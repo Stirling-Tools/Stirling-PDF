@@ -89,12 +89,17 @@ export const runPixelCompare = async ({
   };
 
   return await new Promise<CompareResultPixelData>((resolve, reject) => {
+    let settled = false;
+    let cancellationTimer: ReturnType<typeof setInterval> | null = null;
+
     const handleMessage = (event: MessageEvent<PixelCompareWorkerResponse>) => {
+      if (settled) return;
       const message = event.data;
       if (!message) return;
       if (signal?.cancelled) {
         terminateWorker();
         cleanupOnFailure();
+        settled = true;
         reject(new Error("CANCELLED"));
         return;
       }
@@ -131,6 +136,7 @@ export const runPixelCompare = async ({
         case "success": {
           pages.sort((a, b) => a.pageNumber - b.pageNumber);
           terminateWorker();
+          settled = true;
           resolve({
             mode: "pixel",
             base: { fileId: baseFileId, fileName: baseFile.name },
@@ -151,6 +157,7 @@ export const runPixelCompare = async ({
         case "error": {
           terminateWorker();
           cleanupOnFailure();
+          settled = true;
           reject(new Error(message.message));
           break;
         }
@@ -158,14 +165,20 @@ export const runPixelCompare = async ({
     };
 
     const handleError = (event: ErrorEvent) => {
+      if (settled) return;
       terminateWorker();
       cleanupOnFailure();
+      settled = true;
       reject(
         event.error ?? new Error(event.message || "Pixel compare worker error"),
       );
     };
 
     const terminateWorker = () => {
+      if (cancellationTimer !== null) {
+        clearInterval(cancellationTimer);
+        cancellationTimer = null;
+      }
       worker.removeEventListener("message", handleMessage as EventListener);
       worker.removeEventListener("error", handleError as EventListener);
       try {
@@ -177,6 +190,17 @@ export const runPixelCompare = async ({
 
     worker.addEventListener("message", handleMessage as EventListener);
     worker.addEventListener("error", handleError as EventListener);
+
+    if (signal) {
+      cancellationTimer = setInterval(() => {
+        if (signal.cancelled && !settled) {
+          terminateWorker();
+          cleanupOnFailure();
+          settled = true;
+          reject(new Error("CANCELLED"));
+        }
+      }, 50);
+    }
 
     const request: PixelCompareWorkerRequest = {
       type: "pixel-compare",

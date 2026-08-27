@@ -108,7 +108,11 @@ async function pageText(
 ): Promise<string> {
   if (pageNo < 1 || pageNo > pdfDoc.numPages) return "";
   const page = await pdfDoc.getPage(pageNo);
-  return textFromItems(await pageTextItems(page));
+  try {
+    return textFromItems(await pageTextItems(page));
+  } finally {
+    page.cleanup();
+  }
 }
 
 function textFromItems(items: readonly unknown[]): string {
