@@ -8,5 +8,5 @@ const meta: Meta<typeof ConnectBenefitsSlide> = {
 export default meta;
 type Story = StoryObj<typeof ConnectBenefitsSlide>;
 
-/** Step 1 of the Connect flow: the case for linking, which the old modal never made. */
+/** Step 1 of the Connect flow: the case for linking. */
 export const Default: Story = {};

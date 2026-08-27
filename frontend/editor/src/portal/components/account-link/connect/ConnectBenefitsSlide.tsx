@@ -4,9 +4,9 @@ import "@portal/components/account-link/connect/connect.css";
 /**
  * Step 1 of the connect flow: what connecting a Stirling account gets you.
  *
- * <p>The step this flow was missing. Before it, the only thing an admin ever saw was a login form
- * subtitled "the account this server should bill against", which frames connecting as the moment
- * they start paying rather than what they gain.
+ * <p>Leads with what the admin gains. A login form subtitled "the account this server should bill
+ * against" frames connecting as the moment they start paying, which is the opposite of the reason
+ * to do it.
  *
  * <p>Names what you get rather than selling it. The Processor owns pipelines, policies, sources and
  * audit, so it is one row naming its parts rather than four competing ones. Credits come last: put

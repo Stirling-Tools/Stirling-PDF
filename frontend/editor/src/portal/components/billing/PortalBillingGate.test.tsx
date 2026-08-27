@@ -4,9 +4,9 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 
 /**
  * Usage is a page about an account this instance may not have, so it must not render while
- * unconnected. It used to, which was two bugs: dismissing the dialog stranded the admin on a page
+ * unconnected. Two things turn on that: dismissing the dialog must not strand the admin on a page
  * with nothing on it, and the page reports `linked` as a fact from a wallet read, so a browser
- * holding a SaaS session with no link to this server flipped the whole portal to linked.
+ * holding a SaaS session with no link to this server must not flip the whole portal to linked.
  */
 const gate = { gated: false, loading: false, available: true };
 const connect = vi.fn();

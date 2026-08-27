@@ -169,8 +169,8 @@ export function LinkAccountModal({
       );
     }
 
-    // Step 2. Nothing to confirm and nothing to go back to: the request is out and the browser is
-    // leaving. Close is there so a stalled hand-off is not a dead end.
+    // Nothing to confirm and nothing to go back to: the request is out and the browser is leaving.
+    // Close is there so a stalled hand-off is not a dead end.
     if (step === 2) {
       return (
         <>
@@ -182,8 +182,8 @@ export function LinkAccountModal({
       );
     }
 
-    // Step 3, still finishing: offering a retry over a call that has not answered is how you get
-    // two handshakes.
+    // Still finishing: offering a retry over a call that has not answered is how you get two
+    // handshakes.
     if (outcome?.state === "working") {
       return (
         <>

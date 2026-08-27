@@ -59,7 +59,6 @@ function renderModal(
   );
 }
 
-/** Clicks a footer button by its label. */
 function click(label: string | RegExp) {
   act(() => screen.getByRole("button", { name: label }).click());
 }
@@ -118,8 +117,8 @@ describe("LinkAccountModal", () => {
     const { container } = renderModal();
     click(CONNECT);
 
-    // The provider buttons this flow used to carry sent the admin to Stirling and
-    // abandoned them there. Nothing should collect credentials on this origin.
+    // Nothing collects credentials on this origin: the admin signs in on Stirling, so a provider
+    // button here would send them there and abandon them.
     expect(container.querySelector("input[type=password]")).toBeNull();
     expect(container.querySelector("input[type=email]")).toBeNull();
   });

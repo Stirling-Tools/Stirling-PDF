@@ -4,11 +4,11 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { PortalViewProviders } from "@portal/test/TestQueryProvider";
 
 /**
- * The deep link into the create flow, which is the hole the first attempt at this left open.
+ * The deep link into the create flow, which the gate has to cover in its own right.
  *
  * `?new=1` opens the modal from an effect rather than through the click handler, so guarding
- * openCreate did nothing for it. Both the Documents review queue and the pipelines empty state
- * arrive here that way, and each was a way past the gate.
+ * openCreate does nothing for it. Both the Documents review queue and the pipelines empty state
+ * arrive here that way, so each is a way past the gate unless the deep link is guarded too.
  */
 const { connect } = vi.hoisted(() => ({ connect: vi.fn() }));
 const gate = { gated: true };
