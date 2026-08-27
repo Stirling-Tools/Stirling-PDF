@@ -110,8 +110,7 @@ class Evidence(ApiModel):
     round: int = Field(ge=1, le=3)
     final_round: bool = Field(
         default=False,
-        description="When True, Java will not honour further Requisitions. "
-        "The auditor must return a Verdict this round.",
+        description="When True, Java will not honour further Requisitions. The auditor must return a Verdict this round.",  # noqa: E501
     )
     unauditable_pages: list[int] = Field(
         default_factory=list,

@@ -5,8 +5,8 @@ import sys
 import requests
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "steps"))
-import job_support  # noqa: E402
-import parallel_support  # noqa: E402
+import job_support
+import parallel_support
 
 _BASE_URL = "http://localhost:8080"
 _CONTAINER_NAME = os.environ.get("TEST_CONTAINER_NAME", "")
@@ -17,12 +17,25 @@ _REPORT_DIR = os.environ.get("TEST_REPORT_DIR", "")
 # @login and @register scenarios work in both modes.
 # The "jwt" tag itself is included so that feature-level @jwt tagging is sufficient
 # to mark an entire feature as JWT-dependent.
-_JWT_DEPENDENT_TAGS = frozenset({
-    # jwt_auth.feature scenario tags
-    "me", "refresh", "logout", "role", "token", "mfa", "apikey",
-    # proprietary/enterprise feature tags (all scenarios in these features need JWT)
-    "jwt", "user_mgmt", "admin_settings", "audit", "signature", "team",
-})
+_JWT_DEPENDENT_TAGS = frozenset(
+    {
+        # jwt_auth.feature scenario tags
+        "me",
+        "refresh",
+        "logout",
+        "role",
+        "token",
+        "mfa",
+        "apikey",
+        # proprietary/enterprise feature tags (all scenarios in these features need JWT)
+        "jwt",
+        "user_mgmt",
+        "admin_settings",
+        "audit",
+        "signature",
+        "team",
+    }
+)
 
 # Tags for scenarios that require the policies feature (policies.enabled=true).
 _POLICIES_DEPENDENT_TAGS = frozenset({"policies", "webhook"})
@@ -61,7 +74,9 @@ def _get_docker_log_line_count():
     try:
         result = subprocess.run(
             ["docker", "logs", _CONTAINER_NAME],
-            capture_output=True, text=True, timeout=10,
+            capture_output=True,
+            text=True,
+            timeout=10,
         )
         return len(result.stdout.splitlines()) + len(result.stderr.splitlines())
     except Exception:
@@ -74,7 +89,9 @@ def _capture_docker_logs_window(start_line, scenario_name):
     try:
         result = subprocess.run(
             ["docker", "logs", _CONTAINER_NAME],
-            capture_output=True, text=True, timeout=10,
+            capture_output=True,
+            text=True,
+            timeout=10,
         )
         all_lines = (result.stdout + result.stderr).splitlines()
         window = all_lines[start_line:]
@@ -104,7 +121,12 @@ def _check_policies_available():
         resp = requests.post(
             f"{_BASE_URL}/api/v1/sources",
             headers={"X-API-KEY": "123456789", "Content-Type": "application/json"},
-            json={"name": "policies-probe", "type": "webhook", "options": {}, "enabled": True},
+            json={
+                "name": "policies-probe",
+                "type": "webhook",
+                "options": {},
+                "enabled": True,
+            },
             timeout=10,
         )
         if resp.status_code != 200:
@@ -214,9 +236,7 @@ def after_scenario(context, scenario):
 
     # Remove any temporary files generated during the scenario
     for temp_file in os.listdir("."):
-        if temp_file.startswith("genericNonCustomisableName") or temp_file.startswith(
-            "temp_image_"
-        ):
+        if temp_file.startswith("genericNonCustomisableName") or temp_file.startswith("temp_image_"):
             try:
                 os.remove(temp_file)
             except Exception:
@@ -256,10 +276,7 @@ def _cleanup_async_job_files():
         )
         return
     if response.status_code != 200:
-        print(
-            f"\n[CLEANUP] Async job cleanup returned {response.status_code}: "
-            f"{response.text[:200]}"
-        )
+        print(f"\n[CLEANUP] Async job cleanup returned {response.status_code}: {response.text[:200]}")
         return
     try:
         summary = response.json()

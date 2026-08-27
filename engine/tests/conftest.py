@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
 from stirling.config import AppSettings, DocumentsBackend, load_settings
+from stirling.documents import SqliteVecStore
 from stirling.services import build_runtime
 from stirling.services.runtime import AppRuntime
 
@@ -15,6 +17,21 @@ def clear_settings_cache() -> Iterator[None]:
     load_settings.cache_clear()
     yield
     load_settings.cache_clear()
+
+
+@pytest.fixture(autouse=True)
+def close_sqlite_stores(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
+    stores: list[SqliteVecStore] = []
+    original_init = SqliteVecStore.__init__
+
+    def tracked_init(store: SqliteVecStore, db_path: str | Path) -> None:
+        original_init(store, db_path)
+        stores.append(store)
+
+    monkeypatch.setattr(SqliteVecStore, "__init__", tracked_init)
+    yield
+    for store in stores:
+        asyncio.run(store.close())
 
 
 def build_app_settings() -> AppSettings:
@@ -57,5 +74,7 @@ def app_settings() -> AppSettings:
 
 
 @pytest.fixture
-def runtime(app_settings: AppSettings) -> AppRuntime:
-    return build_runtime(app_settings)
+def runtime(app_settings: AppSettings) -> Iterator[AppRuntime]:
+    app_runtime = build_runtime(app_settings)
+    yield app_runtime
+    asyncio.run(app_runtime.documents.close())

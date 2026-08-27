@@ -2,7 +2,6 @@
 
 import io
 import json as json_module
-import os
 import re
 import sys
 import zipfile
@@ -59,11 +58,7 @@ def _normalize_name(name):
 def _strip_volatile(value):
     """Drop keys whose values legitimately differ between two identical requests."""
     if isinstance(value, dict):
-        return {
-            k: _strip_volatile(v)
-            for k, v in sorted(value.items())
-            if not _VOLATILE_KEY_RE.match(k)
-        }
+        return {k: _strip_volatile(v) for k, v in sorted(value.items()) if not _VOLATILE_KEY_RE.match(k)}
     if isinstance(value, list):
         return [_strip_volatile(v) for v in value]
     if isinstance(value, str):
@@ -131,7 +126,6 @@ def fingerprint(response):
     content_type = (response.headers.get("Content-Type") or "").split(";")[0].strip()
     parts = {"status": response.status_code, "content_type": content_type, "size": len(body)}
 
-
     if "json" in content_type:
         try:
             parts["json"] = _strip_volatile(json_module.loads(body.decode("utf-8")))
@@ -152,11 +146,7 @@ def fingerprint(response):
 
 
 def differing_keys(baseline, other):
-    return {
-        key
-        for key in set(baseline) | set(other)
-        if key != "size" and baseline.get(key) != other.get(key)
-    }
+    return {key for key in set(baseline) | set(other) if key != "size" and baseline.get(key) != other.get(key)}
 
 
 def size_differs(baseline, other):
@@ -168,9 +158,7 @@ def compare(baseline, other, ignore=frozenset(), ignore_size=False):
     """Return a list of human-readable differences between two fingerprints."""
     diffs = []
     for key in sorted(differing_keys(baseline, other) - set(ignore)):
-        diffs.append(
-            f"{key}: baseline={_short(baseline.get(key))} parallel={_short(other.get(key))}"
-        )
+        diffs.append(f"{key}: baseline={_short(baseline.get(key))} parallel={_short(other.get(key))}")
     if not ignore_size and size_differs(baseline, other):
         diffs.append(
             f"size: baseline={baseline.get('size', 0)} parallel={other.get('size', 0)} "
@@ -212,9 +200,7 @@ def build_decoy_spec(spec):
                 width, height = float(box.width), float(box.height)
                 overlay_buffer = io.BytesIO()
                 overlay_canvas = canvas.Canvas(overlay_buffer, pagesize=(width, height))
-                overlay_canvas.drawString(
-                    20, max(20.0, height - 20), f"DECOY-MARKER-{index}-do-not-mix"
-                )
+                overlay_canvas.drawString(20, max(20.0, height - 20), f"DECOY-MARKER-{index}-do-not-mix")
                 overlay_canvas.showPage()
                 overlay_canvas.save()
                 overlay_buffer.seek(0)
@@ -261,16 +247,12 @@ def validate(context, url, spec, headers, baseline, label, timeout=300):
     baseline_fp = fingerprint(baseline)
 
     noise, noisy_size = frozenset(), False
-    failures = _collect_failures(
-        main_results, decoy_results, baseline_fp, repeat, noise, noisy_size
-    )
+    failures = _collect_failures(main_results, decoy_results, baseline_fp, repeat, noise, noisy_size)
     if failures:
         # Some endpoints are inherently nondeterministic (embedded ids, timestamps,
         # deliberate randomness). Re-run sequentially to tell that apart from a real bug.
         noise, noisy_size = _probe_noise(url, spec, headers, baseline_fp, timeout)
-        failures = _collect_failures(
-            main_results, decoy_results, baseline_fp, repeat, noise, noisy_size
-        )
+        failures = _collect_failures(main_results, decoy_results, baseline_fp, repeat, noise, noisy_size)
 
     VALIDATIONS.append(
         {
@@ -303,12 +285,9 @@ def _collect_failures(main_results, decoy_results, baseline_fp, repeat, noise, n
         diffs = compare(baseline_fp, actual_fp, noise, noisy_size)
         if not diffs:
             continue
-        if decoy_fp is not None and not compare(
-            decoy_fp, actual_fp, noise, noisy_size
-        ):
+        if decoy_fp is not None and not compare(decoy_fp, actual_fp, noise, noisy_size):
             failures.append(
-                f"copy {index + 1}/{repeat} returned the CONCURRENT DECOY REQUEST'S response "
-                f"(cross-request bleed)"
+                f"copy {index + 1}/{repeat} returned the CONCURRENT DECOY REQUEST'S response (cross-request bleed)"
             )
         else:
             failures.append(f"copy {index + 1}/{repeat} diverged: " + "; ".join(diffs))
@@ -374,7 +353,7 @@ def validate_get(context, url, params, headers, baseline, label, timeout=60):
             diffs = compare(
                 baseline_fp,
                 fingerprint(response),
-                    noise,
+                noise,
                 noisy_size,
             )
             if diffs:
@@ -387,11 +366,7 @@ def validate_get(context, url, params, headers, baseline, label, timeout=60):
         probes = []
         for _ in range(NOISE_PROBE_SAMPLES):
             try:
-                probes.append(
-                    fingerprint(
-                        requests.get(url, params=params, headers=headers, timeout=timeout)
-                    )
-                )
+                probes.append(fingerprint(requests.get(url, params=params, headers=headers, timeout=timeout)))
             except Exception:
                 break
         noise, noisy_size = _noise_from_samples(baseline_fp, probes)
@@ -408,8 +383,7 @@ def validate_get(context, url, params, headers, baseline, label, timeout=60):
     )
     if failures:
         raise AssertionError(
-            f"Parallel consistency failed for GET {label} at concurrency {repeat}.\n  - "
-            + "\n  - ".join(failures)
+            f"Parallel consistency failed for GET {label} at concurrency {repeat}.\n  - " + "\n  - ".join(failures)
         )
 
 

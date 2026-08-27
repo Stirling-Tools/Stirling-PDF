@@ -10,9 +10,9 @@ import json
 import os
 import subprocess
 import sys
-from concurrent.futures import ThreadPoolExecutor
 import time
 import tomllib
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 
@@ -152,7 +152,7 @@ def translate_batches(batch_files, language_code, api_key, timeout=600, model="g
         print(f"\n[{i}/{total}] Translating {batch_file}...")
 
         # Always pass API key since it's required
-        cmd = f'python3 scripts/translations/batch_translator.py "{batch_file}" --language {language_code} --api-key "{api_key}" --model {model}'
+        cmd = f'python3 scripts/translations/batch_translator.py "{batch_file}" --language {language_code} --api-key "{api_key}" --model {model}'  # noqa: E501
 
         try:
             result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=timeout)
@@ -223,7 +223,7 @@ def apply_translations(merged_file, language_code):
     """Apply merged translations to the language file."""
     print(f"\n📝 Applying translations to {language_code}...")
 
-    cmd = f"python3 scripts/translations/translation_merger.py {language_code} apply-translations --translations-file {merged_file}"
+    cmd = f"python3 scripts/translations/translation_merger.py {language_code} apply-translations --translations-file {merged_file}"  # noqa: E501
 
     if not run_command(cmd):
         print("✗ Failed to apply translations")
@@ -388,7 +388,7 @@ Examples:
     except KeyboardInterrupt:
         print("\n\n⚠ Translation interrupted by user")
         sys.exit(1)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         print(f"\n\n✗ Error: {e}")
         import traceback
 

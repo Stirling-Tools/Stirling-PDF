@@ -11,8 +11,6 @@ Covers:
   - User registration
 """
 
-import json as json_module
-
 import requests
 from behave import given, then, when
 
@@ -60,9 +58,7 @@ def _do_login(username, password):
 def step_logged_in_as_admin(context):
     """Login as the default admin user and store the JWT token in context."""
     response = _do_login(ADMIN_USERNAME, ADMIN_PASSWORD)
-    assert response.status_code == 200, (
-        f"Admin login failed (status {response.status_code}): {response.text}"
-    )
+    assert response.status_code == 200, f"Admin login failed (status {response.status_code}): {response.text}"
     data = response.json()
     context.jwt_token = data["session"]["access_token"]
 
@@ -70,9 +66,7 @@ def step_logged_in_as_admin(context):
 @given("I store the JWT token")
 def step_store_current_jwt(context):
     """Store the currently held jwt_token into context for later comparison."""
-    assert hasattr(context, "jwt_token") and context.jwt_token, (
-        "No JWT token available – did you log in first?"
-    )
+    assert hasattr(context, "jwt_token") and context.jwt_token, "No JWT token available – did you log in first?"
     context.original_jwt_token = context.jwt_token
 
 
@@ -206,8 +200,6 @@ def step_get_with_empty_auth_header(context, endpoint):
     )
 
 
-
-
 @when('I send a GET request to "{endpoint}" with the stored JWT token')
 def step_get_with_stored_jwt(context, endpoint):
     """Send GET request using the JWT token currently stored in context."""
@@ -252,9 +244,7 @@ def step_post_with_invalid_jwt(context, endpoint, token_value):
     )
 
 
-@when(
-    'I send a JSON POST request to "{endpoint}" with JWT authentication and body \'{json_body}\''
-)
+@when("I send a JSON POST request to \"{endpoint}\" with JWT authentication and body '{json_body}'")
 def step_json_post_with_jwt(context, endpoint, json_body):
     """Send JSON POST request using the stored JWT token and a JSON body."""
     headers = {
@@ -269,9 +259,7 @@ def step_json_post_with_jwt(context, endpoint, json_body):
     )
 
 
-@when(
-    'I send a JSON POST request to "{endpoint}" with API key "{api_key}" and body \'{json_body}\''
-)
+@when('I send a JSON POST request to "{endpoint}" with API key "{api_key}" and body \'{json_body}\'')
 def step_json_post_with_api_key(context, endpoint, api_key, json_body):
     """Send JSON POST request using X-API-KEY header and a JSON body."""
     headers = {
@@ -333,8 +321,7 @@ def step_status_code_one_of(context, codes):
     allowed = [int(c.strip()) for c in codes.split(",")]
     actual = context.response.status_code
     assert actual in allowed, (
-        f"Expected status code to be one of {allowed} but got {actual}. "
-        f"Body: {context.response.text[:500]}"
+        f"Expected status code to be one of {allowed} but got {actual}. Body: {context.response.text[:500]}"
     )
 
 
@@ -348,15 +335,11 @@ def step_response_contains_jwt(context):
     """Assert the response has a session.access_token that looks like a JWT."""
     data = context.response.json()
     assert "session" in data, f"No 'session' key in response: {data}"
-    assert "access_token" in data["session"], (
-        f"No 'access_token' in session: {data['session']}"
-    )
+    assert "access_token" in data["session"], f"No 'access_token' in session: {data['session']}"
     token = data["session"]["access_token"]
     assert token, "access_token is empty"
     parts = token.split(".")
-    assert len(parts) == 3, (
-        f"JWT should have 3 dot-separated parts but got {len(parts)}: {token[:60]}..."
-    )
+    assert len(parts) == 3, f"JWT should have 3 dot-separated parts but got {len(parts)}: {token[:60]}..."
 
 
 @then("the JWT access token should have three dot-separated parts")
@@ -366,9 +349,7 @@ def step_jwt_three_parts(context):
     token = data.get("session", {}).get("access_token", "")
     assert token, "No access_token found in response"
     parts = token.split(".")
-    assert len(parts) == 3, (
-        f"JWT must have 3 parts (header.payload.signature) but got {len(parts)}: {token[:60]}"
-    )
+    assert len(parts) == 3, f"JWT must have 3 parts (header.payload.signature) but got {len(parts)}: {token[:60]}"
 
 
 # ---------------------------------------------------------------------------
@@ -376,13 +357,11 @@ def step_jwt_three_parts(context):
 # ---------------------------------------------------------------------------
 
 
-@then("the response JSON should have field \"{field}\"")
+@then('the response JSON should have field "{field}"')
 def step_json_has_field(context, field):
     """Assert the top-level response JSON contains the specified field."""
     data = context.response.json()
-    assert field in data, (
-        f"Expected field '{field}' in response JSON but only found: {list(data.keys())}"
-    )
+    assert field in data, f"Expected field '{field}' in response JSON but only found: {list(data.keys())}"
 
 
 @then('the response JSON should have a user with username "{username}"')
@@ -409,9 +388,7 @@ def step_json_user_field_not_empty(context, field):
     data = context.response.json()
     assert "user" in data, f"No 'user' in response: {list(data.keys())}"
     value = data["user"].get(field)
-    assert value is not None and str(value) != "", (
-        f"Expected user field '{field}' to be non-empty, got: {value!r}"
-    )
+    assert value is not None and str(value) != "", f"Expected user field '{field}' to be non-empty, got: {value!r}"
 
 
 @then('the response JSON user field "{field}" should equal "{expected}"')
@@ -424,9 +401,7 @@ def step_json_user_field_equals(context, field, expected):
     assert "user" in data, f"No 'user' in response: {list(data.keys())}"
     value = data["user"].get(field, "")
     actual = str(value).lower() if isinstance(value, bool) else str(value)
-    assert actual == expected, (
-        f"Expected user field '{field}' == '{expected}' but got '{actual}'"
-    )
+    assert actual == expected, f"Expected user field '{field}' == '{expected}' but got '{actual}'"
 
 
 @then('the response JSON field "{field}" should equal "{expected}"')
@@ -440,8 +415,7 @@ def step_json_top_field_equals(context, field, expected):
     value = data.get(field, "")
     actual = str(value).lower() if isinstance(value, bool) else str(value)
     assert actual == expected, (
-        f"Expected JSON field '{field}' == '{expected}' but got '{actual}'. "
-        f"Full response: {data}"
+        f"Expected JSON field '{field}' == '{expected}' but got '{actual}'. Full response: {data}"
     )
 
 
@@ -459,15 +433,9 @@ def step_json_session_field_positive(context, field):
 def step_json_error_contains(context, error_text):
     """Assert the error/message/detail field contains the expected substring (case-insensitive)."""
     data = context.response.json()
-    error = (
-        data.get("error")
-        or data.get("message")
-        or data.get("detail")
-        or ""
-    )
+    error = data.get("error") or data.get("message") or data.get("detail") or ""
     assert error_text.lower() in str(error).lower(), (
-        f"Expected '{error_text}' (case-insensitive) in error response but got: '{error}'. "
-        f"Full response: {data}"
+        f"Expected '{error_text}' (case-insensitive) in error response but got: '{error}'. Full response: {data}"
     )
 
 
@@ -480,9 +448,7 @@ def step_json_error_contains(context, error_text):
 def step_store_jwt_from_login(context):
     """Extract and store access_token from the login response."""
     data = context.response.json()
-    assert "session" in data and "access_token" in data["session"], (
-        f"No access_token in login response: {data}"
-    )
+    assert "session" in data and "access_token" in data["session"], f"No access_token in login response: {data}"
     context.jwt_token = data["session"]["access_token"]
     assert context.jwt_token, "Stored JWT token is empty"
 
@@ -491,9 +457,7 @@ def step_store_jwt_from_login(context):
 def step_update_stored_jwt(context):
     """Replace the stored JWT token with the new one from the current response."""
     data = context.response.json()
-    assert "session" in data and "access_token" in data["session"], (
-        f"No access_token in response: {data}"
-    )
+    assert "session" in data and "access_token" in data["session"], f"No access_token in response: {data}"
     new_token = data["session"]["access_token"]
     assert new_token, "New JWT token from response is empty"
     context.jwt_token = new_token

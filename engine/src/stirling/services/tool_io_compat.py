@@ -188,8 +188,7 @@ def _check_transition(
                 severity=DiagnosticSeverity.WARN,
                 code=DiagnosticCode.OUTPUT_UNCERTAIN,
                 message=(
-                    "The previous step's output depends on how it is configured, "
-                    f"so {step.operation} may not be able to run."
+                    f"The previous step's output depends on how it is configured, so {step.operation} may not be able to run."  # noqa: E501
                 ),
             )
         ]

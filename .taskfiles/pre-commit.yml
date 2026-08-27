@@ -7,10 +7,13 @@ vars:
   # File selections as git pathspecs: git does the include/exclude matching, so
   # there is no grep/xargs and it behaves identically on every platform.
   PY_FILES: >-
-    'scripts/*.py'
+    'scripts/**/*.py'
     '.github/scripts/*.py'
     'app/core/src/main/resources/static/python/*.py'
-    ':(exclude)*split_photos.py'
+    'testing/**/*.py'
+    'engine/**/*.py'
+    ':(exclude)engine/**/tool_io.py'
+    ':(exclude)engine/**/tool_models.py'
   SPELL_FILES: >-
     '*.html'
     '*.css'
@@ -80,7 +83,7 @@ tasks:
     desc: "Install the pinned pre-commit Python tools"
     run: once
     cmds:
-      - uv sync --project engine --locked --group pre-commit
+      - uv sync --locked --project engine --group pre-commit
     sources:
       - engine/uv.lock
       - engine/pyproject.toml
@@ -101,26 +104,31 @@ tasks:
   ruff:
     deps: [install]
     cmds:
-      - uv run --project engine --locked --group pre-commit ruff check --isolated --line-length=120 {{if .FIX}}--fix {{end}}$(git ls-files {{.PY_FILES}})
+      - uv run --locked --project engine --group pre-commit ruff check $(git ls-files {{.PY_FILES}}) {{if .FIX}}--fix{{end}} --config engine/pyproject.toml
 
   ruff-format:
     deps: [install]
     cmds:
-      - uv run --project engine --locked --group pre-commit ruff format --isolated --line-length=120 {{if .FIX}}{{else}}--check {{end}}$(git ls-files {{.PY_FILES}})
+      - uv run --locked --project engine --group pre-commit ruff format $(git ls-files {{.PY_FILES}}) {{if .FIX}}{{else}}--check{{end}} --config engine/pyproject.toml
+
+  ruff-format-diff:
+    deps: [install]
+    cmds:
+      - uv run --locked --project engine --group pre-commit ruff format $(git ls-files {{.PY_FILES}}) --diff --config engine/pyproject.toml
 
   codespell:
     deps: [install]
     cmds:
-      - uv run --project engine --locked --group pre-commit codespell --ignore-words-list=thirdParty,tabEl,tabEls,Sie,ist,fulfilment --quiet-level=2 $(git ls-files {{.SPELL_FILES}})
+      - uv run --locked --project engine --group pre-commit codespell --ignore-words-list=thirdParty,tabEl,tabEls,Sie,ist,fulfilment --quiet-level=2 $(git ls-files {{.SPELL_FILES}})
 
   toml-sort:
     deps: [install]
     cmds:
-      - uv run --project engine --locked --group pre-commit python scripts/pre-commit/sort_locale_toml.py {{if .FIX}}--fix {{end}}{{.LOCALE_TOML}}
+      - uv run --locked --project engine --group pre-commit python scripts/pre-commit/sort_locale_toml.py {{if .FIX}}--fix {{end}}{{.LOCALE_TOML}}
 
   whitespace:
     cmds:
-      - uv run --project engine --locked --group pre-commit python scripts/pre-commit/whitespace.py {{if .FIX}}--fix {{end}}{{.WS_FILES}}
+      - uv run --locked --project engine --group pre-commit python scripts/pre-commit/whitespace.py {{if .FIX}}--fix {{end}}{{.WS_FILES}}
 
   gitleaks:
     deps: [gitleaks-bin]
@@ -134,4 +142,4 @@ tasks:
     internal: true
     desc: "Ensure the pinned, checksum-verified gitleaks binary is cached in .task/bin"
     cmds:
-      - uv run --project engine --locked --group pre-commit python scripts/pre-commit/install_gitleaks.py
+      - uv run --locked --project engine --group pre-commit python scripts/pre-commit/install_gitleaks.py

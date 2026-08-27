@@ -344,8 +344,7 @@ class PdfEditAgent:
             else ""
         )
         unavailable_line = (
-            "Unavailable operations (exist but not currently usable): "
-            f"{self._get_operations_prompt(unavailable_operations)}\n"
+            f"Unavailable operations (exist but not currently usable): {self._get_operations_prompt(unavailable_operations)}\n"  # noqa: E501
             if unavailable_operations
             else ""
         )

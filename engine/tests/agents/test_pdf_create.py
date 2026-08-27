@@ -15,7 +15,6 @@ from __future__ import annotations
 import json
 
 import pytest
-from conftest import build_app_settings
 from pydantic_ai.models.test import TestModel
 from pydantic_ai.profiles import ModelProfile
 
@@ -45,17 +44,11 @@ from stirling.contracts.pdf_create import (
     WrittenSections,
 )
 from stirling.models.agent_tool_models import AgentToolId, CreatePdfFromHtmlAgentParams
-from stirling.services import build_runtime
 from stirling.services.runtime import AppRuntime
 
 _NATIVE_PROFILE = ModelProfile(supports_json_schema_output=True)
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────────────────────────
-
-
-@pytest.fixture
-def runtime() -> AppRuntime:
-    return build_runtime(build_app_settings())
 
 
 @pytest.fixture

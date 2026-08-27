@@ -1,8 +1,7 @@
 """Concurrency steps, usable either before the request or after it."""
 
-from behave import given, then, when
-
 import parallel_support
+from behave import given, then, when
 
 
 def _set_repeat(context, count, decoy=False):

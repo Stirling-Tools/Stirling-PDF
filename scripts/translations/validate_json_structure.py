@@ -37,8 +37,8 @@ def validate_translation_file(file_path: Path) -> tuple[bool, str]:
         with open(file_path, "rb") as f:
             tomllib.load(f)
         return True, "Valid TOML"
-    except Exception as e:
-        return False, f"Error reading file: {str(e)}"
+    except Exception as e:  # noqa: BLE001
+        return False, f"Error reading file: {e!s}"
 
 
 def validate_structure(en_us_keys: set[str], lang_keys: set[str], lang_code: str) -> dict:
