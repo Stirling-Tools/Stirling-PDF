@@ -79,7 +79,10 @@ describe("QuickNavRailBase — entry state", () => {
     const { container } = render(
       withProviders(
         <QuickNavRailBase
-          groups={[[PROCESSOR], [entry("reader", { pressed: true }), entry("files")]]}
+          groups={[
+            [PROCESSOR],
+            [entry("reader", { pressed: true }), entry("files")],
+          ]}
         />,
       ),
     );
@@ -93,6 +96,30 @@ describe("QuickNavRailBase — entry state", () => {
       ["files", null],
     ]);
     expect(container.querySelectorAll("[aria-current]")).toHaveLength(0);
+  });
+
+  it("keeps a disabled entry in the tab order so its reason stays reachable", () => {
+    // The reason is the whole point of disabling rather than hiding: a merely dim
+    // icon explains nothing, and the tooltip carrying the explanation is only
+    // reachable by keyboard while the control can still be focused.
+    const { container } = render(
+      withProviders(
+        <QuickNavRailBase
+          groups={[
+            [
+              entry("automate", {
+                disabled: true,
+                reason: "Disabled by server administrator",
+              }),
+            ],
+          ]}
+        />,
+      ),
+    );
+
+    const automate = container.querySelector('[aria-label="automate"]')!;
+    expect(automate.getAttribute("aria-disabled")).toBe("true");
+    expect(automate.hasAttribute("disabled")).toBe(false);
   });
 
   it("keeps an unavailable entry rendered, disabled rather than dropped", () => {

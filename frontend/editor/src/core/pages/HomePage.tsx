@@ -1,4 +1,11 @@
-import { forwardRef, useCallback, useEffect, useRef, useState } from "react";
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useTranslation } from "react-i18next";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { Group } from "@mantine/core";
@@ -37,6 +44,10 @@ import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 import { stripBasePath } from "@app/constants/app";
 import { HomePageExtensions } from "@app/components/home/HomePageExtensions";
 import { QuickNavHostBridge } from "@app/components/shared/quickNav/QuickNavHostBridge";
+import {
+  getToolDisabledReason,
+  getDisabledLabel,
+} from "@app/components/tools/fullscreen/shared";
 import { useOtherAppSwitch } from "@app/hooks/useOtherAppSwitch";
 import { consumeReaderModeRequest } from "@app/utils/pendingReaderMode";
 import {
@@ -102,6 +113,7 @@ export default function HomePage() {
     setLeftPanelView,
     toolAvailability,
     customWorkbenchViews,
+    toolRegistry,
   } = useToolWorkflow();
 
   const navigate = useNavigate();
@@ -194,7 +206,8 @@ export default function HomePage() {
       if (!combo) return;
       if (e.code !== "KeyK" && e.code !== "KeyF") return;
       // Same carve-out the search itself makes: a dialog owns the keyboard.
-      if ((e.target as HTMLElement | null)?.closest?.('[role="dialog"]')) return;
+      if ((e.target as HTMLElement | null)?.closest?.('[role="dialog"]'))
+        return;
       e.preventDefault();
       setReaderMode(false);
       if (e.code === "KeyK") {
@@ -230,7 +243,6 @@ export default function HomePage() {
     actions,
     activeFiles.length,
   ]);
-
 
   // Sync the /files* URL into the workbench state so the file manager view
   // takes over the workbench area when the user lands on it. This is the
@@ -333,6 +345,32 @@ export default function HomePage() {
       false);
 
   const brandAltText = t("home.mobile.brandAlt", "Stirling PDF logo");
+
+  /**
+   * Why the rail's tool entries can't be used, worked out with the same helpers
+   * the tool picker uses so the two can't describe one condition differently.
+   *
+   * The shared labels are written to sit in front of a tool name ("Coming soon:
+   * Automate"), but the rail appends the reason after the entry's own label, so
+   * the trailing colon comes off.
+   */
+  const quickNavToolReasons = useMemo(() => {
+    const reasons: Record<string, string> = {};
+    for (const id of ["automate", "sharedSign"] as const) {
+      const tool = toolRegistry[id];
+      if (!tool) continue;
+      const disabledReason = getToolDisabledReason(
+        id,
+        tool,
+        toolAvailability,
+        config?.premiumEnabled,
+      );
+      if (!disabledReason) continue;
+      const { key, fallback } = getDisabledLabel(disabledReason);
+      reasons[id] = t(key, fallback).replace(/:\s*$/, "");
+    }
+    return reasons;
+  }, [toolRegistry, toolAvailability, config?.premiumEnabled, t]);
 
   // Shared by the hoisted brand header's toggle and the sidebar itself, so the
   // two can't drift. On /files the toggle is a "leave" affordance instead.
@@ -519,6 +557,7 @@ export default function HomePage() {
         onSelectTool={(id) =>
           handleToolSelect(id as Parameters<typeof handleToolSelect>[0])
         }
+        toolReasons={quickNavToolReasons}
       />
       <FilesPageProvider>
         {isMobile ? (
