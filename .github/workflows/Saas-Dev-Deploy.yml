@@ -129,6 +129,9 @@ jobs:
         run: echo "app_short=$(git rev-parse --short=8 HEAD)" >> $GITHUB_OUTPUT
 
       # SaaS ships as two images: a backend-only JAR and a separately-built UI.
+      # Each image also gets a moving -latest tag: the per-commit one is the
+      # record of what is deployed, the moving one is what you pull to test
+      # without first looking up a sha.
       - name: Build and push backend image
         if: steps.config.outputs.ready == 'true'
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
@@ -138,7 +141,9 @@ jobs:
           push: true
           cache-from: type=gha,scope=stirling-saas-backend
           cache-to: type=gha,mode=max,scope=stirling-saas-backend
-          tags: ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-test:saas-backend-${{ steps.commit-hash.outputs.app_short }}
+          tags: |
+            ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-test:saas-backend-${{ steps.commit-hash.outputs.app_short }}
+            ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-test:saas-backend-latest
           build-args: |
             VERSION_TAG=v2-alpha
             STIRLING_FLAVOR=saas
@@ -156,7 +161,9 @@ jobs:
           push: true
           cache-from: type=gha,scope=stirling-saas-frontend
           cache-to: type=gha,mode=max,scope=stirling-saas-frontend
-          tags: ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-test:saas-frontend-${{ steps.commit-hash.outputs.app_short }}
+          tags: |
+            ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-test:saas-frontend-${{ steps.commit-hash.outputs.app_short }}
+            ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-test:saas-frontend-latest
           build-args: |
             VERSION_TAG=v2-alpha
             STIRLING_FLAVOR=saas
@@ -176,7 +183,9 @@ jobs:
           push: true
           cache-from: type=gha,scope=stirling-saas-engine
           cache-to: type=gha,mode=max,scope=stirling-saas-engine
-          tags: ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-test:saas-engine-${{ steps.commit-hash.outputs.app_short }}
+          tags: |
+            ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-test:saas-engine-${{ steps.commit-hash.outputs.app_short }}
+            ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-test:saas-engine-latest
           platforms: linux/amd64
 
       - name: Set up SSH
