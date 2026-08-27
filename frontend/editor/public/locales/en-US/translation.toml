@@ -8886,7 +8886,6 @@ appEditor = "Editor"
 appProcessor = "Processor"
 linkAccount = "Link Stirling account"
 primaryNav = "Primary navigation"
-switchApp = "Switch app"
 
 [portal.shell.topbar]
 closeNav = "Close navigation"

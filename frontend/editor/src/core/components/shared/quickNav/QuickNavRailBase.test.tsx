@@ -38,32 +38,19 @@ function renderRail(groups: QuickNavEntry[][]) {
   };
 }
 
-describe("QuickNavRailBase — app switcher", () => {
-  it("renders the switcher for the app you are not in", () => {
-    // The app you are in is the brand mark, so the switcher holds only the other.
+describe("QuickNavRailBase — groups", () => {
+  it("divides one group from the next", () => {
     const { labels, dividers } = renderRail([[PROCESSOR], WITHIN]);
 
     expect(labels).toEqual(["processor", "files", "reader"]);
     expect(dividers).toBe(1);
   });
 
-  it("drops an empty switcher, and its divider with it", () => {
-    // Nothing to switch to, so the divider has nothing to divide.
+  it("drops an empty group, and the divider with it", () => {
     const { labels, dividers } = renderRail([[], WITHIN]);
 
     expect(labels).toEqual(["files", "reader"]);
     expect(dividers).toBe(0);
-  });
-
-  it("tags the switcher group, not whichever group renders first", () => {
-    // Tagging by rendered position would hand the tag to the group below.
-    const { container } = render(
-      withProviders(<QuickNavRailBase groups={[[], WITHIN]} />),
-    );
-
-    const groups = container.querySelectorAll(".quick-nav-rail-group");
-    expect(groups).toHaveLength(1);
-    expect(groups[0].getAttribute("data-switcher")).toBeNull();
   });
 });
 

@@ -12,10 +12,8 @@ interface AppSwitchMenuItemsProps {
 }
 
 /**
- * The editor / processor items for the app-switch menu. Rendered inside the
- * BrandSwitcher's logo dropdown, which both apps use as their switcher. The
- * mark is the shared <BrandMark>, which recolours itself from the theme
- * tokens, so no colour-scheme prop needs threading down here.
+ * The editor / processor items for an app-switch menu. The mark is the shared
+ * <BrandMark>, which recolours itself from the theme tokens.
  */
 export function AppSwitchMenuItems({
   current,
