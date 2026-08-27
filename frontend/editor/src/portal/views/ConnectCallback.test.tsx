@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { act, render, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { MantineProvider } from "@mantine/core";
+import { UIProvider, useUI } from "@portal/contexts/UIContext";
+import type { ConnectOutcome } from "@portal/components/account-link/ConnectCallbackView";
 
 /**
  * The callback handles a live session token in a URL fragment, so the behaviour worth pinning is what it does with it: strip it immediately, refuse anything it cannot verify, and keep the two outcomes (SaaS sign-in, server link) independent of each other.
@@ -32,19 +34,41 @@ function landOn(fragment: string) {
   window.history.replaceState(null, "", `/account-link/callback${fragment}`);
 }
 
+/** Records what the host publishes, standing in for the dialog that consumes it. */
+let published: ConnectOutcome[] = [];
+
+function OutcomeSpy() {
+  const { connectOutcome } = useUI();
+  if (
+    connectOutcome &&
+    published[published.length - 1]?.state !== connectOutcome.state
+  ) {
+    published.push(connectOutcome);
+  }
+  return null;
+}
+
+const lastOutcome = () => published[published.length - 1];
+
 /**
- * Route and host together: the route reads the fragment, the portal renders the
- * outcome. Exercising them apart would test the hand-off rather than the flow.
+ * Route and host together: the route reads the fragment, the host finishes the link and publishes
+ * the outcome for the dialog. Exercising them apart would test the hand-off rather than the flow.
  */
 function renderFlow() {
   return render(
     <MantineProvider>
       <MemoryRouter initialEntries={["/account-link/callback"]}>
-        <ConnectCallbackHost />
-        <Routes>
-          <Route path="/account-link/callback" element={<ConnectCallback />} />
-          <Route path="/processor" element={<div data-testid="portal" />} />
-        </Routes>
+        <UIProvider>
+          <ConnectCallbackHost />
+          <OutcomeSpy />
+          <Routes>
+            <Route
+              path="/account-link/callback"
+              element={<ConnectCallback />}
+            />
+            <Route path="/processor" element={<div data-testid="portal" />} />
+          </Routes>
+        </UIProvider>
       </MemoryRouter>
     </MantineProvider>,
   );
@@ -53,6 +77,7 @@ function renderFlow() {
 describe("account-link callback", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    published = [];
     completeConnect.mockResolvedValue({
       phase: "LINKED",
       authorizeUrl: null,
@@ -131,6 +156,20 @@ describe("account-link callback", () => {
     await waitFor(() => expect(window.location.hash).toBe(""));
     expect(completeConnect).not.toHaveBeenCalled();
     expect(setSession).not.toHaveBeenCalled();
+    // Said so in the dialog rather than silently doing nothing.
+    await waitFor(() => expect(lastOutcome()?.state).toBe("malformed"));
+    expect(lastOutcome()?.reclaim).toBeUndefined();
+  });
+
+  it("hands the result to the dialog rather than rendering its own", async () => {
+    landOn(`#type=link&nonce=${NONCE}&access_token=at&refresh_token=rt`);
+
+    const { container } = renderFlow();
+
+    await waitFor(() => expect(lastOutcome()?.state).toBe("linked"));
+    expect(lastOutcome()?.sessionRestored).toBe(true);
+    // The host draws nothing: step 3 of the connect dialog is where this shows up.
+    expect(container.querySelector(".portal-connect-callback")).toBeNull();
   });
 
   it("refuses a fragment that is not a link response", async () => {
@@ -160,16 +199,31 @@ describe("account-link callback", () => {
       teamId: null,
     });
 
-    const { getAllByRole } = renderFlow();
+    renderFlow();
 
     await waitFor(() => expect(completeConnect).toHaveBeenCalledTimes(1));
-    // Last button, not the only one: the modal shell contributes a close button.
-    const buttons = getAllByRole("button");
-    act(() => buttons[buttons.length - 1].click());
+    await waitFor(() => expect(lastOutcome()?.state).toBe("retry"));
 
-    // Retries the existing handshake; starting a new one would waste the
-    // approval a human just gave.
+    act(() => lastOutcome()!.reclaim!());
+
+    // Re-claims the existing handshake; opening a new one would waste the approval a leader gave
+    // by hand. That is why the outcome carries the action rather than the dialog inventing one.
     await waitFor(() => expect(completeConnect).toHaveBeenCalledTimes(2));
     expect(startConnect).not.toHaveBeenCalled();
+  });
+
+  it("gives a spent handshake no re-claim, so the dialog asks for a new one", async () => {
+    landOn(`#type=link&nonce=${NONCE}`);
+    completeConnect.mockResolvedValue({
+      phase: "EXPIRED",
+      authorizeUrl: null,
+      secondsRemaining: null,
+      teamId: null,
+    });
+
+    renderFlow();
+
+    await waitFor(() => expect(lastOutcome()?.state).toBe("expired"));
+    expect(lastOutcome()?.reclaim).toBeUndefined();
   });
 });

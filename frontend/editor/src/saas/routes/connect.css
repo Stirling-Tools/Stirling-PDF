@@ -8,11 +8,13 @@
   text-align: left;
 }
 
-.saas-connect__title {
-  margin: 0;
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: var(--c-text);
+/* The shared stepped header draws its own heading, so the page no longer has one
+   of its own (.saas-connect__title is gone with it). */
+
+.saas-connect__waiting {
+  display: flex;
+  justify-content: center;
+  padding: 1.5rem 0;
 }
 
 .saas-connect__lead {

@@ -12,6 +12,7 @@ import { useNavigate } from "react-router-dom";
 import { useView, type ViewId } from "@portal/contexts/ViewContext";
 import { useUI } from "@portal/contexts/UIContext";
 import { LinkAccountFooterItem } from "@portal/components/LinkAccountFooterItem";
+import { useConnectGate } from "@portal/hooks/useConnectGate";
 import { EDITOR_URL, EDITOR_IS_SAME_APP } from "@portal/auth/editorUrl";
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 import { takeEditorReturnPath } from "@app/services/workbenchSession";
@@ -49,6 +50,7 @@ export function Sidebar() {
   const { displayName, profilePictureUrl } = useAccountIdentity();
   const credits = useFreeCreditsSummary();
   const openPlan = useOpenPlan();
+  const { gated, connect } = useConnectGate();
 
   // Collapse is a desktop-only affordance: on mobile the sidebar is an
   // off-canvas drawer, so the icon-rail state never applies there.
@@ -81,6 +83,10 @@ export function Sidebar() {
             closeMobileNav();
             if (entry.externalUrl) {
               window.open(entry.externalUrl, "_blank", "noopener,noreferrer");
+            } else if (entry.requiresLink && gated) {
+              // Ask where they are. Navigating first would land them on a page with nothing on
+              // it, and dismissing the dialog would leave them stranded there.
+              connect();
             } else {
               setActiveView(id as ViewId);
             }

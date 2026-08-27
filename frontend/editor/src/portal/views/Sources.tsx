@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useSearchParams } from "react-router-dom";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
@@ -10,11 +10,13 @@ import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
 import { KpiStrip } from "@portal/components/sources/KpiStrip";
 import { SourcesTable } from "@portal/components/sources/SourcesTable";
 import { SourceModal } from "@portal/components/sources/SourceModal";
+import { useConnectGate } from "@portal/hooks/useConnectGate";
 import "@portal/views/Sources.css";
 
 export function Sources() {
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { guard, gated, connect } = useConnectGate();
 
   const state = useSources();
   const { data, loading } = state;
@@ -27,13 +29,23 @@ export function Sources() {
     sourceId: string | null;
   }>({ open: false, sourceId: null });
 
+  // Held in a ref so the effect below does not re-run on its identity. The effect writes back to
+  // the URL, so a callback that changes each render would loop: strip the param, re-render, run
+  // again.
+  const connectRef = useRef(connect);
+  connectRef.current = connect;
+
+  // Deep link into the create flow. It sets the modal directly, so it needs the gate in its own
+  // right: guarding openCreate would leave ?new=1 as a way past it (the Documents review queue and
+  // the pipelines empty state both arrive here that way).
   useEffect(() => {
     if (searchParams.get("new") !== "1") return;
-    setModal({ open: true, sourceId: null });
+    if (gated) connectRef.current();
+    else setModal({ open: true, sourceId: null });
     const next = new URLSearchParams(searchParams);
     next.delete("new");
     setSearchParams(next, { replace: true });
-  }, [searchParams, setSearchParams]);
+  }, [searchParams, setSearchParams, gated]);
 
   const sources = data?.sources ?? [];
 
@@ -42,9 +54,11 @@ export function Sources() {
   const configuredCount = sources.filter((s) => s.type !== "editor").length;
   const showKpis = isLoading || configuredCount > 0;
 
-  const openCreate = () => setModal({ open: true, sourceId: null });
-  const openSource = (source: SourceView) =>
-    setModal({ open: true, sourceId: source.id });
+  // Connecting a source and editing one both need a linked account.
+  const openCreate = guard(() => setModal({ open: true, sourceId: null }));
+  const openSource = guard((source: SourceView) =>
+    setModal({ open: true, sourceId: source.id }),
+  );
 
   // The Connections tab moved to its own Integrations view.
   if (searchParams.get("tab") === "connections") {

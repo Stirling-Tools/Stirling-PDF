@@ -1,5 +1,7 @@
 import { useTranslation } from "react-i18next";
-import { Banner, Button, Spinner } from "@app/ui";
+import { Banner, Spinner } from "@app/ui";
+import { ConnectDoneSlide } from "@portal/components/account-link/connect/ConnectDoneSlide";
+import "@portal/components/account-link/connect/connect.css";
 
 /** Outcomes of returning from the approval page. */
 export type ConnectCallbackState =
@@ -10,26 +12,57 @@ export type ConnectCallbackState =
   | "rejected"
   | "malformed";
 
+/** A finished round trip to Stirling, as the dialog needs to render it. */
+export interface ConnectOutcome {
+  state: ConnectCallbackState;
+  /** True once the SaaS session landed, regardless of how the link itself went. */
+  sessionRestored: boolean;
+  /**
+   * Claims the same handshake again, when it is still open (the approval landed but the claim did
+   * not). Absent when the handshake is spent, where the only way on is a new one: a leader had to
+   * approve this server by hand, so re-claiming beats spending that approval again.
+   */
+  reclaim?: () => void;
+}
+
+/**
+ * Whether the handshake can be picked back up, which decides what the dialog's footer offers.
+ *
+ * <p>Everything except a malformed response is worth another go: the row is still on the instance,
+ * so the admin's next attempt is a fresh handshake rather than a lost cause.
+ */
+export function isRetryableOutcome(state: ConnectCallbackState): boolean {
+  return state !== "linked" && state !== "malformed";
+}
+
 export interface ConnectCallbackViewProps {
   state: ConnectCallbackState;
   /** True once the SaaS session landed, regardless of how the link itself went. */
   sessionRestored: boolean;
-  onRetry: () => void;
+  /** Closes the dialog before a next step navigates, so it doesn't land behind the overlay. */
   onDone: () => void;
 }
 
-/** Presentation for the account-link callback. */
+/**
+ * Step 3's body: what the round trip to Stirling came back with.
+ *
+ * <p>Five states in one step, on purpose. A failed link is still step 3 of the flow the admin
+ * started, and saying so keeps them oriented; dropping them into a separate error dialog would
+ * discard the progress bar that is the only thing explaining where they are.
+ *
+ * <p>Renders no actions of its own. The dialog's footer owns them, so Back/Continue sit where they
+ * do on steps 1 and 2 rather than moving into the body for the last step.
+ */
 export function ConnectCallbackView({
   state,
   sessionRestored,
-  onRetry,
   onDone,
 }: ConnectCallbackViewProps) {
   const { t } = useTranslation();
 
   if (state === "working") {
     return (
-      <div className="portal-connect-callback">
+      <div className="portal-connect-callback portal-connect-callback--working">
         <Spinner size="md" />
         <p>
           {t(
@@ -44,18 +77,15 @@ export function ConnectCallbackView({
   if (state === "linked") {
     return (
       <div className="portal-connect-callback">
-        <Banner
-          tone="success"
-          title={t(
-            "portal.accountLink.connect.callback.linked.title",
-            "Server connected",
-          )}
-        >
+        {/* No success banner: the step title already says Connected, and a green box
+            would be the one coloured card in a flow built from flat rows and plain
+            type. Failures below keep theirs, where the tone is the message. */}
+        <p className="portal-connect__lede">
           {t(
-            "portal.accountLink.connect.callback.linked.body",
-            "This server is connected to your Stirling account.",
+            "portal.accountLink.connect.done.lede",
+            "This server now runs against your Stirling account.",
           )}
-        </Banner>
+        </p>
         {/* The inverse of the failure note below: the link took but the sign-in did
             not, which otherwise only shows up later as "session expired" on a page
             that gives no hint the two are related. */}
@@ -67,14 +97,12 @@ export function ConnectCallbackView({
             )}
           </p>
         )}
-        <Button variant="primary" onClick={onDone}>
-          {t("portal.accountLink.connect.callback.continue", "Continue")}
-        </Button>
+        <ConnectDoneSlide onNavigate={onDone} />
       </div>
     );
   }
 
-  const { tone, title, body, retryable } = failure(state, t);
+  const { tone, title, body } = failure(state, t);
   return (
     <div className="portal-connect-callback">
       <Banner tone={tone} title={title}>
@@ -91,11 +119,6 @@ export function ConnectCallbackView({
           )}
         </p>
       ) : null}
-      <Button variant="primary" onClick={retryable ? onRetry : onDone}>
-        {retryable
-          ? t("portal.accountLink.connect.callback.retry", "Try again")
-          : t("portal.accountLink.connect.callback.continue", "Continue")}
-      </Button>
     </div>
   );
 }
@@ -115,7 +138,6 @@ function failure(state: ConnectCallbackState, t: Translate) {
           "portal.accountLink.connect.callback.expired.body",
           "Connection requests are short lived. Start another one.",
         ),
-        retryable: true,
       };
     case "rejected":
       return {
@@ -128,7 +150,6 @@ function failure(state: ConnectCallbackState, t: Translate) {
           "portal.accountLink.connect.callback.rejected.body",
           "This request was declined or has already been used. Start another one if that was not intended.",
         ),
-        retryable: true,
       };
     case "malformed":
       return {
@@ -141,7 +162,6 @@ function failure(state: ConnectCallbackState, t: Translate) {
           "portal.accountLink.connect.callback.malformed.body",
           "This page was opened without a valid connection response. Start the connection from settings.",
         ),
-        retryable: false,
       };
     default:
       return {
@@ -156,7 +176,6 @@ function failure(state: ConnectCallbackState, t: Translate) {
           "portal.accountLink.connect.callback.unfinished.body",
           "Stirling did not confirm the connection. This is usually temporary.",
         ),
-        retryable: true,
       };
   }
 }

@@ -1,39 +1,86 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
 
-const linkState = { isLinked: false };
+/**
+ * Usage is a page about an account this instance may not have, so it must not render while
+ * unconnected. It used to, which was two bugs: dismissing the dialog stranded the admin on a page
+ * with nothing on it, and the page reports `linked` as a fact from a wallet read, so a browser
+ * holding a SaaS session with no link to this server flipped the whole portal to linked.
+ */
+const gate = { gated: false, loading: false, available: true };
+const connect = vi.fn();
+const applyLinkFacts = vi.fn();
+
+vi.mock("@portal/hooks/useConnectGate", () => ({
+  useConnectGate: () => ({ ...gate, connect, guard: (f: unknown) => f }),
+}));
 vi.mock("@portal/contexts/LinkContext", () => ({
-  useLink: () => linkState,
-  useApplyLinkFacts: () => vi.fn(),
+  useApplyLinkFacts: () => applyLinkFacts,
 }));
 vi.mock("@portal/contexts/UIContext", () => ({
   useUI: () => ({ openLinkModal: vi.fn() }),
 }));
-vi.mock("@portal/components/billing/LinkAccountPrompt", () => ({
-  LinkAccountPrompt: () => <div data-testid="link-prompt" />,
-}));
 vi.mock("@portal/views/Usage", () => ({
-  Usage: () => <div data-testid="usage" />,
+  Usage: ({ onWalletLoaded }: { onWalletLoaded?: (w: unknown) => void }) => {
+    // Stands in for the page's own wallet read landing.
+    onWalletLoaded?.({ status: "free" });
+    return <div data-testid="usage" />;
+  },
 }));
 
 import { PortalBillingGate } from "@portal/components/billing/PortalBillingGate";
 
+const renderGate = () =>
+  render(
+    <MemoryRouter initialEntries={["/processor/usage"]}>
+      <Routes>
+        <Route path="/processor/usage" element={<PortalBillingGate />} />
+        <Route path="/processor" element={<div data-testid="home" />} />
+      </Routes>
+    </MemoryRouter>,
+  );
+
 describe("PortalBillingGate — self-hosted", () => {
   beforeEach(() => {
-    linkState.isLinked = false;
+    connect.mockReset();
+    applyLinkFacts.mockReset();
+    gate.gated = false;
+    gate.loading = false;
   });
 
-  it("shows the link prompt when unlinked (billing gated on link)", () => {
-    linkState.isLinked = false;
-    render(<PortalBillingGate />);
-    expect(screen.getByTestId("link-prompt")).toBeInTheDocument();
-    expect(screen.queryByTestId("usage")).not.toBeInTheDocument();
+  it("asks for the connection when reached unconnected", () => {
+    gate.gated = true;
+    renderGate();
+    expect(connect).toHaveBeenCalledTimes(1);
   });
 
-  it("renders the Usage page once linked", () => {
-    linkState.isLinked = true;
-    render(<PortalBillingGate />);
+  it("sends them back rather than onto a page about an account they lack", () => {
+    gate.gated = true;
+    renderGate();
+    expect(screen.queryByTestId("usage")).toBeNull();
+    expect(screen.getByTestId("home")).toBeInTheDocument();
+  });
+
+  it("never reports the instance as linked while it is not", () => {
+    gate.gated = true;
+    renderGate();
+    // The page is what calls this, off its own wallet read. Not rendering it is what stops the
+    // claim: a live SaaS session in the browser says nothing about this server being linked.
+    expect(applyLinkFacts).not.toHaveBeenCalled();
+  });
+
+  it("holds while the capability is still unknown, rather than bouncing", () => {
+    gate.loading = true;
+    renderGate();
+    expect(screen.queryByTestId("usage")).toBeNull();
+    expect(screen.queryByTestId("home")).toBeNull();
+  });
+
+  it("renders the page once connected", () => {
+    renderGate();
+    expect(connect).not.toHaveBeenCalled();
     expect(screen.getByTestId("usage")).toBeInTheDocument();
-    expect(screen.queryByTestId("link-prompt")).not.toBeInTheDocument();
+    expect(applyLinkFacts).toHaveBeenCalledWith(true, false);
   });
 });
