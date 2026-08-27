@@ -115,7 +115,7 @@ export default function RightSidebar() {
 
   const computedWidth = () => {
     if (isMobile) return "100%";
-    if (!isPanelVisible) return "3.5rem";
+    if (!isPanelVisible) return "var(--nav-rail-w)";
     return expandedWidth;
   };
 
@@ -181,7 +181,8 @@ export default function RightSidebar() {
                 content={tool.name}
                 position="left"
                 arrow
-                delay={300}
+                // No delay: collapsed to icons, the tooltip is the only label.
+                delay={0}
               >
                 <ActionIcon
                   aria-label={tool.name}
@@ -206,7 +207,7 @@ export default function RightSidebar() {
           /* Fixed width matches the expanded panel width so the inner content is
              laid out at its final size from the moment it mounts. The outer
              .tool-panel clips it (overflow-hidden) while it animates from the
-             collapsed 3.5rem width — text/icons stay put and just come into view
+             collapsed rail width — text/icons stay put and just come into view
              instead of jiggling as space becomes available. */
           style={{
             opacity: 1,
