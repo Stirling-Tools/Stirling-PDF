@@ -56,7 +56,17 @@ export const OpensOnFocus: Story = {
     const trigger = canvas.getByRole("button", { name: /focus me/i });
     await userEvent.tab();
     await expect(trigger).toHaveFocus();
-    await expect(canvas.getByRole("tooltip")).toBeInTheDocument();
-    await expect(trigger).toHaveAttribute("aria-describedby");
+    // Portalled to the body, so it is not inside the canvas element. That is the
+    // point: in the flow it was clipped by the first ancestor hiding overflow.
+    const tip = await within(document.body).findByRole("tooltip");
+    await expect(tip.parentElement).toBe(document.body);
+    await expect(trigger).toHaveAttribute("aria-describedby", tip.id);
+
+    // Placed inside the viewport rather than hanging off an edge.
+    const box = tip.getBoundingClientRect();
+    await expect(box.left).toBeGreaterThanOrEqual(0);
+    await expect(box.top).toBeGreaterThanOrEqual(0);
+    await expect(box.right).toBeLessThanOrEqual(window.innerWidth);
+    await expect(box.bottom).toBeLessThanOrEqual(window.innerHeight);
   },
 };

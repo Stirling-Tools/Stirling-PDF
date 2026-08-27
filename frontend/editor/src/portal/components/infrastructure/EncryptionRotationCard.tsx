@@ -36,7 +36,7 @@ export function EncryptionRotationCard({
       <Card padding="loose">
         <SectionHeader
           title={t("portal.infrastructure.encryption.rotation.heading")}
-          hint={t("portal.infrastructure.encryption.rotation.subheading")}
+          hint={t("portal.infrastructure.encryption.rotation.hint")}
           hintLabel={t("portal.infrastructure.encryption.hintLabel")}
         />
 
@@ -88,10 +88,6 @@ export function EncryptionRotationCard({
         {actionError ? (
           <Banner tone="warning" description={actionError} />
         ) : null}
-
-        <p className="portal-enc__note">
-          {t("portal.infrastructure.encryption.rotation.keyNeverOverHttp")}
-        </p>
 
         <div className="portal-enc__actions">
           <Button

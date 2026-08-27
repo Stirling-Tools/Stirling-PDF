@@ -27,6 +27,7 @@ import {
   type MigrationStatus,
   type StorageEncryptionStatus,
 } from "@portal/api/storageEncryption";
+import { InfoHint } from "@portal/components/InfoHint";
 import { SectionHeader } from "@portal/components/infrastructure/SectionHeader";
 import { EncryptionKeyTable } from "@portal/components/infrastructure/EncryptionKeyTable";
 import { EncryptionMigrationCard } from "@portal/components/infrastructure/EncryptionMigrationCard";
@@ -382,6 +383,14 @@ export function EncryptionPanel({
                       <code ref={fingerprintRef}>
                         {status.masterKeyFingerprint}
                       </code>
+                      <InfoHint
+                        content={t(
+                          "portal.infrastructure.encryption.masterKey.compareNote",
+                        )}
+                        label={t(
+                          "portal.infrastructure.encryption.masterKey.fingerprintHelp",
+                        )}
+                      />
                       <Button
                         variant="quiet"
                         size="sm"
@@ -430,12 +439,6 @@ export function EncryptionPanel({
                       )}
                     </p>
                   ) : null}
-                  {/* Only meaningful next to an actual fingerprint. */}
-                  <p className="portal-enc__note">
-                    {t(
-                      "portal.infrastructure.encryption.masterKey.compareNote",
-                    )}
-                  </p>
                 </>
               ) : (
                 <p className="portal-enc__note">

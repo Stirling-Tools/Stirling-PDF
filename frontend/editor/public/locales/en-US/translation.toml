@@ -7820,6 +7820,7 @@ copied = "Copied"
 copy = "Copy"
 copyFailed = "This browser would not allow copying. The fingerprint is selected, so copy it manually."
 fingerprint = "Fingerprint"
+fingerprintHelp = "What is this fingerprint for?"
 heading = "Master key"
 notMaterialised = "The key machinery has not started on this node yet."
 s3StreamingNote = "While anything is encrypted, object-store downloads are streamed through this server rather than redirected, so they use its bandwidth."
@@ -7874,13 +7875,12 @@ uploadsContinue = "New uploads keep working. They get a fresh key, so they stay 
 [portal.infrastructure.encryption.rotation]
 currentVersion = "Current version"
 heading = "Master key rotation"
-keyNeverOverHttp = "A new key is set in configuration and applied on restart. This button only re-wraps the key table."
+hint = "Re-wraps scope keys under a new master key; file contents are never rewritten. The new key is set in configuration and applied on restart, so this button only performs the re-wrap."
 pendingRows = "Rows on an older version"
 rewrap = "Re-wrap keys"
 rewrapped_one = "{{count}} key row re-wrapped."
 rewrapped_other = "{{count}} key rows re-wrapped."
 runbook = "Rotation runbook"
-subheading = "Re-wraps scope keys under a new master key. File contents are never rewritten."
 
 [portal.infrastructure.encryption.rotation.confirm]
 cancel = "Cancel"

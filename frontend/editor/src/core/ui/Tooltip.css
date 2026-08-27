@@ -4,52 +4,35 @@
   align-items: center;
 }
 
+/* Matches the editor tooltip (components/shared/tooltip/Tooltip.module.css):
+   same surface, radius, type scale and soft two-layer shadow, so the product
+   has one tooltip look rather than two. Fixed and portalled to the body,
+   because a tooltip in the flow is clipped by the first ancestor that hides
+   its overflow. */
 .sui-tip__bubble {
-  position: absolute;
+  position: fixed;
   z-index: 1300;
   width: max-content;
-  max-width: 18rem;
-  padding: 0.5rem 0.625rem;
-  border: 1px solid var(--c-border-strong);
-  border-radius: var(--radius-sm);
-  background: var(--c-surface-raised);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  max-width: min(22rem, calc(100vw - 2rem));
+  padding: 0.625rem 0.75rem;
+  border: 0.0625rem solid var(--c-border);
+  border-radius: 0.75rem;
+  background-color: var(--c-surface-raised);
+  box-shadow:
+    0 0.625rem 0.9375rem -0.1875rem rgba(0, 0, 0, 0.1),
+    0 0.25rem 0.375rem -0.125rem rgba(0, 0, 0, 0.05);
   color: var(--c-text);
   font-family: var(--font-sans);
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   font-weight: 400;
-  line-height: 1.4;
+  line-height: 1.5;
   text-align: left;
   white-space: normal;
   pointer-events: none;
   /* The trigger often sits inside styled text (an uppercased stat label, a
-     heading), and the bubble is a child of it. Reset what would otherwise be
-     inherited so the explanation always reads as prose. */
+     heading). The bubble is portalled out, but reset anyway so it always reads
+     as prose regardless of where it is mounted. */
   text-transform: none;
   letter-spacing: normal;
   font-style: normal;
-}
-
-.sui-tip__bubble--top {
-  bottom: calc(100% + 0.375rem);
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.sui-tip__bubble--bottom {
-  top: calc(100% + 0.375rem);
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.sui-tip__bubble--left {
-  right: calc(100% + 0.375rem);
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-.sui-tip__bubble--right {
-  left: calc(100% + 0.375rem);
-  top: 50%;
-  transform: translateY(-50%);
 }
