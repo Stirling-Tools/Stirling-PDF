@@ -60,7 +60,11 @@ function fixture(filename: string): string {
 }
 
 async function openSamplePdfInViewer(page: import("@playwright/test").Page) {
-  await page.goto("/read");
+  // Not /read: that opens the document in reading mode, which collapses the
+  // workbench bar these sidebars are toggled from. This spec is about the
+  // sidebars, so it wants the viewer with its chrome - which is where a single
+  // opened file lands anyway.
+  await page.goto("/");
   await page.waitForLoadState("domcontentloaded");
   await page
     .locator('[data-testid="file-input"]')

@@ -73,8 +73,9 @@ test.describe("Workbench survives the editor/processor switch", () => {
       page.getByRole("radio", { name: /Active Files/i }),
     ).toBeChecked();
 
-    // Out through the sidebar footer switch - the real user path.
-    await page.getByRole("button", { name: "Open PDF Processor" }).click();
+    // Out through the quick nav rail's processor mark - the real user path, and
+    // the only chrome that offers the switch now.
+    await page.getByRole("button", { name: /^Processor$/i }).click();
     await expect(page).toHaveURL(/\/processor/, { timeout: 15000 });
 
     // Split the two halves of the feature: if this fails the writer is at fault,
