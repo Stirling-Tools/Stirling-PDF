@@ -18,6 +18,12 @@ export interface NavEntry {
   icon: ReactNode;
   /** When set, the tab opens this URL in a new tab instead of navigating in-app. */
   externalUrl?: string;
+  /**
+   * The whole tab needs a linked Stirling account, so an unlinked instance is asked for one
+   * instead of being navigated. Unlike the create/edit guards, which let you look around, there
+   * is nothing to look at here: usage and billing are facts about the linked account.
+   */
+  requiresLink?: boolean;
 }
 
 export interface NavGroup {
@@ -43,6 +49,6 @@ export const GROUP_PLATFORM: NavEntry[] = [
   { id: "users", icon: <UsersIcon /> },
   { id: "integrations", icon: <IntegrationsIcon /> },
   { id: "infrastructure", icon: <InfrastructureIcon /> },
-  { id: "usage", icon: <UsageIcon /> },
+  { id: "usage", icon: <UsageIcon />, requiresLink: true },
   { id: "docs", icon: <DocsIcon /> },
 ];

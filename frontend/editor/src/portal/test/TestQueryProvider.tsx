@@ -1,6 +1,8 @@
 import { useState, type ReactNode } from "react";
 import { MantineProvider } from "@mantine/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { LinkProvider, type LinkState } from "@portal/contexts/LinkContext";
+import { UIProvider } from "@portal/contexts/UIContext";
 
 /**
  * Wraps a portal component under test in a fresh QueryClient (retries off for
@@ -25,5 +27,28 @@ export function PortalTestProviders({ children }: { children: ReactNode }) {
     <TestQueryProvider>
       <MantineProvider>{children}</MantineProvider>
     </TestQueryProvider>
+  );
+}
+
+/**
+ * Everything a whole view needs: {@link PortalTestProviders} plus the link and UI contexts.
+ *
+ * Views that create or edit gated features read the connect gate, which asks both whether the
+ * instance is linked (LinkContext) and how to open the Connect flow (UIContext). Defaults to
+ * unlinked, matching the app's own default.
+ */
+export function PortalViewProviders({
+  children,
+  linkState = "unlinked",
+}: {
+  children: ReactNode;
+  linkState?: LinkState;
+}) {
+  return (
+    <PortalTestProviders>
+      <LinkProvider initialState={linkState}>
+        <UIProvider>{children}</UIProvider>
+      </LinkProvider>
+    </PortalTestProviders>
   );
 }

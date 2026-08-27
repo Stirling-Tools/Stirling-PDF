@@ -90,6 +90,17 @@ export function useLink(): LinkContextValue {
 }
 
 /**
+ * As {@link useLink}, but null rather than throwing when there is no provider.
+ *
+ * <p>For code shared with a build that has no link concept. The SaaS portal mounts no
+ * {@link LinkProvider} on purpose, so anything reachable from shared chrome cannot demand one:
+ * absent means "linking does not apply here", which is a real answer and not a mistake.
+ */
+export function useLinkOptional(): LinkContextValue | null {
+  return useContext(LinkContext);
+}
+
+/**
  * Derives the linked state from raw facts: whether the org has linked its SaaS
  * account and whether it carries a live subscription. Keeps the unlinked /
  * linked-free / linked-subscribed mapping in one place.

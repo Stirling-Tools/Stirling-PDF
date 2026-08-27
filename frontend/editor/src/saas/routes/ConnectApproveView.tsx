@@ -1,8 +1,60 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useTranslation } from "@app/hooks/useTranslation";
 import { Banner, Button, Checkbox, Spinner } from "@app/ui";
 import { LocalIcon } from "@app/components/shared/LocalIcon";
 import { Tooltip } from "@app/components/shared/Tooltip";
+import { StepModalHeader } from "@portal/components/shared/StepModalHeader";
+
+/**
+ * Step 2 of the connect flow, which is the middle of a task that started somewhere else.
+ *
+ * <p>The self-hosted dialog counts three steps and hands the browser over on step 2, so for a first
+ * link this page is that step: the same wordmark, the same badge, the same progress bar. Without it
+ * the admin is sent off by one product and asked to make a security decision by what looks like
+ * another, which is the moment they most need to believe the two are the same thing.
+ *
+ * <p>Re-auth is not counted, because on the instance side it is not a three-step flow. It still
+ * wears the first link's copy and its consent checkbox, which is wrong — nothing is being consented
+ * to that the team has not already agreed — and is the subject of its own change.
+ */
+const TOTAL_STEPS = 3;
+
+function ApproveShell({
+  title,
+  stepped,
+  children,
+}: {
+  title: string;
+  /**
+   * Count the steps only for a first link. Re-auth is a single step on the instance side, with no
+   * progress bar and no badge, so claiming "step 2 of 3" here would describe a flow the admin is
+   * not in.
+   */
+  stepped: boolean;
+  children: ReactNode;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div className="saas-connect">
+      {/* No onClose: this is a page, so there is nowhere to close back to. */}
+      <StepModalHeader
+        brand
+        title={title}
+        step={stepped ? 2 : undefined}
+        total={stepped ? TOTAL_STEPS : undefined}
+        stepLabel={
+          stepped
+            ? t("connect.step", "Step {{current}} of {{total}}", {
+                current: 2,
+                total: TOTAL_STEPS,
+              })
+            : undefined
+        }
+      />
+      {children}
+    </div>
+  );
+}
 
 export type ApprovePhase =
   | "loading"
@@ -16,6 +68,12 @@ export interface PendingConnect {
   requestId: string;
   callbackOrigin: string;
   insecureTransport: boolean;
+  /**
+   * LINK binds this server to a team for the first time; REAUTH only re-establishes a browser
+   * session for a server the team already owns, and cannot rebind it — the team is pinned from the
+   * device credential when the request is made.
+   */
+  mode?: "LINK" | "REAUTH";
 }
 
 export interface ConnectApproveViewProps {
@@ -44,23 +102,33 @@ export function ConnectApproveView({
   // Gates the primary action: anyone can create a request, so the approver reading
   // the address is the only thing between one and a linked team.
   const [acknowledged, setAcknowledged] = useState(false);
+  // Absent on the settled phases, where there is no request to describe. Those keep the count,
+  // since a request that reached them was a first link far more often than not.
+  const stepped = pending?.mode !== "REAUTH";
 
   if (phase === "loading" || phase === "redirecting") {
     return (
-      <div className="saas-connect">
-        <Spinner size="md" />
-        <p className="saas-connect__lead">
-          {phase === "redirecting"
+      <ApproveShell
+        stepped={stepped}
+        title={
+          phase === "redirecting"
             ? t("connect.redirecting", "Returning you to your server.")
-            : t("connect.loading", "Checking this request.")}
-        </p>
-      </div>
+            : t("connect.loading", "Checking this request.")
+        }
+      >
+        <div className="saas-connect__waiting">
+          <Spinner size="md" />
+        </div>
+      </ApproveShell>
     );
   }
 
   if (phase === "notFound") {
     return (
-      <div className="saas-connect">
+      <ApproveShell
+        stepped={stepped}
+        title={t("connect.notFound.title", "Request not valid")}
+      >
         <Banner
           tone="danger"
           title={t("connect.notFound.title", "Request not valid")}
@@ -70,13 +138,16 @@ export function ConnectApproveView({
             "This connection request is not valid. It may have expired, or already been used. Start another one from your server.",
           )}
         </Banner>
-      </div>
+      </ApproveShell>
     );
   }
 
   if (phase === "declined") {
     return (
-      <div className="saas-connect">
+      <ApproveShell
+        stepped={stepped}
+        title={t("connect.declined.title", "Request declined")}
+      >
         <Banner
           tone="warning"
           title={t("connect.declined.title", "Request declined")}
@@ -86,15 +157,15 @@ export function ConnectApproveView({
             "Nothing was connected. You can close this page.",
           )}
         </Banner>
-      </div>
+      </ApproveShell>
     );
   }
 
   return (
-    <div className="saas-connect">
-      <h1 className="saas-connect__title">
-        {t("connect.confirm.title", "Connect this server?")}
-      </h1>
+    <ApproveShell
+      stepped={stepped}
+      title={t("connect.confirm.title", "Connect this server?")}
+    >
       <p className="saas-connect__lead">
         {t(
           "connect.confirm.lead",
@@ -177,6 +248,6 @@ export function ConnectApproveView({
           {t("connect.confirm.approve", "Connect server")}
         </Button>
       </div>
-    </div>
+    </ApproveShell>
   );
 }
