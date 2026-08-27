@@ -25,10 +25,8 @@ import lombok.AccessLevel;
 import lombok.Getter;
 
 /**
- * The registry of failure kinds, described as data: a stable id, i18n keys and an English fallback
- * like {@code ExceptionUtils.ErrorCode}, plus the facets a review surface needs.
- *
- * <p>A new kind ships as a registry entry plus copy. Each offer says who it is for and where.
+ * The registry of failure kinds as data: id, i18n keys, English fallback, plus the facets a review
+ * surface needs. A new kind ships as an entry plus copy; each offer says who it is for and where.
  */
 @Getter
 public enum FailureKind {

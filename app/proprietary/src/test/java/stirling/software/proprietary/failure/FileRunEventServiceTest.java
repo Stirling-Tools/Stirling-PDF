@@ -223,6 +223,35 @@ class FileRunEventServiceTest {
                     .extracting(FileRunEvent::status)
                     .isEqualTo(FileRunEventStatus.NEW);
         }
+
+        @Test
+        void aRecurrenceReopensAnIncidentClosedBecauseTheFileWasRemoved() {
+            // A library file comes back under the same id, so without this every repeat folds
+            // into the closed row and the queue never shows the failure again.
+            service.report(new EditorFailureReport("compress", "E001", List.of("f-1"), "boom"));
+            service.forgetFiles(List.of("f-1"));
+            assertThat(service.list(null, null, 10)).isEmpty();
+
+            service.report(new EditorFailureReport("compress", "E001", List.of("f-1"), "boom"));
+
+            assertThat(service.list(null, null, 10))
+                    .singleElement()
+                    .extracting(FileRunEvent::status)
+                    .isEqualTo(FileRunEventStatus.NEW);
+        }
+
+        @Test
+        void aRecurrenceLeavesAReviewersDismissalAlone() {
+            // Dismiss is a decision about the incident, not a claim about the document, so it
+            // outlasts a repeat where FILE_REMOVED and RESOLVED do not.
+            service.report(new EditorFailureReport("compress", "E001", List.of("f-1"), "boom"));
+            FileRunEvent event = service.list(null, null, 10).getFirst();
+            service.dispatch(event.id(), "DISMISS", Map.of());
+
+            service.report(new EditorFailureReport("compress", "E001", List.of("f-1"), "boom"));
+
+            assertThat(service.list(null, null, 10)).isEmpty();
+        }
     }
 
     @Nested

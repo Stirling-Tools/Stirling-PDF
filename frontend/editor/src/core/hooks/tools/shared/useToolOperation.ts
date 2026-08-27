@@ -138,6 +138,49 @@ export const useToolOperation = <TParams>(
     outputFileIds: FileId[];
   } | null>(null);
 
+  /**
+   * Record a failure and keep what a retry needs. Shared with the batch's per-input failures:
+   * one bad file in twenty is still a failure the user has to be told about.
+   */
+  const reportFailure = useCallback(
+    (
+      error: unknown,
+      fileIds: FileId[],
+      runtimeEndpoint: string | undefined,
+      params: TParams,
+    ) => {
+      if (fileIds.length === 0 || wasCancelled(error)) return;
+
+      void reportToolFailure({
+        operation: config.operationType,
+        error,
+        fileIds,
+      }).then(refreshNotificationsNow);
+
+      // Skipped where nothing could use it: a custom processor's request cannot be replayed
+      // generically, and a build with no bell has nothing to read the stash.
+      if (
+        !runtimeEndpoint ||
+        config.toolType === ToolType.custom ||
+        !notificationsAvailable
+      ) {
+        return;
+      }
+      void errorCodeOf(error).then((errorCode) =>
+        stashRetryPayload({
+          operation: config.operationType,
+          endpoint: runtimeEndpoint,
+          params: params as Record<string, unknown>,
+          fileIds,
+          multiFile: config.toolType === ToolType.multiFile,
+          errorCode,
+          recordedAt: Date.now(),
+        }),
+      );
+    },
+    [config.operationType, config.toolType, notificationsAvailable],
+  );
+
   const executeOperation = useCallback(
     async (params: TParams, selectedFiles: StirlingFile[]): Promise<void> => {
       // Validation
@@ -268,9 +311,20 @@ export const useToolOperation = <TParams>(
             );
             processedFiles = result.outputFiles;
             successSourceIds = result.successSourceIds;
+            // Reported here, not in the catch: this loop only throws when EVERY input failed,
+            // so a batch that lost one file to a bad PDF reaches the success path.
+            for (const failed of result.failedInputs) {
+              reportFailure(
+                failed.error,
+                [failed.fileId],
+                runtimeEndpoint,
+                params,
+              );
+            }
             console.debug("[useToolOperation] Multi-file results", {
               outputFiles: processedFiles.length,
               successSources: result.successSourceIds.length,
+              failedInputs: result.failedInputs.length,
             });
             break;
           }
@@ -633,35 +687,13 @@ export const useToolOperation = <TParams>(
           void _e;
         }
 
-        // Report it so a leader sees the failure too, then carry on with the user's
-        // own error handling. Fire-and-forget: the reporter swallows its own errors.
-        // Chained, not fired alongside: the re-read must happen after the row exists.
-        void reportToolFailure({
-          operation: config.operationType,
+        // The whole run failed, so every input is a casualty.
+        reportFailure(
           error,
-          fileIds: validFiles.map((file) => file.fileId),
-        }).then(refreshNotificationsNow);
-
-        // Keep what a retry needs: the report carries none of it. Skipped where nothing
-        // could use it, and gated on the reporter's own cancellation test.
-        if (
-          !wasCancelled(error) &&
-          runtimeEndpoint &&
-          config.toolType !== ToolType.custom &&
-          notificationsAvailable
-        ) {
-          void errorCodeOf(error).then((errorCode) =>
-            stashRetryPayload({
-              operation: config.operationType,
-              endpoint: runtimeEndpoint,
-              params: params as Record<string, unknown>,
-              fileIds: validFiles.map((file) => file.fileId),
-              multiFile: config.toolType === ToolType.multiFile,
-              errorCode,
-              recordedAt: Date.now(),
-            }),
-          );
-        }
+          validFiles.map((file) => file.fileId),
+          runtimeEndpoint,
+          params,
+        );
 
         const errorMessage =
           config.getErrorMessage?.(error) || extractErrorMessage(error);
@@ -689,6 +721,7 @@ export const useToolOperation = <TParams>(
       checkCredits,
       continueResolutions,
       notificationsAvailable,
+      reportFailure,
     ],
   );
 

@@ -11,9 +11,8 @@ public enum FileRunEventStatus {
     RESOLVED(true),
 
     /**
-     * The document this incident was about was deleted from its owner's editor, so there is nothing
-     * left to act on. Distinct from {@code DISMISSED}, which is a reviewer's decision, and from
-     * {@code RESOLVED}, which reopens on recurrence: this one cannot recur, the file is gone.
+     * The document was deleted, so there is nothing left to act on. A recurrence reopens it like
+     * {@code RESOLVED}: a fresh failure is proof the document is back.
      */
     FILE_REMOVED(true);
 

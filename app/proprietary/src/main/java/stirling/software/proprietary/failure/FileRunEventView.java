@@ -61,8 +61,8 @@ public record FileRunEventView(
     }
 
     /**
-     * {@code defaultLabel} and {@code execution} let a client render and route an action it was
-     * never built with. {@code slot} is placement intent; see {@link FailureActionSlot}.
+     * {@code defaultLabel} and {@code execution} let a client render an action it was never built
+     * with; {@code slot} is placement intent. See {@link FailureActionSlot}.
      */
     public record ActionView(
             String id,

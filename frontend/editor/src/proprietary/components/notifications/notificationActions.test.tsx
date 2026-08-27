@@ -637,33 +637,8 @@ describe("useNotificationActions", () => {
     expect(navigate).toHaveBeenCalledWith("/processor/documents#failures");
   });
 
-  it("opens a new tab rather than costing the reader a loaded workbench", () => {
-    // Navigating away would unload their files, costing them every upload again.
+  it("navigates in place even with a loaded workbench, never opening a tab", () => {
     openFileIds = ["f-1"];
-    const openTab = vi.spyOn(window, "open").mockReturnValue({} as Window);
-
-    registry().VIEW_IN_PROCESSOR?.run(context());
-
-    expect(openTab).toHaveBeenCalledWith(
-      "/processor/documents#failures",
-      "_blank",
-      "noopener",
-    );
-    expect(navigate).not.toHaveBeenCalled();
-    openTab.mockRestore();
-  });
-
-  it("navigates in place when the tab would be refused", () => {
-    openFileIds = ["f-1"];
-    const openTab = vi.spyOn(window, "open").mockReturnValue(null);
-
-    registry().VIEW_IN_PROCESSOR?.run(context());
-
-    expect(navigate).toHaveBeenCalledWith("/processor/documents#failures");
-    openTab.mockRestore();
-  });
-
-  it("navigates in place from an empty workbench, which costs the reader nothing", () => {
     const openTab = vi.spyOn(window, "open");
 
     registry().VIEW_IN_PROCESSOR?.run(context());
@@ -673,7 +648,7 @@ describe("useNotificationActions", () => {
     openTab.mockRestore();
   });
 
-  it("navigates in place from the processor, which has no workbench to lose", () => {
+  it("navigates in place from the processor too", () => {
     const openTab = vi.spyOn(window, "open");
 
     registry(inProcessor).VIEW_IN_PROCESSOR?.run(context());

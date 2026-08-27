@@ -20,8 +20,8 @@ import lombok.RequiredArgsConstructor;
 import stirling.software.proprietary.failure.FailureActionException;
 
 /**
- * Open to any authenticated user, unlike the failure endpoints it draws on: each source scopes its
- * own rows. Every action runs on the client's own device, so the only write is it reporting a fix.
+ * Open to any authenticated user: each source scopes its own rows. Every action runs on the
+ * client's own device, so the only write is it reporting a fix.
  */
 @RestController
 @RequestMapping("/api/v1/notifications")

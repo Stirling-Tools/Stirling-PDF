@@ -97,11 +97,6 @@ function takeSelection(): Handoff | null {
   }
 }
 
-/** False when the browser refused it, so the caller can fall back to navigating in place. */
-function openInNewTab(path: string): boolean {
-  return window.open(withBasePath(path), "_blank", "noopener") !== null;
-}
-
 /** Not the router's `navigate`: the editor reads its tool on mount and on a history pop. */
 function goToEditor(path: string): void {
   window.history.pushState({}, "", withBasePath(path));
@@ -458,14 +453,7 @@ export function useNotificationActions(): ClientActionRegistry {
       // Dev-only until failures get a review screen; portal/views/Documents holds the other half.
       available: () => import.meta.env.DEV,
       closesPanel: true,
-      run: () => {
-        // Leaving would cost them a loaded workbench, and every file in it a re-upload.
-        const holdsFiles = (fileStore?.getState().files.ids.length ?? 0) > 0;
-        if (canOpenHere && holdsFiles && openInNewTab(FAILURES_DESTINATION)) {
-          return;
-        }
-        navigate(FAILURES_DESTINATION);
-      },
+      run: () => navigate(FAILURES_DESTINATION),
     };
 
     return {

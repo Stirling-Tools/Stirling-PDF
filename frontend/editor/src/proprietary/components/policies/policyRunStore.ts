@@ -215,20 +215,34 @@ export function isDispatched(categoryId: string, fileId: string): boolean {
   return state.dispatched.includes(dispatchKey(categoryId, fileId));
 }
 
-/** Walked back through this document's lineage. Only a COMPLETED run counts as applied. */
+/** True when the browser's own pass ran for this file and could not produce a verdict. */
+export function localPassFailed(categoryId: string, fileId: string): boolean {
+  return state.runs.some(
+    (run) =>
+      run.browserLocal === true &&
+      run.status === "FAILED" &&
+      run.categoryId === categoryId &&
+      run.fileId === fileId,
+  );
+}
+
+/** Walked back through this document's lineage. Only a COMPLETED server run counts as applied. */
 export function appliedCategoriesFor(fileId: string): Set<string> {
   const applied = new Set<string>();
-  let cursor = fileId;
+  let cursor: string | null = fileId;
   // A lineage cannot outrun the recorded runs, and the bound also breaks a hand-edited cycle.
   for (let step = 0; step < state.runs.length; step++) {
-    const child = cursor;
-    const producer = state.runs.find(
-      (run) =>
-        run.status === "COMPLETED" && (run.outputFileIds ?? []).includes(child),
-    );
-    if (!producer) break;
-    applied.add(producer.categoryId);
-    cursor = producer.fileId;
+    if (cursor === null) break;
+    const child: string = cursor;
+    cursor = null;
+    for (const run of state.runs) {
+      // A local first pass is not the policy's run: counting it would skip the escalation.
+      if (run.status !== "COMPLETED" || run.browserLocal) continue;
+      if (!(run.outputFileIds ?? []).includes(child)) continue;
+      applied.add(run.categoryId);
+      // An annotating run names its input as its own output, so it adds no lineage step.
+      if (run.fileId !== child) cursor = run.fileId;
+    }
   }
   return applied;
 }

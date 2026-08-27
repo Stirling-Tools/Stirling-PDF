@@ -56,18 +56,17 @@ export function orderRewritesFirst(categoryIds: string[]): string[] {
 const TRUSTED_CONFIDENCE: ClassificationConfidence = "high";
 
 /**
- * Whether the AI classifier should be asked about this file. For an upload, only once the
- * heuristic has reported: dispatching before then races the first pass and bills for an answer it
- * was about to produce. A tool-derived file gets no local pass (useClientSideClassification skips
- * it) and only ever carries an inherited verdict, so an absent verdict there is permanent -
- * escalate rather than wait for a report that will never come.
+ * Whether to ask the AI classifier. An upload waits for the local pass, since dispatching races it
+ * and bills for a free answer; a derived file or a failed pass waits forever, so both escalate.
  */
 export function shouldDispatchToAi(
   categoryId: string,
   stub: StirlingFileStub,
+  localPassFailed = false,
 ): boolean {
   if (!isClassificationCategory(categoryId)) return true;
   const confidence = stub.classificationConfidence;
-  if (confidence == null) return Boolean(stub.derivedFromTool);
+  if (confidence == null)
+    return Boolean(stub.derivedFromTool) || localPassFailed;
   return confidence !== TRUSTED_CONFIDENCE;
 }

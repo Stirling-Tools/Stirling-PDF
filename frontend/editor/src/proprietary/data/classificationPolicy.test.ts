@@ -97,6 +97,18 @@ describe("shouldDispatchToAi", () => {
     expect(shouldDispatchToAi("classification", stub("none"))).toBe(true);
   });
 
+  it("escalates an upload whose local pass threw, rather than waiting forever", () => {
+    // An encrypted document never reports a local verdict, so waiting means the server run
+    // never dispatches, nothing records the failure, and the bell stays empty.
+    expect(shouldDispatchToAi("classification", stub(), true)).toBe(true);
+  });
+
+  it("still lets a confident verdict stand even if an earlier pass had thrown", () => {
+    expect(shouldDispatchToAi("classification", stub("high"), true)).toBe(
+      false,
+    );
+  });
+
   it("escalates a tool-derived file with no verdict at all", () => {
     // A derived file gets no local pass (useClientSideClassification skips it), so
     // there is no verdict to wait for: holding back would skip it forever. This is

@@ -49,6 +49,7 @@ import {
   dispatchKey,
   getRun,
   isDispatched,
+  localPassFailed,
   markDispatched,
   recordRunStart,
   removeRun,
@@ -252,8 +253,17 @@ export function usePolicyAutoRun(): void {
       ) {
         continue;
       }
-      // A confident local verdict stands; only an unsure one is escalated to the engine.
-      if (!shouldDispatchToAi(firstCategory, stub)) continue;
+      // A confident local verdict stands; only an unsure one is escalated to the engine. A pass
+      // that threw counts as unsure: an unreadable file will never report one of its own.
+      if (
+        !shouldDispatchToAi(
+          firstCategory,
+          stub,
+          localPassFailed(firstCategory, stub.id),
+        )
+      ) {
+        continue;
+      }
       dispatching.current.add(key);
       void runPolicyOnFile(firstCategory, backendId, stub.id, stub.name)
         .catch(() => {

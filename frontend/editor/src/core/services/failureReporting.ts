@@ -158,15 +158,8 @@ function messageOf(error: unknown): string {
 }
 
 /**
- * A user cancelling is the one failure worth dropping: nothing went wrong and there
- * is nothing for a reviewer to do. `useToolApiCalls` rethrows an axios cancellation
- * as a plain Error with the original as its cause, so both shapes are checked.
- *
- * <p>Everything else is reported, client-side refusals included: an unsupported input
- * format is the same class of problem as the processor rejecting a file type, which
- * is already recorded.
- *
- * <p>Exported so a run the user cancelled does not get a retry stashed for it.
+ * A user cancelling is the one failure worth dropping. Both shapes are checked, since
+ * `useToolApiCalls` rethrows an axios cancellation as an Error with the original as its cause.
  */
 export function wasCancelled(error: unknown): boolean {
   const candidate = error as {
