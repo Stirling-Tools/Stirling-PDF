@@ -5,7 +5,7 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-/** Persistence for the per-period metered input-set signatures (combined-billing "Mode A"). */
+/** Persistence for the per-period metered input-set signatures (combined billing). */
 public interface MeteredInputSignatureRepository
         extends JpaRepository<MeteredInputSignature, Long> {
 

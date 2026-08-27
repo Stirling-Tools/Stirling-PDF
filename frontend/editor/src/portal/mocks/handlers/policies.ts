@@ -35,7 +35,7 @@ function nextId(categoryId: string): string {
 }
 
 function categoryId(wire: WirePolicy): string {
-  return (wire.output?.options?.categoryId as string | undefined) ?? "";
+  return wire.output?.options?.categoryId ?? "";
 }
 
 export const policiesHandlers = [

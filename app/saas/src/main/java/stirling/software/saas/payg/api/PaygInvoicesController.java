@@ -105,7 +105,7 @@ public class PaygInvoicesController {
         if (rows.isEmpty()) {
             return ResponseEntity.ok(List.of());
         }
-        Long teamId = rows.get(0).getTeam().getId();
+        Long teamId = rows.getFirst().getTeam().getId();
 
         // No PAYG extension row OR no Stripe customer id → team has never subscribed → no
         // invoices. Empty list, not 404 — the UI distinguishes "no invoices yet" from a
