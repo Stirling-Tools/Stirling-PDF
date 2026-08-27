@@ -534,14 +534,10 @@ export default function HomePage() {
         onOpenSettings={() => setConfigModalOpen(true)}
         onOpenTeams={otherApp ? () => navigate("/settings/teams") : undefined}
         requestNavigation={requestNavigation}
-        // Cast at the boundary: ToolId is a per-variant union the shared rail
-        // can't name, and the ids it passes exist in every build.
         readerMode={readerMode}
         onSetReaderMode={setReaderMode}
         onGoToDefaultState={goToDefaultState}
-        onSelectTool={(id) =>
-          handleToolSelect(id as Parameters<typeof handleToolSelect>[0])
-        }
+        onSelectTool={handleToolSelect}
         toolReasons={quickNavToolReasons}
       />
       <FilesPageProvider>

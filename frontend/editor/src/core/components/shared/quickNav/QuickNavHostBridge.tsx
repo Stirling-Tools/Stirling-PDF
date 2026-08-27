@@ -6,6 +6,7 @@ import { useQuickNavToolReasons } from "@app/components/shared/quickNav/useQuick
 import { useNotificationsAvailable } from "@app/components/notifications/useNotificationsAvailable";
 import { useSigningBadgeCount } from "@app/hooks/signing/useSigningBadgeCount";
 import { useRegisterQuickNavHost } from "@app/contexts/QuickNavHostContext";
+import type { ToolId } from "@app/types/toolId";
 
 export interface QuickNavHostBridgeProps {
   /** The processor passes true; being in it is the proof. */
@@ -22,7 +23,7 @@ export interface QuickNavHostBridgeProps {
   /** Returns this app to its default state; the brand mark calls it. */
   onGoToDefaultState?: () => void;
   /** Selects one of this app's tools; omitted by an app with none. */
-  onSelectTool?: (toolId: string) => void;
+  onSelectTool?: (toolId: ToolId) => void;
   /**
    * Extra reasons, translated, keyed by entry id - layered over what this works out
    * itself, for conditions only the app can see. Optional.

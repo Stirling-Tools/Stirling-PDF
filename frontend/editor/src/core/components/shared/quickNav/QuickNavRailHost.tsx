@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { QuickNavRailContainer } from "@app/components/shared/quickNav/QuickNavRailContainer";
 import type { QuickNavEntry } from "@app/components/shared/quickNav/QuickNavRailBase";
+import type { ToolId } from "@app/types/toolId";
 import { useQuickNavHost } from "@app/contexts/QuickNavHostContext";
 import { requestReaderMode } from "@app/utils/pendingReaderMode";
 import {
@@ -38,7 +39,7 @@ export function QuickNavRailHost() {
   };
 
   // Through the owning app where possible: its route only selects on a fresh mount.
-  const openTool = (toolId: string, route: string) => {
+  const openTool = (toolId: ToolId, route: string) => {
     const select = host?.actions.current?.selectTool;
     if (select) select(toolId);
     else go(route);

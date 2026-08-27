@@ -1,3 +1,4 @@
+import type { ToolId } from "@app/types/toolId";
 import {
   createContext,
   useCallback,
@@ -47,7 +48,7 @@ export interface QuickNavHostActions {
    * client-side navigation would set the address and select nothing. Absent in an
    * app with no tools; the rail then navigates, which lands as a fresh mount.
    */
-  selectTool?: (toolId: string) => void;
+  selectTool?: (toolId: ToolId) => void;
   setReaderMode?: (on: boolean) => void;
   /** The panel is rendered by the app, since a row's actions reach the workbench. */
   toggleNotifications?: () => void;
