@@ -107,6 +107,27 @@ Step numbering is fine where it labels a genuinely numbered thing, such as a wiz
 step or a step in a written test procedure. It is narration when it numbers the
 lines of one function.
 
+## Comments at the end of a line
+
+A trailing comment usually does a different job from one above the code: it decodes
+the line it sits on. Those are worth keeping, and the linter leaves them alone.
+
+```java
+byte[] pdfBytes = {0x25, 0x50, 0x44, 0x46};   // "%PDF"
+long maxAttachmentSize = 50L * 1024 * 1024;   // 50 MB
+double buffer = 0.10;                         // 10% headroom
+default -> toBytes(value, 2);                 // MB
+```
+
+Each overlaps in words with the code and each adds the interpretation the code
+leaves implicit, which is the lower-altitude case the test above asks for. So
+`CMT001` does not judge trailing comments; on this codebase it would have been
+wrong about roughly six in seven of them.
+
+What still applies is anything that does not depend on the code below: a trailing
+`// TODO fix this` is as unowned as one on its own line, and a trailing
+`// this used to run before the flush` narrates history wherever it sits.
+
 A comment block over about 12 lines, outside a file or type header, is usually a
 sign the code needs restructuring. If it is genuinely product documentation, it
 belongs in the docs repo.
@@ -190,9 +211,15 @@ Name the rule on the line above:
 // ─── kept deliberately, because <reason> ───
 ```
 
-There is no form that disables every rule. If you reach for this more than
-occasionally the rule is wrong: fix it in `comment-rules.mjs` and update the
-fixture corpus in the same commit, so the diff shows what moved.
+There is no form that disables every rule, and the directive has to earn its
+place. `CMT010` reports one that names something which is not a rule, and one that
+silences nothing, so a typo does not read as a suppression and a stale
+suppression does not sit there blinding the line. The whole comment must be the
+directive; prose that mentions the syntax is just prose.
+
+If you reach for this more than occasionally the rule is wrong: fix it in
+`comment-rules.mjs` and update the fixture corpus in the same commit, so the diff
+shows what moved.
 
 ### The existing backlog
 

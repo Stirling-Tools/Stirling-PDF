@@ -64,15 +64,19 @@ function groupIntoRuns(tokens, lines) {
 
     const kind = token.type === "Line" ? "line" : token.value.startsWith("*") ? "doc" : "block";
     const startLine = entries[0].line;
-    const contiguous = current && startLine === current.endLine + 1 && current.kind === kind;
+    const trailing = entries[0].trailing === true;
+    const contiguous = !trailing && current && startLine === current.endLine + 1 && current.kind === kind && !current.trailing;
 
     if (contiguous) {
       current.lines.push(...entries);
       current.endLine = entries[entries.length - 1].line;
       continue;
     }
-    current = { startLine, endLine: entries[entries.length - 1].line, kind, lines: entries };
+    current = { startLine, endLine: entries[entries.length - 1].line, kind, trailing, lines: entries };
     runs.push(current);
+
+    // Code sits in front of a trailing comment, so nothing can continue it.
+    if (trailing) current = null;
   }
 
   return runs;
@@ -85,11 +89,17 @@ function expand(token, lines) {
   const start = token.loc.start.line;
   const column = token.loc.start.column + 1;
   const before = (lines[start - 1] ?? "").slice(0, token.loc.start.column).trim();
-  if (before.length > 0 && !before.startsWith("{")) return []; // trailing comment
+
+  // Code in front of the comment makes it a trailing note. Marked rather than
+  // dropped, so CMT004 and CMT009 still see it: a TODO is a TODO wherever it
+  // sits. The rules that compare a comment against the code below it stay out,
+  // because a trailing comment usually decodes the line it sits on.
+  const trailing = before.length > 0 && !before.startsWith("{");
 
   if (token.type === "Line") {
-    return [{ line: start, column, body: token.value, range: token.range }];
+    return [{ line: start, column, body: token.value, range: token.range, trailing }];
   }
+  if (trailing) return [];
 
   // token.value is the text between the delimiters, so it begins two chars in.
   let offset = token.range[0] + 2;

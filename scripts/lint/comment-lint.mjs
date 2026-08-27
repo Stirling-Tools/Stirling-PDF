@@ -315,15 +315,16 @@ function readRuns(lines, language) {
   let inBlock = false;
   let docstring = null;
 
-  const push = (index, column, body, kind) => {
+  const push = (index, column, body, kind, trailing = false) => {
     const line = index + 1;
-    if (current && current.endLine === line - 1 && current.kind === kind) {
+    if (!trailing && current && current.endLine === line - 1 && current.kind === kind && !current.trailing) {
       current.lines.push({ line, column, body });
       current.endLine = line;
       return;
     }
-    current = { startLine: line, endLine: line, kind, lines: [{ line, column, body }] };
+    current = { startLine: line, endLine: line, kind, trailing, lines: [{ line, column, body }] };
     runs.push(current);
+    if (trailing) current = null;
   };
 
   for (let i = 0; i < lines.length; i++) {
@@ -358,6 +359,14 @@ function readRuns(lines, language) {
         push(i, column, raw.trim().replace(/^#+/, ""), "line");
         continue;
       }
+      const hashAt = raw.indexOf("#");
+      if (hashAt > 0 && !/["']/.test(raw.slice(0, hashAt))) {
+        const body = raw.slice(hashAt + 1).trim();
+        if (body.length > 0) {
+          push(i, hashAt + 1, body, "line", true);
+          continue;
+        }
+      }
       const quoted = tripleQuoted(trimmed);
       if (quoted) {
         if (quoted.isDoc) push(i, column, stripDocstringDelimiters(raw), "doc");
@@ -376,6 +385,17 @@ function readRuns(lines, language) {
     if (trimmed.startsWith("//")) {
       push(i, column, raw.trim().replace(/^\/\/+/, ""), "line");
       continue;
+    }
+
+    // Code first, then a comment. blankStrings has already neutralised any `//`
+    // inside a string literal, so this index is a real comment marker.
+    const trailingAt = text.indexOf("//");
+    if (trailingAt > 0) {
+      const body = raw.slice(trailingAt + 2).trim();
+      if (body.length > 0) {
+        push(i, trailingAt + 1, body, "line", true);
+        continue;
+      }
     }
     current = null;
   }

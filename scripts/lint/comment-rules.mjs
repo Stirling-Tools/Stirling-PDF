@@ -25,6 +25,7 @@ export const RULES = {
   CMT006: { name: "block-too-long", severity: SEVERITY.ERROR },
   CMT007: { name: "doc-restates-signature", severity: SEVERITY.ERROR },
   CMT009: { name: "unowned-todo", severity: SEVERITY.ERROR },
+  CMT010: { name: "bad-allow", severity: SEVERITY.ERROR },
 };
 
 export const MAX_BLOCK_LINES = 12;
@@ -219,16 +220,64 @@ export function isUnownedTodo(body, runText = body) {
   return TODO_MARKER.test(body) && !HAS_REFERENCE.test(runText);
 }
 
-// `comment-lint-allow: CMT002` silences one rule, on the comment itself or on
-// the line above it. There is deliberately no form that disables every rule.
-const ALLOW = /comment-lint-allow:\s*((?:CMT\d{3})(?:\s*,\s*CMT\d{3})*)/gi;
+// A rule id is silenced by `comment-lint-allow: CMT002`, on the comment itself or
+// on the line above it. There is deliberately no form that disables every rule.
+//
+// The whole comment must be the directive. Matching it anywhere in the text meant
+// prose that merely mentions the syntax silenced a rule, which this file's own
+// paragraph above did.
+const DIRECTIVE = /^comment-lint-allow:\s*(.+?)\s*$/i;
 
-export function allowedRules(text) {
-  const found = new Set();
-  for (const match of text.matchAll(ALLOW)) {
-    for (const id of match[1].split(",")) found.add(id.trim().toUpperCase());
+export function isDirective(body) {
+  return DIRECTIVE.test(body.trim());
+}
+
+// A directive that names nothing real, or that suppresses nothing, is dead
+// configuration: it reads as a silenced rule while silencing nothing, and it
+// blinds the line for whoever inherits it. Reported for the same reason ESLint
+// has --report-unused-disable-directives and ruff has RUF100.
+class Allowance {
+  constructor(directives) {
+    this.entries = [];
+    for (const directive of directives) {
+      for (const token of directiveTokens(directive.body)) {
+        this.entries.push({ token, directive, known: token in RULES, used: false });
+      }
+    }
   }
-  return found;
+
+  // Called only once a rule has decided it would report, so a directive counts
+  // as used when it actually silenced something. Asking before the rule decided
+  // marked every consulted directive as used, which hid the unused ones.
+  suppresses(rule) {
+    let allowed = false;
+    for (const entry of this.entries) {
+      if (entry.token !== rule) continue;
+      entry.used = true;
+      allowed = true;
+    }
+    return allowed;
+  }
+
+  reportUnused(report) {
+    for (const entry of this.entries) {
+      if (entry.used) continue;
+      const detail = entry.known ? `${entry.token} is allowed here but nothing reported it` : `${entry.token} is not a rule`;
+      report("CMT010", entry.directive.line, entry.directive.column, detail, entry.directive.body);
+    }
+  }
+}
+
+// Every token a directive names, valid or not, so an unknown one is reported
+// rather than quietly ignored. Matching only real ids would let `CMT999` through
+// as a silent no-op: it looks like a rule and silences nothing.
+export function directiveTokens(body) {
+  const match = DIRECTIVE.exec(body.trim());
+  if (!match) return [];
+  return match[1]
+    .split(",")
+    .map((token) => token.trim().toUpperCase())
+    .filter(Boolean);
 }
 
 // Generated files carry whatever the generator emits, and editing them to
@@ -314,46 +363,79 @@ export function analyse({ lines, runs, isTestFile = false }) {
   };
 
   for (const run of runs) {
-    const bodies = run.lines.map((l) => l.body);
-    const runText = bodies.join("\n");
-    const allowed = allowedRules(runText + "\n" + precedingLine(lines, run.startLine));
+    // A directive is scaffolding, not content. Leaving it in the run made it two
+    // lines long, and CMT001 only judges a one-line run, so any directive
+    // silenced CMT001 whatever rule it named.
+    const directives = run.lines.filter((l) => isDirective(l.body));
+    const content = run.lines.filter((l) => !isDirective(l.body));
+    const allowed = new Allowance(directives);
 
-    if (!allowed.has("CMT005") && isDeadCodeRun(bodies)) {
-      report("CMT005", run.startLine, run.lines[0].column, `${bodies.length} commented-out lines`, runText);
+    if (content.length === 0) {
+      allowed.reportUnused(report);
+      continue;
+    }
+
+    const bodies = content.map((l) => l.body);
+    const runText = bodies.join("\n");
+    const first = content[0];
+
+    // Only CMT004 and CMT009 judge a trailing comment. The others depend on the
+    // comment introducing the code below it, and a trailing comment sits beside
+    // it: `0x25 // "%PDF"` overlaps in words while adding the decoding, which is
+    // the kind of lower-altitude fact the standard asks for.
+    if (run.trailing) {
+      for (const entry of content) {
+        const body = entry.body.trim();
+        if (body.length === 0) continue;
+        if (isDiffNarration(body) && !allowed.suppresses("CMT004")) {
+          report("CMT004", entry.line, entry.column, truncate(body), body);
+          continue;
+        }
+        if (isUnownedTodo(body, runText) && !allowed.suppresses("CMT009")) {
+          report("CMT009", entry.line, entry.column, truncate(body), body);
+        }
+      }
+      allowed.reportUnused(report);
+      continue;
+    }
+
+    if (isDeadCodeRun(bodies) && !allowed.suppresses("CMT005")) {
+      report("CMT005", run.startLine, first.column, `${bodies.length} commented-out lines`, runText);
+      allowed.reportUnused(report);
       continue; // Every other rule would pile onto the same block of dead code.
     }
 
     // A doc block is exempt: the standard asks for thorough contracts, so capping
     // their length would argue with itself. This judges runs of implementation
     // comment, where an essay means the code needs restructuring.
-    const essay = run.kind !== "doc" && run.lines.length > MAX_BLOCK_LINES && run.startLine > FILE_HEADER_LINES;
-    if (!allowed.has("CMT006") && essay) {
-      report("CMT006", run.startLine, run.lines[0].column, `${run.lines.length} lines, limit ${MAX_BLOCK_LINES}`, runText);
+    const essay = run.kind !== "doc" && content.length > MAX_BLOCK_LINES && run.startLine > FILE_HEADER_LINES;
+    if (essay && !allowed.suppresses("CMT006")) {
+      report("CMT006", run.startLine, first.column, `${content.length} lines, limit ${MAX_BLOCK_LINES}`, runText);
     }
 
     const owner = run.kind === "line" ? "" : nextCodeLine(lines, run);
 
-    for (const entry of run.lines) {
+    for (const entry of content) {
       const body = entry.body.trim();
       if (body.length === 0) continue;
 
-      if (!allowed.has("CMT002") && isBanner(body)) {
+      if (isBanner(body) && !allowed.suppresses("CMT002")) {
         report("CMT002", entry.line, entry.column, truncate(body), body);
         continue;
       }
-      if (!allowed.has("CMT003") && isStepNarration(body)) {
+      if (isStepNarration(body) && !allowed.suppresses("CMT003")) {
         report("CMT003", entry.line, entry.column, truncate(body), body);
         continue;
       }
-      if (!allowed.has("CMT004") && isDiffNarration(body)) {
+      if (isDiffNarration(body) && !allowed.suppresses("CMT004")) {
         report("CMT004", entry.line, entry.column, truncate(body), body);
         continue;
       }
-      if (!allowed.has("CMT007") && docRestatesSignature(body, owner)) {
+      if (docRestatesSignature(body, owner) && !allowed.suppresses("CMT007")) {
         report("CMT007", entry.line, entry.column, truncate(body), body);
         continue;
       }
-      if (!allowed.has("CMT009") && isUnownedTodo(body, runText)) {
+      if (isUnownedTodo(body, runText) && !allowed.suppresses("CMT009")) {
         report("CMT009", entry.line, entry.column, truncate(body), body);
         continue;
       }
@@ -364,14 +446,16 @@ export function analyse({ lines, runs, isTestFile = false }) {
     // A one-line `/* … */` counts, which is how JSX `{/* Cap editor */}` above
     // `<CapEditor …>` is caught. A doc block does not: it is a contract, and
     // CMT007 is the rule that judges those.
-    if (!allowed.has("CMT001") && run.kind !== "doc" && run.lines.length === 1) {
-      const entry = run.lines[0];
+    if (run.kind !== "doc" && content.length === 1) {
+      const entry = first;
       const body = entry.body.trim();
       const code = nextCodeLine(lines, run);
-      if (code && !isBanner(body) && restatesCode(body, code)) {
+      if (code && !isBanner(body) && restatesCode(body, code) && !allowed.suppresses("CMT001")) {
         report("CMT001", entry.line, entry.column, `${truncate(body)}  ->  ${truncate(code)}`, body);
       }
     }
+
+    allowed.reportUnused(report);
   }
 
   return findings.sort((a, b) => a.line - b.line || a.column - b.column);

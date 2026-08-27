@@ -48,6 +48,8 @@ Two tests before keeping a comment:
 - **Delete it.** Is any information lost? If not, it stays deleted.
 - **Could a name carry it instead?** A better identifier, an extracted function, or a named constant beats a comment. Prefer the code change.
 
+A comment at the end of a line usually decodes that line, and that is worth keeping: `{0x25, 0x50} // "%PDF"`, `50L * 1024 * 1024 // 50 MB`. The rules that compare a comment against the code below it do not apply there, but a trailing TODO or a trailing bit of history is judged like any other.
+
 A reference is supplementary, never load-bearing: the comment must survive deleting it. `// See #1234` is a dead end; `// saving first loses every annotation (#6865)` is not. Prefer a spec (`RFC 3161`) or CVE where one applies.
 
 A TODO needs an issue, not an owner: `// TODO(#1234): re-enable the gate once account syncing lands`. If it is not worth an issue, it is not worth a TODO. A question is not a TODO.

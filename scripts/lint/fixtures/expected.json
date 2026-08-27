@@ -1,6 +1,12 @@
 {
   "AaaTest.java": [],
-  "allow.java": [],
+  "allow.java": [
+    "12:CMT010:error",
+    "17:CMT010:error",
+    "22:CMT010:error",
+    "28:CMT010:error",
+    "29:CMT001:error"
+  ],
   "apostrophes.java": [
     "20:CMT001:error"
   ],
@@ -47,5 +53,9 @@
   ],
   "todos.java": [
     "6:CMT009:error"
+  ],
+  "trailing.java": [
+    "13:CMT009:error",
+    "14:CMT004:error"
   ]
 }
