@@ -72,6 +72,9 @@ import {
   clearWatchedFolderDraggedFileIds,
 } from "@app/components/watchedFolders/watchedFolderDragState";
 import { WATCHED_FOLDERS_ENABLED } from "@app/constants/featureFlags";
+import { FolderTreeSidebar } from "@app/components/filesPage/FolderTreeSidebar";
+import { useFilesPage } from "@app/contexts/FilesPageContext";
+import type { FolderId, FolderRecord } from "@app/types/folder";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import "@app/components/shared/FileSidebar.css";
 
@@ -184,6 +187,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const { state } = useFileState();
     const { actions: fileActions } = useFileActions();
     const { actions: navActions } = useNavigationActions();
+    const filesPage = useFilesPage();
     const { setCustomWorkbenchViewData, customWorkbenchViews } =
       useToolWorkflow();
     const { workbench: currentWorkbench, selectedTool } = useNavigationState();
@@ -1182,7 +1186,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                 <div className="file-sidebar-files-section sidebar-content-fade">
                   <div className="file-sidebar-section-header">
                     <span className="file-sidebar-section-label">
-                      {t("fileSidebar.library", "PDF Library")}
+                      {t("fileSidebar.library", "Files")}
                     </span>
                     <FileSidebarGroupControls stubs={allFileStubs} />
                     <ActionIcon
@@ -1315,6 +1319,34 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                       </p>
                     </div>
                   )}
+                </div>
+              )}
+
+              {/* Folders, under the files they hold. This was a panel of its own beside
+                  the workbench; the library is an ordinary view now, so the navigation
+                  for it belongs with the rest of the file chrome. */}
+              {!collapsed && (
+                <div className="file-sidebar-folders-section sidebar-content-fade">
+                  <div className="file-sidebar-section-header">
+                    <span className="file-sidebar-section-label">
+                      {t("fileSidebar.folders", "Folders")}
+                    </span>
+                  </div>
+                  <FolderTreeSidebar
+                    fileCounts={filesPage.fileCountsByFolder}
+                    onRequestNewFolder={filesPage.openNewFolderDialog}
+                    onRenameFolder={(folder: FolderRecord) =>
+                      filesPage.openRenameFolderDialog(folder)
+                    }
+                    onDeleteFolder={filesPage.promptDeleteFolder}
+                    onMoveFilesIntoFolder={async (
+                      targetId: FolderId | null,
+                      fileIds: FileId[],
+                    ) => {
+                      if (fileIds.length === 0) return;
+                      await filesPage.moveFilesTo(fileIds, targetId);
+                    }}
+                  />
                 </div>
               )}
             </div>

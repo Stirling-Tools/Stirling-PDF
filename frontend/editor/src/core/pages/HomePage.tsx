@@ -27,7 +27,6 @@ import { isApplyingRestoredView } from "@app/services/workbenchSession";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useLocation, useNavigate } from "react-router-dom";
 import AppsIcon from "@mui/icons-material/AppsRounded";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
 
 import RightSidebar from "@app/components/tools/RightSidebar";
@@ -57,7 +56,6 @@ import {
 } from "@app/contexts/FilesPageContext";
 import { useFolders } from "@app/contexts/FolderContext";
 import { useFileHandler } from "@app/hooks/useFileHandler";
-import { FolderTreePanel } from "@app/components/filesPage/FolderTreePanel";
 import type { FileSidebarProps } from "@app/components/shared/FileSidebar";
 
 import { Button } from "@app/ui/Button";
@@ -265,21 +263,6 @@ export default function HomePage() {
     }
   }, [navigationState.workbench, location.pathname, navigate]);
 
-  // Auto-collapse the FileSidebar while on /files; restore the user's persisted
-  // preference on leave. Auto-collapse doesn't write to storage so deep-linking
-  // to /files won't overwrite what the user actually chose.
-  const prevWorkbenchRef = useRef(navigationState.workbench);
-  useEffect(() => {
-    const prev = prevWorkbenchRef.current;
-    const curr = navigationState.workbench;
-    if (curr === "myFiles" && prev !== "myFiles") {
-      if (!fileSidebarCollapsed) setFileSidebarCollapsed(true);
-    } else if (curr !== "myFiles" && prev === "myFiles") {
-      setFileSidebarCollapsed(readPersistedSidebarCollapsed());
-    }
-    prevWorkbenchRef.current = curr;
-    // fileSidebarCollapsed read as snapshot on transition only.
-  }, [navigationState.workbench]);
   // Imperative, so the toggle still works while reading. Never persisted: not a preference.
   const prevReaderModeRef = useRef(readerMode);
   useEffect(() => {
@@ -718,30 +701,14 @@ export default function HomePage() {
             bg="var(--c-bg)"
           >
             <div className="workspace-frame">
-              <MyFilesAwareFileSidebar
+              <FolderAwareFileSidebar
                 ref={quickAccessRef}
                 accountHoisted
-                toggleAriaLabel={
-                  navigationState.workbench === "myFiles"
-                    ? t("fileSidebar.leaveMyFiles", "Leave File library")
-                    : undefined
-                }
-                toggleIcon={
-                  navigationState.workbench === "myFiles" ? (
-                    <ArrowBackIcon />
-                  ) : undefined
-                }
-                active={navigationState.workbench === "myFiles"}
-                // Forced: a deep link to /files has no transition to collapse on.
-                collapsed={
-                  navigationState.workbench === "myFiles" ||
-                  fileSidebarCollapsed
-                }
+                collapsed={fileSidebarCollapsed}
                 onToggleCollapse={handleSidebarToggle}
                 onOpenSettings={() => setConfigModalOpen(true)}
               />
             </div>
-            <FolderTreePanel active={navigationState.workbench === "myFiles"} />
             <Workbench />
             {!hideToolPanel && <RightSidebar />}
             <FileManager selectedTool={selectedTool} />
@@ -756,29 +723,15 @@ export default function HomePage() {
   );
 }
 
-interface MyFilesAwareFileSidebarProps extends FileSidebarProps {
-  active: boolean;
-}
-
-/** Wraps FileSidebar with /files-aware overrides when `active`. */
-const MyFilesAwareFileSidebar = forwardRef<
-  HTMLDivElement,
-  MyFilesAwareFileSidebarProps
->(function MyFilesAwareFileSidebar(props, ref) {
-  const { active, ...rest } = props;
-  if (!active) {
-    return <FileSidebar ref={ref} {...rest} />;
-  }
-  return <MyFilesSidebarOverrides ref={ref} {...rest} />;
-});
-
-const MyFilesSidebarOverrides = forwardRef<HTMLDivElement, FileSidebarProps>(
-  function MyFilesSidebarOverrides(props, ref) {
+/** Uploads land in the folder you have open, and New folder sits with the tree. */
+const FolderAwareFileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
+  function FolderAwareFileSidebar(props, ref) {
     const { t } = useTranslation();
     const filesPage = useFilesPage();
     const folders = useFolders();
     const { addFiles } = useFileHandler();
 
+    const browsingLibrary = useNavigationState().workbench === "myFiles";
     const handleUpload = useCallback(
       async (files: File[]) => {
         const added = await addFiles(files, { skipWorkspaceDispatch: true });
@@ -805,8 +758,11 @@ const MyFilesSidebarOverrides = forwardRef<HTMLDivElement, FileSidebarProps>(
       <FileSidebar
         ref={ref}
         {...props}
-        onUploadFiles={handleUpload}
-        onPickGoogleDriveFiles={handleUpload}
+        // Only in the library: filing something away there should not open it, while
+        // the sidebar's own path picks a view to open an upload in - which is what
+        // you want everywhere else.
+        onUploadFiles={browsingLibrary ? handleUpload : undefined}
+        onPickGoogleDriveFiles={browsingLibrary ? handleUpload : undefined}
         extraAction={{
           icon: <CreateNewFolderIcon />,
           label: t("filesPage.newFolder", "New folder"),

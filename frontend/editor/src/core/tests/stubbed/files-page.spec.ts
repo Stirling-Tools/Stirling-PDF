@@ -822,10 +822,10 @@ test.describe("Files page", () => {
     });
   });
 
-  test.describe("Folder tree panel resize", () => {
+  test.describe("Folder tree", () => {
     test.use({ autoGoto: false });
 
-    test("Resize handle is present and keyboard-adjustable", async ({
+    test("lives in the file sidebar, not a panel of its own", async ({
       page,
     }) => {
       await stubStorageApis(page);
@@ -833,27 +833,14 @@ test.describe("Files page", () => {
         { id: "alpha", name: "alpha.pdf", remoteStorageId: null },
       ]);
       await gotoFilesPage(page);
-      const handle = page.locator(".folder-tree-panel-resizer").first();
-      await expect(handle).toBeVisible();
-      const before = await page.evaluate(() => {
-        const el = document.querySelector(
-          ".folder-tree-panel[data-active='true']",
-        ) as HTMLElement | null;
-        return el?.getBoundingClientRect().width ?? 0;
-      });
-      await handle.focus();
-      await page.keyboard.press("ArrowRight");
-      await page.keyboard.press("ArrowRight");
-      await page.keyboard.press("ArrowRight");
-      await page.keyboard.press("ArrowRight");
-      const after = await page.evaluate(() => {
-        const el = document.querySelector(
-          ".folder-tree-panel[data-active='true']",
-        ) as HTMLElement | null;
-        return el?.getBoundingClientRect().width ?? 0;
-      });
-      // Four 8px steps = +32px.
-      expect(after).toBeGreaterThanOrEqual(before + 24);
+
+      const tree = page.getByRole("tree", { name: /Folders/i });
+      await expect(tree).toBeVisible();
+      await expect(
+        tree.getByRole("treeitem", { name: /All files/i }),
+      ).toBeVisible();
+      // The library is an ordinary view now, so it adds no column of its own.
+      await expect(page.locator(".folder-tree-panel")).toHaveCount(0);
     });
   });
 });

@@ -1,0 +1,99 @@
+/* Folder tree rows. They sit in the file sidebar's Folders section, so they take the
+   same row height, padding and muted icon treatment as .file-sidebar-action-row, and
+   the same hover pill rather than an accent bar. */
+
+.files-page-tree-list {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 0 12px;
+}
+
+.files-page-tree-node {
+  display: flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 4px;
+  margin: 0 8px;
+  cursor: pointer;
+  user-select: none;
+  color: var(--c-text-muted);
+  font-size: 14px;
+  position: relative;
+  transition: background-color 0.15s ease;
+  flex-shrink: 0;
+}
+
+.files-page-tree-node:hover {
+  background: var(--c-hover);
+}
+
+.files-page-tree-node.is-active {
+  background: var(--c-hover);
+  color: var(--c-text);
+  font-weight: 500;
+}
+
+.files-page-tree-node.is-drop-target {
+  background: color-mix(in srgb, var(--c-primary) 12%, transparent);
+  box-shadow: inset 0 0 0 1px var(--c-primary);
+  color: var(--c-text);
+}
+
+.files-page-tree-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  color: var(--c-text-subtle);
+  flex-shrink: 0;
+}
+
+.files-page-tree-toggle svg {
+  font-size: 16px !important;
+}
+
+.files-page-tree-spacer {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.files-page-tree-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--c-text-subtle);
+  margin-left: 8px;
+  font-size: 18px;
+}
+
+.files-page-tree-icon svg {
+  font-size: 18px !important;
+}
+
+.files-page-tree-name {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-left: 12px;
+}
+
+.files-page-tree-count {
+  color: var(--c-text-subtle);
+  font-size: 12px;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+@media (max-width: 900px) {
+  /* Cap the user width on narrow viewports so the tree can't squeeze
+   * out the file grid. The custom property is still honoured but capped. */
+  .folder-tree-panel[data-active="true"] {
+    width: min(var(--folder-tree-panel-width, 14rem), 14rem);
+  }
+}

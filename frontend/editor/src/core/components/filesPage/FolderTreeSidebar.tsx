@@ -27,6 +27,7 @@ import {
   serialiseFilesPageDragPayload,
 } from "@app/components/filesPage/dragDrop";
 import { useDropTarget } from "@app/components/filesPage/useDropTarget";
+import "@app/components/filesPage/FolderTreeSidebar.css";
 
 /**
  * Hard cap on folder-tree render depth. The backend already enforces an
@@ -54,14 +55,9 @@ interface FolderTreeSidebarProps {
   ) => Promise<void> | void;
 }
 
-// This component is always rendered inside FolderTreePanel, which supplies
-// its own <aside> chrome and "New folder at root" toolbar control. An
-// earlier `embed` prop selected between an embedded list and a standalone
-// aside+header layout; the standalone layout was unused and its "New
-// folder at root" ActionIcon was not gated by `serverReachable`, so if
-// anyone re-wired the component into a non-embed surface they'd ship an
-// always-enabled mutation button against a possibly-offline server.
-// Deleted to remove the trap.
+// A list, not a surface: the section it sits in supplies the heading and chrome. It
+// carries no "New folder at root" control of its own - one that skipped the
+// serverReachable check used to ship an always-enabled mutation button here.
 export function FolderTreeSidebar({
   fileCounts,
   onRequestNewFolder,
