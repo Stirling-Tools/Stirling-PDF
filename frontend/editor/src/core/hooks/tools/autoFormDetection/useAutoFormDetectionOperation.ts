@@ -4,10 +4,6 @@ import {
   ToolType,
   useToolOperation,
 } from "@app/hooks/tools/shared/useToolOperation";
-import {
-  FormDetectionModelStatus,
-  FormDetectionCatalogEntry,
-} from "@app/hooks/useFormDetectionModelStatus";
 import apiClient from "@app/services/apiClient";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
 import {
@@ -23,18 +19,15 @@ import {
 } from "@app/hooks/tools/autoFormDetection/useAutoFormDetectionParameters";
 
 const DETECT_ENDPOINT = "/api/v1/form/form-detection/detect";
-const STATUS_URL = "/api/v1/form/form-detection-model/status";
-
-// Sentinel thrown by the processor; mapped to a translated message in getErrorMessage.
-export const NO_LOCAL_MODEL_ERROR = "NO_LOCAL_MODEL";
 
 export const buildAutoFormDetectionFormData = (
   parameters: AutoFormDetectionParameters,
   file: File,
+  applyToPdf: boolean,
 ): FormData => {
   const formData = new FormData();
   formData.append("file", file);
-  formData.append("applyToPdf", "true");
+  formData.append("applyToPdf", String(applyToPdf));
   const confidence = resolveConfidence(parameters);
   if (typeof confidence === "number") {
     formData.append("confThreshold", String(confidence));
@@ -42,77 +35,9 @@ export const buildAutoFormDetectionFormData = (
   return formData;
 };
 
-function outputName(file: File): string {
-  const base = (file.name || "document").replace(/\.pdf$/i, "");
-  return `${base}_form.pdf`;
-}
-
-async function serverDetect(
-  parameters: AutoFormDetectionParameters,
-  file: File,
-): Promise<File> {
-  emitStage({ kind: "starting", engine: "server" });
-  emitStage({ kind: "uploading" });
-  const confidence = resolveConfidence(parameters);
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("applyToPdf", "false");
-  if (typeof confidence === "number") {
-    formData.append("confThreshold", String(confidence));
-  }
-
-  try {
-    const res = await apiClient.post(DETECT_ENDPOINT, formData);
-    const fields = ((res.data as { detections?: DetectedField[] })
-      ?.detections ?? []) as DetectedField[];
-
-    emitStage({ kind: "applying" });
-    const { applyFields } =
-      await import("@app/services/formDetection/applyFields");
-    const bytes = await file.arrayBuffer();
-    const appliedPdf = await applyFields(bytes, fields);
-
-    emitSummary(summarizeFields(fields, "server"));
-    return new File([new Uint8Array(appliedPdf)], outputName(file), {
-      type: "application/pdf",
-    });
-  } catch (e) {
-    console.warn(
-      "[AutoFormDetection] detect+apply flow failed; falling back to server-side apply",
-      e,
-    );
-    const res = await apiClient.post(
-      DETECT_ENDPOINT,
-      buildAutoFormDetectionFormData(parameters, file),
-      { responseType: "blob" },
-    );
-    return new File([res.data as Blob], outputName(file), {
-      type: "application/pdf",
-    });
-  }
-}
-
-async function browserDetect(
-  parameters: AutoFormDetectionParameters,
-  file: File,
-  entry: FormDetectionCatalogEntry,
-  pageBudgetMs?: number,
-): Promise<File> {
-  emitStage({ kind: "starting", engine: "browser" });
-  const { runBrowserDetection } =
-    await import("@app/services/formDetection/runBrowserPipeline");
-  const bytes = await file.arrayBuffer();
-  const { fields, appliedPdf } = await runBrowserDetection(
-    bytes,
-    entry,
-    resolveConfidence(parameters),
-    emitStage,
-    { pageBudgetMs },
-  );
-  emitSummary(summarizeFields(fields, "browser"));
-  return new File([new Uint8Array(appliedPdf)], outputName(file), {
-    type: "application/pdf",
-  });
+function asPdf(data: BlobPart, source: File): File {
+  const base = (source.name || "document").replace(/\.pdf$/i, "");
+  return new File([data], `${base}_form.pdf`, { type: "application/pdf" });
 }
 
 async function processAutoFormDetection(
@@ -122,60 +47,38 @@ async function processAutoFormDetection(
   const file = files[0];
 
   try {
-    const status = (await apiClient.get(STATUS_URL))
-      .data as FormDetectionModelStatus;
-    const mode = status.executionMode ?? "auto";
-    const activeEntry = (status.catalog ?? []).find(
-      (c) => c.id === status.activeModelId,
+    emitStage({ kind: "starting" });
+    emitStage({ kind: "uploading" });
+
+    // Ask for the field list rather than a finished PDF so the summary panel has counts to
+    // show; applying the fields here also spares the server a second parse of the same file.
+    const res = await apiClient.post(
+      DETECT_ENDPOINT,
+      buildAutoFormDetectionFormData(parameters, file, false),
     );
+    const fields = ((res.data as { detections?: DetectedField[] })
+      ?.detections ?? []) as DetectedField[];
 
-    if (mode === "browser") {
-      // Strict: no budget and no fallback. The point of this mode is that the PDF never leaves the
-      // device, so a slow device waits rather than silently uploading, and a missing or stale model
-      // is an error rather than a reason to upload.
-      if (!activeEntry) {
-        throw new Error(NO_LOCAL_MODEL_ERROR);
-      }
-      return { files: [await browserDetect(parameters, file, activeEntry)] };
-    }
-    if (mode === "server" || !activeEntry) {
-      return { files: [await serverDetect(parameters, file)] };
-    }
+    emitStage({ kind: "applying" });
+    const { applyFields } =
+      await import("@app/services/formDetection/applyFields");
+    const bytes = await file.arrayBuffer();
+    const appliedPdf = await applyFields(bytes, fields);
 
-    // auto: prefer the device. Keeping detection local spares the backend from running every page
-    // of every user's document, and keeps the file on the machine it came from. Only a device that
-    // looks too weak to finish in reasonable time starts on the server instead.
-    const {
-      isUnderpoweredForBrowserEngine,
-      describeDevice,
-      BROWSER_PAGE_BUDGET_MS,
-    } = await import("@app/services/formDetection/deviceCapability");
-    if (isUnderpoweredForBrowserEngine()) {
-      console.debug(
-        `[AutoFormDetection] ${describeDevice()} - using the server engine`,
-      );
-      return { files: [await serverDetect(parameters, file)] };
-    }
-    try {
-      return {
-        files: [
-          await browserDetect(
-            parameters,
-            file,
-            activeEntry,
-            BROWSER_PAGE_BUDGET_MS,
-          ),
-        ],
-      };
-    } catch (e) {
-      // Covers both a hard failure and the budget check: the capability hints are advisory, so the
-      // first page is the real measurement and the honest place to change our mind.
-      console.warn(
-        "[AutoFormDetection] in-browser engine did not complete; falling back to server",
-        e,
-      );
-      return { files: [await serverDetect(parameters, file)] };
-    }
+    emitSummary(summarizeFields(fields));
+    return { files: [asPdf(new Uint8Array(appliedPdf), file)] };
+  } catch (e) {
+    // pdf-lib rejects some documents PDFBox accepts; let the server write the fields instead.
+    console.warn(
+      "[AutoFormDetection] applying fields locally failed; asking the server to apply them",
+      e,
+    );
+    const res = await apiClient.post(
+      DETECT_ENDPOINT,
+      buildAutoFormDetectionFormData(parameters, file, true),
+      { responseType: "blob" },
+    );
+    return { files: [asPdf(res.data as Blob, file)] };
   } finally {
     emitStage({ kind: "done" });
   }
@@ -192,23 +95,13 @@ export const autoFormDetectionOperationConfig = {
 export const useAutoFormDetectionOperation = () => {
   const { t } = useTranslation();
 
-  const standardHandler = createStandardErrorHandler(
-    t(
-      "autoFormDetection.error.failed",
-      "An error occurred while detecting form fields.",
-    ),
-  );
-
   return useToolOperation<AutoFormDetectionParameters>({
     ...autoFormDetectionOperationConfig,
-    getErrorMessage: (error: unknown) => {
-      if (error instanceof Error && error.message === NO_LOCAL_MODEL_ERROR) {
-        return t(
-          "autoFormDetection.error.noLocalModel",
-          "Detection is set to run only in your browser, but no AI model is active. An admin needs to install and activate a model first.",
-        );
-      }
-      return standardHandler(error);
-    },
+    getErrorMessage: createStandardErrorHandler(
+      t(
+        "autoFormDetection.error.failed",
+        "An error occurred while detecting form fields.",
+      ),
+    ),
   });
 };

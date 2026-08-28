@@ -1068,8 +1068,8 @@ public class FormUtils {
                             definition.width(),
                             definition.height());
             FormFieldTypeSupport handler = FormFieldTypeSupport.forTypeName(definition.type());
-            // Signature is coerced by name, not by capability: the editor can create real
-            // signature widgets, but pdf-lib cannot, so detection must emit text on both engines.
+            // Coerced by name, not capability: detection results can also be applied client-side
+            // with pdf-lib, which cannot create signature widgets, so both paths emit text.
             if (handler == null
                     || handler == FormFieldTypeSupport.SIGNATURE
                     || handler.doesNotsupportsDefinitionCreation()) {

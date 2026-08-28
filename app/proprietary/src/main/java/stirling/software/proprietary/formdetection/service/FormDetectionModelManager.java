@@ -122,10 +122,8 @@ public class FormDetectionModelManager {
     }
 
     /**
-     * Gate the {@code form-detection} endpoint (which drives the tool tile): off with reason CONFIG
-     * when the feature is disabled by the admin, off with reason DEPENDENCY when no model is ready,
-     * otherwise on. Execution mode (browser/server) does not affect this - the tile is active
-     * either way and the frontend chooses where to run.
+     * Gate the {@code form-detection} endpoint that drives the tool tile: CONFIG when an admin
+     * disabled the feature, DEPENDENCY when no model is ready, enabled otherwise.
      */
     private void applyEndpointState() {
         if (!isFeatureEnabled()) {
@@ -150,20 +148,6 @@ public class FormDetectionModelManager {
             log.warn("Could not persist formDetection.enabled (state kept in memory)", e);
         }
         applyEndpointState();
-    }
-
-    /** Set where detection runs: auto|browser|server (admin). Persists. */
-    public synchronized void setExecutionMode(String mode) {
-        String m = mode == null ? "auto" : mode.trim().toLowerCase(Locale.ROOT);
-        if (!m.equals("auto") && !m.equals("browser") && !m.equals("server")) {
-            throw new IllegalArgumentException("executionMode must be auto, browser or server");
-        }
-        applicationProperties.getFormDetection().setExecutionMode(m);
-        try {
-            GeneralUtils.saveKeyToSettings("formDetection.executionMode", m);
-        } catch (IOException e) {
-            log.warn("Could not persist formDetection.executionMode (state kept in memory)", e);
-        }
     }
 
     /**
@@ -504,7 +488,6 @@ public class FormDetectionModelManager {
                 isWritable(dir),
                 catalog.getAll(),
                 isFeatureEnabled(),
-                applicationProperties.getFormDetection().getExecutionMode(),
                 SERVER_ENGINE_AVAILABLE,
                 downloadingModelId);
     }

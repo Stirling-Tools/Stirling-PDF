@@ -19,9 +19,8 @@ import stirling.software.jpdfium.model.PageSize;
 import stirling.software.jpdfium.model.RenderResult;
 
 /**
- * Renders PDF pages to RGBA bitmaps via JPDFium (the same PDFium engine the browser pipeline uses,
- * for closer parity than PDFBox's Java2D renderer). Each page is rendered at a DPI chosen so its
- * long side is approximately the model input size, minimising any later resampling. The actual
+ * Renders PDF pages to RGBA bitmaps via JPDFium. Each page is rendered at a DPI chosen so its long
+ * side is approximately the model input size, minimising any later resampling. The actual
  * pixels-per-point scale is computed from the rendered dimensions so coordinate mapping does not
  * depend on how {@code renderAt} interprets its argument.
  *

@@ -6,10 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * Snapshot returned by {@code GET /api/v1/form/form-detection-model/status}. Includes the full
- * catalog so the browser can read the active model's parity-critical pipeline spec.
- */
+/** Snapshot returned by {@code GET /api/v1/form/form-detection-model/status}. */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -38,10 +35,7 @@ public class ModelStatusResponse {
     /** Master on/off for the whole feature (admin-controlled). */
     private boolean enabled;
 
-    /** Where detection runs: auto | browser | server. */
-    private String executionMode;
-
-    /** True if the server-side ONNX engine is bundled in this build (else only browser works). */
+    /** True when the ONNX engine is bundled in this build; without it detection cannot run. */
     private boolean serverEngineAvailable;
 
     private String downloadingModelId;

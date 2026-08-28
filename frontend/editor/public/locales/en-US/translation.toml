@@ -561,10 +561,10 @@ expand = "Expand"
 
 [admin.formDetection]
 confirmUninstall = "Click to confirm"
-description = "Lets users make PDFs fillable by detecting text fields, checkboxes and signature areas with a local AI model. No data leaves your deployment."
+description = "Detects text fields, checkboxes and signature areas in a PDF and turns them into fillable form fields. Detection runs on this server with the model you install below."
 downloadingNote = "{{percent}}% of {{size}}"
 enableFeature = "Enable feature"
-engineLabel = "Where detection runs"
+engineUnavailable = "This build does not include the detection engine, so the tool stays unavailable even with a model installed."
 errorTitle = "Something went wrong"
 install = "Install"
 installFailed = "Install failed"
@@ -587,20 +587,11 @@ show = "Offline / air-gapped install"
 step1 = "1. Download on a machine with internet:"
 step2 = "2. Check the SHA-256 checksum matches:"
 step3 = "3. Copy it into the model directory on this server:"
-step4 = "4. Set formDetection.activeModelId to the model's id in settings.yml and restart. <configs> is the configs volume (e.g. /configs in Docker). The Docker image already pre-bundles the small model."
+step4 = "4. Set formDetection.activeModelId to the model's id in settings.yml and restart. <configs> is the configs volume (e.g. /configs in Docker). The air-gapped image ships with a model already installed."
 
 [admin.formDetection.badge]
 active = "Active"
 installed = "Installed"
-
-[admin.formDetection.engine]
-auto = "Auto"
-autoHint = "Prefers the user's browser (PDFs stay on their device) and falls back to this server if that fails."
-browser = "User's browser"
-browserHint = "Always in the user's browser - PDFs never reach this server. Each device downloads a ~12 MB runtime once."
-server = "This server"
-serverHint = "Always on this server - PDFs are uploaded for detection. Best for weak client devices."
-serverUnavailable = "(The server engine is not bundled in this build, so detection always runs in the browser.)"
 
 [admin.formDetection.state]
 downloading = "Downloading..."
@@ -2122,16 +2113,9 @@ text = "Text fields"
 
 [autoFormDetection.error]
 failed = "An error occurred while detecting form fields."
-noLocalModel = "Detection is set to run only in your browser, but no AI model is active. An admin needs to install and activate a model first."
 
 [autoFormDetection.progress]
-analyzing = "Analyzing page {{page}} of {{pageCount}}..."
 applying = "Building fillable fields..."
-downloading = "Fetching AI model..."
-downloadingSized = "Fetching AI model ({{loaded}} of {{total}})..."
-downloadNote = "One-time setup - future runs start instantly."
-loadingModel = "Getting the model ready..."
-rendering = "Preparing page {{page}} of {{pageCount}}..."
 starting = "Preparing detection..."
 uploading = "Analyzing your document..."
 

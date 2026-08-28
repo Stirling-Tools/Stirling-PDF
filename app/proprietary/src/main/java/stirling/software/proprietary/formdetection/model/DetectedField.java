@@ -1,8 +1,7 @@
 package stirling.software.proprietary.formdetection.model;
 
 /**
- * One detected form field. This is the shared schema returned by both the server detect endpoint
- * and the in-browser pipeline so the two paths are interchangeable.
+ * One detected form field, as returned by the detect endpoint.
  *
  * @param type AcroForm field type (text|checkbox|radio|signature)
  * @param page zero-based page index

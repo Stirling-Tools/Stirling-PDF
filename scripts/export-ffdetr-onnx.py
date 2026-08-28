@@ -11,8 +11,8 @@ with onnxruntime alone, exactly as it loads any other model in the catalogue.
     python scripts/export-ffdetr-onnx.py --out build/ffdetr
 
 Emits `ffdetr-int8.onnx` (~37MB, the one to host) plus the fp32 graph it came from, and prints
-the sha256 for `model-catalog.json` and docker/embedded/Dockerfile.fat. int8 measures smaller than FFDNet-S at 38.4MB and, on a
-form page, returns detections indistinguishable from fp32.
+the sha256 for `model-catalog.json` and docker/embedded/Dockerfile.fat. On a form page the int8
+graph returns detections indistinguishable from fp32.
 """
 
 from __future__ import annotations

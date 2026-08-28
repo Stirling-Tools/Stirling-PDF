@@ -19,19 +19,11 @@ RUN apt-get update \
     && rm /tmp/task.deb \
     && rm -rf /var/lib/apt/lists/*
 
-# Optionally bake an Auto Form Detection model into the image, seeded into the writable configs
-# model dir at startup by FormDetectionModelManager (FORMDETECTION_PREINSTALLEDMODELDIR below).
-#
-# Empty by default ON PURPOSE, and unlike Dockerfile.fat this image is meant to stay that way:
-# it has internet access, so an admin install costs 0MB in the image against ~27MB of pull for
-# every user who never opens the tool. Baking a model in also makes us its distributor, so only
-# weights we hold a redistribution grant for may go here - which the FFDNet checkpoints are not,
-# as their publisher declares no licence at all. Set all three args to pre-bundle a model you may ship:
+# Empty by default: this image can reach the internet, so an admin installs a detection model
+# on demand rather than every user pulling ~27MB. Only bake in weights we may redistribute:
 #   --build-arg FORM_DETECTION_MODEL_URL=... \
 #   --build-arg FORM_DETECTION_MODEL_SHA256=... \
 #   --build-arg FORM_DETECTION_MODEL_ID=ffdetr
-# Without them the image ships no model and the tile stays dependency-disabled until an admin
-# installs one from the catalogue.
 ARG FORM_DETECTION_MODEL_URL=""
 ARG FORM_DETECTION_MODEL_SHA256=""
 ARG FORM_DETECTION_MODEL_ID="ffdetr"
@@ -91,9 +83,7 @@ WORKDIR /tmp
 COPY --from=app-build /app/app/core/build/libs/*.jar app.jar
 RUN java -Djarmode=tools -jar app.jar extract --layers --destination /layers
 
-# Slim the bundled ONNX Runtime (included only via -PbundleOnnxRuntime above) to the target Linux
-# arch (~42MB jar -> ~8MB). Docker server image only; desktop/local builds don't bundle it at all.
-# The detection model itself is unaffected - it is still downloaded on demand at runtime.
+# Strip the bundled ONNX Runtime's natives down to the target Linux arch (~42MB jar -> ~8MB).
 COPY scripts/slim-onnxruntime.sh /tmp/slim-onnxruntime.sh
 RUN apt-get update \
     && apt-get install -y --no-install-recommends zip \
@@ -118,7 +108,7 @@ COPY --link --from=app-build --chown=1000:1000 \
      /app/build/libs/restart-helper.jar /restart-helper.jar
 COPY --link --chown=1000:1000 scripts/ /scripts/
 
-# Pre-bundled default detection model; FormDetectionModelManager seeds it into /configs on startup.
+# Baked-in detection model; FormDetectionModelManager seeds it into /configs on startup.
 COPY --link --from=app-build --chown=1000:1000 /preinstalled-models/ /opt/stirling/preinstalled-models/
 
 # Fonts go to system dir, root ownership is correct (world-readable)

@@ -1,19 +1,12 @@
 import { DetectedField } from "@app/services/formDetection/types";
 
-export type DetectionEngine = "browser" | "server";
-
 export type DetectionStage =
-  | { kind: "starting"; engine: DetectionEngine }
-  | { kind: "model-download"; loadedBytes: number; totalBytes: number | null }
-  | { kind: "model-init" }
-  | { kind: "rendering"; page: number; pageCount: number }
-  | { kind: "analyzing"; page: number; pageCount: number }
+  | { kind: "starting" }
   | { kind: "uploading" }
   | { kind: "applying" }
   | { kind: "done" };
 
 export interface DetectionSummary {
-  engine: DetectionEngine;
   total: number;
   byType: Record<string, number>;
   pagesWithFields: number;
@@ -43,10 +36,7 @@ export function onSummary(cb: (s: DetectionSummary) => void): () => void {
   return () => window.removeEventListener(SUMMARY_EVENT, handler);
 }
 
-export function summarizeFields(
-  fields: DetectedField[],
-  engine: DetectionEngine,
-): DetectionSummary {
+export function summarizeFields(fields: DetectedField[]): DetectionSummary {
   const byType: Record<string, number> = {};
   const pages = new Set<number>();
   for (const f of fields) {
@@ -54,7 +44,6 @@ export function summarizeFields(
     pages.add(f.page);
   }
   return {
-    engine,
     total: fields.length,
     byType,
     pagesWithFields: pages.size,

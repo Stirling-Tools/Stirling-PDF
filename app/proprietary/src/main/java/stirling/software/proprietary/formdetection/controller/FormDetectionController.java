@@ -246,6 +246,6 @@ public class FormDetectionController {
         return stem + "_form";
     }
 
-    /** Shared JSON response (mirrors the browser pipeline output). */
+    /** JSON body returned when {@code applyToPdf} is false. */
     public record DetectResponse(List<DetectedField> detections) {}
 }

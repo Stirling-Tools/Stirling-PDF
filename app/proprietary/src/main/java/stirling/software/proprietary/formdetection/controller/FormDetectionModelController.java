@@ -82,8 +82,7 @@ public class FormDetectionModelController {
 
     @PostMapping("/config")
     @PreAuthorize("hasRole('ADMIN')")
-    @Operation(
-            summary = "Update the feature on/off switch and execution mode (auto/browser/server)")
+    @Operation(summary = "Update the feature on/off switch")
     public ResponseEntity<ModelStatusResponse> config(@RequestBody ConfigRequest request) {
         if (request == null) {
             return ResponseEntity.badRequest().body(manager.status());
@@ -91,9 +90,6 @@ public class FormDetectionModelController {
         try {
             if (request.getEnabled() != null) {
                 manager.setEnabled(request.getEnabled());
-            }
-            if (StringUtils.isNotBlank(request.getExecutionMode())) {
-                manager.setExecutionMode(request.getExecutionMode());
             }
             return ResponseEntity.ok(manager.status());
         } catch (IllegalArgumentException e) {
@@ -107,9 +103,6 @@ public class FormDetectionModelController {
     public static class ConfigRequest {
         /** Master on/off; {@code null} leaves it unchanged. */
         private Boolean enabled;
-
-        /** auto|browser|server; blank/null leaves it unchanged. */
-        private String executionMode;
     }
 
     @Data

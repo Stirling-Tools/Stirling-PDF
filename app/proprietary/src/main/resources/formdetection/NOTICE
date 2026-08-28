@@ -29,7 +29,7 @@ modified beyond that conversion, and the result is republished under the same li
 
 Not vendored: the `commonforms` reference wrapper (github.com/jbarrow/commonforms) carries no
 licence file and depends on Ultralytics, so none of its code is used. The pre/post-processing in
-RfDetr.java and decode.ts is written from the model's own input/output contract.
+RfDetr.java is written from the model's own input/output contract.
 
 
 ffdnet-s, ffdnet-l

@@ -11,7 +11,6 @@ import {
 } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { StatusBadge, type StatusTone } from "@app/ui/StatusBadge";
 import { ProgressBar } from "@app/ui/ProgressBar";
 import { Banner } from "@app/ui/Banner";
@@ -21,7 +20,6 @@ import LocalIcon from "@app/components/shared/LocalIcon";
 import {
   useFormDetectionModelStatus,
   FormDetectionCatalogEntry,
-  FormDetectionExecutionMode,
 } from "@app/hooks/useFormDetectionModelStatus";
 
 function formatSize(
@@ -101,8 +99,6 @@ export default function AdminFormDetectionSection() {
   );
 
   const enabled = status?.enabled ?? true;
-  const executionMode: FormDetectionExecutionMode =
-    status?.executionMode ?? "auto";
   const serverEngineAvailable = status?.serverEngineAvailable ?? true;
   const catalog = status?.catalog ?? [];
   const st = status?.status;
@@ -171,10 +167,7 @@ export default function AdminFormDetectionSection() {
     }
   };
 
-  const doSetConfig = async (config: {
-    enabled?: boolean;
-    executionMode?: FormDetectionExecutionMode;
-  }) => {
+  const doSetConfig = async (config: { enabled?: boolean }) => {
     setConfigBusy(true);
     setActionError(null);
     try {
@@ -188,21 +181,6 @@ export default function AdminFormDetectionSection() {
     } finally {
       setConfigBusy(false);
     }
-  };
-
-  const engineHint: Record<FormDetectionExecutionMode, string> = {
-    auto: t(
-      "admin.formDetection.engine.autoHint",
-      "Prefers the user's browser (PDFs stay on their device) and falls back to this server if that fails.",
-    ),
-    browser: t(
-      "admin.formDetection.engine.browserHint",
-      "Always in the user's browser - PDFs never reach this server. Each device downloads a ~12 MB runtime once.",
-    ),
-    server: t(
-      "admin.formDetection.engine.serverHint",
-      "Always on this server - PDFs are uploaded for detection. Best for weak client devices.",
-    ),
   };
 
   const anyError = actionError || error || status?.error;
@@ -459,46 +437,22 @@ export default function AdminFormDetectionSection() {
               />
             ) : null}
 
-            <div>
-              <Text fw={500} size="sm" mb={4}>
-                {t("admin.formDetection.engineLabel", "Where detection runs")}
-              </Text>
-              <SegmentedControl<FormDetectionExecutionMode>
-                value={executionMode}
-                onChange={(v) => doSetConfig({ executionMode: v })}
-                disabled={configBusy || !enabled}
-                options={[
-                  {
-                    label: t("admin.formDetection.engine.auto", "Auto"),
-                    value: "auto",
-                  },
-                  {
-                    label: t(
-                      "admin.formDetection.engine.browser",
-                      "User's browser",
-                    ),
-                    value: "browser",
-                  },
-                  {
-                    label: t(
-                      "admin.formDetection.engine.server",
-                      "This server",
-                    ),
-                    value: "server",
-                    disabled: !serverEngineAvailable,
-                  },
-                ]}
+            {!serverEngineAvailable ? (
+              <Banner
+                tone="warning"
+                icon={
+                  <LocalIcon
+                    icon="warning-rounded"
+                    width="1.1rem"
+                    height="1.1rem"
+                  />
+                }
+                description={t(
+                  "admin.formDetection.engineUnavailable",
+                  "This build does not include the detection engine, so the tool stays unavailable even with a model installed.",
+                )}
               />
-              <Text size="xs" c="dimmed" mt={4}>
-                {engineHint[executionMode]}
-                {!serverEngineAvailable
-                  ? ` ${t(
-                      "admin.formDetection.engine.serverUnavailable",
-                      "(The server engine is not bundled in this build, so detection always runs in the browser.)",
-                    )}`
-                  : ""}
-              </Text>
-            </div>
+            ) : null}
 
             <div>
               <Text fw={500} size="sm" mb={4}>
@@ -583,7 +537,7 @@ export default function AdminFormDetectionSection() {
                 <Text size="xs" c="dimmed">
                   {t(
                     "admin.formDetection.airgap.step4",
-                    "4. Set formDetection.activeModelId to the model's id in settings.yml and restart. <configs> is the configs volume (e.g. /configs in Docker). The Docker image already pre-bundles the small model.",
+                    "4. Set formDetection.activeModelId to the model's id in settings.yml and restart. <configs> is the configs volume (e.g. /configs in Docker). The air-gapped image ships with a model already installed.",
                   )}
                 </Text>
               </Stack>

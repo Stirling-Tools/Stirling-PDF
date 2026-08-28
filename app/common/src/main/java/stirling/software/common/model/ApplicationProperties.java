@@ -450,13 +450,6 @@ public class ApplicationProperties {
         /** Master on/off switch for the whole feature (admin-controlled). */
         private boolean enabled = true;
 
-        /**
-         * Where detection runs: {@code auto} (browser first, server fallback), {@code browser}
-         * (in-browser WASM only - the PDF never leaves the device), or {@code server} (backend
-         * inference). Read by the frontend tool to choose its pipeline.
-         */
-        private String executionMode = "auto";
-
         /** Id of the installed model; blank means none installed. */
         private String activeModelId = "";
 

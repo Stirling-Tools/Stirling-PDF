@@ -1,14 +1,9 @@
 #!/usr/bin/env sh
 # Shrink the bundled ONNX Runtime native libraries down to a single Linux arch.
 #
-# The Maven `com.microsoft.onnxruntime:onnxruntime` jar ships native libs for every supported
-# platform (macOS arm64, Windows x64, Linux x64/arm64 - ~42MB on 1.26.x; older 1.20.x also
-# carried macOS x64 at ~88MB). A container image only ever loads one of them, so the rest is
-# dead weight. Stripping to the target arch takes the jar down to ~8MB with no behaviour change
-# (the model is still downloaded dynamically at runtime; only the unused native libs are removed).
-#
-# This is intentionally a Docker-build-only step: local/desktop builds keep every platform so
-# cross-platform development still works.
+# The onnxruntime jar carries natives for macOS arm64, Windows x64 and Linux x64/arm64 (~42MB).
+# A container loads exactly one, so keeping only the target arch takes the jar to ~8MB.
+# Docker-build-only, so local and desktop builds keep every platform for cross-platform work.
 #
 # Usage: slim-onnxruntime.sh <target> [debian-arch]
 #   <target> = a directory containing onnxruntime-*.jar (e.g. an extracted BOOT-INF/lib)

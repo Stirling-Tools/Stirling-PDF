@@ -11,21 +11,6 @@ export interface FormDetectionCatalogEntry {
   sizeBytes: number;
   onnxUrl: string;
   sha256: string;
-  // Pipeline spec (parity with the backend ModelCatalogEntry) - drives the in-browser engine.
-  decoder?: string;
-  inputSize: number;
-  resizeMode?: string;
-  padColor?: number[];
-  channelOrder?: string;
-  normMean?: number[];
-  normStd?: number[];
-  outputLayout?: string;
-  hasObjectness?: boolean;
-  classNames?: string[];
-  classFieldTypes?: string[];
-  scoreThreshold?: number;
-  nms?: string;
-  iou?: number;
 }
 
 export type FormDetectionState =
@@ -34,8 +19,6 @@ export type FormDetectionState =
   | "verifying"
   | "ready"
   | "failed";
-
-export type FormDetectionExecutionMode = "auto" | "browser" | "server";
 
 export interface FormDetectionModelStatus {
   status: FormDetectionState;
@@ -46,7 +29,6 @@ export interface FormDetectionModelStatus {
   writable: boolean;
   catalog: FormDetectionCatalogEntry[];
   enabled: boolean;
-  executionMode: FormDetectionExecutionMode;
   serverEngineAvailable: boolean;
   downloadingModelId?: string | null;
 }
@@ -126,10 +108,7 @@ export function useFormDetectionModelStatus() {
   );
 
   const setConfig = useCallback(
-    async (config: {
-      enabled?: boolean;
-      executionMode?: FormDetectionExecutionMode;
-    }) => {
+    async (config: { enabled?: boolean }) => {
       await apiClient.post(CONFIG_URL, config);
       await fetchStatus();
     },

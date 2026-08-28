@@ -6,8 +6,7 @@ import lombok.Data;
 
 /**
  * One installable form-detection model plus the data-driven pre/post-processing spec the inference
- * pipeline needs. The exact same numeric values are surfaced to the browser (via the model status
- * endpoint) so the in-browser and server inference paths stay equivalent.
+ * pipeline needs.
  *
  * <p>NOTE: the pipeline-spec defaults below follow common Ultralytics-YOLO conventions. The precise
  * values for a given model (input size, resize mode, channel order, output layout, NMS, class
@@ -31,7 +30,7 @@ public class ModelCatalogEntry {
     /** Lower-hex SHA-256 of the .onnx. Blank = not yet available (install is rejected). */
     private String sha256;
 
-    // --- Pre-processing (parity-critical, mirrored by the browser) ---------------
+    // --- Pre-processing (must match the exported model) --------------------------
     /** Square model input edge in pixels. */
     private int inputSize = 1024;
 

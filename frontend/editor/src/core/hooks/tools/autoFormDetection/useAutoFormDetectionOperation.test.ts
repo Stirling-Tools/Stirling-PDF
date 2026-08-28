@@ -11,12 +11,6 @@ vi.mock("@app/services/formDetection/progress", () => ({
 vi.mock("@app/services/formDetection/applyFields", () => ({
   applyFields: vi.fn(async () => new Uint8Array([1, 2, 3])),
 }));
-vi.mock("@app/services/formDetection/runBrowserPipeline", () => ({
-  runBrowserDetection: vi.fn(async () => ({
-    fields: [],
-    appliedPdf: new Uint8Array([1, 2, 3]),
-  })),
-}));
 vi.mock("@app/hooks/useFormDetectionModelStatus", () => ({}));
 vi.mock("@app/hooks/tools/shared/useToolOperation", () => ({
   ToolType: { custom: "custom" },
@@ -28,36 +22,13 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
+import { expectConsole } from "@app/tests/failOnConsole";
 import apiClient from "@app/services/apiClient";
-import { runBrowserDetection } from "@app/services/formDetection/runBrowserPipeline";
-import {
-  autoFormDetectionOperationConfig,
-  NO_LOCAL_MODEL_ERROR,
-} from "@app/hooks/tools/autoFormDetection/useAutoFormDetectionOperation";
+import { applyFields } from "@app/services/formDetection/applyFields";
+import { autoFormDetectionOperationConfig } from "@app/hooks/tools/autoFormDetection/useAutoFormDetectionOperation";
 import { defaultParameters } from "@app/hooks/tools/autoFormDetection/useAutoFormDetectionParameters";
 
-const CATALOG_ENTRY = {
-  id: "ffdnet-s",
-  displayName: "FFDNet-S",
-  description: "",
-  license: "",
-  sizeBytes: 1,
-  onnxUrl: "",
-  sha256: "",
-  inputSize: 1216,
-};
-
-function stubStatus(overrides: Record<string, unknown>) {
-  (apiClient.get as Mock).mockResolvedValue({
-    data: {
-      status: "ready",
-      catalog: [CATALOG_ENTRY],
-      activeModelId: "ffdnet-s",
-      executionMode: "auto",
-      ...overrides,
-    },
-  });
-}
+const DETECT_ENDPOINT = "/api/v1/form/form-detection/detect";
 
 function pdfFile(): File {
   return new File(["%PDF-1.4 dummy"], "doc.pdf", { type: "application/pdf" });
@@ -65,49 +36,45 @@ function pdfFile(): File {
 
 const process = autoFormDetectionOperationConfig.customProcessor;
 
-// The admin UI promises browser mode keeps PDFs on the device, so a missing model
-// must be an error, never a silent upload (Ethan's review, PR #6663).
-describe("processAutoFormDetection engine selection", () => {
+describe("processAutoFormDetection", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (apiClient.post as Mock).mockResolvedValue({ data: { detections: [] } });
   });
 
-  it("browser mode without an active model fails instead of uploading", async () => {
-    stubStatus({ executionMode: "browser", activeModelId: "" });
-
-    await expect(process(defaultParameters, [pdfFile()])).rejects.toThrow(
-      NO_LOCAL_MODEL_ERROR,
-    );
-    expect(apiClient.post).not.toHaveBeenCalled();
-  });
-
-  it("browser mode with an active model never posts the file", async () => {
-    stubStatus({ executionMode: "browser" });
-
-    await process(defaultParameters, [pdfFile()]);
-
-    expect(runBrowserDetection).toHaveBeenCalledTimes(1);
-    expect(apiClient.post).not.toHaveBeenCalled();
-  });
-
-  it("server mode uploads to the detect endpoint", async () => {
-    stubStatus({ executionMode: "server" });
-
-    await process(defaultParameters, [pdfFile()]);
-
-    expect(apiClient.post).toHaveBeenCalledWith(
-      "/api/v1/form/form-detection/detect",
-      expect.any(FormData),
-    );
-  });
-
-  it("auto mode without an active model may fall back to the server", async () => {
-    stubStatus({ executionMode: "auto", activeModelId: "" });
-
-    await process(defaultParameters, [pdfFile()]);
+  it("asks the server for fields, then applies them locally", async () => {
+    const { files } = await process(defaultParameters, [pdfFile()]);
 
     expect(apiClient.post).toHaveBeenCalledTimes(1);
-    expect(runBrowserDetection).not.toHaveBeenCalled();
+    const [url, body] = (apiClient.post as Mock).mock.calls[0];
+    expect(url).toBe(DETECT_ENDPOINT);
+    expect((body as FormData).get("applyToPdf")).toBe("false");
+    expect(applyFields).toHaveBeenCalledTimes(1);
+    expect(files[0].name).toBe("doc_form.pdf");
+  });
+
+  it("sends the sensitivity's confidence threshold", async () => {
+    await process({ ...defaultParameters, sensitivity: "low" }, [pdfFile()]);
+
+    const body = (apiClient.post as Mock).mock.calls[0][1] as FormData;
+    expect(body.get("confThreshold")).toBe("0.45");
+  });
+
+  it("re-requests a server-applied PDF when applying locally fails", async () => {
+    expectConsole.warn(/applying fields locally failed/);
+    (applyFields as Mock).mockRejectedValueOnce(new Error("bad xref"));
+    (apiClient.post as Mock).mockResolvedValueOnce({
+      data: { detections: [] },
+    });
+    (apiClient.post as Mock).mockResolvedValueOnce({
+      data: new Blob(["%PDF-1.4 applied"]),
+    });
+
+    const { files } = await process(defaultParameters, [pdfFile()]);
+
+    expect(apiClient.post).toHaveBeenCalledTimes(2);
+    const body = (apiClient.post as Mock).mock.calls[1][1] as FormData;
+    expect(body.get("applyToPdf")).toBe("true");
+    expect(files[0].name).toBe("doc_form.pdf");
   });
 });

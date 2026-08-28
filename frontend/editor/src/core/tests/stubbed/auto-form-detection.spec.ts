@@ -29,7 +29,6 @@ const MODEL_STATUS_NOT_INSTALLED = {
       sizeBytes: 0,
       onnxUrl: "",
       sha256: "",
-      inputSize: 1024,
     },
   ],
 };

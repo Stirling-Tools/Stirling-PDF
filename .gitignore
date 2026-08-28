@@ -74,7 +74,6 @@ app/core/src/main/resources/static/favicon.png
 app/core/src/main/resources/static/safari-pinned-tab.svg
 app/core/src/main/resources/static/pdfium/
 app/core/src/main/resources/static/pdfjs/
-app/core/src/main/resources/static/ort/
 app/core/src/main/resources/static/vendor/
 app/core/src/main/resources/static/**/*.gz
 app/core/src/main/resources/static/**/*.br

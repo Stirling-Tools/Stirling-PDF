@@ -408,7 +408,6 @@ aiEngine:
 
 formDetection:
   enabled: true # Master on/off switch for the Auto Form Detection feature
-  executionMode: auto # Where detection runs: 'auto' (browser first, server fallback), 'browser' (in-browser WASM only, PDF never leaves the device), or 'server' (backend inference)
   activeModelId: "" # Id of the installed Auto Form Detection model (set automatically after an admin installs one)
   modelDir: "" # Optional override directory for downloaded .onnx models; blank uses <configs>/models/form-detection
   preinstalledModelDir: "" # Read-only dir of models baked into the image (the air-gapped image bakes one here); activated on startup without being copied. Blank disables.

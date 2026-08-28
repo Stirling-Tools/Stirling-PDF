@@ -1,6 +1,5 @@
-// Apply detected fields as a real AcroForm using @cantoo/pdf-lib (the same library the rest of the
-// app uses). The browser counterpart of FormUtils.addFields; coordinates are already in PDF points
-// with a bottom-left origin, which is exactly what addToPage expects.
+// Turn detected fields into a real AcroForm with @cantoo/pdf-lib.
+// Rects arrive in PDF points, bottom-left origin - exactly what addToPage wants.
 
 import { PDFDocument } from "@cantoo/pdf-lib";
 

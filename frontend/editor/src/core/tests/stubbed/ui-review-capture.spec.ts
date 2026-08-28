@@ -37,10 +37,6 @@ const CATALOG = [
     onnxUrl:
       "https://huggingface.co/jbarrow/FFDNet-S-cpu/resolve/main/FFDNet-S.onnx",
     sha256: "93bccf47c048f9f947f9b1b52d002edf144a8a583dae39f164d9e5725321acc0",
-    inputSize: 1216,
-    classNames: ["text", "choice", "signature"],
-    classFieldTypes: ["text", "checkbox", "signature"],
-    scoreThreshold: 0.3,
   },
   {
     id: "ffdnet-l",
@@ -53,10 +49,6 @@ const CATALOG = [
     onnxUrl:
       "https://huggingface.co/jbarrow/FFDNet-L-cpu/resolve/main/FFDNet-L.onnx",
     sha256: "e00c59edd9a5275dab5847d38f042c8ecc827063650c8aac22b0e486c414cd35",
-    inputSize: 1216,
-    classNames: ["text", "choice", "signature"],
-    classFieldTypes: ["text", "checkbox", "signature"],
-    scoreThreshold: 0.3,
   },
 ];
 
@@ -72,7 +64,6 @@ function modelStatus(overrides: StatusOverrides = {}) {
     writable: true,
     catalog: CATALOG,
     enabled: true,
-    executionMode: "auto",
     serverEngineAvailable: true,
     ...overrides,
   };
@@ -407,7 +398,6 @@ test.describe("admin", () => {
   test("admin-05-server-unavailable", async ({ page }) => {
     await stubStatus(page, {
       serverEngineAvailable: false,
-      executionMode: "auto",
     });
     const { dialog } = await openFormDetectionSettings(page);
     await shootCard(page, dialog, "admin-05-server-unavailable");

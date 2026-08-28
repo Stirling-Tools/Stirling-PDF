@@ -4,10 +4,6 @@ import { useTranslation } from "react-i18next";
 import { ProgressBar } from "@app/ui/ProgressBar";
 import { DetectionStage, onStage } from "@app/services/formDetection/progress";
 
-function mb(bytes: number): string {
-  return `${Math.max(1, Math.round(bytes / (1024 * 1024)))} MB`;
-}
-
 export default function DetectionProgressPanel({
   active,
 }: {
@@ -28,52 +24,8 @@ export default function DetectionProgressPanel({
     "autoFormDetection.progress.starting",
     "Preparing detection...",
   );
-  let note: string | null = null;
 
   switch (stage.kind) {
-    case "model-download": {
-      const frac = stage.totalBytes
-        ? stage.loadedBytes / stage.totalBytes
-        : 0.5;
-      value = 0.05 + 0.3 * Math.min(1, frac);
-      label = stage.totalBytes
-        ? t(
-            "autoFormDetection.progress.downloadingSized",
-            "Fetching AI model ({{loaded}} of {{total}})...",
-            { loaded: mb(stage.loadedBytes), total: mb(stage.totalBytes) },
-          )
-        : t("autoFormDetection.progress.downloading", "Fetching AI model...");
-      note = t(
-        "autoFormDetection.progress.downloadNote",
-        "One-time setup - future runs start instantly.",
-      );
-      break;
-    }
-    case "model-init":
-      value = 0.38;
-      label = t(
-        "autoFormDetection.progress.loadingModel",
-        "Getting the model ready...",
-      );
-      break;
-    // Each page is rendered and analysed back to back, so both stages share one band keyed on the
-    // page number. Giving them separate bands would send the bar backwards on every page.
-    case "rendering":
-      value = 0.4 + 0.53 * (stage.page / Math.max(1, stage.pageCount));
-      label = t(
-        "autoFormDetection.progress.rendering",
-        "Preparing page {{page}} of {{pageCount}}...",
-        { page: stage.page, pageCount: stage.pageCount },
-      );
-      break;
-    case "analyzing":
-      value = 0.4 + 0.53 * (stage.page / Math.max(1, stage.pageCount));
-      label = t(
-        "autoFormDetection.progress.analyzing",
-        "Analyzing page {{page}} of {{pageCount}}...",
-        { page: stage.page, pageCount: stage.pageCount },
-      );
-      break;
     case "uploading":
       value = 0.35;
       label = t(
@@ -82,7 +34,7 @@ export default function DetectionProgressPanel({
       );
       break;
     case "applying":
-      value = 0.96;
+      value = 0.9;
       label = t(
         "autoFormDetection.progress.applying",
         "Building fillable fields...",
@@ -103,11 +55,6 @@ export default function DetectionProgressPanel({
       <Text size="xs" c="dimmed">
         {label}
       </Text>
-      {note ? (
-        <Text size="xs" c="dimmed">
-          {note}
-        </Text>
-      ) : null}
     </Stack>
   );
 }

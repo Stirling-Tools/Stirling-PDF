@@ -13,7 +13,7 @@ import stirling.software.proprietary.formdetection.model.ModelCatalogEntry;
 
 /**
  * Pure pre/post-processing for a YOLO-style detector, driven entirely by the {@link
- * ModelCatalogEntry} spec. The browser pipeline mirrors this exactly so both inference paths agree.
+ * ModelCatalogEntry} spec.
  *
  * <p>Coordinate spaces: {@code preprocess} maps the source bitmap into the model's NxN input;
  * {@code decode} reads raw model output (boxes in input-pixel space), thresholds, runs NMS, and

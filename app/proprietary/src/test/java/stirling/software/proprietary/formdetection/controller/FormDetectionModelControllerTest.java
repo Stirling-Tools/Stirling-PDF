@@ -21,7 +21,7 @@ class FormDetectionModelControllerTest {
 
     private ModelStatusResponse notInstalled() {
         return new ModelStatusResponse(
-                "not_installed", 0, "", List.of(), null, true, List.of(), true, "auto", true, null);
+                "not_installed", 0, "", List.of(), null, true, List.of(), true, true, null);
     }
 
     private MockMvc mvc(FormDetectionModelManager manager) {
