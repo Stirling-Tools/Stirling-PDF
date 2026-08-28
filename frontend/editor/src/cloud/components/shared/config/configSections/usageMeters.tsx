@@ -17,8 +17,6 @@ import {
 import "@app/components/shared/config/configSections/Payg.css";
 import "@app/components/shared/config/configSections/PaygFree.css";
 
-// ─── Free grant meter (per billing period) ─────────────────────────────────
-
 export interface FreeSnapshot {
   /** Free documents used so far this period (grant − remaining). */
   billableUsed: number;
@@ -78,8 +76,6 @@ export function FreeMeterPanel({ snap }: { snap: FreeSnapshot }) {
     />
   );
 }
-
-// ─── Monthly spend-cap meter ────────────────────────────────────────────────
 
 export interface SpendCapSnapshot {
   /** Money spent so far this billing period, in major currency units. */
@@ -150,8 +146,6 @@ export function SpendCapMeterPanel({ snap }: { snap: SpendCapSnapshot }) {
     />
   );
 }
-
-// ─── Prepaid bundle capacity meter ──────────────────────────────────────────
 
 export interface PrepaidSnapshot {
   /** Prepaid units still available across the team's in-term pools. */
