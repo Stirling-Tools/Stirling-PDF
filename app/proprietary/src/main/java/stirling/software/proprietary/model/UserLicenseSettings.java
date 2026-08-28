@@ -50,17 +50,6 @@ public class UserLicenseSettings implements Serializable {
     private int licenseMaxUsers = 0;
 
     /**
-     * Servers purchased and users granted per server, from licence metadata. Presentation only, so
-     * the capacity UI can say "2 servers, 100 users each" between the weekly Keygen refreshes.
-     * {@code licenseMaxUsers} stays the enforced limit. Zero on any licence issued before the cap.
-     */
-    @Column(name = "server_quantity", nullable = false)
-    private int serverQuantity = 0;
-
-    @Column(name = "user_block_size", nullable = false)
-    private int userBlockSize = 0;
-
-    /**
      * Random salt used when generating signatures. Makes it harder to recompute the signature when
      * manually editing the table.
      */

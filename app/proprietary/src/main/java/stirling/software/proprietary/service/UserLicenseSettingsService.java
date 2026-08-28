@@ -156,26 +156,14 @@ public class UserLicenseSettingsService {
         UserLicenseSettings settings = getOrCreateSettings();
 
         int licenseMaxUsers = 0;
-        int serverQuantity = 0;
-        int userBlockSize = 0;
         if (hasPaidLicense()) {
             licenseMaxUsers = applicationProperties.getPremium().getMaxUsers();
-            serverQuantity = applicationProperties.getPremium().getServerQuantity();
-            userBlockSize = applicationProperties.getPremium().getUserBlockSize();
         }
 
-        if (settings.getLicenseMaxUsers() != licenseMaxUsers
-                || settings.getServerQuantity() != serverQuantity
-                || settings.getUserBlockSize() != userBlockSize) {
+        if (settings.getLicenseMaxUsers() != licenseMaxUsers) {
             settings.setLicenseMaxUsers(licenseMaxUsers);
-            settings.setServerQuantity(serverQuantity);
-            settings.setUserBlockSize(userBlockSize);
             settingsRepository.save(settings);
-            log.info(
-                    "Updated license capacity: maxUsers={}, servers={}, usersPerServer={}",
-                    licenseMaxUsers,
-                    serverQuantity,
-                    userBlockSize);
+            log.info("Updated license max users to: {}", licenseMaxUsers);
         }
     }
 

@@ -39,7 +39,6 @@ import stirling.software.proprietary.audit.AuditLevel;
 import stirling.software.proprietary.config.AuditConfigurationProperties;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.model.TeamMembership;
-import stirling.software.proprietary.model.UserLicenseSettings;
 import stirling.software.proprietary.model.dto.TeamWithUserCountDTO;
 import stirling.software.proprietary.repository.PersistentAuditEventRepository;
 import stirling.software.proprietary.security.config.EnterpriseEndpoint;
@@ -348,8 +347,7 @@ public class ProprietaryUIDataController {
         int maxAllowedUsers = licenseSettingsService.calculateMaxAllowedUsers();
         long availableSlots = licenseSettingsService.getAvailableUserSlots();
         int grandfatheredCount = licenseSettingsService.getDisplayGrandfatheredCount();
-        UserLicenseSettings licenseSettings = licenseSettingsService.getSettings();
-        int licenseMaxUsers = licenseSettings.getLicenseMaxUsers();
+        int licenseMaxUsers = licenseSettingsService.getSettings().getLicenseMaxUsers();
         boolean premiumEnabled = applicationProperties.getPremium().isEnabled();
         long pendingInvites = inviteTokenRepository.countActiveInvites(LocalDateTime.now());
 
@@ -394,8 +392,10 @@ public class ProprietaryUIDataController {
         data.setAvailableSlots(availableSlots);
         data.setGrandfatheredUserCount(grandfatheredCount);
         data.setLicenseMaxUsers(licenseMaxUsers);
-        data.setServerQuantity(licenseSettings.getServerQuantity());
-        data.setUserBlockSize(licenseSettings.getUserBlockSize());
+        // Read straight off the verified licence rather than the settings row: these are display
+        // fields, repopulated on every licence check, and not worth a schema change.
+        data.setServerQuantity(applicationProperties.getPremium().getServerQuantity());
+        data.setUserBlockSize(applicationProperties.getPremium().getUserBlockSize());
         data.setPendingInvites(pendingInvites);
         data.setPremiumEnabled(premiumEnabled);
         data.setMailEnabled(applicationProperties.getMail().isEnabled());

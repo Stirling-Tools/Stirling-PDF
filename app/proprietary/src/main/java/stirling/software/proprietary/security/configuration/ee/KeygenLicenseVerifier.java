@@ -84,6 +84,11 @@ public class KeygenLicenseVerifier {
     }
 
     public License verifyLicense(String licenseKeyOrCert) {
+        // Clear last verification's breakdown up front. Without this, removing or invalidating a
+        // licence leaves the previous server count in memory and the UI keeps reporting capacity
+        // the installation no longer has. Each parse path sets real values below.
+        applyCapacityBreakdown(null);
+
         if (!applicationProperties.getPremium().isEnabled()) {
             return License.NORMAL;
         }
