@@ -8,9 +8,6 @@
   text-align: left;
 }
 
-/* The shared stepped header draws its own heading, so the page no longer has one
-   of its own (.saas-connect__title is gone with it). */
-
 .saas-connect__waiting {
   display: flex;
   justify-content: center;

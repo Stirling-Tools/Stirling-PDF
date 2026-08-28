@@ -6,16 +6,11 @@ import { Tooltip } from "@app/components/shared/Tooltip";
 import { StepModalHeader } from "@portal/components/shared/StepModalHeader";
 
 /**
- * Step 2 of the connect flow, which is the middle of a task that started somewhere else.
+ * This page is step 2 of a flow that started on the instance, so it wears the same chrome: the admin
+ * is being asked for a security decision by what would otherwise look like a different product.
  *
- * <p>The self-hosted dialog counts three steps and hands the browser over on step 2, so for a first
- * link this page is that step: the same wordmark, the same badge, the same progress bar. Without it
- * the admin is sent off by one product and asked to make a security decision by what looks like
- * another, which is the moment they most need to believe the two are the same thing.
- *
- * <p>Re-auth is not counted, because on the instance side it is not a three-step flow. It still
- * wears the first link's copy and its consent checkbox, which is wrong — nothing is being consented
- * to that the team has not already agreed — and is the subject of its own change.
+ * <p>TODO: re-auth still wears the first link's copy and consent checkbox, which asks the approver
+ * to agree to a binding that already exists.
  */
 const TOTAL_STEPS = 3;
 
@@ -25,11 +20,7 @@ function ApproveShell({
   children,
 }: {
   title: string;
-  /**
-   * Count the steps only for a first link. Re-auth is a single step on the instance side, with no
-   * progress bar and no badge, so claiming "step 2 of 3" here would describe a flow the admin is
-   * not in.
-   */
+  /** Re-auth is one step on the instance side, so counting to three here would describe nothing. */
   stepped: boolean;
   children: ReactNode;
 }) {
@@ -68,11 +59,7 @@ export interface PendingConnect {
   requestId: string;
   callbackOrigin: string;
   insecureTransport: boolean;
-  /**
-   * LINK binds this server to a team for the first time; REAUTH only re-establishes a browser
-   * session for a server the team already owns, and cannot rebind it — the team is pinned from the
-   * device credential when the request is made.
-   */
+  /** REAUTH cannot rebind: the team is pinned from the device credential at request time. */
   mode?: "LINK" | "REAUTH";
 }
 
@@ -102,8 +89,6 @@ export function ConnectApproveView({
   // Gates the primary action: anyone can create a request, so the approver reading
   // the address is the only thing between one and a linked team.
   const [acknowledged, setAcknowledged] = useState(false);
-  // Absent on the settled phases, where there is no request to describe. Those keep the count,
-  // since a request that reached them was a first link far more often than not.
   const stepped = pending?.mode !== "REAUTH";
 
   if (phase === "loading" || phase === "redirecting") {

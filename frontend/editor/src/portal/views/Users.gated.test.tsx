@@ -4,11 +4,8 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { PortalViewProviders } from "@portal/test/TestQueryProvider";
 
 /**
- * The deep link into the invite flow, which the gate has to cover in its own right.
- *
- * `?invite` opens the modal from an effect rather than through the click handler, so guarding
- * openInvite did nothing for it. Same hole as Sources' `?new=1`, and it survived that fix — the
- * super search and the connect flow's own next steps both arrive here this way.
+ * `?invite` opens the modal from an effect, so guarding openInvite did nothing for it. Same hole as
+ * Sources' `?new=1`, and it survived that fix.
  */
 const { connect } = vi.hoisted(() => ({ connect: vi.fn() }));
 const gate = { gated: true };
@@ -35,7 +32,6 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
-// The page's chrome, none of which this test is about.
 vi.mock("@portal/contexts/TierContext", () => ({
   useTier: () => ({ tier: "pro" }),
 }));

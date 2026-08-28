@@ -1,11 +1,8 @@
-/* ──────────────────────────────────────────────────────────────────────── */
-/*  Connect flow — the three account-link steps                             */
-/* ──────────────────────────────────────────────────────────────────────── */
+/* Connect flow, the three account-link steps.
 
-/* Deliberately flat: bordered rows and plain type rather than icon tiles or
-   coloured cards. The value on step 1 is in the words, and a benefit grid that
-   competes with them reads as decoration. FlowModal already stacks and spaces
-   the body, so these blocks only own their own internals. */
+   Deliberately flat: bordered rows and plain type, not icon tiles or coloured
+   cards. FlowModal stacks and spaces the body, so these blocks own only their
+   own internals. */
 
 .portal-connect__lede {
   margin: 0;
@@ -14,14 +11,6 @@
   color: var(--c-text-muted);
 }
 
-.portal-connect__stack {
-  display: flex;
-  flex-direction: column;
-  gap: 0.9rem;
-}
-
-/* Benefit list. A definition list rather than a table: each row is a term and
-   its qualifier, which is what a screen reader should hear. */
 .portal-connect__list {
   margin: 0;
   border-top: 1px solid var(--c-border);
@@ -65,22 +54,18 @@
 
 /* ── Step 3 ─────────────────────────────────────────────────────────────── */
 
-/* The account row stands on its own rather than inside the benefits list, so it
-   needs the top edge the list would have given it. */
+/* Standalone, so it needs the top edge the benefits list would have given it. */
 .portal-connect__row--standalone {
   border-top: 1px solid var(--c-border);
 }
 
-/* The shared meter bar, seated on its own rather than in the plan card it wears on
-   the Usage page. Padded to sit in the row rhythm above and below it. */
+/* The shared bar without the plan card it wears on Usage; padded into the row rhythm. */
 .portal-connect__meter {
   padding: 0.25rem 0 0.5rem;
 }
 
-/* Next steps. Rows rather than a stack of full-width buttons: three primary-looking
-   buttons all competing was the loudest thing on a screen whose job is to confirm,
-   and it read as a form to fill in. Same flat row as the step 1 list, so the two
-   ends of the flow match, with a chevron to say it navigates. */
+/* Rows, not full-width buttons: three competing primaries were the loudest thing
+   on a screen whose job is to confirm. Same flat row as step 1, so both ends match. */
 .portal-connect__next {
   display: flex;
   flex-direction: column;
@@ -90,8 +75,7 @@
   border-top: 1px solid var(--c-border);
 }
 
-/* The Account row directly above already draws a bottom edge, so the list's own top
-   edge would sit 1px under it as a double line. */
+/* The Account row above draws a bottom edge; both would render as a double line. */
 .portal-connect__row + .portal-connect__next {
   border-top: 0;
 }

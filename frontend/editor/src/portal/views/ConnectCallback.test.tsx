@@ -5,9 +5,7 @@ import { MantineProvider } from "@mantine/core";
 import { UIProvider, useUI } from "@portal/contexts/UIContext";
 import type { ConnectOutcome } from "@portal/components/account-link/ConnectCallbackView";
 
-/**
- * The callback handles a live session token in a URL fragment, so the behaviour worth pinning is what it does with it: strip it immediately, refuse anything it cannot verify, and keep the two outcomes (SaaS sign-in, server link) independent of each other.
- */
+/** A live session token rides in the fragment: strip it at once, refuse what cannot be verified. */
 const { completeConnect, startConnect, setSession, refresh } = vi.hoisted(
   () => ({
     completeConnect: vi.fn(),
@@ -34,7 +32,7 @@ function landOn(fragment: string) {
   window.history.replaceState(null, "", `/account-link/callback${fragment}`);
 }
 
-/** Records what the host publishes, standing in for the dialog that consumes it. */
+/** Stands in for the dialog that consumes the outcome. */
 let published: ConnectOutcome[] = [];
 
 function OutcomeSpy() {
@@ -50,10 +48,7 @@ function OutcomeSpy() {
 
 const lastOutcome = () => published[published.length - 1];
 
-/**
- * Route and host together: the route reads the fragment, the host finishes the link and publishes
- * the outcome for the dialog. Exercising them apart would test the hand-off rather than the flow.
- */
+/** Route and host together: apart, this would test the hand-off rather than the flow. */
 function renderFlow() {
   return render(
     <MantineProvider>
@@ -92,8 +87,7 @@ describe("account-link callback", () => {
 
     renderFlow();
 
-    // Synchronous, before any await: the fragment must not survive long enough
-    // to be read from the address bar or land in a history entry.
+    // Before any await: the fragment must not reach the address bar or a history entry.
     expect(window.location.hash).toBe("");
     await waitFor(() => expect(completeConnect).toHaveBeenCalled());
   });
@@ -134,8 +128,7 @@ describe("account-link callback", () => {
 
     renderFlow();
 
-    // The two outcomes are independent: a failed sign-in must not strand the
-    // server unlinked.
+    // Independent outcomes: a failed sign-in must not strand the server unlinked.
     await waitFor(() => expect(completeConnect).toHaveBeenCalledWith(NONCE));
   });
 
@@ -156,7 +149,6 @@ describe("account-link callback", () => {
     await waitFor(() => expect(window.location.hash).toBe(""));
     expect(completeConnect).not.toHaveBeenCalled();
     expect(setSession).not.toHaveBeenCalled();
-    // Said so in the dialog rather than silently doing nothing.
     await waitFor(() => expect(lastOutcome()?.state).toBe("malformed"));
     expect(lastOutcome()?.reclaim).toBeUndefined();
   });
@@ -168,7 +160,6 @@ describe("account-link callback", () => {
 
     await waitFor(() => expect(lastOutcome()?.state).toBe("linked"));
     expect(lastOutcome()?.sessionRestored).toBe(true);
-    // The host draws nothing: step 3 of the connect dialog is where this shows up.
     expect(container.querySelector(".portal-connect-callback")).toBeNull();
   });
 
@@ -206,8 +197,7 @@ describe("account-link callback", () => {
 
     act(() => lastOutcome()!.reclaim!());
 
-    // Re-claims the existing handshake; opening a new one would waste the approval a leader gave
-    // by hand. That is why the outcome carries the action rather than the dialog inventing one.
+    // Re-claims rather than opening a new handshake, which would spend a leader's approval.
     await waitFor(() => expect(completeConnect).toHaveBeenCalledTimes(2));
     expect(startConnect).not.toHaveBeenCalled();
   });

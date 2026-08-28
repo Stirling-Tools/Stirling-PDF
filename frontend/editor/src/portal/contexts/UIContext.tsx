@@ -48,13 +48,8 @@ interface UIContextValue {
   openLinkModal: (mode?: "link" | "reauth") => void;
   closeLinkModal: () => void;
   /**
-   * The connect flow's last step, arriving after the admin has been to Stirling and back.
-   *
-   * A one-shot signal rather than a direct call, for the same reason
-   * {@link UIContextValue.trialSetupRequested} is: the callback route and the dialog are mounted
-   * separately, and there must only ever be one link dialog. The callback publishes the outcome,
-   * this reopens the same dialog on step 3, and the admin lands where the progress bar said they
-   * would rather than in a second dialog that looks nothing like the one they left.
+   * A one-shot signal like {@link UIContextValue.trialSetupRequested}: the callback route and the
+   * dialog mount separately, and there must only ever be one link dialog.
    */
   connectOutcome: ConnectOutcome | null;
   publishConnectOutcome: (outcome: ConnectOutcome) => void;
@@ -182,8 +177,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
       closeLinkModal: () => {
         setLinkModalOpen(false);
         setLinkModalMode("link");
-        // Dropped with the dialog: a reopen from a CTA is a fresh flow at step 1, not the
-        // result of a handshake the admin has already dismissed.
+        // A reopen from a CTA is a fresh flow, not a handshake already dismissed.
         setConnectOutcome(null);
         if (reopenSettingsAfterLink) {
           setSettingsInitialSection(reopenSettingsAfterLink);

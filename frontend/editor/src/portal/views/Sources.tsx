@@ -29,15 +29,12 @@ export function Sources() {
     sourceId: string | null;
   }>({ open: false, sourceId: null });
 
-  // Held in a ref so the effect below does not re-run on its identity. The effect writes back to
-  // the URL, so a callback that changes each render would loop: strip the param, re-render, run
-  // again.
+  // Ref so the effect does not loop: it writes the param back, which would re-run it.
   const connectRef = useRef(connect);
   connectRef.current = connect;
 
-  // Deep link into the create flow. It sets the modal directly, so it needs the gate in its own
-  // right: guarding openCreate would leave ?new=1 as a way past it (the Documents review queue and
-  // the pipelines empty state both arrive here that way).
+  // Sets the modal directly, so it needs the gate in its own right: guarding openCreate would
+  // leave ?new=1 as a way past it.
   useEffect(() => {
     if (searchParams.get("new") !== "1") return;
     if (gated) connectRef.current();

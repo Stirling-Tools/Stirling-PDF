@@ -4,13 +4,9 @@ import { MemoryRouter } from "react-router-dom";
 import { PortalTestProviders } from "@portal/test/TestQueryProvider";
 
 /**
- * The free-grant figure is the one number on this screen a customer can check against their
- * account, so it must be the wallet's and never a hardcoded 500: the allowance is seeded per team,
- * so an account that has already spent it has nothing left to show.
- *
- * The upgrade CTA is the other thing worth pinning. It appears on a nearly spent trial and not
- * otherwise, because a prompt to pay on a screen confirming a free connection is the wrong note
- * unless it is actually the next thing to do.
+ * The figure is checkable against a real account, so it must be the wallet's and never a hardcoded
+ * 500. The upgrade row appears only on a nearly spent trial: a prompt to pay is the wrong note on a
+ * screen confirming a free connection.
  */
 const { fetchWallet } = vi.hoisted(() => ({ fetchWallet: vi.fn() }));
 vi.mock("@portal/api/billing", () => ({ fetchWallet }));
@@ -18,7 +14,7 @@ vi.mock("@portal/api/billing", () => ({ fetchWallet }));
 import { ConnectDoneSlide } from "@portal/components/account-link/connect/ConnectDoneSlide";
 import { freeWallet } from "@portal/components/billing/walletFixtures";
 
-/** The shared free-plan wallet, wound down to the balance under test. */
+/** The shared fixture, wound down to the balance under test. */
 const wallet = (freeRemaining: number) => ({
   ...freeWallet,
   freeRemaining,
@@ -55,7 +51,6 @@ describe("ConnectDoneSlide", () => {
     await waitFor(() =>
       expect(screen.getByText("Invite your team")).toBeTruthy(),
     );
-    // No meter and no upgrade prompt off a balance we never learned.
     expect(document.querySelector(".paygf-meter")).toBeNull();
     expect(screen.queryByText(SWITCH_ON)).toBeNull();
   });
@@ -64,7 +59,6 @@ describe("ConnectDoneSlide", () => {
     fetchWallet.mockResolvedValue(wallet(40));
     renderDone();
     await waitFor(() => expect(screen.getByText(SWITCH_ON)).toBeTruthy());
-    // First, above the things that can wait.
     const rows = [...document.querySelectorAll(".portal-connect__next-item")];
     expect(rows[0]?.textContent).toMatch(SWITCH_ON);
   });

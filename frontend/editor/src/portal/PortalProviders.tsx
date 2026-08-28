@@ -14,11 +14,8 @@ function LinkModalHost() {
   // Ask once a session while the instance is unlinked, rather than waiting to be found.
   useConnectPrompt();
 
-  // Mounted only while open, so closing discards the flow's state instead of parking it. The
-  // dialog's step is derived from an in-flight hand-off, and a hand-off that was interrupted (the
-  // admin closed the dialog on the way out, or came back from Stirling) stays flagged: kept
-  // mounted, every later open would reopen on the ghost step with no way forward. Modal already
-  // renders null when closed, so there is no exit transition to lose.
+  // Mounted only while open, so closing discards the flow. Kept mounted, an interrupted hand-off
+  // stays flagged and every later open resumes on the ghost step with no way forward.
   if (!linkModalOpen) return null;
   return (
     <LinkAccountModal

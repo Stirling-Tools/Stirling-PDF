@@ -70,8 +70,7 @@ export function Sidebar() {
             if (entry.externalUrl) {
               window.open(entry.externalUrl, "_blank", "noopener,noreferrer");
             } else if (entry.requiresLink && gated) {
-              // Ask where they are. Navigating first would land them on a page with nothing on
-              // it, and dismissing the dialog would leave them stranded there.
+              // Ask here: navigating first strands them on a page with nothing on it.
               connect();
             } else {
               setActiveView(id as ViewId);

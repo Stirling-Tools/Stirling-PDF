@@ -65,14 +65,11 @@ export function Users() {
 
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Held in a ref so the effect below does not re-run on its identity. The effect writes back to
-  // the URL, so a callback that changes each render would loop: strip the param, re-render, run
-  // again.
+  // Ref so the effect does not loop: it writes the param back, which would re-run it.
   const connectRef = useRef(connect);
   connectRef.current = connect;
 
-  // Deep link into the invite flow. It sets the modal directly, so it needs the gate in its own
-  // right: guarding openInvite alone would leave ?invite as a way past it.
+  // Sets the modal directly, so it needs the gate in its own right.
   useEffect(() => {
     if (searchParams.get("invite") === null) return;
     if (gated) connectRef.current();

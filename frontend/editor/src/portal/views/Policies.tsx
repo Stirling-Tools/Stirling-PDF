@@ -106,10 +106,9 @@ export function Policies() {
 
   const openEntry = useCallback(
     (entry: CatalogueEntry) => {
-      // Setting up or changing a policy needs a linked account, so ask for one rather than opening
-      // an editor whose save would fail. Viewing the catalogue stays open to everyone. Via the ref
-      // so this callback keeps its identity: the deep-link effect below depends on it and writes
-      // back to the URL, which would otherwise loop.
+      // Ask rather than open an editor whose save would fail; viewing the catalogue stays open.
+      // Via the ref so this keeps its identity: the deep-link effect depends on it and writes the
+      // URL back, which would otherwise loop.
       if (gated) {
         connectRef.current();
         return;

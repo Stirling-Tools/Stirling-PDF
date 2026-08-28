@@ -90,11 +90,8 @@ export function useLink(): LinkContextValue {
 }
 
 /**
- * As {@link useLink}, but null rather than throwing when there is no provider.
- *
- * <p>For code shared with a build that has no link concept. The SaaS portal mounts no
- * {@link LinkProvider} on purpose, so anything reachable from shared chrome cannot demand one:
- * absent means "linking does not apply here", which is a real answer and not a mistake.
+ * Null rather than throwing where there is no provider. The SaaS portal mounts none on purpose, so
+ * absent means "linking does not apply here" — a real answer, not a mistake.
  */
 export function useLinkOptional(): LinkContextValue | null {
   return useContext(LinkContext);

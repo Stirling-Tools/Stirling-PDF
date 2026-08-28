@@ -19,14 +19,9 @@ interface LocationState {
 }
 
 /**
- * Finishes the handshake and hands the outcome to the connect dialog as its last step.
- *
- * <p>Renders nothing. The result belongs on step 3 of the dialog the admin left on step 2, so this
- * publishes into {@link useUI} and the single dialog host reopens there. A dialog of its own would
- * arrive with no progress bar and nothing connecting it to the task that sent them away.
- *
- * <p>Mounted app-wide rather than on the callback route, which only reads the fragment and
- * navigates: by the time there is an outcome to show, that route is gone.
+ * Renders nothing: the result belongs on step 3 of the dialog the admin left, so this publishes the
+ * outcome and the single dialog host reopens there. Mounted app-wide because the callback route
+ * only reads the fragment and navigates, so it is gone by the time there is an outcome.
  */
 export function ConnectCallbackHost() {
   const location = useLocation();
@@ -36,8 +31,7 @@ export function ConnectCallbackHost() {
 
   const startedRef = useRef(false);
 
-  // Held in refs so the effect runs on the hand-over alone, not on the identity of callbacks that
-  // change every render. The effect must not re-run: it consumes a single-use nonce.
+  // Refs so the effect runs on the hand-over alone: it consumes a single-use nonce.
   const publishRef = useRef(publishConnectOutcome);
   publishRef.current = publishConnectOutcome;
   const refreshRef = useRef(refresh);
@@ -58,8 +52,7 @@ export function ConnectCallbackHost() {
       if (accessToken && refreshToken) {
         try {
           const supabase = ensureSaasSupabase();
-          // Logged, not swallowed: silently this resurfaces later as "session expired" on the
-          // usage page, with nothing tying it back here.
+          // Logged, not swallowed: this resurfaces later as "session expired" otherwise.
           if (!supabase) {
             console.warn(
               "[account-link] no Supabase client: VITE_SUPABASE_URL / VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY are not set for this build",
@@ -87,13 +80,7 @@ export function ConnectCallbackHost() {
       await claim(nonce, sessionRestored);
     })();
 
-    /**
-     * Claims the handshake and publishes what came back.
-     *
-     * <p>Passes itself as {@code reclaim} for the states where the row is still there, so the
-     * dialog's Try again re-claims rather than opening a new handshake. Recursive on purpose: a
-     * second failure is offered the same choice as the first.
-     */
+    /** Passes itself as {@code reclaim} so Try again re-claims rather than opening a handshake. */
     async function claim(nonce: string, sessionRestored: boolean) {
       publishRef.current({ state: "working", sessionRestored });
       const again = () => void claim(nonce, sessionRestored);
@@ -104,12 +91,10 @@ export function ConnectCallbackHost() {
           sessionRestored,
           reclaim: state === "retry" ? again : undefined,
         });
-        // The portal read its status on mount, before this existed. Without this the page behind
-        // the dialog still says unlinked until a reload.
+        // Without this the page behind the dialog says unlinked until a reload.
         if (state === "linked") await refreshRef.current();
       } catch {
-        // Could not reach our own backend. The handshake is untouched, so this is worth another
-        // attempt rather than a restart.
+        // Our own backend is unreachable; the handshake is untouched, so retrying beats restarting.
         publishRef.current({ state: "retry", sessionRestored, reclaim: again });
       }
     }

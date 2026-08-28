@@ -21,37 +21,15 @@ const TOTAL_STEPS = 3;
 interface Props {
   open: boolean;
   onClose: () => void;
-  /**
-   * "link" connects this server to a team for the first time; "reauth" only re-establishes the
-   * browser's Stirling session for a server that is already linked, so it stays one step with no
-   * pitch and no success screen.
-   */
+  /** "reauth" only re-establishes the browser session, so it stays one step with no pitch. */
   mode?: "link" | "reauth";
-  /**
-   * The outcome of a round trip to Stirling, published by the callback route. Present means the
-   * admin is returning, so the dialog shows step 3 instead of step 1.
-   */
+  /** Published by the callback route; present means the admin is returning, so show step 3. */
   outcome?: ConnectOutcome | null;
 }
 
 /**
- * The connect flow: three steps that say why this server needs a Stirling account, hand the browser
- * over, and show what it got.
- *
- * <p>The progress bar spans a redirect, which is the shape of the flow rather than a compromise.
- * The admin leaves on step 2, signs in and approves on stirling.com, and returns on step 3 of the
- * dialog they left. Without that they would be sent to another site by one dialog and greeted by a
- * different one on the way back, with nothing saying the two were the same task.
- *
- * <p>The step is derived, not held. It is a function of what the flow is doing (asking, handing
- * over, reporting), so there is no state to reset when the dialog closes and no effect to move it
- * on when an outcome lands.
- *
- * <p>Chrome is the portal's own {@link FlowModal} and {@link StepModalHeader}, the shells
- * procurement and prepay already wear, so this dialog cannot drift from them.
- *
- * <p>The device secret never reaches the browser: approval happens on Stirling, the instance claims
- * the credential server to server, and this component only ever sees an outcome.
+ * The progress bar spans the redirect on purpose: the admin leaves on step 2 and returns on step 3
+ * of the dialog they left, rather than being sent off by one dialog and greeted by another.
  */
 export function LinkAccountModal({
   open,
@@ -63,8 +41,7 @@ export function LinkAccountModal({
   const reauth = mode === "reauth";
   const handoff = useConnectHandoff(reauth);
 
-  // Busy outranks a stale outcome, so retrying from step 3 shows the hand-off again rather than
-  // sitting on the old result until the browser leaves.
+  // Busy outranks a stale outcome, or a retry sits on the old result until the browser leaves.
   const step: Step = handoff.busy ? 2 : outcome ? 3 : 1;
 
   const title = reauth
@@ -121,8 +98,7 @@ export function LinkAccountModal({
         />
       )}
 
-      {/* On step 1, not in the slides: a failed hand-off drops back here, so this is where the
-          reason has to be. */}
+      {/* Here, not in the ghost: a failed hand-off unmounts that and drops back to step 1. */}
       {step === 1 && !isSaasSupabaseConfigured && (
         <Banner
           tone="warning"
@@ -169,8 +145,7 @@ export function LinkAccountModal({
       );
     }
 
-    // Nothing to confirm and nothing to go back to: the request is out and the browser is leaving.
-    // Close is there so a stalled hand-off is not a dead end.
+    // Close only, so a stalled hand-off is not a dead end.
     if (step === 2) {
       return (
         <>
@@ -182,8 +157,7 @@ export function LinkAccountModal({
       );
     }
 
-    // Still finishing: offering a retry over a call that has not answered is how you get two
-    // handshakes.
+    // A retry over a call that has not answered is how you get two handshakes.
     if (outcome?.state === "working") {
       return (
         <>
@@ -195,8 +169,7 @@ export function LinkAccountModal({
       );
     }
 
-    // Still-open handshake: claim it again. Starting over would spend the approval a leader gave by
-    // hand.
+    // Still open: re-claim rather than spend the approval a leader gave by hand.
     if (outcome?.reclaim) {
       return (
         <>
@@ -210,7 +183,6 @@ export function LinkAccountModal({
       );
     }
 
-    // Spent handshake: the fix is a new one, which is what the hand-off does.
     if (outcome && isRetryableOutcome(outcome.state)) {
       return (
         <>

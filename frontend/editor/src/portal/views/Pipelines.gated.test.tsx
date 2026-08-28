@@ -4,15 +4,8 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { PortalViewProviders } from "@portal/test/TestQueryProvider";
 
 /**
- * How the gate behaves for someone who has not connected an account.
- *
- * The page must look exactly as it always does. The ask is a dialog raised when they try to do
- * something, not a lock screen in place of the feature: an admin who has pipelines still needs to
- * see them, and one who has none should still see the empty state that explains what they are.
- *
- * The route guard is the important half. Guarding click handlers is whack-a-mole, and the builder
- * is reachable from its own list, the Documents review queue, the Connect flow's next steps, and a
- * typed URL. These pin the route, so a new link added later cannot walk around it.
+ * The page must look exactly as it always does: the ask is a dialog on the attempt, not a lock
+ * screen in place of the feature. The route half is what a later link cannot walk around.
  */
 const { connect } = vi.hoisted(() => ({ connect: vi.fn() }));
 
@@ -115,7 +108,6 @@ describe("Pipelines when the account is not connected", () => {
   it("turns away a direct arrival at the builder, however it was reached", async () => {
     fetchPipelines.mockResolvedValue({ kpis: [], pipelines: [] });
     renderAt("/processor/pipelines/new");
-    // Bounced to the list, which is the page it would have come from.
     expect(
       await screen.findByText("portal.pipelines.empty.title"),
     ).toBeInTheDocument();

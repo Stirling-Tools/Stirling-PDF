@@ -3,13 +3,8 @@ import { Skeleton } from "@app/ui";
 import "@portal/components/account-link/connect/connect.css";
 
 /**
- * Step 2 of the connect flow: the browser is on its way to Stirling.
- *
- * <p>A ghost rather than a screen, because the admin has already decided by this point. It earns
- * its place when the instance's own backend is slow to open the handshake, which is when a blank
- * dialog would look broken.
- *
- * <p>No error state: a failed hand-off drops back to step 1, which is where the reason is shown.
+ * A ghost rather than a screen: the admin has already decided. It earns its place when the local
+ * backend is slow to open the handshake, where a blank dialog would look broken.
  */
 export function ConnectHandoffGhost() {
   const { t } = useTranslation();

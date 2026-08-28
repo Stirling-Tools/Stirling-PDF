@@ -30,13 +30,7 @@ export function PortalTestProviders({ children }: { children: ReactNode }) {
   );
 }
 
-/**
- * Everything a whole view needs: {@link PortalTestProviders} plus the link and UI contexts.
- *
- * Views that create or edit gated features read the connect gate, which asks both whether the
- * instance is linked (LinkContext) and how to open the Connect flow (UIContext). Defaults to
- * unlinked, matching the app's own default.
- */
+/** {@link PortalTestProviders} plus the contexts the connect gate reads. Unlinked by default. */
 export function PortalViewProviders({
   children,
   linkState = "unlinked",

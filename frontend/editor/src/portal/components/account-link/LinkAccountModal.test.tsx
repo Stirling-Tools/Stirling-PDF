@@ -3,14 +3,7 @@ import { act, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { PortalTestProviders } from "@portal/test/TestQueryProvider";
 
-/**
- * The connect flow's step machine.
- *
- * What matters: the pitch is never skipped for a fresh link, the hand-off happens on step 2 and
- * only when the admin asks for it, re-auth never grows a pitch or a success screen it has no
- * business showing, and an outcome published by the callback resumes on step 3 rather than opening
- * a second dialog.
- */
+/** The step machine: what drives each step, and what must not skip or repeat one. */
 const { startConnect, startReauth, fetchWallet, EMAIL } = vi.hoisted(() => ({
   startConnect: vi.fn(),
   startReauth: vi.fn(),
@@ -63,10 +56,7 @@ function click(label: string | RegExp) {
   act(() => screen.getByRole("button", { name: label }).click());
 }
 
-/**
- * How far along the progress bar reads, which is the step indicator that survives no-i18n.
- * Queried off the body because the dialog portals out of the render container.
- */
+/** Read off the body because the dialog portals out; the badge itself is uninterpolated here. */
 function filledSteps(): number {
   return document.body.querySelectorAll(
     ".portal-stepmodal__progress .is-filled",
@@ -117,8 +107,7 @@ describe("LinkAccountModal", () => {
     const { container } = renderModal();
     click(CONNECT);
 
-    // Nothing collects credentials on this origin: the admin signs in on Stirling, so a provider
-    // button here would send them there and abandon them.
+    // A sign-in started on this origin cannot complete, so nothing here may collect credentials.
     expect(container.querySelector("input[type=password]")).toBeNull();
     expect(container.querySelector("input[type=email]")).toBeNull();
   });
@@ -127,12 +116,10 @@ describe("LinkAccountModal", () => {
     renderModal();
     click(CONNECT);
 
-    // One click, not two: step 2 is the hand-off happening, not a page about it.
     await waitFor(() => expect(startConnect).toHaveBeenCalled());
     expect(screen.getByText(GHOST)).toBeTruthy();
     expect(filledSteps()).toBe(2);
-    // Callback built from this page's own origin, which the backend then checks
-    // against the request's Origin header.
+    // The backend checks this against the request's Origin header.
     expect(startConnect).toHaveBeenCalledWith(
       "localhost",
       "http://localhost:5173/account-link/callback",
@@ -150,8 +137,7 @@ describe("LinkAccountModal", () => {
 
     click(/Sign in again/);
 
-    // A different endpoint on purpose: reauth presents the device credential so
-    // Stirling pins the handshake to the team that already owns this server.
+    // A different endpoint: reauth presents the credential, so the team is pinned server-side.
     await waitFor(() =>
       expect(startReauth).toHaveBeenCalledWith(
         "http://localhost:5173/account-link/callback",
@@ -169,8 +155,7 @@ describe("LinkAccountModal", () => {
 
     await waitFor(() => expect(startConnect).toHaveBeenCalled());
     expect(assign).not.toHaveBeenCalled();
-    // The ghost is not where an error belongs: it unmounts the moment the request settles, so
-    // the reason has to land on the step the admin is returned to.
+    // The ghost unmounts when the request settles, so the reason lands on step 1.
     expect(await screen.findByText(/outbound network access/)).toBeTruthy();
     expect(screen.getByText(BENEFITS)).toBeTruthy();
     expect(filledSteps()).toBe(1);
@@ -192,11 +177,7 @@ describe("LinkAccountModal", () => {
     expect(assign).not.toHaveBeenCalled();
   });
 
-  /**
-   * The hand-off is flagged in flight and never cleared on the success path, because the page was
-   * supposed to be gone. Both ways of coming back have to undo that, or the dialog is stuck on the
-   * ghost step with nothing to click.
-   */
+  /** Busy is never cleared on success, because the page was meant to be gone. */
   describe("coming back from a hand-off that never completed", () => {
     it("clears the in-flight flag when the page is shown again", async () => {
       renderModal();
@@ -204,7 +185,6 @@ describe("LinkAccountModal", () => {
 
       await waitFor(() => expect(screen.getByText(GHOST)).toBeTruthy());
 
-      // Back from Stirling, restored from the browser's cache with the heap intact.
       act(() => {
         window.dispatchEvent(new Event("pageshow"));
       });
@@ -214,11 +194,8 @@ describe("LinkAccountModal", () => {
     });
 
     /**
-     * Not a test of the close path itself: the host mounts this dialog only while open, so closing
-     * is an unmount and a fresh mount is clean by construction. What this pins is the property that
-     * makes that work, and the mistake that would undo it. Hoist the in-flight flag into UIContext
-     * (the obvious "fix" if the ghost ever needs to survive something) and the trap comes straight
-     * back, with this failing.
+     * Not the close path itself (the host unmounts, so a fresh mount is clean by construction) but
+     * the property behind it: hoist the flag into UIContext and the trap returns, failing here.
      */
     it("keeps the in-flight flag local, so a fresh mount cannot inherit one", async () => {
       const first = renderModal();
@@ -241,14 +218,9 @@ describe("LinkAccountModal", () => {
         await screen.findByText(/now runs against your Stirling account/),
       ).toBeTruthy();
       expect(screen.queryByText(BENEFITS)).toBeNull();
-      // The whole reason the progress bar spans the redirect: the admin left on 2 of 3 and the
-      // bar says they arrived on 3. Counted rather than read off the badge, because the step
-      // label is interpolated and i18n is not initialised here.
+      // Left on 2 of 3, arrived on 3: the whole reason the bar spans the redirect.
       expect(filledSteps()).toBe(3);
-      // Which account, so the admin can see it landed on the one they meant rather than
-      // whatever they were last signed in as.
       expect(await screen.findByText(EMAIL)).toBeTruthy();
-      // And the moment to act on what was unlocked.
       expect(await screen.findByText("Invite your team")).toBeTruthy();
     });
 
@@ -259,8 +231,7 @@ describe("LinkAccountModal", () => {
       click(/Try again/);
 
       await waitFor(() => expect(startConnect).toHaveBeenCalled());
-      // Busy outranks the stale outcome, or the admin would sit on "Request expired"
-      // until the browser left.
+      // Busy outranks the stale outcome, or they sit on "Request expired" until the browser goes.
       expect(screen.getByText(GHOST)).toBeTruthy();
     });
 
@@ -268,7 +239,6 @@ describe("LinkAccountModal", () => {
       renderModal("link", { state: "working", sessionRestored: false });
 
       expect(await screen.findByText(/Finishing the connection/)).toBeTruthy();
-      // Retrying over a call that has not answered is how you get two handshakes.
       expect(screen.queryByRole("button", { name: /Try again/ })).toBeNull();
     });
 

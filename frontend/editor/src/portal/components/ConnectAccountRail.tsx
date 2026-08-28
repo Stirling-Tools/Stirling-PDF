@@ -14,17 +14,7 @@ function readDismissed(): boolean {
   }
 }
 
-/**
- * The ambient connect prompt on portal Home, shown while the instance can link but has not.
- *
- * <p>Sits above the deployment rail rather than inside it: the deployment card answers "is this
- * server running", which stays true either way, while this answers "is it connected to an account",
- * which is the thing an admin has to act on.
- *
- * <p>Dismissal is session scoped on purpose. The ask is meant to come back until it is answered, so
- * nothing is persisted to localStorage; closing the tab clears it. Once linked the gate closes and
- * the rail disappears on its own.
- */
+/** Session-scoped dismissal, so the ask comes back until it is answered rather than for good. */
 export function ConnectAccountRail() {
   const { t } = useTranslation();
   const { gated, loading, connect } = useConnectGate();
@@ -36,7 +26,7 @@ export function ConnectAccountRail() {
     try {
       sessionStorage.setItem(DISMISSED_KEY, "true");
     } catch {
-      // A browser refusing session storage is not a reason to leave the rail stuck on screen.
+      // Storage refusing is no reason to leave the rail stuck on screen.
     }
     setDismissed(true);
   };

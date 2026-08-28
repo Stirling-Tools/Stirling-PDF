@@ -4,10 +4,8 @@ import { LinkProvider, type LinkState } from "@portal/contexts/LinkContext";
 import { ConnectAccountRail } from "@portal/components/ConnectAccountRail";
 
 /**
- * The rail only exists where the instance CAN link but has not, and both halves of that come from
- * outside the component: the capability from the backend app-config, the link state from context.
- * The global mock answers app-config without the flag, so every other portal story stays ungated
- * and a story that wants to see the rail has to ask.
+ * Both halves of "can link but has not" come from outside the component, and the global mock answers
+ * app-config without the flag — so a story that wants the rail has to ask for it.
  */
 const canLink = {
   msw: {
@@ -35,16 +33,13 @@ const meta: Meta<typeof ConnectAccountRail> = {
 export default meta;
 type Story = StoryObj<typeof ConnectAccountRail>;
 
-/** How it appears on Home: the ask, plus a way to defer it for this session. */
+/** On Home: the ask, plus a way to defer it for this session. */
 export const Default: Story = {
   parameters: canLink,
   decorators: withLinkState("unlinked"),
 };
 
-/**
- * Connected, so the rail removes itself. Renders nothing on purpose — the ask has been answered
- * and a permanent banner would be noise.
- */
+/** Connected, so the rail removes itself. Renders nothing on purpose. */
 export const Hidden: Story = {
   parameters: canLink,
   decorators: withLinkState("linked-free"),

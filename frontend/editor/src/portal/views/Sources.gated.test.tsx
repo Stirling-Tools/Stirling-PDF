@@ -84,10 +84,8 @@ describe("Sources deep link when the account is not connected", () => {
     fetchSources.mockResolvedValue({ kpis: [], sources: [EDITOR_ROW] });
   });
 
-  // The table header only renders once the fetch has resolved, so finding it is
-  // both "the list is there" and the await this test needs.
+  // Renders only once the fetch resolves, so finding it is also the await.
   const LIST = "portal.sources.table.source";
-  // SourceModal's own title, rendered only while it is open on the create path.
   const MODAL = "portal.sources.builder.createTitle";
 
   it("asks to connect instead of opening the create modal", async () => {
@@ -108,7 +106,6 @@ describe("Sources deep link when the account is not connected", () => {
     renderAt("/processor/sources?new=1");
     expect(await screen.findByText(LIST)).toBeInTheDocument();
     expect(connect).not.toHaveBeenCalled();
-    // The gate is out of the way, so the deep link does what it says.
     expect(await screen.findByText(MODAL)).toBeInTheDocument();
   });
 });

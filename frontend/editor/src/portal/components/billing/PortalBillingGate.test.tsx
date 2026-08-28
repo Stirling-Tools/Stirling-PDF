@@ -3,10 +3,8 @@ import { render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 
 /**
- * Usage is a page about an account this instance may not have, so it must not render while
- * unconnected. Two things turn on that: dismissing the dialog must not strand the admin on a page
- * with nothing on it, and the page reports `linked` as a fact from a wallet read, so a browser
- * holding a SaaS session with no link to this server must not flip the whole portal to linked.
+ * Usage must not render while unlinked: it reports `linked` as a fact from its wallet read, so a
+ * browser holding a SaaS session with no link to this server would flip the whole portal to linked.
  */
 const gate = { gated: false, loading: false, available: true };
 const connect = vi.fn();
@@ -23,7 +21,6 @@ vi.mock("@portal/contexts/UIContext", () => ({
 }));
 vi.mock("@portal/views/Usage", () => ({
   Usage: ({ onWalletLoaded }: { onWalletLoaded?: (w: unknown) => void }) => {
-    // Stands in for the page's own wallet read landing.
     onWalletLoaded?.({ status: "free" });
     return <div data-testid="usage" />;
   },
@@ -65,8 +62,7 @@ describe("PortalBillingGate — self-hosted", () => {
   it("never reports the instance as linked while it is not", () => {
     gate.gated = true;
     renderGate();
-    // The page is what calls this, off its own wallet read. Not rendering it is what stops the
-    // claim: a live SaaS session in the browser says nothing about this server being linked.
+    // Not rendering the page is what stops the claim.
     expect(applyLinkFacts).not.toHaveBeenCalled();
   });
 

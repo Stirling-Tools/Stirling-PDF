@@ -12,46 +12,28 @@ export type ConnectCallbackState =
   | "rejected"
   | "malformed";
 
-/** A finished round trip to Stirling, as the dialog needs to render it. */
 export interface ConnectOutcome {
   state: ConnectCallbackState;
   /** True once the SaaS session landed, regardless of how the link itself went. */
   sessionRestored: boolean;
-  /**
-   * Claims the same handshake again, when it is still open (the approval landed but the claim did
-   * not). Absent when the handshake is spent, where the only way on is a new one: a leader had to
-   * approve this server by hand, so re-claiming beats spending that approval again.
-   */
+  /** Present only while the handshake is still open, so a retry re-claims rather than opening one. */
   reclaim?: () => void;
 }
 
-/**
- * Whether the handshake can be picked back up, which decides what the dialog's footer offers.
- *
- * <p>Everything except a malformed response is worth another go: the row is still on the instance,
- * so the admin's next attempt is a fresh handshake rather than a lost cause.
- */
 export function isRetryableOutcome(state: ConnectCallbackState): boolean {
   return state !== "linked" && state !== "malformed";
 }
 
 export interface ConnectCallbackViewProps {
   state: ConnectCallbackState;
-  /** True once the SaaS session landed, regardless of how the link itself went. */
   sessionRestored: boolean;
-  /** Closes the dialog before a next step navigates, so it doesn't land behind the overlay. */
   onDone: () => void;
 }
 
 /**
- * Step 3's body: what the round trip to Stirling came back with.
- *
- * <p>Five states in one step, on purpose. A failed link is still step 3 of the flow the admin
- * started, and saying so keeps them oriented; dropping them into a separate error dialog would
- * discard the progress bar that is the only thing explaining where they are.
- *
- * <p>Renders no actions of its own. The dialog's footer owns them, so Back/Continue sit where they
- * do on steps 1 and 2 rather than moving into the body for the last step.
+ * Five states in one step: a failed link is still step 3 of the flow they started, and a separate
+ * error dialog would discard the progress bar that says where they are. Actions live in the
+ * dialog's footer, not here, so they stay where steps 1 and 2 put them.
  */
 export function ConnectCallbackView({
   state,
@@ -77,18 +59,14 @@ export function ConnectCallbackView({
   if (state === "linked") {
     return (
       <div className="portal-connect-callback">
-        {/* No success banner: the step title already says Connected, and a green box
-            would be the one coloured card in a flow built from flat rows and plain
-            type. Failures below keep theirs, where the tone is the message. */}
         <p className="portal-connect__lede">
           {t(
             "portal.accountLink.connect.done.lede",
             "This server now runs against your Stirling account.",
           )}
         </p>
-        {/* The inverse of the failure note below: the link took but the sign-in did
-            not, which otherwise only shows up later as "session expired" on a page
-            that gives no hint the two are related. */}
+        {/* Link took, sign-in did not: otherwise this resurfaces later as "session expired" with
+            nothing tying it back here. */}
         {sessionRestored ? null : (
           <p className="portal-connect-callback__note">
             {t(
@@ -108,9 +86,8 @@ export function ConnectCallbackView({
       <Banner tone={tone} title={title}>
         {body}
       </Banner>
-      {/* The SaaS sign-in and the server link are separate outcomes. Say so when
-          one worked and the other did not, or the admin re-runs the whole thing
-          to fix a problem that is already half solved. */}
+      {/* Two separate outcomes: without this the admin re-runs the lot to fix a half-solved
+          problem. */}
       {sessionRestored ? (
         <p className="portal-connect-callback__note">
           {t(

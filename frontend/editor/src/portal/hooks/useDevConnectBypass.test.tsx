@@ -2,12 +2,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
 
 /**
- * The bypass exists for developers on a flag-on instance and must not exist for anyone else.
- *
- * The connect gate is currently the only thing enforcing that teams, the processor, pipelines and
- * policies need a linked account, so a switch a customer could reach would hand those over for
- * free. The last test here is the one that matters: with DEV folded to false, which is what every
- * build does, the parameter does nothing at all.
+ * The gate is the only thing making these features need a link, so a switch a customer could reach
+ * would hand them over. The last test is the one that matters: with DEV folded off, the parameter
+ * does nothing at all.
  */
 import { useDevConnectBypass } from "@portal/hooks/useDevConnectBypass";
 

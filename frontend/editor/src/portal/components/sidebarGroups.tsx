@@ -18,11 +18,7 @@ export interface NavEntry {
   icon: ReactNode;
   /** When set, the tab opens this URL in a new tab instead of navigating in-app. */
   externalUrl?: string;
-  /**
-   * The whole tab needs a linked Stirling account, so an unlinked instance is asked for one
-   * instead of being navigated. Unlike the create/edit guards, which let you look around, there
-   * is nothing to look at here: usage and billing are facts about the linked account.
-   */
+  /** The whole tab is facts about the linked account, so unlinked is asked rather than navigated. */
   requiresLink?: boolean;
 }
 

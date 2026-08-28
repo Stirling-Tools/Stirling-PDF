@@ -9,17 +9,13 @@ import "@portal/components/billing/billing.css";
 import "@portal/components/account-link/connect/connect.css";
 
 interface Props {
-  /** Closes the dialog before navigating, so a next step doesn't land behind the overlay. */
+  /** Closes the dialog first, so a next step does not land behind the overlay. */
   onNavigate: () => void;
 }
 
-/**
- * A trial this close to spent is the thing worth acting on, so below this the meter grows the
- * upgrade CTA. Above it the meter is information, not a prompt.
- */
+/** Below this the meter grows an upgrade row; above it the meter is information, not a prompt. */
 const LOW_CREDITS = 100;
 
-/** Chevron on a next-step row, so it reads as somewhere to go rather than a button. */
 function Chevron() {
   return (
     <svg
@@ -40,22 +36,10 @@ function Chevron() {
 }
 
 /**
- * Step 3 of the connect flow: confirm the link and route into what it just unlocked.
- *
- * <p>Reached after the admin has been to Stirling and back, so this renders on the callback rather
- * than on the click that started the flow. It is still step 3 of the same dialog, which is the
- * point: the progress bar they left on step 2 is what tells them the round trip worked.
- *
- * <p>The balance is the shared {@link MeterBar}, the same bar the Usage page draws, but not the card
- * around it: that card leads with the plan's headline and price, which at dialog width wrapped over
- * four lines and buried the two things this screen is for. The bar alone says the same thing in
- * one. It reads the wallet rather than hardcoding: the allowance is seeded per team, so an account
- * that has already spent it has nothing left to show, and this is where a stale "500" would show up.
- *
- * <p>Upgrading is a row alongside the others, not a button on the bar, so it cannot wrap and does
- * not compete with the confirmation. It goes to Usage rather than starting checkout here: switching
- * the Processor on is a real flow with quotes, invoices and a resumable bundle that already lives
- * on that page, and a second entry point into it would be a second thing to keep correct.
+ * The bar without the plan card around it: at dialog width that card's headline and price wrapped
+ * over four lines. Upgrading is a row rather than a button on the bar for the same reason, and it
+ * goes to Usage rather than starting checkout, which already lives there with its quotes and
+ * resumable bundle.
  */
 export function ConnectDoneSlide({ onNavigate }: Props) {
   const { t } = useTranslation();
@@ -86,7 +70,6 @@ export function ConnectDoneSlide({ onNavigate }: Props) {
   const lowOnCredits = wallet != null && wallet.freeRemaining < LOW_CREDITS;
 
   const nextSteps: { key: string; label: string; path: string }[] = [
-    // First, and only when it is the thing standing in the way.
     ...(lowOnCredits
       ? [
           {
@@ -124,12 +107,10 @@ export function ConnectDoneSlide({ onNavigate }: Props) {
 
   return (
     <>
-      {/* What they got, before who it belongs to: the balance is the reward, and putting it first
-          leaves every row-shaped thing below it grouped together. */}
       {wallet && (
         <div className="portal-connect__meter">
-          {/* No status chip: its tone turns red on an exhausted trial, and a red badge on the
-              screen confirming success reads as something having gone wrong. */}
+          {/* No status chip: its tone goes red on an exhausted trial, which on a success screen
+              reads as something having gone wrong. */}
           <MeterBar
             {...remainingMeter(wallet.freeRemaining, wallet.freeAllowance)}
             figure={wallet.freeRemaining.toLocaleString()}
@@ -146,10 +127,8 @@ export function ConnectDoneSlide({ onNavigate }: Props) {
         </div>
       )}
 
-      {/* Which account, in the account's own words. The one thing on this screen that proves the
-          link landed where the admin meant it to, rather than on whatever they were last signed
-          in as. Read from the SaaS session the callback just deposited, so it is absent exactly
-          when that hand-off failed, which the note above already says. */}
+      {/* Proves it landed on the account they meant. Read from the session the callback deposited,
+          so it is absent exactly when that hand-off failed — which the note above already says. */}
       {email && (
         <div className="portal-connect__row portal-connect__row--standalone">
           <span className="portal-connect__row-label">
