@@ -3,7 +3,11 @@
  */
 export function isSafePostLoginRedirect(path: unknown): path is string {
   if (typeof path !== "string" || path.length === 0) return false;
-  if (!path.startsWith("/") || path.startsWith("//") || path.startsWith("/\\")) {
+  if (
+    !path.startsWith("/") ||
+    path.startsWith("//") ||
+    path.startsWith("/\\")
+  ) {
     return false;
   }
   const lowered = path.toLowerCase();
