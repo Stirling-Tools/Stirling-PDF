@@ -19,6 +19,8 @@ import {
 } from "@app/services/userManagementService";
 
 vi.mock("@app/components/toast", () => ({ alert: vi.fn() }));
+import { alert } from "@app/components/toast";
+import { allowConsole } from "@app/tests/failOnConsole";
 vi.mock("react-router-dom", () => ({ useNavigate: () => vi.fn() }));
 vi.mock("@app/auth/UseSession", () => ({
   useAuth: () => ({ user: { username: "admin" } }),
@@ -218,5 +220,76 @@ describe("admin directory reads", () => {
     // Example rows, not a spinner: the endpoints are not callable.
     await screen.findByText("Internal");
     expect(calls.getTeams).toBe(0);
+  });
+
+  it("refreshes the roster after disabling a user's MFA", async () => {
+    const user = userEvent.setup();
+    let mfa = "true";
+    userManagementService.getUsers = async () => {
+      calls.getUsers++;
+      return {
+        ...ADMIN_DATA,
+        userSettings: { alice: { mfaEnabled: mfa } },
+      };
+    };
+    userManagementService.disableMfaByAdmin = async () => {
+      mfa = "false";
+    };
+
+    render(
+      <Harness>
+        <PeopleSection />
+      </Harness>,
+    );
+    await screen.findByText("alice");
+
+    await user.click(screen.getByLabelText("Member actions"));
+    await user.click(await screen.findByText("Disable MFA"));
+
+    // The row drove the menu item off itself: it must reflect the new state
+    // without a reload.
+    await waitFor(() => expect(calls.getUsers).toBe(2));
+  });
+
+  it("reports the server's refusal message, not a generic one", async () => {
+    const user = userEvent.setup();
+    allowConsole.error(/Admin directory write failed/);
+    teamService.createTeam = async () => {
+      throw Object.assign(new Error("Request failed"), {
+        isAxiosError: true,
+        response: { data: { message: "A team with that name exists" } },
+      });
+    };
+
+    render(
+      <Harness>
+        <TeamsSection />
+      </Harness>,
+    );
+    await screen.findByText("Engineering");
+
+    await user.click(
+      screen.getByRole("button", { name: "workspace.teams.createNewTeam" }),
+    );
+    await user.type(
+      await screen.findByPlaceholderText(
+        "workspace.teams.createTeam.teamNamePlaceholder",
+      ),
+      "Engineering",
+    );
+    await user.click(
+      screen.getByRole("button", {
+        name: "workspace.teams.createTeam.submit",
+      }),
+    );
+
+    await waitFor(() =>
+      expect(alert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          alertType: "error",
+          title: "A team with that name exists",
+        }),
+      ),
+    );
   });
 });

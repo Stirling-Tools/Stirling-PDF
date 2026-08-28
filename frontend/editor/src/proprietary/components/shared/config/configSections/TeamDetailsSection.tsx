@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { isAxiosError } from "axios";
 import { useTranslation } from "react-i18next";
 import {
   Stack,
@@ -30,6 +29,7 @@ import {
   useAdminUsers,
   useTeamDetails,
   useTeams,
+  useAdminMutation,
   useInvalidateAdminDirectory,
 } from "@app/hooks/useAdminDirectory";
 
@@ -72,7 +72,6 @@ export default function TeamDetailsSection({
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<string>("");
   const [selectedTeamId, setSelectedTeamId] = useState<string>("");
-  const [processing, setProcessing] = useState(false);
   const availableUsersForTeam = team
     ? availableUsers.filter((user) => user.team?.id !== team.id)
     : [];
@@ -92,7 +91,103 @@ export default function TeamDetailsSection({
     onBack();
   }, [loadFailed, onBack, t]);
 
-  const handleAddMember = async () => {
+  // A membership move changes the team's count, the member's own team and
+  // both teams' detail rows.
+  const MEMBERSHIP = ["teams", "teamDetails", "users"] as const;
+
+  const addMember = useAdminMutation({
+    write: (userId: number) => teamService.addUserToTeam(teamId, userId),
+    invalidates: MEMBERSHIP,
+    success: t(
+      "workspace.teams.addMemberToTeam.success",
+      "User added to team successfully",
+    ),
+    errorFallback: t(
+      "workspace.teams.addMemberToTeam.error",
+      "Failed to add user to team",
+    ),
+    onDone: () => {
+      setAddMemberModalOpened(false);
+      setSelectedUserId("");
+    },
+  });
+
+  const removeMember = useAdminMutation({
+    write: (user: User) => {
+      const defaultTeam = allTeams.find((team) => team.name === "Default");
+      if (!defaultTeam) throw new Error("Default team not found");
+      return teamService.moveUserToTeam(
+        user.username,
+        user.rolesAsString || "ROLE_USER",
+        defaultTeam.id,
+      );
+    },
+    invalidates: MEMBERSHIP,
+    success: t("workspace.teams.removeMemberSuccess", "User removed from team"),
+    errorFallback: t(
+      "workspace.teams.removeMemberError",
+      "Failed to remove user from team",
+    ),
+  });
+
+  const changeTeam = useAdminMutation({
+    write: ({ user, teamId: target }: { user: User; teamId: number }) =>
+      teamService.moveUserToTeam(
+        user.username,
+        user.rolesAsString || "ROLE_USER",
+        target,
+      ),
+    invalidates: MEMBERSHIP,
+    success: t(
+      "workspace.teams.changeTeam.success",
+      "Team changed successfully",
+    ),
+    errorFallback: t(
+      "workspace.teams.changeTeam.error",
+      "Failed to change team",
+    ),
+    onDone: () => {
+      setChangeTeamModalOpened(false);
+      setSelectedUser(null);
+      setSelectedTeamId("");
+    },
+  });
+
+  const deleteUser = useAdminMutation({
+    write: (username: string) => userManagementService.deleteUser(username),
+    invalidates: ["users", "teams"],
+    success: t(
+      "workspace.people.deleteUserSuccess",
+      "User deleted successfully",
+    ),
+    errorFallback: t(
+      "workspace.people.deleteUserError",
+      "Failed to delete user",
+    ),
+  });
+
+  const unlockUser = useAdminMutation({
+    write: (username: string) => userManagementService.unlockUser(username),
+    invalidates: ["users"],
+    success: t(
+      "workspace.people.unlockUserSuccess",
+      "User account unlocked successfully",
+    ),
+    errorFallback: t(
+      "workspace.people.unlockUserError",
+      "Failed to unlock user account",
+    ),
+  });
+
+  // Row actions are blocked while any write is in flight, as before.
+  const processing =
+    addMember.isPending ||
+    removeMember.isPending ||
+    changeTeam.isPending ||
+    deleteUser.isPending ||
+    unlockUser.isPending;
+
+  const handleAddMember = () => {
     if (!selectedUserId) {
       alert({
         alertType: "error",
@@ -103,155 +198,44 @@ export default function TeamDetailsSection({
       });
       return;
     }
-
-    try {
-      setProcessing(true);
-      await teamService.addUserToTeam(teamId, parseInt(selectedUserId));
-      alert({
-        alertType: "success",
-        title: t(
-          "workspace.teams.addMemberToTeam.success",
-          "User added to team successfully",
-        ),
-      });
-      setAddMemberModalOpened(false);
-      setSelectedUserId("");
-      refreshDirectory();
-    } catch (error: unknown) {
-      console.error("Failed to add member:", error);
-      const errorMessage = isAxiosError(error)
-        ? error.response?.data?.message ||
-          error.response?.data?.error ||
-          error.message
-        : (error instanceof Error ? error.message : undefined) ||
-          t(
-            "workspace.teams.addMemberToTeam.error",
-            "Failed to add user to team",
-          );
-      alert({ alertType: "error", title: errorMessage });
-    } finally {
-      setProcessing(false);
-    }
+    addMember.mutate(parseInt(selectedUserId));
   };
 
-  const handleRemoveMember = async (user: User) => {
-    if (
-      !window.confirm(
-        t(
-          "workspace.teams.confirmRemove",
-          `Remove ${user.username} from this team?`,
-        ),
-      )
-    ) {
-      return;
-    }
-
-    try {
-      setProcessing(true);
-      // Find the Default team ID
-      const defaultTeam = allTeams.find((t) => t.name === "Default");
-
-      if (!defaultTeam) {
-        throw new Error("Default team not found");
-      }
-
-      // Move user to Default team by updating their role with the Default team ID
-      await teamService.moveUserToTeam(
-        user.username,
-        user.rolesAsString || "ROLE_USER",
-        defaultTeam.id,
-      );
-      alert({
-        alertType: "success",
-        title: t(
-          "workspace.teams.removeMemberSuccess",
-          "User removed from team",
-        ),
-      });
-      refreshDirectory();
-    } catch (error: unknown) {
-      console.error("Failed to remove member:", error);
-      const errorMessage = isAxiosError(error)
-        ? error.response?.data?.message ||
-          error.response?.data?.error ||
-          error.message
-        : (error instanceof Error ? error.message : undefined) ||
-          t(
-            "workspace.teams.removeMemberError",
-            "Failed to remove user from team",
-          );
-      alert({ alertType: "error", title: errorMessage });
-    } finally {
-      setProcessing(false);
-    }
+  const handleRemoveMember = (user: User) => {
+    const confirmMessage = t(
+      "workspace.teams.confirmRemove",
+      `Remove ${user.username} from this team?`,
+    );
+    if (!window.confirm(confirmMessage)) return;
+    removeMember.mutate(user);
   };
 
-  const handleDeleteUser = async (user: User) => {
+  const handleDeleteUser = (user: User) => {
     const confirmMessage = t(
       "workspace.people.confirmDelete",
       "Are you sure you want to delete this user? This action cannot be undone.",
     );
-    if (!window.confirm(`${confirmMessage}\n\nUser: ${user.username}`)) {
-      return;
-    }
+    if (
+      !window.confirm(`${confirmMessage}
 
-    try {
-      setProcessing(true);
-      await userManagementService.deleteUser(user.username);
-      alert({
-        alertType: "success",
-        title: t(
-          "workspace.people.deleteUserSuccess",
-          "User deleted successfully",
-        ),
-      });
-      refreshDirectory();
-    } catch (error: unknown) {
-      console.error("Failed to delete user:", error);
-      const errorMessage = isAxiosError(error)
-        ? error.response?.data?.message ||
-          error.response?.data?.error ||
-          error.message
-        : (error instanceof Error ? error.message : undefined) ||
-          t("workspace.people.deleteUserError", "Failed to delete user");
-      alert({ alertType: "error", title: errorMessage });
-    } finally {
-      setProcessing(false);
-    }
+User: ${user.username}`)
+    )
+      return;
+    deleteUser.mutate(user.username);
   };
 
-  const handleUnlockUser = async (user: User) => {
+  const handleUnlockUser = (user: User) => {
     const confirmMessage = t(
       "workspace.people.confirmUnlock",
       "Are you sure you want to unlock this user account?",
     );
-    if (!window.confirm(`${confirmMessage}\n\nUser: ${user.username}`)) {
-      return;
-    }
+    if (
+      !window.confirm(`${confirmMessage}
 
-    try {
-      await userManagementService.unlockUser(user.username);
-      alert({
-        alertType: "success",
-        title: t(
-          "workspace.people.unlockUserSuccess",
-          "User account unlocked successfully",
-        ),
-      });
-      refreshDirectory();
-    } catch (error: unknown) {
-      console.error("[TeamDetailsSection] Failed to unlock user:", error);
-      const errorMessage = isAxiosError(error)
-        ? error.response?.data?.message ||
-          error.response?.data?.error ||
-          error.message
-        : (error instanceof Error ? error.message : undefined) ||
-          t(
-            "workspace.people.unlockUserError",
-            "Failed to unlock user account",
-          );
-      alert({ alertType: "error", title: errorMessage });
-    }
+User: ${user.username}`)
+    )
+      return;
+    unlockUser.mutate(user.username);
   };
 
   const openChangeTeamModal = (user: User) => {
@@ -270,7 +254,7 @@ export default function TeamDetailsSection({
     setPasswordUser(null);
   };
 
-  const handleChangeTeam = async () => {
+  const handleChangeTeam = () => {
     if (!selectedUser || !selectedTeamId) {
       alert({
         alertType: "error",
@@ -281,37 +265,10 @@ export default function TeamDetailsSection({
       });
       return;
     }
-
-    try {
-      setProcessing(true);
-      await teamService.moveUserToTeam(
-        selectedUser.username,
-        selectedUser.rolesAsString || "ROLE_USER",
-        parseInt(selectedTeamId),
-      );
-      alert({
-        alertType: "success",
-        title: t(
-          "workspace.teams.changeTeam.success",
-          "Team changed successfully",
-        ),
-      });
-      setChangeTeamModalOpened(false);
-      setSelectedUser(null);
-      setSelectedTeamId("");
-      refreshDirectory();
-    } catch (error: unknown) {
-      console.error("Failed to change team:", error);
-      const errorMessage = isAxiosError(error)
-        ? error.response?.data?.message ||
-          error.response?.data?.error ||
-          error.message
-        : (error instanceof Error ? error.message : undefined) ||
-          t("workspace.teams.changeTeam.error", "Failed to change team");
-      alert({ alertType: "error", title: errorMessage });
-    } finally {
-      setProcessing(false);
-    }
+    changeTeam.mutate({
+      user: selectedUser,
+      teamId: parseInt(selectedTeamId),
+    });
   };
 
   if (loading) {
@@ -740,7 +697,7 @@ export default function TeamDetailsSection({
 
             <Button
               onClick={handleAddMember}
-              loading={processing}
+              loading={addMember.isPending}
               fullWidth
               size="md"
               style={{ marginTop: "var(--mantine-spacing-md)" }}
@@ -817,7 +774,7 @@ export default function TeamDetailsSection({
 
             <Button
               onClick={handleChangeTeam}
-              loading={processing}
+              loading={changeTeam.isPending}
               fullWidth
               size="md"
               style={{ marginTop: "var(--mantine-spacing-md)" }}

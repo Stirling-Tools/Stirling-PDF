@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { isAxiosError } from "axios";
 import { Trans, useTranslation } from "react-i18next";
 import {
   Stack,
@@ -20,7 +19,6 @@ import {
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import LocalIcon from "@app/components/shared/LocalIcon";
-import { alert } from "@app/components/toast";
 import {
   userManagementService,
   User,
@@ -38,6 +36,7 @@ import { useAuth } from "@app/auth/UseSession";
 import {
   useAdminUsers,
   useTeams,
+  useAdminMutation,
   useInvalidateAdminDirectory,
 } from "@app/hooks/useAdminDirectory";
 
@@ -144,7 +143,6 @@ export default function PeopleSection() {
     useState(false);
   const [passwordUser, setPasswordUser] = useState<User | null>(null);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [processing, setProcessing] = useState(false);
   const mailEnabled = loginEnabled ? (admin.data?.mailEnabled ?? false) : false;
   const lockedUsers = loginEnabled ? (admin.data?.lockedUsers ?? []) : [];
   const licenseInfo = loginEnabled
@@ -207,122 +205,103 @@ export default function PeopleSection() {
     teamId: undefined as number | undefined,
   });
 
-  const handleUpdateUserRole = async () => {
+  const updateUserRole = useAdminMutation({
+    write: (payload: { username: string; role: string; teamId?: number }) =>
+      userManagementService.updateUserRole(payload),
+    // A role edit can also move the user, which changes both teams' counts.
+    invalidates: ["users", "teams"],
+    success: t("workspace.people.editMember.success"),
+    errorFallback: t("workspace.people.editMember.error"),
+    onDone: () => closeEditModal(),
+  });
+
+  const toggleEnabled = useAdminMutation({
+    write: (user: User) =>
+      userManagementService.toggleUserEnabled(user.username, !user.enabled),
+    invalidates: ["users"],
+    success: t("workspace.people.toggleEnabled.success"),
+    errorFallback: t("workspace.people.toggleEnabled.error"),
+  });
+
+  const deleteUser = useAdminMutation({
+    write: (username: string) => userManagementService.deleteUser(username),
+    invalidates: ["users", "teams"],
+    success: t(
+      "workspace.people.deleteUserSuccess",
+      "User deleted successfully",
+    ),
+    errorFallback: t(
+      "workspace.people.deleteUserError",
+      "Failed to delete user",
+    ),
+  });
+
+  const unlockUser = useAdminMutation({
+    write: (username: string) => userManagementService.unlockUser(username),
+    invalidates: ["users"],
+    success: t(
+      "workspace.people.unlockUserSuccess",
+      "User account unlocked successfully",
+    ),
+    errorFallback: t(
+      "workspace.people.unlockUserError",
+      "Failed to unlock user account",
+    ),
+  });
+
+  const disableMfa = useAdminMutation({
+    write: (username: string) =>
+      userManagementService.disableMfaByAdmin(username),
+    invalidates: ["users"],
+    success: t(
+      "workspace.people.mfa.adminDisableSuccess",
+      "MFA disabled successfully for user",
+    ),
+    errorFallback: t(
+      "workspace.people.mfa.adminDisableError",
+      "Failed to disable MFA for user",
+    ),
+  });
+
+  const handleUpdateUserRole = () => {
     if (!selectedUser) return;
-
-    try {
-      setProcessing(true);
-      await userManagementService.updateUserRole({
-        username: selectedUser.username,
-        role: editForm.role,
-        teamId: editForm.teamId,
-      });
-      alert({
-        alertType: "success",
-        title: t("workspace.people.editMember.success"),
-      });
-      closeEditModal();
-      refreshDirectory();
-    } catch (error: unknown) {
-      console.error("[PeopleSection] Failed to update user:", error);
-      const errorMessage = isAxiosError(error)
-        ? error.response?.data?.message ||
-          error.response?.data?.error ||
-          error.message
-        : (error instanceof Error ? error.message : undefined) ||
-          t("workspace.people.editMember.error");
-      alert({ alertType: "error", title: errorMessage });
-    } finally {
-      setProcessing(false);
-    }
+    updateUserRole.mutate({
+      username: selectedUser.username,
+      role: editForm.role,
+      teamId: editForm.teamId,
+    });
   };
 
-  const handleToggleEnabled = async (user: User) => {
-    try {
-      await userManagementService.toggleUserEnabled(
-        user.username,
-        !user.enabled,
-      );
-      alert({
-        alertType: "success",
-        title: t("workspace.people.toggleEnabled.success"),
-      });
-      refreshDirectory();
-    } catch (error: unknown) {
-      console.error("[PeopleSection] Failed to toggle user status:", error);
-      const errorMessage = isAxiosError(error)
-        ? error.response?.data?.message ||
-          error.response?.data?.error ||
-          error.message
-        : (error instanceof Error ? error.message : undefined) ||
-          t("workspace.people.toggleEnabled.error");
-      alert({ alertType: "error", title: errorMessage });
-    }
+  const handleToggleEnabled = (user: User) => {
+    toggleEnabled.mutate(user);
   };
 
-  const handleDeleteUser = async (user: User) => {
+  const handleDeleteUser = (user: User) => {
     const confirmMessage = t(
       "workspace.people.confirmDelete",
       "Are you sure you want to delete this user? This action cannot be undone.",
     );
-    if (!window.confirm(`${confirmMessage}\n\nUser: ${user.username}`)) {
-      return;
-    }
+    if (
+      !window.confirm(`${confirmMessage}
 
-    try {
-      await userManagementService.deleteUser(user.username);
-      alert({
-        alertType: "success",
-        title: t(
-          "workspace.people.deleteUserSuccess",
-          "User deleted successfully",
-        ),
-      });
-      refreshDirectory();
-    } catch (error: unknown) {
-      console.error("[PeopleSection] Failed to delete user:", error);
-      const errorMessage = isAxiosError(error)
-        ? error.response?.data?.message ||
-          error.response?.data?.error ||
-          error.message
-        : (error instanceof Error ? error.message : undefined) ||
-          t("workspace.people.deleteUserError", "Failed to delete user");
-      alert({ alertType: "error", title: errorMessage });
-    }
+User: ${user.username}`)
+    )
+      return;
+    deleteUser.mutate(user.username);
   };
 
-  const handleUnlockUser = async (user: User) => {
+  const handleUnlockUser = (user: User) => {
     const confirmMessage = t(
       "workspace.people.confirmUnlock",
       "Are you sure you want to unlock this user account?",
     );
-    if (!window.confirm(`${confirmMessage}\n\nUser: ${user.username}`)) {
-      return;
-    }
+    if (
+      !window.confirm(`${confirmMessage}
 
-    try {
-      await userManagementService.unlockUser(user.username);
-      alert({
-        alertType: "success",
-        title: t(
-          "workspace.people.unlockUserSuccess",
-          "User account unlocked successfully",
-        ),
-      });
-      refreshDirectory();
-    } catch (error: unknown) {
-      console.error("[PeopleSection] Failed to unlock user:", error);
-      const errorMessage = isAxiosError(error)
-        ? error.response?.data?.message ||
-          error.response?.data?.error ||
-          error.message
-        : (error instanceof Error ? error.message : undefined) ||
-          t(
-            "workspace.people.unlockUserError",
-            "Failed to unlock user account",
-          );
-      alert({ alertType: "error", title: errorMessage });
-    }
+User: ${user.username}`)
+    )
+      return;
+    unlockUser.mutate(user.username);
   };
 
   const openEditModal = (user: User) => {
@@ -852,40 +831,7 @@ export default function PeopleSection() {
                                     height="1rem"
                                   />
                                 }
-                                onClick={async () => {
-                                  try {
-                                    await userManagementService.disableMfaByAdmin(
-                                      user.username,
-                                    );
-                                    alert({
-                                      alertType: "success",
-                                      title: t(
-                                        "workspace.people.mfa.adminDisableSuccess",
-                                        "MFA disabled successfully for user",
-                                      ),
-                                    });
-                                  } catch (error: unknown) {
-                                    console.error(
-                                      "[PeopleSection] Failed to disable MFA for user:",
-                                      error,
-                                    );
-                                    const errorMessage = isAxiosError(error)
-                                      ? error.response?.data?.message ||
-                                        error.response?.data?.error ||
-                                        error.message
-                                      : (error instanceof Error
-                                          ? error.message
-                                          : undefined) ||
-                                        t(
-                                          "workspace.people.mfa.adminDisableError",
-                                          "Failed to disable MFA for user",
-                                        );
-                                    alert({
-                                      alertType: "error",
-                                      title: errorMessage,
-                                    });
-                                  }
-                                }}
+                                onClick={() => disableMfa.mutate(user.username)}
                                 disabled={!loginEnabled}
                               >
                                 {t(
@@ -1036,7 +982,7 @@ export default function PeopleSection() {
             />
             <Button
               onClick={handleUpdateUserRole}
-              loading={processing}
+              loading={updateUserRole.isPending}
               fullWidth
               size="md"
               style={{ marginTop: "var(--mantine-spacing-md)" }}
