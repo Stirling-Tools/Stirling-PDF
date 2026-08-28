@@ -231,9 +231,9 @@ jobs:
           PROJECT_REF: ${{ secrets.SAAS_DB_PROJECT_REF }}
           API_BASE_OVERRIDE: ${{ vars.SAAS_API_BASE_URL }}
         run: |
-          # One value for both halves. The browser's reads and the backend's register/entitlement
-          # calls have to land on the same SaaS, and nothing checks that they do. Optional, because
-          # the backend already defaults to prod - set it only to point a preview elsewhere.
+          # Set, this is the one value both halves use: the browser's portal reads and the backend's
+          # register/entitlement calls have to land on the same SaaS, and nothing checks that they
+          # do. Unset, only the backend gets a base, from its own compiled-in default.
           API_BASE="${API_BASE_OVERRIDE:-https://stirling.com/app}"
           echo "backend_base=${API_BASE}" >> "$GITHUB_OUTPUT"
 
@@ -242,8 +242,6 @@ jobs:
             echo "account, and the connect dialog will say so. To wire one up, set on the"
             echo "pr-preview environment the secrets SAAS_DB_PROJECT_REF and"
             echo "SAAS_SUPABASE_PUBLISHABLE_KEY, both from the same Supabase project."
-            # Moves with the Supabase pair, so an unconfigured preview stays wholly unconfigured
-            # instead of aiming its reads at an account it cannot sign in to.
             echo "supabase_url=" >> "$GITHUB_OUTPUT"
             echo "frontend_base=" >> "$GITHUB_OUTPUT"
           else
@@ -251,7 +249,11 @@ jobs:
             # line it appears in, derived URL included.
             echo "Stirling account configured, at ${API_BASE}."
             echo "supabase_url=https://${PROJECT_REF}.supabase.co" >> "$GITHUB_OUTPUT"
-            echo "frontend_base=${API_BASE}" >> "$GITHUB_OUTPUT"
+            # Deliberately the override and not API_BASE: the backend's default is a subpath URL
+            # nobody has confirmed answers /api/v1, and prod CORS does not list preview hostnames,
+            # so portal reads stay off until someone sets a base they have checked. Empty leaves the
+            # committed .env default alone, which is the clean "not configured" state.
+            echo "frontend_base=${API_BASE_OVERRIDE}" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Check if image exists
