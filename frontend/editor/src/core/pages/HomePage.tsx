@@ -525,6 +525,7 @@ export default function HomePage() {
         onSetReaderMode={setReaderMode}
         onGoToDefaultState={goToDefaultState}
         onSelectTool={handleToolSelect}
+        activeTool={selectedToolKey}
         toolReasons={quickNavToolReasons}
       />
       <FilesPageProvider>
