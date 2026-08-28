@@ -1,7 +1,9 @@
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@app/auth/context";
+import { useNavigationActions } from "@app/contexts/NavigationContext";
 import { PORTAL_BASENAME } from "@app/routes/portalBasename";
 import { useProcessorEnabled } from "@app/hooks/useProcessorEnabled";
+import { saveEditorReturnPath } from "@app/services/workbenchSession";
 import { type NavFooterAppLink } from "@app/components/shared/navFooter/NavFooter";
 
 /**
@@ -13,6 +15,16 @@ export function useOtherAppSwitch(): NavFooterAppLink | null {
   const { portalAccess } = useAuth();
   const processorEnabled = useProcessorEnabled();
   const navigate = useNavigate();
+  const location = useLocation();
+  const { actions } = useNavigationActions();
   if (!portalAccess || !processorEnabled) return null;
-  return { app: "processor", onOpen: () => navigate(PORTAL_BASENAME) };
+  return {
+    app: "processor",
+    onOpen: () =>
+      // Through the guard, so unsaved edits get the same warning as any other navigation.
+      actions.requestNavigation(() => {
+        saveEditorReturnPath(location.pathname + location.search);
+        navigate(PORTAL_BASENAME);
+      }),
+  };
 }

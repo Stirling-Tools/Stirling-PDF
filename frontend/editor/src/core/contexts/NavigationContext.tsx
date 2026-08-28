@@ -94,6 +94,9 @@ export interface NavigationWarningHandlers {
 // Navigation context actions interface
 export interface NavigationContextActions {
   setWorkbench: (workbench: WorkbenchType) => void;
+  /** Reopen a view the user already had, bypassing the unsaved-changes prompt that
+   *  guards a user-initiated switch - a restore is not the user leaving anything. */
+  restoreWorkbench: (workbench: WorkbenchType) => void;
   setSelectedTool: (toolId: ToolId | null) => void;
   setToolAndWorkbench: (
     toolId: ToolId | null,
@@ -220,6 +223,10 @@ export const NavigationProvider: React.FC<{
     },
     [state.workbench, state.hasUnsavedChanges],
   );
+
+  const restoreWorkbench = useCallback((workbench: WorkbenchType) => {
+    dispatch({ type: "SET_WORKBENCH", payload: { workbench } });
+  }, []);
 
   const setSelectedTool = useCallback((toolId: ToolId | null) => {
     dispatch({ type: "SET_SELECTED_TOOL", payload: { toolId } });
@@ -402,6 +409,7 @@ export const NavigationProvider: React.FC<{
   const actions: NavigationContextActions = useMemo(
     () => ({
       setWorkbench,
+      restoreWorkbench,
       setSelectedTool,
       setToolAndWorkbench,
       setHasUnsavedChanges,
@@ -419,6 +427,7 @@ export const NavigationProvider: React.FC<{
     }),
     [
       setWorkbench,
+      restoreWorkbench,
       setSelectedTool,
       setToolAndWorkbench,
       setHasUnsavedChanges,
