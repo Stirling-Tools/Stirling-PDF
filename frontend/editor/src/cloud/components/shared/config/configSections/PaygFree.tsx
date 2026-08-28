@@ -9,9 +9,8 @@
  * watermarks, compression — are unmetered, no matter where they're triggered
  * from. The distinction is the <em>type of work</em> (manual tool vs
  * automation / AI / API), not where the click happens, because automation and
- * AI also have UI surfaces. The free grant (default 500) applies <em>only</em>
- * to the three billable categories, and it is a monthly allowance: the counter
- * resets each billing period and unused units do not carry over.
+ * AI also have UI surfaces. The free grant applies <em>only</em> to the three
+ * billable categories, and resets each billing period.
  *
  * <p>Layout: a slim <b>Editor plan</b> card (always-free tools only — no dates,
  * no metered split) on top, then a single <b>Processor plan</b> card that

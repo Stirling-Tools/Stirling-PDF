@@ -4,14 +4,12 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
- * One team's billing facts, composed by {@link TeamBillingService}. Two meters live here — separate
- * pools, but both measured over the same window, which is what lets "500 free per month" and "$50 a
- * month" mean the same month:
+ * One team's billing facts, composed by {@link TeamBillingService}. Two separate pools, both
+ * measured over the same window:
  *
  * <ul>
- *   <li>the <b>recurring free grant</b> ({@link #freeGrantUnits} per period, {@link
- *       #freeRemainingUnits} left in this one) — gates an un-subscribed team and decides the
- *       free-vs-paid split of every job; resets at each period boundary;
+ *   <li>the <b>free grant</b> ({@link #freeGrantUnits} per period, {@link #freeRemainingUnits} left
+ *       in this one) — gates an un-subscribed team and decides the free-vs-paid split of every job;
  *   <li>the <b>billing window</b> ({@link #periodStart}/{@link #periodEnd}) and the optional
  *       spending cap ({@link #monthlyCapDocUnits}) — govern the subscribed invoice + cap only.
  * </ul>
@@ -25,8 +23,8 @@ import java.time.LocalDateTime;
  * @param freeGrantUnits the team's free grant size per period (policy {@code free_tier_units}); the
  *     denominator for "used X of N free"
  * @param freeRemainingUnits free documents still available in this period ({@code
- *     payg_team_extensions.free_units_remaining}, projected onto the current period by {@code
- *     TeamBillingService.remainingForPeriod}). 0 = this period's grant is exhausted.
+ *     payg_team_extensions.free_units_remaining}, via {@code
+ *     TeamBillingService.remainingForPeriod}). 0 = exhausted.
  * @param perDocMinor paid per-document rate in minor units of {@link #currency()}; null when the
  *     rate can't be resolved (free team, price row unsynced) — display "unknown", never substitute
  * @param currency lower-case ISO 4217 of the subscription's Price; null when unknown

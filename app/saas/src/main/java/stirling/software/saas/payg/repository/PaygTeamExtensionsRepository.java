@@ -18,12 +18,10 @@ public interface PaygTeamExtensionsRepository extends JpaRepository<PaygTeamExte
     Optional<PaygTeamExtensions> findByStripeCustomerId(String stripeCustomerId);
 
     /**
-     * Pessimistic-write load of the sidecar row, used by the charge pipeline to deduct the free
-     * grant (and apply its period reset) atomically. The lock serialises concurrent charges <em>for
-     * the same team</em> so the per-job {@code free_units_consumed} split (and therefore the
-     * metered paid portion) is exact — two simultaneous jobs can't both believe they drew from the
-     * same remaining unit. Different teams never contend; the lock is held only for the {@code
-     * openProcess} transaction.
+     * Pessimistic-write load of the sidecar row, used by the charge pipeline to move the free grant
+     * atomically. The lock serialises concurrent charges <em>for the same team</em> so the per-job
+     * {@code free_units_consumed} split is exact — two simultaneous jobs can't both believe they
+     * drew from the same remaining unit. Different teams never contend.
      */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT e FROM PaygTeamExtensions e WHERE e.teamId = :teamId")

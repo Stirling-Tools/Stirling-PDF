@@ -77,9 +77,6 @@ class JobChargeServiceTest {
     private TeamBillingService teamBillingService;
     private JobChargeService service;
 
-    /**
-     * Period the free grant is stamped with in these tests — the calendar month of a fixed date.
-     */
     private static final LocalDateTime PERIOD_START = LocalDateTime.of(2026, 8, 1, 0, 0);
 
     private static final long GRANT = 500L;
@@ -101,8 +98,6 @@ class JobChargeServiceTest {
         // a test stubs the sidecar row. The free split is decided at openProcess time now, not at
         // close, so the meter tests just set free_units_consumed on the shadow row directly.
         teamBillingService = Mockito.mock(TeamBillingService.class);
-        // The charge path reads only the period + grant size off the context; the balance always
-        // comes from the locked sidecar row.
         when(teamBillingService.forTeam(Mockito.anyLong())).thenReturn(billingContext(GRANT));
         service =
                 new JobChargeService(
@@ -414,10 +409,8 @@ class JobChargeServiceTest {
     @Test
     void openProcess_firstChargeOfNewPeriod_resetsGrantAndRestamps(@TempDir Path tmp)
             throws IOException {
-        // The team exhausted last period's grant and hasn't run anything since. The first charge of
-        // the new period is what persists the reset: the counter goes back to the full grant, this
-        // job draws from it, and the row is re-stamped so the next charge reads the balance rather
-        // than resetting again. Nothing schedules this — the roll-forward rides the charge.
+        // Grant exhausted last period, nothing run since. This charge persists the reset: counter
+        // back to the full grant, drawn from, and re-stamped so the next charge reads the balance.
         PricingPolicy policy = stubPolicy(1, Map.of(JobSource.WEB, 10));
         when(policyService.getEffectivePolicy(100L)).thenReturn(policy);
         ProcessingJob newJob = openJob(UUID.randomUUID());
@@ -439,7 +432,6 @@ class JobChargeServiceTest {
 
         ArgumentCaptor<PaygShadowCharge> captor = ArgumentCaptor.forClass(PaygShadowCharge.class);
         verify(shadowRepo).save(captor.capture());
-        // Drawn from the fresh grant, so nothing meters.
         assertThat(captor.getValue().getFreeUnitsConsumed()).isEqualTo(4);
         assertThat(ext.getFreeUnitsRemaining()).isEqualTo(GRANT - 4);
         assertThat(ext.getFreeUnitsPeriodStart()).isEqualTo(PERIOD_START);
@@ -448,9 +440,7 @@ class JobChargeServiceTest {
 
     @Test
     void openProcess_unstampedRow_resetsToGrantAndStamps(@TempDir Path tmp) throws IOException {
-        // A row written before the grant became recurring carries no period stamp. It must read as
-        // owed a reset, not as an exhausted lifetime pool — otherwise every existing team stays
-        // stuck at zero after the switch to a monthly grant.
+        // An unstamped row must read as owed a reset, not as an exhausted pool.
         PricingPolicy policy = stubPolicy(1, Map.of(JobSource.WEB, 10));
         when(policyService.getEffectivePolicy(100L)).thenReturn(policy);
         ProcessingJob newJob = openJob(UUID.randomUUID());
@@ -478,8 +468,7 @@ class JobChargeServiceTest {
 
     @Test
     void openProcess_zeroGrantRollover_stampsWithoutDrawing(@TempDir Path tmp) throws IOException {
-        // A policy with no free grant still needs its stamp moved forward on the first charge of a
-        // period, or every later charge re-evaluates the same stale row as a reset still owed.
+        // A zero grant still advances the stamp, or every later charge re-evaluates a stale row.
         when(teamBillingService.forTeam(100L)).thenReturn(billingContext(0L));
         PricingPolicy policy = stubPolicy(1, Map.of(JobSource.WEB, 10));
         when(policyService.getEffectivePolicy(100L)).thenReturn(policy);
@@ -501,7 +490,6 @@ class JobChargeServiceTest {
 
         ArgumentCaptor<PaygShadowCharge> captor = ArgumentCaptor.forClass(PaygShadowCharge.class);
         verify(shadowRepo).save(captor.capture());
-        // All 3 units bill; the stamp still advances.
         assertThat(captor.getValue().getFreeUnitsConsumed()).isZero();
         assertThat(ext.getFreeUnitsRemaining()).isZero();
         assertThat(ext.getFreeUnitsPeriodStart()).isEqualTo(PERIOD_START);
@@ -673,7 +661,7 @@ class JobChargeServiceTest {
         assertThat(refund.getReferenceId()).isEqualTo(jobId.toString());
         assertThat(refund.getPolicyId()).isEqualTo(7L);
         assertThat(refund.getBillingCategory()).isEqualTo(BillingCategory.API);
-        // This row consumed no free units, so the grant counter is never even loaded.
+        // No free units consumed, so the grant counter is never loaded.
         verify(teamExtRepo, never()).findByIdForUpdate(100L);
     }
 
@@ -699,9 +687,7 @@ class JobChargeServiceTest {
 
     @Test
     void markFirstStepFailed_refundAfterPeriodTurned_doesNotExceedTheGrant() {
-        // The charge happened last period and its grant has already been reset. Handing the units
-        // back on top of the fresh grant would give the team more free work than the policy allows,
-        // so the restore is capped — and it stamps the row for the current period on the way out.
+        // The charge's period is over and the grant already reset, so the restore is capped.
         UUID jobId = UUID.randomUUID();
         PaygShadowCharge row = chargedShadowRow(jobId, 100L, 10, 3, BillingCategory.API);
         when(shadowRepo.findFirstByJobIdOrderByIdAsc(jobId)).thenReturn(Optional.of(row));

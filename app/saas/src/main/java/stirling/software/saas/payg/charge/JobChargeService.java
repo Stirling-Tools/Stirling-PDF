@@ -222,14 +222,9 @@ public class JobChargeService {
      * Skipped for non-billable / team-less calls (BYPASSED never reaches openProcess; guarded
      * defensively).
      *
-     * <p>This is also where the recurring reset is persisted. The counter carries the period it was
-     * last written for; when that predates the current window, the first charge of the new period
-     * rolls it back up to the full grant and re-stamps it, under the same lock. Nothing schedules
-     * that — the reset is owed the instant the period turns and the read paths already show it (see
-     * {@link TeamBillingService#remainingForPeriod}), so a team that runs nothing all period simply
-     * has nothing to persist. The period and the grant size come from the cached billing context,
-     * both stable across a period; only the balance is read from the locked row, so the split stays
-     * exact under concurrency.
+     * <p>Also the only place the period reset is persisted, under that same lock. Period and grant
+     * size come from the cached billing context (both stable across a period); only the balance is
+     * read from the locked row, so the split stays exact.
      */
     private int consumeFreeGrant(ChargeContext ctx, int units) {
         BillingCategory category = ctx.billingCategory();
@@ -254,8 +249,7 @@ public class JobChargeService {
                         periodStart);
         int freeUsed = (int) Math.min(units, Math.max(0L, remaining));
         if (periodRolled || freeUsed > 0) {
-            // Write on a roll-over even when this job draws nothing (a zero grant), so the row
-            // records the period its counter belongs to and stops reading as a reset still owed.
+            // A roll-over writes even when nothing is drawn, so the stamp stops reading as stale.
             ext.setFreeUnitsRemaining(remaining - freeUsed);
             ext.setFreeUnitsPeriodStart(periodStart);
             teamExtensionsRepository.save(ext);
@@ -264,18 +258,12 @@ public class JobChargeService {
     }
 
     /**
-     * Return {@code units} to the team's free grant after a refund, never exceeding one period's
-     * grant. Takes the same row lock as {@link #consumeFreeGrant} rather than a blind increment:
-     * the ceiling has to be applied against the balance as it stands, and a refund can race a
-     * charge for the same team.
+     * Return {@code units} to the team's free grant after a refund, capped at one period's grant.
+     * Takes the same row lock as {@link #consumeFreeGrant} rather than a blind increment, because
+     * the cap applies against the balance as it stands.
      *
-     * <p>The ceiling is what keeps a recurring grant from being over-credited. Within a period it
-     * changes nothing — the amount restored is exactly what the job took, so the counter lands back
-     * where it started. It earns its keep when a refund lands after the period turned: the balance
-     * resolves to a fresh full grant, and adding last period's units on top would hand the team
-     * more free work than the policy allows. Resolving through {@link
-     * TeamBillingService#remainingForPeriod} also persists that pending reset, so the refund leaves
-     * the row stamped for the current period like any charge would.
+     * <p>The cap only bites when a refund lands after its charge's period ended: the balance has
+     * already reset to a full grant, and adding the old units on top would over-credit the team.
      */
     private void restoreFreeGrant(Long teamId, int units) {
         Optional<PaygTeamExtensions> extOpt = teamExtensionsRepository.findByIdForUpdate(teamId);
@@ -465,8 +453,7 @@ public class JobChargeService {
                     refund.setPolicyId(row.getPolicyId());
                     refund.setBillingCategory(category);
                     ledgerRepository.save(refund);
-                    // Hand back the free units this job consumed — first-step failures are
-                    // pre-meter, so nothing was billed to Stripe and only the grant moved.
+                    // First-step failures are pre-meter: nothing was billed, only the grant moved.
                     int freeConsumed =
                             row.getFreeUnitsConsumed() == null ? 0 : row.getFreeUnitsConsumed();
                     if (freeConsumed > 0 && row.getTeamId() != null) {

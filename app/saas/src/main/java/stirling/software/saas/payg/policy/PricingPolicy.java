@@ -74,15 +74,9 @@ public class PricingPolicy implements Serializable {
     private Integer fileUnitCap = 1000;
 
     /**
-     * Free document grant a team gets <b>each billing period</b>. {@code 0} (default) means no free
-     * grant. Unused units do not carry over: the counter resets to this value at each period
-     * boundary rather than accumulating.
-     *
-     * <p>The value is copied into {@code payg_team_extensions.free_units_remaining} when the team's
-     * sidecar row is created (V14 trigger, updated in V19), and re-applied there by the charge
-     * pipeline on the first charge of each new period. Between resets the per-team counter is
-     * authoritative; this column is the size, not the balance. The period is {@code
-     * TeamBillingContext.periodStart} — the same window the spending cap is enforced over.
+     * Free document grant a team gets each billing period; {@code 0} (default) means none. Unused
+     * units do not carry over. This is the size, not the balance: {@code
+     * payg_team_extensions.free_units_remaining} is reset to it at each period boundary.
      */
     @Column(name = "free_tier_units", nullable = false)
     private Long freeTierUnits = 0L;

@@ -13,11 +13,8 @@ function toCredits(
   freeRemaining: number,
   freeAllowance: number,
 ): CachedCredits {
-  // Free teams only. A paying team's headline number is spend against its cap,
-  // not what's left of the grant, so showing a draining free meter next to a
-  // live invoice reads as a problem when nothing is wrong. Plan draws the same
-  // line — subscribed teams get the spend-vs-cap meter there, and admins get
-  // usage in the processor.
+  // Free teams only: a payer's headline number is spend against cap, and a
+  // draining free meter beside a live invoice reads as a problem.
   if (status === "subscribed") return null;
   return { remaining: freeRemaining, total: freeAllowance };
 }

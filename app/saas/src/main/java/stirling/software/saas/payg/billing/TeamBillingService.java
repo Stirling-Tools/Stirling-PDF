@@ -30,24 +30,16 @@ import stirling.software.saas.payg.wallet.WalletPolicy;
  * entitlement hot path and the wallet endpoint read from here, so what the customer sees is what
  * the guard enforces.
  *
- * <p>Two meters, both keyed to the same period (the grant became recurring in 2026-08; before that
- * it was a one-time lifetime pool):
+ * <p>Two separate pools, both measured over the same period window:
  *
  * <ul>
- *   <li><b>Free grant</b> — per team, <b>per period</b>. Size from {@code
- *       pricing_policy.free_tier_units}; live balance from the {@code
- *       payg_team_extensions.free_units_remaining} counter (maintained by the charge pipeline),
- *       read through {@link #remainingForPeriod} so a counter still stamped with a past period
- *       reads as a fresh grant. Gates un-subscribed teams and drives the free-vs-paid split.
+ *   <li><b>Free grant</b> — per team, per period. Size from {@code pricing_policy.free_tier_units};
+ *       balance from {@code payg_team_extensions.free_units_remaining}, read through {@link
+ *       #remainingForPeriod}. Gates un-subscribed teams and drives the free-vs-paid split.
  *   <li><b>Period window + cap</b> — the Stripe subscription period (calendar month otherwise) and
  *       the optional money cap. Govern the subscribed invoice + spending cap only. The per-document
  *       rate is the synced {@code stripe.prices.unit_amount} (PAYG prices are plain per-unit).
  * </ul>
- *
- * <p>That window is the system's only period definition: the grant resets on it, the cap is
- * enforced over it, and linked self-hosted instances bucket their local usage by the {@code
- * periodStart} they read from it. "500 free per month" means this window — which for an
- * un-subscribed team, the only kind the grant gates, is the calendar month.
  *
  * <p>Cached per team for {@value #CACHE_TTL_SECONDS}s. {@code EntitlementService.invalidate}
  * cascades into {@link #invalidate(Long)} so both caches drop together on cap edits / webhooks.
@@ -150,10 +142,8 @@ public class TeamBillingService {
                         .orElseGet(TeamBillingService::calendarMonthWindow);
 
         long freeGrant = resolveGrant(teamId);
-        // Project the stored counter onto the current period instead of reading it raw. A team
-        // whose stamp predates this period is owed a reset that the charge pipeline applies lazily
-        // on its next charge; reading raw would show — and gate on — last period's exhausted
-        // balance until the team happened to run something.
+        // Not the raw counter: the charge pipeline persists the period reset lazily, so a team that
+        // has run nothing since the boundary would otherwise read as last period's exhausted.
         long freeRemaining =
                 extOpt.map(
                                 ext ->
@@ -200,10 +190,7 @@ public class TeamBillingService {
                 monthlyCapDocUnits);
     }
 
-    /**
-     * The per-period grant size — the "N" denominator for display, and the value the counter resets
-     * to at each period boundary; the counter is the live balance within the period.
-     */
+    /** The per-period grant size — the "N" denominator; the counter is the balance within it. */
     private long resolveGrant(Long teamId) {
         try {
             PricingPolicy policy = pricingPolicyService.getEffectivePolicy(teamId);
@@ -299,22 +286,11 @@ public class TeamBillingService {
     }
 
     /**
-     * The team's free balance for the period starting at {@code currentPeriodStart}, given the
-     * counter as last written. This is the one rule for "has this period's grant been drawn yet",
-     * shared by the read paths here and by the authoritative decrement in {@code JobChargeService},
-     * so what the customer sees is what the guard enforces and neither side can drift onto its own
-     * reset schedule.
+     * The team's free balance for the period starting at {@code currentPeriodStart}: a full grant
+     * when the counter is stale (its reset is owed but not yet written), the counter otherwise.
      *
-     * <p>A stamp older than the current period start — or absent, as on every row written before
-     * the grant became recurring — means the reset is owed but not yet applied, so the answer is a
-     * full grant; the charge pipeline persists it when it next draws. A stamp at or after the
-     * period start means the counter is already this period's and is returned as-is. That includes
-     * a stamp in the future, which shouldn't happen but must never read as "here's another grant".
-     *
-     * @param stampedPeriodStart {@code payg_team_extensions.free_units_period_start}; may be null
-     * @param storedRemaining {@code payg_team_extensions.free_units_remaining}; may be null
-     * @param grant the policy's per-period grant size
-     * @param currentPeriodStart the period start being resolved against
+     * <p>The single rule for that decision, shared by the reads here and the decrement in {@code
+     * JobChargeService}, so displayed and enforced balances can't diverge.
      */
     public static long remainingForPeriod(
             LocalDateTime stampedPeriodStart,
@@ -327,7 +303,7 @@ public class TeamBillingService {
         return storedRemaining == null ? 0L : Math.max(0L, storedRemaining);
     }
 
-    /** True when {@code stampedPeriodStart} belongs to an earlier period than the current one. */
+    /** True when the stamp belongs to an earlier period, so a reset is owed. */
     public static boolean isStale(
             LocalDateTime stampedPeriodStart, LocalDateTime currentPeriodStart) {
         return currentPeriodStart != null

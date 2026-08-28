@@ -15,10 +15,6 @@ import java.util.List;
  * subscription's Stripe Price. Fields that can't be resolved are {@code null} and the FE renders
  * "unknown" — never a substituted default.
  *
- * <p>The free grant and the spending cap are measured over the same window, so {@code
- * billingPeriodStart}/{@code billingPeriodEnd} date both: an un-subscribed team's "free per month"
- * is the calendar month shown here, and a subscribed team's is its Stripe period.
- *
  * @param teamId the caller's primary team_id. Needed by the frontend so it can pass it to the
  *     Supabase edge functions that create Stripe Checkout / portal sessions — those run outside
  *     Spring Security and have no other way to resolve the caller's team.
@@ -36,8 +32,7 @@ import java.util.List;
  *     grant ({@code freeAllowance}) for free teams; {@code floor(cap / perDocRate)} paid docs/month
  *     for capped subscribed teams; {@code null} when subscribed with no cap (uncapped).
  * @param freeAllowance the team's free document grant size per period (the "N" in "X of N free").
- *     Resets at each period boundary; unused units don't carry over. Applies to billable categories
- *     only.
+ *     Resets each period. Applies to billable categories only.
  * @param freeRemaining free documents still available to the team this period ({@code
  *     payg_team_extensions.free_units_remaining}). 0 = this period's grant is exhausted.
  * @param pricePerDocMinor paid per-document rate in minor units of {@code currency} (may be

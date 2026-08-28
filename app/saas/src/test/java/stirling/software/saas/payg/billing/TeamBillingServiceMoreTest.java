@@ -380,8 +380,7 @@ class TeamBillingServiceMoreTest {
         @DisplayName("a counter stamped with a past period reads as a fresh grant")
         void staleStampReadsAsFreshGrant() {
             stubGrant(GRANT);
-            // Exhausted last month, nothing run since: the reset is owed and nothing has persisted
-            // it yet, so the read must already show it rather than wait for a charge.
+            // Nothing has persisted the reset yet, so the read has to show it anyway.
             when(extensionsRepository.findById(TEAM_ID))
                     .thenReturn(
                             Optional.of(
@@ -422,8 +421,7 @@ class TeamBillingServiceMoreTest {
         void subscribedGrantFollowsTheStripeWindow() {
             stubGrant(GRANT);
             // Stamped for the calendar month, but this team's period is Stripe-anchored and starts
-            // mid-month. The stamp therefore belongs to the previous period and the grant resets —
-            // the point being that one window governs both the grant and the cap.
+            // mid-month, so the stamp belongs to the previous period and the grant resets.
             LocalDateTime stripeStart = LocalDateTime.of(2026, 6, 10, 0, 0);
             when(extensionsRepository.findById(TEAM_ID))
                     .thenReturn(Optional.of(subscribedRow(LocalDateTime.of(2026, 6, 1, 0, 0))));

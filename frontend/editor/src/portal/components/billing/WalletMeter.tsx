@@ -17,8 +17,7 @@ interface Props {
 /**
  * The free Processor-trial meter — "X of N free PDFs left" against this period's
  * grant, with what has been used alongside as the status badge. The bar shows what
- * is left, so it drains towards empty as the grant is spent and refills when the
- * billing period turns.
+ * is left, so it drains towards empty as the grant is spent.
  * Uses the shared {@link MeterBar} (same `paygf-meter` structure as the
  * cloud plan page). The subscribed spend-vs-cap meter is a separate surface
  * ({@code SpendLimitCard}); this card is only the free face.
