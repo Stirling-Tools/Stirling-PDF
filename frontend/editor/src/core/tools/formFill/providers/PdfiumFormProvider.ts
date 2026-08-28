@@ -22,12 +22,7 @@ import type {
   ButtonAction,
 } from "@app/tools/formFill/types";
 import type { IFormDataProvider } from "@app/tools/formFill/providers/types";
-import type {
-  PDFDict,
-  PDFString,
-  PDFHexString,
-  PDFName,
-} from "@cantoo/pdf-lib";
+import type { PDFDict } from "@cantoo/pdf-lib";
 
 interface PDFAcroField {
   dict: PDFDict;
@@ -317,7 +312,7 @@ export class PdfiumFormProvider implements IFormDataProvider {
 
       const decodeText = (obj: unknown): string => {
         if (obj instanceof PDFString || obj instanceof PDFHexString)
-          return (obj as PDFString | PDFHexString).decodeText();
+          return obj.decodeText();
         return String(obj ?? "");
       };
 
@@ -410,28 +405,27 @@ export class PdfiumFormProvider implements IFormDataProvider {
 
       const decodeText = (obj: unknown): string | null => {
         if (obj instanceof PDFString || obj instanceof PDFHexString)
-          return (obj as PDFString | PDFHexString).decodeText();
+          return obj.decodeText();
         if (obj instanceof PDFName)
-          return (obj as PDFName).asString() ?? String(obj).replace(/^\//, "");
+          return obj.asString() ?? String(obj).replace(/^\//, "");
         return null;
       };
 
       const parseActionDict = (aObj: unknown): ButtonAction | null => {
         if (!(aObj instanceof PDFDict)) return null;
         // @cantoo/pdf-lib ships without individual .d.ts files so instanceof can't narrow `unknown`
-        const a = aObj as PDFDict;
+        const a = aObj;
         const sObj = a.lookup(PDFName.of("S"));
         if (!(sObj instanceof PDFName)) return null;
         const actionType: string =
-          (sObj as PDFName).asString() ?? String(sObj).replace(/^\//, "");
+          sObj.asString() ?? String(sObj).replace(/^\//, "");
 
         switch (actionType) {
           case "Named": {
             const nObj = a.lookup(PDFName.of("N"));
             const name =
               nObj instanceof PDFName
-                ? ((nObj as PDFName).asString() ??
-                  String(nObj).replace(/^\//, ""))
+                ? (nObj.asString() ?? String(nObj).replace(/^\//, ""))
                 : "";
             return { type: "named", namedAction: name };
           }

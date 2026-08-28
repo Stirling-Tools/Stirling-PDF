@@ -55,11 +55,16 @@ class FileRunEventStoreDbTest {
     }
 
     private RecordFailure failure(FailureKind kind, Long teamId, String fileId) {
+        return failure(kind, teamId, "author@example.com", fileId);
+    }
+
+    /** As {@link #failure} but naming the actor, which is what the read scope narrows by. */
+    private RecordFailure failure(FailureKind kind, Long teamId, String actor, String fileId) {
         return new RecordFailure(
                 kind,
                 FailureOrigin.POLICY,
                 teamId,
-                "author@example.com",
+                actor,
                 "policy-1",
                 "run-1",
                 null,
@@ -74,14 +79,35 @@ class FileRunEventStoreDbTest {
         store.record(failure(FailureKind.UNKNOWN, OTHER_TEAM, "theirs"));
         store.record(failure(FailureKind.UNKNOWN, null, "unteamed"));
 
-        assertThat(store.list(TEAM, null, null, 10))
+        assertThat(store.list(TEAM, null, null, null, 10))
                 .extracting(FileRunEvent::fileId)
                 .containsExactly("ours");
         // A plain `e.teamId = :teamId` would return nothing here: SQL equality against NULL is
         // never true, which is what the explicit null branch in the JPQL exists for.
-        assertThat(store.list(null, null, null, 10))
+        assertThat(store.list(null, null, null, null, 10))
                 .extracting(FileRunEvent::fileId)
                 .containsExactly("unteamed");
+    }
+
+    @Test
+    @DisplayName("actor narrowing is enforced by the query, within the team")
+    void actorNarrowingIsEnforcedBySql() {
+        // The clause that makes a member read only their own rows. Exercised here rather than only
+        // against the in-memory repository, which reimplements the filter in Java and would agree
+        // with a query that had lost it.
+        store.record(failure(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "mine@example.com", "f1"));
+        store.record(
+                failure(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "theirs@example.com", "f2"));
+        store.record(failure(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, null, "f3"));
+
+        assertThat(store.list(TEAM, null, null, "mine@example.com", 10))
+                .extracting(FileRunEvent::fileId)
+                .containsExactly("f1");
+        // A null actor is "no filter", which is what a leader reads with: the whole team, including
+        // the rows nobody is named on.
+        assertThat(store.list(TEAM, null, null, null, 10))
+                .extracting(FileRunEvent::fileId)
+                .containsExactlyInAnyOrder("f1", "f2", "f3");
     }
 
     @Test
@@ -170,7 +196,7 @@ class FileRunEventStoreDbTest {
 
         assertThat(replacement.id()).isNotEqualTo(first.id());
         assertThat(replacement.occurrences()).isEqualTo(1);
-        assertThat(store.list(TEAM, null, null, 10)).hasSize(1);
+        assertThat(store.list(TEAM, null, null, null, 10)).hasSize(1);
     }
 
     @Test
@@ -188,7 +214,7 @@ class FileRunEventStoreDbTest {
         FileRunEvent folded = store.record(secondSweep);
 
         assertThat(folded.occurrences()).isEqualTo(2);
-        assertThat(store.list(TEAM, null, null, 10))
+        assertThat(store.list(TEAM, null, null, null, 10))
                 .as("one incident per document, however many runs it failed in")
                 .extracting(FileRunEvent::fileId)
                 .containsExactlyInAnyOrder("file-hash-a", "file-hash-b");
@@ -207,7 +233,7 @@ class FileRunEventStoreDbTest {
     }
 
     @Test
-    @DisplayName("closing deleted files touches only that owner's own open editor rows")
+    @DisplayName("deleting a document closes every incident about it that the deleter caused")
     void markFilesRemovedIsScopedBySqlNotByTheCaller() {
         // The scoping is entirely in the JPQL, so the in-memory fake proves nothing about it:
         // it implements the same rules by hand and would agree with a wrong query.
@@ -215,6 +241,10 @@ class FileRunEventStoreDbTest {
                 store.record(
                         RecordFailure.forEditor(
                                 FailureKind.UNKNOWN, TEAM, "owner@example.com", "f-1", "boom"));
+        // Recorded by the processor, about the document they just deleted. Keying on origin left
+        // these in the queue.
+        FileRunEvent myPolicyRun =
+                store.record(failure(FailureKind.UNKNOWN, TEAM, "owner@example.com", "f-1"));
         FileRunEvent theirs =
                 store.record(
                         RecordFailure.forEditor(
@@ -227,12 +257,14 @@ class FileRunEventStoreDbTest {
                                 "owner@example.com",
                                 "f-1",
                                 "boom"));
-        FileRunEvent fromProcessor = store.record(failure(FailureKind.UNKNOWN, TEAM, "f-1"));
 
         int closed = store.markFilesRemoved(TEAM, "owner@example.com", List.of("f-1"));
 
-        assertThat(closed).isEqualTo(1);
+        assertThat(closed).isEqualTo(2);
         assertThat(store.find(mine.id(), TEAM).orElseThrow().status())
+                .isEqualTo(FileRunEventStatus.FILE_REMOVED);
+        assertThat(store.find(myPolicyRun.id(), TEAM).orElseThrow().status())
+                .as("their upload, their document, now deleted")
                 .isEqualTo(FileRunEventStatus.FILE_REMOVED);
         assertThat(store.find(theirs.id(), TEAM).orElseThrow().status())
                 .as("another person's incident about their own file")
@@ -240,8 +272,30 @@ class FileRunEventStoreDbTest {
         assertThat(store.find(otherTeam.id(), OTHER_TEAM).orElseThrow().status())
                 .as("another team entirely")
                 .isEqualTo(FileRunEventStatus.NEW);
-        assertThat(store.find(fromProcessor.id(), TEAM).orElseThrow().status())
-                .as("nothing was deleted from an editor here")
+    }
+
+    @Test
+    @DisplayName("a source-fed incident survives a client naming its file id")
+    void markFilesRemovedLeavesSourceFedRowsAlone() {
+        // With login disabled the actor is null on both sides, so the absence of a source is all
+        // that stands between a local delete and a sweep's incidents.
+        FileRunEvent sweep =
+                store.record(
+                        new RecordFailure(
+                                FailureKind.UNKNOWN,
+                                FailureOrigin.POLICY,
+                                null,
+                                null,
+                                "policy-1",
+                                "run-1",
+                                "src-watched-folder",
+                                "collides-with-a-client-id",
+                                "detail"));
+
+        int closed = store.markFilesRemoved(null, null, List.of("collides-with-a-client-id"));
+
+        assertThat(closed).isZero();
+        assertThat(store.find(sweep.id(), null).orElseThrow().status())
                 .isEqualTo(FileRunEventStatus.NEW);
     }
 
@@ -267,7 +321,7 @@ class FileRunEventStoreDbTest {
             store.record(failure(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "newer-" + i));
         }
 
-        assertThat(store.list(TEAM, null, "UNKNOWN", 1))
+        assertThat(store.list(TEAM, null, "UNKNOWN", null, 1))
                 .extracting(FileRunEvent::fileId)
                 .containsExactly("old-unknown");
     }

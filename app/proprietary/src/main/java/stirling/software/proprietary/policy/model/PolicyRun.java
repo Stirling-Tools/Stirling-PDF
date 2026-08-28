@@ -35,6 +35,14 @@ public class PolicyRun {
      */
     private final String fileIdentity;
 
+    /**
+     * The user who triggered this run, or null when nothing attended it (a trigger-fired sweep).
+     * Recorded as a failure's actor, so an attended failure is handed to the person holding the
+     * document. Deliberately not the billing principal: a shared policy is billed to its owner, who
+     * may never have touched the file.
+     */
+    private final String triggeringUser;
+
     private final Instant createdAt = Instant.now();
 
     private volatile PolicyRunStatus status = PolicyRunStatus.PENDING;
@@ -63,22 +71,24 @@ public class PolicyRun {
     private volatile Instant updatedAt = Instant.now();
 
     /**
-     * Both references are required rather than defaulted: a run with neither is a real case (a
-     * user's upload, an ad-hoc pipeline), but it should be stated at the call site. Overloads that
-     * omitted them would make losing the attribution the frictionless option, which is how both
-     * fields went unpopulated in the first place.
+     * All three attribution references are required rather than defaulted: a run with none is a
+     * real case (an unattended sweep of a generator pipeline), but it should be stated at the call
+     * site. Overloads that omitted them would make losing the attribution the frictionless option,
+     * which is how {@code sourceId} and {@code fileIdentity} went unpopulated in the first place.
      */
     public PolicyRun(
             String runId,
             String policyId,
             PipelineDefinition definition,
             String sourceId,
-            String fileIdentity) {
+            String fileIdentity,
+            String triggeringUser) {
         this.runId = runId;
         this.policyId = policyId;
         this.sourceId = sourceId;
         this.definition = definition;
         this.fileIdentity = fileIdentity;
+        this.triggeringUser = triggeringUser;
     }
 
     public int stepCount() {

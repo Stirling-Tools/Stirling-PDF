@@ -189,6 +189,7 @@ public class OCRController {
         List<String> selectedLanguages = request.getLanguages();
         boolean sidecar = request.isSidecar();
         Boolean deskew = request.isDeskew();
+        Boolean rotatePages = request.isRotatePages();
         Boolean clean = request.isClean();
         Boolean cleanFinal = request.isCleanFinal();
         String ocrType = request.getOcrType();
@@ -229,6 +230,7 @@ public class OCRController {
                         selectedLanguages,
                         sidecar,
                         deskew,
+                        rotatePages,
                         clean,
                         cleanFinal,
                         ocrType,
@@ -311,6 +313,7 @@ public class OCRController {
             List<String> selectedLanguages,
             Boolean sidecar,
             Boolean deskew,
+            Boolean rotatePages,
             Boolean clean,
             Boolean cleanFinal,
             String ocrType,
@@ -342,6 +345,10 @@ public class OCRController {
 
         if (deskew != null && deskew) {
             command.add("--deskew");
+        }
+        if (rotatePages != null && rotatePages) {
+            // Tesseract OSD-based automatic page orientation correction (90/180/270)
+            command.add("--rotate-pages");
         }
         if (clean != null && clean) {
             command.add("--clean");

@@ -7,7 +7,11 @@ import { PortalSearchBar } from "@portal/components/PortalSearchBar";
 import { useUI } from "@portal/contexts/UIContext";
 import { MenuIcon, SearchIcon } from "@portal/components/icons";
 import { Logo } from "@app/ui/Logo";
+import "@app/components/layout/WorkspaceFrame.css";
+import { QuickNavHostBridge } from "@app/components/shared/quickNav/QuickNavHostBridge";
 import "@portal/components/AppShell.css";
+import { NotificationBell } from "@app/components/notifications/NotificationBell";
+import { useIsPhone } from "@app/hooks/useIsMobile";
 
 /**
  * Compact header shown only under the mobile breakpoint (CSS-hidden on
@@ -57,8 +61,10 @@ function MobileTopbar() {
  * prop-free.
  */
 export function AppShell({ children }: { children: ReactNode }) {
-  const { mobileNavOpen, closeMobileNav } = useUI();
+  const { mobileNavOpen, closeMobileNav, openSettings } = useUI();
   const { pathname } = useLocation();
+  // Below this width the rail, and the bell it carries, is gone.
+  const isPhone = useIsPhone();
 
   // Navigating (tap on a nav row, back button, deep link) always dismisses the
   // drawer. Depends on pathname only: the close fn's identity changes with any
@@ -78,7 +84,11 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="portal-shell">
-      <Sidebar />
+      {/* portalAccess: being here is proof the processor is available. */}
+      <QuickNavHostBridge portalAccess onOpenSettings={() => openSettings()} />
+      <div className="workspace-frame">
+        <Sidebar />
+      </div>
       {mobileNavOpen && (
         <div
           className="portal-shell__scrim"
@@ -89,6 +99,12 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="portal-shell__main">
         <MobileTopbar />
         <PortalSearchBar />
+        {/* Phone only: above that the rail carries it, and this would be a second. */}
+        {isPhone && (
+          <div className="portal-shell__notifications">
+            <NotificationBell />
+          </div>
+        )}
         <main className="portal-shell__view">{children}</main>
       </div>
     </div>
