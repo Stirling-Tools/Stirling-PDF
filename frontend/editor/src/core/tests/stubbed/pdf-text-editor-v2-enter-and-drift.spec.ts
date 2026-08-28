@@ -198,20 +198,15 @@ test.describe("v2 editor - Enter keeps the caret on the new line", () => {
   });
 });
 
-// The caret used to walk off the text about a pixel per keystroke - 7px, 14px,
-// 21px over thirty characters - and snap back only when typing stopped.
+// Guards caret drift during a typing burst. The bitmap is never the culprit:
+// PDFium re-rasterises in milliseconds. The engine's pen positions are, and a
+// debounce that clears its timer on every dispatch never refreshes them, so
+// the overlay falls back to browser advances - a percent wider - and the caret
+// walks off the glyphs by the difference.
 //
-// The page bitmap was never the problem: PDFium re-rasterises in a few
-// milliseconds and its ink tracks the typing character for character. What
-// lagged was the ENGINE's pen positions. `schedulePositionRefresh` debounced
-// them by 600ms and cleared its own timer on every dispatch, so a continuous
-// burst postponed the refresh indefinitely; with no measured advances for the
-// new text the overlay laid it out on the browser's, which are a percent or so
-// wider, and the caret drifted by the difference.
-//
-// It was also closed once by masking the page and letting the overlay paint its
-// own glyphs instead. That is the wrong trade - it changes the typeface of text
-// the user is reading, mid-word. See pdf-text-editor-v2-edit-mask.spec.ts.
+// Masking the page and letting the overlay paint its own glyphs also hides
+// this, and is the wrong trade: it changes the typeface mid-word. See
+// pdf-text-editor-v2-edit-mask.spec.ts.
 test.describe("v2 editor - the caret stays on the text while typing", () => {
   test("a long typing burst never separates the caret from the glyphs", async ({
     page,

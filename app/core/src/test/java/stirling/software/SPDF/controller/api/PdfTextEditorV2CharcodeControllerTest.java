@@ -314,25 +314,16 @@ class PdfTextEditorV2CharcodeControllerTest {
         assertThat(body.getCharcodes()).isNull();
     }
 
-    // ------------------------------------------------------------------
-    // Same-family sibling subsets (the Mangum-CV corruption).
+    // Same-family sibling subsets. One document can embed several subsets of
+    // one family, each re-encoded by order of first glyph use, so a letter has
+    // a different charcode in each ("R" = 0x21 in one, 0x22 in its sibling).
+    // FPDFFont_GetBaseFontName strips the "ABCDEF+" tag, so a name-based
+    // lookup cannot tell them apart and borrows the wrong subset's codes.
     //
-    // A Word/Quartz-printed CV embedded FOUR subsets of Garamond, each
-    // re-encoded by order of first glyph use, so the same letter has a
-    // DIFFERENT charcode in each subset ("R" = 0x21 in one, 0x22 in its
-    // sibling). PDFium reports every one of them as plain "Garamond"
-    // (FPDFFont_GetBaseFontName strips the "ABCDEF+" tag), so a
-    // name-based lookup picked whichever sibling scanned first and its
-    // charcodes - written into the OTHER subset's text object - rendered
-    // "RUSSELL W. MANGUM III" as "US EEL W. MANGS M III".
-    //
-    // The synthetic doc below mirrors that: two TrueType subsets whose
-    // /BaseFont differs only by subset tag, with ToUnicode maps assigning
-    // DIFFERENT codes to the same char. PUA code points keep the test
-    // deterministic: font.encode() cannot resolve them via glyph names,
-    // so the returned charcode always comes from the selected font's
-    // ToUnicode reverse map - i.e. it proves WHICH font was selected.
-    // ------------------------------------------------------------------
+    // The doc below mirrors that with two TrueType subsets differing only by
+    // subset tag. PUA code points keep it deterministic: font.encode() cannot
+    // resolve them by glyph name, so the charcode can only come from the
+    // selected font's ToUnicode reverse map - proving WHICH font was picked.
 
     private static final String PUA = "";
 

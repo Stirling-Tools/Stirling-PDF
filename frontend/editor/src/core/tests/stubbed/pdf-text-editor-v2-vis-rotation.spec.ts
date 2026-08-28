@@ -287,9 +287,7 @@ async function firstRunId(page: Page): Promise<string> {
   return id;
 }
 
-// ---------------------------------------------------------------------------
 // Object rotation (a rotated text matrix on an unrotated page)
-// ---------------------------------------------------------------------------
 
 test("rotated run: model bounds box the diagonal ink within 4px on every edge", async ({
   page,
@@ -511,9 +509,7 @@ test("editing a rotated run re-renders the added glyphs along the same 30 degree
   ).toBeLessThan(4);
 });
 
-// ---------------------------------------------------------------------------
 // Page /Rotate
-// ---------------------------------------------------------------------------
 
 const PAGE_ROTATIONS = [
   { idx: 0, rotate: 0, edge: "top" },

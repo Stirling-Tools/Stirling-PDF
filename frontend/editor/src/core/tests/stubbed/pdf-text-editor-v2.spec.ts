@@ -1013,7 +1013,6 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
     expect(reopened).toMatch(/Alternative\s+Hi/);
   });
 
-  // ---------------------------------------------------------------
   // Sequential-edit visual-integrity tests.
 
   async function findTaglineRun(page: import("@playwright/test").Page) {
@@ -1338,7 +1337,6 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
       { op: "delete", pos: baseline.text.length },
       // Append a known-existing 'A'.
       { op: "insertText", pos: baseline.text.length - 1, ch: "A" },
-      // Delete it.
       { op: "delete", pos: baseline.text.length },
       // Type 'e' back at the end.
       { op: "insertText", pos: baseline.text.length - 1, ch: "e" },
@@ -1444,7 +1442,6 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
     expect(postCaretSubRunIdx).toBeLessThan(baseline.mergedFromBounds.length);
     const origPostCaretX = baseline.mergedFromBounds[postCaretSubRunIdx].x;
 
-    // Insert "aaa" at the caret position.
     await execAt(page, baseline.id, caretPos, "insertText", "aaa");
 
     const after = await page.evaluate((tid) => {
@@ -1745,7 +1742,6 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
     ).toBeGreaterThan(15);
   });
 
-  // -------------------------------------------------------------------
   // Comprehensive edit-text regression.
 
   /** Walk adjacent merged-from-bounds and assert no horizontal overlap. */
@@ -2170,7 +2166,6 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
     expect(allText.indexOf("Alternativ")).toBeGreaterThanOrEqual(0);
   });
 
-  // -------------------------------------------------------------------
   // Font-fallback regression tests.
 
   test("font-fallback: Helvetica fallback for inserted text produces a visible glyph (width > 0)", async ({
@@ -4111,8 +4106,7 @@ test.describe("PDF text editor v2 - Ctrl+A select all", () => {
   });
 });
 
-// ============================================================ Stress +
-// edge-case battery.
+// Stress + edge-case battery.
 
 test.describe("PDF text editor v2 - stress: whitespace insertion variations", () => {
   /** Caret at char index `pos` inside `runTestId`. */
@@ -4213,7 +4207,7 @@ test.describe("PDF text editor v2 - stress: whitespace insertion variations", ()
     await page.waitForTimeout(500);
   }
 
-  // --- end-of-line inserts ---
+  // end-of-line inserts
   for (const [label, payload] of [
     ["single trailing space + token", " Hi"],
     ["leading space + multi-char", " Hello"],
@@ -4455,7 +4449,6 @@ test.describe("PDF text editor v2 - stress: bold / font swap variations", () => 
     const mid = await readRun(page, id);
     if (!mid) throw new Error("mid read failed");
     expect(mid.merged).toBe(0);
-    // Undo.
     await page.getByTestId("v2-undo").click();
     await page.waitForTimeout(400);
     const after = await readRun(page, id);
@@ -5165,7 +5158,7 @@ test.describe("PDF text editor v2 - stress: AddText box content fidelity", () =>
     await page.waitForTimeout(500);
   }
 
-  // ---- Bulk insertText paths ----
+  // Bulk insertText paths
 
   for (const payload of [
     "be  aaA",
@@ -5210,7 +5203,7 @@ test.describe("PDF text editor v2 - stress: AddText box content fidelity", () =>
     });
   }
 
-  // ---- Char-by-char typing path. ----
+  // Char-by-char typing path.
 
   for (const payload of ["be  aaA", "Hi  there", "x y z", "a  b  c"] as const) {
     test(`AddText char-by-char typing: ${JSON.stringify(payload)} produces correct final state + order`, async ({
@@ -5237,7 +5230,7 @@ test.describe("PDF text editor v2 - stress: AddText box content fidelity", () =>
     });
   }
 
-  // ---- Round-trip survivability ----
+  // Round-trip survivability
 
   for (const payload of ["be  aaA", "Hello  world", "a  b  c"] as const) {
     test(`AddText round-trip: ${JSON.stringify(payload)} survives save+reopen with chars in order`, async ({
@@ -5287,7 +5280,7 @@ test.describe("PDF text editor v2 - stress: AddText box content fidelity", () =>
     });
   }
 
-  // ---- Edit-after-edit (mutate the AddText box repeatedly) ----
+  // Edit-after-edit (mutate the AddText box repeatedly)
 
   test("AddText: typing then defocusing then editing again keeps chars in order", async ({
     page,
@@ -5336,7 +5329,7 @@ test.describe("PDF text editor v2 - stress: AddText box content fidelity", () =>
     }
   });
 
-  // ---- Add multiple text boxes; verify each stays independent ----
+  // Add multiple text boxes; verify each stays independent
 
   test("AddText: three boxes on same page each keep their own typed content", async ({
     page,
@@ -5361,7 +5354,7 @@ test.describe("PDF text editor v2 - stress: AddText box content fidelity", () =>
     }
   });
 
-  // ---- Defensive ordering check via PDFium-rendered bounds ----
+  // Defensive ordering check via PDFium-rendered bounds
 
   test("AddText: 'be  aaA' chars appear left-to-right in saved object positions (no reorder)", async ({
     page,

@@ -621,8 +621,8 @@ export function rotationFromMatrix(matrix: {
   if (!scale) return undefined;
   const cos = matrix.a / scale;
   const sin = matrix.b / scale;
-  // A mirrored generator reads as sin~=0 / cos>0 from a,b ALONE and used to be
-  // mistaken for plain upright text.
+  // a,b alone cannot tell a mirrored generator from upright text - both read
+  // sin~=0 / cos>0 - so the determinant decides.
   const c = matrix.c ?? 0;
   const d = matrix.d ?? scale;
   const mirrored = matrix.a * d - matrix.b * c < 0;

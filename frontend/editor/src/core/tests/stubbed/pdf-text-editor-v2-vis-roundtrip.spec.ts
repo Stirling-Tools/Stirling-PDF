@@ -10,20 +10,14 @@ import {
 
 // Save round-trip fidelity, judged on PIXELS.
 //
-// The v2 editor re-renders the real PDFium bitmap on every edit (the run
-// overlay paints no glyphs of its own - see the edit-mask spec), so the canvas
-// on screen before a save is a faithful picture of the in-memory document.
-// That makes a strong assertion possible: save, feed the downloaded bytes back
-// in, and the freshly rendered bitmap must match the pre-save one. An edit that
-// looked right on screen but serialised wrong - a dropped glyph, a resurrected
-// ghost of deleted text, a stroke that never reached the content stream, a page
-// that shifted - shows up as a difference in the ink.
+// The overlay paints no glyphs of its own (see the edit-mask spec), so the
+// canvas before a save is a faithful picture of the in-memory document: save,
+// feed the bytes back in, and the re-rendered bitmap must match. A dropped
+// glyph, a ghost of deleted text or a shifted page shows up as ink.
 //
-// Every comparison below is measured on `getImageData` from the page canvas.
-// Measured behaviour today: the round-trip is pixel-EXACT (every ratio came
-// back 0.0000), while the edits themselves move the profiles by 3-23%. The
-// thresholds are set several times tighter than the edit signal so a real
-// serialisation regression cannot slip through.
+// Every comparison is `getImageData` on the page canvas. The round-trip
+// measures pixel-EXACT (ratios 0.0000) while the edits move the profiles
+// 3-23%, so the thresholds sit several times tighter than the edit signal.
 
 const FIX = (n: string) =>
   path.join(import.meta.dirname, "../test-fixtures", n);

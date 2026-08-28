@@ -630,7 +630,8 @@ export function applyPartialEditPlan(
   const formMod = m as unknown as FormRemovalModule;
   const emitY = baselineY ?? run.matrix.f;
   const startX = defaultX ?? run.bounds.x;
-  // Step 1: remove deleted sub-objects.
+  // Removals run before the walk below: it re-emits from the surviving
+  // pointers, so a deleted object still on the page would be re-counted.
   for (const { ptr, containerPtr } of plan.removePtrs) {
     if (!ptr) continue;
     if (containerPtr && formMod.FPDFFormObj_RemoveObject) {
@@ -648,7 +649,6 @@ export function applyPartialEditPlan(
     }
   }
 
-  // Step 2: walk ops.
   const fallbackFamily = fallbackFamilyFor(run.fontId);
   const newMergedFromPtrs: number[] = [];
   const newMergedFromTexts: string[] = [];

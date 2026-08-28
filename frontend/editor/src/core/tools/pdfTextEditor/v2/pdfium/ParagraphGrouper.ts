@@ -27,7 +27,8 @@ export class ParagraphGrouper {
     const allLines = [...page.runs];
     const paragraphs: ParagraphInfo[] = [];
 
-    // Segment into columns FIRST.
+    // Columns first: a reading-order sort across the whole page interleaves
+    // side-by-side columns into one bogus paragraph.
     for (const column of segmentColumns(allLines)) {
       const sorted = column.sort((a, b) => {
         const yDiff = b.matrix.f - a.matrix.f;

@@ -296,8 +296,6 @@ export class RawPdf {
     return this.objects.get(num)?.offset ?? -1;
   }
 
-  // --- dictionary access ---------------------------------------------------
-
   /** `/Key 12 0 R` -> 12. */
   dictRef(body: string, key: string): number | null {
     const span = this.valueSpan(body, key);
@@ -384,8 +382,6 @@ export class RawPdf {
     return null;
   }
 
-  // --- streams -------------------------------------------------------------
-
   /** Decoded stream payload for an object, or null when unsupported. */
   async streamData(num: number): Promise<Uint8Array | null> {
     const entry = this.objects.get(num);
@@ -469,8 +465,6 @@ export class RawPdf {
       int("Columns", 1),
     );
   }
-
-  // --- page tree -----------------------------------------------------------
 
   /**
    * Object numbers of every page, in document order.

@@ -300,7 +300,7 @@ public class PdfBoxFontEncodingProbeTest {
                                 + ")");
             }
 
-            // ------------------ Q1/Q2/Q3 ------------------
+            // Q1/Q2/Q3
             // Try encoding a char that is NEVER in Sample.pdf via each font.
             // 'Z' is unlikely to be in the subset for most marketing pages.
             // Try several candidates to surface what each font can/can't add.
@@ -325,7 +325,7 @@ public class PdfBoxFontEncodingProbeTest {
                 }
             }
 
-            // ------------------ Q5 ------------------
+            // Q5
             // For each font, see what's in the FontFile* stream - this is what we'd
             // have to round-trip through to "rehabilitate" a Type3 font.
             System.out.println("\n=== FontFile stream availability (Q5) ===");
@@ -367,7 +367,7 @@ public class PdfBoxFontEncodingProbeTest {
             }
         }
 
-        // ------------------ Q4: PDType0Font.load(doc, file) round-trip ------------------
+        // Q4: PDType0Font.load(doc, file) round-trip
         System.out.println("\n=== Q4: load fresh TTF and write text to a fresh PDF ===");
         Path liberation =
                 PROJECT_ROOT.resolve(
@@ -432,7 +432,7 @@ public class PdfBoxFontEncodingProbeTest {
             }
         }
 
-        // ------------------ Q4b: load TTF into an EXISTING PDF (Sample.pdf) and append text ------
+        // Q4b: load TTF into an EXISTING PDF (Sample.pdf) and append text
         System.out.println(
                 "\n=== Q4b: load TTF into EXISTING Sample.pdf and write text on page 0 ===");
         try (PDDocument doc = Loader.loadPDF(pdfBytes)) {
@@ -482,7 +482,7 @@ public class PdfBoxFontEncodingProbeTest {
             }
         }
 
-        // ------------------ Q6: what fonts ship in PDFBox / fontbox ------------------
+        // Q6: what fonts ship in PDFBox / fontbox
         System.out.println("\n=== Q6: bundled fonts (Standard14 redirect probe) ===");
         for (Standard14Fonts.FontName fn : Standard14Fonts.FontName.values()) {
             PDType1Font f = new PDType1Font(fn);

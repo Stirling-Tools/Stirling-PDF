@@ -3,20 +3,13 @@ import type { Page } from "@playwright/test";
 import path from "path";
 import type { V2TestWindow } from "@app/tests/stubbed/v2EditorTestTypes";
 
-// A window selection outlives the blur that ends an edit: blurring a
-// contenteditable leaves the caret sitting inside it. The repaint that follows
-// an edit re-seated that caret unconditionally, and putting a range back into a
-// contenteditable FOCUSES it - so a run the user had clicked away from took the
-// cursor back about 600ms later, silently, and kept it.
+// Guards focus theft after an edit. A window selection outlives the blur that
+// ends an edit, and putting a range back into a contenteditable FOCUSES it, so
+// an unconditional caret restore hands the cursor back to a run the user has
+// already left - taking their typing with it.
 //
-// Everything typed afterwards then went into a paragraph the user had already
-// left, and the next click elsewhere fired that run's blur handler a second
-// time - dispatching a wrap edit nobody asked for, which also cleared the redo
-// stack.
-//
-// Reading the caret from the selection is right: replaceChildren detaches the
-// node it sits in, and an element-anchored caret still has to survive. Writing
-// it back into a run that no longer holds focus is not.
+// Reading the caret from the selection is still right: replaceChildren
+// detaches the node it sits in. Writing it back to an unfocused run is not.
 
 const SAMPLE = path.join(
   import.meta.dirname,

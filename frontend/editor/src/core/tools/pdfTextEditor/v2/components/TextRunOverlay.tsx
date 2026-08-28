@@ -379,7 +379,6 @@ export function TextRunOverlay({
     [font, fontSizePx, faceEpoch],
   );
 
-  // Line height (px).
   const lineHeightPx =
     run.paragraphLineHeight && run.paragraphLineHeight > 0
       ? run.paragraphLineHeight * scale
@@ -662,9 +661,8 @@ export function TextRunOverlay({
   // with the bitmap: the PDF draws each line as ONE text object at one pen
   // origin and cannot wrap, so an overlay that wraps stops describing the page
   // underneath it.
-  // Wrap KEEPS its width - that is the mode. It used to widen to the page edge
-  // exactly like Grow, which made the two indistinguishable and then clipped
-  // everything past the edge anyway.
+  // Wrap holds its width and pushes overflow onto new lines; widening to the
+  // page edge instead is Grow's job, and doing both makes the modes identical.
   const width = wantWrap
     ? Math.min(wrapLockWidth, pageCap)
     : exact
@@ -946,11 +944,9 @@ export function TextRunOverlay({
                 ? "rgba(44,123,229,0.04)"
                 : "transparent",
         caretColor: toCssHex(run.fill),
-        // A SELECTED run keeps a ring. It used to lose the one it had while
-        // merely hovered, so selecting something removed its only crisp edge
-        // and left a 10% wash as the sole cue - close to invisible over a
-        // coloured band. A LOCKED run gets its own muted, non-dashed ring so it
-        // does not look like something you can type into.
+        // Selected keeps a ring: the 10% tint alone is near-invisible over a
+        // coloured band. Locked gets a muted ring so it does not read as
+        // something you can type into.
         outline: run.locked
           ? hovered || selected
             ? "1px solid rgba(120,120,120,0.55)"

@@ -8,20 +8,14 @@ import {
   saveAndDownload,
 } from "@app/tests/stubbed/v2SaveHelpers";
 
-// Opening a file and pressing save is not an edit, but it used to push the
-// document through the full PDFium serialiser, which rewrites every object.
+// Opening a file and pressing save is not an edit, so it must not rewrite the
+// file. Routed through the full PDFium serialiser it changed the bytes of 8 of
+// this suite's 10 fixtures: paragraph-sample 1390 -> 1884 (+35.5%),
+// justified-sample +33.4%. paragraph-sample carries the largest signal.
 //
-// Measured on this suite's fixtures with the shortcut disabled, an unedited
-// save changed the bytes of 8 of 10 files and inflated the small ones badly:
-// paragraph-sample 1390 -> 1884 (+35.5%), justified-sample +33.4%,
-// split-contents-sample +24.8%. (Repeat saves were byte-stable throughout, so
-// the defect is "it rewrites the file", not "it rewrites it differently each
-// time".) paragraph-sample is used below because it carries the largest signal.
-//
-// The tempting fix - "skip the serialiser while the document is not dirty" -
-// is a trap, because `dirty` clears on save: a second save after a real edit
-// would hand back the pre-edit bytes and silently revert the user's work. The
-// second test here is that regression.
+// Gating on `dirty` instead is a trap - it clears on save, so a second save
+// after a real edit hands back the pre-edit bytes and silently reverts the
+// user's work. The second test is that regression.
 
 const FIX = (n: string): string =>
   path.join(import.meta.dirname, "../test-fixtures", n);

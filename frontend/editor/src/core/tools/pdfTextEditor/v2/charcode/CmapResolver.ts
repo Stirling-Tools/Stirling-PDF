@@ -173,8 +173,7 @@ export function parseTrueTypeCmap(
     const recordOffset = tableRecordStart + i * 16;
     if (recordOffset + 16 > bytes.length) return null;
     const tag = dv.getUint32(recordOffset);
-    if (tag === 0x636d6170) {
-      // 'cmap'
+    if (tag === CMAP_TABLE_TAG) {
       cmapOffset = dv.getUint32(recordOffset + 8);
       break;
     }
@@ -272,6 +271,9 @@ function parseFormat4(
   }
   return out;
 }
+
+/** Big-endian "cmap" as an sfnt table tag. */
+const CMAP_TABLE_TAG = 0x636d6170;
 
 // Hard cap on entries built from any one cmap.
 const MAX_CMAP_ENTRIES = 200_000;
