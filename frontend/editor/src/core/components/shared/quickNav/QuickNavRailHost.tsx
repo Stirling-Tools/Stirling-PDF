@@ -48,6 +48,8 @@ export function QuickNavRailHost() {
     else go(route);
   };
 
+  const openingTool = (id: ToolId) => ({ current: host?.activeTool === id });
+
   const unusable = (id: ToolId) => {
     const reason = host?.toolReasons?.[id];
     return { disabled: Boolean(reason), reason };
@@ -135,6 +137,7 @@ export function QuickNavRailHost() {
       icon: (
         <LocalIcon icon="rebase-outline-rounded" width={SIZE} height={SIZE} />
       ),
+      ...openingTool("automate"),
       ...unusable("automate"),
       onClick: () => openTool("automate", "/automate"),
     },
@@ -146,6 +149,7 @@ export function QuickNavRailHost() {
       ),
       badge: host?.signingBadge,
       badgeTone: "warning",
+      ...openingTool("sharedSign"),
       ...unusable("sharedSign"),
       onClick: () => openTool("sharedSign", "/shared-sign"),
     },
