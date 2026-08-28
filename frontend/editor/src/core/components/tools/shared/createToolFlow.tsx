@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Stack } from "@mantine/core";
+import { Stack } from "@mantine/core";
 import {
   createToolSteps,
   ToolStepProvider,
@@ -13,6 +13,7 @@ import {
 import { StirlingFile } from "@app/types/fileContext";
 import type { TooltipTip } from "@app/types/tips";
 import type { ExecuteDisabledReason } from "@app/hooks/tools/shared/toolOperationTypes";
+import classes from "@app/components/tools/shared/createToolFlow.module.css";
 
 export interface FilesStepConfig {
   selectedFiles: StirlingFile[];
@@ -152,31 +153,13 @@ export function createToolFlow<TParams = unknown>(
                     : eb.paramsValid === false
                       ? "invalidParams"
                       : null;
+            // Pin the action only while it is the last thing in the flow; with a
+            // review below it, a sticky footer would float over the results.
             return (
-              /* Pinned to the bottom of the panel rather than left at the end of the
-                 steps. A tall tool - certificate signing runs to about 1200px once the
-                 signature options are open - pushed the button past the fold, where a
-                 user who does not think to scroll simply cannot run the tool. Sticky
-                 costs nothing when the panel fits: the button sits exactly where it
-                 always did, and only starts holding its place once there is more
-                 content than room. */
-              <Box
-                style={{
-                  position: "sticky",
-                  bottom: 0,
-                  zIndex: 2,
-                  // The button used to be a direct child of the Stack and stretched to
-                  // its width; keep that, or wrapping it shrinks it to its label.
-                  display: "flex",
-                  flexDirection: "column",
-                  // Opaque, or the steps show through as they scroll underneath.
-                  background: "var(--c-surface)",
-                  // Cancel the Stack's padding so the bar spans the panel's full width
-                  // and nothing slides past it at the sides.
-                  marginInline: "calc(var(--mantine-spacing-sm) * -1)",
-                  paddingInline: "var(--mantine-spacing-sm)",
-                  paddingBottom: "var(--mantine-spacing-sm)",
-                }}
+              <div
+                className={
+                  config.review.isVisible ? undefined : classes.executeFooter
+                }
               >
                 <ScopedOperationButton
                   selectedFiles={config.files.selectedFiles ?? []}
@@ -196,7 +179,7 @@ export function createToolFlow<TParams = unknown>(
                   data-tour="run-button"
                 />
                 {config.belowExecuteButton}
-              </Box>
+              </div>
             );
           })()}
 

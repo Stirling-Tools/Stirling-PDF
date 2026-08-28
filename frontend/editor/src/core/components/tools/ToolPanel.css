@@ -19,17 +19,12 @@
   user-select: none;
 }
 
+/* Flush, with a rule on the workbench side mirroring the file sidebar's. */
 .tool-panel--floating {
-  margin: var(--nav-gutter) var(--nav-gutter) var(--nav-gutter) 0;
-  /* Of the container, not of the viewport. AppLayout puts banners above the app and
-     rewrites .h-screen to 100% so everything below shrinks to what is left; a panel
-     measured in vh ignores that and hangs off the bottom of the window by the height
-     of the banner, taking the run button with it - and overflow: hidden means no
-     amount of scrolling brings it back. The file sidebar has always used 100%. */
-  height: calc(100% - (var(--nav-gutter) * 2));
+  /* Tracks the frame, which is dvh; vh would cut the bottom off on mobile. */
+  height: 100%;
   background: var(--c-surface);
-  border: 1px solid var(--c-border-subtle);
-  border-radius: var(--radius-nav);
+  border-inline-start: 1px solid var(--c-border-subtle);
 }
 
 .tool-panel__collapsed-strip {
@@ -172,6 +167,31 @@
   font-weight: 600;
   letter-spacing: -0.01em;
   color: var(--c-text);
+}
+
+/* On mobile the "Tools" tab sits directly above this panel, so the heading
+   just repeats it. The header stays for its actions, but shrinks to fit them -
+   at the desktop 52px it would read as an empty band once the title is gone. */
+@media (max-width: 64rem) {
+  .tool-panel__compact-title {
+    display: none;
+  }
+  .tool-panel__compact-header {
+    min-height: 44px;
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+  }
+}
+
+/* In-panel tool filter. Aligned with .tool-picker__compact's inline padding so
+   the field lines up with the tool rows underneath it. */
+.tool-panel__search {
+  flex-shrink: 0;
+  padding: 0.5rem var(--mantine-spacing-sm) 0;
+}
+
+.tool-panel__search .search-input-container {
+  margin: 0;
 }
 
 .tool-panel__compact-header-actions {

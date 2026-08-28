@@ -28,7 +28,7 @@ jobs:
       pull-requests: write # Allow writing to pull requests
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
+        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
         with:
           egress-policy: audit
 
@@ -125,7 +125,7 @@ jobs:
             const changedFiles = files
               .filter(file =>
                 file.status !== "removed" &&
-                /^frontend\/public\/locales\/[a-zA-Z-]+\/translation\.toml$/.test(file.filename)
+                /^frontend\/editor\/public\/locales\/[a-zA-Z-]+\/translation\.toml$/.test(file.filename)
               )
               .map(file => file.filename);
 
@@ -195,7 +195,7 @@ jobs:
             core.exportVariable("REFERENCE_FILE", referenceFilePath);
 
       - name: Install uv
-        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
           enable-cache: true
           cache-dependency-glob: |

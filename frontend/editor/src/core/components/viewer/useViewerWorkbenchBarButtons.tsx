@@ -124,7 +124,7 @@ export function useViewerWorkbenchBarButtons(
   const layersLabel = t("workbenchBar.toggleLayers", "Toggle Layers");
   const commentsLabel = t("workbenchBar.toggleComments", "Comments");
   const annotationsLabel = t("workbenchBar.annotations", "Annotations");
-  const formFillLabel = t("workbenchBar.formFill", "Fill Form");
+  const formFillLabel = t("workbenchBar.formFill", "Form Editor");
   const rulerLabel = t("workbenchBar.ruler", "Ruler / Measure");
   const rulerSettingsLabel = t("workbenchBar.rulerSettings", "Scale Settings");
   const readAloudLabel = t("workbenchBar.readAloud", "Read Aloud");
@@ -185,23 +185,24 @@ export function useViewerWorkbenchBarButtons(
         section: "top" as const,
         order: 10,
         render: ({ disabled }) => (
-          <Tooltip
-            content={searchLabel}
+          <Popover
             position={tooltipPosition}
-            offset={12}
-            arrow
-            portalTarget={document.body}
+            withArrow
+            shadow="md"
+            offset={8}
+            opened={isSearchInterfaceVisible}
+            onClose={viewer.searchInterfaceActions.close}
           >
-            <Popover
-              position={tooltipPosition}
-              withArrow
-              shadow="md"
-              offset={8}
-              opened={isSearchInterfaceVisible}
-              onClose={viewer.searchInterfaceActions.close}
-            >
-              <Popover.Target>
-                <div style={{ display: "inline-flex" }}>
+            <Popover.Target>
+              <div style={{ display: "inline-flex" }}>
+                {/* Inside the Popover: Tooltip binds by cloning, and Popover passes no ref on. */}
+                <Tooltip
+                  content={searchLabel}
+                  position={tooltipPosition}
+                  offset={12}
+                  arrow
+                  portalTarget={document.body}
+                >
                   <ActionIcon
                     variant="tertiary"
                     className="workbench-bar-action-icon"
@@ -215,18 +216,18 @@ export function useViewerWorkbenchBarButtons(
                       height="1.25rem"
                     />
                   </ActionIcon>
-                </div>
-              </Popover.Target>
-              <Popover.Dropdown>
-                <div style={{ minWidth: "20rem" }}>
-                  <SearchInterface
-                    visible={isSearchInterfaceVisible}
-                    onClose={viewer.searchInterfaceActions.close}
-                  />
-                </div>
-              </Popover.Dropdown>
-            </Popover>
-          </Tooltip>
+                </Tooltip>
+              </div>
+            </Popover.Target>
+            <Popover.Dropdown>
+              <div style={{ minWidth: "20rem" }}>
+                <SearchInterface
+                  visible={isSearchInterfaceVisible}
+                  onClose={viewer.searchInterfaceActions.close}
+                />
+              </div>
+            </Popover.Dropdown>
+          </Popover>
         ),
       },
       {
