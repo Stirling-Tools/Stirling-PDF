@@ -2,6 +2,7 @@
 // does not cost the user their workbench. sessionStorage on purpose: per-tab, tabs never clobber.
 
 import type { StirlingFileStub } from "@app/types/fileContext";
+import { stripBasePath } from "@app/constants/app";
 
 const SESSION_KEY = "stirling.workbench.session";
 /** Bumped when the record's shape or meaning changes, so an old one is discarded rather than
@@ -153,8 +154,10 @@ export function isSeedableView(
   return view !== undefined && SEEDABLE_VIEWS.includes(view);
 }
 
-export function saveEditorReturnPath(path: string): void {
+export function saveEditorReturnPath(): void {
   try {
+    const path =
+      stripBasePath(window.location.pathname) + window.location.search;
     sessionStorage.setItem(RETURN_PATH_KEY, path);
   } catch {
     // Best-effort: the switch back just lands on the editor root.
