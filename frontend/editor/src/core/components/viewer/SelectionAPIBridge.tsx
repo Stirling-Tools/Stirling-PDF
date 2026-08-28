@@ -118,7 +118,6 @@ export function SelectionAPIBridge() {
 
     const buildApi = () => ({
       copyToClipboard: () => selection.copyToClipboard(),
-      getSelectedText: () => selection.getSelectedText(),
       getFormattedSelection: () => selection.getFormattedSelection(),
       selectAll: async (totalPages: number) => {
         const docId = activeDocumentId;

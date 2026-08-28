@@ -207,6 +207,9 @@ export interface AddWatermarkRequest {
    */
   widthSpacer?: number;
 }
+export interface AiToolsClassifyAndLabelRequest {
+  reclassify?: boolean;
+}
 export interface AutoRotatePdfRequest {
   /**
    * Minimum Tesseract OSD orientation confidence required before a correction is applied. Matches OCRmyPDF's --rotate-pages-threshold scale
@@ -1033,6 +1036,10 @@ export interface ProcessPdfWithOcrRequest {
    */
   removeImagesAfter?: boolean;
   /**
+   * Auto-correct page orientation (90/180/270) using Tesseract OSD if set to true
+   */
+  rotatePages?: boolean;
+  /**
    * Include OCR text in a sidecar text file if set to true
    */
   sidecar?: boolean;
@@ -1498,6 +1505,7 @@ export interface UrlToPdfRequest {
 
 /** Endpoint path for a generated tool operation (the operation identity across languages). */
 export type ToolEndpoint =
+  | "/api/v1/ai/tools/classify-and-label"
   | "/api/v1/convert/cbr/pdf"
   | "/api/v1/convert/cbz/pdf"
   | "/api/v1/convert/ebook/pdf"
@@ -1600,6 +1608,7 @@ export type ToolEndpoint =
 
 /** Backend request-parameter model for each tool endpoint. */
 export interface ToolApiParams {
+  "/api/v1/ai/tools/classify-and-label": AiToolsClassifyAndLabelRequest;
   "/api/v1/convert/cbr/pdf": ConvertCbrToPdfRequest;
   "/api/v1/convert/cbz/pdf": ConvertCbzToPdfRequest;
   "/api/v1/convert/ebook/pdf": ConvertEbookToPdfRequest;
@@ -1703,6 +1712,7 @@ export interface ToolApiParams {
 
 /** Every generated tool endpoint, for iteration. */
 export const TOOL_ENDPOINTS = [
+  "/api/v1/ai/tools/classify-and-label",
   "/api/v1/convert/cbr/pdf",
   "/api/v1/convert/cbz/pdf",
   "/api/v1/convert/ebook/pdf",
