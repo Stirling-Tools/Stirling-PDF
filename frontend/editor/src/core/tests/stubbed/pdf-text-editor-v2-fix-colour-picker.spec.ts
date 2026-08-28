@@ -179,7 +179,7 @@ test.describe("v2 editor - fill colour picker", () => {
     await selectRun(page, HEADING);
 
     const clean = await history(page);
-    await setFill(page, "#cc0000");
+    await setFill(page, "#cc0000"); // theme-allow-color PDF ink, matched against the rendered bitmap
     await page.waitForTimeout(1200);
 
     const red = await sample(page, HEADING);
@@ -211,7 +211,7 @@ test.describe("v2 editor - fill colour picker", () => {
     // (B) Pick again and dismiss the picker deliberately: dismissing must not
     // bank a second entry on top of the pick.
     await selectRun(page, HEADING);
-    await setFill(page, "#cc0000");
+    await setFill(page, "#cc0000"); // theme-allow-color PDF ink, matched against the rendered bitmap
     await page.waitForTimeout(1200);
     const secondPick = await history(page);
     await page.getByTestId("v2-colour").blur();
@@ -230,7 +230,7 @@ test.describe("v2 editor - fill colour picker", () => {
   }) => {
     await openV2(page, PARAGRAPH_PDF);
     await selectRun(page, BODY);
-    await setFill(page, "#cc0000");
+    await setFill(page, "#cc0000"); // theme-allow-color PDF ink, matched against the rendered bitmap
     await page.waitForTimeout(1200);
 
     // The heading sits directly under where the dropdown opens.
@@ -258,7 +258,7 @@ test.describe("v2 editor - fill colour picker", () => {
   test("a dropdown pick still unifies a mixed selection", async ({ page }) => {
     await openV2(page, PARAGRAPH_PDF);
     await selectRun(page, HEADING);
-    await setFill(page, "#cc0000");
+    await setFill(page, "#cc0000"); // theme-allow-color PDF ink, matched against the rendered bitmap
     await page.waitForTimeout(1200);
     expect(
       (await sample(page, HEADING)).redDom,

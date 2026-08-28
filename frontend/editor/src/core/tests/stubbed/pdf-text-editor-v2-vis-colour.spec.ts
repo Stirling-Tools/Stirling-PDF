@@ -291,7 +291,7 @@ test.describe("v2 editor - colour on the page bitmap", () => {
     ).toBe(0);
 
     await selectRun(page, HEADING);
-    await setFill(page, "#cc0000");
+    await setFill(page, "#cc0000"); // theme-allow-color PDF ink, matched against the rendered bitmap
     await waitForInk(page, HEADING, { target: RED, tol: 12, minNear: 260 });
 
     const after = await sample(page, HEADING, { target: RED, tol: 12 });
@@ -309,7 +309,7 @@ test.describe("v2 editor - colour on the page bitmap", () => {
     ).toBeLessThan(10);
     expect(
       after.nearTarget,
-      `pixels within 12 of #cc0000 (got ${after.nearTarget} of ${after.ink} ink)`,
+      `pixels within 12 of #cc0000 (got ${after.nearTarget} of ${after.ink} ink)`, // theme-allow-color PDF ink, matched against the rendered bitmap
     ).toBeGreaterThan(200);
     expect(
       after.mean[0] - after.mean[1],
@@ -334,7 +334,7 @@ test.describe("v2 editor - colour on the page bitmap", () => {
     ).not.toBeNull();
 
     await selectRun(page, BODY);
-    await setFill(page, "#0044cc");
+    await setFill(page, "#0044cc"); // theme-allow-color PDF ink, matched against the rendered bitmap
     await waitForInk(page, BODY, { minBlueDom: 260 });
 
     const after = await sample(page, BODY);
@@ -399,7 +399,7 @@ test.describe("v2 editor - colour on the page bitmap", () => {
     await openV2(page, PARAGRAPH_PDF);
 
     await selectRun(page, BODY);
-    await setFill(page, "#0044cc");
+    await setFill(page, "#0044cc"); // theme-allow-color PDF ink, matched against the rendered bitmap
     await waitForInk(page, BODY, { minBlueDom: 260 });
     const bodyBlue = await sample(page, BODY);
     expect(
@@ -408,7 +408,7 @@ test.describe("v2 editor - colour on the page bitmap", () => {
     ).toBeGreaterThan(200);
 
     await selectRun(page, HEADING);
-    await setFill(page, "#cc0000");
+    await setFill(page, "#cc0000"); // theme-allow-color PDF ink, matched against the rendered bitmap
     await waitForInk(page, HEADING, { minRedDom: 260 });
 
     const heading = await sample(page, HEADING);
@@ -442,7 +442,7 @@ test.describe("v2 editor - colour on the page bitmap", () => {
     expectBlackBaseline(before, HEADING);
 
     await selectRun(page, HEADING);
-    await setFill(page, "#cc0000");
+    await setFill(page, "#cc0000"); // theme-allow-color PDF ink, matched against the rendered bitmap
     await waitForInk(page, HEADING, { minRedDom: 260 });
     const red = await sample(page, HEADING);
     expect(
@@ -450,7 +450,7 @@ test.describe("v2 editor - colour on the page bitmap", () => {
       "precondition: the first colour must land before the second",
     ).toBeGreaterThan(200);
 
-    await setFill(page, "#0000cc");
+    await setFill(page, "#0000cc"); // theme-allow-color PDF ink, matched against the rendered bitmap
     await waitForInk(page, HEADING, {
       target: BLUE,
       tol: 12,
@@ -489,7 +489,7 @@ test.describe("v2 editor - colour on the page bitmap", () => {
     expectBlackBaseline(before, HEADING);
 
     await selectRun(page, HEADING);
-    await setFill(page, "#cc0000");
+    await setFill(page, "#cc0000"); // theme-allow-color PDF ink, matched against the rendered bitmap
     await waitForInk(page, HEADING, { minRedDom: 260 });
     const red = await sample(page, HEADING);
     expect(
@@ -540,7 +540,7 @@ test.describe("v2 editor - colour on the page bitmap", () => {
     expectBlackBaseline(before, HEADING);
 
     await selectRun(page, HEADING);
-    await setFill(page, "#cc0000");
+    await setFill(page, "#cc0000"); // theme-allow-color PDF ink, matched against the rendered bitmap
     await waitForInk(page, HEADING, { target: RED, tol: 12, minNear: 200 });
 
     // Blur: focus moves to the other run entirely.
@@ -574,7 +574,7 @@ test.describe("v2 editor - colour on the page bitmap", () => {
     const after = await sample(page, HEADING, { target: RED, tol: 12 });
     expect(
       after.nearTarget,
-      `red ink should survive the blur (${after.nearTarget} px within 12 of #cc0000)`,
+      `red ink should survive the blur (${after.nearTarget} px within 12 of #cc0000)`, // theme-allow-color PDF ink, matched against the rendered bitmap
     ).toBeGreaterThan(200);
     expect(
       after.redDom,
@@ -598,7 +598,7 @@ test.describe("v2 editor - colour on the page bitmap", () => {
 
     await selectRun(page, HEADING);
     await openAdvanced(page);
-    await setOutlineColour(page, "#00aa00");
+    await setOutlineColour(page, "#00aa00"); // theme-allow-color PDF ink, matched against the rendered bitmap
     await setOutlineWidth(page, "1.5");
     await waitForInk(page, HEADING, { minGreenDom: 400 });
 
@@ -629,7 +629,7 @@ test.describe("v2 editor - colour on the page bitmap", () => {
 
     await selectRun(page, HEADING);
     await openAdvanced(page);
-    await setOutlineColour(page, "#00aa00");
+    await setOutlineColour(page, "#00aa00"); // theme-allow-color PDF ink, matched against the rendered bitmap
     await setOutlineWidth(page, "0.5");
     await waitForInk(page, HEADING, { minGreenDom: 150 });
     const narrow = await sample(page, HEADING);
@@ -671,7 +671,7 @@ test.describe("v2 editor - colour on the page bitmap", () => {
 
     await selectRun(page, HEADING);
     await openAdvanced(page);
-    await setOutlineColour(page, "#00aa00");
+    await setOutlineColour(page, "#00aa00"); // theme-allow-color PDF ink, matched against the rendered bitmap
     await setOutlineWidth(page, "1.5");
     await waitForInk(page, HEADING, { minGreenDom: 400 });
     const outlined = await sample(page, HEADING);
@@ -718,13 +718,13 @@ test.describe("v2 editor - colour on the page bitmap", () => {
 
     // Control: a plain 6-digit hex on the body paragraph.
     await selectRun(page, BODY);
-    await setFill(page, "#cc0000");
+    await setFill(page, "#cc0000"); // theme-allow-color PDF ink, matched against the rendered bitmap
     await waitForInk(page, BODY, { target: RED, tol: 12, minNear: 260 });
     const control = await sample(page, BODY, { target: RED, tol: 12 });
 
     // Same colour, but with a half-transparent alpha suffix.
     await selectRun(page, HEADING);
-    await setFill(page, "#cc000080");
+    await setFill(page, "#cc000080"); // theme-allow-color PDF ink, matched against the rendered bitmap
     await waitForInk(page, HEADING, { target: RED, tol: 12, minNear: 200 });
     const alpha = await sample(page, HEADING, { target: RED, tol: 12 });
 
@@ -740,7 +740,7 @@ test.describe("v2 editor - colour on the page bitmap", () => {
     ).toBeGreaterThan(196);
     expect(
       alpha.nearTarget,
-      `solid #cc0000 pixels under the alpha-suffixed run (${alpha.nearTarget} of ${alpha.ink})`,
+      `solid #cc0000 pixels under the alpha-suffixed run (${alpha.nearTarget} of ${alpha.ink})`, // theme-allow-color PDF ink, matched against the rendered bitmap
     ).toBeGreaterThan(150);
     expect(
       alpha.nearTarget / alpha.ink,

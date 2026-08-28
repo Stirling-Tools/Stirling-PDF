@@ -396,7 +396,7 @@ test.describe("v2 editor - undo/redo restores the page bitmap", () => {
     ).toBeLessThan(5);
 
     await selectRun(page, HEAD);
-    await page.getByTestId("v2-colour").fill("#cc0000");
+    await page.getByTestId("v2-colour").fill("#cc0000"); // theme-allow-color PDF ink, matched against the rendered bitmap
     await blurAll(page);
     await page.waitForTimeout(1500);
     const editedPage = await settle(page);
