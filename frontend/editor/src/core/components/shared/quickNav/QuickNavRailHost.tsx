@@ -20,7 +20,7 @@ const SIZE = "1.125rem";
 export function QuickNavRailHost() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { pathname, search } = useLocation();
+  const { pathname } = useLocation();
   const host = useQuickNavHost();
 
   const appMounted = Boolean(host?.appMounted);
@@ -74,7 +74,7 @@ export function QuickNavRailHost() {
           returnHome();
           return;
         }
-        saveEditorReturnPath(pathname + search);
+        saveEditorReturnPath();
         go(PORTAL_BASENAME);
       },
     },
