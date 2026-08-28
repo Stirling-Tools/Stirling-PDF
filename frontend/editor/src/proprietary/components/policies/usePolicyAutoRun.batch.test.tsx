@@ -48,6 +48,12 @@ const mocks = vi.hoisted(() => ({
   meter: vi.fn(),
 }));
 
+// The second (file-producing) policy's timing, flippable per test to prove classification's local
+// pass is independent of when the rewriter runs.
+const securityRunOn = vi.hoisted(() => ({
+  value: "upload" as "upload" | "export",
+}));
+
 vi.mock("@app/hooks/useAiEngineEnabled", () => ({
   useAiEngineEnabled: () => true,
 }));
@@ -86,7 +92,7 @@ vi.mock("@app/hooks/usePolicies", () => ({
         runsOnEditor: true,
         status: "active",
         backendId: "backend-security",
-        runOn: "upload",
+        runOn: securityRunOn.value,
         order: 1,
         outputMode: "new_version",
         outputName: "",
@@ -176,6 +182,7 @@ beforeEach(() => {
   mocks.backendOutCounter = 0;
   mocks.dispatchInFlight = 0;
   mocks.maxDispatchInFlight = 0;
+  securityRunOn.value = "upload";
 
   mocks.workspace = Array.from({ length: FILE_COUNT }, (_, i) => ({
     id: `file-${i}`,
@@ -355,5 +362,30 @@ describe("policy auto-run — 61-file batch through a Security → Classificatio
     expect(mocks.workspace).toHaveLength(0);
     expect(mocks.consumeSilentCalls).toBe(0);
     expect(mocks.persistCalls).toBeGreaterThan(0);
+  });
+
+  it("classifies uploads even when the other editor policy runs on export, not upload", async () => {
+    // Repro: with a file-producing policy set to export, the auto-run engine dispatches nothing on
+    // upload - but classification's local pass is independent and must still run on every upload.
+    securityRunOn.value = "export";
+
+    renderHook(() => Harness());
+    await act(async () => {
+      await vi.waitFor(
+        () => {
+          const classification = latestRuns.filter(
+            (r) => r.categoryId === "classification" && r.imported,
+          );
+          expect(classification).toHaveLength(FILE_COUNT);
+        },
+        { timeout: 8000, interval: 20 },
+      );
+    });
+
+    // The export policy did not run on upload; nothing versioned in place.
+    expect(latestRuns.filter((r) => r.categoryId === "security")).toHaveLength(
+      0,
+    );
+    expect(mocks.consumeSilentCalls).toBe(0);
   });
 });

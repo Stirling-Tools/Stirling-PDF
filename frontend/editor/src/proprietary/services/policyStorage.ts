@@ -55,7 +55,14 @@ export function loadPolicies(): PoliciesByCategory {
   // category gets a default rather than being undefined.
   const out: PoliciesByCategory = {};
   loadPolicyCatalog().categories.forEach((cat, index) => {
-    const merged = { ...defaultState(cat.id), ...(parsed[cat.id] ?? {}) };
+    const stored = parsed[cat.id];
+    const merged = { ...defaultState(cat.id), ...(stored ?? {}) };
+    // Migration: a row stored before runsOnEditor existed has no such field, so the default (true)
+    // would put a tile narrowed to non-editor sources on the editor until the first reconcile lands.
+    // Derive it from the legacy signal (the editor in its sources), mirroring the decode rule.
+    if (stored && stored.runsOnEditor === undefined) {
+      merged.runsOnEditor = (stored.sources ?? []).includes("editor");
+    }
     // Migration: clear the obsolete persisted reviewer email so it re-defaults
     // to the real signed-in user.
     if (merged.reviewerEmail === STALE_REVIEWER_EMAIL)
