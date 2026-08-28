@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { isAxiosError } from "axios";
 import { useTranslation } from "react-i18next";
 import {
@@ -19,20 +19,33 @@ import { ActionIcon } from "@app/ui/ActionIcon";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { alert } from "@app/components/toast";
 import { teamService, Team } from "@app/services/teamService";
-import {
-  userManagementService,
-  User,
-} from "@app/services/userManagementService";
+import { type User } from "@app/services/userManagementService";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 import TeamDetailsSection from "@app/components/shared/config/configSections/TeamDetailsSection";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
+import {
+  useTeams,
+  useFetchAdminUsers,
+  useInvalidateAdminDirectory,
+} from "@app/hooks/useAdminDirectory";
 import LoginRequiredBanner from "@app/components/shared/config/LoginRequiredBanner";
+
+const EXAMPLE_TEAMS: Team[] = [
+  { id: 1, name: "Engineering", userCount: 3 },
+  { id: 2, name: "Marketing", userCount: 2 },
+  { id: 3, name: "Internal", userCount: 1 },
+];
 
 export default function TeamsSection() {
   const { t } = useTranslation();
   const { loginEnabled } = useLoginRequired();
-  const [teams, setTeams] = useState<Team[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: fetchedTeams, isPending } = useTeams(loginEnabled);
+  const refreshDirectory = useInvalidateAdminDirectory();
+  const fetchAdminUsers = useFetchAdminUsers();
+  // Login off means the endpoints are not callable, so the table shows a
+  // worked example instead of an empty state.
+  const teams = loginEnabled ? (fetchedTeams ?? []) : EXAMPLE_TEAMS;
+  const loading = loginEnabled && isPending;
   const [createModalOpened, setCreateModalOpened] = useState(false);
   const [renameModalOpened, setRenameModalOpened] = useState(false);
   const [addMemberModalOpened, setAddMemberModalOpened] = useState(false);
@@ -48,33 +61,6 @@ export default function TeamsSection() {
   const availableUsersForSelectedTeam = selectedTeam
     ? availableUsers.filter((user) => user.team?.id !== selectedTeam.id)
     : [];
-
-  useEffect(() => {
-    fetchTeams();
-  }, []);
-
-  const fetchTeams = async () => {
-    try {
-      setLoading(true);
-      if (loginEnabled) {
-        const teamsData = await teamService.getTeams();
-        setTeams(teamsData);
-      } else {
-        // Provide example data when login is disabled
-        const exampleTeams: Team[] = [
-          { id: 1, name: "Engineering", userCount: 3 },
-          { id: 2, name: "Marketing", userCount: 2 },
-          { id: 3, name: "Internal", userCount: 1 },
-        ];
-        setTeams(exampleTeams);
-      }
-    } catch (error) {
-      console.error("Failed to fetch teams:", error);
-      alert({ alertType: "error", title: "Failed to load teams" });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleCreateTeam = async () => {
     if (!newTeamName.trim()) {
@@ -94,7 +80,7 @@ export default function TeamsSection() {
       });
       setNewTeamName("");
       setCreateModalOpened(false);
-      await fetchTeams();
+      refreshDirectory();
     } catch (error: unknown) {
       console.error("Failed to create team:", error);
       const errorMessage = isAxiosError(error)
@@ -128,7 +114,7 @@ export default function TeamsSection() {
       setRenameTeamName("");
       setSelectedTeam(null);
       setRenameModalOpened(false);
-      await fetchTeams();
+      refreshDirectory();
     } catch (error: unknown) {
       console.error("Failed to rename team:", error);
       const errorMessage = isAxiosError(error)
@@ -162,7 +148,7 @@ export default function TeamsSection() {
         alertType: "success",
         title: t("workspace.teams.deleteTeam.success"),
       });
-      await fetchTeams();
+      refreshDirectory();
     } catch (error: unknown) {
       console.error("Failed to delete team:", error);
       const errorMessage = isAxiosError(error)
@@ -198,8 +184,7 @@ export default function TeamsSection() {
     }
     setSelectedTeam(team);
     try {
-      // Fetch all users to show in dropdown
-      const adminData = await userManagementService.getUsers();
+      const adminData = await fetchAdminUsers();
       setAvailableUsers(adminData.users);
       setAddMemberModalOpened(true);
     } catch (error) {
@@ -233,7 +218,7 @@ export default function TeamsSection() {
       setSelectedUserId("");
       setSelectedTeam(null);
       setAddMemberModalOpened(false);
-      await fetchTeams();
+      refreshDirectory();
     } catch (error) {
       console.error("Failed to add member to team:", error);
       alert({
@@ -252,7 +237,6 @@ export default function TeamsSection() {
         teamId={viewingTeamId}
         onBack={() => {
           setViewingTeamId(null);
-          fetchTeams(); // Refresh teams list
         }}
       />
     );

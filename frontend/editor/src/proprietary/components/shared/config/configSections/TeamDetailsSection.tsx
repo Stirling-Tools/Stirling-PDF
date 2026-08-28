@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { isAxiosError } from "axios";
 import { useTranslation } from "react-i18next";
 import {
@@ -19,13 +19,19 @@ import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { alert } from "@app/components/toast";
-import { teamService, Team } from "@app/services/teamService";
+import { teamService } from "@app/services/teamService";
 import {
   User,
   userManagementService,
 } from "@app/services/userManagementService";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 import ChangeUserPasswordModal from "@app/components/shared/ChangeUserPasswordModal";
+import {
+  useAdminUsers,
+  useTeamDetails,
+  useTeams,
+  useInvalidateAdminDirectory,
+} from "@app/hooks/useAdminDirectory";
 
 interface TeamDetailsSectionProps {
   teamId: number;
@@ -37,14 +43,27 @@ export default function TeamDetailsSection({
   onBack,
 }: TeamDetailsSectionProps) {
   const { t } = useTranslation();
-  const [loading, setLoading] = useState(true);
-  const [team, setTeam] = useState<Team | null>(null);
-  const [teamUsers, setTeamUsers] = useState<User[]>([]);
-  const [availableUsers, setAvailableUsers] = useState<User[]>([]);
-  const [allTeams, setAllTeams] = useState<Team[]>([]);
-  const [userLastRequest, setUserLastRequest] = useState<
-    Record<string, number>
-  >({});
+  const details = useTeamDetails(teamId, true);
+  const admin = useAdminUsers(true);
+  // The same list TeamsSection is showing behind this view.
+  const { data: allTeams = [] } = useTeams(true);
+  const refreshDirectory = useInvalidateAdminDirectory();
+
+  const loading = details.isPending || admin.isPending;
+  const team = details.data?.team ?? null;
+  const teamUsers = Array.isArray(details.data?.teamUsers)
+    ? details.data.teamUsers
+    : [];
+  const availableUsers = Array.isArray(details.data?.availableUsers)
+    ? details.data.availableUsers
+    : [];
+  const userLastRequest = details.data?.userLastRequest ?? {};
+  const licenseInfo = admin.data
+    ? { availableSlots: admin.data.availableSlots }
+    : null;
+  const mailEnabled = admin.data?.mailEnabled ?? false;
+  const lockedUsers = admin.data?.lockedUsers ?? [];
+
   const [addMemberModalOpened, setAddMemberModalOpened] = useState(false);
   const [changeTeamModalOpened, setChangeTeamModalOpened] = useState(false);
   const [changePasswordModalOpened, setChangePasswordModalOpened] =
@@ -58,61 +77,20 @@ export default function TeamDetailsSection({
     ? availableUsers.filter((user) => user.team?.id !== team.id)
     : [];
 
-  // License information
-  const [licenseInfo, setLicenseInfo] = useState<{
-    availableSlots: number;
-  } | null>(null);
-  const [mailEnabled, setMailEnabled] = useState(false);
-  const [lockedUsers, setLockedUsers] = useState<string[]>([]);
-
   const isLockedUser = (user: User) => lockedUsers.includes(user.username);
 
+  // A failed load leaves nothing to show, so the view hands back to the list.
+  const loadFailed = details.isLoadingError || admin.isLoadingError;
+  const reportedRef = useRef(false);
   useEffect(() => {
-    fetchTeamDetails();
-    fetchAllTeams();
-  }, [teamId]);
-
-  const fetchTeamDetails = async () => {
-    try {
-      setLoading(true);
-      const [data, adminData] = await Promise.all([
-        teamService.getTeamDetails(teamId),
-        userManagementService.getUsers(),
-      ]);
-      console.log("[TeamDetailsSection] Raw data:", data);
-      setTeam(data.team);
-      setTeamUsers(Array.isArray(data.teamUsers) ? data.teamUsers : []);
-      setAvailableUsers(
-        Array.isArray(data.availableUsers) ? data.availableUsers : [],
-      );
-      setUserLastRequest(data.userLastRequest || {});
-
-      // Store license information
-      setLicenseInfo({
-        availableSlots: adminData.availableSlots,
-      });
-      setMailEnabled(adminData.mailEnabled);
-      setLockedUsers(adminData.lockedUsers || []);
-    } catch (error) {
-      console.error("Failed to fetch team details:", error);
-      alert({
-        alertType: "error",
-        title: t("workspace.teams.loadError", "Failed to load team details"),
-      });
-      onBack();
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchAllTeams = async () => {
-    try {
-      const teams = await teamService.getTeams();
-      setAllTeams(teams);
-    } catch (error) {
-      console.error("Failed to fetch teams:", error);
-    }
-  };
+    if (!loadFailed || reportedRef.current) return;
+    reportedRef.current = true;
+    alert({
+      alertType: "error",
+      title: t("workspace.teams.loadError", "Failed to load team details"),
+    });
+    onBack();
+  }, [loadFailed, onBack, t]);
 
   const handleAddMember = async () => {
     if (!selectedUserId) {
@@ -138,7 +116,7 @@ export default function TeamDetailsSection({
       });
       setAddMemberModalOpened(false);
       setSelectedUserId("");
-      fetchTeamDetails();
+      refreshDirectory();
     } catch (error: unknown) {
       console.error("Failed to add member:", error);
       const errorMessage = isAxiosError(error)
@@ -190,7 +168,7 @@ export default function TeamDetailsSection({
           "User removed from team",
         ),
       });
-      fetchTeamDetails();
+      refreshDirectory();
     } catch (error: unknown) {
       console.error("Failed to remove member:", error);
       const errorMessage = isAxiosError(error)
@@ -227,7 +205,7 @@ export default function TeamDetailsSection({
           "User deleted successfully",
         ),
       });
-      fetchTeamDetails();
+      refreshDirectory();
     } catch (error: unknown) {
       console.error("Failed to delete user:", error);
       const errorMessage = isAxiosError(error)
@@ -260,7 +238,7 @@ export default function TeamDetailsSection({
           "User account unlocked successfully",
         ),
       });
-      fetchTeamDetails();
+      refreshDirectory();
     } catch (error: unknown) {
       console.error("[TeamDetailsSection] Failed to unlock user:", error);
       const errorMessage = isAxiosError(error)
@@ -321,7 +299,7 @@ export default function TeamDetailsSection({
       setChangeTeamModalOpened(false);
       setSelectedUser(null);
       setSelectedTeamId("");
-      fetchTeamDetails();
+      refreshDirectory();
     } catch (error: unknown) {
       console.error("Failed to change team:", error);
       const errorMessage = isAxiosError(error)
@@ -686,7 +664,7 @@ export default function TeamDetailsSection({
         opened={changePasswordModalOpened}
         onClose={closeChangePasswordModal}
         user={passwordUser}
-        onSuccess={fetchTeamDetails}
+        onSuccess={refreshDirectory}
         mailEnabled={mailEnabled}
       />
 

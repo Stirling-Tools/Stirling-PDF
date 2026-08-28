@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import { isAxiosError } from "axios";
 import { Trans, useTranslation } from "react-i18next";
 import {
@@ -25,9 +25,8 @@ import {
   userManagementService,
   User,
 } from "@app/services/userManagementService";
-import { teamService, Team } from "@app/services/teamService";
+import { type Team } from "@app/services/teamService";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
 import InviteMembersModal from "@app/components/shared/InviteMembersModal";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
 import LoginRequiredBanner from "@app/components/shared/config/LoginRequiredBanner";
@@ -36,17 +35,108 @@ import UpdateSeatsButton from "@app/components/shared/UpdateSeatsButton";
 import { useLicense } from "@app/contexts/LicenseContext";
 import ChangeUserPasswordModal from "@app/components/shared/ChangeUserPasswordModal";
 import { useAuth } from "@app/auth/UseSession";
+import {
+  useAdminUsers,
+  useTeams,
+  useInvalidateAdminDirectory,
+} from "@app/hooks/useAdminDirectory";
+
+const EXAMPLE_USERS: User[] = [
+  {
+    id: 1,
+    username: "admin",
+    email: "admin@example.com",
+    enabled: true,
+    roleName: "ROLE_ADMIN",
+    rolesAsString: "ROLE_ADMIN",
+    authenticationType: "password",
+    isActive: true,
+    lastRequest: Date.now(),
+    team: { id: 1, name: "Engineering" },
+  },
+  {
+    id: 2,
+    username: "john.doe",
+    email: "john.doe@example.com",
+    enabled: true,
+    roleName: "ROLE_USER",
+    rolesAsString: "ROLE_USER",
+    authenticationType: "password",
+    isActive: false,
+    lastRequest: Date.now() - 86400000,
+    team: { id: 1, name: "Engineering" },
+  },
+  {
+    id: 3,
+    username: "jane.smith",
+    email: "jane.smith@example.com",
+    enabled: true,
+    roleName: "ROLE_USER",
+    rolesAsString: "ROLE_USER",
+    authenticationType: "oauth",
+    isActive: true,
+    lastRequest: Date.now(),
+    team: { id: 2, name: "Marketing" },
+  },
+  {
+    id: 4,
+    username: "bob.wilson",
+    email: "bob.wilson@example.com",
+    enabled: false,
+    roleName: "ROLE_USER",
+    rolesAsString: "ROLE_USER",
+    authenticationType: "password",
+    isActive: false,
+    lastRequest: Date.now() - 604800000,
+    team: undefined,
+  },
+];
+
+const EXAMPLE_TEAMS: Team[] = [
+  { id: 1, name: "Engineering", userCount: 3 },
+  { id: 2, name: "Marketing", userCount: 2 },
+];
+
+const EXAMPLE_LICENSE = {
+  maxAllowedUsers: 10,
+  availableSlots: 6,
+  grandfatheredUserCount: 0,
+  licenseMaxUsers: 5,
+  premiumEnabled: true,
+  totalUsers: 4,
+};
 
 export default function PeopleSection() {
   const { t } = useTranslation();
-  const { config } = useAppConfig();
   const { loginEnabled } = useLoginRequired();
   const { user: currentUser } = useAuth();
   const navigate = useNavigate();
   const { licenseInfo: globalLicenseInfo } = useLicense();
-  const [users, setUsers] = useState<User[]>([]);
-  const [teams, setTeams] = useState<Team[]>([]);
-  const [loading, setLoading] = useState(true);
+  const admin = useAdminUsers(loginEnabled);
+  const { data: fetchedTeams } = useTeams(loginEnabled);
+  const refreshDirectory = useInvalidateAdminDirectory();
+
+  // Session and MFA state arrive alongside the roster, keyed by username.
+  const fetchedUsers = useMemo<User[]>(() => {
+    if (!admin.data) return [];
+    return admin.data.users.map((user) => ({
+      ...user,
+      isActive: admin.data.userSessions[user.username] || false,
+      lastRequest: admin.data.userLastRequest[user.username] || undefined,
+      mfaEnabled:
+        (
+          admin.data.userSettings?.[user.username] as
+            | Record<string, unknown>
+            | undefined
+        )?.mfaEnabled === "true",
+    }));
+  }, [admin.data]);
+
+  // Login off means the endpoints are not callable, so the table shows a
+  // worked example instead of an empty state.
+  const users = loginEnabled ? fetchedUsers : EXAMPLE_USERS;
+  const teams = loginEnabled ? (fetchedTeams ?? []) : EXAMPLE_TEAMS;
+  const loading = loginEnabled && admin.isPending;
   const [searchQuery, setSearchQuery] = useState("");
   const [inviteModalOpened, setInviteModalOpened] = useState(false);
   const [editUserModalOpened, setEditUserModalOpened] = useState(false);
@@ -55,18 +145,20 @@ export default function PeopleSection() {
   const [passwordUser, setPasswordUser] = useState<User | null>(null);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [processing, setProcessing] = useState(false);
-  const [mailEnabled, setMailEnabled] = useState(false);
-  const [lockedUsers, setLockedUsers] = useState<string[]>([]);
-
-  // License information
-  const [licenseInfo, setLicenseInfo] = useState<{
-    maxAllowedUsers: number;
-    availableSlots: number;
-    grandfatheredUserCount: number;
-    licenseMaxUsers: number;
-    premiumEnabled: boolean;
-    totalUsers: number;
-  } | null>(null);
+  const mailEnabled = loginEnabled ? (admin.data?.mailEnabled ?? false) : false;
+  const lockedUsers = loginEnabled ? (admin.data?.lockedUsers ?? []) : [];
+  const licenseInfo = loginEnabled
+    ? admin.data
+      ? {
+          maxAllowedUsers: admin.data.maxAllowedUsers,
+          availableSlots: admin.data.availableSlots,
+          grandfatheredUserCount: admin.data.grandfatheredUserCount,
+          licenseMaxUsers: admin.data.licenseMaxUsers,
+          premiumEnabled: admin.data.premiumEnabled,
+          totalUsers: admin.data.totalUsers,
+        }
+      : null
+    : EXAMPLE_LICENSE;
   const hasNoSlots = licenseInfo ? licenseInfo.availableSlots === 0 : false;
   const handleAddMembersClick = () => {
     if (!loginEnabled) {
@@ -115,137 +207,6 @@ export default function PeopleSection() {
     teamId: undefined as number | undefined,
   });
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  useEffect(() => {
-    if (config) {
-      console.log(
-        "[PeopleSection] Email invites enabled:",
-        config.enableEmailInvites,
-      );
-    }
-  }, [config]);
-
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-
-      if (loginEnabled) {
-        const [adminData, teamsData] = await Promise.all([
-          userManagementService.getUsers(),
-          teamService.getTeams(),
-        ]);
-
-        // Enrich users with session data
-        const enrichedUsers = adminData.users.map((user) => ({
-          ...user,
-          isActive: adminData.userSessions[user.username] || false,
-          lastRequest: adminData.userLastRequest[user.username] || undefined,
-          mfaEnabled:
-            (
-              adminData.userSettings?.[user.username] as
-                | Record<string, unknown>
-                | undefined
-            )?.mfaEnabled === "true",
-        }));
-
-        setUsers(enrichedUsers);
-        setTeams(teamsData);
-
-        // Store license information
-        setLicenseInfo({
-          maxAllowedUsers: adminData.maxAllowedUsers,
-          availableSlots: adminData.availableSlots,
-          grandfatheredUserCount: adminData.grandfatheredUserCount,
-          licenseMaxUsers: adminData.licenseMaxUsers,
-          premiumEnabled: adminData.premiumEnabled,
-          totalUsers: adminData.totalUsers,
-        });
-        setMailEnabled(adminData.mailEnabled);
-        setLockedUsers(adminData.lockedUsers || []);
-      } else {
-        // Provide example data when login is disabled
-        const exampleUsers: User[] = [
-          {
-            id: 1,
-            username: "admin",
-            email: "admin@example.com",
-            enabled: true,
-            roleName: "ROLE_ADMIN",
-            rolesAsString: "ROLE_ADMIN",
-            authenticationType: "password",
-            isActive: true,
-            lastRequest: Date.now(),
-            team: { id: 1, name: "Engineering" },
-          },
-          {
-            id: 2,
-            username: "john.doe",
-            email: "john.doe@example.com",
-            enabled: true,
-            roleName: "ROLE_USER",
-            rolesAsString: "ROLE_USER",
-            authenticationType: "password",
-            isActive: false,
-            lastRequest: Date.now() - 86400000,
-            team: { id: 1, name: "Engineering" },
-          },
-          {
-            id: 3,
-            username: "jane.smith",
-            email: "jane.smith@example.com",
-            enabled: true,
-            roleName: "ROLE_USER",
-            rolesAsString: "ROLE_USER",
-            authenticationType: "oauth",
-            isActive: true,
-            lastRequest: Date.now(),
-            team: { id: 2, name: "Marketing" },
-          },
-          {
-            id: 4,
-            username: "bob.wilson",
-            email: "bob.wilson@example.com",
-            enabled: false,
-            roleName: "ROLE_USER",
-            rolesAsString: "ROLE_USER",
-            authenticationType: "password",
-            isActive: false,
-            lastRequest: Date.now() - 604800000,
-            team: undefined,
-          },
-        ];
-
-        const exampleTeams: Team[] = [
-          { id: 1, name: "Engineering", userCount: 3 },
-          { id: 2, name: "Marketing", userCount: 2 },
-        ];
-
-        setUsers(exampleUsers);
-        setTeams(exampleTeams);
-        setMailEnabled(false);
-        setLockedUsers([]);
-
-        // Example license information
-        setLicenseInfo({
-          maxAllowedUsers: 10,
-          availableSlots: 6,
-          grandfatheredUserCount: 0,
-          licenseMaxUsers: 5,
-          premiumEnabled: true,
-          totalUsers: 4,
-        });
-      }
-    } catch (error) {
-      console.error("[PeopleSection] Failed to fetch people data:", error);
-      alert({ alertType: "error", title: "Failed to load people data" });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleUpdateUserRole = async () => {
     if (!selectedUser) return;
 
@@ -261,7 +222,7 @@ export default function PeopleSection() {
         title: t("workspace.people.editMember.success"),
       });
       closeEditModal();
-      fetchData();
+      refreshDirectory();
     } catch (error: unknown) {
       console.error("[PeopleSection] Failed to update user:", error);
       const errorMessage = isAxiosError(error)
@@ -286,7 +247,7 @@ export default function PeopleSection() {
         alertType: "success",
         title: t("workspace.people.toggleEnabled.success"),
       });
-      fetchData();
+      refreshDirectory();
     } catch (error: unknown) {
       console.error("[PeopleSection] Failed to toggle user status:", error);
       const errorMessage = isAxiosError(error)
@@ -317,7 +278,7 @@ export default function PeopleSection() {
           "User deleted successfully",
         ),
       });
-      fetchData();
+      refreshDirectory();
     } catch (error: unknown) {
       console.error("[PeopleSection] Failed to delete user:", error);
       const errorMessage = isAxiosError(error)
@@ -348,7 +309,7 @@ export default function PeopleSection() {
           "User account unlocked successfully",
         ),
       });
-      fetchData();
+      refreshDirectory();
     } catch (error: unknown) {
       console.error("[PeopleSection] Failed to unlock user:", error);
       const errorMessage = isAxiosError(error)
@@ -549,7 +510,7 @@ export default function PeopleSection() {
               <Text size="sm" c="dimmed" span>
                 •
               </Text>
-              <UpdateSeatsButton size="sm" onSuccess={fetchData} />
+              <UpdateSeatsButton size="sm" onSuccess={refreshDirectory} />
             </>
           )}
         </Group>
@@ -968,14 +929,14 @@ export default function PeopleSection() {
       <InviteMembersModal
         opened={inviteModalOpened}
         onClose={() => setInviteModalOpened(false)}
-        onSuccess={fetchData}
+        onSuccess={refreshDirectory}
       />
 
       <ChangeUserPasswordModal
         opened={changePasswordModalOpened}
         onClose={closeChangePasswordModal}
         user={passwordUser}
-        onSuccess={fetchData}
+        onSuccess={refreshDirectory}
         mailEnabled={mailEnabled}
       />
 
