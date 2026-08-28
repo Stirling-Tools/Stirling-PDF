@@ -77,7 +77,8 @@ export function useClassificationPolicy(): void {
     policy?.configured &&
     policy.status === "active" &&
     backendId &&
-    policy.runsOnEditor,
+    policy.runsOnEditor &&
+    (policy.runOn ?? "upload") === "upload",
   );
 
   // The file-producing policies whose chain classification waits behind: it runs on the last one's

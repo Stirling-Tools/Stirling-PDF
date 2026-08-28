@@ -18,6 +18,7 @@ interface TestStub {
 }
 
 const aiEnabled = vi.hoisted(() => ({ value: false }));
+const runOn = vi.hoisted(() => ({ value: "upload" as "upload" | "export" }));
 
 const mocks = vi.hoisted(() => ({
   workspace: [] as Array<{
@@ -57,6 +58,7 @@ vi.mock("@app/hooks/usePolicies", () => ({
         runsOnEditor: true,
         status: "active",
         backendId: "backend-classification",
+        runOn: runOn.value,
         sources: ["editor"],
       },
     },
@@ -119,6 +121,7 @@ describe("useClassificationPolicy delivery", () => {
     );
     mocks.classify.mockReset();
     aiEnabled.value = false;
+    runOn.value = "upload";
     mocks.runPolicyOnFile.mockReset();
     mocks.runPolicyOnFile.mockResolvedValue(undefined);
   });
@@ -325,6 +328,27 @@ describe("useClassificationPolicy delivery", () => {
         classificationConfidence: "none",
       }),
     );
+    expect(mocks.runPolicyOnFile).not.toHaveBeenCalled();
+  });
+
+  it("does not run on upload when the policy is set to run on export", async () => {
+    // An export-time policy is enforced by the export path, not this upload engine, so an upload
+    // must not classify, meter, or escalate.
+    runOn.value = "export";
+    aiEnabled.value = true;
+    mocks.workspace = [stub("a")];
+    mocks.classify.mockResolvedValue({
+      labels: ["invoice"],
+      confidence: "low",
+    });
+
+    renderHook(() => useClassificationPolicy());
+
+    // Give the (immediate) idle path a beat to prove it stays silent.
+    await new Promise((r) => setTimeout(r, 50));
+    expect(mocks.classify).not.toHaveBeenCalled();
+    expect(mocks.updateStirlingFileStub).not.toHaveBeenCalled();
+    expect(mocks.meter).not.toHaveBeenCalled();
     expect(mocks.runPolicyOnFile).not.toHaveBeenCalled();
   });
 });
