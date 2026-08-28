@@ -5280,10 +5280,10 @@ rolePlaceholder = "Confirm your role"
 roleUser = "User"
 
 [onboarding.serverLicense]
-freeBody = "Our <strong>Open-Core</strong> licensing permits up to <strong>{{freeTierLimit}}</strong> users for free per server. To scale uninterrupted, we recommend the Stirling Server plan - <strong>unlimited seats</strong> and <strong>SSO support</strong> for $99/server/mo."
-freeTitle = "Server License"
-overLimitBody = "Our licensing permits up to <strong>{{freeTierLimit}}</strong> users for free per server. You have <strong>{{overLimitUserCopy}}</strong> Stirling users. To continue uninterrupted, upgrade to the Stirling Server plan - <strong>unlimited seats</strong>, PDF text editing, and full admin control for $99/server/mo."
-overLimitTitle = "Server License Needed"
+freeBody = "Our <strong>Open-Core</strong> licensing permits up to <strong>{{freeTierLimit}}</strong> users for free. To scale uninterrupted, we recommend the Stirling Team plan - <strong>100 users</strong> and <strong>SSO support</strong> for $99/mo."
+freeTitle = "Team plan"
+overLimitBody = "Our licensing permits up to <strong>{{freeTierLimit}}</strong> users for free. You have <strong>{{overLimitUserCopy}}</strong> Stirling users. To continue uninterrupted, upgrade to the Stirling Team plan - <strong>100 users</strong>, PDF text editing, and full admin control for $99/mo."
+overLimitTitle = "Team plan needed"
 seePlans = "See Plans →"
 upgrade = "Upgrade now →"
 
@@ -6089,7 +6089,7 @@ popular = "Popular"
 selectPlan = "Select Plan"
 showComparison = "Compare All Features"
 upgrade = "Upgrade"
-withServer = "+ Server Plan"
+withServer = "+ Team plan"
 
 [plan.api]
 large = "5,000 Credits"
@@ -6107,8 +6107,8 @@ highlight1 = "Custom pricing"
 highlight2 = "Dedicated support"
 highlight3 = "Latest features"
 name = "Enterprise"
-requiresServer = "Requires Server"
-requiresServerMessage = "Please upgrade to the Server plan first before upgrading to Enterprise."
+requiresServer = "Requires Team plan"
+requiresServerMessage = "Please upgrade to the Team plan first before upgrading to Enterprise."
 
 [plan.feature]
 api = "API Access"
@@ -6133,10 +6133,10 @@ saml = "SAML"
 secureLoginSupport = "Secure Login Support"
 selfHostedDeployment = "Self-hosted deployment"
 sso = "SSO"
-unlimitedUsers = "Unlimited users"
 upToFiveUsers = "Up to 5 users"
 upToFiveUsersLowercase = "up to 5 users"
 usageTracking = "Usage tracking"
+usersIncluded = "100 users included"
 usersLimitedToSeats = "Users limited to seats"
 
 [plan.free]
@@ -6165,12 +6165,12 @@ saveWithAnnualBilling = "Save with annual billing"
 selfHosted = "Self-hosted"
 selfHostedOnInfrastructure = "Self-hosted on your infrastructure"
 ssoOAuth = "SSO (OAuth2/OIDC)"
-unlimitedUsers = "Unlimited users"
 upToFiveUsers = "Up to 5 users"
 usageTrackingPrometheus = "Usage tracking & Prometheus"
+usersIncluded = "100 users included"
 
 [plan.licenseWarning]
-body = "You have {{total}} users but the free tier only supports {{limit}} per server. Upgrade to keep Stirling PDF running smoothly."
+body = "You have {{total}} users but the free tier only supports {{limit}}. Upgrade to keep Stirling PDF running smoothly."
 cta = "See plans"
 overLimit = "more than {{limit}}"
 title = "Free self-hosted limit reached"
@@ -6193,7 +6193,7 @@ title = "You're on a Roll!"
 [plan.static]
 activateLicense = "Activate Your License"
 contactToUpgrade = "Contact us to upgrade or customize your plan"
-getLicense = "Get Server License"
+getLicense = "Get the Team plan"
 monthlyBilling = "Monthly Billing"
 selectPeriod = "Select Billing Period"
 upgradeToEnterprise = "Upgrade to Enterprise"
@@ -6213,6 +6213,10 @@ instructions = "Complete your purchase in the Stripe tab. Once your payment is c
 keyDescription = "Paste the license key from your email"
 success = "License Activated!"
 successMessage = "Your license has been successfully activated. You can now close this window."
+
+[plan.team]
+maxUsers = "100 users"
+name = "Team"
 
 [policies.activity]
 outputsUnavailable = "Policy outputs are no longer available to download."
@@ -6465,16 +6469,16 @@ subtitle = "Deploy anywhere, for your whole team."
 title = "Free PDF Editors"
 
 [portal.billing.freePlan]
+anywhere = "Web, desktop & self-hosted"
 checkoutErrorTitle = "Couldn't start checkout"
 currentPlan = "Current plan"
+everyPdfTool = "Every PDF tool"
 freeForever = "Free forever"
 noTeamResolved = "No team is resolved on your wallet yet — refresh and try again."
 ownerOnly = "Only the team owner can switch on the Processor plan."
 payInvoice = "Pay invoice to complete"
-planName = "Editor"
-ssoIncluded = "SSO included"
+planName = "Free"
 switchOnProcessor = "Switch on the Processor →"
-unlimitedUsers = "Unlimited users"
 viewQuote = "View quote"
 
 [portal.billing.invoices]
@@ -10073,18 +10077,6 @@ memberCount_one = "{{count}} team member"
 memberCount_other = "{{count}} team members"
 memberCount_zero = "no team members"
 
-[settings.planBilling.tier]
-enterprise = "Enterprise"
-enterpriseDescription = "Custom enterprise features and support"
-free = "Free"
-freeDescription = "50 credits per month"
-team = "Team"
-teamBadge = "Team"
-teamDescription = "500 credits/month included, automatic overage billing for uninterrupted service"
-teamTooltipCredits = "Team plan includes {{credits}} credits/month."
-teamTooltipFineprint = "Only pay for what you use beyond included credits."
-teamTooltipOverage = "Automatic overage billing at {{price}}/credit ensures uninterrupted service."
-
 [settings.planBilling.trial]
 daysRemaining = "{{days}} days remaining"
 daysRemainingFull = "Your trial ends in {{days}} days"
@@ -11028,9 +11020,9 @@ urgent = "Urgent"
 attentionBody = "Your admin needs to sign in to see more info. Please contact them immediately."
 attentionBodyAdmin = "Review the license requirements to keep this server compliant."
 attentionTitle = "This server needs admin attention"
-message = "Get the most out of Stirling PDF with unlimited users and advanced features"
+message = "Get the most out of Stirling PDF with 100 users, SSO, and advanced features"
 seeInfo = "See info"
-title = "Upgrade to Server Plan"
+title = "Upgrade to the Team plan"
 upgradeButton = "Upgrade Now"
 
 [URLToPDF]

@@ -343,10 +343,10 @@ const UpgradeBanner: React.FC = () => {
       {friendlyVisible && (
         <InfoBanner
           icon="stars-rounded"
-          title={t("upgradeBanner.title", "Upgrade to Server Plan")}
+          title={t("upgradeBanner.title", "Upgrade to the Team plan")}
           message={t(
             "upgradeBanner.message",
-            "Get the most out of Stirling PDF with unlimited users and advanced features.",
+            "Get the most out of Stirling PDF with 100 users, SSO, and advanced features.",
           )}
           buttonText={t("upgradeBanner.upgradeButton", "Upgrade Now")}
           buttonIcon="upgrade-rounded"
