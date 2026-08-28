@@ -387,8 +387,7 @@ export async function ensureRulesLoaded(): Promise<void> {
   if (!loadPromise) {
     loadPromise = import("@app/services/heuristic/heuristicRules.json").then(
       (mod) => {
-        const root = ((mod as { default?: RulesFile }).default ??
-          (mod as RulesFile)) as RulesFile;
+        const root = (mod as { default?: RulesFile }).default ?? mod;
         PREPARED = prepare(root.labels ?? []);
         PRIORS = loadPriors(root.priors ?? {});
       },

@@ -308,8 +308,10 @@ export function usePolicyAutoRun(): void {
       for (const outputId of outputIds) {
         if (isDispatched(nextCategory, outputId as FileId)) continue;
         const outputStub = stubsRef.current.find((s) => s.id === outputId);
-        // Nothing to escalate: either the heuristic already answered confidently, or it has
-        // not reported yet and this effect re-runs when the verdict lands.
+        // The output's inherited verdict decides here and now (no local pass ever runs
+        // on a derived file, so there is nothing to defer to): a confident one stands,
+        // anything else - including no verdict at all, e.g. a new_file-mode delivery -
+        // escalates. A stub not yet in the snapshot falls through to dispatch too.
         if (outputStub && !shouldDispatchToAi(nextCategory, outputStub))
           continue;
         void runPolicyOnFile(
@@ -326,6 +328,9 @@ export function usePolicyAutoRun(): void {
   // Poll each in-flight run to a terminal state.
   useEffect(() => {
     for (const run of runs) {
+      // A browser-local run has no server-side status: polling it 404s (and after MAX_NOT_FOUND
+      // marks a run that actually succeeded as failed). Its own pass settles it.
+      if (run.browserLocal) continue;
       if (isTerminal(run.status) || polling.current.has(run.runId)) continue;
       polling.current.add(run.runId);
       void poll(run.runId, onRunFinished).finally(() =>
@@ -768,7 +773,7 @@ async function importOutputs(
     // Mark the outputs handled BEFORE adding them (belt-and-suspenders session
     // guard on top of derivedFromTool) so the auto-run never enforces the policy
     // on its own output — that would version endlessly in a loop.
-    for (const s of categorized) markHandled(s.id as string);
+    for (const s of categorized) markHandled(s.id);
     deliveredIds = categorized.map((s) => s.id as string);
     if (ctx.parentStub) {
       // Input is in the active workspace: version it in place, silently — the
@@ -799,7 +804,7 @@ async function importOutputs(
       derivedFromTool: true,
     });
     // Belt-and-suspenders session guard on top of derivedFromTool.
-    for (const f of added) markHandled(f.fileId as string);
+    for (const f of added) markHandled(f.fileId);
     deliveredIds = added.map((f) => f.fileId as string);
     // Mark each new-file output as tool-derived (the versioned path gets this from the
     // CONSUME_FILES reducer; the addFiles path doesn't). This is the real loop guard: the dispatch

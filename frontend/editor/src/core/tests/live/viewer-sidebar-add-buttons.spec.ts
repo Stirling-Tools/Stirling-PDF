@@ -60,7 +60,8 @@ function fixture(filename: string): string {
 }
 
 async function openSamplePdfInViewer(page: import("@playwright/test").Page) {
-  await page.goto("/read");
+  // Not /read: reading collapses the workbench bar these sidebars are toggled from.
+  await page.goto("/");
   await page.waitForLoadState("domcontentloaded");
   await page
     .locator('[data-testid="file-input"]')
