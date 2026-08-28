@@ -202,9 +202,10 @@ public class JpaPolicyStore implements PolicyStore {
     private static final Set<String> EXPORT_BY_DEFAULT = Set.of("security");
 
     /**
-     * Derive {@code editor} for a blob written before editor participation had its own field. It
-     * used to be inferred from {@code output.options}: {@code "editor"} in {@code sources}, or -
-     * for a catalogue policy - no sources at all, which meant "nobody narrowed it".
+     * Derive {@code editor} for a blob written before editor participation had its own field, from
+     * its {@code output.options}: allowed when {@code sources} lists {@code "editor"}, or - for a
+     * catalogue policy - when there is no {@code sources} list at all (an unnarrowed catalogue
+     * policy runs in the editor).
      *
      * <p>Runs on every read, deliberately outside {@link #upgradeLegacyShape}'s early return: a
      * blob written after triggers moved onto {@code inputs} but before this field existed still
