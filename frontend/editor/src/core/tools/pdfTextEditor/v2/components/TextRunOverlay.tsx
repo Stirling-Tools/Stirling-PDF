@@ -39,6 +39,7 @@ import {
 import {
   cssFontShorthand,
   measureFontMetrics,
+  measureLongestTokenWidth,
   measureMaxLineWidth,
   resetTextMetricsCache,
 } from "@app/tools/pdfTextEditor/v2/util/textMetrics";
@@ -634,6 +635,19 @@ export function TextRunOverlay({
   // to the page edge and then clipped everything beyond, measured at 2944px of
   // invisible text on a single-line run.
   const pageCap = Math.max(fontSizePx * 4, pageWidth * scale - left - 4);
+  // Wrapping cannot break inside a word, so a box narrower than the longest one
+  // hides its tail however the lines are broken - 707px of a held-down key
+  // measured invisible, with the caret out there past the box edge.
+  //
+  // The longest token overrides even the page edge. Stopping there is right for
+  // text that can wrap, because the overflow has somewhere else to go; a word
+  // with no break in it has nowhere, so the cap stops protecting the page
+  // margin and just hides what the user is typing.
+  const longestTokenWidth = measureLongestTokenWidth(run.text, font);
+  const wrapWidth = Math.max(
+    Math.min(wrapLockWidth, pageCap),
+    longestTokenWidth + fontSizePx,
+  );
   const maxOnPageWidth = wantWrap ? pageCap : Number.POSITIVE_INFINITY;
   const naturalWidth = wantWrap
     ? wrapLockWidth
@@ -663,11 +677,7 @@ export function TextRunOverlay({
   // underneath it.
   // Wrap holds its width and pushes overflow onto new lines; widening to the
   // page edge instead is Grow's job, and doing both makes the modes identical.
-  const width = wantWrap
-    ? Math.min(wrapLockWidth, pageCap)
-    : exact
-      ? exactWidth
-      : flowWidth;
+  const width = wantWrap ? wrapWidth : exact ? exactWidth : flowWidth;
   const height = exact ? exact.heightPx : flowHeight;
   // An exact layout is never wrapped - its lines are the PDF's own. Only the
   // plain-text fallback, where CSS flow genuinely owns the layout, may wrap.
@@ -679,7 +689,7 @@ export function TextRunOverlay({
   // pixels of it - and the caret only dropped onto the new line at that point.
   // The reflow shares EditTextCommand's coalesce key and ignores the time
   // window, so running it mid-burst does not fragment undo.
-  const wrapTarget = Math.min(wrapLockWidth, pageCap);
+  const wrapTarget = wrapWidth;
   useEffect(() => {
     if (!wantWrap || !onWrap || !focused) return;
     const el = ref.current;

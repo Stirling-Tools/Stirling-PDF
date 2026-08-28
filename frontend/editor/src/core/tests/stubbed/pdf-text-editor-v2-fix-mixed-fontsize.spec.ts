@@ -167,13 +167,19 @@ test.describe("v2 editor - font size on a mixed-size selection", () => {
     );
 
     const band = bandAround(first, other!);
-    const sampled = await page.evaluate(BAND_FN, { ...band, mode: "snap" });
+    const sampled = await page.evaluate(BAND_FN, {
+      ...band,
+      mode: "snap" as const,
+    });
     expect(sampled, "the band sampled no canvas pixels").toBeGreaterThan(200);
 
     // Control: how much this band moves when nothing is done to it. Without
     // this the "did it re-render" threshold below would be a guessed number.
     await page.waitForTimeout(900);
-    const idle = await page.evaluate(BAND_FN, { ...band, mode: "diff" });
+    const idle = await page.evaluate(BAND_FN, {
+      ...band,
+      mode: "diff" as const,
+    });
 
     await clickRun(page, first, false);
     await clickRun(page, other!, true);
@@ -200,7 +206,7 @@ test.describe("v2 editor - font size on a mixed-size selection", () => {
 
     // Re-snap once the runs are selected, so the diff below measures the
     // resize and not the selection highlight.
-    await page.evaluate(BAND_FN, { ...band, mode: "snap" });
+    await page.evaluate(BAND_FN, { ...band, mode: "snap" as const });
 
     await box.fill("30");
     await page.waitForTimeout(900);
@@ -219,7 +225,10 @@ test.describe("v2 editor - font size on a mixed-size selection", () => {
     }
 
     // The page really re-rendered at the new size, not just the model.
-    const changed = await page.evaluate(BAND_FN, { ...band, mode: "diff" });
+    const changed = await page.evaluate(BAND_FN, {
+      ...band,
+      mode: "diff" as const,
+    });
     // eslint-disable-next-line no-console
     console.log(
       `MIXEDSIZE bandChanged=${(changed * 100).toFixed(2)}% idle=${(idle * 100).toFixed(2)}%`,

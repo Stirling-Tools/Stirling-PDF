@@ -39,6 +39,22 @@ export function measureMaxLineWidth(text: string, font: string): number {
   return max;
 }
 
+/**
+ * Width of the widest run of non-space characters - the narrowest a box can be
+ * and still show every glyph. No line breaking can beat it: there is nowhere
+ * inside a word to break, so a box narrower than this clips text whatever the
+ * wrap target says.
+ */
+export function measureLongestTokenWidth(text: string, font: string): number {
+  let max = 0;
+  for (const token of text.split(/\s+/)) {
+    if (!token) continue;
+    const w = measureAdvancePx(token, font);
+    if (w > max) max = w;
+  }
+  return max;
+}
+
 export function measureFontMetrics(
   font: string,
   fontSizePx: number,

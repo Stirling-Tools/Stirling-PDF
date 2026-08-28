@@ -36,21 +36,12 @@ class PdfUaRealCorpusTest {
     /** Files the converter is expected to refuse rather than process. */
     private static final List<String> EXPECTED_REJECTS = List.of("encrypted.pdf", "corrupted.pdf");
 
-    // Files the font-embedding pass is known to alter, measured 2026-08-28. The
-    // tagging-only pass preserves text on every file in the corpus, so these are
-    // defects in the Ghostscript stage, not in the tagger. Two are data loss and
-    // want fixing rather than tolerating:
-    //   big-sample            422070 -> 211230 chars; every other line dropped.
-    //   split-contents-sample 74 -> 47; one stream of a /Contents ARRAY dropped.
-    //   rotated-text-sample   "ted" -> " te d"; spaces injected into rotated text.
-    //   annotation-text       +" Widget field text"; a widget is flattened in.
-    // Additions here need the same evidence: what changed, and by how much.
+    // Files the font-embedding pass still alters, measured 2026-08-28. Both are
+    // ADDITIONS, not loss: the embedder flattens a widget annotation into the
+    // page, and injects spaces into rotated text. Loss is caught by
+    // FontEmbeddingService, which keeps the original instead.
     private static final List<String> KNOWN_EMBED_TEXT_DIFFS =
-            List.of(
-                    "big-sample.pdf",
-                    "split-contents-sample.pdf",
-                    "rotated-text-sample.pdf",
-                    "annotation-text-sample.pdf");
+            List.of("rotated-text-sample.pdf", "annotation-text-sample.pdf");
 
     @BeforeAll
     static void setUp() {

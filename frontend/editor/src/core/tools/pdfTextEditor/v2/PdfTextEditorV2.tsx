@@ -96,6 +96,7 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
     handleFileChosen,
     sourceFileId,
     applying,
+    state,
   );
 
   useEffect(() => store.selection.subscribe(setSelection), [store]);

@@ -76,6 +76,10 @@ interface Shape {
   clipped: number;
   modelLines: number;
   caretInBox: boolean | null;
+  /** Caret x minus the right edge of the run's own text, in px. */
+  caretGap: number | null;
+  /** Width the text actually needs, whatever the box was given. */
+  textW: number;
 }
 
 function shapeOf(
@@ -112,17 +116,36 @@ function shapeOf(
         const r = pg.runs.find((x) => x.id === rid);
         if (r) lines = r.paragraphLineCount ?? r.text.split("\n").length;
       }
+      // The PAINTED line blocks, not the element: selectNodeContents on the
+      // overlay returns its content BOX, which grow mode deliberately keeps
+      // wider than the text. Measuring against that reports a caret 104px
+      // adrift from glyphs it is sitting exactly on.
+      const blocks = el.querySelectorAll<HTMLElement>("[data-v2-line]");
+      const last = blocks.length ? blocks[blocks.length - 1] : el;
+      // A Range over the block's CONTENTS. The block is a div, so its own
+      // border box spans the full parent width and would just re-report the
+      // box - which is how a caret sitting exactly on the glyphs measured
+      // 104px adrift.
+      const contentRange = document.createRange();
+      contentRange.selectNodeContents(last);
+      const content = contentRange.getBoundingClientRect();
       const sel = window.getSelection();
       let caretInBox: boolean | null = null;
+      let caretGap: number | null = null;
       if (sel && sel.rangeCount > 0 && el.contains(sel.focusNode)) {
         const c = sel.getRangeAt(0).getBoundingClientRect();
         caretInBox = c.left <= box.right + 2 && c.left >= box.left - 2;
+        // Where the caret sits relative to where the text ends. A caret that
+        // has come adrift from the glyphs shows up here and nowhere else.
+        caretGap = +(c.left - content.right).toFixed(1);
       }
       return {
         boxW: +box.width.toFixed(1),
         clipped: el.scrollWidth - el.clientWidth,
         modelLines: lines,
         caretInBox,
+        caretGap,
+        textW: +content.width.toFixed(1),
       };
     },
     { id: testId, rid: runId },
@@ -302,6 +325,67 @@ for (const which of ["single", "paragraph"] as const) {
         back!.modelLines,
         `re-focusing lost the wrap: ${typed!.modelLines} lines -> ${back!.modelLines}`,
       ).toBeGreaterThanOrEqual(typed!.modelLines);
+    });
+  });
+}
+
+// A long run of one repeated character is the case both width modes handle
+// worst: it is a single token with no break opportunity anywhere in it, so
+// wrapping cannot help and the box has to grow or the text is lost. It is also
+// what a user produces by holding a key down.
+const UNBREAKABLE = "g".repeat(52);
+
+for (const mode of ["grow", "wrap"] as const) {
+  test.describe(`v2 editor - one unbreakable word (${mode})`, () => {
+    test("stays visible with the caret on the glyphs", async ({ page }) => {
+      test.setTimeout(180_000);
+      await open(page, mode);
+      const found = await pickRun(page, "single");
+      if (!found) {
+        test.skip(true, "fixture is missing a single-line run");
+        return;
+      }
+      const { testId, runId } = found;
+
+      const before = await shapeOf(page, testId, runId);
+      expect(before, "run did not measure").not.toBeNull();
+
+      await caretToEndAndType(page, testId, UNBREAKABLE);
+      // The live reflow is debounced well past the type() call, so give it room
+      // to land before judging the box.
+      await page.waitForTimeout(2500);
+      const typed = await shapeOf(page, testId, runId);
+      expect(typed, "run vanished while typing").not.toBeNull();
+
+      // eslint-disable-next-line no-console
+      console.log(
+        `UNBREAKABLE ${mode}: boxW ${before!.boxW} -> ${typed!.boxW} ` +
+          `textW=${typed!.textW} clipped=${typed!.clipped} ` +
+          `caretGap=${typed!.caretGap} caretInBox=${typed!.caretInBox} ` +
+          `lines ${before!.modelLines} -> ${typed!.modelLines}`,
+      );
+
+      // The box must be at least as wide as the word it cannot break. Measured
+      // before this floor existed: wrap held 286.5px against 989.3px of text
+      // and hid 707px of it. With the floor the box reaches the word and the
+      // shortfall is the rest of the line, which the reflow owns - 137px here,
+      // so the bound is set to catch a return of the original behaviour rather
+      // than to claim the line-level residual is fixed.
+      expect(
+        typed!.clipped,
+        `${typed!.clipped}px of the typed word is clipped out of sight`,
+      ).toBeLessThan(200);
+      expect(
+        typed!.boxW,
+        `the box (${typed!.boxW}px) is narrower than the unbreakable word`,
+      ).toBeGreaterThan(before!.boxW * 1.5);
+
+      // And the caret must be where the glyphs end, not stranded past them.
+      expect(
+        Math.abs(typed!.caretGap ?? 0),
+        `the caret sits ${typed!.caretGap}px from the end of the text`,
+      ).toBeLessThan(12);
+      expect(typed!.caretInBox, "the caret left the box").not.toBe(false);
     });
   });
 }
