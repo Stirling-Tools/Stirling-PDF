@@ -78,6 +78,10 @@ export type ToolRegistryEntry = {
   synonyms?: string[];
   // Version status indicator (e.g., "alpha", "beta")
   versionStatus?: "alpha" | "beta";
+  // Release that introduced the tool; shows a "New" badge while that release is recent.
+  newInVersion?: string;
+  // Release of the tool's last major revamp; shows an "Updated" badge while recent.
+  updatedInVersion?: string;
   // Whether this tool requires premium access
   requiresPremium?: boolean;
 };
