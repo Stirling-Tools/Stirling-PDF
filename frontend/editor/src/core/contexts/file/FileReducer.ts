@@ -390,8 +390,8 @@ export function fileContextReducer(
       // tool that versions/derives a classified file keeps it in its label
       // groups instead of dropping to "Other" and waiting on a PDF re-read.
       // Inherited from the first input that has labels, together with that
-      // verdict's confidence - the escalation decision (shouldDispatchToAi) is
-      // about the document, not about which step produced the current bytes, so
+      // verdict's confidence - the escalation decision (localVerdictNeedsEscalation)
+      // is about the document, not about which step produced the current bytes, so
       // it must survive the version boundary. An output that already carries its
       // own verdict (e.g. a fresh classify result) keeps it.
       const verdictDonor = inputFileIds

@@ -211,7 +211,7 @@ describe("fileContextReducer — silent CONSUME_FILES (background enforcement)",
 
   it("carries classificationConfidence forward with the labels", () => {
     // The confidence is part of the verdict: without it the escalation decision
-    // (shouldDispatchToAi) dies at the version boundary and a chained
+    // (localVerdictNeedsEscalation) dies at the version boundary and a chained
     // classification never runs.
     const start = stateWith([
       stub("a", {
