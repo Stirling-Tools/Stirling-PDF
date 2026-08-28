@@ -1254,7 +1254,7 @@ description = "インプリントへの URL またはファイル名（地域に
 label = "インプリント"
 
 [admin.settings.legal.loginAgreement]
-defaultLocaleHint = "— 言語にファイルがない場合のフォールバックとして使用されます。"
+defaultLocaleHint = "- 言語にファイルがない場合のフォールバックとして使用されます。"
 defaultLocaleLink = "既定のロケールを設定"
 description = "ログイン後にユーザーが同意する必要がある免責事項を表示します。テキストは各ユーザーの言語に合わせて表示されます。"
 discardConfirm = "未保存の変更は失われます。言語を切り替えますか？"
@@ -2318,7 +2318,7 @@ failed = "丁合いレイアウトの作成中にエラーが発生しました�
 
 [bookletImposition.flipOnShortEdge]
 label = "短辺で反転（自動両面のみ）"
-manualNote = "手動モードでは不要です—束を自分で反転します"
+manualNote = "手動モードでは不要です-束を自分で反転します"
 tooltip = "短辺反転の自動両面印刷向けに有効化（手動モードでは無視）"
 
 [bookletImposition.gutterSize]
@@ -2385,7 +2385,7 @@ combineSets = "セットを結合"
 every3rd = "3 ページごと"
 first50 = "最初の 50"
 last50 = "最後の 50"
-oddWithinExcluding = "1–20 の奇数（5–7 を除外）"
+oddWithinExcluding = "1-20 の奇数（5-7 を除外）"
 title = "例"
 
 [bulkSelection.firstNPages]
@@ -2515,10 +2515,10 @@ text = "あなたが署名したことを証明する安全な ID です。証�
 title = "証明書とは？"
 
 [certSign.certType.tooltip.which]
-bullet1 = "PKCS#12（.p12 / .pfx）— 1 つの結合ファイル（最も一般的）"
-bullet2 = "PFX（.pfx）— Microsoft の PKCS12 形式"
-bullet3 = "PEM — 秘密鍵と証明書の .pem を別々に"
-bullet4 = "JKS — 開発/CI-CD 用の Java .jks キーストア"
+bullet1 = "PKCS#12（.p12 / .pfx）- 1 つの結合ファイル（最も一般的）"
+bullet2 = "PFX（.pfx）- Microsoft の PKCS12 形式"
+bullet3 = "PEM - 秘密鍵と証明書の .pem を別々に"
+bullet4 = "JKS - 開発/CI-CD 用の Java .jks キーストア"
 text = "お持ちの証明書ファイルに合う形式を選択してください："
 title = "どのオプションを使うべき？"
 
@@ -2743,7 +2743,7 @@ submit = "PDF に署名"
 
 [certSign.signMode.tooltip.auto]
 text = "サーバーの<b>自己署名</b>証明書で署名します。同じ<b>改ざん検知シール</b>と<b>監査証跡</b>を提供し、多くのビューアーでは<b>未検証</b>と表示されます。"
-title = "自動 — 設定不要・即時のシステムシール"
+title = "自動 - 設定不要・即時のシステムシール"
 use = "用途：迅速性が必要で、レビューや記録で一貫した内部アイデンティティが求められる場合。"
 
 [certSign.signMode.tooltip.header]
@@ -2751,7 +2751,7 @@ title = "PDF 署名について"
 
 [certSign.signMode.tooltip.manual]
 text = "独自の証明書ファイルで署名し、ブランドに合ったアイデンティティを示せます。CA/チェーンが認識されると<b>信頼済み</b>と表示できます。"
-title = "手動 — 証明書を持ち込む"
+title = "手動 - 証明書を持ち込む"
 use = "用途：対外的、法務、コンプライアンス。"
 
 [certSign.signMode.tooltip.overview]
@@ -3219,7 +3219,7 @@ title = "線画"
 [compress.tooltip.qualityAdjustment]
 bullet1 = "値が小さいほど画質を保持"
 bullet2 = "値が大きいほどファイルサイズを削減"
-text = "スライダーで圧縮強度を調整します。低め（1–3）は画質を保ちますがサイズは大きめ、高め（7–9）は大きく縮小できますが画像の鮮明さが低下します。"
+text = "スライダーで圧縮強度を調整します。低め（1-3）は画質を保ちますがサイズは大きめ、高め（7-9）は大きく縮小できますが画像の鮮明さが低下します。"
 title = "品質調整"
 
 [compressPdfs]
@@ -3901,7 +3901,7 @@ dateDesc = "新しい順"
 dateLabel = "最新"
 nameAsc = "A から Z"
 nameDesc = "Z から A"
-nameLabel = "A–Z"
+nameLabel = "A-Z"
 
 [fileSelectorPicker.tabs]
 saved = "保存済みファイル"
@@ -5671,7 +5671,7 @@ title = "ページ削除"
 description = "操作に使用するページを選択します。単一ページ、範囲、数式、all キーワードに対応。"
 
 [pageSelection.tooltip.complex]
-bullet1 = "<strong>1,3-5,8,2n</strong> → 1、3–5、8 に加えて偶数ページ"
+bullet1 = "<strong>1,3-5,8,2n</strong> → 1、3-5、8 に加えて偶数ページ"
 bullet2 = "<strong>10-,2n-1</strong> → 10ページ目から末尾まで + 奇数ページ"
 description = "異なる種類を組み合わせます。"
 title = "複合的な組み合わせ"
@@ -5771,7 +5771,7 @@ title = "Turn on the Processor plan"
 eyebrow = "Editor plan · Always free"
 
 [payg.free.header]
-freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
+freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR - as much as you want, no matter where you trigger it."
 freeTitle = "Unlimited PDF editing"
 
 [payg.free.hero]
@@ -5799,8 +5799,8 @@ pauses = "pauses at cap"
 title = "What happens when the cap is reached"
 
 [payg.header]
-eyebrow = "Processor plan · {{start}} – {{end}}"
-freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
+eyebrow = "Processor plan · {{start}} - {{end}}"
+freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR - as much as you want, no matter where you trigger it."
 freeLabel = "Always free"
 freeTitle = "Unlimited PDF editing"
 meterBody = "{{limit}} free PDFs to start, then billed per PDF up to your cap."
@@ -5820,8 +5820,8 @@ chip = "年払い前払い"
 
 [payg.prepaid.banner]
 exhausted = "前払い容量を使い切りました。従量課金が再開されました。割引を維持するには追加購入してください。"
-expiring_one = "前払い年はあと {{count}} 日で終了します。未使用容量は期限切れになります — 新しい年を開始するには追加購入してください。"
-expiring_other = "前払い年はあと {{count}} 日で終了します。未使用容量は期限切れになります — 新しい年を開始するには追加購入してください。"
+expiring_one = "前払い年はあと {{count}} 日で終了します。未使用容量は期限切れになります - 新しい年を開始するには追加購入してください。"
+expiring_other = "前払い年はあと {{count}} 日で終了します。未使用容量は期限切れになります - 新しい年を開始するには追加購入してください。"
 low = "前払い容量の残りが {{pct}}% です。処理を中断しないために、いつでも追加購入できます。"
 
 [payg.prepaid.card]
@@ -6522,7 +6522,7 @@ never = "なし"
 [portal.accountLink.modal]
 linkSubtitle = "このサーバーの請求先にするアカウントにサインインしてください。"
 linkTitle = "Stirling アカウントをリンク"
-reauthSubtitle = "セッションの有効期限が切れました — Stirling アカウントに再度サインインしてください。インスタンスのリンクは維持されます。"
+reauthSubtitle = "セッションの有効期限が切れました - Stirling アカウントに再度サインインしてください。インスタンスのリンクは維持されます。"
 reauthTitle = "再度サインイン"
 simulateSignIn = "サインインをシミュレート（dev）"
 
@@ -6582,7 +6582,7 @@ noClientSecret = "Edge function が client_secret を返しませんでした。
 title = "Processorプランを有効にする"
 
 [portal.billing.checkout.activationSlow]
-body = "お支払いは成功しましたが、有効化に通常より少し時間がかかっています。自動的に有効になります — これを閉じると、まもなくここに表示されます。"
+body = "お支払いは成功しましたが、有効化に通常より少し時間がかかっています。自動的に有効になります - これを閉じると、まもなくここに表示されます。"
 close = "閉じる"
 title = "もう少しです"
 
@@ -6606,7 +6606,7 @@ note = "カード詳細は Stripe が収集します。Stirling が PAN また�
 title = "チェックアウトを開始できませんでした"
 
 [portal.billing.checkout.finalizing]
-body = "お支払いが完了しました。リンクされたインスタンス全体で従量制処理を有効化しています — 通常は数秒で完了します。"
+body = "お支払いが完了しました。リンクされたインスタンス全体で従量制処理を有効化しています - 通常は数秒で完了します。"
 hint = "このウィンドウを開いたままにしてください。"
 title = "Processorプランを有効化中..."
 
@@ -6633,7 +6633,7 @@ title = "無料 PDF エディター"
 checkoutErrorTitle = "チェックアウトを開始できませんでした"
 currentPlan = "現在のプラン"
 freeForever = "ずっと無料"
-noTeamResolved = "ウォレット上でチームがまだ解決されていません — 更新してもう一度お試しください。"
+noTeamResolved = "ウォレット上でチームがまだ解決されていません - 更新してもう一度お試しください。"
 ownerOnly = "チームオーナーのみが Processorプランを有効にできます。"
 payInvoice = "完了するには請求書を支払う"
 planName = "Editor"
@@ -6668,7 +6668,7 @@ viewLink = "表示 ↗"
 
 [portal.billing.linkPrompt]
 cta = "Stirling アカウントをリンク"
-description = "手動のPDF編集 — 表示、署名、結合、分割、透かし、圧縮、変換、手動 OCR — はリンクの有無に関係なく常に無料です。リンクすると、従量制処理（自動化、AI、API）の無料PDF 500件を受け取れます。さらに必要な場合は Processorプランを有効にし、使用した分だけお支払いください。"
+description = "手動のPDF編集 - 表示、署名、結合、分割、透かし、圧縮、変換、手動 OCR - はリンクの有無に関係なく常に無料です。リンクすると、従量制処理（自動化、AI、API）の無料PDF 500件を受け取れます。さらに必要な場合は Processorプランを有効にし、使用した分だけお支払いください。"
 title = "Stirling アカウントをリンク"
 
 [portal.billing.paymentMethod]
@@ -6802,13 +6802,13 @@ low = "残りわずか"
 [portal.billing.spendLimit]
 adjustLimit = "上限を調整"
 cancel = "キャンセル"
-capControlNote = "変更はすぐに適用されます — 上限はいつでも上げ下げできます。"
+capControlNote = "変更はすぐに適用されます - 上限はいつでも上げ下げできます。"
 capSuffix = "/ 月"
 capSuffixWithDocs = "/ 月 · 約 {{documents}} ドキュメント"
-displaySub = "自動処理した分だけ請求されます — 上限を超えることはありません。"
+displaySub = "自動処理した分だけ請求されます - 上限を超えることはありません。"
 editTitle = "月間上限を設定"
 eyebrow = "利用額上限"
-guardrailBody = "厳格な上限です — それを超えて請求されることはありません。上限に達すると、引き上げるかサイクルがリセットされるまで従量制処理は一時停止します（無制限のPDF編集は引き続き利用できます）。何も失われません。"
+guardrailBody = "厳格な上限です - それを超えて請求されることはありません。上限に達すると、引き上げるかサイクルがリセットされるまで従量制処理は一時停止します（無制限のPDF編集は引き続き利用できます）。何も失われません。"
 guardrailLabel = "ガードレール:"
 noCap = "上限なし"
 pctUsed = "{{pct}}% 使用済み"
@@ -7243,8 +7243,8 @@ viewSource = "GitHub でソースを表示"
 codeCaption = "すべてのリクエスト"
 eyebrow = "はじめに"
 lead = "すべてのリクエストはベアラートークンで認証されます。キーは環境ごとにスコープ設定され、ローテーションしない限り期限切れになりません。"
-liveKey = "本番キー — 請求対象で、プランに応じてレート制限されます。"
-testKey = "Sandbox キー — 無料で、合成フィクスチャを返します。"
+liveKey = "本番キー - 請求対象で、プランに応じてレート制限されます。"
+testKey = "Sandbox キー - 無料で、合成フィクスチャを返します。"
 title = "認証"
 
 [portal.docs.components]
@@ -7291,7 +7291,7 @@ body = "Infrastructure タブからスコープ付きキーを作成します。
 title = "API キーを発行"
 
 [portal.docs.quickstart.step2]
-body = "任意の型付きエンドポイントにファイルを POST します。エンドポイントによって返されるスキーマが決まります — ここでは請求書抽出機能です。"
+body = "任意の型付きエンドポイントにファイルを POST します。エンドポイントによって返されるスキーマが決まります - ここでは請求書抽出機能です。"
 snippetCaption = "請求書を抽出"
 title = "ドキュメントを送信"
 
@@ -7371,8 +7371,8 @@ overview = "概要"
 requestAccess = "アクセスをリクエスト"
 
 [portal.documents.elevation.active]
-description = "一時的な許可 — アクセスは記録され、時間制限があります。"
-descriptionFourEyes = "一時的な許可 — ピアレビュアーに通知されました（四眼原則）。"
+description = "一時的な許可 - アクセスは記録され、時間制限があります。"
+descriptionFourEyes = "一時的な許可 - ピアレビュアーに通知されました（四眼原則）。"
 title = "アクセスは {{time}} 後に期限切れになります"
 
 [portal.documents.elevation.gated]
@@ -7469,7 +7469,7 @@ rotate = "ローテーション"
 talkToSales = "営業に相談"
 
 [portal.editorAdmin.sections.health]
-sub = "報告しているすべての Editor インスタンス — バージョン、リージョン、ステータス、最終確認、アクティブユーザー。"
+sub = "報告しているすべての Editor インスタンス - バージョン、リージョン、ステータス、最終確認、アクティブユーザー。"
 title = "インスタンスの健全性"
 
 [portal.editorAdmin.sections.pairing]
@@ -7755,9 +7755,9 @@ done = "完了"
 keyNameLabel = "キー名"
 keyNamePlaceholder = "例: Production · ingest"
 secretKeyCaption = "シークレットキー"
-secretWarning = "これをシークレットマネージャーに保存してください。Stirling はハッシュのみを保存します — 後で復元する方法はありません。"
+secretWarning = "これをシークレットマネージャーに保存してください。Stirling はハッシュのみを保存します - 後で復元する方法はありません。"
 subtitle = "キーのスコープを必要最小限にします。いつでもローテーションまたは失効できます。"
-subtitleCreated = "今すぐこのシークレットをコピーしてください — 再表示されません。"
+subtitleCreated = "今すぐこのシークレットをコピーしてください - 再表示されません。"
 title = "API キーを作成"
 titleCreated = "キーが作成されました"
 
@@ -8318,7 +8318,7 @@ label = "ドキュメントをメール送信（Mailgun）"
 [portal.policies.operations.n8nGate]
 description = "Your workflow decides whether the run carries on."
 label = "Ask an n8n workflow to approve"
-note = "The workflow must reply with {\"approved\": true}. Anything else — including a timeout — stops the run and parks the document."
+note = "The workflow must reply with {\"approved\": true}. Anything else - including a timeout - stops the run and parks the document."
 
 [portal.policies.operations.n8nNotify]
 description = "Sends the run's details, not the document."
@@ -8596,11 +8596,11 @@ postalCodePlaceholder = "94105"
 posture = "ガバナンス"
 posture_count = "約{{count}}個のポリシー"
 posture_essentials = "基本"
-posture_essentialsSub = "分類 + 共有 — デフォルト"
+posture_essentialsSub = "分類 + 共有 - デフォルト"
 posture_governed = "ガバナンス対応"
 posture_governedSub = "セキュリティとルーティングを追加"
 posture_regulated = "規制対応"
-posture_regulatedSub = "すべてのカテゴリ — コンプライアンス、保持、取り込み"
+posture_regulatedSub = "すべてのカテゴリ - コンプライアンス、保持、取り込み"
 qbr = "四半期ビジネスレビュー"
 qbrSub = "担当 SE が四半期ごとに使用状況とロードマップをレビューします"
 region = "州 / 地域"
@@ -9065,7 +9065,7 @@ summary = "制限付きまたは Web のみのアクセス。個人設定は保�
 
 [portal.users.roles.member]
 label = "メンバー"
-summary = "通常ユーザー — 共有リソースと自身の設定を使用します。"
+summary = "通常ユーザー - 共有リソースと自身の設定を使用します。"
 
 [portal.users.roles.member.permissions]
 0 = "エディターと共有連携を使用"
@@ -11463,9 +11463,9 @@ emptyFile = "空のファイル"
 htmlHidePreview = "プレビューを非表示"
 htmlPreview = "HTMLプレビュー"
 htmlPreviewMobileHidden = "HTML ページはデスクトップ幅向けにレイアウトされているため、ここではプレビューはデフォルトでオフになっています。"
-htmlPreviewWarning = "HTMLプレビュー — 外部リソースは読み込まれない場合があります · {{size}}"
+htmlPreviewWarning = "HTMLプレビュー - 外部リソースは読み込まれない場合があります · {{size}}"
 htmlShowPreview = "それでもプレビューを表示"
-invalidJson = "無効な JSON — 生の内容を表示しています"
+invalidJson = "無効な JSON - 生の内容を表示しています"
 lineNumbers = "行番号"
 loading = "読み込み中..."
 renderMarkdown = "Markdown をレンダリング"
@@ -11527,7 +11527,7 @@ create = "Create your first Watched Folder"
 deleteFolder = "Delete folder"
 editFolder = "Edit folder"
 empty = "No watched folders yet"
-emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged — whatever your pipeline does."
+emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged - whatever your pipeline does."
 emptyTitle = "Automate your PDF workflows"
 file = "file"
 files = "files"
@@ -11535,7 +11535,7 @@ pause = "Pause"
 resume = "Resume"
 
 [watchedFolders.howItWorks]
-step1Desc = "Drag PDFs onto any Watched Folder card — or send them from your file list"
+step1Desc = "Drag PDFs onto any Watched Folder card - or send them from your file list"
 step1Title = "Drop files"
 step2Desc = "Your configured tools process each file automatically"
 step2Title = "Pipeline runs"
@@ -11559,18 +11559,18 @@ createFolder = "Create Folder"
 createTitle = "New Watched Folder"
 editTitle = "Edit Watched Folder"
 inputFolder = "Input folder"
-inputFolderNotChosen = "No folder chosen — required for auto-scan"
+inputFolderNotChosen = "No folder chosen - required for auto-scan"
 inputSource = "Input source"
-inputSourceBrowser = "Browser — drop files here"
+inputSourceBrowser = "Browser - drop files here"
 inputSourceLocal = "Local folder (auto-scan)"
-inputSourceLocalUnsupported = "Local folder (auto-scan) — Chrome/Edge only"
+inputSourceLocalUnsupported = "Local folder (auto-scan) - Chrome/Edge only"
 localOutputFolder = "Local output folder"
 maxRetries = "Max retries"
 name = "Folder name"
 namePlaceholder = "My Watched Folder"
 nameRequired = "Folder name is required"
 nameTooLong = "Folder name must be 50 characters or less"
-outputFolderNotSet = "Not set — outputs stay in app"
+outputFolderNotSet = "Not set - outputs stay in app"
 outputFolderUnsupported = "Not supported in this browser"
 outputModeNewDesc = "Output is saved as a new separate file"
 outputModeVersion = "Replace original?"
@@ -11630,9 +11630,9 @@ filterPending = "Pending"
 inputs = "Inputs"
 inputSize = "Input size"
 legendComplete = "Complete"
-noActivity = "No activity yet — drop a PDF to start"
+noActivity = "No activity yet - drop a PDF to start"
 noActivityMatch = "No matching activity"
-noInputFolder = "No input folder — edit to configure"
+noInputFolder = "No input folder - edit to configure"
 outputs = "Outputs"
 pause = "Pause"
 preview = "Preview"
@@ -11640,7 +11640,7 @@ previewInput = "Preview input"
 previewLoadFailed = "Could not load file preview."
 previewOutput = "Preview output"
 queued = "Queued"
-queuedWaiting = "Queued — waiting to run"
+queuedWaiting = "Queued - waiting to run"
 removeEntries = "Remove {{count}} entries"
 removeEntry = "Remove entry"
 removeNotificationsOnly = "Remove notifications only"

@@ -1254,7 +1254,7 @@ description = "URL of bestandsnaam van het impressum (in sommige jurisdicties ve
 label = "Impressum"
 
 [admin.settings.legal.loginAgreement]
-defaultLocaleHint = "— gebruikt als terugvaloptie wanneer een taal geen bestand heeft."
+defaultLocaleHint = "- gebruikt als terugvaloptie wanneer een taal geen bestand heeft."
 defaultLocaleLink = "Standaardlocale configureren"
 description = "Toon een verklaring die gebruikers moeten accepteren na het inloggen. De tekst volgt de taal van elke gebruiker."
 discardConfirm = "U hebt niet-opgeslagen wijzigingen die verloren gaan. Toch van taal wisselen?"
@@ -2515,10 +2515,10 @@ text = "Het is een veilige ID voor uw handtekening die bewijst dat u hebt ondert
 title = "Wat is een certificaat?"
 
 [certSign.certType.tooltip.which]
-bullet1 = "PKCS#12 (.p12 / .pfx) – een gecombineerd bestand (meest voorkomend)"
-bullet2 = "PFX (.pfx) – Microsofts versie van PKCS12"
-bullet3 = "PEM – aparte .pem-bestanden voor privésleutel en certificaat"
-bullet4 = "JKS – Java .jks-keystore voor dev-/CI-CD-workflows"
+bullet1 = "PKCS#12 (.p12 / .pfx) - een gecombineerd bestand (meest voorkomend)"
+bullet2 = "PFX (.pfx) - Microsofts versie van PKCS12"
+bullet3 = "PEM - aparte .pem-bestanden voor privésleutel en certificaat"
+bullet4 = "JKS - Java .jks-keystore voor dev-/CI-CD-workflows"
 text = "Kies de indeling die overeenkomt met uw certificaatbestand:"
 title = "Welke optie moet ik gebruiken?"
 
@@ -3462,7 +3462,7 @@ showPreferencesBtn = "Voorkeuren beheren"
 title = "Hoe we cookies gebruiken"
 
 [cookieBanner.popUp.description]
-1 = "We gebruiken cookies en andere technologieën om Stirling PDF beter voor u te laten werken—zo verbeteren we onze tools en blijven we functies bouwen die u waardeert."
+1 = "We gebruiken cookies en andere technologieën om Stirling PDF beter voor u te laten werken - zo verbeteren we onze tools en blijven we functies bouwen die u waardeert."
 2 = "If you’d rather not, clicking 'No Thanks' will only enable the essential cookies needed to keep things running smoothly."
 
 [cookieBanner.preferencesModal]
@@ -3475,16 +3475,16 @@ subtitle = "Cookiegebruik"
 title = "Centrum voor toestemmingsvoorkeuren"
 
 [cookieBanner.preferencesModal.analytics]
-description = "Deze cookies helpen ons te begrijpen hoe onze tools worden gebruikt, zodat we ons kunnen richten op het bouwen van de functies die onze community het meest waardeert. Wees gerust—Stirling PDF kan niet en zal nooit de inhoud van de documenten waarmee u werkt volgen."
+description = "Deze cookies helpen ons te begrijpen hoe onze tools worden gebruikt, zodat we ons kunnen richten op het bouwen van de functies die onze community het meest waardeert. Wees gerust - Stirling PDF kan niet en zal nooit de inhoud van de documenten waarmee u werkt volgen."
 title = "Analyse"
 
 [cookieBanner.preferencesModal.description]
 1 = "Stirling PDF gebruikt cookies en vergelijkbare technologieën om uw ervaring te verbeteren en te begrijpen hoe onze tools worden gebruikt. Dit helpt ons de prestaties te verbeteren, de functies te ontwikkelen die jij belangrijk vindt en doorlopende ondersteuning te bieden."
-2 = "Stirling PDF kan niet—en zal nooit—de inhoud van de documenten die u gebruikt volgen of openen."
+2 = "Stirling PDF kan niet - en zal nooit - de inhoud van de documenten die u gebruikt volgen of openen."
 3 = "Uw privacy en vertrouwen staan centraal in wat we doen."
 
 [cookieBanner.preferencesModal.necessary]
-description = "These cookies are essential for the website to function properly. They enable core features like setting your privacy preferences, logging in, and filling out forms—which is why they can’t be turned off."
+description = "These cookies are essential for the website to function properly. They enable core features like setting your privacy preferences, logging in, and filling out forms - which is why they can’t be turned off."
 
 [cookieBanner.preferencesModal.necessary.title]
 1 = "Strikt noodzakelijke cookies"
@@ -3901,7 +3901,7 @@ dateDesc = "Nieuwste eerst"
 dateLabel = "Meest recent"
 nameAsc = "A tot Z"
 nameDesc = "Z tot A"
-nameLabel = "A–Z"
+nameLabel = "A-Z"
 
 [fileSelectorPicker.tabs]
 saved = "Opgeslagen bestanden"
@@ -5414,7 +5414,7 @@ userBody = "Nodig teamgenoten uit, wijs rollen toe en houd uw documenten georgan
 userTitle = "Abonnementoverzicht"
 
 [onboarding.processorIntro]
-body = "Stirling voert nu <strong>Beleid</strong> uit — geautomatiseerde regels die elk document classificeren, beveiligen en verwerken zodra het binnenkomt. Stel ze in en bewaak uitvoeringen in de <strong>Processor</strong>."
+body = "Stirling voert nu <strong>Beleid</strong> uit - geautomatiseerde regels die elk document classificeren, beveiligen en verwerken zodra het binnenkomt. Stel ze in en bewaak uitvoeringen in de <strong>Processor</strong>."
 cta = "Bekijk de Processor"
 title = "Bekijk de Stirling Processor"
 
@@ -5671,7 +5671,7 @@ title = "Pagina verwijderaar"
 description = "Kies welke pagina's u wilt gebruiken voor de bewerking. Ondersteunt enkele pagina's, reeksen, formules en het sleutelwoord all."
 
 [pageSelection.tooltip.complex]
-bullet1 = "<strong>1,3-5,8,2n</strong> → pagina's 1, 3–5, 8, plus even"
+bullet1 = "<strong>1,3-5,8,2n</strong> → pagina's 1, 3-5, 8, plus even"
 bullet2 = "<strong>10-,2n-1</strong> → vanaf pagina 10 tot het einde + oneven pagina's"
 description = "Combineer verschillende types."
 title = "Complexe combinaties"
@@ -5694,8 +5694,8 @@ description = "Gebruik n in formules voor patronen."
 title = "Wiskundige functies"
 
 [pageSelection.tooltip.ranges]
-bullet1 = "<strong>3-6</strong> → selecteert pagina's 3–6"
-bullet2 = "<strong>10-15</strong> → selecteert pagina's 10–15"
+bullet1 = "<strong>3-6</strong> → selecteert pagina's 3-6"
+bullet2 = "<strong>10-15</strong> → selecteert pagina's 10-15"
 bullet3 = "<strong>5-</strong> → selecteert pagina's 5 tot het einde"
 description = "Gebruik - voor opeenvolgende pagina's."
 title = "Paginareeksen"
@@ -5771,7 +5771,7 @@ title = "Turn on the Processor plan"
 eyebrow = "Editor plan · Always free"
 
 [payg.free.header]
-freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
+freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR - as much as you want, no matter where you trigger it."
 freeTitle = "Unlimited PDF editing"
 
 [payg.free.hero]
@@ -5799,8 +5799,8 @@ pauses = "pauses at cap"
 title = "What happens when the cap is reached"
 
 [payg.header]
-eyebrow = "Processor plan · {{start}} – {{end}}"
-freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
+eyebrow = "Processor plan · {{start}} - {{end}}"
+freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR - as much as you want, no matter where you trigger it."
 freeLabel = "Always free"
 freeTitle = "Unlimited PDF editing"
 meterBody = "{{limit}} free PDFs to start, then billed per PDF up to your cap."
@@ -5820,8 +5820,8 @@ chip = "Vooruitbetaald jaar"
 
 [payg.prepaid.banner]
 exhausted = "Je vooruitbetaalde capaciteit is opgebruikt; gefactureerd gebruik is hervat. Waardeer op om de korting te behouden."
-expiring_one = "Je vooruitbetaalde jaar eindigt over {{count}} dag. Ongebruikte capaciteit verloopt — waardeer op om een nieuw jaar te starten."
-expiring_other = "Je vooruitbetaalde jaar eindigt over {{count}} dagen. Ongebruikte capaciteit verloopt — waardeer op om een nieuw jaar te starten."
+expiring_one = "Je vooruitbetaalde jaar eindigt over {{count}} dag. Ongebruikte capaciteit verloopt - waardeer op om een nieuw jaar te starten."
+expiring_other = "Je vooruitbetaalde jaar eindigt over {{count}} dagen. Ongebruikte capaciteit verloopt - waardeer op om een nieuw jaar te starten."
 low = "Je hebt nog {{pct}}% van je vooruitbetaalde capaciteit over. Waardeer op elk moment op om verwerking zonder onderbreking voort te zetten."
 
 [payg.prepaid.card]
@@ -6121,7 +6121,7 @@ processing = "Processing"
 uploading = "Uploading"
 
 [pdfTextEditor.tooltip.alpha]
-text = "Deze alpha-viewer is nog in ontwikkeling — bepaalde lettertypen, kleuren, transparantie-effecten en opmaakdetails kunnen iets verschuiven. Controleer het gegenereerde PDF-bestand goed voordat je het deelt."
+text = "Deze alpha-viewer is nog in ontwikkeling - bepaalde lettertypen, kleuren, transparantie-effecten en opmaakdetails kunnen iets verschuiven. Controleer het gegenereerde PDF-bestand goed voordat je het deelt."
 title = "Alpha-viewer"
 
 [pdfTextEditor.tooltip.header]
@@ -6522,7 +6522,7 @@ never = "nooit"
 [portal.accountLink.modal]
 linkSubtitle = "Meld je aan bij het account waaraan deze server moet worden gefactureerd."
 linkTitle = "Koppel je Stirling-account"
-reauthSubtitle = "Je sessie is verlopen — meld je opnieuw aan bij je Stirling-account. Je instantie blijft gekoppeld."
+reauthSubtitle = "Je sessie is verlopen - meld je opnieuw aan bij je Stirling-account. Je instantie blijft gekoppeld."
 reauthTitle = "Opnieuw aanmelden"
 simulateSignIn = "Aanmelden simuleren (dev)"
 
@@ -6633,7 +6633,7 @@ title = "Gratis PDF Editors"
 checkoutErrorTitle = "Kon checkout niet starten"
 currentPlan = "Huidig abonnement"
 freeForever = "Voor altijd gratis"
-noTeamResolved = "Er is nog geen team gekoppeld aan je wallet — vernieuw en probeer opnieuw."
+noTeamResolved = "Er is nog geen team gekoppeld aan je wallet - vernieuw en probeer opnieuw."
 ownerOnly = "Alleen de teameigenaar kan het Processor-abonnement inschakelen."
 payInvoice = "Factuur betalen om te voltooien"
 planName = "Editor"
@@ -6668,7 +6668,7 @@ viewLink = "Bekijken ↗"
 
 [portal.billing.linkPrompt]
 cta = "Stirling-account koppelen"
-description = "Handmatige PDF-bewerking — bekijken, ondertekenen, samenvoegen, splitsen, watermerken, comprimeren, converteren, handmatige OCR — is altijd gratis, gekoppeld of niet. Koppel om 500 gratis PDF's voor verbruiksgemeten verwerking te claimen (automatisering, AI en de API); wanneer je meer nodig hebt, schakel je het Processor-abonnement in en betaal je alleen voor wat je gebruikt."
+description = "Handmatige PDF-bewerking - bekijken, ondertekenen, samenvoegen, splitsen, watermerken, comprimeren, converteren, handmatige OCR - is altijd gratis, gekoppeld of niet. Koppel om 500 gratis PDF's voor verbruiksgemeten verwerking te claimen (automatisering, AI en de API); wanneer je meer nodig hebt, schakel je het Processor-abonnement in en betaal je alleen voor wat je gebruikt."
 title = "Koppel je Stirling-account"
 
 [portal.billing.paymentMethod]
@@ -6802,13 +6802,13 @@ low = "Bijna op"
 [portal.billing.spendLimit]
 adjustLimit = "Limiet aanpassen"
 cancel = "Annuleren"
-capControlNote = "Wijzigingen gelden direct — verhoog of verlaag het plafond op elk moment."
+capControlNote = "Wijzigingen gelden direct - verhoog of verlaag het plafond op elk moment."
 capSuffix = "/ maand"
 capSuffixWithDocs = "/ maand · ≈ {{documents}} documenten"
-displaySub = "Je betaalt alleen voor wat je automatisch verwerkt — nooit boven het plafond."
+displaySub = "Je betaalt alleen voor wat je automatisch verwerkt - nooit boven het plafond."
 editTitle = "Stel je maandelijkse plafond in"
 eyebrow = "Uitgavelimiet"
-guardrailBody = "een hard plafond — je betaalt nooit meer dan dat. Bij het plafond pauzeert verbruiksgemeten verwerking (onbeperkte PDF-bewerking blijft werken) totdat je het verhoogt of de cyclus opnieuw start. Er gaat niets verloren."
+guardrailBody = "een hard plafond - je betaalt nooit meer dan dat. Bij het plafond pauzeert verbruiksgemeten verwerking (onbeperkte PDF-bewerking blijft werken) totdat je het verhoogt of de cyclus opnieuw start. Er gaat niets verloren."
 guardrailLabel = "Je vangrail:"
 noCap = "geen plafond"
 pctUsed = "{{pct}}% gebruikt"
@@ -7243,8 +7243,8 @@ viewSource = "Bron bekijken op GitHub"
 codeCaption = "elk verzoek"
 eyebrow = "AAN DE SLAG"
 lead = "Alle verzoeken worden geauthenticeerd met een bearer token. Sleutels zijn per omgeving afgebakend en verlopen nooit tenzij ze worden geroteerd."
-liveKey = "Productiesleutels — gefactureerd, met rate limit volgens je abonnement."
-testKey = "Sandbox-sleutels — gratis, retourneren synthetische fixtures."
+liveKey = "Productiesleutels - gefactureerd, met rate limit volgens je abonnement."
+testKey = "Sandbox-sleutels - gratis, retourneren synthetische fixtures."
 title = "Authenticatie"
 
 [portal.docs.components]
@@ -7282,7 +7282,7 @@ title = "Quickstart"
 
 [portal.docs.quickstart.callout]
 bodyAfterLink = "voor copy-paste-recepten."
-bodyBeforeLink = "verbind dezelfde call met een pipeline om validatie, redactie en levering te koppelen — of stel deze beschikbaar aan een agent via MCP. Zie"
+bodyBeforeLink = "verbind dezelfde call met een pipeline om validatie, redactie en levering te koppelen - of stel deze beschikbaar aan een agent via MCP. Zie"
 label = "Volgende:"
 link = "Playbooks"
 
@@ -7291,7 +7291,7 @@ body = "Maak een afgebakende sleutel aan op het tabblad Infrastructuur. Sleutels
 title = "Een API-sleutel uitgeven"
 
 [portal.docs.quickstart.step2]
-body = "POST een bestand naar een getypeerd endpoint. Het endpoint bepaalt het schema dat je terugkrijgt — hier de factuurextractor."
+body = "POST een bestand naar een getypeerd endpoint. Het endpoint bepaalt het schema dat je terugkrijgt - hier de factuurextractor."
 snippetCaption = "een factuur extraheren"
 title = "Een document verzenden"
 
@@ -7371,8 +7371,8 @@ overview = "Overzicht"
 requestAccess = "Toegang aanvragen"
 
 [portal.documents.elevation.active]
-description = "Tijdelijke toekenning — toegang wordt gelogd en is tijdgebonden."
-descriptionFourEyes = "Tijdelijke toekenning — een collega-beoordelaar is geïnformeerd (vierogenprincipe)."
+description = "Tijdelijke toekenning - toegang wordt gelogd en is tijdgebonden."
+descriptionFourEyes = "Tijdelijke toekenning - een collega-beoordelaar is geïnformeerd (vierogenprincipe)."
 title = "Toegang verloopt over {{time}}"
 
 [portal.documents.elevation.gated]
@@ -7433,7 +7433,7 @@ time = "Tijd"
 user = "Gebruiker"
 
 [portal.editorAdmin]
-subtitle = "Implementeer de Stirling PDF Editor, koppel zelfgehoste instanties aan je organisatie en beheer de draaiende fleet — doelen, gezondheid, referenties en offline activering op één plek."
+subtitle = "Implementeer de Stirling PDF Editor, koppel zelfgehoste instanties aan je organisatie en beheer de draaiende fleet - doelen, gezondheid, referenties en offline activering op één plek."
 title = "Editor-implementatie"
 
 [portal.editorAdmin.health.columns]
@@ -7469,7 +7469,7 @@ rotate = "Roteren"
 talkToSales = "Neem contact op met sales"
 
 [portal.editorAdmin.sections.health]
-sub = "Elke Editor-instantie die rapporteert — versie, regio, status, laatst gezien en actieve gebruikers."
+sub = "Elke Editor-instantie die rapporteert - versie, regio, status, laatst gezien en actieve gebruikers."
 title = "Instantiegezondheid"
 
 [portal.editorAdmin.sections.pairing]
@@ -7755,9 +7755,9 @@ done = "Gereed"
 keyNameLabel = "Sleutelnaam"
 keyNamePlaceholder = "bijv. Productie · ingest"
 secretKeyCaption = "Geheime sleutel"
-secretWarning = "Sla dit op in een secrets manager. Stirling slaat alleen ooit een hash op — er is geen manier om deze later te herstellen."
+secretWarning = "Sla dit op in een secrets manager. Stirling slaat alleen ooit een hash op - er is geen manier om deze later te herstellen."
 subtitle = "Beperk de sleutel tot het minimum dat nodig is. Je kunt deze op elk moment roteren of intrekken."
-subtitleCreated = "Kopieer dit geheim nu — het wordt niet opnieuw getoond."
+subtitleCreated = "Kopieer dit geheim nu - het wordt niet opnieuw getoond."
 title = "API-sleutel maken"
 titleCreated = "Sleutel aangemaakt"
 
@@ -8318,7 +8318,7 @@ label = "Het document e-mailen (Mailgun)"
 [portal.policies.operations.n8nGate]
 description = "Your workflow decides whether the run carries on."
 label = "Ask an n8n workflow to approve"
-note = "The workflow must reply with {\"approved\": true}. Anything else — including a timeout — stops the run and parks the document."
+note = "The workflow must reply with {\"approved\": true}. Anything else - including a timeout - stops the run and parks the document."
 
 [portal.policies.operations.n8nNotify]
 description = "Sends the run's details, not the document."
@@ -8340,7 +8340,7 @@ label = "Uploaden naar Nextcloud"
 [portal.policies.operations.presidioAnalyze]
 description = "Je eigen Presidio-server rapporteert de persoonsgegevens die worden gevonden."
 label = "Persoonsgegevens detecteren"
-note = "Presidio leest tekst, geen bestanden. Geef de tekst op die je wilt laten controleren — het document zelf wordt niet geüpload."
+note = "Presidio leest tekst, geen bestanden. Geef de tekst op die je wilt laten controleren - het document zelf wordt niet geüpload."
 
 [portal.policies.operations.responseMode]
 replace = "Het document vervangen door het antwoord"
@@ -8430,7 +8430,7 @@ desc = "Voert OCR uit zodat gescande pagina's selecteerbare, doorzoekbare tekst 
 label = "Tekst doorzoekbaar maken"
 
 [portal.policies.wizard.capability.redact]
-desc = "Vindt en maakt gevoelige gegevens zwart — zoals BSN- en kaartnummers — zodat ze niet kunnen worden gelezen."
+desc = "Vindt en maakt gevoelige gegevens zwart - zoals BSN- en kaartnummers - zodat ze niet kunnen worden gelezen."
 label = "Gevoelige informatie redigeren"
 
 [portal.policies.wizard.capability.sanitize]
@@ -8596,11 +8596,11 @@ postalCodePlaceholder = "94105"
 posture = "Governance"
 posture_count = "~{{count}} beleid"
 posture_essentials = "Essentials"
-posture_essentialsSub = "Classificatie + Delen — de standaardinstellingen"
+posture_essentialsSub = "Classificatie + Delen - de standaardinstellingen"
 posture_governed = "Governed"
 posture_governedSub = "Voegt Beveiliging en Routering toe"
 posture_regulated = "Regulated"
-posture_regulatedSub = "Elke categorie — Compliance, Bewaring, Ingestie"
+posture_regulatedSub = "Elke categorie - Compliance, Bewaring, Ingestie"
 qbr = "Kwartaalreviews"
 qbrSub = "Je SE beoordeelt elk kwartaal gebruik en roadmap"
 region = "Staat / regio"
@@ -8722,13 +8722,13 @@ label = "Trial"
 [portal.procurement.license]
 copied = "Gekopieerd"
 copy = "Sleutel kopiëren"
-downloadError = "Kon het offline licentiebestand nog niet genereren — probeer het over enkele ogenblikken opnieuw."
+downloadError = "Kon het offline licentiebestand nog niet genereren - probeer het over enkele ogenblikken opnieuw."
 downloadOffline = "Offline licentie downloaden (.lic)"
 hint = "Plak deze sleutel in een self-hosted instantie om deze te activeren, of bewaar hem voor je administratie. Bewaar hem veilig."
 label = "Je licentiesleutel"
 subtitle = "Activeer een self-hosted instantie met deze sleutel, of bewaar deze voor je administratie."
 title = "Je licentiesleutel"
-trialFileHint = "Dit is je proeflicentiebestand. Zodra je overeenkomst rond is, kom je terug en download je het opnieuw — anders dan de online licentiesleutel wordt het .lic-bestand niet vanzelf bijgewerkt."
+trialFileHint = "Dit is je proeflicentiebestand. Zodra je overeenkomst rond is, kom je terug en download je het opnieuw - anders dan de online licentiesleutel wordt het .lic-bestand niet vanzelf bijgewerkt."
 
 [portal.procurement.link]
 cta = "Account koppelen"
@@ -8742,10 +8742,10 @@ eyebrow = "Live"
 title = "Je bent live op Stirling Enterprise"
 
 [portal.procurement.milestone]
-downloadError = "Kon de offerte-PDF nog niet downloaden — probeer het over enkele ogenblikken opnieuw."
+downloadError = "Kon de offerte-PDF nog niet downloaden - probeer het over enkele ogenblikken opnieuw."
 
 [portal.procurement.payment]
-description = "Je offerte is geaccepteerd en je licentie is al actief — je team kan meteen beginnen. Betaal de eerste factuur wanneer je er klaar voor bent; je kunt deze hier betalen of downloaden, geen e-mail nodig."
+description = "Je offerte is geaccepteerd en je licentie is al actief - je team kan meteen beginnen. Betaal de eerste factuur wanneer je er klaar voor bent; je kunt deze hier betalen of downloaden, geen e-mail nodig."
 downloadAgreement = "Ondertekende overeenkomst downloaden"
 downloadInvoice = "Factuur downloaden"
 eyebrow = "Betaling"
@@ -8800,7 +8800,7 @@ workEmailPlaceholder = "you@company.com"
 
 [portal.procurement.trial]
 body = "Verlengen voegt 7 dagen toe en stelt je solutions engineer op de hoogte."
-bodyMaxed = "Je hebt al je verlengingen gebruikt — neem contact op met je solutions engineer als je meer tijd nodig hebt."
+bodyMaxed = "Je hebt al je verlengingen gebruikt - neem contact op met je solutions engineer als je meer tijd nodig hebt."
 cancel = "Trial annuleren"
 extend = "7 dagen verlengen"
 maxed = "Maximum bereikt"
@@ -9037,7 +9037,7 @@ walletUnavailable = "Wallet niet beschikbaar: {{status}} {{statusText}}"
 
 [portal.usage.sessionExpired]
 action = "Opnieuw inloggen"
-body = "Je Stirling-accountsessie is verlopen. Log opnieuw in om facturatie te bekijken — je instantie blijft gekoppeld."
+body = "Je Stirling-accountsessie is verlopen. Log opnieuw in om facturatie te bekijken - je instantie blijft gekoppeld."
 title = "Sessie verlopen"
 
 [portal.users]
@@ -9065,7 +9065,7 @@ summary = "Beperkte of alleen webtoegang; kan geen persoonlijke configuraties he
 
 [portal.users.roles.member]
 label = "Lid"
-summary = "Reguliere gebruiker — werkt met gedeelde resources en eigen configuraties."
+summary = "Reguliere gebruiker - werkt met gedeelde resources en eigen configuraties."
 
 [portal.users.roles.member.permissions]
 0 = "De editor en gedeelde integraties gebruiken"
@@ -9075,7 +9075,7 @@ summary = "Reguliere gebruiker — werkt met gedeelde resources en eigen configu
 
 [portal.users.roles.team_owner]
 label = "Teameigenaar"
-summary = "Bezit een team — beheert de resources en gedeelde configuraties van de leden."
+summary = "Bezit een team - beheert de resources en gedeelde configuraties van de leden."
 
 [portal.users.roles.team_owner.permissions]
 0 = "De S3-verbindingen van het team maken & beheren"
@@ -9766,7 +9766,7 @@ failed = "Er is een fout opgetreden bij het extraheren van afbeeldingsscans."
 
 [scannerImageSplit.tooltip]
 headsUp = "Let op"
-headsUpDesc = "Overlappende foto's of achtergronden die qua kleur erg op de foto's lijken, kunnen de nauwkeurigheid verminderen—probeer een lichtere of donkerdere achtergrond en laat meer ruimte."
+headsUpDesc = "Overlappende foto's of achtergronden die qua kleur erg op de foto's lijken, kunnen de nauwkeurigheid verminderen - probeer een lichtere of donkerdere achtergrond en laat meer ruimte."
 problem1 = "Foto's niet gedetecteerd → verhoog Tolerance naar 30-50"
 problem2 = "Te veel foutieve detecties → verhoog Minimum Area naar 15,000-20,000"
 problem3 = "Uitsnedes te krap → verhoog Border Size naar 5-10"
@@ -9784,7 +9784,7 @@ useCase2 = "Splits flatbed-batches in afzonderlijke bestanden"
 useCase3 = "Splits collages in afzonderlijke foto's"
 useCase4 = "Foto's uit documenten halen"
 whatThisDoes = "Wat dit doet"
-whatThisDoesDesc = "Detecteert en extraheert automatisch elke foto uit een gescande pagina of samengestelde afbeelding—geen handmatig bijsnijden."
+whatThisDoesDesc = "Detecteert en extraheert automatisch elke foto uit een gescande pagina of samengestelde afbeelding - geen handmatig bijsnijden."
 whenToUse = "Wanneer te gebruiken"
 
 [ScannerImageSplit.selectText]
@@ -11463,9 +11463,9 @@ emptyFile = "Leeg bestand"
 htmlHidePreview = "Voorbeeldweergave verbergen"
 htmlPreview = "HTML-voorbeeld"
 htmlPreviewMobileHidden = "HTML-pagina's zijn ingedeeld voor desktopbreedtes, dus de voorbeeldweergave is hier standaard uitgeschakeld."
-htmlPreviewWarning = "HTML-voorbeeld — externe bronnen worden mogelijk niet geladen · {{size}}"
+htmlPreviewWarning = "HTML-voorbeeld - externe bronnen worden mogelijk niet geladen · {{size}}"
 htmlShowPreview = "Voorbeeldweergave toch tonen"
-invalidJson = "Ongeldige JSON — ruwe inhoud wordt weergegeven"
+invalidJson = "Ongeldige JSON - ruwe inhoud wordt weergegeven"
 lineNumbers = "Regelnummers"
 loading = "Laden..."
 renderMarkdown = "Markdown renderen"
@@ -11527,7 +11527,7 @@ create = "Create your first Watched Folder"
 deleteFolder = "Delete folder"
 editFolder = "Edit folder"
 empty = "No watched folders yet"
-emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged — whatever your pipeline does."
+emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged - whatever your pipeline does."
 emptyTitle = "Automate your PDF workflows"
 file = "file"
 files = "files"
@@ -11535,7 +11535,7 @@ pause = "Pause"
 resume = "Resume"
 
 [watchedFolders.howItWorks]
-step1Desc = "Drag PDFs onto any Watched Folder card — or send them from your file list"
+step1Desc = "Drag PDFs onto any Watched Folder card - or send them from your file list"
 step1Title = "Drop files"
 step2Desc = "Your configured tools process each file automatically"
 step2Title = "Pipeline runs"
@@ -11559,18 +11559,18 @@ createFolder = "Create Folder"
 createTitle = "New Watched Folder"
 editTitle = "Edit Watched Folder"
 inputFolder = "Input folder"
-inputFolderNotChosen = "No folder chosen — required for auto-scan"
+inputFolderNotChosen = "No folder chosen - required for auto-scan"
 inputSource = "Input source"
-inputSourceBrowser = "Browser — drop files here"
+inputSourceBrowser = "Browser - drop files here"
 inputSourceLocal = "Local folder (auto-scan)"
-inputSourceLocalUnsupported = "Local folder (auto-scan) — Chrome/Edge only"
+inputSourceLocalUnsupported = "Local folder (auto-scan) - Chrome/Edge only"
 localOutputFolder = "Local output folder"
 maxRetries = "Max retries"
 name = "Folder name"
 namePlaceholder = "My Watched Folder"
 nameRequired = "Folder name is required"
 nameTooLong = "Folder name must be 50 characters or less"
-outputFolderNotSet = "Not set — outputs stay in app"
+outputFolderNotSet = "Not set - outputs stay in app"
 outputFolderUnsupported = "Not supported in this browser"
 outputModeNewDesc = "Output is saved as a new separate file"
 outputModeVersion = "Replace original?"
@@ -11630,9 +11630,9 @@ filterPending = "Pending"
 inputs = "Inputs"
 inputSize = "Input size"
 legendComplete = "Complete"
-noActivity = "No activity yet — drop a PDF to start"
+noActivity = "No activity yet - drop a PDF to start"
 noActivityMatch = "No matching activity"
-noInputFolder = "No input folder — edit to configure"
+noInputFolder = "No input folder - edit to configure"
 outputs = "Outputs"
 pause = "Pause"
 preview = "Preview"
@@ -11640,7 +11640,7 @@ previewInput = "Preview input"
 previewLoadFailed = "Could not load file preview."
 previewOutput = "Preview output"
 queued = "Queued"
-queuedWaiting = "Queued — waiting to run"
+queuedWaiting = "Queued - waiting to run"
 removeEntries = "Remove {{count}} entries"
 removeEntry = "Remove entry"
 removeNotificationsOnly = "Remove notifications only"

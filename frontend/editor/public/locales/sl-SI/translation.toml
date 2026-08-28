@@ -481,7 +481,7 @@ configure = "Nastavi besedilo"
 colorLabel = "Barva besedila"
 fontLabel = "Pisava"
 fontSizeLabel = "Velikost pisave"
-fontSizePlaceholder = "Vnesite ali izberite velikost pisave (8–200)"
+fontSizePlaceholder = "Vnesite ali izberite velikost pisave (8-200)"
 name = "Vsebina besedila"
 placeholder = "Vnesite besedilo, ki ga želite dodati"
 
@@ -551,7 +551,7 @@ title = "Ciljna velikost strani"
 bullet1 = "1,0 = izvirna velikost"
 bullet2 = "0,5 = polovica velikosti (50 % manjše)"
 bullet3 = "2,0 = dvojna velikost (200 % večje, lahko se obreže)"
-text = "Nadzira, kako velika ali majhna je vsebina na strani. Vsebina se poveča/pomanjša in je sredinjena – če je povečana vsebina večja od velikosti strani, se lahko obreže."
+text = "Nadzira, kako velika ali majhna je vsebina na strani. Vsebina se poveča/pomanjša in je sredinjena - če je povečana vsebina večja od velikosti strani, se lahko obreže."
 title = "Faktor merila"
 
 [admin]
@@ -696,7 +696,7 @@ title = "Dokumenti in RAG"
 description = "Pustite prazno za uporabo lastne poverilnice okolja pogona. Velja za samogostovane uvedbe z enim pogonom."
 generic = "API ključ za vdelave"
 openai = "OpenAI API ključ"
-setPlaceholder = "Shranjeno – pustite prazno, da ohranite trenutni ključ"
+setPlaceholder = "Shranjeno - pustite prazno, da ohranite trenutni ključ"
 voyageai = "VoyageAI API ključ"
 
 [admin.settings.ai.documents.embeddingBaseUrl]
@@ -815,7 +815,7 @@ anthropic = "Anthropic API ključ"
 description = "Pustite prazno za uporabo lastne poverilnice okolja pogona. Velja za samogostovane uvedbe z enim pogonom."
 generic = "API ključ"
 openai = "OpenAI API ključ"
-setPlaceholder = "Shranjeno – pustite prazno, da ohranite trenutni ključ"
+setPlaceholder = "Shranjeno - pustite prazno, da ohranite trenutni ključ"
 
 [admin.settings.ai.models.baseUrl]
 description = "Osnovni URL končne točke, združljive z OpenAI / Ollama, npr. http://ollama:11434/v1."
@@ -1254,7 +1254,7 @@ description = "URL ali ime datoteke do impressuma (zahtevano v nekaterih jurisdi
 label = "Impressum"
 
 [admin.settings.legal.loginAgreement]
-defaultLocaleHint = "— uporablja se kot nadomestni, ko jezik nima datoteke."
+defaultLocaleHint = "- uporablja se kot nadomestni, ko jezik nima datoteke."
 defaultLocaleLink = "Nastavite privzeti jezik"
 description = "Prikaži izjavo, ki jo morajo uporabniki sprejeti po prijavi. Besedilo se prilagodi jeziku vsakega uporabnika."
 discardConfirm = "Imate neshranjene spremembe, ki bodo izgubljene. Želite vseeno preklopiti jezik?"
@@ -2022,8 +2022,8 @@ insufficientPermissions = "Nimate dovoljenja za izvedbo tega dejanja."
 
 [auth.callback]
 completing = "Dokončevanje avtentikacije"
-invalidToken = "Prijava OAuth ni uspela – neveljaven token."
-missingToken = "Prijava OAuth ni uspela – token ni bil prejet."
+invalidToken = "Prijava OAuth ni uspela - neveljaven token."
+missingToken = "Prijava OAuth ni uspela - token ni bil prejet."
 oauthFailed = "Prijava OAuth ni uspela. Poskusite znova."
 pleaseWait = "Počakajte, da dokončamo vašo prijavo."
 signedOut = "Odjavljeni ste bili. Prijavite se znova."
@@ -2318,8 +2318,8 @@ failed = "Pri ustvarjanju postavitve knjižice je prišlo do napake."
 
 [bookletImposition.flipOnShortEdge]
 label = "Preklop na kratkem robu (samo samodejni dupleks)"
-manualNote = "Ni potrebno v ročnem načinu – sklad obrnete sami"
-tooltip = "Omogočite za dupleksno tiskanje na kratkem robu (samo samodejni dupleks – v ročnem načinu ignorirano)"
+manualNote = "Ni potrebno v ročnem načinu - sklad obrnete sami"
+tooltip = "Omogočite za dupleksno tiskanje na kratkem robu (samo samodejni dupleks - v ročnem načinu ignorirano)"
 
 [bookletImposition.gutterSize]
 label = "Velikost vpenjalnega roba (točke)"
@@ -2385,7 +2385,7 @@ combineSets = "Združi množice"
 every3rd = "Vsaka 3."
 first50 = "Prvih 50"
 last50 = "Zadnjih 50"
-oddWithinExcluding = "Lihe v 1–20, razen 5–7"
+oddWithinExcluding = "Lihe v 1-20, razen 5-7"
 title = "Primeri"
 
 [bulkSelection.firstNPages]
@@ -2465,7 +2465,7 @@ pemPrivateKeyLabel = "Zasebni ključ (.pem / .key)"
 pending = "Na čakanju"
 readyToFinalize = "Pripravljeno za zaključek"
 reason = "Razlog"
-serverCertMessage = "Uporablja se strežniško potrdilo – datoteke ali geslo niso potrebni"
+serverCertMessage = "Uporablja se strežniško potrdilo - datoteke ali geslo niso potrebni"
 showLogo = "Prikaži logotip"
 signatureProgress = "{{signedCount}}/{{totalCount}} podpisov"
 signed = "Podpisano"
@@ -2515,10 +2515,10 @@ text = "To je varna identiteta za vaš podpis, ki dokazuje, da ste podpisali. Č
 title = "Kaj je potrdilo?"
 
 [certSign.certType.tooltip.which]
-bullet1 = "PKCS#12 (.p12 / .pfx) – ena kombinirana datoteka (najpogosteje)"
-bullet2 = "PFX (.pfx) – Microsoftova različica PKCS12"
-bullet3 = "PEM – ločene .pem datoteke zasebnega ključa in potrdila"
-bullet4 = "JKS – Java .jks keystore za dev / CI-CD delovne tokove"
+bullet1 = "PKCS#12 (.p12 / .pfx) - ena kombinirana datoteka (najpogosteje)"
+bullet2 = "PFX (.pfx) - Microsoftova različica PKCS12"
+bullet3 = "PEM - ločene .pem datoteke zasebnega ključa in potrdila"
+bullet4 = "JKS - Java .jks keystore za dev / CI-CD delovne tokove"
 text = "Izberite format, ki ustreza vaši datoteki potrdila:"
 title = "Katero možnost izbrati?"
 
@@ -2743,7 +2743,7 @@ submit = "Podpiši PDF"
 
 [certSign.signMode.tooltip.auto]
 text = "Podpiše s strežniškim <b>self-signed</b> potrdilom. Enak <b>tamper-evident seal</b> in <b>audit trail</b>; v pregledovalnikih običajno prikazuje <b>Unverified</b>."
-title = "Samodejno – brez nastavitve, takojšen sistemski pečat"
+title = "Samodejno - brez nastavitve, takojšen sistemski pečat"
 use = "Uporabite, ko potrebujete hitrost in dosledno interno identiteto v pregledih in evidencah."
 
 [certSign.signMode.tooltip.header]
@@ -2751,7 +2751,7 @@ title = "O podpisih PDF"
 
 [certSign.signMode.tooltip.manual]
 text = "Uporabite svoje datoteke potrdil za identiteto, usklajeno z blagovno znamko. Lahko prikaže <b>Trusted</b>, ko je vaš CA/veriga prepoznana."
-title = "Ročno – uporabite svoje potrdilo"
+title = "Ročno - uporabite svoje potrdilo"
 use = "Za: delo s strankami, pravne in skladnostne namene."
 
 [certSign.signMode.tooltip.overview]
@@ -3219,7 +3219,7 @@ title = "Črtna risba"
 [compress.tooltip.qualityAdjustment]
 bullet1 = "Nižje vrednosti ohranijo kakovost"
 bullet2 = "Višje vrednosti zmanjšajo velikost datoteke"
-text = "Povlecite drsnik za nastavitev moči stiskanja. Nižje vrednosti (1–3) ohranijo kakovost, vendar ustvarijo večje datoteke. Višje vrednosti (7–9) bolj zmanjšajo datoteko, a znižajo jasnost slike."
+text = "Povlecite drsnik za nastavitev moči stiskanja. Nižje vrednosti (1-3) ohranijo kakovost, vendar ustvarijo večje datoteke. Višje vrednosti (7-9) bolj zmanjšajo datoteko, a znižajo jasnost slike."
 title = "Prilagoditev kakovosti"
 
 [compressPdfs]
@@ -3462,7 +3462,7 @@ showPreferencesBtn = "Upravljaj nastavitve"
 title = "Kako uporabljamo piškotke"
 
 [cookieBanner.popUp.description]
-1 = "Piškotke in druge tehnologije uporabljamo, da Stirling PDF deluje bolje za vas — to nam pomaga izboljševati naša orodja in graditi funkcije, ki vam bodo všeč."
+1 = "Piškotke in druge tehnologije uporabljamo, da Stirling PDF deluje bolje za vas - to nam pomaga izboljševati naša orodja in graditi funkcije, ki vam bodo všeč."
 2 = "If you’d rather not, clicking 'No Thanks' will only enable the essential cookies needed to keep things running smoothly."
 
 [cookieBanner.preferencesModal]
@@ -3475,16 +3475,16 @@ subtitle = "Uporaba piškotkov"
 title = "Center za nastavitve soglasja"
 
 [cookieBanner.preferencesModal.analytics]
-description = "Ti piškotki nam pomagajo razumeti, kako se naša orodja uporabljajo, da se lahko osredotočimo na gradnjo funkcij, ki jih naša skupnost najbolj ceni. Bodite brez skrbi — Stirling PDF ne more in nikoli ne bo sledil vsebini dokumentov, s katerimi delate."
+description = "Ti piškotki nam pomagajo razumeti, kako se naša orodja uporabljajo, da se lahko osredotočimo na gradnjo funkcij, ki jih naša skupnost najbolj ceni. Bodite brez skrbi - Stirling PDF ne more in nikoli ne bo sledil vsebini dokumentov, s katerimi delate."
 title = "Analitika"
 
 [cookieBanner.preferencesModal.description]
 1 = "Stirling PDF uporablja piškotke in podobne tehnologije za izboljšanje vaše izkušnje in razumevanje uporabe naših orodij. To nam pomaga izboljšati zmogljivost, razvijati funkcije, ki so vam pomembne, in nenehno podpirati naše uporabnike."
-2 = "Stirling PDF ne more — in nikoli ne bo — sledil ali dostopal do vsebine dokumentov, ki jih uporabljate."
+2 = "Stirling PDF ne more - in nikoli ne bo - sledil ali dostopal do vsebine dokumentov, ki jih uporabljate."
 3 = "Vaša zasebnost in zaupanje sta v središču našega dela."
 
 [cookieBanner.preferencesModal.necessary]
-description = "These cookies are essential for the website to function properly. They enable core features like setting your privacy preferences, logging in, and filling out forms—which is why they can’t be turned off."
+description = "These cookies are essential for the website to function properly. They enable core features like setting your privacy preferences, logging in, and filling out forms - which is why they can’t be turned off."
 
 [cookieBanner.preferencesModal.necessary.title]
 1 = "Strogo potrebni piškotki"
@@ -3901,7 +3901,7 @@ dateDesc = "Najnovejše najprej"
 dateLabel = "Najnovejše"
 nameAsc = "A do Ž"
 nameDesc = "Ž do A"
-nameLabel = "A–Ž"
+nameLabel = "A-Ž"
 
 [fileSelectorPicker.tabs]
 saved = "Shranjene datoteke"
@@ -4015,7 +4015,7 @@ inPath = "v {{path}}"
 inWorkspace = "Odprto"
 inWorkspaceAria = "Že v delovnem prostoru"
 loading = "Nalaganje…"
-localFoldersUnavailable = "Mape so samo v oblaku – datoteko shranite v oblak, da jih lahko organizirate."
+localFoldersUnavailable = "Mape so samo v oblaku - datoteko shranite v oblak, da jih lahko organizirate."
 moveSkippedRemote_one = "{{count}} file couldn't be moved on the server (no permission or already deleted)."
 moveSkippedRemote_other = "{{count}} files couldn't be moved on the server (no permission or already deleted)."
 moveTo = "Premakni v…"
@@ -4023,7 +4023,7 @@ myFiles = "Moje datoteke"
 newFolder = "Nova mapa"
 newFolderStorageDisabled = "Shranjevanje map na strežniku ni omogočeno. Prosite skrbnika, naj to omogoči."
 newFolderTabUnavailable = "Preklopite na Vse ali Oblak, da ustvarite mape."
-offlineNoFolderEdits = "Sinhronizacija map s strežnikom ni na voljo – spremembe map so onemogočene. Preverite prijavo in nastavitve shrambe."
+offlineNoFolderEdits = "Sinhronizacija map s strežnikom ni na voljo - spremembe map so onemogočene. Preverite prijavo in nastavitve shrambe."
 open = "Odpri"
 openVersionInWorkspace = "Odpri v delovnem prostoru"
 originFilter = "Filtriraj po viru"
@@ -5414,7 +5414,7 @@ userBody = "Povabite sodelavce, dodelite vloge in ohranite dokumente organiziran
 userTitle = "Pregled načrta"
 
 [onboarding.processorIntro]
-body = "Stirling zdaj izvaja <strong>Pravila</strong> — avtomatizirana pravila, ki razvrstijo, zaščitijo in obdelajo vsak dokument ob prihodu. Nastavite jih in spremljajte izvajanja v <strong>Processor</strong>."
+body = "Stirling zdaj izvaja <strong>Pravila</strong> - avtomatizirana pravila, ki razvrstijo, zaščitijo in obdelajo vsak dokument ob prihodu. Nastavite jih in spremljajte izvajanja v <strong>Processor</strong>."
 cta = "Oglejte si Processor"
 title = "Oglejte si Stirling Processor"
 
@@ -5441,9 +5441,9 @@ rolePlaceholder = "Potrdite svojo vlogo"
 roleUser = "Uporabnik"
 
 [onboarding.serverLicense]
-freeBody = "Naše licenciranje <strong>Open-Core</strong> brezplačno omogoča do <strong>{{freeTierLimit}}</strong> uporabnikov na strežnik. Za nemoteno rast in zgodnji dostop do našega novega <strong>orodja za urejanje besedila PDF</strong> priporočamo načrt Stirling Server – polno urejanje in <strong>neomejena mesta</strong> za $99/strežnik/mesec."
+freeBody = "Naše licenciranje <strong>Open-Core</strong> brezplačno omogoča do <strong>{{freeTierLimit}}</strong> uporabnikov na strežnik. Za nemoteno rast in zgodnji dostop do našega novega <strong>orodja za urejanje besedila PDF</strong> priporočamo načrt Stirling Server - polno urejanje in <strong>neomejena mesta</strong> za $99/strežnik/mesec."
 freeTitle = "Licenca strežnika"
-overLimitBody = "Naše licenciranje brezplačno omogoča do <strong>{{freeTierLimit}}</strong> uporabnikov na strežnik. Imate <strong>{{overLimitUserCopy}}</strong> uporabnikov Stirling. Za nemoteno uporabo nadgradite na načrt Stirling Server – <strong>neomejena mesta</strong>, urejanje besedila PDF in popoln skrbniški nadzor za $99/strežnik/mesec."
+overLimitBody = "Naše licenciranje brezplačno omogoča do <strong>{{freeTierLimit}}</strong> uporabnikov na strežnik. Imate <strong>{{overLimitUserCopy}}</strong> uporabnikov Stirling. Za nemoteno uporabo nadgradite na načrt Stirling Server - <strong>neomejena mesta</strong>, urejanje besedila PDF in popoln skrbniški nadzor za $99/strežnik/mesec."
 overLimitTitle = "Potrebna licenca strežnika"
 seePlans = "Poglej načrte →"
 upgrade = "Nadgradi zdaj →"
@@ -5453,7 +5453,7 @@ body = "Stirling PDF V2 prinaša številna orodja in osveženo postavitev. Oprav
 title = "Pregled ogleda"
 
 [onboarding.welcomeSlide]
-body = "Stirling PDF je zdaj pripravljen za ekipe vseh velikosti. Ta posodobitev vključuje novo postavitev, zmogljive nove skrbniške zmožnosti in našo najbolj zahtevano funkcijo – <strong>Uredi besedilo</strong>."
+body = "Stirling PDF je zdaj pripravljen za ekipe vseh velikosti. Ta posodobitev vključuje novo postavitev, zmogljive nove skrbniške zmožnosti in našo najbolj zahtevano funkcijo - <strong>Uredi besedilo</strong>."
 title = "Dobrodošli v Stirling"
 
 [onboarding.whatsNew]
@@ -5671,7 +5671,7 @@ title = "Odstranjevalec strani"
 description = "Izberite, katere strani želite uporabiti za operacijo. Podpira posamezne strani, obsege, formule in ključno besedo all."
 
 [pageSelection.tooltip.complex]
-bullet1 = "<strong>1,3-5,8,2n</strong> → strani 1, 3–5, 8, plus sode"
+bullet1 = "<strong>1,3-5,8,2n</strong> → strani 1, 3-5, 8, plus sode"
 bullet2 = "<strong>10-,2n-1</strong> → od strani 10 do konca + lihe strani"
 description = "Kombinirajte različne tipe."
 title = "Kompleksne kombinacije"
@@ -5694,8 +5694,8 @@ description = "Uporabite n v formulah za vzorce."
 title = "Matematične funkcije"
 
 [pageSelection.tooltip.ranges]
-bullet1 = "<strong>3-6</strong> → izbere strani 3–6"
-bullet2 = "<strong>10-15</strong> → izbere strani 10–15"
+bullet1 = "<strong>3-6</strong> → izbere strani 3-6"
+bullet2 = "<strong>10-15</strong> → izbere strani 10-15"
 bullet3 = "<strong>5-</strong> → izbere strani 5 do konca"
 description = "Za zaporedne strani uporabite -."
 title = "Obsegi strani"
@@ -5771,7 +5771,7 @@ title = "Turn on the Processor plan"
 eyebrow = "Editor plan · Always free"
 
 [payg.free.header]
-freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
+freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR - as much as you want, no matter where you trigger it."
 freeTitle = "Unlimited PDF editing"
 
 [payg.free.hero]
@@ -5799,8 +5799,8 @@ pauses = "pauses at cap"
 title = "What happens when the cap is reached"
 
 [payg.header]
-eyebrow = "Processor plan · {{start}} – {{end}}"
-freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
+eyebrow = "Processor plan · {{start}} - {{end}}"
+freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR - as much as you want, no matter where you trigger it."
 freeLabel = "Always free"
 freeTitle = "Unlimited PDF editing"
 meterBody = "{{limit}} free PDFs to start, then billed per PDF up to your cap."
@@ -5820,8 +5820,8 @@ chip = "Predplačniško leto"
 
 [payg.prepaid.banner]
 exhausted = "Vaša predplačniška zmogljivost je porabljena; obračun po porabi se je nadaljeval. Napolnite, da ohranite popust."
-expiring_one = "Vaše predplačniško leto se konča čez {{count}} dan. Neuporabljena zmogljivost poteče — napolnite za začetek novega leta."
-expiring_other = "Vaše predplačniško leto se konča čez {{count}} dni. Neuporabljena zmogljivost poteče — napolnite za začetek novega leta."
+expiring_one = "Vaše predplačniško leto se konča čez {{count}} dan. Neuporabljena zmogljivost poteče - napolnite za začetek novega leta."
+expiring_other = "Vaše predplačniško leto se konča čez {{count}} dni. Neuporabljena zmogljivost poteče - napolnite za začetek novega leta."
 low = "Preostalo vam je {{pct}}% predplačniške zmogljivosti. Napolnite kadar koli, da obdelava ostane neprekinjena."
 
 [payg.prepaid.card]
@@ -5962,14 +5962,14 @@ continue = "Nadaljuj"
 description = "Uporabili ga bomo za pošiljanje licenčnega ključa in računov."
 emailLabel = "E-poštni naslov"
 emailPlaceholder = "your@email.com"
-modalTitle = "Začnite – {{planName}}"
+modalTitle = "Začnite - {{planName}}"
 
 [payment.paymentStage]
-modalTitle = "Zaključite plačilo – {{planName}}"
+modalTitle = "Zaključite plačilo - {{planName}}"
 
 [payment.planStage]
 billedYearly = "Zaračunano letno po {{currency}}{{amount}}"
-modalTitle = "Izberite obračunsko obdobje – {{planName}}"
+modalTitle = "Izberite obračunsko obdobje - {{planName}}"
 savePercent = "Prihranite {{percent}}%"
 savingsAmount = "Prihranite {{amount}}"
 selectMonthly = "Izberi mesečno"
@@ -6121,7 +6121,7 @@ processing = "Processing"
 uploading = "Uploading"
 
 [pdfTextEditor.tooltip.alpha]
-text = "Ta alfa pregledovalnik se še razvija — določene pisave, barve, učinki prosojnosti in podrobnosti postavitve se lahko nekoliko spremenijo. Pred deljenjem prosimo, ponovno preverite ustvarjeni PDF."
+text = "Ta alfa pregledovalnik se še razvija - določene pisave, barve, učinki prosojnosti in podrobnosti postavitve se lahko nekoliko spremenijo. Pred deljenjem prosimo, ponovno preverite ustvarjeni PDF."
 title = "Alfa pregledovalnik"
 
 [pdfTextEditor.tooltip.header]
@@ -6146,8 +6146,8 @@ feedback = "To je funkcija zgodnjega dostopa. Sporočite morebitne težave, da n
 gotIt = "Razumem"
 howItWorks = "Orodje pretvori vaš PDF v ureljiv format, kjer lahko spreminjate besedilo in premikate slike. Spremembe se shranijo kot nov PDF."
 issue1 = "Barva besedila trenutno ni ohranjena (kmalu bo dodana)"
-issue2 = "Način odstavka ima več težav s poravnavo in razmiki – priporočen je način posamezne vrstice"
-issue3 = "Predogled se razlikuje od izvoženega PDF-ja – izvoženi PDF-ji so bližje izvirniku"
+issue2 = "Način odstavka ima več težav s poravnavo in razmiki - priporočen je način posamezne vrstice"
+issue3 = "Predogled se razlikuje od izvoženega PDF-ja - izvoženi PDF-ji so bližje izvirniku"
 issue4 = "Poravnavo rotiranega besedila bo morda treba ročno prilagoditi"
 issue5 = "Učinki prosojnosti in slojev se lahko razlikujejo od izvirnika"
 knownIssues = "Znane težave (v odpravljanju):"
@@ -6522,7 +6522,7 @@ never = "nikoli"
 [portal.accountLink.modal]
 linkSubtitle = "Prijavite se v račun, ki naj mu ta strežnik zaračunava."
 linkTitle = "Povežite svoj račun Stirling"
-reauthSubtitle = "Vaša seja je potekla — znova se prijavite v svoj račun Stirling. Vaša instanca ostane povezana."
+reauthSubtitle = "Vaša seja je potekla - znova se prijavite v svoj račun Stirling. Vaša instanca ostane povezana."
 reauthTitle = "Znova se prijavite"
 simulateSignIn = "Simuliraj prijavo (dev)"
 
@@ -6582,7 +6582,7 @@ noClientSecret = "Edge function ni vrnila client_secret."
 title = "Vklopite paket Processor"
 
 [portal.billing.checkout.activationSlow]
-body = "Vaše plačilo je uspelo, vendar aktivacija traja nekoliko dlje kot običajno. Vklopila se bo samodejno — zaprite to in kmalu se bo prikazala tukaj."
+body = "Vaše plačilo je uspelo, vendar aktivacija traja nekoliko dlje kot običajno. Vklopila se bo samodejno - zaprite to in kmalu se bo prikazala tukaj."
 close = "Zapri"
 title = "Skoraj smo tam"
 
@@ -6606,7 +6606,7 @@ note = "Podatke kartice zbira Stripe. Stirling nikoli ne shranjuje PAN ali CVC."
 title = "Checkouta ni bilo mogoče začeti"
 
 [portal.billing.checkout.finalizing]
-body = "Vaše plačilo je bilo izvedeno. Vklapljamo merjeno obdelavo v vseh vaših povezanih instancah — to običajno traja nekaj sekund."
+body = "Vaše plačilo je bilo izvedeno. Vklapljamo merjeno obdelavo v vseh vaših povezanih instancah - to običajno traja nekaj sekund."
 hint = "Pustite to okno odprto."
 title = "Aktiviranje vašega paketa Processor..."
 
@@ -6633,7 +6633,7 @@ title = "Brezplačni PDF urejevalniki"
 checkoutErrorTitle = "Checkouta ni bilo mogoče začeti"
 currentPlan = "Trenutni paket"
 freeForever = "Brezplačno za vedno"
-noTeamResolved = "V vaši denarnici še ni razrešene ekipe — osvežite in poskusite znova."
+noTeamResolved = "V vaši denarnici še ni razrešene ekipe - osvežite in poskusite znova."
 ownerOnly = "Samo lastnik ekipe lahko vklopi paket Processor."
 payInvoice = "Plačaj račun za dokončanje"
 planName = "Editor"
@@ -6668,7 +6668,7 @@ viewLink = "Prikaži ↗"
 
 [portal.billing.linkPrompt]
 cta = "Poveži račun Stirling"
-description = "Ročno urejanje PDF — ogled, podpisovanje, združevanje, razdeljevanje, vodni žig, stiskanje, pretvorba, ročni OCR — je vedno brezplačno, ne glede na povezavo. Povežite račun, da pridobite 500 brezplačnih PDF-jev merjene obdelave (avtomatizacija, AI in API); ko potrebujete več, vklopite paket Processor in plačajte samo za uporabo."
+description = "Ročno urejanje PDF - ogled, podpisovanje, združevanje, razdeljevanje, vodni žig, stiskanje, pretvorba, ročni OCR - je vedno brezplačno, ne glede na povezavo. Povežite račun, da pridobite 500 brezplačnih PDF-jev merjene obdelave (avtomatizacija, AI in API); ko potrebujete več, vklopite paket Processor in plačajte samo za uporabo."
 title = "Povežite svoj račun Stirling"
 
 [portal.billing.paymentMethod]
@@ -6802,13 +6802,13 @@ low = "Zmanjkuje"
 [portal.billing.spendLimit]
 adjustLimit = "Prilagodi omejitev"
 cancel = "Prekliči"
-capControlNote = "Spremembe začnejo veljati takoj — zgornjo mejo lahko kadar koli zvišate ali znižate."
+capControlNote = "Spremembe začnejo veljati takoj - zgornjo mejo lahko kadar koli zvišate ali znižate."
 capSuffix = "/ mesec"
 capSuffixWithDocs = "/ mesec · ≈ {{documents}} dokumentov"
-displaySub = "Zaračunano vam je samo za samodejno obdelavo — nikoli čez zgornjo mejo."
+displaySub = "Zaračunano vam je samo za samodejno obdelavo - nikoli čez zgornjo mejo."
 editTitle = "Nastavite svojo mesečno zgornjo mejo"
 eyebrow = "Omejitev porabe"
-guardrailBody = "trda zgornja meja — nikoli vam ne zaračunamo več od nje. Ob dosegu meje se merjena obdelava začasno ustavi (neomejeno urejanje PDF še naprej deluje), dokler je ne zvišate ali se cikel ponastavi. Nič se ne izgubi."
+guardrailBody = "trda zgornja meja - nikoli vam ne zaračunamo več od nje. Ob dosegu meje se merjena obdelava začasno ustavi (neomejeno urejanje PDF še naprej deluje), dokler je ne zvišate ali se cikel ponastavi. Nič se ne izgubi."
 guardrailLabel = "Vaša varovalka:"
 noCap = "brez omejitve"
 pctUsed = "porabljeno {{pct}}%"
@@ -6898,7 +6898,7 @@ description = "Pošljite dokument v podpis ali notarsko overitev."
 label = "E-podpis in notarska overitev"
 
 [portal.connections.categories.storage]
-description = "Kam končajo obdelani dokumenti – v bucket, pogon, zahtevek ali stran."
+description = "Kam končajo obdelani dokumenti - v bucket, pogon, zahtevek ali stran."
 label = "Datoteke in priloge"
 
 [portal.connections.commonFields.accessToken]
@@ -6947,9 +6947,9 @@ save = "Shrani povezavo"
 [portal.connections.picker2]
 back = "Spremeni integracijo"
 heading = "Kaj želite povezati?"
-noResultsBody = "Tega še ne podpiramo – povejte nam o tem in razmislili bomo o dodajanju."
+noResultsBody = "Tega še ne podpiramo - povejte nam o tem in razmislili bomo o dodajanju."
 noResultsTitle = "Nič se ne ujema z \"{{query}}\""
-searchPlaceholder = "Išči integracije – poskusite \"sign\", \"ocr\" ali ime izdelka"
+searchPlaceholder = "Išči integracije - poskusite \"sign\", \"ocr\" ali ime izdelka"
 
 [portal.connections.types.api]
 description = "Kličite kateri koli HTTP API iz pravila. Izberete URL, avtentikacijo in payload."
@@ -7008,7 +7008,7 @@ label = "Uporabniško ime"
 
 [portal.connections.types.clamav]
 baseUrlPlaceholder = "http://clamav-rest:9000"
-description = "Preglejte dokumente za zlonamerno programsko opremo na strežniku, ki ga upravljate – nič ne zapusti vašega omrežja."
+description = "Preglejte dokumente za zlonamerno programsko opremo na strežniku, ki ga upravljate - nič ne zapusti vašega omrežja."
 label = "ClamAV (samogostovano)"
 
 [portal.connections.types.cloudmersive]
@@ -7016,7 +7016,7 @@ description = "Pregled virusov in vsebine za dokumente v pravilu."
 label = "Cloudmersive"
 
 [portal.connections.types.cloudmersiveadvanced]
-description = "Blokirajte dokumente, ki vsebujejo makre, izvršljive datoteke, skripte ali vdelane predmete – ne samo znane zlonamerne programske opreme."
+description = "Blokirajte dokumente, ki vsebujejo makre, izvršljive datoteke, skripte ali vdelane predmete - ne samo znane zlonamerne programske opreme."
 label = "Cloudmersive Advanced Scan"
 
 [portal.connections.types.confluence]
@@ -7243,8 +7243,8 @@ viewSource = "Ogled izvorne kode na GitHub"
 codeCaption = "vsaka zahteva"
 eyebrow = "ZAČETEK"
 lead = "Vse zahteve se overijo z bearer token. Ključi so omejeni po okolju in nikoli ne potečejo, razen če se rotirajo."
-liveKey = "Produkcijski ključi — zaračunani, z omejitvijo hitrosti glede na vaš paket."
-testKey = "Sandbox ključi — brezplačni, vračajo sintetične fiksne podatke."
+liveKey = "Produkcijski ključi - zaračunani, z omejitvijo hitrosti glede na vaš paket."
+testKey = "Sandbox ključi - brezplačni, vračajo sintetične fiksne podatke."
 title = "Avtentikacija"
 
 [portal.docs.components]
@@ -7282,7 +7282,7 @@ title = "Quickstart"
 
 [portal.docs.quickstart.callout]
 bodyAfterLink = "za recepte za kopiranje in lepljenje."
-bodyBeforeLink = "povežite isti klic v cevovod za verigo preverjanja, prekrivanja in dostave — ali ga izpostavite agentu prek MCP. Glejte"
+bodyBeforeLink = "povežite isti klic v cevovod za verigo preverjanja, prekrivanja in dostave - ali ga izpostavite agentu prek MCP. Glejte"
 label = "Naprej:"
 link = "Playbooks"
 
@@ -7291,7 +7291,7 @@ body = "Ustvarite obsežno omejen ključ na zavihku Infrastructure. Ključi imaj
 title = "Izdajte API ključ"
 
 [portal.docs.quickstart.step2]
-body = "POST datoteko na kateri koli tipiziran endpoint. Endpoint določi shemo, ki jo dobite nazaj — tukaj izločevalnik računov."
+body = "POST datoteko na kateri koli tipiziran endpoint. Endpoint določi shemo, ki jo dobite nazaj - tukaj izločevalnik računov."
 snippetCaption = "izloči račun"
 title = "Pošljite dokument"
 
@@ -7371,8 +7371,8 @@ overview = "Pregled"
 requestAccess = "Zahtevaj dostop"
 
 [portal.documents.elevation.active]
-description = "Začasna odobritev — dostop je zabeležen in časovno omejen."
-descriptionFourEyes = "Začasna odobritev — obveščen je bil medsebojni pregledovalec (štiri oči)."
+description = "Začasna odobritev - dostop je zabeležen in časovno omejen."
+descriptionFourEyes = "Začasna odobritev - obveščen je bil medsebojni pregledovalec (štiri oči)."
 title = "Dostop poteče čez {{time}}"
 
 [portal.documents.elevation.gated]
@@ -7433,7 +7433,7 @@ time = "Čas"
 user = "Uporabnik"
 
 [portal.editorAdmin]
-subtitle = "Namestite Stirling PDF Editor, povežite samogostovane primerke s svojo organizacijo in upravljajte delujočo floto — cilje, stanje, poverilnice in offline aktivacijo na enem mestu."
+subtitle = "Namestite Stirling PDF Editor, povežite samogostovane primerke s svojo organizacijo in upravljajte delujočo floto - cilje, stanje, poverilnice in offline aktivacijo na enem mestu."
 title = "Namestitev urejevalnika"
 
 [portal.editorAdmin.health.columns]
@@ -7469,7 +7469,7 @@ rotate = "Zavrti"
 talkToSales = "Pogovorite se s prodajo"
 
 [portal.editorAdmin.sections.health]
-sub = "Vsak primerek urejevalnika, ki poroča — različica, regija, stanje, nazadnje videno in aktivni uporabniki."
+sub = "Vsak primerek urejevalnika, ki poroča - različica, regija, stanje, nazadnje videno in aktivni uporabniki."
 title = "Stanje primerkov"
 
 [portal.editorAdmin.sections.pairing]
@@ -7755,9 +7755,9 @@ done = "Končano"
 keyNameLabel = "Ime ključa"
 keyNamePlaceholder = "npr. Produkcija · zajem"
 secretKeyCaption = "Skrivni ključ"
-secretWarning = "Shranite to v upravljalnik skrivnosti. Stirling vedno shrani samo hash — pozneje ga ni mogoče obnoviti."
+secretWarning = "Shranite to v upravljalnik skrivnosti. Stirling vedno shrani samo hash - pozneje ga ni mogoče obnoviti."
 subtitle = "Omejite ključ na najmanjši obseg, ki ga potrebuje. Kadar koli ga lahko zavrtite ali prekličete."
-subtitleCreated = "Kopirajte to skrivnost zdaj — ne bo več prikazana."
+subtitleCreated = "Kopirajte to skrivnost zdaj - ne bo več prikazana."
 title = "Ustvari API ključ"
 titleCreated = "Ključ ustvarjen"
 
@@ -8182,7 +8182,7 @@ title = "Backend ni na voljo"
 [portal.policies.operations]
 change = "Spremeni, kaj naredi ta korak"
 noResults = "Noben korak se ne ujema s tem. Poskusite ime izdelka ali \"scan\", \"notify\", \"attach\"."
-searchPlaceholder = "Išči korake – poskusite \"scan\", \"attach\" ali ime izdelka"
+searchPlaceholder = "Išči korake - poskusite \"scan\", \"attach\" ali ime izdelka"
 
 [portal.policies.operations.bodyMode]
 binary = "Surovi bajti datoteke"
@@ -8318,7 +8318,7 @@ label = "Pošlji dokument po e-pošti (Mailgun)"
 [portal.policies.operations.n8nGate]
 description = "Your workflow decides whether the run carries on."
 label = "Ask an n8n workflow to approve"
-note = "The workflow must reply with {\"approved\": true}. Anything else — including a timeout — stops the run and parks the document."
+note = "The workflow must reply with {\"approved\": true}. Anything else - including a timeout - stops the run and parks the document."
 
 [portal.policies.operations.n8nNotify]
 description = "Sends the run's details, not the document."
@@ -8340,7 +8340,7 @@ label = "Naloži v Nextcloud"
 [portal.policies.operations.presidioAnalyze]
 description = "Vaš lastni strežnik Presidio poroča o osebnih podatkih, ki jih najde."
 label = "Zaznaj osebne podatke"
-note = "Presidio bere besedilo, ne datotek. Podajte besedilo, ki ga želite preveriti — sam dokument se ne naloži."
+note = "Presidio bere besedilo, ne datotek. Podajte besedilo, ki ga želite preveriti - sam dokument se ne naloži."
 
 [portal.policies.operations.responseMode]
 replace = "Zamenjaj dokument z odgovorom"
@@ -8430,7 +8430,7 @@ desc = "Zažene OCR, da skenirane strani postanejo besedilo, ki ga je mogoče iz
 label = "Omogoči iskanje po besedilu"
 
 [portal.policies.wizard.capability.redact]
-desc = "Poišče in počrni občutljive podrobnosti — kot so številke socialnega zavarovanja in kartic — da jih ni mogoče prebrati."
+desc = "Poišče in počrni občutljive podrobnosti - kot so številke socialnega zavarovanja in kartic - da jih ni mogoče prebrati."
 label = "Prekrij občutljive podatke"
 
 [portal.policies.wizard.capability.sanitize]
@@ -8438,7 +8438,7 @@ desc = "Odstrani skriti JavaScript, da se ob odprtju dokumenta nič ne more samo
 label = "Odstrani aktivno vsebino"
 
 [portal.policies.wizard.capability.timestampPdf]
-desc = "Dokazuje, da je dokument obstajal v tej točni obliki v določenem trenutku z uporabo neodvisnega organa za časovni žig. Pošlje se samo zgoščena vrednost – dokument nikoli ne zapusti vašega strežnika."
+desc = "Dokazuje, da je dokument obstajal v tej točni obliki v določenem trenutku z uporabo neodvisnega organa za časovni žig. Pošlje se samo zgoščena vrednost - dokument nikoli ne zapusti vašega strežnika."
 label = "Dodaj zaupanja vreden časovni žig"
 
 [portal.policies.wizard.capability.watermark]
@@ -8549,7 +8549,7 @@ confirm = "Prebral/-a sem in se strinjam s pogodbo Stirling Enterprise Agreement
 docName = "Stirling Enterprise Agreement"
 docSub = "MSA, naročilnica, EULA in DPA, združeni v en podpis."
 download = "Prenesi"
-downloadDraftError = "PDF pogodbe ni bilo mogoče ustvariti – upodabljalnik dokumentov ni na voljo. Poskusite znova kmalu ali se obrnite na podporo."
+downloadDraftError = "PDF pogodbe ni bilo mogoče ustvariti - upodabljalnik dokumentov ni na voljo. Poskusite znova kmalu ali se obrnite na podporo."
 downloadError = "Podpisane pogodbe ni bilo mogoče prenesti. Poskusite znova."
 legalName = "Ime pravne osebe"
 legalNamePlaceholder = "Pravna oseba, ki bo podpisala"
@@ -8596,11 +8596,11 @@ postalCodePlaceholder = "94105"
 posture = "Upravljanje"
 posture_count = "~{{count}} pravilnikov"
 posture_essentials = "Osnove"
-posture_essentialsSub = "Klasifikacija + deljenje — privzete nastavitve"
+posture_essentialsSub = "Klasifikacija + deljenje - privzete nastavitve"
 posture_governed = "Upravljano"
 posture_governedSub = "Doda varnost in usmerjanje"
 posture_regulated = "Regulirano"
-posture_regulatedSub = "Vsaka kategorija — skladnost, hramba, zajem"
+posture_regulatedSub = "Vsaka kategorija - skladnost, hramba, zajem"
 qbr = "Četrtletni poslovni pregledi"
 qbrSub = "Vaš SE vsako četrtletje pregleda uporabo in časovni načrt"
 region = "Država / regija"
@@ -8722,13 +8722,13 @@ label = "Preizkus"
 [portal.procurement.license]
 copied = "Kopirano"
 copy = "Kopiraj ključ"
-downloadError = "Datoteke offline licence trenutno še ni bilo mogoče ustvariti — poskusite znova čez trenutek."
+downloadError = "Datoteke offline licence trenutno še ni bilo mogoče ustvariti - poskusite znova čez trenutek."
 downloadOffline = "Prenesi offline licenco (.lic)"
 hint = "Prilepite ta ključ v samogostujočo instanco, da jo aktivirate, ali ga shranite za svojo evidenco. Varno ga hranite."
 label = "Vaš licenčni ključ"
 subtitle = "S tem ključem aktivirajte samostojno gostovano instanco ali ga shranite za svoje evidence."
 title = "Vaš licenčni ključ"
-trialFileHint = "To je vaša preskusna licenčna datoteka. Ko je vaša pogodba sklenjena, se vrnite in jo znova prenesite — za razliko od spletnega licenčnega ključa se datoteka .lic ne posodobi sama."
+trialFileHint = "To je vaša preskusna licenčna datoteka. Ko je vaša pogodba sklenjena, se vrnite in jo znova prenesite - za razliko od spletnega licenčnega ključa se datoteka .lic ne posodobi sama."
 
 [portal.procurement.link]
 cta = "Poveži račun"
@@ -8742,10 +8742,10 @@ eyebrow = "V živo"
 title = "V Stirling Enterprise ste v živo"
 
 [portal.procurement.milestone]
-downloadError = "Ponudbenega PDF-ja trenutno še ni bilo mogoče prenesti — poskusite znova čez trenutek."
+downloadError = "Ponudbenega PDF-ja trenutno še ni bilo mogoče prenesti - poskusite znova čez trenutek."
 
 [portal.procurement.payment]
-description = "Vaša ponudba je sprejeta in vaša licenca je že aktivna — vaša ekipa lahko začne takoj. Prvi račun plačajte, ko boste pripravljeni; tukaj ga lahko plačate ali prenesete, brez e-pošte."
+description = "Vaša ponudba je sprejeta in vaša licenca je že aktivna - vaša ekipa lahko začne takoj. Prvi račun plačajte, ko boste pripravljeni; tukaj ga lahko plačate ali prenesete, brez e-pošte."
 downloadAgreement = "Prenesi podpisano pogodbo"
 downloadInvoice = "Prenesi račun"
 eyebrow = "Plačilo"
@@ -8800,7 +8800,7 @@ workEmailPlaceholder = "you@company.com"
 
 [portal.procurement.trial]
 body = "Podaljšanje doda 7 dni in obvesti vašega inženirja rešitev."
-bodyMaxed = "Uporabili ste vsa svoja podaljšanja — če potrebujete več časa, se pogovorite s svojim inženirjem rešitev."
+bodyMaxed = "Uporabili ste vsa svoja podaljšanja - če potrebujete več časa, se pogovorite s svojim inženirjem rešitev."
 cancel = "Prekliči preizkus"
 extend = "Podaljšaj za 7 dni"
 maxed = "Dosežena omejitev"
@@ -9037,7 +9037,7 @@ walletUnavailable = "Denarnica ni na voljo: {{status}} {{statusText}}"
 
 [portal.usage.sessionExpired]
 action = "Znova se prijavite"
-body = "Vaša seja računa Stirling je potekla. Znova se prijavite za ogled obračunavanja — vaša instanca ostane povezana."
+body = "Vaša seja računa Stirling je potekla. Znova se prijavite za ogled obračunavanja - vaša instanca ostane povezana."
 title = "Seja je potekla"
 
 [portal.users]
@@ -9065,7 +9065,7 @@ summary = "Omejen ali samo spletni dostop; ne more imeti osebnih konfiguracij."
 
 [portal.users.roles.member]
 label = "Član"
-summary = "Običajen uporabnik — dela z deljenimi viri in svojimi konfiguracijami."
+summary = "Običajen uporabnik - dela z deljenimi viri in svojimi konfiguracijami."
 
 [portal.users.roles.member.permissions]
 0 = "Uporaba urejevalnika in deljenih integracij"
@@ -9075,7 +9075,7 @@ summary = "Običajen uporabnik — dela z deljenimi viri in svojimi konfiguracij
 
 [portal.users.roles.team_owner]
 label = "Lastnik ekipe"
-summary = "Ima ekipo — upravlja vire njenih članov in deljene konfiguracije."
+summary = "Ima ekipo - upravlja vire njenih članov in deljene konfiguracije."
 
 [portal.users.roles.team_owner.permissions]
 0 = "Ustvarjanje in upravljanje povezav S3 ekipe"
@@ -9353,7 +9353,7 @@ title = "Napredne nastavitve redakcije"
 
 [redact.tooltip.advanced.regex]
 bullet1 = "Primer: \\d{4}-\\d{2}-\\d{2} za ujemanje datumov v formatu YYYY-MM-DD"
-bullet2 = "Uporabljajte previdno – temeljito testirajte"
+bullet2 = "Uporabljajte previdno - temeljito testirajte"
 text = "Omogočite regularne izraze za napredno ujemanje vzorcev. Uporabno za iskanje telefonskih številk, e-pošt ali kompleksnih vzorcev."
 title = "Uporabi Regex"
 
@@ -9620,8 +9620,8 @@ text = "Pretvori PDF iz barvnega prostora RGB v barvni prostor CMYK, optimiziran
 title = "Pretvori v CMYK"
 
 [replaceColor.tooltip.custom]
-bullet1 = "Barva besedila – izberite barvo za besedilne elemente"
-bullet2 = "Barva ozadja – nastavite barvo ozadja dokumenta"
+bullet1 = "Barva besedila - izberite barvo za besedilne elemente"
+bullet2 = "Barva ozadja - nastavite barvo ozadja dokumenta"
 text = "Določite lastne barve besedila in ozadja z izbirniki barv. Odlično za dokumente v skladu z blagovno znamko ali posebne zahteve dostopnosti."
 title = "Barve po meri"
 
@@ -9633,10 +9633,10 @@ title = "Opis"
 title = "Pregled nastavitev zamenjave/preobrata barv"
 
 [replaceColor.tooltip.highContrast]
-bullet1 = "Belo besedilo na črnem ozadju – klasični temni način"
-bullet2 = "Črno besedilo na belem ozadju – standardni visoki kontrast"
-bullet3 = "Rumeno besedilo na črnem ozadju – možnost visoke vidnosti"
-bullet4 = "Zeleno besedilo na črnem ozadju – alternativni visoki kontrast"
+bullet1 = "Belo besedilo na črnem ozadju - klasični temni način"
+bullet2 = "Črno besedilo na belem ozadju - standardni visoki kontrast"
+bullet3 = "Rumeno besedilo na črnem ozadju - možnost visoke vidnosti"
+bullet4 = "Zeleno besedilo na črnem ozadju - alternativni visoki kontrast"
 text = "Uporabi vnaprej določene barvne kombinacije z visokim kontrastom, zasnovane za boljšo berljivost in skladnost z dostopnostjo."
 title = "Visok kontrast"
 
@@ -9766,17 +9766,17 @@ failed = "Pri izvlečenju skeniranih slik je prišlo do napake."
 
 [scannerImageSplit.tooltip]
 headsUp = "Pozor"
-headsUpDesc = "Prekrivajoče se fotografije ali ozadja, ki so po barvi zelo podobna fotografijam, lahko zmanjšajo natančnost – poskusite svetlejše ali temnejše ozadje in pustite več prostora."
-problem1 = "Fotografije niso zaznane → povečajte Tolerance na 30–50"
-problem2 = "Preveč lažnih zaznav → povečajte Minimum Area na 15.000–20.000"
-problem3 = "Obrezi so pretesni → povečajte Border Size na 5–10"
+headsUpDesc = "Prekrivajoče se fotografije ali ozadja, ki so po barvi zelo podobna fotografijam, lahko zmanjšajo natančnost - poskusite svetlejše ali temnejše ozadje in pustite več prostora."
+problem1 = "Fotografije niso zaznane → povečajte Tolerance na 30-50"
+problem2 = "Preveč lažnih zaznav → povečajte Minimum Area na 15.000-20.000"
+problem3 = "Obrezi so pretesni → povečajte Border Size na 5-10"
 problem4 = "Nagnjene fotografije niso poravnane → znižajte Angle Threshold na ~5°"
-problem5 = "Škatle prahu/šuma → povečajte Minimum Contour Area na 1000–2000"
+problem5 = "Škatle prahu/šuma → povečajte Minimum Contour Area na 1000-2000"
 quickFixes = "Hitra popravila"
 setupTips = "Nasveti za nastavitev"
 tip1 = "Uporabite enostavno, svetlo ozadje"
 tip2 = "Pustite majhno vrzel (≈1 cm) med fotografijami"
-tip3 = "Skenirajte pri 300–600 DPI"
+tip3 = "Skenirajte pri 300-600 DPI"
 tip4 = "Očistite steklo skenerja"
 title = "Razdeljevalnik fotografij"
 useCase1 = "Skenirajte celotne strani albuma naenkrat"
@@ -9784,7 +9784,7 @@ useCase2 = "Razdelite sklope s ploskega skenerja v ločene datoteke"
 useCase3 = "Razbijte kolaže v posamezne fotografije"
 useCase4 = "Izvlecite fotografije iz dokumentov"
 whatThisDoes = "Kaj počne"
-whatThisDoesDesc = "Samodejno najde in izvleče vsako fotografijo s skenirane strani ali sestavljene slike — brez ročnega obrezovanja."
+whatThisDoesDesc = "Samodejno najde in izvleče vsako fotografijo s skenirane strani ali sestavljene slike - brez ročnega obrezovanja."
 whenToUse = "Kdaj uporabiti"
 
 [ScannerImageSplit.selectText]
@@ -10364,7 +10364,7 @@ configure = "Nastavitev podpisa"
 colorLabel = "Barva besedila"
 fontLabel = "Pisava"
 fontSizeLabel = "Velikost pisave"
-fontSizePlaceholder = "Vpišite ali izberite velikost pisave (8–200)"
+fontSizePlaceholder = "Vpišite ali izberite velikost pisave (8-200)"
 name = "Ime podpisnika"
 placeholder = "Vnesite svoje polno ime"
 
@@ -10557,7 +10557,7 @@ title = "Razdeli po številu strani"
 bullet1 = "Natisnite ločilne liste iz povezave za prenos"
 bullet2 = "Vstavite ločilne liste med svoje dokumente"
 bullet3 = "Vse dokumente skenirajte skupaj kot en PDF"
-bullet4 = "Naložite – ločilne strani so samodejno zaznane in odstranjene"
+bullet4 = "Naložite - ločilne strani so samodejno zaznane in odstranjene"
 bullet5 = "Omogočite dvostranski način, če skenirate obe strani ločilnih listov"
 text = "Samodejno razdelite skenirane dokumente z uporabo fizičnih ločilnih listov z QR kodami. Odlično za obdelavo več dokumentov, skeniranih skupaj."
 title = "Razdeli z ločilnimi listi"
@@ -10932,7 +10932,7 @@ recommended = "Priporočeno"
 selfHostedOffline = "Zahteva vaš strežnik Stirling-PDF (trenutno brez povezave):"
 showDetails = "Pokaži podrobnosti"
 unavailable = "Onemogočeno s strani skrbnika strežnika:"
-unavailableDependency = "Ni na voljo – na strežniku manjka zahtevano orodje:"
+unavailableDependency = "Ni na voljo - na strežniku manjka zahtevano orodje:"
 unfavorite = "Odstrani iz priljubljenih"
 
 [toolPanel.modePrompt]
@@ -11235,7 +11235,7 @@ title = "Preimenuj ekipo"
 apply = "Ponastavi geslo"
 confirm = "Potrdite geslo"
 copied = "Kopirano v odložišče"
-copyHint = "Kopirajte to zdaj – ne bo več prikazano."
+copyHint = "Kopirajte to zdaj - ne bo več prikazano."
 email = "Obvesti uporabnika o ponastavitvi po e-pošti"
 forceChange = "Zahtevaj spremembo gesla ob naslednji prijavi"
 generate = "Ustvari varno geslo"
@@ -11463,9 +11463,9 @@ emptyFile = "Prazna datoteka"
 htmlHidePreview = "Skrij predogled"
 htmlPreview = "Predogled HTML"
 htmlPreviewMobileHidden = "Strani HTML so zasnovane za širine namiznih zaslonov, zato je predogled tukaj privzeto izklopljen."
-htmlPreviewWarning = "Predogled HTML — zunanja sredstva se morda ne bodo naložila · {{size}}"
+htmlPreviewWarning = "Predogled HTML - zunanja sredstva se morda ne bodo naložila · {{size}}"
 htmlShowPreview = "Vseeno prikaži predogled"
-invalidJson = "Neveljaven JSON — prikaz neoblikovane vsebine"
+invalidJson = "Neveljaven JSON - prikaz neoblikovane vsebine"
 lineNumbers = "Številke vrstic"
 loading = "Nalaganje..."
 renderMarkdown = "Upodobi markdown"
@@ -11527,7 +11527,7 @@ create = "Create your first Watched Folder"
 deleteFolder = "Delete folder"
 editFolder = "Edit folder"
 empty = "No watched folders yet"
-emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged — whatever your pipeline does."
+emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged - whatever your pipeline does."
 emptyTitle = "Automate your PDF workflows"
 file = "file"
 files = "files"
@@ -11535,7 +11535,7 @@ pause = "Pause"
 resume = "Resume"
 
 [watchedFolders.howItWorks]
-step1Desc = "Drag PDFs onto any Watched Folder card — or send them from your file list"
+step1Desc = "Drag PDFs onto any Watched Folder card - or send them from your file list"
 step1Title = "Drop files"
 step2Desc = "Your configured tools process each file automatically"
 step2Title = "Pipeline runs"
@@ -11559,18 +11559,18 @@ createFolder = "Create Folder"
 createTitle = "New Watched Folder"
 editTitle = "Edit Watched Folder"
 inputFolder = "Input folder"
-inputFolderNotChosen = "No folder chosen — required for auto-scan"
+inputFolderNotChosen = "No folder chosen - required for auto-scan"
 inputSource = "Input source"
-inputSourceBrowser = "Browser — drop files here"
+inputSourceBrowser = "Browser - drop files here"
 inputSourceLocal = "Local folder (auto-scan)"
-inputSourceLocalUnsupported = "Local folder (auto-scan) — Chrome/Edge only"
+inputSourceLocalUnsupported = "Local folder (auto-scan) - Chrome/Edge only"
 localOutputFolder = "Local output folder"
 maxRetries = "Max retries"
 name = "Folder name"
 namePlaceholder = "My Watched Folder"
 nameRequired = "Folder name is required"
 nameTooLong = "Folder name must be 50 characters or less"
-outputFolderNotSet = "Not set — outputs stay in app"
+outputFolderNotSet = "Not set - outputs stay in app"
 outputFolderUnsupported = "Not supported in this browser"
 outputModeNewDesc = "Output is saved as a new separate file"
 outputModeVersion = "Replace original?"
@@ -11630,9 +11630,9 @@ filterPending = "Pending"
 inputs = "Inputs"
 inputSize = "Input size"
 legendComplete = "Complete"
-noActivity = "No activity yet — drop a PDF to start"
+noActivity = "No activity yet - drop a PDF to start"
 noActivityMatch = "No matching activity"
-noInputFolder = "No input folder — edit to configure"
+noInputFolder = "No input folder - edit to configure"
 outputs = "Outputs"
 pause = "Pause"
 preview = "Preview"
@@ -11640,7 +11640,7 @@ previewInput = "Preview input"
 previewLoadFailed = "Could not load file preview."
 previewOutput = "Preview output"
 queued = "Queued"
-queuedWaiting = "Queued — waiting to run"
+queuedWaiting = "Queued - waiting to run"
 removeEntries = "Remove {{count}} entries"
 removeEntry = "Remove entry"
 removeNotificationsOnly = "Remove notifications only"
@@ -11699,7 +11699,7 @@ wording = "Vsebina"
 
 [watermark.tooltip.appearance]
 bullet1 = "Vrtenje: -360° do 360° za poševne žige"
-bullet2 = "Prosojnost: 0–100% za nadzor preglednosti"
+bullet2 = "Prosojnost: 0-100% za nadzor preglednosti"
 bullet3 = "Nižja prosojnost ustvari subtilnejše žige"
 text = "Nadzirajte, kako vaš vodni žig izgleda in se zliva z dokumentom."
 title = "Nastavitve videza"
@@ -11982,7 +11982,7 @@ success = "uporabnik(i) uspešno povabljen(i)"
 [workspace.people.inviteLink]
 copied = "Povezava kopirana v odložišče"
 email = "E-poštni naslov"
-emailDescription = "Neobvezno – pustite prazno za splošno povezavo za povabilo, ki jo lahko uporabi kdorkoli"
+emailDescription = "Neobvezno - pustite prazno za splošno povezavo za povabilo, ki jo lahko uporabi kdorkoli"
 emailPlaceholder = "user@example.com (neobvezno)"
 emailSent = "Povezava za povabilo ustvarjena in poslana po e-pošti"
 error = "Povezave za povabilo ni bilo mogoče ustvariti"

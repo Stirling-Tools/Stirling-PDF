@@ -1254,7 +1254,7 @@ description = "Impressum-ലേക്ക് URL അല്ലെങ്കിൽ �
 label = "Impressum"
 
 [admin.settings.legal.loginAgreement]
-defaultLocaleHint = "— ഒരു ഭാഷയ്ക്ക് ഫയൽ ഇല്ലാത്തപ്പോൾ ഫോൾബാക്കായി ഉപയോഗിക്കും."
+defaultLocaleHint = "- ഒരു ഭാഷയ്ക്ക് ഫയൽ ഇല്ലാത്തപ്പോൾ ഫോൾബാക്കായി ഉപയോഗിക്കും."
 defaultLocaleLink = "സ്വതേയുള്ള ലോക്കേൽ ക്രമീകരിക്കുക"
 description = "ലോഗിൻ ചെയ്തതിന് ശേഷം ഉപയോക്താക്കൾ അംഗീകരിക്കേണ്ട ഒരു ഡിസ്ക്ലെയിമർ പ്രദർശിപ്പിക്കുക. വാചകം ഓരോ ഉപയോക്താവിന്റെയും ഭാഷയെ അനുസരിച്ചായിരിക്കും."
 discardConfirm = "നിങ്ങൾക്ക് സംരക്ഷിക്കാത്ത മാറ്റങ്ങൾ ഉണ്ട്; അവ നഷ്ടപ്പെടും. എങ്കിലും ഭാഷ മാറ്റണോ?"
@@ -2515,10 +2515,10 @@ text = "നിങ്ങൾ ഒപ്പുവെച്ചതായി തെള�
 title = "സർട്ടിഫിക്കറ്റ് എന്നത് എന്താണ്?"
 
 [certSign.certType.tooltip.which]
-bullet1 = "PKCS#12 (.p12 / .pfx) – ഒറ്റ സംയോജിത ഫയൽ (ഏറ്റവും സാധാരണ)"
-bullet2 = "PFX (.pfx) – PKCS12-ന്റെ Microsoft പതിപ്പ്"
-bullet3 = "PEM – വേർതിരിച്ച private-key, certificate .pem ഫയലുകൾ"
-bullet4 = "JKS – dev / CI-CD workflows-നുള്ള Java .jks keystore"
+bullet1 = "PKCS#12 (.p12 / .pfx) - ഒറ്റ സംയോജിത ഫയൽ (ഏറ്റവും സാധാരണ)"
+bullet2 = "PFX (.pfx) - PKCS12-ന്റെ Microsoft പതിപ്പ്"
+bullet3 = "PEM - വേർതിരിച്ച private-key, certificate .pem ഫയലുകൾ"
+bullet4 = "JKS - dev / CI-CD workflows-നുള്ള Java .jks keystore"
 text = "നിങ്ങളുടെ സർട്ടിഫിക്കറ്റ് ഫയലിനുമായി പൊരുന്ന ഫോർമാറ്റ് തിരഞ്ഞെടുക്കുക:"
 title = "ഞാൻ ഏത് ഓപ്ഷൻ ഉപയോഗിക്കണം?"
 
@@ -3462,7 +3462,7 @@ showPreferencesBtn = "മുൻഗണനകൾ കൈകാര്യം ചെ�
 title = "ഞങ്ങൾ കുക്കികൾ എങ്ങനെ ഉപയോഗിക്കുന്നു"
 
 [cookieBanner.popUp.description]
-1 = "സ്റ്റെർലിംഗ് PDF നിങ്ങൾക്ക് മികച്ച രീതിയിൽ പ്രവർത്തിക്കാൻ ഞങ്ങൾ കുക്കികളും മറ്റ് സാങ്കേതികവിദ്യകളും ഉപയോഗിക്കുന്നു—ഞങ്ങളുടെ ടൂളുകൾ മെച്ചപ്പെടുത്താനും നിങ്ങൾ ഇഷ്ടപ്പെടുന്ന ഫീച്ചറുകൾ നിർമ്മിക്കുന്നത് തുടരാനും ഇത് ഞങ്ങളെ സഹായിക്കുന്നു."
+1 = "സ്റ്റെർലിംഗ് PDF നിങ്ങൾക്ക് മികച്ച രീതിയിൽ പ്രവർത്തിക്കാൻ ഞങ്ങൾ കുക്കികളും മറ്റ് സാങ്കേതികവിദ്യകളും ഉപയോഗിക്കുന്നു - ഞങ്ങളുടെ ടൂളുകൾ മെച്ചപ്പെടുത്താനും നിങ്ങൾ ഇഷ്ടപ്പെടുന്ന ഫീച്ചറുകൾ നിർമ്മിക്കുന്നത് തുടരാനും ഇത് ഞങ്ങളെ സഹായിക്കുന്നു."
 2 = "നിങ്ങൾക്ക് താൽപ്പര്യമില്ലെങ്കിൽ, 'വേണ്ട നന്ദി' ക്ലിക്ക് ചെയ്യുന്നത് കാര്യങ്ങൾ സുഗമമായി പ്രവർത്തിക്കാൻ ആവശ്യമായ അവശ്യ കുക്കികൾ മാത്രം പ്രവർത്തനക്ഷമമാക്കും."
 
 [cookieBanner.preferencesModal]
@@ -3475,16 +3475,16 @@ subtitle = "കുക്കി ഉപയോഗം"
 title = "സമ്മത മുൻഗണനാ കേന്ദ്രം"
 
 [cookieBanner.preferencesModal.analytics]
-description = "ഞങ്ങളുടെ ടൂളുകൾ എങ്ങനെ ഉപയോഗിക്കുന്നുവെന്ന് മനസ്സിലാക്കാൻ ഈ കുക്കികൾ ഞങ്ങളെ സഹായിക്കുന്നു, അതിനാൽ ഞങ്ങളുടെ കമ്മ്യൂണിറ്റി ഏറ്റവും കൂടുതൽ വിലമതിക്കുന്ന ഫീച്ചറുകൾ നിർമ്മിക്കുന്നതിൽ ഞങ്ങൾക്ക് ശ്രദ്ധ കേന്ദ്രീകരിക്കാൻ കഴിയും. ഉറപ്പാക്കുക—സ്റ്റെർലിംഗ് PDF-ന് നിങ്ങൾ പ്രവർത്തിക്കുന്ന പ്രമാണങ്ങളുടെ ഉള്ളടക്കം ട്രാക്ക് ചെയ്യാൻ കഴിയില്ല, ഒരിക്കലും കഴിയില്ല."
+description = "ഞങ്ങളുടെ ടൂളുകൾ എങ്ങനെ ഉപയോഗിക്കുന്നുവെന്ന് മനസ്സിലാക്കാൻ ഈ കുക്കികൾ ഞങ്ങളെ സഹായിക്കുന്നു, അതിനാൽ ഞങ്ങളുടെ കമ്മ്യൂണിറ്റി ഏറ്റവും കൂടുതൽ വിലമതിക്കുന്ന ഫീച്ചറുകൾ നിർമ്മിക്കുന്നതിൽ ഞങ്ങൾക്ക് ശ്രദ്ധ കേന്ദ്രീകരിക്കാൻ കഴിയും. ഉറപ്പാക്കുക - സ്റ്റെർലിംഗ് PDF-ന് നിങ്ങൾ പ്രവർത്തിക്കുന്ന പ്രമാണങ്ങളുടെ ഉള്ളടക്കം ട്രാക്ക് ചെയ്യാൻ കഴിയില്ല, ഒരിക്കലും കഴിയില്ല."
 title = "അനലിറ്റിക്സ്"
 
 [cookieBanner.preferencesModal.description]
 1 = "നിങ്ങളുടെ അനുഭവം മെച്ചപ്പെടുത്തുന്നതിനും ഞങ്ങളുടെ ടൂളുകൾ എങ്ങനെ ഉപയോഗിക്കുന്നുവെന്ന് മനസ്സിലാക്കുന്നതിനും സ്റ്റെർലിംഗ് PDF കുക്കികളും സമാന സാങ്കേതികവിദ്യകളും ഉപയോഗിക്കുന്നു. പ്രകടനം മെച്ചപ്പെടുത്താനും നിങ്ങൾ വിലമതിക്കുന്ന ഫീച്ചറുകൾ വികസിപ്പിക്കാനും ഞങ്ങളുടെ ഉപയോക്താക്കൾക്ക് തുടർന്നും പിന്തുണ നൽകാനും ഇത് ഞങ്ങളെ സഹായിക്കുന്നു."
-2 = "സ്റ്റെർലിംഗ് PDF-ന് നിങ്ങൾ ഉപയോഗിക്കുന്ന പ്രമാണങ്ങളുടെ ഉള്ളടക്കം ട്രാക്ക് ചെയ്യാനോ ആക്‌സസ് ചെയ്യാനോ കഴിയില്ല—ഒരിക്കലും കഴിയില്ല."
+2 = "സ്റ്റെർലിംഗ് PDF-ന് നിങ്ങൾ ഉപയോഗിക്കുന്ന പ്രമാണങ്ങളുടെ ഉള്ളടക്കം ട്രാക്ക് ചെയ്യാനോ ആക്‌സസ് ചെയ്യാനോ കഴിയില്ല - ഒരിക്കലും കഴിയില്ല."
 3 = "നിങ്ങളുടെ സ്വകാര്യതയും വിശ്വാസവുമാണ് ഞങ്ങൾ ചെയ്യുന്നതിന്റെ കാതൽ."
 
 [cookieBanner.preferencesModal.necessary]
-description = "വെബ്സൈറ്റ് ശരിയായി പ്രവർത്തിക്കാൻ ഈ കുക്കികൾ അത്യാവശ്യമാണ്. നിങ്ങളുടെ സ്വകാര്യതാ മുൻഗണനകൾ സജ്ജമാക്കുക, ലോഗിൻ ചെയ്യുക, ഫോമുകൾ പൂരിപ്പിക്കുക തുടങ്ങിയ പ്രധാന സവിശേഷതകൾ അവ പ്രവർത്തനക്ഷമമാക്കുന്നു—അതുകൊണ്ടാണ് അവ ഓഫാക്കാൻ കഴിയാത്തത്."
+description = "വെബ്സൈറ്റ് ശരിയായി പ്രവർത്തിക്കാൻ ഈ കുക്കികൾ അത്യാവശ്യമാണ്. നിങ്ങളുടെ സ്വകാര്യതാ മുൻഗണനകൾ സജ്ജമാക്കുക, ലോഗിൻ ചെയ്യുക, ഫോമുകൾ പൂരിപ്പിക്കുക തുടങ്ങിയ പ്രധാന സവിശേഷതകൾ അവ പ്രവർത്തനക്ഷമമാക്കുന്നു - അതുകൊണ്ടാണ് അവ ഓഫാക്കാൻ കഴിയാത്തത്."
 
 [cookieBanner.preferencesModal.necessary.title]
 1 = "കർശനമായി ആവശ്യമായ കുക്കികൾ"
@@ -3901,7 +3901,7 @@ dateDesc = "പുതിയത് ആദ്യം"
 dateLabel = "പുതിയത്"
 nameAsc = "A മുതൽ Z വരെ"
 nameDesc = "Z മുതൽ A വരെ"
-nameLabel = "A–Z"
+nameLabel = "A-Z"
 
 [fileSelectorPicker.tabs]
 saved = "സേവ് ചെയ്ത ഫയലുകൾ"
@@ -5414,7 +5414,7 @@ userBody = "ടീംമേറ്റ്‌കളെ ക്ഷണിക്കു�
 userTitle = "പ്ലാൻ അവലോകനം"
 
 [onboarding.processorIntro]
-body = "Stirling ഇപ്പോൾ <strong>Policies</strong> പ്രവർത്തിപ്പിക്കുന്നു — ഓരോ document എത്തുമ്പോഴും classify, secure, process ചെയ്യുന്ന automated rules. അവ setup ചെയ്ത് runs <strong>Processor</strong>-ൽ monitor ചെയ്യുക."
+body = "Stirling ഇപ്പോൾ <strong>Policies</strong> പ്രവർത്തിപ്പിക്കുന്നു - ഓരോ document എത്തുമ്പോഴും classify, secure, process ചെയ്യുന്ന automated rules. അവ setup ചെയ്ത് runs <strong>Processor</strong>-ൽ monitor ചെയ്യുക."
 cta = "Processor പരിശോധിക്കുക"
 title = "Stirling Processor പരിശോധിക്കുക"
 
@@ -5671,7 +5671,7 @@ title = "പേജ് നീക്കംചെയ്യൽ ഉപകരണം"
 description = "ഓപ്പറേഷനായി ഉപയോഗിക്കേണ്ട പേജുകൾ തിരഞ്ഞെടുക്കുക. ഒറ്റ പേജുകൾ, പരിധികൾ, ഫോർമുലകൾ, all കീവേഡ് എന്നിവയെല്ലാം പിന്തുണയ്ക്കുന്നു."
 
 [pageSelection.tooltip.complex]
-bullet1 = "<strong>1,3-5,8,2n</strong> → പേജുകൾ 1, 3–5, 8, കൂടാതെ even പേജുകൾ"
+bullet1 = "<strong>1,3-5,8,2n</strong> → പേജുകൾ 1, 3-5, 8, കൂടാതെ even പേജുകൾ"
 bullet2 = "<strong>10-,2n-1</strong> → പേജ് 10 മുതൽ അവസാനം വരെ + odd പേജുകൾ"
 description = "വിവിധ തരങ്ങൾ ചേർത്തുപയോഗിക്കുക."
 title = "സങ്കീർണ്ണ കൂട്ടിച്ചേർക്കലുകൾ"
@@ -5694,8 +5694,8 @@ description = "മാതൃകകൾക്കായി ഫോർമുലകള�
 title = "ഗണിത ഫങ്ഷനുകൾ"
 
 [pageSelection.tooltip.ranges]
-bullet1 = "<strong>3-6</strong> → പേജുകൾ 3–6 തിരഞ്ഞെടുക്കുന്നു"
-bullet2 = "<strong>10-15</strong> → പേജുകൾ 10–15 തിരഞ്ഞെടുക്കുന്നു"
+bullet1 = "<strong>3-6</strong> → പേജുകൾ 3-6 തിരഞ്ഞെടുക്കുന്നു"
+bullet2 = "<strong>10-15</strong> → പേജുകൾ 10-15 തിരഞ്ഞെടുക്കുന്നു"
 bullet3 = "<strong>5-</strong> → പേജ് 5 മുതൽ അവസാനം വരെ തിരഞ്ഞെടുക്കുന്നു"
 description = "അനുക്രമ പേജുകൾക്കായി - ഉപയോഗിക്കുക."
 title = "പേജ് പരിധികൾ"
@@ -5771,7 +5771,7 @@ title = "Turn on the Processor plan"
 eyebrow = "Editor plan · Always free"
 
 [payg.free.header]
-freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
+freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR - as much as you want, no matter where you trigger it."
 freeTitle = "Unlimited PDF editing"
 
 [payg.free.hero]
@@ -5799,8 +5799,8 @@ pauses = "pauses at cap"
 title = "What happens when the cap is reached"
 
 [payg.header]
-eyebrow = "Processor plan · {{start}} – {{end}}"
-freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
+eyebrow = "Processor plan · {{start}} - {{end}}"
+freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR - as much as you want, no matter where you trigger it."
 freeLabel = "Always free"
 freeTitle = "Unlimited PDF editing"
 meterBody = "{{limit}} free PDFs to start, then billed per PDF up to your cap."
@@ -5820,8 +5820,8 @@ chip = "മുൻകൂർ പണമടച്ച വർഷം"
 
 [payg.prepaid.banner]
 exhausted = "നിങ്ങളുടെ prepaid capacity ഉപയോഗിച്ചു തീർന്നു; metered billing വീണ്ടും തുടങ്ങി. discount നിലനിർത്താൻ top up ചെയ്യുക."
-expiring_one = "നിങ്ങളുടെ prepaid year {{count}} ദിവസത്തിൽ അവസാനിക്കുന്നു. ഉപയോഗിക്കാത്ത capacity കാലഹരണപ്പെടും — പുതിയ വർഷം ആരംഭിക്കാൻ top up ചെയ്യുക."
-expiring_other = "നിങ്ങളുടെ prepaid year {{count}} ദിവസങ്ങളിൽ അവസാനിക്കുന്നു. ഉപയോഗിക്കാത്ത capacity കാലഹരണപ്പെടും — പുതിയ വർഷം ആരംഭിക്കാൻ top up ചെയ്യുക."
+expiring_one = "നിങ്ങളുടെ prepaid year {{count}} ദിവസത്തിൽ അവസാനിക്കുന്നു. ഉപയോഗിക്കാത്ത capacity കാലഹരണപ്പെടും - പുതിയ വർഷം ആരംഭിക്കാൻ top up ചെയ്യുക."
+expiring_other = "നിങ്ങളുടെ prepaid year {{count}} ദിവസങ്ങളിൽ അവസാനിക്കുന്നു. ഉപയോഗിക്കാത്ത capacity കാലഹരണപ്പെടും - പുതിയ വർഷം ആരംഭിക്കാൻ top up ചെയ്യുക."
 low = "നിങ്ങളുടെ prepaid capacity-യുടെ {{pct}}% മാത്രം ബാക്കി. processing തടസ്സമില്ലാതെ തുടരാൻ എപ്പോൾ വേണമെങ്കിലും top up ചെയ്യുക."
 
 [payg.prepaid.card]
@@ -6121,7 +6121,7 @@ processing = "Processing"
 uploading = "Uploading"
 
 [pdfTextEditor.tooltip.alpha]
-text = "ഈ ആൽഫാ വ്യൂവർ ഇനിയും വികസനത്തിലാണു—ചില ഫോണ്ടുകൾ, നിറങ്ങൾ, പാരദർശ്യത ഇഫക്ടുകൾ, ലേഔട്ട് വിശദാംശങ്ങൾ എന്നിവ നേരിയ മാറ്റങ്ങൾ കാണിക്കാം. പങ്കിടുന്നതിന് മുമ്പ് സൃഷ്ടിച്ച PDF വീണ്ടും പരിശോധിക്കുക."
+text = "ഈ ആൽഫാ വ്യൂവർ ഇനിയും വികസനത്തിലാണു - ചില ഫോണ്ടുകൾ, നിറങ്ങൾ, പാരദർശ്യത ഇഫക്ടുകൾ, ലേഔട്ട് വിശദാംശങ്ങൾ എന്നിവ നേരിയ മാറ്റങ്ങൾ കാണിക്കാം. പങ്കിടുന്നതിന് മുമ്പ് സൃഷ്ടിച്ച PDF വീണ്ടും പരിശോധിക്കുക."
 title = "ആൽഫാ വ്യൂവർ"
 
 [pdfTextEditor.tooltip.header]
@@ -6522,7 +6522,7 @@ never = "ഒരിക്കലും ഇല്ല"
 [portal.accountLink.modal]
 linkSubtitle = "ഈ server ബിൽ ചെയ്യേണ്ട അക്കൗണ്ടിലേക്ക് sign in ചെയ്യുക."
 linkTitle = "നിങ്ങളുടെ Stirling അക്കൗണ്ട് ലിങ്ക് ചെയ്യുക"
-reauthSubtitle = "നിങ്ങളുടെ session കാലഹരണപ്പെട്ടു — നിങ്ങളുടെ Stirling അക്കൗണ്ടിലേക്ക് വീണ്ടും sign in ചെയ്യുക. നിങ്ങളുടെ instance ലിങ്ക് ചെയ്തുതന്നെ തുടരും."
+reauthSubtitle = "നിങ്ങളുടെ session കാലഹരണപ്പെട്ടു - നിങ്ങളുടെ Stirling അക്കൗണ്ടിലേക്ക് വീണ്ടും sign in ചെയ്യുക. നിങ്ങളുടെ instance ലിങ്ക് ചെയ്തുതന്നെ തുടരും."
 reauthTitle = "വീണ്ടും sign in ചെയ്യുക"
 simulateSignIn = "sign-in simulate ചെയ്യുക (dev)"
 
@@ -6633,7 +6633,7 @@ title = "സൗജന്യ PDF Editors"
 checkoutErrorTitle = "Checkout ആരംഭിക്കാനായില്ല"
 currentPlan = "നിലവിലെ plan"
 freeForever = "എന്നേക്കും സൗജന്യം"
-noTeamResolved = "നിങ്ങളുടെ wallet-ൽ ഇതുവരെ team resolved ആയിട്ടില്ല — refresh ചെയ്ത് വീണ്ടും ശ്രമിക്കുക."
+noTeamResolved = "നിങ്ങളുടെ wallet-ൽ ഇതുവരെ team resolved ആയിട്ടില്ല - refresh ചെയ്ത് വീണ്ടും ശ്രമിക്കുക."
 ownerOnly = "ടീം owner-ക്ക് മാത്രമേ Processor plan ഓൺ ചെയ്യാൻ കഴിയൂ."
 payInvoice = "പൂർത്തിയാക്കാൻ invoice അടയ്ക്കുക"
 planName = "Editor"
@@ -6668,7 +6668,7 @@ viewLink = "കാണുക ↗"
 
 [portal.billing.linkPrompt]
 cta = "Stirling അക്കൗണ്ട് ലിങ്ക് ചെയ്യുക"
-description = "Manual PDF editing — view, sign, merge, split, watermark, compress, convert, manual OCR — ലിങ്ക് ചെയ്താലും ഇല്ലെങ്കിലും എല്ലായ്പ്പോഴും സൗജന്യമാണ്. Metered processing (automation, AI, and the API) ന്റെ 500 സൗജന്യ PDFs claim ചെയ്യാൻ ലിങ്ക് ചെയ്യുക; കൂടുതൽ ആവശ്യമുള്ളപ്പോൾ Processor plan ഓൺ ചെയ്ത് നിങ്ങൾ ഉപയോഗിക്കുന്നതിനേ മാത്രം പണം നൽകുക."
+description = "Manual PDF editing - view, sign, merge, split, watermark, compress, convert, manual OCR - ലിങ്ക് ചെയ്താലും ഇല്ലെങ്കിലും എല്ലായ്പ്പോഴും സൗജന്യമാണ്. Metered processing (automation, AI, and the API) ന്റെ 500 സൗജന്യ PDFs claim ചെയ്യാൻ ലിങ്ക് ചെയ്യുക; കൂടുതൽ ആവശ്യമുള്ളപ്പോൾ Processor plan ഓൺ ചെയ്ത് നിങ്ങൾ ഉപയോഗിക്കുന്നതിനേ മാത്രം പണം നൽകുക."
 title = "നിങ്ങളുടെ Stirling അക്കൗണ്ട് ലിങ്ക് ചെയ്യുക"
 
 [portal.billing.paymentMethod]
@@ -6802,13 +6802,13 @@ low = "കുറഞ്ഞുവരുന്നു"
 [portal.billing.spendLimit]
 adjustLimit = "Limit ക്രമീകരിക്കുക"
 cancel = "റദ്ദാക്കുക"
-capControlNote = "മാറ്റങ്ങൾ ഉടൻ ബാധകം — ഏത് സമയത്തും പരിധി ഉയർത്തുകയോ കുറയ്ക്കുകയോ ചെയ്യാം."
+capControlNote = "മാറ്റങ്ങൾ ഉടൻ ബാധകം - ഏത് സമയത്തും പരിധി ഉയർത്തുകയോ കുറയ്ക്കുകയോ ചെയ്യാം."
 capSuffix = "/ മാസം"
 capSuffixWithDocs = "/ മാസം · ≈ {{documents}} രേഖകൾ"
-displaySub = "നിങ്ങൾ സ്വയമേവ പ്രോസസ് ചെയ്യുന്നതിന് മാത്രമേ ബിൽ ചെയ്യൂ — പരിധി ഒരിക്കലും കടക്കില്ല."
+displaySub = "നിങ്ങൾ സ്വയമേവ പ്രോസസ് ചെയ്യുന്നതിന് മാത്രമേ ബിൽ ചെയ്യൂ - പരിധി ഒരിക്കലും കടക്കില്ല."
 editTitle = "നിങ്ങളുടെ മാസപരിധി സജ്ജമാക്കുക"
 eyebrow = "Spend limit"
-guardrailBody = "ഒരു കർശന പരിധി — നിങ്ങൾക്ക് ഒരിക്കലും അതിനപ്പുറം ബിൽ ചെയ്യില്ല. Cap എത്തുമ്പോൾ, metered processing pause ചെയ്യും (അപരിമിത PDF editing തുടരും) നിങ്ങൾ അത് ഉയർത്തുകയോ cycle reset ചെയ്യുകയോ ചെയ്യുന്നതുവരെ. ഒന്നും നഷ്ടമാകില്ല."
+guardrailBody = "ഒരു കർശന പരിധി - നിങ്ങൾക്ക് ഒരിക്കലും അതിനപ്പുറം ബിൽ ചെയ്യില്ല. Cap എത്തുമ്പോൾ, metered processing pause ചെയ്യും (അപരിമിത PDF editing തുടരും) നിങ്ങൾ അത് ഉയർത്തുകയോ cycle reset ചെയ്യുകയോ ചെയ്യുന്നതുവരെ. ഒന്നും നഷ്ടമാകില്ല."
 guardrailLabel = "നിങ്ങളുടെ guardrail:"
 noCap = "cap ഇല്ല"
 pctUsed = "{{pct}}% ഉപയോഗിച്ചു"
@@ -7243,8 +7243,8 @@ viewSource = "source GitHub-ൽ കാണുക"
 codeCaption = "ഓരോ request-വും"
 eyebrow = "GETTING STARTED"
 lead = "എല്ലാ requests-ഉം bearer token ഉപയോഗിച്ച് authenticate ചെയ്യുന്നു. Keys environment അനുസരിച്ച് scoped ആണ്; rotate ചെയ്യാത്ത പക്ഷം ഒരിക്കലും expire ചെയ്യില്ല."
-liveKey = "Production keys — billed, നിങ്ങളുടെ plan അനുസരിച്ച് rate-limited."
-testKey = "Sandbox keys — സൗജന്യം, synthetic fixtures തിരികെ നൽകും."
+liveKey = "Production keys - billed, നിങ്ങളുടെ plan അനുസരിച്ച് rate-limited."
+testKey = "Sandbox keys - സൗജന്യം, synthetic fixtures തിരികെ നൽകും."
 title = "Authentication"
 
 [portal.docs.components]
@@ -7282,7 +7282,7 @@ title = "Quickstart"
 
 [portal.docs.quickstart.callout]
 bodyAfterLink = "copy-paste recipes-ക്കായി."
-bodyBeforeLink = "validation, redaction, delivery എന്നിവ chain ചെയ്യാൻ അതേ call pipeline-ിലേക്ക് wire ചെയ്യുക — അല്ലെങ്കിൽ MCP വഴി agent-ന് expose ചെയ്യുക. കാണുക"
+bodyBeforeLink = "validation, redaction, delivery എന്നിവ chain ചെയ്യാൻ അതേ call pipeline-ിലേക്ക് wire ചെയ്യുക - അല്ലെങ്കിൽ MCP വഴി agent-ന് expose ചെയ്യുക. കാണുക"
 label = "അടുത്തത്:"
 link = "Playbooks"
 
@@ -7291,7 +7291,7 @@ body = "Infrastructure tab-ൽ നിന്ന് scoped key സൃഷ്ടി�
 title = "ഒരു API key issue ചെയ്യുക"
 
 [portal.docs.quickstart.step2]
-body = "ഏതെങ്കിലും typed endpoint-ലേക്ക് ഒരു file POST ചെയ്യുക. നിങ്ങൾക്ക് തിരികെ കിട്ടുന്ന schema endpoint നിർണ്ണയിക്കും — ഇവിടെ, invoice extractor."
+body = "ഏതെങ്കിലും typed endpoint-ലേക്ക് ഒരു file POST ചെയ്യുക. നിങ്ങൾക്ക് തിരികെ കിട്ടുന്ന schema endpoint നിർണ്ണയിക്കും - ഇവിടെ, invoice extractor."
 snippetCaption = "ഒരു invoice extract ചെയ്യുക"
 title = "ഒരു document അയയ്ക്കുക"
 
@@ -7371,8 +7371,8 @@ overview = "അവലോകനം"
 requestAccess = "പ്രവേശനം അഭ്യർത്ഥിക്കുക"
 
 [portal.documents.elevation.active]
-description = "താൽക്കാലിക അനുമതി — പ്രവേശനം ലോഗ് ചെയ്യുകയും സമയപരിധിയിലാക്കുകയും ചെയ്യുന്നു."
-descriptionFourEyes = "താൽക്കാലിക അനുമതി — ഒരു സഹ അവലോകകനെ അറിയിച്ചു (four-eyes)."
+description = "താൽക്കാലിക അനുമതി - പ്രവേശനം ലോഗ് ചെയ്യുകയും സമയപരിധിയിലാക്കുകയും ചെയ്യുന്നു."
+descriptionFourEyes = "താൽക്കാലിക അനുമതി - ഒരു സഹ അവലോകകനെ അറിയിച്ചു (four-eyes)."
 title = "പ്രവേശനം {{time}}-ൽ കാലഹരണപ്പെടും"
 
 [portal.documents.elevation.gated]
@@ -7433,7 +7433,7 @@ time = "സമയം"
 user = "ഉപയോക്താവ്"
 
 [portal.editorAdmin]
-subtitle = "Stirling PDF Editor വിന്യസിക്കുക, self-hosted ഇൻസ്റ്റൻസുകൾ നിങ്ങളുടെ org-നൊപ്പം pair ചെയ്യുക, പ്രവർത്തിക്കുന്ന fleet നിയന്ത്രിക്കുക — targets, health, credentials, offline activation എന്നിവ ഒരിടത്ത്."
+subtitle = "Stirling PDF Editor വിന്യസിക്കുക, self-hosted ഇൻസ്റ്റൻസുകൾ നിങ്ങളുടെ org-നൊപ്പം pair ചെയ്യുക, പ്രവർത്തിക്കുന്ന fleet നിയന്ത്രിക്കുക - targets, health, credentials, offline activation എന്നിവ ഒരിടത്ത്."
 title = "Editor വിന്യാസം"
 
 [portal.editorAdmin.health.columns]
@@ -7469,7 +7469,7 @@ rotate = "Rotate"
 talkToSales = "Sales-നെ സമീപിക്കുക"
 
 [portal.editorAdmin.sections.health]
-sub = "റിപ്പോർട്ട് ചെയ്യുന്ന ഓരോ Editor instance-വും — version, region, status, last seen, active users."
+sub = "റിപ്പോർട്ട് ചെയ്യുന്ന ഓരോ Editor instance-വും - version, region, status, last seen, active users."
 title = "Instance health"
 
 [portal.editorAdmin.sections.pairing]
@@ -7755,9 +7755,9 @@ done = "പൂർത്തിയായി"
 keyNameLabel = "Key പേര്"
 keyNamePlaceholder = "ഉദാ. Production · ingest"
 secretKeyCaption = "Secret key"
-secretWarning = "ഇത് secrets manager-ൽ സൂക്ഷിക്കുക. Stirling എപ്പോഴും hash മാത്രമേ സൂക്ഷിക്കൂ — പിന്നീട് ഇത് വീണ്ടെടുക്കാൻ മാർഗമില്ല."
+secretWarning = "ഇത് secrets manager-ൽ സൂക്ഷിക്കുക. Stirling എപ്പോഴും hash മാത്രമേ സൂക്ഷിക്കൂ - പിന്നീട് ഇത് വീണ്ടെടുക്കാൻ മാർഗമില്ല."
 subtitle = "Key-ക്ക് ആവശ്യമായ കുറഞ്ഞ scope മാത്രം നൽകുക. ഏത് സമയത്തും rotate ചെയ്യുകയോ revoke ചെയ്യുകയോ ചെയ്യാം."
-subtitleCreated = "ഈ secret ഇപ്പോൾ copy ചെയ്യുക — ഇത് വീണ്ടും കാണിക്കില്ല."
+subtitleCreated = "ഈ secret ഇപ്പോൾ copy ചെയ്യുക - ഇത് വീണ്ടും കാണിക്കില്ല."
 title = "API key സൃഷ്ടിക്കുക"
 titleCreated = "Key സൃഷ്ടിച്ചു"
 
@@ -8318,7 +8318,7 @@ label = "ഡോക്യുമെന്റ് email ചെയ്യുക (Mailg
 [portal.policies.operations.n8nGate]
 description = "Your workflow decides whether the run carries on."
 label = "Ask an n8n workflow to approve"
-note = "The workflow must reply with {\"approved\": true}. Anything else — including a timeout — stops the run and parks the document."
+note = "The workflow must reply with {\"approved\": true}. Anything else - including a timeout - stops the run and parks the document."
 
 [portal.policies.operations.n8nNotify]
 description = "Sends the run's details, not the document."
@@ -8340,7 +8340,7 @@ label = "Nextcloud-ലേക്ക് upload ചെയ്യുക"
 [portal.policies.operations.presidioAnalyze]
 description = "നിങ്ങളുടെ സ്വന്തം Presidio server കണ്ടെത്തുന്ന personal data report ചെയ്യുന്നു."
 label = "personal data കണ്ടെത്തുക"
-note = "Presidio text വായിക്കുന്നു, files അല്ല. പരിശോധിക്കേണ്ട text നൽകുക — ഡോക്യുമെന്റ് തന്നെ upload ചെയ്യുന്നില്ല."
+note = "Presidio text വായിക്കുന്നു, files അല്ല. പരിശോധിക്കേണ്ട text നൽകുക - ഡോക്യുമെന്റ് തന്നെ upload ചെയ്യുന്നില്ല."
 
 [portal.policies.operations.responseMode]
 replace = "ഡോക്യുമെന്റിനെ reply ഉപയോഗിച്ച് മാറ്റിസ്ഥാപിക്കുക"
@@ -8430,7 +8430,7 @@ desc = "സ്കാൻ ചെയ്ത പേജുകൾ തിരഞ്ഞെ
 label = "ടെക്സ്റ്റ് തിരയാവുന്നതാക്കുക"
 
 [portal.policies.wizard.capability.redact]
-desc = "Social Security, കാർഡ് നമ്പറുകൾ പോലുള്ള സെൻസിറ്റീവ് വിശദാംശങ്ങൾ കണ്ടെത്തി കറുപ്പാക്കുന്നു — വായിക്കാനാകാതാക്കാൻ."
+desc = "Social Security, കാർഡ് നമ്പറുകൾ പോലുള്ള സെൻസിറ്റീവ് വിശദാംശങ്ങൾ കണ്ടെത്തി കറുപ്പാക്കുന്നു - വായിക്കാനാകാതാക്കാൻ."
 label = "സെൻസിറ്റീവ് വിവരങ്ങൾ റിഡാക്റ്റ് ചെയ്യുക"
 
 [portal.policies.wizard.capability.sanitize]
@@ -8596,11 +8596,11 @@ postalCodePlaceholder = "94105"
 posture = "Governance"
 posture_count = "~{{count}} policies"
 posture_essentials = "Essentials"
-posture_essentialsSub = "Classification + Sharing — defaults"
+posture_essentialsSub = "Classification + Sharing - defaults"
 posture_governed = "Governed"
 posture_governedSub = "Security, Routing എന്നിവ ചേർക്കുന്നു"
 posture_regulated = "Regulated"
-posture_regulatedSub = "ഓരോ category — Compliance, Retention, Ingestion"
+posture_regulatedSub = "ഓരോ category - Compliance, Retention, Ingestion"
 qbr = "ത്രൈമാസ ബിസിനസ് അവലോകനങ്ങൾ"
 qbrSub = "നിങ്ങളുടെ SE ഓരോ ത്രൈമാസവും ഉപയോഗവും roadmap-ഉം അവലോകനം ചെയ്യും"
 region = "State / region"
@@ -8722,13 +8722,13 @@ label = "Trial"
 [portal.procurement.license]
 copied = "പകർത്തി"
 copy = "Key പകർത്തുക"
-downloadError = "Offline ലൈസൻസ് ഫയൽ ഇതുവരെ സൃഷ്ടിക്കാനായില്ല — ദയവായി കുറച്ച് കഴിഞ്ഞ് വീണ്ടും ശ്രമിക്കുക."
+downloadError = "Offline ലൈസൻസ് ഫയൽ ഇതുവരെ സൃഷ്ടിക്കാനായില്ല - ദയവായി കുറച്ച് കഴിഞ്ഞ് വീണ്ടും ശ്രമിക്കുക."
 downloadOffline = "Offline ലൈസൻസ് (.lic) ഡൗൺലോഡ് ചെയ്യുക"
 hint = "ഇത് activate ചെയ്യാൻ ഈ key self-hosted instance-ൽ ഒട്ടിക്കുക, അല്ലെങ്കിൽ നിങ്ങളുടെ രേഖകൾക്കായി സൂക്ഷിക്കുക. സുരക്ഷിതമായി സൂക്ഷിക്കുക."
 label = "നിങ്ങളുടെ ലൈസൻസ് key"
 subtitle = "ഈ key ഉപയോഗിച്ച് self-hosted instance activate ചെയ്യുക, അല്ലെങ്കിൽ നിങ്ങളുടെ records-നായി സൂക്ഷിക്കുക."
 title = "നിങ്ങളുടെ licence key"
-trialFileHint = "ഇത് നിങ്ങളുടെ trial licence file ആണ്. നിങ്ങളുടെ agreement പ്രാബല്യത്തിൽ വന്നാൽ, തിരികെ വന്ന് ഇത് വീണ്ടും ഡൗൺലോഡ് ചെയ്യുക — online licence key-നെ പോലെ അല്ല, .lic file സ്വയം update ചെയ്യില്ല."
+trialFileHint = "ഇത് നിങ്ങളുടെ trial licence file ആണ്. നിങ്ങളുടെ agreement പ്രാബല്യത്തിൽ വന്നാൽ, തിരികെ വന്ന് ഇത് വീണ്ടും ഡൗൺലോഡ് ചെയ്യുക - online licence key-നെ പോലെ അല്ല, .lic file സ്വയം update ചെയ്യില്ല."
 
 [portal.procurement.link]
 cta = "അക്കൗണ്ട് ലിങ്ക് ചെയ്യുക"
@@ -8742,10 +8742,10 @@ eyebrow = "Live"
 title = "നിങ്ങൾ Stirling Enterprise-ൽ live ആണ്"
 
 [portal.procurement.milestone]
-downloadError = "ക്വോട്ട് PDF ഇതുവരെ ഡൗൺലോഡ് ചെയ്യാനായില്ല — ദയവായി കുറച്ച് കഴിഞ്ഞ് വീണ്ടും ശ്രമിക്കുക."
+downloadError = "ക്വോട്ട് PDF ഇതുവരെ ഡൗൺലോഡ് ചെയ്യാനായില്ല - ദയവായി കുറച്ച് കഴിഞ്ഞ് വീണ്ടും ശ്രമിക്കുക."
 
 [portal.procurement.payment]
-description = "നിങ്ങളുടെ ക്വോട്ട് അംഗീകരിച്ചു, ലൈസൻസ് ഇതിനകം സജീവമാണ് — നിങ്ങളുടെ ടീമിന് ഉടൻ തുടങ്ങാം. തയ്യാറാകുമ്പോൾ ആദ്യ invoice അടയ്ക്കുക; email ആവശ്യമില്ലാതെ ഇവിടെ അടയ്ക്കുകയോ ഡൗൺലോഡ് ചെയ്യുകയോ ചെയ്യാം."
+description = "നിങ്ങളുടെ ക്വോട്ട് അംഗീകരിച്ചു, ലൈസൻസ് ഇതിനകം സജീവമാണ് - നിങ്ങളുടെ ടീമിന് ഉടൻ തുടങ്ങാം. തയ്യാറാകുമ്പോൾ ആദ്യ invoice അടയ്ക്കുക; email ആവശ്യമില്ലാതെ ഇവിടെ അടയ്ക്കുകയോ ഡൗൺലോഡ് ചെയ്യുകയോ ചെയ്യാം."
 downloadAgreement = "signed agreement ഡൗൺലോഡ് ചെയ്യുക"
 downloadInvoice = "Invoice ഡൗൺലോഡ് ചെയ്യുക"
 eyebrow = "Payment"
@@ -8800,7 +8800,7 @@ workEmailPlaceholder = "you@company.com"
 
 [portal.procurement.trial]
 body = "നീട്ടുന്നത് 7 ദിവസം ചേർക്കുകയും നിങ്ങളുടെ solutions engineer-നെ അറിയിക്കുകയും ചെയ്യും."
-bodyMaxed = "നിങ്ങളുടെ എല്ലാ extensions-ഉം ഉപയോഗിച്ചു — കൂടുതൽ സമയം ആവശ്യമെങ്കിൽ നിങ്ങളുടെ solutions engineer-നോട് സംസാരിക്കുക."
+bodyMaxed = "നിങ്ങളുടെ എല്ലാ extensions-ഉം ഉപയോഗിച്ചു - കൂടുതൽ സമയം ആവശ്യമെങ്കിൽ നിങ്ങളുടെ solutions engineer-നോട് സംസാരിക്കുക."
 cancel = "Trial റദ്ദാക്കുക"
 extend = "7 ദിവസം നീട്ടുക"
 maxed = "പരമാവധി എത്തി"
@@ -9027,7 +9027,7 @@ close = "അടയ്ക്കുക"
 
 [portal.usage]
 managePayment = "Payment നിയന്ത്രിക്കുക"
-subtitle = "Stirling bill ചെയ്ത ഓരോ PDF-ക്കും consumption, invoices, plan management — ഒരൊറ്റ console-ൽ."
+subtitle = "Stirling bill ചെയ്ത ഓരോ PDF-ക്കും consumption, invoices, plan management - ഒരൊറ്റ console-ൽ."
 title = "Usage & billing"
 
 [portal.usage.error]
@@ -9037,7 +9037,7 @@ walletUnavailable = "Wallet ലഭ്യമല്ല: {{status}} {{statusText}}"
 
 [portal.usage.sessionExpired]
 action = "വീണ്ടും sign in ചെയ്യുക"
-body = "നിങ്ങളുടെ Stirling account session കാലഹരണപ്പെട്ടു. Billing കാണാൻ വീണ്ടും sign in ചെയ്യുക — നിങ്ങളുടെ instance linked ആയിത്തന്നെ തുടരും."
+body = "നിങ്ങളുടെ Stirling account session കാലഹരണപ്പെട്ടു. Billing കാണാൻ വീണ്ടും sign in ചെയ്യുക - നിങ്ങളുടെ instance linked ആയിത്തന്നെ തുടരും."
 title = "Session കാലഹരണപ്പെട്ടു"
 
 [portal.users]
@@ -9065,7 +9065,7 @@ summary = "പരിമിതമായ അല്ലെങ്കിൽ web-only a
 
 [portal.users.roles.member]
 label = "Member"
-summary = "സാധാരണ ഉപയോക്താവ് — shared resources-ഉം സ്വന്തം configs-ഉം ഉപയോഗിച്ച് പ്രവർത്തിക്കുന്നു."
+summary = "സാധാരണ ഉപയോക്താവ് - shared resources-ഉം സ്വന്തം configs-ഉം ഉപയോഗിച്ച് പ്രവർത്തിക്കുന്നു."
 
 [portal.users.roles.member.permissions]
 0 = "Editor-ഉം shared integrations-ഉം ഉപയോഗിക്കുക"
@@ -9075,7 +9075,7 @@ summary = "സാധാരണ ഉപയോക്താവ് — shared resource
 
 [portal.users.roles.team_owner]
 label = "Team owner"
-summary = "ഒരു team-ന്റെ ഉടമ — അതിന്റെ members' resources-ഉം shared configs-ഉം നിയന്ത്രിക്കുന്നു."
+summary = "ഒരു team-ന്റെ ഉടമ - അതിന്റെ members' resources-ഉം shared configs-ഉം നിയന്ത്രിക്കുന്നു."
 
 [portal.users.roles.team_owner.permissions]
 0 = "Team-ന്റെ S3 connections സൃഷ്ടിക്കുകയും നിയന്ത്രിക്കുകയും ചെയ്യുക"
@@ -9352,7 +9352,7 @@ title = "PDF-Image ആയി മാറ്റുക"
 title = "അഡ്വാൻസ്ഡ് റിഡാക്ഷൻ സെറ്റിങ്ങുകൾ"
 
 [redact.tooltip.advanced.regex]
-bullet1 = "ഉദാഹരണം: \\d{4}-\\d{2}-\\d{2} — YYYY-MM-DD ഫോർമാറ്റിലെ ഏതൊരു തീയതിയും മാച്ച് ചെയ്യാൻ"
+bullet1 = "ഉദാഹരണം: \\d{4}-\\d{2}-\\d{2} - YYYY-MM-DD ഫോർമാറ്റിലെ ഏതൊരു തീയതിയും മാച്ച് ചെയ്യാൻ"
 bullet2 = "ജാഗ്രതയോടെ ഉപയോഗിക്കുക - പൂർണ്ണമായി ടെസ്റ്റ് ചെയ്യുക"
 text = "അഡ്വാൻസ്ഡ് പാറ്റേൺ മാച്ചിംഗിനായി regular expressions എനേബിൾ ചെയ്യുക. ഫോൺ നമ്പറുകൾ, ഇമെയിലുകൾ, അല്ലെങ്കിൽ സങ്കീർണ്ണ പാറ്റേണുകൾ കണ്ടെത്താൻ ഉപകാരപ്പെടും."
 title = "Regex ഉപയോഗിക്കുക"
@@ -9497,7 +9497,7 @@ title = "ചിത്രം നീക്കം ചെയ്യുക"
 failed = "PDF-ലിൽ നിന്ന് ഇമേജുകൾ നീക്കാൻ കഴിഞ്ഞില്ല."
 
 [removeImage.results]
-title = "ഇമേജുകൾ നീക്കം ചെയ്തത് — ഫലങ്ങൾ"
+title = "ഇമേജുകൾ നീക്കം ചെയ്തത് - ഫലങ്ങൾ"
 
 [removeImagePdf]
 tags = "ചിത്രം നീക്കം ചെയ്യുക,പേജ് പ്രവർത്തനങ്ങൾ,ബാക്ക് എൻഡ്,സെർവർ സൈഡ്"
@@ -9766,7 +9766,7 @@ failed = "ചിത്ര സ്കാൻസ് എടുക്കുന്ന�
 
 [scannerImageSplit.tooltip]
 headsUp = "ശ്രദ്ധിക്കുക"
-headsUpDesc = "ഒന്നുമിച്ചതായ ഫോട്ടോകൾ അല്ലെങ്കിൽ ഫോട്ടോകളുടെ നിറത്തോട് വളരെ അടുത്ത പശ്ചാത്തലങ്ങൾ കൃത്യത കുറയ്ക്കാം—ഇനിയും ഇളം അല്ലെങ്കിൽ കനം കൂടിയ പശ്ചാത്തലം ശ്രമിക്കുക, കൂടുതൽ ഇടം വിടുക."
+headsUpDesc = "ഒന്നുമിച്ചതായ ഫോട്ടോകൾ അല്ലെങ്കിൽ ഫോട്ടോകളുടെ നിറത്തോട് വളരെ അടുത്ത പശ്ചാത്തലങ്ങൾ കൃത്യത കുറയ്ക്കാം - ഇനിയും ഇളം അല്ലെങ്കിൽ കനം കൂടിയ പശ്ചാത്തലം ശ്രമിക്കുക, കൂടുതൽ ഇടം വിടുക."
 problem1 = "ഫോട്ടോകൾ കണ്ടെത്തുന്നില്ല → Tolerance 30-50 ആയി വർദ്ധിപ്പിക്കുക"
 problem2 = "തെറ്റായ കണ്ടെത്തലുകൾ വളരെ കൂടുതലാണ് → Minimum Area 15,000-20,000 ആയി വർദ്ധിപ്പിക്കുക"
 problem3 = "ക്രോപ്പുകൾ വളരെ കട്ടിയാണു → Border Size 5-10 ആയി വർദ്ധിപ്പിക്കുക"
@@ -9784,7 +9784,7 @@ useCase2 = "ഫ്ലാറ്റ്‌ബെഡ് ബാച്ചുകൾ വ
 useCase3 = "കോളാഷുകൾ വ്യക്തിഗത ഫോട്ടോകളാക്കി മാറ്റുക"
 useCase4 = "ഡോക്യുമെന്റുകളിൽ നിന്ന് ഫോട്ടോകൾ എടുക്കുക"
 whatThisDoes = "ഇത് എന്താണ് ചെയ്യുന്നത്"
-whatThisDoesDesc = "സ്കാൻ ചെയ്ത ഒരു പേജിലോ കോമ്പോസിറ്റ് ചിത്രത്തിലോ ഉള്ള ഓരോ ഫോട്ടോയും സ്വയം കണ്ടെത്തി വേർതിരിക്കുന്നു—മാനുവൽ ക്രോപ്പിംഗ് വേണ്ട."
+whatThisDoesDesc = "സ്കാൻ ചെയ്ത ഒരു പേജിലോ കോമ്പോസിറ്റ് ചിത്രത്തിലോ ഉള്ള ഓരോ ഫോട്ടോയും സ്വയം കണ്ടെത്തി വേർതിരിക്കുന്നു - മാനുവൽ ക്രോപ്പിംഗ് വേണ്ട."
 whenToUse = "എപ്പോൾ ഉപയോഗിക്കാം"
 
 [ScannerImageSplit.selectText]
@@ -11463,9 +11463,9 @@ emptyFile = "ശൂന്യ ഫയൽ"
 htmlHidePreview = "പ്രിവ്യൂ മറയ്ക്കുക"
 htmlPreview = "HTML പ്രിവ്യൂ"
 htmlPreviewMobileHidden = "HTML പേജുകൾ desktop വീതികൾക്കായി ക്രമീകരിച്ചിരിക്കുന്നതിനാൽ ഇവിടെ പ്രിവ്യൂ സ്ഥിരമായി ഓഫാണ്."
-htmlPreviewWarning = "HTML പ്രിവ്യൂ — ബാഹ്യ വിഭവങ്ങൾ ലോഡ് ചെയ്യാതിരിക്കാം · {{size}}"
+htmlPreviewWarning = "HTML പ്രിവ്യൂ - ബാഹ്യ വിഭവങ്ങൾ ലോഡ് ചെയ്യാതിരിക്കാം · {{size}}"
 htmlShowPreview = "എങ്കിലും പ്രിവ്യൂ കാണിക്കുക"
-invalidJson = "അസാധുവായ JSON — അസംസ്കൃത ഉള്ളടക്കം കാണിക്കുന്നു"
+invalidJson = "അസാധുവായ JSON - അസംസ്കൃത ഉള്ളടക്കം കാണിക്കുന്നു"
 lineNumbers = "വരി നമ്പറുകൾ"
 loading = "ലോഡ് ചെയ്യുന്നു..."
 renderMarkdown = "മാർക്ക്ഡൗൺ റെൻഡർ ചെയ്യുക"
@@ -11527,7 +11527,7 @@ create = "Create your first Watched Folder"
 deleteFolder = "Delete folder"
 editFolder = "Edit folder"
 empty = "No watched folders yet"
-emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged — whatever your pipeline does."
+emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged - whatever your pipeline does."
 emptyTitle = "Automate your PDF workflows"
 file = "file"
 files = "files"
@@ -11535,7 +11535,7 @@ pause = "Pause"
 resume = "Resume"
 
 [watchedFolders.howItWorks]
-step1Desc = "Drag PDFs onto any Watched Folder card — or send them from your file list"
+step1Desc = "Drag PDFs onto any Watched Folder card - or send them from your file list"
 step1Title = "Drop files"
 step2Desc = "Your configured tools process each file automatically"
 step2Title = "Pipeline runs"
@@ -11559,18 +11559,18 @@ createFolder = "Create Folder"
 createTitle = "New Watched Folder"
 editTitle = "Edit Watched Folder"
 inputFolder = "Input folder"
-inputFolderNotChosen = "No folder chosen — required for auto-scan"
+inputFolderNotChosen = "No folder chosen - required for auto-scan"
 inputSource = "Input source"
-inputSourceBrowser = "Browser — drop files here"
+inputSourceBrowser = "Browser - drop files here"
 inputSourceLocal = "Local folder (auto-scan)"
-inputSourceLocalUnsupported = "Local folder (auto-scan) — Chrome/Edge only"
+inputSourceLocalUnsupported = "Local folder (auto-scan) - Chrome/Edge only"
 localOutputFolder = "Local output folder"
 maxRetries = "Max retries"
 name = "Folder name"
 namePlaceholder = "My Watched Folder"
 nameRequired = "Folder name is required"
 nameTooLong = "Folder name must be 50 characters or less"
-outputFolderNotSet = "Not set — outputs stay in app"
+outputFolderNotSet = "Not set - outputs stay in app"
 outputFolderUnsupported = "Not supported in this browser"
 outputModeNewDesc = "Output is saved as a new separate file"
 outputModeVersion = "Replace original?"
@@ -11630,9 +11630,9 @@ filterPending = "Pending"
 inputs = "Inputs"
 inputSize = "Input size"
 legendComplete = "Complete"
-noActivity = "No activity yet — drop a PDF to start"
+noActivity = "No activity yet - drop a PDF to start"
 noActivityMatch = "No matching activity"
-noInputFolder = "No input folder — edit to configure"
+noInputFolder = "No input folder - edit to configure"
 outputs = "Outputs"
 pause = "Pause"
 preview = "Preview"
@@ -11640,7 +11640,7 @@ previewInput = "Preview input"
 previewLoadFailed = "Could not load file preview."
 previewOutput = "Preview output"
 queued = "Queued"
-queuedWaiting = "Queued — waiting to run"
+queuedWaiting = "Queued - waiting to run"
 removeEntries = "Remove {{count}} entries"
 removeEntry = "Remove entry"
 removeNotificationsOnly = "Remove notifications only"

@@ -1254,7 +1254,7 @@ description = "URL o nom de fitxer de l'impressum (requerit en algunes jurisdicc
 label = "Avís legal"
 
 [admin.settings.legal.loginAgreement]
-defaultLocaleHint = "— s'utilitza com a alternativa quan un idioma no té fitxer."
+defaultLocaleHint = "- s'utilitza com a alternativa quan un idioma no té fitxer."
 defaultLocaleLink = "Configura l'idioma predeterminat"
 description = "Mostra un avís legal que els usuaris han d'acceptar després d'iniciar sessió. El text s'adapta a l'idioma de cada usuari."
 discardConfirm = "Teniu canvis no desats que es perdran. Voleu canviar d'idioma igualment?"
@@ -2515,10 +2515,10 @@ text = "És un identificador segur per a la vostra signatura que demostra que he
 title = "Què és un certificat?"
 
 [certSign.certType.tooltip.which]
-bullet1 = "PKCS#12 (.p12 / .pfx) – un sol fitxer combinat (el més habitual)"
-bullet2 = "PFX (.pfx) – la versió de Microsoft de PKCS12"
-bullet3 = "PEM – fitxers .pem de clau privada i certificat separats"
-bullet4 = "JKS – magatzem de claus .jks de Java per a fluxos de treball de dev / CI-CD"
+bullet1 = "PKCS#12 (.p12 / .pfx) - un sol fitxer combinat (el més habitual)"
+bullet2 = "PFX (.pfx) - la versió de Microsoft de PKCS12"
+bullet3 = "PEM - fitxers .pem de clau privada i certificat separats"
+bullet4 = "JKS - magatzem de claus .jks de Java per a fluxos de treball de dev / CI-CD"
 text = "Trieu el format que coincideixi amb el vostre fitxer de certificat:"
 title = "Quina opció hauria d'utilitzar?"
 
@@ -3462,7 +3462,7 @@ showPreferencesBtn = "Gestiona les preferències"
 title = "Com fem servir les galetes"
 
 [cookieBanner.popUp.description]
-1 = "Fem servir galetes i altres tecnologies per fer que Stirling PDF funcioni millor per a vosaltres — ajudant-nos a millorar les nostres eines i a continuar creant funcionalitats que us agradaran."
+1 = "Fem servir galetes i altres tecnologies per fer que Stirling PDF funcioni millor per a vosaltres - ajudant-nos a millorar les nostres eines i a continuar creant funcionalitats que us agradaran."
 2 = "If you’d rather not, clicking 'No Thanks' will only enable the essential cookies needed to keep things running smoothly."
 
 [cookieBanner.preferencesModal]
@@ -3480,11 +3480,11 @@ title = "Analítica"
 
 [cookieBanner.preferencesModal.description]
 1 = "Stirling PDF utilitza galetes i tecnologies similars per millorar la vostra experiència i entendre com s'utilitzen les nostres eines. Això ens ajuda a millorar el rendiment, desenvolupar les funcionalitats que més us importen i oferir suport continu als nostres usuaris."
-2 = "Stirling PDF no pot —i mai— rastrejar ni accedir al contingut dels documents que utilitzeu."
+2 = "Stirling PDF no pot - i mai - rastrejar ni accedir al contingut dels documents que utilitzeu."
 3 = "La vostra privadesa i confiança són al cor del que fem."
 
 [cookieBanner.preferencesModal.necessary]
-description = "These cookies are essential for the website to function properly. They enable core features like setting your privacy preferences, logging in, and filling out forms—which is why they can’t be turned off."
+description = "These cookies are essential for the website to function properly. They enable core features like setting your privacy preferences, logging in, and filling out forms - which is why they can’t be turned off."
 
 [cookieBanner.preferencesModal.necessary.title]
 1 = "Galetes estrictament necessàries"
@@ -3901,7 +3901,7 @@ dateDesc = "Més nous primer"
 dateLabel = "Més recents"
 nameAsc = "De la A a la Z"
 nameDesc = "De la Z a la A"
-nameLabel = "A–Z"
+nameLabel = "A-Z"
 
 [fileSelectorPicker.tabs]
 saved = "Fitxers desats"
@@ -5414,7 +5414,7 @@ userBody = "Convida companys, assigna rols i mantén els documents organitzats e
 userTitle = "Resum del pla"
 
 [onboarding.processorIntro]
-body = "Stirling ara executa <strong>Polítiques</strong> — regles automatitzades que classifiquen, protegeixen i processen cada document quan arriba. Configura-les i supervisa les execucions al <strong>Processador</strong>."
+body = "Stirling ara executa <strong>Polítiques</strong> - regles automatitzades que classifiquen, protegeixen i processen cada document quan arriba. Configura-les i supervisa les execucions al <strong>Processador</strong>."
 cta = "Consulta el Processador"
 title = "Consulta el Processador de Stirling"
 
@@ -5671,7 +5671,7 @@ title = "Eliminació de Pàgines"
 description = "Tria quines pàgines utilitzar per a l'operació. Admet pàgines soltes, intervals, fórmules i la paraula clau all."
 
 [pageSelection.tooltip.complex]
-bullet1 = "<strong>1,3-5,8,2n</strong> → pàgines 1, 3–5, 8, més les parells"
+bullet1 = "<strong>1,3-5,8,2n</strong> → pàgines 1, 3-5, 8, més les parells"
 bullet2 = "<strong>10-,2n-1</strong> → des de la pàgina 10 fins al final + pàgines imparells"
 description = "Barreja diferents tipus."
 title = "Combinacions complexes"
@@ -5694,8 +5694,8 @@ description = "Fes servir n en fórmules per crear patrons."
 title = "Funcions matemàtiques"
 
 [pageSelection.tooltip.ranges]
-bullet1 = "<strong>3-6</strong> → selecciona les pàgines 3–6"
-bullet2 = "<strong>10-15</strong> → selecciona les pàgines 10–15"
+bullet1 = "<strong>3-6</strong> → selecciona les pàgines 3-6"
+bullet2 = "<strong>10-15</strong> → selecciona les pàgines 10-15"
 bullet3 = "<strong>5-</strong> → selecciona des de la pàgina 5 fins al final"
 description = "Fes servir - per a pàgines consecutives."
 title = "Intervals de pàgines"
@@ -5771,7 +5771,7 @@ title = "Turn on the Processor plan"
 eyebrow = "Editor plan · Always free"
 
 [payg.free.header]
-freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
+freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR - as much as you want, no matter where you trigger it."
 freeTitle = "Unlimited PDF editing"
 
 [payg.free.hero]
@@ -5799,8 +5799,8 @@ pauses = "pauses at cap"
 title = "What happens when the cap is reached"
 
 [payg.header]
-eyebrow = "Processor plan · {{start}} – {{end}}"
-freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
+eyebrow = "Processor plan · {{start}} - {{end}}"
+freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR - as much as you want, no matter where you trigger it."
 freeLabel = "Always free"
 freeTitle = "Unlimited PDF editing"
 meterBody = "{{limit}} free PDFs to start, then billed per PDF up to your cap."
@@ -5820,8 +5820,8 @@ chip = "Any prepagat"
 
 [payg.prepaid.banner]
 exhausted = "La teva capacitat prepagada s'ha esgotat; la facturació per ús s'ha reprès. Recarrega per mantenir el descompte."
-expiring_one = "El teu any prepagat acaba d'aquí a {{count}} dia. La capacitat no utilitzada caduca — recarrega per començar un any nou."
-expiring_other = "El teu any prepagat acaba d'aquí a {{count}} dies. La capacitat no utilitzada caduca — recarrega per començar un any nou."
+expiring_one = "El teu any prepagat acaba d'aquí a {{count}} dia. La capacitat no utilitzada caduca - recarrega per començar un any nou."
+expiring_other = "El teu any prepagat acaba d'aquí a {{count}} dies. La capacitat no utilitzada caduca - recarrega per començar un any nou."
 low = "Et queda el {{pct}}% de la teva capacitat prepagada. Recarrega en qualsevol moment per mantenir el processament sense interrupcions."
 
 [payg.prepaid.card]
@@ -6668,7 +6668,7 @@ viewLink = "Mostra ↗"
 
 [portal.billing.linkPrompt]
 cta = "Enllaça el compte de Stirling"
-description = "L'edició manual de PDF — visualitzar, signar, combinar, dividir, afegir marca d'aigua, comprimir, convertir, OCR manual — sempre és gratuïta, estigui enllaçada o no. Enllaça per reclamar 500 PDF gratuïts de processament mesurat (automatització, AI i l'API); quan en necessitis més, activa el pla Processor i paga només pel que utilitzis."
+description = "L'edició manual de PDF - visualitzar, signar, combinar, dividir, afegir marca d'aigua, comprimir, convertir, OCR manual - sempre és gratuïta, estigui enllaçada o no. Enllaça per reclamar 500 PDF gratuïts de processament mesurat (automatització, AI i l'API); quan en necessitis més, activa el pla Processor i paga només pel que utilitzis."
 title = "Enllaça el teu compte de Stirling"
 
 [portal.billing.paymentMethod]
@@ -7371,8 +7371,8 @@ overview = "Visió general"
 requestAccess = "Sol·licita accés"
 
 [portal.documents.elevation.active]
-description = "Concessió temporal — l'accés queda registrat i limitat en el temps."
-descriptionFourEyes = "Concessió temporal — s'ha notificat a un revisor parell (quatre ulls)."
+description = "Concessió temporal - l'accés queda registrat i limitat en el temps."
+descriptionFourEyes = "Concessió temporal - s'ha notificat a un revisor parell (quatre ulls)."
 title = "L'accés caduca d'aquí a {{time}}"
 
 [portal.documents.elevation.gated]
@@ -7433,7 +7433,7 @@ time = "Hora"
 user = "Usuari"
 
 [portal.editorAdmin]
-subtitle = "Desplega l'Editor de Stirling PDF, vincula instàncies self-hosted a la teva organització i opera la flota en execució — objectius, salut, credencials i activació offline en un sol lloc."
+subtitle = "Desplega l'Editor de Stirling PDF, vincula instàncies self-hosted a la teva organització i opera la flota en execució - objectius, salut, credencials i activació offline en un sol lloc."
 title = "Desplegament de l'Editor"
 
 [portal.editorAdmin.health.columns]
@@ -7469,7 +7469,7 @@ rotate = "Rota"
 talkToSales = "Parla amb vendes"
 
 [portal.editorAdmin.sections.health]
-sub = "Cada instància de l'Editor que informa — versió, regió, estat, darrera visualització i usuaris actius."
+sub = "Cada instància de l'Editor que informa - versió, regió, estat, darrera visualització i usuaris actius."
 title = "Salut de la instància"
 
 [portal.editorAdmin.sections.pairing]
@@ -7755,9 +7755,9 @@ done = "Fet"
 keyNameLabel = "Nom de la clau"
 keyNamePlaceholder = "p. ex. Producció · ingestió"
 secretKeyCaption = "Clau secreta"
-secretWarning = "Desa-ho en un gestor de secrets. Stirling només emmagatzema un hash — no hi ha manera de recuperar-ho més tard."
+secretWarning = "Desa-ho en un gestor de secrets. Stirling només emmagatzema un hash - no hi ha manera de recuperar-ho més tard."
 subtitle = "Limita la clau al mínim que necessita. La pots rotar o revocar en qualsevol moment."
-subtitleCreated = "Copia aquest secret ara — no es tornarà a mostrar."
+subtitleCreated = "Copia aquest secret ara - no es tornarà a mostrar."
 title = "Crea una clau API"
 titleCreated = "Clau creada"
 
@@ -8318,7 +8318,7 @@ label = "Envia el document per correu electrònic (Mailgun)"
 [portal.policies.operations.n8nGate]
 description = "Your workflow decides whether the run carries on."
 label = "Ask an n8n workflow to approve"
-note = "The workflow must reply with {\"approved\": true}. Anything else — including a timeout — stops the run and parks the document."
+note = "The workflow must reply with {\"approved\": true}. Anything else - including a timeout - stops the run and parks the document."
 
 [portal.policies.operations.n8nNotify]
 description = "Sends the run's details, not the document."
@@ -8430,7 +8430,7 @@ desc = "Executa OCR perquè les pàgines escanejades es converteixin en text sel
 label = "Fes que el text sigui cercable"
 
 [portal.policies.wizard.capability.redact]
-desc = "Troba i enfosqueix detalls sensibles — com números de la Seguretat Social i de targeta — perquè no es puguin llegir."
+desc = "Troba i enfosqueix detalls sensibles - com números de la Seguretat Social i de targeta - perquè no es puguin llegir."
 label = "Censura informació sensible"
 
 [portal.policies.wizard.capability.sanitize]
@@ -8596,11 +8596,11 @@ postalCodePlaceholder = "94105"
 posture = "Governança"
 posture_count = "~{{count}} polítiques"
 posture_essentials = "Essencials"
-posture_essentialsSub = "Classificació + Compartició — els valors predeterminats"
+posture_essentialsSub = "Classificació + Compartició - els valors predeterminats"
 posture_governed = "Governat"
 posture_governedSub = "Afegeix Seguretat i Encaminament"
 posture_regulated = "Regulat"
-posture_regulatedSub = "Totes les categories — Compliment, Retenció, Ingesta"
+posture_regulatedSub = "Totes les categories - Compliment, Retenció, Ingesta"
 qbr = "Revisions empresarials trimestrals"
 qbrSub = "El teu SE revisa l'ús i el full de ruta cada trimestre"
 region = "Estat / regió"
@@ -8722,7 +8722,7 @@ label = "Prova"
 [portal.procurement.license]
 copied = "Copiat"
 copy = "Copia la clau"
-downloadError = "Encara no s'ha pogut generar el fitxer de llicència offline — torna-ho a provar d'aquí a un moment."
+downloadError = "Encara no s'ha pogut generar el fitxer de llicència offline - torna-ho a provar d'aquí a un moment."
 downloadOffline = "Baixa la llicència offline (.lic)"
 hint = "Enganxa aquesta clau en una instància autoallotjada per activar-la, o conserva-la per als teus registres. Guarda-la en un lloc segur."
 label = "La teva clau de llicència"
@@ -8742,10 +8742,10 @@ eyebrow = "En producció"
 title = "Ja estàs en producció amb Stirling Enterprise"
 
 [portal.procurement.milestone]
-downloadError = "Encara no s'ha pogut baixar el PDF del pressupost — torna-ho a provar d'aquí a un moment."
+downloadError = "Encara no s'ha pogut baixar el PDF del pressupost - torna-ho a provar d'aquí a un moment."
 
 [portal.procurement.payment]
-description = "El teu pressupost s'ha acceptat i la teva llicència ja és activa — el teu equip pot començar de seguida. Paga la primera factura quan estiguis a punt; pots pagar-la o baixar-la aquí, sense correu electrònic."
+description = "El teu pressupost s'ha acceptat i la teva llicència ja és activa - el teu equip pot començar de seguida. Paga la primera factura quan estiguis a punt; pots pagar-la o baixar-la aquí, sense correu electrònic."
 downloadAgreement = "Descarrega l'acord signat"
 downloadInvoice = "Baixa la factura"
 eyebrow = "Pagament"
@@ -8800,7 +8800,7 @@ workEmailPlaceholder = "you@company.com"
 
 [portal.procurement.trial]
 body = "L'extensió afegeix 7 dies i notifica el teu enginyer de solucions."
-bodyMaxed = "Has utilitzat totes les extensions — parla amb el teu enginyer de solucions si necessites més temps."
+bodyMaxed = "Has utilitzat totes les extensions - parla amb el teu enginyer de solucions si necessites més temps."
 cancel = "Cancel·la la prova"
 extend = "Amplia 7 dies"
 maxed = "Límit assolit"
@@ -9037,7 +9037,7 @@ walletUnavailable = "Cartera no disponible: {{status}} {{statusText}}"
 
 [portal.usage.sessionExpired]
 action = "Torna a iniciar la sessió"
-body = "La sessió del teu compte de Stirling ha caducat. Torna a iniciar la sessió per veure la facturació — la teva instància continua enllaçada."
+body = "La sessió del teu compte de Stirling ha caducat. Torna a iniciar la sessió per veure la facturació - la teva instància continua enllaçada."
 title = "Sessió caducada"
 
 [portal.users]
@@ -9065,7 +9065,7 @@ summary = "Accés limitat o només web; no pot tenir configuracions personals."
 
 [portal.users.roles.member]
 label = "Membre"
-summary = "Usuari habitual — treballa amb recursos compartits i les seves pròpies configuracions."
+summary = "Usuari habitual - treballa amb recursos compartits i les seves pròpies configuracions."
 
 [portal.users.roles.member.permissions]
 0 = "Utilitzar l'editor i les integracions compartides"
@@ -9075,7 +9075,7 @@ summary = "Usuari habitual — treballa amb recursos compartits i les seves prò
 
 [portal.users.roles.team_owner]
 label = "Propietari d'equip"
-summary = "Posseeix un equip — en gestiona els recursos dels membres i les configuracions compartides."
+summary = "Posseeix un equip - en gestiona els recursos dels membres i les configuracions compartides."
 
 [portal.users.roles.team_owner.permissions]
 0 = "Crear i gestionar les connexions S3 de l'equip"
@@ -11463,9 +11463,9 @@ emptyFile = "Fitxer buit"
 htmlHidePreview = "Amaga la previsualització"
 htmlPreview = "Previsualització HTML"
 htmlPreviewMobileHidden = "Les pàgines HTML estan dissenyades per a amplades d'escriptori, per tant aquí la previsualització està desactivada per defecte."
-htmlPreviewWarning = "Previsualització HTML — els recursos externs poden no carregar-se · {{size}}"
+htmlPreviewWarning = "Previsualització HTML - els recursos externs poden no carregar-se · {{size}}"
 htmlShowPreview = "Mostra la previsualització igualment"
-invalidJson = "JSON no vàlid — es mostra el contingut en brut"
+invalidJson = "JSON no vàlid - es mostra el contingut en brut"
 lineNumbers = "Números de línia"
 loading = "Carregant..."
 renderMarkdown = "Renderitza Markdown"
@@ -11527,7 +11527,7 @@ create = "Create your first Watched Folder"
 deleteFolder = "Delete folder"
 editFolder = "Edit folder"
 empty = "No watched folders yet"
-emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged — whatever your pipeline does."
+emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged - whatever your pipeline does."
 emptyTitle = "Automate your PDF workflows"
 file = "file"
 files = "files"
@@ -11535,7 +11535,7 @@ pause = "Pause"
 resume = "Resume"
 
 [watchedFolders.howItWorks]
-step1Desc = "Drag PDFs onto any Watched Folder card — or send them from your file list"
+step1Desc = "Drag PDFs onto any Watched Folder card - or send them from your file list"
 step1Title = "Drop files"
 step2Desc = "Your configured tools process each file automatically"
 step2Title = "Pipeline runs"
@@ -11559,18 +11559,18 @@ createFolder = "Create Folder"
 createTitle = "New Watched Folder"
 editTitle = "Edit Watched Folder"
 inputFolder = "Input folder"
-inputFolderNotChosen = "No folder chosen — required for auto-scan"
+inputFolderNotChosen = "No folder chosen - required for auto-scan"
 inputSource = "Input source"
-inputSourceBrowser = "Browser — drop files here"
+inputSourceBrowser = "Browser - drop files here"
 inputSourceLocal = "Local folder (auto-scan)"
-inputSourceLocalUnsupported = "Local folder (auto-scan) — Chrome/Edge only"
+inputSourceLocalUnsupported = "Local folder (auto-scan) - Chrome/Edge only"
 localOutputFolder = "Local output folder"
 maxRetries = "Max retries"
 name = "Folder name"
 namePlaceholder = "My Watched Folder"
 nameRequired = "Folder name is required"
 nameTooLong = "Folder name must be 50 characters or less"
-outputFolderNotSet = "Not set — outputs stay in app"
+outputFolderNotSet = "Not set - outputs stay in app"
 outputFolderUnsupported = "Not supported in this browser"
 outputModeNewDesc = "Output is saved as a new separate file"
 outputModeVersion = "Replace original?"
@@ -11630,9 +11630,9 @@ filterPending = "Pending"
 inputs = "Inputs"
 inputSize = "Input size"
 legendComplete = "Complete"
-noActivity = "No activity yet — drop a PDF to start"
+noActivity = "No activity yet - drop a PDF to start"
 noActivityMatch = "No matching activity"
-noInputFolder = "No input folder — edit to configure"
+noInputFolder = "No input folder - edit to configure"
 outputs = "Outputs"
 pause = "Pause"
 preview = "Preview"
@@ -11640,7 +11640,7 @@ previewInput = "Preview input"
 previewLoadFailed = "Could not load file preview."
 previewOutput = "Preview output"
 queued = "Queued"
-queuedWaiting = "Queued — waiting to run"
+queuedWaiting = "Queued - waiting to run"
 removeEntries = "Remove {{count}} entries"
 removeEntry = "Remove entry"
 removeNotificationsOnly = "Remove notifications only"

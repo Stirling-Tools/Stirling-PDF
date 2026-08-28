@@ -551,7 +551,7 @@ title = "Célozott oldalméret"
 bullet1 = "1.0 = Eredeti méret"
 bullet2 = "0.5 = Fele akkora (50%-kal kisebb)"
 bullet3 = "2.0 = Kétszeres méret (200%-kal nagyobb, levágódhat)"
-text = "Szabályozza, mekkorának látszik a tartalom az oldalon. A tartalom skálázva és középre igazítva lesz – ha a skálázott tartalom nagyobb, mint az oldalméret, levágásra kerülhet."
+text = "Szabályozza, mekkorának látszik a tartalom az oldalon. A tartalom skálázva és középre igazítva lesz - ha a skálázott tartalom nagyobb, mint az oldalméret, levágásra kerülhet."
 title = "Skálázási arány"
 
 [admin]
@@ -696,7 +696,7 @@ title = "Dokumentumok és RAG"
 description = "Hagyja üresen a motor saját környezeti hitelesítő adatainak használatához. Saját üzemeltetésű, egymotoros telepítésekre vonatkozik."
 generic = "Embedding API key"
 openai = "OpenAI API key"
-setPlaceholder = "Mentve – hagyja üresen az aktuális kulcs megtartásához"
+setPlaceholder = "Mentve - hagyja üresen az aktuális kulcs megtartásához"
 voyageai = "VoyageAI API key"
 
 [admin.settings.ai.documents.embeddingBaseUrl]
@@ -815,7 +815,7 @@ anthropic = "Anthropic API key"
 description = "Hagyja üresen a motor saját környezeti hitelesítő adatainak használatához. Saját üzemeltetésű, egymotoros telepítésekre vonatkozik."
 generic = "API key"
 openai = "OpenAI API key"
-setPlaceholder = "Mentve – hagyja üresen az aktuális kulcs megtartásához"
+setPlaceholder = "Mentve - hagyja üresen az aktuális kulcs megtartásához"
 
 [admin.settings.ai.models.baseUrl]
 description = "Az OpenAI-kompatibilis / Ollama végpont alap URL-je, pl. http://ollama:11434/v1."
@@ -1162,7 +1162,7 @@ description = "Elérési út a LibreOffice unoconverthez dokumentumkonverziókho
 label = "Unoconvert futtatható állomány"
 
 [admin.settings.general.customPaths.operations.weasyprint]
-description = "A WeasyPrint futtatható állomány elérési útja HTML–PDF átalakításhoz (hagyja üresen az alapértelmezettért: /opt/venv/bin/weasyprint)"
+description = "A WeasyPrint futtatható állomány elérési útja HTML-PDF átalakításhoz (hagyja üresen az alapértelmezettért: /opt/venv/bin/weasyprint)"
 label = "WeasyPrint futtatható állomány"
 
 [admin.settings.general.customPaths.pipeline]
@@ -1254,7 +1254,7 @@ description = "URL vagy fájlnév az impresszumhoz (egyes joghatóságokban köt
 label = "Impresszum"
 
 [admin.settings.legal.loginAgreement]
-defaultLocaleHint = "— tartalékként használjuk, ha egy nyelvhez nincs fájl."
+defaultLocaleHint = "- tartalékként használjuk, ha egy nyelvhez nincs fájl."
 defaultLocaleLink = "Alapértelmezett területi beállítás konfigurálása"
 description = "Egy nyilatkozatot jelenít meg, amelyet a felhasználóknak bejelentkezés után el kell fogadniuk. A szöveg a felhasználó nyelvét követi."
 discardConfirm = "Nem mentett módosításai vannak, amelyek el fognak veszni. Ennek ellenére vált nyelvet?"
@@ -1560,7 +1560,7 @@ description = "RFC 1918 privát hálózatok tiltása (10.x.x.x, 192.168.x.x, 172
 label = "Privát hálózatok tiltása"
 
 [admin.settings.security.htmlUrlSecurity.enabled]
-description = "URL-biztonsági korlátozások engedélyezése HTML–PDF átalakításokhoz"
+description = "URL-biztonsági korlátozások engedélyezése HTML-PDF átalakításokhoz"
 label = "URL-biztonság engedélyezése"
 
 [admin.settings.security.htmlUrlSecurity.internalTlds]
@@ -2022,8 +2022,8 @@ insufficientPermissions = "Nincs jogosultsága a művelet végrehajtásához."
 
 [auth.callback]
 completing = "Hitelesítés befejezése"
-invalidToken = "OAuth bejelentkezés sikertelen – érvénytelen token."
-missingToken = "OAuth bejelentkezés sikertelen – nem érkezett token."
+invalidToken = "OAuth bejelentkezés sikertelen - érvénytelen token."
+missingToken = "OAuth bejelentkezés sikertelen - nem érkezett token."
 oauthFailed = "OAuth bejelentkezés sikertelen. Próbálja újra."
 pleaseWait = "Kérjük, várjon, amíg befejezzük a bejelentkezést."
 signedOut = "Kijelentkezett. Kérjük, jelentkezzen be újra."
@@ -2318,8 +2318,8 @@ failed = "Hiba történt a füzetkiosztás létrehozása közben."
 
 [bookletImposition.flipOnShortEdge]
 label = "Rövid él mentén forgatás (csak automatikus duplex)"
-manualNote = "Kézi módban nem szükséges – a köteget Ön fordítja meg"
-tooltip = "Engedélyezze rövid élre forgató duplex nyomtatáshoz (csak automatikus duplex – kézi módban figyelmen kívül hagyva)"
+manualNote = "Kézi módban nem szükséges - a köteget Ön fordítja meg"
+tooltip = "Engedélyezze rövid élre forgató duplex nyomtatáshoz (csak automatikus duplex - kézi módban figyelmen kívül hagyva)"
 
 [bookletImposition.gutterSize]
 label = "Kötőmargó mérete (pont)"
@@ -2385,7 +2385,7 @@ combineSets = "Halmazok kombinálása"
 every3rd = "Minden 3."
 first50 = "Első 50"
 last50 = "Utolsó 50"
-oddWithinExcluding = "Páratlanok 1–20 között, 5–7 kivételével"
+oddWithinExcluding = "Páratlanok 1-20 között, 5-7 kivételével"
 title = "Példák"
 
 [bulkSelection.firstNPages]
@@ -2515,10 +2515,10 @@ text = "Ez egy biztonságos azonosító az aláírásához, amely igazolja, hogy
 title = "Mi az a tanúsítvány?"
 
 [certSign.certType.tooltip.which]
-bullet1 = "PKCS#12 (.p12 / .pfx) – egy kombinált fájl (leggyakoribb)"
-bullet2 = "PFX (.pfx) – a Microsoft PKCS12-változata"
-bullet3 = "PEM – külön privát kulcs és tanúsítvány .pem fájlok"
-bullet4 = "JKS – Java .jks kulcstár fejlesztői / CI-CD munkafolyamatokhoz"
+bullet1 = "PKCS#12 (.p12 / .pfx) - egy kombinált fájl (leggyakoribb)"
+bullet2 = "PFX (.pfx) - a Microsoft PKCS12-változata"
+bullet3 = "PEM - külön privát kulcs és tanúsítvány .pem fájlok"
+bullet4 = "JKS - Java .jks kulcstár fejlesztői / CI-CD munkafolyamatokhoz"
 text = "Válassza ki az opciót, amely megfelel a tanúsítványfájljának formátumának:"
 title = "Melyik opciót válasszam?"
 
@@ -2717,7 +2717,7 @@ expires = "lejár"
 listCerts = "Tanúsítványok listázása"
 loading = "Tanúsítványok beolvasása…"
 noCerts = "Nem található aláíró tanúsítvány"
-noDriver = "Nem észleltünk PKCS#11 illesztőprogramot. Telepítse a token illesztőprogramját (pl. OpenSC), majd nyissa meg újra ezt – vagy adja meg alább kézzel az illesztőprogram útvonalát."
+noDriver = "Nem észleltünk PKCS#11 illesztőprogramot. Telepítse a token illesztőprogramját (pl. OpenSC), majd nyissa meg újra ezt - vagy adja meg alább kézzel az illesztőprogram útvonalát."
 notYetValid = "még nem érvényes"
 pin = "Token PIN-kód"
 pkcs11Hint = "Válassza ki a token PKCS#11 illesztőprogramját, adja meg a PIN-kódot, majd listázza a tokenen lévő tanúsítványokat."
@@ -2726,7 +2726,7 @@ refresh = "Frissítés"
 selectCert = "Tanúsítvány kiválasztása"
 selectDriver = "Illesztőprogram kiválasztása"
 slot = "Foglalat (opcionális)"
-windowsHint = "Válasszon tanúsítványt a Windows tanúsítványtárból. Az aláírás a kártyán/tokenen lévő kulcsot használja – a Windows bekéri a PIN-kódot."
+windowsHint = "Válasszon tanúsítványt a Windows tanúsítványtárból. Az aláírás a kártyán/tokenen lévő kulcsot használja - a Windows bekéri a PIN-kódot."
 windowsLoadError = "Nem sikerült beolvasni a Windows tanúsítványtárat"
 
 [certSign.sessions]
@@ -2860,7 +2860,7 @@ title = "Csapolási állapot"
 bullet1 = "Adjon hozzá bármely, a dokumentumhoz kapcsolódó egyéni mezőt"
 bullet2 = "Példák: Osztály, Projekt, Verzió, Állapot"
 bullet3 = "Minden bejegyzéshez kötelező a kulcs és az érték is"
-text = "Adjon hozzá saját egyéni kulcs–érték metaadatpárokat."
+text = "Adjon hozzá saját egyéni kulcs-érték metaadatpárokat."
 title = "Egyéni metaadatok"
 
 [changeMetadata.tooltip.dates]
@@ -3219,7 +3219,7 @@ title = "Vonalrajz"
 [compress.tooltip.qualityAdjustment]
 bullet1 = "Alacsonyabb értékek megőrzik a minőséget"
 bullet2 = "Magasabb értékek csökkentik a fájlméretet"
-text = "Húzza a csúszkát a tömörítés erősségének beállításához. Az alacsonyabb értékek (1–3) megőrzik a minőséget, de nagyobb fájlokat eredményeznek. A magasabb értékek (7–9) jobban zsugorítják a fájlt, de csökkentik a képek élességét."
+text = "Húzza a csúszkát a tömörítés erősségének beállításához. Az alacsonyabb értékek (1-3) megőrzik a minőséget, de nagyobb fájlokat eredményeznek. A magasabb értékek (7-9) jobban zsugorítják a fájlt, de csökkentik a képek élességét."
 title = "Minőség állítása"
 
 [compressPdfs]
@@ -3901,7 +3901,7 @@ dateDesc = "Legújabbak elöl"
 dateLabel = "Legújabb"
 nameAsc = "A-tól Z-ig"
 nameDesc = "Z-től A-ig"
-nameLabel = "A–Z"
+nameLabel = "A-Z"
 
 [fileSelectorPicker.tabs]
 saved = "Mentett fájlok"
@@ -4015,7 +4015,7 @@ inPath = "itt: {{path}}"
 inWorkspace = "Megnyitva"
 inWorkspaceAria = "Már a munkaterületen"
 loading = "Betöltés…"
-localFoldersUnavailable = "A mappák csak felhőben érhetők el – mentsen fájlt a felhőbe a rendszerezéshez."
+localFoldersUnavailable = "A mappák csak felhőben érhetők el - mentsen fájlt a felhőbe a rendszerezéshez."
 moveSkippedRemote_one = "{{count}} file couldn't be moved on the server (no permission or already deleted)."
 moveSkippedRemote_other = "{{count}} files couldn't be moved on the server (no permission or already deleted)."
 moveTo = "Áthelyezés…"
@@ -4023,7 +4023,7 @@ myFiles = "Saját fájlok"
 newFolder = "Új mappa"
 newFolderStorageDisabled = "A szerver mappatárolása nincs engedélyezve. Kérje meg az adminisztrátort, hogy kapcsolja be."
 newFolderTabUnavailable = "Váltson az Összes vagy a Felhő fülre mappák létrehozásához."
-offlineNoFolderEdits = "A szerver mappaszinkronja nem érhető el – mappamódosítások letiltva. Ellenőrizze a bejelentkezést és a tárhely beállításait."
+offlineNoFolderEdits = "A szerver mappaszinkronja nem érhető el - mappamódosítások letiltva. Ellenőrizze a bejelentkezést és a tárhely beállításait."
 open = "Megnyitás"
 openVersionInWorkspace = "Megnyitás a munkaterületen"
 originFilter = "Szűrés forrás szerint"
@@ -4495,8 +4495,8 @@ unknown = "Ismeretlen szerző"
 untitled = "egy cím nélküli dokumentum"
 
 [getPdfInfo.summary.security]
-encrypted = "Titkosított PDF – jelszóvédelemmel"
-unencrypted = "Titkosítatlan PDF – nincs jelszóvédelem"
+encrypted = "Titkosított PDF - jelszóvédelemmel"
+unencrypted = "Titkosítatlan PDF - nincs jelszóvédelem"
 
 [getPdfInfo.summary.tech]
 bookmarks = "Könyvjelzők"
@@ -5351,7 +5351,7 @@ runButton = "Miután beállította az eszközt, ezzel a gombbal futtathatja azt 
 selectCropTool = "Válasszuk ki a <strong>Vágás</strong> eszközt, hogy bemutassuk egy eszköz használatát."
 stepOf = "{{current}}/{{total}}. lépés"
 toolInterface = "Ez a <strong>Vágás</strong> eszköz felülete. Ahogy látható, még nincs itt sok minden, mert még nem adtunk hozzá PDF-fájlokat."
-workbench = "Ez a <strong>Munkaterület</strong> – a fő terület, ahol megtekintheti és szerkesztheti a PDF-jeit."
+workbench = "Ez a <strong>Munkaterület</strong> - a fő terület, ahol megtekintheti és szerkesztheti a PDF-jeit."
 wrapUp = "Készen is van! Megismerte az alkalmazás fő területeit és használatukat. A túrát bármikor újra megtekintheti a <strong>Súgó</strong> gombra kattintva."
 
 [onboarding.buttons]
@@ -5414,7 +5414,7 @@ userBody = "Hívja meg a csapattagokat, rendeljen szerepköröket, és tartsa re
 userTitle = "Csomag áttekintése"
 
 [onboarding.processorIntro]
-body = "A Stirling mostantól <strong>Szabályokat</strong> futtat — automatizált szabályokat, amelyek érkezéskor minden dokumentumot osztályoznak, védenek és feldolgoznak. Állítsa be őket, és kövesse a futásokat a <strong>Processor</strong> felületén."
+body = "A Stirling mostantól <strong>Szabályokat</strong> futtat - automatizált szabályokat, amelyek érkezéskor minden dokumentumot osztályoznak, védenek és feldolgoznak. Állítsa be őket, és kövesse a futásokat a <strong>Processor</strong> felületén."
 cta = "A Processor megtekintése"
 title = "Ismerje meg a Stirling Processort"
 
@@ -5441,9 +5441,9 @@ rolePlaceholder = "Erősítse meg a szerepkörét"
 roleUser = "Felhasználó"
 
 [onboarding.serverLicense]
-freeBody = "Az <strong>Open-Core</strong> licencelésünk szerverenként legfeljebb <strong>{{freeTierLimit}}</strong> felhasználót enged ingyen. A zavartalan bővüléshez és az új <strong>PDF szövegszerkesztő eszköz</strong> korai eléréséhez a Stirling Server csomagot ajánljuk – teljes szerkesztés és <strong>korlátlan hely</strong> $99/szerver/hó áron."
+freeBody = "Az <strong>Open-Core</strong> licencelésünk szerverenként legfeljebb <strong>{{freeTierLimit}}</strong> felhasználót enged ingyen. A zavartalan bővüléshez és az új <strong>PDF szövegszerkesztő eszköz</strong> korai eléréséhez a Stirling Server csomagot ajánljuk - teljes szerkesztés és <strong>korlátlan hely</strong> $99/szerver/hó áron."
 freeTitle = "Szerverlicenc"
-overLimitBody = "Licencelésünk szerverenként legfeljebb <strong>{{freeTierLimit}}</strong> felhasználót enged ingyen. Önnek <strong>{{overLimitUserCopy}}</strong> Stirling felhasználója van. A zavartalan használathoz váltson a Stirling Server csomagra – <strong>korlátlan hely</strong>, PDF szövegszerkesztés és teljes adminisztrátori vezérlés $99/szerver/hó áron."
+overLimitBody = "Licencelésünk szerverenként legfeljebb <strong>{{freeTierLimit}}</strong> felhasználót enged ingyen. Önnek <strong>{{overLimitUserCopy}}</strong> Stirling felhasználója van. A zavartalan használathoz váltson a Stirling Server csomagra - <strong>korlátlan hely</strong>, PDF szövegszerkesztés és teljes adminisztrátori vezérlés $99/szerver/hó áron."
 overLimitTitle = "Szerverlicenc szükséges"
 seePlans = "Csomagok megtekintése →"
 upgrade = "Frissítés most →"
@@ -5453,7 +5453,7 @@ body = "A Stirling PDF V2 tucatnyi eszközzel és megújult elrendezéssel érke
 title = "Bemutató áttekintése"
 
 [onboarding.welcomeSlide]
-body = "A Stirling PDF mostantól minden méretű csapat számára készen áll. Ez a frissítés új elrendezést, erőteljes új adminisztrátori képességeket és a leggyakrabban kért funkciónkat – a <strong>Szöveg szerkesztése</strong>-t tartalmazza."
+body = "A Stirling PDF mostantól minden méretű csapat számára készen áll. Ez a frissítés új elrendezést, erőteljes új adminisztrátori képességeket és a leggyakrabban kért funkciónkat - a <strong>Szöveg szerkesztése</strong>-t tartalmazza."
 title = "Üdvözöljük a Stirlingben"
 
 [onboarding.whatsNew]
@@ -5671,7 +5671,7 @@ title = "Oldaleltávolító"
 description = "Válassza ki, mely oldalakat használja a művelethez. Támogatja az egyes oldalakat, tartományokat, képleteket és az all kulcsszót."
 
 [pageSelection.tooltip.complex]
-bullet1 = "<strong>1,3-5,8,2n</strong> → az 1., 3–5., 8. oldalak, plusz a párosak"
+bullet1 = "<strong>1,3-5,8,2n</strong> → az 1., 3-5., 8. oldalak, plusz a párosak"
 bullet2 = "<strong>10-,2n-1</strong> → a 10. oldaltól a végéig + páratlan oldalak"
 description = "Különböző típusok vegyítése."
 title = "Összetett kombinációk"
@@ -5694,8 +5694,8 @@ description = "Mintákhoz használja az n-t a képletekben."
 title = "Matematikai funkciók"
 
 [pageSelection.tooltip.ranges]
-bullet1 = "<strong>3-6</strong> → a 3–6. oldalak kijelölése"
-bullet2 = "<strong>10-15</strong> → a 10–15. oldalak kijelölése"
+bullet1 = "<strong>3-6</strong> → a 3-6. oldalak kijelölése"
+bullet2 = "<strong>10-15</strong> → a 10-15. oldalak kijelölése"
 bullet3 = "<strong>5-</strong> → az 5. oldaltól a végéig"
 description = "Használja a - jelet a folyamatos oldaltartományokhoz."
 title = "Oldaltartományok"
@@ -5771,7 +5771,7 @@ title = "Turn on the Processor plan"
 eyebrow = "Editor plan · Always free"
 
 [payg.free.header]
-freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
+freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR - as much as you want, no matter where you trigger it."
 freeTitle = "Unlimited PDF editing"
 
 [payg.free.hero]
@@ -5799,8 +5799,8 @@ pauses = "pauses at cap"
 title = "What happens when the cap is reached"
 
 [payg.header]
-eyebrow = "Processor plan · {{start}} – {{end}}"
-freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
+eyebrow = "Processor plan · {{start}} - {{end}}"
+freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR - as much as you want, no matter where you trigger it."
 freeLabel = "Always free"
 freeTitle = "Unlimited PDF editing"
 meterBody = "{{limit}} free PDFs to start, then billed per PDF up to your cap."
@@ -5820,8 +5820,8 @@ chip = "Előre fizetett év"
 
 [payg.prepaid.banner]
 exhausted = "Az előre fizetett kapacitása elfogyott; a mért számlázás újraindult. Töltse fel, hogy megőrizze a kedvezményt."
-expiring_one = "Az előre fizetett éve {{count}} nap múlva lejár. A fel nem használt kapacitás lejár — töltse fel egy új év indításához."
-expiring_other = "Az előre fizetett éve {{count}} nap múlva lejár. A fel nem használt kapacitás lejár — töltse fel egy új év indításához."
+expiring_one = "Az előre fizetett éve {{count}} nap múlva lejár. A fel nem használt kapacitás lejár - töltse fel egy új év indításához."
+expiring_other = "Az előre fizetett éve {{count}} nap múlva lejár. A fel nem használt kapacitás lejár - töltse fel egy új év indításához."
 low = "Az előre fizetett kapacitásának {{pct}}%-a maradt. Bármikor feltöltheti, hogy a feldolgozás megszakítás nélkül folytatódjon."
 
 [payg.prepaid.card]
@@ -5962,14 +5962,14 @@ continue = "Folytatás"
 description = "Ezt használjuk a licenckulcs és a bizonylatok elküldésére."
 emailLabel = "E-mail-cím"
 emailPlaceholder = "your@email.com"
-modalTitle = "Kezdés – {{planName}}"
+modalTitle = "Kezdés - {{planName}}"
 
 [payment.paymentStage]
-modalTitle = "Fizetés befejezése – {{planName}}"
+modalTitle = "Fizetés befejezése - {{planName}}"
 
 [payment.planStage]
 billedYearly = "Évente számlázva: {{currency}}{{amount}}"
-modalTitle = "Számlázási időszak kiválasztása – {{planName}}"
+modalTitle = "Számlázási időszak kiválasztása - {{planName}}"
 savePercent = "Megtakarítás: {{percent}}%"
 savingsAmount = "Megtakarítás: {{amount}}"
 selectMonthly = "Havi kiválasztása"
@@ -6121,7 +6121,7 @@ processing = "Processing"
 uploading = "Uploading"
 
 [pdfTextEditor.tooltip.alpha]
-text = "Ez az alfa megjelenítő még fejlődik — bizonyos betűtípusok, színek, áttetszőségi hatások és elrendezési részletek kissé eltérhetnek. Kérjük, megosztás előtt ellenőrizze a létrehozott PDF-et."
+text = "Ez az alfa megjelenítő még fejlődik - bizonyos betűtípusok, színek, áttetszőségi hatások és elrendezési részletek kissé eltérhetnek. Kérjük, megosztás előtt ellenőrizze a létrehozott PDF-et."
 title = "Alfa megjelenítő"
 
 [pdfTextEditor.tooltip.header]
@@ -6146,8 +6146,8 @@ feedback = "Ez egy korai hozzáférésű funkció. Kérjük, jelezzen minden és
 gotIt = "Rendben"
 howItWorks = "Ez az eszköz a PDF-et szerkeszthető formátumra alakítja, ahol módosíthatja a szövegtartalmat és áthelyezheti a képeket. A módosítások új PDF-ként kerülnek mentésre."
 issue1 = "A szöveg színe jelenleg nem marad meg (hamarosan hozzáadjuk)"
-issue2 = "A Bekezdés módnál több igazítási és térköz probléma fordul elő – a Single Line mód ajánlott"
-issue3 = "Az előnézeti megjelenítés eltér az exportált PDF-től – az exportált PDF-ek közelebb állnak az eredetihez"
+issue2 = "A Bekezdés módnál több igazítási és térköz probléma fordul elő - a Single Line mód ajánlott"
+issue3 = "Az előnézeti megjelenítés eltér az exportált PDF-től - az exportált PDF-ek közelebb állnak az eredetihez"
 issue4 = "A forgatott szöveg igazítása kézi beállítást igényelhet"
 issue5 = "Az átlátszóság és a rétegzés effektusai eltérhetnek az eredetitől"
 knownIssues = "Ismert problémák (javítás alatt):"
@@ -6522,7 +6522,7 @@ never = "soha"
 [portal.accountLink.modal]
 linkSubtitle = "Jelentkezzen be abba a fiókba, amelyre ennek a szervernek számláznia kell."
 linkTitle = "Stirling-fiók összekapcsolása"
-reauthSubtitle = "A munkamenete lejárt — jelentkezzen be újra a Stirling-fiókjába. A példánya összekapcsolva marad."
+reauthSubtitle = "A munkamenete lejárt - jelentkezzen be újra a Stirling-fiókjába. A példánya összekapcsolva marad."
 reauthTitle = "Bejelentkezés újra"
 simulateSignIn = "Bejelentkezés szimulálása (dev)"
 
@@ -6582,7 +6582,7 @@ noClientSecret = "Az Edge function nem adott vissza client_secret értéket."
 title = "Processor csomag bekapcsolása"
 
 [portal.billing.checkout.activationSlow]
-body = "A fizetés sikerült, de az aktiválás a szokásosnál kicsit tovább tart. Automatikusan bekapcsol — zárja be ezt, és hamarosan megjelenik itt."
+body = "A fizetés sikerült, de az aktiválás a szokásosnál kicsit tovább tart. Automatikusan bekapcsol - zárja be ezt, és hamarosan megjelenik itt."
 close = "Bezárás"
 title = "Majdnem kész"
 
@@ -6606,7 +6606,7 @@ note = "A kártyaadatokat a Stripe gyűjti. A Stirling soha nem tárol PAN-t vag
 title = "Nem sikerült elindítani a fizetést"
 
 [portal.billing.checkout.finalizing]
-body = "A fizetés sikerült. Bekapcsoljuk a mért feldolgozást az összekapcsolt példányokon — ez általában néhány másodpercig tart."
+body = "A fizetés sikerült. Bekapcsoljuk a mért feldolgozást az összekapcsolt példányokon - ez általában néhány másodpercig tart."
 hint = "Kérjük, hagyja nyitva ezt az ablakot."
 title = "Processor csomag aktiválása..."
 
@@ -6633,7 +6633,7 @@ title = "Ingyenes PDF szerkesztők"
 checkoutErrorTitle = "Nem sikerült elindítani a fizetést"
 currentPlan = "Aktuális csomag"
 freeForever = "Örökké ingyenes"
-noTeamResolved = "A tárcájához még nincs csapat hozzárendelve — frissítsen, és próbálja újra."
+noTeamResolved = "A tárcájához még nincs csapat hozzárendelve - frissítsen, és próbálja újra."
 ownerOnly = "Csak a csapat tulajdonosa kapcsolhatja be a Processor csomagot."
 payInvoice = "Számla kifizetése a befejezéshez"
 planName = "Editor"
@@ -6668,7 +6668,7 @@ viewLink = "Megtekintés ↗"
 
 [portal.billing.linkPrompt]
 cta = "Stirling-fiók összekapcsolása"
-description = "A kézi PDF-szerkesztés — megtekintés, aláírás, egyesítés, felosztás, vízjelezés, tömörítés, konvertálás, kézi OCR — mindig ingyenes, akár össze van kapcsolva a fiók, akár nem. Kapcsolja össze, hogy igénybe vegyen 500 ingyenes PDF-et mért feldolgozásra (automatizálás, AI és az API); ha többre van szüksége, kapcsolja be a Processor csomagot, és csak azért fizessen, amit használ."
+description = "A kézi PDF-szerkesztés - megtekintés, aláírás, egyesítés, felosztás, vízjelezés, tömörítés, konvertálás, kézi OCR - mindig ingyenes, akár össze van kapcsolva a fiók, akár nem. Kapcsolja össze, hogy igénybe vegyen 500 ingyenes PDF-et mért feldolgozásra (automatizálás, AI és az API); ha többre van szüksége, kapcsolja be a Processor csomagot, és csak azért fizessen, amit használ."
 title = "Stirling-fiók összekapcsolása"
 
 [portal.billing.paymentMethod]
@@ -6802,13 +6802,13 @@ low = "Kevés maradt"
 [portal.billing.spendLimit]
 adjustLimit = "Limit módosítása"
 cancel = "Mégse"
-capControlNote = "A módosítások azonnal érvénybe lépnek — bármikor emelheti vagy csökkentheti a felső határt."
+capControlNote = "A módosítások azonnal érvénybe lépnek - bármikor emelheti vagy csökkentheti a felső határt."
 capSuffix = "/ hónap"
 capSuffixWithDocs = "/ hónap · ≈ {{documents}} dokumentum"
-displaySub = "Csak azért számlázunk, amit automatikusan feldolgoz — soha nem a felső határ felett."
+displaySub = "Csak azért számlázunk, amit automatikusan feldolgoz - soha nem a felső határ felett."
 editTitle = "Havi felső határ beállítása"
 eyebrow = "Költési limit"
-guardrailBody = "kemény felső határ — soha nem számlázunk ezen túl. A limit elérésekor a mért feldolgozás szünetel (a korlátlan PDF-szerkesztés tovább működik), amíg meg nem emeli, vagy a ciklus újra nem indul. Semmi sem vész el."
+guardrailBody = "kemény felső határ - soha nem számlázunk ezen túl. A limit elérésekor a mért feldolgozás szünetel (a korlátlan PDF-szerkesztés tovább működik), amíg meg nem emeli, vagy a ciklus újra nem indul. Semmi sem vész el."
 guardrailLabel = "Az Ön védőkorlátja:"
 noCap = "nincs limit"
 pctUsed = "{{pct}}% felhasználva"
@@ -6898,7 +6898,7 @@ description = "Küldjön ki egy dokumentumot aláírásra vagy közjegyzői hite
 label = "E-aláírás és közjegyzői hitelesítés"
 
 [portal.connections.categories.storage]
-description = "Ahova a feldolgozott dokumentumok kerülnek – bucket, meghajtó, ticket vagy oldal."
+description = "Ahova a feldolgozott dokumentumok kerülnek - bucket, meghajtó, ticket vagy oldal."
 label = "Fájl és csatolás"
 
 [portal.connections.commonFields.accessToken]
@@ -6947,9 +6947,9 @@ save = "Kapcsolat mentése"
 [portal.connections.picker2]
 back = "Integráció módosítása"
 heading = "Mit szeretne csatlakoztatni?"
-noResultsBody = "Ezt még nem támogatjuk – jelezze nekünk, és megvizsgáljuk a hozzáadását."
+noResultsBody = "Ezt még nem támogatjuk - jelezze nekünk, és megvizsgáljuk a hozzáadását."
 noResultsTitle = "Nincs találat erre: \"{{query}}\""
-searchPlaceholder = "Integrációk keresése – próbálja: \"sign\", \"ocr\" vagy egy terméknév"
+searchPlaceholder = "Integrációk keresése - próbálja: \"sign\", \"ocr\" vagy egy terméknév"
 
 [portal.connections.types.api]
 description = "Hívjon meg bármilyen HTTP API-t egy szabályból. Ön választja ki az URL-t, a hitelesítést és a payloadot."
@@ -7008,7 +7008,7 @@ label = "Felhasználónév"
 
 [portal.connections.types.clamav]
 baseUrlPlaceholder = "http://clamav-rest:9000"
-description = "Dokumentumok kártevő-ellenőrzése egy Ön által futtatott szerveren – semmi sem hagyja el a hálózatát."
+description = "Dokumentumok kártevő-ellenőrzése egy Ön által futtatott szerveren - semmi sem hagyja el a hálózatát."
 label = "ClamAV (saját üzemeltetésű)"
 
 [portal.connections.types.cloudmersive]
@@ -7016,7 +7016,7 @@ description = "Vírus- és tartalomellenőrzés dokumentumokhoz egy szabályban.
 label = "Cloudmersive"
 
 [portal.connections.types.cloudmersiveadvanced]
-description = "Makrókat, végrehajtható fájlokat, szkripteket vagy beágyazott objektumokat tartalmazó dokumentumok blokkolása – nem csak ismert kártevők."
+description = "Makrókat, végrehajtható fájlokat, szkripteket vagy beágyazott objektumokat tartalmazó dokumentumok blokkolása - nem csak ismert kártevők."
 label = "Cloudmersive Advanced Scan"
 
 [portal.connections.types.confluence]
@@ -7243,8 +7243,8 @@ viewSource = "Forrás megtekintése GitHubon"
 codeCaption = "minden kérés"
 eyebrow = "ELSŐ LÉPÉSEK"
 lead = "Minden kérés bearer tokennel hitelesít. A kulcsok környezetenként hatókörözöttek, és soha nem járnak le, hacsak nem rotálják őket."
-liveKey = "Éles kulcsok — számlázottak, a csomagja szerint sebességkorlátozottak."
-testKey = "Sandbox kulcsok — ingyenesek, szintetikus fixture-öket adnak vissza."
+liveKey = "Éles kulcsok - számlázottak, a csomagja szerint sebességkorlátozottak."
+testKey = "Sandbox kulcsok - ingyenesek, szintetikus fixture-öket adnak vissza."
 title = "Hitelesítés"
 
 [portal.docs.components]
@@ -7282,7 +7282,7 @@ title = "Quickstart"
 
 [portal.docs.quickstart.callout]
 bodyAfterLink = "másolható receptekért."
-bodyBeforeLink = "illessze ugyanezt a hívást egy pipeline-ba az ellenőrzés, kitakarás és kézbesítés láncolásához — vagy tegye elérhetővé egy ügynök számára MCP-n keresztül. Lásd:"
+bodyBeforeLink = "illessze ugyanezt a hívást egy pipeline-ba az ellenőrzés, kitakarás és kézbesítés láncolásához - vagy tegye elérhetővé egy ügynök számára MCP-n keresztül. Lásd:"
 label = "Következő:"
 link = "Playbookok"
 
@@ -7291,7 +7291,7 @@ body = "Hozzon létre egy hatókörözött kulcsot az Infrastructure lapon. A ku
 title = "API-kulcs kiadása"
 
 [portal.docs.quickstart.step2]
-body = "Küldjön POST-tal egy fájlt bármelyik típusos endpointnak. Az endpoint határozza meg a visszakapott sémát — itt a számlakinyerő."
+body = "Küldjön POST-tal egy fájlt bármelyik típusos endpointnak. Az endpoint határozza meg a visszakapott sémát - itt a számlakinyerő."
 snippetCaption = "számla kinyerése"
 title = "Dokumentum küldése"
 
@@ -7371,8 +7371,8 @@ overview = "Áttekintés"
 requestAccess = "Hozzáférés kérése"
 
 [portal.documents.elevation.active]
-description = "Ideiglenes engedély — a hozzáférés naplózva van és időkorlátos."
-descriptionFourEyes = "Ideiglenes engedély — egy szakmai felülvizsgáló értesítést kapott (four-eyes)."
+description = "Ideiglenes engedély - a hozzáférés naplózva van és időkorlátos."
+descriptionFourEyes = "Ideiglenes engedély - egy szakmai felülvizsgáló értesítést kapott (four-eyes)."
 title = "A hozzáférés lejár: {{time}}"
 
 [portal.documents.elevation.gated]
@@ -7433,7 +7433,7 @@ time = "Idő"
 user = "Felhasználó"
 
 [portal.editorAdmin]
-subtitle = "Telepítse a Stirling PDF Editor-t, párosítsa a self-hosted példányokat a szervezetéhez, és kezelje a futó flottát — célok, állapot, hitelesítő adatok és offline aktiválás egy helyen."
+subtitle = "Telepítse a Stirling PDF Editor-t, párosítsa a self-hosted példányokat a szervezetéhez, és kezelje a futó flottát - célok, állapot, hitelesítő adatok és offline aktiválás egy helyen."
 title = "Editor telepítése"
 
 [portal.editorAdmin.health.columns]
@@ -7469,7 +7469,7 @@ rotate = "Rotálás"
 talkToSales = "Kapcsolat az értékesítéssel"
 
 [portal.editorAdmin.sections.health]
-sub = "Minden Editor példány jelentkezik — verzió, régió, állapot, utoljára látható és aktív felhasználók."
+sub = "Minden Editor példány jelentkezik - verzió, régió, állapot, utoljára látható és aktív felhasználók."
 title = "Példányállapot"
 
 [portal.editorAdmin.sections.pairing]
@@ -7755,9 +7755,9 @@ done = "Kész"
 keyNameLabel = "Kulcs neve"
 keyNamePlaceholder = "pl. Production · ingest"
 secretKeyCaption = "Titkos kulcs"
-secretWarning = "Tárolja ezt secrets managerben. A Stirling csak hash-t tárol — később nincs mód a visszaállítására."
+secretWarning = "Tárolja ezt secrets managerben. A Stirling csak hash-t tárol - később nincs mód a visszaállítására."
 subtitle = "A kulcs hatókörét a szükséges minimumra korlátozza. Bármikor rotálhatja vagy visszavonhatja."
-subtitleCreated = "Másolja ki most ezt a titkot — többé nem jelenik meg."
+subtitleCreated = "Másolja ki most ezt a titkot - többé nem jelenik meg."
 title = "API kulcs létrehozása"
 titleCreated = "Kulcs létrehozva"
 
@@ -8182,7 +8182,7 @@ title = "Backend nem érhető el"
 [portal.policies.operations]
 change = "A lépés tevékenységének módosítása"
 noResults = "Nincs ilyen lépés. Próbáljon meg egy terméknevet, vagy ezt: \"scan\", \"notify\", \"attach\"."
-searchPlaceholder = "Lépések keresése – próbálja ezt: \"scan\", \"attach\" vagy egy terméknevet"
+searchPlaceholder = "Lépések keresése - próbálja ezt: \"scan\", \"attach\" vagy egy terméknevet"
 
 [portal.policies.operations.bodyMode]
 binary = "Nyers fájlbájtok"
@@ -8318,7 +8318,7 @@ label = "Dokumentum küldése e-mailben (Mailgun)"
 [portal.policies.operations.n8nGate]
 description = "Your workflow decides whether the run carries on."
 label = "Ask an n8n workflow to approve"
-note = "The workflow must reply with {\"approved\": true}. Anything else — including a timeout — stops the run and parks the document."
+note = "The workflow must reply with {\"approved\": true}. Anything else - including a timeout - stops the run and parks the document."
 
 [portal.policies.operations.n8nNotify]
 description = "Sends the run's details, not the document."
@@ -8340,7 +8340,7 @@ label = "Feltöltés Nextcloudba"
 [portal.policies.operations.presidioAnalyze]
 description = "A saját Presidio szervere jelenti a megtalált személyes adatokat."
 label = "Személyes adatok észlelése"
-note = "A Presidio szöveget olvas, nem fájlokat. Adja meg az ellenőrizendő szöveget — maga a dokumentum nem lesz feltöltve."
+note = "A Presidio szöveget olvas, nem fájlokat. Adja meg az ellenőrizendő szöveget - maga a dokumentum nem lesz feltöltve."
 
 [portal.policies.operations.responseMode]
 replace = "A dokumentum cseréje a válaszra"
@@ -8430,7 +8430,7 @@ desc = "OCR-t futtat, hogy a beolvasott oldalak kijelölhető, kereshető szöve
 label = "Szöveg kereshetővé tétele"
 
 [portal.policies.wizard.capability.redact]
-desc = "Megkeresi és elfeketíti az érzékeny adatokat — például a társadalombiztosítási és kártyaszámokat —, hogy ne legyenek olvashatók."
+desc = "Megkeresi és elfeketíti az érzékeny adatokat - például a társadalombiztosítási és kártyaszámokat -, hogy ne legyenek olvashatók."
 label = "Érzékeny adatok kitakarása"
 
 [portal.policies.wizard.capability.sanitize]
@@ -8438,7 +8438,7 @@ desc = "Eltávolítja a rejtett JavaScriptet, hogy a dokumentum megnyitásakor s
 label = "Aktív tartalom eltávolítása"
 
 [portal.policies.wizard.capability.timestampPdf]
-desc = "Bizonyítja, hogy a dokumentum ebben a pontos formában létezett egy adott időpontban, független időbélyeg-szolgáltató használatával. Csak hash kerül elküldésre – a dokumentum soha nem hagyja el a szerverét."
+desc = "Bizonyítja, hogy a dokumentum ebben a pontos formában létezett egy adott időpontban, független időbélyeg-szolgáltató használatával. Csak hash kerül elküldésre - a dokumentum soha nem hagyja el a szerverét."
 label = "Megbízható időbélyeg hozzáadása"
 
 [portal.policies.wizard.capability.watermark]
@@ -8549,7 +8549,7 @@ confirm = "Elolvastam és elfogadom a Stirling Enterprise Agreement feltételeit
 docName = "Stirling Enterprise Agreement"
 docSub = "MSA, Order Form, EULA és DPA egyetlen aláírásban egyesítve."
 download = "Letöltés"
-downloadDraftError = "Nem sikerült létrehozni a megállapodás PDF-jét – a dokumentumrenderelő nem érhető el. Kérjük, próbálja újra rövidesen, vagy lépjen kapcsolatba a támogatással."
+downloadDraftError = "Nem sikerült létrehozni a megállapodás PDF-jét - a dokumentumrenderelő nem érhető el. Kérjük, próbálja újra rövidesen, vagy lépjen kapcsolatba a támogatással."
 downloadError = "Nem sikerült letölteni az aláírt megállapodást. Kérjük, próbálja újra."
 legalName = "Jogi személy neve"
 legalNamePlaceholder = "Az aláíró jogi személy"
@@ -8596,11 +8596,11 @@ postalCodePlaceholder = "94105"
 posture = "Irányítás"
 posture_count = "~{{count}} házirend"
 posture_essentials = "Alapok"
-posture_essentialsSub = "Osztályozás + Megosztás — az alapértelmezések"
+posture_essentialsSub = "Osztályozás + Megosztás - az alapértelmezések"
 posture_governed = "Irányított"
 posture_governedSub = "Biztonságot és útválasztást ad hozzá"
 posture_regulated = "Szabályozott"
-posture_regulatedSub = "Minden kategória — Megfelelőség, Megőrzés, Bevitel"
+posture_regulatedSub = "Minden kategória - Megfelelőség, Megőrzés, Bevitel"
 qbr = "Negyedéves üzleti áttekintések"
 qbrSub = "Az Ön SE-je negyedévente áttekinti a használatot és az ütemtervet"
 region = "Állam / régió"
@@ -8618,7 +8618,7 @@ size_compactSub = "Többnyire szöveg, 1 MB alatt"
 size_heavy = "Nagy"
 size_heavySub = "Szkennelt vagy sok képet tartalmaz, 5 MB+"
 size_standard = "Standard"
-size_standardSub = "Vegyes szöveg és képek, 1–5 MB"
+size_standardSub = "Vegyes szöveg és képek, 1-5 MB"
 slDedicated = "Dedikált"
 slDedicatedSub = "4 munkaóra · dedikált fiókmenedzser · +30%"
 slPriority = "Prioritás"
@@ -8722,13 +8722,13 @@ label = "Próbaidőszak"
 [portal.procurement.license]
 copied = "Másolva"
 copy = "Kulcs másolása"
-downloadError = "Még nem sikerült létrehozni az offline licencfájlt — kérjük, próbálja újra egy pillanat múlva."
+downloadError = "Még nem sikerült létrehozni az offline licencfájlt - kérjük, próbálja újra egy pillanat múlva."
 downloadOffline = "Offline licenc letöltése (.lic)"
 hint = "Illessze be ezt a kulcsot egy self-hosted példányba az aktiváláshoz, vagy őrizze meg a nyilvántartásához. Tartsa biztonságban."
 label = "Az Ön licenckulcsa"
 subtitle = "Aktiváljon egy saját üzemeltetésű példányt ezzel a kulccsal, vagy őrizze meg a nyilvántartásához."
 title = "Az Ön licenckulcsa"
-trialFileHint = "Ez az Ön próba licencfájlja. Miután a megállapodás létrejött, térjen vissza, és töltse le újra — az online licenckulccsal ellentétben a .lic fájl nem frissül magától."
+trialFileHint = "Ez az Ön próba licencfájlja. Miután a megállapodás létrejött, térjen vissza, és töltse le újra - az online licenckulccsal ellentétben a .lic fájl nem frissül magától."
 
 [portal.procurement.link]
 cta = "Fiók összekapcsolása"
@@ -8742,10 +8742,10 @@ eyebrow = "Élő"
 title = "Élőben van a Stirling Enterprise-on"
 
 [portal.procurement.milestone]
-downloadError = "Még nem sikerült letölteni az ajánlat PDF-et — kérjük, próbálja újra egy pillanat múlva."
+downloadError = "Még nem sikerült letölteni az ajánlat PDF-et - kérjük, próbálja újra egy pillanat múlva."
 
 [portal.procurement.payment]
-description = "Az ajánlatát elfogadtuk, és a licence már aktív — a csapata azonnal kezdhet. Fizesse ki az első számlát, amikor készen áll; itt fizetheti ki vagy töltheti le, email nélkül."
+description = "Az ajánlatát elfogadtuk, és a licence már aktív - a csapata azonnal kezdhet. Fizesse ki az első számlát, amikor készen áll; itt fizetheti ki vagy töltheti le, email nélkül."
 downloadAgreement = "Aláírt megállapodás letöltése"
 downloadInvoice = "Számla letöltése"
 eyebrow = "Fizetés"
@@ -8800,7 +8800,7 @@ workEmailPlaceholder = "you@company.com"
 
 [portal.procurement.trial]
 body = "A hosszabbítás 7 napot ad hozzá, és értesíti a solutions engineer-jét."
-bodyMaxed = "Felhasználta az összes hosszabbítást — beszéljen a solutions engineer-jével, ha több időre van szüksége."
+bodyMaxed = "Felhasználta az összes hosszabbítást - beszéljen a solutions engineer-jével, ha több időre van szüksége."
 cancel = "Próbaidőszak lemondása"
 extend = "7 nappal meghosszabbítás"
 maxed = "Elérte a maximumot"
@@ -9037,7 +9037,7 @@ walletUnavailable = "Tárca nem érhető el: {{status}} {{statusText}}"
 
 [portal.usage.sessionExpired]
 action = "Bejelentkezés újra"
-body = "A Stirling-fiók munkamenete lejárt. Jelentkezzen be újra a számlázás megtekintéséhez — a példánya összekapcsolva marad."
+body = "A Stirling-fiók munkamenete lejárt. Jelentkezzen be újra a számlázás megtekintéséhez - a példánya összekapcsolva marad."
 title = "Munkamenet lejárt"
 
 [portal.users]
@@ -9065,7 +9065,7 @@ summary = "Korlátozott vagy csak webes hozzáférés; nem tarthat személyes ko
 
 [portal.users.roles.member]
 label = "Tag"
-summary = "Általános felhasználó — megosztott erőforrásokkal és saját konfigurációkkal dolgozik."
+summary = "Általános felhasználó - megosztott erőforrásokkal és saját konfigurációkkal dolgozik."
 
 [portal.users.roles.member.permissions]
 0 = "Az editor és a megosztott integrációk használata"
@@ -9075,7 +9075,7 @@ summary = "Általános felhasználó — megosztott erőforrásokkal és saját 
 
 [portal.users.roles.team_owner]
 label = "Csapattulajdonos"
-summary = "Egy csapat tulajdonosa — kezeli a tagok erőforrásait és megosztott konfigurációit."
+summary = "Egy csapat tulajdonosa - kezeli a tagok erőforrásait és megosztott konfigurációit."
 
 [portal.users.roles.team_owner.permissions]
 0 = "A csapat S3 kapcsolatainak létrehozása és kezelése"
@@ -9353,7 +9353,7 @@ title = "Speciális kitakarási beállítások"
 
 [redact.tooltip.advanced.regex]
 bullet1 = "Példa: \\d{4}-\\d{2}-\\d{2} bármely YYYY-MM-DD dátum formátum egyezéséhez"
-bullet2 = "Körültekintően használja – tesztelje alaposan"
+bullet2 = "Körültekintően használja - tesztelje alaposan"
 text = "Engedélyezze a reguláris kifejezéseket fejlettebb mintakereséshez. Hasznos telefonszámok, e-mailek vagy összetett minták megtalálásához."
 title = "Regex használata"
 
@@ -9534,7 +9534,7 @@ title = "Oldalak eltávolításának beállításai"
 
 [removePages.tooltip.pageNumbers]
 bullet1 = "Egyes oldalak: 1,3,5 (az 1., 3. és 5. oldal eltávolítása)"
-bullet2 = "Oldaltartományok: 1-5,10-15 (az 1–5. és 10–15. oldalak eltávolítása)"
+bullet2 = "Oldaltartományok: 1-5,10-15 (az 1-5. és 10-15. oldalak eltávolítása)"
 bullet3 = "Matematikai: 2n+1 (páratlan oldalak eltávolítása)"
 bullet4 = "Nyitott tartományok: 5- (eltávolítás az 5. oldaltól a végéig)"
 text = "Adja meg, mely oldalakat távolítsa el a PDF-ből. Kijelölhet egyes oldalakat, tartományokat vagy használhat matematikai kifejezéseket."
@@ -9620,8 +9620,8 @@ text = "A PDF konvertálása RGB színtérről CMYK színtérre, professzionáli
 title = "Átalakítás CMYK-ra"
 
 [replaceColor.tooltip.custom]
-bullet1 = "Szövegszín – Válassza ki a szövegelemek színét"
-bullet2 = "Háttérszín – Állítsa be a dokumentum háttérszínét"
+bullet1 = "Szövegszín - Válassza ki a szövegelemek színét"
+bullet2 = "Háttérszín - Állítsa be a dokumentum háttérszínét"
 text = "Határozza meg saját szöveg- és háttérszíneit a színválasztókkal. Tökéletes arculathoz igazított dokumentumokhoz vagy konkrét akadálymentességi igényekhez."
 title = "Egyéni színek"
 
@@ -9633,10 +9633,10 @@ title = "Leírás"
 title = "Színcsere és invertálás beállításainak áttekintése"
 
 [replaceColor.tooltip.highContrast]
-bullet1 = "Fehér szöveg fekete háttéren – Klasszikus sötét mód"
-bullet2 = "Fekete szöveg fehér háttéren – Szabványos magas kontraszt"
-bullet3 = "Sárga szöveg fekete háttéren – Magas láthatóságú opció"
-bullet4 = "Zöld szöveg fekete háttéren – Alternatív magas kontraszt"
+bullet1 = "Fehér szöveg fekete háttéren - Klasszikus sötét mód"
+bullet2 = "Fekete szöveg fehér háttéren - Szabványos magas kontraszt"
+bullet3 = "Sárga szöveg fekete háttéren - Magas láthatóságú opció"
+bullet4 = "Zöld szöveg fekete háttéren - Alternatív magas kontraszt"
 text = "Előre definiált, jobb olvashatóságra és akadálymentességi megfelelésre tervezett magas kontrasztú színkombinációk alkalmazása."
 title = "Magas kontraszt"
 
@@ -9766,17 +9766,17 @@ failed = "Hiba történt a képbeolvasások kinyerése közben."
 
 [scannerImageSplit.tooltip]
 headsUp = "Figyelem"
-headsUpDesc = "Az egymást átfedő fotók vagy a fotókhoz nagyon közeli színű hátterek csökkenthetik a pontosságot—próbáljon világosabb vagy sötétebb hátteret, és hagyjon több helyet."
-problem1 = "Fotók nem észlelhetők → növelje a Toleranciát 30–50-re"
-problem2 = "Túl sok téves észlelés → növelje a Minimális területet 15,000–20,000-re"
-problem3 = "A vágások túl szorosak → növelje a Szegély méretét 5–10-re"
+headsUpDesc = "Az egymást átfedő fotók vagy a fotókhoz nagyon közeli színű hátterek csökkenthetik a pontosságot - próbáljon világosabb vagy sötétebb hátteret, és hagyjon több helyet."
+problem1 = "Fotók nem észlelhetők → növelje a Toleranciát 30-50-re"
+problem2 = "Túl sok téves észlelés → növelje a Minimális területet 15,000-20,000-re"
+problem3 = "A vágások túl szorosak → növelje a Szegély méretét 5-10-re"
 problem4 = "A megdőlt fotók nincsenek kiegyenesítve → csökkentse a Szögküszöböt kb. 5°-ra"
-problem5 = "Por/zaj téglalapok → növelje a Minimális kontúrterületet 1000–2000-re"
+problem5 = "Por/zaj téglalapok → növelje a Minimális kontúrterületet 1000-2000-re"
 quickFixes = "Gyors megoldások"
 setupTips = "Beállítási tippek"
 tip1 = "Használjon egyszínű, világos hátteret"
 tip2 = "Hagyjon kis rést (≈1 cm) a fotók között"
-tip3 = "Szkenneljen 300–600 DPI-vel"
+tip3 = "Szkenneljen 300-600 DPI-vel"
 tip4 = "Tisztítsa meg a szkenner üvegét"
 title = "Fotófelosztó"
 useCase1 = "Egész albumoldalak beolvasása egy menetben"
@@ -9784,7 +9784,7 @@ useCase2 = "Síkágyas kötegek szétválasztása külön fájlokra"
 useCase3 = "Kollázsok felbontása önálló fotókká"
 useCase4 = "Fotók kinyerése dokumentumokból"
 whatThisDoes = "Mit csinál ez"
-whatThisDoesDesc = "Automatikusan megtalálja és kinyeri az egyes fotókat egy szkennelt oldalról vagy kompozit képről—kézi vágás nélkül."
+whatThisDoesDesc = "Automatikusan megtalálja és kinyeri az egyes fotókat egy szkennelt oldalról vagy kompozit képről - kézi vágás nélkül."
 whenToUse = "Mikor használja"
 
 [ScannerImageSplit.selectText]
@@ -10364,7 +10364,7 @@ configure = "Aláírás beállítása"
 colorLabel = "Szöveg színe"
 fontLabel = "Betűtípus"
 fontSizeLabel = "Betűméret"
-fontSizePlaceholder = "Írja be vagy válassza ki a betűméretet (8–200)"
+fontSizePlaceholder = "Írja be vagy válassza ki a betűméretet (8-200)"
 name = "Aláíró neve"
 placeholder = "Adja meg a teljes nevét"
 
@@ -10557,7 +10557,7 @@ title = "Felosztás oldalszám szerint"
 bullet1 = "Nyomtassa ki az elválasztó lapokat a letöltési linkről"
 bullet2 = "Helyezzen elválasztó lapokat a dokumentumok közé"
 bullet3 = "Szkenneljen be mindent egyetlen PDF-be"
-bullet4 = "Feltöltés – az elválasztó oldalakat automatikusan felismeri és eltávolítja a rendszer"
+bullet4 = "Feltöltés - az elválasztó oldalakat automatikusan felismeri és eltávolítja a rendszer"
 bullet5 = "Kapcsolja be a kétoldalas módot, ha az elválasztó lapok mindkét oldalát szkenneli"
 text = "Automatikusan ossza fel a beszkennelt dokumentumokat fizikai, QR kódos elválasztó lapokkal. Tökéletes több, együtt beszkennelt dokumentum feldolgozásához."
 title = "Felosztás elválasztó oldal szerint"
@@ -10932,7 +10932,7 @@ recommended = "Ajánlott"
 selfHostedOffline = "A saját Stirling-PDF szerverére van szükség (jelenleg offline):"
 showDetails = "Részletek megjelenítése"
 unavailable = "Szerveradminisztrátor letiltotta:"
-unavailableDependency = "Nem érhető el – szükséges eszköz hiányzik a szerveren:"
+unavailableDependency = "Nem érhető el - szükséges eszköz hiányzik a szerveren:"
 unfavorite = "Eltávolítás a kedvencekből"
 
 [toolPanel.modePrompt]
@@ -11235,7 +11235,7 @@ title = "Csapat átnevezése"
 apply = "Jelszó visszaállítása"
 confirm = "Jelszó megerősítése"
 copied = "Vágólapra másolva"
-copyHint = "Másold ki most – nem fog újra megjelenni."
+copyHint = "Másold ki most - nem fog újra megjelenni."
 email = "Felhasználó értesítése e-mailben a visszaállításról"
 forceChange = "Jelszóváltoztatás megkövetelése a következő bejelentkezéskor"
 generate = "Biztonságos jelszó generálása"
@@ -11307,9 +11307,9 @@ certExpired = "Lejárt tanúsítvány"
 certRevocationUnknown = "Ismeretlen a tanúsítvány visszavonási állapota"
 certRevoked = "Visszavont tanúsítvány"
 chainInvalid = "Érvénytelen tanúsítványlánc"
-documentModified = "A dokumentum az aláírás után módosult – tartalmat adtak hozzá az aláírt területen kívül"
+documentModified = "A dokumentum az aláírás után módosult - tartalmat adtak hozzá az aláírt területen kívül"
 revocationNotChecked = "A visszavonást nem ellenőrizték"
-selfSigned = "Önaláírt – az aláíró személyazonossága nincs ellenőrizve"
+selfSigned = "Önaláírt - az aláíró személyazonossága nincs ellenőrizve"
 signatureInvalid = "Az aláírás kriptográfiai ellenőrzése sikertelen"
 trustInvalid = "A tanúsítvány nem megbízható"
 
@@ -11463,9 +11463,9 @@ emptyFile = "Üres fájl"
 htmlHidePreview = "Előnézet elrejtése"
 htmlPreview = "HTML előnézet"
 htmlPreviewMobileHidden = "A HTML oldalak asztali szélességre vannak elrendezve, ezért itt az előnézet alapértelmezés szerint ki van kapcsolva."
-htmlPreviewWarning = "HTML előnézet — a külső erőforrások nem biztos, hogy betöltődnek · {{size}}"
+htmlPreviewWarning = "HTML előnézet - a külső erőforrások nem biztos, hogy betöltődnek · {{size}}"
 htmlShowPreview = "Előnézet megjelenítése mégis"
-invalidJson = "Érvénytelen JSON — nyers tartalom megjelenítése"
+invalidJson = "Érvénytelen JSON - nyers tartalom megjelenítése"
 lineNumbers = "Sorszámok"
 loading = "Betöltés..."
 renderMarkdown = "Markdown megjelenítése"
@@ -11527,7 +11527,7 @@ create = "Create your first Watched Folder"
 deleteFolder = "Delete folder"
 editFolder = "Edit folder"
 empty = "No watched folders yet"
-emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged — whatever your pipeline does."
+emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged - whatever your pipeline does."
 emptyTitle = "Automate your PDF workflows"
 file = "file"
 files = "files"
@@ -11535,7 +11535,7 @@ pause = "Pause"
 resume = "Resume"
 
 [watchedFolders.howItWorks]
-step1Desc = "Drag PDFs onto any Watched Folder card — or send them from your file list"
+step1Desc = "Drag PDFs onto any Watched Folder card - or send them from your file list"
 step1Title = "Drop files"
 step2Desc = "Your configured tools process each file automatically"
 step2Title = "Pipeline runs"
@@ -11559,18 +11559,18 @@ createFolder = "Create Folder"
 createTitle = "New Watched Folder"
 editTitle = "Edit Watched Folder"
 inputFolder = "Input folder"
-inputFolderNotChosen = "No folder chosen — required for auto-scan"
+inputFolderNotChosen = "No folder chosen - required for auto-scan"
 inputSource = "Input source"
-inputSourceBrowser = "Browser — drop files here"
+inputSourceBrowser = "Browser - drop files here"
 inputSourceLocal = "Local folder (auto-scan)"
-inputSourceLocalUnsupported = "Local folder (auto-scan) — Chrome/Edge only"
+inputSourceLocalUnsupported = "Local folder (auto-scan) - Chrome/Edge only"
 localOutputFolder = "Local output folder"
 maxRetries = "Max retries"
 name = "Folder name"
 namePlaceholder = "My Watched Folder"
 nameRequired = "Folder name is required"
 nameTooLong = "Folder name must be 50 characters or less"
-outputFolderNotSet = "Not set — outputs stay in app"
+outputFolderNotSet = "Not set - outputs stay in app"
 outputFolderUnsupported = "Not supported in this browser"
 outputModeNewDesc = "Output is saved as a new separate file"
 outputModeVersion = "Replace original?"
@@ -11630,9 +11630,9 @@ filterPending = "Pending"
 inputs = "Inputs"
 inputSize = "Input size"
 legendComplete = "Complete"
-noActivity = "No activity yet — drop a PDF to start"
+noActivity = "No activity yet - drop a PDF to start"
 noActivityMatch = "No matching activity"
-noInputFolder = "No input folder — edit to configure"
+noInputFolder = "No input folder - edit to configure"
 outputs = "Outputs"
 pause = "Pause"
 preview = "Preview"
@@ -11640,7 +11640,7 @@ previewInput = "Preview input"
 previewLoadFailed = "Could not load file preview."
 previewOutput = "Preview output"
 queued = "Queued"
-queuedWaiting = "Queued — waiting to run"
+queuedWaiting = "Queued - waiting to run"
 removeEntries = "Remove {{count}} entries"
 removeEntry = "Remove entry"
 removeNotificationsOnly = "Remove notifications only"
@@ -11699,7 +11699,7 @@ wording = "Szöveg"
 
 [watermark.tooltip.appearance]
 bullet1 = "Forgatás: -360° és 360° között a döntött vízjelekhez"
-bullet2 = "Átlátszatlanság: 0–100% az áttetszőség szabályozásához"
+bullet2 = "Átlátszatlanság: 0-100% az áttetszőség szabályozásához"
 bullet3 = "Az alacsonyabb átlátszatlanság visszafogottabb vízjelet eredményez"
 text = "Szabályozza, hogyan nézzen ki a vízjel és hogyan olvadjon a dokumentumba."
 title = "Megjelenési beállítások"
@@ -11982,7 +11982,7 @@ success = "felhasználó sikeresen meghívva"
 [workspace.people.inviteLink]
 copied = "Hivatkozás vágólapra másolva"
 email = "E-mail cím"
-emailDescription = "Opcionális – hagyja üresen általános meghívó linkhez, amelyet bárki felhasználhat"
+emailDescription = "Opcionális - hagyja üresen általános meghívó linkhez, amelyet bárki felhasználhat"
 emailPlaceholder = "user@example.com (opcionális)"
 emailSent = "Meghívó link létrehozva és e-mailben elküldve"
 error = "Nem sikerült létrehozni a meghívó linket"

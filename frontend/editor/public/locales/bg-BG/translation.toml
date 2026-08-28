@@ -551,7 +551,7 @@ title = "Целеви размер на страница"
 bullet1 = "1.0 = Оригинален размер"
 bullet2 = "0.5 = Половин размер (50% по-малко)"
 bullet3 = "2.0 = Двоен размер (200% по-голямо, може да изрязва)"
-text = "Контролира колко голямо или малко да изглежда съдържанието на страницата. Съдържанието се мащабира и центрира — ако мащабираното съдържание е по-голямо от размера на страницата, може да бъде изрязано."
+text = "Контролира колко голямо или малко да изглежда съдържанието на страницата. Съдържанието се мащабира и центрира - ако мащабираното съдържание е по-голямо от размера на страницата, може да бъде изрязано."
 title = "Коефициент на мащабиране"
 
 [admin]
@@ -1254,7 +1254,7 @@ description = "URL или име на файл към импресум (задъ
 label = "Импресум"
 
 [admin.settings.legal.loginAgreement]
-defaultLocaleHint = "— използва се като резервен вариант, когато за даден език няма файл."
+defaultLocaleHint = "- използва се като резервен вариант, когато за даден език няма файл."
 defaultLocaleLink = "Настройване на локала по подразбиране"
 description = "Показва отказ от отговорност, който потребителите трябва да приемат след влизане. Текстът следва езика на всеки потребител."
 discardConfirm = "Имате незаписани промени, които ще бъдат загубени. Искате ли все пак да смените езика?"
@@ -2318,7 +2318,7 @@ failed = "Възникна грешка при създаването на им�
 
 [bookletImposition.flipOnShortEdge]
 label = "Обръщане по късата страна (само автоматичен дуплекс)"
-manualNote = "Не е нужно в ръчен режим — вие сами обръщате купата"
+manualNote = "Не е нужно в ръчен режим - вие сами обръщате купата"
 tooltip = "Активирайте за дуплекс по късата страна (само автоматичен дуплекс - игнорира се в ръчен режим)"
 
 [bookletImposition.gutterSize]
@@ -2465,7 +2465,7 @@ pemPrivateKeyLabel = "Частен ключ (.pem / .key)"
 pending = "В изчакване"
 readyToFinalize = "Готово за финализиране"
 reason = "Причина"
-serverCertMessage = "Използва се сървърен сертификат — не са необходими файлове или парола"
+serverCertMessage = "Използва се сървърен сертификат - не са необходими файлове или парола"
 showLogo = "Покажи лого"
 signatureProgress = "{{signedCount}}/{{totalCount}} подписа"
 signed = "Подписано"
@@ -2515,10 +2515,10 @@ text = "Това е защитен идентификатор за вашия п
 title = "Какво е сертификат?"
 
 [certSign.certType.tooltip.which]
-bullet1 = "PKCS#12 (.p12 / .pfx) – един комбиниран файл (най-често)"
-bullet2 = "PFX (.pfx) – версията на Microsoft на PKCS12"
-bullet3 = "PEM – отделни .pem файлове за частен ключ и сертификат"
-bullet4 = "JKS – Java .jks keystore за dev / CI-CD работни потоци"
+bullet1 = "PKCS#12 (.p12 / .pfx) - един комбиниран файл (най-често)"
+bullet2 = "PFX (.pfx) - версията на Microsoft на PKCS12"
+bullet3 = "PEM - отделни .pem файлове за частен ключ и сертификат"
+bullet4 = "JKS - Java .jks keystore за dev / CI-CD работни потоци"
 text = "Изберете формат, който съответства на вашия файл със сертификат:"
 title = "Кой вариант да използвам?"
 
@@ -2717,7 +2717,7 @@ expires = "изтича"
 listCerts = "Покажи сертификатите"
 loading = "Четене на сертификати…"
 noCerts = "Не са намерени сертификати за подписване"
-noDriver = "Не е открит PKCS#11 драйвер. Инсталирайте драйвера на вашия токен (напр. OpenSC), после отворете това отново – или въведете ръчно пътя до драйвера по-долу."
+noDriver = "Не е открит PKCS#11 драйвер. Инсталирайте драйвера на вашия токен (напр. OpenSC), после отворете това отново - или въведете ръчно пътя до драйвера по-долу."
 notYetValid = "още не е валиден"
 pin = "PIN на токена"
 pkcs11Hint = "Изберете PKCS#11 драйвера на вашия токен, въведете PIN, след това покажете сертификатите на токена."
@@ -2726,7 +2726,7 @@ refresh = "Опреснете"
 selectCert = "Изберете сертификат"
 selectDriver = "Изберете драйвер"
 slot = "Слот (по избор)"
-windowsHint = "Изберете сертификат от хранилището на сертификати на Windows. Подписването използва ключа на вашата карта/токен – Windows ще поиска PIN."
+windowsHint = "Изберете сертификат от хранилището на сертификати на Windows. Подписването използва ключа на вашата карта/токен - Windows ще поиска PIN."
 windowsLoadError = "Не можа да се прочете хранилището на сертификати на Windows"
 
 [certSign.sessions]
@@ -2743,7 +2743,7 @@ submit = "Подпиши PDF"
 
 [certSign.signMode.tooltip.auto]
 text = "Подписва със сървърен <b>самоподписан</b> сертификат. Същият <b>печат срещу подправяне</b> и <b>аудитна следа</b>; обикновено показва <b>Unverified</b> в преглеждащите."
-title = "Авто – без настройка, незабавно системно запечатване"
+title = "Авто - без настройка, незабавно системно запечатване"
 use = "Използвайте, когато: ви трябва скорост и последователна вътрешна идентичност при прегледи и записи."
 
 [certSign.signMode.tooltip.header]
@@ -2751,7 +2751,7 @@ title = "За PDF подписите"
 
 [certSign.signMode.tooltip.manual]
 text = "Използвайте собствените си файлове със сертификати за идентичност, съобразена с марката. Може да показва <b>Trusted</b>, когато вашата CA/верига е разпозната."
-title = "Ръчно – използвайте своя сертификат"
+title = "Ръчно - използвайте своя сертификат"
 use = "За: към клиенти, правни, съответствие."
 
 [certSign.signMode.tooltip.overview]
@@ -3462,7 +3462,7 @@ showPreferencesBtn = "Управление на предпочитанията"
 title = "Как използваме бисквитките"
 
 [cookieBanner.popUp.description]
-1 = "Използваме бисквитки и други технологии, за да работи Stirling PDF по-добре за вас — помагайки ни да подобряваме инструментите и да продължим да изграждаме функции, които ще харесате."
+1 = "Използваме бисквитки и други технологии, за да работи Stirling PDF по-добре за вас - помагайки ни да подобряваме инструментите и да продължим да изграждаме функции, които ще харесате."
 2 = "If you’d rather not, clicking 'No Thanks' will only enable the essential cookies needed to keep things running smoothly."
 
 [cookieBanner.preferencesModal]
@@ -3475,16 +3475,16 @@ subtitle = "Използване на бисквитки"
 title = "Център за предпочитания за съгласие"
 
 [cookieBanner.preferencesModal.analytics]
-description = "Тези бисквитки ни помагат да разберем как се използват инструментите ни, за да се фокусираме върху изграждането на функциите, които общността най-много цени. Бъдете спокойни — Stirling PDF не може и никога няма да проследява съдържанието на документите, с които работите."
+description = "Тези бисквитки ни помагат да разберем как се използват инструментите ни, за да се фокусираме върху изграждането на функциите, които общността най-много цени. Бъдете спокойни - Stirling PDF не може и никога няма да проследява съдържанието на документите, с които работите."
 title = "Анализи"
 
 [cookieBanner.preferencesModal.description]
 1 = "Stirling PDF използва бисквитки и подобни технологии, за да подобри вашето изживяване и да разбере как се използват нашите инструменти. Това ни помага да подобряваме производителността, да развиваме функциите, които ви интересуват, и да предоставяме постоянна поддръжка на потребителите."
-2 = "Stirling PDF не може — и никога няма да — проследява или да има достъп до съдържанието на документите, които използвате."
+2 = "Stirling PDF не може - и никога няма да - проследява или да има достъп до съдържанието на документите, които използвате."
 3 = "Вашата поверителност и доверие са в основата на това, което правим."
 
 [cookieBanner.preferencesModal.necessary]
-description = "These cookies are essential for the website to function properly. They enable core features like setting your privacy preferences, logging in, and filling out forms—which is why they can’t be turned off."
+description = "These cookies are essential for the website to function properly. They enable core features like setting your privacy preferences, logging in, and filling out forms - which is why they can’t be turned off."
 
 [cookieBanner.preferencesModal.necessary.title]
 1 = "Строго необходими бисквитки"
@@ -3901,7 +3901,7 @@ dateDesc = "Най-новите първо"
 dateLabel = "Най-нови"
 nameAsc = "А до Я"
 nameDesc = "Я до А"
-nameLabel = "А–Я"
+nameLabel = "А-Я"
 
 [fileSelectorPicker.tabs]
 saved = "Запазени файлове"
@@ -5351,7 +5351,7 @@ runButton = "След като инструментът е конфигурир�
 selectCropTool = "Нека изберем инструмента <strong>Изрязване</strong>, за да демонстрираме как се използва инструмент."
 stepOf = "Стъпка {{current}} от {{total}}"
 toolInterface = "Това е интерфейсът на инструмента <strong>Изрязване</strong>. Както виждате, няма много неща, защото още не сме добавили PDF файлове за работа."
-workbench = "Това е <strong>Работната зона</strong> – основната област, където преглеждате и редактирате вашите PDF файлове."
+workbench = "Това е <strong>Работната зона</strong> - основната област, където преглеждате и редактирате вашите PDF файлове."
 wrapUp = "Готови сте! Научихте за основните области на приложението и как да ги използвате. Кликнете бутона <strong>Помощ</strong> по всяко време, за да видите обиколката отново."
 
 [onboarding.buttons]
@@ -5414,7 +5414,7 @@ userBody = "Поканете колеги, задавайте роли и под
 userTitle = "Преглед на плана"
 
 [onboarding.processorIntro]
-body = "Stirling вече изпълнява <strong>Правила</strong> — автоматизирани правила, които класифицират, защитават и обработват всеки документ при пристигането му. Настройте ги и наблюдавайте изпълненията в <strong>Processor</strong>."
+body = "Stirling вече изпълнява <strong>Правила</strong> - автоматизирани правила, които класифицират, защитават и обработват всеки документ при пристигането му. Настройте ги и наблюдавайте изпълненията в <strong>Processor</strong>."
 cta = "Вижте Processor"
 title = "Вижте Stirling Processor"
 
@@ -5441,9 +5441,9 @@ rolePlaceholder = "Потвърдете ролята си"
 roleUser = "Потребител"
 
 [onboarding.serverLicense]
-freeBody = "Нашият <strong>Open-Core</strong> лиценз позволява до <strong>{{freeTierLimit}}</strong> безплатни потребители на сървър. За да мащабирате без прекъсвания и да получите ранен достъп до нашия нов <strong>инструмент за редакция на PDF текст</strong>, препоръчваме плана Stirling Server – пълно редактиране и <strong>неограничени места</strong> за $99/сървър/месец."
+freeBody = "Нашият <strong>Open-Core</strong> лиценз позволява до <strong>{{freeTierLimit}}</strong> безплатни потребители на сървър. За да мащабирате без прекъсвания и да получите ранен достъп до нашия нов <strong>инструмент за редакция на PDF текст</strong>, препоръчваме плана Stirling Server - пълно редактиране и <strong>неограничени места</strong> за $99/сървър/месец."
 freeTitle = "Лиценз за сървър"
-overLimitBody = "Нашият лиценз позволява до <strong>{{freeTierLimit}}</strong> безплатни потребители на сървър. Имате <strong>{{overLimitUserCopy}}</strong> потребители на Stirling. За да продължите без прекъсвания, надградете до плана Stirling Server – <strong>неограничени места</strong>, редакция на PDF текст и пълен админ контрол за $99/сървър/месец."
+overLimitBody = "Нашият лиценз позволява до <strong>{{freeTierLimit}}</strong> безплатни потребители на сървър. Имате <strong>{{overLimitUserCopy}}</strong> потребители на Stirling. За да продължите без прекъсвания, надградете до плана Stirling Server - <strong>неограничени места</strong>, редакция на PDF текст и пълен админ контрол за $99/сървър/месец."
 overLimitTitle = "Необходим е лиценз за сървър"
 seePlans = "Виж плановете →"
 upgrade = "Надградете сега →"
@@ -5453,7 +5453,7 @@ body = "Stirling PDF V2 идва с десетки инструменти и о�
 title = "Преглед на тура"
 
 [onboarding.welcomeSlide]
-body = "Stirling PDF вече е готов за екипи от всякакъв размер. Тази актуализация включва нов облик, мощни админ възможности и най-желаната ни функция – <strong>Редакция на текст</strong>."
+body = "Stirling PDF вече е готов за екипи от всякакъв размер. Тази актуализация включва нов облик, мощни админ възможности и най-желаната ни функция - <strong>Редакция на текст</strong>."
 title = "Добре дошли в Stirling"
 
 [onboarding.whatsNew]
@@ -5575,7 +5575,7 @@ title = "Подредба на страници"
 title = "Разширени опции за оформление"
 
 [pageLayout.advanced.tooltip.orientation]
-text = "Изберете ориентацията на крайния лист. Вертикалната е по-подходяща за високо съдържание, а хоризонталната — за по-широки оформления."
+text = "Изберете ориентацията на крайния лист. Вертикалната е по-подходяща за високо съдържание, а хоризонталната - за по-широки оформления."
 title = "Ориентация"
 
 [pageLayout.advanced.tooltip.readingDirection]
@@ -5671,7 +5671,7 @@ title = "Премахване на страници"
 description = "Изберете кои страници да се използват за операцията. Поддържа единични страници, диапазони, формули и ключовата дума all."
 
 [pageSelection.tooltip.complex]
-bullet1 = "<strong>1,3-5,8,2n</strong> → страници 1, 3–5, 8 плюс четните"
+bullet1 = "<strong>1,3-5,8,2n</strong> → страници 1, 3-5, 8 плюс четните"
 bullet2 = "<strong>10-,2n-1</strong> → от страница 10 до края + нечетните страници"
 description = "Смесвайте различни типове."
 title = "Комплексни комбинации"
@@ -5694,8 +5694,8 @@ description = "Използвайте n във формули за шаблон�
 title = "Математически функции"
 
 [pageSelection.tooltip.ranges]
-bullet1 = "<strong>3-6</strong> → избира страници 3–6"
-bullet2 = "<strong>10-15</strong> → избира страници 10–15"
+bullet1 = "<strong>3-6</strong> → избира страници 3-6"
+bullet2 = "<strong>10-15</strong> → избира страници 10-15"
 bullet3 = "<strong>5-</strong> → избира страници 5 до края"
 description = "Използвайте - за последователни страници."
 title = "Диапазони от страници"
@@ -5771,7 +5771,7 @@ title = "Turn on the Processor plan"
 eyebrow = "Editor plan · Always free"
 
 [payg.free.header]
-freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
+freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR - as much as you want, no matter where you trigger it."
 freeTitle = "Unlimited PDF editing"
 
 [payg.free.hero]
@@ -5799,8 +5799,8 @@ pauses = "pauses at cap"
 title = "What happens when the cap is reached"
 
 [payg.header]
-eyebrow = "Processor plan · {{start}} – {{end}}"
-freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
+eyebrow = "Processor plan · {{start}} - {{end}}"
+freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR - as much as you want, no matter where you trigger it."
 freeLabel = "Always free"
 freeTitle = "Unlimited PDF editing"
 meterBody = "{{limit}} free PDFs to start, then billed per PDF up to your cap."
@@ -5820,8 +5820,8 @@ chip = "Предплатена година"
 
 [payg.prepaid.banner]
 exhausted = "Вашият предплатен капацитет е изчерпан; таксуването по измерване е възобновено. Допълнете, за да запазите отстъпката."
-expiring_one = "Вашата предплатена година приключва след {{count}} ден. Неизползваният капацитет изтича — допълнете, за да започнете нова година."
-expiring_other = "Вашата предплатена година приключва след {{count}} дни. Неизползваният капацитет изтича — допълнете, за да започнете нова година."
+expiring_one = "Вашата предплатена година приключва след {{count}} ден. Неизползваният капацитет изтича - допълнете, за да започнете нова година."
+expiring_other = "Вашата предплатена година приключва след {{count}} дни. Неизползваният капацитет изтича - допълнете, за да започнете нова година."
 low = "Остават ви {{pct}}% от предплатения капацитет. Допълнете по всяко време, за да продължи обработката без прекъсване."
 
 [payg.prepaid.card]
@@ -5962,14 +5962,14 @@ continue = "Продължи"
 description = "Ще го използваме, за да ви изпратим лицензния ключ и разписките."
 emailLabel = "Имейл адрес"
 emailPlaceholder = "your@email.com"
-modalTitle = "Стартиране – {{planName}}"
+modalTitle = "Стартиране - {{planName}}"
 
 [payment.paymentStage]
-modalTitle = "Завършване на плащането – {{planName}}"
+modalTitle = "Завършване на плащането - {{planName}}"
 
 [payment.planStage]
 billedYearly = "Таксуване годишно по {{currency}}{{amount}}"
-modalTitle = "Избор на период на фактуриране – {{planName}}"
+modalTitle = "Избор на период на фактуриране - {{planName}}"
 savePercent = "Спести {{percent}}%"
 savingsAmount = "Спестявате {{amount}}"
 selectMonthly = "Избери месечно"
@@ -6121,7 +6121,7 @@ processing = "Processing"
 uploading = "Uploading"
 
 [pdfTextEditor.tooltip.alpha]
-text = "Този алфа визуализатор все още се развива — определени шрифтове, цветове, ефекти на прозрачност и детайли в оформлението може леко да се променят. Моля, проверете генерирания PDF преди да го споделите."
+text = "Този алфа визуализатор все още се развива - определени шрифтове, цветове, ефекти на прозрачност и детайли в оформлението може леко да се променят. Моля, проверете генерирания PDF преди да го споделите."
 title = "Алфа визуализатор"
 
 [pdfTextEditor.tooltip.header]
@@ -6146,8 +6146,8 @@ feedback = "Това е функция в ранен достъп. Моля, д�
 gotIt = "Разбрах"
 howItWorks = "Този инструмент преобразува вашия PDF в редактируем формат, в който можете да променяте текстовото съдържание и да премествате изображения. Промените се запазват обратно като нов PDF."
 issue1 = "Цветът на текста в момента не се запазва (скоро ще бъде добавено)"
-issue2 = "Режимът „Абзац“ има повече проблеми с подравняването и разредката – препоръчва се режим „Единичен ред“"
-issue3 = "Визуализацията се различава от експортирания PDF – експортираните PDF файлове са по-близки до оригинала"
+issue2 = "Режимът „Абзац“ има повече проблеми с подравняването и разредката - препоръчва се режим „Единичен ред“"
+issue3 = "Визуализацията се различава от експортирания PDF - експортираните PDF файлове са по-близки до оригинала"
 issue4 = "Подравняването на завъртения текст може да изисква ръчна корекция"
 issue5 = "Ефектите на прозрачност и наслояване може да се различават от оригинала"
 knownIssues = "Известни проблеми (в процес на отстраняване):"
@@ -6522,7 +6522,7 @@ never = "никога"
 [portal.accountLink.modal]
 linkSubtitle = "Влезте в акаунта, към който този сървър трябва да таксува."
 linkTitle = "Свържете своя Stirling акаунт"
-reauthSubtitle = "Сесията ви изтече — влезте отново във вашия Stirling акаунт. Вашата инстанция остава свързана."
+reauthSubtitle = "Сесията ви изтече - влезте отново във вашия Stirling акаунт. Вашата инстанция остава свързана."
 reauthTitle = "Влезте отново"
 simulateSignIn = "Симулирай влизане (dev)"
 
@@ -6582,7 +6582,7 @@ noClientSecret = "Edge функцията не върна client_secret."
 title = "Включете план Processor"
 
 [portal.billing.checkout.activationSlow]
-body = "Плащането ви е успешно, но активирането отнема малко повече от обичайното. Ще се включи автоматично — затворете това и скоро ще се появи тук."
+body = "Плащането ви е успешно, но активирането отнема малко повече от обичайното. Ще се включи автоматично - затворете това и скоро ще се появи тук."
 close = "Затвори"
 title = "Почти готово"
 
@@ -6606,7 +6606,7 @@ note = "Данните за картата се събират от Stripe. Stir
 title = "Checkout не можа да стартира"
 
 [portal.billing.checkout.finalizing]
-body = "Плащането ви премина. Включваме измерваната обработка във вашите свързани инстанции — това обикновено отнема няколко секунди."
+body = "Плащането ви премина. Включваме измерваната обработка във вашите свързани инстанции - това обикновено отнема няколко секунди."
 hint = "Моля, оставете този прозорец отворен."
 title = "Активиране на вашия план Processor..."
 
@@ -6633,7 +6633,7 @@ title = "Безплатни PDF редактори"
 checkoutErrorTitle = "Checkout не можа да стартира"
 currentPlan = "Текущ план"
 freeForever = "Безплатно завинаги"
-noTeamResolved = "Все още няма определен екип за вашия портфейл — обновете и опитайте отново."
+noTeamResolved = "Все още няма определен екип за вашия портфейл - обновете и опитайте отново."
 ownerOnly = "Само собственикът на екипа може да включи план Processor."
 payInvoice = "Платете фактурата, за да завършите"
 planName = "Editor"
@@ -6668,7 +6668,7 @@ viewLink = "Виж ↗"
 
 [portal.billing.linkPrompt]
 cta = "Свържи Stirling акаунт"
-description = "Ръчната PDF редакция — преглед, подписване, обединяване, разделяне, воден знак, компресиране, конвертиране, ръчен OCR — винаги е безплатна, независимо дали е свързана или не. Свържете, за да получите 500 безплатни PDF за измервана обработка (автоматизация, AI и API); когато ви потрябват още, включете план Processor и плащайте само за използваното."
+description = "Ръчната PDF редакция - преглед, подписване, обединяване, разделяне, воден знак, компресиране, конвертиране, ръчен OCR - винаги е безплатна, независимо дали е свързана или не. Свържете, за да получите 500 безплатни PDF за измервана обработка (автоматизация, AI и API); когато ви потрябват още, включете план Processor и плащайте само за използваното."
 title = "Свържете своя Stirling акаунт"
 
 [portal.billing.paymentMethod]
@@ -6802,13 +6802,13 @@ low = "На изчерпване"
 [portal.billing.spendLimit]
 adjustLimit = "Коригирай лимита"
 cancel = "Отказ"
-capControlNote = "Промените се прилагат незабавно — увеличете или намалете тавана по всяко време."
+capControlNote = "Промените се прилагат незабавно - увеличете или намалете тавана по всяко време."
 capSuffix = "/ месец"
 capSuffixWithDocs = "/ месец · ≈ {{documents}} документа"
-displaySub = "Таксуваме ви само за това, което обработвате автоматично — никога над тавана."
+displaySub = "Таксуваме ви само за това, което обработвате автоматично - никога над тавана."
 editTitle = "Задайте месечния си таван"
 eyebrow = "Лимит на разходите"
-guardrailBody = "твърд таван — никога не ви таксуваме над него. При достигане на тавана измерваната обработка спира на пауза (неограничената PDF редакция продължава да работи), докато не го увеличите или цикълът не се нулира. Нищо не се губи."
+guardrailBody = "твърд таван - никога не ви таксуваме над него. При достигане на тавана измерваната обработка спира на пауза (неограничената PDF редакция продължава да работи), докато не го увеличите или цикълът не се нулира. Нищо не се губи."
 guardrailLabel = "Вашата защита:"
 noCap = "без таван"
 pctUsed = "използвани {{pct}}%"
@@ -7243,8 +7243,8 @@ viewSource = "Преглед на source в GitHub"
 codeCaption = "всяка заявка"
 eyebrow = "GETTING STARTED"
 lead = "Всички заявки се удостоверяват с bearer token. Ключовете са ограничени по среда и никога не изтичат, освен ако не бъдат ротирани."
-liveKey = "Production ключове — таксувани, с ограничение на скоростта според вашия план."
-testKey = "Sandbox ключове — безплатни, връщат синтетични fixtures."
+liveKey = "Production ключове - таксувани, с ограничение на скоростта според вашия план."
+testKey = "Sandbox ключове - безплатни, връщат синтетични fixtures."
 title = "Удостоверяване"
 
 [portal.docs.components]
@@ -7282,7 +7282,7 @@ title = "Quickstart"
 
 [portal.docs.quickstart.callout]
 bodyAfterLink = "за рецепти за copy-paste."
-bodyBeforeLink = "свържете същото извикване в pipeline, за да веригирате валидиране, заличаване и доставка — или го изложете на агент чрез MCP. Вижте"
+bodyBeforeLink = "свържете същото извикване в pipeline, за да веригирате валидиране, заличаване и доставка - или го изложете на агент чрез MCP. Вижте"
 label = "Следващо:"
 link = "Playbooks"
 
@@ -7291,7 +7291,7 @@ body = "Създайте scoped key от раздел Infrastructure. Ключо
 title = "Издайте API ключ"
 
 [portal.docs.quickstart.step2]
-body = "POST файл към който и да е typed endpoint. Endpoint определя схемата, която получавате обратно — тук, invoice extractor."
+body = "POST файл към който и да е typed endpoint. Endpoint определя схемата, която получавате обратно - тук, invoice extractor."
 snippetCaption = "извличане на фактура"
 title = "Изпратете документ"
 
@@ -7371,8 +7371,8 @@ overview = "Общ преглед"
 requestAccess = "Заяви достъп"
 
 [portal.documents.elevation.active]
-description = "Временен достъп — достъпът се записва и е ограничен във времето."
-descriptionFourEyes = "Временен достъп — партньор за преглед беше уведомен (четири очи)."
+description = "Временен достъп - достъпът се записва и е ограничен във времето."
+descriptionFourEyes = "Временен достъп - партньор за преглед беше уведомен (четири очи)."
 title = "Достъпът изтича след {{time}}"
 
 [portal.documents.elevation.gated]
@@ -7433,7 +7433,7 @@ time = "Време"
 user = "Потребител"
 
 [portal.editorAdmin]
-subtitle = "Разгърнете Stirling PDF Editor, свържете самостоятелно хоствани инстанции към вашата организация и управлявайте работещия флот — цели, здраве, удостоверения и офлайн активация на едно място."
+subtitle = "Разгърнете Stirling PDF Editor, свържете самостоятелно хоствани инстанции към вашата организация и управлявайте работещия флот - цели, здраве, удостоверения и офлайн активация на едно място."
 title = "Разгръщане на редактора"
 
 [portal.editorAdmin.health.columns]
@@ -7469,7 +7469,7 @@ rotate = "Ротирай"
 talkToSales = "Свържете се с продажбите"
 
 [portal.editorAdmin.sections.health]
-sub = "Всяка инстанция на Editor докладва — версия, регион, статус, последно видяна и активни потребители."
+sub = "Всяка инстанция на Editor докладва - версия, регион, статус, последно видяна и активни потребители."
 title = "Здраве на инстанциите"
 
 [portal.editorAdmin.sections.pairing]
@@ -7755,9 +7755,9 @@ done = "Готово"
 keyNameLabel = "Име на ключ"
 keyNamePlaceholder = "напр. Production · ingest"
 secretKeyCaption = "Secret key"
-secretWarning = "Съхранявайте това в secrets manager. Stirling винаги съхранява само hash — няма начин да го възстановите по-късно."
+secretWarning = "Съхранявайте това в secrets manager. Stirling винаги съхранява само hash - няма начин да го възстановите по-късно."
 subtitle = "Ограничете ключа до минимално необходимото. Можете да го ротирате или отнемете по всяко време."
-subtitleCreated = "Копирайте тази тайна сега — няма да бъде показана отново."
+subtitleCreated = "Копирайте тази тайна сега - няма да бъде показана отново."
 title = "Създай API ключ"
 titleCreated = "Ключът е създаден"
 
@@ -8318,7 +8318,7 @@ label = "Изпращане на документа по имейл (Mailgun)"
 [portal.policies.operations.n8nGate]
 description = "Your workflow decides whether the run carries on."
 label = "Ask an n8n workflow to approve"
-note = "The workflow must reply with {\"approved\": true}. Anything else — including a timeout — stops the run and parks the document."
+note = "The workflow must reply with {\"approved\": true}. Anything else - including a timeout - stops the run and parks the document."
 
 [portal.policies.operations.n8nNotify]
 description = "Sends the run's details, not the document."
@@ -8340,7 +8340,7 @@ label = "Качване в Nextcloud"
 [portal.policies.operations.presidioAnalyze]
 description = "Вашият собствен Presidio сървър отчита личните данни, които намира."
 label = "Откриване на лични данни"
-note = "Presidio чете текст, не файлове. Дайте му текста, който искате да бъде проверен — самият документ не се качва."
+note = "Presidio чете текст, не файлове. Дайте му текста, който искате да бъде проверен - самият документ не се качва."
 
 [portal.policies.operations.responseMode]
 replace = "Замяна на документа с отговора"
@@ -8430,7 +8430,7 @@ desc = "Изпълнява OCR, така че сканираните стран�
 label = "Направи текста търсим"
 
 [portal.policies.wizard.capability.redact]
-desc = "Намира и заличава чувствителни данни — като номера за социално осигуряване и номера на карти — така че да не могат да бъдат прочетени."
+desc = "Намира и заличава чувствителни данни - като номера за социално осигуряване и номера на карти - така че да не могат да бъдат прочетени."
 label = "Заличаване на чувствителна информация"
 
 [portal.policies.wizard.capability.sanitize]
@@ -8596,11 +8596,11 @@ postalCodePlaceholder = "94105"
 posture = "Управление"
 posture_count = "~{{count}} политики"
 posture_essentials = "Essentials"
-posture_essentialsSub = "Класификация + споделяне — настройките по подразбиране"
+posture_essentialsSub = "Класификация + споделяне - настройките по подразбиране"
 posture_governed = "Governed"
 posture_governedSub = "Добавя сигурност и маршрутизиране"
 posture_regulated = "Regulated"
-posture_regulatedSub = "Всяка категория — съответствие, задържане, приемане"
+posture_regulatedSub = "Всяка категория - съответствие, задържане, приемане"
 qbr = "Тримесечни бизнес прегледи"
 qbrSub = "Вашият SE преглежда употребата и roadmap всяко тримесечие"
 region = "Щат / регион"
@@ -8722,13 +8722,13 @@ label = "Trial"
 [portal.procurement.license]
 copied = "Копирано"
 copy = "Копиране на ключ"
-downloadError = "Файлът за офлайн лиценз все още не можа да бъде генериран — моля, опитайте отново след малко."
+downloadError = "Файлът за офлайн лиценз все още не можа да бъде генериран - моля, опитайте отново след малко."
 downloadOffline = "Изтегляне на офлайн лиценз (.lic)"
 hint = "Поставете този ключ в self-hosted инстанция, за да я активирате, или го запазете за вашите записи. Пазете го на сигурно място."
 label = "Вашият лицензен ключ"
 subtitle = "Активирайте self-hosted инстанция с този ключ или го запазете за архив."
 title = "Вашият лицензионен ключ"
-trialFileHint = "Това е вашият пробен лицензионен файл. След като споразумението ви е в сила, върнете се и го изтеглете отново — за разлика от онлайн лицензионния ключ, .lic файлът няма да се актуализира сам."
+trialFileHint = "Това е вашият пробен лицензионен файл. След като споразумението ви е в сила, върнете се и го изтеглете отново - за разлика от онлайн лицензионния ключ, .lic файлът няма да се актуализира сам."
 
 [portal.procurement.link]
 cta = "Свързване на акаунт"
@@ -8742,10 +8742,10 @@ eyebrow = "Live"
 title = "Вече сте на живо със Stirling Enterprise"
 
 [portal.procurement.milestone]
-downloadError = "PDF офертата все още не можа да бъде изтеглена — моля, опитайте отново след малко."
+downloadError = "PDF офертата все още не можа да бъде изтеглена - моля, опитайте отново след малко."
 
 [portal.procurement.payment]
-description = "Вашата оферта е приета и лицензът ви вече е активен — екипът ви може да започне веднага. Платете първата фактура, когато сте готови; можете да я платите или изтеглите тук, без да е нужен email."
+description = "Вашата оферта е приета и лицензът ви вече е активен - екипът ви може да започне веднага. Платете първата фактура, когато сте готови; можете да я платите или изтеглите тук, без да е нужен email."
 downloadAgreement = "Изтегляне на подписаното споразумение"
 downloadInvoice = "Изтегляне на фактура"
 eyebrow = "Плащане"
@@ -8800,7 +8800,7 @@ workEmailPlaceholder = "you@company.com"
 
 [portal.procurement.trial]
 body = "Удължаването добавя 7 дни и уведомява вашия solutions engineer."
-bodyMaxed = "Използвали сте всички удължения — говорете с вашия solutions engineer, ако ви трябва още време."
+bodyMaxed = "Използвали сте всички удължения - говорете с вашия solutions engineer, ако ви трябва още време."
 cancel = "Отказ на trial"
 extend = "Удължаване със 7 дни"
 maxed = "Достигнат максимум"
@@ -9037,7 +9037,7 @@ walletUnavailable = "Wallet не е наличен: {{status}} {{statusText}}"
 
 [portal.usage.sessionExpired]
 action = "Влезте отново"
-body = "Сесията на вашия Stirling акаунт е изтекла. Влезте отново, за да видите таксуването — вашата инстанция остава свързана."
+body = "Сесията на вашия Stirling акаунт е изтекла. Влезте отново, за да видите таксуването - вашата инстанция остава свързана."
 title = "Сесията е изтекла"
 
 [portal.users]
@@ -9065,7 +9065,7 @@ summary = "Ограничен или само web достъп; не може д
 
 [portal.users.roles.member]
 label = "Член"
-summary = "Обикновен потребител — работи със споделени ресурси и собствени конфигурации."
+summary = "Обикновен потребител - работи със споделени ресурси и собствени конфигурации."
 
 [portal.users.roles.member.permissions]
 0 = "Използване на редактора и споделените интеграции"
@@ -9075,7 +9075,7 @@ summary = "Обикновен потребител — работи със сп�
 
 [portal.users.roles.team_owner]
 label = "Собственик на екип"
-summary = "Притежава екип — управлява ресурсите на членовете му и споделените конфигурации."
+summary = "Притежава екип - управлява ресурсите на членовете му и споделените конфигурации."
 
 [portal.users.roles.team_owner.permissions]
 0 = "Създаване и управление на S3 връзките на екипа"
@@ -9353,7 +9353,7 @@ title = "Разширени настройки за заличаване"
 
 [redact.tooltip.advanced.regex]
 bullet1 = "Пример: \\d{4}-\\d{2}-\\d{2} за съвпадение на дати във формат YYYY-MM-DD"
-bullet2 = "Използвайте внимателно — тествайте обстойно"
+bullet2 = "Използвайте внимателно - тествайте обстойно"
 text = "Активирайте регулярни изрази за напреднало съвпадение на шаблони. Полезно за намиране на телефонни номера, имейли или сложни шаблони."
 title = "Използвай регулярни изрази"
 
@@ -9659,7 +9659,7 @@ failed = "Възникна грешка при завъртане на PDF."
 title = "Преглед на завъртането"
 
 [rotate.tooltip.controls]
-text = "Използвайте бутоните за завъртане, за да коригирате ориентацията. Левият бутон завърта обратно, десният – по часовниковата стрелка. Всяко щракване завърта с 90 градуса."
+text = "Използвайте бутоните за завъртане, за да коригирате ориентацията. Левият бутон завърта обратно, десният - по часовниковата стрелка. Всяко щракване завърта с 90 градуса."
 title = "Управление"
 
 [rotate.tooltip.description]
@@ -9766,17 +9766,17 @@ failed = "Възникна грешка при извличането на ск�
 
 [scannerImageSplit.tooltip]
 headsUp = "Важно"
-headsUpDesc = "Покриващи се снимки или фонове много близки по цвят до снимките могат да намалят точността—опитайте по-светъл или по-тъмен фон и оставете повече място."
-problem1 = "Снимките не се засичат → увеличете Tolerance до 30–50"
-problem2 = "Твърде много грешни засичания → увеличете Minimum Area до 15 000–20 000"
-problem3 = "Изрязванията са твърде тесни → увеличете Border Size до 5–10"
+headsUpDesc = "Покриващи се снимки или фонове много близки по цвят до снимките могат да намалят точността - опитайте по-светъл или по-тъмен фон и оставете повече място."
+problem1 = "Снимките не се засичат → увеличете Tolerance до 30-50"
+problem2 = "Твърде много грешни засичания → увеличете Minimum Area до 15 000-20 000"
+problem3 = "Изрязванията са твърде тесни → увеличете Border Size до 5-10"
 problem4 = "Наклонени снимки не се изправят → намалете Angle Threshold до ~5°"
-problem5 = "Кутии от прах/шум → увеличете Minimum Contour Area до 1000–2000"
+problem5 = "Кутии от прах/шум → увеличете Minimum Contour Area до 1000-2000"
 quickFixes = "Бързи корекции"
 setupTips = "Съвети за настройка"
 tip1 = "Използвайте едноцветен, светъл фон"
 tip2 = "Оставете малък отстъп (≈1 см) между снимките"
-tip3 = "Сканирайте на 300–600 DPI"
+tip3 = "Сканирайте на 300-600 DPI"
 tip4 = "Почистете стъклото на скенера"
 title = "Разделяне на снимки"
 useCase1 = "Сканирайте цели страници от албуми наведнъж"
@@ -9784,7 +9784,7 @@ useCase2 = "Разделете партиди от плосък скенер н�
 useCase3 = "Разбийте колажи на отделни снимки"
 useCase4 = "Извличайте снимки от документи"
 whatThisDoes = "Какво прави"
-whatThisDoesDesc = "Автоматично открива и извлича всяка снимка от сканирана страница или композитно изображение—без ръчно изрязване."
+whatThisDoesDesc = "Автоматично открива и извлича всяка снимка от сканирана страница или композитно изображение - без ръчно изрязване."
 whenToUse = "Кога да се използва"
 
 [ScannerImageSplit.selectText]
@@ -10364,7 +10364,7 @@ configure = "Конфигуриране на подпис"
 colorLabel = "Цвят на текста"
 fontLabel = "Шрифт"
 fontSizeLabel = "Размер на шрифта"
-fontSizePlaceholder = "Въведете или изберете размер на шрифта (8–200)"
+fontSizePlaceholder = "Въведете или изберете размер на шрифта (8-200)"
 name = "Име на подписващия"
 placeholder = "Въведете пълното си име"
 
@@ -10557,7 +10557,7 @@ title = "Разделяне по брой страници"
 bullet1 = "Отпечатайте разделителните листове от връзката за изтегляне"
 bullet2 = "Поставете разделителни листове между документите"
 bullet3 = "Сканирайте всички документи заедно като един PDF"
-bullet4 = "Качете – разделителните страници се откриват и премахват автоматично"
+bullet4 = "Качете - разделителните страници се откриват и премахват автоматично"
 bullet5 = "Активирайте двустранен режим, ако сканирате и двете страни на разделителите"
 text = "Автоматично разделяйте сканирани документи с физически разделителни листове с QR кодове. Перфектно за обработка на множество документи, сканирани заедно."
 title = "Разделяне с разделител на страници"
@@ -10932,7 +10932,7 @@ recommended = "Препоръчително"
 selfHostedOffline = "Изисква вашия Stirling-PDF сървър (в момента офлайн):"
 showDetails = "Показване на подробности"
 unavailable = "Деактивирано от администратор на сървъра:"
-unavailableDependency = "Недостъпно – липсва необходим инструмент на сървъра:"
+unavailableDependency = "Недостъпно - липсва необходим инструмент на сървъра:"
 unfavorite = "Премахване от любими"
 
 [toolPanel.modePrompt]
@@ -11307,9 +11307,9 @@ certExpired = "Сертификатът е изтекъл"
 certRevocationUnknown = "Неизвестен статус на отмяна на сертификата"
 certRevoked = "Сертификатът е отнет"
 chainInvalid = "Невалидна верига на сертификата"
-documentModified = "Документът е променян след подписването – добавено е съдържание извън подписаната област"
+documentModified = "Документът е променян след подписването - добавено е съдържание извън подписаната област"
 revocationNotChecked = "Не е проверена отмяната"
-selfSigned = "Самоподписан – самоличността на подписващия не е потвърдена"
+selfSigned = "Самоподписан - самоличността на подписващия не е потвърдена"
 signatureInvalid = "Криптографската проверка на подписа е неуспешна"
 trustInvalid = "Сертификатът не е доверен"
 
@@ -11463,9 +11463,9 @@ emptyFile = "Празен файл"
 htmlHidePreview = "Скриване на прегледа"
 htmlPreview = "HTML визуализация"
 htmlPreviewMobileHidden = "HTML страниците са оформени за ширини на настолен компютър, затова прегледът тук е изключен по подразбиране."
-htmlPreviewWarning = "HTML визуализация — външните ресурси може да не се заредят · {{size}}"
+htmlPreviewWarning = "HTML визуализация - външните ресурси може да не се заредят · {{size}}"
 htmlShowPreview = "Показване на прегледа въпреки това"
-invalidJson = "Невалиден JSON — показване на суровото съдържание"
+invalidJson = "Невалиден JSON - показване на суровото съдържание"
 lineNumbers = "Номера на редовете"
 loading = "Зареждане..."
 renderMarkdown = "Рендерирай Markdown"
@@ -11527,7 +11527,7 @@ create = "Create your first Watched Folder"
 deleteFolder = "Delete folder"
 editFolder = "Edit folder"
 empty = "No watched folders yet"
-emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged — whatever your pipeline does."
+emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged - whatever your pipeline does."
 emptyTitle = "Automate your PDF workflows"
 file = "file"
 files = "files"
@@ -11535,7 +11535,7 @@ pause = "Pause"
 resume = "Resume"
 
 [watchedFolders.howItWorks]
-step1Desc = "Drag PDFs onto any Watched Folder card — or send them from your file list"
+step1Desc = "Drag PDFs onto any Watched Folder card - or send them from your file list"
 step1Title = "Drop files"
 step2Desc = "Your configured tools process each file automatically"
 step2Title = "Pipeline runs"
@@ -11559,18 +11559,18 @@ createFolder = "Create Folder"
 createTitle = "New Watched Folder"
 editTitle = "Edit Watched Folder"
 inputFolder = "Input folder"
-inputFolderNotChosen = "No folder chosen — required for auto-scan"
+inputFolderNotChosen = "No folder chosen - required for auto-scan"
 inputSource = "Input source"
-inputSourceBrowser = "Browser — drop files here"
+inputSourceBrowser = "Browser - drop files here"
 inputSourceLocal = "Local folder (auto-scan)"
-inputSourceLocalUnsupported = "Local folder (auto-scan) — Chrome/Edge only"
+inputSourceLocalUnsupported = "Local folder (auto-scan) - Chrome/Edge only"
 localOutputFolder = "Local output folder"
 maxRetries = "Max retries"
 name = "Folder name"
 namePlaceholder = "My Watched Folder"
 nameRequired = "Folder name is required"
 nameTooLong = "Folder name must be 50 characters or less"
-outputFolderNotSet = "Not set — outputs stay in app"
+outputFolderNotSet = "Not set - outputs stay in app"
 outputFolderUnsupported = "Not supported in this browser"
 outputModeNewDesc = "Output is saved as a new separate file"
 outputModeVersion = "Replace original?"
@@ -11630,9 +11630,9 @@ filterPending = "Pending"
 inputs = "Inputs"
 inputSize = "Input size"
 legendComplete = "Complete"
-noActivity = "No activity yet — drop a PDF to start"
+noActivity = "No activity yet - drop a PDF to start"
 noActivityMatch = "No matching activity"
-noInputFolder = "No input folder — edit to configure"
+noInputFolder = "No input folder - edit to configure"
 outputs = "Outputs"
 pause = "Pause"
 preview = "Preview"
@@ -11640,7 +11640,7 @@ previewInput = "Preview input"
 previewLoadFailed = "Could not load file preview."
 previewOutput = "Preview output"
 queued = "Queued"
-queuedWaiting = "Queued — waiting to run"
+queuedWaiting = "Queued - waiting to run"
 removeEntries = "Remove {{count}} entries"
 removeEntry = "Remove entry"
 removeNotificationsOnly = "Remove notifications only"
@@ -11982,7 +11982,7 @@ success = "Потребител(и) поканени успешно"
 [workspace.people.inviteLink]
 copied = "Връзката е копирана в клипборда"
 email = "Имейл адрес"
-emailDescription = "Незадължително – оставете празно за обща покана, която може да се използва от всеки"
+emailDescription = "Незадължително - оставете празно за обща покана, която може да се използва от всеки"
 emailPlaceholder = "user@example.com (незадължително)"
 emailSent = "Връзката за покана е генерирана и изпратена по имейл"
 error = "Неуспешно генериране на връзка за покана"

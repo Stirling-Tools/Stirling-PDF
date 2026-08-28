@@ -1254,7 +1254,7 @@ description = "URL یا نام فایل برای impressum (در برخی حوز
 label = "Impressum"
 
 [admin.settings.legal.loginAgreement]
-defaultLocaleHint = "— زمانی که زبانی پرونده‌ای ندارد به‌عنوان پشتیبان استفاده می‌شود."
+defaultLocaleHint = "- زمانی که زبانی پرونده‌ای ندارد به‌عنوان پشتیبان استفاده می‌شود."
 defaultLocaleLink = "بومی‌سازی پیش‌فرض را پیکربندی کنید"
 description = "بیانیه‌ای نمایش دهید که کاربران باید پس از ورود آن را بپذیرند. متن بر اساس زبان هر کاربر نشان داده می‌شود."
 discardConfirm = "تغییراتی ذخیره‌نشده دارید که از بین خواهند رفت. با این حال زبان را تغییر دهید؟"
@@ -2515,10 +2515,10 @@ text = "این یک شناسه امن برای امضای شماست که ثاب
 title = "گواهی چیست؟"
 
 [certSign.certType.tooltip.which]
-bullet1 = "PKCS#12 (.p12 / .pfx) – یک فایل ترکیبی (رایج‌ترین)"
-bullet2 = "PFX (.pfx) – نسخه Microsoft از PKCS12"
-bullet3 = "PEM – فایل‌های جداگانه کلید خصوصی و گواهی با پسوند .pem"
-bullet4 = "JKS – کی‌استور .jks جاوا برای توسعه / جریان‌های کاری CI-CD"
+bullet1 = "PKCS#12 (.p12 / .pfx) - یک فایل ترکیبی (رایج‌ترین)"
+bullet2 = "PFX (.pfx) - نسخه Microsoft از PKCS12"
+bullet3 = "PEM - فایل‌های جداگانه کلید خصوصی و گواهی با پسوند .pem"
+bullet4 = "JKS - کی‌استور .jks جاوا برای توسعه / جریان‌های کاری CI-CD"
 text = "فرمتی را انتخاب کنید که با فایل گواهی شما مطابقت دارد:"
 title = "کدام گزینه را باید استفاده کنم؟"
 
@@ -3462,7 +3462,7 @@ showPreferencesBtn = "مدیریت تنظیمات"
 title = "چگونه از کوکی‌ها استفاده می‌کنیم"
 
 [cookieBanner.popUp.description]
-1 = "ما از کوکی‌ها و فناوری‌های دیگر برای بهتر کار کردن Stirling PDF برای شما استفاده می‌کنیم—تا به ما در بهبود ابزارها و ادامه ساخت قابلیت‌هایی که دوست خواهید داشت کمک کند."
+1 = "ما از کوکی‌ها و فناوری‌های دیگر برای بهتر کار کردن Stirling PDF برای شما استفاده می‌کنیم - تا به ما در بهبود ابزارها و ادامه ساخت قابلیت‌هایی که دوست خواهید داشت کمک کند."
 2 = "If you’d rather not, clicking 'No Thanks' will only enable the essential cookies needed to keep things running smoothly."
 
 [cookieBanner.preferencesModal]
@@ -3475,16 +3475,16 @@ subtitle = "کاربرد کوکی"
 title = "مرکز تنظیمات رضایت"
 
 [cookieBanner.preferencesModal.analytics]
-description = "این کوکی‌ها به ما کمک می‌کنند بفهمیم چگونه از ابزارهای ما استفاده می‌شود تا بتوانیم ساخت قابلیت‌هایی را که جامعه ما بیشتر ارزش می‌دهد در اولویت قرار دهیم. مطمئن باشید—Stirling PDF نمی‌تواند و هرگز محتوای اسنادی را که با آنها کار می‌کنید ردیابی کند."
+description = "این کوکی‌ها به ما کمک می‌کنند بفهمیم چگونه از ابزارهای ما استفاده می‌شود تا بتوانیم ساخت قابلیت‌هایی را که جامعه ما بیشتر ارزش می‌دهد در اولویت قرار دهیم. مطمئن باشید - Stirling PDF نمی‌تواند و هرگز محتوای اسنادی را که با آنها کار می‌کنید ردیابی کند."
 title = "تحلیل‌ها"
 
 [cookieBanner.preferencesModal.description]
 1 = "Stirling PDF از کوکی‌ها و فناوری‌های مشابه برای بهبود تجربه شما و درک چگونگی استفاده از ابزارهای ما استفاده می‌کند. این به ما کمک می‌کند عملکرد را بهبود دهیم، قابلیت‌های مورد علاقه شما را توسعه دهیم و به کاربران خود پشتیبانی مستمر ارائه کنیم."
-2 = "Stirling PDF هرگز نمی‌تواند—و هرگز نخواهد توانست—محتوای اسنادی را که استفاده می‌کنید ردیابی یا دسترسی کند."
+2 = "Stirling PDF هرگز نمی‌تواند - و هرگز نخواهد توانست - محتوای اسنادی را که استفاده می‌کنید ردیابی یا دسترسی کند."
 3 = "حریم خصوصی و اعتماد شما در قلب کار ماست."
 
 [cookieBanner.preferencesModal.necessary]
-description = "These cookies are essential for the website to function properly. They enable core features like setting your privacy preferences, logging in, and filling out forms—which is why they can’t be turned off."
+description = "These cookies are essential for the website to function properly. They enable core features like setting your privacy preferences, logging in, and filling out forms - which is why they can’t be turned off."
 
 [cookieBanner.preferencesModal.necessary.title]
 1 = "کوکی‌های کاملاً ضروری"
@@ -3901,7 +3901,7 @@ dateDesc = "جدیدترین ابتدا"
 dateLabel = "جدیدترین"
 nameAsc = "A تا Z"
 nameDesc = "Z تا A"
-nameLabel = "A–Z"
+nameLabel = "A-Z"
 
 [fileSelectorPicker.tabs]
 saved = "فایل‌های ذخیره‌شده"
@@ -5414,7 +5414,7 @@ userBody = "هم‌تیمی‌ها را دعوت کنید، نقش‌ها را �
 userTitle = "نمای کلی پلن"
 
 [onboarding.processorIntro]
-body = "Stirling اکنون <strong>خط‌مشی‌ها</strong> را اجرا می‌کند — قوانین خودکاری که هر سند را هنگام ورود دسته‌بندی، ایمن و پردازش می‌کنند. آن‌ها را تنظیم کنید و اجراها را در <strong>پردازشگر</strong> پایش کنید."
+body = "Stirling اکنون <strong>خط‌مشی‌ها</strong> را اجرا می‌کند - قوانین خودکاری که هر سند را هنگام ورود دسته‌بندی، ایمن و پردازش می‌کنند. آن‌ها را تنظیم کنید و اجراها را در <strong>پردازشگر</strong> پایش کنید."
 cta = "مشاهده پردازشگر"
 title = "پردازشگر Stirling را بررسی کنید"
 
@@ -5671,7 +5671,7 @@ title = "حذف صفحات"
 description = "انتخاب کنید کدام صفحات برای عملیات استفاده شوند. از صفحات تکی، بازه‌ها، فرمول‌ها و کلیدواژه all پشتیبانی می‌کند."
 
 [pageSelection.tooltip.complex]
-bullet1 = "<strong>1,3-5,8,2n</strong> → صفحات 1، 3–5، 8، به‌اضافه صفحات زوج"
+bullet1 = "<strong>1,3-5,8,2n</strong> → صفحات 1، 3-5، 8، به‌اضافه صفحات زوج"
 bullet2 = "<strong>10-,2n-1</strong> → از صفحه 10 تا انتها + صفحات فرد"
 description = "انواع مختلف را ترکیب کنید."
 title = "ترکیب‌های پیچیده"
@@ -5694,8 +5694,8 @@ description = "برای الگوها از n در فرمول‌ها استفاد�
 title = "توابع ریاضی"
 
 [pageSelection.tooltip.ranges]
-bullet1 = "<strong>3-6</strong> → صفحات 3–6 را انتخاب می‌کند"
-bullet2 = "<strong>10-15</strong> → صفحات 10–15 را انتخاب می‌کند"
+bullet1 = "<strong>3-6</strong> → صفحات 3-6 را انتخاب می‌کند"
+bullet2 = "<strong>10-15</strong> → صفحات 10-15 را انتخاب می‌کند"
 bullet3 = "<strong>5-</strong> → صفحات 5 تا انتها را انتخاب می‌کند"
 description = "برای صفحات پیاپی از - استفاده کنید."
 title = "بازه صفحات"
@@ -5771,7 +5771,7 @@ title = "Turn on the Processor plan"
 eyebrow = "Editor plan · Always free"
 
 [payg.free.header]
-freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
+freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR - as much as you want, no matter where you trigger it."
 freeTitle = "Unlimited PDF editing"
 
 [payg.free.hero]
@@ -5799,8 +5799,8 @@ pauses = "pauses at cap"
 title = "What happens when the cap is reached"
 
 [payg.header]
-eyebrow = "Processor plan · {{start}} – {{end}}"
-freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
+eyebrow = "Processor plan · {{start}} - {{end}}"
+freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR - as much as you want, no matter where you trigger it."
 freeLabel = "Always free"
 freeTitle = "Unlimited PDF editing"
 meterBody = "{{limit}} free PDFs to start, then billed per PDF up to your cap."
@@ -5820,8 +5820,8 @@ chip = "سال پیش‌پرداخت‌شده"
 
 [payg.prepaid.banner]
 exhausted = "ظرفیت پیش‌پرداخت شما مصرف شده است؛ صورت‌حساب بر اساس مصرف از سر گرفته شده است. برای حفظ تخفیف، شارژ کنید."
-expiring_one = "سال پیش‌پرداخت شما تا {{count}} روز دیگر پایان می‌یابد. ظرفیت استفاده‌نشده منقضی می‌شود — برای شروع یک سال تازه، شارژ کنید."
-expiring_other = "سال پیش‌پرداخت شما تا {{count}} روز دیگر پایان می‌یابد. ظرفیت استفاده‌نشده منقضی می‌شود — برای شروع یک سال تازه، شارژ کنید."
+expiring_one = "سال پیش‌پرداخت شما تا {{count}} روز دیگر پایان می‌یابد. ظرفیت استفاده‌نشده منقضی می‌شود - برای شروع یک سال تازه، شارژ کنید."
+expiring_other = "سال پیش‌پرداخت شما تا {{count}} روز دیگر پایان می‌یابد. ظرفیت استفاده‌نشده منقضی می‌شود - برای شروع یک سال تازه، شارژ کنید."
 low = "شما به {{pct}}% از ظرفیت پیش‌پرداخت خود رسیده‌اید. هر زمان شارژ کنید تا پردازش بدون وقفه ادامه یابد."
 
 [payg.prepaid.card]
@@ -6121,7 +6121,7 @@ processing = "Processing"
 uploading = "Uploading"
 
 [pdfTextEditor.tooltip.alpha]
-text = "این نمایشگر آلفا هنوز در حال تکامل است—برخی فونت‌ها، رنگ‌ها، افکت‌های شفافیت و جزئیات چیدمان ممکن است کمی جابه‌جا شوند. لطفاً قبل از اشتراک‌گذاری، PDF تولیدشده را دوباره بررسی کنید."
+text = "این نمایشگر آلفا هنوز در حال تکامل است - برخی فونت‌ها، رنگ‌ها، افکت‌های شفافیت و جزئیات چیدمان ممکن است کمی جابه‌جا شوند. لطفاً قبل از اشتراک‌گذاری، PDF تولیدشده را دوباره بررسی کنید."
 title = "نمایشگر آلفا"
 
 [pdfTextEditor.tooltip.header]
@@ -6522,7 +6522,7 @@ never = "هرگز"
 [portal.accountLink.modal]
 linkSubtitle = "وارد حسابی شوید که این سرور باید هزینه‌ها را به آن نسبت دهد."
 linkTitle = "پیوند دادن حساب Stirling شما"
-reauthSubtitle = "نشست شما منقضی شده است — دوباره وارد حساب Stirling خود شوید. نمونه شما پیوند داده‌شده باقی می‌ماند."
+reauthSubtitle = "نشست شما منقضی شده است - دوباره وارد حساب Stirling خود شوید. نمونه شما پیوند داده‌شده باقی می‌ماند."
 reauthTitle = "دوباره وارد شوید"
 simulateSignIn = "شبیه‌سازی ورود (dev)"
 
@@ -6633,7 +6633,7 @@ title = "ویرایشگرهای PDF رایگان"
 checkoutErrorTitle = "امکان شروع پرداخت وجود نداشت"
 currentPlan = "طرح فعلی"
 freeForever = "برای همیشه رایگان"
-noTeamResolved = "هنوز هیچ تیمی در کیف پول شما شناسایی نشده است — تازه‌سازی کنید و دوباره تلاش کنید."
+noTeamResolved = "هنوز هیچ تیمی در کیف پول شما شناسایی نشده است - تازه‌سازی کنید و دوباره تلاش کنید."
 ownerOnly = "فقط مالک تیم می‌تواند طرح Processor را فعال کند."
 payInvoice = "پرداخت فاکتور برای تکمیل"
 planName = "Editor"
@@ -6668,7 +6668,7 @@ viewLink = "مشاهده ↗"
 
 [portal.billing.linkPrompt]
 cta = "پیوند حساب Stirling"
-description = "ویرایش دستی PDF — مشاهده، امضا، ادغام، تقسیم، واترمارک، فشرده‌سازی، تبدیل، OCR دستی — چه پیوند داده باشید چه نه، همیشه رایگان است. برای دریافت 500 PDF رایگان از پردازش اندازه‌گیری‌شده (اتوماسیون، AI و API) پیوند دهید؛ وقتی به مقدار بیشتری نیاز داشتید، طرح Processor را فعال کنید و فقط برای آنچه استفاده می‌کنید پرداخت کنید."
+description = "ویرایش دستی PDF - مشاهده، امضا، ادغام، تقسیم، واترمارک، فشرده‌سازی، تبدیل، OCR دستی - چه پیوند داده باشید چه نه، همیشه رایگان است. برای دریافت 500 PDF رایگان از پردازش اندازه‌گیری‌شده (اتوماسیون، AI و API) پیوند دهید؛ وقتی به مقدار بیشتری نیاز داشتید، طرح Processor را فعال کنید و فقط برای آنچه استفاده می‌کنید پرداخت کنید."
 title = "پیوند دادن حساب Stirling شما"
 
 [portal.billing.paymentMethod]
@@ -6802,13 +6802,13 @@ low = "رو به اتمام"
 [portal.billing.spendLimit]
 adjustLimit = "تنظیم حد"
 cancel = "لغو"
-capControlNote = "تغییرات فوراً اعمال می‌شوند — سقف را هر زمان بالا یا پایین ببرید."
+capControlNote = "تغییرات فوراً اعمال می‌شوند - سقف را هر زمان بالا یا پایین ببرید."
 capSuffix = "/ ماه"
 capSuffixWithDocs = "/ ماه · ≈ {{documents}} سند"
-displaySub = "فقط برای آنچه به‌طور خودکار پردازش می‌کنید صورت‌حساب می‌شوید — هرگز فراتر از سقف."
+displaySub = "فقط برای آنچه به‌طور خودکار پردازش می‌کنید صورت‌حساب می‌شوید - هرگز فراتر از سقف."
 editTitle = "تنظیم سقف ماهانه شما"
 eyebrow = "حد هزینه"
-guardrailBody = "یک سقف سخت — هرگز فراتر از آن صورت‌حساب نمی‌شوید. در سقف، پردازش اندازه‌گیری‌شده متوقف می‌شود (ویرایش نامحدود PDF همچنان کار می‌کند) تا زمانی که آن را افزایش دهید یا چرخه بازنشانی شود. چیزی از دست نمی‌رود."
+guardrailBody = "یک سقف سخت - هرگز فراتر از آن صورت‌حساب نمی‌شوید. در سقف، پردازش اندازه‌گیری‌شده متوقف می‌شود (ویرایش نامحدود PDF همچنان کار می‌کند) تا زمانی که آن را افزایش دهید یا چرخه بازنشانی شود. چیزی از دست نمی‌رود."
 guardrailLabel = "حفاظ شما:"
 noCap = "بدون سقف"
 pctUsed = "{{pct}}% استفاده شده"
@@ -7243,8 +7243,8 @@ viewSource = "مشاهده منبع در GitHub"
 codeCaption = "هر درخواست"
 eyebrow = "شروع به کار"
 lead = "همه درخواست‌ها با bearer token احراز هویت می‌شوند. کلیدها برای هر محیط محدوده‌بندی شده‌اند و هرگز منقضی نمی‌شوند مگر اینکه چرخانده شوند."
-liveKey = "کلیدهای Production — قابل‌هزینه، با محدودیت نرخ بر اساس طرح شما."
-testKey = "کلیدهای Sandbox — رایگان، با بازگرداندن fixtureهای مصنوعی."
+liveKey = "کلیدهای Production - قابل‌هزینه، با محدودیت نرخ بر اساس طرح شما."
+testKey = "کلیدهای Sandbox - رایگان، با بازگرداندن fixtureهای مصنوعی."
 title = "احراز هویت"
 
 [portal.docs.components]
@@ -7282,7 +7282,7 @@ title = "شروع سریع"
 
 [portal.docs.quickstart.callout]
 bodyAfterLink = "برای دستورالعمل‌های آماده کپی."
-bodyBeforeLink = "همان فراخوانی را در یک خط لوله وصل کنید تا اعتبارسنجی، حذف و تحویل را زنجیره کنید — یا آن را از طریق MCP در اختیار یک عامل قرار دهید. ببینید"
+bodyBeforeLink = "همان فراخوانی را در یک خط لوله وصل کنید تا اعتبارسنجی، حذف و تحویل را زنجیره کنید - یا آن را از طریق MCP در اختیار یک عامل قرار دهید. ببینید"
 label = "بعدی:"
 link = "Playbooks"
 
@@ -7291,7 +7291,7 @@ body = "یک کلید محدوده‌بندی‌شده از تب Infrastructure 
 title = "صدور یک کلید API"
 
 [portal.docs.quickstart.step2]
-body = "یک فایل را به هر endpoint تایپ‌شده POST کنید. endpoint شِمایی را که دریافت می‌کنید تعیین می‌کند — اینجا، استخراج‌کننده فاکتور."
+body = "یک فایل را به هر endpoint تایپ‌شده POST کنید. endpoint شِمایی را که دریافت می‌کنید تعیین می‌کند - اینجا، استخراج‌کننده فاکتور."
 snippetCaption = "استخراج یک فاکتور"
 title = "ارسال یک سند"
 
@@ -7371,8 +7371,8 @@ overview = "نمای کلی"
 requestAccess = "درخواست دسترسی"
 
 [portal.documents.elevation.active]
-description = "مجوز موقت — دسترسی ثبت می‌شود و زمان‌محدود است."
-descriptionFourEyes = "مجوز موقت — یک بازبین همتا مطلع شد (چهارچشمی)."
+description = "مجوز موقت - دسترسی ثبت می‌شود و زمان‌محدود است."
+descriptionFourEyes = "مجوز موقت - یک بازبین همتا مطلع شد (چهارچشمی)."
 title = "دسترسی تا {{time}} دیگر منقضی می‌شود"
 
 [portal.documents.elevation.gated]
@@ -7433,7 +7433,7 @@ time = "زمان"
 user = "کاربر"
 
 [portal.editorAdmin]
-subtitle = "Stirling PDF Editor را مستقر کنید، نمونه‌های خودمیزبان را به سازمان خود متصل کنید و ناوگان در حال اجرا را مدیریت کنید — اهداف، سلامت، اعتبارنامه‌ها و فعال‌سازی آفلاین در یک مکان."
+subtitle = "Stirling PDF Editor را مستقر کنید، نمونه‌های خودمیزبان را به سازمان خود متصل کنید و ناوگان در حال اجرا را مدیریت کنید - اهداف، سلامت، اعتبارنامه‌ها و فعال‌سازی آفلاین در یک مکان."
 title = "استقرار ویرایشگر"
 
 [portal.editorAdmin.health.columns]
@@ -7469,7 +7469,7 @@ rotate = "چرخش"
 talkToSales = "صحبت با فروش"
 
 [portal.editorAdmin.sections.health]
-sub = "هر نمونه ویرایشگر که گزارش می‌دهد — نسخه، region، وضعیت، آخرین مشاهده و کاربران فعال."
+sub = "هر نمونه ویرایشگر که گزارش می‌دهد - نسخه، region، وضعیت، آخرین مشاهده و کاربران فعال."
 title = "سلامت نمونه"
 
 [portal.editorAdmin.sections.pairing]
@@ -7755,9 +7755,9 @@ done = "انجام شد"
 keyNameLabel = "نام کلید"
 keyNamePlaceholder = "مثلاً Production · ingest"
 secretKeyCaption = "کلید محرمانه"
-secretWarning = "این را در یک secrets manager ذخیره کنید. Stirling فقط یک hash ذخیره می‌کند — هیچ راهی برای بازیابی آن در آینده وجود ندارد."
+secretWarning = "این را در یک secrets manager ذخیره کنید. Stirling فقط یک hash ذخیره می‌کند - هیچ راهی برای بازیابی آن در آینده وجود ندارد."
 subtitle = "دامنه کلید را به حداقل نیاز آن محدود کنید. هر زمان می‌توانید آن را بچرخانید یا لغو کنید."
-subtitleCreated = "این secret را اکنون کپی کنید — دوباره نمایش داده نخواهد شد."
+subtitleCreated = "این secret را اکنون کپی کنید - دوباره نمایش داده نخواهد شد."
 title = "ایجاد کلید API"
 titleCreated = "کلید ایجاد شد"
 
@@ -8318,7 +8318,7 @@ label = "ایمیل کردن سند (Mailgun)"
 [portal.policies.operations.n8nGate]
 description = "Your workflow decides whether the run carries on."
 label = "Ask an n8n workflow to approve"
-note = "The workflow must reply with {\"approved\": true}. Anything else — including a timeout — stops the run and parks the document."
+note = "The workflow must reply with {\"approved\": true}. Anything else - including a timeout - stops the run and parks the document."
 
 [portal.policies.operations.n8nNotify]
 description = "Sends the run's details, not the document."
@@ -8340,7 +8340,7 @@ label = "آپلود به Nextcloud"
 [portal.policies.operations.presidioAnalyze]
 description = "سرور Presidio خودتان داده‌های شخصی‌ای را که پیدا می‌کند گزارش می‌دهد."
 label = "تشخیص داده‌های شخصی"
-note = "Presidio متن را می‌خواند، نه فایل‌ها را. متنی را که می‌خواهید بررسی شود به آن بدهید — خود سند آپلود نمی‌شود."
+note = "Presidio متن را می‌خواند، نه فایل‌ها را. متنی را که می‌خواهید بررسی شود به آن بدهید - خود سند آپلود نمی‌شود."
 
 [portal.policies.operations.responseMode]
 replace = "جایگزینی سند با پاسخ"
@@ -8430,7 +8430,7 @@ desc = "OCR را اجرا می‌کند تا صفحات اسکن‌شده به �
 label = "قابل جستجو کردن متن"
 
 [portal.policies.wizard.capability.redact]
-desc = "جزئیات حساس — مانند شماره‌های تأمین اجتماعی و کارت — را پیدا و سیاه می‌کند تا قابل خواندن نباشند."
+desc = "جزئیات حساس - مانند شماره‌های تأمین اجتماعی و کارت - را پیدا و سیاه می‌کند تا قابل خواندن نباشند."
 label = "حذف اطلاعات حساس"
 
 [portal.policies.wizard.capability.sanitize]
@@ -8596,11 +8596,11 @@ postalCodePlaceholder = "94105"
 posture = "حاکمیت"
 posture_count = "حدود {{count}} خط‌مشی"
 posture_essentials = "ضروریات"
-posture_essentialsSub = "طبقه‌بندی + اشتراک‌گذاری — پیش‌فرض‌ها"
+posture_essentialsSub = "طبقه‌بندی + اشتراک‌گذاری - پیش‌فرض‌ها"
 posture_governed = "حاکمیت‌یافته"
 posture_governedSub = "امنیت و مسیریابی را اضافه می‌کند"
 posture_regulated = "تنظیم‌شده"
-posture_regulatedSub = "هر دسته — Compliance، Retention، Ingestion"
+posture_regulatedSub = "هر دسته - Compliance، Retention، Ingestion"
 qbr = "بازبینی‌های فصلی کسب‌وکار"
 qbrSub = "SE شما هر فصل استفاده و نقشه راه را بررسی می‌کند"
 region = "ایالت / منطقه"
@@ -8722,13 +8722,13 @@ label = "دوره آزمایشی"
 [portal.procurement.license]
 copied = "کپی شد"
 copy = "کپی کلید"
-downloadError = "هنوز امکان ایجاد فایل مجوز آفلاین وجود ندارد — لطفاً چند لحظه دیگر دوباره تلاش کنید."
+downloadError = "هنوز امکان ایجاد فایل مجوز آفلاین وجود ندارد - لطفاً چند لحظه دیگر دوباره تلاش کنید."
 downloadOffline = "دانلود مجوز آفلاین (.lic)"
 hint = "این کلید را برای فعال‌سازی در یک نمونه self-hosted وارد کنید، یا برای سوابق خود نگه دارید. آن را امن نگه دارید."
 label = "کلید مجوز شما"
 subtitle = "یک نمونه self-hosted را با این کلید فعال کنید، یا آن را برای سوابق خود نگه دارید."
 title = "کلید مجوز شما"
-trialFileHint = "این فایل مجوز آزمایشی شماست. وقتی توافق‌نامه شما برقرار شد، برگردید و دوباره آن را دانلود کنید — برخلاف کلید مجوز آنلاین، فایل .lic به‌خودی‌خود به‌روزرسانی نمی‌شود."
+trialFileHint = "این فایل مجوز آزمایشی شماست. وقتی توافق‌نامه شما برقرار شد، برگردید و دوباره آن را دانلود کنید - برخلاف کلید مجوز آنلاین، فایل .lic به‌خودی‌خود به‌روزرسانی نمی‌شود."
 
 [portal.procurement.link]
 cta = "پیوند دادن حساب"
@@ -8742,10 +8742,10 @@ eyebrow = "فعال"
 title = "شما در Stirling Enterprise فعال هستید"
 
 [portal.procurement.milestone]
-downloadError = "هنوز امکان دانلود PDF پیشنهاد قیمت وجود ندارد — لطفاً چند لحظه دیگر دوباره تلاش کنید."
+downloadError = "هنوز امکان دانلود PDF پیشنهاد قیمت وجود ندارد - لطفاً چند لحظه دیگر دوباره تلاش کنید."
 
 [portal.procurement.payment]
-description = "پیشنهاد قیمت شما پذیرفته شده و مجوز شما از قبل فعال است — تیم شما می‌تواند بلافاصله شروع کند. هر زمان آماده بودید اولین فاکتور را پرداخت کنید؛ می‌توانید آن را اینجا پرداخت یا دانلود کنید، بدون نیاز به ایمیل."
+description = "پیشنهاد قیمت شما پذیرفته شده و مجوز شما از قبل فعال است - تیم شما می‌تواند بلافاصله شروع کند. هر زمان آماده بودید اولین فاکتور را پرداخت کنید؛ می‌توانید آن را اینجا پرداخت یا دانلود کنید، بدون نیاز به ایمیل."
 downloadAgreement = "دانلود توافق‌نامه امضاشده"
 downloadInvoice = "دانلود فاکتور"
 eyebrow = "پرداخت"
@@ -8800,7 +8800,7 @@ workEmailPlaceholder = "you@company.com"
 
 [portal.procurement.trial]
 body = "تمدید، ۷ روز اضافه می‌کند و به مهندس راهکارهای شما اطلاع می‌دهد."
-bodyMaxed = "همه تمدیدهای خود را استفاده کرده‌اید — اگر به زمان بیشتری نیاز دارید با مهندس راهکارهای خود صحبت کنید."
+bodyMaxed = "همه تمدیدهای خود را استفاده کرده‌اید - اگر به زمان بیشتری نیاز دارید با مهندس راهکارهای خود صحبت کنید."
 cancel = "لغو دوره آزمایشی"
 extend = "تمدید ۷ روز"
 maxed = "به سقف رسیده"
@@ -9037,7 +9037,7 @@ walletUnavailable = "کیف پول در دسترس نیست: {{status}} {{status
 
 [portal.usage.sessionExpired]
 action = "دوباره وارد شوید"
-body = "نشست حساب Stirling شما منقضی شده است. برای مشاهده صورتحساب دوباره وارد شوید — نمونه شما همچنان پیوندشده می‌ماند."
+body = "نشست حساب Stirling شما منقضی شده است. برای مشاهده صورتحساب دوباره وارد شوید - نمونه شما همچنان پیوندشده می‌ماند."
 title = "نشست منقضی شد"
 
 [portal.users]
@@ -9065,7 +9065,7 @@ summary = "دسترسی محدود یا فقط وب؛ نمی‌تواند پیک
 
 [portal.users.roles.member]
 label = "عضو"
-summary = "کاربر عادی — با منابع مشترک و پیکربندی‌های خود کار می‌کند."
+summary = "کاربر عادی - با منابع مشترک و پیکربندی‌های خود کار می‌کند."
 
 [portal.users.roles.member.permissions]
 0 = "استفاده از ویرایشگر و یکپارچه‌سازی‌های مشترک"
@@ -9075,7 +9075,7 @@ summary = "کاربر عادی — با منابع مشترک و پیکربند�
 
 [portal.users.roles.team_owner]
 label = "مالک تیم"
-summary = "مالک یک تیم است — منابع اعضا و پیکربندی‌های مشترک آن را مدیریت می‌کند."
+summary = "مالک یک تیم است - منابع اعضا و پیکربندی‌های مشترک آن را مدیریت می‌کند."
 
 [portal.users.roles.team_owner.permissions]
 0 = "ایجاد و مدیریت اتصالات S3 تیم"
@@ -9766,7 +9766,7 @@ failed = "هنگام استخراج اسکن‌های تصویر خطایی رخ
 
 [scannerImageSplit.tooltip]
 headsUp = "توجه"
-headsUpDesc = "هم‌پوشانی عکس‌ها یا پس‌زمینه‌هایی با رنگ بسیار نزدیک به عکس‌ها می‌تواند دقت را کاهش دهد—پس‌زمینه‌ای روشن‌تر یا تیره‌تر امتحان کنید و فاصله بیشتری بگذارید."
+headsUpDesc = "هم‌پوشانی عکس‌ها یا پس‌زمینه‌هایی با رنگ بسیار نزدیک به عکس‌ها می‌تواند دقت را کاهش دهد - پس‌زمینه‌ای روشن‌تر یا تیره‌تر امتحان کنید و فاصله بیشتری بگذارید."
 problem1 = "عکس‌ها شناسایی نمی‌شوند → مقدار Tolerance را به 30-50 افزایش دهید"
 problem2 = "تشخیص‌های اشتباه زیاد است → Minimum Area را به 15,000-20,000 افزایش دهید"
 problem3 = "برش‌ها خیلی تنگ هستند → Border Size را به 5-10 افزایش دهید"
@@ -9784,7 +9784,7 @@ useCase2 = "دسته‌های اسکنر تخت را به فایل‌های جد
 useCase3 = "کلاژها را به عکس‌های جداگانه تقسیم کنید"
 useCase4 = "عکس‌ها را از اسناد بیرون بکشید"
 whatThisDoes = "این ابزار چه می‌کند"
-whatThisDoesDesc = "به‌صورت خودکار هر عکس را از یک صفحه اسکن‌شده یا تصویر مرکب پیدا و استخراج می‌کند—بدون برش دستی."
+whatThisDoesDesc = "به‌صورت خودکار هر عکس را از یک صفحه اسکن‌شده یا تصویر مرکب پیدا و استخراج می‌کند - بدون برش دستی."
 whenToUse = "زمان استفاده"
 
 [ScannerImageSplit.selectText]
@@ -10364,7 +10364,7 @@ configure = "پیکربندی امضا"
 colorLabel = "رنگ متن"
 fontLabel = "فونت"
 fontSizeLabel = "اندازه فونت"
-fontSizePlaceholder = "اندازه فونت را وارد یا انتخاب کنید (۸–۲۰۰)"
+fontSizePlaceholder = "اندازه فونت را وارد یا انتخاب کنید (۸-۲۰۰)"
 name = "نام امضاکننده"
 placeholder = "نام کامل خود را وارد کنید"
 
@@ -11463,9 +11463,9 @@ emptyFile = "فایل خالی"
 htmlHidePreview = "پنهان کردن پیش‌نمایش"
 htmlPreview = "پیش‌نمایش HTML"
 htmlPreviewMobileHidden = "صفحات HTML برای عرض‌های دسکتاپ چیدمان شده‌اند، بنابراین پیش‌نمایش اینجا به‌طور پیش‌فرض خاموش است."
-htmlPreviewWarning = "پیش‌نمایش HTML — ممکن است منابع خارجی بارگذاری نشوند · {{size}}"
+htmlPreviewWarning = "پیش‌نمایش HTML - ممکن است منابع خارجی بارگذاری نشوند · {{size}}"
 htmlShowPreview = "با این حال پیش‌نمایش را نشان بده"
-invalidJson = "JSON نامعتبر — محتوای خام نمایش داده می‌شود"
+invalidJson = "JSON نامعتبر - محتوای خام نمایش داده می‌شود"
 lineNumbers = "شماره خطوط"
 loading = "در حال بارگذاری..."
 renderMarkdown = "رندر Markdown"
@@ -11527,7 +11527,7 @@ create = "Create your first Watched Folder"
 deleteFolder = "Delete folder"
 editFolder = "Edit folder"
 empty = "No watched folders yet"
-emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged — whatever your pipeline does."
+emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged - whatever your pipeline does."
 emptyTitle = "Automate your PDF workflows"
 file = "file"
 files = "files"
@@ -11535,7 +11535,7 @@ pause = "Pause"
 resume = "Resume"
 
 [watchedFolders.howItWorks]
-step1Desc = "Drag PDFs onto any Watched Folder card — or send them from your file list"
+step1Desc = "Drag PDFs onto any Watched Folder card - or send them from your file list"
 step1Title = "Drop files"
 step2Desc = "Your configured tools process each file automatically"
 step2Title = "Pipeline runs"
@@ -11559,18 +11559,18 @@ createFolder = "Create Folder"
 createTitle = "New Watched Folder"
 editTitle = "Edit Watched Folder"
 inputFolder = "Input folder"
-inputFolderNotChosen = "No folder chosen — required for auto-scan"
+inputFolderNotChosen = "No folder chosen - required for auto-scan"
 inputSource = "Input source"
-inputSourceBrowser = "Browser — drop files here"
+inputSourceBrowser = "Browser - drop files here"
 inputSourceLocal = "Local folder (auto-scan)"
-inputSourceLocalUnsupported = "Local folder (auto-scan) — Chrome/Edge only"
+inputSourceLocalUnsupported = "Local folder (auto-scan) - Chrome/Edge only"
 localOutputFolder = "Local output folder"
 maxRetries = "Max retries"
 name = "Folder name"
 namePlaceholder = "My Watched Folder"
 nameRequired = "Folder name is required"
 nameTooLong = "Folder name must be 50 characters or less"
-outputFolderNotSet = "Not set — outputs stay in app"
+outputFolderNotSet = "Not set - outputs stay in app"
 outputFolderUnsupported = "Not supported in this browser"
 outputModeNewDesc = "Output is saved as a new separate file"
 outputModeVersion = "Replace original?"
@@ -11630,9 +11630,9 @@ filterPending = "Pending"
 inputs = "Inputs"
 inputSize = "Input size"
 legendComplete = "Complete"
-noActivity = "No activity yet — drop a PDF to start"
+noActivity = "No activity yet - drop a PDF to start"
 noActivityMatch = "No matching activity"
-noInputFolder = "No input folder — edit to configure"
+noInputFolder = "No input folder - edit to configure"
 outputs = "Outputs"
 pause = "Pause"
 preview = "Preview"
@@ -11640,7 +11640,7 @@ previewInput = "Preview input"
 previewLoadFailed = "Could not load file preview."
 previewOutput = "Preview output"
 queued = "Queued"
-queuedWaiting = "Queued — waiting to run"
+queuedWaiting = "Queued - waiting to run"
 removeEntries = "Remove {{count}} entries"
 removeEntry = "Remove entry"
 removeNotificationsOnly = "Remove notifications only"
