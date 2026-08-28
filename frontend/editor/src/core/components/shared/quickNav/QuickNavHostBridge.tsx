@@ -16,6 +16,7 @@ import type { ToolId } from "@app/types/toolId";
 
 export interface QuickNavHostBridgeProps {
   portalAccess?: boolean;
+  processorEnabled?: boolean;
   readerMode?: boolean;
   onSetReaderMode?: (on: boolean) => void;
   onOpenSettings: () => void;
@@ -29,6 +30,7 @@ export interface QuickNavHostBridgeProps {
 /** Registers with the rail what only the app can see, and owns the notifications panel. */
 export function QuickNavHostBridge({
   portalAccess = false,
+  processorEnabled = true,
   readerMode = false,
   onSetReaderMode,
   onOpenSettings,
@@ -58,6 +60,7 @@ export function QuickNavHostBridge({
       identity: { displayName, profilePictureUrl },
       signingBadge,
       portalAccess,
+      processorEnabled,
       readerMode,
       notificationsOpen,
       toolReasons: mergedToolReasons,

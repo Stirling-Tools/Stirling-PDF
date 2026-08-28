@@ -30,7 +30,10 @@ const ADMIN_WITH_PORTAL = {
   portalAccess: true,
 };
 
-const SWITCH_APP = "Switch app";
+// The quick-nav rail's Processor entry, and the sidebar footer row. Both are
+// named: an assertion on a control that no longer exists passes vacuously,
+// which is how #7695 silently defanged this file.
+const RAIL_PROCESSOR = "Processor";
 const OPEN_PROCESSOR = "Open PDF Processor";
 
 // Copy that only a Processor server can honour: a link tool pointing at the
@@ -114,8 +117,10 @@ test.describe("editor-only server (processor.enabled=false)", () => {
     await page.goto("/editor", { waitUntil: "domcontentloaded" });
     await expect(page.locator(INPUT)).toBeVisible();
 
-    // The logo stays a plain logo: no editor -> processor switcher...
-    await expect(page.getByLabel(SWITCH_APP)).toHaveCount(0);
+    // The quick-nav rail offers no Processor entry...
+    await expect(
+      page.getByRole("button", { name: RAIL_PROCESSOR, exact: true }),
+    ).toHaveCount(0);
     // ...and the sidebar footer offers no "Open PDF Processor" row.
     await expect(page.getByLabel(OPEN_PROCESSOR)).toHaveCount(0);
 
@@ -168,15 +173,10 @@ test.describe("editor-only server (processor.enabled=false)", () => {
     }
   });
 
-  test("bounces a hand-typed /processor URL back to the editor", async ({
-    page,
-  }) => {
-    // The last hole: hiding the entry points doesn't stop someone typing the URL.
-    // The editor shell rendering here is the assertion - the portal has its own
-    // shell and no #super-search-input, as the control below shows.
-    await page.goto("/processor", { waitUntil: "domcontentloaded" });
-    await expect(page.locator(INPUT)).toBeVisible();
-  });
+  // Not asserted here: whether /processor is routable depends on BUILD_PORTAL,
+  // which the stubbed dev suite (portal always bundled) cannot vary. The
+  // editor-only image is built with BUILD_PORTAL=false and its dist carries no
+  // portal chunk - that is where the absence is verified.
 });
 
 test.describe("same user on a server with the Processor on", () => {
@@ -192,7 +192,9 @@ test.describe("same user on a server with the Processor on", () => {
 
   test("is offered the switch to the Processor", async ({ page }) => {
     await expect(page.locator(INPUT)).toBeVisible();
-    await expect(page.getByLabel(SWITCH_APP)).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: RAIL_PROCESSOR, exact: true }),
+    ).toBeVisible();
   });
 
   test("is offered Processor lanes in super search", async ({ page }) => {

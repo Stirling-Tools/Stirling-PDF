@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
   navigate: vi.fn(),
   requestNavigation: vi.fn(),
   portalAccess: true,
+  processorEnabled: true,
 }));
 
 vi.mock("react-router-dom", () => ({
@@ -13,6 +14,11 @@ vi.mock("react-router-dom", () => ({
 }));
 vi.mock("@app/auth/context", () => ({
   useAuth: () => ({ portalAccess: mocks.portalAccess }),
+}));
+// Stubbed rather than provider-wrapped: the real hook reads app-config, which
+// this suite never fetches.
+vi.mock("@app/hooks/useProcessorEnabled", () => ({
+  useProcessorEnabled: () => mocks.processorEnabled,
 }));
 vi.mock("@app/contexts/NavigationContext", () => ({
   useNavigationActions: () => ({
@@ -27,11 +33,18 @@ beforeEach(() => {
   sessionStorage.clear();
   vi.clearAllMocks();
   mocks.portalAccess = true;
+  mocks.processorEnabled = true;
 });
 
 describe("useOtherAppSwitch", () => {
   it("offers no switch without portal access", () => {
     mocks.portalAccess = false;
+    const { result } = renderHook(() => useOtherAppSwitch());
+    expect(result.current).toBeNull();
+  });
+
+  it("offers no switch on an editor-only server", () => {
+    mocks.processorEnabled = false;
     const { result } = renderHook(() => useOtherAppSwitch());
     expect(result.current).toBeNull();
   });

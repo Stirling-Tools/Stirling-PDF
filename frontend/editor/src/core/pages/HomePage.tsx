@@ -50,6 +50,7 @@ import {
   getDisabledLabel,
 } from "@app/components/tools/fullscreen/shared";
 import { useOtherAppSwitch } from "@app/hooks/useOtherAppSwitch";
+import { useProcessorEnabled } from "@app/hooks/useProcessorEnabled";
 import { consumeReaderModeRequest } from "@app/utils/pendingReaderMode";
 import {
   FilesPageProvider,
@@ -126,6 +127,7 @@ export default function HomePage() {
   const isProgrammaticScroll = useRef(false);
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const otherApp = useOtherAppSwitch();
+  const processorEnabled = useProcessorEnabled();
   const location = useLocation();
   // Persisted user preference for the FileSidebar collapsed state. Auto-
   // collapse on /files is layered on top in the transition effect below and
@@ -519,6 +521,7 @@ export default function HomePage() {
       <HomePageExtensions />
       <QuickNavHostBridge
         portalAccess={Boolean(otherApp)}
+        processorEnabled={processorEnabled}
         onOpenSettings={() => setConfigModalOpen(true)}
         requestNavigation={requestNavigation}
         readerMode={readerMode}

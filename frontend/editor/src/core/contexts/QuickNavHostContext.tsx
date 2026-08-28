@@ -23,6 +23,8 @@ export interface QuickNavHostData {
   identity: QuickNavIdentity | null;
   signingBadge: number;
   portalAccess: boolean;
+  /** False only on an editor-only server, where there is no Processor to offer. */
+  processorEnabled: boolean;
   readerMode: boolean;
   /** The app owns the panel; the rail's bell only reports its state. */
   notificationsOpen: boolean;
@@ -60,6 +62,7 @@ const EMPTY_DATA: QuickNavHostData = {
   identity: null,
   signingBadge: 0,
   portalAccess: false,
+  processorEnabled: true,
   readerMode: false,
   notificationsOpen: false,
   hasSettings: false,
@@ -89,6 +92,7 @@ export function QuickNavHostProvider({ children }: { children: ReactNode }) {
         merged.appMounted === prev.appMounted &&
         merged.signingBadge === prev.signingBadge &&
         merged.portalAccess === prev.portalAccess &&
+        merged.processorEnabled === prev.processorEnabled &&
         merged.readerMode === prev.readerMode &&
         merged.notificationsOpen === prev.notificationsOpen &&
         merged.hasSettings === prev.hasSettings &&
@@ -142,6 +146,7 @@ export function useRegisterQuickNavHost(
     identity,
     signingBadge,
     portalAccess,
+    processorEnabled,
     readerMode,
     notificationsOpen,
     toolReasons,
@@ -154,6 +159,7 @@ export function useRegisterQuickNavHost(
       identity: identity ?? null,
       signingBadge: signingBadge ?? 0,
       portalAccess: portalAccess ?? false,
+      processorEnabled: processorEnabled ?? true,
       readerMode: readerMode ?? false,
       notificationsOpen: notificationsOpen ?? false,
       // Omitted when unknown, so the last answer survives a re-fetch.

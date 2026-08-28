@@ -159,7 +159,13 @@ export function QuickNavRailHost() {
 
   return (
     <QuickNavRailContainer
-      groups={HAS_PORTAL ? [apps, within] : [within]}
+      // Bundling the portal says nothing about the server: an editor-only one has
+      // no Processor to offer, so drop the group rather than show it disabled.
+      groups={
+        HAS_PORTAL && (inPortal || host?.processorEnabled !== false)
+          ? [apps, within]
+          : [within]
+      }
       onReturnHome={returnHome}
       identity={host?.identity ?? null}
       onOpenSettings={host?.hasSettings ? openSettings : undefined}
