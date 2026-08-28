@@ -534,6 +534,10 @@ export interface FlattenRequest {
    */
   renderDpi?: number;
 }
+export interface FormFormDetectionDetectRequest {
+  applyToPdf?: boolean;
+  confThreshold?: number;
+}
 export type GeneralExtractBookmarksRequest = Record<string, never>;
 export type GeneralFile = Record<string, never>;
 export type GeneralPdfToSinglePageRequest = Record<string, never>;
@@ -1528,6 +1532,7 @@ export type ToolEndpoint =
   | "/api/v1/filter/filter-page-count"
   | "/api/v1/filter/filter-page-rotation"
   | "/api/v1/filter/filter-page-size"
+  | "/api/v1/form/form-detection/detect"
   | "/api/v1/general/booklet-imposition"
   | "/api/v1/general/crop"
   | "/api/v1/general/edit-table-of-contents"
@@ -1631,6 +1636,7 @@ export interface ToolApiParams {
   "/api/v1/filter/filter-page-count": PDFComparisonAndCount;
   "/api/v1/filter/filter-page-rotation": PageRotationRequest;
   "/api/v1/filter/filter-page-size": PageSizeRequest;
+  "/api/v1/form/form-detection/detect": FormFormDetectionDetectRequest;
   "/api/v1/general/booklet-imposition": BookletImpositionRequest;
   "/api/v1/general/crop": CropPdfForm;
   "/api/v1/general/edit-table-of-contents": EditTableOfContentsRequest;
@@ -1735,6 +1741,7 @@ export const TOOL_ENDPOINTS = [
   "/api/v1/filter/filter-page-count",
   "/api/v1/filter/filter-page-rotation",
   "/api/v1/filter/filter-page-size",
+  "/api/v1/form/form-detection/detect",
   "/api/v1/general/booklet-imposition",
   "/api/v1/general/crop",
   "/api/v1/general/edit-table-of-contents",

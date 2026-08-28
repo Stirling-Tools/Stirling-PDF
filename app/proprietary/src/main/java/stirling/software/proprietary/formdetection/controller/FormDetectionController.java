@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.TreeSet;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -26,6 +26,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.tool.ToolArity;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
+import stirling.software.common.model.tool.ToolIOCase;
+import stirling.software.common.model.tool.ToolIOWhen;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.FormUtils;
 import stirling.software.common.util.FormUtils.NewFormFieldDefinition;
@@ -44,7 +49,6 @@ import tools.jackson.databind.ObjectMapper;
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/form/form-detection")
-@ConditionalOnClass(name = "ai.onnxruntime.OrtEnvironment")
 @RequiredArgsConstructor
 @Tag(name = "Auto Form Detection")
 public class FormDetectionController {
@@ -52,27 +56,52 @@ public class FormDetectionController {
     /** Carries the field counts alongside the PDF, so one request feeds the results panel. */
     static final String SUMMARY_HEADER = "X-Stirling-Detected-Fields";
 
-    private final FormDetectionService detection;
+    /**
+     * Resolved by interface and lazily: the pipeline is absent from builds without onnxruntime, and
+     * an eager or concrete-typed dependency would keep this endpoint out of the OpenAPI spec.
+     */
+    private final ObjectProvider<FormDetectionService> detectionProvider;
+
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
     private final ObjectMapper objectMapper;
 
     @PostMapping(value = "/detect", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @ToolIO(
+            produces = ToolFormat.PDF,
+            cases = {
+                @ToolIOCase(
+                        when = @ToolIOWhen(param = "applyToPdf", matches = "false"),
+                        produces = ToolFormat.JSON,
+                        arity = ToolArity.SISO)
+            })
     @Operation(
             summary = "Detect form fields with the installed AI model",
             description =
-                    "Runs the installed ONNX model over each page and returns detected fields in"
-                            + " PDF points. With applyToPdf=true, returns the fillable PDF instead.")
+                    "Runs the installed ONNX model over each page and returns the PDF with the"
+                            + " detected fields added. With applyToPdf=false, returns the field"
+                            + " rectangles as JSON instead, in PDF points.")
     public ResponseEntity<?> detect(
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "confThreshold", required = false) Float confThreshold,
-            @RequestParam(value = "applyToPdf", required = false, defaultValue = "false")
+            @RequestParam(value = "applyToPdf", required = false, defaultValue = "true")
                     boolean applyToPdf)
             throws IOException {
 
         if (file.isEmpty()) {
             return ResponseEntity.badRequest()
                     .body(Map.of("reason", "INVALID_PDF", "message", "The uploaded file is empty"));
+        }
+
+        FormDetectionService detection = detectionProvider.getIfAvailable();
+        if (detection == null) {
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                    .body(
+                            Map.of(
+                                    "reason",
+                                    "DEPENDENCY",
+                                    "message",
+                                    "This build does not include the detection engine"));
         }
 
         List<DetectedField> detections;

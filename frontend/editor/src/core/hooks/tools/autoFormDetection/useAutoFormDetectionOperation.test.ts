@@ -3,8 +3,12 @@ import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 vi.mock("@app/services/apiClient", () => ({
   default: { get: vi.fn(), post: vi.fn() },
 }));
-vi.mock("@app/hooks/tools/shared/useToolOperation", () => ({
-  ToolType: { custom: "custom" },
+// Only the hook is stubbed; defineCustomTool and friends stay real so this does not break
+// every time the module grows an export.
+vi.mock("@app/hooks/tools/shared/useToolOperation", async (importOriginal) => ({
+  ...(await importOriginal<
+    typeof import("@app/hooks/tools/shared/useToolOperation")
+  >()),
   useToolOperation: vi.fn(),
 }));
 vi.mock("react-i18next", () => ({

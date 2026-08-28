@@ -8,6 +8,7 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -32,11 +33,18 @@ class FormDetectionControllerTest {
         // the pipeline's actual exceptions rather than a stubbed stand-in.
         FormDetectionController controller =
                 new FormDetectionController(
-                        new FormDetectionService(manager, detector, rasterizer),
+                        provider(new FormDetectionService(manager, detector, rasterizer)),
                         Mockito.mock(CustomPDFDocumentFactory.class),
                         Mockito.mock(TempFileManager.class),
                         new ObjectMapper());
         return MockMvcBuilders.standaloneSetup(controller).build();
+    }
+
+    @SuppressWarnings("unchecked")
+    private static ObjectProvider<FormDetectionService> provider(FormDetectionService service) {
+        ObjectProvider<FormDetectionService> p = Mockito.mock(ObjectProvider.class);
+        Mockito.when(p.getIfAvailable()).thenReturn(service);
+        return p;
     }
 
     private MockMultipartFile pdf() {
@@ -69,7 +77,10 @@ class FormDetectionControllerTest {
     @Test
     void detectReturnsEmptyDetectionsForBlankRender() throws Exception {
         mvc(readyManager(), Mockito.mock(OnnxFormDetector.class), noPages())
-                .perform(multipart("/api/v1/form/form-detection/detect").file(pdf()))
+                .perform(
+                        multipart("/api/v1/form/form-detection/detect")
+                                .file(pdf())
+                                .param("applyToPdf", "false"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.detections").isArray())
                 .andExpect(jsonPath("$.detections").isEmpty());
@@ -95,7 +106,10 @@ class FormDetectionControllerTest {
         PageRasterizer rasterizer = noPages();
 
         mvc(readyManager(), Mockito.mock(OnnxFormDetector.class), rasterizer)
-                .perform(multipart("/api/v1/form/form-detection/detect").file(pdf()))
+                .perform(
+                        multipart("/api/v1/form/form-detection/detect")
+                                .file(pdf())
+                                .param("applyToPdf", "false"))
                 .andExpect(status().isOk());
 
         Mockito.verify(rasterizer)
@@ -152,7 +166,8 @@ class FormDetectionControllerTest {
                 .perform(
                         multipart("/api/v1/form/form-detection/detect")
                                 .file(pdf())
-                                .param("confThreshold", "-42"))
+                                .param("confThreshold", "-42")
+                                .param("applyToPdf", "false"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.detections").isEmpty());
     }

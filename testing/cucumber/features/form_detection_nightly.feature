@@ -15,6 +15,9 @@ Feature: Auto Form Detection API Validation
     Scenario: Detect returns field boxes for a printed form
         Given I generate a PDF file as "file"
         And the pdf looks like a printed form
+        And the request data includes
+            | parameter  | value |
+            | applyToPdf | false |
         When I send the API request to the endpoint "/api/v1/form/form-detection/detect"
         Then the response status code should be 200
         And the response content type should be "application/json"
@@ -25,6 +28,9 @@ Feature: Auto Form Detection API Validation
     Scenario: Detect finds fields on every page of a multi-page form
         Given I generate a PDF file as "file"
         And the pdf looks like a printed form on 3 pages
+        And the request data includes
+            | parameter  | value |
+            | applyToPdf | false |
         When I send the API request to the endpoint "/api/v1/form/form-detection/detect"
         Then the response status code should be 200
         And the response should contain at least 15 detected fields
@@ -37,17 +43,15 @@ Feature: Auto Form Detection API Validation
         And the request data includes
             | parameter     | value |
             | confThreshold | 0.7   |
+            | applyToPdf    | false |
         When I send the API request to the endpoint "/api/v1/form/form-detection/detect"
         Then the response status code should be 200
         And every detected field should have confidence of at least 0.7
 
     @detect @positive
-    Scenario: applyToPdf returns a fillable PDF instead of JSON
+    Scenario: A fillable PDF comes back by default
         Given I generate a PDF file as "file"
         And the pdf looks like a printed form
-        And the request data includes
-            | parameter  | value |
-            | applyToPdf | true  |
         When I send the API request to the endpoint "/api/v1/form/form-detection/detect"
         Then the response status code should be 200
         And the response content type should be "application/pdf"
@@ -59,6 +63,9 @@ Feature: Auto Form Detection API Validation
     Scenario: A page with nothing form-like yields an empty detection list
         Given I generate a PDF file as "file"
         And the pdf contains 1 blank pages
+        And the request data includes
+            | parameter  | value |
+            | applyToPdf | false |
         When I send the API request to the endpoint "/api/v1/form/form-detection/detect"
         Then the response status code should be 200
         And the response content type should be "application/json"
@@ -78,6 +85,7 @@ Feature: Auto Form Detection API Validation
         And the request data includes
             | parameter     | value |
             | confThreshold | 9.5   |
+            | applyToPdf    | false |
         When I send the API request to the endpoint "/api/v1/form/form-detection/detect"
         Then the response status code should be 200
         And every detected field should be a usable field box

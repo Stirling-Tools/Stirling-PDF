@@ -516,8 +516,11 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
           "fields",
           "auto",
         ],
-        automationSettings: null,
-        supportsAutomate: false,
+        automationSettings: lazySettings(
+          () =>
+            import("@app/components/tools/autoFormDetection/AutoFormDetectionSettings"),
+        ),
+        supportsAutomate: true,
       },
       changePermissions: {
         icon: <LocalIcon icon="lock-outline" width="1.5rem" height="1.5rem" />,

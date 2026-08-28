@@ -32,6 +32,20 @@ export const defaultParameters: AutoFormDetectionParameters = {
   sensitivity: "balanced",
 };
 
+/** Invert resolveConfidence, so a stored automation step reopens on the sensitivity it was saved with. */
+export function sensitivityFor(
+  confThreshold: number | undefined,
+): DetectionSensitivity {
+  if (typeof confThreshold !== "number") return "balanced";
+  const match = (
+    Object.entries(SENSITIVITY_CONFIDENCE) as [
+      DetectionSensitivity,
+      number | undefined,
+    ][]
+  ).find(([, value]) => value === confThreshold);
+  return match ? match[0] : "balanced";
+}
+
 export type AutoFormDetectionParametersHook =
   BaseParametersHook<AutoFormDetectionParameters>;
 
