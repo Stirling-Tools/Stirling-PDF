@@ -340,6 +340,12 @@ export function PipelineBuilder() {
     if (seeded) return;
     if (isEdit && !policyState.data) return;
     const policy = policyState.data ?? undefined;
+    // An editor pipeline is recognised by the editor source id, which arrives with the sources
+    // fetch. If the policy loads first, seeding now would latch a blank input and re-save the
+    // pipeline off the editor (editor.allowed:false), so wait for that fetch to settle.
+    if (policy?.editor?.allowed && !sourcesState.data && !sourcesState.error) {
+      return;
+    }
     setName(policy?.name ?? "");
     setEnabled(policy?.enabled ?? true);
     // The one input row is always present: blank for a new pipeline (or a legacy policy saved
@@ -370,7 +376,14 @@ export function PipelineBuilder() {
     );
     setOutputIds(seedsEditor ? [] : (policy?.outputIds ?? []));
     setSeeded(true);
-  }, [isEdit, policyState.data, allTools, seeded, sourcesState.data]);
+  }, [
+    isEdit,
+    policyState.data,
+    allTools,
+    seeded,
+    sourcesState.data,
+    sourcesState.error,
+  ]);
 
   const sourceType = (sourceId: string) =>
     availableSources.find((s) => s.id === sourceId)?.type;
