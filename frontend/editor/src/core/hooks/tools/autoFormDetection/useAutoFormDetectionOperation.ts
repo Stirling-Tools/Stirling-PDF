@@ -40,6 +40,24 @@ function asPdf(data: BlobPart, source: File): File {
   return new File([data], `${base}_form.pdf`, { type: "application/pdf" });
 }
 
+/**
+ * The one place detection is asked for. A detector running in the browser would substitute here
+ * without the caller changing, since the wire contract is plain geometry.
+ */
+export async function detectFields(
+  parameters: AutoFormDetectionParameters,
+  file: File,
+): Promise<DetectedField[]> {
+  // Ask for the field list rather than a finished PDF so the summary panel has counts to show;
+  // applying the fields here also spares the server a second parse of the same file.
+  const res = await apiClient.post(
+    DETECT_ENDPOINT,
+    buildAutoFormDetectionFormData(parameters, file, false),
+  );
+  return ((res.data as { detections?: DetectedField[] })?.detections ??
+    []) as DetectedField[];
+}
+
 async function processAutoFormDetection(
   parameters: AutoFormDetectionParameters,
   files: File[],
@@ -49,36 +67,31 @@ async function processAutoFormDetection(
   try {
     emitStage({ kind: "starting" });
     emitStage({ kind: "uploading" });
-
-    // Ask for the field list rather than a finished PDF so the summary panel has counts to
-    // show; applying the fields here also spares the server a second parse of the same file.
-    const res = await apiClient.post(
-      DETECT_ENDPOINT,
-      buildAutoFormDetectionFormData(parameters, file, false),
-    );
-    const fields = ((res.data as { detections?: DetectedField[] })
-      ?.detections ?? []) as DetectedField[];
+    const fields = await detectFields(parameters, file);
 
     emitStage({ kind: "applying" });
-    const { applyFields } =
-      await import("@app/services/formDetection/applyFields");
-    const bytes = await file.arrayBuffer();
-    const appliedPdf = await applyFields(bytes, fields);
+    try {
+      const { applyFields } =
+        await import("@app/services/formDetection/applyFields");
+      const bytes = await file.arrayBuffer();
+      const appliedPdf = await applyFields(bytes, fields);
 
-    emitSummary(summarizeFields(fields));
-    return { files: [asPdf(new Uint8Array(appliedPdf), file)] };
-  } catch (e) {
-    // pdf-lib rejects some documents PDFBox accepts; let the server write the fields instead.
-    console.warn(
-      "[AutoFormDetection] applying fields locally failed; asking the server to apply them",
-      e,
-    );
-    const res = await apiClient.post(
-      DETECT_ENDPOINT,
-      buildAutoFormDetectionFormData(parameters, file, true),
-      { responseType: "blob" },
-    );
-    return { files: [asPdf(res.data as Blob, file)] };
+      emitSummary(summarizeFields(fields));
+      return { files: [asPdf(new Uint8Array(appliedPdf), file)] };
+    } catch (e) {
+      // Guards the local apply only: pdf-lib rejects some documents PDFBox accepts. A failed
+      // detect must not land here, or every server error costs a second upload and inference.
+      console.warn(
+        "[AutoFormDetection] applying fields locally failed; asking the server to apply them",
+        e,
+      );
+      const res = await apiClient.post(
+        DETECT_ENDPOINT,
+        buildAutoFormDetectionFormData(parameters, file, true),
+        { responseType: "blob" },
+      );
+      return { files: [asPdf(res.data as Blob, file)] };
+    }
   } finally {
     emitStage({ kind: "done" });
   }

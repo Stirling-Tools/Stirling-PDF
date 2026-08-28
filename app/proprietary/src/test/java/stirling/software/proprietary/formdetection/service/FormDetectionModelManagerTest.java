@@ -33,7 +33,7 @@ import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.formdetection.catalog.ModelCatalogService;
-import stirling.software.proprietary.formdetection.inference.FormDetectionEngine;
+import stirling.software.proprietary.formdetection.inference.UnloadableModel;
 import stirling.software.proprietary.formdetection.model.ModelCatalogEntry;
 
 class FormDetectionModelManagerTest {
@@ -48,7 +48,7 @@ class FormDetectionModelManagerTest {
 
     /** Stands in for a build with no ONNX engine bean, which is the default packaging. */
     @SuppressWarnings("unchecked")
-    private static ObjectProvider<FormDetectionEngine> noEngine() {
+    private static ObjectProvider<UnloadableModel> noEngine() {
         return Mockito.mock(ObjectProvider.class);
     }
 

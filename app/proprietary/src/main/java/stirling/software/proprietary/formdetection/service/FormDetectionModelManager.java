@@ -39,7 +39,7 @@ import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.proprietary.formdetection.catalog.ModelCatalogService;
-import stirling.software.proprietary.formdetection.inference.FormDetectionEngine;
+import stirling.software.proprietary.formdetection.inference.UnloadableModel;
 import stirling.software.proprietary.formdetection.model.FormDetectionStatus;
 import stirling.software.proprietary.formdetection.model.ModelCatalogEntry;
 import stirling.software.proprietary.formdetection.model.ModelStatusResponse;
@@ -94,7 +94,7 @@ public class FormDetectionModelManager {
      * Resolved lazily and by interface: the ONNX engine is absent from builds without onnxruntime,
      * and an eager or concrete-typed dependency would fail startup there.
      */
-    private final ObjectProvider<FormDetectionEngine> engineProvider;
+    private final ObjectProvider<UnloadableModel> engineProvider;
 
     private final AtomicBoolean installing = new AtomicBoolean(false);
     private volatile FormDetectionStatus state = FormDetectionStatus.NOT_INSTALLED;
@@ -397,7 +397,7 @@ public class FormDetectionModelManager {
      * unchanged, so without this the engine keeps serving the pre-swap session.
      */
     private void invalidateEngine() {
-        engineProvider.ifAvailable(FormDetectionEngine::unload);
+        engineProvider.ifAvailable(UnloadableModel::unload);
     }
 
     /** SHA-256 of an existing model file as lowercase hex, or {@code null} if it cannot be read. */

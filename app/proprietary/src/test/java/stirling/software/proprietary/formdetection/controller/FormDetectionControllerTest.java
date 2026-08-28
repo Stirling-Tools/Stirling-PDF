@@ -18,6 +18,7 @@ import stirling.software.proprietary.formdetection.inference.OnnxFormDetector;
 import stirling.software.proprietary.formdetection.model.ModelCatalogEntry;
 import stirling.software.proprietary.formdetection.render.PageRasterizer;
 import stirling.software.proprietary.formdetection.service.FormDetectionModelManager;
+import stirling.software.proprietary.formdetection.service.FormDetectionService;
 
 class FormDetectionControllerTest {
 
@@ -25,11 +26,11 @@ class FormDetectionControllerTest {
             FormDetectionModelManager manager,
             OnnxFormDetector detector,
             PageRasterizer rasterizer) {
+        // A real service over mocked collaborators, so the HTTP translation is exercised against
+        // the pipeline's actual exceptions rather than a stubbed stand-in.
         FormDetectionController controller =
                 new FormDetectionController(
-                        manager,
-                        detector,
-                        rasterizer,
+                        new FormDetectionService(manager, detector, rasterizer),
                         Mockito.mock(CustomPDFDocumentFactory.class),
                         Mockito.mock(TempFileManager.class));
         return MockMvcBuilders.standaloneSetup(controller).build();
@@ -76,8 +77,7 @@ class FormDetectionControllerTest {
         PageRasterizer rasterizer = Mockito.mock(PageRasterizer.class);
         Mockito.doThrow(
                         new PageRasterizer.PageLimitExceededException(
-                                FormDetectionController.MAX_PAGES + 1,
-                                FormDetectionController.MAX_PAGES))
+                                FormDetectionService.MAX_PAGES + 1, FormDetectionService.MAX_PAGES))
                 .when(rasterizer)
                 .rasterize(Mockito.any(), Mockito.anyInt(), Mockito.anyInt(), Mockito.any());
 
@@ -99,7 +99,7 @@ class FormDetectionControllerTest {
                 .rasterize(
                         Mockito.any(),
                         Mockito.anyInt(),
-                        Mockito.eq(FormDetectionController.MAX_PAGES),
+                        Mockito.eq(FormDetectionService.MAX_PAGES),
                         Mockito.any());
     }
 

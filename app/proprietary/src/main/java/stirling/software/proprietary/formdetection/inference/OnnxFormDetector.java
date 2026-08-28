@@ -33,7 +33,7 @@ import ai.onnxruntime.OrtSession;
 @Service
 @ConditionalOnClass(name = "ai.onnxruntime.OrtEnvironment")
 @RequiredArgsConstructor
-public class OnnxFormDetector implements FormDetectionEngine {
+public class OnnxFormDetector implements UnloadableModel {
 
     private final FormDetectionModelManager manager;
 

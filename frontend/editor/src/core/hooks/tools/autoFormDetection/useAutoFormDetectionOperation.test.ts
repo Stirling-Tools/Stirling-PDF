@@ -60,6 +60,16 @@ describe("processAutoFormDetection", () => {
     expect(body.get("confThreshold")).toBe("0.45");
   });
 
+  it("does not retry when the detect request itself fails", async () => {
+    (apiClient.post as Mock).mockRejectedValueOnce(new Error("503 no model"));
+
+    await expect(process(defaultParameters, [pdfFile()])).rejects.toThrow(
+      "503 no model",
+    );
+    expect(apiClient.post).toHaveBeenCalledTimes(1);
+    expect(applyFields).not.toHaveBeenCalled();
+  });
+
   it("re-requests a server-applied PDF when applying locally fails", async () => {
     expectConsole.warn(/applying fields locally failed/);
     (applyFields as Mock).mockRejectedValueOnce(new Error("bad xref"));
