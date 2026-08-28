@@ -1,5 +1,3 @@
-import { DetectedField } from "@app/services/formDetection/types";
-
 export type DetectionStage =
   | { kind: "starting" }
   | { kind: "uploading" }
@@ -36,16 +34,18 @@ export function onSummary(cb: (s: DetectionSummary) => void): () => void {
   return () => window.removeEventListener(SUMMARY_EVENT, handler);
 }
 
-export function summarizeFields(fields: DetectedField[]): DetectionSummary {
-  const byType: Record<string, number> = {};
-  const pages = new Set<number>();
-  for (const f of fields) {
-    byType[f.type] = (byType[f.type] ?? 0) + 1;
-    pages.add(f.page);
+/** Parse the server's X-Detected-Fields header; a missing or malformed one shows nothing. */
+export function parseSummary(header: unknown): DetectionSummary | null {
+  if (typeof header !== "string" || header.length === 0) return null;
+  try {
+    const raw = JSON.parse(header) as Partial<DetectionSummary>;
+    if (typeof raw.total !== "number") return null;
+    return {
+      total: raw.total,
+      byType: raw.byType ?? {},
+      pagesWithFields: raw.pagesWithFields ?? 0,
+    };
+  } catch {
+    return null;
   }
-  return {
-    total: fields.length,
-    byType,
-    pagesWithFields: pages.size,
-  };
 }

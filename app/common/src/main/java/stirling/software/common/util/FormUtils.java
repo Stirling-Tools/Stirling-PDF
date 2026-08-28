@@ -1065,8 +1065,8 @@ public class FormUtils {
                             definition.width(),
                             definition.height());
             FormFieldTypeSupport handler = FormFieldTypeSupport.forTypeName(definition.type());
-            // Coerced by name, not capability: detection results can also be applied client-side
-            // with pdf-lib, which cannot create signature widgets, so both paths emit text.
+            // Signature has no definition-creation path here, so it lands as text. PDFBox can build
+            // a real PDSignatureField, so this is worth revisiting for both callers.
             if (handler == null
                     || handler == FormFieldTypeSupport.SIGNATURE
                     || handler.doesNotsupportsDefinitionCreation()) {

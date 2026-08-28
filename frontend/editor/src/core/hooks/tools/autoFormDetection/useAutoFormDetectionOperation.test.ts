@@ -3,15 +3,6 @@ import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 vi.mock("@app/services/apiClient", () => ({
   default: { get: vi.fn(), post: vi.fn() },
 }));
-vi.mock("@app/services/formDetection/progress", () => ({
-  emitStage: vi.fn(),
-  emitSummary: vi.fn(),
-  summarizeFields: vi.fn(() => ({})),
-}));
-vi.mock("@app/services/formDetection/applyFields", () => ({
-  applyFields: vi.fn(async () => new Uint8Array([1, 2, 3])),
-}));
-vi.mock("@app/hooks/useFormDetectionModelStatus", () => ({}));
 vi.mock("@app/hooks/tools/shared/useToolOperation", () => ({
   ToolType: { custom: "custom" },
   useToolOperation: vi.fn(),
@@ -22,9 +13,8 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
-import { expectConsole } from "@app/tests/failOnConsole";
 import apiClient from "@app/services/apiClient";
-import { applyFields } from "@app/services/formDetection/applyFields";
+import { onSummary } from "@app/services/formDetection/progress";
 import { autoFormDetectionOperationConfig } from "@app/hooks/tools/autoFormDetection/useAutoFormDetectionOperation";
 import { defaultParameters } from "@app/hooks/tools/autoFormDetection/useAutoFormDetectionParameters";
 
@@ -34,23 +24,31 @@ function pdfFile(): File {
   return new File(["%PDF-1.4 dummy"], "doc.pdf", { type: "application/pdf" });
 }
 
+function respond(headers: Record<string, string> = {}) {
+  (apiClient.post as Mock).mockResolvedValue({
+    data: new Blob(["%PDF-1.4 applied"]),
+    headers,
+  });
+}
+
 const process = autoFormDetectionOperationConfig.customProcessor;
 
 describe("processAutoFormDetection", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (apiClient.post as Mock).mockResolvedValue({ data: { detections: [] } });
+    respond();
   });
 
-  it("asks the server for fields, then applies them locally", async () => {
+  it("asks the server to apply the fields and returns the PDF it sends back", async () => {
     const { files } = await process(defaultParameters, [pdfFile()]);
 
     expect(apiClient.post).toHaveBeenCalledTimes(1);
-    const [url, body] = (apiClient.post as Mock).mock.calls[0];
+    const [url, body, config] = (apiClient.post as Mock).mock.calls[0];
     expect(url).toBe(DETECT_ENDPOINT);
-    expect((body as FormData).get("applyToPdf")).toBe("false");
-    expect(applyFields).toHaveBeenCalledTimes(1);
+    expect((body as FormData).get("applyToPdf")).toBe("true");
+    expect(config).toMatchObject({ responseType: "blob" });
     expect(files[0].name).toBe("doc_form.pdf");
+    expect(files[0].type).toBe("application/pdf");
   });
 
   it("sends the sensitivity's confidence threshold", async () => {
@@ -60,31 +58,31 @@ describe("processAutoFormDetection", () => {
     expect(body.get("confThreshold")).toBe("0.45");
   });
 
-  it("does not retry when the detect request itself fails", async () => {
-    (apiClient.post as Mock).mockRejectedValueOnce(new Error("503 no model"));
+  it("publishes the summary the server reported", async () => {
+    respond({
+      "x-stirling-detected-fields":
+        '{"total":11,"byType":{"text":8,"checkbox":3},"pagesWithFields":1}',
+    });
+    const seen: unknown[] = [];
+    const stop = onSummary((s) => seen.push(s));
 
-    await expect(process(defaultParameters, [pdfFile()])).rejects.toThrow(
-      "503 no model",
-    );
-    expect(apiClient.post).toHaveBeenCalledTimes(1);
-    expect(applyFields).not.toHaveBeenCalled();
+    await process(defaultParameters, [pdfFile()]);
+    stop();
+
+    expect(seen).toEqual([
+      { total: 11, byType: { text: 8, checkbox: 3 }, pagesWithFields: 1 },
+    ]);
   });
 
-  it("re-requests a server-applied PDF when applying locally fails", async () => {
-    expectConsole.warn(/applying fields locally failed/);
-    (applyFields as Mock).mockRejectedValueOnce(new Error("bad xref"));
-    (apiClient.post as Mock).mockResolvedValueOnce({
-      data: { detections: [] },
-    });
-    (apiClient.post as Mock).mockResolvedValueOnce({
-      data: new Blob(["%PDF-1.4 applied"]),
-    });
+  it("still returns the PDF when the summary header is missing or malformed", async () => {
+    respond({ "x-stirling-detected-fields": "not json" });
+    const seen: unknown[] = [];
+    const stop = onSummary((s) => seen.push(s));
 
     const { files } = await process(defaultParameters, [pdfFile()]);
+    stop();
 
-    expect(apiClient.post).toHaveBeenCalledTimes(2);
-    const body = (apiClient.post as Mock).mock.calls[1][1] as FormData;
-    expect(body.get("applyToPdf")).toBe("true");
+    expect(seen).toEqual([]);
     expect(files[0].name).toBe("doc_form.pdf");
   });
 });

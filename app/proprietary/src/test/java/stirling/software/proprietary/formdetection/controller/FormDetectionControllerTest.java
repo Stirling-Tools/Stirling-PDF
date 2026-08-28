@@ -20,6 +20,8 @@ import stirling.software.proprietary.formdetection.render.PageRasterizer;
 import stirling.software.proprietary.formdetection.service.FormDetectionModelManager;
 import stirling.software.proprietary.formdetection.service.FormDetectionService;
 
+import tools.jackson.databind.ObjectMapper;
+
 class FormDetectionControllerTest {
 
     private MockMvc mvc(
@@ -32,7 +34,8 @@ class FormDetectionControllerTest {
                 new FormDetectionController(
                         new FormDetectionService(manager, detector, rasterizer),
                         Mockito.mock(CustomPDFDocumentFactory.class),
-                        Mockito.mock(TempFileManager.class));
+                        Mockito.mock(TempFileManager.class),
+                        new ObjectMapper());
         return MockMvcBuilders.standaloneSetup(controller).build();
     }
 

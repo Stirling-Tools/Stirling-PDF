@@ -215,7 +215,8 @@ public class SecurityConfiguration {
                         "Content-Disposition",
                         "Content-Type",
                         "X-Stirling-Skipped-Field-Edits",
-                        "X-Stirling-Skipped-Field-Edits-Total"));
+                        "X-Stirling-Skipped-Field-Edits-Total",
+                        "X-Stirling-Detected-Fields"));
 
         cfg.setAllowCredentials(true);
         cfg.setMaxAge(3600L);

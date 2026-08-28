@@ -2,11 +2,14 @@ package stirling.software.proprietary.formdetection.controller;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeSet;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -32,6 +35,8 @@ import stirling.software.proprietary.formdetection.model.DetectedField;
 import stirling.software.proprietary.formdetection.render.PageRasterizer;
 import stirling.software.proprietary.formdetection.service.FormDetectionService;
 
+import tools.jackson.databind.ObjectMapper;
+
 /**
  * Detection endpoint, behind the {@code form-detection} key that is disabled until a model is
  * installed. Returns detected fields, or the applied PDF when {@code applyToPdf=true}.
@@ -44,9 +49,13 @@ import stirling.software.proprietary.formdetection.service.FormDetectionService;
 @Tag(name = "Auto Form Detection")
 public class FormDetectionController {
 
+    /** Carries the field counts alongside the PDF, so one request feeds the results panel. */
+    static final String SUMMARY_HEADER = "X-Stirling-Detected-Fields";
+
     private final FormDetectionService detection;
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
+    private final ObjectMapper objectMapper;
 
     @PostMapping(value = "/detect", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
@@ -101,8 +110,13 @@ public class FormDetectionController {
                 defs.add(toDefinition(f));
             }
             FormUtils.addFields(document, defs);
-            return WebResponseUtils.pdfDocToWebResponse(
-                    document, baseName(file) + ".pdf", tempFileManager);
+            ResponseEntity<Resource> pdf =
+                    WebResponseUtils.pdfDocToWebResponse(
+                            document, baseName(file) + ".pdf", tempFileManager);
+            return ResponseEntity.status(pdf.getStatusCode())
+                    .headers(pdf.getHeaders())
+                    .header(SUMMARY_HEADER, summaryHeader(detections))
+                    .body(pdf.getBody());
         } catch (IOException e) {
             log.debug("Auto Form Detection could not apply fields: {}", e.getMessage());
             return ResponseEntity.badRequest()
@@ -139,6 +153,21 @@ public class FormDetectionController {
                 null,
                 null,
                 null);
+    }
+
+    /** Compact JSON of what was added; a header keeps it to one request and one inference. */
+    private String summaryHeader(List<DetectedField> detections) {
+        Map<String, Integer> byType = new LinkedHashMap<>();
+        TreeSet<Integer> pages = new TreeSet<>();
+        for (DetectedField f : detections) {
+            byType.merge(f.type(), 1, Integer::sum);
+            pages.add(f.page());
+        }
+        return objectMapper.writeValueAsString(
+                Map.of(
+                        "total", detections.size(),
+                        "byType", byType,
+                        "pagesWithFields", pages.size()));
     }
 
     private static String baseName(MultipartFile file) {
