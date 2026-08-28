@@ -157,6 +157,17 @@ const EmbedPdfViewerContent = ({
   const pendingRotationRestoreRef = useRef<number | null>(null);
   const rotationRestoreAttemptsRef = useRef<number>(0);
 
+  // Stable refs for the scroll/rotation restore effects — scrollActions,
+  // rotationActions and getScrollState are new references on every render (not
+  // memoized in ViewerContext), which would cause the effects to re-run on every
+  // render and clear their timers.
+  const scrollActionsRef = useRef(scrollActions);
+  scrollActionsRef.current = scrollActions;
+  const rotationActionsRef = useRef(rotationActions);
+  rotationActionsRef.current = rotationActions;
+  const getScrollStateRef = useRef(getScrollState);
+  getScrollStateRef.current = getScrollState;
+
   const formApplyInProgressRef = useRef(false);
   const applyChangesInFlightRef = useRef<Promise<void> | null>(null);
 
@@ -751,16 +762,37 @@ const EmbedPdfViewerContent = ({
         pendingRotationRestoreRef.current = currentRotation;
         rotationRestoreAttemptsRef.current = 0;
 
-        // Track the new file ID so the viewer follows it after the list reorders
+        // Replace the current file before changing the viewer's active ID. This
+        // prevents a render where activeFileId points at a file that is not yet
+        // present in FileContext; during that render currentFile would fall back
+        // to the old PDF and a form-field scan could clear/reload the wrong state.
         const newFileId = stubs[0]?.id;
-        if (newFileId) setActiveFileId(newFileId);
-
-        // Replace the current file in context
+        if (newFileId) {
+          pendingFormApplyFileIdRef.current = newFileId;
+          (window as any).__PENDING_FORM_APPLY_ID__ = newFileId;
+        }
         await actions.consumeFiles([currentFileId], stirlingFiles, stubs);
+
+        // Track the new file ID only after the replacement is in FileContext. The
+        // normal file-change effect then scans the active replacement file, rather
+        // than racing this handler's scan against the old file.
+        if (newFileId) setActiveFileId(newFileId);
 
         console.log("[Viewer] Form fill changes applied successfully");
       } catch (error) {
+        pendingFormApplyFileIdRef.current = null;
         console.error("[Viewer] Apply form changes failed:", error);
+        alert({
+          title: t("viewer.saveChangesErrorTitle", "Could not save changes"),
+          body:
+            error instanceof Error && error.message
+              ? error.message
+              : t(
+                  "viewer.saveChangesErrorBody",
+                  "The document could not be saved. Try again.",
+                ),
+          alertType: "error",
+        });
       } finally {
         formApplyInProgressRef.current = false;
       }
@@ -772,6 +804,7 @@ const EmbedPdfViewerContent = ({
       selectors,
       activeFileIds.length,
       rotationState.rotation,
+      t,
     ],
   );
 
@@ -941,7 +974,9 @@ const EmbedPdfViewerContent = ({
   ]);
 
   // Restore scroll position after file replacement or tool switch
-  // Uses polling with retries to ensure the scroll succeeds
+  // Uses polling with retries to ensure the scroll succeeds.
+  // Note: uses refs for scrollActions and getScrollState because the originals
+  // are not memoized and would cause the effect to re-run on every render.
   useEffect(() => {
     if (pendingScrollRestoreRef.current === null) return;
 
@@ -950,16 +985,18 @@ const EmbedPdfViewerContent = ({
     const attemptInterval = 100; // ms between attempts
 
     const attemptScroll = () => {
-      const currentState = getScrollState();
+      const currentState = getScrollStateRef.current();
       const targetPage = Math.min(pageToRestore, currentState.totalPages);
 
       // Only attempt if we have valid state (totalPages > 0 means PDF is loaded)
       if (currentState.totalPages > 0 && targetPage > 0) {
-        scrollActions.scrollToPage(targetPage, "instant");
+        // Must use 'instant' here rather than smooth, because we are trying to
+        // seamlessly jump to where the user was before the file reload.
+        scrollActionsRef.current.scrollToPage(targetPage, "instant");
 
         // Check if scroll succeeded after a brief delay
         setTimeout(() => {
-          const afterState = getScrollState();
+          const afterState = getScrollStateRef.current();
           if (
             afterState.currentPage === targetPage ||
             scrollRestoreAttemptsRef.current >= maxAttempts
@@ -979,13 +1016,10 @@ const EmbedPdfViewerContent = ({
             }
           }
         }, 50);
-      } else if (scrollRestoreAttemptsRef.current < maxAttempts) {
-        // PDF not ready yet, retry
-        scrollRestoreAttemptsRef.current++;
-        setTimeout(attemptScroll, attemptInterval);
       } else {
-        // Give up after max attempts
-        pendingScrollRestoreRef.current = null;
+        // PDF not ready yet (totalPages still 0). Keep the pending restore and
+        // stop polling — the effect re-runs when scrollState.totalPages changes
+        // once the new document finishes loading.
         scrollRestoreAttemptsRef.current = 0;
       }
     };
@@ -993,10 +1027,12 @@ const EmbedPdfViewerContent = ({
     // Start attempting after initial delay
     const timer = setTimeout(attemptScroll, 150);
     return () => clearTimeout(timer);
-  }, [scrollState.totalPages, scrollActions, getScrollState]);
+  }, [currentFileId, scrollState.totalPages]);
 
   // Restore rotation after file replacement or tool switch
-  // Uses polling with retries to ensure the rotation succeeds
+  // Uses polling with retries to ensure the rotation succeeds.
+  // Note: uses refs for getScrollState and rotationActions — see the scroll
+  // restore effect above.
   useEffect(() => {
     if (pendingRotationRestoreRef.current === null) return;
 
@@ -1005,15 +1041,15 @@ const EmbedPdfViewerContent = ({
     const attemptInterval = 100; // ms between attempts
 
     const attemptRotation = () => {
-      const currentState = getScrollState();
+      const currentState = getScrollStateRef.current();
 
       // Only attempt if PDF is loaded (totalPages > 0)
       if (currentState.totalPages > 0) {
-        rotationActions.setRotation(rotationToRestore);
+        rotationActionsRef.current.setRotation(rotationToRestore);
 
         // Check if rotation succeeded after a brief delay
         setTimeout(() => {
-          const currentRotation = rotationActions.getRotation();
+          const currentRotation = rotationActionsRef.current.getRotation();
           if (
             currentRotation === rotationToRestore ||
             rotationRestoreAttemptsRef.current >= maxAttempts
@@ -1033,13 +1069,10 @@ const EmbedPdfViewerContent = ({
             }
           }
         }, 50);
-      } else if (rotationRestoreAttemptsRef.current < maxAttempts) {
-        // PDF not ready yet, retry
-        rotationRestoreAttemptsRef.current++;
-        setTimeout(attemptRotation, attemptInterval);
       } else {
-        // Give up after max attempts
-        pendingRotationRestoreRef.current = null;
+        // PDF not ready yet (totalPages still 0). Keep the pending restore and
+        // stop polling — the effect re-runs when scrollState.totalPages changes
+        // once the new document finishes loading.
         rotationRestoreAttemptsRef.current = 0;
       }
     };
@@ -1047,7 +1080,7 @@ const EmbedPdfViewerContent = ({
     // Start attempting after initial delay
     const timer = setTimeout(attemptRotation, 150);
     return () => clearTimeout(timer);
-  }, [scrollState.totalPages, rotationActions, getScrollState]);
+  }, [scrollState.totalPages]);
 
   // Register applyChanges with ViewerContext so tools can access it directly
   useEffect(() => {
@@ -1093,10 +1126,24 @@ const EmbedPdfViewerContent = ({
   // In normal viewer mode, this uses PDFium WASM (frontend-only).
   // In formFill tool mode, this uses PDFBox (backend).
   const formFillFileIdRef = useRef<string | null>(null);
+  // While a replacement is being committed, suppress the auto-fetch effect's
+  // intermediate render where currentFile still resolves to the old file.
+  const pendingFormApplyFileIdRef = useRef<string | null>(null);
   const formFillProviderRef = useRef(isFormFillToolActive);
 
   // Generate a unique identifier for the current file to detect file changes
   useEffect(() => {
+    const pendingFormApplyFileId = pendingFormApplyFileIdRef.current;
+    if (
+      pendingFormApplyFileId &&
+      currentFileId !== `stirling-${pendingFormApplyFileId}`
+    ) {
+      return;
+    }
+    if (pendingFormApplyFileId) {
+      pendingFormApplyFileIdRef.current = null;
+    }
+
     const fileChanged = currentFileId !== formFillFileIdRef.current;
     const providerChanged =
       formFillProviderRef.current !== isFormFillToolActive;

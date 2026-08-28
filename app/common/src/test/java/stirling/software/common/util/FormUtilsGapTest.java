@@ -2,6 +2,7 @@ package stirling.software.common.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -10,6 +11,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
@@ -23,6 +25,7 @@ import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDCheckBox;
 import org.apache.pdfbox.pdmodel.interactive.form.PDComboBox;
+import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.apache.pdfbox.pdmodel.interactive.form.PDListBox;
 import org.apache.pdfbox.pdmodel.interactive.form.PDRadioButton;
 import org.apache.pdfbox.pdmodel.interactive.form.PDSignatureField;
@@ -753,6 +756,113 @@ class FormUtilsGapTest {
         }
 
         @Test
+        void typeChangeUsesPageIndexFallbackWhenWidgetHasNoPageReference() throws IOException {
+            try (PDDocument doc = new PDDocument()) {
+                SetupDocument setup = createBasicDocument(doc);
+                PDTextField text = new PDTextField(setup.acroForm());
+                text.setPartialName("noPage");
+                text.setDefaultAppearance("/Helv 12 Tf 0 g");
+
+                // Simulate a widget with NO page reference: no /P entry AND not
+                // present in any page's /Annots array. This is the case that
+                // produced "could not resolve page index" warnings and previously
+                // caused the modification to be silently skipped.
+                PDAnnotationWidget widget = new PDAnnotationWidget();
+                widget.setRectangle(new PDRectangle(50, 700, 200, 20));
+                List<PDAnnotationWidget> widgets = new ArrayList<>();
+                widgets.add(widget);
+                text.setWidgets(widgets);
+                setup.acroForm().getFields().add(text);
+                // Intentionally NOT added to setup.page().getAnnotations().
+
+                // Type change (text -> checkbox) forces the remove-and-recreate path,
+                // which needs a page. The frontend-supplied pageIndex must be used
+                // as a fallback when the widget itself cannot resolve its page.
+                FormUtils.ModifyFormFieldDefinition mod =
+                        new FormUtils.ModifyFormFieldDefinition(
+                                "noPage",
+                                null,
+                                "Renamed",
+                                "checkbox",
+                                0, // pageIndex fallback
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null);
+
+                FormUtils.modifyFormFields(doc, List.of(mod));
+
+                // The recreate path must not require a resolved widget page: the
+                // fallback pageIndex is used and the recreated field keeps its name
+                // and type.
+                PDField recreated = doc.getDocumentCatalog().getAcroForm().getField("noPage");
+                assertNotNull(recreated, "recreated field should exist");
+                assertTrue(recreated instanceof PDCheckBox, "field should become a checkbox");
+                assertEquals("noPage", recreated.getPartialName());
+                // The original field must be removed, not duplicated.
+                assertEquals(1, FormUtils.extractFormFields(doc).size());
+            }
+        }
+
+        @Test
+        void propertyEditWithoutPageReferenceIsAppliedInPlace() throws IOException {
+            try (PDDocument doc = new PDDocument()) {
+                SetupDocument setup = createBasicDocument(doc);
+                PDTextField text = new PDTextField(setup.acroForm());
+                text.setPartialName("noPage");
+                text.setDefaultAppearance("/Helv 12 Tf 0 g");
+
+                // Same widget-without-page setup as above.
+                PDAnnotationWidget widget = new PDAnnotationWidget();
+                widget.setRectangle(new PDRectangle(50, 700, 200, 20));
+                List<PDAnnotationWidget> widgets = new ArrayList<>();
+                widgets.add(widget);
+                text.setWidgets(widgets);
+                setup.acroForm().getFields().add(text);
+                setup.page().getAnnotations().add(widget);
+
+                // Property-only edit (no type change, no pageIndex). The in-place
+                // path must not require a resolved widget page.
+                FormUtils.ModifyFormFieldDefinition mod =
+                        new FormUtils.ModifyFormFieldDefinition(
+                                "noPage",
+                                null,
+                                "New Label",
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                Boolean.TRUE,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null);
+
+                FormUtils.modifyFormFields(doc, List.of(mod));
+
+                List<FormUtils.FormFieldInfo> fields = FormUtils.extractFormFields(doc);
+                assertEquals(1, fields.size());
+                assertEquals("New Label", fields.get(0).label());
+                assertTrue(fields.get(0).required());
+            }
+        }
+
+        @Test
         void nullEntriesAndBlankTargetsAreSkipped() throws IOException {
             try (PDDocument doc = new PDDocument()) {
                 SetupDocument setup = createBasicDocument(doc);
@@ -853,6 +963,80 @@ class FormUtilsGapTest {
                 doc.addPage(new PDPage());
                 assertFalse(FormUtils.hasAnyRotatedPage(doc));
             }
+        }
+    }
+
+    // ----------------------------------------------------------------------
+    // Safety / gap tests added for form-field safety fixes
+    // ----------------------------------------------------------------------
+
+    @Test
+    void exactFieldNameWithWhitespaceLookupSucceeds() throws IOException {
+        try (PDDocument document = new PDDocument()) {
+            SetupDocument setup = createBasicDocument(document);
+            PDTextField field = new PDTextField(setup.acroForm());
+            field.setPartialName("First Name");
+            PDRectangle rect = new PDRectangle(50, 600, 150, 20);
+            attachWidget(setup, field, rect);
+
+            // locateField is tested indirectly via deleteFormFields.
+            // If locateField trimmed the name, "First Name" would not match and
+            // the field would survive the delete; an empty document proves it was found.
+            FormUtils.deleteFormFields(document, List.of("First Name"));
+
+            List<FormUtils.FormFieldInfo> remaining = FormUtils.extractFormFields(document);
+            assertTrue(remaining.isEmpty(), "Field with space in name must be found by exact name");
+        }
+    }
+
+    @Test
+    void crlfInFieldNameDoesNotForgeLogLines() {
+        // Verifies sanitizeForLog strips CR/LF
+        String malicious = "field\r\nINJECTED LOG LINE";
+        String sanitized = FormUtils.sanitizeForLog(malicious);
+        assertFalse(sanitized.contains("\r"), "CR must be stripped");
+        assertFalse(sanitized.contains("\n"), "LF must be stripped");
+        assertTrue(sanitized.contains("field"), "Field name prefix must survive");
+        assertTrue(
+                sanitized.contains("INJECTED LOG LINE"),
+                "Rest of string survives, just no newlines");
+    }
+
+    @Test
+    void choiceOptionTrimmedValueIsCanonical() throws IOException {
+        // When an option has surrounding whitespace, allowed.add(cleaned) not add(option)
+        try (PDDocument document = new PDDocument()) {
+            SetupDocument setup = createBasicDocument(document);
+            PDListBox listBox = new PDListBox(setup.acroForm());
+            listBox.setPartialName("colorChoice");
+            listBox.setOptions(List.of("  red  ", "blue", "  green  "));
+            PDRectangle rect = new PDRectangle(50, 500, 200, 60);
+            attachWidget(setup, listBox, rect);
+
+            List<String> options = FormUtils.collectChoiceAllowedValues(listBox);
+
+            assertTrue(options.contains("red"), "Trimmed 'red' must be in options");
+            assertTrue(options.contains("green"), "Trimmed 'green' must be in options");
+            assertFalse(
+                    options.stream().anyMatch(o -> o.startsWith(" ")),
+                    "No option may start with whitespace");
+        }
+    }
+
+    @Test
+    void generatedNameDoesNotCollideWithPartialName() throws IOException {
+        try (PDDocument document = new PDDocument()) {
+            SetupDocument setup = createBasicDocument(document);
+            PDTextField existing = new PDTextField(setup.acroForm());
+            existing.setPartialName("field");
+            attachWidget(setup, existing, new PDRectangle(50, 600, 100, 20));
+
+            // A new field with base name "field" must not collide with the existing partial name.
+            PDAcroForm acroForm = document.getDocumentCatalog().getAcroForm();
+            Set<String> existingNames = FormUtils.collectExistingFieldNames(acroForm);
+            String generated = FormUtils.generateUniqueFieldName("field", existingNames);
+            assertNotEquals(
+                    "field", generated, "Generated name must differ from existing partial name");
         }
     }
 }

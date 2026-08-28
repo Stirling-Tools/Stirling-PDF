@@ -605,7 +605,7 @@ export function FormFieldOverlay({
   pageHeight,
   fileId,
 }: FormFieldOverlayProps) {
-  const { setValue, setActiveField, fieldsByPage, state, forFileId } =
+  const { setValue, setActiveField, fieldsByPage, state, forFileId, mode } =
     useFormFill();
   const { activeFieldName, validationErrors } = state;
   const { printActions, scrollActions, exportActions } = useViewer();
@@ -746,6 +746,10 @@ export function FormFieldOverlay({
   }
 
   if (pageFields.length === 0) return null;
+
+  // In modify mode the edit overlay owns the page — hide fill inputs to avoid
+  // event clashes and to let the selection/move/resized layer render unobstructed.
+  if (mode === "modify") return null;
 
   return (
     <div

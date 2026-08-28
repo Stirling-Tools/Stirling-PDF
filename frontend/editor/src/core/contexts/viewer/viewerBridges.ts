@@ -36,7 +36,7 @@ export interface DocumentPermissionsAPIWrapper {
 export interface ScrollAPIWrapper {
   scrollToPage: (params: {
     pageNumber: number;
-    behavior?: ScrollBehavior;
+    behavior?: "smooth" | "instant" | "auto" | ScrollBehavior;
   }) => void;
   scrollToPreviousPage: () => void;
   scrollToNextPage: () => void;

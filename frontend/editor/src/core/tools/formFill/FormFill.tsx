@@ -90,6 +90,10 @@ const FormFill = (_props: BaseToolProps) => {
     validateForm,
     mode,
     setMode,
+    canUndo,
+    canRedo,
+    undo,
+    redo,
   } = useFormFill();
 
   const MODE_TABS: ModeTabDef[] = useMemo(
@@ -269,10 +273,23 @@ const FormFill = (_props: BaseToolProps) => {
         e.preventDefault();
         if (isDirtyRef.current || flattenChangedRef.current) handleSave();
       }
+      // Undo: Ctrl+Z
+      if ((e.ctrlKey || e.metaKey) && e.key === "z" && !e.shiftKey) {
+        e.preventDefault();
+        if (canUndo) undo();
+      }
+      // Redo: Ctrl+Shift+Z or Ctrl+Y
+      if (
+        ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "z") ||
+        ((e.ctrlKey || e.metaKey) && e.key === "y")
+      ) {
+        e.preventDefault();
+        if (canRedo) redo();
+      }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isActive, handleSave]);
+  }, [isActive, handleSave, canUndo, canRedo, undo, redo]);
 
   // Data loss prevention: warn on beforeunload if dirty
   useEffect(() => {

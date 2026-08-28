@@ -77,10 +77,12 @@ public class FormFieldWithCoordinates {
         @Schema(description = "Page index (0-based)", example = "0")
         private int pageIndex;
 
-        @Schema(description = "X coordinate in PDF points (lower-left origin)")
+        @Schema(description = "X coordinate in PDF CropBox-relative points.")
         private float x;
 
-        @Schema(description = "Y coordinate in PDF points (lower-left origin)")
+        @Schema(
+                description =
+                        "Y coordinate in PDF CropBox-relative points, CSS upper-left origin (0 = top; increases downward).")
         private float y;
 
         @Schema(description = "Width in PDF points")

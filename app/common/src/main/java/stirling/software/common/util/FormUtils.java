@@ -1157,7 +1157,7 @@ public class FormUtils {
                                 option -> {
                                     String cleaned = option.trim();
                                     if (!cleaned.isEmpty()) {
-                                        allowed.add(option);
+                                        allowed.add(cleaned);
                                     }
                                 });
             }
@@ -1177,7 +1177,7 @@ public class FormUtils {
                                 option -> {
                                     String cleaned = option.trim();
                                     if (!cleaned.isEmpty()) {
-                                        allowed.add(option);
+                                        allowed.add(cleaned);
                                     }
                                 });
             }
@@ -1575,30 +1575,40 @@ public class FormUtils {
                 continue;
             }
 
-            String lookupName = modification.targetName().trim();
+            String lookupName = modification.targetName();
             if (lookupName.isEmpty()) {
                 continue;
             }
 
             PDField originalField = locateField(acroForm, lookupName);
             if (originalField == null) {
-                log.warn("No matching field '{}' found for modification", lookupName);
+                log.warn(
+                        "No matching field '{}' found for modification",
+                        sanitizeForLog(lookupName));
                 continue;
             }
 
             List<PDAnnotationWidget> widgets = originalField.getWidgets();
             if (widgets == null || widgets.isEmpty()) {
-                log.warn("Field '{}' has no widgets; skipping modification", lookupName);
+                log.warn(
+                        "Field '{}' has no widgets; skipping modification",
+                        sanitizeForLog(lookupName));
                 continue;
             }
 
             PDAnnotationWidget widget = widgets.getFirst();
             PDRectangle originalRectangle = cloneRectangle(widget.getRectangle());
-            PDPage page = resolveWidgetPage(document, widget, null);
-            if (page == null || originalRectangle == null) {
-                log.warn(
-                        "Unable to resolve widget page or rectangle for '{}'; skipping",
-                        lookupName);
+
+            // Fallback: use the modification's x/y/width/height when the widget
+            // has no rectangle (extremely rare but handled defensively).
+            if (originalRectangle == null && modification.x() != null && modification.y() != null) {
+                float w = modification.width() != null ? modification.width() : 100;
+                float h = modification.height() != null ? modification.height() : 20;
+                originalRectangle = new PDRectangle(modification.x(), modification.y(), w, h);
+            }
+
+            if (originalRectangle == null) {
+                log.warn("Unable to resolve widget rectangle for '{}'; skipping", lookupName);
                 continue;
             }
 
@@ -1646,13 +1656,40 @@ public class FormUtils {
             }
 
             // For type changes or when in-place modification fails, use remove-and-recreate
-            // But create the new field first to ensure success before removing the original
+            // But create the new field first to ensure success before removing the original.
+            // Resolve the page now — it is only needed for this path (in-place edits
+            // operate on the field/widget directly and don't require a page).
+            PDPage page = resolveWidgetPage(document, widget, null);
+
+            // Fallback: use the page index supplied by the frontend (which was
+            // resolved during field extraction) when the widget has no direct
+            // page reference (common in PDFs where widgets lack /P entries).
+            if (page == null && modification.pageIndex() != null) {
+                int pi = modification.pageIndex();
+                if (pi >= 0 && pi < document.getNumberOfPages()) {
+                    page = document.getPage(pi);
+                }
+            }
+
+            if (page == null) {
+                log.warn("Unable to resolve widget page for '{}'; skipping recreation", lookupName);
+                continue;
+            }
+
+            int pageIndex = document.getPages().indexOf(page);
+            if (pageIndex < 0) {
+                log.warn(
+                        "Resolved page for '{}' is not part of the document; skipping recreation",
+                        lookupName);
+                continue;
+            }
+
             NewFormFieldDefinition replacementDefinition =
                     new NewFormFieldDefinition(
                             desiredName,
                             modification.label(),
                             resolvedType,
-                            determineWidgetPageIndex(document, widget, null),
+                            pageIndex,
                             originalRectangle.getLowerLeftX(),
                             originalRectangle.getLowerLeftY(),
                             originalRectangle.getWidth(),
@@ -1808,6 +1845,17 @@ public class FormUtils {
                 PDRectangle rect = widget.getRectangle();
                 if (rect != null) {
                     PDPage page = resolveWidgetPage(document, widget, null);
+
+                    // Fallback: use the page index supplied by the frontend when
+                    // the widget has no direct page reference, so the CropBox
+                    // offset is still applied correctly.
+                    if (page == null && modification.pageIndex() != null) {
+                        int pi = modification.pageIndex();
+                        if (pi >= 0 && pi < document.getNumberOfPages()) {
+                            page = document.getPage(pi);
+                        }
+                    }
+
                     float offX = 0;
                     float offY = 0;
                     if (page != null) {
@@ -2375,6 +2423,11 @@ public class FormUtils {
         return raw == null ? "" : raw.trim().replaceAll("[^A-Za-z0-9_-]", "_");
     }
 
+    /** Strips CR and LF characters from a string before it is included in a log message. */
+    static String sanitizeForLog(String value) {
+        return value == null ? null : value.replace("\r", "").replace("\n", "");
+    }
+
     /**
      * Applies a mixed batch of field edits to a document in a single pass: existing fields are
      * modified, then deleted, then new fields are added (so newly-generated names dedupe against
@@ -2412,9 +2465,9 @@ public class FormUtils {
                 continue;
             }
 
-            PDField field = locateField(acroForm, name.trim());
+            PDField field = locateField(acroForm, name);
             if (field == null) {
-                log.warn("No matching field '{}' found for deletion", name);
+                log.warn("No matching field '{}' found for deletion", sanitizeForLog(name));
                 continue;
             }
 
@@ -2701,7 +2754,7 @@ public class FormUtils {
         return widgetToPage.isEmpty() ? Collections.emptyMap() : widgetToPage;
     }
 
-    private Set<String> collectExistingFieldNames(PDAcroForm acroForm) {
+    Set<String> collectExistingFieldNames(PDAcroForm acroForm) {
         if (acroForm == null) {
             return Collections.emptySet();
         }
@@ -2711,6 +2764,10 @@ public class FormUtils {
                 String fqn = field.getFullyQualifiedName();
                 if (fqn != null && !fqn.isEmpty()) {
                     existing.add(fqn);
+                }
+                String partial = field.getPartialName();
+                if (partial != null && !partial.isEmpty()) {
+                    existing.add(partial);
                 }
             }
         }
@@ -2752,7 +2809,7 @@ public class FormUtils {
         return normalized;
     }
 
-    private String generateUniqueFieldName(String baseName, Set<String> existingNames) {
+    String generateUniqueFieldName(String baseName, Set<String> existingNames) {
         String sanitized =
                 Optional.ofNullable(baseName)
                         .map(String::trim)

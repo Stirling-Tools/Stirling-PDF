@@ -172,7 +172,6 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
   );
 
   const clearPersistedDocument = useCallback(() => {
-    console.log("[PageEditorContext] Clearing persisted document");
     setPersistedDocument(null);
     setPersistedDocumentSignature(null);
     setCurrentPages(null);
@@ -259,7 +258,6 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
       return;
     }
 
-    const previousSignature = prevFileContextSignature.current;
     prevFileContextSignature.current = fileContextSignature;
 
     if (!idsChanged) {
@@ -267,13 +265,6 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
       return;
     }
 
-    console.log(
-      "[PageEditorContext] File signature changed (IDs/versions changed), clearing persisted document:",
-      {
-        prev: previousSignature?.substring(0, 50),
-        current: fileContextSignature.substring(0, 50),
-      },
-    );
     clearPersistedDocument();
   }, [fileContextSignature, clearPersistedDocument, state.files.ids]);
 
@@ -300,13 +291,6 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
     if (!fileContextChanged) {
       return;
     }
-
-    console.log("[PageEditorContext] FileContext files changed:", {
-      prevCount: prevFileIds.length,
-      currentCount: currentFileIds.length,
-      added: currentFileIds.filter((id) => !prevFileIds.includes(id)).length,
-      removed: prevFileIds.filter((id) => !currentFileIds.includes(id)).length,
-    });
 
     clearPersistedDocument();
 

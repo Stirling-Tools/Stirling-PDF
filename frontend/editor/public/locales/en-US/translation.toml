@@ -4332,6 +4332,8 @@ empty = "This PDF has no form fields yet."
 failed = "Failed to save changes"
 hint = "Select a field to edit its properties, drag it on the page, or delete it."
 restore = "Restore"
+undo = "Undo"
+redo = "Redo"
 
 [formFill.sidebar]
 close = "Close sidebar"

@@ -21,7 +21,9 @@ import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlineRounded";
+import RedoIcon from "@mui/icons-material/Redo";
 import RestoreIcon from "@mui/icons-material/Restore";
+import UndoIcon from "@mui/icons-material/Undo";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import { useFormFill } from "@app/tools/formFill/FormFillContext";
 import type {
@@ -38,11 +40,17 @@ import {
 } from "@app/tools/formFill/FormFieldPropertyEditor";
 import { useFormCommit } from "@app/tools/formFill/useFormCommit";
 import styles from "@app/tools/formFill/FormFill.module.css";
+import { useVirtualizer } from "@tanstack/react-virtual";
 
 interface FormFieldModifyPanelProps {
   currentFile: File | Blob | null;
   onApplied?: (blob: Blob) => void;
 }
+
+/** One row in the virtualised list: either a page header or a field. */
+type ModifyRow =
+  | { kind: "page"; pageIndex: number }
+  | { kind: "field"; field: FormField };
 
 /** Current backend (lower-left origin) coords for a field's first widget. */
 function currentCoords(field: FormField, staged?: ModifyFieldDefinition) {
@@ -86,24 +94,55 @@ export function FormFieldModifyPanel({
     toggleFieldDeleted,
     commitModifications,
     hasUncommittedChanges,
+    canUndo,
+    canRedo,
+    undo,
+    redo,
   } = useFormFill();
 
   const { committing, error, commit } = useFormCommit(onApplied);
   const selectedRowRef = useRef<HTMLDivElement>(null);
 
   // Group fields by their first widget's page.
-  const { sortedPages, fieldsByPage } = useMemo(() => {
+  const { flatRows } = useMemo(() => {
     const byPage = new Map<number, FormField[]>();
     for (const field of state.fields) {
       const pageIndex = field.widgets?.[0]?.pageIndex ?? 0;
       if (!byPage.has(pageIndex)) byPage.set(pageIndex, []);
       byPage.get(pageIndex)!.push(field);
     }
-    return {
-      sortedPages: Array.from(byPage.keys()).sort((a, b) => a - b),
-      fieldsByPage: byPage,
-    };
+    const pages = Array.from(byPage.keys()).sort((a, b) => a - b);
+    // Flatten page headers + field rows into a single list so the whole thing
+    // can be virtualised. Without this a 600-field document mounts 600 Papers
+    // (plus their Collapse/Tooltip subtrees) on every state change.
+    const rows: ModifyRow[] = [];
+    for (const pageIndex of pages) {
+      rows.push({ kind: "page", pageIndex });
+      for (const field of byPage.get(pageIndex)!) {
+        rows.push({ kind: "field", field });
+      }
+    }
+    return { flatRows: rows };
   }, [state.fields]);
+
+  // O(1) membership tests. `deletedFieldNames` is an array, so the previous
+  // `.includes()` per row made rendering O(rows x deletions).
+  const deletedSet = useMemo(
+    () => new Set(deletedFieldNames),
+    [deletedFieldNames],
+  );
+
+  const listViewportRef = useRef<HTMLDivElement>(null);
+  const rowVirtualizer = useVirtualizer({
+    count: flatRows.length,
+    getScrollElement: () => listViewportRef.current,
+    estimateSize: (index) => (flatRows[index]?.kind === "page" ? 32 : 44),
+    overscan: 10,
+    getItemKey: (index) => {
+      const row = flatRows[index];
+      return row.kind === "page" ? `page-${row.pageIndex}` : row.field.name;
+    },
+  });
 
   // Auto-scroll the list to the selected field (e.g. selected via the overlay).
   useEffect(() => {
@@ -126,8 +165,10 @@ export function FormFieldModifyPanel({
     return () => window.removeEventListener("keydown", onKey);
   }, [selectedFieldName, setSelectedField]);
 
-  const changeCount =
-    Object.keys(modifiedFields).length + deletedFieldNames.length;
+  const effectiveModCount = Object.keys(modifiedFields).filter(
+    (name) => !deletedSet.has(name),
+  ).length;
+  const changeCount = effectiveModCount + deletedFieldNames.length;
 
   const handleCommit = useCallback(() => {
     if (!currentFile || !hasUncommittedChanges) return;
@@ -180,17 +221,42 @@ export function FormFieldModifyPanel({
           </Alert>
         )}
 
-        <Button
-          size="sm"
-          onClick={handleCommit}
-          loading={committing}
-          disabled={!currentFile || !hasUncommittedChanges}
-          data-testid="form-modify-commit"
-        >
-          {t("formFill.modify.commit", "Save {{count}} change(s)", {
-            count: changeCount,
-          })}
-        </Button>
+        <Group gap={4} wrap="nowrap">
+          <Button
+            style={{ flex: 1 }}
+            size="sm"
+            onClick={handleCommit}
+            loading={committing}
+            disabled={!currentFile || !hasUncommittedChanges}
+            data-testid="form-modify-commit"
+          >
+            {t("formFill.modify.commit", "Save {{count}} change(s)", {
+              count: changeCount,
+            })}
+          </Button>
+          <Tooltip label={t("formFill.modify.undo", "Undo")} withArrow>
+            <ActionIcon
+              size="md"
+              variant="tertiary"
+              disabled={!canUndo}
+              onClick={undo}
+              aria-label={t("formFill.modify.undo", "Undo")}
+            >
+              <UndoIcon sx={{ fontSize: 16 }} />
+            </ActionIcon>
+          </Tooltip>
+          <Tooltip label={t("formFill.modify.redo", "Redo")} withArrow>
+            <ActionIcon
+              size="md"
+              variant="tertiary"
+              disabled={!canRedo}
+              onClick={redo}
+              aria-label={t("formFill.modify.redo", "Redo")}
+            >
+              <RedoIcon sx={{ fontSize: 16 }} />
+            </ActionIcon>
+          </Tooltip>
+        </Group>
 
         {state.fields.length === 0 && !state.loading && (
           <Text size="xs" c="dimmed" ta="center" py="md">
@@ -199,182 +265,213 @@ export function FormFieldModifyPanel({
         )}
       </div>
 
-      <ScrollArea className={styles.fieldList}>
-        <div className={styles.fieldListInner}>
-          {sortedPages.map((pageIdx, i) => (
-            <React.Fragment key={pageIdx}>
-              <div
-                className={styles.pageDivider}
-                style={i === 0 ? { marginTop: 0 } : undefined}
-              >
-                <Text className={styles.pageDividerLabel}>
-                  {t("formFill.page", "Page")} {pageIdx + 1}
-                </Text>
-              </div>
+      <ScrollArea className={styles.fieldList} viewportRef={listViewportRef}>
+        <div
+          className={styles.fieldListInner}
+          style={{
+            height: rowVirtualizer.getTotalSize(),
+            position: "relative",
+          }}
+        >
+          {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+            const row = flatRows[virtualRow.index];
 
-              {fieldsByPage.get(pageIdx)!.map((field) => {
-                const selected = selectedFieldName === field.name;
-                const deleted = deletedFieldNames.includes(field.name);
-                const coords = currentCoords(field, modifiedFields[field.name]);
-                return (
-                  <Paper
-                    key={field.name}
-                    ref={selected ? selectedRowRef : undefined}
-                    withBorder
-                    p={6}
-                    radius="sm"
-                    style={{
-                      cursor: "pointer",
-                      borderColor: selected
-                        ? "var(--mantine-color-blue-5)"
-                        : undefined,
-                      opacity: deleted ? 0.55 : 1,
-                    }}
-                    onClick={() =>
-                      setSelectedField(selected ? null : field.name)
-                    }
-                    data-testid={`form-modify-row-${field.name}`}
-                  >
-                    <Group gap={6} wrap="nowrap" justify="space-between">
-                      <Group gap={6} wrap="nowrap" style={{ minWidth: 0 }}>
-                        <span
-                          style={{
-                            color: `var(--mantine-color-${FIELD_TYPE_COLOR[field.type]}-6)`,
-                            display: "flex",
-                          }}
-                        >
-                          {FIELD_TYPE_ICON[field.type]}
-                        </span>
-                        <Text
-                          size="xs"
-                          truncate
-                          td={deleted ? "line-through" : undefined}
-                        >
-                          {field.label || field.name}
-                        </Text>
-                      </Group>
-                      <Tooltip
-                        label={
+            if (row.kind === "page") {
+              return (
+                <div
+                  key={virtualRow.key}
+                  ref={rowVirtualizer.measureElement}
+                  data-index={virtualRow.index}
+                  className={styles.pageDivider}
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    transform: `translateY(${virtualRow.start}px)`,
+                    marginTop: virtualRow.index === 0 ? 0 : undefined,
+                  }}
+                >
+                  <Text className={styles.pageDividerLabel}>
+                    {t("formFill.page", "Page")} {row.pageIndex + 1}
+                  </Text>
+                </div>
+              );
+            }
+
+            const field = row.field;
+            const pageIdx = field.widgets?.[0]?.pageIndex ?? 0;
+            const selected = selectedFieldName === field.name;
+            const deleted = deletedSet.has(field.name);
+            const coords = currentCoords(field, modifiedFields[field.name]);
+
+            return (
+              <div
+                key={virtualRow.key}
+                ref={rowVirtualizer.measureElement}
+                data-index={virtualRow.index}
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  transform: `translateY(${virtualRow.start}px)`,
+                }}
+              >
+                <Paper
+                  ref={selected ? selectedRowRef : undefined}
+                  withBorder
+                  p={6}
+                  radius="sm"
+                  style={{
+                    cursor: "pointer",
+                    borderColor: selected
+                      ? "var(--mantine-color-blue-5)"
+                      : undefined,
+                    opacity: deleted ? 0.55 : 1,
+                  }}
+                  onClick={() => setSelectedField(selected ? null : field.name)}
+                  data-testid={`form-modify-row-${field.name}`}
+                >
+                  <Group gap={6} wrap="nowrap" justify="space-between">
+                    <Group gap={6} wrap="nowrap" style={{ minWidth: 0 }}>
+                      <span
+                        style={{
+                          color: `var(--mantine-color-${FIELD_TYPE_COLOR[field.type]}-6)`,
+                          display: "flex",
+                        }}
+                      >
+                        {FIELD_TYPE_ICON[field.type]}
+                      </span>
+                      <Text
+                        size="xs"
+                        truncate
+                        td={deleted ? "line-through" : undefined}
+                      >
+                        {field.label || field.name}
+                      </Text>
+                    </Group>
+                    <Tooltip
+                      label={
+                        deleted
+                          ? t("formFill.modify.restore", "Restore")
+                          : t("formFill.modify.delete", "Delete")
+                      }
+                      withArrow
+                    >
+                      <ActionIcon
+                        size="sm"
+                        variant="tertiary"
+                        accent={deleted ? "default" : "danger"}
+                        aria-label={
                           deleted
                             ? t("formFill.modify.restore", "Restore")
                             : t("formFill.modify.delete", "Delete")
                         }
-                        withArrow
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleFieldDeleted(field.name);
+                        }}
+                        data-testid={`form-modify-delete-${field.name}`}
                       >
-                        <ActionIcon
-                          size="sm"
-                          variant="tertiary"
-                          accent={deleted ? "default" : "danger"}
-                          aria-label={
-                            deleted
-                              ? t("formFill.modify.restore", "Restore")
-                              : t("formFill.modify.delete", "Delete")
-                          }
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleFieldDeleted(field.name);
-                          }}
-                          data-testid={`form-modify-delete-${field.name}`}
-                        >
-                          {deleted ? (
-                            <RestoreIcon sx={{ fontSize: 16 }} />
-                          ) : (
-                            <DeleteOutlineIcon sx={{ fontSize: 16 }} />
-                          )}
-                        </ActionIcon>
-                      </Tooltip>
-                    </Group>
-
-                    <Collapse in={selected && !deleted}>
-                      <div
-                        style={{ marginTop: 8 }}
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <FormFieldPropertyEditor
-                          value={editorValue(field)}
-                          onChange={(patch) =>
-                            stageModification(
-                              field.name,
-                              patch as Partial<ModifyFieldDefinition>,
-                            )
-                          }
-                          showName
-                          allowTypeChange
-                        />
-
-                        {coords && (
-                          <Group gap={6} mt="xs" grow>
-                            <NumberInput
-                              size="xs"
-                              label="X"
-                              value={Math.round(coords.x)}
-                              onChange={(v) =>
-                                typeof v === "number" &&
-                                stageModification(field.name, {
-                                  pageIndex: pageIdx,
-                                  x: v,
-                                  y: coords.y,
-                                  width: coords.width,
-                                  height: coords.height,
-                                })
-                              }
-                            />
-                            <NumberInput
-                              size="xs"
-                              label="Y"
-                              value={Math.round(coords.y)}
-                              onChange={(v) =>
-                                typeof v === "number" &&
-                                stageModification(field.name, {
-                                  pageIndex: pageIdx,
-                                  x: coords.x,
-                                  y: v,
-                                  width: coords.width,
-                                  height: coords.height,
-                                })
-                              }
-                            />
-                            <NumberInput
-                              size="xs"
-                              label="W"
-                              value={Math.round(coords.width)}
-                              min={1}
-                              onChange={(v) =>
-                                typeof v === "number" &&
-                                stageModification(field.name, {
-                                  pageIndex: pageIdx,
-                                  x: coords.x,
-                                  y: coords.y,
-                                  width: v,
-                                  height: coords.height,
-                                })
-                              }
-                            />
-                            <NumberInput
-                              size="xs"
-                              label="H"
-                              value={Math.round(coords.height)}
-                              min={1}
-                              onChange={(v) =>
-                                typeof v === "number" &&
-                                stageModification(field.name, {
-                                  pageIndex: pageIdx,
-                                  x: coords.x,
-                                  y: coords.y,
-                                  width: coords.width,
-                                  height: v,
-                                })
-                              }
-                            />
-                          </Group>
+                        {deleted ? (
+                          <RestoreIcon sx={{ fontSize: 16 }} />
+                        ) : (
+                          <DeleteOutlineIcon sx={{ fontSize: 16 }} />
                         )}
-                      </div>
-                    </Collapse>
-                  </Paper>
-                );
-              })}
-            </React.Fragment>
-          ))}
+                      </ActionIcon>
+                    </Tooltip>
+                  </Group>
+
+                  <Collapse in={selected && !deleted}>
+                    <div
+                      style={{ marginTop: 8 }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <FormFieldPropertyEditor
+                        value={editorValue(field)}
+                        onChange={(patch) =>
+                          stageModification(
+                            field.name,
+                            patch as Partial<ModifyFieldDefinition>,
+                          )
+                        }
+                        showName
+                        allowTypeChange
+                      />
+
+                      {coords && (
+                        <Group gap={6} mt="xs" grow>
+                          <NumberInput
+                            size="xs"
+                            label="X"
+                            value={Math.round(coords.x)}
+                            onChange={(v) =>
+                              typeof v === "number" &&
+                              stageModification(field.name, {
+                                pageIndex: pageIdx,
+                                x: v,
+                                y: coords.y,
+                                width: coords.width,
+                                height: coords.height,
+                              })
+                            }
+                          />
+                          <NumberInput
+                            size="xs"
+                            label="Y"
+                            value={Math.round(coords.y)}
+                            onChange={(v) =>
+                              typeof v === "number" &&
+                              stageModification(field.name, {
+                                pageIndex: pageIdx,
+                                x: coords.x,
+                                y: v,
+                                width: coords.width,
+                                height: coords.height,
+                              })
+                            }
+                          />
+                          <NumberInput
+                            size="xs"
+                            label="W"
+                            value={Math.round(coords.width)}
+                            min={1}
+                            onChange={(v) =>
+                              typeof v === "number" &&
+                              stageModification(field.name, {
+                                pageIndex: pageIdx,
+                                x: coords.x,
+                                y: coords.y,
+                                width: v,
+                                height: coords.height,
+                              })
+                            }
+                          />
+                          <NumberInput
+                            size="xs"
+                            label="H"
+                            value={Math.round(coords.height)}
+                            min={1}
+                            onChange={(v) =>
+                              typeof v === "number" &&
+                              stageModification(field.name, {
+                                pageIndex: pageIdx,
+                                x: coords.x,
+                                y: coords.y,
+                                width: coords.width,
+                                height: v,
+                              })
+                            }
+                          />
+                        </Group>
+                      )}
+                    </div>
+                  </Collapse>
+                </Paper>
+              </div>
+            );
+          })}
         </div>
       </ScrollArea>
     </div>

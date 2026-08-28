@@ -1184,16 +1184,18 @@ class FileStorageService {
     }
 
     await Promise.all(
-      outputStirlingFiles.map((file, i) =>
-        this.storeStirlingFile(file, outputStirlingFileStubs[i]).catch(
-          (error) =>
-            console.error(
-              "Failed to persist output file to storage:",
-              file.name,
-              error,
-            ),
-        ),
-      ),
+      outputStirlingFiles.map(async (file, i) => {
+        try {
+          await this.storeStirlingFile(file, outputStirlingFileStubs[i]);
+        } catch (error) {
+          console.error(
+            "Failed to persist output file to storage:",
+            file.name,
+            error,
+          );
+          throw error;
+        }
+      }),
     );
   }
 

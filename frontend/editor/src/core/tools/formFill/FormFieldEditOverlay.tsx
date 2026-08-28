@@ -109,8 +109,33 @@ export function FormFieldEditOverlay({
     modifiedFields,
     stageModification,
     deletedFieldNames,
+    toggleFieldDeleted,
     forFileId,
   } = useFormFill();
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (
+        (e.key === "Delete" || e.key === "Backspace") &&
+        selectedFieldName &&
+        !deletedFieldNames.includes(selectedFieldName)
+      ) {
+        // Prevent deleting if the user is typing in an input elsewhere
+        if (
+          document.activeElement instanceof HTMLInputElement ||
+          document.activeElement instanceof HTMLTextAreaElement
+        ) {
+          return;
+        }
+
+        toggleFieldDeleted(selectedFieldName);
+        e.preventDefault();
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [selectedFieldName, deletedFieldNames, toggleFieldDeleted]);
 
   const rootRef = useRef<HTMLDivElement>(null);
   const interactionRef = useRef<Interaction | null>(null);

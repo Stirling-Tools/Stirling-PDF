@@ -8,7 +8,10 @@ import {
 import { PdfBookmarkObject, PdfAttachmentObject } from "@embedpdf/models";
 
 export interface ScrollActions {
-  scrollToPage: (page: number, behavior?: "smooth" | "instant") => void;
+  scrollToPage: (
+    page: number,
+    behavior?: "smooth" | "instant" | "auto",
+  ) => void;
   scrollToFirstPage: () => void;
   scrollToPreviousPage: () => void;
   scrollToNextPage: () => void;
@@ -113,13 +116,16 @@ export function createViewerActions({
   triggerImmediateZoomUpdate,
 }: ViewerActionDependencies): ViewerActionsBundle {
   const scrollActions: ScrollActions = {
-    scrollToPage: (page: number, behavior?: "smooth" | "instant") => {
+    scrollToPage: (
+      page: number,
+      behavior: "smooth" | "instant" | "auto" = "smooth",
+    ) => {
       const api = registry.current.scroll?.api;
       if (api?.scrollToPage) {
         try {
           api.scrollToPage({
             pageNumber: page,
-            behavior: behavior || "smooth",
+            behavior: behavior,
           });
         } catch (error) {
           // Silently handle "Strategy not found" errors that occur during document transitions

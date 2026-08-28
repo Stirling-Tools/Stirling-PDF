@@ -267,6 +267,16 @@ export interface FormFillContextValue {
 
   /** True when create or modify mode has uncommitted work. */
   hasUncommittedChanges: boolean;
+
+  // --- Undo/Redo ---
+  /** Undo the last modification or creation action. */
+  undo: () => void;
+  /** Redo the last undone action. */
+  redo: () => void;
+  /** Whether undo is available. */
+  canUndo: boolean;
+  /** Whether redo is available. */
+  canRedo: boolean;
 }
 
 const FormFillContext = createContext<FormFillContextValue | null>(null);
@@ -382,12 +392,73 @@ export function FormFillProvider({
   // Monotonic counter for client-side pending-field ids and default names.
   const pendingCounterRef = useRef(0);
 
+  // --- Undo/Redo history ---
+  const [historyIndex, setHistoryIndex] = useState(-1);
+  const historyRef = useRef<
+    Array<{
+      mode: FormMode;
+      pendingFields: PendingField[];
+      selectedFieldName: string | null;
+      modifiedFields: Record<string, ModifyFieldDefinition>;
+      deletedFieldNames: string[];
+    }>
+  >([]);
+
+  const saveToHistory = useCallback(() => {
+    // Truncate any future history
+    const newHistory = historyRef.current.slice(0, historyIndex + 1);
+    newHistory.push({
+      mode,
+      pendingFields,
+      selectedFieldName,
+      modifiedFields,
+      deletedFieldNames,
+    });
+    historyRef.current = newHistory;
+    setHistoryIndex(newHistory.length - 1);
+  }, [
+    historyIndex,
+    mode,
+    pendingFields,
+    selectedFieldName,
+    modifiedFields,
+    deletedFieldNames,
+  ]);
+
+  const undo = useCallback(() => {
+    if (historyIndex <= 0) return;
+    const prev = historyRef.current[historyIndex - 1];
+    setHistoryIndex(historyIndex - 1);
+    setMode(prev.mode);
+    setPendingFields(prev.pendingFields);
+    setSelectedField(prev.selectedFieldName);
+    setModifiedFields(prev.modifiedFields);
+    setDeletedFieldNames(prev.deletedFieldNames);
+  }, [historyIndex]);
+
+  const redo = useCallback(() => {
+    if (historyIndex >= historyRef.current.length - 1) return;
+    const next = historyRef.current[historyIndex + 1];
+    setHistoryIndex(historyIndex + 1);
+    setMode(next.mode);
+    setPendingFields(next.pendingFields);
+    setSelectedField(next.selectedFieldName);
+    setModifiedFields(next.modifiedFields);
+    setDeletedFieldNames(next.deletedFieldNames);
+  }, [historyIndex]);
+
+  const canUndo = historyIndex > 0;
+  const canRedo = historyIndex < historyRef.current.length - 1;
+
   const clearEditingState = useCallback(() => {
     setCreationType(null);
     setPendingFields([]);
     setSelectedField(null);
     setModifiedFields({});
     setDeletedFieldNames([]);
+    // Clear history when explicitly clearing editing state
+    historyRef.current = [];
+    setHistoryIndex(-1);
   }, []);
 
   const fetchFields = useCallback(
@@ -412,7 +483,13 @@ export function FormFillProvider({
       // switch (setMode) and reset() instead.
       dispatch({ type: "FETCH_START" });
       try {
+        console.log(
+          `[FormFill] Fetching fields for file size: ${file.size}, version: ${version}`,
+        );
         let fields = await providerRef.current.fetchFields(file);
+        console.log(
+          `[FormFill] Fetched ${fields.length} fields. version: ${version}, current: ${fetchVersionRef.current}`,
+        );
         // If another fetch or reset happened while we were waiting, discard this result
         if (fetchVersionRef.current !== version) {
           console.debug(
@@ -498,8 +575,9 @@ export function FormFillProvider({
     (fieldName: string, value: string) => {
       // Update external store (triggers per-field subscribers only)
       valuesStore.setValue(fieldName, value);
-      // Mark form as dirty in React state (only triggers re-render once)
+      // Mark form as dirty
       dispatch({ type: "MARK_DIRTY" });
+      // Run validation for required fields
       validateFieldDebounced(fieldName);
     },
     [valuesStore, validateFieldDebounced],
@@ -510,36 +588,10 @@ export function FormFillProvider({
   }, []);
 
   const submitForm = useCallback(
-    async (file: File | Blob, flatten = false) => {
-      const blob = await providerRef.current.fillForm(
-        file,
-        valuesStore.values,
-        flatten,
-      );
-      dispatch({ type: "MARK_CLEAN" });
+    async (file: File | Blob, flatten = false): Promise<Blob> => {
+      const values = valuesStore.values;
+      const blob = await providerRef.current.fillForm(file, values, flatten);
       return blob;
-    },
-    [valuesStore],
-  );
-
-  const setProviderMode = useCallback(
-    (mode: "pdflib" | "pdfbox") => {
-      // Use the ref to check the current mode synchronously — avoids
-      // relying on stale closure state and allows the early return.
-      if (providerModeRef.current === mode) return;
-
-      // provider (pdfbox vs pdflib).
-      const newProvider = mode === "pdfbox" ? pdfBoxProvider : pdfiumProvider;
-      providerRef.current = newProvider;
-      providerModeRef.current = mode;
-
-      fetchVersionRef.current++;
-      forFileIdRef.current = null;
-      setForFileId(null);
-      valuesStore.reset({});
-      dispatch({ type: "RESET" });
-
-      setProviderModeState(mode);
     },
     [valuesStore],
   );
@@ -586,6 +638,22 @@ export function FormFillProvider({
     [clearEditingState],
   );
 
+  const setProviderMode = useCallback(
+    (next: "pdflib" | "pdfbox") => {
+      if (providerModeRef.current === next) return;
+      // Switch provider and reset form state
+      providerModeRef.current = next;
+      setProviderModeState(next);
+      fetchVersionRef.current++;
+      forFileIdRef.current = null;
+      setForFileId(null);
+      valuesStore.reset({});
+      dispatch({ type: "RESET" });
+      clearEditingState();
+    },
+    [valuesStore, clearEditingState],
+  );
+
   // --- Create mode ---
   const addPendingField = useCallback(
     (field: Omit<NewFieldDefinition, "name"> & { name?: string }): string => {
@@ -617,9 +685,10 @@ export function FormFillProvider({
         ...prev,
         { ...field, name: defaultName, options, id } as PendingField,
       ]);
+      saveToHistory();
       return id;
     },
-    [],
+    [saveToHistory],
   );
 
   const updatePendingField = useCallback(
@@ -627,13 +696,18 @@ export function FormFillProvider({
       setPendingFields((prev) =>
         prev.map((f) => (f.id === id ? { ...f, ...patch } : f)),
       );
+      saveToHistory();
     },
-    [],
+    [saveToHistory],
   );
 
-  const removePendingField = useCallback((id: string) => {
-    setPendingFields((prev) => prev.filter((f) => f.id !== id));
-  }, []);
+  const removePendingField = useCallback(
+    (id: string) => {
+      setPendingFields((prev) => prev.filter((f) => f.id !== id));
+      saveToHistory();
+    },
+    [saveToHistory],
+  );
 
   const clearPendingFields = useCallback(() => {
     setPendingFields([]);
@@ -661,36 +735,48 @@ export function FormFillProvider({
         ...prev,
         [targetName]: { ...prev[targetName], targetName, ...patch },
       }));
+      saveToHistory();
     },
-    [],
+    [saveToHistory],
   );
 
-  const clearModification = useCallback((targetName: string) => {
-    setModifiedFields((prev) => {
-      if (!(targetName in prev)) return prev;
-      const { [targetName]: _removed, ...rest } = prev;
-      return rest;
-    });
-  }, []);
+  const clearModification = useCallback(
+    (targetName: string) => {
+      setModifiedFields((prev) => {
+        if (!(targetName in prev)) return prev;
+        const { [targetName]: _removed, ...rest } = prev;
+        return rest;
+      });
+      saveToHistory();
+    },
+    [saveToHistory],
+  );
 
-  const toggleFieldDeleted = useCallback((name: string) => {
-    setDeletedFieldNames((prev) =>
-      prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name],
-    );
-  }, []);
+  const toggleFieldDeleted = useCallback(
+    (name: string) => {
+      setDeletedFieldNames((prev) =>
+        prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name],
+      );
+      saveToHistory();
+    },
+    [saveToHistory],
+  );
 
   const clearModifications = useCallback(() => {
     setModifiedFields({});
     setDeletedFieldNames([]);
     setSelectedField(null);
-  }, []);
+    saveToHistory();
+  }, [saveToHistory]);
 
   const commitModifications = useCallback(
     async (file: File | Blob): Promise<Blob> => {
       // Apply property/geometry changes (for fields not being deleted) and the
-      // deletions in a single backend round-trip.
+      // deletions in a single backend round-trip. Set lookup keeps this linear
+      // rather than O(modified x deleted) on field-heavy documents.
+      const deletedSet = new Set(deletedFieldNames);
       const updates = Object.values(modifiedFields).filter(
-        (m) => !deletedFieldNames.includes(m.targetName),
+        (m) => !deletedSet.has(m.targetName),
       );
       const blob = await applyFieldEdits(file, {
         modify: updates,
@@ -758,6 +844,11 @@ export function FormFillProvider({
       clearModifications,
       commitModifications,
       hasUncommittedChanges,
+      // undo/redo
+      undo,
+      redo,
+      canUndo,
+      canRedo,
     }),
     [
       state,
@@ -784,6 +875,7 @@ export function FormFillProvider({
       clearPendingFields,
       commitNewFields,
       selectedFieldName,
+      setSelectedField,
       modifiedFields,
       stageModification,
       clearModification,
@@ -792,6 +884,10 @@ export function FormFillProvider({
       clearModifications,
       commitModifications,
       hasUncommittedChanges,
+      undo,
+      redo,
+      canUndo,
+      canRedo,
     ],
   );
 

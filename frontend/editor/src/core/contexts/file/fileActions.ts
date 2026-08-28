@@ -640,7 +640,17 @@ export async function consumeFiles(
     );
   }
 
+  // Persist the durable half (mark inputs non-leaf + store output versions) before
+  // publishing the replacement to the in-memory workspace. If storage fails, the
+  // old file remains active and the caller can report a real save failure.
+  await fileStorage.persistVersionedOutputs(
+    inputFileIds,
+    outputStirlingFiles,
+    outputStirlingFileStubs,
+  );
+
   // Store StirlingFiles in filesRef using their existing IDs (no ID generation needed)
+  // only after the durable write succeeds.
   for (let i = 0; i < outputStirlingFiles.length; i++) {
     const stirlingFile = outputStirlingFiles[i];
     const stub = outputStirlingFileStubs[i];
@@ -658,14 +668,6 @@ export async function consumeFiles(
         `📄 consumeFiles: Stored StirlingFile ${stirlingFile.name} with ID ${stirlingFile.fileId}`,
       );
   }
-
-  // Persist the durable half (mark inputs non-leaf + store output versions) via the shared
-  // storage helper, so a policy run recovered after a reload versions the file identically.
-  await fileStorage.persistVersionedOutputs(
-    inputFileIds,
-    outputStirlingFiles,
-    outputStirlingFileStubs,
-  );
 
   // Dispatch the consume action with pre-created stubs (no processing needed)
   dispatch({
