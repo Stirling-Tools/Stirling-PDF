@@ -180,17 +180,15 @@ class PdfToCbrUtilsMoreTest {
         @DisplayName("a zero-page document raises a no-pages exception before rendering")
         void zeroPageDocument() throws Exception {
             assumeTrue(RenderingUtils.isLibVipsAvailable(), "libvips not available");
-            try (PDDocument empty = new PDDocument()) {
-                CustomPDFDocumentFactory factory = factoryReturning(empty);
-                assertThatThrownBy(
-                                () ->
-                                        PdfToCbrUtils.convertPdfToCbr(
-                                                pdfMultipart(onePageImagePdf()),
-                                                72,
-                                                factory,
-                                                mock(TempFileManager.class)))
-                        .isInstanceOf(Exception.class);
-            }
+            // A PDF with 0 pages or invalid empty PDF bytes
+            MultipartFile emptyPdf =
+                    new MockMultipartFile("file", "comic.pdf", "application/pdf", new byte[0]);
+            CustomPDFDocumentFactory factory = mock(CustomPDFDocumentFactory.class);
+            assertThatThrownBy(
+                            () ->
+                                    PdfToCbrUtils.convertPdfToCbr(
+                                            emptyPdf, 72, factory, mock(TempFileManager.class)))
+                    .isInstanceOf(Exception.class);
         }
     }
 

@@ -21,6 +21,8 @@ import stirling.software.jpdfium.PdfDocument;
 import stirling.software.jpdfium.PdfImageConverter;
 import stirling.software.jpdfium.model.ImageFormat;
 import stirling.software.jpdfium.transform.PageOps;
+import stirling.software.jpdfium.vips.VipsAvailability;
+import stirling.software.jpdfium.vips.VipsNatives;
 
 import app.photofox.vipsffm.VBlob;
 import app.photofox.vipsffm.VImage;
@@ -35,6 +37,7 @@ public class RenderingUtils {
 
     static {
         try {
+            VipsNatives.configure();
             String currentPath = System.getProperty("java.library.path", "");
             String os = System.getProperty("os.name", "").toLowerCase(Locale.ROOT);
             List<String> candidatePaths = new ArrayList<>();
@@ -340,12 +343,7 @@ public class RenderingUtils {
     }
 
     public static boolean isLibVipsAvailable() {
-        try {
-            app.photofox.vipsffm.Vips.init();
-            return true;
-        } catch (Throwable e) {
-            return false;
-        }
+        return VipsAvailability.isAvailable();
     }
 
     /** Maps a format string to JPDFium's ImageFormat, or null if unsupported. */

@@ -43,6 +43,7 @@ dependencies {
 
     api 'app.photofox.vips-ffm:vips-ffm-core:1.9.8'
     api "com.stirling:jpdfium:${jpdfiumVersion}"
+    api "com.stirling:jpdfium-vips:${jpdfiumVersion}"
 
     // -PjpdfiumPlatforms=auto|all|none|<csv of linux-x64,linux-arm64,linux-musl-x64,linux-musl-arm64,darwin-x64,darwin-arm64,windows-x64> (windows-arm64 natives not published yet)
     def jpdfiumPlatformsProp = (project.findProperty('jpdfiumPlatforms') ?: 'auto').toString().trim()
@@ -82,6 +83,7 @@ dependencies {
     logger.lifecycle("JPDFium native platforms: ${jpdfiumPlatforms ? jpdfiumPlatforms.join(', ') : 'none'}")
     jpdfiumPlatforms.each { platform ->
         runtimeOnly "com.stirling:jpdfium-natives-${platform}:${jpdfiumVersion}"
+        runtimeOnly "com.stirling:jpdfium-natives-vips-${platform}:${jpdfiumVersion}"
     }
 
     // Bucket4j (local in-process token bucket for RateLimitStore default impl)
