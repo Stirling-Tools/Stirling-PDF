@@ -220,6 +220,24 @@ jobs:
             echo "app_short=${APP_HASH:0:8}" >> $GITHUB_OUTPUT
           fi
 
+      # The Stirling account previews connect to. Derived from the project ref rather than stored as
+      # a URL so it cannot drift from the key: a mismatched pair is accepted by the browser and
+      # rejected by Supabase, which shows up much later as "session expired" on Usage.
+      - name: Resolve Stirling account config
+        id: saas
+        env:
+          PROJECT_REF: ${{ secrets.SAAS_DB_PROJECT_REF }}
+        run: |
+          if [ -z "${PROJECT_REF}" ]; then
+            echo "No SAAS_DB_PROJECT_REF for this environment: the preview will build without a"
+            echo "Stirling account, and the connect flow will say it is not configured."
+            echo "supabase_url=" >> "$GITHUB_OUTPUT"
+          else
+            # Logged so the build says which project it wired itself to. The ref is not a secret.
+            echo "Stirling account: https://${PROJECT_REF}.supabase.co"
+            echo "supabase_url=https://${PROJECT_REF}.supabase.co" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Check if image exists
         id: check-image
         run: |
@@ -246,6 +264,9 @@ jobs:
           build-args: |
             VERSION_TAG=v2-alpha
             BUILD_PORTAL=${{ env.BUILD_PORTAL }}
+            VITE_SUPABASE_URL=${{ steps.saas.outputs.supabase_url }}
+            VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY=${{ secrets.SAAS_SUPABASE_PUBLISHABLE_KEY }}
+            VITE_SAAS_API_URL=${{ vars.SAAS_API_BASE_URL }}
           platforms: linux/amd64
 
       - name: Set up SSH
@@ -279,6 +300,10 @@ jobs:
               environment:
                 DISABLE_ADDITIONAL_FEATURES: "false"
                 STIRLING_BILLING_ACCOUNT_LINK_ENABLED: "true"
+                # Stated rather than inferred from the request: the callback has to come back to the
+                # preview hostname, not to the container's own :8080 behind this proxy.
+                # account-link.saas-base-url is left alone; it already defaults to prod.
+                SYSTEM_FRONTENDURL: "https://${V2_PORT}.ssl.stirlingpdf.cloud"
                 SECURITY_ENABLELOGIN: "true"
                 SECURITY_INITIALLOGIN_USERNAME: "${TEST_LOGIN_USERNAME}"
                 SECURITY_INITIALLOGIN_PASSWORD: "${TEST_LOGIN_PASSWORD}"
