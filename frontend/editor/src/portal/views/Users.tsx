@@ -47,7 +47,7 @@ interface Confirm {
  */
 export function Users() {
   const { t } = useTranslation();
-  const { guard } = useConnectGate();
+  const { guard, gated, connect } = useConnectGate();
   const { usersState, grantsState, teamsState, authState, refresh } =
     useUsersData();
 
@@ -64,13 +64,23 @@ export function Users() {
   const [confirm, setConfirm] = useState<Confirm | null>(null);
 
   const [searchParams, setSearchParams] = useSearchParams();
+
+  // Held in a ref so the effect below does not re-run on its identity. The effect writes back to
+  // the URL, so a callback that changes each render would loop: strip the param, re-render, run
+  // again.
+  const connectRef = useRef(connect);
+  connectRef.current = connect;
+
+  // Deep link into the invite flow. It sets the modal directly, so it needs the gate in its own
+  // right: guarding openInvite alone would leave ?invite as a way past it.
   useEffect(() => {
     if (searchParams.get("invite") === null) return;
-    setInviteOpen(true);
+    if (gated) connectRef.current();
+    else setInviteOpen(true);
     const next = new URLSearchParams(searchParams);
     next.delete("invite");
     setSearchParams(next, { replace: true });
-  }, [searchParams, setSearchParams]);
+  }, [searchParams, setSearchParams, gated]);
 
   // Scroll to and flash the row for ?member=<id> (deep link from the super
   // search), once the roster has rendered; then strip the param. Scoped to the
