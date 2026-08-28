@@ -955,25 +955,6 @@ JAVA_CMD=(
   -Djava.io.tmpdir=/tmp/stirling-pdf
 )
 
-# jemalloc — required by libvips at link time; LD_PRELOAD extends it to Java
-JEMALLOC_PATH=""
-for p in /usr/lib/$(dpkg-architecture -qDEB_HOST_MULTIARCH 2>/dev/null || echo "")/libjemalloc.so.2 \
-         /usr/lib/x86_64-linux-gnu/libjemalloc.so.2 \
-         /usr/lib/aarch64-linux-gnu/libjemalloc.so.2 \
-         /usr/lib/libjemalloc.so.2 \
-         /usr/lib/libjemalloc.so; do
-  if [ -f "$p" ]; then JEMALLOC_PATH="$p"; break; fi
-done
-
-TARGET_LD_PRELOAD="${LD_PRELOAD:-}"
-if [ -n "$JEMALLOC_PATH" ]; then
-  if [ -n "$TARGET_LD_PRELOAD" ]; then
-    TARGET_LD_PRELOAD="${JEMALLOC_PATH}:${TARGET_LD_PRELOAD}"
-  else
-    TARGET_LD_PRELOAD="${JEMALLOC_PATH}"
-  fi
-fi
-
 if [ -f "/app.jar" ]; then
   JAVA_CMD+=("-jar" "/app.jar")
 elif [ -f "/app/app.jar" ]; then
@@ -1019,17 +1000,16 @@ elif [ -x "$STIRLING_ENGINE_HOME/.venv/bin/python" ]; then
 fi
 
 if [ "$CURRENT_USER" = "$RUNTIME_USER" ]; then
-  LD_PRELOAD="$TARGET_LD_PRELOAD" "${JAVA_CMD[@]}" &
+  "${JAVA_CMD[@]}" &
 elif [ "$CURRENT_UID" -eq 0 ] && command_exists setpriv; then
   # Set HOME/USER/LOGNAME to match gosu behavior (setpriv does not touch env vars)
   env HOME="$(getent passwd "$RUNTIME_USER" | cut -d: -f6)" \
       USER="$RUNTIME_USER" \
       LOGNAME="$RUNTIME_USER" \
-      LD_PRELOAD="$TARGET_LD_PRELOAD" \
     setpriv --reuid="$RUNTIME_USER" --regid="$(id -gn "$RUNTIME_USER")" --init-groups -- "${JAVA_CMD[@]}" &
 else
   warn_switch_user_once
-  LD_PRELOAD="$TARGET_LD_PRELOAD" "${JAVA_CMD[@]}" &
+  "${JAVA_CMD[@]}" &
 fi
 
 JAVA_PID=$!
@@ -1070,9 +1050,6 @@ if [ "$AOT_GENERATE_BACKGROUND" = true ]; then
 
   if [ "$CONTAINER_MEM_MB" -gt "$_aot_min_mem" ] || [ "$CONTAINER_MEM_MB" -eq 0 ]; then
     (
-      # jemalloc LD_PRELOAD for AOT generation too
-      [ -n "$JEMALLOC_PATH" ] && export LD_PRELOAD="${JEMALLOC_PATH}${LD_PRELOAD:+:$LD_PRELOAD}"
-
       # Wait for Spring Boot to finish initializing before competing for CPU/memory.
       # ARM devices (Raspberry Pi 4, Ampere) need extra time, 90s vs 45s on x86_64.
       _startup_wait=45
