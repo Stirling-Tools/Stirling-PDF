@@ -218,8 +218,8 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   const setReaderMode = useCallback(
     (mode: boolean) => {
       if (mode) {
+        // Reading is a mode the open document is put into, not a tool run on it.
         actions.setWorkbench("viewer");
-        actions.setSelectedTool("read");
       }
       dispatch({ type: "SET_READER_MODE", payload: mode });
     },
