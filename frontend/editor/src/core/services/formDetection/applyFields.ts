@@ -37,7 +37,8 @@ export async function applyFields(
         const cb = form.createCheckBox(name);
         cb.addToPage(page, { x: r.x, y: r.y, width: r.w, height: r.h });
       } else {
-        // pdf-lib has no first-class signature widget; a text field keeps it fillable.
+        // Signature and radio both land here: FormUtils.addFields coerces them to text too,
+        // so a document is identical whichever side applied the fields.
         const tf = form.createTextField(name);
         tf.addToPage(page, { x: r.x, y: r.y, width: r.w, height: r.h });
       }

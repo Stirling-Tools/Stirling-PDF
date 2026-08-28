@@ -170,9 +170,9 @@ public class FormDetectionModelManager {
             throw new IllegalStateException(
                     "Model '" + modelId + "' has no download URL/checksum configured yet");
         }
-        String scheme = URI.create(url).getScheme();
-        if (!"https".equalsIgnoreCase(scheme) && !"http".equalsIgnoreCase(scheme)) {
-            throw new IllegalArgumentException("Model URL must be http(s): " + url);
+        // Same allowlist the download enforces, so a bad catalog entry fails here, not mid-install.
+        if (!url.startsWith(ALLOWED_MODEL_URL_PREFIX)) {
+            throw new IllegalArgumentException("Model URL is not on the allowlist: " + url);
         }
         if (!SHA256_HEX.matcher(sha).matches()) {
             throw new IllegalArgumentException("Checksum must be a 64-char hex SHA-256");

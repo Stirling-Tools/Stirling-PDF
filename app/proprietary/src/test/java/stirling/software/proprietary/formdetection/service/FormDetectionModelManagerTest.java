@@ -38,6 +38,9 @@ import stirling.software.proprietary.formdetection.model.ModelCatalogEntry;
 
 class FormDetectionModelManagerTest {
 
+    /** Catalog URLs must satisfy the production allowlist; the stub below serves them locally. */
+    private static final String ALLOWED_URL = "https://huggingface.co";
+
     private HttpServer server;
     private byte[] modelBytes;
     private String modelSha;
@@ -103,8 +106,9 @@ class FormDetectionModelManagerTest {
         return new FormDetectionModelManager(paths, catalog, props, ep, noEngine()) {
             @Override
             HttpURLConnection openModelDownload(String url) throws IOException {
+                String local = "http://127.0.0.1:" + port + URI.create(url).getPath();
                 HttpURLConnection conn =
-                        (HttpURLConnection) URI.create(url).toURL().openConnection();
+                        (HttpURLConnection) URI.create(local).toURL().openConnection();
                 conn.setConnectTimeout(5000);
                 conn.setReadTimeout(10000);
                 return conn;
@@ -128,7 +132,7 @@ class FormDetectionModelManagerTest {
     void installsDownloadsVerifiesAndPublishesAtomically(@TempDir Path dir) throws Exception {
         EndpointConfiguration ep = Mockito.mock(EndpointConfiguration.class);
         FormDetectionModelManager m =
-                manager(dir, entry("http://127.0.0.1:" + port + "/model.onnx", modelSha), ep);
+                manager(dir, entry(ALLOWED_URL + "/model.onnx", modelSha), ep);
 
         m.startInstall("test-model");
         awaitState(m, "ready", 5000);
@@ -145,7 +149,7 @@ class FormDetectionModelManagerTest {
     void rejectsChecksumMismatchAndLeavesNoFile(@TempDir Path dir) throws Exception {
         EndpointConfiguration ep = Mockito.mock(EndpointConfiguration.class);
         FormDetectionModelManager m =
-                manager(dir, entry("http://127.0.0.1:" + port + "/model.onnx", "0".repeat(64)), ep);
+                manager(dir, entry(ALLOWED_URL + "/model.onnx", "0".repeat(64)), ep);
 
         m.startInstall("test-model");
         awaitState(m, "failed", 5000);
@@ -174,7 +178,7 @@ class FormDetectionModelManagerTest {
         FormDetectionModelManager m =
                 manager(
                         dir,
-                        entry("http://127.0.0.1:" + port + "/gated.onnx", modelSha),
+                        entry(ALLOWED_URL + "/gated.onnx", modelSha),
                         Mockito.mock(EndpointConfiguration.class));
 
         m.startInstall("test-model"); // begins, blocks in handler
@@ -189,6 +193,16 @@ class FormDetectionModelManagerTest {
         FormDetectionModelManager m =
                 manager(dir, entry("", ""), Mockito.mock(EndpointConfiguration.class));
         assertThrows(IllegalStateException.class, () -> m.startInstall("test-model"));
+    }
+
+    @Test
+    void rejectsCatalogUrlOutsideAllowlist(@TempDir Path dir) {
+        FormDetectionModelManager m =
+                manager(
+                        dir,
+                        entry("http://127.0.0.1:" + port + "/model.onnx", modelSha),
+                        Mockito.mock(EndpointConfiguration.class));
+        assertThrows(IllegalArgumentException.class, () -> m.startInstall("test-model"));
     }
 
     @Test
@@ -216,7 +230,7 @@ class FormDetectionModelManagerTest {
         FormDetectionModelManager m =
                 manager(
                         dir,
-                        entry("http://127.0.0.1:" + port + "/model.onnx", modelSha),
+                        entry(ALLOWED_URL + "/model.onnx", modelSha),
                         Mockito.mock(EndpointConfiguration.class));
         assertThrows(IllegalArgumentException.class, () -> m.startInstall("unknown"));
     }
@@ -227,7 +241,7 @@ class FormDetectionModelManagerTest {
         Path preDir = root.resolve("preinstalled");
         Files.createDirectories(preDir);
         Files.write(preDir.resolve("test-model.onnx"), modelBytes);
-        ModelCatalogEntry e = entry("http://127.0.0.1:" + port + "/model.onnx", modelSha);
+        ModelCatalogEntry e = entry(ALLOWED_URL + "/model.onnx", modelSha);
 
         ApplicationProperties props = new ApplicationProperties();
         props.getFormDetection().setPreinstalledModelDir(preDir.toString());
