@@ -97,6 +97,13 @@ export class EditTextCommand implements Command {
   private overlaid = false;
   private prevObjPtr = 0;
   private prevFontId: string | null = null;
+  /**
+   * The original object's PDFium font handle, captured before the overlay
+   * replaces it. Font handles are document-level and outlive the object, so
+   * the revert can re-emit in the run's OWN face instead of a base-14
+   * lookalike.
+   */
+  private prevFontPtr = 0;
   private coverRectPtr = 0;
   private createdPtrs: number[] = [];
   private newTextPtr = 0;
@@ -308,6 +315,9 @@ export class EditTextCommand implements Command {
     this.overlaid = true;
     this.prevObjPtr = run.pdfiumObjPtr;
     if (this.prevFontId === null) this.prevFontId = run.fontId;
+    if (this.prevFontPtr === 0 && run.containerPtr === 0 && run.pdfiumObjPtr) {
+      this.prevFontPtr = safeGetFont(doc.module, run.pdfiumObjPtr);
+    }
     const fallbackFamily = fallbackFamilyFor(this.prevFontId);
     const m = doc.module;
 
@@ -737,6 +747,24 @@ export class EditTextCommand implements Command {
     this.newTextPtr = 0;
     this.createdPtrs = [];
 
+    // Everything else the run still owns goes too, because the re-emit below
+    // rebuilds the run whole.
+    //
+    // A typed burst coalesces into ONE undo step covering several commands.
+    // The first revert removes its own createdPtrs and re-emits; the second
+    // then finds ITS createdPtrs already gone, removes nothing, and re-emits
+    // again - leaving the first revert's objects orphaned on the page. Two
+    // characters typed mid-word undid to "Heading in a Qbigger bigger
+    // sizesize": doubled, overlapping glyphs that read as a changed font.
+    for (const ptr of run.paragraphLeafPtrs) {
+      if (!ptr) continue;
+      try {
+        m.FPDFPage_RemoveObject(page.pagePtr, ptr);
+      } catch {
+        /* best-effort - the ptr may already be gone */
+      }
+    }
+
     // PDFium has no insert-into-form-xobject API, so the truly-original
     // pointers (if they lived in a form) are gone forever.
     const revertFallback = fallbackFamilyFor(this.prevFontId ?? "");
@@ -751,7 +779,9 @@ export class EditTextCommand implements Command {
         y: line.y,
         fontSize: line.fontSize,
         fill: line.fill,
-        originalFontPtr: 0,
+        // The run's own font, not a base-14 stand-in: re-emitting an embedded
+        // face as Helvetica is what made undo look like it changed the font.
+        originalFontPtr: this.prevFontPtr,
         charSpacingPt: line.charSpacingPt,
         fallbackFamily: revertFallback,
         // Keep the run's original orientation - without this, undoing an
@@ -768,8 +798,13 @@ export class EditTextCommand implements Command {
     }
 
     run.pdfiumObjPtr = lineAnchorPtrs[0] ?? this.prevObjPtr;
-    run.fontId = fallbackFontIdFor(revertFallback);
-    run.fontSubset = false;
+    // Only claim the fallback when we actually emitted in it.
+    if (this.prevFontPtr === 0) {
+      run.fontId = fallbackFontIdFor(revertFallback);
+      run.fontSubset = false;
+    } else if (this.prevFontId !== null) {
+      run.fontId = this.prevFontId;
+    }
     run.text = this.prevText;
     run.mergedFromPtrs = [];
     run.paragraphMemberPtrs = lineAnchorPtrs;
@@ -1099,21 +1134,19 @@ export class EditTextCommand implements Command {
   ): void {
     const m = doc.module;
     // Drop everything the run still owns that this rebuild is not keeping.
+    // A coalesced burst reverts several commands in a row, each re-emitting
+    // the whole run, so the earlier reverts' objects would stay painted under
+    // the later ones (5 objects -> 15 -> 48 on four characters).
     //
-    // A burst of typing coalesces into ONE undo step, so a single Ctrl+Z
-    // reverts several EditTextCommands in a row. Each one rebuilt the whole run
-    // from its own pre-edit snapshot and cleared paragraphLineSlots, so the next
-    // revert in the chain re-emitted everything again while the previous
-    // revert's objects stayed on the page. Typing four characters and undoing
-    // once took the page from 5 text objects to 15 to 48, with the original and
-    // the edited glyphs painted on top of each other.
+    // Both lists: the paragraph path tracks paragraphLeafPtrs, the partial
+    // (split) path repoints mergedFromPtrs at what it emitted.
     const keep = new Set<number>();
     for (const line of lines) {
       for (const sr of line.subRuns) {
         if (!sr.removed && sr.ptr) keep.add(sr.ptr);
       }
     }
-    for (const ptr of run.paragraphLeafPtrs) {
+    for (const ptr of [...run.paragraphLeafPtrs, ...run.mergedFromPtrs]) {
       if (!ptr || keep.has(ptr)) continue;
       try {
         m.FPDFPage_RemoveObject(page.pagePtr, ptr);

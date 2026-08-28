@@ -347,14 +347,16 @@ test.describe("v2 editor - undo/redo restores the page bitmap", () => {
   });
 
   // BUG (found while writing this file, 2026-08-28): typing in the MIDDLE of a
-  // run - the partial-edit path that splits the run - leaves the edited glyphs
-  // painted on the page after undo. The model text reverts correctly and the
-  // undo stack goes 1 -> 0, but the raster shows the original text AND the
-  // edited text on top of each other (heading ink 9915 -> 10294 on edit ->
-  // 10736 after undo; a forced re-render does not clear it, so the PDFium page
-  // really does hold both objects). Backspace at the end of a run shows the
-  // same residue. Appending at the end (test above) is exact, so the defect is
-  // in the split/partial-edit undo, not in undo generally.
+  // run leaves the raster differing from the original even though the text is
+  // now correct. The duplicate-glyph half of this is fixed and guarded by
+  // pdf-text-editor-v2-fix-undo-duplicate-glyphs: undo no longer grows the page
+  // (5 -> 9 -> 9 objects, was 14) and no longer doubles words.
+  //
+  // What remains is structural: the revert re-EMITS the run from its text
+  // rather than restoring the original PDF objects, so a one-object heading
+  // comes back as five, with its own spacing. Measured residue after the fix is
+  // 2252 differing pixels against an edit distance of 2561. Closing it needs
+  // the apply path to preserve the originals instead of destroying them.
   test.skip("undoing a mid-word edit repaints the original glyphs without leaving the edited ones behind", async ({
     page,
   }) => {
