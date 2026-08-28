@@ -462,7 +462,11 @@ public class FormDetectionModelManager {
         applyEndpointState();
     }
 
-    public ModelStatusResponse status() {
+    /**
+     * Synchronized with the mutators: activate() flips the state before it enables the endpoint, so
+     * an unsynchronized read can report ready while /detect is still gated.
+     */
+    public synchronized ModelStatusResponse status() {
         Path dir = modelDir();
         List<String> installed = new ArrayList<>(listModelIds(dir));
         // Image-baked models count as installed even though they were never copied here.

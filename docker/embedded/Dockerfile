@@ -19,10 +19,10 @@ RUN apt-get update \
     && rm /tmp/task.deb \
     && rm -rf /var/lib/apt/lists/*
 
-# Empty by default: this image has internet, so an admin installs a model rather than every user
-# pulling ~27MB. Bake one in only if we may redistribute it, via the three FORM_DETECTION_MODEL_* args.
-ARG FORM_DETECTION_MODEL_URL=""
-ARG FORM_DETECTION_MODEL_SHA256=""
+# Bake the detection model in so the tool works out of the box (~26MB pull, 35MB on disk).
+# Only weights we may redistribute belong here; FFDetr is Apache-2.0 end to end.
+ARG FORM_DETECTION_MODEL_URL="https://huggingface.co/Frooodle/ffdetr-int8/resolve/ad3223d7c3ae25ce1d1ec8fe972c8ff7630aff45/ffdetr-int8.onnx"
+ARG FORM_DETECTION_MODEL_SHA256="de43bb39adb08459fe62fa1a7be6bfb4f2d397bb034c46055f3b8fa3d04fc8f4"
 ARG FORM_DETECTION_MODEL_ID="ffdetr"
 RUN mkdir -p /preinstalled-models \
     && if [ -n "${FORM_DETECTION_MODEL_URL}" ]; then \
