@@ -12,7 +12,7 @@ import {
   clampText,
   extractAxiosErrorMessage,
 } from "@app/services/httpErrorUtils";
-import { withBasePath } from "@app/constants/app";
+import { stripBasePath, withBasePath } from "@app/constants/app";
 
 // Module-scoped state to reduce global variable usage
 const recentSpecialByEndpoint: Record<string, number> = {};
@@ -128,7 +128,11 @@ export async function handleHttpError(error: unknown): Promise<boolean> {
       console.debug("[httpErrorHandler] 401 detected, redirecting to login");
       // Spring 302-strips the ?from= query from /login, so stash the return
       // path in sessionStorage (AuthCallback reads it after SSO round-trip).
-      const currentLocation = window.location.pathname + window.location.search;
+      // Router-relative, not browser-relative: every consumer replays this
+      // through navigate(), which re-applies the basename. Keeping the base
+      // path here yields /app/app/<tool> on a subpath deploy.
+      const currentLocation =
+        stripBasePath(window.location.pathname) + window.location.search;
       stashPostLoginRedirect(currentLocation);
       let hadStoredJwt = false;
       try {
