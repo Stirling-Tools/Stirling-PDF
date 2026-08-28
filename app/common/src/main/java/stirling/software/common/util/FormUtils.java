@@ -940,9 +940,8 @@ public class FormUtils {
     }
 
     /**
-     * With {@code onlyFields} non-null, regenerates appearances for just those fields; {@code
-     * preserveNeedAppearances} then keeps the viewer-side generation flag set for the untouched
-     * pre-existing fields that still rely on it.
+     * With {@code onlyFields} set, regenerates only those. {@code preserveNeedAppearances} keeps
+     * the viewer-side flag on for untouched fields that still rely on it.
      */
     private void ensureAppearances(
             PDAcroForm acroForm, List<PDField> onlyFields, boolean preserveNeedAppearances) {
@@ -1012,10 +1011,8 @@ public class FormUtils {
     }
 
     /**
-     * Create new AcroForm fields from a list of definitions (used by Auto Form Detection). Reuses
-     * the same field-creation and appearance logic as the rest of this class, and creates the
-     * AcroForm (with a Helvetica default resource) when the document has none. Field names are made
-     * unique against any existing fields.
+     * Create AcroForm fields from definitions, uniquifying names against existing fields. Creates
+     * the AcroForm with a Helvetica default resource when the document has none.
      */
     public void addFields(PDDocument document, List<NewFormFieldDefinition> definitions)
             throws IOException {
@@ -3718,9 +3715,8 @@ public class FormUtils {
             }
         }
 
-        // Only link a SEPARATE widget into the field; the merged widget IS the
-        // field dictionary and is already its own widget. setWidgets is what persists
-        // the /Kids link - getWidgets() alone returns a detached copy.
+        // Only link a SEPARATE widget; a merged widget is already the field dictionary.
+        // setWidgets persists the /Kids link - getWidgets() returns a detached copy.
         if (!reuseFieldDict) {
             List<PDAnnotationWidget> widgets = new ArrayList<>(field.getWidgets());
             if (!widgets.contains(widget)) {

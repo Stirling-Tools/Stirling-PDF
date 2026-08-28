@@ -19,11 +19,8 @@ RUN apt-get update \
     && rm /tmp/task.deb \
     && rm -rf /var/lib/apt/lists/*
 
-# Empty by default: this image can reach the internet, so an admin installs a detection model
-# on demand rather than every user pulling ~27MB. Only bake in weights we may redistribute:
-#   --build-arg FORM_DETECTION_MODEL_URL=... \
-#   --build-arg FORM_DETECTION_MODEL_SHA256=... \
-#   --build-arg FORM_DETECTION_MODEL_ID=ffdetr
+# Empty by default: this image has internet, so an admin installs a model rather than every user
+# pulling ~27MB. Bake one in only if we may redistribute it, via the three FORM_DETECTION_MODEL_* args.
 ARG FORM_DETECTION_MODEL_URL=""
 ARG FORM_DETECTION_MODEL_SHA256=""
 ARG FORM_DETECTION_MODEL_ID="ffdetr"

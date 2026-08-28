@@ -26,9 +26,8 @@ import stirling.software.proprietary.formdetection.inference.Yolo;
 import stirling.software.proprietary.formdetection.model.DetectedField;
 
 /**
- * End-to-end geometry check: draw a black rectangle at known user-space coordinates on pages with
- * /Rotate and a shifted crop box, render through the real PDFium rasterizer, locate the dark region
- * in the bitmap, and assert the coordinate mapper recovers the original user-space rectangle.
+ * End-to-end geometry check: render a black rectangle on rotated, crop-shifted pages through real
+ * PDFium, find it in the bitmap, and assert the mapper recovers its user-space rect.
  */
 class PageRasterizerRotationTest {
 

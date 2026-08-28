@@ -18,13 +18,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import stirling.software.proprietary.formdetection.model.ModelCatalogEntry;
 
 /**
- * Parity tests for the RF-DETR decode path.
- *
- * <p>The fixture holds real tensors captured from the exported FFDetr ONNX, together with the
- * detections the reference Python decode produced from them. That makes this a genuine parity check
- * against the model rather than a restatement of the Java code: if the Java decode forgets the
- * sigmoid, reads the no-object column as a class, or treats the boxes as pixels rather than
- * normalised, the expected values below stop matching.
+ * Parity tests for the RF-DETR decode path. The fixture holds real tensors from the exported ONNX
+ * plus the reference Python decode output, so a missing sigmoid breaks it.
  */
 class RfDetrTest {
 
@@ -159,9 +154,8 @@ class RfDetrTest {
     }
 
     /**
-     * Hand-built because the exported model never lets the no-object column win - its highest
-     * sigmoid across all 300 queries is 0.0014 - so real tensors cannot exercise this guard.
-     * Without it a dominant 4th column would yield classId 3 and index past classNames.
+     * Hand-built: the exported model never lets the no-object column win, so real tensors cannot
+     * exercise this guard. Without it a dominant 4th column indexes past classNames.
      */
     @Test
     void neverClassifiesAQueryAsTheNoObjectColumn() {

@@ -1,18 +1,10 @@
 #!/usr/bin/env python3
-"""Export the Apache-2.0 FFDetr form-field detector to the ONNX we ship.
-
-Its publisher releases only a PyTorch `.pth`, so unlike the FFDNet checkpoints there is no
-`.onnx` to point a catalogue entry at. This does the conversion they skipped. Run it once on a
-workstation or a CI job; torch is needed HERE and nowhere else - the product loads the result
-with onnxruntime alone, exactly as it loads any other model in the catalogue.
+"""Export the Apache-2.0 FFDetr detector to the ONNX we ship: int8 (~37MB) plus its fp32 source,
+printing the sha256 for model-catalog.json. torch is needed here and nowhere else.
 
     pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
     pip install rfdetr onnx onnxruntime onnxconverter-common
     python scripts/export-ffdetr-onnx.py --out build/ffdetr
-
-Emits `ffdetr-int8.onnx` (~37MB, the one to host) plus the fp32 graph it came from, and prints
-the sha256 for `model-catalog.json` and docker/embedded/Dockerfile.fat. On a form page the int8
-graph returns detections indistinguishable from fp32.
 """
 
 from __future__ import annotations
@@ -24,10 +16,8 @@ import sys
 import warnings
 from pathlib import Path
 
-# Pinned so a re-export uses the same checkpoint; bump deliberately, not incidentally. The OUTPUT
-# is not byte-reproducible - onnxruntime writes its registered opset_import domains into the graph,
-# so a different runtime version shifts the tail and the sha256. Check equivalence by running both
-# graphs on one input, not by comparing hashes; update model-catalog.json when you republish.
+# Pinned so a re-export uses the same checkpoint. The output is not byte-reproducible (opset_import
+# domains shift with the runtime), so check equivalence by running both graphs, not by hash.
 REPO = "jbarrow/FFDetr"
 REVISION = "56f4e4235e28dcb2953513dc020bb191a2f54cfe"
 CHECKPOINT_SHA256 = "f852e1bac18c8f435b82270fc8ff8e2ca4a2cd8869c411fa8f473f16e69585ef"

@@ -6,11 +6,8 @@ import {
 } from "@app/tests/helpers/api-stubs";
 
 /**
- * Stubbed coverage for the Auto Form Detection tool and its admin install panel.
- *   - the tool tile renders even when the `form-detection` endpoint is disabled
- *     (model not installed), so users can discover it,
- *   - the tile opens the tool once the endpoint reports enabled,
- *   - an admin sees the "AI Form Detection" settings section.
+ * Stubbed coverage for the tool tile (shown even when the endpoint is disabled, so the tool stays
+ * discoverable), opening it once enabled, and the admin install panel.
  */
 
 const MODEL_STATUS_NOT_INSTALLED = {

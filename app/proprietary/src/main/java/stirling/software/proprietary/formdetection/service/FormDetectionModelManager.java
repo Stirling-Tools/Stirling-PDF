@@ -45,10 +45,8 @@ import stirling.software.proprietary.formdetection.model.ModelCatalogEntry;
 import stirling.software.proprietary.formdetection.model.ModelStatusResponse;
 
 /**
- * Downloads, verifies and tracks the on-demand Auto Form Detection model. Concurrency-safe
- * (single-flight install), checksum-verified, and atomic-published to a mounted volume so the model
- * survives container restarts/updates. Mirrors the OCR tessdata admin pattern but adds the lock,
- * temp-file + atomic rename, and SHA-256 verification the spec requires.
+ * Downloads, verifies and tracks the detection model. Single-flight install, SHA-256 verified,
+ * published by atomic rename into a mounted volume so it survives container restarts.
  */
 @Slf4j
 @Service
@@ -70,9 +68,8 @@ public class FormDetectionModelManager {
     private static final int MAX_REDIRECTS = 5;
 
     /**
-     * Whether the server-side ONNX engine is bundled in this build (the onnxruntime jar is only
-     * included via {@code -PbundleOnnxRuntime=true}, e.g. the Docker server image). The frontend
-     * uses this to disable the "Server" execution mode when it isn't available.
+     * Whether the ONNX engine is bundled in this build; the jar only ships with {@code
+     * -PbundleOnnxRuntime=true}. Without it the tool cannot run at all.
      */
     private static final boolean SERVER_ENGINE_AVAILABLE = isOnnxRuntimePresent();
 
@@ -355,10 +352,8 @@ public class FormDetectionModelManager {
     }
 
     /**
-     * Tombstone marking a model an admin explicitly uninstalled, so the pre-installed seeding on
-     * the next boot does not silently resurrect it. Cleared by an explicit (re)install. The id is
-     * SAFE_ID-validated by every caller; the containment check keeps the resolve provably inside
-     * the model dir regardless.
+     * Tombstone for an admin-uninstalled model, so the next boot's seeding cannot resurrect it;
+     * cleared by a reinstall. The containment check keeps the path inside the model dir.
      */
     private Path tombstoneFor(String id) {
         Path base = modelDir().normalize();
@@ -378,10 +373,8 @@ public class FormDetectionModelManager {
     }
 
     /**
-     * Mark a verified, on-disk model as the active one and (re)enable the feature.
-     *
-     * <p>Synchronized because it runs on the install thread and writes settings, which the admin
-     * setters also do; without the shared monitor a concurrent toggle could drop one of the keys.
+     * Mark a verified on-disk model active and re-enable the feature. Synchronized because it
+     * writes settings from the install thread, where a concurrent toggle could drop a key.
      */
     private synchronized void activate(String modelId, String expectedSha) {
         clearTombstone(modelId);
@@ -401,8 +394,7 @@ public class FormDetectionModelManager {
 
     /**
      * Drop any model an engine still holds. Reinstalling the same id leaves the loaded id
-     * unchanged, so without this the engine would keep serving from the session it opened before
-     * the swap.
+     * unchanged, so without this the engine keeps serving the pre-swap session.
      */
     private void invalidateEngine() {
         engineProvider.ifAvailable(FormDetectionEngine::unload);
@@ -497,9 +489,8 @@ public class FormDetectionModelManager {
     }
 
     /**
-     * Locate an installed model by listing a directory, so the path handed to the file API comes
-     * from the directory itself and can never escape it via the supplied id. The writable model dir
-     * wins; an image-baked copy is read in place rather than duplicated into it.
+     * Locate a model by listing the directory, so the path can never escape it via the id. The
+     * writable model dir wins; an image-baked copy is read in place.
      */
     private Optional<Path> installedModelFile(String id) {
         if (StringUtils.isBlank(id) || !SAFE_ID.matcher(id).matches()) {
@@ -580,10 +571,8 @@ public class FormDetectionModelManager {
     }
 
     /**
-     * Activate an image-baked model (see {@code formDetection.preinstalledModelDir}) when nothing
-     * is active yet, so the air-gapped image works without an admin install. The file is read where
-     * the image put it - copying it into the writable model dir would store the same ~37MB twice on
-     * every running container. No-op when the dir is unset or missing (desktop/local).
+     * Activate an image-baked model when nothing is active, so the air-gapped image needs no admin
+     * install. Read in place; copying would store the same ~37MB twice per container.
      */
     private void seedPreinstalledModels() {
         Path src = preinstalledDir();

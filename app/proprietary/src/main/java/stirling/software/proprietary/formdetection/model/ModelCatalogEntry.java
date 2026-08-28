@@ -5,14 +5,8 @@ import java.util.List;
 import lombok.Data;
 
 /**
- * One installable form-detection model plus the data-driven pre/post-processing spec the inference
- * pipeline needs.
- *
- * <p>NOTE: the pipeline-spec defaults below follow common Ultralytics-YOLO conventions. The precise
- * values for a given model (input size, resize mode, channel order, output layout, NMS, class
- * indices) MUST be verified against the actual exported {@code .onnx} before that entry's {@code
- * onnxUrl}/{@code sha256} are populated. An entry with a blank {@code onnxUrl} or {@code sha256} is
- * not installable, which keeps the distribution shippable without any bundled model.
+ * One installable model plus the pre/post-processing spec its pipeline needs; verify every value
+ * against the exported {@code .onnx}. A blank {@code onnxUrl} means not installable.
  */
 @Data
 public class ModelCatalogEntry {
@@ -54,15 +48,8 @@ public class ModelCatalogEntry {
 
     // --- Post-processing (parity-critical) ---------------------------------------
     /**
-     * Which head shape the model emits, and so how its output is read.
-     *
-     * <ul>
-     *   <li>{@code yolo} - one anchor-grid tensor, boxes already in input pixels, scores already
-     *       through their activation. Described by {@link #outputLayout}/{@link #hasObjectness}.
-     *   <li>{@code rfdetr} - two named tensors, {@code dets} (normalised cxcywh) and {@code labels}
-     *       (raw logits, one column per class plus a trailing no-object slot). Query based, so
-     *       there is no anchor grid and the two fields above do not apply.
-     * </ul>
+     * Head shape, so how the output is read. {@code yolo}: one anchor-grid tensor, input pixels,
+     * activated scores. {@code rfdetr}: {@code dets} (normalised cxcywh) plus {@code labels}.
      */
     private String decoder = "yolo";
 

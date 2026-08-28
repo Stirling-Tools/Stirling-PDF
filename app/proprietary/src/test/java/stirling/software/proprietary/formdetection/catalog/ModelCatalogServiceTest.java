@@ -29,11 +29,8 @@ class ModelCatalogServiceTest {
         assertEquals(3, l.getClassFieldTypes().size());
         assertTrue(l.getInputSize() > 0);
 
-        // Model-free distribution: the jar bundles no weights, they are fetched on demand. What
-        // must never happen is downloading without a checksum to verify against, so any entry
-        // that declares a URL must also declare a SHA-256. An entry may legitimately carry
-        // neither yet - the admin panel renders it as not-installable (see `installable` in
-        // AdminFormDetectionSection) - which is how a model we have not published lands here.
+        // Weights are fetched on demand, so a URL without a SHA-256 would download unverified.
+        // Neither field set is fine: the admin panel renders that entry as not-installable.
         for (ModelCatalogEntry e : all) {
             assertNotNull(e.getOnnxUrl(), e.getId() + " must declare a URL field, even if blank");
             assertNotNull(e.getSha256(), e.getId() + " must declare a checksum");

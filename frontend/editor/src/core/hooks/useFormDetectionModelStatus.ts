@@ -39,9 +39,8 @@ const CONFIG_URL = "/api/v1/form/form-detection-model/config";
 const MODEL_URL = "/api/v1/form/form-detection-model";
 
 /**
- * Polls the Auto Form Detection model status and exposes admin install/uninstall actions.
- * Polling only runs while a download/verify is in flight. When readiness flips, the shared
- * endpoint-availability cache is invalidated so the tool tile re-enables/disables.
+ * Polls model status while an install is in flight and exposes the admin actions. Readiness flips
+ * invalidate the endpoint-availability cache so the tool tile enables/disables.
  */
 export function useFormDetectionModelStatus() {
   const queryClient = useQueryClient();

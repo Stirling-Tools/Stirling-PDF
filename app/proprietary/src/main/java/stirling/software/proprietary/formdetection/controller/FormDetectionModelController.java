@@ -23,9 +23,8 @@ import stirling.software.proprietary.formdetection.model.ModelStatusResponse;
 import stirling.software.proprietary.formdetection.service.FormDetectionModelManager;
 
 /**
- * Admin-managed lifecycle for the Auto Form Detection model. Lives under the never-gated {@code
- * form-detection-model} endpoint key so install/status stay reachable while the feature itself (the
- * {@code form-detection} detect endpoint) is disabled until a model is ready.
+ * Admin lifecycle for the detection model. Uses the never-gated {@code form-detection-model} key so
+ * install and status stay reachable while {@code form-detection} itself is disabled.
  */
 @Slf4j
 @RestController

@@ -10,9 +10,7 @@ FIELD_TYPES = {"text", "checkbox", "radio", "signature"}
 
 def _draw_form_page(c, width, height, title):
     """Draw a printed form: ruled entry boxes, checkbox squares and a signature line.
-
-    The detector works off the rendered page, so the page has to *look* like a form -
-    an AcroForm-only PDF gives it nothing to see.
+    The detector works off the rendered page, so an AcroForm-only PDF gives it nothing to see.
     """
     c.setFont("Helvetica-Bold", 16)
     c.drawString(60, height - 70, title)

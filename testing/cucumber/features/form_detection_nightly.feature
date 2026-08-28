@@ -1,9 +1,8 @@
 @nightly @proprietary @form-detection
 Feature: Auto Form Detection API Validation
 
-    # Needs the ONNX runtime bundled in and a detection model baked into the image,
-    # which only Dockerfile.fat does. behave.ini excludes @nightly; the nightly job
-    # opts back in with --tags=@nightly against that image.
+    # Needs the ONNX runtime and a baked-in model, which only Dockerfile.fat has.
+    # behave.ini excludes @nightly; the nightly job opts back in against that image.
 
     @model-status @positive
     Scenario: Model status reports a ready model and an available engine

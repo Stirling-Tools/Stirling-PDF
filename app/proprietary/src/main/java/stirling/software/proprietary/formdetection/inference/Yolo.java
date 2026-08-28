@@ -12,13 +12,8 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.proprietary.formdetection.model.ModelCatalogEntry;
 
 /**
- * Pure pre/post-processing for a YOLO-style detector, driven entirely by the {@link
- * ModelCatalogEntry} spec.
- *
- * <p>Coordinate spaces: {@code preprocess} maps the source bitmap into the model's NxN input;
- * {@code decode} reads raw model output (boxes in input-pixel space), thresholds, runs NMS, and
- * un-projects boxes back to the original bitmap-pixel space (top-left origin). Mapping to PDF
- * points is done separately by {@code CoordinateMapper}.
+ * Pre/post-processing for a YOLO-style detector, driven by the {@link ModelCatalogEntry} spec.
+ * {@code decode} yields bitmap pixels, top-left origin; CoordinateMapper maps to PDF points.
  */
 @Slf4j
 public final class Yolo {

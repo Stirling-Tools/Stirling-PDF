@@ -38,9 +38,8 @@ import stirling.software.proprietary.formdetection.render.PageRasterizer;
 import stirling.software.proprietary.formdetection.service.FormDetectionModelManager;
 
 /**
- * Server-side detection endpoint. Gated behind the {@code form-detection} endpoint key, which is
- * disabled until a model is installed (so the tool tile is greyed in the UI). Returns the shared
- * detection schema, or - when {@code applyToPdf=true} - the AcroForm-applied PDF.
+ * Detection endpoint, behind the {@code form-detection} key that is disabled until a model is
+ * installed. Returns detected fields, or the applied PDF when {@code applyToPdf=true}.
  */
 @Slf4j
 @RestController
@@ -150,9 +149,8 @@ public class FormDetectionController {
             return ResponseEntity.badRequest()
                     .body(Map.of("reason", "INVALID_PDF", "message", e.getMessage()));
         } catch (IllegalStateException e) {
-            // e.g. ONNX Runtime native unavailable for this OS/arch - report unavailable cleanly
-            // rather than a 500. Cannot happen on a normally-built jar (all platforms bundled), but
-            // keeps a slimmed/mis-targeted build from erroring.
+            // ONNX Runtime native missing for this OS/arch (a slimmed or mis-targeted build):
+            // report unavailable rather than 500.
             log.warn("Auto Form Detection inference unavailable: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
                     .body(Map.of("reason", "DEPENDENCY", "message", e.getMessage()));

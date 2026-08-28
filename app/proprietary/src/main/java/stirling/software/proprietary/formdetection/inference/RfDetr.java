@@ -9,13 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.proprietary.formdetection.model.ModelCatalogEntry;
 
 /**
- * Decoder for RF-DETR style query-based heads, as used by the Apache-2.0 FFDetr checkpoint.
- *
- * <p>Differs from {@link Yolo} in every respect that matters downstream: two output tensors instead
- * of one, a fixed set of queries instead of an anchor grid, boxes normalised to [0,1] instead of
- * input pixels, and raw logits instead of activated scores. Preprocessing is shared - {@link
- * Yolo#preprocess} already honours the spec's channel order and mean/std, which is all RF-DETR
- * needs (RGB, ImageNet normalisation).
+ * Decoder for RF-DETR query-based heads: two output tensors, fixed queries, boxes normalised to
+ * [0,1] and raw logits. Preprocessing is shared with {@link Yolo#preprocess}.
  */
 @Slf4j
 public final class RfDetr {
@@ -29,11 +24,8 @@ public final class RfDetr {
     private static final String LOGITS = "labels";
 
     /**
-     * Decode two named outputs into detections in original-bitmap pixels.
-     *
-     * <p>Outputs are looked up by name, never by position: with three classes both tensors are
-     * [300, 4] - four box values against three classes plus the no-object slot - so they cannot be
-     * told apart by shape.
+     * Decode two named outputs into detections in original-bitmap pixels. Looked up by name, never
+     * position: with three classes both tensors are [300, 4] and share a shape.
      */
     public static List<Yolo.Detection> decode(
             Map<String, Yolo.RawOutput> outputs,

@@ -6,10 +6,8 @@ import stirling.software.proprietary.formdetection.inference.Yolo;
 import stirling.software.proprietary.formdetection.model.DetectedField;
 
 /**
- * Maps a detection (rendered bitmap pixels, top-left origin) to PDF points in unrotated user space
- * (bottom-left origin, crop-box offset applied) - the space PDFBox and pdf-lib widget rectangles
- * live in. The bitmap is display space: /Rotate baked in and the crop box anchored at (0,0), so the
- * mapping is scale + Y-flip, then the inverse page rotation, then the crop-box translation.
+ * Maps bitmap pixels (top-left origin) to PDF points in unrotated user space, where widget rects
+ * live. The bitmap has /Rotate baked in: scale + Y-flip, inverse rotation, then crop.
  */
 @UtilityClass
 public class CoordinateMapper {

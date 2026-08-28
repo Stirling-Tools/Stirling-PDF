@@ -26,10 +26,8 @@ import ai.onnxruntime.OrtException;
 import ai.onnxruntime.OrtSession;
 
 /**
- * Holds the ONNX Runtime session for the active model. Lazily (re)loads when the active model
- * changes, guards session swaps with a read/write lock, and bounds concurrent inferences to limit
- * memory. The session input is NCHW float32 {@code [1,3,N,N]}; the raw output is returned as-is for
- * {@link Yolo#decode} to interpret per the model spec.
+ * Holds the ONNX Runtime session, reloading on model change under a read/write lock and capping
+ * concurrent inferences. Input is NCHW float32 {@code [1,3,N,N]}; output is raw.
  */
 @Slf4j
 @Service
@@ -48,12 +46,8 @@ public class OnnxFormDetector implements FormDetectionEngine {
     private volatile String inputName;
 
     /**
-     * Run the model and return every output tensor keyed by its graph name, in graph order.
-     *
-     * <p>Keyed by name rather than position because a query-based head emits two tensors of the
-     * SAME shape - RF-DETR's {@code dets} and {@code labels} are both [1, 300, 4] when there are
-     * three classes, since 4 box values and 3 classes + 1 no-object slot coincide. Picking by index
-     * would silently decode logits as boxes.
+     * Run the model, returning each output tensor keyed by graph name. RF-DETR's {@code dets} and
+     * {@code labels} share a shape, so an index would decode logits as boxes.
      */
     public Map<String, Yolo.RawOutput> infer(float[] chw, int inputSize) {
         ensureLoaded();
@@ -147,10 +141,8 @@ public class OnnxFormDetector implements FormDetectionEngine {
                 loadedModelId = activeId;
                 log.info("Loaded ONNX session for Auto Form Detection model '{}'", activeId);
             } catch (OrtException | RuntimeException | LinkageError e) {
-                // Native library missing/incompatible for this OS+arch (e.g. a Linux-slimmed jar
-                // run on Windows), or a model load failure. Degrade gracefully instead of letting
-                // an UnsatisfiedLinkError escape - the detect endpoint reports unavailable and the
-                // server keeps running.
+                // Native missing for this OS+arch, or the model failed to load.
+                // Swallowed so no UnsatisfiedLinkError escapes; detect reports unavailable.
                 throw new IllegalStateException(
                         "ONNX Runtime is unavailable on this platform/build: " + e.getMessage(), e);
             }

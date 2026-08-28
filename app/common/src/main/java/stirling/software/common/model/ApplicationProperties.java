@@ -457,10 +457,8 @@ public class ApplicationProperties {
         private String modelDir = "";
 
         /**
-         * Read-only dir of models baked into the image (the air-gapped image bakes one here). On
-         * startup any {@code <catalogId>.onnx} found here is activated if no model is active, so
-         * the feature works out-of-the-box. The file is read in place rather than copied into the
-         * writable model dir, so it is not stored twice. Blank (default) disables seeding.
+         * Read-only dir of image-baked models, activated on startup when none is active and read in
+         * place rather than copied. Blank disables seeding.
          */
         private String preinstalledModelDir = "";
     }

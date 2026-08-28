@@ -76,10 +76,8 @@ async function stubStatus(page: Page, overrides: StatusOverrides = {}) {
 }
 
 /**
- * Stub the server detect endpoint. The tool now posts applyToPdf=false and expects
- * JSON detections (client-side apply); return a realistic field set so the summary
- * panel and the pdf-lib apply path exercise for real. Falls back to the PDF blob
- * shape if the request asked for applyToPdf=true.
+ * Stub the detect endpoint: JSON detections for applyToPdf=false so the summary panel and the
+ * pdf-lib apply path run for real, a PDF blob otherwise.
  */
 async function stubDetect(page: Page, delayMs = 0) {
   const pdf = fs.readFileSync(SAMPLE_PDF);

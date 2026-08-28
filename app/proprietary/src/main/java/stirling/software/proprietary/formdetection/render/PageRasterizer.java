@@ -19,18 +19,8 @@ import stirling.software.jpdfium.model.PageSize;
 import stirling.software.jpdfium.model.RenderResult;
 
 /**
- * Renders PDF pages to RGBA bitmaps via JPDFium. Each page is rendered at a DPI chosen so its long
- * side is approximately the model input size, minimising any later resampling. The actual
- * pixels-per-point scale is computed from the rendered dimensions so coordinate mapping does not
- * depend on how {@code renderAt} interprets its argument.
- *
- * <p>PDFium renders the page as displayed: /Rotate baked in and the crop box anchored at (0,0). The
- * per-page rotation and crop-box origin needed to map detections back into unrotated user space are
- * not exposed by JPDFium, so they are read from PDFBox alongside the render.
- *
- * <p>Pages are handed to the caller one at a time rather than returned as a list: a rendered page
- * is several megabytes of RGBA, so holding a whole document worth of them at once is enough to
- * exhaust the heap on a large upload.
+ * Renders pages to RGBA via JPDFium at roughly the model input size, one at a time so a large
+ * document cannot exhaust the heap. Rotation and crop box come from PDFBox, not JPDFium.
  */
 @Slf4j
 @Service
