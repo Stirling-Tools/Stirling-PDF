@@ -16,6 +16,7 @@ import type {
 import { getSupabaseClient } from "@app/auth/supabase/supabaseClient";
 import { AuthContext } from "@app/auth/context";
 import { isAdminRole } from "@app/auth/roles";
+import { getApiBaseUrl } from "@app/services/apiClientConfig";
 import {
   defaultTranslate,
   type AuthContextValue,
@@ -154,14 +155,23 @@ export function SupabaseAuthProvider({
       return;
     }
     let cancelled = false;
+    // Same API base the rest of the app uses: SaaS serves the frontend and the
+    // API from different hosts, so a root-relative path never reaches /me.
+    const apiBase = (getApiBaseUrl() || "").replace(/\/+$/, "");
+    const meUrl = `${apiBase}/api/v1/auth/me`;
     const loadAccess = () => {
-      void fetch("/api/v1/auth/me", {
+      void fetch(meUrl, {
         headers: {
           Authorization: `Bearer ${token}`,
           Accept: "application/json",
         },
       })
-        .then((res) => (res.ok ? res.json() : null))
+        .then((res) => {
+          // Must throw, not resolve null: swallowing a non-ok leaves
+          // portalAccess undefined and hangs the portal gate on a spinner.
+          if (!res.ok) throw new Error(`auth/me responded ${res.status}`);
+          return res.json();
+        })
         .then(
           (
             data: {

@@ -5,6 +5,7 @@ import { supabase } from "@app/auth/supabase";
 import { Button } from "@app/ui/Button";
 import { withBasePath } from "@app/constants/app";
 import { readPendingConnect } from "@app/routes/pendingConnect";
+import { isSafePostLoginRedirect } from "@app/services/postLoginRedirect";
 import { AuthShell } from "@app/auth/ui/AuthShell";
 import ErrorMessage from "@app/auth/ui/ErrorMessage";
 import { Spinner } from "@app/ui/Spinner";
@@ -136,18 +137,16 @@ export default function AuthCallback() {
         // else on the editor.
         // Explicit `next` first, so a sign-in started for another reason is not
         // hijacked by a remembered connect request.
-        const explicitNext = url.searchParams.get("next");
+        const explicitNext =
+          url.searchParams.get("next") ?? url.searchParams.get("from");
         const pendingConnect = readPendingConnect();
-        const destination =
-          explicitNext &&
-          explicitNext.startsWith("/") &&
-          !explicitNext.startsWith("//")
-            ? explicitNext
-            : pendingConnect
-              ? `/link?request=${encodeURIComponent(pendingConnect)}`
-              : next.startsWith("/") && !next.startsWith("//")
-                ? next
-                : await resolveLandingPath();
+        const destination = isSafePostLoginRedirect(explicitNext)
+          ? explicitNext
+          : pendingConnect
+            ? `/link?request=${encodeURIComponent(pendingConnect)}`
+            : isSafePostLoginRedirect(next)
+              ? next
+              : await resolveLandingPath();
         console.log("[Auth Callback Debug] Redirecting to:", destination);
 
         setTimeout(() => navigate(destination, { replace: true }), 1500);
