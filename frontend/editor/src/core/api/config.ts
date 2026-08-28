@@ -9,7 +9,9 @@ export const DEFAULT_APP_CONFIG: AppConfig = { enableLogin: true };
 
 /** Earliest point the Processor flag is known — feed the non-hook snapshot. */
 function publishConfig(config: AppConfig): AppConfig {
-  setProcessorEnabled(config.processorEnabled === true);
+  // Only an explicit false turns it off: the 401 fallback carries no flag, and
+  // reading that as "off" would silently stop policy export enforcement.
+  setProcessorEnabled(config.processorEnabled !== false);
   return config;
 }
 

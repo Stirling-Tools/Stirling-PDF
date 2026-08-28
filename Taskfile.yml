@@ -81,20 +81,19 @@ tasks:
           BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'
           OPEN: "true"
 
-  # One task, because the two halves are one deployment shape: a backend with the
-  # Processor off served by an editor build that has no Processor code in it.
+  # The backend half is compiled in, so this only picks the editor bundle; flip
+  # ProcessorFeature.ENABLED and rebuild to move the backend with it.
   dev:editoronly:
-    desc: "Start an editor-only deployment: backend with PROCESSOR_ENABLED=false + editoronly editor"
+    desc: "Start the editoronly editor build (backend follows ProcessorFeature.ENABLED)"
     vars:
       PORTS:
         sh: '{{if eq OS "windows"}}{{.FIND_FREE_PORT_PS}} 8080 5173{{else}}{{.FIND_FREE_PORT_SH}} 8080 5173{{end}}'
       BACKEND_PORT: '{{index (splitList "\n" .PORTS) 0}}'
       FRONTEND_PORT: '{{index (splitList "\n" .PORTS) 1}}'
     deps:
-      - task: backend:dev:editoronly
+      - task: backend:dev
         vars:
           PORT: '{{.BACKEND_PORT}}'
-          # Inherited from settings.yml unless you pass SECURITY_ENABLELOGIN=true.
           SECURITY_ENABLELOGIN: '{{.SECURITY_ENABLELOGIN}}'
       - task: frontend:dev:editoronly
         vars:

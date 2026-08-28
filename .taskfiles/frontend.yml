@@ -221,7 +221,7 @@ tasks:
       - '{{if .PREVIEW}}VITE_BUILD_FOR_PREVIEW=1 {{end}}npx vite build editor --mode proprietary'
 
   build:editoronly:
-    desc: "Build for editor-only mode (no Processor; pair with PROCESSOR_ENABLED=false)"
+    desc: "Build for editor-only mode (pair with ProcessorFeature.ENABLED=false)"
     deps: [prepare]
     cmds:
       - npx vite build editor --mode editoronly

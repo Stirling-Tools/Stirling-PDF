@@ -26,7 +26,6 @@ tasks:
           AIENGINE_ENABLED: '{{.AIENGINE_ENABLED}}'
           AIENGINE_TIMEOUTSECONDS: '{{.AIENGINE_TIMEOUTSECONDS}}'
           SECURITY_ENABLELOGIN: '{{.SECURITY_ENABLELOGIN}}'
-          PROCESSOR_ENABLED: '{{.PROCESSOR_ENABLED}}'
 
   dev:proprietary:
     desc: "Start backend dev server in proprietary mode"
@@ -41,24 +40,13 @@ tasks:
       AIENGINE_ENABLED: '{{.AIENGINE_ENABLED | default "false"}}'
       AIENGINE_TIMEOUTSECONDS: '{{.AIENGINE_TIMEOUTSECONDS | default "120"}}'
       SECURITY_ENABLELOGIN: '{{.SECURITY_ENABLELOGIN | default ""}}'
-      # Empty leaves the Processor on, matching a stock install.
-      PROCESSOR_ENABLED: '{{.PROCESSOR_ENABLED | default ""}}'
     env:
       SERVER_PORT: '{{.PORT}}'
     cmds:
-      - cmd: '{{if .AIENGINE_URL}}AIENGINE_URL={{.AIENGINE_URL}} AIENGINE_ENABLED={{.AIENGINE_ENABLED}} AIENGINE_TIMEOUTSECONDS={{.AIENGINE_TIMEOUTSECONDS}} {{end}}{{if .SECURITY_ENABLELOGIN}}SECURITY_ENABLELOGIN={{.SECURITY_ENABLELOGIN}} {{end}}{{if .PROCESSOR_ENABLED}}PROCESSOR_ENABLED={{.PROCESSOR_ENABLED}} {{end}}cmd /c ".\gradlew.bat :stirling-pdf:bootRun"'
+      - cmd: '{{if .AIENGINE_URL}}AIENGINE_URL={{.AIENGINE_URL}} AIENGINE_ENABLED={{.AIENGINE_ENABLED}} AIENGINE_TIMEOUTSECONDS={{.AIENGINE_TIMEOUTSECONDS}} {{end}}{{if .SECURITY_ENABLELOGIN}}SECURITY_ENABLELOGIN={{.SECURITY_ENABLELOGIN}} {{end}}cmd /c ".\gradlew.bat :stirling-pdf:bootRun"'
         platforms: [windows]
-      - cmd: '{{if .AIENGINE_URL}}AIENGINE_URL={{.AIENGINE_URL}} AIENGINE_ENABLED={{.AIENGINE_ENABLED}} AIENGINE_TIMEOUTSECONDS={{.AIENGINE_TIMEOUTSECONDS}} {{end}}{{if .SECURITY_ENABLELOGIN}}SECURITY_ENABLELOGIN={{.SECURITY_ENABLELOGIN}} {{end}}{{if .PROCESSOR_ENABLED}}PROCESSOR_ENABLED={{.PROCESSOR_ENABLED}} {{end}}./gradlew :stirling-pdf:bootRun'
+      - cmd: '{{if .AIENGINE_URL}}AIENGINE_URL={{.AIENGINE_URL}} AIENGINE_ENABLED={{.AIENGINE_ENABLED}} AIENGINE_TIMEOUTSECONDS={{.AIENGINE_TIMEOUTSECONDS}} {{end}}{{if .SECURITY_ENABLELOGIN}}SECURITY_ENABLELOGIN={{.SECURITY_ENABLELOGIN}} {{end}}./gradlew :stirling-pdf:bootRun'
         platforms: [linux, darwin]
-
-  dev:editoronly:
-    desc: "Start backend dev server with the Processor off (editor-only deployment)"
-    cmds:
-      - task: dev:proprietary
-        vars:
-          PORT: '{{.PORT}}'
-          SECURITY_ENABLELOGIN: '{{.SECURITY_ENABLELOGIN}}'
-          PROCESSOR_ENABLED: "false"
 
   dev:bundled:
     desc: "Clean + bootRun with frontend bundled into the backend (single :8080 server)"

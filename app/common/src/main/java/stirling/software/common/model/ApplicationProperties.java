@@ -47,7 +47,6 @@ import stirling.software.common.model.oauth2.GoogleProvider;
 import stirling.software.common.model.oauth2.KeycloakProvider;
 import stirling.software.common.model.oauth2.Provider;
 import stirling.software.common.service.SsrfProtectionService.SsrfProtectionLevel;
-import stirling.software.common.util.RequestUriUtils;
 import stirling.software.common.util.ValidationUtils;
 
 @Data
@@ -82,7 +81,6 @@ public class ApplicationProperties {
     private InternalApi internalApi = new InternalApi();
     private Cluster cluster = new Cluster();
     private Policies policies = new Policies();
-    private Processor processor = new Processor();
 
     @Bean
     public PropertySource<?> dynamicYamlPropertySource(ConfigurableEnvironment environment)
@@ -115,15 +113,6 @@ public class ApplicationProperties {
         log.debug("Loaded properties: {}", propertySource.getSource());
 
         return propertySource;
-    }
-
-    /**
-     * RequestUriUtils is static (called per-request from filters), so it can't be injected. Publish
-     * the flag here, at bean init - long before any request can reach those filters.
-     */
-    @PostConstruct
-    public void publishProcessorFlag() {
-        RequestUriUtils.setProcessorEnabled(processor.isEnabled());
     }
 
     /**
@@ -213,26 +202,6 @@ public class ApplicationProperties {
              */
             private List<String> allowedExtensions = new java.util.ArrayList<>();
         }
-    }
-
-    @Data
-    public static class Processor {
-        /**
-         * Whether the Processor - policies, document sources, classification, pipelines, triggers
-         * and integrations - is available on this server. On by default wherever the proprietary
-         * module is present.
-         *
-         * <p>Turning this off yields an editor-only deployment: the Processor's beans are never
-         * created, its endpoints stop being mapped, the {@code /processor} portal is unreachable,
-         * and the editor hides every Processor affordance. Everything outside the Processor
-         * (accounts, storage, premium, audit) is untouched, which is what separates this from
-         * building the {@code core} flavour.
-         *
-         * <p>Deliberately absent from {@code settings.yml.template}: this is a deployment shape
-         * chosen once, not a setting to browse. Set it with {@code PROCESSOR_ENABLED=false} or in
-         * {@code custom_settings.yml}, which the template merge never rewrites.
-         */
-        private boolean enabled = true;
     }
 
     @Data

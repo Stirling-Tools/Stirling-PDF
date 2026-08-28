@@ -18,17 +18,18 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.StandardEnvironment;
 import org.springframework.core.type.filter.AssignableTypeFilter;
 import org.springframework.data.repository.Repository;
 
 import stirling.software.common.annotations.ConditionalOnProcessor;
+import stirling.software.common.configuration.ProcessorFeature;
 
 /**
- * Guards {@code processor.enabled}: every component under the Processor's two packages must carry
- * {@link ConditionalOnProcessor}, so an editor-only server starts none of them.
+ * Guards {@link ProcessorFeature#ENABLED}: every component under the Processor's two packages must
+ * carry {@link ConditionalOnProcessor}, so an editor-only server starts none of them.
  *
  * <p>This scans rather than hardcoding a list, so a component added later fails here instead of
  * silently shipping on a server that asked for no Processor. Anything that genuinely must survive
@@ -76,30 +77,31 @@ class ProcessorConditionalTest {
     }
 
     @Test
-    void theGateReadsProcessorEnabled() {
+    void theGateReadsTheCompileTimeConstant() {
         // The annotation is the single definition of the flag - assert its wiring directly,
         // since every other test here only asserts the annotation is present.
-        ConditionalOnProperty conditional =
-                ConditionalOnProcessor.class.getAnnotation(ConditionalOnProperty.class);
-        assertNotNull(conditional, "@ConditionalOnProcessor must be a @ConditionalOnProperty");
-        assertTrue(
-                Arrays.asList(conditional.name()).contains("processor.enabled")
-                        || Arrays.asList(conditional.value()).contains("processor.enabled"),
-                "@ConditionalOnProcessor must gate on processor.enabled");
-        assertEquals("true", conditional.havingValue(), "must require processor.enabled=true");
-        assertTrue(conditional.matchIfMissing(), "the Processor must stay on by default");
+        Conditional conditional = ConditionalOnProcessor.class.getAnnotation(Conditional.class);
+        assertNotNull(conditional, "@ConditionalOnProcessor must be a @Conditional");
+        assertEquals(
+                List.of(ProcessorFeature.class),
+                Arrays.asList(conditional.value()),
+                "@ConditionalOnProcessor must be driven by ProcessorFeature");
+        assertEquals(
+                ProcessorFeature.ENABLED,
+                new ProcessorFeature().matches(null, null),
+                "the condition must report exactly what the constant says");
     }
 
     @Test
-    void stacksWithAnotherConditionalOnProperty() {
+    void stacksWithAnotherCondition() {
         // TelegramPipelineBot carries both this gate and its own @ConditionalOnProperty. Two
-        // @ConditionalOnProperty sets on one class is subtle enough to prove rather than assume:
-        // both must have to pass, not just the last one read.
-        assertTrue(hasBean("feature.enabled=true", "processor.enabled=true"), "both on -> present");
-        assertTrue(
-                !hasBean("feature.enabled=true", "processor.enabled=false"),
-                "processor off must veto even with the feature on");
-        assertTrue(!hasBean("processor.enabled=true"), "the other condition must still apply");
+        // conditions on one class is subtle enough to prove rather than assume: both must pass.
+        assertEquals(
+                ProcessorFeature.ENABLED,
+                hasBean("feature.enabled=true"),
+                "with the feature on, presence must track the constant");
+        assertTrue(!hasBean("feature.enabled=false"), "the other condition must still apply");
+        assertTrue(!hasBean(), "an absent property must still veto");
     }
 
     /** By type, not name: a nested @Configuration gets an outer-class-qualified bean name. */
@@ -182,13 +184,9 @@ class ProcessorConditionalTest {
         return source.getLocation().getPath().replace('\\', '/').contains("/classes/java/test");
     }
 
-    /** processor.enabled=true, else the scanner's condition evaluator hides the gated classes. */
+    /** The scanner evaluates conditions; ProcessorFeature answers from the constant. */
     private static StandardEnvironment environmentWithProcessorOn() {
-        StandardEnvironment environment = new StandardEnvironment();
-        environment
-                .getPropertySources()
-                .addFirst(new MapPropertySource("test", Map.of("processor.enabled", "true")));
-        return environment;
+        return new StandardEnvironment();
     }
 
     private static Class<?> loadClass(String name) {

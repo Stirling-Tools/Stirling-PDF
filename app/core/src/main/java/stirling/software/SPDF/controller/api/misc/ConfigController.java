@@ -22,6 +22,7 @@ import stirling.software.SPDF.config.InitialSetup;
 import stirling.software.SPDF.controller.api.security.TimestampController;
 import stirling.software.common.annotations.api.ConfigApi;
 import stirling.software.common.configuration.AppConfig;
+import stirling.software.common.configuration.ProcessorFeature;
 import stirling.software.common.configuration.interfaces.ShowAdminInterface;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.ServerCertificateServiceInterface;
@@ -338,8 +339,7 @@ public class ConfigController {
             // Premium/Enterprise settings
             configData.put("premiumEnabled", applicationProperties.getPremium().isEnabled());
 
-            // Processor (policies, sources, classification). Off = editor-only server.
-            configData.put("processorEnabled", applicationProperties.getProcessor().isEnabled());
+            configData.put("processorEnabled", ProcessorFeature.ENABLED);
 
             // AI Engine settings
             ApplicationProperties.AiEngine aiEngineConfig = applicationProperties.getAiEngine();

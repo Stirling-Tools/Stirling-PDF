@@ -47,8 +47,8 @@ ENV STIRLING_FLAVOR=${STIRLING_FLAVOR}
 # Embed the admin portal app at /portal. Set true by the deploy workflow when the
 # portal or AI layers change; defaults false so normal builds skip the extra app.
 ARG BUILD_PORTAL=false
-# Vite build mode. Empty keeps the flavour-derived default; "editoronly" builds an
-# editor with no Processor code, which must be run with PROCESSOR_ENABLED=false.
+# Vite build mode. Empty keeps the flavour-derived default; "editoronly" drops the
+# Processor from the bundle and pairs with ProcessorFeature.ENABLED=false.
 ARG FRONTEND_MODE=
 
 # Bundle only the JPDFium native for this image's target arch.

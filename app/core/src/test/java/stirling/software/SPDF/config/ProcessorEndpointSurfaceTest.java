@@ -2,6 +2,7 @@ package stirling.software.SPDF.config;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -27,9 +28,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import stirling.software.common.annotations.ConditionalOnProcessor;
 
 /**
- * Guards the URL surface of {@code processor.enabled=false}: every endpoint whose path belongs to
- * the Processor must sit on a class carrying {@link ConditionalOnProcessor}, so an editor-only
- * server never maps it.
+ * Guards the URL surface of an editor-only build: every endpoint whose path belongs to the
+ * Processor must sit on a class carrying {@link ConditionalOnProcessor}, so flipping {@code
+ * ProcessorFeature.ENABLED} unmaps it.
  *
  * <p>Complements {@code ProcessorConditionalTest}, which scans the Processor's two packages. That
  * test cannot see a Processor endpoint declared elsewhere — {@code PipelineController} lives in
@@ -83,7 +84,7 @@ class ProcessorEndpointSurfaceTest {
         assertTrue(
                 offenders.isEmpty(),
                 () ->
-                        "These endpoints stay mapped with processor.enabled=false. Add"
+                        "These endpoints stay mapped on an editor-only build. Add"
                                 + " @ConditionalOnProcessor to the controller, or - if the endpoint"
                                 + " is genuinely not part of the Processor - narrow the path lists"
                                 + " in this test:\n  - "
@@ -106,6 +107,7 @@ class ProcessorEndpointSurfaceTest {
 
     @Test
     void nonProcessorEndpointsInSharedNamespacesStayMapped() throws Exception {
+        assumeTrue(proprietaryOnClasspath(), SKIP_REASON);
         // If a prefix ever swallowed one of these namespaces, editor features would vanish from an
         // editor-only server - the exact opposite of what the flag promises.
         Set<String> ungated = new TreeSet<>();
@@ -134,6 +136,7 @@ class ProcessorEndpointSurfaceTest {
 
     @Test
     void everyDeclaredProcessorPathIsActuallyClaimedBySomeController() throws Exception {
+        assumeTrue(proprietaryOnClasspath(), SKIP_REASON);
         // A prefix nobody serves means the list has drifted from the code, and the guard above
         // would pass vacuously for that entry.
         Set<String> allPaths = new LinkedHashSet<>();
@@ -156,6 +159,19 @@ class ProcessorEndpointSurfaceTest {
         assertTrue(
                 unclaimed.isEmpty(),
                 () -> "declared Processor paths that no controller maps any more: " + unclaimed);
+    }
+
+    private static final String SKIP_REASON =
+            "core flavour builds without :proprietary, so it maps none of these paths";
+
+    /** app/core/build.gradle only puts :proprietary on the classpath outside the core flavour. */
+    private static boolean proprietaryOnClasspath() {
+        try {
+            Class.forName("stirling.software.proprietary.policy.controller.PolicyController");
+            return true;
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
     }
 
     private static boolean isProcessorPath(String path) {
@@ -227,8 +243,9 @@ class ProcessorEndpointSurfaceTest {
                 controllers.add(type);
             }
         }
+        int floor = proprietaryOnClasspath() ? 40 : 20;
         assertTrue(
-                controllers.size() > 40,
+                controllers.size() > floor,
                 "scan found only " + controllers.size() + " controllers - is it wired?");
         return controllers;
     }

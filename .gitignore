@@ -25,6 +25,7 @@ watchedFolders/
 # The rule above targets the app's runtime watched-folders working dir, but it
 # also matches this frontend source component dir; keep the source tracked.
 !frontend/editor/src/proprietary/components/watchedFolders/
+!frontend/editor/src/editoronly/components/watchedFolders/
 clientWebUI/
 policy-webhook-spool/
 # Scratch dir used by local fixture-regeneration runs (see
