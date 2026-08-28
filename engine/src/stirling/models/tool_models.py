@@ -734,6 +734,9 @@ class OcrPdfParams(ApiModel):
     )
     ocr_type: OcrType = Field(..., description="Specify the OCR type, e.g., 'skip-text', 'force-ocr', or 'Normal'")
     remove_images_after: bool | None = Field(None, description="Remove images from the output PDF if set to true")
+    rotate_pages: bool | None = Field(
+        None, description="Auto-correct page orientation (90/180/270) using Tesseract OSD if set to true"
+    )
     sidecar: bool | None = Field(None, description="Include OCR text in a sidecar text file if set to true")
 
 

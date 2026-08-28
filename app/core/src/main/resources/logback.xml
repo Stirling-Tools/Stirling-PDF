@@ -15,14 +15,15 @@
         <encoder>
             <pattern>%d %p %c{1} [%thread] %m%n</pattern>
         </encoder>
-        <!-- SizeAndTimeBased: rotate daily OR every 100 MB, keep 1 day of history,
-             hard cap the appender's total disk footprint at 200 MB so a runaway
-             logger can't ever fill the disk (see GENERAL appender note). -->
+        <!-- SizeAndTime, not Time alone: the size trigger is what stops a
+             runaway logger filling the disk (see GENERAL appender note).
+             Archives are gzipped, so 64 MB of them holds far more than a
+             day. Worst case on disk is one 100 MB live file plus the cap. -->
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <fileNamePattern>${LOG_PATH}/auth-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <fileNamePattern>${LOG_PATH}/auth-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
             <maxFileSize>100MB</maxFileSize>
-            <maxHistory>1</maxHistory>
-            <totalSizeCap>200MB</totalSizeCap>
+            <maxHistory>7</maxHistory>
+            <totalSizeCap>64MB</totalSizeCap>
         </rollingPolicy>
     </appender>
 
@@ -43,10 +44,10 @@
             <pattern>%d %p %c{1} [%thread] %m%n</pattern>
         </encoder>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <fileNamePattern>${LOG_PATH}/info-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <fileNamePattern>${LOG_PATH}/info-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
             <maxFileSize>100MB</maxFileSize>
-            <maxHistory>1</maxHistory>
-            <totalSizeCap>500MB</totalSizeCap>
+            <maxHistory>7</maxHistory>
+            <totalSizeCap>256MB</totalSizeCap>
         </rollingPolicy>
     </appender>
 

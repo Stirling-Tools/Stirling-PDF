@@ -256,7 +256,7 @@ export const procurementSaasHandlers = [
       stage: "quote",
       licensed: true,
       latestQuote: quote,
-    } as never;
+    };
     return HttpResponse.json(quote);
   }),
   http.post(`${SAAS}/api/v1/procurement/trial/extend`, () => {
