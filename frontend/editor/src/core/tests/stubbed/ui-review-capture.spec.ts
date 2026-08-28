@@ -143,8 +143,6 @@ const panel = (page: Page) => page.locator('[data-tour="tool-panel"]');
 
 test.use({ autoGoto: false });
 
-/* ─── Tool surface ─────────────────────────────────────────────────── */
-
 test("tool-01-home-tile", async ({ page }) => {
   await stubStatus(page);
   await page.goto("/", { waitUntil: "domcontentloaded" });
@@ -282,8 +280,6 @@ test("tool-08-dark-results", async ({ page }) => {
   await settle(page, 1_200);
   await panel(page).screenshot({ path: shot("tool-08-dark-results") });
 });
-
-/* ─── Admin surface ────────────────────────────────────────────────── */
 
 const adminUse = {
   stubOptions: {
