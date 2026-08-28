@@ -13,3 +13,6 @@
  * Watched Folders implementation to navigate to).
  */
 export const WATCHED_FOLDERS_ENABLED: boolean = false;
+
+// Refill an empty workbench from the tab's last session (survives the editor/processor switch).
+export const WORKBENCH_SESSION_RESTORE: boolean = true;
