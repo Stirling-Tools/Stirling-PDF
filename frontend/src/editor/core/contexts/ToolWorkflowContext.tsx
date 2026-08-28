@@ -32,6 +32,7 @@ import { useNavigationUrlSync } from "@editor/hooks/useUrlSync";
 import { isAuthRoute } from "@editor/constants/routes";
 import { EDITOR_BASENAME } from "@editor/routes/editorBasename";
 import { filterToolRegistryByQuery } from "@editor/utils/toolSearch";
+import { acknowledgeToolFreshness } from "@editor/utils/toolFreshness";
 import { useToolHistory } from "@editor/hooks/tools/useUserToolActivity";
 import { markReaderModeFromPreference } from "@editor/utils/pendingReaderMode";
 import {
@@ -473,6 +474,14 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     setReaderMode,
     setLeftPanelView,
   ]);
+
+  // Opening a tool counts as seeing it: clear its New/Updated badge.
+  useEffect(() => {
+    const toolId = navigationState.selectedTool;
+    if (!toolId) return;
+    const tool = allTools[toolId];
+    if (tool) acknowledgeToolFreshness(toolId, tool);
+  }, [navigationState.selectedTool, allTools]);
 
   // Tool reset methods
   const registerToolReset = useCallback(

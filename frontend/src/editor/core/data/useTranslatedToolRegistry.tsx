@@ -375,6 +375,8 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
           "modify",
           "builder",
         ],
+        // Fill Form became a full Form Editor (create/edit/delete fields).
+        updatedInVersion: "2.15.0",
       },
       autoFormDetection: {
         icon: <Icon name="form-scan" size="1.5rem" />,
@@ -571,6 +573,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
             import("@editor/components/tools/autoRotate/AutoRotateAutomationSettings"),
         ),
         synonyms: getSynonyms(t, "autoRotate"),
+        newInVersion: "2.15.0",
       },
       split: {
         icon: <Icon name="scissors" size="1.5rem" />,
