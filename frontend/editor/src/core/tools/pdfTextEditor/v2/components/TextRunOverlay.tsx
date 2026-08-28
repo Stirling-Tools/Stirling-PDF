@@ -411,9 +411,35 @@ export function TextRunOverlay({
     ],
   );
 
+  // How the run's own text axis is rotated on the page, if it is. cos/sin come
+  // straight from the text matrix; screen y runs the other way from PDF y, so
+  // the CSS angle is the negation.
+  const runRotation = useMemo(() => {
+    const norm = Math.hypot(run.matrix.a, run.matrix.b);
+    // The run's own slant, if any. Screen y runs opposite to PDF y, so the CSS
+    // angle is the negation of the matrix angle.
+    const own = norm
+      ? -Math.atan2(run.matrix.b / norm, run.matrix.a / norm) * (180 / Math.PI)
+      : 0;
+    // Plus the page's own quarter-turns. `transform.apply` already puts the
+    // anchor in the right place on a /Rotate page, but the box was still drawn
+    // along the PAGE's x-axis while the glyphs ran down it, so a box on a
+    // /Rotate 90 page stuck up to 247px off the right-hand edge.
+    const pageDeg = ((((transform.rotate ?? 0) % 4) + 4) % 4) * 90;
+    const deg = own + pageDeg;
+    if (Math.abs(deg) < 0.01) return null;
+    return { deg };
+  }, [run.matrix.a, run.matrix.b, transform.rotate]);
+
   const heldExactRef = useRef<ExactLayout | null>(null);
   if (freshExact) heldExactRef.current = freshExact;
-  const exact = freshExact ?? (focused ? heldExactRef.current : null);
+  // An exact layout is built from per-character x positions along the PAGE's
+  // x-axis, which stop describing a run whose own axis is rotated - the box
+  // came out axis-aligned over slanted glyphs and covered 38% of its own ink.
+  // Rotated runs use the flow geometry plus a matching CSS rotation instead.
+  const exact = runRotation
+    ? null
+    : (freshExact ?? (focused ? heldExactRef.current : null));
   if (!freshExact && !focused) heldExactRef.current = null;
 
   const advanceEm = useMemo(() => charAdvancesEm(run), [run]);
@@ -868,12 +894,21 @@ export function TextRunOverlay({
         transform:
           [
             dragOffset ? `translate(${dragOffset.x}px, ${dragOffset.y}px)` : "",
+            // Turn the box with the text. Placed before scaleX so the fit still
+            // stretches along the run's own axis rather than the page's.
+            runRotation ? `rotate(${runRotation.deg}deg)` : "",
             fit.scaleX !== 1 ? `scaleX(${fit.scaleX})` : "",
           ]
             .filter(Boolean)
             .join(" ") || undefined,
-        // Scale from the run's own origin, never its centre.
-        transformOrigin: fit.scaleX !== 1 ? "0 50%" : undefined,
+        // Rotate about the text's own origin - the left end of its first
+        // baseline - which is the point the flow geometry positions. Otherwise
+        // scale from the run's own origin, never its centre.
+        transformOrigin: runRotation
+          ? `0 ${firstBaselineFromTop}px`
+          : fit.scaleX !== 1
+            ? "0 50%"
+            : undefined,
         opacity: dragging ? 0.75 : 1,
         zIndex: dragging ? 20 : undefined,
         // Only the opacity settle is animated.
@@ -911,11 +946,22 @@ export function TextRunOverlay({
                 ? "rgba(44,123,229,0.04)"
                 : "transparent",
         caretColor: toCssHex(run.fill),
-        outline: dragging
-          ? "1px dashed #2c7be5"
-          : hovered && !selected
-            ? "1px dashed rgba(44,123,229,0.5)"
-            : "1px dashed transparent",
+        // A SELECTED run keeps a ring. It used to lose the one it had while
+        // merely hovered, so selecting something removed its only crisp edge
+        // and left a 10% wash as the sole cue - close to invisible over a
+        // coloured band. A LOCKED run gets its own muted, non-dashed ring so it
+        // does not look like something you can type into.
+        outline: run.locked
+          ? hovered || selected
+            ? "1px solid rgba(120,120,120,0.55)"
+            : "1px dashed transparent"
+          : dragging || selected
+            ? "1px solid #2c7be5"
+            : hovered
+              ? "1px dashed rgba(44,123,229,0.5)"
+              : "1px dashed transparent",
+        // Locked runs are not editable, so don't offer an I-beam.
+        cursor: run.locked ? "default" : undefined,
         overflow: "hidden",
       }}
     />

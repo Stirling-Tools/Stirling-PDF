@@ -239,7 +239,13 @@ export function PageStage() {
         <ScrollArea h="100%" type="auto" data-testid="v2-stage">
           <Box
             py="lg"
-            onPointerDown={() => store.selection.clear()}
+            onPointerDown={(e) => {
+              // Shift means "extend" here (shift-click) and Ctrl/Cmd+Shift
+              // starts the marquee: neither may wipe what it is about to add
+              // to. A plain press on bare page still clears.
+              if (e.shiftKey) return;
+              store.selection.clear();
+            }}
             data-testid="v2-pages"
           >
             <Stack gap="lg" align="center">

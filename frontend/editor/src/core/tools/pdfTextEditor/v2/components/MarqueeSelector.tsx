@@ -50,8 +50,14 @@ export function MarqueeSelector({ store }: MarqueeSelectorProps) {
       if (!origin || !r) return;
       if (r.width < 3 && r.height < 3) return;
       const hits = collectRunsInRect(r);
+      // A rectangle that caught nothing leaves the selection alone rather than
+      // silently wiping it.
       if (hits.length === 0) return;
-      store.selection.selectMany(hits);
+      // Seam for an extending rectangle-select. No modifier is bound to it:
+      // the marquee already claims Ctrl/Cmd+Shift and both Ctrl-click and
+      // Shift-click already mean extend, so the gesture needs a UX decision.
+      const additive = false;
+      store.selection.selectMany(hits, additive);
     }
     // Pointer events cover mouse, pen and touch with one code path.
     window.addEventListener("pointerdown", onPointerDown);

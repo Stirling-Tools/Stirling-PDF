@@ -10,6 +10,14 @@ export async function exportToBlob(
   blob: Blob;
   filename: string;
 }> {
+  // Nothing was ever written to a page, so PDFium has nothing to contribute:
+  // handing back what we opened keeps the file byte-identical. Rewriting it
+  // changed the bytes of 8 of this suite's 10 fixtures and inflated the small
+  // ones by up to 35% - for no edit at all.
+  if (documentIsPristine(doc)) {
+    return { blob: pdfBlob(doc.openedBytes), filename: exportName(sourceName) };
+  }
+
   // A signed document is appended to rather than rewritten, so the bytes the
   // signature covers are still there and still verify for their revision.
   const incremental = documentIsSigned(doc);
@@ -30,13 +38,33 @@ export async function exportToBlob(
     }
   }
 
-  const blob = new Blob([bytes as unknown as ArrayBuffer], {
+  return { blob: pdfBlob(bytes), filename: exportName(sourceName) };
+}
+
+function pdfBlob(bytes: Uint8Array): Blob {
+  return new Blob([bytes as unknown as ArrayBuffer], {
     type: "application/pdf",
   });
-  // Derive from the opened file's name so downloads don't all collide on
-  // a generic "edited.pdf".
+}
+
+// Derive from the opened file's name so downloads don't all collide on
+// a generic "edited.pdf".
+function exportName(sourceName?: string | null): string {
   const base = (sourceName ?? "").replace(/\.pdf$/i, "").trim();
-  return { blob, filename: base ? `${base}_edited.pdf` : "edited.pdf" };
+  return base ? `${base}_edited.pdf` : "edited.pdf";
+}
+
+/**
+ * True when no page's content stream has been regenerated and none is waiting
+ * to be. `regenerated` is sticky, so this stays false for every later save in
+ * a session that has edited once - a second save can never hand back the
+ * pre-edit bytes and silently revert the first.
+ */
+function documentIsPristine(doc: EditorDocument): boolean {
+  if (doc.openedBytes.length === 0) return false;
+  return doc
+    .loadedPages()
+    .every((p) => !p.regenerated && !p.needsGenerateContent);
 }
 
 function documentIsSigned(doc: EditorDocument): boolean {

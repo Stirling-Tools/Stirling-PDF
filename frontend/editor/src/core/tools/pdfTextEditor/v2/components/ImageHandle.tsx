@@ -101,6 +101,10 @@ export function ImageHandle({
         setDragging(true);
         onSelect();
       }}
+      onResizeStart={() => {
+        if (locked) return;
+        onSelect();
+      }}
       onDragStop={(_, data) => {
         setDragging(false);
         const next = cssToPdfBounds(data.x, data.y, width, height);
@@ -136,6 +140,17 @@ export function ImageHandle({
         cursor: locked ? "default" : "move",
         // No explicit zIndex - text overlays paint on top via DOM order.
         pointerEvents: "auto",
+      }}
+      onPointerDown={(e: React.PointerEvent) => {
+        // Locked images are inert - the press belongs to the stage.
+        if (locked) return;
+        // Ctrl/Cmd+Shift+drag is the marquee gesture - let it reach the stage.
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey) return;
+        // The resize handles are children of this root and sit ~10px outside
+        // it, so without this their pointerdown reaches the stage's
+        // "empty space clears" handler and deselects mid-resize.
+        e.stopPropagation();
+        onSelect();
       }}
       onClick={(e: React.MouseEvent) => {
         e.stopPropagation();

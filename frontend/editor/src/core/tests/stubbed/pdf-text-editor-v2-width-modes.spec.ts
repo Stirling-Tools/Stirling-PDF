@@ -191,7 +191,9 @@ for (const which of ["single", "paragraph"] as const) {
       ).toBe(before!.modelLines);
     });
 
-    test("keeps the same size across blur and re-focus", async ({ page }) => {
+    test("Grow keeps the same size across blur and re-focus", async ({
+      page,
+    }) => {
       test.setTimeout(180_000);
       await open(page, "grow");
       const found = await pickRun(page, which);
@@ -262,7 +264,9 @@ for (const which of ["single", "paragraph"] as const) {
       ).toBeGreaterThan(before!.modelLines);
     });
 
-    test("keeps the same size across blur and re-focus", async ({ page }) => {
+    test("Wrap keeps the same size across blur and re-focus", async ({
+      page,
+    }) => {
       test.setTimeout(180_000);
       await open(page, "wrap");
       const found = await pickRun(page, which);

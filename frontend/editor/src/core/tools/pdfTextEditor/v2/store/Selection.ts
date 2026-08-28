@@ -77,8 +77,21 @@ export class Selection {
     this.set({ runIds: [], imageIds: [imageId], caret: null });
   }
 
-  selectMany(runIds: string[]): void {
-    this.set({ runIds: [...runIds], imageIds: [], caret: null });
+  /**
+   * Replace the selection with `runIds`, or union them into it when additive
+   * (an extending rectangle-select). Additive keeps order, dedupes, and leaves
+   * any selected images alone.
+   */
+  selectMany(runIds: string[], additive = false): void {
+    if (!additive) {
+      this.set({ runIds: [...runIds], imageIds: [], caret: null });
+      return;
+    }
+    const merged = [...this.state.runIds];
+    for (const id of runIds) {
+      if (!merged.includes(id)) merged.push(id);
+    }
+    this.set({ ...this.state, runIds: merged, caret: null });
   }
 
   subscribe(listener: (s: SelectionState) => void): () => void {

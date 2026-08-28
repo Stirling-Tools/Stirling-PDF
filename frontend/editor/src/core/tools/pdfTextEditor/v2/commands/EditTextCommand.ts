@@ -1097,6 +1097,31 @@ export class EditTextCommand implements Command {
     lines: RebuildLine[],
     fallbackFamily: string,
   ): void {
+    const m = doc.module;
+    // Drop everything the run still owns that this rebuild is not keeping.
+    //
+    // A burst of typing coalesces into ONE undo step, so a single Ctrl+Z
+    // reverts several EditTextCommands in a row. Each one rebuilt the whole run
+    // from its own pre-edit snapshot and cleared paragraphLineSlots, so the next
+    // revert in the chain re-emitted everything again while the previous
+    // revert's objects stayed on the page. Typing four characters and undoing
+    // once took the page from 5 text objects to 15 to 48, with the original and
+    // the edited glyphs painted on top of each other.
+    const keep = new Set<number>();
+    for (const line of lines) {
+      for (const sr of line.subRuns) {
+        if (!sr.removed && sr.ptr) keep.add(sr.ptr);
+      }
+    }
+    for (const ptr of run.paragraphLeafPtrs) {
+      if (!ptr || keep.has(ptr)) continue;
+      try {
+        m.FPDFPage_RemoveObject(page.pagePtr, ptr);
+      } catch {
+        /* best-effort - the ptr may already be gone */
+      }
+    }
+
     const orderedLive: number[] = [];
     const lineAnchors: number[] = [];
     const anchorFs: number[] = [];

@@ -36,6 +36,7 @@ import RotateLeftIcon from "@mui/icons-material/RotateLeftOutlined";
 import RotateRightIcon from "@mui/icons-material/RotateRightOutlined";
 import FlipIcon from "@mui/icons-material/FlipOutlined";
 import OpenInNewIcon from "@mui/icons-material/OpenInNewOutlined";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   parseCssColor,
@@ -136,6 +137,9 @@ export function Toolbar({
   disabled,
 }: ToolbarProps) {
   const { t } = useTranslation();
+  // Mantine only closes the fill picker's dropdown on blur, and it is
+  // portalled over the page - so we drive it and close it on a commit.
+  const [fillPickerOpen, setFillPickerOpen] = useState(false);
   const imageDisabled = disabled || !hasImageSelection;
   // Vertical aligns + distribute need 2+ objects. Horizontal aligns also
   // accept a single multi-line paragraph (aligns its lines to each other).
@@ -197,12 +201,19 @@ export function Toolbar({
         w={72}
         min={4}
         max={144}
-        value={state.fontSize ?? 12}
+        // Blank rather than a made-up number when the runs disagree, but still
+        // editable: typing a size is how you make a mixed selection uniform.
+        value={state.mixed.fontSize ? "" : (state.fontSize ?? 12)}
+        placeholder={
+          state.mixed.fontSize
+            ? t("pdfTextEditorV2.fontPicker.mixed", "Mixed")
+            : undefined
+        }
         onChange={(value) => {
           const next = typeof value === "number" ? value : Number(value);
           if (Number.isFinite(next) && next > 0) onChangeFontSize(next);
         }}
-        disabled={disabled || !hasRunSelection || state.fontSize === null}
+        disabled={disabled || !hasRunSelection}
         aria-label={t("pdfTextEditorV2.toolbar.fontSize", "Font size")}
         data-testid="v2-font-size"
       />
@@ -210,9 +221,41 @@ export function Toolbar({
         size="xs"
         w={132}
         value={fillHex}
+        // Blur re-emits the last valid colour, which re-applied the fill AFTER
+        // an undo. The input is controlled, so there is nothing to fix up.
+        fixOnBlur={false}
         onChange={(next) => {
           if (!next) return;
-          if (parseCssColor(next)) onChangeFill(next);
+          const rgb = parseCssColor(next);
+          if (!rgb) return;
+          // Re-emitting the applied colour must not cost a second undo step.
+          // Mixed fills (state.fill null) still apply - that unifies them.
+          if (
+            state.fill &&
+            rgb.r === state.fill.r &&
+            rgb.g === state.fill.g &&
+            rgb.b === state.fill.b
+          ) {
+            return;
+          }
+          onChangeFill(next);
+        }}
+        // Drag end, swatch click or a committed hex - the deliberate pick.
+        onChangeEnd={() => setFillPickerOpen(false)}
+        onFocus={() => setFillPickerOpen(true)}
+        onClick={() => setFillPickerOpen(true)}
+        onBlur={() => setFillPickerOpen(false)}
+        onKeyDown={(event) => {
+          // The dropdown's own Escape handler never sees the key - focus stays
+          // in the input - so dismiss it here.
+          if (event.key === "Escape" || event.key === "Enter") {
+            setFillPickerOpen(false);
+          }
+        }}
+        popoverProps={{
+          opened: fillPickerOpen,
+          onChange: setFillPickerOpen,
+          transitionProps: { transition: "fade", duration: 0 },
         }}
         // Enabled for MIXED fills (state.fill null) on purpose: picking a
         // colour is the only way to unify a multi-colour selection.

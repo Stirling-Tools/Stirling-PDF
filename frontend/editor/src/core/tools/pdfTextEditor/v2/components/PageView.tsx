@@ -47,6 +47,20 @@ interface PageViewProps {
   ) => void;
 }
 
+// Nearest scrolling ancestor, or null when the page scrolls with the document.
+// IntersectionObserver clips a target against every scrolling ancestor BEFORE
+// root/rootMargin are applied, so a document-rooted observer can never see past
+// the stage's ScrollArea and its rootMargin is dead. Rooting at the scroller
+// itself is what makes the prefetch margin real.
+function nearestScrollRoot(el: HTMLElement): HTMLElement | null {
+  for (let node = el.parentElement; node; node = node.parentElement) {
+    const style = getComputedStyle(node);
+    const overflow = `${style.overflowY} ${style.overflowX}`;
+    if (/auto|scroll|overlay/.test(overflow)) return node;
+  }
+  return null;
+}
+
 // One PDF page: a PDFium-rendered bitmap plus an HTML overlay layer with one
 // positioned, editable element per text run.
 export function PageView({
@@ -116,7 +130,7 @@ export function PageView({
           setNearViewport(entry.isIntersecting);
         }
       },
-      { rootMargin: "800px" },
+      { root: nearestScrollRoot(el), rootMargin: "800px" },
     );
     observer.observe(el);
     return () => observer.disconnect();
