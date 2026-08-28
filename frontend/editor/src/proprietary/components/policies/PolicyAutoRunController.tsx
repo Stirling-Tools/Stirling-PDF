@@ -1,5 +1,5 @@
 import { usePolicyAutoRun } from "@app/components/policies/usePolicyAutoRun";
-import { useClassificationPolicy } from "@app/components/policies/useClassificationPolicy";
+import { usePolicyLocalPasses } from "@app/components/policies/usePolicyLocalPasses";
 
 /**
  * Headless controller that drives policy auto-run (enforce every enabled policy
@@ -7,9 +7,9 @@ import { useClassificationPolicy } from "@app/components/policies/useClassificat
  * regardless of whether the policy panel is visible. Renders nothing.
  */
 export function PolicyAutoRunController() {
-  // File-producing policies and their chain.
+  // Server-dispatched, file-producing policies and their chain.
   usePolicyAutoRun();
-  // The Classification policy, which runs itself: local pass, then AI escalation when unsure.
-  useClassificationPolicy();
+  // Policies with a browser-side fast path (e.g. classification's heuristic), run generically.
+  usePolicyLocalPasses();
   return null;
 }

@@ -1,8 +1,9 @@
 /**
- * Everything specific to the built-in Classification policy, in one module. The generic policy
- * runner dispatches and chains only file-producing policies (see {@link orderedRewritingCategories});
- * classification runs itself - local heuristic first, escalating an unsure verdict to the AI - so the
- * runner never learns it has two ways to run. A second annotating policy is a change here, not there.
+ * Everything specific to the built-in Classification policy, in one module. The generic policy runner
+ * dispatches and chains only file-producing policies (see {@link orderedRewritingCategories}), and the
+ * generic local-pass engine runs whatever browser-side fast path a policy declares. Classification's
+ * fast path (its heuristic) lives in classificationLocalPass; the capability answers below let the
+ * generic engines treat it without naming it. A second annotating policy is a change here, not there.
  *
  * These are still keyed on the category id rather than a property each policy declares. That is
  * deliberate for now: policies are becoming pipelines with labels behind a separate enforcement
@@ -33,6 +34,14 @@ export function policyRewritesDocument(categoryId: string): boolean {
 /** Whether a completed run is expected to deliver output files (annotators deliver labels). */
 export function policyDeliversOutputFiles(categoryId: string): boolean {
   return policyRewritesDocument(categoryId);
+}
+
+/**
+ * Whether the policy's server run needs the AI engine. The local-pass engine skips dispatching such
+ * a run when the engine is off - there is nothing to escalate to, and the local verdict stands.
+ */
+export function policyRequiresAiEngine(categoryId: string): boolean {
+  return isClassificationCategory(categoryId);
 }
 
 /** Order annotating policies last; everything else keeps the order it was given. */

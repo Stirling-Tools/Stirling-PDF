@@ -124,14 +124,14 @@ vi.mock("@app/services/classificationMeter", () => ({
 }));
 
 import { usePolicyAutoRun } from "@app/components/policies/usePolicyAutoRun";
-import { useClassificationPolicy } from "@app/components/policies/useClassificationPolicy";
+import { usePolicyLocalPasses } from "@app/components/policies/usePolicyLocalPasses";
 import {
   usePolicyRuns,
   resetPolicyRuns,
 } from "@app/components/policies/policyRunStore";
 import type { PolicyRunRecord } from "@app/components/policies/policyRunStore";
 
-// Run idle callbacks immediately so the classification hook's batches start without timer waits.
+// Run idle callbacks immediately so the local-pass engine's batches start without timer waits.
 vi.stubGlobal("requestIdleCallback", (cb: () => void) => {
   cb();
   return 1;
@@ -142,12 +142,15 @@ vi.stubGlobal("cancelIdleCallback", () => {});
 let latestRuns: PolicyRunRecord[] = [];
 function Harness() {
   usePolicyAutoRun();
-  useClassificationPolicy();
+  usePolicyLocalPasses();
   latestRuns = usePolicyRuns();
   return null;
 }
 
 function replaceInWorkspace(inputIds: string[], outputIds: string[]) {
+  // A versioned output inherits its input's classification verdict, exactly as the real CONSUME_FILES
+  // reducer does - so a label put on the upload rides forward without re-classifying the output.
+  const donor = mocks.workspace.find((s) => inputIds.includes(s.id));
   mocks.workspace = mocks.workspace
     .filter((s) => !inputIds.includes(s.id))
     .concat(
@@ -155,6 +158,8 @@ function replaceInWorkspace(inputIds: string[], outputIds: string[]) {
         id,
         name: "doc.pdf",
         derivedFromTool: true,
+        classificationLabels: donor?.classificationLabels,
+        classificationConfidence: donor?.classificationConfidence,
       })),
     );
 }
@@ -335,19 +340,18 @@ describe("policy auto-run — 61-file batch through a Security → Classificatio
     await act(async () => {
       await vi.waitFor(
         () => {
-          const imported = latestRuns.filter((r) => r.imported).length;
-          expect(imported).toBe(FILE_COUNT);
+          const security = latestRuns.filter(
+            (r) => r.categoryId === "security" && r.imported,
+          );
+          expect(security).toHaveLength(FILE_COUNT);
         },
         { timeout: 8000, interval: 20 },
       );
     });
 
     // Security's versions went to STORAGE, never re-added to the workbench, so the
-    // workspace stays empty. Classification needs the file in the workbench to tag,
-    // so a closed file is left unclassified rather than re-opened.
-    expect(latestRuns.filter((r) => r.categoryId === "security")).toHaveLength(
-      FILE_COUNT,
-    );
+    // workspace stays empty. (Classification may have tagged the few files still open
+    // when the workbench was cleared; the point here is the runner does not re-open them.)
     expect(mocks.workspace).toHaveLength(0);
     expect(mocks.consumeSilentCalls).toBe(0);
     expect(mocks.persistCalls).toBeGreaterThan(0);

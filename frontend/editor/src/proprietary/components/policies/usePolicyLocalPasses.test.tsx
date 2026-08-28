@@ -87,7 +87,7 @@ vi.mock("@app/services/classificationMeter", () => ({
   meterClassificationRun: (payload: unknown) => mocks.meter(payload),
 }));
 
-import { useClassificationPolicy } from "@app/components/policies/useClassificationPolicy";
+import { usePolicyLocalPasses } from "@app/components/policies/usePolicyLocalPasses";
 
 // Run idle callbacks immediately so batches start without timer waits.
 vi.stubGlobal("requestIdleCallback", (cb: () => void) => {
@@ -105,7 +105,7 @@ const stub = (id: string, extra: Partial<TestStub> = {}): TestStub => ({
 
 const fakeFile = (id: string) => new File([id], `${id}.pdf`);
 
-describe("useClassificationPolicy delivery", () => {
+describe("usePolicyLocalPasses delivery", () => {
   beforeEach(() => {
     localStorage.clear();
     resetPolicyRuns();
@@ -132,7 +132,7 @@ describe("useClassificationPolicy delivery", () => {
       labels: [file.name.startsWith("a") ? "invoice" : "resume"],
     }));
 
-    renderHook(() => useClassificationPolicy());
+    renderHook(() => usePolicyLocalPasses());
 
     await waitFor(() =>
       expect(mocks.updateStirlingFileStub).toHaveBeenCalledTimes(2),
@@ -155,7 +155,7 @@ describe("useClassificationPolicy delivery", () => {
     );
     mocks.workspace = [stub("a")];
 
-    const { rerender } = renderHook(() => useClassificationPolicy());
+    const { rerender } = renderHook(() => usePolicyLocalPasses());
     await waitFor(() => expect(mocks.classify).toHaveBeenCalledTimes(1));
 
     // A new upload mid-classify re-fires the effect and cancels the in-flight
@@ -183,7 +183,7 @@ describe("useClassificationPolicy delivery", () => {
     mocks.workspace = [stub("plain")];
     mocks.classify.mockResolvedValue({ labels: [] });
 
-    renderHook(() => useClassificationPolicy());
+    renderHook(() => usePolicyLocalPasses());
 
     await waitFor(() =>
       expect(mocks.updateStirlingFileStub).toHaveBeenCalledWith("plain", {
@@ -200,7 +200,7 @@ describe("useClassificationPolicy delivery", () => {
     mocks.workspace = [stub("lost")];
     mocks.classify.mockResolvedValue({ labels: ["bank-statement"] });
 
-    renderHook(() => useClassificationPolicy());
+    renderHook(() => usePolicyLocalPasses());
 
     await waitFor(() =>
       expect(mocks.updateStirlingFileStub).toHaveBeenCalledWith("lost", {
@@ -217,7 +217,7 @@ describe("useClassificationPolicy delivery", () => {
     mocks.workspace = [stub("corrupt")];
     mocks.classify.mockRejectedValue(new Error("bad pdf"));
 
-    renderHook(() => useClassificationPolicy());
+    renderHook(() => usePolicyLocalPasses());
 
     await waitFor(() =>
       expect(warn).toHaveBeenCalledWith(
@@ -239,7 +239,7 @@ describe("useClassificationPolicy delivery", () => {
     mocks.workspace = [stub("early")];
     mocks.classify.mockResolvedValue({ labels: ["invoice"] });
 
-    const { rerender } = renderHook(() => useClassificationPolicy());
+    const { rerender } = renderHook(() => usePolicyLocalPasses());
     await new Promise((r) => setTimeout(r, 50));
     expect(mocks.classify).not.toHaveBeenCalled();
 
@@ -260,7 +260,7 @@ describe("useClassificationPolicy delivery", () => {
       stub("verdict", { classificationLabels: [] }),
     ];
 
-    renderHook(() => useClassificationPolicy());
+    renderHook(() => usePolicyLocalPasses());
 
     // Nothing to classify; give the (immediate) idle path a beat to prove it.
     await new Promise((r) => setTimeout(r, 50));
@@ -275,7 +275,7 @@ describe("useClassificationPolicy delivery", () => {
       confidence: "low",
     });
 
-    renderHook(() => useClassificationPolicy());
+    renderHook(() => usePolicyLocalPasses());
 
     await waitFor(() =>
       expect(mocks.runPolicyOnFile).toHaveBeenCalledWith(
@@ -283,7 +283,6 @@ describe("useClassificationPolicy delivery", () => {
         "backend-classification",
         "a",
         "a.pdf",
-        false, // an upload, not a chained output
       ),
     );
     // The local verdict is still delivered before escalation.
@@ -301,7 +300,7 @@ describe("useClassificationPolicy delivery", () => {
       confidence: "high",
     });
 
-    renderHook(() => useClassificationPolicy());
+    renderHook(() => usePolicyLocalPasses());
 
     await waitFor(() =>
       expect(mocks.updateStirlingFileStub).toHaveBeenCalledWith("a", {
@@ -320,7 +319,7 @@ describe("useClassificationPolicy delivery", () => {
       confidence: "none",
     });
 
-    renderHook(() => useClassificationPolicy());
+    renderHook(() => usePolicyLocalPasses());
 
     await waitFor(() =>
       expect(mocks.updateStirlingFileStub).toHaveBeenCalledWith("a", {
@@ -342,7 +341,7 @@ describe("useClassificationPolicy delivery", () => {
       confidence: "low",
     });
 
-    renderHook(() => useClassificationPolicy());
+    renderHook(() => usePolicyLocalPasses());
 
     // Give the (immediate) idle path a beat to prove it stays silent.
     await new Promise((r) => setTimeout(r, 50));
