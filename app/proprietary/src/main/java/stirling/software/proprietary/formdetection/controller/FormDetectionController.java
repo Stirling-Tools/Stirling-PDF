@@ -109,13 +109,13 @@ public class FormDetectionController {
             for (DetectedField f : detections) {
                 defs.add(toDefinition(f));
             }
-            FormUtils.addFields(document, defs);
+            List<FormUtils.CreatedField> written = FormUtils.addFields(document, defs);
             ResponseEntity<Resource> pdf =
                     WebResponseUtils.pdfDocToWebResponse(
                             document, baseName(file) + ".pdf", tempFileManager);
             return ResponseEntity.status(pdf.getStatusCode())
                     .headers(pdf.getHeaders())
-                    .header(SUMMARY_HEADER, summaryHeader(detections))
+                    .header(SUMMARY_HEADER, summaryHeader(written))
                     .body(pdf.getBody());
         } catch (IOException e) {
             log.debug("Auto Form Detection could not apply fields: {}", e.getMessage());
@@ -155,17 +155,20 @@ public class FormDetectionController {
                 null);
     }
 
-    /** Compact JSON of what was added; a header keeps it to one request and one inference. */
-    private String summaryHeader(List<DetectedField> detections) {
+    /**
+     * Compact JSON of the fields actually written, so the panel cannot over-report ones that
+     * addFields skipped, and reports the type each ended up as rather than the detected one.
+     */
+    private String summaryHeader(List<FormUtils.CreatedField> written) {
         Map<String, Integer> byType = new LinkedHashMap<>();
         TreeSet<Integer> pages = new TreeSet<>();
-        for (DetectedField f : detections) {
+        for (FormUtils.CreatedField f : written) {
             byType.merge(f.type(), 1, Integer::sum);
-            pages.add(f.page());
+            pages.add(f.pageIndex());
         }
         return objectMapper.writeValueAsString(
                 Map.of(
-                        "total", detections.size(),
+                        "total", written.size(),
                         "byType", byType,
                         "pagesWithFields", pages.size()));
     }

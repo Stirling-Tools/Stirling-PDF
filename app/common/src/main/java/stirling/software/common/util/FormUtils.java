@@ -1014,11 +1014,12 @@ public class FormUtils {
      * Create AcroForm fields from definitions, uniquifying names against existing fields. Creates
      * the AcroForm with a Helvetica default resource when the document has none.
      */
-    public void addFields(PDDocument document, List<NewFormFieldDefinition> definitions)
-            throws IOException {
+    public List<CreatedField> addFields(
+            PDDocument document, List<NewFormFieldDefinition> definitions) throws IOException {
         if (document == null || definitions == null || definitions.isEmpty()) {
-            return;
+            return List.of();
         }
+        List<CreatedField> created = new ArrayList<>();
         PDDocumentCatalog documentCatalog = document.getDocumentCatalog();
         PDAcroForm acroForm = documentCatalog.getAcroForm();
         boolean priorNeedAppearances =
@@ -1087,10 +1088,11 @@ public class FormUtils {
                         uniqueName,
                         definition,
                         definition.options());
-                PDField created = acroForm.getField(uniqueName);
-                if (created != null) {
-                    createdFields.add(created);
+                PDField field = acroForm.getField(uniqueName);
+                if (field != null) {
+                    createdFields.add(field);
                     createdButtons.add(Map.entry(uniqueName, definition));
+                    created.add(new CreatedField(handler.typeName(), pageIndex));
                 }
             } catch (Exception e) {
                 log.warn("Failed to create detected field '{}': {}", uniqueName, e.getMessage());
@@ -1100,7 +1102,11 @@ public class FormUtils {
         applyButtonAppearances(document, acroForm, createdButtons);
         // Refresh only what we added; regenerating pre-existing fields could alter their look.
         ensureAppearances(acroForm, createdFields, priorNeedAppearances);
+        return List.copyOf(created);
     }
+
+    /** A field that was actually written, with the type it ended up as after any coercion. */
+    public record CreatedField(String type, int pageIndex) {}
 
     public String filterSingleChoiceSelection(
             String selection, List<String> allowedOptions, String fieldName) {

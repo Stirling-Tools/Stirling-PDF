@@ -1,8 +1,4 @@
-export type DetectionStage =
-  | { kind: "starting" }
-  | { kind: "uploading" }
-  | { kind: "applying" }
-  | { kind: "done" };
+export type DetectionStage = { kind: "detecting" } | { kind: "done" };
 
 export interface DetectionSummary {
   total: number;

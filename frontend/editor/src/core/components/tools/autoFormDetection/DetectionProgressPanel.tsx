@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
-import { Stack, Text } from "@mantine/core";
+import { Group, Loader, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { ProgressBar } from "@app/ui/ProgressBar";
 import { DetectionStage, onStage } from "@app/services/formDetection/progress";
 
 export default function DetectionProgressPanel({
@@ -19,42 +18,19 @@ export default function DetectionProgressPanel({
 
   if (!active || !stage || stage.kind === "done") return null;
 
-  let value = 0.05;
-  let label = t(
-    "autoFormDetection.progress.starting",
-    "Preparing detection...",
-  );
-
-  switch (stage.kind) {
-    case "uploading":
-      value = 0.35;
-      label = t(
-        "autoFormDetection.progress.uploading",
-        "Analyzing your document...",
-      );
-      break;
-    case "applying":
-      value = 0.9;
-      label = t(
-        "autoFormDetection.progress.applying",
-        "Building fillable fields...",
-      );
-      break;
-    case "starting":
-      value = 0.05;
-      label = t(
-        "autoFormDetection.progress.starting",
-        "Preparing detection...",
-      );
-      break;
-  }
-
+  // Detection is one request of unknown length, so a spinner is honest where a percentage
+  // would have to be invented.
   return (
     <Stack gap={6} mx="md" mt="sm">
-      <ProgressBar value={value} label={label} />
-      <Text size="xs" c="dimmed">
-        {label}
-      </Text>
+      <Group gap={8} wrap="nowrap">
+        <Loader size="xs" />
+        <Text size="xs" c="dimmed">
+          {t(
+            "autoFormDetection.progress.detecting",
+            "Analyzing your document...",
+          )}
+        </Text>
+      </Group>
     </Stack>
   );
 }

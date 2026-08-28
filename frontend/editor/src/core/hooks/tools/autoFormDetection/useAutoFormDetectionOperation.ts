@@ -47,18 +47,22 @@ async function processAutoFormDetection(
   const file = files[0];
 
   try {
-    emitStage({ kind: "starting" });
-    emitStage({ kind: "uploading" });
+    emitStage({ kind: "detecting" });
     const res = await apiClient.post(
       DETECT_ENDPOINT,
       buildAutoFormDetectionFormData(parameters, file),
       { responseType: "blob" },
     );
 
-    emitStage({ kind: "applying" });
     const summary = parseSummary(res.headers?.["x-stirling-detected-fields"]);
     if (summary) {
       emitSummary(summary);
+    } else {
+      // Not fatal - the PDF is still correct - but the results panel needs the header, so a
+      // proxy that drops it turns into a silently missing summary without this.
+      console.warn(
+        "[AutoFormDetection] no X-Stirling-Detected-Fields header; skipping the results summary",
+      );
     }
     return { files: [asPdf(res.data as Blob, file)] };
   } finally {

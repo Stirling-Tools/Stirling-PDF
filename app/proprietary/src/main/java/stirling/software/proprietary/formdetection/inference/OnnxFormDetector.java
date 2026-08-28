@@ -54,11 +54,18 @@ public class OnnxFormDetector implements UnloadableModel {
         concurrency.acquireUninterruptibly();
         lock.readLock().lock();
         try {
+            // Re-read under the lock: an uninstall between ensureLoaded and here closes the
+            // session, and dereferencing it then would be a 500 rather than the usual 503.
+            OrtSession current = session;
+            String input = inputName;
+            if (current == null || input == null) {
+                throw new IllegalStateException("Model was unloaded while the request was running");
+            }
             OrtEnvironment env = OrtEnvironment.getEnvironment();
             long[] shape = {1, 3, inputSize, inputSize};
             try (OnnxTensor tensor = OnnxTensor.createTensor(env, FloatBuffer.wrap(chw), shape);
                     OrtSession.Result results =
-                            session.run(Collections.singletonMap(inputName, tensor))) {
+                            current.run(Collections.singletonMap(input, tensor))) {
                 Map<String, Yolo.RawOutput> outputs = new LinkedHashMap<>();
                 for (Map.Entry<String, OnnxValue> entry : results) {
                     outputs.put(entry.getKey(), toRawOutput(entry.getKey(), entry.getValue()));

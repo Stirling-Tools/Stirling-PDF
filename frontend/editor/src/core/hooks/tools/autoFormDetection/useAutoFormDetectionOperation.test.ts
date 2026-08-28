@@ -13,6 +13,7 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
+import { expectConsole } from "@app/tests/failOnConsole";
 import apiClient from "@app/services/apiClient";
 import { onSummary } from "@app/services/formDetection/progress";
 import { autoFormDetectionOperationConfig } from "@app/hooks/tools/autoFormDetection/useAutoFormDetectionOperation";
@@ -24,7 +25,12 @@ function pdfFile(): File {
   return new File(["%PDF-1.4 dummy"], "doc.pdf", { type: "application/pdf" });
 }
 
-function respond(headers: Record<string, string> = {}) {
+const SUMMARY =
+  '{"total":11,"byType":{"text":8,"checkbox":3},"pagesWithFields":1}';
+
+function respond(
+  headers: Record<string, string> = { "x-stirling-detected-fields": SUMMARY },
+) {
   (apiClient.post as Mock).mockResolvedValue({
     data: new Blob(["%PDF-1.4 applied"]),
     headers,
@@ -59,10 +65,7 @@ describe("processAutoFormDetection", () => {
   });
 
   it("publishes the summary the server reported", async () => {
-    respond({
-      "x-stirling-detected-fields":
-        '{"total":11,"byType":{"text":8,"checkbox":3},"pagesWithFields":1}',
-    });
+    respond({ "x-stirling-detected-fields": SUMMARY });
     const seen: unknown[] = [];
     const stop = onSummary((s) => seen.push(s));
 
@@ -75,6 +78,7 @@ describe("processAutoFormDetection", () => {
   });
 
   it("still returns the PDF when the summary header is missing or malformed", async () => {
+    expectConsole.warn(/no X-Stirling-Detected-Fields header/);
     respond({ "x-stirling-detected-fields": "not json" });
     const seen: unknown[] = [];
     const stop = onSummary((s) => seen.push(s));

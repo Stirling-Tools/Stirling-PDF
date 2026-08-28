@@ -2115,9 +2115,7 @@ text = "Text fields"
 failed = "An error occurred while detecting form fields."
 
 [autoFormDetection.progress]
-applying = "Building fillable fields..."
-starting = "Preparing detection..."
-uploading = "Analyzing your document..."
+detecting = "Analyzing your document..."
 
 [autoFormDetection.results]
 title = "Review fillable PDF"
