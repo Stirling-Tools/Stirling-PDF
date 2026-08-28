@@ -84,8 +84,7 @@ public class PaygTeamExtensions implements Serializable {
      * TeamBillingContext.periodStart}. {@code null} or older than the current period start means
      * the counter is stale and reads as a full grant.
      *
-     * <p>Written only by the app: the period rule needs the team's Stripe subscription, so SQL
-     * cannot stamp this.
+     * <p>Written only by the app, which owns the period rule.
      */
     @Column(name = "free_units_period_start")
     private LocalDateTime freeUnitsPeriodStart;
