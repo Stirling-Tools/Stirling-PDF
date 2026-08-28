@@ -92,7 +92,9 @@ function taskCommand() {
   for (const candidate of candidates) {
     if (existsSync(candidate)) return { command: candidate, shell: false };
   }
-  return { command: process.platform === "win32" ? "task.cmd" : "task", shell: process.platform === "win32" };
+  // "task" rather than "task.cmd": only an npm install ships a .cmd, and scoop or
+  // winget put task.exe on PATH, which the shell resolves through PATHEXT anyway.
+  return { command: "task", shell: process.platform === "win32" };
 }
 
 function run() {
