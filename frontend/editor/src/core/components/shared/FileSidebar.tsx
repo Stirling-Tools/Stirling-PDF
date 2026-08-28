@@ -11,7 +11,6 @@ import { ActionIcon } from "@app/ui/ActionIcon";
 import { NavSurface } from "@app/ui/NavSurface";
 import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
 import { useFileState, useFileActions } from "@app/contexts/file/fileHooks";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useGoogleDrivePicker } from "@app/hooks/useGoogleDrivePicker";
@@ -177,7 +176,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       null,
     );
 
-    const navigate = useNavigate();
     const { config } = useAppConfig();
     const {
       isEnabled: isGoogleDriveEnabled,
@@ -1078,7 +1076,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                 data-testid="my-files-button"
                 onClick={() => {
                   if (collapsed && onToggleCollapse) onToggleCollapse();
-                  navigate("/files");
+                  navActions.setWorkbench("myFiles");
                 }}
                 role="button"
                 tabIndex={0}
@@ -1086,7 +1084,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault();
-                    navigate("/files");
+                    navActions.setWorkbench("myFiles");
                   }
                 }}
               >
@@ -1190,7 +1188,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                     <ActionIcon
                       variant="quiet"
                       className="file-sidebar-section-btn file-sidebar-section-btn-external"
-                      onClick={() => navigate("/files")}
+                      onClick={() => navActions.setWorkbench("myFiles")}
                       title={t(
                         "fileSidebar.openFileManager",
                         "Browse all files & folders",
@@ -1287,7 +1285,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                             fullWidth
                             justify="between"
                             className="file-sidebar-view-all"
-                            onClick={() => navigate("/files")}
+                            onClick={() => navActions.setWorkbench("myFiles")}
                             rightSection={
                               <KeyboardArrowRightIcon
                                 sx={{ fontSize: "1rem" }}

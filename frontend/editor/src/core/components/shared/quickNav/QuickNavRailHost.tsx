@@ -105,7 +105,14 @@ export function QuickNavRailHost() {
       icon: (
         <LocalIcon icon="folder-outline-rounded" width={SIZE} height={SIZE} />
       ),
-      onClick: () => go("/files"),
+      // Through the app where possible: the library is a view, not a route. From the
+      // processor there is no editor to ask, so the path carries it and HomePage
+      // seeds the view on arrival.
+      onClick: () => {
+        const show = host?.actions.current?.showFileLibrary;
+        if (show) show();
+        else go("/files");
+      },
     },
     {
       id: "reader",
