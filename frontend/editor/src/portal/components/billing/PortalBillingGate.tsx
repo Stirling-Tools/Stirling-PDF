@@ -14,15 +14,13 @@ import type { Wallet } from "@portal/api/billing";
  * came from. The nav does not send anyone here in that state (see the sidebar's requiresLink), so
  * this is the backstop for a typed URL or an old bookmark.
  *
- * <p>The Usage page must not render while unconnected, which it used to. Two things went wrong.
- * It is a page about an account this instance does not have, so dismissing the dialog stranded the
- * admin on it; and {@link onWalletLoaded} reports {@code linked} as a fact, so a wallet read that
- * happened to succeed — the browser can hold a SaaS session with no link between it and this
- * server — flipped the whole portal to linked.
+ * <p>The Usage page must not render while unconnected, for two reasons. It is a page about an
+ * account this instance does not have, so dismissing the dialog would strand the admin on it; and
+ * {@link onWalletLoaded} reports {@code linked} as a fact, so a wallet read that happens to succeed
+ * (the browser can hold a SaaS session with no link between it and this server) would flip the
+ * whole portal to linked.
  *
- * <p>It also maps the page's callbacks onto the link dimension: the wallet's subscription status
- * refines the plan badge, and a lapsed SaaS session re-opens the re-auth. That keeps the "link"
- * concept entirely out of the Usage page. The SaaS build shadows this with a passthrough.
+ * <p>Mapping the page's callbacks here is what keeps the "link" concept out of the Usage page.
  */
 export function PortalBillingGate() {
   const applyLinkFacts = useApplyLinkFacts();

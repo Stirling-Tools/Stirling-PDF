@@ -3,7 +3,6 @@ import { Navigate } from "react-router-dom";
 import { useConnectGate } from "@portal/hooks/useConnectGate";
 
 interface Props {
-  /** The gated page. */
   children: ReactNode;
   /** Where to send someone who cannot open it yet, e.g. the list this builder belongs to. */
   fallback: string;
