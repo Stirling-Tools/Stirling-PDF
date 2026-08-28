@@ -141,7 +141,7 @@ beforeEach(() => {
     outputs: [{ fileId: "backend-out-0", fileName: "doc.pdf" }],
   });
 
-  // Classification now dispatches its own AI run (see useClassificationPolicy); this suite exercises
+  // Classification now dispatches its own AI run (see usePolicyLocalPasses); this suite exercises
   // the auto-run engine's generic import/label-stamping path, so seed a completed classification run
   // for it to pick up rather than driving a dispatch.
   recordRunStart({

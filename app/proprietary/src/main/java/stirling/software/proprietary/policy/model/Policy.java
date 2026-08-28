@@ -87,7 +87,6 @@ public record Policy(
         return inputs.stream().map(PipelineInput::sourceId).toList();
     }
 
-    /** The distinct trigger types configured across this policy's inputs (manual inputs aside). */
     /**
      * The moment this policy fires in the editor ("upload" / "export"), or empty when the editor
      * does not run it. Legacy blobs are lifted onto {@link EditorConfig} when they are read.
@@ -96,6 +95,7 @@ public record Policy(
         return editor.allowed() ? Optional.of(editor.runOn()) : Optional.empty();
     }
 
+    /** The distinct trigger types configured across this policy's inputs (manual inputs aside). */
     public List<String> triggerTypes() {
         return inputs.stream()
                 .map(PipelineInput::trigger)
