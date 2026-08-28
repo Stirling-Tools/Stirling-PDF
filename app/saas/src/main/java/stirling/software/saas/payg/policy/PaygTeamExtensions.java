@@ -73,8 +73,8 @@ public class PaygTeamExtensions implements Serializable {
 
     /**
      * Free documents left in the team's current billing period, reset to the policy's {@code
-     * free_tier_units} at each boundary (see {@link #freeUnitsPeriodStart}). Maintained by the
-     * charge pipeline. This counter, not the wallet ledger, is the source of truth for the grant.
+     * free_tier_units} at each boundary (see {@link #freeUnitsPeriodStart}). This counter, not the
+     * wallet ledger, is the source of truth for the grant.
      */
     @Column(name = "free_units_remaining", nullable = false)
     private Long freeUnitsRemaining = 0L;
@@ -82,9 +82,8 @@ public class PaygTeamExtensions implements Serializable {
     /**
      * The billing period {@link #freeUnitsRemaining} was last reset for, always a {@code
      * TeamBillingContext.periodStart}. {@code null} or older than the current period start means
-     * the counter is stale and reads as a full grant.
-     *
-     * <p>Written only by the app, which owns the period rule.
+     * the counter is stale and reads as a full grant. Written only by the app, which owns the
+     * period rule.
      */
     @Column(name = "free_units_period_start")
     private LocalDateTime freeUnitsPeriodStart;

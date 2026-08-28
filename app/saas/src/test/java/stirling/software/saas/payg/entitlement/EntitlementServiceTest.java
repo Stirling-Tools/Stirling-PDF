@@ -96,7 +96,6 @@ class EntitlementServiceTest {
 
         assertThat(snap.periodCapUnits()).isEqualTo(2000L);
         assertThat(snap.periodSpendUnits()).isEqualTo(500L);
-        // 500/2000 = 25% — FULL
         assertThat(snap.state()).isEqualTo(EntitlementState.FULL);
     }
 

@@ -132,10 +132,7 @@ public class PaygWalletController {
                 Objects.requireNonNull(prepaidBundleService, "prepaidBundleService");
     }
 
-    // ---------------------------------------------------------------------------------------
-    // GET /wallet — the single FE fetch
-    // ---------------------------------------------------------------------------------------
-
+    /** The single wallet fetch the frontend makes; every figure on the Plan page comes from it. */
     @GetMapping("/wallet")
     @PreAuthorize("isAuthenticated()")
     @Transactional(readOnly = true)
@@ -327,10 +324,7 @@ public class PaygWalletController {
         };
     }
 
-    // ---------------------------------------------------------------------------------------
-    // PATCH /cap — leader-only, cap is application-layer, no Stripe call
-    // ---------------------------------------------------------------------------------------
-
+    /** Leader-only. The cap is enforced in the application layer; Stripe is never called. */
     @PatchMapping("/cap")
     @PreAuthorize("isAuthenticated()")
     @Transactional
@@ -394,10 +388,6 @@ public class PaygWalletController {
     /** Request body for {@link #updateCap}. */
     public record UpdateCapRequest(@Min(0) int capUsd, boolean noCap) {}
 
-    // ---------------------------------------------------------------------------------------
-    // POST /wallet/refresh — drop the caller's cached snapshot so the next read is fresh
-    // ---------------------------------------------------------------------------------------
-
     /**
      * Drops the caller's team snapshot + billing cache so the next {@code GET /wallet} reflects a
      * billing state that just changed out-of-band. The subscription flip is written by a Postgres
@@ -419,10 +409,6 @@ public class PaygWalletController {
                 .ifPresent(m -> entitlementService.invalidate(m.getTeam().getId()));
         return ResponseEntity.noContent().build();
     }
-
-    // ---------------------------------------------------------------------------------------
-    // Helpers
-    // ---------------------------------------------------------------------------------------
 
     private Optional<TeamMembership> primaryMembership(Long userId) {
         List<TeamMembership> rows = memberRepo.findPrimaryMembership(userId);

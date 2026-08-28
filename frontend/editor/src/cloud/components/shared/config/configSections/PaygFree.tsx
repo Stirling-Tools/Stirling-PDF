@@ -46,8 +46,6 @@ import {
   type FreeSnapshot,
 } from "@app/components/shared/config/configSections/usageMeters";
 
-// ─── Editor plan card (always-free tools only) ────────────────────────────
-
 interface EditorPlanCardProps {
   /** Role pill text on the right. */
   pill: string;
@@ -91,8 +89,6 @@ function EditorPlanCard({ pill, leader }: EditorPlanCardProps) {
     </div>
   );
 }
-
-// ─── Processor plan card (two-column: pitch + benefits | meter + CTA) ──────
 
 interface ProcessorCardProps {
   snap: FreeSnapshot;
@@ -206,8 +202,6 @@ function ProcessorCard({ snap, isLeader, onTurnOn }: ProcessorCardProps) {
   );
 }
 
-// ─── Free LEADER ──────────────────────────────────────────────────────────
-
 export interface PaygFreeLeaderProps {
   /**
    * Called when the user finishes the {@link UpgradeModal} checkout flow.
@@ -263,8 +257,6 @@ function PaygFreeLeaderInner({ onUpgraded }: PaygFreeLeaderProps = {}) {
     </div>
   );
 }
-
-// ─── Free MEMBER ──────────────────────────────────────────────────────────
 
 function PaygFreeMemberInner() {
   useRenderCount("PaygFreeMember");

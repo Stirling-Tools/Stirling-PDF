@@ -213,18 +213,13 @@ public class JobChargeService {
     }
 
     /**
-     * Draw this job's free portion from the team's grant for the current billing period,
-     * atomically, and return the units taken (0..{@code units}); the remainder is the paid portion
-     * that will be metered to Stripe. Runs inside {@code openProcess}'s transaction with a
-     * pessimistic row lock so concurrent same-team charges split the grant exactly — no two jobs
-     * can both claim the last free unit. The grant is a soft floor: it never goes below 0, and the
-     * single job that crosses the boundary takes whatever's left (its remaining units bill).
-     * Skipped for non-billable / team-less calls (BYPASSED never reaches openProcess; guarded
-     * defensively).
+     * Units of {@code units} drawn from the team's grant for the current period; the remainder is
+     * metered to Stripe. The grant is a soft floor, so the job crossing the boundary takes what is
+     * left and bills the rest.
      *
-     * <p>Also the only place the period reset is persisted, under that same lock. Period and grant
-     * size come from the cached billing context (both stable across a period); only the balance is
-     * read from the locked row, so the split stays exact.
+     * <p>Also the only writer of the period reset. Both happen under {@code openProcess}'s row
+     * lock, against the balance on the locked row rather than the cached context, so concurrent
+     * same-team charges cannot both claim the last free unit.
      */
     private int consumeFreeGrant(ChargeContext ctx, int units) {
         BillingCategory category = ctx.billingCategory();
@@ -258,12 +253,10 @@ public class JobChargeService {
     }
 
     /**
-     * Return {@code units} to the team's free grant after a refund, capped at one period's grant.
-     * Takes the same row lock as {@link #consumeFreeGrant} rather than a blind increment, because
-     * the cap applies against the balance as it stands.
-     *
-     * <p>The cap only bites when a refund lands after its charge's period ended: the balance has
-     * already reset to a full grant, and adding the old units on top would over-credit the team.
+     * Return {@code units} to the team's free grant, capped at one period's grant. The cap only
+     * bites when a refund lands after its charge's period ended, where the balance has already
+     * reset and adding the old units would over-credit the team. Locks rather than incrementing
+     * blindly because the cap applies against the balance as it stands.
      */
     private void restoreFreeGrant(Long teamId, int units) {
         Optional<PaygTeamExtensions> extOpt = teamExtensionsRepository.findByIdForUpdate(teamId);
@@ -599,9 +592,7 @@ public class JobChargeService {
             return;
         }
 
-        // Paid portion = units beyond the team's free grant, fixed at charge time. The free grant
-        // is app-side only (Stripe's Prices are plain per-unit, no free tier), so the free units
-        // were already withheld when this row's free_units_consumed was set.
+        // Free units are withheld app-side at charge time; Stripe's Prices carry no free tier.
         int freeConsumed = row.getFreeUnitsConsumed() == null ? 0 : row.getFreeUnitsConsumed();
         int bundleConsumed =
                 row.getBundleUnitsConsumed() == null ? 0 : row.getBundleUnitsConsumed();

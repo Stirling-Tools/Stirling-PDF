@@ -1177,8 +1177,6 @@ class JobChargeServiceTest {
         return row;
     }
 
-    // --- helpers --------------------------------------------------------------------------------
-
     private static PricingPolicy stubPolicy(int minCharge, Map<JobSource, Integer> stepLimits) {
         PricingPolicy p = new PricingPolicy();
         p.setId(42L);

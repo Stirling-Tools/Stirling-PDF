@@ -4,15 +4,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
- * One team's billing facts, composed by {@link TeamBillingService}. Two separate pools, both
- * measured over the same window:
- *
- * <ul>
- *   <li>the <b>free grant</b> ({@link #freeGrantUnits} per period, {@link #freeRemainingUnits} left
- *       in this one) — gates an un-subscribed team and decides the free-vs-paid split of every job;
- *   <li>the <b>billing window</b> ({@link #periodStart}/{@link #periodEnd}) and the optional
- *       spending cap ({@link #monthlyCapDocUnits}) — govern the subscribed invoice + cap only.
- * </ul>
+ * One team's billing facts, composed by {@link TeamBillingService}. The free grant and the spending
+ * cap are separate pools measured over one window.
  *
  * @param subscribed team has a live PAYG subscription — i.e. {@code payg_subscription_id} is set.
  *     Cleared by {@code payg_unlink_subscription} on cancellation, so a cancelled team reads false.

@@ -30,16 +30,8 @@ import stirling.software.saas.payg.wallet.WalletPolicy;
  * entitlement hot path and the wallet endpoint read from here, so what the customer sees is what
  * the guard enforces.
  *
- * <p>Two separate pools, both measured over the same period window:
- *
- * <ul>
- *   <li><b>Free grant</b> — per team, per period. Size from {@code pricing_policy.free_tier_units};
- *       balance from {@code payg_team_extensions.free_units_remaining}, read through {@link
- *       #remainingForPeriod}. Gates un-subscribed teams and drives the free-vs-paid split.
- *   <li><b>Period window + cap</b> — the Stripe subscription period (calendar month otherwise) and
- *       the optional money cap. Govern the subscribed invoice + spending cap only. The per-document
- *       rate is the synced {@code stripe.prices.unit_amount} (PAYG prices are plain per-unit).
- * </ul>
+ * <p>The free grant and the spending cap are separate pools measured over one window: the Stripe
+ * subscription period when subscribed, the calendar month otherwise.
  *
  * <p>Cached per team for {@value #CACHE_TTL_SECONDS}s. {@code EntitlementService.invalidate}
  * cascades into {@link #invalidate(Long)} so both caches drop together on cap edits / webhooks.
@@ -142,8 +134,8 @@ public class TeamBillingService {
                         .orElseGet(TeamBillingService::calendarMonthWindow);
 
         long freeGrant = resolveGrant(teamId);
-        // Not the raw counter: the charge pipeline persists the period reset lazily, so a team that
-        // has run nothing since the boundary would otherwise read as last period's exhausted.
+        // The reset is persisted lazily by the charge pipeline, so the raw counter still reads as
+        // last period's for a team that has run nothing since the boundary.
         long freeRemaining =
                 extOpt.map(
                                 ext ->
@@ -190,7 +182,6 @@ public class TeamBillingService {
                 monthlyCapDocUnits);
     }
 
-    /** The per-period grant size — the "N" denominator; the counter is the balance within it. */
     private long resolveGrant(Long teamId) {
         try {
             PricingPolicy policy = pricingPolicyService.getEffectivePolicy(teamId);
@@ -287,10 +278,8 @@ public class TeamBillingService {
 
     /**
      * The team's free balance for the period starting at {@code currentPeriodStart}: a full grant
-     * when the counter is stale (its reset is owed but not yet written), the counter otherwise.
-     *
-     * <p>The single rule for that decision, shared by the reads here and the decrement in {@code
-     * JobChargeService}, so displayed and enforced balances can't diverge.
+     * when the counter is stale, the counter otherwise. Shared with the decrement in {@code
+     * JobChargeService} so displayed and enforced balances cannot diverge.
      */
     public static long remainingForPeriod(
             LocalDateTime stampedPeriodStart,
@@ -303,7 +292,6 @@ public class TeamBillingService {
         return storedRemaining == null ? 0L : Math.max(0L, storedRemaining);
     }
 
-    /** True when the stamp belongs to an earlier period, so a reset is owed. */
     public static boolean isStale(
             LocalDateTime stampedPeriodStart, LocalDateTime currentPeriodStart) {
         return currentPeriodStart != null

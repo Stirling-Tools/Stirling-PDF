@@ -74,9 +74,9 @@ public class PricingPolicy implements Serializable {
     private Integer fileUnitCap = 1000;
 
     /**
-     * Free document grant a team gets each billing period; {@code 0} (default) means none. Unused
-     * units do not carry over. This is the size, not the balance: {@code
-     * payg_team_extensions.free_units_remaining} is reset to it at each period boundary.
+     * Free document grant a team gets each billing period; {@code 0} (default) means none. The
+     * size, not the balance: {@code payg_team_extensions.free_units_remaining} is reset to it at
+     * each period boundary and does not carry over.
      */
     @Column(name = "free_tier_units", nullable = false)
     private Long freeTierUnits = 0L;

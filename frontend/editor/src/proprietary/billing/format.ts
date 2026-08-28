@@ -88,8 +88,6 @@ export function formatPeriodDate(
   }
 }
 
-// ─── Prepaid bundle pricing (run-based brain) ───────────────────────────────
-
 /**
  * "12 months for the price of 10" — months granted vs paid. Mirrors the Stripe
  * coupon (10/12 off), so the calculator's live estimate matches the amount charged.

@@ -157,11 +157,8 @@ public class EntitlementService {
             snapshotSpend = periodSpend;
             snapshotCap = cap;
         } else {
-            // Unsubscribed: gate on this period's free grant, then on a prepaid pool. While the
-            // grant has balance, the warn/degrade band is used-of-grant. Once it's spent, a live
-            // prepaid pool keeps the team fully entitled: paid-for capacity is usable on its own
-            // merit, independent of any subscription. Only when both are exhausted do billable
-            // categories hard-stop.
+            // A prepaid pool outranks an exhausted grant: paid-for capacity is usable on its own
+            // merit, with no subscription. Only with both gone do billable categories hard-stop.
             long grant = billing.freeGrantUnits();
             long remaining = billing.freeRemainingUnits();
             long used = Math.max(0L, grant - remaining);
