@@ -37,6 +37,7 @@ export interface QuickNavHostActions {
   /** The editor reads its tool from the URL only on mount. */
   selectTool?: (toolId: ToolId) => void;
   setReaderMode?: (on: boolean) => void;
+  showFileLibrary?: () => void;
   toggleNotifications?: () => void;
   goToDefaultState?: () => void;
   requestNavigation?: (go: () => void) => void;

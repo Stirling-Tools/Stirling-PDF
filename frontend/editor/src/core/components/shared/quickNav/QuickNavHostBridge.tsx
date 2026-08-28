@@ -22,6 +22,7 @@ export interface QuickNavHostBridgeProps {
   requestNavigation?: (go: () => void) => void;
   onGoToDefaultState?: () => void;
   onSelectTool?: (toolId: ToolId) => void;
+  onShowFileLibrary?: () => void;
   /** Merged over the reasons worked out here, for what only the app can see. */
   toolReasons?: QuickNavToolReasons;
 }
@@ -34,6 +35,7 @@ export function QuickNavHostBridge({
   onOpenSettings,
   requestNavigation,
   onSelectTool,
+  onShowFileLibrary,
   onGoToDefaultState,
   toolReasons,
 }: QuickNavHostBridgeProps) {
@@ -67,6 +69,7 @@ export function QuickNavHostBridge({
       requestNavigation,
       selectTool: onSelectTool,
       setReaderMode: onSetReaderMode,
+      showFileLibrary: onShowFileLibrary,
       goToDefaultState: onGoToDefaultState,
       toggleNotifications: () => setNotificationsOpen((open) => !open),
     },

@@ -27,7 +27,6 @@ import { isApplyingRestoredView } from "@app/services/workbenchSession";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useLocation, useNavigate } from "react-router-dom";
 import AppsIcon from "@mui/icons-material/AppsRounded";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
 
 import RightSidebar from "@app/components/tools/RightSidebar";
@@ -57,7 +56,6 @@ import {
 } from "@app/contexts/FilesPageContext";
 import { useFolders } from "@app/contexts/FolderContext";
 import { useFileHandler } from "@app/hooks/useFileHandler";
-import { FolderTreePanel } from "@app/components/filesPage/FolderTreePanel";
 import type { FileSidebarProps } from "@app/components/shared/FileSidebar";
 
 import { Button } from "@app/ui/Button";
@@ -223,20 +221,20 @@ export default function HomePage() {
   // Clean slate: no tool, out of the file library and reading.
   const goToDefaultState = useCallback(() => {
     handleBackToTools();
-    if (location.pathname.startsWith("/files")) navigate(EDITOR_BASENAME);
     actions.setWorkbench(getDefaultWorkbenchForFileCount(activeFiles.length));
-  }, [
-    handleBackToTools,
-    location.pathname,
-    navigate,
-    actions,
-    activeFiles.length,
-  ]);
+  }, [handleBackToTools, actions, activeFiles.length]);
 
-  // Sync the /files* URL into the workbench state so the file manager view
-  // takes over the workbench area when the user lands on it. This is the
-  // only state-of-truth for the active workbench, so keep the URL pinned.
+  // The library is a view like the viewer and the file editor: which view is on screen
+  // is state, the path says which folder you are in. Each side moves the other on a
+  // transition only - asserting either every render is what let the path re-impose
+  // "myFiles" a render after anything else had set a view.
+
+  // Path moved, so the path is the cause: arrival, back/forward, or a deliberate
+  // navigate. Mount included, which is what seeds a deep link.
+  const syncedPathRef = useRef<string | null>(null);
   useEffect(() => {
+    if (syncedPathRef.current === location.pathname) return;
+    syncedPathRef.current = location.pathname;
     if (location.pathname.startsWith("/files")) {
       if (navigationState.workbench !== "myFiles") {
         actions.setWorkbench("myFiles");
@@ -245,34 +243,26 @@ export default function HomePage() {
       navigationState.workbench === "myFiles" &&
       !isApplyingRestoredView()
     ) {
-      // The URL no longer supports the file manager - drop back to a sensible default. Stays a
-      // state check rather than a transition one: HomePage remounts without NavigationContext
-      // (a share link, a login bounce), and the view has to be corrected on arrival too.
       // Skipped mid-restore, which is reopening a recorded view onto files still loading.
-      actions.setWorkbench(activeFiles.length > 1 ? "fileEditor" : "viewer");
+      actions.setWorkbench(getDefaultWorkbenchForFileCount(activeFiles.length));
     }
-  }, [
-    location.pathname,
-    navigationState.workbench,
-    actions,
-    activeFiles.length,
-  ]);
+    // Deliberately not keyed on the workbench: this reacts to the path only.
+  }, [location.pathname, actions, activeFiles.length]);
 
-  // Auto-collapse the FileSidebar while on /files; restore the user's persisted
-  // preference on leave. Auto-collapse doesn't write to storage so deep-linking
-  // to /files won't overwrite what the user actually chose.
-  const prevWorkbenchRef = useRef(navigationState.workbench);
+  // View moved, so the path follows. Pushed, not replaced, so Back leaves the library.
+  const wasInLibraryRef = useRef(navigationState.workbench === "myFiles");
   useEffect(() => {
-    const prev = prevWorkbenchRef.current;
-    const curr = navigationState.workbench;
-    if (curr === "myFiles" && prev !== "myFiles") {
-      if (!fileSidebarCollapsed) setFileSidebarCollapsed(true);
-    } else if (curr !== "myFiles" && prev === "myFiles") {
-      setFileSidebarCollapsed(readPersistedSidebarCollapsed());
+    const inLibrary = navigationState.workbench === "myFiles";
+    if (inLibrary === wasInLibraryRef.current) return;
+    wasInLibraryRef.current = inLibrary;
+    const onFilesPath = location.pathname.startsWith("/files");
+    if (inLibrary && !onFilesPath) {
+      navigate("/files");
+    } else if (!inLibrary && onFilesPath) {
+      navigate(EDITOR_BASENAME);
     }
-    prevWorkbenchRef.current = curr;
-    // fileSidebarCollapsed read as snapshot on transition only.
-  }, [navigationState.workbench]);
+  }, [navigationState.workbench, location.pathname, navigate]);
+
   // Imperative, so the toggle still works while reading. Never persisted: not a preference.
   const prevReaderModeRef = useRef(readerMode);
   useEffect(() => {
@@ -525,6 +515,7 @@ export default function HomePage() {
         onSetReaderMode={setReaderMode}
         onGoToDefaultState={goToDefaultState}
         onSelectTool={handleToolSelect}
+        onShowFileLibrary={() => actions.setWorkbench("myFiles")}
         toolReasons={quickNavToolReasons}
       />
       <FilesPageProvider>
@@ -710,30 +701,14 @@ export default function HomePage() {
             bg="var(--c-bg)"
           >
             <div className="workspace-frame">
-              <MyFilesAwareFileSidebar
+              <FolderAwareFileSidebar
                 ref={quickAccessRef}
                 accountHoisted
-                toggleAriaLabel={
-                  navigationState.workbench === "myFiles"
-                    ? t("fileSidebar.leaveMyFiles", "Leave File library")
-                    : undefined
-                }
-                toggleIcon={
-                  navigationState.workbench === "myFiles" ? (
-                    <ArrowBackIcon />
-                  ) : undefined
-                }
-                active={navigationState.workbench === "myFiles"}
-                // Forced: a deep link to /files has no transition to collapse on.
-                collapsed={
-                  navigationState.workbench === "myFiles" ||
-                  fileSidebarCollapsed
-                }
+                collapsed={fileSidebarCollapsed}
                 onToggleCollapse={handleSidebarToggle}
                 onOpenSettings={() => setConfigModalOpen(true)}
               />
             </div>
-            <FolderTreePanel active={navigationState.workbench === "myFiles"} />
             <Workbench />
             {!hideToolPanel && <RightSidebar />}
             <FileManager selectedTool={selectedTool} />
@@ -748,29 +723,15 @@ export default function HomePage() {
   );
 }
 
-interface MyFilesAwareFileSidebarProps extends FileSidebarProps {
-  active: boolean;
-}
-
-/** Wraps FileSidebar with /files-aware overrides when `active`. */
-const MyFilesAwareFileSidebar = forwardRef<
-  HTMLDivElement,
-  MyFilesAwareFileSidebarProps
->(function MyFilesAwareFileSidebar(props, ref) {
-  const { active, ...rest } = props;
-  if (!active) {
-    return <FileSidebar ref={ref} {...rest} />;
-  }
-  return <MyFilesSidebarOverrides ref={ref} {...rest} />;
-});
-
-const MyFilesSidebarOverrides = forwardRef<HTMLDivElement, FileSidebarProps>(
-  function MyFilesSidebarOverrides(props, ref) {
+/** Uploads land in the folder you have open, and New folder sits with the tree. */
+const FolderAwareFileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
+  function FolderAwareFileSidebar(props, ref) {
     const { t } = useTranslation();
     const filesPage = useFilesPage();
     const folders = useFolders();
     const { addFiles } = useFileHandler();
 
+    const browsingLibrary = useNavigationState().workbench === "myFiles";
     const handleUpload = useCallback(
       async (files: File[]) => {
         const added = await addFiles(files, { skipWorkspaceDispatch: true });
@@ -797,8 +758,11 @@ const MyFilesSidebarOverrides = forwardRef<HTMLDivElement, FileSidebarProps>(
       <FileSidebar
         ref={ref}
         {...props}
-        onUploadFiles={handleUpload}
-        onPickGoogleDriveFiles={handleUpload}
+        // Only in the library: filing something away there should not open it, while
+        // the sidebar's own path picks a view to open an upload in - which is what
+        // you want everywhere else.
+        onUploadFiles={browsingLibrary ? handleUpload : undefined}
+        onPickGoogleDriveFiles={browsingLibrary ? handleUpload : undefined}
         extraAction={{
           icon: <CreateNewFolderIcon />,
           label: t("filesPage.newFolder", "New folder"),

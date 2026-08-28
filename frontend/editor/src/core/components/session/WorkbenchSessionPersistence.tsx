@@ -116,7 +116,12 @@ export function WorkbenchSessionPersistence() {
   const { user, loading: authLoading } = useAuth();
   // Login/signup mount the editor's providers too. Nothing there is the user's workbench, so this
   // records nothing and restores nothing - otherwise signing out rebuilds it on the login screen.
-  const onAuthRoute = isAuthRoute(useLocation().pathname);
+  const { pathname } = useLocation();
+  const onAuthRoute = isAuthRoute(pathname);
+  // The file library is the one view its path names, so arriving on /files is the user
+  // asking for it. A recorded document view must not displace that; the files it records
+  // are still reopened underneath.
+  const pathOwnsView = pathname.startsWith("/files");
   const userId = user?.id != null ? String(user.id) : null;
   // Fingerprinted, never stored raw - see fingerprintOwner. Computed asynchronously, so writes
   // hold off until it lands rather than stamping the record "nobody's" and then failing its own
@@ -238,7 +243,10 @@ export function WorkbenchSessionPersistence() {
           .filter((stub): stub is StirlingFileStub => stub !== undefined);
 
         if (stubs.length > 0) {
-          const view = isSeedableView(saved.workbench) ? saved.workbench : null;
+          const view =
+            !pathOwnsView && isSeedableView(saved.workbench)
+              ? saved.workbench
+              : null;
           if (view) held = beginRestoredView();
           // The same entry point My Files uses, so a restored file is governed by the same rules as
           // any other file entering the workbench - including whether a policy has already run on it.
@@ -295,6 +303,7 @@ export function WorkbenchSessionPersistence() {
     authLoading,
     userId,
     onAuthRoute,
+    pathOwnsView,
   ]);
 
   return null;
