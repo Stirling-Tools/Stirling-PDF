@@ -27,6 +27,7 @@ import { buildExactLines } from "@app/tools/pdfTextEditor/v2/util/exactLayout";
 import { stackLineBoxes } from "@app/tools/pdfTextEditor/v2/util/lineLayout";
 import {
   isLinePainted,
+  normalizeContainerCaret,
   type PaintLine,
   paintLines,
   paintPlainText,
@@ -730,9 +731,21 @@ export function TextRunOverlay({
             )
           : undefined
       }
+      onKeyDown={(e) => {
+        // A caret parked on the container (a click past the text lands there)
+        // makes Firefox insert the keystroke as a sibling of the line blocks,
+        // which reads back as a line the user never typed. Seat it in the
+        // block it sits beside before the input applies.
+        const sel = window.getSelection();
+        if (sel)
+          normalizeContainerCaret(e.currentTarget as HTMLDivElement, sel);
+      }}
       onPaste={(e) => {
         // Paste as PLAIN TEXT.
         e.preventDefault();
+        const sel = window.getSelection();
+        if (sel)
+          normalizeContainerCaret(e.currentTarget as HTMLDivElement, sel);
         const text = e.clipboardData?.getData("text/plain");
         if (text) document.execCommand("insertText", false, text);
       }}
@@ -833,6 +846,22 @@ export function TextRunOverlay({
         setTouched(false);
         setMaskColor(null);
         setFocused(false);
+        // WebKit routes keystrokes to the SELECTION even when the element has
+        // lost focus, so typing after a click-away landed in the run just
+        // left. Once focus is genuinely outside the run, its selection goes
+        // with it.
+        {
+          const el = e.currentTarget as HTMLDivElement;
+          const sel = window.getSelection();
+          if (
+            sel &&
+            sel.focusNode &&
+            el.contains(sel.focusNode) &&
+            !(e.relatedTarget instanceof Node && el.contains(e.relatedTarget))
+          ) {
+            sel.removeAllRanges();
+          }
+        }
         // Wrap mode: when the just-edited content overflows the locked box
         // width.
         if (!wantWrap || !onWrap) return;

@@ -234,15 +234,8 @@ describe("readOverlayText", () => {
 describe("readOverlayText - browser-emptied blocks", () => {
   // Chrome does not always leave a bare <br> behind. Pressing Enter at the end
   // of a line leaves the new block holding an EMPTY CLONE of the token span
-  // with the filler <br> inside it, and innerText still reports that as a line
-  // of its own - so one Enter used to read back as two.
-  function withInnerText(el: HTMLElement, value: string): void {
-    Object.defineProperty(el, "innerText", {
-      configurable: true,
-      get: () => value,
-    });
-  }
-
+  // with the filler <br> inside it - a break the walk must NOT read as a line
+  // of its own, or one Enter reads back as two.
   it("reads a block emptied down to a token span as ONE blank line", () => {
     const el = host();
     paintLines(el, [line("Second line"), line("left margin")], OPTS);
@@ -252,7 +245,6 @@ describe("readOverlayText - browser-emptied blocks", () => {
     leftover.dataset.src = "line";
     leftover.appendChild(document.createElement("br"));
     emptied.replaceChildren(leftover);
-    withInnerText(emptied, "\n");
     expect(readOverlayText(el)).toBe("\nleft margin");
   });
 
@@ -260,7 +252,16 @@ describe("readOverlayText - browser-emptied blocks", () => {
     const el = host();
     paintLines(el, [line("one two")], OPTS);
     const block = el.children[0] as HTMLElement;
-    withInnerText(block, "one\ntwo");
+    // Firefox spells a manual break as a <br> INSIDE the token span it split,
+    // so the reader has to descend to see it.
+    const span = document.createElement("span");
+    span.setAttribute("data-v2-token", "");
+    span.replaceChildren(
+      document.createTextNode("one"),
+      document.createElement("br"),
+      document.createTextNode("two"),
+    );
+    block.replaceChildren(span);
     expect(readOverlayText(el)).toBe("one\ntwo");
   });
 });

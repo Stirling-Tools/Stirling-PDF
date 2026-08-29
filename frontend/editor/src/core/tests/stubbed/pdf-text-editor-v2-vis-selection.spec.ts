@@ -151,9 +151,9 @@ interface Analysis {
   ink: number;
   /** How many of those ink pixels read as tinted in the screenshot. */
   inkTinted: number;
-  /** Bounding box of the ink, in client coordinates. */
+  /** Bounding box of the ink as seen IN THE SHOT (same frame as tintBox). */
   inkBox: Box;
-  /** Bounding box of the tinted pixels, in client coordinates. */
+  /** Bounding box of the tinted pixels, in shot-derived client coordinates. */
   tintBox: Box;
   tinted: number;
   strong: number;
@@ -237,6 +237,17 @@ async function analyse(page: P, clip: Rect): Promise<Analysis> {
             if (clientY > tintBox.y1) tintBox.y1 = clientY;
           }
           if (br >= arg.strongMin) strong++;
+          // Glyph ink located IN THE SHOT, same frame as the tint: WebKit's
+          // clipped screenshots land ~15px off the client coordinates, so a
+          // canvas-derived box would be comparing across two coordinate
+          // frames. Dark but not ring-blue (a tinted black glyph reads
+          // br~18, ring pixels ~93).
+          if (S[si] < 160 && S[si + 1] < 160 && br < arg.strongMin) {
+            if (clientX < inkBox.x0) inkBox.x0 = clientX;
+            if (clientY < inkBox.y0) inkBox.y0 = clientY;
+            if (clientX > inkBox.x1) inkBox.x1 = clientX;
+            if (clientY > inkBox.y1) inkBox.y1 = clientY;
+          }
           const cx = Math.round((clientX - cb.left) * sx);
           if (cx < 0 || cx >= canvas.width || cy < 0 || cy >= canvas.height)
             continue;
@@ -244,10 +255,6 @@ async function analyse(page: P, clip: Rect): Promise<Analysis> {
           if (C[ci] < 160 && C[ci + 1] < 160) {
             ink++;
             if (isTint) inkTinted++;
-            if (clientX < inkBox.x0) inkBox.x0 = clientX;
-            if (clientY < inkBox.y0) inkBox.y0 = clientY;
-            if (clientX > inkBox.x1) inkBox.x1 = clientX;
-            if (clientY > inkBox.y1) inkBox.y1 = clientY;
           }
         }
       }
@@ -639,13 +646,15 @@ test.describe("v2 editor - selection affordances, visually", () => {
     expect(a.tintBox.y0).toBeLessThanOrEqual(a.inkBox.y0);
     expect(a.tintBox.y1).toBeGreaterThanOrEqual(a.inkBox.y1);
     // ... and it must hug it: an overlay that had slipped a line would still
-    // "contain" the ink if it were huge, so cap the slack too.
+    // "contain" the ink if it were huge, so cap the slack too. The box owns
+    // ~a font-size of deliberate caret room, so the cap sits above that but
+    // far below the box-doubling drift this exists to catch.
     const inkW = a.inkBox.x1 - a.inkBox.x0;
     const tintW = a.tintBox.x1 - a.tintBox.x0;
     expect(
       tintW - inkW,
       `tint is ${tintW}px wide for ${inkW}px of ink - too much slack`,
-    ).toBeLessThan(24);
+    ).toBeLessThan(48);
   });
 
   // Breaks if the hover affordance stops rendering, or if the selected state

@@ -17,6 +17,7 @@ import {
   resetPerCharBranchPtrs,
 } from "@app/tools/pdfTextEditor/v2/commands/editTextHelpers";
 import type { Command } from "@app/tools/pdfTextEditor/v2/commands/Command";
+import type { TextRun } from "@app/tools/pdfTextEditor/v2/model/TextRun";
 import type {
   GroupingMode,
   PageSnapshot,
@@ -328,18 +329,20 @@ export class EditorStore {
       this.lastPositionRefreshAt = Date.now();
       const doc = this.doc;
       if (!doc) return;
+      const changedByPage = new Map<number, Set<TextRun>>();
       for (const page of doc.loadedPages()) {
         try {
           // Positions only. `PdfiumModelSync.resyncPage` re-reads the whole
           // page and would give identity-preserved RUNS too, but it re-runs
           // grouping, font registration and the annotation walk on every tick
           // for no gain while only positions may safely be adopted mid-edit.
-          PdfiumTextReader.recapturePositions(doc, page);
+          const changed = PdfiumTextReader.recapturePositions(doc, page);
+          if (changed.size > 0) changedByPage.set(page.index, changed);
         } catch {
           continue;
         }
       }
-      this.refreshRunSnapshots();
+      if (changedByPage.size > 0) this.refreshRunSnapshots(changedByPage);
     }, delay);
   }
 
@@ -360,16 +363,25 @@ export class EditorStore {
     }
   }
 
-  private refreshRunSnapshots(): void {
+  // Publish fresh snapshots ONLY for runs whose positions moved. Re-snapshotting
+  // every run made the periodic tick re-render every overlay on every page per
+  // keystroke; reusing identities lets React skip the untouched ones.
+  private refreshRunSnapshots(changedByPage: Map<number, Set<TextRun>>): void {
     const doc = this.doc;
     if (!doc) return;
     this.patch({
       pages: this.state.pages.map((p) => {
+        const changed = changedByPage.get(p.pageIndex);
+        if (!changed || changed.size === 0) return p;
         const live = doc.page(p.pageIndex);
+        const prevById = new Map(p.runs.map((s) => [s.id, s]));
         return {
           ...p,
-          runs: live.runs.map((r) => r.snapshot()),
-          images: live.images.map((img) => img.snapshot()),
+          runs: live.runs.map((r) =>
+            changed.has(r)
+              ? r.snapshot()
+              : (prevById.get(r.id) ?? r.snapshot()),
+          ),
         };
       }),
     });

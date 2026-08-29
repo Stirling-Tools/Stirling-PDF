@@ -241,7 +241,12 @@ export function Toolbar({
           onChangeFill(next);
         }}
         // Drag end, swatch click or a committed hex - the deliberate pick.
-        onChangeEnd={() => setFillPickerOpen(false)}
+        // Deferred a frame: a saturation-square pick delivers its value on the
+        // NEXT animation frame (use-move), so closing now unmounts the picker
+        // first and Firefox loses the pick against a detached 0x0 node.
+        onChangeEnd={() =>
+          window.requestAnimationFrame(() => setFillPickerOpen(false))
+        }
         onFocus={() => setFillPickerOpen(true)}
         onClick={() => setFillPickerOpen(true)}
         onBlur={() => setFillPickerOpen(false)}

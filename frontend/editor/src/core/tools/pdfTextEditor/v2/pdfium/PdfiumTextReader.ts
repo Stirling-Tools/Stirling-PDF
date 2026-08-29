@@ -79,15 +79,19 @@ export class PdfiumTextReader {
     page.loaded = true;
   }
 
-  static recapturePositions(doc: EditorDocument, page: Page): void {
+  // Returns the runs whose captured positions actually moved, so the caller
+  // can re-snapshot just those instead of re-rendering every overlay per tick.
+  static recapturePositions(doc: EditorDocument, page: Page): Set<TextRun> {
     const m = doc.module;
-    if (!page.loaded || page.runs.length === 0) return;
-    page.flushGenerate(m);
+    if (!page.loaded || page.runs.length === 0) return new Set();
+    // No flush: like FPDF_RenderPageBitmap, FPDFText_LoadPage walks the live
+    // object list. Regenerating here cost ~1s per keystroke on Firefox and is
+    // what save/repopulate do anyway.
     const textPagePtr = m.FPDFText_LoadPage(page.pagePtr);
-    if (!textPagePtr) return;
+    if (!textPagePtr) return new Set();
     try {
       const geometry = collectCharGeometry(m, page, textPagePtr);
-      if (geometry) captureCharPositions(geometry);
+      return geometry ? captureCharPositions(geometry) : new Set();
     } finally {
       m.FPDFText_ClosePage(textPagePtr);
     }
@@ -244,9 +248,18 @@ function inferRunCharSpacing(page: Page, geometry: CharGeometry[]): void {
   }
 }
 
+/** NaN-safe element-wise equality for captured position arrays. */
+function samePositions(prev: number[] | null, next: number[]): boolean {
+  if (!prev || prev.length !== next.length) return false;
+  for (let i = 0; i < prev.length; i += 1) {
+    if (!Object.is(prev[i], next[i])) return false;
+  }
+  return true;
+}
+
 // Record where the engine put every glyph, indexed by code unit of `text`.
 // Both units of a surrogate pair share a value; synthesised spaces stay NaN.
-function captureCharPositions(geometry: CharGeometry[]): void {
+function captureCharPositions(geometry: CharGeometry[]): Set<TextRun> {
   const glyphs = new Map<
     TextRun,
     Array<{ cp: number; x: number; end: number }>
@@ -264,6 +277,7 @@ function captureCharPositions(geometry: CharGeometry[]): void {
     list.push({ cp: g.cp, x: g.originX, end: g.right });
   }
 
+  const changed = new Set<TextRun>();
   for (const [run, list] of glyphs) {
     // Upright runs only: an origin's X is the advance direction only when the
     // baseline is horizontal.
@@ -273,10 +287,21 @@ function captureCharPositions(geometry: CharGeometry[]): void {
     }
     const aligned = alignToText(run.text, list);
     if (!aligned) continue;
+    // Same positions under a still-current key is a no-op capture; skipping it
+    // keeps untouched runs' snapshots stable across the periodic tick.
+    if (
+      samePositions(run.charStartsX, aligned.starts) &&
+      samePositions(run.charEndsX, aligned.ends) &&
+      run.charPositionsKey === run.positionsKey()
+    ) {
+      continue;
+    }
     run.charStartsX = aligned.starts;
     run.charEndsX = aligned.ends;
     run.charPositionsKey = run.positionsKey();
+    changed.add(run);
   }
+  return changed;
 }
 
 // Line up the engine's glyph list with the run's text - they are not

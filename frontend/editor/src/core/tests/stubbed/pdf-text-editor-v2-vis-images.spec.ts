@@ -262,7 +262,12 @@ async function imageMenu(page: Page, itemTestId: string): Promise<void> {
   await page.getByTestId(itemTestId).click();
 }
 
-/** Drag from `from` to `to` with intermediate steps, so react-rnd tracks it. */
+/**
+ * Drag from `from` to `to` with intermediate steps, so react-rnd tracks it.
+ * Each step yields: WebKit delivers `steps:`-generated moves in one task, one
+ * React batch collapses them, and the drag lands at a fraction of the
+ * distance. A real pointer never produces two moves in the same task.
+ */
 async function dragMouse(
   page: Page,
   from: { x: number; y: number },
@@ -271,7 +276,14 @@ async function dragMouse(
   await page.mouse.move(from.x, from.y);
   await page.waitForTimeout(120);
   await page.mouse.down();
-  await page.mouse.move(to.x, to.y, { steps: 12 });
+  const STEPS = 12;
+  for (let i = 1; i <= STEPS; i += 1) {
+    await page.mouse.move(
+      from.x + ((to.x - from.x) * i) / STEPS,
+      from.y + ((to.y - from.y) * i) / STEPS,
+    );
+    await page.waitForTimeout(16);
+  }
   await page.waitForTimeout(120);
   await page.mouse.up();
 }

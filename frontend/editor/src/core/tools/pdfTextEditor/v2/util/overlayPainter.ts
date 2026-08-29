@@ -174,22 +174,32 @@ export function paintPlainText(el: HTMLElement, text: string): void {
 /**
  * Lines held by one painted line block.
  *
- * innerText is the only reader that agrees with layout about where a block
- * breaks - Firefox puts a manual break INSIDE the token span it split, which no
- * child walk sees. The single case it gets wrong is a block the browser
- * emptied, which keeps a filler break that innerText reports as a newline of
- * its own; that inserts a phantom line and shoves every line below it down the
- * page. The filler is not always a direct <br>: pressing Enter at the end of a
- * line leaves Chrome an empty clone of the token span with the <br> inside it.
- * An emptied block is one empty line however the browser spells it, so key off
- * the absence of text rather than the shape holding it.
+ * A recursive walk that emits one break per <br> - Firefox puts a manual break
+ * INSIDE the token span it split, so the walk has to descend. Under the
+ * blocks' `white-space: pre` this agrees with layout the way innerText does,
+ * without innerText's forced layout flush (the old reader spent a flush per
+ * block per keystroke). A block the browser emptied keeps a filler break that
+ * would otherwise read as a newline of its own; the filler is not always a
+ * direct <br> - pressing Enter at the end of a line leaves Chrome an empty
+ * clone of the token span with the <br> inside it. An emptied block is one
+ * empty line however the browser spells it, so key off the absence of text.
  */
 function blockLines(element: HTMLElement): string[] {
   if ((element.textContent ?? "") === "") return [""];
-  // textContent is the jsdom fallback: innerText needs layout, so unit tests
-  // exercise structure while the browser suites cover the layout-driven cases.
-  const text = element.innerText ?? element.textContent ?? "";
-  return text.split("\n");
+  const lines: string[] = [""];
+  const walk = (node: Node): void => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      lines[lines.length - 1] += node.textContent ?? "";
+      return;
+    }
+    if (node instanceof HTMLElement && node.tagName === "BR") {
+      lines.push("");
+      return;
+    }
+    for (const child of Array.from(node.childNodes)) walk(child);
+  };
+  for (const child of Array.from(element.childNodes)) walk(child);
+  return lines;
 }
 
 /**
@@ -241,63 +251,92 @@ function lineBlocks(el: HTMLElement): HTMLElement[] {
   );
 }
 
-// Characters of `root` that precede (node, offset). A caret does not always sit
-// in a text node - pressing Enter parks it inside the empty token span Chrome
-// left behind - and a tree walk over text nodes alone reports nothing for those
-// positions, which loses the caret on the next repaint.
-function textOffsetWithin(
-  root: HTMLElement,
-  node: Node,
-  offset: number,
-): number | null {
-  if (!root.contains(node)) return null;
-  const range = document.createRange();
-  try {
-    range.setStart(root, 0);
-    range.setEnd(node, offset);
-  } catch {
-    return null;
-  }
-  return range.toString().length;
-}
-
-function containerCaretOffset(el: HTMLElement, offset: number): number | null {
-  const chars = textOffsetWithin(el, el, offset);
-  if (chars === null) return null;
-  let crossed = 0;
-  for (let i = 0; i < offset && i < el.childNodes.length; i += 1) {
-    const child = el.childNodes[i];
-    if (child instanceof HTMLElement && child.hasAttribute(LINE_ATTR)) {
-      crossed += 1;
-    }
-  }
-  // A caret past the last block belongs at that line's end, not on a fresh one.
-  const trailing = offset >= el.childNodes.length ? 1 : 0;
-  return chars + Math.max(0, crossed - trailing);
-}
-
+/**
+ * Characters of the run's model text that precede the caret. Computed by
+ * reading a truncated clone through the SAME walk that produces the model
+ * text, so any DOM the browser improvises mid-edit (a break inside a token
+ * span, a stray sibling div Firefox wraps typed text in, a caret parked on
+ * the container) yields an offset consistent with readOverlayText. The old
+ * block-by-block count returned null for those shapes, the repaint then
+ * skipped the restore, and the next keystroke landed at the start of the run.
+ */
 export function plainCaretOffset(el: HTMLElement): number | null {
   const selection = window.getSelection();
   if (!selection || selection.rangeCount === 0) return null;
   const { focusNode, focusOffset } = selection;
   if (!focusNode || !el.contains(focusNode)) return null;
-
-  const blocks = lineBlocks(el);
-  if (blocks.length === 0) return textOffsetWithin(el, focusNode, focusOffset);
-  // Parked on the container itself: the offset counts CHILD BLOCKS, so add back
-  // the newline each completed block stands for.
-  if (focusNode === el) return containerCaretOffset(el, focusOffset);
-
-  let before = 0;
-  for (let i = 0; i < blocks.length; i += 1) {
-    const block = blocks[i];
-    if (block.contains(focusNode) || block === focusNode) {
-      const within = textOffsetWithin(block, focusNode, focusOffset);
-      return within === null ? null : before + within;
-    }
-    before += (block.textContent ?? "").length + 1;
+  const range = document.createRange();
+  try {
+    range.setStart(el, 0);
+    range.setEnd(focusNode, focusOffset);
+  } catch {
+    return null;
   }
-  return null;
+  const host = document.createElement("div");
+  host.appendChild(range.cloneContents());
+  const chars = readOverlayText(host).length;
+  // A caret parked on the container BETWEEN two line children sits at the
+  // start of the next line - one past the end of the truncated text. Past the
+  // last line child it belongs at that line's end, not on a fresh one.
+  if (focusNode === el) {
+    const idx = Math.min(focusOffset, el.childNodes.length);
+    const children = Array.from(el.childNodes);
+    const isLineChild = (n: Node) =>
+      n instanceof HTMLElement && n.tagName !== "BR";
+    if (
+      children.slice(0, idx).some(isLineChild) &&
+      children.slice(idx).some(isLineChild)
+    ) {
+      return chars + 1;
+    }
+  }
+  return chars;
+}
+
+/**
+ * Move a caret parked on the CONTAINER itself into the painted block it sits
+ * beside. Left there, Firefox applies the next insertText as a bare sibling of
+ * the line divs (often wrapped in a fresh div), which reads back as an extra
+ * model line the user never typed.
+ */
+export function normalizeContainerCaret(
+  el: HTMLElement,
+  selection: Selection,
+): void {
+  if (selection.rangeCount === 0) return;
+  // A CARET only. Firefox anchors a select-all on the container too, and
+  // collapsing that just before a Delete turns "replace the line" into
+  // "delete one character".
+  if (!selection.isCollapsed) return;
+  const { anchorNode, anchorOffset } = selection;
+  if (anchorNode !== el) return;
+  const blocks = lineBlocks(el);
+  if (blocks.length === 0) return;
+  // Container offset N sits between child N-1 and child N: land at the end of
+  // the block before it (or the start of the first block for offset 0).
+  let target: HTMLElement | null = null;
+  for (
+    let i = Math.min(anchorOffset, el.childNodes.length) - 1;
+    i >= 0;
+    i -= 1
+  ) {
+    const child = el.childNodes[i];
+    if (child instanceof HTMLElement && child.hasAttribute(LINE_ATTR)) {
+      target = child;
+      break;
+    }
+  }
+  if (target) {
+    let node: Node = target;
+    while (node.lastChild) node = node.lastChild;
+    const at =
+      node.nodeType === Node.TEXT_NODE ? (node.textContent ?? "").length : 0;
+    setCollapsed(selection, node, at);
+    return;
+  }
+  let first: Node = blocks[0];
+  while (first.firstChild) first = first.firstChild;
+  setCollapsed(selection, first, 0);
 }
 
 export function restoreCaretOffset(el: HTMLElement, offset: number): void {

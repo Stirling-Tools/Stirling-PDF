@@ -72,8 +72,7 @@ function focusState(page: Page, id: string) {
     return {
       runHasFocus: !!(el && el.contains(document.activeElement)),
       activeTestId: document.activeElement?.getAttribute("data-testid") ?? null,
-      // Recorded to show the selection genuinely does survive the click-away,
-      // which is what made the unconditional restore look harmless.
+      // A selection left in a blurred run is what WebKit keeps typing into.
       selectionInRun: !!(sel?.focusNode && el && el.contains(sel.focusNode)),
     };
   }, id);
@@ -103,10 +102,12 @@ test.describe("v2 editor - an edited run lets go of focus", () => {
     await page.waitForTimeout(PAST_SETTLE_MS);
 
     const state = await focusState(page, id);
+    // The blur handler drops the run's selection with its focus - WebKit
+    // otherwise keeps routing keystrokes into it (see the next test).
     expect(
       state.selectionInRun,
-      "precondition: the caret really does outlive the click-away",
-    ).toBe(true);
+      "a blurred run kept its selection, which WebKit still types into",
+    ).toBe(false);
     expect(
       state.runHasFocus,
       `a run the user clicked away from took the cursor back (active=${state.activeTestId})`,
