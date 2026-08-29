@@ -27,12 +27,7 @@ const THEME = resolve(process.cwd(), "editor/src/core/theme");
 // (no directory-listing feeding into a file read). readdir is used only to fail
 // if a new .css is added without being registered — coverage can't silently
 // lapse — but its output is never passed to readFileSync.
-const THEME_FILES = [
-  "primitives.css",
-  "colors.css",
-  "dimensions.css",
-  "index.css",
-];
+const THEME_FILES = ["primitives.css", "colors.css", "dimensions.css", "index.css"];
 
 // ── colour helpers ─────────────────────────────────────────────────────────
 const HEX_RE = /#[0-9a-fA-F]{3,8}\b/g;
@@ -220,10 +215,7 @@ function stripComments(text) {
 // ── shared colour math + token resolution (used by contrast report + tone guard)
 function readPrimitives(css) {
   const primitives = {};
-  for (const m of css.matchAll(
-    /(--p-[a-z0-9-]+)\s*:\s*(#[0-9a-fA-F]{3,8})\s*;/g,
-  ))
-    primitives[m[1]] = m[2];
+  for (const m of css.matchAll(/(--p-[a-z0-9-]+)\s*:\s*(#[0-9a-fA-F]{3,8})\s*;/g)) primitives[m[1]] = m[2];
   return primitives;
 }
 function hexToRgb(hex) {
@@ -267,11 +259,7 @@ function resolveColorValue(v, t, primitives, seen) {
   if ((m = v.match(/^var\(\s*(--[a-z0-9-]+)\s*(?:,\s*([\s\S]+))?\)$/))) {
     return resolveColorVar(m[1], m[2], t, primitives, seen);
   }
-  if (
-    (m = v.match(
-      /^color-mix\(\s*in srgb\s*,\s*(.+?)\s+(\d+)%\s*,\s*(.+?)\s*\)$/,
-    ))
-  ) {
+  if ((m = v.match(/^color-mix\(\s*in srgb\s*,\s*(.+?)\s+(\d+)%\s*,\s*(.+?)\s*\)$/))) {
     const a = resolveColorValue(m[1], t, primitives, seen);
     if (!a) return null;
     if (m[3].trim() === "transparent") return { ...a, a: +m[2] / 100 };
@@ -282,11 +270,7 @@ function resolveColorValue(v, t, primitives, seen) {
 }
 function resolveColorVar(name, fallback, t, primitives, seen) {
   if (name.startsWith("--p-")) {
-    return primitives[name]
-      ? hexToRgb(primitives[name])
-      : fallback
-        ? resolveColorValue(fallback, t, primitives, seen)
-        : null;
+    return primitives[name] ? hexToRgb(primitives[name]) : fallback ? resolveColorValue(fallback, t, primitives, seen) : null;
   }
   if (!seen.has(name) && t[name] !== undefined) {
     const next = new Set(seen).add(name);
@@ -303,9 +287,7 @@ const relativeLuminance = ({ r, g, b }) => {
   return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
 };
 const contrastRatio = (a, b) => {
-  const [hi, lo] = [relativeLuminance(a), relativeLuminance(b)].sort(
-    (x, y) => y - x,
-  );
+  const [hi, lo] = [relativeLuminance(a), relativeLuminance(b)].sort((x, y) => y - x);
   return (hi + 0.05) / (lo + 0.05);
 };
 
@@ -316,8 +298,7 @@ function check() {
   const lineOf = (text, index) => text.slice(0, index).split("\n").length;
   // path.relative emits backslashes on Windows; normalize so the PRIMITIVES
   // comparison below matches and printed paths stay POSIX-style.
-  const posixRel = (name) =>
-    relative(process.cwd(), join(THEME, name)).replaceAll("\\", "/");
+  const posixRel = (name) => relative(process.cwd(), join(THEME, name)).replaceAll("\\", "/");
 
   // Fail if a theme .css exists that isn't registered above (readdir is only
   // compared here — never used to build a path passed to readFileSync).
@@ -374,8 +355,7 @@ function check() {
         // Property must be a lone identifier — a custom prop (--x) OR a standard
         // property (color, border) — so `color: red` is checked, not just tokens,
         // while selectors (`.foo:hover`) with a colon are skipped.
-        if (!/^\s*(?:--)?[a-z][a-z0-9-]*\s*$/i.test(line.slice(0, colon)))
-          return;
+        if (!/^\s*(?:--)?[a-z][a-z0-9-]*\s*$/i.test(line.slice(0, colon))) return;
         const value = line
           .slice(colon + 1)
           .replace(/--[a-z0-9-]+/gi, " ")
@@ -403,10 +383,8 @@ function reportContrast() {
   const blocks = [];
   for (const m of colorsCss.matchAll(/([^{}]+)\{([^}]*)\}/g)) {
     const decls = {};
-    for (const d of m[2].matchAll(/(--c-[a-z0-9-]+)\s*:\s*([^;]+);/g))
-      decls[d[1]] = d[2].trim();
-    if (Object.keys(decls).length)
-      blocks.push({ selector: m[1].trim(), decls });
+    for (const d of m[2].matchAll(/(--c-[a-z0-9-]+)\s*:\s*([^;]+);/g)) decls[d[1]] = d[2].trim();
+    if (Object.keys(decls).length) blocks.push({ selector: m[1].trim(), decls });
   }
   // The editor always renders data-app-theme="custom"; the accent (--user-*) is
   // injected at runtime, so seed the DEFAULT blue to resolve the custom tint
@@ -419,24 +397,16 @@ function reportContrast() {
   };
   const pick = (re) => blocks.filter((b) => re.test(b.selector));
   const lightBase = pick(/:root/);
-  const customBase = blocks.filter(
-    (b) =>
-      /app-theme="custom"/.test(b.selector) &&
-      !/color-scheme="dark"/.test(b.selector),
-  );
-  const customDark = pick(
-    /app-theme="custom"\]\[data-mantine-color-scheme="dark"/,
-  );
+  const customBase = blocks.filter((b) => /app-theme="custom"/.test(b.selector) && !/color-scheme="dark"/.test(b.selector));
+  const customDark = pick(/app-theme="custom"\]\[data-mantine-color-scheme="dark"/);
   const midnight = pick(/data-theme="dark"/);
   const themes = {
     "editor light": [...lightBase, ...customBase],
     "editor dark": [...lightBase, ...customBase, ...customDark],
     "portal dark": [...lightBase, ...midnight],
   };
-  const flatten = (list) =>
-    Object.assign({ ...SEED }, ...list.map((b) => b.decls));
-  const resolve = (token, t) =>
-    resolveColorValue(t[token] ?? null, t, primitives, new Set([token]));
+  const flatten = (list) => Object.assign({ ...SEED }, ...list.map((b) => b.decls));
+  const resolve = (token, t) => resolveColorValue(t[token] ?? null, t, primitives, new Set([token]));
   const contrast = (t1, t2, t) => {
     const surface = resolve("--c-surface", t);
     let a = resolve(t1, t);
@@ -465,17 +435,11 @@ function reportContrast() {
         continue;
       }
       if (r < floor) warnings++;
-      console.log(
-        `    ${r < floor ? "⚠ " : "  "}${r.toFixed(2).padStart(5)}  (floor ${floor})  ${t1} on ${t2}`,
-      );
+      console.log(`    ${r < floor ? "⚠ " : "  "}${r.toFixed(2).padStart(5)}  (floor ${floor})  ${t1} on ${t2}`);
     }
     console.log("");
   }
-  console.log(
-    warnings
-      ? `⚠ ${warnings} pair(s) below floor — review, not blocking.`
-      : "✓ all pairs clear their floor.",
-  );
+  console.log(warnings ? `⚠ ${warnings} pair(s) below floor — review, not blocking.` : "✓ all pairs clear their floor.");
 }
 
 // ── status-tone text on its own fill ─────────────────────────────────────────
@@ -488,9 +452,7 @@ const TONE_INVISIBLE = 1.6;
 // fill, per theme. Returns [{ theme, base, fill, ratio|null }] — no printing, so
 // both the warn-only report and the blocking guard can share it.
 function toneContrastResults() {
-  const primitives = readPrimitives(
-    readFileSync(join(THEME, "primitives.css"), "utf8"),
-  );
+  const primitives = readPrimitives(readFileSync(join(THEME, "primitives.css"), "utf8"));
   // Strip comments first: a selector's captured prefix can otherwise include a
   // preceding comment that mentions data-theme="dark", misclassifying the block.
   const css = stripComments(readFileSync(TOKENS_CSS, "utf8"));
@@ -499,8 +461,7 @@ function toneContrastResults() {
   const darkTones = {};
   for (const m of css.matchAll(/([^{}]+)\{([^}]*)\}/g)) {
     const target = isDark(m[1]) ? darkTones : lightTones;
-    for (const d of m[2].matchAll(/(--color-[a-z0-9-]+)\s*:\s*([^;]+);/g))
-      target[d[1]] = d[2].trim();
+    for (const d of m[2].matchAll(/(--color-[a-z0-9-]+)\s*:\s*([^;]+);/g)) target[d[1]] = d[2].trim();
   }
   // Dark only overrides the tones it redefines; unspecified ones inherit light.
   const themes = { light: lightTones, dark: { ...lightTones, ...darkTones } };
@@ -514,13 +475,7 @@ function toneContrastResults() {
       const fill = `${base}-light`;
       const fg = resolveColorValue(t[base], t, primitives, new Set([base]));
       const bg = resolveColorValue(t[fill], t, primitives, new Set([fill]));
-      const ratio =
-        fg && bg
-          ? contrastRatio(
-              fg.a < 1 ? over(fg, bg) : fg,
-              bg.a < 1 ? over(bg, white) : bg,
-            )
-          : null;
+      const ratio = fg && bg ? contrastRatio(fg.a < 1 ? over(fg, bg) : fg, bg.a < 1 ? over(bg, white) : bg) : null;
       results.push({ theme, base, fill, ratio });
     }
   }
@@ -543,8 +498,7 @@ function reportToneContrast() {
       continue;
     }
     // ✖ = near-invisible (blocks CI), ⚠ = below the WCAG floor (warn only).
-    const mark =
-      ratio < TONE_INVISIBLE ? "✖ " : ratio < TONE_FLOOR ? "⚠ " : "  ";
+    const mark = ratio < TONE_INVISIBLE ? "✖ " : ratio < TONE_FLOOR ? "⚠ " : "  ";
     if (ratio < TONE_INVISIBLE) invisible++;
     else if (ratio < TONE_FLOOR) warnings++;
     console.log(
@@ -552,13 +506,10 @@ function reportToneContrast() {
     );
   }
   const parts = [];
-  if (invisible)
-    parts.push(`✖ ${invisible} near-invisible (<${TONE_INVISIBLE}:1)`);
+  if (invisible) parts.push(`✖ ${invisible} near-invisible (<${TONE_INVISIBLE}:1)`);
   if (warnings) parts.push(`⚠ ${warnings} below the ${TONE_FLOOR} floor`);
   console.log(
-    parts.length
-      ? `\n${parts.join(", ")}. ✖ blocks the build; ⚠ is advisory.\n`
-      : "\n✓ all tones clear the floor.\n",
+    parts.length ? `\n${parts.join(", ")}. ✖ blocks the build; ⚠ is advisory.\n` : "\n✓ all tones clear the floor.\n",
   );
 }
 
@@ -580,9 +531,7 @@ function trackedFiles() {
 
 function checkAppCss() {
   const EXEMPT = /(?:^|\/)(?:primitives\.css|output\.css)$/;
-  const listed = trackedFiles().filter(
-    (l) => l.endsWith(".css") && !EXEMPT.test(l),
-  );
+  const listed = trackedFiles().filter((l) => l.endsWith(".css") && !EXEMPT.test(l));
 
   const violations = [];
   const lineOf = (text, index) => text.slice(0, index).split("\n").length;
@@ -634,7 +583,7 @@ const CODE_EXEMPT_PATH = [
   // PDF rendering/drawing surfaces that legitimately carry colour literals —
   // scoped to specific tool paths, not a blanket "pdf" substring (which used to
   // exempt most of the app in a PDF product).
-  /pdfTextEditor|pixelCompare|\/compare\.ts$|customPrimary|accentColors|formFieldColors/,
+  /pdfTextEditor|pixelCompare|\/compare\.ts$|customPrimary|accentColors/,
   /validateSignature\/outputtedPDFSections|CenteredMessageSection|StatusBadgeSection/,
   /\/viewer\/|Annotation|useViewerReadAloud|CommentsSidebar|\/constants\/search\.ts$|SignaturePreview/,
   /ColorPicker|ColorControl|WatchedFolderManagementModal|watchedFolderPresets|fileColors|unifiedBackground|folder\.ts$|policyFolders/,
@@ -646,16 +595,14 @@ const CODE_EXEMPT_PATH = [
   // `theme-allow-color`.
   /\.test\.[jt]sx?$|\/types\//,
 ];
-const CODE_HEX =
-  /#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{4}|[0-9a-fA-F]{3})(?![0-9a-fA-F])/g;
+const CODE_HEX = /#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{4}|[0-9a-fA-F]{3})(?![0-9a-fA-F])/g;
 const CODE_RGB = /rgba?\(([^)]*)\)/gi;
 const CODE_HSL = /hsla?\(([^)]*)\)/gi;
 // NOTE: bare named colours (e.g. 'blue') are intentionally NOT flagged in
 // TS/TSX — they are dominated by legitimate Mantine palette props (`c="red"`,
 // `color="blue"`, which are theme-routed) and provider names ('azure'), so a
 // string match produces mostly false positives. hsl()/hex/rgb() are unambiguous.
-const codeStructuralHex = (h) =>
-  /^#(?:000|fff|000f|ffff|000000|ffffff|00000000|ffffffff)$/i.test(h);
+const codeStructuralHex = (h) => /^#(?:000|fff|000f|ffff|000000|ffffff|00000000|ffffffff)$/i.test(h);
 // Line-level skips for contexts where a colour literal is inherent (canvas /
 // pdf-lib drawing, computed-style reads) or explicitly opted out. NOTE: a
 // `var(--x, #hex)` literal fallback is deliberately NOT skipped — the hex in the
@@ -665,10 +612,7 @@ const CODE_SKIP_LINE =
 function codeStripNonCode(text) {
   return text
     .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, " "))
-    .replace(
-      /(^|[^:])\/\/[^\n]*/g,
-      (m, p) => p + m.slice(p.length).replace(/[^\n]/g, " "),
-    )
+    .replace(/(^|[^:])\/\/[^\n]*/g, (m, p) => p + m.slice(p.length).replace(/[^\n]/g, " "))
     .replace(/&#\d+;/g, "     ");
 }
 function codeRgbIsColour(inner) {
@@ -685,9 +629,7 @@ function codeRgbIsColour(inner) {
   return k !== "0,0,0" && k !== "255,255,255";
 }
 function checkCodeColors() {
-  const files = trackedFiles().filter(
-    (l) => /\.(ts|tsx)$/.test(l) && !CODE_EXEMPT_PATH.some((re) => re.test(l)),
-  );
+  const files = trackedFiles().filter((l) => /\.(ts|tsx)$/.test(l) && !CODE_EXEMPT_PATH.some((re) => re.test(l)));
   const violations = [];
   for (const rel of files) {
     const raw = readFileSync(rel, "utf8");
@@ -697,12 +639,9 @@ function checkCodeColors() {
       if (/theme-allow-color/.test(rawLines[i] || "")) return;
       if (CODE_SKIP_LINE.test(line)) return;
       const hits = [];
-      for (const h of line.match(CODE_HEX) || [])
-        if (!codeStructuralHex(h)) hits.push(h);
-      for (const m of line.match(CODE_RGB) || [])
-        if (codeRgbIsColour(m.replace(/rgba?\(|\)/gi, ""))) hits.push(m);
-      for (const m of line.match(CODE_HSL) || [])
-        if (!/var\(/.test(m)) hits.push(m);
+      for (const h of line.match(CODE_HEX) || []) if (!codeStructuralHex(h)) hits.push(h);
+      for (const m of line.match(CODE_RGB) || []) if (codeRgbIsColour(m.replace(/rgba?\(|\)/gi, ""))) hits.push(m);
+      for (const m of line.match(CODE_HSL) || []) if (!/var\(/.test(m)) hits.push(m);
       for (const h of hits)
         violations.push({
           file: rel,
@@ -753,18 +692,13 @@ const PRIMITIVE_LAYER = [
   /^editor\/src\/core\/ui\/accents\.css$/,
 ];
 function checkNoPrimitives() {
-  const files = trackedFiles().filter(
-    (l) =>
-      /\.(css|scss|ts|tsx)$/.test(l) &&
-      !PRIMITIVE_LAYER.some((re) => re.test(l)),
-  );
+  const files = trackedFiles().filter((l) => /\.(css|scss|ts|tsx)$/.test(l) && !PRIMITIVE_LAYER.some((re) => re.test(l)));
   const REF = /var\(\s*(--p-[a-z0-9-]+)/g;
   const violations = [];
   const lineOf = (text, index) => text.slice(0, index).split("\n").length;
   for (const rel of files) {
     const text = stripComments(readFileSync(rel, "utf8"));
-    for (const m of text.matchAll(REF))
-      violations.push({ file: rel, line: lineOf(text, m.index), token: m[1] });
+    for (const m of text.matchAll(REF)) violations.push({ file: rel, line: lineOf(text, m.index), token: m[1] });
   }
   return violations;
 }
@@ -780,9 +714,7 @@ if (process.argv.includes("no-primitives")) {
     console.error("");
     process.exit(1);
   }
-  console.log(
-    "✓ theme-lint no-primitives: components reference --c-* semantic tokens (no raw --p-*)",
-  );
+  console.log("✓ theme-lint no-primitives: components reference --c-* semantic tokens (no raw --p-*)");
   process.exit(0);
 }
 
@@ -795,81 +727,52 @@ if (process.argv.includes("contrast")) {
 if (process.argv.includes("css-colors")) {
   const v = checkAppCss();
   if (v.length) {
-    console.error(
-      `\n✖ theme-lint css-colors: ${v.length} hardcoded colour(s) in source CSS:\n`,
-    );
+    console.error(`\n✖ theme-lint css-colors: ${v.length} hardcoded colour(s) in source CSS:\n`);
     for (const x of v) console.error(`  ${x.file}:${x.line}  ${x.msg}`);
-    console.error(
-      `\nDefine every colour once in core/theme/primitives.css and reference it with var(--p-…).\n`,
-    );
+    console.error(`\nDefine every colour once in core/theme/primitives.css and reference it with var(--p-…).\n`);
     process.exit(1);
   }
-  console.log(
-    "✓ theme-lint css-colors: source CSS is free of hardcoded colour",
-  );
+  console.log("✓ theme-lint css-colors: source CSS is free of hardcoded colour");
   process.exit(0);
 }
 
 if (process.argv.includes("code-colors")) {
   const v = checkCodeColors();
   if (v.length) {
-    console.error(
-      `\n✖ theme-lint code-colors: ${v.length} hardcoded colour(s) in TS/TSX:\n`,
-    );
+    console.error(`\n✖ theme-lint code-colors: ${v.length} hardcoded colour(s) in TS/TSX:\n`);
     for (const x of v) console.error(`  ${x.file}:${x.line}  ${x.msg}`);
     console.error("");
     process.exit(1);
   }
-  console.log(
-    "✓ theme-lint code-colors: no hardcoded colour in TS/TSX DOM code (rendering/vendor/config areas exempt)",
-  );
+  console.log("✓ theme-lint code-colors: no hardcoded colour in TS/TSX DOM code (rendering/vendor/config areas exempt)");
   process.exit(0);
 }
 
 const violations = check();
 // Block near-invisible status tones (< TONE_INVISIBLE) in either theme.
-const toneViolations = toneContrastResults().filter(
-  (r) => r.ratio != null && r.ratio < TONE_INVISIBLE,
-);
+const toneViolations = toneContrastResults().filter((r) => r.ratio != null && r.ratio < TONE_INVISIBLE);
 // Block references to --p-*/--c-* tokens that are defined nowhere (no fallback).
 const unresolvedTokens = checkTokenResolution();
 if (unresolvedTokens.length) {
   console.error(
     `\n✖ theme-lint: ${unresolvedTokens.length} reference(s) to undefined --p-*/--c-* token(s) (colour silently drops to transparent/inherited):\n`,
   );
-  for (const r of unresolvedTokens)
-    console.error(
-      `  ${r.file}:${r.line}  var(${r.token}) — not defined anywhere`,
-    );
-  console.error(
-    `\nDefine the token (primitive in primitives.css, semantic in colors.css) or give the var() a fallback.\n`,
-  );
+  for (const r of unresolvedTokens) console.error(`  ${r.file}:${r.line}  var(${r.token}) — not defined anywhere`);
+  console.error(`\nDefine the token (primitive in primitives.css, semantic in colors.css) or give the var() a fallback.\n`);
 }
 if (violations.length || toneViolations.length || unresolvedTokens.length) {
   if (violations.length) {
-    console.error(
-      `\n✖ theme-lint: ${violations.length} raw/duplicate colour(s) in core/theme/:\n`,
-    );
-    for (const v of violations)
-      console.error(`  ${v.file}:${v.line}  ${v.msg}`);
-    console.error(
-      `\nDefine every colour once in core/theme/primitives.css and reference it with var(--p-…).\n`,
-    );
+    console.error(`\n✖ theme-lint: ${violations.length} raw/duplicate colour(s) in core/theme/:\n`);
+    for (const v of violations) console.error(`  ${v.file}:${v.line}  ${v.msg}`);
+    console.error(`\nDefine every colour once in core/theme/primitives.css and reference it with var(--p-…).\n`);
   }
   if (toneViolations.length) {
     console.error(
       `\n✖ theme-lint: ${toneViolations.length} status tone(s) below the ${TONE_INVISIBLE}:1 legibility floor (text nearly invisible on its own fill):\n`,
     );
-    for (const v of toneViolations)
-      console.error(
-        `  ${v.base} on ${v.fill} — ${v.ratio.toFixed(2)}:1 in ${v.theme} theme`,
-      );
-    console.error(
-      `\nGive --color-{hue}-light a paler/darker tint in core/tokens/tokens.css so the label is legible.\n`,
-    );
+    for (const v of toneViolations) console.error(`  ${v.base} on ${v.fill} — ${v.ratio.toFixed(2)}:1 in ${v.theme} theme`);
+    console.error(`\nGive --color-{hue}-light a paler/darker tint in core/tokens/tokens.css so the label is legible.\n`);
   }
   process.exit(1);
 }
-console.log(
-  "✓ theme-lint: core/theme colours route through the primitive palette; status tones clear the legibility floor",
-);
+console.log("✓ theme-lint: core/theme colours route through the primitive palette; status tones clear the legibility floor");
