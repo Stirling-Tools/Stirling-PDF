@@ -20,26 +20,33 @@ public interface FileRunEventRepository extends JpaRepository<FileRunEventEntity
      * As {@link #findByTeamAndStatus} but for a set of statuses, e.g. the open ones. The kind
      * filter is in the query, before the limit: filtering an already-limited page could return
      * nothing while matching rows exist.
+     *
+     * <p>{@code actor} narrows to one person's own failures. Null means the whole team, which only
+     * a leader ever asks for: see {@code FileRunEventService#readScope}.
      */
     @Query(
             "select e from FileRunEventEntity e where ((:teamId is null and e.teamId is null) or"
                     + " e.teamId = :teamId) and e.status in :statuses"
-                    + " and (:kindId is null or e.kindId = :kindId) order by e.lastSeenAt desc")
+                    + " and (:kindId is null or e.kindId = :kindId)"
+                    + " and (:actor is null or e.actor = :actor) order by e.lastSeenAt desc")
     List<FileRunEventEntity> findByTeamAndStatusIn(
             @Param("teamId") Long teamId,
             @Param("statuses") List<FileRunEventStatus> statuses,
             @Param("kindId") String kindId,
+            @Param("actor") String actor,
             Pageable pageable);
 
     /** As {@link #findByTeamAndStatusIn} but for exactly one status, for the surface's filters. */
     @Query(
             "select e from FileRunEventEntity e where ((:teamId is null and e.teamId is null) or"
                     + " e.teamId = :teamId) and e.status = :status"
-                    + " and (:kindId is null or e.kindId = :kindId) order by e.lastSeenAt desc")
+                    + " and (:kindId is null or e.kindId = :kindId)"
+                    + " and (:actor is null or e.actor = :actor) order by e.lastSeenAt desc")
     List<FileRunEventEntity> findByTeamAndStatus(
             @Param("teamId") Long teamId,
             @Param("status") FileRunEventStatus status,
             @Param("kindId") String kindId,
+            @Param("actor") String actor,
             Pageable pageable);
 
     /**
@@ -91,20 +98,18 @@ public interface FileRunEventRepository extends JpaRepository<FileRunEventEntity
      * Close the incidents about documents their owner deleted from the editor: the queue is what
      * needs attention, and a document that no longer exists needs none.
      *
-     * <p>Restricted to that owner's own editor rows. File ids are minted by the client, so scoping
-     * on team alone would let one caller close a colleague's incidents by naming ids. Processor
-     * rows are excluded outright: nothing was deleted from an editor there.
+     * <p>Scoped by the absence of a source rather than by origin: a source-fed run's {@code fileId}
+     * is a hash no client can name. Narrowed to the owner's own rows, since clients mint the ids.
      */
     @Modifying(clearAutomatically = true)
     @Transactional
     @Query(
             "update FileRunEventEntity e set e.status ="
                     + " stirling.software.proprietary.failure.FileRunEventStatus.FILE_REMOVED,"
-                    + " e.statusActor = :actor, e.statusAt = :now where e.origin ="
-                    + " stirling.software.proprietary.failure.FailureOrigin.TOOL and ((:teamId is"
-                    + " null and e.teamId is null) or e.teamId = :teamId) and ((:actor is null and"
-                    + " e.actor is null) or e.actor = :actor) and e.fileId in :fileIds and e.status in"
-                    + " :allowedFrom")
+                    + " e.statusActor = :actor, e.statusAt = :now where e.sourceId is null and"
+                    + " ((:teamId is null and e.teamId is null) or e.teamId = :teamId) and"
+                    + " ((:actor is null and e.actor is null) or e.actor = :actor) and e.fileId in"
+                    + " :fileIds and e.status in :allowedFrom")
     int markFilesRemoved(
             @Param("teamId") Long teamId,
             @Param("actor") String actor,

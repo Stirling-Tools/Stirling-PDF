@@ -40,6 +40,7 @@ import { FormFillProvider } from "@app/tools/formFill/FormFillContext";
 import { FolderFileContextProvider } from "@app/contexts/FolderFileContext";
 import { FolderProvider } from "@app/contexts/FolderContext";
 import { createEditorQueryClient } from "@app/queryClient";
+import { WorkbenchSessionPersistence } from "@app/components/session/WorkbenchSessionPersistence";
 
 // Component to initialize scarf tracking (must be inside AppConfigProvider)
 function ScarfTrackingInitializer() {
@@ -173,6 +174,7 @@ function AppProvidersTree({
                                                 <TourOrchestrationProvider>
                                                   <AdminTourOrchestrationProvider>
                                                     <FolderFileContextProvider>
+                                                      <WorkbenchSessionPersistence />
                                                       {children}
                                                     </FolderFileContextProvider>
                                                   </AdminTourOrchestrationProvider>
