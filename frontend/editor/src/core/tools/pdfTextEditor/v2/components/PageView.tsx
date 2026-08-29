@@ -9,6 +9,7 @@ import { ImageHandle } from "@app/tools/pdfTextEditor/v2/components/ImageHandle"
 import { AnnotationOutline } from "@app/tools/pdfTextEditor/v2/components/AnnotationOutline";
 import { DisplayTransform } from "@app/tools/pdfTextEditor/v2/model/DisplayTransform";
 import { PageGuides } from "@app/tools/pdfTextEditor/v2/components/PageRulers";
+import { useDevicePixelRatio } from "@app/tools/pdfTextEditor/v2/hooks/useDevicePixelRatio";
 
 interface PageViewProps {
   document: EditorDocument;
@@ -84,8 +85,19 @@ export function PageView({
 }: PageViewProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  // `raster` is the CSS layout size; the bitmap itself renders at deviceScale
+  // so a HiDPI display gets real pixels instead of a browser-upscaled blur.
+  // The canvas element pins its CSS width/height to `raster`, which is what
+  // lets the bitmap resolution move independently of the layout.
   const raster = PdfiumPageRenderer.rasterSize(page.width, page.height, scale);
   const cssScale = raster.width / page.width;
+  const dpr = useDevicePixelRatio();
+  const deviceScale = PdfiumPageRenderer.deviceScale(
+    page.width,
+    page.height,
+    scale,
+    dpr,
+  );
   // Raw-PDF -> display (CropBox/rotation) transform for this page. Identity for
   // normal pages, so every overlay/click computation below is unchanged there.
   const transform = DisplayTransform.fromData(page.display);
@@ -150,7 +162,11 @@ export function PageView({
     if (!canvas) return;
     setRendering(true);
     setRenderError(null);
-    PdfiumPageRenderer.render(document, document.page(page.pageIndex), scale)
+    PdfiumPageRenderer.render(
+      document,
+      document.page(page.pageIndex),
+      deviceScale,
+    )
       .then((image) => {
         if (cancelled || !canvasRef.current) return;
         canvas.width = image.width;
@@ -187,7 +203,7 @@ export function PageView({
     page.pageIndex,
     page.width,
     page.height,
-    scale,
+    deviceScale,
     page.revision,
     retryToken,
   ]);

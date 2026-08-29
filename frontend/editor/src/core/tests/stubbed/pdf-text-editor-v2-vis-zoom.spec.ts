@@ -12,7 +12,9 @@ import path from "path";
 //
 // Geometry facts this suite relies on (verified against the source):
 //   * `PdfiumPageRenderer.rasterSize` => canvas.width = round(pageWidth*scale)
-//   * the canvas CSS size equals its backing size, so 1 CSS px = 1 canvas px
+//   * 1 CSS px = 1 canvas px HERE because every stubbed project pins
+//     deviceScaleFactor 1 - on a real HiDPI display the bitmap carries
+//     devicePixelRatio x the pixels (see pdf-text-editor-v2-hidpi.spec.ts)
 //   * `.v2-run` is absolutely positioned at the text origin, then given
 //     `padding: 2px` and `translate: -2px -2px`. Its border box therefore
 //     starts exactly 2 CSS px before the text origin, at EVERY scale - the
@@ -249,7 +251,14 @@ async function waitForBitmap(
       if (!canvas || !store) return false;
       const st = store.getState();
       if (Math.abs(st.renderScale - want) > 1e-6) return false;
-      return canvas.width === Math.max(1, Math.round(st.pages[0].width * want));
+      // The bitmap renders at zoom x devicePixelRatio (capped at 3) so HiDPI
+      // displays get real pixels; headless runs are 1x, so this reduces to
+      // the plain zoom scale there.
+      const ratio = Math.min(Math.max(window.devicePixelRatio || 1, 1), 3);
+      return (
+        canvas.width ===
+        Math.max(1, Math.round(st.pages[0].width * want * ratio))
+      );
     },
     scale,
     { timeout: 20_000 },

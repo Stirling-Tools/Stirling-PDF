@@ -111,7 +111,14 @@ export default defineConfig({
     {
       name: "stubbed-webkit",
       testDir: "./src/core/tests/stubbed",
-      use: { ...devices["Desktop Safari"], viewport: STUBBED_VIEWPORT },
+      // Desktop Safari ships deviceScaleFactor 2; the editor now renders
+      // bitmaps at dpr x zoom, so leaving it would 4x every page raster in
+      // this suite. The HiDPI spec opts into 2x deliberately where it matters.
+      use: {
+        ...devices["Desktop Safari"],
+        viewport: STUBBED_VIEWPORT,
+        deviceScaleFactor: 1,
+      },
     },
   ],
 

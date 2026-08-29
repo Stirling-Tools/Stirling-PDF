@@ -1,6 +1,15 @@
 import type { EditorDocument } from "@app/tools/pdfTextEditor/v2/model/EditorDocument";
 import type { Page } from "@app/tools/pdfTextEditor/v2/model/Page";
 
+// A display ratio above this buys no visible sharpness for a PDF preview and
+// doubles memory per step, so the raster stops following it there.
+const MAX_DPR = 3;
+
+// Budget for one page's bitmap, in pixels (32M ≈ 128MB of RGBA). Zoom and
+// device ratio multiply together, and a poster-sized page at that product can
+// otherwise ask the wasm heap for gigabytes.
+const MAX_RASTER_PIXELS = 32_000_000;
+
 /** Renders pages to bitmaps for the on-screen preview. */
 export class PdfiumPageRenderer {
   static rasterSize(
@@ -12,6 +21,24 @@ export class PdfiumPageRenderer {
       width: Math.max(1, Math.round(pageWidth * scale)),
       height: Math.max(1, Math.round(pageHeight * scale)),
     };
+  }
+
+  /**
+   * The scale to RENDER at for a page displayed at `cssScale`: the display's
+   * pixel ratio multiplied in, so a HiDPI screen gets real pixels instead of
+   * a browser-upscaled bitmap, then capped by the per-page pixel budget.
+   */
+  static deviceScale(
+    pageWidth: number,
+    pageHeight: number,
+    cssScale: number,
+    dpr: number,
+  ): number {
+    const ratio = Math.min(Math.max(dpr || 1, 1), MAX_DPR);
+    const cap = Math.sqrt(
+      MAX_RASTER_PIXELS / Math.max(1, pageWidth * pageHeight),
+    );
+    return Math.max(0.25, Math.min(cssScale * ratio, cap));
   }
 
   static async render(
