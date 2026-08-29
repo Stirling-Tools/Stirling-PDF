@@ -273,9 +273,48 @@ RUN if [ "${CALIBRE_STRIP_WEBENGINE}" = "true" ]; then \
     fi
 
 
+# Native compiler cache tools are opt-in so ordinary local and GitHub-cache
+# builds retain the upstream behavior. BoringCache enables this stage for the
+# compile-heavy base image and injects the remote ccache configuration only for
+# the lifetime of that BuildKit session.
+FROM ubuntu:noble@sha256:561618e2c15bf2397621dd04f96926663a3b5616c189cf7e38db7e82f5c538ea AS native-build-base
+ARG ENABLE_CCACHE=false
+ARG CCACHE_VERSION=4.13.6
+ARG CCACHE_STORAGE_HTTP_VERSION=0.8
+
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    set -eux; \
+    if [ "${ENABLE_CCACHE}" != "true" ]; then exit 0; fi; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends ca-certificates curl; \
+    rm -rf /var/lib/apt/lists/*; \
+    arch="$(dpkg --print-architecture)"; \
+    case "$arch" in \
+      amd64) ccache_arch=x86_64; helper_arch=amd64; ccache_sha=567b1b648411819590f918f045218c92da14418bdec3b30db94a3b4f5d77cf13; helper_sha=2c2cfafa39f5a4628201ccc11c81829197519159aa128fe00ea251f1f4f2461c ;; \
+      arm64) ccache_arch=aarch64; helper_arch=arm64; ccache_sha=fae67fb810e1f0d390409af6603355483572229e19183e68574cd0f851a6fb98; helper_sha=49587fb0534f5c6265fd1008267af795885f8297c6c51213708da74e4de9d475 ;; \
+      *) echo "Unsupported ccache architecture: ${arch}" >&2; exit 1 ;; \
+    esac; \
+    ccache_archive="ccache-${CCACHE_VERSION}-linux-${ccache_arch}-glibc.tar.gz"; \
+    helper_archive="ccache-storage-http-go-${CCACHE_STORAGE_HTTP_VERSION}-linux-${helper_arch}.tar.gz"; \
+    curl -fsSL --retry 5 "https://github.com/ccache/ccache/releases/download/v${CCACHE_VERSION}/${ccache_archive}" -o "/tmp/${ccache_archive}"; \
+    echo "${ccache_sha}  /tmp/${ccache_archive}" | sha256sum --check; \
+    curl -fsSL --retry 5 "https://github.com/ccache/ccache-storage-http-go/releases/download/v${CCACHE_STORAGE_HTTP_VERSION}/${helper_archive}" -o "/tmp/${helper_archive}"; \
+    echo "${helper_sha}  /tmp/${helper_archive}" | sha256sum --check; \
+    tar xzf "/tmp/${ccache_archive}" -C /tmp; \
+    tar xzf "/tmp/${helper_archive}" -C /tmp; \
+    install -m 0755 "/tmp/ccache-${CCACHE_VERSION}-linux-${ccache_arch}-glibc/ccache" /usr/local/bin/ccache; \
+    install -m 0755 "/tmp/ccache-storage-http-go-${CCACHE_STORAGE_HTTP_VERSION}-linux-${helper_arch}/ccache-storage-http" /usr/local/bin/ccache-storage-http; \
+    ccache --version; \
+    helper_version="$(ccache-storage-http --version 2>&1 || true)"; \
+    printf '%s\n' "$helper_version"; \
+    printf '%s\n' "$helper_version" | grep -F "Version: ${CCACHE_STORAGE_HTTP_VERSION}"; \
+    rm -rf /tmp/ccache-*
+
+
 # Stage 2: Build Ghostscript from source
-FROM ubuntu:noble@sha256:561618e2c15bf2397621dd04f96926663a3b5616c189cf7e38db7e82f5c538ea AS gs-build
+FROM native-build-base AS gs-build
 ARG TARGETPLATFORM
+ARG ENABLE_CCACHE=false
 ARG GS_VERSION=10.07.1
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
@@ -287,6 +326,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     rm -rf ghostscript-* && \
     (test -d "ghostscript-${GS_VERSION}" || curl -fsSL --max-time 300 --retry 3 --retry-delay 5 "https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/${GS_TAG}/ghostscript-${GS_VERSION}.tar.gz" | tar xz) && \
     cd "ghostscript-${GS_VERSION}" && \
+    if [ "${ENABLE_CCACHE}" = "true" ]; then export CC="ccache cc" CXX="ccache c++" CCACHE_COMPILERCHECK=content; fi && \
     ./configure \
       --prefix=/usr/local \
       --without-x \
@@ -294,12 +334,14 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
       --disable-gtk && \
     make -j"$(nproc)" && \
     make install && \
-    cd ..
+    cd .. && \
+    if [ "${ENABLE_CCACHE}" = "true" ]; then ccache --show-stats; fi
 
 
 # Stage 3: Build PDF Tools (QPDF and ImageMagick 7)
-FROM ubuntu:noble@sha256:561618e2c15bf2397621dd04f96926663a3b5616c189cf7e38db7e82f5c538ea AS pdf-tools-build
+FROM native-build-base AS pdf-tools-build
 ARG TARGETPLATFORM
+ARG ENABLE_CCACHE=false
 ARG QPDF_VERSION=12.4.0
 ARG IM_VERSION=7.1.2-29
 
@@ -311,6 +353,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
       libltdl-dev libtool && rm -rf /var/lib/apt/lists/* && \
     cd /tmp/pdf-tools-build && \
     rm -rf qpdf-* ImageMagick-* && \
+    if [ "${ENABLE_CCACHE}" = "true" ]; then export CC="ccache cc" CXX="ccache c++" CCACHE_COMPILERCHECK=content; fi && \
     # Build QPDF
     (test -d "qpdf-${QPDF_VERSION}" || curl -fsSL --max-time 300 --retry 3 --retry-delay 5 "https://github.com/qpdf/qpdf/releases/download/v${QPDF_VERSION}/qpdf-${QPDF_VERSION}.tar.gz" | tar xz) && \
     cd "qpdf-${QPDF_VERSION}" && \
@@ -329,7 +372,8 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     sed -i 's/rights="none" pattern="PS"/rights="read|write" pattern="PS"/' /usr/local/etc/ImageMagick-7/policy.xml && \
     sed -i 's/rights="none" pattern="EPS"/rights="read|write" pattern="EPS"/' /usr/local/etc/ImageMagick-7/policy.xml && \
     cd .. && \
-    ldconfig /usr/local/lib
+    ldconfig /usr/local/lib && \
+    if [ "${ENABLE_CCACHE}" = "true" ]; then ccache --show-stats; fi
 
 # Stage ImageMagick outputs into a single directory so runtime can import them with one COPY
 # (reduces 4 separate COPY layers to 1 independent --link layer).

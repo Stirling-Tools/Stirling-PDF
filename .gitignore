@@ -195,6 +195,10 @@ __pycache__/
 *.py[cod]
 *.pyo
 
+# Project-local dependency caches managed by BoringCache.
+/.npm-cache/
+/.uv-cache/
+
 # Virtual environments
 .venv*
 env*/

@@ -28,6 +28,8 @@ jobs:
     name: Sync docs manifest
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      BORINGCACHE_ENABLED: ${{ vars.BORINGCACHE_ENABLED == 'true' && (secrets.BORINGCACHE_RESTORE_TOKEN != '' || (github.event_name != 'pull_request' && secrets.BORINGCACHE_SAVE_TOKEN != '')) && 'true' || 'false' }}
     permissions:
       contents: write
       pull-requests: write
@@ -43,6 +45,19 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      - name: Restore npm dependencies with BoringCache
+        if: env.BORINGCACHE_ENABLED == 'true'
+        uses: boringcache/one@71fdb67f0aa0afc1c4ac616c8c57d0d535f15bd9 # v1.19.2
+        with:
+          trust-policy: auto
+          setup: none
+          mode: archive
+          cache-profiles: npm-dependencies
+          metadata-hints: workflow=sync-portal-docs
+        env:
+          BORINGCACHE_RESTORE_TOKEN: ${{ secrets.BORINGCACHE_RESTORE_TOKEN }}
+          BORINGCACHE_SAVE_TOKEN: ${{ github.event_name != 'pull_request' && secrets.BORINGCACHE_SAVE_TOKEN || '' }}
+
       - name: Setup GitHub App Bot
         id: setup-bot
         uses: ./.github/actions/setup-bot
@@ -54,7 +69,7 @@ jobs:
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: "22"
-          cache: "npm"
+          cache: ${{ env.BORINGCACHE_ENABLED != 'true' && 'npm' || '' }}
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install frontend dependencies
