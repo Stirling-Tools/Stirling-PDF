@@ -37,7 +37,7 @@ public class EnterpriseEndpointFilter extends OncePerRequestFilter {
                             : uri;
 
             boolean isHealthCheck =
-                    trimmedUri.startsWith("/actuator/health")
+                    matchesPathOrChild(trimmedUri, "/actuator/health")
                             || "/health".equals(trimmedUri)
                             || "/healthz".equals(trimmedUri)
                             || "/liveness".equals(trimmedUri)
@@ -53,5 +53,9 @@ public class EnterpriseEndpointFilter extends OncePerRequestFilter {
 
     private boolean isPrometheusEndpointRequest(HttpServletRequest request) {
         return request.getRequestURI().contains("/actuator/");
+    }
+
+    private boolean matchesPathOrChild(String requestUri, String endpoint) {
+        return requestUri.equals(endpoint) || requestUri.startsWith(endpoint + "/");
     }
 }

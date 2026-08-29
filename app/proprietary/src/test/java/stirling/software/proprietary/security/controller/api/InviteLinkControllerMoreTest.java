@@ -31,6 +31,9 @@ import stirling.software.proprietary.security.model.InviteToken;
 import stirling.software.proprietary.security.repository.InviteTokenRepository;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.service.EmailService;
+import stirling.software.proprietary.security.service.InviteAcceptanceService;
+import stirling.software.proprietary.security.service.InviteAcceptanceService.AcceptanceResult;
+import stirling.software.proprietary.security.service.InviteAcceptanceService.InviteAcceptanceException;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.service.UserLicenseSettingsService;
 
@@ -43,6 +46,7 @@ class InviteLinkControllerMoreTest {
     @Mock private UserService userService;
     @Mock private EmailService emailService;
     @Mock private UserLicenseSettingsService userLicenseSettingsService;
+    @Mock private InviteAcceptanceService inviteAcceptanceService;
 
     private ApplicationProperties applicationProperties;
     private MockMvc mockMvc;
@@ -64,7 +68,8 @@ class InviteLinkControllerMoreTest {
                         userService,
                         applicationProperties,
                         Optional.of(emailService),
-                        userLicenseSettingsService);
+                        userLicenseSettingsService,
+                        inviteAcceptanceService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 
@@ -266,9 +271,8 @@ class InviteLinkControllerMoreTest {
         @Test
         @DisplayName("returns 404 for an expired token")
         void expiredToken() throws Exception {
-            InviteToken invite = validInvite("exp");
-            invite.setExpiresAt(LocalDateTime.now().minusHours(1));
-            when(inviteTokenRepository.findByToken("exp")).thenReturn(Optional.of(invite));
+            when(inviteAcceptanceService.accept("exp", null, "secret123"))
+                    .thenThrow(InviteAcceptanceException.invalidInvite());
 
             mockMvc.perform(post("/api/v1/invite/accept/exp").param("password", "secret123"))
                     .andExpect(status().isNotFound())
@@ -278,9 +282,11 @@ class InviteLinkControllerMoreTest {
         @Test
         @DisplayName("requires an email when the invite has none")
         void emailRequired() throws Exception {
-            InviteToken invite = validInvite("noemail");
-            invite.setEmail(null);
-            when(inviteTokenRepository.findByToken("noemail")).thenReturn(Optional.of(invite));
+            when(inviteAcceptanceService.accept("noemail", null, "secret123"))
+                    .thenThrow(
+                            new InviteAcceptanceException(
+                                    org.springframework.http.HttpStatus.BAD_REQUEST,
+                                    "Email address is required"));
 
             mockMvc.perform(post("/api/v1/invite/accept/noemail").param("password", "secret123"))
                     .andExpect(status().isBadRequest())
@@ -290,18 +296,14 @@ class InviteLinkControllerMoreTest {
         @Test
         @DisplayName("creates the account using the pre-set email")
         void createsWithPresetEmail() throws Exception {
-            InviteToken invite = validInvite("preset");
-            invite.setEmail("preset@ex.com");
-            invite.setTeamId(3L);
-            when(inviteTokenRepository.findByToken("preset")).thenReturn(Optional.of(invite));
-            when(userService.usernameExistsIgnoreCase("preset@ex.com")).thenReturn(false);
+            when(inviteAcceptanceService.accept("preset", null, "secret123"))
+                    .thenReturn(new AcceptanceResult("preset@ex.com", Role.USER.getRoleId()));
 
             mockMvc.perform(post("/api/v1/invite/accept/preset").param("password", "secret123"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.username").value("preset@ex.com"));
 
-            verify(userService).saveUserCore(any());
-            verify(inviteTokenRepository).save(invite);
+            verify(inviteAcceptanceService).accept("preset", null, "secret123");
         }
     }
 }
