@@ -1,7 +1,6 @@
 alphabet = "알파벳"
 apply = "적용"
 applyAndContinue = "저장하고 나가기"
-areYouSure = "정말 떠나시겠습니까?"
 back = "뒤로"
 black = "검정"
 blue = "파랑"
@@ -42,7 +41,7 @@ false = "거짓"
 fileNotSavedToDisk = "디스크에 저장되지 않았습니다"
 fileSavedToDisk = "파일이 디스크에 저장되었습니다"
 fileSelected = "선택됨: {{filename}}"
-filesSelected = "개의 파일이 선택됨"
+filesSelected = "{{count}}개 파일"
 font = "글꼴"
 fontSizeTooltip = "페이지 번호 텍스트의 포인트 크기입니다. 숫자가 클수록 텍스트가 커집니다."
 fontTypeTooltip = "페이지 번호에 사용할 글꼴 계열입니다. 문서 스타일에 맞게 선택하세요."
@@ -106,6 +105,7 @@ undoSuccess = "작업을 성공적으로 취소했습니다"
 unknown = "알 수 없음"
 unpin = "파일 고정 해제(도구 실행 후 교체)"
 unsavedChanges = "PDF에 저장되지 않은 변경 사항이 있습니다."
+unsavedChangesBody = "You have unsaved changes to your PDF. Are you sure you want to leave?"
 unsavedChangesTitle = "저장되지 않은 변경 사항"
 unsupported = "지원되지 않음"
 username = "사용자 이름"
@@ -1879,6 +1879,9 @@ width = "너비"
 [app]
 description = "무료 Adobe Acrobat 대안(1,000만+ 다운로드)"
 
+[appBanner]
+dismiss = "Dismiss"
+
 [attachments]
 convertToPdfA3b = "PDF/A-3b로 변환"
 convertToPdfA3bDescription = "첨부 파일이 포함된 보관용 PDF를 생성합니다"
@@ -2933,12 +2936,16 @@ text = "이 권한을 변경할 수 없도록 하려면, 비밀번호 추가 도
 [chat.actions]
 copy = "메시지 복사"
 
+[chat.emptyState]
+text = "Ask a question about your documents or get help with PDF tools."
+
 [chat.fab]
 close = "Close chat"
 open = "Open Stirling AI assistant"
 
 [chat.header]
 agentMenu = "Stirling 에이전트 옵션"
+assistant = "AI Assistant"
 clearChat = "채팅 지우기"
 
 [chat.input]
@@ -3001,28 +3008,35 @@ tooltip = "이 작업은 클라우드 크레딧을 사용합니다"
 tooltip = "화면에서 색상 선택"
 
 [colorPicker]
+hue = "Hue"
+saturation = "Saturation and brightness"
 title = "색상 선택"
 
 [common]
+actions = "Actions"
 back = "뒤로"
 cancel = "취소"
 close = "닫기"
+codeSample = "Code sample"
 collapse = "접기"
 confirm = "확인"
 continue = "계속"
 copied = "복사됨!"
 copy = "복사"
 done = "완료"
+enterValue = "Enter value"
 error = "오류"
 expand = "펼치기"
 loading = "불러오는 중..."
 next = "다음"
+open = "Open"
 preview = "미리보기"
 previous = "이전"
 refresh = "새로고침"
 remaining = "남음"
 retry = "다시 시도"
 save = "저장"
+stepOf = "Step {{current}} of {{total}}"
 
 [compare]
 clearSelected = "선택 항목 지우기"
@@ -3185,6 +3199,7 @@ title = "압축 방식"
 [compress.settings]
 desiredSize = "원하는 파일 크기"
 desiredSizePlaceholder = "크기 입력"
+desiredSizeUnit = "Size unit"
 
 [compress.tooltip.description]
 text = "압축은 파일 크기를 줄이는 쉬운 방법입니다. 파일 크기를 선택하면 목표 크기를 입력하고 품질은 저희가 조정합니다. 품질을 선택하면 압축 강도를 직접 설정할 수 있습니다."
@@ -3387,6 +3402,24 @@ pdfOptions = "PDF 옵션"
 pdfToCbr = "PDF → CBR"
 pdfToCbz = "PDF → CBZ"
 pdfToEpub = "PDF → EPUB"
+pdfUaAltTextNotice = "Images need a written description before a document can be certified. Descriptions are never generated automatically, because an invented one passes the checker while telling a screen-reader user nothing. Any image left without one is reported, and the file comes back tagged but not certified."
+pdfUaAltTextScanFailed = "The images could not be listed. Convert anyway and the response reports what is missing."
+pdfUaAltTextSingleFileOnly = "Descriptions belong to one document: an image is identified by its position, which is a different image in every file. Convert these {{fileCount}} files to tag them, then convert one at a time to describe its images."
+pdfUaEmbedFonts = "Embed missing fonts"
+pdfUaEmbedFontsHelp = "PDF/UA requires every font to be embedded. Turning this off is faster but usually prevents conformance."
+pdfUaFigureLabel = "Page {{page}} {{kind}}"
+pdfUaFigurePlaceholder = "What this image tells the reader"
+pdfUaFindImages = "Find images needing a description"
+pdfUaLanguage = "Document language"
+pdfUaLanguageHelp = "A BCP-47 tag such as en-GB. Used only when the document does not already declare its own language."
+pdfUaNoImagesNeedingText = "No image is missing a description."
+pdfUaOptions = "PDF/UA Options"
+pdfUaOverrideLanguage = "Replace the document's own language"
+pdfUaOverrideLanguageHelp = "Only tick this if the language above is right and the document's own is wrong. Relabelling a document into a language it is not written in makes a screen reader unintelligible."
+pdfUaProfile = "Conformance level"
+pdfUaSignatureWarning = "This PDF is digitally signed. Tagging rewrites the page content the signature covers, so the signature will stop verifying. Convert first, then re-sign."
+pdfUaTitle = "Document title"
+pdfUaTitleHelp = "Shown by a reader instead of the filename. Left blank, the first heading is used."
 selectSourceFormatFirst = "먼저 원본 형식을 선택하세요"
 settings = "설정"
 single = "단일"
@@ -3564,7 +3597,11 @@ tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [dropdownList]
+noItems = "No items available"
+noResults = "No results found"
 searchPlaceholder = "검색..."
+selectLanguages = "Select languages"
+selectOption = "Select an option"
 
 [editableSecretField]
 edit = "편집"
@@ -3823,11 +3860,13 @@ shareSelected = "선택 항목 공유"
 sharing = "공유"
 showAll = "모두 표시"
 showHistory = "기록 표시"
+sortBy = "Sort files"
 sortByDate = "날짜순 정렬"
 sortByName = "이름순 정렬"
 sortBySize = "크기순 정렬"
 storage = "저장소"
 storageState = "저장소"
+storageUsed = "Storage used"
 synced = "동기화됨"
 title = "PDF 파일 업로드"
 toolChain = "적용된 도구"
@@ -3873,8 +3912,12 @@ addFiles = "파일 추가"
 addingFiles = "파일 추가 중…"
 collapse = "사이드바 접기"
 customizeGroups = "그룹 사용자 지정"
+dataLostBody = "This browser lost this file's contents. Upload it again to keep working with it."
+dataLostTitle = "File data is unavailable"
+downloadFailed = "Download failed"
 dropHint = "시작하려면 파일을 여세요"
 dropToAdd = "Drop files to add"
+duplicateFailed = "Could not duplicate file"
 expand = "사이드바 펼치기"
 googleDrive = "Google Drive"
 googleDriveDisabled = "Google Drive가 구성되지 않았습니다"
@@ -3887,15 +3930,17 @@ openFromComputer = "컴퓨터에서 열기"
 openSettings = "설정 열기"
 other = "기타"
 recent = "최근"
-search = "검색"
-searchPlaceholder = "파일 검색..."
 viewAll = "{{count}}개 파일 모두 보기"
 
 [fileSidebar.fileItem]
 closeViewer = "뷰어 닫기"
+dataLost = "Data lost"
+dataLostTooltip = "This browser lost this file's contents. Upload it again to keep working with it."
 delete = "Delete"
+duplicate = "Duplicate"
 moreActions = "More actions"
 openInViewer = "뷰어에서 열기"
+rename = "Rename"
 savedToServer = "Saved to server"
 updateOnServer = "Update on server"
 uploadToServer = "Upload to server"
@@ -3907,6 +3952,14 @@ reset = "기본값으로 재설정"
 subtitle = "파일을 상위 카테고리로 그룹화하세요. 기존 또는 새 라벨을 카테고리에 추가하거나, 이름을 변경하거나, 직접 만들 수 있습니다. 어떤 카테고리에도 속하지 않는 파일은 “기타” 아래에 표시됩니다."
 title = "사이드바 카테고리"
 
+[fileSidebar.rename]
+cancel = "Cancel"
+error = "Could not rename the file."
+illegalCharacters = "A file name can't contain \\ / : * ? \" < > |"
+label = "File name"
+save = "Rename"
+title = "Rename file"
+
 [filesPage]
 addToWorkspace = "작업 공간에 추가"
 addToWorkspaceCount = "{{count}}개를 작업 공간에 추가"
@@ -3915,9 +3968,9 @@ back = "뒤로"
 backToFolder = "{{folder}}로 돌아가기"
 backToMyFiles = "내 파일로 돌아가기"
 breadcrumbs = "폴더 경로"
+bulkActions = "작업"
 cancel = "취소"
 classification = "분류"
-clearSearch = "검색 지우기"
 clearSelection = "선택 해제"
 closeDetails = "세부정보 닫기"
 create = "생성"
@@ -3949,6 +4002,7 @@ downloadAll = "전체 다운로드"
 downloadVersion = "이 버전 다운로드"
 dropOverlay = "업로드하려면 파일을 놓으세요"
 dropOverlaySub = "파일은 로컬에서 시작됩니다. '이동' 또는 '클라우드에 저장'으로 폴더에 정리하세요."
+duplicate = "Duplicate"
 file = "파일"
 fileInfo = "File info"
 fileMenu = "파일 작업"
@@ -3982,8 +4036,6 @@ resizeFolderTree = "폴더 트리 크기 조절(화살표 키, 크게 조절은 
 save = "저장"
 saveToServer = "서버에 저장"
 saveToServerDisabledHint = "이 서버에서는 서버로 저장이 활성화되어 있지 않습니다. 관리자에게 활성화를 요청하세요."
-search = "검색"
-searchPlaceholder = "이 폴더 및 하위 폴더 검색"
 selectAll = "모두 선택"
 selectAllHint = "모두 선택하려면 클릭. 팁: Ctrl(또는 Cmd)로 하나씩 추가, Shift로 범위 선택."
 selectedCount = "{{count}}개 선택됨"
@@ -4043,6 +4095,10 @@ title = "아직 클라우드 파일이 없습니다"
 hint = "업로드하지 않고 저장한 파일은 여기에 남습니다. 파일을 놓아 추가하세요."
 title = "로컬 전용 파일 없음"
 
+[filesPage.empty.noResults]
+hint = "No files in this folder match your filter. Try a different term or clear the filter."
+title = "No matching files"
+
 [filesPage.empty.recent]
 hint = "열거나 편집한 파일이 여기에 표시됩니다."
 title = "아직 수정된 항목이 없습니다"
@@ -4062,6 +4118,8 @@ cloudDeleteFailed_one = "Couldn't delete 1 file from the cloud."
 cloudDeleteFailed_other = "Couldn't delete {{count}} files from the cloud."
 deleteFolderFailed = "폴더를 삭제할 수 없습니다."
 deleteFolderFailedDetail = "폴더를 삭제할 수 없습니다: {{message}}"
+downloadFailed = "Could not download the file."
+duplicateFailed = "Could not duplicate the file."
 folderAppearanceFailed = "폴더 모양을 업데이트할 수 없습니다."
 folderAppearanceFailedDetail = "폴더 모양을 업데이트할 수 없습니다: {{message}}"
 moveFilesFailed = "파일을 이동할 수 없습니다."
@@ -4083,6 +4141,11 @@ size = "크기"
 totalSize = "총 크기"
 type = "유형"
 versionHistory = "버전 기록"
+
+[filesPage.filters]
+activeCount = "{{count}}개 필터 활성화됨"
+clearAll = "필터 지우기"
+label = "필터"
 
 [filesPage.folderName]
 cancel = "취소"
@@ -4112,7 +4175,13 @@ localHint = "이 브라우저에만 저장됨"
 shared = "공유됨"
 sharedHint = "링크로 공유됨"
 
+[filesPage.search]
+clear = "Clear filter"
+label = "Filter files by name"
+placeholder = "Filter files…"
+
 [filesPage.sort]
+label = "파일 정렬"
 modifiedAsc = "오래된 순"
 modifiedDesc = "최신 순"
 nameAsc = "이름 A→Z"
@@ -4167,6 +4236,7 @@ noFilesInStorageOpen = "저장소에 파일이 없습니다. 먼저 파일을 �
 open = "열기"
 openFile = "파일 열기"
 openFiles = "여러 파일 열기"
+selectFile = "Select {{name}}"
 selectFromStorage = "저장소에서 선택"
 upload = "업로드"
 uploadFile = "파일 업로드"
@@ -4240,16 +4310,99 @@ issues = "GitHub"
 
 [formFill]
 allSaved = "모두 저장됨"
+analyzingFields = "Analysing form fields..."
+applyFailed = "변경 사항을 적용할 수 없습니다"
 extractCsvError = "CSV 추출 실패"
 extractXlsxError = "XLSX 추출 실패"
+filled = "filled"
 flattenAfterFilling = "채운 후 평면화"
+goToPage = "이 페이지로 이동"
+noFields = "No fillable form fields found in this PDF."
+page = "페이지"
+placeholderEnter = "Enter"
+placeholderSelect = "Select"
 requiredAbbreviation = "필수"
 requiredFieldsError = "모든 필수 필드를 입력하세요"
 rescanFields = "필드 재검색"
 rescanFormFields = "양식 필드 재검색"
 save = "저장"
 saveShortcut = "저장하려면 Ctrl+S"
+skippedEdits_one = "1개 변경 사항을 적용할 수 없습니다:"
+skippedEdits_other = "{{count}}개 변경 사항을 적용할 수 없습니다:"
+skippedEditsTruncated = "{{count}}개가 더 있으며 목록에 표시되지 않았습니다."
 unsavedChanges = "저장되지 않은 변경 사항"
+
+[formFill.create]
+commit = "{{count}}개 필드를 PDF에 추가"
+empty = "아직 그린 필드가 없습니다."
+failed = "필드 추가 실패"
+goToField = "이 필드로 이동"
+hint = "필드 유형을 선택한 다음 페이지에 그리세요."
+placing = "페이지에 {{type}} 필드를 그리세요. 중지하려면 Esc를 누르세요."
+preview = "길게 눌러 미리보기"
+previewHelp = "편집 윤곽선 없이 추가된 후의 필드 모양을 보려면 길게 누르세요."
+removeField = "필드 제거"
+
+[formFill.editor]
+action = "버튼 동작"
+actionHelp = "버튼을 클릭했을 때 수행할 동작입니다."
+actionNone = "없음"
+actionPrint = "인쇄"
+actionReset = "양식 재설정"
+actionSubmit = "URL로 제출"
+actionUri = "URL 열기"
+actionUrl = "URL"
+actionUrlHelp = "버튼이 열거나 제출할 주소입니다."
+addOption = "옵션 추가"
+caption = "버튼 캡션"
+captionHelp = "버튼 표면에 표시될 텍스트입니다."
+defaultValue = "기본값"
+defaultValueHelp = "누군가 입력하기 전에 필드에 포함될 내용입니다. 빈 필드로 두려면 비워 두세요."
+fontSize = "글꼴 크기"
+fontSizeHelp = "필드 안의 텍스트 크기입니다. 리더가 맞게 크기를 조정하도록 하려면 비워 두세요."
+label = "레이블"
+labelHelp = "양식을 작성하는 사람에게 표시될 문구입니다. 비워 두면 필드 이름으로 대체됩니다."
+maxLength = "최대 길이(콤)"
+maxLengthHelp = "들어갈 문자 수를 제한하며, 균등한 간격의 상자로 그려집니다."
+multiline = "여러 줄"
+multilineHelp = "두 줄 이상의 텍스트를 허용하고 필드 가장자리에서 줄 바꿈합니다."
+multiSelect = "다중 선택 허용"
+multiSelectHelp = "한 번에 둘 이상의 옵션을 선택할 수 있습니다."
+name = "필드 이름"
+nameHelp = "필드의 내부 이름입니다. 데이터를 내보내거나 다른 시스템에서 양식을 작성할 때 사용되므로, 고유하고 공백이 없도록 유지하세요."
+optionGap = "옵션 간격"
+optionGapHelp = "버튼 사이의 간격(포인트)입니다. 상자 아래로 균등하게 배치하려면 비워 두세요."
+optionPlaceholder = "옵션 {{n}}"
+options = "옵션"
+optionsEmpty = "하나 이상의 옵션을 추가하세요."
+optionsHelp = "목록에 제공되는 선택지입니다. 각 항목은 입력한 그대로 저장되므로, 짧고 구별되게 유지하세요."
+optionSize = "옵션 크기"
+optionSizeHelp = "각 버튼의 너비와 높이(포인트)입니다. 그린 상자에 맞추려면 비워 두세요."
+readOnly = "읽기 전용"
+readOnlyHelp = "값을 표시하지만 아무도 편집할 수 없게 합니다."
+removeOption = "옵션 제거"
+required = "필수"
+requiredHelp = "이 필드를 입력해야 양식을 제출할 수 있습니다."
+signatureNote = "자리 표시자 전용 - 여기서 서명하지 않습니다. PDF 서명자(Adobe Acrobat, 서명 서비스 등)가 문서에 서명할 때 이 위치에 서명을 배치하도록 서명이 들어갈 위치를 표시합니다."
+tooltip = "툴팁"
+tooltipHelp = "PDF 리더에서 누군가 필드 위에 마우스를 올렸을 때 표시되는 힌트입니다."
+type = "유형"
+typeHelp = "이 필드의 종류입니다. 변경하면 필드가 다시 생성되므로 현재 값은 유지되지 않습니다."
+
+[formFill.mode]
+create = "생성"
+fill = "채우기"
+label = "양식 편집기 모드"
+modify = "수정"
+
+[formFill.modify]
+commit = "{{count}}개 변경 사항 저장"
+delete = "삭제"
+empty = "이 PDF에는 아직 양식 필드가 없습니다."
+failed = "변경 사항 저장 실패"
+groupSizeHint = "옵션 크기 사용"
+hint = "필드를 선택하여 속성을 편집하거나, 페이지에서 드래그하거나, 삭제하세요."
+restore = "복원"
 
 [formFill.sidebar]
 close = "사이드바 닫기"
@@ -4515,6 +4668,10 @@ title = "메타데이터 변경"
 desc = "문서 제한 및 권한 변경"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "권한 변경"
+
+[home.classify]
+desc = "이 문서의 종류를 식별하고 태그를 지정합니다."
+title = "분류"
 
 [home.compare]
 desc = "2개의 PDF 문서를 비교하고 차이점을 보여줍니다"
@@ -4794,9 +4951,6 @@ title = "이미지를 PDF로"
 [imageToPdf]
 tags = "변환,이미지,jpg,사진"
 
-[infoBanner]
-dismiss = "닫기"
-
 [invite]
 acceptError = "계정 생성에 실패했습니다"
 accountFor = "계정 생성 대상"
@@ -4978,6 +5132,34 @@ uploadSuccess = "업로드 성공!"
 uploadSuccessMessage = "이미지가 전송되었습니다."
 validating = "세션 검증 중..."
 
+[mobileSign]
+clear = "Clear"
+invalidSession = "Session expired"
+invalidSessionMessage = "This QR code is no longer valid. Open the Sign tool on your computer and scan the new code."
+penSizeLabel = "Pen size"
+send = "Send to computer"
+sendAnother = "Send another signature"
+sendError = "Could not send the signature. Check the connection and try again."
+sentMessage = "Signature sent to your computer. You can send another or close this page."
+tabsLabel = "Signature source"
+undo = "Undo"
+validating = "Checking session…"
+
+[mobileSign.photo]
+fromGallery = "From gallery"
+hint = "Photograph a signature on white paper, or choose an existing image."
+invalidType = "Please choose an image file."
+takePhoto = "Take a photo"
+
+[mobileSign.tab]
+draw = "Draw"
+photo = "Photo"
+type = "Type"
+
+[mobileSign.type]
+placeholder = "Your name"
+previewPlaceholder = "Signature preview"
+
 [mobileUpload]
 description = "스캔하여 사진을 업로드하세요. 이미지는 자동으로 PDF로 변환됩니다."
 descriptionNoConvert = "모바일 기기에서 사진을 스캔해 업로드하세요."
@@ -4996,8 +5178,37 @@ title = "모바일에서 업로드"
 tags = "멀티 도구,다중 작업,UI,클릭 드래그,프론트엔드,클라이언트 사이드,대화형,상호작용,이동,삭제,마이그레이션,분할"
 title = "PDF 멀티 도구"
 
-[navbar]
-search = "검색"
+[navFooter]
+openEditor = "Open PDF Editor"
+openProcessor = "Open PDF Processor"
+
+[navFooter.credits]
+count = "{{remaining}} of {{total}}"
+label = "Free credits"
+
+[notifications]
+empty = "보고할 내용이 없습니다."
+handoffUnavailable = "이 브라우저는 처리기가 문서를 편집기로 전달하는 것을 허용하지 않습니다. 대신 편집기에서 여세요."
+noDocumentLinked = "이 실패는 특정 문서와 연결되어 있지 않아 여기서 열 항목이 없습니다."
+notOnThisDevice = "이 문서는 이 장치에 없으므로 여기서 열 수 없습니다."
+occurrences = "{{count}}회"
+open = "알림"
+title = "알림"
+unread = "읽지 않음"
+
+[notifications.action]
+failed = "작동하지 않았습니다. 잠시 후 다시 시도하세요."
+unavailable = "이 알림에는 사용할 수 없습니다."
+
+[notifications.detail]
+copied = "복사됨"
+copy = "오류 복사"
+less = "간단히 보기"
+more = "전체 메시지 표시"
+
+[notifications.section]
+earlier = "이전"
+new = "새 알림"
 
 [oauth.error]
 message = "인증에 성공하지 못했습니다. 이 창을 닫고 다시 시도하세요."
@@ -5126,6 +5337,7 @@ activeFiles = "<strong>활성 파일</strong> 보기에는 도구에 로드한 �
 allTools = "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools."
 close = "닫기"
 cropSettings = "이제 자르려는 파일을 선택했으므로, 자르기 도구를 구성하여 PDF를 자를 영역을 지정할 수 있습니다."
+dialogLabel = "Onboarding"
 fileCheckbox = "파일을 클릭하면 처리 대상으로 선택됩니다. 배치 작업을 위해 여러 파일을 선택할 수 있습니다."
 fileReplacement = "수정된 파일은 워크벤치에서 원본 파일을 자동으로 대체하므로, 더 많은 도구로 쉽게 이어서 작업할 수 있습니다."
 filesButton = "빠른 액세스 막대의 <strong>파일</strong> 버튼을 사용하면 도구로 처리할 PDF를 업로드할 수 있습니다."
@@ -5562,6 +5774,7 @@ freeBody = "View, edit, merge, split, sign, watermark, compress, convert and man
 freeTitle = "Unlimited PDF editing"
 
 [payg.free.hero]
+barAria = "Free PDFs remaining"
 capSuffix = "/ {{limit}} free PDFs"
 metaCategories = "Automation · AI · API requests"
 
@@ -5641,6 +5854,7 @@ automation = "automations"
 default = "this feature"
 
 [payg.spendCapMeter]
+barAria = "Spend against cap"
 capSuffix = "/ {{amount}} cap"
 metaCategories = "Automation · AI · API spend"
 resets = "Resets each billing period"
@@ -5969,6 +6183,11 @@ header = "PDF를 PDF/A로"
 tags = "아카이브,장기,표준,변환,저장,보존"
 title = "PDF를 PDF/A로"
 
+[pdfToPDFUA]
+header = "PDF To PDF/UA"
+tags = "accessibility,accessible,tagged,screen reader,wcag,eaa,section 508,conversion"
+title = "PDF To PDF/UA"
+
 [pdfToPDFX]
 tags = "인쇄,표준,변환,제작,프리프레스,보관"
 title = "PDF를 PDF/X로"
@@ -6044,6 +6263,7 @@ small = "500 크레딧"
 xsmall = "100 크레딧"
 
 [plan.availablePlans]
+currency = "Billing currency"
 subtitle = "필요에 맞는 요금제를 선택하세요"
 title = "이용 가능한 요금제"
 
@@ -6623,11 +6843,12 @@ reachedTitle = "월별 지출 한도에 도달했습니다"
 title = "Stripe portal을 열 수 없음"
 
 [portal.billing.walletMeter]
+barAria = "Free PDFs remaining"
 capSuffix_one = "무료 PDFs {{allowance}}개 중 사용됨"
 capSuffix_other = "무료 PDFs {{allowance}}개 중 사용됨"
 eyebrow = "Processor 평가판"
-statusLabel_one = "{{remaining}} 남음"
-statusLabel_other = "{{remaining}} 남음"
+statusLabel_one = "{{used}} 사용됨"
+statusLabel_other = "{{used}} 사용됨"
 sub = "PDF Editor는 무료로 사용하세요. PDF 자동 처리에는 비용이 부과됩니다."
 title_one = "PDF {{allowance}}개 무료 처리"
 title_other = "PDF {{allowance}}개 무료 처리"
@@ -6872,6 +7093,32 @@ label = "Jira"
 description = "정책이 실행될 때 문서 또는 알림을 Email로 보냅니다."
 label = "Mailgun"
 
+[portal.connections.types.n8n]
+baseUrlPlaceholder = "https://your-n8n/webhook/9f2c-..."
+description = "Hand documents to an n8n workflow, and take back whatever it produces."
+label = "n8n"
+
+[portal.connections.types.n8n.fields.authType]
+helperText = "Match the Authentication set on the n8n Webhook node."
+label = "Webhook authentication"
+
+[portal.connections.types.n8n.fields.authType.options.basic]
+label = "Basic auth"
+
+[portal.connections.types.n8n.fields.authType.options.header]
+label = "Header auth"
+
+[portal.connections.types.n8n.fields.authType.options.none]
+label = "None"
+
+[portal.connections.types.n8n.fields.headerName]
+helperText = "The header name from the n8n credential, not its value."
+label = "Header name"
+placeholder = "X-N8N-Key"
+
+[portal.connections.types.n8n.fields.token]
+label = "Header value"
+
 [portal.connections.types.nextcloud]
 baseUrlPlaceholder = "https://your-server/remote.php/dav"
 description = "처리된 문서를 Nextcloud에 파일로 저장합니다."
@@ -7076,11 +7323,6 @@ title = "공식 SDKs"
 beta = "Beta"
 deprecated = "Deprecated"
 
-[portal.docs.search]
-empty = "일치하는 문서 없음"
-placeholder = "문서 검색"
-results = "결과 {{count}}개"
-
 [portal.docs.skills]
 eyebrow = "SKILLS"
 lead = "agent가 단일 도구로 호출하는 번들형 명명된 기능입니다. 각 skill은 eval이 연결된 결정적 작업 체인입니다."
@@ -7179,11 +7421,11 @@ editorAction = "편집자"
 empty = "이 필터와 일치하는 문서가 없습니다."
 rowActions = "행 작업"
 sensitiveLabel = "민감"
-sensitiveTitle = "민감 — 접근 필요"
 
 [portal.documents.table.columns]
 action = "파이프라인 / 작업"
 document = "문서"
+labels = "Labels"
 product = "제품"
 status = "상태"
 time = "시간"
@@ -7199,6 +7441,7 @@ host = "호스트"
 lastSeen = "마지막 확인"
 region = "지역"
 status = "상태"
+target = "Target"
 version = "버전"
 
 [portal.editorAdmin.health.empty]
@@ -7272,6 +7515,60 @@ running = "실행 중"
 description = "이 보기에서 예기치 않은 오류가 발생했습니다. 다시 시도하거나 사이드바에서 다른 섹션을 선택하세요."
 retry = "다시 시도"
 title = "이 페이지에서 문제가 발생했습니다"
+
+[portal.failures]
+fromSource = "From source {{source}}"
+occurrences = "{{count}} occurrences"
+reportedBy = "Hit by {{actor}}"
+runReference = "Run {{runId}}"
+subtitle = "Failures recorded from your policy runs and your team's editors, with the actions you can take."
+title = "Failures"
+
+[portal.failures.action]
+acknowledge = "Acknowledge"
+confirm = "Are you sure?"
+dismiss = "Dismiss"
+dismissSkipFile = "Skip this file"
+viewFile = "파일 보기"
+viewInProcessor = "처리기에서 보기"
+
+[portal.failures.debug]
+copyJson = "Copy JSON"
+dismissAll = "Dismiss all ({{total}})"
+dismissing = "Dismissing..."
+hideJson = "Hide raw JSON ({{total}})"
+refresh = "Refresh failures"
+showJson = "Show raw JSON ({{total}})"
+
+[portal.failures.disabled]
+closed = "This failure is already closed."
+noDocument = "이 실패는 특정 문서에 대해 기록되지 않았으므로 여기서 열 항목이 없습니다."
+unattended = "이 파일은 폴더, 버킷 또는 webhook을 통해 전달되었으므로, 열기 위해 보관 중인 브라우저가 없습니다."
+unavailable = "Not available for this failure."
+
+[portal.failures.empty]
+description = "Policy runs that fail will appear here with the actions you can take."
+title = "No failures recorded"
+
+[portal.failures.kind.inputPasswordProtected]
+description = "The pipeline could not open the document because it is password-protected. Unlock it and run it again, or skip this file."
+title = "Password-protected document"
+
+[portal.failures.kind.unknown]
+description = "This run failed for a reason Stirling does not yet recognise. The raw message is shown below."
+title = "Unrecognised failure"
+
+[portal.failures.origin]
+pipeline = "Pipeline"
+policy = "Policy"
+tool = "Tool run"
+
+[portal.failures.stage]
+blocked = "Blocked"
+input = "Input"
+internal = "Internal"
+never_ran = "Never ran"
+output = "Output"
 
 [portal.home.download]
 back = "뒤로"
@@ -7379,11 +7676,6 @@ cancel = "취소"
 confirm = "키 폐기"
 title = "API 키 폐기"
 
-[portal.infrastructure.attestationLabel]
-attested = "증명됨"
-inScope = "범위 내"
-notApplicable = "N/A"
-
 [portal.infrastructure.audit]
 filterAriaLabel = "카테고리별 감사 이벤트 필터링"
 heading = "감사 로그"
@@ -7455,11 +7747,6 @@ info = "정보"
 success = "성공"
 warning = "경고"
 
-[portal.infrastructure.certLabel]
-certified = "인증됨"
-inProgress = "진행 중"
-notStarted = "시작 안 됨"
-
 [portal.infrastructure.createKey]
 cancel = "취소"
 createKey = "키 생성"
@@ -7473,237 +7760,9 @@ subtitleCreated = "지금 이 비밀을 복사하세요 — 다시 표시되지 
 title = "API 키 생성"
 titleCreated = "키 생성됨"
 
-[portal.infrastructure.deployLabel]
-live = "라이브"
-queued = "대기 중"
-rolledBack = "롤백됨"
-rolling = "롤아웃 중"
-
-[portal.infrastructure.deployments]
-msValue = "{{value}} ms"
-throughputValue = "{{value}}/min"
-
-[portal.infrastructure.deployments.deployColumns]
-deployedBy = "배포자"
-environment = "환경"
-product = "제품"
-status = "상태"
-version = "버전"
-when = "시점"
-
-[portal.infrastructure.deployments.recent]
-heading = "최근 배포"
-subheading = "제품 및 환경 전반의 최신 롤아웃입니다."
-
-[portal.infrastructure.deployments.regionColumns]
-instances = "인스턴스"
-latency = "지연 시간"
-load = "부하"
-p99 = "P99"
-region = "지역"
-status = "상태"
-throughput = "처리량"
-uptime = "가동 시간"
-version = "버전"
-
-[portal.infrastructure.deployments.regions]
-heading = "지역"
-subheading = "배포된 모든 Stirling 지역의 실시간 상태 — 지연 시간, 부하, 롤아웃 버전."
-
-[portal.infrastructure.deployments.regions.empty]
-description = "워크스페이스가 프로비저닝되면 배포된 지역이 여기에 표시됩니다."
-title = "배포된 지역 없음"
-
 [portal.infrastructure.keyLabel]
 active = "활성"
 revoked = "폐기됨"
-
-[portal.infrastructure.modelLabel]
-active = "활성"
-degraded = "성능 저하"
-disabled = "비활성화됨"
-
-[portal.infrastructure.models]
-heading = "모델"
-msValue = "{{value}} ms"
-subheading = "워크스페이스 전반의 문서 처리를 구동하는 모델 카탈로그 및 라우팅입니다."
-
-[portal.infrastructure.models.byom]
-description = "온프레미스 또는 셀프 호스팅 모델을 등록하고 데이터 레지던시 기반 처리를 위해 지역에 고정하세요."
-title = "자체 모델 가져오기"
-
-[portal.infrastructure.models.catalogue]
-heading = "카탈로그"
-sub = "워크스페이스에서 사용할 수 있는 관리형 모델이며, 실시간 지연 시간과 비용을 포함합니다."
-subEnterprise = "관리형, 자체 제공, 온프레미스 모델 — 지역별 고정 사용 가능."
-
-[portal.infrastructure.models.catalogue.empty]
-description = "워크스페이스 카탈로그의 모델이 여기에 표시됩니다."
-title = "사용 가능한 모델 없음"
-
-[portal.infrastructure.models.columns]
-cost = "비용"
-latency = "지연 시간"
-load = "부하"
-model = "모델"
-status = "상태"
-type = "유형"
-version = "버전"
-
-[portal.infrastructure.models.cost]
-perCall = "{{price}}/호출"
-perThousand = "{{price}}/1k"
-
-[portal.infrastructure.models.metrics]
-activeModels = "활성 모델"
-avgLatency = "평균 지연 시간"
-included = "포함됨"
-monthlySpend = "월별 모델 지출"
-
-[portal.infrastructure.models.routing]
-empty = "구성된 라우팅 규칙이 없습니다."
-heading = "라우팅 규칙"
-sub = "각 작업을 처리할 모델입니다. 더 구체적인 규칙과 일치하지 않을 때 기본값이 적용됩니다."
-subLocked = "작업을 특정 모델로 라우팅 — 유료 플랜에서 사용 가능."
-
-[portal.infrastructure.models.routing.lockedBanner]
-description = "각 작업과 문서 유형을 처리할 모델을 제어하려면 Pro로 업그레이드하세요."
-title = "모델 라우팅은 유료 기능입니다"
-
-[portal.infrastructure.models.routingColumns]
-default = "기본값"
-docType = "문서 유형"
-modelForAria = "{{operation}}용 모델"
-operation = "작업"
-routedTo = "라우팅 대상"
-
-[portal.infrastructure.modelTypeLabel]
-classification = "분류"
-extraction = "추출"
-llm = "LLM"
-ocr = "OCR"
-
-[portal.infrastructure.regionLabel]
-degraded = "성능 저하"
-down = "중단"
-healthy = "정상"
-
-[portal.infrastructure.security.access.byok]
-description = "자체 KMS의 키를 제공하세요. Stirling은 이 키로 암호화하지만 여전히 읽을 수 있습니다."
-label = "자체 키 가져오기(BYOK)"
-
-[portal.infrastructure.security.access.hyok]
-description = "키는 KMS를 벗어나지 않습니다. Stirling은 암호문만 보유합니다."
-label = "자체 키 보유(HYOK)"
-
-[portal.infrastructure.security.access.stirling]
-description = "Stirling이 암호화 키를 관리합니다. 가장 간단하며 사용자가 키 작업을 할 필요가 없습니다."
-label = "Stirling 보유 키"
-
-[portal.infrastructure.security.accessPolicy]
-heading = "문서 접근 정책"
-subheading = "저장된 처리 완료 문서를 복호화할 수 있는 사용자를 제어합니다."
-
-[portal.infrastructure.security.attestations]
-heading = "컴플라이언스 증명"
-noReport = "사용 가능한 보고서 없음"
-subheading = "증명된 제어에 대한 보고서가 제공되는 프레임워크별 감사 상태입니다."
-viewReport = "보고서 보기 →"
-
-[portal.infrastructure.security.compliance]
-heading = "컴플라이언스"
-subheading = "Stirling 플랫폼을 포괄하는 증명 및 인증입니다."
-
-[portal.infrastructure.security.empty]
-description = "워크스페이스의 보안 구성이 여기에 표시됩니다."
-title = "보안 상태를 사용할 수 없음"
-
-[portal.infrastructure.security.hyokBanner]
-description = "HYOK를 사용하면 암호화 키가 KMS를 벗어나지 않습니다. Stirling은 언제든지 취소할 수 있는 암호문만 저장하고 처리합니다."
-title = "Stirling은 문서를 복호화할 수 없습니다"
-
-[portal.infrastructure.security.ipAllowlist]
-empty = "구성된 IP 범위가 없습니다 — 모든 IP가 허용됩니다."
-heading = "IP 허용 목록"
-sub = "API 접근이 이러한 CIDR 범위로 제한됩니다."
-subLocked = "API 접근을 알려진 IP 범위로 제한 — 유료 플랜에서 사용 가능."
-
-[portal.infrastructure.security.ipAllowlist.lockedBanner]
-description = "API 접근을 특정 네트워크로 제한하려면 Pro로 업그레이드하세요."
-title = "IP 허용 목록은 유료 기능입니다"
-
-[portal.infrastructure.security.ipColumns]
-added = "추가됨"
-addedBy = "추가한 사람"
-cidr = "CIDR"
-label = "레이블"
-
-[portal.infrastructure.security.keyManagement]
-algorithm = "Algorithm"
-heading = "암호화 키 관리"
-keyId = "키 식별자"
-lastRotated = "마지막 교체"
-rotateKey = "키 교체"
-rotationPolicy = "교체 정책"
-subheading = "저장된 문서를 암호화하는 키의 보관 관리 — 복호화 가능 주체 및 키 교체 방식."
-
-[portal.infrastructure.security.managedBanner]
-description = "Bring-your-own-key(BYOK) 및 hold-your-own-key(HYOK) 보관 관리는 Enterprise에서 사용할 수 있습니다. 자체 KMS의 키를 제공하려면 업그레이드하세요."
-title = "현재 플랜에서는 키가 Stirling에서 관리됩니다"
-
-[portal.infrastructure.security.residency.apac]
-description = "ap-southeast-1"
-label = "아시아 태평양"
-
-[portal.infrastructure.security.residency.eu]
-description = "eu-west-1 · GDPR 데이터 경계"
-label = "유럽 연합"
-
-[portal.infrastructure.security.residency.us]
-description = "us-east-1 · us-west-2"
-label = "미국"
-
-[portal.infrastructure.security.residencyHeader]
-heading = "데이터 레지던시"
-subheading = "문서가 저장되고 처리되는 위치입니다."
-
-[portal.infrastructure.storage]
-gbValue = "{{value}} GB"
-percentUsed = "{{value}} 사용됨"
-
-[portal.infrastructure.storage.empty]
-description = "연결된 스토리지와 사용량이 여기에 표시됩니다."
-title = "구성된 스토리지 없음"
-
-[portal.infrastructure.storage.lifecycle]
-active = "활성"
-activeRange = "0–{{value}}d"
-archived = "보관됨"
-coldStorage = "cold storage"
-deleted = "삭제됨"
-never = "없음"
-purged = "영구 삭제됨"
-
-[portal.infrastructure.storage.providers]
-connect = "연결"
-connected = "연결됨"
-heading = "연결된 제공업체"
-subheading = "처리된 아티팩트가 기록되는 위치입니다."
-
-[portal.infrastructure.storage.retention]
-heading = "보존"
-subheading = "수명 주기 삭제 전 아티팩트가 보관되는 기간입니다."
-windowLabel = "기본 보존 기간"
-
-[portal.infrastructure.storage.retentionOption]
-days_one = "{{count}}일"
-days_other = "{{count}}일"
-never = "삭제하지 않음"
-
-[portal.infrastructure.storage.totalUsage]
-heading = "총 사용량"
-progressLabel = "사용된 스토리지"
-subheading = "연결된 모든 제공업체에서 소비된 스토리지입니다."
 
 [portal.infrastructure.tabs]
 apiKeys = "API 키"
@@ -7714,11 +7773,9 @@ security = "보안"
 storage = "스토리지"
 
 [portal.integrations]
-addAnother = "다른 항목 추가"
 availableHeading = "사용 가능"
 comingSoonHeading = "곧 제공 예정"
 connect = "연결"
-connectedHeading = "연결됨"
 connectionCount_one = "{{count}}개 연결"
 connectionCount_other = "{{count}}개 연결"
 customApi = "사용자 지정 API"
@@ -7735,6 +7792,10 @@ notify = "알림"
 security = "보안"
 signing = "서명"
 storage = "스토리지"
+
+[portal.integrations.noResults]
+description = "No integrations match your filters. Try a different category or search."
+title = "No matches"
 
 [portal.integrations.status]
 connected = "연결됨"
@@ -7766,7 +7827,6 @@ integrations = "통합"
 pipelines = "파이프라인"
 policies = "정책"
 procurement = "구매"
-settings = "설정"
 sources = "소스"
 usage = "사용량 및 청구"
 users = "사용자"
@@ -7783,7 +7843,7 @@ title = "파이프라인"
 newPipeline = "새 파이프라인"
 
 [portal.pipelines.builder]
-addStep = "도구 추가"
+activate = "Activate"
 back = "파이프라인으로 돌아가기"
 cannotFollow = "{{produced}}을(를) 사용할 수 없습니다"
 chooseAccount = "계정 선택"
@@ -7791,28 +7851,38 @@ chooseDestination = "대상 선택"
 chooseOperation = "이 단계에서 수행할 작업 선택"
 chooseSource = "소스 선택"
 discard = "변경 사항 버리기"
-enabled = "활성화됨"
 inputs = "입력"
 inputSource = "입력 소스"
 inputTrigger = "트리거"
 keepEditing = "계속 편집"
+moreActions = "More actions"
 needsConfiguring = "설정 필요"
-needsUpload = "업로드된 파일 필요"
-noSources = "아직 연결된 소스가 없습니다. 입력으로 사용하려면 하나를 생성하세요."
+needsDestination = "No destination chosen"
+needsSource = "No source chosen"
 noToolMatches = "검색과 일치하는 도구가 없습니다."
-pipelineSettings = "파이프라인 설정"
+pause = "Pause"
+rename = "Rename pipeline"
 searchTools = "도구 검색"
-selectToolBody = "파이프라인을 구축하려면 도구를 추가하세요."
-selectToolTitle = "아직 도구가 없습니다"
 sendToSystem = "다른 시스템으로 보내기"
 stepsIncompatible = "이 단계들은 이전 단계가 생성한 항목에서 실행할 수 없습니다: {{tools}}."
 stepsNeedSetup = "저장하기 전에 아직 설정이 필요한 단계입니다: {{tools}}."
-toolSettings = "도구 설정"
+supportingFiles = "Supporting files"
+testRun = "Test with a file"
 unknownStep = "인식되지 않는 작업이며, 그대로 유지되었습니다."
 unsavedBody = "저장되지 않은 변경 사항이 있습니다. 나가기 전에 저장하시겠습니까, 아니면 버리시겠습니까?"
 unsavedTitle = "저장되지 않은 변경 사항"
-uploadUnsupported = "업로드된 파일은 아직 파이프라인에서 지원되지 않으므로 다음 단계는 저장할 수 없습니다: {{tools}}."
 usesDefaults = "기본 설정으로 실행"
+viewDefinition = "View definition"
+
+[portal.pipelines.builder.blocker]
+destination = "Choose a destination"
+heading = "To create this pipeline:"
+incompatible = "Fix steps that can't run in order: {{tools}}"
+name = "Give the pipeline a name"
+saveHeading = "To save your changes:"
+schedule = "Set how often it runs"
+setup = "Finish setting up: {{tools}}"
+source = "Choose an input source"
 
 [portal.pipelines.builder.diagnostic]
 fan-in = "이전 단계의 모든 파일을 결합합니다"
@@ -7824,30 +7894,35 @@ undeclared-operation = "이 단계가 무엇을 허용하는지 확인할 수 �
 
 [portal.pipelines.composer]
 addTool = "도구 추가"
-cancel = "취소"
-chainEmpty = "파이프라인 구축을 시작하려면 도구를 추가하세요."
 create = "파이프라인 생성"
+createPaused = "Create paused"
 editingUnsupported = "편집을 위해 이러한 도구 매개변수를 표시하는 기능은 아직 지원되지 않습니다."
-moveDown = "아래로 이동"
-moveUp = "위로 이동"
+editSource = "Edit source"
 name = "이름"
 namePlaceholder = "예: Redaction sweep"
 noToolSettings = "이 도구에는 구성 가능한 설정이 없습니다."
-operations_one = "작업({{count}})"
-operations_other = "작업({{count}})"
 output = "출력"
-removeStep = "작업 제거"
 save = "변경 사항 저장"
 scheduleEvery = "실행 주기"
-sources = "소스"
-sourcesLoading = "소스 로드 중..."
 trigger = "트리거"
 triggerManual = "수동만"
+
+[portal.pipelines.composer.runsEvery]
+days_one = "Runs every day"
+days_other = "Runs every {{count}} days"
+hours_one = "Runs every hour"
+hours_other = "Runs every {{count}} hours"
+minutes_one = "Runs every minute"
+minutes_other = "Runs every {{count}} minutes"
 
 [portal.pipelines.composer.unit]
 days = "일"
 hours = "시간"
 minutes = "분"
+
+[portal.pipelines.definition]
+subtitle = "The pipeline as it would be saved."
+title = "Definition"
 
 [portal.pipelines.delete]
 body = "\"{{name}}\"을(를) 삭제하시겠습니까? 이 작업은 취소할 수 없습니다."
@@ -7866,6 +7941,37 @@ connectSource = "소스 연결"
 description = "첫 번째 파이프라인을 생성하세요. 실행할 소스를 선택하고, 작업을 연결하며, 출력 위치를 선택하세요."
 title = "아직 파이프라인이 없습니다"
 
+[portal.pipelines.graph]
+addFirstTool = "Add a tool"
+dragHint = "Drop on a line to move it"
+insertHere = "Add a tool here"
+removeNode = "Remove {{name}}"
+showError = "Show why {{name}} failed"
+
+[portal.pipelines.graph.add]
+input = "Add a source"
+output = "Add a destination"
+
+[portal.pipelines.graph.run]
+done = "Done"
+failed = "Failed"
+running = "Running"
+
+[portal.pipelines.inspector]
+multipleBody = "Drag any of them onto a line to move them together, or press Delete to remove them."
+multipleSelected_one = "{{count}} step selected"
+multipleSelected_other = "{{count}} steps selected"
+noSelectionBody = "Pick a node in the graph to change what it does."
+noSelectionTitle = "Nothing selected"
+
+[portal.pipelines.inspector.status]
+completed_one = "Finished the only step"
+completed_other = "Finished all {{count}} steps"
+failed_one = "Failed on the only step"
+failed_other = "Failed after {{done}} of {{count}} steps"
+running_one = "Running the only step"
+running_other = "Running step {{done}} of {{count}}"
+
 [portal.pipelines.kpi]
 active = "활성"
 paused = "일시 중지됨"
@@ -7878,7 +7984,6 @@ completed_one = "실행이 완료되었습니다."
 completed_other = "{{count}}개 실행이 모두 완료되었습니다."
 empty = "실행할 항목이 없습니다. 소스에 처리할 문서가 없습니다."
 failed = "실행 실패: {{error}}"
-historyCleared = "기록이 지워졌습니다. 다음 실행에서는 현재 소스에 있는 모든 항목을 다시 처리합니다."
 inFlight = "새로 실행할 항목이 없습니다: 이전 실행의 문서가 아직 처리 중입니다."
 parked_one = "실행할 항목이 없습니다: 문서 {{count}}개가 이전에 실패하여 보류되어 있습니다. 원인을 수정한 다음 기록을 지워 다시 시도하세요."
 parked_other = "실행할 항목이 없습니다: 문서 {{count}}개가 이전에 실패하여 보류되어 있습니다. 원인을 수정한 다음 기록을 지워 다시 시도하세요."
@@ -7894,6 +7999,7 @@ name = "파이프라인"
 sources = "소스"
 status = "상태"
 steps = "단계"
+trigger = "Trigger"
 
 [portal.pipelines.trigger]
 folder-watch = "폴더 감시"
@@ -8207,6 +8313,24 @@ label = "Jira 이슈에 첨부"
 [portal.policies.operations.mailgunEmail]
 description = "처리된 문서를 첨부 파일로 보냅니다."
 label = "문서 이메일 보내기(Mailgun)"
+
+[portal.policies.operations.n8nGate]
+description = "Your workflow decides whether the run carries on."
+label = "Ask an n8n workflow to approve"
+note = "The workflow must reply with {\"approved\": true}. Anything else — including a timeout — stops the run and parks the document."
+
+[portal.policies.operations.n8nNotify]
+description = "Sends the run's details, not the document."
+label = "Tell an n8n workflow"
+
+[portal.policies.operations.n8nSend]
+description = "Sends the document and the run's details to your workflow."
+label = "Send the document to n8n"
+
+[portal.policies.operations.n8nTransform]
+description = "Your workflow processes the document and the file it returns replaces it."
+label = "Process the document in n8n"
+note = "Set the Webhook node to respond \"Using Respond to Webhook Node\", and return a file. On the default \"Immediately\" setting n8n replies with an acknowledgement, and that would replace the document."
 
 [portal.policies.operations.nextcloudUpload]
 description = "처리된 문서를 폴더에 기록합니다."
@@ -8682,16 +8806,6 @@ maxed = "한도 도달"
 subtitle = "무료 평가판은 {{date}}까지 진행됩니다. 카드가 필요하지 않습니다."
 title = "Enterprise 평가판"
 
-[portal.search]
-ariaLabel = "검색"
-placeholder = "Stirling 검색 — 엔드포인트, 파이프라인, 문서…"
-
-[portal.search.empty]
-noActionsDescription = "빠른 작업을 사용할 수 있게 되면 여기에 표시됩니다."
-noActionsTitle = "빠른 작업 없음"
-noMatches = "\"{{query}}\"에 대한 일치 항목 없음"
-noMatchesDescription = "다른 키워드를 시도하거나 카탈로그를 찾아보세요."
-
 [portal.settings.groups]
 admin = "관리자"
 
@@ -8718,7 +8832,9 @@ title = "소스"
 connectSource = "소스 연결"
 
 [portal.sources.builder]
+advanced = "고급"
 back = "소스로 돌아가기"
+backToSource = "소스 설정으로 돌아가기"
 backToTypes = "모든 소스 유형"
 cancel = "취소"
 chooseHint = "문서가 어디에서 오는지 선택하세요. 회색으로 표시된 커넥터는 곧 제공됩니다."
@@ -8728,7 +8844,6 @@ create = "소스 생성"
 createTitle = "소스 연결"
 delete = "삭제"
 editTitle = "소스 편집"
-enabled = "활성화됨"
 save = "변경 사항 저장"
 
 [portal.sources.builder.folderAccess]
@@ -8741,10 +8856,6 @@ body = "\"{{name}}\"을(를) 삭제하시겠습니까? 이 작업은 되돌릴 �
 cancel = "취소"
 confirm = "삭제"
 title = "소스를 삭제하시겠습니까?"
-
-[portal.sources.empty]
-description = "정책이 문서를 가져올 위치를 가질 수 있도록 폴더(곧 cloud storage도)를 연결하세요."
-title = "아직 연결된 소스 없음"
 
 [portal.sources.kpi]
 inUse = "사용 중"
@@ -8769,6 +8880,7 @@ consume = "소비: 각 파일을 한 번 처리"
 snapshot = "스냅샷: 실행할 때마다 폴더 다시 읽기"
 
 [portal.sources.networkFields.recursive]
+helperText = "파일이 중첩된 폴더로 구성되어 있으면 하위 폴더를 포함하고, 아니면 최상위 수준만 감시하세요."
 label = "폴더 깊이"
 
 [portal.sources.networkFields.recursive.options]
@@ -8784,6 +8896,7 @@ unused = "미사용"
 documents = "문서"
 source = "소스"
 status = "상태"
+type = "Type"
 usedBy = "정책"
 
 [portal.sources.types.box]
@@ -8821,6 +8934,7 @@ hash = "크기, 날짜 및 콘텐츠 검사"
 stat = "크기 및 수정 날짜"
 
 [portal.sources.types.folder.fields.mode]
+helperText = "처리된 후 원본 파일을 그대로 둘지 여부입니다. 원본 파일을 그대로 두면 다음에 파이프라인이 소스를 스캔할 때 다시 처리됩니다."
 label = "읽기 모드"
 
 [portal.sources.types.folder.fields.mode.options]
@@ -8828,6 +8942,7 @@ consume = "소비: 각 파일을 한 번 처리"
 snapshot = "스냅샷: 실행할 때마다 폴더 다시 읽기"
 
 [portal.sources.types.folder.fields.recursive]
+helperText = "파일이 중첩된 폴더로 구성되어 있으면 하위 폴더를 포함하고, 아니면 최상위 수준만 감시하세요."
 label = "폴더 깊이"
 
 [portal.sources.types.folder.fields.recursive.options]
@@ -9701,7 +9816,9 @@ toolNotAvailableLocally = "Stirling-PDF 서버가 오프라인이며 로컬 백�
 expired = "세션이 만료되었습니다. 페이지를 새로 고침하고 다시 시도하세요."
 
 [settings]
+backToSections = "모든 설정"
 close = "닫기"
+title = "설정"
 
 [settings.ai]
 documents = "문서 및 RAG"
@@ -9979,9 +10096,6 @@ title = "정책 및 개인정보 보호"
 [settings.preferences]
 title = "환경설정"
 
-[settings.search]
-placeholder = "설정 페이지 검색..."
-
 [settings.security]
 description = "계정을 안전하게 유지하려면 비밀번호를 업데이트하세요."
 title = "보안"
@@ -10127,6 +10241,7 @@ last = "마지막 페이지"
 maintainRatio = "종횡비 유지 토글"
 next = "다음 페이지"
 noSavedSigs = "저장된 서명이 없습니다"
+penSizePlaceholder = "Type or select pen size (1-200)"
 personalSigs = "개인 서명"
 previous = "이전 페이지"
 redo = "다시 실행"
@@ -10165,6 +10280,7 @@ backgroundRemovalFailedTitle = "배경 제거 실패"
 hint = "서명 PNG 또는 JPG 이미지를 업로드하세요"
 label = "서명 이미지 업로드"
 placeholder = "이미지 파일 선택"
+previewAlt = "Current image signature"
 processing = "이미지 처리 중..."
 removeBackground = "흰색 배경 제거(투명 처리)"
 
@@ -10177,6 +10293,17 @@ resumeHint = "배치를 다시 시작하여 클릭 후 서명을 추가하세요
 saved = "위에서 저장된 서명을 선택한 뒤, PDF를 클릭하여 배치하세요."
 text = "위에 이름을 입력한 후, PDF의 아무 곳이나 클릭하여 서명을 배치하세요."
 title = "서명 추가 방법"
+
+[sign.mobile]
+createFromPhone = "Mobile upload"
+description = "Scan this QR code with your phone or tablet, draw your signature, and it will appear here automatically."
+error = "Connection Error"
+expiryWarning = "QR Code Expiring Soon"
+expiryWarningMessage = "This QR code will expire in {{seconds}} seconds. A new code will be generated automatically."
+instructions = "Open the camera app on your phone and scan this code. Keep this window open while you draw."
+pollingError = "Error checking for the signature"
+sessionCreateError = "Failed to create session"
+title = "Draw on your phone"
 
 [sign.mode]
 move = "서명 이동"
@@ -10624,6 +10751,24 @@ title = "서버로 업로드"
 updateButton = "서버에서 업데이트"
 uploadButton = "서버로 업로드"
 
+[superSearch]
+all = "All"
+ariaLabel = "Super search"
+filtersAriaLabel = "Search filters"
+hint = "Type to search"
+placeholder = "Search Stirling"
+placeholderShort = "검색"
+showLess = "Show less"
+showMore = "Show {{count}} more"
+
+[superSearch.group]
+docs = "Docs"
+files = "Files"
+pages = "Pages"
+processor = "Processor"
+settings = "Settings"
+tools = "Tools"
+
 [survey]
 title = "Stirling-PDF Survey"
 
@@ -10773,7 +10918,6 @@ goBack = "뒤로 가기"
 pdfTools = "PDF 도구"
 placeholder = "시작하려면 도구를 선택하세요"
 premiumFeature = "프리미엄 기능:"
-searchTools = "도구 검색"
 toolsHeader = "도구"
 viewAllTools = "모든 도구 보기"
 
@@ -10810,6 +10954,7 @@ searchPlaceholder = "도구 검색..."
 
 [toolPicker.subcategories]
 advancedFormatting = "고급 서식"
+ai = "AI"
 automation = "자동화"
 developerTools = "개발자 도구"
 documentReview = "문서 검토"
@@ -10820,6 +10965,9 @@ pageFormatting = "페이지 서식"
 removal = "제거"
 signing = "서명"
 verification = "검증"
+
+[toolRenderer]
+notFound = "Tool not found: {{tool}}"
 
 [tools]
 noSearchResults = "도구를 찾을 수 없습니다"
@@ -10978,6 +11126,13 @@ approver = "정책 승인"
 editor = "편집기"
 processor = "프로세서"
 
+[users.columns]
+capabilities = "Capabilities"
+email = "Email"
+person = "Person"
+role = "Role"
+status = "Status"
+
 [users.confirm]
 cancelInviteBody = "{{email}}에 대한 초대를 취소하시겠습니까? 현재 링크로는 참여할 수 없게 됩니다."
 cancelInviteTitle = "초대 취소"
@@ -10997,10 +11152,8 @@ title = "아직 구성원 없음"
 addToTeam = "팀에 추가"
 guestCount = "{{count}}명 게스트"
 guests = "게스트"
-guestsDesc = "외부 협업자, 공유한 범위로 제한됨. 편집기만 사용."
 ledBy = "{{owner}}이(가) 이끎"
 org = "조직"
-orgDesc = "조직 전체 권한 및 정책 승인을 가진 소유자"
 owners = "{{count}}명 소유자"
 team = "{{name}} 팀"
 teamMeta = "{{count}}명"
@@ -11040,12 +11193,14 @@ usernamePlaceholder = "jsmith"
 [users.invites]
 by = "{{who}}님이 초대함"
 cancel = "취소"
-count = "{{count}}개 대기 중"
-desc = "아직 참여하지 않은 초대받은 사람들입니다. 수락할 때까지 시트를 차지합니다."
 expiresInDays_one = "{{count}}일 후 만료"
 expiresInDays_other = "{{count}}일 후 만료"
 expiresToday = "오늘 만료"
 title = "대기 중인 초대"
+
+[users.invites.columns]
+expires = "Expires"
+invitee = "Invitee"
 
 [users.loadError]
 description = "백엔드에 연결하는 중 문제가 발생했거나 접근 권한이 없습니다. 다시 시도하세요."
@@ -11236,12 +11391,15 @@ searchPlaceholder = "첨부 파일 검색"
 title = "첨부 파일"
 
 [viewer.bookmarks]
+addBookmark = "Add bookmark"
 bookmarkTitle = "북마크 제목"
 bookmarkTitleRequired = "북마크 제목은 필수입니다"
 closeSidebar = "북마크 사이드바 닫기"
 collapseAll = "모든 북마크 접기"
+empty = "No bookmarks in this document"
 expandAll = "모든 북마크 펼치기"
 searchPlaceholder = "북마크 검색"
+title = "Bookmarks"
 
 [viewer.comments]
 addComment = "댓글 추가"
@@ -11263,10 +11421,12 @@ locateAnnotation = "문서에서 찾기"
 moreActions = "추가 작업"
 nComments_one = "{{count}} comment"
 nComments_other = "{{count}} comments"
+noMatch = "No comments match your search"
 pageLabel = "페이지 {{page}}"
 placingHint = "페이지를 클릭하여 배치… (취소)"
 removeCommentOnly = "댓글만 제거"
 saveReply = "답글 저장"
+searchPlaceholder = "Search comments"
 title = "댓글"
 typeComment = "댓글"
 typeInsertText = "텍스트 삽입"
@@ -11289,6 +11449,7 @@ unsavedDesc = "저장되지 않은 변경 사항이 있습니다"
 closeSidebar = "레이어 사이드바 닫기"
 hideAll = "모든 레이어 숨기기"
 showAll = "모든 레이어 표시"
+title = "Layers"
 
 [viewer.link]
 delete = "링크 삭제"
@@ -11298,8 +11459,11 @@ columnDefault = "열 {{index}}"
 convertToPdf = "PDF로 변환"
 csvStats = "{{rows}}행 · {{columns}}열 · {{size}}"
 emptyFile = "빈 파일"
+htmlHidePreview = "미리보기 숨기기"
 htmlPreview = "HTML 미리보기"
+htmlPreviewMobileHidden = "HTML 페이지는 데스크톱 너비에 맞게 배치되므로 여기서는 미리보기가 기본적으로 꺼져 있습니다."
 htmlPreviewWarning = "HTML 미리보기 — 외부 리소스가 로드되지 않을 수 있습니다 · {{size}}"
+htmlShowPreview = "그래도 미리보기 표시"
 invalidJson = "잘못된 JSON — 원본 내용을 표시합니다"
 lineNumbers = "줄 번호"
 loading = "로딩 중..."
@@ -11645,6 +11809,8 @@ exitRedaction = "가리기 모드 종료"
 exportAll = "PDF 내보내기"
 exportSelected = "선택한 페이지 내보내기"
 formFill = "양식 채우기"
+hideToolbar = "Hide toolbar"
+moreActions = "추가 작업"
 multiTool = "멀티 도구"
 panMode = "이동 모드"
 print = "PDF 인쇄"
@@ -11665,6 +11831,9 @@ selectAll = "모두 선택"
 selectByNumber = "페이지 번호로 선택"
 selectLanguage = "언어 선택"
 share = "공유"
+showAllTools = "모든 도구 표시"
+showFewerTools = "도구 모음 접기"
+showToolbar = "Show toolbar"
 toggleAnnotations = "주석 표시 전환"
 toggleAttachments = "첨부 파일 표시 전환"
 toggleBookmarks = "책갈피 표시 전환"

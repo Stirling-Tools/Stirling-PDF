@@ -1,7 +1,6 @@
 alphabet = "الأبجدية"
 apply = "تطبيق"
 applyAndContinue = "تطبيق والمتابعة"
-areYouSure = "هل أنت متأكد أنك تريد المغادرة؟"
 back = "رجوع"
 black = "أسود"
 blue = "أزرق"
@@ -42,7 +41,7 @@ false = "خطأ"
 fileNotSavedToDisk = "لم يُحفَظ على القرص"
 fileSavedToDisk = "تم حفظ الملف على القرص"
 fileSelected = "المحدد: {{filename}}"
-filesSelected = "الملفات المحددة"
+filesSelected = "{{count}} ملفات"
 font = "الخط"
 fontSizeTooltip = "حجم نص رقم الصفحة بالنقاط. الأرقام الأكبر تنتج نصًا أكبر."
 fontTypeTooltip = "عائلة الخط لأرقام الصفحات. اختر بناءً على نمط مستندك."
@@ -106,6 +105,7 @@ undoSuccess = "تم التراجع عن العملية بنجاح"
 unknown = "غير معروف"
 unpin = "إلغاء تثبيت الملف (استبداله بعد تشغيل الأداة)"
 unsavedChanges = "لديك تغييرات غير محفوظة على ملف PDF. ماذا تريد أن تفعل؟"
+unsavedChangesBody = "You have unsaved changes to your PDF. Are you sure you want to leave?"
 unsavedChangesTitle = "تغييرات غير محفوظة"
 unsupported = "غير مدعوم"
 username = "اسم المستخدم"
@@ -1879,6 +1879,9 @@ width = "العرض"
 [app]
 description = "بديل Adobe Acrobat المجاني (10M+ تنزيلات)"
 
+[appBanner]
+dismiss = "Dismiss"
+
 [attachments]
 convertToPdfA3b = "تحويل إلى PDF/A-3b"
 convertToPdfA3bDescription = "ينشئ ملف PDF للأرشفة مع مرفقات مضمنة"
@@ -2933,12 +2936,16 @@ text = "لجعل هذه الأذونات غير قابلة للتغيير، اس
 [chat.actions]
 copy = "نسخ الرسالة"
 
+[chat.emptyState]
+text = "Ask a question about your documents or get help with PDF tools."
+
 [chat.fab]
 close = "Close chat"
 open = "Open Stirling AI assistant"
 
 [chat.header]
 agentMenu = "خيارات وكيل Stirling"
+assistant = "AI Assistant"
 clearChat = "مسح الدردشة"
 
 [chat.input]
@@ -3001,28 +3008,35 @@ tooltip = "ستستخدم هذه العملية أرصدة السحابة الخ
 tooltip = "التقاط لون من الشاشة"
 
 [colorPicker]
+hue = "Hue"
+saturation = "Saturation and brightness"
 title = "اختر اللون"
 
 [common]
+actions = "Actions"
 back = "رجوع"
 cancel = "إلغاء"
 close = "إغلاق"
+codeSample = "Code sample"
 collapse = "طيّ"
 confirm = "تأكيد"
 continue = "متابعة"
 copied = "تم النسخ!"
 copy = "نسخ"
 done = "تم"
+enterValue = "Enter value"
 error = "خطأ"
 expand = "توسيع"
 loading = "جارٍ التحميل..."
 next = "التالي"
+open = "Open"
 preview = "معاينة"
 previous = "السابق"
 refresh = "تحديث"
 remaining = "المتبقي"
 retry = "إعادة المحاولة"
 save = "حفظ"
+stepOf = "Step {{current}} of {{total}}"
 
 [compare]
 clearSelected = "مسح المحدد"
@@ -3185,6 +3199,7 @@ title = "طريقة الضغط"
 [compress.settings]
 desiredSize = "حجم الملف المطلوب"
 desiredSizePlaceholder = "أدخل الحجم"
+desiredSizeUnit = "Size unit"
 
 [compress.tooltip.description]
 text = "الضغط طريقة سهلة لتقليل حجم ملفك. اختر حجم الملف لإدخال حجم مستهدف وسنعدّل الجودة من أجلك. اختر الجودة لضبط قوة الضغط يدويًا."
@@ -3387,6 +3402,24 @@ pdfOptions = "خيارات PDF"
 pdfToCbr = "PDF → CBR"
 pdfToCbz = "PDF → CBZ"
 pdfToEpub = "PDF → EPUB"
+pdfUaAltTextNotice = "Images need a written description before a document can be certified. Descriptions are never generated automatically, because an invented one passes the checker while telling a screen-reader user nothing. Any image left without one is reported, and the file comes back tagged but not certified."
+pdfUaAltTextScanFailed = "The images could not be listed. Convert anyway and the response reports what is missing."
+pdfUaAltTextSingleFileOnly = "Descriptions belong to one document: an image is identified by its position, which is a different image in every file. Convert these {{fileCount}} files to tag them, then convert one at a time to describe its images."
+pdfUaEmbedFonts = "Embed missing fonts"
+pdfUaEmbedFontsHelp = "PDF/UA requires every font to be embedded. Turning this off is faster but usually prevents conformance."
+pdfUaFigureLabel = "Page {{page}} {{kind}}"
+pdfUaFigurePlaceholder = "What this image tells the reader"
+pdfUaFindImages = "Find images needing a description"
+pdfUaLanguage = "Document language"
+pdfUaLanguageHelp = "A BCP-47 tag such as en-GB. Used only when the document does not already declare its own language."
+pdfUaNoImagesNeedingText = "No image is missing a description."
+pdfUaOptions = "PDF/UA Options"
+pdfUaOverrideLanguage = "Replace the document's own language"
+pdfUaOverrideLanguageHelp = "Only tick this if the language above is right and the document's own is wrong. Relabelling a document into a language it is not written in makes a screen reader unintelligible."
+pdfUaProfile = "Conformance level"
+pdfUaSignatureWarning = "This PDF is digitally signed. Tagging rewrites the page content the signature covers, so the signature will stop verifying. Convert first, then re-sign."
+pdfUaTitle = "Document title"
+pdfUaTitleHelp = "Shown by a reader instead of the filename. Left blank, the first heading is used."
 selectSourceFormatFirst = "حدّد أولًا صيغة المصدر"
 settings = "إعدادات"
 single = "مفرد"
@@ -3564,7 +3597,11 @@ tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [dropdownList]
+noItems = "No items available"
+noResults = "No results found"
 searchPlaceholder = "بحث..."
+selectLanguages = "Select languages"
+selectOption = "Select an option"
 
 [editableSecretField]
 edit = "تحرير"
@@ -3823,11 +3860,13 @@ shareSelected = "مشاركة المحدد"
 sharing = "مشاركة"
 showAll = "عرض الكل"
 showHistory = "عرض السجلّ"
+sortBy = "Sort files"
 sortByDate = "فرز حسب التاريخ"
 sortByName = "فرز حسب الاسم"
 sortBySize = "فرز حسب الحجم"
 storage = "التخزين"
 storageState = "التخزين"
+storageUsed = "Storage used"
 synced = "تمت المزامنة"
 title = "تحميل ملفات PDF"
 toolChain = "الأدوات المطبّقة"
@@ -3873,8 +3912,12 @@ addFiles = "إضافة ملفات"
 addingFiles = "جارٍ إضافة الملفات…"
 collapse = "طيّ الشريط الجانبي"
 customizeGroups = "تخصيص المجموعات"
+dataLostBody = "This browser lost this file's contents. Upload it again to keep working with it."
+dataLostTitle = "File data is unavailable"
+downloadFailed = "Download failed"
 dropHint = "افتح ملفات للبدء"
 dropToAdd = "Drop files to add"
+duplicateFailed = "Could not duplicate file"
 expand = "توسيع الشريط الجانبي"
 googleDrive = "Google Drive"
 googleDriveDisabled = "Google Drive غير مُكوَّن"
@@ -3887,15 +3930,17 @@ openFromComputer = "فتح من الكمبيوتر"
 openSettings = "فتح الإعدادات"
 other = "أخرى"
 recent = "الأحدث"
-search = "بحث"
-searchPlaceholder = "ابحث في الملفات..."
 viewAll = "عرض كل ملفات {{count}}"
 
 [fileSidebar.fileItem]
 closeViewer = "إغلاق العارض"
+dataLost = "Data lost"
+dataLostTooltip = "This browser lost this file's contents. Upload it again to keep working with it."
 delete = "Delete"
+duplicate = "Duplicate"
 moreActions = "More actions"
 openInViewer = "فتح في العارض"
+rename = "Rename"
 savedToServer = "Saved to server"
 updateOnServer = "Update on server"
 uploadToServer = "Upload to server"
@@ -3907,6 +3952,14 @@ reset = "إعادة التعيين إلى الافتراضيات"
 subtitle = "جمّع ملفاتك ضمن فئات رئيسية. أضف تسميات موجودة أو جديدة إلى فئة، أو أعد تسميتها، أو أنشئ فئتك الخاصة. تظهر الملفات غير الموجودة ضمن أي من فئاتك تحت “أخرى”."
 title = "فئات الشريط الجانبي"
 
+[fileSidebar.rename]
+cancel = "Cancel"
+error = "Could not rename the file."
+illegalCharacters = "A file name can't contain \\ / : * ? \" < > |"
+label = "File name"
+save = "Rename"
+title = "Rename file"
+
 [filesPage]
 addToWorkspace = "إضافة إلى مساحة العمل"
 addToWorkspaceCount = "إضافة {{count}} إلى مساحة العمل"
@@ -3915,9 +3968,9 @@ back = "رجوع"
 backToFolder = "الرجوع إلى {{folder}}"
 backToMyFiles = "الرجوع إلى ملفاتي"
 breadcrumbs = "مسار المجلد"
+bulkActions = "الإجراءات"
 cancel = "إلغاء"
 classification = "التصنيف"
-clearSearch = "مسح البحث"
 clearSelection = "مسح التحديد"
 closeDetails = "إغلاق التفاصيل"
 create = "إنشاء"
@@ -3949,6 +4002,7 @@ downloadAll = "تنزيل الكل"
 downloadVersion = "تنزيل هذا الإصدار"
 dropOverlay = "أفلِت الملفات للرفع"
 dropOverlaySub = "تبدأ الملفات محلياً. استخدم 'نقل إلى' أو 'حفظ إلى السحابة' لتنظيمها في مجلد."
+duplicate = "Duplicate"
 file = "ملف"
 fileInfo = "File info"
 fileMenu = "إجراءات الملف"
@@ -3982,8 +4036,6 @@ resizeFolderTree = "تغيير حجم شجرة المجلدات (مفاتيح ا
 save = "حفظ"
 saveToServer = "حفظ إلى الخادم"
 saveToServerDisabledHint = "الحفظ إلى الخادم غير مفعّل على هذا الخادم. اطلب من المسؤول تمكينه."
-search = "بحث"
-searchPlaceholder = "ابحث في هذا المجلد والمجلدات الفرعية"
 selectAll = "تحديد الكل"
 selectAllHint = "انقر لتحديد الكل. تلميح: اضغط Ctrl (أو Cmd) لإضافة الملفات واحداً تلو الآخر، وShift لتحديد نطاق."
 selectedCount = "{{count}} محدد"
@@ -4043,6 +4095,10 @@ title = "لا توجد ملفات سحابية بعد"
 hint = "الملفات المحفوظة دون رفع تبقى هنا. أسقط ملفاً لإضافته."
 title = "لا توجد ملفات محلية فقط"
 
+[filesPage.empty.noResults]
+hint = "No files in this folder match your filter. Try a different term or clear the filter."
+title = "No matching files"
+
 [filesPage.empty.recent]
 hint = "الملفات التي تفتحها أو تعدّلها ستظهر هنا."
 title = "لم يتم تعديل أي شيء بعد"
@@ -4062,6 +4118,8 @@ cloudDeleteFailed_one = "Couldn't delete 1 file from the cloud."
 cloudDeleteFailed_other = "Couldn't delete {{count}} files from the cloud."
 deleteFolderFailed = "تعذّر حذف المجلد."
 deleteFolderFailedDetail = "تعذّر حذف المجلد: {{message}}"
+downloadFailed = "Could not download the file."
+duplicateFailed = "Could not duplicate the file."
 folderAppearanceFailed = "تعذّر تحديث مظهر المجلد."
 folderAppearanceFailedDetail = "تعذّر تحديث مظهر المجلد: {{message}}"
 moveFilesFailed = "تعذّر نقل الملفات."
@@ -4083,6 +4141,11 @@ size = "الحجم"
 totalSize = "الحجم الإجمالي"
 type = "النوع"
 versionHistory = "رحلة الإصدارات"
+
+[filesPage.filters]
+activeCount = "{{count}} عوامل تصفية نشطة"
+clearAll = "مسح عوامل التصفية"
+label = "عوامل التصفية"
 
 [filesPage.folderName]
 cancel = "إلغاء"
@@ -4112,7 +4175,13 @@ localHint = "مخزّن فقط في هذا المتصفح"
 shared = "مُشترك"
 sharedHint = "تمت مشاركته معك عبر رابط"
 
+[filesPage.search]
+clear = "Clear filter"
+label = "Filter files by name"
+placeholder = "Filter files…"
+
 [filesPage.sort]
+label = "فرز الملفات"
 modifiedAsc = "الأقدم أولاً"
 modifiedDesc = "الأحدث أولاً"
 nameAsc = "الاسم A→Z"
@@ -4167,6 +4236,7 @@ noFilesInStorageOpen = "لا توجد ملفات في التخزين. افتح �
 open = "فتح"
 openFile = "فتح ملف"
 openFiles = "فتح ملفات"
+selectFile = "Select {{name}}"
 selectFromStorage = "الاختيار من التخزين"
 upload = "تحميل"
 uploadFile = "تحميل ملف"
@@ -4240,16 +4310,99 @@ issues = "GitHub"
 
 [formFill]
 allSaved = "تم حفظ الكل"
+analyzingFields = "Analysing form fields..."
+applyFailed = "تعذّر تطبيق التغييرات"
 extractCsvError = "فشل استخراج CSV"
 extractXlsxError = "فشل استخراج XLSX"
+filled = "filled"
 flattenAfterFilling = "تسطيح بعد التعبئة"
+goToPage = "الانتقال إلى هذه الصفحة"
+noFields = "No fillable form fields found in this PDF."
+page = "الصفحة"
+placeholderEnter = "Enter"
+placeholderSelect = "Select"
 requiredAbbreviation = "مطلوب"
 requiredFieldsError = "يُرجى ملء جميع الحقول المطلوبة"
 rescanFields = "إعادة فحص الحقول"
 rescanFormFields = "إعادة فحص حقول النموذج"
 save = "حفظ"
 saveShortcut = "Ctrl+S للحفظ"
+skippedEdits_one = "تعذّر تطبيق تغيير واحد:"
+skippedEdits_other = "تعذّر تطبيق {{count}} تغييرات:"
+skippedEditsTruncated = "{{count}} إضافية غير مدرجة."
 unsavedChanges = "تغييرات غير محفوظة"
+
+[formFill.create]
+commit = "إضافة {{count}} من الحقول إلى PDF"
+empty = "لم يتم رسم أي حقول بعد."
+failed = "فشل في إضافة الحقول"
+goToField = "الانتقال إلى هذا الحقل"
+hint = "اختر نوع الحقل، ثم ارسمه على الصفحة."
+placing = "ارسم حقل {{type}} على الصفحة. اضغط على Esc للتوقف."
+preview = "اضغط مطولًا للمعاينة"
+previewHelp = "اضغط مطولًا لرؤية الحقول كما ستبدو بعد إضافتها، دون حدود التحرير."
+removeField = "إزالة الحقل"
+
+[formFill.editor]
+action = "إجراء الزر"
+actionHelp = "ما يفعله الزر عند النقر عليه."
+actionNone = "لا شيء"
+actionPrint = "طباعة"
+actionReset = "إعادة تعيين النموذج"
+actionSubmit = "إرسال إلى URL"
+actionUri = "فتح URL"
+actionUrl = "URL"
+actionUrlHelp = "العنوان الذي يفتحه الزر أو يرسل إليه."
+addOption = "إضافة خيار"
+caption = "نص الزر"
+captionHelp = "النص المطبوع على واجهة الزر."
+defaultValue = "القيمة الافتراضية"
+defaultValueHelp = "ما يحتويه الحقل قبل أن يملأه أي شخص. اتركه فارغًا لحقل فارغ."
+fontSize = "حجم الخط"
+fontSizeHelp = "حجم النص داخل الحقل. اتركه فارغًا للسماح للقارئ بتغيير حجمه ليناسب المساحة."
+label = "التسمية"
+labelHelp = "النص المعروض لمن يملأ النموذج. اتركه فارغًا للرجوع إلى اسم الحقل."
+maxLength = "الحد الأقصى للطول (comb)"
+maxLengthHelp = "يحدد عدد الأحرف التي يمكن احتواؤها، مع رسمها كمربعات متباعدة بالتساوي."
+multiline = "متعدد الأسطر"
+multilineHelp = "يسمح بأكثر من سطر واحد من النص ويلتف عند حافة الحقل."
+multiSelect = "السماح بتحديد متعدد"
+multiSelectHelp = "يسمح باختيار أكثر من خيار واحد في الوقت نفسه."
+name = "اسم الحقل"
+nameHelp = "الاسم الداخلي للحقل. يُستخدم عند تصدير البيانات أو ملء النموذج من نظام آخر، لذا اجعله فريدًا وخاليًا من المسافات."
+optionGap = "تباعد الخيارات"
+optionGapHelp = "المسافة بين الأزرار، بالنقاط. اتركها فارغة لتوزيعها بالتساوي على طول المربع."
+optionPlaceholder = "الخيار {{n}}"
+options = "الخيارات"
+optionsEmpty = "أضف خيارًا واحدًا على الأقل."
+optionsHelp = "الاختيارات المعروضة في القائمة. يتم تخزين كل اختيار كما كُتب، لذا اجعلها قصيرة ومميزة."
+optionSize = "حجم الخيار"
+optionSizeHelp = "عرض وارتفاع كل زر، بالنقاط. اتركه فارغًا لملاءمتها مع المربع الذي رسمته."
+readOnly = "للقراءة فقط"
+readOnlyHelp = "يعرض قيمة لكنه يمنع أي شخص من تعديلها."
+removeOption = "إزالة الخيار"
+required = "مطلوب"
+requiredHelp = "لا يمكن إرسال النموذج حتى يتم ملء هذا الحقل."
+signatureNote = "عنصر نائب فقط - لا توقّع هنا. إنه يحدد مكان وجود التوقيع حتى يضع موقّع PDF (Adobe Acrobat، خدمة توقيع، وما إلى ذلك) التوقيع في هذا الموضع عند توقيع المستند."
+tooltip = "تلميح"
+tooltipHelp = "التلميح المعروض عندما يمرر شخص المؤشر فوق الحقل في قارئ PDF."
+type = "النوع"
+typeHelp = "نوع هذا الحقل. يؤدي تغييره إلى إعادة إنشاء الحقل، لذا لن يتم نقل قيمته الحالية."
+
+[formFill.mode]
+create = "إنشاء"
+fill = "ملء"
+label = "وضع محرر النماذج"
+modify = "تعديل"
+
+[formFill.modify]
+commit = "حفظ {{count}} من التغييرات"
+delete = "حذف"
+empty = "لا يحتوي ملف PDF هذا على أي حقول نموذج بعد."
+failed = "فشل في حفظ التغييرات"
+groupSizeHint = "استخدم حجم الخيار"
+hint = "حدد حقلًا لتعديل خصائصه، أو اسحبه على الصفحة، أو احذفه."
+restore = "استعادة"
 
 [formFill.sidebar]
 close = "إغلاق الشريط الجانبي"
@@ -4515,6 +4668,10 @@ title = "تغيير البيانات الوصفية"
 desc = "تغيير قيود المستند وأذوناته"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "تغيير الأذونات"
+
+[home.classify]
+desc = "تحديد نوع هذا المستند ووضع علامة عليه."
+title = "تصنيف"
 
 [home.compare]
 desc = "يقارن ويظهر الاختلافات بين مستندين PDF"
@@ -4794,9 +4951,6 @@ title = "صورة إلى PDF"
 [imageToPdf]
 tags = "تحويل,صورة,jpg,صورة,صورة فوتوغرافية"
 
-[infoBanner]
-dismiss = "تجاهل"
-
 [invite]
 acceptError = "فشل إنشاء الحساب"
 accountFor = "إنشاء حساب لـ"
@@ -4978,6 +5132,34 @@ uploadSuccess = "تم الرفع بنجاح!"
 uploadSuccessMessage = "تم نقل صورك."
 validating = "جارٍ التحقق من الجلسة..."
 
+[mobileSign]
+clear = "Clear"
+invalidSession = "Session expired"
+invalidSessionMessage = "This QR code is no longer valid. Open the Sign tool on your computer and scan the new code."
+penSizeLabel = "Pen size"
+send = "Send to computer"
+sendAnother = "Send another signature"
+sendError = "Could not send the signature. Check the connection and try again."
+sentMessage = "Signature sent to your computer. You can send another or close this page."
+tabsLabel = "Signature source"
+undo = "Undo"
+validating = "Checking session…"
+
+[mobileSign.photo]
+fromGallery = "From gallery"
+hint = "Photograph a signature on white paper, or choose an existing image."
+invalidType = "Please choose an image file."
+takePhoto = "Take a photo"
+
+[mobileSign.tab]
+draw = "Draw"
+photo = "Photo"
+type = "Type"
+
+[mobileSign.type]
+placeholder = "Your name"
+previewPlaceholder = "Signature preview"
+
 [mobileUpload]
 description = "امسح ضوئيًا لرفع الصور. تتحول الصور تلقائيًا إلى PDF."
 descriptionNoConvert = "امسح ضوئيًا لرفع الصور من جهازك المحمول."
@@ -4996,8 +5178,37 @@ title = "رفع من الهاتف المحمول"
 tags = "أداة متعددة,عملية متعددة,واجهة مستخدم,النقر والسحب,واجهة أمامية,جانب العميل"
 title = "أداة متعددة PDF"
 
-[navbar]
-search = "البحث"
+[navFooter]
+openEditor = "Open PDF Editor"
+openProcessor = "Open PDF Processor"
+
+[navFooter.credits]
+count = "{{remaining}} of {{total}}"
+label = "Free credits"
+
+[notifications]
+empty = "لا يوجد ما يمكن الإبلاغ عنه."
+handoffUnavailable = "لن يسمح هذا المتصفح للمعالج بتمرير المستند إلى المحرر. افتحه من المحرر بدلًا من ذلك."
+noDocumentLinked = "هذا الفشل غير مرتبط بمستند محدد، لذا لا يوجد ما يمكن فتحه هنا."
+notOnThisDevice = "هذا المستند غير موجود على هذا الجهاز، لذا لا يمكن فتحه هنا."
+occurrences = "{{count}} مرات"
+open = "الإشعارات"
+title = "الإشعارات"
+unread = "غير مقروء"
+
+[notifications.action]
+failed = "لم ينجح ذلك. حاول مرة أخرى بعد قليل."
+unavailable = "غير متاح لهذا الإشعار."
+
+[notifications.detail]
+copied = "تم النسخ"
+copy = "نسخ الخطأ"
+less = "عرض أقل"
+more = "عرض الرسالة كاملة"
+
+[notifications.section]
+earlier = "سابقًا"
+new = "جديد"
 
 [oauth.error]
 message = "لم تتم المصادقة بنجاح. يمكنك إغلاق هذه النافذة والمحاولة مجدداً."
@@ -5126,6 +5337,7 @@ activeFiles = "تعرض واجهة <strong>الملفات النشطة</strong> 
 allTools = "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools."
 close = "إغلاق"
 cropSettings = "بعد أن اخترنا الملف الذي نريد قصّه، يمكننا تهيئة أداة القص لاختيار المنطقة التي سنقصّ إليها ملف PDF."
+dialogLabel = "Onboarding"
 fileCheckbox = "يؤدي النقر على أحد الملفات إلى اختياره للمعالجة. يمكنك تحديد عدة ملفات لتنفيذ العمليات الدُفعية."
 fileReplacement = "سيحل الملف المعدّل محل الملف الأصلي في منضدة العمل تلقائيًا، مما يتيح لك تشغيله بسهولة عبر مزيد من الأدوات."
 filesButton = "يتيح زر <strong>الملفات</strong> في شريط الوصول السريع رفع ملفات PDF لاستخدام الأدوات عليها."
@@ -5562,6 +5774,7 @@ freeBody = "View, edit, merge, split, sign, watermark, compress, convert and man
 freeTitle = "Unlimited PDF editing"
 
 [payg.free.hero]
+barAria = "Free PDFs remaining"
 capSuffix = "/ {{limit}} free PDFs"
 metaCategories = "Automation · AI · API requests"
 
@@ -5641,6 +5854,7 @@ automation = "automations"
 default = "this feature"
 
 [payg.spendCapMeter]
+barAria = "Spend against cap"
 capSuffix = "/ {{amount}} cap"
 metaCategories = "Automation · AI · API spend"
 resets = "Resets each billing period"
@@ -5969,6 +6183,11 @@ header = "PDF إلى PDF/A"
 tags = "أرشيف,طويل الأجل,معيار,تحويل,تخزين,حفظ"
 title = "PDF إلى PDF/A"
 
+[pdfToPDFUA]
+header = "PDF To PDF/UA"
+tags = "accessibility,accessible,tagged,screen reader,wcag,eaa,section 508,conversion"
+title = "PDF To PDF/UA"
+
 [pdfToPDFX]
 tags = "طباعة,معيار,تحويل,إنتاج,ما قبل الطباعة,أرشفة"
 title = "PDF إلى PDF/X"
@@ -6044,6 +6263,7 @@ small = "500 رصيد"
 xsmall = "100 رصيد"
 
 [plan.availablePlans]
+currency = "Billing currency"
 subtitle = "اختر الخطة التي تناسب احتياجاتك"
 title = "الخطط المتاحة"
 
@@ -6623,11 +6843,12 @@ reachedTitle = "تم بلوغ حد الإنفاق الشهري"
 title = "تعذر فتح بوابة Stripe"
 
 [portal.billing.walletMeter]
+barAria = "Free PDFs remaining"
 capSuffix_one = "من {{allowance}} ملفات PDF مجانية مستخدمة"
 capSuffix_other = "من {{allowance}} ملفات PDF مجانية مستخدمة"
 eyebrow = "تجربة Processor"
-statusLabel_one = "متبقٍ {{remaining}}"
-statusLabel_other = "متبقٍ {{remaining}}"
+statusLabel_one = "تم استخدام {{used}}"
+statusLabel_other = "تم استخدام {{used}}"
 sub = "استخدم محرر PDF مجانًا. ادفع لمعالجة ملفات PDF تلقائيًا."
 title_one = "عالِج {{allowance}} ملف PDF مجانًا"
 title_other = "عالِج {{allowance}} ملفات PDF مجانًا"
@@ -6872,6 +7093,32 @@ label = "Jira"
 description = "أرسل مستندًا أو إشعارًا بالبريد الإلكتروني عندما تعمل سياسة."
 label = "Mailgun"
 
+[portal.connections.types.n8n]
+baseUrlPlaceholder = "https://your-n8n/webhook/9f2c-..."
+description = "Hand documents to an n8n workflow, and take back whatever it produces."
+label = "n8n"
+
+[portal.connections.types.n8n.fields.authType]
+helperText = "Match the Authentication set on the n8n Webhook node."
+label = "Webhook authentication"
+
+[portal.connections.types.n8n.fields.authType.options.basic]
+label = "Basic auth"
+
+[portal.connections.types.n8n.fields.authType.options.header]
+label = "Header auth"
+
+[portal.connections.types.n8n.fields.authType.options.none]
+label = "None"
+
+[portal.connections.types.n8n.fields.headerName]
+helperText = "The header name from the n8n credential, not its value."
+label = "Header name"
+placeholder = "X-N8N-Key"
+
+[portal.connections.types.n8n.fields.token]
+label = "Header value"
+
 [portal.connections.types.nextcloud]
 baseUrlPlaceholder = "https://your-server/remote.php/dav"
 description = "حفظ المستندات المعالجة في Nextcloud."
@@ -7076,11 +7323,6 @@ title = "SDKs الرسمية"
 beta = "Beta"
 deprecated = "مهمل"
 
-[portal.docs.search]
-empty = "لا توجد مستندات مطابقة"
-placeholder = "بحث في المستندات"
-results = "{{count}} نتيجة"
-
 [portal.docs.skills]
 eyebrow = "المهارات"
 lead = "قدرات مدمجة ومسمّاة يستدعيها وكيلك كأداة واحدة. كل مهارة هي سلسلة عمليات حتمية مع تقييمات مرفقة."
@@ -7179,11 +7421,11 @@ editorAction = "المحرر"
 empty = "لا توجد مستندات تطابق عامل التصفية هذا."
 rowActions = "إجراءات الصف"
 sensitiveLabel = "حساس"
-sensitiveTitle = "حساس — الوصول مطلوب"
 
 [portal.documents.table.columns]
 action = "مسار العمل / الإجراء"
 document = "المستند"
+labels = "Labels"
 product = "المنتج"
 status = "الحالة"
 time = "الوقت"
@@ -7199,6 +7441,7 @@ host = "المضيف"
 lastSeen = "آخر ظهور"
 region = "المنطقة"
 status = "الحالة"
+target = "Target"
 version = "الإصدار"
 
 [portal.editorAdmin.health.empty]
@@ -7272,6 +7515,60 @@ running = "قيد التشغيل"
 description = "واجه هذا العرض خطأً غير متوقع. حاول مرة أخرى، أو اختر قسمًا آخر من الشريط الجانبي."
 retry = "حاول مرة أخرى"
 title = "حدث خطأ ما في هذه الصفحة"
+
+[portal.failures]
+fromSource = "From source {{source}}"
+occurrences = "{{count}} occurrences"
+reportedBy = "Hit by {{actor}}"
+runReference = "Run {{runId}}"
+subtitle = "Failures recorded from your policy runs and your team's editors, with the actions you can take."
+title = "Failures"
+
+[portal.failures.action]
+acknowledge = "Acknowledge"
+confirm = "Are you sure?"
+dismiss = "Dismiss"
+dismissSkipFile = "Skip this file"
+viewFile = "عرض الملف"
+viewInProcessor = "عرض في المعالج"
+
+[portal.failures.debug]
+copyJson = "Copy JSON"
+dismissAll = "Dismiss all ({{total}})"
+dismissing = "Dismissing..."
+hideJson = "Hide raw JSON ({{total}})"
+refresh = "Refresh failures"
+showJson = "Show raw JSON ({{total}})"
+
+[portal.failures.disabled]
+closed = "This failure is already closed."
+noDocument = "لم يتم تسجيل هذا الفشل مقابل مستند محدد، لذا لا يوجد شيء هنا لفتحه."
+unattended = "تم إدخال هذا الملف بواسطة مجلد أو حاوية أو webhook، لذا لا يحتفظ به متصفح أي شخص لفتحه."
+unavailable = "Not available for this failure."
+
+[portal.failures.empty]
+description = "Policy runs that fail will appear here with the actions you can take."
+title = "No failures recorded"
+
+[portal.failures.kind.inputPasswordProtected]
+description = "The pipeline could not open the document because it is password-protected. Unlock it and run it again, or skip this file."
+title = "Password-protected document"
+
+[portal.failures.kind.unknown]
+description = "This run failed for a reason Stirling does not yet recognise. The raw message is shown below."
+title = "Unrecognised failure"
+
+[portal.failures.origin]
+pipeline = "Pipeline"
+policy = "Policy"
+tool = "Tool run"
+
+[portal.failures.stage]
+blocked = "Blocked"
+input = "Input"
+internal = "Internal"
+never_ran = "Never ran"
+output = "Output"
 
 [portal.home.download]
 back = "رجوع"
@@ -7379,11 +7676,6 @@ cancel = "إلغاء"
 confirm = "إبطال المفتاح"
 title = "إبطال مفتاح API"
 
-[portal.infrastructure.attestationLabel]
-attested = "مُصدق عليه"
-inScope = "ضمن النطاق"
-notApplicable = "غير منطبق"
-
 [portal.infrastructure.audit]
 filterAriaLabel = "تصفية أحداث التدقيق حسب الفئة"
 heading = "سجلات التدقيق"
@@ -7455,11 +7747,6 @@ info = "معلومات"
 success = "نجاح"
 warning = "تحذير"
 
-[portal.infrastructure.certLabel]
-certified = "معتمد"
-inProgress = "قيد التقدم"
-notStarted = "لم يبدأ"
-
 [portal.infrastructure.createKey]
 cancel = "إلغاء"
 createKey = "إنشاء مفتاح"
@@ -7473,237 +7760,9 @@ subtitleCreated = "انسخ هذا السر الآن — لن يتم عرضه م
 title = "إنشاء مفتاح API"
 titleCreated = "تم إنشاء المفتاح"
 
-[portal.infrastructure.deployLabel]
-live = "مباشر"
-queued = "في قائمة الانتظار"
-rolledBack = "تم التراجع"
-rolling = "جارٍ النشر"
-
-[portal.infrastructure.deployments]
-msValue = "{{value}} ms"
-throughputValue = "{{value}}/دقيقة"
-
-[portal.infrastructure.deployments.deployColumns]
-deployedBy = "تم النشر بواسطة"
-environment = "البيئة"
-product = "المنتج"
-status = "الحالة"
-version = "الإصدار"
-when = "متى"
-
-[portal.infrastructure.deployments.recent]
-heading = "عمليات النشر الأخيرة"
-subheading = "أحدث عمليات الطرح عبر المنتجات والبيئات."
-
-[portal.infrastructure.deployments.regionColumns]
-instances = "المثيلات"
-latency = "زمن الاستجابة"
-load = "الحمل"
-p99 = "P99"
-region = "المنطقة"
-status = "الحالة"
-throughput = "الإنتاجية"
-uptime = "وقت التشغيل"
-version = "الإصدار"
-
-[portal.infrastructure.deployments.regions]
-heading = "المناطق"
-subheading = "صحة حية لكل منطقة Stirling منشورة — زمن الاستجابة والحمل وإصدار الطرح."
-
-[portal.infrastructure.deployments.regions.empty]
-description = "ستظهر المناطق المنشورة هنا بمجرد تزويد مساحة عملك."
-title = "لا توجد مناطق منشورة"
-
 [portal.infrastructure.keyLabel]
 active = "نشط"
 revoked = "مُبطل"
-
-[portal.infrastructure.modelLabel]
-active = "نشط"
-degraded = "متدهور"
-disabled = "معطل"
-
-[portal.infrastructure.models]
-heading = "النماذج"
-msValue = "{{value}} ms"
-subheading = "كتالوج النماذج والتوجيه الذي يشغل معالجة المستندات عبر مساحة عملك."
-
-[portal.infrastructure.models.byom]
-description = "سجّل نموذجًا داخل المؤسسة أو مستضافًا ذاتيًا وثبّته في منطقة للمعالجة المقيدة بإقامة البيانات."
-title = "أحضر نموذجك الخاص"
-
-[portal.infrastructure.models.catalogue]
-heading = "الكتالوج"
-sub = "النماذج المُدارة المتاحة لمساحة عملك، مع زمن استجابة وتكلفة حيين."
-subEnterprise = "نماذج مُدارة، وأحضر نموذجك الخاص، ونماذج داخل المؤسسة — مع إمكانية التثبيت لكل منطقة."
-
-[portal.infrastructure.models.catalogue.empty]
-description = "ستظهر النماذج في كتالوج مساحة عملك هنا."
-title = "لا توجد نماذج متاحة"
-
-[portal.infrastructure.models.columns]
-cost = "التكلفة"
-latency = "زمن الاستجابة"
-load = "الحمل"
-model = "النموذج"
-status = "الحالة"
-type = "النوع"
-version = "الإصدار"
-
-[portal.infrastructure.models.cost]
-perCall = "{{price}}/استدعاء"
-perThousand = "{{price}}/1k"
-
-[portal.infrastructure.models.metrics]
-activeModels = "النماذج النشطة"
-avgLatency = "متوسط زمن الاستجابة"
-included = "مضمن"
-monthlySpend = "الإنفاق الشهري على النماذج"
-
-[portal.infrastructure.models.routing]
-empty = "لا توجد قواعد توجيه مكوّنة."
-heading = "قواعد التوجيه"
-sub = "أي نموذج يتولى كل عملية. ينطبق الافتراضي عندما لا تطابق قاعدة أضيق."
-subLocked = "وجّه العمليات إلى نماذج محددة — متاح في الخطط المدفوعة."
-
-[portal.infrastructure.models.routing.lockedBanner]
-description = "قم بالترقية إلى Pro للتحكم في النموذج الذي يتولى كل عملية ونوع مستند."
-title = "توجيه النماذج ميزة مدفوعة"
-
-[portal.infrastructure.models.routingColumns]
-default = "افتراضي"
-docType = "نوع المستند"
-modelForAria = "نموذج لـ {{operation}}"
-operation = "العملية"
-routedTo = "موجّه إلى"
-
-[portal.infrastructure.modelTypeLabel]
-classification = "التصنيف"
-extraction = "الاستخراج"
-llm = "LLM"
-ocr = "OCR"
-
-[portal.infrastructure.regionLabel]
-degraded = "متدهور"
-down = "متوقف"
-healthy = "سليم"
-
-[portal.infrastructure.security.access.byok]
-description = "قدّم مفتاحًا من KMS الخاص بك. يقوم Stirling بالتشفير به لكنه لا يزال قادرًا على القراءة."
-label = "أحضر مفتاحك الخاص (BYOK)"
-
-[portal.infrastructure.security.access.hyok]
-description = "لا تغادر المفاتيح KMS الخاص بك أبدًا. يحتفظ Stirling بالنص المشفر فقط."
-label = "احتفظ بمفتاحك الخاص (HYOK)"
-
-[portal.infrastructure.security.access.stirling]
-description = "يدير Stirling مفاتيح التشفير. الأبسط — لا عمليات مفاتيح من جانبك."
-label = "مفاتيح يحتفظ بها Stirling"
-
-[portal.infrastructure.security.accessPolicy]
-heading = "سياسة الوصول إلى المستندات"
-subheading = "تتحكم في من يمكنه فك تشفير المستندات المعالجة أثناء السكون."
-
-[portal.infrastructure.security.attestations]
-heading = "إثباتات الامتثال"
-noReport = "لا يوجد تقرير متاح"
-subheading = "وضع التدقيق حسب إطار العمل، مع تقارير متاحة للضوابط المثبتة."
-viewReport = "عرض التقرير ←"
-
-[portal.infrastructure.security.compliance]
-heading = "الامتثال"
-subheading = "إثباتات وشهادات تغطي منصة Stirling."
-
-[portal.infrastructure.security.empty]
-description = "سيظهر تكوين الأمان لمساحة عملك هنا."
-title = "وضع الأمان غير متاح"
-
-[portal.infrastructure.security.hyokBanner]
-description = "مع HYOK، لا تغادر مفاتيح التشفير KMS الخاص بك أبدًا. يخزن Stirling ويعالج فقط النص المشفر الذي يمكنك إلغاؤه في أي وقت."
-title = "لا يستطيع Stirling فك تشفير مستنداتك"
-
-[portal.infrastructure.security.ipAllowlist]
-empty = "لا توجد نطاقات IP مكوّنة — كل عناوين IP مسموح بها."
-heading = "قائمة سماح IP"
-sub = "وصول API مقيد بهذه نطاقات CIDR."
-subLocked = "قيّد وصول API إلى نطاقات IP معروفة — متاح في الخطط المدفوعة."
-
-[portal.infrastructure.security.ipAllowlist.lockedBanner]
-description = "قم بالترقية إلى Pro لتقييد وصول API إلى شبكات محددة."
-title = "قائمة سماح IP ميزة مدفوعة"
-
-[portal.infrastructure.security.ipColumns]
-added = "تمت الإضافة"
-addedBy = "أضيف بواسطة"
-cidr = "CIDR"
-label = "التسمية"
-
-[portal.infrastructure.security.keyManagement]
-algorithm = "الخوارزمية"
-heading = "إدارة مفاتيح التشفير"
-keyId = "معرّف المفتاح"
-lastRotated = "آخر تدوير"
-rotateKey = "تدوير المفتاح"
-rotationPolicy = "سياسة التدوير"
-subheading = "حيازة المفاتيح التي تشفر المستندات أثناء السكون — من يمكنه فك التشفير، وكيف يتم تدوير المفاتيح."
-
-[portal.infrastructure.security.managedBanner]
-description = "حيازة أحضر مفتاحك الخاص (BYOK) واحتفظ بمفتاحك الخاص (HYOK) متاحة في Enterprise. قم بالترقية لتقديم مفاتيح من KMS الخاص بك."
-title = "يدير Stirling المفاتيح في خطتك"
-
-[portal.infrastructure.security.residency.apac]
-description = "ap-southeast-1"
-label = "آسيا والمحيط الهادئ"
-
-[portal.infrastructure.security.residency.eu]
-description = "eu-west-1 · حدود بيانات GDPR"
-label = "الاتحاد الأوروبي"
-
-[portal.infrastructure.security.residency.us]
-description = "us-east-1 · us-west-2"
-label = "الولايات المتحدة"
-
-[portal.infrastructure.security.residencyHeader]
-heading = "إقامة البيانات"
-subheading = "مكان تخزين المستندات ومعالجتها."
-
-[portal.infrastructure.storage]
-gbValue = "{{value}} GB"
-percentUsed = "{{value}} مستخدم"
-
-[portal.infrastructure.storage.empty]
-description = "سيظهر التخزين المتصل والاستخدام هنا."
-title = "لا يوجد تخزين مكوّن"
-
-[portal.infrastructure.storage.lifecycle]
-active = "نشط"
-activeRange = "0–{{value}} يوم"
-archived = "مؤرشف"
-coldStorage = "تخزين بارد"
-deleted = "محذوف"
-never = "أبدًا"
-purged = "تمت إزالته نهائيًا"
-
-[portal.infrastructure.storage.providers]
-connect = "ربط"
-connected = "متصل"
-heading = "الموفرون المتصلون"
-subheading = "مكان كتابة المخرجات المعالجة."
-
-[portal.infrastructure.storage.retention]
-heading = "الاحتفاظ"
-subheading = "مدة الاحتفاظ بالمخرجات قبل حذف دورة الحياة."
-windowLabel = "نافذة الاحتفاظ الافتراضية"
-
-[portal.infrastructure.storage.retentionOption]
-days_one = "{{count}} يوم"
-days_other = "{{count}} أيام"
-never = "عدم الحذف أبدًا"
-
-[portal.infrastructure.storage.totalUsage]
-heading = "إجمالي الاستخدام"
-progressLabel = "التخزين المستخدم"
-subheading = "التخزين المستهلك عبر جميع الموفرين المتصلين."
 
 [portal.infrastructure.tabs]
 apiKeys = "مفاتيح API"
@@ -7714,11 +7773,9 @@ security = "الأمان"
 storage = "التخزين"
 
 [portal.integrations]
-addAnother = "إضافة آخر"
 availableHeading = "متاح"
 comingSoonHeading = "قريبًا"
 connect = "اتصال"
-connectedHeading = "متصل"
 connectionCount_one = "{{count}} اتصال"
 connectionCount_other = "{{count}} اتصالات"
 customApi = "API مخصص"
@@ -7735,6 +7792,10 @@ notify = "إشعار"
 security = "الأمان"
 signing = "التوقيع"
 storage = "التخزين"
+
+[portal.integrations.noResults]
+description = "No integrations match your filters. Try a different category or search."
+title = "No matches"
 
 [portal.integrations.status]
 connected = "متصل"
@@ -7766,7 +7827,6 @@ integrations = "التكاملات"
 pipelines = "مسارات العمل"
 policies = "السياسات"
 procurement = "المشتريات"
-settings = "الإعدادات"
 sources = "المصادر"
 usage = "الاستخدام والفوترة"
 users = "المستخدمون"
@@ -7783,7 +7843,7 @@ title = "مسارات العمل"
 newPipeline = "مسار عمل جديد"
 
 [portal.pipelines.builder]
-addStep = "إضافة أداة"
+activate = "Activate"
 back = "العودة إلى مسارات العمل"
 cannotFollow = "لا يمكن أخذ {{produced}}"
 chooseAccount = "اختر حسابًا"
@@ -7791,28 +7851,38 @@ chooseDestination = "اختر وجهة"
 chooseOperation = "اختر ما تفعله هذه الخطوة"
 chooseSource = "اختر مصدرًا"
 discard = "تجاهل التغييرات"
-enabled = "مفعّل"
 inputs = "الإدخال"
 inputSource = "مصدر الإدخال"
 inputTrigger = "المشغّل"
 keepEditing = "متابعة التحرير"
+moreActions = "More actions"
 needsConfiguring = "يحتاج إلى إعداد"
-needsUpload = "يحتاج إلى ملف مرفوع"
-noSources = "لا توجد مصادر متصلة بعد. أنشئ واحدًا لاستخدامه كإدخال."
+needsDestination = "No destination chosen"
+needsSource = "No source chosen"
 noToolMatches = "لا توجد أدوات تطابق بحثك."
-pipelineSettings = "إعدادات مسار العمل"
+pause = "Pause"
+rename = "Rename pipeline"
 searchTools = "البحث في الأدوات"
-selectToolBody = "أضف أداة لإنشاء مسار عملك."
-selectToolTitle = "لا توجد أدوات بعد"
 sendToSystem = "إرسال إلى نظام آخر"
 stepsIncompatible = "لا يمكن تشغيل هذه الخطوات على ما تنتجه الخطوة السابقة: {{tools}}."
 stepsNeedSetup = "لا تزال هذه الخطوات بحاجة إلى إعداد قبل الحفظ: {{tools}}."
-toolSettings = "إعدادات الأداة"
+supportingFiles = "Supporting files"
+testRun = "Test with a file"
 unknownStep = "عملية غير معروفة، تم الإبقاء عليها كما هي."
 unsavedBody = "لديك تغييرات غير محفوظة. احفظها قبل المغادرة، أم تتجاهلها؟"
 unsavedTitle = "تغييرات غير محفوظة"
-uploadUnsupported = "الملفات المرفوعة غير مدعومة في مسارات العمل بعد، لذلك لا يمكن حفظ هذه الخطوات: {{tools}}."
 usesDefaults = "يعمل بالإعدادات الافتراضية"
+viewDefinition = "View definition"
+
+[portal.pipelines.builder.blocker]
+destination = "Choose a destination"
+heading = "To create this pipeline:"
+incompatible = "Fix steps that can't run in order: {{tools}}"
+name = "Give the pipeline a name"
+saveHeading = "To save your changes:"
+schedule = "Set how often it runs"
+setup = "Finish setting up: {{tools}}"
+source = "Choose an input source"
 
 [portal.pipelines.builder.diagnostic]
 fan-in = "يجمع كل ملف من الخطوة السابقة"
@@ -7824,30 +7894,35 @@ undeclared-operation = "لا يمكن التحقق مما تقبله هذه ال
 
 [portal.pipelines.composer]
 addTool = "إضافة أداة"
-cancel = "إلغاء"
-chainEmpty = "أضف أداة لبدء إنشاء مسار عملك."
 create = "إنشاء مسار عمل"
+createPaused = "Create paused"
 editingUnsupported = "عرض معاملات هذه الأداة للتحرير غير مدعوم بعد."
-moveDown = "نقل إلى الأسفل"
-moveUp = "نقل إلى الأعلى"
+editSource = "Edit source"
 name = "الاسم"
 namePlaceholder = "مثال: مسح التنقيح"
 noToolSettings = "لا تحتوي هذه الأداة على إعدادات قابلة للتكوين."
-operations_one = "عملية ({{count}})"
-operations_other = "عمليات ({{count}})"
 output = "الإخراج"
-removeStep = "إزالة العملية"
 save = "حفظ التغييرات"
 scheduleEvery = "تشغيل كل"
-sources = "المصادر"
-sourcesLoading = "جارٍ تحميل المصادر..."
 trigger = "المشغّل"
 triggerManual = "يدوي فقط"
+
+[portal.pipelines.composer.runsEvery]
+days_one = "Runs every day"
+days_other = "Runs every {{count}} days"
+hours_one = "Runs every hour"
+hours_other = "Runs every {{count}} hours"
+minutes_one = "Runs every minute"
+minutes_other = "Runs every {{count}} minutes"
 
 [portal.pipelines.composer.unit]
 days = "أيام"
 hours = "ساعات"
 minutes = "دقائق"
+
+[portal.pipelines.definition]
+subtitle = "The pipeline as it would be saved."
+title = "Definition"
 
 [portal.pipelines.delete]
 body = "حذف \"{{name}}\"؟ لا يمكن التراجع عن هذا."
@@ -7866,6 +7941,37 @@ connectSource = "اتصال بمصدر"
 description = "أنشئ مسار عملك الأول: اختر المصادر التي يعمل عليها، وسلسلة العمليات، ومكان انتقال الإخراج."
 title = "لا توجد مسارات عمل بعد"
 
+[portal.pipelines.graph]
+addFirstTool = "Add a tool"
+dragHint = "Drop on a line to move it"
+insertHere = "Add a tool here"
+removeNode = "Remove {{name}}"
+showError = "Show why {{name}} failed"
+
+[portal.pipelines.graph.add]
+input = "Add a source"
+output = "Add a destination"
+
+[portal.pipelines.graph.run]
+done = "Done"
+failed = "Failed"
+running = "Running"
+
+[portal.pipelines.inspector]
+multipleBody = "Drag any of them onto a line to move them together, or press Delete to remove them."
+multipleSelected_one = "{{count}} step selected"
+multipleSelected_other = "{{count}} steps selected"
+noSelectionBody = "Pick a node in the graph to change what it does."
+noSelectionTitle = "Nothing selected"
+
+[portal.pipelines.inspector.status]
+completed_one = "Finished the only step"
+completed_other = "Finished all {{count}} steps"
+failed_one = "Failed on the only step"
+failed_other = "Failed after {{done}} of {{count}} steps"
+running_one = "Running the only step"
+running_other = "Running step {{done}} of {{count}}"
+
 [portal.pipelines.kpi]
 active = "نشطة"
 paused = "متوقفة مؤقتًا"
@@ -7878,7 +7984,6 @@ completed_one = "اكتمل التشغيل."
 completed_other = "اكتملت كل عمليات التشغيل البالغ عددها {{count}}."
 empty = "لا يوجد شيء لتشغيله: لم تكن لدى المصادر مستندات للمعالجة."
 failed = "فشل التشغيل: {{error}}"
-historyCleared = "تم مسح السجل. ستعيد عملية التشغيل التالية معالجة كل ما هو موجود حاليًا في المصادر."
 inFlight = "لا يوجد شيء جديد لتشغيله: لا تزال المستندات قيد المعالجة من عملية تشغيل سابقة."
 parked_one = "لا يوجد ما يمكن تشغيله: فشل مستند {{count}} سابقًا وتم إيقافه. أصلح السبب، ثم امسح السجل لإعادة المحاولة."
 parked_other = "لا يوجد ما يمكن تشغيله: فشلت مستندات عددها {{count}} سابقًا وتم إيقافها. أصلح السبب، ثم امسح السجل لإعادة المحاولة."
@@ -7894,6 +7999,7 @@ name = "مسار العمل"
 sources = "المصادر"
 status = "الحالة"
 steps = "الخطوات"
+trigger = "Trigger"
 
 [portal.pipelines.trigger]
 folder-watch = "مراقبة المجلد"
@@ -8207,6 +8313,24 @@ label = "إرفاق بمشكلة Jira"
 [portal.policies.operations.mailgunEmail]
 description = "يرسل المستند المعالج كمرفق."
 label = "إرسال المستند بالبريد الإلكتروني (Mailgun)"
+
+[portal.policies.operations.n8nGate]
+description = "Your workflow decides whether the run carries on."
+label = "Ask an n8n workflow to approve"
+note = "The workflow must reply with {\"approved\": true}. Anything else — including a timeout — stops the run and parks the document."
+
+[portal.policies.operations.n8nNotify]
+description = "Sends the run's details, not the document."
+label = "Tell an n8n workflow"
+
+[portal.policies.operations.n8nSend]
+description = "Sends the document and the run's details to your workflow."
+label = "Send the document to n8n"
+
+[portal.policies.operations.n8nTransform]
+description = "Your workflow processes the document and the file it returns replaces it."
+label = "Process the document in n8n"
+note = "Set the Webhook node to respond \"Using Respond to Webhook Node\", and return a file. On the default \"Immediately\" setting n8n replies with an acknowledgement, and that would replace the document."
 
 [portal.policies.operations.nextcloudUpload]
 description = "يكتب المستند المعالج في مجلد."
@@ -8682,16 +8806,6 @@ maxed = "بلغ الحد الأقصى"
 subtitle = "تستمر تجربتك المجانية حتى {{date}}. لا حاجة إلى بطاقة."
 title = "تجربة Enterprise"
 
-[portal.search]
-ariaLabel = "بحث"
-placeholder = "ابحث في Stirling — endpoints، المسارات، المستندات…"
-
-[portal.search.empty]
-noActionsDescription = "ستظهر الإجراءات السريعة هنا بمجرد توفرها."
-noActionsTitle = "لا توجد إجراءات سريعة"
-noMatches = "لا توجد نتائج لـ \"{{query}}\""
-noMatchesDescription = "جرّب كلمة مفتاحية مختلفة أو تصفح الفهرس."
-
 [portal.settings.groups]
 admin = "المسؤول"
 
@@ -8718,7 +8832,9 @@ title = "المصادر"
 connectSource = "توصيل مصدر"
 
 [portal.sources.builder]
+advanced = "متقدم"
 back = "العودة إلى المصادر"
+backToSource = "العودة إلى إعداد المصدر"
 backToTypes = "كل أنواع المصادر"
 cancel = "إلغاء"
 chooseHint = "اختر من أين تأتي المستندات. الموصلات باللون الرمادي قادمة قريبًا."
@@ -8728,7 +8844,6 @@ create = "إنشاء مصدر"
 createTitle = "اتصال بمصدر"
 delete = "حذف"
 editTitle = "تعديل المصدر"
-enabled = "مفعل"
 save = "حفظ التغييرات"
 
 [portal.sources.builder.folderAccess]
@@ -8741,10 +8856,6 @@ body = "حذف \"{{name}}\"؟ لا يمكن التراجع عن ذلك. يجب �
 cancel = "إلغاء"
 confirm = "حذف"
 title = "حذف المصدر؟"
-
-[portal.sources.empty]
-description = "وصّل مجلدًا (وقريبًا، التخزين السحابي) حتى يكون لدى سياساتك مكان تسحب منه المستندات."
-title = "لا توجد مصادر متصلة بعد"
 
 [portal.sources.kpi]
 inUse = "قيد الاستخدام"
@@ -8769,6 +8880,7 @@ consume = "استهلاك: معالجة كل ملف مرة واحدة"
 snapshot = "لقطة: إعادة قراءة المجلد في كل تشغيل"
 
 [portal.sources.networkFields.recursive]
+helperText = "قم بتضمين المجلدات الفرعية إذا كانت ملفاتك منظمة داخل مجلدات متداخلة، أو راقب المستوى الأعلى فقط."
 label = "عمق المجلد"
 
 [portal.sources.networkFields.recursive.options]
@@ -8784,6 +8896,7 @@ unused = "غير مستخدم"
 documents = "المستندات"
 source = "المصدر"
 status = "الحالة"
+type = "Type"
 usedBy = "السياسات"
 
 [portal.sources.types.box]
@@ -8821,6 +8934,7 @@ hash = "الحجم والتاريخ والتحقق من المحتوى"
 stat = "الحجم وتاريخ التعديل"
 
 [portal.sources.types.folder.fields.mode]
+helperText = "ما إذا كان سيتم ترك الملف الأصلي في مكانه بعد معالجته. إذا تُرك الملف الأصلي في مكانه، فستتم إعادة معالجته في المرة التالية التي يفحص فيها مسار المعالجة المصدر."
 label = "وضع القراءة"
 
 [portal.sources.types.folder.fields.mode.options]
@@ -8828,6 +8942,7 @@ consume = "استهلاك: معالجة كل ملف مرة واحدة"
 snapshot = "لقطة: إعادة قراءة المجلد في كل تشغيل"
 
 [portal.sources.types.folder.fields.recursive]
+helperText = "قم بتضمين المجلدات الفرعية إذا كانت ملفاتك منظمة داخل مجلدات متداخلة، أو راقب المستوى الأعلى فقط."
 label = "عمق المجلد"
 
 [portal.sources.types.folder.fields.recursive.options]
@@ -9701,7 +9816,9 @@ toolNotAvailableLocally = "خادم Stirling-PDF الخاص بك غير متصل
 expired = "لقد انتهت جلستك. يرجى تحديث الصفحة والمحاولة مرة أخرى"
 
 [settings]
+backToSections = "كل الإعدادات"
 close = "إغلاق"
+title = "الإعدادات"
 
 [settings.ai]
 documents = "المستندات و RAG"
@@ -9979,9 +10096,6 @@ title = "السياسات والخصوصية"
 [settings.preferences]
 title = "التفضيلات"
 
-[settings.search]
-placeholder = "ابحث في صفحات الإعدادات..."
-
 [settings.security]
 description = "حدّث كلمة مرورك للحفاظ على أمان حسابك."
 title = "الأمان"
@@ -10127,6 +10241,7 @@ last = "الصفحة الأخيرة"
 maintainRatio = "تبديل الحفاظ على نسبة الأبعاد"
 next = "الصفحة التالية"
 noSavedSigs = "لم يتم العثور على توقيعات محفوظة"
+penSizePlaceholder = "Type or select pen size (1-200)"
 personalSigs = "توقيعات شخصية"
 previous = "الصفحة السابقة"
 redo = "إعادة"
@@ -10165,6 +10280,7 @@ backgroundRemovalFailedTitle = "فشل إزالة الخلفية"
 hint = "ارفع صورة PNG أو JPG لتوقيعك"
 label = "رفع صورة التوقيع"
 placeholder = "اختر ملف صورة"
+previewAlt = "Current image signature"
 processing = "جارٍ معالجة الصورة..."
 removeBackground = "إزالة الخلفية البيضاء (جعلها شفافة)"
 
@@ -10177,6 +10293,17 @@ resumeHint = "استأنف الوضع للنقر وإضافة توقيعك."
 saved = "اختر توقيعاً محفوظاً أعلاه، ثم انقر في أي مكان على ملف PDF لوضعه."
 text = "بعد إدخال اسمك أعلاه، انقر في أي مكان على ملف PDF لوضع توقيعك."
 title = "كيفية إضافة توقيع"
+
+[sign.mobile]
+createFromPhone = "Mobile upload"
+description = "Scan this QR code with your phone or tablet, draw your signature, and it will appear here automatically."
+error = "Connection Error"
+expiryWarning = "QR Code Expiring Soon"
+expiryWarningMessage = "This QR code will expire in {{seconds}} seconds. A new code will be generated automatically."
+instructions = "Open the camera app on your phone and scan this code. Keep this window open while you draw."
+pollingError = "Error checking for the signature"
+sessionCreateError = "Failed to create session"
+title = "Draw on your phone"
 
 [sign.mode]
 move = "تحريك التوقيع"
@@ -10624,6 +10751,24 @@ title = "التحميل إلى الخادم"
 updateButton = "تحديث على الخادم"
 uploadButton = "تحميل إلى الخادم"
 
+[superSearch]
+all = "All"
+ariaLabel = "Super search"
+filtersAriaLabel = "Search filters"
+hint = "Type to search"
+placeholder = "Search Stirling"
+placeholderShort = "بحث"
+showLess = "Show less"
+showMore = "Show {{count}} more"
+
+[superSearch.group]
+docs = "Docs"
+files = "Files"
+pages = "Pages"
+processor = "Processor"
+settings = "Settings"
+tools = "Tools"
+
 [survey]
 title = "Stirling-PDF Survey"
 
@@ -10773,7 +10918,6 @@ goBack = "رجوع"
 pdfTools = "أدوات PDF"
 placeholder = "اختر أداة للبدء"
 premiumFeature = "ميزة Premium:"
-searchTools = "البحث في الأدوات"
 toolsHeader = "الأدوات"
 viewAllTools = "عرض كل الأدوات"
 
@@ -10810,6 +10954,7 @@ searchPlaceholder = "ابحث عن الأدوات..."
 
 [toolPicker.subcategories]
 advancedFormatting = "تنسيق متقدم"
+ai = "AI"
 automation = "أتمتة"
 developerTools = "أدوات المطوّر"
 documentReview = "مراجعة المستند"
@@ -10820,6 +10965,9 @@ pageFormatting = "تنسيق الصفحات"
 removal = "إزالة"
 signing = "توقيع"
 verification = "تحقق"
+
+[toolRenderer]
+notFound = "Tool not found: {{tool}}"
 
 [tools]
 noSearchResults = "لم يتم العثور على أدوات"
@@ -10978,6 +11126,13 @@ approver = "يعتمد السياسة"
 editor = "المحرر"
 processor = "المعالج"
 
+[users.columns]
+capabilities = "Capabilities"
+email = "Email"
+person = "Person"
+role = "Role"
+status = "Status"
+
 [users.confirm]
 cancelInviteBody = "إلغاء الدعوة إلى {{email}}؟ لن يتمكنوا من الانضمام باستخدام الرابط الحالي."
 cancelInviteTitle = "إلغاء الدعوة"
@@ -10997,10 +11152,8 @@ title = "لا يوجد أعضاء بعد"
 addToTeam = "إضافة إلى فريق"
 guestCount = "{{count}} ضيف"
 guests = "الضيوف"
-guestsDesc = "متعاونون خارجيون، ضمن نطاق ما شاركته. المحرر فقط."
 ledBy = "بقيادة {{owner}}"
 org = "المؤسسة"
-orgDesc = "مالكون بسلطة على مستوى المؤسسة واعتماد السياسات"
 owners = "{{count}} مالك"
 team = "فريق {{name}}"
 teamMeta = "{{count}} شخص"
@@ -11040,12 +11193,14 @@ usernamePlaceholder = "jsmith"
 [users.invites]
 by = "تمت الدعوة بواسطة {{who}}"
 cancel = "إلغاء"
-count = "{{count}} معلقة"
-desc = "الأشخاص المدعوون الذين لم ينضموا بعد. يحتفظون بمقعد حتى يقبلوا."
 expiresInDays_one = "تنتهي خلال يوم واحد"
 expiresInDays_other = "تنتهي خلال {{count}} أيام"
 expiresToday = "تنتهي اليوم"
 title = "الدعوات المعلقة"
+
+[users.invites.columns]
+expires = "Expires"
+invitee = "Invitee"
 
 [users.loadError]
 description = "حدث خطأ ما أثناء الوصول إلى الخادم الخلفي، أو ليس لديك صلاحية الوصول. حاول مرة أخرى."
@@ -11236,12 +11391,15 @@ searchPlaceholder = "ابحث في المرفقات"
 title = "المرفقات"
 
 [viewer.bookmarks]
+addBookmark = "Add bookmark"
 bookmarkTitle = "عنوان الإشارة المرجعية"
 bookmarkTitleRequired = "عنوان الإشارة المرجعية مطلوب"
 closeSidebar = "إغلاق الشريط الجانبي للإشارات المرجعية"
 collapseAll = "طي جميع الإشارات المرجعية"
+empty = "No bookmarks in this document"
 expandAll = "توسيع جميع الإشارات المرجعية"
 searchPlaceholder = "البحث في الإشارات المرجعية"
+title = "Bookmarks"
 
 [viewer.comments]
 addComment = "إضافة تعليق"
@@ -11263,10 +11421,12 @@ locateAnnotation = "تحديد الموقع في المستند"
 moreActions = "إجراءات أخرى"
 nComments_one = "{{count}} comment"
 nComments_other = "{{count}} comments"
+noMatch = "No comments match your search"
 pageLabel = "الصفحة {{page}}"
 placingHint = "انقر على صفحة لوضع… (إلغاء)"
 removeCommentOnly = "إزالة التعليق فقط"
 saveReply = "حفظ الرد"
+searchPlaceholder = "Search comments"
 title = "التعليقات"
 typeComment = "تعليق"
 typeInsertText = "إدراج نص"
@@ -11289,6 +11449,7 @@ unsavedDesc = "لديك تغييرات غير محفوظة"
 closeSidebar = "إغلاق الشريط الجانبي للطبقات"
 hideAll = "إخفاء جميع الطبقات"
 showAll = "إظهار جميع الطبقات"
+title = "Layers"
 
 [viewer.link]
 delete = "حذف الرابط"
@@ -11298,8 +11459,11 @@ columnDefault = "العمود {{index}}"
 convertToPdf = "التحويل إلى PDF"
 csvStats = "{{rows}} صفوف · {{columns}} أعمدة · {{size}}"
 emptyFile = "ملف فارغ"
+htmlHidePreview = "إخفاء المعاينة"
 htmlPreview = "معاينة HTML"
+htmlPreviewMobileHidden = "تم تصميم صفحات HTML لعرض سطح المكتب، لذلك تكون المعاينة معطلة افتراضيًا هنا."
 htmlPreviewWarning = "معاينة HTML — قد لا يتم تحميل الموارد الخارجية · {{size}}"
+htmlShowPreview = "إظهار المعاينة على أي حال"
 invalidJson = "JSON غير صالح — عرض المحتوى الخام"
 lineNumbers = "أرقام الأسطر"
 loading = "جارٍ التحميل..."
@@ -11645,6 +11809,8 @@ exitRedaction = "إنهاء وضع التنقيح"
 exportAll = "تصدير PDF"
 exportSelected = "تصدير الصفحات المحددة"
 formFill = "تعبئة النموذج"
+hideToolbar = "Hide toolbar"
+moreActions = "مزيد من الإجراءات"
 multiTool = "الأداة المتعددة"
 panMode = "وضع التحريك"
 print = "طباعة PDF"
@@ -11665,6 +11831,9 @@ selectAll = "تحديد الكل"
 selectByNumber = "تحديد حسب أرقام الصفحات"
 selectLanguage = "اختر اللغة"
 share = "مشاركة"
+showAllTools = "إظهار كل الأدوات"
+showFewerTools = "طي شريط الأدوات"
+showToolbar = "Show toolbar"
 toggleAnnotations = "تبديل ظهور الشروح"
 toggleAttachments = "تبديل عرض المرفقات"
 toggleBookmarks = "تبديل الإشارات المرجعية"

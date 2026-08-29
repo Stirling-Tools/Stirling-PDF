@@ -1,7 +1,6 @@
 alphabet = "حروف الفبا"
 apply = "اعمال"
 applyAndContinue = "ذخیره و خروج"
-areYouSure = "مطمئنید می‌خواهید خارج شوید؟"
 back = "بازگشت"
 black = "سیاه"
 blue = "آبی"
@@ -42,7 +41,7 @@ false = "غلط"
 fileNotSavedToDisk = "روی دیسک ذخیره نشد"
 fileSavedToDisk = "فایل روی دیسک ذخیره شد"
 fileSelected = "انتخاب‌شده: {{filename}}"
-filesSelected = "فایل‌ها انتخاب شدند"
+filesSelected = "{{count}} فایل"
 font = "فونت"
 fontSizeTooltip = "اندازه متن شماره صفحه بر حسب پوینت. اعداد بزرگ‌تر متن بزرگ‌تری ایجاد می‌کنند."
 fontTypeTooltip = "خانواده فونت برای شماره صفحات. بر اساس سبک سند خود انتخاب کنید."
@@ -106,6 +105,7 @@ undoSuccess = "عملیات با موفقیت واگردانی شد"
 unknown = "نامعلوم"
 unpin = "برداشتن سنجاق فایل (پس از اجرای ابزار جایگزین شود)"
 unsavedChanges = "شما تغییرات ذخیره‌نشده‌ای در PDF دارید."
+unsavedChangesBody = "You have unsaved changes to your PDF. Are you sure you want to leave?"
 unsavedChangesTitle = "تغییرات ذخیره‌نشده"
 unsupported = "پشتیبانی نمی‌شود"
 username = "نام کاربری"
@@ -1879,6 +1879,9 @@ width = "عرض"
 [app]
 description = "جایگزین رایگان Adobe Acrobat (10M+ دانلود)"
 
+[appBanner]
+dismiss = "Dismiss"
+
 [attachments]
 convertToPdfA3b = "تبدیل به PDF/A-3b"
 convertToPdfA3bDescription = "یک PDF آرشیوی با پیوست‌های توکار ایجاد می‌کند"
@@ -2933,12 +2936,16 @@ text = "برای غیرقابل‌تغییر کردن این مجوزها، از
 [chat.actions]
 copy = "کپی پیام"
 
+[chat.emptyState]
+text = "Ask a question about your documents or get help with PDF tools."
+
 [chat.fab]
 close = "Close chat"
 open = "Open Stirling AI assistant"
 
 [chat.header]
 agentMenu = "گزینه‌های عامل Stirling"
+assistant = "AI Assistant"
 clearChat = "پاک‌کردن چت"
 
 [chat.input]
@@ -3001,28 +3008,35 @@ tooltip = "این عملیات از اعتبارهای ابری شما استف�
 tooltip = "برداشت رنگ از صفحه"
 
 [colorPicker]
+hue = "Hue"
+saturation = "Saturation and brightness"
 title = "انتخاب رنگ"
 
 [common]
+actions = "Actions"
 back = "بازگشت"
 cancel = "انصراف"
 close = "بستن"
+codeSample = "Code sample"
 collapse = "جمع کردن"
 confirm = "تأیید"
 continue = "ادامه"
 copied = "کپی شد!"
 copy = "کپی"
 done = "انجام شد"
+enterValue = "Enter value"
 error = "خطا"
 expand = "گسترش دادن"
 loading = "در حال بارگذاری..."
 next = "بعدی"
+open = "Open"
 preview = "پیش‌نمایش"
 previous = "قبلی"
 refresh = "تازه‌سازی"
 remaining = "باقی‌مانده"
 retry = "تلاش مجدد"
 save = "ذخیره"
+stepOf = "Step {{current}} of {{total}}"
 
 [compare]
 clearSelected = "پاک کردن انتخاب‌شده‌ها"
@@ -3185,6 +3199,7 @@ title = "روش فشرده‌سازی"
 [compress.settings]
 desiredSize = "حجم فایل موردنظر"
 desiredSizePlaceholder = "اندازه را وارد کنید"
+desiredSizeUnit = "Size unit"
 
 [compress.tooltip.description]
 text = "فشرده‌سازی راهی آسان برای کاهش اندازه فایل است. «اندازه فایل» را انتخاب کنید تا اندازه هدف را وارد کنید و ما کیفیت را برای شما تنظیم کنیم. «کیفیت» را انتخاب کنید تا قدرت فشرده‌سازی را به‌صورت دستی تنظیم کنید."
@@ -3387,6 +3402,24 @@ pdfOptions = "گزینه‌های PDF"
 pdfToCbr = "PDF → CBR"
 pdfToCbz = "PDF → CBZ"
 pdfToEpub = "PDF → EPUB"
+pdfUaAltTextNotice = "Images need a written description before a document can be certified. Descriptions are never generated automatically, because an invented one passes the checker while telling a screen-reader user nothing. Any image left without one is reported, and the file comes back tagged but not certified."
+pdfUaAltTextScanFailed = "The images could not be listed. Convert anyway and the response reports what is missing."
+pdfUaAltTextSingleFileOnly = "Descriptions belong to one document: an image is identified by its position, which is a different image in every file. Convert these {{fileCount}} files to tag them, then convert one at a time to describe its images."
+pdfUaEmbedFonts = "Embed missing fonts"
+pdfUaEmbedFontsHelp = "PDF/UA requires every font to be embedded. Turning this off is faster but usually prevents conformance."
+pdfUaFigureLabel = "Page {{page}} {{kind}}"
+pdfUaFigurePlaceholder = "What this image tells the reader"
+pdfUaFindImages = "Find images needing a description"
+pdfUaLanguage = "Document language"
+pdfUaLanguageHelp = "A BCP-47 tag such as en-GB. Used only when the document does not already declare its own language."
+pdfUaNoImagesNeedingText = "No image is missing a description."
+pdfUaOptions = "PDF/UA Options"
+pdfUaOverrideLanguage = "Replace the document's own language"
+pdfUaOverrideLanguageHelp = "Only tick this if the language above is right and the document's own is wrong. Relabelling a document into a language it is not written in makes a screen reader unintelligible."
+pdfUaProfile = "Conformance level"
+pdfUaSignatureWarning = "This PDF is digitally signed. Tagging rewrites the page content the signature covers, so the signature will stop verifying. Convert first, then re-sign."
+pdfUaTitle = "Document title"
+pdfUaTitleHelp = "Shown by a reader instead of the filename. Left blank, the first heading is used."
 selectSourceFormatFirst = "ابتدا قالب مبدأ را انتخاب کنید"
 settings = "تنظیمات"
 single = "تکی"
@@ -3564,7 +3597,11 @@ tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [dropdownList]
+noItems = "No items available"
+noResults = "No results found"
 searchPlaceholder = "جستجو..."
+selectLanguages = "Select languages"
+selectOption = "Select an option"
 
 [editableSecretField]
 edit = "ویرایش"
@@ -3823,11 +3860,13 @@ shareSelected = "اشتراک‌گذاری موارد انتخاب‌شده"
 sharing = "اشتراک‌گذاری"
 showAll = "نمایش همه"
 showHistory = "نمایش تاریخچه"
+sortBy = "Sort files"
 sortByDate = "مرتب‌سازی بر اساس تاریخ"
 sortByName = "مرتب‌سازی بر اساس نام"
 sortBySize = "مرتب‌سازی بر اساس حجم"
 storage = "فضای ذخیره"
 storageState = "ذخیره‌سازی"
+storageUsed = "Storage used"
 synced = "همگام شد"
 title = "بارگذاری فایل‌های PDF"
 toolChain = "ابزارهای اعمال‌شده"
@@ -3873,8 +3912,12 @@ addFiles = "افزودن فایل‌ها"
 addingFiles = "در حال افزودن فایل‌ها…"
 collapse = "جمع کردن نوار کناری"
 customizeGroups = "سفارشی‌سازی گروه‌ها"
+dataLostBody = "This browser lost this file's contents. Upload it again to keep working with it."
+dataLostTitle = "File data is unavailable"
+downloadFailed = "Download failed"
 dropHint = "برای شروع فایل‌ها را باز کنید"
 dropToAdd = "Drop files to add"
+duplicateFailed = "Could not duplicate file"
 expand = "گسترش نوار کناری"
 googleDrive = "Google Drive"
 googleDriveDisabled = "Google Drive پیکربندی نشده است"
@@ -3887,15 +3930,17 @@ openFromComputer = "باز کردن از رایانه"
 openSettings = "باز کردن تنظیمات"
 other = "سایر"
 recent = "اخیر"
-search = "جستجو"
-searchPlaceholder = "جستجوی فایل‌ها..."
 viewAll = "مشاهده همه {{count}} فایل"
 
 [fileSidebar.fileItem]
 closeViewer = "بستن نمایشگر"
+dataLost = "Data lost"
+dataLostTooltip = "This browser lost this file's contents. Upload it again to keep working with it."
 delete = "Delete"
+duplicate = "Duplicate"
 moreActions = "More actions"
 openInViewer = "باز کردن در نمایشگر"
+rename = "Rename"
 savedToServer = "Saved to server"
 updateOnServer = "Update on server"
 uploadToServer = "Upload to server"
@@ -3907,6 +3952,14 @@ reset = "بازنشانی به پیش‌فرض‌ها"
 subtitle = "فایل‌های خود را در دسته‌های والد گروه‌بندی کنید. برچسب‌های موجود یا جدید را به یک دسته اضافه کنید، نام آن را تغییر دهید، یا دسته خودتان را بسازید. فایل‌هایی که در هیچ‌یک از دسته‌های شما نیستند زیر «سایر» نمایش داده می‌شوند."
 title = "دسته‌های نوار کناری"
 
+[fileSidebar.rename]
+cancel = "Cancel"
+error = "Could not rename the file."
+illegalCharacters = "A file name can't contain \\ / : * ? \" < > |"
+label = "File name"
+save = "Rename"
+title = "Rename file"
+
 [filesPage]
 addToWorkspace = "افزودن به فضای کاری"
 addToWorkspaceCount = "افزودن {{count}} مورد به فضای کاری"
@@ -3915,9 +3968,9 @@ back = "بازگشت"
 backToFolder = "بازگشت به {{folder}}"
 backToMyFiles = "بازگشت به فایل‌های من"
 breadcrumbs = "مسیر پوشه"
+bulkActions = "اقدامات"
 cancel = "لغو"
 classification = "طبقه‌بندی"
-clearSearch = "پاک‌کردن جستجو"
 clearSelection = "پاک‌کردن انتخاب"
 closeDetails = "بستن جزئیات"
 create = "ایجاد"
@@ -3949,6 +4002,7 @@ downloadAll = "دانلود همه"
 downloadVersion = "دانلود این نسخه"
 dropOverlay = "فایل‌ها را برای بارگذاری رها کنید"
 dropOverlaySub = "فایل‌ها در «محلی» شروع می‌شوند. برای سازمان‌دهی آن‌ها در یک پوشه از 'انتقال به' یا 'ذخیره در ابر' استفاده کنید."
+duplicate = "Duplicate"
 file = "فایل"
 fileInfo = "File info"
 fileMenu = "اقدامات فایل"
@@ -3982,8 +4036,6 @@ resizeFolderTree = "تغییر اندازهٔ درخت پوشه‌ها (کلید
 save = "ذخیره"
 saveToServer = "ذخیره در سرور"
 saveToServerDisabledHint = "ذخیره در سرور روی این سرور فعال نیست. از مدیر خود بخواهید آن را فعال کند."
-search = "جستجو"
-searchPlaceholder = "جستجوی این پوشه و زیرپوشه‌ها"
 selectAll = "انتخاب همه"
 selectAllHint = "برای انتخاب همه کلیک کنید. نکته: برای افزودن فایل‌ها به‌صورت تکی Ctrl (یا Cmd) را نگه دارید، و برای انتخاب یک بازه از Shift استفاده کنید."
 selectedCount = "{{count}} مورد انتخاب‌شده"
@@ -4043,6 +4095,10 @@ title = "هنوز فایلی در ابر نیست"
 hint = "فایل‌هایی که بدون بارگذاری ذخیره می‌کنید اینجا می‌مانند. برای افزودن، یک فایل را رها کنید."
 title = "هیچ فایل صرفاً محلی نیست"
 
+[filesPage.empty.noResults]
+hint = "No files in this folder match your filter. Try a different term or clear the filter."
+title = "No matching files"
+
 [filesPage.empty.recent]
 hint = "فایل‌هایی که باز یا ویرایش می‌کنید اینجا نمایش داده می‌شوند."
 title = "هنوز موردی تغییر نکرده است"
@@ -4062,6 +4118,8 @@ cloudDeleteFailed_one = "Couldn't delete 1 file from the cloud."
 cloudDeleteFailed_other = "Couldn't delete {{count}} files from the cloud."
 deleteFolderFailed = "امکان حذف پوشه نبود."
 deleteFolderFailedDetail = "امکان حذف پوشه نبود: {{message}}"
+downloadFailed = "Could not download the file."
+duplicateFailed = "Could not duplicate the file."
 folderAppearanceFailed = "امکان به‌روزرسانی ظاهر پوشه نبود."
 folderAppearanceFailedDetail = "امکان به‌روزرسانی ظاهر پوشه نبود: {{message}}"
 moveFilesFailed = "امکان جابه‌جایی فایل‌ها نبود."
@@ -4083,6 +4141,11 @@ size = "حجم"
 totalSize = "حجم کل"
 type = "نوع"
 versionHistory = "سفر نسخه"
+
+[filesPage.filters]
+activeCount = "{{count}} فیلتر فعال"
+clearAll = "پاک کردن فیلترها"
+label = "فیلترها"
 
 [filesPage.folderName]
 cancel = "لغو"
@@ -4112,7 +4175,13 @@ localHint = "فقط در این مرورگر ذخیره شده است"
 shared = "اشتراکی"
 sharedHint = "از طریق لینک با شما به اشتراک گذاشته شده"
 
+[filesPage.search]
+clear = "Clear filter"
+label = "Filter files by name"
+placeholder = "Filter files…"
+
 [filesPage.sort]
+label = "مرتب‌سازی فایل‌ها"
 modifiedAsc = "قدیمی‌ترین ابتدا"
 modifiedDesc = "جدیدترین ابتدا"
 nameAsc = "نام A→Z"
@@ -4167,6 +4236,7 @@ noFilesInStorageOpen = "فایلی در فضای ذخیره‌سازی موجو�
 open = "باز کردن"
 openFile = "باز کردن فایل"
 openFiles = "باز کردن فایل‌ها"
+selectFile = "Select {{name}}"
 selectFromStorage = "انتخاب از فضای ذخیره"
 upload = "بارگذاری"
 uploadFile = "بارگذاری فایل"
@@ -4240,16 +4310,99 @@ issues = "GitHub"
 
 [formFill]
 allSaved = "همه ذخیره شد"
+analyzingFields = "Analysing form fields..."
+applyFailed = "امکان اعمال تغییرات نبود"
 extractCsvError = "استخراج CSV ناموفق بود"
 extractXlsxError = "استخراج XLSX ناموفق بود"
+filled = "filled"
 flattenAfterFilling = "مسطح‌سازی پس از پرکردن"
+goToPage = "رفتن به این صفحه"
+noFields = "No fillable form fields found in this PDF."
+page = "صفحه"
+placeholderEnter = "Enter"
+placeholderSelect = "Select"
 requiredAbbreviation = "الزامی"
 requiredFieldsError = "لطفاً همه فیلدهای الزامی را پر کنید"
 rescanFields = "اسکن دوبارهٔ فیلدها"
 rescanFormFields = "اسکن دوبارهٔ فیلدهای فرم"
 save = "ذخیره"
 saveShortcut = "Ctrl+S برای ذخیره"
+skippedEdits_one = "۱ تغییر قابل اعمال نبود:"
+skippedEdits_other = "{{count}} تغییر قابل اعمال نبود:"
+skippedEditsTruncated = "{{count}} مورد دیگر فهرست نشده است."
 unsavedChanges = "تغییرات ذخیره‌نشده"
+
+[formFill.create]
+commit = "افزودن {{count}} فیلد به PDF"
+empty = "هنوز هیچ فیلدی رسم نشده است."
+failed = "افزودن فیلدها ناموفق بود"
+goToField = "رفتن به این فیلد"
+hint = "نوع فیلد را انتخاب کنید، سپس آن را روی صفحه رسم کنید."
+placing = "یک فیلد {{type}} روی صفحه رسم کنید. برای توقف Esc را فشار دهید."
+preview = "برای پیش‌نمایش نگه دارید"
+previewHelp = "نگه دارید تا فیلدها را همان‌طور که پس از افزودن دیده می‌شوند، بدون کادرهای ویرایش، ببینید."
+removeField = "حذف فیلد"
+
+[formFill.editor]
+action = "عملکرد دکمه"
+actionHelp = "کاری که دکمه هنگام کلیک انجام می‌دهد."
+actionNone = "هیچ‌کدام"
+actionPrint = "چاپ"
+actionReset = "بازنشانی فرم"
+actionSubmit = "ارسال به URL"
+actionUri = "باز کردن URL"
+actionUrl = "URL"
+actionUrlHelp = "آدرسی که دکمه باز می‌کند یا به آن ارسال می‌کند."
+addOption = "افزودن گزینه"
+caption = "عنوان دکمه"
+captionHelp = "متنی که روی دکمه چاپ می‌شود."
+defaultValue = "مقدار پیش‌فرض"
+defaultValueHelp = "مقداری که فیلد پیش از پر شدن دارد. برای فیلد خالی، خالی بگذارید."
+fontSize = "اندازه قلم"
+fontSizeHelp = "اندازه متن داخل فیلد. خالی بگذارید تا نمایشگر PDF آن را متناسب کند."
+label = "برچسب"
+labelHelp = "متنی که به کسی که فرم را پر می‌کند نمایش داده می‌شود. خالی بگذارید تا از نام فیلد استفاده شود."
+maxLength = "حداکثر طول (comb)"
+maxLengthHelp = "تعداد نویسه‌هایی را که جا می‌شوند محدود می‌کند و آن‌ها را به‌صورت خانه‌های با فاصله برابر رسم می‌کند."
+multiline = "چندخطی"
+multilineHelp = "اجازه می‌دهد بیش از یک خط متن وارد شود و متن در لبه فیلد به خط بعد برود."
+multiSelect = "اجازه انتخاب چندگانه"
+multiSelectHelp = "امکان انتخاب بیش از یک گزینه را هم‌زمان فراهم می‌کند."
+name = "نام فیلد"
+nameHelp = "نام داخلی فیلد. هنگام خروجی گرفتن از داده‌ها یا پر کردن فرم از سامانه‌ای دیگر استفاده می‌شود، بنابراین آن را یکتا و بدون فاصله نگه دارید."
+optionGap = "فاصله گزینه‌ها"
+optionGapHelp = "فاصله بین دکمه‌ها، بر حسب پوینت. خالی بگذارید تا به‌طور یکنواخت در طول کادر پخش شوند."
+optionPlaceholder = "گزینه {{n}}"
+options = "گزینه‌ها"
+optionsEmpty = "حداقل یک گزینه اضافه کنید."
+optionsHelp = "گزینه‌های ارائه‌شده در فهرست. هرکدام دقیقاً همان‌طور که تایپ شده ذخیره می‌شود، پس آن‌ها را کوتاه و متمایز نگه دارید."
+optionSize = "اندازه گزینه"
+optionSizeHelp = "عرض و ارتفاع هر دکمه، بر حسب پوینت. خالی بگذارید تا با کادری که رسم کرده‌اید متناسب شوند."
+readOnly = "فقط خواندنی"
+readOnlyHelp = "مقداری را نمایش می‌دهد اما از ویرایش آن جلوگیری می‌کند."
+removeOption = "حذف گزینه"
+required = "الزامی"
+requiredHelp = "فرم تا زمانی که این فیلد پر نشود نمی‌تواند ارسال شود."
+signatureNote = "فقط جای‌نگهدارنده است - شما اینجا امضا نمی‌کنید. این مشخص می‌کند امضا کجا قرار می‌گیرد تا یک امضاکننده PDF (Adobe Acrobat، یک سرویس امضا و غیره) هنگام امضای سند، امضا را در این محل قرار دهد."
+tooltip = "راهنمای شناور"
+tooltipHelp = "راهنمایی که وقتی کسی در نمایشگر PDF نشانگر را روی فیلد می‌برد نمایش داده می‌شود."
+type = "نوع"
+typeHelp = "این فیلد از چه نوعی است. تغییر آن فیلد را دوباره می‌سازد، بنابراین مقدار فعلی منتقل نمی‌شود."
+
+[formFill.mode]
+create = "ایجاد"
+fill = "پر کردن"
+label = "حالت ویرایشگر فرم"
+modify = "ویرایش"
+
+[formFill.modify]
+commit = "ذخیره {{count}} تغییر"
+delete = "حذف"
+empty = "این PDF هنوز هیچ فیلد فرمی ندارد."
+failed = "ذخیره تغییرات ناموفق بود"
+groupSizeHint = "استفاده از اندازه گزینه"
+hint = "فیلدی را برای ویرایش ویژگی‌هایش انتخاب کنید، آن را روی صفحه بکشید، یا حذفش کنید."
+restore = "بازیابی"
 
 [formFill.sidebar]
 close = "بستن نوار کناری"
@@ -4515,6 +4668,10 @@ title = "تغییر متاداده"
 desc = "تغییر محدودیت‌ها و مجوزهای سند"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "تغییر مجوزها"
+
+[home.classify]
+desc = "نوع این سند را شناسایی و آن را برچسب‌گذاری کنید."
+title = "طبقه‌بندی"
 
 [home.compare]
 desc = "مقایسه و نمایش تفاوت‌ها بین 2 سند PDF"
@@ -4794,9 +4951,6 @@ title = "تبدیل تصویر به PDF"
 [imageToPdf]
 tags = "تبدیل،عکس،jpg،تصویر،عکس"
 
-[infoBanner]
-dismiss = "بستن"
-
 [invite]
 acceptError = "ایجاد حساب ناموفق بود"
 accountFor = "در حال ایجاد حساب برای"
@@ -4978,6 +5132,34 @@ uploadSuccess = "آپلود موفق!"
 uploadSuccessMessage = "تصاویر شما منتقل شدند."
 validating = "در حال اعتبارسنجی نشست..."
 
+[mobileSign]
+clear = "Clear"
+invalidSession = "Session expired"
+invalidSessionMessage = "This QR code is no longer valid. Open the Sign tool on your computer and scan the new code."
+penSizeLabel = "Pen size"
+send = "Send to computer"
+sendAnother = "Send another signature"
+sendError = "Could not send the signature. Check the connection and try again."
+sentMessage = "Signature sent to your computer. You can send another or close this page."
+tabsLabel = "Signature source"
+undo = "Undo"
+validating = "Checking session…"
+
+[mobileSign.photo]
+fromGallery = "From gallery"
+hint = "Photograph a signature on white paper, or choose an existing image."
+invalidType = "Please choose an image file."
+takePhoto = "Take a photo"
+
+[mobileSign.tab]
+draw = "Draw"
+photo = "Photo"
+type = "Type"
+
+[mobileSign.type]
+placeholder = "Your name"
+previewPlaceholder = "Signature preview"
+
 [mobileUpload]
 description = "برای آپلود عکس‌ها اسکن کنید. تصاویر به‌صورت خودکار به PDF تبدیل می‌شوند."
 descriptionNoConvert = "برای آپلود عکس‌ها از دستگاه موبایل خود اسکن کنید."
@@ -4996,8 +5178,37 @@ title = "آپلود از موبایل"
 tags = "ابزار چندگانه،عملیات چندگانه،واسط کاربری،کلیک و کشیدن،فرانت‌اند،کاربردی،قابل تعامل،جابجایی،حذف،تقسیم"
 title = "ابزار چندگانه PDF"
 
-[navbar]
-search = "جستجو"
+[navFooter]
+openEditor = "Open PDF Editor"
+openProcessor = "Open PDF Processor"
+
+[navFooter.credits]
+count = "{{remaining}} of {{total}}"
+label = "Free credits"
+
+[notifications]
+empty = "چیزی برای گزارش وجود ندارد."
+handoffUnavailable = "این مرورگر اجازه نمی‌دهد پردازشگر سند را به ویرایشگر منتقل کند. به‌جای آن، آن را از ویرایشگر باز کنید."
+noDocumentLinked = "این خطا به سند خاصی مرتبط نیست، بنابراین چیزی برای باز کردن در اینجا وجود ندارد."
+notOnThisDevice = "این سند روی این دستگاه نیست، بنابراین نمی‌توان آن را اینجا باز کرد."
+occurrences = "{{count}} بار"
+open = "اعلان‌ها"
+title = "اعلان‌ها"
+unread = "خوانده‌نشده"
+
+[notifications.action]
+failed = "انجام نشد. کمی بعد دوباره تلاش کنید."
+unavailable = "برای این اعلان در دسترس نیست."
+
+[notifications.detail]
+copied = "کپی شد"
+copy = "کپی خطا"
+less = "نمایش کمتر"
+more = "نمایش پیام کامل"
+
+[notifications.section]
+earlier = "پیش‌تر"
+new = "جدید"
 
 [oauth.error]
 message = "احراز هویت موفق نبود. می‌توانید این پنجره را ببندید و دوباره تلاش کنید."
@@ -5126,6 +5337,7 @@ activeFiles = "نمای <strong>Active Files</strong> همه PDFهایی را ک
 allTools = "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools."
 close = "بستن"
 cropSettings = "حالا که فایلی را که می‌خواهیم برش دهیم انتخاب کرده‌ایم، می‌توانیم ابزار Crop را پیکربندی کنیم تا ناحیه‌ای را که می‌خواهیم PDF به آن برش داده شود انتخاب کنیم."
+dialogLabel = "Onboarding"
 fileCheckbox = "با کلیک روی یکی از فایل‌ها، آن برای پردازش انتخاب می‌شود. می‌توانید چندین فایل را برای عملیات دسته‌ای انتخاب کنید."
 fileReplacement = "فایل تغییر‌یافته به‌طور خودکار در Workbench جایگزین فایل اصلی می‌شود و امکان می‌دهد به‌راحتی آن را از ابزارهای بیشتری عبور دهید."
 filesButton = "دکمه <strong>Files</strong> در نوار دسترسی سریع به شما امکان می‌دهد PDFها را برای استفاده در ابزارها بارگذاری کنید."
@@ -5562,6 +5774,7 @@ freeBody = "View, edit, merge, split, sign, watermark, compress, convert and man
 freeTitle = "Unlimited PDF editing"
 
 [payg.free.hero]
+barAria = "Free PDFs remaining"
 capSuffix = "/ {{limit}} free PDFs"
 metaCategories = "Automation · AI · API requests"
 
@@ -5641,6 +5854,7 @@ automation = "automations"
 default = "this feature"
 
 [payg.spendCapMeter]
+barAria = "Spend against cap"
 capSuffix = "/ {{amount}} cap"
 metaCategories = "Automation · AI · API spend"
 resets = "Resets each billing period"
@@ -5969,6 +6183,11 @@ header = "PDF به PDF/A"
 tags = "آرشیو،ذخیره‌سازی بلندمدت،استاندارد،تبدیل،ذخیره‌سازی،حفظ"
 title = "PDF به PDF/A"
 
+[pdfToPDFUA]
+header = "PDF To PDF/UA"
+tags = "accessibility,accessible,tagged,screen reader,wcag,eaa,section 508,conversion"
+title = "PDF To PDF/UA"
+
 [pdfToPDFX]
 tags = "چاپ,استاندارد,تبدیل,تولید,پیش‌ازچاپ,آرشیو"
 title = "تبدیل PDF به PDF/X"
@@ -6044,6 +6263,7 @@ small = "500 اعتبار"
 xsmall = "100 اعتبار"
 
 [plan.availablePlans]
+currency = "Billing currency"
 subtitle = "طرحی را انتخاب کنید که با نیازهای شما سازگار است"
 title = "طرح‌های موجود"
 
@@ -6623,11 +6843,12 @@ reachedTitle = "حد هزینه ماهانه رسیده است"
 title = "امکان باز کردن پورتال Stripe وجود نداشت"
 
 [portal.billing.walletMeter]
+barAria = "Free PDFs remaining"
 capSuffix_one = "از {{allowance}} PDF رایگان استفاده شده"
 capSuffix_other = "از {{allowance}} PDF رایگان استفاده شده"
 eyebrow = "آزمایشی Processor"
-statusLabel_one = "{{remaining}} باقی‌مانده"
-statusLabel_other = "{{remaining}} باقی‌مانده"
+statusLabel_one = "{{used}} استفاده‌شده"
+statusLabel_other = "{{used}} استفاده‌شده"
 sub = "از PDF Editor رایگان استفاده کنید. برای پردازش خودکار PDFها پرداخت کنید."
 title_one = "{{allowance}} PDF را رایگان پردازش کنید"
 title_other = "{{allowance}} PDF را رایگان پردازش کنید"
@@ -6872,6 +7093,32 @@ label = "Jira"
 description = "وقتی یک خط‌مشی اجرا می‌شود، سند یا اعلان را ایمیل کنید."
 label = "Mailgun"
 
+[portal.connections.types.n8n]
+baseUrlPlaceholder = "https://your-n8n/webhook/9f2c-..."
+description = "Hand documents to an n8n workflow, and take back whatever it produces."
+label = "n8n"
+
+[portal.connections.types.n8n.fields.authType]
+helperText = "Match the Authentication set on the n8n Webhook node."
+label = "Webhook authentication"
+
+[portal.connections.types.n8n.fields.authType.options.basic]
+label = "Basic auth"
+
+[portal.connections.types.n8n.fields.authType.options.header]
+label = "Header auth"
+
+[portal.connections.types.n8n.fields.authType.options.none]
+label = "None"
+
+[portal.connections.types.n8n.fields.headerName]
+helperText = "The header name from the n8n credential, not its value."
+label = "Header name"
+placeholder = "X-N8N-Key"
+
+[portal.connections.types.n8n.fields.token]
+label = "Header value"
+
 [portal.connections.types.nextcloud]
 baseUrlPlaceholder = "https://your-server/remote.php/dav"
 description = "اسناد پردازش‌شده را در Nextcloud قرار دهید."
@@ -7076,11 +7323,6 @@ title = "SDKهای رسمی"
 beta = "Beta"
 deprecated = "منسوخ‌شده"
 
-[portal.docs.search]
-empty = "مستندات مطابقی وجود ندارد"
-placeholder = "جست‌وجوی مستندات"
-results = "{{count}} نتیجه"
-
 [portal.docs.skills]
 eyebrow = "مهارت‌ها"
 lead = "قابلیت‌های بسته‌بندی‌شده و نام‌دار که عامل شما به‌عنوان یک ابزار واحد فراخوانی می‌کند. هر مهارت یک زنجیره عملیات قطعی با ارزیابی‌های پیوست‌شده است."
@@ -7179,11 +7421,11 @@ editorAction = "ویرایشگر"
 empty = "هیچ سندی با این فیلتر مطابقت ندارد."
 rowActions = "اقدامات ردیف"
 sensitiveLabel = "حساس"
-sensitiveTitle = "حساس — دسترسی لازم است"
 
 [portal.documents.table.columns]
 action = "Pipeline / اقدام"
 document = "سند"
+labels = "Labels"
 product = "محصول"
 status = "وضعیت"
 time = "زمان"
@@ -7199,6 +7441,7 @@ host = "Host"
 lastSeen = "آخرین مشاهده"
 region = "Region"
 status = "وضعیت"
+target = "Target"
 version = "نسخه"
 
 [portal.editorAdmin.health.empty]
@@ -7272,6 +7515,60 @@ running = "در حال اجرا"
 description = "این نما با خطای غیرمنتظره‌ای روبه‌رو شد. دوباره تلاش کنید، یا بخش دیگری را از نوار کناری انتخاب کنید."
 retry = "دوباره تلاش کنید"
 title = "در این صفحه مشکلی پیش آمد"
+
+[portal.failures]
+fromSource = "From source {{source}}"
+occurrences = "{{count}} occurrences"
+reportedBy = "Hit by {{actor}}"
+runReference = "Run {{runId}}"
+subtitle = "Failures recorded from your policy runs and your team's editors, with the actions you can take."
+title = "Failures"
+
+[portal.failures.action]
+acknowledge = "Acknowledge"
+confirm = "Are you sure?"
+dismiss = "Dismiss"
+dismissSkipFile = "Skip this file"
+viewFile = "مشاهده فایل"
+viewInProcessor = "مشاهده در پردازشگر"
+
+[portal.failures.debug]
+copyJson = "Copy JSON"
+dismissAll = "Dismiss all ({{total}})"
+dismissing = "Dismissing..."
+hideJson = "Hide raw JSON ({{total}})"
+refresh = "Refresh failures"
+showJson = "Show raw JSON ({{total}})"
+
+[portal.failures.disabled]
+closed = "This failure is already closed."
+noDocument = "این خطا برای سند خاصی ثبت نشده است، بنابراین چیزی برای باز کردن در اینجا وجود ندارد."
+unattended = "این فایل از طریق یک پوشه، bucket یا webhook وارد شده است، بنابراین مرورگر هیچ‌کس آن را برای باز کردن در اختیار ندارد."
+unavailable = "Not available for this failure."
+
+[portal.failures.empty]
+description = "Policy runs that fail will appear here with the actions you can take."
+title = "No failures recorded"
+
+[portal.failures.kind.inputPasswordProtected]
+description = "The pipeline could not open the document because it is password-protected. Unlock it and run it again, or skip this file."
+title = "Password-protected document"
+
+[portal.failures.kind.unknown]
+description = "This run failed for a reason Stirling does not yet recognise. The raw message is shown below."
+title = "Unrecognised failure"
+
+[portal.failures.origin]
+pipeline = "Pipeline"
+policy = "Policy"
+tool = "Tool run"
+
+[portal.failures.stage]
+blocked = "Blocked"
+input = "Input"
+internal = "Internal"
+never_ran = "Never ran"
+output = "Output"
 
 [portal.home.download]
 back = "بازگشت"
@@ -7379,11 +7676,6 @@ cancel = "لغو"
 confirm = "لغو کلید"
 title = "لغو کلید API"
 
-[portal.infrastructure.attestationLabel]
-attested = "تأییدشده"
-inScope = "در محدوده"
-notApplicable = "N/A"
-
 [portal.infrastructure.audit]
 filterAriaLabel = "فیلتر کردن رویدادهای حسابرسی بر اساس دسته"
 heading = "گزارش‌های حسابرسی"
@@ -7455,11 +7747,6 @@ info = "اطلاعات"
 success = "موفقیت"
 warning = "هشدار"
 
-[portal.infrastructure.certLabel]
-certified = "گواهی‌شده"
-inProgress = "در حال انجام"
-notStarted = "شروع نشده"
-
 [portal.infrastructure.createKey]
 cancel = "لغو"
 createKey = "ایجاد کلید"
@@ -7473,237 +7760,9 @@ subtitleCreated = "این secret را اکنون کپی کنید — دوبار�
 title = "ایجاد کلید API"
 titleCreated = "کلید ایجاد شد"
 
-[portal.infrastructure.deployLabel]
-live = "فعال"
-queued = "در صف"
-rolledBack = "بازگردانی‌شده"
-rolling = "در حال انتشار"
-
-[portal.infrastructure.deployments]
-msValue = "{{value}} ms"
-throughputValue = "{{value}}/دقیقه"
-
-[portal.infrastructure.deployments.deployColumns]
-deployedBy = "مستقرشده توسط"
-environment = "محیط"
-product = "محصول"
-status = "وضعیت"
-version = "نسخه"
-when = "زمان"
-
-[portal.infrastructure.deployments.recent]
-heading = "استقرارهای اخیر"
-subheading = "آخرین rolloutها در محصولات و محیط‌ها."
-
-[portal.infrastructure.deployments.regionColumns]
-instances = "نمونه‌ها"
-latency = "Latency"
-load = "بار"
-p99 = "P99"
-region = "Region"
-status = "وضعیت"
-throughput = "Throughput"
-uptime = "Uptime"
-version = "نسخه"
-
-[portal.infrastructure.deployments.regions]
-heading = "Regions"
-subheading = "سلامت زنده برای هر Stirling region مستقرشده — latency، بار و نسخه rollout."
-
-[portal.infrastructure.deployments.regions.empty]
-description = "پس از تأمین فضای کاری شما، regionهای مستقرشده اینجا نمایش داده می‌شوند."
-title = "هیچ regionی مستقر نشده است"
-
 [portal.infrastructure.keyLabel]
 active = "فعال"
 revoked = "لغوشده"
-
-[portal.infrastructure.modelLabel]
-active = "فعال"
-degraded = "دارای اختلال"
-disabled = "غیرفعال"
-
-[portal.infrastructure.models]
-heading = "مدل‌ها"
-msValue = "{{value}} ms"
-subheading = "کاتالوگ مدل و routing که پردازش سند را در سراسر فضای کاری شما توانمند می‌کند."
-
-[portal.infrastructure.models.byom]
-description = "یک مدل on-prem یا خودمیزبان ثبت کنید و آن را برای پردازش محدود به data residency به یک region پین کنید."
-title = "مدل خودتان را بیاورید"
-
-[portal.infrastructure.models.catalogue]
-heading = "کاتالوگ"
-sub = "مدل‌های مدیریت‌شده در دسترس فضای کاری شما، با latency و هزینه زنده."
-subEnterprise = "مدل‌های مدیریت‌شده، bring-your-own و on-prem — با امکان پین کردن برای هر region."
-
-[portal.infrastructure.models.catalogue.empty]
-description = "مدل‌های موجود در کاتالوگ فضای کاری شما اینجا نمایش داده می‌شوند."
-title = "هیچ مدلی در دسترس نیست"
-
-[portal.infrastructure.models.columns]
-cost = "هزینه"
-latency = "Latency"
-load = "بار"
-model = "مدل"
-status = "وضعیت"
-type = "نوع"
-version = "نسخه"
-
-[portal.infrastructure.models.cost]
-perCall = "{{price}}/فراخوانی"
-perThousand = "{{price}}/1k"
-
-[portal.infrastructure.models.metrics]
-activeModels = "مدل‌های فعال"
-avgLatency = "میانگین latency"
-included = "شامل‌شده"
-monthlySpend = "هزینه ماهانه مدل"
-
-[portal.infrastructure.models.routing]
-empty = "هیچ قانون routing پیکربندی نشده است."
-heading = "قوانین routing"
-sub = "کدام مدل هر عملیات را مدیریت می‌کند. حالت پیش‌فرض زمانی اعمال می‌شود که هیچ قانون محدودتری مطابقت نداشته باشد."
-subLocked = "هدایت عملیات به مدل‌های مشخص — در طرح‌های پولی در دسترس است."
-
-[portal.infrastructure.models.routing.lockedBanner]
-description = "برای کنترل اینکه کدام مدل هر عملیات و نوع سند را مدیریت کند، به Pro ارتقا دهید."
-title = "Model routing یک قابلیت پولی است"
-
-[portal.infrastructure.models.routingColumns]
-default = "پیش‌فرض"
-docType = "نوع سند"
-modelForAria = "مدل برای {{operation}}"
-operation = "عملیات"
-routedTo = "هدایت‌شده به"
-
-[portal.infrastructure.modelTypeLabel]
-classification = "طبقه‌بندی"
-extraction = "استخراج"
-llm = "LLM"
-ocr = "OCR"
-
-[portal.infrastructure.regionLabel]
-degraded = "دارای اختلال"
-down = "از کار افتاده"
-healthy = "سالم"
-
-[portal.infrastructure.security.access.byok]
-description = "یک کلید از KMS خودتان ارائه دهید. Stirling با آن رمزنگاری می‌کند اما همچنان می‌تواند بخواند."
-label = "Bring your own key (BYOK)"
-
-[portal.infrastructure.security.access.hyok]
-description = "کلیدها هرگز KMS شما را ترک نمی‌کنند. Stirling فقط ciphertext را نگه می‌دارد."
-label = "Hold your own key (HYOK)"
-
-[portal.infrastructure.security.access.stirling]
-description = "Stirling کلیدهای رمزنگاری را مدیریت می‌کند. ساده‌ترین حالت — بدون عملیات کلید از سمت شما."
-label = "کلیدهای نگه‌داری‌شده توسط Stirling"
-
-[portal.infrastructure.security.accessPolicy]
-heading = "سیاست دسترسی سند"
-subheading = "کنترل می‌کند چه کسانی می‌توانند اسناد پردازش‌شده در حالت at rest را رمزگشایی کنند."
-
-[portal.infrastructure.security.attestations]
-heading = "گواهی‌های انطباق"
-noReport = "هیچ گزارشی در دسترس نیست"
-subheading = "وضعیت حسابرسی چارچوب‌به‌چارچوب، با گزارش‌های در دسترس برای کنترل‌های گواهی‌شده."
-viewReport = "مشاهده گزارش →"
-
-[portal.infrastructure.security.compliance]
-heading = "انطباق"
-subheading = "گواهی‌ها و تأییدیه‌هایی که پلتفرم Stirling را پوشش می‌دهند."
-
-[portal.infrastructure.security.empty]
-description = "پیکربندی امنیتی فضای کاری شما اینجا نمایش داده می‌شود."
-title = "وضعیت امنیتی در دسترس نیست"
-
-[portal.infrastructure.security.hyokBanner]
-description = "با HYOK، کلیدهای رمزنگاری هرگز KMS شما را ترک نمی‌کنند. Stirling فقط ciphertext را ذخیره و پردازش می‌کند که می‌توانید هر زمان لغو کنید."
-title = "Stirling نمی‌تواند اسناد شما را رمزگشایی کند"
-
-[portal.infrastructure.security.ipAllowlist]
-empty = "هیچ محدوده IP پیکربندی نشده است — همه IPها مجاز هستند."
-heading = "IP allowlist"
-sub = "دسترسی API به این محدوده‌های CIDR محدود شده است."
-subLocked = "محدود کردن دسترسی API به محدوده‌های IP شناخته‌شده — در طرح‌های پولی در دسترس است."
-
-[portal.infrastructure.security.ipAllowlist.lockedBanner]
-description = "برای محدود کردن دسترسی API به شبکه‌های مشخص، به Pro ارتقا دهید."
-title = "IP allowlisting یک قابلیت پولی است"
-
-[portal.infrastructure.security.ipColumns]
-added = "افزوده‌شده"
-addedBy = "افزوده‌شده توسط"
-cidr = "CIDR"
-label = "برچسب"
-
-[portal.infrastructure.security.keyManagement]
-algorithm = "Algorithm"
-heading = "مدیریت کلید رمزنگاری"
-keyId = "شناسه کلید"
-lastRotated = "آخرین چرخش"
-rotateKey = "چرخش کلید"
-rotationPolicy = "سیاست چرخش"
-subheading = "نگه‌داری کلیدهایی که اسناد at rest را رمزنگاری می‌کنند — چه کسی می‌تواند رمزگشایی کند و کلیدها چگونه می‌چرخند."
-
-[portal.infrastructure.security.managedBanner]
-description = "نگه‌داری bring-your-own-key (BYOK) و hold-your-own-key (HYOK) در Enterprise در دسترس است. برای ارائه کلیدها از KMS خودتان ارتقا دهید."
-title = "در طرح شما، کلیدها توسط Stirling مدیریت می‌شوند"
-
-[portal.infrastructure.security.residency.apac]
-description = "ap-southeast-1"
-label = "آسیا-اقیانوسیه"
-
-[portal.infrastructure.security.residency.eu]
-description = "eu-west-1 · مرز داده GDPR"
-label = "اتحادیه اروپا"
-
-[portal.infrastructure.security.residency.us]
-description = "us-east-1 · us-west-2"
-label = "ایالات متحده"
-
-[portal.infrastructure.security.residencyHeader]
-heading = "Data residency"
-subheading = "محل ذخیره و پردازش اسناد."
-
-[portal.infrastructure.storage]
-gbValue = "{{value}} GB"
-percentUsed = "{{value}} استفاده‌شده"
-
-[portal.infrastructure.storage.empty]
-description = "ذخیره‌سازی متصل و مصرف اینجا نمایش داده می‌شود."
-title = "هیچ ذخیره‌سازی پیکربندی نشده است"
-
-[portal.infrastructure.storage.lifecycle]
-active = "فعال"
-activeRange = "0–{{value}} روز"
-archived = "آرشیوشده"
-coldStorage = "ذخیره‌سازی سرد"
-deleted = "حذف‌شده"
-never = "هرگز"
-purged = "پاک‌سازی‌شده"
-
-[portal.infrastructure.storage.providers]
-connect = "اتصال"
-connected = "متصل"
-heading = "ارائه‌دهندگان متصل"
-subheading = "محل نوشتن artifactهای پردازش‌شده."
-
-[portal.infrastructure.storage.retention]
-heading = "نگه‌داری"
-subheading = "مدت نگه‌داری artifactها پیش از حذف چرخه عمر."
-windowLabel = "بازه نگه‌داری پیش‌فرض"
-
-[portal.infrastructure.storage.retentionOption]
-days_one = "{{count}} روز"
-days_other = "{{count}} روز"
-never = "هرگز حذف نکن"
-
-[portal.infrastructure.storage.totalUsage]
-heading = "مصرف کل"
-progressLabel = "ذخیره‌سازی استفاده‌شده"
-subheading = "ذخیره‌سازی مصرف‌شده در همه ارائه‌دهندگان متصل."
 
 [portal.infrastructure.tabs]
 apiKeys = "کلیدهای API"
@@ -7714,11 +7773,9 @@ security = "امنیت"
 storage = "ذخیره‌سازی"
 
 [portal.integrations]
-addAnother = "افزودن مورد دیگر"
 availableHeading = "در دسترس"
 comingSoonHeading = "به‌زودی"
 connect = "متصل کردن"
-connectedHeading = "متصل‌شده"
 connectionCount_one = "{{count}} اتصال"
 connectionCount_other = "{{count}} اتصال"
 customApi = "API سفارشی"
@@ -7735,6 +7792,10 @@ notify = "اعلان"
 security = "امنیت"
 signing = "امضا"
 storage = "ذخیره‌سازی"
+
+[portal.integrations.noResults]
+description = "No integrations match your filters. Try a different category or search."
+title = "No matches"
 
 [portal.integrations.status]
 connected = "متصل‌شده"
@@ -7766,7 +7827,6 @@ integrations = "یکپارچه‌سازی‌ها"
 pipelines = "پایپ‌لاین‌ها"
 policies = "سیاست‌ها"
 procurement = "تدارکات"
-settings = "تنظیمات"
 sources = "منابع"
 usage = "مصرف و صورت‌حساب"
 users = "کاربران"
@@ -7783,7 +7843,7 @@ title = "پایپ‌لاین‌ها"
 newPipeline = "پایپ‌لاین جدید"
 
 [portal.pipelines.builder]
-addStep = "افزودن ابزار"
+activate = "Activate"
 back = "بازگشت به پایپ‌لاین‌ها"
 cannotFollow = "نمی‌تواند {{produced}} را بگیرد"
 chooseAccount = "یک حساب انتخاب کنید"
@@ -7791,28 +7851,38 @@ chooseDestination = "یک مقصد انتخاب کنید"
 chooseOperation = "انتخاب کنید این مرحله چه کاری انجام دهد"
 chooseSource = "یک منبع انتخاب کنید"
 discard = "دور انداختن تغییرات"
-enabled = "فعال"
 inputs = "ورودی"
 inputSource = "منبع ورودی"
 inputTrigger = "محرک"
 keepEditing = "ادامه ویرایش"
+moreActions = "More actions"
 needsConfiguring = "نیاز به راه‌اندازی دارد"
-needsUpload = "به یک فایل آپلودشده نیاز دارد"
-noSources = "هنوز هیچ منبعی متصل نشده است. یکی بسازید تا از آن به‌عنوان ورودی استفاده کنید."
+needsDestination = "No destination chosen"
+needsSource = "No source chosen"
 noToolMatches = "هیچ ابزاری با جستجوی شما مطابقت ندارد."
-pipelineSettings = "تنظیمات پایپ‌لاین"
+pause = "Pause"
+rename = "Rename pipeline"
 searchTools = "جستجوی ابزارها"
-selectToolBody = "برای ساخت پایپ‌لاین خود، یک ابزار اضافه کنید."
-selectToolTitle = "هنوز ابزاری وجود ندارد"
 sendToSystem = "ارسال به سیستم دیگر"
 stepsIncompatible = "این مراحل نمی‌توانند روی خروجی مرحله قبلی خود اجرا شوند: {{tools}}."
 stepsNeedSetup = "این مراحل پیش از ذخیره هنوز به راه‌اندازی نیاز دارند: {{tools}}."
-toolSettings = "تنظیمات ابزار"
+supportingFiles = "Supporting files"
+testRun = "Test with a file"
 unknownStep = "عملیات ناشناخته، بدون تغییر نگه داشته شد."
 unsavedBody = "تغییرات ذخیره‌نشده دارید. پیش از خروج آن‌ها را ذخیره می‌کنید یا دور می‌اندازید؟"
 unsavedTitle = "تغییرات ذخیره‌نشده"
-uploadUnsupported = "فایل‌های آپلودشده هنوز در پایپ‌لاین‌ها پشتیبانی نمی‌شوند، بنابراین این مراحل قابل ذخیره نیستند: {{tools}}."
 usesDefaults = "با تنظیمات پیش‌فرض اجرا می‌شود"
+viewDefinition = "View definition"
+
+[portal.pipelines.builder.blocker]
+destination = "Choose a destination"
+heading = "To create this pipeline:"
+incompatible = "Fix steps that can't run in order: {{tools}}"
+name = "Give the pipeline a name"
+saveHeading = "To save your changes:"
+schedule = "Set how often it runs"
+setup = "Finish setting up: {{tools}}"
+source = "Choose an input source"
 
 [portal.pipelines.builder.diagnostic]
 fan-in = "همه فایل‌های مرحله قبلی را ترکیب می‌کند"
@@ -7824,30 +7894,35 @@ undeclared-operation = "نمی‌توان بررسی کرد این مرحله چ
 
 [portal.pipelines.composer]
 addTool = "افزودن ابزار"
-cancel = "لغو"
-chainEmpty = "برای شروع ساخت پایپ‌لاین خود، یک ابزار اضافه کنید."
 create = "ایجاد پایپ‌لاین"
+createPaused = "Create paused"
 editingUnsupported = "نمایش این params ابزار برای ویرایش هنوز پشتیبانی نمی‌شود."
-moveDown = "انتقال به پایین"
-moveUp = "انتقال به بالا"
+editSource = "Edit source"
 name = "نام"
 namePlaceholder = "مثلاً Redaction sweep"
 noToolSettings = "این ابزار تنظیمات قابل پیکربندی ندارد."
-operations_one = "عملیات ({{count}})"
-operations_other = "عملیات ({{count}})"
 output = "خروجی"
-removeStep = "حذف عملیات"
 save = "ذخیره تغییرات"
 scheduleEvery = "اجرا هر"
-sources = "منابع"
-sourcesLoading = "در حال بارگذاری منابع..."
 trigger = "Trigger"
 triggerManual = "فقط دستی"
+
+[portal.pipelines.composer.runsEvery]
+days_one = "Runs every day"
+days_other = "Runs every {{count}} days"
+hours_one = "Runs every hour"
+hours_other = "Runs every {{count}} hours"
+minutes_one = "Runs every minute"
+minutes_other = "Runs every {{count}} minutes"
 
 [portal.pipelines.composer.unit]
 days = "روز"
 hours = "ساعت"
 minutes = "دقیقه"
+
+[portal.pipelines.definition]
+subtitle = "The pipeline as it would be saved."
+title = "Definition"
 
 [portal.pipelines.delete]
 body = "«{{name}}» حذف شود؟ این کار قابل بازگشت نیست."
@@ -7866,6 +7941,37 @@ connectSource = "اتصال یک منبع"
 description = "اولین پایپ‌لاین خود را ایجاد کنید: منابعی را که روی آن‌ها اجرا می‌شود انتخاب کنید، عملیات را زنجیره کنید و محل خروجی را انتخاب کنید."
 title = "هنوز پایپ‌لاینی وجود ندارد"
 
+[portal.pipelines.graph]
+addFirstTool = "Add a tool"
+dragHint = "Drop on a line to move it"
+insertHere = "Add a tool here"
+removeNode = "Remove {{name}}"
+showError = "Show why {{name}} failed"
+
+[portal.pipelines.graph.add]
+input = "Add a source"
+output = "Add a destination"
+
+[portal.pipelines.graph.run]
+done = "Done"
+failed = "Failed"
+running = "Running"
+
+[portal.pipelines.inspector]
+multipleBody = "Drag any of them onto a line to move them together, or press Delete to remove them."
+multipleSelected_one = "{{count}} step selected"
+multipleSelected_other = "{{count}} steps selected"
+noSelectionBody = "Pick a node in the graph to change what it does."
+noSelectionTitle = "Nothing selected"
+
+[portal.pipelines.inspector.status]
+completed_one = "Finished the only step"
+completed_other = "Finished all {{count}} steps"
+failed_one = "Failed on the only step"
+failed_other = "Failed after {{done}} of {{count}} steps"
+running_one = "Running the only step"
+running_other = "Running step {{done}} of {{count}}"
+
 [portal.pipelines.kpi]
 active = "فعال"
 paused = "متوقف‌شده"
@@ -7878,7 +7984,6 @@ completed_one = "اجرا کامل شد."
 completed_other = "همه {{count}} اجرا کامل شد."
 empty = "چیزی برای اجرا نیست: منابع سندی برای پردازش نداشتند."
 failed = "اجرا ناموفق بود: {{error}}"
-historyCleared = "تاریخچه پاک شد. اجرای بعدی همه موارد فعلی در منابع را دوباره پردازش می‌کند."
 inFlight = "مورد جدیدی برای اجرا نیست: اسناد هنوز از اجرای قبلی در حال پردازش هستند."
 parked_one = "چیزی برای اجرا نیست: {{count}} سند قبلاً ناموفق بوده و کنار گذاشته شده است. علت را رفع کنید، سپس برای تلاش مجدد تاریخچه را پاک کنید."
 parked_other = "چیزی برای اجرا نیست: {{count}} سند قبلاً ناموفق بوده‌اند و کنار گذاشته شده‌اند. علت را رفع کنید، سپس برای تلاش مجدد تاریخچه را پاک کنید."
@@ -7894,6 +7999,7 @@ name = "پایپ‌لاین"
 sources = "منابع"
 status = "وضعیت"
 steps = "مراحل"
+trigger = "Trigger"
 
 [portal.pipelines.trigger]
 folder-watch = "پایش پوشه"
@@ -8207,6 +8313,24 @@ label = "پیوست به یک issue در Jira"
 [portal.policies.operations.mailgunEmail]
 description = "سند پردازش‌شده را به‌عنوان پیوست ارسال می‌کند."
 label = "ایمیل کردن سند (Mailgun)"
+
+[portal.policies.operations.n8nGate]
+description = "Your workflow decides whether the run carries on."
+label = "Ask an n8n workflow to approve"
+note = "The workflow must reply with {\"approved\": true}. Anything else — including a timeout — stops the run and parks the document."
+
+[portal.policies.operations.n8nNotify]
+description = "Sends the run's details, not the document."
+label = "Tell an n8n workflow"
+
+[portal.policies.operations.n8nSend]
+description = "Sends the document and the run's details to your workflow."
+label = "Send the document to n8n"
+
+[portal.policies.operations.n8nTransform]
+description = "Your workflow processes the document and the file it returns replaces it."
+label = "Process the document in n8n"
+note = "Set the Webhook node to respond \"Using Respond to Webhook Node\", and return a file. On the default \"Immediately\" setting n8n replies with an acknowledgement, and that would replace the document."
 
 [portal.policies.operations.nextcloudUpload]
 description = "سند پردازش‌شده را داخل یک پوشه می‌نویسد."
@@ -8682,16 +8806,6 @@ maxed = "به سقف رسیده"
 subtitle = "دوره آزمایشی رایگان شما تا {{date}} ادامه دارد. کارت لازم نیست."
 title = "دوره آزمایشی Enterprise"
 
-[portal.search]
-ariaLabel = "جستجو"
-placeholder = "جستجو در Stirling — endpoints، پایپ‌لاین‌ها، مستندات…"
-
-[portal.search.empty]
-noActionsDescription = "وقتی اقدامات سریع در دسترس باشند، اینجا نمایش داده می‌شوند."
-noActionsTitle = "اقدام سریعی وجود ندارد"
-noMatches = "هیچ نتیجه‌ای برای «{{query}}» یافت نشد"
-noMatchesDescription = "یک کلیدواژه دیگر امتحان کنید یا کاتالوگ را مرور کنید."
-
 [portal.settings.groups]
 admin = "مدیر"
 
@@ -8718,7 +8832,9 @@ title = "منابع"
 connectSource = "اتصال منبع"
 
 [portal.sources.builder]
+advanced = "پیشرفته"
 back = "بازگشت به منابع"
+backToSource = "بازگشت به تنظیمات منبع"
 backToTypes = "همه انواع منبع"
 cancel = "لغو"
 chooseHint = "انتخاب کنید اسناد از کجا می‌آیند. اتصال‌دهنده‌های خاکستری‌شده در راه هستند."
@@ -8728,7 +8844,6 @@ create = "ایجاد منبع"
 createTitle = "اتصال یک منبع"
 delete = "حذف"
 editTitle = "ویرایش منبع"
-enabled = "فعال"
 save = "ذخیره تغییرات"
 
 [portal.sources.builder.folderAccess]
@@ -8741,10 +8856,6 @@ body = "«{{name}}» حذف شود؟ این کار قابل بازگشت نیس�
 cancel = "لغو"
 confirm = "حذف"
 title = "منبع حذف شود؟"
-
-[portal.sources.empty]
-description = "یک پوشه (و به‌زودی فضای ذخیره‌سازی ابری) را متصل کنید تا خط‌مشی‌های شما جایی برای دریافت اسناد داشته باشند."
-title = "هنوز هیچ منبعی متصل نشده است"
 
 [portal.sources.kpi]
 inUse = "در حال استفاده"
@@ -8769,6 +8880,7 @@ consume = "Consume: پردازش هر فایل فقط یک‌بار"
 snapshot = "Snapshot: خواندن دوباره پوشه در هر اجرا"
 
 [portal.sources.networkFields.recursive]
+helperText = "اگر فایل‌های شما در پوشه‌های تودرتو سازمان‌دهی شده‌اند، زیرپوشه‌ها را هم شامل کنید، یا فقط سطح بالایی را پایش کنید."
 label = "عمق پوشه"
 
 [portal.sources.networkFields.recursive.options]
@@ -8784,6 +8896,7 @@ unused = "استفاده‌نشده"
 documents = "اسناد"
 source = "منبع"
 status = "وضعیت"
+type = "Type"
 usedBy = "خط‌مشی‌ها"
 
 [portal.sources.types.box]
@@ -8821,6 +8934,7 @@ hash = "اندازه، تاریخ و بررسی محتوا"
 stat = "اندازه و تاریخ تغییر"
 
 [portal.sources.types.folder.fields.mode]
+helperText = "این‌که پس از پردازش، فایل اصلی در جای خود باقی بماند یا نه. اگر فایل اصلی در جای خود باقی بماند، دفعه بعد که خط لوله منبع را اسکن کند دوباره پردازش می‌شود."
 label = "حالت خواندن"
 
 [portal.sources.types.folder.fields.mode.options]
@@ -8828,6 +8942,7 @@ consume = "مصرف: هر فایل را یک‌بار پردازش کن"
 snapshot = "Snapshot: در هر اجرا پوشه را دوباره بخوان"
 
 [portal.sources.types.folder.fields.recursive]
+helperText = "اگر فایل‌های شما در پوشه‌های تودرتو سازمان‌دهی شده‌اند، زیرپوشه‌ها را هم شامل کنید، یا فقط سطح بالایی را پایش کنید."
 label = "عمق پوشه"
 
 [portal.sources.types.folder.fields.recursive.options]
@@ -9701,7 +9816,9 @@ toolNotAvailableLocally = "سرور Stirling-PDF شما آفلاین است و \
 expired = "نشست شما به پایان رسیده است. لطفاً صفحه را تازه‌سازی کرده و دوباره تلاش کنید."
 
 [settings]
+backToSections = "همه تنظیمات"
 close = "بستن"
+title = "تنظیمات"
 
 [settings.ai]
 documents = "اسناد و RAG"
@@ -9979,9 +10096,6 @@ title = "سیاست‌ها و حریم خصوصی"
 [settings.preferences]
 title = "ترجیحات"
 
-[settings.search]
-placeholder = "جستجوی صفحات تنظیمات..."
-
 [settings.security]
 description = "رمز عبور خود را به‌روزرسانی کنید تا حسابتان ایمن بماند."
 title = "امنیت"
@@ -10127,6 +10241,7 @@ last = "صفحه آخر"
 maintainRatio = "تغییر حفظ نسبت ابعاد"
 next = "صفحه بعدی"
 noSavedSigs = "هیچ امضای ذخیره‌شده‌ای یافت نشد"
+penSizePlaceholder = "Type or select pen size (1-200)"
 personalSigs = "امضاهای شخصی"
 previous = "صفحه قبلی"
 redo = "انجام مجدد"
@@ -10165,6 +10280,7 @@ backgroundRemovalFailedTitle = "حذف پس‌زمینه ناموفق بود"
 hint = "یک تصویر PNG یا JPG از امضای خود بارگذاری کنید"
 label = "بارگذاری تصویر امضا"
 placeholder = "انتخاب فایل تصویر"
+previewAlt = "Current image signature"
 processing = "در حال پردازش تصویر..."
 removeBackground = "حذف پس‌زمینه سفید (شفاف‌سازی)"
 
@@ -10177,6 +10293,17 @@ resumeHint = "برای کلیک و افزودن امضا، جانمایی را �
 saved = "یک امضای ذخیره‌شده را انتخاب کنید، سپس برای جانمایی روی PDF کلیک کنید."
 text = "پس از وارد کردن نام خود در بالا، هرجای PDF کلیک کنید تا امضای شما قرار گیرد."
 title = "چگونه امضا اضافه کنیم"
+
+[sign.mobile]
+createFromPhone = "Mobile upload"
+description = "Scan this QR code with your phone or tablet, draw your signature, and it will appear here automatically."
+error = "Connection Error"
+expiryWarning = "QR Code Expiring Soon"
+expiryWarningMessage = "This QR code will expire in {{seconds}} seconds. A new code will be generated automatically."
+instructions = "Open the camera app on your phone and scan this code. Keep this window open while you draw."
+pollingError = "Error checking for the signature"
+sessionCreateError = "Failed to create session"
+title = "Draw on your phone"
 
 [sign.mode]
 move = "جابجایی امضا"
@@ -10624,6 +10751,24 @@ title = "بارگذاری در سرور"
 updateButton = "به‌روزرسانی روی سرور"
 uploadButton = "بارگذاری در سرور"
 
+[superSearch]
+all = "All"
+ariaLabel = "Super search"
+filtersAriaLabel = "Search filters"
+hint = "Type to search"
+placeholder = "Search Stirling"
+placeholderShort = "جستجو"
+showLess = "Show less"
+showMore = "Show {{count}} more"
+
+[superSearch.group]
+docs = "Docs"
+files = "Files"
+pages = "Pages"
+processor = "Processor"
+settings = "Settings"
+tools = "Tools"
+
 [survey]
 title = "Stirling-PDF Survey"
 
@@ -10773,7 +10918,6 @@ goBack = "بازگشت"
 pdfTools = "ابزارهای PDF"
 placeholder = "برای شروع یک ابزار انتخاب کنید"
 premiumFeature = "ویژگی پرمیوم:"
-searchTools = "جستجوی ابزارها"
 toolsHeader = "ابزارها"
 viewAllTools = "مشاهدهٔ همهٔ ابزارها"
 
@@ -10810,6 +10954,7 @@ searchPlaceholder = "جستجوی ابزارها..."
 
 [toolPicker.subcategories]
 advancedFormatting = "قالب‌بندی پیشرفته"
+ai = "AI"
 automation = "اتوماسیون"
 developerTools = "ابزارهای توسعه‌دهنده"
 documentReview = "بازبینی سند"
@@ -10820,6 +10965,9 @@ pageFormatting = "قالب‌بندی صفحه"
 removal = "حذف"
 signing = "امضا"
 verification = "تأیید"
+
+[toolRenderer]
+notFound = "Tool not found: {{tool}}"
 
 [tools]
 noSearchResults = "هیچ ابزاری یافت نشد"
@@ -10978,6 +11126,13 @@ approver = "تأیید خط‌مشی"
 editor = "ویرایشگر"
 processor = "پردازشگر"
 
+[users.columns]
+capabilities = "Capabilities"
+email = "Email"
+person = "Person"
+role = "Role"
+status = "Status"
+
 [users.confirm]
 cancelInviteBody = "دعوت به {{email}} لغو شود؟ آن‌ها دیگر نمی‌توانند با لینک فعلی بپیوندند."
 cancelInviteTitle = "لغو دعوت"
@@ -10997,10 +11152,8 @@ title = "هنوز عضوی وجود ندارد"
 addToTeam = "افزودن به تیم"
 guestCount = "{{count}} مهمان"
 guests = "مهمانان"
-guestsDesc = "همکاران خارجی، محدود به آنچه به اشتراک گذاشته‌اید. فقط ویرایشگر."
 ledBy = "به رهبری {{owner}}"
 org = "سازمان"
-orgDesc = "مالکانی با اختیار در سراسر سازمان و تأیید خط‌مشی"
 owners = "{{count}} مالک"
 team = "تیم {{name}}"
 teamMeta = "{{count}} نفر"
@@ -11040,12 +11193,14 @@ usernamePlaceholder = "jsmith"
 [users.invites]
 by = "دعوت‌شده توسط {{who}}"
 cancel = "لغو"
-count = "{{count}} در انتظار"
-desc = "افراد دعوت‌شده‌ای که هنوز نپیوسته‌اند. تا زمانی که دعوت را بپذیرند، یک جایگاه را اشغال می‌کنند."
 expiresInDays_one = "{{count}} روز دیگر منقضی می‌شود"
 expiresInDays_other = "{{count}} روز دیگر منقضی می‌شود"
 expiresToday = "امروز منقضی می‌شود"
 title = "دعوت‌های در انتظار"
+
+[users.invites.columns]
+expires = "Expires"
+invitee = "Invitee"
 
 [users.loadError]
 description = "در برقراری ارتباط با بک‌اند مشکلی پیش آمد، یا شما دسترسی ندارید. دوباره تلاش کنید."
@@ -11236,12 +11391,15 @@ searchPlaceholder = "جستجوی پیوست‌ها"
 title = "پیوست‌ها"
 
 [viewer.bookmarks]
+addBookmark = "Add bookmark"
 bookmarkTitle = "عنوان نشانک"
 bookmarkTitleRequired = "عنوان نشانک الزامی است"
 closeSidebar = "بستن نوار کناری نشانک‌ها"
 collapseAll = "جمع کردن همه نشانک‌ها"
+empty = "No bookmarks in this document"
 expandAll = "باز کردن همه نشانک‌ها"
 searchPlaceholder = "جستجوی نشانک‌ها"
+title = "Bookmarks"
 
 [viewer.comments]
 addComment = "افزودن نظر"
@@ -11263,10 +11421,12 @@ locateAnnotation = "یافتن در سند"
 moreActions = "عملیات بیشتر"
 nComments_one = "{{count}} comment"
 nComments_other = "{{count}} comments"
+noMatch = "No comments match your search"
 pageLabel = "صفحه {{page}}"
 placingHint = "برای قرار دادن، روی یک صفحه کلیک کنید… (لغو)"
 removeCommentOnly = "فقط حذف نظر"
 saveReply = "ذخیره پاسخ"
+searchPlaceholder = "Search comments"
 title = "نظرات"
 typeComment = "نظر"
 typeInsertText = "درج متن"
@@ -11289,6 +11449,7 @@ unsavedDesc = "تغییرات ذخیره‌نشده دارید"
 closeSidebar = "بستن نوار کناری لایه‌ها"
 hideAll = "پنهان کردن همه لایه‌ها"
 showAll = "نمایش همه لایه‌ها"
+title = "Layers"
 
 [viewer.link]
 delete = "حذف لینک"
@@ -11298,8 +11459,11 @@ columnDefault = "ستون {{index}}"
 convertToPdf = "تبدیل به PDF"
 csvStats = "{{rows}} ردیف · {{columns}} ستون · {{size}}"
 emptyFile = "فایل خالی"
+htmlHidePreview = "پنهان کردن پیش‌نمایش"
 htmlPreview = "پیش‌نمایش HTML"
+htmlPreviewMobileHidden = "صفحات HTML برای عرض‌های دسکتاپ چیدمان شده‌اند، بنابراین پیش‌نمایش اینجا به‌طور پیش‌فرض خاموش است."
 htmlPreviewWarning = "پیش‌نمایش HTML — ممکن است منابع خارجی بارگذاری نشوند · {{size}}"
+htmlShowPreview = "با این حال پیش‌نمایش را نشان بده"
 invalidJson = "JSON نامعتبر — محتوای خام نمایش داده می‌شود"
 lineNumbers = "شماره خطوط"
 loading = "در حال بارگذاری..."
@@ -11645,6 +11809,8 @@ exitRedaction = "خروج از حالت پنهان‌سازی"
 exportAll = "خروجی گرفتن از PDF"
 exportSelected = "خروجی گرفتن از صفحات منتخب"
 formFill = "پر کردن فرم"
+hideToolbar = "Hide toolbar"
+moreActions = "اقدامات بیشتر"
 multiTool = "ابزار چندگانه"
 panMode = "حالت جابه‌جایی"
 print = "چاپ PDF"
@@ -11665,6 +11831,9 @@ selectAll = "انتخاب همه"
 selectByNumber = "انتخاب بر اساس شماره‌های صفحه"
 selectLanguage = "انتخاب زبان"
 share = "اشتراک‌گذاری"
+showAllTools = "نمایش همه ابزارها"
+showFewerTools = "جمع کردن نوار ابزار"
+showToolbar = "Show toolbar"
 toggleAnnotations = "نمایش/مخفی کردن حاشیه‌نویسی‌ها"
 toggleAttachments = "نمایش/مخفی کردن پیوست‌ها"
 toggleBookmarks = "نمایش/مخفی کردن نشانک‌ها"

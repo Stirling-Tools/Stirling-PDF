@@ -1,7 +1,6 @@
 alphabet = "Alfabetoa"
 apply = "Aplikatu"
 applyAndContinue = "Gorde eta irten"
-areYouSure = "Ziur zaude irten nahi duzula?"
 back = "Atzera"
 black = "Beltza"
 blue = "Urdina"
@@ -42,7 +41,7 @@ false = "Faltsua"
 fileNotSavedToDisk = "Ez da diskoan gorde"
 fileSavedToDisk = "Fitxategia diskoan gorde da"
 fileSelected = "Hautatuta: {{filename}}"
-filesSelected = "Hautatutako fitxategiak"
+filesSelected = "{{count}} fitxategi"
 font = "Letra-tipoa"
 fontSizeTooltip = "Orri-zenbakiaren testuaren tamaina puntutan. Zenbaki handiagoek testu handiagoa sortzen dute."
 fontTypeTooltip = "Orri-zenbakientzako letra-familia. Aukeratu zure dokumentuaren estiloaren arabera."
@@ -106,6 +105,7 @@ undoSuccess = "Eragiketa ongi desegin da"
 unknown = "Ezezaguna"
 unpin = "Kendu aingura fitxategiari (ordeztu tresna exekutatu ondoren)"
 unsavedChanges = "Gorde gabeko aldaketak dituzu zure PDFan."
+unsavedChangesBody = "You have unsaved changes to your PDF. Are you sure you want to leave?"
 unsavedChangesTitle = "Gorde gabeko aldaketak"
 unsupported = "Ez da onartzen"
 username = "Erabiltzaile izena"
@@ -1879,6 +1879,9 @@ width = "Zabalera"
 [app]
 description = "Adobe Acrobat-en doako alternatiba (10M+ deskarga)"
 
+[appBanner]
+dismiss = "Dismiss"
+
 [attachments]
 convertToPdfA3b = "Bihurtu PDF/A-3b formatura"
 convertToPdfA3bDescription = "Eranskinak txertatuta dituen artxibatzeko PDF bat sortzen du"
@@ -2933,12 +2936,16 @@ text = "Baimen hauek aldaezinak bihurtzeko, erabili Gehitu Pasahitza tresna jabe
 [chat.actions]
 copy = "Kopiatu mezua"
 
+[chat.emptyState]
+text = "Ask a question about your documents or get help with PDF tools."
+
 [chat.fab]
 close = "Close chat"
 open = "Open Stirling AI assistant"
 
 [chat.header]
 agentMenu = "Stirling agentearen aukerak"
+assistant = "AI Assistant"
 clearChat = "Garbitu txata"
 
 [chat.input]
@@ -3001,28 +3008,35 @@ tooltip = "Eragiketa honek zure hodeiko kredituak erabiliko ditu"
 tooltip = "Hautatu kolorea pantailatik"
 
 [colorPicker]
+hue = "Hue"
+saturation = "Saturation and brightness"
 title = "Aukeratu kolorea"
 
 [common]
+actions = "Actions"
 back = "Atzera"
 cancel = "Utzi"
 close = "Itxi"
+codeSample = "Code sample"
 collapse = "Tolestu"
 confirm = "Berretsi"
 continue = "Jarraitu"
 copied = "Kopiatuta!"
 copy = "Kopiatu"
 done = "Eginda"
+enterValue = "Enter value"
 error = "Errorea"
 expand = "Zabaldu"
 loading = "Kargatzen..."
 next = "Hurrengoa"
+open = "Open"
 preview = "Aurrebista"
 previous = "Aurrekoa"
 refresh = "Freskatu"
 remaining = "Geratzen dena"
 retry = "Saiatu berriro"
 save = "Gorde"
+stepOf = "Step {{current}} of {{total}}"
 
 [compare]
 clearSelected = "Garbitu hautatutakoa"
@@ -3185,6 +3199,7 @@ title = "Konpresio-metodoa"
 [compress.settings]
 desiredSize = "Nahi den fitxategi-tamaina"
 desiredSizePlaceholder = "Sartu tamaina"
+desiredSizeUnit = "Size unit"
 
 [compress.tooltip.description]
 text = "Konpresioa modu erraza da fitxategi-tamaina murrizteko. Aukeratu Fitxategiaren tamaina helburu tamaina bat sartzeko eta guk kalitatea doitzeko. Aukeratu Kalitatea konpresio-indarra eskuz ezartzeko."
@@ -3387,6 +3402,24 @@ pdfOptions = "PDF aukerak"
 pdfToCbr = "PDF → CBR"
 pdfToCbz = "PDF → CBZ"
 pdfToEpub = "PDF → EPUB"
+pdfUaAltTextNotice = "Images need a written description before a document can be certified. Descriptions are never generated automatically, because an invented one passes the checker while telling a screen-reader user nothing. Any image left without one is reported, and the file comes back tagged but not certified."
+pdfUaAltTextScanFailed = "The images could not be listed. Convert anyway and the response reports what is missing."
+pdfUaAltTextSingleFileOnly = "Descriptions belong to one document: an image is identified by its position, which is a different image in every file. Convert these {{fileCount}} files to tag them, then convert one at a time to describe its images."
+pdfUaEmbedFonts = "Embed missing fonts"
+pdfUaEmbedFontsHelp = "PDF/UA requires every font to be embedded. Turning this off is faster but usually prevents conformance."
+pdfUaFigureLabel = "Page {{page}} {{kind}}"
+pdfUaFigurePlaceholder = "What this image tells the reader"
+pdfUaFindImages = "Find images needing a description"
+pdfUaLanguage = "Document language"
+pdfUaLanguageHelp = "A BCP-47 tag such as en-GB. Used only when the document does not already declare its own language."
+pdfUaNoImagesNeedingText = "No image is missing a description."
+pdfUaOptions = "PDF/UA Options"
+pdfUaOverrideLanguage = "Replace the document's own language"
+pdfUaOverrideLanguageHelp = "Only tick this if the language above is right and the document's own is wrong. Relabelling a document into a language it is not written in makes a screen reader unintelligible."
+pdfUaProfile = "Conformance level"
+pdfUaSignatureWarning = "This PDF is digitally signed. Tagging rewrites the page content the signature covers, so the signature will stop verifying. Convert first, then re-sign."
+pdfUaTitle = "Document title"
+pdfUaTitleHelp = "Shown by a reader instead of the filename. Left blank, the first heading is used."
 selectSourceFormatFirst = "Lehenik hautatu iturburu formatua"
 settings = "Ezarpenak"
 single = "Bakarra"
@@ -3564,7 +3597,11 @@ tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [dropdownList]
+noItems = "No items available"
+noResults = "No results found"
 searchPlaceholder = "Bilatu..."
+selectLanguages = "Select languages"
+selectOption = "Select an option"
 
 [editableSecretField]
 edit = "Editatu"
@@ -3823,11 +3860,13 @@ shareSelected = "Partekatu hautatutakoak"
 sharing = "Partekatzea"
 showAll = "Erakutsi denak"
 showHistory = "Historia erakutsi"
+sortBy = "Sort files"
 sortByDate = "Ordenatu dataren arabera"
 sortByName = "Ordenatu izenaren arabera"
 sortBySize = "Ordenatu tamainaren arabera"
 storage = "Biltegia"
 storageState = "Biltegiratzea"
+storageUsed = "Storage used"
 synced = "Sinkronizatuta"
 title = "PDF fitxategiak igo"
 toolChain = "Aplikatutako tresnak"
@@ -3873,8 +3912,12 @@ addFiles = "Gehitu fitxategiak"
 addingFiles = "Fitxategiak gehitzen…"
 collapse = "Tolestu alboko barra"
 customizeGroups = "Pertsonalizatu taldeak"
+dataLostBody = "This browser lost this file's contents. Upload it again to keep working with it."
+dataLostTitle = "File data is unavailable"
+downloadFailed = "Download failed"
 dropHint = "Ireki fitxategiak hasteko"
 dropToAdd = "Drop files to add"
+duplicateFailed = "Could not duplicate file"
 expand = "Zabaldu alboko barra"
 googleDrive = "Google Drive"
 googleDriveDisabled = "Google Drive ez dago konfiguratuta"
@@ -3887,15 +3930,17 @@ openFromComputer = "Ireki ordenagailutik"
 openSettings = "Ireki ezarpenak"
 other = "Besteak"
 recent = "Azkenak"
-search = "Bilatu"
-searchPlaceholder = "Bilatu fitxategiak..."
 viewAll = "Ikusi {{count}} fitxategi guztiak"
 
 [fileSidebar.fileItem]
 closeViewer = "Itxi ikustailea"
+dataLost = "Data lost"
+dataLostTooltip = "This browser lost this file's contents. Upload it again to keep working with it."
 delete = "Delete"
+duplicate = "Duplicate"
 moreActions = "More actions"
 openInViewer = "Ireki ikustailean"
+rename = "Rename"
 savedToServer = "Saved to server"
 updateOnServer = "Update on server"
 uploadToServer = "Upload to server"
@@ -3907,6 +3952,14 @@ reset = "Berrezarri lehenetsietara"
 subtitle = "Taldekatu zure fitxategiak kategoria nagusietan. Gehitu kategoria bati lehendik dauden edo etiketa berriak, aldatu izena edo sortu zurea. Zure kategorietako batean ez dauden fitxategiak “Besteak” atalean agertuko dira."
 title = "Alboko barrako kategoriak"
 
+[fileSidebar.rename]
+cancel = "Cancel"
+error = "Could not rename the file."
+illegalCharacters = "A file name can't contain \\ / : * ? \" < > |"
+label = "File name"
+save = "Rename"
+title = "Rename file"
+
 [filesPage]
 addToWorkspace = "Gehitu lan-eremura"
 addToWorkspaceCount = "Gehitu {{count}} lan-eremura"
@@ -3915,9 +3968,9 @@ back = "Atzera"
 backToFolder = "Itzuli hona: {{folder}}"
 backToMyFiles = "Itzuli Nire Fitxategietara"
 breadcrumbs = "Karpetaren bidea"
+bulkActions = "Ekintzak"
 cancel = "Utzi"
 classification = "Sailkapena"
-clearSearch = "Garbitu bilaketa"
 clearSelection = "Garbitu hautapena"
 closeDetails = "Itxi xehetasunak"
 create = "Sortu"
@@ -3949,6 +4002,7 @@ downloadAll = "Deskargatu dena"
 downloadVersion = "Deskargatu bertsio hau"
 dropOverlay = "Jaregin fitxategiak igotzeko"
 dropOverlaySub = "Fitxategiak Tokikoan hasten dira. Erabili 'Eraman hona' edo 'Gorde hodeian' karpeta batean antolatzeko."
+duplicate = "Duplicate"
 file = "Fitxategia"
 fileInfo = "File info"
 fileMenu = "Fitxategi-ekintzak"
@@ -3982,8 +4036,6 @@ resizeFolderTree = "Aldatu karpeta-zuhaitzaren tamaina (gezi-teklak, Shift pauso
 save = "Gorde"
 saveToServer = "Gorde zerbitzarian"
 saveToServerDisabledHint = "Zerbitzarian gordetzea ez dago gaituta zerbitzari honetan. Eskatu administratzaileari gaitzeko."
-search = "Bilatu"
-searchPlaceholder = "Bilatu karpeta honetan eta azpikarpetetan"
 selectAll = "Hautatu dena"
 selectAllHint = "Egin klik dena hautatzeko. Aholkua: eutsi Ctrl (edo Cmd) tekla fitxategiak banaka gehitzeko, Shift tarte bat hautatzeko."
 selectedCount = "{{count}} hautatuta"
@@ -4043,6 +4095,10 @@ title = "Oraindik ez dago hodeiko fitxategirik"
 hint = "Igo gabe gordetako fitxategiak hemen geratzen dira. Jaregin fitxategi bat gehitzeko."
 title = "Ez dago tokiko soilik diren fitxategirik"
 
+[filesPage.empty.noResults]
+hint = "No files in this folder match your filter. Try a different term or clear the filter."
+title = "No matching files"
+
 [filesPage.empty.recent]
 hint = "Irekiko edo editatuko dituzun fitxategiak hemen agertuko dira."
 title = "Oraindik ez da ezer aldatu"
@@ -4062,6 +4118,8 @@ cloudDeleteFailed_one = "Couldn't delete 1 file from the cloud."
 cloudDeleteFailed_other = "Couldn't delete {{count}} files from the cloud."
 deleteFolderFailed = "Ezin izan da karpeta ezabatu."
 deleteFolderFailedDetail = "Ezin izan da karpeta ezabatu: {{message}}"
+downloadFailed = "Could not download the file."
+duplicateFailed = "Could not duplicate the file."
 folderAppearanceFailed = "Ezin izan da karpetaren itxura eguneratu."
 folderAppearanceFailedDetail = "Ezin izan da karpetaren itxura eguneratu: {{message}}"
 moveFilesFailed = "Ezin izan dira fitxategiak mugitu."
@@ -4083,6 +4141,11 @@ size = "Tamaina"
 totalSize = "Tamaina osoa"
 type = "Mota"
 versionHistory = "Bertsioen ibilbidea"
+
+[filesPage.filters]
+activeCount = "{{count}} iragazki aktibo"
+clearAll = "Garbitu iragazkiak"
+label = "Iragazkiak"
 
 [filesPage.folderName]
 cancel = "Utzi"
@@ -4112,7 +4175,13 @@ localHint = "Nabigatzaile honetan soilik gordeta"
 shared = "Partekatuak"
 sharedHint = "Zurekin estekaz partekatuta"
 
+[filesPage.search]
+clear = "Clear filter"
+label = "Filter files by name"
+placeholder = "Filter files…"
+
 [filesPage.sort]
+label = "Ordenatu fitxategiak"
 modifiedAsc = "Zaharrenak lehenik"
 modifiedDesc = "Berrienak lehenik"
 nameAsc = "Izena A→Z"
@@ -4167,6 +4236,7 @@ noFilesInStorageOpen = "Ez dago fitxategirik biltegian. Ireki lehenik fitxategi 
 open = "Ireki"
 openFile = "Fitxategia ireki"
 openFiles = "Fitxategiak ireki"
+selectFile = "Select {{name}}"
 selectFromStorage = "Biltegitik hautatu"
 upload = "Igo"
 uploadFile = "Fitxategia igo"
@@ -4240,16 +4310,99 @@ issues = "GitHub"
 
 [formFill]
 allSaved = "Dena gordeta"
+analyzingFields = "Analysing form fields..."
+applyFailed = "Ezin izan dira aldaketak aplikatu"
 extractCsvError = "Ezin izan da CSV erauzi"
 extractXlsxError = "Ezin izan da XLSX erauzi"
+filled = "filled"
 flattenAfterFilling = "Lautu betetze ondoren"
+goToPage = "Joan orri honetara"
+noFields = "No fillable form fields found in this PDF."
+page = "Orria"
+placeholderEnter = "Enter"
+placeholderSelect = "Select"
 requiredAbbreviation = "behar."
 requiredFieldsError = "Bete beharrezko eremu guztiak"
 rescanFields = "Eremuak berriro eskaneatu"
 rescanFormFields = "Inprimaki-eremuak berriro eskaneatu"
 save = "Gorde"
 saveShortcut = "Ctrl+S gordetzeko"
+skippedEdits_one = "Ezin izan da aldaketa bat aplikatu:"
+skippedEdits_other = "Ezin izan dira {{count}} aldaketa aplikatu:"
+skippedEditsTruncated = "Beste {{count}} ez dira zerrendatu."
 unsavedChanges = "Gorde gabeko aldaketak"
+
+[formFill.create]
+commit = "Gehitu {{count}} eremu PDF fitxategira"
+empty = "Oraindik ez da eremurik marraztu."
+failed = "Ezin izan dira eremuak gehitu"
+goToField = "Joan eremu honetara"
+hint = "Hautatu eremu mota bat, eta marraztu orrian."
+placing = "Marraztu {{type}} eremu bat orrian. Sakatu Esc gelditzeko."
+preview = "Eduki sakatuta aurrebista ikusteko"
+previewHelp = "Eduki sakatuta eremuak gehitu ondoren nolakoak izango diren ikusteko, edizio-ingeradarik gabe."
+removeField = "Kendu eremua"
+
+[formFill.editor]
+action = "Botoiaren ekintza"
+actionHelp = "Botoiak klik egitean zer egiten duen."
+actionNone = "Bat ere ez"
+actionPrint = "Inprimatu"
+actionReset = "Berrezarri formularioa"
+actionSubmit = "Bidali URL helbidera"
+actionUri = "Ireki URL"
+actionUrl = "URL"
+actionUrlHelp = "Botoiak irekitzen duen edo bidaltzeko erabiltzen duen URL helbidea."
+addOption = "Gehitu aukera"
+caption = "Botoiaren epigrafea"
+captionHelp = "Botoiaren aurpegian inprimatzen den testua."
+defaultValue = "Balio lehenetsia"
+defaultValueHelp = "Norbaitek bete aurretik eremuak duen edukia. Utzi hutsik eremu huts baterako."
+fontSize = "Letra-tamaina"
+fontSizeHelp = "Eremu barruko testuaren tamaina. Utzi hutsik irakurgailuak egokitzeko tamaina ezar dezan."
+label = "Etiketa"
+labelHelp = "Formularioa betetzen duenari erakutsiko zaion testua. Utzi hutsik eremuaren izena erabiltzeko."
+maxLength = "Gehieneko luzera (comb)"
+maxLengthHelp = "Zenbat karaktere sar daitezkeen mugatzen du, tarte berdineko laukitxo gisa marraztuta."
+multiline = "Lerro anitzekoa"
+multilineHelp = "Testu-lerro bat baino gehiago onartzen ditu eta eremuaren ertzean doitzen du."
+multiSelect = "Baimendu hautapen anitza"
+multiSelectHelp = "Aldi berean aukera bat baino gehiago hautatzeko aukera ematen du."
+name = "Eremuaren izena"
+nameHelp = "Eremuaren barne-izena. Datuak esportatzean edo formularioa beste sistema batetik betetzean erabiltzen da; beraz, mantendu bakarra eta zuriunerik gabea."
+optionGap = "Aukeren arteko tartea"
+optionGapHelp = "Botoien arteko tartea, puntutan. Utzi hutsik kutxan behera modu uniformean banatzeko."
+optionPlaceholder = "{{n}}. aukera"
+options = "Aukerak"
+optionsEmpty = "Gehitu gutxienez aukera bat."
+optionsHelp = "Zerrendan eskaintzen diren aukerak. Bakoitza idatzi bezala gordetzen da; beraz, mantendu laburrak eta bereiziak."
+optionSize = "Aukeraren tamaina"
+optionSizeHelp = "Botoi bakoitzaren zabalera eta altuera, puntutan. Utzi hutsik marraztu duzun kutxara egokitzeko."
+readOnly = "Irakurtzeko soilik"
+readOnlyHelp = "Balio bat erakusten du, baina editatzea eragozten du."
+removeOption = "Kendu aukera"
+required = "Beharrezkoa"
+requiredHelp = "Formularioa ezin da bidali eremu hau bete arte."
+signatureNote = "Leku-marka soilik - hemen ez duzu sinatzen. Sinadura non egon behar den markatzen du, PDF sinatzaile batek (Adobe Acrobat, sinadura-zerbitzu bat, etab.) dokumentua sinatzen denean sinadura leku honetan jar dezan."
+tooltip = "Argibide-burbuila"
+tooltipHelp = "PDF irakurgailu batean norbaitek eremuaren gainean sagua jartzean erakusten den argibidea."
+type = "Mota"
+typeHelp = "Eremu mota. Aldatzean eremua berreraikitzen da; beraz, uneko balioa ez da mantenduko."
+
+[formFill.mode]
+create = "Sortu"
+fill = "Bete"
+label = "Formulario-editorearen modua"
+modify = "Aldatu"
+
+[formFill.modify]
+commit = "Gorde {{count}} aldaketa"
+delete = "Ezabatu"
+empty = "PDF honek ez du oraindik formulario-eremurik."
+failed = "Ezin izan dira aldaketak gorde"
+groupSizeHint = "Erabili aukeraren tamaina"
+hint = "Hautatu eremu bat bere propietateak editatzeko, arrastatu orrian edo ezabatu."
+restore = "Lehengoratu"
 
 [formFill.sidebar]
 close = "Itxi alboko barra"
@@ -4515,6 +4668,10 @@ title = "Aldatu metadatuak"
 desc = "Aldatu dokumentuaren murrizketak eta baimenak"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Aldatu baimenak"
+
+[home.classify]
+desc = "Identifikatu zer dokumentu mota den eta etiketatu."
+title = "Sailkatu"
 
 [home.compare]
 desc = "Konparatu eta erakutsi 2 PDF dokumenturen aldeak"
@@ -4794,9 +4951,6 @@ title = "Irudia PDF bihurtu"
 [imageToPdf]
 tags = "conversion,img,jpg,picture,photo,psd,photoshop"
 
-[infoBanner]
-dismiss = "Baztertu"
-
 [invite]
 acceptError = "Ezin izan da kontua sortu"
 accountFor = "Kontua sortzen honentzat"
@@ -4978,6 +5132,34 @@ uploadSuccess = "Kargaketa arrakastatsua!"
 uploadSuccessMessage = "Zure irudiak transferitu dira."
 validating = "Saioa balioztatzen..."
 
+[mobileSign]
+clear = "Clear"
+invalidSession = "Session expired"
+invalidSessionMessage = "This QR code is no longer valid. Open the Sign tool on your computer and scan the new code."
+penSizeLabel = "Pen size"
+send = "Send to computer"
+sendAnother = "Send another signature"
+sendError = "Could not send the signature. Check the connection and try again."
+sentMessage = "Signature sent to your computer. You can send another or close this page."
+tabsLabel = "Signature source"
+undo = "Undo"
+validating = "Checking session…"
+
+[mobileSign.photo]
+fromGallery = "From gallery"
+hint = "Photograph a signature on white paper, or choose an existing image."
+invalidType = "Please choose an image file."
+takePhoto = "Take a photo"
+
+[mobileSign.tab]
+draw = "Draw"
+photo = "Photo"
+type = "Type"
+
+[mobileSign.type]
+placeholder = "Your name"
+previewPlaceholder = "Signature preview"
+
 [mobileUpload]
 description = "Eskaneatu argazkiak igotzeko. Irudiak automatikoki PDFra bihurtzen dira."
 descriptionNoConvert = "Eskaneatu argazkiak zure gailu mugikorretik igotzeko."
@@ -4996,8 +5178,37 @@ title = "Kargatu mugikorretik"
 tags = "Multi Tool,Multi operation,UI,click drag,front end,client side"
 title = "PDF erabilera anitzeko tresna"
 
-[navbar]
-search = "Bilatu"
+[navFooter]
+openEditor = "Open PDF Editor"
+openProcessor = "Open PDF Processor"
+
+[navFooter.credits]
+count = "{{remaining}} of {{total}}"
+label = "Free credits"
+
+[notifications]
+empty = "Ez dago jakinaraztekorik."
+handoffUnavailable = "Arakatzaile honek ez dio prozesadoreari dokumentua editoreari pasatzen utziko. Ireki editoretik horren ordez."
+noDocumentLinked = "Hutsegite hau ez dago dokumentu zehatz bati lotuta; beraz, hemen ez dago irekitzeko ezer."
+notOnThisDevice = "Dokumentu hau ez dago gailu honetan; beraz, ezin da hemen ireki."
+occurrences = "{{count}} aldiz"
+open = "Jakinarazpenak"
+title = "Jakinarazpenak"
+unread = "Irakurri gabeak"
+
+[notifications.action]
+failed = "Horrek ez du funtzionatu. Saiatu berriro une bat barru."
+unavailable = "Ez dago erabilgarri jakinarazpen honetarako."
+
+[notifications.detail]
+copied = "Kopiatuta"
+copy = "Kopiatu errorea"
+less = "Erakutsi gutxiago"
+more = "Erakutsi mezu osoa"
+
+[notifications.section]
+earlier = "Lehenago"
+new = "Berria"
 
 [oauth.error]
 message = "Autentifikazioa ez da ongi burutu. Leiho hau itxi eta saiatu berriro."
@@ -5126,6 +5337,7 @@ activeFiles = "<strong>Fitxategi Aktiboak</strong> ikuspegiak tresnan kargatuta 
 allTools = "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools."
 close = "Itxi"
 cropSettings = "Orain moztu nahi dugun fitxategia hautatu dugunez, <strong>Moztu</strong> tresna konfigura dezakegu PDFa moztu nahi dugun eremua aukeratzeko."
+dialogLabel = "Onboarding"
 fileCheckbox = "Fitxategietako bat sakatzean, prozesatzeko hautatzen da. Hainbat fitxategi hauta ditzakezu batch eragiketetarako."
 fileReplacement = "Aldatutako fitxategiak automatikoki ordezkatuko du jatorrizkoa Lan-mahaian, errazago beste tresna batzuekin berriz prozesatzeko."
 filesButton = "Sarbide azkarreko barrako <strong>Fitxategiak</strong> botoiak PDFak igotzea ahalbidetzen dizu tresnekin erabiltzeko."
@@ -5562,6 +5774,7 @@ freeBody = "View, edit, merge, split, sign, watermark, compress, convert and man
 freeTitle = "Unlimited PDF editing"
 
 [payg.free.hero]
+barAria = "Free PDFs remaining"
 capSuffix = "/ {{limit}} free PDFs"
 metaCategories = "Automation · AI · API requests"
 
@@ -5641,6 +5854,7 @@ automation = "automations"
 default = "this feature"
 
 [payg.spendCapMeter]
+barAria = "Spend against cap"
 capSuffix = "/ {{amount}} cap"
 metaCategories = "Automation · AI · API spend"
 resets = "Resets each billing period"
@@ -5969,6 +6183,11 @@ header = "PDFa PDF/A bihurtu"
 tags = "artxibo,epe-luze,estandar,bihurketa,biltegiratzea,kontserbazioa"
 title = "PDFa PDF/A bihurtu"
 
+[pdfToPDFUA]
+header = "PDF To PDF/UA"
+tags = "accessibility,accessible,tagged,screen reader,wcag,eaa,section 508,conversion"
+title = "PDF To PDF/UA"
+
 [pdfToPDFX]
 tags = "inprimaketa,estandarra,bihurketa,produkzioa,aurre-inprimaketa,artxiboa"
 title = "PDFtik PDF/Xera"
@@ -6044,6 +6263,7 @@ small = "500 kreditu"
 xsmall = "100 kreditu"
 
 [plan.availablePlans]
+currency = "Billing currency"
 subtitle = "Aukeratu zure beharretara egokitzen den plana"
 title = "Plan eskuragarriak"
 
@@ -6623,11 +6843,12 @@ reachedTitle = "Hileko gastu-mugara iritsi da"
 title = "Ezin izan da Stripe ataria ireki"
 
 [portal.billing.walletMeter]
+barAria = "Free PDFs remaining"
 capSuffix_one = "{{allowance}} doako PDFetatik erabilita"
 capSuffix_other = "{{allowance}} doako PDFetatik erabilita"
 eyebrow = "Processor proba"
-statusLabel_one = "{{remaining}} geratzen da"
-statusLabel_other = "{{remaining}} geratzen dira"
+statusLabel_one = "{{used}} erabilita"
+statusLabel_other = "{{used}} erabilita"
 sub = "Erabili PDF Editor doan. Ordaindu PDFak automatikoki prozesatzeko."
 title_one = "Prozesatu {{allowance}} PDF doan"
 title_other = "Prozesatu {{allowance}} PDF doan"
@@ -6872,6 +7093,32 @@ label = "Jira"
 description = "Bidali dokumentu bat edo jakinarazpen bat email bidez politika bat exekutatzen denean."
 label = "Mailgun"
 
+[portal.connections.types.n8n]
+baseUrlPlaceholder = "https://your-n8n/webhook/9f2c-..."
+description = "Hand documents to an n8n workflow, and take back whatever it produces."
+label = "n8n"
+
+[portal.connections.types.n8n.fields.authType]
+helperText = "Match the Authentication set on the n8n Webhook node."
+label = "Webhook authentication"
+
+[portal.connections.types.n8n.fields.authType.options.basic]
+label = "Basic auth"
+
+[portal.connections.types.n8n.fields.authType.options.header]
+label = "Header auth"
+
+[portal.connections.types.n8n.fields.authType.options.none]
+label = "None"
+
+[portal.connections.types.n8n.fields.headerName]
+helperText = "The header name from the n8n credential, not its value."
+label = "Header name"
+placeholder = "X-N8N-Key"
+
+[portal.connections.types.n8n.fields.token]
+label = "Header value"
+
 [portal.connections.types.nextcloud]
 baseUrlPlaceholder = "https://your-server/remote.php/dav"
 description = "Gorde prozesatutako dokumentuak Nextcloud-en."
@@ -7076,11 +7323,6 @@ title = "SDK ofizialak"
 beta = "Beta"
 deprecated = "Zaharkitua"
 
-[portal.docs.search]
-empty = "Ez dago bat datorren dokumentaziorik"
-placeholder = "Bilatu dokumentazioan"
-results = "{{count}} emaitza"
-
 [portal.docs.skills]
 eyebrow = "TREBETASUNAK"
 lead = "Agenteak tresna bakar gisa deitzen dituen gaitasun integratu eta izendatuak. Trebetasun bakoitza ebaluazioak lotuta dituen eragiketa-kate determinista bat da."
@@ -7179,11 +7421,11 @@ editorAction = "Editorea"
 empty = "Ez dago iragazki honekin bat datorren dokumenturik."
 rowActions = "Errenkadako ekintzak"
 sensitiveLabel = "Sentikorra"
-sensitiveTitle = "Sentikorra — sarbidea behar da"
 
 [portal.documents.table.columns]
 action = "Pipelinea / Ekintza"
 document = "Dokumentua"
+labels = "Labels"
 product = "Produktua"
 status = "Egoera"
 time = "Ordua"
@@ -7199,6 +7441,7 @@ host = "Host"
 lastSeen = "Azken aldiz ikusita"
 region = "Eskualdea"
 status = "Egoera"
+target = "Target"
 version = "Bertsioa"
 
 [portal.editorAdmin.health.empty]
@@ -7272,6 +7515,60 @@ running = "Martxan"
 description = "Ikuspegi honek ustekabeko errore bat izan du. Saiatu berriro, edo aukeratu alboko barrako beste atal bat."
 retry = "Saiatu berriro"
 title = "Zerbait gaizki atera da orri honetan"
+
+[portal.failures]
+fromSource = "From source {{source}}"
+occurrences = "{{count}} occurrences"
+reportedBy = "Hit by {{actor}}"
+runReference = "Run {{runId}}"
+subtitle = "Failures recorded from your policy runs and your team's editors, with the actions you can take."
+title = "Failures"
+
+[portal.failures.action]
+acknowledge = "Acknowledge"
+confirm = "Are you sure?"
+dismiss = "Dismiss"
+dismissSkipFile = "Skip this file"
+viewFile = "Ikusi fitxategia"
+viewInProcessor = "Ikusi prozesadorean"
+
+[portal.failures.debug]
+copyJson = "Copy JSON"
+dismissAll = "Dismiss all ({{total}})"
+dismissing = "Dismissing..."
+hideJson = "Hide raw JSON ({{total}})"
+refresh = "Refresh failures"
+showJson = "Show raw JSON ({{total}})"
+
+[portal.failures.disabled]
+closed = "This failure is already closed."
+noDocument = "Hutsegite hau ez zen dokumentu zehatz baten aurka erregistratu; beraz, hemen ez dago irekitzeko ezer."
+unattended = "Fitxategi hau karpeta, bucket edo webhook batek eman du; beraz, inoren arakatzaileak ez dauka irekitzeko."
+unavailable = "Not available for this failure."
+
+[portal.failures.empty]
+description = "Policy runs that fail will appear here with the actions you can take."
+title = "No failures recorded"
+
+[portal.failures.kind.inputPasswordProtected]
+description = "The pipeline could not open the document because it is password-protected. Unlock it and run it again, or skip this file."
+title = "Password-protected document"
+
+[portal.failures.kind.unknown]
+description = "This run failed for a reason Stirling does not yet recognise. The raw message is shown below."
+title = "Unrecognised failure"
+
+[portal.failures.origin]
+pipeline = "Pipeline"
+policy = "Policy"
+tool = "Tool run"
+
+[portal.failures.stage]
+blocked = "Blocked"
+input = "Input"
+internal = "Internal"
+never_ran = "Never ran"
+output = "Output"
 
 [portal.home.download]
 back = "Atzera"
@@ -7379,11 +7676,6 @@ cancel = "Utzi"
 confirm = "Ezeztatu gakoa"
 title = "Ezeztatu API gakoa"
 
-[portal.infrastructure.attestationLabel]
-attested = "Egiaztatuta"
-inScope = "Eremuan"
-notApplicable = "E/E"
-
 [portal.infrastructure.audit]
 filterAriaLabel = "Iragazi auditoria-gertaerak kategoriaren arabera"
 heading = "Auditoria-erregistroak"
@@ -7455,11 +7747,6 @@ info = "Informazioa"
 success = "Arrakasta"
 warning = "Abisua"
 
-[portal.infrastructure.certLabel]
-certified = "Ziurtatuta"
-inProgress = "Abian"
-notStarted = "Hasi gabe"
-
 [portal.infrastructure.createKey]
 cancel = "Utzi"
 createKey = "Sortu gakoa"
@@ -7473,237 +7760,9 @@ subtitleCreated = "Kopiatu sekretu hau orain — ez da berriro erakutsiko."
 title = "Sortu API gakoa"
 titleCreated = "Gakoa sortuta"
 
-[portal.infrastructure.deployLabel]
-live = "Martxan"
-queued = "Ilaran"
-rolledBack = "Atzera itzulita"
-rolling = "Zabaltzen"
-
-[portal.infrastructure.deployments]
-msValue = "{{value}} ms"
-throughputValue = "{{value}}/min"
-
-[portal.infrastructure.deployments.deployColumns]
-deployedBy = "Hedatu duena"
-environment = "Ingurunea"
-product = "Produktua"
-status = "Egoera"
-version = "Bertsioa"
-when = "Noiz"
-
-[portal.infrastructure.deployments.recent]
-heading = "Azken hedapenak"
-subheading = "Produktu eta inguruneetako azken zabalkundeak."
-
-[portal.infrastructure.deployments.regionColumns]
-instances = "Instantziak"
-latency = "Latentzia"
-load = "Karga"
-p99 = "P99"
-region = "Eskualdea"
-status = "Egoera"
-throughput = "Errendimendua"
-uptime = "Erabilgarritasun-denbora"
-version = "Bertsioa"
-
-[portal.infrastructure.deployments.regions]
-heading = "Eskualdeak"
-subheading = "Hedatutako Stirling eskualde bakoitzaren zuzeneko osasuna — latentzia, karga eta zabalkunde-bertsioa."
-
-[portal.infrastructure.deployments.regions.empty]
-description = "Hedatutako eskualdeak hemen agertuko dira zure lan-eremua hornitu ondoren."
-title = "Ez dago eskualderik hedatuta"
-
 [portal.infrastructure.keyLabel]
 active = "Aktibo"
 revoked = "Ezeztatuta"
-
-[portal.infrastructure.modelLabel]
-active = "Aktibo"
-degraded = "Degradatuta"
-disabled = "Desgaituta"
-
-[portal.infrastructure.models]
-heading = "Modeloak"
-msValue = "{{value}} ms"
-subheading = "Zure lan-eremuan dokumentuen prozesamendua elikatzen duten modelo-katalogoa eta bideratzea."
-
-[portal.infrastructure.models.byom]
-description = "Erregistratu on-prem edo norberak ostatatutako modelo bat eta lotu eskualde bati datu-egoitzak mugatutako prozesamendurako."
-title = "Ekarri zure modeloa"
-
-[portal.infrastructure.models.catalogue]
-heading = "Katalogoa"
-sub = "Zure lan-eremurako eskuragarri dauden kudeatutako modeloak, zuzeneko latentziarekin eta kostuarekin."
-subEnterprise = "Kudeatutako, norberak ekarritako eta on-prem modeloak — eskualdeka lotzeko aukerarekin."
-
-[portal.infrastructure.models.catalogue.empty]
-description = "Zure lan-eremuko katalogoko modeloak hemen agertuko dira."
-title = "Ez dago modelorik erabilgarri"
-
-[portal.infrastructure.models.columns]
-cost = "Kostua"
-latency = "Latentzia"
-load = "Karga"
-model = "Modeloa"
-status = "Egoera"
-type = "Mota"
-version = "Bertsioa"
-
-[portal.infrastructure.models.cost]
-perCall = "{{price}}/dei"
-perThousand = "{{price}}/1k"
-
-[portal.infrastructure.models.metrics]
-activeModels = "Modelo aktiboak"
-avgLatency = "Batez besteko latentzia"
-included = "Barne"
-monthlySpend = "Hileko modelo-gastua"
-
-[portal.infrastructure.models.routing]
-empty = "Ez dago bideratze-arau konfiguraturik."
-heading = "Bideratze-arauak"
-sub = "Zein modelok kudeatzen duen eragiketa bakoitza. Lehenetsia aplikatzen da arau zehatzagorik bat ez datorrenean."
-subLocked = "Bideratu eragiketak modelo zehatzetara — ordaindutako planetan eskuragarri."
-
-[portal.infrastructure.models.routing.lockedBanner]
-description = "Berritu Pro planera eragiketa eta dokumentu mota bakoitza zein modelok kudeatzen duen kontrolatzeko."
-title = "Modeloen bideratzea ordaindutako eginbidea da"
-
-[portal.infrastructure.models.routingColumns]
-default = "Lehenetsia"
-docType = "Dokumentu mota"
-modelForAria = "{{operation}} eragiketarako modeloa"
-operation = "Eragiketa"
-routedTo = "Hona bideratua"
-
-[portal.infrastructure.modelTypeLabel]
-classification = "Sailkapena"
-extraction = "Erauzketa"
-llm = "LLM"
-ocr = "OCR"
-
-[portal.infrastructure.regionLabel]
-degraded = "Degradatuta"
-down = "Erorita"
-healthy = "Osasuntsu"
-
-[portal.infrastructure.security.access.byok]
-description = "Eman zure KMS propioaren gako bat. Stirling-ek harekin zifratzen du, baina oraindik irakur dezake."
-label = "Ekarri zure gakoa (BYOK)"
-
-[portal.infrastructure.security.access.hyok]
-description = "Gakoak ez dira inoiz zure KMS-tik irteten. Stirling-ek zifratu-testua baino ez du gordetzen."
-label = "Gorde zure gakoa (HYOK)"
-
-[portal.infrastructure.security.access.stirling]
-description = "Stirling-ek zifratze-gakoak kudeatzen ditu. Errazena — zure aldetik gako-eragiketarik gabe."
-label = "Stirling-ek gordetako gakoak"
-
-[portal.infrastructure.security.accessPolicy]
-heading = "Dokumentuetarako sarbide-gidalerroa"
-subheading = "Atsedenean dauden prozesatutako dokumentuak nork deszifratu ditzakeen kontrolatzen du."
-
-[portal.infrastructure.security.attestations]
-heading = "Betetze-egiaztapenak"
-noReport = "Ez dago txostenik eskuragarri"
-subheading = "Esparruz esparruko auditoria-jarrera, egiaztatutako kontroletan txostenak eskuragarri direla."
-viewReport = "Ikusi txostena →"
-
-[portal.infrastructure.security.compliance]
-heading = "Betetzea"
-subheading = "Stirling plataforma estaltzen duten egiaztapenak eta ziurtagiriak."
-
-[portal.infrastructure.security.empty]
-description = "Zure lan-eremuko segurtasun-konfigurazioa hemen agertuko da."
-title = "Segurtasun-jarrera ez dago eskuragarri"
-
-[portal.infrastructure.security.hyokBanner]
-description = "HYOK erabiliz, zifratze-gakoak ez dira inoiz zure KMS-tik irteten. Stirling-ek edozein unetan baliogabetu dezakezun zifratu-testua baino ez du gordetzen eta prozesatzen."
-title = "Stirling-ek ezin ditu zure dokumentuak deszifratu"
-
-[portal.infrastructure.security.ipAllowlist]
-empty = "Ez dago IP barrutirik konfiguratuta — IP guztiak baimenduta daude."
-heading = "IP baimen-zerrenda"
-sub = "API sarbidea CIDR barruti hauetara mugatuta dago."
-subLocked = "Mugatu API sarbidea IP barruti ezagunetara — ordaindutako planetan eskuragarri."
-
-[portal.infrastructure.security.ipAllowlist.lockedBanner]
-description = "Berritu Pro planera API sarbidea sare zehatzetara mugatzeko."
-title = "IP baimen-zerrendak ordaindutako eginbidea dira"
-
-[portal.infrastructure.security.ipColumns]
-added = "Gehituta"
-addedBy = "Gehitu duena"
-cidr = "CIDR"
-label = "Etiketa"
-
-[portal.infrastructure.security.keyManagement]
-algorithm = "Algoritmoa"
-heading = "Zifratze-gakoen kudeaketa"
-keyId = "Gako-identifikatzailea"
-lastRotated = "Azken biraketa"
-rotateKey = "Biratu gakoa"
-rotationPolicy = "Biraketa-gidalerroa"
-subheading = "Atsedenean dokumentuak zifratzen dituzten gakoen zaintza — nork deszifratu dezakeen eta gakoak nola biratzen diren."
-
-[portal.infrastructure.security.managedBanner]
-description = "Bring-your-own-key (BYOK) eta hold-your-own-key (HYOK) zaintza Enterprise planean daude eskuragarri. Berritu zure KMS propioko gakoak emateko."
-title = "Zure planean, gakoak Stirling-ek kudeatzen ditu"
-
-[portal.infrastructure.security.residency.apac]
-description = "ap-southeast-1"
-label = "Asia Pazifikoa"
-
-[portal.infrastructure.security.residency.eu]
-description = "eu-west-1 · GDPR datu-muga"
-label = "Europar Batasuna"
-
-[portal.infrastructure.security.residency.us]
-description = "us-east-1 · us-west-2"
-label = "Estatu Batuak"
-
-[portal.infrastructure.security.residencyHeader]
-heading = "Datu-egoitza"
-subheading = "Dokumentuak non gordetzen eta prozesatzen diren."
-
-[portal.infrastructure.storage]
-gbValue = "{{value}} GB"
-percentUsed = "{{value}} erabilita"
-
-[portal.infrastructure.storage.empty]
-description = "Konektatutako biltegiratzea eta erabilera hemen agertuko dira."
-title = "Ez dago biltegiratzerik konfiguratuta"
-
-[portal.infrastructure.storage.lifecycle]
-active = "Aktibo"
-activeRange = "0–{{value}}d"
-archived = "Artxibatuta"
-coldStorage = "biltegiratze hotza"
-deleted = "Ezabatuta"
-never = "inoiz ez"
-purged = "garbituta"
-
-[portal.infrastructure.storage.providers]
-connect = "Konektatu"
-connected = "Konektatuta"
-heading = "Konektatutako hornitzaileak"
-subheading = "Prozesatutako artefaktuak non idazten diren."
-
-[portal.infrastructure.storage.retention]
-heading = "Atxikipena"
-subheading = "Artefaktuak bizi-zikloko ezabaketaren aurretik zenbat denboraz mantentzen diren."
-windowLabel = "Atxikipen-leiho lehenetsia"
-
-[portal.infrastructure.storage.retentionOption]
-days_one = "{{count}} egun"
-days_other = "{{count}} egun"
-never = "Ez ezabatu inoiz"
-
-[portal.infrastructure.storage.totalUsage]
-heading = "Erabilera guztira"
-progressLabel = "Erabilitako biltegiratzea"
-subheading = "Konektatutako hornitzaile guztietan kontsumitutako biltegiratzea."
 
 [portal.infrastructure.tabs]
 apiKeys = "API gakoak"
@@ -7714,11 +7773,9 @@ security = "Segurtasuna"
 storage = "Biltegiratzea"
 
 [portal.integrations]
-addAnother = "Gehitu beste bat"
 availableHeading = "Eskuragarri"
 comingSoonHeading = "Laster"
 connect = "Konektatu"
-connectedHeading = "Konektatuta"
 connectionCount_one = "{{count}} konexio"
 connectionCount_other = "{{count}} konexio"
 customApi = "API pertsonalizatua"
@@ -7735,6 +7792,10 @@ notify = "Jakinarazi"
 security = "Segurtasuna"
 signing = "Sinatzea"
 storage = "Biltegiratzea"
+
+[portal.integrations.noResults]
+description = "No integrations match your filters. Try a different category or search."
+title = "No matches"
 
 [portal.integrations.status]
 connected = "Konektatuta"
@@ -7766,7 +7827,6 @@ integrations = "Integrazioak"
 pipelines = "Pipelineak"
 policies = "Gidalerroak"
 procurement = "Erosketak"
-settings = "Ezarpenak"
 sources = "Iturburuak"
 usage = "Erabilera eta fakturazioa"
 users = "Erabiltzaileak"
@@ -7783,7 +7843,7 @@ title = "Pipelineak"
 newPipeline = "Pipeline berria"
 
 [portal.pipelines.builder]
-addStep = "Gehitu tresna"
+activate = "Activate"
 back = "Itzuli pipelineetara"
 cannotFollow = "Ezin du {{produced}} hartu"
 chooseAccount = "Aukeratu kontu bat"
@@ -7791,28 +7851,38 @@ chooseDestination = "Aukeratu helmuga bat"
 chooseOperation = "Aukeratu urrats honek zer egiten duen"
 chooseSource = "Aukeratu iturburu bat"
 discard = "Baztertu aldaketak"
-enabled = "Gaituta"
 inputs = "Sarrera"
 inputSource = "Sarrera-iturburua"
 inputTrigger = "Abiarazlea"
 keepEditing = "Jarraitu editatzen"
+moreActions = "More actions"
 needsConfiguring = "Konfiguratu behar da"
-needsUpload = "Kargatutako fitxategi bat behar du"
-noSources = "Oraindik ez dago iturbururik konektatuta. Sortu bat sarrera gisa erabiltzeko."
+needsDestination = "No destination chosen"
+needsSource = "No source chosen"
 noToolMatches = "Ez dago zure bilaketarekin bat datorren tresnarik."
-pipelineSettings = "Pipelinearen ezarpenak"
+pause = "Pause"
+rename = "Rename pipeline"
 searchTools = "Bilatu tresnak"
-selectToolBody = "Gehitu tresna bat zure pipelinea eraikitzeko."
-selectToolTitle = "Oraindik ez dago tresnarik"
 sendToSystem = "Bidali beste sistema batera"
 stepsIncompatible = "Urrats hauek ezin dira exekutatu aurreko urratsak sortzen duenarekin: {{tools}}."
 stepsNeedSetup = "Urrats hauek oraindik konfiguratu behar dira gorde aurretik: {{tools}}."
-toolSettings = "Tresnaren ezarpenak"
+supportingFiles = "Supporting files"
+testRun = "Test with a file"
 unknownStep = "Eragiketa ezezaguna, bere horretan mantendu da."
 unsavedBody = "Gorde gabeko aldaketak dituzu. Gorde irten aurretik, edo baztertu?"
 unsavedTitle = "Gorde gabeko aldaketak"
-uploadUnsupported = "Kargatutako fitxategiak oraindik ez dira onartzen pipelineetan; beraz, urrats hauek ezin dira gorde: {{tools}}."
 usesDefaults = "Ezarpen lehenetsiekin exekutatzen da"
+viewDefinition = "View definition"
+
+[portal.pipelines.builder.blocker]
+destination = "Choose a destination"
+heading = "To create this pipeline:"
+incompatible = "Fix steps that can't run in order: {{tools}}"
+name = "Give the pipeline a name"
+saveHeading = "To save your changes:"
+schedule = "Set how often it runs"
+setup = "Finish setting up: {{tools}}"
+source = "Choose an input source"
 
 [portal.pipelines.builder.diagnostic]
 fan-in = "Aurreko urratseko fitxategi guztiak konbinatzen ditu"
@@ -7824,30 +7894,35 @@ undeclared-operation = "Ezin da egiaztatu urrats honek zer onartzen duen"
 
 [portal.pipelines.composer]
 addTool = "Gehitu tresna"
-cancel = "Utzi"
-chainEmpty = "Gehitu tresna bat zure pipelinea eraikitzen hasteko."
 create = "Sortu pipelinea"
+createPaused = "Create paused"
 editingUnsupported = "Tresna-parametro hauek editatzeko bistaratzea oraindik ez da onartzen."
-moveDown = "Mugitu behera"
-moveUp = "Mugitu gora"
+editSource = "Edit source"
 name = "Izena"
 namePlaceholder = "adib. Erredakzio-ekorketa"
 noToolSettings = "Tresna honek ez du ezarpen konfiguragarririk."
-operations_one = "Eragiketa ({{count}})"
-operations_other = "Eragiketak ({{count}})"
 output = "Irteera"
-removeStep = "Kendu eragiketa"
 save = "Gorde aldaketak"
 scheduleEvery = "Exekutatu behin"
-sources = "Iturburuak"
-sourcesLoading = "Iturburuak kargatzen..."
 trigger = "Abiarazlea"
 triggerManual = "Eskuz bakarrik"
+
+[portal.pipelines.composer.runsEvery]
+days_one = "Runs every day"
+days_other = "Runs every {{count}} days"
+hours_one = "Runs every hour"
+hours_other = "Runs every {{count}} hours"
+minutes_one = "Runs every minute"
+minutes_other = "Runs every {{count}} minutes"
 
 [portal.pipelines.composer.unit]
 days = "egun"
 hours = "ordu"
 minutes = "minutu"
+
+[portal.pipelines.definition]
+subtitle = "The pipeline as it would be saved."
+title = "Definition"
 
 [portal.pipelines.delete]
 body = "Ezabatu \"{{name}}\"? Hau ezin da desegin."
@@ -7866,6 +7941,37 @@ connectSource = "Konektatu iturburu bat"
 description = "Sortu zure lehen pipelinea: aukeratu zein iturburutan exekutatuko den, kateatu eragiketak eta aukeratu irteera nora joango den."
 title = "Oraindik ez dago pipelinerik"
 
+[portal.pipelines.graph]
+addFirstTool = "Add a tool"
+dragHint = "Drop on a line to move it"
+insertHere = "Add a tool here"
+removeNode = "Remove {{name}}"
+showError = "Show why {{name}} failed"
+
+[portal.pipelines.graph.add]
+input = "Add a source"
+output = "Add a destination"
+
+[portal.pipelines.graph.run]
+done = "Done"
+failed = "Failed"
+running = "Running"
+
+[portal.pipelines.inspector]
+multipleBody = "Drag any of them onto a line to move them together, or press Delete to remove them."
+multipleSelected_one = "{{count}} step selected"
+multipleSelected_other = "{{count}} steps selected"
+noSelectionBody = "Pick a node in the graph to change what it does."
+noSelectionTitle = "Nothing selected"
+
+[portal.pipelines.inspector.status]
+completed_one = "Finished the only step"
+completed_other = "Finished all {{count}} steps"
+failed_one = "Failed on the only step"
+failed_other = "Failed after {{done}} of {{count}} steps"
+running_one = "Running the only step"
+running_other = "Running step {{done}} of {{count}}"
+
 [portal.pipelines.kpi]
 active = "Aktibo"
 paused = "Pausatuta"
@@ -7878,7 +7984,6 @@ completed_one = "Exekuzioa osatu da."
 completed_other = "{{count}} exekuzio guztiak osatu dira."
 empty = "Ez dago exekutatzeko ezer: iturburuek ez zuten prozesatzeko dokumenturik."
 failed = "Exekuzioak huts egin du: {{error}}"
-historyCleared = "Historia garbitu da. Hurrengo exekuzioak une honetan iturburuetan dagoen guztia berriro prozesatuko du."
 inFlight = "Ez dago exekutatzeko ezer berririk: dokumentuak oraindik aurreko exekuzio batetik prozesatzen ari dira."
 parked_one = "Ez dago exekutatzeko ezer: {{count}} dokumentuk huts egin zuen lehenago eta aparkatuta dago. Konpondu arrazoia, eta gero garbitu historia berriro saiatzeko."
 parked_other = "Ez dago exekutatzeko ezer: {{count}} dokumentuk huts egin zuten lehenago eta aparkatuta daude. Konpondu arrazoia, eta gero garbitu historia berriro saiatzeko."
@@ -7894,6 +7999,7 @@ name = "Pipelinea"
 sources = "Iturburuak"
 status = "Egoera"
 steps = "Urratsak"
+trigger = "Trigger"
 
 [portal.pipelines.trigger]
 folder-watch = "Karpetaren zaintza"
@@ -8207,6 +8313,24 @@ label = "Erantsi Jira issue bati"
 [portal.policies.operations.mailgunEmail]
 description = "Prozesatutako dokumentua eranskin gisa bidaltzen du."
 label = "Bidali dokumentua email bidez (Mailgun)"
+
+[portal.policies.operations.n8nGate]
+description = "Your workflow decides whether the run carries on."
+label = "Ask an n8n workflow to approve"
+note = "The workflow must reply with {\"approved\": true}. Anything else — including a timeout — stops the run and parks the document."
+
+[portal.policies.operations.n8nNotify]
+description = "Sends the run's details, not the document."
+label = "Tell an n8n workflow"
+
+[portal.policies.operations.n8nSend]
+description = "Sends the document and the run's details to your workflow."
+label = "Send the document to n8n"
+
+[portal.policies.operations.n8nTransform]
+description = "Your workflow processes the document and the file it returns replaces it."
+label = "Process the document in n8n"
+note = "Set the Webhook node to respond \"Using Respond to Webhook Node\", and return a file. On the default \"Immediately\" setting n8n replies with an acknowledgement, and that would replace the document."
 
 [portal.policies.operations.nextcloudUpload]
 description = "Prozesatutako dokumentua karpeta batean idazten du."
@@ -8682,16 +8806,6 @@ maxed = "Mugara iritsita"
 subtitle = "Zure doako probaldia {{date}} arte doa. Ez da txartelik behar."
 title = "Enterprise probaldia"
 
-[portal.search]
-ariaLabel = "Bilatu"
-placeholder = "Bilatu Stirling — endpointak, pipelineak, dokumentuak…"
-
-[portal.search.empty]
-noActionsDescription = "Ekintza azkarrak hemen agertuko dira erabilgarri daudenean."
-noActionsTitle = "Ez dago ekintza azkarrik"
-noMatches = "Ez dago bat-etortzerik \"{{query}}\"-rentzat"
-noMatchesDescription = "Saiatu beste gako-hitz batekin edo arakatu katalogoa."
-
 [portal.settings.groups]
 admin = "Admin"
 
@@ -8718,7 +8832,9 @@ title = "Iturburuak"
 connectSource = "Konektatu iturburua"
 
 [portal.sources.builder]
+advanced = "Aurreratua"
 back = "Itzuli iturburuetara"
+backToSource = "Itzuli iturburuaren konfiguraziora"
 backToTypes = "Iturburu mota guztiak"
 cancel = "Utzi"
 chooseHint = "Aukeratu dokumentuak nondik datozen. Grisez dauden konektoreak bidean daude."
@@ -8728,7 +8844,6 @@ create = "Sortu iturburua"
 createTitle = "Konektatu iturburu bat"
 delete = "Ezabatu"
 editTitle = "Editatu iturburua"
-enabled = "Gaituta"
 save = "Gorde aldaketak"
 
 [portal.sources.builder.folderAccess]
@@ -8741,10 +8856,6 @@ body = "Ezabatu \"{{name}}\"? Hau ezin da desegin. Hura erreferentziatzen duten 
 cancel = "Utzi"
 confirm = "Ezabatu"
 title = "Ezabatu iturburua?"
-
-[portal.sources.empty]
-description = "Konektatu karpeta bat (eta, laster, hodeiko biltegiratzea), zure politikek dokumentuak nondik hartu izan dezaten."
-title = "Oraindik ez dago iturbururik konektatuta"
 
 [portal.sources.kpi]
 inUse = "Erabiltzen"
@@ -8769,6 +8880,7 @@ consume = "Kontsumitu: prozesatu fitxategi bakoitza behin"
 snapshot = "Snapshot: berrirakurri karpeta exekuzio bakoitzean"
 
 [portal.sources.networkFields.recursive]
+helperText = "Sartu azpikarpetak zure fitxategiak habiaratutako karpetetan antolatuta badaude, edo kontrolatu goiko maila bakarrik."
 label = "Karpetaren sakonera"
 
 [portal.sources.networkFields.recursive.options]
@@ -8784,6 +8896,7 @@ unused = "Erabili gabe"
 documents = "Dokumentuak"
 source = "Iturburua"
 status = "Egoera"
+type = "Type"
 usedBy = "Politikak"
 
 [portal.sources.types.box]
@@ -8821,6 +8934,7 @@ hash = "Tamaina, data eta eduki-egiaztapena"
 stat = "Tamaina eta aldatze-data"
 
 [portal.sources.types.folder.fields.mode]
+helperText = "Jatorrizko fitxategia prozesatu ondoren bere lekuan utzi behar den ala ez. Jatorrizko fitxategia bere lekuan uzten bada, pipeline-ak iturburua eskaneatzen duen hurrengo aldian berriro prozesatuko da."
 label = "Irakurketa-modua"
 
 [portal.sources.types.folder.fields.mode.options]
@@ -8828,6 +8942,7 @@ consume = "Kontsumitu: prozesatu fitxategi bakoitza behin"
 snapshot = "Snapshot: berrirakurri karpeta exekuzio bakoitzean"
 
 [portal.sources.types.folder.fields.recursive]
+helperText = "Sartu azpikarpetak zure fitxategiak habiaratutako karpetetan antolatuta badaude, edo kontrolatu goiko maila bakarrik."
 label = "Karpetaren sakonera"
 
 [portal.sources.types.folder.fields.recursive.options]
@@ -9701,7 +9816,9 @@ toolNotAvailableLocally = "Zure Stirling-PDF zerbitzaria lineaz kanpo dago eta \
 expired = "Zure saioa iraungi da. Freskatu orria eta saiatu berriro."
 
 [settings]
+backToSections = "Ezarpen guztiak"
 close = "Itxi"
+title = "Ezarpenak"
 
 [settings.ai]
 documents = "Dokumentuak eta RAG"
@@ -9979,9 +10096,6 @@ title = "Politikak eta Pribatutasuna"
 [settings.preferences]
 title = "Hobespenak"
 
-[settings.search]
-placeholder = "Bilatu ezarpen-orrietan..."
-
 [settings.security]
 description = "Eguneratu pasahitza kontua seguru mantentzeko."
 title = "Segurtasuna"
@@ -10127,6 +10241,7 @@ last = "Azken orria"
 maintainRatio = "Aldatu aspektu-erlazioa mantentzea"
 next = "Hurrengo orria"
 noSavedSigs = "Ez da gordetako sinadurarik aurkitu"
+penSizePlaceholder = "Type or select pen size (1-200)"
 personalSigs = "Sinadura pertsonalak"
 previous = "Aurreko orria"
 redo = "Berregin"
@@ -10165,6 +10280,7 @@ backgroundRemovalFailedTitle = "Atzeko planoa kentzeak huts egin du"
 hint = "Igo zure sinaduraren PNG edo JPG irudia"
 label = "Igo sinaduraren irudia"
 placeholder = "Hautatu irudi-fitxategia"
+previewAlt = "Current image signature"
 processing = "Irudia prozesatzen..."
 removeBackground = "Kendu atzeko plano zuria (gardendu)"
 
@@ -10177,6 +10293,17 @@ resumeHint = "Berrekin kokatzeari klik egin eta zure sinadura gehitzeko."
 saved = "Hautatu goiko gordetako sinadura, ondoren egin klik PDFan edozein lekutan kokatzeko."
 text = "Goian zure izena sartu ondoren, egin klik PDFn edonon zure sinadura kokatzeko."
 title = "Nola gehitu sinadura"
+
+[sign.mobile]
+createFromPhone = "Mobile upload"
+description = "Scan this QR code with your phone or tablet, draw your signature, and it will appear here automatically."
+error = "Connection Error"
+expiryWarning = "QR Code Expiring Soon"
+expiryWarningMessage = "This QR code will expire in {{seconds}} seconds. A new code will be generated automatically."
+instructions = "Open the camera app on your phone and scan this code. Keep this window open while you draw."
+pollingError = "Error checking for the signature"
+sessionCreateError = "Failed to create session"
+title = "Draw on your phone"
 
 [sign.mode]
 move = "Mugitu sinadura"
@@ -10624,6 +10751,24 @@ title = "Igo zerbitzarira"
 updateButton = "Eguneratu zerbitzarian"
 uploadButton = "Igo zerbitzarira"
 
+[superSearch]
+all = "All"
+ariaLabel = "Super search"
+filtersAriaLabel = "Search filters"
+hint = "Type to search"
+placeholder = "Search Stirling"
+placeholderShort = "Bilatu"
+showLess = "Show less"
+showMore = "Show {{count}} more"
+
+[superSearch.group]
+docs = "Docs"
+files = "Files"
+pages = "Pages"
+processor = "Processor"
+settings = "Settings"
+tools = "Tools"
+
 [survey]
 title = "Stirling-PDF Survey"
 
@@ -10773,7 +10918,6 @@ goBack = "Itzuli atzera"
 pdfTools = "PDF tresnak"
 placeholder = "Aukeratu tresna bat hasteko"
 premiumFeature = "Premium ezaugarria:"
-searchTools = "Bilatu tresnak"
 toolsHeader = "Tresnak"
 viewAllTools = "Ikusi tresna guztiak"
 
@@ -10810,6 +10954,7 @@ searchPlaceholder = "Bilatu tresnak..."
 
 [toolPicker.subcategories]
 advancedFormatting = "Formateatze aurreratua"
+ai = "AI"
 automation = "Automatizazioa"
 developerTools = "Garatzaileentzako tresnak"
 documentReview = "Dokumentu-berrikuspena"
@@ -10820,6 +10965,9 @@ pageFormatting = "Orri-formatua"
 removal = "Kentzea"
 signing = "Sinatzea"
 verification = "Egiaztapena"
+
+[toolRenderer]
+notFound = "Tool not found: {{tool}}"
 
 [tools]
 noSearchResults = "Ez da tresnarik aurkitu"
@@ -10978,6 +11126,13 @@ approver = "Politika onartzen du"
 editor = "Editorea"
 processor = "Processor"
 
+[users.columns]
+capabilities = "Capabilities"
+email = "Email"
+person = "Person"
+role = "Role"
+status = "Status"
+
 [users.confirm]
 cancelInviteBody = "{{email}} helbiderako gonbidapena bertan behera utzi? Ezingo dute uneko estekarekin bat egin."
 cancelInviteTitle = "Utzi gonbidapena bertan behera"
@@ -10997,10 +11152,8 @@ title = "Oraindik ez dago kiderik"
 addToTeam = "Gehitu taldera"
 guestCount = "{{count}} gonbidatu"
 guests = "Gonbidatuak"
-guestsDesc = "Kanpoko kolaboratzaileak, partekatu duzunera mugatuak. Editorea soilik."
 ledBy = "{{owner}}-k gidatua"
 org = "Erakundea"
-orgDesc = "Erakunde osoko agintea eta politika-onarpena dituzten jabeak"
 owners = "{{count}} jabe"
 team = "{{name}} taldea"
 teamMeta = "{{count}} pertsona"
@@ -11040,12 +11193,14 @@ usernamePlaceholder = "jsmith"
 [users.invites]
 by = "{{who}} erabiltzaileak gonbidatua"
 cancel = "Utzi bertan behera"
-count = "{{count}} zain"
-desc = "Oraindik sartu ez diren gonbidatuak. Eserleku bat mantentzen dute onartu arte."
 expiresInDays_one = "{{count}} egun barru iraungiko da"
 expiresInDays_other = "{{count}} egun barru iraungiko da"
 expiresToday = "Gaur iraungiko da"
 title = "Zain dauden gonbidapenak"
+
+[users.invites.columns]
+expires = "Expires"
+invitee = "Invitee"
 
 [users.loadError]
 description = "Zerbait gaizki joan da backend-era konektatzean, edo ez duzu sarbiderik. Saiatu berriro."
@@ -11236,12 +11391,15 @@ searchPlaceholder = "Bilatu eranskinak"
 title = "Eranskinak"
 
 [viewer.bookmarks]
+addBookmark = "Add bookmark"
 bookmarkTitle = "Laster-markaren izenburua"
 bookmarkTitleRequired = "Laster-markaren izenburua beharrezkoa da"
 closeSidebar = "Itxi laster-marken alboko barra"
 collapseAll = "Tolestu laster-marka guztiak"
+empty = "No bookmarks in this document"
 expandAll = "Zabaldu laster-marka guztiak"
 searchPlaceholder = "Bilatu laster-markak"
+title = "Bookmarks"
 
 [viewer.comments]
 addComment = "Gehitu iruzkina"
@@ -11263,10 +11421,12 @@ locateAnnotation = "Kokatu dokumentuan"
 moreActions = "Ekintza gehiago"
 nComments_one = "{{count}} comment"
 nComments_other = "{{count}} comments"
+noMatch = "No comments match your search"
 pageLabel = "Orrialdea {{page}}"
 placingHint = "Egin klik orri batean kokatzeko… (utzi)"
 removeCommentOnly = "Kendu iruzkina bakarrik"
 saveReply = "Gorde erantzuna"
+searchPlaceholder = "Search comments"
 title = "Iruzkinak"
 typeComment = "Iruzkina"
 typeInsertText = "Testua txertatu"
@@ -11289,6 +11449,7 @@ unsavedDesc = "Gorde gabeko aldaketak dituzu"
 closeSidebar = "Itxi geruzen alboko barra"
 hideAll = "Ezkutatu geruza guztiak"
 showAll = "Erakutsi geruza guztiak"
+title = "Layers"
 
 [viewer.link]
 delete = "Ezabatu esteka"
@@ -11298,8 +11459,11 @@ columnDefault = "{{index}}. zutabea"
 convertToPdf = "Bihurtu PDFra"
 csvStats = "{{rows}} errenkada · {{columns}} zutabe · {{size}}"
 emptyFile = "Fitxategi hutsa"
+htmlHidePreview = "Ezkutatu aurrebista"
 htmlPreview = "HTML aurrebista"
+htmlPreviewMobileHidden = "HTML orriak mahaigaineko zabaleretarako diseinatuta daude; beraz, aurrebista desaktibatuta dago hemen lehenespenez."
 htmlPreviewWarning = "HTML aurrebista — kanpoko baliabideak agian ez dira kargatuko · {{size}}"
+htmlShowPreview = "Erakutsi aurrebista hala ere"
 invalidJson = "JSON baliogabea — edukia gordinean erakusten"
 lineNumbers = "Lerro-zenbakiak"
 loading = "Kargatzen..."
@@ -11645,6 +11809,8 @@ exitRedaction = "Irten zentsura modutik"
 exportAll = "Esportatu PDFa"
 exportSelected = "Esportatu hautatutako orriak"
 formFill = "Bete inprimakia"
+hideToolbar = "Hide toolbar"
+moreActions = "Ekintza gehiago"
 multiTool = "Multi-tresna"
 panMode = "Pan modua"
 print = "Inprimatu PDFa"
@@ -11665,6 +11831,9 @@ selectAll = "Hautatu dena"
 selectByNumber = "Hautatu orri-zenbakien arabera"
 selectLanguage = "Hautatu hizkuntza"
 share = "Partekatu"
+showAllTools = "Erakutsi tresna guztiak"
+showFewerTools = "Tolestu tresna-barra"
+showToolbar = "Show toolbar"
 toggleAnnotations = "Txandakatu anotazioen ikusgarritasuna"
 toggleAttachments = "Txandakatu eranskinak"
 toggleBookmarks = "Txandakatu laster-markak"

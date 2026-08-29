@@ -1,7 +1,6 @@
 alphabet = "Abeceda"
 apply = "Použít"
 applyAndContinue = "Uložit a odejít"
-areYouSure = "Opravdu chcete odejít?"
 back = "Zpět"
 black = "Černá"
 blue = "Modrá"
@@ -42,7 +41,7 @@ false = "Ne"
 fileNotSavedToDisk = "Neuloženo na disk"
 fileSavedToDisk = "Soubor uložen na disk"
 fileSelected = "Vybráno: {{filename}}"
-filesSelected = "vybraných souborů"
+filesSelected = "{{count}} souborů"
 font = "Písmo"
 fontSizeTooltip = "Velikost textu čísla stránky v bodech. Větší čísla znamenají větší text."
 fontTypeTooltip = "Rodina písma pro čísla stránek. Zvolte podle stylu dokumentu."
@@ -106,6 +105,7 @@ undoSuccess = "Operace úspěšně vrácena"
 unknown = "Neznámý"
 unpin = "Odepnout soubor (nahradit po spuštění nástroje)"
 unsavedChanges = "Máte neuložené změny v PDF."
+unsavedChangesBody = "You have unsaved changes to your PDF. Are you sure you want to leave?"
 unsavedChangesTitle = "Neuložené změny"
 unsupported = "Nepodporováno"
 username = "Uživatelské jméno"
@@ -1879,6 +1879,9 @@ width = "Šířka"
 [app]
 description = "Bezplatná alternativa k Adobe Acrobat (10+ mil. stažení)"
 
+[appBanner]
+dismiss = "Dismiss"
+
 [attachments]
 convertToPdfA3b = "Convert to PDF/A-3b"
 convertToPdfA3bDescription = "Creates an archival PDF with embedded attachments"
@@ -2933,12 +2936,16 @@ text = "Abyste tato oprávnění učinili nezměnitelnými, použijte nástroj P
 [chat.actions]
 copy = "Kopírovat zprávu"
 
+[chat.emptyState]
+text = "Ask a question about your documents or get help with PDF tools."
+
 [chat.fab]
 close = "Close chat"
 open = "Open Stirling AI assistant"
 
 [chat.header]
 agentMenu = "Možnosti agenta Stirling"
+assistant = "AI Assistant"
 clearChat = "Vymazat chat"
 
 [chat.input]
@@ -3001,28 +3008,35 @@ tooltip = "Tato operace využije vaše cloudové kredity"
 tooltip = "Vybrat barvu z obrazovky"
 
 [colorPicker]
+hue = "Hue"
+saturation = "Saturation and brightness"
 title = "Zvolte barvu"
 
 [common]
+actions = "Actions"
 back = "Zpět"
 cancel = "Zrušit"
 close = "Zavřít"
+codeSample = "Code sample"
 collapse = "Sbalit"
 confirm = "Potvrdit"
 continue = "Pokračovat"
 copied = "Zkopírováno!"
 copy = "Kopírovat"
 done = "Hotovo"
+enterValue = "Enter value"
 error = "Chyba"
 expand = "Rozbalit"
 loading = "Načítání..."
 next = "Další"
+open = "Open"
 preview = "Náhled"
 previous = "Předchozí"
 refresh = "Obnovit"
 remaining = "Zbývá"
 retry = "Zkusit znovu"
 save = "Save"
+stepOf = "Step {{current}} of {{total}}"
 
 [compare]
 clearSelected = "Vymazat vybrané"
@@ -3185,6 +3199,7 @@ title = "Metoda komprese"
 [compress.settings]
 desiredSize = "Požadovaná velikost souboru"
 desiredSizePlaceholder = "Zadejte velikost"
+desiredSizeUnit = "Size unit"
 
 [compress.tooltip.description]
 text = "Komprese je snadný způsob, jak zmenšit velikost souboru. Zvolte Velikost souboru pro zadání cílové velikosti a my upravíme kvalitu za vás. Zvolte Kvalitu pro ruční nastavení síly komprese."
@@ -3387,6 +3402,24 @@ pdfOptions = "Možnosti PDF"
 pdfToCbr = "PDF → CBR"
 pdfToCbz = "PDF → CBZ"
 pdfToEpub = "PDF → EPUB"
+pdfUaAltTextNotice = "Images need a written description before a document can be certified. Descriptions are never generated automatically, because an invented one passes the checker while telling a screen-reader user nothing. Any image left without one is reported, and the file comes back tagged but not certified."
+pdfUaAltTextScanFailed = "The images could not be listed. Convert anyway and the response reports what is missing."
+pdfUaAltTextSingleFileOnly = "Descriptions belong to one document: an image is identified by its position, which is a different image in every file. Convert these {{fileCount}} files to tag them, then convert one at a time to describe its images."
+pdfUaEmbedFonts = "Embed missing fonts"
+pdfUaEmbedFontsHelp = "PDF/UA requires every font to be embedded. Turning this off is faster but usually prevents conformance."
+pdfUaFigureLabel = "Page {{page}} {{kind}}"
+pdfUaFigurePlaceholder = "What this image tells the reader"
+pdfUaFindImages = "Find images needing a description"
+pdfUaLanguage = "Document language"
+pdfUaLanguageHelp = "A BCP-47 tag such as en-GB. Used only when the document does not already declare its own language."
+pdfUaNoImagesNeedingText = "No image is missing a description."
+pdfUaOptions = "PDF/UA Options"
+pdfUaOverrideLanguage = "Replace the document's own language"
+pdfUaOverrideLanguageHelp = "Only tick this if the language above is right and the document's own is wrong. Relabelling a document into a language it is not written in makes a screen reader unintelligible."
+pdfUaProfile = "Conformance level"
+pdfUaSignatureWarning = "This PDF is digitally signed. Tagging rewrites the page content the signature covers, so the signature will stop verifying. Convert first, then re-sign."
+pdfUaTitle = "Document title"
+pdfUaTitleHelp = "Shown by a reader instead of the filename. Left blank, the first heading is used."
 selectSourceFormatFirst = "Nejprve vyberte zdrojový formát"
 settings = "Nastavení"
 single = "Jeden"
@@ -3564,7 +3597,11 @@ tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [dropdownList]
+noItems = "No items available"
+noResults = "No results found"
 searchPlaceholder = "Hledat..."
+selectLanguages = "Select languages"
+selectOption = "Select an option"
 
 [editableSecretField]
 edit = "Upravit"
@@ -3823,11 +3860,13 @@ shareSelected = "Sdílet vybrané"
 sharing = "Sdílení"
 showAll = "Zobrazit vše"
 showHistory = "Zobrazit historii"
+sortBy = "Sort files"
 sortByDate = "Seřadit podle data"
 sortByName = "Seřadit podle názvu"
 sortBySize = "Seřadit podle velikosti"
 storage = "Úložiště"
 storageState = "Úložiště"
+storageUsed = "Storage used"
 synced = "Synchronizováno"
 title = "Nahrát soubory PDF"
 toolChain = "Použité nástroje"
@@ -3873,8 +3912,12 @@ addFiles = "Přidat soubory"
 addingFiles = "Přidávání souborů…"
 collapse = "Sbalit postranní panel"
 customizeGroups = "Přizpůsobit skupiny"
+dataLostBody = "This browser lost this file's contents. Upload it again to keep working with it."
+dataLostTitle = "File data is unavailable"
+downloadFailed = "Download failed"
 dropHint = "Otevřete soubory a začněte"
 dropToAdd = "Drop files to add"
+duplicateFailed = "Could not duplicate file"
 expand = "Rozbalit postranní panel"
 googleDrive = "Google Drive"
 googleDriveDisabled = "Google Drive není nakonfigurován"
@@ -3887,15 +3930,17 @@ openFromComputer = "Otevřít z počítače"
 openSettings = "Otevřít nastavení"
 other = "Ostatní"
 recent = "Nedávné"
-search = "Hledat"
-searchPlaceholder = "Hledat soubory..."
 viewAll = "Zobrazit všech {{count}} souborů"
 
 [fileSidebar.fileItem]
 closeViewer = "Zavřít prohlížeč"
+dataLost = "Data lost"
+dataLostTooltip = "This browser lost this file's contents. Upload it again to keep working with it."
 delete = "Delete"
+duplicate = "Duplicate"
 moreActions = "More actions"
 openInViewer = "Otevřít v prohlížeči"
+rename = "Rename"
 savedToServer = "Saved to server"
 updateOnServer = "Update on server"
 uploadToServer = "Upload to server"
@@ -3907,6 +3952,14 @@ reset = "Obnovit výchozí nastavení"
 subtitle = "Seskupte soubory do nadřazených kategorií. Přidejte do kategorie existující nebo nové štítky, přejmenujte ji nebo si vytvořte vlastní. Soubory, které nejsou v žádné z vašich kategorií, se zobrazí pod „Ostatní“."
 title = "Kategorie postranního panelu"
 
+[fileSidebar.rename]
+cancel = "Cancel"
+error = "Could not rename the file."
+illegalCharacters = "A file name can't contain \\ / : * ? \" < > |"
+label = "File name"
+save = "Rename"
+title = "Rename file"
+
 [filesPage]
 addToWorkspace = "Přidat do pracovního prostoru"
 addToWorkspaceCount = "Přidat {{count}} do pracovního prostoru"
@@ -3915,9 +3968,9 @@ back = "Zpět"
 backToFolder = "Zpět do {{folder}}"
 backToMyFiles = "Zpět na Moje soubory"
 breadcrumbs = "Cesta ke složce"
+bulkActions = "Akce"
 cancel = "Zrušit"
 classification = "Klasifikace"
-clearSearch = "Vymazat hledání"
 clearSelection = "Zrušit výběr"
 closeDetails = "Zavřít podrobnosti"
 create = "Vytvořit"
@@ -3949,6 +4002,7 @@ downloadAll = "Stáhnout vše"
 downloadVersion = "Stáhnout tuto verzi"
 dropOverlay = "Přetáhněte soubory pro nahrání"
 dropOverlaySub = "Soubory začínají v Místní. K jejich uspořádání do složky použijte 'Přesunout do' nebo 'Uložit do cloudu'."
+duplicate = "Duplicate"
 file = "Soubor"
 fileInfo = "File info"
 fileMenu = "Akce souboru"
@@ -3982,8 +4036,6 @@ resizeFolderTree = "Změnit velikost stromu složek (šipky, Shift pro větší 
 save = "Uložit"
 saveToServer = "Uložit na server"
 saveToServerDisabledHint = "Ukládání na server není na tomto serveru povoleno. Požádejte správce o povolení."
-search = "Hledat"
-searchPlaceholder = "Hledat v této složce a podsložkách"
 selectAll = "Vybrat vše"
 selectAllHint = "Kliknutím vyberete vše. Tip: podržte Ctrl (nebo Cmd) pro přidání jednotlivých souborů, Shift pro výběr rozsahu."
 selectedCount = "Vybráno: {{count}}"
@@ -4043,6 +4095,10 @@ title = "Zatím žádné cloudové soubory"
 hint = "Soubory uložené bez nahrání zůstávají zde. Přetáhněte soubor pro přidání."
 title = "Žádné pouze místní soubory"
 
+[filesPage.empty.noResults]
+hint = "No files in this folder match your filter. Try a different term or clear the filter."
+title = "No matching files"
+
 [filesPage.empty.recent]
 hint = "Soubory, které otevřete nebo upravíte, se zobrazí zde."
 title = "Zatím nic nebylo upraveno"
@@ -4062,6 +4118,8 @@ cloudDeleteFailed_one = "Couldn't delete 1 file from the cloud."
 cloudDeleteFailed_other = "Couldn't delete {{count}} files from the cloud."
 deleteFolderFailed = "Nepodařilo se smazat složku."
 deleteFolderFailedDetail = "Nepodařilo se smazat složku: {{message}}"
+downloadFailed = "Could not download the file."
+duplicateFailed = "Could not duplicate the file."
 folderAppearanceFailed = "Nepodařilo se upravit vzhled složky."
 folderAppearanceFailedDetail = "Nepodařilo se upravit vzhled složky: {{message}}"
 moveFilesFailed = "Nepodařilo se přesunout soubory."
@@ -4083,6 +4141,11 @@ size = "Velikost"
 totalSize = "Celková velikost"
 type = "Typ"
 versionHistory = "Vývoj verzí"
+
+[filesPage.filters]
+activeCount = "{{count}} aktivních filtrů"
+clearAll = "Vymazat filtry"
+label = "Filtry"
 
 [filesPage.folderName]
 cancel = "Zrušit"
@@ -4112,7 +4175,13 @@ localHint = "Uloženo pouze v tomto prohlížeči"
 shared = "Sdílené"
 sharedHint = "Sdíleno s vámi přes odkaz"
 
+[filesPage.search]
+clear = "Clear filter"
+label = "Filter files by name"
+placeholder = "Filter files…"
+
 [filesPage.sort]
+label = "Seřadit soubory"
 modifiedAsc = "Od nejstarších"
 modifiedDesc = "Od nejnovějších"
 nameAsc = "Název A→Z"
@@ -4167,6 +4236,7 @@ noFilesInStorageOpen = "V úložišti nejsou k dispozici žádné soubory. Nejpr
 open = "Otevřít"
 openFile = "Otevřít soubor"
 openFiles = "Otevřít soubory"
+selectFile = "Select {{name}}"
 selectFromStorage = "Vybrat z úložiště"
 upload = "Nahrát"
 uploadFile = "Nahrát soubor"
@@ -4240,16 +4310,99 @@ issues = "GitHub"
 
 [formFill]
 allSaved = "Vše uloženo"
+analyzingFields = "Analysing form fields..."
+applyFailed = "Změny se nepodařilo použít"
 extractCsvError = "Nepodařilo se extrahovat CSV"
 extractXlsxError = "Nepodařilo se extrahovat XLSX"
+filled = "filled"
 flattenAfterFilling = "Zploštit po vyplnění"
+goToPage = "Přejít na tuto stránku"
+noFields = "No fillable form fields found in this PDF."
+page = "Stránka"
+placeholderEnter = "Enter"
+placeholderSelect = "Select"
 requiredAbbreviation = "pov."
 requiredFieldsError = "Vyplňte prosím všechna povinná pole"
 rescanFields = "Znovu detekovat pole"
 rescanFormFields = "Znovu detekovat pole formuláře"
 save = "Uložit"
 saveShortcut = "Ctrl+S pro uložení"
+skippedEdits_one = "1 změnu se nepodařilo použít:"
+skippedEdits_other = "{{count}} změn se nepodařilo použít:"
+skippedEditsTruncated = "{{count}} dalších není uvedeno."
 unsavedChanges = "Neuložené změny"
+
+[formFill.create]
+commit = "Přidat {{count}} polí do PDF"
+empty = "Zatím nejsou nakreslena žádná pole."
+failed = "Pole se nepodařilo přidat"
+goToField = "Přejít na toto pole"
+hint = "Vyberte typ pole a poté ho nakreslete na stránku."
+placing = "Nakreslete pole {{type}} na stránku. Stisknutím Esc skončíte."
+preview = "Podržte pro náhled"
+previewHelp = "Podržením zobrazíte pole tak, jak budou vypadat po přidání, bez obrysů pro úpravy."
+removeField = "Odebrat pole"
+
+[formFill.editor]
+action = "Akce tlačítka"
+actionHelp = "Co tlačítko provede po kliknutí."
+actionNone = "Žádná"
+actionPrint = "Tisk"
+actionReset = "Resetovat formulář"
+actionSubmit = "Odeslat na URL"
+actionUri = "Otevřít URL"
+actionUrl = "URL"
+actionUrlHelp = "Adresa, kterou tlačítko otevře nebo na ni odešle data."
+addOption = "Přidat možnost"
+caption = "Popisek tlačítka"
+captionHelp = "Text vytištěný na čelní straně tlačítka."
+defaultValue = "Výchozí hodnota"
+defaultValueHelp = "Co pole obsahuje, než ho někdo vyplní. Pro prázdné pole nechte prázdné."
+fontSize = "Velikost písma"
+fontSizeHelp = "Velikost textu uvnitř pole. Nechte prázdné, aby ji prohlížeč přizpůsobil."
+label = "Štítek"
+labelHelp = "Text zobrazený osobě, která formulář vyplňuje. Nechte prázdné pro použití názvu pole."
+maxLength = "Maximální délka (comb)"
+maxLengthHelp = "Omezuje počet znaků, které se vejdou, vykreslené jako rovnoměrně rozmístěná políčka."
+multiline = "Víceřádkové"
+multilineHelp = "Umožňuje více než jeden řádek textu a zalamuje ho na okraji pole."
+multiSelect = "Povolit vícenásobný výběr"
+multiSelectHelp = "Umožňuje vybrat více než jednu možnost najednou."
+name = "Název pole"
+nameHelp = "Interní název pole. Používá se při exportu dat nebo vyplňování formuláře z jiného systému, proto musí být jedinečný a bez mezer."
+optionGap = "Mezera mezi možnostmi"
+optionGapHelp = "Mezera mezi tlačítky v bodech. Nechte prázdné, aby se rovnoměrně rozmístila po rámečku."
+optionPlaceholder = "Možnost {{n}}"
+options = "Možnosti"
+optionsEmpty = "Přidejte alespoň jednu možnost."
+optionsHelp = "Volby nabízené v seznamu. Každá se uloží tak, jak je zadána, proto je udržujte krátké a odlišné."
+optionSize = "Velikost možnosti"
+optionSizeHelp = "Šířka a výška každého tlačítka v bodech. Nechte prázdné, aby se přizpůsobily nakreslenému rámečku."
+readOnly = "Pouze pro čtení"
+readOnlyHelp = "Zobrazuje hodnotu, ale brání jejím úpravám."
+removeOption = "Odebrat možnost"
+required = "Povinné"
+requiredHelp = "Formulář nelze odeslat, dokud není toto pole vyplněno."
+signatureNote = "Pouze zástupné místo - zde nepodepisujete. Označuje, kam patří podpis, aby nástroj pro podepisování PDF (Adobe Acrobat, podpisová služba atd.) při podpisu dokumentu umístil podpis na toto místo."
+tooltip = "Tooltip"
+tooltipHelp = "Nápověda zobrazená, když někdo najede na pole v prohlížeči PDF."
+type = "Typ"
+typeHelp = "Jaký druh pole to je. Změna pole znovu vytvoří, takže jeho aktuální hodnota nebude zachována."
+
+[formFill.mode]
+create = "Vytvořit"
+fill = "Vyplnit"
+label = "Režim editoru formuláře"
+modify = "Upravit"
+
+[formFill.modify]
+commit = "Uložit {{count}} změn"
+delete = "Smazat"
+empty = "Toto PDF zatím nemá žádná formulářová pole."
+failed = "Změny se nepodařilo uložit"
+groupSizeHint = "Použít velikost možnosti"
+hint = "Vyberte pole pro úpravu jeho vlastností, přetáhněte ho na stránce nebo ho smažte."
+restore = "Obnovit"
 
 [formFill.sidebar]
 close = "Zavřít postranní panel"
@@ -4515,6 +4668,10 @@ title = "Změnit metadata"
 desc = "Změnit omezení a oprávnění dokumentu"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Změnit oprávnění"
+
+[home.classify]
+desc = "Určete, o jaký druh dokumentu jde, a označte ho štítkem."
+title = "Klasifikovat"
 
 [home.compare]
 desc = "Porovná a zobrazí rozdíly mezi 2 PDF dokumenty"
@@ -4794,9 +4951,6 @@ title = "Obrázek na PDF"
 [imageToPdf]
 tags = "převod,img,jpg,obrázek,fotka"
 
-[infoBanner]
-dismiss = "Zavřít"
-
 [invite]
 acceptError = "Nepodařilo se vytvořit účet"
 accountFor = "Vytváření účtu pro"
@@ -4978,6 +5132,34 @@ uploadSuccess = "Nahrávání úspěšné!"
 uploadSuccessMessage = "Vaše obrázky byly přeneseny."
 validating = "Ověřuje se relace..."
 
+[mobileSign]
+clear = "Clear"
+invalidSession = "Session expired"
+invalidSessionMessage = "This QR code is no longer valid. Open the Sign tool on your computer and scan the new code."
+penSizeLabel = "Pen size"
+send = "Send to computer"
+sendAnother = "Send another signature"
+sendError = "Could not send the signature. Check the connection and try again."
+sentMessage = "Signature sent to your computer. You can send another or close this page."
+tabsLabel = "Signature source"
+undo = "Undo"
+validating = "Checking session…"
+
+[mobileSign.photo]
+fromGallery = "From gallery"
+hint = "Photograph a signature on white paper, or choose an existing image."
+invalidType = "Please choose an image file."
+takePhoto = "Take a photo"
+
+[mobileSign.tab]
+draw = "Draw"
+photo = "Photo"
+type = "Type"
+
+[mobileSign.type]
+placeholder = "Your name"
+previewPlaceholder = "Signature preview"
+
 [mobileUpload]
 description = "Naskenujte pro nahrání fotografií. Obrázky se automaticky převedou do PDF."
 descriptionNoConvert = "Naskenujte pro nahrání fotografií z mobilního zařízení."
@@ -4996,8 +5178,37 @@ title = "Nahrát z mobilu"
 tags = "Multi nástroj,Více operací,UI,kliknutí a přetažení,přední strana,klientská strana,interaktivní,pohyb,smazat,přesunout,rozdělit"
 title = "PDF Multi nástroj"
 
-[navbar]
-search = "Hledat"
+[navFooter]
+openEditor = "Open PDF Editor"
+openProcessor = "Open PDF Processor"
+
+[navFooter.credits]
+count = "{{remaining}} of {{total}}"
+label = "Free credits"
+
+[notifications]
+empty = "Není co hlásit."
+handoffUnavailable = "Tento prohlížeč nedovolí zpracovateli předat dokument editoru. Otevřete ho místo toho z editoru."
+noDocumentLinked = "Toto selhání není propojeno s konkrétním dokumentem, takže zde není co otevřít."
+notOnThisDevice = "Tento dokument není na tomto zařízení, takže ho zde nelze otevřít."
+occurrences = "{{count}}krát"
+open = "Oznámení"
+title = "Oznámení"
+unread = "Nepřečtené"
+
+[notifications.action]
+failed = "To se nepodařilo. Zkuste to za chvíli znovu."
+unavailable = "Pro toto oznámení není k dispozici."
+
+[notifications.detail]
+copied = "Zkopírováno"
+copy = "Kopírovat chybu"
+less = "Zobrazit méně"
+more = "Zobrazit celou zprávu"
+
+[notifications.section]
+earlier = "Dříve"
+new = "Nové"
 
 [oauth.error]
 message = "Ověření nebylo úspěšné. Toto okno můžete zavřít a zkusit to znovu."
@@ -5126,6 +5337,7 @@ activeFiles = "Zobrazení <strong>Aktivní soubory</strong> ukazuje všechna PDF
 allTools = "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools."
 close = "Zavřít"
 cropSettings = "Teď, když jsme vybrali soubor, který chceme oříznout, můžeme nakonfigurovat nástroj Oříznout a zvolit oblast, na kterou PDF ořízneme."
+dialogLabel = "Onboarding"
 fileCheckbox = "Kliknutím na soubor ho vyberete ke zpracování. Pro dávkové operace můžete vybrat více souborů."
 fileReplacement = "Upravený soubor automaticky nahradí původní soubor na Pracovní ploše, takže jej můžete snadno poslat do dalších nástrojů."
 filesButton = "Tlačítko <strong>Soubory</strong> na panelu Rychlý přístup umožňuje nahrát PDF, na kterých chcete nástroje použít."
@@ -5562,6 +5774,7 @@ freeBody = "View, edit, merge, split, sign, watermark, compress, convert and man
 freeTitle = "Unlimited PDF editing"
 
 [payg.free.hero]
+barAria = "Free PDFs remaining"
 capSuffix = "/ {{limit}} free PDFs"
 metaCategories = "Automation · AI · API requests"
 
@@ -5641,6 +5854,7 @@ automation = "automations"
 default = "this feature"
 
 [payg.spendCapMeter]
+barAria = "Spend against cap"
 capSuffix = "/ {{amount}} cap"
 metaCategories = "Automation · AI · API spend"
 resets = "Resets each billing period"
@@ -5969,6 +6183,11 @@ header = "PDF na PDF/A"
 tags = "archiv,dlouhodobý,standard,převod,úložiště,uchování"
 title = "PDF na PDF/A"
 
+[pdfToPDFUA]
+header = "PDF To PDF/UA"
+tags = "accessibility,accessible,tagged,screen reader,wcag,eaa,section 508,conversion"
+title = "PDF To PDF/UA"
+
 [pdfToPDFX]
 tags = "tisk,standard,konverze,produkce,předtisk,archiv"
 title = "PDF na PDF/X"
@@ -6044,6 +6263,7 @@ small = "500 kreditů"
 xsmall = "100 kreditů"
 
 [plan.availablePlans]
+currency = "Billing currency"
 subtitle = "Vyberte plán, který vám vyhovuje"
 title = "Dostupné plány"
 
@@ -6623,11 +6843,12 @@ reachedTitle = "Měsíční limit výdajů dosažen"
 title = "Nepodařilo se otevřít portál Stripe"
 
 [portal.billing.walletMeter]
+barAria = "Free PDFs remaining"
 capSuffix_one = "z {{allowance}} bezplatných PDFs použito"
 capSuffix_other = "z {{allowance}} bezplatných PDFs použito"
 eyebrow = "Zkušební Processor"
-statusLabel_one = "zbývá {{remaining}}"
-statusLabel_other = "zbývá {{remaining}}"
+statusLabel_one = "{{used}} využito"
+statusLabel_other = "{{used}} využito"
 sub = "Používejte PDF Editor zdarma. Plaťte za automatické zpracování PDFs."
 title_one = "Zpracujte {{allowance}} PDFs zdarma"
 title_other = "Zpracujte {{allowance}} PDFs zdarma"
@@ -6872,6 +7093,32 @@ label = "Jira"
 description = "Odeslat dokument nebo oznámení e-mailem, když se spustí zásada."
 label = "Mailgun"
 
+[portal.connections.types.n8n]
+baseUrlPlaceholder = "https://your-n8n/webhook/9f2c-..."
+description = "Hand documents to an n8n workflow, and take back whatever it produces."
+label = "n8n"
+
+[portal.connections.types.n8n.fields.authType]
+helperText = "Match the Authentication set on the n8n Webhook node."
+label = "Webhook authentication"
+
+[portal.connections.types.n8n.fields.authType.options.basic]
+label = "Basic auth"
+
+[portal.connections.types.n8n.fields.authType.options.header]
+label = "Header auth"
+
+[portal.connections.types.n8n.fields.authType.options.none]
+label = "None"
+
+[portal.connections.types.n8n.fields.headerName]
+helperText = "The header name from the n8n credential, not its value."
+label = "Header name"
+placeholder = "X-N8N-Key"
+
+[portal.connections.types.n8n.fields.token]
+label = "Header value"
+
 [portal.connections.types.nextcloud]
 baseUrlPlaceholder = "https://your-server/remote.php/dav"
 description = "Ukládat zpracované dokumenty do Nextcloud."
@@ -7076,11 +7323,6 @@ title = "Oficiální SDKs"
 beta = "Beta"
 deprecated = "Zastaralé"
 
-[portal.docs.search]
-empty = "Žádná odpovídající dokumentace"
-placeholder = "Hledat v dokumentaci"
-results = "{{count}} výsledků"
-
 [portal.docs.skills]
 eyebrow = "DOVEDNOSTI"
 lead = "Přibalené pojmenované schopnosti, které váš agent vyvolává jako jeden nástroj. Každá dovednost je deterministický řetězec operací s připojenými evals."
@@ -7179,11 +7421,11 @@ editorAction = "Editor"
 empty = "Tomuto filtru neodpovídají žádné dokumenty."
 rowActions = "Akce řádku"
 sensitiveLabel = "Citlivé"
-sensitiveTitle = "Citlivé — je vyžadován přístup"
 
 [portal.documents.table.columns]
 action = "Pipeline / Akce"
 document = "Dokument"
+labels = "Labels"
 product = "Produkt"
 status = "Stav"
 time = "Čas"
@@ -7199,6 +7441,7 @@ host = "Host"
 lastSeen = "Naposledy viděno"
 region = "Region"
 status = "Stav"
+target = "Target"
 version = "Verze"
 
 [portal.editorAdmin.health.empty]
@@ -7272,6 +7515,60 @@ running = "Běží"
 description = "V tomto zobrazení došlo k neočekávané chybě. Zkuste to znovu nebo vyberte jinou sekci z postranního panelu."
 retry = "Zkusit znovu"
 title = "Na této stránce se něco pokazilo"
+
+[portal.failures]
+fromSource = "From source {{source}}"
+occurrences = "{{count}} occurrences"
+reportedBy = "Hit by {{actor}}"
+runReference = "Run {{runId}}"
+subtitle = "Failures recorded from your policy runs and your team's editors, with the actions you can take."
+title = "Failures"
+
+[portal.failures.action]
+acknowledge = "Acknowledge"
+confirm = "Are you sure?"
+dismiss = "Dismiss"
+dismissSkipFile = "Skip this file"
+viewFile = "Zobrazit soubor"
+viewInProcessor = "Zobrazit ve zpracovateli"
+
+[portal.failures.debug]
+copyJson = "Copy JSON"
+dismissAll = "Dismiss all ({{total}})"
+dismissing = "Dismissing..."
+hideJson = "Hide raw JSON ({{total}})"
+refresh = "Refresh failures"
+showJson = "Show raw JSON ({{total}})"
+
+[portal.failures.disabled]
+closed = "This failure is already closed."
+noDocument = "Toto selhání nebylo zaznamenáno u konkrétního dokumentu, takže zde není co otevřít."
+unattended = "Tento soubor byl dodán složkou, bucketem nebo webhookem, takže ho žádný prohlížeč neudržuje k otevření."
+unavailable = "Not available for this failure."
+
+[portal.failures.empty]
+description = "Policy runs that fail will appear here with the actions you can take."
+title = "No failures recorded"
+
+[portal.failures.kind.inputPasswordProtected]
+description = "The pipeline could not open the document because it is password-protected. Unlock it and run it again, or skip this file."
+title = "Password-protected document"
+
+[portal.failures.kind.unknown]
+description = "This run failed for a reason Stirling does not yet recognise. The raw message is shown below."
+title = "Unrecognised failure"
+
+[portal.failures.origin]
+pipeline = "Pipeline"
+policy = "Policy"
+tool = "Tool run"
+
+[portal.failures.stage]
+blocked = "Blocked"
+input = "Input"
+internal = "Internal"
+never_ran = "Never ran"
+output = "Output"
 
 [portal.home.download]
 back = "Zpět"
@@ -7379,11 +7676,6 @@ cancel = "Zrušit"
 confirm = "Odvolat klíč"
 title = "Odvolat API klíč"
 
-[portal.infrastructure.attestationLabel]
-attested = "Ověřeno"
-inScope = "V rozsahu"
-notApplicable = "N/A"
-
 [portal.infrastructure.audit]
 filterAriaLabel = "Filtrovat auditní události podle kategorie"
 heading = "Auditní protokoly"
@@ -7455,11 +7747,6 @@ info = "Info"
 success = "Úspěch"
 warning = "Varování"
 
-[portal.infrastructure.certLabel]
-certified = "Certifikováno"
-inProgress = "Probíhá"
-notStarted = "Nezahájeno"
-
 [portal.infrastructure.createKey]
 cancel = "Zrušit"
 createKey = "Vytvořit klíč"
@@ -7473,237 +7760,9 @@ subtitleCreated = "Zkopírujte si toto tajemství nyní — znovu se nezobrazí.
 title = "Vytvořit API klíč"
 titleCreated = "Klíč vytvořen"
 
-[portal.infrastructure.deployLabel]
-live = "Živě"
-queued = "Ve frontě"
-rolledBack = "Vráceno zpět"
-rolling = "Nasazuje se"
-
-[portal.infrastructure.deployments]
-msValue = "{{value}} ms"
-throughputValue = "{{value}}/min"
-
-[portal.infrastructure.deployments.deployColumns]
-deployedBy = "Nasadil"
-environment = "Prostředí"
-product = "Produkt"
-status = "Stav"
-version = "Verze"
-when = "Kdy"
-
-[portal.infrastructure.deployments.recent]
-heading = "Nedávná nasazení"
-subheading = "Nejnovější rollouty napříč produkty a prostředími."
-
-[portal.infrastructure.deployments.regionColumns]
-instances = "Instance"
-latency = "Latence"
-load = "Zatížení"
-p99 = "P99"
-region = "Region"
-status = "Stav"
-throughput = "Propustnost"
-uptime = "Doba provozu"
-version = "Verze"
-
-[portal.infrastructure.deployments.regions]
-heading = "Regiony"
-subheading = "Živý stav každého nasazeného regionu Stirling — latence, zatížení a verze rolloutů."
-
-[portal.infrastructure.deployments.regions.empty]
-description = "Nasazené regiony se zde zobrazí, jakmile bude váš pracovní prostor zřízen."
-title = "Žádné regiony nejsou nasazeny"
-
 [portal.infrastructure.keyLabel]
 active = "Aktivní"
 revoked = "Odvoláno"
-
-[portal.infrastructure.modelLabel]
-active = "Aktivní"
-degraded = "Zhoršené"
-disabled = "Zakázáno"
-
-[portal.infrastructure.models]
-heading = "Modely"
-msValue = "{{value}} ms"
-subheading = "Katalog modelů a směrování, které pohání zpracování dokumentů napříč vaším pracovním prostorem."
-
-[portal.infrastructure.models.byom]
-description = "Zaregistrujte on-prem nebo self-hosted model a připněte jej k regionu pro zpracování vázané na datovou rezidenci."
-title = "Přineste si vlastní model"
-
-[portal.infrastructure.models.catalogue]
-heading = "Katalog"
-sub = "Spravované modely dostupné pro váš pracovní prostor, s živou latencí a náklady."
-subEnterprise = "Spravované, vlastní a on-prem modely — s možností připnutí podle regionu."
-
-[portal.infrastructure.models.catalogue.empty]
-description = "Modely v katalogu vašeho pracovního prostoru se zobrazí zde."
-title = "Žádné modely nejsou dostupné"
-
-[portal.infrastructure.models.columns]
-cost = "Náklady"
-latency = "Latence"
-load = "Zatížení"
-model = "Model"
-status = "Stav"
-type = "Typ"
-version = "Verze"
-
-[portal.infrastructure.models.cost]
-perCall = "{{price}}/volání"
-perThousand = "{{price}}/1k"
-
-[portal.infrastructure.models.metrics]
-activeModels = "Aktivní modely"
-avgLatency = "Průměrná latence"
-included = "Zahrnuto"
-monthlySpend = "Měsíční výdaje za modely"
-
-[portal.infrastructure.models.routing]
-empty = "Nejsou nakonfigurována žádná pravidla směrování."
-heading = "Pravidla směrování"
-sub = "Který model zpracovává jednotlivé operace. Výchozí se použije, když neodpovídá žádné užší pravidlo."
-subLocked = "Směrujte operace na konkrétní modely — dostupné v placených plánech."
-
-[portal.infrastructure.models.routing.lockedBanner]
-description = "Upgradujte na Pro a určete, který model zpracovává jednotlivé operace a typy dokumentů."
-title = "Směrování modelů je placená funkce"
-
-[portal.infrastructure.models.routingColumns]
-default = "Výchozí"
-docType = "Typ dokumentu"
-modelForAria = "Model pro {{operation}}"
-operation = "Operace"
-routedTo = "Směrováno na"
-
-[portal.infrastructure.modelTypeLabel]
-classification = "Klasifikace"
-extraction = "Extrakce"
-llm = "LLM"
-ocr = "OCR"
-
-[portal.infrastructure.regionLabel]
-degraded = "Zhoršené"
-down = "Mimo provoz"
-healthy = "V pořádku"
-
-[portal.infrastructure.security.access.byok]
-description = "Poskytněte klíč z vlastního KMS. Stirling s ním šifruje, ale stále může číst."
-label = "Bring your own key (BYOK)"
-
-[portal.infrastructure.security.access.hyok]
-description = "Klíče nikdy neopustí váš KMS. Stirling uchovává pouze ciphertext."
-label = "Hold your own key (HYOK)"
-
-[portal.infrastructure.security.access.stirling]
-description = "Stirling spravuje šifrovací klíče. Nejjednodušší — na vaší straně žádné operace s klíči."
-label = "Klíče držené Stirling"
-
-[portal.infrastructure.security.accessPolicy]
-heading = "Zásady přístupu k dokumentům"
-subheading = "Řídí, kdo může dešifrovat zpracované dokumenty v klidu."
-
-[portal.infrastructure.security.attestations]
-heading = "Atestace souladu"
-noReport = "Není dostupná žádná zpráva"
-subheading = "Auditní postoj podle jednotlivých rámců, se zprávami dostupnými u atestovaných kontrol."
-viewReport = "Zobrazit zprávu →"
-
-[portal.infrastructure.security.compliance]
-heading = "Soulad"
-subheading = "Atestace a certifikace pokrývající platformu Stirling."
-
-[portal.infrastructure.security.empty]
-description = "Konfigurace zabezpečení vašeho pracovního prostoru se zobrazí zde."
-title = "Bezpečnostní postoj není dostupný"
-
-[portal.infrastructure.security.hyokBanner]
-description = "S HYOK šifrovací klíče nikdy neopustí váš KMS. Stirling ukládá a zpracovává pouze ciphertext, který můžete kdykoli odvolat."
-title = "Stirling nemůže dešifrovat vaše dokumenty"
-
-[portal.infrastructure.security.ipAllowlist]
-empty = "Nejsou nakonfigurovány žádné IP rozsahy — všechny IP jsou povoleny."
-heading = "IP allowlist"
-sub = "API přístup je omezen na tyto CIDR rozsahy."
-subLocked = "Omezte API přístup na známé IP rozsahy — dostupné v placených plánech."
-
-[portal.infrastructure.security.ipAllowlist.lockedBanner]
-description = "Upgradujte na Pro a omezte API přístup na konkrétní sítě."
-title = "IP allowlisting je placená funkce"
-
-[portal.infrastructure.security.ipColumns]
-added = "Přidáno"
-addedBy = "Přidal"
-cidr = "CIDR"
-label = "Štítek"
-
-[portal.infrastructure.security.keyManagement]
-algorithm = "Algoritmus"
-heading = "Správa šifrovacích klíčů"
-keyId = "Identifikátor klíče"
-lastRotated = "Naposledy rotováno"
-rotateKey = "Rotovat klíč"
-rotationPolicy = "Zásady rotace"
-subheading = "Správa klíčů, které šifrují dokumenty v klidu — kdo může dešifrovat a jak se klíče rotují."
-
-[portal.infrastructure.security.managedBanner]
-description = "Správa klíčů bring-your-own-key (BYOK) a hold-your-own-key (HYOK) je dostupná v Enterprise. Upgradujte a poskytněte klíče z vlastního KMS."
-title = "Klíče jsou ve vašem plánu spravovány Stirling"
-
-[portal.infrastructure.security.residency.apac]
-description = "ap-southeast-1"
-label = "Asie a Pacifik"
-
-[portal.infrastructure.security.residency.eu]
-description = "eu-west-1 · hranice dat GDPR"
-label = "Evropská unie"
-
-[portal.infrastructure.security.residency.us]
-description = "us-east-1 · us-west-2"
-label = "Spojené státy"
-
-[portal.infrastructure.security.residencyHeader]
-heading = "Datová rezidence"
-subheading = "Kde jsou dokumenty ukládány a zpracovávány."
-
-[portal.infrastructure.storage]
-gbValue = "{{value}} GB"
-percentUsed = "{{value}} využito"
-
-[portal.infrastructure.storage.empty]
-description = "Připojené úložiště a využití se zobrazí zde."
-title = "Není nakonfigurováno žádné úložiště"
-
-[portal.infrastructure.storage.lifecycle]
-active = "Aktivní"
-activeRange = "0–{{value}} d"
-archived = "Archivováno"
-coldStorage = "cold storage"
-deleted = "Smazáno"
-never = "nikdy"
-purged = "vymazáno"
-
-[portal.infrastructure.storage.providers]
-connect = "Připojit"
-connected = "Připojeno"
-heading = "Připojení poskytovatelé"
-subheading = "Kam se zapisují zpracované artefakty."
-
-[portal.infrastructure.storage.retention]
-heading = "Uchovávání"
-subheading = "Jak dlouho se artefakty uchovávají před odstraněním v rámci životního cyklu."
-windowLabel = "Výchozí okno uchovávání"
-
-[portal.infrastructure.storage.retentionOption]
-days_one = "{{count}} den"
-days_other = "{{count}} dní"
-never = "Nikdy nemazat"
-
-[portal.infrastructure.storage.totalUsage]
-heading = "Celkové využití"
-progressLabel = "Využité úložiště"
-subheading = "Úložiště spotřebované napříč všemi připojenými poskytovateli."
 
 [portal.infrastructure.tabs]
 apiKeys = "API klíče"
@@ -7714,11 +7773,9 @@ security = "Zabezpečení"
 storage = "Úložiště"
 
 [portal.integrations]
-addAnother = "Přidat další"
 availableHeading = "Dostupné"
 comingSoonHeading = "Již brzy"
 connect = "Připojit"
-connectedHeading = "Připojeno"
 connectionCount_one = "{{count}} připojení"
 connectionCount_other = "{{count}} připojení"
 customApi = "Vlastní API"
@@ -7735,6 +7792,10 @@ notify = "Oznámení"
 security = "Zabezpečení"
 signing = "Podepisování"
 storage = "Úložiště"
+
+[portal.integrations.noResults]
+description = "No integrations match your filters. Try a different category or search."
+title = "No matches"
 
 [portal.integrations.status]
 connected = "Připojeno"
@@ -7766,7 +7827,6 @@ integrations = "Integrace"
 pipelines = "Pipeline"
 policies = "Zásady"
 procurement = "Nákup"
-settings = "Nastavení"
 sources = "Zdroje"
 usage = "Využití a fakturace"
 users = "Uživatelé"
@@ -7783,7 +7843,7 @@ title = "Pipeline"
 newPipeline = "Nová pipeline"
 
 [portal.pipelines.builder]
-addStep = "Přidat nástroj"
+activate = "Activate"
 back = "Zpět na pipeline"
 cannotFollow = "Nelze přijmout {{produced}}"
 chooseAccount = "Vyberte účet"
@@ -7791,28 +7851,38 @@ chooseDestination = "Vyberte cíl"
 chooseOperation = "Vyberte, co tento krok provede"
 chooseSource = "Vyberte zdroj"
 discard = "Zahodit změny"
-enabled = "Povoleno"
 inputs = "Vstup"
 inputSource = "Vstupní zdroj"
 inputTrigger = "Spouštěč"
 keepEditing = "Pokračovat v úpravách"
+moreActions = "More actions"
 needsConfiguring = "Vyžaduje nastavení"
-needsUpload = "Vyžaduje nahraný soubor"
-noSources = "Zatím nejsou připojeny žádné zdroje. Vytvořte jeden, abyste jej mohli použít jako vstup."
+needsDestination = "No destination chosen"
+needsSource = "No source chosen"
 noToolMatches = "Vašemu hledání neodpovídají žádné nástroje."
-pipelineSettings = "Nastavení pipeline"
+pause = "Pause"
+rename = "Rename pipeline"
 searchTools = "Hledat nástroje"
-selectToolBody = "Přidejte nástroj a vytvořte svou pipeline."
-selectToolTitle = "Zatím žádné nástroje"
 sendToSystem = "Odeslat do jiného systému"
 stepsIncompatible = "Tyto kroky nelze spustit nad tím, co vytváří jejich předchozí krok: {{tools}}."
 stepsNeedSetup = "Tyto kroky je před uložením stále nutné nastavit: {{tools}}."
-toolSettings = "Nastavení nástroje"
+supportingFiles = "Supporting files"
+testRun = "Test with a file"
 unknownStep = "Nerozpoznaná operace, ponechána beze změny."
 unsavedBody = "Máte neuložené změny. Uložte je před odchodem, nebo je zahoďte?"
 unsavedTitle = "Neuložené změny"
-uploadUnsupported = "Nahrané soubory zatím nejsou v pipeline podporovány, takže tyto kroky nelze uložit: {{tools}}."
 usesDefaults = "Spouští se s výchozím nastavením"
+viewDefinition = "View definition"
+
+[portal.pipelines.builder.blocker]
+destination = "Choose a destination"
+heading = "To create this pipeline:"
+incompatible = "Fix steps that can't run in order: {{tools}}"
+name = "Give the pipeline a name"
+saveHeading = "To save your changes:"
+schedule = "Set how often it runs"
+setup = "Finish setting up: {{tools}}"
+source = "Choose an input source"
 
 [portal.pipelines.builder.diagnostic]
 fan-in = "Kombinuje každý soubor z předchozího kroku"
@@ -7824,30 +7894,35 @@ undeclared-operation = "Nelze zkontrolovat, co tento krok přijímá"
 
 [portal.pipelines.composer]
 addTool = "Přidat nástroj"
-cancel = "Zrušit"
-chainEmpty = "Přidejte nástroj a začněte vytvářet svou pipeline."
 create = "Vytvořit pipeline"
+createPaused = "Create paused"
 editingUnsupported = "Zobrazení těchto parametrů nástroje pro úpravy zatím není podporováno."
-moveDown = "Přesunout dolů"
-moveUp = "Přesunout nahoru"
+editSource = "Edit source"
 name = "Název"
 namePlaceholder = "např. Kontrola redakcí"
 noToolSettings = "Tento nástroj nemá žádná konfigurovatelná nastavení."
-operations_one = "Operace ({{count}})"
-operations_other = "Operace ({{count}})"
 output = "Výstup"
-removeStep = "Odebrat operaci"
 save = "Uložit změny"
 scheduleEvery = "Spustit každých"
-sources = "Zdroje"
-sourcesLoading = "Načítání zdrojů..."
 trigger = "Trigger"
 triggerManual = "Pouze ručně"
+
+[portal.pipelines.composer.runsEvery]
+days_one = "Runs every day"
+days_other = "Runs every {{count}} days"
+hours_one = "Runs every hour"
+hours_other = "Runs every {{count}} hours"
+minutes_one = "Runs every minute"
+minutes_other = "Runs every {{count}} minutes"
 
 [portal.pipelines.composer.unit]
 days = "dní"
 hours = "hodin"
 minutes = "minut"
+
+[portal.pipelines.definition]
+subtitle = "The pipeline as it would be saved."
+title = "Definition"
 
 [portal.pipelines.delete]
 body = "Smazat „{{name}}“? Tuto akci nelze vrátit zpět."
@@ -7866,6 +7941,37 @@ connectSource = "Připojit zdroj"
 description = "Vytvořte svou první pipeline: vyberte zdroje, nad kterými běží, zřetězte operace a zvolte, kam půjde výstup."
 title = "Zatím žádné pipeline"
 
+[portal.pipelines.graph]
+addFirstTool = "Add a tool"
+dragHint = "Drop on a line to move it"
+insertHere = "Add a tool here"
+removeNode = "Remove {{name}}"
+showError = "Show why {{name}} failed"
+
+[portal.pipelines.graph.add]
+input = "Add a source"
+output = "Add a destination"
+
+[portal.pipelines.graph.run]
+done = "Done"
+failed = "Failed"
+running = "Running"
+
+[portal.pipelines.inspector]
+multipleBody = "Drag any of them onto a line to move them together, or press Delete to remove them."
+multipleSelected_one = "{{count}} step selected"
+multipleSelected_other = "{{count}} steps selected"
+noSelectionBody = "Pick a node in the graph to change what it does."
+noSelectionTitle = "Nothing selected"
+
+[portal.pipelines.inspector.status]
+completed_one = "Finished the only step"
+completed_other = "Finished all {{count}} steps"
+failed_one = "Failed on the only step"
+failed_other = "Failed after {{done}} of {{count}} steps"
+running_one = "Running the only step"
+running_other = "Running step {{done}} of {{count}}"
+
 [portal.pipelines.kpi]
 active = "Aktivní"
 paused = "Pozastaveno"
@@ -7878,7 +7984,6 @@ completed_one = "Běh dokončen."
 completed_other = "Všech {{count}} běhů dokončeno."
 empty = "Není co spustit: zdroje neměly žádné dokumenty ke zpracování."
 failed = "Běh selhal: {{error}}"
-historyCleared = "Historie vymazána. Příští spuštění znovu zpracuje vše, co je aktuálně ve zdrojích."
 inFlight = "Není co nového spustit: dokumenty se stále zpracovávají z dřívějšího spuštění."
 parked_one = "Není co spustit: {{count}} dokument dříve selhal a je odložen. Opravte příčinu a poté vymažte historii, abyste jej zkusili znovu."
 parked_other = "Není co spustit: {{count}} dokumentů dříve selhalo a jsou odloženy. Opravte příčinu a poté vymažte historii, abyste je zkusili znovu."
@@ -7894,6 +7999,7 @@ name = "Pipeline"
 sources = "Zdroje"
 status = "Stav"
 steps = "Kroky"
+trigger = "Trigger"
 
 [portal.pipelines.trigger]
 folder-watch = "Sledování složky"
@@ -8207,6 +8313,24 @@ label = "Připojit k issue Jira"
 [portal.policies.operations.mailgunEmail]
 description = "Odešle zpracovaný dokument jako přílohu."
 label = "Odeslat dokument e-mailem (Mailgun)"
+
+[portal.policies.operations.n8nGate]
+description = "Your workflow decides whether the run carries on."
+label = "Ask an n8n workflow to approve"
+note = "The workflow must reply with {\"approved\": true}. Anything else — including a timeout — stops the run and parks the document."
+
+[portal.policies.operations.n8nNotify]
+description = "Sends the run's details, not the document."
+label = "Tell an n8n workflow"
+
+[portal.policies.operations.n8nSend]
+description = "Sends the document and the run's details to your workflow."
+label = "Send the document to n8n"
+
+[portal.policies.operations.n8nTransform]
+description = "Your workflow processes the document and the file it returns replaces it."
+label = "Process the document in n8n"
+note = "Set the Webhook node to respond \"Using Respond to Webhook Node\", and return a file. On the default \"Immediately\" setting n8n replies with an acknowledgement, and that would replace the document."
 
 [portal.policies.operations.nextcloudUpload]
 description = "Zapíše zpracovaný dokument do složky."
@@ -8682,16 +8806,6 @@ maxed = "Vyčerpáno"
 subtitle = "Váš bezplatný trial běží do {{date}}. Karta není vyžadována."
 title = "Enterprise trial"
 
-[portal.search]
-ariaLabel = "Hledat"
-placeholder = "Hledat ve Stirling — endpointy, pipeline, dokumentace…"
-
-[portal.search.empty]
-noActionsDescription = "Rychlé akce se zde zobrazí, jakmile budou dostupné."
-noActionsTitle = "Žádné rychlé akce"
-noMatches = "Žádné shody pro „{{query}}“"
-noMatchesDescription = "Zkuste jiné klíčové slovo nebo procházejte katalog."
-
 [portal.settings.groups]
 admin = "Admin"
 
@@ -8718,7 +8832,9 @@ title = "Zdroje"
 connectSource = "Připojit zdroj"
 
 [portal.sources.builder]
+advanced = "Pokročilé"
 back = "Zpět na zdroje"
+backToSource = "Zpět na nastavení zdroje"
 backToTypes = "Všechny typy zdrojů"
 cancel = "Zrušit"
 chooseHint = "Vyberte, odkud dokumenty pocházejí. Zašedlé konektory jsou na cestě."
@@ -8728,7 +8844,6 @@ create = "Vytvořit zdroj"
 createTitle = "Připojit zdroj"
 delete = "Smazat"
 editTitle = "Upravit zdroj"
-enabled = "Povoleno"
 save = "Uložit změny"
 
 [portal.sources.builder.folderAccess]
@@ -8741,10 +8856,6 @@ body = "Odstranit „{{name}}“? Tuto akci nelze vrátit zpět. Zásady, které
 cancel = "Zrušit"
 confirm = "Odstranit"
 title = "Odstranit zdroj?"
-
-[portal.sources.empty]
-description = "Připojte složku (a brzy i cloudové úložiště), aby vaše zásady měly odkud dokumenty načítat."
-title = "Zatím nejsou připojeny žádné zdroje"
 
 [portal.sources.kpi]
 inUse = "Používá se"
@@ -8769,6 +8880,7 @@ consume = "Consume: zpracovat každý soubor jednou"
 snapshot = "Snapshot: znovu načíst složku při každém spuštění"
 
 [portal.sources.networkFields.recursive]
+helperText = "Zahrňte podsložky, pokud jsou soubory uspořádány do vnořených složek, nebo sledujte pouze nejvyšší úroveň."
 label = "Hloubka složky"
 
 [portal.sources.networkFields.recursive.options]
@@ -8784,6 +8896,7 @@ unused = "Nepoužito"
 documents = "Dokumenty"
 source = "Zdroj"
 status = "Stav"
+type = "Type"
 usedBy = "Zásady"
 
 [portal.sources.types.box]
@@ -8821,6 +8934,7 @@ hash = "Velikost, datum a kontrola obsahu"
 stat = "Velikost a datum změny"
 
 [portal.sources.types.folder.fields.mode]
+helperText = "Zda ponechat původní soubor na místě po jeho zpracování. Pokud původní soubor zůstane na místě, bude při dalším skenování zdroje pipeline zpracován znovu."
 label = "Režim čtení"
 
 [portal.sources.types.folder.fields.mode.options]
@@ -8828,6 +8942,7 @@ consume = "Spotřebovat: zpracovat každý soubor jednou"
 snapshot = "Snímek: znovu načíst složku při každém spuštění"
 
 [portal.sources.types.folder.fields.recursive]
+helperText = "Zahrňte podsložky, pokud jsou soubory uspořádány do vnořených složek, nebo sledujte pouze nejvyšší úroveň."
 label = "Hloubka složky"
 
 [portal.sources.types.folder.fields.recursive.options]
@@ -9701,7 +9816,9 @@ toolNotAvailableLocally = "Váš server Stirling-PDF je offline a \"{{endpoint}}
 expired = "Vaše relace vypršela. Obnovte prosím stránku a zkuste to znovu."
 
 [settings]
+backToSections = "Všechna nastavení"
 close = "Zavřít"
+title = "Nastavení"
 
 [settings.ai]
 documents = "Dokumenty a RAG"
@@ -9979,9 +10096,6 @@ title = "Zásady a soukromí"
 [settings.preferences]
 title = "Předvolby"
 
-[settings.search]
-placeholder = "Hledat na stránkách nastavení..."
-
 [settings.security]
 description = "Update your password to keep your account secure."
 title = "Security"
@@ -10127,6 +10241,7 @@ last = "Poslední stránka"
 maintainRatio = "Přepnout zachování poměru stran"
 next = "Další stránka"
 noSavedSigs = "Nebyly nalezeny žádné uložené podpisy"
+penSizePlaceholder = "Type or select pen size (1-200)"
 personalSigs = "Osobní podpisy"
 previous = "Předchozí stránka"
 redo = "Znovu"
@@ -10165,6 +10280,7 @@ backgroundRemovalFailedTitle = "Background removal failed"
 hint = "Nahrajte PNG nebo JPG s vaším podpisem"
 label = "Nahrát obrázek podpisu"
 placeholder = "Vyberte obrazový soubor"
+previewAlt = "Current image signature"
 processing = "Processing image..."
 removeBackground = "Remove white background (make transparent)"
 
@@ -10177,6 +10293,17 @@ resumeHint = "Obnovte umisťování a kliknutím přidejte podpis."
 saved = "Vyberte výše uložený podpis a poté klikněte kamkoli do PDF pro jeho umístění."
 text = "Po zadání jména výše klikněte kamkoli do PDF pro umístění podpisu."
 title = "Jak přidat podpis"
+
+[sign.mobile]
+createFromPhone = "Mobile upload"
+description = "Scan this QR code with your phone or tablet, draw your signature, and it will appear here automatically."
+error = "Connection Error"
+expiryWarning = "QR Code Expiring Soon"
+expiryWarningMessage = "This QR code will expire in {{seconds}} seconds. A new code will be generated automatically."
+instructions = "Open the camera app on your phone and scan this code. Keep this window open while you draw."
+pollingError = "Error checking for the signature"
+sessionCreateError = "Failed to create session"
+title = "Draw on your phone"
 
 [sign.mode]
 move = "Přesunout podpis"
@@ -10624,6 +10751,24 @@ title = "Nahrát na server"
 updateButton = "Aktualizovat na serveru"
 uploadButton = "Nahrát na server"
 
+[superSearch]
+all = "All"
+ariaLabel = "Super search"
+filtersAriaLabel = "Search filters"
+hint = "Type to search"
+placeholder = "Search Stirling"
+placeholderShort = "Hledat"
+showLess = "Show less"
+showMore = "Show {{count}} more"
+
+[superSearch.group]
+docs = "Docs"
+files = "Files"
+pages = "Pages"
+processor = "Processor"
+settings = "Settings"
+tools = "Tools"
+
 [survey]
 title = "Stirling-PDF Survey"
 
@@ -10773,7 +10918,6 @@ goBack = "Vrátit se"
 pdfTools = "Nástroje PDF"
 placeholder = "Vyberte nástroj pro začátek"
 premiumFeature = "Prémiová funkce:"
-searchTools = "Hledat nástroje"
 toolsHeader = "Nástroje"
 viewAllTools = "Zobrazit všechny nástroje"
 
@@ -10810,6 +10954,7 @@ searchPlaceholder = "Hledat nástroje..."
 
 [toolPicker.subcategories]
 advancedFormatting = "Pokročilé formátování"
+ai = "AI"
 automation = "Automatizace"
 developerTools = "Nástroje pro vývojáře"
 documentReview = "Kontrola dokumentu"
@@ -10820,6 +10965,9 @@ pageFormatting = "Formátování stránek"
 removal = "Odstranění"
 signing = "Podepisování"
 verification = "Ověření"
+
+[toolRenderer]
+notFound = "Tool not found: {{tool}}"
 
 [tools]
 noSearchResults = "Nebyly nalezeny žádné nástroje"
@@ -10978,6 +11126,13 @@ approver = "Schvaluje zásadu"
 editor = "Editor"
 processor = "Processor"
 
+[users.columns]
+capabilities = "Capabilities"
+email = "Email"
+person = "Person"
+role = "Role"
+status = "Status"
+
 [users.confirm]
 cancelInviteBody = "Zrušit pozvánku pro {{email}}? S aktuálním odkazem se nebudou moci připojit."
 cancelInviteTitle = "Zrušit pozvánku"
@@ -10997,10 +11152,8 @@ title = "Zatím žádní členové"
 addToTeam = "Přidat do týmu"
 guestCount = "{{count}} host"
 guests = "Hosté"
-guestsDesc = "Externí spolupracovníci, omezení na to, co jste sdíleli. Pouze Editor."
 ledBy = "vedeno uživatelem {{owner}}"
 org = "Organizace"
-orgDesc = "Vlastníci s pravomocí v celé org. a schvalováním zásad"
 owners = "{{count}} vlastník"
 team = "Tým {{name}}"
 teamMeta = "{{count}} lidí"
@@ -11040,12 +11193,14 @@ usernamePlaceholder = "jsmith"
 [users.invites]
 by = "Pozval(a) {{who}}"
 cancel = "Zrušit"
-count = "{{count}} čeká"
-desc = "Pozvaní lidé, kteří se ještě nepřipojili. Drží místo, dokud pozvánku nepřijmou."
 expiresInDays_one = "Vyprší za {{count}} den"
 expiresInDays_other = "Vyprší za {{count}} dní"
 expiresToday = "Vyprší dnes"
 title = "Čekající pozvánky"
+
+[users.invites.columns]
+expires = "Expires"
+invitee = "Invitee"
 
 [users.loadError]
 description = "Při spojení s backendem došlo k chybě, nebo nemáte přístup. Zkuste to znovu."
@@ -11236,12 +11391,15 @@ searchPlaceholder = "Hledat přílohy"
 title = "Přílohy"
 
 [viewer.bookmarks]
+addBookmark = "Add bookmark"
 bookmarkTitle = "Název záložky"
 bookmarkTitleRequired = "Název záložky je povinný"
 closeSidebar = "Zavřít postranní panel záložek"
 collapseAll = "Sbalit všechny záložky"
+empty = "No bookmarks in this document"
 expandAll = "Rozbalit všechny záložky"
 searchPlaceholder = "Hledat záložky"
+title = "Bookmarks"
 
 [viewer.comments]
 addComment = "Přidat komentář"
@@ -11263,10 +11421,12 @@ locateAnnotation = "Najít v dokumentu"
 moreActions = "Další akce"
 nComments_one = "{{count}} comment"
 nComments_other = "{{count}} comments"
+noMatch = "No comments match your search"
 pageLabel = "Stránka {{page}}"
 placingHint = "Klikněte na stránku pro umístění… (zrušit)"
 removeCommentOnly = "Odebrat pouze komentář"
 saveReply = "Uložit odpověď"
+searchPlaceholder = "Search comments"
 title = "Komentáře"
 typeComment = "Komentář"
 typeInsertText = "Vložit text"
@@ -11289,6 +11449,7 @@ unsavedDesc = "Máte neuložené změny"
 closeSidebar = "Zavřít postranní panel vrstev"
 hideAll = "Skrýt všechny vrstvy"
 showAll = "Zobrazit všechny vrstvy"
+title = "Layers"
 
 [viewer.link]
 delete = "Smazat odkaz"
@@ -11298,8 +11459,11 @@ columnDefault = "Sloupec {{index}}"
 convertToPdf = "Převést do PDF"
 csvStats = "{{rows}} řádků · {{columns}} sloupců · {{size}}"
 emptyFile = "Prázdný soubor"
+htmlHidePreview = "Skrýt náhled"
 htmlPreview = "Náhled HTML"
+htmlPreviewMobileHidden = "HTML stránky jsou rozvrženy pro šířky desktopu, takže zde je náhled ve výchozím nastavení vypnutý."
 htmlPreviewWarning = "Náhled HTML — externí zdroje se nemusí načíst · {{size}}"
+htmlShowPreview = "Přesto zobrazit náhled"
 invalidJson = "Neplatný JSON — zobrazen nezpracovaný obsah"
 lineNumbers = "Čísla řádků"
 loading = "Načítání..."
@@ -11645,6 +11809,8 @@ exitRedaction = "Opustit režim začernění"
 exportAll = "Exportovat PDF"
 exportSelected = "Exportovat vybrané stránky"
 formFill = "Vyplnit formulář"
+hideToolbar = "Hide toolbar"
+moreActions = "Další akce"
 multiTool = "Multinástroj"
 panMode = "Režim posunu"
 print = "Tisk PDF"
@@ -11665,6 +11831,9 @@ selectAll = "Vybrat vše"
 selectByNumber = "Vybrat podle čísel stránek"
 selectLanguage = "Vyberte jazyk"
 share = "Sdílet"
+showAllTools = "Zobrazit všechny nástroje"
+showFewerTools = "Sbalit panel nástrojů"
+showToolbar = "Show toolbar"
 toggleAnnotations = "Přepnout viditelnost anotací"
 toggleAttachments = "Přepnout přílohy"
 toggleBookmarks = "Přepnout záložky"
