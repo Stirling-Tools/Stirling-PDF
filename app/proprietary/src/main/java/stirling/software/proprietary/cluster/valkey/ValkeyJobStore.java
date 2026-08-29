@@ -44,8 +44,10 @@ public class ValkeyJobStore implements JobStore {
     private static final String FILE_INDEX_PREFIX = "stirling:file2job:";
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
-    private static final TypeReference<List<String>> LIST_STRING = new TypeReference<>() {};
-    private static final TypeReference<Map<String, String>> MAP_STRING = new TypeReference<>() {};
+    private static final TypeReference<List<String>> LIST_STRING =
+            new TypeReference<List<String>>() {};
+    private static final TypeReference<Map<String, String>> MAP_STRING =
+            new TypeReference<Map<String, String>>() {};
 
     private final StringRedisTemplate template;
 
