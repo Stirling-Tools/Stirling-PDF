@@ -769,7 +769,6 @@ const EmbedPdfViewerContent = ({
         const newFileId = stubs[0]?.id;
         if (newFileId) {
           pendingFormApplyFileIdRef.current = newFileId;
-          (window as any).__PENDING_FORM_APPLY_ID__ = newFileId;
         }
         await actions.consumeFiles([currentFileId], stirlingFiles, stubs);
 

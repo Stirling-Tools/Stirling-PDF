@@ -282,7 +282,7 @@ export function FormFieldCreationOverlay({
                 lineHeight: "14px",
                 padding: "0 4px",
                 background: FORM_COLORS.accent,
-                color: "#fff",
+                color: "var(--c-text-on-primary)",
                 borderRadius: 2,
                 whiteSpace: "nowrap",
               }}

@@ -1,5 +1,5 @@
 /**
- * SnapGuides — renders the pink alignment guide lines shared by the create and
+ * SnapGuides — renders the alignment guide lines shared by the create and
  * edit overlays. Absolutely positioned within the page overlay.
  */
 import React from "react";

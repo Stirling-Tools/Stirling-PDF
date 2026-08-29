@@ -634,7 +634,7 @@ const CODE_EXEMPT_PATH = [
   // PDF rendering/drawing surfaces that legitimately carry colour literals —
   // scoped to specific tool paths, not a blanket "pdf" substring (which used to
   // exempt most of the app in a PDF product).
-  /pdfTextEditor|pixelCompare|\/compare\.ts$|customPrimary|accentColors|formFieldColors/,
+  /pdfTextEditor|pixelCompare|\/compare\.ts$|customPrimary|accentColors/,
   /validateSignature\/outputtedPDFSections|CenteredMessageSection|StatusBadgeSection/,
   /\/viewer\/|Annotation|useViewerReadAloud|CommentsSidebar|\/constants\/search\.ts$|SignaturePreview/,
   /ColorPicker|ColorControl|WatchedFolderManagementModal|watchedFolderPresets|fileColors|unifiedBackground|folder\.ts$|policyFolders/,

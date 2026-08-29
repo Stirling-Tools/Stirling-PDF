@@ -509,7 +509,7 @@ export function FormFieldEditOverlay({
                   : isSelected
                     ? FORM_COLORS.accent
                     : FORM_COLORS.neutralChip,
-                color: "#fff",
+                color: "var(--c-text-on-primary)",
                 borderRadius: 2,
                 whiteSpace: "nowrap",
                 opacity: isSelected || isDeleted ? 1 : 0.75,
@@ -541,7 +541,7 @@ export function FormFieldEditOverlay({
                 top: pos.y - HANDLE_SIZE / 2,
                 width: HANDLE_SIZE,
                 height: HANDLE_SIZE,
-                background: "#fff",
+                background: "var(--c-surface-raised)",
                 border: `1.5px solid ${FORM_COLORS.accent}`,
                 borderRadius: 2,
                 cursor: h.cursor,

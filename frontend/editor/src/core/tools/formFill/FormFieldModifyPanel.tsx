@@ -34,6 +34,7 @@ import {
   FIELD_TYPE_ICON,
   FIELD_TYPE_COLOR,
 } from "@app/tools/formFill/fieldMeta";
+import { FORM_COLORS } from "@app/tools/formFill/formFieldColors";
 import {
   FormFieldPropertyEditor,
   type EditableFieldProps,
@@ -325,9 +326,7 @@ export function FormFieldModifyPanel({
                   radius="sm"
                   style={{
                     cursor: "pointer",
-                    borderColor: selected
-                      ? "var(--mantine-color-blue-5)"
-                      : undefined,
+                    borderColor: selected ? FORM_COLORS.accent : undefined,
                     opacity: deleted ? 0.55 : 1,
                   }}
                   onClick={() => setSelectedField(selected ? null : field.name)}

@@ -273,15 +273,27 @@ const FormFill = (_props: BaseToolProps) => {
         e.preventDefault();
         if (isDirtyRef.current || flattenChangedRef.current) handleSave();
       }
+      // Undo/Redo: only intercept when not typing in an editable element,
+      // so native text editing undo/redo continues to work in inputs.
+      const inEditable =
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement ||
+        (e.target instanceof HTMLElement && e.target.isContentEditable);
       // Undo: Ctrl+Z
-      if ((e.ctrlKey || e.metaKey) && e.key === "z" && !e.shiftKey) {
+      if (
+        !inEditable &&
+        (e.ctrlKey || e.metaKey) &&
+        e.key === "z" &&
+        !e.shiftKey
+      ) {
         e.preventDefault();
         if (canUndo) undo();
       }
       // Redo: Ctrl+Shift+Z or Ctrl+Y
       if (
-        ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "z") ||
-        ((e.ctrlKey || e.metaKey) && e.key === "y")
+        !inEditable &&
+        (((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "z") ||
+          ((e.ctrlKey || e.metaKey) && e.key === "y"))
       ) {
         e.preventDefault();
         if (canRedo) redo();

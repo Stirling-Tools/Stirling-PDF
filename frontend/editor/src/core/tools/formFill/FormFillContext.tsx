@@ -404,32 +404,43 @@ export function FormFillProvider({
     }>
   >([]);
 
-  const saveToHistory = useCallback(() => {
-    // Truncate any future history
-    const newHistory = historyRef.current.slice(0, historyIndex + 1);
-    newHistory.push({
+  const saveToHistory = useCallback(
+    (overrides?: {
+      mode?: FormMode;
+      pendingFields?: PendingField[];
+      selectedFieldName?: string | null;
+      modifiedFields?: Record<string, ModifyFieldDefinition>;
+      deletedFieldNames?: string[];
+    }) => {
+      // Truncate any future history
+      const newHistory = historyRef.current.slice(0, historyIndex + 1);
+      newHistory.push({
+        mode: overrides?.mode ?? mode,
+        pendingFields: overrides?.pendingFields ?? pendingFields,
+        selectedFieldName: overrides?.selectedFieldName ?? selectedFieldName,
+        modifiedFields: overrides?.modifiedFields ?? modifiedFields,
+        deletedFieldNames: overrides?.deletedFieldNames ?? deletedFieldNames,
+      });
+      historyRef.current = newHistory;
+      setHistoryIndex(newHistory.length - 1);
+    },
+    [
+      historyIndex,
       mode,
       pendingFields,
       selectedFieldName,
       modifiedFields,
       deletedFieldNames,
-    });
-    historyRef.current = newHistory;
-    setHistoryIndex(newHistory.length - 1);
-  }, [
-    historyIndex,
-    mode,
-    pendingFields,
-    selectedFieldName,
-    modifiedFields,
-    deletedFieldNames,
-  ]);
+    ],
+  );
 
   const undo = useCallback(() => {
     if (historyIndex <= 0) return;
     const prev = historyRef.current[historyIndex - 1];
     setHistoryIndex(historyIndex - 1);
-    setMode(prev.mode);
+    // Use setModeState (not setMode) to avoid clearing editing state/history
+    // when replaying a snapshot whose mode differs from the current one.
+    setModeState(prev.mode);
     setPendingFields(prev.pendingFields);
     setSelectedField(prev.selectedFieldName);
     setModifiedFields(prev.modifiedFields);
@@ -440,7 +451,9 @@ export function FormFillProvider({
     if (historyIndex >= historyRef.current.length - 1) return;
     const next = historyRef.current[historyIndex + 1];
     setHistoryIndex(historyIndex + 1);
-    setMode(next.mode);
+    // Use setModeState (not setMode) to avoid clearing editing state/history
+    // when replaying a snapshot whose mode differs from the current one.
+    setModeState(next.mode);
     setPendingFields(next.pendingFields);
     setSelectedField(next.selectedFieldName);
     setModifiedFields(next.modifiedFields);
@@ -483,11 +496,11 @@ export function FormFillProvider({
       // switch (setMode) and reset() instead.
       dispatch({ type: "FETCH_START" });
       try {
-        console.log(
+        console.debug(
           `[FormFill] Fetching fields for file size: ${file.size}, version: ${version}`,
         );
         let fields = await providerRef.current.fetchFields(file);
-        console.log(
+        console.debug(
           `[FormFill] Fetched ${fields.length} fields. version: ${version}, current: ${fetchVersionRef.current}`,
         );
         // If another fetch or reset happened while we were waiting, discard this result
@@ -681,11 +694,14 @@ export function FormFillProvider({
         field.type === "radio";
       const options =
         field.options ?? (needsOptions ? ["Option 1", "Option 2"] : undefined);
-      setPendingFields((prev) => [
-        ...prev,
-        { ...field, name: defaultName, options, id } as PendingField,
-      ]);
-      saveToHistory();
+      setPendingFields((prev) => {
+        const next = [
+          ...prev,
+          { ...field, name: defaultName, options, id } as PendingField,
+        ];
+        saveToHistory({ pendingFields: next });
+        return next;
+      });
       return id;
     },
     [saveToHistory],
@@ -693,18 +709,22 @@ export function FormFillProvider({
 
   const updatePendingField = useCallback(
     (id: string, patch: Partial<NewFieldDefinition>) => {
-      setPendingFields((prev) =>
-        prev.map((f) => (f.id === id ? { ...f, ...patch } : f)),
-      );
-      saveToHistory();
+      setPendingFields((prev) => {
+        const next = prev.map((f) => (f.id === id ? { ...f, ...patch } : f));
+        saveToHistory({ pendingFields: next });
+        return next;
+      });
     },
     [saveToHistory],
   );
 
   const removePendingField = useCallback(
     (id: string) => {
-      setPendingFields((prev) => prev.filter((f) => f.id !== id));
-      saveToHistory();
+      setPendingFields((prev) => {
+        const next = prev.filter((f) => f.id !== id);
+        saveToHistory({ pendingFields: next });
+        return next;
+      });
     },
     [saveToHistory],
   );
@@ -731,11 +751,14 @@ export function FormFillProvider({
   // --- Modify mode ---
   const stageModification = useCallback(
     (targetName: string, patch: Partial<ModifyFieldDefinition>) => {
-      setModifiedFields((prev) => ({
-        ...prev,
-        [targetName]: { ...prev[targetName], targetName, ...patch },
-      }));
-      saveToHistory();
+      setModifiedFields((prev) => {
+        const next = {
+          ...prev,
+          [targetName]: { ...prev[targetName], targetName, ...patch },
+        };
+        saveToHistory({ modifiedFields: next });
+        return next;
+      });
     },
     [saveToHistory],
   );
@@ -745,19 +768,22 @@ export function FormFillProvider({
       setModifiedFields((prev) => {
         if (!(targetName in prev)) return prev;
         const { [targetName]: _removed, ...rest } = prev;
+        saveToHistory({ modifiedFields: rest });
         return rest;
       });
-      saveToHistory();
     },
     [saveToHistory],
   );
 
   const toggleFieldDeleted = useCallback(
     (name: string) => {
-      setDeletedFieldNames((prev) =>
-        prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name],
-      );
-      saveToHistory();
+      setDeletedFieldNames((prev) => {
+        const next = prev.includes(name)
+          ? prev.filter((n) => n !== name)
+          : [...prev, name];
+        saveToHistory({ deletedFieldNames: next });
+        return next;
+      });
     },
     [saveToHistory],
   );
@@ -766,8 +792,12 @@ export function FormFillProvider({
     setModifiedFields({});
     setDeletedFieldNames([]);
     setSelectedField(null);
-    saveToHistory();
-  }, [saveToHistory]);
+    saveToHistory({
+      modifiedFields: {},
+      deletedFieldNames: [],
+      selectedFieldName: null,
+    });
+  }, []);
 
   const commitModifications = useCallback(
     async (file: File | Blob): Promise<Blob> => {
