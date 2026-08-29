@@ -7,8 +7,11 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.CreationTimestamp;
 
+import jakarta.persistence.Cacheable;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -37,6 +40,8 @@ import stirling.software.saas.payg.model.JobSource;
  */
 @Entity
 @Table(name = "pricing_policy")
+@Cacheable
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region = "saas-pricing-policies")
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
@@ -90,6 +95,7 @@ public class PricingPolicy implements Serializable {
      * <p>Persisted as a normalized child table {@code pricing_policy_step_limit (policy_id,
      * job_source, step_limit)} rather than JSONB — values are typed and queryable directly.
      */
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region = "saas-pricing-policies")
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(
             name = "pricing_policy_step_limit",
@@ -107,6 +113,7 @@ public class PricingPolicy implements Serializable {
      *
      * <p>Persisted as {@code pricing_policy_stripe_price (policy_id, stripe_price_id)}.
      */
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region = "saas-pricing-policies")
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(
             name = "pricing_policy_stripe_price",

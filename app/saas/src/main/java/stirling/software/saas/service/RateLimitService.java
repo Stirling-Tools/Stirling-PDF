@@ -113,19 +113,8 @@ public class RateLimitService {
     public void cleanupExpiredBuckets() {
         long now = System.currentTimeMillis();
 
-        int hourlyRemoved =
-                (int)
-                        hourlyLimits.entrySet().stream()
-                                .filter(e -> e.getValue().getResetTime() < now)
-                                .peek(e -> hourlyLimits.remove(e.getKey()))
-                                .count();
-
-        int dailyRemoved =
-                (int)
-                        dailyLimits.entrySet().stream()
-                                .filter(e -> e.getValue().getResetTime() < now)
-                                .peek(e -> dailyLimits.remove(e.getKey()))
-                                .count();
+        int hourlyRemoved = removeExpired(hourlyLimits, now);
+        int dailyRemoved = removeExpired(dailyLimits, now);
 
         if (hourlyRemoved + dailyRemoved > 0) {
             log.debug(
@@ -134,6 +123,24 @@ public class RateLimitService {
                     hourlyRemoved,
                     dailyRemoved);
         }
+    }
+
+    /**
+     * Removes buckets whose reset time has passed and returns how many were removed. The
+     * two-argument {@code remove(key, value)} only removes when the map still maps the key to the
+     * exact entry observed, so a bucket concurrently replaced by a fresh one (in {@link
+     * #checkAndIncrement}) is never deleted and the count stays deterministic. Iteration is weakly
+     * consistent: an entry inserted mid-sweep is simply left for the next run.
+     */
+    private static int removeExpired(ConcurrentHashMap<String, RateLimitBucket> storage, long now) {
+        AtomicInteger removed = new AtomicInteger();
+        storage.forEach(
+                (key, bucket) -> {
+                    if (bucket.getResetTime() < now && storage.remove(key, bucket)) {
+                        removed.incrementAndGet();
+                    }
+                });
+        return removed.get();
     }
 
     /** Internal class to track rate limit counts and reset times. */
