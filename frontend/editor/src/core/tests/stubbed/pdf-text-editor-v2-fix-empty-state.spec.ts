@@ -82,6 +82,12 @@ async function openEditorOnWorkbenchFile(page: Page): Promise<void> {
   await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
   await expect(page.getByTestId("v2-root")).toBeVisible({ timeout: 30_000 });
   await expectDocumentOpen(page, "after opening the tool on a workbench file");
+  // hasDocument flips true before the pages finish loading, and a clear that
+  // lands mid-load disposes the document being read ("failed to load page 2"),
+  // which is the invalid injection the rounds below already guard against.
+  // Settle the same way they do before handing the editor to the test body.
+  await expect(page.getByTestId("v2-page-0")).toBeVisible({ timeout: 30_000 });
+  await page.waitForTimeout(800);
 }
 
 test.describe("v2 editor - it never gets stuck with no document", () => {
