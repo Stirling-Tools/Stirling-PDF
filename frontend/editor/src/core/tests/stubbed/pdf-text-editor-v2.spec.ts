@@ -4065,13 +4065,18 @@ test.describe("PDF text editor v2 - PageDown navigation", () => {
         }),
       );
     });
-    await page.waitForTimeout(500);
 
-    const afterTop = await page
-      .getByTestId("v2-page-1")
-      .evaluate((el) => el.getBoundingClientRect().top);
-
-    expect(afterTop).toBeLessThan(beforeTop);
+    // Poll rather than a fixed delay: the scroll animates, and on a loaded
+    // runner 500ms was not always enough for it to have moved at all.
+    await expect
+      .poll(
+        () =>
+          page
+            .getByTestId("v2-page-1")
+            .evaluate((el) => el.getBoundingClientRect().top),
+        { timeout: 10_000 },
+      )
+      .toBeLessThan(beforeTop);
   });
 });
 
