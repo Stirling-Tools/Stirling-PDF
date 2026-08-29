@@ -14,6 +14,7 @@
  * for both providers.
  */
 import { PDF_FORM_FIELD_TYPE } from "@app/services/pdfiumService";
+import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 import { FPDF_ANNOT_WIDGET, FLAT_PRINT } from "@app/utils/pdfiumBitmapUtils";
 import type {
   FormField,
@@ -23,6 +24,26 @@ import type {
 } from "@app/tools/formFill/types";
 import type { IFormDataProvider } from "@app/tools/formFill/providers/types";
 import type { PDFDict } from "@cantoo/pdf-lib";
+import { isWidgetChecked } from "@app/tools/formFill/checkboxState";
+
+/** Reads one widget annotation's /AP on-state name, or null when it has none. */
+function readAnnotExportValue(
+  m: WrappedPdfiumModule,
+  formEnvPtr: number,
+  annotPtr: number,
+): string | null {
+  try {
+    const len = m.FPDFAnnot_GetFormFieldExportValue(formEnvPtr, annotPtr, 0, 0);
+    if (len <= 0) return null;
+    const buf = m.pdfium.wasmExports.malloc(len);
+    m.FPDFAnnot_GetFormFieldExportValue(formEnvPtr, annotPtr, buf, len);
+    const out = readUtf16(m, buf, len);
+    m.pdfium.wasmExports.free(buf);
+    return out || null;
+  } catch {
+    return null;
+  }
+}
 
 interface PDFAcroField {
   dict: PDFDict;
@@ -92,7 +113,8 @@ function toFormField(
   // Derive value string
   let value = f.value;
   if (type === "checkbox") {
-    value = f.isChecked ? f.widgets[0]?.exportValue || "Yes" : "Off";
+    const checkedWidget = f.widgets.find((w) => w.isChecked) ?? f.widgets[0];
+    value = f.isChecked ? checkedWidget?.exportValue || "Yes" : "Off";
   } else if (type === "radio") {
     // Use widget index as the canonical radio value.
     // This avoids issues with duplicate exportValues across widgets
@@ -615,7 +637,17 @@ export class PdfiumFormProvider implements IFormDataProvider {
                 formEnvPtr,
                 annotPtr,
               );
-              const shouldBeChecked = value !== "" && value !== "Off";
+              // Per widget, not per field: a checkbox field's kid widgets can
+              // carry different on-states, and only the matching kid is ticked.
+              const widgetExportValue = readAnnotExportValue(
+                m,
+                formEnvPtr,
+                annotPtr,
+              );
+              const shouldBeChecked = isWidgetChecked(
+                { exportValue: widgetExportValue },
+                value,
+              );
               if (isCurrentlyChecked !== shouldBeChecked) {
                 const ENTER_KEY = 13;
                 m.FORM_SetFocusedAnnot(formEnvPtr, annotPtr);

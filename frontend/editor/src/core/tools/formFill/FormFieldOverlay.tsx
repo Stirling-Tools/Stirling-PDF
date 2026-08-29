@@ -29,6 +29,7 @@ import type {
   WidgetCoordinates,
   ButtonAction,
 } from "@app/tools/formFill/types";
+import { isWidgetChecked } from "@app/tools/formFill/checkboxState";
 
 /**
  * Execute PDF JavaScript in a minimally sandboxed context.
@@ -338,10 +339,7 @@ function WidgetInputInner({
       );
 
     case "checkbox": {
-      // Checkbox is checked when value matches exportValue if present, or is non-empty and not 'Off'
-      const isChecked = widget.exportValue
-        ? value === widget.exportValue || value === "Yes"
-        : !!value && value !== "Off";
+      const isChecked = isWidgetChecked(widget, value);
       // When toggling on, use the widget's exportValue (e.g. 'Red', 'Blue', 'Pass') or fall back to 'Yes'
       const onValue = widget.exportValue || "Yes";
       return (

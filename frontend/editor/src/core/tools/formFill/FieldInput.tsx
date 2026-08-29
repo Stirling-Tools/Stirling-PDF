@@ -18,6 +18,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { useFieldValue } from "@app/tools/formFill/FormFillContext";
 import type { FormField } from "@app/tools/formFill/types";
+import { isFieldChecked } from "@app/tools/formFill/checkboxState";
 
 function FieldInputInner({
   field,
@@ -69,9 +70,7 @@ function FieldInputInner({
 
     case "checkbox": {
       const exportVal = field.widgets && field.widgets[0]?.exportValue;
-      const isChecked = exportVal
-        ? value === exportVal || value === "Yes"
-        : !!value && value !== "Off";
+      const isChecked = isFieldChecked(field.widgets, value);
       const onValue = exportVal || "Yes";
       return (
         <Checkbox

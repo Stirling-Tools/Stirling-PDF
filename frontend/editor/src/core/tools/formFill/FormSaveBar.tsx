@@ -106,7 +106,10 @@ export function FormSaveBar({
             ...styles,
             position: "absolute",
             top: "1rem",
+            left: "1rem",
             right: "1rem",
+            display: "flex",
+            justifyContent: "flex-end",
             zIndex: 100,
             pointerEvents: "none",
           }}
@@ -117,10 +120,9 @@ export function FormSaveBar({
             withBorder
             style={{
               pointerEvents: "auto",
-              // Fill the viewport on small screens instead of overflowing the
-              // left edge with a fixed 320px+ minimum width.
-              width: "min(420px, calc(100vw - 2rem))",
-              maxWidth: "100%",
+              // Resolved against the PDF pane, not the viewport: the pane is
+              // inset by the tool rail and any open sidebar, and clips overflow.
+              width: "min(420px, 100%)",
               overflow: "hidden",
             }}
           >

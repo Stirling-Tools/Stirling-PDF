@@ -14,8 +14,11 @@ import org.opensaml.saml.saml2.core.AuthnStatement;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.saml2.core.Saml2Error;
+import org.springframework.security.saml2.core.Saml2ErrorCodes;
 import org.springframework.security.saml2.provider.service.authentication.OpenSaml5AuthenticationProvider.ResponseToken;
 import org.springframework.security.saml2.provider.service.authentication.Saml2Authentication;
+import org.springframework.security.saml2.provider.service.authentication.Saml2AuthenticationException;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -64,7 +67,12 @@ public class CustomSaml2ResponseAuthenticationConverter
         List<Assertion> assertions = responseToken.getResponse().getAssertions();
         if (assertions == null || assertions.isEmpty()) {
             log.error("SAML response contains no assertions");
-            return null;
+            // Returning null makes ProviderManager report "no provider found" and loses the
+            // SAML error code the failure handler renders.
+            throw new Saml2AuthenticationException(
+                    new Saml2Error(
+                            Saml2ErrorCodes.MALFORMED_RESPONSE_DATA,
+                            "No assertions found in response."));
         }
         Assertion assertion = assertions.getFirst();
         Map<String, List<Object>> attributes = extractAttributes(assertion);

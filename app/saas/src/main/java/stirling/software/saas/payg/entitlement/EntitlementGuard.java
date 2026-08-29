@@ -20,8 +20,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 
-import tools.jackson.databind.ObjectMapper;
-
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 
@@ -39,6 +37,9 @@ import stirling.software.saas.payg.cap.AiToolRoutes;
 import stirling.software.saas.payg.cap.RequiresFeature;
 import stirling.software.saas.payg.model.FeatureGate;
 import stirling.software.saas.util.AuthenticationUtils;
+
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Hot-path entitlement check. Runs after {@code PaygChargeInterceptor} in the MVC chain and short-
@@ -357,9 +358,11 @@ public class EntitlementGuard implements HandlerInterceptor {
             response.setHeader(HttpHeaders.CONTENT_LENGTH, Integer.toString(payload.length));
             response.getOutputStream().write(payload);
             response.getOutputStream().flush();
-        } catch (IOException e) {
+        } catch (IOException | JacksonException e) {
             // Container will fall back to its default error page — we did set the status code,
             // so the client still sees the right HTTP code even if the body fails to write.
+            // JacksonException is unchecked and not an IOException, so serialization failures
+            // would otherwise escape preHandle and turn a 402 into a 500.
             log.warn("EntitlementGuard write response body failed", e);
             errorsCounter.increment();
         }
