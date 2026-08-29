@@ -22,25 +22,22 @@ import {
 } from "@app/contexts/NavigationContext";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useFileHandler } from "@app/hooks/useFileHandler";
-import { useAuth } from "@app/auth/UseSession";
-import { useProfilePictureUrl } from "@app/hooks/useProfilePictureUrl";
+import { useAccountIdentity } from "@app/hooks/useAccountIdentity";
+import { useFreeCreditsSummary } from "@app/hooks/useFreeCreditsSummary";
+import { useOpenPlan } from "@app/hooks/useOpenPlan";
+import { NavFooter } from "@app/components/shared/navFooter/NavFooter";
 import {
   useIndexedDB,
   useIndexedDBRevision,
 } from "@app/contexts/IndexedDBContext";
-import { accountService } from "@app/services/accountService";
 import { GoogleDriveIcon } from "@app/components/shared/CloudStorageIcons";
-import { AppSwitcher } from "@app/components/shared/AppSwitcher";
-import { SidebarToggleIcon } from "@app/components/shared/SidebarToggleIcon";
+import { SidebarHeader } from "@app/components/shared/SidebarHeader";
 import type { StirlingFileStub } from "@app/types/fileContext";
-import SearchIcon from "@mui/icons-material/Search";
 import FolderOpenIcon from "@mui/icons-material/FolderOpen";
 import FolderSpecialIcon from "@mui/icons-material/FolderSpecial";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
-import CloseIcon from "@mui/icons-material/Close";
 import AddIcon from "@mui/icons-material/Add";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import SettingsIcon from "@mui/icons-material/Settings";
+import OpenInFullIcon from "@mui/icons-material/OpenInFull";
 import type { FileId } from "@app/types/file";
 import { FileItem } from "@app/components/shared/FileSidebarFileItem";
 import { useLabelName } from "@app/data/labelDisplay";
@@ -56,12 +53,17 @@ import BulkUploadToServerModal from "@app/components/shared/BulkUploadToServerMo
 import { getFileOrigin } from "@app/components/filesPage/fileOrigin";
 import { VersionHistoryModal } from "@app/components/filesPage/VersionHistoryModal";
 import { DeleteFilesDialog } from "@app/components/filesPage/DeleteFilesDialog";
+import { RenameFileDialog } from "@app/components/shared/RenameFileDialog";
+import { duplicateStoredFile } from "@app/utils/duplicateFile";
 import { SidebarChecklistSlot } from "@app/components/shared/SidebarChecklistSlot";
 import {
   deleteServerFile,
   type DeleteScope,
 } from "@app/services/serverStorageDelete";
-import { fileStorage } from "@app/services/fileStorage";
+import { fileStorage, onRecordUnreadable } from "@app/services/fileStorage";
+import { downloadFileWithPolicy } from "@app/services/exportWithPolicy";
+import { useOpenInNewWindow } from "@app/extensions/openInNewWindow";
+import { alert } from "@app/components/toast";
 import { useBulkAddProgress } from "@app/services/bulkAddProgress";
 import { useFolderMembership } from "@app/hooks/useFolderMembership";
 import { useAllWatchedFolders } from "@app/hooks/useAllWatchedFolders";
@@ -74,16 +76,18 @@ import { WATCHED_FOLDERS_ENABLED } from "@app/constants/featureFlags";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import "@app/components/shared/FileSidebar.css";
 
-const COLLAPSED_WIDTH = "3.5rem";
-const EXPANDED_WIDTH = "16.25rem"; // ~260px
+// Shared with the processor sidebar via tokens, so the two cannot drift.
+const COLLAPSED_WIDTH = "var(--sidebar-collapsed-w)";
+const EXPANDED_WIDTH = "var(--sidebar-w)";
 
 // Inlined to avoid a circular import with WatchedFoldersRegistration.
 const WATCHED_FOLDER_VIEW_ID = "watchedFolder";
 const WATCHED_FOLDER_WORKBENCH_ID = "custom:watchedFolder";
 
-// Stable empty props for rows without folders, so the memoized FileItem
-// isn't re-rendered by a fresh `?? []` identity on every list render.
+// Stable empty props for rows without folders/policies, so the memoized
+// FileItem isn't re-rendered by a fresh `?? []` identity on every list render.
 const NO_FOLDERS: never[] = [];
+const NO_POLICIES: never[] = [];
 
 /** Only surface the "Adding files…" progress row for drops big enough that the
  *  pre-dispatch scan is user-visible; small adds finish before it would paint. */
@@ -93,16 +97,16 @@ export interface FileSidebarProps {
   collapsed?: boolean;
   onToggleCollapse?: () => void;
   onOpenSettings?: () => void;
-  /** Accessible name override for the toggle button. */
+  /** The quick nav rail owns the account control, so the footer drops its own row. */
+  accountHoisted?: boolean;
+  /** Accessible name override for the collapse toggle. */
   toggleAriaLabel?: string;
-  /** Icon override for the toggle button (e.g. back-arrow on /files). */
+  /** Icon override for the collapse toggle (e.g. back-arrow on /files). */
   toggleIcon?: React.ReactNode;
   /** Override the Open-from-computer handler (e.g. upload to /files folder). */
   onUploadFiles?: (files: File[]) => void | Promise<void>;
   /** Override the Google Drive handler. */
   onPickGoogleDriveFiles?: (files: File[]) => void | Promise<void>;
-  /** Override the Search row click (e.g. focus the /files search input). */
-  onSearchClick?: () => void;
   /** Extra action row inserted under Open-from-computer (e.g. New folder). */
   extraAction?: {
     icon: React.ReactNode;
@@ -152,12 +156,12 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       collapsed = false,
       onToggleCollapse,
       onOpenSettings,
-      onUploadFiles,
-      onPickGoogleDriveFiles,
-      onSearchClick,
-      extraAction,
+      accountHoisted = false,
       toggleAriaLabel,
       toggleIcon,
+      onUploadFiles,
+      onPickGoogleDriveFiles,
+      extraAction,
     },
     ref,
   ) {
@@ -167,9 +171,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     // Classification off (non-SaaS / AI-off) → never show the per-row label chip,
     // even if a stub carries labels from an imported PDF; keeps the row plain.
     const classificationEnabled = useClassificationEnabled();
-    const [searchActive, setSearchActive] = useState(false);
-    const [searchQuery, setSearchQuery] = useState("");
-    const searchInputRef = useRef<HTMLInputElement>(null);
     const nativeFileInputRef = useRef<HTMLInputElement>(null);
     // State (not ref) so setting it triggers a re-render - avoids racing addFiles state updates.
     const [pendingViewFileId, setPendingViewFileId] = useState<string | null>(
@@ -209,7 +210,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const openWatchedFolders = useCallback(() => {
       if (collapsed && onToggleCollapse) onToggleCollapse();
       setCustomWorkbenchViewData(WATCHED_FOLDER_VIEW_ID, { folderId: null });
-      navActions.setWorkbench(WATCHED_FOLDER_WORKBENCH_ID as any);
+      navActions.setWorkbench(WATCHED_FOLDER_WORKBENCH_ID);
     }, [collapsed, onToggleCollapse, setCustomWorkbenchViewData, navActions]);
 
     // Clicking a file's membership dot jumps straight into that folder.
@@ -217,7 +218,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       (folderId: string) => {
         if (collapsed && onToggleCollapse) onToggleCollapse();
         setCustomWorkbenchViewData(WATCHED_FOLDER_VIEW_ID, { folderId });
-        navActions.setWorkbench(WATCHED_FOLDER_WORKBENCH_ID as any);
+        navActions.setWorkbench(WATCHED_FOLDER_WORKBENCH_ID);
       },
       [collapsed, onToggleCollapse, setCustomWorkbenchViewData, navActions],
     );
@@ -247,46 +248,26 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const { addFiles } = useFileHandler();
     const indexedDB = useIndexedDB();
 
-    // Each auth layer derives its own displayName from its native user shape.
-    // Fall back to the proprietary REST endpoint only when the auth
-    // context yields nothing - then to "User" as a generic last resort.
-    const { displayName: authDisplayName, isAnonymous } = useAuth();
-    const [accountUsername, setAccountUsername] = useState<string | null>(null);
-    const displayName =
-      authDisplayName ?? accountUsername ?? t("auth.displayName.user", "User");
-
-    const profilePictureUrl = useProfilePictureUrl();
-    const [pictureFailed, setPictureFailed] = useState(false);
-    useEffect(() => setPictureFailed(false), [profilePictureUrl]);
-    const showProfilePicture = !!profilePictureUrl && !pictureFailed;
-
-    useEffect(() => {
-      if (!config?.enableLogin) {
-        setAccountUsername(null);
-        return;
-      }
-      if (authDisplayName) {
-        // The auth context has a name; don't bother hitting the REST
-        // endpoint, but clear any stale cached value from a prior call.
-        setAccountUsername(null);
-        return;
-      }
-      accountService
-        .getAccountData()
-        .then((data) => {
-          // Always reflect the latest result - including clearing it on
-          // sign-out, when the endpoint returns no username (or 401s into
-          // the catch branch below). Without this, signing out would leave
-          // the old username on screen.
-          setAccountUsername(data?.username ?? null);
-        })
-        .catch(() => {
-          setAccountUsername(null);
-        });
-    }, [config?.enableLogin, authDisplayName]);
+    const { displayName, profilePictureUrl, isAnonymous } =
+      useAccountIdentity();
+    const credits = useFreeCreditsSummary();
+    const openPlan = useOpenPlan();
 
     // Leaf files = user-visible files (excludes intermediate tool outputs)
     const [allFileStubs, setAllFileStubs] = useState<StirlingFileStub[]>([]);
+    // Files whose stored bytes this session PROVED unreadable. Rows render a
+    // "data lost" state instead of pretending the file can open; storage keeps
+    // the record so a reload re-tests it.
+    const [lostFileIds, setLostFileIds] = useState<ReadonlySet<string>>(
+      () => new Set(),
+    );
+    useEffect(
+      () =>
+        onRecordUnreadable((fileId) =>
+          setLostFileIds((prev) => new Set(prev).add(fileId as string)),
+        ),
+      [],
+    );
     const [stubsLoaded, setStubsLoaded] = useState(false);
     // Kebab "Save to cloud" target; drives BulkUploadToServerModal.
     const [saveToServerTarget, setSaveToServerTarget] = useState<
@@ -300,37 +281,54 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const [deleteTarget, setDeleteTarget] = useState<StirlingFileStub | null>(
       null,
     );
+    // Kebab "Rename" target; drives RenameFileDialog.
+    const [renameTarget, setRenameTarget] = useState<StirlingFileStub | null>(
+      null,
+    );
     // Storage gate: only offer Save-to-cloud when the server allows it and
     // the user is signed in (guests have no cloud library).
     const storageEnabled = config?.storageEnabled === true && !isAnonymous;
 
     const refreshStubs = useCallback(async () => {
-      // Leaf files from IDB - same source as the file selection modal.
-      const stubs = await indexedDB.loadLeafMetadata();
-      const idbIds = new Set(stubs.map((s) => s.id as string));
+      // `stubsLoaded` gates the spinner, so the `finally` below must set it on
+      // every path - callers never await this, so a rejection goes nowhere.
+      let stubs: StirlingFileStub[] = [];
+      try {
+        // Leaf files from IDB - same source as the file selection modal.
+        stubs = await indexedDB.loadLeafMetadata();
+      } catch (error) {
+        // Carry on with the in-memory workbench files: an unreadable library
+        // should cost the user their history, not the file they're working on.
+        console.error("Failed to read the file library from storage:", error);
+      }
 
-      // Also include workbench files not yet flushed to IDB.
-      const pendingStubs = state.files.ids
-        .map((id) => state.files.byId[id])
-        .filter(
-          (stub): stub is NonNullable<typeof stub> =>
-            !!stub && stub.isLeaf !== false && !idbIds.has(stub.id as string),
+      try {
+        const idbIds = new Set(stubs.map((s) => s.id as string));
+
+        // Also include workbench files not yet flushed to IDB.
+        const pendingStubs = state.files.ids
+          .map((id) => state.files.byId[id])
+          .filter(
+            (stub): stub is NonNullable<typeof stub> =>
+              !!stub && stub.isLeaf !== false && !idbIds.has(stub.id as string),
+          );
+
+        const allStubs = [...stubs, ...pendingStubs];
+        // A version swap briefly lists both the old leaf (IDB) and its replacement (workbench); two stubs for one lineage collide on the row key and corrupt React reconciliation, so drop any stub another names as its parent.
+        const superseded = new Set(
+          allStubs.map((s) => s.parentFileId as string | undefined),
         );
-
-      const allStubs = [...stubs, ...pendingStubs];
-      // A version swap briefly lists both the old leaf (IDB) and its replacement (workbench); two stubs for one lineage collide on the row key and corrupt React reconciliation, so drop any stub another names as its parent.
-      const superseded = new Set(
-        allStubs.map((s) => s.parentFileId as string | undefined),
-      );
-      const currentStubs = allStubs.filter(
-        (s) => !superseded.has(s.id as string),
-      );
-      setAllFileStubs(
-        currentStubs.sort(
-          (a, b) => (b.lastModified ?? 0) - (a.lastModified ?? 0),
-        ),
-      );
-      setStubsLoaded(true);
+        const currentStubs = allStubs.filter(
+          (s) => !superseded.has(s.id as string),
+        );
+        setAllFileStubs(
+          currentStubs.sort(
+            (a, b) => (b.lastModified ?? 0) - (a.lastModified ?? 0),
+          ),
+        );
+      } finally {
+        setStubsLoaded(true);
+      }
     }, [indexedDB, state.files.ids, state.files.byId]);
 
     // Refresh on mount, workbench changes, or external IndexedDB writes —
@@ -369,7 +367,9 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           setDeleteTarget(stub);
           return;
         }
-        await fileActions.removeFiles([fileId], true);
+        // Its superseded versions go too - see orphanedAncestorIds.
+        const orphans = await fileStorage.orphanedAncestorIds([fileId]);
+        await fileActions.removeFiles([fileId, ...orphans], true);
         await refreshStubs();
       },
       [allFileStubs, fileActions, refreshStubs],
@@ -387,7 +387,8 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           await deleteServerFile(stub.remoteStorageId);
         }
         if (scope === "device" || scope === "everywhere") {
-          await fileActions.removeFiles([stub.id], true);
+          const orphans = await fileStorage.orphanedAncestorIds([stub.id]);
+          await fileActions.removeFiles([stub.id, ...orphans], true);
         } else if (scope === "cloud") {
           // Local copy kept - drop the dead remote pointer so the cloud badge
           // clears (the sidebar doesn't reconcile with the server itself).
@@ -425,6 +426,121 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       [allFileStubs],
     );
 
+    const warnDataUnavailable = useCallback(() => {
+      alert({
+        alertType: "warning",
+        title: t("fileSidebar.dataLostTitle", "File data is unavailable"),
+        body: t(
+          "fileSidebar.dataLostBody",
+          "This browser lost this file's contents. Upload it again to keep working with it.",
+        ),
+        expandable: false,
+        durationMs: 6000,
+      });
+    }, [t]);
+
+    // Kebab: download a copy (desktop saves via the native dialog). Routed
+    // through the policy wrapper so export policies enforce here too.
+    const handleDownload = useCallback(
+      async (fileId: FileId) => {
+        const stub = allFileStubs.find((s) => s.id === fileId);
+        const file = await fileStorage.getStirlingFile(fileId);
+        if (!file) {
+          warnDataUnavailable();
+          return;
+        }
+        try {
+          await downloadFileWithPolicy({
+            data: file,
+            filename: stub?.name ?? file.name,
+            fileId: fileId as string,
+          });
+        } catch (error) {
+          console.error("[FileSidebar] Download failed:", error);
+          alert({
+            alertType: "error",
+            title: t("fileSidebar.downloadFailed", "Download failed"),
+            body: error instanceof Error ? error.message : String(error),
+            expandable: false,
+          });
+        }
+      },
+      [allFileStubs, warnDataUnavailable, t],
+    );
+
+    // Kebab: copy the file into the library under a free "(copy)" name.
+    const handleDuplicate = useCallback(
+      async (fileId: FileId) => {
+        const stub = allFileStubs.find((s) => s.id === fileId);
+        if (!stub) return;
+        try {
+          const copyId = await duplicateStoredFile(
+            stub,
+            allFileStubs.map((s) => s.name),
+            addFiles,
+          );
+          if (!copyId) {
+            warnDataUnavailable();
+            return;
+          }
+          await refreshStubs();
+        } catch (error) {
+          console.error("[FileSidebar] Duplicate failed:", error);
+          alert({
+            alertType: "error",
+            title: t("fileSidebar.duplicateFailed", "Could not duplicate file"),
+            body: error instanceof Error ? error.message : String(error),
+            expandable: false,
+          });
+        }
+      },
+      [allFileStubs, addFiles, refreshStubs, warnDataUnavailable, t],
+    );
+
+    // Kebab: open the rename dialog for this one file.
+    const handleRename = useCallback(
+      (fileId: FileId) => {
+        const stub = allFileStubs.find((s) => s.id === fileId);
+        if (stub) setRenameTarget(stub);
+      },
+      [allFileStubs],
+    );
+
+    // The stub name is what the UI and exports read, so a rename is a metadata
+    // write - storage first, then the workbench copy if the file is open.
+    const handleConfirmRename = useCallback(
+      async (name: string) => {
+        const stub = renameTarget;
+        if (!stub) return;
+        // quickKey is name|size|lastModified; a stale one would make a re-upload
+        // of the original look like a duplicate of the renamed file.
+        const quickKey = `${name}|${stub.size}|${stub.lastModified}`;
+        const saved = await fileStorage.updateFileMetadata(stub.id, {
+          name,
+          quickKey,
+        });
+        if (!saved) {
+          throw new Error(
+            t("fileSidebar.rename.error", "Could not rename the file."),
+          );
+        }
+        fileActions.updateStirlingFileStub(stub.id, { name, quickKey });
+        setRenameTarget(null);
+        await refreshStubs();
+      },
+      [renameTarget, fileActions, refreshStubs, t],
+    );
+
+    // Desktop-only; a no-op stub on web, where this stays hidden.
+    const { canOpenInNewWindow, openInNewWindow } = useOpenInNewWindow();
+    const handleOpenInNewWindow = useCallback(
+      (fileId: FileId) => {
+        const stub = allFileStubs.find((s) => s.id === fileId);
+        if (stub) openInNewWindow(stub);
+      },
+      [allFileStubs, openInNewWindow],
+    );
+
     // Once a pending file lands in state, open it in the viewer.
     useEffect(() => {
       if (!pendingViewFileId) return;
@@ -438,17 +554,8 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       }
     }, [pendingViewFileId, state.files.ids, setActiveFileId, navActions]);
 
-    // Memoized so an unrelated re-render (e.g. a policy-run store tick) keeps a
-    // stable array identity — avoids re-running the grouping memo + backfill effect.
-    const filteredFileStubs = useMemo(() => {
-      const q = searchQuery.trim().toLowerCase();
-      return q
-        ? allFileStubs.filter((stub) => stub.name.toLowerCase().includes(q))
-        : allFileStubs;
-    }, [allFileStubs, searchQuery]);
-
     // SaaS groups by classification label; core returns null → one flat, recency-sorted list.
-    const fileGroups = useFileSidebarGroups(filteredFileStubs);
+    const fileGroups = useFileSidebarGroups(allFileStubs);
     // Workbench membership as a Set for O(1) per-row lookups (see renderFileRow).
     const workbenchIds = useMemo(
       () => new Set(state.files.ids.map((id) => id as string)),
@@ -458,12 +565,12 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     // must key by their unique leaf id rather than the shared lineage (see renderFileRow).
     const lineageCounts = useMemo(() => {
       const counts = new Map<string, number>();
-      for (const s of filteredFileStubs) {
+      for (const s of allFileStubs) {
         const k = (s.originalFileId ?? s.id) as string;
         counts.set(k, (counts.get(k) ?? 0) + 1);
       }
       return counts;
-    }, [filteredFileStubs]);
+    }, [allFileStubs]);
     // Per-group expand/collapse, falling back to each group's default until toggled.
     const [groupOpen, setGroupOpen] = useState<Record<string, boolean>>({});
     const setGroupOpenState = useCallback(
@@ -471,29 +578,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         setGroupOpen((prev) => ({ ...prev, [id]: open })),
       [],
     );
-
-    // Handle search activation
-    const handleSearchClick = useCallback(() => {
-      if (onSearchClick) {
-        onSearchClick();
-        return;
-      }
-      if (collapsed && onToggleCollapse) {
-        onToggleCollapse();
-      }
-      setSearchActive(true);
-    }, [collapsed, onToggleCollapse, onSearchClick]);
-
-    const handleSearchClose = useCallback(() => {
-      setSearchActive(false);
-      setSearchQuery("");
-    }, []);
-
-    useEffect(() => {
-      if (searchActive && searchInputRef.current) {
-        searchInputRef.current.focus();
-      }
-    }, [searchActive]);
 
     // Handle Google Drive
     const handleGoogleDriveClick = useCallback(async () => {
@@ -522,6 +606,22 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       async (fileId: FileId) => {
         const stub = allFileStubs.find((s) => s.id === fileId);
         if (!stub) return;
+
+        // Its bytes are gone; opening it can only fail. Say so instead of a
+        // click that goes nowhere.
+        if (stub.dataUnavailable || lostFileIds.has(fileId as string)) {
+          alert({
+            alertType: "warning",
+            title: t("fileSidebar.dataLostTitle", "File data is unavailable"),
+            body: t(
+              "fileSidebar.dataLostBody",
+              "This browser lost this file's contents. Upload it again to keep working with it.",
+            ),
+            expandable: false,
+            durationMs: 6000,
+          });
+          return;
+        }
 
         // In the Watched Folders view a click sends the file into the open folder
         // (mirrors how a click toggles a file into the active workbench elsewhere).
@@ -577,6 +677,8 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       },
       [
         allFileStubs,
+        lostFileIds,
+        t,
         state.files.ids,
         state.ui.selectedFileIds,
         fileActions,
@@ -764,6 +866,8 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
             ? state.files.byId[workbenchFileId]?.thumbnailUrl
             : undefined) || stub.thumbnailUrl;
       const fileOrigin = getFileOrigin(stub);
+      const dataUnavailable =
+        stub.dataUnavailable === true || lostFileIds.has(stub.id as string);
       // Key by lineage (originalFileId) so a version swap updates the row in place instead of
       // remounting. But a 1-input→many-output op (split) yields sibling leaves that share one
       // originalFileId; those would collide on the key, so fall back to the unique leaf id when a
@@ -786,12 +890,19 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           thumbnailUrl={thumbnailUrl}
           onClick={handleFileClick}
           onEyeClick={handleEyeClick}
+          dataUnavailable={dataUnavailable}
           draggable={isWatchedFoldersActive}
           onDragStart={handleWatchedFolderDragStart}
           folders={memberFolders}
           onFolderClick={openWatchedFolder}
-          policies={policyFileBadges.get(stub.id as string) ?? []}
+          policies={policyFileBadges.get(stub.id as string) ?? NO_POLICIES}
           onDelete={isWatchedFoldersActive ? undefined : handleSidebarDelete}
+          onDownload={handleDownload}
+          onRename={isWatchedFoldersActive ? undefined : handleRename}
+          onDuplicate={isWatchedFoldersActive ? undefined : handleDuplicate}
+          onOpenInNewWindow={
+            canOpenInNewWindow(stub) ? handleOpenInNewWindow : undefined
+          }
           onSaveToCloud={isWatchedFoldersActive ? undefined : handleSaveToCloud}
           canSaveToCloud={storageEnabled && fileOrigin !== "shared-with-me"}
           isUploadedToCloud={fileOrigin === "cloud"}
@@ -833,78 +944,16 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           </div>
         )}
         <div className="file-sidebar-inner">
-          <div className="file-sidebar-brand">
-            <AppSwitcher collapsed={collapsed} />
-            {onToggleCollapse && (
-              <ActionIcon
-                variant="tertiary"
-                size="md"
-                className="file-sidebar-collapse-toggle"
-                onClick={() => onToggleCollapse()}
-                aria-label={
-                  toggleAriaLabel ??
-                  (collapsed
-                    ? t("fileSidebar.expand", "Expand sidebar")
-                    : t("fileSidebar.collapse", "Collapse sidebar"))
-                }
-              >
-                {toggleIcon ?? <SidebarToggleIcon size={18} />}
-              </ActionIcon>
-            )}
-          </div>
+          <SidebarHeader
+            collapsed={collapsed}
+            onToggleCollapse={onToggleCollapse}
+            toggleAriaLabel={toggleAriaLabel}
+            toggleIcon={toggleIcon}
+          />
 
-          {/* Box 1 — top controls (search + open / my files / cloud). No title. */}
+          {/* Box 1 — top controls (open / my files / cloud). No title. File
+              search lives in the global super search (top bar), not here. */}
           <NavSurface className="file-sidebar-controls">
-            {/* Search row */}
-            <Tooltip
-              label={t("fileSidebar.search", "Search")}
-              position="right"
-              withinPortal
-              disabled={!collapsed}
-            >
-              <div
-                className={`file-sidebar-search-row${searchActive && !collapsed ? " active" : ""}`}
-                onClick={!searchActive ? handleSearchClick : undefined}
-                role={!searchActive ? "button" : undefined}
-                tabIndex={!searchActive ? 0 : undefined}
-                onKeyDown={
-                  !searchActive
-                    ? (e) => e.key === "Enter" && handleSearchClick()
-                    : undefined
-                }
-              >
-                {searchActive && !collapsed ? (
-                  <CloseIcon
-                    className="file-sidebar-search-icon"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleSearchClose();
-                    }}
-                  />
-                ) : (
-                  <SearchIcon className="file-sidebar-search-icon" />
-                )}
-                {!collapsed &&
-                  (searchActive ? (
-                    <input
-                      ref={searchInputRef}
-                      className="file-sidebar-search-input sidebar-content-fade"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder={t(
-                        "fileSidebar.searchPlaceholder",
-                        "Search files...",
-                      )}
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                  ) : (
-                    <span className="file-sidebar-search-label sidebar-content-fade">
-                      {t("fileSidebar.search", "Search")}
-                    </span>
-                  ))}
-              </div>
-            </Tooltip>
-
             {/* Hidden native file input - kept outside the !collapsed gate so
                 the "Open from computer" row below (always rendered) can fire
                 it in either sidebar state without a silent no-op. */}
@@ -923,7 +972,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
             {/* Tooltips only fire when collapsed - when expanded the visible
                 text label below already identifies each row, so a tooltip
                 would just flash a duplicate. Distinct icons (UploadFile for
-                "Open from computer" vs FolderOpen for "My Files") so the
+                "Open from computer" vs FolderOpen for "File library") so the
                 collapsed rail isn't two identical folder icons either. */}
             <Tooltip
               label={t("fileSidebar.openFromComputer", "Open from computer")}
@@ -942,7 +991,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                 onClick={() => {
                   // "Open from computer" goes straight to the native OS file
                   // picker. The full file manager (recent + drives + folders)
-                  // is reachable via "My Files" below.
+                  // is reachable via "File library" below.
                   nativeFileInputRef.current?.click();
                 }}
                 role="button"
@@ -1019,7 +1068,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
             )}
 
             <Tooltip
-              label={t("fileSidebar.myFiles", "My Files")}
+              label={t("fileSidebar.myFiles", "File library")}
               position="right"
               withinPortal
               disabled={!collapsed}
@@ -1033,7 +1082,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                 }}
                 role="button"
                 tabIndex={0}
-                aria-label={t("fileSidebar.myFiles", "My Files")}
+                aria-label={t("fileSidebar.myFiles", "File library")}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault();
@@ -1044,7 +1093,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                 <FolderOpenIcon className="file-sidebar-action-icon" />
                 {!collapsed && (
                   <span className="file-sidebar-action-label sidebar-content-fade">
-                    {t("fileSidebar.myFiles", "My Files")}
+                    {t("fileSidebar.myFiles", "File library")}
                   </span>
                 )}
               </div>
@@ -1137,7 +1186,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                     <span className="file-sidebar-section-label">
                       {t("fileSidebar.library", "PDF Library")}
                     </span>
-                    <FileSidebarGroupControls stubs={filteredFileStubs} />
+                    <FileSidebarGroupControls stubs={allFileStubs} />
                     <ActionIcon
                       variant="quiet"
                       className="file-sidebar-section-btn file-sidebar-section-btn-external"
@@ -1152,7 +1201,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                       )}
                       data-testid="open-files-page"
                     >
-                      <OpenInNewIcon sx={{ fontSize: "1rem" }} />
+                      <OpenInFullIcon sx={{ fontSize: "1rem" }} />
                     </ActionIcon>
                     <ActionIcon
                       variant="quiet"
@@ -1171,7 +1220,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                     <div className="file-sidebar-loading">
                       <Loader size="sm" color="var(--c-text-subtle)" />
                     </div>
-                  ) : filteredFileStubs.length > 0 ? (
+                  ) : allFileStubs.length > 0 ? (
                     <div className="file-sidebar-file-list">
                       {fileGroups ? (
                         <>
@@ -1249,29 +1298,24 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                               "fileSidebar.viewAll",
                               "View all {{count}} files",
                               {
-                                count: filteredFileStubs.length,
+                                count: allFileStubs.length,
                               },
                             )}
                           </Button>
                         </>
                       ) : (
-                        filteredFileStubs.map(renderFileRow)
+                        allFileStubs.map(renderFileRow)
                       )}
                     </div>
                   ) : (
-                    !searchActive && (
-                      <div className="file-sidebar-empty">
-                        <p className="file-sidebar-empty-text">
-                          {t("fileSidebar.noFiles", "No files yet")}
-                        </p>
-                        <p className="file-sidebar-empty-hint">
-                          {t(
-                            "fileSidebar.dropHint",
-                            "Open files to get started",
-                          )}
-                        </p>
-                      </div>
-                    )
+                    <div className="file-sidebar-empty">
+                      <p className="file-sidebar-empty-text">
+                        {t("fileSidebar.noFiles", "No files yet")}
+                      </p>
+                      <p className="file-sidebar-empty-hint">
+                        {t("fileSidebar.dropHint", "Open files to get started")}
+                      </p>
+                    </div>
                   )}
                 </div>
               )}
@@ -1295,6 +1339,14 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           onChanged={refreshStubs}
         />
 
+        {/* Kebab "Rename" dialog. */}
+        <RenameFileDialog
+          opened={Boolean(renameTarget)}
+          fileName={renameTarget?.name ?? ""}
+          onClose={() => setRenameTarget(null)}
+          onSubmit={handleConfirmRename}
+        />
+
         {/* Cloud-aware delete choice (only opened for cloud-uploaded files). */}
         <DeleteFilesDialog
           opened={Boolean(deleteTarget)}
@@ -1306,70 +1358,17 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         {/* Getting-started checklist, floating above the footer (SaaS only). */}
         <SidebarChecklistSlot collapsed={collapsed} />
 
-        {/* Box 3 — account footer (avatar + name + settings). */}
-        <NavSurface className="file-sidebar-footer-box">
-          {/* Bottom bar: user name + settings */}
-          <Tooltip
-            label={
-              onOpenSettings
-                ? `${displayName} - ${t("fileSidebar.openSettings", "Open settings")}`
-                : displayName
-            }
-            position="right"
-            withinPortal
-            disabled={!collapsed}
-          >
-            <div
-              className="file-sidebar-bottom-bar"
-              onClick={onOpenSettings}
-              role={onOpenSettings ? "button" : undefined}
-              tabIndex={onOpenSettings ? 0 : undefined}
-              onKeyDown={
-                onOpenSettings
-                  ? (e) => e.key === "Enter" && onOpenSettings()
-                  : undefined
-              }
-              data-testid={onOpenSettings ? "config-button" : undefined}
-              data-tour={onOpenSettings ? "config-button" : undefined}
-              aria-label={
-                onOpenSettings
-                  ? t("fileSidebar.openSettings", "Open settings")
-                  : displayName
-              }
-              style={onOpenSettings ? { cursor: "pointer" } : undefined}
-            >
-              <div
-                className={`file-sidebar-bottom-avatar${
-                  showProfilePicture
-                    ? " file-sidebar-bottom-avatar--picture"
-                    : ""
-                }`}
-                aria-label={displayName}
-              >
-                {showProfilePicture ? (
-                  <img
-                    src={profilePictureUrl}
-                    alt=""
-                    className="file-sidebar-bottom-avatar-img"
-                    onError={() => setPictureFailed(true)}
-                  />
-                ) : (
-                  displayName.charAt(0).toUpperCase()
-                )}
-              </div>
-              {!collapsed && (
-                <span className="file-sidebar-bottom-name sidebar-content-fade">
-                  {displayName}
-                </span>
-              )}
-              {onOpenSettings && !collapsed && (
-                <div className="file-sidebar-bottom-settings">
-                  <SettingsIcon sx={{ fontSize: "1.1rem" }} />
-                </div>
-              )}
-            </div>
-          </Tooltip>
-        </NavSurface>
+        {/* Box 3 — the shared footer: credits, plan, and the account row unless hoisted. */}
+        <NavFooter
+          className="file-sidebar-footer-box"
+          displayName={displayName}
+          profilePictureUrl={profilePictureUrl}
+          onOpenSettings={onOpenSettings}
+          showAccount={!accountHoisted}
+          credits={credits}
+          onOpenPlan={openPlan ?? undefined}
+          collapsed={collapsed}
+        />
       </div>
     );
   },

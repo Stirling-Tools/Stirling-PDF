@@ -57,13 +57,21 @@ dependencies {
     // veraPDF still uses javax.xml.bind, not the new jakarta namespace
     implementation 'javax.xml.bind:jaxb-api:2.3.1'
     implementation 'com.sun.xml.bind:jaxb-impl:2.3.9'
-    implementation 'com.sun.xml.bind:jaxb-core:4.0.7'
+    implementation 'com.sun.xml.bind:jaxb-core:4.0.9'
 
     // CVE-2022-25647: Explicit gson to prevent unsafe deserialization (tabula would pull 2.8.7)
     implementation "com.google.code.gson:gson:${gsonVersion}"
     implementation 'org.apache.pdfbox:jbig2-imageio:3.0.5'
-    implementation 'com.opencsv:opencsv:5.12.0' // https://mvnrepository.com/artifact/com.opencsv/opencsv
-    implementation 'org.apache.poi:poi-ooxml:5.5.1'
+    // OpenCSV: Stirling-PDF only uses CSVWriter, not the opencsv-bean module.
+    // Exclude commons-beanutils + commons-collections.
+    implementation('com.opencsv:opencsv:5.12.0') {
+        exclude group: 'commons-beanutils', module: 'commons-beanutils'
+        exclude group: 'commons-collections', module: 'commons-collections'
+    }
+    // POI: only XSSF (modern Excel) is used, not HSSF/FormulaEvaluator which need commons-math3.
+    implementation('org.apache.poi:poi-ooxml:5.5.1') {
+        exclude group: 'org.apache.commons', module: 'commons-math3'
+    }
 
     // Batik only bridge module needed (transitively pulls anim, gvt, util, css, dom, svg-dom)
     // Replaces batik-all which included unused codec, svggen, transcoder, script modules
@@ -128,6 +136,10 @@ bootJar {
     exclude 'META-INF/*.DSA'
     exclude 'META-INF/*.RSA'
     exclude 'META-INF/*.EC'
+
+    // Exclude source maps from production JAR, dev-only debugging artifacts, not needed at runtime
+    exclude 'static/pdfjs-legacy/**/*.map'
+    exclude 'static/**/*.map'
 
     manifest {
         attributes(
@@ -312,8 +324,9 @@ tasks.register('cleanFrontendAssets', Delete) {
     delete generatedFrontendPaths.collect { new File(resourcesStaticDir, it) }
     // Prerendered per-route SPA pages (e.g. compress.html) carry per-tool OG tags and are
     // copied from the frontend build. Remove stale ones so renamed/removed tools don't linger.
-    // api-landing.html and mobile-upload.html are real backend source files, not generated artifacts.
-    delete fileTree(dir: resourcesStaticDir, includes: ['*.html'], excludes: ['api-landing.html', 'mobile-upload.html'])
+    // api-landing.html, mobile-upload.html and mobile-sign.html are real backend source files,
+    // not generated artifacts.
+    delete fileTree(dir: resourcesStaticDir, includes: ['*.html'], excludes: ['api-landing.html', 'mobile-upload.html', 'mobile-sign.html'])
     // Nested prerendered route pages (e.g. settings/people.html)
     delete new File(resourcesStaticDir, 'settings')
 }
@@ -330,8 +343,24 @@ tasks.register('copyApiLandingPage', Copy) {
     }
 }
 
+tasks.register('copyBackendOnlySamples', Copy) {
+    group = 'frontend'
+    description = 'Copy frontend sample files for backend-only mode'
+    from(new File(frontendEditorDir, 'public/samples'))
+    into(new File(resourcesStaticDir, 'samples'))
+    dependsOn cleanFrontendAssets
+    onlyIf { !buildWithFrontend }
+}
+
 // Ensure copyFrontendAssets runs after spotless tasks
 tasks.named('copyFrontendAssets').configure {
+    mustRunAfter tasks.matching { it.name.startsWith('spotless') }
+}
+
+// Cleanup removes frontend-generated resources that are also visible to the resource/formatting
+// task graph. Keep all Spotless tasks ahead of cleanup so they never snapshot a path that has
+// just been removed.
+tasks.named('cleanFrontendAssets').configure {
     mustRunAfter tasks.matching { it.name.startsWith('spotless') }
 }
 
@@ -342,6 +371,7 @@ if (buildWithFrontend) {
     println "Frontend build disabled - JAR will be backend-only with API landing page"
     // When not building the UI, ensure any stale frontend assets are removed and use API landing page
     processResources.dependsOn copyApiLandingPage
+    processResources.dependsOn copyBackendOnlySamples
 }
 
 bootJar.dependsOn ':common:jar'

@@ -22,7 +22,11 @@ pipeline/
 customFiles/
 configs/
 watchedFolders/
+# The rule above targets the app's runtime watched-folders working dir, but it
+# also matches this frontend source component dir; keep the source tracked.
+!frontend/editor/src/proprietary/components/watchedFolders/
 clientWebUI/
+policy-webhook-spool/
 # Scratch dir used by local fixture-regeneration runs (see
 # app/proprietary/src/test/resources/db-migration-fixtures/README.md).
 # Holds downloaded JARs and disposable workdirs. Never committed.
@@ -35,6 +39,7 @@ exampleYmlFiles/stirling/
 /testing/file_snapshots
 /testing/cucumber/junit/
 /testing/cucumber/report.html
+/testing/cucumber/.parallel/
 /testing/.failed_tests
 /.test-state/
 SwaggerDoc.json
@@ -60,13 +65,23 @@ app/core/src/main/resources/static/og_images/
 app/core/src/main/resources/static/samples/
 app/core/src/main/resources/static/manifest-classic.json
 app/core/src/main/resources/static/og-metadata.json
+app/core/src/main/resources/static/og-metadata.saas.json
 app/core/src/main/resources/static/sw-folder-retry.js
 app/core/src/main/resources/static/robots.txt
+app/core/src/main/resources/static/android-chrome-*.png
+app/core/src/main/resources/static/mstile-*.png
+app/core/src/main/resources/static/favicon.png
+app/core/src/main/resources/static/safari-pinned-tab.svg
 app/core/src/main/resources/static/pdfium/
 app/core/src/main/resources/static/pdfjs/
 app/core/src/main/resources/static/vendor/
 app/core/src/main/resources/static/**/*.gz
 app/core/src/main/resources/static/**/*.br
+app/core/src/main/resources/static/css/cookieconsent.css
+app/core/src/main/resources/static/css/cookieconsentCustomisation.css
+app/core/src/main/resources/static/mockServiceWorker.js
+app/core/src/main/resources/static/js/thirdParty/cookieconsent.umd.js
+app/core/src/main/resources/static/images/google-drive.svg
 # Note: Keep backend-managed files like fonts/, css/, js/, pdfjs/, etc.
 
 # Gradle
@@ -161,6 +176,8 @@ app/core/src/main/resources/static/**/*.br
 *.nar
 *.ear
 *.zip
+# Real backend archives the form-bundle reader is tested against.
+!frontend/editor/src/core/tools/formFill/__fixtures__/*.zip
 *.tar.gz
 *.rar
 *.db
@@ -281,8 +298,13 @@ docs/type3/signatures/
 
 **/application-dev-local.properties
 
-# Claude
-.claude/
+# Claude. Contents are ignored so personal config stays local, with the two
+# shared pieces re-included: settings.json (the comment-lint hook) and skills/.
+# The directory itself cannot be ignored or git will not look inside it.
+.claude/*
+!.claude/settings.json
+!.claude/skills/
+.claude/settings.local.json
 
 # Playwright MCP screenshots / traces
 .playwright-mcp/

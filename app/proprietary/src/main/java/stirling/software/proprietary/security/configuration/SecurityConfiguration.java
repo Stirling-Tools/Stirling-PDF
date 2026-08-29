@@ -213,7 +213,9 @@ public class SecurityConfiguration {
                         "X-Page-Number",
                         "X-Page-Size",
                         "Content-Disposition",
-                        "Content-Type"));
+                        "Content-Type",
+                        "X-Stirling-Skipped-Field-Edits",
+                        "X-Stirling-Skipped-Field-Edits-Total"));
 
         cfg.setAllowCredentials(true);
         cfg.setMaxAge(3600L);
@@ -355,12 +357,12 @@ public class SecurityConfiguration {
                                             req -> {
                                                 String uri = req.getRequestURI();
                                                 String contextPath = req.getContextPath();
-                                                // Check if it's a public auth endpoint or static
-                                                // resource
                                                 return RequestUriUtils.isStaticResource(
                                                                 contextPath, uri)
                                                         || RequestUriUtils.isPublicAuthEndpoint(
-                                                                uri, contextPath);
+                                                                uri, contextPath)
+                                                        || RequestUriUtils.isFrontendRoute(
+                                                                contextPath, uri);
                                             })
                                     .permitAll()
                                     .anyRequest()

@@ -32,8 +32,7 @@ export function LandingActions({
     <>
       <Group gap="sm" justify="center" wrap="wrap" mb="xs">
         <Button
-          className="landing-btn-primary"
-          px="xl"
+          fat
           leftSection={
             <LocalIcon icon={icons.uploadIconName} width="1rem" height="1rem" />
           }
@@ -47,8 +46,7 @@ export function LandingActions({
 
         <Button
           variant="secondary"
-          className="landing-btn-secondary"
-          px="xl"
+          fat
           leftSection={<LocalIcon icon="add" width="1rem" height="1rem" />}
           onClick={(e) => {
             e.stopPropagation();
@@ -64,7 +62,7 @@ export function LandingActions({
               size="lg"
               variant="secondary"
               aria-label={terminology.mobileUpload}
-              className="landing-btn-secondary landing-btn-icon"
+              className="landing-btn-icon"
               onClick={(e) => {
                 e.stopPropagation();
                 onMobileUploadClick();

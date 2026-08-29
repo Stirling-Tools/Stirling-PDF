@@ -131,7 +131,7 @@ export async function reconcileServerFiles(
       {
         suppressErrorToast: true,
         skipAuthRedirect: true,
-      } as any,
+      },
     );
     const serverFiles = Array.isArray(response.data) ? response.data : [];
     const serverMap = new Map<number, StoredFileResponse>();
@@ -280,7 +280,7 @@ export async function reconcileServerFiles(
   try {
     const response = await apiClient.get<AccessedShareLinkResponse[]>(
       "/api/v1/storage/share-links/accessed",
-      { suppressErrorToast: true, skipAuthRedirect: true } as any,
+      { suppressErrorToast: true, skipAuthRedirect: true },
     );
     const sharedLinks = Array.isArray(response.data) ? response.data : [];
     const allowed = new Set(
@@ -426,7 +426,7 @@ export async function materializeServerStubs(
         responseType: "blob",
         suppressErrorToast: true,
         skipAuthRedirect: true,
-      } as any);
+      });
       const rawHeaders = (response.headers ?? {}) as Record<string, unknown> & {
         get?: (name: string) => string | null;
       };

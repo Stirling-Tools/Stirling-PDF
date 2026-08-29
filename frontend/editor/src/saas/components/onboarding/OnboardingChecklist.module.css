@@ -82,7 +82,7 @@
 
 .completeIcon {
   font-size: 1.05rem !important;
-  color: var(--mantine-color-blue-6);
+  color: var(--c-accent-text);
 }
 
 .progressTrack {
@@ -131,7 +131,7 @@
 
 .checkDone {
   font-size: 1.05rem !important;
-  color: var(--mantine-color-blue-6);
+  color: var(--c-accent-text);
 }
 
 .checkTodo {

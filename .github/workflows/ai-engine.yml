@@ -20,7 +20,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
         with:
           egress-policy: audit
 
@@ -28,10 +28,12 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Install uv
-        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
           enable-cache: true
-          cache-suffix: ai-engine
+          cache-dependency-glob: |
+            engine/pyproject.toml
+            engine/uv.lock
 
       - name: Install Task
         uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
@@ -95,6 +97,14 @@ jobs:
           echo "to see what still needs fixing manually."
           echo "============================================"
           exit 1
+
+      - name: Build engine production image
+        if: always()
+        run: docker build --file engine/Dockerfile --tag stirling-pdf-engine:ci .
+
+      - name: Build engine development image
+        if: always()
+        run: docker build --file engine/Dockerfile.dev --tag stirling-pdf-engine-dev:ci .
 
       - name: Remove engine check comment on success
         if: steps.engine-check.outcome == 'success' && github.event_name == 'pull_request'

@@ -209,6 +209,54 @@ describe("fileContextReducer — silent CONSUME_FILES (background enforcement)",
     ]);
   });
 
+  it("carries classificationConfidence forward with the labels", () => {
+    // The confidence is part of the verdict: without it the escalation decision
+    // (shouldDispatchToAi) dies at the version boundary and a chained
+    // classification never runs.
+    const start = stateWith([
+      stub("a", {
+        classificationLabels: ["Invoice"],
+        classificationConfidence: "low",
+      }),
+    ]);
+    const next = fileContextReducer(start, {
+      type: "CONSUME_FILES",
+      payload: {
+        inputFileIds: ["a" as FileId],
+        outputStirlingFileStubs: [stub("a-v2")],
+      },
+    });
+    expect(next.files.byId["a-v2" as FileId].classificationConfidence).toBe(
+      "low",
+    );
+  });
+
+  it("an output with its own verdict keeps it — no confidence bleed from the input", () => {
+    // A fresh classify result carries its own labels; stamping the input's
+    // heuristic confidence onto them would mislabel an AI verdict as unsure.
+    const start = stateWith([
+      stub("a", {
+        classificationLabels: ["Invoice"],
+        classificationConfidence: "low",
+      }),
+    ]);
+    const next = fileContextReducer(start, {
+      type: "CONSUME_FILES",
+      payload: {
+        inputFileIds: ["a" as FileId],
+        outputStirlingFileStubs: [
+          stub("b", { classificationLabels: ["Contract"] }),
+        ],
+      },
+    });
+    expect(next.files.byId["b" as FileId].classificationLabels).toEqual([
+      "Contract",
+    ]);
+    expect(
+      next.files.byId["b" as FileId].classificationConfidence,
+    ).toBeUndefined();
+  });
+
   it("non-silent CONSUME_FILES still moves the output to the front (unchanged)", () => {
     const start = stateWith([stub("a"), stub("b")]);
     const next = fileContextReducer(start, {
@@ -220,5 +268,42 @@ describe("fileContextReducer — silent CONSUME_FILES (background enforcement)",
     });
     expect(next.files.ids).toEqual(["b2", "a"]);
     expect(next.ui.selectedFileIds).toEqual(["b2"]);
+  });
+});
+
+describe("fileContextReducer — REMOVE_FILES", () => {
+  /** Deleting from the library dispatches this for files that were never in the
+   *  workbench; reallocating then re-renders every consumer for nothing. */
+  it("is a true no-op when none of the ids are in the workbench", () => {
+    const state = stateWith([stub("a")]);
+    const next = fileContextReducer(state, {
+      type: "REMOVE_FILES",
+      payload: { fileIds: ["gone" as FileId] },
+    });
+    expect(next).toBe(state);
+  });
+
+  it("still removes the ids it does hold", () => {
+    const state = stateWith([stub("a"), stub("b")]);
+    const next = fileContextReducer(state, {
+      type: "REMOVE_FILES",
+      payload: { fileIds: ["a" as FileId, "gone" as FileId] },
+    });
+    expect(next.files.ids).toEqual(["b"]);
+    expect(next.files.byId["a" as FileId]).toBeUndefined();
+  });
+
+  it("keeps the files slice when only a selection is cleared", () => {
+    const base = stateWith([stub("a")]);
+    const state: FileContextState = {
+      ...base,
+      ui: { ...base.ui, selectedFileIds: ["gone" as FileId] },
+    };
+    const next = fileContextReducer(state, {
+      type: "REMOVE_FILES",
+      payload: { fileIds: ["gone" as FileId] },
+    });
+    expect(next.files).toBe(state.files);
+    expect(next.ui.selectedFileIds).toEqual([]);
   });
 });

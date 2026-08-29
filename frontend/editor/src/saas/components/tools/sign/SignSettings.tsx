@@ -34,6 +34,11 @@ import {
   AddSignatureResult,
 } from "@app/hooks/tools/sign/useSavedSignatures";
 import { SavedSignaturesSection } from "@app/components/tools/sign/SavedSignaturesSection";
+import MobileSignatureModal, {
+  type MobileSignaturePayload,
+} from "@app/components/tools/sign/MobileSignatureModal";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { useIsMobile } from "@app/hooks/useIsMobile";
 import { buildSignaturePreview } from "@app/utils/signaturePreview";
 
 type SignatureDrafts = {
@@ -116,6 +121,12 @@ const SignSettings = ({
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
   const [isPlacementManuallyPaused, setPlacementManuallyPaused] =
     useState(false);
+  const [isMobileSignModalOpen, setIsMobileSignModalOpen] = useState(false);
+  const { config } = useAppConfig();
+  const isMobileViewport = useIsMobile();
+  // Drawing on a phone needs a second device, so the QR entry is desktop-only.
+  const canDrawOnPhone =
+    Boolean(config?.enableMobileSignature) && !isMobileViewport;
 
   // State for different signature types
   const [canvasSignatureData, setCanvasSignatureData] = useState<
@@ -536,7 +547,7 @@ const SignSettings = ({
       return;
     }
     const nextSource = allowedSignatureSources.includes(
-      parameters.signatureType as SignatureSource,
+      parameters.signatureType,
     )
       ? (parameters.signatureType as SignatureSource)
       : effectiveDefaultSource;
@@ -663,6 +674,71 @@ const SignSettings = ({
       });
     },
     [onActivateSignaturePlacement],
+  );
+
+  // Route a signature made on a phone to the matching source, mirroring
+  // handleUseSavedSignature: ink is a canvas signature, a photo is an image
+  // signature, and typed text stays editable text rather than baked pixels.
+  const handleMobileSignatureReceived = useCallback(
+    (payload: MobileSignaturePayload) => {
+      // Receiving a signature is as clear an intent to place it as drawing
+      // one, so placement goes live even if it was paused beforehand.
+      setPlacementManuallyPaused(false);
+      lastAppliedPlacementKey.current = null;
+      if (payload.kind === "draw") {
+        if (parameters.signatureType !== "canvas") {
+          onParameterChange("signatureType", "canvas");
+        }
+        handleCanvasSignatureChange(payload.dataUrl);
+      } else if (payload.kind === "photo") {
+        if (parameters.signatureType !== "image") {
+          onParameterChange("signatureType", "image");
+        }
+        setImageSignatureData(payload.dataUrl);
+      } else {
+        if (parameters.signatureType !== "text") {
+          onParameterChange("signatureType", "text");
+        }
+        onParameterChange("signerName", payload.text);
+        onParameterChange("fontFamily", payload.fontFamily);
+        onParameterChange("textColor", payload.color);
+        // Move the draft mirror in the same commit as the parameters. The
+        // record/restore effect pair otherwise sees them one commit apart and
+        // ping-pongs old draft against new params, wiping the received text
+        // and looping until React aborts the update depth.
+        const nextDraft = {
+          signerName: payload.text,
+          fontSize: parameters.fontSize ?? 16,
+          fontFamily: payload.fontFamily,
+          textColor: payload.color,
+        };
+        lastSyncedTextDraft.current = nextDraft;
+        setSignatureDrafts((prev) => ({ ...prev, text: nextDraft }));
+      }
+      // Activate directly for every kind: the canvas-change handler only
+      // activates when the data actually changed, and the auto-activate
+      // effect only reacts to state transitions - neither fires for a
+      // repeat of the same signature. Fired twice because the first shot can
+      // land between the receive commit and the ready-state settling, where
+      // the placement effect immediately deactivates it; the second shot is
+      // after everything has settled, and re-activating is idempotent.
+      if (typeof window !== "undefined") {
+        window.setTimeout(
+          () => onActivateSignaturePlacement?.(),
+          PLACEMENT_ACTIVATION_DELAY,
+        );
+        window.setTimeout(() => onActivateSignaturePlacement?.(), 500);
+      } else {
+        onActivateSignaturePlacement?.();
+      }
+    },
+    [
+      parameters.signatureType,
+      parameters.fontSize,
+      onParameterChange,
+      handleCanvasSignatureChange,
+      onActivateSignaturePlacement,
+    ],
   );
 
   const hasCanvasSignature = useMemo(
@@ -1019,6 +1095,29 @@ const SignSettings = ({
     if (signatureSource === "image") {
       return (
         <Stack gap="xs">
+          {imageSignatureData && (
+            <Box
+              style={{
+                border: "1px solid var(--mantine-color-default-border)",
+                borderRadius: "var(--mantine-radius-default)",
+                // Signatures are stamped on paper-white pages, so preview on white.
+                background: "white",
+                padding: "0.5rem",
+                display: "flex",
+                justifyContent: "center",
+              }}
+            >
+              <img
+                src={imageSignatureData}
+                alt={translate("image.previewAlt", "Current image signature")}
+                style={{
+                  maxWidth: "100%",
+                  maxHeight: 120,
+                  objectFit: "contain",
+                }}
+              />
+            </Box>
+          )}
           <ImageUploader
             onImageChange={handleImageChange}
             disabled={disabled}
@@ -1193,13 +1292,29 @@ const SignSettings = ({
             "Choose how you want to create the signature",
           )}
         </Text>
+        {canDrawOnPhone && (
+          <>
+            <Button
+              variant="secondary"
+              fullWidth
+              disabled={disabled}
+              leftSection={<LocalIcon icon="qr-code-rounded" width="1rem" />}
+              onClick={() => setIsMobileSignModalOpen(true)}
+            >
+              {t("sign.mobile.createFromPhone", "Mobile upload")}
+            </Button>
+            <MobileSignatureModal
+              opened={isMobileSignModalOpen}
+              onClose={() => setIsMobileSignModalOpen(false)}
+              onSignatureReceived={handleMobileSignatureReceived}
+            />
+          </>
+        )}
         {sourceOptions.length > 1 && (
           <SegmentedControl
             value={signatureSource}
             fullWidth
-            onChange={(value) =>
-              handleSignatureSourceChange(value as SignatureSource)
-            }
+            onChange={(value) => handleSignatureSourceChange(value)}
             options={sourceOptions}
           />
         )}
