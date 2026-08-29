@@ -109,7 +109,7 @@
     ]
   },
   "devDependencies": {
-    "@iconify-json/material-symbols": "^1.2.83",
+    "@iconify-json/material-symbols": "^1.2.89",
     "@iconify/react": "^6.0.2",
     "@iconify/utils": "^3.1.4",
     "@playwright/test": "^1.55.0",
