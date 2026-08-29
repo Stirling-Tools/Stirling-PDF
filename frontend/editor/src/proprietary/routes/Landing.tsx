@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@app/auth/UseSession";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { useSuppressQuickNavRail } from "@app/contexts/QuickNavHostContext";
 import HomePage from "@app/pages/HomePage";
 import { useBackendProbe } from "@app/hooks/useBackendProbe";
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
@@ -26,6 +27,9 @@ export default function Landing() {
   const { t } = useTranslation();
 
   const loading = authLoading || configLoading || backendProbe.loading;
+
+  // The backend-down screen is not the app. Loading is: it resolves in a moment.
+  useSuppressQuickNavRail(!session && backendProbe.status !== "up");
 
   // Debug: Track Landing component lifecycle
   useEffect(() => {

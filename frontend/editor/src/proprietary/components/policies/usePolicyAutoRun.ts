@@ -308,8 +308,10 @@ export function usePolicyAutoRun(): void {
       for (const outputId of outputIds) {
         if (isDispatched(nextCategory, outputId as FileId)) continue;
         const outputStub = stubsRef.current.find((s) => s.id === outputId);
-        // Nothing to escalate: either the heuristic already answered confidently, or it has
-        // not reported yet and this effect re-runs when the verdict lands.
+        // The output's inherited verdict decides here and now (no local pass ever runs
+        // on a derived file, so there is nothing to defer to): a confident one stands,
+        // anything else - including no verdict at all, e.g. a new_file-mode delivery -
+        // escalates. A stub not yet in the snapshot falls through to dispatch too.
         if (outputStub && !shouldDispatchToAi(nextCategory, outputStub))
           continue;
         void runPolicyOnFile(
@@ -326,6 +328,9 @@ export function usePolicyAutoRun(): void {
   // Poll each in-flight run to a terminal state.
   useEffect(() => {
     for (const run of runs) {
+      // A browser-local run has no server-side status: polling it 404s (and after MAX_NOT_FOUND
+      // marks a run that actually succeeded as failed). Its own pass settles it.
+      if (run.browserLocal) continue;
       if (isTerminal(run.status) || polling.current.has(run.runId)) continue;
       polling.current.add(run.runId);
       void poll(run.runId, onRunFinished).finally(() =>
