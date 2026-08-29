@@ -94,6 +94,9 @@ function register(page: Page, runId: string) {
 
 test.describe("v2 editor - the overlay stays in register with the page", () => {
   test("a painted line never occupies more than one row", async ({ page }) => {
+    // The 140-char burst is real typing work; CI WebKit needs more than the
+    // default budget for it (same allowance the width-mode specs take).
+    test.setTimeout(180_000);
     await open(page);
     const runId = await findRun(page);
     const run = page.locator(`[data-testid="v2-run-${runId}"]`);
@@ -129,6 +132,7 @@ test.describe("v2 editor - the overlay stays in register with the page", () => {
   test("the overlay shows exactly as many rows as the model has lines", async ({
     page,
   }) => {
+    test.setTimeout(180_000);
     await open(page);
     const runId = await findRun(page);
     const run = page.locator(`[data-testid="v2-run-${runId}"]`);

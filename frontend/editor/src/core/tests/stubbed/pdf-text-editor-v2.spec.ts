@@ -3215,13 +3215,15 @@ test.describe("PDF text editor v2 - image manipulation", () => {
     if (!box) throw new Error("image overlay has no bounding box");
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
     await page.mouse.down();
-    await page.mouse.move(
-      box.x + box.width / 2 + 80,
-      box.y + box.height / 2 + 40,
-      {
-        steps: 5,
-      },
-    );
+    // Paced one move per task: WebKit delivers `steps:` moves in one batch,
+    // which react-rnd's delta tracking collapses to a fraction of the drag.
+    for (let i = 1; i <= 5; i += 1) {
+      await page.mouse.move(
+        box.x + box.width / 2 + (80 * i) / 5,
+        box.y + box.height / 2 + (40 * i) / 5,
+      );
+      await page.waitForTimeout(16);
+    }
     await page.mouse.up();
     await expect(page.getByTestId("v2-undo")).toBeEnabled({ timeout: 5_000 });
   });
@@ -3461,11 +3463,14 @@ test.describe("PDF text editor v2 - image transform (absolute)", () => {
     if (!box) throw new Error("image overlay has no bounding box");
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
     await page.mouse.down();
-    await page.mouse.move(
-      box.x + box.width / 2 + 90,
-      box.y + box.height / 2 + 60,
-      { steps: 5 },
-    );
+    // Paced one move per task - see the legacy-alias drag above.
+    for (let i = 1; i <= 5; i += 1) {
+      await page.mouse.move(
+        box.x + box.width / 2 + (90 * i) / 5,
+        box.y + box.height / 2 + (60 * i) / 5,
+      );
+      await page.waitForTimeout(16);
+    }
     await page.mouse.up();
     await expect(page.getByTestId("v2-undo")).toBeEnabled({ timeout: 5_000 });
   });

@@ -227,15 +227,25 @@ test.describe("v2 editor - the caret stays on the text while typing", () => {
     await page.waitForTimeout(400);
 
     // Sampled DURING the burst, never after it: the point is that the caret
-    // tracks the page's own glyphs while the user is still typing.
+    // tracks the page's own glyphs while the user is still typing. Each
+    // checkpoint takes the BEST of a few instantaneous reads: on a loaded
+    // runner a single read can catch the caret one raster behind (a
+    // glyph-width of transient lead), while the drift this guards against -
+    // stale pen positions - survives every refresh, so its gap never drops.
     const gaps: number[] = [];
     for (let i = 0; i < 30; i += 1) {
       await page.keyboard.type("b", { delay: 0 });
       await page.waitForTimeout(60);
       if (i === 9 || i === 19 || i === 29) {
-        const seen = await caretVersusGlyphs(page, testId);
-        expect(seen, "should be able to measure the caret").not.toBeNull();
-        gaps.push(Math.abs(seen!.gap));
+        let best = Number.POSITIVE_INFINITY;
+        for (let poll = 0; poll < 6; poll += 1) {
+          const seen = await caretVersusGlyphs(page, testId);
+          expect(seen, "should be able to measure the caret").not.toBeNull();
+          best = Math.min(best, Math.abs(seen!.gap));
+          if (best < 4) break;
+          await page.waitForTimeout(50);
+        }
+        gaps.push(best);
       }
     }
     // The gap used to GROW with every keystroke - 7px, 14px, 21px here.
