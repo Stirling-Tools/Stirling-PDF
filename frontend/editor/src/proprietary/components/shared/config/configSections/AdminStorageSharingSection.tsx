@@ -254,7 +254,7 @@ export default function AdminStorageSharingSection() {
                   )}
                 </Text>
                 {!frontendUrlConfigured && (
-                  <Text size="xs" c="orange">
+                  <Text size="xs" c="var(--color-amber-dark)">
                     {t(
                       "admin.settings.storage.sharing.links.frontendUrlNote",
                       "Requires a Frontend URL. ",
@@ -265,7 +265,7 @@ export default function AdminStorageSharingSection() {
                         e.preventDefault();
                         navigate("/settings/adminGeneral#frontendUrl");
                       }}
-                      c="orange"
+                      c="var(--color-amber-dark)"
                       td="underline"
                     >
                       {t(
@@ -317,7 +317,7 @@ export default function AdminStorageSharingSection() {
                   )}
                 </Text>
                 {!mailEnabled && (
-                  <Text size="xs" c="orange">
+                  <Text size="xs" c="var(--color-amber-dark)">
                     {t(
                       "admin.settings.storage.sharing.email.mailNote",
                       "Requires mail configuration. ",
@@ -328,7 +328,7 @@ export default function AdminStorageSharingSection() {
                         e.preventDefault();
                         navigate("/settings/adminConnections");
                       }}
-                      c="orange"
+                      c="var(--color-amber-dark)"
                       td="underline"
                     >
                       {t(

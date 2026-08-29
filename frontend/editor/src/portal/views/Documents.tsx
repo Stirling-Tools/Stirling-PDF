@@ -96,7 +96,7 @@ export function Documents() {
         </div>
         <Button
           variant="secondary"
-          size="sm"
+          fat
           leftSection={<DownloadIcon />}
           onClick={exportCsv}
           disabled={documents.length === 0}
@@ -107,9 +107,13 @@ export function Documents() {
 
       <ReviewQueue documents={documents} loading={state.loading} />
 
-      {/* Recorded policy-run failures. Not mounted outside dev: the endpoints are live and
-          gated, but the surface itself is unfinished (no polling, no paging, no filters).
-          Vite folds this to false in a build, so neither the view nor its fetch ships. */}
+      {/* Recorded policy, pipeline and editor failures. DEV ONLY, deliberately: this list is a
+          stand-in until failures get their own review screen, and it is not the surface we want to
+          ship. The endpoints behind it are live and gated, so nothing here is load-bearing.
+
+          Vite folds this to false in a build, so neither the section nor its fetch ships. The bell's
+          "View in processor" action is gated the same way and for the same reason - lift both
+          together when the review screen lands, or that button navigates nowhere. */}
       {import.meta.env.DEV && <FileRunEventList />}
     </div>
   );

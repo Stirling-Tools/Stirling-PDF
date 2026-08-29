@@ -244,7 +244,7 @@ export class ReorderPagesCommand extends DOMCommand {
         .map((pageNum) =>
           currentDoc.pages.find((p) => p.pageNumber === pageNum),
         )
-        .filter((page) => page !== undefined) as PDFPage[];
+        .filter((page) => page !== undefined);
 
       const remainingPages = currentDoc.pages.filter(
         (page) => !this.selectedPages!.includes(page.pageNumber),

@@ -46,12 +46,8 @@ export default function SignupRequiredBootstrap() {
         return true;
       });
     };
-    window.addEventListener("payg:signupRequired", handler as EventListener);
-    return () =>
-      window.removeEventListener(
-        "payg:signupRequired",
-        handler as EventListener,
-      );
+    window.addEventListener("payg:signupRequired", handler);
+    return () => window.removeEventListener("payg:signupRequired", handler);
   }, []);
 
   // Map the server's gate categories to user-facing nouns. The server

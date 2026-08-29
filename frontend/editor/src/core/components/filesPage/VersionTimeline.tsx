@@ -120,14 +120,14 @@ export function VersionTimeline({
       };
   const rows: Row[] = useMemo(() => {
     if (!collapsible || showAllCollapsed) {
-      return ordered.map((v) => ({ kind: "version", version: v }) as Row);
+      return ordered.map<Row>((v) => ({ kind: "version", version: v }));
     }
     const head = ordered
       .slice(0, 3)
-      .map((v) => ({ kind: "version", version: v }) as Row);
+      .map<Row>((v) => ({ kind: "version", version: v }));
     const tail = ordered
       .slice(-2)
-      .map((v) => ({ kind: "version", version: v }) as Row);
+      .map<Row>((v) => ({ kind: "version", version: v }));
     const hidden = ordered.length - 5;
     return [...head, { kind: "ellipsis", hidden }, ...tail];
   }, [collapsible, showAllCollapsed, ordered]);
@@ -219,7 +219,20 @@ export function VersionTimeline({
                     align="center"
                     style={{ flex: 1, minWidth: 0, flexWrap: "nowrap" }}
                   >
-                    <Badge size="xs" variant={isActive ? "filled" : "light"}>
+                    <Badge
+                      size="xs"
+                      variant={isActive ? "filled" : "light"}
+                      styles={
+                        isActive
+                          ? {
+                              root: {
+                                backgroundColor: "var(--c-accent-solid)",
+                              },
+                              label: { color: "var(--c-text-on-primary)" },
+                            }
+                          : undefined
+                      }
+                    >
                       v{v.versionNumber ?? 1}
                     </Badge>
                     <Text
