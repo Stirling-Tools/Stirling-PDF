@@ -92,6 +92,37 @@ export function detachedFields(
   };
 }
 
+// A save writes onto the watched path, so the watcher reports our own write as
+// an external change. Paths are muted until the post-save re-baseline lands.
+const SELF_WRITE_MAX_MS = 10_000;
+const selfWrites = new Map<string, number>();
+
+/** Mute disk checks for a path we are about to write ourselves. */
+export function beginSelfWrite(path: string): void {
+  selfWrites.set(path, Date.now() + SELF_WRITE_MAX_MS);
+}
+
+/** Unmute once the write is accounted for. Safe for an unknown path. */
+export function endSelfWrite(path: string): void {
+  selfWrites.delete(path);
+}
+
+function isSelfWrite(path: string): boolean {
+  const until = selfWrites.get(path);
+  if (until == null) return false;
+  // A save that never re-baselined must not blind us forever.
+  if (Date.now() > until) {
+    selfWrites.delete(path);
+    return false;
+  }
+  return true;
+}
+
+/** Test seam: the register is module state and would leak between cases. */
+export function __resetSelfWrites(): void {
+  selfWrites.clear();
+}
+
 /** Compare a linked stub against disk and read live bytes when it moved on.
  *  Unsaved edits win (conflict); an unreadable file reports unchanged. */
 export async function syncLinkedFileFromDisk(
@@ -101,6 +132,10 @@ export async function syncLinkedFileFromDisk(
     return { status: "not-linked" };
   }
 
+  // Our own write is in flight: reporting it as an external change would accuse
+  // the user of conflicting with themselves.
+  if (isSelfWrite(stub.localFilePath)) return { status: "unchanged" };
+
   const state = await getDiskFileState(stub.localFilePath);
   if (!state.exists) return { status: "missing" };
   if (!hasDiskChanged(stub, state)) return { status: "unchanged" };
@@ -108,6 +143,19 @@ export async function syncLinkedFileFromDisk(
 
   const bytes = await readFileFromDisk(stub.localFilePath);
   if (!bytes) return { status: "unchanged" };
+
+  // The file may still have been being written while we read it. Only commit
+  // bytes whose size and mtime held still across the read.
+  const after = await getDiskFileState(stub.localFilePath);
+  if (
+    !after.exists ||
+    after.size !== state.size ||
+    after.modifiedMs !== state.modifiedMs ||
+    bytes.byteLength !== state.size
+  ) {
+    // Baseline deliberately left un-stamped, so the next event re-reads.
+    return { status: "unchanged" };
+  }
 
   const file = new File([bytes], stub.name, {
     type: stub.type || "application/pdf",
@@ -117,7 +165,8 @@ export async function syncLinkedFileFromDisk(
 }
 
 /** Read the disk version, discarding unsaved in-app edits. Only from the "Use
- *  disk version" action - losing unsaved work must be the user's choice. */
+ *  disk version" action - losing unsaved work must be the user's choice. No
+ *  settle check here: declining silently would make the button look dead. */
 export async function loadDiskVersion(
   stub: StirlingFileStub,
 ): Promise<{ file: File; state: DiskFileState } | null> {
@@ -166,14 +215,19 @@ export async function refreshDiskBaselineAfterSave(
   StirlingFileStub,
   "diskSyncedSize" | "diskSyncedModifiedMs" | "diskConflictAt"
 > | null> {
-  if (!desktopFileLinkingSupported) return null;
-  const state = await getDiskFileState(path);
-  if (!state.exists) return null;
-  // Writing our version out is one way of resolving a divergence, so the
-  // conflict marker goes with it.
-  const baseline = { ...diskBaseline(state), diskConflictAt: undefined };
-  await fileStorage.updateFileMetadata(fileId, baseline);
-  return baseline;
+  try {
+    if (!desktopFileLinkingSupported) return null;
+    const state = await getDiskFileState(path);
+    if (!state.exists) return null;
+    // Writing our version out is one way of resolving a divergence, so the
+    // conflict marker goes with it.
+    const baseline = { ...diskBaseline(state), diskConflictAt: undefined };
+    await fileStorage.updateFileMetadata(fileId, baseline);
+    return baseline;
+  } finally {
+    // The write is now accounted for, however it went.
+    endSelfWrite(path);
+  }
 }
 
 /** Drop a linked file whose disk original is gone, copy and all. */

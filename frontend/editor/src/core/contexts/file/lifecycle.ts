@@ -9,6 +9,7 @@ import {
   StirlingFileStub,
   ProcessedFilePage,
 } from "@app/types/fileContext";
+import { cancelDiskConflict } from "@app/services/diskConflictPrompt";
 
 const DEBUG = process.env.NODE_ENV === "development";
 
@@ -69,6 +70,7 @@ export class FileLifecycleManager {
     fileId: FileId,
     stateRef?: React.MutableRefObject<FileContextState>,
   ): void => {
+    cancelDiskConflict(fileId);
     // Use comprehensive cleanup (same as removeFiles)
     this.cleanupAllResourcesForFile(fileId, stateRef);
 
@@ -147,6 +149,9 @@ export class FileLifecycleManager {
     stateRef?: React.MutableRefObject<FileContextState>,
   ): void => {
     fileIds.forEach((fileId) => {
+      // A queued conflict for a file that is gone would name it in a blocking
+      // modal whose Use-disk button then no-ops against the filesRef guard.
+      cancelDiskConflict(fileId);
       // Clean up all resources for this file
       this.cleanupAllResourcesForFile(fileId, stateRef);
     });

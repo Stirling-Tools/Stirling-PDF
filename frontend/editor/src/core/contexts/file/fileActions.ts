@@ -37,6 +37,7 @@ import {
   notifyOpenFileDeleted,
   saveOrphanAsCopy,
 } from "@app/services/diskFileSync";
+import { isPristineLocalPassthrough } from "@app/services/pruneMissingRecentFiles";
 import { getDiskFileState } from "@app/services/desktopFileLink";
 import { requestDiskConflictChoice } from "@app/services/diskConflictPrompt";
 const DEBUG = process.env.NODE_ENV === "development";
@@ -239,6 +240,11 @@ export function createChildStub(
 
     // Mark as dirty if parent has a localFilePath (modified file not yet saved to disk)
     isDirty: parentStub.localFilePath ? true : undefined,
+
+    // Disk markers describe the parent's relationship with disk at conflict
+    // time; inheriting diskConflictAt also suppresses the child's own prompt.
+    diskConflictAt: undefined,
+    diskReloadedAt: undefined,
   };
 
   if (DEBUG) {
@@ -894,6 +900,16 @@ export async function resyncFilesFromDisk(
     }
 
     if (outcome.status === "updated") {
+      // The stat, the read and this commit are all awaited, so the decision was
+      // made against a snapshot. Re-check before overwriting the user's bytes.
+      const latest = stateRef.current.files.byId[fileId];
+      if (
+        !latest ||
+        latest.isDirty ||
+        latest.localFilePath !== stub.localFilePath
+      ) {
+        continue;
+      }
       const { file, state } = outcome;
       const reloadedAt = Date.now();
       filesRef.current.set(fileId, createStirlingFile(file, fileId));
@@ -1043,7 +1059,11 @@ export async function addStirlingFileStubs(
         // A desktop file only caches disk, so reconcile BEFORE serving it, or
         // external edits stay invisible and deleted files still open.
         const diskSync = await syncLinkedFileFromDisk(stub);
-        if (diskSync.status === "missing") {
+        // Only an unedited v1 passthrough holds nothing the disk file did not;
+        // anything else is detached below, never deleted.
+        const lostPath =
+          diskSync.status === "missing" ? stub.localFilePath : undefined;
+        if (diskSync.status === "missing" && isPristineLocalPassthrough(stub)) {
           // Deleted between the list being drawn and this open; remove it rather
           // than serving a copy of a file the user deleted.
           console.warn(
@@ -1086,9 +1106,24 @@ export async function addStirlingFileStubs(
 
         filesRef.current.set(fileId, stirlingFile);
 
+        if (lostPath) {
+          // The original is gone but this record is not a pristine passthrough,
+          // so it holds work only we have. Cut the link, never delete it.
+          lifecycleManager.updateStirlingFileStub(
+            fileId,
+            detachedFields(lostPath),
+            stateRef,
+          );
+          notifyOpenFileDeleted([stub.name]);
+        }
+
+        // An edit committed while we were reading disk must not be discarded by
+        // a decision taken before it existed.
+        const stillClean = !stateRef.current.files.byId[fileId]?.isDirty;
+
         // Workbench selectors only see the file once something dispatches; must
         // follow the filesRef write or the update is dropped.
-        if (diskSync.status === "updated") {
+        if (diskSync.status === "updated" && stillClean) {
           const { file, state } = diskSync;
           const reloadedAt = Date.now();
           void persistDiskUpdate(fileId, file, state, reloadedAt).catch(

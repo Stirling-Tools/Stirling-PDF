@@ -16,7 +16,7 @@ export function hasLocalRecord(stub: StirlingFileStub): boolean {
 
 /** Unedited v1 holds the same bytes as disk, so losing it loses nothing unique.
  *  Non-leaf is excluded: it is the version-history root "revert to original" needs. */
-function isPristineLocalPassthrough(stub: StirlingFileStub): boolean {
+export function isPristineLocalPassthrough(stub: StirlingFileStub): boolean {
   return (
     !stub.isDirty &&
     stub.isLeaf !== false &&

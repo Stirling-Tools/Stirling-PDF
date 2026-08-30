@@ -43,6 +43,7 @@ vi.mock("@app/services/exportWithPolicy", () => ({ downloadFileWithPolicy }));
 const alertMock = vi.hoisted(() => vi.fn());
 vi.mock("@app/components/toast", () => ({ alert: alertMock }));
 
+import { getDiskFileState } from "@app/services/desktopFileLink";
 import {
   syncLinkedFileFromDisk,
   hasDiskChanged,
@@ -56,6 +57,9 @@ import {
   notifyDiskConflict,
   notifyDiskReloaded,
   notifyOpenFileDeleted,
+  beginSelfWrite,
+  endSelfWrite,
+  __resetSelfWrites,
 } from "@app/services/diskFileSync";
 
 function stub(overrides: Partial<StirlingFileStub> = {}): StirlingFileStub {
@@ -79,6 +83,7 @@ beforeEach(() => {
   diskState.supported = true;
   diskState.state = { exists: true, size: 100, modifiedMs: 5000 };
   diskState.bytes = new Uint8Array([1, 2, 3]).buffer;
+  __resetSelfWrites();
   vi.clearAllMocks();
   downloadFileWithPolicy.mockResolvedValue({
     savedPath: "C:/elsewhere/report.pdf",
@@ -188,10 +193,64 @@ describe("syncLinkedFileFromDisk", () => {
   });
 
   it("re-reads a legacy record that has no baseline", async () => {
+    diskState.state = { exists: true, size: 3, modifiedMs: 5000 };
     const result = await syncLinkedFileFromDisk(
       stub({ diskSyncedSize: undefined, diskSyncedModifiedMs: undefined }),
     );
     expect(result.status).toBe("updated");
+  });
+
+  it("refuses bytes that moved on disk while we were reading them", async () => {
+    // Another process was mid-write: committing this read would install a
+    // truncated PDF and then persist it over the cached copy.
+    const stat = vi.mocked(getDiskFileState);
+    stat.mockResolvedValueOnce({ exists: true, size: 200, modifiedMs: 9000 });
+    stat.mockResolvedValueOnce({ exists: true, size: 400, modifiedMs: 9500 });
+    const result = await syncLinkedFileFromDisk(stub());
+    expect(result.status).toBe("unchanged");
+  });
+
+  it("refuses a read shorter than the file it was stat'd against", async () => {
+    const stat = vi.mocked(getDiskFileState);
+    stat.mockResolvedValueOnce({ exists: true, size: 400, modifiedMs: 9000 });
+    stat.mockResolvedValueOnce({ exists: true, size: 400, modifiedMs: 9000 });
+    const result = await syncLinkedFileFromDisk(stub());
+    expect(result.status).toBe("unchanged");
+  });
+});
+
+describe("self-write muting", () => {
+  const path = "C:/docs/report.pdf";
+  const moved = () => stub({ diskSyncedSize: 1, diskSyncedModifiedMs: 1 });
+
+  it("does not report our own save as an external change", async () => {
+    diskState.state = { exists: true, size: 3, modifiedMs: 9000 };
+    beginSelfWrite(path);
+    const result = await syncLinkedFileFromDisk(moved());
+    expect(result.status).toBe("unchanged");
+    // Muted before the stat, so a half-written file is never even read.
+    expect(vi.mocked(getDiskFileState)).not.toHaveBeenCalled();
+  });
+
+  it("picks the file up again once the write is accounted for", async () => {
+    diskState.state = { exists: true, size: 3, modifiedMs: 9000 };
+    beginSelfWrite(path);
+    endSelfWrite(path);
+    const result = await syncLinkedFileFromDisk(moved());
+    expect(result.status).toBe("updated");
+  });
+
+  it("releases itself if the save never re-baselines", async () => {
+    vi.useFakeTimers();
+    try {
+      diskState.state = { exists: true, size: 3, modifiedMs: 9000 };
+      beginSelfWrite(path);
+      vi.advanceTimersByTime(11_000);
+      const result = await syncLinkedFileFromDisk(moved());
+      expect(result.status).toBe("updated");
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 
@@ -347,6 +406,20 @@ describe("refreshDiskBaselineAfterSave", () => {
     expect(
       await refreshDiskBaselineAfterSave("file-1" as FileId, "/x.pdf"),
     ).toBeNull();
+  });
+
+  it("releases the self-write mute, even when it stamps nothing", async () => {
+    diskState.state = { exists: false, size: 0, modifiedMs: 0 };
+    beginSelfWrite("C:/docs/report.pdf");
+    await refreshDiskBaselineAfterSave(
+      "file-1" as FileId,
+      "C:/docs/report.pdf",
+    );
+    diskState.state = { exists: true, size: 3, modifiedMs: 9000 };
+    const result = await syncLinkedFileFromDisk(
+      stub({ diskSyncedSize: 1, diskSyncedModifiedMs: 1 }),
+    );
+    expect(result.status).toBe("updated");
   });
 });
 
