@@ -219,10 +219,11 @@ describe("apiClient", () => {
     // Import apiClient after mocking
     const { default: apiClient } = await import("@app/services/apiClient");
 
-    // Mock window.location for redirect test
+    // On /editor when the session dies: the return path must ride along so the
+    // login screen sends the user back here, not to the role-based landing.
     Object.defineProperty(window, "location", {
       writable: true,
-      value: { href: "" },
+      value: { href: "", pathname: "/editor", search: "" },
     });
 
     const mockAdapter = vi.fn((config) => {
@@ -245,8 +246,50 @@ describe("apiClient", () => {
     } catch (_) {
       // Verify refresh was attempted
       expect(supabase.auth.refreshSession).toHaveBeenCalled();
-      // Verify redirect to login
-      expect(window.location.href).toBe("/login");
+      // Verify redirect to login carries the return path
+      expect(window.location.href).toBe("/login?next=%2Feditor");
+    }
+  });
+
+  it("does not redirect (or loop) when already on the login page", async () => {
+    expectConsole.error(/\[API Client\] Token refresh failed/);
+    const oldSession = { access_token: "old", user: { id: "user-123" } };
+    vi.mocked(supabase.auth.getSession).mockResolvedValue({
+      data: { session: oldSession as unknown as Session },
+      error: null,
+    });
+    vi.mocked(supabase.auth.refreshSession).mockResolvedValue({
+      data: { user: null, session: null },
+      error: {
+        name: "AuthError",
+        message: "Refresh failed",
+        status: 400,
+        code: "auth_error",
+      } as unknown as AuthError,
+    });
+
+    const { default: apiClient } = await import("@app/services/apiClient");
+
+    Object.defineProperty(window, "location", {
+      writable: true,
+      value: { href: "", pathname: "/login", search: "?next=%2Feditor" },
+    });
+
+    apiClient.defaults.adapter = vi.fn((config) =>
+      Promise.reject(
+        Object.assign(new Error("Unauthorized"), {
+          response: { status: 401, data: { error: "Unauthorized" } },
+          config,
+        }),
+      ),
+    );
+
+    try {
+      await apiClient.get("/api/v1/test");
+      expect(true).toBe(false);
+    } catch (_) {
+      // Left untouched: no second redirect off the login page.
+      expect(window.location.href).toBe("");
     }
   });
 });
