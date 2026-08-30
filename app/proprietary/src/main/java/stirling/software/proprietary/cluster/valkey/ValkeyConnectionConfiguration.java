@@ -508,15 +508,18 @@ public class ValkeyConnectionConfiguration {
                         target,
                         tls,
                         ex.getMessage());
-                try {
-                    Thread.sleep(3000);
-                } catch (InterruptedException ie) {
-                    // Destroy first: an armed interrupt aborts Lettuce's shutdown await and
-                    // leaks the client resources.
-                    factory.destroy();
-                    Thread.currentThread().interrupt();
-                    throw new IllegalStateException(
-                            unreachableMessage(attempt, target, tls, last), last);
+                // No backoff after the final attempt: it would only delay the throw below.
+                if (attempt < BOOT_PROBE_ATTEMPTS) {
+                    try {
+                        Thread.sleep(3000);
+                    } catch (InterruptedException ie) {
+                        // Destroy first: an armed interrupt aborts Lettuce's shutdown await and
+                        // leaks the client resources.
+                        factory.destroy();
+                        Thread.currentThread().interrupt();
+                        throw new IllegalStateException(
+                                unreachableMessage(attempt, target, tls, last), last);
+                    }
                 }
             }
         }
