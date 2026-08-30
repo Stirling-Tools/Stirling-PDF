@@ -3931,7 +3931,6 @@ label = "Y Position"
 
 [crop.error]
 failed = "Failed to crop PDF"
-invalidArea = "Crop area extends beyond PDF boundaries"
 
 [crop.preview]
 title = "Crop Area Selection"
