@@ -65,6 +65,7 @@ export function useFormDetectionModelStatus() {
   }, [fetchStatus]);
 
   const active = status?.status;
+  const featureEnabled = status?.enabled;
 
   // Poll only while an install is in flight.
   useEffect(() => {
@@ -75,7 +76,8 @@ export function useFormDetectionModelStatus() {
     return undefined;
   }, [active, fetchStatus]);
 
-  // When readiness flips, the tool availability cache must be refreshed.
+  // Readiness and the master switch both gate the endpoint, so either flipping must refresh
+  // the tool availability cache.
   useEffect(() => {
     if (active === "ready" || active === "not_installed") {
       void queryClient.invalidateQueries({
@@ -85,7 +87,7 @@ export function useFormDetectionModelStatus() {
         queryKey: qk.endpointEnabled("form-detection"),
       });
     }
-  }, [active, queryClient]);
+  }, [active, featureEnabled, queryClient]);
 
   const install = useCallback(
     async (modelId: string) => {

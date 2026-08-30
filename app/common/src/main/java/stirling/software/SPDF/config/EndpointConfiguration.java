@@ -648,6 +648,10 @@ public class EndpointConfiguration {
             disableEndpoint("accessibility-report");
         }
 
+        // Only FormDetectionModelManager (proprietary) can enable this; default it off so a core
+        // build does not advertise a tool whose controller is not on the classpath.
+        disableEndpoint("form-detection", DisableReason.DEPENDENCY);
+
         if (!applicationProperties.getSystem().isEnableUrlToPDF()) {
             disableEndpoint("url-to-pdf");
         }

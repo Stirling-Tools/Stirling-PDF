@@ -271,7 +271,12 @@ export default function AdminFormDetectionSection() {
                   size="sm"
                   variant={isInstalled ? "secondary" : "primary"}
                   loading={isBusy || isDownloading}
-                  disabled={!installable || inFlight || !enabled}
+                  disabled={
+                    !installable ||
+                    inFlight ||
+                    !enabled ||
+                    !serverEngineAvailable
+                  }
                   onClick={() => doInstall(entry.id)}
                 >
                   {isInstalled
@@ -365,7 +370,7 @@ export default function AdminFormDetectionSection() {
               <Tooltip
                 content={t(
                   "admin.formDetection.description",
-                  "Lets users make PDFs fillable by detecting text fields, checkboxes and signature areas with a local AI model. No data leaves your deployment.",
+                  "Detects text fields, checkboxes and signature areas in a PDF and turns them into fillable form fields. Detection runs on this server with the model you install below.",
                 )}
                 position="top"
                 arrow

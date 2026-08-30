@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.net.URI;
@@ -30,6 +31,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import com.sun.net.httpserver.HttpServer;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
+import stirling.software.SPDF.config.EndpointConfiguration.DisableReason;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.formdetection.catalog.ModelCatalogService;
@@ -95,6 +97,21 @@ class FormDetectionModelManagerTest {
             ModelCatalogEntry entry,
             EndpointConfiguration ep,
             ApplicationProperties props) {
+        return manager(dir, entry, ep, props, true);
+    }
+
+    /** Stands in for a build packaged without the ONNX runtime, where the tool cannot run. */
+    private FormDetectionModelManager managerWithoutEngine(
+            Path dir, ModelCatalogEntry entry, EndpointConfiguration ep) {
+        return manager(dir, entry, ep, new ApplicationProperties(), false);
+    }
+
+    private FormDetectionModelManager manager(
+            Path dir,
+            ModelCatalogEntry entry,
+            EndpointConfiguration ep,
+            ApplicationProperties props,
+            boolean serverEngineAvailable) {
         RuntimePathConfig paths = Mockito.mock(RuntimePathConfig.class);
         Mockito.when(paths.getFormDetectionModelPath()).thenReturn(dir.toString());
         ModelCatalogService catalog = Mockito.mock(ModelCatalogService.class);
@@ -112,6 +129,11 @@ class FormDetectionModelManagerTest {
                 conn.setConnectTimeout(5000);
                 conn.setReadTimeout(10000);
                 return conn;
+            }
+
+            @Override
+            boolean isServerEngineAvailable() {
+                return serverEngineAvailable;
             }
         };
     }
@@ -158,6 +180,94 @@ class FormDetectionModelManagerTest {
         assertFalse(Files.exists(dir.resolve("test-model.onnx.tmp")), "temp cleaned up");
         assertFalse(m.isReady());
         Mockito.verify(ep, Mockito.never()).enableEndpoint("form-detection");
+    }
+
+    @Test
+    void followsRedirectsOnlyWithinTheAllowedDomains() throws Exception {
+        String from = "https://huggingface.co/a/b.onnx";
+        // Hugging Face hands the file off to its own CDN, which is a subdomain of hf.co.
+        assertEquals(
+                "https://cdn-lfs.hf.co/x",
+                FormDetectionModelManager.requireAllowedRedirect(from, "https://cdn-lfs.hf.co/x"));
+        assertEquals(
+                "https://huggingface.co/c/d.onnx",
+                FormDetectionModelManager.requireAllowedRedirect(from, "/c/d.onnx"));
+    }
+
+    @Test
+    void rejectsRedirectsOffTheAllowlist() {
+        String from = "https://huggingface.co/a/b.onnx";
+        assertThrows(
+                IOException.class,
+                () ->
+                        FormDetectionModelManager.requireAllowedRedirect(
+                                from, "https://evil.example/x"));
+        assertThrows(
+                IOException.class,
+                () ->
+                        FormDetectionModelManager.requireAllowedRedirect(
+                                from, "https://huggingface.co.evil.example/x"));
+        assertThrows(
+                IOException.class,
+                () ->
+                        FormDetectionModelManager.requireAllowedRedirect(
+                                from, "http://huggingface.co/x"));
+        assertThrows(
+                IOException.class,
+                () ->
+                        FormDetectionModelManager.requireAllowedRedirect(
+                                from, "https://user@huggingface.co/x"));
+    }
+
+    @Test
+    void abortsAnOversizedDownloadAndLeavesNoPartialFile(@TempDir Path dir) throws Exception {
+        // Well past the 8MB slack the manager allows over the catalogue size.
+        long size = modelBytes.length + 9L * 1024 * 1024;
+        server.createContext(
+                "/huge.onnx",
+                ex -> {
+                    ex.sendResponseHeaders(200, size);
+                    byte[] chunk = new byte[1 << 16];
+                    try (OutputStream body = ex.getResponseBody()) {
+                        for (long sent = 0; sent < size; sent += chunk.length) {
+                            body.write(chunk, 0, (int) Math.min(chunk.length, size - sent));
+                        }
+                    } catch (IOException ignored) {
+                        // Expected: the client aborts as soon as the ceiling trips.
+                    }
+                    ex.close();
+                });
+        FormDetectionModelManager m =
+                manager(
+                        dir,
+                        entry(ALLOWED_URL + "/huge.onnx", modelSha),
+                        Mockito.mock(EndpointConfiguration.class));
+
+        m.startInstall("test-model");
+        awaitState(m, "failed", 15000);
+
+        assertFalse(
+                Files.exists(dir.resolve("test-model.onnx")), "no model on an aborted download");
+        assertFalse(
+                Files.exists(dir.resolve("test-model.onnx.tmp")), "partial download is deleted");
+        assertEquals(0, m.status().getProgress(), "progress resets on failure");
+        assertTrue(
+                m.status().getError().contains("exceeded the expected size"),
+                "the size ceiling, not the checksum, is what stopped it");
+    }
+
+    @Test
+    void doesNotEnableTheEndpointWhenTheOnnxEngineIsAbsent(@TempDir Path dir) throws Exception {
+        EndpointConfiguration ep = Mockito.mock(EndpointConfiguration.class);
+        FormDetectionModelManager m =
+                managerWithoutEngine(dir, entry(ALLOWED_URL + "/model.onnx", modelSha), ep);
+
+        m.startInstall("test-model");
+        awaitState(m, "ready", 5000);
+
+        Mockito.verify(ep, Mockito.never()).enableEndpoint("form-detection");
+        Mockito.verify(ep, Mockito.atLeastOnce())
+                .disableEndpoint("form-detection", DisableReason.DEPENDENCY);
     }
 
     @Test

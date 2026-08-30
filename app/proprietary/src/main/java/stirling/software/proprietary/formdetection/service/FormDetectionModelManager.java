@@ -67,6 +67,12 @@ public class FormDetectionModelManager {
 
     private static final int MAX_REDIRECTS = 5;
 
+    /** Slack over the catalogue size; a larger body could never match the checksum anyway. */
+    private static final long DOWNLOAD_SLACK_BYTES = 8L * 1024 * 1024;
+
+    /** Ceiling when neither the catalogue nor Content-Length declares a size. */
+    private static final long MAX_DOWNLOAD_BYTES = 512L * 1024 * 1024;
+
     /**
      * Whether the ONNX engine is bundled in this build; the jar only ships with {@code
      * -PbundleOnnxRuntime=true}. Without it the tool cannot run at all.
@@ -125,11 +131,18 @@ public class FormDetectionModelManager {
     private void applyEndpointState() {
         if (!isFeatureEnabled()) {
             endpointConfiguration.disableEndpoint(ENDPOINT_KEY, DisableReason.CONFIG);
-        } else if (state == FormDetectionStatus.READY && getActiveModelFile().isPresent()) {
+        } else if (isServerEngineAvailable()
+                && state == FormDetectionStatus.READY
+                && getActiveModelFile().isPresent()) {
             endpointConfiguration.enableEndpoint(ENDPOINT_KEY);
         } else {
             endpointConfiguration.disableEndpoint(ENDPOINT_KEY, DisableReason.DEPENDENCY);
         }
+    }
+
+    /** Package-private so a test can simulate a build packaged without the ONNX runtime. */
+    boolean isServerEngineAvailable() {
+        return SERVER_ENGINE_AVAILABLE;
     }
 
     public boolean isFeatureEnabled() {
@@ -195,6 +208,7 @@ public class FormDetectionModelManager {
                             } catch (Exception e) {
                                 log.error("Auto Form Detection install failed for {}", modelId, e);
                                 error = e.getMessage();
+                                progress = 0;
                                 // Keep a previously-installed model usable if the new one failed.
                                 state =
                                         getActiveModelFile().isPresent()
@@ -244,6 +258,7 @@ public class FormDetectionModelManager {
             conn = openModelDownload(url);
             long total =
                     entry.getSizeBytes() > 0 ? entry.getSizeBytes() : conn.getContentLengthLong();
+            long ceiling = total > 0 ? total + DOWNLOAD_SLACK_BYTES : MAX_DOWNLOAD_BYTES;
             try (InputStream in = conn.getInputStream();
                     OutputStream out =
                             Files.newOutputStream(tmp, CREATE, TRUNCATE_EXISTING, WRITE)) {
@@ -251,14 +266,28 @@ public class FormDetectionModelManager {
                 long read = 0;
                 int n;
                 while ((n = in.read(buf)) >= 0) {
+                    read += n;
+                    if (read > ceiling) {
+                        throw new IOException(
+                                "Model download exceeded the expected size of "
+                                        + ceiling
+                                        + " bytes");
+                    }
                     out.write(buf, 0, n);
                     digest.update(buf, 0, n);
-                    read += n;
                     if (total > 0) {
                         progress = (int) Math.min(99, (read * 100) / total);
                     }
                 }
             }
+        } catch (IOException | RuntimeException e) {
+            // The partial file can never verify, so do not leave it on the configs volume.
+            try {
+                Files.deleteIfExists(tmp);
+            } catch (IOException suppressed) {
+                e.addSuppressed(suppressed);
+            }
+            throw e;
         } finally {
             if (conn != null) {
                 conn.disconnect();
@@ -331,8 +360,11 @@ public class FormDetectionModelManager {
                 || status == 308;
     }
 
-    /** Resolve a redirect target and re-apply the https + host allowlist to it. */
-    private static String requireAllowedRedirect(String from, String location) throws IOException {
+    /**
+     * Resolve a redirect target and re-apply the https + host allowlist to it. Package-private so
+     * the allowlist can be tested directly.
+     */
+    static String requireAllowedRedirect(String from, String location) throws IOException {
         URI next;
         try {
             next = URI.create(from).resolve(location);
@@ -484,7 +516,7 @@ public class FormDetectionModelManager {
                 isWritable(dir),
                 catalog.getAll(),
                 isFeatureEnabled(),
-                SERVER_ENGINE_AVAILABLE,
+                isServerEngineAvailable(),
                 downloadingModelId);
     }
 

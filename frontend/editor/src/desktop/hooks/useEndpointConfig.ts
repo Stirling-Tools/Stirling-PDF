@@ -483,6 +483,3 @@ export function useEndpointConfig(): EndpointConfig {
 
   return { backendUrl };
 }
-
-// Desktop endpoint config holds no module-level cache; nothing to invalidate.
-export function invalidateEndpointCache() {}
