@@ -358,26 +358,26 @@ for (const theme of ["light", "dark"] as const) {
     await page.emulateMedia({ colorScheme: theme });
     await installTauri(page);
 
-    // ---- 1. everything in sync -------------------------------------------
+    // 1. Everything in sync
     await gotoFiles(page);
     await stage(page, ALL_PRESENT, THREE_FILES);
     await shoot(page, "01_in_sync", theme);
 
-    // ---- 3. deleted while the app was closed ------------------------------
+    // 3. Deleted while the app was closed
     // (before 2, because 2 leaves the workbench populated)
     const withoutArchived = { ...ALL_PRESENT };
     delete withoutArchived[P.archived];
     await stage(page, withoutArchived, THREE_FILES);
     await shoot(page, "03_pruned_after_delete", theme);
 
-    // ---- 2. edited in another app ----------------------------------------
+    // 2. Edited in another app
     await stage(page, ALL_PRESENT, THREE_FILES);
     await editOnDisk(page, P.report, PDF_LARGE);
     await openCard(page, "quarterly-report.pdf");
     await page.waitForTimeout(2500);
     await shoot(page, "02_external_edit_picked_up", theme);
 
-    // ---- 4. deleted between listing and clicking --------------------------
+    // 4. Deleted between listing and clicking
     await stage(page, ALL_PRESENT, THREE_FILES);
     // The list-time check has already passed; now it goes.
     await deleteOnDisk(page, P.notes);
@@ -385,7 +385,7 @@ for (const theme of ["light", "dark"] as const) {
     await page.waitForTimeout(2000);
     await shoot(page, "04_vanished_on_open", theme);
 
-    // ---- 5. deleted while open, caught live by the watcher ----------------
+    // 5. Deleted while open, caught live by the watcher
     await stage(page, ALL_PRESENT, THREE_FILES);
     await openCard(page, "archived.pdf");
     await page.waitForTimeout(1500);
@@ -399,7 +399,7 @@ for (const theme of ["light", "dark"] as const) {
     await page.waitForTimeout(2000);
     await shoot(page, "05b_orphaned_badge", theme);
 
-    // ---- 6. disk moved on while unsaved edits were held -------------------
+    // 6. Disk moved on while unsaved edits were held
     await stage(page, ALL_PRESENT, [
       { ...THREE_FILES[0], isDirty: true },
       THREE_FILES[1],

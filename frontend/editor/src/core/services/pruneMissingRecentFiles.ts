@@ -29,7 +29,7 @@ export function isPristineLocalPassthrough(stub: StirlingFileStub): boolean {
 export interface DetachedOpenFile {
   id: FileId;
   name: string;
-  /** Where it used to live, so the caller can record it as the orphaned path. */
+  /** The now-dead disk path, so the caller can record it as the orphaned path. */
   path: string;
 }
 

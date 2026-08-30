@@ -11,7 +11,7 @@ interface FileEditorStatusDotProps {
 export function FileEditorStatusDot({ file }: FileEditorStatusDotProps) {
   const { t } = useTranslation();
 
-  // Orphaned needs its own case: it used to read "not saved to disk", making a
+  // Orphaned needs its own case: sharing "not saved to disk" would make a
   // deleted original indistinguishable from a file never saved.
   const { label, color } = (() => {
     switch (diskLinkState(file)) {

@@ -54,8 +54,8 @@ export interface StirlingFileStub extends BaseFileMetadata {
   // one of them, which is how a stale stored copy is spotted without hashing.
   diskSyncedSize?: number;
   diskSyncedModifiedMs?: number;
-  // Path this file used to be backed by, kept when the original is deleted so
-  // the badge keeps saying "not on disk" long after the toast has gone.
+  // Disk path whose original is deleted, kept so the badge keeps saying "not on
+  // disk" long after the toast has gone.
   orphanedFilePath?: string;
   // Epoch ms of an unresolved divergence: disk moved on while we held unsaved
   // edits, so two real versions exist and the user has not picked one yet.

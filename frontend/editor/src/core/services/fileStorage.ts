@@ -40,8 +40,8 @@ export interface StoredStirlingFileRecord extends BaseFileMetadata {
   // detectable without hashing. Only meaningful alongside localFilePath.
   diskSyncedSize?: number;
   diskSyncedModifiedMs?: number;
-  // Path this file used to be backed by, once its original is gone. Persisted so
-  // the "not on disk" state survives a reload instead of dying with the toast.
+  // Disk path whose original is gone. Persisted so the "not on disk" state
+  // survives a reload instead of dying with the toast.
   orphanedFilePath?: string;
   // Epoch ms of an unresolved disk-vs-unsaved-edits divergence.
   diskConflictAt?: number;
