@@ -1,4 +1,11 @@
-import { Box, Group, NumberInput, Select, Text, TextInput } from "@mantine/core";
+import {
+  Box,
+  Group,
+  NumberInput,
+  Select,
+  Text,
+  TextInput,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import StraightenOutlinedIcon from "@mui/icons-material/StraightenOutlined";
 import CropSquareOutlinedIcon from "@mui/icons-material/CropSquareOutlined";
@@ -30,7 +37,10 @@ function ownAnnotationType(
   return annotations.find((a) => a.materialId === materialId)?.type ?? null;
 }
 
-const TOOL_BUTTONS: { tool: TakeoffAnnotationType; Icon: typeof StraightenOutlinedIcon }[] = [
+const TOOL_BUTTONS: {
+  tool: TakeoffAnnotationType;
+  Icon: typeof StraightenOutlinedIcon;
+}[] = [
   { tool: "length", Icon: StraightenOutlinedIcon },
   { tool: "area", Icon: CropSquareOutlinedIcon },
   { tool: "count", Icon: NumbersOutlinedIcon },
@@ -110,7 +120,11 @@ export default function TakeoffRow({
         </Text>
       </Group>
 
-      <Group gap={6} mb={ownType === "area" ? 6 : 0} onClick={(e) => e.stopPropagation()}>
+      <Group
+        gap={6}
+        mb={ownType === "area" ? 6 : 0}
+        onClick={(e) => e.stopPropagation()}
+      >
         <TextInput
           placeholder={t("takeoff.row.unit", "unit")}
           value={material.unit}
@@ -139,7 +153,11 @@ export default function TakeoffRow({
           style={{ width: 84 }}
         />
         <Text size="xs" fw={600} ml="auto">
-          ${lineTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          $
+          {lineTotal.toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}
         </Text>
       </Group>
 
@@ -160,13 +178,18 @@ export default function TakeoffRow({
           />
           <Select
             aria-label={t("takeoff.row.deductsFrom", "Deduct from")}
-            placeholder={t("takeoff.row.deductsFromPlaceholder", "Deduct from…")}
+            placeholder={t(
+              "takeoff.row.deductsFromPlaceholder",
+              "Deduct from…",
+            )}
             data={deductCandidates.map((m) => ({
               value: m.id,
               label: m.name || t("takeoff.row.unnamed", "Unnamed item"),
             }))}
             value={material.deductsFromMaterialId ?? null}
-            onChange={(v) => onChange({ deductsFromMaterialId: v ?? undefined })}
+            onChange={(v) =>
+              onChange({ deductsFromMaterialId: v ?? undefined })
+            }
             size="xs"
             clearable
             style={{ flex: 1 }}

@@ -1,6 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Box, Group, ScrollArea, Select, Stack, Text, TextInput, Tooltip } from "@mantine/core";
+import {
+  Box,
+  Group,
+  ScrollArea,
+  Select,
+  Stack,
+  Text,
+  TextInput,
+  Tooltip,
+} from "@mantine/core";
 import type { PDFDocumentProxy } from "pdfjs-dist";
 import ArrowBackOutlinedIcon from "@mui/icons-material/ArrowBackOutlined";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
@@ -182,26 +191,37 @@ const TakeoffWorkbenchView = ({ data }: { data: TakeoffWorkbenchData }) => {
 
   const [materials, setMaterials] = useState<TakeoffMaterial[]>([]);
   const [annotations, setAnnotations] = useState<TakeoffAnnotation[]>([]);
-  const [pageScales, setPageScales] = useState<Record<number, TakeoffPageScale>>({});
+  const [pageScales, setPageScales] = useState<
+    Record<number, TakeoffPageScale>
+  >({});
 
   const [pdfDoc, setPdfDoc] = useState<PDFDocumentProxy | null>(null);
   const [pageIndex, setPageIndex] = useState(0);
   const [numPages, setNumPages] = useState(1);
   const [zoom, setZoom] = useState(DEFAULT_ZOOM);
-  const [pageDims, setPageDims] = useState<{ width: number; height: number } | null>(null);
+  const [pageDims, setPageDims] = useState<{
+    width: number;
+    height: number;
+  } | null>(null);
 
   const [armedMaterialId, setArmedMaterialId] = useState<string | null>(null);
-  const [armedTool, setArmedTool] = useState<TakeoffAnnotationType | null>(null);
+  const [armedTool, setArmedTool] = useState<TakeoffAnnotationType | null>(
+    null,
+  );
   const [inProgress, setInProgress] = useState<TakeoffPoint[]>([]);
   const [hoverPoint, setHoverPoint] = useState<TakeoffPoint | null>(null);
   const [dragState, setDragState] = useState<DragState | null>(null);
 
   const [calibrating, setCalibrating] = useState(false);
-  const [calibrationPrompt, setCalibrationPrompt] = useState<{ pointsSpan: number } | null>(null);
+  const [calibrationPrompt, setCalibrationPrompt] = useState<{
+    pointsSpan: number;
+  } | null>(null);
   const [calibrationValue, setCalibrationValue] = useState("");
   const [calibrationUnit, setCalibrationUnit] = useState("m");
 
-  const [selectedMaterialId, setSelectedMaterialId] = useState<string | null>(null);
+  const [selectedMaterialId, setSelectedMaterialId] = useState<string | null>(
+    null,
+  );
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -251,7 +271,8 @@ const TakeoffWorkbenchView = ({ data }: { data: TakeoffWorkbenchData }) => {
       const context = canvas.getContext("2d");
       if (!context) return;
       await page.render({ canvasContext: context, viewport, canvas }).promise;
-      if (!cancelled) setPageDims({ width: viewport.width, height: viewport.height });
+      if (!cancelled)
+        setPageDims({ width: viewport.width, height: viewport.height });
     })();
     return () => {
       cancelled = true;
@@ -259,12 +280,13 @@ const TakeoffWorkbenchView = ({ data }: { data: TakeoffWorkbenchData }) => {
   }, [pdfDoc, pageIndex, zoom]);
 
   const armedMaterial = armedMaterialId
-    ? materials.find((m) => m.id === armedMaterialId) ?? null
+    ? (materials.find((m) => m.id === armedMaterialId) ?? null)
     : null;
   const currentScale = pageScales[pageIndex] ?? null;
 
   const totalCost = useMemo(
-    () => materials.reduce((s, m) => s + (m.quantity ?? 0) * (m.unitPrice ?? 0), 0),
+    () =>
+      materials.reduce((s, m) => s + (m.quantity ?? 0) * (m.unitPrice ?? 0), 0),
     [materials],
   );
 
@@ -425,7 +447,10 @@ const TakeoffWorkbenchView = ({ data }: { data: TakeoffWorkbenchData }) => {
     if (!armedMaterial || armedTool !== "area") return;
     if (inProgress.length < 3) {
       window.alert(
-        t("takeoff.needThreePoints", "Need at least 3 points to close a shape."),
+        t(
+          "takeoff.needThreePoints",
+          "Need at least 3 points to close a shape.",
+        ),
       );
       return;
     }
@@ -465,7 +490,12 @@ const TakeoffWorkbenchView = ({ data }: { data: TakeoffWorkbenchData }) => {
       const nextPageScales = { ...pageScales, [pageIndex]: nextScale };
       setPageScales(nextPageScales);
       setMaterials((prev) =>
-        recomputeIds(new Set(prev.map((m) => m.id)), prev, annotations, nextPageScales),
+        recomputeIds(
+          new Set(prev.map((m) => m.id)),
+          prev,
+          annotations,
+          nextPageScales,
+        ),
       );
     }
     setCalibrationPrompt(null);
@@ -510,7 +540,9 @@ const TakeoffWorkbenchView = ({ data }: { data: TakeoffWorkbenchData }) => {
       const filtered = prev
         .filter((m) => m.id !== id)
         .map((m) =>
-          m.deductsFromMaterialId === id ? { ...m, deductsFromMaterialId: undefined } : m,
+          m.deductsFromMaterialId === id
+            ? { ...m, deductsFromMaterialId: undefined }
+            : m,
         );
       if (!removed?.deductsFromMaterialId) return filtered;
       return recomputeIds(
@@ -552,7 +584,14 @@ const TakeoffWorkbenchView = ({ data }: { data: TakeoffWorkbenchData }) => {
   const tooltipText = dragState ? dragTooltipText : polygonTooltipText;
 
   return (
-    <Box style={{ display: "flex", flexDirection: "column", height: "100%", width: "100%" }}>
+    <Box
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        height: "100%",
+        width: "100%",
+      }}
+    >
       <Group
         justify="space-between"
         px="md"
@@ -561,7 +600,11 @@ const TakeoffWorkbenchView = ({ data }: { data: TakeoffWorkbenchData }) => {
         style={{ borderBottom: "1px solid var(--c-border)", rowGap: 8 }}
       >
         <Group gap="sm">
-          <ActionIcon variant="quiet" onClick={handleBack} aria-label={t("takeoff.back", "Back")}>
+          <ActionIcon
+            variant="quiet"
+            onClick={handleBack}
+            aria-label={t("takeoff.back", "Back")}
+          >
             <ArrowBackOutlinedIcon fontSize="small" />
           </ActionIcon>
           <Text size="sm" fw={600}>
@@ -681,7 +724,10 @@ const TakeoffWorkbenchView = ({ data }: { data: TakeoffWorkbenchData }) => {
           <ScrollArea style={{ flex: 1 }}>
             {materials.length === 0 ? (
               <Text size="xs" c="dimmed" p="md">
-                {t("takeoff.empty", "No items yet — add one to start measuring.")}
+                {t(
+                  "takeoff.empty",
+                  "No items yet — add one to start measuring.",
+                )}
               </Text>
             ) : (
               <Stack gap={0}>
@@ -746,7 +792,8 @@ const TakeoffWorkbenchView = ({ data }: { data: TakeoffWorkbenchData }) => {
                   style={{
                     position: "absolute",
                     inset: 0,
-                    cursor: calibrating || armedMaterial ? "crosshair" : "default",
+                    cursor:
+                      calibrating || armedMaterial ? "crosshair" : "default",
                   }}
                   onMouseDown={handleMouseDown}
                   onMouseMove={handleMouseMove}
@@ -766,7 +813,10 @@ const TakeoffWorkbenchView = ({ data }: { data: TakeoffWorkbenchData }) => {
 
                   {inProgress.length > 0 && (
                     <polyline
-                      points={[...inProgress, hoverPoint ?? inProgress[inProgress.length - 1]]
+                      points={[
+                        ...inProgress,
+                        hoverPoint ?? inProgress[inProgress.length - 1],
+                      ]
                         .map((p) => `${p.x * zoom},${p.y * zoom}`)
                         .join(" ")}
                       fill="rgba(220,38,38,0.12)"
@@ -781,8 +831,12 @@ const TakeoffWorkbenchView = ({ data }: { data: TakeoffWorkbenchData }) => {
                       y1={dragState.start.y * zoom}
                       x2={dragState.current.x * zoom}
                       y2={dragState.current.y * zoom}
-                      stroke={dragState.kind === "calibrate" ? "#78716C" : "#2563EB"}
-                      strokeDasharray={dragState.kind === "calibrate" ? "6 4" : undefined}
+                      stroke={
+                        dragState.kind === "calibrate" ? "#78716C" : "#2563EB"
+                      }
+                      strokeDasharray={
+                        dragState.kind === "calibrate" ? "6 4" : undefined
+                      }
                       strokeWidth={2}
                     />
                   )}

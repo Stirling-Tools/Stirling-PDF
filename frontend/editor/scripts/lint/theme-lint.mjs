@@ -642,6 +642,10 @@ const CODE_EXEMPT_PATH = [
   /mantineTheme|\/theme\.ts$|toolsTaxonomy|LayoutPreview|PageNumberPreview|CloudStorageIcons|BrandMarks/,
   /\/onboarding\//,
   /addStamp|addWatermark|\/tooltips\//,
+  // Take Off's SVG overlay draws length/area/count measurement markers on
+  // top of the rendered PDF page — annotation colours inherent to the
+  // measurement type, same rationale as the viewer's Annotation exemption.
+  /\/tools\/takeoff\//,
   // Stories are checked like app code; colour-as-data lines opt out with
   // `theme-allow-color`.
   /\.test\.[jt]sx?$|\/types\//,

@@ -4549,11 +4549,6 @@ desc = "Highlight, draw, add notes and shapes in the viewer"
 tags = "annotate,highlight,draw,markup,comment,notes,review,redline,feedback,markup tools,sticky notes,shapes,arrows,text box,freehand"
 title = "Annotate"
 
-[home.takeoff]
-desc = "Measure lengths, areas, and counts on a plan and price them out as a materials list"
-tags = "takeoff,take off,measure,measurement,estimate,estimating,quantity,quantities,construction,building,plan,drawing,ruler,area,count,scale,calibrate,materials list,cost estimate"
-title = "Take Off"
-
 [home.automate]
 desc = "Build multi-step workflows by chaining together PDF actions. Ideal for recurring tasks."
 tags = "workflow,sequence,automation,automate,batch,batch processing,pipeline,chain,multi-step,recurring,scheduled,automatic,process multiple,bulk operations"
@@ -4834,6 +4829,11 @@ title = "Split PDF by Sections"
 [home.swagger]
 tags = "API,documentation,test,swagger,API docs,REST API,endpoints,developer,API reference,API testing,OpenAPI,integration,developer docs"
 title = "API Documentation"
+
+[home.takeoff]
+desc = "Measure lengths, areas, and counts on a plan and price them out as a materials list"
+tags = "takeoff,take off,measure,measurement,estimate,estimating,quantity,quantities,construction,building,plan,drawing,ruler,area,count,scale,calibrate,materials list,cost estimate"
+title = "Take Off"
 
 [home.timestampPdf]
 desc = "Add an RFC 3161 document timestamp to prove when your PDF existed"
@@ -10673,6 +10673,54 @@ title = "API Documentation"
 
 [tableExtraxt]
 tags = "CSV,Table Extraction,extract,convert"
+
+[takeoff]
+addRow = "Add"
+back = "Back"
+calibratePlaceholder = "e.g. 5"
+calibrateTitle = "What is this length in real life?"
+cancel = "Cancel"
+confirm = "Confirm"
+dragKnownLength = "Drag a known length…"
+empty = "No items yet — add one to start measuring."
+estimatedTotal = "Estimated total"
+loading = "Loading plan…"
+materials = "Takeoffs"
+needThreePoints = "Need at least 3 points to close a shape."
+nextPage = "Next page"
+prevPage = "Previous page"
+scaleNotSet = "Scale not set"
+scaleSetWithRatio = "Scale set (≈1:{{ratio}})"
+scaleTooltip = "One scale applies to this whole page. If this sheet has multiple details at different scales (e.g. a 3D view at 1:10 next to an elevation at 1:20), recalibrate against the detail you're about to measure before drawing on it — otherwise the numbers will be wrong for anything not drawn at the calibrated scale."
+setScale = "set scale"
+setScaleFirst = "Set this page's scale first — otherwise the measurement will show 0."
+title = "Take Off"
+viewLabel = "Take Off"
+zoomIn = "Zoom in"
+zoomOut = "Zoom out"
+
+[takeoff.row]
+deductsFrom = "Deduct from"
+deductsFromPlaceholder = "Deduct from…"
+namePlaceholder = "Item name"
+notMeasured = "not measured"
+pitch = "Roof pitch (degrees)"
+pitchPlaceholder = "pitch°"
+quantity = "Quantity"
+remove = "Remove item"
+unit = "unit"
+unitPrice = "Unit price"
+unnamed = "Unnamed item"
+
+[takeoff.row.measuredAs]
+area = "Area"
+count = "Count"
+length = "Length"
+
+[takeoff.row.tool]
+area = "Area"
+count = "Count"
+length = "Length"
 
 [team]
 cancelInviteError = "Failed to cancel invitation"
