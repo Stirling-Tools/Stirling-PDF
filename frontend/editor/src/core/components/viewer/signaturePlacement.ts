@@ -35,3 +35,20 @@ export function shouldAutoExitPlacement(
     params.annotation?.type ?? params.annotation?.object?.type ?? null;
   return type === PdfAnnotationSubtype.STAMP;
 }
+
+/**
+ * Whether the stamp tool must be re-armed after a user placement.
+ *
+ * The shared "stamp" tool carries `deactivateToolAfterCreate`, so the plugin
+ * disarms it after every placement. Without an explicit re-arm the panel keeps
+ * offering "Pause placement" while clicking the page does nothing. The same
+ * exclusions as auto-exit apply: only user-placed stamps count.
+ */
+export function shouldRearmPlacement(params: AutoExitPlacementParams): boolean {
+  if (!params.autoExitEnabled || !params.userPlaced || !params.placeMultiple) {
+    return false;
+  }
+  const type =
+    params.annotation?.type ?? params.annotation?.object?.type ?? null;
+  return type === PdfAnnotationSubtype.STAMP;
+}
