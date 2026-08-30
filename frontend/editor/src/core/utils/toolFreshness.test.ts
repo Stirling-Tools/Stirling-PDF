@@ -36,9 +36,11 @@ describe("isRecentRelease", () => {
     expect(isRecentRelease("1.9.0", "2.0.0")).toBe(false);
   });
 
-  test("unknown app version keeps badges visible", () => {
-    expect(isRecentRelease("2.15.0", undefined)).toBe(true);
-    expect(isRecentRelease("2.15.0", null)).toBe(true);
+  test("unknown app version hides badges", () => {
+    expect(isRecentRelease("2.15.0", undefined)).toBe(false);
+    expect(isRecentRelease("2.15.0", null)).toBe(false);
+    expect(isRecentRelease("2.15.0", "")).toBe(false);
+    expect(isRecentRelease("2.15.0", "unknown")).toBe(false);
   });
 
   test("unparseable tagged version never badges", () => {
@@ -67,6 +69,15 @@ describe("latestTaggedVersion", () => {
     ).toBe("2.15.0");
     expect(latestTaggedVersion({ newInVersion: "2.14.0" })).toBe("2.14.0");
     expect(latestTaggedVersion({})).toBeNull();
+  });
+
+  test("a v prefix does not skew the comparison", () => {
+    expect(
+      latestTaggedVersion({
+        newInVersion: "v2.15.0",
+        updatedInVersion: "2.14.0",
+      }),
+    ).toBe("v2.15.0");
   });
 });
 
@@ -122,6 +133,16 @@ describe("acknowledgements", () => {
     expect(
       isToolFreshnessAcknowledged(acknowledged, "autoRotate", "2.16.0"),
     ).toBe(true);
+  });
+
+  test("a v prefix does not hide a newer badge", () => {
+    expect(
+      isToolFreshnessAcknowledged(
+        { autoRotate: "2.14.0" },
+        "autoRotate",
+        "v2.15.0",
+      ),
+    ).toBe(false);
   });
 
   test("persists to localStorage and survives a cache reset", () => {

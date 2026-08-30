@@ -27,6 +27,12 @@ function parseMajorMinor(
   return { major: Number(match[1]), minor: Number(match[2]) };
 }
 
+// compareVersions parses each dot-segment with parseInt, so a leading "v" reads as
+// 0; strip it so comparisons accept what parseMajorMinor already allows.
+function normalizeVersion(version: string): string {
+  return version.trim().replace(/^v/i, "");
+}
+
 // Recent = within RECENT_MINOR_WINDOW of the app's minor, or newer than the
 // build itself (registry tagged ahead, e.g. dev builds reporting 0.0.0).
 export function isRecentRelease(
@@ -36,7 +42,9 @@ export function isRecentRelease(
   const tagged = parseMajorMinor(taggedVersion);
   if (!tagged) return false;
   const current = appVersion ? parseMajorMinor(appVersion) : null;
-  if (!current) return true;
+  // Unknown app version: stay quiet. A 401 or a failed config fetch falls back to
+  // a default config with no appVersion, which would pin every badge on forever.
+  if (!current) return false;
   if (tagged.major !== current.major) return tagged.major > current.major;
   return current.minor - tagged.minor <= RECENT_MINOR_WINDOW;
 }
@@ -45,7 +53,10 @@ export function isRecentRelease(
 export function latestTaggedVersion(tool: FreshnessFields): string | null {
   const { newInVersion, updatedInVersion } = tool;
   if (newInVersion && updatedInVersion) {
-    return updateService.compareVersions(updatedInVersion, newInVersion) >= 0
+    return updateService.compareVersions(
+      normalizeVersion(updatedInVersion),
+      normalizeVersion(newInVersion),
+    ) >= 0
       ? updatedInVersion
       : newInVersion;
   }
@@ -110,7 +121,13 @@ export function isToolFreshnessAcknowledged(
   version: string,
 ): boolean {
   const seen = acknowledged[toolId];
-  return !!seen && updateService.compareVersions(seen, version) >= 0;
+  return (
+    !!seen &&
+    updateService.compareVersions(
+      normalizeVersion(seen),
+      normalizeVersion(version),
+    ) >= 0
+  );
 }
 
 // Records that the user has opened the tool at its currently tagged version.

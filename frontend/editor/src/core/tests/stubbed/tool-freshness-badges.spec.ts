@@ -49,6 +49,8 @@ test.describe("Tool freshness badges", () => {
 
     // Opening the tool acknowledges it; back on the list the badge is gone.
     await toolButton(page, "autoRotate").click();
+    // Wait for the route so the acknowledgement effect has run before navigating.
+    await expect(page).toHaveURL(/\/auto-rotate(?:$|[/?#])/);
     await page.goto("/editor", { waitUntil: "domcontentloaded" });
     await expect(toolButton(page, "autoRotate")).toBeVisible();
     await expect(badge(page, "autoRotate", "New")).toHaveCount(0);
