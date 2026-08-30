@@ -132,10 +132,14 @@ public class ProfilePictureController {
         }
         StoredImage image = stored.get();
         return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(image.contentType()))
+                // store() re-encodes every upload, so the stored type is always PNG; parsing it
+                // back would only add a 500 path for a row written by anything else.
+                .contentType(MediaType.IMAGE_PNG)
                 // Same URI for every user, so a shared browser must not reuse it. The client keeps
                 // the blob for the session anyway, so there is nothing to gain from caching here.
                 .cacheControl(CacheControl.noStore())
+                .header("X-Content-Type-Options", "nosniff")
+                .header("Content-Disposition", "inline; filename=\"avatar.png\"")
                 .body(image.data());
     }
 

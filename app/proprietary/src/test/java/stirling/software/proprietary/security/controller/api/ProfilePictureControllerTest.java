@@ -12,6 +12,8 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -30,6 +32,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -142,10 +145,23 @@ class ProfilePictureControllerTest {
 
         mockMvc.perform(get("/api/v1/user/profile-picture").principal(VIEWER))
                 .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.IMAGE_PNG))
+                .andExpect(header().string("X-Content-Type-Options", "nosniff"))
                 .andExpect(
                         result ->
                                 assertThat(result.getResponse().getHeader("Cache-Control"))
                                         .contains("no-store"));
+    }
+
+    @Test
+    void aStoredTypeThatIsNotAMediaTypeStillServesAsPngRatherThanA500() throws Exception {
+        // Nothing writes this today, but parsing the column back would turn a bad row into a 500.
+        when(profilePictureService.findImage(1L))
+                .thenReturn(Optional.of(new StoredImage(new byte[] {1, 2, 3}, "not a media type")));
+
+        mockMvc.perform(get("/api/v1/user/profile-picture").principal(VIEWER))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.IMAGE_PNG));
     }
 
     @Test
