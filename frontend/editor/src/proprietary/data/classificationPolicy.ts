@@ -56,8 +56,11 @@ export function orderRewritesFirst(categoryIds: string[]): string[] {
 const TRUSTED_CONFIDENCE: ClassificationConfidence = "high";
 
 /**
- * Whether the AI classifier should be asked about this file. Only once the heuristic has reported:
- * dispatching before then races the first pass and bills for an answer it was about to produce.
+ * Whether the AI classifier should be asked about this file. For an upload, only once the
+ * heuristic has reported: dispatching before then races the first pass and bills for an answer it
+ * was about to produce. A tool-derived file gets no local pass (useClientSideClassification skips
+ * it) and only ever carries an inherited verdict, so an absent verdict there is permanent -
+ * escalate rather than wait for a report that will never come.
  */
 export function shouldDispatchToAi(
   categoryId: string,
@@ -65,5 +68,6 @@ export function shouldDispatchToAi(
 ): boolean {
   if (!isClassificationCategory(categoryId)) return true;
   const confidence = stub.classificationConfidence;
-  return confidence != null && confidence !== TRUSTED_CONFIDENCE;
+  if (confidence == null) return Boolean(stub.derivedFromTool);
+  return confidence !== TRUSTED_CONFIDENCE;
 }

@@ -175,8 +175,8 @@ const Compare = (props: BaseToolProps) => {
   );
 
   useEffect(() => {
-    const baseFileId = params.baseFileId as FileId | null;
-    const comparisonFileId = params.comparisonFileId as FileId | null;
+    const baseFileId = params.baseFileId;
+    const comparisonFileId = params.comparisonFileId;
 
     if (!baseFileId || !comparisonFileId) {
       lastProcessedAtRef.current = null;
@@ -437,9 +437,7 @@ const Compare = (props: BaseToolProps) => {
                       : "Select the edited PDF",
                   )
             }
-            excludeIds={
-              otherSlot ? [otherSlot.stirlingFile.fileId as string] : []
-            }
+            excludeIds={otherSlot ? [otherSlot.stirlingFile.fileId] : []}
             disabled={isDisabled}
             onSelect={(result: FileSelectorResult) => {
               if (role === "base") setBaseSlot(result);

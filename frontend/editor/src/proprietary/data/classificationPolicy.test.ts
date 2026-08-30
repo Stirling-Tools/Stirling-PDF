@@ -14,6 +14,14 @@ const stub = (
 ): StirlingFileStub =>
   ({ classificationConfidence: confidence }) as StirlingFileStub;
 
+const derivedStub = (
+  confidence?: StirlingFileStub["classificationConfidence"],
+): StirlingFileStub =>
+  ({
+    derivedFromTool: true,
+    classificationConfidence: confidence,
+  }) as StirlingFileStub;
+
 describe("isClassificationCategory", () => {
   it("recognises the classification category and nothing else", () => {
     expect(isClassificationCategory("classification")).toBe(true);
@@ -87,5 +95,20 @@ describe("shouldDispatchToAi", () => {
     expect(shouldDispatchToAi("classification", stub("medium"))).toBe(true);
     expect(shouldDispatchToAi("classification", stub("low"))).toBe(true);
     expect(shouldDispatchToAi("classification", stub("none"))).toBe(true);
+  });
+
+  it("escalates a tool-derived file with no verdict at all", () => {
+    // A derived file gets no local pass (useClientSideClassification skips it), so
+    // there is no verdict to wait for: holding back would skip it forever. This is
+    // the chained case for a new_file-mode output, or a version made before the
+    // upload's verdict landed.
+    expect(shouldDispatchToAi("classification", derivedStub())).toBe(true);
+  });
+
+  it("lets a derived file's inherited verdict decide like an upload's own", () => {
+    expect(shouldDispatchToAi("classification", derivedStub("high"))).toBe(
+      false,
+    );
+    expect(shouldDispatchToAi("classification", derivedStub("low"))).toBe(true);
   });
 });

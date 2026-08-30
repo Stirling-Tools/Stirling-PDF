@@ -11,12 +11,16 @@ import { LoadingFallback } from "@app/components/shared/LoadingFallback";
 import OnboardingTour from "@app/components/onboarding/OnboardingTour";
 import Landing from "@app/routes/Landing";
 import Login from "@app/routes/Login";
+import { ResumePendingConnect } from "@app/routes/ResumePendingConnect";
 import Signup from "@app/routes/Signup";
 import AuthCallback from "@app/routes/AuthCallback";
 import ResetPassword from "@app/routes/ResetPassword";
 import OAuthConsent from "@app/routes/OAuthConsent";
+import ConnectApprove from "@app/routes/ConnectApprove";
 import ShareLinkPage from "@app/routes/ShareLinkPage";
 import { getAdminRouteExtensions } from "@app/routes/adminRouteExtensions";
+import { AppFrame } from "@app/components/layout/AppFrame";
+import { NoAppChrome } from "@app/components/layout/NoAppChrome";
 import OnboardingBootstrap from "@app/components/OnboardingBootstrap";
 import SignupRequiredBootstrap from "@app/components/SignupRequiredBootstrap";
 import UsageLimitModalHost from "@app/components/UsageLimitModalHost";
@@ -94,41 +98,63 @@ export default function App() {
           }
         />
 
-        {/* Admin-only route-set (the portal): its own top-level shell, mounted
-            before the catch-all. */}
-        {getAdminRouteExtensions()}
+        {/* Both apps, under a shared frame so the rail renders once outside them. */}
+        <Route element={<AppFrame />}>
+          {/* The portal: its own top-level shell, before the catch-all. */}
+          {getAdminRouteExtensions()}
 
-        {/* Everything else needs the auth/backend providers. RootGate makes "/"
-            route by role BEFORE any of it mounts, so a user bound for the
-            processor never boots the editor on the way. */}
-        <Route
-          path="*"
-          element={
-            <RootGate>
-              <AppProviders
-                appConfigProviderProps={{ onConfigLoaded: handleConfigLoaded }}
-              >
-                <AppLayout>
-                  <NonAuthBootstraps />
-                  <Routes>
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/signup" element={<Signup />} />
-                    <Route path="/auth/callback" element={<AuthCallback />} />
-                    <Route path="/auth/reset" element={<ResetPassword />} />
-                    <Route path="/oauth/consent" element={<OAuthConsent />} />
-                    {/* Shared-file links. Team invites are NOT routed here: on
-                        SaaS they are accepted in-app via the Supabase team
-                        invitation banner, not the Spring password-based
-                        /invite/:token page used by the self-hosted build. */}
-                    <Route path="/share/:token" element={<ShareLinkPage />} />
-                    <Route path="/*" element={<Landing />} />
-                  </Routes>
-                  <OnboardingTour />
-                </AppLayout>
-              </AppProviders>
-            </RootGate>
-          }
-        />
+          {/* Everything else needs the auth/backend providers. RootGate routes "/"
+            by role before any of it mounts. */}
+          <Route
+            path="*"
+            element={
+              <RootGate>
+                <AppProviders
+                  appConfigProviderProps={{
+                    onConfigLoaded: handleConfigLoaded,
+                  }}
+                >
+                  <AppLayout>
+                    <NonAuthBootstraps />
+                    <ResumePendingConnect />
+                    <Routes>
+                      {/* Not the app: no rail over any of these, ever. */}
+                      <Route element={<NoAppChrome />}>
+                        <Route path="/login" element={<Login />} />
+                        <Route path="/signup" element={<Signup />} />
+                        <Route
+                          path="/auth/callback"
+                          element={<AuthCallback />}
+                        />
+                        <Route path="/auth/reset" element={<ResetPassword />} />
+                        <Route
+                          path="/oauth/consent"
+                          element={<OAuthConsent />}
+                        />
+                        {/* Human half of the self-hosted account-link handshake.
+                          It lives on this origin because a customer hostname can
+                          never be in the provider's redirect allow-list. Grouped
+                          with the pages above: it is an approval step, not the
+                          app. */}
+                        <Route path="/link" element={<ConnectApprove />} />
+                        {/* Shared-file links. Team invites are NOT routed here:
+                          on SaaS they are accepted in-app via the Supabase team
+                          invitation banner, not the Spring password-based
+                          /invite/:token page used by the self-hosted build. */}
+                        <Route
+                          path="/share/:token"
+                          element={<ShareLinkPage />}
+                        />
+                      </Route>
+                      <Route path="/*" element={<Landing />} />
+                    </Routes>
+                    <OnboardingTour />
+                  </AppLayout>
+                </AppProviders>
+              </RootGate>
+            }
+          />
+        </Route>
       </Routes>
     </Suspense>
   );

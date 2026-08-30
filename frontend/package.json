@@ -38,7 +38,7 @@
     "@mantine/dates": "^8.3.1",
     "@mantine/dropzone": "^8.3.1",
     "@mantine/hooks": "^8.3.1",
-    "@mui/icons-material": "^9.2.0",
+    "@mui/icons-material": "^9.3.1",
     "@mui/material": "^9.0.0",
     "@posthog/react": "^1.8.2",
     "@reactour/tour": "^3.8.0",
@@ -48,7 +48,7 @@
     "@tailwindcss/postcss": "^4.1.13",
     "@tanstack/react-query": "^5.101.4",
     "@tanstack/react-table": "^9.1.2",
-    "@tanstack/react-virtual": "^3.13.12",
+    "@tanstack/react-virtual": "^3.14.10",
     "@tauri-apps/api": "^2.10.1",
     "@tauri-apps/plugin-dialog": "2.7.0",
     "@tauri-apps/plugin-fs": "2.5.0",
@@ -109,7 +109,7 @@
     ]
   },
   "devDependencies": {
-    "@iconify-json/material-symbols": "^1.2.83",
+    "@iconify-json/material-symbols": "^1.2.89",
     "@iconify/react": "^6.0.2",
     "@iconify/utils": "^3.1.4",
     "@playwright/test": "^1.55.0",

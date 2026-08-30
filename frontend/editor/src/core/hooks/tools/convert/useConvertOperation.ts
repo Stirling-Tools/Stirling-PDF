@@ -383,7 +383,7 @@ export const convertToApiParams = (
   formData.forEach((value, key) => {
     if (typeof value === "string") body[key] = value;
   });
-  return body as unknown as ToolApiParams[ToolEndpoint];
+  return body;
 };
 
 /**
@@ -405,12 +405,6 @@ type ConvertOptionReaders = {
     toExtension: string,
   ) => Partial<ConvertParameters>;
 };
-
-/** The reader shape collapsed for the runtime dispatch, where the endpoint is only a string. */
-type ConvertOptionReader = (
-  body: Record<string, string | undefined>,
-  toExtension: string,
-) => Partial<ConvertParameters>;
 
 // The stored values are strings; these read one back into the typed shape ConvertParameters expects,
 // validating an enum against its allowed set (asEnum) rather than blind-casting an arbitrary string.
@@ -583,12 +577,9 @@ export const convertFromApiParams = (
   const fromExtension = body.fromExtension ?? "";
   const toExtension = body.toExtension ?? "";
   const endpoint = convertEndpointFor(fromExtension, toExtension);
-  // Each reader reads only its own endpoint's fields; the runtime endpoint is just a string, so the
-  // precise per-endpoint type is recovered with one widening cast here (every reader accepts a
-  // superset string record).
-  const readOptions = endpoint
-    ? (CONVERT_OPTION_READERS[endpoint] as ConvertOptionReader | undefined)
-    : undefined;
+  // Each reader reads only its own endpoint's fields; the runtime endpoint is just a string, so
+  // readOptions is looked up per-endpoint (undefined when the pair has no reader).
+  const readOptions = endpoint ? CONVERT_OPTION_READERS[endpoint] : undefined;
   return {
     fromExtension,
     toExtension,

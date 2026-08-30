@@ -279,9 +279,7 @@ const PdfTextEditorSidebar = ({ data }: PdfTextEditorSidebarProps) => {
                   </Text>
                   <SegmentedControl
                     value={externalGroupingMode}
-                    onChange={(value) =>
-                      handleModeChangeRequest(value as GroupingMode)
-                    }
+                    onChange={(value) => handleModeChangeRequest(value)}
                     options={[
                       {
                         label: t("pdfTextEditor.groupingMode.auto", "Auto"),
