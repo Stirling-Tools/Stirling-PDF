@@ -61,7 +61,7 @@ export function ClassificationLabelsSection() {
                       )}
                       <LocalIcon icon={family.icon} width="1.1rem" />
                       <span className="classification-category-name">
-                        {family.name}
+                        {t(`classification.families.${family.id}`, family.name)}
                       </span>
                     </span>
                   }
