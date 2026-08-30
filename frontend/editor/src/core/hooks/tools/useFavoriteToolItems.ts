@@ -9,8 +9,8 @@ export function useFavoriteToolItems(
   return useMemo(() => {
     return favoriteTools
       .map((toolId) => {
-        const tool = toolRegistry[toolId as ToolId];
-        return tool ? { id: toolId as ToolId, tool } : null;
+        const tool = toolRegistry[toolId];
+        return tool ? { id: toolId, tool } : null;
       })
       .filter((x): x is { id: ToolId; tool: ToolRegistryEntry } => x !== null)
       .filter(

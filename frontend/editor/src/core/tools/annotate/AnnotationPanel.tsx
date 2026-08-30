@@ -891,7 +891,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
           ) {
             annotationApiRef?.current?.updateAnnotation?.(
               selectedAnn.object.pageIndex ?? 0,
-              selectedAnn.object.id as string,
+              selectedAnn.object.id,
               {
                 opacity: opacity / 100,
               },
@@ -906,7 +906,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
           if (selectedAnn?.object?.id && selectedAnn.object?.type === 10) {
             annotationApiRef?.current?.updateAnnotation?.(
               selectedAnn.object.pageIndex ?? 0,
-              selectedAnn.object.id as string,
+              selectedAnn.object.id,
               {
                 opacity: opacity / 100,
               },
@@ -921,7 +921,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
           if (selectedAnn?.object?.id && selectedAnn.object?.type === 12) {
             annotationApiRef?.current?.updateAnnotation?.(
               selectedAnn.object.pageIndex ?? 0,
-              selectedAnn.object.id as string,
+              selectedAnn.object.id,
               {
                 opacity: opacity / 100,
               },
@@ -936,7 +936,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
           if (selectedAnn?.object?.id && selectedAnn.object?.type === 11) {
             annotationApiRef?.current?.updateAnnotation?.(
               selectedAnn.object.pageIndex ?? 0,
-              selectedAnn.object.id as string,
+              selectedAnn.object.id,
               {
                 opacity: opacity / 100,
               },
@@ -1017,7 +1017,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
           if (selectedAnn?.object?.id) {
             annotationApiRef?.current?.updateAnnotation?.(
               selectedAnn.object.pageIndex ?? 0,
-              selectedAnn.object.id as string,
+              selectedAnn.object.id,
               {
                 color,
               },
@@ -1032,7 +1032,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
           if (selectedAnn?.object?.id) {
             annotationApiRef?.current?.updateAnnotation?.(
               selectedAnn.object.pageIndex ?? 0,
-              selectedAnn.object.id as string,
+              selectedAnn.object.id,
               {
                 color,
               },
@@ -1047,7 +1047,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
           if (selectedAnn?.object?.id) {
             annotationApiRef?.current?.updateAnnotation?.(
               selectedAnn.object.pageIndex ?? 0,
-              selectedAnn.object.id as string,
+              selectedAnn.object.id,
               {
                 color,
               },
@@ -1140,7 +1140,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
           if (selectedAnn?.object?.id) {
             annotationApiRef?.current?.updateAnnotation?.(
               selectedAnn.object.pageIndex ?? 0,
-              selectedAnn.object.id as string,
+              selectedAnn.object.id,
               {
                 strokeColor: color,
                 color: selectedAnn.object?.color ?? shapeFillColor,
@@ -1163,7 +1163,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
           if (selectedAnn?.object?.id) {
             annotationApiRef?.current?.updateAnnotation?.(
               selectedAnn.object.pageIndex ?? 0,
-              selectedAnn.object.id as string,
+              selectedAnn.object.id,
               {
                 color,
                 strokeColor:

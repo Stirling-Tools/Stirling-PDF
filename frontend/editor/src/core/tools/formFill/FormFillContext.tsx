@@ -377,7 +377,7 @@ export function FormFillProvider({
   const [providerMode, setProviderModeState] = useState<"pdflib" | "pdfbox">(
     initialMode,
   );
-  const providerModeRef = useRef(initialMode as "pdflib" | "pdfbox");
+  const providerModeRef = useRef(initialMode);
   providerModeRef.current = providerMode;
   const provider =
     providerProp ??

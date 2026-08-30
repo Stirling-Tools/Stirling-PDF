@@ -79,7 +79,7 @@ export const useCompareChangeNavigation = (
         const inner = anchor.closest(
           ".compare-diff-page__inner",
         ) as HTMLElement | null;
-        const topPercent = parseFloat((anchor as HTMLElement).style.top || "0");
+        const topPercent = parseFloat(anchor.style.top || "0");
         if (pageEl && inner && !Number.isNaN(topPercent)) {
           const innerRect = inner.getBoundingClientRect();
           const innerHeight = Math.max(1, innerRect.height);
@@ -156,9 +156,7 @@ export const useCompareChangeNavigation = (
             ".compare-diff-page",
           ) as HTMLElement | null;
           const pageNumAttr = pageEl?.getAttribute("data-page-number");
-          const topPercent = parseFloat(
-            (anchor as HTMLElement).style.top || "0",
-          );
+          const topPercent = parseFloat(anchor.style.top || "0");
           if (pageNumAttr) {
             const peerPageEl = peer.querySelector(
               `.compare-diff-page[data-page-number="${pageNumAttr}"]`,
