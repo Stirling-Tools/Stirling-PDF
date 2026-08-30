@@ -60,10 +60,6 @@ export interface FormDataImport {
 /** Join a hierarchical field path the way PDF fully-qualified names do. */
 const qualify = (path: string[]): string => path.join(".");
 
-// ---------------------------------------------------------------------------
-// XFDF
-// ---------------------------------------------------------------------------
-
 const XFDF_NS = "http://ns.adobe.com/xfdf/";
 
 /**
@@ -245,10 +241,6 @@ export function buildXfdf(
     "",
   ].join("\n");
 }
-
-// ---------------------------------------------------------------------------
-// FDF
-// ---------------------------------------------------------------------------
 
 // PDFDocEncoding differs from latin1 only here (PDF 32000-1 Table D.2).
 // Note 0x92 is TRADE MARK, not the apostrophe - that is 0x90.
@@ -457,10 +449,6 @@ export function looksLikeFdf(text: string): boolean {
     /%FDF-/.test(text.slice(0, 1024)) || /\/FDF\s*<</.test(text.slice(0, 8192))
   );
 }
-
-// ---------------------------------------------------------------------------
-// Format-sniffing entry point
-// ---------------------------------------------------------------------------
 
 /**
  * Read an exported form-data file, detecting XFDF vs FDF from its contents

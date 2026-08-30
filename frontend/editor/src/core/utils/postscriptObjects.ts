@@ -422,10 +422,6 @@ export function collectTopLevelDicts(src: string): PsDict[] {
   return readObjects(src).topLevelDicts;
 }
 
-// ---------------------------------------------------------------------------
-// Typed accessors
-// ---------------------------------------------------------------------------
-
 export const psBoolean = (value: PsValue): boolean | undefined =>
   typeof value === "boolean" ? value : undefined;
 
