@@ -3,7 +3,6 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import apiClient from "@app/services/apiClient";
 import {
   fetchToolRecommendations,
-  fetchToolWorkflows,
   recordToolUsage,
   resetToolRecommendationsAvailabilityForTests,
 } from "@app/api/toolRecommendations";
@@ -17,6 +16,10 @@ const mockPost = vi.mocked(apiClient.post);
 
 const http404 = Object.assign(new Error("not found"), {
   response: { status: 404 },
+});
+
+const http501 = Object.assign(new Error("not implemented"), {
+  response: { status: 501 },
 });
 
 describe("toolRecommendations api", () => {
@@ -71,33 +74,6 @@ describe("toolRecommendations api", () => {
     });
   });
 
-  describe("fetchToolWorkflows", () => {
-    it("returns repeated workflows and passes the filters", async () => {
-      mockGet.mockResolvedValue({
-        data: {
-          workflows: [
-            { tools: ["compress", "watermark"], count: 4, scope: "USER" },
-          ],
-        },
-      });
-
-      const result = await fetchToolWorkflows(3, 10);
-
-      expect(result).toEqual([
-        { tools: ["compress", "watermark"], count: 4, scope: "USER" },
-      ]);
-      const url = mockGet.mock.calls[0][0] as string;
-      expect(url).toContain("minLength=3");
-      expect(url).toContain("limit=10");
-    });
-
-    it("returns null on failure", async () => {
-      mockGet.mockRejectedValue(new Error("network down"));
-
-      expect(await fetchToolWorkflows()).toBeNull();
-    });
-  });
-
   describe("recordToolUsage", () => {
     it("posts the tool and each input document's prior chain", async () => {
       mockPost.mockResolvedValue({});
@@ -130,6 +106,15 @@ describe("toolRecommendations api", () => {
 
     it("skips the network entirely once the API is known to be missing", async () => {
       mockPost.mockRejectedValue(http404);
+
+      await recordToolUsage("ocr");
+      await recordToolUsage("ocr");
+
+      expect(mockPost).toHaveBeenCalledTimes(1);
+    });
+
+    it("stops posting after a 501 from an install that declined tracking", async () => {
+      mockPost.mockRejectedValue(http501);
 
       await recordToolUsage("ocr");
       await recordToolUsage("ocr");

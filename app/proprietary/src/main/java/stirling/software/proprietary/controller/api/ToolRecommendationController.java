@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,7 +21,6 @@ import stirling.software.common.annotations.api.ProprietaryUiDataApi;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.proprietary.service.ToolRecommendationService;
 import stirling.software.proprietary.service.ToolRecommendationService.ToolRecommendation;
-import stirling.software.proprietary.service.ToolRecommendationService.ToolWorkflow;
 import stirling.software.proprietary.service.ToolUsageTrackingService;
 
 /**
@@ -39,8 +39,6 @@ public class ToolRecommendationController {
     private final Optional<UserServiceInterface> userService;
 
     public record RecommendationsResponse(List<ToolRecommendation> recommendations) {}
-
-    public record WorkflowsResponse(List<ToolWorkflow> workflows) {}
 
     /**
      * @param priorChains the tools already applied to each input document, oldest step first and
@@ -72,29 +70,6 @@ public class ToolRecommendationController {
         }
     }
 
-    @GetMapping("/tool-recommendations/workflows")
-    @Operation(
-            summary = "Get repeated tool workflows",
-            description =
-                    "Ordered tool sequences that get applied to the same document over and over,"
-                            + " most repeated first. Intended as the basis for suggesting"
-                            + " automations, so each entry says whether the pattern is the"
-                            + " caller's own, their team's, or the whole install's.")
-    public ResponseEntity<WorkflowsResponse> getWorkflows(
-            @RequestParam(value = "minLength", defaultValue = "2") int minLength,
-            @RequestParam(value = "limit", defaultValue = "6") int limit,
-            @RequestHeader(value = "X-Browser-Id", required = false) String browserId) {
-        try {
-            return ResponseEntity.ok(
-                    new WorkflowsResponse(
-                            recommendationService.getWorkflows(
-                                    resolvePrincipal(browserId), minLength, limit)));
-        } catch (Exception e) {
-            log.warn("Failed to load tool workflows: {}", e.getMessage());
-            return ResponseEntity.ok(new WorkflowsResponse(List.of()));
-        }
-    }
-
     @PostMapping("/tool-recommendations/usage")
     @Operation(
             summary = "Record a completed tool run",
@@ -107,6 +82,10 @@ public class ToolRecommendationController {
             @RequestHeader(value = "X-Browser-Id", required = false) String browserId) {
         if (request == null || !ToolUsageTrackingService.isValidToolKey(request.toolKey())) {
             return ResponseEntity.badRequest().build();
+        }
+        if (!trackingService.isRecordingEnabled()) {
+            // 501 latches the client, so a declining install stops receiving the posts at all.
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
         }
         trackingService.recordUsage(
                 resolvePrincipal(browserId), request.toolKey(), request.priorChains());

@@ -69,37 +69,3 @@ export async function recordToolUsage(
     markUnavailableOn404(error);
   }
 }
-
-/** Where a repeated workflow was observed. */
-export type WorkflowScope = "USER" | "TEAM" | "GLOBAL";
-
-export interface ToolWorkflowDto {
-  tools: string[];
-  count: number;
-  scope: WorkflowScope;
-}
-
-/**
- * Tool sequences applied to the same document over and over - the basis for
- * suggesting an automation. Null when the backend cannot serve them.
- */
-export async function fetchToolWorkflows(
-  minLength = 2,
-  limit = 6,
-): Promise<ToolWorkflowDto[] | null> {
-  if (backendUnavailable) return null;
-  try {
-    const params = new URLSearchParams({
-      minLength: String(minLength),
-      limit: String(limit),
-    });
-    const response = await apiClient.get<{ workflows: ToolWorkflowDto[] }>(
-      `${BASE_PATH}/workflows?${params}`,
-      { suppressErrorToast: true, skipAuthRedirect: true },
-    );
-    return response.data?.workflows ?? [];
-  } catch (error) {
-    markUnavailableOn404(error);
-    return null;
-  }
-}

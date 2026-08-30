@@ -445,6 +445,8 @@ export const useToolOperation = <TParams>(
           // Set by both branches so the usage tracker can move each document's
           // tool chain from the inputs onto the outputs that replaced them.
           let producedFileIds: FileId[] = [];
+          // An input that failed stays in the workbench, so it must keep its chain.
+          let consumedInputIds: FileId[] = [];
 
           if (isVersionOp) {
             // Output is a modified version of the input — link it to the input's version chain.
@@ -493,6 +495,7 @@ export const useToolOperation = <TParams>(
             const toConsumeInputIds = successSourceIds.filter((id) =>
               inputFileIds.includes(id),
             );
+            consumedInputIds = toConsumeInputIds;
             console.debug("[useToolOperation] Consuming files (version)", {
               inputCount: inputFileIds.length,
               toConsume: toConsumeInputIds.length,
@@ -557,6 +560,7 @@ export const useToolOperation = <TParams>(
             const toConsumeInputIds = successSourceIds.filter((id) =>
               inputFileIds.includes(id),
             );
+            consumedInputIds = toConsumeInputIds;
             console.debug("[useToolOperation] Consuming files (independent)", {
               inputCount: inputFileIds.length,
               toConsume: toConsumeInputIds.length,
@@ -598,7 +602,9 @@ export const useToolOperation = <TParams>(
           // the outputs that replaced it.
           notifyToolCompleted({
             toolId: config.operationType,
-            inputs: inputStirlingFileStubs,
+            inputs: inputStirlingFileStubs.filter((stub) =>
+              consumedInputIds.includes(stub.id),
+            ),
             outputFileIds: producedFileIds,
           });
         }

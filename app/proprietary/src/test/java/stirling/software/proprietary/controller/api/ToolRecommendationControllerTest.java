@@ -1,13 +1,18 @@
 package stirling.software.proprietary.controller.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.List;
 import java.util.Optional;
@@ -20,21 +25,22 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.proprietary.controller.api.ToolRecommendationController.RecommendationsResponse;
 import stirling.software.proprietary.controller.api.ToolRecommendationController.UsageRequest;
-import stirling.software.proprietary.controller.api.ToolRecommendationController.WorkflowsResponse;
 import stirling.software.proprietary.service.ToolRecommendationService;
 import stirling.software.proprietary.service.ToolRecommendationService.ToolRecommendation;
-import stirling.software.proprietary.service.ToolRecommendationService.ToolWorkflow;
-import stirling.software.proprietary.service.ToolRecommendationService.WorkflowScope;
 import stirling.software.proprietary.service.ToolUsageTrackingService;
 
 @ExtendWith(MockitoExtension.class)
 class ToolRecommendationControllerTest {
 
     private static final String BROWSER_ID = "0f8fad5b-d9cb-469f-a165-70867728950e";
+
+    private static final String BASE_PATH = "/api/v1/proprietary/ui-data/tool-recommendations";
 
     /** One input document that has already been through compress. */
     private static final List<List<String>> CHAIN = List.of(List.of("compress"));
@@ -46,12 +52,16 @@ class ToolRecommendationControllerTest {
     @Mock private UserServiceInterface userService;
 
     private ToolRecommendationController controller;
+    private MockMvc mockMvc;
 
     @BeforeEach
     void setUp() {
         controller =
                 new ToolRecommendationController(
                         trackingService, recommendationService, Optional.of(userService));
+        mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
+        // Lenient: the 400 and 404 cases never reach the consent check.
+        lenient().when(trackingService.isRecordingEnabled()).thenReturn(true);
     }
 
     @Nested
@@ -137,36 +147,47 @@ class ToolRecommendationControllerTest {
 
             verify(trackingService).recordUsage("alice", "ocr", JUNK_CHAIN);
         }
+
+        @Test
+        @DisplayName("an install that declined tracking answers 501 so the client stops posting")
+        void declinedInstallReturns501() {
+            when(trackingService.isRecordingEnabled()).thenReturn(false);
+
+            ResponseEntity<Void> response =
+                    controller.recordUsage(new UsageRequest("ocr", CHAIN), null);
+
+            assertThat(response.getStatusCode().value()).isEqualTo(501);
+            verify(trackingService, never()).recordUsage(anyString(), anyString(), any());
+        }
     }
 
     @Nested
-    @DisplayName("GET workflows")
-    class GetWorkflows {
+    @DisplayName("Cross-principal exposure")
+    class CrossPrincipalExposure {
 
+        /** The chain queries carry no tenant predicate, so no HTTP route may reach them. */
         @Test
-        @DisplayName("returns the repeated workflows for the resolved principal")
-        void returnsWorkflows() {
-            when(userService.getCurrentUsername()).thenReturn("alice");
-            ToolWorkflow workflow =
-                    new ToolWorkflow(List.of("compress", "ocr"), 4, WorkflowScope.USER);
-            when(recommendationService.getWorkflows("alice", 2, 6)).thenReturn(List.of(workflow));
+        @DisplayName("no route serves other principals' chains")
+        void workflowsRouteIsGone() throws Exception {
+            mockMvc.perform(get(BASE_PATH + "/workflows").param("minLength", "2"))
+                    .andExpect(status().isNotFound());
 
-            ResponseEntity<WorkflowsResponse> response = controller.getWorkflows(2, 6, null);
-
-            assertThat(response.getBody().workflows()).containsExactly(workflow);
+            verifyNoInteractions(recommendationService);
         }
 
         @Test
-        @DisplayName("a failure degrades to an empty list rather than breaking the caller")
-        void failureDegrades() {
-            when(userService.getCurrentUsername()).thenReturn("alice");
-            when(recommendationService.getWorkflows(anyString(), anyInt(), anyInt()))
-                    .thenThrow(new RuntimeException("db down"));
+        @DisplayName("a spoofed browser id cannot read the logged-in caller out of their own scope")
+        void browserIdCannotOverrideLoggedInPrincipal() throws Exception {
+            when(userService.getCurrentUsername()).thenReturn("bob");
+            when(recommendationService.getRecommendations(eq("bob"), isNull(), anyInt()))
+                    .thenReturn(List.of());
 
-            ResponseEntity<WorkflowsResponse> response = controller.getWorkflows(2, 6, null);
+            mockMvc.perform(get(BASE_PATH).header("X-Browser-Id", BROWSER_ID))
+                    .andExpect(status().isOk());
 
-            assertThat(response.getStatusCode().value()).isEqualTo(200);
-            assertThat(response.getBody().workflows()).isEmpty();
+            verify(recommendationService).getRecommendations("bob", null, 6);
+            verify(recommendationService, never())
+                    .getRecommendations(eq("anon:" + BROWSER_ID), any(), anyInt());
         }
     }
 

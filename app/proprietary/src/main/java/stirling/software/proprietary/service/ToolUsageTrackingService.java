@@ -7,7 +7,6 @@ import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import org.springframework.dao.DataIntegrityViolationException;
@@ -55,6 +54,11 @@ public class ToolUsageTrackingService {
     static boolean isUsageDataAllowed(ApplicationProperties properties) {
         return properties.getToolRecommendations().isEnabled()
                 && properties.getSystem().isAnalyticsEnabled();
+    }
+
+    /** Lets the controller answer 501 so the browser stops posting on a declining install. */
+    public boolean isRecordingEnabled() {
+        return isUsageDataAllowed(applicationProperties);
     }
 
     /**
@@ -177,7 +181,7 @@ public class ToolUsageTrackingService {
     }
 
     /** Daily retention sweep; both tables hold one row per principal, key and day. */
-    @Scheduled(fixedDelay = 1, initialDelay = 1, timeUnit = TimeUnit.DAYS)
+    @Scheduled(cron = "0 15 3 * * *")
     public void cleanupOldStats() {
         int retentionDays = applicationProperties.getToolRecommendations().getRetentionDays();
         if (retentionDays <= 0) {

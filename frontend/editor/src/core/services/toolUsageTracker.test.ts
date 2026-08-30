@@ -109,6 +109,15 @@ describe("toolUsageTracker", () => {
     expect(getDocumentToolChain(uploaded("p2"))).toEqual(["compress", "split"]);
   });
 
+  it("leaves an input the tool never consumed with its chain intact", () => {
+    run("compress", [uploaded("a")], ["a2"]);
+    run("compress", [uploaded("b")], ["b2"]);
+    // Only a2 succeeded, so b2 stays in the workbench and keeps its lineage.
+    run("ocr", [uploaded("a2")], ["a3"]);
+
+    expect(getDocumentToolChain(uploaded("b2"))).toEqual(["compress"]);
+  });
+
   it("prefers the tracked chain over a stale persisted history", () => {
     run("compress", [uploaded("a")], ["a2"]);
 
