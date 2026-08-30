@@ -547,7 +547,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          APP=$(find ./frontend/editor/src-tauri/target -maxdepth 6 -type d -name "*.app" | head -1)
+          # -prune stops find descending into the matched bundle; || true swallows
+          # the SIGPIPE 141 head -1 gives find, which pipefail would treat as fatal.
+          APP=$(find ./frontend/editor/src-tauri/target -maxdepth 6 -type d -name "*.app" -prune -print | head -1 || true)
           if [ -z "$APP" ]; then
             echo "::error::No .app bundle found to verify"
             exit 1
@@ -558,6 +560,10 @@ jobs:
             exit 1
           fi
           NAME=$(plutil -extract CFBundleIconName raw "$APP/Contents/Info.plist")
+          if [ "$NAME" != "Icon" ]; then
+            echo "::error::CFBundleIconName is '$NAME', expected 'Icon' - it comes from the Icon.icon copy in .taskfiles/desktop.yml"
+            exit 1
+          fi
           echo "Assets.car present, CFBundleIconName=$NAME"
 
       - name: Rename artifacts

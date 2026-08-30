@@ -88,7 +88,7 @@ jobs:
           # JPDFium natives yet - flip to windows-arm64 once JPDFium ships them.
           WINDOWS='{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64","jpdfium_platforms":"windows-x64"}'
           WINDOWS_ARM64='{"platform":"windows-11-arm","args":"--target aarch64-pc-windows-msvc --bundles nsis","name":"windows-arm64","jpdfium_platforms":"none"}'
-          MACOS='{"platform":"macos-15","args":"--target universal-apple-darwin","name":"macos-universal","jpdfium_platforms":"darwin-arm64,darwin-x64"}'
+          MACOS='{"platform":"macos-26","args":"--target universal-apple-darwin","name":"macos-universal","jpdfium_platforms":"darwin-arm64,darwin-x64"}'
           LINUX='{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64","jpdfium_platforms":"linux-x64"}'
           ALL="$WINDOWS,$WINDOWS_ARM64,$MACOS,$LINUX"
 
@@ -230,11 +230,35 @@ jobs:
           cache: "npm"
           cache-dependency-path: frontend/package-lock.json
 
+      # Tauri compiles the macOS 26 icon (icons/macos/app.icon) with actool and
+      # skips it when actool is older than 26, so the icon would vanish with
+      # a green build. Runs before Setup Rust so the whole macOS build, tests
+      # included, compiles against one SDK rather than two either side of it.
+      - name: Select Xcode 26+ (macOS 26 app icon)
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          set -euo pipefail
+          xcode=""
+          for candidate in $(ls -d /Applications/Xcode_*.app 2>/dev/null | sort -Vr); do
+            major=$(basename "$candidate" | sed -E 's/^Xcode_([0-9]+).*/\1/')
+            case "$major" in ''|*[!0-9]*) continue ;; esac
+            if [ "$major" -ge 26 ]; then xcode="$candidate"; break; fi
+          done
+          if [ -z "$xcode" ]; then
+            echo "::error::No Xcode >= 26 on this runner - Tauri would silently skip the macOS 26 icon"
+            exit 1
+          fi
+          sudo xcode-select -s "$xcode"
+          echo "Selected $xcode"
+          xcodebuild -version
+          command -v actool
+
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@4be9e76fd7c4901c61fb841f559994984270fce7 # stable
         with:
           toolchain: stable
-          targets: ${{ matrix.platform == 'macos-15' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+          targets: ${{ matrix.platform == 'macos-26' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
       - name: Cache Gradle
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -249,7 +273,7 @@ jobs:
       # jmods from both arches; the x64 path is captured into the env
       # before the second setup-java overwrites JAVA_HOME.
       - name: Set up x86_64 JDK 25 (macOS universal JRE)
-        if: matrix.platform == 'macos-15'
+        if: matrix.platform == 'macos-26'
         uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
         with:
           java-version: "25"
@@ -257,7 +281,7 @@ jobs:
           architecture: "x64"
 
       - name: Capture x86_64 JAVA_HOME
-        if: matrix.platform == 'macos-15'
+        if: matrix.platform == 'macos-26'
         run: echo "X64_JAVA_HOME=$JAVA_HOME" >> "$GITHUB_ENV"
 
       # Temurin has no windows-aarch64 JDK 25 yet; Microsoft OpenJDK does.
@@ -273,7 +297,7 @@ jobs:
       # Build the universal JRE before desktop:prepare so the jlink:runtime
       # task short-circuits on its `test -d runtime/jre` status check.
       - name: Build universal macOS JRE
-        if: matrix.platform == 'macos-15'
+        if: matrix.platform == 'macos-26'
         env:
           AARCH64_JAVA_HOME: ${{ env.JAVA_HOME }}
           JPDFIUM_PLATFORMS: ${{ matrix.jpdfium_platforms }}
@@ -341,7 +365,7 @@ jobs:
           SM_CLIENT_CERT_PASSWORD: ${{ secrets.SM_CLIENT_CERT_PASSWORD }}
           SM_KEYPAIR_ALIAS: ${{ secrets.SM_KEYPAIR_ALIAS }}
       - name: Import Apple Developer Certificate
-        if: matrix.platform == 'macos-15' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.sign != 'false') || github.ref == 'refs/heads/release')
+        if: matrix.platform == 'macos-26' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.sign != 'false') || github.ref == 'refs/heads/release')
         env:
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
@@ -362,7 +386,7 @@ jobs:
           rm certificate.p12
 
       - name: Verify Certificate
-        if: matrix.platform == 'macos-15' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.sign != 'false') || github.ref == 'refs/heads/release')
+        if: matrix.platform == 'macos-26' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.sign != 'false') || github.ref == 'refs/heads/release')
         run: |
           echo "Verifying Apple Developer Certificate..."
           KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
@@ -645,6 +669,33 @@ jobs:
             Write-Host "smctl log directory not found at $logDir"
           }
 
+      # actool can succeed and still leave CFBundleIconName unwritten, which ships
+      # a green build with the icon quietly falling back to the icns. Assert both
+      # halves rather than trusting the bundler's warning.
+      - name: Verify macOS 26 icon landed (macOS only)
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          set -euo pipefail
+          # -prune stops find descending into the matched bundle; || true swallows
+          # the SIGPIPE 141 head -1 gives find, which pipefail would treat as fatal.
+          APP=$(find ./frontend/editor/src-tauri/target -maxdepth 6 -type d -name "*.app" -prune -print | head -1 || true)
+          if [ -z "$APP" ]; then
+            echo "::error::No .app bundle found to verify"
+            exit 1
+          fi
+          echo "Checking $APP"
+          if [ ! -f "$APP/Contents/Resources/Assets.car" ]; then
+            echo "::error::Assets.car missing - actool did not compile icons/macos/app.icon"
+            exit 1
+          fi
+          NAME=$(plutil -extract CFBundleIconName raw "$APP/Contents/Info.plist")
+          if [ "$NAME" != "Icon" ]; then
+            echo "::error::CFBundleIconName is '$NAME', expected 'Icon' - it comes from the Icon.icon copy in .taskfiles/desktop.yml"
+            exit 1
+          fi
+          echo "Assets.car present, CFBundleIconName=$NAME"
+
       # Rename + Upload: use always() so artifacts are still collected when verify
       # fails - we need them to manually inspect what actually came out of the build.
       - name: Rename artifacts
@@ -672,7 +723,7 @@ jobs:
             # The setup exe is also its own updater payload (-> sibling .sig).
             find . -name "*-setup.exe" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}-setup.exe" \;
             find . -name "*-setup.exe.sig" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}-setup.exe.sig" \;
-          elif [ "${{ matrix.platform }}" = "macos-15" ]; then
+          elif [ "${{ matrix.platform }}" = "macos-26" ]; then
             # DMG = manual install; .app.tar.gz (+ .sig) = updater payload.
             # Raw .app is intentionally not shipped (hundreds of MB of uncompressed input).
             find . -name "*.dmg" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.dmg" \;
@@ -703,7 +754,7 @@ jobs:
         run: |
           rm -f certificate.p12
           rm -rf "$RUNNER_TEMP/msi-verify"
-          if [ "${{ matrix.platform }}" = "macos-15" ]; then
+          if [ "${{ matrix.platform }}" = "macos-26" ]; then
             security delete-keychain "$RUNNER_TEMP/app-signing.keychain-db" 2>/dev/null || true
           fi
         continue-on-error: true

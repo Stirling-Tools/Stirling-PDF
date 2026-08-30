@@ -47,9 +47,20 @@ tasks:
       # Assets.car takes the supported prebuilt-.car path instead.
       - cmd: |
           set -eu
+          # Needs full Xcode 26+; Command Line Tools ship an actool that cannot read
+          # .icon bundles, so skip rather than block every desktop task on macOS.
+          XCODE_MAJOR=$(xcodebuild -version 2>/dev/null | sed -n '1s/^Xcode \([0-9][0-9]*\).*/\1/p')
+          if ! command -v actool >/dev/null 2>&1 || [ -z "${XCODE_MAJOR:-}" ] || [ "$XCODE_MAJOR" -lt 26 ]; then
+            echo "Xcode 26+ not found (found: ${XCODE_MAJOR:-none}) - skipping the macOS 26 app icon; the build falls back to icons/macos/app.icns"
+            exit 0
+          fi
           ICONS=icons/macos
-          WORK=$(mktemp -d)/build
+          TMP=$(mktemp -d)
+          trap 'rm -rf "$TMP"' EXIT
+          WORK=$TMP/build
           mkdir -p "$WORK/out"
+          # The copied bundle's basename is what actool writes into
+          # CFBundleIconName, so keep it Icon.icon - CI asserts CFBundleIconName=Icon.
           cp -R "$ICONS/app.icon" "$WORK/Icon.icon"
           actool "$WORK/Icon.icon" --compile "$WORK/out" \
             --output-format human-readable-text --notices --warnings \
@@ -59,6 +70,10 @@ tasks:
             --target-device mac --minimum-deployment-target 26.0 --platform macosx
           cp "$WORK/out/Assets.car" "$ICONS/Assets.car"
           echo "Compiled $ICONS/Assets.car ($(wc -c < "$ICONS/Assets.car") bytes)"
+    sources:
+      - icons/macos/app.icon/**/*
+    generates:
+      - icons/macos/Assets.car
 
   provisioner:
     desc: "Build installer provisioner"
