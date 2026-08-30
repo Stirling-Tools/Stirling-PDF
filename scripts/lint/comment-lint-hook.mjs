@@ -64,6 +64,13 @@ if (result.status !== FOUND) {
   process.exit(1);
 }
 
+// Exit 1 with nothing on stdout is the launcher failing, not a finding. Reported as
+// findings it becomes a blocking message that names no file, line or rule.
+if (!result.output.trim()) {
+  process.stderr.write("comment-lint exited 1 with an empty report, so comments in this turn were not checked.\n");
+  process.exit(1);
+}
+
 // The linter's own report already names the file, line, rule and the standard, so
 // it is passed through rather than rewritten.
 process.stderr.write(`${result.output.trim()}\n\nFix these before finishing.\n`);
@@ -92,7 +99,9 @@ function taskCommand() {
   for (const candidate of candidates) {
     if (existsSync(candidate)) return { command: candidate, shell: false };
   }
-  return { command: process.platform === "win32" ? "task.cmd" : "task", shell: process.platform === "win32" };
+  // Bare name on win32 too: cmd.exe resolves it through PATHEXT, so a scoop task.exe
+  // works as well as npm's task.cmd, which a scoop install does not ship.
+  return { command: "task", shell: process.platform === "win32" };
 }
 
 function run() {
