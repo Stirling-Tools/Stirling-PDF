@@ -158,7 +158,6 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
 
   return (
     <Stack gap="md" data-tour="crop-settings">
-      {/* Pages to crop */}
       <CropPageSelection
         value={parameters.parameters.pageNumbers}
         onChange={(value) => parameters.updateParameter("pageNumbers", value)}
