@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  type ComponentProps,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import {
   Stack,
   Text,
@@ -17,6 +24,7 @@ import { FormField } from "@app/ui/FormField";
 import { useTranslation } from "react-i18next";
 import { CertSignParameters } from "@app/hooks/tools/certSign/useCertSignParameters";
 import { useAllFiles } from "@app/contexts/FileContext";
+import { FileStoreContext } from "@app/contexts/file/contexts";
 import FileUploadButton from "@app/components/shared/FileUploadButton";
 import SignaturePlacementPicker from "@app/components/tools/certSign/SignaturePlacementPicker";
 import SignatureAttributePicker from "@app/components/tools/certSign/SignatureAttributePicker";
@@ -33,6 +41,52 @@ import {
   type SignaturePlacementResult,
 } from "@app/constants/signaturePlacementEvents";
 
+type PlacementPickerProps = Omit<
+  ComponentProps<typeof SignaturePlacementPicker>,
+  "file" | "fileStub" | "thumbnailUrl"
+>;
+
+const PlacementPickerWithWorkbenchFile = (props: PlacementPickerProps) => {
+  const { files, fileStubs } = useAllFiles();
+  const file = useMemo(() => (files.length > 0 ? files[0] : null), [files]);
+  const stub = useMemo(
+    () => (fileStubs.length > 0 ? fileStubs[0] : null),
+    [fileStubs],
+  );
+
+  return (
+    <SignaturePlacementPicker
+      {...props}
+      file={file}
+      fileStub={stub}
+      thumbnailUrl={stub?.thumbnailUrl ?? null}
+    />
+  );
+};
+
+/**
+ * The placement picker, wired to the workbench document when there is one.
+ *
+ * These settings also render in the pipeline builder, which configures a run before any
+ * document exists and so mounts no file context. The file hooks throw outside their
+ * provider, so the subscription lives in a child that is mounted only when the provider
+ * is present; without it the picker still draws, over an empty page.
+ */
+const SignaturePlacementPickerForTool = (props: PlacementPickerProps) => {
+  const hasWorkbenchFiles = useContext(FileStoreContext) !== undefined;
+
+  return hasWorkbenchFiles ? (
+    <PlacementPickerWithWorkbenchFile {...props} />
+  ) : (
+    <SignaturePlacementPicker
+      {...props}
+      file={null}
+      fileStub={null}
+      thumbnailUrl={null}
+    />
+  );
+};
+
 interface SignatureAppearanceSettingsProps {
   parameters: CertSignParameters;
   onParameterChange: <K extends keyof CertSignParameters>(
@@ -48,17 +102,7 @@ const SignatureAppearanceSettings = ({
   disabled = false,
 }: SignatureAppearanceSettingsProps) => {
   const { t } = useTranslation();
-  const { files, fileStubs } = useAllFiles();
   const [isPlacing, setIsPlacing] = useState(false);
-
-  const selectedFile = useMemo(
-    () => (files.length > 0 ? files[0] : null),
-    [files],
-  );
-  const selectedStub = useMemo(
-    () => (fileStubs.length > 0 ? fileStubs[0] : null),
-    [fileStubs],
-  );
 
   const startPlacement = useCallback(() => {
     setIsPlacing(true);
@@ -386,10 +430,7 @@ const SignatureAppearanceSettings = ({
           {parameters.markAllPages && (
             <>
               <Divider />
-              <SignaturePlacementPicker
-                file={selectedFile}
-                fileStub={selectedStub}
-                thumbnailUrl={selectedStub?.thumbnailUrl ?? null}
+              <SignaturePlacementPickerForTool
                 pageNumber={parameters.pageNumber}
                 signatureArea={parameters.signatureArea}
                 onSignatureAreaChange={(area) =>
