@@ -28,6 +28,7 @@ import {
   type JscanifyScanner,
 } from "@app/utils/loadJscanify";
 import apiClient from "@app/services/apiClient";
+import { fitThumbs, THUMB_GAP } from "@app/utils/mobileScannerThumbs";
 
 const API_BASE = (apiClient.defaults.baseURL ?? "").replace(/\/+$/, "");
 
@@ -40,38 +41,6 @@ const FLUID = {
   gap: "clamp(0.35rem, 1.4dvh, 1rem)",
   pad: "clamp(0.5rem, 1.8dvh, 1.25rem)",
 } as const;
-
-const THUMB_SIZES = [52, 44, 38, 32, 26, 20];
-const THUMB_GAP = 4;
-
-function fitThumbs(
-  total: number,
-  viewportWidth: number,
-  viewportHeight: number,
-) {
-  if (!viewportWidth || !viewportHeight) {
-    return { thumbSize: THUMB_SIZES[0], stripMaxHeight: undefined };
-  }
-  const rowWidth = Math.max(viewportWidth - 24, 80);
-  const heightFor = (size: number) => {
-    const perRow = Math.max(
-      1,
-      Math.floor((rowWidth + THUMB_GAP) / (size + THUMB_GAP)),
-    );
-    return Math.ceil(total / perRow) * (size + THUMB_GAP);
-  };
-  const preferred = viewportHeight * 0.24;
-  const thumbSize =
-    THUMB_SIZES.find((size) => heightFor(size) <= preferred) ??
-    THUMB_SIZES[THUMB_SIZES.length - 1];
-  // Let the strip grow past its usual share rather than hide images, but never
-  // far enough to swallow the preview.
-  const stripMaxHeight = Math.min(
-    Math.max(preferred, heightFor(thumbSize)),
-    viewportHeight * 0.45,
-  );
-  return { thumbSize, stripMaxHeight };
-}
 
 function readFileAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -217,7 +186,12 @@ export default function MobileScannerPage() {
       `[Mobile Scanner] Camera effect triggered: mode=${mode}, cameraError=${cameraError}, viewing=${selectedIndex}`,
     );
 
-    if (mode === "camera" && !cameraError && selectedIndex === null) {
+    if (
+      mode === "camera" &&
+      !cameraError &&
+      selectedIndex === null &&
+      !uploadSuccess
+    ) {
       console.log(
         "[Mobile Scanner] Camera effect: Starting camera initialization",
       );
@@ -335,12 +309,12 @@ export default function MobileScannerPage() {
         streamRef.current = null;
       }
       if (highlightIntervalRef.current) {
-        clearInterval(highlightIntervalRef.current);
+        cancelAnimationFrame(highlightIntervalRef.current);
         highlightIntervalRef.current = null;
       }
       setCameraReady(false);
     };
-  }, [mode, cameraError, selectedIndex, t]);
+  }, [mode, cameraError, selectedIndex, uploadSuccess, t]);
 
   useEffect(() => {
     console.log(
@@ -843,10 +817,6 @@ export default function MobileScannerPage() {
       setImages([]);
       setSelectedIndex(null);
       setUploadSuccess(true);
-
-      setTimeout(() => {
-        window.close();
-      }, 1500);
     } catch (err) {
       console.error("Upload failed:", err);
       setUploadError(
