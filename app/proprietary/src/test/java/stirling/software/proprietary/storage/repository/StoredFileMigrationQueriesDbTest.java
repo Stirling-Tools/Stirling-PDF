@@ -175,6 +175,31 @@ class StoredFileMigrationQueriesDbTest {
                 .isEqualTo(1L);
     }
 
+    @Test
+    void findContentVersionById_readsTheBumpedValueNotTheCachedEntity() {
+        StoredFile file = persistFile("k-projection", null);
+        file.setContentVersion(5L);
+        entityManager.merge(file);
+        entityManager.flush();
+        entityManager.clear();
+
+        StoredFile loaded = repository.findById(file.getId()).orElseThrow();
+        repository.bumpContentVersion(loaded.getId());
+        repository.bumpContentVersion(loaded.getId());
+
+        // The entity loaded before the bulk update stays stale; the projection reads the DB.
+        assertThat(loaded.getContentVersion()).isEqualTo(5L);
+        assertThat(repository.findContentVersionById(loaded.getId())).isEqualTo(7L);
+    }
+
+    @Test
+    void findContentVersionById_legacyNullVersionReadsAsZero() {
+        StoredFile file = persistFile("k-projection-legacy", null);
+        entityManager.clear();
+
+        assertThat(repository.findContentVersionById(file.getId())).isEqualTo(0L);
+    }
+
     @SpringBootConfiguration
     @AutoConfigurationPackage(basePackages = "stirling.software.proprietary")
     static class TestApp {}

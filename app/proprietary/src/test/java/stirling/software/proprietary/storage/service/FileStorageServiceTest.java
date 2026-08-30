@@ -17,12 +17,15 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.transaction.support.TransactionSynchronizationUtils;
@@ -34,6 +37,8 @@ import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.storage.crypto.StorageEncryptionException;
 import stirling.software.proprietary.storage.crypto.StorageKeyRevokedException;
 import stirling.software.proprietary.storage.model.FileShare;
+import stirling.software.proprietary.storage.model.FileShareAccess;
+import stirling.software.proprietary.storage.model.FileShareAccessType;
 import stirling.software.proprietary.storage.model.ShareAccessRole;
 import stirling.software.proprietary.storage.model.StoredFile;
 import stirling.software.proprietary.storage.provider.StorageProvider;
@@ -121,6 +126,17 @@ class FileStorageServiceTest {
         s.setSharedWithUser(user);
         s.setAccessRole(role);
         return s;
+    }
+
+    /** The service reads the acting principal off the security context to attribute writes. */
+    private void withAuthenticatedUser(User user, Runnable action) {
+        SecurityContextHolder.getContext()
+                .setAuthentication(new UsernamePasswordAuthenticationToken(user, "n/a", List.of()));
+        try {
+            action.run();
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -572,6 +588,49 @@ class FileStorageServiceTest {
     }
 
     @Test
+    void updateFileResponse_editorShare_recordsEditAccess() throws IOException {
+        when(storageProperties.getQuotas()).thenReturn(null);
+        User owner = user(1L);
+        User editor = user(2L);
+        StoredFile existing = ownedFile(owner);
+        existing.setStorageKey("old-key");
+        FileShare share = shareFor(existing, editor, ShareAccessRole.EDITOR);
+        existing.getShares().add(share);
+        when(storedFileRepository.findByIdWithShares(100L)).thenReturn(Optional.of(existing));
+        when(fileShareRepository.findByFileAndSharedWithUser(existing, editor))
+                .thenReturn(Optional.of(share));
+        when(storageProvider.store(any(), any())).thenReturn(storedObject("new-key"));
+        when(storedFileRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        MockMultipartFile file =
+                new MockMultipartFile("file", "test.pdf", "application/pdf", new byte[] {1});
+
+        withAuthenticatedUser(editor, () -> service.updateFileResponse(editor, 100L, file));
+
+        ArgumentCaptor<FileShareAccess> access = ArgumentCaptor.forClass(FileShareAccess.class);
+        verify(fileShareAccessRepository).save(access.capture());
+        assertThat(access.getValue().getAccessType()).isEqualTo(FileShareAccessType.EDIT);
+        assertThat(access.getValue().getFileShare()).isSameAs(share);
+        assertThat(access.getValue().getUser()).isSameAs(editor);
+    }
+
+    @Test
+    void updateFileResponse_owner_recordsNoShareAccess() throws IOException {
+        when(storageProperties.getQuotas()).thenReturn(null);
+        User owner = user(1L);
+        StoredFile existing = ownedFile(owner);
+        existing.setStorageKey("old-key");
+        when(storedFileRepository.findByIdWithShares(100L)).thenReturn(Optional.of(existing));
+        when(storageProvider.store(any(), any())).thenReturn(storedObject("new-key"));
+        when(storedFileRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        MockMultipartFile file =
+                new MockMultipartFile("file", "test.pdf", "application/pdf", new byte[] {1});
+
+        withAuthenticatedUser(owner, () -> service.updateFileResponse(owner, 100L, file));
+
+        verify(fileShareAccessRepository, never()).save(any());
+    }
+
+    @Test
     void replaceFile_viewerShare_nonOwnerForbidden() {
         User owner = user(1L);
         User viewer = user(2L);
@@ -646,12 +705,32 @@ class FileStorageServiceTest {
         existing.setStorageKey("old-key");
         when(storageProvider.store(any(), any())).thenReturn(storedObject("new-key"));
         when(storedFileRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        // Another writer bumped past us, so the SQL-computed value is not loaded + 1.
+        when(storedFileRepository.findContentVersionById(100L)).thenReturn(9L);
         MockMultipartFile file =
                 new MockMultipartFile("file", "test.pdf", "application/pdf", new byte[] {1});
 
         StoredFile updated = service.replaceFile(owner, existing, file, null, null, null);
 
         verify(storedFileRepository).bumpContentVersion(100L);
+        assertThat(updated.getContentVersion()).isEqualTo(9L);
+    }
+
+    @Test
+    void replaceFile_noExpectedVersion_versionProjectionMissing_fallsBackToLoadedPlusOne()
+            throws IOException {
+        when(storageProperties.getQuotas()).thenReturn(null);
+        User owner = user(1L);
+        StoredFile existing = ownedFile(owner);
+        existing.setStorageKey("old-key");
+        when(storageProvider.store(any(), any())).thenReturn(storedObject("new-key"));
+        when(storedFileRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(storedFileRepository.findContentVersionById(100L)).thenReturn(null);
+        MockMultipartFile file =
+                new MockMultipartFile("file", "test.pdf", "application/pdf", new byte[] {1});
+
+        StoredFile updated = service.replaceFile(owner, existing, file, null, null, null);
+
         // Legacy null version reads as 0 and increments to 1.
         assertThat(updated.getContentVersion()).isEqualTo(1L);
     }

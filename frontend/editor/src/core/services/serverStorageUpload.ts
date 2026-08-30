@@ -49,7 +49,7 @@ async function putExistingFile(
     const response = await apiClient.put(
       `/api/v1/storage/files/${existingRemoteId}`,
       formData,
-      { headers: buildUpdateHeaders(options), suppressErrorToast: true } as any,
+      { headers: buildUpdateHeaders(options), suppressErrorToast: true },
     );
     return {
       updatedAt: resolveUpdatedAt(response.data?.updatedAt),
