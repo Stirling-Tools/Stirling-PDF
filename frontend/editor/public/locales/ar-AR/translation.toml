@@ -3526,7 +3526,6 @@ label = "إحداثي Y"
 
 [crop.error]
 failed = "فشل قصّ PDF"
-invalidArea = "منطقة القص تتجاوز حدود PDF"
 
 [crop.preview]
 title = "معاينة منطقة القص"

@@ -423,7 +423,7 @@ function GridView(props: FileGridProps) {
               parentPath={entry.parentPath}
               isSelected={selectedFileIds.has(entry.file.id)}
               isInWorkspace={
-                activeWorkspaceFileIds?.has(entry.file.id as string) ?? false
+                activeWorkspaceFileIds?.has(entry.file.id) ?? false
               }
               selectedFileIds={selectedFileIds}
               multiSelectActive={selectedFileIds.size >= 2}
@@ -939,7 +939,7 @@ function FileCard({
                 shiftKey: false,
                 ctrlKey: true,
                 metaKey: true,
-              } as unknown as React.MouseEvent);
+              });
             }}
             onChange={() => {
               /* handled by onClick */
@@ -984,7 +984,7 @@ function FileCard({
             ·
           </span>
           <span>{fileDate}</span>
-          <PolicyBadges fileId={file.id as string} />
+          <PolicyBadges fileId={file.id} />
         </div>
       </div>
       <div className="files-page-card-actions">
@@ -1139,7 +1139,7 @@ function ListView(
               parentPath={entry.parentPath}
               isSelected={selectedFileIds.has(entry.file.id)}
               isInWorkspace={
-                activeWorkspaceFileIds?.has(entry.file.id as string) ?? false
+                activeWorkspaceFileIds?.has(entry.file.id) ?? false
               }
               selectedFileIds={selectedFileIds}
               multiSelectActive={selectedFileIds.size >= 2}
@@ -1426,7 +1426,7 @@ function FileRow({
                 shiftKey: false,
                 ctrlKey: true,
                 metaKey: true,
-              } as unknown as React.MouseEvent);
+              });
             }}
             onChange={() => {
               /* handled by onClick */
@@ -1494,7 +1494,7 @@ function FileRow({
         </span>
         <FileOriginBadge origin={getFileOrigin(file)} compact />
         <DiskLinkBadge file={file} compact />
-        <PolicyBadges fileId={file.id as string} />
+        <PolicyBadges fileId={file.id} />
         {isInWorkspace && (
           <span className="files-page-row-open-pill">
             <span className="files-page-card-open-dot" />
