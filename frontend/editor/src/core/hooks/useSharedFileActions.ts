@@ -47,8 +47,10 @@ export function useSharedFileActions() {
   const fetchLatestCopy = useCallback(
     async (file: StirlingFileStub): Promise<boolean> => {
       try {
-        const blob = await downloadSharedBytes(file);
+        // Version first: if a writer commits between the two calls the bytes are
+        // newer than the base, which costs a spurious 409, never a lost update.
         const latestVersion = await fetchLatestSharedVersion(file);
+        const blob = await downloadSharedBytes(file);
         const latest = new File([blob], file.name, {
           type: blob.type || file.type,
         });

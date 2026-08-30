@@ -376,7 +376,10 @@ public class FileStorageService {
             newVersion = expectedVersion + 1;
         } else {
             storedFileRepository.bumpContentVersion(existing.getId());
-            newVersion = existing.contentVersionOrZero() + 1;
+            // Another writer may have bumped past us; the in-memory value would
+            // otherwise be flushed back over the SQL-computed one.
+            Long persisted = storedFileRepository.findContentVersionById(existing.getId());
+            newVersion = persisted != null ? persisted : existing.contentVersionOrZero() + 1;
         }
         existing.setContentVersion(newVersion);
         return newVersion;
@@ -488,8 +491,16 @@ public class FileStorageService {
             Long expectedVersion) {
         // Share-aware lookup so EDITOR recipients can write back; replaceFile enforces the role.
         StoredFile existing = getAccessibleFile(actor, fileId);
+        boolean nonOwnerWrite = !isOwner(existing, actor);
         StoredFile updated =
                 replaceFile(actor, existing, file, historyBundle, auditLog, expectedVersion);
+        if (nonOwnerWrite) {
+            // Mirrors updateShareLinkResponse so both write paths are attributable.
+            recordShareAccess(
+                    userShare(existing, actor),
+                    SecurityContextHolder.getContext().getAuthentication(),
+                    FileShareAccessType.EDIT);
+        }
         return buildResponse(updated, actor);
     }
 

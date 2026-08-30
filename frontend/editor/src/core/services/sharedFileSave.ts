@@ -79,7 +79,7 @@ export async function saveSharedFile(
     const response = await apiClient.put(url, formData, {
       headers,
       suppressErrorToast: true,
-    } as any);
+    });
     const version =
       typeof response.data?.version === "number"
         ? response.data.version
@@ -104,7 +104,7 @@ export async function downloadSharedBytes(
   const response = await apiClient.get(url, {
     responseType: "blob",
     suppressErrorToast: true,
-  } as any);
+  });
   return response.data as Blob;
 }
 
@@ -116,7 +116,7 @@ export async function fetchLatestSharedVersion(
     if (stub.remoteSharedViaLink && stub.remoteShareToken) {
       const response = await apiClient.get(
         `/api/v1/storage/share-links/${stub.remoteShareToken}/metadata`,
-        { suppressErrorToast: true, skipAuthRedirect: true } as any,
+        { suppressErrorToast: true, skipAuthRedirect: true },
       );
       const version = response.data?.version;
       return typeof version === "number" ? version : null;
@@ -124,7 +124,7 @@ export async function fetchLatestSharedVersion(
     if (stub.remoteStorageId) {
       const response = await apiClient.get(
         `/api/v1/storage/files/${stub.remoteStorageId}`,
-        { suppressErrorToast: true, skipAuthRedirect: true } as any,
+        { suppressErrorToast: true, skipAuthRedirect: true },
       );
       const version = response.data?.version;
       return typeof version === "number" ? version : null;

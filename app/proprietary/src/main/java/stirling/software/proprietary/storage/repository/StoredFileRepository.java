@@ -90,6 +90,10 @@ public interface StoredFileRepository extends JpaRepository<StoredFile, Long> {
                     + "WHERE f.id = :id")
     int bumpContentVersion(@Param("id") Long id);
 
+    // Scalar projection: reads the DB, not the stale first-level cache entity.
+    @Query("SELECT COALESCE(f.contentVersion, 0) FROM StoredFile f WHERE f.id = :id")
+    Long findContentVersionById(@Param("id") Long id);
+
     // ---- storage encryption at rest ----------------------------------------------------
 
     long countByEncryptionKeyIdIsNull();
