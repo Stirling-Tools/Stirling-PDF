@@ -258,7 +258,9 @@ function tokenize(src: string): Token[] {
       tokens.push({ kind: "boolean", value: word === "true" });
     } else if (word === "null") {
       tokens.push({ kind: "null" });
-    } else if (/^[+-]?(\d+\.?\d*|\.\d+)(e[+-]?\d+)?$/i.test(word)) {
+      // Fractional digits sit inside the optional group so there is only
+      // one way to split a digit run: linear, not quadratic.
+    } else if (/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i.test(word)) {
       tokens.push({ kind: "number", value: Number(word) });
     } else {
       tokens.push({ kind: "operator", value: word });
