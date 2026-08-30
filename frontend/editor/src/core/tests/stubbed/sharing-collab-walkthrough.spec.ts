@@ -375,7 +375,6 @@ test.describe("Sharing collaboration walkthrough", () => {
     });
   }
 
-  // ─── RTL spot checks ──────────────────────────────────────────────────────
   test("08_rtl_grid_badges", async ({ page }) => {
     await enableRtl(page);
     await stubStorageApis(page);
