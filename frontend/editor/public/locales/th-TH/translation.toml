@@ -3526,7 +3526,6 @@ label = "ตำแหน่ง Y"
 
 [crop.error]
 failed = "ครอบตัด PDF ไม่สำเร็จ"
-invalidArea = "พื้นที่ครอบตัดเกินขอบเขตของ PDF"
 
 [crop.preview]
 title = "การเลือกพื้นที่ครอบตัด"

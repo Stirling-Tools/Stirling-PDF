@@ -27,6 +27,7 @@ async function restoreEnabled(
 }
 
 const NO_RESTORE = "this build ships the workbench restore off";
+const NO_PORTAL = "this build ships no processor to switch to";
 
 // Switching editor -> processor unmounts every editor provider; the session record
 // in sessionStorage is what brings the workbench back on return.
@@ -73,8 +74,13 @@ test.describe("Workbench survives the editor/processor switch", () => {
       page.getByRole("radio", { name: /Active Files/i }),
     ).toBeChecked();
 
-    // Out through the sidebar footer switch - the real user path.
-    await page.getByRole("button", { name: "Open PDF Processor" }).click();
+    // Out through the rail's processor mark, the only chrome that offers the switch.
+    const processorMark = page.getByRole("button", { name: /^Processor$/i });
+    test.skip(
+      !(await processorMark.isVisible({ timeout: 5_000 }).catch(() => false)),
+      NO_PORTAL,
+    );
+    await processorMark.click();
     await expect(page).toHaveURL(/\/processor/, { timeout: 15000 });
 
     // Split the two halves of the feature: if this fails the writer is at fault,

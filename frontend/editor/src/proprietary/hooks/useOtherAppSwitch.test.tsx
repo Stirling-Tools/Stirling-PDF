@@ -7,9 +7,10 @@ const mocks = vi.hoisted(() => ({
   portalAccess: true,
 }));
 
+// The hook reads window.location for the return path (not useLocation), because
+// the editor's raw history.pushState leaves react-router's location stale.
 vi.mock("react-router-dom", () => ({
   useNavigate: () => mocks.navigate,
-  useLocation: () => ({ pathname: "/compress", search: "?mode=fast" }),
 }));
 vi.mock("@app/auth/context", () => ({
   useAuth: () => ({ portalAccess: mocks.portalAccess }),
@@ -27,6 +28,7 @@ beforeEach(() => {
   sessionStorage.clear();
   vi.clearAllMocks();
   mocks.portalAccess = true;
+  window.history.pushState({}, "", "/");
 });
 
 describe("useOtherAppSwitch", () => {
@@ -45,6 +47,7 @@ describe("useOtherAppSwitch", () => {
   });
 
   it("records where to return to, then navigates to the processor", () => {
+    window.history.pushState({}, "", "/compress?mode=fast");
     const { result } = renderHook(() => useOtherAppSwitch());
     result.current?.onOpen();
     mocks.requestNavigation.mock.calls[0][0]();

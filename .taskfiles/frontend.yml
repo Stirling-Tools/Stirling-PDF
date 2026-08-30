@@ -23,7 +23,7 @@ tasks:
       - package-lock.json
       - package.json
     status:
-      - test -d node_modules
+      - npm ls --depth=0
     env:
       CI: '{{ .CI | default "false" }}'
 
