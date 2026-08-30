@@ -93,7 +93,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               ? true
               : false,
         createdAt: Date.now(),
-      } as ToastInstance;
+      };
       setToasts((prev) => {
         // Coalesce duplicates by alertType + title + body text if no explicit id was provided
         if (!options.id) {
@@ -138,7 +138,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           ...t,
           ...updates,
           progress,
-        } as ToastInstance;
+        };
 
         // Detect completion but do not auto-flip to success.
         // Callers (e.g., compare workbench) explicitly set alertType when done.
@@ -197,9 +197,8 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         ),
       );
     };
-    window.addEventListener("toast:toggle", handler as EventListener);
-    return () =>
-      window.removeEventListener("toast:toggle", handler as EventListener);
+    window.addEventListener("toast:toggle", handler);
+    return () => window.removeEventListener("toast:toggle", handler);
   }, []);
 
   return (

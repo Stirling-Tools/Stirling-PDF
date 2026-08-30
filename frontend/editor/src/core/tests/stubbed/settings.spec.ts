@@ -144,15 +144,11 @@ test.describe("Settings dialog", () => {
       const origReplace = window.history.replaceState.bind(window.history);
       window.history.pushState = function (...args) {
         w.__historyOps.push++;
-        return origPush(
-          ...(args as Parameters<typeof window.history.pushState>),
-        );
+        return origPush(...args);
       };
       window.history.replaceState = function (...args) {
         w.__historyOps.replace++;
-        return origReplace(
-          ...(args as Parameters<typeof window.history.replaceState>),
-        );
+        return origReplace(...args);
       };
     });
 

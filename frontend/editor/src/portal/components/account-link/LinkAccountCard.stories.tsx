@@ -9,8 +9,9 @@ const base: UseAccountLink = {
   status: { linked: false, name: null },
   phase: "idle",
   error: null,
-  completeLink: async () => {},
+
   unlink: async () => {},
+  refresh: async () => {},
 };
 
 const meta: Meta<typeof LinkAccountCard> = {
