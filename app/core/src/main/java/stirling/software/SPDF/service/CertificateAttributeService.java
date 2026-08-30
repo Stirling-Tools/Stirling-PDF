@@ -113,17 +113,22 @@ public class CertificateAttributeService {
      *
      * @param attributes every attribute available
      * @param selected the subset to render, in the order given by the enum; {@code null} means all
+     * @param labels what to draw in front of each value, for the attributes the caller has a
+     *     translation for; the English label is used for the rest
      */
     public List<SignatureAppearanceLayout.Field> toDisplayFields(
-            Map<CertificateAttribute, String> attributes, Iterable<CertificateAttribute> selected) {
+            Map<CertificateAttribute, String> attributes,
+            Iterable<CertificateAttribute> selected,
+            Map<CertificateAttribute, String> labels) {
         List<SignatureAppearanceLayout.Field> fields = new ArrayList<>();
         Iterable<CertificateAttribute> wanted = selected != null ? selected : attributes.keySet();
         for (CertificateAttribute attribute : wanted) {
             String value = attributes.get(attribute);
             if (value != null && !value.isBlank()) {
+                String label = labels != null ? labels.get(attribute) : null;
                 fields.add(
                         new SignatureAppearanceLayout.Field(
-                                label(attribute),
+                                label != null && !label.isBlank() ? label : label(attribute),
                                 value,
                                 attribute == CertificateAttribute.SUBJECT_COMMON_NAME));
             }

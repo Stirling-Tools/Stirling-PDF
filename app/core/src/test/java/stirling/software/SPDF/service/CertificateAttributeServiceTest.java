@@ -58,6 +58,8 @@ class CertificateAttributeServiceTest {
         return new JcaX509CertificateConverter().getCertificate(builder.build(signer));
     }
 
+    private static final Map<CertificateAttribute, String> NO_LABELS = Map.of();
+
     private static List<String> labels(List<SignatureAppearanceLayout.Field> fields) {
         return fields.stream().map(SignatureAppearanceLayout.Field::label).toList();
     }
@@ -175,7 +177,8 @@ class CertificateAttributeServiceTest {
                             attributes,
                             List.of(
                                     CertificateAttribute.SUBJECT_ORGANISATION,
-                                    CertificateAttribute.SUBJECT_COMMON_NAME));
+                                    CertificateAttribute.SUBJECT_COMMON_NAME),
+                            NO_LABELS);
 
             assertEquals(List.of("Organisation", "Signed by"), labels(fields));
             assertEquals("IMGA", fields.get(0).value());
@@ -196,10 +199,30 @@ class CertificateAttributeServiceTest {
                             attributes,
                             List.of(
                                     CertificateAttribute.SUBJECT_COMMON_NAME,
-                                    CertificateAttribute.SUBJECT_EMAIL));
+                                    CertificateAttribute.SUBJECT_EMAIL),
+                            NO_LABELS);
 
             // An empty "Email:" line in a signature would look like a defect.
             assertEquals(List.of("Signed by"), labels(fields));
+        }
+
+        @Test
+        @DisplayName("The caller's labels are drawn in place of the English ones")
+        void callerSuppliesTheLabels() throws Exception {
+            Map<CertificateAttribute, String> attributes =
+                    service.extract(certificate("CN=Samuel Saez,O=IMGA,C=ES", "CN=Emisor"));
+
+            List<SignatureAppearanceLayout.Field> fields =
+                    service.toDisplayFields(
+                            attributes,
+                            List.of(
+                                    CertificateAttribute.SUBJECT_COMMON_NAME,
+                                    CertificateAttribute.SUBJECT_ORGANISATION),
+                            Map.of(CertificateAttribute.SUBJECT_COMMON_NAME, "Assinado por"));
+
+            // The one that was translated is translated; the rest keeps the English label, which
+            // is what a caller that only knows some of the fields should get.
+            assertEquals(List.of("Assinado por", "Organisation"), labels(fields));
         }
 
         @Test
@@ -208,7 +231,7 @@ class CertificateAttributeServiceTest {
             Map<CertificateAttribute, String> attributes =
                     service.extract(certificate("CN=Samuel Saez,O=IMGA", "CN=Emisor"));
 
-            List<String> labels = labels(service.toDisplayFields(attributes, null));
+            List<String> labels = labels(service.toDisplayFields(attributes, null, NO_LABELS));
 
             assertTrue(labels.contains("Signed by"));
             assertTrue(labels.contains("Organisation"));

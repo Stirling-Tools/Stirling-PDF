@@ -10,6 +10,7 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.Calendar;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -354,6 +355,8 @@ public class CertSignController {
         CreateSignature createSignature =
                 new CreateSignature(ks, pin, request.getAlias(), signingProvider);
         createSignature.setCustomLogo(readLogo(request.getLogoImage(), request.getLogoPosition()));
+        createSignature.setAttributeLabels(
+                zipLabels(request.getVisibleAttributes(), request.getVisibleAttributeLabels()));
         TempFile signedOut = tempFileManager.createManagedTempFile(".pdf");
         try (OutputStream os = new FileOutputStream(signedOut.getFile())) {
             sign(
@@ -433,6 +436,26 @@ public class CertSignController {
      * obviously wrong upload here gives the user a clear message instead of a decoding failure
      * halfway through signing.
      */
+    /**
+     * Pairs each selected attribute with the label the caller wants drawn for it.
+     *
+     * <p>The two lists come from a form, so they can disagree; anything the labels do not cover
+     * keeps the English one, which is the same outcome as sending no labels at all.
+     */
+    private static Map<CertificateAttribute, String> zipLabels(
+            List<CertificateAttribute> attributes, List<String> labels) {
+        if (attributes == null || labels == null) {
+            return Map.of();
+        }
+        Map<CertificateAttribute, String> zipped = new EnumMap<>(CertificateAttribute.class);
+        for (int i = 0; i < Math.min(attributes.size(), labels.size()); i++) {
+            if (attributes.get(i) != null && labels.get(i) != null && !labels.get(i).isBlank()) {
+                zipped.put(attributes.get(i), labels.get(i));
+            }
+        }
+        return zipped;
+    }
+
     private boolean isSupportedLogoType(MultipartFile logoImage) {
         String contentType = logoImage.getContentType();
         if (contentType != null) {
@@ -489,6 +512,18 @@ public class CertSignController {
          * appearance builder owns what the signature looks like.
          */
         private SignatureLogoPlacement.Logo customLogo;
+
+        private Map<CertificateAttribute, String> attributeLabels = Map.of();
+
+        /**
+         * Sets what to draw in front of each value.
+         *
+         * <p>Carried on the signer for the same reason the logo is: this class owns how the
+         * signature looks, and {@code sign(...)} already takes thirteen arguments.
+         */
+        public void setAttributeLabels(Map<CertificateAttribute, String> attributeLabels) {
+            this.attributeLabels = attributeLabels != null ? attributeLabels : Map.of();
+        }
 
         public void setCustomLogo(SignatureLogoPlacement.Logo customLogo) {
             this.customLogo = customLogo;
@@ -754,7 +789,7 @@ public class CertSignController {
                             ? visibleAttributes
                             : DEFAULT_VISIBLE_ATTRIBUTES;
 
-            return attributeService.toDisplayFields(available, selected);
+            return attributeService.toDisplayFields(available, selected, attributeLabels);
         }
 
         /** Draws the selected certificate fields, scaled to whatever box the user drew. */

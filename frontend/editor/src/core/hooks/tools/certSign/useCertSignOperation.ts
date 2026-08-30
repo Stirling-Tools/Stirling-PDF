@@ -1,4 +1,6 @@
 import { useTranslation } from "react-i18next";
+import i18n from "@app/i18n";
+import { CERTIFICATE_ATTRIBUTE_LABEL_KEYS } from "@app/constants/certSignConstants";
 import {
   useToolOperation,
   defineSingleFileTool,
@@ -87,6 +89,12 @@ const withSignatureAppearance = (
     }
     if (parameters.visibleAttributes.length > 0) {
       apiParams.visibleAttributes = parameters.visibleAttributes;
+      // The signature is baked into the document, so it is stamped in the language the person
+      // signing is reading, not in the server's. These are the same labels the field picker
+      // shows, sent in the same order as the fields they belong to.
+      apiParams.visibleAttributeLabels = parameters.visibleAttributes.map((a) =>
+        i18n.t(CERTIFICATE_ATTRIBUTE_LABEL_KEYS[a]),
+      );
     }
     // Only meaningful alongside a box: without one there is no shape to repeat.
     if (parameters.markAllPages && area) {

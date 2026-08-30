@@ -142,6 +142,14 @@ public class SignPDFWithCertRequest extends PDFFile {
 
     @Schema(
             description =
+                    "Labels to draw in front of each of visibleAttributes, in the same order. The"
+                            + " application holds its own translations, and the signature is baked"
+                            + " into the document, so the caller says what the reader should see."
+                            + " Omit to get English.")
+    private List<String> visibleAttributeLabels;
+
+    @Schema(
+            description =
                     "Repeat the signature's appearance on every page. A PDF signature has one"
                             + " widget on one page, so only the page given by pageNumber carries"
                             + " the actual signature; the other pages get a visual mark with the"

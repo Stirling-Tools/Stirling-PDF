@@ -1370,6 +1370,15 @@ export interface SignPDFWithCertRequest {
    * The location where the PDF is signed
    */
   location?: string;
+  logoImage?: File;
+  /**
+   * Where the logo sits inside the signature box. BEHIND draws it under the text as a watermark; the others give it a strip of its own. Sending it without a signature box is allowed and applies the same layout to the default box.
+   */
+  logoPosition?: "LEFT" | "RIGHT" | "TOP" | "BOTTOM" | "BEHIND";
+  /**
+   * Repeat the signature's appearance on every page. A PDF signature has one widget on one page, so only the page given by pageNumber carries the actual signature; the other pages get a visual mark with the same content that is NOT a signature. Tell the user that, or the document looks signed in more places than it is.
+   */
+  markAllPages?: boolean;
   /**
    * The name of the signer
    */
@@ -1401,13 +1410,17 @@ export interface SignPDFWithCertRequest {
    */
   showLogo?: boolean;
   /**
-   * Where the logo sits inside the signature box. BEHIND draws it under the text as a watermark; the others give it a strip of its own.
-   */
-  logoPosition?: "LEFT" | "RIGHT" | "TOP" | "BOTTOM" | "BEHIND";
-  /**
    * Whether to visually show the signature in the PDF file
    */
   showSignature?: boolean;
+  /**
+   * Height of the signature box in PDF points.
+   */
+  signatureHeight?: number;
+  /**
+   * Width of the signature box in PDF points.
+   */
+  signatureWidth?: number;
   /**
    * Distance in PDF points from the left edge of the page to the left edge of the signature box. Omit to keep the legacy bottom-left placement.
    */
@@ -1417,20 +1430,12 @@ export interface SignPDFWithCertRequest {
    */
   signatureY?: number;
   /**
-   * Width of the signature box in PDF points.
+   * Labels to draw in front of each of visibleAttributes, in the same order. The application holds its own translations, and the signature is baked into the document, so the caller says what the reader should see. Omit to get English.
    */
-  signatureWidth?: number;
+  visibleAttributeLabels?: string[];
   /**
-   * Height of the signature box in PDF points.
+   * Certificate fields to draw inside the signature box, in the order given. Omit to keep the legacy content (signer name, date and reason). Fields the certificate does not carry are skipped rather than drawn blank.
    */
-  signatureHeight?: number;
-  /**
-   * Certificate fields to draw inside the signature box, in the order given. Omit to keep the legacy content. Fields the certificate does not carry are skipped rather than drawn blank.
-   */
-  /**
-   * Repeat the signature's appearance on every page. Only the page given by pageNumber carries the actual signature; the other pages get a visual mark that is NOT a signature.
-   */
-  markAllPages?: boolean;
   visibleAttributes?: (
     | "SUBJECT_COMMON_NAME"
     | "SUBJECT_ORGANISATION"
@@ -1856,6 +1861,7 @@ export const TOOL_FILE_FIELDS = {
     "certFile",
     "p12File",
     "jksFile",
+    "logoImage",
   ],
   "/api/v1/security/cert-sign/validate-certificate": ["p12File", "jksFile"],
   "/api/v1/security/validate-signature": ["certFile"],
