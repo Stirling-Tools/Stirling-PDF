@@ -216,6 +216,8 @@ const SAAS_ROUTE_OVERRIDES = {
     ogTitle: "Govern every PDF your organization touches",
     description:
       "Redaction, retention, and encryption policies enforced everywhere PDFs enter your org. Distribute the free Editor anywhere. 1¢ per PDF.",
+    // Metered product - a price-0 Offer would contradict the page copy.
+    noOffer: true,
   },
   "/editor": {
     image: "/og_images/saas/app-editor.png",
@@ -322,6 +324,8 @@ for (const id of allIds) {
     image: `/og_images/${img || DEFAULT_IMAGE_BASENAME}.png`,
     title: titleFor(id),
     description: descFor(id),
+    // Link tools are external redirects with no component, not landing pages.
+    ...(linkIds.includes(id) ? { noindex: true } : {}),
   };
 }
 

@@ -5,6 +5,8 @@ export interface OgEntry {
   title: string;
   description: string;
   noindex?: boolean;
+  /** Omit the price-0 Offer from JSON-LD (metered/paid surfaces). */
+  noOffer?: boolean;
   /** Punchier social-card title; falls back to `title` for the <title> tag. */
   ogTitle?: string;
 }

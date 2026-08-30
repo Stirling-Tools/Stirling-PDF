@@ -273,7 +273,7 @@
     },
     "formFill": {
       "image": "/og_images/form-fill.png",
-      "title": "Form Editor - Stirling PDF",
+      "title": "Fill PDF Forms - Stirling PDF",
       "description": "Fill, create, edit, and delete PDF form fields with a visual editor"
     },
     "multiTool": {
@@ -294,22 +294,26 @@
     "devApi": {
       "image": "/og_images/dev-api.png",
       "title": "API - Stirling PDF",
-      "description": "Link to API documentation"
+      "description": "Link to API documentation",
+      "noindex": true
     },
     "devFolderScanning": {
       "image": "/og_images/dev-folder-scanning.png",
       "title": "Automated Folder Scanning - Stirling PDF",
-      "description": "Link to automated folder scanning guide"
+      "description": "Link to automated folder scanning guide",
+      "noindex": true
     },
     "devSsoGuide": {
       "image": "/og_images/dev-sso-guide.png",
       "title": "SSO Guide - Stirling PDF",
-      "description": "Link to SSO guide"
+      "description": "Link to SSO guide",
+      "noindex": true
     },
     "devAirgapped": {
       "image": "/og_images/dev-airgapped.png",
       "title": "Air-gapped Setup - Stirling PDF",
-      "description": "Link to air-gapped setup guide"
+      "description": "Link to air-gapped setup guide",
+      "noindex": true
     },
     "/editor": {
       "image": "/og_images/saas/app-editor.png",
@@ -692,7 +696,8 @@
       "image": "/og_images/saas/app-processor.png",
       "title": "Stirling Processor - Govern every PDF your organization touches",
       "ogTitle": "Govern every PDF your organization touches",
-      "description": "Redaction, retention, and encryption policies enforced everywhere PDFs enter your org. Distribute the free Editor anywhere. 1¢ per PDF."
+      "description": "Redaction, retention, and encryption policies enforced everywhere PDFs enter your org. Distribute the free Editor anywhere. 1¢ per PDF.",
+      "noOffer": true
     }
   },
   "byPath": {
@@ -947,6 +952,10 @@
     {
       "path": "/change-permissions",
       "label": "Change PDF Permissions"
+    },
+    {
+      "path": "/classify",
+      "label": "Classify"
     },
     {
       "path": "/single-large-page",

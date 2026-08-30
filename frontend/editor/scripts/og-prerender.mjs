@@ -79,9 +79,9 @@ export function buildCanonicalTag(canonicalUrl) {
 
 /**
  * Build a JSON-LD structured-data block. Home gets WebSite + Organization;
- * tool pages get a free WebApplication plus a Home > Tool breadcrumb. Needs an
+ * tool pages get a WebApplication plus a Home > Tool breadcrumb. Needs an
  * absolute origin, so callers only invoke it when a canonical base is known.
- * @param {{title:string,description:string}} entry
+ * @param {{title:string,description:string,noOffer?:boolean}} entry
  * @param {{siteRoot:string, pageUrl:string, isHome:boolean}} opts
  */
 export function buildJsonLd(entry, { siteRoot, pageUrl, isHome }) {
@@ -115,7 +115,12 @@ export function buildJsonLd(entry, { siteRoot, pageUrl, isHome }) {
           applicationCategory: "BusinessApplication",
           operatingSystem: "All",
           browserRequirements: "Requires JavaScript. Requires HTML5.",
-          offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+          // Manifest entries for metered products opt out (see noOffer).
+          ...(entry.noOffer
+            ? {}
+            : {
+                offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+              }),
           isPartOf: { "@type": "WebSite", name: SITE_NAME, url: siteRoot },
           publisher: organization,
         },

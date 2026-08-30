@@ -337,7 +337,7 @@
   },
   "/form-fill": {
     "title": "Fill PDF Forms",
-    "description": "Fill PDF form fields interactively with a visual editor"
+    "description": "Fill, create, edit, and delete PDF form fields with a visual editor"
   },
   "/multi-tool": {
     "title": "PDF Page Editor",

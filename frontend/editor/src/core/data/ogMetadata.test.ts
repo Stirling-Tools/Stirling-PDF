@@ -1,12 +1,15 @@
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { getToolOgImage } from "@app/data/ogImage";
+import { CORE_LINK_TOOL_IDS } from "@app/types/toolId";
 // Build tooling (plain ESM, node:fs only) - import the helpers for coverage.
 // oxlint-disable-next-line no-restricted-imports -- build script lives outside the @app alias root
 import {
   buildBodyContent,
+  buildJsonLd,
   buildOgTags,
   buildSitemap,
   injectBody,
@@ -179,6 +182,18 @@ describe("injectOg SEO extras (robots, canonical, JSON-LD)", () => {
     expect(out).toContain('<script type="application/ld+json">');
     expect(out).toContain('"@type":"WebApplication"');
     expect(out).toContain('"@type":"BreadcrumbList"');
+  });
+
+  it("omits the price-0 Offer when the entry opts out (metered surfaces)", () => {
+    const opts = {
+      siteRoot: "https://stirling.com/",
+      pageUrl: "https://stirling.com/processor",
+      isHome: false,
+    };
+    expect(buildJsonLd(entry, opts)).toContain('"price":"0"');
+    expect(buildJsonLd({ ...entry, noOffer: true }, opts)).not.toContain(
+      '"offers"',
+    );
   });
 
   it("escapes '<' inside JSON-LD so a value cannot close the script early", () => {
@@ -562,5 +577,47 @@ describe("prerenderOg (flat + nested route files)", () => {
     expect(login).toContain('content="noindex, follow"');
 
     await fs.rm(dir, { recursive: true, force: true });
+  });
+});
+
+// Contract over the committed generator output, which the fixture-based suites
+// above cannot see. Regenerate with `node scripts/generate-og-metadata.mjs`.
+describe("shipped OG manifests", () => {
+  // Read import.meta.url via a variable: inlined, vite rewrites the
+  // `new URL(..., import.meta.url)` asset pattern and the path resolves wrong.
+  const here = import.meta.url;
+  const load = async (name: string) =>
+    JSON.parse(
+      await fs.readFile(
+        fileURLToPath(new URL(`../../../public/${name}`, here)),
+        "utf8",
+      ),
+    );
+
+  it.each(["og-metadata.json", "og-metadata.saas.json"])(
+    "%s marks every link tool noindex and keeps it out of the sitemap",
+    async (name) => {
+      const manifest = await load(name);
+      const linkIds: readonly string[] = CORE_LINK_TOOL_IDS;
+      for (const id of linkIds)
+        expect(manifest.byTool[id]?.noindex, id).toBe(true);
+
+      const linkPaths = Object.entries(manifest.byPath)
+        .filter(([, id]) => linkIds.includes(id as string))
+        .map(([routePath]) => routePath);
+      expect(linkPaths.length).toBeGreaterThanOrEqual(linkIds.length);
+
+      const xml = buildSitemap(manifest, { ogBase: "https://stirling.com" });
+      for (const routePath of linkPaths)
+        expect(xml).not.toContain(
+          `<loc>https://stirling.com${routePath}</loc>`,
+        );
+    },
+  );
+
+  it("opts the metered /processor out of the price-0 Offer, not /editor", async () => {
+    const manifest = await load("og-metadata.saas.json");
+    expect(manifest.byTool["/processor"].noOffer).toBe(true);
+    expect(manifest.byTool["/editor"].noOffer).toBeUndefined();
   });
 });
