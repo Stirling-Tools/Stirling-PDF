@@ -1,6 +1,7 @@
 import { lazy, useMemo } from "react";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import GroupAddOutlinedIcon from "@mui/icons-material/GroupAddOutlined";
+import StraightenOutlinedIcon from "@mui/icons-material/StraightenOutlined";
 import { useTranslation } from "react-i18next";
 import { devApiLink } from "@app/constants/links";
 import { reorganizePagesOperationConfig } from "@app/hooks/tools/reorganizePages/useReorganizePagesOperation";
@@ -302,6 +303,24 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         automationSettings: null,
         synonyms: getSynonyms(t, "annotate"),
         supportsAutomate: false,
+      },
+      takeoff: {
+        icon: <StraightenOutlinedIcon sx={{ fontSize: "1.5rem" }} />,
+        name: t("home.takeoff.title", "Take Off"),
+        component: lazy(() => import("@app/tools/Takeoff")),
+        description: t(
+          "home.takeoff.desc",
+          "Measure lengths, areas, and counts on a plan and price them out as a materials list",
+        ),
+        categoryId: ToolCategoryId.STANDARD_TOOLS,
+        subcategoryId: SubcategoryId.GENERAL,
+        maxFiles: 1,
+        endpoints: ["view-pdf"],
+        operationConfig: asRegistryConfig(signOperationConfig),
+        automationSettings: null,
+        synonyms: getSynonyms(t, "takeoff"),
+        supportsAutomate: false,
+        versionStatus: "alpha",
       },
 
       // Document Security

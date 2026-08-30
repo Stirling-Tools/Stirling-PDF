@@ -33,6 +33,7 @@ export const CORE_REGULAR_TOOL_IDS = [
   "rotate",
   "autoRotate",
   "annotate",
+  "takeoff",
   "scannerImageSplit",
   "editTableOfContents",
   "scannerEffect",

@@ -110,6 +110,11 @@
       "title": "Annotate - Stirling PDF",
       "description": "Highlight, draw, add notes, and shapes directly in the viewer"
     },
+    "takeoff": {
+      "image": "/og_images/home.png",
+      "title": "Take Off - Stirling PDF",
+      "description": "Measure lengths, areas, and counts on a plan and price them out as a materials list"
+    },
     "scannerImageSplit": {
       "image": "/og_images/detect-split-scanned-photos.png",
       "title": "Detect & Split Scanned Photos - Stirling PDF",
@@ -558,6 +563,7 @@
     "/rotate": "rotate",
     "/auto-rotate": "autoRotate",
     "/annotate": "annotate",
+    "/takeoff": "takeoff",
     "/scanner-image-split": "scannerImageSplit",
     "/edit-table-of-contents": "editTableOfContents",
     "/scanner-effect": "scannerEffect",

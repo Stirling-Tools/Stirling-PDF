@@ -4549,6 +4549,11 @@ desc = "Highlight, draw, add notes and shapes in the viewer"
 tags = "annotate,highlight,draw,markup,comment,notes,review,redline,feedback,markup tools,sticky notes,shapes,arrows,text box,freehand"
 title = "Annotate"
 
+[home.takeoff]
+desc = "Measure lengths, areas, and counts on a plan and price them out as a materials list"
+tags = "takeoff,take off,measure,measurement,estimate,estimating,quantity,quantities,construction,building,plan,drawing,ruler,area,count,scale,calibrate,materials list,cost estimate"
+title = "Take Off"
+
 [home.automate]
 desc = "Build multi-step workflows by chaining together PDF actions. Ideal for recurring tasks."
 tags = "workflow,sequence,automation,automate,batch,batch processing,pipeline,chain,multi-step,recurring,scheduled,automatic,process multiple,bulk operations"
