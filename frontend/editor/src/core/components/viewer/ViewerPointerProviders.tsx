@@ -33,6 +33,7 @@ export function ViewerGlobalPointerProvider({
   return (
     <GlobalPointerProvider
       documentId={documentId}
+      // Consumed by the touch-action rule in core/styles/theme.css.
       data-viewer-touch-scroll={mode === POINTER_MODE ? "on" : "off"}
     >
       {children}
@@ -53,6 +54,7 @@ export function ViewerPagePointerProvider({
     <PagePointerProvider
       documentId={documentId}
       pageIndex={pageIndex}
+      // Consumed by the touch-action rule in core/styles/theme.css.
       className="pdf-page-pointer-layer"
     >
       {children}

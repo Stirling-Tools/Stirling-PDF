@@ -602,6 +602,8 @@
   background-color: var(--p-gray-500) !important;
 }
 
+/* !important beats the inline touch-action:none the interaction manager writes for pointerMode. */
+[data-viewer-touch-scroll="on"],
 [data-viewer-touch-scroll="on"] .pdf-page-pointer-layer {
   touch-action: pan-y pinch-zoom !important;
 }

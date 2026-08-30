@@ -249,6 +249,16 @@ test.describe("touch-primary device", () => {
       }),
     ).toBe("pan-y pinch-zoom");
 
+    // The global provider is an ancestor of the scroller, so its inline none would veto pinch-zoom.
+    expect(
+      await page.evaluate(() => {
+        const el = document.querySelector<HTMLElement>(
+          '[data-viewer-touch-scroll="on"]',
+        );
+        return el ? getComputedStyle(el).touchAction : null;
+      }),
+    ).toBe("pan-y pinch-zoom");
+
     const cdp = await page.context().newCDPSession(page);
     const touchDrag = async (x: number, y: number, dx: number, dy: number) => {
       await cdp.send("Input.dispatchTouchEvent", {
