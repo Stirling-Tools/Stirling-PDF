@@ -3,15 +3,15 @@ package stirling.software.proprietary.storage.converter;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 
 import lombok.extern.slf4j.Slf4j;
+
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * JPA AttributeConverter for storing Map<String, Object> as JSON in database columns.
@@ -33,7 +33,7 @@ public class JsonMapConverter implements AttributeConverter<Map<String, Object>,
 
         try {
             return objectMapper.writeValueAsString(attribute);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             log.error("Failed to convert map to JSON", e);
             throw new RuntimeException("Failed to convert map to JSON", e);
         }
@@ -48,7 +48,7 @@ public class JsonMapConverter implements AttributeConverter<Map<String, Object>,
         try {
             // Try normal parsing first
             return objectMapper.readValue(dbData, new TypeReference<Map<String, Object>>() {});
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             // Fallback: try double-parsing for legacy double-encoded data
             // This handles data that was stored as JSON strings instead of JSON objects
             log.debug("Attempting double-decode fallback for legacy metadata format");
@@ -69,7 +69,7 @@ public class JsonMapConverter implements AttributeConverter<Map<String, Object>,
                     return objectMapper.readValue(
                             node.asText(), new TypeReference<Map<String, Object>>() {});
                 }
-            } catch (JsonProcessingException e2) {
+            } catch (JacksonException e2) {
                 log.error("Failed to parse metadata even with double-decode fallback", e2);
             }
 

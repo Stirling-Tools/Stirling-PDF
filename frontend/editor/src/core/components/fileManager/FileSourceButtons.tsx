@@ -173,7 +173,7 @@ const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({
           mb="xs"
           style={{ paddingLeft: "1rem" }}
         >
-          {t("fileManager.myFiles", "My Files")}
+          {t("fileSidebar.myFiles", "File library")}
         </Text>
         {buttons}
       </Stack>

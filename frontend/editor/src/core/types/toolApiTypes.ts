@@ -1023,6 +1023,10 @@ export interface ProcessPdfWithOcrRequest {
    */
   removeImagesAfter?: boolean;
   /**
+   * Auto-correct page orientation (90/180/270) using Tesseract OSD if set to true
+   */
+  rotatePages?: boolean;
+  /**
    * Include OCR text in a sidecar text file if set to true
    */
   sidecar?: boolean;
