@@ -1,6 +1,7 @@
 package stirling.software.SPDF.controller.api.security;
 
 import java.awt.*;
+import java.awt.geom.AffineTransform;
 import java.beans.PropertyEditorSupport;
 import java.io.*;
 import java.nio.file.Files;
@@ -643,12 +644,19 @@ public class CertSignController {
 
                 // Without a requested box, keep the historical bottom-left placement so existing
                 // callers see no change in where their signatures land.
+                PDPage sourcePage = srcDoc.getPage(pageNumber);
                 PDRectangle rect =
                         box != null
-                                ? box.toPdfRectangle(srcDoc.getPage(pageNumber).getMediaBox())
+                                ? box.toPdfRectangle(sourcePage)
                                 : new PDRectangle(0, 0, 200, 50);
 
                 widget.setRectangle(rect);
+
+                // A page can be stored one way up and displayed another. The box arrived measured
+                // against what the reader sees, so the appearance is drawn that way round and
+                // turned to match the page, or the signature would read sideways.
+                int turn = box != null ? SignatureBox.quarterTurn(sourcePage) : 0;
+                boolean sideways = turn == 90 || turn == 270;
 
                 // from PDVisualSigBuilder.createHolderForm()
                 PDStream stream = new PDStream(doc);
@@ -656,9 +664,15 @@ public class CertSignController {
                 PDResources res = new PDResources();
                 form.setResources(res);
                 form.setFormType(1);
-                PDRectangle bbox = new PDRectangle(rect.getWidth(), rect.getHeight());
+                PDRectangle bbox =
+                        sideways
+                                ? new PDRectangle(rect.getHeight(), rect.getWidth())
+                                : new PDRectangle(rect.getWidth(), rect.getHeight());
                 float height = bbox.getHeight();
                 form.setBBox(bbox);
+                if (turn != 0) {
+                    form.setMatrix(AffineTransform.getRotateInstance(Math.toRadians(turn)));
+                }
                 PDFont font = new PDType1Font(FontName.TIMES_BOLD);
 
                 // from PDVisualSigBuilder.createAppearanceDictionary()

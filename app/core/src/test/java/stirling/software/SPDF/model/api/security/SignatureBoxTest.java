@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -63,6 +64,13 @@ class SignatureBoxTest {
         }
     }
 
+    /** An unrotated page showing exactly the given area. */
+    private static PDPage pageOf(PDRectangle visible) {
+        PDPage page = new PDPage(visible);
+        page.setCropBox(visible);
+        return page;
+    }
+
     @Nested
     @DisplayName("Placing the box on a page")
     class Placement {
@@ -72,7 +80,7 @@ class SignatureBoxTest {
         void placesAtGivenCoordinates() {
             SignatureBox box = new SignatureBox(30f, 700f, 200f, 40f);
 
-            PDRectangle rect = box.toPdfRectangle(A4);
+            PDRectangle rect = box.toPdfRectangle(pageOf(A4));
 
             assertEquals(30f, rect.getLowerLeftX(), 0.01f);
             assertEquals(700f, rect.getLowerLeftY(), 0.01f);
@@ -83,7 +91,7 @@ class SignatureBoxTest {
         @Test
         @DisplayName("A box at the origin sits on the bottom-left corner")
         void originCorner() {
-            PDRectangle rect = new SignatureBox(0f, 0f, 100f, 50f).toPdfRectangle(A4);
+            PDRectangle rect = new SignatureBox(0f, 0f, 100f, 50f).toPdfRectangle(pageOf(A4));
 
             assertEquals(0f, rect.getLowerLeftX(), 0.01f);
             assertEquals(0f, rect.getLowerLeftY(), 0.01f);
@@ -93,7 +101,7 @@ class SignatureBoxTest {
         @DisplayName("A box dragged past the right edge is pulled back inside")
         void clampsHorizontally() {
             // 500pt from the left on a 595pt-wide page, with a 200pt box: 105pt would overflow.
-            PDRectangle rect = new SignatureBox(500f, 100f, 200f, 50f).toPdfRectangle(A4);
+            PDRectangle rect = new SignatureBox(500f, 100f, 200f, 50f).toPdfRectangle(pageOf(A4));
 
             assertEquals(A4.getWidth() - 200f, rect.getLowerLeftX(), 0.01f);
             assertTrue(
@@ -105,7 +113,7 @@ class SignatureBoxTest {
         @DisplayName("A box dragged past the top edge is pulled back inside")
         void clampsVertically() {
             // 830pt up on an 841pt-tall page, with a 50pt box: 39pt would overflow the top.
-            PDRectangle rect = new SignatureBox(50f, 830f, 200f, 50f).toPdfRectangle(A4);
+            PDRectangle rect = new SignatureBox(50f, 830f, 200f, 50f).toPdfRectangle(pageOf(A4));
 
             assertEquals(A4.getHeight() - 50f, rect.getLowerLeftY(), 0.01f);
             assertTrue(
@@ -116,7 +124,7 @@ class SignatureBoxTest {
         @Test
         @DisplayName("Negative coordinates are pulled back to the page edge")
         void clampsNegative() {
-            PDRectangle rect = new SignatureBox(-100f, -100f, 200f, 50f).toPdfRectangle(A4);
+            PDRectangle rect = new SignatureBox(-100f, -100f, 200f, 50f).toPdfRectangle(pageOf(A4));
 
             assertEquals(0f, rect.getLowerLeftX(), 0.01f);
             assertEquals(0f, rect.getLowerLeftY(), 0.01f);
@@ -125,21 +133,21 @@ class SignatureBoxTest {
         @Test
         @DisplayName("A box bigger than the page shrinks to the page instead of overflowing")
         void shrinksOversizedBox() {
-            PDRectangle rect = new SignatureBox(0f, 0f, 9999f, 9999f).toPdfRectangle(A4);
+            PDRectangle rect = new SignatureBox(0f, 0f, 9999f, 9999f).toPdfRectangle(pageOf(A4));
 
             assertEquals(A4.getWidth(), rect.getWidth(), 0.01f);
             assertEquals(A4.getHeight(), rect.getHeight(), 0.01f);
         }
 
         @Test
-        @DisplayName("A page whose media box does not start at the origin is honoured")
+        @DisplayName("A page whose visible area does not start at the origin is honoured")
         void respectsOffsetMediaBox() {
             // Cropped or imposed pages can have a non-zero lower-left corner.
             PDRectangle offset = new PDRectangle(20f, 30f, 400f, 600f);
 
-            PDRectangle rect = new SignatureBox(10f, 10f, 100f, 50f).toPdfRectangle(offset);
+            PDRectangle rect = new SignatureBox(10f, 10f, 100f, 50f).toPdfRectangle(pageOf(offset));
 
-            // The media box's own origin has to be carried through, not assumed to be (0,0).
+            // The page's own origin has to be carried through, not assumed to be (0,0).
             assertEquals(20f + 10f, rect.getLowerLeftX(), 0.01f);
             assertEquals(30f + 10f, rect.getLowerLeftY(), 0.01f);
         }

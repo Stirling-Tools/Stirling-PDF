@@ -17,6 +17,7 @@ import org.apache.pdfbox.pdmodel.interactive.action.PDActionGoTo;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationLink;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDBorderStyleDictionary;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.destination.PDPageFitWidthDestination;
+import org.apache.pdfbox.util.Matrix;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -102,16 +103,25 @@ public class SignatureMarkStamper {
                 continue;
             }
             PDPage page = document.getPage(pageIndex);
-            PDRectangle rect = box.toPdfRectangle(page.getMediaBox());
+            PDRectangle rect = box.toPdfRectangle(page);
+
+            // The layout happens the way up the reader sees the page; the turn into the page's
+            // own coordinates is what keeps a rotated page's mark readable rather than sideways.
+            int turn = SignatureBox.quarterTurn(page);
+            boolean sideways = turn == 90 || turn == 270;
+            PDRectangle area =
+                    sideways
+                            ? new PDRectangle(rect.getHeight(), rect.getWidth())
+                            : new PDRectangle(rect.getWidth(), rect.getHeight());
 
             // The logo takes its strip first, exactly as it does in the signature, so both end up
             // with the text in the same place. This part stays per page: the box lands on each
-            // page's own media box, and a document can mix page sizes.
-            PDRectangle textArea = rect;
+            // page's own crop box, and a document can mix page sizes.
+            PDRectangle textArea = area;
             SignatureLogoPlacement.Placement placement = null;
             if (logoImage != null) {
                 placement =
-                        SignatureLogoPlacement.place(rect, aspectRatio(logoImage), logo.position());
+                        SignatureLogoPlacement.place(area, aspectRatio(logoImage), logo.position());
                 textArea = placement.textRect();
             }
 
@@ -128,7 +138,9 @@ public class SignatureMarkStamper {
             // AppendMode.APPEND leaves the existing page content untouched underneath.
             try (PDPageContentStream cs =
                     new PDPageContentStream(document, page, AppendMode.APPEND, true, true)) {
-                drawBorder(cs, rect);
+                cs.saveGraphicsState();
+                cs.transform(uprightOn(rect, turn));
+                drawBorder(cs, area);
                 if (placement != null) {
                     SignatureLogoPlacement.draw(
                             cs,
@@ -137,6 +149,7 @@ public class SignatureMarkStamper {
                             logo.position() == SignatureLogoPosition.BEHIND);
                 }
                 SignatureAppearanceLayout.draw(cs, font, textArea, layout);
+                cs.restoreGraphicsState();
             }
             if (signedPage != null) {
                 addLinkToSignature(page, rect, signedPage);
@@ -185,6 +198,33 @@ public class SignatureMarkStamper {
 
     private static float aspectRatio(PDImageXObject image) {
         return image.getHeight() == 0 ? 1f : (float) image.getWidth() / (float) image.getHeight();
+    }
+
+    /**
+     * Maps a mark drawn the way up the reader sees the page onto the page as it is stored.
+     *
+     * @param rect where the mark goes, in the page's own unturned coordinates
+     * @param turn the page's rotation, which the drawing has to undo to come out level
+     */
+    private static Matrix uprightOn(PDRectangle rect, int turn) {
+        return switch (turn) {
+            case 90 ->
+                    Matrix.getRotateInstance(
+                            Math.toRadians(90),
+                            rect.getLowerLeftX() + rect.getWidth(),
+                            rect.getLowerLeftY());
+            case 180 ->
+                    Matrix.getRotateInstance(
+                            Math.toRadians(180),
+                            rect.getLowerLeftX() + rect.getWidth(),
+                            rect.getLowerLeftY() + rect.getHeight());
+            case 270 ->
+                    Matrix.getRotateInstance(
+                            Math.toRadians(270),
+                            rect.getLowerLeftX(),
+                            rect.getLowerLeftY() + rect.getHeight());
+            default -> Matrix.getTranslateInstance(rect.getLowerLeftX(), rect.getLowerLeftY());
+        };
     }
 
     private static void drawBorder(PDPageContentStream cs, PDRectangle rect) throws IOException {
