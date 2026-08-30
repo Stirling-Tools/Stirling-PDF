@@ -1,4 +1,5 @@
 import { connectionModeService } from "@app/services/connectionModeService";
+import { suspendWorkbenchSession } from "@app/services/workbenchSession";
 
 type SignOutFn = () => Promise<void>;
 
@@ -16,6 +17,10 @@ export function useAccountLogout() {
     redirectToLogin,
   }: AccountLogoutDeps): Promise<void> => {
     try {
+      // The tab outlives the session; the next person to sign in here must not
+      // inherit this workbench. Suspends writing too - signing out unmounts the
+      // editor, and its flush would otherwise write the record straight back.
+      suspendWorkbenchSession();
       await signOut();
 
       const currentConfig = await connectionModeService.getCurrentConfig();

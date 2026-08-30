@@ -129,9 +129,9 @@ const SharedSign = (_props: BaseToolProps) => {
 
   const onItemClick = (item: SessionItem) => {
     if (item.itemType === "signRequest") {
-      void controller.openSignRequest(item as SignRequestSummary);
+      void controller.openSignRequest(item);
     } else {
-      void controller.openSession(item as SessionSummary);
+      void controller.openSession(item);
     }
   };
 
@@ -247,7 +247,7 @@ const SharedSign = (_props: BaseToolProps) => {
       <SegmentedControl
         fullWidth
         value={tab}
-        onChange={(value) => changeTab(value as Tab)}
+        onChange={(value) => changeTab(value)}
         options={[
           { label: t("sharedSign.tab.active", "Active"), value: "active" },
           {
