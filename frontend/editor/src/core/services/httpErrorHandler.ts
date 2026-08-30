@@ -12,7 +12,8 @@ import {
   clampText,
   extractAxiosErrorMessage,
 } from "@app/services/httpErrorUtils";
-import { withBasePath } from "@app/constants/app";
+import { stripBasePath, withBasePath } from "@app/constants/app";
+import { isSafePostLoginRedirect } from "@app/services/postLoginRedirect";
 
 // Module-scoped state to reduce global variable usage
 const recentSpecialByEndpoint: Record<string, number> = {};
@@ -21,26 +22,9 @@ const SPECIAL_SUPPRESS_MS = 1500; // brief window to suppress generic duplicate 
 // Mirrors the key in proprietary/auth/springAuthClient.ts; AuthCallback consumes it.
 const POST_LOGIN_REDIRECT_STORAGE_KEY = "stirling_post_login_path";
 
-function isSafePostLoginPath(path: string): boolean {
-  if (
-    !path.startsWith("/") ||
-    path.startsWith("//") ||
-    path.startsWith("/\\")
-  ) {
-    return false;
-  }
-  const lowered = path.toLowerCase();
-  return (
-    !lowered.startsWith("/login") &&
-    !lowered.startsWith("/auth/") &&
-    !lowered.startsWith("/oauth2") &&
-    !lowered.startsWith("/saml2")
-  );
-}
-
 function stashPostLoginRedirect(path: string): void {
   try {
-    if (typeof window === "undefined" || !isSafePostLoginPath(path)) return;
+    if (typeof window === "undefined" || !isSafePostLoginRedirect(path)) return;
     window.sessionStorage.setItem(POST_LOGIN_REDIRECT_STORAGE_KEY, path);
   } catch {
     // sessionStorage unavailable (private mode) — fail open
@@ -131,7 +115,11 @@ export async function handleHttpError(error: unknown): Promise<boolean> {
       console.debug("[httpErrorHandler] 401 detected, redirecting to login");
       // Spring 302-strips the ?from= query from /login, so stash the return
       // path in sessionStorage (AuthCallback reads it after SSO round-trip).
-      const currentLocation = window.location.pathname + window.location.search;
+      // Router-relative, not browser-relative: every consumer replays this
+      // through navigate(), which re-applies the basename. Keeping the base
+      // path here yields /app/app/<tool> on a subpath deploy.
+      const currentLocation =
+        stripBasePath(window.location.pathname) + window.location.search;
       stashPostLoginRedirect(currentLocation);
       let hadStoredJwt = false;
       try {

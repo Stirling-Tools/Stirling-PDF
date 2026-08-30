@@ -67,15 +67,9 @@ const UpgradeBanner: React.FC = () => {
       }
     };
 
-    window.addEventListener(
-      UPGRADE_BANNER_TEST_EVENT,
-      handleTestEvent as EventListener,
-    );
+    window.addEventListener(UPGRADE_BANNER_TEST_EVENT, handleTestEvent);
     return () => {
-      window.removeEventListener(
-        UPGRADE_BANNER_TEST_EVENT,
-        handleTestEvent as EventListener,
-      );
+      window.removeEventListener(UPGRADE_BANNER_TEST_EVENT, handleTestEvent);
     };
   }, [isDev]);
 
