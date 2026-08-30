@@ -1,9 +1,12 @@
 package stirling.software.proprietary.policy.legacy;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -16,8 +19,11 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.springframework.dao.DataAccessResourceFailureException;
 
 import stirling.software.common.configuration.RuntimePathConfig;
+import stirling.software.proprietary.policy.config.FolderAccessDeniedException;
+import stirling.software.proprietary.policy.config.FolderAccessGuard;
 import stirling.software.proprietary.policy.model.PipelineInput;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.source.InProcessSourceStore;
@@ -41,6 +47,7 @@ class WatchedFolderPipelineImportTest {
     private final RuntimePathConfig runtimePathConfig = mock(RuntimePathConfig.class);
     private final TeamRepository teamRepository = mock(TeamRepository.class);
     private final PolicyTriggerManager policyTriggerManager = mock(PolicyTriggerManager.class);
+    private final FolderAccessGuard folderAccessGuard = mock(FolderAccessGuard.class);
 
     private WatchedFolderPipelineImport importer;
     private String finishedFolders;
@@ -62,7 +69,8 @@ class WatchedFolderPipelineImportTest {
                         importedPipelines,
                         policyTriggerManager,
                         teamRepository,
-                        runtimePathConfig);
+                        runtimePathConfig,
+                        folderAccessGuard);
     }
 
     @Test
@@ -176,8 +184,41 @@ class WatchedFolderPipelineImportTest {
         assertFalse(importer.isMigrated(watchedRoot.resolve("empty")));
     }
 
+    @Test
+    void leavesAFolderAloneWhenItsOutputDirectoryIsNotPermitted() throws IOException {
+        Path folder = watchedFolderWritingTo("invoices", "/data/outbox");
+        doThrow(new FolderAccessDeniedException("denied"))
+                .when(folderAccessGuard)
+                .requirePermitted(any());
+
+        importer.importWatchedFolders();
+
+        // The sink would refuse every delivery, so the legacy scanner has to keep the folder.
+        assertTrue(policyStore.all().isEmpty());
+        assertTrue(sourceStore.all().isEmpty());
+        assertFalse(importer.isMigrated(folder));
+        assertTrue(
+                Files.exists(folder.resolve("config.json")),
+                "the legacy scanner still needs its config");
+    }
+
+    @Test
+    void neverFailsBootWhenTheTeamLookupBlowsUp() throws IOException {
+        watchedFolder("invoices");
+        when(teamRepository.findByName(org.mockito.ArgumentMatchers.anyString()))
+                .thenThrow(new DataAccessResourceFailureException("db down"));
+
+        // A ready-event listener that throws aborts SpringApplication.run.
+        assertDoesNotThrow(() -> importer.importWatchedFolders());
+        assertTrue(policyStore.all().isEmpty());
+    }
+
     /** A legacy watched folder: a pipeline JSON beside the files it processes. */
     private Path watchedFolder(String relative) throws IOException {
+        return watchedFolderWritingTo(relative, "{outputFolder}");
+    }
+
+    private Path watchedFolderWritingTo(String relative, String outputDir) throws IOException {
         Path folder = watchedRoot.resolve(relative);
         Files.createDirectories(folder);
         Files.writeString(
@@ -191,10 +232,11 @@ class WatchedFolderPipelineImportTest {
                       "parameters": {"optimizeLevel": 3, "fileInput": "automated"}
                     }
                   ],
-                  "outputDir": "{outputFolder}",
+                  "outputDir": "%s",
                   "outputFileName": "compressed_{filename}"
                 }
-                """);
+                """
+                        .formatted(outputDir));
         return folder;
     }
 }

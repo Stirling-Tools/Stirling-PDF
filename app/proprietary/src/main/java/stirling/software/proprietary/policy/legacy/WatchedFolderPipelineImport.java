@@ -68,6 +68,7 @@ public class WatchedFolderPipelineImport implements MigratedWatchedFolders {
     private final PolicyTriggerManager policyTriggerManager;
     private final TeamRepository teamRepository;
     private final RuntimePathConfig runtimePathConfig;
+    private final FolderAccessGuard folderAccessGuard;
 
     @Override
     public boolean isMigrated(Path directory) {
@@ -82,6 +83,18 @@ public class WatchedFolderPipelineImport implements MigratedWatchedFolders {
     @Order(3)
     @EventListener(ApplicationReadyEvent.class)
     public void importWatchedFolders() {
+        try {
+            convertWatchedFolders();
+        } catch (Exception e) {
+            // A ready-event listener that throws aborts SpringApplication.run; a cosmetic
+            // migration must never be able to stop the app booting.
+            log.error(
+                    "Watched-folder conversion failed; leaving the folders to the legacy scanner",
+                    e);
+        }
+    }
+
+    private void convertWatchedFolders() {
         Long teamId = defaultTeamId();
         int imported = 0;
         for (String root : runtimePathConfig.getPipelineWatchedFoldersPaths()) {
@@ -120,6 +133,21 @@ public class WatchedFolderPipelineImport implements MigratedWatchedFolders {
         List<PipelineStep> steps = converter.toSteps(config);
         if (steps.isEmpty()) {
             log.warn("Watched folder {} has no operations to convert; skipping", directory);
+            return false;
+        }
+
+        // The sink checks this on every delivery; converting a folder it would refuse just swaps a
+        // working legacy automation for a pipeline that fails every run.
+        Path outputDirectory = converter.resolveOutputDirectory(config, directory);
+        try {
+            folderAccessGuard.requirePermitted(outputDirectory);
+        } catch (IllegalArgumentException notPermitted) {
+            log.warn(
+                    "Watched folder {} writes to {}, which folder access does not permit ({});"
+                            + " leaving it to the legacy scanner",
+                    directory,
+                    outputDirectory,
+                    notPermitted.getMessage());
             return false;
         }
 
