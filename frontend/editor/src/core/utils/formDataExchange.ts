@@ -82,6 +82,12 @@ export function parseXfdf(xmlText: string): FormDataImport {
     );
   }
 
+  // XFDF never carries a DTD. Rejecting one states the hardening instead
+  // of leaning on the engine to ignore entities.
+  if (doc.doctype) {
+    throw new Error("XFDF must not declare a DOCTYPE.");
+  }
+
   const root = doc.documentElement;
   if (!root || root.localName !== "xfdf") {
     throw new Error("Not an XFDF file: expected an <xfdf> root element.");
@@ -124,10 +130,16 @@ export function parseXfdf(xmlText: string): FormDataImport {
   return { format: "xfdf", values, pdfHref: href };
 }
 
+// Match the document shape, not the namespace string: a bare `includes` of a
+// URL literal reads as an incomplete host check and misroutes any file quoting it.
+const XFDF_ROOT = /<\s*(?:[A-Za-z_][\w.-]*:)?xfdf[\s>]/;
+const XFDF_NS_ATTR =
+  /xmlns(?::[\w.-]+)?\s*=\s*["']https?:\/\/ns\.adobe\.com\/xfdf\/?["']/;
+
 /** True when the text looks like XFDF. */
 export function looksLikeXfdf(text: string): boolean {
   const head = text.slice(0, 2048);
-  return head.includes(XFDF_NS) || /<xfdf[\s>]/.test(head);
+  return XFDF_ROOT.test(head) || XFDF_NS_ATTR.test(head);
 }
 
 const XML_ESCAPES: Record<string, string> = {
@@ -137,8 +149,12 @@ const XML_ESCAPES: Record<string, string> = {
   '"': "&quot;",
 };
 
+// XML 1.0 forbids these outright; tab, LF and CR are legal and kept.
+// oxlint-disable-next-line no-control-regex -- stripping control characters is the point
+const XML_ILLEGAL = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF]/g;
+
 const escapeXml = (value: string): string =>
-  value.replace(/[&<>"]/g, (ch) => XML_ESCAPES[ch]);
+  value.replace(XML_ILLEGAL, "").replace(/[&<>"]/g, (ch) => XML_ESCAPES[ch]);
 
 /**
  * A tree node used to rebuild the `<field>` hierarchy from dotted names on
@@ -220,7 +236,7 @@ export function buildXfdf(
 
   return [
     '<?xml version="1.0" encoding="UTF-8"?>',
-    '<xfdf xmlns="http://ns.adobe.com/xfdf/" xml:space="preserve">',
+    `<xfdf xmlns="${XFDF_NS}" xml:space="preserve">`,
     ...(options.pdfHref ? [`  <f href="${escapeXml(options.pdfHref)}"/>`] : []),
     "  <fields>",
     ...fields,
@@ -234,10 +250,54 @@ export function buildXfdf(
 // FDF
 // ---------------------------------------------------------------------------
 
+// PDFDocEncoding differs from latin1 only here (PDF 32000-1 Table D.2).
+// Note 0x92 is TRADE MARK, not the apostrophe - that is 0x90.
+const PDF_DOC_ENCODING: Record<number, string> = {
+  0x18: "\u02d8",
+  0x19: "\u02c7",
+  0x1a: "\u02c6",
+  0x1b: "\u02d9",
+  0x1c: "\u02dd",
+  0x1d: "\u02db",
+  0x1e: "\u02da",
+  0x1f: "\u02dc",
+  0x80: "\u2022",
+  0x81: "\u2020",
+  0x82: "\u2021",
+  0x83: "\u2026",
+  0x84: "\u2014",
+  0x85: "\u2013",
+  0x86: "\u0192",
+  0x87: "\u2044",
+  0x88: "\u2039",
+  0x89: "\u203a",
+  0x8a: "\u2212",
+  0x8b: "\u2030",
+  0x8c: "\u201e",
+  0x8d: "\u201c",
+  0x8e: "\u201d",
+  0x8f: "\u2018",
+  0x90: "\u2019",
+  0x91: "\u201a",
+  0x92: "\u2122",
+  0x93: "\ufb01",
+  0x94: "\ufb02",
+  0x95: "\u0141",
+  0x96: "\u0152",
+  0x97: "\u0160",
+  0x98: "\u0178",
+  0x99: "\u017d",
+  0x9a: "\u0131",
+  0x9b: "\u0142",
+  0x9c: "\u0153",
+  0x9d: "\u0161",
+  0x9e: "\u017e",
+  0xa0: "\u20ac",
+};
+
 /**
  * Decode a PDF text string. Strings prefixed with the UTF-16BE byte-order
- * mark carry non-Latin text; everything else is PDFDocEncoding, which is
- * close enough to latin1 for field values.
+ * mark carry non-Latin text; everything else is PDFDocEncoding.
  */
 function decodePdfString(raw: string): string {
   if (
@@ -253,7 +313,11 @@ function decodePdfString(raw: string): string {
     }
     return out;
   }
-  return raw;
+  let out = "";
+  for (let i = 0; i < raw.length; i++) {
+    out += PDF_DOC_ENCODING[raw.charCodeAt(i)] ?? raw[i];
+  }
+  return out;
 }
 
 /**
@@ -297,12 +361,18 @@ function fdfValueToString(
   return undefined;
 }
 
+// PDF field hierarchies are a few levels deep. The resolver's cycle guard
+// is per-call, so a /Kids cycle needs its own bound.
+const MAX_FIELD_DEPTH = 64;
+
 function walkFdfFields(
   fields: PsValue[],
   path: string[],
   values: Record<string, string>,
   resolve: Resolver,
+  depth = 0,
 ): void {
+  if (depth >= MAX_FIELD_DEPTH) return;
   for (const entry of fields) {
     const field = psDict(resolve(entry));
     if (!field) continue;
@@ -317,7 +387,7 @@ function walkFdfFields(
       if (value !== undefined) values[qualify(nextPath)] = value;
     }
     const kids = psArray(resolve(field.Kids));
-    if (kids) walkFdfFields(kids, nextPath, values, resolve);
+    if (kids) walkFdfFields(kids, nextPath, values, resolve, depth + 1);
   }
 }
 

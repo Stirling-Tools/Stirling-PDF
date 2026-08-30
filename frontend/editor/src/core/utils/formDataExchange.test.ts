@@ -203,6 +203,47 @@ describe("formDataExchange", () => {
         /expected an <xfdf> root/,
       );
     });
+
+    test("rejects a DOCTYPE", () => {
+      expect(() =>
+        parseXfdf(
+          '<?xml version="1.0"?><!DOCTYPE xfdf>' +
+            '<xfdf xmlns="http://ns.adobe.com/xfdf/"><fields/></xfdf>',
+        ),
+      ).toThrow(/DOCTYPE/);
+    });
+
+    test("rejects a billion-laughs entity bomb", () => {
+      const bomb =
+        '<?xml version="1.0"?><!DOCTYPE xfdf [' +
+        '<!ENTITY lol "lol">' +
+        '<!ENTITY lol1 "' +
+        "&lol;".repeat(10) +
+        '">' +
+        '<!ENTITY lol2 "' +
+        "&lol1;".repeat(10) +
+        '">' +
+        '<!ENTITY lol3 "' +
+        "&lol2;".repeat(10) +
+        '">' +
+        '<!ENTITY lol4 "' +
+        "&lol3;".repeat(10) +
+        '">' +
+        ']><xfdf xmlns="http://ns.adobe.com/xfdf/"><fields>' +
+        '<field name="A"><value>&lol4;</value></field></fields></xfdf>';
+      expect(() => parseXfdf(bomb)).toThrow(/DOCTYPE/);
+    });
+
+    test("rejects an external-entity XXE payload", () => {
+      const xxe =
+        '<?xml version="1.0"?><!DOCTYPE xfdf [' +
+        '<!ENTITY xxe SYSTEM "file:///etc/passwd">]>' +
+        '<xfdf xmlns="http://ns.adobe.com/xfdf/"><fields>' +
+        '<field name="A"><value>&xxe;</value></field></fields></xfdf>';
+      // jsdom reports the unresolvable entity as a syntax error before the
+      // doctype check is reached; either rejection is correct.
+      expect(() => parseXfdf(xxe)).toThrow(/not valid XML|DOCTYPE/);
+    });
   });
 
   describe("parseFdf", () => {
@@ -240,6 +281,27 @@ describe("formDataExchange", () => {
       expect(() => parseFdf("%FDF-1.2\n<< /FDF << /F (x.pdf) >> >>\n")).toThrow(
         /no \/Fields array/,
       );
+    });
+
+    test("decodes non-BOM strings as PDFDocEncoding, not latin1", () => {
+      const fdf =
+        "%FDF-1.2\n" +
+        "1 0 obj<</FDF<</Fields[" +
+        "<</T (Name) /V (Smith\\220s form \\224 \\240100)>>" +
+        "]>>>>endobj\n";
+      expect(parseFdf(fdf).values.Name).toBe(
+        "Smith\u2019s form \ufb02 \u20ac100",
+      );
+    });
+
+    test("a huge numeric token does not blow up the tokenizer", () => {
+      const fdf =
+        "%FDF-1.2\n1 0 obj<</FDF<</Fields[<</T (A) /V (x)>>]>>>>endobj\n" +
+        "1".repeat(100000) +
+        "x\n";
+      const start = performance.now();
+      expect(parseFdf(fdf).values.A).toBe("x");
+      expect(performance.now() - start).toBeLessThan(1000);
     });
   });
 
@@ -288,6 +350,14 @@ trailer<</Root 1 0 R>>
       // Which error it lands on doesn't matter; not hanging does.
       expect(() => parseFdf(cyclic)).toThrow(/no form data|no \/FDF/);
     });
+
+    test("a /Kids reference cycle terminates instead of overflowing the stack", () => {
+      const cyclic =
+        "%FDF-1.2\n" +
+        "1 0 obj<</T (A) /Kids [1 0 R]>>endobj\n" +
+        "2 0 obj<</FDF <</Fields [1 0 R]>>>>endobj\n";
+      expect(() => parseFdf(cyclic)).not.toThrow();
+    });
   });
 
   describe("format detection", () => {
@@ -296,6 +366,21 @@ trailer<</Root 1 0 R>>
       expect(looksLikeFdf(XFDF)).toBe(false);
       expect(looksLikeFdf(FDF)).toBe(true);
       expect(looksLikeXfdf(FDF)).toBe(false);
+    });
+
+    test("does not treat a document that merely quotes the namespace as XFDF", () => {
+      const html =
+        "<!doctype html><html><body><p>The XFDF namespace is " +
+        "http://ns.adobe.com/xfdf/ and Acrobat uses it.</p></body></html>";
+      expect(looksLikeXfdf(html)).toBe(false);
+    });
+
+    test("detects a prefix-namespaced xfdf root", () => {
+      expect(
+        looksLikeXfdf(
+          '<?xml version="1.0"?><xfdf:xfdf xmlns:xfdf="http://ns.adobe.com/xfdf/"/>',
+        ),
+      ).toBe(true);
     });
   });
 
@@ -338,6 +423,12 @@ trailer<</Root 1 0 R>>
 
     test("an empty form still produces valid XFDF", () => {
       expect(parseXfdf(buildXfdf({})).values).toEqual({});
+    });
+
+    test("drops control characters XML cannot represent so the export re-parses", () => {
+      const xfdf = buildXfdf({ Notes: "A\u0000B\u001FC\tD" });
+      expect(() => parseXfdf(xfdf)).not.toThrow();
+      expect(parseXfdf(xfdf).values.Notes).toBe("ABC\tD");
     });
   });
 
