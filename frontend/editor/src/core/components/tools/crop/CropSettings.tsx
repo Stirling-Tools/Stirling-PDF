@@ -1,13 +1,5 @@
 import { useState, useEffect } from "react";
-import {
-  Stack,
-  Text,
-  Box,
-  Group,
-  Center,
-  Alert,
-  Checkbox,
-} from "@mantine/core";
+import { Stack, Text, Box, Group, Center, Checkbox } from "@mantine/core";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
@@ -161,7 +153,6 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
     );
   }
 
-  const isCropValid = parameters.isCropAreaValid(pdfBounds);
   const isFullCrop = parameters.isFullPDFCrop(pdfBounds);
 
   return (
@@ -238,18 +229,6 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
           pdfBounds={pdfBounds}
           showAutomationInfo={false}
         />
-      )}
-
-      {/* Validation Alert - Only show when autoCrop is false */}
-      {!parameters.parameters.autoCrop && !isCropValid && (
-        <Alert color="red" variant="light">
-          <Text size="xs">
-            {t(
-              "crop.error.invalidArea",
-              "Crop area extends beyond PDF boundaries",
-            )}
-          </Text>
-        </Alert>
       )}
     </Stack>
   );
