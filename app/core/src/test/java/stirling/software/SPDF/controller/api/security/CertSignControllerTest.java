@@ -16,6 +16,7 @@ import java.nio.file.Files;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -206,6 +207,64 @@ class CertSignControllerTest {
 
         assertNotNull(response.getBody());
         assertTrue(drainBody(response).length > 0);
+    }
+
+    /**
+     * The appearance produced when nothing new is asked for, operator by operator.
+     *
+     * <p>Every caller that predates the configurable box still comes through here, so this pins the
+     * drawing rather than merely checking that a signature came out: the numbers below are what the
+     * tool has always emitted, and a change to any of them is a change to those callers' documents.
+     */
+    @Test
+    void legacyAppearanceIsUnchanged() throws Exception {
+        MockMultipartFile pdfFile =
+                new MockMultipartFile(
+                        "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+        MockMultipartFile p12File =
+                new MockMultipartFile("p12File", "test-cert.p12", "application/x-pkcs12", p12Bytes);
+
+        SignPDFWithCertRequest request = new SignPDFWithCertRequest();
+        request.setFileInput(pdfFile);
+        request.setCertType("PKCS12");
+        request.setP12File(p12File);
+        request.setPassword("password");
+        request.setShowSignature(true);
+        request.setShowLogo(true);
+        request.setReason("test");
+        request.setLocation("test");
+        request.setName("tester");
+        request.setPageNumber(1);
+
+        byte[] signed = drainBody(certSignController.signPDFWithCert(request, httpRequest));
+
+        String appearance = appearanceOf(signed);
+        // The bundled mark, at the scale and offset it has always had.
+        assertTrue(
+                appearance.contains("0.08 0 0 0.08 0 0 cm"),
+                "the legacy logo transform changed: " + appearance);
+        assertTrue(appearance.contains("100 0 cm") || appearance.contains("100 0 Td"), appearance);
+        // Ten-point type on fifteen-point leading, starting one line down from the top.
+        assertTrue(appearance.contains("10 Tf"), "the legacy type size changed: " + appearance);
+        assertTrue(appearance.contains("15 TL"), "the legacy leading changed: " + appearance);
+        assertTrue(appearance.contains("10 35 Td"), "the legacy first line moved: " + appearance);
+        // The legacy text says "Signed by" with no colon, unlike the configurable appearance.
+        assertTrue(appearance.contains("Signed by "), appearance);
+    }
+
+    /** The normal appearance stream of the first widget, as PDF operators. */
+    private static String appearanceOf(byte[] signed) throws Exception {
+        try (PDDocument doc = Loader.loadPDF(signed)) {
+            PDAnnotationWidget widget =
+                    (PDAnnotationWidget) doc.getPage(0).getAnnotations().getFirst();
+            return new String(
+                    widget.getAppearance()
+                            .getNormalAppearance()
+                            .getAppearanceStream()
+                            .getContentStream()
+                            .toByteArray(),
+                    java.nio.charset.StandardCharsets.ISO_8859_1);
+        }
     }
 
     @Test

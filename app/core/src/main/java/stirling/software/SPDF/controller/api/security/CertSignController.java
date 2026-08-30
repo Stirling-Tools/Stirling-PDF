@@ -572,6 +572,18 @@ public class CertSignController {
                     : (float) image.getWidth() / (float) image.getHeight();
         }
 
+        /**
+         * Whether the legacy placement keeps the image inside the box it is clipped to.
+         *
+         * <p>True for the bundled mark, which is why that path can go on drawing the image at a
+         * size taken from its own pixels rather than from the box.
+         */
+        private static boolean fitsAtLegacySize(PDImageXObject image, PDRectangle bbox) {
+            return LEGACY_LOGO_X * LEGACY_LOGO_SCALE + image.getWidth() * LEGACY_LOGO_SCALE
+                            <= bbox.getWidth()
+                    && image.getHeight() * LEGACY_LOGO_SCALE <= bbox.getHeight();
+        }
+
         public InputStream createVisibleSignature(
                 PDDocument srcDoc,
                 PDSignature signature,
@@ -634,15 +646,25 @@ public class CertSignController {
                     if (Boolean.TRUE.equals(showLogo)) {
                         PDImageXObject img = loadLogoImage(doc);
 
-                        if (legacyAppearance) {
+                        if (legacyAppearance && fitsAtLegacySize(img, bbox)) {
                             cs.saveGraphicsState();
                             PDExtendedGraphicsState extState = new PDExtendedGraphicsState();
                             extState.setBlendMode(BlendMode.MULTIPLY);
                             extState.setNonStrokingAlphaConstant(0.5f);
                             cs.setGraphicsStateParameters(extState);
-                            cs.transform(Matrix.getScaleInstance(0.08f, 0.08f));
-                            cs.drawImage(img, 100, 0);
+                            cs.transform(
+                                    Matrix.getScaleInstance(LEGACY_LOGO_SCALE, LEGACY_LOGO_SCALE));
+                            cs.drawImage(img, LEGACY_LOGO_X, 0);
                             cs.restoreGraphicsState();
+                        } else if (legacyAppearance) {
+                            // The legacy size comes from the image's own pixels, which is safe only
+                            // for the bundled mark. A larger image would be cut off by the form's
+                            // bounding box, so it is letterboxed into the box instead.
+                            SignatureLogoPlacement.draw(
+                                    cs,
+                                    img,
+                                    SignatureLogoPlacement.fitInside(bbox, aspectRatio(img)),
+                                    true);
                         } else {
                             SignatureLogoPosition position = logoPosition();
                             // The split is pure geometry: the text sizes itself to whatever area
@@ -754,6 +776,12 @@ public class CertSignController {
                             textArea.getHeight()));
         }
     }
+
+    /** Scale the bundled mark has always been drawn at, before any transform of its own. */
+    private static final float LEGACY_LOGO_SCALE = 0.08f;
+
+    /** Where the bundled mark sits, in the scaled space the legacy transform sets up. */
+    private static final float LEGACY_LOGO_X = 100f;
 
     /** Fields shown when a box is requested without saying which fields to draw. */
     private static final List<CertificateAttribute> DEFAULT_VISIBLE_ATTRIBUTES =
