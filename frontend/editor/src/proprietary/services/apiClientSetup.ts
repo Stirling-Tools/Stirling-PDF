@@ -1,6 +1,7 @@
 import { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from "axios";
-import { withBasePath } from "@app/constants/app";
+import { stripBasePath, withBasePath } from "@app/constants/app";
 import { getBrowserId } from "@app/utils/browserIdentifier";
+import { setPostLoginRedirectPath } from "@app/auth/spring/springAuthClient";
 
 let isRefreshing = false;
 let failedQueue: Array<{
@@ -93,6 +94,11 @@ async function refreshAuthToken(client: AxiosInstance): Promise<string> {
     // Redirect to login
     const loginPath = withBasePath("/login");
     if (window.location.pathname !== loginPath) {
+      // Router-relative: Login replays this through navigate(), which applies
+      // the basename itself. See the same note in httpErrorHandler.
+      setPostLoginRedirectPath(
+        stripBasePath(window.location.pathname) + window.location.search,
+      );
       console.log("[API Client] Redirecting to login page...");
       window.location.href = loginPath;
     }

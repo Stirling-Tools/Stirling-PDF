@@ -2,8 +2,8 @@ import { forwardRef, type HTMLAttributes } from "react";
 import "@app/ui/NavSurface.css";
 
 export interface NavSurfaceProps extends HTMLAttributes<HTMLDivElement> {
-  /** Element to render; `section`/`aside` when the box is a landmark. */
-  as?: "div" | "section" | "aside";
+  /** Element to render; `section`/`aside`/`nav` when the box is a landmark. */
+  as?: "div" | "section" | "aside" | "nav";
 }
 
 /**
