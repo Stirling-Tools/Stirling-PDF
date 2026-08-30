@@ -942,7 +942,7 @@ export function WatchedFolderWorkbenchView({
                       })
                     : t(
                         "watchedFolders.workbench.noInputFolder",
-                        "No input folder — edit to configure",
+                        "No input folder - edit to configure",
                       )}
                 </Text>
               )}
@@ -1449,7 +1449,7 @@ export function WatchedFolderWorkbenchView({
                 <Text size="xs" c="dimmed" ta="center" py="lg">
                   {t(
                     "watchedFolders.workbench.noActivity",
-                    "No activity yet — drop a PDF to start",
+                    "No activity yet - drop a PDF to start",
                   )}
                 </Text>
               ) : filteredActivityIds.length === 0 ? (
@@ -1924,7 +1924,7 @@ export function WatchedFolderWorkbenchView({
                               <Text size="xs" c="dimmed">
                                 {t(
                                   "watchedFolders.workbench.queuedWaiting",
-                                  "Queued — waiting to run",
+                                  "Queued - waiting to run",
                                 )}
                               </Text>
                             )}

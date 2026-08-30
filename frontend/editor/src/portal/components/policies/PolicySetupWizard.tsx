@@ -123,7 +123,7 @@ const CAPABILITY_META: Record<
     labelEn: "Redact sensitive information",
     descKey: "portal.policies.wizard.capability.redact.desc",
     descEn:
-      "Finds and blacks out sensitive details — like Social Security and card numbers — so they can't be read.",
+      "Finds and blacks out sensitive details - like Social Security and card numbers - so they can't be read.",
   },
   sanitize: {
     labelKey: "portal.policies.wizard.capability.sanitize.label",

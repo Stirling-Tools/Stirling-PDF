@@ -2726,7 +2726,7 @@ refresh = "刷新"
 selectCert = "选择证书"
 selectDriver = "选择驱动程序"
 slot = "插槽（可选）"
-windowsHint = "从 Windows 证书存储中选择一个证书。签名将使用您卡片/令牌上的密钥- Windows 将提示输入 PIN。"
+windowsHint = "从 Windows 证书存储中选择一个证书。签名将使用您卡片/令牌上的密钥-Windows 将提示输入 PIN。"
 windowsLoadError = "无法读取 Windows 证书存储"
 
 [certSign.sessions]
@@ -3475,7 +3475,7 @@ subtitle = "Cookie 使用"
 title = "同意偏好中心"
 
 [cookieBanner.preferencesModal.analytics]
-description = "这些 cookies 帮助我们了解我们的工具是如何被使用的，从而让我们专注于构建社区最看重的功能。请放心- Stirling PDF 不能且绝不会跟踪你处理的文档内容。"
+description = "这些 cookies 帮助我们了解我们的工具是如何被使用的，从而让我们专注于构建社区最看重的功能。请放心-Stirling PDF 不能且绝不会跟踪你处理的文档内容。"
 title = "分析"
 
 [cookieBanner.preferencesModal.description]
@@ -6667,7 +6667,7 @@ viewLink = "查看 ↗"
 
 [portal.billing.linkPrompt]
 cta = "链接 Stirling 账户"
-description = "手动 PDF 编辑-查看、签名、合并、拆分、水印、压缩、转换、手动 OCR -无论是否链接都始终免费。链接后可领取 500 个按量处理 PDFs 的免费额度（自动化、AI 和 API）；需要更多时，启用 Processor 方案，仅按实际使用付费。"
+description = "手动 PDF 编辑-查看、签名、合并、拆分、水印、压缩、转换、手动 OCR-无论是否链接都始终免费。链接后可领取 500 个按量处理 PDFs 的免费额度（自动化、AI 和 API）；需要更多时，启用 Processor 方案，仅按实际使用付费。"
 title = "链接您的 Stirling 账户"
 
 [portal.billing.paymentMethod]
@@ -7290,7 +7290,7 @@ body = "从基础设施选项卡创建一个限定范围的密钥。密钥带有
 title = "签发 API 密钥"
 
 [portal.docs.quickstart.step2]
-body = "将文件 POST 到任意类型化端点。端点决定您返回的 schema -这里是发票提取器。"
+body = "将文件 POST 到任意类型化端点。端点决定您返回的 schema-这里是发票提取器。"
 snippetCaption = "提取发票"
 title = "发送文档"
 
@@ -8741,7 +8741,7 @@ eyebrow = "上线"
 title = "您已在 Stirling Enterprise 上线"
 
 [portal.procurement.milestone]
-downloadError = "暂时无法下载报价 PDF -请稍后重试。"
+downloadError = "暂时无法下载报价 PDF-请稍后重试。"
 
 [portal.procurement.payment]
 description = "您的报价已接受，许可证已激活-您的团队可以立即开始使用。准备好后支付第一张发票；您可以在这里付款或下载，无需电子邮件。"

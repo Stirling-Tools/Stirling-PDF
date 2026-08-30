@@ -3475,7 +3475,7 @@ subtitle = "쿠키 사용"
 title = "동의 환경설정 센터"
 
 [cookieBanner.preferencesModal.analytics]
-description = "이 쿠키는 도구가 어떻게 사용되는지 이해하는 데 도움이 되며, 커뮤니티가 가장 중요하게 여기는 기능 개발에 집중할 수 있게 합니다. 안심하세요- Stirling PDF는 여러분이 작업하는 문서의 내용을 추적할 수 없으며, 앞으로도 절대 그렇게 하지 않습니다."
+description = "이 쿠키는 도구가 어떻게 사용되는지 이해하는 데 도움이 되며, 커뮤니티가 가장 중요하게 여기는 기능 개발에 집중할 수 있게 합니다. 안심하세요-Stirling PDF는 여러분이 작업하는 문서의 내용을 추적할 수 없으며, 앞으로도 절대 그렇게 하지 않습니다."
 title = "분석"
 
 [cookieBanner.preferencesModal.description]

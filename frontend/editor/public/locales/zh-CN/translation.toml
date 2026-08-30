@@ -6667,7 +6667,7 @@ viewLink = "查看 ↗"
 
 [portal.billing.linkPrompt]
 cta = "关联 Stirling 账户"
-description = "手动 PDF 编辑-查看、签名、合并、拆分、水印、压缩、转换、手动 OCR -无论是否关联，始终免费。关联后可领取 500 个免费 PDFs 的按量计费处理额度（自动化、AI 和 API）；需要更多时，启用 Processor 计划，并且只为实际使用量付费。"
+description = "手动 PDF 编辑-查看、签名、合并、拆分、水印、压缩、转换、手动 OCR-无论是否关联，始终免费。关联后可领取 500 个免费 PDFs 的按量计费处理额度（自动化、AI 和 API）；需要更多时，启用 Processor 计划，并且只为实际使用量付费。"
 title = "关联您的 Stirling 账户"
 
 [portal.billing.paymentMethod]
@@ -8741,7 +8741,7 @@ eyebrow = "已上线"
 title = "你已在 Stirling Enterprise 上线"
 
 [portal.procurement.milestone]
-downloadError = "暂时无法下载报价 PDF -请稍后重试。"
+downloadError = "暂时无法下载报价 PDF-请稍后重试。"
 
 [portal.procurement.payment]
 description = "你的报价已接受，许可证也已激活-你的团队可以立即开始使用。准备好后支付第一张发票；你可以在这里支付或下载，无需 email。"

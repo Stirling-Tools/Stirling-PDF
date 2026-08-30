@@ -5350,7 +5350,7 @@ runButton = "設定完成後，使用此按鈕即可在所有已選取的 PDF �
 selectCropTool = "我們先選擇 <strong>裁切</strong> 工具，示範如何使用其中一個工具。"
 stepOf = "步驟 {{current}} / {{total}}"
 toolInterface = "這是 <strong>裁切</strong> 工具介面。如您所見，因為尚未加入任何 PDF 檔可供操作，因此內容不多。"
-workbench = "這裡是 <strong>工作區</strong> -檢視與編輯 PDF 的主要區域。"
+workbench = "這裡是 <strong>工作區</strong>-檢視與編輯 PDF 的主要區域。"
 wrapUp = "大功告成！您已了解此應用程式的主要區域與使用方式。隨時點選 <strong>說明</strong> 按鈕可再度觀看本導覽。"
 
 [onboarding.buttons]

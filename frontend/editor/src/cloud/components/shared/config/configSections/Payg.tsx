@@ -709,7 +709,7 @@ function PrepaidBanner({
         )
       : t(
           "payg.prepaid.banner.expiring",
-          "Your prepaid year ends in {{count}} days. Unused capacity expires — top up to start a fresh year.",
+          "Your prepaid year ends in {{count}} days. Unused capacity expires - top up to start a fresh year.",
           // This arm only renders when expiringSoon (days is a valid number); ?? 0 satisfies the
           // count option's number type.
           { count: days ?? 0 },
@@ -756,7 +756,7 @@ const Payg: React.FC<PaygProps> = ({
             <span className="payg-planhead__eyebrow">
               {t(
                 "payg.header.eyebrow",
-                "Processor plan · {{start}} – {{end}}",
+                "Processor plan · {{start}} - {{end}}",
                 {
                   start: fmt(wallet.billingPeriodStart),
                   end: fmt(wallet.billingPeriodEnd),
