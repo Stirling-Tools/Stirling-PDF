@@ -41,7 +41,7 @@ false = "Брехня"
 fileNotSavedToDisk = "Не збережено на диск"
 fileSavedToDisk = "Файл збережено на диск"
 fileSelected = "Вибрано: {{filename}}"
-filesSelected = "файлів обрано"
+filesSelected = "{{count}} файлів"
 font = "Шрифт"
 fontSizeTooltip = "Розмір тексту номера сторінки у пунктах. Більші числа дають більший текст."
 fontTypeTooltip = "Гарнітура для номерів сторінок. Оберіть відповідно до стилю документа."
@@ -3526,7 +3526,6 @@ label = "Позиція Y"
 
 [crop.error]
 failed = "Не вдалося обрізати PDF"
-invalidArea = "Область обрізки виходить за межі PDF"
 
 [crop.preview]
 title = "Вибір області обрізки"
@@ -3969,6 +3968,7 @@ back = "Назад"
 backToFolder = "Назад до {{folder}}"
 backToMyFiles = "Назад до «Мої файли»"
 breadcrumbs = "Шлях до папки"
+bulkActions = "Дії"
 cancel = "Скасувати"
 classification = "Класифікація"
 clearSelection = "Очистити вибір"
@@ -4142,6 +4142,11 @@ totalSize = "Загальний розмір"
 type = "Тип"
 versionHistory = "Історія версій"
 
+[filesPage.filters]
+activeCount = "{{count}} активних фільтрів"
+clearAll = "Очистити фільтри"
+label = "Фільтри"
+
 [filesPage.folderName]
 cancel = "Скасувати"
 error = "Не вдалося зберегти папку. Спробуйте ще раз."
@@ -4176,6 +4181,7 @@ label = "Filter files by name"
 placeholder = "Filter files…"
 
 [filesPage.sort]
+label = "Сортувати файли"
 modifiedAsc = "Спочатку найстаріші"
 modifiedDesc = "Спочатку останні"
 nameAsc = "Назва A→Z"
@@ -4305,11 +4311,14 @@ issues = "GitHub"
 [formFill]
 allSaved = "Усе збережено"
 analyzingFields = "Analysing form fields..."
+applyFailed = "Не вдалося застосувати зміни"
 extractCsvError = "Не вдалося витягти CSV"
 extractXlsxError = "Не вдалося витягти XLSX"
 filled = "filled"
 flattenAfterFilling = "Сплющити після заповнення"
+goToPage = "Перейти до цієї сторінки"
 noFields = "No fillable form fields found in this PDF."
+page = "Сторінка"
 placeholderEnter = "Enter"
 placeholderSelect = "Select"
 requiredAbbreviation = "обов."
@@ -4318,7 +4327,82 @@ rescanFields = "Повторно сканувати поля"
 rescanFormFields = "Повторно сканувати поля форми"
 save = "Зберегти"
 saveShortcut = "Ctrl+S для збереження"
+skippedEdits_one = "1 зміну не вдалося застосувати:"
+skippedEdits_other = "{{count}} змін не вдалося застосувати:"
+skippedEditsTruncated = "Ще {{count}} не показано."
 unsavedChanges = "Незбережені зміни"
+
+[formFill.create]
+commit = "Додати {{count}} поле(ів) до PDF"
+empty = "Ще не намальовано жодного поля."
+failed = "Не вдалося додати поля"
+goToField = "Перейти до цього поля"
+hint = "Виберіть тип поля, а потім намалюйте його на сторінці."
+placing = "Намалюйте поле {{type}} на сторінці. Натисніть Esc, щоб зупинити."
+preview = "Утримуйте для попереднього перегляду"
+previewHelp = "Утримуйте, щоб побачити поля такими, якими вони виглядатимуть після додавання, без контурів редагування."
+removeField = "Видалити поле"
+
+[formFill.editor]
+action = "Дія кнопки"
+actionHelp = "Що робить кнопка після натискання."
+actionNone = "Немає"
+actionPrint = "Друкувати"
+actionReset = "Скинути форму"
+actionSubmit = "Надіслати на URL"
+actionUri = "Відкрити URL"
+actionUrl = "URL"
+actionUrlHelp = "Адреса, яку кнопка відкриває або на яку надсилає дані."
+addOption = "Додати варіант"
+caption = "Підпис кнопки"
+captionHelp = "Текст, що відображається на кнопці."
+defaultValue = "Значення за замовчуванням"
+defaultValueHelp = "Що містить поле до того, як його хтось заповнить. Залиште порожнім для порожнього поля."
+fontSize = "Розмір шрифту"
+fontSizeHelp = "Розмір тексту всередині поля. Залиште порожнім, щоб засіб перегляду підібрав його за розміром."
+label = "Мітка"
+labelHelp = "Текст, що показується тому, хто заповнює форму. Залиште порожнім, щоб використовувати назву поля."
+maxLength = "Макс. довжина (comb)"
+maxLengthHelp = "Обмежує кількість символів, відображаючи їх як рівномірно розташовані комірки."
+multiline = "Багаторядкове"
+multilineHelp = "Дозволяє більше одного рядка тексту та переносить текст біля краю поля."
+multiSelect = "Дозволити множинний вибір"
+multiSelectHelp = "Дозволяє вибрати кілька варіантів одночасно."
+name = "Назва поля"
+nameHelp = "Внутрішня назва поля. Використовується під час експорту даних або заповнення форми з іншої системи, тому вона має бути унікальною і без пробілів."
+optionGap = "Інтервал між варіантами"
+optionGapHelp = "Відстань між кнопками в пунктах. Залиште порожнім, щоб рівномірно розподілити їх униз по рамці."
+optionPlaceholder = "Варіант {{n}}"
+options = "Варіанти"
+optionsEmpty = "Додайте принаймні один варіант."
+optionsHelp = "Варіанти, запропоновані у списку. Кожен зберігається так, як введено, тому робіть їх короткими й відмінними."
+optionSize = "Розмір варіанта"
+optionSizeHelp = "Ширина й висота кожної кнопки в пунктах. Залиште порожнім, щоб припасувати їх до намальованої рамки."
+readOnly = "Лише для читання"
+readOnlyHelp = "Показує значення, але не дозволяє його редагувати."
+removeOption = "Видалити варіант"
+required = "Обов’язкове"
+requiredHelp = "Форму не можна надіслати, доки це поле не буде заповнено."
+signatureNote = "Лише заповнювач - ви не підписуєтеся тут. Він позначає місце для підпису, щоб засіб підписання PDF (Adobe Acrobat, сервіс підписання тощо) розмістив підпис у цьому місці під час підписання документа."
+tooltip = "Підказка"
+tooltipHelp = "Підказка, що показується, коли хтось наводить курсор на поле в засобі перегляду PDF."
+type = "Тип"
+typeHelp = "Тип цього поля. Його зміна перебудує поле, тому поточне значення не буде перенесено."
+
+[formFill.mode]
+create = "Створити"
+fill = "Заповнити"
+label = "Режим редактора форм"
+modify = "Змінити"
+
+[formFill.modify]
+commit = "Зберегти {{count}} змін(и)"
+delete = "Видалити"
+empty = "У цьому PDF ще немає полів форми."
+failed = "Не вдалося зберегти зміни"
+groupSizeHint = "Використовуйте розмір варіанта"
+hint = "Виберіть поле, щоб редагувати його властивості, перетягніть його на сторінці або видаліть."
+restore = "Відновити"
 
 [formFill.sidebar]
 close = "Закрити бічну панель"
@@ -4584,6 +4668,10 @@ title = "Змінити метадані"
 desc = "Змінити обмеження та дозволи документа"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Змінити дозволи"
+
+[home.classify]
+desc = "Визначте, що це за документ, і позначте його тегом."
+title = "Класифікувати"
 
 [home.compare]
 desc = "Порівнює та показує різницю між двома PDF-документами"
@@ -5097,6 +5185,30 @@ openProcessor = "Open PDF Processor"
 [navFooter.credits]
 count = "{{remaining}} of {{total}}"
 label = "Free credits"
+
+[notifications]
+empty = "Немає повідомлень."
+handoffUnavailable = "Цей браузер не дозволить обробнику передати документ до редактора. Натомість відкрийте його з редактора."
+noDocumentLinked = "Цей збій не пов’язаний із конкретним документом, тому тут нічого відкривати."
+notOnThisDevice = "Цей документ не на цьому пристрої, тому його не можна відкрити тут."
+occurrences = "{{count}} разів"
+open = "Сповіщення"
+title = "Сповіщення"
+unread = "Непрочитані"
+
+[notifications.action]
+failed = "Це не спрацювало. Спробуйте ще раз за мить."
+unavailable = "Недоступно для цього сповіщення."
+
+[notifications.detail]
+copied = "Скопійовано"
+copy = "Копіювати помилку"
+less = "Показати менше"
+more = "Показати повне повідомлення"
+
+[notifications.section]
+earlier = "Раніше"
+new = "Нові"
 
 [oauth.error]
 message = "Автентифікація не відбулася. Можете закрити це вікно та спробувати ще раз."
@@ -6735,8 +6847,8 @@ barAria = "Free PDFs remaining"
 capSuffix_one = "з {{allowance}} безкоштовних PDF використано"
 capSuffix_other = "з {{allowance}} безкоштовних PDF використано"
 eyebrow = "Пробний період Processor"
-statusLabel_one = "залишилося {{remaining}}"
-statusLabel_other = "залишилося {{remaining}}"
+statusLabel_one = "використано {{used}}"
+statusLabel_other = "використано {{used}}"
 sub = "Користуйтеся PDF Editor безкоштовно. Платіть за автоматичну обробку PDF."
 title_one = "Обробіть {{allowance}} PDF безкоштовно"
 title_other = "Обробіть {{allowance}} PDF безкоштовно"
@@ -7417,6 +7529,8 @@ acknowledge = "Acknowledge"
 confirm = "Are you sure?"
 dismiss = "Dismiss"
 dismissSkipFile = "Skip this file"
+viewFile = "Переглянути файл"
+viewInProcessor = "Переглянути в обробнику"
 
 [portal.failures.debug]
 copyJson = "Copy JSON"
@@ -7428,6 +7542,8 @@ showJson = "Show raw JSON ({{total}})"
 
 [portal.failures.disabled]
 closed = "This failure is already closed."
+noDocument = "Цей збій не було записано для конкретного документа, тому тут нічого відкривати."
+unattended = "Цей файл надійшов із папки, bucket або webhook, тому жоден браузер не утримує його для відкриття."
 unavailable = "Not available for this failure."
 
 [portal.failures.empty]
@@ -8716,7 +8832,9 @@ title = "Джерела"
 connectSource = "Підключити джерело"
 
 [portal.sources.builder]
+advanced = "Додатково"
 back = "Назад до джерел"
+backToSource = "Назад до налаштування джерела"
 backToTypes = "Усі типи джерел"
 cancel = "Скасувати"
 chooseHint = "Виберіть, звідки надходять документи. З'єднувачі, позначені сірим, уже в роботі."
@@ -8726,7 +8844,6 @@ create = "Створити джерело"
 createTitle = "Підключити джерело"
 delete = "Видалити"
 editTitle = "Редагувати джерело"
-enabled = "Увімкнено"
 save = "Зберегти зміни"
 
 [portal.sources.builder.folderAccess]
@@ -8763,6 +8880,7 @@ consume = "Consume: обробляти кожен файл один раз"
 snapshot = "Snapshot: перечитувати папку під час кожного запуску"
 
 [portal.sources.networkFields.recursive]
+helperText = "Включайте підпапки, якщо ваші файли впорядковані у вкладених папках, або відстежуйте лише верхній рівень."
 label = "Глибина папок"
 
 [portal.sources.networkFields.recursive.options]
@@ -8816,6 +8934,7 @@ hash = "Розмір, дата та перевірка вмісту"
 stat = "Розмір і дата зміни"
 
 [portal.sources.types.folder.fields.mode]
+helperText = "Чи залишати оригінальний файл на місці після обробки. Якщо оригінальний файл залишено на місці, його буде повторно оброблено наступного разу, коли конвеєр скануватиме джерело."
 label = "Режим читання"
 
 [portal.sources.types.folder.fields.mode.options]
@@ -8823,6 +8942,7 @@ consume = "Consume: обробляти кожен файл один раз"
 snapshot = "Snapshot: перечитувати папку під час кожного запуску"
 
 [portal.sources.types.folder.fields.recursive]
+helperText = "Включайте підпапки, якщо ваші файли впорядковані у вкладених папках, або відстежуйте лише верхній рівень."
 label = "Глибина папки"
 
 [portal.sources.types.folder.fields.recursive.options]
@@ -9696,7 +9816,9 @@ toolNotAvailableLocally = "Ваш сервер Stirling-PDF офлайн і \"{{
 expired = "Ваш сеанс закінчився. Будь ласка, оновіть сторінку та повторіть спробу."
 
 [settings]
+backToSections = "Усі налаштування"
 close = "Закрити"
+title = "Налаштування"
 
 [settings.ai]
 documents = "Документи й RAG"
@@ -10635,6 +10757,7 @@ ariaLabel = "Super search"
 filtersAriaLabel = "Search filters"
 hint = "Type to search"
 placeholder = "Search Stirling"
+placeholderShort = "Пошук"
 showLess = "Show less"
 showMore = "Show {{count}} more"
 
@@ -10831,6 +10954,7 @@ searchPlaceholder = "Пошук інструментів..."
 
 [toolPicker.subcategories]
 advancedFormatting = "Розширене форматування"
+ai = "AI"
 automation = "Автоматизація"
 developerTools = "Інструменти для розробників"
 documentReview = "Перегляд документа"
@@ -11335,8 +11459,11 @@ columnDefault = "Стовпець {{index}}"
 convertToPdf = "Перетворити в PDF"
 csvStats = "{{rows}} рядків · {{columns}} стовпців · {{size}}"
 emptyFile = "Порожній файл"
+htmlHidePreview = "Приховати попередній перегляд"
 htmlPreview = "Попередній перегляд HTML"
+htmlPreviewMobileHidden = "HTML-сторінки розраховані на ширину робочого стола, тому попередній перегляд тут вимкнено за замовчуванням."
 htmlPreviewWarning = "Попередній перегляд HTML — зовнішні ресурси можуть не завантажитися · {{size}}"
+htmlShowPreview = "Показати попередній перегляд усе одно"
 invalidJson = "Некоректний JSON — показ вмісту як є"
 lineNumbers = "Номери рядків"
 loading = "Завантаження..."
@@ -11683,6 +11810,7 @@ exportAll = "Експортувати PDF"
 exportSelected = "Експортувати вибрані сторінки"
 formFill = "Заповнити форму"
 hideToolbar = "Hide toolbar"
+moreActions = "Більше дій"
 multiTool = "Мультиінструмент"
 panMode = "Режим переміщення"
 print = "Надрукувати PDF"
@@ -11703,6 +11831,8 @@ selectAll = "Вибрати все"
 selectByNumber = "Вибрати за номерами сторінок"
 selectLanguage = "Вибрати мову"
 share = "Надати спільний доступ"
+showAllTools = "Показати всі інструменти"
+showFewerTools = "Згорнути панель інструментів"
 showToolbar = "Show toolbar"
 toggleAnnotations = "Перемкнути видимість анотацій"
 toggleAttachments = "Перемкнути вкладення"

@@ -8,11 +8,6 @@ updates:
   - package-ecosystem: "gradle" # See documentation for possible values
     directories:
       - "/" # Location of package manifests
-      - "/app/common"
-      - "/app/core"
-      - "/app/proprietary"
-      - "/app/saas"
-      - "/buildSrc"
     schedule:
       interval: "weekly"
     cooldown:

@@ -41,7 +41,7 @@ false = "Salah"
 fileNotSavedToDisk = "Tidak disimpan ke disk"
 fileSavedToDisk = "File disimpan ke disk"
 fileSelected = "Dipilih: {{filename}}"
-filesSelected = "berkas dipilih"
+filesSelected = "{{count}} berkas"
 font = "Jenis huruf"
 fontSizeTooltip = "Ukuran teks nomor halaman dalam poin. Angka yang lebih besar membuat teks lebih besar."
 fontTypeTooltip = "Keluarga font untuk nomor halaman. Pilih sesuai gaya dokumen Anda."
@@ -3526,7 +3526,6 @@ label = "Posisi Y"
 
 [crop.error]
 failed = "Gagal memangkas PDF"
-invalidArea = "Area pangkas melampaui batas PDF"
 
 [crop.preview]
 title = "Pilihan Area Pangkas"
@@ -3969,6 +3968,7 @@ back = "Kembali"
 backToFolder = "Kembali ke {{folder}}"
 backToMyFiles = "Kembali ke File Saya"
 breadcrumbs = "Jalur folder"
+bulkActions = "Tindakan"
 cancel = "Batal"
 classification = "Klasifikasi"
 clearSelection = "Hapus pilihan"
@@ -4142,6 +4142,11 @@ totalSize = "Total ukuran"
 type = "Jenis"
 versionHistory = "Perjalanan versi"
 
+[filesPage.filters]
+activeCount = "{{count}} filter aktif"
+clearAll = "Hapus filter"
+label = "Filter"
+
 [filesPage.folderName]
 cancel = "Batal"
 error = "Tidak dapat menyimpan folder. Coba lagi."
@@ -4176,6 +4181,7 @@ label = "Filter files by name"
 placeholder = "Filter files…"
 
 [filesPage.sort]
+label = "Urutkan file"
 modifiedAsc = "Terlama dulu"
 modifiedDesc = "Terbaru dulu"
 nameAsc = "Nama A→Z"
@@ -4305,11 +4311,14 @@ issues = "GitHub"
 [formFill]
 allSaved = "Semua tersimpan"
 analyzingFields = "Analysing form fields..."
+applyFailed = "Tidak dapat menerapkan perubahan"
 extractCsvError = "Gagal mengekstrak CSV"
 extractXlsxError = "Gagal mengekstrak XLSX"
 filled = "filled"
 flattenAfterFilling = "Ratakan setelah mengisi"
+goToPage = "Buka halaman ini"
 noFields = "No fillable form fields found in this PDF."
+page = "Halaman"
 placeholderEnter = "Enter"
 placeholderSelect = "Select"
 requiredAbbreviation = "wajib"
@@ -4318,7 +4327,82 @@ rescanFields = "Pindai ulang bidang"
 rescanFormFields = "Pindai ulang bidang formulir"
 save = "Simpan"
 saveShortcut = "Ctrl+S untuk menyimpan"
+skippedEdits_one = "1 perubahan tidak dapat diterapkan:"
+skippedEdits_other = "{{count}} perubahan tidak dapat diterapkan:"
+skippedEditsTruncated = "{{count}} lainnya tidak tercantum."
 unsavedChanges = "Perubahan belum disimpan"
+
+[formFill.create]
+commit = "Tambahkan {{count}} bidang ke PDF"
+empty = "Belum ada bidang yang digambar."
+failed = "Gagal menambahkan bidang"
+goToField = "Buka bidang ini"
+hint = "Pilih jenis bidang, lalu gambar di halaman."
+placing = "Gambar bidang {{type}} di halaman. Tekan Esc untuk berhenti."
+preview = "Tahan untuk pratinjau"
+previewHelp = "Tahan untuk melihat bidang sebagaimana tampilannya setelah ditambahkan, tanpa garis tepi pengeditan."
+removeField = "Hapus bidang"
+
+[formFill.editor]
+action = "Tindakan tombol"
+actionHelp = "Apa yang dilakukan tombol saat diklik."
+actionNone = "Tidak ada"
+actionPrint = "Cetak"
+actionReset = "Reset formulir"
+actionSubmit = "Kirim ke URL"
+actionUri = "Buka URL"
+actionUrl = "URL"
+actionUrlHelp = "Alamat yang dibuka tombol atau menjadi tujuan pengiriman."
+addOption = "Tambahkan opsi"
+caption = "Keterangan tombol"
+captionHelp = "Teks yang dicetak pada permukaan tombol."
+defaultValue = "Nilai default"
+defaultValueHelp = "Isi bidang sebelum diisi oleh siapa pun. Biarkan kosong untuk bidang kosong."
+fontSize = "Ukuran font"
+fontSizeHelp = "Ukuran teks di dalam bidang. Biarkan kosong agar pembaca menyesuaikannya supaya pas."
+label = "Label"
+labelHelp = "Teks yang ditampilkan kepada orang yang mengisi formulir. Biarkan kosong untuk menggunakan nama bidang."
+maxLength = "Panjang maks (comb)"
+maxLengthHelp = "Membatasi jumlah karakter yang muat, digambar sebagai kotak-kotak dengan jarak merata."
+multiline = "Multi-baris"
+multilineHelp = "Memungkinkan lebih dari satu baris teks dan membungkus di tepi bidang."
+multiSelect = "Izinkan beberapa pilihan"
+multiSelectHelp = "Memungkinkan lebih dari satu opsi dipilih sekaligus."
+name = "Nama bidang"
+nameHelp = "Nama internal bidang. Digunakan saat mengekspor data atau mengisi formulir dari sistem lain, jadi buat tetap unik dan tanpa spasi."
+optionGap = "Jarak opsi"
+optionGapHelp = "Jarak antar tombol, dalam poin. Biarkan kosong untuk menyebarkannya secara merata ke bawah kotak."
+optionPlaceholder = "Opsi {{n}}"
+options = "Opsi"
+optionsEmpty = "Tambahkan setidaknya satu opsi."
+optionsHelp = "Pilihan yang ditawarkan dalam daftar. Setiap pilihan disimpan sesuai yang diketik, jadi buat singkat dan berbeda."
+optionSize = "Ukuran opsi"
+optionSizeHelp = "Lebar dan tinggi setiap tombol, dalam poin. Biarkan kosong agar disesuaikan dengan kotak yang Anda gambar."
+readOnly = "Hanya baca"
+readOnlyHelp = "Menampilkan nilai tetapi mencegah siapa pun mengeditnya."
+removeOption = "Hapus opsi"
+required = "Wajib"
+requiredHelp = "Formulir tidak dapat dikirim sampai bidang ini diisi."
+signatureNote = "Hanya placeholder - Anda tidak menandatangani di sini. Ini menandai tempat tanda tangan berada sehingga penanda tangan PDF (Adobe Acrobat, layanan penandatanganan, dll.) menempatkan tanda tangan di lokasi ini saat dokumen ditandatangani."
+tooltip = "Tooltip"
+tooltipHelp = "Petunjuk yang ditampilkan saat seseorang mengarahkan kursor ke bidang di pembaca PDF."
+type = "Jenis"
+typeHelp = "Jenis bidang ini. Mengubahnya akan membangun ulang bidang, sehingga nilai saat ini tidak ikut dibawa."
+
+[formFill.mode]
+create = "Buat"
+fill = "Isi"
+label = "Mode editor formulir"
+modify = "Ubah"
+
+[formFill.modify]
+commit = "Simpan {{count}} perubahan"
+delete = "Hapus"
+empty = "PDF ini belum memiliki bidang formulir."
+failed = "Gagal menyimpan perubahan"
+groupSizeHint = "Gunakan Ukuran opsi"
+hint = "Pilih bidang untuk mengedit propertinya, seret di halaman, atau hapus."
+restore = "Pulihkan"
 
 [formFill.sidebar]
 close = "Tutup bilah sisi"
@@ -4584,6 +4668,10 @@ title = "Ubah Metadata"
 desc = "Ubah pembatasan dan izin dokumen"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Ganti Perizinan"
+
+[home.classify]
+desc = "Identifikasi jenis dokumen ini dan beri tag."
+title = "Klasifikasikan"
 
 [home.compare]
 desc = "Membandingkan dan menunjukkan perbedaan antara 2 Dokumen PDF"
@@ -5097,6 +5185,30 @@ openProcessor = "Open PDF Processor"
 [navFooter.credits]
 count = "{{remaining}} of {{total}}"
 label = "Free credits"
+
+[notifications]
+empty = "Tidak ada yang perlu dilaporkan."
+handoffUnavailable = "Browser ini tidak mengizinkan pemroses meneruskan dokumen ke editor. Buka dari editor saja."
+noDocumentLinked = "Kegagalan ini tidak terkait dengan dokumen tertentu, jadi tidak ada yang dapat dibuka di sini."
+notOnThisDevice = "Dokumen ini tidak ada di perangkat ini, sehingga tidak dapat dibuka di sini."
+occurrences = "{{count}} kali"
+open = "Notifikasi"
+title = "Notifikasi"
+unread = "Belum dibaca"
+
+[notifications.action]
+failed = "Itu tidak berhasil. Coba lagi sebentar lagi."
+unavailable = "Tidak tersedia untuk notifikasi ini."
+
+[notifications.detail]
+copied = "Disalin"
+copy = "Salin kesalahan"
+less = "Tampilkan lebih sedikit"
+more = "Tampilkan pesan lengkap"
+
+[notifications.section]
+earlier = "Sebelumnya"
+new = "Baru"
 
 [oauth.error]
 message = "Autentikasi tidak berhasil. Anda dapat menutup jendela ini dan mencoba lagi."
@@ -6735,8 +6847,8 @@ barAria = "Free PDFs remaining"
 capSuffix_one = "dari {{allowance}} PDF gratis digunakan"
 capSuffix_other = "dari {{allowance}} PDF gratis digunakan"
 eyebrow = "Uji coba Processor"
-statusLabel_one = "{{remaining}} tersisa"
-statusLabel_other = "{{remaining}} tersisa"
+statusLabel_one = "{{used}} terpakai"
+statusLabel_other = "{{used}} terpakai"
 sub = "Gunakan PDF Editor secara gratis. Bayar untuk memproses PDF secara otomatis."
 title_one = "Proses {{allowance}} PDF gratis"
 title_other = "Proses {{allowance}} PDF gratis"
@@ -7417,6 +7529,8 @@ acknowledge = "Acknowledge"
 confirm = "Are you sure?"
 dismiss = "Dismiss"
 dismissSkipFile = "Skip this file"
+viewFile = "Lihat file"
+viewInProcessor = "Lihat di pemroses"
 
 [portal.failures.debug]
 copyJson = "Copy JSON"
@@ -7428,6 +7542,8 @@ showJson = "Show raw JSON ({{total}})"
 
 [portal.failures.disabled]
 closed = "This failure is already closed."
+noDocument = "Kegagalan ini tidak dicatat pada dokumen tertentu, jadi tidak ada yang dapat dibuka di sini."
+unattended = "File ini diberikan oleh folder, bucket, atau webhook, jadi tidak ada browser siapa pun yang menyimpannya untuk dibuka."
 unavailable = "Not available for this failure."
 
 [portal.failures.empty]
@@ -8716,7 +8832,9 @@ title = "Sumber"
 connectSource = "Hubungkan sumber"
 
 [portal.sources.builder]
+advanced = "Lanjutan"
 back = "Kembali ke sumber"
+backToSource = "Kembali ke penyiapan sumber"
 backToTypes = "Semua jenis sumber"
 cancel = "Batal"
 chooseHint = "Pilih dari mana dokumen berasal. Konektor yang diabu-abukan sedang disiapkan."
@@ -8726,7 +8844,6 @@ create = "Buat sumber"
 createTitle = "Hubungkan sumber"
 delete = "Hapus"
 editTitle = "Edit sumber"
-enabled = "Diaktifkan"
 save = "Simpan perubahan"
 
 [portal.sources.builder.folderAccess]
@@ -8763,6 +8880,7 @@ consume = "Consume: proses setiap file sekali"
 snapshot = "Snapshot: baca ulang folder setiap proses"
 
 [portal.sources.networkFields.recursive]
+helperText = "Sertakan subfolder jika file Anda diatur ke dalam folder bertingkat, atau pantau hanya tingkat teratas."
 label = "Kedalaman folder"
 
 [portal.sources.networkFields.recursive.options]
@@ -8816,6 +8934,7 @@ hash = "Pemeriksaan ukuran, tanggal, dan konten"
 stat = "Ukuran dan tanggal diubah"
 
 [portal.sources.types.folder.fields.mode]
+helperText = "Apakah file asli tetap dibiarkan di tempatnya setelah diproses. Jika file asli dibiarkan di tempatnya, file tersebut akan diproses ulang saat pipeline memindai sumber berikutnya."
 label = "Mode baca"
 
 [portal.sources.types.folder.fields.mode.options]
@@ -8823,6 +8942,7 @@ consume = "Konsumsi: proses setiap file sekali"
 snapshot = "Snapshot: baca ulang folder setiap eksekusi"
 
 [portal.sources.types.folder.fields.recursive]
+helperText = "Sertakan subfolder jika file Anda diatur ke dalam folder bertingkat, atau pantau hanya tingkat teratas."
 label = "Kedalaman folder"
 
 [portal.sources.types.folder.fields.recursive.options]
@@ -9696,7 +9816,9 @@ toolNotAvailableLocally = "Server Stirling-PDF Anda sedang offline dan \"{{endpo
 expired = "Sesi Anda telah kedaluwarsa. Silakan muat ulang halaman dan coba lagi."
 
 [settings]
+backToSections = "Semua pengaturan"
 close = "Tutup"
+title = "Pengaturan"
 
 [settings.ai]
 documents = "Dokumen & RAG"
@@ -10635,6 +10757,7 @@ ariaLabel = "Super search"
 filtersAriaLabel = "Search filters"
 hint = "Type to search"
 placeholder = "Search Stirling"
+placeholderShort = "Cari"
 showLess = "Show less"
 showMore = "Show {{count}} more"
 
@@ -10831,6 +10954,7 @@ searchPlaceholder = "Cari alat..."
 
 [toolPicker.subcategories]
 advancedFormatting = "Pemformatan Lanjutan"
+ai = "AI"
 automation = "Otomatisasi"
 developerTools = "Alat Pengembang"
 documentReview = "Peninjauan Dokumen"
@@ -11335,8 +11459,11 @@ columnDefault = "Kolom {{index}}"
 convertToPdf = "Konversi ke PDF"
 csvStats = "{{rows}} baris · {{columns}} kolom · {{size}}"
 emptyFile = "File kosong"
+htmlHidePreview = "Sembunyikan pratinjau"
 htmlPreview = "Pratinjau HTML"
+htmlPreviewMobileHidden = "Halaman HTML ditata untuk lebar desktop, jadi pratinjau dinonaktifkan secara default di sini."
 htmlPreviewWarning = "Pratinjau HTML — sumber eksternal mungkin tidak dimuat · {{size}}"
+htmlShowPreview = "Tetap tampilkan pratinjau"
 invalidJson = "JSON tidak valid — menampilkan konten mentah"
 lineNumbers = "Nomor baris"
 loading = "Memuat..."
@@ -11683,6 +11810,7 @@ exportAll = "Ekspor PDF"
 exportSelected = "Ekspor Halaman yang Dipilih"
 formFill = "Isi Formulir"
 hideToolbar = "Hide toolbar"
+moreActions = "Tindakan lainnya"
 multiTool = "Multi-Tool"
 panMode = "Mode Geser"
 print = "Cetak PDF"
@@ -11703,6 +11831,8 @@ selectAll = "Pilih Semua"
 selectByNumber = "Pilih berdasarkan Nomor Halaman"
 selectLanguage = "Pilih bahasa"
 share = "Bagikan"
+showAllTools = "Tampilkan semua alat"
+showFewerTools = "Ciutkan bilah alat"
 showToolbar = "Show toolbar"
 toggleAnnotations = "Tampilkan/Sembunyikan Anotasi"
 toggleAttachments = "Tampilkan/Sembunyikan Lampiran"
