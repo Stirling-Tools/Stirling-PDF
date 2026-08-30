@@ -148,6 +148,7 @@ export default function HomePage() {
     syncFromUrl();
     window.addEventListener("popstate", syncFromUrl);
     return () => window.removeEventListener("popstate", syncFromUrl);
+    // location.pathname is a trigger only - it marks a router commit.
   }, [location.pathname]);
 
   useEffect(() => {
@@ -160,9 +161,8 @@ export default function HomePage() {
   // when opened directly on a /settings URL (deep link) - close falls back to
   // the editor root.
   const settingsOriginRef = useRef<string | null>(null);
-  // Last route outside /settings. Openers that navigate straight to
-  // /settings/* (super search) have already replaced the URL by the time the
-  // modal opens, so the origin has to be remembered on the way past.
+  // Last route outside /settings. Super search pushes /settings/* through the
+  // router, so the app is already in settings when the modal opens.
   const lastNonSettingsPathRef = useRef<string | null>(null);
   useEffect(() => {
     if (!location.pathname.startsWith("/settings")) {
@@ -172,11 +172,9 @@ export default function HomePage() {
   const wasConfigOpenRef = useRef(false);
   useEffect(() => {
     if (configModalOpen && !wasConfigOpenRef.current) {
-      // Already in /settings when the modal opened: either a nav-driven open
-      // (fall back to the route we came from) or a genuine deep link (null).
-      settingsOriginRef.current = isInSettings()
-        ? lastNonSettingsPathRef.current
-        : location.pathname;
+      // One clock only: location.pathname can still hold a stale /settings
+      // path here, and storing it makes the next close re-open the modal.
+      settingsOriginRef.current = lastNonSettingsPathRef.current;
     }
     wasConfigOpenRef.current = configModalOpen;
   }, [configModalOpen, location.pathname]);

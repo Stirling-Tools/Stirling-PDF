@@ -250,6 +250,19 @@ test.describe("Settings dialog", () => {
       .toBe(originPath);
   });
 
+  test("close from a deep link leaves /settings", async ({ page }) => {
+    // Nothing to restore on a cold deep link, so close falls back to the
+    // editor root rather than pinning the URL in /settings.
+    await page.goto("/settings/general", { waitUntil: "domcontentloaded" });
+    await expect(page.locator(".modal-container")).toBeVisible({
+      timeout: 5_000,
+    });
+    await closeSettings(page);
+    await expect
+      .poll(() => new URL(page.url()).pathname, { timeout: 5_000 })
+      .not.toMatch(/\/settings/);
+  });
+
   test("close returns to origin URL when settings was opened from super search", async ({
     page,
   }) => {

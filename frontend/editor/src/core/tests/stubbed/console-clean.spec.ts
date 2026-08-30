@@ -82,6 +82,12 @@ async function attachInPageErrorCapture(page: Page): Promise<void> {
       if (value instanceof Error) {
         return value.stack || `${value.name}: ${value.message}`;
       }
+      if (value instanceof Element) {
+        // JSON.stringify renders a DOM node as "{}" without throwing, so the
+        // object branch below would swallow the one detail that matters.
+        const el = value as HTMLImageElement & HTMLLinkElement;
+        return `${value.tagName}[${el.src || el.href || ""}]`;
+      }
       if (value && typeof value === "object") {
         try {
           return JSON.stringify(value);
@@ -91,17 +97,20 @@ async function attachInPageErrorCapture(page: Page): Promise<void> {
       }
       return String(value);
     };
-    window.addEventListener("error", (event) => {
-      // Resource-load failures bubble here with no `error` object and never
-      // reach `pageerror`, so record where they came from rather than
-      // pretending they were throws.
-      const origin = event.filename
-        ? `${event.filename}:${event.lineno}:${event.colno}`
-        : describe(event.target);
-      sink.push(
-        `[window.onerror] ${event.message || "(sanitised)"} @ ${origin} :: ${describe(event.error)}`,
-      );
-    });
+    window.addEventListener(
+      "error",
+      (event) => {
+        // Resource-load failures only reach window in the capture phase and
+        // never reach `pageerror`, so record where they came from.
+        const origin = event.filename
+          ? `${event.filename}:${event.lineno}:${event.colno}`
+          : describe(event.target);
+        sink.push(
+          `[window.onerror] ${event.message || "(sanitised)"} @ ${origin} :: ${describe(event.error)}`,
+        );
+      },
+      true,
+    );
     window.addEventListener("unhandledrejection", (event) => {
       sink.push(`[unhandledrejection] ${describe(event.reason)}`);
     });
