@@ -186,7 +186,7 @@ public class AdvancedPdfMarkdownConverter implements PdfMarkdownExtractor {
             for (List<Line> row : b.rows()) {
                 for (Line l : row) {
                     tableLines.add(l);
-                    tableRowTexts.add(MarkdownText.repairHyphens(l.text).strip());
+                    tableRowTexts.add(l.text.strip());
                 }
             }
         }
@@ -259,6 +259,10 @@ public class AdvancedPdfMarkdownConverter implements PdfMarkdownExtractor {
         try (PdfPage page = doc.page(pageIndex)) {
             return PageRules.of(page);
         } catch (Exception e) {
+            log.debug(
+                    "Page {} ruling lines unreadable; falling back to word-grid tables",
+                    pageIndex,
+                    e);
             return PageRules.EMPTY;
         }
     }

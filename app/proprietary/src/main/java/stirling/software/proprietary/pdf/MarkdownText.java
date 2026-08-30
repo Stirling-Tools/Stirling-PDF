@@ -9,14 +9,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Markdown text utilities: escaping extracted text, repairing extractor artefacts, and rebasing the
- * finished document's heading levels.
+ * Markdown text utilities: escaping extracted text and rebasing the finished document's heading
+ * levels.
  */
 final class MarkdownText {
 
     private MarkdownText() {}
-
-    private static final Pattern SOFT_HYPHEN = Pattern.compile("(\\w+)-\\n([a-z])");
 
     /** A Markdown ATX heading at the start of a line, with its level in group 1. */
     private static final Pattern ATX_HEADING = Pattern.compile("(?m)^(#{1,6}) (?=\\S)");
@@ -110,10 +108,6 @@ final class MarkdownText {
             out.add(escapeMarkdown(para.toString()));
             para.setLength(0);
         }
-    }
-
-    static String repairHyphens(String text) {
-        return SOFT_HYPHEN.matcher(text).replaceAll("$1$2");
     }
 
     static boolean endsWithSentencePunctuation(String s) {

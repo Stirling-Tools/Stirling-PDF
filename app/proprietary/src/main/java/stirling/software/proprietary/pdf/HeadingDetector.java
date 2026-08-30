@@ -22,6 +22,9 @@ final class HeadingDetector {
     /** A heading is at most this many words; longer lines are treated as body text. */
     private static final int MAX_HEADING_WORDS = 12;
 
+    /** A heading in a script written without word spaces is at most this many characters. */
+    private static final int MAX_HEADING_UNSPACED_CHARS = 30;
+
     /** Six-letter subset tag PDF writers prepend to embedded font names. */
     private static final Pattern SUBSET_TAG = Pattern.compile("^[A-Z]{6}\\+");
 
@@ -119,7 +122,7 @@ final class HeadingDetector {
             String bodyFont,
             boolean isolated) {
         String text = lineText.strip();
-        if (text.isEmpty() || wordCount(text) > MAX_HEADING_WORDS) {
+        if (text.isEmpty() || tooLongForHeading(text)) {
             return "";
         }
         float ratio = sizeRatio(lineHeight, words, medianBodySize, medianBodyHeight);
@@ -285,7 +288,7 @@ final class HeadingDetector {
      */
     static boolean isBoldLabel(String lineText, List<TextWord> words) {
         String text = lineText.strip();
-        if (text.isEmpty() || wordCount(text) > MAX_HEADING_WORDS || endsLikeSentence(text)) {
+        if (text.isEmpty() || tooLongForHeading(text) || endsLikeSentence(text)) {
             return false;
         }
         if (RUNS_ON.matcher(text).find()) {
@@ -298,9 +301,45 @@ final class HeadingDetector {
         return text.split("\\s+").length;
     }
 
+    /** Whitespace tokens do not measure a line written in a script with no word spaces. */
+    private static boolean tooLongForHeading(String text) {
+        return wordCount(text) > MAX_HEADING_WORDS
+                || unspacedScriptChars(text) > MAX_HEADING_UNSPACED_CHARS;
+    }
+
+    private static int unspacedScriptChars(String text) {
+        int n = 0;
+        for (int i = 0; i < text.length(); ) {
+            int cp = text.codePointAt(i);
+            if (isUnspacedScript(cp)) {
+                n++;
+            }
+            i += Character.charCount(cp);
+        }
+        return n;
+    }
+
+    private static boolean isUnspacedScript(int cp) {
+        Character.UnicodeScript s = Character.UnicodeScript.of(cp);
+        return s == Character.UnicodeScript.HAN
+                || s == Character.UnicodeScript.HIRAGANA
+                || s == Character.UnicodeScript.KATAKANA
+                || s == Character.UnicodeScript.THAI
+                || s == Character.UnicodeScript.LAO
+                || s == Character.UnicodeScript.KHMER
+                || s == Character.UnicodeScript.MYANMAR;
+    }
+
     private static boolean endsLikeSentence(String text) {
         char last = text.charAt(text.length() - 1);
-        return last == '.' || last == '!' || last == '?';
+        // Ideographic and full-width stops end a sentence exactly as the ASCII ones do.
+        return last == '.'
+                || last == '!'
+                || last == '?'
+                || last == '\u3002'
+                || last == '\uff01'
+                || last == '\uff1f'
+                || last == '\uff61';
     }
 
     /** True when the line's dominant font is bold, inferred from PostScript font names. */

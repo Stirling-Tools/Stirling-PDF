@@ -26,7 +26,7 @@ final class ParagraphAssembler {
 
         for (int i = 0; i < lines.size(); i++) {
             Line line = lines.get(i);
-            String text = MarkdownText.repairHyphens(line.text).strip();
+            String text = line.text.strip();
             if (text.isEmpty()) {
                 continue;
             }
@@ -71,7 +71,7 @@ final class ParagraphAssembler {
                 int k = i + 1;
                 while (k < lines.size() && words < MAX_WRAPPED_HEADING_WORDS) {
                     Line next = lines.get(k);
-                    String nt = MarkdownText.repairHyphens(next.text).strip();
+                    String nt = next.text.strip();
                     if (nt.isEmpty()) {
                         // An empty extractor record is not a break in the text; the vertical
                         // gap below decides whether the heading ended.

@@ -2,6 +2,7 @@ package stirling.software.proprietary.pdf;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -23,6 +24,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import stirling.software.jpdfium.PdfDocument;
+import stirling.software.jpdfium.text.TextChar;
 import stirling.software.jpdfium.text.TextLine;
 import stirling.software.jpdfium.text.TextWord;
 
@@ -104,7 +106,7 @@ class AdvancedPdfMarkdownConverterTest {
         List<Float> gutters = assertDoesNotThrow(() -> ColumnLayout.guttersFromTextLines(rows));
         assertTrue(
                 gutters.isEmpty(),
-                "implausible page span should disable gutter detection, not scan it");
+                "every candidate band is crossed by every line, so no gutter is found");
     }
 
     /**
@@ -170,6 +172,48 @@ class AdvancedPdfMarkdownConverterTest {
         // Already rooted at level 1 with no gaps: left alone.
         String unchanged = "# Title\n\n## Section\n";
         assertEquals(unchanged, MarkdownText.normaliseHeadingLevels(unchanged));
+    }
+
+    /** A line of Han text has no spaces, so the word-count heading guard cannot measure it. */
+    private static List<TextWord> cjkWords(String text, String font) {
+        List<TextChar> chars = new ArrayList<>(text.length());
+        for (int i = 0; i < text.length(); i++) {
+            chars.add(new TextChar(i, text.charAt(i), 50f + i * 12f, 400f, 12f, 12f, font, 12f));
+        }
+        return List.of(new TextWord(chars, 50f, 400f, text.length() * 12f, 12f));
+    }
+
+    @Test
+    void boldCjkParagraphIsNotPromotedToAHeading() {
+        String paragraph =
+                "\u672c\u898f\u7d04\u306f\u3001\u5f53\u793e\u304c\u63d0\u4f9b\u3059\u308b"
+                        + "\u672c\u30b5\u30fc\u30d3\u30b9\u306e\u5229\u7528\u6761\u4ef6\u3092"
+                        + "\u5b9a\u3081\u308b\u3082\u306e\u3067\u3042\u308a\u3001\u5229\u7528"
+                        + "\u8005\u306e\u7686\u3055\u307e\u306b\u306f\u672c\u898f\u7d04\u306b"
+                        + "\u5f93\u3063\u3066\u3054\u5229\u7528\u3044\u305f\u3060\u304d\u307e\u3059\u3002";
+        List<TextWord> words = cjkWords(paragraph, "NotoSansCJKjp-Bold");
+        assertEquals(
+                "",
+                HeadingDetector.headingPrefix(
+                        paragraph, 12f, words, 12f, 12f, "NotoSansCJKjp-Regular", true),
+                "a bold paragraph in a script with no word spaces is body text, not a heading");
+        assertFalse(
+                HeadingDetector.isBoldLabel(paragraph, words),
+                "a paragraph ending in an ideographic stop is a sentence, not a bold label");
+
+        // The guard must not cost the short headings it is meant to keep.
+        String heading = "\u7b2c\u4e09\u7ae0 \u5b9f\u88c5\u306e\u6982\u8981";
+        assertEquals(
+                "### ",
+                HeadingDetector.headingPrefix(
+                        heading,
+                        12f,
+                        cjkWords(heading, "NotoSansCJKjp-Bold"),
+                        12f,
+                        12f,
+                        "NotoSansCJKjp-Regular",
+                        true),
+                "a short isolated bold CJK line is still a heading");
     }
 
     /**
