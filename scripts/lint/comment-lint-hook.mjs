@@ -64,9 +64,17 @@ if (result.status !== FOUND) {
   process.exit(1);
 }
 
+// A report with nothing in it is the launcher failing, not the linter: a missing
+// `task` also exits 1, and blocking on that reads as "your comments are bad".
+const report = result.output.trim();
+if (!report) {
+  process.stderr.write("comment-lint exited 1 with no report, so comments in this turn were not checked.\n");
+  process.exit(1);
+}
+
 // The linter's own report already names the file, line, rule and the standard, so
 // it is passed through rather than rewritten.
-process.stderr.write(`${result.output.trim()}\n\nFix these before finishing.\n`);
+process.stderr.write(`${report}\n\nFix these before finishing.\n`);
 process.exit(2);
 
 function readStdin() {
@@ -92,7 +100,9 @@ function taskCommand() {
   for (const candidate of candidates) {
     if (existsSync(candidate)) return { command: candidate, shell: false };
   }
-  return { command: process.platform === "win32" ? "task.cmd" : "task", shell: process.platform === "win32" };
+  // Bare `task` on win32, not `task.cmd`: cmd.exe resolves it through PATHEXT, so
+  // it finds scoop's task.exe as well as the npm package's task.cmd.
+  return { command: "task", shell: process.platform === "win32" };
 }
 
 function run() {

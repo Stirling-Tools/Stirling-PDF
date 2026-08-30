@@ -15,6 +15,15 @@ version: '3'
 #                  stripping; cmd.exe also requires `.\` (not bare `gradlew.bat`)
 #                  because modern Windows excludes cwd from cmd's search path.
 
+vars:
+  # settings.gradle only puts :saas in the project graph when the saas flavor is
+  # selected, so a default `spotlessApply` silently leaves app/saas unformatted
+  # and nothing ever notices. Pin the flavor for the format tasks so they cover
+  # every subproject the checkout actually has. Empty on clones without
+  # app/saas (settings.gradle treats an empty value as "unset").
+  SPOTLESS_FLAVOR:
+    sh: test -d app/saas && echo saas || true
+
 tasks:
   dev:
     desc: "Start backend dev server"
@@ -227,6 +236,8 @@ tasks:
 
   format:
     desc: "Auto-fix code formatting"
+    env:
+      STIRLING_FLAVOR: '{{.SPOTLESS_FLAVOR}}'
     cmds:
       - cmd: cmd /c ".\gradlew.bat spotlessApply"
         platforms: [windows]
@@ -235,6 +246,8 @@ tasks:
 
   format:check:
     desc: "Check code formatting"
+    env:
+      STIRLING_FLAVOR: '{{.SPOTLESS_FLAVOR}}'
     cmds:
       - cmd: cmd /c ".\gradlew.bat spotlessCheck"
         platforms: [windows]

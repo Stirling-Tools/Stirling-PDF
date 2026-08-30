@@ -54,9 +54,10 @@ jobs:
       - name: Install Task
         uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
       - name: Check Java formatting (Spotless)
-        # Runs once per matrix combination - pick the cheapest leg
-        # (core - no proprietary, no saas) so we don't wait for the
-        # heavier flavors just to fail formatting.
+        # Runs on the cheapest leg so we don't wait for the heavier flavors just
+        # to fail formatting. Coverage does not depend on the leg: the task pins
+        # STIRLING_FLAVOR itself so spotless always sees every subproject,
+        # :saas included.
         if: matrix.jdk-version == 25 && matrix.flavor == 'core'
         id: spotless-check
         run: task backend:format:check

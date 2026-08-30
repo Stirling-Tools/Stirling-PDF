@@ -152,10 +152,10 @@ tasks:
 
       Full tree (report only):     task pre-commit:comment-lint:all
       Fixture corpus:             task pre-commit:comment-lint:selftest
-    # Depends on the frontend install because the .ts/.tsx half of the rule set
-    # runs as an oxlint plugin. Without it the TS engine warns and skips, which
-    # would leave the frontend silently unchecked on CI.
-    deps: [":frontend:install"]
+    # No :frontend:install dep: this runs from the git hook, and a from-scratch
+    # npm install there stalls every commit. Missing oxlint warns and skips the
+    # TS half; the callers that must not skip (:ci, :branch, :all) keep the dep,
+    # and pre_commit.yml installs the frontend before it runs this.
     cmds:
       - node scripts/lint/comment-lint.mjs {{.CLI_ARGS}}
 

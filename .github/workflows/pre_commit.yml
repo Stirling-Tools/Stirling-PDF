@@ -35,6 +35,11 @@ jobs:
       - name: Install Task
         uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
 
+      # The .ts/.tsx half of comment-lint runs as an oxlint plugin. The task no
+      # longer installs it for us (that stalled the local git hook), so do it here.
+      - name: Install frontend dependencies
+        run: task frontend:install
+
       - name: Run pre-commit checks
         run: task pre-commit
 
