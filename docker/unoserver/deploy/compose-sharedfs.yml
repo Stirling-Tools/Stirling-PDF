@@ -1,0 +1,72 @@
+x-uno: &uno
+  image: ghcr.io/stirling-tools/stirling-unoserver:latest
+  environment:
+    UNOSERVER_PORT: "2003"
+    UNOSERVER_CONVERSION_TIMEOUT: "1800"
+    UNOSERVER_RECYCLE_INTERVAL_SECONDS: "3600"
+  volumes:
+    - uno-shared:/shared/stirling-pdf
+  healthcheck:
+    test: ["CMD-SHELL", "unoping --host 127.0.0.1 --port 2003 || exit 1"]
+    interval: 10s
+    timeout: 10s
+    retries: 3
+    start_period: 30s
+  depends_on:
+    uno-shared-init:
+      condition: service_completed_successfully
+  restart: unless-stopped
+  networks: [stirling]
+
+services:
+  uno-shared-init:
+    image: alpine:3.20
+    user: "0:0"
+    command: ["sh", "-c", "mkdir -p /shared/stirling-pdf && chown -R 1001:1001 /shared/stirling-pdf && chmod 775 /shared/stirling-pdf"]
+    volumes:
+      - uno-shared:/shared/stirling-pdf
+    networks: [stirling]
+
+  stirling-pdf:
+    image: docker.stirlingpdf.com/stirlingtools/stirling-pdf:latest
+    ports:
+      - "8080:8080"
+    environment:
+      PUID: "1001"
+      PGID: "1001"
+      SYSTEM_TEMPFILEMANAGEMENT_BASETMPDIR: "/shared/stirling-pdf"
+      PROCESS_EXECUTOR_AUTO_UNO_SERVER: "false"
+      PROCESS_EXECUTOR_UNO_SERVER_ENDPOINTS_0_HOST: "unoserver-lb"
+      PROCESS_EXECUTOR_UNO_SERVER_ENDPOINTS_0_PORT: "2003"
+      PROCESS_EXECUTOR_UNO_SERVER_ENDPOINTS_0_HOST_LOCATION: "local"
+      PROCESS_EXECUTOR_UNO_SERVER_ENDPOINTS_0_CONCURRENCY: "3"
+      PROCESS_EXECUTOR_SESSION_LIMIT_LIBRE_OFFICE_SESSION_LIMIT: "3"
+    volumes:
+      - uno-shared:/shared/stirling-pdf
+    depends_on:
+      uno-shared-init:
+        condition: service_completed_successfully
+      unoserver-lb:
+        condition: service_started
+    restart: unless-stopped
+    networks: [stirling]
+
+  unoserver-lb:
+    image: nginx:1.27-alpine
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    restart: unless-stopped
+    networks: [stirling]
+
+  unoserver-1:
+    <<: *uno
+  unoserver-2:
+    <<: *uno
+  unoserver-3:
+    <<: *uno
+
+volumes:
+  uno-shared:
+
+networks:
+  stirling:

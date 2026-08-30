@@ -24,15 +24,28 @@ public class UnoServerPool {
         } else {
             this.endpoints = new ArrayList<>(endpoints);
             this.availableIndices = new LinkedBlockingQueue<>();
-            // Initialize queue with all endpoint indices
             for (int i = 0; i < this.endpoints.size(); i++) {
-                this.availableIndices.offer(i);
+                for (int slot = 0; slot < slotsFor(this.endpoints.get(i)); slot++) {
+                    this.availableIndices.offer(i);
+                }
             }
         }
     }
 
     public boolean isEmpty() {
         return endpoints.isEmpty();
+    }
+
+    public int totalSlots() {
+        int total = 0;
+        for (ApplicationProperties.ProcessExecutor.UnoServerEndpoint endpoint : endpoints) {
+            total += slotsFor(endpoint);
+        }
+        return total;
+    }
+
+    private static int slotsFor(ApplicationProperties.ProcessExecutor.UnoServerEndpoint endpoint) {
+        return Math.max(1, endpoint.getConcurrency());
     }
 
     public UnoServerLease acquireEndpoint() throws InterruptedException {

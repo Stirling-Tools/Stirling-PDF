@@ -343,6 +343,7 @@ processExecutor:
   #     port: 2003
   #     hostLocation: "auto"  # auto|local|remote (use "remote" for port-forwarded servers)
   #     protocol: "http"       # http|https
+  #     concurrency: 1
   #   - host: "remote-server.local"
   #     port: 8080
   #     hostLocation: "remote"

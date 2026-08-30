@@ -1,0 +1,43 @@
+services:
+  stirling-pdf:
+    image: docker.stirlingpdf.com/stirlingtools/stirling-pdf:latest
+    ports:
+      - "8080:8080"
+    environment:
+      PROCESS_EXECUTOR_AUTO_UNO_SERVER: "false"
+      PROCESS_EXECUTOR_UNO_SERVER_ENDPOINTS_0_HOST: "unoserver-lb"
+      PROCESS_EXECUTOR_UNO_SERVER_ENDPOINTS_0_PORT: "2003"
+      PROCESS_EXECUTOR_UNO_SERVER_ENDPOINTS_0_HOST_LOCATION: "remote"
+      PROCESS_EXECUTOR_UNO_SERVER_ENDPOINTS_0_CONCURRENCY: "4"
+      PROCESS_EXECUTOR_SESSION_LIMIT_LIBRE_OFFICE_SESSION_LIMIT: "4"
+    depends_on:
+      - unoserver-lb
+    restart: unless-stopped
+    networks: [stirling]
+
+  unoserver-lb:
+    image: haproxy:3.0-alpine
+    volumes:
+      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    ports:
+      - "8404:8404"
+    restart: unless-stopped
+    networks: [stirling]
+
+  unoserver:
+    image: ghcr.io/stirling-tools/stirling-unoserver:latest
+    environment:
+      UNOSERVER_PORT: "2003"
+      UNOSERVER_CONVERSION_TIMEOUT: "1800"
+      UNOSERVER_RECYCLE_INTERVAL_SECONDS: "3600"
+    healthcheck:
+      test: ["CMD-SHELL", "unoping --host 127.0.0.1 --port 2003 || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+    networks: [stirling]
+
+networks:
+  stirling:

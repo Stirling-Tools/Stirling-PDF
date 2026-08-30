@@ -259,6 +259,50 @@ public class UnoServerPoolTest {
         }
     }
 
+    @Test
+    void defaultConcurrencyKeepsOneSlotPerEndpoint() {
+        UnoServerPool pool = new UnoServerPool(createEndpoints(3));
+        assertEquals(3, pool.totalSlots(), "Unset concurrency must behave as one slot each");
+    }
+
+    @Test
+    void loadBalancerEntryHandsOutItsConcurrencyInParallel() throws InterruptedException {
+        List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> endpoints =
+                createEndpoints(1);
+        endpoints.getFirst().setHost("unoserver-lb");
+        endpoints.getFirst().setConcurrency(4);
+
+        UnoServerPool pool = new UnoServerPool(endpoints);
+        assertEquals(4, pool.totalSlots());
+
+        List<UnoServerPool.UnoServerLease> held = new ArrayList<>();
+        for (int i = 0; i < 4; i++) {
+            UnoServerPool.UnoServerLease lease = pool.acquireEndpoint();
+            assertEquals("unoserver-lb", lease.getEndpoint().getHost());
+            held.add(lease);
+        }
+        assertThrows(
+                TimeoutException.class,
+                () -> pool.acquireEndpoint(100, TimeUnit.MILLISECONDS),
+                "The fifth acquire must wait: concurrency is a cap, not a hint");
+
+        held.forEach(UnoServerPool.UnoServerLease::close);
+        try (UnoServerPool.UnoServerLease reacquired = pool.acquireEndpoint()) {
+            assertEquals("unoserver-lb", reacquired.getEndpoint().getHost());
+        }
+    }
+
+    @Test
+    void slotsSumAcrossMixedEndpoints() {
+        List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> endpoints =
+                createEndpoints(2);
+        endpoints.get(0).setConcurrency(3);
+        endpoints.get(1).setConcurrency(0);
+
+        UnoServerPool pool = new UnoServerPool(endpoints);
+        assertEquals(4, pool.totalSlots(), "3 + a clamped 1");
+    }
+
     private List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> createEndpoints(
             int count) {
         List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> endpoints = new ArrayList<>();

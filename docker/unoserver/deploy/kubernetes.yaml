@@ -1,0 +1,102 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: unoserver
+  labels:
+    app: unoserver
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: unoserver
+  template:
+    metadata:
+      labels:
+        app: unoserver
+    spec:
+      terminationGracePeriodSeconds: 1800
+      containers:
+        - name: unoserver
+          image: ghcr.io/stirling-tools/stirling-unoserver:latest
+          ports:
+            - containerPort: 2003
+              name: rpc
+          env:
+            - name: UNOSERVER_PORT
+              value: "2003"
+            - name: UNOSERVER_CONVERSION_TIMEOUT
+              value: "1800"
+            - name: UNOSERVER_RECYCLE_INTERVAL_SECONDS
+              value: "3600"
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "1Gi"
+            limits:
+              memory: "2Gi"
+          readinessProbe:
+            exec:
+              command: ["sh", "-c", "unoping --host 127.0.0.1 --port 2003"]
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 10
+          livenessProbe:
+            exec:
+              command: ["sh", "-c", "unoping --host 127.0.0.1 --port 2003"]
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: unoserver
+spec:
+  selector:
+    app: unoserver
+  ports:
+    - port: 2003
+      targetPort: 2003
+      name: rpc
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stirling-pdf
+  labels:
+    app: stirling-pdf
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: stirling-pdf
+  template:
+    metadata:
+      labels:
+        app: stirling-pdf
+    spec:
+      containers:
+        - name: stirling-pdf
+          image: docker.stirlingpdf.com/stirlingtools/stirling-pdf:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: PROCESS_EXECUTOR_AUTO_UNO_SERVER
+              value: "false"
+            - name: PROCESS_EXECUTOR_UNO_SERVER_ENDPOINTS_0_HOST
+              value: "unoserver"
+            - name: PROCESS_EXECUTOR_UNO_SERVER_ENDPOINTS_0_PORT
+              value: "2003"
+            - name: PROCESS_EXECUTOR_UNO_SERVER_ENDPOINTS_0_HOST_LOCATION
+              value: "remote"
+            - name: PROCESS_EXECUTOR_UNO_SERVER_ENDPOINTS_0_CONCURRENCY
+              value: "2"
+            - name: PROCESS_EXECUTOR_SESSION_LIMIT_LIBRE_OFFICE_SESSION_LIMIT
+              value: "2"
+          readinessProbe:
+            httpGet:
+              path: /api/v1/info/status
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10

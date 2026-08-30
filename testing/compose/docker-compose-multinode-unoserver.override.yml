@@ -1,0 +1,69 @@
+# Shared unoserver pool for the multi-node stack: every Stirling node converts through
+# one HAProxy-fronted fleet instead of running its own LibreOffice.
+#
+# Bring up:  docker compose -f docker-compose-multinode.yml -f docker-compose-multinode-unoserver.override.yml up -d --scale unoserver=3
+# Resize:    docker compose ... up -d --scale unoserver=6 --no-recreate   (nothing restarts)
+# Watch:     http://localhost:8404/  (queue depth, per-server sessions)
+#
+# Why a proxy rather than listing unoserver hosts on each node: unoserver converts
+# strictly in series (measured: 1 job 6.0s, 2 jobs 10.5s, 4 jobs 20.8s against one
+# instance) and queues without bound instead of rejecting. UnoServerPool's semaphore
+# is per-JVM, so N nodes each believing they may run M conversions oversubscribes the
+# fleet by N and the excess piles up invisibly inside unoserver. One shared queue in
+# front is the only place that limit can actually be enforced.
+
+x-uno-endpoints: &uno-endpoints
+  PROCESS_EXECUTOR_AUTO_UNO_SERVER: "false"
+  # One entry for the whole fleet. concurrency is this node's in-flight cap, not a host
+  # count: real capacity is the replica count, and HAProxy queues the difference.
+  PROCESS_EXECUTOR_UNO_SERVER_ENDPOINTS_0_HOST: "unoserver-lb"
+  PROCESS_EXECUTOR_UNO_SERVER_ENDPOINTS_0_PORT: "2003"
+  PROCESS_EXECUTOR_UNO_SERVER_ENDPOINTS_0_HOST_LOCATION: "remote"
+  PROCESS_EXECUTOR_UNO_SERVER_ENDPOINTS_0_CONCURRENCY: "4"
+  # Matches the slot count so RuntimePathConfig does not log a mismatch warning.
+  PROCESS_EXECUTOR_SESSION_LIMIT_LIBRE_OFFICE_SESSION_LIMIT: "4"
+
+services:
+  stirling-1:
+    environment: *uno-endpoints
+    depends_on:
+      unoserver-lb:
+        condition: service_started
+
+  stirling-2:
+    environment: *uno-endpoints
+    depends_on:
+      unoserver-lb:
+        condition: service_started
+
+  # No container_name: that is what allows --scale.
+  unoserver:
+    image: ghcr.io/stirling-tools/stirling-unoserver:latest
+    environment:
+      UNOSERVER_PORT: "2003"
+      UNOSERVER_UNO_PORT: "2002"
+      UNOSERVER_CONVERSION_TIMEOUT: "1800"
+      # Hourly restart bounds LibreOffice memory growth. Safe to leave on here only
+      # because HAProxy health checks pull a recycling instance out of rotation.
+      UNOSERVER_RECYCLE_INTERVAL_SECONDS: "3600"
+    healthcheck:
+      # unoping is a real RPC round-trip: the TCP port stays bound while LibreOffice
+      # is wedged, so a port check would keep a dead instance in the pool.
+      test: ["CMD-SHELL", "unoping --host 127.0.0.1 --port 2003 || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - stirling-multinode
+
+  unoserver-lb:
+    image: haproxy:3.0-alpine
+    volumes:
+      - ./multinode/haproxy-unoserver.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    ports:
+      - "8404:8404" # stats + /metrics
+    restart: unless-stopped
+    networks:
+      - stirling-multinode

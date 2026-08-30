@@ -292,12 +292,16 @@ public class RuntimePathConfig {
             List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> configured =
                     sanitizeUnoServerEndpoints(processExecutor.getUnoServerEndpoints());
             if (!configured.isEmpty()) {
-                // Warn if manual endpoint count doesn't match sessionLimit
-                if (configured.size() != sessionLimit) {
+                int slots = 0;
+                for (ApplicationProperties.ProcessExecutor.UnoServerEndpoint endpoint :
+                        configured) {
+                    slots += Math.max(1, endpoint.getConcurrency());
+                }
+                if (slots != sessionLimit) {
                     log.warn(
-                            "Manual UNO endpoint count ({}) differs from libreOfficeSessionLimit ({}). "
-                                    + "Concurrency will be limited by endpoint count, not sessionLimit.",
-                            configured.size(),
+                            "Manual UNO endpoints allow {} concurrent conversion(s) but libreOfficeSessionLimit is {}. "
+                                    + "Concurrency will be limited by the endpoints, not sessionLimit.",
+                            slots,
                             sessionLimit);
                 }
                 return configured;

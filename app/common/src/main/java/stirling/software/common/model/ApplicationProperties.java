@@ -1612,6 +1612,7 @@ public class ApplicationProperties {
             private int port = 2003;
             private String hostLocation = "auto"; // auto|local|remote
             private String protocol = "http"; // http|https
+            private int concurrency = 1;
         }
 
         @Data
