@@ -763,6 +763,23 @@ def step_check_response_pdf_page_count(context, page_count):
     ), f"Expected {page_count} pages but got {actual_page_count} pages"
 
 
+@then(
+    "the response PDF page {page_number:d} should have width {width:d} and height {height:d}"
+)
+def step_check_response_pdf_page_size(context, page_number, width, height):
+    response_file = io.BytesIO(context.response.content)
+    reader = PdfReader(io.BytesIO(response_file.getvalue()))
+    page = reader.pages[page_number - 1]
+    actual_width = float(page.mediabox.width)
+    actual_height = float(page.mediabox.height)
+    assert (
+        abs(actual_width - width) < 0.5
+    ), f"Expected page {page_number} width {width} but got {actual_width}"
+    assert (
+        abs(actual_height - height) < 0.5
+    ), f"Expected page {page_number} height {height} but got {actual_height}"
+
+
 @then("the response ZIP should contain {file_count:d} files")
 def step_check_response_zip_file_count(context, file_count):
     response_file = io.BytesIO(context.response.content)

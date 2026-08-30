@@ -3847,6 +3847,12 @@ label = "Y Position"
 [crop.error]
 failed = "Failed to crop PDF"
 
+[crop.pageNumbers]
+description = "Crop the selected area on specific pages, or 'all' for every page."
+error = "Invalid page selection. Use e.g. 1, 3, 5-8 or all."
+label = "Pages to Crop"
+placeholder = "e.g. 1, 3, 5-8 or all"
+
 [crop.preview]
 title = "Crop Area Selection"
 
