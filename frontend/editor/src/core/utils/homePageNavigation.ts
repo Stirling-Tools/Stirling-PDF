@@ -1,10 +1,17 @@
-import type { WorkbenchType } from "@app/types/workbench";
+import { getDefaultWorkbench, type WorkbenchType } from "@app/types/workbench";
 
 export type StartupWorkbench = "viewer" | "fileEditor";
 
 export interface StartupNavigationAction {
   workbench: StartupWorkbench;
   activeFileIndex?: number;
+}
+
+/** Several files means the file editor; one or none the viewer. */
+export function getDefaultWorkbenchForFileCount(
+  fileCount: number,
+): WorkbenchType {
+  return fileCount > 1 ? "fileEditor" : getDefaultWorkbench();
 }
 
 export function getStartupNavigationAction(
