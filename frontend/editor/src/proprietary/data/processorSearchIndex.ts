@@ -3,14 +3,9 @@ import { PORTAL_BASENAME } from "@app/routes/portalBasename";
 // the lazy portal chunk into the main bundle the way @portal/* values would.
 import { usersCapabilities } from "@app/portal/usersCapabilities";
 import type { ProcessorSearchEntry } from "@core/data/processorSearchIndex";
+import { HAS_PORTAL } from "@app/routes/hasPortal";
 
 export type { ProcessorSearchEntry };
-
-// Mirrors the admin-route seam's gate: the portal route-set is only mounted in
-// dev and in builds made with VITE_INCLUDE_PORTAL=true, so the search must not
-// offer destinations that would 404 elsewhere.
-const includePortal =
-  import.meta.env.VITE_INCLUDE_PORTAL === "true" || import.meta.env.DEV;
 
 /**
  * The portal's in-app views. Deliberately a static mirror of the portal's nav
@@ -91,7 +86,8 @@ const VIEWS: ProcessorSearchEntry[] = [
   },
 ];
 
-export const PROCESSOR_SEARCH_INDEX: ProcessorSearchEntry[] = includePortal
+// Empty without the portal: these destinations would 404.
+export const PROCESSOR_SEARCH_INDEX: ProcessorSearchEntry[] = HAS_PORTAL
   ? VIEWS
   : [];
 

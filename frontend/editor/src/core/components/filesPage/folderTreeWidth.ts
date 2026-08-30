@@ -27,7 +27,7 @@ function depthOf(
   let cursor: FolderRecord | undefined = folder;
   while (cursor && cursor.parentFolderId) {
     depth += 1;
-    cursor = byId.get(cursor.parentFolderId as string);
+    cursor = byId.get(cursor.parentFolderId);
     if (depth > 50) break;
   }
   return depth;

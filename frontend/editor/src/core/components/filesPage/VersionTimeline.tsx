@@ -120,14 +120,14 @@ export function VersionTimeline({
       };
   const rows: Row[] = useMemo(() => {
     if (!collapsible || showAllCollapsed) {
-      return ordered.map((v) => ({ kind: "version", version: v }) as Row);
+      return ordered.map<Row>((v) => ({ kind: "version", version: v }));
     }
     const head = ordered
       .slice(0, 3)
-      .map((v) => ({ kind: "version", version: v }) as Row);
+      .map<Row>((v) => ({ kind: "version", version: v }));
     const tail = ordered
       .slice(-2)
-      .map((v) => ({ kind: "version", version: v }) as Row);
+      .map<Row>((v) => ({ kind: "version", version: v }));
     const hidden = ordered.length - 5;
     return [...head, { kind: "ellipsis", hidden }, ...tail];
   }, [collapsible, showAllCollapsed, ordered]);

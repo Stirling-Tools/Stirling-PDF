@@ -29,6 +29,8 @@ import {
   isBaseWorkbench,
 } from "@app/types/workbench";
 import { useNavigationUrlSync } from "@app/hooks/useUrlSync";
+import { stripBasePath } from "@app/constants/app";
+import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 import { filterToolRegistryByQuery } from "@app/utils/toolSearch";
 import { useToolHistory } from "@app/hooks/tools/useUserToolActivity";
 import {
@@ -218,8 +220,8 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   const setReaderMode = useCallback(
     (mode: boolean) => {
       if (mode) {
+        // Reading is a mode the open document is put into, not a tool run on it.
         actions.setWorkbench("viewer");
-        actions.setSelectedTool("read");
       }
       dispatch({ type: "SET_READER_MODE", payload: mode });
     },
@@ -373,15 +375,28 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   // This runs once to navigate to the user's preferred tab (read/automate)
   // instead of always starting on the tools tab.
   const hasAppliedStartupView = React.useRef(false);
+  // Set when the startup view picks the tool, so the URL sync knows this
+  // selection came from a preference and must not be written to the address.
+  const startupSelectedToolRef = React.useRef<ToolId | null>(null);
   useEffect(() => {
     if (hasAppliedStartupView.current) return;
+    // The URL wins: the startup view decides what you see when you arrive at the
+    // editor's home, never what a deep link to a tool shows. Without this, a
+    // "Reader" preference rewrote every /<tool> link to /read.
+    const path = stripBasePath(window.location.pathname);
+    if (path !== "/" && path !== EDITOR_BASENAME) {
+      hasAppliedStartupView.current = true;
+      return;
+    }
     const startupView = preferences.defaultStartupView;
     if (startupView === "read") {
       hasAppliedStartupView.current = true;
+      startupSelectedToolRef.current = "read";
       setReaderMode(true);
       actions.setSelectedTool("read");
     } else if (startupView === "automate") {
       hasAppliedStartupView.current = true;
+      startupSelectedToolRef.current = "automate";
       actions.setSelectedTool("automate");
       setLeftPanelView("toolContent");
     }
@@ -573,6 +588,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     handleBackToTools,
     allTools,
     true,
+    startupSelectedToolRef,
   );
 
   // Ref-backed wrappers so callback identities stay stable across renders.

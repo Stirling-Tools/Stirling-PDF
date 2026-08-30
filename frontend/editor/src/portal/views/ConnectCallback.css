@@ -1,0 +1,32 @@
+/* Account-link callback. A transient page the admin passes through, so it is
+   centred and says one thing rather than trying to be a settings screen. */
+
+.portal-connect-callback {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  max-width: 30rem;
+  margin: 4rem auto;
+  padding: 0 1rem;
+  text-align: center;
+}
+
+.portal-connect-callback > * {
+  width: 100%;
+}
+
+/* The button is the one thing that should not stretch to the banner's width. */
+.portal-connect-callback button {
+  width: auto;
+}
+
+.portal-connect-callback p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--c-text-muted);
+}
+
+.portal-connect-callback__note {
+  font-size: 0.8125rem;
+}

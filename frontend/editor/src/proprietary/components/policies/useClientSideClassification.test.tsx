@@ -77,7 +77,10 @@ vi.mock("@app/services/classificationMeter", () => ({
   meterClassificationRun: (payload: unknown) => mocks.meter(payload),
 }));
 
-import { useClientSideClassification } from "@app/components/policies/useClientSideClassification";
+import {
+  useClientSideClassification,
+  LOCAL_METER_CATEGORY,
+} from "@app/components/policies/useClientSideClassification";
 
 // Run idle callbacks immediately so batches start without timer waits.
 vi.stubGlobal("requestIdleCallback", (cb: () => void) => {
@@ -181,8 +184,9 @@ describe("useClientSideClassification delivery", () => {
   });
 
   it("heals a previously-dispatched file whose result was lost, without re-metering", async () => {
-    // A past session classified + metered this file but the delivery was lost.
-    markDispatched("classification", "lost");
+    // A past session classified + metered this file but the delivery was lost. The marker is the
+    // local-meter key, NOT the classification dispatch key - that one belongs to the server run.
+    markDispatched(LOCAL_METER_CATEGORY, "lost");
     mocks.workspace = [stub("lost")];
     mocks.classify.mockResolvedValue({ labels: ["bank-statement"] });
 

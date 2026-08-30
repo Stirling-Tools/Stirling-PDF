@@ -62,10 +62,8 @@ export function fromWirePolicy(policy: WirePolicy): PolicyDecodedState {
     name: policy.name,
     enabled: policy.enabled,
     categoryId,
-    sources: Array.isArray(raw.sources) ? (raw.sources as string[]) : [],
-    scopeTypes: Array.isArray(raw.scopeTypes)
-      ? (raw.scopeTypes as string[])
-      : [],
+    sources: Array.isArray(raw.sources) ? raw.sources : [],
+    scopeTypes: Array.isArray(raw.scopeTypes) ? raw.scopeTypes : [],
     reviewerEmail: str(raw.reviewerEmail),
     fieldValues: raw.fieldValues ?? {},
     runOn: resolveRunOn(raw.runOn, categoryId),

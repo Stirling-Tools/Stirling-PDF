@@ -5,8 +5,9 @@ import {
   classifyPaygError,
   handlePaygError,
 } from "@app/services/paygErrorInterceptor";
-import { withBasePath } from "@app/constants/app";
+import { stripBasePath, withBasePath } from "@app/constants/app";
 import { getBrowserId } from "@app/utils/browserIdentifier";
+import { isSafePostLoginRedirect } from "@app/services/postLoginRedirect";
 
 // Helper: decode base64url JWT payload safely
 function decodeJwtPayload(token: string): Record<string, unknown> | null {
@@ -113,6 +114,21 @@ function refreshSessionOnce(): ReturnType<typeof supabase.auth.refreshSession> {
   return inFlightRefresh;
 }
 
+// Hard-redirect to /login, carrying where the user was so the login screen can
+// return them there instead of falling through to the role-based landing (which
+// sends processor users to the processor - the "refresh /editor bounces me to
+// the processor" bug). Router-relative, matching what Login reads via `?next=`.
+function redirectToLogin(): void {
+  const loginPath = withBasePath("/login");
+  // Already on the login page: another redirect would just loop.
+  if (window.location.pathname === loginPath) return;
+  const returnPath =
+    stripBasePath(window.location.pathname) + window.location.search;
+  window.location.href = isSafePostLoginRedirect(returnPath)
+    ? `${loginPath}?next=${encodeURIComponent(returnPath)}`
+    : loginPath;
+}
+
 // Response interceptor for handling token refresh
 apiClient.interceptors.response.use(
   (response) => response,
@@ -173,7 +189,7 @@ apiClient.interceptors.response.use(
             // The session genuinely can't be recovered. Send protected requests
             // to login; public ones just fail quietly (no redirect).
             if (!isPublicEndpoint) {
-              window.location.href = withBasePath("/login");
+              redirectToLogin();
             }
 
             return Promise.reject(error);
@@ -194,10 +210,7 @@ apiClient.interceptors.response.use(
           console.debug(
             "[API Client] No session to refresh, 401 on protected endpoint",
           );
-          const loginPath = withBasePath("/login");
-          if (window.location.pathname !== loginPath) {
-            window.location.href = loginPath;
-          }
+          redirectToLogin();
           return Promise.reject(error);
         }
       } catch (refreshError) {

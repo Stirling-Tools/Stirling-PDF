@@ -18,12 +18,12 @@ import stirling.software.saas.payg.model.ProcessType;
 import stirling.software.saas.payg.repository.PaygInstanceUsageRepository;
 
 /**
- * Ingests a linked instance's daily usage sync (combined-billing "Mode A"). The instance reports a
- * monotonic cumulative unit total per {@link BillingCategory}; we bill only the delta since the
- * last sync via {@link JobChargeService#chargeStandalone} (reusing the in-cloud free-grant split,
- * ledger DEBIT, Stripe meter and idempotency). Idempotent (a resend → delta 0 → no charge) and
- * tamper-evident (a backwards total is refused; a monotonic {@code syncSeq} dedups replays). The
- * cap is enforced at the instance gate, not here. Gated behind {@code account-link.enabled}.
+ * Ingests a linked instance's daily usage sync (combined billing). The instance reports a monotonic
+ * cumulative unit total per {@link BillingCategory}; we bill only the delta since the last sync via
+ * {@link JobChargeService#chargeStandalone} (reusing the in-cloud free-grant split, ledger DEBIT,
+ * Stripe meter and idempotency). Idempotent (a resend → delta 0 → no charge) and tamper-evident (a
+ * backwards total is refused; a monotonic {@code syncSeq} dedups replays). The cap is enforced at
+ * the instance gate, not here. Gated behind {@code account-link.enabled}.
  */
 @Slf4j
 @Service

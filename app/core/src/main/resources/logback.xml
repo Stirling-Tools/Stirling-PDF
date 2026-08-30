@@ -16,8 +16,9 @@
             <pattern>%d %p %c{1} [%thread] %m%n</pattern>
         </encoder>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${LOG_PATH}/auth-%d{yyyy-MM-dd}.log</fileNamePattern>
-            <maxHistory>1</maxHistory>
+            <fileNamePattern>${LOG_PATH}/auth-%d{yyyy-MM-dd}.log.gz</fileNamePattern>
+            <maxHistory>7</maxHistory>
+            <totalSizeCap>64MB</totalSizeCap>
         </rollingPolicy>
     </appender>
 
@@ -28,8 +29,9 @@
             <pattern>%d %p %c{1} [%thread] %m%n</pattern>
         </encoder>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${LOG_PATH}/info-%d{yyyy-MM-dd}.log</fileNamePattern>
-            <maxHistory>1</maxHistory>
+            <fileNamePattern>${LOG_PATH}/info-%d{yyyy-MM-dd}.log.gz</fileNamePattern>
+            <maxHistory>7</maxHistory>
+            <totalSizeCap>256MB</totalSizeCap>
         </rollingPolicy>
     </appender>
 

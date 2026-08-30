@@ -386,14 +386,19 @@ export function fileContextReducer(
         ),
       );
 
-      // Carry the document's classification labels forward across the edit: any
+      // Carry the document's classification verdict forward across the edit: any
       // tool that versions/derives a classified file keeps it in its label
       // groups instead of dropping to "Other" and waiting on a PDF re-read.
-      // Inherited from the first input that has any; an output that already
-      // carries its own (e.g. a fresh classify result) keeps them.
-      const inheritedLabels = inputFileIds
-        .map((id) => state.files.byId[id]?.classificationLabels)
-        .find((labels) => labels && labels.length > 0);
+      // Inherited from the first input that has labels, together with that
+      // verdict's confidence - the escalation decision (shouldDispatchToAi) is
+      // about the document, not about which step produced the current bytes, so
+      // it must survive the version boundary. An output that already carries its
+      // own verdict (e.g. a fresh classify result) keeps it.
+      const verdictDonor = inputFileIds
+        .map((id) => state.files.byId[id])
+        .find(
+          (s) => s?.classificationLabels && s.classificationLabels.length > 0,
+        );
 
       // Mark every consume output as tool-produced (the single chokepoint for
       // both versioned edits and independent artifacts like convert/split/merge)
@@ -404,7 +409,14 @@ export function fileContextReducer(
         ...stub,
         derivedFromTool: true,
         sourceFileIds,
-        classificationLabels: stub.classificationLabels ?? inheritedLabels,
+        ...(stub.classificationLabels == null && verdictDonor
+          ? {
+              classificationLabels: verdictDonor.classificationLabels,
+              classificationConfidence:
+                stub.classificationConfidence ??
+                verdictDonor.classificationConfidence,
+            }
+          : {}),
       }));
 
       // Silent (background enforcement): replace inputs in their existing grid
