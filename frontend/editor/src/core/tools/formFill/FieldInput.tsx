@@ -68,8 +68,11 @@ function FieldInputInner({
       );
 
     case "checkbox": {
-      const isChecked = !!value && value !== "Off";
-      const onValue = (field.widgets && field.widgets[0]?.exportValue) || "Yes";
+      const exportVal = field.widgets && field.widgets[0]?.exportValue;
+      const isChecked = exportVal
+        ? value === exportVal || value === "Yes"
+        : !!value && value !== "Off";
+      const onValue = exportVal || "Yes";
       return (
         <Checkbox
           size="xs"

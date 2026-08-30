@@ -518,11 +518,11 @@ export default function AdminConnectionsSection() {
     updatedSettings: Record<string, unknown>,
   ) => {
     if (provider.id === "smtp") {
-      setSettings({ ...settings, mail: updatedSettings as MailSettings });
+      setSettings({ ...settings, mail: updatedSettings });
     } else if (provider.id === "telegram") {
       setSettings({
         ...settings,
-        telegram: updatedSettings as TelegramSettingsData,
+        telegram: updatedSettings,
       });
     } else if (provider.id === "googledrive") {
       const gd = updatedSettings as GoogleDriveSettings;
@@ -534,7 +534,7 @@ export default function AdminConnectionsSection() {
         googleDriveAppId: gd.appId,
       });
     } else if (provider.id === "saml2") {
-      setSettings({ ...settings, saml2: updatedSettings as Saml2Settings });
+      setSettings({ ...settings, saml2: updatedSettings });
     } else if (provider.id === "oauth2-generic") {
       const generic = updatedSettings as OAuth2GenericSettings;
       setSettings({ ...settings, oauth2: { ...settings.oauth2, ...generic } });

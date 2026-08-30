@@ -1,8 +1,13 @@
-import { useState, useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import apiClient from "@app/services/apiClient";
+import { fetchSigningSessions } from "@app/api/signing";
+import { qk } from "@app/query/keys";
 import { alert } from "@app/components/toast";
 import { SignRequestSummary, SessionSummary } from "@app/types/signingSession";
+
+const EMPTY_REQUESTS: SignRequestSummary[] = [];
+const EMPTY_SESSIONS: SessionSummary[] = [];
 
 export interface UseSigningSessionsOptions {
   enabled?: boolean;
@@ -18,8 +23,8 @@ export interface UseSigningSessionsResult {
 }
 
 /**
- * Hook to fetch signing sessions data (sign requests and user's sessions).
- * Supports auto-refresh for real-time updates.
+ * Signing sessions. Background polls never raise the spinner or a toast; only a
+ * first load or an explicit refetch does.
  */
 export const useSigningSessions = (
   options: UseSigningSessionsOptions = {},
@@ -27,83 +32,64 @@ export const useSigningSessions = (
   const { enabled = true, autoRefreshInterval = 0 } = options;
   const { t } = useTranslation();
 
-  const [signRequests, setSignRequests] = useState<SignRequestSummary[]>([]);
-  const [mySessions, setMySessions] = useState<SessionSummary[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+  const { data, isLoading, isLoadingError, error, refetch } = useQuery({
+    queryKey: qk.signingSessions(),
+    queryFn: fetchSigningSessions,
+    enabled,
+    staleTime: 0,
+    refetchInterval: autoRefreshInterval > 0 ? autoRefreshInterval : false,
+    refetchIntervalInBackground: false,
+    // The interval pauses while unfocused, so returning has to catch up: the
+    // client-wide default of false would hold stale data until the next tick.
+    refetchOnWindowFocus: autoRefreshInterval > 0,
+  });
 
-  const fetchData = useCallback(
-    async (opts?: { silent?: boolean }) => {
-      if (!enabled) return;
+  const notifyFailure = useCallback(() => {
+    console.error("Failed to fetch signing data");
+    alert({
+      alertType: "warning",
+      title: t("common.error"),
+      body: t("certSign.fetchFailed", "Failed to load signing data"),
+      expandable: false,
+      durationMs: 2500,
+    });
+  }, [t]);
 
-      // Background auto-refreshes pass { silent: true } to skip the loading spinner
-      // and failure toasts; only the initial load and explicit refetch surface errors.
-      const silent = opts?.silent ?? false;
-
-      if (!silent) setLoading(true);
-      setError(null);
-
-      try {
-        const [requestsResponse, sessionsResponse] = await Promise.all([
-          apiClient.get<SignRequestSummary[]>(
-            "/api/v1/security/cert-sign/sign-requests",
-          ),
-          apiClient.get<SessionSummary[]>(
-            "/api/v1/security/cert-sign/sessions",
-          ),
-        ]);
-
-        setSignRequests(requestsResponse.data);
-        setMySessions(sessionsResponse.data);
-      } catch (err) {
-        const errorObj =
-          err instanceof Error
-            ? err
-            : new Error("Failed to fetch signing data");
-        setError(errorObj);
-        console.error("Failed to fetch signing data:", err);
-
-        if (!silent) {
-          alert({
-            alertType: "warning",
-            title: t("common.error"),
-            body: t("certSign.fetchFailed", "Failed to load signing data"),
-            expandable: false,
-            durationMs: 2500,
-          });
-        }
-      } finally {
-        if (!silent) setLoading(false);
-      }
-    },
-    [enabled, t],
-  );
-
-  // Initial fetch
+  // isLoadingError is "failed with nothing cached", i.e. a first load. A poll
+  // that fails after a success keeps the old data and stays silent.
+  const reportedRef = useRef(false);
   useEffect(() => {
-    if (enabled) {
-      fetchData();
-    }
-  }, [enabled, fetchData]);
-
-  // Auto-refresh
-  useEffect(() => {
-    if (!enabled || !autoRefreshInterval || autoRefreshInterval <= 0) {
+    if (!isLoadingError) {
+      reportedRef.current = false;
       return;
     }
+    if (reportedRef.current) return;
+    reportedRef.current = true;
+    notifyFailure();
+  }, [isLoadingError, notifyFailure]);
 
-    const interval = setInterval(() => {
-      fetchData({ silent: true });
-    }, autoRefreshInterval);
+  // Neither isLoading nor isFetching alone matches the old `silent` flag: a
+  // user-initiated refresh showed the spinner even with data on screen, a
+  // background poll never did. isFetching cannot tell them apart, so track it.
+  const [refreshing, setRefreshing] = useState(false);
 
-    return () => clearInterval(interval);
-  }, [enabled, autoRefreshInterval, fetchData]);
+  const explicitRefetch = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      const result = await refetch();
+      // Reported here rather than by the effect: a user-initiated refresh
+      // should say so even when stale data is already on screen.
+      if (result.error && !reportedRef.current) notifyFailure();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refetch, notifyFailure]);
 
   return {
-    signRequests,
-    mySessions,
-    loading,
-    error,
-    refetch: fetchData,
+    signRequests: data?.signRequests ?? EMPTY_REQUESTS,
+    mySessions: data?.mySessions ?? EMPTY_SESSIONS,
+    loading: isLoading || refreshing,
+    error: (error as Error | null) ?? null,
+    refetch: explicitRefetch,
   };
 };

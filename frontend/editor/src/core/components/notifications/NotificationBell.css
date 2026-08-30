@@ -10,7 +10,7 @@
   position: relative;
   padding: var(--sp-2, 0.5rem);
   border: none;
-  border-radius: var(--radius-md, 0.375rem);
+  border-radius: var(--radius-md);
   background: transparent;
   color: var(--c-text-muted);
   cursor: pointer;
@@ -46,6 +46,12 @@
   border-radius: var(--radius-lg, 0.5rem);
   background: var(--c-surface);
   box-shadow: 0 10px 30px rgb(0 0 0 / 25%);
+}
+
+/* The rail's bell is at the foot of a full-height column, so its panel rises beside it. */
+.notification-bell__panel--rail {
+  inset-inline-start: calc(var(--nav-rail-w) + var(--nav-gutter));
+  inset-block-end: var(--nav-gutter);
 }
 
 .notification-bell__heading {
