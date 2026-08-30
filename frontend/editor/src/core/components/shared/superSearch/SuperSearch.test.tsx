@@ -84,7 +84,7 @@ function renderSearch(
     <MantineProvider>
       <SuperSearch
         inputId="test-super-search"
-        useResults={useResults as TestUseResultsHook | undefined}
+        useResults={useResults}
         scopes={scopes}
       />
     </MantineProvider>,
@@ -103,7 +103,7 @@ describe("SuperSearch", () => {
       width: 320,
       height: 40,
       toJSON: () => "",
-    } as DOMRect);
+    });
 
     Object.defineProperty(Element.prototype, "scrollIntoView", {
       value: vi.fn(),

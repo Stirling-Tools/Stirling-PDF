@@ -51,7 +51,7 @@ export function useFolderRunStatuses(
             );
             return [folder.id, deriveStatus(runs)] as const;
           } catch {
-            return [folder.id, "idle" as FolderRunStatus] as const;
+            return [folder.id, "idle"] as const;
           }
         }),
       );
