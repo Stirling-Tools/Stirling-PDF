@@ -384,6 +384,33 @@ class SignatureAppearanceLayoutTest {
         }
 
         @Test
+        @DisplayName("A whole value keeps every character when the fields after it are dropped")
+        void neverEatsAWholeValue() throws IOException {
+            SignatureAppearanceLayout.Layout layout =
+                    SignatureAppearanceLayout.fit(
+                            fields(
+                                    "Signed by", "Samuel Saez",
+                                    "Serial", "1a2b3c",
+                                    "Valid until", "2027-01-01",
+                                    "Location", "Spain"),
+                            FONT,
+                            200f,
+                            14f);
+
+            for (SignatureAppearanceLayout.Line line : layout.lines()) {
+                String text = line.text();
+                if (!text.endsWith("...")) {
+                    continue;
+                }
+                // The mark may only ride on a value the box cut in half. On a whole one it follows
+                // a space, so "Serial: 1a2b3c ..." cannot be read as a longer serial number.
+                assertTrue(
+                        text.endsWith(" ..."),
+                        "a dropped field must not make a whole value look shortened: " + text);
+            }
+        }
+
+        @Test
         @DisplayName("An area too narrow to name the signer yields nothing to draw")
         void tooNarrowToSayAnything() throws IOException {
             SignatureAppearanceLayout.Layout layout =

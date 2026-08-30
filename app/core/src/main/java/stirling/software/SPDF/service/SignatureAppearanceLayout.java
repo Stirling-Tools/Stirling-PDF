@@ -117,7 +117,13 @@ public final class SignatureAppearanceLayout {
     }
 
     /** A line before its baseline is known, while only its horizontal placement is settled. */
-    private record Piece(String text, float fontSize, float x) {}
+    /**
+     * One drawn line.
+     *
+     * @param field index of the field it came from, so a line cut short can be told from a whole
+     *     one that happens to be last
+     */
+    private record Piece(String text, float fontSize, float x, int field) {}
 
     /** How far the type reaches above and below its baseline, in multiples of the font size. */
     private record Ink(float top, float bottom) {}
@@ -223,7 +229,8 @@ public final class SignatureAppearanceLayout {
     private static List<Piece> compose(
             List<Field> fields, PDFont font, float size, float availableWidth) throws IOException {
         List<Piece> pieces = new ArrayList<>();
-        for (Field field : fields) {
+        for (int f = 0; f < fields.size(); f++) {
+            Field field = fields.get(f);
             float fieldSize = field.headline() ? size * HEADLINE_RATIO : size;
             String head = field.label() + ": ";
             float indent = textWidth(head, font, fieldSize);
@@ -238,7 +245,7 @@ public final class SignatureAppearanceLayout {
                             availableWidth,
                             availableWidth - continuation);
             for (int i = 0; i < wrapped.size(); i++) {
-                pieces.add(new Piece(wrapped.get(i), fieldSize, i == 0 ? 0f : continuation));
+                pieces.add(new Piece(wrapped.get(i), fieldSize, i == 0 ? 0f : continuation, f));
             }
         }
         return pieces;
@@ -340,6 +347,11 @@ public final class SignatureAppearanceLayout {
      *
      * <p>Reached only for a box that cannot take even one field at that size once the text has been
      * broken across lines. Showing the signer and losing the rest still beats showing nothing.
+     *
+     * <p>What the mark is attached to matters. Against the last character of a value the box cut in
+     * half it reads as "this value continues", which is true. Against a whole value it would read
+     * the same way and be false, so there it goes after a space instead: a signature that misstates
+     * the serial number it certifies is worse than one that quietly shows a field fewer.
      */
     private static Layout truncateToFit(
             List<Field> fields,
@@ -362,17 +374,35 @@ public final class SignatureAppearanceLayout {
             return new Layout(MIN_FONT_SIZE, List.of());
         }
 
+        Piece last = kept.get(kept.size() - 1);
         if (kept.size() < pieces.size()) {
-            Piece last = kept.get(kept.size() - 1);
-            String cut = ellipsise(last.text(), font, last.fontSize(), availableWidth - last.x());
-            kept.set(kept.size() - 1, new Piece(cut, last.fontSize(), last.x()));
+            boolean cutMidValue = pieces.get(kept.size()).field() == last.field();
+            String marked =
+                    mark(
+                            last.text(),
+                            font,
+                            last.fontSize(),
+                            availableWidth - last.x(),
+                            cutMidValue);
+            kept.set(kept.size() - 1, new Piece(marked, last.fontSize(), last.x(), last.field()));
         }
         return new Layout(MIN_FONT_SIZE, position(kept, ink, padding, availableHeight));
     }
 
-    /** Marks a line as cut short, shortening it until the mark fits alongside it. */
-    private static String ellipsise(String line, PDFont font, float fontSize, float maxWidth)
+    /**
+     * Notes on a line that the box held more than it shows.
+     *
+     * @param midValue true when the line is a value the box cut in half, so the mark joins the last
+     *     character it kept; false when whole fields were dropped after it, so the mark follows a
+     *     space and the value itself is left alone even if that means no mark at all
+     */
+    private static String mark(
+            String line, PDFont font, float fontSize, float maxWidth, boolean midValue)
             throws IOException {
+        if (!midValue) {
+            String spaced = line + " ...";
+            return textWidth(spaced, font, fontSize) <= maxWidth ? spaced : line;
+        }
         String candidate = line;
         while (!candidate.isEmpty()) {
             if (textWidth(candidate + "...", font, fontSize) <= maxWidth) {
