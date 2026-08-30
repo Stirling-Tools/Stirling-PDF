@@ -14,54 +14,39 @@ import stirling.software.SPDF.model.api.security.SignatureLogoPosition;
  * Splits a signature box between the logo and the text.
  *
  * <p>The box is whatever the user dragged on the page, and the logo is whatever image they
- * uploaded, so neither size is known in advance. Two rules keep the result usable at any
- * combination:
+ * uploaded, so neither size is known in advance. The logo is given the largest strip its shape can
+ * use, and the text takes the whole of the rest: {@link SignatureAppearanceLayout} sizes the type
+ * to whatever area it is handed, so a strip taken here costs the text no field and no legibility,
+ * only a different type size.
  *
- * <ul>
- *   <li>The logo keeps its aspect ratio. Stretching a company logo to fill a strip is worse than
- *       showing it smaller, because a distorted logo looks like a bug in the signature.
- *   <li>Past a floor, the text keeps everything it would have had with the whole box to itself -
- *       every line, and type no more than a quarter smaller. A signature that shows a picture and
- *       no signer is not a signature.
- * </ul>
- *
- * <p>Between those two the logo gets as much as it can, which is the change from a fixed share: one
- * number cannot be right for both a 300pt box with two fields in it and a 60pt one with five, and a
- * middling value gave the first far less than it could have had.
- *
- * <p>The floor is the share that was fixed before, and it is unconditional. Sizing purely by what
- * the text can spare would make a band above a short signature <em>thinner</em> than it used to be,
- * because three fields underneath demand every point of the height - the very case that prompted
- * the change. Below the floor, then, the text still gives way exactly as it always did.
+ * <p>Two limits shape the result. The logo keeps its aspect ratio, because a company logo stretched
+ * to fill a strip looks like a bug in the signature. And the strip stops at half the box, because a
+ * wide logo asked to match the height of a short box would otherwise want more width than the box
+ * has and leave the signature with a picture and no signer.
  *
  * <p>{@link SignatureLogoPosition#BEHIND} is the exception to the split: the logo covers the whole
  * box and the text keeps it too, drawn on top.
  */
 public final class SignatureLogoPlacement {
 
-    /** Most of the box the logo strip may take, however much room the text turns out to need. */
+    /** Most of the box the logo strip may take, whatever the shape of the image. */
     private static final float MAX_LOGO_SHARE = 0.5f;
-
-    /**
-     * Least the logo strip is given when the text cannot spare even that.
-     *
-     * <p>This is the share the class used to hand out unconditionally, and keeping it as the floor
-     * is deliberate: it makes the new rule a strict improvement, since no box and position can now
-     * come out with a smaller logo than it had before.
-     *
-     * <p>It matters most where the text is hungriest. A band above a short signature has three
-     * fields underneath it demanding the height, so a rule that only ever gave the logo what the
-     * text could spare would leave it thinner here than the fixed share did - which is precisely
-     * the case users complained about. Small is a legible outcome; smaller than before is a
-     * regression.
-     */
-    private static final float MIN_LOGO_SHARE = 0.35f;
-
-    /** How finely the share is searched. Finer than the eye can tell in a signature box. */
-    private static final float LOGO_SHARE_STEP = 0.02f;
 
     /** Gap between the logo strip and the text, as a share of the box's smaller side. */
     private static final float GAP_SHARE = 0.04f;
+
+    /**
+     * Margin between the logo and the edges of the box, as a share of the box's smaller side.
+     *
+     * <p>A logo drawn hard against the edge has nothing to lose to rounding, and viewers do round:
+     * the appearance stream is clipped to exactly the box, and the mark stamped on the other pages
+     * draws its border down the same line. Either will shave a row of pixels off an image that
+     * touches it, which is what a cropped logo looks like to the person who uploaded it.
+     *
+     * <p>It matches the margin {@link SignatureAppearanceLayout} leaves around the text, so the
+     * logo and the fields sit on one optical margin rather than two.
+     */
+    private static final float EDGE_INSET_SHARE = 0.04f;
 
     private SignatureLogoPlacement() {}
 
@@ -83,21 +68,15 @@ public final class SignatureLogoPlacement {
     public record Logo(byte[] image, SignatureLogoPosition position) {}
 
     /**
-     * Divides the box between logo and text, giving the logo everything the text can spare.
+     * Divides the box between logo and text.
      *
      * @param box the signature box, in page coordinates
      * @param imageAspectRatio image width divided by image height; values that are not positive and
      *     finite fall back to a square, so a broken image never produces a broken layout
      * @param position where the caller asked for the logo
-     * @param textFit whether the text is still usable in a candidate area. Passing {@link
-     *     SignatureAppearanceLayout.TextFit#ANY} hands the logo the largest strip allowed.
      */
     public static Placement place(
-            PDRectangle box,
-            float imageAspectRatio,
-            SignatureLogoPosition position,
-            SignatureAppearanceLayout.TextFit textFit)
-            throws IOException {
+            PDRectangle box, float imageAspectRatio, SignatureLogoPosition position) {
         float aspect = sanitiseAspect(imageAspectRatio);
         SignatureLogoPosition where = position != null ? position : SignatureLogoPosition.LEFT;
 
@@ -105,45 +84,31 @@ public final class SignatureLogoPlacement {
             return new Placement(fitInside(box, aspect), box);
         }
 
-        float gap = Math.min(box.getWidth(), box.getHeight()) * GAP_SHARE;
-        boolean beside =
-                where == SignatureLogoPosition.LEFT || where == SignatureLogoPosition.RIGHT;
+        float shorter = Math.min(box.getWidth(), box.getHeight());
+        float gap = shorter * GAP_SHARE;
+        float inset = shorter * EDGE_INSET_SHARE;
         boolean first = where == SignatureLogoPosition.LEFT || where == SignatureLogoPosition.TOP;
 
-        // Largest share the text tolerates, searched downwards. The chosen position is never
-        // second-guessed: what gives is the size, which is what the user can see and adjust.
-        for (float share = MAX_LOGO_SHARE; share > MIN_LOGO_SHARE; share -= LOGO_SHARE_STEP) {
-            Placement candidate =
-                    beside
-                            ? placeBeside(box, aspect, gap, first, share)
-                            : placeAbove(box, aspect, gap, first, share);
-            PDRectangle text = candidate.textRect();
-            if (textFit.fits(text.getWidth(), text.getHeight())) {
-                return candidate;
-            }
-        }
-        return beside
-                ? placeBeside(box, aspect, gap, first, MIN_LOGO_SHARE)
-                : placeAbove(box, aspect, gap, first, MIN_LOGO_SHARE);
+        return where == SignatureLogoPosition.LEFT || where == SignatureLogoPosition.RIGHT
+                ? placeBeside(box, aspect, gap, inset, first)
+                : placeAbove(box, aspect, gap, inset, first);
     }
 
     /** Logo in a column at one side, text in the rest of the width. */
     private static Placement placeBeside(
-            PDRectangle box, float aspect, float gap, boolean logoOnLeft, float share) {
-        float maxStripWidth = Math.max(0f, box.getWidth() * share - gap);
+            PDRectangle box, float aspect, float gap, float inset, boolean logoOnLeft) {
+        float maxStripWidth = Math.max(0f, box.getWidth() * MAX_LOGO_SHARE - gap - inset);
         // A tall logo is limited by the box height, a wide one by the share it may take.
-        float logoWidth = Math.min(maxStripWidth, box.getHeight() * aspect);
-        float logoHeight = aspect > 0 ? logoWidth / aspect : 0f;
+        float logoWidth =
+                Math.min(maxStripWidth, Math.max(0f, box.getHeight() - 2 * inset) * aspect);
+        float logoHeight = logoWidth / aspect;
 
-        float stripWidth = logoWidth + gap;
-        float textWidth =
-                Math.max(box.getWidth() * (1f - MAX_LOGO_SHARE), box.getWidth() - stripWidth);
+        float textWidth = Math.max(0f, box.getWidth() - inset - logoWidth - gap);
 
         float logoX =
-                logoOnLeft
-                        ? box.getLowerLeftX() + (stripWidth - gap - logoWidth) / 2f
-                        : box.getUpperRightX() - stripWidth + gap / 2f;
-        float textX = logoOnLeft ? box.getUpperRightX() - textWidth : box.getLowerLeftX();
+                logoOnLeft ? box.getLowerLeftX() + inset : box.getUpperRightX() - inset - logoWidth;
+        float textX =
+                logoOnLeft ? box.getLowerLeftX() + inset + logoWidth + gap : box.getLowerLeftX();
 
         return new Placement(
                 new PDRectangle(
@@ -156,20 +121,17 @@ public final class SignatureLogoPlacement {
 
     /** Logo in a band at the top or bottom, text in the rest of the height. */
     private static Placement placeAbove(
-            PDRectangle box, float aspect, float gap, boolean logoOnTop, float share) {
-        float maxBandHeight = Math.max(0f, box.getHeight() * share - gap);
+            PDRectangle box, float aspect, float gap, float inset, boolean logoOnTop) {
+        float maxBandHeight = Math.max(0f, box.getHeight() * MAX_LOGO_SHARE - gap - inset);
         // A wide logo is limited by the box width, a tall one by the share it may take.
-        float logoHeight = Math.min(maxBandHeight, aspect > 0 ? box.getWidth() / aspect : 0f);
+        float logoHeight =
+                Math.min(maxBandHeight, Math.max(0f, box.getWidth() - 2 * inset) / aspect);
         float logoWidth = logoHeight * aspect;
 
-        float bandHeight = logoHeight + gap;
-        float textHeight =
-                Math.max(box.getHeight() * (1f - MAX_LOGO_SHARE), box.getHeight() - bandHeight);
+        float textHeight = Math.max(0f, box.getHeight() - inset - logoHeight - gap);
 
         float logoY =
-                logoOnTop
-                        ? box.getUpperRightY() - bandHeight + gap / 2f
-                        : box.getLowerLeftY() + (bandHeight - gap - logoHeight) / 2f;
+                logoOnTop ? box.getUpperRightY() - inset - logoHeight : box.getLowerLeftY() + inset;
         float textY = logoOnTop ? box.getLowerLeftY() : box.getUpperRightY() - textHeight;
 
         return new Placement(
@@ -189,7 +151,7 @@ public final class SignatureLogoPlacement {
      *
      * @param watermark true for {@link SignatureLogoPosition#BEHIND}, where the text is drawn on
      *     top afterwards: the image is multiplied at half opacity, the treatment the bundled mark
-     *     has always used, which is what keeps text readable over it
+     *     has always had, which is what keeps text readable over it
      */
     public static void draw(
             PDPageContentStream cs, PDImageXObject image, PDRectangle area, boolean watermark)
@@ -214,12 +176,13 @@ public final class SignatureLogoPlacement {
     }
 
     /** Largest rectangle of the given aspect ratio that fits the box, centred in it. */
-    private static PDRectangle fitInside(PDRectangle box, float aspect) {
+    public static PDRectangle fitInside(PDRectangle box, float aspect) {
+        float safeAspect = sanitiseAspect(aspect);
         float width = box.getWidth();
-        float height = width / aspect;
+        float height = width / safeAspect;
         if (height > box.getHeight()) {
             height = box.getHeight();
-            width = height * aspect;
+            width = height * safeAspect;
         }
         return new PDRectangle(
                 box.getLowerLeftX() + (box.getWidth() - width) / 2f,

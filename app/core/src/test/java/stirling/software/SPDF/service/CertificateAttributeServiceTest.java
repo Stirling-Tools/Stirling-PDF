@@ -58,6 +58,10 @@ class CertificateAttributeServiceTest {
         return new JcaX509CertificateConverter().getCertificate(builder.build(signer));
     }
 
+    private static List<String> labels(List<SignatureAppearanceLayout.Field> fields) {
+        return fields.stream().map(SignatureAppearanceLayout.Field::label).toList();
+    }
+
     @Nested
     @DisplayName("Reading attributes off a certificate")
     class Extraction {
@@ -166,16 +170,19 @@ class CertificateAttributeServiceTest {
             Map<CertificateAttribute, String> attributes =
                     service.extract(certificate("CN=Samuel Saez,O=IMGA,C=ES", "CN=Emisor"));
 
-            Map<String, String> lines =
-                    service.toDisplayLines(
+            List<SignatureAppearanceLayout.Field> fields =
+                    service.toDisplayFields(
                             attributes,
                             List.of(
                                     CertificateAttribute.SUBJECT_ORGANISATION,
                                     CertificateAttribute.SUBJECT_COMMON_NAME));
 
-            assertEquals(List.of("Organisation", "Signed by"), List.copyOf(lines.keySet()));
-            assertEquals("IMGA", lines.get("Organisation"));
-            assertEquals("Samuel Saez", lines.get("Signed by"));
+            assertEquals(List.of("Organisation", "Signed by"), labels(fields));
+            assertEquals("IMGA", fields.get(0).value());
+            assertEquals("Samuel Saez", fields.get(1).value());
+            // The signer's name is the headline wherever the caller puts it in the order.
+            assertFalse(fields.get(0).headline());
+            assertTrue(fields.get(1).headline());
         }
 
         @Test
@@ -184,15 +191,15 @@ class CertificateAttributeServiceTest {
             Map<CertificateAttribute, String> attributes =
                     service.extract(certificate("CN=Solo Nombre", "CN=Emisor"));
 
-            Map<String, String> lines =
-                    service.toDisplayLines(
+            List<SignatureAppearanceLayout.Field> fields =
+                    service.toDisplayFields(
                             attributes,
                             List.of(
                                     CertificateAttribute.SUBJECT_COMMON_NAME,
                                     CertificateAttribute.SUBJECT_EMAIL));
 
             // An empty "Email:" line in a signature would look like a defect.
-            assertEquals(List.of("Signed by"), List.copyOf(lines.keySet()));
+            assertEquals(List.of("Signed by"), labels(fields));
         }
 
         @Test
@@ -201,11 +208,11 @@ class CertificateAttributeServiceTest {
             Map<CertificateAttribute, String> attributes =
                     service.extract(certificate("CN=Samuel Saez,O=IMGA", "CN=Emisor"));
 
-            Map<String, String> lines = service.toDisplayLines(attributes, null);
+            List<String> labels = labels(service.toDisplayFields(attributes, null));
 
-            assertTrue(lines.containsKey("Signed by"));
-            assertTrue(lines.containsKey("Organisation"));
-            assertTrue(lines.containsKey("Issued by"));
+            assertTrue(labels.contains("Signed by"));
+            assertTrue(labels.contains("Organisation"));
+            assertTrue(labels.contains("Issued by"));
         }
     }
 }

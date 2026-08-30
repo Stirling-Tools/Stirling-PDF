@@ -176,7 +176,7 @@ const SignaturePlacementPicker: React.FC<SignaturePlacementPickerProps> = ({
       <Text size="xs" c="dimmed">
         {t(
           "certSign.placement.hint",
-          "Drag on the page to place the signature. The text scales to fit the box you draw.",
+          "Drag on the page to place the signature. The text is sized to fill the box you draw.",
         )}
       </Text>
 

@@ -4,9 +4,10 @@ import java.security.cert.X509Certificate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.EnumMap;
-import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -104,23 +105,30 @@ public class CertificateAttributeService {
     }
 
     /**
-     * Renders the attributes as display-ready lines, keeping only those the caller asked for.
+     * Renders the attributes as display-ready fields, keeping only those the caller asked for.
+     *
+     * <p>The signer's name is marked as the headline, so the layout can give it the emphasis a
+     * reader looks for first. Deciding that here, from the attribute itself, is what keeps it
+     * working once the labels are translated: matching on the label text would not survive it.
      *
      * @param attributes every attribute available
      * @param selected the subset to render, in the order given by the enum; {@code null} means all
-     * @return label/value pairs, ready to be drawn one per line
      */
-    public Map<String, String> toDisplayLines(
+    public List<SignatureAppearanceLayout.Field> toDisplayFields(
             Map<CertificateAttribute, String> attributes, Iterable<CertificateAttribute> selected) {
-        Map<String, String> lines = new LinkedHashMap<>();
+        List<SignatureAppearanceLayout.Field> fields = new ArrayList<>();
         Iterable<CertificateAttribute> wanted = selected != null ? selected : attributes.keySet();
         for (CertificateAttribute attribute : wanted) {
             String value = attributes.get(attribute);
             if (value != null && !value.isBlank()) {
-                lines.put(label(attribute), value);
+                fields.add(
+                        new SignatureAppearanceLayout.Field(
+                                label(attribute),
+                                value,
+                                attribute == CertificateAttribute.SUBJECT_COMMON_NAME));
             }
         }
-        return lines;
+        return fields;
     }
 
     /** Human-readable label drawn in front of an attribute's value. */

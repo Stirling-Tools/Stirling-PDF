@@ -84,7 +84,7 @@ export const useSignatureAppearanceTips = (): TooltipContent => {
           ),
           t(
             "certSign.appearance.tooltip.placement.bullet3",
-            "The text shrinks to fit, so it never spills out of the box",
+            "The text grows or shrinks to fill the box, so no space is wasted",
           ),
           t(
             "certSign.appearance.tooltip.placement.bullet4",
@@ -137,7 +137,7 @@ export const useSignatureAppearanceTips = (): TooltipContent => {
           ),
           t(
             "certSign.appearance.tooltip.logo.bullet4",
-            "It takes whatever room the fields can spare, so a bigger box shows it bigger",
+            "It takes the largest size the box allows, and the text fills what is left",
           ),
         ],
       },

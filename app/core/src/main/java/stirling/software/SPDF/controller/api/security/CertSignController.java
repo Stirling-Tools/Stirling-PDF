@@ -197,7 +197,7 @@ public class CertSignController {
                                 doc,
                                 pageNumber != null ? pageNumber : 0,
                                 box,
-                                instance.displayLines(signature, visibleAttributes),
+                                instance.displayFields(signature, visibleAttributes),
                                 instance.effectiveLogo(showLogo));
                 log.info(
                         "Stamped the signature mark on {} page(s); only page {} carries the"
@@ -645,19 +645,10 @@ public class CertSignController {
                             cs.restoreGraphicsState();
                         } else {
                             SignatureLogoPosition position = logoPosition();
-                            // Sized by what the fields actually need, not by a fixed share: a
-                            // box with room to spare gives the logo more, and a cramped one
-                            // gives it less rather than costing the signer a line.
+                            // The split is pure geometry: the text sizes itself to whatever area
+                            // is left over, so there is nothing about the fields to consult here.
                             SignatureLogoPlacement.Placement placement =
-                                    SignatureLogoPlacement.place(
-                                            bbox,
-                                            aspectRatio(img),
-                                            position,
-                                            SignatureAppearanceLayout.keepsTheTextIntact(
-                                                    displayLines(signature, visibleAttributes),
-                                                    font,
-                                                    bbox.getWidth(),
-                                                    bbox.getHeight()));
+                                    SignatureLogoPlacement.place(bbox, aspectRatio(img), position);
                             SignatureLogoPlacement.draw(
                                     cs,
                                     img,
@@ -672,7 +663,7 @@ public class CertSignController {
                     if (legacyAppearance) {
                         drawLegacyText(cs, font, height, cert, signature);
                     } else {
-                        drawAttributeText(cs, font, textArea, cert, signature, visibleAttributes);
+                        drawAttributeText(cs, font, textArea, signature, visibleAttributes);
                     }
                 }
 
@@ -716,15 +707,13 @@ public class CertSignController {
         }
 
         /**
-         * Draws the selected certificate fields, scaled to whatever box the user drew. Falls back
-         * to the fields the legacy appearance showed when no selection was made, so asking only for
-         * a position still yields a sensible signature.
+         * The fields the visible signature shows, so the mark stamped on the other pages can render
+         * identical content without duplicating the selection rules.
+         *
+         * <p>Falls back to the fields the legacy appearance showed when no selection was made, so
+         * asking only for a position still yields a sensible signature.
          */
-        /**
-         * The label/value pairs the visible signature shows, so the mark stamped on other pages can
-         * render identical content without duplicating the selection rules.
-         */
-        public Map<String, String> displayLines(
+        public List<SignatureAppearanceLayout.Field> displayFields(
                 PDSignature signature, List<CertificateAttribute> visibleAttributes)
                 throws IOException {
             X509Certificate cert = (X509Certificate) getCertificateChain()[0];
@@ -743,41 +732,26 @@ public class CertSignController {
                             ? visibleAttributes
                             : DEFAULT_VISIBLE_ATTRIBUTES;
 
-            return attributeService.toDisplayLines(available, selected);
+            return attributeService.toDisplayFields(available, selected);
         }
 
+        /** Draws the selected certificate fields, scaled to whatever box the user drew. */
         private void drawAttributeText(
                 PDPageContentStream cs,
                 PDFont font,
                 PDRectangle textArea,
-                X509Certificate cert,
                 PDSignature signature,
                 List<CertificateAttribute> visibleAttributes)
                 throws IOException {
-            Map<String, String> lines = displayLines(signature, visibleAttributes);
-            SignatureAppearanceLayout.Layout layout =
+            SignatureAppearanceLayout.draw(
+                    cs,
+                    font,
+                    textArea,
                     SignatureAppearanceLayout.fit(
-                            lines, font, textArea.getWidth(), textArea.getHeight());
-            if (layout.lines().isEmpty()) {
-                return;
-            }
-
-            cs.beginText();
-            cs.setFont(font, layout.fontSize());
-            cs.setNonStrokingColor(Color.black);
-            // Offsets are relative to the area left for the text, which is the whole box unless a
-            // logo took a strip of it. The first baseline is measured down from that area's top.
-            cs.newLineAtOffset(
-                    textArea.getLowerLeftX() + layout.padding(),
-                    textArea.getUpperRightY() - layout.firstBaselineFromTop());
-            cs.setLeading(layout.leading());
-            for (int i = 0; i < layout.lines().size(); i++) {
-                if (i > 0) {
-                    cs.newLine();
-                }
-                cs.showText(layout.lines().get(i));
-            }
-            cs.endText();
+                            displayFields(signature, visibleAttributes),
+                            font,
+                            textArea.getWidth(),
+                            textArea.getHeight()));
         }
     }
 

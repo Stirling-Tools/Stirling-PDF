@@ -10,8 +10,7 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.List;
 import java.util.Set;
 
 import javax.imageio.ImageIO;
@@ -40,11 +39,10 @@ class SignatureMarkStamperTest {
 
     private static final SignatureBox BOX = new SignatureBox(50f, 600f, 220f, 60f);
 
-    private static Map<String, String> lines() {
-        Map<String, String> lines = new LinkedHashMap<>();
-        lines.put("Signed by", "Samuel Saez");
-        lines.put("Date", "2026-08-03");
-        return lines;
+    private static List<SignatureAppearanceLayout.Field> lines() {
+        return List.of(
+                new SignatureAppearanceLayout.Field("Signed by", "Samuel Saez", false),
+                new SignatureAppearanceLayout.Field("Date", "2026-08-03", false));
     }
 
     private static PDDocument document(int pages) {
@@ -325,7 +323,7 @@ class SignatureMarkStamperTest {
         @DisplayName("No fields means nothing is drawn, rather than an empty framed box")
         void noLines() throws IOException {
             try (PDDocument doc = document(3)) {
-                assertEquals(0, SignatureMarkStamper.stampOtherPages(doc, 0, BOX, Map.of()));
+                assertEquals(0, SignatureMarkStamper.stampOtherPages(doc, 0, BOX, List.of()));
                 assertTrue(textOnPage(doc, 1).isEmpty());
             }
         }

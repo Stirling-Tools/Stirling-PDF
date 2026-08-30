@@ -58,9 +58,9 @@ export const VisibleSignature: Story = {
 };
 
 /**
- * With a box already placed. Worth its own story because this state used to be taller
- * than the one above - the reset control only existed once a box was there - and the
- * extra row pushed the tool's run button off the bottom of the panel.
+ * With a box already placed. Worth its own story because placing a box must not make the
+ * panel any taller: the reset control is always present, so no extra row appears here to
+ * push the tool's run button off the bottom of the panel.
  */
 export const BoxPlaced: Story = {
   render: () => (

@@ -4,8 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.List;
 
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDFont;
@@ -49,20 +48,11 @@ class SignatureLogoPlacementTest {
 
     private static final PDFont FONT = new PDType1Font(FontName.TIMES_BOLD);
 
-    private static final SignatureAppearanceLayout.TextFit ANY =
-            SignatureAppearanceLayout.TextFit.ANY;
-
-    private static Map<String, String> fields() {
-        Map<String, String> fields = new LinkedHashMap<>();
-        fields.put("Signer", "Jane Doe");
-        fields.put("Date", "2026-08-17 10:15");
-        fields.put("Reason", "Approved");
-        return fields;
-    }
-
-    private static SignatureAppearanceLayout.TextFit textFitIn(PDRectangle box) throws IOException {
-        return SignatureAppearanceLayout.keepsTheTextIntact(
-                fields(), FONT, box.getWidth(), box.getHeight());
+    private static List<SignatureAppearanceLayout.Field> fields() {
+        return List.of(
+                new SignatureAppearanceLayout.Field("Signer", "Jane Doe", false),
+                new SignatureAppearanceLayout.Field("Date", "2026-08-17 10:15", false),
+                new SignatureAppearanceLayout.Field("Reason", "Approved", false));
     }
 
     @Nested
@@ -74,8 +64,7 @@ class SignatureLogoPlacementTest {
         @DisplayName("The logo stays inside the box")
         void logoStaysInsideTheBox(SignatureLogoPosition position) throws IOException {
             for (float aspect : new float[] {SQUARE, VERY_WIDE, VERY_TALL}) {
-                PDRectangle logo =
-                        SignatureLogoPlacement.place(BOX, aspect, position, ANY).logoRect();
+                PDRectangle logo = SignatureLogoPlacement.place(BOX, aspect, position).logoRect();
 
                 assertTrue(
                         logo.getLowerLeftX() >= BOX.getLowerLeftX() - TOLERANCE,
@@ -97,8 +86,7 @@ class SignatureLogoPlacementTest {
         @DisplayName("The logo keeps the image's proportions")
         void logoKeepsAspectRatio(SignatureLogoPosition position) throws IOException {
             for (float aspect : new float[] {SQUARE, VERY_WIDE, VERY_TALL}) {
-                PDRectangle logo =
-                        SignatureLogoPlacement.place(BOX, aspect, position, ANY).logoRect();
+                PDRectangle logo = SignatureLogoPlacement.place(BOX, aspect, position).logoRect();
 
                 // A distorted company logo reads as a rendering fault, so this is not cosmetic.
                 assertEquals(
@@ -114,8 +102,7 @@ class SignatureLogoPlacementTest {
         @DisplayName("The text keeps half the box even when nothing protects it")
         void textKeepsRoom(SignatureLogoPosition position) throws IOException {
             for (float aspect : new float[] {SQUARE, VERY_WIDE, VERY_TALL}) {
-                PDRectangle text =
-                        SignatureLogoPlacement.place(BOX, aspect, position, ANY).textRect();
+                PDRectangle text = SignatureLogoPlacement.place(BOX, aspect, position).textRect();
 
                 // TextFit.ANY lets the logo take the largest strip allowed, so this is the hard
                 // ceiling rather than a typical outcome: even then, half the box is the text's.
@@ -152,9 +139,7 @@ class SignatureLogoPlacementTest {
                 names = {"LEFT", "RIGHT", "TOP", "BOTTOM"})
         @DisplayName("A roomy box gives the logo more than a fixed third would")
         void roomyBoxGrowsTheLogo(SignatureLogoPosition position) throws IOException {
-            PDRectangle logo =
-                    SignatureLogoPlacement.place(ROOMY, SQUARE, position, textFitIn(ROOMY))
-                            .logoRect();
+            PDRectangle logo = SignatureLogoPlacement.place(ROOMY, SQUARE, position).logoRect();
 
             float fixedThird =
                     position == SignatureLogoPosition.LEFT
@@ -179,7 +164,7 @@ class SignatureLogoPlacementTest {
         @DisplayName("A cramped box still draws the logo, in the position that was asked for")
         void crampedBoxStillDrawsIt(SignatureLogoPosition position) throws IOException {
             SignatureLogoPlacement.Placement placement =
-                    SignatureLogoPlacement.place(CRAMPED, SQUARE, position, textFitIn(CRAMPED));
+                    SignatureLogoPlacement.place(CRAMPED, SQUARE, position);
             PDRectangle logo = placement.logoRect();
 
             // Small is a legible outcome; absent is a bug report. The user picked this corner.
@@ -210,9 +195,9 @@ class SignatureLogoPlacementTest {
          * The floor, checked against the formula it replaced rather than against a number, so that
          * lowering the minimum share later fails here instead of quietly shrinking logos.
          *
-         * <p>It bites where the text is hungriest: a band above a short signature has three fields
-         * demanding the height, so sizing purely by what the text can spare would leave the logo
-         * thinner than the old fixed share did.
+         * <p>The comparison is made against the inset rectangle, which is the one the logo may
+         * occupy: it is held off the edge of the box so the appearance clip and the mark's border
+         * cannot shave it. That margin is the only thing it gives up.
          */
         @ParameterizedTest
         @EnumSource(
@@ -226,17 +211,20 @@ class SignatureLogoPlacementTest {
 
             for (PDRectangle box : new PDRectangle[] {ROOMY, BOX, CRAMPED}) {
                 for (float aspect : new float[] {VERY_WIDE, SQUARE, VERY_TALL}) {
-                    float gap = Math.min(box.getWidth(), box.getHeight()) * 0.04f;
+                    float shorter = Math.min(box.getWidth(), box.getHeight());
+                    float gap = shorter * 0.04f;
+                    float inset = shorter * 0.04f;
                     float before =
                             beside
                                     ? Math.min(
-                                            box.getWidth() * 0.35f - gap, box.getHeight() * aspect)
+                                            box.getWidth() * 0.35f - gap,
+                                            (box.getHeight() - 2 * inset) * aspect)
                                     : Math.min(
-                                            box.getHeight() * 0.35f - gap, box.getWidth() / aspect);
+                                            box.getHeight() * 0.35f - gap,
+                                            (box.getWidth() - 2 * inset) / aspect);
 
                     PDRectangle logo =
-                            SignatureLogoPlacement.place(box, aspect, position, textFitIn(box))
-                                    .logoRect();
+                            SignatureLogoPlacement.place(box, aspect, position).logoRect();
                     float now = beside ? logo.getWidth() : logo.getHeight();
 
                     assertTrue(
@@ -256,61 +244,6 @@ class SignatureLogoPlacementTest {
                 }
             }
         }
-
-        @ParameterizedTest
-        @EnumSource(
-                value = SignatureLogoPosition.class,
-                names = {"LEFT", "RIGHT", "TOP", "BOTTOM"})
-        @DisplayName("Growing past the floor never costs the signature a line of text")
-        void growingNeverCostsALine(SignatureLogoPosition position) throws IOException {
-            boolean beside =
-                    position == SignatureLogoPosition.LEFT
-                            || position == SignatureLogoPosition.RIGHT;
-
-            for (PDRectangle box : new PDRectangle[] {ROOMY, BOX, CRAMPED}) {
-                PDRectangle atTheFloor =
-                        SignatureLogoPlacement.place(
-                                        box,
-                                        VERY_WIDE,
-                                        position,
-                                        (width, height) -> false) // nothing fits -> the floor
-                                .logoRect();
-                SignatureLogoPlacement.Placement chosen =
-                        SignatureLogoPlacement.place(box, VERY_WIDE, position, textFitIn(box));
-
-                float floorSize = beside ? atTheFloor.getWidth() : atTheFloor.getHeight();
-                float chosenSize =
-                        beside ? chosen.logoRect().getWidth() : chosen.logoRect().getHeight();
-                if (chosenSize <= floorSize + TOLERANCE) {
-                    // At the floor the text gives way, as it always has; nothing to check.
-                    continue;
-                }
-
-                int withTheWholeBox =
-                        SignatureAppearanceLayout.fit(
-                                        fields(), FONT, box.getWidth(), box.getHeight())
-                                .lines()
-                                .size();
-                PDRectangle text = chosen.textRect();
-                int withTheLogo =
-                        SignatureAppearanceLayout.fit(
-                                        fields(), FONT, text.getWidth(), text.getHeight())
-                                .lines()
-                                .size();
-
-                assertTrue(
-                        withTheLogo >= withTheWholeBox,
-                        position
-                                + " in a "
-                                + (int) box.getWidth()
-                                + "x"
-                                + (int) box.getHeight()
-                                + " box grew past the floor and dropped the text from "
-                                + withTheWholeBox
-                                + " lines to "
-                                + withTheLogo);
-            }
-        }
     }
 
     @Nested
@@ -321,7 +254,7 @@ class SignatureLogoPlacementTest {
         @DisplayName("LEFT keeps the logo left of the text")
         void left() throws IOException {
             SignatureLogoPlacement.Placement placement =
-                    SignatureLogoPlacement.place(BOX, SQUARE, SignatureLogoPosition.LEFT, ANY);
+                    SignatureLogoPlacement.place(BOX, SQUARE, SignatureLogoPosition.LEFT);
 
             assertTrue(
                     placement.logoRect().getUpperRightX()
@@ -334,7 +267,7 @@ class SignatureLogoPlacementTest {
         @DisplayName("RIGHT keeps the logo right of the text")
         void right() throws IOException {
             SignatureLogoPlacement.Placement placement =
-                    SignatureLogoPlacement.place(BOX, SQUARE, SignatureLogoPosition.RIGHT, ANY);
+                    SignatureLogoPlacement.place(BOX, SQUARE, SignatureLogoPosition.RIGHT);
 
             assertTrue(
                     placement.logoRect().getLowerLeftX()
@@ -347,7 +280,7 @@ class SignatureLogoPlacementTest {
         @DisplayName("TOP keeps the logo above the text")
         void top() throws IOException {
             SignatureLogoPlacement.Placement placement =
-                    SignatureLogoPlacement.place(BOX, SQUARE, SignatureLogoPosition.TOP, ANY);
+                    SignatureLogoPlacement.place(BOX, SQUARE, SignatureLogoPosition.TOP);
 
             assertTrue(
                     placement.logoRect().getLowerLeftY()
@@ -360,7 +293,7 @@ class SignatureLogoPlacementTest {
         @DisplayName("BOTTOM keeps the logo below the text")
         void bottom() throws IOException {
             SignatureLogoPlacement.Placement placement =
-                    SignatureLogoPlacement.place(BOX, SQUARE, SignatureLogoPosition.BOTTOM, ANY);
+                    SignatureLogoPlacement.place(BOX, SQUARE, SignatureLogoPosition.BOTTOM);
 
             assertTrue(
                     placement.logoRect().getUpperRightY()
@@ -373,7 +306,7 @@ class SignatureLogoPlacementTest {
         @DisplayName("BEHIND leaves the text the whole box and centres the logo in it")
         void behind() throws IOException {
             SignatureLogoPlacement.Placement placement =
-                    SignatureLogoPlacement.place(BOX, SQUARE, SignatureLogoPosition.BEHIND, ANY);
+                    SignatureLogoPlacement.place(BOX, SQUARE, SignatureLogoPosition.BEHIND);
 
             // The text is drawn on top, so it loses nothing to the logo here.
             assertEquals(BOX.getWidth(), placement.textRect().getWidth(), TOLERANCE);
@@ -398,8 +331,7 @@ class SignatureLogoPlacementTest {
         @DisplayName("BEHIND scales to a cramped box instead of overflowing it")
         void behindInACrampedBox() throws IOException {
             PDRectangle logo =
-                    SignatureLogoPlacement.place(
-                                    CRAMPED, VERY_WIDE, SignatureLogoPosition.BEHIND, ANY)
+                    SignatureLogoPlacement.place(CRAMPED, VERY_WIDE, SignatureLogoPosition.BEHIND)
                             .logoRect();
 
             assertTrue(logo.getWidth() <= CRAMPED.getWidth() + TOLERANCE);
@@ -421,9 +353,9 @@ class SignatureLogoPlacementTest {
         @DisplayName("A null position is treated as LEFT")
         void nullPositionDefaultsToLeft() throws IOException {
             SignatureLogoPlacement.Placement fromNull =
-                    SignatureLogoPlacement.place(BOX, SQUARE, null, ANY);
+                    SignatureLogoPlacement.place(BOX, SQUARE, null);
             SignatureLogoPlacement.Placement fromLeft =
-                    SignatureLogoPlacement.place(BOX, SQUARE, SignatureLogoPosition.LEFT, ANY);
+                    SignatureLogoPlacement.place(BOX, SQUARE, SignatureLogoPosition.LEFT);
 
             assertEquals(fromLeft.logoRect().getLowerLeftX(), fromNull.logoRect().getLowerLeftX());
             assertEquals(fromLeft.textRect().getWidth(), fromNull.textRect().getWidth());
@@ -435,7 +367,7 @@ class SignatureLogoPlacementTest {
         void brokenAspectRatioFallsBackToSquare() throws IOException {
             for (float broken : new float[] {0f, -3f, Float.NaN, Float.POSITIVE_INFINITY}) {
                 PDRectangle logo =
-                        SignatureLogoPlacement.place(BOX, broken, SignatureLogoPosition.BEHIND, ANY)
+                        SignatureLogoPlacement.place(BOX, broken, SignatureLogoPosition.BEHIND)
                                 .logoRect();
 
                 assertTrue(logo.getWidth() > 0f, "aspect " + broken + " produced no width");
