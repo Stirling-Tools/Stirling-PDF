@@ -367,11 +367,8 @@ public class AdminSettingsController {
             Map<String, Object> flattened = new LinkedHashMap<>();
             flattenSectionData(sectionName, sectionData, flattened);
 
-            int updatedCount = 0;
-            for (Map.Entry<String, Object> entry : flattened.entrySet()) {
-                String fullKey = entry.getKey();
-                Object value = entry.getValue();
-
+            // Validate every key before writing, so an invalid one cannot half-update the file.
+            for (String fullKey : flattened.keySet()) {
                 if (!isValidSettingKey(fullKey)) {
                     return ResponseEntity.badRequest()
                             .body(
@@ -380,18 +377,23 @@ public class AdminSettingsController {
                                             "Invalid setting key format: "
                                                     + HtmlUtils.htmlEscape(fullKey)));
                 }
+            }
 
+            // Load once, apply all, save once instead of one full rewrite per leaf key.
+            GeneralUtils.updateSettingsTransactional(flattened);
+
+            for (Map.Entry<String, Object> entry : flattened.entrySet()) {
+                String fullKey = entry.getKey();
+                Object value = entry.getValue();
                 log.info(
                         "Admin updating section setting: {} = {}",
                         fullKey,
                         logSafeValue(fullKey, value));
-                GeneralUtils.saveKeyToSettings(fullKey, value);
-
-                // Track this as a pending change
-                pendingChanges.put(fullKey, value);
-
-                updatedCount++;
+                // pendingChanges is a ConcurrentHashMap and rejects null values.
+                pendingChanges.put(fullKey, value != null ? value : "");
             }
+
+            int updatedCount = flattened.size();
 
             String escapedSectionName = HtmlUtils.htmlEscape(sectionName);
             return ResponseEntity.ok(

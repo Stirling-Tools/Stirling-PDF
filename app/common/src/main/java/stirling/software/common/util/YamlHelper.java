@@ -176,6 +176,13 @@ public class YamlHelper {
                                 new ScalarNode(tag, String.valueOf(obj), ScalarStyle.PLAIN));
                     }
                     newValueNode = new SequenceNode(Tag.SEQ, sequenceNodes, FlowStyle.FLOW);
+                } else if (newValue == null) {
+                    // A null must not inherit the old tag: !!int 'null' and !!map 'null'
+                    // make settings.yml unloadable and the app will not boot.
+                    newValueNode = new ScalarNode(Tag.NULL, "null", ScalarStyle.PLAIN);
+                } else if (tag == Tag.INT || tag == Tag.FLOAT) {
+                    // Numeric values were handled above, so this one is not numeric.
+                    newValueNode = convertValueToNode(newValue);
                 } else if (tag == Tag.NULL) {
                     if ("true".equals(newValue)
                             || "false".equals(newValue)
@@ -209,6 +216,12 @@ public class YamlHelper {
      * Applies each entry of {@code values} onto {@code target} in place, keeping any key of {@code
      * target} the map does not mention (along with its comments). Keys absent from {@code target}
      * are appended.
+     *
+     * <p>The merge is additive-only: an entry can add or overwrite a key but never remove one, and
+     * a null entry writes a null value rather than deleting the key.
+     *
+     * <p>An appended key the settings template does not contain is dropped on the next restart,
+     * because ConfigInitializer merges the user file into the template.
      */
     private void mergeIntoMappingNode(MappingNode target, Map<?, ?> values) {
         for (Map.Entry<?, ?> entry : values.entrySet()) {
