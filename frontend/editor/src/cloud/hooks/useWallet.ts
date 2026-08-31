@@ -4,6 +4,17 @@
  * the dev preview route synthesises a wallet from localStorage) and exposes
  * mutations for marking-subscribed and updating-the-cap.
  *
+ * <h2>Self-hosted / not-yet-connected gating</h2>
+ *
+ * This hook backs consumers that are always mounted regardless of platform
+ * (e.g. the sidebar's free-credits meter via {@code useFreeCreditsSummary}),
+ * so it cannot assume a wallet backend is reachable. It gates the real fetch
+ * (and its poll) behind the {@code @app/hooks/useConfirmedSaaSMode} seam:
+ * true synchronously on cloud web (saas has no other mode), but starts false
+ * on desktop until the connection mode is confirmed "saas" — desktop's local/
+ * self-hosted mode has no wallet endpoint at all, so fetching there would
+ * just 404 against the bundled backend on every cold start.
+ *
  * <h2>Render efficiency</h2>
  *
  * The hook is designed so {@code Plan}, {@code PaygFreeLeader/Member}, and
@@ -51,13 +62,14 @@
  * {@code import.meta.env}, {@code window.location} and web storage — all banned
  * in cloud/) live in the saas leaf's impl of that seam; this hook just consults
  * it. Desktop's cascade falls through to the cloud default (no dev preview), so
- * it always fetches the real wallet.
+ * it fetches the real wallet whenever the confirmed-SaaS-mode gate above is open.
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 import apiClient from "@app/services/apiClient";
 import { createPortalSession } from "@app/services/billing";
 import { openExternal } from "@app/platform/openExternal";
 import { getWalletDevPreview } from "@app/hooks/walletDevPreview";
+import { useConfirmedSaaSMode } from "@app/hooks/useConfirmedSaaSMode";
 import type {
   Wallet,
   WalletStatus,
@@ -201,6 +213,12 @@ export function useWallet(): UseWalletResult {
   // cloud/ may not touch directly.
   const devPreview = useRef(getWalletDevPreview()).current;
 
+  // See "Self-hosted / not-yet-connected gating" above. Safe to call
+  // unconditionally even on the provider-less /dev/payg-preview route —
+  // unlike an AppConfigContext-backed hook, this seam has no context
+  // dependency to throw on.
+  const confirmedSaaSMode = useConfirmedSaaSMode();
+
   const [wallet, setWallet] = useState<Wallet | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -248,6 +266,17 @@ export function useWallet(): UseWalletResult {
         return;
       }
 
+      if (!confirmedSaaSMode) {
+        // Not (yet) connected to a wallet backend — e.g. desktop in local/
+        // self-hosted mode. Nothing to fetch; leave the last-known snapshot
+        // in place if this is a silent poll, otherwise clear to "no wallet".
+        if (cancelled || reqId !== latestReqId.current) return;
+        if (!silent) setWallet(null);
+        setLoading(false);
+        setError(null);
+        return;
+      }
+
       try {
         const res = await apiClient.get<Wallet>("/api/v1/payg/wallet");
         if (cancelled || reqId !== latestReqId.current) return;
@@ -282,7 +311,7 @@ export function useWallet(): UseWalletResult {
       // still see a definitive "load completed" point. The reqId guard
       // upstream ensures stale results don't commit.
     };
-  }, [devPreview, refetchTick]);
+  }, [devPreview, confirmedSaaSMode, refetchTick]);
 
   // The wallet drains as automation, AI and API work runs, so a figure fetched
   // on mount goes stale while the user watches it. Refresh on a timer, and
@@ -290,7 +319,7 @@ export function useWallet(): UseWalletResult {
   // case people actually notice. Hidden tabs don't poll, and the dev-preview
   // wallet is synthesised locally so there is nothing to re-read.
   useEffect(() => {
-    if (devPreview) return;
+    if (devPreview || !confirmedSaaSMode) return;
 
     let timer: ReturnType<typeof setInterval> | undefined;
     const refresh = () => {
@@ -322,7 +351,7 @@ export function useWallet(): UseWalletResult {
       stop();
       document.removeEventListener("visibilitychange", onVisibilityChange);
     };
-  }, [devPreview]);
+  }, [devPreview, confirmedSaaSMode]);
 
   const refetch = useCallback(async () => {
     setRefetchTick((t) => t + 1);
