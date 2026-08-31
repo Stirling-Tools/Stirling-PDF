@@ -5,6 +5,7 @@
  */
 import { fromWirePolicy } from "@app/policies/codec";
 import { runsToActivity, runsToStats } from "@app/policies/runs";
+import { policyStepToWire } from "@app/policies/operations";
 import {
   POLICY_CATEGORIES,
   POLICY_CONFIG,
@@ -50,5 +51,36 @@ export function decorateForStory(categoryId: string): DecoratedPolicy {
     steps: decoded.steps,
     stats: runsToStats(policyRuns),
     activity: runsToActivity(policyRuns),
+  };
+}
+
+/** A configured Sharing policy: like {@link decorateForStory} but sharing-shaped, since the seeded
+ *  mock policies are all upload/export ones. */
+export function decorateSharingForStory(
+  overrides: Partial<PolicyState> = {},
+): DecoratedPolicy {
+  const base = decorateForStory("sharing");
+  return {
+    ...base,
+    steps: [
+      policyStepToWire(
+        POLICY_CONFIG.sharing.defaultOperations.find(
+          (s) => s.toolId === "watermark",
+        )!,
+      ),
+    ],
+    state: {
+      ...base.state,
+      sources: [],
+      scopeTypes: [],
+      fieldValues: {
+        defaultAccess: "restricted",
+        externalRecipients: "restrict",
+        internalDomains: ["example.com"],
+        linkExpiry: "sevenDays",
+        downloads: "allow",
+      },
+      ...overrides,
+    },
   };
 }

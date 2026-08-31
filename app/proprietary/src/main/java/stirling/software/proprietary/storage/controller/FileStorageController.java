@@ -35,6 +35,9 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.service.AuditService;
+import stirling.software.proprietary.storage.egress.ShareEgressDecision;
+import stirling.software.proprietary.storage.egress.ShareEgressException;
+import stirling.software.proprietary.storage.egress.ShareEgressProcessor;
 import stirling.software.proprietary.storage.model.FileShare;
 import stirling.software.proprietary.storage.model.StoredFile;
 import stirling.software.proprietary.storage.model.api.CreateShareLinkRequest;
@@ -59,6 +62,7 @@ public class FileStorageController {
 
     private final FileStorageService fileStorageService;
     private final StorageProvider storageProvider;
+    private final ShareEgressProcessor shareEgressProcessor;
     private final AuditService auditService;
 
     @PostMapping(
@@ -105,6 +109,12 @@ public class FileStorageController {
         User user = fileStorageService.requireAuthenticatedUser();
         StoredFile file = fileStorageService.getAccessibleFile(user, fileId);
         fileStorageService.requireReadAccess(user, file);
+        // A recipient fetching a file shared with them is egress; the owner fetching their own is
+        // not, and findUserShare returns empty for them.
+        Optional<FileShare> share = fileStorageService.findUserShare(user, file);
+        if (share.isPresent()) {
+            return deliverUnderPolicy(share.get(), file, user, inline);
+        }
         Optional<ResponseEntity<org.springframework.core.io.Resource>> redirect =
                 tryRedirectToSignedUrl(file, inline);
         return redirect.orElseGet(() -> buildFileResponse(file, inline));
@@ -203,11 +213,11 @@ public class FileStorageController {
             throw new ResponseStatusException(status, message);
         }
         fileStorageService.requireReadAccess(share);
-        fileStorageService.recordShareAccess(share, authentication, inline);
-        StoredFile file = share.getFile();
-        Optional<ResponseEntity<org.springframework.core.io.Resource>> redirect =
-                tryRedirectToSignedUrl(file, inline);
-        return redirect.orElseGet(() -> buildFileResponse(file, inline));
+        User accessor =
+                authentication != null && authentication.getPrincipal() instanceof User user
+                        ? user
+                        : null;
+        return deliverUnderPolicy(share, share.getFile(), accessor, inline, authentication);
     }
 
     @GetMapping("/share-links/{token}/metadata")
@@ -263,9 +273,53 @@ public class FileStorageController {
         return fileStorageService.listShareAccessResponses(owner, file, token);
     }
 
+    /** Serves a shared document under the owner team's Sharing policies. */
+    private ResponseEntity<org.springframework.core.io.Resource> deliverUnderPolicy(
+            FileShare share, StoredFile file, User accessor, boolean inline) {
+        return deliverUnderPolicy(share, file, accessor, inline, null);
+    }
+
+    private ResponseEntity<org.springframework.core.io.Resource> deliverUnderPolicy(
+            FileShare share,
+            StoredFile file,
+            User accessor,
+            boolean inline,
+            Authentication shareLinkAuth) {
+        ShareEgressDecision decision = fileStorageService.decideDelivery(share, accessor);
+        if (!decision.allowed()) {
+            throw new ShareEgressException(decision);
+        }
+        // `inline` is a client hint. Under a view-only policy the server picks the disposition
+        // instead, so appending ?inline cannot decide whether the policy applies.
+        boolean servedInline = inline || decision.viewOnly();
+        // Record the access only once the policy has let it through, so a refused attempt does not
+        // appear in the owner's access log as a successful view.
+        if (shareLinkAuth != null) {
+            fileStorageService.recordShareAccess(share, shareLinkAuth, servedInline);
+        }
+        if (!decision.requiresManagedDelivery()) {
+            Optional<ResponseEntity<org.springframework.core.io.Resource>> redirect =
+                    tryRedirectToSignedUrl(file, servedInline);
+            if (redirect.isPresent()) {
+                return redirect.get();
+            }
+            return buildFileResponse(file, servedInline);
+        }
+        // A signed URL would point straight at the stored object, bypassing both the processed copy
+        // and the view-only disposition, so managed deliveries always stream through here.
+        org.springframework.core.io.Resource stored = fileStorageService.loadFile(file);
+        org.springframework.core.io.Resource served =
+                shareEgressProcessor.resolve(share, stored, file.getOriginalFilename(), decision);
+        return buildFileResponse(file, served, servedInline);
+    }
+
     private ResponseEntity<org.springframework.core.io.Resource> buildFileResponse(
             StoredFile file, boolean inline) {
-        org.springframework.core.io.Resource resource = fileStorageService.loadFile(file);
+        return buildFileResponse(file, fileStorageService.loadFile(file), inline);
+    }
+
+    private ResponseEntity<org.springframework.core.io.Resource> buildFileResponse(
+            StoredFile file, org.springframework.core.io.Resource resource, boolean inline) {
         if (file.getEncryptionKeyId() != null) {
             // Compliance marker: a plaintext copy of encrypted-at-rest content left the platform
             // (inline=true is an in-app view; false is a saved download).
@@ -296,7 +350,15 @@ public class FileStorageController {
         } catch (IllegalArgumentException ex) {
             headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
         }
-        headers.setContentLength(file.getSizeBytes());
+        // A processed copy is a different size from the stored original, so take the length from
+        // the resource actually being served and fall back to the record only if it can't say.
+        long length = file.getSizeBytes();
+        try {
+            length = resource.contentLength();
+        } catch (IOException e) {
+            log.debug("Could not size the served resource; using the stored size", e);
+        }
+        headers.setContentLength(length);
         return ResponseEntity.ok().headers(headers).body(resource);
     }
 

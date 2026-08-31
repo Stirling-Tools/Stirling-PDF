@@ -5,6 +5,9 @@ import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
 import CloudOutlinedIcon from "@mui/icons-material/CloudOutlined";
 import StorageOutlinedIcon from "@mui/icons-material/StorageOutlined";
+import PeopleOutlinedIcon from "@mui/icons-material/PeopleOutlined";
+import LinkOutlinedIcon from "@mui/icons-material/LinkOutlined";
+import MailOutlinedIcon from "@mui/icons-material/MailOutlined";
 import {
   Banner,
   Button,
@@ -19,6 +22,7 @@ import {
 import { SettingsRow } from "@app/ui/SettingsRow";
 import {
   humanizeEndpoint,
+  SHARE_CHANNELS,
   type CatalogueEntry,
   type PipelineStep,
   type PolicySetupResult,
@@ -59,6 +63,21 @@ function sourceIcon(type: string): ReactNode {
   }
 }
 
+/** Outline icon for a share-channel tile, so it reads like the source tiles. */
+function channelIcon(id: string): ReactNode {
+  const sx = { fontSize: "1.1rem" } as const;
+  switch (id) {
+    case "userShare":
+      return <PeopleOutlinedIcon sx={sx} />;
+    case "shareLink":
+      return <LinkOutlinedIcon sx={sx} />;
+    case "emailShare":
+      return <MailOutlinedIcon sx={sx} />;
+    default:
+      return <StorageOutlinedIcon sx={sx} />;
+  }
+}
+
 interface PolicySetupWizardProps {
   /** The category being configured, or null when closed. */
   entry: CatalogueEntry | null;
@@ -90,9 +109,8 @@ function resolveFieldValues(
  * round-trips); otherwise the category preset's default chain. Each preset step
  * starts enabled — the user toggles tools off in the workflow.
  */
-// Temporary until the catalogue carries a defaultEnabled flag.
-// Steps that cannot work until someone configures them, so they start off rather than failing
-// every run of a freshly created policy. Purview needs a tenant connection and a label GUID.
+// Steps that cannot work until configured, so they start off. A preset that DOES supply the
+// parameters overrides this with its own `defaultOn`.
 const DISABLED_BY_DEFAULT = new Set<PolicyToolId>([
   "watermark",
   "purviewApplyLabel",
@@ -202,6 +220,7 @@ function seedTools(entry: CatalogueEntry): ToolState[] {
     const step = policyStepFromWire(wire);
     if (step) savedByTool.set(step.toolId, step);
   }
+  const defaultOn = entry.config.defaultOn;
   // defaultOperations is the canonical list (so tools added later still show on edit); a saved
   // step's params win over the preset.
   return entry.config.defaultOperations.map((preset) => {
@@ -212,7 +231,9 @@ function seedTools(entry: CatalogueEntry): ToolState[] {
         ? true
         : savedSteps.length > 0
           ? false
-          : !DISABLED_BY_DEFAULT.has(preset.toolId),
+          : defaultOn
+            ? defaultOn.includes(preset.toolId)
+            : !DISABLED_BY_DEFAULT.has(preset.toolId),
     };
   });
 }
@@ -254,6 +275,9 @@ function PolicySetupWizardBody({
   const { category, config, policy } = entry;
   const isEdit = policy != null;
   const isClassification = category.id === "classification";
+  // Runs on shares, not the editor: share channels instead of sources, no output naming, and
+  // gating access with no tool chain is a valid configuration.
+  const isEgress = category.runsAtEgress === true;
 
   const [step, setStep] = useState<Step>("workflow");
   const [tools, setTools] = useState<ToolState[]>(() => {
@@ -269,8 +293,12 @@ function PolicySetupWizardBody({
     resolveFieldValues(entry),
   );
   // Real sources only; editor participation is its own flag, not an entry here.
+  // For an egress policy these are share channels, not input sources; empty means
+  // every channel, so a new one starts unnarrowed.
   const [sources, setSources] = useState<string[]>(() =>
-    (policy?.state.sources ?? []).filter((s) => s !== "editor"),
+    isEgress
+      ? (policy?.state.sources ?? [])
+      : (policy?.state.sources ?? []).filter((s) => s !== "editor"),
   );
   // Whether the policy runs in the editor. Defaults on for a new policy (the common case);
   // on edit it comes straight from the stored flag, never re-derived from the sources list.
@@ -380,7 +408,9 @@ function PolicySetupWizardBody({
 
   async function submit() {
     if (submitting) return;
-    if (enabledTools.length === 0) {
+    // An egress policy that only gates access — no watermark, no redaction — is
+    // a complete policy, so the at-least-one-tool rule doesn't apply to it.
+    if (enabledTools.length === 0 && !isEgress) {
       setError(t("portal.policies.wizard.errors.noTools"));
       setStep("workflow");
       return;
@@ -506,10 +536,15 @@ function PolicySetupWizardBody({
       {step === "workflow" && !isClassification && (
         <div className="portal-policies__wizard-section">
           <p className="portal-policies__wizard-desc">
-            {t(
-              "portal.policies.wizard.workflow.description",
-              "Choose what this policy does to every document it processes.",
-            )}
+            {isEgress
+              ? t(
+                  "portal.policies.wizard.workflow.egressDescription",
+                  "Choose what happens to the copy that leaves. Recipients get the processed copy; the original is untouched. Leave these off to govern access only.",
+                )
+              : t(
+                  "portal.policies.wizard.workflow.description",
+                  "Choose what this policy does to every document it processes.",
+                )}
           </p>
           <Card padding="none">
             <div className="portal-policies__capabilities">
@@ -579,6 +614,53 @@ function PolicySetupWizardBody({
 
       {step === "settings" && (
         <div className="portal-policies__wizard-section">
+          {/* Egress policies lead with what they govern, then the terms — the
+              order the policy is described in. */}
+          {isEgress && (
+            <>
+              <h3 className="portal-policies__wizard-heading">
+                {t("portal.policies.wizard.channels.heading")}
+              </h3>
+              <p className="portal-policies__wizard-desc">
+                {sources.length === 0
+                  ? t("portal.policies.wizard.channels.all")
+                  : t("portal.policies.wizard.channels.narrowed")}
+              </p>
+              <div className="portal-policies__sources">
+                {SHARE_CHANNELS.map((channel) => {
+                  const on = sources.includes(channel.id);
+                  return (
+                    <Button
+                      key={channel.id}
+                      variant={on ? "secondary" : "quiet"}
+                      justify="between"
+                      fullWidth
+                      className={
+                        "portal-policies__source" +
+                        (on ? " portal-policies__source--on" : "")
+                      }
+                      rightSection={
+                        <CheckIcon
+                          sx={{
+                            fontSize: "1.1rem",
+                            visibility: on ? "visible" : "hidden",
+                          }}
+                        />
+                      }
+                      onClick={() => toggleSource(channel.id)}
+                      aria-pressed={on}
+                    >
+                      <span className="portal-policies__source-label">
+                        {channelIcon(channel.id)}
+                        {t(channel.label)}
+                      </span>
+                    </Button>
+                  );
+                })}
+              </div>
+            </>
+          )}
+
           {config.fields.length > 0 && (
             <>
               <h3 className="portal-policies__wizard-heading">
@@ -599,58 +681,72 @@ function PolicySetupWizardBody({
             </>
           )}
 
-          <h3 className="portal-policies__wizard-heading">
-            {t("portal.policies.wizard.sources.heading")}
-          </h3>
-          {sourcesAsync.loading && !sourcesAsync.data ? (
-            <p className="portal-policies__sources-loading">
-              {t("portal.policies.wizard.sources.loading")}
-            </p>
-          ) : (
-            // The backend always returns the editor as a virtual source, so the
-            // loaded list is never empty - no "no sources" state exists.
-            <div className="portal-policies__sources">
-              {availableSources.map((src) => {
-                const on =
-                  src.id === "editor" ? runsOnEditor : sources.includes(src.id);
-                return (
-                  <Button
-                    key={src.id}
-                    variant={on ? "secondary" : "quiet"}
-                    justify="between"
-                    fullWidth
-                    className={
-                      "portal-policies__source" +
-                      (on ? " portal-policies__source--on" : "")
-                    }
-                    // The check keeps its slot when unselected (hidden) so the
-                    // icon + name stay put whether or not the tile is selected.
-                    rightSection={
-                      <CheckIcon
-                        sx={{
-                          fontSize: "1.1rem",
-                          visibility: on ? "visible" : "hidden",
-                        }}
-                      />
-                    }
-                    onClick={() => toggleSource(src.id)}
-                    aria-pressed={on}
-                  >
-                    <span className="portal-policies__source-label">
-                      {sourceIcon(src.type)}
-                      {src.name}
-                    </span>
-                  </Button>
-                );
-              })}
-            </div>
+          {/* Input sources are for policies that pull files. An egress policy
+              acts on documents already in storage, so it has none — its
+              equivalent is the share channels above. */}
+          {!isEgress && (
+            <h3 className="portal-policies__wizard-heading">
+              {t("portal.policies.wizard.sources.heading")}
+            </h3>
           )}
+          {!isEgress &&
+            (sourcesAsync.loading && !sourcesAsync.data ? (
+              <p className="portal-policies__sources-loading">
+                {t("portal.policies.wizard.sources.loading")}
+              </p>
+            ) : (
+              // The backend always returns the editor as a virtual source, so the
+              // loaded list is never empty - no "no sources" state exists.
+              <div className="portal-policies__sources">
+                {availableSources.map((src) => {
+                  // The editor tile toggles runsOnEditor; real sources toggle membership.
+                  const on =
+                    src.id === "editor"
+                      ? runsOnEditor
+                      : sources.includes(src.id);
+                  return (
+                    <Button
+                      key={src.id}
+                      variant={on ? "secondary" : "quiet"}
+                      justify="between"
+                      fullWidth
+                      className={
+                        "portal-policies__source" +
+                        (on ? " portal-policies__source--on" : "")
+                      }
+                      // The check keeps its slot when unselected (hidden) so the
+                      // icon + name stay put whether or not the tile is selected.
+                      rightSection={
+                        <CheckIcon
+                          sx={{
+                            fontSize: "1.1rem",
+                            visibility: on ? "visible" : "hidden",
+                          }}
+                        />
+                      }
+                      onClick={() => toggleSource(src.id)}
+                      aria-pressed={on}
+                    >
+                      <span className="portal-policies__source-label">
+                        {sourceIcon(src.type)}
+                        {src.name}
+                      </span>
+                    </Button>
+                  );
+                })}
+              </div>
+            ))}
 
-          <h3 className="portal-policies__wizard-heading">
-            {t("portal.policies.wizard.output.heading")}
-          </h3>
+          {/* Output naming applies to a run that produces a file in the editor.
+              An egress policy replaces the copy in flight, so there is nothing
+              to name. */}
+          {!isEgress && (
+            <h3 className="portal-policies__wizard-heading">
+              {t("portal.policies.wizard.output.heading")}
+            </h3>
+          )}
           <div className="portal-policies__fields">
-            {runsOnEditor && (
+            {!isEgress && runsOnEditor && (
               <>
                 <FormField
                   label={t("portal.policies.wizard.output.runOn.label")}

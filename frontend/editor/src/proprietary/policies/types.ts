@@ -6,7 +6,7 @@
  * reviewer, fieldValues, runOn, output settings) inside `output.options` — the
  * same "options bag" the editor uses. `trigger` is always null for
  * portal/editor-authored policies; the editor fires runs on upload/export via
- * `/run`, so there is no server-side trigger.
+ * `/run`, and egress policies are found by their stored `categoryId`.
  */
 
 // ── Wire types (match Policy.java / PipelineStep.java / PolicyRunView.java) ──

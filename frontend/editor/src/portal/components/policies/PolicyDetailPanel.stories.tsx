@@ -1,5 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { decorateForStory } from "@portal/components/policies/storyFixtures";
+import {
+  decorateForStory,
+  decorateSharingForStory,
+} from "@portal/components/policies/storyFixtures";
 import { PolicyDetailPanel } from "@portal/components/policies/PolicyDetailPanel";
 
 const meta: Meta<typeof PolicyDetailPanel> = {
@@ -30,6 +33,21 @@ export const Paused: Story = {
       ...decorateForStory("security"),
       state: { ...decorateForStory("security").state, status: "paused" },
     },
+  },
+};
+
+/** An egress policy: the trigger strip reads "at egress" and "Runs on" lists share channels. */
+export const SharingEveryChannel: Story = {
+  args: { policy: decorateSharingForStory() },
+};
+
+/** The same policy narrowed to share links and to two document types. */
+export const SharingNarrowed: Story = {
+  args: {
+    policy: decorateSharingForStory({
+      sources: ["shareLink", "emailShare"],
+      scopeTypes: ["contract", "nda"],
+    }),
   },
 };
 

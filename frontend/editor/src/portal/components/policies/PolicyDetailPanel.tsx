@@ -10,6 +10,7 @@ import {
 } from "@app/ui";
 import {
   humanizeEndpoint,
+  SHARE_CHANNELS,
   type DecoratedPolicy,
   type PolicyActivityItem,
 } from "@portal/api/policies";
@@ -115,13 +116,15 @@ export function PolicyDetailPanel({
   if (!policy) return null;
   const { category, config, state, steps, stats, activity } = policy;
   const isPaused = state.status === "paused";
+  const isEgress = category.runsAtEgress === true;
   const canDelete = state.isDefault !== true;
   // Editor participation is its own flag (runsOnEditor), not a source. A legacy policy still carries
   // "editor" in its stored sources until re-saved, so drop it here to count only real watched sources.
   const realSources = state.sources.filter((s) => s !== "editor");
-  // Processed history only exists for watched sources; editor uploads are never ledgered.
+  // Processed history only exists for watched sources; editor uploads are never ledgered, and an
+  // egress policy's "sources" are channels, not files it sweeps.
   const canClearHistory =
-    onClearHistory !== undefined && realSources.length > 0;
+    onClearHistory !== undefined && !isEgress && realSources.length > 0;
 
   const enforceItems = steps.length > 0 ? steps.map((s) => s.operation) : null;
   const hasEditorSource = state.runsOnEditor === true;
@@ -133,6 +136,12 @@ export function PolicyDetailPanel({
     state.outputMode === "new_file"
       ? t("portal.policies.detail.outputAsNewFile")
       : t("portal.policies.detail.outputAsNewVersion");
+
+  function sourceLabel(id: string) {
+    if (id === "editor") return t("portal.sources.types.editor.label");
+    const channel = SHARE_CHANNELS.find((c) => c.id === id);
+    return channel ? t(channel.label) : id;
+  }
 
   return (
     <>
@@ -155,7 +164,9 @@ export function PolicyDetailPanel({
                 {t("portal.policies.detail.actions.delete")}
               </Button>
             )}
-            {onRun && (
+            {/* An egress policy has nothing to run on demand: it fires when a
+                document is shared, not against a set of files. */}
+            {onRun && !isEgress && (
               <Button
                 variant="secondary"
                 size="sm"
@@ -199,7 +210,17 @@ export function PolicyDetailPanel({
               ? t("portal.policies.status.paused")
               : t("portal.policies.status.active")}
           </StatusBadge>
-          {hasEditorSource && (
+          {isEgress && (
+            <>
+              <span className="portal-policies__detail-sep" aria-hidden>
+                ·
+              </span>
+              <span className="portal-policies__detail-meta">
+                {t("portal.policies.detail.atEgress")}
+              </span>
+            </>
+          )}
+          {!isEgress && hasEditorSource && (
             <>
               <span className="portal-policies__detail-sep" aria-hidden>
                 ·
@@ -240,14 +261,18 @@ export function PolicyDetailPanel({
           </span>
         </div>
 
-        {/* Sources */}
-        {realSources.length > 0 && (
+        {/* Runs on — input sources, or share channels for an egress policy. */}
+        {(realSources.length > 0 || isEgress) && (
           <div className="portal-policies__detail-inline">
             <span className="portal-policies__detail-inline-label">
-              {t("portal.policies.detail.sources")}
+              {isEgress
+                ? t("portal.policies.detail.channels")
+                : t("portal.policies.detail.sources")}
             </span>
             <span className="portal-policies__detail-inline-value">
-              {realSources.join(" · ")}
+              {realSources.length > 0
+                ? realSources.map(sourceLabel).join(" · ")
+                : t("portal.policies.detail.everyChannel")}
             </span>
           </div>
         )}

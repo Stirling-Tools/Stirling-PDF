@@ -24,6 +24,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.storage.egress.ShareChannel;
 
 /** Represents a file sharing relationship between a file and a user or token. */
 @Entity
@@ -70,6 +71,19 @@ public class FileShare implements Serializable {
 
     @Column(name = "expires_at")
     private LocalDateTime expiresAt;
+
+    /** The channel this share was granted through, so delivery is judged as the grant was. */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "egress_channel", length = 32)
+    private ShareChannel egressChannel;
+
+    /** Job-storage id of the processed copy; cache only, re-derived if swept. */
+    @Column(name = "egress_file_id")
+    private String egressFileId;
+
+    /** Identity of that copy (policies + steps + source version); a mismatch means it is stale. */
+    @Column(name = "egress_fingerprint", length = 64)
+    private String egressFingerprint;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
