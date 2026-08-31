@@ -432,10 +432,10 @@ const TakeoffWorkbenchView = ({ data }: { data: TakeoffWorkbenchData }) => {
     const { kind, start, current } = dragState;
     setDragState(null);
     const pointsSpan = distance(start, current);
-    if (pointsSpan < 2) {
-      if (kind === "length") disarmAllTools();
-      return;
-    }
+    // A stray click-without-drag isn't a real segment — ignore it and stay
+    // armed (same as a failed calibration drag) rather than kicking the user
+    // out of the tool over a mis-click.
+    if (pointsSpan < 2) return;
     if (kind === "calibrate") {
       setCalibrationPrompt({ pointsSpan });
       setCalibrationValue("");
@@ -449,10 +449,11 @@ const TakeoffWorkbenchView = ({ data }: { data: TakeoffWorkbenchData }) => {
       page: pageIndex,
       points: [start, current],
     };
-    const nextAnnotations = [
-      ...annotations.filter((a) => a.materialId !== armedMaterial.id),
-      newAnnotation,
-    ];
+    // Append rather than replace: a row can own several length segments
+    // (see the comment on TakeoffAnnotation), so drawing another one — even
+    // on a different page — adds to the row's total instead of overwriting
+    // its previous segment.
+    const nextAnnotations = [...annotations, newAnnotation];
     setAnnotations(nextAnnotations);
     setMaterials((prev) =>
       recomputeIds(
@@ -462,7 +463,9 @@ const TakeoffWorkbenchView = ({ data }: { data: TakeoffWorkbenchData }) => {
         pageScales,
       ),
     );
-    disarmAllTools();
+    // Deliberately stays armed — matches Count, which already lets you place
+    // several markers in a row. Navigate to another page and draw again to
+    // keep adding to this row's total; click the tool button again to stop.
   }
 
   function handleClick(e: React.MouseEvent<SVGSVGElement>) {
@@ -515,10 +518,8 @@ const TakeoffWorkbenchView = ({ data }: { data: TakeoffWorkbenchData }) => {
       page: pageIndex,
       points: inProgress,
     };
-    const nextAnnotations = [
-      ...annotations.filter((a) => a.materialId !== armedMaterial.id),
-      newAnnotation,
-    ];
+    // Append rather than replace — see the matching comment in handleMouseUp.
+    const nextAnnotations = [...annotations, newAnnotation];
     setAnnotations(nextAnnotations);
     setMaterials((prev) =>
       recomputeIds(
@@ -530,7 +531,8 @@ const TakeoffWorkbenchView = ({ data }: { data: TakeoffWorkbenchData }) => {
     );
     setInProgress([]);
     setHoverPoint(null);
-    disarmAllTools();
+    // Stays armed — see the matching comment in handleMouseUp. Double-click
+    // again to start the next shape for this row.
   }
 
   function confirmCalibration() {

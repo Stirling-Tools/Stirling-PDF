@@ -10703,6 +10703,7 @@ zoomOut = "Zoom out"
 [takeoff.row]
 deductsFrom = "Deduct from"
 deductsFromPlaceholder = "Deduct from…"
+measuredAsSegments = "{{type}} · {{count}} segments"
 namePlaceholder = "Item name"
 notMeasured = "not measured"
 pitch = "Roof pitch (degrees)"

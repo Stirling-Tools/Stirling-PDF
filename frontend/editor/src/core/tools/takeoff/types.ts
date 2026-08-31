@@ -11,8 +11,11 @@ export interface TakeoffPoint {
 export type TakeoffAnnotationType = "length" | "area" | "count";
 
 // Geometry drawn on the plan, owned by exactly one TakeoffMaterial row via
-// materialId. A length/area row owns one annotation; a count row owns one
-// annotation per placed marker.
+// materialId. A row can own several of these — one per drawn segment/shape/
+// marker, possibly spread across several pages — and its quantity is the sum
+// of all of them (see computeValue in geometry.ts). This is how e.g. one
+// "Interior Partition Walls" row can be measured a run at a time across
+// several floor plan pages and still total correctly.
 export interface TakeoffAnnotation {
   id: string;
   materialId: string;

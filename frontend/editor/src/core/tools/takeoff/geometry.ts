@@ -23,11 +23,39 @@ function unitsPerPoint(scale: TakeoffPageScale): number {
   return scale.real / scale.pointsSpan;
 }
 
+// Flat (unpitched) area of every 'area' annotation a material owns, summed
+// across however many shapes/pages it was drawn on. A segment on a page with
+// no calibrated scale contributes 0 rather than voiding the whole total —
+// see the comment on computeValue for why.
+function sumFlatArea(
+  materialId: string,
+  annotations: TakeoffAnnotation[],
+  pageScales: Record<number, TakeoffPageScale>,
+): number {
+  return annotations
+    .filter((a) => a.materialId === materialId && a.type === "area")
+    .reduce((sum, a) => {
+      const scale = pageScales[a.page];
+      if (!scale) return sum;
+      const upp = unitsPerPoint(scale);
+      return sum + polygonArea(a.points) * upp * upp;
+    }, 0);
+}
+
 // A row's quantity is derived from the geometry it owns (materialId match).
-// Which formula applies is read off the annotation's own type — set by
+// Which formula applies is read off the annotations' own type — set by
 // whichever tool (Ruler / Area / Count) actually drew it — not the row's
 // free-text unit label, so relabelling a unit never changes how it's
 // measured.
+//
+// A row isn't limited to one shape: length and area rows sum every segment
+// they own, the same way count rows already sum every marker — so a single
+// "Interior Partition Walls" row can be measured a run at a time across
+// several pages and still total correctly. Each segment converts through
+// its OWN page's calibrated scale, so mixed-scale sheets stay correct. A
+// segment on a page with no scale set yet just contributes 0 (rather than
+// voiding the whole row's total) so the rest of the sum stays visible while
+// that one page gets calibrated.
 export function computeValue(
   material: TakeoffMaterial,
   materials: TakeoffMaterial[],
@@ -41,21 +69,11 @@ export function computeValue(
   if (first.type === "count") return own.length;
 
   if (first.type === "area") {
-    const scale = pageScales[first.page];
-    if (!scale) return null;
-    const upp = unitsPerPoint(scale);
-    const flat = polygonArea(first.points) * upp * upp;
+    const flat = sumFlatArea(material.id, annotations, pageScales);
 
     const deducted = materials
       .filter((m) => m.deductsFromMaterialId === material.id)
-      .reduce((sum, m) => {
-        const dAnn = annotations.find((a) => a.materialId === m.id);
-        if (!dAnn) return sum;
-        const dScale = pageScales[dAnn.page];
-        if (!dScale) return sum;
-        const dUpp = unitsPerPoint(dScale);
-        return sum + polygonArea(dAnn.points) * dUpp * dUpp;
-      }, 0);
+      .reduce((sum, m) => sum + sumFlatArea(m.id, annotations, pageScales), 0);
 
     const net = Math.max(0, flat - deducted);
     if (material.pitchDegrees) {
@@ -66,10 +84,13 @@ export function computeValue(
   }
 
   // length
-  const scale = pageScales[first.page];
-  if (!scale) return null;
-  if (first.points.length < 2) return null;
-  return distance(first.points[0], first.points[1]) * unitsPerPoint(scale);
+  return own
+    .filter((a) => a.type === "length" && a.points.length >= 2)
+    .reduce((sum, a) => {
+      const scale = pageScales[a.page];
+      if (!scale) return sum;
+      return sum + distance(a.points[0], a.points[1]) * unitsPerPoint(scale);
+    }, 0);
 }
 
 export function roundTo2(n: number | null): number | null {

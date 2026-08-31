@@ -37,6 +37,13 @@ function ownAnnotationType(
   return annotations.find((a) => a.materialId === materialId)?.type ?? null;
 }
 
+function ownSegmentCount(
+  materialId: string,
+  annotations: TakeoffAnnotation[],
+): number {
+  return annotations.filter((a) => a.materialId === materialId).length;
+}
+
 const TOOL_BUTTONS: {
   tool: TakeoffAnnotationType;
   Icon: typeof StraightenOutlinedIcon;
@@ -60,6 +67,19 @@ export default function TakeoffRow({
   const { t } = useTranslation();
   const ownType = ownAnnotationType(material.id, annotations);
   const lineTotal = (material.quantity ?? 0) * (material.unitPrice ?? 0);
+
+  // Count's own quantity already reads as a segment count, so the hint is
+  // only useful for length/area — where it confirms multiple segments
+  // (possibly across pages) are summing into this row's total.
+  const segmentCount = ownSegmentCount(material.id, annotations);
+  const measuredAsLabel = ownType
+    ? ownType !== "count" && segmentCount > 1
+      ? t("takeoff.row.measuredAsSegments", "{{type}} · {{count}} segments", {
+          type: t(`takeoff.row.measuredAs.${ownType}`, ownType),
+          count: segmentCount,
+        })
+      : t(`takeoff.row.measuredAs.${ownType}`, ownType)
+    : t("takeoff.row.notMeasured", "not measured");
 
   const deductCandidates = materials.filter(
     (m) =>
@@ -114,9 +134,7 @@ export default function TakeoffRow({
           </ActionIcon>
         ))}
         <Text size="xs" c="dimmed" ml={4}>
-          {ownType
-            ? t(`takeoff.row.measuredAs.${ownType}`, ownType)
-            : t("takeoff.row.notMeasured", "not measured")}
+          {measuredAsLabel}
         </Text>
       </Group>
 
