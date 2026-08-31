@@ -370,7 +370,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   }, [preferences.defaultToolPanelMode, state.toolPanelMode]);
 
   // Apply default startup view preference on initial load.
-  // This runs once to navigate to the user's preferred tab (read/automate)
+  // This runs once to navigate to the user's preferred tab (read)
   // instead of always starting on the tools tab.
   const hasAppliedStartupView = React.useRef(false);
   useEffect(() => {
@@ -380,21 +380,12 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
       hasAppliedStartupView.current = true;
       setReaderMode(true);
       actions.setSelectedTool("read");
-    } else if (startupView === "automate") {
-      hasAppliedStartupView.current = true;
-      actions.setSelectedTool("automate");
-      setLeftPanelView("toolContent");
     }
     // 'tools' is the default — no action needed
     if (startupView === "tools") {
       hasAppliedStartupView.current = true;
     }
-  }, [
-    preferences.defaultStartupView,
-    actions,
-    setReaderMode,
-    setLeftPanelView,
-  ]);
+  }, [preferences.defaultStartupView, actions, setReaderMode]);
 
   // When in multi-tool, sync left panel visibility with workbench:
   // hide the panel on pageEditor, show it when navigating to viewer/fileEditor.

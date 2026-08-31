@@ -25,11 +25,6 @@
       "title": "Add Text - Stirling PDF",
       "description": "Add custom text anywhere in your PDF"
     },
-    "addPassword": {
-      "image": "/og_images/add-password.png",
-      "title": "Add Password - Stirling PDF",
-      "description": "Add password protection and restrictions to PDF files"
-    },
     "removePassword": {
       "image": "/og_images/remove-password.png",
       "title": "Remove Password - Stirling PDF",
@@ -54,11 +49,6 @@
       "image": "/og_images/remove-image.png",
       "title": "Remove Images - Stirling PDF",
       "description": "Remove all images from a PDF document"
-    },
-    "changePermissions": {
-      "image": "/og_images/change-permissions.png",
-      "title": "Change Permissions - Stirling PDF",
-      "description": "Change document restrictions and permissions"
     },
     "watermark": {
       "image": "/og_images/add-watermark.png",
@@ -130,11 +120,6 @@
       "title": "Scanner Effect - Stirling PDF",
       "description": "Create a PDF that looks like it was scanned"
     },
-    "autoRename": {
-      "image": "/og_images/auto-rename-pdf-file.png",
-      "title": "Auto Rename PDF File - Stirling PDF",
-      "description": "Automatically rename PDF files based on their content"
-    },
     "pageLayout": {
       "image": "/og_images/multi-page-layout.png",
       "title": "Multi-Page Layout - Stirling PDF",
@@ -190,11 +175,6 @@
       "title": "Remove Certificate Sign - Stirling PDF",
       "description": "Remove digital signature from PDF documents"
     },
-    "unlockPDFForms": {
-      "image": "/og_images/unlock-pdf-forms.png",
-      "title": "Unlock PDF Forms - Stirling PDF",
-      "description": "Remove read-only property of form fields in a PDF document."
-    },
     "compress": {
       "image": "/og_images/compress.png",
       "title": "Compress - Stirling PDF",
@@ -215,11 +195,6 @@
       "title": "Extract Images - Stirling PDF",
       "description": "Extract images from PDF documents"
     },
-    "addStamp": {
-      "image": "/og_images/add-stamp.png",
-      "title": "Add Stamp to PDF - Stirling PDF",
-      "description": "Add text or add image stamps at set locations"
-    },
     "addAttachments": {
       "image": "/og_images/add-attachments.png",
       "title": "Add Attachments - Stirling PDF",
@@ -234,16 +209,6 @@
       "image": "/og_images/overlay-pdfs.png",
       "title": "Overlay Pdfs - Stirling PDF",
       "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
-    },
-    "getPdfInfo": {
-      "image": "/og_images/get-all-info-on-pdf.png",
-      "title": "Get ALL Info on PDF - Stirling PDF",
-      "description": "Grabs any and all information possible on PDFs"
-    },
-    "validateSignature": {
-      "image": "/og_images/validate-pdf-signature.png",
-      "title": "Validate PDF Signature - Stirling PDF",
-      "description": "Verify digital signatures and certificates in PDF documents"
     },
     "timestampPdf": {
       "image": "/og_images/timestamp-pdf.png",
@@ -284,11 +249,6 @@
       "image": "/og_images/read.png",
       "title": "Read - Stirling PDF",
       "description": "View and annotate PDFs. Highlight text, draw, or insert comments for review and collaboration."
-    },
-    "automate": {
-      "image": "/og_images/automate.png",
-      "title": "Automate - Stirling PDF",
-      "description": "Build multi-step workflows by chaining together PDF actions. Ideal for recurring tasks."
     },
     "devApi": {
       "image": "/og_images/dev-api.png",
@@ -546,13 +506,11 @@
     "/sign": "sign",
     "/shared-sign": "sharedSign",
     "/add-text": "addText",
-    "/add-password": "addPassword",
     "/remove-password": "removePassword",
     "/remove-pages": "removePages",
     "/remove-blanks": "removeBlanks",
     "/remove-annotations": "removeAnnotations",
     "/remove-image": "removeImage",
-    "/change-permissions": "changePermissions",
     "/watermark": "watermark",
     "/sanitize": "sanitize",
     "/split": "split",
@@ -567,7 +525,6 @@
     "/scanner-image-split": "scannerImageSplit",
     "/edit-table-of-contents": "editTableOfContents",
     "/scanner-effect": "scannerEffect",
-    "/auto-rename": "autoRename",
     "/page-layout": "pageLayout",
     "/scale-pages": "scalePages",
     "/adjust-contrast": "adjustContrast",
@@ -579,17 +536,13 @@
     "/redact": "redact",
     "/flatten": "flatten",
     "/remove-cert-sign": "removeCertSign",
-    "/unlock-p-d-f-forms": "unlockPDFForms",
     "/compress": "compress",
     "/extract-pages": "extractPages",
     "/reorganize-pages": "reorganizePages",
     "/extract-images": "extractImages",
-    "/add-stamp": "addStamp",
     "/add-attachments": "addAttachments",
     "/change-metadata": "changeMetadata",
     "/overlay-pdfs": "overlayPdfs",
-    "/get-pdf-info": "getPdfInfo",
-    "/validate-signature": "validateSignature",
     "/timestamp-pdf": "timestampPdf",
     "/replace-color": "replaceColor",
     "/show-j-s": "showJS",
@@ -598,7 +551,6 @@
     "/form-fill": "formFill",
     "/multi-tool": "multiTool",
     "/read": "read",
-    "/automate": "automate",
     "/dev-api": "devApi",
     "/dev-folder-scanning": "devFolderScanning",
     "/dev-sso-guide": "devSsoGuide",
@@ -625,10 +577,9 @@
     "/pdf-to-cbz": "convert",
     "/manage-signatures": "certSign",
     "/remove-certificate-sign": "removeCertSign",
-    "/unlock-pdf-forms": "unlockPDFForms",
     "/sanitize-pdf": "sanitize",
-    "/ocr-pdf": "ocr",
     "/add-watermark": "watermark",
+    "/ocr-pdf": "ocr",
     "/single-large-page": "pdfToSinglePage",
     "/auto-split-pdf": "split",
     "/auto-size-split-pdf": "split",
@@ -644,12 +595,9 @@
     "/pdf-to-text": "convert",
     "/pdf-to-html": "convert",
     "/auto-redact": "redact",
-    "/stamp": "addStamp",
     "/view-pdf": "read",
-    "/get-info-on-pdf": "getPdfInfo",
     "/remove-image-pdf": "removeImage",
     "/replace-and-invert-color-pdf": "replaceColor",
-    "/pipeline": "automate",
     "/extract-image-scans": "scannerImageSplit",
     "/show-javascript": "showJS",
     "/split-by-size-or-count": "split",

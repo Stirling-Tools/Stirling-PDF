@@ -16,13 +16,11 @@ export const CORE_REGULAR_TOOL_IDS = [
   "sign",
   "sharedSign",
   "addText",
-  "addPassword",
   "removePassword",
   "removePages",
   "removeBlanks",
   "removeAnnotations",
   "removeImage",
-  "changePermissions",
   "watermark",
   "sanitize",
   "split",
@@ -37,7 +35,6 @@ export const CORE_REGULAR_TOOL_IDS = [
   "scannerImageSplit",
   "editTableOfContents",
   "scannerEffect",
-  "autoRename",
   "pageLayout",
   "scalePages",
   "adjustContrast",
@@ -49,17 +46,13 @@ export const CORE_REGULAR_TOOL_IDS = [
   "redact",
   "flatten",
   "removeCertSign",
-  "unlockPDFForms",
   "compress",
   "extractPages",
   "reorganizePages",
   "extractImages",
-  "addStamp",
   "addAttachments",
   "changeMetadata",
   "overlayPdfs",
-  "getPdfInfo",
-  "validateSignature",
   "timestampPdf",
   "replaceColor",
   "showJS",
@@ -68,7 +61,7 @@ export const CORE_REGULAR_TOOL_IDS = [
   "formFill",
 ] as const;
 
-export const CORE_SUPER_TOOL_IDS = ["multiTool", "read", "automate"] as const;
+export const CORE_SUPER_TOOL_IDS = ["multiTool", "read"] as const;
 
 export const CORE_LINK_TOOL_IDS = [
   "devApi",

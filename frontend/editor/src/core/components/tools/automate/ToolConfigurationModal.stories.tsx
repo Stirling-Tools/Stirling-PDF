@@ -25,8 +25,8 @@ export const Default: Story = {
     opened: true,
     tool: {
       id: "1",
-      operation: "autoRename",
-      name: "Auto Rename",
+      operation: "compress",
+      name: "Compress",
     },
     onSave: () => {},
     onCancel: () => {},
@@ -52,11 +52,11 @@ function DemoSettings({
 }
 
 const registryWithSettings: Partial<ToolRegistry> = {
-  autoRename: {
+  compress: {
     icon: null,
-    name: "Auto Rename",
+    name: "Compress",
     component: null,
-    description: "Automatically rename files.",
+    description: "Compress the PDF.",
     categoryId: ToolCategoryId.STANDARD_TOOLS,
     subcategoryId: SubcategoryId.GENERAL,
     automationSettings: DemoSettings,
@@ -69,8 +69,8 @@ export const WithSettings: Story = {
     opened: true,
     tool: {
       id: "1",
-      operation: "autoRename",
-      name: "Auto Rename",
+      operation: "compress",
+      name: "Compress",
       parameters: { prefix: "invoice-" },
     },
     onSave: () => {},

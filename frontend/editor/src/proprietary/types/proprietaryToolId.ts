@@ -10,7 +10,11 @@ export const PROPRIETARY_REGULAR_TOOL_IDS = [] as const;
 // chat orchestrator (which may invoke one or more underlying tools). Lives here
 // as a super-tool so ``ToolOperation.toolId`` stays typed; not user-pickable —
 // see ChatContext.tsx. The tool registry doesn't include it as an entry.
-export const PROPRIETARY_SUPER_TOOL_IDS = ["ai-workflow"] as const;
+// "policy" is the same pattern for Policies: a policy run is a multi-tool
+// automation (redact/watermark/sanitize/…), not any single tool, so file
+// version provenance is stamped with this marker rather than one of its
+// underlying steps — see usePolicyAutoRun.ts.
+export const PROPRIETARY_SUPER_TOOL_IDS = ["ai-workflow", "policy"] as const;
 
 export const PROPRIETARY_LINK_TOOL_IDS = [] as const;
 

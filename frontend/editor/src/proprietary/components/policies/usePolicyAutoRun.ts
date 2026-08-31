@@ -806,12 +806,12 @@ async function importOutputs(
 
   if (parentStub) {
     // Replace the input file with a versioned child (preserves its history).
-    // The version records "automate" as its origin tool — a policy is a
+    // The version records "policy" as its origin tool — a policy is a
     // multi-tool automation, not any single tool (redact/watermark/sanitize/…).
     const { stirlingFiles, stubs } = await createStirlingFilesAndStubs(
       files,
       parentStub,
-      "automate",
+      "policy",
     );
     // Transitive provenance for the PERSISTED record, mirroring what the
     // CONSUME_FILES reducer computes for workspace state: the output derives

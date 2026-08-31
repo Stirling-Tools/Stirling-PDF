@@ -8,7 +8,7 @@ export type LogoVariant = "modern" | "classic";
 
 export type PdfRenderMode = "normal" | "dark" | "sepia";
 
-export type StartupView = "tools" | "read" | "automate";
+export type StartupView = "tools" | "read";
 
 export type ViewerZoomSetting =
   | "auto"

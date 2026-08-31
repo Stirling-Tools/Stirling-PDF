@@ -85,11 +85,9 @@ export default function HomePage() {
   const {
     selectedTool,
     selectedToolKey,
-    handleToolSelect,
     handleBackToTools,
     readerMode,
     setLeftPanelView,
-    toolAvailability,
     customWorkbenchViews,
   } = useToolWorkflow();
 
@@ -481,29 +479,6 @@ export default function HomePage() {
                   {t("quickAccess.allTools", "Tools")}
                 </span>
               </Button>
-              {toolAvailability["automate"]?.available !== false && (
-                <Button
-                  variant="tertiary"
-                  className="mobile-bottom-button"
-                  aria-label={t("quickAccess.automate", "Automate")}
-                  onClick={() => {
-                    leaveMyFiles();
-                    handleToolSelect("automate");
-                    if (isMobile) {
-                      setActiveMobileView("tools");
-                    }
-                  }}
-                >
-                  <LocalIcon
-                    icon="automation-outline"
-                    width="1.5rem"
-                    height="1.5rem"
-                  />
-                  <span className="mobile-bottom-button-label">
-                    {t("quickAccess.automate", "Automate")}
-                  </span>
-                </Button>
-              )}
               <Button
                 variant="tertiary"
                 className="mobile-bottom-button"

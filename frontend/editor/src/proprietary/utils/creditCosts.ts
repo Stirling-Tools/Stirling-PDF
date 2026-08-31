@@ -30,12 +30,9 @@ export const TOOL_CREDIT_COSTS: Partial<Record<ToolId, number>> = {
   rotate: CREDIT_COSTS.SMALL,
   removePages: CREDIT_COSTS.SMALL,
   addText: CREDIT_COSTS.SMALL,
-  addPassword: CREDIT_COSTS.SMALL,
   removePassword: CREDIT_COSTS.SMALL,
-  changePermissions: CREDIT_COSTS.SMALL,
   flatten: CREDIT_COSTS.SMALL,
   repair: CREDIT_COSTS.SMALL,
-  unlockPDFForms: CREDIT_COSTS.SMALL,
   crop: CREDIT_COSTS.SMALL,
   addPageNumbers: CREDIT_COSTS.SMALL,
   extractPages: CREDIT_COSTS.SMALL,
@@ -50,8 +47,6 @@ export const TOOL_CREDIT_COSTS: Partial<Record<ToolId, number>> = {
   multiTool: CREDIT_COSTS.SMALL,
   compare: CREDIT_COSTS.SMALL,
   addAttachments: CREDIT_COSTS.SMALL,
-  getPdfInfo: CREDIT_COSTS.MEDIUM,
-  validateSignature: CREDIT_COSTS.SMALL,
   read: CREDIT_COSTS.SMALL,
 
   // Medium operations (3 credits)
@@ -63,10 +58,8 @@ export const TOOL_CREDIT_COSTS: Partial<Record<ToolId, number>> = {
   bookletImposition: CREDIT_COSTS.MEDIUM,
   pdfToSinglePage: CREDIT_COSTS.MEDIUM,
   removeBlanks: CREDIT_COSTS.MEDIUM,
-  autoRename: CREDIT_COSTS.MEDIUM,
   sanitize: CREDIT_COSTS.MEDIUM,
   addImage: CREDIT_COSTS.MEDIUM,
-  addStamp: CREDIT_COSTS.MEDIUM,
   extractImages: CREDIT_COSTS.MEDIUM,
   overlayPdfs: CREDIT_COSTS.MEDIUM,
   pageLayout: CREDIT_COSTS.MEDIUM,
@@ -83,9 +76,6 @@ export const TOOL_CREDIT_COSTS: Partial<Record<ToolId, number>> = {
   ocr: CREDIT_COSTS.LARGE,
   certSign: CREDIT_COSTS.LARGE,
   timestampPdf: CREDIT_COSTS.LARGE,
-
-  // Extra large operations (10 credits)
-  automate: CREDIT_COSTS.XLARGE,
 };
 
 /**

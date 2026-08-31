@@ -27,9 +27,9 @@ const registry: Partial<ToolRegistry> = {
     "Rotate",
     "turn,flip,orient,rotate,orientation,landscape,portrait,90 degrees,180 degrees,clockwise,anticlockwise,counter-clockwise,fix orientation",
   ),
-  addPassword: makeEntry(
-    "Add Password",
-    "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access",
+  removePassword: makeEntry(
+    "Remove Password",
+    "unlock,remove password,unlock PDF,decrypt,remove encryption,unprotect,open protected PDF,password removal,unlock protected,disable password,remove security,remove owner password",
   ),
   changeMetadata: makeEntry(
     "Change Metadata",
@@ -67,7 +67,7 @@ describe("filterToolRegistryByQuery", () => {
   });
 
   it("matches tools by tag substring", () => {
-    expect(idsFor("protect")).toEqual(["addPassword"]);
+    expect(idsFor("protect")).toEqual(["removePassword"]);
     expect(idsFor("orientation")).toEqual(["rotate"]);
   });
 

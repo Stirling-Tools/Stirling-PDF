@@ -57,7 +57,7 @@ export const SETTINGS_SEARCH_INDEX: SettingsSearchEntry[] = [
     anchor: "setting-startup-view",
     labelKey: "settings.general.defaultStartupView",
     labelFallback: "Default view on launch",
-    keywords: ["startup", "launch", "home", "reader", "automate"],
+    keywords: ["startup", "launch", "home", "reader"],
   },
   {
     section: "general",

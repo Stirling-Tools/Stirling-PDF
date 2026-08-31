@@ -23,27 +23,22 @@ import { getSynonyms } from "@app/utils/toolSynonyms";
 import { useProprietaryToolRegistry } from "@app/data/useProprietaryToolRegistry";
 import { compressOperationConfig } from "@app/hooks/tools/compress/useCompressOperation";
 import { splitOperationConfig } from "@app/hooks/tools/split/useSplitOperation";
-import { addPasswordOperationConfig } from "@app/hooks/tools/addPassword/useAddPasswordOperation";
 import { removePasswordOperationConfig } from "@app/hooks/tools/removePassword/useRemovePasswordOperation";
-import { sanitizeOperationConfig } from "@app/hooks/tools/sanitize/useSanitizeOperation";
 import { repairOperationConfig } from "@app/hooks/tools/repair/useRepairOperation";
+import { sanitizeOperationConfig } from "@app/hooks/tools/sanitize/useSanitizeOperation";
 import { addWatermarkOperationConfig } from "@app/hooks/tools/addWatermark/useAddWatermarkOperation";
-import { addStampOperationConfig } from "@app/components/tools/addStamp/useAddStampOperation";
+import { flattenOperationConfig } from "@app/hooks/tools/flatten/useFlattenOperation";
 import { addAttachmentsOperationConfig } from "@app/hooks/tools/addAttachments/useAddAttachmentsOperation";
-import { unlockPdfFormsOperationConfig } from "@app/hooks/tools/unlockPdfForms/useUnlockPdfFormsOperation";
 import { singleLargePageOperationConfig } from "@app/hooks/tools/singleLargePage/useSingleLargePageOperation";
 import { ocrOperationConfig } from "@app/hooks/tools/ocr/useOCROperation";
 import { convertOperationConfig } from "@app/hooks/tools/convert/useConvertOperation";
 import { removeCertificateSignOperationConfig } from "@app/hooks/tools/removeCertificateSign/useRemoveCertificateSignOperation";
-import { changePermissionsOperationConfig } from "@app/hooks/tools/changePermissions/useChangePermissionsOperation";
 import { certSignOperationConfig } from "@app/hooks/tools/certSign/useCertSignOperation";
 import { timestampPdfOperationConfig } from "@app/hooks/tools/timestampPdf/useTimestampPdfOperation";
 import { bookletImpositionOperationConfig } from "@app/hooks/tools/bookletImposition/useBookletImpositionOperation";
 import { mergeOperationConfig } from "@app/hooks/tools/merge/useMergeOperation";
 import { editTableOfContentsOperationConfig } from "@app/hooks/tools/editTableOfContents/useEditTableOfContentsOperation";
-import { autoRenameOperationConfig } from "@app/hooks/tools/autoRename/useAutoRenameOperation";
 import { usePrototypeToolRegistry } from "@app/data/usePrototypeToolRegistry";
-import { flattenOperationConfig } from "@app/hooks/tools/flatten/useFlattenOperation";
 import { redactOperationConfig } from "@app/hooks/tools/redact/useRedactOperation";
 import { rotateOperationConfig } from "@app/hooks/tools/rotate/useRotateOperation";
 import { autoRotateOperationConfig } from "@app/hooks/tools/autoRotate/useAutoRotateOperation";
@@ -323,28 +318,31 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         versionStatus: "alpha",
       },
 
-      // Document Security
-
-      addPassword: {
+      formFill: {
         icon: (
-          <LocalIcon icon="password-rounded" width="1.5rem" height="1.5rem" />
+          <LocalIcon
+            icon="text-fields-rounded"
+            width="1.5rem"
+            height="1.5rem"
+          />
         ),
-        name: t("home.addPassword.title", "Add Password"),
-        component: lazy(() => import("@app/tools/AddPassword")),
+        name: t("home.formFill.title", "Fill Form"),
+        component: lazy(() => import("@app/tools/formFill/FormFill")),
         description: t(
-          "home.addPassword.desc",
-          "Add password protection and restrictions to PDF files",
+          "home.formFill.desc",
+          "Fill PDF form fields interactively with a visual editor",
         ),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
-        subcategoryId: SubcategoryId.DOCUMENT_SECURITY,
-        maxFiles: -1,
-        endpoints: ["add-password"],
-        operationConfig: asRegistryConfig(addPasswordOperationConfig),
-        automationSettings: lazySettings(
-          () => import("@app/components/tools/addPassword/AddPasswordSettings"),
-        ),
-        synonyms: getSynonyms(t, "addPassword"),
+        subcategoryId: SubcategoryId.GENERAL,
+        workbench: "viewer" as const,
+        endpoints: ["form-fill"],
+        automationSettings: null,
+        supportsAutomate: false,
+        synonyms: ["form", "fill", "fillable", "input", "field", "acroform"],
       },
+
+      // Document Security
+
       watermark: {
         icon: (
           <LocalIcon
@@ -369,31 +367,6 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
             import("@app/components/tools/addWatermark/AddWatermarkSingleStepSettings"),
         ),
         synonyms: getSynonyms(t, "watermark"),
-      },
-      addStamp: {
-        icon: (
-          <LocalIcon
-            icon="approval-outline-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
-        name: t("home.addStamp.title", "Add Stamp to PDF"),
-        component: lazy(() => import("@app/tools/AddStamp")),
-        description: t(
-          "home.addStamp.desc",
-          "Add text or add image stamps at set locations",
-        ),
-        categoryId: ToolCategoryId.STANDARD_TOOLS,
-        subcategoryId: SubcategoryId.DOCUMENT_SECURITY,
-        synonyms: getSynonyms(t, "addStamp"),
-        maxFiles: -1,
-        endpoints: ["add-stamp"],
-        operationConfig: asRegistryConfig(addStampOperationConfig),
-        automationSettings: lazySettings(
-          () =>
-            import("@app/components/tools/addStamp/AddStampAutomationSettings"),
-        ),
       },
       sanitize: {
         icon: (
@@ -442,115 +415,6 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
           () => import("@app/components/tools/flatten/FlattenSettings"),
         ),
         synonyms: getSynonyms(t, "flatten"),
-      },
-      unlockPDFForms: {
-        icon: (
-          <LocalIcon
-            icon="preview-off-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
-        name: t("home.unlockPDFForms.title", "Unlock PDF Forms"),
-        component: lazy(() => import("@app/tools/UnlockPdfForms")),
-        description: t(
-          "home.unlockPDFForms.desc",
-          "Remove read-only property of form fields in a PDF document.",
-        ),
-        categoryId: ToolCategoryId.STANDARD_TOOLS,
-        subcategoryId: SubcategoryId.DOCUMENT_SECURITY,
-        maxFiles: -1,
-        endpoints: ["unlock-pdf-forms"],
-        operationConfig: asRegistryConfig(unlockPdfFormsOperationConfig),
-        synonyms: getSynonyms(t, "unlockPDFForms"),
-        automationSettings: null,
-      },
-      formFill: {
-        icon: (
-          <LocalIcon
-            icon="text-fields-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
-        name: t("home.formFill.title", "Fill Form"),
-        component: lazy(() => import("@app/tools/formFill/FormFill")),
-        description: t(
-          "home.formFill.desc",
-          "Fill PDF form fields interactively with a visual editor",
-        ),
-        categoryId: ToolCategoryId.STANDARD_TOOLS,
-        subcategoryId: SubcategoryId.GENERAL,
-        workbench: "viewer" as const,
-        endpoints: ["form-fill"],
-        automationSettings: null,
-        supportsAutomate: false,
-        synonyms: ["form", "fill", "fillable", "input", "field", "acroform"],
-      },
-      changePermissions: {
-        icon: <LocalIcon icon="lock-outline" width="1.5rem" height="1.5rem" />,
-        name: t("home.changePermissions.title", "Change Permissions"),
-        component: lazy(() => import("@app/tools/ChangePermissions")),
-        description: t(
-          "home.changePermissions.desc",
-          "Change document restrictions and permissions",
-        ),
-        categoryId: ToolCategoryId.STANDARD_TOOLS,
-        subcategoryId: SubcategoryId.DOCUMENT_SECURITY,
-        maxFiles: -1,
-        endpoints: ["add-password"],
-        operationConfig: asRegistryConfig(changePermissionsOperationConfig),
-        automationSettings: lazySettings(
-          () =>
-            import("@app/components/tools/changePermissions/ChangePermissionsSettings"),
-        ),
-        synonyms: getSynonyms(t, "changePermissions"),
-      },
-      getPdfInfo: {
-        icon: (
-          <LocalIcon
-            icon="fact-check-outline-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
-        name: t("home.getPdfInfo.title", "Get ALL Info on PDF"),
-        component: lazy(() => import("@app/tools/GetPdfInfo")),
-        description: t(
-          "home.getPdfInfo.desc",
-          "Grabs any and all information possible on PDFs",
-        ),
-        categoryId: ToolCategoryId.STANDARD_TOOLS,
-        subcategoryId: SubcategoryId.VERIFICATION,
-        endpoints: ["get-info-on-pdf"],
-        synonyms: getSynonyms(t, "getPdfInfo"),
-        supportsAutomate: false,
-        automationSettings: null,
-        maxFiles: 1,
-      },
-      validateSignature: {
-        icon: (
-          <LocalIcon
-            icon="verified-outline-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
-        name: t("home.validateSignature.title", "Validate PDF Signature"),
-        component: lazy(() => import("@app/tools/ValidateSignature")),
-        description: t(
-          "home.validateSignature.desc",
-          "Verify digital signatures and certificates in PDF documents",
-        ),
-        categoryId: ToolCategoryId.STANDARD_TOOLS,
-        subcategoryId: SubcategoryId.VERIFICATION,
-        maxFiles: -1,
-        endpoints: ["validate-signature"],
-        synonyms: getSynonyms(t, "validateSignature"),
-        // Reports on signatures rather than transforming the PDF, and its hook is
-        // not on the operationConfig seam, so it cannot run as an automation step.
-        supportsAutomate: false,
-        automationSettings: null,
       },
 
       // Document Review
@@ -1047,44 +911,6 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         automationSettings: null,
       },
 
-      // Automation
-
-      automate: {
-        icon: (
-          <LocalIcon icon="automation-outline" width="1.5rem" height="1.5rem" />
-        ),
-        name: t("home.automate.title", "Automate"),
-        component: lazy(() => import("@app/tools/Automate")),
-        description: t(
-          "home.automate.desc",
-          "Build multi-step workflows by chaining together PDF actions. Ideal for recurring tasks.",
-        ),
-        categoryId: ToolCategoryId.ADVANCED_TOOLS,
-        subcategoryId: SubcategoryId.AUTOMATION,
-        maxFiles: -1,
-        supportedFormats: CONVERT_SUPPORTED_FORMATS,
-        endpoints: ["automate"],
-        synonyms: getSynonyms(t, "automate"),
-        automationSettings: null,
-      },
-      autoRename: {
-        icon: (
-          <LocalIcon icon="match-word-rounded" width="1.5rem" height="1.5rem" />
-        ),
-        name: t("home.autoRename.title", "Auto Rename PDF File"),
-        component: lazy(() => import("@app/tools/AutoRename")),
-        maxFiles: -1,
-        endpoints: ["auto-rename"],
-        operationConfig: asRegistryConfig(autoRenameOperationConfig),
-        description: t(
-          "home.autoRename.desc",
-          "Automatically rename PDF files based on their content",
-        ),
-        categoryId: ToolCategoryId.ADVANCED_TOOLS,
-        subcategoryId: SubcategoryId.AUTOMATION,
-        synonyms: getSynonyms(t, "autoRename"),
-        automationSettings: null,
-      },
       // Advanced Formatting
 
       adjustContrast: {

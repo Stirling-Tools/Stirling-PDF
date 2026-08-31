@@ -28,15 +28,13 @@ const TEMPLATE = `<!doctype html>
 describe("getToolOgImage (client resolver)", () => {
   it("maps a tool id to its image (camelCase id, kebab filename)", () => {
     expect(getToolOgImage("", "compress")).toBe("/og_images/compress.png");
-    expect(getToolOgImage("", "addPassword")).toBe(
-      "/og_images/add-password.png",
-    );
+    expect(getToolOgImage("", "addText")).toBe("/og_images/add-text.png");
   });
 
   it("maps tools whose art uses a legacy v1 filename", () => {
     expect(getToolOgImage("", "merge")).toBe("/og_images/mergePdfs.png");
-    expect(getToolOgImage("", "getPdfInfo")).toBe(
-      "/og_images/get-all-info-on-pdf.png",
+    expect(getToolOgImage("", "pdfToSinglePage")).toBe(
+      "/og_images/single-large-page.png",
     );
   });
 

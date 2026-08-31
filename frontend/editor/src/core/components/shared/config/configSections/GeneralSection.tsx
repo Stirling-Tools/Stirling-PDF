@@ -620,10 +620,6 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
                   label: t("settings.general.startupView.read", "Reader"),
                   value: "read",
                 },
-                {
-                  label: t("settings.general.startupView.automate", "Automate"),
-                  value: "automate",
-                },
               ]}
             />
           </div>

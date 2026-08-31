@@ -23,7 +23,6 @@ confirmCloseUnsaved = "This file has unsaved changes."
 confirmCloseUnsavedList_one = "You have {{count}} file with unsaved changes.\n\n{{fileList}}"
 confirmCloseUnsavedList_other = "You have {{count}} files with unsaved changes.\n\n{{fileList}}"
 custom = "Custom..."
-customPosition = "Custom Position"
 customTextTooltip = "Optional custom format for page numbers. Use {n} as placeholder for the number. Example: \"Page {n}\" will show \"Page 1\", \"Page 2\", etc."
 delete = "Delete"
 details = "Details"
@@ -81,7 +80,6 @@ pro = "Pro"
 processingComplete = "Your file is ready."
 processingCompleteMultiple = "{{count}} files are ready."
 property = "Property"
-quickPosition = "Quick Position"
 red = "Red"
 remove = "Remove"
 reset = "Reset"
@@ -302,122 +300,9 @@ title = "Page Number Results"
 5 = "Pages to Number"
 6 = "Custom Text Format"
 
-[addPassword]
-desc = "Encrypt your PDF document with a password."
-submit = "Encrypt"
-tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
-title = "Add Password"
-
-[addPassword.encryption.keyLength]
-128bit = "128-bit (Standard)"
-256bit = "256-bit (High)"
-40bit = "40-bit (Low)"
-label = "Encryption Key Length"
-
-[addPassword.error]
-failed = "An error occurred while encrypting the PDF."
-
-[addPassword.passwords]
-stepTitle = "Passwords & Encryption"
-
-[addPassword.passwords.owner]
-label = "Owner Password"
-placeholder = "Enter owner password"
-
-[addPassword.passwords.user]
-label = "User Password"
-placeholder = "Enter user password"
-
-[addPassword.results]
-title = "Encrypted PDFs"
-
-[addPassword.tooltip.encryption]
-bullet1 = "40-bit: Basic security, compatible with older viewers"
-bullet2 = "128-bit: Standard security, widely supported"
-bullet3 = "256-bit: Maximum security, requires modern viewers"
-text = "Higher encryption levels provide better security but may not be supported by older PDF viewers."
-title = "Encryption Levels"
-
-[addPassword.tooltip.header]
-title = "Password Protection Overview"
-
-[addPassword.tooltip.passwords]
-bullet1 = "User Password: Required to open the PDF"
-bullet2 = "Owner Password: Controls document permissions (not supported by all PDF viewers)"
-text = "User passwords restrict opening the document, while owner passwords control what can be done with the document once opened. You can set both or just one."
-title = "Password Types"
-
-[addPassword.tooltip.permissions]
-text = "These permissions control what users can do with the PDF. Most effective when combined with an owner password."
-title = "Change Permissions"
-
-[addStamp]
-preview = "Preview Stamp"
-tags = "stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
-
 [AddStampRequest]
-alphabet = "Alphabet"
-clickToExpand = "Click to expand"
-customColor = "Custom Text Color"
-customDateDesc = "Custom format"
-customPosition = "Drag the stamp to the desired location in the preview window."
-dateDesc = "Current date"
-datetimeDesc = "Date and time combined"
-dateTimeVars = "Date & Time"
-dynamicVariables = "Dynamic Variables"
-examples = "Examples"
-filenameDesc = "Filename without extension"
-filenameFullDesc = "Filename with extension"
-fileVars = "File Information"
-fontSize = "Font/Image Size"
-imageSize = "Image Size"
-margin = "Margin"
-metadataDesc = "From PDF document properties"
-metadataVars = "Document Metadata"
-multiLine = "multi-line"
-noStampSelected = "No stamp selected. Return to Step 1."
-opacity = "Opacity"
-otherVars = "Other"
-pageNumberDesc = "Current page number"
-pageVars = "Page Information"
-position = "Position"
-positionAndFormatting = "Position & Formatting"
-preview = "Preview:"
-quickPosition = "Select a position on the page to place the stamp."
-rotation = "Rotation"
-selectTemplate = "Select a template..."
-stampSetup = "Stamp Setup"
-stampText = "Stamp Text"
-stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
-stampType = "Stamp Type"
-submit = "Submit"
 tags = "Stamp, Add image, center image, Watermark, PDF, Embed, Customize"
-timeDesc = "Current time"
 title = "Stamp PDF"
-totalPagesDesc = "Total number of pages"
-useTemplate = "Use Template"
-uuidDesc = "Short unique identifier (8 chars)"
-variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
-yearMonthDayDesc = "Individual date parts"
-
-[AddStampRequest.error]
-failed = "An error occurred while adding stamp to the PDF."
-
-[AddStampRequest.results]
-title = "Stamp Results"
-
-[AddStampRequest.template]
-custom = "Custom"
-dateHeader = "Date Header"
-doc-info = "Document Info"
-draft = "Draft Watermark"
-draftWatermark = "Draft Watermark"
-european-date = "European Date (DD/MM/YYYY)"
-europeanDate = "European Date"
-legal-footer = "Legal Footer"
-page-numbers = "Page Numbers"
-pageNumberFooter = "Page Number Footer"
-timestamp = "Timestamp"
 
 [addText]
 applySignatures = "Apply Text"
@@ -2034,45 +1919,14 @@ guest = "Guest"
 user = "User"
 
 [auto-rename]
-description = "Automatically finds the title from your PDF content and uses it as the filename."
-submit = "Auto Rename"
 tags = "auto-detect,header-based,organize,relabel"
 title = "Auto Rename"
 
-[auto-rename.error]
-failed = "An error occurred while auto-renaming the PDF."
-
-[auto-rename.results]
-title = "Auto-Rename Results"
-
-[auto-rename.settings]
-title = "About"
-
-[auto-rename.tooltip.description]
-title = "What it does"
-
-[auto-rename.tooltip.header]
-title = "How Auto-Rename Works"
-
-[auto-rename.tooltip.howItWorks]
-bullet1 = "Looks for text that appears to be a title or heading"
-bullet2 = "Creates a clean, valid filename from the detected title"
-bullet3 = "Keeps the original name if no suitable title is found"
-title = "Smart Renaming"
-
 [automate]
 copyToSaved = "Copy to Saved"
-desc = "Build multi-step workflows by chaining together PDF actions. Ideal for recurring tasks."
 export = "Export"
 exportForFolderScanning = "Export for Folder Scanning"
 import = "Import"
-importPartialSuccess_one = "Imported with {{count}} unmapped operation: {{ops}}"
-importPartialSuccess_other = "Imported with {{count}} unmapped operations: {{ops}}"
-importSuccess = "Imported automation: {{name}}"
-invalidStep = "Invalid step"
-reviewTitle = "Automation Results"
-tags = "workflow,sequence,automation,automate,batch,batch processing,pipeline,chain,multi-step,recurring,scheduled,automatic,process multiple,bulk operations"
-title = "Automate"
 
 [automate.config]
 cancel = "Cancel"
@@ -2082,15 +1936,13 @@ save = "Save Configuration"
 title = "Configure {{toolName}}"
 
 [automate.creation]
-createTitle = "Create Automation"
-editTitle = "Edit Automation"
 export = "Export"
 exportForFolderScanning = "Export for Folder Scanning"
 intro = "Automations run tools sequentially. To get started, add tools in the order you want them to run."
 save = "Save Automation"
 
 [automate.creation.description]
-label = "Description (optional)"
+label = "Description"
 placeholder = "Describe what this automation does..."
 
 [automate.creation.icon]
@@ -2117,62 +1969,6 @@ title = "Unsaved Changes"
 
 [automate.entryMenu]
 label = "Open menu for {{title}}"
-
-[automate.importModal]
-cancel = "Cancel"
-confirm = "Import"
-detectedAutomation = "Automate JSON"
-detectedFolderScan = "Folder Scanning JSON"
-dropHint = "Drop JSON here or click to choose a file"
-dropSubhint = "Both Automate and Folder Scanning configs are accepted"
-dropzoneAriaLabel = "Drop an automation JSON file here"
-intro = "Drop a JSON file or paste its contents below. The format (Automate or Folder Scanning) is detected automatically."
-opCount_one = "{{count}} operation"
-opCount_other = "{{count}} operations"
-parseError = "Could not parse: {{message}}"
-pasteLabel = "Or paste JSON"
-pastePlaceholder = "Paste your automation JSON here…"
-title = "Import automation"
-unresolved = "Unmapped: {{ops}}"
-
-[automate.run]
-title = "Run Automation"
-
-[automate.selection]
-title = "Automation Selection"
-
-[automate.selection.createNew]
-title = "Create New Automation"
-
-[automate.selection.saved]
-title = "Saved"
-
-[automate.selection.suggested]
-title = "Suggested"
-
-[automate.sequence]
-finish = "Finish"
-run = "Run Automation"
-running = "Running Automation..."
-steps_one = "{{count}} step"
-steps_other = "{{count}} steps"
-unnamed = "Unnamed Automation"
-
-[automation.suggested]
-emailPreparation = "Email Preparation"
-emailPreparationDesc = "Optimizes PDFs for email distribution by compressing files, splitting large documents into 20MB chunks for email compatibility, and removing metadata for privacy."
-prePublishSanitization = "Pre-publish Sanitization"
-prePublishSanitizationDesc = "Sanitization workflow that removes all hidden metadata, JavaScript, embedded files, annotations, and flattens forms to prevent data leakage before publishing PDFs online."
-processImages = "Process Images"
-processImagesDesc = "Converts multiple image files into a single PDF document, then applies OCR technology to extract searchable text from the images."
-securePdfIngestion = "Secure PDF Ingestion"
-securePdfIngestionDesc = "Comprehensive PDF processing workflow that sanitizes documents, applies OCR with cleanup, converts to PDF/A format for long-term archival, and optimizes file size."
-secureWorkflow = "Security Workflow"
-secureWorkflowDesc = "Secures PDF documents by removing potentially malicious content like JavaScript and embedded files, then adds password protection to prevent unauthorized access. Password is set to 'password' by default."
-
-[autoRename]
-description = "This tool will automatically rename PDF files based on their content. It analyzes the document to find the most suitable title from the text."
-tags = "auto-detect,header-based,organize,relabel,auto rename,automatic rename,smart rename,rename by content,filename,file naming,detect title"
 
 [autoRotate]
 submit = "Auto Rotate"
@@ -2887,51 +2683,6 @@ false = "False"
 label = "Trapped Status"
 true = "True"
 unknown = "Unknown"
-
-[changePermissions]
-desc = "Change document restrictions and permissions."
-submit = "Change Permissions"
-tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
-title = "Change Permissions"
-
-[changePermissions.error]
-failed = "An error occurred while changing PDF permissions."
-
-[changePermissions.permissions.preventAssembly]
-label = "Prevent assembly of document"
-
-[changePermissions.permissions.preventExtractContent]
-label = "Prevent content extraction"
-
-[changePermissions.permissions.preventExtractForAccessibility]
-label = "Prevent extraction for accessibility"
-
-[changePermissions.permissions.preventFillInForm]
-label = "Prevent filling in form"
-
-[changePermissions.permissions.preventModify]
-label = "Prevent modification"
-
-[changePermissions.permissions.preventModifyAnnotations]
-label = "Prevent annotation modification"
-
-[changePermissions.permissions.preventPrinting]
-label = "Prevent printing"
-
-[changePermissions.permissions.preventPrintingFaithful]
-label = "Prevent printing different formats"
-
-[changePermissions.results]
-title = "Modified PDFs"
-
-[changePermissions.tooltip.description]
-text = "Changes document permissions, allowing/disallowing access to different features in PDF readers."
-
-[changePermissions.tooltip.header]
-title = "Change Permissions"
-
-[changePermissions.tooltip.warning]
-text = "To make these permissions unchangeable, use the Add Password tool to set an owner password."
 
 [chat.actions]
 copy = "Copy message"
@@ -3880,10 +3631,8 @@ versionHistory = "Version history"
 
 [files]
 addFiles = "Add files"
-created = "Created"
 selectFromWorkbench = "Add files to the workbench or "
 selectMultipleFromWorkbench = "Add at least {{count}} files to the workbench or "
-size = "File Size"
 title = "Files"
 upload = "Upload"
 uploadFiles = "Upload Files"
@@ -4330,106 +4079,6 @@ unsavedChanges = "Unsaved changes"
 [formFill.sidebar]
 close = "Close sidebar"
 
-[getPdfInfo]
-downloadJson = "Download JSON"
-downloads = "Downloads"
-indexTitle = "Index"
-noneDetected = "None detected"
-noResults = "Run the tool to generate a report."
-processing = "Extracting information..."
-results = "Results"
-submit = "Get Info"
-tags = "infomation,data,stats,statistics"
-title = "Get Info on PDF"
-
-[getPdfInfo.compliance]
-failed = "Failed"
-failedCount = "failed"
-noVerification = "No Verification Performed"
-noVerificationDesc = "PDF standards compliance was not verified for this document."
-passed = "Passed"
-passedCount = "passed"
-
-[getPdfInfo.error]
-partial = "Some files could not be processed."
-unexpected = "Unexpected error during extraction."
-
-[getPdfInfo.other]
-attachments = "Attachments"
-embeddedFiles = "Embedded Files"
-javaScript = "JavaScript"
-layers = "Layers"
-structureTree = "StructureTree"
-xmp = "XMPMetadata"
-
-[getPdfInfo.perPage]
-annotations = "Annotations"
-fonts = "Fonts"
-images = "Images"
-links = "Links"
-multimedia = "Multimedia"
-size = "Size"
-xobjects = "XObject Counts"
-
-[getPdfInfo.report]
-shortTitle = "PDF Information"
-
-[getPdfInfo.sections]
-basicInfo = "Basic Info"
-compliance = "Compliance"
-documentInfo = "Document Info"
-encryption = "Encryption"
-formFields = "Form Fields"
-metadata = "Metadata"
-other = "Other"
-permissions = "Permissions"
-perPageInfo = "Per Page Info"
-tableOfContents = "Table of Contents"
-
-[getPdfInfo.status]
-complete = "Extraction complete"
-
-[getPdfInfo.summary]
-author = "Author"
-basic = "Basic Information"
-complianceChecked = "Standards verified ({{failed}} failed)"
-compliancePassed = "{{standards}} compliant"
-created = "Created"
-documentInfo = "Document Information"
-fileSize = "File Size"
-language = "Language"
-modified = "Modified"
-noCompliance = "No Compliance Standards"
-overviewTitle = "PDF Overview"
-pages = "Pages"
-pdfVersion = "PDF Version"
-permsAll = "All Permissions Allowed"
-permsMixed = "Some permissions restricted"
-permsRestricted_one = "{{count}} restriction"
-permsRestricted_other = "{{count}} restrictions"
-securityTitle = "Security Status"
-technical = "Technical"
-title = "PDF Summary"
-
-[getPdfInfo.summary.overview]
-text = "This is a {{pages}}-page PDF titled {{title}} created by {{author}} (PDF version {{version}})."
-unknown = "Unknown Author"
-untitled = "an untitled document"
-
-[getPdfInfo.summary.security]
-encrypted = "Encrypted PDF - Password protection present"
-unencrypted = "Unencrypted PDF - No password protection"
-
-[getPdfInfo.summary.tech]
-bookmarks = "Bookmarks"
-embeddedFiles = "Embedded Files"
-fonts = "Fonts"
-formFields = "Form Fields"
-images = "Images"
-javaScript = "JavaScript"
-layers = "Layers"
-multimedia = "Multimedia"
-
 [groupSigning.steps]
 back = "Back"
 completed = "Completed"
@@ -4524,16 +4173,6 @@ desc = "Add Page numbers throughout a document in a set location"
 tags = "number,pagination,count,add page numbers,page numbering,page numbers,footer,header,number pages,sequential,pagination tool"
 title = "Add Page Numbers"
 
-[home.addPassword]
-desc = "Add password protection and restrictions to PDF files"
-tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
-title = "Add Password"
-
-[home.addStamp]
-desc = "Add text or add image stamps at set locations"
-tags = "stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
-title = "Add Stamp to PDF"
-
 [home.addText]
 desc = "Add custom text anywhere in your PDF"
 tags = "text,annotation,label,add text,insert text,place text,text box,add label,add caption,type on PDF,write on PDF,add words,add note,text overlay,typewriter"
@@ -4548,16 +4187,6 @@ title = "Adjust Colors/Contrast"
 desc = "Highlight, draw, add notes and shapes in the viewer"
 tags = "annotate,highlight,draw,markup,comment,notes,review,redline,feedback,markup tools,sticky notes,shapes,arrows,text box,freehand"
 title = "Annotate"
-
-[home.automate]
-desc = "Build multi-step workflows by chaining together PDF actions. Ideal for recurring tasks."
-tags = "workflow,sequence,automation,automate,batch,batch processing,pipeline,chain,multi-step,recurring,scheduled,automatic,process multiple,bulk operations"
-title = "Automate"
-
-[home.autoRename]
-desc = "Auto renames a PDF file based on its detected header"
-tags = "auto-detect,header-based,organize,relabel,auto rename,automatic rename,smart rename,rename by content,filename,file naming,detect title"
-title = "Auto Rename PDF File"
 
 [home.autoRotate]
 desc = "Detect each page's orientation and rotate it upright automatically."
@@ -4586,11 +4215,6 @@ title = "Sign with Certificate"
 desc = "Change/Remove/Add metadata from a PDF document"
 tags = "edit,modify,update,metadata,properties,document properties,author,title,subject,keywords,creator,producer,info,document info,file properties"
 title = "Change Metadata"
-
-[home.changePermissions]
-desc = "Change document restrictions and permissions"
-tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
-title = "Change Permissions"
 
 [home.compare]
 desc = "Compares and shows the differences between 2 PDF Documents"
@@ -4655,11 +4279,6 @@ title = "Flatten"
 [home.formFill]
 desc = "Fill PDF form fields interactively with a visual editor"
 title = "Fill Form"
-
-[home.getPdfInfo]
-desc = "Grabs any and all information possible on PDFs"
-tags = "info,metadata,details,PDF info,document info,properties,file info,get info,show info,view properties,document properties,statistics,page count,file details,inspect"
-title = "Get ALL Info on PDF"
 
 [home.manageCertificates]
 tags = "certificates,import,export,manage certificates,digital certificates,certificate management,PFX,P12,keystore,import certificate,export certificate,certificate store,PKI"
@@ -4840,16 +4459,6 @@ desc = "Add an RFC 3161 document timestamp to prove when your PDF existed"
 tags = "timestamp,RFC 3161,TSA,time stamp authority,document timestamp,proof of existence,timestamp token,trusted timestamp,sign timestamp,notarize"
 title = "Timestamp PDF"
 
-[home.unlockPDFForms]
-desc = "Remove read-only property of form fields in a PDF document."
-tags = "unlock,enable,edit,unlock forms,enable forms,editable forms,remove read only,make editable,unlock fields,enable editing,form fields,fillable,unprotect forms"
-title = "Unlock PDF Forms"
-
-[home.validateSignature]
-desc = "Verify digital signatures and certificates in PDF documents"
-tags = "validate,verify,certificate,validate signature,verify signature,check signature,digital signature,certificate verification,signature validation,authentic,trust,signed,verify certificate"
-title = "Validate PDF Signature"
-
 [home.viewPdf]
 title = "View/Edit PDF"
 
@@ -4972,12 +4581,6 @@ updatePassword = "Update password"
 useMagicLink = "Use magic link instead"
 username = "Username"
 youAreLoggedIn = "You are logged in!"
-
-[margin]
-large = "Large"
-medium = "Medium"
-small = "Small"
-xLarge = "Extra Large"
 
 [MarkdownToPDF]
 header = "Markdown To PDF"
@@ -9184,7 +8787,6 @@ label = "SMTP Username"
 
 [quickAccess]
 allTools = "Tools"
-automate = "Automate"
 config = "Config"
 files = "Files"
 
@@ -10917,18 +10519,6 @@ noTools = "No tools available"
 [tooltip]
 close = "Close tooltip"
 
-[unlockPDFForms]
-description = "This tool will remove read-only restrictions from PDF form fields, making them editable and fillable."
-submit = "Unlock Forms"
-tags = "remove,delete,form,field,readonly"
-title = "Remove Read-Only from Form Fields"
-
-[unlockPDFForms.error]
-failed = "An error occurred while unlocking PDF forms."
-
-[unlockPDFForms.results]
-title = "Unlocked Forms Results"
-
 [update]
 allReleases = "All Releases"
 breaking = "Breaking"
@@ -11196,104 +10786,6 @@ teamOwner = "Team Owner"
 grantProcessor = "Grant Processor to team"
 revokeProcessor = "Revoke Processor from team"
 
-[validateSignature]
-date = "Date"
-downloadCsv = "Download CSV"
-downloadJson = "Download JSON"
-downloadPdf = "Download PDF Report"
-finalizing = "Preparing downloads..."
-location = "Location"
-noResults = "Run the validation to generate a report."
-noSignatures = "No digital signatures found in this document"
-noSignaturesShort = "No signatures"
-processing = "Validating signatures..."
-reason = "Reason"
-results = "Validation Results"
-selectCustomCert = "Custom Certificate File X.509 (Optional)"
-signatureDate = "Signature Date"
-signer = "Signer"
-submit = "Validate Signatures"
-tags = "signature,verify,validate,pdf,certificate,digital signature,Validate Signature,Validate certificate"
-title = "Validate PDF Signatures"
-totalSignatures = "Total Signatures"
-
-[validateSignature.cert]
-algorithm = "Algorithm"
-bits = "bits"
-details = "Certificate Details"
-issuer = "Issuer"
-keySize = "Key Size"
-keyUsage = "Key Usage"
-selfSigned = "Self-Signed"
-serialNumber = "Serial Number"
-subject = "Subject"
-validFrom = "Valid From"
-validUntil = "Valid Until"
-version = "Version"
-
-[validateSignature.downloadType]
-csv = "CSV"
-json = "JSON"
-pdf = "PDF"
-
-[validateSignature.error]
-allFailed = "Unable to validate the selected files."
-partial = "Some files could not be validated."
-reportGeneration = "Could not generate the PDF report. JSON and CSV are available."
-unexpected = "Unexpected error during validation."
-
-[validateSignature.issue]
-certExpired = "Certificate expired"
-certRevocationUnknown = "Certificate revocation status unknown"
-certRevoked = "Certificate revoked"
-chainInvalid = "Certificate chain invalid"
-documentModified = "Document modified after signing - content was added outside the signed area"
-revocationNotChecked = "Revocation was not checked"
-selfSigned = "Self-signed - signer identity not verified"
-signatureInvalid = "Signature cryptographic check failed"
-trustInvalid = "Certificate not trusted"
-
-[validateSignature.report]
-continued = "Continued"
-downloads = "Downloads"
-entryLabel = "Signature Summary"
-filesEvaluated_one = "{{count}} file evaluated"
-filesEvaluated_other = "{{count}} files evaluated"
-footer = "Validated via Stirling PDF"
-generatedAt = "Generated"
-noPdf = "PDF report will be available after a successful validation."
-page = "Page"
-shortTitle = "Signature Summary"
-signatureCountLabel_one = "{{count}} signature"
-signatureCountLabel_other = "{{count}} signatures"
-signaturesFound_one = "{{count}} signature detected"
-signaturesFound_other = "{{count}} signatures detected"
-signaturesInvalid = "{{count}} invalid"
-signaturesUnverified_one = "{{count}} needs review"
-signaturesUnverified_other = "{{count}} need review"
-signaturesValid = "{{count}} fully valid"
-title = "Signature Validation Report"
-
-[validateSignature.report.fields]
-created = "Created"
-fileSize = "File Size"
-signatureCount = "Total Signatures"
-signatureDate = "Signature Date"
-
-[validateSignature.settings]
-certHint = "Upload a trusted X.509 certificate to validate against a custom trust source."
-title = "Validation Settings"
-
-[validateSignature.signature]
-_value = "Signature"
-
-[validateSignature.status]
-complete = "Validation complete"
-invalid = "Invalid"
-untrustedShort = "Unverified"
-valid = "Valid"
-validUntrusted = "Valid, signer not verified"
-
 [viewer]
 cannotPreviewFile = "Cannot Preview File"
 copyText = "Copy"
@@ -11431,9 +10923,6 @@ closeSidebar = "Close thumbnails sidebar"
 [viewPdf]
 tags = "view,read,annotate,text,image,highlight,edit"
 title = "View/Edit PDF"
-
-[warning]
-tooltipTitle = "Warning"
 
 [watchedFolders]
 alreadyInFolder = "Already in this folder"
@@ -11728,10 +11217,6 @@ bullet2 = "Common examples: 'CONFIDENTIAL', 'DRAFT', company name"
 bullet3 = "Emoji characters are not supported and will be filtered out"
 text = "Enter the text that will appear as your watermark across the document."
 title = "Watermark Text"
-
-[watermark.type]
-1 = "Text"
-2 = "Image"
 
 [watermark.watermarkType]
 image = "Image"

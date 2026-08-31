@@ -12,7 +12,6 @@ export const URL_TO_TOOL_MAP: Record<string, ToolId> = {
   "/rotate": "rotate",
   "/rotate-pdf": "rotate",
   "/repair": "repair",
-  "/flatten": "flatten",
   "/crop": "crop",
 
   // Convert tool and all its variants
@@ -35,25 +34,21 @@ export const URL_TO_TOOL_MAP: Record<string, ToolId> = {
   "/pdf-to-cbz": "convert",
 
   // Security tools
-  "/add-password": "addPassword",
   "/remove-password": "removePassword",
-  "/change-permissions": "changePermissions",
   "/cert-sign": "certSign",
   "/manage-signatures": "certSign",
   "/remove-certificate-sign": "removeCertSign",
   "/remove-cert-sign": "removeCertSign",
-  "/unlock-pdf-forms": "unlockPDFForms",
-  "/validate-signature": "validateSignature",
-
-  // Content manipulation
   "/sanitize": "sanitize",
   "/sanitize-pdf": "sanitize",
-  "/ocr": "ocr",
-  "/ocr-pdf": "ocr",
   "/watermark": "watermark",
   "/add-watermark": "watermark",
+  "/flatten": "flatten",
+
+  // Content manipulation
+  "/ocr": "ocr",
+  "/ocr-pdf": "ocr",
   "/add-image": "addImage",
-  "/add-stamp": "addStamp",
   "/add-page-numbers": "addPageNumbers",
   "/redact": "redact",
 
@@ -86,20 +81,17 @@ export const URL_TO_TOOL_MAP: Record<string, ToolId> = {
 
   // Metadata and info
   "/change-metadata": "changeMetadata",
-  "/get-pdf-info": "getPdfInfo",
   "/add-attachments": "addAttachments",
 
   // Advanced tools
   "/overlay-pdfs": "overlayPdfs",
   "/edit-table-of-contents": "editTableOfContents",
-  "/auto-rename": "autoRename",
   "/compare": "compare",
   "/multi-tool": "multiTool",
   "/show-js": "showJS",
 
   // Special/utility tools
   "/read": "read",
-  "/automate": "automate",
   "/sign": "sign",
   "/add-text": "addText",
   "/pdf-text-editor": "pdfTextEditor",
@@ -120,12 +112,9 @@ export const URL_TO_TOOL_MAP: Record<string, ToolId> = {
   "/pdf-to-text": "convert",
   "/pdf-to-html": "convert",
   "/auto-redact": "redact",
-  "/stamp": "addStamp",
   "/view-pdf": "read",
-  "/get-info-on-pdf": "getPdfInfo",
   "/remove-image-pdf": "removeImage",
   "/replace-and-invert-color-pdf": "replaceColor",
-  "/pipeline": "automate",
   "/extract-image-scans": "scannerImageSplit",
   "/show-javascript": "showJS",
   "/scanner-effect": "scannerEffect",

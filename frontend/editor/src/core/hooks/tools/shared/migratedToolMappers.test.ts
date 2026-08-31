@@ -13,15 +13,11 @@ import { splitOperationConfig } from "@app/hooks/tools/split/useSplitOperation";
 // Rolled out in Phase 3.
 import { addAttachmentsOperationConfig } from "@app/hooks/tools/addAttachments/useAddAttachmentsOperation";
 import { addPageNumbersOperationConfig } from "@app/components/tools/addPageNumbers/useAddPageNumbersOperation";
-import { addPasswordOperationConfig } from "@app/hooks/tools/addPassword/useAddPasswordOperation";
-import { addStampOperationConfig } from "@app/components/tools/addStamp/useAddStampOperation";
 import { addWatermarkOperationConfig } from "@app/hooks/tools/addWatermark/useAddWatermarkOperation";
 import { adjustPageScaleOperationConfig } from "@app/hooks/tools/adjustPageScale/useAdjustPageScaleOperation";
-import { autoRenameOperationConfig } from "@app/hooks/tools/autoRename/useAutoRenameOperation";
 import { bookletImpositionOperationConfig } from "@app/hooks/tools/bookletImposition/useBookletImpositionOperation";
 import { certSignOperationConfig } from "@app/hooks/tools/certSign/useCertSignOperation";
 import { changeMetadataOperationConfig } from "@app/hooks/tools/changeMetadata/useChangeMetadataOperation";
-import { changePermissionsOperationConfig } from "@app/hooks/tools/changePermissions/useChangePermissionsOperation";
 import { cropOperationConfig } from "@app/hooks/tools/crop/useCropOperation";
 import { editTableOfContentsOperationConfig } from "@app/hooks/tools/editTableOfContents/useEditTableOfContentsOperation";
 import { extractImagesOperationConfig } from "@app/hooks/tools/extractImages/useExtractImagesOperation";
@@ -42,7 +38,6 @@ import { sanitizeOperationConfig } from "@app/hooks/tools/sanitize/useSanitizeOp
 import { scannerImageSplitOperationConfig } from "@app/hooks/tools/scannerImageSplit/useScannerImageSplitOperation";
 import { singleLargePageOperationConfig } from "@app/hooks/tools/singleLargePage/useSingleLargePageOperation";
 import { timestampPdfOperationConfig } from "@app/hooks/tools/timestampPdf/useTimestampPdfOperation";
-import { unlockPdfFormsOperationConfig } from "@app/hooks/tools/unlockPdfForms/useUnlockPdfFormsOperation";
 
 // Every tool migrated to the mapper seam. Erased to the registry shape so one
 // loop can invoke toApiParams(defaultParameters) uniformly regardless of the
@@ -54,15 +49,11 @@ const MIGRATED_CONFIGS = [
   splitOperationConfig,
   addAttachmentsOperationConfig,
   addPageNumbersOperationConfig,
-  addPasswordOperationConfig,
-  addStampOperationConfig,
   addWatermarkOperationConfig,
   adjustPageScaleOperationConfig,
-  autoRenameOperationConfig,
   bookletImpositionOperationConfig,
   certSignOperationConfig,
   changeMetadataOperationConfig,
-  changePermissionsOperationConfig,
   cropOperationConfig,
   editTableOfContentsOperationConfig,
   extractImagesOperationConfig,
@@ -83,7 +74,6 @@ const MIGRATED_CONFIGS = [
   scannerImageSplitOperationConfig,
   singleLargePageOperationConfig,
   timestampPdfOperationConfig,
-  unlockPdfFormsOperationConfig,
   // Erase each tool's own TParams to the shared registry shape (the same
   // existential boundary asRegistryConfig applies) so one loop can call
   // toApiParams(defaultParameters) uniformly.
