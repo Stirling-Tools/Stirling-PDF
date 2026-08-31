@@ -26,6 +26,7 @@ import type {
   WirePipelineInput,
   WirePipelineStep,
   WirePolicy,
+  WireRoutingRule,
   WireTriggerConfig,
 } from "@app/policies/types";
 
@@ -99,6 +100,7 @@ export interface PolicyState {
   isDefault?: boolean;
   trigger?: WireTriggerConfig | null;
   outputIds?: string[];
+  routingRules?: WireRoutingRule[];
 }
 
 export interface PolicySetupResult {
@@ -116,6 +118,7 @@ export interface PolicySetupResult {
   steps: WirePipelineStep[];
   trigger: WireTriggerConfig | null;
   outputIds: string[];
+  routingRules: WireRoutingRule[];
 }
 
 export interface DecoratedPolicy {
@@ -444,6 +447,7 @@ function decoratePolicy(
     isDefault,
     trigger: decoded.trigger,
     outputIds: decoded.outputIds,
+    routingRules: decoded.routingRules,
   };
 
   return {
@@ -610,6 +614,7 @@ export function buildWireFromSetup(
       steps: result.steps,
       trigger: result.trigger,
       outputIds: result.outputIds,
+      routingRules: result.routingRules,
     }),
   };
 }
@@ -650,6 +655,7 @@ export function buildWireFromState(
       steps: policy.steps,
       trigger: s.trigger ?? null,
       outputIds: s.outputIds ?? [],
+      routingRules: s.routingRules ?? [],
     }),
   };
 }

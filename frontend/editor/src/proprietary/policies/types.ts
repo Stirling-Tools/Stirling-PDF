@@ -51,6 +51,25 @@ export interface WirePipelineInput {
   trigger: WireTriggerConfig | null;
 }
 
+/** How a routing rule compares a document fact against its values. Mirrors `MatchOperator.java`. */
+export type WireMatchOperator =
+  | "matches-any"
+  | "matches-none"
+  | "exists"
+  | "absent";
+
+/**
+ * One routing rule: when `field` satisfies `operator` against `values`, the document is delivered
+ * to `outputId` instead of the policy's fallback destinations. Mirrors `RoutingRule.java`; rules
+ * are tried in order, first match wins.
+ */
+export interface WireRoutingRule {
+  field: string;
+  operator: WireMatchOperator;
+  values: string[];
+  outputId: string;
+}
+
 /**
  * Mirrors `EditorConfig.java`. Absent only on records that never went through the
  * backend (hand-built fixtures); a stored policy always carries it, derived from
@@ -72,6 +91,8 @@ export interface WirePolicy {
   output: WireOutputSpec;
   /** Saved sources used as write targets; empty means the inline output. */
   outputIds?: string[];
+  /** Per-document destinations: first matching rule wins, else the outputIds fallback. */
+  routingRules?: WireRoutingRule[];
   editor?: WireEditorConfig;
   teamId?: string;
 }
@@ -132,6 +153,8 @@ export interface PolicyDecodedState {
   trigger: WireTriggerConfig | null;
   /** Saved sources the output is also delivered to (write targets). */
   outputIds: string[];
+  /** Per-document routing rules; empty for a plain deliver-to-all policy. */
+  routingRules: WireRoutingRule[];
 }
 
 // ── Display types (returned by runs.ts derivations) ───────────────────────────

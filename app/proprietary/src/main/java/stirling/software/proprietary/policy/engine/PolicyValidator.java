@@ -19,6 +19,7 @@ import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineInput;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
+import stirling.software.proprietary.policy.model.RoutingRule;
 import stirling.software.proprietary.policy.model.TriggerConfig;
 import stirling.software.proprietary.policy.output.PolicyOutputSink;
 import stirling.software.proprietary.policy.source.Source;
@@ -35,6 +36,9 @@ import stirling.software.proprietary.policy.trigger.PolicyTrigger;
 @Service
 @RequiredArgsConstructor
 public class PolicyValidator {
+
+    /** Upper bound on a policy's routing rules; see {@link #validateRoutingRules}. */
+    private static final int MAX_ROUTING_RULES = 100;
 
     private final List<PolicyTrigger> triggers;
     private final List<InputSource> inputSources;
@@ -73,10 +77,58 @@ public class PolicyValidator {
             InputSpec spec = source.toInputSpec();
             inputSourceFor(spec).validate(spec);
         }
+        validateRoutingRules(policy);
         validateSteps(policy.steps());
         validateAssetReferences(policy);
         validateChain(policy.steps());
         validateOutput(policy.output());
+    }
+
+    /**
+     * A routing rule must name a field, an operator, a destination that resolves to a writable
+     * source, and - for the operators that compare - something to compare against. A rule failing
+     * any of these would never fire, silently sending its documents to the fallback instead, so it
+     * is rejected at save time rather than left to look like it works.
+     */
+    private void validateRoutingRules(Policy policy) {
+        // A cap, like the one on inputs: rules are evaluated per document per run, so an
+        // unreasonable number is a cost multiplier rather than a configuration anyone wants.
+        if (policy.routingRules().size() > MAX_ROUTING_RULES) {
+            throw new IllegalArgumentException(
+                    "a policy supports at most " + MAX_ROUTING_RULES + " routing rules");
+        }
+        for (RoutingRule rule : policy.routingRules()) {
+            if (rule.field() == null || rule.field().isBlank()) {
+                throw new IllegalArgumentException("a routing rule must name a field to match on");
+            }
+            if (rule.operator() == null) {
+                throw new IllegalArgumentException(
+                        "routing rule on '" + rule.field() + "' has no operator");
+            }
+            // Blank values are rejected rather than ignored: a blank can never equal a real fact,
+            // so it makes a matches-any rule dead and - worse - a matches-none rule claim
+            // everything the fact is set on.
+            if (rule.operator().usesValues()
+                    && rule.values().stream().allMatch(value -> value == null || value.isBlank())) {
+                throw new IllegalArgumentException(
+                        "routing rule on '"
+                                + rule.field()
+                                + "' has nothing to match against; give it at least one value");
+            }
+            if (rule.outputId() == null || rule.outputId().isBlank()) {
+                throw new IllegalArgumentException(
+                        "routing rule on '" + rule.field() + "' has no destination");
+            }
+            Source destination =
+                    sourceStore
+                            .get(rule.outputId())
+                            .orElseThrow(
+                                    () ->
+                                            new IllegalArgumentException(
+                                                    "unknown routing destination: "
+                                                            + rule.outputId()));
+            validateOutput(destination.toOutputSpec());
+        }
     }
 
     /**

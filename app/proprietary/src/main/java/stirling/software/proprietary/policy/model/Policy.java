@@ -15,6 +15,11 @@ import java.util.Optional;
  * <p>{@code outputIds} reference the {@code Source} locations (resolved live) a run's files are
  * delivered to - a run is delivered to every one; when empty the inline {@link #output} is used
  * (results returned to the caller), the case for editor and one-off policies.
+ *
+ * <p>{@code routingRules} make that destination per-document rather than per-run: each rule tests a
+ * fact about the document (e.g. {@code classification.labels}) and, on the first match, sends it to
+ * that rule's destination instead of the {@code outputIds} fallback. Empty means every file goes to
+ * every {@code outputId}, the plain case.
  */
 public record Policy(
         String id,
@@ -26,7 +31,8 @@ public record Policy(
         OutputSpec output,
         List<String> outputIds,
         Long teamId,
-        EditorConfig editor) {
+        EditorConfig editor,
+        List<RoutingRule> routingRules) {
 
     public Policy {
         inputs = inputs == null ? List.of() : List.copyOf(inputs);
@@ -34,6 +40,22 @@ public record Policy(
         output = output == null ? OutputSpec.inline() : output;
         outputIds = outputIds == null ? List.of() : List.copyOf(outputIds);
         editor = editor == null ? EditorConfig.disabled() : editor;
+        routingRules = routingRules == null ? List.of() : List.copyOf(routingRules);
+    }
+
+    /** Without routing rules: every file is delivered to every {@code outputId}. */
+    public Policy(
+            String id,
+            String name,
+            String owner,
+            boolean enabled,
+            List<PipelineInput> inputs,
+            List<PipelineStep> steps,
+            OutputSpec output,
+            List<String> outputIds,
+            Long teamId,
+            EditorConfig editor) {
+        this(id, name, owner, enabled, inputs, steps, output, outputIds, teamId, editor, List.of());
     }
 
     /** Without editor participation: a swept or on-demand policy. */
@@ -108,19 +130,77 @@ public record Policy(
     /** A copy with the inline output replaced (e.g. resolved for the engine, or migrated). */
     public Policy withOutput(OutputSpec resolved) {
         return new Policy(
-                id, name, owner, enabled, inputs, steps, resolved, outputIds, teamId, editor);
+                id,
+                name,
+                owner,
+                enabled,
+                inputs,
+                steps,
+                resolved,
+                outputIds,
+                teamId,
+                editor,
+                routingRules);
     }
 
     /** A copy under a different owner (e.g. moving a seed off a placeholder name). */
     public Policy withOwner(String newOwner) {
         return new Policy(
-                id, name, newOwner, enabled, inputs, steps, output, outputIds, teamId, editor);
+                id,
+                name,
+                newOwner,
+                enabled,
+                inputs,
+                steps,
+                output,
+                outputIds,
+                teamId,
+                editor,
+                routingRules);
     }
 
     /** A copy referencing the given saved output destinations. */
     public Policy withOutputIds(List<String> newOutputIds) {
         return new Policy(
-                id, name, owner, enabled, inputs, steps, output, newOutputIds, teamId, editor);
+                id,
+                name,
+                owner,
+                enabled,
+                inputs,
+                steps,
+                output,
+                newOutputIds,
+                teamId,
+                editor,
+                routingRules);
+    }
+
+    /** A copy with different steps (e.g. classification prepended for a routing policy). */
+    public Policy withSteps(List<PipelineStep> newSteps) {
+        return new Policy(
+                id,
+                name,
+                owner,
+                enabled,
+                inputs,
+                newSteps,
+                output,
+                outputIds,
+                teamId,
+                editor,
+                routingRules);
+    }
+
+    /**
+     * Every saved destination this policy can deliver to: the {@code outputIds} fallback plus each
+     * routing rule's destination. Used to resolve them all up front and to validate references.
+     */
+    public List<String> allOutputIds() {
+        return java.util.stream.Stream.concat(
+                        outputIds.stream(), routingRules.stream().map(RoutingRule::outputId))
+                .filter(id -> id != null && !id.isBlank())
+                .distinct()
+                .toList();
     }
 
     /**

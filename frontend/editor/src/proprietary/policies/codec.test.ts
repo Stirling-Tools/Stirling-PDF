@@ -32,6 +32,7 @@ const FULL_STATE: PolicyDecodedState = {
   ],
   trigger: null,
   outputIds: [],
+  routingRules: [],
 };
 
 describe("toWirePolicy", () => {
@@ -100,6 +101,21 @@ describe("fromWirePolicy → round-trip", () => {
     expect(decoded.steps).toEqual(FULL_STATE.steps);
     expect(decoded.inputs).toEqual(FULL_STATE.inputs);
     expect(decoded.outputIds).toEqual(FULL_STATE.outputIds);
+    expect(decoded.routingRules).toEqual(FULL_STATE.routingRules);
+  });
+
+  it("round-trips routing rules", () => {
+    const rules = [
+      {
+        field: "classification.labels",
+        operator: "matches-any" as const,
+        values: ["invoice", "receipt"],
+        outputId: "src-finance",
+      },
+    ];
+    const wire = toWirePolicy({ ...FULL_STATE, routingRules: rules });
+    expect(wire.routingRules).toEqual(rules);
+    expect(fromWirePolicy(wire).routingRules).toEqual(rules);
   });
 
   // The moment has two possible homes now (the `editor` block, and the legacy
@@ -186,6 +202,7 @@ describe("fromWirePolicy → round-trip", () => {
     expect(decoded.sources).toEqual([]);
     expect(decoded.inputs).toEqual([]);
     expect(decoded.outputIds).toEqual([]);
+    expect(decoded.routingRules).toEqual([]);
     expect(decoded.trigger).toBeNull();
     expect(decoded.runsOnEditor).toBe(false);
     expect(decoded.runOn).toBe("upload");

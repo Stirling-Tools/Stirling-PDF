@@ -36,7 +36,7 @@ import { resolveRunOn } from "@app/policies/runOn";
 import { useSources } from "@portal/queries/sources";
 import { availableOutputModes } from "@portal/components/pipelines/outputModes";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
-import type { WireTriggerConfig } from "@app/policies/types";
+import type { WireRoutingRule, WireTriggerConfig } from "@app/policies/types";
 import { fetchIntegrations } from "@portal/api/integrations";
 import { errorMessage } from "@portal/api/http";
 import { useAsync } from "@portal/hooks/useAsync";
@@ -46,6 +46,7 @@ import { PolicyRedactConfig } from "@app/components/policies/PolicyRedactConfig"
 import { PolicyWatermarkConfig } from "@app/components/policies/PolicyWatermarkConfig";
 import { PolicyPurviewConfig } from "@portal/components/policies/PolicyPurviewConfig";
 import { PolicyExternalApiConfig } from "@portal/components/policies/PolicyExternalApiConfig";
+import { RoutingRules } from "@portal/components/policies/RoutingRules";
 import { ClassificationLabelsSection } from "@portal/components/policies/ClassificationLabelsSection";
 import "@portal/views/Policies.css";
 
@@ -271,6 +272,7 @@ function PolicySetupWizardBody({
   const { category, config, policy } = entry;
   const isEdit = policy != null;
   const isClassification = category.id === "classification";
+  const isRouting = category.id === "routing";
 
   const [tools, setTools] = useState<ToolState[]>(() => {
     const seeded = seedTools(entry);
@@ -300,6 +302,10 @@ function PolicySetupWizardBody({
   // One destination too: the backend caps outputs at one (PolicyValidator).
   const [outputIds, setOutputIds] = useState<string[]>(() =>
     (policy?.state.outputIds ?? []).slice(0, 1),
+  );
+  // Per-document routing rules (routing category only): label(s) -> destination, first match wins.
+  const [routingRules, setRoutingRules] = useState<WireRoutingRule[]>(
+    () => policy?.state.routingRules ?? [],
   );
   const navigate = useNavigate();
   // Whether the policy runs in the editor. Defaults on for a new policy (the common case);
@@ -474,6 +480,8 @@ function PolicySetupWizardBody({
         steps,
         trigger: deriveTrigger(selectedBackendSource?.type),
         outputIds,
+        // Only the routing category authors rules; other categories deliver to all.
+        routingRules: isRouting ? routingRules : [],
       });
     } catch (e) {
       setSubmitting(false);
@@ -878,11 +886,31 @@ function PolicySetupWizardBody({
             {/* TODO: reviewer user-picker goes here */}
           </div>
 
+          {isRouting && (
+            <RoutingRules
+              rules={routingRules}
+              onChange={setRoutingRules}
+              destinations={writableSources.map((s) => ({
+                id: s.id,
+                name: s.name,
+              }))}
+              onCreateDestination={() => {
+                onClose();
+                navigate(sourcesPath);
+              }}
+            />
+          )}
+
           <h3 className="portal-policies__wizard-heading">
-            {t(
-              "portal.policies.wizard.destinations.heading",
-              "Deliver output to",
-            )}
+            {isRouting
+              ? t(
+                  "portal.policies.wizard.destinations.fallbackHeading",
+                  "Default destination",
+                )
+              : t(
+                  "portal.policies.wizard.destinations.heading",
+                  "Deliver output to",
+                )}
           </h3>
           <p className="portal-policies__wizard-desc">
             {t(

@@ -68,6 +68,7 @@ export function toWirePolicy(state: PolicyDecodedState): WirePolicy {
     steps: state.steps,
     output: { type: "inline", options },
     outputIds: state.outputIds,
+    routingRules: state.routingRules,
     // Omitting this makes the backend stamp EditorConfig.disabled(), so a pause or a
     // wizard save would quietly take the policy off the editor.
     editor: { allowed: state.runsOnEditor, runOn: state.runOn },
@@ -122,5 +123,6 @@ export function fromWirePolicy(policy: WirePolicy): PolicyDecodedState {
     steps: Array.isArray(policy.steps) ? policy.steps : [],
     trigger: inputs.find((i) => i.trigger)?.trigger ?? null,
     outputIds: policy.outputIds ?? [],
+    routingRules: policy.routingRules ?? [],
   };
 }
