@@ -10,6 +10,8 @@ export interface ToggleSwitchProps {
   "aria-labelledby"?: string;
   /** Optional helper text rendered next to the label. */
   description?: string;
+  /** Accessible name when the label lives outside the switch (e.g. a SettingsRow's label). */
+  "aria-label"?: string;
   disabled?: boolean;
   size?: "sm" | "md";
   id?: string;
@@ -27,6 +29,7 @@ export function ToggleSwitch({
   label,
   "aria-labelledby": ariaLabelledBy,
   description,
+  "aria-label": ariaLabel,
   disabled,
   size = "md",
   id,
@@ -45,6 +48,7 @@ export function ToggleSwitch({
         aria-labelledby={ariaLabelledBy}
         checked={checked}
         disabled={disabled}
+        aria-label={label ? undefined : ariaLabel}
         onChange={(e) => onChange(e.target.checked)}
       />
       <span className="sui-toggle__track" aria-hidden>

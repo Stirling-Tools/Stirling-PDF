@@ -14,7 +14,11 @@ import { apiClient } from "@portal/api/http";
 import { fromWirePolicy, toWirePolicy } from "@app/policies/codec";
 import { resolveRunOn } from "@app/policies/runOn";
 import { runsToActivity, runsToStats } from "@app/policies/runs";
-import { policyStep, type PolicyToolStep } from "@app/policies/operations";
+import {
+  policyStep,
+  type PolicyToolStep,
+  type UntypedPolicyEndpoint,
+} from "@app/policies/operations";
 import type { ToolEndpoint } from "@app/types/toolApiTypes";
 import type {
   PolicyDecodedState,
@@ -139,10 +143,11 @@ export interface CatalogueEntry {
 
 /**
  * i18n keys keyed by endpoint; labels stored steps in the detail view. Mostly
- * {@link ToolEndpoint}s, plus the AI classify endpoint, which isn't part of the generated union.
+ * {@link ToolEndpoint}s, plus the AI classify and policy gate endpoints, which are `@Hidden` and so
+ * aren't part of the generated union.
  */
 export const ENDPOINT_LABELS: Partial<
-  Record<ToolEndpoint | "/api/v1/ai/tools/classify-and-label", string>
+  Record<ToolEndpoint | UntypedPolicyEndpoint, string>
 > = {
   "/api/v1/security/auto-redact": "portal.policies.endpoints.autoRedact",
   "/api/v1/security/sanitize-pdf": "portal.policies.endpoints.sanitizePdf",
@@ -150,6 +155,9 @@ export const ENDPOINT_LABELS: Partial<
   "/api/v1/misc/ocr-pdf": "portal.policies.endpoints.ocrPdf",
   "/api/v1/misc/flatten": "portal.policies.endpoints.flatten",
   "/api/v1/misc/compress-pdf": "portal.policies.endpoints.compressPdf",
+  "/api/v1/convert/pdf/pdfa": "portal.policies.endpoints.pdfa",
+  "/api/v1/security/validate-compliance":
+    "portal.policies.endpoints.validateCompliance",
   "/api/v1/ai/tools/classify-and-label":
     "portal.policies.endpoints.classifyAndLabel",
 };
@@ -204,7 +212,6 @@ export const POLICY_CATEGORIES: PolicyCategory[] = [
     label: "portal.policies.categories.compliance.label",
     tone: "amber",
     desc: "portal.policies.categories.compliance.desc",
-    comingSoon: true,
   },
   {
     id: "routing",
@@ -295,47 +302,22 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
       "portal.policies.config.compliance.rules.2",
     ],
     scopeLabel: "portal.policies.config.scopeAll",
-    // Apply writes our sensitivity label into the document after it is sanitised and flattened.
-    // Offered only once a Purview tenant is connected (it needs a tenant connection and a label
-    // GUID, which no default can guess), and hidden entirely until then.
+    // Gate last, so it judges the document that actually ships. No flatten step: it rasterises
+    // whole pages, and an archive without a text layer is not an archive.
     defaultOperations: [
-      policyStep("sanitize"),
-      policyStep("flatten"),
+      // Hidden data is the usual disclosure route: strip scripts, attachments and both metadata
+      // streams. Fonts stay - PDF/A requires them embedded.
+      policyStep("sanitize", {
+        removeMetadata: true,
+        removeXMPMetadata: true,
+      }),
+      policyStep("pdfa"),
       policyStep("purviewApplyLabel"),
+      policyStep("complianceCheck"),
     ],
-    fields: [
-      {
-        label: "portal.policies.config.compliance.fields.frameworks",
-        key: "frameworks",
-        type: "chips",
-        value: ["hipaa"],
-        options: ["hipaa", "gdpr", "soc2", "fedramp", "pciDss", "iso27001"],
-      },
-      {
-        label: "portal.policies.config.compliance.fields.onViolation",
-        key: "onViolation",
-        type: "select",
-        value: "flagForReview",
-        options: [
-          "flagForReview",
-          "blockExport",
-          "autoRedactPhi",
-          "quarantineDocument",
-        ],
-      },
-      {
-        label: "portal.policies.config.compliance.fields.auditTrail",
-        key: "auditTrail",
-        type: "toggle",
-        value: true,
-      },
-      {
-        label: "portal.policies.config.compliance.fields.accessLog",
-        key: "accessLog",
-        type: "toggle",
-        value: true,
-      },
-    ],
+    // No policy-level settings: what this policy does is the step chain, and nothing on the
+    // backend reads fieldValues, so a framework picker here could only ever be decoration.
+    fields: [],
   },
   routing: {
     summary: "portal.policies.config.routing.summary",

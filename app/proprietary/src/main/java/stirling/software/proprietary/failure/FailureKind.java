@@ -24,8 +24,10 @@ import lombok.Getter;
  * The registry of failure kinds, described as data: a stable id, i18n keys and an English fallback
  * like {@code ExceptionUtils.ErrorCode}, plus the facets a review surface needs.
  *
- * <p>A new kind ships as a registry entry plus copy. Each offer also says who it is for, since one
- * incident is read both by whoever hit it and by whoever reviews after them.
+ * <p>Actions are declared here but implemented in {@link FailureAction} beans resolved by id, so a
+ * new kind ships as a registry entry plus copy. Each offer also says who it is for, since one
+ * incident is read both by whoever hit it and by whoever reviews after them. {@link #UNKNOWN} gives
+ * every failed run a record, and kinds get promoted out of it as production shows what occurs.
  */
 @Getter
 public enum FailureKind {
@@ -36,6 +38,17 @@ public enum FailureKind {
             FailureScope.FILE,
             errorCodes("E004"),
             fallback("This document is password-protected, so the pipeline could not read it."),
+            offer(VIEW_FILE, OWNER),
+            offer(VIEW_IN_PROCESSOR, TEAM_REVIEWER),
+            offer(DISMISS, ANYONE_WHO_SEES)),
+
+    COMPLIANCE_NOT_MET(
+            FailureStage.BLOCKED,
+            FailureSeverity.ERROR,
+            FailureRemedy.NEEDS_FILE_FIX,
+            FailureScope.FILE,
+            errorCodes("E074"),
+            fallback("This document did not meet the compliance standard the policy checks for."),
             offer(VIEW_FILE, OWNER),
             offer(VIEW_IN_PROCESSOR, TEAM_REVIEWER),
             offer(DISMISS, ANYONE_WHO_SEES)),
