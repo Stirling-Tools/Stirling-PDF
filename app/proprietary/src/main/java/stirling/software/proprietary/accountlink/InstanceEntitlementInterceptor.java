@@ -39,8 +39,8 @@ import stirling.software.proprietary.policy.controller.PolicyRunRoutes;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 
 /**
- * Request-time gate + meter for combined-billing "Mode A". {@code preHandle} blocks billable (API /
- * AI / automation) work when the instance is unlinked or over its limit; manual tools pass through.
+ * Request-time gate + meter for combined billing. {@code preHandle} blocks billable (API / AI /
+ * automation) work when the instance is unlinked or over its limit; manual tools pass through.
  * {@code afterCompletion} meters a successful billable op into the per-period cumulative counter.
  *
  * <p>Blocking responds {@code 402} with a machine-readable body the FE maps to a "link to activate"
