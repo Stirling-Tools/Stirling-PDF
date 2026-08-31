@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { toWirePolicy, fromWirePolicy } from "@app/policies/codec";
+import {
+  toWirePolicy,
+  fromWirePolicy,
+  policyInputs,
+  EDITOR_SOURCE_ID,
+} from "@app/policies/codec";
 import type { PolicyDecodedState } from "@app/policies/types";
 
 const FULL_STATE: PolicyDecodedState = {
@@ -8,6 +13,7 @@ const FULL_STATE: PolicyDecodedState = {
   enabled: true,
   categoryId: "security",
   sources: ["editor", "gdrive"],
+  inputs: [{ sourceId: "gdrive", trigger: null }],
   runsOnEditor: true,
   scopeTypes: ["Contracts", "Invoices"],
   reviewerEmail: "admin@example.com",
@@ -24,11 +30,15 @@ const FULL_STATE: PolicyDecodedState = {
       parameters: { mode: "automatic" },
     },
   ],
+  trigger: null,
+  outputIds: [],
 };
 
 describe("toWirePolicy", () => {
-  it("sets trigger to null", () => {
-    expect(toWirePolicy(FULL_STATE).trigger).toBeNull();
+  it("emits the bound inputs at the top level", () => {
+    expect(toWirePolicy(FULL_STATE).inputs).toEqual([
+      { sourceId: "gdrive", trigger: null },
+    ]);
   });
 
   it("sets output.type to inline", () => {
@@ -88,6 +98,8 @@ describe("fromWirePolicy → round-trip", () => {
     expect(decoded.maxRetries).toBe(FULL_STATE.maxRetries);
     expect(decoded.retryDelayMinutes).toBe(FULL_STATE.retryDelayMinutes);
     expect(decoded.steps).toEqual(FULL_STATE.steps);
+    expect(decoded.inputs).toEqual(FULL_STATE.inputs);
+    expect(decoded.outputIds).toEqual(FULL_STATE.outputIds);
   });
 
   // The moment has two possible homes now (the `editor` block, and the legacy
@@ -166,12 +178,15 @@ describe("fromWirePolicy → round-trip", () => {
       id: "x",
       name: "X",
       enabled: false,
-      trigger: null,
+      inputs: [],
       steps: [],
       output: { type: "inline", options: {} },
     });
     expect(decoded.categoryId).toBe("");
     expect(decoded.sources).toEqual([]);
+    expect(decoded.inputs).toEqual([]);
+    expect(decoded.outputIds).toEqual([]);
+    expect(decoded.trigger).toBeNull();
     expect(decoded.runsOnEditor).toBe(false);
     expect(decoded.runOn).toBe("upload");
     expect(decoded.outputMode).toBe("new_version");
@@ -181,5 +196,62 @@ describe("fromWirePolicy → round-trip", () => {
     const wire = toWirePolicy(FULL_STATE);
     delete (wire.output.options as Record<string, unknown>).fieldValues;
     expect(fromWirePolicy(wire).fieldValues).toEqual({});
+  });
+});
+
+describe("policyInputs → binding a source selection", () => {
+  const trigger = {
+    type: "schedule",
+    options: { schedule: { type: "every", count: 1, unit: "HOURS" } },
+  };
+
+  it("drops the virtual editor source and never binds it", () => {
+    expect(policyInputs([EDITOR_SOURCE_ID, "src-dropbox"], trigger)).toEqual([
+      { sourceId: "src-dropbox", trigger },
+    ]);
+  });
+
+  it("pairs every real source with the given trigger", () => {
+    expect(policyInputs(["src-dropbox"], null)).toEqual([
+      { sourceId: "src-dropbox", trigger: null },
+    ]);
+  });
+
+  it("returns no inputs for an editor-only selection", () => {
+    expect(policyInputs([EDITOR_SOURCE_ID], trigger)).toEqual([]);
+  });
+});
+
+describe("fromWirePolicy → routing bindings", () => {
+  it("unions the options-bag sources with the bound inputs", () => {
+    // A record saved before inputs were emitted (sources only in the bag) plus
+    // a bound input still decodes to the complete selection, no duplicates.
+    const decoded = fromWirePolicy({
+      id: "pol_routing",
+      name: "Routing",
+      enabled: true,
+      inputs: [{ sourceId: "src-dropbox", trigger: null }],
+      steps: [],
+      output: {
+        type: "inline",
+        options: { categoryId: "routing", sources: ["editor", "src-dropbox"] },
+      },
+      outputIds: ["src-archive"],
+    });
+    expect(decoded.sources).toEqual(["editor", "src-dropbox"]);
+    expect(decoded.outputIds).toEqual(["src-archive"]);
+  });
+
+  it("surfaces the bound input's trigger as the read-view trigger", () => {
+    const trigger = { type: "webhook", options: {} };
+    const decoded = fromWirePolicy({
+      id: "pol_routing",
+      name: "Routing",
+      enabled: true,
+      inputs: [{ sourceId: "src-hook", trigger }],
+      steps: [],
+      output: { type: "inline", options: { categoryId: "routing" } },
+    });
+    expect(decoded.trigger).toEqual(trigger);
   });
 });

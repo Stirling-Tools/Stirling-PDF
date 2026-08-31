@@ -1,4 +1,5 @@
 import { useMemo, useState, type ReactNode } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import CheckIcon from "@mui/icons-material/Check";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
@@ -33,6 +34,9 @@ import {
 } from "@app/policies/operations";
 import { resolveRunOn } from "@app/policies/runOn";
 import { useSources } from "@portal/queries/sources";
+import { availableOutputModes } from "@portal/components/pipelines/outputModes";
+import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
+import type { WireTriggerConfig } from "@app/policies/types";
 import { fetchIntegrations } from "@portal/api/integrations";
 import { errorMessage } from "@portal/api/http";
 import { useAsync } from "@portal/hooks/useAsync";
@@ -41,6 +45,7 @@ import { PolicyCategoryBadge } from "@portal/components/policies/PolicyCategoryI
 import { PolicyRedactConfig } from "@app/components/policies/PolicyRedactConfig";
 import { PolicyWatermarkConfig } from "@app/components/policies/PolicyWatermarkConfig";
 import { PolicyPurviewConfig } from "@portal/components/policies/PolicyPurviewConfig";
+import { PolicyExternalApiConfig } from "@portal/components/policies/PolicyExternalApiConfig";
 import { ClassificationLabelsSection } from "@portal/components/policies/ClassificationLabelsSection";
 import "@portal/views/Policies.css";
 
@@ -195,6 +200,18 @@ const CAPABILITY_META: Record<
   },
 };
 
+// Trigger from the bound source's type: folders are watched, webhooks fire on
+// push, the rest sweep hourly; editor-only stays null (the frontend runs those).
+function deriveTrigger(sourceType?: string): WireTriggerConfig | null {
+  if (!sourceType || sourceType === "editor") return null;
+  if (sourceType === "folder") return { type: "folder-watch", options: {} };
+  if (sourceType === "webhook") return { type: "webhook", options: {} };
+  return {
+    type: "schedule",
+    options: { schedule: { type: "every", count: 1, unit: "HOURS" } },
+  };
+}
+
 function seedTools(entry: CatalogueEntry): ToolState[] {
   const savedSteps = entry.policy?.steps ?? [];
   const savedByTool = new Map<PolicyToolId, PolicyToolStep>();
@@ -255,7 +272,6 @@ function PolicySetupWizardBody({
   const isEdit = policy != null;
   const isClassification = category.id === "classification";
 
-  const [step, setStep] = useState<Step>("workflow");
   const [tools, setTools] = useState<ToolState[]>(() => {
     const seeded = seedTools(entry);
     // Classification's single tool has no toggle in the workflow step, so keep it
@@ -265,13 +281,27 @@ function PolicySetupWizardBody({
       ? seeded.map((t) => ({ ...t, enabled: true }))
       : seeded;
   });
+  // Open on the tab that matters: when no action starts enabled (routing's
+  // source-to-destination flow), the Settings tab IS the setup.
+  const [step, setStep] = useState<Step>(() =>
+    isClassification || tools.some((tl) => tl.enabled)
+      ? "workflow"
+      : "settings",
+  );
   const [fieldValues, setFieldValues] = useState(() =>
     resolveFieldValues(entry),
   );
-  // Real sources only; editor participation is its own flag, not an entry here.
+  // Real sources only (editor participation is its own flag), capped to the one
+  // input the backend binds - trimming a wider legacy record on edit so it can't
+  // re-save a body the backend rejects.
   const [sources, setSources] = useState<string[]>(() =>
-    (policy?.state.sources ?? []).filter((s) => s !== "editor"),
+    (policy?.state.sources ?? []).filter((s) => s !== "editor").slice(0, 1),
   );
+  // One destination too: the backend caps outputs at one (PolicyValidator).
+  const [outputIds, setOutputIds] = useState<string[]>(() =>
+    (policy?.state.outputIds ?? []).slice(0, 1),
+  );
+  const navigate = useNavigate();
   // Whether the policy runs in the editor. Defaults on for a new policy (the common case);
   // on edit it comes straight from the stored flag, never re-derived from the sources list.
   const [runsOnEditor, setRunsOnEditor] = useState<boolean>(
@@ -298,6 +328,25 @@ function PolicySetupWizardBody({
     };
     return [editorSource, ...backendSources.filter((s) => s.id !== "editor")];
   }, [sourcesAsync.data, t]);
+  // Real (non-editor) sources drive the empty-state prompt and trigger choice.
+  const backendSources = useMemo(
+    () => availableSources.filter((s) => s.type !== "editor"),
+    [availableSources],
+  );
+  // Destinations are sources used as write targets: only writable types.
+  const writableSources = useMemo(
+    () =>
+      backendSources.filter((s) =>
+        (availableOutputModes() as string[]).includes(s.type),
+      ),
+    [backendSources],
+  );
+  // The one bound source, if any: it decides the trigger the policy is saved with.
+  const selectedBackendSource = useMemo(
+    () => backendSources.find((s) => sources.includes(s.id)),
+    [backendSources, sources],
+  );
+  const sourcesPath = `${toPortalPath(VIEW_PATHS.sources)}/new`;
   // Document-type scoping has no UI; preserve any saved scope on edit and
   // default new policies to all document types.
   const [scopeTypes] = useState<string[]>(policy?.state.scopeTypes ?? []);
@@ -373,15 +422,34 @@ function PolicySetupWizardBody({
       setRunsOnEditor((on) => !on);
       return;
     }
-    setSources((prev) =>
-      prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id],
-    );
+    // The backend binds at most one real source, so picking one replaces
+    // whichever was picked before (single-select).
+    setSources((prev) => (prev.includes(id) ? [] : [id]));
+  }
+
+  // One destination too: the backend caps outputs at one (PolicyValidator).
+  function toggleDestination(id: string) {
+    setOutputIds((prev) => (prev.includes(id) ? [] : [id]));
   }
 
   async function submit() {
     if (submitting) return;
-    if (enabledTools.length === 0) {
+    // A policy must do SOMETHING: run at least one action, or route documents
+    // to at least one destination (a zero-step policy is a pure move).
+    if (enabledTools.length === 0 && outputIds.length === 0) {
       setError(t("portal.policies.wizard.errors.noTools"));
+      setStep("workflow");
+      return;
+    }
+    // The backend rejects a delivery step with no account anyway; catching it
+    // here points at the workflow step instead of a save-time error banner.
+    const unconfiguredDelivery = enabledTools.some(
+      (tl) =>
+        tl.toolId === "externalApiCall" &&
+        (tl.params.operationId === "" || tl.params.connectionId === ""),
+    );
+    if (unconfiguredDelivery) {
+      setError(t("portal.policies.wizard.errors.deliveryUnconfigured"));
       setStep("workflow");
       return;
     }
@@ -404,6 +472,8 @@ function PolicySetupWizardBody({
         maxRetries,
         retryDelayMinutes,
         steps,
+        trigger: deriveTrigger(selectedBackendSource?.type),
+        outputIds,
       });
     } catch (e) {
       setSubmitting(false);
@@ -567,6 +637,14 @@ function PolicySetupWizardBody({
                             }
                           />
                         )}
+                        {tl.toolId === "externalApiCall" && (
+                          <PolicyExternalApiConfig
+                            parameters={tl.params}
+                            onChange={(params) =>
+                              setToolParams("externalApiCall", params)
+                            }
+                          />
+                        )}
                       </div>
                     )}
                   </div>
@@ -645,10 +723,44 @@ function PolicySetupWizardBody({
               })}
             </div>
           )}
+          {!sourcesAsync.loading && backendSources.length === 0 && (
+            <Banner
+              tone="info"
+              description={t(
+                "portal.policies.wizard.sources.emptyPrompt",
+                "No sources connected yet - the policy still covers editor uploads. Connect a folder, S3, SFTP or webhook source to process documents from other systems.",
+              )}
+              action={
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => {
+                    onClose();
+                    navigate(sourcesPath);
+                  }}
+                >
+                  {t(
+                    "portal.policies.wizard.sources.connect",
+                    "Connect a source",
+                  )}
+                </Button>
+              }
+            />
+          )}
+          {selectedBackendSource && (
+            <p className="portal-policies__wizard-desc">
+              {t(
+                "portal.policies.wizard.sources.triggerNote",
+                "Folder and webhook sources run this policy automatically; other sources are checked hourly.",
+              )}
+            </p>
+          )}
 
-          <h3 className="portal-policies__wizard-heading">
-            {t("portal.policies.wizard.output.heading")}
-          </h3>
+          {runsOnEditor && (
+            <h3 className="portal-policies__wizard-heading">
+              {t("portal.policies.wizard.output.heading")}
+            </h3>
+          )}
           <div className="portal-policies__fields">
             {runsOnEditor && (
               <>
@@ -765,6 +877,76 @@ function PolicySetupWizardBody({
             )}
             {/* TODO: reviewer user-picker goes here */}
           </div>
+
+          <h3 className="portal-policies__wizard-heading">
+            {t(
+              "portal.policies.wizard.destinations.heading",
+              "Deliver output to",
+            )}
+          </h3>
+          <p className="portal-policies__wizard-desc">
+            {t(
+              "portal.policies.wizard.destinations.description",
+              "Results always stay in Stirling. Pick one destination to also receive a copy of every processed document.",
+            )}
+          </p>
+          {writableSources.length === 0 ? (
+            <Banner
+              tone="info"
+              description={t(
+                "portal.policies.wizard.destinations.emptyPrompt",
+                "No writable destinations yet. Connect a folder or S3 source to deliver processed documents outside Stirling.",
+              )}
+              action={
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => {
+                    onClose();
+                    navigate(sourcesPath);
+                  }}
+                >
+                  {t(
+                    "portal.policies.wizard.sources.connect",
+                    "Connect a source",
+                  )}
+                </Button>
+              }
+            />
+          ) : (
+            <div className="portal-policies__sources">
+              {writableSources.map((dest) => {
+                const on = outputIds.includes(dest.id);
+                return (
+                  <Button
+                    key={dest.id}
+                    variant={on ? "secondary" : "quiet"}
+                    justify="between"
+                    fullWidth
+                    className={
+                      "portal-policies__source" +
+                      (on ? " portal-policies__source--on" : "")
+                    }
+                    rightSection={
+                      <CheckIcon
+                        sx={{
+                          fontSize: "1.1rem",
+                          visibility: on ? "visible" : "hidden",
+                        }}
+                      />
+                    }
+                    onClick={() => toggleDestination(dest.id)}
+                    aria-pressed={on}
+                  >
+                    <span className="portal-policies__source-label">
+                      {sourceIcon(dest.type)}
+                      {dest.name}
+                    </span>
+                  </Button>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
     </Modal>

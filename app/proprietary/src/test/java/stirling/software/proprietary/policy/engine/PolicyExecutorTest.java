@@ -362,14 +362,18 @@ class PolicyExecutorTest {
     }
 
     @Test
-    void emptyPipelineIsRejected() {
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                        executor.execute(
-                                new PipelineDefinition("empty", List.of(), OutputSpec.inline()),
-                                PolicyInputs.of(List.of(pdf("in", "in.pdf"))),
-                                PolicyProgressListener.NOOP));
+    void emptyStepsPassInputsThroughUnchanged() throws Exception {
+        // A pure routing policy has no steps: inputs are delivered to the
+        // destinations untouched, so execute returns them as-is.
+        Resource input = pdf("in", "in.pdf");
+        PolicyExecutionResult result =
+                executor.execute(
+                        new PipelineDefinition("empty", List.of(), OutputSpec.inline()),
+                        PolicyInputs.of(List.of(input)),
+                        PolicyProgressListener.NOOP);
+
+        assertEquals(1, result.files().size());
+        assertEquals("in.pdf", result.files().get(0).getFilename());
     }
 
     // --- helpers ---

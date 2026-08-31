@@ -5,6 +5,8 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
+import type { ReactNode } from "react";
 import { PortalTestProviders } from "@portal/test/TestQueryProvider";
 import { PolicySetupWizard } from "@portal/components/policies/PolicySetupWizard";
 import {
@@ -16,8 +18,17 @@ import {
   type PipelineStep,
 } from "@portal/api/policies";
 
+// The wizard calls useNavigate for its "connect a source" prompts, so it needs a
+// router in context. Wrap here rather than in PortalTestProviders — the portal
+// view tests nest their own router and a second one would clash.
+const Wrapper = ({ children }: { children: ReactNode }) => (
+  <MemoryRouter>
+    <PortalTestProviders>{children}</PortalTestProviders>
+  </MemoryRouter>
+);
+
 const render = (ui: Parameters<typeof baseRender>[0]) =>
-  baseRender(ui, { wrapper: PortalTestProviders });
+  baseRender(ui, { wrapper: Wrapper });
 
 // Deterministic i18n: return the fallback when given, else the key. initReactI18next is stubbed
 // because the import graph pulls core/i18n.ts, which registers it as a plugin.
@@ -52,6 +63,19 @@ const compliance = POLICY_CATEGORIES.find((c) => c.id === "compliance")!;
 const complianceConfig = POLICY_CONFIG.compliance;
 
 const PURVIEW_LABEL = "Apply a Microsoft Purview sensitivity label";
+
+/** Two connected sources, both writable, so they show as sources and destinations. */
+const CONNECTED_SOURCES = [
+  { id: "src-folder", name: "Inbox folder", type: "folder" },
+  { id: "src-s3", name: "Archive bucket", type: "s3" },
+].map((s) => ({
+  ...s,
+  status: "active" as const,
+  referenceCount: 0,
+  referencingPolicies: [],
+  config: [],
+  docsTotal: 0,
+}));
 
 function editEntry(steps: PipelineStep[]): CatalogueEntry {
   const policy: DecoratedPolicy = {
@@ -177,5 +201,59 @@ describe("PolicySetupWizard", () => {
     // Redact carries the preset PII patterns as the backend's listOfText.
     const redact = result.steps[0].parameters as { listOfText?: string };
     expect(redact.listOfText).toBeTruthy();
+  });
+
+  it("binds one source and one destination, matching the backend's cap", async () => {
+    fetchSources.mockResolvedValue({ sources: CONNECTED_SOURCES });
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    const entry: CatalogueEntry = {
+      category: security,
+      config: securityConfig,
+      policy: null,
+    };
+    // Each source appears twice on the settings tab: source tile, then destination tile.
+    const tiles = (name: RegExp) => screen.getAllByRole("button", { name });
+
+    render(
+      <PolicySetupWizard entry={entry} onClose={vi.fn()} onSubmit={onSubmit} />,
+    );
+    fireEvent.click(await screen.findByRole("button", { name: CONTINUE }));
+    await screen.findAllByRole("button", { name: /Inbox folder/ });
+
+    fireEvent.click(tiles(/Inbox folder/)[0]);
+    // Picking a second source replaces the first rather than adding to it.
+    fireEvent.click(tiles(/Archive bucket/)[0]);
+    fireEvent.click(tiles(/Inbox folder/)[1]);
+    fireEvent.click(tiles(/Archive bucket/)[1]);
+    fireEvent.click(screen.getByRole("button", { name: ENABLE }));
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    const result = onSubmit.mock.calls[0][1] as PolicySetupResult;
+    // Editor participation is its own flag; only the one bound backend source
+    // rides in `sources`, and its trigger is derived from that source's type.
+    expect(result.sources).toEqual(["src-s3"]);
+    expect(result.outputIds).toEqual(["src-s3"]);
+    // S3 has no watcher, so the bound source is swept on a schedule.
+    expect(result.trigger?.type).toBe("schedule");
+  });
+
+  it("trims a legacy multi-source policy back to one on edit", async () => {
+    fetchSources.mockResolvedValue({ sources: CONNECTED_SOURCES });
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    const entry = editEntry([
+      { operation: "/api/v1/security/sanitize-pdf", parameters: {} },
+    ]);
+    entry.policy!.state.sources = ["editor", "src-folder", "src-s3"];
+    entry.policy!.state.outputIds = ["src-folder", "src-s3"];
+
+    render(
+      <PolicySetupWizard entry={entry} onClose={vi.fn()} onSubmit={onSubmit} />,
+    );
+    await submitWizard(SAVE_CHANGES);
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    const result = onSubmit.mock.calls[0][1] as PolicySetupResult;
+    expect(result.sources).toEqual(["src-folder"]);
+    expect(result.outputIds).toEqual(["src-folder"]);
   });
 });
