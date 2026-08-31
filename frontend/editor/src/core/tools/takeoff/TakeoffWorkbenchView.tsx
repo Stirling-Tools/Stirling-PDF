@@ -31,6 +31,7 @@ import {
   polygonArea,
   computeValue,
   roundTo2,
+  detectScaleFromText,
 } from "@app/tools/takeoff/geometry";
 import type {
   TakeoffAnnotation,
@@ -256,6 +257,59 @@ const TakeoffWorkbenchView = ({ data }: { data: TakeoffWorkbenchData }) => {
       if (pdfDoc) pdfWorkerManager.destroyDocument(pdfDoc);
     };
   }, [pdfDoc]);
+
+  // Mirrors for the auto-detect effect below, which reads current state
+  // from an async callback keyed only on [pdfDoc, pageIndex] — using these
+  // instead of the state values directly avoids stale closures without
+  // adding pageScales/materials/annotations (which change on every draw)
+  // to that effect's deps, which would re-run text extraction constantly.
+  const pageScalesRef = useRef(pageScales);
+  useEffect(() => {
+    pageScalesRef.current = pageScales;
+  }, [pageScales]);
+  const materialsRef = useRef(materials);
+  useEffect(() => {
+    materialsRef.current = materials;
+  }, [materials]);
+  const annotationsRef = useRef(annotations);
+  useEffect(() => {
+    annotationsRef.current = annotations;
+  }, [annotations]);
+
+  // Auto-detect this page's printed scale note (e.g. "1:100" or
+  // '1/4" = 1'-0"') so most sheets never need a manual calibration drag.
+  // Skipped entirely if the page already has a scale — manual calibration
+  // always takes priority and is never overwritten by this.
+  useEffect(() => {
+    if (!pdfDoc || pageScalesRef.current[pageIndex]) return;
+    let cancelled = false;
+    (async () => {
+      const page = await pdfDoc.getPage(pageIndex + 1);
+      const content = await page.getTextContent();
+      if (cancelled) return;
+      const text = content.items
+        .map((item) => ("str" in item ? item.str : ""))
+        .join(" ");
+      const detected = detectScaleFromText(text);
+      if (!detected || cancelled || pageScalesRef.current[pageIndex]) return;
+      const nextPageScales = {
+        ...pageScalesRef.current,
+        [pageIndex]: detected,
+      };
+      setPageScales(nextPageScales);
+      setMaterials(
+        recomputeIds(
+          new Set(materialsRef.current.map((m) => m.id)),
+          materialsRef.current,
+          annotationsRef.current,
+          nextPageScales,
+        ),
+      );
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [pdfDoc, pageIndex]);
 
   // Render the current page to the canvas whenever page/zoom/doc changes.
   useEffect(() => {
@@ -486,6 +540,7 @@ const TakeoffWorkbenchView = ({ data }: { data: TakeoffWorkbenchData }) => {
         pointsSpan: calibrationPrompt.pointsSpan,
         real,
         unit: calibrationUnit,
+        source: "manual",
       };
       const nextPageScales = { ...pageScales, [pageIndex]: nextScale };
       setPageScales(nextPageScales);
@@ -639,12 +694,21 @@ const TakeoffWorkbenchView = ({ data }: { data: TakeoffWorkbenchData }) => {
               {calibrating
                 ? t("takeoff.dragKnownLength", "Drag a known length…")
                 : currentScale
-                  ? t("takeoff.scaleSetWithRatio", "Scale set (≈1:{{ratio}})", {
-                      ratio: (() => {
-                        const ratio = estimateArchitecturalRatio(currentScale);
-                        return ratio ? Math.round(ratio) : "?";
-                      })(),
-                    })
+                  ? t(
+                      currentScale.source === "auto"
+                        ? "takeoff.scaleAutoDetected"
+                        : "takeoff.scaleSetWithRatio",
+                      currentScale.source === "auto"
+                        ? "Scale auto-detected (≈1:{{ratio}})"
+                        : "Scale set (≈1:{{ratio}})",
+                      {
+                        ratio: (() => {
+                          const ratio =
+                            estimateArchitecturalRatio(currentScale);
+                          return ratio ? Math.round(ratio) : "?";
+                        })(),
+                      },
+                    )
                   : t("takeoff.scaleNotSet", "Scale not set")}
             </Button>
           </Tooltip>

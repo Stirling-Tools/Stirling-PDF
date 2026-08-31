@@ -27,6 +27,10 @@ export interface TakeoffPageScale {
   pointsSpan: number;
   real: number;
   unit: string;
+  // 'auto' when read off a printed scale note (see detectScaleFromText) —
+  // shown differently so the user knows to sanity-check it. Manually
+  // recalibrating always overwrites this with 'manual'.
+  source?: "manual" | "auto";
 }
 
 // A row is both a cost line and the on-plan measurement trigger — clicking

@@ -75,3 +75,52 @@ export function computeValue(
 export function roundTo2(n: number | null): number | null {
   return n == null ? null : Math.round(n * 100) / 100;
 }
+
+// Auto-detects a printed scale note from a page's extracted text, either a
+// ratio ("1:50", "SCALE 1:100") or an architectural fraction
+// ("1/4" = 1'-0"", "1" = 20'-0""), so most sheets never need a manual
+// calibration drag. Best-effort only: a sheet with no legible scale note,
+// or one marked "NOT TO SCALE"/"NTS", returns null and falls back to the
+// existing manual calibration flow.
+const RATIO_SCALE_RE = /\b1\s*:\s*(\d{1,4}(?:\.\d+)?)\b/;
+const ARCH_SCALE_RE =
+  /(\d+)\s*(?:\/\s*(\d+))?\s*["″]\s*=\s*(\d+)\s*['′]\s*-?\s*(\d+(?:\.\d+)?)?\s*["″]?/;
+const NOT_TO_SCALE_RE = /\bnot\s+to\s+scale\b|\bnts\b/i;
+const INCH_TO_M = 0.0254;
+
+export function detectScaleFromText(text: string): TakeoffPageScale | null {
+  if (NOT_TO_SCALE_RE.test(text)) return null;
+
+  const archMatch = ARCH_SCALE_RE.exec(text);
+  const ratioMatch = RATIO_SCALE_RE.exec(text);
+  const preferArch =
+    archMatch != null && (!ratioMatch || archMatch.index <= ratioMatch.index);
+
+  if (preferArch && archMatch) {
+    const [, num, den, feet, inches] = archMatch;
+    const paperInches = den ? Number(num) / Number(den) : Number(num);
+    const realInches = Number(feet) * 12 + (inches ? Number(inches) : 0);
+    if (paperInches > 0 && realInches > 0) {
+      return {
+        pointsSpan: 72 * paperInches,
+        real: realInches / 12,
+        unit: "ft",
+        source: "auto",
+      };
+    }
+  }
+
+  if (ratioMatch) {
+    const n = Number(ratioMatch[1]);
+    if (n >= 2 && n <= 2000) {
+      return {
+        pointsSpan: 72,
+        real: n * INCH_TO_M,
+        unit: "m",
+        source: "auto",
+      };
+    }
+  }
+
+  return null;
+}
