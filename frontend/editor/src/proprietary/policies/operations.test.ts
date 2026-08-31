@@ -21,6 +21,7 @@ describe("POLICY_OPERATIONS", () => {
       "externalApiCall",
       "flatten",
       "ocr",
+      "pdfUa",
       "pdfa",
       "purviewApplyLabel",
       "purviewReadLabel",

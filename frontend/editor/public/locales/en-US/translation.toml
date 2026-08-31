@@ -6764,6 +6764,7 @@ insurance = "Insurance"
 invoices = "Invoices"
 iso27001 = "ISO 27001"
 legalFilings = "Legal filings"
+mark-decorative = "Mark images decorative"
 medicalPhi = "Medical / PHI"
 never = "Never"
 ninetyDays = "90 days"
@@ -6780,6 +6781,7 @@ pdfa-2b = "PDF/A-2b"
 pdfa-3b = "PDF/A-3b"
 pdfua = "PDF/UA (accessibility)"
 quarantineDocument = "Quarantine document"
+require-alt = "Require descriptions"
 routeToBucket = "Route to bucket"
 s3Bucket = "S3 bucket"
 sevenYears = "7 years"
@@ -8462,6 +8464,14 @@ label = "Archival profile"
 help = "Some documents cannot be made fully compliant. Stop the run rather than deliver a file that only claims to be archival."
 label = "Stop if conversion falls short"
 
+[portal.policies.config.pdfUa.fields.embedFonts]
+help = "Embed fonts the document references but does not carry. Required for conformance; needs Ghostscript."
+label = "Embed fonts"
+
+[portal.policies.config.pdfUa.fields.figurePolicy]
+help = "A policy cannot describe figures per document. Mark images decorative so it can conform unattended, or require descriptions and fail without them."
+label = "Images without a description"
+
 [portal.policies.config.purview]
 label = "Apply a Microsoft Purview sensitivity label"
 
@@ -8822,6 +8832,10 @@ label = "Make text searchable"
 [portal.policies.wizard.capability.pdfa]
 desc = "Rewrites the document in the ISO archival format, embedding its fonts and colour profiles so it still renders the same years from now."
 label = "Convert to PDF/A for archiving"
+
+[portal.policies.wizard.capability.pdfUa]
+desc = "Tags the document's structure and embeds its fonts so assistive technology can read it, meeting the PDF/UA accessibility standard."
+label = "Convert to PDF/UA for accessibility"
 
 [portal.policies.wizard.capability.redact]
 desc = "Finds and blacks out sensitive details — like Social Security and card numbers — so they can't be read."

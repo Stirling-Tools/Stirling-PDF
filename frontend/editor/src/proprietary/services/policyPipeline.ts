@@ -122,6 +122,8 @@ const POLICY_OPERATION_ENDPOINTS: Record<string, string> = {
   // Archival conversion. The Convert tool reaches the same endpoint, but only through a
   // multi-format parameter model a policy step has no use for.
   pdfa: "/api/v1/convert/pdf/pdfa",
+  // Accessibility (PDF/UA) conversion — the archival sibling of pdfa.
+  pdfUa: "/api/v1/convert/pdf/ua",
   // Compliance gate — hands the document back untouched and fails the run when it does not meet
   // the standard. Dispatched only by the Compliance policy.
   complianceCheck: "/api/v1/security/validate-compliance",

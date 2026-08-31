@@ -13,6 +13,7 @@ import { ocrOperationConfig } from "@app/hooks/tools/ocr/useOCROperation";
 import { flattenOperationConfig } from "@app/hooks/tools/flatten/useFlattenOperation";
 import { compressOperationConfig } from "@app/hooks/tools/compress/useCompressOperation";
 import { pdfaOperationConfig } from "@app/policies/pdfaOperation";
+import { pdfUaOperationConfig } from "@app/policies/pdfUaOperation";
 import type { ToolEndpoint } from "@app/types/toolApiTypes";
 import type { WirePipelineStep } from "@app/policies/types";
 
@@ -156,6 +157,9 @@ export const POLICY_OPERATIONS = {
   // Long-term archival format: embeds fonts and colour profiles so the document still renders the
   // same decades from now, which is what a retention or archival requirement actually asks for.
   pdfa: describeToolOperation("/api/v1/convert/pdf/pdfa", pdfaOperationConfig),
+  // Accessibility format (PDF/UA): tags structure and embeds fonts so assistive tech can read the
+  // document. The archival sibling of pdfa - a compliance policy targets one or the other.
+  pdfUa: describeToolOperation("/api/v1/convert/pdf/ua", pdfUaOperationConfig),
   // The gate. Mappers are explicit because the values are a closed set: a stored step naming
   // something else is clamped to the default rather than reaching the backend.
   complianceCheck: {
