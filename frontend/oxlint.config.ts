@@ -81,7 +81,6 @@ const noExplicitAnyExcludes = [
   "editor/src/core/contexts/*.{js,mjs,jsx,ts,tsx}",
   "editor/src/core/hooks/*.{js,mjs,jsx,ts,tsx}",
   "editor/src/core/services/pdfProcessingService.ts",
-  "editor/src/core/services/zipFileService.ts",
   "editor/src/core/tools/annotate/useAnnotationSelection.ts",
   "editor/src/core/types/*.{js,mjs,jsx,ts,tsx}",
   "editor/src/core/utils/*.{js,mjs,jsx,ts,tsx}",
