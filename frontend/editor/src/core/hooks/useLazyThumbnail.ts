@@ -82,7 +82,6 @@ export function useLazyThumbnail(
   return thumb;
 }
 
-
 /**
  * Cache keyed by path + mtime + size, so an unchanged file never renders
  * twice and an edited one re-renders. Bounded: a mounted Downloads folder can
