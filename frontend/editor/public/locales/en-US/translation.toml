@@ -6477,7 +6477,7 @@ freeForever = "Free forever"
 noTeamResolved = "No team is resolved on your wallet yet — refresh and try again."
 ownerOnly = "Only the team owner can switch on the Processor plan."
 payInvoice = "Pay invoice to complete"
-planName = "Free"
+planName = "Editor"
 switchOnProcessor = "Switch on the Processor →"
 viewQuote = "View quote"
 

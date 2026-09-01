@@ -30,7 +30,7 @@ function isSaasCurrency(c: string | null): c is SaasCurrency {
 }
 
 /**
- * Linked, not yet subscribed — the "Free" current plan. Shows the team's free
+ * Linked, not yet subscribed — the "Editor" current plan. Shows the team's free
  * editor fleet, the Processor trial meter (with the inline "Switch on the
  * Processor" CTA → embedded Stripe Checkout), and the Enterprise upsell.
  */
@@ -108,7 +108,7 @@ export function FreePlanView({ wallet, unsynced, onSubscribed }: Props) {
         </span>
         <div className="portal-billing__current-plan-row">
           <h2 className="portal-billing__current-plan-name">
-            {t("portal.billing.freePlan.planName", "Free")}
+            {t("portal.billing.freePlan.planName", "Editor")}
           </h2>
           <StatusBadge tone="success" size="sm" showDot={false}>
             {t("portal.billing.freePlan.freeForever", "Free forever")}
