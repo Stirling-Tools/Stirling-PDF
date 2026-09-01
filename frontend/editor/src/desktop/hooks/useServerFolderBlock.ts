@@ -5,18 +5,16 @@ import type { ConnectionMode } from "@app/services/connectionModeService";
 import { useServerFolderBlock as useCoreServerFolderBlock } from "@core/hooks/useServerFolderBlock";
 
 /**
- * Desktop's server-folder blocker speaks in connection modes. In local mode
- * there is no server to hold a folder — "storage isn't enabled" would send
- * the user hunting for a setting that doesn't exist, when signing in to
- * Stirling Cloud or connecting a self-hosted server IS the fix. The other
- * modes have a real server, so the shared account/storage reasons apply.
+ * Desktop's blocker speaks in connection modes. Local mode has no server at all, so
+ * "storage isn't enabled" would send the user after a setting that does not exist
+ * when signing in or connecting a server is the fix. Other modes have a real server,
+ * so the shared reasons apply.
  */
 export function useServerFolderBlock(): string | null {
   const { t } = useTranslation();
   const coreReason = useCoreServerFolderBlock();
-  // Seeded from the service's cache so a remount answers correctly on its
-  // first frame; the effect only matters for the first-ever load and for
-  // mode switches afterwards.
+  // Seeded from the cache so a remount answers on its first frame; the effect covers
+  // the first-ever load and later mode switches.
   const [mode, setMode] = useState<ConnectionMode | null>(() =>
     connectionModeService.getCachedMode(),
   );

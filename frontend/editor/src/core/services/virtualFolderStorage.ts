@@ -66,10 +66,9 @@ class VirtualFolderStorageService {
   }
 
   /**
-   * Create a virtual folder under the given parent (null = root). The parent,
-   * when set, must itself be a virtual folder: a virtual row can't hang off a
-   * server folder, whose lifetime this browser doesn't control — a server-side
-   * delete would orphan the whole virtual subtree with nothing to notice.
+   * Create a virtual folder under `parent` (null = root). The parent must itself be
+   * virtual: hanging one off a server folder means a server-side delete orphans the
+   * whole subtree with nothing here to notice.
    */
   async createFolder(
     name: string,

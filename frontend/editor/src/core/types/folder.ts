@@ -38,17 +38,14 @@ export const FOLDER_COLOR_PALETTE = [
 export type FolderPaletteColor = (typeof FOLDER_COLOR_PALETTE)[number];
 
 /**
- * What kind of thing a folder is — three independent features that happen to
- * share a shape, not variants of one:
+ * Three independent features that share a shape, not variants of one:
  *
- * - `server`: a folder in app storage. Lives in the server's database, synced
- *   down and cached in IndexedDB; needs login + storage to exist.
- * - `virtual`: an organisation-only folder in this browser's IndexedDB. No
- *   server involvement at all, so it works offline and on installs with
- *   storage disabled.
- * - `local`: a real directory on the machine, mounted read-through — the
- *   filesystem is the source of truth and Stirling holds no copy of its
- *   contents, only this record of where it is.
+ * - `server`: in the server's database, synced down and cached; needs login and
+ *   storage to exist.
+ * - `virtual`: organisation only, in this browser's IndexedDB; works offline and
+ *   with storage disabled.
+ * - `local`: a real directory, mounted read-through - the filesystem is the source
+ *   of truth and nothing of its contents is held here.
  */
 export type FolderKind = "server" | "virtual" | "local";
 
@@ -56,9 +53,8 @@ export type FolderKind = "server" | "virtual" | "local";
 export interface FolderRecord {
   id: FolderId;
   /**
-   * Absent means `server`: kinds arrived after rows already existed in user
-   * databases and on the server wire, and every one of those is a server
-   * folder. Read through {@link folderKind} rather than directly.
+   * Absent means `server`: rows predating kinds are all server folders. Read
+   * through {@link folderKind} rather than directly.
    */
   kind?: FolderKind;
   name: string;

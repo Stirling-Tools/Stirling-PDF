@@ -272,8 +272,7 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
   const submitFolderName = useCallback(
     async (name: string) => {
       if (folderNameDialog.mode === "new") {
-        // The kind was chosen before the dialog opened (the New-folder menu);
-        // it only matters at the root — a subfolder inherits its parent's.
+        // Chosen before the dialog opened, and only used at the root.
         await folders.createFolder(
           name,
           folderNameDialog.parentId ?? folders.currentFolderId,
@@ -312,10 +311,8 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
   const moveFilesTo = useCallback(
     async (fileIds: FileId[], folderId: FolderId | null) => {
       if (fileIds.length === 0) return;
-      // fileMap is a render-time snapshot, and callers move files they
-      // created moments ago (an upload straight into a folder) — those ids
-      // aren't in any snapshot yet. Storage is the truth; falling back to it
-      // keeps a just-born file from silently dropping out of the move.
+      // fileMap is a render-time snapshot, so a file created moments ago is not in
+      // it yet. Storage is the truth, and falling back keeps it in the move.
       const fetched = await Promise.all(
         fileIds.map(
           (id) => fileMap.get(id) ?? fileStorage.getStirlingFileStub(id),
@@ -331,12 +328,9 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
       const targetKind = targetFolder ? folderKind(targetFolder) : null;
 
       if (targetKind === "local") {
-        // Being "in" a mounted folder means being ON the disk: the move
-        // writes each file into the directory (the read-through listing
-        // shows it at once) and retires the app-side copy — only after the
-        // bytes verifiably landed. Server files stay in the library: their
-        // home is the server, and a disk copy would fork the document's
-        // identity.
+        // In a mount means on the disk: write each file into the directory, then
+        // retire the app-side copy once the bytes verifiably landed. Server files
+        // stay put - a disk copy would fork the document's identity.
         const { written, failedCount } = await writeIntoMount(
           targetFolder?.directory,
           localOnly.map((stub) => ({
@@ -348,13 +342,11 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
           .filter((_, i) => written[i])
           .map((stub) => stub.id);
         if (movedIds.length > 0) {
-          // Take the superseded versions with it, or their bytes sit in
-          // storage forever - invisible, because listings only show leaves.
+          // Superseded versions go too, or their bytes sit in storage unseen.
           const orphans = await fileStorage.orphanedAncestorIds(movedIds);
           await fileActions.removeFiles([...movedIds, ...orphans], true);
         }
-        // One error slot, possibly two things to say — the user asked to
-        // move N files and needs the whole account of what didn't.
+        // One error slot, two possible failures: report both.
         const notices: string[] = [];
         if (failedCount > 0) {
           notices.push(
@@ -382,10 +374,8 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (targetKind === "virtual") {
-        // A virtual folder is browser-owned, so membership is too: local
-        // files just point their folderId at it — no upload, no server call.
-        // Server files stay out: their folder membership belongs to the
-        // server, and the next sync would silently snap them back.
+        // Browser-owned, so membership is too: local files just point folderId at
+        // it. Server files stay out or the next sync snaps them back.
         if (cloudFiles.length > 0) {
           folders.setError(
             t(

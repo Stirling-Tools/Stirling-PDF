@@ -234,8 +234,7 @@ export default function FileManagerView() {
     } else if (foldersById.has(param as FolderId)) {
       setCurrentFolderId(param as FolderId);
     } else if (isDiskFolderId(param) && resolveDiskFolder(param as FolderId)) {
-      // A mount subdirectory deep link: its record is rebuilt from the id,
-      // and the map will carry it on the next render.
+      // A mount subdirectory deep link: rebuilt from the id, mapped next render.
       setCurrentFolderId(param as FolderId);
     } else {
       setCurrentFolderId(ROOT_FOLDER_ID);
@@ -300,9 +299,7 @@ export default function FileManagerView() {
     }
     const lc = search.toLowerCase();
     const matched = folders.folders.filter((f) => {
-      // The Cloud tab is the server's view: browser folders hold files the
-      // tab's file filter will never list (a count with an empty room), and
-      // mounts aren't on the server at all.
+      // The Cloud tab is the server's view: browser folders and mounts aren't on it.
       if (currentTab === "cloud" && folderKind(f) !== "server") return false;
       if (search) {
         // Subtree-wide name match; exclude the current folder itself.
@@ -325,9 +322,7 @@ export default function FileManagerView() {
     // Tab overrides folder navigation for Local/Recent/Shared.
     switch (currentTab) {
       case "local":
-        // Local is the pseudo-folder for files that live nowhere: no server
-        // copy AND no folder membership (cf. file.ts). A local file placed in
-        // a browser folder is IN that folder, not loose here too.
+        // Local means no server copy AND no folder membership - not both places.
         return allFiles.filter(
           (f) => f.remoteStorageId == null && (f.folderId ?? null) === null,
         );
@@ -457,8 +452,7 @@ export default function FileManagerView() {
     [foldersById],
   );
 
-  // The directory is the source of truth: its contents are read fresh off
-  // the disk whenever the user is inside the folder, never ingested to show.
+  // Read-through: the directory is the source of truth, never ingested to show.
   const currentFolder = currentFolderId
     ? folders.foldersById.get(currentFolderId)
     : undefined;
@@ -469,16 +463,13 @@ export default function FileManagerView() {
   const { setError: setFolderError, registerDiskSubfolders } = folders;
   const [diskEntries, setDiskEntries] = useState<DiskFileEntry[]>([]);
   const [diskLoading, setDiskLoading] = useState(false);
-  // Bumped after this view writes into the directory (an upload while inside
-  // the mount), so the listing re-reads without leaving and re-entering.
+  // Bumped when this view writes into the directory, so the listing re-reads.
   const [diskRefreshTick, setDiskRefreshTick] = useState(0);
   useEffect(() => {
     if (!currentLocalDirectory || !canListDirectory) {
       setDiskEntries([]);
-      // Also stand the loading flag down: when the user navigates OUT of a
-      // mount mid-listing, the in-flight finally skips its reset (cancelled),
-      // and this branch is the only code that runs — without the reset the
-      // skeleton covers every folder for the rest of the session.
+      // Leaving a mount mid-listing cancels the in-flight reset, so clear the
+      // flag here or the skeleton covers every folder for the rest of the session.
       setDiskLoading(false);
       return;
     }
@@ -527,9 +518,8 @@ export default function FileManagerView() {
     return () => {
       cancelled = true;
     };
-    // The stable setter, not the context object: that changes identity on
-    // every folder mutation — including the setError call above, which would
-    // make a failing listing re-trigger itself.
+    // The stable setter, not the context: its identity changes on every folder
+    // mutation, including the setError above, so a failing listing would re-trigger.
   }, [
     currentLocalDirectory,
     currentFolderId,
@@ -539,8 +529,7 @@ export default function FileManagerView() {
     t,
   ]);
 
-  // Opening a disk file loads its bytes into the workbench — the one moment
-  // anything leaves the disk, and only because the user asked to work on it.
+  // The one moment bytes leave the disk, and only because the user asked.
   const openDiskFile = useCallback(
     async (entry: DiskFileEntry) => {
       try {
@@ -574,9 +563,7 @@ export default function FileManagerView() {
     // currentFolderId. When no search is active, every item is in the
     // current folder by definition and the subtitle is suppressed.
     const inSearch = search.length > 0;
-    // Inside a mounted folder the listing IS the directory: its
-    // subdirectories (registered as folders when listed) and its files.
-    // Storage rows don't apply there.
+    // Inside a mount the listing is the directory; storage rows don't apply.
     if (currentLocalDirectory) {
       const needle = search.toLowerCase();
       const compare: Record<
@@ -708,8 +695,7 @@ export default function FileManagerView() {
       const target =
         currentTab === "all" || currentTab === "cloud" ? currentFolderId : null;
       const targetFolder = target ? folders.foldersById.get(target) : undefined;
-      // A mount's contents ARE its directory: the upload writes straight to
-      // the disk, never detouring through app storage.
+      // A mount's upload writes straight to disk, never through app storage.
       if (targetFolder && folderKind(targetFolder) === "local") {
         const { failedCount } = await writeIntoMount(
           targetFolder.directory,
@@ -727,10 +713,8 @@ export default function FileManagerView() {
         setDiskRefreshTick((tick) => tick + 1);
         return;
       }
-      // Everywhere else the file is BORN in the folder — membership set
-      // atomically with the stub, not by a move that could fail afterwards.
-      // For a server folder that membership is local until the save-to-server
-      // lands; moveFilesTo runs that sync (and is a no-op placement-wise).
+      // Everywhere else membership is set with the stub rather than by a move that
+      // could fail after. For a server folder it stays local until the save lands.
       const added = await addFiles(files, {
         selectFiles: false,
         skipWorkspaceDispatch: true,
@@ -1108,11 +1092,9 @@ export default function FileManagerView() {
     [selectedFiles, fileMap],
   );
 
-  // Per-destination availability for the New-folder menu. The reasons render
-  // inline as the disabled item's caption — the reason IS the information —
-  // and the server one comes through a build seam, because what actually
-  // blocks a server folder differs by platform (desktop's local mode has no
-  // server at all, not a storage setting to flip).
+  // Per-destination availability for the New-folder menu; the reason renders as the
+  // disabled item's caption. The server one comes through a build seam because what
+  // blocks it differs by platform - desktop's local mode has no server at all.
   const serverFolderDisabledReason = useServerFolderBlock() ?? undefined;
 
   const { addLocalFolder, createFolderHere, createFolderHereBlockedReason } =
@@ -1120,9 +1102,7 @@ export default function FileManagerView() {
 
   // null = New folder actionable; string = disabled tooltip reason.
   const newFolderDisabledReason: string | null = useMemo(() => {
-    // Folders only render in the All/Cloud views, so creating one from any
-    // other tab would appear to do nothing. (Folders are NOT cloud-only —
-    // this is about which views show them, not where they can exist.)
+    // Only All/Cloud render folders, so creating one elsewhere would look inert.
     if (
       currentTab === "local" ||
       currentTab === "recent" ||
@@ -1134,9 +1114,8 @@ export default function FileManagerView() {
         "Switch to All or Cloud to create folders.",
       );
     }
-    // Inside a server folder the subfolder inherits kind server, so the
-    // server-side blockers apply to the button itself — otherwise the dialog
-    // opens only to fail at submit with a raw error.
+    // A subfolder inherits kind server, so the blockers gate the button rather
+    // than letting the dialog open and fail at submit.
     if (
       currentFolder &&
       folderKind(currentFolder) === "server" &&
@@ -1144,10 +1123,8 @@ export default function FileManagerView() {
     ) {
       return serverFolderDisabledReason;
     }
-    // The web root creates on the server or not at all, so the same blockers
-    // gate the button there. Desktop's root menu stays clickable regardless:
-    // "Add local folder" needs no server, and the server item explains its
-    // own disabled state inline.
+    // The web root creates on the server or not at all. Desktop's stays clickable:
+    // a local folder needs no server, and the server item explains itself inline.
     if (
       folders.currentFolderId === null &&
       !canPickDirectory &&
@@ -1197,8 +1174,7 @@ export default function FileManagerView() {
           const handleRefresh = async () => {
             setRefreshing(true);
             try {
-              // Inside a mount, "refresh" means the directory too — the
-              // listing is read-through and only re-reads when told to.
+              // In a mount, refresh means the directory: the listing only re-reads when told.
               if (currentLocalDirectory) {
                 setDiskRefreshTick((tick) => tick + 1);
               }
@@ -1271,10 +1247,8 @@ export default function FileManagerView() {
                     </span>
                   </Tooltip>
                 ) : folders.currentFolderId !== null || !canPickDirectory ? (
-                  // Inside a folder there is nothing to choose: the subfolder
-                  // inherits its parent's kind. On the web the root offers no
-                  // choice either — folders live on the server, full stop —
-                  // so both cases are a plain click → name dialog.
+                  // Nothing to choose: a subfolder inherits its parent's kind, and on
+                  // the web everything lives on the server. Straight to the dialog.
                   <Button
                     variant="secondary"
                     size="sm"
@@ -1288,9 +1262,7 @@ export default function FileManagerView() {
                     {t("filesPage.newFolder", "New folder")}
                   </Button>
                 ) : (
-                  // Desktop root: the button IS the menu. The destinations
-                  // are peers — neither deserves to be the hidden one behind
-                  // a chevron — so every click shows both.
+                  // Desktop root: two peer destinations, so the button is the menu.
                   <Menu shadow="md" position="bottom-end" withinPortal>
                     <Menu.Target>
                       <Button
@@ -1977,10 +1949,8 @@ export default function FileManagerView() {
               // identical regardless of where the user clicks from.
               onEmptyUpload={() => fileInputRef.current?.click()}
               onEmptyCreateFolder={createFolderHere}
-              // The CTA is a single-click shortcut, so it also blocks when
-              // the shortcut has nothing safe to do (web root, no server) —
-              // unlike the header button, whose root menu still offers the
-              // explicit choices.
+              // A single-click shortcut, so it also blocks where it has nothing safe
+              // to do, unlike the header button whose menu still offers the choices.
               newFolderDisabledReason={
                 newFolderDisabledReason ?? createFolderHereBlockedReason
               }
@@ -2069,10 +2039,8 @@ export default function FileManagerView() {
       <MoveToFolderDialog
         opened={moveDialog.open}
         onClose={closeMoveDialog}
-        // Only real destinations. Files can go anywhere — a mount takes them
-        // by writing to its directory — but a FOLDER can only move within
-        // its own kind, and never into a mount (a directory's subfolders are
-        // the filesystem's business).
+        // Files can go anywhere, but a folder moves only within its own kind and
+        // never into a mount - a directory's subfolders are the filesystem's.
         folders={folders.folders.filter((candidate) => {
           if (!moveDialog.folderId) return true;
           if (folderKind(candidate) === "local") return false;

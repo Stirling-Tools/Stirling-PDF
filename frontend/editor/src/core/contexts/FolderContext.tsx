@@ -98,10 +98,9 @@ interface FolderContextValue {
     reason?: "endpoint-missing" | "network" | "server" | "client";
   }>;
   /**
-   * Create a folder. With a parent, the kind is the parent's — a subtree is
-   * one kind throughout, since each kind has its own system of record and a
-   * mixed chain would mean an ancestry no single store can vouch for. At the
-   * root, `kind` decides, defaulting to server.
+   * Create a folder. With a parent the kind is the parent's - one subtree, one
+   * system of record, since a mixed chain has no store that can vouch for it. At
+   * the root `kind` decides, defaulting to server.
    */
   createFolder: (
     name: string,
@@ -119,22 +118,19 @@ interface FolderContextValue {
   ) => Promise<FolderRecord | null>;
   deleteFolder: (id: FolderId) => Promise<FolderId[]>;
   /**
-   * Mount a directory on the machine as a local folder. Idempotent per
-   * directory. Removing the mount later goes through {@link deleteFolder};
-   * the directory itself is never touched by either.
+   * Mount a directory as a local folder, idempotent per directory. Unmounting goes
+   * through {@link deleteFolder}; neither touches the directory itself.
    */
   mountLocalFolder: (directory: string, name: string) => Promise<FolderRecord>;
   /**
-   * Subdirectories a mount listing found under `parentId`. They are not
-   * stored — the directory is the record — so each listing replaces the
-   * previous set for that parent, and a directory removed on disk drops out
-   * on the next look.
+   * Subdirectories a mount listing found under `parentId`. Not stored - the
+   * directory is the record - so each listing replaces the previous set, and one
+   * removed on disk drops out on the next look.
    */
   registerDiskSubfolders: (parentId: FolderId, records: FolderRecord[]) => void;
   /**
-   * Rebuild the records behind a disk-subfolder id (a `/files/<id>` link
-   * arriving before any listing ran). True when the id sits under a known
-   * mount and its chain is now registered.
+   * Rebuild the records behind a disk-subfolder id, for a link arriving before any
+   * listing ran. True when it sits under a known mount and is now registered.
    */
   resolveDiskFolder: (id: FolderId) => boolean;
 
@@ -296,8 +292,7 @@ function shouldStrandedReset(
 
 export function FolderProvider({ children }: FolderProviderProps) {
   const [storedFolders, setFolders] = useState<FolderRecord[]>([]);
-  // Subdirectories discovered inside mounts, keyed by the parent they were
-  // listed under. In memory only: a directory is its own record.
+  // Subdirectories found inside mounts, keyed by parent. In memory only.
   const [diskSubfolders, setDiskSubfolders] = useState<
     Map<FolderId, FolderRecord[]>
   >(() => new Map());
@@ -343,8 +338,7 @@ export function FolderProvider({ children }: FolderProviderProps) {
   const refresh = useCallback(async () => {
     setLoading(true);
     try {
-      // Two systems of record: the server cache and the browser-owned virtual
-      // store. The UI sees one list; kind says which rules each row follows.
+      // Two systems of record behind one list; kind says which rules a row follows.
       const [server, virtual, local] = await Promise.all([
         folderStorage.getAllFolders(),
         virtualFolderStorage.getAllFolders(),
@@ -422,8 +416,7 @@ export function FolderProvider({ children }: FolderProviderProps) {
         console.warn("[FolderContext] cache replace failed", cacheErr);
       }
       if (mountedRef.current) {
-        // Server-wins applies to server rows only: virtual and local folders
-        // have no server copy, so a pull says nothing about them.
+        // Server-wins is for server rows: the other kinds have no server copy.
         setFolders((prev) => [
           ...remote,
           ...prev.filter((f) => folderKind(f) !== "server"),
@@ -620,19 +613,15 @@ export function FolderProvider({ children }: FolderProviderProps) {
       parentFolderId: FolderId | null = currentFolderId,
       kind?: FolderKind,
     ): Promise<FolderRecord> => {
-      // A child's kind is its parent's, always: one subtree, one system of
-      // record. Only a root-level create gets to choose, and an unstated
-      // choice means the server — the one kind every creating surface offers.
-      // (Virtual is reachable only as a subfolder of an existing virtual
-      // folder; local is never created here at all.)
+      // A child's kind is its parent's. Only a root create chooses, defaulting to
+      // server; virtual is reachable only under a virtual parent, local never here.
       const effectiveKind: FolderKind =
         parentFolderId !== null
           ? requireKind(parentFolderId)
           : (kind ?? "server");
       if (effectiveKind === "local") {
-        // A subfolder of a mount is a directory: make it on disk and present
-        // it the way a listing would. Mount roots themselves come from the
-        // picker, never from here.
+        // A mount's subfolder is a directory: make it on disk, present it as a
+        // listing would. Mount roots come from the picker, never here.
         const parent = parentFolderId ? foldersById.get(parentFolderId) : null;
         if (!parent?.directory) {
           throw new Error("Cannot create a folder outside a mounted directory");
@@ -721,8 +710,7 @@ export function FolderProvider({ children }: FolderProviderProps) {
     async (id: FolderId, name: string) => {
       const kind = requireKind(id);
       if (kind === "local") {
-        // The record's name is the directory's name; renaming the directory
-        // is the filesystem's business, not Stirling's.
+        // The record's name is the directory's; renaming it is the filesystem's job.
         throw new Error("A local folder takes its name from its directory");
       }
       if (kind === "virtual") {
@@ -747,8 +735,7 @@ export function FolderProvider({ children }: FolderProviderProps) {
   const moveFolder = useCallback(
     async (id: FolderId, newParentId: FolderId | null) => {
       const kind = requireKind(id);
-      // One subtree, one system of record: a folder can move to the root or
-      // under a parent of its own kind, never across.
+      // One subtree, one kind: to the root or under its own kind, never across.
       if (newParentId !== null && requireKind(newParentId) !== kind) {
         throw new Error("Folders can only move within their own kind");
       }
@@ -785,16 +772,13 @@ export function FolderProvider({ children }: FolderProviderProps) {
     ) => {
       const kind = requireKind(id);
       if (kind === "local") {
-        // Nothing persists a local folder's cosmetics yet; its record lives
-        // with whichever feature mounted it.
+        // Nothing persists a local folder's cosmetics yet.
         throw new Error("Local folders cannot be recoloured yet");
       }
       if (kind === "virtual") {
-        // Forward only the fields the picker actually sent: it sends one key
-        // per interaction, and the store's spread persists an explicit
-        // undefined — so passing both keys would erase whichever appearance
-        // field the user did NOT touch. (icon: null means "clear the icon"
-        // and maps to an explicit undefined deliberately.)
+        // Only the fields the picker sent: it sends one key per interaction, and the
+        // store's spread persists an explicit undefined, so passing both would erase
+        // the one the user did not touch. icon: null clears the icon, deliberately.
         const updates: { color?: string; icon?: string } = {};
         if (appearance.color !== undefined) updates.color = appearance.color;
         if (appearance.icon !== undefined) {
@@ -827,14 +811,12 @@ export function FolderProvider({ children }: FolderProviderProps) {
       const kind = requireKind(id);
       if (kind === "local") {
         if (isDiskFolderId(id)) {
-          // A subdirectory is the disk's, not a record of ours; the app never
-          // deletes directories.
+          // A subdirectory is the disk's; the app never deletes directories.
           throw new Error(
             "Subfolders of a mounted directory are removed on disk",
           );
         }
-        // Removing the mount removes the record and nothing else — the
-        // directory on disk is the user's, always.
+        // Removes the record and nothing else; the directory is the user's.
         await localFolderStorage.removeFolder(id);
         if (mountedRef.current) {
           setError(null);
@@ -847,8 +829,7 @@ export function FolderProvider({ children }: FolderProviderProps) {
         return [id];
       }
       if (kind === "virtual") {
-        // Same shape as the server path below: subtree delete, strand-reset,
-        // then detach the files that pointed at any removed folder.
+        // Same shape as the server path: subtree delete, strand-reset, detach files.
         const removed = await virtualFolderStorage.deleteFolder(id);
         const removedSet = new Set(removed);
         if (mountedRef.current) {
@@ -977,8 +958,7 @@ export function FolderProvider({ children }: FolderProviderProps) {
       const path = diskFolderPath(id);
       if (path === null) return false;
       const pathKey = directoryKey(path);
-      // The mount whose directory contains the path — the deepest one, since
-      // nested mounts are allowed and the closer root gives the shorter chain.
+      // The deepest mount containing the path: nested mounts give a shorter chain.
       let mount: FolderRecord | null = null;
       let mountKeyLength = -1;
       for (const folder of storedFolders) {

@@ -83,15 +83,13 @@ export function useLazyThumbnail(
 }
 
 /**
- * Cache keyed by path + mtime + size, so an unchanged file never renders
- * twice and an edited one re-renders. Bounded: a mounted Downloads folder can
- * list hundreds of files, and each generation reads the file's FULL bytes off
- * disk, so the cache is what makes revisits and re-sorts free.
+ * Keyed by path + mtime + size, so an unchanged file never renders twice and an
+ * edited one does. Each generation reads the file's full bytes off disk, so this is
+ * what makes revisits and re-sorts free.
  */
 const diskThumbCache = new Map<string, string>();
-// Image thumbnails are data URLs whose size tracks the source image, so the
-// cache is bounded by BYTES, not entries — 300 photos would otherwise pin
-// gigabytes of strings for the process lifetime.
+// Bounded by bytes, not entries: image thumbnails are data URLs that track the
+// source, so 300 photos would pin gigabytes of strings for the process lifetime.
 const DISK_THUMB_CACHE_MAX_BYTES = 48 * 1024 * 1024;
 let diskThumbCacheBytes = 0;
 
@@ -102,8 +100,7 @@ function cacheDiskThumb(key: string, url: string): void {
     diskThumbCacheBytes + url.length > DISK_THUMB_CACHE_MAX_BYTES &&
     diskThumbCache.size > 0
   ) {
-    // Maps iterate in insertion order; evicting the first entry makes this
-    // FIFO — crude, but evicted thumbnails simply re-render on revisit.
+    // Insertion order makes this FIFO; an evicted thumbnail re-renders on revisit.
     const oldest = diskThumbCache.keys().next().value!;
     diskThumbCacheBytes -= diskThumbCache.get(oldest)!.length;
     diskThumbCache.delete(oldest);
@@ -112,9 +109,7 @@ function cacheDiskThumb(key: string, url: string): void {
   diskThumbCacheBytes += url.length;
 }
 
-// Reading a file's bytes is the expensive step, so it only happens for types
-// the generator can actually render — it branches on MIME (PDF and images)
-// and returns nothing for everything else, which must not cost a full read.
+// Reading the bytes is the expensive step, so only for types the generator renders.
 const THUMBABLE_EXTENSIONS = new Set([
   "pdf",
   "png",

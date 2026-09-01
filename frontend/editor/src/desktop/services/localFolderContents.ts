@@ -45,26 +45,19 @@ async function isWithinMount(path: string): Promise<boolean> {
     );
 }
 
-/**
- * A directory can hold anything; the page shouldn't drown in it. Everything
- * up to the cap lists; past it, the freshest files win — for a Downloads-like
- * directory that is also the end the user is looking for.
- */
+/** Caps the listing; past the cap the freshest files win, which is what is wanted
+ *  in a Downloads-like directory. */
 const LIST_CAP = 500;
 
 /**
- * Every stat is a webview↔Rust round trip, so a big directory's listing cost
- * is IPC latency, not disk speed. Overlapping the calls turns N sequential
- * hops into N/BATCH; the batch bound keeps a 10k-file directory from opening
- * 10k requests at once.
+ * Every stat is a webview-to-Rust round trip, so listing cost is IPC latency, not
+ * disk speed. Overlapping turns N hops into N/BATCH, bounded so a 10k-file
+ * directory does not open 10k requests at once.
  */
 const STAT_BATCH = 32;
 
-/**
- * Lexical join. The async path.join is itself an IPC round trip, which a
- * per-file loop cannot afford; joining a listed directory to a child name it
- * itself reported needs no normalization the string can't do.
- */
+/** Lexical join: path.join is another IPC round trip, and a directory joined to a
+ *  name it reported itself needs no normalisation a string cannot do. */
 function joinPath(directory: string, name: string): string {
   const sep = directory.includes("\\") ? "\\" : "/";
   const base = directory.endsWith(sep)
@@ -80,8 +73,7 @@ export async function listDirectory(
 ): Promise<DiskListing | null> {
   if (!canListDirectory) return null;
   const dirEntries = await readDir(directory);
-  // Visible entries only: dotfiles are hidden on disk for a reason. One
-  // level deep — a subdirectory is listed when the user enters it.
+  // Visible entries, one level deep: a subdirectory lists when the user enters it.
   const visible = dirEntries.filter((entry) => !entry.name.startsWith("."));
   const directories: DiskDirEntry[] = visible
     .filter((entry) => entry.isDirectory)
@@ -121,10 +113,8 @@ export async function listDirectory(
   return { files: files.slice(0, LIST_CAP), directories };
 }
 
-/**
- * Create a subdirectory. Same containment and name rules as a file write;
- * the OS refuses an existing name, which is the answer the user wants.
- */
+/** Create a subdirectory. Same containment and name rules as a file write; the OS
+ *  refuses an existing name, which is the answer the user wants. */
 export async function makeDiskDirectory(
   parent: string,
   name: string,
@@ -137,10 +127,9 @@ export async function makeDiskDirectory(
 }
 
 /**
- * The filesystem gives back bytes and a name, never a MIME type — but
- * everything downstream branches on File.type (the thumbnail generator's PDF
- * path, the workbench's format handling), and an untyped File silently takes
- * every "unknown format" branch. Recover the type from the extension.
+ * The filesystem returns bytes and a name, never a MIME type, and everything
+ * downstream branches on File.type - an untyped File silently takes every
+ * "unknown format" path. Recover it from the extension.
  */
 const MIME_BY_EXTENSION: Record<string, string> = {
   pdf: "application/pdf",
@@ -172,10 +161,9 @@ export async function readDiskFile(entry: DiskFileEntry): Promise<File | null> {
 const UNIQUE_NAME_ATTEMPTS = 1000;
 
 /**
- * File names come from outside the app's control — zip entries, a server's
- * Content-Disposition — and this function holds a filesystem-wide write
- * scope. Reduce whatever arrives to a plain basename so a name like
- * "..\\evil" cannot steer the write out of the chosen directory.
+ * Names arrive from outside the app - zip entries, Content-Disposition - and this
+ * holds a filesystem-wide write scope. Reduce whatever comes to a plain basename so
+ * a traversal like "..\evil" cannot steer the write out of the chosen directory.
  */
 function safeBaseName(name: string): string {
   const base = name.split(/[\\/]/).pop() ?? "";
@@ -196,11 +184,9 @@ export async function writeDiskFile(
   const base = dot > 0 ? name.slice(0, dot) : name;
   const ext = dot > 0 ? name.slice(dot) : "";
   const data = new Uint8Array(await bytes.arrayBuffer());
-  // The directory is the user's: an existing name keeps its file and the
-  // incomer takes " (n)", the same convention the OS itself uses. The
-  // exclusive create is what makes that a guarantee rather than a hope: a
-  // probe-then-write would let a file created in between be overwritten,
-  // while create-new fails atomically and the loop simply moves on.
+  // An existing name keeps its file and the incomer takes " (n)", as the OS does.
+  // The exclusive create is what makes that a guarantee: probe-then-write would let
+  // a file created in between be overwritten, create-new fails and the loop moves on.
   for (let n = 0; n < UNIQUE_NAME_ATTEMPTS; n++) {
     const candidate = n === 0 ? name : `${base} (${n})${ext}`;
     const path = joinPath(directory, candidate);
@@ -214,10 +200,8 @@ export async function writeDiskFile(
   throw new Error(`No free name for ${name} in ${directory}`);
 }
 
-/**
- * The plugin surfaces OS errors as text. EEXIST is 17; Windows reports
- * ERROR_FILE_EXISTS (80) or ERROR_ALREADY_EXISTS (183) depending on the call.
- */
+/** The plugin surfaces OS errors as text. EEXIST is 17; Windows reports 80 or 183
+ *  depending on the call. */
 function isAlreadyExists(err: unknown): boolean {
   const text = err instanceof Error ? err.message : String(err);
   return /already exists|file exists|os error (17|80|183)\b/i.test(text);
