@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   ColorInput,
   Group,
@@ -18,7 +19,6 @@ import LockOpenIcon from "@mui/icons-material/LockOpenOutlined";
 import TextFieldsIcon from "@mui/icons-material/TextFields";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import LayersIcon from "@mui/icons-material/LayersOutlined";
-import ImageIcon from "@mui/icons-material/ImageOutlined";
 import FlipToFrontIcon from "@mui/icons-material/FlipToFrontOutlined";
 import FlipToBackIcon from "@mui/icons-material/FlipToBackOutlined";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
@@ -29,137 +29,57 @@ import VerticalAlignCenterIcon from "@mui/icons-material/VerticalAlignCenter";
 import AlignHorizontalLeftIcon from "@mui/icons-material/AlignHorizontalLeftOutlined";
 import AlignHorizontalCenterIcon from "@mui/icons-material/AlignHorizontalCenterOutlined";
 import AlignHorizontalRightIcon from "@mui/icons-material/AlignHorizontalRightOutlined";
-// LinearScale stands in for "distribute" since MUI Material doesn't ship a
-// dedicated DistributeHorizontally / DistributeVertically icon.
 import LinearScaleIcon from "@mui/icons-material/LinearScaleOutlined";
-import RotateLeftIcon from "@mui/icons-material/RotateLeftOutlined";
-import RotateRightIcon from "@mui/icons-material/RotateRightOutlined";
-import FlipIcon from "@mui/icons-material/FlipOutlined";
-import OpenInNewIcon from "@mui/icons-material/OpenInNewOutlined";
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   parseCssColor,
   toCssHex,
 } from "@app/tools/pdfTextEditor/v2/model/Color";
-import type { ToolbarState } from "@app/tools/pdfTextEditor/v2/types";
 import { familyOf } from "@app/tools/pdfTextEditor/v2/util/fontFamily";
 import { FontFamilySelect } from "@app/tools/pdfTextEditor/v2/components/FontFamilySelect";
+import type { useToolbarController } from "@app/tools/pdfTextEditor/v2/hooks/useToolbarController";
 
-export type ChangeCaseMode = "upper" | "lower" | "title" | "sentence";
-export type AlignMode =
-  | "left"
-  | "center-h"
-  | "right"
-  | "top"
-  | "middle-v"
-  | "bottom";
-export type ZOrderToolbarMode = "to-front" | "to-back" | "forward" | "backward";
-export type ImageTransformToolbarMode =
-  | "rotate-cw"
-  | "rotate-ccw"
-  | "flip-h"
-  | "flip-v";
+type Controller = ReturnType<typeof useToolbarController>;
 
+/**
+ * The canvas toolbar: undo/redo, plus formatting for the current selection.
+ *
+ * Character formatting sits here rather than in the side panel because that is
+ * where every document editor puts it. The group is *contextual* - it appears
+ * with a selection instead of standing permanently greyed - which is what
+ * keeps the strip to a single row.
+ */
 interface ToolbarProps {
-  state: ToolbarState;
-  canUndo: boolean;
-  canRedo: boolean;
-  onUndo: () => void;
-  onRedo: () => void;
-  onChangeFontSize: (size: number) => void;
-  onChangeFill: (hex: string) => void;
-  /** Null colour clears the outline; width 0 does the same. */
-  onChangeOutline: (hex: string | null, width: number) => void;
-  onChangeFontFamily: (family: string) => void;
-  onToggleItalic: () => void;
-  onDelete: () => void;
-  onToggleLock: () => void;
-  onChangeCase: (mode: ChangeCaseMode) => void;
-  onChangeZOrder: (mode: ZOrderToolbarMode) => void;
-  onAlign: (mode: AlignMode) => void;
-  onDistribute: (axis: "horizontal" | "vertical") => void;
-  onTransformImage: (mode: ImageTransformToolbarMode) => void;
-  /** Swap the selected image's pixels, keeping its placement. */
-  onReplaceImage: () => void;
-  /** Hand the selected image to another app and re-import its saves. */
-  onEditImageExternally: () => void;
-  /** False where the browser cannot write a file the user then edits. */
-  externalEditSupported: boolean;
-  /** True when every selected run/image is currently locked. */
-  selectionAllLocked: boolean;
-  /** True when at least one text run is selected. Disables case + lock-for-runs when false. */
-  hasRunSelection: boolean;
-  /** True when at least one image is selected. Gates rotate/flip buttons. */
-  hasImageSelection: boolean;
-  /** Count of selected objects (runs + images). 0/1 disables align; <3 disables distribute. */
-  selectionCount: number;
-  /** True when exactly one multi-line paragraph is selected - enables the
-   * horizontal aligns (left/centre/right) to align that paragraph's lines. */
-  canAlignLines: boolean;
-  disabled: boolean;
+  controller: Controller;
 }
 
 function ToolbarSeparator() {
   return (
-    <Text size="sm" c="dimmed" aria-hidden>
+    <Text size="sm" c="dimmed" aria-hidden style={NO_SHRINK}>
       |
     </Text>
   );
 }
 
-export function Toolbar({
-  state,
-  canUndo,
-  canRedo,
-  onUndo,
-  onRedo,
-  onChangeFontSize,
-  onChangeFill,
-  onChangeOutline,
-  onChangeFontFamily,
-  onToggleItalic,
-  onDelete,
-  onToggleLock,
-  onChangeCase,
-  onChangeZOrder,
-  onAlign,
-  onDistribute,
-  onTransformImage,
-  onReplaceImage,
-  onEditImageExternally,
-  externalEditSupported,
-  selectionAllLocked,
-  hasRunSelection,
-  hasImageSelection,
-  selectionCount,
-  canAlignLines,
-  disabled,
-}: ToolbarProps) {
+/** Toolbar children keep their natural width; the strip scrolls if pressed. */
+const NO_SHRINK = { flexShrink: 0 } as const;
+
+export function Toolbar({ controller }: ToolbarProps) {
   const { t } = useTranslation();
-  // Mantine only closes the fill picker's dropdown on blur, and it is
-  // portalled over the page - so we drive it and close it on a commit.
-  const [fillPickerOpen, setFillPickerOpen] = useState(false);
-  const imageDisabled = disabled || !hasImageSelection;
-  // Vertical aligns + distribute need 2+ objects. Horizontal aligns also
-  // accept a single multi-line paragraph (aligns its lines to each other).
-  const alignDisabled = disabled || selectionCount < 2;
-  const hAlignDisabled = disabled || (selectionCount < 2 && !canAlignLines);
-  const distributeDisabled = disabled || selectionCount < 3;
-  const fillHex = state.fill ? toCssHex(state.fill) : "#000000";
-  const outlineHex = state.stroke ? toCssHex(state.stroke) : "#000000";
-  const outlineWidth = state.strokeWidth ?? 0;
-  // Every id form ends in the family, "pdf:<ptr>:<family>" included - the picker
-  // needs that name, not the id, to be able to name an embedded face at all.
-  const fontFamily = state.fontFamily ? familyOf(state.fontFamily) : null;
+  const hasSelection = controller.selectionCount > 0;
   return (
     <Group
       gap="xs"
       px="md"
       py="xs"
+      wrap="nowrap"
       style={{
         borderBottom: "1px solid var(--mantine-color-default-border)",
         background: "var(--mantine-color-body)",
+        // Scrolls rather than wraps: a second row was the old strip's failure
+        // mode, and a wrapped toolbar hides controls without saying so.
+        overflowX: "auto",
+        scrollbarWidth: "thin",
       }}
       data-testid="v2-toolbar"
     >
@@ -168,11 +88,13 @@ export function Toolbar({
       >
         <Button
           variant="tertiary"
+          accent="neutral"
           size="sm"
-          onClick={onUndo}
-          disabled={!canUndo}
+          onClick={controller.onUndo}
+          disabled={!controller.canUndo}
           aria-label={t("pdfTextEditorV2.toolbar.undo", "Undo")}
           data-testid="v2-undo"
+          style={NO_SHRINK}
           leftSection={<UndoIcon fontSize="small" />}
         />
       </Tooltip>
@@ -181,29 +103,73 @@ export function Toolbar({
       >
         <Button
           variant="tertiary"
+          accent="neutral"
           size="sm"
-          onClick={onRedo}
-          disabled={!canRedo}
+          onClick={controller.onRedo}
+          disabled={!controller.canRedo}
           aria-label={t("pdfTextEditorV2.toolbar.redo", "Redo")}
           data-testid="v2-redo"
+          style={NO_SHRINK}
           leftSection={<RedoIcon fontSize="small" />}
         />
       </Tooltip>
-      <ToolbarSeparator />
+      {hasSelection && (
+        <>
+          <ToolbarSeparator />
+          <FormatGroup controller={controller} />
+          <ToolbarSeparator />
+          <ObjectGroup controller={controller} />
+        </>
+      )}
+    </Group>
+  );
+}
+
+/** Character formatting. Text runs only - absent for a pure image selection. */
+function FormatGroup({ controller }: { controller: Controller }) {
+  const { t } = useTranslation();
+  const {
+    state,
+    hasRunSelection,
+    onChangeFontFamily,
+    onChangeFontSize,
+    onChangeFill,
+    onChangeOutline,
+    onToggleItalic,
+    onChangeCase,
+  } = controller;
+  // Mantine only closes the fill picker's dropdown on blur, and it is
+  // portalled over the page - so we drive it and close it on a commit.
+  const [fillPickerOpen, setFillPickerOpen] = useState(false);
+  if (!hasRunSelection) return null;
+
+  const fillHex = state.fill ? toCssHex(state.fill) : "#000000";
+  const outlineHex = state.stroke ? toCssHex(state.stroke) : "#000000";
+  const outlineWidth = state.strokeWidth ?? 0;
+  const fontFamily = state.fontFamily ? familyOf(state.fontFamily) : null;
+
+  return (
+    <>
       <FontFamilySelect
         value={fontFamily}
         onChange={onChangeFontFamily}
         mixed={state.mixed.fontFamily}
-        disabled={disabled || !hasRunSelection}
       />
       <NumberInput
         size="xs"
-        w={72}
+        w={76}
         min={4}
         max={144}
+        // A PDF font size is a float, so 11pt arrives as 11.000000002 and
+        // rendered in full. One decimal is all a type size ever needs.
+        decimalScale={1}
         // Blank rather than a made-up number when the runs disagree, but still
         // editable: typing a size is how you make a mixed selection uniform.
-        value={state.mixed.fontSize ? "" : (state.fontSize ?? 12)}
+        value={
+          state.mixed.fontSize
+            ? ""
+            : Math.round((state.fontSize ?? 12) * 10) / 10
+        }
         placeholder={
           state.mixed.fontSize
             ? t("pdfTextEditorV2.fontPicker.mixed", "Mixed")
@@ -213,13 +179,20 @@ export function Toolbar({
           const next = typeof value === "number" ? value : Number(value);
           if (Number.isFinite(next) && next > 0) onChangeFontSize(next);
         }}
-        disabled={disabled || !hasRunSelection}
         aria-label={t("pdfTextEditorV2.toolbar.fontSize", "Font size")}
         data-testid="v2-font-size"
+        style={NO_SHRINK}
       />
       <ColorInput
         size="xs"
-        w={132}
+        w={fillPickerOpen ? 116 : 58}
+        withEyeDropper={false}
+        styles={{
+          input: {
+            color: fillPickerOpen ? undefined : "transparent",
+            transition: "width 120ms ease-out",
+          },
+        }}
         value={fillHex}
         // Blur re-emits the last valid colour, which re-applied the fill AFTER
         // an undo. The input is controlled, so there is nothing to fix up.
@@ -262,11 +235,9 @@ export function Toolbar({
           onChange: setFillPickerOpen,
           transitionProps: { transition: "fade", duration: 0 },
         }}
-        // Enabled for MIXED fills (state.fill null) on purpose: picking a
-        // colour is the only way to unify a multi-colour selection.
-        disabled={disabled || !hasRunSelection}
         aria-label={t("pdfTextEditorV2.toolbar.fontColour", "Font colour")}
         data-testid="v2-colour"
+        style={NO_SHRINK}
       />
       <Popover position="bottom-start" withinPortal shadow="md">
         <Popover.Target>
@@ -278,13 +249,14 @@ export function Toolbar({
           >
             <Button
               variant={outlineWidth > 0 ? "primary" : "tertiary"}
+              accent={outlineWidth > 0 ? "default" : "neutral"}
               size="sm"
-              disabled={disabled || !hasRunSelection}
               aria-label={t(
                 "pdfTextEditorV2.toolbar.advancedColour",
                 "Advanced colour",
               )}
               data-testid="v2-colour-advanced"
+              style={NO_SHRINK}
               leftSection={<TuneIcon fontSize="small" />}
             />
           </Tooltip>
@@ -301,7 +273,6 @@ export function Toolbar({
                 // so give it a visible default rather than a silent no-op.
                 onChangeOutline(next, outlineWidth > 0 ? outlineWidth : 0.5);
               }}
-              disabled={disabled || !hasRunSelection}
               aria-label={t(
                 "pdfTextEditorV2.toolbar.outlineColour",
                 "Outline colour",
@@ -324,9 +295,7 @@ export function Toolbar({
                 if (next > 0 && state.mixed.stroke) return;
                 onChangeOutline(next > 0 ? outlineHex : null, next);
               }}
-              disabled={
-                disabled || !hasRunSelection || state.strokeWidth === null
-              }
+              disabled={state.strokeWidth === null}
               aria-label={t(
                 "pdfTextEditorV2.toolbar.outlineWidth",
                 "Outline width (0 = none)",
@@ -338,7 +307,7 @@ export function Toolbar({
       </Popover>
       <Tooltip
         label={
-          hasRunSelection && !state.canItalic
+          !state.canItalic
             ? t(
                 "pdfTextEditorV2.toolbar.italicUnavailable",
                 "This font has no italic version. Load your device fonts or pick another font family.",
@@ -348,11 +317,13 @@ export function Toolbar({
       >
         <Button
           variant={state.italic ? "primary" : "tertiary"}
+          accent={state.italic ? "default" : "neutral"}
           size="sm"
           onClick={onToggleItalic}
-          disabled={disabled || !hasRunSelection || !state.canItalic}
+          disabled={!state.canItalic}
           aria-label={t("pdfTextEditorV2.toolbar.italic", "Italic")}
           data-testid="v2-italic"
+          style={NO_SHRINK}
           leftSection={<FormatItalicIcon fontSize="small" />}
         />
       </Tooltip>
@@ -366,13 +337,14 @@ export function Toolbar({
           >
             <Button
               variant="tertiary"
+              accent="neutral"
               size="sm"
-              disabled={disabled || !hasRunSelection}
               aria-label={t(
                 "pdfTextEditorV2.toolbar.changeCase",
                 "Change case",
               )}
               data-testid="v2-change-case"
+              style={NO_SHRINK}
               leftSection={<TextFieldsIcon fontSize="small" />}
             />
           </Tooltip>
@@ -404,7 +376,31 @@ export function Toolbar({
           </Menu.Item>
         </Menu.Dropdown>
       </Menu>
-      <ToolbarSeparator />
+    </>
+  );
+}
+
+/** Verbs that apply to any object: lock, delete, and Arrange. */
+function ObjectGroup({ controller }: { controller: Controller }) {
+  const { t } = useTranslation();
+  const {
+    selectionAllLocked,
+    onToggleLock,
+    onDelete,
+    onChangeZOrder,
+    onAlign,
+    onDistribute,
+    selectionCount,
+    canAlignLines,
+  } = controller;
+  // Vertical aligns + distribute need 2+ objects. Horizontal aligns also
+  // accept a single multi-line paragraph (aligns its lines to each other).
+  const alignDisabled = selectionCount < 2;
+  const hAlignDisabled = selectionCount < 2 && !canAlignLines;
+  const distributeDisabled = selectionCount < 3;
+
+  return (
+    <>
       <Tooltip
         label={
           selectionAllLocked
@@ -420,15 +416,16 @@ export function Toolbar({
       >
         <Button
           variant={selectionAllLocked ? "primary" : "tertiary"}
+          accent={selectionAllLocked ? "default" : "neutral"}
           size="sm"
           onClick={onToggleLock}
-          disabled={disabled}
           aria-label={
             selectionAllLocked
               ? t("pdfTextEditorV2.toolbar.unlock", "Unlock selection")
               : t("pdfTextEditorV2.toolbar.lock", "Lock selection")
           }
           data-testid="v2-toggle-lock"
+          style={NO_SHRINK}
           leftSection={
             selectionAllLocked ? (
               <LockIcon fontSize="small" />
@@ -446,16 +443,12 @@ export function Toolbar({
           accent="danger"
           size="sm"
           onClick={onDelete}
-          disabled={disabled}
           aria-label={t("pdfTextEditorV2.toolbar.delete", "Delete selected")}
           data-testid="v2-delete"
+          style={NO_SHRINK}
           leftSection={<DeleteIcon fontSize="small" />}
         />
       </Tooltip>
-      <ToolbarSeparator />
-      {/* Arrange groups the object-level z-order, align and distribute
-          controls behind one menu so the strip stays compact. Align needs
-          2+ objects (or a multi-line paragraph); distribute needs 3+. */}
       <Menu shadow="md" position="bottom-start" withinPortal closeOnItemClick>
         <Menu.Target>
           <Button
@@ -464,8 +457,8 @@ export function Toolbar({
             accent="neutral"
             leftSection={<LayersIcon fontSize="small" />}
             rightSection={<ExpandMoreIcon fontSize="small" />}
-            disabled={disabled}
             data-testid="v2-arrange-menu"
+            style={NO_SHRINK}
           >
             {t("pdfTextEditorV2.toolbar.arrange", "Arrange")}
           </Button>
@@ -591,95 +584,6 @@ export function Toolbar({
           </Menu.Item>
         </Menu.Dropdown>
       </Menu>
-      {/* Image transforms only apply to a selected image. The menu opens
-          whenever something is selected; if it isn't an image, the items are
-          disabled and a label explains why (reachable, unlike a tooltip on a
-          disabled button). */}
-      <Menu shadow="md" position="bottom-start" withinPortal closeOnItemClick>
-        <Menu.Target>
-          <Button
-            size="sm"
-            variant="secondary"
-            accent="neutral"
-            leftSection={<ImageIcon fontSize="small" />}
-            rightSection={<ExpandMoreIcon fontSize="small" />}
-            disabled={disabled}
-            data-testid="v2-imgop-menu"
-          >
-            {t("pdfTextEditorV2.toolbar.image", "Image")}
-          </Button>
-        </Menu.Target>
-        <Menu.Dropdown>
-          {!hasImageSelection && (
-            <Menu.Label>
-              {t(
-                "pdfTextEditorV2.toolbar.selectImageFirst",
-                "Select an image first",
-              )}
-            </Menu.Label>
-          )}
-          <Menu.Item
-            leftSection={<RotateLeftIcon fontSize="small" />}
-            disabled={imageDisabled}
-            onClick={() => onTransformImage("rotate-ccw")}
-            data-testid="v2-imgop-rotate-ccw"
-          >
-            {t("pdfTextEditorV2.toolbar.rotateLeft", "Rotate 90° left")}
-          </Menu.Item>
-          <Menu.Item
-            leftSection={<RotateRightIcon fontSize="small" />}
-            disabled={imageDisabled}
-            onClick={() => onTransformImage("rotate-cw")}
-            data-testid="v2-imgop-rotate-cw"
-          >
-            {t("pdfTextEditorV2.toolbar.rotateRight", "Rotate 90° right")}
-          </Menu.Item>
-          <Menu.Item
-            leftSection={<FlipIcon fontSize="small" />}
-            disabled={imageDisabled}
-            onClick={() => onTransformImage("flip-h")}
-            data-testid="v2-imgop-flip-h"
-          >
-            {t("pdfTextEditorV2.toolbar.flipHorizontal", "Flip horizontal")}
-          </Menu.Item>
-          <Menu.Item
-            leftSection={
-              <FlipIcon
-                fontSize="small"
-                style={{ transform: "rotate(90deg)" }}
-              />
-            }
-            disabled={imageDisabled}
-            onClick={() => onTransformImage("flip-v")}
-            data-testid="v2-imgop-flip-v"
-          >
-            {t("pdfTextEditorV2.toolbar.flipVertical", "Flip vertical")}
-          </Menu.Item>
-          <Menu.Divider />
-          <Menu.Item
-            leftSection={<ImageIcon fontSize="small" />}
-            disabled={imageDisabled}
-            onClick={onReplaceImage}
-            data-testid="v2-imgop-replace"
-          >
-            {t(
-              "pdfTextEditorV2.toolbar.replaceImage",
-              "Replace, keeping placement",
-            )}
-          </Menu.Item>
-          <Menu.Item
-            leftSection={<OpenInNewIcon fontSize="small" />}
-            disabled={imageDisabled || !externalEditSupported}
-            onClick={onEditImageExternally}
-            data-testid="v2-imgop-edit-externally"
-          >
-            {t(
-              "pdfTextEditorV2.toolbar.editImageExternally",
-              "Edit in another app",
-            )}
-          </Menu.Item>
-        </Menu.Dropdown>
-      </Menu>
-    </Group>
+    </>
   );
 }

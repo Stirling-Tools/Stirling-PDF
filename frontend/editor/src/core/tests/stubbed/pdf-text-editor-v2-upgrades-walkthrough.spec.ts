@@ -108,6 +108,7 @@ test("rulers and guides can be switched on from the sidebar", async ({
   test.setTimeout(140_000);
   await openEditor(page);
 
+  await page.getByTestId("v2-tab-document").click();
   const toggle = page.getByTestId("v2-toggle-rulers");
   await expect(toggle).toBeVisible();
   await toggle.click();
@@ -147,9 +148,8 @@ test("the sidebar exposes the spellcheck control", async ({
 }) => {
   test.setTimeout(140_000);
   await openEditor(page);
+  await page.getByTestId("v2-tab-document").click();
   const control = page.getByTestId("v2-spellcheck");
-  // The sidebar scrolls, so bring the control into view the way a user would.
-  await control.scrollIntoViewIfNeeded();
   await expect(control).toBeVisible();
   await expect(page.getByTestId("v2-spellcheck-language")).toBeVisible();
   await page.screenshot({ path: path.join(SHOTS, "05-sidebar.png") });

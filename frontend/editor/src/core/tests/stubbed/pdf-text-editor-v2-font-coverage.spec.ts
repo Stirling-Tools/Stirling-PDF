@@ -30,6 +30,7 @@ test("fonts panel reports concrete a-zA-Z0-9 coverage gaps client-side", async (
   // must not corrupt PDFium.
   await expect(page.getByTestId("v2-page-0")).toBeVisible();
 
+  await page.getByTestId("v2-tab-document").click();
   const panel = page.getByTestId("v2-fonts-panel");
   await expect(panel).toBeVisible();
 

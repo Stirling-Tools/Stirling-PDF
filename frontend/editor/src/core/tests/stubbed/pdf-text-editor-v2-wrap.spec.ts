@@ -38,10 +38,13 @@ async function openWrapMode(
   file: string,
 ) {
   await openV2(page, file);
+  await page.getByTestId("v2-tab-document").click();
+  await page.getByTestId("v2-advanced-toggle").click();
   await page
     .getByTestId("v2-width-mode-control")
     .getByText("Wrap", { exact: true })
     .click();
+  await page.getByTestId("v2-tab-selected").click();
   await page.waitForTimeout(400);
 }
 
@@ -154,11 +157,14 @@ test.describe("v2 editor - text wrap", () => {
   test("wrap mode keeps a single-line run inside its box", async ({ page }) => {
     await openV2(page, PARAGRAPH_PDF);
 
-    // Wrap mode is the sidebar's "Wrap" width setting.
+    // Wrap mode is a document-level preference, in the panel's overflow menu.
+    await page.getByTestId("v2-tab-document").click();
+    await page.getByTestId("v2-advanced-toggle").click();
     await page
       .getByTestId("v2-width-mode-control")
       .getByText("Wrap", { exact: true })
       .click();
+    await page.getByTestId("v2-tab-selected").click();
     await page.waitForTimeout(400);
 
     const run = page

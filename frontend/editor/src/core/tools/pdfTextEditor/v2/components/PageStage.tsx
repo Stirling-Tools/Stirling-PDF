@@ -11,8 +11,9 @@ import {
 import { useTranslation } from "react-i18next";
 import { useEditorStore } from "@app/tools/pdfTextEditor/v2/hooks/useEditorStore";
 import { ensurePageRead } from "@app/tools/pdfTextEditor/v2/hooks/useDocumentLoader";
-import { useToolbarController } from "@app/tools/pdfTextEditor/v2/hooks/useToolbarController";
 import { Toolbar } from "@app/tools/pdfTextEditor/v2/components/Toolbar";
+import { useToolbarController } from "@app/tools/pdfTextEditor/v2/hooks/useToolbarController";
+import { ZoomPill } from "@app/tools/pdfTextEditor/v2/components/ZoomPill";
 import { MarqueeSelector } from "@app/tools/pdfTextEditor/v2/components/MarqueeSelector";
 import { PageView } from "@app/tools/pdfTextEditor/v2/components/PageView";
 import { EditTextCommand } from "@app/tools/pdfTextEditor/v2/commands/EditTextCommand";
@@ -64,9 +65,11 @@ export function PageStage() {
     return () => el.removeEventListener("wheel", onWheel);
   }, [store, state.hasDocument, state.loading]);
 
-  // The contextual formatting toolbar is a bar across the TOP of the canvas,
-  // not in the side panel.
-  const toolbar = useToolbarController(store, state, selection);
+  // The strip carries undo/redo plus the contextual formatting group. The
+  // inspector derives from the same controller, so both surfaces read one
+  // source of truth.
+  const controller = useToolbarController(store, state, selection);
+  const toolbar = { controller };
 
   if (!state.hasDocument && !state.loading) {
     return (
@@ -324,6 +327,13 @@ export function PageStage() {
             </Stack>
           </Box>
         </ScrollArea>
+        {state.hasDocument && (
+          <ZoomPill
+            store={store}
+            renderScale={state.renderScale}
+            pages={state.pages}
+          />
+        )}
       </Box>
     </Stack>
   );

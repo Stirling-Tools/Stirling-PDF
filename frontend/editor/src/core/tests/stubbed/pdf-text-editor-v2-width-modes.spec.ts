@@ -63,10 +63,13 @@ async function open(page: Page, mode: "grow" | "wrap"): Promise<void> {
   await expect(page.getByTestId("v2-page-0")).toBeVisible({ timeout: 60_000 });
   await page.waitForTimeout(1500);
   if (mode === "wrap") {
+    await page.getByTestId("v2-tab-document").click();
+    await page.getByTestId("v2-advanced-toggle").click();
     await page
       .getByTestId("v2-width-mode-control")
       .getByText("Wrap", { exact: true })
       .click();
+    await page.getByTestId("v2-tab-selected").click();
     await page.waitForTimeout(500);
   }
 }

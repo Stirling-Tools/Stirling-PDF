@@ -1,8 +1,9 @@
 import { useCallback, useMemo, useState, useSyncExternalStore } from "react";
-import { Group, Select, Text } from "@mantine/core";
+import { Group, Select, Text, Tooltip } from "@mantine/core";
 import type { ComboboxData, ComboboxItemGroup } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";
+import FontDownloadIcon from "@mui/icons-material/FontDownloadOutlined";
 import {
   groupByFamily,
   isLocalFontAccessSupported,
@@ -133,7 +134,8 @@ export function FontFamilySelect({
     <Group gap="xs" align="center" wrap="nowrap">
       <Select
         size="xs"
-        w={150}
+        w={138}
+        style={{ flexShrink: 0 }}
         searchable
         data={data}
         value={selected}
@@ -154,18 +156,30 @@ export function FontFamilySelect({
         data-testid="v2-font-family"
       />
       {supported && deviceFamilies.length === 0 && (
-        <Button
-          variant="tertiary"
-          size="sm"
-          loading={loading}
-          disabled={disabled || loading}
-          onClick={() => {
-            void loadDeviceFonts();
-          }}
-          data-testid="v2-use-device-fonts"
+        <Tooltip
+          label={t(
+            "pdfTextEditorV2.fontPicker.useDeviceFonts",
+            "Use device fonts",
+          )}
         >
-          {t("pdfTextEditorV2.fontPicker.useDeviceFonts", "Use device fonts")}
-        </Button>
+          <Button
+            variant="tertiary"
+            accent="neutral"
+            size="sm"
+            style={{ flexShrink: 0 }}
+            loading={loading}
+            disabled={disabled || loading}
+            onClick={() => {
+              void loadDeviceFonts();
+            }}
+            aria-label={t(
+              "pdfTextEditorV2.fontPicker.useDeviceFonts",
+              "Use device fonts",
+            )}
+            data-testid="v2-use-device-fonts"
+            leftSection={<FontDownloadIcon fontSize="small" />}
+          />
+        </Tooltip>
       )}
       {notice && (
         <Text size="xs" c="dimmed" data-testid="v2-device-fonts-notice">

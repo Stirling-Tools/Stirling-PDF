@@ -16,10 +16,13 @@ async function gotoWrap(page: Page): Promise<void> {
   await page.locator('[data-testid="v2-file-input"]').setInputFiles(SAMPLE);
   await expect(page.getByTestId("v2-page-1")).toBeVisible({ timeout: 30_000 });
   await page.waitForTimeout(700);
+  await page.getByTestId("v2-tab-document").click();
+  await page.getByTestId("v2-advanced-toggle").click();
   await page
     .getByTestId("v2-width-mode-control")
     .getByText("Wrap", { exact: true })
     .click();
+  await page.getByTestId("v2-tab-selected").click();
   await page.waitForTimeout(150);
 }
 

@@ -3,7 +3,13 @@ import type { Page } from "@playwright/test";
 import path from "path";
 import type { V2TestWindow } from "@app/tests/stubbed/v2EditorTestTypes";
 
-/** UI-layout coverage for the menu-grouped editor chrome. */
+/**
+ * Layout coverage for the properties-inspector panel.
+ *
+ * The contract these tests pin down: the canvas strip carries only verbs that
+ * are always available, everything selection-scoped lives in the right-hand
+ * inspector, and set-and-forget preferences live behind the overflow menu.
+ */
 const SAMPLE = path.join(
   import.meta.dirname,
   "../../../../public/samples/Sample.pdf",
@@ -48,8 +54,14 @@ async function selectOne(page: Page, id: string): Promise<void> {
   await page.waitForTimeout(150);
 }
 
-test.describe("v2 editor - menu-grouped layout", () => {
-  test("Arrange menu groups z-order, align and distribute with correct gating", async ({
+/** Switch to the Document tab, which owns the document-level preferences. */
+async function openSettings(page: Page): Promise<void> {
+  await page.getByTestId("v2-tab-document").click();
+  await expect(page.getByTestId("v2-view-settings")).toBeVisible();
+}
+
+test.describe("v2 editor - inspector layout", () => {
+  test("Arrange groups z-order, align and distribute with correct gating", async ({
     page,
   }) => {
     await open(page, 0);
@@ -61,7 +73,7 @@ test.describe("v2 editor - menu-grouped layout", () => {
     const arrange = page.getByTestId("v2-arrange-menu");
     await expect(arrange).toBeVisible();
     await expect(arrange).toBeEnabled();
-    // The Arrange control belongs to the toolbar, not the sidebar.
+    // Arrange is a toolbar verb, beside the formatting it accompanies.
     await expect(
       page.getByTestId("v2-toolbar").getByTestId("v2-arrange-menu"),
     ).toHaveCount(1);
@@ -77,28 +89,39 @@ test.describe("v2 editor - menu-grouped layout", () => {
     await page.keyboard.press("Escape");
   });
 
-  test("Image menu opens with rotate/flip gated off while a text run is selected", async ({
+  test("image controls stay absent while a text run is selected", async ({
     page,
   }) => {
     await open(page, 0);
     const id = await runId(page, 0, "Downloads");
     await selectOne(page, id);
-    // Enabled because something is selected, but the transforms are disabled
-    // and an in-dropdown label explains why.
-    await expect(page.getByTestId("v2-imgop-menu")).toBeEnabled();
-    await page.getByTestId("v2-imgop-menu").click();
-    await expect(page.getByText("Select an image first")).toBeVisible();
-    await expect(page.getByTestId("v2-imgop-rotate-cw")).toBeDisabled();
-    await page.getByTestId("v2-zoom-percent").click();
+    // Rotate/flip cannot apply to a text run, so the section does not render
+    // at all rather than rendering disabled.
+    await expect(page.getByTestId("v2-imgop-menu")).toHaveCount(0);
+    await expect(page.getByTestId("v2-imgop-rotate-cw")).toHaveCount(0);
+    // Text-only controls are the ones on show instead.
+    await expect(page.getByTestId("v2-font-size")).toBeVisible();
   });
 
-  test("Arrange and Image menus are disabled with nothing selected", async ({
+  test("the inspector shows nothing selectable with nothing selected", async ({
     page,
   }) => {
     await open(page, 0);
-    // On load no object is selected, so both selection-scoped menus are off.
-    await expect(page.getByTestId("v2-arrange-menu")).toBeDisabled();
-    await expect(page.getByTestId("v2-imgop-menu")).toBeDisabled();
+    // No object picked: the panel offers an empty state, not a wall of
+    // disabled controls the user has to learn to ignore.
+    await expect(page.getByTestId("v2-nothing-selected")).toBeVisible();
+    for (const id of [
+      "v2-arrange-menu",
+      "v2-imgop-menu",
+      "v2-font-size",
+      "v2-toggle-lock",
+      "v2-delete",
+      "v2-group",
+      "v2-ungroup",
+      "v2-pos-x",
+    ]) {
+      await expect(page.getByTestId(id)).toHaveCount(0);
+    }
   });
 
   test("lock and delete are icon buttons in the toolbar", async ({ page }) => {
@@ -115,40 +138,98 @@ test.describe("v2 editor - menu-grouped layout", () => {
     );
   });
 
-  test("general tools live in the sidebar, not the toolbar", async ({
+  test("the strip shows formatting only once something is selected", async ({
     page,
   }) => {
     await open(page, 0);
-    const sidebar = page.getByTestId("v2-sidebar-status");
-    // Insert + Paragraph + Editor-settings controls are in the sidebar.
-    for (const id of [
-      "v2-add-text",
-      "v2-add-image",
-      "v2-group",
-      "v2-ungroup",
-      "v2-grouping-mode-control",
-      "v2-width-mode-control",
-    ]) {
-      await expect(sidebar.getByTestId(id)).toBeVisible();
-    }
-    // ...and they are NOT duplicated in the toolbar.
     const toolbar = page.getByTestId("v2-toolbar");
-    for (const id of ["v2-add-text", "v2-add-image", "v2-group"]) {
+    // Always available, selection or not.
+    for (const id of ["v2-undo", "v2-redo"]) {
+      await expect(toolbar.getByTestId(id)).toBeVisible();
+    }
+    // Contextual: absent, rather than present-and-greyed, with no selection.
+    for (const id of [
+      "v2-font-size",
+      "v2-colour",
+      "v2-italic",
+      "v2-arrange-menu",
+      "v2-toggle-lock",
+      "v2-delete",
+    ]) {
       await expect(toolbar.getByTestId(id)).toHaveCount(0);
     }
+    // ...and all of them appear in the strip once a run is picked.
+    await selectOne(page, await runId(page, 0, "Downloads"));
+    for (const id of [
+      "v2-font-size",
+      "v2-colour",
+      "v2-italic",
+      "v2-arrange-menu",
+      "v2-toggle-lock",
+      "v2-delete",
+    ]) {
+      await expect(toolbar.getByTestId(id)).toBeVisible();
+    }
   });
 
-  test("app top bar holds only chrome (no insert/group controls)", async ({
+  test("the inspector keeps geometry and paragraph structure", async ({
     page,
   }) => {
     await open(page, 0);
-    // Zoom / save / help remain; insert + paragraph actions moved out.
-    await expect(page.getByTestId("v2-save")).toBeVisible();
-    await expect(page.getByTestId("v2-zoom-percent")).toBeVisible();
-    await expect(page.getByTestId("v2-help")).toBeVisible();
+    await selectOne(page, await runId(page, 0, "Downloads"));
+    const sidebar = page.getByTestId("v2-sidebar-status");
+    // Labelled numeric fields need the panel's vertical room, so they live
+    // here rather than in the horizontal strip.
+    for (const id of ["v2-pos-x", "v2-pos-y", "v2-size-w", "v2-group"]) {
+      await expect(sidebar.getByTestId(id)).toBeVisible();
+    }
+    // ...and the strip does not duplicate them.
+    for (const id of ["v2-pos-x", "v2-group"]) {
+      await expect(page.getByTestId("v2-toolbar").getByTestId(id)).toHaveCount(
+        0,
+      );
+    }
   });
 
-  test("Add text toggles its label and inserts from the sidebar", async ({
+  test("zoom floats on the canvas and save is pinned to the panel", async ({
+    page,
+  }) => {
+    await open(page, 0);
+    await expect(page.getByTestId("v2-save")).toBeVisible();
+    await expect(page.getByTestId("v2-download")).toBeVisible();
+    // Zoom sits over the pages it scales, not in the far rail.
+    const zoom = page.getByTestId("v2-zoom-controls");
+    await expect(zoom).toBeVisible();
+    await expect(zoom.getByTestId("v2-zoom-percent")).toBeVisible();
+    await expect(
+      page.getByTestId("v2-stage").getByTestId("v2-zoom-controls"),
+    ).toHaveCount(0);
+  });
+
+  test("everyday settings are plain; only parse options are behind Advanced", async ({
+    page,
+  }) => {
+    await open(page);
+    // Find and the shortcuts sheet are everyday controls, not settings: they
+    // sit in the panel header, one click from anywhere.
+    await expect(page.getByTestId("v2-open-find")).toBeVisible();
+    await expect(page.getByTestId("v2-help")).toBeVisible();
+
+    await openSettings(page);
+    // View toggles are on show - no disclosure to discover first.
+    await expect(page.getByTestId("v2-toggle-rulers")).toBeVisible();
+    await expect(page.getByTestId("v2-spellcheck")).toBeVisible();
+
+    // The two options that change how the document was PARSED start folded,
+    // because switching grouping re-reads it and drops undo history.
+    await expect(page.getByTestId("v2-grouping-mode-control")).toBeHidden();
+    await expect(page.getByTestId("v2-width-mode-control")).toBeHidden();
+    await page.getByTestId("v2-advanced-toggle").click();
+    await expect(page.getByTestId("v2-grouping-mode-control")).toBeVisible();
+    await expect(page.getByTestId("v2-width-mode-control")).toBeVisible();
+  });
+
+  test("Add text toggles its label and inserts from the panel", async ({
     page,
   }) => {
     await open(page, 0);
@@ -156,37 +237,28 @@ test.describe("v2 editor - menu-grouped layout", () => {
     const before = await runs.count();
     const addText = page.getByTestId("v2-add-text");
     await addText.click();
-    await expect(addText).toContainText(/click page to add text/i);
+    await expect(addText).toContainText(/click page/i);
     await page.getByTestId("v2-page-0").click({ position: { x: 200, y: 400 } });
     await expect(runs).toHaveCount(before + 1, { timeout: 5_000 });
     await expect(addText).toHaveText("Add text");
   });
 
-  test("sidebar lists the page fonts with a status badge", async ({ page }) => {
-    await open(page, 0);
-    const panel = page.getByTestId("v2-fonts-panel");
-    await expect(panel).toBeVisible();
-    await expect(panel.getByText("Fonts", { exact: true })).toBeVisible();
-    // At least one font row with a status badge (standard / embedded / subset).
-    const badges = panel.locator('[data-testid^="v2-font-"]');
-    expect(await badges.count()).toBeGreaterThan(0);
-  });
-
-  test("fonts panel shows a compatibility summary and an info explainer", async ({
+  test("the Document tab lists the page fonts with a status badge", async ({
     page,
   }) => {
     await open(page, 0);
+    await page.getByTestId("v2-tab-document").click();
     const panel = page.getByTestId("v2-fonts-panel");
-    // The summary banner is present and carries an honest tone (ok / info /
-    // warn) - never claiming a blanket "no issues" for embedded fonts.
+    await expect(panel).toBeVisible();
+    // Collapsed by default: one headline row carrying an honest tone
+    // (ok / info / warn), never a blanket "no issues" for embedded fonts.
     const compat = panel.getByTestId("v2-font-compat");
     await expect(compat).toBeVisible();
     const tone = await compat.getAttribute("data-compat");
     expect(["ok", "info", "warn"]).toContain(tone);
-    // The (i) explainer is present and reveals the existing-vs-new guidance.
-    const info = panel.getByTestId("v2-fonts-info");
-    await expect(info).toBeVisible();
-    await info.hover();
-    await expect(page.getByText(/New characters/i).first()).toBeVisible();
+    // The per-font detail is one click away.
+    await panel.getByTestId("v2-fonts-toggle").click();
+    const badges = panel.locator('[data-testid^="v2-font-"]');
+    expect(await badges.count()).toBeGreaterThan(0);
   });
 });

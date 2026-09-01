@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
-import { Select, Stack, Text } from "@mantine/core";
+import { Group, Select, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Checkbox } from "@app/ui/Checkbox";
+import { ToggleSwitch } from "@app/ui/ToggleSwitch";
 import {
   SPELLCHECK_AUTO,
   SPELLCHECK_LANGUAGES,
@@ -57,18 +57,20 @@ export function SpellcheckControl({
       style={style}
       data-testid="v2-spellcheck"
     >
-      <Text size="xs" fw={500}>
-        {t("pdfTextEditorV2.spellcheck.title", "Spell check")}
-      </Text>
-      <Checkbox
-        checked={pref.enabled}
-        onChange={(e) => setSpellcheckEnabled(e.currentTarget.checked)}
-        label={t(
-          "pdfTextEditorV2.spellcheck.enable",
-          "Check spelling as you type",
-        )}
-        data-testid="v2-spellcheck-toggle"
-      />
+      <Group justify="space-between" wrap="nowrap" gap="sm">
+        {/* The row's own text names the switch; passing `label` too would
+            print it twice, once either side of the control. */}
+        <Text size="xs" id="v2-spellcheck-label">
+          {t("pdfTextEditorV2.spellcheck.enable", "Check spelling as you type")}
+        </Text>
+        <ToggleSwitch
+          size="sm"
+          checked={pref.enabled}
+          onChange={setSpellcheckEnabled}
+          aria-labelledby="v2-spellcheck-label"
+          data-testid="v2-spellcheck-toggle"
+        />
+      </Group>
       <Select
         size="xs"
         data={options}
@@ -81,12 +83,6 @@ export function SpellcheckControl({
         )}
         data-testid="v2-spellcheck-language"
       />
-      <Text size="xs" c="dimmed">
-        {t(
-          "pdfTextEditorV2.spellcheck.hint",
-          "Uses your browser's own dictionaries. Right-click a marked word for suggestions.",
-        )}
-      </Text>
     </Stack>
   );
 }

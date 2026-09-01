@@ -23,7 +23,7 @@ import { FindBar } from "@app/tools/pdfTextEditor/v2/components/FindBar";
 import { HelpOverlay } from "@app/tools/pdfTextEditor/v2/components/HelpOverlay";
 import { SaveRiskModal } from "@app/tools/pdfTextEditor/v2/components/SaveRiskModal";
 import { PasswordPromptModal } from "@app/tools/pdfTextEditor/v2/components/PasswordPromptModal";
-import { EditorTopBar } from "@app/tools/pdfTextEditor/v2/components/EditorTopBar";
+import { EditorSaveBar } from "@app/tools/pdfTextEditor/v2/components/EditorSaveBar";
 import { EditorSidebar } from "@app/tools/pdfTextEditor/v2/components/EditorSidebar";
 import { EditorFileInputs } from "@app/tools/pdfTextEditor/v2/components/EditorFileInputs";
 import { PageStage } from "@app/tools/pdfTextEditor/v2/components/PageStage";
@@ -475,19 +475,6 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
       .find((r) => r.id === selection.runIds[0]);
     return !!run && (run.paragraphLineCount ?? 0) > 1;
   })();
-  const handleToggleAddText = useCallback(
-    () =>
-      store.setMode(store.getState().mode === "addText" ? "select" : "addText"),
-    [store],
-  );
-  const handlePickImageClick = useCallback(() => {
-    (
-      document.querySelector(
-        '[data-testid="v2-image-input"]',
-      ) as HTMLInputElement | null
-    )?.click();
-  }, []);
-
   const onPickPdf = useCallback(
     (file: File) => {
       setOpenedFileName(file.name);
@@ -520,17 +507,6 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
       style={{ overflow: "hidden" }}
       data-testid="v2-root"
     >
-      <EditorTopBar
-        store={store}
-        hasDocument={state.hasDocument}
-        dirty={state.dirty}
-        renderScale={state.renderScale}
-        pages={state.pages}
-        openedFileName={openedFileName}
-        onSave={handleSave}
-        onDownload={handleDownload}
-        onShowHelp={() => setHelpOpen(true)}
-      />
       {state.error && (
         <Alert color="red" m="sm" data-testid="v2-error">
           {state.error}
@@ -557,21 +533,40 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
         onCancel={handleCancelPassword}
       />
       <EditorSidebar
+        store={store}
         state={state}
         selection={selection}
-        currentFileId={sourceFileId}
-        onPickFile={openWorkbenchFile}
-        mode={state.mode}
         canGroup={canGroup}
         canUngroup={canUngroup}
-        onToggleAddText={handleToggleAddText}
-        onPickImage={handlePickImageClick}
         onGroup={handleMergeSelection}
         onUngroup={handleUngroupSelection}
         onSetGroupingMode={(mode) => store.setGroupingMode(mode)}
         onSetWidthMode={(m) => store.setWidthMode(m)}
         onSetShowRulers={(show) => store.setShowRulers(show)}
+        onOpenFind={() => setFindOpen(true)}
+        onShowHelp={() => setHelpOpen(true)}
+        addTextArmed={state.mode === "addText"}
+        onToggleAddText={() =>
+          store.setMode(
+            store.getState().mode === "addText" ? "select" : "addText",
+          )
+        }
+        onPickImage={() =>
+          document
+            .querySelector<HTMLInputElement>('[data-testid="v2-image-input"]')
+            ?.click()
+        }
       />
+      {state.hasDocument && (
+        <EditorSaveBar
+          openedFileName={openedFileName}
+          dirty={state.dirty}
+          currentFileId={sourceFileId}
+          onPickFile={openWorkbenchFile}
+          onSave={handleSave}
+          onDownload={handleDownload}
+        />
+      )}
     </Stack>
   );
 }

@@ -316,6 +316,43 @@ interface TextRunOverlayProps {
   onWrap?: (maxWidthPt: number) => void;
 }
 
+/**
+ * Which gesture the pointer is over: the frame, or the text interior.
+ *
+ * There is deliberately no resize zone. Re-wrapping to an arbitrary width goes
+ * through ReflowWrapCommand, whose word grouping is x-gap based - on a run
+ * whose glyphs are individually positioned (letter-spaced headings, button
+ * labels) every glyph becomes its own "word" and the line breaker splits
+ * inside words, shredding "Open Source" into one character per line. Until
+ * that grouping is token-aware, a drag handle would make the corruption a
+ * one-gesture accident.
+ */
+type EdgeZone = "move" | null;
+
+/** Grab band around the box, in CSS px. Matches the visible ring's reach. */
+const EDGE_PX = 7;
+
+/**
+ * Classify a pointer position against the run's own box.
+ *
+ * The box is contentEditable, so handles cannot be child elements without
+ * becoming editable content. Hit-testing the border band instead gives the
+ * same affordance with no DOM inside the editable region.
+ */
+function edgeZoneAt(
+  el: HTMLElement,
+  clientX: number,
+  clientY: number,
+): EdgeZone {
+  const r = el.getBoundingClientRect();
+  const nearLeft = clientX - r.left <= EDGE_PX;
+  const nearRight = r.right - clientX <= EDGE_PX;
+  const nearTop = clientY - r.top <= EDGE_PX;
+  const nearBottom = r.bottom - clientY <= EDGE_PX;
+  if (nearTop || nearBottom || nearLeft || nearRight) return "move";
+  return null;
+}
+
 /** One editable HTML element per PDF text run. */
 export function TextRunOverlay({
   run,
@@ -361,13 +398,16 @@ export function TextRunOverlay({
   // Text content captured when the box gains focus, so blur can tell whether
   // the user actually edited it (and a Wrap reflow is warranted).
   const focusTextRef = useRef<string>("");
-  // Ctrl+drag-to-move state. `dragOffset` is the live cursor delta applied as a
+  // Drag-to-move state. `dragOffset` is the live cursor delta applied as a
   // CSS transform so the box follows the cursor during the drag.
   const dragOriginRef = useRef<{ x: number; y: number } | null>(null);
   const [dragging, setDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState<{ x: number; y: number } | null>(
     null,
   );
+  // Which edge the pointer is over, so the cursor can advertise the gesture
+  // before the user commits to it. Null means the text interior.
+  const [edgeZone, setEdgeZone] = useState<EdgeZone>(null);
   const originalBoundsWidthRef = useRef<number>(run.bounds.width);
   // Whether this run was a real (multi-line) paragraph when it first mounted.
 
@@ -755,7 +795,17 @@ export function TextRunOverlay({
         e.stopPropagation();
         // Locked runs are inert: no select, no drag, no edit.
         if (run.locked) return;
-        if ((e.ctrlKey || e.metaKey) && onMove) {
+        const zone = edgeZoneAt(
+          e.currentTarget as HTMLDivElement,
+          e.clientX,
+          e.clientY,
+        );
+
+        // Ctrl+drag still moves from anywhere inside, so existing muscle
+        // memory keeps working; grabbing the frame is the discoverable path.
+        if ((e.ctrlKey || e.metaKey || zone === "move") && onMove) {
+          const viaFrame = zone === "move" && !(e.ctrlKey || e.metaKey);
+          if (viaFrame) e.preventDefault();
           dragOriginRef.current = { x: e.clientX, y: e.clientY };
           setDragging(true);
           setDragOffset({ x: 0, y: 0 });
@@ -785,10 +835,11 @@ export function TextRunOverlay({
             const v = transform.invertVector(ddx, ddy);
             const dx = v.x;
             const dy = v.y;
-            // Below the drag threshold this was a Ctrl+click, not a move, so
-            // treat it as the multi-select gesture it looks like.
+            // Below the drag threshold nothing moved. From the frame that is
+            // a plain click (select); with Ctrl held it is the multi-select
+            // gesture it looks like.
             if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) {
-              onSelect(true);
+              onSelect(!viaFrame);
               return;
             }
             onMove(dx, dy);
@@ -919,7 +970,17 @@ export function TextRunOverlay({
         // and wraps via CSS, so the editing view is always on-page.
       }}
       onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      onMouseLeave={() => {
+        setHovered(false);
+        setEdgeZone(null);
+      }}
+      onPointerMove={(e) => {
+        // Only while idle: mid-drag the cursor is owned by the gesture.
+        if (run.locked || dragging) return;
+        setEdgeZone(
+          edgeZoneAt(e.currentTarget as HTMLDivElement, e.clientX, e.clientY),
+        );
+      }}
       style={{
         left,
         top,
@@ -990,13 +1051,24 @@ export function TextRunOverlay({
           ? hovered || selected
             ? "1px solid rgba(120,120,120,0.55)"
             : "1px dashed transparent"
-          : dragging || selected
-            ? "1px solid #2c7be5"
-            : hovered
-              ? "1px dashed rgba(44,123,229,0.5)"
-              : "1px dashed transparent",
-        // Locked runs are not editable, so don't offer an I-beam.
-        cursor: run.locked ? "default" : undefined,
+          : dragging
+            ? "2px solid #2c7be5"
+            : selected
+              ? edgeZone
+                ? "2px solid #2c7be5"
+                : "1px solid #2c7be5"
+              : hovered
+                ? "1px dashed rgba(44,123,229,0.5)"
+                : "1px dashed transparent",
+        // The cursor is the affordance: the box advertises move/resize on the
+        // frame and keeps the I-beam over the text.
+        cursor: run.locked
+          ? "default"
+          : dragging
+            ? "grabbing"
+            : edgeZone === "move"
+              ? "grab"
+              : undefined,
         overflow: "hidden",
       }}
     />

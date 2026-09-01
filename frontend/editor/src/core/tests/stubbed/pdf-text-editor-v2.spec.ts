@@ -205,9 +205,10 @@ test.describe("PDF text editor v2 - selection + properties", () => {
     const fontSize = page.getByTestId("v2-font-size");
     const colour = page.getByTestId("v2-colour");
 
-    // Before selection, the toolbar inputs are disabled.
-    await expect(fontSize).toBeDisabled();
-    await expect(colour).toBeDisabled();
+    // Before selection the inspector has nothing to act on, so the type
+    // controls are absent rather than present-but-greyed.
+    await expect(fontSize).toHaveCount(0);
+    await expect(colour).toHaveCount(0);
 
     await page.locator('[data-testid^="v2-run-p0-"]').first().click();
     await expect(fontSize).toBeEnabled();
@@ -3917,8 +3918,8 @@ test.describe("PDF text editor v2 - marquee + merge", () => {
     const initial = await runs.count();
     expect(initial).toBeGreaterThanOrEqual(2);
 
-    await expect(page.getByTestId("v2-group")).toBeDisabled();
-    await expect(page.getByTestId("v2-ungroup")).toBeDisabled();
+    await expect(page.getByTestId("v2-group")).toHaveCount(0);
+    await expect(page.getByTestId("v2-ungroup")).toHaveCount(0);
 
     const ids = await runs.evaluateAll((els) =>
       els
@@ -4043,7 +4044,7 @@ test.describe("PDF text editor v2 - selection count panel", () => {
 
     const countNode = page.getByTestId("v2-selection-count");
     await expect(countNode).toBeVisible();
-    await expect(countNode).toContainText(/2 text runs selected/);
+    await expect(countNode).toContainText(/2 boxes/);
   });
 });
 
