@@ -22,9 +22,9 @@ import stirling.software.proprietary.billing.DocumentUnitCalculator.FileSize;
 
 /**
  * Meters + audits a client-side automation run so a browser-run automation bills like the
- * equivalent server-side policy. The meter endpoint for every automation that executes in
- * the browser (rather than through the billing interceptors). Side-effect only; does no
- * processing itself.
+ * equivalent server-side policy. The meter endpoint for every automation that executes in the
+ * browser (rather than through the billing interceptors). Side-effect only; does no processing
+ * itself.
  */
 @Slf4j
 @Hidden
