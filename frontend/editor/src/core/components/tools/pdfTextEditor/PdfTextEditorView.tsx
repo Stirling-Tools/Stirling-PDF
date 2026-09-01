@@ -43,6 +43,7 @@ import {
   PdfJsonFont,
   PdfJsonPage,
   TextGroup,
+  WhiteoutBox,
 } from "@app/tools/pdfTextEditor/pdfTextEditorTypes";
 import {
   getImageBounds,
@@ -353,6 +354,8 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
   const [activeImageId, setActiveImageId] = useState<string | null>(null);
+  const [draftWhiteout, setDraftWhiteout] = useState<WhiteoutBox | null>(null);
+  const whiteoutStartRef = useRef<{ x: number; y: number } | null>(null);
   const [selectedGroupIds, setSelectedGroupIds] = useState<Set<string>>(
     new Set(),
   );
@@ -440,6 +443,10 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
     onMergeGroups,
     onUngroupGroup,
     onLoadFile,
+    whiteouts,
+    onAddWhiteout,
+    onRemoveWhiteout,
+    whiteoutMode,
   } = data;
 
   // Define derived variables immediately after props destructuring, before any hooks
@@ -448,7 +455,54 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
   const pageGroups = groupsByPage[selectedPage] ?? [];
   const pageImages = imagesByPage[selectedPage] ?? [];
   const pagePreview = pagePreviews.get(selectedPage);
+  const pageWhiteouts = whiteouts[selectedPage] ?? [];
   const { width: pageWidth, height: pageHeight } = pageDimensions(currentPage);
+
+  const handleWhiteoutMouseDown = useCallback(
+    (event: React.MouseEvent<HTMLDivElement>) => {
+      if (!whiteoutMode || event.button !== 0) return;
+      event.preventDefault();
+      event.stopPropagation();
+      const bounds = event.currentTarget.getBoundingClientRect();
+      const x = Math.max(0, Math.min(event.clientX - bounds.left, scaledWidth));
+      const y = Math.max(0, Math.min(event.clientY - bounds.top, scaledHeight));
+      whiteoutStartRef.current = { x, y };
+      setDraftWhiteout({ id: "draft", left: x / scale, right: x / scale, top: pageHeight - y / scale, bottom: pageHeight - y / scale });
+    },
+    [pageHeight, scale, scaledHeight, scaledWidth, whiteoutMode],
+  );
+
+  useEffect(() => {
+    if (!whiteoutMode) return undefined;
+    const handleMouseMove = (event: MouseEvent) => {
+      const start = whiteoutStartRef.current;
+      const container = containerRef.current;
+      if (!start || !container) return;
+      const bounds = container.getBoundingClientRect();
+      const currentX = Math.max(0, Math.min(event.clientX - bounds.left, scaledWidth));
+      const currentY = Math.max(0, Math.min(event.clientY - bounds.top, scaledHeight));
+      setDraftWhiteout({
+        id: "draft",
+        left: Math.min(start.x, currentX) / scale,
+        right: Math.max(start.x, currentX) / scale,
+        top: pageHeight - Math.max(start.y, currentY) / scale,
+        bottom: pageHeight - Math.min(start.y, currentY) / scale,
+      });
+    };
+    const handleMouseUp = () => {
+      if (draftWhiteout && draftWhiteout.right - draftWhiteout.left > 4 && draftWhiteout.bottom - draftWhiteout.top > 4) {
+        onAddWhiteout(selectedPage, draftWhiteout);
+      }
+      whiteoutStartRef.current = null;
+      setDraftWhiteout(null);
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [draftWhiteout, onAddWhiteout, pageHeight, scale, scaledHeight, scaledWidth, selectedPage, whiteoutMode]);
 
   // Debug logging for page dimensions
   console.log(`📐 [PdfTextEditor] Page ${selectedPage + 1} Dimensions:`, {
@@ -2087,6 +2141,17 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
                         });
                       }
                     }}
+                    onMouseDown={handleWhiteoutMouseDown}
+                    style={{
+                      position: "relative",
+                      width: `${scaledWidth}px`,
+                      height: `${scaledHeight}px`,
+                      backgroundColor: "#ffffff",
+                      boxShadow: "0 0 12px rgba(15, 23, 42, 0.12)",
+                      borderRadius: "0.5rem",
+                      overflow: "hidden",
+                      cursor: whiteoutMode ? "crosshair" : "default",
+                    }}
                   >
                     {pagePreview && (
                       <img
@@ -2104,6 +2169,31 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
                         }}
                       />
                     )}
+                    {pageWhiteouts.concat(draftWhiteout ?? []).map((whiteout) => {
+                      const bounds = toCssBounds(currentPage, pageHeight, scale, whiteout);
+                      const isDraft = whiteout.id === "draft";
+                      return (
+                        <Box
+                          key={whiteout.id}
+                          onMouseDown={(event) => event.stopPropagation()}
+                          onDoubleClick={(event) => {
+                            event.stopPropagation();
+                            if (!isDraft) onRemoveWhiteout(selectedPage, whiteout.id);
+                          }}
+                          style={{
+                            position: "absolute",
+                            left: bounds.left,
+                            top: bounds.top,
+                            width: bounds.width,
+                            height: bounds.height,
+                            zIndex: 2_500_000,
+                            backgroundColor: "white",
+                            border: isDraft ? "1px dashed #2563eb" : "1px solid #d1d5db",
+                            cursor: whiteoutMode ? "crosshair" : "pointer",
+                          }}
+                        />
+                      );
+                    })}
                     {selectionToolbarPosition && (
                       <Group
                         gap={6}
@@ -2353,7 +2443,9 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
                       );
                     })}
                     {visibleGroups.length === 0 &&
-                    orderedImages.length === 0 ? (
+                    orderedImages.length === 0 &&
+                    pageWhiteouts.length === 0 &&
+                    !draftWhiteout ? (
                       <Group
                         justify="center"
                         align="center"

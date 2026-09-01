@@ -34,6 +34,7 @@ import {
   PdfTextEditorViewData,
   BoundingBox,
   ConversionProgress,
+  WhiteoutBox,
 } from "@app/tools/pdfTextEditor/pdfTextEditorTypes";
 import {
   deepCloneDocument,
@@ -280,6 +281,8 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
     new Map(),
   );
   const [autoScaleText, setAutoScaleText] = useState(true);
+  const [whiteouts, setWhiteouts] = useState<Record<number, WhiteoutBox[]>>({});
+  const [whiteoutMode, setWhiteoutMode] = useState(false);
 
   // Lazy loading state
   const [isLazyMode, setIsLazyMode] = useState(false);
@@ -358,7 +361,12 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
       ),
     [groupsByPage, imagesByPage],
   );
-  const hasChanges = useMemo(() => dirtyPages.some(Boolean), [dirtyPages]);
+  const hasChanges = useMemo(
+    () =>
+      dirtyPages.some(Boolean) ||
+      Object.values(whiteouts).some((boxes) => boxes.length > 0),
+    [dirtyPages, whiteouts],
+  );
   const hasDocument = loadedDocument !== null;
 
   // Sync hasChanges to navigation context so navigation guards can block
@@ -421,6 +429,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
         loadedImagePagesRef.current = new Set();
         loadingImagePagesRef.current = new Set();
         setSelectedPage(0);
+        setWhiteouts({});
         setIsLazyMode(false);
         setCachedJobId(null);
         cachedJobIdRef.current = null;
@@ -450,6 +459,20 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
       loadedImagePagesRef.current = new Set(initialLoaded);
       loadingImagePagesRef.current = new Set();
       setSelectedPage(0);
+      setWhiteouts(
+        Object.fromEntries(
+          (cloned.pages ?? []).map((page, index) => [
+            index,
+            (page.whiteouts ?? []).map((box, boxIndex) => ({
+              id: `whiteout-${index}-${boxIndex}`,
+              left: box.left,
+              right: box.left + box.width,
+              top: box.bottom,
+              bottom: box.bottom + box.height,
+            })),
+          ]),
+        ),
+      );
     },
     [],
   );
@@ -1210,6 +1233,30 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
     setErrorMessage(null);
   }, [groupingMode, loadedDocument, resetToDocument]);
 
+  const handleAddWhiteout = useCallback(
+    (pageIndex: number, box: Omit<WhiteoutBox, "id">) => {
+      setWhiteouts((previous) => ({
+        ...previous,
+        [pageIndex]: [
+          ...(previous[pageIndex] ?? []),
+          { ...box, id: `whiteout-${Date.now()}-${Math.random()}` },
+        ],
+      }));
+    },
+    [],
+  );
+
+  const handleRemoveWhiteout = useCallback((pageIndex: number, id: string) => {
+    setWhiteouts((previous) => ({
+      ...previous,
+      [pageIndex]: (previous[pageIndex] ?? []).filter((box) => box.id !== id),
+    }));
+  }, []);
+
+  const handleClearWhiteouts = useCallback((pageIndex: number) => {
+    setWhiteouts((previous) => ({ ...previous, [pageIndex]: [] }));
+  }, []);
+
   const buildPayload = useCallback(() => {
     if (!loadedDocument) {
       return null;
@@ -1222,6 +1269,15 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
       originalImagesRef.current,
       forceSingleTextElement,
     );
+    updatedDocument.pages = (updatedDocument.pages ?? []).map((page, index) => ({
+      ...page,
+      whiteouts: (whiteouts[index] ?? []).map((box) => ({
+        left: box.left,
+        bottom: box.top,
+        width: box.right - box.left,
+        height: box.bottom - box.top,
+      })),
+    }));
     const baseName = sanitizeBaseName(
       fileName || loadedDocument.metadata?.title || undefined,
     );
@@ -1229,7 +1285,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
       document: updatedDocument,
       filename: `${baseName}.json`,
     };
-  }, [fileName, forceSingleTextElement, groupsByPage, loadedDocument]);
+  }, [fileName, forceSingleTextElement, groupsByPage, loadedDocument, whiteouts]);
 
   const handleDownloadJson = useCallback(() => {
     const payload = buildPayload();
@@ -1893,6 +1949,12 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
       onMergeGroups: handleMergeGroups,
       onUngroupGroup: handleUngroupGroup,
       onLoadFile: handleLoadFileFromDropzone,
+      whiteouts,
+      onAddWhiteout: handleAddWhiteout,
+      onRemoveWhiteout: handleRemoveWhiteout,
+      onClearWhiteouts: handleClearWhiteouts,
+      whiteoutMode,
+      onWhiteoutModeChange: setWhiteoutMode,
     }),
     [
       handleMergeGroups,
@@ -1927,6 +1989,11 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
       requestPagePreview,
       setForceSingleTextElement,
       handleLoadFileFromDropzone,
+      whiteouts,
+      handleAddWhiteout,
+      handleRemoveWhiteout,
+      handleClearWhiteouts,
+      whiteoutMode,
     ],
   );
 

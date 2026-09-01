@@ -89,6 +89,13 @@ export interface PdfJsonImageElement {
   imageFormat?: string | null;
 }
 
+export interface PdfJsonWhiteout {
+  left: number;
+  bottom: number;
+  width: number;
+  height: number;
+}
+
 export interface PdfJsonStream {
   dictionary?: Record<string, unknown> | null;
   rawData?: string | null;
@@ -105,6 +112,7 @@ export interface PdfJsonPage {
   imageElements?: PdfJsonImageElement[] | null;
   resources?: unknown;
   contentStreams?: PdfJsonStream[] | null;
+  whiteouts?: PdfJsonWhiteout[] | null;
 }
 
 export interface PdfJsonMetadata {
@@ -184,6 +192,14 @@ export interface ConversionProgress {
   total?: number;
 }
 
+export interface WhiteoutBox {
+  id: string;
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
+}
+
 export interface PdfTextEditorViewData {
   document: PdfJsonDocument | null;
   groupsByPage: TextGroup[][];
@@ -230,4 +246,14 @@ export interface PdfTextEditorViewData {
   onMergeGroups: (pageIndex: number, groupIds: string[]) => boolean;
   onUngroupGroup: (pageIndex: number, groupId: string) => boolean;
   onLoadFile: (file: File) => void;
+  /** Whiteout annotations placed on pages (Nitro PDF "Whiteout") */
+  whiteouts: Record<number, WhiteoutBox[]>;
+  /** Add a whiteout box on a page (pageIndex is zero-based) */
+  onAddWhiteout: (pageIndex: number, box: Omit<WhiteoutBox, "id">) => void;
+  /** Remove a whiteout by id on a specific page */
+  onRemoveWhiteout: (pageIndex: number, id: string) => void;
+  /** Clear all whiteouts on a page */
+  onClearWhiteouts: (pageIndex: number) => void;
+  whiteoutMode: boolean;
+  onWhiteoutModeChange: (value: boolean) => void;
 }

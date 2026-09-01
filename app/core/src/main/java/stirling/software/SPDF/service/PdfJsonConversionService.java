@@ -2,6 +2,7 @@ package stirling.software.SPDF.service;
 
 import static stirling.software.SPDF.service.PdfJsonFallbackFontService.FALLBACK_FONT_ID;
 
+import java.awt.Color;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
@@ -111,6 +112,7 @@ import stirling.software.SPDF.model.json.PdfJsonImageElement;
 import stirling.software.SPDF.model.json.PdfJsonMetadata;
 import stirling.software.SPDF.model.json.PdfJsonPage;
 import stirling.software.SPDF.model.json.PdfJsonPageDimension;
+import stirling.software.SPDF.model.json.PdfJsonWhiteout;
 import stirling.software.SPDF.model.json.PdfJsonStream;
 import stirling.software.SPDF.model.json.PdfJsonTextColor;
 import stirling.software.SPDF.model.json.PdfJsonTextElement;
@@ -730,6 +732,8 @@ public class PdfJsonConversionService {
 
                 boolean hasText = !elements.isEmpty();
                 boolean hasImages = !imageElements.isEmpty();
+                boolean hasWhiteouts =
+                    pageModel.getWhiteouts() != null && !pageModel.getWhiteouts().isEmpty();
                 boolean rewriteSucceeded = true;
 
                 if (hasText) {
@@ -769,7 +773,7 @@ public class PdfJsonConversionService {
                     shouldRegenerate = true;
                 }
 
-                if (!(hasText || hasImages)) {
+                if (!(hasText || hasImages || hasWhiteouts)) {
                     pageIndex++;
                     continue;
                 }
@@ -798,6 +802,8 @@ public class PdfJsonConversionService {
                             appendMode);
                     log.debug("Page content regeneration complete for page {}", pageNumberValue);
                 }
+
+                drawWhiteouts(document, page, pageModel.getWhiteouts());
 
                 // Restore annotations for this page
                 List<PdfJsonAnnotation> annotations =
@@ -6794,6 +6800,8 @@ public class PdfJsonConversionService {
                 pageNumberValue,
                 appendMode);
 
+        drawWhiteouts(document, page, pageModel.getWhiteouts());
+
         if (!preserveExistingAnnotations) {
             page.getAnnotations().clear();
             List<PdfJsonAnnotation> annotations =
@@ -6801,6 +6809,30 @@ public class PdfJsonConversionService {
                             ? new ArrayList<>(pageModel.getAnnotations())
                             : new ArrayList<>();
             restoreAnnotations(document, page, annotations);
+        }
+    }
+
+            private void drawWhiteouts(
+                PDDocument document, PDPage page, List<PdfJsonWhiteout> whiteouts) throws IOException {
+        if (whiteouts == null || whiteouts.isEmpty()) {
+            return;
+        }
+        try (PDPageContentStream contentStream =
+                new PDPageContentStream(document, page, AppendMode.APPEND, true, true)) {
+            contentStream.setNonStrokingColor(Color.WHITE);
+            for (PdfJsonWhiteout whiteout : whiteouts) {
+                if (whiteout == null || whiteout.getLeft() == null || whiteout.getBottom() == null
+                        || whiteout.getWidth() == null || whiteout.getHeight() == null
+                        || whiteout.getWidth() <= 0 || whiteout.getHeight() <= 0) {
+                    continue;
+                }
+                contentStream.addRect(
+                    whiteout.getLeft(),
+                    whiteout.getBottom(),
+                    whiteout.getWidth(),
+                    whiteout.getHeight());
+                contentStream.fill();
+            }
         }
     }
 
