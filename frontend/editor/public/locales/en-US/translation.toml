@@ -5506,24 +5506,21 @@ count = "{{remaining}} of {{total}}"
 label = "Free credits"
 
 [notifications]
-empty = "Nothing to report."
+empty = "You're all caught up."
 handoffUnavailable = "This browser will not let the processor pass the document to the editor. Open it from the editor instead."
-noDocumentLinked = "This failure is not linked to a specific document, so there is nothing to open here."
-notOnThisDevice = "This document is not on this device, so it cannot be opened here."
+noDocumentLinked = "This failure is not linked to a specific document, so it cannot be opened or retried here."
+notOnThisDevice = "This document is not on this device, so it cannot be opened or retried here."
 occurrences = "{{count}} times"
 open = "Notifications"
 title = "Notifications"
 unread = "Unread"
 
 [notifications.action]
+copiedLog = "Copied"
+copyLog = "Copy log"
 failed = "That did not work. Try again in a moment."
+more = "More options"
 unavailable = "Not available for this notification."
-
-[notifications.detail]
-copied = "Copied"
-copy = "Copy error"
-less = "Show less"
-more = "Show full message"
 
 [notifications.section]
 earlier = "Earlier"
@@ -7896,8 +7893,10 @@ title = "Failures"
 [portal.failures.action]
 acknowledge = "Acknowledge"
 confirm = "Are you sure?"
+decrypt = "Decrypt and retry"
 dismiss = "Dismiss"
 dismissSkipFile = "Skip this file"
+openInTool = "Retry"
 viewFile = "View file"
 viewInProcessor = "View in processor"
 
@@ -7920,11 +7919,11 @@ description = "Policy runs that fail will appear here with the actions you can t
 title = "No failures recorded"
 
 [portal.failures.kind.inputPasswordProtected]
-description = "The pipeline could not open the document because it is password-protected. Unlock it and run it again, or skip this file."
+description = "Your file is password protected, so the run could not read it."
 title = "Password-protected document"
 
 [portal.failures.kind.unknown]
-description = "This run failed for a reason Stirling does not yet recognise. The raw message is shown below."
+description = "Something went wrong that Stirling does not recognise yet."
 title = "Unrecognised failure"
 
 [portal.failures.origin]
