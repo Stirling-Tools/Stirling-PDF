@@ -69,6 +69,7 @@ import type { RemovePasswordParameters } from "@app/hooks/tools/removePassword/u
 import { useResolutionContinuation } from "@app/hooks/tools/shared/useResolutionContinuation";
 import apiClient from "@app/services/apiClient";
 import { reportFilesRemoved } from "@app/services/failureReporting";
+import { setPendingUnlocks } from "@app/services/pendingUnlocks";
 import { processResponse } from "@app/utils/toolResponseProcessor";
 import { ToolOperation } from "@app/types/file";
 import { handlePasswordError } from "@app/utils/toolErrorHandler";
@@ -184,6 +185,17 @@ function FileContextInner({
       setActiveEncryptedFileId(null);
     }
   }, [activeEncryptedFileId, state.files.ids]);
+
+  // Published so an upload policy holds off until the user has answered the prompt: running now
+  // would fail on a document they are about to decrypt, and leave a row about a version that no
+  // longer exists once they have.
+  useEffect(() => {
+    setPendingUnlocks(
+      activeEncryptedFileId
+        ? [activeEncryptedFileId, ...encryptedQueue]
+        : encryptedQueue,
+    );
+  }, [activeEncryptedFileId, encryptedQueue]);
 
   useEffect(() => {
     setUnlockPassword("");
