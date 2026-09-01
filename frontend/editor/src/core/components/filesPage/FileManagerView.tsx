@@ -22,8 +22,6 @@ import { useMediaQuery } from "@mantine/hooks";
 import CloseIcon from "@mui/icons-material/Close";
 import SearchIcon from "@mui/icons-material/Search";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
-import QrCode2Icon from "@mui/icons-material/QrCode2";
-import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
 import GridViewIcon from "@mui/icons-material/GridView";
 import ViewListIcon from "@mui/icons-material/ViewList";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -32,11 +30,11 @@ import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
-import RefreshIcon from "@mui/icons-material/Refresh";
 import { FilesToolbarBulkMenu } from "@app/components/filesPage/FilesToolbarBulkMenu";
 import { FilesToolbarCount } from "@app/components/filesPage/FilesToolbarCount";
 import { FilesToolbarFilterMenu } from "@app/components/filesPage/FilesToolbarFilterMenu";
 import { FilesToolbarSortMenu } from "@app/components/filesPage/FilesToolbarSortMenu";
+import { useFileLibraryWorkbenchBarButtons } from "@app/components/filesPage/useFileLibraryWorkbenchBarButtons";
 
 import { stripBasePath } from "@app/constants/app";
 import { useAuth } from "@app/auth/UseSession";
@@ -63,8 +61,6 @@ import { StirlingFileStub } from "@app/types/fileContext";
 import { FolderId, ROOT_FOLDER_ID } from "@app/types/folder";
 
 import { FileGrid, FilesPageEntry } from "@app/components/filesPage/FileGrid";
-import SuperSearch from "@app/components/shared/superSearch/SuperSearch";
-import { useEditorSearchScopes } from "@app/hooks/useSuperSearch";
 import { FileDetailsPanel } from "@app/components/filesPage/FileDetailsPanel";
 import BulkUploadToServerModal from "@app/components/shared/BulkUploadToServerModal";
 import MobileUploadModal from "@app/components/shared/MobileUploadModal";
@@ -92,7 +88,6 @@ export default function FileManagerView() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
-  const searchScopes = useEditorSearchScopes();
 
   // Hide Shared tab when storageSharingEnabled is false.
   const { sharingEnabled } = useSharingEnabled();
@@ -914,6 +909,32 @@ export default function FileManagerView() {
   );
 
   // null = New folder actionable; string = disabled tooltip reason.
+  // Lifted out of the header that used to render it: the workbench bar owns these
+  // controls now, and a handler defined inside JSX cannot be handed to it.
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      // pullFromServer bumps the folder revision, which the FolderProvider's effect
+      // reacts to by re-running refresh() - no need to await folders.refresh() here.
+      const result = await folders.pullFromServer();
+      if (!result.ok && result.reason !== "endpoint-missing") {
+        folders.setError(
+          result.reason === "network"
+            ? t("filesPage.syncError.network", "Could not reach the server.")
+            : result.reason === "server"
+              ? t(
+                  "filesPage.syncError.server",
+                  "Server error during folder sync.",
+                )
+              : t("filesPage.syncError.client", "Folder sync failed."),
+        );
+      }
+      await refresh();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [folders, refresh, t]);
+
   const newFolderDisabledReason: string | null = useMemo(() => {
     // Guests can't use cloud folders at all - say so before any tab/storage
     // hint, since switching tabs wouldn't help them.
@@ -945,23 +966,35 @@ export default function FileManagerView() {
     return null;
   }, [signInRequiredReason, currentTab, folders.serverReachable, t]);
 
+  // Stable identities: the bar re-registers whenever these change, and a fresh arrow
+  // per render turns that into an endless register -> render -> register loop.
+  const openFilePicker = useCallback(() => fileInputRef.current?.click(), []);
+  const openMobileUpload = useCallback(
+    () => setMobileUploadModalOpen(true),
+    [],
+  );
+
+  useFileLibraryWorkbenchBarButtons({
+    onRefresh: handleRefresh,
+    refreshing,
+    refreshDisabledReason: signInRequiredReason,
+    onNewFolder: openNewFolderDialog,
+    newFolderDisabledReason,
+    onUpload: openFilePicker,
+    onUploadFromMobile: isMobileUploadAvailable ? openMobileUpload : undefined,
+  });
+
   return (
     <div className="files-page" ref={dropZoneRef}>
-      <header className="files-page-header">
-        {/* Breadcrumb only for folder-rooted tabs. */}
+      {/* Folder context, not a bar: the controls that used to sit beside this are
+          registered into the workbench bar the other views use. */}
+      <div className="files-page-location">
         {(currentTab === "all" || currentTab === "cloud") && <Breadcrumbs />}
         {(currentTab === "local" ||
           currentTab === "recent" ||
           currentTab === "shared" ||
           currentTab === "sharedByMe") && (
-          <div
-            style={{
-              fontSize: "0.95rem",
-              fontWeight: 600,
-              padding: "0.25rem 0.5rem",
-              color: "var(--c-text)",
-            }}
-          >
+          <span className="files-page-location-name">
             {currentTab === "local"
               ? t("filesPage.tabName.local", "Local")
               : currentTab === "recent"
@@ -969,132 +1002,16 @@ export default function FileManagerView() {
                 : currentTab === "shared"
                   ? t("filesPage.tabName.shared", "Shared with me")
                   : t("filesPage.tabName.sharedByMe", "Shared by me")}
-          </div>
+          </span>
         )}
-        {(() => {
-          // Both the inline desktop buttons and the mobile kebab menu need
-          // these handlers - extract once so we don't drift two copies.
-          const handleRefresh = async () => {
-            setRefreshing(true);
-            try {
-              // pullFromServer bumps the folder revision, which the
-              // FolderProvider's effect reacts to by re-running refresh() -
-              // no need to await folders.refresh() manually.
-              const result = await folders.pullFromServer();
-              if (!result.ok && result.reason !== "endpoint-missing") {
-                folders.setError(
-                  result.reason === "network"
-                    ? t(
-                        "filesPage.syncError.network",
-                        "Could not reach the server.",
-                      )
-                    : result.reason === "server"
-                      ? t(
-                          "filesPage.syncError.server",
-                          "Server error during folder sync.",
-                        )
-                      : t("filesPage.syncError.client", "Folder sync failed."),
-                );
-              }
-              await refresh();
-            } finally {
-              setRefreshing(false);
-            }
-          };
-          return (
-            <>
-              <div className="files-page-header-search">
-                <SuperSearch scopes={searchScopes} />
-              </div>
-              <div className="files-page-header-actions">
-                <Tooltip
-                  label={
-                    signInRequiredReason ??
-                    t("filesPage.refresh", "Refresh from server")
-                  }
-                  withinPortal
-                >
-                  <ActionIcon
-                    variant="secondary"
-                    size="sm"
-                    loading={refreshing}
-                    disabled={refreshing || Boolean(signInRequiredReason)}
-                    aria-busy={refreshing}
-                    onClick={handleRefresh}
-                    aria-label={t("filesPage.refresh", "Refresh from server")}
-                  >
-                    <RefreshIcon />
-                  </ActionIcon>
-                </Tooltip>
-                {newFolderDisabledReason ? (
-                  <Tooltip
-                    label={newFolderDisabledReason}
-                    withinPortal
-                    multiline
-                    w={220}
-                  >
-                    <span style={{ display: "inline-flex" }}>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        leftSection={<CreateNewFolderIcon fontSize="small" />}
-                        disabled
-                        style={{ pointerEvents: "auto" }}
-                      >
-                        {t("filesPage.newFolder", "New folder")}
-                      </Button>
-                    </span>
-                  </Tooltip>
-                ) : (
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    leftSection={<CreateNewFolderIcon fontSize="small" />}
-                    onClick={() => openNewFolderDialog()}
-                  >
-                    {t("filesPage.newFolder", "New folder")}
-                  </Button>
-                )}
-                <Button
-                  size="sm"
-                  leftSection={<UploadFileIcon fontSize="small" />}
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  {t("filesPage.upload", "Upload")}
-                </Button>
-                {isMobileUploadAvailable && (
-                  <Tooltip
-                    label={t(
-                      "filesPage.uploadFromMobile",
-                      "Upload from Mobile",
-                    )}
-                    withinPortal
-                  >
-                    <ActionIcon
-                      size="sm"
-                      variant="secondary"
-                      onClick={() => setMobileUploadModalOpen(true)}
-                      aria-label={t(
-                        "filesPage.uploadFromMobile",
-                        "Upload from Mobile",
-                      )}
-                    >
-                      <QrCode2Icon fontSize="small" />
-                    </ActionIcon>
-                  </Tooltip>
-                )}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  multiple
-                  style={{ display: "none" }}
-                  onChange={onFileInputChange}
-                />
-              </div>
-            </>
-          );
-        })()}
-      </header>
+      </div>
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple
+        style={{ display: "none" }}
+        onChange={onFileInputChange}
+      />
 
       {folders.error && (
         <div

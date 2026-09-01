@@ -8,57 +8,21 @@
   overflow: hidden;
 }
 
-.files-page-header {
-  /* 3-column grid keeps the search bar position-stable regardless of
-   * breadcrumb length. Left column flexes for the breadcrumb (truncating
-   * via overflow:hidden), middle column holds the search, right column
-   * holds the action buttons right-aligned. */
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(min(14rem, 100%), 40rem) minmax(
-      0,
-      1fr
-    );
-  align-items: center;
-  gap: 1rem;
-  min-height: 48px;
-  padding: 0 0.75rem;
-  border-bottom: 1px solid var(--c-border-subtle);
-  background: var(--c-bg-raised);
-  flex-shrink: 0;
-}
-
-.files-page-header-actions {
-  justify-self: end;
+/* Where you are in the library. Not a bar - the controls that used to share this
+   row are registered into the workbench bar, and the search lives there too. */
+.files-page-location {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-}
-
-.files-page-header-search {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  min-height: 2rem;
+  padding: 0.25rem 0.75rem 0;
   min-width: 0;
 }
 
-.files-page-header-search .super-search {
-  flex: 0 1 24rem;
-  width: min(100%, 24rem);
-  max-width: 24rem;
-}
-
-.files-page-header-search .super-search input {
-  background-color: transparent;
-  padding-top: 4px;
-  padding-bottom: 4px;
-  font-size: 12.5px;
-}
-
-[data-mantine-color-scheme="dark"]
-  .files-page-header-search
-  .super-search
-  input {
-  background-color: transparent;
+.files-page-location-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 0.25rem 0.5rem;
+  color: var(--c-text);
 }
 
 .files-page-breadcrumbs {
@@ -1317,12 +1281,6 @@
    filter selects, and pins the view toggle so it never clips off the
    right edge. The header stays in desktop layout here (it has fewer
    items and the side panels disappearing actually GIVES it room). */
-.files-page-header [data-desktop-hide="true"] {
-  /* The mobile-only overflow menu trigger. Hidden by default; shown
-     inside the mobile breakpoint below. Live as inline-flex so it
-     sits next to the Upload button without breaking the action row. */
-  display: none;
-}
 @media (max-width: 1024px) {
   .files-page-toolbar {
     /* nowrap so "7 items" + "Select all" sit on the same row as the
@@ -1395,48 +1353,12 @@
    search takes whatever is left. Ends at the app's mobile breakpoint so
    it matches the layout HomePage is already rendering. */
 @media (max-width: 1024px) {
-  .files-page-header {
-    display: flex;
-    flex-wrap: nowrap;
-    align-items: center;
-    gap: 0.4rem;
-    padding: 0.25rem 0.4rem;
-    overflow-x: hidden;
-  }
-  .files-page-header-search {
-    flex: 1 1 auto;
-    min-width: 0;
-    justify-content: flex-start;
-  }
-  /* Undo the fixed 24rem basis so the pill tracks the row's spare width. */
-  .files-page-header-search .super-search {
-    flex: 1 1 auto;
-    width: 100%;
-    max-width: none;
-  }
-  .files-page-header-actions {
-    flex: 0 0 auto;
-    margin-left: auto;
-    gap: 0.25rem;
-    flex-wrap: nowrap;
-  }
   .files-page-breadcrumbs {
     flex: 0 1 auto;
     font-size: 0.85rem;
     flex-wrap: nowrap;
     overflow-x: auto;
     min-width: 0;
-  }
-  /* Icon-only actions: the labels are what pushed Upload past the edge. */
-  .files-page-header-actions .mantine-Button-root {
-    padding-left: 0.55rem;
-    padding-right: 0.55rem;
-  }
-  .files-page-header-actions .mantine-Button-section[data-position="left"] {
-    margin-right: 0;
-  }
-  .files-page-header-actions .mantine-Button-label {
-    display: none;
   }
 }
 
