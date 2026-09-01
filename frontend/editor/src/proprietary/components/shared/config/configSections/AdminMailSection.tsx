@@ -23,7 +23,7 @@ import EditableSecretField from "@app/components/shared/EditableSecretField";
 import apiClient from "@app/services/apiClient";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
 
-interface MailSettingsData {
+type MailSettingsData = {
   enabled?: boolean;
   enableInvites?: boolean;
   inviteLinkExpiryHours?: number;
@@ -32,7 +32,7 @@ interface MailSettingsData {
   username?: string;
   password?: string;
   from?: string;
-}
+};
 
 interface ApiResponseWithPending<T> {
   _pending?: Partial<T>;

@@ -29,7 +29,7 @@ interface UseAdminSettingsOptions<T> {
    * Returns an object with sectionData and optionally deltaSettings.
    */
   saveTransformer?: (settings: T) => {
-    sectionData: unknown;
+    sectionData: SettingsBlock;
     deltaSettings?: SettingsBlock;
   };
 }
