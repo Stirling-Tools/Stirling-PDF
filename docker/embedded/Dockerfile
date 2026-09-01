@@ -48,9 +48,23 @@ ENV STIRLING_FLAVOR=${STIRLING_FLAVOR}
 # portal or AI layers change; defaults false so normal builds skip the extra app.
 ARG BUILD_PORTAL=false
 
+# Which Stirling account the portal connects to. Build-time because Vite inlines VITE_* into the
+# bundle; there is no runtime override. Empty leaves the committed .env.proprietary defaults, which
+# is what an ordinary image wants: no Stirling account and no connect flow. The publishable key is
+# client-side by design, not a secret. Pass the URL and the key from the same Supabase project or
+# the browser accepts the pair and Supabase rejects it, which surfaces later as "session expired".
+ARG VITE_SUPABASE_URL=""
+ARG VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY=""
+ARG VITE_SAAS_API_URL=""
+
 # Bundle only the JPDFium native for this image's target arch.
 ARG TARGETARCH
+# Exported only when non-empty: Vite reads process.env ahead of the .env files, so exporting an
+# empty value would blank the committed default rather than fall back to it.
 RUN JPDFIUM_PLATFORM="$([ "$TARGETARCH" = arm64 ] && echo linux-arm64 || echo linux-x64)" && \
+    if [ -n "${VITE_SUPABASE_URL}" ]; then export VITE_SUPABASE_URL="${VITE_SUPABASE_URL}"; fi; \
+    if [ -n "${VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY}" ]; then export VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY="${VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY}"; fi; \
+    if [ -n "${VITE_SAAS_API_URL}" ]; then export VITE_SAAS_API_URL="${VITE_SAAS_API_URL}"; fi; \
     STIRLING_FLAVOR=${STIRLING_FLAVOR} \
     gradle clean build \
       -PbuildWithFrontend=true \
