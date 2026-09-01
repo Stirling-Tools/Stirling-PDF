@@ -77,8 +77,8 @@ function policyRow(overrides: Partial<AppNotification> = {}): AppNotification {
     lastSeenAt: "2026-08-06T00:00:00Z",
     actions: [
       offer("DECRYPT", "RESOLUTION"),
+      offer("VIEW_FILE", "SECONDARY"),
       offer("OPEN_IN_TOOL", "OVERFLOW"),
-      offer("VIEW_FILE", "OVERFLOW"),
     ],
     ...overrides,
   };
@@ -94,7 +94,7 @@ function toolRow(overrides: Partial<AppNotification> = {}): AppNotification {
     fileId: "f-tool",
     actions: [
       offer("OPEN_IN_TOOL", "SECONDARY"),
-      offer("VIEW_FILE", "OVERFLOW"),
+      offer("VIEW_FILE", "SECONDARY"),
     ],
     ...overrides,
   });
@@ -205,7 +205,7 @@ describe("useResolutionContinuation", () => {
         policyRow({
           actions: [
             offer("DECRYPT", "RESOLUTION", false),
-            offer("VIEW_IN_PROCESSOR", "SECONDARY"),
+            offer("VIEW_IN_PROCESSOR", "OVERFLOW"),
           ],
         }),
       ],
