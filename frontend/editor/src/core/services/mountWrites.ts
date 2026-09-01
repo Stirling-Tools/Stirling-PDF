@@ -7,13 +7,12 @@ export interface MountWriteItem {
 }
 
 /**
- * Write a batch of named blobs into a mounted directory — the one engine
- * behind "upload while standing in a mount" and "move library files into a
- * mount", so failure accounting and collision behavior can't drift between
- * them. Failures are counted, never thrown: the caller owes the user one
- * banner for the batch, not an abort at the first bad file. `written[i]`
- * tells the caller which items verifiably landed (and are safe to retire
- * from app storage).
+ * Write named blobs into a mounted directory - the one engine behind both uploading
+ * into a mount and moving library files into one, so failure accounting and
+ * collision behaviour cannot drift apart. Failures are counted, never thrown: the
+ * caller owes one banner for the batch rather than an abort at the first bad file.
+ * `written[i]` says which items verifiably landed and are safe to retire from app
+ * storage.
  */
 export async function writeIntoMount(
   directory: string | undefined,

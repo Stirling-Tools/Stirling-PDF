@@ -24,15 +24,13 @@ import type {
 export type { DiskDirEntry, DiskFileEntry, DiskListing };
 
 /**
- * Containment: file reads and writes here run under a filesystem-wide Tauri
- * capability, but this module's contract is mounted directories only —
- * refuse any path outside one. The capability layer is the real trust
- * boundary; this keeps the contract explicit and a bad path inert.
+ * Containment: these reads and writes run under a filesystem-wide Tauri capability,
+ * but the contract here is mounted directories only, so any path outside one is
+ * refused. The capability layer is the real trust boundary; this keeps a bad path
+ * inert.
  *
- * The mount store is read fresh on every call: it holds a handful of rows,
- * which is nothing next to the file bytes about to cross the IPC bridge,
- * and the heavy callers (thumbnails) are already concurrency-throttled.
- * Fresh reads mean a removed mount is refused immediately.
+ * The mount store is read fresh every call - a handful of rows against the file
+ * bytes about to cross the IPC bridge - so a removed mount is refused at once.
  */
 async function isWithinMount(path: string): Promise<boolean> {
   const pathKey = directoryKey(path);

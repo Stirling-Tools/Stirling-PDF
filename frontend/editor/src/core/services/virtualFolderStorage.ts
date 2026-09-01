@@ -1,16 +1,13 @@
 /**
- * Virtual Folder Storage - the system of record for kind "virtual" folders.
+ * The system of record for kind "virtual" folders - rows this store owns rather
+ * than caches. {@link folderStorage} is wiped and rewritten on every sync because
+ * the server is authoritative there; a virtual folder exists only in this browser,
+ * with nothing to restore it from. They organise files where there is no login, no
+ * server storage, or no network.
  *
- * Unlike {@link folderStorage} (a passive cache of the server's folder
- * hierarchy, wiped and rewritten on every sync), this store OWNS its rows:
- * a virtual folder exists only in this browser's IndexedDB and has no server
- * copy to be restored from. That is the point — virtual folders organise
- * files on installs with no login, no server storage, or no network.
- *
- * Because there is no server to be authoritative, the invariants the server
- * enforces for its folders are enforced here instead: no reparenting a folder
- * under its own subtree (cycles), and a bounded chain depth. Limits mirror
- * FolderService so a hierarchy never behaves differently for being virtual.
+ * No server to enforce them means the invariants live here: no reparenting a folder
+ * under its own subtree, and a bounded depth, with the limits mirroring
+ * FolderService so a hierarchy does not behave differently for being virtual.
  */
 
 import {

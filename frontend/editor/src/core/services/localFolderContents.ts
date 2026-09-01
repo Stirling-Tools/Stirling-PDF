@@ -1,11 +1,8 @@
 /**
- * Reading a mounted local folder's contents straight off the disk.
- *
- * A local folder is read-through: the directory is the source of truth and
- * nothing is ingested to show it — the listing IS the directory, taken fresh
- * on every look. Only an environment that can see the filesystem can do
- * this, so core reports the capability absent and the desktop build shadows
- * this module with the Tauri filesystem plugin.
+ * Reading a mounted folder's contents straight off the disk. Read-through: the
+ * listing is the directory, taken fresh each look, with nothing ingested to show it.
+ * Only an environment that can see the filesystem can do this, so core reports the
+ * capability absent and the desktop build shadows this module.
  */
 
 /** One file inside a mounted directory, as the file manager lists it. */

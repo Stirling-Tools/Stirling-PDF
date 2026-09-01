@@ -1,13 +1,11 @@
 /**
- * Local Folder Storage - the record of directories mounted into the file
- * manager (kind "local").
+ * The record of directories mounted into the file manager (kind "local"): a pointer
+ * at a directory, nothing more. The directory owns its name, contents and lifetime,
+ * so the record holds only where it is and how to show it, and removing a mount
+ * removes the record and nothing else.
  *
- * A local folder is a pointer at a directory on the machine; the directory
- * itself is the source of truth for everything else — name, contents,
- * lifetime — so the record carries only where it is and how to show it.
- * Mounts are flat by construction: they have no parent, and a directory's
- * subdirectories are the filesystem's business, not a folder hierarchy for
- * this store to model. Removing a mount removes the record and nothing else.
+ * Mounts are flat by construction - no parent, and a directory's subdirectories are
+ * the filesystem's business rather than a hierarchy for this store to model.
  */
 
 import {
@@ -73,12 +71,10 @@ class LocalFolderStorageService {
   }
 
   /**
-   * Mount a directory. Mounting the same directory twice hands back the
-   * existing record — two rows for one directory would be two names for one
-   * truth, and removing one would lie about the other. Nesting is fine: a
-   * mount lists only its own files, so a subdirectory needs its own mount to
-   * be reachable at all — the same way a file manager pins both a folder and
-   * one of its children.
+   * Mount a directory, or hand back the existing record for one already mounted:
+   * two rows for one directory would be two names for one truth. Nesting is fine -
+   * a mount lists only its own files, so a subdirectory needs its own mount to be
+   * reachable.
    */
   async mountDirectory(directory: string, name: string): Promise<FolderRecord> {
     const key = directoryKey(directory);

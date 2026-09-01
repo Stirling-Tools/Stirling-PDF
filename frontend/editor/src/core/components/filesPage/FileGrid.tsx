@@ -534,9 +534,8 @@ function FolderCard({
 }: FolderCardProps) {
   const { t } = useTranslation();
   const { serverReachable, setError } = useFolders();
-  // Only server folders go offline: a virtual folder is browser-owned and a
-  // local one takes its name, look, and lifetime from its directory on disk —
-  // so its edit items are hidden rather than disabled-with-a-wrong-excuse.
+  // Only a server folder can go offline: the other kinds take their name, look and
+  // lifetime from elsewhere, so their edit items are hidden rather than disabled.
   const kind = folderKind(folder);
   const originBadge = useFolderOriginBadge(folder);
   const editsDisabled = kind === "server" && !serverReachable;
@@ -1285,9 +1284,7 @@ function FolderRow({
 }: FolderRowProps) {
   const { t } = useTranslation();
   const { serverReachable, setError } = useFolders();
-  // Only server folders go offline: a virtual folder is browser-owned and a
-  // local one takes its name, look, and lifetime from its directory on disk —
-  // so its edit items are hidden rather than disabled-with-a-wrong-excuse.
+  // Kinds gate the edit items, as in FolderCard.
   const kind = folderKind(folder);
   const originBadge = useFolderOriginBadge(folder);
   const editsDisabled = kind === "server" && !serverReachable;
