@@ -307,12 +307,12 @@ describe("useNotificationActions", () => {
   it("offers no retry once the document has left this browser", () => {
     const actions = registry();
 
-    expect(actions.OPEN_IN_TOOL?.available(context({ hasLocalFile: false }))).toBe(
-      false,
-    );
-    expect(actions.OPEN_IN_TOOL?.available(context({ retryPayload: null }))).toBe(
-      false,
-    );
+    expect(
+      actions.OPEN_IN_TOOL?.available(context({ hasLocalFile: false })),
+    ).toBe(false);
+    expect(
+      actions.OPEN_IN_TOOL?.available(context({ retryPayload: null })),
+    ).toBe(false);
     expect(actions.VIEW_FILE?.available(context({ hasLocalFile: false }))).toBe(
       false,
     );
@@ -435,10 +435,7 @@ describe("useNotificationActions", () => {
   it("unlocks with the password it was given and reports what came back", async () => {
     retryWithPassword.mockResolvedValue({ ok: false, message: "Wrong" });
 
-    const outcome = await registry().DECRYPT?.run(
-      context(),
-      "hunter2",
-    );
+    const outcome = await registry().DECRYPT?.run(context(), "hunter2");
 
     expect(retryWithPassword).toHaveBeenCalledWith(
       expect.objectContaining({ endpoint: "/api/v1/security/remove-password" }),
@@ -461,10 +458,7 @@ describe("useNotificationActions", () => {
       ],
     });
 
-    const outcome = await registry().DECRYPT?.run(
-      context(),
-      "hunter2",
-    );
+    const outcome = await registry().DECRYPT?.run(context(), "hunter2");
 
     expect(outcome).toEqual({ ok: true });
     const [files, options] = addFiles.mock.calls[0];
@@ -491,10 +485,7 @@ describe("useNotificationActions", () => {
       ],
     });
 
-    const outcome = await registry().DECRYPT?.run(
-      policyContext(),
-      "hunter2",
-    );
+    const outcome = await registry().DECRYPT?.run(policyContext(), "hunter2");
 
     expect(outcome).toEqual({ ok: true });
     // Consumed, not added: the encrypted original is versioned, so there is only ever one document.
@@ -552,9 +543,9 @@ describe("useNotificationActions", () => {
     });
     reportNotificationResolved.mockResolvedValue(false);
 
-    expect(
-      await registry().DECRYPT?.run(context(), "hunter2"),
-    ).toEqual({ ok: true });
+    expect(await registry().DECRYPT?.run(context(), "hunter2")).toEqual({
+      ok: true,
+    });
   });
 
   it("reports a failure when the unlocked document cannot be taken in", async () => {
@@ -565,10 +556,7 @@ describe("useNotificationActions", () => {
     });
     addFiles.mockRejectedValue(new Error("quota"));
 
-    const outcome = await registry().DECRYPT?.run(
-      context(),
-      "hunter2",
-    );
+    const outcome = await registry().DECRYPT?.run(context(), "hunter2");
 
     expect(outcome).toEqual({
       ok: false,
@@ -780,7 +768,9 @@ describe("retrying an attended policy run", () => {
   });
 
   it("refuses rather than firing a run the processor shell could not collect", async () => {
-    expect(await registry(inProcessor).OPEN_IN_TOOL?.run(policyContext())).toEqual({
+    expect(
+      await registry(inProcessor).OPEN_IN_TOOL?.run(policyContext()),
+    ).toEqual({
       ok: false,
       message: "This document can no longer be retried from this browser.",
     });
@@ -802,10 +792,7 @@ describe("retrying an attended policy run", () => {
       return true;
     });
 
-    const outcome = await registry().DECRYPT?.run(
-      policyContext(),
-      "hunter2",
-    );
+    const outcome = await registry().DECRYPT?.run(policyContext(), "hunter2");
 
     expect(outcome).toEqual({ ok: true });
     // The unlock is the remove-password call on the document the row names, not a stashed endpoint.
@@ -862,9 +849,7 @@ describe("retrying an attended policy run", () => {
     // Untracked, so the processed document never arrives: the unlocked input is not the point.
     rechainPolicyOnDocument.mockResolvedValue({ ok: true, tracked: false });
 
-    expect(
-      await registry().DECRYPT?.run(policyContext(), "hunter2"),
-    ).toEqual({
+    expect(await registry().DECRYPT?.run(policyContext(), "hunter2")).toEqual({
       ok: false,
       message:
         "The document was unlocked and the policy re-run started, but its result cannot be delivered here, so this failure stays open.",
@@ -892,9 +877,10 @@ describe("retrying an attended policy run", () => {
       message: "The password is incorrect.",
     });
 
-    expect(
-      await registry().DECRYPT?.run(policyContext(), "wrong"),
-    ).toEqual({ ok: false, message: "The password is incorrect." });
+    expect(await registry().DECRYPT?.run(policyContext(), "wrong")).toEqual({
+      ok: false,
+      message: "The password is incorrect.",
+    });
     expect(addFiles).not.toHaveBeenCalled();
     expect(rechainPolicyOnDocument).not.toHaveBeenCalled();
     // The row is still a failure, so nothing may report it fixed.
@@ -904,9 +890,7 @@ describe("retrying an attended policy run", () => {
   it("neither re-runs nor closes the incident when the document cannot be taken in", async () => {
     consumeFiles.mockRejectedValue(new Error("quota"));
 
-    expect(
-      await registry().DECRYPT?.run(policyContext(), "hunter2"),
-    ).toEqual({
+    expect(await registry().DECRYPT?.run(policyContext(), "hunter2")).toEqual({
       ok: false,
       message:
         "The document was unlocked but could not be opened here. Try the tool directly.",
@@ -922,9 +906,7 @@ describe("retrying an attended policy run", () => {
       message: "Queue full.",
     });
 
-    expect(
-      await registry().DECRYPT?.run(policyContext(), "hunter2"),
-    ).toEqual({
+    expect(await registry().DECRYPT?.run(policyContext(), "hunter2")).toEqual({
       ok: false,
       message:
         "The document was unlocked and opened here, but the policy could not be run on it again.",

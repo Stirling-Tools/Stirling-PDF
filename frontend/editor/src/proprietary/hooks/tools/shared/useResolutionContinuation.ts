@@ -104,7 +104,8 @@ async function continueRow(
   if (!stash || stash.operation !== run.operation) return false;
   // One stash per file but one incident per kind per file, so the stash may be another row's.
   if (!stashMatchesKind(row.kindId, stash)) return false;
-  if (!row.actions.some((a) => a.enabled && a.id === "OPEN_IN_TOOL")) return false;
+  if (!row.actions.some((a) => a.enabled && a.id === "OPEN_IN_TOOL"))
+    return false;
   return reportNotificationResolved(row.id);
 }
 

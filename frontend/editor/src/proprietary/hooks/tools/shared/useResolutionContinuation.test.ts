@@ -92,7 +92,10 @@ function toolRow(overrides: Partial<AppNotification> = {}): AppNotification {
     origin: "TOOL",
     policyId: null,
     fileId: "f-tool",
-    actions: [offer("OPEN_IN_TOOL", "SECONDARY"), offer("VIEW_FILE", "OVERFLOW")],
+    actions: [
+      offer("OPEN_IN_TOOL", "SECONDARY"),
+      offer("VIEW_FILE", "OVERFLOW"),
+    ],
     ...overrides,
   });
 }
