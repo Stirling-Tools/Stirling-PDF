@@ -457,7 +457,6 @@ export default function FileManagerView() {
     [foldersById],
   );
 
-  // ─── read-through listing for a mounted local folder ────────────────────
   // The directory is the source of truth: its contents are read fresh off
   // the disk whenever the user is inside the folder, never ingested to show.
   const currentFolder = currentFolderId

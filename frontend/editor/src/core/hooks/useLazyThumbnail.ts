@@ -82,7 +82,6 @@ export function useLazyThumbnail(
   return thumb;
 }
 
-// ─── thumbnails for files listed straight off a mounted directory ─────────
 
 /**
  * Cache keyed by path + mtime + size, so an unchanged file never renders
