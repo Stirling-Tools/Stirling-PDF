@@ -90,6 +90,14 @@ export function useLink(): LinkContextValue {
 }
 
 /**
+ * Null rather than throwing where there is no provider. The SaaS portal mounts none on purpose, so
+ * absent means "linking does not apply here" — a real answer, not a mistake.
+ */
+export function useLinkOptional(): LinkContextValue | null {
+  return useContext(LinkContext);
+}
+
+/**
  * Derives the linked state from raw facts: whether the org has linked its SaaS
  * account and whether it carries a live subscription. Keeps the unlinked /
  * linked-free / linked-subscribed mapping in one place.

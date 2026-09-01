@@ -41,7 +41,7 @@ export function WalletMeter({ wallet, unsynced, action }: Props) {
     rate != null
       ? t(
           "portal.billing.walletMeter.titleWithRate",
-          "Process {{allowance}} PDFs free every month, then {{rate}}/PDF",
+          "{{allowance}} free credits every month, then {{rate}} per PDF",
           {
             count: wallet.freeAllowance,
             allowance: wallet.freeAllowance.toLocaleString(),
@@ -50,7 +50,7 @@ export function WalletMeter({ wallet, unsynced, action }: Props) {
         )
       : t(
           "portal.billing.walletMeter.title",
-          "Process {{allowance}} PDFs free every month",
+          "{{allowance}} free credits every month",
           {
             count: wallet.freeAllowance,
             allowance: wallet.freeAllowance.toLocaleString(),
@@ -80,12 +80,12 @@ export function WalletMeter({ wallet, unsynced, action }: Props) {
           pct={pct}
           barLabel={t(
             "portal.billing.walletMeter.barAria",
-            "Free PDFs remaining",
+            "Free credits remaining",
           )}
           figure={remaining.toLocaleString()}
           capSuffix={t(
             "portal.billing.walletMeter.capSuffix",
-            "of {{allowance}} free PDFs left this month",
+            "of {{allowance}} free credits left this month",
             {
               count: wallet.freeAllowance,
               allowance: wallet.freeAllowance.toLocaleString(),

@@ -3641,6 +3641,7 @@ system = "System Configuration"
 [connect]
 loading = "Checking this request."
 redirecting = "Returning you to your server."
+step = "Step {{current}} of {{total}}"
 
 [connect.confirm]
 acknowledge = "I recognise this address and want to connect it to my team"
@@ -3846,7 +3847,6 @@ label = "Y Position"
 
 [crop.error]
 failed = "Failed to crop PDF"
-invalidArea = "Crop area extends beyond PDF boundaries"
 
 [crop.preview]
 title = "Crop Area Selection"
@@ -6805,10 +6805,22 @@ after = "to enable account linking against the hosted Stirling account. In dev y
 before = "Set"
 title = "SaaS login not configured"
 
+[portal.accountLink.connect]
+close = "Close"
+notNow = "Not now"
+start = "Connect Stirling account"
+step = "Step {{current}} of {{total}}"
+
+[portal.accountLink.connect.benefits]
+creditsDetail = "500 free per month"
+creditsLabel = "Credits"
+processorDetail = "Pipelines, policies, sources and audit"
+processorLabel = "Processor"
+teamsDetail = "Free for up to 5 users"
+teamsLabel = "Teams"
+
 [portal.accountLink.connect.callback]
-continue = "Continue"
 linkedNotSignedIn = "You are not signed in to Stirling in this browser, so usage and billing will ask you to sign in."
-modalTitle = "Connecting this server"
 retry = "Try again"
 signedInAnyway = "You are signed in to Stirling, so billing and usage will load. Only the server link is incomplete."
 working = "Finishing the connection."
@@ -6816,10 +6828,6 @@ working = "Finishing the connection."
 [portal.accountLink.connect.callback.expired]
 body = "Connection requests are short lived. Start another one."
 title = "Request expired"
-
-[portal.accountLink.connect.callback.linked]
-body = "This server is connected to your Stirling account."
-title = "Server connected"
 
 [portal.accountLink.connect.callback.malformed]
 body = "This page was opened without a valid connection response. Start the connection from settings."
@@ -6833,11 +6841,23 @@ title = "Connection not completed"
 body = "Stirling did not confirm the connection. This is usually temporary."
 title = "Not finished yet"
 
-[portal.accountLink.gate]
-action = "Link account"
-description = "Link this org's Stirling account to use billable features."
-title = "Link to unlock"
-titleFeature = "Link to unlock {{feature}}"
+[portal.accountLink.connect.done]
+accountLabel = "Account"
+addPolicy = "Add a policy"
+buildPipeline = "Set up a pipeline"
+creditsBarLabel = "Free credits remaining"
+creditsSuffix = "of {{allowance}} free credits left"
+cta = "Done"
+inviteTeam = "Invite your team"
+lede = "This server now runs against your Stirling account."
+pendingTitle = "Almost there"
+switchOnProcessor = "Switch on the Processor"
+title = "Connected"
+
+[portal.accountLink.connect.handoff]
+going = "Taking you to stirling.com"
+reauthLede = "Your Stirling session expired. Signing in again keeps usage and billing visible. This server stays connected either way."
+title = "Connecting"
 
 [portal.accountLink.instances]
 active = "Active"
@@ -6867,17 +6887,11 @@ never = "never"
 
 [portal.accountLink.modal]
 cancel = "Cancel"
-continueLink = "Continue to Stirling"
 continueReauth = "Sign in again"
-linkSubtitle = "Connect this server to the Stirling account it should bill against."
 linkTitle = "Connect your Stirling account"
 noAuthorizeUrl = "Stirling did not return somewhere to continue. Try again in a moment."
-reauthSubtitle = "Your Stirling session expired. Sign in again to keep seeing usage and billing. This server stays connected either way."
 reauthTitle = "Sign in again"
 startFailed = "Could not reach Stirling to start the connection. Check this server's outbound network access, then try again."
-step1 = "We send you to stirling.com to sign in. Any sign-in method works there, including Google and single sign-on."
-step2 = "You check this server's address and approve it. A team owner has to do this the first time."
-step3 = "Stirling brings you straight back here and finishes up."
 
 [portal.accountLink.modal.loginNotConfigured]
 after = "so this server can finish the connection when you come back."
@@ -6895,6 +6909,12 @@ sub = "Link this self-hosted org to its Stirling account so unattended processin
 forbidden = "Only the team owner can view the org's linked instances."
 generic = "Couldn't load the team's linked instances. Try again in a moment."
 title = "Couldn't load linked instances"
+
+[portal.accountLink.rail]
+cta = "Connect"
+later = "Not now"
+sub = "Unlocks teams, PDF processor, pipelines, and policies. PDF editing stays free."
+title = "Connect your Stirling account"
 
 [portal.accountLink.state]
 free = "Editor plan"
@@ -7018,11 +7038,6 @@ showMostRecent_other = "Show {{count}} most recent"
 title = "Invoice history"
 viewAriaLabel = "View invoice {{number}} in Stripe"
 viewLink = "View ↗"
-
-[portal.billing.linkPrompt]
-cta = "Link Stirling account"
-description = "Manual PDF editing — view, sign, merge, split, watermark, compress, convert, manual OCR — is always free, linked or not. Link to claim 500 free PDFs of metered processing (automation, AI, and the API); when you need more, turn on the Processor plan and only pay for what you use."
-title = "Link your Stirling account"
 
 [portal.billing.paymentMethod]
 billedMonthly = "Billed monthly"
@@ -7179,8 +7194,8 @@ label = "Projected to exceed."
 
 [portal.billing.spendThisMonth]
 eyebrow = "Spend this month"
-freeRemaining_one = "{{formatted}} free PDF remaining"
-freeRemaining_other = "{{formatted}} free PDFs remaining"
+freeRemaining_one = "{{formatted}} free credit remaining"
+freeRemaining_other = "{{formatted}} free credits remaining"
 processed_one = "{{formattedCount}} PDF processed."
 processed_other = "{{formattedCount}} PDFs processed."
 processedWithRate_one = "{{formattedCount}} PDF processed, at {{rate}} each."
@@ -7197,17 +7212,17 @@ reachedTitle = "Monthly spend limit reached"
 title = "Couldn't open Stripe portal"
 
 [portal.billing.walletMeter]
-barAria = "Free PDFs remaining"
-capSuffix_one = "of {{allowance}} free PDF left this month"
-capSuffix_other = "of {{allowance}} free PDFs left this month"
+barAria = "Free credits remaining"
+capSuffix_one = "of {{allowance}} free credit left this month"
+capSuffix_other = "of {{allowance}} free credits left this month"
 eyebrow = "Processor trial"
 statusLabel_one = "{{used}} used"
 statusLabel_other = "{{used}} used"
 sub = "Use the PDF Editor for free. Pay to process PDFs automatically."
-title_one = "Process {{allowance}} PDFs free every month"
-title_other = "Process {{allowance}} PDFs free every month"
-titleWithRate_one = "Process {{allowance}} PDFs free every month, then {{rate}}/PDF"
-titleWithRate_other = "Process {{allowance}} PDFs free every month, then {{rate}}/PDF"
+title_one = "{{allowance}} free credit every month"
+title_other = "{{allowance}} free credits every month"
+titleWithRate_one = "{{allowance}} free credit every month, then {{rate}} per PDF"
+titleWithRate_other = "{{allowance}} free credits every month, then {{rate}} per PDF"
 
 [portal.components.billingUnit]
 approval = "approval"
