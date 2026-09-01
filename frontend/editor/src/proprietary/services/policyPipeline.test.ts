@@ -111,7 +111,8 @@ const samplePolicy = {
     updatedAt: "",
   },
   pipelineSteps: [{ operation: "/api/v1/misc/compress-pdf", parameters: {} }],
-  sources: ["editor"],
+  sources: [],
+  runsOnEditor: true,
   scopeTypes: ["Contracts"],
   reviewerEmail: "me@x.com",
   fieldValues: { minConfidence: "80%" },
@@ -147,7 +148,8 @@ describe("buildBackendPolicy", () => {
     expect(decoded.id).toBe("p1");
     expect(decoded.categoryId).toBe("security");
     expect(decoded.enabled).toBe(true);
-    expect(decoded.sources).toEqual(["editor"]);
+    expect(decoded.sources).toEqual([]);
+    expect(decoded.runsOnEditor).toBe(true);
     expect(decoded.scopeTypes).toEqual(["Contracts"]);
     expect(decoded.reviewerEmail).toBe("me@x.com");
     expect(decoded.fieldValues).toEqual({ minConfidence: "80%" });
