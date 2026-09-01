@@ -83,9 +83,8 @@ export function useLazyThumbnail(
 }
 
 /**
- * Keyed by path + mtime + size, so an unchanged file never renders twice and an
- * edited one does. Each generation reads the file's full bytes off disk, so this is
- * what makes revisits and re-sorts free.
+ * Keyed by path + mtime + size, so an unchanged file never renders twice and an edited
+ * one does.
  */
 const diskThumbCache = new Map<string, string>();
 // Bounded by bytes, not entries: image thumbnails are data URLs that track the
@@ -127,11 +126,9 @@ function canEverThumbnail(name: string): boolean {
 }
 
 /**
- * Thumbnail for a disk-listed file, through the same generator and the same
- * concurrency gate as stored files — a mounted folder's rows fill in
- * progressively alongside everything else instead of stampeding the disk.
- * Returns undefined while pending, unsupported, or too large (placeholder
- * icon stays).
+ * Thumbnail for a disk-listed file, through the same generator and the same concurrency
+ * gate as stored files — a mounted folder's rows fill in progressively alongside
+ * everything else instead of stampeding the disk.
  */
 export function useDiskThumbnail(entry: {
   path: string;
@@ -172,7 +169,6 @@ export function useDiskThumbnail(entry: {
       cancelled = true;
     };
     // The key encodes every field of `entry` this effect reads.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
   return thumb;

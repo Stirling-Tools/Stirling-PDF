@@ -121,9 +121,8 @@ export async function reconcileServerFiles(
 
   let combinedStubs: StirlingFileStub[];
   // Virtual folders are browser-owned, so a stub sitting in one must keep its
-  // membership through the reconcile — the server's folderId (always null for
-  // them) is not an opinion about it. Read best-effort: with the store
-  // unreadable, behave exactly as before the guard existed.
+  // membership through the reconcile — the server's folderId (always null for them) is
+  // not an opinion about it.
   const virtualFolderIds = new Set<FolderId>(
     await virtualFolderStorage
       .getAllFolders()

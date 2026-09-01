@@ -71,11 +71,7 @@ export class ConnectionModeService {
     return config.mode;
   }
 
-  /**
-   * The mode already in memory, or null before the first load. For render
-   * paths that must answer synchronously — after boot the config is a plain
-   * field, and a first paint shouldn't wait on (or guess through) a promise.
-   */
+  /** The mode already in memory, or null before the first load. */
   getCachedMode(): ConnectionMode | null {
     return this.currentConfig?.mode ?? null;
   }

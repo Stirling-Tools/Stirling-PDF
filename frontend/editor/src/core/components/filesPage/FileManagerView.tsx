@@ -1093,8 +1093,7 @@ export default function FileManagerView() {
   );
 
   // Per-destination availability for the New-folder menu; the reason renders as the
-  // disabled item's caption. The server one comes through a build seam because what
-  // blocks it differs by platform - desktop's local mode has no server at all.
+  // disabled item's caption.
   const serverFolderDisabledReason = useServerFolderBlock() ?? undefined;
 
   const { addLocalFolder, createFolderHere, createFolderHereBlockedReason } =
@@ -1123,8 +1122,7 @@ export default function FileManagerView() {
     ) {
       return serverFolderDisabledReason;
     }
-    // The web root creates on the server or not at all. Desktop's stays clickable:
-    // a local folder needs no server, and the server item explains itself inline.
+    // The web root creates on the server or not at all.
     if (
       folders.currentFolderId === null &&
       !canPickDirectory &&

@@ -1,11 +1,6 @@
 /**
- * The record of directories mounted into the file manager (kind "local"): a pointer
- * at a directory, nothing more. The directory owns its name, contents and lifetime,
- * so the record holds only where it is and how to show it, and removing a mount
- * removes the record and nothing else.
- *
- * Mounts are flat by construction - no parent, and a directory's subdirectories are
- * the filesystem's business rather than a hierarchy for this store to model.
+ * The record of directories mounted into the file manager (kind "local"): a pointer at
+ * a directory, nothing more.
  */
 
 import {
@@ -20,14 +15,7 @@ import {
   DATABASE_CONFIGS,
 } from "@app/services/indexedDBManager";
 
-/**
- * One directory, one key — regardless of how the picker spelled the path.
- * Lexical only: separators unified, repeats collapsed (UNC's leading pair
- * kept), trailing separator stripped, and case folded for Windows-style
- * paths (drive letter or UNC), where the filesystem ignores case but a
- * string compare doesn't. Elsewhere case stays significant. Symlinks and 8.3
- * short names are beyond a string's power to resolve and stay distinct.
- */
+/** One directory, one key — regardless of how the picker spelled the path. */
 export function directoryKey(directory: string): string {
   let key = directory.replace(/\\/g, "/");
   const unc = key.startsWith("//");
@@ -71,10 +59,8 @@ class LocalFolderStorageService {
   }
 
   /**
-   * Mount a directory, or hand back the existing record for one already mounted:
-   * two rows for one directory would be two names for one truth. Nesting is fine -
-   * a mount lists only its own files, so a subdirectory needs its own mount to be
-   * reachable.
+   * Mount a directory, or hand back the existing record for one already mounted: two
+   * rows for one directory would be two names for one truth.
    */
   async mountDirectory(directory: string, name: string): Promise<FolderRecord> {
     const key = directoryKey(directory);

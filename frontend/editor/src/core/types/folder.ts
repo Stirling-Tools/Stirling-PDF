@@ -38,24 +38,15 @@ export const FOLDER_COLOR_PALETTE = [
 export type FolderPaletteColor = (typeof FOLDER_COLOR_PALETTE)[number];
 
 /**
- * Three independent features that share a shape, not variants of one:
- *
- * - `server`: in the server's database, synced down and cached; needs login and
- *   storage to exist.
- * - `virtual`: organisation only, in this browser's IndexedDB; works offline and
- *   with storage disabled.
- * - `local`: a real directory, mounted read-through - the filesystem is the source
- *   of truth and nothing of its contents is held here.
+ * Three independent features that share a shape, not variants of one: - `server`: in
+ * the server's database, synced down and cached; needs login and storage to exist.
  */
 export type FolderKind = "server" | "virtual" | "local";
 
 /** Persisted folder shape stored in IndexedDB. */
 export interface FolderRecord {
   id: FolderId;
-  /**
-   * Absent means `server`: rows predating kinds are all server folders. Read
-   * through {@link folderKind} rather than directly.
-   */
+  /** Absent means `server`: rows predating kinds are all server folders. */
   kind?: FolderKind;
   name: string;
   parentFolderId: FolderId | null;
@@ -106,11 +97,7 @@ export function parseFolderId(value: unknown): FolderId {
   return value as FolderId;
 }
 
-/**
- * Subdirectories of a mounted folder are not stored anywhere — the directory
- * is the record. Their ids encode the path, so a `/files/<id>` link survives
- * a reload and the record can be rebuilt from the id alone.
- */
+/** Subdirectories of a mounted folder are not stored anywhere — the directory is the record. */
 const DISK_FOLDER_ID_PREFIX = "disk:";
 
 export function diskFolderId(path: string): FolderId {

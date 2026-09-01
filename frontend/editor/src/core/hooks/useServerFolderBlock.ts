@@ -3,13 +3,7 @@ import { useAuth } from "@app/auth/UseSession";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useFolders } from "@app/contexts/FolderContext";
 
-/**
- * Why a server folder can't be created right now, or null when it can. The
- * answer is what renders on the disabled option/button, so it must name the
- * user's actual next step. This core version speaks web's language — sign in,
- * or storage is off on the server — and the desktop build shadows it: there
- * the honest blocker in local mode is having no server connected at all.
- */
+/** Why a server folder can't be created right now, or null when it can. */
 export function useServerFolderBlock(): string | null {
   const { t } = useTranslation();
   const { isAnonymous } = useAuth();

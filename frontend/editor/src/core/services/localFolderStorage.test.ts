@@ -11,10 +11,8 @@ import {
 } from "@app/services/indexedDBManager";
 
 /**
- * A mount is a pointer at a directory, and one directory must never have two
- * pointers — the rows would be two names for one truth. The filesystem is
- * happy to spell one directory many ways, so the dedupe has to see through
- * the spelling.
+ * A mount is a pointer at a directory, and one directory must never have two pointers —
+ * the rows would be two names for one truth.
  */
 describe("localFolderStorage", () => {
   beforeEach(() => {

@@ -328,9 +328,8 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
       const targetKind = targetFolder ? folderKind(targetFolder) : null;
 
       if (targetKind === "local") {
-        // In a mount means on the disk: write each file into the directory, then
-        // retire the app-side copy once the bytes verifiably landed. Server files
-        // stay put - a disk copy would fork the document's identity.
+        // In a mount means on the disk: write each file into the directory, then retire
+        // the app-side copy once the bytes verifiably landed.
         const { written, failedCount } = await writeIntoMount(
           targetFolder?.directory,
           localOnly.map((stub) => ({
@@ -374,8 +373,7 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (targetKind === "virtual") {
-        // Browser-owned, so membership is too: local files just point folderId at
-        // it. Server files stay out or the next sync snaps them back.
+        // Browser-owned, so membership is too: local files just point folderId at it.
         if (cloudFiles.length > 0) {
           folders.setError(
             t(
@@ -470,11 +468,9 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
-      // Local files moving to the root DO need a write when they are leaving a
-      // folder — their membership is a browser-side folderId that nothing
-      // above has touched (the upload branch only runs for a non-null
-      // target). Without this, a file placed in a virtual folder could never
-      // be taken out of it.
+      // Local files moving to the root DO need a write when they are leaving a folder —
+      // their membership is a browser-side folderId that nothing above has touched (the
+      // upload branch only runs for a non-null target).
       if (folderId === null && localOnly.length > 0) {
         const leaving = localOnly
           .filter((s) => (s.folderId ?? null) !== null)
@@ -674,10 +670,9 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
   const promptDeleteFolder = useCallback(
     (folder: FolderRecord) => {
       if (folderKind(folder) === "local") {
-        // Removing a mount destroys nothing — the record goes, the directory
-        // and every file in it stay — so there is nothing to warn about and
-        // the delete dialog's "what about the files?" question would be a
-        // scary lie. Remove directly.
+        // Removing a mount destroys nothing — the record goes, the directory and every
+        // file in it stay — so there is nothing to warn about and the delete dialog's
+        // "what about the files?" question would be a scary lie.
         void folders.deleteFolder(folder.id).catch((err) => {
           folders.setError(
             err instanceof Error

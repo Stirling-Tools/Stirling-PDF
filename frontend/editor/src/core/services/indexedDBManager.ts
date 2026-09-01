@@ -465,10 +465,8 @@ class IndexedDBManager {
 export const DATABASE_CONFIGS = {
   FILES: {
     name: "stirling-pdf-files",
-    // v10 existed briefly with only one of the two browser-folder stores;
-    // v11 declares both, so every v10 profile upgrades to a full schema.
-    // Never add a store under an already-opened version number — the upgrade
-    // only fires on a version change, so late additions are unreachable.
+    // v10 existed briefly with only one of the two browser-folder stores; v11 declares
+    // both, so every v10 profile upgrades to a full schema.
     version: 11,
     stores: [
       {
@@ -496,20 +494,15 @@ export const DATABASE_CONFIGS = {
           { name: "createdAt", keyPath: "createdAt", unique: false },
         ],
       },
-      // Folders mounted from a directory on the machine (kind "local"). Flat
-      // by construction — a mount has no parent, and its subdirectories are
-      // the filesystem's business. Same lifecycle reasoning as
-      // virtual_folders: browser-owned, so never in the server-synced cache.
+      // Folders mounted from a directory on the machine (kind "local").
       {
         name: "local_folders",
         keyPath: "id",
         indexes: [{ name: "name", keyPath: "name", unique: false }],
       },
-      // Browser-owned folders (kind "virtual"), deliberately a separate store
-      // from `folders`: that one is a cache the server sync wipes wholesale on
-      // every pull, and these rows have no server copy to be restored from.
-      // NOT named smart_folders/folder_members/folder_run_states — the upgrade
-      // cleanup above deletes stores by those names.
+      // Browser-owned folders (kind "virtual"), deliberately a separate store from
+      // `folders`: that one is a cache the server sync wipes wholesale on every pull,
+      // and these rows have no server copy to be restored from.
       {
         name: "virtual_folders",
         keyPath: "id",

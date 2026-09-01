@@ -1,8 +1,4 @@
-/**
- * Desktop read-through for mounted local folders, over the Tauri filesystem
- * plugin. The listing is taken fresh from the directory on every call —
- * nothing is copied or ingested to produce it.
- */
+/** Desktop read-through for mounted local folders, over the Tauri filesystem plugin. */
 
 import { isTauri } from "@tauri-apps/api/core";
 import {
@@ -24,13 +20,8 @@ import type {
 export type { DiskDirEntry, DiskFileEntry, DiskListing };
 
 /**
- * Containment: these reads and writes run under a filesystem-wide Tauri capability,
- * but the contract here is mounted directories only, so any path outside one is
- * refused. The capability layer is the real trust boundary; this keeps a bad path
- * inert.
- *
- * The mount store is read fresh every call - a handful of rows against the file
- * bytes about to cross the IPC bridge - so a removed mount is refused at once.
+ * Containment: these reads and writes run under a filesystem-wide Tauri capability, but
+ * the contract here is mounted directories only, so any path outside one is refused.
  */
 async function isWithinMount(path: string): Promise<boolean> {
   const pathKey = directoryKey(path);
@@ -50,9 +41,8 @@ async function isWithinMount(path: string): Promise<boolean> {
 const LIST_CAP = 500;
 
 /**
- * Every stat is a webview-to-Rust round trip, so listing cost is IPC latency, not
- * disk speed. Overlapping turns N hops into N/BATCH, bounded so a 10k-file
- * directory does not open 10k requests at once.
+ * Every stat is a webview-to-Rust round trip, so listing cost is IPC latency, not disk
+ * speed.
  */
 const STAT_BATCH = 32;
 
@@ -113,8 +103,7 @@ export async function listDirectory(
   return { files: files.slice(0, LIST_CAP), directories };
 }
 
-/** Create a subdirectory. Same containment and name rules as a file write; the OS
- *  refuses an existing name, which is the answer the user wants. */
+/** Create a subdirectory. */
 export async function makeDiskDirectory(
   parent: string,
   name: string,
@@ -127,9 +116,8 @@ export async function makeDiskDirectory(
 }
 
 /**
- * The filesystem returns bytes and a name, never a MIME type, and everything
- * downstream branches on File.type - an untyped File silently takes every
- * "unknown format" path. Recover it from the extension.
+ * The filesystem returns bytes and a name, never a MIME type, and everything downstream
+ * branches on File.type - an untyped File silently takes every "unknown format" path.
  */
 const MIME_BY_EXTENSION: Record<string, string> = {
   pdf: "application/pdf",
@@ -161,9 +149,8 @@ export async function readDiskFile(entry: DiskFileEntry): Promise<File | null> {
 const UNIQUE_NAME_ATTEMPTS = 1000;
 
 /**
- * Names arrive from outside the app - zip entries, Content-Disposition - and this
- * holds a filesystem-wide write scope. Reduce whatever comes to a plain basename so
- * a traversal like "..\evil" cannot steer the write out of the chosen directory.
+ * Names arrive from outside the app - zip entries, Content-Disposition - and this holds
+ * a filesystem-wide write scope.
  */
 function safeBaseName(name: string): string {
   const base = name.split(/[\\/]/).pop() ?? "";
@@ -185,8 +172,6 @@ export async function writeDiskFile(
   const ext = dot > 0 ? name.slice(dot) : "";
   const data = new Uint8Array(await bytes.arrayBuffer());
   // An existing name keeps its file and the incomer takes " (n)", as the OS does.
-  // The exclusive create is what makes that a guarantee: probe-then-write would let
-  // a file created in between be overwritten, create-new fails and the loop moves on.
   for (let n = 0; n < UNIQUE_NAME_ATTEMPTS; n++) {
     const candidate = n === 0 ? name : `${base} (${n})${ext}`;
     const path = joinPath(directory, candidate);
@@ -200,8 +185,7 @@ export async function writeDiskFile(
   throw new Error(`No free name for ${name} in ${directory}`);
 }
 
-/** The plugin surfaces OS errors as text. EEXIST is 17; Windows reports 80 or 183
- *  depending on the call. */
+/** The plugin surfaces OS errors as text. */
 function isAlreadyExists(err: unknown): boolean {
   const text = err instanceof Error ? err.message : String(err);
   return /already exists|file exists|os error (17|80|183)\b/i.test(text);

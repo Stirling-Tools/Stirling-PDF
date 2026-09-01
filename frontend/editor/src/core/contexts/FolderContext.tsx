@@ -97,11 +97,7 @@ interface FolderContextValue {
     ok: boolean;
     reason?: "endpoint-missing" | "network" | "server" | "client";
   }>;
-  /**
-   * Create a folder. With a parent the kind is the parent's - one subtree, one
-   * system of record, since a mixed chain has no store that can vouch for it. At
-   * the root `kind` decides, defaulting to server.
-   */
+  /** Create a folder. */
   createFolder: (
     name: string,
     parentFolderId?: FolderId | null,
@@ -117,16 +113,9 @@ interface FolderContextValue {
     appearance: { color?: string; icon?: string | null },
   ) => Promise<FolderRecord | null>;
   deleteFolder: (id: FolderId) => Promise<FolderId[]>;
-  /**
-   * Mount a directory as a local folder, idempotent per directory. Unmounting goes
-   * through {@link deleteFolder}; neither touches the directory itself.
-   */
+  /** Mount a directory as a local folder, idempotent per directory. */
   mountLocalFolder: (directory: string, name: string) => Promise<FolderRecord>;
-  /**
-   * Subdirectories a mount listing found under `parentId`. Not stored - the
-   * directory is the record - so each listing replaces the previous set, and one
-   * removed on disk drops out on the next look.
-   */
+  /** Subdirectories a mount listing found under `parentId`. */
   registerDiskSubfolders: (parentId: FolderId, records: FolderRecord[]) => void;
   /**
    * Rebuild the records behind a disk-subfolder id, for a link arriving before any
@@ -613,8 +602,7 @@ export function FolderProvider({ children }: FolderProviderProps) {
       parentFolderId: FolderId | null = currentFolderId,
       kind?: FolderKind,
     ): Promise<FolderRecord> => {
-      // A child's kind is its parent's. Only a root create chooses, defaulting to
-      // server; virtual is reachable only under a virtual parent, local never here.
+      // A child's kind is its parent's.
       const effectiveKind: FolderKind =
         parentFolderId !== null
           ? requireKind(parentFolderId)

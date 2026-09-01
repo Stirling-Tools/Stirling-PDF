@@ -15,15 +15,13 @@ export function useNewFolderFlow() {
   const navigate = useNavigate();
   const serverFolderBlock = useServerFolderBlock();
 
-  // No dialog: the picker is the whole interaction and the directory names the
-  // folder. Landing inside the fresh mount is the confirmation.
+  // No dialog: the picker is the whole interaction and the directory names the folder.
   const addLocalFolder = useCallback(async () => {
     try {
       const picked = await pickDirectory();
       if (!picked) return;
       const record = await folders.mountLocalFolder(picked.path, picked.name);
-      // The path owns folder selection. Setting state here races that effect, which
-      // re-runs on the same commit with the old pathname and snaps back to root.
+      // The path owns folder selection.
       navigate(`/files/${record.id}`);
     } catch (err) {
       folders.setError(
@@ -60,8 +58,7 @@ export function useNewFolderFlow() {
     serverFolderBlock,
   ]);
 
-  // Why the single-click surfaces are disabled, or null. Only the web root blocks:
-  // desktop always has the picker, and subfolders inherit their kind.
+  // Why the single-click surfaces are disabled, or null.
   const createFolderHereBlockedReason =
     folders.currentFolderId === null && !canPickDirectory
       ? serverFolderBlock

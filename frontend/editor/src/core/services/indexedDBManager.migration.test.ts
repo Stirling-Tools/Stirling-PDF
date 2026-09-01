@@ -402,8 +402,6 @@ describe("IndexedDB migration (FILES store)", () => {
 
   test("a v10 profile missing local_folders upgrades to v11 with the full schema", async () => {
     // v10 briefly existed with only one of the two browser-folder stores.
-    // The cure is the shipped version bump: v11 declares both, so the normal
-    // upgrade path (which only adds what's absent) completes the schema.
     await new Promise<void>((resolve, reject) => {
       const req = indexedDB.open(DB_NAME, 10);
       req.onupgradeneeded = () => {

@@ -274,10 +274,9 @@ interface AddFileOptions {
    *  auto-run skips it — used for policy outputs imported via addFiles. */
   derivedFromTool?: boolean;
   /**
-   * The folder every added file is born into — membership set at creation,
-   * atomically with the stub, instead of a separate move that can fail after
-   * the file already landed somewhere else. See StirlingFileStub.folderId
-   * for what the value means per storage state.
+   * The folder every added file is born into — membership set at creation, atomically
+   * with the stub, instead of a separate move that can fail after the file already
+   * landed somewhere else.
    */
   folderId?: string;
 }

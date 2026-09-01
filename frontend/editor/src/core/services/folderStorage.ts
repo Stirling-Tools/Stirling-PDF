@@ -18,11 +18,8 @@ import {
 } from "@app/services/indexedDBManager";
 
 /**
- * This cache is wiped and rewritten from the server's response on every sync,
- * so a non-server folder stored here would silently vanish on the next pull.
- * Virtual folders live in their own store (virtualFolderStorage); local
- * folders are records of a directory, not cache entries. Refusing loudly here
- * is what keeps a mis-routed mutation a bug report instead of data loss.
+ * This cache is wiped and rewritten from the server's response on every sync, so a
+ * non-server folder stored here would silently vanish on the next pull.
  */
 function requireServerFolder(folder: FolderRecord): void {
   if (folderKind(folder) !== "server") {

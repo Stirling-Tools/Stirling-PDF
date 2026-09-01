@@ -52,10 +52,8 @@ import type { FilesPageSortMode } from "@app/contexts/FilesPageContext";
 import { OpenInNewWindowMenuItem } from "@app/components/filesPage/OpenInNewWindowMenuItem";
 
 /**
- * The origin badge a folder wears, mirroring the one its files would: a
- * server folder is Cloud, a virtual folder is Local (this browser), a
- * mounted folder is On disk. Tooltips are folder-phrased — the badge's own
- * defaults describe files.
+ * The origin badge a folder wears, mirroring the one its files would: a server folder
+ * is Cloud, a virtual folder is Local (this browser), a mounted folder is On disk.
  */
 function useFolderOriginBadge(folder: FolderRecord): {
   origin: "cloud" | "local";
@@ -1650,13 +1648,7 @@ function FileRow({
 // Re-export root constant for caller convenience
 export { ROOT_FOLDER_ID };
 
-/**
- * A file listed straight off a mounted directory. Nothing behind it is
- * stored: no stub, no selection, no move/rename/delete — the disk owns the
- * file, and the one thing Stirling adds is "Add to workspace", which loads
- * the bytes in. Visually it is a normal file card wearing an "On disk"
- * origin badge, because to the user it is simply a file.
- */
+/** A file listed straight off a mounted directory. */
 function DiskFileCard({
   entry,
   onOpen,

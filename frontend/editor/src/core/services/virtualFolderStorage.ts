@@ -1,13 +1,6 @@
 /**
- * The system of record for kind "virtual" folders - rows this store owns rather
- * than caches. {@link folderStorage} is wiped and rewritten on every sync because
- * the server is authoritative there; a virtual folder exists only in this browser,
- * with nothing to restore it from. They organise files where there is no login, no
- * server storage, or no network.
- *
- * No server to enforce them means the invariants live here: no reparenting a folder
- * under its own subtree, and a bounded depth, with the limits mirroring
- * FolderService so a hierarchy does not behave differently for being virtual.
+ * The system of record for kind "virtual" folders - rows this store owns rather than
+ * caches.
  */
 
 import {
@@ -65,11 +58,7 @@ class VirtualFolderStorageService {
     });
   }
 
-  /**
-   * Create a virtual folder under `parent` (null = root). The parent must itself be
-   * virtual: hanging one off a server folder means a server-side delete orphans the
-   * whole subtree with nothing here to notice.
-   */
+  /** Create a virtual folder under `parent` (null = root). */
   async createFolder(
     name: string,
     parentFolderId: FolderId | null,
@@ -194,12 +183,7 @@ class VirtualFolderStorageService {
     });
   }
 
-  /**
-   * Walk from `startId` to the root, returning the ids seen. Throws when the
-   * chain is missing a link (the parent must exist and be virtual), already
-   * cyclic (defensive — a bug or hand-edited DB, not a reachable state), or
-   * too deep to accept another child.
-   */
+  /** Walk from `startId` to the root, returning the ids seen. */
   private async requireWithinDepth(startId: FolderId): Promise<Set<FolderId>> {
     // One read for the whole store, walked in memory — the chain would
     // otherwise cost a serialized IndexedDB round trip per ancestor.

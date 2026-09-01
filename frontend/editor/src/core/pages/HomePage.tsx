@@ -792,10 +792,8 @@ const MyFilesSidebarOverrides = forwardRef<HTMLDivElement, FileSidebarProps>(
       [addFiles, filesPage, folders.currentFolderId],
     );
 
-    // Kind-aware: only a server folder's subfolder needs the server, and a
-    // mounted directory takes no subfolders from here at all. At the root
-    // the shortcut's own availability rules apply (picker on desktop,
-    // server folder on web, blocked when the server can't take one).
+    // Kind-aware: only a server folder's subfolder needs the server, and a mounted
+    // directory takes no subfolders from here at all.
     const railCurrentFolder = folders.currentFolderId
       ? folders.foldersById.get(folders.currentFolderId)
       : undefined;

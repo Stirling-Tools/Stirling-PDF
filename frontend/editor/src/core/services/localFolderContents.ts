@@ -1,9 +1,4 @@
-/**
- * Reading a mounted folder's contents straight off the disk. Read-through: the
- * listing is the directory, taken fresh each look, with nothing ingested to show it.
- * Only an environment that can see the filesystem can do this, so core reports the
- * capability absent and the desktop build shadows this module.
- */
+/** Reading a mounted folder's contents straight off the disk. */
 
 /** One file inside a mounted directory, as the file manager lists it. */
 export interface DiskFileEntry {
@@ -30,9 +25,8 @@ export interface DiskListing {
 export const canListDirectory = false;
 
 /**
- * The regular files and subdirectories directly inside `directory` — one
- * level, never recursive; a subdirectory is listed only when entered. Null
- * when unsupported.
+ * The regular files and subdirectories directly inside `directory` — one level, never
+ * recursive; a subdirectory is listed only when entered.
  */
 export async function listDirectory(
   _directory: string,
@@ -40,10 +34,7 @@ export async function listDirectory(
   return null;
 }
 
-/**
- * Create a subdirectory inside a mounted directory. Returns its path, or
- * null when unsupported.
- */
+/** Create a subdirectory inside a mounted directory. */
 export async function makeDiskDirectory(
   _parent: string,
   _name: string,
@@ -58,12 +49,7 @@ export async function readDiskFile(
   return null;
 }
 
-/**
- * Write a file into a mounted directory, under a name that never clobbers an
- * existing one. Moving an app file INTO a mount means putting it on the
- * filesystem — only a build that can see the filesystem can. Returns the
- * name the file landed under, or null when unsupported.
- */
+/** Write a file into a mounted directory, under a name that never clobbers an existing one. */
 export async function writeDiskFile(
   _directory: string,
   _name: string,
