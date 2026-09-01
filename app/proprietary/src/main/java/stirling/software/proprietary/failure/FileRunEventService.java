@@ -171,6 +171,18 @@ public class FileRunEventService {
         return action.execute(event, inputs == null ? Map.of() : inputs, currentActor());
     }
 
+    /** Mark an incident resolved after a client's own retry worked. Idempotent. */
+    public FileRunEvent resolve(String eventId) {
+        FileRunEvent event = requireVisible(eventId);
+        // No terminal pre-check: the store's guarded UPDATE decides, rather than racing a read.
+        return store.applyStatusOnce(
+                event.id(),
+                event.teamId(),
+                FileRunEventStatus.RESOLVED,
+                currentActor(),
+                FileRunEventStatus.open());
+    }
+
     /** "No such event" rather than a refusal, so trying does not confirm a colleague's exists. */
     private FileRunEvent requireVisible(String eventId) {
         ReadScope scope = readScope();
@@ -222,7 +234,8 @@ public class FileRunEventService {
             boolean unattended,
             boolean documentless) {
         String reason = disabledReasonFor(offer.audience(), closed, unattended, documentless);
-        return new AvailableAction(offer.id(), offer.labelKey(), reason == null, reason);
+        return new AvailableAction(
+                offer.id(), offer.labelKey(), offer.slot(), reason == null, reason);
     }
 
     /** Closed wins over everything, then the owner-only reasons, most specific first. */
@@ -251,8 +264,8 @@ public class FileRunEventService {
         };
     }
 
-    /** Login disabled has no roles, so its one operator triages everything. */
-    private boolean reviewsTeam() {
+    /** Whether the caller triages the team's incidents, not only their own. Login disabled: all. */
+    public boolean reviewsTeam() {
         return !enforced() || policyManagementAuthority.canEditPolicies();
     }
 
@@ -326,6 +339,11 @@ public class FileRunEventService {
         return applicationProperties.getSecurity().isEnableLogin();
     }
 
+    /** One action offered to one caller, availability resolved. */
     public record AvailableAction(
-            FailureActionId id, String labelKey, boolean enabled, String disabledReasonKey) {}
+            FailureActionId id,
+            String labelKey,
+            FailureActionSlot slot,
+            boolean enabled,
+            String disabledReasonKey) {}
 }

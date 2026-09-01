@@ -35,7 +35,9 @@ function notification(id: string): AppNotification {
 describe("QuickNavRailNotifications", () => {
   beforeEach(() => {
     window.localStorage.clear();
-    fetchNotifications.mockReset().mockResolvedValue([]);
+    fetchNotifications
+      .mockReset()
+      .mockResolvedValue({ notifications: [], viewerReviewsTeam: true });
     h.notificationsAvailable = true;
   });
 
@@ -53,10 +55,11 @@ describe("QuickNavRailNotifications", () => {
   });
 
   it("carries the unread count on the icon", async () => {
-    fetchNotifications.mockResolvedValue([
-      notification("a"),
-      notification("b"),
-    ]);
+    // A reviewer's response, so nothing is filtered for want of a local document.
+    fetchNotifications.mockResolvedValue({
+      notifications: [notification("a"), notification("b")],
+      viewerReviewsTeam: true,
+    });
 
     render(<QuickNavRailNotifications onToggle={() => {}} />);
 
