@@ -33,20 +33,23 @@ vi.mock("@app/services/notifications", () => ({
 // IndexedDB, which jsdom has none of. Answered here so availability is a fact of the test.
 const h = vi.hoisted(() => ({
   hasLocalFile: true,
+  retryPayload: { operation: "removePassword" } as unknown,
   // This build has the notifications API, except in the one test about the build that does not.
   notificationsAvailable: true,
   specs: {} as Record<
     string,
     {
       available: (context: unknown) => boolean;
-      run: (context: unknown) => unknown;
+      run: (context: unknown, password?: string) => unknown;
+      needsPassword?: boolean;
       closesPanel?: boolean;
     }
   >,
 }));
 
-vi.mock("@app/services/localFilePresence", () => ({
+vi.mock("@app/services/notificationRetry", () => ({
   hasLocalFile: () => Promise.resolve(h.hasLocalFile),
+  loadRetryPayload: () => Promise.resolve(h.retryPayload),
 }));
 
 vi.mock("@app/components/notifications/useNotificationsAvailable", () => ({
@@ -146,6 +149,7 @@ describe("NotificationBell", () => {
     window.localStorage.clear();
     fetchNotifications.mockReset().mockResolvedValue([]);
     h.hasLocalFile = true;
+    h.retryPayload = { operation: "removePassword" };
     h.notificationsAvailable = true;
     h.specs = {};
   });
@@ -543,16 +547,57 @@ describe("NotificationBell", () => {
     ).toBeTruthy();
   });
 
-  it("shows a failed action in the row instead of leaving the user guessing", async () => {
+  it("asks for the password in the unlock modal before it retries", async () => {
+    const run = vi.fn().mockResolvedValue({ ok: true });
     h.specs = {
-      VIEW_FILE: {
+      DECRYPT_AND_RETRY: {
         available: () => true,
-        run: () => Promise.resolve({ ok: false, message: "Could not open" }),
+        run,
+        needsPassword: true,
+        closesPanel: true,
       },
     };
     fetchNotifications.mockResolvedValue([
       notification("a", "Password-protected document", {
-        actions: [offer("VIEW_FILE")],
+        actions: [offer("DECRYPT_AND_RETRY", "RESOLUTION")],
+      }),
+    ]);
+    render(<NotificationBell />);
+    await openPanel();
+
+    // The click opens the app's unlock modal rather than running anything.
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "DECRYPT_AND_RETRY: Password-protected document",
+      }),
+    );
+    expect(run).not.toHaveBeenCalled();
+
+    const field = await screen.findByLabelText("PDF password");
+    fireEvent.change(field, { target: { value: "hunter2" } });
+    // The modal's confirm carries the action's own wording, not a generic "unlock".
+    fireEvent.click(screen.getByRole("button", { name: "DECRYPT_AND_RETRY" }));
+
+    await waitFor(() => expect(run).toHaveBeenCalledTimes(1));
+    expect(run.mock.calls[0][1]).toBe("hunter2");
+    // Resolved server-side, so the list is re-read and the panel gets out of the way.
+    await waitFor(() => expect(fetchNotifications).toHaveBeenCalledTimes(2));
+    await waitFor(() =>
+      expect(screen.queryByText("Password-protected document")).toBeNull(),
+    );
+  });
+
+  it("shows a failed unlock in the modal instead of leaving the user guessing", async () => {
+    h.specs = {
+      DECRYPT_AND_RETRY: {
+        available: () => true,
+        run: () => Promise.resolve({ ok: false, message: "Wrong password" }),
+        needsPassword: true,
+      },
+    };
+    fetchNotifications.mockResolvedValue([
+      notification("a", "Password-protected document", {
+        actions: [offer("DECRYPT_AND_RETRY", "RESOLUTION")],
       }),
     ]);
     render(<NotificationBell />);
@@ -560,16 +605,19 @@ describe("NotificationBell", () => {
 
     fireEvent.click(
       screen.getByRole("button", {
-        name: "VIEW_FILE: Password-protected document",
+        name: "DECRYPT_AND_RETRY: Password-protected document",
       }),
     );
+    const field = await screen.findByLabelText("PDF password");
+    fireEvent.change(field, { target: { value: "nope" } });
+    fireEvent.click(screen.getByRole("button", { name: "DECRYPT_AND_RETRY" }));
 
     expect(await screen.findByRole("alert")).toHaveProperty(
       "textContent",
-      "Could not open",
+      "Wrong password",
     );
-    // Still on screen, so the row remains actionable.
-    expect(screen.getByText("Password-protected document")).toBeTruthy();
+    // The prompt stays up, so the next attempt is one keystroke rather than a re-open.
+    expect(screen.getByLabelText("PDF password")).toBeTruthy();
   });
 
   it("reads the kind's own words rather than the raw failure", async () => {
