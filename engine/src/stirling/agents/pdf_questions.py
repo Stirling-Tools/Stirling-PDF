@@ -29,7 +29,7 @@ from stirling.contracts import (
 from stirling.documents import RagCapability
 from stirling.models import PrincipalId
 from stirling.models.agent_tool_models import AgentToolId, MathAuditorAgentParams
-from stirling.services import AppRuntime, require_current_user_id
+from stirling.services import AppRuntime, language_directive, require_current_user_id
 
 logger = logging.getLogger(__name__)
 
@@ -68,8 +68,8 @@ PDF_QUESTION_SYSTEM_PROMPT = (
     "- NEVER mention 'RAG', 'retrieval', 'chunks', 'search results', 'targeted search', "
     "'search_knowledge', 'read_full_document', 'find_contradictions', or other "
     "implementation details.\n"
-    "- For questions where the answer just isn't in the document, say so directly: "
-    "'I couldn't find that information in the document.'\n"
+    "- For questions where the answer just isn't in the document, say plainly that "
+    "it isn't there.\n"
     "- Do not make it sound like you're choosing not to answer."
 )
 
@@ -222,7 +222,11 @@ class PdfQuestionAgent:
         answer in the same language as the user's question. The system prompt
         forbids invented figures; the LLM only restates Verdict facts.
         """
-        prompt = f"User question:\n{user_message}\n\nMath audit Verdict (JSON):\n{verdict.model_dump_json()}"
+        prompt = (
+            f"User question:\n{user_message}\n\n"
+            f"Math audit Verdict (JSON):\n{verdict.model_dump_json()}\n\n"
+            f"{language_directive()}"
+        )
         result = await self._math_synth_agent.run(prompt)
         return result.output
 
@@ -232,5 +236,6 @@ class PdfQuestionAgent:
             f"Conversation history:\n{history}\n"
             f"Files: {format_file_names(request.files)}\n"
             f"Question: {request.question}\n"
-            "Pick the right retrieval tool for this question, then answer from what it returns."
+            "Pick the right retrieval tool for this question, then answer from what it returns.\n"
+            f"{language_directive()}"
         )

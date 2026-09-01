@@ -30,7 +30,7 @@ from stirling.contracts import (
 )
 from stirling.contracts.pdf_create import PdfCreateOrchestrateResponse
 from stirling.models import ApiModel
-from stirling.services import AppRuntime
+from stirling.services import AppRuntime, language_directive, set_reply_locale
 
 logger = logging.getLogger(__name__)
 
@@ -153,6 +153,8 @@ class OrchestratorAgent:
         )
 
     async def handle(self, request: OrchestratorRequest) -> OrchestratorResponse:
+        # Bound once; delegates and worker tasks inherit it.
+        set_reply_locale(request.locale)
         logger.info(
             "[orchestrator] handle: files=%s resume_with=%s artifacts=%s msg=%r",
             [file.name for file in request.files],
@@ -269,7 +271,8 @@ class OrchestratorAgent:
             f"Conversation history:\n{history}\n"
             f"User message: {request.user_message}\n"
             f"Files: {format_file_names(request.files)}\n"
-            f"Available artifacts:\n{artifact_summary}"
+            f"Available artifacts:\n{artifact_summary}\n"
+            f"{language_directive()}"
         )
 
     def _describe_artifacts(self, request: OrchestratorRequest) -> str:

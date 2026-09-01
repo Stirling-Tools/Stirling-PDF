@@ -402,7 +402,7 @@ const initialState: ChatState = {
 };
 
 export function ChatProvider({ children }: { children: ReactNode }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [state, dispatch] = useReducer(chatReducer, initialState);
   const { files: activeFiles, fileStubs: activeFileStubs } = useAllFiles();
   const { actions: fileActions } = useFileActions();
@@ -552,6 +552,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       try {
         const formData = new FormData();
         formData.append("userMessage", content);
+        // The engine replies in this language instead of guessing.
+        if (i18n.language) formData.append("locale", i18n.language);
         sourceFiles.forEach((file, i) => {
           formData.append(`fileInputs[${i}].fileInput`, file);
         });
@@ -694,7 +696,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
               message: {
                 id: generateId(),
                 role: ChatRole.ASSISTANT,
-                content: data.message || "Something went wrong.",
+                content: data.message || t("chat.responses.cannot_continue"),
                 timestamp: Date.now(),
               },
             });
@@ -710,10 +712,10 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         const isEngineError =
           err.message.startsWith("AI engine request failed:") ||
           err.message === "Stream ended without a result";
+        const engineUnavailable = t("chat.responses.engine_unavailable");
         const content = isEngineError
-          ? "Failed to get a response. The AI engine may not be available yet."
-          : (err.message ??
-            "Failed to get a response. The AI engine may not be available yet.");
+          ? engineUnavailable
+          : (err.message ?? engineUnavailable);
         dispatch({ type: "SET_PROGRESS", progress: null });
         dispatch({
           type: "ADD_MESSAGE",

@@ -21,7 +21,7 @@ from stirling.contracts import (
     format_conversation_history,
 )
 from stirling.models import ApiModel
-from stirling.services import AppRuntime
+from stirling.services import AppRuntime, language_directive
 
 
 class UserSpecMetadata(ApiModel):
@@ -97,7 +97,8 @@ class UserSpecAgent:
             f"Conversation history:\n{format_conversation_history(request.conversation_history)}\n\n"
             f"Edit plan summary:\n{edit_plan.summary}\n\n"
             f"Edit plan rationale:\n{edit_plan.rationale or 'None'}\n\n"
-            f"Edit plan steps:\n{edit_plan.model_dump_json(indent=2)}"
+            f"Edit plan steps:\n{edit_plan.model_dump_json(indent=2)}\n\n"
+            f"{language_directive()}"
         )
 
     def _build_revision_prompt(self, request: AgentRevisionRequest, edit_plan: EditPlanResponse) -> str:
@@ -107,7 +108,8 @@ class UserSpecAgent:
             f"Current draft:\n{request.current_draft.model_dump_json(indent=2)}\n\n"
             f"Edit plan summary:\n{edit_plan.summary}\n\n"
             f"Edit plan rationale:\n{edit_plan.rationale or 'None'}\n\n"
-            f"Edit plan steps:\n{edit_plan.model_dump_json(indent=2)}"
+            f"Edit plan steps:\n{edit_plan.model_dump_json(indent=2)}\n\n"
+            f"{language_directive()}"
         )
 
     async def _build_edit_plan(
