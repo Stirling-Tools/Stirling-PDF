@@ -7,7 +7,6 @@ export interface PickedDirectory {
   name: string;
 }
 
-/** Whether this build can produce a directory path at all. */
 export const canPickDirectory = false;
 
 /** Ask the user for a directory; null when cancelled (or unsupported). */

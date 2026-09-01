@@ -21,7 +21,8 @@ export function useNewFolderFlow() {
       const picked = await pickDirectory();
       if (!picked) return;
       const record = await folders.mountLocalFolder(picked.path, picked.name);
-      // The path owns folder selection.
+      // The path owns folder selection: setting state here races the effect that
+      // re-runs with the old pathname and snaps back to root.
       navigate(`/files/${record.id}`);
     } catch (err) {
       folders.setError(
@@ -58,7 +59,8 @@ export function useNewFolderFlow() {
     serverFolderBlock,
   ]);
 
-  // Why the single-click surfaces are disabled, or null.
+  // Why the single-click surfaces are disabled, or null. Only the web root blocks:
+  // desktop always has the picker, and subfolders inherit their kind.
   const createFolderHereBlockedReason =
     folders.currentFolderId === null && !canPickDirectory
       ? serverFolderBlock

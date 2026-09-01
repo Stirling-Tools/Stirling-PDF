@@ -1,5 +1,3 @@
-/** Reading a mounted folder's contents straight off the disk. */
-
 /** One file inside a mounted directory, as the file manager lists it. */
 export interface DiskFileEntry {
   /** Absolute path — the file's identity here; nothing about it is stored. */
@@ -21,7 +19,6 @@ export interface DiskListing {
   directories: DiskDirEntry[];
 }
 
-/** Whether this build can list a directory at all. */
 export const canListDirectory = false;
 
 /**

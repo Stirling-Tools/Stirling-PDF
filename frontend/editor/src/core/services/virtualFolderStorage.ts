@@ -58,7 +58,10 @@ class VirtualFolderStorageService {
     });
   }
 
-  /** Create a virtual folder under `parent` (null = root). */
+  /**
+   * Create a virtual folder under `parent` (null = root), which must itself be
+   * virtual: hung off a server folder, a server-side delete orphans the subtree.
+   */
   async createFolder(
     name: string,
     parentFolderId: FolderId | null,

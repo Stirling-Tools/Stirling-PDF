@@ -97,7 +97,7 @@ interface FolderContextValue {
     ok: boolean;
     reason?: "endpoint-missing" | "network" | "server" | "client";
   }>;
-  /** Create a folder. */
+  /** Create a folder. A child takes its parent's kind; only a root create chooses. */
   createFolder: (
     name: string,
     parentFolderId?: FolderId | null,
@@ -113,7 +113,7 @@ interface FolderContextValue {
     appearance: { color?: string; icon?: string | null },
   ) => Promise<FolderRecord | null>;
   deleteFolder: (id: FolderId) => Promise<FolderId[]>;
-  /** Mount a directory as a local folder, idempotent per directory. */
+  /** Idempotent per directory: mounting one already mounted returns its record. */
   mountLocalFolder: (directory: string, name: string) => Promise<FolderRecord>;
   /** Subdirectories a mount listing found under `parentId`. */
   registerDiskSubfolders: (parentId: FolderId, records: FolderRecord[]) => void;
@@ -602,7 +602,7 @@ export function FolderProvider({ children }: FolderProviderProps) {
       parentFolderId: FolderId | null = currentFolderId,
       kind?: FolderKind,
     ): Promise<FolderRecord> => {
-      // A child's kind is its parent's.
+      // A child's kind is its parent's: one subtree, one system of record.
       const effectiveKind: FolderKind =
         parentFolderId !== null
           ? requireKind(parentFolderId)

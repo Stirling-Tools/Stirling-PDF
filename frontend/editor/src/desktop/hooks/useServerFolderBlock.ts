@@ -4,7 +4,10 @@ import { connectionModeService } from "@app/services/connectionModeService";
 import type { ConnectionMode } from "@app/services/connectionModeService";
 import { useServerFolderBlock as useCoreServerFolderBlock } from "@core/hooks/useServerFolderBlock";
 
-/** Desktop's blocker speaks in connection modes. */
+/**
+ * Desktop's blocker speaks in connection modes: local mode has no server at all, so
+ * "storage isn't enabled" would send the user after a setting that does not exist.
+ */
 export function useServerFolderBlock(): string | null {
   const { t } = useTranslation();
   const coreReason = useCoreServerFolderBlock();

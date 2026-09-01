@@ -103,7 +103,6 @@ export async function listDirectory(
   return { files: files.slice(0, LIST_CAP), directories };
 }
 
-/** Create a subdirectory. */
 export async function makeDiskDirectory(
   parent: string,
   name: string,
@@ -185,7 +184,7 @@ export async function writeDiskFile(
   throw new Error(`No free name for ${name} in ${directory}`);
 }
 
-/** The plugin surfaces OS errors as text. */
+/** The plugin surfaces OS errors as text: EEXIST is 17, Windows 80 or 183. */
 function isAlreadyExists(err: unknown): boolean {
   const text = err instanceof Error ? err.message : String(err);
   return /already exists|file exists|os error (17|80|183)\b/i.test(text);
