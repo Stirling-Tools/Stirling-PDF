@@ -74,7 +74,6 @@ const modernGlobals: OxlintGlobals = {
 
 // Folders not yet conformant to the stricter no-explicit-any rule
 const noExplicitAnyExcludes = [
-  "editor/src/core/components/shared/FilePickerModal.tsx",
   "editor/src/core/components/shared/config/configSections/*.{js,mjs,jsx,ts,tsx}",
   "editor/src/core/components/tools/addStamp/*.{js,mjs,jsx,ts,tsx}",
   "editor/src/core/components/viewer/*.{js,mjs,jsx,ts,tsx}",

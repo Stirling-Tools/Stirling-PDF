@@ -14,12 +14,26 @@ import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import DocumentThumbnail from "@app/components/shared/filePreview/DocumentThumbnail";
 import { FileId } from "@app/types/file";
+import type { StoredStirlingFileRecord } from "@app/services/fileStorage";
 import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
+
+// The persisted storage record (StoredStirlingFileRecord) is what this picker is
+// meant to receive; its fields are reused rather than re-declared. The picker is
+// unwired today (its only caller passes []) and also defensively reconstructs a
+// File from a raw `file` or an `arrayBuffer()` accessor, and reads the runtime
+// stub's `processedFile` - none of which are on the persisted record, so they're
+// added here as optional extras.
+type StoredFileItem = Partial<StoredStirlingFileRecord> & {
+  id: FileId;
+  file?: File;
+  arrayBuffer?: () => Promise<ArrayBuffer>;
+  processedFile?: { isEncrypted?: boolean };
+};
 
 interface FilePickerModalProps {
   opened: boolean;
   onClose: () => void;
-  storedFiles: any[]; // Files from storage (various formats supported)
+  storedFiles: StoredFileItem[];
   onSelectFiles: (selectedFiles: File[]) => void;
 }
 
@@ -84,7 +98,7 @@ const FilePickerModal = ({
             const blob = new Blob([arrayBuffer], {
               type: fileItem.type || "application/pdf",
             });
-            return new File([blob], fileItem.name, {
+            return new File([blob], fileItem.name ?? "", {
               type: fileItem.type || "application/pdf",
               lastModified: fileItem.lastModified || Date.now(),
             });
@@ -95,7 +109,7 @@ const FilePickerModal = ({
             const blob = new Blob([fileItem.data], {
               type: fileItem.type || "application/pdf",
             });
-            return new File([blob], fileItem.name, {
+            return new File([blob], fileItem.name ?? "", {
               type: fileItem.type || "application/pdf",
               lastModified: fileItem.lastModified || Date.now(),
             });
@@ -211,7 +225,7 @@ const FilePickerModal = ({
                           }}
                         >
                           <DocumentThumbnail
-                            file={file}
+                            file={file.file ?? null}
                             thumbnail={
                               file.processedFile?.isEncrypted
                                 ? undefined
