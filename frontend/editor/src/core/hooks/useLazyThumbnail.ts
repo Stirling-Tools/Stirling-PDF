@@ -3,6 +3,7 @@ import type { FileId } from "@app/types/file";
 import { useFileManagement } from "@app/contexts/FileContext";
 import { useIndexedDB } from "@app/contexts/IndexedDBContext";
 import { generateThumbnailForFile } from "@app/utils/thumbnailUtils";
+import { readDiskFile } from "@app/services/localFolderContents";
 
 const THUMBNAIL_SIZE_LIMIT = 100 * 1024 * 1024; // 100MB
 
@@ -15,7 +16,7 @@ const LAZY_THUMB_CONCURRENCY = 2;
 let activeLazyThumbs = 0;
 const lazyThumbQueue: Array<() => Promise<void>> = [];
 
-function scheduleLazyThumb(task: () => Promise<void>): void {
+export function scheduleLazyThumb(task: () => Promise<void>): void {
   lazyThumbQueue.push(task);
   drainLazyThumbQueue();
 }
@@ -105,6 +106,95 @@ export function useLazyThumbnail(
       cancelled = true;
     };
   }, [fileId, size, thumbnailUrl, indexedDB, updateStirlingFileStub]);
+
+  return thumb;
+}
+
+// Keyed by path + mtime + size: an unchanged file never renders twice, an edited one does.
+const diskThumbCache = new Map<string, string>();
+// Bounded by bytes, not entries: image thumbnails are data URLs that track the
+// source, so 300 photos would pin gigabytes of strings for the process lifetime.
+const DISK_THUMB_CACHE_MAX_BYTES = 48 * 1024 * 1024;
+let diskThumbCacheBytes = 0;
+
+function cacheDiskThumb(key: string, url: string): void {
+  const prior = diskThumbCache.get(key);
+  if (prior !== undefined) diskThumbCacheBytes -= prior.length;
+  while (
+    diskThumbCacheBytes + url.length > DISK_THUMB_CACHE_MAX_BYTES &&
+    diskThumbCache.size > 0
+  ) {
+    // Insertion order makes this FIFO; an evicted thumbnail re-renders on revisit.
+    const oldest = diskThumbCache.keys().next().value!;
+    diskThumbCacheBytes -= diskThumbCache.get(oldest)!.length;
+    diskThumbCache.delete(oldest);
+  }
+  diskThumbCache.set(key, url);
+  diskThumbCacheBytes += url.length;
+}
+
+// Reading the bytes is the expensive step, so only for types the generator renders.
+const THUMBABLE_EXTENSIONS = new Set([
+  "pdf",
+  "png",
+  "jpg",
+  "jpeg",
+  "gif",
+  "webp",
+  "bmp",
+  "svg",
+]);
+
+function canEverThumbnail(name: string): boolean {
+  const ext = name.includes(".") ? name.split(".").pop()!.toLowerCase() : "";
+  return THUMBABLE_EXTENSIONS.has(ext);
+}
+
+/**
+ * Thumbnail for a disk-listed file, through the same generator and the same concurrency
+ * gate as stored files — a mounted folder's rows fill in progressively alongside
+ * everything else instead of stampeding the disk.
+ */
+export function useDiskThumbnail(entry: {
+  path: string;
+  name: string;
+  sizeBytes: number;
+  lastModified: number;
+}): string | undefined {
+  const key = `${entry.path}|${entry.lastModified}|${entry.sizeBytes}`;
+  const [thumb, setThumb] = useState<string | undefined>(() => {
+    const hit = diskThumbCache.get(key);
+    return hit === "" ? undefined : hit;
+  });
+
+  useEffect(() => {
+    const cached = diskThumbCache.get(key);
+    if (cached !== undefined) {
+      setThumb(cached === "" ? undefined : cached);
+      return;
+    }
+    if (entry.sizeBytes >= THUMBNAIL_SIZE_LIMIT) return;
+    if (!canEverThumbnail(entry.name)) return;
+    let cancelled = false;
+    scheduleLazyThumb(async () => {
+      if (cancelled || diskThumbCache.has(key)) return;
+      try {
+        const file = await readDiskFile(entry);
+        if (!file || cancelled) return;
+        const url = await generateThumbnailForFile(file);
+        // "" is cached too: a failed/oversized render should not retry on
+        // every re-mount of the same row.
+        cacheDiskThumb(key, url);
+        if (!cancelled && url) setThumb(url);
+      } catch {
+        cacheDiskThumb(key, "");
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+    // The key encodes every field of `entry` this effect reads.
+  }, [key]);
 
   return thumb;
 }

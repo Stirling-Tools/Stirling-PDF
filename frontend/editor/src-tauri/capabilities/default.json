@@ -40,6 +40,18 @@
       "allow": [{ "path": "**" }]
     },
     {
+      "identifier": "fs:allow-read-dir",
+      "allow": [{ "path": "**" }]
+    },
+    {
+      "identifier": "fs:allow-stat",
+      "allow": [{ "path": "**" }]
+    },
+    {
+      "identifier": "fs:allow-mkdir",
+      "allow": [{ "path": "**" }]
+    },
+    {
       "identifier": "fs:allow-write-file",
       "allow": [{ "path": "**" }]
     },

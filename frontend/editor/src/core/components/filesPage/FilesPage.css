@@ -590,7 +590,12 @@
   position: absolute;
   bottom: 0.4rem;
   left: 0.4rem;
+  /* The overlay itself stays transparent to the card's clicks and drags, but
+     the badge inside must catch hover or its tooltip can never open. */
   pointer-events: none;
+}
+.files-page-card-origin > * {
+  pointer-events: auto;
 }
 
 /* "Open" badge - file is currently loaded in the active workspace.
@@ -1501,4 +1506,15 @@
   .files-page-card.is-folder.is-drop-target .files-page-card-thumb {
     transform: none;
   }
+}
+
+/* A disabled destination still has to be read - its caption carries the reason - and
+   Mantine's disabled colour drops below comfortable contrast in dark mode. Selector
+   stands on the item's own class because the dropdown renders in a portal. */
+.files-page-new-folder-option[data-disabled] {
+  color: var(--c-text-muted) !important;
+  opacity: 1;
+}
+.files-page-new-folder-option[data-disabled] .mantine-Text-root {
+  color: var(--c-text-subtle) !important;
 }
