@@ -10,7 +10,11 @@ import {
   mergePendingSettings,
   isFieldPending,
   hasPendingChanges,
+  type SettingsWithPending,
 } from "@app/utils/settingsPendingHelper";
+
+/** A settings block, which is an object of unknown-shaped fields. */
+type SettingsBlock = Record<string, unknown>;
 
 interface UseAdminSettingsOptions<T> {
   sectionName: string;
@@ -25,14 +29,14 @@ interface UseAdminSettingsOptions<T> {
    * Returns an object with sectionData and optionally deltaSettings.
    */
   saveTransformer?: (settings: T) => {
-    sectionData: any;
-    deltaSettings?: Record<string, any>;
+    sectionData: unknown;
+    deltaSettings?: SettingsBlock;
   };
 }
 
 interface UseAdminSettingsReturn<T> {
   settings: T;
-  rawSettings: any;
+  rawSettings: (T & SettingsWithPending<T>) | null;
   loading: boolean;
   saving: boolean;
   setSettings: (settings: T) => void;
@@ -45,7 +49,7 @@ interface UseAdminSettingsReturn<T> {
  * One config section: the server value, an editable draft over it, and a save
  * that sends only what changed. Sections sharing a sectionName share the fetch.
  */
-export function useAdminSettings<T = any>(
+export function useAdminSettings<T>(
   options: UseAdminSettingsOptions<T>,
 ): UseAdminSettingsReturn<T> {
   const {
@@ -70,10 +74,10 @@ export function useAdminSettings<T = any>(
     isFetching,
   } = useQuery({
     queryKey,
-    queryFn: () =>
+    queryFn: (): Promise<T & SettingsWithPending<T>> =>
       fetchTransformerRef.current
-        ? fetchTransformerRef.current()
-        : fetchAdminSection<T>(sectionName),
+        ? (fetchTransformerRef.current() as Promise<T & SettingsWithPending<T>>)
+        : fetchAdminSection<T & SettingsWithPending<T>>(sectionName),
     enabled,
     // Inherits the client's 30s window. Not CONFIG_STALE_TIME: these are
     // editable, and a save invalidates. Override it for live server state.
@@ -115,7 +119,7 @@ export function useAdminSettings<T = any>(
       }
 
       if (deltaSettings && Object.keys(deltaSettings).length > 0) {
-        const changed: Record<string, any> = {};
+        const changed: SettingsBlock = {};
         for (const [key, value] of Object.entries(deltaSettings)) {
           if (JSON.stringify(value) !== JSON.stringify(originalDelta?.[key])) {
             changed[key] = value;
@@ -142,8 +146,8 @@ export function useAdminSettings<T = any>(
     setSettings: setDraft,
     saveSettings,
     isFieldPending: (fieldPath: string) =>
-      isFieldPending(rawSettings as any, fieldPath),
-    hasPendingChanges: () => hasPendingChanges(rawSettings as any),
+      isFieldPending(rawSettings, fieldPath),
+    hasPendingChanges: () => hasPendingChanges(rawSettings),
   };
 }
 
@@ -151,13 +155,13 @@ export function useAdminSettings<T = any>(
  * Compute delta between original and current settings.
  * Returns only fields that have changed.
  */
-function computeDelta(original: any, current: any): any {
-  const delta: any = {};
+function computeDelta(original: unknown, current: unknown): SettingsBlock {
+  const delta: SettingsBlock = {};
+  if (!isPlainObject(current)) return delta;
+  const before: SettingsBlock = isPlainObject(original) ? original : {};
 
-  for (const key in current) {
-    if (!Object.prototype.hasOwnProperty.call(current, key)) continue;
-
-    const originalValue = original?.[key];
+  for (const key of Object.keys(current)) {
+    const originalValue = before[key];
     const currentValue = current[key];
 
     if (isPlainObject(currentValue) && isPlainObject(originalValue)) {
@@ -180,7 +184,7 @@ function computeDelta(original: any, current: any): any {
 /**
  * Check if value is a plain object (not array, not null, not Date, etc.)
  */
-function isPlainObject(value: any): boolean {
+function isPlainObject(value: unknown): value is SettingsBlock {
   return (
     value !== null && typeof value === "object" && value.constructor === Object
   );
