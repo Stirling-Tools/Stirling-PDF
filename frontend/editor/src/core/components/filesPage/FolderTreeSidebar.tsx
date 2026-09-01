@@ -72,7 +72,13 @@ export function FolderTreeSidebar({
 }: FolderTreeSidebarProps) {
   const { t } = useTranslation();
   const { tree, currentFolderId, setCurrentFolderId } = useFolders();
-  const { currentTab, setCurrentTab, moveFolderTo } = useFilesPage();
+  const {
+    currentTab,
+    setCurrentTab,
+    moveFolderTo,
+    originFilter,
+    setOriginFilter,
+  } = useFilesPage();
 
   return (
     <div
@@ -99,8 +105,8 @@ export function FolderTreeSidebar({
         }
       />
       <LocalRow
-        isActive={currentTab === "local"}
-        onSelect={() => setCurrentTab("local")}
+        isActive={originFilter === "local"}
+        onSelect={() => setOriginFilter("local")}
       />
       {tree.map((node) => (
         <TreeNodeRow
@@ -198,10 +204,9 @@ interface LocalRowProps {
 }
 
 /**
- * Pinned pseudo-folder row that selects the Local tab. Local files don't
- * belong to a folder (folders are a cloud concept) so this row is not a
- * drop target and has no count badge - the Local view scopes by predicate
- * (`remoteStorageId == null`), not by folderId.
+ * Sets the source filter to local, and nothing else: it narrows whatever view you
+ * are in rather than being a place of its own. Not a drop target and no count
+ * badge - a local file has no folder to be counted under.
  */
 function LocalRow({ isActive, onSelect }: LocalRowProps) {
   const { t } = useTranslation();

@@ -153,7 +153,7 @@ interface FileGridProps {
   sortMode?: FilesPageSortMode;
   onChangeSortMode?: (mode: FilesPageSortMode) => void;
   /** Drives the empty-state copy. */
-  currentTab?: "all" | "local" | "cloud" | "recent" | "shared" | "sharedByMe";
+  currentTab?: "all" | "cloud" | "recent" | "shared" | "sharedByMe";
   /** A filter is applied; an empty result then means "no matches", not "no files". */
   searchActive?: boolean;
   /** Cloud reachability; switches the cloud empty-state copy. */
@@ -384,7 +384,7 @@ function SkeletonGrid({ viewMode }: { viewMode: FilesPageViewMode }) {
 
 interface EmptyStateProps {
   /** Drives copy + iconography. */
-  tab?: "all" | "local" | "cloud" | "recent" | "shared" | "sharedByMe";
+  tab?: "all" | "cloud" | "recent" | "shared" | "sharedByMe";
   /** When true the empty list is the result of a filter, not a bare folder. */
   searchActive?: boolean;
   /** Switches the cloud empty-state copy. */
@@ -429,14 +429,6 @@ function EmptyState({
 
   const { titleKey, titleFallback, hintKey, hintFallback } = (() => {
     switch (tab) {
-      case "local":
-        return {
-          titleKey: "filesPage.empty.local.title",
-          titleFallback: "No local-only files",
-          hintKey: "filesPage.empty.local.hint",
-          hintFallback:
-            "Files saved without uploading stay here. Drop a file to add one.",
-        };
       case "cloud":
         return serverReachable
           ? {
@@ -489,8 +481,7 @@ function EmptyState({
   const readOnlyTab =
     tab === "recent" || tab === "shared" || tab === "sharedByMe";
   const showUpload = Boolean(onUpload) && !readOnlyTab;
-  const showCreateFolder =
-    Boolean(onCreateFolder) && !readOnlyTab && tab !== "local";
+  const showCreateFolder = Boolean(onCreateFolder) && !readOnlyTab;
   const showCtas = showUpload || showCreateFolder;
   return (
     <div className="files-page-empty">

@@ -290,7 +290,6 @@ export default function FileManagerView() {
   const visibleFolders = useMemo(() => {
     // Folders only appear in cloud-rooted tabs.
     if (
-      currentTab === "local" ||
       currentTab === "recent" ||
       currentTab === "shared" ||
       currentTab === "sharedByMe"
@@ -321,12 +320,6 @@ export default function FileManagerView() {
   const filesInCurrentFolder = useMemo(() => {
     // Tab overrides folder navigation for Local/Recent/Shared.
     switch (currentTab) {
-      case "local":
-        // Both halves: a local file inside a browser folder belongs to that folder,
-        // not here as well.
-        return allFiles.filter(
-          (f) => f.remoteStorageId == null && (f.folderId ?? null) === null,
-        );
       case "cloud":
         // Cloud bucket; search widens to subtree, else direct-folder match.
         return allFiles.filter((f) => {
@@ -1101,7 +1094,6 @@ export default function FileManagerView() {
   const newFolderDisabledReason: string | null = useMemo(() => {
     // Only All/Cloud render folders, so creating one elsewhere would look inert.
     if (
-      currentTab === "local" ||
       currentTab === "recent" ||
       currentTab === "shared" ||
       currentTab === "sharedByMe"
@@ -1143,8 +1135,7 @@ export default function FileManagerView() {
       <header className="files-page-header">
         {/* Breadcrumb only for folder-rooted tabs. */}
         {(currentTab === "all" || currentTab === "cloud") && <Breadcrumbs />}
-        {(currentTab === "local" ||
-          currentTab === "recent" ||
+        {(currentTab === "recent" ||
           currentTab === "shared" ||
           currentTab === "sharedByMe") && (
           <div
@@ -1155,13 +1146,11 @@ export default function FileManagerView() {
               color: "var(--c-text)",
             }}
           >
-            {currentTab === "local"
-              ? t("filesPage.tabName.local", "Local")
-              : currentTab === "recent"
-                ? t("filesPage.tabName.recent", "Recent")
-                : currentTab === "shared"
-                  ? t("filesPage.tabName.shared", "Shared with me")
-                  : t("filesPage.tabName.sharedByMe", "Shared by me")}
+            {currentTab === "recent"
+              ? t("filesPage.tabName.recent", "Recent")
+              : currentTab === "shared"
+                ? t("filesPage.tabName.shared", "Shared with me")
+                : t("filesPage.tabName.sharedByMe", "Shared by me")}
           </div>
         )}
         {(() => {
