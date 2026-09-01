@@ -260,7 +260,7 @@ beforeEach(() => {
 
 describe("useNotificationActions", () => {
   it("opens the failed tool on the failed document alone, in the viewer", async () => {
-    await registry().RETRY?.run(context());
+    await registry().OPEN_IN_TOOL?.run(context());
 
     expect(addStirlingFileStubs).toHaveBeenCalledWith([h.stub]);
     expect(setActiveFileId).toHaveBeenCalledWith("f-1");
@@ -273,7 +273,7 @@ describe("useNotificationActions", () => {
   });
 
   it("opens the document alone when the stashed operation names no tool this build has", async () => {
-    await registry().RETRY?.run(
+    await registry().OPEN_IN_TOOL?.run(
       context({
         retryPayload: {
           operation: "quarantine",
@@ -295,7 +295,7 @@ describe("useNotificationActions", () => {
   it("reports a retry whose document has gone from storage rather than opening nothing", async () => {
     h.getStirlingFileStub.mockResolvedValue(null);
 
-    const outcome = await registry().RETRY?.run(context());
+    const outcome = await registry().OPEN_IN_TOOL?.run(context());
 
     expect(outcome).toEqual({
       ok: false,
@@ -307,10 +307,10 @@ describe("useNotificationActions", () => {
   it("offers no retry once the document has left this browser", () => {
     const actions = registry();
 
-    expect(actions.RETRY?.available(context({ hasLocalFile: false }))).toBe(
+    expect(actions.OPEN_IN_TOOL?.available(context({ hasLocalFile: false }))).toBe(
       false,
     );
-    expect(actions.RETRY?.available(context({ retryPayload: null }))).toBe(
+    expect(actions.OPEN_IN_TOOL?.available(context({ retryPayload: null }))).toBe(
       false,
     );
     expect(actions.VIEW_FILE?.available(context({ hasLocalFile: false }))).toBe(
@@ -377,7 +377,7 @@ describe("useNotificationActions", () => {
   });
 
   it("hands the tool over with the document, so a retry arrives scoped", async () => {
-    await registry(inProcessor).RETRY?.run(context());
+    await registry(inProcessor).OPEN_IN_TOOL?.run(context());
 
     expect(
       window.sessionStorage.getItem("stirling.notifications.pendingSelection"),
@@ -435,7 +435,7 @@ describe("useNotificationActions", () => {
   it("unlocks with the password it was given and reports what came back", async () => {
     retryWithPassword.mockResolvedValue({ ok: false, message: "Wrong" });
 
-    const outcome = await registry().DECRYPT_AND_RETRY?.run(
+    const outcome = await registry().DECRYPT?.run(
       context(),
       "hunter2",
     );
@@ -461,7 +461,7 @@ describe("useNotificationActions", () => {
       ],
     });
 
-    const outcome = await registry().DECRYPT_AND_RETRY?.run(
+    const outcome = await registry().DECRYPT?.run(
       context(),
       "hunter2",
     );
@@ -491,7 +491,7 @@ describe("useNotificationActions", () => {
       ],
     });
 
-    const outcome = await registry().DECRYPT_AND_RETRY?.run(
+    const outcome = await registry().DECRYPT?.run(
       policyContext(),
       "hunter2",
     );
@@ -512,7 +512,7 @@ describe("useNotificationActions", () => {
     openFileIds = [];
     openFilesById = {};
 
-    await registry().DECRYPT_AND_RETRY?.run(policyContext(), "hunter2");
+    await registry().DECRYPT?.run(policyContext(), "hunter2");
 
     expect(addFiles).not.toHaveBeenCalled();
     expect(consumeFiles.mock.calls[0][0]).toEqual(["f-1"]);
@@ -522,7 +522,7 @@ describe("useNotificationActions", () => {
     // No stub anywhere: there is no version chain to extend, so adding is all that is left.
     h.getStirlingFileStub.mockResolvedValue(null);
 
-    await registry().DECRYPT_AND_RETRY?.run(policyContext(), "hunter2");
+    await registry().DECRYPT?.run(policyContext(), "hunter2");
 
     expect(consumeFiles).not.toHaveBeenCalled();
     expect(addFiles.mock.calls[0][1]).toEqual({
@@ -539,7 +539,7 @@ describe("useNotificationActions", () => {
     });
     addFiles.mockRejectedValue(new Error("quota"));
 
-    await registry().DECRYPT_AND_RETRY?.run(context(), "hunter2");
+    await registry().DECRYPT?.run(context(), "hunter2");
 
     expect(reportNotificationResolved).not.toHaveBeenCalled();
   });
@@ -553,7 +553,7 @@ describe("useNotificationActions", () => {
     reportNotificationResolved.mockResolvedValue(false);
 
     expect(
-      await registry().DECRYPT_AND_RETRY?.run(context(), "hunter2"),
+      await registry().DECRYPT?.run(context(), "hunter2"),
     ).toEqual({ ok: true });
   });
 
@@ -565,7 +565,7 @@ describe("useNotificationActions", () => {
     });
     addFiles.mockRejectedValue(new Error("quota"));
 
-    const outcome = await registry().DECRYPT_AND_RETRY?.run(
+    const outcome = await registry().DECRYPT?.run(
       context(),
       "hunter2",
     );
@@ -581,10 +581,10 @@ describe("useNotificationActions", () => {
     // No FileContext there, so an unlocked document would have nowhere to go.
     const actions = registry(inProcessor);
 
-    expect(actions.DECRYPT_AND_RETRY?.available(context())).toBe(false);
+    expect(actions.DECRYPT?.available(context())).toBe(false);
     expect(actions.VIEW_IN_PROCESSOR?.available(context())).toBe(true);
     // And it refuses rather than posting a password whose output would be discarded.
-    expect(await actions.DECRYPT_AND_RETRY?.run(context(), "hunter2")).toEqual({
+    expect(await actions.DECRYPT?.run(context(), "hunter2")).toEqual({
       ok: false,
       message: "This document can no longer be retried from this browser.",
     });
@@ -592,9 +592,9 @@ describe("useNotificationActions", () => {
   });
 
   it("offers the unlock where the editor can take the result", () => {
-    expect(registry().DECRYPT_AND_RETRY?.available(context())).toBe(true);
+    expect(registry().DECRYPT?.available(context())).toBe(true);
     expect(
-      registry().DECRYPT_AND_RETRY?.available(context({ hasLocalFile: false })),
+      registry().DECRYPT?.available(context({ hasLocalFile: false })),
     ).toBe(false);
   });
 
@@ -619,7 +619,7 @@ describe("useNotificationActions", () => {
   });
 
   it("says so rather than posting nothing when the stash has gone", async () => {
-    const outcome = await registry().DECRYPT_AND_RETRY?.run(
+    const outcome = await registry().DECRYPT?.run(
       context({ retryPayload: null }),
       "hunter2",
     );
@@ -671,7 +671,7 @@ describe("useNotificationActions", () => {
 /** The other retry shape: nothing is stashed, so everything comes off the row itself. */
 describe("retrying an attended policy run", () => {
   it("runs the policy again on the document it already holds", async () => {
-    const outcome = await registry().RETRY?.run(policyContext());
+    const outcome = await registry().OPEN_IN_TOOL?.run(policyContext());
 
     expect(rerunPolicy).toHaveBeenCalledWith({
       policyId: "pol-1",
@@ -684,7 +684,7 @@ describe("retrying an attended policy run", () => {
 
   it("re-runs the policy rather than reopening a tool, even where a stash happens to exist", async () => {
     // An earlier tool failure may have left a stash, but the row is about the policy.
-    await registry().RETRY?.run(
+    await registry().OPEN_IN_TOOL?.run(
       policyContext({
         retryPayload: {
           operation: "removePassword",
@@ -709,7 +709,7 @@ describe("retrying an attended policy run", () => {
       message: "That policy is no longer enabled.",
     });
 
-    expect(await registry().RETRY?.run(policyContext())).toEqual({
+    expect(await registry().OPEN_IN_TOOL?.run(policyContext())).toEqual({
       ok: false,
       message: "That policy is no longer enabled.",
     });
@@ -722,7 +722,7 @@ describe("retrying an attended policy run", () => {
       message: null,
     });
 
-    expect(await registry().RETRY?.run(policyContext())).toEqual({
+    expect(await registry().OPEN_IN_TOOL?.run(policyContext())).toEqual({
       ok: false,
       message:
         "The policy could not be run again just now. Try again in a moment.",
@@ -732,7 +732,7 @@ describe("retrying an attended policy run", () => {
   it("reports the document is gone rather than blaming the policy", async () => {
     rerunPolicy.mockResolvedValue({ ok: false, reason: "missingFile" });
 
-    expect(await registry().RETRY?.run(policyContext())).toEqual({
+    expect(await registry().OPEN_IN_TOOL?.run(policyContext())).toEqual({
       ok: false,
       message:
         "This document is not on this device, so it cannot be opened or retried here.",
@@ -742,8 +742,8 @@ describe("retrying an attended policy run", () => {
   it("is offered for an attended row whose document is here, and for nothing else", () => {
     const actions = registry();
 
-    expect(actions.RETRY?.available(policyContext())).toBe(true);
-    expect(actions.DECRYPT_AND_RETRY?.available(policyContext())).toBe(true);
+    expect(actions.OPEN_IN_TOOL?.available(policyContext())).toBe(true);
+    expect(actions.DECRYPT?.available(policyContext())).toBe(true);
 
     // Unattended: the fileId hashes a path that was never on any device, so nothing can re-submit.
     const unattended = policyContext({
@@ -753,12 +753,12 @@ describe("retrying an attended policy run", () => {
         sourceId: "src-1",
       }),
     });
-    expect(actions.RETRY?.available(unattended)).toBe(false);
-    expect(actions.DECRYPT_AND_RETRY?.available(unattended)).toBe(false);
+    expect(actions.OPEN_IN_TOOL?.available(unattended)).toBe(false);
+    expect(actions.DECRYPT?.available(unattended)).toBe(false);
 
     // No policy named, and no stash either: nothing describes what would run again.
     expect(
-      actions.RETRY?.available(
+      actions.OPEN_IN_TOOL?.available(
         policyContext({
           notification: notification({ origin: "POLICY", policyId: null }),
         }),
@@ -767,7 +767,7 @@ describe("retrying an attended policy run", () => {
 
     // Document gone from this browser.
     expect(
-      actions.RETRY?.available(policyContext({ hasLocalFile: false })),
+      actions.OPEN_IN_TOOL?.available(policyContext({ hasLocalFile: false })),
     ).toBe(false);
   });
 
@@ -775,12 +775,12 @@ describe("retrying an attended policy run", () => {
     // The bell mounts outside the app's providers there, so a run has nowhere to land.
     const actions = registry(inProcessor);
 
-    expect(actions.RETRY?.available(policyContext())).toBe(false);
-    expect(actions.DECRYPT_AND_RETRY?.available(policyContext())).toBe(false);
+    expect(actions.OPEN_IN_TOOL?.available(policyContext())).toBe(false);
+    expect(actions.DECRYPT?.available(policyContext())).toBe(false);
   });
 
   it("refuses rather than firing a run the processor shell could not collect", async () => {
-    expect(await registry(inProcessor).RETRY?.run(policyContext())).toEqual({
+    expect(await registry(inProcessor).OPEN_IN_TOOL?.run(policyContext())).toEqual({
       ok: false,
       message: "This document can no longer be retried from this browser.",
     });
@@ -802,7 +802,7 @@ describe("retrying an attended policy run", () => {
       return true;
     });
 
-    const outcome = await registry().DECRYPT_AND_RETRY?.run(
+    const outcome = await registry().DECRYPT?.run(
       policyContext(),
       "hunter2",
     );
@@ -833,7 +833,7 @@ describe("retrying an attended policy run", () => {
   });
 
   it("starts exactly one run for one click", async () => {
-    await registry().DECRYPT_AND_RETRY?.run(policyContext(), "hunter2");
+    await registry().DECRYPT?.run(policyContext(), "hunter2");
 
     // One submission: the adoption's is silenced by derivedFromTool above.
     expect(rechainPolicyOnDocument).toHaveBeenCalledTimes(1);
@@ -848,7 +848,7 @@ describe("retrying an attended policy run", () => {
     consumeFiles.mockResolvedValue([]);
     rechainPolicyOnDocument.mockResolvedValue({ ok: true, tracked: false });
 
-    await registry().DECRYPT_AND_RETRY?.run(policyContext(), "hunter2");
+    await registry().DECRYPT?.run(policyContext(), "hunter2");
 
     expect(rechainPolicyOnDocument).toHaveBeenCalledWith(
       { policyId: "pol-1", fileId: "f-1" },
@@ -863,7 +863,7 @@ describe("retrying an attended policy run", () => {
     rechainPolicyOnDocument.mockResolvedValue({ ok: true, tracked: false });
 
     expect(
-      await registry().DECRYPT_AND_RETRY?.run(policyContext(), "hunter2"),
+      await registry().DECRYPT?.run(policyContext(), "hunter2"),
     ).toEqual({
       ok: false,
       message:
@@ -878,7 +878,7 @@ describe("retrying an attended policy run", () => {
     // Same hole without a password: the cache could not place the policy, so nothing polls the run.
     rerunPolicy.mockResolvedValue({ ok: true, tracked: false });
 
-    expect(await registry().RETRY?.run(policyContext())).toEqual({
+    expect(await registry().OPEN_IN_TOOL?.run(policyContext())).toEqual({
       ok: false,
       message:
         "The policy re-run started, but its result cannot be delivered here, so this failure stays open.",
@@ -893,7 +893,7 @@ describe("retrying an attended policy run", () => {
     });
 
     expect(
-      await registry().DECRYPT_AND_RETRY?.run(policyContext(), "wrong"),
+      await registry().DECRYPT?.run(policyContext(), "wrong"),
     ).toEqual({ ok: false, message: "The password is incorrect." });
     expect(addFiles).not.toHaveBeenCalled();
     expect(rechainPolicyOnDocument).not.toHaveBeenCalled();
@@ -905,7 +905,7 @@ describe("retrying an attended policy run", () => {
     consumeFiles.mockRejectedValue(new Error("quota"));
 
     expect(
-      await registry().DECRYPT_AND_RETRY?.run(policyContext(), "hunter2"),
+      await registry().DECRYPT?.run(policyContext(), "hunter2"),
     ).toEqual({
       ok: false,
       message:
@@ -923,7 +923,7 @@ describe("retrying an attended policy run", () => {
     });
 
     expect(
-      await registry().DECRYPT_AND_RETRY?.run(policyContext(), "hunter2"),
+      await registry().DECRYPT?.run(policyContext(), "hunter2"),
     ).toEqual({
       ok: false,
       message:
@@ -936,7 +936,7 @@ describe("retrying an attended policy run", () => {
   });
 
   it("never hands the password to anything but the unlock", async () => {
-    await registry().DECRYPT_AND_RETRY?.run(policyContext(), "hunter2");
+    await registry().DECRYPT?.run(policyContext(), "hunter2");
 
     // Everything downstream of the unlock: no payload, stash or id carries the password.
     const downstream = [

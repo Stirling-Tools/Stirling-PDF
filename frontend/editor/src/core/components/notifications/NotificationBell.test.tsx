@@ -550,7 +550,7 @@ describe("NotificationBell", () => {
   it("asks for the password in the unlock modal before it retries", async () => {
     const run = vi.fn().mockResolvedValue({ ok: true });
     h.specs = {
-      DECRYPT_AND_RETRY: {
+      DECRYPT: {
         available: () => true,
         run,
         needsPassword: true,
@@ -559,7 +559,7 @@ describe("NotificationBell", () => {
     };
     fetchNotifications.mockResolvedValue([
       notification("a", "Password-protected document", {
-        actions: [offer("DECRYPT_AND_RETRY", "RESOLUTION")],
+        actions: [offer("DECRYPT", "RESOLUTION")],
       }),
     ]);
     render(<NotificationBell />);
@@ -568,7 +568,7 @@ describe("NotificationBell", () => {
     // The click opens the app's unlock modal rather than running anything.
     fireEvent.click(
       screen.getByRole("button", {
-        name: "DECRYPT_AND_RETRY: Password-protected document",
+        name: "DECRYPT: Password-protected document",
       }),
     );
     expect(run).not.toHaveBeenCalled();
@@ -576,7 +576,7 @@ describe("NotificationBell", () => {
     const field = await screen.findByLabelText("PDF password");
     fireEvent.change(field, { target: { value: "hunter2" } });
     // The modal's confirm carries the action's own wording, not a generic "unlock".
-    fireEvent.click(screen.getByRole("button", { name: "DECRYPT_AND_RETRY" }));
+    fireEvent.click(screen.getByRole("button", { name: "DECRYPT" }));
 
     await waitFor(() => expect(run).toHaveBeenCalledTimes(1));
     expect(run.mock.calls[0][1]).toBe("hunter2");
@@ -589,7 +589,7 @@ describe("NotificationBell", () => {
 
   it("shows a failed unlock in the modal instead of leaving the user guessing", async () => {
     h.specs = {
-      DECRYPT_AND_RETRY: {
+      DECRYPT: {
         available: () => true,
         run: () => Promise.resolve({ ok: false, message: "Wrong password" }),
         needsPassword: true,
@@ -597,7 +597,7 @@ describe("NotificationBell", () => {
     };
     fetchNotifications.mockResolvedValue([
       notification("a", "Password-protected document", {
-        actions: [offer("DECRYPT_AND_RETRY", "RESOLUTION")],
+        actions: [offer("DECRYPT", "RESOLUTION")],
       }),
     ]);
     render(<NotificationBell />);
@@ -605,12 +605,12 @@ describe("NotificationBell", () => {
 
     fireEvent.click(
       screen.getByRole("button", {
-        name: "DECRYPT_AND_RETRY: Password-protected document",
+        name: "DECRYPT: Password-protected document",
       }),
     );
     const field = await screen.findByLabelText("PDF password");
     fireEvent.change(field, { target: { value: "nope" } });
-    fireEvent.click(screen.getByRole("button", { name: "DECRYPT_AND_RETRY" }));
+    fireEvent.click(screen.getByRole("button", { name: "DECRYPT" }));
 
     expect(await screen.findByRole("alert")).toHaveProperty(
       "textContent",

@@ -355,7 +355,7 @@ export function useNotificationActions(): ClientActionRegistry {
       return target.kind === "tool" || fileContext !== undefined;
     };
 
-    const retry: ClientActionSpec = {
+    const openInTool: ClientActionSpec = {
       available: canRetry,
       closesPanel: true,
       run: async (context): Promise<ClientActionOutcome | void> => {
@@ -374,7 +374,7 @@ export function useNotificationActions(): ClientActionRegistry {
       },
     };
 
-    const decryptAndRetry: ClientActionSpec = {
+    const decrypt: ClientActionSpec = {
       // In the processor shell an unlocked document has nowhere to go, so the row promotes on.
       available: (context) => fileContext !== undefined && canRetry(context),
       needsPassword: true,
@@ -454,8 +454,8 @@ export function useNotificationActions(): ClientActionRegistry {
     };
 
     return {
-      RETRY: retry,
-      DECRYPT_AND_RETRY: decryptAndRetry,
+      OPEN_IN_TOOL: openInTool,
+      DECRYPT: decrypt,
       VIEW_FILE: viewFile,
       VIEW_IN_PROCESSOR: viewInProcessor,
     };
