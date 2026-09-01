@@ -45,16 +45,12 @@ export interface PolicyRunRecord {
   /** Set while an auto-retry is pending after a transient (queue-full) rejection, so the activity
    *  feed shows a soft "busy" row instead of a hard failure during the backoff window. */
   retrying?: boolean;
+  /** A run computed entirely in the browser - it has no server run behind it,
+   *  so it must never be polled for status (a status poll 404s and would flip a
+   *  succeeded run to FAILED) or reconciled against the server. */
+  browserLocal?: boolean;
   /** Epoch ms when the run was dispatched. */
   startedAt: number;
-  /**
-   * Ran in the browser (the local classification heuristic), not on a backend. Such a run has no
-   * server-side status to poll, and - crucially - must NOT claim the (policy, file) dispatch key:
-   * it is the first pass, not the policy's run, so claiming it would suppress the server run the
-   * verdict may still need to escalate to. Distinct from {@link target}, which says which BACKEND
-   * holds a real run's outputs.
-   */
-  browserLocal?: boolean;
 }
 
 /** Statuses of a run that is still executing (not yet settled). */
@@ -224,15 +220,11 @@ export function recordRunStart(record: PolicyRunRecord) {
   const waveStartedAt = state.runs.some(isRunInFlight)
     ? state.waveStartedAt
     : record.startedAt;
-  // A browser-local run is the first pass, not the policy's run: claiming the dispatch key here
-  // would permanently suppress the server run its verdict may still need to escalate to.
-  const claimsDispatch = !record.browserLocal;
   state = {
     runs: capRuns([record, ...state.runs]),
-    dispatched:
-      !claimsDispatch || state.dispatched.includes(key)
-        ? state.dispatched
-        : [...state.dispatched, key],
+    dispatched: state.dispatched.includes(key)
+      ? state.dispatched
+      : [...state.dispatched, key],
     waveStartedAt,
   };
   emit();

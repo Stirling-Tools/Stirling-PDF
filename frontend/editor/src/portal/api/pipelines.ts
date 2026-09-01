@@ -78,6 +78,8 @@ export interface Policy {
    * output} is used.
    */
   outputIds: string[];
+  /** Whether the editor runs this policy per file, and on which moment. */
+  editor?: { allowed: boolean; runOn: "upload" | "export" };
   teamId?: number | null;
 }
 

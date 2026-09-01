@@ -336,6 +336,15 @@ public class PolicyController {
      * nothing to check.
      */
     private void requireAccessibleOutput(Policy policy) {
+        // An editor policy hands its results back to the workspace the file came from. A stored
+        // destination would send the run to a folder or bucket instead, leaving the editor's copy
+        // untouched - and the editor's import would then have nothing to collect.
+        if (policy.editor().allowed() && !policy.outputIds().isEmpty()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "An editor policy delivers back to the editor and can't also have a"
+                            + " destination");
+        }
         for (String outputId : policy.outputIds()) {
             Source destination =
                     sourceStore
@@ -395,7 +404,8 @@ public class PolicyController {
                 policy.steps(),
                 policy.output(),
                 policy.outputIds(),
-                teamId);
+                teamId,
+                policy.editor());
     }
 
     /** Output secrets never leave the server: reads return the redaction sentinel instead. */

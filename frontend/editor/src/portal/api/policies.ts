@@ -85,6 +85,8 @@ export interface PolicyState {
   /** Org-mandated policy (see the pipeline `Policy.required`). */
   required: boolean;
   sources: string[];
+  /** Whether the editor runs this policy per file; stored, not derived from `sources`. */
+  runsOnEditor?: boolean;
   scopeTypes: string[];
   reviewerEmail: string;
   fieldValues: Record<string, boolean | string | string[]>;
@@ -102,6 +104,7 @@ export interface PolicySetupResult {
   required: boolean;
   fieldValues: Record<string, boolean | string | string[]>;
   sources: string[];
+  runsOnEditor: boolean;
   scopeTypes: string[];
   reviewerEmail: string;
   outputMode: "new_file" | "new_version";
@@ -444,6 +447,7 @@ function decoratePolicy(
     status,
     required: decoded.required,
     sources: decoded.sources,
+    runsOnEditor: decoded.runsOnEditor,
     scopeTypes: decoded.scopeTypes,
     reviewerEmail: decoded.reviewerEmail,
     fieldValues: decoded.fieldValues,
@@ -674,6 +678,7 @@ export function buildWireFromSetup(
       required: result.required,
       categoryId: entry.category.id,
       sources: result.sources,
+      runsOnEditor: result.runsOnEditor,
       scopeTypes: result.scopeTypes,
       reviewerEmail: result.reviewerEmail,
       fieldValues: result.fieldValues,
@@ -705,6 +710,8 @@ export function buildWireFromState(
       required: s.required,
       categoryId: entry.category.id,
       sources: s.sources,
+      // Carry the stored value through: pause/resume must not re-derive it.
+      runsOnEditor: s.runsOnEditor === true,
       scopeTypes: s.scopeTypes,
       reviewerEmail: s.reviewerEmail,
       fieldValues: s.fieldValues,

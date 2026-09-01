@@ -17,6 +17,8 @@ export interface NavEntry {
   icon: ReactNode;
   /** When set, the tab opens this URL in a new tab instead of navigating in-app. */
   externalUrl?: string;
+  /** The whole tab is facts about the linked account, so unlinked is asked rather than navigated. */
+  requiresLink?: boolean;
 }
 
 export interface NavGroup {
@@ -42,6 +44,6 @@ export const GROUP_PLATFORM: NavEntry[] = [
   { id: "users", icon: <UsersIcon /> },
   { id: "integrations", icon: <IntegrationsIcon /> },
   { id: "infrastructure", icon: <InfrastructureIcon /> },
-  { id: "usage", icon: <UsageIcon /> },
+  { id: "usage", icon: <UsageIcon />, requiresLink: true },
   { id: "docs", icon: <DocsIcon /> },
 ];

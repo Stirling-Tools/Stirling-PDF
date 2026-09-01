@@ -36,6 +36,16 @@ export interface WireOutputSpec {
   options: Partial<WireOutputOptions>;
 }
 
+/**
+ * Mirrors `EditorConfig.java`. Absent only on records that never went through the
+ * backend (hand-built fixtures); a stored policy always carries it, derived from
+ * the legacy `output.options` bag when it predates the field.
+ */
+export interface WireEditorConfig {
+  allowed: boolean;
+  runOn: "upload" | "export";
+}
+
 export interface WirePolicy {
   id: string;
   name: string;
@@ -46,6 +56,7 @@ export interface WirePolicy {
   trigger: null;
   steps: WirePipelineStep[];
   output: WireOutputSpec;
+  editor?: WireEditorConfig;
   teamId?: string;
 }
 
@@ -84,6 +95,12 @@ export interface PolicyDecodedState {
   required: boolean;
   categoryId: string;
   sources: string[];
+  /**
+   * Whether the editor runs this policy per file. Its own field, not derived from
+   * `sources`: the seeded Classification policy is editor-run with empty sources,
+   * so re-deriving on write would silently take it off the editor.
+   */
+  runsOnEditor: boolean;
   scopeTypes: string[];
   reviewerEmail: string;
   fieldValues: Record<string, boolean | string | string[]>;

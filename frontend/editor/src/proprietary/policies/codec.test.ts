@@ -9,6 +9,7 @@ const FULL_STATE: PolicyDecodedState = {
   required: true,
   categoryId: "security",
   sources: ["editor", "gdrive"],
+  runsOnEditor: true,
   scopeTypes: ["Contracts", "Invoices"],
   reviewerEmail: "admin@example.com",
   fieldValues: { auditTrail: true, frameworks: ["HIPAA"] },
@@ -53,6 +54,26 @@ describe("toWirePolicy", () => {
     expect(opts.position).toBe("prefix");
   });
 
+  it("sends the editor block so a save never drops editor participation", () => {
+    expect(toWirePolicy(FULL_STATE).editor).toEqual({
+      allowed: true,
+      runOn: "upload",
+    });
+    expect(toWirePolicy({ ...FULL_STATE, runsOnEditor: false }).editor).toEqual(
+      { allowed: false, runOn: "upload" },
+    );
+  });
+
+  it("keeps editor participation that empty sources would have re-derived away", () => {
+    // The seeded Classification policy: editor-run, no sources.
+    const wire = toWirePolicy({
+      ...FULL_STATE,
+      sources: [],
+      runsOnEditor: true,
+    });
+    expect(wire.editor?.allowed).toBe(true);
+  });
+
   it("preserves steps at the top level", () => {
     const wire = toWirePolicy(FULL_STATE);
     expect(wire.steps).toEqual(FULL_STATE.steps);
@@ -79,15 +100,24 @@ describe("fromWirePolicy → round-trip", () => {
     expect(decoded.steps).toEqual(FULL_STATE.steps);
   });
 
-  it("defaults a missing runOn to the category default (security → export)", () => {
-    const wire = toWirePolicy(FULL_STATE);
+  // The moment has two possible homes now (the `editor` block, and the legacy
+  // options bag), so "nothing stored" means clearing both.
+  const withNoStoredRunOn = (state: PolicyDecodedState) => {
+    const wire = toWirePolicy(state);
     delete (wire.output.options as Record<string, unknown>).runOn;
-    expect(fromWirePolicy(wire).runOn).toBe("export");
+    delete wire.editor;
+    return wire;
+  };
+
+  it("defaults a missing runOn to the category default (security → export)", () => {
+    expect(fromWirePolicy(withNoStoredRunOn(FULL_STATE)).runOn).toBe("export");
   });
 
   it("defaults a missing runOn to upload for other categories", () => {
-    const wire = toWirePolicy({ ...FULL_STATE, categoryId: "classification" });
-    delete (wire.output.options as Record<string, unknown>).runOn;
+    const wire = withNoStoredRunOn({
+      ...FULL_STATE,
+      categoryId: "classification",
+    });
     expect(fromWirePolicy(wire).runOn).toBe("upload");
   });
 
@@ -119,6 +149,28 @@ describe("fromWirePolicy → round-trip", () => {
     }
   });
 
+  it("reads editor participation off the editor block, not sources", () => {
+    const wire = toWirePolicy(FULL_STATE);
+    expect(fromWirePolicy(wire).runsOnEditor).toBe(true);
+    expect(
+      fromWirePolicy({ ...wire, editor: { allowed: false, runOn: "upload" } })
+        .runsOnEditor,
+    ).toBe(false);
+  });
+
+  it("prefers the editor block's moment over the legacy options bag", () => {
+    const wire = toWirePolicy(FULL_STATE);
+    wire.output.options.runOn = "upload";
+    wire.editor = { allowed: true, runOn: "export" };
+    expect(fromWirePolicy(wire).runOn).toBe("export");
+  });
+
+  it("falls back to the stored moment when the editor does not run it", () => {
+    const wire = toWirePolicy({ ...FULL_STATE, runOn: "export" });
+    wire.editor = { allowed: false, runOn: "upload" };
+    expect(fromWirePolicy(wire).runOn).toBe("export");
+  });
+
   it("handles empty options gracefully", () => {
     const decoded = fromWirePolicy({
       id: "x",
@@ -130,6 +182,7 @@ describe("fromWirePolicy → round-trip", () => {
     });
     expect(decoded.categoryId).toBe("");
     expect(decoded.sources).toEqual([]);
+    expect(decoded.runsOnEditor).toBe(false);
     expect(decoded.runOn).toBe("upload");
     expect(decoded.outputMode).toBe("new_version");
   });
