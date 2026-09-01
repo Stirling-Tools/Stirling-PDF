@@ -4192,10 +4192,13 @@ public class PdfJsonConversionService {
             // If standard encoding failed, fall through to Type3 glyph mapping (for subset fonts)
             // or return null to trigger fallback font
         } else if (!isType3Font || fontModel == null) {
-            // For non-Type3 fonts without Type3 metadata, use standard encoding
+            // For non-Type3 fonts without Type3 metadata, use standard encoding.
+            // The result goes out byte for byte: a character code indexes the font's own
+            // encoding and carries no ASCII meaning, so codes below 0x20 are ordinary - subset
+            // fonts hand them out from 0x01 up - and dropping them deletes glyphs. Hungarian
+            // "ő"/"ű" and other characters outside WinAnsiEncoding land there routinely.
             try {
-                byte[] encoded = font.encode(text);
-                return sanitizeEncoded(encoded);
+                return font.encode(text);
             } catch (IllegalArgumentException ex) {
                 log.debug(
                         "[FONT-DEBUG] Font {} cannot encode text '{}': {}",
@@ -4257,7 +4260,7 @@ public class PdfJsonConversionService {
             baos.write(charCode);
         }
         if (mappedAll) {
-            return sanitizeEncoded(baos.toByteArray());
+            return baos.toByteArray();
         }
         // Fallback to rawCharCodes for actual Type3 fonts if mapping failed
         if (rawCharCodes != null && !rawCharCodes.isEmpty()) {
@@ -4289,35 +4292,6 @@ public class PdfJsonConversionService {
             baos.write(code);
         }
         return baos.toByteArray();
-    }
-
-    private byte[] sanitizeEncoded(byte[] encoded) {
-        if (encoded == null || encoded.length == 0) {
-            return new byte[0];
-        }
-        ByteArrayOutputStream baos = new ByteArrayOutputStream(encoded.length);
-        for (byte b : encoded) {
-            if (isStrippedControlByte(b)) {
-                continue;
-            }
-            baos.write(b);
-        }
-        byte[] sanitized = baos.toByteArray();
-        if (sanitized.length == 0) {
-            return sanitized;
-        }
-        return sanitized;
-    }
-
-    private boolean isStrippedControlByte(byte value) {
-        if (value == 0) {
-            return true;
-        }
-        int unsigned = Byte.toUnsignedInt(value);
-        if (unsigned <= 0x1F) {
-            return !(unsigned == 0x09 || unsigned == 0x0A || unsigned == 0x0D);
-        }
-        return false;
     }
 
     private int countGlyphs(COSString value, PDFont font) {
