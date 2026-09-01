@@ -6344,48 +6344,30 @@ REVERSE_ORDER = "Flip the document so the last page becomes first and so on."
 SIDE_STITCH_BOOKLET_SORT = "Arrange pages for side‑stitch booklet printing (optimized for binding on the side)."
 
 [pdfTextEditor]
-tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
-title = "PDF Text Editor"
-
-[pdfTextEditor.tooltip.alpha]
-text = "This alpha viewer is still evolving-certain fonts, colors, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing."
-title = "Alpha Viewer"
-
-[pdfTextEditor.tooltip.header]
-title = "Preview Limitations"
-
-[pdfTextEditor.tooltip.previewVariance]
-text = "Some visuals (such as table borders, shapes, or annotation appearances) may not display exactly in the preview. The exported PDF keeps the original drawing commands whenever possible."
-title = "Preview Variance"
-
-[pdfTextEditor.tooltip.textFocus]
-text = "This workspace focuses on editing text and repositioning embedded images. Complex page artwork, form widgets, and layered graphics are preserved for export but are not fully editable here."
-title = "Text and Image Focus"
-
-[pdfTextEditorV2]
 confirmReplaceDirty = "You have unsaved changes. Replace the open document and discard them?"
 download = "Download"
 downloadTooltip = "Save and download the edited PDF"
 save = "Save PDF"
 saveTooltip = "Apply changes to the file in your workspace (Ctrl+S)"
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF Text Editor"
 unsaved = "(unsaved)"
 workbenchLabel = "Editor"
 
-[pdfTextEditorV2.annotations]
+[pdfTextEditor.annotations]
 freetext = "Annotation text - not page text, so it can't be edited here"
 stamp = "Stamp annotation - not page text, so it can't be edited here"
 widget = "Form field - not page text, so it can't be edited here"
 
-[pdfTextEditorV2.drop]
+[pdfTextEditor.drop]
 hint = "Releases on the editor stage replace any open document."
 title = "Drop a PDF to open"
 
-[pdfTextEditorV2.error]
+[pdfTextEditor.error]
 decodeImage = "Could not decode the selected image."
 insertImage = "Could not insert the selected image."
 
-[pdfTextEditorV2.find]
+[pdfTextEditor.find]
 close = "Close find bar"
 count = "{{current}} of {{total}}"
 findPlaceholder = "Find"
@@ -6402,7 +6384,7 @@ title = "Find & replace"
 typeToSearch = "Type to search"
 wholeWord = "Whole word"
 
-[pdfTextEditorV2.fontPicker]
+[pdfTextEditor.fontPicker]
 builtInGroup = "Built-in fonts"
 deviceFontsNone = "No extra device fonts were found."
 deviceFontsUnavailable = "Device fonts are unavailable. The built-in fonts still work."
@@ -6414,36 +6396,36 @@ noMatch = "No matching font"
 placeholder = "Font family"
 useDeviceFonts = "Use device fonts"
 
-[pdfTextEditorV2.fonts]
+[pdfTextEditor.fonts]
 allPresent = "All letters & numbers present"
 missing = "Missing: {{glyphs}}"
 title = "Fonts"
 
-[pdfTextEditorV2.fonts.compat]
+[pdfTextEditor.fonts.compat]
 info = "Existing text edits perfectly. A new character an embedded font doesn't include falls back to a standard font."
 ok = "Every font includes the full alphabet and digits - type freely."
 warnOther = "{{count}} fonts missing some letters or numbers - typing those uses a standard fallback font."
 
-[pdfTextEditorV2.fonts.pill]
+[pdfTextEditor.fonts.pill]
 info = "Embedded"
 ok = "All glyphs"
 warn = "{{count}} with gaps"
 
-[pdfTextEditorV2.fonts.status.embedded]
+[pdfTextEditor.fonts.status.embedded]
 label = "Embedded"
 
-[pdfTextEditorV2.fonts.status.standard]
+[pdfTextEditor.fonts.status.standard]
 label = "Standard"
 
-[pdfTextEditorV2.fonts.status.subset]
+[pdfTextEditor.fonts.status.subset]
 label = "Subset"
 
-[pdfTextEditorV2.help]
+[pdfTextEditor.help]
 ariaLabel = "Keyboard shortcuts"
 title = "Keyboard shortcuts"
 tooltip = "Keyboard shortcuts (?)"
 
-[pdfTextEditorV2.help.arrangement]
+[pdfTextEditor.help.arrangement]
 alignDesc = "Align edges L / centre / R / T / mid / B"
 alignKey = "Toolbar align"
 distributeDesc = "Equal horizontal / vertical spacing (3+)"
@@ -6456,7 +6438,7 @@ lockKey = "Lock button"
 orderDesc = "Bring forward / send backward (one step)"
 orderKey = "Toolbar ↑ ↓"
 
-[pdfTextEditorV2.help.clipboard]
+[pdfTextEditor.help.clipboard]
 copyDesc = "Copy selected text"
 copyKey = "Ctrl+C"
 cutDesc = "Cut selected (copy + delete)"
@@ -6467,7 +6449,7 @@ pasteKey = "Ctrl+V"
 pastePlainDesc = "Paste as plain text"
 pastePlainKey = "Ctrl+Shift+V"
 
-[pdfTextEditorV2.help.document]
+[pdfTextEditor.help.document]
 escDesc = "Clear selection / close find / close help"
 escKey = "Esc"
 heading = "Document"
@@ -6476,7 +6458,7 @@ helpKey = "? / F1"
 saveDesc = "Save to your workspace"
 saveKey = "Ctrl+S"
 
-[pdfTextEditorV2.help.editing]
+[pdfTextEditor.help.editing]
 clickDesc = "Edit text"
 clickKey = "Click"
 deleteDesc = "Remove selected"
@@ -6499,7 +6481,7 @@ undoRedoKey = "Ctrl+Z / Ctrl+Y"
 ungroupDesc = "Ungroup paragraph: select it, click Ungroup"
 ungroupKey = "-"
 
-[pdfTextEditorV2.help.find]
+[pdfTextEditor.help.find]
 enterFindDesc = "Next match"
 enterFindKey = "Enter (in find)"
 enterReplaceDesc = "Replace one (Shift = Replace All)"
@@ -6510,7 +6492,7 @@ nextKey = "F3 / Ctrl+G"
 openDesc = "Open find bar (and replace)"
 openKey = "Ctrl+F"
 
-[pdfTextEditorV2.help.formatting]
+[pdfTextEditor.help.formatting]
 caseDesc = "Change case (upper/lower/title/sentence)"
 caseKey = "Toolbar case (Aa)"
 colourDesc = "Change fill colour"
@@ -6523,7 +6505,7 @@ heading = "Text formatting"
 italicDesc = "Italic"
 italicKey = "Toolbar I"
 
-[pdfTextEditorV2.help.image]
+[pdfTextEditor.help.image]
 flipDesc = "Flip horizontally or vertically"
 flipKey = "Toolbar flip"
 heading = "Image"
@@ -6534,7 +6516,7 @@ resizeKey = "Corner drag"
 rotateDesc = "Rotate 90° clockwise or counter-clockwise"
 rotateKey = "Toolbar rotate"
 
-[pdfTextEditorV2.help.navigation]
+[pdfTextEditor.help.navigation]
 firstLastDesc = "First / last page"
 firstLastKey = "Ctrl+Home / Ctrl+End"
 heading = "Navigation"
@@ -6545,7 +6527,7 @@ toolbarZoomKey = "Toolbar zoom"
 zoomDesc = "Zoom in / out"
 zoomKey = "Ctrl+Wheel"
 
-[pdfTextEditorV2.inspector]
+[pdfTextEditor.inspector]
 document = "Document"
 fontEmbedded = "Embedded font · a character it lacks falls back to Helvetica."
 fontGap = "{{name}} · missing {{glyphs}} - typing those falls back to Helvetica."
@@ -6571,7 +6553,7 @@ widthHint = "A text box's width follows its content and wrapping."
 x = "X"
 y = "Y"
 
-[pdfTextEditorV2.password]
+[pdfTextEditor.password]
 cancel = "Cancel"
 incorrect = "Incorrect password - try again."
 label = "Password"
@@ -6580,29 +6562,29 @@ protected = "This PDF is password-protected."
 protectedNamed = "\"{{fileName}}\" is password-protected."
 title = "Password required"
 
-[pdfTextEditorV2.rulers]
+[pdfTextEditor.rulers]
 guide = "Alignment guide at {{value}} {{unit}} - drag onto a ruler to remove"
 hint = "Drag from a ruler to add an alignment guide"
 horizontal = "Horizontal ruler"
 unit = "pt"
 vertical = "Vertical ruler"
 
-[pdfTextEditorV2.run]
+[pdfTextEditor.run]
 lockedTitle = "Locked - use the Unlock button to edit"
 
-[pdfTextEditorV2.saveRisk]
+[pdfTextEditor.saveRisk]
 cancel = "Cancel"
 intro = "Saving the edited copy changes the file. That means:"
 note = "Your edits are kept. The changes listed above are unavoidable when saving the edited copy."
 saveAnyway = "Save anyway"
 title = "Saving will change this PDF"
 
-[pdfTextEditorV2.settings]
+[pdfTextEditor.settings]
 advanced = "Advanced"
 find = "Find in document"
 view = "View"
 
-[pdfTextEditorV2.sidebar]
+[pdfTextEditor.sidebar]
 addImage = "Add image"
 addText = "Add text"
 clickPageToAddText = "Click page to add text"
@@ -6627,19 +6609,19 @@ widthGrow = "Grow"
 widthGrowHint = "Grow widens a box as you type; Wrap keeps its width and flows onto new lines."
 widthWrap = "Wrap"
 
-[pdfTextEditorV2.spellcheck]
+[pdfTextEditor.spellcheck]
 auto = "Automatic"
 enable = "Check spelling as you type"
 language = "Dictionary language"
 
-[pdfTextEditorV2.stage]
+[pdfTextEditor.stage]
 loadingDocument = "Loading document"
 loadingProgress = "Loading progress"
 noDocument = "No document loaded."
 pickPrompt = "Pick a PDF from the Files panel on the left to begin editing."
 renderingPreview = "Rendering preview"
 
-[pdfTextEditorV2.toolbar]
+[pdfTextEditor.toolbar]
 advancedColour = "Advanced colour"
 advancedColourTooltip = "Advanced colour (glyph outline)"
 alignBottom = "Align bottom"
@@ -6687,7 +6669,22 @@ undoTooltip = "Undo (Ctrl+Z)"
 unlock = "Unlock selection"
 unlockTooltip = "Unlock selection - makes it editable again"
 
-[pdfTextEditorV2.zoom]
+[pdfTextEditor.tooltip.alpha]
+text = "This alpha viewer is still evolving-certain fonts, colors, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing."
+title = "Alpha Viewer"
+
+[pdfTextEditor.tooltip.header]
+title = "Preview Limitations"
+
+[pdfTextEditor.tooltip.previewVariance]
+text = "Some visuals (such as table borders, shapes, or annotation appearances) may not display exactly in the preview. The exported PDF keeps the original drawing commands whenever possible."
+title = "Preview Variance"
+
+[pdfTextEditor.tooltip.textFocus]
+text = "This workspace focuses on editing text and repositioning embedded images. Complex page artwork, form widgets, and layered graphics are preserved for export but are not fully editable here."
+title = "Text and Image Focus"
+
+[pdfTextEditor.zoom]
 fit = "Fit"
 fitToWidth = "Fit to width"
 in = "Zoom in"

@@ -1790,7 +1790,7 @@ class ToolEndpoint(StrEnum):
     EDIT_TEXT = "/api/v1/general/edit-text"
     MERGE_PDFS = "/api/v1/general/merge-pdfs"
     MULTI_PAGE_LAYOUT = "/api/v1/general/multi-page-layout"
-    ENCODE_CHARCODES = "/api/v1/general/pdf-text-editor-v2/encode-charcodes"
+    ENCODE_CHARCODES = "/api/v1/general/pdf-text-editor/encode-charcodes"
     PDF_TO_SINGLE_PAGE = "/api/v1/general/pdf-to-single-page"
     REARRANGE_PAGES = "/api/v1/general/rearrange-pages"
     REMOVE_IMAGE_PDF = "/api/v1/general/remove-image-pdf"

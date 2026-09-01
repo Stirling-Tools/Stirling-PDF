@@ -63,7 +63,7 @@
          This declarative logback entry is the SOLE mechanism: it is
          visible to ops and revertable via configuration. An earlier
          build also mutated this logger's level from a static block in
-         PdfTextEditorV2CharcodeController, which silenced the same
+         PdfTextEditorCharcodeController, which silenced the same
          warnings JVM-wide with no trace in any config file - that
          static block has been removed in favour of this entry. -->
     <logger name="org.apache.pdfbox.pdmodel.font.PDSimpleFont"

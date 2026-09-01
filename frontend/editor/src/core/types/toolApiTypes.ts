@@ -1544,7 +1544,7 @@ export type ToolEndpoint =
   | "/api/v1/general/merge-pdfs"
   | "/api/v1/general/multi-page-layout"
   | "/api/v1/general/overlay-pdfs"
-  | "/api/v1/general/pdf-text-editor-v2/encode-charcodes"
+  | "/api/v1/general/pdf-text-editor/encode-charcodes"
   | "/api/v1/general/pdf-to-single-page"
   | "/api/v1/general/rearrange-pages"
   | "/api/v1/general/remove-image-pdf"
@@ -1648,7 +1648,7 @@ export interface ToolApiParams {
   "/api/v1/general/merge-pdfs": MergePdfsRequest;
   "/api/v1/general/multi-page-layout": MergeMultiplePagesRequest;
   "/api/v1/general/overlay-pdfs": OverlayPdfsRequest;
-  "/api/v1/general/pdf-text-editor-v2/encode-charcodes": EncodeCharcodesRequest;
+  "/api/v1/general/pdf-text-editor/encode-charcodes": EncodeCharcodesRequest;
   "/api/v1/general/pdf-to-single-page": GeneralPdfToSinglePageRequest;
   "/api/v1/general/rearrange-pages": RearrangePagesRequest;
   "/api/v1/general/remove-image-pdf": GeneralRemoveImagePdfRequest;
@@ -1753,7 +1753,7 @@ export const TOOL_ENDPOINTS = [
   "/api/v1/general/merge-pdfs",
   "/api/v1/general/multi-page-layout",
   "/api/v1/general/overlay-pdfs",
-  "/api/v1/general/pdf-text-editor-v2/encode-charcodes",
+  "/api/v1/general/pdf-text-editor/encode-charcodes",
   "/api/v1/general/pdf-to-single-page",
   "/api/v1/general/rearrange-pages",
   "/api/v1/general/remove-image-pdf",

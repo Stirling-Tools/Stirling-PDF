@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """One-off generator for `subset-font-sample.pdf`.
 
-This fixture exercises the v2 editor's subset-font fallback branch
+This fixture exercises the PDF text editor's subset-font fallback branch
 (`canReuseFont = ... && !run.fontSubset`). The editor flags a run as a
 subset font only when PDFium's FPDFFont_GetFamilyName returns a name
 matching /^[A-Z]{6}\\+/ - and PDFium reads that name from the embedded

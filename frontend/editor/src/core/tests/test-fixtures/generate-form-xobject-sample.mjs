@@ -9,7 +9,7 @@ import process from "node:process";
 // Run with: node generate-form-xobject-sample.mjs
 //
 // The output is checked into test-fixtures/ and consumed by
-// pdf-text-editor-v2.spec.ts under the "form xobject recursion" group.
+// pdf-text-editor.spec.ts under the "form xobject recursion" group.
 import { writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";

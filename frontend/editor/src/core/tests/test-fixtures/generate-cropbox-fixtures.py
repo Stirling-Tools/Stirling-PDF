@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate minimal synthetic PDFs for the v2 editor CropBox/rotation tests.
+"""Generate minimal synthetic PDFs for the PDF text editor CropBox/rotation tests.
 
 These are hand-authored fixtures (NOT spirit-sx, which must never be committed).
 Each has one page with a single Helvetica text object "Hi" at a known user-space
