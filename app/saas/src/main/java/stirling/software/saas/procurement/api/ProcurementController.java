@@ -18,8 +18,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import tools.jackson.databind.ObjectMapper;
-
 import io.swagger.v3.oas.annotations.Hidden;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -42,6 +40,8 @@ import stirling.software.saas.procurement.pricing.QuoteConfig;
 import stirling.software.saas.procurement.pricing.QuoteLineItem;
 import stirling.software.saas.procurement.service.ProcurementService;
 import stirling.software.saas.util.AuthenticationUtils;
+
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * The enterprise procurement journey for a linked team: read the deal snapshot, start/extend a
@@ -449,7 +449,7 @@ public class ProcurementController {
                                         .header(
                                                 HttpHeaders.CONTENT_DISPOSITION,
                                                 "attachment;"
-                                                        + " filename=\"stirling-enterprise-agreement.pdf\"")
+                                                    + " filename=\"stirling-enterprise-agreement.pdf\"")
                                         .contentType(MediaType.APPLICATION_PDF)
                                         .body(pdf))
                 .orElseGet(() -> ResponseEntity.notFound().build());
@@ -472,7 +472,7 @@ public class ProcurementController {
                                         .header(
                                                 HttpHeaders.CONTENT_DISPOSITION,
                                                 "attachment;"
-                                                        + " filename=\"stirling-enterprise-agreement.pdf\"")
+                                                    + " filename=\"stirling-enterprise-agreement.pdf\"")
                                         .contentType(MediaType.APPLICATION_PDF)
                                         .body(pdf))
                 .orElseGet(() -> ResponseEntity.notFound().build());

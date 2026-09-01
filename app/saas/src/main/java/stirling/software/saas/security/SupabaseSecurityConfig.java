@@ -174,8 +174,9 @@ public class SupabaseSecurityConfig {
         String issuerError = validateIssuer(issuer);
         if (issuerError != null) {
             log.warn(
-                    "{} saas profile is active but JWTs cannot be validated. Set SAAS_DB_PROJECT_REF"
-                            + " (or app.supabase.issuer) in application-saas.properties or via env.",
+                    "{} saas profile is active but JWTs cannot be validated. Set"
+                            + " SAAS_DB_PROJECT_REF (or app.supabase.issuer) in"
+                            + " application-saas.properties or via env.",
                     issuerError);
             // Build a decoder that will reject every token; failing closed is safer than failing
             // open when configuration is incomplete.

@@ -178,7 +178,8 @@ class SaasUserAccountServiceTest {
 
         @Test
         @DisplayName(
-                "downgrades a PRO user whose team is personal (personal team is not a shared PRO source)")
+                "downgrades a PRO user whose team is personal (personal team is not a shared PRO"
+                        + " source)")
         void proWithPersonalTeam_isDowngraded() {
             User u = userWithRole(Role.PRO_USER.getRoleId());
             Team t = team(7L, "alice-personal");
@@ -414,7 +415,8 @@ class SaasUserAccountServiceTest {
 
         @Test
         @DisplayName(
-                "does not overwrite username/email when the email is blank, but still promotes the type")
+                "does not overwrite username/email when the email is blank, but still promotes the"
+                        + " type")
         void blankEmail_keepsUsername() {
             SupabaseUser su = supabaseUser(false);
             User u = anonymousLocalUser();

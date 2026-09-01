@@ -50,7 +50,8 @@ public class SaasDataSourceConfig {
 
     // search_path so native SQL hits stirling_pdf, not the postgres-default public.
     @Value(
-            "${spring.datasource.hikari.connection-init-sql:SET search_path TO stirling_pdf, auth, public}")
+            "${spring.datasource.hikari.connection-init-sql:SET search_path TO stirling_pdf, auth,"
+                    + " public}")
     private String connectionInitSql;
 
     @Bean
@@ -59,9 +60,9 @@ public class SaasDataSourceConfig {
     public DataSource saasDataSource() {
         if (url == null || url.isBlank()) {
             throw new IllegalStateException(
-                    "spring.datasource.url is required when the saas profile is active. "
-                            + "Set it via application-{profile}.properties (e.g. application-dev.properties) "
-                            + "or via the SPRING_DATASOURCE_URL env var.");
+                    "spring.datasource.url is required when the saas profile is active. Set it via"
+                        + " application-{profile}.properties (e.g. application-dev.properties) or"
+                        + " via the SPRING_DATASOURCE_URL env var.");
         }
 
         HikariConfig config = new HikariConfig();
@@ -79,7 +80,8 @@ public class SaasDataSourceConfig {
         }
 
         log.info(
-                "Saas DataSource configured (ApplicationName: '{}', max pool: {}, min idle: {}, search_path init: '{}')",
+                "Saas DataSource configured (ApplicationName: '{}', max pool: {}, min idle: {},"
+                        + " search_path init: '{}')",
                 applicationName,
                 maximumPoolSize,
                 minimumIdle,

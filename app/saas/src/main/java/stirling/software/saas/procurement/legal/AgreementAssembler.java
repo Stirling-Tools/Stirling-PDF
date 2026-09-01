@@ -10,8 +10,6 @@ import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
-import tools.jackson.databind.ObjectMapper;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -21,6 +19,8 @@ import stirling.software.saas.procurement.model.ProcurementQuote;
 import stirling.software.saas.procurement.pricing.ProcurementPricingService;
 import stirling.software.saas.procurement.pricing.QuoteConfig;
 import stirling.software.saas.procurement.pricing.QuoteLineItem;
+
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Builds the full Stirling Enterprise Agreement for a specific quote: the static MSA (Part A) and
@@ -159,7 +159,8 @@ public class AgreementAssembler {
         row(
                 sb,
                 "Term",
-                "{{term_years}} year(s) · term discount {{term_discount_pct}} on committed processing");
+                "{{term_years}} year(s) · term discount {{term_discount_pct}} on committed"
+                        + " processing");
         row(sb, "Itemized services", itemizedServices(quote));
         row(sb, "Annual Fee (year 1)", "{{annual_fee_y1}}");
         row(sb, "Total (paid in advance)", "{{contract_total}}");
@@ -174,12 +175,13 @@ public class AgreementAssembler {
                 sb,
                 "Data schedule",
                 "First 25 MB per file included; each additional 25 MB or part thereof (decimal MB,"
-                        + " rounded up per file, measured once at ingestion) draws down 1 PDF Process."
-                        + " Frozen for the Term (MSA §3.5).");
+                    + " rounded up per file, measured once at ingestion) draws down 1 PDF Process."
+                    + " Frozen for the Term (MSA §3.5).");
         row(
                 sb,
                 "Drawdown schedule",
-                "{{posture}}: {{processes_per_pdf}} PDF Processes per PDF (MSA §3.3, frozen for the Term)");
+                "{{posture}}: {{processes_per_pdf}} PDF Processes per PDF (MSA §3.3, frozen for the"
+                        + " Term)");
         row(
                 sb,
                 "Enhanced IP Protection",
@@ -187,12 +189,13 @@ public class AgreementAssembler {
         row(sb, "Standard terms", "SSO, SCIM, RBAC, and audit logs included.");
 
         sb.append(
-                "\n**Itemized services menu (include as elected):** Self-hosted deployment $12,000/yr"
-                        + " · Air-gapped deployment $36,000/yr · Dedicated SE/CSM $30,000/yr · Enhanced IP"
-                        + " Protection (patent coverage, Section 7.3) 5% of committed processing fees ·"
-                        + " Onboarding & training $7,500 one-time · Quarterly business reviews $8,000/yr."
-                        + " Baseline IP indemnification (copyright, trademark, trade secret) is included at"
-                        + " no charge.\n\n");
+                "\n"
+                    + "**Itemized services menu (include as elected):** Self-hosted deployment"
+                    + " $12,000/yr · Air-gapped deployment $36,000/yr · Dedicated SE/CSM $30,000/yr"
+                    + " · Enhanced IP Protection (patent coverage, Section 7.3) 5% of committed"
+                    + " processing fees · Onboarding & training $7,500 one-time · Quarterly"
+                    + " business reviews $8,000/yr. Baseline IP indemnification (copyright,"
+                    + " trademark, trade secret) is included at no charge.\n\n");
         sb.append(
                 "**Signatures.** By signing, each signatory represents they have authority to bind"
                         + " their Party. Signatures delivered electronically or in counterparts are"

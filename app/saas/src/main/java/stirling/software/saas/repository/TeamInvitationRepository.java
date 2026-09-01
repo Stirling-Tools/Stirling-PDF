@@ -23,7 +23,8 @@ public interface TeamInvitationRepository extends JpaRepository<TeamInvitation, 
      * @return Optional of TeamInvitation if found
      */
     @Query(
-            "SELECT ti FROM TeamInvitation ti JOIN FETCH ti.team JOIN FETCH ti.inviter WHERE ti.invitationToken = :token")
+            "SELECT ti FROM TeamInvitation ti JOIN FETCH ti.team JOIN FETCH ti.inviter WHERE"
+                    + " ti.invitationToken = :token")
     Optional<TeamInvitation> findByInvitationToken(@Param("token") String token);
 
     /**
@@ -33,7 +34,8 @@ public interface TeamInvitationRepository extends JpaRepository<TeamInvitation, 
      * @return List of invitations
      */
     @Query(
-            "SELECT ti FROM TeamInvitation ti JOIN FETCH ti.team JOIN FETCH ti.inviter WHERE ti.inviteeEmail = :email")
+            "SELECT ti FROM TeamInvitation ti JOIN FETCH ti.team JOIN FETCH ti.inviter WHERE"
+                    + " ti.inviteeEmail = :email")
     List<TeamInvitation> findByInviteeEmail(@Param("email") String email);
 
     /**
@@ -43,8 +45,8 @@ public interface TeamInvitationRepository extends JpaRepository<TeamInvitation, 
      * @return List of pending invitations
      */
     @Query(
-            "SELECT ti FROM TeamInvitation ti JOIN FETCH ti.team JOIN FETCH ti.inviter "
-                    + "WHERE ti.inviteeEmail = :email AND ti.status = 'PENDING' AND ti.expiresAt > :now")
+            "SELECT ti FROM TeamInvitation ti JOIN FETCH ti.team JOIN FETCH ti.inviter WHERE"
+                    + " ti.inviteeEmail = :email AND ti.status = 'PENDING' AND ti.expiresAt > :now")
     List<TeamInvitation> findPendingInvitationsByEmail(
             @Param("email") String email, @Param("now") LocalDateTime now);
 
@@ -64,7 +66,8 @@ public interface TeamInvitationRepository extends JpaRepository<TeamInvitation, 
      * @return List of invitations
      */
     @Query(
-            "SELECT ti FROM TeamInvitation ti JOIN FETCH ti.team WHERE ti.inviter.id = :inviterUserId")
+            "SELECT ti FROM TeamInvitation ti JOIN FETCH ti.team WHERE ti.inviter.id ="
+                    + " :inviterUserId")
     List<TeamInvitation> findByInviterUserId(@Param("inviterUserId") Long inviterUserId);
 
     /**
@@ -75,7 +78,8 @@ public interface TeamInvitationRepository extends JpaRepository<TeamInvitation, 
      */
     @Modifying
     @Query(
-            "UPDATE TeamInvitation ti SET ti.status = 'EXPIRED' WHERE ti.status = 'PENDING' AND ti.expiresAt < :now")
+            "UPDATE TeamInvitation ti SET ti.status = 'EXPIRED' WHERE ti.status = 'PENDING' AND"
+                    + " ti.expiresAt < :now")
     int markExpiredInvitations(@Param("now") LocalDateTime now);
 
     /**

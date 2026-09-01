@@ -45,8 +45,9 @@ public class SaasProjectNotice {
             return;
         }
         log.info(
-                "SaaS dev profile: Supabase preview branch {}, ddl-auto={}. Disposable, so Hibernate"
-                        + " is allowed to add the inherited tables the migrations do not create.",
+                "SaaS dev profile: Supabase preview branch {}, ddl-auto={}. Disposable, so"
+                        + " Hibernate is allowed to add the inherited tables the migrations do not"
+                        + " create.",
                 projectRef,
                 ddlAuto);
     }

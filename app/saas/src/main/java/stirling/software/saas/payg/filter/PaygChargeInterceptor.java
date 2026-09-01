@@ -155,7 +155,8 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
         this.callsBypassed =
                 Counter.builder("payg.filter.bypassed")
                         .description(
-                                "Manual UI tool calls that skipped openProcess (BillingCategory.BYPASSED)")
+                                "Manual UI tool calls that skipped openProcess"
+                                        + " (BillingCategory.BYPASSED)")
                         .register(meterRegistry);
         this.refundsCounter =
                 Counter.builder("payg.filter.refunds")
@@ -429,7 +430,8 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
         Long maxBytes = properties.getResponse().getMaxBytes();
         if (maxBytes != null && wrapper.bytesWritten() > maxBytes) {
             log.debug(
-                    "Response size {} exceeds payg.filter.response.max-bytes={}; skipping OUTPUT recording",
+                    "Response size {} exceeds payg.filter.response.max-bytes={}; skipping OUTPUT"
+                            + " recording",
                     wrapper.bytesWritten(),
                     maxBytes);
             return;

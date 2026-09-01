@@ -383,7 +383,8 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
                     .orElseThrow(
                             () ->
                                     new AuthenticationFailureException(
-                                            "User creation conflict, but unable to find existing user",
+                                            "User creation conflict, but unable to find existing"
+                                                    + " user",
                                             dup));
         }
     }

@@ -12,11 +12,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
-import tools.jackson.databind.ObjectMapper;
-
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.saas.config.SupabaseConfigurationProperties;
+
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Reports per-tenant overage to Stripe Billing Meters via the Supabase {@code meter-usage} Edge
@@ -58,13 +58,15 @@ public class StripeUsageReportingService {
 
         if (supabaseUrl == null || supabaseUrl.isEmpty()) {
             log.error(
-                    "[USAGE-BILLING] supabase.url not configured; cannot report usage. Set SUPABASE_URL.");
+                    "[USAGE-BILLING] supabase.url not configured; cannot report usage. Set"
+                            + " SUPABASE_URL.");
             return false;
         }
 
         if (!supabaseConfig.isEdgeFunctionConfigured()) {
             log.error(
-                    "[USAGE-BILLING] Supabase edge function not configured (URL + secret required); cannot report usage.");
+                    "[USAGE-BILLING] Supabase edge function not configured (URL + secret required);"
+                            + " cannot report usage.");
             return false;
         }
 

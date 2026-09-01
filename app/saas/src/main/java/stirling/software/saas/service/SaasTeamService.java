@@ -274,7 +274,8 @@ public class SaasTeamService {
                         existingUser -> {
                             if (hasPaidSubscription(existingUser)) {
                                 throw new IllegalArgumentException(
-                                        "Cannot invite paid users to teams. Only team leaders manage billing.");
+                                        "Cannot invite paid users to teams. Only team leaders"
+                                                + " manage billing.");
                             }
 
                             // Check if already a member
@@ -324,7 +325,8 @@ public class SaasTeamService {
         Team userTeam = user.getTeam();
         if (userTeam == null || !hasActivePaidSubscription(userTeam)) {
             log.warn(
-                    "User {} joined team {} but team has no active subscription - not granting PRO role",
+                    "User {} joined team {} but team has no active subscription - not granting PRO"
+                            + " role",
                     user.getUsername(),
                     userTeam != null ? userTeam.getName() : "null");
             return;
@@ -386,7 +388,8 @@ public class SaasTeamService {
         // Validate: user doesn't have paid subscription
         if (hasPaidSubscription(acceptingUser)) {
             throw new IllegalArgumentException(
-                    "Cannot join team with active paid subscription. Cancel your subscription first.");
+                    "Cannot join team with active paid subscription. Cancel your subscription"
+                            + " first.");
         }
 
         // Validate: team has available seats
@@ -683,9 +686,9 @@ public class SaasTeamService {
             // Check if Supabase is configured
             if (!supabaseConfig.isEdgeFunctionConfigured()) {
                 log.warn(
-                        "Supabase integration not configured, skipping email send. "
-                                + "Please configure supabase.edgeFunctionUrl and supabase.edgeFunctionSecret "
-                                + "in application properties.");
+                        "Supabase integration not configured, skipping email send. Please configure"
+                                + " supabase.edgeFunctionUrl and supabase.edgeFunctionSecret in"
+                                + " application properties.");
                 return;
             }
 
@@ -748,7 +751,8 @@ public class SaasTeamService {
         if (maxSeats < currentSeatsUsed) {
             int excessMembers = currentSeatsUsed - maxSeats;
             log.warn(
-                    "Team {} reducing seats from {} to {} with {} current members. Removing {} excess members.",
+                    "Team {} reducing seats from {} to {} with {} current members. Removing {}"
+                            + " excess members.",
                     teamId,
                     currentMaxSeats,
                     maxSeats,
@@ -811,7 +815,8 @@ public class SaasTeamService {
                 downgradeUserToFree(userToRemove);
 
                 log.info(
-                        "User {} removed from team {} and migrated to personal team due to seat reduction",
+                        "User {} removed from team {} and migrated to personal team due to seat"
+                                + " reduction",
                         userToRemove.getId(),
                         teamId);
             }
@@ -886,7 +891,8 @@ public class SaasTeamService {
 
                 if (hasActiveSubscription) {
                     log.info(
-                            "User {} has active subscription (trial or paid), maintaining PRO access after leaving team",
+                            "User {} has active subscription (trial or paid), maintaining PRO"
+                                    + " access after leaving team",
                             refetchedUser.getUsername());
                     return; // Keep PRO access
                 }
