@@ -25,18 +25,13 @@ const RESOLUTION_TOOLS: Record<string, string> = {
 };
 
 export function useResolutionContinuation(): (run: SucceededToolRun) => void {
-  return useCallback(
-    (run: SucceededToolRun) => {
-      void continueResolutions(run);
-    },
-    [],
-  );
+  return useCallback((run: SucceededToolRun) => {
+    void continueResolutions(run);
+  }, []);
 }
 
 /** Best-effort: a continuation that cannot happen leaves the row where it already was. */
-async function continueResolutions(
-  run: SucceededToolRun,
-): Promise<void> {
+async function continueResolutions(run: SucceededToolRun): Promise<void> {
   try {
     if (!(await couldResolveAnything(run))) return;
 

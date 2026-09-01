@@ -438,6 +438,16 @@ function applyOutputName(
     : `${base}_${outputName}${ext}`;
 }
 
+/** Next upload policy in the chain, or undefined if last or no longer eligible. */
+function nextUploadCategory(
+  orderedUploadCategories: string[],
+  categoryId: string,
+): string | undefined {
+  const index = orderedUploadCategories.indexOf(categoryId);
+  if (index < 0) return undefined;
+  return orderedUploadCategories[index + 1];
+}
+
 async function reconcileServerRuns(
   policies: PoliciesByCategory,
 ): Promise<void> {

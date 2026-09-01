@@ -811,8 +811,6 @@ describe("retrying an attended policy run", () => {
       { policyId: "pol-1", fileId: "f-1" },
       expect.any(File),
       "f-unlocked",
-      // No app-config above this render, so the engine reads as off and Classification drops out.
-      false,
     );
     // And with the prefixed notification id, never a raw failure id.
     expect(reportNotificationResolved).toHaveBeenCalledWith("failure:evt-1");
@@ -841,7 +839,6 @@ describe("retrying an attended policy run", () => {
       { policyId: "pol-1", fileId: "f-1" },
       expect.any(File),
       null,
-      false,
     );
   });
 

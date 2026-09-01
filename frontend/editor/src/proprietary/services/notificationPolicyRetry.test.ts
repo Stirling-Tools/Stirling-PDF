@@ -134,7 +134,7 @@ describe("rechainPolicyOnDocument", () => {
 
   it("submits bytes the caller already holds, still under the original reference", async () => {
     await expect(
-      rechainPolicyOnDocument(target, unlocked, "f-unlocked", false),
+      rechainPolicyOnDocument(target, unlocked, "f-unlocked"),
     ).resolves.toEqual({
       ok: true,
       tracked: true,
@@ -146,7 +146,7 @@ describe("rechainPolicyOnDocument", () => {
 
   it("attributes the run to the adopted document, not the one the failure named", async () => {
     // Two references: the failure's to the server so a repeat folds on, the adopted one to the store.
-    await rechainPolicyOnDocument(target, unlocked, "f-unlocked", false);
+    await rechainPolicyOnDocument(target, unlocked, "f-unlocked");
 
     expect(runStoredPolicy).toHaveBeenCalledWith("pol-1", [unlocked], "f-1");
     expect(getRun("run-1")).toMatchObject({ fileId: "f-unlocked" });
@@ -156,7 +156,7 @@ describe("rechainPolicyOnDocument", () => {
   it("runs untracked rather than filing the output against the wrong document, and admits it", async () => {
     // No workspace id, so recording it would version the encrypted original instead.
     await expect(
-      rechainPolicyOnDocument(target, unlocked, null, false),
+      rechainPolicyOnDocument(target, unlocked, null),
     ).resolves.toEqual({ ok: true, tracked: false });
 
     expect(runStoredPolicy).toHaveBeenCalled();
@@ -169,7 +169,7 @@ describe("rechainPolicyOnDocument", () => {
     });
 
     await expect(
-      rechainPolicyOnDocument(target, unlocked, "f-unlocked", false),
+      rechainPolicyOnDocument(target, unlocked, "f-unlocked"),
     ).resolves.toEqual({
       ok: false,
       reason: "rejected",
@@ -183,7 +183,7 @@ describe("rechainPolicyOnDocument", () => {
     });
 
     await expect(
-      rechainPolicyOnDocument(target, unlocked, "f-unlocked", false),
+      rechainPolicyOnDocument(target, unlocked, "f-unlocked"),
     ).resolves.toEqual({
       ok: false,
       reason: "rejected",
@@ -195,7 +195,7 @@ describe("rechainPolicyOnDocument", () => {
     runStoredPolicy.mockRejectedValue(new Error("Network Error"));
 
     await expect(
-      rechainPolicyOnDocument(target, unlocked, "f-unlocked", false),
+      rechainPolicyOnDocument(target, unlocked, "f-unlocked"),
     ).resolves.toEqual({
       ok: false,
       reason: "rejected",
@@ -215,7 +215,8 @@ describe("rechainPolicyOnDocument rejoining the chain", () => {
       configured: true,
       status: "active",
       runOn: "upload",
-      sources: ["editor"],
+      sources: [],
+      runsOnEditor: true,
       order,
     };
   }
@@ -254,7 +255,7 @@ describe("rechainPolicyOnDocument rejoining the chain", () => {
     };
     completedRun("run-w", "watermark", "f-upload", "f-1");
 
-    await rechainPolicyOnDocument(target, unlocked, "f-unlocked", false);
+    await rechainPolicyOnDocument(target, unlocked, "f-unlocked");
 
     expect(runStoredPolicy).toHaveBeenCalledWith("pol-1", [unlocked], "f-1");
   });
@@ -266,7 +267,7 @@ describe("rechainPolicyOnDocument rejoining the chain", () => {
       security: uploadPolicy("pol-1", 1),
     };
 
-    await rechainPolicyOnDocument(target, unlocked, "f-unlocked", false);
+    await rechainPolicyOnDocument(target, unlocked, "f-unlocked");
 
     // Filed under the resumed policy's category, so security still runs on watermark's output.
     expect(runStoredPolicy).toHaveBeenCalledWith("pol-w", [unlocked], "f-1");
@@ -283,7 +284,7 @@ describe("rechainPolicyOnDocument rejoining the chain", () => {
       security: uploadPolicy("pol-1", 1),
     };
 
-    await rechainPolicyOnDocument(target, unlocked, "f-unlocked", false);
+    await rechainPolicyOnDocument(target, unlocked, "f-unlocked");
 
     expect(runStoredPolicy).toHaveBeenCalledWith("pol-1", [unlocked], "f-1");
   });
@@ -295,7 +296,7 @@ describe("rechainPolicyOnDocument rejoining the chain", () => {
       security: { ...uploadPolicy("pol-1", 1), runOn: "export" },
     };
 
-    await rechainPolicyOnDocument(target, unlocked, "f-unlocked", false);
+    await rechainPolicyOnDocument(target, unlocked, "f-unlocked");
 
     expect(runStoredPolicy).toHaveBeenCalledWith("pol-1", [unlocked], "f-1");
   });

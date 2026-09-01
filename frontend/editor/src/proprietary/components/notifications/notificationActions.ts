@@ -459,12 +459,5 @@ export function useNotificationActions(): ClientActionRegistry {
       VIEW_FILE: viewFile,
       VIEW_IN_PROCESSOR: viewInProcessor,
     };
-  }, [
-    canOpenHere,
-    openInWorkbench,
-    fileContext,
-    fileStore,
-    navigate,
-    t,
-  ]);
+  }, [canOpenHere, openInWorkbench, fileContext, fileStore, navigate, t]);
 }

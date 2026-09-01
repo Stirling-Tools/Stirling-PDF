@@ -151,7 +151,6 @@ describe("useResolutionContinuation", () => {
       { policyId: "pol-1", fileId: "f-locked" },
       expect.any(File),
       "f-unlocked",
-      true,
     );
     expect(refreshNotificationsNow).toHaveBeenCalled();
   });

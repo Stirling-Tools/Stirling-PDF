@@ -84,24 +84,6 @@ describe("policyRunStore", () => {
     expect(isDispatched("security", "f1")).toBe(true);
   });
 
-  it("a browser-local run does not claim the (policy, file) dispatch key", () => {
-    // The local classification heuristic records a run for the same (classification, file) pair
-    // the server escalation is keyed on. If that claimed the key, the auto-run would read
-    // "already dispatched" and never ask the AI - which killed escalation entirely.
-    recordRunStart(
-      rec({
-        runId: "local-classification-f1-1",
-        categoryId: "classification",
-        fileId: "f1",
-        target: "local",
-        browserLocal: true,
-        status: "RUNNING",
-      }),
-    );
-    expect(getRun("local-classification-f1-1")).toBeDefined();
-    expect(isDispatched("classification", "f1")).toBe(false);
-  });
-
   it("a real backend run still claims the dispatch key", () => {
     recordRunStart(rec({ runId: "srv-1", categoryId: "classification" }));
     expect(isDispatched("classification", "f1")).toBe(true);

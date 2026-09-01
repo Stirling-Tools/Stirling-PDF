@@ -53,12 +53,7 @@ export async function rechainPolicyOnDocument(
   document: File,
   workspaceFileId: string | null,
 ): Promise<PolicyRerunOutcome> {
-  return submit(
-    target,
-    document,
-    workspaceFileId,
-    resumePointFor(target),
-  );
+  return submit(target, document, workspaceFileId, resumePointFor(target));
 }
 
 /** Which policy a retry should actually run, and the category to file its run under. */
