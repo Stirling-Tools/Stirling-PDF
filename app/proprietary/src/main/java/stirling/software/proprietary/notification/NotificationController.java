@@ -47,7 +47,9 @@ public class NotificationController {
     public NotificationsResponse list(@RequestParam(required = false) Integer limit) {
         int capped = Math.min(limit == null ? DEFAULT_LIMIT : Math.max(1, limit), MAX_LIMIT);
         return new NotificationsResponse(
-                notifications.list(capped), notifications.callerReviewsTeam());
+                notifications.list(capped),
+                notifications.callerReviewsTeam(),
+                notifications.callerViewerKey());
     }
 
     @PostMapping("/{notificationId}/resolved")
@@ -70,5 +72,8 @@ public class NotificationController {
 
     /** Wrapped so paging or a total can be added without breaking clients. */
     public record NotificationsResponse(
-            List<NotificationView> notifications, boolean viewerReviewsTeam) {}
+            List<NotificationView> notifications,
+            boolean viewerReviewsTeam,
+            /** Opaque; the client scopes its own read state on it. Empty means "cannot scope". */
+            String viewerKey) {}
 }

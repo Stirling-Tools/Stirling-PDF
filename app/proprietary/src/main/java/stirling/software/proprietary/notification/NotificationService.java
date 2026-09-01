@@ -41,6 +41,11 @@ public class NotificationService {
         return fileRunEvents.reviewsTeam();
     }
 
+    /** Opaque and stable, so a shared browser can keep one viewer's read state off another's. */
+    public String callerViewerKey() {
+        return fileRunEvents.viewerKey();
+    }
+
     /** Takes the prefixed id, so the bell cannot reach a failure endpoint even by accident. */
     public NotificationView resolve(String notificationId) {
         NotificationSource.QualifiedId qualified = qualify(notificationId);

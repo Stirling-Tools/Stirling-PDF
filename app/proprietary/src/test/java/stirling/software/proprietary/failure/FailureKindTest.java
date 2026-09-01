@@ -233,7 +233,7 @@ class FailureKindTest {
             // No known fix, so no resolution; a retry is still worth offering for a one-off.
             assertThat(FailureKind.UNKNOWN.getOfferedActions())
                     .containsExactly(
-                            offered(FailureActionId.RETRY, OWNER, SECONDARY, "retry"),
+                            offered(FailureActionId.OPEN_IN_TOOL, OWNER, SECONDARY, "openInTool"),
                             offered(FailureActionId.VIEW_FILE, OWNER, SECONDARY, "viewFile"),
                             offered(
                                     FailureActionId.VIEW_IN_PROCESSOR,
@@ -297,18 +297,14 @@ class FailureKindTest {
             // Only the owner has the password, so a reviewer is offered the run and a dismiss.
             assertThat(FailureKind.INPUT_PASSWORD_PROTECTED.getOfferedActions())
                     .containsExactly(
-                            offered(
-                                    FailureActionId.DECRYPT_AND_RETRY,
-                                    OWNER,
-                                    RESOLUTION,
-                                    "decryptAndRetry"),
+                            offered(FailureActionId.DECRYPT, OWNER, RESOLUTION, "decrypt"),
                             offered(FailureActionId.VIEW_FILE, OWNER, SECONDARY, "viewFile"),
                             offered(
                                     FailureActionId.VIEW_IN_PROCESSOR,
                                     TEAM_REVIEWER,
                                     OVERFLOW,
                                     "viewInProcessor"),
-                            offered(FailureActionId.RETRY, OWNER, OVERFLOW, "retry"),
+                            offered(FailureActionId.OPEN_IN_TOOL, OWNER, OVERFLOW, "openInTool"),
                             offered(FailureActionId.DISMISS, ANYONE_WHO_SEES, OVERFLOW, "dismiss"));
         }
 
@@ -339,10 +335,8 @@ class FailureKindTest {
             assertThat(FailureKind.UNKNOWN.labelKeyFor(FailureActionId.DISMISS))
                     .isEqualTo(FailureKind.genericLabelKey(FailureActionId.DISMISS))
                     .isEqualTo("portal.failures.action.dismiss");
-            assertThat(
-                            FailureKind.INPUT_PASSWORD_PROTECTED.labelKeyFor(
-                                    FailureActionId.DECRYPT_AND_RETRY))
-                    .isEqualTo("portal.failures.action.decryptAndRetry");
+            assertThat(FailureKind.INPUT_PASSWORD_PROTECTED.labelKeyFor(FailureActionId.DECRYPT))
+                    .isEqualTo("portal.failures.action.decrypt");
         }
 
         @Test

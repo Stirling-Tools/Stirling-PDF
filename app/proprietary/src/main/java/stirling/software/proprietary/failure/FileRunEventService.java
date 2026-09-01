@@ -1,5 +1,9 @@
 package stirling.software.proprietary.failure;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
 
@@ -267,6 +271,33 @@ public class FileRunEventService {
     /** Whether the caller triages the team's incidents, not only their own. Login disabled: all. */
     public boolean reviewsTeam() {
         return !enforced() || policyManagementAuthority.canEditPolicies();
+    }
+
+    /**
+     * An opaque, stable discriminator for the calling viewer, for a client scoping per-browser read
+     * state. Hashed rather than the username itself: a client only needs to tell one viewer from
+     * another, and the value ends up in that browser's own storage.
+     *
+     * <p>{@code "anonymous"} with login disabled, where the one operator is every viewer.
+     */
+    public String viewerKey() {
+        String actor = currentActor();
+        return actor == null || actor.isBlank() ? "anonymous" : sha256Prefix(actor);
+    }
+
+    /** First 8 bytes of SHA-256 as hex: stable, one-way, and collision-safe enough to key on. */
+    private static String sha256Prefix(String value) {
+        try {
+            byte[] digest =
+                    MessageDigest.getInstance("SHA-256")
+                            .digest(value.getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(digest, 0, 8);
+        } catch (NoSuchAlgorithmException e) {
+            // Every JVM ships SHA-256; a constant here would silently merge two viewers' read
+            // state, so the caller gets no key and the client falls back to showing everything.
+            log.warn("SHA-256 unavailable, so notifications cannot be scoped to a viewer", e);
+            return "";
+        }
     }
 
     private FailureActionId parseActionId(String actionId) {

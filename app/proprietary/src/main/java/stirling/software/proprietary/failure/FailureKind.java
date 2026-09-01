@@ -1,8 +1,8 @@
 package stirling.software.proprietary.failure;
 
-import static stirling.software.proprietary.failure.FailureActionId.DECRYPT_AND_RETRY;
+import static stirling.software.proprietary.failure.FailureActionId.DECRYPT;
 import static stirling.software.proprietary.failure.FailureActionId.DISMISS;
-import static stirling.software.proprietary.failure.FailureActionId.RETRY;
+import static stirling.software.proprietary.failure.FailureActionId.OPEN_IN_TOOL;
 import static stirling.software.proprietary.failure.FailureActionId.VIEW_FILE;
 import static stirling.software.proprietary.failure.FailureActionId.VIEW_IN_PROCESSOR;
 import static stirling.software.proprietary.failure.FailureActionSlot.OVERFLOW;
@@ -38,10 +38,10 @@ public enum FailureKind {
             errorCodes("E004"),
             fallback("This document is password-protected, so the pipeline could not read it."),
             // The password is the fix; the owner's own document is the runner-up.
-            resolution(DECRYPT_AND_RETRY, OWNER),
+            resolution(DECRYPT, OWNER),
             global(VIEW_FILE, OWNER, SECONDARY),
             global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, OVERFLOW),
-            global(RETRY, OWNER, OVERFLOW),
+            global(OPEN_IN_TOOL, OWNER, OVERFLOW),
             global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
 
     UNKNOWN(
@@ -52,7 +52,7 @@ public enum FailureKind {
             noErrorCodes(),
             fallback("This run failed for a reason Stirling does not yet recognise."),
             // No known fix to declare, so a plain retry leads: these are often one-offs.
-            global(RETRY, OWNER, SECONDARY),
+            global(OPEN_IN_TOOL, OWNER, SECONDARY),
             global(VIEW_FILE, OWNER, SECONDARY),
             global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, OVERFLOW),
             global(DISMISS, ANYONE_WHO_SEES, OVERFLOW));

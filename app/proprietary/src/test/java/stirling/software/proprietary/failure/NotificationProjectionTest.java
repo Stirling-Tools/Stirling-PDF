@@ -212,4 +212,30 @@ class NotificationProjectionTest {
             assertThat(controller.list(null).viewerReviewsTeam()).isFalse();
         }
     }
+
+    @Nested
+    @DisplayName("the response names the viewer, opaquely, for a client to scope read state on")
+    class ViewerKey {
+
+        @Test
+        void steadyForOneViewerAcrossReads() {
+            assertThat(controller.list(null).viewerKey())
+                    .isEqualTo(controller.list(null).viewerKey())
+                    .isNotBlank();
+        }
+
+        @Test
+        void differentForAnotherViewerSoOneCannotInheritTheOthersMarker() {
+            String mine = controller.list(null).viewerKey();
+            when(userService.getCurrentUsername()).thenReturn("someone.else@example.com");
+
+            assertThat(controller.list(null).viewerKey()).isNotEqualTo(mine);
+        }
+
+        @Test
+        void neverTheUsernameItself() {
+            // It lands in that browser's storage, and a client only needs to tell viewers apart.
+            assertThat(controller.list(null).viewerKey()).doesNotContain(ACTOR);
+        }
+    }
 }

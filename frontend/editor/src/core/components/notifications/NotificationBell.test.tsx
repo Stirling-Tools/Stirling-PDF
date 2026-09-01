@@ -25,7 +25,7 @@ vi.mock("@app/services/notifications", () => ({
   fetchNotifications: async (...args: unknown[]) => {
     const value = await fetchNotifications(...args);
     return Array.isArray(value)
-      ? { notifications: value, viewerReviewsTeam: true }
+      ? { notifications: value, viewerReviewsTeam: true, viewerKey: "viewer-a" }
       : value;
   },
 }));
@@ -103,7 +103,8 @@ const AT: Record<string, string> = {
   b: "2026-08-05T01:00:00Z",
 };
 
-const READ_THROUGH_KEY = "stirling.notifications.readThroughAt";
+/** Scoped to the viewer the mocked response names, as the store writes it. */
+const READ_THROUGH_KEY = "stirling.notifications.readThroughAt.viewer-a";
 
 function markReadThrough(iso: string): void {
   window.localStorage.setItem(READ_THROUGH_KEY, String(Date.parse(iso)));
@@ -310,14 +311,14 @@ describe("NotificationBell", () => {
 
   it("tucks overflow actions into a menu, not a row of buttons", async () => {
     h.specs = {
-      DECRYPT_AND_RETRY: { available: () => true, run: vi.fn() },
+      DECRYPT: { available: () => true, run: vi.fn() },
       VIEW_FILE: { available: () => true, run: vi.fn() },
       VIEW_IN_PROCESSOR: { available: () => true, run: vi.fn() },
     };
     fetchNotifications.mockResolvedValue([
       notification("a", "Unrecognised failure", {
         actions: [
-          offer("DECRYPT_AND_RETRY", "RESOLUTION"),
+          offer("DECRYPT", "RESOLUTION"),
           offer("VIEW_FILE", "SECONDARY"),
           offer("VIEW_IN_PROCESSOR", "OVERFLOW"),
         ],
@@ -329,7 +330,7 @@ describe("NotificationBell", () => {
     // Two real buttons; the overflow one is off screen until the menu is opened.
     expect(
       screen.getByRole("button", {
-        name: "DECRYPT_AND_RETRY: Unrecognised failure",
+        name: "DECRYPT: Unrecognised failure",
       }),
     ).toBeTruthy();
     expect(

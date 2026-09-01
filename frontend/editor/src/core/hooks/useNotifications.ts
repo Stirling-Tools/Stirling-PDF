@@ -12,16 +12,27 @@ import { hasLocalFile } from "@app/services/localFilePresence";
 
 // TODO: read state is per-browser. Move it server-side when notifications get their own table.
 const POLL_INTERVAL_MS = 30_000;
-const SEEN_STORAGE_KEY = "stirling.notifications.readThroughAt";
+const SEEN_STORAGE_KEY_PREFIX = "stirling.notifications.readThroughAt";
+
+/**
+ * Scoped to the viewer the server named, because a timestamp is legible to whoever reads it next: an
+ * unscoped marker left by the previous user of a shared browser would silently pre-read the
+ * incoming user's older failures. Null while the viewer is unknown, which reads as nothing marked.
+ */
+function seenStorageKey(viewerKey: string | null): string | null {
+  return viewerKey ? `${SEEN_STORAGE_KEY_PREFIX}.${viewerKey}` : null;
+}
 
 /** A time, not an id: an id points at nothing once its row leaves the list. */
 function orderedAt(notification: AppNotification): number {
   return Date.parse(notification.lastSeenAt);
 }
 
-function readReadThrough(): number | null {
+function readReadThrough(viewerKey: string | null): number | null {
+  const key = seenStorageKey(viewerKey);
+  if (!key) return null;
   try {
-    const stored = Number(window.localStorage.getItem(SEEN_STORAGE_KEY));
+    const stored = Number(window.localStorage.getItem(key));
     return Number.isFinite(stored) && stored > 0 ? stored : null;
   } catch {
     // Private mode: everything reads as unseen, which errs towards showing failures.
@@ -29,26 +40,32 @@ function readReadThrough(): number | null {
   }
 }
 
-function writeReadThrough(at: number): void {
+function writeReadThrough(viewerKey: string | null, at: number): void {
+  const key = seenStorageKey(viewerKey);
+  // Unscoped would be worse than unsaved: the next viewer here would inherit it.
+  if (!key) return;
   try {
-    window.localStorage.setItem(SEEN_STORAGE_KEY, String(at));
+    window.localStorage.setItem(key, String(at));
   } catch {
     // The marker just will not survive a reload.
   }
 }
 
 /**
- * Forget how far the reader got, for a browser about to belong to someone else. A time left by the
- * previous user parses perfectly well, so without this their marker would mark the next user's
- * older failures read and the badge would stay dark on a row nobody has seen.
+ * Forget how far the departing reader got. The marker is scoped to its viewer, so this is belt to
+ * that brace: it also covers a sign-out on a build where the server names no viewer, and it drops
+ * the in-memory marker so the bell does not answer for them until the next read says who is here.
  */
 export function clearNotificationReadState(): void {
-  try {
-    window.localStorage.removeItem(SEEN_STORAGE_KEY);
-  } catch {
-    // Nothing to clear that a read could trust anyway.
+  const key = seenStorageKey(snapshot.viewerKey);
+  if (key) {
+    try {
+      window.localStorage.removeItem(key);
+    } catch {
+      // Nothing to clear that a read could trust anyway.
+    }
   }
-  publish({ ...snapshot, readThroughAt: null });
+  publish({ ...snapshot, readThroughAt: null, viewerKey: null });
 }
 
 export interface NotificationDocumentState {
@@ -73,12 +90,15 @@ interface NotificationsSnapshot {
   documents: Record<string, NotificationDocumentState>;
   /** Everything up to and including this time has been read. Epoch millis, never a row id. */
   readThroughAt: number | null;
+  /** Who the marker belongs to. Null until a read says, so nothing is marked on their behalf. */
+  viewerKey: string | null;
 }
 
 const NOTHING_LOADED: NotificationsSnapshot = {
   notifications: [],
   documents: {},
   readThroughAt: null,
+  viewerKey: null,
 };
 
 let snapshot: NotificationsSnapshot = NOTHING_LOADED;
@@ -108,8 +128,11 @@ function publish(next: NotificationsSnapshot): void {
 }
 
 async function read(forCycle: number): Promise<void> {
-  const { notifications: listed, viewerReviewsTeam } =
-    await fetchNotifications();
+  const {
+    notifications: listed,
+    viewerReviewsTeam,
+    viewerKey,
+  } = await fetchNotifications();
   if (forCycle !== cycle) return;
 
   const fileIds = [
@@ -138,11 +161,23 @@ async function read(forCycle: number): Promise<void> {
   // because every offer a member gets needs the document, so the row would only say so.
   const visible = viewerReviewsTeam
     ? listed
-    : listed.filter((n) =>
-        Boolean(n.fileId && documents[n.fileId]?.hasLocalFile),
+    : listed.filter(
+        // Asked rather than left to the lookup missing: an unattended row's fileId comes from
+        // another id space, so a hit on one would be a collision and not the document.
+        (n) =>
+          isResolvableHere(n) &&
+          Boolean(n.fileId && documents[n.fileId]?.hasLocalFile),
       );
 
-  publish({ ...snapshot, notifications: visible, documents });
+  // Read per read, not once at startup: the marker belongs to whoever the server says is
+  // reading, and signing in or out changes who that is without remounting the bell.
+  publish({
+    ...snapshot,
+    notifications: visible,
+    documents,
+    viewerKey,
+    readThroughAt: readReadThrough(viewerKey),
+  });
 }
 
 /** A caller arriving mid-read joins the one already running. */
@@ -182,8 +217,9 @@ function loadFresh(): void {
 
 function startPolling(): void {
   cycle += 1;
-  // From disk, not memory: another tab may have moved the marker on.
-  snapshot = { ...NOTHING_LOADED, readThroughAt: readReadThrough() };
+  // Nothing read until the first read names the viewer, since the marker is theirs and not this
+  // browser's. Everything counts as unread until then, which errs towards showing failures.
+  snapshot = NOTHING_LOADED;
   pollTimer = window.setInterval(() => void load(), POLL_INTERVAL_MS);
   void load();
 }
@@ -217,7 +253,7 @@ function markAllSeen(): void {
   if (!Number.isFinite(newest)) return;
   if (snapshot.readThroughAt !== null && newest <= snapshot.readThroughAt)
     return;
-  writeReadThrough(newest);
+  writeReadThrough(snapshot.viewerKey, newest);
   publish({ ...snapshot, readThroughAt: newest });
 }
 

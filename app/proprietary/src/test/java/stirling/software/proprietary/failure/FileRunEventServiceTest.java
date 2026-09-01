@@ -456,9 +456,9 @@ class FileRunEventServiceTest {
 
             assertThat(offeredFor(mine))
                     .containsExactly(
-                            FailureActionId.DECRYPT_AND_RETRY,
+                            FailureActionId.DECRYPT,
                             FailureActionId.VIEW_FILE,
-                            FailureActionId.RETRY,
+                            FailureActionId.OPEN_IN_TOOL,
                             FailureActionId.DISMISS);
             assertThat(service.availableActions(mine))
                     .allMatch(FileRunEventService.AvailableAction::enabled);
@@ -486,10 +486,10 @@ class FileRunEventServiceTest {
 
             assertThat(offeredFor(unattended))
                     .containsExactly(
-                            FailureActionId.DECRYPT_AND_RETRY,
+                            FailureActionId.DECRYPT,
                             FailureActionId.VIEW_FILE,
                             FailureActionId.VIEW_IN_PROCESSOR,
-                            FailureActionId.RETRY,
+                            FailureActionId.OPEN_IN_TOOL,
                             FailureActionId.DISMISS);
         }
 
@@ -607,7 +607,7 @@ class FileRunEventServiceTest {
             FileRunEvent mine = givenHitBy(ACTOR, FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f1");
 
             assertThat(service.availableActions(mine))
-                    .filteredOn(action -> action.id() == FailureActionId.DECRYPT_AND_RETRY)
+                    .filteredOn(action -> action.id() == FailureActionId.DECRYPT)
                     .singleElement()
                     .extracting(FileRunEventService.AvailableAction::slot)
                     .isEqualTo(FailureActionSlot.RESOLUTION);

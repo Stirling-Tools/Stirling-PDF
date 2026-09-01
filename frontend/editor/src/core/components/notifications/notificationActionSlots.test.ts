@@ -9,14 +9,14 @@ import type {
 
 /** The offers as `FailureKind` declares them for an unrecognised failure. */
 const UNKNOWN_OFFERS: Record<string, NotificationActionOffer> = {
-  RETRY: offer("RETRY", "SECONDARY"),
+  OPEN_IN_TOOL: offer("OPEN_IN_TOOL", "SECONDARY"),
   VIEW_IN_PROCESSOR: offer("VIEW_IN_PROCESSOR", "SECONDARY"),
   VIEW_FILE: offer("VIEW_FILE", "OVERFLOW"),
 };
 
 const PASSWORD_OFFERS: Record<string, NotificationActionOffer> = {
-  DECRYPT_AND_RETRY: offer("DECRYPT_AND_RETRY", "RESOLUTION"),
-  RETRY: offer("RETRY", "OVERFLOW"),
+  DECRYPT: offer("DECRYPT", "RESOLUTION"),
+  OPEN_IN_TOOL: offer("OPEN_IN_TOOL", "OVERFLOW"),
   VIEW_FILE: offer("VIEW_FILE", "OVERFLOW"),
   VIEW_IN_PROCESSOR: offer("VIEW_IN_PROCESSOR", "SECONDARY"),
 };
@@ -72,8 +72,8 @@ function refusing(
 
 /** Everything this client can do, with the file on this device. */
 const RUNNABLE = new Set([
-  "RETRY",
-  "DECRYPT_AND_RETRY",
+  "OPEN_IN_TOOL",
+  "DECRYPT",
   "VIEW_FILE",
   "VIEW_IN_PROCESSOR",
 ]);
@@ -102,8 +102,8 @@ function promoted(list: NotificationActionOffer[]) {
 describe("promoteActions", () => {
   it("gives the owner the retry, and keeps the rest quiet behind it", () => {
     // No portal access, so the server never offered the processor link.
-    expect(promoted(unknown("RETRY", "VIEW_FILE"))).toEqual({
-      primary: "RETRY",
+    expect(promoted(unknown("OPEN_IN_TOOL", "VIEW_FILE"))).toEqual({
+      primary: "OPEN_IN_TOOL",
       secondary: null,
       overflow: ["VIEW_FILE"],
       withheldReasonKey: null,
@@ -115,9 +115,9 @@ describe("promoteActions", () => {
     expect(
       promoted(
         refusing(
-          unknown("RETRY", "VIEW_IN_PROCESSOR", "VIEW_FILE"),
+          unknown("OPEN_IN_TOOL", "VIEW_IN_PROCESSOR", "VIEW_FILE"),
           NO_DOCUMENT,
-          "RETRY",
+          "OPEN_IN_TOOL",
           "VIEW_FILE",
         ),
       ),
@@ -134,9 +134,9 @@ describe("promoteActions", () => {
     expect(
       promoted(
         refusing(
-          unknown("RETRY", "VIEW_IN_PROCESSOR", "VIEW_FILE"),
+          unknown("OPEN_IN_TOOL", "VIEW_IN_PROCESSOR", "VIEW_FILE"),
           UNATTENDED,
-          "RETRY",
+          "OPEN_IN_TOOL",
           "VIEW_FILE",
         ),
       ),
@@ -161,11 +161,11 @@ describe("promoteActions", () => {
   it("leads a password failure with the unlock, not the plain retry", () => {
     // Running it again unchanged is a second answer to the same problem, so it drops behind.
     expect(
-      promoted(password("DECRYPT_AND_RETRY", "RETRY", "VIEW_FILE")),
+      promoted(password("DECRYPT", "OPEN_IN_TOOL", "VIEW_FILE")),
     ).toEqual({
-      primary: "DECRYPT_AND_RETRY",
+      primary: "DECRYPT",
       secondary: null,
-      overflow: ["RETRY", "VIEW_FILE"],
+      overflow: ["OPEN_IN_TOOL", "VIEW_FILE"],
       withheldReasonKey: null,
     });
   });
@@ -174,16 +174,16 @@ describe("promoteActions", () => {
     expect(
       promoted(
         password(
-          "DECRYPT_AND_RETRY",
-          "RETRY",
+          "DECRYPT",
+          "OPEN_IN_TOOL",
           "VIEW_FILE",
           "VIEW_IN_PROCESSOR",
         ),
       ),
     ).toEqual({
-      primary: "DECRYPT_AND_RETRY",
+      primary: "DECRYPT",
       secondary: "VIEW_IN_PROCESSOR",
-      overflow: ["RETRY", "VIEW_FILE"],
+      overflow: ["OPEN_IN_TOOL", "VIEW_FILE"],
       withheldReasonKey: null,
     });
   });
@@ -192,7 +192,7 @@ describe("promoteActions", () => {
     // Already closed elsewhere: every offer refused, so the row is its message plus one line.
     expect(
       promoted(
-        refusing(unknown("RETRY", "VIEW_FILE"), CLOSED, "RETRY", "VIEW_FILE"),
+        refusing(unknown("OPEN_IN_TOOL", "VIEW_FILE"), CLOSED, "OPEN_IN_TOOL", "VIEW_FILE"),
       ),
     ).toEqual({
       primary: null,
@@ -205,23 +205,23 @@ describe("promoteActions", () => {
   it("promotes past a resolution the shell cannot deliver", () => {
     // Read from the processor, which has no FileContext, so the unlock reports itself unavailable.
     const inProcessor = (action: NotificationActionOffer) =>
-      action.id !== "DECRYPT_AND_RETRY" && canRun(action);
+      action.id !== "DECRYPT" && canRun(action);
 
     const { primary, secondary, overflow } = promoteActions(
-      password("DECRYPT_AND_RETRY", "RETRY", "VIEW_FILE", "VIEW_IN_PROCESSOR"),
+      password("DECRYPT", "OPEN_IN_TOOL", "VIEW_FILE", "VIEW_IN_PROCESSOR"),
       inProcessor,
       knowsAction,
     );
 
     expect(primary?.id).toBe("VIEW_IN_PROCESSOR");
     expect(secondary).toBeNull();
-    expect(overflow.map((action) => action.id)).toEqual(["RETRY", "VIEW_FILE"]);
+    expect(overflow.map((action) => action.id)).toEqual(["OPEN_IN_TOOL", "VIEW_FILE"]);
   });
 
   it("drops a client action this device cannot perform, without inventing a reason", () => {
     // The document is gone from this browser: the actions disappear rather than fail on click.
     const { primary, overflow, withheldReasonKey } = promoteActions(
-      unknown("RETRY", "VIEW_FILE"),
+      unknown("OPEN_IN_TOOL", "VIEW_FILE"),
       () => false,
       knowsAction,
     );
@@ -233,10 +233,10 @@ describe("promoteActions", () => {
 
   it("skips an action id it has never heard of without touching the rest", () => {
     // The server ships a kind with a new action before this build knows what it means.
-    const list = [offer("QUARANTINE", "RESOLUTION"), ...unknown("RETRY")];
+    const list = [offer("QUARANTINE", "RESOLUTION"), ...unknown("OPEN_IN_TOOL")];
 
     expect(promoted(list)).toEqual({
-      primary: "RETRY",
+      primary: "OPEN_IN_TOOL",
       secondary: null,
       overflow: [],
       withheldReasonKey: null,
@@ -283,7 +283,7 @@ describe("promoteActions", () => {
         enabled: false,
         disabledReasonKey: CLOSED,
       }),
-      offer("DECRYPT_AND_RETRY", "RESOLUTION", {
+      offer("DECRYPT", "RESOLUTION", {
         enabled: false,
         disabledReasonKey: NO_DOCUMENT,
       }),

@@ -35,9 +35,11 @@ function notification(id: string): AppNotification {
 describe("QuickNavRailNotifications", () => {
   beforeEach(() => {
     window.localStorage.clear();
-    fetchNotifications
-      .mockReset()
-      .mockResolvedValue({ notifications: [], viewerReviewsTeam: true });
+    fetchNotifications.mockReset().mockResolvedValue({
+      notifications: [],
+      viewerReviewsTeam: true,
+      viewerKey: "viewer-a",
+    });
     h.notificationsAvailable = true;
   });
 
@@ -59,6 +61,7 @@ describe("QuickNavRailNotifications", () => {
     fetchNotifications.mockResolvedValue({
       notifications: [notification("a"), notification("b")],
       viewerReviewsTeam: true,
+      viewerKey: "viewer-a",
     });
 
     render(<QuickNavRailNotifications onToggle={() => {}} />);

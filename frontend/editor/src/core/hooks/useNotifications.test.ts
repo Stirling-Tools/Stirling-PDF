@@ -33,8 +33,15 @@ const {
 function feed(
   notifications: AppNotification[],
   viewerReviewsTeam = true,
+  viewerKey: string | null = VIEWER,
 ): FetchedNotifications {
-  return { notifications, viewerReviewsTeam };
+  return { notifications, viewerReviewsTeam, viewerKey };
+}
+
+const VIEWER = "viewer-a";
+
+function readThroughKeyFor(viewerKey: string): string {
+  return `stirling.notifications.readThroughAt.${viewerKey}`;
 }
 
 function notification(
@@ -152,6 +159,28 @@ describe("useNotifications", () => {
     expect(result.current.unreadCount).toBe(1);
   });
 
+  it("hides a member's unattended row even when its id happens to be stored here", async () => {
+    // A source-fed row's fileId is a content hash from another id space. Storage answering for it
+    // is a collision, not the document, so the row must go on being filtered as unresolvable.
+    hasLocalFile.mockResolvedValue(true);
+    fetchNotifications.mockResolvedValue(
+      feed(
+        [
+          notification("unattended", {
+            sourceId: "src-s3-invoices",
+            fileId: "collides-with-a-local-id",
+          }),
+        ],
+        false,
+      ),
+    );
+
+    const { result } = renderHook(() => useNotifications());
+
+    await waitFor(() => expect(fetchNotifications).toHaveBeenCalled());
+    expect(result.current.notifications).toHaveLength(0);
+  });
+
   it("shows a reviewer both rows, document here or not", async () => {
     // A reviewer keeps a row for a file they cannot open: it is how they see a policy needs fixing.
     hasLocalFile.mockImplementation((id: string) =>
@@ -216,9 +245,43 @@ describe("useNotifications", () => {
 
     expect(first.result.current.unreadCount).toBe(0);
     expect(second.result.current.unreadCount).toBe(0);
+    expect(window.localStorage.getItem(readThroughKeyFor(VIEWER))).toBe(
+      String(Date.parse("2026-08-05T00:00:00Z")),
+    );
+  });
+
+  it("keeps one viewer's read state off another's on a shared browser", async () => {
+    // A timestamp is legible to whoever reads it next, so an unscoped marker would leave the
+    // incoming user's older failures silently pre-read.
+    fetchNotifications.mockResolvedValue(feed([notification("a")]));
+    const first = renderHook(() => useNotifications());
+    await waitFor(() => expect(first.result.current.unreadCount).toBe(1));
+    await act(async () => first.result.current.markAllSeen());
+    expect(first.result.current.unreadCount).toBe(0);
+    first.unmount();
+
+    // Same browser, same rows, different signed-in viewer.
+    fetchNotifications.mockResolvedValue(
+      feed([notification("a")], true, "viewer-b"),
+    );
+    const second = renderHook(() => useNotifications());
+
+    await waitFor(() => expect(second.result.current.unreadCount).toBe(1));
+  });
+
+  it("marks nothing when the server names no viewer", async () => {
+    // Unscoped would be worse than unsaved: the next viewer here would inherit it.
+    fetchNotifications.mockResolvedValue(feed([notification("a")], true, null));
+    const { result } = renderHook(() => useNotifications());
+    await waitFor(() => expect(result.current.unreadCount).toBe(1));
+
+    await act(async () => result.current.markAllSeen());
+
     expect(
-      window.localStorage.getItem("stirling.notifications.readThroughAt"),
-    ).toBe(String(Date.parse("2026-08-05T00:00:00Z")));
+      Object.keys(window.localStorage).filter((key) =>
+        key.startsWith("stirling.notifications.readThroughAt"),
+      ),
+    ).toEqual([]);
   });
 
   it("keeps earlier rows read once the row that was newest has gone", async () => {
@@ -252,9 +315,7 @@ describe("useNotifications", () => {
 
     clearNotificationReadState();
     leaving.unmount();
-    expect(
-      window.localStorage.getItem("stirling.notifications.readThroughAt"),
-    ).toBeNull();
+    expect(window.localStorage.getItem(readThroughKeyFor(VIEWER))).toBeNull();
 
     // The next user's own row is older than the marker that was just cleared.
     fetchNotifications.mockResolvedValue(

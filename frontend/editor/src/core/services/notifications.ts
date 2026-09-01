@@ -54,12 +54,18 @@ export interface AppNotification {
 interface NotificationsResponse {
   notifications: AppNotification[];
   viewerReviewsTeam: boolean;
+  viewerKey: string;
 }
 
 export interface FetchedNotifications {
   notifications: AppNotification[];
   /** A reviewer keeps rows whose document this browser does not hold; a member does not. */
   viewerReviewsTeam: boolean;
+  /**
+   * Opaque id for the signed-in viewer, for scoping this browser's read state. Null when the
+   * server did not say, which must read as "cannot scope" rather than as a viewer of its own.
+   */
+  viewerKey: string | null;
 }
 
 /** Newest first. Empty rather than throwing, and defaulting to the least hiding. */
@@ -73,9 +79,10 @@ export async function fetchNotifications(
     return {
       notifications: response?.data?.notifications ?? [],
       viewerReviewsTeam: response?.data?.viewerReviewsTeam ?? true,
+      viewerKey: response?.data?.viewerKey || null,
     };
   } catch {
-    return { notifications: [], viewerReviewsTeam: true };
+    return { notifications: [], viewerReviewsTeam: true, viewerKey: null };
   }
 }
 
