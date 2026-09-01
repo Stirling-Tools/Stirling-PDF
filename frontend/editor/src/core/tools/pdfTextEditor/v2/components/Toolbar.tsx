@@ -185,9 +185,13 @@ function FormatGroup({ controller }: { controller: Controller }) {
       />
       <ColorInput
         size="xs"
-        w={fillPickerOpen ? 116 : 58}
+        w={fillPickerOpen ? 116 : 74}
         withEyeDropper={false}
         styles={{
+          // The swatch is decoration, not a target: left interactive it covers
+          // the whole of a narrow input and swallows the click that opens the
+          // picker. Clicks fall through to the input, which owns the gesture.
+          section: { pointerEvents: "none" },
           input: {
             color: fillPickerOpen ? undefined : "transparent",
             transition: "width 120ms ease-out",
