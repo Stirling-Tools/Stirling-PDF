@@ -238,9 +238,7 @@ const WetSignatureInput = ({
         <SegmentedControl
           value={signatureType}
           fullWidth
-          onChange={(value) =>
-            handleSignatureTypeChange(value as SignatureType)
-          }
+          onChange={(value) => handleSignatureTypeChange(value)}
           options={[
             { label: t("sign.type.canvas", "Draw"), value: "canvas", disabled },
             { label: t("sign.type.image", "Upload"), value: "image", disabled },

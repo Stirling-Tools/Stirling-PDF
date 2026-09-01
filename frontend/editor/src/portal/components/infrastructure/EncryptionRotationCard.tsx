@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Banner, Button, Card } from "@app/ui";
+import { Banner, Button, Card, Modal } from "@app/ui";
 import { RUNBOOK_ROTATION } from "@portal/api/storageEncryption";
 import { SectionHeader } from "@portal/components/infrastructure/SectionHeader";
 
@@ -28,13 +29,15 @@ export function EncryptionRotationCard({
   onRotate,
 }: EncryptionRotationCardProps) {
   const { t } = useTranslation();
+  const [confirming, setConfirming] = useState(false);
 
   return (
     <section>
       <Card padding="loose">
         <SectionHeader
           title={t("portal.infrastructure.encryption.rotation.heading")}
-          sub={t("portal.infrastructure.encryption.rotation.subheading")}
+          hint={t("portal.infrastructure.encryption.rotation.hint")}
+          hintLabel={t("portal.infrastructure.encryption.hintLabel")}
         />
 
         <div className="portal-enc__kv">
@@ -86,16 +89,12 @@ export function EncryptionRotationCard({
           <Banner tone="warning" description={actionError} />
         ) : null}
 
-        <p className="portal-enc__note">
-          {t("portal.infrastructure.encryption.rotation.keyNeverOverHttp")}
-        </p>
-
         <div className="portal-enc__actions">
           <Button
             variant="secondary"
             size="sm"
             disabled={pendingRows === 0 || rotating}
-            onClick={onRotate}
+            onClick={() => setConfirming(true)}
           >
             {t("portal.infrastructure.encryption.rotation.rewrap")}
           </Button>
@@ -110,6 +109,45 @@ export function EncryptionRotationCard({
             {t("portal.infrastructure.encryption.rotation.runbook")}
           </Button>
         </div>
+
+        <Modal
+          open={confirming}
+          onClose={() => setConfirming(false)}
+          width="md"
+          title={t("portal.infrastructure.encryption.rotation.confirm.title")}
+          footer={
+            <>
+              <Button variant="secondary" onClick={() => setConfirming(false)}>
+                {t("portal.infrastructure.encryption.rotation.confirm.cancel")}
+              </Button>
+              <Button
+                variant="primary"
+                onClick={() => {
+                  setConfirming(false);
+                  onRotate();
+                }}
+              >
+                {t("portal.infrastructure.encryption.rotation.confirm.confirm")}
+              </Button>
+            </>
+          }
+        >
+          <ul className="portal-enc__consequences">
+            <li>
+              {t("portal.infrastructure.encryption.rotation.confirm.rewraps", {
+                count: pendingRows,
+              })}
+            </li>
+            <li>
+              {t("portal.infrastructure.encryption.rotation.confirm.noFiles")}
+            </li>
+            <li>
+              {t(
+                "portal.infrastructure.encryption.rotation.confirm.rerunnable",
+              )}
+            </li>
+          </ul>
+        </Modal>
       </Card>
     </section>
   );

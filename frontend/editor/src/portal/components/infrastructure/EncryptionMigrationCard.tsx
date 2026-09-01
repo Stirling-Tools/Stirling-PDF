@@ -1,15 +1,15 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  ActionIcon,
   Banner,
   Button,
   Card,
   ProgressBar,
   StatTile,
+  Modal,
   StatusBadge,
-  Tooltip,
 } from "@app/ui";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { InfoHint } from "@portal/components/InfoHint";
 import type { StatusTone } from "@app/ui";
 import { SectionHeader } from "@portal/components/infrastructure/SectionHeader";
 import type {
@@ -57,6 +57,7 @@ export function EncryptionMigrationCard({
   const failed = status?.failed ?? 0;
   const fraction = total > 0 ? Math.min(processed / total, 1) : 0;
   const canStart = writeEnabled && plaintextFiles > 0 && state !== "RUNNING";
+  const [confirming, setConfirming] = useState(false);
 
   return (
     <section>
@@ -64,7 +65,8 @@ export function EncryptionMigrationCard({
         <div className="portal-enc__head">
           <SectionHeader
             title={t("portal.infrastructure.encryption.migration.heading")}
-            sub={t("portal.infrastructure.encryption.migration.subheading")}
+            hint={t("portal.infrastructure.encryption.migration.hint")}
+            hintLabel={t("portal.infrastructure.encryption.hintLabel")}
           />
           <StatusBadge tone={STATE_TONE[state]} size="sm">
             {t(`portal.infrastructure.encryption.migration.state.${state}`)}
@@ -119,24 +121,17 @@ export function EncryptionMigrationCard({
               />
               <StatTile
                 label={
-                  <span className="portal-enc__stat-label">
+                  <>
                     {t("portal.infrastructure.encryption.migration.skipped")}
-                    <Tooltip
+                    <InfoHint
                       content={t(
                         "portal.infrastructure.encryption.migration.skippedNote",
                       )}
-                    >
-                      <ActionIcon
-                        variant="quiet"
-                        size="sm"
-                        aria-label={t(
-                          "portal.infrastructure.encryption.migration.skippedHelp",
-                        )}
-                      >
-                        <LocalIcon icon="info-rounded" width="0.875rem" />
-                      </ActionIcon>
-                    </Tooltip>
-                  </span>
+                      label={t(
+                        "portal.infrastructure.encryption.migration.skippedHelp",
+                      )}
+                    />
+                  </>
                 }
                 value={skipped.toLocaleString()}
               />
@@ -172,26 +167,64 @@ export function EncryptionMigrationCard({
           </p>
         ) : null}
 
-        {/* Shown at IDLE too when a backlog remains: that is the state a run lost
-            to a restart leaves behind, so it is where the caveat explains most. */}
-        {state !== "IDLE" || plaintextFiles > 0 ? (
-          <p className="portal-enc__note">
-            {t("portal.infrastructure.encryption.migration.restartNote")}
-          </p>
-        ) : null}
-
         <div className="portal-enc__actions">
           <Button
             variant="primary"
             size="sm"
             disabled={!canStart || starting}
-            onClick={onStart}
+            onClick={() => setConfirming(true)}
           >
             {state === "FAILED" || state === "COMPLETED"
               ? t("portal.infrastructure.encryption.migration.runAgain")
               : t("portal.infrastructure.encryption.migration.start")}
           </Button>
         </div>
+
+        <Modal
+          open={confirming}
+          onClose={() => setConfirming(false)}
+          width="md"
+          title={t("portal.infrastructure.encryption.migration.confirm.title")}
+          footer={
+            <>
+              <Button variant="secondary" onClick={() => setConfirming(false)}>
+                {t("portal.infrastructure.encryption.migration.confirm.cancel")}
+              </Button>
+              <Button
+                variant="primary"
+                onClick={() => {
+                  setConfirming(false);
+                  onStart();
+                }}
+              >
+                {t(
+                  "portal.infrastructure.encryption.migration.confirm.confirm",
+                )}
+              </Button>
+            </>
+          }
+        >
+          <ul className="portal-enc__consequences">
+            <li>
+              {t(
+                "portal.infrastructure.encryption.migration.confirm.rewrites",
+                {
+                  count: plaintextFiles,
+                  formatted: plaintextFiles.toLocaleString(),
+                },
+              )}
+            </li>
+            {/* The reason this dialog exists: there is no stop control. */}
+            <li>
+              {t("portal.infrastructure.encryption.migration.confirm.noCancel")}
+            </li>
+            <li>
+              {t(
+                "portal.infrastructure.encryption.migration.confirm.throttled",
+              )}
+            </li>
+          </ul>
+        </Modal>
       </Card>
     </section>
   );

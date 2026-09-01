@@ -10,7 +10,6 @@ import {
   StatTile,
   StatusBadge,
 } from "@app/ui";
-import { useTier } from "@portal/contexts/TierContext";
 import { errorMessage } from "@portal/api/http";
 import {
   disableEncryptionKey,
@@ -28,6 +27,7 @@ import {
   type MigrationStatus,
   type StorageEncryptionStatus,
 } from "@portal/api/storageEncryption";
+import { InfoHint } from "@portal/components/InfoHint";
 import { SectionHeader } from "@portal/components/infrastructure/SectionHeader";
 import { EncryptionKeyTable } from "@portal/components/infrastructure/EncryptionKeyTable";
 import { EncryptionMigrationCard } from "@portal/components/infrastructure/EncryptionMigrationCard";
@@ -40,6 +40,13 @@ const MIGRATION_POLL_MS = 2000;
 export interface EncryptionPanelProps {
   /** Shows the cross-node propagation note when revoking. */
   clusterEnabled?: boolean;
+  /**
+   * Whether the licence records audit events (Enterprise). Supplied by the view
+   * from the backend's `runningEE` flag rather than read here, because the
+   * portal tier is derived from the SaaS account link and never reports
+   * Enterprise on a self-hosted install.
+   */
+  auditAvailable?: boolean;
 }
 
 /**
@@ -52,9 +59,9 @@ export interface EncryptionPanelProps {
  */
 export function EncryptionPanel({
   clusterEnabled = false,
+  auditAvailable = true,
 }: EncryptionPanelProps) {
   const { t } = useTranslation();
-  const { tier } = useTier();
 
   const [status, setStatus] = useState<StorageEncryptionStatus | null>(null);
   const [loadError, setLoadError] = useState<unknown>(null);
@@ -216,7 +223,8 @@ export function EncryptionPanel({
       <section className="portal-enc__stack">
         <SectionHeader
           title={t("portal.infrastructure.encryption.heading")}
-          sub={t("portal.infrastructure.encryption.subheading")}
+          hint={t("portal.infrastructure.encryption.subheading")}
+          hintLabel={t("portal.infrastructure.encryption.hintLabel")}
         />
         <Card padding="loose">
           <EmptyState
@@ -262,14 +270,15 @@ export function EncryptionPanel({
       <section className="portal-enc__head">
         <SectionHeader
           title={t("portal.infrastructure.encryption.heading")}
-          sub={t("portal.infrastructure.encryption.subheading")}
+          hint={t("portal.infrastructure.encryption.subheading")}
+          hintLabel={t("portal.infrastructure.encryption.hintLabel")}
         />
         <StatusBadge tone={writeStateTone} size="sm">
           {t(`portal.infrastructure.encryption.writeState.${writeStateKey}`)}
         </StatusBadge>
       </section>
 
-      {tier !== "enterprise" ? (
+      {!auditAvailable ? (
         <Banner
           tone="info"
           title={t("portal.infrastructure.encryption.auditNotice.title")}
@@ -305,7 +314,8 @@ export function EncryptionPanel({
         <Card padding="loose">
           <SectionHeader
             title={t("portal.infrastructure.encryption.coverage.heading")}
-            sub={t("portal.infrastructure.encryption.coverage.subheading")}
+            hint={t("portal.infrastructure.encryption.coverage.subheading")}
+            hintLabel={t("portal.infrastructure.encryption.hintLabel")}
           />
           <div className="portal-enc__coverage">
             <div className="portal-enc__coverage-tiles">
@@ -356,7 +366,10 @@ export function EncryptionPanel({
             <Card padding="loose">
               <SectionHeader
                 title={t("portal.infrastructure.encryption.masterKey.heading")}
-                sub={t("portal.infrastructure.encryption.masterKey.subheading")}
+                hint={t(
+                  "portal.infrastructure.encryption.masterKey.subheading",
+                )}
+                hintLabel={t("portal.infrastructure.encryption.hintLabel")}
               />
               {status.masterKeyFingerprint ? (
                 <>
@@ -370,6 +383,14 @@ export function EncryptionPanel({
                       <code ref={fingerprintRef}>
                         {status.masterKeyFingerprint}
                       </code>
+                      <InfoHint
+                        content={t(
+                          "portal.infrastructure.encryption.masterKey.compareNote",
+                        )}
+                        label={t(
+                          "portal.infrastructure.encryption.masterKey.fingerprintHelp",
+                        )}
+                      />
                       <Button
                         variant="quiet"
                         size="sm"
@@ -418,12 +439,6 @@ export function EncryptionPanel({
                       )}
                     </p>
                   ) : null}
-                  {/* Only meaningful next to an actual fingerprint. */}
-                  <p className="portal-enc__note">
-                    {t(
-                      "portal.infrastructure.encryption.masterKey.compareNote",
-                    )}
-                  </p>
                 </>
               ) : (
                 <p className="portal-enc__note">

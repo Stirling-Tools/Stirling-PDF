@@ -99,11 +99,22 @@ tasks:
           BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'
           OPEN: "true"
 
+  # Set SAAS_DEV_PROJECT_REF in app/.env.saas.local to pick the PR.
   dev:saas:
-    desc: "Start SaaS backend + frontend concurrently on free ports"
+    desc: "Start SaaS backend + frontend + engine against the current PR's preview branch"
     cmds:
       - task: dev:_all
-        vars: { FRONTEND: saas, BACKEND: saas }
+        vars: { FRONTEND: saas, BACKEND: saas, SAAS_ENV: dev }
+
+  staging:saas:
+    desc: "Start SaaS backend + frontend + engine against the shared v3 staging project"
+    cmds:
+      - task: dev:_all
+        vars:
+          FRONTEND: saas
+          BACKEND: saas
+          BACKEND_TASK: backend:staging:saas
+          SAAS_ENV: staging
 
   dev:all:
     desc: "Start backend + frontend + engine concurrently on free ports"
@@ -115,6 +126,9 @@ tasks:
     vars:
       FRONTEND: '{{.FRONTEND | default "proprietary"}}'
       BACKEND: '{{.BACKEND | default "proprietary"}}'
+      BACKEND_TASK: '{{.BACKEND_TASK | default (printf "backend:dev:%s" .BACKEND)}}'
+      # Only meaningful to the saas frontend; every other flavor ignores it.
+      SAAS_ENV: '{{.SAAS_ENV | default ""}}'
       PORTS:
         sh: '{{if eq OS "windows"}}{{.FIND_FREE_PORT_PS}} 8080 5173 5001{{else}}{{.FIND_FREE_PORT_SH}} 8080 5173 5001{{end}}'
       BACKEND_PORT: '{{index (splitList "\n" .PORTS) 0}}'
@@ -124,7 +138,7 @@ tasks:
       - task: engine:dev
         vars:
           PORT: '{{.ENGINE_PORT}}'
-      - task: 'backend:dev:{{.BACKEND}}'
+      - task: '{{.BACKEND_TASK}}'
         vars:
           PORT: '{{.BACKEND_PORT}}'
           AIENGINE_URL: 'http://localhost:{{.ENGINE_PORT}}'
@@ -134,6 +148,7 @@ tasks:
           PORT: '{{.FRONTEND_PORT}}'
           BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'
           OPEN: "true"
+          SAAS_ENV: '{{.SAAS_ENV}}'
 
   # ============================================================
   # Build
