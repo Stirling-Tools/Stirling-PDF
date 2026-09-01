@@ -1647,7 +1647,10 @@ function FileRow({
 // Re-export root constant for caller convenience
 export { ROOT_FOLDER_ID };
 
-/** A file listed straight off a mounted directory. */
+/**
+ * No stub behind it, so no selection, move, rename or delete: the disk owns the
+ * file and the only affordance is adding it to the workspace.
+ */
 function DiskFileCard({
   entry,
   onOpen,

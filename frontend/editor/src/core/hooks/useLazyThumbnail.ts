@@ -82,10 +82,7 @@ export function useLazyThumbnail(
   return thumb;
 }
 
-/**
- * Keyed by path + mtime + size, so an unchanged file never renders twice and an edited
- * one does.
- */
+// Keyed by path + mtime + size: an unchanged file never renders twice, an edited one does.
 const diskThumbCache = new Map<string, string>();
 // Bounded by bytes, not entries: image thumbnails are data URLs that track the
 // source, so 300 photos would pin gigabytes of strings for the process lifetime.

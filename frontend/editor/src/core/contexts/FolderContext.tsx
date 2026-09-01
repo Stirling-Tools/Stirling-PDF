@@ -280,7 +280,7 @@ function shouldStrandedReset(
 
 export function FolderProvider({ children }: FolderProviderProps) {
   const [storedFolders, setFolders] = useState<FolderRecord[]>([]);
-  // Subdirectories found inside mounts, keyed by parent. In memory only.
+  // Never persisted: a directory is its own record, so a listing rebuilds these.
   const [diskSubfolders, setDiskSubfolders] = useState<
     Map<FolderId, FolderRecord[]>
   >(() => new Map());

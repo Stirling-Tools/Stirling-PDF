@@ -322,7 +322,8 @@ export default function FileManagerView() {
     // Tab overrides folder navigation for Local/Recent/Shared.
     switch (currentTab) {
       case "local":
-        // Local means no server copy AND no folder membership - not both places.
+        // Both halves: a local file inside a browser folder belongs to that folder,
+        // not here as well.
         return allFiles.filter(
           (f) => f.remoteStorageId == null && (f.folderId ?? null) === null,
         );
@@ -452,7 +453,6 @@ export default function FileManagerView() {
     [foldersById],
   );
 
-  // Read-through: the directory is the source of truth, never ingested to show.
   const currentFolder = currentFolderId
     ? folders.foldersById.get(currentFolderId)
     : undefined;
@@ -694,7 +694,6 @@ export default function FileManagerView() {
       const target =
         currentTab === "all" || currentTab === "cloud" ? currentFolderId : null;
       const targetFolder = target ? folders.foldersById.get(target) : undefined;
-      // A mount's upload writes straight to disk, never through app storage.
       if (targetFolder && folderKind(targetFolder) === "local") {
         const { failedCount } = await writeIntoMount(
           targetFolder.directory,

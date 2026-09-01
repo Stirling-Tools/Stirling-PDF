@@ -46,7 +46,7 @@ export type FolderKind = "server" | "virtual" | "local";
 /** Persisted folder shape stored in IndexedDB. */
 export interface FolderRecord {
   id: FolderId;
-  /** Absent means `server`: rows predating kinds are all server folders. */
+  /** Read through {@link folderKind}, never directly. */
   kind?: FolderKind;
   name: string;
   parentFolderId: FolderId | null;
@@ -59,7 +59,7 @@ export interface FolderRecord {
   updatedAt: number;
 }
 
-/** The folder's kind. Absent means `server`: server DTOs and long-lived cached rows never carry one. */
+/** Absent means `server`: server DTOs and rows predating kinds never carry one. */
 export function folderKind(folder: Pick<FolderRecord, "kind">): FolderKind {
   return folder.kind ?? "server";
 }
