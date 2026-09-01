@@ -12,9 +12,8 @@ import {
 const LINE_TOLERANCE = 2;
 const GAP_FACTOR = 0.6;
 const SPACE_MIN_GAP = 1.5;
-const MIN_CHAR_WIDTH_FACTOR = 0.35;
-const MAX_CHAR_WIDTH_FACTOR = 1.25;
-const EXTRA_GAP_RATIO = 0.8;
+const SPACE_WIDTH_FALLBACK = 0.25;
+const SPACE_GAP_RATIO = 0.5;
 
 type FontMetrics = {
   unitsPerEm: number;
@@ -310,17 +309,6 @@ const getSpacingHint = (element: PdfJsonTextElement): number => {
   return Math.max(characterSpacing, 0);
 };
 
-const estimateCharWidth = (
-  element: PdfJsonTextElement,
-  avgFontSize: number,
-  metrics?: FontMetricsMap,
-): number => {
-  const rawWidth = getWidth(element, metrics);
-  const minWidth = avgFontSize * MIN_CHAR_WIDTH_FACTOR;
-  const maxWidth = avgFontSize * MAX_CHAR_WIDTH_FACTOR;
-  return Math.min(Math.max(rawWidth, minWidth), maxWidth);
-};
-
 const mergeBounds = (bounds: BoundingBox[]): BoundingBox => {
   if (bounds.length === 0) {
     return { left: 0, right: 0, top: 0, bottom: 0 };
@@ -344,21 +332,21 @@ const shouldInsertSpace = (
   const prevRight = getX(prev) + getWidth(prev, metrics);
   const trailingGap = Math.max(0, getX(current) - prevRight);
   const avgFontSize = (getFontSize(prev) + getFontSize(current)) / 2;
-  const baselineAdvance = Math.max(0, getX(current) - getX(prev));
-  const charWidthEstimate = estimateCharWidth(prev, avgFontSize, metrics);
-  const inferredGap = Math.max(0, baselineAdvance - charWidthEstimate);
-  const spacingHint = Math.max(
+
+  // Runs carry their own spaces: the extractor only breaks a run where the text
+  // state changes, which happens mid-word whenever the producer swaps font for
+  // a single glyph (non-WinAnsi characters such as "ő"/"ű" come from a fallback
+  // font). So a boundary is a word break only when the geometry shows one, and
+  // the yardstick is the font's own space: half of it is the usual threshold
+  // for deciding a gap was meant to be read as a space.
+  const spaceWidth = Math.max(
     SPACE_MIN_GAP,
     getSpacingHint(prev),
     getSpacingHint(current),
-    avgFontSize * GAP_FACTOR,
+    avgFontSize * SPACE_WIDTH_FALLBACK,
   );
 
-  if (trailingGap > spacingHint) {
-    return true;
-  }
-
-  if (inferredGap > spacingHint * EXTRA_GAP_RATIO) {
+  if (trailingGap > spaceWidth * SPACE_GAP_RATIO) {
     return true;
   }
 
