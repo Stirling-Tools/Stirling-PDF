@@ -319,6 +319,14 @@
   gap: 1rem;
 }
 
+/* Stands in for the rows outside the rendered window, so the scrollbar reflects the
+   whole folder. Spans every column: in the grid a spacer sharing a row with cards
+   would be laid out beside them instead of above. */
+.files-page-virtual-pad {
+  grid-column: 1 / -1;
+  pointer-events: none;
+}
+
 .files-page-list {
   display: flex;
   flex-direction: column;

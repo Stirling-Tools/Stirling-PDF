@@ -29,6 +29,10 @@ import {
 } from "@app/types/folder";
 import type { DiskFileEntry } from "@app/services/localFolderContents";
 import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
+import {
+  useVirtualFileRows,
+  rowHeightPx,
+} from "@app/components/filesPage/useVirtualFileRows";
 import { StirlingFileStub } from "@app/types/fileContext";
 import { formatFileSize, getFileDate } from "@app/utils/fileUtils";
 import {
@@ -560,9 +564,21 @@ function GridView({
   actions: FileGridActions;
   policyBadges: Map<string, FileItemPolicyRef[]>;
 }) {
+  const { range, padTop, padBottom, setContainer } = useVirtualFileRows(
+    entries.length,
+    rowHeightPx(true),
+    true,
+  );
   return (
-    <div className="files-page-grid" role="list">
-      {entries.map((entry) => {
+    <div className="files-page-grid" role="list" ref={setContainer}>
+      {padTop > 0 && (
+        <div
+          aria-hidden="true"
+          className="files-page-virtual-pad"
+          style={{ height: padTop }}
+        />
+      )}
+      {entries.slice(range.start, range.end).map((entry) => {
         if (entry.kind === "folder" && entry.folder) {
           return (
             <FolderCard
@@ -608,6 +624,13 @@ function GridView({
         }
         return null;
       })}
+      {padBottom > 0 && (
+        <div
+          aria-hidden="true"
+          className="files-page-virtual-pad"
+          style={{ height: padBottom }}
+        />
+      )}
     </div>
   );
 }
@@ -1210,8 +1233,13 @@ function ListView({
     },
   });
 
+  const { range, padTop, padBottom, setContainer } = useVirtualFileRows(
+    entries.length,
+    rowHeightPx(false),
+    false,
+  );
   return (
-    <div className="files-page-list" role="grid">
+    <div className="files-page-list" role="grid" ref={setContainer}>
       {/* Each direct child is a columnheader: a role="row" may only own cells, so
           the sort controls and the select-all box have to sit inside one. */}
       <div className="files-page-list-row is-header" role="row">
@@ -1256,7 +1284,14 @@ function ListView({
         </span>
         <span aria-hidden="true" />
       </div>
-      {entries.map((entry) => {
+      {padTop > 0 && (
+        <div
+          aria-hidden="true"
+          className="files-page-virtual-pad"
+          style={{ height: padTop }}
+        />
+      )}
+      {entries.slice(range.start, range.end).map((entry) => {
         if (entry.kind === "folder" && entry.folder) {
           return (
             <FolderRow
@@ -1302,6 +1337,13 @@ function ListView({
         }
         return null;
       })}
+      {padBottom > 0 && (
+        <div
+          aria-hidden="true"
+          className="files-page-virtual-pad"
+          style={{ height: padBottom }}
+        />
+      )}
     </div>
   );
 }

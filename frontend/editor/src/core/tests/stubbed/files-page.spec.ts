@@ -856,4 +856,52 @@ test.describe("Files page", () => {
       expect(after).toBeGreaterThanOrEqual(before + 24);
     });
   });
+
+  test.describe("Long lists", () => {
+    test.use({ autoGoto: false });
+
+    /**
+     * A folder can hold thousands of files, so the grid renders a window of them plus
+     * a spacer at each end rather than the whole list. Needs a real browser: without
+     * layout the window stands down and everything renders, which is the intended
+     * fallback but proves nothing about the windowing.
+     */
+    test("renders a window of a long list, not all of it", async ({ page }) => {
+      const COUNT = 400;
+      await stubStorageApis(page);
+      await seedFiles(
+        page,
+        Array.from({ length: COUNT }, (_, i) => ({
+          id: `bulk-${i}`,
+          name: `bulk-${String(i).padStart(4, "0")}.pdf`,
+          remoteStorageId: null,
+        })),
+      );
+      await gotoFilesPage(page);
+
+      const cards = page.locator(
+        ".files-page-card:not(.files-page-skeleton-card)",
+      );
+      const rendered = await cards.count();
+      expect(rendered).toBeGreaterThan(0);
+      expect(rendered).toBeLessThan(COUNT / 2);
+
+      // The spacers stand in for the rest, so the scroll height still reflects the
+      // whole folder rather than only what is mounted.
+      const scroller = page.locator(".files-page-content");
+      const metrics = await scroller.evaluate((el) => ({
+        scrollHeight: el.scrollHeight,
+        clientHeight: el.clientHeight,
+      }));
+      expect(metrics.scrollHeight).toBeGreaterThan(metrics.clientHeight * 3);
+
+      // Scrolling to the end swaps the window rather than growing it.
+      const firstBefore = await cards.first().textContent();
+      await scroller.evaluate((el) => el.scrollTo({ top: el.scrollHeight }));
+      await expect
+        .poll(async () => cards.first().textContent(), { timeout: 5_000 })
+        .not.toBe(firstBefore);
+      expect(await cards.count()).toBeLessThan(COUNT / 2);
+    });
+  });
 });
