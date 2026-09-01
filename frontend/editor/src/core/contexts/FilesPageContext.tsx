@@ -373,7 +373,8 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (targetKind === "virtual") {
-        // Browser-owned, so membership is too: local files just point folderId at it.
+        // A browser-owned folder cannot hold server files: the next sync would snap
+        // them back, so they are left where they are and reported.
         if (cloudFiles.length > 0) {
           folders.setError(
             t(

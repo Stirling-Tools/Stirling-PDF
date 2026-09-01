@@ -11,7 +11,6 @@ interface FileOriginBadgeProps {
   origin: FileOrigin;
   /** Compact (icon-only) vs full (icon + text). */
   compact?: boolean;
-  /** Override the hover text. */
   tooltip?: string;
 }
 

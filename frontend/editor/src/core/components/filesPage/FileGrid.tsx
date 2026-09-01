@@ -116,7 +116,6 @@ interface FileGridProps {
   onOpenFolder: (id: FolderId) => void;
   /** "Add to workspace". */
   onOpenFile: (file: StirlingFileStub) => void;
-  /** Open a file listed straight from a mounted directory. */
   onOpenDiskFile?: (entry: DiskFileEntry) => void;
   onMoveFiles: (
     fileIds: FileId[],

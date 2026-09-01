@@ -7,7 +7,6 @@ export interface DiskFileEntry {
   lastModified: number;
 }
 
-/** One subdirectory inside a mounted directory. */
 export interface DiskDirEntry {
   path: string;
   name: string;
@@ -31,7 +30,6 @@ export async function listDirectory(
   return null;
 }
 
-/** Create a subdirectory inside a mounted directory. */
 export async function makeDiskDirectory(
   _parent: string,
   _name: string,

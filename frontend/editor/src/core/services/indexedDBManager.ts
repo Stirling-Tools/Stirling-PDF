@@ -494,7 +494,6 @@ export const DATABASE_CONFIGS = {
           { name: "createdAt", keyPath: "createdAt", unique: false },
         ],
       },
-      // Folders mounted from a directory on the machine (kind "local").
       {
         name: "local_folders",
         keyPath: "id",

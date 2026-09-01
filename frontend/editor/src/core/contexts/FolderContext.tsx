@@ -115,7 +115,6 @@ interface FolderContextValue {
   deleteFolder: (id: FolderId) => Promise<FolderId[]>;
   /** Idempotent per directory: mounting one already mounted returns its record. */
   mountLocalFolder: (directory: string, name: string) => Promise<FolderRecord>;
-  /** Subdirectories a mount listing found under `parentId`. */
   registerDiskSubfolders: (parentId: FolderId, records: FolderRecord[]) => void;
   /**
    * Rebuild the records behind a disk-subfolder id, for a link arriving before any
@@ -327,7 +326,7 @@ export function FolderProvider({ children }: FolderProviderProps) {
   const refresh = useCallback(async () => {
     setLoading(true);
     try {
-      // Two systems of record behind one list; kind says which rules a row follows.
+      // Three systems of record behind one list; kind says which rules a row follows.
       const [server, virtual, local] = await Promise.all([
         folderStorage.getAllFolders(),
         virtualFolderStorage.getAllFolders(),
@@ -698,7 +697,6 @@ export function FolderProvider({ children }: FolderProviderProps) {
     async (id: FolderId, name: string) => {
       const kind = requireKind(id);
       if (kind === "local") {
-        // The record's name is the directory's; renaming it is the filesystem's job.
         throw new Error("A local folder takes its name from its directory");
       }
       if (kind === "virtual") {
@@ -723,7 +721,6 @@ export function FolderProvider({ children }: FolderProviderProps) {
   const moveFolder = useCallback(
     async (id: FolderId, newParentId: FolderId | null) => {
       const kind = requireKind(id);
-      // One subtree, one kind: to the root or under its own kind, never across.
       if (newParentId !== null && requireKind(newParentId) !== kind) {
         throw new Error("Folders can only move within their own kind");
       }
@@ -760,7 +757,6 @@ export function FolderProvider({ children }: FolderProviderProps) {
     ) => {
       const kind = requireKind(id);
       if (kind === "local") {
-        // Nothing persists a local folder's cosmetics yet.
         throw new Error("Local folders cannot be recoloured yet");
       }
       if (kind === "virtual") {
@@ -799,7 +795,6 @@ export function FolderProvider({ children }: FolderProviderProps) {
       const kind = requireKind(id);
       if (kind === "local") {
         if (isDiskFolderId(id)) {
-          // A subdirectory is the disk's; the app never deletes directories.
           throw new Error(
             "Subfolders of a mounted directory are removed on disk",
           );

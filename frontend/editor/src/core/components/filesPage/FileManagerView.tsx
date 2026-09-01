@@ -529,7 +529,6 @@ export default function FileManagerView() {
     t,
   ]);
 
-  // The one moment bytes leave the disk, and only because the user asked.
   const openDiskFile = useCallback(
     async (entry: DiskFileEntry) => {
       try {
