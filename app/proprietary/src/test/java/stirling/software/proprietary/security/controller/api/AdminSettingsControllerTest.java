@@ -108,14 +108,14 @@ class AdminSettingsControllerTest {
         @Test
         @DisplayName("merges pending changes when includePending is true")
         void mergesPendingChanges() {
-            putPending("ui.logoStyle", "modern");
+            putPending("ui.appNameNavbar", "Custom Name");
 
             ResponseEntity<?> response = controller.getSettings(true);
 
             assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
             Map<?, ?> body = (Map<?, ?>) response.getBody();
             Map<?, ?> ui = (Map<?, ?>) body.get("ui");
-            assertThat(ui.get("logoStyle")).isEqualTo("modern");
+            assertThat(ui.get("appNameNavbar")).isEqualTo("Custom Name");
         }
 
         @Test
@@ -490,14 +490,14 @@ class AdminSettingsControllerTest {
         @Test
         @DisplayName("returns value for an existing key")
         void existingKey() {
-            applicationProperties.getUi().setLogoStyle("modern");
+            applicationProperties.getUi().setAppNameNavbar("Custom Name");
 
-            ResponseEntity<?> response = controller.getSettingValue("ui.logoStyle");
+            ResponseEntity<?> response = controller.getSettingValue("ui.appNameNavbar");
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             SettingValueResponse body = (SettingValueResponse) response.getBody();
-            assertThat(body.getKey()).isEqualTo("ui.logoStyle");
-            assertThat(body.getValue()).isEqualTo("modern");
+            assertThat(body.getKey()).isEqualTo("ui.appNameNavbar");
+            assertThat(body.getValue()).isEqualTo("Custom Name");
         }
 
         @Test

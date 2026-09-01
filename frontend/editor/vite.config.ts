@@ -330,13 +330,9 @@ export default defineConfig(async ({ mode, command }) => {
             dest: "pdfjs/standard_fonts",
           },
           {
-            // Brand assets live in core; the editor serves them by URL per
-            // variant, so copy each set to the /{variant}-logo path its
-            // manifests, index.html and useLogoAssets resolve against.
-            src: "src/core/assets/brand/classic-logo/*",
-            dest: "classic-logo",
-          },
-          {
+            // Brand assets live in core; the editor serves them by URL, so
+            // copy the set to the /modern-logo path its manifest, index.html
+            // and useLogoAssets resolve against.
             src: "src/core/assets/brand/modern-logo/*",
             dest: "modern-logo",
           },
