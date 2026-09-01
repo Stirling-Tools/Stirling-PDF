@@ -73,6 +73,15 @@ function readSwipeHintSeen(): boolean {
   }
 }
 
+/**
+ * The path this last derived a view from. Module scope on purpose: HomePage remounts
+ * (a share link, a login bounce, a Suspense boundary resolving) and a per-mount ref
+ * would read the unchanged path as a fresh arrival, re-imposing the library over a
+ * view the user had just picked. Reset by a real page load, which is when a path does
+ * need deriving again.
+ */
+let lastSyncedPath: string | null = null;
+
 function readPersistedSidebarCollapsed(): boolean {
   try {
     return (
@@ -231,10 +240,9 @@ export default function HomePage() {
 
   // Path moved, so the path is the cause: arrival, back/forward, or a deliberate
   // navigate. Mount included, which is what seeds a deep link.
-  const syncedPathRef = useRef<string | null>(null);
   useEffect(() => {
-    if (syncedPathRef.current === location.pathname) return;
-    syncedPathRef.current = location.pathname;
+    if (lastSyncedPath === location.pathname) return;
+    lastSyncedPath = location.pathname;
     if (location.pathname.startsWith("/files")) {
       if (navigationState.workbench !== "myFiles") {
         actions.setWorkbench("myFiles");

@@ -1,6 +1,13 @@
 import React from "react";
 
-export type WorkbenchBarSection = "top" | "middle" | "bottom" | "tool-panel";
+/** "bar" renders in the bar's own row beside the view switcher; top/middle/bottom
+ *  are lanes of the retractable tool row beneath it. */
+export type WorkbenchBarSection =
+  | "bar"
+  | "top"
+  | "middle"
+  | "bottom"
+  | "tool-panel";
 
 export type WorkbenchBarAction = () => void;
 

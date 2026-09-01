@@ -20,6 +20,11 @@ test.describe("The file library behaves like the other views", () => {
 
     await railButton(page, /^File library$/i).click();
     await expect(page).toHaveURL(/\/files/);
+    // The path leads the view by a render, so wait for the library itself: clicking
+    // the next control before it mounts races its own arrival.
+    await expect(page.getByRole("tree", { name: /Folders/i })).toBeVisible({
+      timeout: 15_000,
+    });
 
     // Reader sets the viewer workbench. The path leaving /files is that view change
     // reaching the URL - which is what the old reconciler undid.
