@@ -21,14 +21,15 @@ import stirling.software.proprietary.audit.AuditContext;
 import stirling.software.proprietary.billing.DocumentUnitCalculator.FileSize;
 
 /**
- * Meters + audits a client-side Automate run so a browser-run workflow bills like the equivalent
- * server-side policy. Side-effect only; does no processing itself. The frontend dispatches this
- * once, after the run completes.
+ * Meters + audits a client-side automation run so a browser-run automation bills like the
+ * equivalent server-side policy. The meter endpoint for every automation that executes in
+ * the browser (rather than through the billing interceptors). Side-effect only; does no
+ * processing itself.
  */
 @Slf4j
 @Hidden
 @RestController
-@RequestMapping("/api/v1/automate")
+@RequestMapping("/api/v1/automation")
 public class AutomationMeterController {
 
     /** Cap on input documents accepted per call, guarding against a hostile client payload. */
@@ -45,10 +46,11 @@ public class AutomationMeterController {
 
     @PostMapping("/meter")
     @Operation(
-            summary = "Meter a client-side Automate run",
+            summary = "Meter a client-side automation run",
             description =
-                    "Records billing + audit for an automation performed in the browser. Does no"
-                            + " processing itself. Dispatched by the frontend, not for direct use.")
+                    "Records billing + audit for an automation performed in the browser (the"
+                            + " Automate tool or the local classification pass). Does no processing"
+                            + " itself. Dispatched by the frontend, not for direct use.")
     public ResponseEntity<Void> meterAutomationRun(
             @RequestBody(required = false) AutomationMeterRequest body,
             HttpServletRequest request) {

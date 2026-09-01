@@ -10,7 +10,7 @@ import { useClassificationEnabled } from "@app/hooks/useClassificationEnabled";
 import { scheduleIdle } from "@app/utils/scheduleIdle";
 import { usePolicies } from "@app/hooks/usePolicies";
 import { classifyFileHeuristically } from "@app/services/heuristic/heuristicClassification";
-import { meterClassificationRun } from "@app/services/classificationMeter";
+import { meterAutomationRun } from "@app/services/automationMeter";
 import {
   isDispatched,
   markDispatched,
@@ -28,6 +28,9 @@ import { CLASSIFICATION_CATEGORY_ID } from "@app/data/classificationPolicy";
  * would tell the auto-run the policy had already run and kill the escalation entirely.
  */
 export const LOCAL_METER_CATEGORY = `${CLASSIFICATION_CATEGORY_ID}:local-meter`;
+/** Audit step label for a metered classify run; mirrors the AI classify tool so both paths read
+ *  alike in the trail. */
+const CLASSIFY_STEP = "/api/v1/ai/tools/classify-and-label";
 /** Files classified per idle pass, so a large library drains over several ticks. */
 const CLASSIFY_BATCH = 3;
 /** How long to wait for an upload's bytes to land in IndexedDB (20 × 250ms ≈ 5s).
@@ -108,6 +111,7 @@ export function useClientSideClassification(): void {
             stub.id,
             stub.name,
             stub.size ?? 0,
+            stub.processedFile?.totalPages ?? 0,
           );
           // Bytes never landed (file removed mid-wait): leave undelivered so a
           // reload (or new version) retries; the claim stops churn this session.
@@ -149,6 +153,7 @@ async function classifyStub(
   fileId: FileId,
   fileName: string,
   fileSize: number,
+  pageCount: number,
 ): Promise<{ labels: string[]; confidence: HeuristicConfidence } | null> {
   let file: StirlingFile | null = null;
   for (let i = 0; i < FILE_WAIT_TRIES; i++) {
@@ -202,10 +207,10 @@ async function classifyStub(
     // Meter on the first classification only; a healing re-run of an undelivered
     // result (already dispatched) is not a new billable run.
     if (!alreadyMetered) {
-      meterClassificationRun({
-        policyName: "Classification",
-        documentCount: 1,
-        labels,
+      meterAutomationRun({
+        automationName: "Classification",
+        operations: [CLASSIFY_STEP],
+        inputs: [{ pages: pageCount, bytes: fileSize }],
       });
     }
     markDispatched(LOCAL_METER_CATEGORY, fileId);

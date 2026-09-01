@@ -43,7 +43,7 @@ test("a 10-file upload wave classifies every file into its group", async ({
   await page.route("**/api/v1/policies", (route) =>
     route.fulfill({ json: [SEEDED_POLICY] }),
   );
-  await page.route("**/api/v1/policies/classify/meter", (route) =>
+  await page.route("**/api/v1/automation/meter", (route) =>
     route.fulfill({ status: 202, body: "" }),
   );
   await page.goto("/editor", {

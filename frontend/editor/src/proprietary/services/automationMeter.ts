@@ -1,4 +1,4 @@
-// Meters an in-browser Automate run for billing/audit.
+// Meters an in-browser automation run.
 
 import apiClient from "@app/services/apiClient";
 import { type AutomationMeterPayload } from "@core/services/automationMeter";
@@ -10,7 +10,7 @@ export {
 
 export function meterAutomationRun(payload: AutomationMeterPayload): void {
   void apiClient
-    .post(`/api/v1/automate/meter`, payload, { suppressErrorToast: true })
+    .post(`/api/v1/automation/meter`, payload, { suppressErrorToast: true })
     .catch(() => {
       // Best-effort billing; the automation already succeeded in the browser.
     });
