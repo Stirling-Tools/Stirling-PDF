@@ -8849,9 +8849,6 @@ labelsHeading = "Classification labels"
 noTools = "Enable at least one tool in the workflow first."
 saveFailed = "Couldn't save the pipeline. Please try again."
 
-[portal.policies.wizard.output]
-heading = "Output & run"
-
 [portal.policies.wizard.output.filenameRule]
 autoNumber = "Auto-number"
 label = "Filename rule"
@@ -8872,10 +8869,6 @@ upload = "Upload"
 
 [portal.policies.wizard.settings]
 heading = "Settings"
-
-[portal.policies.wizard.sources]
-heading = "Sources"
-loading = "Loading sources…"
 
 [portal.policies.wizard.tabs]
 ariaLabel = "Setup steps"

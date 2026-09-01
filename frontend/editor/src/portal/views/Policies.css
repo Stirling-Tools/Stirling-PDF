@@ -281,26 +281,6 @@
   margin-top: 0.75rem;
 }
 
-/* Sources picker */
-/* Selectable source tiles: a vertical stack of full-width shared Buttons
-   (icon · name · check). Layout is the Button's own leftSection/label/
-   rightSection — only the selected border/tint is added here. */
-.portal-policies__sources {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.portal-policies__source--on {
-  border-color: var(--c-primary);
-}
-
-.portal-policies__source-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
 .portal-policies__link {
   border: none;
   background: none;

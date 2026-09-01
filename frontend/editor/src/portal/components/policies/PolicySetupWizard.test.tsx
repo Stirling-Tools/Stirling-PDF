@@ -32,11 +32,6 @@ vi.mock("react-i18next", () => ({
   initReactI18next: { type: "3rdParty", init: vi.fn() },
 }));
 
-const fetchSources = vi.fn();
-vi.mock("@portal/api/sources", () => ({
-  fetchSources: () => fetchSources(),
-}));
-
 const fetchIntegrations = vi.fn();
 vi.mock("@portal/api/integrations", () => ({
   fetchIntegrations: () => fetchIntegrations(),
@@ -89,7 +84,6 @@ async function submitWizard(saveLabel: string) {
 
 describe("PolicySetupWizard", () => {
   beforeEach(() => {
-    fetchSources.mockResolvedValue({ sources: [] });
     fetchIntegrations.mockResolvedValue([]);
   });
 

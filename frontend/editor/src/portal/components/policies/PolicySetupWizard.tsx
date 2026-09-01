@@ -1,11 +1,6 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import CheckIcon from "@mui/icons-material/Check";
 import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
-import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
-import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
-import CloudOutlinedIcon from "@mui/icons-material/CloudOutlined";
-import StorageOutlinedIcon from "@mui/icons-material/StorageOutlined";
 import {
   Banner,
   Button,
@@ -34,7 +29,6 @@ import {
   type PolicyToolStep,
 } from "@app/policies/operations";
 import { resolveRunOn } from "@app/policies/runOn";
-import { useSources } from "@portal/queries/sources";
 import { fetchIntegrations } from "@portal/api/integrations";
 import { errorMessage } from "@portal/api/http";
 import { useAsync } from "@portal/hooks/useAsync";
@@ -45,21 +39,6 @@ import { PolicyWatermarkConfig } from "@app/components/policies/PolicyWatermarkC
 import { PolicyPurviewConfig } from "@portal/components/policies/PolicyPurviewConfig";
 import { ClassificationLabelsSection } from "@portal/components/policies/ClassificationLabelsSection";
 import "@portal/views/Policies.css";
-
-/** Outline icon for a source tile, keyed by the backend source `type`. */
-function sourceIcon(type: string): ReactNode {
-  const sx = { fontSize: "1.1rem" } as const;
-  switch (type) {
-    case "editor":
-      return <EditOutlinedIcon sx={sx} />;
-    case "folder":
-      return <FolderOutlinedIcon sx={sx} />;
-    case "s3":
-      return <CloudOutlinedIcon sx={sx} />;
-    default:
-      return <StorageOutlinedIcon sx={sx} />;
-  }
-}
 
 interface PolicySetupWizardProps {
   /** The category being configured, or null when closed. */
@@ -280,36 +259,6 @@ function PolicySetupWizardBody({
   const [fieldValues, setFieldValues] = useState(() =>
     resolveFieldValues(entry),
   );
-  // Real sources only; editor participation is its own flag, not an entry here.
-  const [sources, setSources] = useState<string[]>(() =>
-    (policy?.state.sources ?? []).filter((s) => s !== "editor"),
-  );
-  // Whether the policy runs in the editor. Defaults on for a new policy (the common case);
-  // on edit it comes straight from the stored flag, never re-derived from the sources list.
-  const [runsOnEditor, setRunsOnEditor] = useState<boolean>(
-    policy?.state.runsOnEditor ?? true,
-  );
-
-  const sourcesAsync = useSources();
-  const availableSources = useMemo(() => {
-    const backendSources = (sourcesAsync.data?.sources ?? []).filter(
-      (s) => s.status !== "disabled",
-    );
-    // The editor is always an available source. The backend now returns it as a
-    // virtual source too, so take that when present (avoids a duplicate tile) and
-    // otherwise fall back to a synthetic one; keep it first, selected by default.
-    const editorSource = backendSources.find((s) => s.id === "editor") ?? {
-      id: "editor",
-      name: t("portal.sources.types.editor.label"),
-      type: "editor",
-      status: "active" as const,
-      referenceCount: 0,
-      referencingPolicies: [],
-      config: [],
-      docsTotal: null,
-    };
-    return [editorSource, ...backendSources.filter((s) => s.id !== "editor")];
-  }, [sourcesAsync.data, t]);
   // Document-type scoping has no UI; preserve any saved scope on edit and
   // default new policies to all document types.
   const [scopeTypes] = useState<string[]>(policy?.state.scopeTypes ?? []);
@@ -381,18 +330,6 @@ function PolicySetupWizardBody({
     );
   }
 
-  function toggleSource(id: string) {
-    // The editor is not a real source: its tile toggles the runsOnEditor flag instead of
-    // adding "editor" to the sources list.
-    if (id === "editor") {
-      setRunsOnEditor((on) => !on);
-      return;
-    }
-    setSources((prev) =>
-      prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id],
-    );
-  }
-
   /** The wizard's current state as a submit result: shared by Save and Customise. */
   function collectResult(): PolicySetupResult {
     const steps: PipelineStep[] = enabledTools.map((tl) =>
@@ -400,9 +337,12 @@ function PolicySetupWizardBody({
     );
     return {
       required,
-      runsOnEditor,
+      // A template always runs in the editor. A pipeline takes exactly one input, and the simple
+      // wizard has no field to bind a stored source, so real sources never applied here; anyone
+      // wanting a folder or bucket source uses Customise, which drops into the full builder.
+      runsOnEditor: true,
       fieldValues,
-      sources,
+      sources: [],
       scopeTypes,
       reviewerEmail,
       outputMode,
@@ -634,170 +574,112 @@ function PolicySetupWizardBody({
             </>
           )}
 
-          <h3 className="portal-policies__wizard-heading">
-            {t("portal.policies.wizard.sources.heading")}
-          </h3>
-          {sourcesAsync.loading && !sourcesAsync.data ? (
-            <p className="portal-policies__sources-loading">
-              {t("portal.policies.wizard.sources.loading")}
-            </p>
-          ) : (
-            // The backend always returns the editor as a virtual source, so the
-            // loaded list is never empty - no "no sources" state exists.
-            <div className="portal-policies__sources">
-              {availableSources.map((src) => {
-                const on =
-                  src.id === "editor" ? runsOnEditor : sources.includes(src.id);
-                return (
-                  <Button
-                    key={src.id}
-                    variant={on ? "secondary" : "quiet"}
-                    justify="between"
-                    fullWidth
-                    className={
-                      "portal-policies__source" +
-                      (on ? " portal-policies__source--on" : "")
-                    }
-                    // The check keeps its slot when unselected (hidden) so the
-                    // icon + name stay put whether or not the tile is selected.
-                    rightSection={
-                      <CheckIcon
-                        sx={{
-                          fontSize: "1.1rem",
-                          visibility: on ? "visible" : "hidden",
-                        }}
-                      />
-                    }
-                    onClick={() => toggleSource(src.id)}
-                    aria-pressed={on}
-                  >
-                    <span className="portal-policies__source-label">
-                      {sourceIcon(src.type)}
-                      {src.name}
-                    </span>
-                  </Button>
-                );
-              })}
-            </div>
-          )}
-
-          <h3 className="portal-policies__wizard-heading">
-            {t("portal.policies.wizard.output.heading")}
-          </h3>
           <div className="portal-policies__fields">
-            {runsOnEditor && (
-              <>
-                <FormField
-                  label={t("portal.policies.wizard.output.runOn.label")}
-                  helperText={t("portal.policies.wizard.output.runOn.helper")}
-                >
-                  <Select
+            <FormField
+              label={t("portal.policies.wizard.output.runOn.label")}
+              helperText={t("portal.policies.wizard.output.runOn.helper")}
+            >
+              <Select
+                inputSize="sm"
+                value={runOn}
+                onChange={(value) => setRunOn(resolveRunOn(value, category.id))}
+                options={[
+                  {
+                    value: "upload",
+                    label: t("portal.policies.wizard.output.runOn.upload"),
+                  },
+                  {
+                    value: "export",
+                    label: t("portal.policies.wizard.output.runOn.export"),
+                  },
+                ]}
+              />
+            </FormField>
+            <FormField
+              label={t("portal.policies.wizard.output.outputAs.label")}
+            >
+              <Select
+                inputSize="sm"
+                value={outputMode}
+                onChange={(value) => {
+                  const mode = (value ?? "new_file") as
+                    | "new_file"
+                    | "new_version";
+                  setOutputMode(mode);
+                  // Auto-number only applies to separate new files.
+                  if (
+                    mode === "new_version" &&
+                    outputNamePosition === "auto-number"
+                  ) {
+                    setOutputNamePosition("suffix");
+                  }
+                }}
+                options={[
+                  {
+                    value: "new_version",
+                    label: t(
+                      "portal.policies.wizard.output.outputAs.newVersion",
+                    ),
+                  },
+                  {
+                    value: "new_file",
+                    label: t("portal.policies.wizard.output.outputAs.newFile"),
+                  },
+                ]}
+              />
+            </FormField>
+            <FormField
+              label={t("portal.policies.wizard.output.filenameRule.label")}
+            >
+              <div className="portal-policies__name-row">
+                <Select
+                  inputSize="sm"
+                  value={outputNamePosition}
+                  onChange={(value) =>
+                    setOutputNamePosition(
+                      (value ?? "suffix") as
+                        | "prefix"
+                        | "suffix"
+                        | "auto-number",
+                    )
+                  }
+                  options={[
+                    {
+                      value: "prefix",
+                      label: t(
+                        "portal.policies.wizard.output.filenameRule.prefix",
+                      ),
+                    },
+                    {
+                      value: "suffix",
+                      label: t(
+                        "portal.policies.wizard.output.filenameRule.suffix",
+                      ),
+                    },
+                    ...(outputMode === "new_file"
+                      ? [
+                          {
+                            value: "auto-number",
+                            label: t(
+                              "portal.policies.wizard.output.filenameRule.autoNumber",
+                            ),
+                          },
+                        ]
+                      : []),
+                  ]}
+                />
+                {outputNamePosition !== "auto-number" && (
+                  <Input
                     inputSize="sm"
-                    value={runOn}
-                    onChange={(value) =>
-                      setRunOn(resolveRunOn(value, category.id))
-                    }
-                    options={[
-                      {
-                        value: "upload",
-                        label: t("portal.policies.wizard.output.runOn.upload"),
-                      },
-                      {
-                        value: "export",
-                        label: t("portal.policies.wizard.output.runOn.export"),
-                      },
-                    ]}
-                  />
-                </FormField>
-                <FormField
-                  label={t("portal.policies.wizard.output.outputAs.label")}
-                >
-                  <Select
-                    inputSize="sm"
-                    value={outputMode}
-                    onChange={(value) => {
-                      const mode = (value ?? "new_file") as
-                        | "new_file"
-                        | "new_version";
-                      setOutputMode(mode);
-                      // Auto-number only applies to separate new files.
-                      if (
-                        mode === "new_version" &&
-                        outputNamePosition === "auto-number"
-                      ) {
-                        setOutputNamePosition("suffix");
-                      }
-                    }}
-                    options={[
-                      {
-                        value: "new_version",
-                        label: t(
-                          "portal.policies.wizard.output.outputAs.newVersion",
-                        ),
-                      },
-                      {
-                        value: "new_file",
-                        label: t(
-                          "portal.policies.wizard.output.outputAs.newFile",
-                        ),
-                      },
-                    ]}
-                  />
-                </FormField>
-                <FormField
-                  label={t("portal.policies.wizard.output.filenameRule.label")}
-                >
-                  <div className="portal-policies__name-row">
-                    <Select
-                      inputSize="sm"
-                      value={outputNamePosition}
-                      onChange={(value) =>
-                        setOutputNamePosition(
-                          (value ?? "suffix") as
-                            | "prefix"
-                            | "suffix"
-                            | "auto-number",
-                        )
-                      }
-                      options={[
-                        {
-                          value: "prefix",
-                          label: t(
-                            "portal.policies.wizard.output.filenameRule.prefix",
-                          ),
-                        },
-                        {
-                          value: "suffix",
-                          label: t(
-                            "portal.policies.wizard.output.filenameRule.suffix",
-                          ),
-                        },
-                        ...(outputMode === "new_file"
-                          ? [
-                              {
-                                value: "auto-number",
-                                label: t(
-                                  "portal.policies.wizard.output.filenameRule.autoNumber",
-                                ),
-                              },
-                            ]
-                          : []),
-                      ]}
-                    />
-                    {outputNamePosition !== "auto-number" && (
-                      <Input
-                        inputSize="sm"
-                        value={outputName}
-                        placeholder={t(
-                          "portal.policies.wizard.output.filenameRule.placeholder",
-                        )}
-                        onChange={(e) => setOutputName(e.target.value)}
-                      />
+                    value={outputName}
+                    placeholder={t(
+                      "portal.policies.wizard.output.filenameRule.placeholder",
                     )}
-                  </div>
-                </FormField>
-              </>
-            )}
+                    onChange={(e) => setOutputName(e.target.value)}
+                  />
+                )}
+              </div>
+            </FormField>
             {/* TODO: reviewer user-picker goes here */}
           </div>
 
