@@ -160,9 +160,7 @@ describe("promoteActions", () => {
 
   it("leads a password failure with the unlock, not the plain retry", () => {
     // Running it again unchanged is a second answer to the same problem, so it drops behind.
-    expect(
-      promoted(password("DECRYPT", "OPEN_IN_TOOL", "VIEW_FILE")),
-    ).toEqual({
+    expect(promoted(password("DECRYPT", "OPEN_IN_TOOL", "VIEW_FILE"))).toEqual({
       primary: "DECRYPT",
       secondary: null,
       overflow: ["OPEN_IN_TOOL", "VIEW_FILE"],
@@ -173,12 +171,7 @@ describe("promoteActions", () => {
   it("gives a reviewer their own password failure the unlock plus the queue", () => {
     expect(
       promoted(
-        password(
-          "DECRYPT",
-          "OPEN_IN_TOOL",
-          "VIEW_FILE",
-          "VIEW_IN_PROCESSOR",
-        ),
+        password("DECRYPT", "OPEN_IN_TOOL", "VIEW_FILE", "VIEW_IN_PROCESSOR"),
       ),
     ).toEqual({
       primary: "DECRYPT",
@@ -192,7 +185,12 @@ describe("promoteActions", () => {
     // Already closed elsewhere: every offer refused, so the row is its message plus one line.
     expect(
       promoted(
-        refusing(unknown("OPEN_IN_TOOL", "VIEW_FILE"), CLOSED, "OPEN_IN_TOOL", "VIEW_FILE"),
+        refusing(
+          unknown("OPEN_IN_TOOL", "VIEW_FILE"),
+          CLOSED,
+          "OPEN_IN_TOOL",
+          "VIEW_FILE",
+        ),
       ),
     ).toEqual({
       primary: null,
@@ -215,7 +213,10 @@ describe("promoteActions", () => {
 
     expect(primary?.id).toBe("VIEW_IN_PROCESSOR");
     expect(secondary).toBeNull();
-    expect(overflow.map((action) => action.id)).toEqual(["OPEN_IN_TOOL", "VIEW_FILE"]);
+    expect(overflow.map((action) => action.id)).toEqual([
+      "OPEN_IN_TOOL",
+      "VIEW_FILE",
+    ]);
   });
 
   it("drops a client action this device cannot perform, without inventing a reason", () => {
@@ -233,7 +234,10 @@ describe("promoteActions", () => {
 
   it("skips an action id it has never heard of without touching the rest", () => {
     // The server ships a kind with a new action before this build knows what it means.
-    const list = [offer("QUARANTINE", "RESOLUTION"), ...unknown("OPEN_IN_TOOL")];
+    const list = [
+      offer("QUARANTINE", "RESOLUTION"),
+      ...unknown("OPEN_IN_TOOL"),
+    ];
 
     expect(promoted(list)).toEqual({
       primary: "OPEN_IN_TOOL",
