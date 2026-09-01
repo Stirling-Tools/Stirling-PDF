@@ -14,8 +14,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -61,7 +61,7 @@ public class AiCreateInternalController {
             try {
                 outlineConstraintsPayload =
                         objectMapper.writeValueAsString(request.outlineConstraints());
-            } catch (JsonProcessingException exc) {
+            } catch (JacksonException exc) {
                 throw new ResponseStatusException(
                         HttpStatus.BAD_REQUEST, "Invalid outline constraints payload", exc);
             }
@@ -70,7 +70,7 @@ public class AiCreateInternalController {
         if (request.draftSections() != null) {
             try {
                 draftSectionsPayload = objectMapper.writeValueAsString(request.draftSections());
-            } catch (JsonProcessingException exc) {
+            } catch (JacksonException exc) {
                 throw new ResponseStatusException(
                         HttpStatus.BAD_REQUEST, "Invalid draft sections payload", exc);
             }
@@ -136,7 +136,7 @@ public class AiCreateInternalController {
                             .getTypeFactory()
                             .constructCollectionType(
                                     List.class, AiCreateController.DraftSection.class));
-        } catch (JsonProcessingException exc) {
+        } catch (JacksonException exc) {
             log.warn("Failed to parse draft sections payload", exc);
             return null;
         }
@@ -152,7 +152,7 @@ public class AiCreateInternalController {
                     objectMapper
                             .getTypeFactory()
                             .constructMapType(Map.class, String.class, Object.class));
-        } catch (JsonProcessingException exc) {
+        } catch (JacksonException exc) {
             log.warn("Failed to parse outline constraints payload", exc);
             return null;
         }
