@@ -4287,7 +4287,6 @@ allFiles = "All files"
 back = "Back"
 backToFolder = "Back to {{folder}}"
 backToMyFiles = "Back to File library"
-breadcrumbs = "Folder path"
 bulkActions = "Actions"
 cancel = "Cancel"
 classification = "Classification"
@@ -4514,9 +4513,6 @@ server = "Server error during folder sync."
 
 [filesPage.tabName]
 local = "Local"
-recent = "Recent"
-shared = "Shared with me"
-sharedByMe = "Shared by me"
 
 [filesPage.tabs]
 all = "All"

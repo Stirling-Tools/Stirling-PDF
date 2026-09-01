@@ -29,7 +29,6 @@ import DriveFileMoveIcon from "@mui/icons-material/DriveFileMove";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import { FilesToolbarBulkMenu } from "@app/components/filesPage/FilesToolbarBulkMenu";
 import { FilesToolbarCount } from "@app/components/filesPage/FilesToolbarCount";
 import { FilesToolbarFilterMenu } from "@app/components/filesPage/FilesToolbarFilterMenu";
@@ -76,10 +75,7 @@ import { duplicateStoredFile } from "@app/utils/duplicateFile";
 import { downloadFileFromStorage } from "@app/utils/downloadUtils";
 import { fileStorage } from "@app/services/fileStorage";
 import { materializeServerStubs } from "@app/services/fileSyncService";
-import {
-  FILES_PAGE_DRAG_TYPE,
-  parseFilesPageDragPayload,
-} from "@app/components/filesPage/dragDrop";
+import {} from "@app/components/filesPage/dragDrop";
 import { clearFilesPageReturnRoute } from "@app/components/filesPage/filesPageReturnRoute";
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 import "@app/components/filesPage/FilesPage.css";
@@ -986,25 +982,6 @@ export default function FileManagerView() {
 
   return (
     <div className="files-page" ref={dropZoneRef}>
-      {/* Folder context, not a bar: the controls that used to sit beside this are
-          registered into the workbench bar the other views use. */}
-      <div className="files-page-location">
-        {(currentTab === "all" || currentTab === "cloud") && <Breadcrumbs />}
-        {(currentTab === "local" ||
-          currentTab === "recent" ||
-          currentTab === "shared" ||
-          currentTab === "sharedByMe") && (
-          <span className="files-page-location-name">
-            {currentTab === "local"
-              ? t("filesPage.tabName.local", "Local")
-              : currentTab === "recent"
-                ? t("filesPage.tabName.recent", "Recent")
-                : currentTab === "shared"
-                  ? t("filesPage.tabName.shared", "Shared with me")
-                  : t("filesPage.tabName.sharedByMe", "Shared by me")}
-          </span>
-        )}
-      </div>
       <input
         ref={fileInputRef}
         type="file"
@@ -1797,94 +1774,5 @@ export default function FileManagerView() {
         }}
       />
     </div>
-  );
-}
-
-function Breadcrumbs() {
-  const { t } = useTranslation();
-  const folders = useFolders();
-  const filesPage = useFilesPage();
-  const trail = folders.breadcrumbs;
-  return (
-    <nav
-      className="files-page-breadcrumbs"
-      aria-label={t("filesPage.breadcrumbs", "Folder path")}
-    >
-      {trail.map((entry, idx) => {
-        const isLast = idx === trail.length - 1;
-        return (
-          <React.Fragment key={entry.id ?? "root"}>
-            <Button
-              variant="tertiary"
-              className={`files-page-breadcrumb${isLast ? " is-current" : ""}`}
-              onClick={() => folders.setCurrentFolderId(entry.id)}
-              onDragOver={(e) => {
-                if (e.dataTransfer.types.includes(FILES_PAGE_DRAG_TYPE)) {
-                  e.preventDefault();
-                  e.dataTransfer.dropEffect = "move";
-                }
-              }}
-              onDrop={(e) => {
-                e.preventDefault();
-                const payload = parseFilesPageDragPayload(e.dataTransfer);
-                if (!payload) return;
-                if (payload.kind === "files") {
-                  // Route through moveFilesTo (→ IndexedDBContext.moveFilesToFolder)
-                  // so the revision bumps and the grid refreshes. Surface
-                  // rejection via the banner - console-only was invisible
-                  // to non-dev users.
-                  void filesPage
-                    .moveFilesTo(payload.fileIds, entry.id)
-                    .catch((err) => {
-                      console.error("[breadcrumb] drop failed", err);
-                      folders.setError(
-                        err instanceof Error
-                          ? t("filesPage.error.moveFilesFailedDetail", {
-                              message: err.message,
-                              defaultValue: `Could not move files: ${err.message}`,
-                            })
-                          : t(
-                              "filesPage.error.moveFilesFailed",
-                              "Could not move files.",
-                            ),
-                      );
-                    });
-                } else if (payload.kind === "folder") {
-                  // Route through moveFolderTo so the client-side cycle guard fires
-                  // before the server call - otherwise dragging an ancestor onto a
-                  // child crumb shows the generic banner instead of the localized
-                  // "Can't move a folder into one of its own subfolders." message.
-                  void filesPage
-                    .moveFolderTo(payload.folderId, entry.id)
-                    .catch((err) => {
-                      console.error("[breadcrumb] folder drop failed", err);
-                      folders.setError(
-                        err instanceof Error
-                          ? t("filesPage.error.moveFolderFailedDetail", {
-                              message: err.message,
-                              defaultValue: `Could not move folder: ${err.message}`,
-                            })
-                          : t(
-                              "filesPage.error.moveFolderFailed",
-                              "Could not move folder.",
-                            ),
-                      );
-                    });
-                }
-              }}
-            >
-              {entry.name}
-            </Button>
-            {!isLast && (
-              <KeyboardArrowRightIcon
-                className="files-page-breadcrumb-sep"
-                fontSize="small"
-                aria-hidden="true"
-              />
-            )}
-          </React.Fragment>
-        );
-      })}
-    </nav>
   );
 }

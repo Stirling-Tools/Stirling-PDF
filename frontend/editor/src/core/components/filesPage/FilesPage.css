@@ -8,68 +8,6 @@
   overflow: hidden;
 }
 
-/* Where you are in the library. Not a bar - the controls that used to share this
-   row are registered into the workbench bar, and the search lives there too. */
-.files-page-location {
-  display: flex;
-  align-items: center;
-  min-height: 2rem;
-  padding: 0.25rem 0.75rem 0;
-  min-width: 0;
-}
-
-.files-page-location-name {
-  font-size: 0.95rem;
-  font-weight: 600;
-  padding: 0.25rem 0.5rem;
-  color: var(--c-text);
-}
-
-.files-page-breadcrumbs {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-size: 0.95rem;
-  min-width: 0;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-.files-page-breadcrumbs::-webkit-scrollbar {
-  display: none;
-}
-
-.files-page-breadcrumb {
-  background: none;
-  border: none;
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.375rem;
-  color: var(--c-text-muted);
-  cursor: pointer;
-  font-size: inherit;
-  font-weight: 500;
-  transition:
-    background-color 0.12s ease,
-    color 0.12s ease;
-  white-space: nowrap;
-  max-width: 18rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.files-page-breadcrumb:hover,
-.files-page-breadcrumb.is-current {
-  background: var(--c-hover);
-  color: var(--c-text);
-}
-
-.files-page-breadcrumb-sep {
-  color: var(--c-text-subtle);
-  font-size: 1rem !important;
-  width: 1rem;
-  height: 1rem;
-  opacity: 0.55;
-  flex-shrink: 0;
-}
-
 .files-page-body {
   display: flex;
   flex: 1 1 auto;
@@ -1344,23 +1282,6 @@
    navigation, so the in-header Home/Apps/Close trio is duplicated
    and the first to go. Same for "Upload" - the user can use the
    centre drop overlay. */
-/* ── Mobile + tablet chrome (≤1024px = useIsMobile) ──────────────────
-   The desktop header is a 3-column grid whose middle track can grow to
-   40rem. Below ~1024px that track eats the row: the breadcrumb column
-   collapsed to ~36px (wrapping "All files" to two lines) and the action
-   column overflowed, pushing Upload off the right edge. One flex row
-   instead - breadcrumb and actions keep their intrinsic width and the
-   search takes whatever is left. Ends at the app's mobile breakpoint so
-   it matches the layout HomePage is already rendering. */
-@media (max-width: 1024px) {
-  .files-page-breadcrumbs {
-    flex: 0 1 auto;
-    font-size: 0.85rem;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    min-width: 0;
-  }
-}
 
 @media (max-width: 640px) {
   /* Grid: single column on very narrow phones; two columns from ~440px */
