@@ -37,6 +37,20 @@ function writeReadThrough(at: number): void {
   }
 }
 
+/**
+ * Forget how far the reader got, for a browser about to belong to someone else. A time left by the
+ * previous user parses perfectly well, so without this their marker would mark the next user's
+ * older failures read and the badge would stay dark on a row nobody has seen.
+ */
+export function clearNotificationReadState(): void {
+  try {
+    window.localStorage.removeItem(SEEN_STORAGE_KEY);
+  } catch {
+    // Nothing to clear that a read could trust anyway.
+  }
+  publish({ ...snapshot, readThroughAt: null });
+}
+
 export interface NotificationDocumentState {
   hasLocalFile: boolean;
 }
@@ -120,7 +134,8 @@ async function read(forCycle: number): Promise<void> {
   if (forCycle !== cycle) return;
 
   const documents = Object.fromEntries(resolved);
-  // A member cannot open a document this browser does not hold, nor fix the policy behind it.
+  // Presentation, not access: the server has already scoped these rows to the reader. Hidden
+  // because every offer a member gets needs the document, so the row would only say so.
   const visible = viewerReviewsTeam
     ? listed
     : listed.filter((n) =>

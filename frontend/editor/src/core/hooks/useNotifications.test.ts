@@ -23,8 +23,11 @@ vi.mock("@app/services/localFilePresence", () => ({
   hasLocalFile: (fileId: string) => hasLocalFile(fileId),
 }));
 
-const { useNotifications, refreshNotificationsNow } =
-  await import("@app/hooks/useNotifications");
+const {
+  useNotifications,
+  refreshNotificationsNow,
+  clearNotificationReadState,
+} = await import("@app/hooks/useNotifications");
 
 /** A fetch result. Reviewer by default, so a test says nothing about filtering unless it means to. */
 function feed(
@@ -236,6 +239,30 @@ describe("useNotifications", () => {
 
     await waitFor(() => expect(result.current.notifications).toHaveLength(1));
     expect(result.current.unreadCount).toBe(0);
+  });
+
+  it("forgets the marker on sign-out, so the next user's failures are not pre-read", async () => {
+    // A time is parseable whoever left it, so an inherited marker would silently mark the
+    // incoming user's older rows read - the direction the id-based marker never failed in.
+    fetchNotifications.mockResolvedValue(feed([notification("theirs")]));
+    const leaving = renderHook(() => useNotifications());
+    await waitFor(() => expect(leaving.result.current.unreadCount).toBe(1));
+    await act(async () => leaving.result.current.markAllSeen());
+    expect(leaving.result.current.unreadCount).toBe(0);
+
+    clearNotificationReadState();
+    leaving.unmount();
+    expect(
+      window.localStorage.getItem("stirling.notifications.readThroughAt"),
+    ).toBeNull();
+
+    // The next user's own row is older than the marker that was just cleared.
+    fetchNotifications.mockResolvedValue(
+      feed([notification("mine", { lastSeenAt: "2026-08-04T00:00:00Z" })]),
+    );
+    const arriving = renderHook(() => useNotifications());
+
+    await waitFor(() => expect(arriving.result.current.unreadCount).toBe(1));
   });
 
   it("chains one fresh read behind the read in flight rather than joining it", async () => {

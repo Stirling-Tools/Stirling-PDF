@@ -137,4 +137,16 @@ class NotificationResolveTest {
         assertThat(statusOf(() -> controller.resolved("failure:" + theirs.id())))
                 .isEqualTo(HttpStatus.NOT_FOUND);
     }
+
+    @Test
+    void aReviewerClosesAColleaguesRowTheyFixed() {
+        // Visibility decides, not ownership: a reviewer reads the team's incidents, so a reviewer
+        // who fixes one closes it. The member's own row is unreachable to them the other way round.
+        FileRunEvent theirs = given(FailureKind.UNKNOWN, "colleague@example.com", "f-1");
+
+        controller.resolved("failure:" + theirs.id());
+
+        assertThat(store.find(theirs.id(), TEAM).orElseThrow().status())
+                .isEqualTo(FileRunEventStatus.RESOLVED);
+    }
 }
