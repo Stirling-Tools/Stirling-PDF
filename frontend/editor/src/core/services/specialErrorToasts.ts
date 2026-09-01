@@ -1,5 +1,6 @@
 import i18n from "i18next";
 import { alert } from "@app/components/toast";
+import { STORAGE_KEY_REVOKED_PATTERN } from "@app/services/storageKeyRevoked";
 
 interface ErrorToastMapping {
   regex: RegExp;
@@ -20,6 +21,16 @@ const MAPPINGS: ErrorToastMapping[] = [
       /the pdf document is passworded and either the password was not provided or was incorrect/i,
     i18nKey: "errors.incorrectPasswordProvided",
     defaultMessage: "The PDF password is incorrect or not provided.",
+  },
+  {
+    // Storage encryption kill switch. Matches the detail from
+    // StorageEncryptionErrors.revoked, which both My Files and workflow reads
+    // answer with. A permissions 403 does not match, so it still falls through
+    // to the generic message.
+    regex: STORAGE_KEY_REVOKED_PATTERN,
+    i18nKey: "errors.storageKeyRevoked",
+    defaultMessage:
+      "An administrator has revoked access to files stored under this encryption key. This is reversible: ask an administrator to restore the key.",
   },
 ];
 
