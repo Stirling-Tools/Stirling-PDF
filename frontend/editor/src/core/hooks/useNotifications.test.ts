@@ -164,8 +164,7 @@ describe("useNotifications", () => {
   });
 
   it("hides a member's unattended row even when its id happens to be stored here", async () => {
-    // A source-fed row's fileId is a content hash from another id space. Storage answering for it
-    // is a collision, not the document, so the row must go on being filtered as unresolvable.
+    // Storage answering for a source-fed row's hash is a collision, not the document.
     hasLocalFile.mockResolvedValue(true);
     fetchNotifications.mockResolvedValue(
       feed(
@@ -255,8 +254,6 @@ describe("useNotifications", () => {
   });
 
   it("keeps one viewer's read state off another's on a shared browser", async () => {
-    // A timestamp is legible to whoever reads it next, so an unscoped marker would leave the
-    // incoming user's older failures silently pre-read.
     fetchNotifications.mockResolvedValue(feed([notification("a")]));
     const first = renderHook(() => useNotifications());
     await waitFor(() => expect(first.result.current.unreadCount).toBe(1));
@@ -274,7 +271,6 @@ describe("useNotifications", () => {
   });
 
   it("marks nothing when the server names no viewer", async () => {
-    // Unscoped would be worse than unsaved: the next viewer here would inherit it.
     fetchNotifications.mockResolvedValue(feed([notification("a")], true, null));
     const { result } = renderHook(() => useNotifications());
     await waitFor(() => expect(result.current.unreadCount).toBe(1));
