@@ -277,6 +277,7 @@ class ResourceAccessServiceTest {
                 .isFalse();
     }
 
+    // comment-lint-allow: CMT002
     // ---- processor convenience (default policy ADMINS_AND_TEAM_LEADS) ----
 
     @Test
