@@ -99,7 +99,8 @@ public class StorageOutputSink implements PolicyOutputSink {
             Resource output = outputs.get(i);
             StoredFile stored;
             if (replaceInPlace) {
-                // The output takes the input's place — same row, same name, new content.
+                // The output takes the input's place — same row, same name, new content, and
+                // replaceFile keeps the row in whatever folder the user put it in.
                 stored =
                         fileStorageService.replaceFile(
                                 origin.getOwner(),
