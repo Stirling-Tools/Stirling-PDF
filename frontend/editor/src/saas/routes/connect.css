@@ -8,11 +8,10 @@
   text-align: left;
 }
 
-.saas-connect__title {
-  margin: 0;
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: var(--c-text);
+.saas-connect__waiting {
+  display: flex;
+  justify-content: center;
+  padding: 1.5rem 0;
 }
 
 .saas-connect__lead {

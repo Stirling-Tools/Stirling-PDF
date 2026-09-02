@@ -42,10 +42,10 @@ function isClassificationDebug(): boolean {
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export const classificationLocalPass: LocalPass = {
-  // A new document that has not been classified yet. Tool outputs inherit their input's verdict via
-  // the file reducer, so they are never classified afresh here.
-  eligible: (stub) =>
-    !stub.derivedFromTool && stub.classificationLabels == null,
+  // Any document without a verdict yet: an upload, or a policy's new-file output that had no parent
+  // to inherit one from.
+  // A file that did inherit (or was classified) carries a label array and is skipped.
+  eligible: (stub) => stub.classificationLabels === undefined,
   run: async (fileId, stub) => {
     const verdict = await classifyStub(fileId, stub.name, stub.size ?? 0);
     // Bytes never landed (file removed mid-wait): leave unclassified so a reload retries.
