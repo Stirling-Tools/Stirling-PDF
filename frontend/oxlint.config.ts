@@ -79,7 +79,10 @@ const noExplicitAnyExcludes = [
   "editor/src/core/contexts/*.{js,mjs,jsx,ts,tsx}",
   "editor/src/core/hooks/*.{js,mjs,jsx,ts,tsx}",
   "editor/src/core/tools/annotate/useAnnotationSelection.ts",
-  "editor/src/core/types/*.{js,mjs,jsx,ts,tsx}",
+  "editor/src/core/types/fileContext.ts",
+  "editor/src/core/types/fileIdSafety.d.ts",
+  "editor/src/core/types/automation.ts",
+  "editor/src/core/types/tool.ts",
   "editor/src/core/utils/*.{js,mjs,jsx,ts,tsx}",
 ];
 
