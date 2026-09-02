@@ -117,8 +117,10 @@ describe("useClientSideClassification delivery", () => {
 
   it("classifies pending uploads, writes labels, and meters once per file", async () => {
     mocks.workspace = [stub("a"), stub("b")];
+    // A confident verdict stands locally, so the local pass is the billable run.
     mocks.classify.mockImplementation(async (file: File) => ({
       labels: [file.name.startsWith("a") ? "invoice" : "resume"],
+      confidence: "high",
     }));
 
     renderHook(() => useClientSideClassification());
@@ -128,19 +130,43 @@ describe("useClientSideClassification delivery", () => {
     );
     expect(mocks.updateStirlingFileStub).toHaveBeenCalledWith("a", {
       classificationLabels: ["invoice"],
+      classificationConfidence: "high",
     });
     expect(mocks.updateStirlingFileStub).toHaveBeenCalledWith("b", {
       classificationLabels: ["resume"],
+      classificationConfidence: "high",
     });
     expect(mocks.meter).toHaveBeenCalledTimes(2);
     expect(mocks.bumpRevision).toHaveBeenCalled();
   });
 
+  it("does not meter a low-confidence local pass; the AI escalation bills it", async () => {
+    mocks.workspace = [stub("unsure")];
+    mocks.classify.mockResolvedValue({
+      labels: ["maybe-invoice"],
+      confidence: "low",
+    });
+
+    renderHook(() => useClientSideClassification());
+
+    await waitFor(() =>
+      expect(mocks.updateStirlingFileStub).toHaveBeenCalledWith("unsure", {
+        classificationLabels: ["maybe-invoice"],
+        classificationConfidence: "low",
+      }),
+    );
+    // Labels still written locally, but no local charge - the file escalates to the AI run.
+    expect(mocks.meter).not.toHaveBeenCalled();
+  });
+
   it("delivers a result computed while the effect re-fired mid-batch (upload-wave race)", async () => {
-    let resolveA!: (v: { labels: string[] }) => void;
-    const gateA = new Promise<{ labels: string[] }>((r) => (resolveA = r));
+    type Verdict = { labels: string[]; confidence: string };
+    let resolveA!: (v: Verdict) => void;
+    const gateA = new Promise<Verdict>((r) => (resolveA = r));
     mocks.classify.mockImplementation((file: File) =>
-      file.name.startsWith("a") ? gateA : Promise.resolve({ labels: ["nda"] }),
+      file.name.startsWith("a")
+        ? gateA
+        : Promise.resolve({ labels: ["nda"], confidence: "high" }),
     );
     mocks.workspace = [stub("a")];
 
@@ -152,16 +178,18 @@ describe("useClientSideClassification delivery", () => {
     mocks.workspace = [stub("a"), stub("b")];
     rerender();
 
-    resolveA({ labels: ["purchase-order"] });
+    resolveA({ labels: ["purchase-order"], confidence: "high" });
     await waitFor(() =>
       expect(mocks.updateStirlingFileStub).toHaveBeenCalledWith("a", {
         classificationLabels: ["purchase-order"],
+        classificationConfidence: "high",
       }),
     );
     // The newly-arrived file classifies too, and neither is double-classified.
     await waitFor(() =>
       expect(mocks.updateStirlingFileStub).toHaveBeenCalledWith("b", {
         classificationLabels: ["nda"],
+        classificationConfidence: "high",
       }),
     );
     expect(mocks.classify).toHaveBeenCalledTimes(2);
@@ -170,13 +198,14 @@ describe("useClientSideClassification delivery", () => {
 
   it("persists a definitive [] verdict for an unlabelled file and does not retry it", async () => {
     mocks.workspace = [stub("plain")];
-    mocks.classify.mockResolvedValue({ labels: [] });
+    mocks.classify.mockResolvedValue({ labels: [], confidence: "high" });
 
     renderHook(() => useClientSideClassification());
 
     await waitFor(() =>
       expect(mocks.updateStirlingFileStub).toHaveBeenCalledWith("plain", {
         classificationLabels: [],
+        classificationConfidence: "high",
       }),
     );
     expect(mocks.classify).toHaveBeenCalledTimes(1);

@@ -20,7 +20,10 @@ import {
 import type { FileId } from "@app/types/file";
 import type { StirlingFile, StirlingFileStub } from "@app/types/fileContext";
 import type { HeuristicConfidence } from "@app/services/heuristic/types";
-import { CLASSIFICATION_CATEGORY_ID } from "@app/data/classificationPolicy";
+import {
+  CLASSIFICATION_CATEGORY_ID,
+  localVerdictStands,
+} from "@app/data/classificationPolicy";
 
 /**
  * Dispatch-store key namespace for "this file's local pass has been metered". Deliberately NOT the
@@ -204,9 +207,10 @@ async function classifyStub(
         (alreadyMetered ? " [heal: not re-metered]" : ""),
     );
     if (debug && result.explain) logExplanation(fileName, result);
-    // Meter on the first classification only; a healing re-run of an undelivered
-    // result (already dispatched) is not a new billable run.
-    if (!alreadyMetered) {
+    // Meter the local pass only when its verdict stands: an unsure verdict escalates to the AI
+    // run, which is billed there instead (avoids double-charging one classification). Metered on
+    // the first pass only; a healing re-run of an undelivered result is not a new billable run.
+    if (!alreadyMetered && localVerdictStands(result.confidence)) {
       meterAutomationRun({
         automationName: "Classification",
         operations: [CLASSIFY_STEP],

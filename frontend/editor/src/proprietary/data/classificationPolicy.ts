@@ -55,6 +55,13 @@ export function orderRewritesFirst(categoryIds: string[]): string[] {
  */
 const TRUSTED_CONFIDENCE: ClassificationConfidence = "high";
 
+/** Whether a local heuristic verdict is final and stands on its own. */
+export function localVerdictStands(
+  confidence: ClassificationConfidence | undefined,
+): boolean {
+  return confidence === TRUSTED_CONFIDENCE;
+}
+
 /**
  * Whether the AI classifier should be asked about this file. For an upload, only once the
  * heuristic has reported: dispatching before then races the first pass and bills for an answer it
@@ -69,5 +76,5 @@ export function shouldDispatchToAi(
   if (!isClassificationCategory(categoryId)) return true;
   const confidence = stub.classificationConfidence;
   if (confidence == null) return Boolean(stub.derivedFromTool);
-  return confidence !== TRUSTED_CONFIDENCE;
+  return !localVerdictStands(confidence);
 }
