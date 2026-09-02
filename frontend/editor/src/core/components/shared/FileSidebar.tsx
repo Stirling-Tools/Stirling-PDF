@@ -760,14 +760,16 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           await onUploadFiles(files);
         } else {
           await addFiles(files);
-          if (!isMultiTool) {
+          // A tool that pinned its own workbench surface owns it - switching to
+          // the viewer here strands the upload outside the tool being used.
+          if (!isMultiTool && !currentWorkbench.startsWith("custom:")) {
             navActions.setWorkbench(
               files.length === 1 ? "viewer" : "fileEditor",
             );
           }
         }
       },
-      [addFiles, navActions, isMultiTool, onUploadFiles],
+      [addFiles, navActions, isMultiTool, onUploadFiles, currentWorkbench],
     );
 
     const handleNativeFilePick = useCallback(
