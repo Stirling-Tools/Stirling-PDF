@@ -1,4 +1,12 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import {
+  describe,
+  it,
+  expect,
+  vi,
+  beforeEach,
+  afterEach,
+  type Mock,
+} from "vitest";
 import { renderHook, waitFor, act } from "@testing-library/react";
 import { TestQueryProvider } from "@app/tests/utils/TestQueryProvider";
 import {
@@ -32,7 +40,9 @@ vi.mock("@app/i18n", () => ({
 vi.mock("@app/services/apiClient", () => ({
   default: { get: vi.fn() },
 }));
-const mockGet = vi.mocked(apiClient.get);
+// Cast to a plain mock: the real get() is the tauri-http signature, but the
+// tests only need { data } back.
+const mockGet = apiClient.get as unknown as Mock;
 
 // --- connection mode ---
 let mode: "saas" | "selfhosted" | "local" = "saas";
@@ -282,10 +292,15 @@ describe("desktop useMultipleEndpointsEnabled", () => {
       return Promise.resolve(availability({ merge: { enabled: true } }));
     });
 
-    const { result } = renderHook(() => useMultipleEndpointsEnabled(["merge"]), {
-      wrapper: TestQueryProvider,
-    });
-    await waitFor(() => expect(result.current.endpointStatus.merge).toBe(false));
+    const { result } = renderHook(
+      () => useMultipleEndpointsEnabled(["merge"]),
+      {
+        wrapper: TestQueryProvider,
+      },
+    );
+    await waitFor(() =>
+      expect(result.current.endpointStatus.merge).toBe(false),
+    );
 
     // Server comes back: the hook must re-resolve against the remote, not sit
     // on the stale offline answer.
