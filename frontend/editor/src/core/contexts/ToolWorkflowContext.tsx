@@ -46,18 +46,20 @@ import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
 // Types and reducer/state moved to './toolWorkflow/state'
 
 // Context value interface
-export interface CustomWorkbenchViewRegistration {
+export interface CustomWorkbenchViewRegistration<T = unknown> {
   id: string;
   workbenchId: WorkbenchType;
   label: string;
   icon?: React.ReactNode;
-  component: React.ComponentType<{ data: any }>;
+  component: React.ComponentType<{ data: T }>;
   hideTopControls?: boolean;
   hideToolPanel?: boolean;
 }
 
-export interface CustomWorkbenchViewInstance extends CustomWorkbenchViewRegistration {
-  data: any;
+export interface CustomWorkbenchViewInstance<
+  T = unknown,
+> extends CustomWorkbenchViewRegistration<T> {
+  data: T;
 }
 
 interface ToolWorkflowContextValue extends ToolWorkflowState {
@@ -107,22 +109,28 @@ interface ToolWorkflowContextValue extends ToolWorkflowState {
   isFavorite: (toolId: ToolId) => boolean;
 
   customWorkbenchViews: CustomWorkbenchViewInstance[];
-  registerCustomWorkbenchView: (view: CustomWorkbenchViewRegistration) => void;
+  registerCustomWorkbenchView: <T>(
+    view: CustomWorkbenchViewRegistration<T>,
+  ) => void;
   unregisterCustomWorkbenchView: (id: string) => void;
-  setCustomWorkbenchViewData: (id: string, data: any) => void;
+  setCustomWorkbenchViewData: (
+    id: string,
+    data: unknown | ((prev: unknown) => unknown),
+  ) => void;
   clearCustomWorkbenchViewData: (id: string) => void;
 }
 
 // Ensure a single context instance across HMR to avoid provider/consumer mismatches
 const __GLOBAL_CONTEXT_KEY__ = "__ToolWorkflowContext__";
-const existingContext = (globalThis as any)[__GLOBAL_CONTEXT_KEY__] as
-  | React.Context<ToolWorkflowContextValue | undefined>
-  | undefined;
+const existingContext = (globalThis as Record<string, unknown>)[
+  __GLOBAL_CONTEXT_KEY__
+] as React.Context<ToolWorkflowContextValue | undefined> | undefined;
 const ToolWorkflowContext =
   existingContext ??
   createContext<ToolWorkflowContextValue | undefined>(undefined);
 if (!existingContext) {
-  (globalThis as any)[__GLOBAL_CONTEXT_KEY__] = ToolWorkflowContext;
+  (globalThis as Record<string, unknown>)[__GLOBAL_CONTEXT_KEY__] =
+    ToolWorkflowContext;
 }
 
 /**
@@ -187,7 +195,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     Record<string, CustomWorkbenchViewRegistration>
   >({});
   const [customViewData, setCustomViewData] = React.useState<
-    Record<string, any>
+    Record<string, unknown>
   >({});
 
   // Navigation actions and state are available since we're inside NavigationProvider
@@ -259,8 +267,13 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   }, []);
 
   const registerCustomWorkbenchView = useCallback(
-    (view: CustomWorkbenchViewRegistration) => {
-      setCustomViewRegistry((prev) => ({ ...prev, [view.id]: view }));
+    <T,>(view: CustomWorkbenchViewRegistration<T>) => {
+      setCustomViewRegistry((prev) => ({
+        ...prev,
+        // Type-erase the view's data shape for uniform storage; the render site
+        // hands the opaque data back to this same component to narrow.
+        [view.id]: view as CustomWorkbenchViewRegistration,
+      }));
     },
     [],
   );
@@ -300,7 +313,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   );
 
   const setCustomWorkbenchViewData = useCallback(
-    (id: string, dataOrUpdater: any | ((prev: any) => any)) => {
+    (id: string, dataOrUpdater: unknown | ((prev: unknown) => unknown)) => {
       setCustomViewData((prev) => {
         const currentData = prev[id];
         const newData =

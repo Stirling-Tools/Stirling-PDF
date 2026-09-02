@@ -83,7 +83,6 @@ const noExplicitAnyExcludes = [
   "editor/src/core/components/viewer/viewerTypes.ts",
   "editor/src/core/components/viewer/EmbedPdfViewer.tsx",
   "editor/src/core/components/viewer/RedactionSelectionMenu.tsx",
-  "editor/src/core/contexts/ToolWorkflowContext.tsx",
   "editor/src/core/tools/annotate/useAnnotationSelection.ts",
   "editor/src/core/types/fileContext.ts",
   "editor/src/core/types/fileIdSafety.d.ts",
