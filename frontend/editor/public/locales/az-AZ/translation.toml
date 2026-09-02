@@ -3319,6 +3319,7 @@ description = "Model Context Protocol (MCP) lets AI assistants like Claude use y
 guestInfo = "Guest users can't connect MCP clients. Create an account to use the MCP server and let your AI assistant run Stirling PDF tools on your behalf."
 navLabel = "MCP Server"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
+title = "MCP Server"
 viewApiKeys = "View API keys"
 
 [config.mcp.copy]
@@ -6463,6 +6464,9 @@ thirtyDays = "30 gün"
 threeYears = "3 il"
 webhook = "Webhook"
 
+[portal]
+comingSoon = "Tezliklə"
+
 [portal.accountLink.card]
 billingNote = "Nəzarətsiz emal təşkilatınızın pul kisəsindən hesablanır."
 eyebrow = "Hesab bağlantısı"
@@ -7641,6 +7645,12 @@ afternoon = "Günortanız xeyir"
 evening = "Axşamınız xeyir"
 morning = "Sabahınız xeyir"
 
+[portal.infrastructure]
+manageEditorDeployment = "Editor yerləşdirilməsini idarə et"
+sectionsAriaLabel = "İnfrastruktur bölmələri"
+subtitle = "Stirling iş sahəniz üçün yerləşdirmələr, giriş məlumatları, təhlükəsizlik vəziyyəti, saxlama və audit izi."
+title = "İnfrastruktur"
+
 [portal.infrastructure.apiKeys]
 createKey = "Açar yarat"
 heading = "API açarları"
@@ -7753,6 +7763,14 @@ titleCreated = "Açar yaradıldı"
 [portal.infrastructure.keyLabel]
 active = "Aktiv"
 revoked = "Ləğv edilib"
+
+[portal.infrastructure.tabs]
+apiKeys = "API açarları"
+audit = "Audit jurnalları"
+deployments = "Yerləşdirmələr"
+models = "Modellər"
+security = "Təhlükəsizlik"
+storage = "Saxlama"
 
 [portal.integrations]
 availableHeading = "Mövcud"
@@ -8787,6 +8805,9 @@ extend = "7 gün uzat"
 maxed = "Limitə çatıb"
 subtitle = "Pulsuz sınağınız {{date}} tarixinə qədər davam edir. Kart tələb olunmur."
 title = "Enterprise sınağı"
+
+[portal.settings.groups]
+admin = "Admin"
 
 [portal.settings.sections]
 account-link = "Hesab bağlantısı"
@@ -11879,6 +11900,7 @@ noMembersFound = "Üzv tapılmadı"
 role = "Rol"
 searchMembers = "Üzvlərdə axtar..."
 team = "Komanda"
+title = "İnsanlar"
 unlockAccount = "Hesabın kilidini aç"
 unlockUserError = "İstifadəçi hesabının kilidini açmaq mümkün olmadı"
 unlockUserSuccess = "İstifadəçi hesabının kilidi uğurla açıldı"
@@ -12032,6 +12054,7 @@ system = "Sistem"
 teamActions = "Komanda əməliyyatları"
 teamName = "Komandanın adı"
 teamNotFound = "Komanda tapılmadı"
+title = "Komandalar"
 totalMembers = "Ümumi Üzv sayı"
 viewTeam = "Komandaya bax"
 

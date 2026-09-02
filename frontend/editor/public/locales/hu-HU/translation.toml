@@ -3319,6 +3319,7 @@ description = "Model Context Protocol (MCP) lets AI assistants like Claude use y
 guestInfo = "Guest users can't connect MCP clients. Create an account to use the MCP server and let your AI assistant run Stirling PDF tools on your behalf."
 navLabel = "MCP Server"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
+title = "MCP Server"
 viewApiKeys = "View API keys"
 
 [config.mcp.copy]
@@ -6463,6 +6464,9 @@ thirtyDays = "30 nap"
 threeYears = "3 év"
 webhook = "Webhook"
 
+[portal]
+comingSoon = "Hamarosan"
+
 [portal.accountLink.card]
 billingNote = "A felügyelet nélküli feldolgozás költsége a szervezeti tárcát terheli."
 eyebrow = "Fiók összekapcsolása"
@@ -7641,6 +7645,12 @@ afternoon = "Jó napot"
 evening = "Jó estét"
 morning = "Jó reggelt"
 
+[portal.infrastructure]
+manageEditorDeployment = "Editor telepítés kezelése"
+sectionsAriaLabel = "Infrastruktúra szakaszai"
+subtitle = "Telepítések, hitelesítő adatok, biztonsági állapot, tárhely és auditnapló a Stirling munkaterületéhez."
+title = "Infrastruktúra"
+
 [portal.infrastructure.apiKeys]
 createKey = "Kulcs létrehozása"
 heading = "API kulcsok"
@@ -7753,6 +7763,14 @@ titleCreated = "Kulcs létrehozva"
 [portal.infrastructure.keyLabel]
 active = "Aktív"
 revoked = "Visszavonva"
+
+[portal.infrastructure.tabs]
+apiKeys = "API kulcsok"
+audit = "Auditnaplók"
+deployments = "Telepítések"
+models = "Modellek"
+security = "Biztonság"
+storage = "Tárhely"
 
 [portal.integrations]
 availableHeading = "Elérhető"
@@ -8787,6 +8805,9 @@ extend = "7 nappal meghosszabbítás"
 maxed = "Elérte a maximumot"
 subtitle = "Az ingyenes próbaidőszak {{date}} dátumig tart. Kártya nem szükséges."
 title = "Enterprise próbaidőszak"
+
+[portal.settings.groups]
+admin = "Admin"
 
 [portal.settings.sections]
 account-link = "Fiók összekapcsolása"
@@ -11879,6 +11900,7 @@ noMembersFound = "Nem találhatók tagok"
 role = "Szerepkör"
 searchMembers = "Tagok keresése..."
 team = "Csapat"
+title = "Tagok"
 unlockAccount = "Fiók feloldása"
 unlockUserError = "Nem sikerült feloldani a felhasználói fiókot"
 unlockUserSuccess = "A felhasználói fiók sikeresen feloldva"
@@ -12032,6 +12054,7 @@ system = "Rendszer"
 teamActions = "Csapatműveletek"
 teamName = "Csapat neve"
 teamNotFound = "A csapat nem található"
+title = "Csapatok"
 totalMembers = "Tagok összesen"
 viewTeam = "Csapat megtekintése"
 

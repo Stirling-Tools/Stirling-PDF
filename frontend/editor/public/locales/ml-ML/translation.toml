@@ -3319,6 +3319,7 @@ description = "Model Context Protocol (MCP) lets AI assistants like Claude use y
 guestInfo = "Guest users can't connect MCP clients. Create an account to use the MCP server and let your AI assistant run Stirling PDF tools on your behalf."
 navLabel = "MCP Server"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
+title = "MCP Server"
 viewApiKeys = "View API keys"
 
 [config.mcp.copy]
@@ -6463,6 +6464,9 @@ thirtyDays = "30 ദിവസം"
 threeYears = "3 വർഷം"
 webhook = "Webhook"
 
+[portal]
+comingSoon = "ഉടൻ വരുന്നു"
+
 [portal.accountLink.card]
 billingNote = "Unattended processing നിങ്ങളുടെ org wallet-ലേക്ക് ബിൽ ചെയ്യപ്പെടും."
 eyebrow = "അക്കൗണ്ട് ലിങ്ക്"
@@ -7641,6 +7645,12 @@ afternoon = "ശുഭ ഉച്ചയ്ക്ക്"
 evening = "ശുഭ സന്ധ്യ"
 morning = "ശുഭ പ്രഭാതം"
 
+[portal.infrastructure]
+manageEditorDeployment = "Editor വിന്യാസം നിയന്ത്രിക്കുക"
+sectionsAriaLabel = "Infrastructure വിഭാഗങ്ങൾ"
+subtitle = "നിങ്ങളുടെ Stirling workspace-നുള്ള deployments, credentials, security posture, storage, audit trail എന്നിവ."
+title = "Infrastructure"
+
 [portal.infrastructure.apiKeys]
 createKey = "Key സൃഷ്ടിക്കുക"
 heading = "API keys"
@@ -7753,6 +7763,14 @@ titleCreated = "Key സൃഷ്ടിച്ചു"
 [portal.infrastructure.keyLabel]
 active = "Active"
 revoked = "Revoked"
+
+[portal.infrastructure.tabs]
+apiKeys = "API Keys"
+audit = "Audit Logs"
+deployments = "Deployments"
+models = "Models"
+security = "Security"
+storage = "Storage"
 
 [portal.integrations]
 availableHeading = "ലഭ്യമാണ്"
@@ -8787,6 +8805,9 @@ extend = "7 ദിവസം നീട്ടുക"
 maxed = "പരമാവധി എത്തി"
 subtitle = "നിങ്ങളുടെ free trial {{date}} വരെ പ്രവർത്തിക്കും. കാർഡ് ആവശ്യമില്ല."
 title = "Enterprise trial"
+
+[portal.settings.groups]
+admin = "Admin"
 
 [portal.settings.sections]
 account-link = "Account link"
@@ -11879,6 +11900,7 @@ noMembersFound = "അംഗങ്ങളെ കണ്ടെത്താനായ�
 role = "റോൾ"
 searchMembers = "അംഗങ്ങളെ തിരയുക..."
 team = "ടീം"
+title = "മനുഷ്യർ"
 unlockAccount = "അക്കൗണ്ട് അൺലോക്ക് ചെയ്യുക"
 unlockUserError = "ഉപയോക്തൃ അക്കൗണ്ട് അൺലോക്ക് ചെയ്യുന്നതിൽ പരാജയപ്പെട്ടു"
 unlockUserSuccess = "ഉപയോക്തൃ അക്കൗണ്ട് വിജയകരമായി അൺലോക്ക് ചെയ്തു"
@@ -12032,6 +12054,7 @@ system = "സിസ്റ്റം"
 teamActions = "ടീം പ്രവർത്തനങ്ങൾ"
 teamName = "ടീം പേര്"
 teamNotFound = "ടീം കണ്ടെത്താനായില്ല"
+title = "ടീങ്ങൾ"
 totalMembers = "ആകെ അംഗങ്ങൾ"
 viewTeam = "ടീം കാണുക"
 

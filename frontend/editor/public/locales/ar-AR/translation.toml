@@ -3319,6 +3319,7 @@ description = "Model Context Protocol (MCP) lets AI assistants like Claude use y
 guestInfo = "Guest users can't connect MCP clients. Create an account to use the MCP server and let your AI assistant run Stirling PDF tools on your behalf."
 navLabel = "MCP Server"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
+title = "MCP Server"
 viewApiKeys = "View API keys"
 
 [config.mcp.copy]
@@ -6463,6 +6464,9 @@ thirtyDays = "30 يومًا"
 threeYears = "3 سنوات"
 webhook = "Webhook"
 
+[portal]
+comingSoon = "قريبًا"
+
 [portal.accountLink.card]
 billingNote = "تتم فوترة المعالجة غير المراقبة من محفظة مؤسستك."
 eyebrow = "ربط الحساب"
@@ -7641,6 +7645,12 @@ afternoon = "مساء الخير"
 evening = "مساء الخير"
 morning = "صباح الخير"
 
+[portal.infrastructure]
+manageEditorDeployment = "إدارة نشر Editor"
+sectionsAriaLabel = "أقسام البنية التحتية"
+subtitle = "عمليات النشر وبيانات الاعتماد ووضع الأمان والتخزين ومسار التدقيق لمساحة عمل Stirling لديك."
+title = "البنية التحتية"
+
 [portal.infrastructure.apiKeys]
 createKey = "إنشاء مفتاح"
 heading = "مفاتيح API"
@@ -7753,6 +7763,14 @@ titleCreated = "تم إنشاء المفتاح"
 [portal.infrastructure.keyLabel]
 active = "نشط"
 revoked = "مُبطل"
+
+[portal.infrastructure.tabs]
+apiKeys = "مفاتيح API"
+audit = "سجلات التدقيق"
+deployments = "عمليات النشر"
+models = "النماذج"
+security = "الأمان"
+storage = "التخزين"
 
 [portal.integrations]
 availableHeading = "متاح"
@@ -8787,6 +8805,9 @@ extend = "تمديد 7 أيام"
 maxed = "بلغ الحد الأقصى"
 subtitle = "تستمر تجربتك المجانية حتى {{date}}. لا حاجة إلى بطاقة."
 title = "تجربة Enterprise"
+
+[portal.settings.groups]
+admin = "المسؤول"
 
 [portal.settings.sections]
 account-link = "ربط الحساب"
@@ -11879,6 +11900,7 @@ noMembersFound = "لم يتم العثور على أعضاء"
 role = "الدور"
 searchMembers = "ابحث عن الأعضاء..."
 team = "الفريق"
+title = "الأشخاص"
 unlockAccount = "فتح قفل الحساب"
 unlockUserError = "فشل فتح قفل حساب المستخدم"
 unlockUserSuccess = "تم فتح قفل حساب المستخدم بنجاح"
@@ -12032,6 +12054,7 @@ system = "النظام"
 teamActions = "إجراءات الفريق"
 teamName = "اسم الفريق"
 teamNotFound = "لم يتم العثور على الفريق"
+title = "الفرق"
 totalMembers = "إجمالي الأعضاء"
 viewTeam = "عرض الفريق"
 

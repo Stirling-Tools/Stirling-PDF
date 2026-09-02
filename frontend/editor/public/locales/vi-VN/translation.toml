@@ -3319,6 +3319,7 @@ description = "Model Context Protocol (MCP) lets AI assistants like Claude use y
 guestInfo = "Guest users can't connect MCP clients. Create an account to use the MCP server and let your AI assistant run Stirling PDF tools on your behalf."
 navLabel = "MCP Server"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
+title = "MCP Server"
 viewApiKeys = "View API keys"
 
 [config.mcp.copy]
@@ -6463,6 +6464,9 @@ thirtyDays = "30 ngày"
 threeYears = "3 năm"
 webhook = "Webhook"
 
+[portal]
+comingSoon = "Sắp ra mắt"
+
 [portal.accountLink.card]
 billingNote = "Xử lý không giám sát được tính phí vào ví tổ chức của bạn."
 eyebrow = "Liên kết tài khoản"
@@ -7641,6 +7645,12 @@ afternoon = "Chào buổi chiều"
 evening = "Chào buổi tối"
 morning = "Chào buổi sáng"
 
+[portal.infrastructure]
+manageEditorDeployment = "Quản lý triển khai Editor"
+sectionsAriaLabel = "Các phần hạ tầng"
+subtitle = "Triển khai, thông tin xác thực, tư thế bảo mật, lưu trữ và dấu vết kiểm tra cho workspace Stirling của bạn."
+title = "Hạ tầng"
+
 [portal.infrastructure.apiKeys]
 createKey = "Tạo khóa"
 heading = "Khóa API"
@@ -7753,6 +7763,14 @@ titleCreated = "Đã tạo khóa"
 [portal.infrastructure.keyLabel]
 active = "Đang hoạt động"
 revoked = "Đã thu hồi"
+
+[portal.infrastructure.tabs]
+apiKeys = "Khóa API"
+audit = "Nhật ký kiểm tra"
+deployments = "Triển khai"
+models = "Mô hình"
+security = "Bảo mật"
+storage = "Lưu trữ"
 
 [portal.integrations]
 availableHeading = "Có sẵn"
@@ -8787,6 +8805,9 @@ extend = "Gia hạn 7 ngày"
 maxed = "Đã đạt giới hạn"
 subtitle = "Bản dùng thử miễn phí của bạn kéo dài đến {{date}}. Không cần thẻ."
 title = "Dùng thử Enterprise"
+
+[portal.settings.groups]
+admin = "Quản trị"
 
 [portal.settings.sections]
 account-link = "Liên kết tài khoản"
@@ -11879,6 +11900,7 @@ noMembersFound = "Không tìm thấy thành viên"
 role = "Vai trò"
 searchMembers = "Tìm thành viên..."
 team = "Nhóm"
+title = "Mọi người"
 unlockAccount = "Mở khóa tài khoản"
 unlockUserError = "Mở khóa tài khoản người dùng không thành công"
 unlockUserSuccess = "Đã mở khóa tài khoản người dùng thành công"
@@ -12032,6 +12054,7 @@ system = "Hệ thống"
 teamActions = "Hành động nhóm"
 teamName = "Tên nhóm"
 teamNotFound = "Không tìm thấy nhóm"
+title = "Nhóm"
 totalMembers = "Tổng số thành viên"
 viewTeam = "Xem nhóm"
 

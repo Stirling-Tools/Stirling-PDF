@@ -3319,6 +3319,7 @@ description = "Model Context Protocol (MCP) lets AI assistants like Claude use y
 guestInfo = "Guest users can't connect MCP clients. Create an account to use the MCP server and let your AI assistant run Stirling PDF tools on your behalf."
 navLabel = "MCP Server"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
+title = "MCP Server"
 viewApiKeys = "View API keys"
 
 [config.mcp.copy]
@@ -6463,6 +6464,9 @@ thirtyDays = "30 dní"
 threeYears = "3 roky"
 webhook = "Webhook"
 
+[portal]
+comingSoon = "Již brzy"
+
 [portal.accountLink.card]
 billingNote = "Bezobslužné zpracování se účtuje z peněženky vaší organizace."
 eyebrow = "Propojení účtu"
@@ -7641,6 +7645,12 @@ afternoon = "Dobré odpoledne"
 evening = "Dobrý večer"
 morning = "Dobré ráno"
 
+[portal.infrastructure]
+manageEditorDeployment = "Spravovat nasazení Editoru"
+sectionsAriaLabel = "Sekce infrastruktury"
+subtitle = "Nasazení, přihlašovací údaje, bezpečnostní postoj, úložiště a auditní stopa pro váš pracovní prostor Stirling."
+title = "Infrastruktura"
+
 [portal.infrastructure.apiKeys]
 createKey = "Vytvořit klíč"
 heading = "API klíče"
@@ -7753,6 +7763,14 @@ titleCreated = "Klíč vytvořen"
 [portal.infrastructure.keyLabel]
 active = "Aktivní"
 revoked = "Odvoláno"
+
+[portal.infrastructure.tabs]
+apiKeys = "API klíče"
+audit = "Auditní protokoly"
+deployments = "Nasazení"
+models = "Modely"
+security = "Zabezpečení"
+storage = "Úložiště"
 
 [portal.integrations]
 availableHeading = "Dostupné"
@@ -8787,6 +8805,9 @@ extend = "Prodloužit o 7 dní"
 maxed = "Vyčerpáno"
 subtitle = "Váš bezplatný trial běží do {{date}}. Karta není vyžadována."
 title = "Enterprise trial"
+
+[portal.settings.groups]
+admin = "Admin"
 
 [portal.settings.sections]
 account-link = "Propojení účtu"
@@ -11879,6 +11900,7 @@ noMembersFound = "Nebyli nalezeni žádní členové"
 role = "Role"
 searchMembers = "Hledat členy..."
 team = "Tým"
+title = "Lidé"
 unlockAccount = "Odemknout účet"
 unlockUserError = "Nepodařilo se odemknout uživatelský účet"
 unlockUserSuccess = "Uživatelský účet byl úspěšně odemknut"
@@ -12032,6 +12054,7 @@ system = "Systém"
 teamActions = "Akce týmu"
 teamName = "Název týmu"
 teamNotFound = "Tým nebyl nalezen"
+title = "Týmy"
 totalMembers = "Celkem členů"
 viewTeam = "Zobrazit tým"
 

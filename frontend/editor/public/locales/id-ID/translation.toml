@@ -3319,6 +3319,7 @@ description = "Model Context Protocol (MCP) lets AI assistants like Claude use y
 guestInfo = "Guest users can't connect MCP clients. Create an account to use the MCP server and let your AI assistant run Stirling PDF tools on your behalf."
 navLabel = "MCP Server"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
+title = "MCP Server"
 viewApiKeys = "View API keys"
 
 [config.mcp.copy]
@@ -6463,6 +6464,9 @@ thirtyDays = "30 hari"
 threeYears = "3 tahun"
 webhook = "Webhook"
 
+[portal]
+comingSoon = "Segera hadir"
+
 [portal.accountLink.card]
 billingNote = "Pemrosesan tanpa pengawasan ditagihkan ke dompet organisasi Anda."
 eyebrow = "Tautan akun"
@@ -7641,6 +7645,12 @@ afternoon = "Selamat siang"
 evening = "Selamat malam"
 morning = "Selamat pagi"
 
+[portal.infrastructure]
+manageEditorDeployment = "Kelola penerapan Editor"
+sectionsAriaLabel = "Bagian infrastruktur"
+subtitle = "Penerapan, kredensial, postur keamanan, penyimpanan, dan jejak audit untuk workspace Stirling Anda."
+title = "Infrastruktur"
+
 [portal.infrastructure.apiKeys]
 createKey = "Buat kunci"
 heading = "API key"
@@ -7753,6 +7763,14 @@ titleCreated = "Kunci dibuat"
 [portal.infrastructure.keyLabel]
 active = "Aktif"
 revoked = "Dicabut"
+
+[portal.infrastructure.tabs]
+apiKeys = "API Key"
+audit = "Log Audit"
+deployments = "Penerapan"
+models = "Model"
+security = "Keamanan"
+storage = "Penyimpanan"
 
 [portal.integrations]
 availableHeading = "Tersedia"
@@ -8787,6 +8805,9 @@ extend = "Perpanjang 7 hari"
 maxed = "Maksimal"
 subtitle = "Uji coba gratis Anda berjalan hingga {{date}}. Tidak perlu kartu."
 title = "Uji coba Enterprise"
+
+[portal.settings.groups]
+admin = "Admin"
 
 [portal.settings.sections]
 account-link = "Tautan akun"
@@ -11879,6 +11900,7 @@ noMembersFound = "Tidak ada anggota ditemukan"
 role = "Peran"
 searchMembers = "Cari anggota..."
 team = "Tim"
+title = "Orang"
 unlockAccount = "Buka Kunci Akun"
 unlockUserError = "Gagal membuka kunci akun pengguna"
 unlockUserSuccess = "Akun pengguna berhasil dibuka kunci"
@@ -12032,6 +12054,7 @@ system = "Sistem"
 teamActions = "Tindakan tim"
 teamName = "Nama Tim"
 teamNotFound = "Tim tidak ditemukan"
+title = "Tim"
 totalMembers = "Total Anggota"
 viewTeam = "Lihat Tim"
 

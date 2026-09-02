@@ -3319,6 +3319,7 @@ description = "Model Context Protocol (MCP) lets AI assistants like Claude use y
 guestInfo = "Guest users can't connect MCP clients. Create an account to use the MCP server and let your AI assistant run Stirling PDF tools on your behalf."
 navLabel = "MCP Server"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
+title = "MCP Server"
 viewApiKeys = "View API keys"
 
 [config.mcp.copy]
@@ -6463,6 +6464,9 @@ thirtyDays = "30 dias"
 threeYears = "3 anos"
 webhook = "Webhook"
 
+[portal]
+comingSoon = "Em breve"
+
 [portal.accountLink.card]
 billingNote = "O processamento sem supervisão é faturado na carteira da sua organização."
 eyebrow = "Associação de conta"
@@ -7641,6 +7645,12 @@ afternoon = "Boa tarde"
 evening = "Boa noite"
 morning = "Bom dia"
 
+[portal.infrastructure]
+manageEditorDeployment = "Gerir implementação do Editor"
+sectionsAriaLabel = "Secções de infraestrutura"
+subtitle = "Implementações, credenciais, postura de segurança, armazenamento e o trilho de auditoria para o seu espaço de trabalho Stirling."
+title = "Infraestrutura"
+
 [portal.infrastructure.apiKeys]
 createKey = "Criar chave"
 heading = "Chaves API"
@@ -7753,6 +7763,14 @@ titleCreated = "Chave criada"
 [portal.infrastructure.keyLabel]
 active = "Ativa"
 revoked = "Revogada"
+
+[portal.infrastructure.tabs]
+apiKeys = "Chaves API"
+audit = "Registos de auditoria"
+deployments = "Implementações"
+models = "Modelos"
+security = "Segurança"
+storage = "Armazenamento"
 
 [portal.integrations]
 availableHeading = "Disponíveis"
@@ -8787,6 +8805,9 @@ extend = "Estender 7 dias"
 maxed = "Esgotado"
 subtitle = "O seu teste gratuito decorre até {{date}}. Não é necessário cartão."
 title = "Teste Enterprise"
+
+[portal.settings.groups]
+admin = "Admin"
 
 [portal.settings.sections]
 account-link = "Ligação da conta"
@@ -11879,6 +11900,7 @@ noMembersFound = "Nenhum membro encontrado"
 role = "Função"
 searchMembers = "Procurar membros..."
 team = "Equipa"
+title = "Pessoas"
 unlockAccount = "Desbloquear conta"
 unlockUserError = "Falha ao desbloquear a conta de utilizador"
 unlockUserSuccess = "Conta de utilizador desbloqueada com sucesso"
@@ -12032,6 +12054,7 @@ system = "Sistema"
 teamActions = "Ações de equipa"
 teamName = "Nome da equipa"
 teamNotFound = "Equipa não encontrada"
+title = "Equipas"
 totalMembers = "Total de membros"
 viewTeam = "Ver equipa"
 

@@ -3319,6 +3319,7 @@ description = "Model Context Protocol (MCP) lets AI assistants like Claude use y
 guestInfo = "Guest users can't connect MCP clients. Create an account to use the MCP server and let your AI assistant run Stirling PDF tools on your behalf."
 navLabel = "MCP Server"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
+title = "MCP Server"
 viewApiKeys = "View API keys"
 
 [config.mcp.copy]
@@ -6463,6 +6464,9 @@ thirtyDays = "30 dana"
 threeYears = "3 godine"
 webhook = "Webhook"
 
+[portal]
+comingSoon = "Uskoro"
+
 [portal.accountLink.card]
 billingNote = "Nenadzirana obrada naplaćuje se s novčanika vaše organizacije."
 eyebrow = "Povezivanje računa"
@@ -7641,6 +7645,12 @@ afternoon = "Dobar dan"
 evening = "Dobra večer"
 morning = "Dobro jutro"
 
+[portal.infrastructure]
+manageEditorDeployment = "Upravljaj implementacijom Editora"
+sectionsAriaLabel = "Odjeljci infrastrukture"
+subtitle = "Implementacije, vjerodajnice, sigurnosni položaj, pohrana i revizijski trag za vaš Stirling radni prostor."
+title = "Infrastruktura"
+
 [portal.infrastructure.apiKeys]
 createKey = "Izradi ključ"
 heading = "API ključevi"
@@ -7753,6 +7763,14 @@ titleCreated = "Ključ izrađen"
 [portal.infrastructure.keyLabel]
 active = "Aktivno"
 revoked = "Opozvano"
+
+[portal.infrastructure.tabs]
+apiKeys = "API ključevi"
+audit = "Revizijski zapisi"
+deployments = "Implementacije"
+models = "Modeli"
+security = "Sigurnost"
+storage = "Pohrana"
 
 [portal.integrations]
 availableHeading = "Dostupno"
@@ -8787,6 +8805,9 @@ extend = "Produlji za 7 dana"
 maxed = "Dosegnut maksimum"
 subtitle = "Vaše besplatno probno razdoblje traje do {{date}}. Kartica nije potrebna."
 title = "Enterprise probno razdoblje"
+
+[portal.settings.groups]
+admin = "Admin"
 
 [portal.settings.sections]
 account-link = "Povezivanje računa"
@@ -11879,6 +11900,7 @@ noMembersFound = "Nije pronađen nijedan član"
 role = "Uloga"
 searchMembers = "Pretraži članove..."
 team = "Tim"
+title = "Osobe"
 unlockAccount = "Otključaj račun"
 unlockUserError = "Otključavanje korisničkog računa nije uspjelo"
 unlockUserSuccess = "Korisnički račun je uspješno otključan"
@@ -12032,6 +12054,7 @@ system = "Sustav"
 teamActions = "Radnje tima"
 teamName = "Naziv tima"
 teamNotFound = "Tim nije pronađen"
+title = "Timovi"
 totalMembers = "Ukupno članova"
 viewTeam = "Prikaži tim"
 

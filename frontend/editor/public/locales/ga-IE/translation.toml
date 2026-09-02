@@ -3319,6 +3319,7 @@ description = "Model Context Protocol (MCP) lets AI assistants like Claude use y
 guestInfo = "Guest users can't connect MCP clients. Create an account to use the MCP server and let your AI assistant run Stirling PDF tools on your behalf."
 navLabel = "MCP Server"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
+title = "MCP Server"
 viewApiKeys = "View API keys"
 
 [config.mcp.copy]
@@ -6463,6 +6464,9 @@ thirtyDays = "30 lá"
 threeYears = "3 bliana"
 webhook = "Webhook"
 
+[portal]
+comingSoon = "Ag teacht go luath"
+
 [portal.accountLink.card]
 billingNote = "Billeálann próiseáil gan freastal ar sparán d’eagraíochta."
 eyebrow = "Nasc cuntais"
@@ -7641,6 +7645,12 @@ afternoon = "Tráthnóna maith"
 evening = "Oíche mhaith"
 morning = "Maidin mhaith"
 
+[portal.infrastructure]
+manageEditorDeployment = "Bainistigh imscaradh an Eagarthóra"
+sectionsAriaLabel = "Rannáin bhonneagair"
+subtitle = "Imscarthaí, dintiúir, seasamh slándála, stóráil, agus an rian iniúchta do do spás oibre Stirling."
+title = "Bonneagar"
+
 [portal.infrastructure.apiKeys]
 createKey = "Cruthaigh eochair"
 heading = "Eochracha API"
@@ -7753,6 +7763,14 @@ titleCreated = "Eochair cruthaithe"
 [portal.infrastructure.keyLabel]
 active = "Gníomhach"
 revoked = "Cúlghairthe"
+
+[portal.infrastructure.tabs]
+apiKeys = "Eochracha API"
+audit = "Logaí Iniúchta"
+deployments = "Imscarthaí"
+models = "Samhlacha"
+security = "Slándáil"
+storage = "Stóráil"
 
 [portal.integrations]
 availableHeading = "Ar fáil"
@@ -8787,6 +8805,9 @@ extend = "Sín 7 lá"
 maxed = "Uasmhéadaithe"
 subtitle = "Maireann do thriail saor in aisce go dtí {{date}}. Níl cárta de dhíth."
 title = "Triail Enterprise"
+
+[portal.settings.groups]
+admin = "Riarachán"
 
 [portal.settings.sections]
 account-link = "Nasc cuntais"
@@ -11879,6 +11900,7 @@ noMembersFound = "Níor aimsíodh baill"
 role = "Ról"
 searchMembers = "Cuardaigh baill..."
 team = "Foireann"
+title = "Daoine"
 unlockAccount = "Díghlasáil an cuntas"
 unlockUserError = "Theip ar dhíghlasáil an chuntais úsáideora"
 unlockUserSuccess = "Díghlasáladh an cuntas úsáideora go rathúil"
@@ -12032,6 +12054,7 @@ system = "Córas"
 teamActions = "Gníomhartha foirne"
 teamName = "Ainm Foirne"
 teamNotFound = "Níor aimsíodh an fhoireann"
+title = "Foirne"
 totalMembers = "Iomlán na mBall"
 viewTeam = "Féach ar an bhFoireann"
 

@@ -3319,6 +3319,7 @@ description = "Model Context Protocol (MCP) lets AI assistants like Claude use y
 guestInfo = "Guest users can't connect MCP clients. Create an account to use the MCP server and let your AI assistant run Stirling PDF tools on your behalf."
 navLabel = "MCP Server"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
+title = "MCP Server"
 viewApiKeys = "View API keys"
 
 [config.mcp.copy]
@@ -6463,6 +6464,9 @@ thirtyDays = "30 दिन"
 threeYears = "3 वर्ष"
 webhook = "Webhook"
 
+[portal]
+comingSoon = "जल्द आ रहा है"
+
 [portal.accountLink.card]
 billingNote = "Unattended processing का बिल आपके org wallet से लिया जाता है।"
 eyebrow = "Account link"
@@ -7641,6 +7645,12 @@ afternoon = "नमस्कार"
 evening = "शुभ संध्या"
 morning = "सुप्रभात"
 
+[portal.infrastructure]
+manageEditorDeployment = "Editor डिप्लॉयमेंट प्रबंधित करें"
+sectionsAriaLabel = "इन्फ्रास्ट्रक्चर अनुभाग"
+subtitle = "आपके Stirling workspace के लिए डिप्लॉयमेंट, क्रेडेंशियल, सुरक्षा स्थिति, स्टोरेज, और audit trail."
+title = "इन्फ्रास्ट्रक्चर"
+
 [portal.infrastructure.apiKeys]
 createKey = "key बनाएँ"
 heading = "API keys"
@@ -7753,6 +7763,14 @@ titleCreated = "Key बनाई गई"
 [portal.infrastructure.keyLabel]
 active = "सक्रिय"
 revoked = "रद्द"
+
+[portal.infrastructure.tabs]
+apiKeys = "API Keys"
+audit = "Audit Logs"
+deployments = "Deployments"
+models = "Models"
+security = "Security"
+storage = "Storage"
 
 [portal.integrations]
 availableHeading = "उपलब्ध"
@@ -8787,6 +8805,9 @@ extend = "7 दिन बढ़ाएं"
 maxed = "अधिकतम हो गया"
 subtitle = "आपका free trial {{date}} तक चलता है। Card आवश्यक नहीं।"
 title = "Enterprise trial"
+
+[portal.settings.groups]
+admin = "Admin"
 
 [portal.settings.sections]
 account-link = "Account link"
@@ -11879,6 +11900,7 @@ noMembersFound = "कोई सदस्य नहीं मिला"
 role = "भूमिका"
 searchMembers = "सदस्यों को खोजें..."
 team = "टीम"
+title = "लोग"
 unlockAccount = "खाता अनलॉक करें"
 unlockUserError = "उपयोगकर्ता खाता अनलॉक करने में विफल"
 unlockUserSuccess = "उपयोगकर्ता खाता सफलतापूर्वक अनलॉक किया गया"
@@ -12032,6 +12054,7 @@ system = "सिस्टम"
 teamActions = "टीम कार्रवाइयाँ"
 teamName = "टीम का नाम"
 teamNotFound = "टीम नहीं मिली"
+title = "टीम्स"
 totalMembers = "कुल सदस्य"
 viewTeam = "टीम देखें"
 

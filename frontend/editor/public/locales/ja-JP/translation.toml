@@ -3319,6 +3319,7 @@ description = "Model Context Protocol (MCP) lets AI assistants like Claude use y
 guestInfo = "Guest users can't connect MCP clients. Create an account to use the MCP server and let your AI assistant run Stirling PDF tools on your behalf."
 navLabel = "MCP Server"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
+title = "MCP Server"
 viewApiKeys = "View API keys"
 
 [config.mcp.copy]
@@ -6463,6 +6464,9 @@ thirtyDays = "30日"
 threeYears = "3年"
 webhook = "Webhook"
 
+[portal]
+comingSoon = "近日公開"
+
 [portal.accountLink.card]
 billingNote = "無人処理は組織ウォレットに請求されます。"
 eyebrow = "アカウントリンク"
@@ -7641,6 +7645,12 @@ afternoon = "こんにちは"
 evening = "こんばんは"
 morning = "おはようございます"
 
+[portal.infrastructure]
+manageEditorDeployment = "Editor デプロイメントを管理"
+sectionsAriaLabel = "インフラストラクチャセクション"
+subtitle = "Stirling ワークスペースのデプロイメント、認証情報、セキュリティ態勢、ストレージ、監査証跡。"
+title = "インフラストラクチャ"
+
 [portal.infrastructure.apiKeys]
 createKey = "キーを作成"
 heading = "API キー"
@@ -7753,6 +7763,14 @@ titleCreated = "キーが作成されました"
 [portal.infrastructure.keyLabel]
 active = "アクティブ"
 revoked = "取り消し済み"
+
+[portal.infrastructure.tabs]
+apiKeys = "API キー"
+audit = "監査ログ"
+deployments = "デプロイメント"
+models = "モデル"
+security = "セキュリティ"
+storage = "ストレージ"
 
 [portal.integrations]
 availableHeading = "利用可能"
@@ -8787,6 +8805,9 @@ extend = "7日延長"
 maxed = "上限に達しました"
 subtitle = "無料トライアルは {{date}} まで有効です。カードは不要です。"
 title = "Enterprise トライアル"
+
+[portal.settings.groups]
+admin = "管理者"
 
 [portal.settings.sections]
 account-link = "アカウントリンク"
@@ -11879,6 +11900,7 @@ noMembersFound = "メンバーが見つかりません"
 role = "役割"
 searchMembers = "メンバーを検索..."
 team = "チーム"
+title = "メンバー"
 unlockAccount = "アカウントのロックを解除"
 unlockUserError = "ユーザーアカウントのロック解除に失敗しました"
 unlockUserSuccess = "ユーザーアカウントのロックを解除しました"
@@ -12032,6 +12054,7 @@ system = "システム"
 teamActions = "チーム操作"
 teamName = "チーム名"
 teamNotFound = "チームが見つかりません"
+title = "チーム"
 totalMembers = "メンバー総数"
 viewTeam = "チームを表示"
 

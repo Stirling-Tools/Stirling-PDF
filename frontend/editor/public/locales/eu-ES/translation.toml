@@ -3319,6 +3319,7 @@ description = "Model Context Protocol (MCP) lets AI assistants like Claude use y
 guestInfo = "Guest users can't connect MCP clients. Create an account to use the MCP server and let your AI assistant run Stirling PDF tools on your behalf."
 navLabel = "MCP Server"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
+title = "MCP Server"
 viewApiKeys = "View API keys"
 
 [config.mcp.copy]
@@ -6463,6 +6464,9 @@ thirtyDays = "30 egun"
 threeYears = "3 urte"
 webhook = "Webhook"
 
+[portal]
+comingSoon = "Laster"
+
 [portal.accountLink.card]
 billingNote = "Gainbegiratu gabeko prozesamendua zure erakundearen zorroari fakturatzen zaio."
 eyebrow = "Kontu-lotura"
@@ -7641,6 +7645,12 @@ afternoon = "Arratsalde on"
 evening = "Gabon"
 morning = "Egun on"
 
+[portal.infrastructure]
+manageEditorDeployment = "Kudeatu Editorearen hedapena"
+sectionsAriaLabel = "Azpiegitura-atalak"
+subtitle = "Hedapenak, kredentzialak, segurtasun-jarrera, biltegiratzea eta auditoria-arrastoa zure Stirling lan-eremurako."
+title = "Azpiegitura"
+
 [portal.infrastructure.apiKeys]
 createKey = "Sortu gakoa"
 heading = "API gakoak"
@@ -7753,6 +7763,14 @@ titleCreated = "Gakoa sortuta"
 [portal.infrastructure.keyLabel]
 active = "Aktibo"
 revoked = "Ezeztatuta"
+
+[portal.infrastructure.tabs]
+apiKeys = "API gakoak"
+audit = "Auditoria-erregistroak"
+deployments = "Hedapenak"
+models = "Modeloak"
+security = "Segurtasuna"
+storage = "Biltegiratzea"
 
 [portal.integrations]
 availableHeading = "Eskuragarri"
@@ -8787,6 +8805,9 @@ extend = "Luzatu 7 egun"
 maxed = "Mugara iritsita"
 subtitle = "Zure doako probaldia {{date}} arte doa. Ez da txartelik behar."
 title = "Enterprise probaldia"
+
+[portal.settings.groups]
+admin = "Admin"
 
 [portal.settings.sections]
 account-link = "Kontu-lotura"
@@ -11879,6 +11900,7 @@ noMembersFound = "Ez da kiderik aurkitu"
 role = "Rola"
 searchMembers = "Bilatu kideak..."
 team = "Taldea"
+title = "Pertsonak"
 unlockAccount = "Desblokeatu kontua"
 unlockUserError = "Erabiltzaile-kontua desblokeatzeak huts egin du"
 unlockUserSuccess = "Erabiltzaile-kontua arrakastaz desblokeatu da"
@@ -12032,6 +12054,7 @@ system = "Sistema"
 teamActions = "Taldearen ekintzak"
 teamName = "Taldearen izena"
 teamNotFound = "Ez da taldea aurkitu"
+title = "Taldeak"
 totalMembers = "Kideak guztira"
 viewTeam = "Ikusi taldea"
 

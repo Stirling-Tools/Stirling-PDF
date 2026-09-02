@@ -3319,6 +3319,7 @@ description = "Il Model Context Protocol (MCP) consente agli assistenti IA come 
 guestInfo = "Gli utenti ospite non possono connettere client MCP. Crea un account per utilizzare il server MCP e consentire al tuo assistente IA di eseguire gli strumenti Stirling PDF per tuo conto."
 navLabel = "Server MCP"
 tip = "Ogni azione eseguita dal tuo assistente viene effettuata con il tuo account e viene conteggiata nel tuo consumo, esattamente come quando usi Stirling PDF direttamente."
+title = "MCP Server"
 viewApiKeys = "Visualizza API key"
 
 [config.mcp.copy]
@@ -6463,6 +6464,9 @@ thirtyDays = "30 giorni"
 threeYears = "3 anni"
 webhook = "Webhook"
 
+[portal]
+comingSoon = "Disponibile a breve"
+
 [portal.accountLink.card]
 billingNote = "L'elaborazione non presidiata viene addebitata al portafoglio della tua organizzazione."
 eyebrow = "Collegamento account"
@@ -7641,6 +7645,12 @@ afternoon = "Buon pomeriggio"
 evening = "Buonasera"
 morning = "Buongiorno"
 
+[portal.infrastructure]
+manageEditorDeployment = "Gestisci la distribuzione dell'Editor"
+sectionsAriaLabel = "Sezioni dell'infrastruttura"
+subtitle = "Distribuzioni, credenziali, postura di sicurezza, storage e traccia di audit per il tuo workspace Stirling."
+title = "Infrastruttura"
+
 [portal.infrastructure.apiKeys]
 createKey = "Crea chiave"
 heading = "Chiavi API"
@@ -7753,6 +7763,14 @@ titleCreated = "Chiave creata"
 [portal.infrastructure.keyLabel]
 active = "Attiva"
 revoked = "Revocata"
+
+[portal.infrastructure.tabs]
+apiKeys = "Chiavi API"
+audit = "Log di audit"
+deployments = "Distribuzioni"
+models = "Modelli"
+security = "Sicurezza"
+storage = "Storage"
 
 [portal.integrations]
 availableHeading = "Disponibili"
@@ -8787,6 +8805,9 @@ extend = "Estendi di 7 giorni"
 maxed = "Limite raggiunto"
 subtitle = "La tua trial gratuita dura fino al {{date}}. Nessuna carta richiesta."
 title = "Trial Enterprise"
+
+[portal.settings.groups]
+admin = "Admin"
 
 [portal.settings.sections]
 account-link = "Collegamento account"
@@ -11879,6 +11900,7 @@ noMembersFound = "Nessun membro trovato"
 role = "Ruolo"
 searchMembers = "Cerca membri..."
 team = "Team"
+title = "Persone"
 unlockAccount = "Sblocca account"
 unlockUserError = "Impossibile sbloccare l'account utente"
 unlockUserSuccess = "Account utente sbloccato con successo"
@@ -12032,6 +12054,7 @@ system = "Sistema"
 teamActions = "Azioni team"
 teamName = "Nome team"
 teamNotFound = "Team non trovato"
+title = "Team"
 totalMembers = "Membri totali"
 viewTeam = "Visualizza team"
 
