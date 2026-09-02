@@ -19,7 +19,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.server.ResponseStatusException;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.service.ToolChainValidator;
 import stirling.software.common.service.UserServiceInterface;
+import stirling.software.proprietary.policy.asset.PolicyAssetStore;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 import stirling.software.proprietary.policy.engine.PolicyRunner;
@@ -59,6 +61,8 @@ class ProcessingFolderControllerTest {
     @Mock private StorageProvider storageProvider;
     @Mock private UserServiceInterface userService;
     @Mock private PolicyManagementAuthority policyManagementAuthority;
+    @Mock private PolicyAssetStore assetStore;
+    @Mock private ToolChainValidator toolChainValidator;
 
     private final InProcessPolicyStore policyStore = new InProcessPolicyStore();
     private final InProcessSourceStore sourceStore = new InProcessSourceStore();
@@ -110,7 +114,9 @@ class ProcessingFolderControllerTest {
                                         storageProvider,
                                         properties)),
                         List.of(),
-                        sourceStore);
+                        sourceStore,
+                        assetStore,
+                        toolChainValidator);
         controller =
                 new ProcessingFolderController(
                         policyStore,
@@ -184,11 +190,12 @@ class ProcessingFolderControllerTest {
                         "Security Policy",
                         "reece",
                         true,
-                        null,
                         List.of(),
                         List.of(),
                         stirling.software.proprietary.policy.model.OutputSpec.inline(),
-                        3L));
+                        List.of(),
+                        3L,
+                        null));
 
         assertThat(controller.list()).hasSize(1);
     }

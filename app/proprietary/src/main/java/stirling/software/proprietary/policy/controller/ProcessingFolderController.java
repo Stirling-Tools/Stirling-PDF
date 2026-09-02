@@ -30,6 +30,7 @@ import stirling.software.proprietary.policy.engine.PolicyValidator;
 import stirling.software.proprietary.policy.engine.SweepOutcome;
 import stirling.software.proprietary.policy.ledger.ProcessedLedger;
 import stirling.software.proprietary.policy.model.OutputSpec;
+import stirling.software.proprietary.policy.model.PipelineInput;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.source.Source;
@@ -135,11 +136,14 @@ public class ProcessingFolderController {
                         "Processing folder: " + folder.getName(),
                         policyAccessGuard.ownerForNewPolicy(),
                         request.enabled() == null || request.enabled(),
-                        null,
-                        List.of(source.id()),
+                        // No automatic trigger: the pair route sweeps on create and the
+                        // watcher drives later sweeps, so the input itself stays manual.
+                        List.of(PipelineInput.manual(source.id())),
                         request.steps() == null ? List.of() : request.steps(),
                         new OutputSpec("storage", outputOptions(request, folder)),
-                        policyAccessGuard.teamForNewPolicy());
+                        List.of(),
+                        policyAccessGuard.teamForNewPolicy(),
+                        null);
         try {
             policyValidator.validate(policy);
         } catch (IllegalArgumentException e) {

@@ -334,7 +334,7 @@ class PolicyRunnerTest {
                         List.of(
                                 ResolvedInput.forFile(
                                         PolicyInputs.of(List.of()), "/in/doc.pdf", success -> {})));
-        when(policyEngine.runPolicy(any(), any(), any(), any(), any()))
+        when(policyEngine.runPolicy(any(), any(), any(), any(), any(), any()))
                 .thenReturn(new PolicyRunHandle("r", new CompletableFuture<>()));
 
         runner.run(policy);
@@ -345,7 +345,8 @@ class PolicyRunnerTest {
                         any(),
                         any(),
                         eq(sourceId),
-                        eq(IdentityHasher.identityHash("/in/doc.pdf")));
+                        eq(IdentityHasher.identityHash("/in/doc.pdf")),
+                        any());
     }
 
     @Test

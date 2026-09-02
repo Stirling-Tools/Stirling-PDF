@@ -95,6 +95,7 @@ public class StorageFolderInputSource implements InputSource {
             work.add(
                     new ResolvedInput(
                             PolicyInputs.of(List.of(new StoredFileResource(storageProvider, file))),
+                            identity,
                             success ->
                                     settleAtCurrentVersion(ctx, fileId, identity, gate, success)));
         }
