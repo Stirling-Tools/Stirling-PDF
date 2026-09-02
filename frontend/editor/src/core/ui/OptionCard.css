@@ -63,16 +63,17 @@
   color: var(--c-accent-text);
 }
 
-/* Disabled cards recede onto the sunken surface and drop to ink: the icon chip flattens to a muted
-   glyph and every label goes muted, so the card reads clearly greyed against the usable ones. */
+/* Disabled cards recede onto the sunken surface: every label goes muted so the card reads clearly
+   greyed against the usable ones, while the icon keeps a faint raised chip in its own colour so it
+   stays distinct from the greyed text rather than flattening into it. */
 .sui-option-card--disabled {
   background: var(--c-surface-sunken);
   cursor: default;
 }
 
 .sui-option-card--disabled .sui-option-card__icon {
-  background: transparent;
-  color: var(--c-text-muted);
+  background: var(--c-surface);
+  color: var(--c-text-subtle);
 }
 
 .sui-option-card--disabled .sui-option-card__title,
