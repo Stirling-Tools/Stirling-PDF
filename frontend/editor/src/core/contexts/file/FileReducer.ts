@@ -389,16 +389,16 @@ export function fileContextReducer(
       // Carry the document's classification verdict forward across the edit: any
       // tool that versions/derives a classified file keeps it in its label
       // groups instead of dropping to "Other" and waiting on a PDF re-read.
-      // Inherited from the first input that has labels, together with that
-      // verdict's confidence - the escalation decision (localVerdictNeedsEscalation)
-      // is about the document, not about which step produced the current bytes, so
-      // it must survive the version boundary. An output that already carries its
-      // own verdict (e.g. a fresh classify result) keeps it.
-      const verdictDonor = inputFileIds
-        .map((id) => state.files.byId[id])
-        .find(
+      // Inherited together with that verdict's confidence - the escalation
+      // decision (localVerdictNeedsEscalation) is about the document, not about
+      // which step produced the current bytes, so it must survive the version
+      // boundary. An output that already carries its own verdict (e.g. a fresh
+      // classify result) keeps it.
+      const inputStubs = inputFileIds.map((id) => state.files.byId[id]);
+      const verdictDonor =
+        inputStubs.find(
           (s) => s?.classificationLabels && s.classificationLabels.length > 0,
-        );
+        ) ?? inputStubs.find((s) => s?.classificationLabels !== undefined);
 
       // Mark every consume output as tool-produced (the single chokepoint for
       // both versioned edits and independent artifacts like convert/split/merge)
@@ -409,7 +409,7 @@ export function fileContextReducer(
         ...stub,
         derivedFromTool: true,
         sourceFileIds,
-        ...(stub.classificationLabels == null && verdictDonor
+        ...(stub.classificationLabels === undefined && verdictDonor
           ? {
               classificationLabels: verdictDonor.classificationLabels,
               classificationConfidence:

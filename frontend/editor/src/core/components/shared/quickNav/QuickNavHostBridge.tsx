@@ -22,6 +22,7 @@ export interface QuickNavHostBridgeProps {
   requestNavigation?: (go: () => void) => void;
   onGoToDefaultState?: () => void;
   onSelectTool?: (toolId: ToolId) => void;
+  activeTool?: ToolId | null;
   /** Merged over the reasons worked out here, for what only the app can see. */
   toolReasons?: QuickNavToolReasons;
 }
@@ -34,6 +35,7 @@ export function QuickNavHostBridge({
   onOpenSettings,
   requestNavigation,
   onSelectTool,
+  activeTool = null,
   onGoToDefaultState,
   toolReasons,
 }: QuickNavHostBridgeProps) {
@@ -59,6 +61,7 @@ export function QuickNavHostBridge({
       signingBadge,
       portalAccess,
       readerMode,
+      activeTool,
       notificationsOpen,
       toolReasons: mergedToolReasons,
     },

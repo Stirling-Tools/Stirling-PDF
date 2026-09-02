@@ -691,7 +691,8 @@ async function importOutputs(
   // origin) — so a 60-file batch doesn't re-read every downstream output.
   const parentLabels = parentStub?.classificationLabels;
   const resolveLabels = async (file: File) =>
-    (parentLabels && parentLabels.length > 0 ? parentLabels : undefined) ??
+    // Inherit the parent's verdict
+    (Array.isArray(parentLabels) ? parentLabels : undefined) ??
     (await readClassificationLabelsFromFile(file)) ??
     undefined;
 

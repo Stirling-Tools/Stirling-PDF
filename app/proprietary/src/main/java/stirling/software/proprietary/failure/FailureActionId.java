@@ -18,6 +18,19 @@ public enum FailureActionId {
 
     DISMISS(Execution.SERVER, "Dismiss"),
 
+    /**
+     * Open the failed operation in the client with its document, for the owner to run again
+     * themselves. Not a re-run: the settings are theirs to check first.
+     */
+    OPEN_IN_TOOL(Execution.CLIENT, "Retry"),
+
+    /**
+     * Ask the owner for the password and unlock the document in their client. Re-running is implied
+     * rather than named: an id says what a caller must supply, and a {@link
+     * FailureActionSlot#RESOLUTION} runs the failed work again once it has it.
+     */
+    DECRYPT(Execution.CLIENT, "Decrypt and retry"),
+
     /** Open the document behind the incident, in whichever client can resolve its id. */
     VIEW_FILE(Execution.CLIENT, "View file"),
 

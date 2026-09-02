@@ -253,10 +253,10 @@ describe("usePolicyLocalPasses delivery", () => {
     );
   });
 
-  it("skips tool outputs and already-labelled files", async () => {
+  it("skips already-classified files (a real label, or the no-label [] verdict)", async () => {
     mocks.workspace = [
-      stub("derived", { derivedFromTool: true }),
       stub("done", { classificationLabels: ["invoice"] }),
+      // [] means classified-nothing-found: it must NOT be re-classified (or re-billed).
       stub("verdict", { classificationLabels: [] }),
     ];
 
@@ -265,6 +265,22 @@ describe("usePolicyLocalPasses delivery", () => {
     // Nothing to classify; give the (immediate) idle path a beat to prove it.
     await new Promise((r) => setTimeout(r, 50));
     expect(mocks.classify).not.toHaveBeenCalled();
+  });
+
+  it("classifies a policy new-file output that has no verdict to inherit", async () => {
+    // A new-file policy output is derivedFromTool but carries no label - there is no parent to
+    // inherit from. Main classified these through the chain, so the local pass must pick them up.
+    mocks.classify.mockResolvedValue({ labels: ["invoice"] });
+    mocks.workspace = [stub("newfile", { derivedFromTool: true })];
+
+    renderHook(() => usePolicyLocalPasses());
+
+    await waitFor(() =>
+      expect(mocks.updateStirlingFileStub).toHaveBeenCalledWith("newfile", {
+        classificationLabels: ["invoice"],
+      }),
+    );
+    expect(mocks.meter).toHaveBeenCalledTimes(1);
   });
 
   it("escalates an unsure local verdict to the AI engine itself", async () => {

@@ -24,6 +24,7 @@ export interface QuickNavHostData {
   signingBadge: number;
   portalAccess: boolean;
   readerMode: boolean;
+  activeTool: ToolId | null;
   /** The app owns the panel; the rail's bell only reports its state. */
   notificationsOpen: boolean;
   /** Translated; absent means usable. */
@@ -61,6 +62,7 @@ const EMPTY_DATA: QuickNavHostData = {
   signingBadge: 0,
   portalAccess: false,
   readerMode: false,
+  activeTool: null,
   notificationsOpen: false,
   hasSettings: false,
 };
@@ -90,6 +92,7 @@ export function QuickNavHostProvider({ children }: { children: ReactNode }) {
         merged.signingBadge === prev.signingBadge &&
         merged.portalAccess === prev.portalAccess &&
         merged.readerMode === prev.readerMode &&
+        merged.activeTool === prev.activeTool &&
         merged.notificationsOpen === prev.notificationsOpen &&
         merged.hasSettings === prev.hasSettings &&
         merged.identity?.displayName === prev.identity?.displayName &&
@@ -143,6 +146,7 @@ export function useRegisterQuickNavHost(
     signingBadge,
     portalAccess,
     readerMode,
+    activeTool,
     notificationsOpen,
     toolReasons,
   } = data;
@@ -155,6 +159,8 @@ export function useRegisterQuickNavHost(
       signingBadge: signingBadge ?? 0,
       portalAccess: portalAccess ?? false,
       readerMode: readerMode ?? false,
+      // Cleared, not omitted as toolReasons is: a stale tool marks an entry.
+      activeTool: activeTool ?? null,
       notificationsOpen: notificationsOpen ?? false,
       // Omitted when unknown, so the last answer survives a re-fetch.
       ...(toolReasons ? { toolReasons } : {}),
@@ -168,6 +174,7 @@ export function useRegisterQuickNavHost(
     signingBadge,
     portalAccess,
     readerMode,
+    activeTool,
     notificationsOpen,
     toolReasons,
     hasSettings,

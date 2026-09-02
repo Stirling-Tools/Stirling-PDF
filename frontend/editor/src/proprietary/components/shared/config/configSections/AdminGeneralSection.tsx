@@ -112,11 +112,11 @@ export default function AdminGeneralSection() {
     setSettings,
     loading,
     saving,
-    fetchSettings,
     saveSettings,
     isFieldPending,
   } = useAdminSettings<GeneralSettingsData>({
     sectionName: "general",
+    enabled: loginEnabled,
     fetchTransformer: async (): Promise<
       GeneralSettingsData & { _pending?: Record<string, unknown> }
     > => {
@@ -330,13 +330,6 @@ export default function AdminGeneralSection() {
       selectedLanguages.includes(option.value),
     );
   }, [selectedLanguages, languageOptions]);
-
-  useEffect(() => {
-    // Only fetch real settings if login is enabled
-    if (loginEnabled) {
-      fetchSettings();
-    }
-  }, [loginEnabled, fetchSettings]);
 
   // Sync local preference with server setting on initial load
   useEffect(() => {
