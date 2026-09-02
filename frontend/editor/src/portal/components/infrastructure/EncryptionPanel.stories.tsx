@@ -284,6 +284,70 @@ export const MigrationFailed: Story = {
   },
 };
 
+/**
+ * A revoke that fails. The error belongs to the key card: one shared error
+ * string previously rendered it under "Encrypt existing files" instead.
+ */
+export const KeyActionFailed: Story = {
+  globals: { tier: "enterprise" },
+  parameters: {
+    msw: {
+      // First match wins in MSW, so the failing handler has to precede the
+      // healthy set rather than follow it.
+      handlers: [
+        http.post(`${BASE}/keys/:keyId/disable`, () =>
+          HttpResponse.json({ detail: "boom" }, { status: 500 }),
+        ),
+        ...handlers(ACTIVE_STATUS),
+      ],
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const rowButtons = await canvas.findAllByRole("button", {
+      name: /^revoke$/i,
+    });
+    await userEvent.click(rowButtons[0]);
+    await userEvent.click(
+      await within(document.body).findByRole("button", {
+        name: /revoke access/i,
+      }),
+    );
+
+    const message = await canvas.findByText(/could not be applied/i);
+    const keysCard = canvas.getByText(/scope keys/i).closest(".sui-card");
+    await expect(keysCard).not.toBeNull();
+    await expect(keysCard?.contains(message)).toBe(true);
+  },
+};
+
+/**
+ * Decrypt-only on S3. The backend still streams downloads through the app once
+ * any key exists, so the bandwidth note has to show here too — it used to be
+ * tied to the write flag and vanished in exactly this state.
+ */
+export const DecryptOnlyOnS3: Story = {
+  globals: { tier: "enterprise" },
+  parameters: {
+    msw: {
+      handlers: handlers({
+        ...ACTIVE_STATUS,
+        writeEnabled: false,
+        active: true,
+        provider: "s3",
+        encryptedFiles: 4128,
+        plaintextFiles: 12,
+      }),
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(
+      await canvas.findByText(/streamed through this server/i),
+    ).toBeInTheDocument();
+  },
+};
+
 /** 09. Mid-rotation: rows still on the old key, so the old key must be kept. */
 export const RotationPending: Story = {
   globals: { tier: "enterprise" },

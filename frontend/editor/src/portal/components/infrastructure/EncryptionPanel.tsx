@@ -71,7 +71,12 @@ export function EncryptionPanel({
   const [starting, setStarting] = useState(false);
   const [rotating, setRotating] = useState(false);
   const [lastRewrapped, setLastRewrapped] = useState<number | null>(null);
-  const [actionError, setActionError] = useState<string | null>(null);
+  // One per action area: a single shared string renders wherever it is passed,
+  // so a failed revoke surfaced under "Encrypt existing files".
+  const [keyActionError, setKeyActionError] = useState<string | null>(null);
+  const [rotateError, setRotateError] = useState<string | null>(null);
+  const [migrationError, setMigrationError] = useState<string | null>(null);
+  const [copyError, setCopyError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const mounted = useRef(true);
   const fingerprintRef = useRef<HTMLElement | null>(null);
@@ -129,18 +134,19 @@ export function EncryptionPanel({
     action: (keyId: string) => Promise<EncryptionKeyInfo>,
   ) => {
     setBusyKeyId(key.keyId);
-    setActionError(null);
+    setKeyActionError(null);
     try {
       await action(key.keyId);
       await load();
     } catch (error) {
-      setActionError(
+      setKeyActionError(
         isConflict(error)
           ? errorMessage(error)
           : isMissing(error)
             ? t("portal.infrastructure.encryption.error.keyMissing")
             : t("portal.infrastructure.encryption.error.action"),
       );
+      await load();
     } finally {
       if (mounted.current) setBusyKeyId(null);
     }
@@ -148,11 +154,11 @@ export function EncryptionPanel({
 
   const onStartMigration = async () => {
     setStarting(true);
-    setActionError(null);
+    setMigrationError(null);
     try {
       setMigration(await startEncryptionMigration());
     } catch (error) {
-      setActionError(
+      setMigrationError(
         isConflict(error)
           ? errorMessage(error)
           : t("portal.infrastructure.encryption.error.migrationStart"),
@@ -172,6 +178,7 @@ export function EncryptionPanel({
     try {
       await navigator.clipboard.writeText(fingerprint);
       setCopied(true);
+      setCopyError(null);
     } catch {
       const node = fingerprintRef.current;
       if (node) {
@@ -182,25 +189,25 @@ export function EncryptionPanel({
         selection?.addRange(range);
       }
       setCopied(false);
-      setActionError(
-        t("portal.infrastructure.encryption.masterKey.copyFailed"),
-      );
+      setCopyError(t("portal.infrastructure.encryption.masterKey.copyFailed"));
     }
   };
 
   const onRotate = async () => {
     setRotating(true);
-    setActionError(null);
+    setRotateError(null);
     try {
       const result = await rotateMasterKey();
       setLastRewrapped(result.rewrapped);
       await load();
     } catch (error) {
-      setActionError(
+      setRotateError(
         isConflict(error)
           ? errorMessage(error)
           : t("portal.infrastructure.encryption.error.rotate"),
       );
+      // A rotation can fail partway, so the pending count on screen is stale.
+      await load();
     } finally {
       if (mounted.current) setRotating(false);
     }
@@ -432,12 +439,18 @@ export function EncryptionPanel({
                   </div>
                   {/* Presigned URLs are suppressed once anything is encrypted, so
                       object-store downloads start streaming through the app. */}
-                  {status.provider === "s3" && status.writeEnabled ? (
+                  {status.provider === "s3" &&
+                  (status.writeEnabled ||
+                    status.active ||
+                    status.keys.length > 0) ? (
                     <p className="portal-enc__note">
                       {t(
                         "portal.infrastructure.encryption.masterKey.s3StreamingNote",
                       )}
                     </p>
+                  ) : null}
+                  {copyError ? (
+                    <Banner tone="warning" description={copyError} />
                   ) : null}
                 </>
               ) : (
@@ -450,6 +463,7 @@ export function EncryptionPanel({
             </Card>
 
             <EncryptionRotationCard
+              actionError={rotateError}
               masterKeyVersion={status.masterKeyVersion}
               pendingRows={pendingRotationCount(status)}
               rotating={rotating}
@@ -459,6 +473,7 @@ export function EncryptionPanel({
           </section>
 
           <EncryptionKeyTable
+            actionError={keyActionError}
             keys={status.keys}
             clusterEnabled={clusterEnabled}
             busyKeyId={busyKeyId}
@@ -473,7 +488,7 @@ export function EncryptionPanel({
         plaintextFiles={status.plaintextFiles}
         writeEnabled={status.writeEnabled}
         starting={starting}
-        actionError={actionError}
+        actionError={migrationError}
         onStart={() => void onStartMigration()}
       />
     </div>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  Banner,
   Button,
   Card,
   column,
@@ -23,6 +24,8 @@ const STATUS_TONE: Record<EncryptionKeyStatus, StatusTone> = {
 };
 
 export interface EncryptionKeyTableProps {
+  /** Why the last revoke or restore failed. Shown here, beside the rows it concerns. */
+  actionError?: string | null;
   keys: EncryptionKeyInfo[];
   /** Shows the cross-node propagation delay in the revoke dialog. */
   clusterEnabled?: boolean;
@@ -39,6 +42,7 @@ export interface EncryptionKeyTableProps {
  * dialog exists at all.
  */
 export function EncryptionKeyTable({
+  actionError = null,
   keys,
   clusterEnabled = false,
   busyKeyId = null,
@@ -133,6 +137,10 @@ export function EncryptionKeyTable({
           hint={t("portal.infrastructure.encryption.keys.subheading")}
           hintLabel={t("portal.infrastructure.encryption.hintLabel")}
         />
+        {actionError ? (
+          <Banner tone="warning" description={actionError} />
+        ) : null}
+
         {/* Column headers over an empty body are chrome around nothing. */}
         {keys.length === 0 ? (
           <EmptyState
