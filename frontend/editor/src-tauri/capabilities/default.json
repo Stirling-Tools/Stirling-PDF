@@ -6,6 +6,12 @@
   "permissions": [
     "core:default",
     "core:window:allow-destroy",
+    "core:window:allow-minimize",
+    "core:window:allow-toggle-maximize",
+    "core:window:allow-internal-toggle-maximize",
+    "core:window:allow-close",
+    "core:window:allow-is-maximized",
+    "core:window:allow-start-dragging",
     "http:default",
     {
       "identifier": "http:allow-fetch",

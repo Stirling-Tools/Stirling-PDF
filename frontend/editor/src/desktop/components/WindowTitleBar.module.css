@@ -1,0 +1,60 @@
+/* Custom Windows title bar (see WindowTitleBar.tsx). Full-width strip above the
+   rail + panels; the drag region is the empty area, controls sit top-right. */
+.titleBar {
+  display: flex;
+  align-items: stretch;
+  justify-content: flex-end;
+  flex: 0 0 auto;
+  height: var(--titlebar-h, 2rem);
+  background: var(--c-bg);
+  user-select: none;
+  -webkit-user-select: none;
+  /* Keep the window controls above app overlays so they stay usable. */
+  position: relative;
+  z-index: 1500;
+}
+
+.controls {
+  display: flex;
+  align-items: stretch;
+  height: 100%;
+}
+
+.button {
+  width: 46px;
+  height: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--c-text-muted);
+  font-size: 15px; /* drives the inherit-sized MUI icons */
+  line-height: 1;
+  cursor: default;
+  transition:
+    background-color 0.12s ease,
+    color 0.12s ease;
+}
+
+/* Clicks (and Tauri's drag-region hit test) should always resolve to the
+   button, never its SVG glyph. */
+.button svg {
+  pointer-events: none;
+}
+
+.button:hover {
+  background: var(--c-hover);
+  color: var(--c-text);
+}
+
+.close:hover {
+  background: var(--c-danger);
+  color: #fff;
+}
+
+.restoreIcon {
+  /* The overlapping-squares glyph reads large next to the others. */
+  font-size: 13px;
+}
