@@ -50,6 +50,24 @@ const ICONS: Record<string, MuiIcon> = {
   retention: ScheduleOutlinedIcon,
 };
 
+// A category id doubles as an icon value (see the ICONS aliases), but the picker only offers the
+// canonical keys below, so a category-id value must be mapped to its canonical key or IconPicker
+// can't match it and falls back to the default glyph. Keep in sync with the ICONS aliases.
+const CATEGORY_ICON_KEY: Record<string, string> = {
+  ingestion: "layers",
+  security: "shield",
+  classification: "label",
+  compliance: "check",
+  routing: "route",
+  retention: "schedule",
+};
+
+/** An icon value (a pickable key, or a category-id alias) mapped to the canonical key the picker
+ * offers, so a template-derived pipeline shows its glyph as the selected option. */
+export function canonicalPipelineIconKey(key: string): string {
+  return CATEGORY_ICON_KEY[key] ?? key;
+}
+
 /** The glyph for a pipeline with no icon set (and the picker's default): the bespoke route mark. */
 export const DEFAULT_PIPELINE_ICON = "route";
 

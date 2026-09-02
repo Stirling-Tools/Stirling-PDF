@@ -76,6 +76,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { qk } from "@portal/queries/keys";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
 import { humanizeOperation } from "@portal/components/pipelines/pipelineOperations";
+import { canonicalPipelineIconKey } from "@portal/components/pipelines/pipelineIcon";
 import { PipelineCreateHeader } from "@portal/components/pipelines/PipelineCreateHeader";
 import { PipelineEditHeader } from "@portal/components/pipelines/PipelineEditHeader";
 import { PipelineGraphToolbar } from "@portal/components/pipelines/PipelineGraphToolbar";
@@ -370,12 +371,15 @@ export function PipelineBuilder() {
     setName(policy?.name ?? "");
     setEnabled(policy?.enabled ?? true);
     setRequired(policy?.required ?? false);
-    // Seed the icon from the first-class field; a template hand-off has none yet, so fall back to
-    // its category id (a valid icon key) so the picker shows the category glyph.
+    // Seed the icon from the first-class field; a template hand-off has none yet, so fall back to its
+    // category id. Normalise either to a canonical pickable key - the picker matches its own
+    // vocabulary, not the category-id aliases, so an unnormalised categoryId shows as the default.
     const seedCategoryId = policy?.output?.options?.categoryId;
     setIcon(
-      policy?.icon ??
-        (typeof seedCategoryId === "string" ? seedCategoryId : ""),
+      canonicalPipelineIconKey(
+        policy?.icon ??
+          (typeof seedCategoryId === "string" ? seedCategoryId : ""),
+      ),
     );
     setOutputOptions(policy?.output?.options ?? {});
     setOutputType(policy?.output?.type ?? "inline");
