@@ -1,4 +1,7 @@
-import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
+import {
+  RolledBackError,
+  type Command,
+} from "@app/tools/pdfTextEditor/commands/Command";
 import { CompositeCommand } from "@app/tools/pdfTextEditor/commands/CompositeCommand";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
 
@@ -12,12 +15,16 @@ const COALESCE_WINDOW_MS = 600;
 export class HistoryStepError extends Error {
   readonly phase: "apply" | "revert";
   readonly cause: unknown;
+  // True when the failing command put the document back as it was, so the run
+  // model still describes the page and only THIS step is lost.
+  readonly documentIntact: boolean;
 
   constructor(phase: "apply" | "revert", cause: unknown) {
     super(`Command failed to ${phase}`);
     this.name = "HistoryStepError";
     this.phase = phase;
-    this.cause = cause;
+    this.documentIntact = cause instanceof RolledBackError;
+    this.cause = cause instanceof RolledBackError ? cause.cause : cause;
   }
 }
 
@@ -59,7 +66,16 @@ export class HistoryStack {
     // Read the clock BEFORE apply: the window is meant to measure the user's
     // idle time between edits.
     const startedAt = Date.now();
-    cmd.apply(doc);
+    try {
+      cmd.apply(doc);
+    } catch (err) {
+      // Same contract undo/redo already honoured: a command that threw is NOT
+      // recorded, because a history entry whose apply half-ran cannot be
+      // reverted. Pushing first would have made the next undo run a revert
+      // against changes that were never made.
+      this.lastCoalesceKey = null;
+      throw new HistoryStepError("apply", err);
+    }
     const key = cmd.coalesceKey?.() ?? null;
     const top = this.undoStack[this.undoStack.length - 1];
     // The command a merge would join. Unwrap a group to its most recent

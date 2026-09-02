@@ -3738,11 +3738,11 @@ test.describe("PDF text editor - dirty state", () => {
     await gotoEditor(page);
     await loadSamplePdf(page);
 
-    // Save state lives beside the top-bar filename; the sidebar no longer
-    // repeats it. Clean on load.
+    // Save state is a dot beside the top-bar filename - a word would squeeze
+    // the name it sits next to. Clean on load.
     const filename = page.getByTestId("pdf-editor-filename");
     await expect(filename).toBeVisible();
-    await expect(filename).not.toContainText("unsaved");
+    await expect(page.getByTestId("pdf-editor-dirty-dot")).toHaveCount(0);
 
     const firstRunTestId = await page
       .locator('[data-testid^="pdf-editor-run-p0-"]')
@@ -3750,7 +3750,7 @@ test.describe("PDF text editor - dirty state", () => {
       .getAttribute("data-testid");
     await typeIntoRun(page, firstRunTestId!, "X");
 
-    await expect(filename).toContainText("unsaved");
+    await expect(page.getByTestId("pdf-editor-dirty-dot")).toBeVisible();
   });
 });
 

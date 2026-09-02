@@ -1,4 +1,5 @@
 import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
+import { assertSavedPdf } from "@app/tools/pdfTextEditor/util/savedBytes";
 
 /** `FPDF_SaveAsCopy` flags. */
 const FPDF_INCREMENTAL = 1;
@@ -40,15 +41,34 @@ export class PdfiumSave {
       );
     }
 
+    // The writer the shim hands back is the FPDF_FILEWRITE the flagged
+    // entry point expects, so incremental mode needs no extra plumbing.
+    const withFlags = (m as unknown as SaveFlagsModule).FPDF_SaveAsCopy;
+    // Falling back to the unflagged entry point would REWRITE a document the
+    // caller asked to append to - the one thing incremental mode exists to
+    // prevent - so refuse rather than quietly break its signatures.
+    if (options.incremental && typeof withFlags !== "function") {
+      throw new Error(
+        "This PDF needs a signature-preserving incremental save, but the " +
+          "PDFium build in use has no FPDF_SaveAsCopy entry point; save " +
+          "aborted rather than rewriting the signed revision.",
+      );
+    }
+
     const writerPtr = m.PDFiumExt_OpenFileWriter();
     try {
-      // The writer the shim hands back is the FPDF_FILEWRITE the flagged
-      // entry point expects, so incremental mode needs no extra plumbing.
-      const withFlags = (m as unknown as SaveFlagsModule).FPDF_SaveAsCopy;
-      if (options.incremental && typeof withFlags === "function") {
-        withFlags(doc.docPtr, writerPtr, FPDF_INCREMENTAL);
-      } else {
-        m.PDFiumExt_SaveAsCopy(doc.docPtr, writerPtr);
+      // PDFium reports a failed save by return code, not by throwing. Ignoring
+      // it meant a failure produced an empty/partial buffer that the editor
+      // then wrote over the user's file.
+      const ok =
+        options.incremental && typeof withFlags === "function"
+          ? withFlags(doc.docPtr, writerPtr, FPDF_INCREMENTAL)
+          : m.PDFiumExt_SaveAsCopy(doc.docPtr, writerPtr);
+      if (!ok) {
+        throw new Error(
+          "PDFium could not serialize the edited document; save aborted so " +
+            "the existing file is left untouched.",
+        );
       }
       const size = m.PDFiumExt_GetFileWriterSize(writerPtr);
       const outBuf = m.pdfium.wasmExports.malloc(size);
@@ -62,6 +82,7 @@ export class PdfiumSave {
           size,
         );
         view.set(heap);
+        assertSavedPdf(view);
         return view;
       } finally {
         m.pdfium.wasmExports.free(outBuf);

@@ -1,0 +1,100 @@
+/* Find & replace, laid out the way a code editor's is: a docked strip under
+   the toolbar, two rows, and hairlines that fence it off from the page. */
+
+.pdf-editor-findbar {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.4375rem 0.625rem;
+  background: var(--c-bg-raised);
+  /* Both edges drawn: without the bottom rule the bar reads as part of the
+     page it is searching. The rule spans the full width; the controls do not. */
+  border-bottom: 0.0625rem solid var(--c-border-subtle);
+  flex: 0 0 auto;
+}
+
+/* One grid for BOTH rows, so the find and replace fields end at the same x
+   whatever the buttons beside them are called. Two flex rows could only agree
+   by hardcoding a width, which the first translation longer than "Replace all"
+   would break. */
+.pdf-editor-findbar__grid {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  column-gap: 0.25rem;
+  row-gap: 0.3125rem;
+  /* Capped, not full-bleed: a search box stretched across a 1600px canvas
+     stops reading as a control. */
+  max-width: 44rem;
+}
+
+/* The toggles + match count that live inside the find field. */
+.pdf-editor-findbar__inline {
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+  padding-right: 0.25rem;
+}
+
+.pdf-editor-findbar__count {
+  font-size: 0.6875rem;
+  color: var(--c-text-muted);
+  white-space: nowrap;
+  padding-right: 0.25rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Square, quiet toggles - "Aa", "ab", "a" - pressed state filled. */
+.pdf-editor-findbar__toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.375rem;
+  height: 1.375rem;
+  padding: 0;
+  border: 0;
+  border-radius: 0.25rem;
+  background: transparent;
+  color: var(--c-text-muted);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.pdf-editor-findbar__toggle--underlined {
+  text-decoration: underline;
+  text-underline-offset: 0.125rem;
+}
+
+.pdf-editor-findbar__toggle:hover {
+  background: var(--c-hover);
+  color: var(--c-text);
+}
+
+.pdf-editor-findbar__toggle[aria-pressed="true"] {
+  background: var(--c-primary);
+  color: var(--c-text-on-primary);
+}
+
+/* Vertical hairline between each field and its buttons. */
+.pdf-editor-findbar__divider {
+  width: 0.0625rem;
+  align-self: stretch;
+  margin: 0.125rem 0.1875rem;
+  background: var(--c-border-strong);
+}
+
+.pdf-editor-findbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Pinned to the bar's own right edge, clear of the capped control grid. */
+.pdf-editor-findbar__close {
+  flex: 0 0 auto;
+  margin-left: auto;
+}

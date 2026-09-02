@@ -1,12 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { Box, Center, Group, Stack, Tabs, Text, Tooltip } from "@mantine/core";
+import { Box, Center, Group, Stack, Tabs, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import HighlightAltIcon from "@mui/icons-material/HighlightAltOutlined";
-import TextFieldsIcon from "@mui/icons-material/TextFieldsOutlined";
-import ImageIcon from "@mui/icons-material/ImageOutlined";
-import SearchIcon from "@mui/icons-material/SearchOutlined";
-import HelpIcon from "@mui/icons-material/HelpOutlineOutlined";
-import { Button } from "@app/ui/Button";
 import { useToolbarController } from "@app/tools/pdfTextEditor/hooks/useToolbarController";
 import { useSelectionGeometry } from "@app/tools/pdfTextEditor/hooks/useSelectionGeometry";
 import { DocumentInspector } from "@app/tools/pdfTextEditor/components/inspector/DocumentInspector";
@@ -34,23 +29,18 @@ interface SidebarProps {
   onSetGroupingMode: (mode: GroupingMode) => void;
   onSetWidthMode: (mode: WidthMode) => void;
   onSetShowRulers: (show: boolean) => void;
-  onOpenFind: () => void;
-  onShowHelp: () => void;
-  /** True while the next page click drops a new text box. */
-  addTextArmed: boolean;
-  onToggleAddText: () => void;
-  onPickImage: () => void;
 }
 
 type TabId = "selected" | "document";
 
 /**
- * The editor's right-hand panel: a properties inspector for the selection.
+ * The editor's side panel: a properties inspector, and nothing else.
  *
- * Two tabs and one overflow menu. "Selected" only ever shows controls that can
- * act on what is picked right now; "Document" holds the facts about the file;
- * everything set-and-forget lives behind the menu. Nothing that never changes
- * competes for space with the thing the user is actually editing.
+ * Two tabs. "Selected" only ever shows what can act on what is picked right
+ * now; "Document" holds the facts about the file and its reading settings.
+ * The verbs - insert, find, save, help - moved to the canvas top bar, where a
+ * document editor's toolbar has always been; a panel that carried them made the
+ * user cross the screen for the two things they do most.
  */
 export function EditorSidebar({
   store,
@@ -63,11 +53,6 @@ export function EditorSidebar({
   onSetGroupingMode,
   onSetWidthMode,
   onSetShowRulers,
-  onOpenFind,
-  onShowHelp,
-  addTextArmed,
-  onToggleAddText,
-  onPickImage,
 }: SidebarProps) {
   const { t } = useTranslation();
   const controller = useToolbarController(store, state, selection);
@@ -121,70 +106,6 @@ export function EditorSidebar({
             {t("pdfTextEditor.inspector.tabDocument", "Document")}
           </Tabs.Tab>
         </Tabs.List>
-        <Tooltip label={t("pdfTextEditor.settings.find", "Find (Ctrl+F)")}>
-          <Button
-            variant="tertiary"
-            accent="neutral"
-            size="sm"
-            onClick={onOpenFind}
-            aria-label={t("pdfTextEditor.settings.find", "Find in document")}
-            data-testid="pdf-editor-open-find"
-            leftSection={<SearchIcon fontSize="small" />}
-          />
-        </Tooltip>
-        <Tooltip
-          label={t("pdfTextEditor.help.tooltip", "Keyboard shortcuts (?)")}
-        >
-          <Button
-            variant="tertiary"
-            accent="neutral"
-            size="sm"
-            onClick={onShowHelp}
-            aria-label={t("pdfTextEditor.help.ariaLabel", "Keyboard shortcuts")}
-            data-testid="pdf-editor-help"
-            leftSection={<HelpIcon fontSize="small" />}
-          />
-        </Tooltip>
-      </Group>
-
-      {/* Insert applies in either tab and to no selection in particular, so it
-          rides with the sticky header rather than inside a panel. */}
-      <Group
-        gap="xs"
-        grow
-        wrap="nowrap"
-        px="md"
-        py="xs"
-        style={{
-          position: "sticky",
-          top: 37,
-          zIndex: 2,
-          background: "var(--c-bg-raised)",
-          borderBottom: "1px solid var(--mantine-color-default-border)",
-        }}
-      >
-        <Button
-          size="sm"
-          variant={addTextArmed ? "primary" : "secondary"}
-          accent={addTextArmed ? "default" : "neutral"}
-          leftSection={<TextFieldsIcon fontSize="small" />}
-          onClick={onToggleAddText}
-          data-testid="pdf-editor-add-text"
-        >
-          {addTextArmed
-            ? t("pdfTextEditor.sidebar.clickPageToAddText", "Click page")
-            : t("pdfTextEditor.sidebar.addText", "Add text")}
-        </Button>
-        <Button
-          size="sm"
-          variant="secondary"
-          accent="neutral"
-          leftSection={<ImageIcon fontSize="small" />}
-          onClick={onPickImage}
-          data-testid="pdf-editor-add-image"
-        >
-          {t("pdfTextEditor.sidebar.addImage", "Add image")}
-        </Button>
       </Group>
 
       <Box>

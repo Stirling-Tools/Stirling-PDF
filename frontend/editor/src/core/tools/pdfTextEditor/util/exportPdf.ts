@@ -1,6 +1,7 @@
 import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
 import { preserveShadings } from "@app/tools/pdfTextEditor/pdfdoc/passes/preserveShadings";
 import { PdfiumSave } from "@app/tools/pdfTextEditor/pdfium/PdfiumSave";
+import { assertIncrementalAppend } from "@app/tools/pdfTextEditor/util/savedBytes";
 
 /** Serialize the editor document to a Blob plus the download filename. */
 export async function exportToBlob(
@@ -32,11 +33,20 @@ export async function exportToBlob(
       const repaired = await preserveShadings(bytes, doc.openedBytes, {
         pages: regenerated,
       });
-      if (repaired) bytes = repaired;
+      // The repair appends its own revision, so it may only ever grow the file
+      // - a shorter result would mean it rewrote what it was handed.
+      if (repaired && (!incremental || repaired.length >= bytes.length)) {
+        bytes = repaired;
+      }
     } catch {
       /* the unrepaired save is still a correct save */
     }
   }
+
+  // Checked LAST, on the bytes that will actually be written: the incremental
+  // path is the tool's signature-preserving promise, and a promise nothing
+  // verifies is just a comment.
+  if (incremental) assertIncrementalAppend(bytes, doc.openedBytes);
 
   return { blob: pdfBlob(bytes), filename: exportName(sourceName) };
 }
