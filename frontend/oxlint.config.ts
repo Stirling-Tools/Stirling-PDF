@@ -82,7 +82,7 @@ const noExplicitAnyExcludes = [
   "editor/src/core/types/fileIdSafety.d.ts",
   "editor/src/core/types/automation.ts",
   "editor/src/core/types/tool.ts",
-  "editor/src/core/utils/*.{js,mjs,jsx,ts,tsx}",
+  "editor/src/core/utils/settingsPendingHelper.ts",
 ];
 
 export default defineConfig({
