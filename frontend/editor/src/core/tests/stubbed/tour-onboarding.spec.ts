@@ -1,6 +1,10 @@
 import path from "path";
 import { test, expect } from "@app/tests/helpers/stub-test-base";
-import { uploadFiles, openSettings } from "@app/tests/helpers/ui-helpers";
+import {
+  uploadFiles,
+  openSettings,
+  expandSettingsGroups,
+} from "@app/tests/helpers/ui-helpers";
 
 /**
  * Tour selector integrity tests.
@@ -215,6 +219,7 @@ test.describe("15.7 Tour selectors - admin modal nav items", () => {
   for (const section of adminNavSections) {
     test(`admin-${section}-nav is present`, async ({ page }) => {
       await openSettings(page);
+      await expandSettingsGroups(page);
       const navItem = page
         .locator(`[data-tour="admin-${section}-nav"]`)
         .first();

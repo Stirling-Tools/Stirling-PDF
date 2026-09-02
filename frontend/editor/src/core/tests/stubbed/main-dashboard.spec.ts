@@ -1,5 +1,8 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
-import { openSettings } from "@app/tests/helpers/ui-helpers";
+import {
+  openSettings,
+  expandSettingsGroups,
+} from "@app/tests/helpers/ui-helpers";
 
 test.describe("2. Main Dashboard / Home Page", () => {
   test.beforeEach(async ({ page }) => {
@@ -102,6 +105,7 @@ test.describe("2. Main Dashboard / Home Page", () => {
       await expect(page.getByText("Survey")).toHaveCount(0);
 
       await openSettings(page);
+      await expandSettingsGroups(page);
       const legalNav = page.locator('[data-tour="admin-legal-nav"]').first();
       await expect(legalNav).toBeVisible({ timeout: 10000 });
       await legalNav.click();

@@ -553,19 +553,6 @@ export default function AdminConnectionsSection() {
       <Stack gap="xl" className="settings-section-content">
         <LoginRequiredBanner show={!loginEnabled} />
 
-        {/* Header */}
-        <div>
-          <Text fw={600} size="lg">
-            {t("admin.settings.connections.title", "Connections")}
-          </Text>
-          <Text size="sm" c="dimmed">
-            {t(
-              "admin.settings.connections.description",
-              "Configure external authentication providers like OAuth2 and SAML.",
-            )}
-          </Text>
-        </div>
-
         {/* SSO Auto Login - Premium Feature */}
         <Paper withBorder p="md" radius="md">
           <Stack gap="md">

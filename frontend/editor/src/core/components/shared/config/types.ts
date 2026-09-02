@@ -43,6 +43,11 @@ export const VALID_NAV_KEYS = [
   "frontendThirdPartyLicenses",
   "payg",
   "account-link",
+  // Server administration moved off the processor's own nav (see
+  // portalSettingsSections).
+  "users",
+  "billing",
+  "audit",
 ] as const;
 
 // Derive the type from the array
@@ -56,15 +61,27 @@ export type NavKey = (typeof VALID_NAV_KEYS)[number];
 export interface ConfigNavItem {
   key: NavKey;
   label: string;
+  /** One line under the page title. The page owns the header; sections don't repeat it. */
+  description?: string;
   icon: string;
   component: React.ReactNode;
   disabled?: boolean;
   disabledTooltip?: string;
   badge?: string;
   badgeColor?: string;
+  /**
+   * The section draws its own page header and gutters, so the settings page
+   * gives it the whole pane and keeps only the chrome it can't provide (the
+   * mobile back button).
+   */
+  fullBleed?: boolean;
 }
 
 export interface ConfigNavSection {
+  /** Stable across languages and layers: merge target, and the key the fold state is remembered under. */
+  id?: string;
   title: string;
   items: ConfigNavItem[];
+  /** Start folded in the sidebar; opening it (or landing in it) unfolds. */
+  collapsedByDefault?: boolean;
 }

@@ -21,10 +21,12 @@ import {
 } from "@portal/components/sidebarGroups";
 import "@portal/components/Sidebar.css";
 
+// Empty groups are dropped: a flavor (or a move to the settings page) can leave
+// one with nothing in it, and an empty card is not a section.
 const NAV_SECTIONS: NavGroup[] = [
   { labelKey: "portal.nav.section.processor", entries: GROUP_PROCESSOR },
   { labelKey: "portal.nav.section.platform", entries: GROUP_PLATFORM },
-];
+].filter((section) => section.entries.length > 0);
 
 /** Must match the shell breakpoint in AppShell.css / Sidebar.css. */
 export const MOBILE_QUERY = "(max-width: 48rem)";

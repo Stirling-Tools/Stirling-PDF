@@ -1,4 +1,5 @@
-/* AppConfigModal styles */
+/* Styles shared by every settings section, and the section chrome the settings
+   page draws around them. */
 
 /* Deep-link highlight: pulses the control the super search jumped to
    (navigated via /settings/{section}?focus={anchor}). */

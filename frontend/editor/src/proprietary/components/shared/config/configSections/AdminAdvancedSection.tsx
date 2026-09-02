@@ -471,17 +471,6 @@ export default function AdminAdvancedSection() {
     <div className="settings-section-container">
       <Stack gap="lg" className="settings-section-content">
         <LoginRequiredBanner show={!loginEnabled} />
-        <div>
-          <Text fw={600} size="lg">
-            {t("admin.settings.advanced.title", "Advanced")}
-          </Text>
-          <Text size="sm" c="dimmed">
-            {t(
-              "admin.settings.advanced.description",
-              "Configure advanced features and experimental functionality.",
-            )}
-          </Text>
-        </div>
 
         {/* Feature Flags */}
         <Paper withBorder p="md" radius="md">

@@ -28,9 +28,9 @@ test.describe("13. Language / Localization", () => {
         !(await languageButton.isVisible({ timeout: 1000 }).catch(() => false))
       ) {
         // Open Settings to access the language selector in the General section
-        await page.locator('[data-testid="config-button"]').first().click();
+        await page.locator('[data-testid="settings-button"]').first().click();
         await page
-          .locator(".mantine-Modal-content")
+          .locator(".settings-page")
           .first()
           .waitFor({ state: "visible", timeout: 5000 });
         languageButton = page

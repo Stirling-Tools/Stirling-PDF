@@ -1,0 +1,7 @@
+/* The docs view sizes itself to its container; on a page that container is the
+   frame's content area rather than the portal shell's scroll column. */
+.docs-page {
+  height: 100%;
+  min-height: 0;
+  background: var(--c-surface);
+}

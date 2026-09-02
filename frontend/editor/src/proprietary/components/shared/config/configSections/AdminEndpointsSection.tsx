@@ -244,18 +244,6 @@ export default function AdminEndpointsSection() {
       <Stack gap="lg" className="settings-section-content">
         <LoginRequiredBanner show={!loginEnabled} />
 
-        <div>
-          <Text fw={600} size="lg">
-            {t("admin.settings.endpoints.title", "API Endpoints")}
-          </Text>
-          <Text size="sm" c="dimmed">
-            {t(
-              "admin.settings.endpoints.description",
-              "Control which API endpoints and endpoint groups are available.",
-            )}
-          </Text>
-        </div>
-
         <Paper withBorder p="md" radius="md">
           <Stack gap="md">
             <Text fw={600} size="sm" mb="xs">

@@ -146,19 +146,8 @@ const HotkeysSection: React.FC = () => {
 
   return (
     <Stack gap="lg">
-      <div id="setting-hotkeys-search">
-        <Text fw={600} size="lg">
-          {t("settings.hotkeys.title", "Keyboard Shortcuts")}
-        </Text>
-        <Text size="sm" c="dimmed">
-          {t(
-            "settings.hotkeys.description",
-            'Customize keyboard shortcuts for quick tool access. Click "Change shortcut" and press a new key combination. Press Esc to cancel.',
-          )}
-        </Text>
-      </div>
-
       <TextInput
+        id="setting-hotkeys-search"
         placeholder={t("settings.hotkeys.searchPlaceholder", "Search tools...")}
         value={searchQuery}
         onChange={(event) => setSearchQuery(event.currentTarget.value)}

@@ -7,15 +7,20 @@ test.describe("26. Workspace Features", () => {
       .getByRole("button", { name: /settings/i })
       .first()
       .click();
-    const settingsDialog = page.locator(".mantine-Modal-content").first();
+    const settingsDialog = page.locator(".settings-page");
     await expect(settingsDialog).toBeVisible({ timeout: 5000 });
   });
 
   test.describe("26.1 Team Members", () => {
     test("should display workspace members section", async ({ page }) => {
       // Step 1: Click "People" in the settings nav
-      const peopleNav = page.getByText(/^People$/i).first();
-      if (await peopleNav.isVisible({ timeout: 3000 }).catch(() => false)) {
+      const peopleNav = page
+        .locator(".settings-page .modal-nav-item")
+        .filter({ hasText: /^People$/i });
+      const usable =
+        (await peopleNav.isVisible({ timeout: 3000 }).catch(() => false)) &&
+        (await peopleNav.isEnabled());
+      if (usable) {
         await peopleNav.click();
 
         // Step 2: Verify the members/team management section loads
@@ -32,15 +37,19 @@ test.describe("26. Workspace Features", () => {
   test.describe("26.2 Teams", () => {
     test("should display teams management section", async ({ page }) => {
       // Step 1: Click "Teams" in the settings nav
-      const teamsNav = page.getByText(/^Teams$/i).first();
-      if (await teamsNav.isVisible({ timeout: 3000 }).catch(() => false)) {
+      const teamsNav = page
+        .locator(".settings-page .modal-nav-item")
+        .filter({ hasText: /^Teams$/i });
+      const usable =
+        (await teamsNav.isVisible({ timeout: 3000 }).catch(() => false)) &&
+        (await teamsNav.isEnabled());
+      if (usable) {
         await teamsNav.click();
 
         // Step 2: Verify the teams management section loads
         await page.waitForTimeout(500);
         const bodyContent = await page
-          .locator(".mantine-Modal-content")
-          .first()
+          .locator(".settings-page .modal-body")
           .textContent();
         expect(bodyContent).toBeTruthy();
       }

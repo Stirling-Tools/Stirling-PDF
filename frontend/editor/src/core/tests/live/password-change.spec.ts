@@ -11,7 +11,7 @@ test.describe("21. Password Change Flow", () => {
         .getByRole("button", { name: /settings/i })
         .first()
         .click();
-      const settingsDialog = page.locator(".mantine-Modal-content").first();
+      const settingsDialog = page.locator(".settings-page");
       await expect(settingsDialog).toBeVisible({ timeout: 5000 });
 
       // Navigate to Account Settings section
@@ -63,7 +63,7 @@ test.describe("21. Password Change Flow", () => {
         .getByRole("button", { name: /settings/i })
         .first()
         .click();
-      const settingsDialog = page.locator(".mantine-Modal-content").first();
+      const settingsDialog = page.locator(".settings-page");
       await expect(settingsDialog).toBeVisible({ timeout: 5000 });
 
       // Navigate to Account Settings section

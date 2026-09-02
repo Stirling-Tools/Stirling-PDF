@@ -3319,7 +3319,6 @@ description = "Model Context Protocol (MCP) lets AI assistants like Claude use y
 guestInfo = "Guest users can't connect MCP clients. Create an account to use the MCP server and let your AI assistant run Stirling PDF tools on your behalf."
 navLabel = "MCP Server"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
-title = "MCP Server"
 viewApiKeys = "View API keys"
 
 [config.mcp.copy]
@@ -6464,9 +6463,6 @@ thirtyDays = "30 de zile"
 threeYears = "3 ani"
 webhook = "Webhook"
 
-[portal]
-comingSoon = "În curând"
-
 [portal.accountLink.card]
 billingNote = "Procesarea nesupravegheată este facturată din portofelul organizației tale."
 eyebrow = "Conectare cont"
@@ -7645,12 +7641,6 @@ afternoon = "Bună ziua"
 evening = "Bună seara"
 morning = "Bună dimineața"
 
-[portal.infrastructure]
-manageEditorDeployment = "Gestionați implementarea Editorului"
-sectionsAriaLabel = "Secțiuni de infrastructură"
-subtitle = "Implementări, credențiale, postură de securitate, stocare și jurnalul de audit pentru spațiul dvs. de lucru Stirling."
-title = "Infrastructură"
-
 [portal.infrastructure.apiKeys]
 createKey = "Creați cheie"
 heading = "Chei API"
@@ -7763,14 +7753,6 @@ titleCreated = "Cheie creată"
 [portal.infrastructure.keyLabel]
 active = "Activă"
 revoked = "Revocată"
-
-[portal.infrastructure.tabs]
-apiKeys = "Chei API"
-audit = "Jurnale de audit"
-deployments = "Implementări"
-models = "Modele"
-security = "Securitate"
-storage = "Stocare"
 
 [portal.integrations]
 availableHeading = "Disponibile"
@@ -8805,9 +8787,6 @@ extend = "Extinde cu 7 zile"
 maxed = "Limită atinsă"
 subtitle = "Trialul tău gratuit rulează până la {{date}}. Nu este necesar cardul."
 title = "Trial Enterprise"
-
-[portal.settings.groups]
-admin = "Admin"
 
 [portal.settings.sections]
 account-link = "Conectarea contului"
@@ -11900,7 +11879,6 @@ noMembersFound = "Nu s-au găsit membri"
 role = "Rol"
 searchMembers = "Căutați membri..."
 team = "Echipă"
-title = "Membri"
 unlockAccount = "Deblocați contul"
 unlockUserError = "Deblocarea contului de utilizator a eșuat"
 unlockUserSuccess = "Contul de utilizator a fost deblocat cu succes"
@@ -12054,7 +12032,6 @@ system = "Sistem"
 teamActions = "Acțiuni echipă"
 teamName = "Numele echipei"
 teamNotFound = "Echipa nu a fost găsită"
-title = "Echipe"
 totalMembers = "Total membri"
 viewTeam = "Vizualizați echipa"
 

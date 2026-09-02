@@ -159,18 +159,6 @@ export default function AdminAiDocumentsSection() {
   return (
     <div className="settings-section-container">
       <Stack gap="lg" className="settings-section-content">
-        <div>
-          <Text fw={600} size="lg">
-            {t("admin.settings.ai.documents.title", "Documents & RAG")}
-          </Text>
-          <Text size="sm" c="dimmed">
-            {t(
-              "admin.settings.ai.documents.description",
-              "Configure the embedding model and retrieval settings used to answer questions over documents. Applied to the AI engine when saved.",
-            )}
-          </Text>
-        </div>
-
         <Paper withBorder p="md" radius="md">
           <Stack gap="md">
             <Select

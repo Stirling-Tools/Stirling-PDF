@@ -446,18 +446,7 @@ export default function AdminDatabaseSection() {
         <LoginRequiredBanner show={!loginEnabled} />
 
         <div>
-          <Group justify="space-between" align="center">
-            <div>
-              <Text fw={600} size="lg">
-                {t("admin.settings.database.title", "Database")}
-              </Text>
-              <Text size="sm" c="dimmed">
-                {t(
-                  "admin.settings.database.description",
-                  "Configure custom database connection settings for enterprise deployments.",
-                )}
-              </Text>
-            </div>
+          <Group justify="flex-end" align="center">
             <Badge
               color="grape"
               size="lg"

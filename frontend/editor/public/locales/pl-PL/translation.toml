@@ -3319,7 +3319,6 @@ description = "Model Context Protocol (MCP) lets AI assistants like Claude use y
 guestInfo = "Guest users can't connect MCP clients. Create an account to use the MCP server and let your AI assistant run Stirling PDF tools on your behalf."
 navLabel = "MCP Server"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
-title = "MCP Server"
 viewApiKeys = "View API keys"
 
 [config.mcp.copy]
@@ -6464,9 +6463,6 @@ thirtyDays = "30 dni"
 threeYears = "3 lata"
 webhook = "Webhook"
 
-[portal]
-comingSoon = "Wkrótce"
-
 [portal.accountLink.card]
 billingNote = "Przetwarzanie nienadzorowane jest rozliczane z portfela Twojej organizacji."
 eyebrow = "Połączenie konta"
@@ -7645,12 +7641,6 @@ afternoon = "Dzień dobry"
 evening = "Dobry wieczór"
 morning = "Dzień dobry"
 
-[portal.infrastructure]
-manageEditorDeployment = "Zarządzaj wdrożeniem Edytora"
-sectionsAriaLabel = "Sekcje infrastruktury"
-subtitle = "Wdrożenia, dane uwierzytelniające, stan bezpieczeństwa, magazyn i ścieżka audytu dla Twojej przestrzeni roboczej Stirling."
-title = "Infrastruktura"
-
 [portal.infrastructure.apiKeys]
 createKey = "Utwórz klucz"
 heading = "Klucze API"
@@ -7763,14 +7753,6 @@ titleCreated = "Klucz utworzony"
 [portal.infrastructure.keyLabel]
 active = "Aktywny"
 revoked = "Unieważniony"
-
-[portal.infrastructure.tabs]
-apiKeys = "Klucze API"
-audit = "Dzienniki audytu"
-deployments = "Wdrożenia"
-models = "Modele"
-security = "Bezpieczeństwo"
-storage = "Magazyn"
 
 [portal.integrations]
 availableHeading = "Dostępne"
@@ -8805,9 +8787,6 @@ extend = "Przedłuż o 7 dni"
 maxed = "Limit wyczerpany"
 subtitle = "Twoja bezpłatna wersja próbna działa do {{date}}. Karta nie jest wymagana."
 title = "Wersja próbna Enterprise"
-
-[portal.settings.groups]
-admin = "Admin"
 
 [portal.settings.sections]
 account-link = "Połączenie konta"
@@ -11900,7 +11879,6 @@ noMembersFound = "Nie znaleziono członków"
 role = "Rola"
 searchMembers = "Szukaj członków..."
 team = "Zespół"
-title = "Osoby"
 unlockAccount = "Odblokuj konto"
 unlockUserError = "Nie udało się odblokować konta użytkownika"
 unlockUserSuccess = "Pomyślnie odblokowano konto użytkownika"
@@ -12054,7 +12032,6 @@ system = "System"
 teamActions = "Działania zespołu"
 teamName = "Nazwa zespołu"
 teamNotFound = "Nie znaleziono zespołu"
-title = "Zespoły"
 totalMembers = "Łącznie członków"
 viewTeam = "Zobacz zespół"
 

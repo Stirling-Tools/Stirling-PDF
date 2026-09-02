@@ -214,14 +214,6 @@ export default function TeamsSection() {
   return (
     <Stack gap="lg">
       <LoginRequiredBanner show={!loginEnabled} />
-      <div>
-        <Text fw={600} size="lg">
-          {t("workspace.teams.title")}
-        </Text>
-        <Text size="sm" c="dimmed">
-          {t("workspace.teams.description")}
-        </Text>
-      </div>
 
       {/* Header Actions */}
       <Group justify="flex-end">

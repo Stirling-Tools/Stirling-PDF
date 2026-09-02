@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { NumberInput, Stack, Paper, Text, Loader, Group } from "@mantine/core";
+import { NumberInput, Stack, Paper, Loader, Group } from "@mantine/core";
 import { alert } from "@app/components/toast";
 import { useAdminSettings } from "@app/hooks/useAdminSettings";
 import { useSettingsDirty } from "@app/hooks/useSettingsDirty";
@@ -97,18 +97,6 @@ export default function AdminAiLimitsSection() {
   return (
     <div className="settings-section-container">
       <Stack gap="lg" className="settings-section-content">
-        <div>
-          <Text fw={600} size="lg">
-            {t("admin.settings.ai.limits.title", "Limits & Performance")}
-          </Text>
-          <Text size="sm" c="dimmed">
-            {t(
-              "admin.settings.ai.limits.description",
-              "Guardrails for how much work AI requests may do and how many run concurrently. Applied to the AI engine when saved.",
-            )}
-          </Text>
-        </div>
-
         <Paper withBorder p="md" radius="md">
           <Stack gap="md">
             <NumberInput

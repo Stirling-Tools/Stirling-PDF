@@ -1,18 +1,51 @@
 import { NavKey } from "@app/components/shared/config/types";
 import { stripBasePath, withBasePath } from "@app/constants/app";
 
-/** Push the URL for a settings section and notify listeners. */
-export function navigateToSettings(section: NavKey) {
-  const newPath = withBasePath(`/settings/${section}`);
-  window.history.pushState({}, "", newPath);
-  window.dispatchEvent(new PopStateEvent("popstate"));
+const ORIGIN_KEY = "stirling.settingsOrigin";
+
+/**
+ * Record where the user is before they go to settings, so its Back control can
+ * restore that URL by replacement. Recorded rather than inferred: history.go(-1)
+ * is dropped by WebKit under load, and an entry made by pushState carries no
+ * router key to tell "came from the editor" apart from "opened a deep link".
+ * A no-op while already in settings, so tab switches keep the original origin.
+ */
+export function rememberSettingsOrigin(): void {
+  const here = stripBasePath(window.location.pathname);
+  if (here.startsWith("/settings")) return;
+  try {
+    window.sessionStorage.setItem(ORIGIN_KEY, here + window.location.search);
+  } catch {
+    // Private mode or storage disabled: Back falls back to the editor.
+  }
 }
 
-export function openSettings(section: NavKey) {
-  window.history.pushState({}, "", withBasePath(`/settings/${section}`));
-  window.dispatchEvent(
-    new CustomEvent("appConfig:open", { detail: { section } }),
-  );
+/** The origin recorded by {@link rememberSettingsOrigin}, cleared on read. */
+export function takeSettingsOrigin(): string | null {
+  try {
+    const origin = window.sessionStorage.getItem(ORIGIN_KEY);
+    window.sessionStorage.removeItem(ORIGIN_KEY);
+    return origin;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Go to the settings page from outside the router — modals, services, and
+ * contexts that must keep working where no <Router> is mounted (portal unit
+ * tests render their providers bare). pushState + a synthetic popstate is how
+ * React Router picks the change up without a hook.
+ *
+ * @param section land on this section; omit for the page's default
+ * @param focus scroll to and highlight this control's row
+ */
+export function navigateToSettings(section?: NavKey, focus?: string) {
+  rememberSettingsOrigin();
+  const query = focus ? `?focus=${encodeURIComponent(focus)}` : "";
+  const path = `/settings${section ? `/${section}` : ""}${query}`;
+  window.history.pushState({}, "", withBasePath(path));
+  window.dispatchEvent(new PopStateEvent("popstate"));
 }
 
 /** URL for a settings section (subpath-aware). */

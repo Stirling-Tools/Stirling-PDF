@@ -539,6 +539,21 @@
       "image": "/og_images/home.png",
       "title": "Account Link Settings - Stirling PDF",
       "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/users": {
+      "image": "/og_images/home.png",
+      "title": "Users Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/billing": {
+      "image": "/og_images/home.png",
+      "title": "Billing Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/audit": {
+      "image": "/og_images/home.png",
+      "title": "Audit Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
     }
   },
   "byPath": {
@@ -701,6 +716,9 @@
     "/settings/backendThirdPartyLicenses": "/settings/backendThirdPartyLicenses",
     "/settings/frontendThirdPartyLicenses": "/settings/frontendThirdPartyLicenses",
     "/settings/payg": "/settings/payg",
-    "/settings/account-link": "/settings/account-link"
+    "/settings/account-link": "/settings/account-link",
+    "/settings/users": "/settings/users",
+    "/settings/billing": "/settings/billing",
+    "/settings/audit": "/settings/audit"
   }
 }

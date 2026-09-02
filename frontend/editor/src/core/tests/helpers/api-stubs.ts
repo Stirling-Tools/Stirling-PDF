@@ -190,6 +190,13 @@ export async function mockAppApis(
     route.fulfill({ json: { user } }),
   );
 
+  // The signed-in user's teams. Unstubbed this 401s, and the API client reads a
+  // 401 here as an expired session: refresh, fail, bounce to /login - so any
+  // page that asks (the login-landing setting, the account tab) logs out.
+  await page.route("**/api/v1/team/my", (route: Route) =>
+    route.fulfill({ json: [] }),
+  );
+
   // Tool availability — every tool enabled unless overridden
   await page.route("**/api/v1/config/endpoints-availability", (route: Route) =>
     route.fulfill({

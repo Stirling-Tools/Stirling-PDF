@@ -27,3 +27,8 @@
   outline: 0.125rem solid var(--c-primary);
   outline-offset: 0.125rem;
 }
+
+/* Current-destination ring, echoing the edge bar the app entries use. */
+.quick-nav-rail-account[data-active] .quick-nav-rail-avatar {
+  box-shadow: 0 0 0 0.125rem var(--c-accent-fg, var(--c-primary));
+}

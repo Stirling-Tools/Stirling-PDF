@@ -3319,7 +3319,6 @@ description = "Model Context Protocol (MCP) lets AI assistants like Claude use y
 guestInfo = "Guest users can't connect MCP clients. Create an account to use the MCP server and let your AI assistant run Stirling PDF tools on your behalf."
 navLabel = "MCP Server"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
-title = "MCP Server"
 viewApiKeys = "View API keys"
 
 [config.mcp.copy]
@@ -6464,9 +6463,6 @@ thirtyDays = "30 dies"
 threeYears = "3 anys"
 webhook = "Webhook"
 
-[portal]
-comingSoon = "Properament"
-
 [portal.accountLink.card]
 billingNote = "El processament desatès es factura al moneder de la teva organització."
 eyebrow = "Enllaç del compte"
@@ -7645,12 +7641,6 @@ afternoon = "Bona tarda"
 evening = "Bon vespre"
 morning = "Bon dia"
 
-[portal.infrastructure]
-manageEditorDeployment = "Gestiona el desplegament de l'Editor"
-sectionsAriaLabel = "Seccions d'infraestructura"
-subtitle = "Desplegaments, credencials, postura de seguretat, emmagatzematge i el rastre d'auditoria del teu espai de treball de Stirling."
-title = "Infraestructura"
-
 [portal.infrastructure.apiKeys]
 createKey = "Crea una clau"
 heading = "Claus API"
@@ -7763,14 +7753,6 @@ titleCreated = "Clau creada"
 [portal.infrastructure.keyLabel]
 active = "Activa"
 revoked = "Revocada"
-
-[portal.infrastructure.tabs]
-apiKeys = "Claus API"
-audit = "Registres d'auditoria"
-deployments = "Desplegaments"
-models = "Models"
-security = "Seguretat"
-storage = "Emmagatzematge"
 
 [portal.integrations]
 availableHeading = "Disponibles"
@@ -8805,9 +8787,6 @@ extend = "Amplia 7 dies"
 maxed = "Límit assolit"
 subtitle = "La teva prova gratuïta dura fins al {{date}}. No cal targeta."
 title = "Prova Enterprise"
-
-[portal.settings.groups]
-admin = "Administració"
 
 [portal.settings.sections]
 account-link = "Enllaç del compte"
@@ -11900,7 +11879,6 @@ noMembersFound = "No s’han trobat membres"
 role = "Rol"
 searchMembers = "Cerca membres..."
 team = "Equip"
-title = "Persones"
 unlockAccount = "Desbloqueja el compte"
 unlockUserError = "No s'ha pogut desbloquejar el compte d'usuari"
 unlockUserSuccess = "El compte d'usuari s'ha desbloquejat correctament"
@@ -12054,7 +12032,6 @@ system = "Sistema"
 teamActions = "Accions de l'equip"
 teamName = "Nom de l’equip"
 teamNotFound = "Equip no trobat"
-title = "Equips"
 totalMembers = "Membres totals"
 viewTeam = "Mostra l’equip"
 

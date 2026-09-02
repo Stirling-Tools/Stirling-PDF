@@ -426,18 +426,6 @@ export default function AdminGeneralSection() {
       <Stack gap="lg" className="settings-section-content">
         <LoginRequiredBanner show={!loginEnabled} />
 
-        <div>
-          <Text fw={600} size="lg">
-            {t("admin.settings.general.title", "System Settings")}
-          </Text>
-          <Text size="sm" c="dimmed">
-            {t(
-              "admin.settings.general.description",
-              "Configure system-wide application settings including branding and default behaviour.",
-            )}
-          </Text>
-        </div>
-
         {/* System Settings */}
         <Paper withBorder p="md" radius="md">
           <Stack gap="md">

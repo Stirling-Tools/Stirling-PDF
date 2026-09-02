@@ -3319,7 +3319,6 @@ description = "Model Context Protocol (MCP) lets AI assistants like Claude use y
 guestInfo = "Guest users can't connect MCP clients. Create an account to use the MCP server and let your AI assistant run Stirling PDF tools on your behalf."
 navLabel = "MCP Server"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
-title = "MCP Server"
 viewApiKeys = "View API keys"
 
 [config.mcp.copy]
@@ -6464,9 +6463,6 @@ thirtyDays = "30 天"
 threeYears = "3 年"
 webhook = "Webhook"
 
-[portal]
-comingSoon = "即將推出"
-
 [portal.accountLink.card]
 billingNote = "自動處理會從您的組織錢包扣款。"
 eyebrow = "帳戶連結"
@@ -7645,12 +7641,6 @@ afternoon = "午安"
 evening = "晚安"
 morning = "早安"
 
-[portal.infrastructure]
-manageEditorDeployment = "管理編輯器部署"
-sectionsAriaLabel = "基礎設施區段"
-subtitle = "您 Stirling 工作區的部署、憑證、安全狀態、儲存空間與稽核軌跡。"
-title = "基礎設施"
-
 [portal.infrastructure.apiKeys]
 createKey = "建立金鑰"
 heading = "API 金鑰"
@@ -7763,14 +7753,6 @@ titleCreated = "金鑰已建立"
 [portal.infrastructure.keyLabel]
 active = "啟用"
 revoked = "已撤銷"
-
-[portal.infrastructure.tabs]
-apiKeys = "API 金鑰"
-audit = "稽核記錄"
-deployments = "部署"
-models = "模型"
-security = "安全性"
-storage = "儲存空間"
 
 [portal.integrations]
 availableHeading = "可用"
@@ -8805,9 +8787,6 @@ extend = "延長 7 天"
 maxed = "已達上限"
 subtitle = "您的免費試用持續到 {{date}}。不需要卡片。"
 title = "Enterprise 試用"
-
-[portal.settings.groups]
-admin = "管理員"
 
 [portal.settings.sections]
 account-link = "帳戶連結"
@@ -11900,7 +11879,6 @@ noMembersFound = "找不到成員"
 role = "角色"
 searchMembers = "搜尋成員..."
 team = "團隊"
-title = "人員"
 unlockAccount = "解鎖帳號"
 unlockUserError = "無法解鎖帳號"
 unlockUserSuccess = "帳號已成功解鎖"
@@ -12054,7 +12032,6 @@ system = "系統"
 teamActions = "團隊動作"
 teamName = "團隊名稱"
 teamNotFound = "找不到團隊"
-title = "團隊"
 totalMembers = "成員總數"
 viewTeam = "檢視團隊"
 

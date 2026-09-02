@@ -178,36 +178,64 @@ export async function runToolAndWaitForReview(
   ).toBeVisible({ timeout: reviewTimeout });
 }
 
+/** The settings page's root. Settings is a route, not a dialog. */
+export const SETTINGS_SURFACE = ".settings-page";
+
 /**
- * Open the global Settings dialog. Returns the dialog locator so callers can
- * scope further queries to it.
+ * Go to the global Settings page, which opens on its first section. Pass
+ * `section` to land on a named one instead. Returns the page's root locator so
+ * callers can scope further queries to it.
  */
-export async function openSettings(page: Page): Promise<Locator> {
-  await page.locator('[data-testid="config-button"]').first().click();
-  const dialog = page.locator(".mantine-Modal-content").first();
-  await expect(dialog).toBeVisible({ timeout: 5_000 });
-  return dialog;
+export async function openSettings(
+  page: Page,
+  section?: string | RegExp,
+): Promise<Locator> {
+  await page.locator('[data-testid="settings-button"]').first().click();
+  const surface = page.locator(SETTINGS_SURFACE);
+  await expect(surface).toBeVisible({ timeout: 5_000 });
+  if (section) {
+    await surface
+      .locator(".modal-nav-item")
+      .filter({ hasText: section })
+      .first()
+      .click();
+    // The URL flips before React commits the section, so wait on the page
+    // title rather than on the address bar.
+    await expect(surface.locator(".settings-page__title")).toHaveText(section, {
+      timeout: 5_000,
+    });
+  }
+  return surface;
 }
 
 /**
- * Close the Settings dialog via its built-in Close button and assert the
- * dialog is fully dismissed before returning.
+ * Leave Settings the way a user does - the rail's Editor entry - and assert the
+ * page is gone before returning.
  */
 export async function closeSettings(page: Page): Promise<void> {
-  const modal = page.locator(".mantine-Modal-content").first();
-  // A click on the X can be swallowed by a re-render, leaving the modal open;
-  // retry until it's gone. A genuinely broken close still fails - every retry
-  // misses and the modal stays past the cap.
+  const surface = page.locator(SETTINGS_SURFACE);
+  // A click can be swallowed by a re-render, leaving the page up; retry until
+  // it is gone. A genuinely broken exit still fails - every retry misses and
+  // the page stays past the cap.
   await expect(async () => {
-    if (await modal.isVisible().catch(() => false)) {
+    if (await surface.isVisible().catch(() => false)) {
       await page
-        .locator('[aria-label="Close"]')
+        .locator('.quick-nav-rail-item[aria-label="Editor"]')
         .first()
         .click({ timeout: 2_000 })
         .catch(() => {});
     }
-    await expect(modal).not.toBeVisible({ timeout: 2_000 });
+    await expect(surface).not.toBeVisible({ timeout: 2_000 });
   }).toPass({ timeout: 12_000 });
+}
+
+/** Unfold every sidebar group, for checks that scan the whole section list. */
+export async function expandSettingsGroups(page: Page): Promise<void> {
+  await page
+    .locator(`${SETTINGS_SURFACE} .settings-page__group[aria-expanded="false"]`)
+    .evaluateAll((buttons) =>
+      buttons.forEach((b) => (b as HTMLButtonElement).click()),
+    );
 }
 
 /**

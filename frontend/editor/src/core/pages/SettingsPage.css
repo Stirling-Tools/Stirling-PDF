@@ -1,0 +1,292 @@
+/* Full-page settings. The section stylesheet's `modal-*` class names are kept —
+   every section component, the admin tour and the e2e suite target them — and
+   restyled here at page scale: a sidebar beside a canvas, not a dialog. */
+
+.settings-page {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  background: var(--c-bg);
+  color: var(--c-text);
+}
+
+/* ---- Sidebar ---- */
+
+.settings-page .settings-page__nav {
+  width: 17.5rem;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-radius: 0;
+  background: var(--c-surface);
+  border-inline-end: 1px solid var(--c-border-subtle);
+}
+
+.settings-page__nav-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-4) var(--space-3) var(--space-2);
+  flex-shrink: 0;
+}
+
+.settings-page__nav-title {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--c-text);
+}
+
+.settings-page .modal-nav-scroll {
+  padding: 0 var(--space-3) var(--space-6);
+}
+
+.settings-page .modal-nav-section {
+  margin: 0;
+  padding-top: var(--space-4);
+}
+
+.settings-page__group {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin: 0;
+  padding: 0.25rem var(--space-3);
+  border: none;
+  border-radius: var(--radius-nav);
+  background: none;
+  font: inherit;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--c-text-subtle);
+  cursor: pointer;
+}
+
+.settings-page__group:hover {
+  color: var(--c-text-muted);
+  background: var(--c-hover);
+}
+
+.settings-page__group:focus-visible {
+  outline: 2px solid var(--c-accent-fg, var(--c-primary));
+  outline-offset: -2px;
+}
+
+.settings-page__group-chevron {
+  flex-shrink: 0;
+  transition: transform var(--motion-fast);
+}
+
+.settings-page__group[aria-expanded="false"] .settings-page__group-chevron {
+  transform: rotate(-90deg);
+}
+
+.settings-page .modal-nav-section-items {
+  margin-top: var(--space-1);
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+/* A button, so it's keyboard-reachable; the reset keeps the row shape. */
+.settings-page .modal-nav-item {
+  width: 100%;
+  margin: 0;
+  padding: 0 var(--space-3);
+  min-height: 2.25rem;
+  border: none;
+  border-radius: var(--radius-nav);
+  background: none;
+  text-align: start;
+  font: inherit;
+  color: var(--c-text-muted);
+  cursor: pointer;
+  transition:
+    background var(--motion-fast),
+    color var(--motion-fast);
+}
+
+.settings-page .modal-nav-item:hover:not([aria-disabled="true"]) {
+  background: var(--c-hover);
+  color: var(--c-text);
+}
+
+.settings-page .modal-nav-item:focus-visible {
+  outline: 2px solid var(--c-accent-fg, var(--c-primary));
+  outline-offset: -2px;
+}
+
+.settings-page .modal-nav-item.active {
+  background: var(--c-primary-subtle);
+  color: var(--c-accent-fg, var(--c-primary));
+}
+
+.settings-page .modal-nav-item.active .settings-page__nav-label {
+  font-weight: 600;
+}
+
+.settings-page .modal-nav-item[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.settings-page__nav-icon {
+  flex-shrink: 0;
+  color: var(--c-text-subtle);
+}
+
+.settings-page .modal-nav-item.active .settings-page__nav-icon,
+.settings-page
+  .modal-nav-item:hover:not([aria-disabled="true"])
+  .settings-page__nav-icon {
+  color: currentColor;
+}
+
+.settings-page__nav-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.settings-page__nav-warning {
+  flex-shrink: 0;
+  color: var(--c-warning);
+}
+
+/* ---- Content ---- */
+
+/* The global search, unpainted at the top of the column - the processor's
+   strip, so the bar sits in the same place in every app. */
+.settings-page__search-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3.1875rem;
+  padding: 0 1rem;
+  flex-shrink: 0;
+}
+
+.settings-page__search-bar .super-search {
+  flex: 0 1 24rem;
+  width: min(100%, 24rem);
+  max-width: 24rem;
+}
+
+.settings-page__search-bar .super-search input {
+  background-color: transparent;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  font-size: 12.5px;
+}
+
+/* Canvas, with the sidebar as the solid panel beside it - the same relationship
+   the editor and processor sidebars have with their content. */
+.settings-page .settings-page__main {
+  flex: 1;
+  min-width: 0;
+  background: var(--c-bg);
+}
+
+/* Readable measure, but the 2rem side gutter stays so the sections' sticky
+   footers (which cancel it with a -2rem margin) still span the pane. */
+.settings-page .modal-body {
+  max-width: 60rem;
+  margin-inline: auto;
+  padding-top: 2.75rem;
+  padding-bottom: 4rem;
+}
+
+/* The page owns every section's title: one voice, one size, one place. */
+.settings-page__header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-bottom: var(--space-8);
+}
+
+.settings-page__eyebrow {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--c-accent-fg, var(--c-primary));
+}
+
+.settings-page__title {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+  color: var(--c-text);
+}
+
+.settings-page__description {
+  margin: var(--space-1) 0 0;
+  max-width: 44rem;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--c-text-muted);
+}
+
+/* A section that draws its own header and gutters gets the whole pane. */
+.settings-page .modal-body.is-full-bleed {
+  max-width: none;
+  padding: 0;
+}
+
+/* The mobile bar, hidden until the panes stack. */
+.settings-page__mobile-bar {
+  display: none;
+}
+
+/* ---- Mobile: the two panes become two screens ---- */
+
+@media (max-width: 1024px) {
+  .settings-page .settings-page__nav {
+    width: 100%;
+    border-inline-end: none;
+  }
+
+  .settings-page .settings-page__mobile-bar {
+    display: flex;
+    justify-content: flex-start;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    background: var(--c-bg);
+    border-bottom: 1px solid var(--c-border-subtle);
+  }
+
+  .settings-page__mobile-bar-title {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--c-text-subtle);
+  }
+
+  .settings-page .modal-body {
+    padding-top: var(--space-5);
+  }
+
+  .settings-page__header {
+    margin-bottom: var(--space-6);
+  }
+
+  /* The bar above already names the group. */
+  .settings-page__eyebrow {
+    display: none;
+  }
+
+  .settings-page__title {
+    font-size: 1.5rem;
+  }
+}

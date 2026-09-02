@@ -21,6 +21,10 @@ export function createCloudPlanNavItem(t: Translate): ConfigNavItem {
   return {
     key: "plan",
     label: t("config.plan", "Plan"),
+    description: t(
+      "config.planDescription",
+      "Your plan, credits and spend limit, and the invoices behind them.",
+    ),
     icon: "credit-card",
     component: <Plan />,
   };
@@ -31,6 +35,10 @@ export function createCloudTeamNavItem(t: Translate): ConfigNavItem {
   return {
     key: "teams",
     label: t("config.team", "Team"),
+    description: t(
+      "config.teamDescription",
+      "Who shares this workspace, and invitations still waiting on an answer.",
+    ),
     icon: "groups-rounded",
     component: <TeamSection />,
   };

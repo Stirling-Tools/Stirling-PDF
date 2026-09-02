@@ -35,13 +35,12 @@ import Workbench from "@app/components/layout/Workbench";
 import FileSidebar from "@app/components/shared/FileSidebar";
 import FileManager from "@app/components/FileManager";
 import LocalIcon from "@app/components/shared/LocalIcon";
-import AppConfigModal from "@app/components/shared/AppConfigModalLazy";
 import {
   getStartupNavigationAction,
   getDefaultWorkbenchForFileCount,
 } from "@app/utils/homePageNavigation";
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
-import { stripBasePath } from "@app/constants/app";
+import { rememberSettingsOrigin } from "@app/utils/settingsNavigation";
 import { HomePageExtensions } from "@app/components/home/HomePageExtensions";
 import { QuickNavHostBridge } from "@app/components/shared/quickNav/QuickNavHostBridge";
 import type { QuickNavToolReasons } from "@app/contexts/QuickNavHostContext";
@@ -127,7 +126,6 @@ export default function HomePage() {
   const sliderRef = useRef<HTMLDivElement | null>(null);
   const [activeMobileView, setActiveMobileView] = useState<MobileView>("tools");
   const isProgrammaticScroll = useRef(false);
-  const [configModalOpen, setConfigModalOpen] = useState(false);
   const otherApp = useOtherAppSwitch();
   const location = useLocation();
   // Persisted user preference for the FileSidebar collapsed state. Auto-
@@ -135,45 +133,15 @@ export default function HomePage() {
   // doesn't write to storage, so deep-linking to /files won't overwrite what
   // the user actually chose last time.
   const [fileSidebarCollapsed, setFileSidebarCollapsed] = useState(
-    readPersistedSidebarCollapsed,
+    // Reader mode outlives this page (settings swaps it out and back), and it
+    // collapses the sidebar without persisting that, so it wins on mount too.
+    () => readerMode || readPersistedSidebarCollapsed(),
   );
 
-  // Open the config modal whenever the URL is /settings/* (e.g. from the admin
-  // tour's openConfigModal action which navigates to /settings/overview).
-  useEffect(() => {
-    const isSettings = location.pathname.startsWith("/settings");
-    setConfigModalOpen(isSettings);
-  }, [location.pathname]);
-
-  useEffect(() => {
-    const handler = () => setConfigModalOpen(true);
-    window.addEventListener("appConfig:open", handler);
-    return () => window.removeEventListener("appConfig:open", handler);
-  }, []);
-
-  // Where the user was before settings opened, so close can restore it. Null
-  // when opened directly on a /settings URL (deep link) - close falls back to
-  // the editor root.
-  const settingsOriginRef = useRef<string | null>(null);
-  const wasConfigOpenRef = useRef(false);
-  useEffect(() => {
-    if (configModalOpen && !wasConfigOpenRef.current) {
-      settingsOriginRef.current = location.pathname.startsWith("/settings")
-        ? null
-        : location.pathname;
-    }
-    wasConfigOpenRef.current = configModalOpen;
-  }, [configModalOpen, location.pathname]);
-
-  const handleCloseConfig = useCallback(() => {
-    // Restore the URL before clearing the flag, or a late /settings commit
-    // re-opens the modal. Read window.location, not useLocation: a tab switch
-    // updates the URL synchronously while the router's commit lags. Replace to
-    // the origin rather than navigate(-1), which webkit can drop.
-    if (stripBasePath(window.location.pathname).startsWith("/settings")) {
-      navigate(settingsOriginRef.current ?? EDITOR_BASENAME, { replace: true });
-    }
-    setConfigModalOpen(false);
+  // Settings is its own page; it restores the recorded origin on Back.
+  const openSettings = useCallback(() => {
+    rememberSettingsOrigin();
+    navigate("/settings");
   }, [navigate]);
 
   const { activeFiles } = useFileContext();
@@ -522,7 +490,7 @@ export default function HomePage() {
       <HomePageExtensions />
       <QuickNavHostBridge
         portalAccess={Boolean(otherApp)}
-        onOpenSettings={() => setConfigModalOpen(true)}
+        onOpenSettings={openSettings}
         requestNavigation={requestNavigation}
         readerMode={readerMode}
         onSetReaderMode={setReaderMode}
@@ -687,7 +655,7 @@ export default function HomePage() {
                 variant="tertiary"
                 className="mobile-bottom-button"
                 aria-label={t("quickAccess.config", "Config")}
-                onClick={() => setConfigModalOpen(true)}
+                onClick={openSettings}
               >
                 <LocalIcon
                   icon="settings-rounded"
@@ -700,10 +668,6 @@ export default function HomePage() {
               </Button>
             </div>
             <FileManager selectedTool={selectedTool} />
-            <AppConfigModal
-              opened={configModalOpen}
-              onClose={handleCloseConfig}
-            />
           </div>
         ) : (
           <Group
@@ -734,17 +698,13 @@ export default function HomePage() {
                   fileSidebarCollapsed
                 }
                 onToggleCollapse={handleSidebarToggle}
-                onOpenSettings={() => setConfigModalOpen(true)}
+                onOpenSettings={openSettings}
               />
             </div>
             <FolderTreePanel active={navigationState.workbench === "myFiles"} />
             <Workbench />
             {!hideToolPanel && <RightSidebar />}
             <FileManager selectedTool={selectedTool} />
-            <AppConfigModal
-              opened={configModalOpen}
-              onClose={handleCloseConfig}
-            />
           </Group>
         )}
       </FilesPageProvider>

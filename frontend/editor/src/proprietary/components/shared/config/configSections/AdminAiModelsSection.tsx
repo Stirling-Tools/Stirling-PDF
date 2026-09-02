@@ -148,18 +148,6 @@ export default function AdminAiModelsSection() {
   return (
     <div className="settings-section-container">
       <Stack gap="lg" className="settings-section-content">
-        <div>
-          <Text fw={600} size="lg">
-            {t("admin.settings.ai.models.title", "Models & Providers")}
-          </Text>
-          <Text size="sm" c="dimmed">
-            {t(
-              "admin.settings.ai.models.description",
-              "Choose the LLM provider and the smart/fast models the AI engine uses. Applied to the AI engine when saved.",
-            )}
-          </Text>
-        </div>
-
         <Paper withBorder p="md" radius="md">
           <Stack gap="md">
             <Select

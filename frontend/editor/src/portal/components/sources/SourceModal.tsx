@@ -19,7 +19,7 @@ import {
   isFolderAccessDeniedError,
   type Source,
 } from "@portal/api/sources";
-import { useUI } from "@portal/contexts/UIContext";
+import { getSettingsUrl } from "@app/utils/settingsNavigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { qk } from "@portal/queries/keys";
 import { creatableSourceTypes } from "@portal/components/sources/creatableSourceTypes";
@@ -119,7 +119,6 @@ export function SourceModal({
   onSaved,
 }: SourceModalProps) {
   const { t } = useTranslation();
-  const { openSettings } = useUI();
   const queryClient = useQueryClient();
   const isEdit = Boolean(sourceId);
 
@@ -675,7 +674,15 @@ export function SourceModal({
                       <Button
                         variant="secondary"
                         size="sm"
-                        onClick={() => openSettings("adminFolderAccess")}
+                        // A new tab: this dialog holds an unsaved draft, and
+                        // settings is a route now, not an overlay over it.
+                        onClick={() =>
+                          window.open(
+                            getSettingsUrl("adminFolderAccess"),
+                            "_blank",
+                            "noopener,noreferrer",
+                          )
+                        }
                       >
                         {t("portal.sources.builder.folderAccess.openSettings")}
                       </Button>

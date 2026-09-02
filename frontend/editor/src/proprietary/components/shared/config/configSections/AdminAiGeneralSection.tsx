@@ -163,18 +163,6 @@ export default function AdminAiGeneralSection() {
   return (
     <div className="settings-section-container">
       <Stack gap="lg" className="settings-section-content">
-        <div>
-          <Text fw={600} size="lg">
-            {t("admin.settings.ai.general.title", "AI Engine")}
-          </Text>
-          <Text size="sm" c="dimmed">
-            {t(
-              "admin.settings.ai.general.description",
-              "Connect Stirling to the Python AI engine and choose which AI capabilities are exposed. Changes apply on restart.",
-            )}
-          </Text>
-        </div>
-
         <Paper withBorder p="md" radius="md">
           <Stack gap="md">
             <Group justify="space-between" align="flex-start" wrap="nowrap">

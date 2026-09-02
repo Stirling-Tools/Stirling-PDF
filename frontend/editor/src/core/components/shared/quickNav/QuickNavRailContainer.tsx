@@ -21,8 +21,14 @@ export interface QuickNavRailContainerProps extends Omit<
   QuickNavRailBaseProps,
   "footer"
 > {
-  /** The rail owns the account control, so the sidebars drop their own row. */
+  /** The rail owns the settings and account controls, so the sidebars drop their own row. */
   onOpenSettings?: () => void;
+  /** The avatar's own destination; falls back to settings. */
+  onOpenAccount?: () => void;
+  /** Settings is a page like any other; the gear marks it the way apps do. */
+  settingsActive?: boolean;
+  /** The account section specifically, so the avatar can claim it instead. */
+  accountActive?: boolean;
   /** Omitted in builds with no processor to invite anyone into. */
   onInvite?: () => void;
   onToggleNotifications?: () => void;
@@ -34,6 +40,9 @@ export interface QuickNavRailContainerProps extends Omit<
 /** The fixed-width column the rail sits in. */
 export function QuickNavRailContainer({
   onOpenSettings,
+  onOpenAccount,
+  settingsActive = false,
+  accountActive = false,
   onInvite,
   onToggleNotifications,
   notificationsOpen,
@@ -69,9 +78,33 @@ export function QuickNavRailContainer({
                 />
               )}
               {onOpenSettings && (
+                <RailButton
+                  label={t("quickNav.settings", "Settings")}
+                  icon={
+                    settingsActive ? (
+                      <LocalIcon
+                        icon="settings-rounded"
+                        width="1.125rem"
+                        height="1.125rem"
+                      />
+                    ) : (
+                      <LocalIcon
+                        icon="settings-outline-rounded"
+                        width="1.125rem"
+                        height="1.125rem"
+                      />
+                    )
+                  }
+                  current={settingsActive}
+                  testId="settings-button"
+                  onClick={onOpenSettings}
+                />
+              )}
+              {onOpenSettings && (
                 <QuickNavRailAccount
-                  onOpenSettings={onOpenSettings}
+                  onOpenSettings={onOpenAccount ?? onOpenSettings}
                   identity={identity}
+                  active={accountActive}
                 />
               )}
             </div>

@@ -403,14 +403,6 @@ User: ${user.username}`)
   return (
     <Stack gap="lg">
       <LoginRequiredBanner show={!loginEnabled} />
-      <div>
-        <Text fw={600} size="lg">
-          {t("workspace.people.title")}
-        </Text>
-        <Text size="sm" c="dimmed">
-          {t("workspace.people.description")}
-        </Text>
-      </div>
 
       {/* License Information - Compact */}
       {licenseInfo && (

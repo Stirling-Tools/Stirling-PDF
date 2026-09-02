@@ -1,4 +1,4 @@
-import { useView } from "@portal/contexts/ViewContext";
+import { useUI } from "@portal/contexts/UIContext";
 import { DealStatusHero } from "@portal/components/procurement/DealStatusHero";
 import type { ProcurementController } from "@portal/components/procurement/useProcurement";
 
@@ -11,7 +11,7 @@ export function ControlledDealStatusHero({
 }: {
   controller: ProcurementController;
 }) {
-  const { setActiveView } = useView();
+  const { openSettings } = useUI();
   if (!controller.data) return null;
   return (
     <DealStatusHero
@@ -26,7 +26,7 @@ export function ControlledDealStatusHero({
       }
       onAcceptQuote={() => void controller.onAcceptQuote()}
       onLicense={() => controller.setExtra("license")}
-      onInvite={() => setActiveView("users")}
+      onInvite={() => openSettings("users")}
       onSchedule={() => controller.setExtra("schedule")}
       onManageTrial={() => controller.setExtra("trial")}
       onDocuments={() => controller.setExtra("documents")}

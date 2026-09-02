@@ -133,18 +133,6 @@ export default function AdminPrivacySection() {
       <Stack gap="lg" className="settings-section-content">
         <LoginRequiredBanner show={!loginEnabled} />
 
-        <div>
-          <Text fw={600} size="lg">
-            {t("admin.settings.privacy.title", "Privacy")}
-          </Text>
-          <Text size="sm" c="dimmed">
-            {t(
-              "admin.settings.privacy.description",
-              "Configure privacy and data collection settings.",
-            )}
-          </Text>
-        </div>
-
         {/* Analytics & Tracking */}
         <Paper withBorder p="md" radius="md">
           <Stack gap="md">

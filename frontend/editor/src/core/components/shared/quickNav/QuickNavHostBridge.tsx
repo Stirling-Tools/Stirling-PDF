@@ -18,7 +18,7 @@ export interface QuickNavHostBridgeProps {
   portalAccess?: boolean;
   readerMode?: boolean;
   onSetReaderMode?: (on: boolean) => void;
-  onOpenSettings: () => void;
+  onOpenSettings?: () => void;
   requestNavigation?: (go: () => void) => void;
   onGoToDefaultState?: () => void;
   onSelectTool?: (toolId: ToolId) => void;

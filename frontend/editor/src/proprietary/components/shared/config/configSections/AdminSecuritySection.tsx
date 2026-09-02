@@ -256,18 +256,6 @@ export default function AdminSecuritySection() {
       <Stack gap="lg" className="settings-section-content">
         <LoginRequiredBanner show={!loginEnabled} />
 
-        <div>
-          <Text fw={600} size="lg">
-            {t("admin.settings.security.title", "Security")}
-          </Text>
-          <Text size="sm" c="dimmed">
-            {t(
-              "admin.settings.security.description",
-              "Configure authentication, login behaviour, and security policies.",
-            )}
-          </Text>
-        </div>
-
         {/* Authentication Settings */}
         <Paper withBorder p="md" radius="md">
           <Stack gap="md">

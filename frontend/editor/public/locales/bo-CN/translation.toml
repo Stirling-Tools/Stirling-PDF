@@ -3319,7 +3319,6 @@ description = "Model Context Protocol (MCP) lets AI assistants like Claude use y
 guestInfo = "Guest users can't connect MCP clients. Create an account to use the MCP server and let your AI assistant run Stirling PDF tools on your behalf."
 navLabel = "MCP Server"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
-title = "MCP Server"
 viewApiKeys = "View API keys"
 
 [config.mcp.copy]
@@ -6464,9 +6463,6 @@ thirtyDays = "ཉིན་ 30"
 threeYears = "ལོ་ 3"
 webhook = "Webhook"
 
-[portal]
-comingSoon = "མགྱོགས་པོར་ཡོང་རྒྱུ"
-
 [portal.accountLink.card]
 billingNote = "ལྟ་སྐྱོང་མེད་པའི་ལས་སྣོན་གྱི་རིན་འབབ་ཁྱེད་ཀྱི་ཚོགས་པའི་དངུལ་ཁུག་ནས་རྩིས་འབུལ་བྱེད།"
 eyebrow = "རྩིས་ཐོ་སྦྲེལ་མཐུད"
@@ -7645,12 +7641,6 @@ afternoon = "ཉིན་གུང་བདེ་ལེགས"
 evening = "དགོང་དྲོ་བདེ་ལེགས"
 morning = "སྔ་དྲོ་བདེ་ལེགས"
 
-[portal.infrastructure]
-manageEditorDeployment = "Editor འགྲེམས་སྤེལ་དོ་དམ"
-sectionsAriaLabel = "རྨང་གཞི་སྒྲིག་བཀོད་སྡེ་ཚན"
-subtitle = "ཁྱེད་ཀྱི Stirling ལས་ཁུལ་གྱི་འགྲེམས་སྤེལ། དཔང་ཡིག བདེ་འཇགས་གནས་བབ། གསོག་ཉར། དང་ཞིབ་བཤེར་རྗེས་ཤུལ།"
-title = "རྨང་གཞི་སྒྲིག་བཀོད"
-
 [portal.infrastructure.apiKeys]
 createKey = "ལྡེ་མིག་གསར་བཟོ"
 heading = "API ལྡེ་མིག"
@@ -7763,14 +7753,6 @@ titleCreated = "ལྡེ་མིག་གསར་སྐྲུན་ཟིན�
 [portal.infrastructure.keyLabel]
 active = "ཤུགས་ལྡན"
 revoked = "ཕྱིར་འཐེན་བྱས་པ"
-
-[portal.infrastructure.tabs]
-apiKeys = "API ལྡེ་མིག"
-audit = "རྩིས་བཤེར་ཉིན་ཐོ"
-deployments = "སྤེལ་འཇོག"
-models = "དཔེ་དབྱིབས"
-security = "བདེ་འཇགས"
-storage = "གསོག་ཉར"
 
 [portal.integrations]
 availableHeading = "སྤྱོད་རུང"
@@ -8805,9 +8787,6 @@ extend = "ཉིན་ 7 དུས་འགྱངས"
 maxed = "མཐོ་ཚད་ལ་སླེབས"
 subtitle = "ཁྱེད་ཀྱི་རིན་མེད་ཚོད་སྤྱོད {{date}} བར་འགྲོ སྤྱོད་བྱང་མི་དགོས།"
 title = "ཁེ་ལས་ཚོད་སྤྱོད"
-
-[portal.settings.groups]
-admin = "དོ་དམ་པ"
 
 [portal.settings.sections]
 account-link = "རྩིས་ཐོ་འབྲེལ་མཐུད"
@@ -11900,7 +11879,6 @@ noMembersFound = "འཐུས་མི་གང་ཡང་མ་ཐོབ།"
 role = "འཁྲབ་ཚན"
 searchMembers = "འཚོལ་ཞིབ་ཚོགས་མི།..."
 team = "རུ་ཁག"
-title = "མི་དམངས"
 unlockAccount = "རྩིས་ཁྲོད་ཕྱེ"
 unlockUserError = "སྤྱོད་པའི་རྩིས་ཁྲོད་ཕྱེ་མི་ཐུབ།"
 unlockUserSuccess = "སྤྱོད་པའི་རྩིས་ཁྲོད་ཕྱེ་ཚར་བ།"
@@ -12054,7 +12032,6 @@ system = "མ་ལག"
 teamActions = "རུ་ཁག་གི་བྱ་སྤྱོད"
 teamName = "རུ་ཁག་གི་མིང་།"
 teamNotFound = "རུ་ཁག་མ་རྙེད་པ།"
-title = "རུ་ཁག"
 totalMembers = "འཐུས་མི།"
 viewTeam = "རུ་ཁག་ལ་ལྟོས།"
 

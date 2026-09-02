@@ -10,7 +10,6 @@ import {
   CopyButton,
   Tabs,
   Tooltip,
-  ThemeIcon,
 } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import LocalIcon from "@app/components/shared/LocalIcon";
@@ -146,23 +145,6 @@ export default function McpSection() {
   return (
     <div className="settings-section-container">
       <Stack gap="md" className="settings-section-content">
-        <div>
-          <Group gap="sm" align="center">
-            <ThemeIcon variant="light" size="lg" radius="md">
-              <LocalIcon icon="smart-toy-rounded" width={22} height={22} />
-            </ThemeIcon>
-            <Text fw={600} size="lg">
-              {t("config.mcp.title", "MCP Server")}
-            </Text>
-          </Group>
-          <Text size="sm" c="dimmed" mt={6}>
-            {t(
-              "config.mcp.description",
-              "Model Context Protocol (MCP) lets AI assistants like Claude use your Stirling PDF tools directly. Connect a client once and your assistant can convert, edit, secure and process documents on your behalf.",
-            )}
-          </Text>
-        </div>
-
         {isAnonymous ? (
           <Paper withBorder p="md" radius="md">
             <Stack gap={10}>

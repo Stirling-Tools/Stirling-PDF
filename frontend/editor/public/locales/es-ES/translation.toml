@@ -3319,7 +3319,6 @@ description = "Model Context Protocol (MCP) lets AI assistants like Claude use y
 guestInfo = "Guest users can't connect MCP clients. Create an account to use the MCP server and let your AI assistant run Stirling PDF tools on your behalf."
 navLabel = "MCP Server"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
-title = "MCP Server"
 viewApiKeys = "View API keys"
 
 [config.mcp.copy]
@@ -6464,9 +6463,6 @@ thirtyDays = "30 días"
 threeYears = "3 años"
 webhook = "Webhook"
 
-[portal]
-comingSoon = "Próximamente"
-
 [portal.accountLink.card]
 billingNote = "El procesamiento desatendido se factura contra la cartera de tu organización."
 eyebrow = "Vinculación de cuenta"
@@ -7645,12 +7641,6 @@ afternoon = "Buenas tardes"
 evening = "Buenas noches"
 morning = "Buenos días"
 
-[portal.infrastructure]
-manageEditorDeployment = "Gestionar despliegue del Editor"
-sectionsAriaLabel = "Secciones de infraestructura"
-subtitle = "Despliegues, credenciales, postura de seguridad, almacenamiento y pista de auditoría para tu espacio de trabajo de Stirling."
-title = "Infraestructura"
-
 [portal.infrastructure.apiKeys]
 createKey = "Crear clave"
 heading = "Claves API"
@@ -7763,14 +7753,6 @@ titleCreated = "Clave creada"
 [portal.infrastructure.keyLabel]
 active = "Activa"
 revoked = "Revocada"
-
-[portal.infrastructure.tabs]
-apiKeys = "Claves API"
-audit = "Registros de auditoría"
-deployments = "Despliegues"
-models = "Modelos"
-security = "Seguridad"
-storage = "Almacenamiento"
 
 [portal.integrations]
 availableHeading = "Disponibles"
@@ -8805,9 +8787,6 @@ extend = "Ampliar 7 días"
 maxed = "Agotadas"
 subtitle = "Tu prueba gratuita se extiende hasta {{date}}. No se requiere tarjeta."
 title = "Prueba Enterprise"
-
-[portal.settings.groups]
-admin = "Admin"
 
 [portal.settings.sections]
 account-link = "Vinculación de cuenta"
@@ -11900,7 +11879,6 @@ noMembersFound = "No se encontraron miembros"
 role = "Rol"
 searchMembers = "Buscar miembros..."
 team = "Equipo"
-title = "Personas"
 unlockAccount = "Desbloquear cuenta"
 unlockUserError = "Error al desbloquear la cuenta de usuario"
 unlockUserSuccess = "La cuenta de usuario se ha desbloqueado correctamente"
@@ -12054,7 +12032,6 @@ system = "Sistema"
 teamActions = "Acciones del equipo"
 teamName = "Nombre del equipo"
 teamNotFound = "Equipo no encontrado"
-title = "Equipos"
 totalMembers = "Miembros totales"
 viewTeam = "Ver equipo"
 

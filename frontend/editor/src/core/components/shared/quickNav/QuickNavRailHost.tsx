@@ -13,6 +13,9 @@ import {
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 import { PORTAL_BASENAME } from "@app/routes/portalBasename";
 import { HAS_PORTAL } from "@app/routes/hasPortal";
+import { DOCS_PATH, HAS_DOCS } from "@app/routes/docsRoute";
+import { stripBasePath } from "@app/constants/app";
+import { rememberSettingsOrigin } from "@app/utils/settingsNavigation";
 
 const SIZE = "1.125rem";
 
@@ -25,7 +28,14 @@ export function QuickNavRailHost() {
 
   const appMounted = Boolean(host?.appMounted);
 
-  const inPortal = pathname.startsWith(PORTAL_BASENAME);
+  const path = stripBasePath(pathname);
+  const inSettings = path.startsWith("/settings");
+  const inAccount = path.startsWith("/settings/account");
+  const inDocs = path.startsWith(DOCS_PATH);
+  const inPortal = path.startsWith(PORTAL_BASENAME);
+  // Settings and the docs browser are pages in their own right, so neither app
+  // is the current one while you are on them.
+  const inEditor = !inPortal && !inSettings && !inDocs;
 
   // Only the app knows its own default state.
   const returnHome = () => {
@@ -76,21 +86,21 @@ export function QuickNavRailHost() {
           returnHome();
           return;
         }
-        saveEditorReturnPath();
+        if (inEditor) saveEditorReturnPath();
         go(PORTAL_BASENAME);
       },
     },
     {
       id: "editor",
       label: t("quickNav.editor", "Editor"),
-      icon: inPortal ? (
-        <LocalIcon icon="edit-outline-rounded" width={SIZE} height={SIZE} />
-      ) : (
+      icon: inEditor ? (
         <LocalIcon icon="edit-rounded" width={SIZE} height={SIZE} />
+      ) : (
+        <LocalIcon icon="edit-outline-rounded" width={SIZE} height={SIZE} />
       ),
-      current: !inPortal,
+      current: inEditor,
       onClick: () => {
-        if (!inPortal) {
+        if (inEditor) {
           returnHome();
           return;
         }
@@ -155,18 +165,59 @@ export function QuickNavRailHost() {
     },
   ];
 
-  // Read at click time, so it's always the mounted app's.
-  const openSettings = () => host?.actions.current?.openSettings?.();
+  // Reference material, not a workspace: its own group beside the apps.
+  const reference: QuickNavEntry[] = HAS_DOCS
+    ? [
+        {
+          id: "docs",
+          label: t("quickNav.docs", "Documentation"),
+          icon: (
+            <LocalIcon
+              icon="import-contacts-outline-rounded"
+              width={SIZE}
+              height={SIZE}
+            />
+          ),
+          current: inDocs,
+          onClick: () => go(DOCS_PATH),
+        },
+      ]
+    : [];
+
+  // In the app, the app decides (mobile settings has its own pane to return to);
+  // anywhere else the rail just goes to the settings page.
+  const openSettings = () => {
+    if (inSettings) {
+      host?.actions.current?.openSettings?.();
+      return;
+    }
+    rememberSettingsOrigin();
+    go("/settings");
+  };
+
+  // Your own account, the section the avatar stands for. Inside settings it is
+  // a tab switch (replace); from an app it is an entry like the gear's.
+  const openAccount = () => {
+    if (inSettings) {
+      navigate("/settings/account", { replace: true });
+      return;
+    }
+    rememberSettingsOrigin();
+    go("/settings/account");
+  };
 
   // A route that isn't the app hides the bar - see useSuppressQuickNavRail.
   if (!appMounted || host?.chromeless) return null;
 
   return (
     <QuickNavRailContainer
-      groups={HAS_PORTAL ? [apps, within] : [within]}
+      groups={HAS_PORTAL ? [apps, within, reference] : [within, reference]}
       onReturnHome={returnHome}
       identity={host?.identity ?? null}
-      onOpenSettings={host?.hasSettings ? openSettings : undefined}
+      onOpenSettings={openSettings}
+      onOpenAccount={openAccount}
+      settingsActive={inSettings && !inAccount}
+      accountActive={inAccount}
       onInvite={
         // Spelt out: VIEW_PATHS lives in the portal, which core cannot import.
         HAS_PORTAL && host?.portalAccess

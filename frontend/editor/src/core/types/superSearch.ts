@@ -90,6 +90,8 @@ export interface PortalEntityScopeDef {
     | "portal-sources";
   /** Portal view id the scope targets (visibility check vs the page index). */
   viewId: string;
+  /** Set when the entities now live in a settings section rather than on that page. */
+  settingsKey?: string;
   labelKey: string;
   labelFallback: string;
   aliases: readonly string[];
@@ -106,6 +108,7 @@ export const PORTAL_ENTITY_SCOPE_DEFS: readonly PortalEntityScopeDef[] = [
   {
     id: "portal-users",
     viewId: "users",
+    settingsKey: "users",
     labelKey: "portal.nav.users",
     labelFallback: "Users",
     aliases: ["user", "users", "member", "members"],

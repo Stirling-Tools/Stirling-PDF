@@ -3319,7 +3319,6 @@ description = "Model Context Protocol (MCP) lets AI assistants like Claude use y
 guestInfo = "Guest users can't connect MCP clients. Create an account to use the MCP server and let your AI assistant run Stirling PDF tools on your behalf."
 navLabel = "MCP Server"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
-title = "MCP Server"
 viewApiKeys = "View API keys"
 
 [config.mcp.copy]
@@ -6464,9 +6463,6 @@ thirtyDays = "30 dage"
 threeYears = "3 år"
 webhook = "Webhook"
 
-[portal]
-comingSoon = "Kommer snart"
-
 [portal.accountLink.card]
 billingNote = "Uovervåget behandling faktureres mod din organisations wallet."
 eyebrow = "Kontolink"
@@ -7645,12 +7641,6 @@ afternoon = "God eftermiddag"
 evening = "God aften"
 morning = "God morgen"
 
-[portal.infrastructure]
-manageEditorDeployment = "Administrer Editor-udrulning"
-sectionsAriaLabel = "Infrastruktursektorer"
-subtitle = "Udrulninger, legitimationsoplysninger, sikkerhedsstatus, lager og revisionsspor for dit Stirling-arbejdsområde."
-title = "Infrastruktur"
-
 [portal.infrastructure.apiKeys]
 createKey = "Opret nøgle"
 heading = "API-nøgler"
@@ -7763,14 +7753,6 @@ titleCreated = "Nøgle oprettet"
 [portal.infrastructure.keyLabel]
 active = "Aktiv"
 revoked = "Tilbagekaldt"
-
-[portal.infrastructure.tabs]
-apiKeys = "API-nøgler"
-audit = "Revisionslogge"
-deployments = "Udrulninger"
-models = "Modeller"
-security = "Sikkerhed"
-storage = "Lager"
 
 [portal.integrations]
 availableHeading = "Tilgængelige"
@@ -8805,9 +8787,6 @@ extend = "Forlæng 7 dage"
 maxed = "Maksimum nået"
 subtitle = "Din gratis prøveperiode løber til {{date}}. Intet kort kræves."
 title = "Enterprise-prøveperiode"
-
-[portal.settings.groups]
-admin = "Admin"
 
 [portal.settings.sections]
 account-link = "Kontotilknytning"
@@ -11900,7 +11879,6 @@ noMembersFound = "Ingen medlemmer fundet"
 role = "Rolle"
 searchMembers = "Søg efter medlemmer..."
 team = "Team"
-title = "Personer"
 unlockAccount = "Lås konto op"
 unlockUserError = "Kunne ikke låse brugerkonto op"
 unlockUserSuccess = "Brugerkonto låst op"
@@ -12054,7 +12032,6 @@ system = "System"
 teamActions = "Teamhandlinger"
 teamName = "Teamnavn"
 teamNotFound = "Team ikke fundet"
-title = "Teams"
 totalMembers = "Samlet antal medlemmer"
 viewTeam = "Vis team"
 

@@ -3319,7 +3319,6 @@ description = "Model Context Protocol (MCP) lets AI assistants like Claude use y
 guestInfo = "Guest users can't connect MCP clients. Create an account to use the MCP server and let your AI assistant run Stirling PDF tools on your behalf."
 navLabel = "MCP Server"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
-title = "MCP Server"
 viewApiKeys = "View API keys"
 
 [config.mcp.copy]
@@ -6464,9 +6463,6 @@ thirtyDays = "۳۰ روز"
 threeYears = "۳ سال"
 webhook = "Webhook"
 
-[portal]
-comingSoon = "به‌زودی"
-
 [portal.accountLink.card]
 billingNote = "پردازش بدون نظارت از کیف پول سازمان شما هزینه می‌شود."
 eyebrow = "پیوند حساب"
@@ -7645,12 +7641,6 @@ afternoon = "عصر بخیر"
 evening = "شب بخیر"
 morning = "صبح بخیر"
 
-[portal.infrastructure]
-manageEditorDeployment = "مدیریت استقرار ویرایشگر"
-sectionsAriaLabel = "بخش‌های زیرساخت"
-subtitle = "استقرارها، اعتبارنامه‌ها، وضعیت امنیتی، ذخیره‌سازی و ردپای حسابرسی برای فضای کاری Stirling شما."
-title = "زیرساخت"
-
 [portal.infrastructure.apiKeys]
 createKey = "ایجاد کلید"
 heading = "کلیدهای API"
@@ -7763,14 +7753,6 @@ titleCreated = "کلید ایجاد شد"
 [portal.infrastructure.keyLabel]
 active = "فعال"
 revoked = "لغوشده"
-
-[portal.infrastructure.tabs]
-apiKeys = "کلیدهای API"
-audit = "گزارش‌های حسابرسی"
-deployments = "استقرارها"
-models = "مدل‌ها"
-security = "امنیت"
-storage = "ذخیره‌سازی"
 
 [portal.integrations]
 availableHeading = "در دسترس"
@@ -8805,9 +8787,6 @@ extend = "تمدید ۷ روز"
 maxed = "به سقف رسیده"
 subtitle = "دوره آزمایشی رایگان شما تا {{date}} ادامه دارد. کارت لازم نیست."
 title = "دوره آزمایشی Enterprise"
-
-[portal.settings.groups]
-admin = "مدیر"
 
 [portal.settings.sections]
 account-link = "پیوند حساب"
@@ -11900,7 +11879,6 @@ noMembersFound = "عضوی یافت نشد"
 role = "نقش"
 searchMembers = "جستجوی اعضا..."
 team = "تیم"
-title = "افراد"
 unlockAccount = "باز کردن قفل حساب"
 unlockUserError = "باز کردن قفل حساب کاربری ناموفق بود"
 unlockUserSuccess = "قفل حساب کاربری با موفقیت باز شد"
@@ -12054,7 +12032,6 @@ system = "سیستم"
 teamActions = "اقدامات تیم"
 teamName = "نام تیم"
 teamNotFound = "تیم پیدا نشد"
-title = "تیم‌ها"
 totalMembers = "مجموع اعضا"
 viewTeam = "مشاهده تیم"
 

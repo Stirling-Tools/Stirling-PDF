@@ -49,6 +49,8 @@ export interface SettingsSectionEntry {
    * which keys off the local backend's login mode rather than auth state.
    */
   requiresAccount?: boolean;
+  /** Section is the processor's; only a session that can enter it sees it. */
+  requiresPortalAccess?: boolean;
 }
 
 /** Core (OSS) sections — always present in every build. */
@@ -74,15 +76,15 @@ export const SETTINGS_SECTION_REGISTRY: SettingsSectionEntry[] = [
     labelKey: "settings.help.label",
     labelFallback: "Tours",
     keywords: ["help", "tour", "guide", "support", "docs"],
-    groupLabelKey: "settings.help.title",
-    groupLabelFallback: "Help",
+    groupLabelKey: "settings.about.title",
+    groupLabelFallback: "About",
   },
   {
     key: "legal",
     labelKey: "settings.legal.label",
     labelFallback: "Legal",
     keywords: ["legal", "terms", "privacy", "licenses"],
-    groupLabelKey: "settings.legal.title",
-    groupLabelFallback: "Legal",
+    groupLabelKey: "settings.about.title",
+    groupLabelFallback: "About",
   },
 ];

@@ -3319,7 +3319,6 @@ description = "Model Context Protocol (MCP) lets AI assistants like Claude use y
 guestInfo = "Guest users can't connect MCP clients. Create an account to use the MCP server and let your AI assistant run Stirling PDF tools on your behalf."
 navLabel = "MCP Server"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
-title = "MCP Server"
 viewApiKeys = "View API keys"
 
 [config.mcp.copy]
@@ -6464,9 +6463,6 @@ thirtyDays = "30 дни"
 threeYears = "3 години"
 webhook = "Webhook"
 
-[portal]
-comingSoon = "Очаквайте скоро"
-
 [portal.accountLink.card]
 billingNote = "Автоматичната обработка се таксува към портфейла на вашата организация."
 eyebrow = "Свързване на акаунт"
@@ -7645,12 +7641,6 @@ afternoon = "Добър ден"
 evening = "Добър вечер"
 morning = "Добро утро"
 
-[portal.infrastructure]
-manageEditorDeployment = "Управление на разгръщането на Editor"
-sectionsAriaLabel = "Секции на инфраструктурата"
-subtitle = "Разгръщания, удостоверения, състояние на сигурността, storage и одитната следа за вашето Stirling работно пространство."
-title = "Инфраструктура"
-
 [portal.infrastructure.apiKeys]
 createKey = "Създай ключ"
 heading = "API ключове"
@@ -7763,14 +7753,6 @@ titleCreated = "Ключът е създаден"
 [portal.infrastructure.keyLabel]
 active = "Активен"
 revoked = "Отменен"
-
-[portal.infrastructure.tabs]
-apiKeys = "API ключове"
-audit = "Одитни logs"
-deployments = "Разгръщания"
-models = "Модели"
-security = "Сигурност"
-storage = "Storage"
 
 [portal.integrations]
 availableHeading = "Налични"
@@ -8805,9 +8787,6 @@ extend = "Удължаване със 7 дни"
 maxed = "Достигнат максимум"
 subtitle = "Вашият безплатен trial продължава до {{date}}. Не се изисква карта."
 title = "Enterprise trial"
-
-[portal.settings.groups]
-admin = "Администратор"
 
 [portal.settings.sections]
 account-link = "Свързване на акаунт"
@@ -11900,7 +11879,6 @@ noMembersFound = "Няма намерени членове"
 role = "Роля"
 searchMembers = "Търсене на членове..."
 team = "Екип"
-title = "Хора"
 unlockAccount = "Отключване на акаунт"
 unlockUserError = "Неуспешно отключване на потребителски акаунт"
 unlockUserSuccess = "Потребителският акаунт е отключен успешно"
@@ -12054,7 +12032,6 @@ system = "Система"
 teamActions = "Действия за екип"
 teamName = "Име на екипа"
 teamNotFound = "Екипът не е намерен"
-title = "Екипи"
 totalMembers = "Общ брой членове"
 viewTeam = "Преглед на екипа"
 

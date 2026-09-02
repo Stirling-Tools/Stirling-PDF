@@ -1637,7 +1637,7 @@ description = "Time before failed login attempts are reset"
 label = "Login Reset Time (minutes)"
 
 [admin.settings.security.ssoNotice]
-message = "OAuth2 and SAML2 authentication providers have been moved to the Connections menu for easier management."
+message = "OAuth2 and SAML2 authentication providers live under Single sign-on, next to this section."
 title = "Looking for SSO/SAML settings?"
 
 [admin.settings.security.xFrameOptions]
@@ -3227,7 +3227,9 @@ tags = "squish,small,tiny"
 
 [config]
 plan = "Plan"
+planDescription = "Your plan, credits and spend limit, and the invoices behind them."
 team = "Team"
+teamDescription = "Who shares this workspace, and invitations still waiting on an answer."
 
 [config.account.overview]
 confirmDelete = "Delete My Account"
@@ -3319,7 +3321,6 @@ description = "Model Context Protocol (MCP) lets AI assistants like Claude use y
 guestInfo = "Guest users can't connect MCP clients. Create an account to use the MCP server and let your AI assistant run Stirling PDF tools on your behalf."
 navLabel = "MCP Server"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using the Stirling PDF API and Automation."
-title = "MCP Server"
 viewApiKeys = "View API keys"
 
 [config.mcp.copy]
@@ -6464,9 +6465,6 @@ thirtyDays = "30 days"
 threeYears = "3 years"
 webhook = "Webhook"
 
-[portal]
-comingSoon = "Coming soon"
-
 [portal.accountLink.card]
 billingNote = "Unattended processing bills against your org wallet."
 eyebrow = "Account link"
@@ -7645,12 +7643,6 @@ afternoon = "Good afternoon"
 evening = "Good evening"
 morning = "Good morning"
 
-[portal.infrastructure]
-manageEditorDeployment = "Manage Editor deployment"
-sectionsAriaLabel = "Infrastructure sections"
-subtitle = "Deployments, credentials, security posture, storage, and the audit trail for your Stirling workspace."
-title = "Infrastructure"
-
 [portal.infrastructure.apiKeys]
 createKey = "Create key"
 heading = "API keys"
@@ -7763,14 +7755,6 @@ titleCreated = "Key created"
 [portal.infrastructure.keyLabel]
 active = "Active"
 revoked = "Revoked"
-
-[portal.infrastructure.tabs]
-apiKeys = "API Keys"
-audit = "Audit Logs"
-deployments = "Deployments"
-models = "Models"
-security = "Security"
-storage = "Storage"
 
 [portal.integrations]
 availableHeading = "Available"
@@ -8806,9 +8790,6 @@ maxed = "Maxed out"
 subtitle = "Your free trial runs through {{date}}. No card required."
 title = "Enterprise trial"
 
-[portal.settings.groups]
-admin = "Admin"
-
 [portal.settings.sections]
 account-link = "Account link"
 
@@ -9817,12 +9798,14 @@ expired = "Your session has expired. Please refresh the page and try again."
 
 [settings]
 backToSections = "All settings"
-close = "Close"
 title = "Settings"
+
+[settings.about]
+title = "About"
 
 [settings.ai]
 documents = "Documents & RAG"
-general = "General"
+general = "AI Engine"
 limits = "Limits & Performance"
 models = "Models & Providers"
 title = "AI"
@@ -9836,9 +9819,9 @@ folderAccess = "Folder Access"
 mcp = "MCP Server"
 storageSharing = "File Storage & Sharing"
 systemSettings = "System Settings"
-title = "Configuration"
 
 [settings.connection]
+description = "Work locally on this machine or connect the app to a Stirling server."
 localDescription = "You are using the local backend without an account. Some tools requiring cloud processing or a self-hosted server are unavailable."
 logout = "Log Out"
 server = "Server"
@@ -9853,6 +9836,7 @@ selfhosted = "Self-Hosted"
 
 [settings.developer]
 apiKeys = "API Keys"
+apiKeysDescription = "Personal keys for calling the Stirling API from scripts and integrations."
 title = "Developer"
 
 [settings.general]
@@ -9958,6 +9942,7 @@ fitPage = "Fit page"
 fitWidth = "Fit width"
 
 [settings.help]
+description = "Guided walkthroughs of the editor and the admin area."
 label = "Tours"
 title = "Help"
 
@@ -9990,6 +9975,7 @@ mac = "Include ⌘ (Command), ⌥ (Option), or another modifier in your shortcut
 windows = "Include Ctrl, Alt, or another modifier in your shortcut."
 
 [settings.legal]
+description = "Terms, privacy policy and your cookie preferences."
 label = "Legal"
 title = "Legal"
 
@@ -10017,10 +10003,12 @@ module = "Module"
 version = "Version"
 
 [settings.licensingAnalytics]
-audit = "Audit"
+audit = "Audit log"
+auditDescription = "Who did what on this server, and how long that record is kept."
 plan = "Plan"
-title = "Licensing & Analytics"
+planDescription = "Your licence, seats and what the current plan unlocks."
 usageAnalytics = "Usage Analytics"
+usageDescription = "How the server is being used: operations, volume and trends over time."
 
 [settings.planBilling]
 currentPlan = "Current Plan"
@@ -10089,9 +10077,8 @@ subtitle = "Upgrade to Team for:"
 title = "Upgrade Your Plan"
 
 [settings.policiesPrivacy]
-legal = "Legal"
+legal = "Legal documents"
 privacy = "Privacy"
-title = "Policies & Privacy"
 
 [settings.preferences]
 title = "Preferences"
@@ -10116,10 +10103,13 @@ success = "Password updated successfully. Please sign in again."
 update = "Update password"
 
 [settings.securityAuth]
-connections = "Connections"
-security = "Security"
+connections = "Single sign-on"
+security = "Sign-in & security"
 telegram = "Telegram"
-title = "Security & Authentication"
+title = "Security & sign-in"
+
+[settings.server]
+title = "Server"
 
 [settings.signOut]
 confirm = "Are you sure you want to sign out?"
@@ -11900,7 +11890,6 @@ noMembersFound = "No members found"
 role = "Role"
 searchMembers = "Search members..."
 team = "Team"
-title = "People"
 unlockAccount = "Unlock Account"
 unlockUserError = "Failed to unlock user account"
 unlockUserSuccess = "User account unlocked successfully"
@@ -12054,7 +12043,6 @@ system = "System"
 teamActions = "Team actions"
 teamName = "Team Name"
 teamNotFound = "Team not found"
-title = "Teams"
 totalMembers = "Total Members"
 viewTeam = "View Team"
 

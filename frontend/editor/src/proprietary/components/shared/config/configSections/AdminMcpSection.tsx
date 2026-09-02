@@ -150,18 +150,6 @@ export default function AdminMcpSection() {
   return (
     <div className="settings-section-container">
       <Stack gap="lg" className="settings-section-content">
-        <div>
-          <Text fw={600} size="lg">
-            {t("admin.settings.mcp.title", "MCP Server")}
-          </Text>
-          <Text size="sm" c="dimmed">
-            {t(
-              "admin.settings.mcp.description",
-              "Expose Stirling's PDF tools and AI agents to MCP clients over an OAuth-protected endpoint.",
-            )}
-          </Text>
-        </div>
-
         <Paper withBorder p="md" radius="md">
           <Stack gap="md">
             <Group justify="space-between" align="flex-start" wrap="nowrap">

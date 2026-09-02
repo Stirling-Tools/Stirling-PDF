@@ -63,6 +63,10 @@ export const useConfigNavSections = (
       {
         key: "connectionMode",
         label: t("settings.connection.title", "Connection Mode"),
+        description: t(
+          "settings.connection.description",
+          "Work locally on this machine or connect the app to a Stirling server.",
+        ),
         icon: "desktop-cloud-rounded",
         component: <ConnectionSettings />,
       },

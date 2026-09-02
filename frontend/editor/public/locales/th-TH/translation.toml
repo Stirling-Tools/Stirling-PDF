@@ -3319,7 +3319,6 @@ description = "Model Context Protocol (MCP) lets AI assistants like Claude use y
 guestInfo = "Guest users can't connect MCP clients. Create an account to use the MCP server and let your AI assistant run Stirling PDF tools on your behalf."
 navLabel = "MCP Server"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
-title = "MCP Server"
 viewApiKeys = "View API keys"
 
 [config.mcp.copy]
@@ -6464,9 +6463,6 @@ thirtyDays = "30 วัน"
 threeYears = "3 ปี"
 webhook = "Webhook"
 
-[portal]
-comingSoon = "เร็วๆ นี้"
-
 [portal.accountLink.card]
 billingNote = "การประมวลผลแบบไม่ต้องดูแลจะเรียกเก็บเงินจากกระเป๋าเงินองค์กรของคุณ"
 eyebrow = "การเชื่อมโยงบัญชี"
@@ -7645,12 +7641,6 @@ afternoon = "สวัสดีตอนบ่าย"
 evening = "สวัสดีตอนเย็น"
 morning = "สวัสดีตอนเช้า"
 
-[portal.infrastructure]
-manageEditorDeployment = "จัดการการปรับใช้ Editor"
-sectionsAriaLabel = "ส่วนโครงสร้างพื้นฐาน"
-subtitle = "การปรับใช้ ข้อมูลประจำตัว สถานะความปลอดภัย พื้นที่จัดเก็บ และ audit trail สำหรับ workspace Stirling ของคุณ"
-title = "โครงสร้างพื้นฐาน"
-
 [portal.infrastructure.apiKeys]
 createKey = "สร้างคีย์"
 heading = "API keys"
@@ -7763,14 +7753,6 @@ titleCreated = "สร้างคีย์แล้ว"
 [portal.infrastructure.keyLabel]
 active = "ใช้งานอยู่"
 revoked = "ถูกเพิกถอน"
-
-[portal.infrastructure.tabs]
-apiKeys = "API Keys"
-audit = "Audit Logs"
-deployments = "การปรับใช้"
-models = "Models"
-security = "ความปลอดภัย"
-storage = "พื้นที่จัดเก็บ"
 
 [portal.integrations]
 availableHeading = "พร้อมใช้งาน"
@@ -8805,9 +8787,6 @@ extend = "ขยาย 7 วัน"
 maxed = "ถึงขีดจำกัดแล้ว"
 subtitle = "trial ฟรีของคุณใช้งานได้ถึง {{date}} ไม่ต้องใช้บัตร"
 title = "Enterprise trial"
-
-[portal.settings.groups]
-admin = "Admin"
 
 [portal.settings.sections]
 account-link = "การเชื่อมโยงบัญชี"
@@ -11900,7 +11879,6 @@ noMembersFound = "ไม่พบสมาชิก"
 role = "บทบาท"
 searchMembers = "ค้นหาสมาชิก..."
 team = "ทีม"
-title = "บุคคล"
 unlockAccount = "ปลดล็อกบัญชี"
 unlockUserError = "ปลดล็อกบัญชีผู้ใช้ล้มเหลว"
 unlockUserSuccess = "ปลดล็อกบัญชีผู้ใช้สำเร็จแล้ว"
@@ -12054,7 +12032,6 @@ system = "ระบบ"
 teamActions = "การดำเนินการของทีม"
 teamName = "ชื่อทีม"
 teamNotFound = "ไม่พบทีม"
-title = "ทีม"
 totalMembers = "สมาชิกทั้งหมด"
 viewTeam = "ดูทีม"
 

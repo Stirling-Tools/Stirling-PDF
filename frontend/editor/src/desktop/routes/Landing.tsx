@@ -1,4 +1,4 @@
-import HomePage from "@app/pages/HomePage";
+import { AppRoot } from "@app/components/layout/AppRoot";
 
 /**
  * Desktop override of Landing.
@@ -8,5 +8,5 @@ import HomePage from "@app/pages/HomePage";
  * when authentication is required.
  */
 export default function Landing() {
-  return <HomePage />;
+  return <AppRoot />;
 }
