@@ -22,6 +22,11 @@ export interface RetryPayload {
 }
 
 /** Mirrored from the server's `FailureKind` declarations. */
+/**
+ * Mirrors the codes each {@code FailureKind} claims, server-side. Pinned there by
+ * `FailureKindTest#everyCodeAKindClaimsIsPinned`, which fails if a kind's codes change without
+ * this moving with them.
+ */
 const KIND_ERROR_CODES: Record<string, string> = {
   INPUT_PASSWORD_PROTECTED: "E004",
 };
@@ -48,7 +53,10 @@ const RETRY_DB_CONFIG: DatabaseConfig = {
 
 const STORE_NAME = "retryPayloads";
 
-/** Capped, oldest evicted first, so the stash cannot grow for the origin's lifetime. */
+/**
+ * Capped, oldest evicted first, so the stash cannot grow for the origin's lifetime. A batch that
+ * exceeds this on its own is kept whole: the failure a user is looking at outranks the cap.
+ */
 const MAX_RETAINED_PAYLOADS = 25;
 
 /** One record per file involved, so a retry can be found from any of them. */
@@ -104,6 +112,19 @@ export async function loadRetryPayload(
     errorCode: record.errorCode ?? null,
     recordedAt: record.recordedAt,
   };
+}
+
+/**
+ * Drop the stash for a file whose failure is resolved. Never rejects: a record left behind is
+ * stale, not harmful, and it would be evicted eventually anyway.
+ */
+export async function clearRetryPayload(fileId: string | null): Promise<void> {
+  if (!isUsableId(fileId)) return;
+  try {
+    await deleteRecord(fileId);
+  } catch {
+    // The retry it describes has already happened, so nothing reads it again.
+  }
 }
 
 /** Whether the document is still in this browser, which decides whether a retry can run. */
@@ -328,17 +349,38 @@ async function writeRecords(records: StoredRetryRecord[]): Promise<void> {
     for (const record of records) store.put(record);
 
     // Evicted in the same transaction, so two concurrent stashes cannot both see room.
+    const justWritten = new Set(records.map((record) => record.fileId));
     const all = store.getAll();
     all.onsuccess = () => {
       const stored = (all.result ?? []) as StoredRetryRecord[];
       const excess = stored.length - MAX_RETAINED_PAYLOADS;
       if (excess <= 0) return;
       stored
-        .sort((a, b) => a.recordedAt - b.recordedAt)
+        // One multi-file failure writes a record per file under one recordedAt, so evicting by
+        // time alone would drop arbitrary members of the batch that just landed. The fileId
+        // breaks the tie, and this batch is exempt: it is the failure with a row on screen.
+        .filter((record) => !justWritten.has(record.fileId))
+        .sort(
+          (a, b) =>
+            a.recordedAt - b.recordedAt || a.fileId.localeCompare(b.fileId),
+        )
         .slice(0, excess)
         .forEach((record) => store.delete(record.fileId));
     };
     all.onerror = () => reject(all.error);
+  });
+}
+
+async function deleteRecord(fileId: string): Promise<void> {
+  const db = await indexedDBManager.openDatabase(RETRY_DB_CONFIG);
+
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction([STORE_NAME], "readwrite");
+    transaction.objectStore(STORE_NAME).delete(fileId);
+    transaction.oncomplete = () => resolve();
+    transaction.onerror = () => reject(transaction.error);
+    transaction.onabort = () =>
+      reject(transaction.error ?? new Error("Retry stash delete aborted"));
   });
 }
 

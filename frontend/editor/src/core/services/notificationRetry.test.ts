@@ -21,6 +21,7 @@ vi.mock("@app/services/apiClient", () => ({
 
 const {
   stashRetryPayload,
+  clearRetryPayload,
   loadRetryPayload,
   hasLocalFile,
   retryWithPassword,
@@ -122,6 +123,45 @@ describe("the retry stash", () => {
     expect(await storedRecords()).toHaveLength(25);
     await expect(loadRetryPayload("f-0")).resolves.toBeNull();
     await expect(loadRetryPayload("f-25")).resolves.toMatchObject({
+      operation: "remove-password",
+    });
+  });
+
+  it("keeps a batch bigger than the cap whole, rather than dropping some of its files", async () => {
+    // One failed multi-file run writes a record per file under one recordedAt, so evicting by
+    // time alone would keep an arbitrary 25 of them and offer no retry for the rest.
+    const batch = Array.from({ length: 30 }, (_, i) => `b-${i}`);
+    await stashRetryPayload(payload({ fileIds: batch, recordedAt: 100 }));
+
+    expect(await storedRecords()).toHaveLength(30);
+    for (const fileId of [batch[0], batch[15], batch[29]]) {
+      await expect(loadRetryPayload(fileId)).resolves.toMatchObject({
+        operation: "remove-password",
+      });
+    }
+  });
+
+  it("evicts earlier failures before the batch that just landed", async () => {
+    await stashRetryPayload(payload({ fileIds: ["old"], recordedAt: 1 }));
+    const batch = Array.from({ length: 25 }, (_, i) => `n-${i}`);
+
+    await stashRetryPayload(payload({ fileIds: batch, recordedAt: 2 }));
+
+    // The row on screen is the new one, so it is the older unrelated stash that goes.
+    await expect(loadRetryPayload("old")).resolves.toBeNull();
+    await expect(loadRetryPayload("n-0")).resolves.toMatchObject({
+      operation: "remove-password",
+    });
+  });
+
+  it("forgets a file's stash once its failure is resolved", async () => {
+    await stashRetryPayload(payload({ fileIds: ["f-1", "f-2"] }));
+
+    await clearRetryPayload("f-1");
+
+    await expect(loadRetryPayload("f-1")).resolves.toBeNull();
+    // Per file: the other input's own row may still be open.
+    await expect(loadRetryPayload("f-2")).resolves.toMatchObject({
       operation: "remove-password",
     });
   });

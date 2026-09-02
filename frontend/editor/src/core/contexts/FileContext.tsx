@@ -197,6 +197,10 @@ function FileContextInner({
     );
   }, [activeEncryptedFileId, encryptedQueue]);
 
+  // The store outlives this provider, and a hold nobody can answer would stall the file's policy
+  // for the rest of the session. Its own effect, so a change of prompt does not clear and re-set.
+  useEffect(() => () => setPendingUnlocks([]), []);
+
   useEffect(() => {
     setUnlockPassword("");
     setUnlockError(null);

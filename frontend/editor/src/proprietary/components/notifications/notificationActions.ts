@@ -16,6 +16,7 @@ import {
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 import { fileStorage } from "@app/services/fileStorage";
 import {
+  clearRetryPayload,
   retryWithPassword,
   stashMatchesKind,
   unlockLocalDocument,
@@ -436,6 +437,8 @@ export function useNotificationActions(): ClientActionRegistry {
 
         // Ignored on purpose: a refused resolve is not a failed unlock.
         await reportNotificationResolved(context.notification.id);
+        // The stash described the run that just succeeded, so it has nothing left to offer.
+        await clearRetryPayload(context.notification.fileId);
         return { ok: true };
       },
     };

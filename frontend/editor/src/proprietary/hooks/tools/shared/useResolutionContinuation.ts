@@ -6,6 +6,7 @@ import {
   type AppNotification,
 } from "@app/services/notifications";
 import {
+  clearRetryPayload,
   loadRetryPayload,
   stashMatchesKind,
 } from "@app/services/notificationRetry";
@@ -88,6 +89,7 @@ async function continueRow(
     );
     // Anything short of a tracked run leaves the row open: the processed document was the point.
     if (!(outcome.ok && outcome.tracked)) return false;
+    await clearRetryPayload(row.fileId);
     return reportNotificationResolved(row.id);
   }
 
@@ -101,6 +103,7 @@ async function continueRow(
   if (!stashMatchesKind(row.kindId, stash)) return false;
   if (!row.actions.some((a) => a.enabled && a.id === "OPEN_IN_TOOL"))
     return false;
+  await clearRetryPayload(row.fileId);
   return reportNotificationResolved(row.id);
 }
 
