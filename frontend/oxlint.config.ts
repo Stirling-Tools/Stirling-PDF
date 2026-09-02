@@ -77,7 +77,6 @@ const noExplicitAnyExcludes = [
   "editor/src/core/components/shared/config/configSections/*.{js,mjs,jsx,ts,tsx}",
   "editor/src/core/components/viewer/*.{js,mjs,jsx,ts,tsx}",
   "editor/src/core/contexts/ToolWorkflowContext.tsx",
-  "editor/src/core/hooks/*.{js,mjs,jsx,ts,tsx}",
   "editor/src/core/tools/annotate/useAnnotationSelection.ts",
   "editor/src/core/types/fileContext.ts",
   "editor/src/core/types/fileIdSafety.d.ts",
