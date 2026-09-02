@@ -725,6 +725,32 @@ class PaygChargeInterceptorTest {
         verify(chargeService, never()).openProcess(any(), anyList());
     }
 
+    @Test
+    void preHandle_plainRouteWithAutomationHeader_isAutomation() throws Exception {
+        // A policy/pipeline sub-step to an unannotated proprietary tool (e.g. an integration step)
+        // carries X-Stirling-Automation: true. It must be in scope and billed AUTOMATION, matching
+        // self-hosted, which bills by the header regardless of annotation.
+        authenticateWithUser(makeUser(7L, 42L));
+        UUID jobId = UUID.randomUUID();
+        when(chargeService.openProcess(any(), anyList()))
+                .thenReturn(new ChargeOutcome(jobId, 1, ChargeOutcome.Disposition.OPENED));
+        org.mockito.ArgumentCaptor<stirling.software.saas.payg.charge.ChargeContext> ctxCaptor =
+                org.mockito.ArgumentCaptor.forClass(
+                        stirling.software.saas.payg.charge.ChargeContext.class);
+
+        MockMultipartHttpServletRequest req = newMultipart();
+        req.setRequestURI("/api/v1/integration/external-api-call");
+        req.addFile(
+                new MockMultipartFile("fileInput", "x.pdf", "application/pdf", "abc".getBytes()));
+        req.addHeader("X-Stirling-Automation", "true");
+
+        interceptor.preHandle(req, new MockHttpServletResponse(), handlerMethodForPlain());
+
+        verify(chargeService).openProcess(ctxCaptor.capture(), anyList());
+        assertThat(ctxCaptor.getValue().billingCategory())
+                .isEqualTo(stirling.software.saas.payg.model.BillingCategory.AUTOMATION);
+    }
+
     // --- helpers --------------------------------------------------------------------------------
 
     private MockMultipartHttpServletRequest newMultipart() {
