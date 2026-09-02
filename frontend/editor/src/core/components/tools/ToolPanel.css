@@ -31,11 +31,7 @@
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  /* Extra top space keeps the expand toggle clear of the desktop window
-     controls overlay. Derive the ~control-height from --wincontrols-w (which is
-     138px when the custom Windows chrome is active, 0 otherwise) via min(), so
-     it needs only that one variable. */
-  padding-top: calc(10px + min(var(--wincontrols-w, 0px), 2rem));
+  padding-top: 10px;
   height: 100%;
   width: 100%;
   min-height: 0;
@@ -161,17 +157,7 @@
   gap: 0.5rem;
   min-height: 52px;
   padding: 0.5rem 0.75rem;
-  /* Keep the collapse toggle clear of the desktop window-controls overlay
-     (--wincontrols-w is 0 unless the custom Windows title bar is active). */
-  padding-right: calc(0.75rem + var(--wincontrols-w, 0px));
   box-sizing: border-box;
-}
-
-/* Active-tool header (e.g. Automate) sits at the panel's top-right too; keep its
-   close button clear of the window-controls overlay. Scoped to the tool panel so
-   the shared header elsewhere (AI chat, etc.) is untouched. */
-.tool-panel .sui-panelhdr__close {
-  margin-right: var(--wincontrols-w, 0px);
 }
 
 .tool-panel__compact-title {

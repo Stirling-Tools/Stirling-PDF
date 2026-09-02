@@ -8,6 +8,9 @@ import FilterNoneIcon from "@mui/icons-material/FilterNone";
 import CloseIcon from "@mui/icons-material/Close";
 import { getDesktopOs, DesktopOs } from "@app/services/platformService";
 import styles from "@app/components/WindowTitleBar.module.css";
+// Desktop-only skin that reserves the controls' corner across core layout
+// surfaces; every rule is gated by the data-window-controls flag set below.
+import "@app/components/windowChrome.css";
 
 // Seed from the UA so the bar (and its reserved height) is present on the first
 // frame on Windows, avoiding a layout shift. getDesktopOs() confirms it right
@@ -19,10 +22,11 @@ const seedIsWindows =
  * Custom window controls for the Windows desktop build. The native caption is
  * removed in Rust (decorations:false), so this draws minimize/maximize/close as
  * a fixed overlay pinned to the top-right corner — the rail and panels run all
- * the way to the window edge, and the app chrome reserves the corner via
- * --wincontrols-w. Renders nothing on macOS/Linux (native decorations kept) and
- * in the browser build (core stub). tao provides edge/corner resize for the
- * undecorated window, so no manual resize handles are needed here.
+ * the way to the window edge, and the app chrome reserves the corner via the
+ * data-window-controls flag this sets on <html> (consumed by windowChrome.css).
+ * Renders nothing on macOS/Linux (native decorations kept); not bundled in the
+ * browser build. tao provides edge/corner resize for the undecorated window, so
+ * no manual resize handles are needed here.
  */
 export function WindowTitleBar() {
   const [isWindows, setIsWindows] = useState(seedIsWindows);
@@ -44,21 +48,19 @@ export function WindowTitleBar() {
     };
   }, []);
 
-  // The controls are a fixed overlay in the top-right corner. Publish their
-  // width so app chrome at the top-right (the tool panel header) can pad clear
-  // of them; unset (0) everywhere else. Layout effect so it lands before paint.
+  // Flag the custom chrome on <html> so windowChrome.css can reserve the
+  // controls' corner across the app. Set only when active (Windows desktop);
+  // absent otherwise, so the skin is inert on macOS/Linux. Layout effect so it
+  // lands before paint.
   useIsomorphicEffect(() => {
     const root = document.documentElement;
     if (active) {
-      root.style.setProperty("--wincontrols-w", "8.625rem"); // 3 x 46px
-      root.style.setProperty("--wincontrols-h", "2rem");
+      root.setAttribute("data-window-controls", "custom");
     } else {
-      root.style.removeProperty("--wincontrols-w");
-      root.style.removeProperty("--wincontrols-h");
+      root.removeAttribute("data-window-controls");
     }
     return () => {
-      root.style.removeProperty("--wincontrols-w");
-      root.style.removeProperty("--wincontrols-h");
+      root.removeAttribute("data-window-controls");
     };
   }, [active]);
 
@@ -113,7 +115,7 @@ export function WindowTitleBar() {
 
   const appWindow = getCurrentWindow();
   return (
-    <div className={styles.titleBar} data-tauri-drag-region>
+    <div className={styles.titleBar}>
       <div className={styles.controls}>
         <button
           type="button"
