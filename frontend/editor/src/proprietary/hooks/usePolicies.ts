@@ -14,6 +14,7 @@ import {
   onPoliciesChange,
   updatePolicy,
   resetPolicy,
+  forgetPolicies,
   reorderPolicies as persistPolicyOrder,
 } from "@app/services/policyStorage";
 import { loadPolicyCatalog } from "@app/services/policyCatalog";
@@ -36,7 +37,7 @@ import {
 } from "@app/services/policyBackend";
 import { reorderPolicies as reorderBackendPolicies } from "@app/services/policyApi";
 import { orderRewritesFirst } from "@app/data/classificationPolicy";
-import type { PolicyToStore } from "@app/services/policyPipeline";
+import { type PolicyToStore } from "@app/services/policyPipeline";
 import type {
   PoliciesByCategory,
   PolicyConfigResult,
@@ -65,6 +66,7 @@ function toStoreRequest(
     automation: result.automation,
     pipelineSteps: result.pipelineSteps,
     sources: result.sources,
+    runsOnEditor: result.runsOnEditor,
     scopeTypes: result.scopeTypes,
     reviewerEmail: result.reviewerEmail,
     fieldValues: result.fieldValues,
@@ -114,6 +116,20 @@ export function usePolicies() {
               backendId: undefined,
             };
       }
+      // Builder-made pipelines have no category, so the built-in loop above skips them. They are
+      // still policies: one set to run on the editor has to reach the auto-run.
+      for (const [key, decoded] of byCategory) {
+        if (reconciled[key]) continue;
+        reconciled[key] = decodedToState(decoded, local[key]?.folderId);
+      }
+      // A builder pipeline the backend no longer has was deleted on the Pipelines page. Its cached
+      // entry keeps a dead backendId that still satisfies the auto-run filter, so the dispatch
+      // fails, the run never completes, and the chain behind it never advances.
+      forgetPolicies(
+        Object.keys(local).filter(
+          (id) => !reconciled[id] && !byCategory.has(id),
+        ),
+      );
       for (const [id, state] of Object.entries(reconciled)) {
         updatePolicy(id, state);
       }
@@ -157,6 +173,7 @@ export function usePolicies() {
         backendId,
         fieldValues: result.fieldValues,
         sources: result.sources,
+        runsOnEditor: result.runsOnEditor,
         scopeTypes: result.scopeTypes,
         reviewerEmail: result.reviewerEmail,
         outputMode: result.folder.outputMode,
@@ -194,6 +211,7 @@ export function usePolicies() {
         backendId,
         fieldValues: result.fieldValues,
         sources: result.sources,
+        runsOnEditor: result.runsOnEditor,
         scopeTypes: result.scopeTypes,
         reviewerEmail: result.reviewerEmail,
         outputMode: result.folder.outputMode,
@@ -246,6 +264,7 @@ export function usePolicies() {
         },
         pipelineSteps: result.pipelineSteps,
         sources: result.sources,
+        runsOnEditor: result.runsOnEditor,
         scopeTypes: result.scopeTypes,
         reviewerEmail: result.reviewerEmail,
         fieldValues: result.fieldValues,
@@ -259,6 +278,7 @@ export function usePolicies() {
         backendId,
         fieldValues: result.fieldValues,
         sources: result.sources,
+        runsOnEditor: result.runsOnEditor,
         scopeTypes: result.scopeTypes,
         reviewerEmail: result.reviewerEmail,
         outputMode: result.folder.outputMode,

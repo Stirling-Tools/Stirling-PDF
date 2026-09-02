@@ -61,14 +61,15 @@ public record FileRunEventView(
     }
 
     /**
-     * {@code defaultLabel} and {@code execution} let a client render and route an action it was
-     * never built with. Declaration order is display order.
+     * {@code defaultLabel} and {@code execution} let a client render an action it was never built
+     * with; {@code slot} is placement intent. See {@link FailureActionSlot}.
      */
     public record ActionView(
             String id,
             String labelKey,
             String defaultLabel,
             FailureActionId.Execution execution,
+            FailureActionSlot slot,
             boolean enabled,
             String disabledReasonKey) {
 
@@ -78,6 +79,7 @@ public record FileRunEventView(
                     action.labelKey(),
                     action.id().getDefaultLabel(),
                     action.id().getExecution(),
+                    action.slot(),
                     action.enabled(),
                     action.disabledReasonKey());
         }

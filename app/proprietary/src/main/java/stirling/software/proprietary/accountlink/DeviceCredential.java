@@ -13,8 +13,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * The device credential this self-hosted instance received when it linked a SaaS account
- * (combined-billing "Mode A"). Singleton — one instance links to exactly one SaaS team.
+ * The device credential this self-hosted instance received when it linked a SaaS account (combined
+ * billing). Singleton — one instance links to exactly one SaaS team.
  *
  * <p>Unlike the SaaS side (which stores only a hash), the instance must keep the plaintext {@code
  * deviceSecret} so it can present it on every unattended entitlement call. It lives in the local

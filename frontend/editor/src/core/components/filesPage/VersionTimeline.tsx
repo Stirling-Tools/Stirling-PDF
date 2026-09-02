@@ -10,7 +10,7 @@ import HistoryIcon from "@mui/icons-material/History";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 
 import { FileId, ToolOperation } from "@app/types/file";
-import { ToolId } from "@app/types/toolId";
+import { toolOperationLabel } from "@app/utils/toolOperationLabel";
 import { StirlingFileStub } from "@app/types/fileContext";
 import { formatFileSize, getFileDate } from "@app/utils/fileUtils";
 import { downloadFileFromStorage } from "@app/utils/downloadUtils";
@@ -64,10 +64,10 @@ function deltaToolFor(
   return curr[priorLen] ?? null;
 }
 
-/** Translated tool name via `home.{toolId}.title`. */
-function ToolLabel({ toolId }: { toolId: ToolId }) {
+/** The operation's own label when it has one, else its translated tool name. */
+function ToolLabel({ operation }: { operation: ToolOperation }) {
   const { t } = useTranslation();
-  return <span>{t(`home.${toolId}.title`, toolId)}</span>;
+  return <span>{toolOperationLabel(operation, t)}</span>;
 }
 
 export interface VersionTimelineProps {
@@ -242,7 +242,7 @@ export function VersionTimeline({
                       style={{ color: "var(--c-text)" }}
                     >
                       {delta ? (
-                        <ToolLabel toolId={delta.toolId} />
+                        <ToolLabel operation={delta} />
                       ) : (
                         t("filesPage.versionOrigin", "Original upload")
                       )}
