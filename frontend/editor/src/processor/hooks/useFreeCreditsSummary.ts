@@ -26,9 +26,8 @@ import { type NavFooterCredits } from "@app/components/shared/navFooter/NavFoote
  * since the wallet lives in the cloud even when the instance doesn't. Gated on
  * linkage: an unlinked instance has no wallet to read.
  *
- * Free teams only, matching the editor and the Plan page. The grant is a
- * lifetime pool that survives subscribing, so a paying team would otherwise sit
- * on a permanent "0 of 500" in red; their usage lives on Usage & Billing.
+ * Free teams only, matching the editor and the Plan page: a payer's headline
+ * number is spend against cap, and their usage lives on Usage & Billing.
  */
 export function useFreeCreditsSummary(): NavFooterCredits | null {
   const { isLinked } = useLink();

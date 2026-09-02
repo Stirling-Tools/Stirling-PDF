@@ -1,6 +1,6 @@
 import type { Wallet } from "@processor/api/billing";
 
-/** Linked, on the one-time free grant — leader view. Override per story. */
+/** Linked, on the free monthly grant — leader view. Override per story. */
 export const freeWallet: Wallet = {
   teamId: 42,
   status: "free",

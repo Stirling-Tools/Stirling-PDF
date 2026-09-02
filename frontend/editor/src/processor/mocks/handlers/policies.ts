@@ -28,6 +28,15 @@ export function resetPoliciesStore(
   runs = seedRuns ? [...seedRuns] : seedPolicyRuns();
 }
 
+/**
+ * The catalogue (suggested-policy) records, for the unified Pipelines overview to merge in - the
+ * real backend keeps a single store, so its overview already sees these; the mock's two stores must
+ * be joined here to match.
+ */
+export function getCataloguePolicies(): WirePolicy[] {
+  return store;
+}
+
 let idCounter = 0;
 function nextId(categoryId: string): string {
   idCounter += 1;

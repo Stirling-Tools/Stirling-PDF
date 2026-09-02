@@ -34,7 +34,10 @@ export function ConnectBenefitsSlide() {
     },
     {
       key: "credits",
-      label: t("processor.accountLink.connect.benefits.creditsLabel", "Credits"),
+      label: t(
+        "processor.accountLink.connect.benefits.creditsLabel",
+        "Credits",
+      ),
       detail: t(
         "processor.accountLink.connect.benefits.creditsDetail",
         "500 free per month",

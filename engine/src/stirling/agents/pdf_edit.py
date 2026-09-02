@@ -27,7 +27,7 @@ from stirling.contracts import (
 )
 from stirling.logging import Pretty
 from stirling.models import OPERATIONS, ApiModel, ParamToolModel, ToolEndpoint
-from stirling.services import AppRuntime, ToolChainStep, blocking, validate_tool_chain
+from stirling.services import AppRuntime, ToolChainStep, blocking, language_directive, validate_tool_chain
 
 logger = logging.getLogger(__name__)
 
@@ -357,6 +357,7 @@ class PdfEditAgent:
             f"{unavailable_line}"
             f"{repair_line}"
             f"Extracted page text:\n{format_page_text(request.page_text)}"
+            f"\n{language_directive()}"
         )
 
     # Endpoints that exist on the server and are callable via the direct API or the manual UI,

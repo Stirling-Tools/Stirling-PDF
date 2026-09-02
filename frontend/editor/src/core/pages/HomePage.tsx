@@ -56,6 +56,9 @@ import {
   useFilesPage,
 } from "@app/contexts/FilesPageContext";
 import { useFolders } from "@app/contexts/FolderContext";
+import { folderKind } from "@app/types/folder";
+import { useServerFolderBlock } from "@app/hooks/useServerFolderBlock";
+import { useNewFolderFlow } from "@app/hooks/useNewFolderFlow";
 import { useFileHandler } from "@app/hooks/useFileHandler";
 import { FolderTreePanel } from "@app/components/filesPage/FolderTreePanel";
 import type { FileSidebarProps } from "@app/components/shared/FileSidebar";
@@ -771,6 +774,8 @@ const MyFilesSidebarOverrides = forwardRef<HTMLDivElement, FileSidebarProps>(
     const filesPage = useFilesPage();
     const folders = useFolders();
     const { addFiles } = useFileHandler();
+    const { createFolderHere, createFolderHereBlockedReason } =
+      useNewFolderFlow();
 
     const handleUpload = useCallback(
       async (files: File[]) => {
@@ -787,12 +792,19 @@ const MyFilesSidebarOverrides = forwardRef<HTMLDivElement, FileSidebarProps>(
       [addFiles, filesPage, folders.currentFolderId],
     );
 
-    const newFolderDisabledReason = !folders.serverReachable
-      ? t(
-          "filesPage.newFolderStorageDisabled",
-          "Server folder storage isn't enabled. Ask your admin to turn it on.",
-        )
+    // Kind-aware: only a server folder's subfolder needs the server, and a mounted
+    // directory takes no subfolders from here at all.
+    const railCurrentFolder = folders.currentFolderId
+      ? folders.foldersById.get(folders.currentFolderId)
+      : undefined;
+    const railCurrentKind = railCurrentFolder
+      ? folderKind(railCurrentFolder)
       : null;
+    const serverFolderBlock = useServerFolderBlock();
+    const newFolderDisabledReason =
+      railCurrentKind === "server"
+        ? serverFolderBlock
+        : createFolderHereBlockedReason;
 
     return (
       <FileSidebar
@@ -803,7 +815,7 @@ const MyFilesSidebarOverrides = forwardRef<HTMLDivElement, FileSidebarProps>(
         extraAction={{
           icon: <CreateNewFolderIcon />,
           label: t("filesPage.newFolder", "New folder"),
-          onClick: () => filesPage.openNewFolderDialog(),
+          onClick: createFolderHere,
           disabled: newFolderDisabledReason !== null,
           disabledTooltip: newFolderDisabledReason ?? undefined,
           testId: "files-rail-new-folder",

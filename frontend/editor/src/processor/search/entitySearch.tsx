@@ -319,7 +319,7 @@ export function buildProcessorEntityGroups(
         t,
         (categoryId) =>
           navigate(
-            `${toProcessorPath(VIEW_PATHS.policies)}?category=${encodeURIComponent(categoryId)}`,
+            `${toProcessorPath(VIEW_PATHS.pipelines)}?setup=${encodeURIComponent(categoryId)}`,
           ),
         ENTITY_GROUP_LIMIT,
       )

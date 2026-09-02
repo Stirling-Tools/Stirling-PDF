@@ -291,7 +291,9 @@ describe("ConnectionModal", () => {
     );
 
     await userEvent.click(
-      screen.getByRole("button", { name: "processor.connections.picker2.back" }),
+      screen.getByRole("button", {
+        name: "processor.connections.picker2.back",
+      }),
     );
     await waitFor(() =>
       expect(

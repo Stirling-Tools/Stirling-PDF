@@ -15,7 +15,7 @@ interface Props {
 }
 
 /**
- * The free Processor-trial meter — "X of N free PDFs left" against the one-time
+ * The free Processor-trial meter — "X of N free PDFs left" against this period's
  * grant, with what has been used alongside as the status badge. The bar shows what
  * is left, so it drains towards empty as the grant is spent.
  * Uses the shared {@link MeterBar} (same `paygf-meter` structure as the
@@ -41,7 +41,7 @@ export function WalletMeter({ wallet, unsynced, action }: Props) {
     rate != null
       ? t(
           "processor.billing.walletMeter.titleWithRate",
-          "Process {{allowance}} PDFs free, then {{rate}}/PDF",
+          "{{allowance}} free credits every month, then {{rate}} per PDF",
           {
             count: wallet.freeAllowance,
             allowance: wallet.freeAllowance.toLocaleString(),
@@ -50,7 +50,7 @@ export function WalletMeter({ wallet, unsynced, action }: Props) {
         )
       : t(
           "processor.billing.walletMeter.title",
-          "Process {{allowance}} PDFs free",
+          "{{allowance}} free credits every month",
           {
             count: wallet.freeAllowance,
             allowance: wallet.freeAllowance.toLocaleString(),
@@ -80,12 +80,12 @@ export function WalletMeter({ wallet, unsynced, action }: Props) {
           pct={pct}
           barLabel={t(
             "processor.billing.walletMeter.barAria",
-            "Free PDFs remaining",
+            "Free credits remaining",
           )}
           figure={remaining.toLocaleString()}
           capSuffix={t(
             "processor.billing.walletMeter.capSuffix",
-            "of {{allowance}} free PDFs left",
+            "of {{allowance}} free credits left this month",
             {
               count: wallet.freeAllowance,
               allowance: wallet.freeAllowance.toLocaleString(),

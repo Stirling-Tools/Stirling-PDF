@@ -14,7 +14,7 @@ type Story = StoryObj<typeof SpendThisMonthCard>;
 /** Actual spend + the Enterprise upsell tacked onto the foot. */
 export const Default: Story = { args: { wallet: subscribedWallet } };
 
-/** Subscribed but still holding leftover lifetime free grant — shows the free-remaining note. */
+/** Subscribed with this period's free grant part-spent — shows the free-remaining note. */
 export const WithFreeRemaining: Story = {
   args: { wallet: { ...subscribedWallet, freeRemaining: 380 } },
 };

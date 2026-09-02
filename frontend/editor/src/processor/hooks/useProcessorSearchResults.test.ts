@@ -212,6 +212,7 @@ function makePolicyEntry(overrides?: Partial<CatalogueEntry>): CatalogueEntry {
       state: {
         configured: true,
         status: "active",
+        required: false,
         sources: [],
         scopeTypes: [],
         reviewerEmail: "",
@@ -239,6 +240,8 @@ function makePipelineView(
     id,
     name,
     enabled: true,
+    required: false,
+    icon: "",
     status: "active",
     trigger,
     sources: [],

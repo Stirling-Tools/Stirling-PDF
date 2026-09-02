@@ -214,7 +214,8 @@ export const CREATABLE_SOURCE_TYPES: CreatableSourceType[] = [
         labelKey: "processor.sources.types.folder.fields.identity.label",
         control: "select",
         defaultValue: "stat",
-        helperTextKey: "processor.sources.types.folder.fields.identity.helperText",
+        helperTextKey:
+          "processor.sources.types.folder.fields.identity.helperText",
         advanced: true,
         // Change detection only governs the consume ledger; snapshot re-reads everything regardless.
         visibleWhen: { key: "mode", equals: "consume" },

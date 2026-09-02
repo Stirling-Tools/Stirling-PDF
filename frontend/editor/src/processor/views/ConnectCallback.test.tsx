@@ -61,7 +61,10 @@ function renderFlow() {
               path="/account-link/callback"
               element={<ConnectCallback />}
             />
-            <Route path="/processor" element={<div data-testid="processor" />} />
+            <Route
+              path="/processor"
+              element={<div data-testid="processor" />}
+            />
           </Routes>
         </UIProvider>
       </MemoryRouter>

@@ -6,6 +6,7 @@ const FULL_STATE: PolicyDecodedState = {
   id: "pol_123",
   name: "Security Policy",
   enabled: true,
+  required: true,
   categoryId: "security",
   sources: ["editor", "gdrive"],
   runsOnEditor: true,
@@ -33,6 +34,14 @@ describe("toWirePolicy", () => {
 
   it("sets output.type to inline", () => {
     expect(toWirePolicy(FULL_STATE).output.type).toBe("inline");
+  });
+
+  it("keeps required first-class (not in the options bag)", () => {
+    const wire = toWirePolicy(FULL_STATE);
+    expect(wire.required).toBe(true);
+    expect(
+      (wire.output.options as Record<string, unknown>).required,
+    ).toBeUndefined();
   });
 
   it("packs metadata into output.options", () => {
@@ -76,6 +85,7 @@ describe("fromWirePolicy → round-trip", () => {
     const wire = toWirePolicy(FULL_STATE);
     const decoded = fromWirePolicy(wire);
     expect(decoded.id).toBe(FULL_STATE.id);
+    expect(decoded.required).toBe(FULL_STATE.required);
     expect(decoded.categoryId).toBe(FULL_STATE.categoryId);
     expect(decoded.sources).toEqual(FULL_STATE.sources);
     expect(decoded.scopeTypes).toEqual(FULL_STATE.scopeTypes);
@@ -181,5 +191,18 @@ describe("fromWirePolicy → round-trip", () => {
     const wire = toWirePolicy(FULL_STATE);
     delete (wire.output.options as Record<string, unknown>).fieldValues;
     expect(fromWirePolicy(wire).fieldValues).toEqual({});
+  });
+
+  it("preserves options keys the codec does not model", () => {
+    const wire = toWirePolicy(FULL_STATE);
+    // An editor-authored blob the portal codec has no field for.
+    (wire.output.options as Record<string, unknown>).automation = { name: "x" };
+    const decoded = fromWirePolicy(wire);
+    expect(decoded.extraOptions).toEqual({ automation: { name: "x" } });
+    // Round-trips back onto the bag rather than being dropped on the next save.
+    expect(
+      (toWirePolicy(decoded).output.options as Record<string, unknown>)
+        .automation,
+    ).toEqual({ name: "x" });
   });
 });

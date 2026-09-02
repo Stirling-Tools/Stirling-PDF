@@ -59,7 +59,9 @@ describe("ConnectDoneSlide", () => {
     fetchWallet.mockResolvedValue(wallet(40));
     renderDone();
     await waitFor(() => expect(screen.getByText(SWITCH_ON)).toBeTruthy());
-    const rows = [...document.querySelectorAll(".processor-connect__next-item")];
+    const rows = [
+      ...document.querySelectorAll(".processor-connect__next-item"),
+    ];
     expect(rows[0]?.textContent).toMatch(SWITCH_ON);
   });
 

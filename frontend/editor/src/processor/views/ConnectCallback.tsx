@@ -34,7 +34,10 @@ export default function ConnectCallback() {
       refreshToken: params.get("refresh_token"),
     };
     // Router state, not the URL: the tokens are live and must not be re-shareable.
-    navigate(PROCESSOR_BASENAME, { replace: true, state: { accountLinkReturn } });
+    navigate(PROCESSOR_BASENAME, {
+      replace: true,
+      state: { accountLinkReturn },
+    });
   }, [navigate]);
 
   return null;

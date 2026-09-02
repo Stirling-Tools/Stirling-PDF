@@ -3,7 +3,10 @@ import { useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button, EmptyState, Skeleton, StatusBadge } from "@app/ui";
 import { PROCESSOR_FAILURES_ANCHOR } from "@app/routes/processorBasename";
-import type { FileRunEvent, FailureSeverity } from "@processor/api/fileRunEvents";
+import type {
+  FileRunEvent,
+  FailureSeverity,
+} from "@processor/api/fileRunEvents";
 import {
   useFileRunEvents,
   useFileRunEventActions,
