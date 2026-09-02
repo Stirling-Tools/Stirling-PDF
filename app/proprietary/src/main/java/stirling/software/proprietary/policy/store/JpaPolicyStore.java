@@ -3,6 +3,7 @@ package stirling.software.proprietary.policy.store;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -11,8 +12,10 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.proprietary.policy.model.EditorConfig;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.PolicyBinding;
+import stirling.software.proprietary.policy.source.EditorSource;
 
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
@@ -49,6 +52,7 @@ public class JpaPolicyStore implements PolicyStore {
                         policy.output(),
                         policy.outputIds(),
                         policy.teamId(),
+                        policy.editor(),
                         policy.origin());
 
         PolicyEntity entity = new PolicyEntity();
@@ -149,7 +153,9 @@ public class JpaPolicyStore implements PolicyStore {
     // One unreadable row must never abort a bulk read or crash startup.
     private Optional<Policy> toPolicy(PolicyEntity entity) {
         try {
-            JsonNode node = upgradeLegacyShape(objectMapper.readTree(entity.getPolicyJson()));
+            JsonNode node =
+                    liftEditorConfig(
+                            upgradeLegacyShape(objectMapper.readTree(entity.getPolicyJson())));
             return Optional.of(objectMapper.treeToValue(node, Policy.class));
         } catch (Exception e) {
             log.error(
@@ -191,5 +197,62 @@ public class JpaPolicyStore implements PolicyStore {
         obj.remove("trigger");
         obj.remove("sourceIds");
         return obj;
+    }
+
+    /** Categories whose editor moment defaulted to export before it was stored (see runOn.ts). */
+    private static final Set<String> EXPORT_BY_DEFAULT = Set.of("security");
+
+    /**
+     * Derive {@code editor} for a blob written before editor participation had its own field, from
+     * its {@code output.options}: allowed when {@code sources} lists {@code "editor"}, or - for a
+     * catalogue policy - when there is no {@code sources} list at all (an unnarrowed catalogue
+     * policy runs in the editor).
+     *
+     * <p>Runs on every read, deliberately outside {@link #upgradeLegacyShape}'s early return: a
+     * blob written after triggers moved onto {@code inputs} but before this field existed still
+     * needs lifting, and that early return would skip exactly those rows.
+     */
+    private JsonNode liftEditorConfig(JsonNode root) {
+        if (!(root instanceof ObjectNode obj) || obj.hasNonNull("editor")) {
+            return root;
+        }
+        JsonNode options = obj.path("output").path("options");
+        String categoryId = text(options, "categoryId");
+        JsonNode sources = options.get("sources");
+        boolean listed = sources != null && sources.isArray() && !sources.isEmpty();
+        boolean allowed;
+        if (listed) {
+            // An explicit scope list decides: only the editor's own id puts it on the editor.
+            allowed = false;
+            for (JsonNode source : sources) {
+                if (source.isValueNode() && EditorSource.ID.equals(source.asString())) {
+                    allowed = true;
+                    break;
+                }
+            }
+        } else {
+            // No list: a catalogue policy ran in the editor by default, but a builder pipeline
+            // (no category) could not reach the editor at all, so silence is not consent there.
+            allowed = !categoryId.isBlank();
+        }
+        ObjectNode editor = objectMapper.createObjectNode();
+        editor.put("allowed", allowed);
+        editor.put("runOn", legacyRunOn(options, categoryId));
+        obj.set("editor", editor);
+        return obj;
+    }
+
+    /** The stored moment, or the category default the client applied when none was stored. */
+    private static String legacyRunOn(JsonNode options, String categoryId) {
+        String stored = text(options, "runOn");
+        if (EditorConfig.EXPORT.equals(stored) || EditorConfig.UPLOAD.equals(stored)) {
+            return stored;
+        }
+        return EXPORT_BY_DEFAULT.contains(categoryId) ? EditorConfig.EXPORT : EditorConfig.UPLOAD;
+    }
+
+    private static String text(JsonNode parent, String field) {
+        JsonNode node = parent.path(field);
+        return node.isValueNode() ? node.asString() : "";
     }
 }

@@ -1,6 +1,7 @@
 package stirling.software.proprietary.policy.model;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * A stored automation: ordered tool steps, input bindings, and output destinations.
@@ -25,6 +26,7 @@ public record Policy(
         OutputSpec output,
         List<String> outputIds,
         Long teamId,
+        EditorConfig editor,
         String origin) {
 
     /** Converted from a legacy watched-folder JSON config that predates the policy engine. */
@@ -35,9 +37,43 @@ public record Policy(
         steps = steps == null ? List.of() : steps;
         output = output == null ? OutputSpec.inline() : output;
         outputIds = outputIds == null ? List.of() : List.copyOf(outputIds);
+        editor = editor == null ? EditorConfig.disabled() : editor;
     }
 
-    /** Without a provenance marker: built here, and what pre-existing rows deserialise to. */
+    /** Without a provenance marker: an ordinary policy created through the UI or a seeder. */
+    public Policy(
+            String id,
+            String name,
+            String owner,
+            boolean enabled,
+            List<PipelineInput> inputs,
+            List<PipelineStep> steps,
+            OutputSpec output,
+            List<String> outputIds,
+            Long teamId,
+            EditorConfig editor) {
+        this(id, name, owner, enabled, inputs, steps, output, outputIds, teamId, editor, null);
+    }
+
+    /** Without editor participation: a swept or on-demand policy. */
+    public Policy(
+            String id,
+            String name,
+            String owner,
+            boolean enabled,
+            List<PipelineInput> inputs,
+            List<PipelineStep> steps,
+            OutputSpec output,
+            List<String> outputIds,
+            Long teamId,
+            String origin) {
+        this(id, name, owner, enabled, inputs, steps, output, outputIds, teamId, null, origin);
+    }
+
+    /**
+     * Without editor participation or a provenance marker: built here, and what pre-existing rows
+     * deserialise to.
+     */
     public Policy(
             String id,
             String name,
@@ -48,7 +84,7 @@ public record Policy(
             OutputSpec output,
             List<String> outputIds,
             Long teamId) {
-        this(id, name, owner, enabled, inputs, steps, output, outputIds, teamId, null);
+        this(id, name, owner, enabled, inputs, steps, output, outputIds, teamId, null, null);
     }
 
     /**
@@ -88,6 +124,14 @@ public record Policy(
         return inputs.stream().map(PipelineInput::sourceId).toList();
     }
 
+    /**
+     * The moment this policy fires in the editor ("upload" / "export"), or empty when the editor
+     * does not run it. Legacy blobs are lifted onto {@link EditorConfig} when they are read.
+     */
+    public Optional<String> editorRunOn() {
+        return editor.allowed() ? Optional.of(editor.runOn()) : Optional.empty();
+    }
+
     /** The distinct trigger types configured across this policy's inputs (manual inputs aside). */
     public List<String> triggerTypes() {
         return inputs.stream()
@@ -101,25 +145,29 @@ public record Policy(
     /** A copy with the inline output replaced (e.g. resolved for the engine, or migrated). */
     public Policy withOutput(OutputSpec resolved) {
         return new Policy(
-                id, name, owner, enabled, inputs, steps, resolved, outputIds, teamId, origin);
+                id, name, owner, enabled, inputs, steps, resolved, outputIds, teamId, editor,
+                origin);
     }
 
     /** A copy under a different owner (e.g. moving a seed off a placeholder name). */
     public Policy withOwner(String newOwner) {
         return new Policy(
-                id, name, newOwner, enabled, inputs, steps, output, outputIds, teamId, origin);
+                id, name, newOwner, enabled, inputs, steps, output, outputIds, teamId, editor,
+                origin);
     }
 
     /** A copy referencing the given saved output destinations. */
     public Policy withOutputIds(List<String> newOutputIds) {
         return new Policy(
-                id, name, owner, enabled, inputs, steps, output, newOutputIds, teamId, origin);
+                id, name, owner, enabled, inputs, steps, output, newOutputIds, teamId, editor,
+                origin);
     }
 
     /** Provenance is stamped server-side; a caller cannot label its own creation as migrated. */
     public Policy withOrigin(String newOrigin) {
         return new Policy(
-                id, name, owner, enabled, inputs, steps, output, outputIds, teamId, newOrigin);
+                id, name, owner, enabled, inputs, steps, output, outputIds, teamId, editor,
+                newOrigin);
     }
 
     /**

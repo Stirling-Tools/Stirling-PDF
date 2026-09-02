@@ -115,10 +115,14 @@ public class PolicyOverviewService {
     /**
      * Summarise a policy's triggers for the overview row: "manual" when no input is triggered,
      * otherwise the distinct trigger types across its inputs (e.g. "folder-watch, schedule").
+     *
+     * <p>An editor policy has no wire input to trigger, but it is not manual either - it fires in
+     * the editor on every upload or export, so it reports that rather than reading as on-demand.
      */
     private static String triggerSummary(Policy policy) {
         List<String> types = policy.triggerTypes();
-        return types.isEmpty() ? "manual" : String.join(", ", types);
+        if (!types.isEmpty()) return String.join(", ", types);
+        return policy.editorRunOn().map(runOn -> "editor-" + runOn).orElse("manual");
     }
 
     private static String outputSummary(OutputSpec output) {

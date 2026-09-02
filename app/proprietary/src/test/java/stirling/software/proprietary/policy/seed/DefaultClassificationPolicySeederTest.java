@@ -64,12 +64,28 @@ class DefaultClassificationPolicySeederTest {
         assertThat(policy.teamId()).isEqualTo(7L);
         assertThat(policy.output().type()).isEqualTo("inline");
         assertThat(policy.output().options().get("categoryId")).isEqualTo("classification");
-        assertThat(policy.output().options().get("runOn")).isEqualTo("upload");
         assertThat(policy.output().options().get("mode")).isEqualTo("new_version");
-        assertThat(policy.output().options().get("sources")).isEqualTo(List.of("editor"));
+        // Editor participation is the policy's own flag, not a marker in the output options.
+        assertThat(policy.editor().allowed()).isTrue();
+        assertThat(policy.editor().runOn()).isEqualTo("upload");
         assertThat(policy.steps()).hasSize(1);
         assertThat(policy.steps().get(0).operation())
                 .isEqualTo("/api/v1/ai/tools/classify-and-label");
+    }
+
+    @Test
+    void marksEditorParticipationOnEditorConfigAndSeedsNoSources() {
+        when(policyStore.findByTeam(7L)).thenReturn(List.of());
+
+        seeder().onTeamCreated(new TeamCreatedEvent(7L, "Acme"));
+
+        ArgumentCaptor<Policy> saved = ArgumentCaptor.forClass(Policy.class);
+        verify(policyStore).save(saved.capture());
+        Policy policy = saved.getValue();
+        // Editor participation is on EditorConfig, not the sources list; the seed carries no
+        // sources.
+        assertThat(policy.editor().allowed()).isTrue();
+        assertThat(policy.output().options().get("sources")).isEqualTo(List.of());
     }
 
     @Test
