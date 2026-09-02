@@ -41,6 +41,9 @@ import { PolicyCategoryBadge } from "@portal/components/policies/PolicyCategoryI
 import { PolicyRedactConfig } from "@app/components/policies/PolicyRedactConfig";
 import { PolicyWatermarkConfig } from "@app/components/policies/PolicyWatermarkConfig";
 import { PolicyPurviewConfig } from "@portal/components/policies/PolicyPurviewConfig";
+import { PolicyPdfaConfig } from "@portal/components/policies/PolicyPdfaConfig";
+import { PolicyPdfUaConfig } from "@portal/components/policies/PolicyPdfUaConfig";
+import { PolicyComplianceCheckConfig } from "@portal/components/policies/PolicyComplianceCheckConfig";
 import { ClassificationLabelsSection } from "@portal/components/policies/ClassificationLabelsSection";
 import "@portal/views/Policies.css";
 
@@ -98,6 +101,9 @@ const DISABLED_BY_DEFAULT = new Set<PolicyToolId>([
   "purviewApplyLabel",
   "purviewReadLabel",
   "externalApiCall",
+  // Accessibility is an alternative target to PDF/A, so it starts off; a policy
+  // enables one or the other.
+  "pdfUa",
 ]);
 
 // Steps that cannot work without a Purview tenant connection, so they are hidden entirely until one
@@ -164,6 +170,27 @@ const CAPABILITY_META: Record<
     labelEn: "Reduce file size",
     descKey: "portal.policies.wizard.capability.compress.desc",
     descEn: "Compresses the document to a smaller file size.",
+  },
+  pdfa: {
+    labelKey: "portal.policies.wizard.capability.pdfa.label",
+    labelEn: "Convert to PDF/A for archiving",
+    descKey: "portal.policies.wizard.capability.pdfa.desc",
+    descEn:
+      "Rewrites the document in the ISO archival format, embedding its fonts and colour profiles so it still renders the same years from now.",
+  },
+  pdfUa: {
+    labelKey: "portal.policies.wizard.capability.pdfUa.label",
+    labelEn: "Convert to PDF/UA for accessibility",
+    descKey: "portal.policies.wizard.capability.pdfUa.desc",
+    descEn:
+      "Tags the document's structure and embeds its fonts so assistive technology can read it, meeting the PDF/UA accessibility standard.",
+  },
+  complianceCheck: {
+    labelKey: "portal.policies.wizard.capability.complianceCheck.label",
+    labelEn: "Check the document meets the standard",
+    descKey: "portal.policies.wizard.capability.complianceCheck.desc",
+    descEn:
+      "Validates the finished document against the published standard and, unless you choose otherwise, stops the run if it does not hold up.",
   },
   classify: {
     labelKey: "portal.policies.wizard.capability.classify.label",
@@ -537,7 +564,7 @@ function PolicySetupWizardBody({
                           onChange={(checked) =>
                             setToolEnabled(tl.toolId, checked)
                           }
-                          label=""
+                          aria-label={label}
                         />
                       }
                     />
@@ -564,6 +591,28 @@ function PolicySetupWizardBody({
                             parameters={tl.params}
                             onChange={(params) =>
                               setToolParams("purviewApplyLabel", params)
+                            }
+                          />
+                        )}
+                        {tl.toolId === "pdfa" && (
+                          <PolicyPdfaConfig
+                            parameters={tl.params}
+                            onChange={(params) => setToolParams("pdfa", params)}
+                          />
+                        )}
+                        {tl.toolId === "pdfUa" && (
+                          <PolicyPdfUaConfig
+                            parameters={tl.params}
+                            onChange={(params) =>
+                              setToolParams("pdfUa", params)
+                            }
+                          />
+                        )}
+                        {tl.toolId === "complianceCheck" && (
+                          <PolicyComplianceCheckConfig
+                            parameters={tl.params}
+                            onChange={(params) =>
+                              setToolParams("complianceCheck", params)
                             }
                           />
                         )}

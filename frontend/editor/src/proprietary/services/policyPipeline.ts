@@ -119,6 +119,14 @@ export interface PolicyRunView {
 const POLICY_OPERATION_ENDPOINTS: Record<string, string> = {
   // Document classification — dispatched only by the Classification policy.
   classify: "/api/v1/ai/tools/classify-and-label",
+  // Archival conversion. The Convert tool reaches the same endpoint, but only through a
+  // multi-format parameter model a policy step has no use for.
+  pdfa: "/api/v1/convert/pdf/pdfa",
+  // Accessibility (PDF/UA) conversion — the archival sibling of pdfa.
+  pdfUa: "/api/v1/convert/pdf/ua",
+  // Compliance gate — hands the document back untouched and fails the run when it does not meet
+  // the standard. Dispatched only by the Compliance policy.
+  complianceCheck: "/api/v1/security/validate-compliance",
 };
 
 /** Resolve a frontend operation id to its backend tool endpoint path. */

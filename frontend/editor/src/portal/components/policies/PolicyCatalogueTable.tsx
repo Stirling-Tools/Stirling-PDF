@@ -97,6 +97,8 @@ export function PolicyCatalogueTable({
       rows={entries}
       rowKey={(e) => e.category.id}
       onRowClick={onOpen}
+      // The status cell is a badge, not a button, so the row itself is the only
+      // interactive control - nothing to nest.
       isRowInteractive={(e) =>
         !(e.category.comingSoon || (isLocked?.(e) ?? false))
       }

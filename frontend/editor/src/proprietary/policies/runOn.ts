@@ -4,6 +4,9 @@ export type PolicyRunOn = "upload" | "export";
 
 const DEFAULT_RUN_ON: Record<string, PolicyRunOn> = {
   security: "export",
+  // Compliance is an archival gate: convert to PDF/A and validate the document
+  // that actually ships, so it enforces on export like security.
+  compliance: "export",
 };
 
 export function defaultRunOn(categoryId: string | undefined): PolicyRunOn {

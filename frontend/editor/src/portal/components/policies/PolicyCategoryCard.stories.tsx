@@ -7,7 +7,7 @@ import {
 import { PolicyCategoryCard } from "@portal/components/policies/PolicyCategoryCard";
 
 const security = POLICY_CATEGORIES.find((c) => c.id === "security")!;
-const compliance = POLICY_CATEGORIES.find((c) => c.id === "compliance")!;
+const routing = POLICY_CATEGORIES.find((c) => c.id === "routing")!;
 
 const meta: Meta<typeof PolicyCategoryCard> = {
   title: "Portal/Policies/PolicyCategoryCard",
@@ -40,8 +40,8 @@ export const NotSetUp: Story = {
 export const ComingSoon: Story = {
   args: {
     entry: {
-      category: compliance,
-      config: POLICY_CONFIG.compliance,
+      category: routing,
+      config: POLICY_CONFIG.routing,
       policy: null,
     },
   },

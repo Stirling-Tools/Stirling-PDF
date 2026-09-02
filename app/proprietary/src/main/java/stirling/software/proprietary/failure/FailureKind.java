@@ -44,6 +44,18 @@ public enum FailureKind {
             global(OPEN_IN_TOOL, OWNER, OVERFLOW),
             global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
 
+    COMPLIANCE_NOT_MET(
+            FailureStage.BLOCKED,
+            FailureSeverity.ERROR,
+            FailureRemedy.NEEDS_FILE_FIX,
+            FailureScope.FILE,
+            errorCodes("E074"),
+            fallback("This document did not meet the compliance standard the policy checks for."),
+            // No automated fix: the document itself has to change, so looking at it leads.
+            global(VIEW_FILE, OWNER, SECONDARY),
+            global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, OVERFLOW),
+            global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
+
     UNKNOWN(
             FailureStage.INTERNAL,
             FailureSeverity.ERROR,

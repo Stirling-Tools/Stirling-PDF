@@ -12,6 +12,8 @@ import { addWatermarkOperationConfig } from "@app/hooks/tools/addWatermark/useAd
 import { ocrOperationConfig } from "@app/hooks/tools/ocr/useOCROperation";
 import { flattenOperationConfig } from "@app/hooks/tools/flatten/useFlattenOperation";
 import { compressOperationConfig } from "@app/hooks/tools/compress/useCompressOperation";
+import { pdfaOperationConfig } from "@app/policies/pdfaOperation";
+import { pdfUaOperationConfig } from "@app/policies/pdfUaOperation";
 import type { ToolEndpoint } from "@app/types/toolApiTypes";
 import type { WirePipelineStep } from "@app/policies/types";
 
@@ -32,10 +34,17 @@ export type IntegrationPolicyEndpoint =
   | "/api/v1/integration/purview-apply-label"
   | "/api/v1/integration/purview-read-label";
 
+/**
+ * Gate steps: `@Hidden` controllers that hand the document back untouched and fail the run when it
+ * must not pass. Hidden from OpenAPI, hence outside the generated union.
+ */
+export type GatePolicyEndpoint = "/api/v1/security/validate-compliance";
+
 /** An endpoint typed here rather than by the generator. */
 export type UntypedPolicyEndpoint =
   | AiPolicyEndpoint
-  | IntegrationPolicyEndpoint;
+  | IntegrationPolicyEndpoint
+  | GatePolicyEndpoint;
 
 /** A tool usable in a policy whose endpoint isn't in the generated union. */
 export interface AiToolDescriptor<TParams> {
@@ -89,6 +98,34 @@ function describeIntegrationOperation<TParams extends Record<string, string>>(
   };
 }
 
+/** What the compliance gate validates the document against. */
+export const COMPLIANCE_STANDARDS = ["auto", "pdfa", "pdfua"] as const;
+
+/** What the gate does when the document fails: stop the run, or record it and carry on. */
+export const COMPLIANCE_VIOLATION_ACTIONS = ["fail", "warn"] as const;
+
+export interface ComplianceCheckParameters {
+  standard: (typeof COMPLIANCE_STANDARDS)[number];
+  onViolation: (typeof COMPLIANCE_VIOLATION_ACTIONS)[number];
+}
+
+/** Fail-closed by default: a gate that only logs would let a bad document through unnoticed. */
+export const complianceCheckDefaultParameters: ComplianceCheckParameters = {
+  standard: "pdfa",
+  onViolation: "fail",
+};
+
+function oneOf<T extends string>(
+  value: unknown,
+  allowed: readonly T[],
+  fallback: T,
+): T {
+  return typeof value === "string" &&
+    (allowed as readonly string[]).includes(value)
+    ? (value as T)
+    : fallback;
+}
+
 export const POLICY_OPERATIONS = {
   redact: describeToolOperation(
     "/api/v1/security/auto-redact",
@@ -117,6 +154,31 @@ export const POLICY_OPERATIONS = {
     "/api/v1/misc/compress-pdf",
     compressOperationConfig,
   ),
+  // Long-term archival format: embeds fonts and colour profiles so the document still renders the
+  // same decades from now, which is what a retention or archival requirement actually asks for.
+  pdfa: describeToolOperation("/api/v1/convert/pdf/pdfa", pdfaOperationConfig),
+  // Accessibility format (PDF/UA): tags structure and embeds fonts so assistive tech can read the
+  // document. The archival sibling of pdfa - a compliance policy targets one or the other.
+  pdfUa: describeToolOperation("/api/v1/convert/pdf/ua", pdfUaOperationConfig),
+  // The gate. Mappers are explicit because the values are a closed set: a stored step naming
+  // something else is clamped to the default rather than reaching the backend.
+  complianceCheck: {
+    endpoint: "/api/v1/security/validate-compliance",
+    defaultParameters: complianceCheckDefaultParameters,
+    toApi: (params: ComplianceCheckParameters) => ({ ...params }),
+    fromApi: (api: Record<string, unknown>): ComplianceCheckParameters => ({
+      standard: oneOf(
+        api.standard,
+        COMPLIANCE_STANDARDS,
+        complianceCheckDefaultParameters.standard,
+      ),
+      onViolation: oneOf(
+        api.onViolation,
+        COMPLIANCE_VIOLATION_ACTIONS,
+        complianceCheckDefaultParameters.onViolation,
+      ),
+    }),
+  } satisfies AiToolDescriptor<ComplianceCheckParameters>,
   classify: describeAiToolOperation("/api/v1/ai/tools/classify-and-label"),
   purviewApplyLabel: describeIntegrationOperation(
     "/api/v1/integration/purview-apply-label",
