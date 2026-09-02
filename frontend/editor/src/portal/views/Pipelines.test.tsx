@@ -3,6 +3,7 @@ import {
   fireEvent,
   render as baseRender,
   screen,
+  waitFor,
 } from "@testing-library/react";
 import { PortalTestProviders } from "@portal/test/TestQueryProvider";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
@@ -37,9 +38,11 @@ vi.mock("react-i18next", () => ({
 
 const fetchPipelines = vi.fn();
 const fetchPipeline = vi.fn();
+const savePipeline = vi.fn();
 vi.mock("@portal/api/pipelines", () => ({
   fetchPipelines: () => fetchPipelines(),
   fetchPipeline: (id: string) => fetchPipeline(id),
+  savePipeline: (policy: unknown) => savePipeline(policy),
 }));
 
 // The template gallery is out of scope here: keep the catalogue empty so the test focuses on the
@@ -105,6 +108,8 @@ describe("Pipelines view", () => {
       output: { type: "inline", options: {} },
       outputIds: [],
     });
+    savePipeline.mockReset();
+    savePipeline.mockResolvedValue(undefined);
   });
 
   it("opens the builder when creating a pipeline", async () => {
@@ -120,6 +125,35 @@ describe("Pipelines view", () => {
     renderView();
     fireEvent.click(await screen.findByText("Redaction sweep"));
     expect(await screen.findByText("pipeline page")).toBeInTheDocument();
+  });
+
+  it("pausing re-saves the stored record verbatim, only flipping enabled", async () => {
+    // Template-representable, so the row opens the simple detail panel (not the builder). It carries
+    // first-class fields the decoded view drops - a custom name and an icon - which pausing must not
+    // rewrite.
+    const policy = {
+      id: "plc-redaction",
+      name: "My custom redaction",
+      enabled: true,
+      required: false,
+      icon: "shield",
+      inputs: [],
+      steps: [{ operation: "/api/v1/security/auto-redact", parameters: {} }],
+      output: { type: "inline", options: { categoryId: "security" } },
+      outputIds: [],
+      editor: { allowed: true, runOn: "upload" },
+    };
+    fetchPipeline.mockResolvedValue(policy);
+
+    renderView();
+    fireEvent.click(await screen.findByText("Redaction sweep"));
+    fireEvent.click(
+      await screen.findByText("portal.policies.detail.actions.pause"),
+    );
+
+    await waitFor(() => expect(savePipeline).toHaveBeenCalled());
+    // The whole record round-trips with only `enabled` flipped: name and icon survive.
+    expect(savePipeline).toHaveBeenCalledWith({ ...policy, enabled: false });
   });
 
   it("shows the KPI stat boxes when pipelines exist", async () => {

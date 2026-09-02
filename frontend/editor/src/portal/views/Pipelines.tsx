@@ -10,12 +10,12 @@ import { usePipelines } from "@portal/queries/pipelines";
 import { usePoliciesOverview } from "@portal/queries/policies";
 import {
   fetchPipeline,
+  savePipeline,
   type PipelineView,
   type Policy,
 } from "@portal/api/pipelines";
 import {
   buildWireFromSetup,
-  buildWireFromState,
   clearProcessedHistory,
   deletePolicy,
   parseSimplePolicy,
@@ -207,13 +207,16 @@ export function Pipelines() {
   }
 
   function handleTogglePause() {
-    const entry = detail;
-    const policy = entry?.policy;
-    if (!entry || !policy?.state.backendId) return;
-    const enabled = policy.state.status === "paused";
-    void runLifecycle(() =>
-      savePolicy(buildWireFromState(entry, policy, enabled, t)),
-    );
+    const id = detail?.policy?.state.backendId;
+    const paused = detail?.policy?.state.status === "paused";
+    if (!id) return;
+    void runLifecycle(async () => {
+      // Re-save the stored record with only `enabled` flipped. Rebuilding it from the decoded view
+      // (as the wizard save does) drops first-class fields that view doesn't carry - the icon, a
+      // custom name, owner - so a pause would silently rewrite them.
+      const current = await fetchPipeline(id);
+      await savePipeline({ ...current, enabled: paused });
+    });
   }
 
   function handleDelete() {

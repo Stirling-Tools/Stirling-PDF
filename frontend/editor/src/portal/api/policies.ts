@@ -12,7 +12,6 @@
 import type { TFunction } from "i18next";
 import { apiClient } from "@portal/api/http";
 import { fromWirePolicy, toWirePolicy } from "@app/policies/codec";
-import { resolveRunOn } from "@app/policies/runOn";
 import { runsToActivity, runsToStats } from "@app/policies/runs";
 import {
   policyStep,
@@ -649,9 +648,6 @@ export async function clearProcessedHistory(id: string): Promise<void> {
 
 // ── Wire-build helpers (so Policies.tsx doesn't need codec knowledge) ────────
 
-const DEFAULT_RETRIES = 3;
-const DEFAULT_RETRY_DELAY = 5;
-
 // Catalogue policy bodies carry categoryId at the top level so the pipelines
 // mock handler can discriminate them from raw pipeline saves on the shared
 // POST /api/v1/policies endpoint. The real backend ignores unknown fields.
@@ -697,40 +693,6 @@ export function buildWireFromSetup(
       maxRetries: result.maxRetries,
       retryDelayMinutes: result.retryDelayMinutes,
       steps: result.steps,
-    }),
-  };
-}
-
-/** Build a wire policy from an existing decorated policy (e.g. for pause/resume). */
-export function buildWireFromState(
-  entry: CatalogueEntry,
-  policy: DecoratedPolicy,
-  enabled: boolean,
-  t: TFunction,
-): CatalogueWireBody {
-  const s = policy.state;
-  return {
-    categoryId: entry.category.id,
-    ...toWirePolicy({
-      id: s.backendId ?? "",
-      name: policyDisplayName(entry, t),
-      enabled,
-      required: s.required,
-      extraOptions: s.extraOptions,
-      categoryId: entry.category.id,
-      sources: s.sources,
-      // Carry the stored value through: pause/resume must not re-derive it.
-      runsOnEditor: s.runsOnEditor === true,
-      scopeTypes: s.scopeTypes,
-      reviewerEmail: s.reviewerEmail,
-      fieldValues: s.fieldValues,
-      runOn: resolveRunOn(s.runOn, entry.category.id),
-      outputMode: s.outputMode ?? "new_version",
-      outputName: s.outputName ?? "",
-      outputNamePosition: s.outputNamePosition ?? "suffix",
-      maxRetries: s.maxRetries ?? DEFAULT_RETRIES,
-      retryDelayMinutes: s.retryDelayMinutes ?? DEFAULT_RETRY_DELAY,
-      steps: policy.steps,
     }),
   };
 }
