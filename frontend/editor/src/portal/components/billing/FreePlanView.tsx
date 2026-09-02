@@ -114,10 +114,13 @@ export function FreePlanView({ wallet, unsynced, onSubscribed }: Props) {
             {t("portal.billing.freePlan.freeForever", "Free forever")}
           </StatusBadge>
           <StatusBadge tone="info" size="sm" showDot={false}>
-            {t("portal.billing.freePlan.ssoIncluded", "SSO included")}
+            {t("portal.billing.freePlan.everyPdfTool", "Every PDF tool")}
           </StatusBadge>
           <StatusBadge tone="purple" size="sm" showDot={false}>
-            {t("portal.billing.freePlan.unlimitedUsers", "Unlimited users")}
+            {t(
+              "portal.billing.freePlan.anywhere",
+              "Web, desktop & self-hosted",
+            )}
           </StatusBadge>
         </div>
       </div>
