@@ -274,7 +274,7 @@ class PaygChargeInterceptorTest {
     }
 
     @Test
-    void afterCompletion_4xx_appendsFailedStepNoRefundNoOutputs() throws Exception {
+    void afterCompletion_4xx_opened_refundsAndNeverMeters() throws Exception {
         authenticateWithApiKey(makeUser(7L, 42L));
         UUID jobId = UUID.randomUUID();
         when(chargeService.openProcess(any(), anyList()))
@@ -288,13 +288,34 @@ class PaygChargeInterceptorTest {
         interceptor.preHandle(req, res, handlerMethodForFakeController());
         interceptor.afterCompletion(req, res, handlerMethodForFakeController(), null);
 
-        verify(chargeService, never()).markFirstStepFailed(any(), any());
+        // Errored work is never charged: the opener is refunded, and it never meters.
+        verify(chargeService).markFirstStepFailed(eq(jobId), eq("first-step-4xx:422"));
         verify(chargeService, never()).decrementStepCount(any());
         verify(jobService, never()).recordOutput(any(), any());
         verify(jobService)
                 .appendStep(eq(jobId), any(), eq(JobStepStatus.FAILED), any(), any(), eq("422"));
-        // 4xx is a full charge (customer paid for the attempt), so it still meters.
-        verify(chargeService).meterJobUsage(jobId);
+        assertThat(meterRegistry.counter("payg.filter.refunds").count()).isEqualTo(1.0);
+        verify(chargeService, never()).meterJobUsage(any());
+    }
+
+    @Test
+    void afterCompletion_4xx_joined_callsDecrementStepCount() throws Exception {
+        authenticateWithApiKey(makeUser(7L, 42L));
+        UUID jobId = UUID.randomUUID();
+        when(chargeService.openProcess(any(), anyList()))
+                .thenReturn(new ChargeOutcome(jobId, 0, ChargeOutcome.Disposition.JOINED));
+
+        MockMultipartHttpServletRequest req = newMultipart();
+        req.addFile(new MockMultipartFile("file", "x.pdf", "application/pdf", "abc".getBytes()));
+        MockHttpServletResponse res = new MockHttpServletResponse();
+        res.setStatus(422);
+
+        interceptor.preHandle(req, res, handlerMethodForFakeController());
+        interceptor.afterCompletion(req, res, handlerMethodForFakeController(), null);
+
+        verify(chargeService).decrementStepCount(jobId);
+        verify(chargeService, never()).markFirstStepFailed(any(), any());
+        verify(chargeService, never()).meterJobUsage(any());
     }
 
     @Test
