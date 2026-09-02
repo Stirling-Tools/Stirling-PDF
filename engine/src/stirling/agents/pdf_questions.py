@@ -222,11 +222,8 @@ class PdfQuestionAgent:
         answer in the same language as the user's question. The system prompt
         forbids invented figures; the LLM only restates Verdict facts.
         """
-        prompt = (
-            f"User question:\n{user_message}\n\n"
-            f"Math audit Verdict (JSON):\n{verdict.model_dump_json()}\n\n"
-            f"{language_directive()}"
-        )
+        prompt = f"User question:\n{user_message}\n\nMath audit Verdict (JSON):\n{verdict.model_dump_json()}"
+        prompt += f"\n\n{language_directive()}"
         result = await self._math_synth_agent.run(prompt)
         return result.output
 
@@ -236,6 +233,6 @@ class PdfQuestionAgent:
             f"Conversation history:\n{history}\n"
             f"Files: {format_file_names(request.files)}\n"
             f"Question: {request.question}\n"
-            "Pick the right retrieval tool for this question, then answer from what it returns.\n"
-            f"{language_directive()}"
+            "Pick the right retrieval tool for this question, then answer from what it returns."
+            f"\n{language_directive()}"
         )

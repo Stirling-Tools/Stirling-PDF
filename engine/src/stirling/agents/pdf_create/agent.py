@@ -339,9 +339,8 @@ class PdfCreateAgent:
 
         # ── Phase 1: plan meta ─────────────────────────────────────────────────
         logger.info("[pdf-create] phase 1/6: planning document meta")
-        meta_prompt = (
-            f"Conversation history:\n{history}\n\nUser request: {request.user_message}\n\n{language_directive()}"
-        )
+        meta_prompt = f"Conversation history:\n{history}\n\nUser request: {request.user_message}"
+        meta_prompt += f"\n\n{language_directive()}"
         meta_result = await self._meta_planner.run(meta_prompt)
         meta = meta_result.output
 

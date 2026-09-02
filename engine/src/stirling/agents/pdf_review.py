@@ -208,11 +208,8 @@ class PdfReviewAgent:
         """Run the math localiser LLM, then combine its output with deterministic
         placement geometry to produce the JSON the ``add-comments`` tool wants.
         """
-        prompt = (
-            f"User review request:\n{user_message}\n\n"
-            f"Math audit Verdict (JSON):\n{verdict.model_dump_json()}\n\n"
-            f"{language_directive()}"
-        )
+        prompt = f"User review request:\n{user_message}\n\nMath audit Verdict (JSON):\n{verdict.model_dump_json()}"
+        prompt += f"\n\n{language_directive()}"
         result = await self._localiser_agent.run(prompt)
         specs = self._build_comment_specs(verdict, result.output.comments)
         serialised = [spec.model_dump(by_alias=True, exclude_none=True) for spec in specs]
@@ -241,8 +238,8 @@ class PdfReviewAgent:
         """
         prompt = (
             f"<user_message>{_escape_for_tag(user_message)}</user_message>\n"
-            f"<verdict>{_escape_for_tag(report.model_dump_json())}</verdict>\n"
-            f"{language_directive()}"
+            f"<verdict>{_escape_for_tag(report.model_dump_json())}</verdict>"
+            f"\n{language_directive()}"
         )
         result = await self._contradiction_localiser.run(prompt)
         specs = self._build_paired_comment_specs(report, result.output.comments)

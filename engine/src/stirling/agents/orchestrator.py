@@ -271,8 +271,8 @@ class OrchestratorAgent:
             f"Conversation history:\n{history}\n"
             f"User message: {request.user_message}\n"
             f"Files: {format_file_names(request.files)}\n"
-            f"Available artifacts:\n{artifact_summary}\n"
-            f"{language_directive()}"
+            f"Available artifacts:\n{artifact_summary}"
+            f"\n{language_directive()}"
         )
 
     def _describe_artifacts(self, request: OrchestratorRequest) -> str:

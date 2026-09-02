@@ -356,8 +356,8 @@ class PdfEditAgent:
             f"Supported operations:\n{self._get_supported_operations_prompt(supported_operations)}\n"
             f"{unavailable_line}"
             f"{repair_line}"
-            f"Extracted page text:\n{format_page_text(request.page_text)}\n"
-            f"{language_directive()}"
+            f"Extracted page text:\n{format_page_text(request.page_text)}"
+            f"\n{language_directive()}"
         )
 
     # Endpoints that exist on the server and are callable via the direct API or the manual UI,
