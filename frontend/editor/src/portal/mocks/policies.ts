@@ -39,7 +39,7 @@ export function seedPolicies(): WirePolicy[] {
       name: "Security Policy",
       owner: "security@acme.com",
       enabled: true,
-      trigger: null,
+      inputs: [],
       steps: SECURITY_STEPS,
       output: {
         type: "inline",
@@ -63,7 +63,7 @@ export function seedPolicies(): WirePolicy[] {
       name: "Classification Policy",
       owner: "data-eng@acme.com",
       enabled: true,
-      trigger: null,
+      inputs: [],
       steps: CLASSIFICATION_STEPS,
       output: {
         type: "inline",

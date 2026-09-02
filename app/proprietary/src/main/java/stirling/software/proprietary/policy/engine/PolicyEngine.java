@@ -3,7 +3,9 @@ package stirling.software.proprietary.policy.engine;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -32,6 +34,7 @@ import stirling.software.common.service.ResourceMonitor;
 import stirling.software.common.service.TaskManager;
 import stirling.software.common.util.ExecutorFactory;
 import stirling.software.common.util.JobContext;
+import stirling.software.proprietary.document.DocumentFacts;
 import stirling.software.proprietary.failure.FailureKind;
 import stirling.software.proprietary.failure.PolicyFailureRecorder;
 import stirling.software.proprietary.policy.asset.PolicyAssetResolver;
@@ -40,12 +43,18 @@ import stirling.software.proprietary.policy.model.PipelineDefinition;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.PolicyInputs;
 import stirling.software.proprietary.policy.model.PolicyRun;
+import stirling.software.proprietary.policy.model.RoutedDestination;
 import stirling.software.proprietary.policy.model.WaitState;
 import stirling.software.proprietary.policy.output.OutputDelivery;
 import stirling.software.proprietary.policy.output.PolicyOutputResolver;
 import stirling.software.proprietary.policy.output.PolicyOutputSink;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
+import stirling.software.proprietary.policy.routing.RoutingRuleMatcher;
 import stirling.software.proprietary.service.DownstreamEntitlementError;
+
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Runs pipelines asynchronously as tracked jobs. {@link #submit} returns a run id immediately; the
@@ -86,6 +95,9 @@ public class PolicyEngine {
     private final PolicyAssetResolver assetResolver;
 
     private final ExecutorService asyncExecutor = ExecutorFactory.newVirtualThreadExecutor();
+
+    // Builds the per-document facts routing rules match against. Stateless, so a shared instance.
+    private static final ObjectMapper FACTS_MAPPER = JsonMapper.builder().build();
 
     /** Stop the service-owned executor when the application context is closed or restarted. */
     @PreDestroy
@@ -181,7 +193,10 @@ public class PolicyEngine {
         // their inline output.
         PipelineDefinition definition =
                 new PipelineDefinition(
-                        policy.name(), policy.steps(), outputResolver.resolve(policy));
+                        policy.name(),
+                        policy.steps(),
+                        outputResolver.resolve(policy),
+                        outputResolver.resolveRouting(policy));
         return submitForPrincipal(
                 policy.owner(),
                 fileOwner,
@@ -289,21 +304,7 @@ public class PolicyEngine {
                 run.markRunning();
                 PolicyExecutionResult result =
                         stepExecutor.execute(run.getDefinition(), inputs, listener);
-                // Deliver the run's files to every destination; no destinations means inline
-                // delivery (results stored/returned to the caller), preserving ad-hoc/AI behaviour.
-                List<OutputSpec> destinations = run.getDefinition().outputs();
-                if (destinations.isEmpty()) {
-                    destinations = List.of(OutputSpec.inline());
-                }
-                List<ResultFile> outputs = new ArrayList<>();
-                for (OutputSpec destination : destinations) {
-                    outputs.addAll(
-                            sinkFor(destination)
-                                    .deliver(
-                                            new OutputDelivery(runId, run.getPolicyId()),
-                                            result.files(),
-                                            destination));
-                }
+                List<ResultFile> outputs = deliver(run, runId, result.files());
                 taskManager.setMultipleFileResults(runId, outputs);
                 taskManager.setComplete(runId);
                 run.complete(outputs);
@@ -452,6 +453,66 @@ public class PolicyEngine {
                 delegate.onHeartbeat();
             }
         };
+    }
+
+    /**
+     * Deliver a finished run's files. Without routing rules every file goes to every destination.
+     * With them, each file is matched against the rules in order and delivered to the first
+     * destination that claims it (a file no rule claims falls back to the run's outputs). Files are
+     * grouped by destination so a sink - which sets up a connection per call - is called once each.
+     */
+    private List<ResultFile> deliver(PolicyRun run, String runId, List<Resource> files)
+            throws IOException {
+        OutputDelivery delivery = new OutputDelivery(runId, run.getPolicyId());
+        List<OutputSpec> fallback = run.getDefinition().outputs();
+        if (fallback.isEmpty()) {
+            // No destinations means inline delivery (results returned to the caller), preserving
+            // ad-hoc/AI behaviour.
+            fallback = List.of(OutputSpec.inline());
+        }
+        List<RoutedDestination> routing = run.getDefinition().routing();
+        if (routing.isEmpty()) {
+            return deliverGrouped(delivery, groupedToAll(files, fallback));
+        }
+        Map<OutputSpec, List<Resource>> byDestination = new LinkedHashMap<>();
+        for (Resource file : files) {
+            JsonNode facts = DocumentFacts.of(file, FACTS_MAPPER);
+            for (OutputSpec target : destinationsFor(routing, fallback, facts)) {
+                byDestination.computeIfAbsent(target, key -> new ArrayList<>()).add(file);
+            }
+        }
+        return deliverGrouped(delivery, byDestination);
+    }
+
+    /** The destination(s) a document goes to: the first matching rule's, or the fallback. */
+    private static List<OutputSpec> destinationsFor(
+            List<RoutedDestination> routing, List<OutputSpec> fallback, JsonNode facts) {
+        for (RoutedDestination routed : routing) {
+            if (RoutingRuleMatcher.matches(routed.rule(), facts)) {
+                return List.of(routed.destination());
+            }
+        }
+        return fallback;
+    }
+
+    private static Map<OutputSpec, List<Resource>> groupedToAll(
+            List<Resource> files, List<OutputSpec> destinations) {
+        Map<OutputSpec, List<Resource>> byDestination = new LinkedHashMap<>();
+        for (OutputSpec destination : destinations) {
+            byDestination.put(destination, files);
+        }
+        return byDestination;
+    }
+
+    private List<ResultFile> deliverGrouped(
+            OutputDelivery delivery, Map<OutputSpec, List<Resource>> byDestination)
+            throws IOException {
+        List<ResultFile> outputs = new ArrayList<>();
+        for (Map.Entry<OutputSpec, List<Resource>> entry : byDestination.entrySet()) {
+            outputs.addAll(
+                    sinkFor(entry.getKey()).deliver(delivery, entry.getValue(), entry.getKey()));
+        }
+        return outputs;
     }
 
     private PolicyOutputSink sinkFor(OutputSpec spec) {

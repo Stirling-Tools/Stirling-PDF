@@ -1,0 +1,40 @@
+{
+  "id": "pol_routing",
+  "name": "Routing Policy",
+  "owner": "",
+  "enabled": true,
+  "inputs": [
+    {
+      "sourceId": "src-dropbox",
+      "trigger": {
+        "type": "schedule",
+        "options": {
+          "schedule": { "type": "every", "count": 1, "unit": "HOURS" }
+        }
+      }
+    }
+  ],
+  "steps": [
+    {
+      "operation": "/api/v1/misc/compress-pdf",
+      "parameters": { "optimizeLevel": 5 }
+    }
+  ],
+  "output": {
+    "type": "inline",
+    "options": {
+      "runOn": "upload",
+      "mode": "new_version",
+      "name": "",
+      "position": "suffix",
+      "maxRetries": 3,
+      "retryDelayMinutes": 5,
+      "categoryId": "routing",
+      "sources": ["editor", "src-dropbox"],
+      "scopeTypes": [],
+      "reviewerEmail": "",
+      "fieldValues": {}
+    }
+  },
+  "outputIds": ["src-archive"]
+}

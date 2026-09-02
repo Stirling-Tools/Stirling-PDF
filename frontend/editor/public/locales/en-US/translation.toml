@@ -8709,11 +8709,6 @@ keepFor = "Keep for"
 [portal.policies.config.routing]
 summary = "Routes documents to the right destination based on type and classification."
 
-[portal.policies.config.routing.fields]
-destination = "Destination"
-notify = "Notify on route"
-webhookUrl = "Webhook URL"
-
 [portal.policies.config.routing.rules]
 0 = "Auto-classify"
 1 = "Route to folder"
@@ -9041,8 +9036,15 @@ label = "Apply a watermark"
 description = "Every uploaded document is classified against the built-in labels and tagged with the types that fit. The label set is shared across your whole team."
 labelsHeading = "Classification labels"
 
+[portal.policies.wizard.destinations]
+description = "Results always stay in Stirling. Pick one destination to also receive a copy of every processed document."
+emptyPrompt = "No writable destinations yet. Connect a folder or S3 source to deliver processed documents outside Stirling."
+fallbackHeading = "Default destination"
+heading = "Deliver output to"
+
 [portal.policies.wizard.errors]
-noTools = "Enable at least one tool in the workflow first."
+deliveryUnconfigured = "Pick an account and operation for the delivery step, or turn it off."
+noTools = "Enable at least one action, or pick a destination to route documents to."
 saveFailed = "Couldn't save the policy. Please try again."
 
 [portal.policies.wizard.output]
@@ -9066,12 +9068,26 @@ helper = "When the policy fires: on upload, or before export."
 label = "Run on"
 upload = "Upload"
 
+[portal.policies.wizard.routing]
+addRule = "Add a rule"
+chooseDestination = "Choose a destination"
+description = "Each document is classified first, then delivered to the first rule it matches. Anything matching none goes to the destination below."
+destinationAria = "Destination"
+heading = "Routing rules"
+labelAria = "Document types"
+labelPlaceholder = "Choose document types"
+needsDestination = "Add a destination below first - a rule needs somewhere to send documents to."
+remove = "Remove rule"
+
 [portal.policies.wizard.settings]
 heading = "Settings"
 
 [portal.policies.wizard.sources]
+connect = "Connect a source"
+emptyPrompt = "No sources connected yet - the policy still covers editor uploads. Connect a folder, S3, SFTP or webhook source to process documents from other systems."
 heading = "Sources"
 loading = "Loading sources…"
+triggerNote = "Folder and webhook sources run this policy automatically; other sources are checked hourly."
 
 [portal.policies.wizard.tabs]
 ariaLabel = "Setup steps"
