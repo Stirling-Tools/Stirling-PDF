@@ -65,13 +65,16 @@ export interface BaseFileMetadata {
   sourceFileIds?: FileId[];
 
   /**
-   * The cloud folder this file lives in. Semantics:
-   * - `remoteStorageId == null` → file is local-only; folderId MUST be null.
-   * - `remoteStorageId != null && folderId == null` → file is at the cloud root.
-   * - `remoteStorageId != null && folderId == X` → file lives in cloud folder X.
+   * The folder this file lives in. Semantics by storage state:
+   * - Cloud-stored (`remoteStorageId != null`): server-authoritative — null is
+   *   the cloud root, X is server folder X; the sync overwrites it.
+   * - Local-only: browser-owned — a browser folder's id, or the server folder
+   *   the file was placed in at upload time, which membership the server
+   *   adopts once the save-to-server lands (and which keeps the file visibly
+   *   in its folder if that save fails).
    *
-   * The "Local" pseudo-folder in the UI is the predicate `remoteStorageId == null`;
-   * it has no corresponding {@code folderId} value. Folders are a server-only concept.
+   * The "Local" pseudo-folder in the UI is the predicate
+   * `remoteStorageId == null && folderId == null`.
    */
   folderId?: FolderId | null;
 

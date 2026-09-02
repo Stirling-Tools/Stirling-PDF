@@ -71,6 +71,11 @@ export class ConnectionModeService {
     return config.mode;
   }
 
+  /** The mode already in memory, or null before the first load. */
+  getCachedMode(): ConnectionMode | null {
+    return this.currentConfig?.mode ?? null;
+  }
+
   async getServerConfig(): Promise<ServerConfig | null> {
     const config = await this.getCurrentConfig();
     return config.server_config;
