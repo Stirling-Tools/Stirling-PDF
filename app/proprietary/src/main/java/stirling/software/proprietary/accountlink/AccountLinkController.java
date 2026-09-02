@@ -63,6 +63,8 @@ public class AccountLinkController {
         this.properties = properties;
     }
 
+    public record LinkRequest(String supabaseJwt, String name) {}
+
     /** {@code callbackUrl} is the portal telling us where its own callback route lives. */
     public record ConnectStartRequest(String name, String callbackUrl) {}
 

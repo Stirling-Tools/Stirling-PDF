@@ -12,20 +12,21 @@ import java.util.Base64;
 import java.util.Locale;
 import java.util.Optional;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import io.quarkus.arc.profile.IfBuildProfile;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
 
 /** Browser-mediated account linking, instance side. */
+// Arc cannot gate a bean on a runtime property, so the account-link flag no longer removes this
+// bean; only the flag-gated endpoints reach it, so nothing links while the flag is off.
 @Slf4j
-@Service
-@Profile("!saas")
-@ConditionalOnProperty(name = "stirling.billing.account-link.enabled", havingValue = "true")
+@ApplicationScoped
+@IfBuildProfile("!saas")
 public class ConnectService {
 
     /** Frontend route that consumes the callback fragment. */
@@ -184,7 +185,7 @@ public class ConnectService {
         };
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public ConnectStatus status() {
         Optional<DeviceCredential> credential = credentialStore.get();
         if (credential.isPresent()) {
