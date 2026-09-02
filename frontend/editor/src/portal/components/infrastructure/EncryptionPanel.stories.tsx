@@ -285,8 +285,9 @@ export const MigrationFailed: Story = {
 };
 
 /**
- * A revoke that fails. The error belongs to the key card: one shared error
- * string previously rendered it under "Encrypt existing files" instead.
+ * A revoke that fails. Asserts the message lands inside the key card rather
+ * than merely existing somewhere on the panel, which is the part that makes
+ * this a regression test rather than a smoke test.
  */
 export const KeyActionFailed: Story = {
   globals: { tier: "enterprise" },
@@ -322,9 +323,9 @@ export const KeyActionFailed: Story = {
 };
 
 /**
- * Decrypt-only on S3. The backend still streams downloads through the app once
- * any key exists, so the bandwidth note has to show here too — it used to be
- * tied to the write flag and vanished in exactly this state.
+ * Decrypt-only on S3. The backend suppresses presigned URLs once any key row
+ * exists, not only while writes are encrypted, so the bandwidth note belongs
+ * in this state too.
  */
 export const DecryptOnlyOnS3: Story = {
   globals: { tier: "enterprise" },
