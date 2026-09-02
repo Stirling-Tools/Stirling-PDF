@@ -14,11 +14,9 @@ import { refreshNotificationsNow } from "@app/hooks/useNotifications";
 import { useIndexedDB } from "@app/contexts/IndexedDBContext";
 import i18n from "@app/i18n";
 import {
-  runStoredPolicy,
   getPolicyRun,
   listPolicyRuns,
   downloadPolicyOutput,
-  resolvePolicyRunTarget,
 } from "@app/services/policyApi";
 import type {
   PolicyRunStatus,
@@ -29,26 +27,19 @@ import type { FileId } from "@app/types/file";
 import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
 import { readClassificationLabelsFromFile } from "@app/services/fileClassification";
 import {
+  orderedRewritingCategories,
   policyDeliversOutputFiles,
-  policyRequiresAiEngine,
-  policyRewritesDocument,
-  shouldDispatchToAi,
 } from "@app/data/classificationPolicy";
-import {
-  acquireDispatchSlot,
-  releaseDispatchSlot,
-} from "@app/components/policies/dispatchSemaphore";
+import { runPolicyOnFile } from "@app/services/policyDispatch";
 import type { StirlingFile, StirlingFileStub } from "@app/types/fileContext";
 import type { PoliciesByCategory } from "@app/types/policies";
 import { usePolicies } from "@app/hooks/usePolicies";
-import { useAiEngineEnabled } from "@app/hooks/useAiEngineEnabled";
 import {
   addReconciledRun,
   dispatchKey,
   getRun,
   isDispatched,
   markDispatched,
-  recordRunStart,
   removeRun,
   updateRun,
   usePolicyRuns,
@@ -107,11 +98,6 @@ function failRun(runId: string, message: string): void {
   updateRun(runId, { status: "FAILED", error: message, errorCode: null });
 }
 
-/** Wait for an upload's bytes to land in IndexedDB (~5s): the stub surfaces in the
- *  file list before its bytes are committed, so an eager fetch would miss the file. */
-const FILE_WAIT_TRIES = 20;
-const FILE_WAIT_MS = 250;
-
 /** A policy that changed nothing completes with no output; left unimported its badge
  *  and blocking overlay spin forever. */
 export function finishedWithNothingToDeliver(run: PolicyRunRecord): boolean {
@@ -138,7 +124,6 @@ export function usePolicyAutoRun(): void {
   const { consumeFiles } = useFileContext();
   const { bumpRevision } = useIndexedDB();
   const { policies } = usePolicies();
-  const aiEnabled = useAiEngineEnabled();
   const runs = usePolicyRuns();
   // Read in the import effect via ref, not as a dependency: delivery mutates fileStubs,
   // so depending on them would re-fire the effect on its own delivery (infinite cascade).
@@ -155,33 +140,13 @@ export function usePolicyAutoRun(): void {
   // sentinel for a saas listener to open the modal. Deduped per run.
   const firedLimitModal = useRef<Set<string>>(new Set());
 
-  // Active upload policies in chain order, so effects accumulate instead of racing to fork
-  // the same version. Mirrors the dispatch filter so the chain honours the same eligibility.
+  // The file-producing upload policies this engine dispatches and chains, in run order, so effects
+  // accumulate instead of racing to fork the same version. Annotating policies (classification) are
+  // absent by design: they run themselves (local pass, then AI escalation), so the engine never sees
+  // their two ways to run.
   const orderedUploadCategories = useMemo(
-    () =>
-      Object.entries(policies)
-        .filter(
-          ([id, s]) =>
-            s.configured &&
-            s.status === "active" &&
-            s.backendId &&
-            (!s.sources ||
-              s.sources.length === 0 ||
-              s.sources.includes("editor")) &&
-            (s.runOn ?? "upload") === "upload" &&
-            // An escalation-only policy has nothing to do with no engine to escalate to.
-            !(policyRequiresAiEngine(id) && !aiEnabled),
-        )
-        // Annotating policies run last: a rewriting one after them would fork a new
-        // version from the pre-annotation state and drop their labels.
-        .sort(([idA, a], [idB, b]) => {
-          const ra = policyRewritesDocument(idA) ? 0 : 1;
-          const rb = policyRewritesDocument(idB) ? 0 : 1;
-          if (ra !== rb) return ra - rb;
-          return (a.order ?? 0) - (b.order ?? 0);
-        })
-        .map(([id]) => id),
-    [policies, aiEnabled],
+    () => orderedRewritingCategories(policies),
+    [policies],
   );
 
   // Chain-continuations handled this session, so the next policy fires once per run.
@@ -190,9 +155,6 @@ export function usePolicyAutoRun(): void {
   // Latest policies, read from inside the stable retry callback (which has no deps).
   const policiesRef = useRef(policies);
   policiesRef.current = policies;
-  // Latest stubs for the chaining effect, which keys off runs and must not depend on stubs.
-  const stubsRef = useRef(fileStubs);
-  stubsRef.current = fileStubs;
   // Per-file (dispatchKey) count of consecutive queue-rejection retries, so backoff escalates and
   // eventually gives up. Survives the run-id changing on each retry; reset on any real outcome.
   const queueRetries = useRef<Map<string, number>>(new Map());
@@ -272,8 +234,6 @@ export function usePolicyAutoRun(): void {
       ) {
         continue;
       }
-      // A confident local verdict stands; only an unsure one is escalated to the engine.
-      if (!shouldDispatchToAi(firstCategory, stub)) continue;
       dispatching.current.add(key);
       void runPolicyOnFile(firstCategory, backendId, stub.id, stub.name)
         .catch(() => {
@@ -307,11 +267,6 @@ export function usePolicyAutoRun(): void {
       // would otherwise silently skip the next policy on outputs 2..N.
       for (const outputId of outputIds) {
         if (isDispatched(nextCategory, outputId as FileId)) continue;
-        const outputStub = stubsRef.current.find((s) => s.id === outputId);
-        // Nothing to escalate: either the heuristic already answered confidently, or it has
-        // not reported yet and this effect re-runs when the verdict lands.
-        if (outputStub && !shouldDispatchToAi(nextCategory, outputStub))
-          continue;
         void runPolicyOnFile(
           nextCategory,
           backendId,
@@ -321,12 +276,18 @@ export function usePolicyAutoRun(): void {
         ).catch(() => {});
       }
     }
-  }, [runs, policies, orderedUploadCategories, fileStubs]);
+  }, [runs, policies, orderedUploadCategories]);
 
-  // Poll each in-flight run to a terminal state.
+  // Poll each in-flight run to a terminal state. A browser-local run (the classification heuristic's
+  // first pass) has no server run behind it, so polling it 404s and would flip its success to FAILED.
   useEffect(() => {
     for (const run of runs) {
-      if (isTerminal(run.status) || polling.current.has(run.runId)) continue;
+      if (
+        run.browserLocal ||
+        isTerminal(run.status) ||
+        polling.current.has(run.runId)
+      )
+        continue;
       polling.current.add(run.runId);
       void poll(run.runId, onRunFinished).finally(() =>
         polling.current.delete(run.runId),
@@ -372,6 +333,7 @@ export function usePolicyAutoRun(): void {
       void importOutputs(run, {
         addFiles,
         consumeFiles,
+        policyName: policies[run.categoryId]?.name,
         updateStirlingFileStub,
         bumpRevision,
         outputMode,
@@ -422,6 +384,8 @@ interface ImportContext {
   bumpRevision: () => void;
   /** "new_file" adds the output as a separate file; "new_version" versions the input. */
   outputMode: "new_file" | "new_version";
+  /** The policy's name, shown in version history instead of the generic "automate" tool. */
+  policyName?: string;
   /** Rename rule. Empty → keep the input's filename. */
   outputName: string;
   /** Rename position around the base filename; defaults to "suffix" when absent. */
@@ -727,7 +691,8 @@ async function importOutputs(
   // origin) — so a 60-file batch doesn't re-read every downstream output.
   const parentLabels = parentStub?.classificationLabels;
   const resolveLabels = async (file: File) =>
-    (parentLabels && parentLabels.length > 0 ? parentLabels : undefined) ??
+    // Inherit the parent's verdict
+    (Array.isArray(parentLabels) ? parentLabels : undefined) ??
     (await readClassificationLabelsFromFile(file)) ??
     undefined;
 
@@ -739,6 +704,7 @@ async function importOutputs(
       files,
       parentStub,
       "automate",
+      ctx.policyName,
     );
     // Transitive provenance for the PERSISTED record, mirroring what the
     // CONSUME_FILES reducer computes for workspace state: the output derives
@@ -842,75 +808,6 @@ async function importOutputs(
         "Some policy outputs are no longer available to download.",
       ),
     );
-  }
-}
-
-/** Resolve the file's bytes, fire a backend run, and record it. */
-async function runPolicyOnFile(
-  categoryId: string,
-  backendId: string,
-  fileId: FileId,
-  fileName: string,
-  // Chained (downstream) dispatch — jumps the dispatch queue so a file mid-chain
-  // finishes its flow before new files start (see acquireDispatchSlot).
-  priority = false,
-): Promise<void> {
-  // A freshly-uploaded file's bytes are written to IndexedDB asynchronously, so
-  // its stub can appear in the file list a beat before getStirlingFile resolves
-  // it. Wait briefly rather than bail — and DON'T mark dispatched until we hold
-  // the file, or a too-early miss would skip enforcement on that file forever.
-  // (The caller's in-flight guard prevents double-dispatch during this wait.)
-  // A transient IndexedDB error is treated as a miss (not a throw), so it retries
-  // and then marks dispatched rather than rejecting into a hot re-dispatch loop.
-  const tryGetFile = async (): Promise<StirlingFile | null> => {
-    try {
-      return await fileStorage.getStirlingFile(fileId);
-    } catch {
-      return null;
-    }
-  };
-  let file = await tryGetFile();
-  for (let i = 0; i < FILE_WAIT_TRIES && !file; i++) {
-    await delay(FILE_WAIT_MS);
-    file = await tryGetFile();
-  }
-  if (!file) {
-    // File genuinely gone (removed before it could run) — mark so we don't loop.
-    markDispatched(categoryId, fileId);
-    return;
-  }
-  // Bounded upload window — see MAX_CONCURRENT_DISPATCHES. Only the POST is
-  // gated; the IDB wait above never holds a slot.
-  await acquireDispatchSlot(priority);
-  try {
-    const target = resolvePolicyRunTarget();
-    // Recorded against a document this browser can resolve. One file per run, which is the only
-    // shape the server keeps a reference for.
-    const runId = await runStoredPolicy(backendId, [file], fileId);
-    // recordRunStart marks this (policy, file) dispatched as it records the run.
-    recordRunStart({
-      runId,
-      categoryId,
-      fileId,
-      fileName,
-      fileSize: file.size,
-      target,
-      status: "PENDING",
-      outputs: [],
-      error: null,
-      startedAt: Date.now(),
-    });
-  } catch (err) {
-    // Dispatch failed (e.g. policy deleted/404 or backend offline). Mark dispatched so we don't hammer;
-    // the absent run simply won't appear in the activity feed. If the backend did
-    // start a run we never recorded, reconcileServerRuns rediscovers it.
-    console.debug(
-      `[PolicyAutoRun] Failed to dispatch policy ${categoryId} (${backendId}):`,
-      err,
-    );
-    markDispatched(categoryId, fileId);
-  } finally {
-    releaseDispatchSlot();
   }
 }
 

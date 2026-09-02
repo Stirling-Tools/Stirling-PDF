@@ -48,9 +48,23 @@ ENV STIRLING_FLAVOR=${STIRLING_FLAVOR}
 # portal or AI layers change; defaults false so normal builds skip the extra app.
 ARG BUILD_PORTAL=false
 
+# Which Stirling account the portal connects to. Build-time because Vite inlines VITE_* into the
+# bundle; there is no runtime override. Empty leaves the committed .env.proprietary defaults, which
+# is what an ordinary image wants: no Stirling account and no connect flow. The publishable key is
+# client-side by design, not a secret. Pass the URL and the key from the same Supabase project or
+# the browser accepts the pair and Supabase rejects it, which surfaces later as "session expired".
+ARG VITE_SUPABASE_URL=""
+ARG VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY=""
+ARG VITE_SAAS_API_URL=""
+
 # Bundle only the JPDFium native for this image's target arch.
 ARG TARGETARCH
+# Exported only when non-empty: Vite reads process.env ahead of the .env files, so exporting an
+# empty value would blank the committed default rather than fall back to it.
 RUN JPDFIUM_PLATFORM="$([ "$TARGETARCH" = arm64 ] && echo linux-arm64 || echo linux-x64)" && \
+    if [ -n "${VITE_SUPABASE_URL}" ]; then export VITE_SUPABASE_URL="${VITE_SUPABASE_URL}"; fi; \
+    if [ -n "${VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY}" ]; then export VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY="${VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY}"; fi; \
+    if [ -n "${VITE_SAAS_API_URL}" ]; then export VITE_SAAS_API_URL="${VITE_SAAS_API_URL}"; fi; \
     STIRLING_FLAVOR=${STIRLING_FLAVOR} \
     gradle clean build \
       -PbuildWithFrontend=true \
@@ -61,14 +75,14 @@ RUN JPDFIUM_PLATFORM="$([ "$TARGETARCH" = arm64 ] && echo linux-arm64 || echo li
       --no-daemon
 
 # Stage 2: Extract Spring Boot Layers
-FROM eclipse-temurin:25-jre-noble@sha256:fbcf915c585659b30eb766ada4d6d7cfc9ec1040bf521e95bf61b10a25af73db AS jar-extract
+FROM eclipse-temurin:25-jre-noble@sha256:b4c93a50fc67612798db73d68ca3b0ee4ebdd51736e59cca370e689b9797037e AS jar-extract
 WORKDIR /tmp
 COPY --from=app-build /app/app/core/build/libs/*.jar app.jar
 RUN java -Djarmode=tools -jar app.jar extract --layers --destination /layers
 
 
 # Compile the network guard here (not only in base) so it ships regardless of the pinned base version.
-FROM ubuntu:noble@sha256:561618e2c15bf2397621dd04f96926663a3b5616c189cf7e38db7e82f5c538ea AS office-guard-build
+FROM ubuntu:noble@sha256:33ceb71981b602c1a7443a53469e4dba065f7503eab3078a2d7a57a2ab987517 AS office-guard-build
 RUN apt-get update && apt-get install -y --no-install-recommends gcc libc6-dev && \
     rm -rf /var/lib/apt/lists/*
 COPY docker/base/security/soffice_no_network.c /tmp/soffice_no_network.c

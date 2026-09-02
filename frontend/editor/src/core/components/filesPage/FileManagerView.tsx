@@ -474,7 +474,7 @@ export default function FileManagerView() {
           if (idx >= 0 && lastIdx >= 0) {
             const [a, b] = idx < lastIdx ? [idx, lastIdx] : [lastIdx, idx];
             for (let i = a; i <= b; i += 1) {
-              next.add(visibleFiles[i]!.id);
+              next.add(visibleFiles[i].id);
             }
             return next;
           }
@@ -593,7 +593,7 @@ export default function FileManagerView() {
         });
         // Branch on requested stubs so already-active files still activate.
         if (materialized.length === 1) {
-          setActiveFileId(materialized[0]!.id);
+          setActiveFileId(materialized[0].id);
           navActions.setWorkbench("viewer");
         } else if (materialized.length > 1) {
           navActions.setWorkbench("fileEditor");
@@ -1172,7 +1172,7 @@ export default function FileManagerView() {
                   else if (e.key === "End") next = TAB_DEFS.length - 1;
                   else return;
                   e.preventDefault();
-                  const target = TAB_DEFS[next]!;
+                  const target = TAB_DEFS[next];
                   setCurrentTab(target.id);
                   focusTab(target.id);
                 }}
@@ -1602,7 +1602,7 @@ export default function FileManagerView() {
                         )
                       )
                         return;
-                      setViewMode(v as (typeof FILES_PAGE_VIEW_MODES)[number]);
+                      setViewMode(v);
                     }}
                     aria-label={t("filesPage.viewMode.label", "View mode")}
                     options={[

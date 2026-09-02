@@ -1,0 +1,59 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<</Type/Catalog/Pages 2 0 R>>
+endobj
+2 0 obj
+<</Type/Pages/Kids[3 0 R]/Count 1>>
+endobj
+3 0 obj
+<</Type/Page/Parent 2 0 R/MediaBox[0 0 220 120]/Resources<</Font<</T3 5 0 R/F1 10 0 R>>>>/Contents 4 0 R>>
+endobj
+4 0 obj
+<</Length 75>>
+stream
+BT /T3 20 Tf 20 70 Td (ab) Tj ET
+BT /F1 14 Tf 20 25 Td (Normal text) Tj ET
+endstream
+endobj
+5 0 obj
+<</Type/Font/Subtype/Type3/FontBBox[0 0 10 10]/FontMatrix[0.1 0 0 0.1 0 0]/CharProcs 6 0 R/Encoding<</Type/Encoding/Differences[97/square 98/tri]>>/FirstChar 97/LastChar 98/Widths[10 10]/Resources<<>>>>
+endobj
+6 0 obj
+<</square 7 0 R/tri 8 0 R>>
+endobj
+7 0 obj
+<</Length 33>>
+stream
+10 0 0 0 10 10 d1
+0 0 10 10 re f
+endstream
+endobj
+8 0 obj
+<</Length 40>>
+stream
+10 0 0 0 10 10 d1
+0 0 m 10 0 l 5 10 l f
+endstream
+endobj
+10 0 obj
+<</Type/Font/Subtype/Type1/BaseFont/Helvetica/Encoding/WinAnsiEncoding>>
+endobj
+xref
+0 11
+0000000000 65535 f 
+0000000015 00000 n 
+0000000060 00000 n 
+0000000111 00000 n 
+0000000233 00000 n 
+0000000355 00000 n 
+0000000573 00000 n 
+0000000616 00000 n 
+0000000696 00000 n 
+0000000000 65535 f 
+0000000783 00000 n 
+trailer
+<</Size 11/Root 1 0 R>>
+startxref
+872
+%%EOF

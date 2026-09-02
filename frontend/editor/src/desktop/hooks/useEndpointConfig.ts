@@ -371,7 +371,10 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
         }
       } else {
         setError(message);
-        const fallbackStatus = endpoints.reduce(
+        const fallbackStatus = endpoints.reduce<{
+          status: Record<string, boolean>;
+          details: Record<string, EndpointAvailabilityDetails>;
+        }>(
           (acc, endpointName) => {
             const fallbackDetail: EndpointAvailabilityDetails = {
               enabled: false,
@@ -382,8 +385,8 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
             return acc;
           },
           {
-            status: {} as Record<string, boolean>,
-            details: {} as Record<string, EndpointAvailabilityDetails>,
+            status: {},
+            details: {},
           },
         );
 
