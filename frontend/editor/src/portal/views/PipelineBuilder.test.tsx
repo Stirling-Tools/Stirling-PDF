@@ -273,6 +273,20 @@ const POLICY: Policy = {
   outputIds: [],
 };
 
+/** The built-in editor source, offered as an input so a pipeline can run in the browser. */
+const EDITOR_SOURCE: SourceView = {
+  id: "src-editor",
+  name: "Editor",
+  type: "editor",
+  status: "active",
+  referenceCount: 0,
+  referencingPolicies: [],
+  config: [],
+  docsTotal: 0,
+  docs24h: 0,
+  docs30d: 0,
+};
+
 const SOURCE: SourceView = {
   id: "src-in",
   name: "Claims intake",
@@ -800,6 +814,31 @@ describe("PipelineBuilder", () => {
 
     fireEvent.click(screen.getByText("edit destination"));
     expect(screen.getByText("source-modal:src-1")).toBeInTheDocument();
+  });
+
+  it("saves an editor pipeline as its own flag, not as a wire input", async () => {
+    fetchSources.mockResolvedValue({
+      kpis: [],
+      sources: [SOURCE, EDITOR_SOURCE],
+    });
+    renderBuilder("/processor/pipelines/new");
+    fireEvent.change(
+      await screen.findByLabelText("portal.pipelines.composer.name"),
+      { target: { value: "Label on upload" } },
+    );
+    await addTool("Compress");
+    await pickInputSource("Editor");
+
+    fireEvent.click(screen.getByText("portal.pipelines.composer.create"));
+
+    await waitFor(() => expect(savePipeline).toHaveBeenCalledTimes(1));
+    const body = savePipeline.mock.calls[0][0];
+    // The editor is virtual: nothing sweeps it server-side, so it is recorded as the policy's own
+    // editor flag rather than as an input the backend would try to pull from.
+    expect(body.inputs).toEqual([]);
+    expect(body.editor).toEqual({ allowed: true, runOn: "upload" });
+    // And it needs no destination - results land back in the workspace the file came from.
+    expect(body.outputIds).toEqual([]);
   });
 
   it("runs an existing pipeline and reports success", async () => {

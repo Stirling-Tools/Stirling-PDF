@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react";
+import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
@@ -81,11 +81,11 @@ export default function AdminSecuritySection() {
     setSettings,
     loading,
     saving,
-    fetchSettings,
     saveSettings,
     isFieldPending,
   } = useAdminSettings<SecuritySettingsData>({
     sectionName: "security",
+    enabled: loginEnabled,
     fetchTransformer: async (): Promise<
       SecuritySettingsData & { _pending?: Record<string, unknown> }
     > => {
@@ -215,12 +215,6 @@ export default function AdminSecuritySection() {
     settings,
     loading,
   );
-
-  useEffect(() => {
-    if (loginEnabled) {
-      fetchSettings();
-    }
-  }, [loginEnabled, fetchSettings]);
 
   // Override loading state when login is disabled
   const actualLoading = loginEnabled ? loading : false;

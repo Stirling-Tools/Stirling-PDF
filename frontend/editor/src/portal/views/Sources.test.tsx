@@ -22,6 +22,16 @@ const Providers = ({ children }: { children: ReactNode }) => (
 const render = (ui: Parameters<typeof baseRender>[0]) =>
   baseRender(ui, { wrapper: Providers });
 
+vi.mock("@portal/hooks/useConnectGate", () => ({
+  useConnectGate: () => ({
+    gated: false,
+    loading: false,
+    available: false,
+    connect: vi.fn(),
+    guard: (fn: unknown) => fn,
+  }),
+}));
+
 // Deterministic i18n: keys returned verbatim.
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({

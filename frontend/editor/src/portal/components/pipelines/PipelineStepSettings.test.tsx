@@ -282,8 +282,7 @@ describe("PipelineStepSettings: every tool's settings render in the portal", () 
       const Settings = entry.automationSettings as ComponentType<
         ToolAutomationSettingsProps<ErasedToolParams>
       >;
-      const params = (entry.operationConfig?.defaultParameters ??
-        {}) as ErasedToolParams;
+      const params = entry.operationConfig?.defaultParameters ?? {};
 
       const caught: { error: Error | null } = { error: null };
       // The sentinel sibling commits only once the lazy Settings actually renders, so we wait for a
