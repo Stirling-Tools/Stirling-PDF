@@ -62,6 +62,11 @@ export function SidebarProvider({ children }: SidebarProviderProps) {
   );
 }
 
+/** For components that render outside a SidebarProvider, such as the rail's tooltips. */
+export function useOptionalSidebarContext(): SidebarContextValue | undefined {
+  return useContext(SidebarContext);
+}
+
 export function useSidebarContext(): SidebarContextValue {
   const context = useContext(SidebarContext);
   if (context === undefined) {

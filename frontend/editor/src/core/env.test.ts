@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync, statSync } from "fs";
+import { readFileSync, readdirSync } from "fs";
 import { join, extname } from "path";
 import { fileURLToPath } from "url";
 import { describe, it, expect } from "vitest";
@@ -18,17 +18,19 @@ function parseEnvKeys(content: string): Set<string> {
   return keys;
 }
 
+// `withFileTypes` answers directory-or-file from the directory read itself;
+// a statSync per entry made this walk of the whole tree exceed the timeout.
 function collectSourceFiles(dir: string): string[] {
   const files: string[] = [];
-  for (const entry of readdirSync(dir)) {
-    const fullPath = join(dir, entry);
-    const stat = statSync(fullPath);
-    if (stat.isDirectory() && entry !== "node_modules" && entry !== "assets") {
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const name = entry.name;
+    const fullPath = join(dir, name);
+    if (entry.isDirectory() && name !== "node_modules" && name !== "assets") {
       files.push(...collectSourceFiles(fullPath));
     } else if (
-      stat.isFile() &&
-      (extname(entry) === ".ts" || extname(entry) === ".tsx") &&
-      !entry.endsWith(".d.ts")
+      entry.isFile() &&
+      (extname(name) === ".ts" || extname(name) === ".tsx") &&
+      !name.endsWith(".d.ts")
     ) {
       files.push(fullPath);
     }
@@ -73,5 +75,6 @@ describe("env vars", () => {
       missing,
       `Missing from 'frontend/.env*' files: ${missing.join(", ")}`,
     ).toHaveLength(0);
-  });
+    // Reads every source file, so the budget is I/O, not the assertion.
+  }, 30_000);
 });

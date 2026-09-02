@@ -1,10 +1,9 @@
-/* Unpainted strip at the top of the main column. Height matches the sidebar's
-   logo row (.portal-sidebar__logo, 56px) so the search lines up with the brand. */
+/* Unpainted strip at the top of the main column, matching the sidebar header's height. */
 .portal-searchbar {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 3.5rem;
+  min-height: 3.1875rem;
   padding: 0 1rem;
   flex-shrink: 0;
 }

@@ -32,11 +32,9 @@ const UsageAnalyticsTable: React.FC<UsageAnalyticsTableProps> = ({ data }) => {
           verticalSpacing="sm"
           withRowBorders
           highlightOnHover
-          style={
-            {
-              "--table-border-color": "var(--mantine-color-gray-3)",
-            } as React.CSSProperties
-          }
+          style={{
+            "--table-border-color": "var(--mantine-color-gray-3)",
+          }}
         >
           <TableThead>
             <TableTr style={{ backgroundColor: "var(--mantine-color-gray-0)" }}>

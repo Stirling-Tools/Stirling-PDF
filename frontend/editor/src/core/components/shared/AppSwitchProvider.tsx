@@ -44,7 +44,7 @@ const MAX_HOLD_MS = 1200;
 
 /** The rail and the brand lockup each app draws at its top-left. */
 const RAIL_SELECTOR = ".file-sidebar, .portal-sidebar";
-const BRAND_SELECTOR = ".sui-brand-switcher";
+const BRAND_SELECTOR = ".quick-nav-brand";
 
 type Phase = "idle" | "exit" | "enter";
 type Direction = "forward" | "back";
@@ -128,8 +128,8 @@ function snapshotBrand(): BrandSnapshot | null {
   if (!brandRect.width || !railRect.width) return null;
 
   const node = brand.cloneNode(true) as HTMLElement;
-  // The switcher's dropdown may still be flagged open from the click that got
-  // us here; the clone must show the mark at rest, not the morphed chevron.
+  // A menu may still be flagged open from the click that got us here; the clone
+  // must show the mark at rest.
   node
     .querySelectorAll(".is-open")
     .forEach((el) => el.classList.remove("is-open"));

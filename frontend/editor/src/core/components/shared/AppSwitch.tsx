@@ -1,11 +1,14 @@
+import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Dropdown } from "@app/ui";
 import { BrandMark } from "@app/components/shared/BrandMark";
 import {
+  bindingMatchesEvent,
   getDisplayParts,
   isMacLike,
   type HotkeyBinding,
 } from "@app/utils/hotkeys";
+import "@app/components/shared/AppSwitch.css";
 
 export type AppSwitchTarget = "editor" | "processor";
 
@@ -23,6 +26,45 @@ export const APP_SWITCH_BINDING: HotkeyBinding = {
   meta: isMacLike(),
   ctrl: !isMacLike(),
 };
+
+/**
+ * Binds the shortcut while `enabled`. Callers pass their own gate so the key is
+ * never live for someone the switch would only bounce off an auth gate.
+ */
+export function useAppSwitchShortcut(
+  current: AppSwitchTarget,
+  onSwitch: (app: AppSwitchTarget) => void,
+  enabled = true,
+) {
+  // Two apps, so switching is a toggle: whichever one this is not.
+  const other: AppSwitchTarget = current === "editor" ? "processor" : "editor";
+  // Through a ref so the listener binds once: callers pass an inline onSwitch.
+  const latest = useRef({ other, onSwitch });
+  latest.current = { other, onSwitch };
+
+  useEffect(() => {
+    if (!enabled) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!bindingMatchesEvent(APP_SWITCH_BINDING, event)) return;
+      // Never take the key off a text field (Ctrl+Alt is AltGr on Windows
+      // layouts) or out from under a modal. The target is only sometimes an
+      // element - document and window fire this too - so narrow it first.
+      const target = event.target;
+      if (
+        target instanceof HTMLElement &&
+        target.closest(
+          'input, textarea, [contenteditable="true"], [role="textbox"], [role="dialog"]',
+        )
+      ) {
+        return;
+      }
+      event.preventDefault();
+      latest.current.onSwitch(latest.current.other);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [enabled]);
+}
 
 /** The shortcut rendered as key caps, for the switch menu's trailing slot. */
 export function AppSwitchShortcutHint() {
@@ -42,12 +84,7 @@ interface AppSwitchMenuItemsProps {
   onSwitch: (app: AppSwitchTarget) => void;
 }
 
-/**
- * The editor / processor items for the app-switch menu. Rendered inside the
- * BrandSwitcher's logo dropdown, which both apps use as their switcher. The
- * mark is the shared <BrandMark>, which recolours itself from the theme
- * tokens, so no colour-scheme prop needs threading down here.
- */
+/** The editor / processor items for an app-switch menu. */
 export function AppSwitchMenuItems({
   current,
   onSwitch,
