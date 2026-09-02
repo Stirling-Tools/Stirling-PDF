@@ -242,10 +242,8 @@ function PolicySetupWizardBody({
       ? seeded.map((t) => ({ ...t, enabled: true }))
       : seeded;
   });
-  // Everything below has no UI: the wizard is one page (the capabilities + the enforce switch). Each
-  // carries the stored value through unchanged on edit and a sensible default for a new policy, so a
-  // save never rewrites a setting the operator can't see. runOn defaults per category (security
-  // enforces on export); the rest are the run-once / new-version defaults.
+  // No UI for any of these: each carries the stored value through on edit, and a sensible default for
+  // a new policy - runOn per category (security enforces on export), the rest run-once/new-version.
   const [fieldValues] = useState(() => resolveFieldValues(entry));
   const [scopeTypes] = useState<string[]>(policy?.state.scopeTypes ?? []);
   const [reviewerEmail] = useState(policy?.state.reviewerEmail ?? "");

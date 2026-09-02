@@ -36,11 +36,9 @@ import { useConnectGate } from "@portal/hooks/useConnectGate";
 import "@portal/views/Pipelines.css";
 
 /**
- * The unified Pipelines + Policies surface. A policy is simply a pipeline the org requires to run;
- * the six suggested policies are templates that seed one. The page has two bands: a "suggested
- * policies" gallery of templates not yet set up (the friendly, simple entry point), and the full
- * list of every pipeline/policy. A policy that still fits its template edits in the simple wizard;
- * once customised beyond it, in the full builder (see {@link parseSimplePolicy}).
+ * The unified Pipelines + Policies surface: a gallery of suggested-policy templates not yet set up,
+ * above the full list of every pipeline/policy. A policy still fitting its template edits in the
+ * simple wizard, otherwise in the full builder (see {@link parseSimplePolicy}).
  */
 export function Pipelines() {
   const { t } = useTranslation();

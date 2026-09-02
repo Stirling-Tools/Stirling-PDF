@@ -27,11 +27,10 @@ export interface OptionCardProps {
 }
 
 /**
- * A choice presented as a titled card: a tinted icon chip, a title, a clamped blurb, and a footer
- * (a CTA when selectable, a muted note when not). The recurring "pick one of these" motif - template
- * galleries, feature pickers, plan tiers - lifted into a primitive on the shared card surface, the
- * same way {@link NodeCard} and {@link MetricCard} centralise their motifs, so its layout, disabled
- * treatment and select a11y are shared rather than re-styled per feature.
+ * A choice presented as a titled card: a tinted icon chip, a title, a clamped blurb, and a footer (a
+ * CTA when selectable, a muted note when not). A primitive for the recurring "pick one of these"
+ * motif (template galleries, feature pickers) so its layout, disabled treatment and select a11y are
+ * shared rather than re-styled per feature.
  */
 export function OptionCard({
   icon,

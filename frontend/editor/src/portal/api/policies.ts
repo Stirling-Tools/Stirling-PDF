@@ -554,13 +554,10 @@ function isOrderedSubset<T>(inner: T[], outer: T[]): boolean {
 }
 
 /**
- * Whether a full pipeline record can be losslessly re-expressed by the simple policy wizard, and if
- * so the CatalogueEntry that seeds it (so editing round-trips). This is the single authority the
- * unified page uses to route to the simple editor vs the full builder, and that the builder uses to
- * decide whether "back to simple" is still offered. It returns null the moment it meets anything the
- * wizard cannot show: no template origin, a server trigger/input, a stored destination, an unknown
- * or extra tool, or a reordered chain. Tool parameters need no check — the wizard seeds each tool
- * from its saved step wholesale, so any params it doesn't surface still round-trip untouched.
+ * The CatalogueEntry that seeds the simple wizard for a policy, or null if the wizard can't express
+ * it losslessly - the single authority for routing an edit to the wizard vs the full builder. Null on
+ * anything the wizard can't show: no template origin, a server input/destination, an unknown or extra
+ * tool, or a reordered chain.
  */
 export function parseSimplePolicy(
   policy: Policy,
