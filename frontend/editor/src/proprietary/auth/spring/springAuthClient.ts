@@ -16,6 +16,7 @@ import { AxiosError, type AxiosRequestConfig } from "axios";
 import { getSpringAuthConfig } from "@app/auth/config";
 import { type OAuthProvider } from "@app/auth/spring/oauthTypes";
 import { resetOAuthState } from "@app/auth/spring/oauthStorage";
+import { isSafePostLoginRedirect } from "@app/services/postLoginRedirect";
 import type {
   AuthUser as User,
   AuthSession as Session,
@@ -100,23 +101,10 @@ function persistRedirectPath(path: string): void {
   }
 }
 
-// Same-origin relative path, not pointing at auth plumbing. Rejects protocol-relative
-// URLs to guard against open-redirect abuse if the stored value is tampered with.
-export function isSafePostLoginRedirect(path: unknown): path is string {
-  if (typeof path !== "string" || path.length === 0) return false;
-  if (!path.startsWith("/") || path.startsWith("//")) return false;
-  if (path.startsWith("/\\")) return false;
-  const lowered = path.toLowerCase();
-  if (
-    lowered.startsWith("/login") ||
-    lowered.startsWith("/auth/") ||
-    lowered.startsWith("/oauth2") ||
-    lowered.startsWith("/saml2")
-  ) {
-    return false;
-  }
-  return true;
-}
+// The safe-return-path rule lives in the shared @app/services/postLoginRedirect
+// extension point (proprietary override adds the Spring SSO routes). Re-exported
+// here so existing importers via @app/auth keep resolving it.
+export { isSafePostLoginRedirect };
 
 export function setPostLoginRedirectPath(
   path: string | null | undefined,

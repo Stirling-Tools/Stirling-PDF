@@ -12,12 +12,16 @@ export type NotificationOrigin = "TOOL" | "POLICY" | "PIPELINE";
 /** From this reader's point of view. `UNOWNED` is an unattended run: nobody holds the file. */
 export type NotificationOwnership = "MINE" | "THEIRS" | "UNOWNED";
 
+/** How much of the row an action has earned; `promoteActions` turns it into a place. */
+export type NotificationActionSlot = "RESOLUTION" | "SECONDARY" | "OVERFLOW";
+
 /** `id` is an open string, not a union: the server may know actions this build does not. */
 export interface NotificationActionOffer {
   id: string;
   labelKey: string;
   /** English fallback, for a build with no copy for `labelKey`. */
   defaultLabel: string;
+  slot: NotificationActionSlot;
   /** False renders no button in the bell, and a disabled one in the processor's queue. */
   enabled: boolean;
   disabledReasonKey: string | null;
@@ -49,18 +53,49 @@ export interface AppNotification {
 
 interface NotificationsResponse {
   notifications: AppNotification[];
+  viewerReviewsTeam: boolean;
+  viewerKey: string;
 }
 
-/** Newest first. Empty rather than throwing: a bell that cannot load is an empty bell, not an error. */
+export interface FetchedNotifications {
+  notifications: AppNotification[];
+  /** A reviewer keeps rows whose document this browser does not hold; a member does not. */
+  viewerReviewsTeam: boolean;
+  /**
+   * Opaque id for the signed-in viewer, for scoping this browser's read state. Null when the
+   * server did not say, which must read as "cannot scope" rather than as a viewer of its own.
+   */
+  viewerKey: string | null;
+}
+
+/** Newest first. Empty rather than throwing, and defaulting to the least hiding. */
 export async function fetchNotifications(
   limit = 20,
-): Promise<AppNotification[]> {
+): Promise<FetchedNotifications> {
   try {
     const response = await apiClient.get<NotificationsResponse>(
       `${NOTIFICATIONS_PATH}?limit=${limit}`,
     );
-    return response?.data?.notifications ?? [];
+    return {
+      notifications: response?.data?.notifications ?? [],
+      viewerReviewsTeam: response?.data?.viewerReviewsTeam ?? true,
+      viewerKey: response?.data?.viewerKey || null,
+    };
   } catch {
-    return [];
+    return { notifications: [], viewerReviewsTeam: true, viewerKey: null };
+  }
+}
+
+/** Never throws: a refusal is not worth interrupting a user whose document is already fixed. */
+export async function reportNotificationResolved(
+  notificationId: string,
+): Promise<boolean> {
+  try {
+    await apiClient.post(
+      `${NOTIFICATIONS_PATH}/${encodeURIComponent(notificationId)}/resolved`,
+    );
+    return true;
+  } catch {
+    return false;
   }
 }

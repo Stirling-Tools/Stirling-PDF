@@ -1,19 +1,17 @@
 import { useMediaQuery } from "@mantine/hooks";
 import { Tooltip } from "@mantine/core";
 import { ActionIcon, NavItem, NavSurface } from "@app/ui";
-import { BrandSwitcher } from "@app/components/shared/BrandSwitcher";
+import { SidebarToggleButton } from "@app/components/shared/SidebarToggleButton";
+import { Logo } from "@app/ui/Logo";
 import { NavFooter } from "@app/components/shared/navFooter/NavFooter";
 import { useAccountIdentity } from "@app/hooks/useAccountIdentity";
 import { useFreeCreditsSummary } from "@processor/hooks/useFreeCreditsSummary";
 import { useOpenPlan } from "@processor/hooks/useOpenPlan";
-import { SidebarToggleIcon } from "@app/components/shared/SidebarToggleIcon";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
 import { useView, type ViewId } from "@processor/contexts/ViewContext";
 import { useUI } from "@processor/contexts/UIContext";
 import { LinkAccountFooterItem } from "@processor/components/LinkAccountFooterItem";
-import { EDITOR_URL, EDITOR_IS_SAME_APP } from "@processor/auth/editorUrl";
-import { EDITOR_BASENAME } from "@app/routes/editorBasename";
+import { useConnectGate } from "@processor/hooks/useConnectGate";
 import { CloseIcon } from "@processor/components/icons";
 import {
   GROUP_PROCESSOR,
@@ -29,37 +27,28 @@ const NAV_SECTIONS: NavGroup[] = [
 ];
 
 /** Must match the shell breakpoint in AppShell.css / Sidebar.css. */
-const MOBILE_QUERY = "(max-width: 48rem)";
+export const MOBILE_QUERY = "(max-width: 48rem)";
 
 export function Sidebar() {
   const { activeView, setActiveView } = useView();
   const {
-    openSettings,
     mobileNavOpen,
     closeMobileNav,
     sidebarCollapsed,
     toggleSidebarCollapsed,
   } = useUI();
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const isMobile = useMediaQuery(MOBILE_QUERY, false, {
     getInitialValueInEffect: false,
   });
   const { displayName, profilePictureUrl } = useAccountIdentity();
   const credits = useFreeCreditsSummary();
   const openPlan = useOpenPlan();
+  const { gated, connect } = useConnectGate();
 
   // Collapse is a desktop-only affordance: on mobile the sidebar is an
   // off-canvas drawer, so the icon-rail state never applies there.
   const collapsed = sidebarCollapsed && !isMobile;
-
-  // Editor and processor are one SPA when the editor serves this origin's root, so
-  // the switch stays client-side; an absolute EDITOR_URL (dev cross-app setup)
-  // needs a full page load.
-  const goToEditor = () => {
-    if (EDITOR_IS_SAME_APP) navigate(EDITOR_BASENAME);
-    else window.location.href = EDITOR_URL;
-  };
 
   // Procurement is no longer a nav tab — it lives on Home as the deal-status hero and expands into
   // a takeover modal (matching the marketing prototype).
@@ -80,6 +69,9 @@ export function Sidebar() {
             closeMobileNav();
             if (entry.externalUrl) {
               window.open(entry.externalUrl, "_blank", "noopener,noreferrer");
+            } else if (entry.requiresLink && gated) {
+              // Ask here: navigating first strands them on a page with nothing on it.
+              connect();
             } else {
               setActiveView(id as ViewId);
             }
@@ -108,25 +100,13 @@ export function Sidebar() {
       // Off-canvas on mobile: remove from the tab order and accessibility tree.
       inert={isMobile && !mobileNavOpen}
     >
-      <div className="processor-sidebar__logo">
-        <BrandSwitcher
-          current="processor"
-          onSwitch={goToEditor}
-          collapsed={collapsed}
-        />
+      <div className="processor-sidebar__header">
+        {!collapsed && <Logo variant="textOnly" textHeight="1.3rem" />}
 
-        <ActionIcon
-          variant="tertiary"
-          className="processor-sidebar__collapse"
-          aria-label={
-            collapsed
-              ? t("fileSidebar.expand", "Expand sidebar")
-              : t("fileSidebar.collapse", "Collapse sidebar")
-          }
-          onClick={toggleSidebarCollapsed}
-        >
-          <SidebarToggleIcon size={18} />
-        </ActionIcon>
+        <SidebarToggleButton
+          collapsed={collapsed}
+          onToggle={toggleSidebarCollapsed}
+        />
 
         <ActionIcon
           variant="tertiary"
@@ -159,10 +139,9 @@ export function Sidebar() {
         className="processor-sidebar__footer"
         displayName={displayName}
         profilePictureUrl={profilePictureUrl}
-        onOpenSettings={openSettings}
+        showAccount={false}
         credits={credits}
         onOpenPlan={openPlan ?? undefined}
-        otherApp={{ app: "editor", onOpen: goToEditor }}
         accountExtras={<LinkAccountFooterItem />}
         collapsed={collapsed}
       />

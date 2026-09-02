@@ -5,15 +5,7 @@ import {
 } from "@processor/hooks/useAccountLink";
 
 /**
- * Single app-wide {@link useAccountLink} instance. The link flow is orchestrated
- * in exactly one place so that:
- *   - status is fetched once on mount (not per consumer), and
- *   - the SSO-return effect fires once — two instances would both call
- *     {@link UseAccountLink.completeLink} on return and re-register the device
- *     credential, leaving a duplicate linked_instance row.
- *
- * Consumers (the top-level link modal host, the Settings account-link panel,
- * the link card) read this shared instance instead of calling the hook again.
+ * Single app-wide {@link useAccountLink} instance, so status is fetched once on mount rather than per consumer.
  */
 const AccountLinkContext = createContext<UseAccountLink | null>(null);
 

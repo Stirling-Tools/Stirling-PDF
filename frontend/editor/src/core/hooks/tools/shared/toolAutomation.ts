@@ -534,7 +534,7 @@ export function deserializeToolStep(
   const params: ErasedToolParams = {
     ...(config?.defaultParameters ?? {}),
     ...mapped,
-  } as ErasedToolParams;
+  };
   // Validate against the generated endpoint set instead of casting the matched string.
   const operation =
     resolveEndpoint(config, params) ??

@@ -1,39 +1,82 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
 
-const linkState = { isLinked: false };
+/**
+ * Usage must not render while unlinked: it reports `linked` as a fact from its wallet read, so a
+ * browser holding a SaaS session with no link to this server would flip the whole processor to linked.
+ */
+const gate = { gated: false, loading: false, available: true };
+const connect = vi.fn();
+const applyLinkFacts = vi.fn();
+
+vi.mock("@processor/hooks/useConnectGate", () => ({
+  useConnectGate: () => ({ ...gate, connect, guard: (f: unknown) => f }),
+}));
 vi.mock("@processor/contexts/LinkContext", () => ({
-  useLink: () => linkState,
-  useApplyLinkFacts: () => vi.fn(),
+  useApplyLinkFacts: () => applyLinkFacts,
 }));
 vi.mock("@processor/contexts/UIContext", () => ({
   useUI: () => ({ openLinkModal: vi.fn() }),
 }));
-vi.mock("@processor/components/billing/LinkAccountPrompt", () => ({
-  LinkAccountPrompt: () => <div data-testid="link-prompt" />,
-}));
 vi.mock("@processor/views/Usage", () => ({
-  Usage: () => <div data-testid="usage" />,
+  Usage: ({ onWalletLoaded }: { onWalletLoaded?: (w: unknown) => void }) => {
+    onWalletLoaded?.({ status: "free" });
+    return <div data-testid="usage" />;
+  },
 }));
 
 import { ProcessorBillingGate } from "@processor/components/billing/ProcessorBillingGate";
 
+const renderGate = () =>
+  render(
+    <MemoryRouter initialEntries={["/processor/usage"]}>
+      <Routes>
+        <Route path="/processor/usage" element={<ProcessorBillingGate />} />
+        <Route path="/processor" element={<div data-testid="home" />} />
+      </Routes>
+    </MemoryRouter>,
+  );
+
 describe("ProcessorBillingGate — self-hosted", () => {
   beforeEach(() => {
-    linkState.isLinked = false;
+    connect.mockReset();
+    applyLinkFacts.mockReset();
+    gate.gated = false;
+    gate.loading = false;
   });
 
-  it("shows the link prompt when unlinked (billing gated on link)", () => {
-    linkState.isLinked = false;
-    render(<ProcessorBillingGate />);
-    expect(screen.getByTestId("link-prompt")).toBeInTheDocument();
-    expect(screen.queryByTestId("usage")).not.toBeInTheDocument();
+  it("asks for the connection when reached unconnected", () => {
+    gate.gated = true;
+    renderGate();
+    expect(connect).toHaveBeenCalledTimes(1);
   });
 
-  it("renders the Usage page once linked", () => {
-    linkState.isLinked = true;
-    render(<ProcessorBillingGate />);
+  it("sends them back rather than onto a page about an account they lack", () => {
+    gate.gated = true;
+    renderGate();
+    expect(screen.queryByTestId("usage")).toBeNull();
+    expect(screen.getByTestId("home")).toBeInTheDocument();
+  });
+
+  it("never reports the instance as linked while it is not", () => {
+    gate.gated = true;
+    renderGate();
+    // Not rendering the page is what stops the claim.
+    expect(applyLinkFacts).not.toHaveBeenCalled();
+  });
+
+  it("holds while the capability is still unknown, rather than bouncing", () => {
+    gate.loading = true;
+    renderGate();
+    expect(screen.queryByTestId("usage")).toBeNull();
+    expect(screen.queryByTestId("home")).toBeNull();
+  });
+
+  it("renders the page once connected", () => {
+    renderGate();
+    expect(connect).not.toHaveBeenCalled();
     expect(screen.getByTestId("usage")).toBeInTheDocument();
-    expect(screen.queryByTestId("link-prompt")).not.toBeInTheDocument();
+    expect(applyLinkFacts).toHaveBeenCalledWith(true, false);
   });
 });

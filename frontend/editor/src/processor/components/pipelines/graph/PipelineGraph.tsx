@@ -51,6 +51,8 @@ export interface GraphNodeContent {
   warning?: string;
   /** Why the input will not be much use. */
   inputWarning?: ChainWarning;
+  /** An end the pipeline decides for itself, so it carries no remove control. */
+  fixed?: boolean;
 }
 
 export interface GraphStepContent extends GraphNodeContent {
@@ -302,7 +304,9 @@ export function PipelineGraph({
                     warning={content.warning}
                     selected={selected === kind}
                     onSelect={() => onSelect(kind)}
-                    onRemove={() => onRemoveEnd(kind)}
+                    onRemove={
+                      content.fixed ? undefined : () => onRemoveEnd(kind)
+                    }
                   />
                 )}
               </div>

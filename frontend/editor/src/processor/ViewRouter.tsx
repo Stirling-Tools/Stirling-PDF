@@ -11,6 +11,7 @@ import { Policies } from "@processor/views/Policies";
 import { EditorAdmin } from "@processor/views/EditorAdmin";
 import { Infrastructure } from "@processor/views/Infrastructure";
 import { ProcessorBillingGate } from "@processor/components/billing/ProcessorBillingGate";
+import { ConnectGuardedRoute } from "@processor/components/account-link/ConnectGuardedRoute";
 import { VIEW_PATHS, toProcessorPath } from "@processor/contexts/ViewContext";
 
 // Lazy so the generated docs manifest (bundled JSON) lands in its own chunk.
@@ -32,13 +33,24 @@ export function ViewRouter() {
       <Route index element={<Home />} />
       <Route path={rel(VIEW_PATHS.users)} element={<Users />} />
       <Route path={rel(VIEW_PATHS.pipelines)} element={<Pipelines />} />
+      {/* Building and editing need a linked account. Gated at the route so every way in is
+          covered: the list, the Documents review queue, the Connect flow's next steps, and a
+          typed URL. */}
       <Route
         path={`${rel(VIEW_PATHS.pipelines)}/new`}
-        element={<PipelineBuilder />}
+        element={
+          <ConnectGuardedRoute fallback={toProcessorPath(VIEW_PATHS.pipelines)}>
+            <PipelineBuilder />
+          </ConnectGuardedRoute>
+        }
       />
       <Route
         path={`${rel(VIEW_PATHS.pipelines)}/:id`}
-        element={<PipelineBuilder />}
+        element={
+          <ConnectGuardedRoute fallback={toProcessorPath(VIEW_PATHS.pipelines)}>
+            <PipelineBuilder />
+          </ConnectGuardedRoute>
+        }
       />
       <Route path={rel(VIEW_PATHS.sources)} element={<Sources />} />
       {/* Source create/edit is a modal on the list now; old deep links land there. */}

@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { MethodBadge, Tabs, type HttpMethod, type TabItem } from "@app/ui";
+import { MethodBadge, Tabs, type TabItem } from "@app/ui";
 import { VERTICALS, ALL_ENDPOINTS } from "@processor/data/endpoints";
 import { DocsSection } from "@processor/components/docs/DocsSection";
 import "@processor/theme/surface.css";
@@ -61,10 +61,8 @@ export function EndpointReferenceSection() {
             </div>
             {v.endpoints.map((e) => (
               <div key={e.endpoint} className="processor-docs__endpoint-row">
-                <MethodBadge method={"POST" as HttpMethod} />
-                <code className="processor-docs__endpoint-path">
-                  {e.endpoint}
-                </code>
+                <MethodBadge method={"POST"} />
+                <code className="processor-docs__endpoint-path">{e.endpoint}</code>
                 <span className="processor-docs__endpoint-name">{e.name}</span>
                 <span className="processor-docs__endpoint-fields">
                   {t("processor.docs.endpoints.fieldCount", {

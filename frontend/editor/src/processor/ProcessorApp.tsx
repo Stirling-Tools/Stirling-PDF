@@ -1,11 +1,11 @@
-import { useState, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { ProcessorAuthBoundary } from "@processor/auth/ProcessorAuthBoundary";
 import { ThemeProvider, useTheme } from "@processor/contexts/ThemeContext";
 import { SuiProvider } from "@processor/theme/SuiProvider";
 import { ProcessorProviders } from "@processor/ProcessorProviders";
 import { ToolRegistryProvider } from "@app/contexts/ToolRegistryProvider";
-import { createProcessorQueryClient } from "@processor/queryClient";
+import { getProcessorQueryClient } from "@processor/queryClient";
 // Reset + typography, scoped to .processor-scope below.
 import "@processor/theme/base.css";
 
@@ -30,7 +30,7 @@ function ThemedSuiProvider({ children }: { children: ReactNode }) {
  * self-hosted mounts the account-link layer, SaaS does not.
  */
 export function ProcessorApp() {
-  const [queryClient] = useState(createProcessorQueryClient);
+  const queryClient = getProcessorQueryClient();
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>

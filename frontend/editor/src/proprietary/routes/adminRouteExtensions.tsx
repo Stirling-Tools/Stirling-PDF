@@ -2,18 +2,9 @@ import { lazy } from "react";
 import type { ReactElement } from "react";
 import { Route } from "react-router-dom";
 import { PROCESSOR_BASENAME } from "@app/routes/processorBasename";
+import { HAS_PROCESSOR } from "@app/routes/hasProcessor";
 
-// The processor ships as a lazy chunk of the editor. It's included in dev (so it's
-// always available to work on) and in production builds made with
-// VITE_INCLUDE_PROCESSOR=true (set by -PbuildWithProcessor in the JAR, and by the deploy
-// GHA when the processor or AI layers change). Vite replaces the env with a literal at
-// build time, so when it's off the dynamic import below is tree-shaken out and the
-// processor chunk isn't emitted. ProcessorApp stays module-level so it isn't recreated on
-// each render.
-const includeProcessor =
-  import.meta.env.VITE_INCLUDE_PROCESSOR === "true" || import.meta.env.DEV;
-
-const ProcessorApp = includeProcessor
+const ProcessorApp = HAS_PROCESSOR
   ? lazy(async () => {
       const m = await import("@processor/ProcessorApp");
       return { default: m.ProcessorApp };
@@ -21,18 +12,28 @@ const ProcessorApp = includeProcessor
   : null;
 
 /**
- * The processor mounts as an admin-only route-set at PROCESSOR_BASENAME (/processor/*).
- * Access is gated inside ProcessorApp (its own AuthProvider + AuthGate, plus server
- * enforcement), so this just wires the lazy route into the editor's router when
- * the processor is included in this build.
+ * Return leg of the account-link handshake, which Stirling redirects to with the admin's session in the URL fragment.
  */
+const ConnectCallback = HAS_PROCESSOR
+  ? lazy(async () => {
+      const m = await import("@processor/views/ConnectCallback");
+      return { default: m.default };
+    })
+  : null;
+
+/** The processor mounts as an admin-only route-set at PROCESSOR_BASENAME (/processor/*). */
 export function getAdminRouteExtensions(): ReactElement[] {
-  if (!ProcessorApp) return [];
+  if (!ProcessorApp || !ConnectCallback) return [];
   return [
     <Route
       key="processor"
       path={`${PROCESSOR_BASENAME}/*`}
       element={<ProcessorApp />}
+    />,
+    <Route
+      key="account-link-callback"
+      path="/account-link/callback"
+      element={<ConnectCallback />}
     />,
   ];
 }

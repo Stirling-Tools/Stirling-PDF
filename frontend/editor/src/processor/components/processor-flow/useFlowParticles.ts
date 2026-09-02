@@ -134,10 +134,7 @@ export function useFlowParticles({
         for (let i = 0; i < meanInterval.length; i++) {
           if (!Number.isFinite(meanInterval[i]) || !g.srcs[i]) continue;
           if (now >= nextEmit[i] && particles.length < MAX_PARTICLES) {
-            const c = document.createElementNS(
-              NS,
-              "circle",
-            ) as SVGCircleElement;
+            const c = document.createElementNS(NS, "circle");
             c.setAttribute("r", "2.5");
             c.setAttribute("opacity", "0.75");
             c.style.fill = "var(--c-primary)";

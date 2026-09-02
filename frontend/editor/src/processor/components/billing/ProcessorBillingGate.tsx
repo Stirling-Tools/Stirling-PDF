@@ -1,23 +1,20 @@
 import { useCallback } from "react";
-import { useApplyLinkFacts, useLink } from "@processor/contexts/LinkContext";
+import { useApplyLinkFacts } from "@processor/contexts/LinkContext";
 import { useUI } from "@processor/contexts/UIContext";
-import { LinkAccountPrompt } from "@processor/components/billing/LinkAccountPrompt";
+import { ConnectGuardedRoute } from "@processor/components/account-link/ConnectGuardedRoute";
+import { VIEW_PATHS, toProcessorPath } from "@processor/contexts/ViewContext";
 import { Usage } from "@processor/views/Usage";
 import type { Wallet } from "@processor/api/billing";
 
 /**
- * Billing access gate — the seam the SaaS build overrides.
+ * The seam the SaaS build shadows, and the backstop for a typed URL — the nav already refuses to
+ * come here unlinked (the sidebar's requiresLink).
  *
- * <p>Self-hosted (this base): billing only makes sense once the instance has
- * linked its SaaS account, so gate on link state — unlinked shows the link prompt;
- * linked renders the (flavor-agnostic) Usage page and maps its callbacks onto the
- * link/tier dimension: the wallet's subscription status refines the plan/tier
- * badge, and a lapsed SaaS session re-opens the account-link re-auth. This keeps
- * the "link" concept entirely out of the Usage page. The SaaS build shadows this
- * with a passthrough — there is no linking there.
+ * <p>Usage must not render while unlinked: {@link onWalletLoaded} reports linked as a fact, and the
+ * browser can hold a SaaS session with no link to this server, so rendering it flipped the processor
+ * to linked.
  */
 export function ProcessorBillingGate() {
-  const { isLinked } = useLink();
   const applyLinkFacts = useApplyLinkFacts();
   const { openLinkModal } = useUI();
 
@@ -27,6 +24,9 @@ export function ProcessorBillingGate() {
   );
   const onReauth = useCallback(() => openLinkModal("reauth"), [openLinkModal]);
 
-  if (!isLinked) return <LinkAccountPrompt />;
-  return <Usage onWalletLoaded={onWalletLoaded} onReauth={onReauth} />;
+  return (
+    <ConnectGuardedRoute fallback={toProcessorPath(VIEW_PATHS.home)}>
+      <Usage onWalletLoaded={onWalletLoaded} onReauth={onReauth} />
+    </ConnectGuardedRoute>
+  );
 }

@@ -12,7 +12,10 @@ import { render, waitFor } from "@testing-library/react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { setupServer } from "msw/node";
 import { http, HttpResponse } from "msw";
-import { createProcessorQueryClient } from "@processor/queryClient";
+import {
+  getProcessorQueryClient,
+  resetProcessorQueryClient,
+} from "@processor/queryClient";
 import { usePoliciesOverview } from "@processor/queries/policies";
 import { useProcessorFlow } from "@processor/queries/processorFlow";
 
@@ -70,9 +73,12 @@ function PoliciesConsumer() {
   return null;
 }
 
+// The client outlives a mount now, so each case starts from a cold one.
+beforeEach(resetProcessorQueryClient);
+
 describe("processor query sharing", () => {
   it("in-view: multiple consumers of the same endpoints fetch each once", async () => {
-    const client = createProcessorQueryClient();
+    const client = getProcessorQueryClient();
     render(
       <QueryClientProvider client={client}>
         <HomeConsumers />
@@ -86,7 +92,7 @@ describe("processor query sharing", () => {
   });
 
   it("cross-view: a later screen reusing the data refetches nothing", async () => {
-    const client = createProcessorQueryClient();
+    const client = getProcessorQueryClient();
     const home = render(
       <QueryClientProvider client={client}>
         <HomeConsumers />

@@ -182,7 +182,7 @@ jobs:
           fetch-depth: 0 # Fetch full history for commit hash detection
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
+        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
 
       - name: Get version number
         id: versionNumber
@@ -220,6 +220,42 @@ jobs:
             echo "app_short=${APP_HASH:0:8}" >> $GITHUB_OUTPUT
           fi
 
+      # The Stirling account previews connect to. Derived from the ref rather than stored as a URL
+      # so it cannot drift from the key: a mismatched pair is accepted by the browser and rejected
+      # by Supabase, surfacing much later as "session expired" on Usage rather than at sign-in.
+      # Secret only to match Saas-Dev-Deploy.yml, which owns the same value; a project ref is not
+      # itself sensitive, which is why SAAS_API_BASE_URL next to it is a plain variable.
+      - name: Resolve Stirling account config
+        id: saas
+        env:
+          PROJECT_REF: ${{ secrets.SAAS_DB_PROJECT_REF }}
+          API_BASE_OVERRIDE: ${{ vars.SAAS_API_BASE_URL }}
+        run: |
+          # Set, this is the one value both halves use: the browser's processor reads and the backend's
+          # register/entitlement calls have to land on the same SaaS, and nothing checks that they
+          # do. Unset, only the backend gets a base, from its own compiled-in default.
+          API_BASE="${API_BASE_OVERRIDE:-https://stirling.com/app}"
+          echo "backend_base=${API_BASE}" >> "$GITHUB_OUTPUT"
+
+          if [ -z "${PROJECT_REF}" ]; then
+            echo "Not configured for this environment: the preview will build without a Stirling"
+            echo "account, and the connect dialog will say so. To wire one up, set on the"
+            echo "pr-preview environment the secrets SAAS_DB_PROJECT_REF and"
+            echo "SAAS_SUPABASE_PUBLISHABLE_KEY, both from the same Supabase project."
+            echo "supabase_url=" >> "$GITHUB_OUTPUT"
+            echo "frontend_base=" >> "$GITHUB_OUTPUT"
+          else
+            # Only whether, not which: the ref is a secret here, so Actions masks it out of any
+            # line it appears in, derived URL included.
+            echo "Stirling account configured, at ${API_BASE}."
+            echo "supabase_url=https://${PROJECT_REF}.supabase.co" >> "$GITHUB_OUTPUT"
+            # Deliberately the override and not API_BASE: the backend's default is a subpath URL
+            # nobody has confirmed answers /api/v1, and prod CORS does not list preview hostnames,
+            # so processor reads stay off until someone sets a base they have checked. Empty leaves the
+            # committed .env default alone, which is the clean "not configured" state.
+            echo "frontend_base=${API_BASE_OVERRIDE}" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Check if image exists
         id: check-image
         run: |
@@ -246,6 +282,9 @@ jobs:
           build-args: |
             VERSION_TAG=v2-alpha
             BUILD_PROCESSOR=${{ env.BUILD_PROCESSOR }}
+            VITE_SUPABASE_URL=${{ steps.saas.outputs.supabase_url }}
+            VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY=${{ secrets.SAAS_SUPABASE_PUBLISHABLE_KEY }}
+            VITE_SAAS_API_URL=${{ steps.saas.outputs.frontend_base }}
           platforms: linux/amd64
 
       - name: Set up SSH
@@ -279,6 +318,13 @@ jobs:
               environment:
                 DISABLE_ADDITIONAL_FEATURES: "false"
                 STIRLING_BILLING_ACCOUNT_LINK_ENABLED: "true"
+                STIRLING_BILLING_ACCOUNT_LINK_SAAS_BASE_URL: "${{ steps.saas.outputs.backend_base }}"
+                # Off so preview traffic never accrues against a real wallet or trips its cap. The
+                # 402 gate is separate and stays on, so gating is still testable here.
+                STIRLING_BILLING_ACCOUNT_LINK_METERING_ENABLED: "false"
+                # Stated rather than inferred from the request: the callback has to come back to the
+                # preview hostname, not to the container's own :8080 behind this proxy.
+                SYSTEM_FRONTENDURL: "https://${V2_PORT}.ssl.stirlingpdf.cloud"
                 SECURITY_ENABLELOGIN: "true"
                 SECURITY_INITIALLOGIN_USERNAME: "${TEST_LOGIN_USERNAME}"
                 SECURITY_INITIALLOGIN_PASSWORD: "${TEST_LOGIN_PASSWORD}"
@@ -353,7 +399,7 @@ jobs:
 
       - name: Install Task for Storybook
         if: steps.sb-changes.outputs.storybook == 'true'
-        uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
+        uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
 
       - name: Build and deploy Storybook
         id: storybook

@@ -3526,7 +3526,6 @@ label = "Y pozíció"
 
 [crop.error]
 failed = "A PDF vágása sikertelen"
-invalidArea = "A vágási terület túlnyúlik a PDF határain"
 
 [crop.preview]
 title = "Vágási terület kiválasztása"

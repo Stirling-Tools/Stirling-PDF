@@ -116,12 +116,15 @@ export function PolicyDetailPanel({
   const { category, config, state, steps, stats, activity } = policy;
   const isPaused = state.status === "paused";
   const canDelete = state.isDefault !== true;
+  // Editor participation is its own flag (runsOnEditor), not a source. A legacy policy still carries
+  // "editor" in its stored sources until re-saved, so drop it here to count only real watched sources.
+  const realSources = state.sources.filter((s) => s !== "editor");
   // Processed history only exists for watched sources; editor uploads are never ledgered.
   const canClearHistory =
-    onClearHistory !== undefined && state.sources.some((s) => s !== "editor");
+    onClearHistory !== undefined && realSources.length > 0;
 
   const enforceItems = steps.length > 0 ? steps.map((s) => s.operation) : null;
-  const hasEditorSource = state.sources.includes("editor");
+  const hasEditorSource = state.runsOnEditor === true;
   const trigger =
     state.runOn === "export"
       ? t("processor.policies.detail.onEveryExport")
@@ -130,11 +133,6 @@ export function PolicyDetailPanel({
     state.outputMode === "new_file"
       ? t("processor.policies.detail.outputAsNewFile")
       : t("processor.policies.detail.outputAsNewVersion");
-
-  function sourceLabel(id: string) {
-    if (id === "editor") return t("processor.sources.types.editor.label");
-    return id;
-  }
 
   return (
     <>
@@ -243,13 +241,13 @@ export function PolicyDetailPanel({
         </div>
 
         {/* Sources */}
-        {state.sources.length > 0 && (
+        {realSources.length > 0 && (
           <div className="processor-policies__detail-inline">
             <span className="processor-policies__detail-inline-label">
               {t("processor.policies.detail.sources")}
             </span>
             <span className="processor-policies__detail-inline-value">
-              {state.sources.map(sourceLabel).join(" · ")}
+              {realSources.join(" · ")}
             </span>
           </div>
         )}

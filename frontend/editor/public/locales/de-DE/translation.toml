@@ -3526,7 +3526,6 @@ label = "Y-Position"
 
 [crop.error]
 failed = "PDF zuschneiden fehlgeschlagen"
-invalidArea = "Zuschneidebereich überschreitet die PDF-Grenzen"
 
 [crop.preview]
 title = "Zuschneidebereich-Auswahl"

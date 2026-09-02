@@ -6,14 +6,9 @@ import type {
   PortalEntityItems,
   PortalEntityScopeId,
 } from "@processor/search/entitySearch";
+import { HAS_PROCESSOR } from "@app/routes/hasProcessor";
 
 type EntitySearchModule = typeof import("@processor/search/entitySearch");
-
-// Mirrors the admin-route seam's gate: the portal route-set is only mounted in
-// dev and in builds made with VITE_INCLUDE_PROCESSOR=true, so the search must not
-// fetch or offer entities that have nowhere to open.
-const includePortal =
-  import.meta.env.VITE_INCLUDE_PROCESSOR === "true" || import.meta.env.DEV;
 
 const NO_GROUPS: SuperSearchGroup[] = [];
 const NO_SCOPES: readonly PortalEntityScopeId[] = [];
@@ -41,7 +36,8 @@ export function useProcessorEntityGroups(
 ): SuperSearchGroup[] {
   const [mod, setMod] = useState<EntitySearchModule | null>(null);
   const modRef = useRef<EntitySearchModule | null>(null);
-  const active = enabled && includePortal;
+  // Without the processor these entities have nowhere to open, so don't fetch them.
+  const active = enabled && HAS_PROCESSOR;
   const hasQuery = trimmed.length > 0;
 
   useEffect(() => {

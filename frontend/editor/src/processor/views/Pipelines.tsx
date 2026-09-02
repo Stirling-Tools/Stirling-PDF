@@ -9,11 +9,13 @@ import { VIEW_PATHS, toProcessorPath } from "@processor/contexts/ViewContext";
 import { PipelinesIcon } from "@processor/components/icons";
 import { KpiStrip } from "@processor/components/pipelines/KpiStrip";
 import { PipelinesTable } from "@processor/components/pipelines/PipelinesTable";
+import { useConnectGate } from "@processor/hooks/useConnectGate";
 import "@processor/views/Pipelines.css";
 
 export function Pipelines() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { guard } = useConnectGate();
   const state = usePipelines();
   const { data, loading } = state;
   const { isLoading } = useSectionFlags(state);
@@ -26,13 +28,18 @@ export function Pipelines() {
   // the loading and empty states don't flash a row of placeholder cards.
   const hasPipelines = pipelines.length > 0;
 
-  const openCreate = () =>
-    navigate(`${toProcessorPath(VIEW_PATHS.pipelines)}/new`);
-  const connectSource = () =>
-    navigate(`${toProcessorPath(VIEW_PATHS.sources)}/new`);
+  // Building and editing a pipeline both need a linked account, so both ask for one first.
+  const openCreate = guard(() =>
+    navigate(`${toProcessorPath(VIEW_PATHS.pipelines)}/new`),
+  );
+  // Guarded in its own right so the ask happens here rather than after a pointless hop to Sources.
+  const connectSource = guard(() =>
+    navigate(`${toProcessorPath(VIEW_PATHS.sources)}/new`),
+  );
   // A row opens that pipeline's own page (view / edit / run / delete live there).
-  const openPipeline = (pipeline: PipelineView) =>
-    navigate(`${toProcessorPath(VIEW_PATHS.pipelines)}/${pipeline.id}`);
+  const openPipeline = guard((pipeline: PipelineView) =>
+    navigate(`${toProcessorPath(VIEW_PATHS.pipelines)}/${pipeline.id}`),
+  );
 
   return (
     <div className="processor-pipelines">

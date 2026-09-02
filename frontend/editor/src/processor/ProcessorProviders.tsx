@@ -1,52 +1,33 @@
 import { TierProvider } from "@processor/contexts/TierContext";
-import { LinkProvider, useLink } from "@processor/contexts/LinkContext";
+import { LinkProvider } from "@processor/contexts/LinkContext";
 import { UIProvider, useUI } from "@processor/contexts/UIContext";
-import type { SupabaseLoginSession } from "@app/auth/ui/useSupabaseLogin";
 import { LinkAccountModal } from "@processor/components/account-link/LinkAccountModal";
-import {
-  AccountLinkProvider,
-  useAccountLinkContext,
-} from "@processor/contexts/AccountLinkContext";
+import { AccountLinkProvider } from "@processor/contexts/AccountLinkContext";
+import { ConnectCallbackHost } from "@processor/components/account-link/ConnectCallbackHost";
 import { ProcessorChrome } from "@processor/components/ProcessorChrome";
+import { useConnectPrompt } from "@processor/hooks/useConnectPrompt";
 
-/**
- * The one and only account-link login modal. Mounted at the app root (never
- * nested in another overlay) and driven by UIContext, so any "Link account" CTA
- * — sidebar, billing prompt, feature gate, Settings panel — opens this exact
- * instance. Linking is finished by the shared {@link useAccountLinkContext}
- * orchestration.
- */
+/** The one and only account-link modal, whichever step it is on. */
 function LinkModalHost() {
-  const { linkModalOpen, linkModalMode, closeLinkModal } = useUI();
-  const { markSaasSessionChanged } = useLink();
-  const link = useAccountLinkContext();
-  // "reauth" only refreshes the browser SaaS session for attended reads — the
-  // sign-in already applied it to the Supabase client, so we just signal a
-  // refetch. It must NOT call completeLink (that re-registers → duplicate row).
-  const onLinked =
-    linkModalMode === "reauth"
-      ? () => markSaasSessionChanged()
-      : (session: SupabaseLoginSession) => link.completeLink(session);
+  const { linkModalOpen, linkModalMode, closeLinkModal, connectOutcome } =
+    useUI();
+  // Ask once a session while the instance is unlinked, rather than waiting to be found.
+  useConnectPrompt();
+
+  // Mounted only while open, so closing discards the flow. Kept mounted, an interrupted hand-off
+  // stays flagged and every later open resumes on the ghost step with no way forward.
+  if (!linkModalOpen) return null;
   return (
     <LinkAccountModal
-      open={linkModalOpen}
+      open
       mode={linkModalMode}
       onClose={closeLinkModal}
-      onLinked={onLinked}
+      outcome={connectOutcome}
     />
   );
 }
 
-/**
- * Self-hosted provider stack. The account-link layer (LinkProvider +
- * AccountLinkProvider + the login modal) wraps the shared chrome; the tier is
- * derived from the link/subscription state (see usePlanTier). TierProvider sits
- * inside LinkProvider because the self-hosted usePlanTier reads useLink.
- *
- * The SaaS build shadows this file to drop the account-link layer entirely — the
- * signed-in account IS the SaaS account, so there is nothing to link and the
- * tier comes from the wallet.
- */
+/** Self-hosted provider stack. */
 export function ProcessorProviders() {
   return (
     <LinkProvider initialState="unlinked">
@@ -55,6 +36,7 @@ export function ProcessorProviders() {
           <AccountLinkProvider>
             <ProcessorChrome />
             <LinkModalHost />
+            <ConnectCallbackHost />
           </AccountLinkProvider>
         </UIProvider>
       </TierProvider>
