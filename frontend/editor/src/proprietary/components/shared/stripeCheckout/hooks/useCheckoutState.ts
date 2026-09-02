@@ -20,7 +20,7 @@ export const useCheckoutState = (planGroup: PlanTierGroup) => {
   const [selectedPeriod, setSelectedPeriod] = useState<"monthly" | "yearly">(
     planGroup.yearly ? "yearly" : "monthly",
   );
-  // Servers to buy. Only the Server tier asks; every other tier stays at one.
+  // Blocks of users to buy. Only the Team tier asks; every other tier stays at one.
   const [serverQuantity, setServerQuantity] = useState<number>(1);
   const [installationId, setInstallationId] = useState<string | null>(null);
   const [currentLicenseKey, setCurrentLicenseKey] = useState<string | null>(

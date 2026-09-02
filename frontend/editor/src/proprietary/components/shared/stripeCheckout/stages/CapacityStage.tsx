@@ -1,20 +1,25 @@
-import React from "react";
+import React, { useState } from "react";
 import { Stack, Text, Group, Divider, Alert, NumberInput } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import { PlanTier } from "@app/services/licenseService";
 import { formatPrice } from "@app/components/shared/stripeCheckout/utils/pricingUtils";
 import {
-  USERS_PER_SERVER,
-  SELF_SERVE_MAX_SERVERS,
-  usersForServers,
-  serversForUsers,
+  USERS_PER_BLOCK,
+  SELF_SERVE_MAX_BLOCKS,
+  USER_PRESETS,
+  usersForBlocks,
+  blocksForUsers,
   shouldOfferEnterprise,
 } from "@app/components/shared/stripeCheckout/utils/capacity";
 
 interface CapacityStageProps {
-  /** The plan the buyer picked a billing period for; supplies unit price and currency. */
+  /** The plan the buyer picked a billing period for; supplies block price and currency. */
   selectedPlan: PlanTier | null;
+  /**
+   * Blocks of users being bought. Held in blocks because that is what the Stripe line item counts,
+   * but nothing shown to the buyer says so.
+   */
   serverQuantity: number;
   setServerQuantity: (quantity: number) => void;
   /** Users already on this installation, so capacity cannot be set below what is in use. */
@@ -24,10 +29,11 @@ interface CapacityStageProps {
 }
 
 /**
- * Pick how much capacity to buy.
+ * Choose how many users the Team plan should cover.
  *
- * The stepper counts servers because that is the unit we sell; every figure beside it is stated in
- * users because that is the unit an admin measures. The line item does the translation.
+ * The buyer picks users; the plan is priced per block of {@link USERS_PER_BLOCK}. Presets cover the
+ * common sizes and "Other" opens a free entry that rounds up to the next whole block, because a
+ * part-block cannot be bought.
  */
 export const CapacityStage: React.FC<CapacityStageProps> = ({
   selectedPlan,
@@ -40,69 +46,92 @@ export const CapacityStage: React.FC<CapacityStageProps> = ({
   const { t } = useTranslation();
 
   const currency = selectedPlan?.currency || "$";
-  const unitPrice = selectedPlan?.price || 0;
+  const blockPrice = selectedPlan?.price || 0;
   const isYearly = selectedPlan?.period?.includes("year") ?? false;
-  const covered = usersForServers(serverQuantity);
-  const total = unitPrice * serverQuantity;
+  const covered = usersForBlocks(serverQuantity);
+  const total = blockPrice * serverQuantity;
 
   // Never sell less capacity than is already in use; reducing capacity happens at renewal rather
-  // than by stranding accounts that already exist. The stage is entered pre-seeded to this minimum,
-  // so the guard below only fires if a caller passes something lower.
-  const minServers = serversForUsers(currentUsers);
-  const belowCurrentUsage = serverQuantity < minServers;
+  // than by stranding accounts that already exist. The stage is entered pre-seeded to this minimum.
+  const minBlocks = blocksForUsers(currentUsers);
+  const minUsers = usersForBlocks(minBlocks);
+  const maxUsers = usersForBlocks(SELF_SERVE_MAX_BLOCKS);
+  const belowCurrentUsage = serverQuantity < minBlocks;
   const offerEnterprise = shouldOfferEnterprise(serverQuantity);
 
-  const setClamped = (value: number) =>
-    setServerQuantity(
-      Math.max(minServers, Math.min(SELF_SERVE_MAX_SERVERS, value)),
-    );
+  const presets = USER_PRESETS.filter((users) => users <= maxUsers);
+  const [showCustom, setShowCustom] = useState(
+    () => !presets.includes(usersForBlocks(serverQuantity)),
+  );
+
+  const period = isYearly
+    ? t("payment.capacityStage.perYear", "/yr")
+    : t("payment.capacityStage.perMonth", "/mo");
+
+  const selectUsers = (users: number) =>
+    setServerQuantity(blocksForUsers(users));
 
   return (
     <Stack gap="lg" style={{ padding: "1.5rem 2rem" }}>
-      <div>
-        <Text size="xl" fw={600}>
-          {t("payment.capacityStage.heading", "How many users do you need?")}
-        </Text>
-        <Text size="sm" c="dimmed" mt={4}>
-          {t(
-            "payment.capacityStage.subheading",
-            "Each server covers {{users}} users. Add servers to cover more.",
-            { users: USERS_PER_SERVER },
-          )}
-        </Text>
-      </div>
+      <Text size="sm" c="dimmed">
+        {t(
+          "payment.capacityStage.subheading",
+          "Covers everyone you invite, in blocks of {{users}} users.",
+          { users: USERS_PER_BLOCK },
+        )}
+      </Text>
 
-      <Group align="flex-end" gap="xl" wrap="wrap">
+      <Group gap="sm" wrap="wrap" align="center">
+        <Text size="sm" fw={500}>
+          {t("payment.capacityStage.usersLabel", "Users")}
+        </Text>
+        {presets.map((users) => (
+          <Button
+            key={users}
+            variant={!showCustom && covered === users ? "primary" : "secondary"}
+            disabled={users < minUsers}
+            onClick={() => {
+              setShowCustom(false);
+              selectUsers(users);
+            }}
+          >
+            {users}
+          </Button>
+        ))}
+        <Button
+          variant={showCustom ? "primary" : "secondary"}
+          onClick={() => setShowCustom(true)}
+        >
+          {t("payment.capacityStage.other", "Other")}
+        </Button>
+      </Group>
+
+      {showCustom && (
         <NumberInput
-          label={t("payment.capacityStage.serversLabel", "Servers")}
-          value={serverQuantity}
-          onChange={(value) => setClamped(Number(value) || minServers)}
-          min={minServers}
-          max={SELF_SERVE_MAX_SERVERS}
+          label={t("payment.capacityStage.customLabel", "Number of users")}
+          description={t(
+            "payment.capacityStage.customHint",
+            "Rounded up to the next block of {{users}}.",
+            { users: USERS_PER_BLOCK },
+          )}
+          value={covered}
+          onChange={(value) => selectUsers(Number(value) || minUsers)}
+          min={minUsers}
+          max={maxUsers}
+          step={USERS_PER_BLOCK}
           clampBehavior="strict"
           allowDecimal={false}
           allowNegative={false}
-          size="lg"
-          style={{ width: 140 }}
+          style={{ width: 220 }}
         />
-        <Stack gap={0} pb={6}>
-          <Text size="xs" c="dimmed">
-            {t("payment.capacityStage.coversUpTo", "Covers up to")}
-          </Text>
-          <Text size="lg" fw={600}>
-            {t("payment.capacityStage.userTotal", "{{users}} users", {
-              users: covered,
-            })}
-          </Text>
-        </Stack>
-      </Group>
+      )}
 
       {belowCurrentUsage && (
         <Alert color="yellow" variant="light">
           {t(
             "payment.capacityStage.minimumForCurrentUsers",
-            "You have {{users}} users, so you need at least {{servers}} servers.",
-            { users: currentUsers, servers: minServers },
+            "You have {{users}} users, so the plan must cover at least {{minimum}}.",
+            { users: currentUsers, minimum: minUsers },
           )}
         </Alert>
       )}
@@ -112,29 +141,37 @@ export const CapacityStage: React.FC<CapacityStageProps> = ({
       <Stack gap="xs">
         <Group justify="space-between">
           <Text size="sm" c="dimmed">
-            {t("payment.capacityStage.lineItem", "Servers x {{servers}}", {
-              servers: serverQuantity,
-            })}
+            {t(
+              "payment.capacityStage.lineItem",
+              "Team · {{price}}{{period}} per {{block}} users",
+              {
+                price: formatPrice(blockPrice, currency, 0),
+                period,
+                block: USERS_PER_BLOCK,
+              },
+            )}
           </Text>
-          <Text size="sm">
-            {t("payment.capacityStage.addedUsers", "+{{users}} users", {
+          <Text size="sm" fw={500}>
+            {t("payment.capacityStage.userTotal", "{{users}} users", {
               users: covered,
             })}
           </Text>
         </Group>
         <Group justify="space-between" align="baseline">
           <Text fw={600}>
-            {isYearly
-              ? t("payment.capacityStage.totalYearly", "Total, billed yearly")
-              : t(
-                  "payment.capacityStage.totalMonthly",
-                  "Total, billed monthly",
-                )}
+            {t("payment.capacityStage.dueToday", "Due today")}
           </Text>
           <Text size="xl" fw={700}>
             {formatPrice(total, currency)}
           </Text>
         </Group>
+        <Text size="xs" c="dimmed">
+          {t(
+            "payment.capacityStage.renewalNote",
+            "Renews at {{total}}{{period}}. Cancel any time in Usage & Billing.",
+            { total: formatPrice(total, currency, 0), period },
+          )}
+        </Text>
       </Stack>
 
       <Stack gap="sm">

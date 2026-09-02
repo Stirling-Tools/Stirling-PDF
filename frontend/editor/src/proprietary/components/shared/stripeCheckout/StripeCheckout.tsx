@@ -19,7 +19,7 @@ import { useCheckoutSession } from "@app/components/shared/stripeCheckout/hooks/
 import { EmailStage } from "@app/components/shared/stripeCheckout/stages/EmailStage";
 import { PlanSelectionStage } from "@app/components/shared/stripeCheckout/stages/PlanSelectionStage";
 import { CapacityStage } from "@app/components/shared/stripeCheckout/stages/CapacityStage";
-import { serversForUsers } from "@app/components/shared/stripeCheckout/utils/capacity";
+import { blocksForUsers } from "@app/components/shared/stripeCheckout/utils/capacity";
 import { PaymentStage } from "@app/components/shared/stripeCheckout/stages/PaymentStage";
 import { SuccessStage } from "@app/components/shared/stripeCheckout/stages/SuccessStage";
 import { ErrorStage } from "@app/components/shared/stripeCheckout/stages/ErrorStage";
@@ -109,16 +109,16 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
     }
   };
 
-  // Only the Server tier is sold by the server. Enterprise is priced per seat and free has nothing
-  // to size, so both go straight to payment.
+  // Only the Team tier is sold by capacity. Enterprise is priced per seat and free has nothing to
+  // size, so both go straight to payment.
   const sellsCapacity = planGroup.tier === "server";
 
   // Plan selection handler
   const handlePlanSelect = (period: "monthly" | "yearly") => {
     checkoutState.setSelectedPeriod(period);
     if (sellsCapacity) {
-      // Arrive on the capacity an installation already needs rather than on a blocked "1".
-      checkoutState.setServerQuantity(serversForUsers(minimumSeats));
+      // Arrive on the capacity an installation already needs rather than on a blocked minimum.
+      checkoutState.setServerQuantity(blocksForUsers(minimumSeats));
       navigation.goToStage("capacity");
       return;
     }

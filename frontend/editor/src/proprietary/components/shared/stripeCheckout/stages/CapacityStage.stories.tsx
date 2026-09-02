@@ -4,12 +4,12 @@ import { CapacityStage } from "@app/components/shared/stripeCheckout/stages/Capa
 import { PlanTier } from "@app/services/licenseService";
 
 /**
- * The capacity step of the Stripe checkout, between billing period and payment. Only the Server
- * tier reaches it: the stepper counts servers, and every figure beside it is stated in users.
+ * The capacity step of the Stripe checkout, between billing period and payment. Only the Team tier
+ * reaches it: the buyer picks users, and the plan is priced per block of 100.
  */
 const yearlyPlan: PlanTier = {
   id: "server-yearly",
-  name: "Server",
+  name: "Team",
   price: 990,
   currency: "$",
   period: "/year",
@@ -50,16 +50,16 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** A fresh purchase: one server, 100 users. */
-export const SingleServer: Story = {};
+/** A fresh purchase: the smallest block, 100 users. */
+export const SingleBlock: Story = {};
 
-/** Three servers on the monthly plan, so the total is three times the unit price. */
-export const MultipleServersMonthly: Story = {
+/** 300 users on the monthly plan, so the total is three block prices. */
+export const ThreeBlocksMonthly: Story = {
   args: { selectedPlan: monthlyPlan, serverQuantity: 3 },
 };
 
 /**
- * An installation already running 240 users cannot buy fewer than three servers. Reducing capacity
+ * An installation already running 240 users cannot buy cover for fewer than 300. Reducing capacity
  * is a renewal conversation, not something checkout does by stranding accounts.
  */
 export const ConstrainedByCurrentUsers: Story = {
@@ -72,8 +72,8 @@ export const BelowCurrentUsage: Story = {
 };
 
 /**
- * At five servers the enterprise quote is offered beside the purchase. It is an option, never a
- * wall: self-serve checkout still completes.
+ * At the self-serve maximum the enterprise quote is offered beside the purchase. It is an option,
+ * never a wall: self-serve checkout still completes.
  */
 export const OffersEnterpriseQuote: Story = {
   args: { serverQuantity: 5, onContactSales: () => {} },

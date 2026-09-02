@@ -37,11 +37,9 @@ export const getModalTitle = (
         { planName },
       );
     case "capacity":
-      return t(
-        "payment.capacityStage.modalTitle",
-        "Choose Capacity - {{planName}}",
-        { planName },
-      );
+      return t("payment.capacityStage.modalTitle", "Upgrade to {{planName}}", {
+        planName,
+      });
     case "payment":
       return t(
         "payment.paymentStage.modalTitle",
