@@ -370,6 +370,23 @@ export default function AdminAiModelsSection() {
                 </Text>
               </Alert>
             )}
+
+            {showBaseUrl && (
+              <Alert
+                variant="light"
+                color="blue"
+                icon={
+                  <LocalIcon icon="info-rounded" width="1rem" height="1rem" />
+                }
+              >
+                <Text size="xs">
+                  {t(
+                    "admin.settings.ai.models.baseUrl.contextWindow",
+                    "Check the model's context window. The engine sends prompts of several thousand tokens and a window below 16,384 will silently truncate them - the oldest part of the prompt is dropped, so the model answers without having seen the request. Ollama defaults to 4,096 and divides that between parallel requests; raise it with OLLAMA_CONTEXT_LENGTH on the server.",
+                  )}
+                </Text>
+              </Alert>
+            )}
           </Stack>
         </Paper>
       </Stack>

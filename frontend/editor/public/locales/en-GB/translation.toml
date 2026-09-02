@@ -818,6 +818,7 @@ openai = "OpenAI API key"
 setPlaceholder = "Saved - leave blank to keep the current key"
 
 [admin.settings.ai.models.baseUrl]
+contextWindow = "Check the model's context window. The engine sends prompts of several thousand tokens and a window below 16,384 will silently truncate them - the oldest part of the prompt is dropped, so the model answers without having seen the request. Ollama defaults to 4,096 and divides that between parallel requests; raise it with OLLAMA_CONTEXT_LENGTH on the server."
 description = "Base URL of the OpenAI-compatible / Ollama endpoint, e.g. http://ollama:11434/v1."
 label = "Provider base URL"
 warning = "The base URL must point at a trusted internal endpoint. The engine will make server-side requests to it, so an untrusted value is SSRF-sensitive."
