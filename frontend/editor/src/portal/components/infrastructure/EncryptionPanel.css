@@ -110,13 +110,6 @@
   margin: 0.75rem 0 0;
 }
 
-/* ...but a banner that is itself a row of the stack is spaced by the stack's
-   gap. Leaving the margin on stacks the two, so consecutive banners sat 1.75rem
-   apart while every other row sat at 1rem. */
-.portal-enc__stack > .sui-banner {
-  margin: 0;
-}
-
 .portal-enc__fingerprint code {
   font-family: var(--font-mono);
   font-size: 0.8125rem;
@@ -161,17 +154,13 @@
 
 .portal-enc__migration-stats {
   display: flex;
-  align-items: start;
   gap: 1.5rem;
   flex-wrap: wrap;
   margin-top: 0.75rem;
 }
 
-/* One label carries a hint icon and the others do not. A fixed height rather
-   than a minimum, so the icon cannot push its value off the row. */
-.portal-enc__migration-stats .sui-stat__label {
-  display: flex;
+.portal-enc__stat-label {
+  display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  height: 1.25rem;
 }

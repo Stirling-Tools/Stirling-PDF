@@ -1,6 +1,10 @@
 // frontend/editor/src/core/services/httpErrorHandler.ts
 import { alert } from "@app/components/toast";
 import {
+  isStorageKeyRevoked,
+  STORAGE_KEY_REVOKED_DETAIL,
+} from "@app/services/storageKeyRevoked";
+import {
   broadcastErroredFiles,
   extractErrorFileIds,
   normalizeAxiosErrorData,
@@ -101,6 +105,13 @@ export async function handleHttpError(error: unknown): Promise<boolean> {
   const skipAuthRedirect = axiosError?.config?.skipAuthRedirect === true;
   // Check if this error should skip the global toast (component will handle it)
   if (axiosError?.config?.suppressErrorToast === true) {
+    // ...except a revoked encryption key. Every caller that reads a stored file
+    // suppresses this toast and reports its own generic failure, which tells the
+    // user what did not happen but never that an administrator did it on purpose
+    // and can undo it. Explain it here rather than in each of those callers.
+    if (await isStorageKeyRevoked(axiosError)) {
+      showSpecialErrorToast(STORAGE_KEY_REVOKED_DETAIL, { status: 403 });
+    }
     return false; // Don't show global toast, but continue rejection
   }
 
