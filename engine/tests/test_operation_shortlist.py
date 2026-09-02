@@ -2,7 +2,13 @@ from __future__ import annotations
 
 import pytest
 
-from stirling.agents.operation_shortlist import OperationShortlist, retrieval_text
+from stirling.agents.operation_shortlist import (
+    OperationShortlist,
+    bm25_scores,
+    rank_fusion,
+    retrieval_text,
+    tokenize,
+)
 from stirling.models import OPERATIONS, ToolEndpoint
 
 
@@ -74,3 +80,31 @@ def test_retrieval_text_carries_parameter_descriptions() -> None:
 
     assert "add watermark" in text
     assert "opacity" in text.lower()
+
+
+def test_lexical_scoring_ranks_the_operation_named_in_the_request() -> None:
+    operations = list(OPERATIONS)
+    corpus = [tokenize(retrieval_text(operation)) for operation in operations]
+
+    scores = bm25_scores("add a trusted timestamp", corpus)
+    best = max(zip(operations, scores, strict=True), key=lambda pair: pair[1])[0]
+
+    assert best is ToolEndpoint.TIMESTAMP_PDF
+
+
+def test_tokenize_splits_endpoint_names_and_drops_stopwords() -> None:
+    assert tokenize("ADD_WATERMARK to the PDF") == ["add", "watermark"]
+
+
+def test_rank_fusion_promotes_what_both_rankings_rate_highly() -> None:
+    first = [ToolEndpoint.ADD_WATERMARK, ToolEndpoint.FLATTEN, ToolEndpoint.REPAIR]
+    second = [ToolEndpoint.ADD_WATERMARK, ToolEndpoint.REPAIR, ToolEndpoint.FLATTEN]
+
+    assert rank_fusion(first, second)[0] is ToolEndpoint.ADD_WATERMARK
+
+
+def test_rank_fusion_surfaces_an_operation_only_one_ranking_found() -> None:
+    semantic = [ToolEndpoint.FLATTEN, ToolEndpoint.REPAIR]
+    lexical = [ToolEndpoint.TIMESTAMP_PDF, ToolEndpoint.FLATTEN]
+
+    assert ToolEndpoint.TIMESTAMP_PDF in rank_fusion(semantic, lexical)
