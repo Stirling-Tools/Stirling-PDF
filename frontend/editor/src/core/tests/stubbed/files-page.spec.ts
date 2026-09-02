@@ -8,12 +8,24 @@ interface SeedFile {
   id: string;
   name: string;
   remoteStorageId: number | null;
+  folderId?: string;
   versionNumber?: number;
   toolHistory?: Array<{ toolId: string; timestamp: number }>;
 }
 
 /** Seed IDB + register the cloud entries with the server stub. */
-async function seedFiles(page: Page, files: SeedFile[]): Promise<void> {
+interface SeedFolder {
+  id: string;
+  name: string;
+}
+
+async function seedFiles(
+  page: Page,
+  files: SeedFile[],
+  // Browser-owned folders, seeded in the same open: a server folder needs an
+  // authenticated sync the stubbed app never runs.
+  virtualFolders: SeedFolder[] = [],
+): Promise<void> {
   // Build the server-side view from the cloud entries so reconcileServerFiles
   // sees them as still-existing on the server (otherwise they get detached).
   const serverFiles = files
@@ -36,7 +48,7 @@ async function seedFiles(page: Page, files: SeedFile[]): Promise<void> {
     route.fulfill({ json: serverFiles }),
   );
   await page.addInitScript(
-    ({ records, dbVersion }) => {
+    ({ records, vFolders, dbVersion }) => {
       const open = window.indexedDB.open("stirling-pdf-files", dbVersion);
       open.onupgradeneeded = (event) => {
         const db = (event.target as IDBOpenDBRequest).result;
@@ -56,15 +68,36 @@ async function seedFiles(page: Page, files: SeedFile[]): Promise<void> {
           });
           fStore.createIndex("name", "name", { unique: false });
         }
+        if (!db.objectStoreNames.contains("virtual_folders")) {
+          const vStore = db.createObjectStore("virtual_folders", {
+            keyPath: "id",
+          });
+          vStore.createIndex("parentFolderId", "parentFolderId", {
+            unique: false,
+          });
+        }
+        if (!db.objectStoreNames.contains("local_folders")) {
+          db.createObjectStore("local_folders", { keyPath: "id" });
+        }
       };
       open.onsuccess = () => {
         const db = open.result;
         // Yield the connection if the app ever needs to upgrade, and drop it
         // once the writes commit, so the seed never blocks the app's open.
         db.onversionchange = () => db.close();
-        const tx = db.transaction("files", "readwrite");
+        const tx = db.transaction(["files", "virtual_folders"], "readwrite");
         const store = tx.objectStore("files");
         const now = Date.now();
+        for (const folder of vFolders) {
+          tx.objectStore("virtual_folders").put({
+            id: folder.id,
+            kind: "virtual",
+            name: folder.name,
+            parentFolderId: null,
+            createdAt: now,
+            updatedAt: now,
+          });
+        }
         for (const f of records) {
           store.put({
             id: f.id,
@@ -83,7 +116,7 @@ async function seedFiles(page: Page, files: SeedFile[]): Promise<void> {
             originalFileId: f.id,
             parentFileId: null,
             toolHistory: f.toolHistory ?? [],
-            folderId: null,
+            folderId: f.folderId ?? null,
             remoteStorageId: f.remoteStorageId,
             remoteStorageUpdatedAt: f.remoteStorageId ? now : null,
             remoteOwnerUsername: f.remoteStorageId ? "testuser" : null,
@@ -97,7 +130,11 @@ async function seedFiles(page: Page, files: SeedFile[]): Promise<void> {
         tx.oncomplete = () => db.close();
       };
     },
-    { records: files, dbVersion: DATABASE_CONFIGS.FILES.version },
+    {
+      records: files,
+      vFolders: virtualFolders,
+      dbVersion: DATABASE_CONFIGS.FILES.version,
+    },
   );
 }
 
@@ -415,6 +452,48 @@ test.describe("Files page", () => {
     });
   });
 
+  test.describe("Opening a file already in the workspace", () => {
+    test.beforeEach(async ({ page }) => {
+      await stubStorageApis(page);
+      await seedFiles(page, [
+        { id: "dupe-test", name: "dupe-test.pdf", remoteStorageId: null },
+      ]);
+    });
+    test.use({ autoGoto: false });
+
+    /**
+     * Opening a file that is already open has nothing to fetch and nothing to add:
+     * sending it through materialize-and-add again has no reason to succeed twice.
+     */
+    test("opens it once, and opening it again neither duplicates nor throws", async ({
+      page,
+    }) => {
+      await gotoFilesPage(page);
+      const card = () =>
+        page
+          .locator(".files-page-card:not(.is-folder)")
+          .filter({ hasText: "dupe-test.pdf" });
+
+      await card().dblclick();
+      await expect(page).not.toHaveURL(/\/files/, { timeout: 5_000 });
+      await expect(page.locator(".file-sidebar-file-item")).toHaveCount(1, {
+        timeout: 10_000,
+      });
+
+      // Back to the library and open the same file again.
+      await page.goto("/files", { waitUntil: "domcontentloaded" });
+      await expect(card()).toBeVisible({ timeout: 10_000 });
+      await card().dblclick();
+      await expect(page).not.toHaveURL(/\/files/, { timeout: 5_000 });
+
+      // Still one: the workspace holds the file once, and the app is still up.
+      await expect(page.locator(".file-sidebar-file-item")).toHaveCount(1, {
+        timeout: 10_000,
+      });
+      await expect(page.getByText(/Something went wrong/i)).toHaveCount(0);
+    });
+  });
+
   test.describe("Drag-and-drop wiring", () => {
     test.beforeEach(async ({ page }) => {
       await stubStorageApis(page);
@@ -499,7 +578,7 @@ test.describe("Files page", () => {
   test.describe("Empty-state CTAs", () => {
     test.use({ autoGoto: false });
 
-    test("renders Upload + Create folder CTAs when grid is empty", async ({
+    test("renders Upload + New folder CTAs when grid is empty", async ({
       page,
     }) => {
       await stubStorageApis(page);
@@ -519,15 +598,15 @@ test.describe("Files page", () => {
       await expect(
         page
           .locator(".files-page-empty-actions")
-          .getByRole("button", { name: /Create folder/i }),
+          .getByRole("button", { name: /New folder/i }),
       ).toBeVisible();
     });
 
-    test("Create folder CTA disabled when storage isn't reachable", async ({
+    test("New folder CTA is disabled when storage isn't reachable", async ({
       page,
     }) => {
-      // Storage disabled - the New folder action is gated and the CTA
-      // should mirror that gating with a disabled state.
+      // The CTA is the header's control, so it reports the same blocked reason
+      // rather than offering a click that cannot land.
       await stubStorageApis(page, { storageEnabled: false });
       await page.goto("/files", { waitUntil: "domcontentloaded" });
       await expect(page.locator(".files-page-empty")).toBeVisible({
@@ -535,7 +614,7 @@ test.describe("Files page", () => {
       });
       const createCta = page
         .locator(".files-page-empty-actions")
-        .getByRole("button", { name: /Create folder/i });
+        .getByRole("button", { name: /New folder/i });
       await expect(createCta).toBeVisible();
       await expect(createCta).toBeDisabled();
     });
@@ -854,6 +933,74 @@ test.describe("Files page", () => {
       });
       // Four 8px steps = +32px.
       expect(after).toBeGreaterThanOrEqual(before + 24);
+    });
+  });
+
+  test.describe("Folder navigation", () => {
+    const FOLDER_ID = "11111111-2222-4333-8444-555555555555";
+    test.beforeEach(async ({ page }) => {
+      await stubStorageApis(page);
+      await seedFiles(
+        page,
+        [
+          { id: "nav-outside", name: "nav-outside.pdf", remoteStorageId: null },
+          {
+            id: "nav-inside",
+            name: "nav-inside.pdf",
+            remoteStorageId: null,
+            folderId: FOLDER_ID,
+          },
+        ],
+        [{ id: FOLDER_ID, name: "Invoices" }],
+      );
+    });
+    test.use({ autoGoto: false });
+
+    const intoFolder = async (page: Page) => {
+      const tree = page.getByRole("tree", { name: /Folders/i });
+      await expect(tree).toBeVisible({ timeout: 10_000 });
+      await tree.getByRole("treeitem", { name: /Invoices/i }).click();
+      await expect(page).toHaveURL(new RegExp(`/files/${FOLDER_ID}`), {
+        timeout: 5_000,
+      });
+    };
+
+    /**
+     * A breadcrumb is a plain jump to an ancestor. Everything the selection change
+     * drives - the listing, the folder filters, the path write - has to survive it.
+     */
+    test("clicking a breadcrumb returns to the root without throwing", async ({
+      page,
+    }) => {
+      await page.goto("/files", { waitUntil: "domcontentloaded" });
+      await intoFolder(page);
+
+      const crumbs = page.getByRole("navigation", { name: /Folder path/i });
+      await expect(crumbs).toBeVisible({ timeout: 5_000 });
+      await crumbs.getByRole("button", { name: /All files/i }).click();
+
+      await expect(page).toHaveURL(/\/files\/?$/, { timeout: 5_000 });
+      await expect(page.getByText(/Something went wrong/i)).toHaveCount(0);
+      // Still a working library, not a husk.
+      await expect(page.getByRole("tree", { name: /Folders/i })).toBeVisible();
+    });
+
+    /** Each folder is its own history entry, so Back walks up the tree rather than
+     *  out of the library, and Forward returns to the folder. */
+    test("back leaves the folder rather than the library, and forward returns", async ({
+      page,
+    }) => {
+      await page.goto("/files", { waitUntil: "domcontentloaded" });
+      await intoFolder(page);
+      const deep = page.url();
+
+      await page.goBack();
+      await expect(page).toHaveURL(/\/files\/?$/, { timeout: 5_000 });
+      await expect(page.getByText(/Something went wrong/i)).toHaveCount(0);
+
+      await page.goForward();
+      await expect(page).toHaveURL(deep, { timeout: 5_000 });
+      await expect(page.getByText(/Something went wrong/i)).toHaveCount(0);
     });
   });
 

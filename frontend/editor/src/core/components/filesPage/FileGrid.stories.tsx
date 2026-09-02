@@ -109,6 +109,5 @@ export const Empty: Story = {
     loading: false,
     currentTab: "all",
     onEmptyUpload: () => {},
-    onEmptyCreateFolder: () => {},
   },
 };

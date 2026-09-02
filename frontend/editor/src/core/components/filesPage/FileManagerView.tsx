@@ -10,10 +10,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import {
   Drawer,
   Group,
-  Menu,
   MultiSelect,
   Select,
-  Text,
   TextInput,
   Tooltip,
 } from "@mantine/core";
@@ -25,7 +23,6 @@ import CloseIcon from "@mui/icons-material/Close";
 import SearchIcon from "@mui/icons-material/Search";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import QrCode2Icon from "@mui/icons-material/QrCode2";
-import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
 import GridViewIcon from "@mui/icons-material/GridView";
 import ViewListIcon from "@mui/icons-material/ViewList";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -34,14 +31,12 @@ import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
-import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
-import DriveFolderUploadIcon from "@mui/icons-material/DriveFolderUpload";
-import CloudIcon from "@mui/icons-material/Cloud";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { FilesToolbarBulkMenu } from "@app/components/filesPage/FilesToolbarBulkMenu";
 import { FilesToolbarCount } from "@app/components/filesPage/FilesToolbarCount";
 import { FilesToolbarFilterMenu } from "@app/components/filesPage/FilesToolbarFilterMenu";
 import { FilesToolbarSortMenu } from "@app/components/filesPage/FilesToolbarSortMenu";
+import { NewFolderButton } from "@app/components/filesPage/NewFolderButton";
 
 import { stripBasePath } from "@app/constants/app";
 import { useAuth } from "@app/auth/UseSession";
@@ -225,21 +220,44 @@ export default function FileManagerView() {
   const foldersById = folders.foldersById;
   const currentFolderId = folders.currentFolderId;
 
-  // Sync the URL into FolderContext.
+  // Which folder the path last selected. The two effects below keep the path and the
+  // selection in step, and each uses this to tell its own write from the other's.
+  const pathSelectedRef = useRef<string | null>(null);
+
+  // Path -> selection. Covers arrival, a deep link, and back/forward.
   useEffect(() => {
     const match = location.pathname.match(/^\/files\/([^/]+)/);
     const param = match?.[1] ?? null;
     if (param === null) {
+      pathSelectedRef.current = null;
       setCurrentFolderId(ROOT_FOLDER_ID);
-    } else if (foldersById.has(param as FolderId)) {
+      return;
+    }
+    if (foldersById.has(param as FolderId)) {
+      pathSelectedRef.current = param;
       setCurrentFolderId(param as FolderId);
-    } else if (isDiskFolderId(param) && resolveDiskFolder(param as FolderId)) {
+      return;
+    }
+    if (isDiskFolderId(param) && resolveDiskFolder(param as FolderId)) {
       // A mount subdirectory deep link: rebuilt from the id, mapped next render.
+      pathSelectedRef.current = param;
       setCurrentFolderId(param as FolderId);
-    } else {
+      return;
+    }
+    // Not known yet is not the same as not real: folders load asynchronously, and a
+    // mount's subdirectories arrive with the listing that finds them. Wait for the map
+    // to fill - this re-runs as it does - and only fall back once it cannot.
+    if (!folders.loading) {
+      pathSelectedRef.current = null;
       setCurrentFolderId(ROOT_FOLDER_ID);
     }
-  }, [location.pathname, foldersById, setCurrentFolderId, resolveDiskFolder]);
+  }, [
+    location.pathname,
+    foldersById,
+    setCurrentFolderId,
+    resolveDiskFolder,
+    folders.loading,
+  ]);
 
   // Bounce off any share-related tab when sharing isn't enabled.
   useEffect(() => {
@@ -251,14 +269,19 @@ export default function FileManagerView() {
     }
   }, [sharingEnabled, currentTab, setCurrentTab]);
 
-  // Push folder selection into the URL while still on /files.
+  // Selection -> path, for a folder opened here. Pushed, not replaced: each folder is
+  // its own history entry, so Back walks up the tree rather than out of the library.
   useEffect(() => {
     const stripped = stripBasePath(window.location.pathname);
     if (!stripped.startsWith("/files")) return;
-    const target =
-      currentFolderId === null ? "/files" : `/files/${currentFolderId}`;
+    const selected = currentFolderId === null ? null : String(currentFolderId);
+    // The path already says this, being what selected the folder. Writing it again
+    // overwrites the entry a back or forward just landed on.
+    if (pathSelectedRef.current === selected) return;
+    const target = selected === null ? "/files" : `/files/${selected}`;
     if (stripped !== target) {
-      navigate(target, { replace: true });
+      pathSelectedRef.current = selected;
+      navigate(target);
     }
   }, [currentFolderId, navigate]);
 
@@ -300,6 +323,12 @@ export default function FileManagerView() {
     const matched = folders.folders.filter((f) => {
       // The Cloud tab is the server's view: browser folders and mounts aren't on it.
       if (currentTab === "cloud" && folderKind(f) !== "server") return false;
+      // A folder answers to the source filter the way its files would: a server
+      // folder is cloud, a browser folder and a mount are both local.
+      if (originFilter !== "all") {
+        const folderOrigin = folderKind(f) === "server" ? "cloud" : "local";
+        if (folderOrigin !== originFilter) return false;
+      }
       if (search) {
         // Subtree-wide name match; exclude the current folder itself.
         return (
@@ -314,7 +343,14 @@ export default function FileManagerView() {
     return matched.sort((a, b) =>
       a.name.localeCompare(b.name, undefined, { sensitivity: "base" }),
     );
-  }, [folders.folders, currentFolderId, search, currentTab, subtreeFolderIds]);
+  }, [
+    folders.folders,
+    currentFolderId,
+    search,
+    currentTab,
+    subtreeFolderIds,
+    originFilter,
+  ]);
 
   // Files in current folder, pre-filter. Drives the type-filter dropdown.
   const filesInCurrentFolder = useMemo(() => {
@@ -746,26 +782,40 @@ export default function FileManagerView() {
       const proceed = async () => {
         clearFilesPageReturnRoute();
 
+        // Already in the workspace: nothing to fetch or add, so just go to it. Sending
+        // it through materialize and add again has no reason to succeed - the bytes
+        // are already spoken for.
+        const alreadyOpen = stubs.filter((stub) =>
+          activeWorkspaceFileIdSet.has(stub.id as string),
+        );
+        const toOpen = stubs.filter(
+          (stub) => !activeWorkspaceFileIdSet.has(stub.id as string),
+        );
+
         // Server-only stubs have no bytes in IDB; download + ingest first.
-        const materialized = await materializeServerStubs(stubs, {
+        const materialized = await materializeServerStubs(toOpen, {
           addFiles: fileActions.addFilesWithOptions,
           updateStub: fileActions.updateStirlingFileStub,
         });
-        if (materialized.length !== stubs.length) {
+        if (materialized.length !== toOpen.length) {
           // At least one server download failed; refresh so the grid
           // reflects any successful ingests and the user can retry.
           await refresh();
           return;
         }
 
-        await fileActions.addStirlingFileStubs(materialized, {
-          selectFiles: false,
-        });
-        // Branch on requested stubs so already-active files still activate.
-        if (materialized.length === 1) {
-          setActiveFileId(materialized[0].id);
+        if (materialized.length > 0) {
+          await fileActions.addStirlingFileStubs(materialized, {
+            selectFiles: false,
+          });
+        }
+
+        // Every file the user asked for, whether it arrived now or was already there.
+        const opened = [...alreadyOpen, ...materialized];
+        if (opened.length === 1) {
+          setActiveFileId(opened[0].id);
           navActions.setWorkbench("viewer");
-        } else if (materialized.length > 1) {
+        } else if (opened.length > 1) {
           navActions.setWorkbench("fileEditor");
         }
         navigate(EDITOR_BASENAME);
@@ -783,6 +833,8 @@ export default function FileManagerView() {
       navigate,
       requestNavigation,
       clearFilesPageReturnRoute,
+      activeWorkspaceFileIdSet,
+      refresh,
     ],
   );
 
@@ -1087,8 +1139,7 @@ export default function FileManagerView() {
   // disabled item's caption.
   const serverFolderDisabledReason = useServerFolderBlock() ?? undefined;
 
-  const { addLocalFolder, createFolderHere, createFolderHereBlockedReason } =
-    useNewFolderFlow();
+  const { addLocalFolder } = useNewFolderFlow();
 
   // null = New folder actionable; string = disabled tooltip reason.
   const newFolderDisabledReason: string | null = useMemo(() => {
@@ -1212,89 +1263,15 @@ export default function FileManagerView() {
                     <RefreshIcon />
                   </ActionIcon>
                 </Tooltip>
-                {newFolderDisabledReason ? (
-                  <Tooltip
-                    label={newFolderDisabledReason}
-                    withinPortal
-                    multiline
-                    w={220}
-                  >
-                    <span style={{ display: "inline-flex" }}>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        leftSection={<CreateNewFolderIcon fontSize="small" />}
-                        disabled
-                        style={{ pointerEvents: "auto" }}
-                      >
-                        {t("filesPage.newFolder", "New folder")}
-                      </Button>
-                    </span>
-                  </Tooltip>
-                ) : folders.currentFolderId !== null || !canPickDirectory ? (
-                  // Nothing to choose: a subfolder inherits its parent's kind, and on
-                  // the web everything lives on the server. Straight to the dialog.
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    leftSection={<CreateNewFolderIcon fontSize="small" />}
-                    onClick={() =>
-                      folders.currentFolderId !== null
-                        ? openNewFolderDialog()
-                        : openNewFolderDialog(null, "server")
-                    }
-                  >
-                    {t("filesPage.newFolder", "New folder")}
-                  </Button>
-                ) : (
-                  // Desktop root: two peer destinations, so the button is the menu.
-                  <Menu shadow="md" position="bottom-end" withinPortal>
-                    <Menu.Target>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        leftSection={<CreateNewFolderIcon fontSize="small" />}
-                        rightSection={<ArrowDropDownIcon fontSize="small" />}
-                      >
-                        {t("filesPage.newFolder", "New folder")}
-                      </Button>
-                    </Menu.Target>
-                    <Menu.Dropdown>
-                      <Menu.Item
-                        leftSection={
-                          <DriveFolderUploadIcon
-                            fontSize="small"
-                            style={{ marginRight: "0.3rem" }}
-                          />
-                        }
-                        onClick={() => void addLocalFolder()}
-                      >
-                        {t(
-                          "filesPage.newFolderMenu.addExisting",
-                          "Add local folder",
-                        )}
-                      </Menu.Item>
-                      <Menu.Item
-                        className="files-page-new-folder-option"
-                        leftSection={<CloudIcon fontSize="small" />}
-                        disabled={Boolean(serverFolderDisabledReason)}
-                        onClick={() => openNewFolderDialog(null, "server")}
-                      >
-                        {t(
-                          "filesPage.newFolderMenu.server",
-                          "New folder on the server",
-                        )}
-                        <Text size="xs" c="dimmed">
-                          {serverFolderDisabledReason ??
-                            t(
-                              "filesPage.newFolderMenu.serverHint",
-                              "Synced to your account, available wherever you sign in.",
-                            )}
-                        </Text>
-                      </Menu.Item>
-                    </Menu.Dropdown>
-                  </Menu>
-                )}
+                <NewFolderButton
+                  label={t("filesPage.newFolder", "New folder")}
+                  disabledReason={newFolderDisabledReason}
+                  serverDisabledReason={serverFolderDisabledReason}
+                  currentFolderId={folders.currentFolderId}
+                  canAddLocalFolder={canPickDirectory}
+                  onAddLocalFolder={() => void addLocalFolder()}
+                  onOpenDialog={openNewFolderDialog}
+                />
                 <Button
                   size="sm"
                   leftSection={<UploadFileIcon fontSize="small" />}
@@ -1934,11 +1911,17 @@ export default function FileManagerView() {
               // (disabled tooltips, native file picker, dialog) is
               // identical regardless of where the user clicks from.
               onEmptyUpload={() => fileInputRef.current?.click()}
-              onEmptyCreateFolder={createFolderHere}
-              // A single-click shortcut, so it also blocks where it has nothing safe
-              // to do, unlike the header button whose menu still offers the choices.
-              newFolderDisabledReason={
-                newFolderDisabledReason ?? createFolderHereBlockedReason
+              emptyNewFolderControl={
+                <NewFolderButton
+                  label={t("filesPage.newFolder", "New folder")}
+                  size="md"
+                  disabledReason={newFolderDisabledReason}
+                  serverDisabledReason={serverFolderDisabledReason}
+                  currentFolderId={folders.currentFolderId}
+                  canAddLocalFolder={canPickDirectory}
+                  onAddLocalFolder={() => void addLocalFolder()}
+                  onOpenDialog={openNewFolderDialog}
+                />
               }
             />
             {isDraggingExternal && (

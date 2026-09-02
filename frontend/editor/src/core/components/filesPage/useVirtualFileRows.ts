@@ -103,9 +103,16 @@ export function useVirtualFileRows(
   }, [active, rows, columns, itemCount, virtualizer]);
 }
 
+// Read once. The root font size is a layout read, and this is called on every render
+// of a list whose whole point is not doing needless work. A root restyled mid-session
+// keeps the first answer, which only shifts an estimate.
+let rootFontSizePx = 0;
+
 /** Card and row heights including their gap, matching contain-intrinsic-size. */
 export function rowHeightPx(isGrid: boolean): number {
-  const rem =
-    parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
-  return isGrid ? 13 * rem + rem : 3 * rem;
+  if (rootFontSizePx === 0) {
+    rootFontSizePx =
+      parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+  }
+  return isGrid ? 14 * rootFontSizePx : 3 * rootFontSizePx;
 }

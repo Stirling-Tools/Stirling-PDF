@@ -17,7 +17,6 @@ import DriveFileRenameOutlineIcon from "@mui/icons-material/DriveFileRenameOutli
 import ContentCopyOutlinedIcon from "@mui/icons-material/ContentCopyOutlined";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
-import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
 import SearchIcon from "@mui/icons-material/Search";
 
 import { FileId } from "@app/types/file";
@@ -160,7 +159,10 @@ interface FileGridProps {
   serverReachable?: boolean;
   /** Empty-state CTA handlers; if absent the matching button hides. */
   onEmptyUpload?: () => void;
-  onEmptyCreateFolder?: () => void;
+  /** The New-folder control for the empty state, built by the page that owns the
+   *  destinations. Passed in rather than rebuilt here so the empty state and the
+   *  header cannot offer different things. */
+  emptyNewFolderControl?: React.ReactNode;
   /** Non-null disables the New folder CTA with this reason as tooltip. */
   newFolderDisabledReason?: string | null;
   /**
@@ -220,8 +222,7 @@ export function FileGrid(props: FileGridProps & { loading?: boolean }) {
     searchActive,
     serverReachable,
     onEmptyUpload,
-    onEmptyCreateFolder,
-    newFolderDisabledReason,
+    emptyNewFolderControl,
   } = props;
 
   const latest = useRef(props);
@@ -304,8 +305,7 @@ export function FileGrid(props: FileGridProps & { loading?: boolean }) {
         searchActive={searchActive}
         serverReachable={serverReachable}
         onUpload={onEmptyUpload}
-        onCreateFolder={onEmptyCreateFolder}
-        newFolderDisabledReason={newFolderDisabledReason}
+        newFolderControl={emptyNewFolderControl}
       />
     );
     // When a filter empties the list view, keep the column headers in place and
@@ -391,9 +391,8 @@ interface EmptyStateProps {
   serverReachable?: boolean;
   /** CTA handlers; absent => button hidden. */
   onUpload?: () => void;
-  onCreateFolder?: () => void;
-  /** Non-null disables New folder CTA with this reason. */
-  newFolderDisabledReason?: string | null;
+  /** Absent => no New folder CTA. */
+  newFolderControl?: React.ReactNode;
 }
 
 function EmptyState({
@@ -401,8 +400,7 @@ function EmptyState({
   searchActive = false,
   serverReachable = true,
   onUpload,
-  onCreateFolder,
-  newFolderDisabledReason,
+  newFolderControl,
 }: EmptyStateProps) {
   const { t } = useTranslation();
 
@@ -481,7 +479,7 @@ function EmptyState({
   const readOnlyTab =
     tab === "recent" || tab === "shared" || tab === "sharedByMe";
   const showUpload = Boolean(onUpload) && !readOnlyTab;
-  const showCreateFolder = Boolean(onCreateFolder) && !readOnlyTab;
+  const showCreateFolder = Boolean(newFolderControl) && !readOnlyTab;
   const showCtas = showUpload || showCreateFolder;
   return (
     <div className="files-page-empty">
@@ -501,37 +499,7 @@ function EmptyState({
               {t("filesPage.empty.uploadCta", "Upload files")}
             </Button>
           )}
-          {showCreateFolder &&
-            (newFolderDisabledReason ? (
-              <Tooltip
-                label={newFolderDisabledReason}
-                withinPortal
-                multiline
-                w={260}
-              >
-                {/* Wrap so tooltip hovers while button is disabled. */}
-                <span style={{ display: "inline-flex" }}>
-                  <Button
-                    size="md"
-                    variant="secondary"
-                    leftSection={<CreateNewFolderIcon fontSize="small" />}
-                    disabled
-                    style={{ pointerEvents: "auto" }}
-                  >
-                    {t("filesPage.empty.newFolderCta", "Create folder")}
-                  </Button>
-                </span>
-              </Tooltip>
-            ) : (
-              <Button
-                size="md"
-                variant="secondary"
-                leftSection={<CreateNewFolderIcon fontSize="small" />}
-                onClick={onCreateFolder}
-              >
-                {t("filesPage.empty.newFolderCta", "Create folder")}
-              </Button>
-            ))}
+          {showCreateFolder && newFolderControl}
         </div>
       )}
     </div>
