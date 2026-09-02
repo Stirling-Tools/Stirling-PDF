@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 
 /** Rows above and below the viewport kept mounted, so a fast scroll stays filled. */
@@ -36,7 +36,7 @@ function useScrollParent(el: HTMLElement | null): HTMLElement | null {
   return parent;
 }
 
-export interface VirtualFileRows {
+interface VirtualFileRows {
   /** The slice to render, or every index when virtualisation is standing down. */
   range: { start: number; end: number };
   /** Height to leave above and below the slice, keeping the scrollbar honest. */
@@ -78,29 +78,28 @@ export function useVirtualFileRows(
   const rows = virtualizer.getVirtualItems();
   const active = Boolean(scrollParent) && rows.length > 0;
 
-  return useMemo(() => {
-    if (!active) {
-      return {
-        range: { start: 0, end: itemCount },
-        padTop: 0,
-        padBottom: 0,
-        columns,
-        setContainer,
-      };
-    }
-    const first = rows[0];
-    const last = rows[rows.length - 1];
+  if (!active) {
     return {
-      range: {
-        start: first.index * columns,
-        end: Math.min((last.index + 1) * columns, itemCount),
-      },
-      padTop: first.start,
-      padBottom: Math.max(0, virtualizer.getTotalSize() - last.end),
+      range: { start: 0, end: itemCount },
+      padTop: 0,
+      padBottom: 0,
       columns,
       setContainer,
     };
-  }, [active, rows, columns, itemCount, virtualizer]);
+  }
+
+  const first = rows[0];
+  const last = rows[rows.length - 1];
+  return {
+    range: {
+      start: first.index * columns,
+      end: Math.min((last.index + 1) * columns, itemCount),
+    },
+    padTop: first.start,
+    padBottom: Math.max(0, virtualizer.getTotalSize() - last.end),
+    columns,
+    setContainer,
+  };
 }
 
 // Read once. The root font size is a layout read, and this is called on every render
