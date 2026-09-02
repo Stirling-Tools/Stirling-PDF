@@ -68,8 +68,8 @@ PDF_QUESTION_SYSTEM_PROMPT = (
     "- NEVER mention 'RAG', 'retrieval', 'chunks', 'search results', 'targeted search', "
     "'search_knowledge', 'read_full_document', 'find_contradictions', or other "
     "implementation details.\n"
-    "- For questions where the answer just isn't in the document, say plainly that "
-    "it isn't there.\n"
+    "- For questions where the answer just isn't in the document, say so directly: "
+    "'I couldn't find that information in the document.'\n"
     "- Do not make it sound like you're choosing not to answer."
 )
 

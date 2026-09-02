@@ -696,7 +696,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
               message: {
                 id: generateId(),
                 role: ChatRole.ASSISTANT,
-                content: data.message || t("chat.responses.cannot_continue"),
+                content: data.message || "Something went wrong.",
                 timestamp: Date.now(),
               },
             });
@@ -712,10 +712,10 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         const isEngineError =
           err.message.startsWith("AI engine request failed:") ||
           err.message === "Stream ended without a result";
-        const engineUnavailable = t("chat.responses.engine_unavailable");
         const content = isEngineError
-          ? engineUnavailable
-          : (err.message ?? engineUnavailable);
+          ? "Failed to get a response. The AI engine may not be available yet."
+          : (err.message ??
+            "Failed to get a response. The AI engine may not be available yet.");
         dispatch({ type: "SET_PROGRESS", progress: null });
         dispatch({
           type: "ADD_MESSAGE",
