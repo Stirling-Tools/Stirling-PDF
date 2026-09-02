@@ -83,6 +83,8 @@ export interface PolicyState {
   status: PolicyStatus;
   /** Org-mandated policy (see the pipeline `Policy.required`). */
   required: boolean;
+  name?: string;
+  icon?: string;
   /** Options the wizard doesn't model, preserved so a wizard save round-trips them (see codec). */
   extraOptions?: Record<string, unknown>;
   sources: string[];
@@ -602,7 +604,16 @@ export function parseSimplePolicy(
   };
   const decorated = decoratePolicy(fromWirePolicy(wire), runs, false);
   if (!decorated) return null;
-  return { category, config, policy: decorated };
+  // The wire codec models neither the icon nor the (custom) name; carry them from the raw record so
+  // the Customise hand-off preserves them instead of resetting to the category default.
+  return {
+    category,
+    config,
+    policy: {
+      ...decorated,
+      state: { ...decorated.state, name: policy.name, icon: policy.icon },
+    },
+  };
 }
 
 /** GET /api/v1/policies/{id} — one stored policy's raw record. */

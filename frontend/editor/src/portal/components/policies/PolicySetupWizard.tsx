@@ -1,17 +1,7 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
-import {
-  Banner,
-  Button,
-  Card,
-  FormField,
-  Input,
-  Modal,
-  Select,
-  Tabs,
-  ToggleSwitch,
-} from "@app/ui";
+import { Banner, Button, Card, Modal, ToggleSwitch } from "@app/ui";
 import { SettingsRow } from "@app/ui/SettingsRow";
 import { EnforceAsPolicyControl } from "@portal/components/pipelines/EnforceAsPolicyControl";
 import {
@@ -32,7 +22,6 @@ import { resolveRunOn } from "@app/policies/runOn";
 import { fetchIntegrations } from "@portal/api/integrations";
 import { errorMessage } from "@portal/api/http";
 import { useAsync } from "@portal/hooks/useAsync";
-import { PolicyFieldRow } from "@portal/components/policies/PolicyFieldRow";
 import { PolicyCategoryBadge } from "@portal/components/policies/PolicyCategoryIcon";
 import { PolicyRedactConfig } from "@app/components/policies/PolicyRedactConfig";
 import { PolicyWatermarkConfig } from "@app/components/policies/PolicyWatermarkConfig";
@@ -56,8 +45,6 @@ interface PolicySetupWizardProps {
    */
   onCustomise: (entry: CatalogueEntry, result: PolicySetupResult) => void;
 }
-
-type Step = "workflow" | "settings";
 
 /** A policy step plus whether it runs. */
 type ToolState = PolicyToolStep & { enabled: boolean };
@@ -246,7 +233,6 @@ function PolicySetupWizardBody({
   const isEdit = policy != null;
   const isClassification = category.id === "classification";
 
-  const [step, setStep] = useState<Step>("workflow");
   const [tools, setTools] = useState<ToolState[]>(() => {
     const seeded = seedTools(entry);
     // Classification's single tool has no toggle in the workflow step, so keep it
@@ -256,28 +242,23 @@ function PolicySetupWizardBody({
       ? seeded.map((t) => ({ ...t, enabled: true }))
       : seeded;
   });
-  const [fieldValues, setFieldValues] = useState(() =>
-    resolveFieldValues(entry),
-  );
-  // Document-type scoping has no UI; preserve any saved scope on edit and
-  // default new policies to all document types.
+  // Everything below has no UI: the wizard is one page (the capabilities + the enforce switch). Each
+  // carries the stored value through unchanged on edit and a sensible default for a new policy, so a
+  // save never rewrites a setting the operator can't see. runOn defaults per category (security
+  // enforces on export); the rest are the run-once / new-version defaults.
+  const [fieldValues] = useState(() => resolveFieldValues(entry));
   const [scopeTypes] = useState<string[]>(policy?.state.scopeTypes ?? []);
-  // TODO: replace with user-picker backed by GET /api/v1/user/users (UserSummary[]).
-  // Store username (which is the email in Spring Security) as reviewerEmail.
-  // See UserSelector.tsx in the editor for the grouping/display pattern.
   const [reviewerEmail] = useState(policy?.state.reviewerEmail ?? "");
-  const [outputMode, setOutputMode] = useState<"new_file" | "new_version">(
+  const [outputMode] = useState<"new_file" | "new_version">(
     policy?.state.outputMode ?? "new_version",
   );
-  const [outputName, setOutputName] = useState(policy?.state.outputName ?? "");
-  const [outputNamePosition, setOutputNamePosition] = useState<
-    "prefix" | "suffix" | "auto-number"
-  >(policy?.state.outputNamePosition ?? "suffix");
-  const [runOn, setRunOn] = useState<"upload" | "export">(() =>
+  const [outputName] = useState(policy?.state.outputName ?? "");
+  const [outputNamePosition] = useState<"prefix" | "suffix" | "auto-number">(
+    policy?.state.outputNamePosition ?? "suffix",
+  );
+  const [runOn] = useState<"upload" | "export">(() =>
     resolveRunOn(policy?.state.runOn, category.id),
   );
-  // Policies run once; retry config has no UI. Preserve any saved values on
-  // edit and default new policies to no retries (run once).
   const [maxRetries] = useState(policy?.state.maxRetries ?? 0);
   const [retryDelayMinutes] = useState(policy?.state.retryDelayMinutes ?? 0);
   // A suggested policy is something the org requires by nature, so new ones default to required;
@@ -366,7 +347,6 @@ function PolicySetupWizardBody({
     if (submitting) return;
     if (enabledTools.length === 0) {
       setError(t("portal.policies.wizard.errors.noTools"));
-      setStep("workflow");
       return;
     }
     setError(null);
@@ -414,45 +394,19 @@ function PolicySetupWizardBody({
           >
             {t("portal.policies.wizard.actions.customise")}
           </Button>
-          {step === "workflow" ? (
-            <Button
-              size="sm"
-              style={{ marginLeft: "auto" }}
-              onClick={() => setStep("settings")}
-            >
-              {t("portal.policies.wizard.actions.continue")}
-            </Button>
-          ) : (
-            <>
-              <Button
-                variant="secondary"
-                size="sm"
-                style={{ marginLeft: "auto" }}
-                onClick={() => setStep("workflow")}
-              >
-                {t("portal.policies.wizard.actions.back")}
-              </Button>
-              <Button size="sm" onClick={submit} loading={submitting}>
-                {isEdit
-                  ? t("portal.policies.wizard.actions.saveChanges")
-                  : t("portal.policies.wizard.actions.enablePolicy")}
-              </Button>
-            </>
-          )}
+          <Button
+            size="sm"
+            style={{ marginLeft: "auto" }}
+            onClick={submit}
+            loading={submitting}
+          >
+            {isEdit
+              ? t("portal.policies.wizard.actions.saveChanges")
+              : t("portal.policies.wizard.actions.enablePolicy")}
+          </Button>
         </div>
       }
     >
-      <Tabs
-        variant="underline"
-        ariaLabel={t("portal.policies.wizard.tabs.ariaLabel")}
-        activeKey={step}
-        onChange={(k) => setStep(k)}
-        items={[
-          { key: "workflow", label: t("portal.policies.wizard.tabs.workflow") },
-          { key: "settings", label: t("portal.policies.wizard.tabs.settings") },
-        ]}
-      />
-
       {error && (
         <Banner
           tone="danger"
@@ -461,7 +415,7 @@ function PolicySetupWizardBody({
         />
       )}
 
-      {step === "workflow" && isClassification && (
+      {isClassification && (
         <div className="portal-policies__wizard-section">
           <p className="portal-policies__wizard-desc">
             {t(
@@ -479,7 +433,7 @@ function PolicySetupWizardBody({
         </div>
       )}
 
-      {step === "workflow" && !isClassification && (
+      {!isClassification && (
         <div className="portal-policies__wizard-section">
           <p className="portal-policies__wizard-desc">
             {t(
@@ -553,145 +507,12 @@ function PolicySetupWizardBody({
         </div>
       )}
 
-      {step === "settings" && (
-        <div className="portal-policies__wizard-section">
-          {config.fields.length > 0 && (
-            <>
-              <h3 className="portal-policies__wizard-heading">
-                {t("portal.policies.wizard.settings.heading")}
-              </h3>
-              <div className="portal-policies__fields">
-                {config.fields.map((field) => (
-                  <PolicyFieldRow
-                    key={field.key}
-                    field={field}
-                    value={fieldValues[field.key]}
-                    onChange={(v) =>
-                      setFieldValues((prev) => ({ ...prev, [field.key]: v }))
-                    }
-                  />
-                ))}
-              </div>
-            </>
-          )}
-
-          <div className="portal-policies__fields">
-            <FormField
-              label={t("portal.policies.wizard.output.runOn.label")}
-              helperText={t("portal.policies.wizard.output.runOn.helper")}
-            >
-              <Select
-                inputSize="sm"
-                value={runOn}
-                onChange={(value) => setRunOn(resolveRunOn(value, category.id))}
-                options={[
-                  {
-                    value: "upload",
-                    label: t("portal.policies.wizard.output.runOn.upload"),
-                  },
-                  {
-                    value: "export",
-                    label: t("portal.policies.wizard.output.runOn.export"),
-                  },
-                ]}
-              />
-            </FormField>
-            <FormField
-              label={t("portal.policies.wizard.output.outputAs.label")}
-            >
-              <Select
-                inputSize="sm"
-                value={outputMode}
-                onChange={(value) => {
-                  const mode = (value ?? "new_file") as
-                    | "new_file"
-                    | "new_version";
-                  setOutputMode(mode);
-                  // Auto-number only applies to separate new files.
-                  if (
-                    mode === "new_version" &&
-                    outputNamePosition === "auto-number"
-                  ) {
-                    setOutputNamePosition("suffix");
-                  }
-                }}
-                options={[
-                  {
-                    value: "new_version",
-                    label: t(
-                      "portal.policies.wizard.output.outputAs.newVersion",
-                    ),
-                  },
-                  {
-                    value: "new_file",
-                    label: t("portal.policies.wizard.output.outputAs.newFile"),
-                  },
-                ]}
-              />
-            </FormField>
-            <FormField
-              label={t("portal.policies.wizard.output.filenameRule.label")}
-            >
-              <div className="portal-policies__name-row">
-                <Select
-                  inputSize="sm"
-                  value={outputNamePosition}
-                  onChange={(value) =>
-                    setOutputNamePosition(
-                      (value ?? "suffix") as
-                        | "prefix"
-                        | "suffix"
-                        | "auto-number",
-                    )
-                  }
-                  options={[
-                    {
-                      value: "prefix",
-                      label: t(
-                        "portal.policies.wizard.output.filenameRule.prefix",
-                      ),
-                    },
-                    {
-                      value: "suffix",
-                      label: t(
-                        "portal.policies.wizard.output.filenameRule.suffix",
-                      ),
-                    },
-                    ...(outputMode === "new_file"
-                      ? [
-                          {
-                            value: "auto-number",
-                            label: t(
-                              "portal.policies.wizard.output.filenameRule.autoNumber",
-                            ),
-                          },
-                        ]
-                      : []),
-                  ]}
-                />
-                {outputNamePosition !== "auto-number" && (
-                  <Input
-                    inputSize="sm"
-                    value={outputName}
-                    placeholder={t(
-                      "portal.policies.wizard.output.filenameRule.placeholder",
-                    )}
-                    onChange={(e) => setOutputName(e.target.value)}
-                  />
-                )}
-              </div>
-            </FormField>
-            {/* TODO: reviewer user-picker goes here */}
-          </div>
-
-          <div className="portal-policies__wizard-enforce">
-            <EnforceAsPolicyControl
-              required={required}
-              onRequiredChange={setRequired}
-            />
-          </div>
-        </div>
-      )}
+      <div className="portal-policies__wizard-enforce">
+        <EnforceAsPolicyControl
+          required={required}
+          onRequiredChange={setRequired}
+        />
+      </div>
     </Modal>
   );
 }

@@ -150,9 +150,11 @@ export function Pipelines() {
   /** The current settings as a full pipeline record, for save or hand-off. */
   function draftFromResult(entry: CatalogueEntry, result: PolicySetupResult) {
     const wire = buildWireFromSetup(entry, result, t);
+    const stored = entry.policy?.state;
     const draft: Policy = {
-      id: entry.policy?.state.backendId,
-      name: wire.name,
+      id: stored?.backendId,
+      name: stored?.name ?? wire.name,
+      icon: stored?.icon,
       enabled: wire.enabled,
       required: wire.required,
       inputs: [],

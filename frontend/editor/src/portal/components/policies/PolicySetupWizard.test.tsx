@@ -37,7 +37,6 @@ vi.mock("@portal/api/integrations", () => ({
   fetchIntegrations: () => fetchIntegrations(),
 }));
 
-const CONTINUE = "portal.policies.wizard.actions.continue";
 const SAVE_CHANGES = "portal.policies.wizard.actions.saveChanges";
 const ENABLE = "portal.policies.wizard.actions.enablePolicy";
 
@@ -76,9 +75,8 @@ function editEntry(steps: PipelineStep[]): CatalogueEntry {
   return { category: security, config: securityConfig, policy };
 }
 
-/** Advance the wizard from the workflow tab to the settings tab and submit. */
+/** Submit the single-page wizard. */
 async function submitWizard(saveLabel: string) {
-  fireEvent.click(await screen.findByRole("button", { name: CONTINUE }));
   fireEvent.click(await screen.findByRole("button", { name: saveLabel }));
 }
 
@@ -218,5 +216,28 @@ describe("PolicySetupWizard", () => {
     // Redact carries the preset PII patterns as the backend's listOfText.
     const redact = result.steps[0].parameters as { listOfText?: string };
     expect(redact.listOfText).toBeTruthy();
+  });
+
+  it("defaults a new security policy to enforcing on export", async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    const entry: CatalogueEntry = {
+      category: security,
+      config: securityConfig,
+      policy: null,
+    };
+
+    render(
+      <PolicySetupWizard
+        entry={entry}
+        onClose={vi.fn()}
+        onSubmit={onSubmit}
+        onCustomise={vi.fn()}
+      />,
+    );
+    await submitWizard(ENABLE);
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    const result = onSubmit.mock.calls[0][1] as PolicySetupResult;
+    expect(result.runOn).toBe("export");
   });
 });

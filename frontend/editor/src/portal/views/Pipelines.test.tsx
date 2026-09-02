@@ -6,9 +6,22 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { PortalTestProviders } from "@portal/test/TestQueryProvider";
-import { MemoryRouter, Route, Routes } from "react-router-dom";
-import type { PipelinesOverviewResponse } from "@portal/api/pipelines";
+import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
+import type { PipelinesOverviewResponse, Policy } from "@portal/api/pipelines";
 import { Pipelines } from "@portal/views/Pipelines";
+
+/** The builder route: shows the draft handed in navigation state, so the Customise hand-off can be
+ * asserted without rendering the real builder. */
+function DraftProbe() {
+  const draft = (useLocation().state as { draft?: Policy } | null)?.draft;
+  return (
+    <div>
+      pipeline page
+      <span data-testid="draft-icon">{draft?.icon ?? ""}</span>
+      <span data-testid="draft-name">{draft?.name ?? ""}</span>
+    </div>
+  );
+}
 
 const render = (
   ui: Parameters<typeof baseRender>[0],
@@ -83,10 +96,7 @@ function renderView(initial = "/processor/pipelines") {
           path="/processor/pipelines/new"
           element={<div>builder new</div>}
         />
-        <Route
-          path="/processor/pipelines/:id"
-          element={<div>pipeline page</div>}
-        />
+        <Route path="/processor/pipelines/:id" element={<DraftProbe />} />
       </Routes>
     </MemoryRouter>,
   );
@@ -154,6 +164,37 @@ describe("Pipelines view", () => {
     await waitFor(() => expect(savePipeline).toHaveBeenCalled());
     // The whole record round-trips with only `enabled` flipped: name and icon survive.
     expect(savePipeline).toHaveBeenCalledWith({ ...policy, enabled: false });
+  });
+
+  it("keeps the custom icon and name when customising from the wizard", async () => {
+    const policy = {
+      id: "plc-redaction",
+      name: "My custom redaction",
+      enabled: true,
+      required: false,
+      icon: "shield",
+      inputs: [],
+      steps: [{ operation: "/api/v1/security/auto-redact", parameters: {} }],
+      output: { type: "inline", options: { categoryId: "security" } },
+      outputIds: [],
+      editor: { allowed: true, runOn: "export" },
+    };
+    fetchPipeline.mockResolvedValue(policy);
+
+    renderView();
+    fireEvent.click(await screen.findByText("Redaction sweep")); // open detail panel
+    fireEvent.click(
+      await screen.findByText("portal.policies.detail.actions.editSettings"),
+    ); // open wizard
+    fireEvent.click(
+      await screen.findByText("portal.policies.wizard.actions.customise"),
+    ); // hand off to the builder
+
+    // The draft carried into the builder keeps the stored icon and name, not the category default.
+    expect(await screen.findByTestId("draft-icon")).toHaveTextContent("shield");
+    expect(screen.getByTestId("draft-name")).toHaveTextContent(
+      "My custom redaction",
+    );
   });
 
   it("shows the KPI stat boxes when pipelines exist", async () => {

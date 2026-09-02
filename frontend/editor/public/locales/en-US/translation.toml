@@ -8797,9 +8797,7 @@ policy = "Policy"
 status = "Status"
 
 [portal.policies.wizard.actions]
-back = "Back"
 cancel = "Cancel"
-continue = "Continue"
 customise = "Customise"
 enablePolicy = "Create pipeline"
 saveChanges = "Save changes"
@@ -8843,32 +8841,6 @@ labelsHeading = "Classification labels"
 [portal.policies.wizard.errors]
 noTools = "Enable at least one tool in the workflow first."
 saveFailed = "Couldn't save the pipeline. Please try again."
-
-[portal.policies.wizard.output.filenameRule]
-autoNumber = "Auto-number"
-label = "Filename rule"
-placeholder = "Text to add (optional)"
-prefix = "Prefix"
-suffix = "Suffix"
-
-[portal.policies.wizard.output.outputAs]
-label = "Output as"
-newFile = "New file"
-newVersion = "New version"
-
-[portal.policies.wizard.output.runOn]
-export = "Export"
-helper = "When the pipeline runs: on upload, or before export."
-label = "Run on"
-upload = "Upload"
-
-[portal.policies.wizard.settings]
-heading = "Settings"
-
-[portal.policies.wizard.tabs]
-ariaLabel = "Setup steps"
-settings = "Settings"
-workflow = "Actions"
 
 [portal.policies.wizard.title]
 edit = "Edit {{category}} pipeline"
