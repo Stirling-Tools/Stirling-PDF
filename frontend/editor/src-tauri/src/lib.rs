@@ -32,6 +32,7 @@ use commands::{
     save_user_info,
     set_connection_mode,
     set_as_default_pdf_handler,
+    set_titlebar_color,
     get_desktop_os,
     get_update_mode,
     print_pdf_file_native,
@@ -146,6 +147,13 @@ pub fn run() {
     .setup(|app| {
       add_log("🚀 Tauri app setup started".to_string());
 
+      // Paint the main window's caption to match the app theme before the
+      // webview mounts, so it never flashes the OS accent colour. The frontend
+      // re-applies the exact themed colour once it has loaded.
+      if let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) {
+        commands::titlebar::apply_startup_color(&window);
+      }
+
       // Files passed on the command line at first launch load into the main
       // window once the frontend mounts.
       let args: Vec<String> = std::env::args().collect();
@@ -224,6 +232,7 @@ pub fn run() {
       clear_user_info,
       start_oauth_login,
       get_desktop_os,
+      set_titlebar_color,
       print_pdf_file_native,
       can_install_updates,
       check_for_update,

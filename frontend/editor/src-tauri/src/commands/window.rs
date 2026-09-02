@@ -51,7 +51,11 @@ fn build_window(app: &AppHandle, label: &str, url: &str) -> Result<WebviewWindow
     let builder =
         builder.additional_browser_args("--enable-features=CertVerifierBuiltinFeature");
 
-    builder.build().map_err(|e| e.to_string())
+    let window = builder.build().map_err(|e| e.to_string())?;
+    // Match the caption to the app theme up front (see titlebar module); the
+    // window's own webview re-applies the exact colour once it mounts.
+    crate::commands::titlebar::apply_startup_color(&window);
+    Ok(window)
 }
 
 // Run `work` on the main thread and await its result. WebView2 on Windows

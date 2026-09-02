@@ -6,6 +6,7 @@ pub mod default_app;
 pub mod local_proxy;
 pub mod platform;
 pub mod print;
+pub mod titlebar;
 pub mod updater;
 pub mod window;
 
@@ -44,6 +45,7 @@ pub use default_app::{is_default_pdf_handler, set_as_default_pdf_handler};
 pub use local_proxy::proxy_local_pdf_request;
 pub use platform::get_desktop_os;
 pub use print::print_pdf_file_native;
+pub use titlebar::set_titlebar_color;
 pub use updater::{
     can_install_updates, check_for_update, download_and_install_update, get_app_version,
     restart_app,
