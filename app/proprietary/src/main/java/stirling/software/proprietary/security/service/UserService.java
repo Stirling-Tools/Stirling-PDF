@@ -47,6 +47,7 @@ import stirling.software.proprietary.integration.repository.IntegrationConfigRep
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.database.repository.AuthorityRepository;
 import stirling.software.proprietary.security.database.repository.PersistentLoginRepository;
+import stirling.software.proprietary.security.database.repository.UserProfilePictureRepository;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.AuthenticationType;
 import stirling.software.proprietary.security.model.Authority;
@@ -96,6 +97,7 @@ public class UserService implements UserServiceInterface {
     private final IntegrationConfigRepository integrationConfigRepository;
     private final TeamMembershipService teamMembershipService;
     private final ApiKeyAuthenticationService apiKeyAuthenticationService;
+    private final UserProfilePictureRepository userProfilePictureRepository;
 
     @Transactional
     public void processSSOPostLogin(
@@ -280,6 +282,9 @@ public class UserService implements UserServiceInterface {
 
         // Delete server certificate (non-nullable OneToOne → User)
         userServerCertificateService.deleteUserCertificate(user.getId());
+
+        // Avatar row keys off users.user_id and would dangle once the user row is gone
+        userProfilePictureRepository.deleteByUserId(user.getId());
 
         // Delete FileShareAccess records where this user is the accessor
         fileShareAccessRepository.deleteByUser(user);

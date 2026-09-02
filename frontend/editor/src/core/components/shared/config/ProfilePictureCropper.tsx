@@ -157,6 +157,10 @@ export const ProfilePictureCropper: React.FC<ProfilePictureCropperProps> = ({
               crop={crop}
               zoom={zoom}
               aspect={1}
+              // Avatars render as circles everywhere, so frame the crop as one; without this a
+              // face framed to the corners silently loses them.
+              cropShape="round"
+              showGrid={false}
               onCropChange={onCropChange}
               onZoomChange={onZoomChange}
               onCropComplete={onCropCompleteCallback}

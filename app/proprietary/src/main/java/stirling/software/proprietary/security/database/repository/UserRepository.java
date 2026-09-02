@@ -50,6 +50,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT DISTINCT u FROM User u")
     List<User> findAllWithTeamAndAuthorities();
 
+    /** (userId, teamId) for the given users that have a primary team; used by avatar visibility. */
+    @Query("SELECT u.id, u.team.id FROM User u WHERE u.id IN :ids AND u.team IS NOT NULL")
+    List<Object[]> findPrimaryTeamIdsByUserIds(@Param("ids") Collection<Long> ids);
+
     /** (userId, key, value) settings rows for the given users. */
     @Query("SELECT u.id, KEY(s), VALUE(s) FROM User u JOIN u.settings s WHERE u.id IN :ids")
     List<Object[]> findSettingsByUserIds(@Param("ids") Collection<Long> ids);

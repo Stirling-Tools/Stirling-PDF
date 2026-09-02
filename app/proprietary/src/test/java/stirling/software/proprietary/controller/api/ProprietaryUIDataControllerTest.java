@@ -32,6 +32,7 @@ import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.service.DatabaseService;
 import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.MfaService;
+import stirling.software.proprietary.security.service.ProfilePictureService;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
 import stirling.software.proprietary.service.UserLicenseSettingsService;
 
@@ -52,6 +53,7 @@ class ProprietaryUIDataControllerTest {
     @Mock private MfaService mfaService;
     @Mock private LoginAttemptService loginAttemptService;
     @Mock private ResourceAccessService resourceAccessService;
+    @Mock private ProfilePictureService profilePictureService;
 
     private ApplicationProperties applicationProperties;
     private AuditConfigurationProperties auditConfig;
@@ -87,7 +89,8 @@ class ProprietaryUIDataControllerTest {
                         auditRepository,
                         mfaService,
                         loginAttemptService,
-                        resourceAccessService);
+                        resourceAccessService,
+                        profilePictureService);
     }
 
     @Test

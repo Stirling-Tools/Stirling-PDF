@@ -46,6 +46,7 @@ import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrin
 import stirling.software.proprietary.security.service.DatabaseServiceInterface;
 import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.MfaService;
+import stirling.software.proprietary.security.service.ProfilePictureService;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
 import stirling.software.proprietary.service.UserLicenseSettingsService;
 
@@ -67,6 +68,7 @@ class ProprietaryUIDataControllerMoreTest {
     @Mock private MfaService mfaService;
     @Mock private LoginAttemptService loginAttemptService;
     @Mock private ResourceAccessService resourceAccessService;
+    @Mock private ProfilePictureService profilePictureService;
 
     private ApplicationProperties applicationProperties;
     private AuditConfigurationProperties auditConfig;
@@ -100,7 +102,8 @@ class ProprietaryUIDataControllerMoreTest {
                         auditRepository,
                         mfaService,
                         loginAttemptService,
-                        resourceAccessService);
+                        resourceAccessService,
+                        profilePictureService);
     }
 
     private static User normalUser(Long id, String username) {
