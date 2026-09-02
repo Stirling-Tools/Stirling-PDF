@@ -452,8 +452,13 @@ subprojects {
     if (name == 'stirling-pdf') {
         apply plugin: 'org.springdoc.openapi-gradle-plugin'
 
+        // Port 8080 is the app's own port, so a Stirling instance already running there answers
+        // this URL before the forked one does and the spec is generated from THAT build's code.
+        def openApiPort = (rootProject.findProperty('openApiPort') ?: '8390').toString()
+
         openApi {
-            apiDocsUrl = "http://localhost:8080/v1/api-docs"
+            apiDocsUrl = "http://localhost:${openApiPort}/v1/api-docs"
+            customBootRun { args = ["--server.port=${openApiPort}"] }
             outputDir = file("$projectDir")
             outputFileName = "SwaggerDoc.json"
             waitTimeInSeconds = 60 // Increase the wait time to 60 seconds
