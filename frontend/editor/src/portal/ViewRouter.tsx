@@ -5,7 +5,6 @@ import { Pipelines } from "@portal/views/Pipelines";
 import { PipelineBuilder } from "@portal/views/PipelineBuilder";
 import { Sources } from "@portal/views/Sources";
 import { Integrations } from "@portal/views/Integrations";
-import { Policies } from "@portal/views/Policies";
 import { EditorAdmin } from "@portal/views/EditorAdmin";
 import { ConnectGuardedRoute } from "@portal/components/account-link/ConnectGuardedRoute";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
@@ -22,6 +21,17 @@ function MovedTo({ to }: { to: string }) {
 // logical VIEW_PATHS, and home is the index route. Redirects use toPortalPath
 // so they resolve to the portal, not the editor root.
 const rel = (viewPath: string) => viewPath.replace(/^\//, "");
+
+/** Redirect the retired Policies path to the unified Pipelines page, carrying any query string. */
+function PoliciesRedirect() {
+  const { search } = useLocation();
+  return (
+    <Navigate
+      to={{ pathname: toPortalPath(VIEW_PATHS.pipelines), search }}
+      replace
+    />
+  );
+}
 
 export function ViewRouter() {
   return (
@@ -60,7 +70,9 @@ export function ViewRouter() {
         element={<Navigate to={toPortalPath(VIEW_PATHS.sources)} replace />}
       />
       <Route path={rel(VIEW_PATHS.integrations)} element={<Integrations />} />
-      <Route path={rel(VIEW_PATHS.policies)} element={<Policies />} />
+      {/* Policies merged into Pipelines (a policy is a pipeline the org requires). Keep the old
+          path working, preserving its query (e.g. onboarding's ?setup=<category>). */}
+      <Route path={rel(VIEW_PATHS.policies)} element={<PoliciesRedirect />} />
       <Route path={rel(VIEW_PATHS.documents)} element={<Documents />} />
       <Route path={rel(VIEW_PATHS.editor)} element={<EditorAdmin />} />
       {/* Server administration and the docs browser are product-wide, so they

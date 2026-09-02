@@ -8442,11 +8442,14 @@ platform = "PDF Platform"
 processor = "PDF Processor"
 
 [portal.pipelines]
-subtitle = "Every automated document pipeline on the backend: an ordered chain of operations over a set of sources, run on a trigger. Click a row for its steps and sources."
+subtitle = "Automate your document workflows. Start from a template for a simple, guided setup, or build a custom pipeline from scratch. Enforce any pipeline as a policy to run it on every document."
 title = "Pipelines"
 
 [portal.pipelines.actions]
-newPipeline = "New pipeline"
+newCustomPipeline = "New custom pipeline"
+
+[portal.pipelines.all]
+title = "All pipelines"
 
 [portal.pipelines.builder]
 activate = "Activate"
@@ -8505,6 +8508,9 @@ output-uncertain = "May not run: output depends on setup"
 source-mismatch = "Input is {{produced}}, needs {{accepts}}"
 undeclared-operation = "Can't check what this step accepts"
 
+[portal.pipelines.builder.icon]
+label = "Change icon"
+
 [portal.pipelines.composer]
 addTool = "Add a tool"
 create = "Create pipeline"
@@ -8553,6 +8559,11 @@ action = "Create a pipeline"
 connectSource = "Connect a source"
 description = "Create your first pipeline: pick the sources it runs over, chain the operations, and choose where output goes."
 title = "No pipelines yet"
+
+[portal.pipelines.enforce]
+desc = "Runs automatically; members can't turn it off"
+info = "What enforcing as a policy means"
+label = "Enforce as policy"
 
 [portal.pipelines.graph]
 addFirstTool = "Add a tool"
@@ -8613,6 +8624,11 @@ sources = "Sources"
 status = "Status"
 steps = "Steps"
 trigger = "Trigger"
+type = "Type"
+
+[portal.pipelines.templates]
+setUp = "Set up"
+title = "Templates"
 
 [portal.pipelines.trigger]
 editor-export = "Every export"
@@ -8621,10 +8637,12 @@ folder-watch = "Folder watch"
 manual = "Manual"
 schedule = "Scheduled"
 
+[portal.pipelines.type]
+pipeline = "Pipeline"
+policy = "Policy"
+
 [portal.policies]
-defaultName = "{{category}} Policy"
-subtitle = "Standing automations that enforce a tool pipeline on every document. Each policy fires on upload or export, runs its tool chain, and saves the enforced version alongside the original."
-title = "Policies"
+defaultName = "{{category}} Pipeline"
 
 [portal.policies.card]
 comingSoon = "Upgrade to Enterprise"
@@ -8750,7 +8768,7 @@ summary = "Detects and redacts PII, strips active content (JavaScript), and wate
 2 = "Watermark"
 
 [portal.policies.detail]
-enforces = "Enforces"
+enforces = "Steps"
 onEveryExport = "On every export"
 onEveryUpload = "On every upload"
 outputAsNewFile = "as a new file"
@@ -8770,13 +8788,13 @@ resume = "Resume"
 runNow = "Run now"
 
 [portal.policies.detail.clearHistory]
-body = "This policy will forget every file it has already processed and reprocess everything currently in its sources on the next run. The files themselves are not changed. This cannot be undone."
+body = "This pipeline will forget every file it has already processed and reprocess everything currently in its sources on the next run. The files themselves are not changed. This cannot be undone."
 cancel = "Cancel"
 confirm = "Clear history"
 title = "Clear processed history?"
 
 [portal.policies.detail.emptyActivity]
-description = "Documents will appear here once this policy runs."
+description = "Documents will appear here once this pipeline runs."
 title = "No activity yet"
 
 [portal.policies.endpoints]
@@ -8787,11 +8805,6 @@ compressPdf = "Compress"
 flatten = "Flatten"
 ocrPdf = "OCR"
 sanitizePdf = "Remove JavaScript"
-
-[portal.policies.offline]
-description = "Your policies are saved and will appear once the connection is restored."
-retry = "Retry"
-title = "Backend unavailable"
 
 [portal.policies.operations]
 change = "Change what this step does"
@@ -8991,7 +9004,7 @@ label = "Trigger a Zap or Make scenario"
 [portal.policies.stats]
 activeFor = "Active"
 dataProcessed = "Data processed"
-docsEnforced = "Docs enforced"
+docsEnforced = "Docs processed"
 
 [portal.policies.status]
 active = "Active"
@@ -9021,10 +9034,9 @@ policy = "Policy"
 status = "Status"
 
 [portal.policies.wizard.actions]
-back = "Back"
 cancel = "Cancel"
-continue = "Continue"
-enablePolicy = "Enable policy"
+customise = "Customise"
+enablePolicy = "Create pipeline"
 saveChanges = "Save changes"
 
 [portal.policies.wizard.capability.classify]
@@ -9065,47 +9077,14 @@ labelsHeading = "Classification labels"
 
 [portal.policies.wizard.errors]
 noTools = "Enable at least one tool in the workflow first."
-saveFailed = "Couldn't save the policy. Please try again."
-
-[portal.policies.wizard.output]
-heading = "Output & run"
-
-[portal.policies.wizard.output.filenameRule]
-autoNumber = "Auto-number"
-label = "Filename rule"
-placeholder = "Text to add (optional)"
-prefix = "Prefix"
-suffix = "Suffix"
-
-[portal.policies.wizard.output.outputAs]
-label = "Output as"
-newFile = "New file"
-newVersion = "New version"
-
-[portal.policies.wizard.output.runOn]
-export = "Export"
-helper = "When the policy fires: on upload, or before export."
-label = "Run on"
-upload = "Upload"
-
-[portal.policies.wizard.settings]
-heading = "Settings"
-
-[portal.policies.wizard.sources]
-heading = "Sources"
-loading = "Loading sources…"
-
-[portal.policies.wizard.tabs]
-ariaLabel = "Setup steps"
-settings = "Settings"
-workflow = "Actions"
+saveFailed = "Couldn't save the pipeline. Please try again."
 
 [portal.policies.wizard.title]
-edit = "Edit {{category}} policy"
-setUp = "Set up {{category}} policy"
+edit = "Edit {{category}} pipeline"
+setUp = "Set up {{category}} pipeline"
 
 [portal.policies.wizard.workflow]
-description = "Choose what this policy does to every document it processes."
+description = "Choose what this pipeline does to every document it processes."
 
 [portal.policySummary.action]
 setUp = "Set up"
