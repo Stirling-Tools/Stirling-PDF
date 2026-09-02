@@ -586,6 +586,7 @@ export function parseSimplePolicy(
     id: policy.id ?? "",
     name: policy.name,
     enabled: policy.enabled,
+    required: policy.required,
     trigger: null,
     steps: policy.steps as WirePipelineStep[],
     // The options bag is untyped on the pipeline record; the codec reads it defensively.
