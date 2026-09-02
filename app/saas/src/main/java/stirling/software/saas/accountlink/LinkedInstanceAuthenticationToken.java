@@ -3,7 +3,8 @@ package stirling.software.saas.accountlink;
 import java.util.List;
 
 import org.springframework.security.authentication.AbstractAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
+
+import stirling.software.common.security.SimpleGrantedAuthority;
 
 /**
  * Authentication for a linked self-hosted instance (combined billing).

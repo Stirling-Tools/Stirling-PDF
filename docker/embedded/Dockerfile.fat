@@ -60,14 +60,7 @@ RUN --mount=type=cache,id=stirling-pdf-npm-cache,target=/root/.npm,sharing=locke
       -x spotlessApply -x spotlessCheck -x test -x sonarqube \
       --no-daemon
 
-# Stage 2: Extract Spring Boot Layers
-FROM eclipse-temurin:25-jre-noble@sha256:b4c93a50fc67612798db73d68ca3b0ee4ebdd51736e59cca370e689b9797037e AS jar-extract
-WORKDIR /tmp
-COPY --from=app-build /app/app/core/build/libs/*.jar app.jar
-RUN java -Djarmode=tools -jar app.jar extract --layers --destination /layers
-
-
-# Stage 2b: AI engine. Built at its final path so the venv resolves after the copy, on uv's
+# Stage 2: AI engine. Built at its final path so the venv resolves after the copy, on uv's
 # managed CPython because the runtime base ships Python 3.12.
 FROM ghcr.io/astral-sh/uv:bookworm-slim@sha256:22334efe746f1b69217d455049b484d7b8cacfb2d5f42555580b62415a98e0a3 AS engine-build
 ENV UV_PYTHON_INSTALL_DIR=/opt/stirling-engine/python
@@ -98,11 +91,12 @@ ARG VERSION_TAG
 
 WORKDIR /app
 
-# Application layers
-COPY --link --from=jar-extract --chown=1000:1000 /layers/dependencies/           /app/
-COPY --link --from=jar-extract --chown=1000:1000 /layers/spring-boot-loader/     /app/
-COPY --link --from=jar-extract --chown=1000:1000 /layers/snapshot-dependencies/  /app/
-COPY --link --from=jar-extract --chown=1000:1000 /layers/application/            /app/
+# Quarkus uber runner-jar (self-contained, all dependencies inside). init-without-ocr.sh launches
+# it via `java -jar /app/app.jar`. Replaces the former Spring Boot layered-jar extraction
+# (java -Djarmode=tools extract --layers + spring-boot-loader layers), which the Quarkus uber-jar
+# does not support; build/libs/*.jar is only the thin (non-runnable) jar.
+COPY --link --from=app-build --chown=1000:1000 \
+     /app/app/core/build/stirling-pdf-*-runner.jar /app/app.jar
 
 COPY --link --from=app-build --chown=1000:1000 \
      /app/build/libs/restart-helper.jar /restart-helper.jar

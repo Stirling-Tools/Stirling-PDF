@@ -4,20 +4,21 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
-
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,8 +32,8 @@ import lombok.extern.slf4j.Slf4j;
  * do what, so the two cannot drift apart.
  */
 @Slf4j
-@RestController
-@RequestMapping("/api/v1/file-run-events")
+@ApplicationScoped
+@Path("/api/v1/file-run-events")
 @Hidden
 @RequiredArgsConstructor
 @Tag(name = "File run events", description = "Recorded policy and pipeline failures")
@@ -45,7 +46,8 @@ public class FileRunEventController {
 
     private final FileRunEventService service;
 
-    @GetMapping
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
     @Operation(
             summary = "List recorded failures",
             description =
@@ -53,10 +55,10 @@ public class FileRunEventController {
                             + " for everyone else. Each row carries its available actions already"
                             + " resolved.")
     public FileRunEventsResponse list(
-            // Spring's converter 400s on a value outside the enum, so no hand-rolled parse.
-            @RequestParam(required = false) FileRunEventStatus status,
-            @RequestParam(required = false) String kindId,
-            @RequestParam(required = false) Integer limit) {
+            // RESTEasy's converter 400s on a value outside the enum, so no hand-rolled parse.
+            @QueryParam("status") FileRunEventStatus status,
+            @QueryParam("kindId") String kindId,
+            @QueryParam("limit") Integer limit) {
         // No role gate: the service scopes the read instead, so a member gets their own failures
         // and a leader the team's.
         int cappedLimit = Math.min(limit == null ? DEFAULT_LIMIT : Math.max(1, limit), MAX_LIMIT);
@@ -70,7 +72,10 @@ public class FileRunEventController {
         return new FileRunEventsResponse(events);
     }
 
-    @PostMapping("/{eventId}/actions/{actionId}")
+    @POST
+    @Path("/{eventId}/actions/{actionId}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     @Operation(
             summary = "Apply an action to a recorded failure",
             description =
@@ -79,9 +84,9 @@ public class FileRunEventController {
                             + " action that makes no sense for a given failure nor one the server"
                             + " cannot perform can be applied.")
     public FileRunEventView act(
-            @PathVariable String eventId,
-            @PathVariable String actionId,
-            @RequestBody(required = false) ActionRequest request) {
+            @PathParam("eventId") String eventId,
+            @PathParam("actionId") String actionId,
+            ActionRequest request) {
         // No role gate: the service decides, which lets someone close their own failure while
         // still keeping a colleague's out of reach.
         Map<String, String> inputs = request == null ? Map.of() : request.safeInputs();
@@ -89,12 +94,13 @@ public class FileRunEventController {
             FileRunEvent updated = service.dispatch(eventId, actionId, inputs);
             return FileRunEventView.of(updated, service.availableActions(updated));
         } catch (FailureActionException e) {
-            throw new ResponseStatusException(
-                    FailureActionException.statusOf(e.getReason()), e.getMessage(), e);
+            throw new WebApplicationException(e.getMessage(), e, statusFor(e.getReason()));
         }
     }
 
-    @PostMapping("/reports")
+    @POST
+    @Path("/reports")
+    @Consumes(MediaType.APPLICATION_JSON)
     @Operation(
             summary = "Report a failure hit in the editor",
             description =
@@ -102,10 +108,10 @@ public class FileRunEventController {
                             + " Open to any authenticated user: whoever's work failed can say so, and"
                             + " reads it back scoped to themselves. Rejected with 400 if it names"
                             + " more files than one report may carry.")
-    public ResponseEntity<Void> report(@RequestBody EditorFailureReport report) {
+    public Response report(EditorFailureReport report) {
         if (report == null || !report.hasOperation()) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "operation is required to report a failure");
+            throw new WebApplicationException(
+                    "operation is required to report a failure", Response.Status.BAD_REQUEST);
         }
         // Refused whole rather than trimmed, and refused before the first write, so an oversized
         // report leaves no rows at all. Trimming would hand a reviewer part of a set with nothing
@@ -113,32 +119,36 @@ public class FileRunEventController {
         // is stated in the message because the editor reports in the background: a client author
         // reading a log is the only person who will ever see this.
         if (report.namesTooManyFiles()) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
+            throw new WebApplicationException(
                     "a report may name at most "
                             + EditorFailureReport.MAX_FILE_IDS
                             + " files, and this one named "
-                            + report.fileIds().size());
+                            + report.fileIds().size(),
+                    Response.Status.BAD_REQUEST);
         }
         service.report(report);
         // No body: the editor reports and moves on, and has nothing to do with the row.
-        return ResponseEntity.noContent().build();
+        return Response.noContent().build();
     }
 
-    @PostMapping("/removed-files")
+    @POST
+    @Path("/removed-files")
+    @Consumes(MediaType.APPLICATION_JSON)
     @Operation(
             summary = "Close the incidents about files deleted from the editor",
             description =
                     "Deleting the document leaves nothing to act on, so its incidents drop out of"
                             + " the queue while the rows stay for audit. Applies only to the"
                             + " caller's own editor rows, however senior they are.")
-    public ResponseEntity<Void> filesRemoved(@RequestBody(required = false) RemovedFiles request) {
+    public Response filesRemoved(RemovedFiles request) {
         service.forgetFiles(request == null ? List.of() : request.safeFileIds());
         // No body: the editor is telling the server, not asking it anything.
-        return ResponseEntity.noContent().build();
+        return Response.noContent().build();
     }
 
-    @GetMapping("/kinds")
+    @GET
+    @Path("/kinds")
+    @Produces(MediaType.APPLICATION_JSON)
     @Operation(
             summary = "List known failure kinds",
             description =
@@ -148,6 +158,18 @@ public class FileRunEventController {
         // The registry is copy and metadata, not anyone's data, and a member needs it to render the
         // failures they can already see.
         return Arrays.stream(FailureKind.values()).map(FailureKindView::of).toList();
+    }
+
+    /**
+     * A closed row is a conflict rather than a bad request: the request was well-formed and would
+     * have been valid a moment earlier.
+     */
+    private static Response.Status statusFor(FailureActionException.Reason reason) {
+        return switch (reason) {
+            case EVENT_NOT_FOUND -> Response.Status.NOT_FOUND;
+            case ACTION_NOT_RECOGNISED, ACTION_NOT_DECLARED -> Response.Status.BAD_REQUEST;
+            case ALREADY_CLOSED -> Response.Status.CONFLICT;
+        };
     }
 
     /** Wrapped rather than a bare array so pagination can be added without breaking clients. */

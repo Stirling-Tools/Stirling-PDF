@@ -6,7 +6,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.springframework.stereotype.Service;
+import io.quarkus.arc.profile.IfBuildProfile;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 
@@ -25,7 +27,8 @@ import stirling.software.proprietary.policy.store.PolicyStore;
  * Frontend/catalogue policies (marked by a {@code categoryId} in their output options) belong to
  * the user-facing Policies page and are excluded; a folder-watch trigger is not a signal.
  */
-@Service
+@ApplicationScoped
+@IfBuildProfile("saas")
 @RequiredArgsConstructor
 public class PolicyOverviewService {
 

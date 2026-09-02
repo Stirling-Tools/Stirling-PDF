@@ -15,6 +15,7 @@ import java.util.List;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -22,10 +23,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
-import org.springframework.web.multipart.MultipartFile;
 
+import jakarta.enterprise.inject.Instance;
+
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.PdfMetadataService;
+import stirling.software.common.service.UserServiceInterface;
+import stirling.software.common.testsupport.TestFileUploads;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.proprietary.classification.ClassificationLabelProvider;
 import stirling.software.proprietary.classification.model.ClassificationLabel;
@@ -48,10 +53,15 @@ class ClassifyLabelControllerTest {
     @Mock private AiEngineClient aiEngineClient;
     @Mock private AiFeatureGate aiFeatureGate;
 
+    // Optional security bean: the migrated constructor resolves it via Instance#isResolvable(), so
+    // a plain null is no longer valid. An unresolvable Instance reproduces the no-user path.
+    @Mock private Instance<UserServiceInterface> userService;
+
     private final ObjectMapper objectMapper = JsonMapper.builder().build();
     private ClassifyLabelController controller;
 
     private void withLabels(List<ClassificationLabel> labels) {
+        when(userService.isResolvable()).thenReturn(false);
         controller =
                 new ClassifyLabelController(
                         pdfDocumentFactory,
@@ -62,13 +72,12 @@ class ClassifyLabelControllerTest {
                         aiFeatureGate,
                         objectMapper,
                         ClassificationLabelProvider.withLabels(labels),
-                        null);
+                        userService);
     }
 
     private void stubSinglePageDocument() throws Exception {
         PDDocument document = mock(PDDocument.class);
-        MultipartFile file = mock(MultipartFile.class);
-        when(file.getOriginalFilename()).thenReturn("invoice.pdf");
+        FileUpload file = TestFileUploads.of(new byte[0], "invoice.pdf", "application/pdf");
         when(pdfDocumentFactory.load(any(MultipartFile.class), eq(true))).thenReturn(document);
         when(document.getNumberOfPages()).thenReturn(1);
         when(pdfContentExtractor.extractPageTextRaw(document, 1))

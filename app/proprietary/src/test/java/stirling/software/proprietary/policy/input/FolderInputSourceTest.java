@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
@@ -19,13 +20,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
+import org.eclipse.microprofile.config.Config;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.env.StandardEnvironment;
+
+import io.smallrye.config.SmallRyeConfig;
 
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.ApplicationProperties;
@@ -60,13 +63,22 @@ class FolderInputSourceTest {
                 new FolderAccessGuard(
                         properties,
                         new RuntimePathConfig(properties),
-                        new StandardEnvironment(),
+                        configWithNoProfiles(),
                         new InProcessSourceStore());
         source = new FolderInputSource(readinessChecker, guard);
         ledger = new InProcessProcessedLedger();
         ctx = new RecordingContext();
         // Lenient: the missing-dir / nonexistent-dir cases return before any readiness check.
         lenient().when(readinessChecker.isReady(any())).thenReturn(true);
+    }
+
+    /** A {@link Config} whose unwrapped {@link SmallRyeConfig} reports no active profile. */
+    private static Config configWithNoProfiles() {
+        SmallRyeConfig smallRyeConfig = mock(SmallRyeConfig.class);
+        when(smallRyeConfig.getProfiles()).thenReturn(List.of());
+        Config config = mock(Config.class);
+        when(config.unwrap(SmallRyeConfig.class)).thenReturn(smallRyeConfig);
+        return config;
     }
 
     @Test

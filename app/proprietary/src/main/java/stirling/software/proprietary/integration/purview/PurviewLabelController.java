@@ -6,24 +6,27 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -49,8 +52,8 @@ import tools.jackson.databind.node.ObjectNode;
  * since it labels documents but does not process them.
  */
 @Slf4j
-@RestController
-@RequestMapping("/api/v1/integration")
+@ApplicationScoped
+@Path("/api/v1/integration")
 @RequiredArgsConstructor
 @Tag(name = "Integrations", description = "Third-party integration steps.")
 public class PurviewLabelController {
@@ -60,7 +63,9 @@ public class PurviewLabelController {
     private final TempFileManager tempFileManager;
     private final ObjectMapper objectMapper;
 
-    @PostMapping(value = "/purview-apply-label", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @POST
+    @Path("/purview-apply-label")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Apply a Microsoft Purview sensitivity label",
@@ -68,15 +73,16 @@ public class PurviewLabelController {
                     "Writes the Purview label metadata (MSIP_Label_<GUID>_*) onto the PDF, so"
                             + " Purview-aware tools recognise the label. Applies the label only;"
                             + " it cannot encrypt, which requires the Microsoft client.")
-    public ResponseEntity<Resource> applyLabel(
-            @RequestParam("fileInput") MultipartFile fileInput,
-            @RequestParam("connectionId") String connectionId,
-            @RequestParam("labelId") String labelId,
-            @RequestParam(value = "labelName", required = false) String labelName,
-            @RequestParam(value = "method", defaultValue = "STANDARD") String method,
-            @RequestParam(value = "contentBits", required = false) Integer contentBits)
+    public Response applyLabel(
+            @RestForm("fileInput") FileUpload fileInputUpload,
+            @RestForm("connectionId") String connectionId,
+            @RestForm("labelId") String labelId,
+            @RestForm("labelName") String labelName,
+            @RestForm("method") @DefaultValue("STANDARD") String method,
+            @RestForm("contentBits") Integer contentBits)
             throws IOException {
 
+        MultipartFile fileInput = FileUploadMultipartFile.of(fileInputUpload);
         PurviewConnectionSettings settings = settings(connectionId);
         AssignmentMethod assignment = parseMethod(method);
 
@@ -96,18 +102,21 @@ public class PurviewLabelController {
         }
     }
 
-    @PostMapping(value = "/purview-read-label", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @POST
+    @Path("/purview-read-label")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Read the Microsoft Purview sensitivity label on a PDF",
             description =
                     "Reports the Purview labels a PDF already carries so a policy can act on"
                             + " them. The document passes through unchanged.")
-    public ResponseEntity<Resource> readLabel(
-            @RequestParam("fileInput") MultipartFile fileInput,
-            @RequestParam("connectionId") String connectionId)
+    public Response readLabel(
+            @RestForm("fileInput") FileUpload fileInputUpload,
+            @RestForm("connectionId") String connectionId)
             throws IOException {
 
+        MultipartFile fileInput = FileUploadMultipartFile.of(fileInputUpload);
         PurviewConnectionSettings settings = settings(connectionId);
 
         List<SensitivityLabel> labels;
@@ -117,13 +126,16 @@ public class PurviewLabelController {
         // The document is returned byte-for-byte rather than re-saved: a read must not perturb the
         // file it inspected, and a PDFBox round-trip would rewrite its structure.
         byte[] bytes = fileInput.getBytes();
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_PDF);
-        headers.setContentDispositionFormData(
-                "attachment", safeFileName(fileInput.getOriginalFilename()));
-        headers.setContentLength(bytes.length);
-        headers.set(AiToolResponseHeaders.TOOL_REPORT, buildReport(labels, settings));
-        return ResponseEntity.ok().headers(headers).body(new ByteArrayResource(bytes));
+        return Response.ok(bytes)
+                .type("application/pdf")
+                .header(HttpHeaders.CONTENT_LENGTH, bytes.length)
+                .header(
+                        "Content-Disposition",
+                        "form-data; name=\"attachment\"; filename=\""
+                                + safeFileName(fileInput.getOriginalFilename())
+                                + "\"")
+                .header(AiToolResponseHeaders.TOOL_REPORT, buildReport(labels, settings))
+                .build();
     }
 
     /**

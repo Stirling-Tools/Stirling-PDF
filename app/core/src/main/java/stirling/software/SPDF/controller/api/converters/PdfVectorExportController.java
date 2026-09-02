@@ -10,14 +10,16 @@ import java.util.Locale;
 import java.util.Set;
 
 import org.apache.commons.io.FilenameUtils;
-import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ModelAttribute;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.swagger.v3.oas.annotations.Operation;
 
-import jakarta.validation.Valid;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +29,7 @@ import stirling.software.SPDF.model.api.converters.PdfVectorExportRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.common.model.tool.ToolArity;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
@@ -41,6 +44,8 @@ import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @ConvertApi
+@ApplicationScoped
+@jakarta.ws.rs.Path("/api/v1/convert")
 @Slf4j
 @RequiredArgsConstructor
 public class PdfVectorExportController {
@@ -51,8 +56,11 @@ public class PdfVectorExportController {
     private final TempFileManager tempFileManager;
     private final EndpointConfiguration endpointConfiguration;
 
+    @POST
+    @jakarta.ws.rs.Path("/vector/pdf")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             value = "/vector/pdf",
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @ToolIO(accepts = ToolFormat.POSTSCRIPT, produces = ToolFormat.PDF)
@@ -60,8 +68,15 @@ public class PdfVectorExportController {
             summary = "Convert PostScript formats to PDF",
             description =
                     "Converts PostScript vector inputs (PS, EPS, EPSF) to PDF using Ghostscript.")
-    public ResponseEntity<Resource> convertGhostscriptInputsToPdf(
-            @Valid @ModelAttribute PdfVectorExportRequest request) throws Exception {
+    public Response convertGhostscriptInputsToPdf(
+            @RestForm("fileInput") FileUpload fileUpload,
+            @RestForm("prepress") Boolean prepressParam)
+            throws Exception {
+
+        // The request model is rebuilt here from the individual multipart @RestForm fields.
+        PdfVectorExportRequest request = new PdfVectorExportRequest();
+        request.setFileInput(FileUploadMultipartFile.of(fileUpload));
+        request.setPrepress(prepressParam);
 
         String originalName =
                 request.getFileInput() != null
@@ -101,8 +116,11 @@ public class PdfVectorExportController {
         return WebResponseUtils.pdfFileToWebResponse(outputTemp, outputName);
     }
 
+    @POST
+    @jakarta.ws.rs.Path("/pdf/vector")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             value = "/pdf/vector",
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     // One case per non-default value of outputFormat; the base covers the default, eps.
@@ -125,8 +143,17 @@ public class PdfVectorExportController {
     @Operation(
             summary = "Convert PDF to vector format",
             description = "Converts PDF to Ghostscript vector formats (EPS, PS, PCL, or XPS).")
-    public ResponseEntity<Resource> convertPdfToVector(
-            @Valid @ModelAttribute PdfVectorExportRequest request) throws Exception {
+    public Response convertPdfToVector(
+            @RestForm("fileInput") FileUpload fileUpload,
+            @RestForm("outputFormat") String outputFormatParam)
+            throws Exception {
+
+        // The request model is rebuilt here from the individual multipart @RestForm fields.
+        PdfVectorExportRequest request = new PdfVectorExportRequest();
+        request.setFileInput(FileUploadMultipartFile.of(fileUpload));
+        if (outputFormatParam != null) {
+            request.setOutputFormat(outputFormatParam);
+        }
 
         String originalName =
                 request.getFileInput() != null
@@ -157,16 +184,16 @@ public class PdfVectorExportController {
         switch (outputFormat.toLowerCase(Locale.ROOT)) {
             case "eps":
             case "ps":
-                mediaType = MediaType.parseMediaType("application/postscript");
+                mediaType = MediaType.valueOf("application/postscript");
                 break;
             case "pcl":
-                mediaType = MediaType.parseMediaType("application/vnd.hp-PCL");
+                mediaType = MediaType.valueOf("application/vnd.hp-PCL");
                 break;
             case "xps":
-                mediaType = MediaType.parseMediaType("application/vnd.ms-xpsdocument");
+                mediaType = MediaType.valueOf("application/vnd.ms-xpsdocument");
                 break;
             default:
-                mediaType = MediaType.APPLICATION_OCTET_STREAM;
+                mediaType = MediaType.valueOf(MediaType.APPLICATION_OCTET_STREAM);
         }
 
         return WebResponseUtils.fileToWebResponse(outputTemp, outputName, mediaType);

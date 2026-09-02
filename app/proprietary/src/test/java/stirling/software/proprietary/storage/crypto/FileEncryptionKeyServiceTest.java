@@ -13,7 +13,8 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.dao.DataIntegrityViolationException;
+
+import jakarta.persistence.PersistenceException;
 
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.model.User;
@@ -221,7 +222,7 @@ class FileEncryptionKeyServiceTest {
         doAnswer(
                         inv -> {
                             repo.rows.put(winner.getKeyId(), winner);
-                            throw new DataIntegrityViolationException("duplicate key");
+                            throw new PersistenceException("duplicate key");
                         })
                 .doAnswer(
                         inv -> {
@@ -345,10 +346,10 @@ class FileEncryptionKeyServiceTest {
 
     @Test
     void createActive_raceWithoutWinner_rethrows() {
-        doThrow(new DataIntegrityViolationException("duplicate key"))
+        doThrow(new PersistenceException("duplicate key"))
                 .when(repo.mock)
                 .saveAndFlush(any(FileEncryptionKey.class));
         assertThatThrownBy(() -> service.activeKekForOwner(teamUser(9)))
-                .isInstanceOf(DataIntegrityViolationException.class);
+                .isInstanceOf(PersistenceException.class);
     }
 }

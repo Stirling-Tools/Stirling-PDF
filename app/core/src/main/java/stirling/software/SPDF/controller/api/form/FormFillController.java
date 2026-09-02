@@ -6,7 +6,6 @@ import java.io.InputStream;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -20,28 +19,29 @@ import java.util.zip.ZipOutputStream;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import com.opencsv.CSVWriter;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.common.model.FormFieldWithCoordinates;
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.FormUtils;
@@ -52,8 +52,8 @@ import stirling.software.common.util.WebResponseUtils;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 
-@RestController
-@RequestMapping("/api/v1/form")
+@ApplicationScoped
+@Path("/api/v1/form")
 @Tag(
         name = "Forms",
         description =
@@ -76,7 +76,7 @@ public class FormFillController {
     /** How many were skipped in total, which may exceed the number listed in the header above. */
     public static final String SKIPPED_EDITS_TOTAL_HEADER = "X-Stirling-Skipped-Field-Edits-Total";
 
-    /** Keeps the header well inside Jetty's response-header budget. */
+    /** Keeps the header well inside the container's response-header budget. */
     private static final int MAX_REPORTED_SKIPS = 20;
 
     /** Bytes of encoded header value, well under the container's limit for the whole header set. */
@@ -92,11 +92,6 @@ public class FormFillController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final ObjectMapper objectMapper;
     private final TempFileManager tempFileManager;
-
-    private ResponseEntity<Resource> saveDocument(PDDocument document, String baseName)
-            throws IOException {
-        return WebResponseUtils.pdfDocToWebResponse(document, baseName + ".pdf", tempFileManager);
-    }
 
     /**
      * Rejects field names PDFBox cannot store before the document is touched, so the caller gets a
@@ -127,8 +122,8 @@ public class FormFillController {
      * The body is the updated PDF, so dropped edits travel as a base64 JSON header;
      * percent-encoding would turn every space into a plus sign.
      */
-    private ResponseEntity<Resource> withSkippedEdits(
-            ResponseEntity<Resource> response, List<FormUtils.SkippedFieldEdit> skipped) {
+    private Response withSkippedEdits(
+            Response response, List<FormUtils.SkippedFieldEdit> skipped) {
         if (skipped.isEmpty()) {
             return response;
         }
@@ -157,11 +152,14 @@ public class FormFillController {
             }
             encoded = candidate;
         }
-        return ResponseEntity.status(response.getStatusCode())
-                .headers(response.getHeaders())
+        return Response.fromResponse(response)
                 .header(SKIPPED_EDITS_TOTAL_HEADER, String.valueOf(skipped.size()))
                 .header(SKIPPED_EDITS_HEADER, encoded)
-                .body(response.getBody());
+                .build();
+    }
+
+    private Response saveDocument(PDDocument document, String baseName) throws IOException {
+        return WebResponseUtils.pdfDocToWebResponse(document, baseName + ".pdf", tempFileManager);
     }
 
     private static String buildBaseName(MultipartFile file, String suffix) {
@@ -183,83 +181,78 @@ public class FormFillController {
         }
     }
 
-    private static String decodePart(byte[] payload) {
-        if (payload == null || payload.length == 0) {
+    // Read a JSON/text multipart part as a raw UTF-8 string. The part is bound as FileUpload rather
+    // than byte[]/String on purpose: clients send these parts with Content-Type: application/json,
+    // and RESTEasy then routes a byte[]/String target through the Jackson reader, which fails
+    // trying
+    // to deserialize a JSON object (e.g. "{}") into those types and surfaces as a 500. FileUpload
+    // is
+    // always read verbatim, so the raw bytes reach the parser below regardless of the part's
+    // declared content type. An absent or empty part yields null (the no-op path).
+    private static String decodePart(FileUpload upload) throws IOException {
+        MultipartFile part = FileUploadMultipartFile.of(upload);
+        if (part == null || part.isEmpty()) {
             return null;
         }
-        return new String(payload, StandardCharsets.UTF_8);
+        byte[] bytes = part.getBytes();
+        if (bytes == null || bytes.length == 0) {
+            return null;
+        }
+        return new String(bytes, StandardCharsets.UTF_8);
     }
 
-    @PostMapping(value = "/fields", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @POST
+    @Path("/fields")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Operation(
             summary = "Inspect PDF form fields",
             description = "Returns metadata describing each field in the provided PDF form")
-    public ResponseEntity<FormUtils.FormFieldExtraction> listFields(
-            @Parameter(
-                            description = "The input PDF file",
-                            required = true,
-                            content =
-                                    @Content(
-                                            mediaType = MediaType.APPLICATION_PDF_VALUE,
-                                            schema = @Schema(type = "string", format = "binary")))
-                    @RequestParam("file")
-                    MultipartFile file)
-            throws IOException {
+    public Response listFields(@RestForm("file") FileUpload fileUpload) throws IOException {
 
+        MultipartFile file = FileUploadMultipartFile.of(fileUpload);
         requirePdf(file);
         try (PDDocument document = pdfDocumentFactory.load(file, true)) {
             FormUtils.repairMissingWidgetPageReferences(document);
             FormUtils.FormFieldExtraction extraction =
                     FormUtils.extractFieldsWithTemplate(document);
-            return ResponseEntity.ok(extraction);
+            return Response.ok(extraction).build();
         }
     }
 
-    @PostMapping(value = "/fields-with-coordinates", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @POST
+    @Path("/fields-with-coordinates")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Operation(
             summary = "Inspect PDF form fields with widget coordinates",
             description =
                     "Returns metadata describing each field in the provided PDF form, "
                             + "including precise widget coordinates for interactive rendering")
-    public ResponseEntity<List<FormFieldWithCoordinates>> listFieldsWithCoordinates(
-            @Parameter(
-                            description = "The input PDF file",
-                            required = true,
-                            content =
-                                    @Content(
-                                            mediaType = MediaType.APPLICATION_PDF_VALUE,
-                                            schema = @Schema(type = "string", format = "binary")))
-                    @RequestParam("file")
-                    MultipartFile file)
+    public Response listFieldsWithCoordinates(@RestForm("file") FileUpload fileUpload)
             throws IOException {
 
+        MultipartFile file = FileUploadMultipartFile.of(fileUpload);
         requirePdf(file);
         try (PDDocument document = pdfDocumentFactory.load(file, true)) {
             FormUtils.repairMissingWidgetPageReferences(document);
             List<FormFieldWithCoordinates> fields =
                     FormUtils.extractFormFieldsWithCoordinates(document);
-            return ResponseEntity.ok(fields);
+            return Response.ok(fields).build();
         }
     }
 
-    @PostMapping(value = "/extract-csv", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @POST
+    @Path("/extract-csv")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Operation(
             summary = "Extract form fields as CSV",
             description =
                     "Returns a CSV file containing all form field names and their current values")
-    public ResponseEntity<byte[]> extractCsv(
-            @Parameter(
-                            description = "The input PDF file",
-                            required = true,
-                            content =
-                                    @Content(
-                                            mediaType = MediaType.APPLICATION_PDF_VALUE,
-                                            schema = @Schema(type = "string", format = "binary")))
-                    @RequestParam("file")
-                    MultipartFile file,
-            @RequestParam(value = "data", required = false) MultipartFile data)
+    public Response extractCsv(
+            @RestForm("file") FileUpload fileUpload, @RestForm("data") FileUpload dataUpload)
             throws IOException {
 
+        MultipartFile file = FileUploadMultipartFile.of(fileUpload);
+        MultipartFile data = FileUploadMultipartFile.of(dataUpload);
         requirePdf(file);
         try (PDDocument document = pdfDocumentFactory.load(file, true);
                 StringWriter sw = new StringWriter()) {
@@ -287,28 +280,23 @@ public class FormFillController {
             byte[] csvBytes = sw.toString().getBytes(StandardCharsets.UTF_8);
             String baseName = buildBaseName(file, "extracted");
             return WebResponseUtils.bytesToWebResponse(
-                    csvBytes, baseName + ".csv", MediaType.parseMediaType("text/csv"));
+                    csvBytes, baseName + ".csv", MediaType.valueOf("text/csv"));
         }
     }
 
-    @PostMapping(value = "/extract-xlsx", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @POST
+    @Path("/extract-xlsx")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Operation(
             summary = "Extract form fields as XLSX",
             description =
                     "Returns an Excel (XLSX) file containing all form field names and their current values")
-    public ResponseEntity<byte[]> extractXlsx(
-            @Parameter(
-                            description = "The input PDF file",
-                            required = true,
-                            content =
-                                    @Content(
-                                            mediaType = MediaType.APPLICATION_PDF_VALUE,
-                                            schema = @Schema(type = "string", format = "binary")))
-                    @RequestParam("file")
-                    MultipartFile file,
-            @RequestParam(value = "data", required = false) MultipartFile data)
+    public Response extractXlsx(
+            @RestForm("file") FileUpload fileUpload, @RestForm("data") FileUpload dataUpload)
             throws IOException {
 
+        MultipartFile file = FileUploadMultipartFile.of(fileUpload);
+        MultipartFile data = FileUploadMultipartFile.of(dataUpload);
         requirePdf(file);
         try (PDDocument document = pdfDocumentFactory.load(file, true);
                 Workbook workbook = new XSSFWorkbook();
@@ -348,36 +336,24 @@ public class FormFillController {
             return WebResponseUtils.bytesToWebResponse(
                     baos.toByteArray(),
                     baseName + ".xlsx",
-                    MediaType.parseMediaType(
+                    MediaType.valueOf(
                             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
         }
     }
 
-    @PostMapping(value = "/add-fields", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @POST
+    @Path("/add-fields")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Operation(
             summary = "Add new form fields",
             description =
                     "Creates new form fields in the provided PDF and returns the updated file")
-    public ResponseEntity<Resource> addFields(
-            @Parameter(
-                            description = "The input PDF file",
-                            required = true,
-                            content =
-                                    @Content(
-                                            mediaType = MediaType.APPLICATION_PDF_VALUE,
-                                            schema = @Schema(type = "string", format = "binary")))
-                    @RequestParam("file")
-                    MultipartFile file,
-            @Parameter(
-                            description = "JSON array of new field definitions",
-                            example =
-                                    "[{\"name\":\"NewField\",\"type\":\"text\",\"pageIndex\":0,"
-                                            + "\"x\":50,\"y\":700,\"width\":200,\"height\":20}]")
-                    @RequestPart(value = "fields", required = false)
-                    byte[] fieldsPayload)
+    public Response addFields(
+            @RestForm("file") FileUpload fileUpload, @RestForm("fields") FileUpload fieldsUpload)
             throws IOException {
 
-        String rawFields = decodePart(fieldsPayload);
+        MultipartFile file = FileUploadMultipartFile.of(fileUpload);
+        String rawFields = decodePart(fieldsUpload);
         List<FormUtils.NewFormFieldDefinition> definitions =
                 FormPayloadParser.parseNewFieldDefinitions(objectMapper, rawFields);
         if (definitions.isEmpty()) {
@@ -398,42 +374,23 @@ public class FormFillController {
                 skipped);
     }
 
-    @PostMapping(value = "/edit-fields", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    // includeFields stays a query parameter, not a form part: the client sends it in the URL.
+    @POST
+    @Path("/edit-fields")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Operation(
             summary = "Apply a batch of form field edits",
             description =
                     "Adds, modifies, and deletes form fields in a single request (one document"
                             + " load/save) and returns the updated file")
-    public ResponseEntity<Resource> editFields(
-            @Parameter(
-                            description = "The input PDF file",
-                            required = true,
-                            content =
-                                    @Content(
-                                            mediaType = MediaType.APPLICATION_PDF_VALUE,
-                                            schema = @Schema(type = "string", format = "binary")))
-                    @RequestParam("file")
-                    MultipartFile file,
-            @Parameter(
-                            description =
-                                    "JSON object with optional 'add', 'modify' and 'delete'"
-                                            + " sections",
-                            example =
-                                    "{\"add\":[{\"name\":\"f\",\"type\":\"text\",\"pageIndex\":0,"
-                                            + "\"x\":50,\"y\":700,\"width\":200,\"height\":20}],"
-                                            + "\"modify\":[],\"delete\":[]}")
-                    @RequestPart(value = "edits", required = false)
-                    byte[] editsPayload,
-            @Parameter(
-                            description =
-                                    "Return a ZIP holding the updated PDF plus the field list it"
-                                            + " produced, instead of the bare PDF. Saves re-uploading"
-                                            + " the result just to read its fields back.")
-                    @RequestParam(value = "includeFields", defaultValue = "false")
-                    boolean includeFields)
+    public Response editFields(
+            @RestForm("file") FileUpload fileUpload,
+            @RestForm("edits") FileUpload editsUpload,
+            @QueryParam("includeFields") @DefaultValue("false") boolean includeFields)
             throws IOException {
 
-        String rawEdits = decodePart(editsPayload);
+        MultipartFile file = FileUploadMultipartFile.of(fileUpload);
+        String rawEdits = decodePart(editsUpload);
         FormUtils.FieldEditBatch batch = FormPayloadParser.parseFieldEdits(objectMapper, rawEdits);
         if (batch.add().isEmpty() && batch.modify().isEmpty() && batch.delete().isEmpty()) {
             throw ExceptionUtils.createIllegalArgumentException(
@@ -457,25 +414,19 @@ public class FormFillController {
                 skipped);
     }
 
-    @PostMapping(value = "/modify-fields", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @POST
+    @Path("/modify-fields")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Operation(
             summary = "Modify existing form fields",
             description =
                     "Updates existing fields in the provided PDF and returns the updated file")
-    public ResponseEntity<Resource> modifyFields(
-            @Parameter(
-                            description = "The input PDF file",
-                            required = true,
-                            content =
-                                    @Content(
-                                            mediaType = MediaType.APPLICATION_PDF_VALUE,
-                                            schema = @Schema(type = "string", format = "binary")))
-                    @RequestParam("file")
-                    MultipartFile file,
-            @RequestPart(value = "updates", required = false) byte[] updatesPayload)
+    public Response modifyFields(
+            @RestForm("file") FileUpload fileUpload, @RestForm("updates") FileUpload updatesUpload)
             throws IOException {
 
-        String rawUpdates = decodePart(updatesPayload);
+        MultipartFile file = FileUploadMultipartFile.of(fileUpload);
+        String rawUpdates = decodePart(updatesUpload);
         List<FormUtils.ModifyFormFieldDefinition> modifications =
                 FormPayloadParser.parseModificationDefinitions(objectMapper, rawUpdates);
         if (modifications.isEmpty()) {
@@ -496,30 +447,18 @@ public class FormFillController {
                 skipped);
     }
 
-    @PostMapping(value = "/delete-fields", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @POST
+    @Path("/delete-fields")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Operation(
             summary = "Delete form fields",
             description = "Removes the specified fields from the PDF and returns the updated file")
-    public ResponseEntity<Resource> deleteFields(
-            @Parameter(
-                            description = "The input PDF file",
-                            required = true,
-                            content =
-                                    @Content(
-                                            mediaType = MediaType.APPLICATION_PDF_VALUE,
-                                            schema = @Schema(type = "string", format = "binary")))
-                    @RequestParam("file")
-                    MultipartFile file,
-            @Parameter(
-                            description =
-                                    "JSON array of field names or objects with a name property,"
-                                            + " matching the /fields response format",
-                            example = "[{\"name\":\"Field1\"}]")
-                    @RequestPart(value = "names", required = false)
-                    byte[] namesPayload)
+    public Response deleteFields(
+            @RestForm("file") FileUpload fileUpload, @RestForm("names") FileUpload namesUpload)
             throws IOException {
 
-        String rawNames = decodePart(namesPayload);
+        MultipartFile file = FileUploadMultipartFile.of(fileUpload);
+        String rawNames = decodePart(namesUpload);
         List<String> names = FormPayloadParser.parseNameList(objectMapper, rawNames);
         if (names.isEmpty()) {
             throw ExceptionUtils.createIllegalArgumentException(
@@ -535,31 +474,22 @@ public class FormFillController {
                 skipped);
     }
 
-    @PostMapping(value = "/fill", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @POST
+    @Path("/fill")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Operation(
             summary = "Fill PDF form fields",
             description =
                     "Populates the supplied PDF form using values from the provided JSON payload"
                             + " and returns the filled PDF")
-    public ResponseEntity<Resource> fillForm(
-            @Parameter(
-                            description = "The input PDF file",
-                            required = true,
-                            content =
-                                    @Content(
-                                            mediaType = MediaType.APPLICATION_PDF_VALUE,
-                                            schema = @Schema(type = "string", format = "binary")))
-                    @RequestParam("file")
-                    MultipartFile file,
-            @Parameter(
-                            description = "JSON object of field-value pairs to apply",
-                            example = "{\"field\":\"value\"}")
-                    @RequestPart(value = "data", required = false)
-                    byte[] valuesPayload,
-            @RequestParam(value = "flatten", defaultValue = "false") boolean flatten)
+    public Response fillForm(
+            @RestForm("file") FileUpload fileUpload,
+            @RestForm("data") FileUpload dataUpload,
+            @RestForm("flatten") @DefaultValue("false") boolean flatten)
             throws IOException {
 
-        String rawValues = decodePart(valuesPayload);
+        MultipartFile file = FileUploadMultipartFile.of(fileUpload);
+        String rawValues = decodePart(dataUpload);
         Map<String, Object> values = FormPayloadParser.parseValueMap(objectMapper, rawValues);
 
         return processSingleFile(
@@ -568,12 +498,12 @@ public class FormFillController {
                 document -> FormUtils.applyFieldValues(document, values, flatten, true));
     }
 
-    private ResponseEntity<Resource> processSingleFile(
+    private Response processSingleFile(
             MultipartFile file, String suffix, DocumentProcessor processor) throws IOException {
         return processSingleFile(file, suffix, false, processor);
     }
 
-    private ResponseEntity<Resource> processSingleFile(
+    private Response processSingleFile(
             MultipartFile file, String suffix, boolean includeFields, DocumentProcessor processor)
             throws IOException {
         requirePdf(file);
@@ -592,20 +522,19 @@ public class FormFillController {
      * Answers "what fields does the saved file have?" from the document still open here, so the
      * caller does not have to upload the result back to ask.
      */
-    private ResponseEntity<Resource> saveDocumentWithFields(PDDocument document, String baseName)
+    private Response saveDocumentWithFields(PDDocument document, String baseName)
             throws IOException {
         TempFile zip = null;
         boolean zipTransferred = false;
         try (TempFile pdf = tempFileManager.createManagedTempFile(".pdf")) {
-            document.save(pdf.getFile());
+            document.save(pdf.getPath().toFile());
             // Read the fields after the save so they describe the bytes actually being returned.
             byte[] fields =
                     objectMapper.writeValueAsBytes(
                             FormUtils.extractFormFieldsWithCoordinates(document));
             zip = tempFileManager.createManagedTempFile(".zip");
             writeFieldBundle(zip.getPath(), pdf.getPath(), fields);
-            ResponseEntity<Resource> response =
-                    WebResponseUtils.zipFileToWebResponse(zip, baseName + ".zip");
+            Response response = WebResponseUtils.zipFileToWebResponse(zip, baseName + ".zip");
             zipTransferred = true;
             return response;
         } finally {
@@ -619,7 +548,8 @@ public class FormFillController {
      * Deflates the JSON because it is text, but stores the PDF: its streams are already compressed,
      * so deflating costs ~25ms per MB to save a few percent.
      */
-    private static void writeFieldBundle(Path zipPath, Path pdfPath, byte[] fields)
+    private static void writeFieldBundle(
+            java.nio.file.Path zipPath, java.nio.file.Path pdfPath, byte[] fields)
             throws IOException {
         long pdfSize = Files.size(pdfPath);
         CRC32 crc = new CRC32();

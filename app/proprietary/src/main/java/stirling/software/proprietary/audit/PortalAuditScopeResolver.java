@@ -1,7 +1,7 @@
 package stirling.software.proprietary.audit;
 
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import stirling.software.common.security.Authentication;
+import stirling.software.common.security.SecurityContextHolder;
 
 /** Resolves which slice of the audit log the caller may see. */
 public interface PortalAuditScopeResolver {

@@ -1,39 +1,49 @@
 package stirling.software.proprietary.audit;
 
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
+import java.util.HashMap;
+import java.util.Map;
 
 import io.swagger.v3.oas.annotations.Hidden;
+
+import jakarta.annotation.security.RolesAllowed;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.proprietary.config.AuditConfigurationProperties;
 import stirling.software.proprietary.security.config.EnterpriseEndpoint;
 
-@Controller
-@PreAuthorize("hasRole('ADMIN')")
+@Path("")
+@ApplicationScoped
+@RolesAllowed("ADMIN")
 @RequiredArgsConstructor
 @EnterpriseEndpoint
 public class AuditDashboardWebController {
     private final AuditConfigurationProperties auditConfig;
 
     /** Display the audit dashboard. */
-    @GetMapping("/audit")
+    @GET
+    @Path("/audit")
     @Hidden
-    public String showDashboard(Model model) {
-        model.addAttribute("auditEnabled", auditConfig.isEnabled());
-        model.addAttribute("auditLevel", auditConfig.getAuditLevel());
-        model.addAttribute("auditLevelInt", auditConfig.getLevel());
-        model.addAttribute("retentionDays", auditConfig.getRetentionDays());
+    public Response showDashboard() {
+        // Spring's org.springframework.ui.Model + view-name ("audit/dashboard") drove Thymeleaf
+        // server-side rendering. Quarkus has no Thymeleaf view resolver; the equivalent is a Qute
+        // TemplateInstance bound to src/main/resources/templates/audit/dashboard.html.
+        Map<String, Object> model = new HashMap<>();
+        model.put("auditEnabled", auditConfig.isEnabled());
+        model.put("auditLevel", auditConfig.getAuditLevel());
+        model.put("auditLevelInt", auditConfig.getLevel());
+        model.put("retentionDays", auditConfig.getRetentionDays());
 
         // Add audit level enum values for display
-        model.addAttribute("auditLevels", AuditLevel.values());
+        model.put("auditLevels", AuditLevel.values());
 
         // Add audit event types for the dropdown
-        model.addAttribute("auditEventTypes", AuditEventType.values());
+        model.put("auditEventTypes", AuditEventType.values());
 
-        return "audit/dashboard";
+        return Response.ok(model).build();
     }
 }

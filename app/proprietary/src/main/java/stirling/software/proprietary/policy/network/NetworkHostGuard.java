@@ -3,7 +3,7 @@ package stirling.software.proprietary.policy.network;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-import org.springframework.stereotype.Component;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 
@@ -17,7 +17,7 @@ import stirling.software.common.model.ApplicationProperties;
  * (the cloud metadata address, an admin panel). Mirrors the S3 endpoint guard; enforced both at
  * save time and before every connect.
  */
-@Component
+@ApplicationScoped
 @RequiredArgsConstructor
 public class NetworkHostGuard {
 

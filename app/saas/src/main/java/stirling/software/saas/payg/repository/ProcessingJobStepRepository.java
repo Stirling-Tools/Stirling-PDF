@@ -3,13 +3,16 @@ package stirling.software.saas.payg.repository;
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import stirling.software.saas.payg.job.ProcessingJobStep;
 
-@Repository
-public interface ProcessingJobStepRepository extends JpaRepository<ProcessingJobStep, Long> {
+@ApplicationScoped
+public class ProcessingJobStepRepository implements PanacheRepositoryBase<ProcessingJobStep, Long> {
 
-    List<ProcessingJobStep> findByJobIdOrderByStartedAtAsc(UUID jobId);
+    public List<ProcessingJobStep> findByJobIdOrderByStartedAtAsc(UUID jobId) {
+        return find("jobId = ?1 ORDER BY startedAt ASC", jobId).list();
+    }
 }

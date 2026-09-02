@@ -2,6 +2,7 @@ package stirling.software.proprietary.security.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -9,6 +10,8 @@ import static org.mockito.Mockito.when;
 import java.util.List;
 import java.util.Optional;
 
+import org.eclipse.microprofile.config.Config;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -26,15 +29,16 @@ import stirling.software.proprietary.security.repository.TeamMembershipRepositor
 class TeamMembershipServiceTest {
 
     @Mock private TeamMembershipRepository membershipRepository;
-    @Mock private org.springframework.core.env.Environment environment;
+    @Mock private Config config;
 
     @InjectMocks private TeamMembershipService service;
 
-    @org.junit.jupiter.api.BeforeEach
+    @BeforeEach
     void notSaas() {
-        org.mockito.Mockito.lenient()
-                .when(environment.getActiveProfiles())
-                .thenReturn(new String[] {});
+        // No active profile, so the saas short-circuit does not fire.
+        lenient()
+                .when(config.getOptionalValue("quarkus.profile", String.class))
+                .thenReturn(Optional.of(""));
     }
 
     @Test

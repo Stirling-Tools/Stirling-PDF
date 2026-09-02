@@ -1,47 +1,26 @@
 package stirling.software.proprietary.security.configuration;
 
-import java.time.Duration;
-
-import org.springframework.cache.CacheManager;
-import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.cache.caffeine.CaffeineCacheManager;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-
-import com.github.benmanes.caffeine.cache.Caffeine;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 import stirling.software.common.model.ApplicationProperties;
 
-@Configuration
-@EnableCaching
+@ApplicationScoped
 public class CacheConfig {
 
     private final ApplicationProperties applicationProperties;
 
+    @Inject
     public CacheConfig(ApplicationProperties applicationProperties) {
         this.applicationProperties = applicationProperties;
     }
 
-    /** Short-TTL cache of recent audit rows, shared by every audit-derived portal view. */
-    private static final String PORTAL_AUDIT_EVENTS_CACHE = "portalAuditEvents";
-
-    @Bean
-    public CacheManager cacheManager() {
-        int keyRetentionDays = applicationProperties.getSecurity().getJwt().getKeyRetentionDays();
-        CaffeineCacheManager cacheManager = new CaffeineCacheManager();
-        cacheManager.setCaffeine(
-                Caffeine.newBuilder()
-                        .maximumSize(1000) // Make configurable?
-                        .expireAfterWrite(Duration.ofDays(keyRetentionDays))
-                        .recordStats());
-        // 30s TTL keeps audit views near-live without re-scanning the DB; one entry per scope.
-        cacheManager.registerCustomCache(
-                PORTAL_AUDIT_EVENTS_CACHE,
-                Caffeine.newBuilder()
-                        .maximumSize(256)
-                        .expireAfterWrite(Duration.ofSeconds(30))
-                        .recordStats()
-                        .build());
-        return cacheManager;
+    /**
+     * Retained for reference: the JWT key retention window (in days) that previously drove
+     * Caffeine's expireAfterWrite. Used by the Quarkus cache migration described above to derive
+     * the TTL for the corresponding named cache.
+     */
+    public int getKeyRetentionDays() {
+        return applicationProperties.getSecurity().getJwt().getKeyRetentionDays();
     }
 }

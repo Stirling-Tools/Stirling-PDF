@@ -3,9 +3,9 @@ package stirling.software.proprietary.accountlink;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Service;
+import io.quarkus.arc.profile.IfBuildProfile;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 /**
  * Decides whether a request may proceed under combined billing on a self-hosted instance.
@@ -24,13 +24,14 @@ import org.springframework.stereotype.Service;
  *   <li>Billable + linked + over limit → block with {@code OVER_LIMIT}.
  * </ol>
  *
- * <p>The decision logic is the pure static {@link #decide}; the Spring wrapper supplies the live
- * flag / linked-state / entitlement and computes whether the grace window has expired. This is the
+ * <p>The decision logic is the pure static {@link #decide}; the bean wrapper supplies the live flag
+ * / linked-state / entitlement and computes whether the grace window has expired. This is the
  * unit-tested core.
  */
-@Service
-@Profile("!saas")
-@ConditionalOnProperty(name = "stirling.billing.account-link.enabled", havingValue = "true")
+// Arc cannot gate a bean on a runtime property, so the account-link flag no longer removes this
+// bean; evaluate() reads the flag itself and allows with FLAG_OFF, as bean-absence used to.
+@ApplicationScoped
+@IfBuildProfile("!saas")
 public class InstanceEntitlementGate {
 
     private final AccountLinkProperties properties;
@@ -80,7 +81,7 @@ public class InstanceEntitlementGate {
     }
 
     /**
-     * Pure decision function — no Spring, no I/O. {@code entitlement} empty means "unknown"
+     * Pure decision function — no framework, no I/O. {@code entitlement} empty means "unknown"
      * (unreachable): when linked, that fails open unless {@code graceExpired} (the metering grace
      * window elapsed with no authoritative contact), in which case it blocks.
      *
@@ -143,7 +144,7 @@ public class InstanceEntitlementGate {
     private LocalDateTime lastAuthoritativeContact() {
         LocalDateTime lastSuccess =
                 syncStateRepository
-                        .findById(AccountLinkSyncState.SINGLETON_ID)
+                        .findByIdOptional(AccountLinkSyncState.SINGLETON_ID)
                         .map(AccountLinkSyncState::getLastSuccessAt)
                         .orElse(null);
         if (lastSuccess != null) {

@@ -3,6 +3,7 @@ package stirling.software.proprietary.policy.output;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.DigestOutputStream;
@@ -13,14 +14,12 @@ import java.util.HexFormat;
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.http.MediaTypeFactory;
-import org.springframework.stereotype.Service;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.io.Resource;
 import stirling.software.common.model.job.ResultFile;
 import stirling.software.proprietary.policy.ledger.ProcessedLedger;
 import stirling.software.proprietary.policy.model.OutputSpec;
@@ -52,11 +51,12 @@ import software.amazon.awssdk.services.s3.model.S3Exception;
  * conditional-write support fall back to an existence check per candidate.
  */
 @Slf4j
-@Service
+@ApplicationScoped
 @RequiredArgsConstructor
 public class S3OutputSink implements PolicyOutputSink {
 
     private static final String TYPE = "s3";
+    private static final String APPLICATION_OCTET_STREAM = "application/octet-stream";
 
     private final S3ConnectionPool connectionPool;
     private final S3ConnectionResolver connectionResolver;
@@ -97,10 +97,10 @@ public class S3OutputSink implements PolicyOutputSink {
                 String predictedGate = stage(resource, staged, delivery.policyId() != null);
                 long size = Files.size(staged);
                 String key = upload(delivery, client, config, name, staged, predictedGate);
-                String contentType =
-                        MediaTypeFactory.getMediaType(name)
-                                .orElse(MediaType.APPLICATION_OCTET_STREAM)
-                                .toString();
+                // jakarta.ws.rs has no MediaTypeFactory equivalent, so guess from the extension
+                // with the JDK and keep Spring's application/octet-stream fallback.
+                String guessed = URLConnection.guessContentTypeFromName(name);
+                String contentType = guessed != null ? guessed : APPLICATION_OCTET_STREAM;
                 results.add(
                         ResultFile.builder()
                                 .fileId(UUID.randomUUID().toString())

@@ -1,7 +1,9 @@
 package stirling.software.SPDF.controller.api;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import java.io.File;
@@ -17,6 +19,7 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageTree;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDDocumentOutline;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlineItem;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,14 +28,13 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockMultipartFile;
+
+import jakarta.ws.rs.core.Response;
 
 import stirling.software.SPDF.controller.api.EditTableOfContentsController.BookmarkItem;
-import stirling.software.SPDF.model.api.EditTableOfContentsRequest;
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.testsupport.TestFileUploads;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 
@@ -49,7 +51,7 @@ class EditTableOfContentsControllerTest {
 
     @InjectMocks private EditTableOfContentsController editTableOfContentsController;
 
-    private MockMultipartFile mockFile;
+    private FileUpload mockFile;
     private PDDocument mockDocument;
     private PDDocumentCatalog mockCatalog;
     private PDPageTree mockPages;
@@ -72,12 +74,7 @@ class EditTableOfContentsControllerTest {
                             lenient().when(tf.getPath()).thenReturn(f.toPath());
                             return tf;
                         });
-        mockFile =
-                new MockMultipartFile(
-                        "file",
-                        "test.pdf",
-                        MediaType.APPLICATION_PDF_VALUE,
-                        "PDF content".getBytes());
+        mockFile = TestFileUploads.pdf("PDF content".getBytes());
         mockDocument = mock(PDDocument.class);
         mockCatalog = mock(PDDocumentCatalog.class);
         mockPages = mock(PDPageTree.class);
@@ -90,7 +87,7 @@ class EditTableOfContentsControllerTest {
     @Test
     void testExtractBookmarks_WithExistingBookmarks_Success() throws Exception {
         // Given
-        when(pdfDocumentFactory.load(mockFile)).thenReturn(mockDocument);
+        when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(mockDocument);
         when(mockDocument.getDocumentCatalog()).thenReturn(mockCatalog);
         when(mockCatalog.getDocumentOutline()).thenReturn(mockOutline);
         when(mockOutline.getFirstChild()).thenReturn(mockOutlineItem);
@@ -103,13 +100,13 @@ class EditTableOfContentsControllerTest {
         when(mockOutlineItem.getNextSibling()).thenReturn(null);
 
         // When
-        ResponseEntity<List<Map<String, Object>>> response =
-                editTableOfContentsController.extractBookmarks(mockFile);
+        Response response = editTableOfContentsController.extractBookmarks(mockFile);
 
         // Then
         assertNotNull(response);
-        assertNotNull(response.getBody());
-        List<Map<String, Object>> result = response.getBody();
+        assertNotNull(response.getEntity());
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> result = (List<Map<String, Object>>) response.getEntity();
         assertEquals(1, result.size());
 
         Map<String, Object> bookmark = result.get(0);
@@ -123,18 +120,18 @@ class EditTableOfContentsControllerTest {
     @Test
     void testExtractBookmarks_NoOutline_ReturnsEmptyList() throws Exception {
         // Given
-        when(pdfDocumentFactory.load(mockFile)).thenReturn(mockDocument);
+        when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(mockDocument);
         when(mockDocument.getDocumentCatalog()).thenReturn(mockCatalog);
         when(mockCatalog.getDocumentOutline()).thenReturn(null);
 
         // When
-        ResponseEntity<List<Map<String, Object>>> response =
-                editTableOfContentsController.extractBookmarks(mockFile);
+        Response response = editTableOfContentsController.extractBookmarks(mockFile);
 
         // Then
         assertNotNull(response);
-        assertNotNull(response.getBody());
-        List<Map<String, Object>> result = response.getBody();
+        assertNotNull(response.getEntity());
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> result = (List<Map<String, Object>>) response.getEntity();
         assertTrue(result.isEmpty());
         verify(mockDocument).close();
     }
@@ -144,7 +141,7 @@ class EditTableOfContentsControllerTest {
         // Given
         PDOutlineItem childItem = mock(PDOutlineItem.class);
 
-        when(pdfDocumentFactory.load(mockFile)).thenReturn(mockDocument);
+        when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(mockDocument);
         when(mockDocument.getDocumentCatalog()).thenReturn(mockCatalog);
         when(mockCatalog.getDocumentOutline()).thenReturn(mockOutline);
         when(mockOutline.getFirstChild()).thenReturn(mockOutlineItem);
@@ -165,13 +162,13 @@ class EditTableOfContentsControllerTest {
         when(childItem.getNextSibling()).thenReturn(null);
 
         // When
-        ResponseEntity<List<Map<String, Object>>> response =
-                editTableOfContentsController.extractBookmarks(mockFile);
+        Response response = editTableOfContentsController.extractBookmarks(mockFile);
 
         // Then
         assertNotNull(response);
-        assertNotNull(response.getBody());
-        List<Map<String, Object>> result = response.getBody();
+        assertNotNull(response.getEntity());
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> result = (List<Map<String, Object>>) response.getEntity();
         assertEquals(1, result.size());
 
         Map<String, Object> parentBookmark = result.get(0);
@@ -193,7 +190,7 @@ class EditTableOfContentsControllerTest {
     @Test
     void testExtractBookmarks_PageNotFound_UsesPageOne() throws Exception {
         // Given
-        when(pdfDocumentFactory.load(mockFile)).thenReturn(mockDocument);
+        when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(mockDocument);
         when(mockDocument.getDocumentCatalog()).thenReturn(mockCatalog);
         when(mockCatalog.getDocumentOutline()).thenReturn(mockOutline);
         when(mockOutline.getFirstChild()).thenReturn(mockOutlineItem);
@@ -204,13 +201,13 @@ class EditTableOfContentsControllerTest {
         when(mockOutlineItem.getNextSibling()).thenReturn(null);
 
         // When
-        ResponseEntity<List<Map<String, Object>>> response =
-                editTableOfContentsController.extractBookmarks(mockFile);
+        Response response = editTableOfContentsController.extractBookmarks(mockFile);
 
         // Then
         assertNotNull(response);
-        assertNotNull(response.getBody());
-        List<Map<String, Object>> result = response.getBody();
+        assertNotNull(response.getEntity());
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> result = (List<Map<String, Object>>) response.getEntity();
         assertEquals(1, result.size());
 
         Map<String, Object> bookmark = result.get(0);
@@ -223,10 +220,7 @@ class EditTableOfContentsControllerTest {
     @Test
     void testEditTableOfContents_Success() throws Exception {
         // Given
-        EditTableOfContentsRequest request = new EditTableOfContentsRequest();
-        request.setFileInput(mockFile);
-        request.setBookmarkData("[{\"title\":\"Chapter 1\",\"pageNumber\":1,\"children\":[]}]");
-        request.setReplaceExisting(true);
+        String bookmarkData = "[{\"title\":\"Chapter 1\",\"pageNumber\":1,\"children\":[]}]";
 
         List<BookmarkItem> bookmarks = new ArrayList<>();
         BookmarkItem bookmark = new BookmarkItem();
@@ -235,9 +229,9 @@ class EditTableOfContentsControllerTest {
         bookmark.setChildren(new ArrayList<>());
         bookmarks.add(bookmark);
 
-        when(pdfDocumentFactory.load(mockFile)).thenReturn(mockDocument);
+        when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(mockDocument);
         when(objectMapper.readValue(
-                        eq(request.getBookmarkData()),
+                        eq(bookmarkData),
                         ArgumentMatchers.<TypeReference<List<BookmarkItem>>>any()))
                 .thenReturn(bookmarks);
         when(mockDocument.getDocumentCatalog()).thenReturn(mockCatalog);
@@ -255,12 +249,13 @@ class EditTableOfContentsControllerTest {
                 .save(any(File.class));
 
         // When
-        ResponseEntity<Resource> result =
-                editTableOfContentsController.editTableOfContents(request);
+        Response result =
+                editTableOfContentsController.editTableOfContents(
+                        mockFile, null, bookmarkData, true);
 
         // Then
         assertNotNull(result);
-        assertNotNull(result.getBody());
+        assertNotNull(result.getEntity());
 
         ArgumentCaptor<PDDocumentOutline> outlineCaptor =
                 ArgumentCaptor.forClass(PDDocumentOutline.class);
@@ -275,13 +270,9 @@ class EditTableOfContentsControllerTest {
     @Test
     void testEditTableOfContents_WithNestedBookmarks_Success() throws Exception {
         // Given
-        EditTableOfContentsRequest request = new EditTableOfContentsRequest();
-        request.setFileInput(mockFile);
-
         String bookmarkJson =
                 "[{\"title\":\"Chapter 1\",\"pageNumber\":1,\"children\":[{\"title\":\"Section"
                         + " 1.1\",\"pageNumber\":2,\"children\":[]}]}]";
-        request.setBookmarkData(bookmarkJson);
 
         List<BookmarkItem> bookmarks = new ArrayList<>();
         BookmarkItem parentBookmark = new BookmarkItem();
@@ -298,7 +289,7 @@ class EditTableOfContentsControllerTest {
         parentBookmark.setChildren(children);
         bookmarks.add(parentBookmark);
 
-        when(pdfDocumentFactory.load(mockFile)).thenReturn(mockDocument);
+        when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(mockDocument);
         when(objectMapper.readValue(
                         eq(bookmarkJson),
                         ArgumentMatchers.<TypeReference<List<BookmarkItem>>>any()))
@@ -319,8 +310,9 @@ class EditTableOfContentsControllerTest {
                 .save(any(File.class));
 
         // When
-        ResponseEntity<Resource> result =
-                editTableOfContentsController.editTableOfContents(request);
+        Response result =
+                editTableOfContentsController.editTableOfContents(
+                        mockFile, null, bookmarkJson, null);
 
         // Then
         assertNotNull(result);
@@ -331,11 +323,9 @@ class EditTableOfContentsControllerTest {
     @Test
     void testEditTableOfContents_PageNumberBounds_ClampsValues() throws Exception {
         // Given
-        EditTableOfContentsRequest request = new EditTableOfContentsRequest();
-        request.setFileInput(mockFile);
-        request.setBookmarkData(
+        String bookmarkData =
                 "[{\"title\":\"Chapter 1\",\"pageNumber\":-5,\"children\":[]},{\"title\":\"Chapter"
-                        + " 2\",\"pageNumber\":100,\"children\":[]}]");
+                        + " 2\",\"pageNumber\":100,\"children\":[]}]";
 
         List<BookmarkItem> bookmarks = new ArrayList<>();
 
@@ -352,9 +342,9 @@ class EditTableOfContentsControllerTest {
         bookmarks.add(bookmark1);
         bookmarks.add(bookmark2);
 
-        when(pdfDocumentFactory.load(mockFile)).thenReturn(mockDocument);
+        when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(mockDocument);
         when(objectMapper.readValue(
-                        eq(request.getBookmarkData()),
+                        eq(bookmarkData),
                         ArgumentMatchers.<TypeReference<List<BookmarkItem>>>any()))
                 .thenReturn(bookmarks);
         when(mockDocument.getDocumentCatalog()).thenReturn(mockCatalog);
@@ -373,8 +363,9 @@ class EditTableOfContentsControllerTest {
                 .save(any(File.class));
 
         // When
-        ResponseEntity<Resource> result =
-                editTableOfContentsController.editTableOfContents(request);
+        Response result =
+                editTableOfContentsController.editTableOfContents(
+                        mockFile, null, bookmarkData, null);
 
         // Then
         assertNotNull(result);
@@ -428,22 +419,21 @@ class EditTableOfContentsControllerTest {
     @Test
     void testEditTableOfContents_IOExceptionDuringLoad_ThrowsException() throws Exception {
         // Given
-        EditTableOfContentsRequest request = new EditTableOfContentsRequest();
-        request.setFileInput(mockFile);
-
-        when(pdfDocumentFactory.load(mockFile))
+        when(pdfDocumentFactory.load(any(MultipartFile.class)))
                 .thenThrow(new RuntimeException("Failed to load PDF"));
 
         // When & Then
         assertThrows(
                 RuntimeException.class,
-                () -> editTableOfContentsController.editTableOfContents(request));
+                () ->
+                        editTableOfContentsController.editTableOfContents(
+                                mockFile, null, "[]", null));
     }
 
     @Test
     void testExtractBookmarks_IOExceptionDuringLoad_ThrowsException() throws Exception {
         // Given
-        when(pdfDocumentFactory.load(mockFile))
+        when(pdfDocumentFactory.load(any(MultipartFile.class)))
                 .thenThrow(new RuntimeException("Failed to load PDF"));
 
         // When & Then

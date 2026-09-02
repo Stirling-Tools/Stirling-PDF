@@ -1,18 +1,21 @@
 package stirling.software.proprietary.storage.provider;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.UUID;
 
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
-import org.springframework.web.multipart.MultipartFile;
-
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.io.InputStreamResource;
+import stirling.software.common.model.io.Resource;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.storage.model.StoredFileBlob;
 import stirling.software.proprietary.storage.repository.StoredFileBlobRepository;
 
+// MIGRATION: not a CDI bean; instantiated via `new` by StorageProviderConfig.storageProvider()
+// producer, which selects the configured provider. Keeping @ApplicationScoped here caused an
+// ambiguous dependency with that producer.
 @RequiredArgsConstructor
 public class DatabaseStorageProvider implements StorageProvider {
 
@@ -24,7 +27,7 @@ public class DatabaseStorageProvider implements StorageProvider {
         StoredFileBlob blob = new StoredFileBlob();
         blob.setStorageKey(storageKey);
         blob.setData(file.getBytes());
-        storedFileBlobRepository.save(blob);
+        storedFileBlobRepository.persist(blob);
 
         return StoredObject.builder()
                 .storageKey(storageKey)
@@ -38,14 +41,15 @@ public class DatabaseStorageProvider implements StorageProvider {
     public Resource load(String storageKey) throws IOException {
         StoredFileBlob blob =
                 storedFileBlobRepository
-                        .findById(storageKey)
+                        .findByIdOptional(storageKey)
                         .orElseThrow(() -> new IOException("File not found"));
-        return new ByteArrayResource(blob.getData());
+        // Quarkus/Jakarta has no Spring ByteArrayResource; use the common InputStreamResource shim.
+        return new InputStreamResource(new ByteArrayInputStream(blob.getData()), storageKey);
     }
 
     @Override
     public void delete(String storageKey) throws IOException {
-        if (!storedFileBlobRepository.existsById(storageKey)) {
+        if (!storedFileBlobRepository.findByIdOptional(storageKey).isPresent()) {
             return;
         }
         storedFileBlobRepository.deleteById(storageKey);

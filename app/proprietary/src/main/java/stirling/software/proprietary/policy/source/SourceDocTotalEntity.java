@@ -2,13 +2,10 @@ package stirling.software.proprietary.policy.source;
 
 import java.io.Serializable;
 
-import org.springframework.data.domain.Persistable;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import jakarta.persistence.Transient;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -19,17 +16,16 @@ import lombok.Setter;
  * row instead of scanning the source's whole hourly-bucket history, and so {@link
  * SourceDocCountEntity} buckets can be pruned to the rolling 30-day window without losing it.
  *
- * <p>Like {@link SourceDocCountEntity}, implements {@link Persistable} reporting {@code isNew() ==
- * true} so a new source's first {@code save} {@code persist}s (a raw INSERT) and a concurrent
- * insert surfaces as a constraint violation the counter retries as an increment, rather than {@code
- * merge} silently overwriting it.
+ * <p>Like {@link SourceDocCountEntity}, a new source's first total row is inserted rather than
+ * merged, so a concurrent insert surfaces as a constraint violation the counter retries as an
+ * increment instead of silently overwriting it.
  */
 @Entity
 @Table(name = "policy_source_doc_totals")
 @NoArgsConstructor
 @Getter
 @Setter
-public class SourceDocTotalEntity implements Serializable, Persistable<String> {
+public class SourceDocTotalEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -43,17 +39,5 @@ public class SourceDocTotalEntity implements Serializable, Persistable<String> {
     public SourceDocTotalEntity(String sourceId, long docTotal) {
         this.sourceId = sourceId;
         this.docTotal = docTotal;
-    }
-
-    @Override
-    @Transient
-    public String getId() {
-        return sourceId;
-    }
-
-    @Override
-    @Transient
-    public boolean isNew() {
-        return true;
     }
 }

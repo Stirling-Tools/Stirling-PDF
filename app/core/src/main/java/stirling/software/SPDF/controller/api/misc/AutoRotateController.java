@@ -19,13 +19,16 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.rendering.ImageType;
 import org.apache.pdfbox.rendering.PDFRenderer;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ModelAttribute;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.swagger.v3.oas.annotations.Operation;
 
-import jakarta.validation.Valid;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +46,7 @@ import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.common.model.tool.ToolArity;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
@@ -58,6 +62,8 @@ import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @MiscApi
+@jakarta.ws.rs.Path("/api/v1/misc")
+@ApplicationScoped
 @Slf4j
 @RequiredArgsConstructor
 public class AutoRotateController {
@@ -77,8 +83,11 @@ public class AutoRotateController {
     private final RuntimePathConfig runtimePathConfig;
     private final ApplicationProperties applicationProperties;
 
+    @POST
+    @jakarta.ws.rs.Path("/auto-rotate-pdf")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             value = "/auto-rotate-pdf",
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @ToolIO(
@@ -96,8 +105,29 @@ public class AutoRotateController {
                             + " displays upright. With dryRun=true, returns a JSON per-page report"
                             + " instead of the PDF. With pageRotations set, applies the given"
                             + " corrections without running detection.")
-    public ResponseEntity<?> autoRotatePdf(@Valid @ModelAttribute AutoRotatePdfRequest request)
+    public Response autoRotatePdf(
+            @RestForm("fileInput") FileUpload fileInput,
+            @RestForm("fileId") String fileId,
+            @RestForm("detectionMode") String detectionMode,
+            @RestForm("confidenceThreshold") Double confidenceThreshold,
+            @RestForm("dryRun") Boolean dryRun,
+            @RestForm("inferUndetected") Boolean inferUndetected)
             throws IOException, InterruptedException {
+        AutoRotatePdfRequest request = new AutoRotatePdfRequest();
+        request.setFileInput(FileUploadMultipartFile.of(fileInput));
+        request.setFileId(fileId);
+        if (detectionMode != null) {
+            request.setDetectionMode(detectionMode);
+        }
+        if (confidenceThreshold != null) {
+            request.setConfidenceThreshold(confidenceThreshold);
+        }
+        if (dryRun != null) {
+            request.setDryRun(dryRun);
+        }
+        if (inferUndetected != null) {
+            request.setInferUndetected(inferUndetected);
+        }
         String mode =
                 request.getDetectionMode() == null
                         ? "auto"
@@ -117,7 +147,7 @@ public class AutoRotateController {
 
             AutoRotateAnalysisResult analysis = analyse(document, mode, request);
             if (request.isDryRun()) {
-                return ResponseEntity.ok(analysis);
+                return Response.ok(analysis).build();
             }
             for (PageResult pageResult : analysis.getPages()) {
                 if (pageResult.isApply()) {
@@ -382,7 +412,7 @@ public class AutoRotateController {
                 .build();
     }
 
-    private ResponseEntity<?> pdfResponse(PDDocument document, AutoRotatePdfRequest request)
+    private Response pdfResponse(PDDocument document, AutoRotatePdfRequest request)
             throws IOException {
         String originalName =
                 request.getFileInput() != null

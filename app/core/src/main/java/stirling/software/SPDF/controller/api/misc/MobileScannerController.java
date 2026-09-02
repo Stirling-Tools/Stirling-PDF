@@ -3,23 +3,13 @@ package stirling.software.SPDF.controller.api.misc;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
@@ -29,9 +19,21 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.common.service.MobileScannerService;
 import stirling.software.common.service.MobileScannerService.FileMetadata;
 
@@ -40,8 +42,8 @@ import stirling.software.common.service.MobileScannerService.FileMetadata;
  * that can be retrieved by desktop clients via a session-based system. No authentication required
  * for peer-to-peer scanning workflow.
  */
-@RestController
-@RequestMapping("/api/v1/mobile-scanner")
+@ApplicationScoped
+@jakarta.ws.rs.Path("/api/v1/mobile-scanner")
 @Tag(
         name = "Mobile Scanner",
         description =
@@ -68,18 +70,19 @@ public class MobileScannerController {
      *
      * @return Error response if disabled, null if enabled
      */
-    private ResponseEntity<Map<String, Object>> checkFeatureEnabled() {
+    private Response checkFeatureEnabled() {
         boolean anyEnabled =
                 applicationProperties.getSystem().isEnableMobileScanner()
                         || applicationProperties.getSystem().isEnableMobileSignature();
         if (!anyEnabled) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(
+            return Response.status(Response.Status.FORBIDDEN)
+                    .entity(
                             Map.of(
                                     "error",
                                     "Mobile scanner feature is not enabled",
                                     "enabled",
-                                    false));
+                                    false))
+                    .build();
         }
         return null;
     }
@@ -90,7 +93,8 @@ public class MobileScannerController {
      * @param sessionId Unique session identifier
      * @return Session information with expiry time
      */
-    @PostMapping("/create-session/{sessionId}")
+    @POST
+    @jakarta.ws.rs.Path("/create-session/{sessionId}")
     @Operation(
             summary = "Create a new mobile scanner session",
             description = "Desktop clients call this when generating a QR code")
@@ -100,11 +104,12 @@ public class MobileScannerController {
             content = @Content(schema = @Schema(implementation = SessionInfoResponse.class)))
     @ApiResponse(responseCode = "400", description = "Invalid session ID")
     @ApiResponse(responseCode = "403", description = "Mobile scanner feature not enabled")
-    public ResponseEntity<Map<String, Object>> createSession(
-            @Parameter(description = "Session ID for QR code", required = true) @PathVariable
+    public Response createSession(
+            @Parameter(description = "Session ID for QR code", required = true)
+                    @PathParam("sessionId")
                     String sessionId) {
 
-        ResponseEntity<Map<String, Object>> featureCheck = checkFeatureEnabled();
+        Response featureCheck = checkFeatureEnabled();
         if (featureCheck != null) {
             return featureCheck;
         }
@@ -120,11 +125,13 @@ public class MobileScannerController {
             response.put("expiresAt", sessionInfo.getExpiresAt());
             response.put("timeoutMs", sessionInfo.getTimeoutMs());
 
-            return ResponseEntity.ok(response);
+            return Response.ok(response).build();
 
         } catch (IllegalArgumentException e) {
             log.warn("Invalid session creation request: {}", e.getMessage());
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(Map.of("error", e.getMessage()))
+                    .build();
         }
     }
 
@@ -134,7 +141,8 @@ public class MobileScannerController {
      * @param sessionId Session identifier to validate
      * @return Session information if valid, error if invalid/expired
      */
-    @GetMapping("/validate-session/{sessionId}")
+    @GET
+    @jakarta.ws.rs.Path("/validate-session/{sessionId}")
     @Operation(
             summary = "Validate a mobile scanner session",
             description = "Check if session exists and is not expired")
@@ -144,11 +152,12 @@ public class MobileScannerController {
             content = @Content(schema = @Schema(implementation = SessionInfoResponse.class)))
     @ApiResponse(responseCode = "404", description = "Session not found or expired")
     @ApiResponse(responseCode = "403", description = "Mobile scanner feature not enabled")
-    public ResponseEntity<Map<String, Object>> validateSession(
-            @Parameter(description = "Session ID to validate", required = true) @PathVariable
+    public Response validateSession(
+            @Parameter(description = "Session ID to validate", required = true)
+                    @PathParam("sessionId")
                     String sessionId) {
 
-        ResponseEntity<Map<String, Object>> featureCheck = checkFeatureEnabled();
+        Response featureCheck = checkFeatureEnabled();
         if (featureCheck != null) {
             return featureCheck;
         }
@@ -157,8 +166,9 @@ public class MobileScannerController {
                 mobileScannerService.validateSession(sessionId);
 
         if (sessionInfo == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("valid", false, "error", "Session not found or expired"));
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(Map.of("valid", false, "error", "Session not found or expired"))
+                    .build();
         }
 
         Map<String, Object> response = new HashMap<>();
@@ -168,17 +178,19 @@ public class MobileScannerController {
         response.put("expiresAt", sessionInfo.getExpiresAt());
         response.put("timeoutMs", sessionInfo.getTimeoutMs());
 
-        return ResponseEntity.ok(response);
+        return Response.ok(response).build();
     }
 
     /**
      * Upload files from mobile device
      *
      * @param sessionId Unique session identifier from QR code
-     * @param files Files to upload
+     * @param fileUploads Files to upload
      * @return Upload status
      */
-    @PostMapping("/upload/{sessionId}")
+    @POST
+    @jakarta.ws.rs.Path("/upload/{sessionId}")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Operation(
             summary = "Upload scanned files from mobile device",
             description = "Mobile devices upload scanned images to a temporary session")
@@ -189,20 +201,28 @@ public class MobileScannerController {
     @ApiResponse(responseCode = "400", description = "Invalid session ID or files")
     @ApiResponse(responseCode = "403", description = "Mobile scanner feature not enabled")
     @ApiResponse(responseCode = "500", description = "Upload failed")
-    public ResponseEntity<Map<String, Object>> uploadFiles(
-            @Parameter(description = "Session ID from QR code", required = true) @PathVariable
+    public Response uploadFiles(
+            @Parameter(description = "Session ID from QR code", required = true)
+                    @PathParam("sessionId")
                     String sessionId,
-            @Parameter(description = "Files to upload", required = true) @RequestParam("files")
-                    List<MultipartFile> files) {
+            @Parameter(description = "Files to upload", required = true) @RestForm("files")
+                    List<FileUpload> fileUploads) {
 
-        ResponseEntity<Map<String, Object>> featureCheck = checkFeatureEnabled();
+        Response featureCheck = checkFeatureEnabled();
         if (featureCheck != null) {
             return featureCheck;
         }
 
         try {
-            if (files == null || files.isEmpty()) {
-                return ResponseEntity.badRequest().body(Map.of("error", "No files provided"));
+            if (fileUploads == null || fileUploads.isEmpty()) {
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity(Map.of("error", "No files provided"))
+                        .build();
+            }
+
+            List<MultipartFile> files = new ArrayList<>();
+            for (FileUpload upload : fileUploads) {
+                files.add(FileUploadMultipartFile.of(upload));
             }
 
             mobileScannerService.uploadFiles(sessionId, files);
@@ -214,15 +234,18 @@ public class MobileScannerController {
             response.put("message", "Files uploaded successfully");
 
             log.info("Mobile scanner upload: session={}, files={}", sessionId, files.size());
-            return ResponseEntity.ok(response);
+            return Response.ok(response).build();
 
         } catch (IllegalArgumentException e) {
             log.warn("Invalid mobile scanner upload request: {}", e.getMessage());
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(Map.of("error", e.getMessage()))
+                    .build();
         } catch (IOException e) {
             log.error("Failed to upload files for session: {}", sessionId, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Failed to save files"));
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(Map.of("error", "Failed to save files"))
+                    .build();
         }
     }
 
@@ -232,7 +255,8 @@ public class MobileScannerController {
      * @param sessionId Session identifier
      * @return List of file metadata
      */
-    @GetMapping("/files/{sessionId}")
+    @GET
+    @jakarta.ws.rs.Path("/files/{sessionId}")
     @Operation(
             summary = "Get uploaded files for a session",
             description = "Desktop clients poll this endpoint to check for new uploads")
@@ -241,11 +265,11 @@ public class MobileScannerController {
             description = "File list retrieved",
             content = @Content(schema = @Schema(implementation = FileListResponse.class)))
     @ApiResponse(responseCode = "403", description = "Mobile scanner feature not enabled")
-    public ResponseEntity<Map<String, Object>> getSessionFiles(
-            @Parameter(description = "Session ID", required = true) @PathVariable
+    public Response getSessionFiles(
+            @Parameter(description = "Session ID", required = true) @PathParam("sessionId")
                     String sessionId) {
 
-        ResponseEntity<Map<String, Object>> featureCheck = checkFeatureEnabled();
+        Response featureCheck = checkFeatureEnabled();
         if (featureCheck != null) {
             return featureCheck;
         }
@@ -257,7 +281,7 @@ public class MobileScannerController {
         response.put("files", files);
         response.put("count", files.size());
 
-        return ResponseEntity.ok(response);
+        return Response.ok(response).build();
     }
 
     /**
@@ -267,7 +291,8 @@ public class MobileScannerController {
      * @param filename Filename to download
      * @return File content
      */
-    @GetMapping("/download/{sessionId}/{filename}")
+    @GET
+    @jakarta.ws.rs.Path("/download/{sessionId}/{filename}")
     @Operation(
             summary = "Download a specific file",
             description =
@@ -275,14 +300,15 @@ public class MobileScannerController {
     @ApiResponse(responseCode = "200", description = "File downloaded successfully")
     @ApiResponse(responseCode = "403", description = "Mobile scanner feature not enabled")
     @ApiResponse(responseCode = "404", description = "File or session not found")
-    public ResponseEntity<Resource> downloadFile(
-            @Parameter(description = "Session ID", required = true) @PathVariable String sessionId,
-            @Parameter(description = "Filename to download", required = true) @PathVariable
+    public Response downloadFile(
+            @Parameter(description = "Session ID", required = true) @PathParam("sessionId")
+                    String sessionId,
+            @Parameter(description = "Filename to download", required = true) @PathParam("filename")
                     String filename) {
 
         if (!applicationProperties.getSystem().isEnableMobileScanner()
                 && !applicationProperties.getSystem().isEnableMobileSignature()) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            return Response.status(Response.Status.FORBIDDEN).build();
         }
 
         try {
@@ -293,25 +319,23 @@ public class MobileScannerController {
 
             String contentType = Files.probeContentType(filePath);
             if (contentType == null) {
-                contentType = MediaType.APPLICATION_OCTET_STREAM_VALUE;
+                contentType = MediaType.APPLICATION_OCTET_STREAM;
             }
 
             // Delete file immediately after reading into memory (server-side cleanup)
             mobileScannerService.deleteFileAfterDownload(sessionId, filename);
 
             // Serve from memory
-            Resource resource = new org.springframework.core.io.ByteArrayResource(fileBytes);
-
-            return ResponseEntity.ok()
-                    .contentType(MediaType.parseMediaType(contentType))
+            return Response.ok(fileBytes)
+                    .type(MediaType.valueOf(contentType))
                     .header(
                             HttpHeaders.CONTENT_DISPOSITION,
                             "attachment; filename=\"" + filename + "\"")
-                    .body(resource);
+                    .build();
 
         } catch (IOException e) {
             log.warn("File not found: session={}, file={}", sessionId, filename);
-            return ResponseEntity.notFound().build();
+            return Response.status(Response.Status.NOT_FOUND).build();
         }
     }
 
@@ -321,25 +345,34 @@ public class MobileScannerController {
      * @param sessionId Session to delete
      * @return Deletion status
      */
-    @DeleteMapping("/session/{sessionId}")
+    @DELETE
+    @jakarta.ws.rs.Path("/session/{sessionId}")
     @Operation(
             summary = "Delete a session",
             description = "Manually delete a session and all its uploaded files")
     @ApiResponse(responseCode = "200", description = "Session deleted successfully")
     @ApiResponse(responseCode = "403", description = "Mobile scanner feature not enabled")
-    public ResponseEntity<Map<String, Object>> deleteSession(
-            @Parameter(description = "Session ID to delete", required = true) @PathVariable
+    public Response deleteSession(
+            @Parameter(description = "Session ID to delete", required = true)
+                    @PathParam("sessionId")
                     String sessionId) {
 
-        ResponseEntity<Map<String, Object>> featureCheck = checkFeatureEnabled();
+        Response featureCheck = checkFeatureEnabled();
         if (featureCheck != null) {
             return featureCheck;
         }
 
         mobileScannerService.deleteSession(sessionId);
 
-        return ResponseEntity.ok(
-                Map.of("success", true, "sessionId", sessionId, "message", "Session deleted"));
+        return Response.ok(
+                        Map.of(
+                                "success",
+                                true,
+                                "sessionId",
+                                sessionId,
+                                "message",
+                                "Session deleted"))
+                .build();
     }
 
     // Response schemas for OpenAPI documentation

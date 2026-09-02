@@ -11,8 +11,8 @@ import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -29,7 +29,7 @@ import tools.jackson.databind.ObjectMapper;
  * reaching the network.
  */
 @Slf4j
-@Service
+@ApplicationScoped
 public class ExternalApiCaller {
 
     /**
@@ -44,7 +44,7 @@ public class ExternalApiCaller {
     private final ApplicationProperties applicationProperties;
     private final ApiTokenCache tokenCache;
 
-    @Autowired
+    @Inject
     public ExternalApiCaller(
             ApplicationProperties applicationProperties, ObjectMapper objectMapper) {
         this(

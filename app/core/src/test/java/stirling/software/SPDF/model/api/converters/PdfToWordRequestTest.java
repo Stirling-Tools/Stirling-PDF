@@ -6,7 +6,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.web.multipart.MultipartFile;
+
+import stirling.software.common.model.MultipartFile;
 
 @DisplayName("PdfToWordRequest")
 class PdfToWordRequestTest {

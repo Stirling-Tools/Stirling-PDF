@@ -8,7 +8,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.springframework.stereotype.Service;
+import io.quarkus.arc.profile.IfBuildProfile;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 
@@ -23,7 +25,8 @@ import stirling.software.proprietary.util.SecretMasker;
  * team's policies in memory rather than persisted on the source - fine at admin-dashboard scale and
  * always consistent with the live policy set.
  */
-@Service
+@ApplicationScoped
+@IfBuildProfile("saas")
 @RequiredArgsConstructor
 public class SourceOverviewService {
 

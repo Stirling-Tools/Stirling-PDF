@@ -1,8 +1,7 @@
 package stirling.software.common.cluster;
 
-import org.springframework.context.annotation.Configuration;
-
 import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +18,7 @@ import stirling.software.common.model.ApplicationProperties.Cluster;
  * single-instance install needs no new config.
  */
 @Slf4j
-@Configuration
+@ApplicationScoped
 @RequiredArgsConstructor
 public class ClusterConfig {
 
@@ -47,7 +46,7 @@ public class ClusterConfig {
                             + " JVM is coordinated. Cross-node lookups and the file proxy will fail."
                             + " Use backplane=valkey for real multi-node deployments.");
         } else {
-            // Fail fast on typos like "valky" so Spring doesn't later report a cryptic
+            // Fail fast on typos like "valky" so CDI doesn't later report a cryptic
             // "no ClusterBackplane bean" - the operator-facing error names the bad value.
             throw new IllegalStateException(
                     "cluster.enabled=true with unknown backplane '"

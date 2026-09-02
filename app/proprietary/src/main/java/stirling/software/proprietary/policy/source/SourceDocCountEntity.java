@@ -2,14 +2,11 @@ package stirling.software.proprietary.policy.source;
 
 import java.io.Serializable;
 
-import org.springframework.data.domain.Persistable;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
 import jakarta.persistence.Table;
-import jakarta.persistence.Transient;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -20,6 +17,9 @@ import lombok.Setter;
  * were fed, {@code docCount} the running total for that hour. Rolling-window totals are summed from
  * these buckets. {@code sourceId} is a plain value, not a foreign key, matching the rest of the
  * subsystem so it stays decoupled from the security entities.
+ *
+ * <p>Buckets are inserted, never merged, so a concurrent insert surfaces as a constraint violation
+ * the counter retries as an increment rather than one run overwriting the other's tally.
  */
 @Entity
 @Table(name = "policy_source_doc_counts")
@@ -27,7 +27,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @Getter
 @Setter
-public class SourceDocCountEntity implements Serializable, Persistable<SourceDocCountId> {
+public class SourceDocCountEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -46,17 +46,5 @@ public class SourceDocCountEntity implements Serializable, Persistable<SourceDoc
         this.sourceId = sourceId;
         this.bucketHour = bucketHour;
         this.docCount = docCount;
-    }
-
-    @Override
-    @Transient
-    public SourceDocCountId getId() {
-        return new SourceDocCountId(sourceId, bucketHour);
-    }
-
-    @Override
-    @Transient
-    public boolean isNew() {
-        return true;
     }
 }

@@ -1,8 +1,6 @@
 package stirling.software.proprietary.security.model.exception;
 
-import org.springframework.security.core.AuthenticationException;
-
-public class AuthenticationFailureException extends AuthenticationException {
+public class AuthenticationFailureException extends RuntimeException {
     public AuthenticationFailureException(String message) {
         super(message);
     }

@@ -10,12 +10,14 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.transaction.support.TransactionOperations;
+import java.util.function.Supplier;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+
+import io.quarkus.narayana.jta.QuarkusTransaction;
+
+import jakarta.persistence.PersistenceException;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -49,8 +51,35 @@ public class FileEncryptionKeyService {
      * INSERT would otherwise defer to the outer commit — the duplicate-key exception would surface
      * far from {@link #createActive}'s recovery catch, and the outer transaction would already be
      * rollback-only.
+     *
+     * <p>Migrated from Spring's {@code TransactionOperations}: production passes {@link
+     * #requiringNewTransaction()}, tests pass a plain pass-through.
      */
-    private final TransactionOperations keyCreationTx;
+    public interface KeyCreationTx {
+        <T> T execute(Supplier<T> work);
+    }
+
+    /** Quarkus REQUIRES_NEW: the key row commits independently of any caller transaction. */
+    public static KeyCreationTx requiringNewTransaction() {
+        return new KeyCreationTx() {
+            @Override
+            public <T> T execute(Supplier<T> work) {
+                return QuarkusTransaction.requiringNew().call(work::get);
+            }
+        };
+    }
+
+    /** No transaction management: the work runs on whatever context the caller is already in. */
+    public static KeyCreationTx withoutTransaction() {
+        return new KeyCreationTx() {
+            @Override
+            public <T> T execute(Supplier<T> work) {
+                return work.get();
+            }
+        };
+    }
+
+    private final KeyCreationTx keyCreationTx;
 
     private final Cache<UUID, byte[]> unwrapCache =
             Caffeine.newBuilder().expireAfterWrite(CACHE_TTL).maximumSize(10_000).build();
@@ -59,24 +88,20 @@ public class FileEncryptionKeyService {
 
     public FileEncryptionKeyService(
             FileEncryptionKeyRepository repository, FileEncryptionMasterKey masterKey) {
-        this(
-                repository,
-                masterKey,
-                StorageEncryptionAuditListener.NOOP,
-                TransactionOperations.withoutTransaction());
+        this(repository, masterKey, StorageEncryptionAuditListener.NOOP, withoutTransaction());
     }
 
     public FileEncryptionKeyService(
             FileEncryptionKeyRepository repository,
             FileEncryptionMasterKey masterKey,
             StorageEncryptionAuditListener auditListener) {
-        this(repository, masterKey, auditListener, TransactionOperations.withoutTransaction());
+        this(repository, masterKey, auditListener, withoutTransaction());
     }
 
     public FileEncryptionKeyService(
             FileEncryptionKeyRepository repository,
             FileEncryptionMasterKey masterKey,
-            TransactionOperations keyCreationTx) {
+            KeyCreationTx keyCreationTx) {
         this(repository, masterKey, StorageEncryptionAuditListener.NOOP, keyCreationTx);
     }
 
@@ -84,7 +109,7 @@ public class FileEncryptionKeyService {
             FileEncryptionKeyRepository repository,
             FileEncryptionMasterKey masterKey,
             StorageEncryptionAuditListener auditListener,
-            TransactionOperations keyCreationTx) {
+            KeyCreationTx keyCreationTx) {
         this.repository = repository;
         this.masterKey = masterKey;
         this.auditListener = auditListener;
@@ -127,7 +152,7 @@ public class FileEncryptionKeyService {
         }
         FileEncryptionKey row =
                 repository
-                        .findById(keyId)
+                        .findByIdOptional(keyId)
                         .orElseThrow(
                                 () -> {
                                     auditListener.decryptDenied(keyId, "key not found");
@@ -154,7 +179,7 @@ public class FileEncryptionKeyService {
             throws StorageEncryptionException {
         FileEncryptionKey row =
                 repository
-                        .findById(keyId)
+                        .findByIdOptional(keyId)
                         .orElseThrow(
                                 () -> new StorageEncryptionException("No encryption key " + keyId));
         row.setStatus(status);
@@ -177,7 +202,7 @@ public class FileEncryptionKeyService {
     public FileEncryptionKey enable(UUID keyId, String actor) throws StorageEncryptionException {
         FileEncryptionKey row =
                 repository
-                        .findById(keyId)
+                        .findByIdOptional(keyId)
                         .orElseThrow(
                                 () -> new StorageEncryptionException("No encryption key " + keyId));
         boolean scopeHasAnotherActiveKey =
@@ -259,7 +284,7 @@ public class FileEncryptionKeyService {
         StorageEncryptionException firstFailure = null;
         // DISABLED rows are included: revocation is meant to be reversible, and a row that cannot
         // be unwrapped would not come back on enable.
-        for (FileEncryptionKey row : repository.findAll()) {
+        for (FileEncryptionKey row : repository.listAll()) {
             try {
                 unwrapRow(row);
             } catch (StorageEncryptionException e) {
@@ -327,7 +352,7 @@ public class FileEncryptionKeyService {
         try {
             // saveAndFlush inside a fresh transaction so a unique-constraint violation surfaces
             // right here (not at some outer commit) and the caller's transaction stays healthy.
-            FileEncryptionKey saved = keyCreationTx.execute(status -> repository.saveAndFlush(row));
+            FileEncryptionKey saved = keyCreationTx.execute(() -> repository.saveAndFlush(row));
             log.info(
                     "Created storage encryption key {} for {}:{}",
                     saved.getKeyId(),
@@ -336,7 +361,7 @@ public class FileEncryptionKeyService {
             unwrapCache.put(saved.getKeyId(), kek);
             auditListener.keyCreated(saved.getKeyId(), scopeType + ":" + scopeId, version);
             return saved;
-        } catch (DataIntegrityViolationException raced) {
+        } catch (PersistenceException raced) {
             // Another node created the scope key concurrently; use theirs.
             return activeForScope(scopeType, scopeId).orElseThrow(() -> raced);
         }

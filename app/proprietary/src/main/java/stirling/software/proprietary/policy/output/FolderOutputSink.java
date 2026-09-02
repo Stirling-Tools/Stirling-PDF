@@ -2,6 +2,7 @@ package stirling.software.proprietary.policy.output;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URLConnection;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -15,14 +16,14 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Stream;
 
-import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.http.MediaTypeFactory;
-import org.springframework.stereotype.Service;
+import io.quarkus.arc.profile.IfBuildProfile;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.io.Resource;
 import stirling.software.common.model.job.ResultFile;
 import stirling.software.proprietary.billing.ContentHasher;
 import stirling.software.proprietary.policy.config.FolderAccessGuard;
@@ -38,8 +39,9 @@ import stirling.software.proprietary.policy.model.OutputSpec;
  * synthetic id since the deliverable is the file on disk, not a {@code FileStorage} entry.
  */
 @Slf4j
-@Service
+@ApplicationScoped
 @RequiredArgsConstructor
+@IfBuildProfile("saas")
 public class FolderOutputSink implements PolicyOutputSink {
 
     static final String TYPE = FolderAccessGuard.FOLDER_TYPE;
@@ -86,10 +88,11 @@ public class FolderOutputSink implements PolicyOutputSink {
             // Size and mtime survive the rename.
             String gate = FolderIdentities.statGate(staged);
             Path target = moveIntoPlace(delivery, canonicalDir, name, staged, gate, contentHash);
-            String contentType =
-                    MediaTypeFactory.getMediaType(name)
-                            .orElse(MediaType.APPLICATION_OCTET_STREAM)
-                            .toString();
+            // Spring's MediaTypeFactory.getMediaType(name) did extension-based content-type
+            // guessing; jakarta.ws.rs.core.MediaType has no equivalent factory, so use the JDK's
+            // URLConnection.guessContentTypeFromName and fall back to application/octet-stream.
+            String guessed = URLConnection.guessContentTypeFromName(name);
+            String contentType = guessed != null ? guessed : "application/octet-stream";
             results.add(
                     ResultFile.builder()
                             .fileId(UUID.randomUUID().toString())

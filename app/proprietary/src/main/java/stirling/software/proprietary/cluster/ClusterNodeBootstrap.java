@@ -6,13 +6,16 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Locale;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.SmartLifecycle;
-import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
+import io.quarkus.runtime.StartupEvent;
+import io.quarkus.scheduler.Scheduled;
+
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
+import jakarta.inject.Inject;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -25,31 +28,38 @@ import stirling.software.common.model.ApplicationProperties.Cluster;
  * Registers the local node with {@link InstanceRegistry} on startup, refreshes the entry at 1/3 of
  * the TTL, and deregisters cleanly on shutdown.
  *
- * <p>Implements {@link SmartLifecycle} with {@code getPhase() == Integer.MAX_VALUE} so Spring tears
- * this bean down before {@code LettuceConnectionFactory} - deregister therefore runs while the
- * Valkey connection is still alive.
+ * <p>Originally implemented Spring's {@code SmartLifecycle} with {@code getPhase() ==
+ * Integer.MAX_VALUE} so Spring tore this bean down before {@code LettuceConnectionFactory} -
+ * deregister therefore ran while the Valkey connection was still alive.
  */
-@Component
+@ApplicationScoped
 @Slf4j
-@ConditionalOnProperty(name = "cluster.enabled", havingValue = "true")
-public class ClusterNodeBootstrap implements SmartLifecycle {
+public class ClusterNodeBootstrap {
 
-    private final Duration heartbeatTtl;
+    @ConfigProperty(name = "cluster.enabled", defaultValue = "false")
+    boolean clusterEnabled;
+
+    private Duration heartbeatTtl;
 
     private final ApplicationProperties applicationProperties;
     private final InstanceRegistry instanceRegistry;
 
-    @Value("${server.port:8080}")
-    private int serverPort;
+    @ConfigProperty(name = "server.port", defaultValue = "8080")
+    int serverPort;
 
     private volatile String nodeId;
     private volatile String internalAddress;
     private volatile boolean running = false;
 
+    @Inject
     public ClusterNodeBootstrap(
             ApplicationProperties applicationProperties, InstanceRegistry instanceRegistry) {
         this.applicationProperties = applicationProperties;
         this.instanceRegistry = instanceRegistry;
+    }
+
+    @PostConstruct
+    void init() {
         Cluster cluster = applicationProperties.getCluster();
         // Default must match the @Scheduled fallback below AND the model default
         // (ApplicationProperties.Cluster.Node.heartbeatIntervalMs = 5000); otherwise the TTL is
@@ -60,18 +70,24 @@ public class ClusterNodeBootstrap implements SmartLifecycle {
         this.heartbeatTtl = Duration.ofMillis(heartbeatMs * 3);
     }
 
-    @EventListener(ApplicationReadyEvent.class)
-    public void registerOnStartup() {
+    void registerOnStartup(@Observes StartupEvent event) {
+        if (!clusterEnabled) {
+            return;
+        }
         nodeId = applicationProperties.getCluster().resolvedNodeId();
         internalAddress = resolveInternalAddress();
+        running = true;
         registerSelf("register");
     }
 
-    @Scheduled(fixedDelayString = "${cluster.node.heartbeat-interval-ms:5000}")
+    @Scheduled(every = "5s")
     public void heartbeat() {
-        // Heartbeat-after-stop race: SmartLifecycle.stop() deregisters, but the @Scheduled
-        // tick keeps firing during a slow drain. Without this guard, the next tick re-registers
-        // the dead node and the entry resurfaces in the registry until TTL expiry.
+        if (!clusterEnabled) {
+            return;
+        }
+        // Heartbeat-after-stop race: shutdown deregisters, but the @Scheduled tick keeps firing
+        // during a slow drain. Without this guard, the next tick re-registers the dead node and
+        // the entry resurfaces in the registry until TTL expiry.
         if (!running) {
             return;
         }
@@ -100,13 +116,8 @@ public class ClusterNodeBootstrap implements SmartLifecycle {
         }
     }
 
-    @Override
-    public void start() {
-        running = true;
-    }
-
-    @Override
-    public void stop() {
+    @PreDestroy
+    void stop() {
         running = false;
         if (nodeId == null) {
             return;
@@ -124,19 +135,8 @@ public class ClusterNodeBootstrap implements SmartLifecycle {
         }
     }
 
-    @Override
     public boolean isRunning() {
         return running;
-    }
-
-    @Override
-    public int getPhase() {
-        return Integer.MAX_VALUE;
-    }
-
-    @Override
-    public boolean isAutoStartup() {
-        return true;
     }
 
     /**

@@ -3,9 +3,11 @@ package stirling.software.proprietary.mcp.tools;
 import java.io.IOException;
 import java.util.List;
 
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Component;
+import io.quarkus.arc.lookup.LookupIfProperty;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -26,18 +28,19 @@ import tools.jackson.databind.node.ObjectNode;
  * capabilities manifest.
  */
 @Slf4j
-@Component
-@ConditionalOnProperty(name = "mcp.enabled", havingValue = "true")
+@ApplicationScoped
+@LookupIfProperty(name = "mcp.enabled", stringValue = "true")
 public class StirlingAiTool implements McpTool {
 
     private final ObjectMapper mapper;
-    private final ObjectProvider<McpToolCatalog> catalogProvider;
-    private final ObjectProvider<AiEngineClient> engineClientProvider;
+    private final Instance<McpToolCatalog> catalogProvider;
+    private final Instance<AiEngineClient> engineClientProvider;
 
+    @Inject
     public StirlingAiTool(
             ObjectMapper mapper,
-            ObjectProvider<McpToolCatalog> catalog,
-            ObjectProvider<AiEngineClient> engineClient) {
+            Instance<McpToolCatalog> catalog,
+            Instance<AiEngineClient> engineClient) {
         this.mapper = mapper;
         this.catalogProvider = catalog;
         this.engineClientProvider = engineClient;
@@ -99,7 +102,7 @@ public class StirlingAiTool implements McpTool {
             return McpResponses.error(mapper, "Missing required argument: operation");
         }
         String opId = opNode.asText();
-        McpToolCatalog catalog = catalogProvider.getIfAvailable();
+        McpToolCatalog catalog = catalogProvider.isResolvable() ? catalogProvider.get() : null;
         if (catalog == null) {
             return McpResponses.error(mapper, "MCP catalog is not available");
         }
@@ -117,7 +120,8 @@ public class StirlingAiTool implements McpTool {
                     mapper,
                     "Insufficient scope: this capability requires '" + meta.requiredScope() + "'.");
         }
-        AiEngineClient client = engineClientProvider.getIfAvailable();
+        AiEngineClient client =
+                engineClientProvider.isResolvable() ? engineClientProvider.get() : null;
         if (client == null) {
             return McpResponses.error(
                     mapper, "AI engine client is not configured - enable aiEngine in settings.");
@@ -140,7 +144,7 @@ public class StirlingAiTool implements McpTool {
     }
 
     private List<OperationMeta> aiOps() {
-        McpToolCatalog catalog = catalogProvider.getIfAvailable();
+        McpToolCatalog catalog = catalogProvider.isResolvable() ? catalogProvider.get() : null;
         if (catalog == null) {
             return List.of();
         }

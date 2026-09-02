@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import org.springframework.stereotype.Service;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +24,7 @@ import tools.jackson.databind.ObjectMapper;
 
 /** Builds the Documents feed from audit_events: one row per file; extraction fields stay null. */
 @Slf4j
-@Service
+@ApplicationScoped
 @RequiredArgsConstructor
 public class PortalDocumentsService {
 

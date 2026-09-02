@@ -3,11 +3,11 @@ package stirling.software.proprietary.storage.service;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import io.quarkus.scheduler.Scheduled;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +18,7 @@ import stirling.software.proprietary.storage.repository.FileShareAccessRepositor
 import stirling.software.proprietary.storage.repository.FileShareRepository;
 import stirling.software.proprietary.storage.repository.StorageCleanupEntryRepository;
 
-@Service
+@ApplicationScoped
 @RequiredArgsConstructor
 @Slf4j
 public class StorageCleanupService {
@@ -30,7 +30,8 @@ public class StorageCleanupService {
     private final FileShareAccessRepository fileShareAccessRepository;
     private final FileShareRepository fileShareRepository;
 
-    @Scheduled(fixedDelay = 1, timeUnit = TimeUnit.DAYS)
+    @Scheduled(every = "24h")
+    @Transactional
     public void cleanupOrphanedStorage() {
         List<StorageCleanupEntry> entries = cleanupEntryRepository.findTop50ByOrderByUpdatedAtAsc();
         if (entries.isEmpty()) {
@@ -52,7 +53,7 @@ public class StorageCleanupService {
                     cleanupEntryRepository.delete(entry);
                 } else {
                     entry.setAttemptCount(attempts);
-                    cleanupEntryRepository.save(entry);
+                    cleanupEntryRepository.persist(entry);
                     log.warn(
                             "Failed to cleanup storage key {} (attempt {}/{})",
                             entry.getStorageKey(),
@@ -64,7 +65,7 @@ public class StorageCleanupService {
         }
     }
 
-    @Scheduled(fixedDelay = 1, timeUnit = TimeUnit.DAYS)
+    @Scheduled(every = "24h")
     @Transactional
     public void cleanupExpiredShareLinks() {
         List<stirling.software.proprietary.storage.model.FileShare> expired =
@@ -72,7 +73,10 @@ public class StorageCleanupService {
         if (expired.isEmpty()) {
             return;
         }
+        // Access rows reference the share, so they go first.
         expired.forEach(fileShareAccessRepository::deleteByFileShare);
-        fileShareRepository.deleteAll(expired);
+        for (stirling.software.proprietary.storage.model.FileShare share : expired) {
+            fileShareRepository.delete(share);
+        }
     }
 }

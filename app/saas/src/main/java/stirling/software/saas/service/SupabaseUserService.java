@@ -2,8 +2,9 @@ package stirling.software.saas.service;
 
 import java.util.UUID;
 
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Service;
+import io.quarkus.arc.profile.IfBuildProfile;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 
@@ -15,8 +16,8 @@ import stirling.software.saas.repository.SupabaseUserRepository;
  * CRUD over Supabase's {@code auth.users} mirror. Exists only under the saas profile because the
  * {@code auth} schema is Supabase-specific.
  */
-@Service
-@Profile("saas")
+@ApplicationScoped
+@IfBuildProfile("saas")
 @RequiredArgsConstructor
 public class SupabaseUserService {
 
@@ -24,7 +25,7 @@ public class SupabaseUserService {
 
     public SupabaseUser getUser(UUID supabaseId) {
         return supabaseUserRepository
-                .findById(supabaseId)
+                .findByIdOptional(supabaseId)
                 .orElseThrow(
                         () ->
                                 new UserNotFoundException(
@@ -36,10 +37,11 @@ public class SupabaseUserService {
         supabaseUser.setId(supabaseId);
         supabaseUser.setEmail(email);
         supabaseUser.setAnonymous(isAnonymous);
-        return supabaseUserRepository.save(supabaseUser);
+        supabaseUserRepository.persist(supabaseUser);
+        return supabaseUser;
     }
 
     public SupabaseUser save(SupabaseUser supabaseUser) {
-        return supabaseUserRepository.save(supabaseUser);
+        return supabaseUserRepository.getEntityManager().merge(supabaseUser);
     }
 }

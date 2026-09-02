@@ -1,17 +1,20 @@
 package stirling.software.SPDF.config;
 
+import java.net.URI;
 import java.util.Arrays;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.web.servlet.HandlerInterceptor;
-import org.springframework.web.servlet.ModelAndView;
+import jakarta.ws.rs.container.ContainerRequestContext;
+import jakarta.ws.rs.container.ContainerRequestFilter;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriInfo;
+import jakarta.ws.rs.ext.Provider;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-
-public class CleanUrlInterceptor implements HandlerInterceptor {
+@Provider
+public class CleanUrlInterceptor implements ContainerRequestFilter {
 
     private static final List<String> ALLOWED_PARAMS =
             Arrays.asList(
@@ -36,34 +39,33 @@ public class CleanUrlInterceptor implements HandlerInterceptor {
                     "session");
 
     @Override
-    public boolean preHandle(
-            HttpServletRequest request, HttpServletResponse response, Object handler)
-            throws Exception {
-        String requestURI = request.getRequestURI();
+    public void filter(ContainerRequestContext requestContext) {
+        UriInfo uriInfo = requestContext.getUriInfo();
+        String requestPath = uriInfo.getPath();
 
         // Skip URL cleaning for API endpoints - they need their own parameter handling
-        if (requestURI.contains("/api/")) {
-            return true;
+        if (requestPath.contains("/api/")) {
+            return;
         }
 
-        String queryString = request.getQueryString();
-        if (queryString != null && !queryString.isEmpty()) {
-            Map<String, String> allowedParameters = new HashMap<>();
-
-            // Keep only the allowed parameters
-            String[] queryParameters = queryString.split("&");
-            for (String param : queryParameters) {
-                String[] keyValuePair = param.split("=");
-                if (keyValuePair.length != 2) {
+        MultivaluedMap<String, String> queryParameters = uriInfo.getQueryParameters();
+        if (queryParameters != null && !queryParameters.isEmpty()) {
+            // Keep only the allowed parameters (preserve insertion order)
+            Map<String, String> allowedParameters = new LinkedHashMap<>();
+            for (Map.Entry<String, List<String>> entry : queryParameters.entrySet()) {
+                String key = entry.getKey();
+                List<String> values = entry.getValue();
+                if (values == null || values.size() != 1) {
+                    // Mirror the original behaviour which only handled single key=value pairs
                     continue;
                 }
-                if (ALLOWED_PARAMS.contains(keyValuePair[0])) {
-                    allowedParameters.put(keyValuePair[0], keyValuePair[1]);
+                if (ALLOWED_PARAMS.contains(key)) {
+                    allowedParameters.put(key, values.get(0));
                 }
             }
 
             // If there are any parameters that are not allowed
-            if (allowedParameters.size() != queryParameters.length) {
+            if (allowedParameters.size() != queryParameters.size()) {
                 // Construct new query string
                 StringBuilder newQueryString = new StringBuilder();
                 for (Map.Entry<String, String> entry : allowedParameters.entrySet()) {
@@ -74,26 +76,15 @@ public class CleanUrlInterceptor implements HandlerInterceptor {
                 }
 
                 // Redirect to the URL with only allowed query parameters
-                String redirectUrl = requestURI + "?" + newQueryString;
+                URI redirectUri =
+                        uriInfo.getBaseUriBuilder()
+                                .path(requestPath)
+                                .replaceQuery(newQueryString.toString())
+                                .build();
 
-                response.sendRedirect(request.getContextPath() + redirectUrl);
-                return false;
+                requestContext.abortWith(
+                        Response.status(Response.Status.FOUND).location(redirectUri).build());
             }
         }
-        return true;
     }
-
-    @Override
-    public void postHandle(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            Object handler,
-            ModelAndView modelAndView) {}
-
-    @Override
-    public void afterCompletion(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            Object handler,
-            Exception ex) {}
 }

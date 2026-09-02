@@ -1,6 +1,6 @@
 package stirling.software.proprietary.failure;
 
-import org.springframework.stereotype.Service;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +15,7 @@ import stirling.software.proprietary.policy.store.PolicyStore;
  * an audit principal. An ad-hoc run has no stored policy, so its rows land unteamed.
  */
 @Slf4j
-@Service
+@ApplicationScoped
 @RequiredArgsConstructor
 public class PolicyFailureRecorder {
 

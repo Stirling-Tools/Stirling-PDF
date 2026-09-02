@@ -1,43 +1,40 @@
 package stirling.software.SPDF.controller.api;
 
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
 import io.swagger.v3.oas.annotations.Hidden;
 
-import jakarta.servlet.http.HttpServletResponse;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
 
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.service.LanguageService;
 
-@RestController
-@RequestMapping("/js")
+@ApplicationScoped
+@Path("/js")
 @RequiredArgsConstructor
 public class AdditionalLanguageJsController {
 
     private final LanguageService languageService;
 
     @Hidden
-    @GetMapping(value = "/additionalLanguageCode.js", produces = "application/javascript")
-    public void generateAdditionalLanguageJs(HttpServletResponse response) throws IOException {
+    @GET
+    @Path("/additionalLanguageCode.js")
+    @Produces("application/javascript")
+    public String generateAdditionalLanguageJs() {
         Set<String> supportedLanguages = languageService.getSupportedLanguages();
-        response.setContentType("application/javascript");
-        PrintWriter writer = response.getWriter();
+        StringBuilder writer = new StringBuilder();
         // Erstelle das JavaScript dynamisch
-        writer.println(
-                "const supportedLanguages = "
-                        + toJsonArray(new ArrayList<>(supportedLanguages))
-                        + ";");
+        writer.append("const supportedLanguages = ")
+                .append(toJsonArray(new ArrayList<>(supportedLanguages)))
+                .append(";\n");
         // Generiere die `getDetailedLanguageCode`-Funktion
-        writer.println(
+        writer.append(
                 """
                         function getDetailedLanguageCode() {
                             const userLanguages = navigator.languages ? navigator.languages : [navigator.language];
@@ -51,7 +48,7 @@ public class AdditionalLanguageJsController {
                             return "en_US";
                         }
                         """);
-        writer.flush();
+        return writer.toString();
     }
 
     // Hilfsfunktion zum Konvertieren der Liste in ein JSON-Array

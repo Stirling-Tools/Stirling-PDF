@@ -3,20 +3,21 @@ package stirling.software.proprietary.accountlink;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import io.quarkus.arc.profile.IfBuildProfile;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 
 /**
  * Secure-at-rest persistence for this instance's device credential. Thin wrapper over the
  * singleton-row repository so the rest of the feature never touches JPA directly.
  *
- * <p>Gated + {@code @Profile("!saas")}: only the self-hosted profile links outward to a SaaS team.
+ * <p>{@code @IfBuildProfile("!saas")}: only the self-hosted profile links outward to a SaaS team.
  */
-@Service
-@Profile("!saas")
-@ConditionalOnProperty(name = "stirling.billing.account-link.enabled", havingValue = "true")
+// Arc cannot gate a bean on a runtime property, so the account-link flag no longer removes this
+// bean; every caller is flag-gated, and an unlinked instance simply has no credential row.
+@ApplicationScoped
+@IfBuildProfile("!saas")
 public class DeviceCredentialStore {
 
     private final DeviceCredentialRepository repo;
@@ -25,12 +26,12 @@ public class DeviceCredentialStore {
         this.repo = repo;
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public Optional<DeviceCredential> get() {
         return repo.findCredential();
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public boolean isLinked() {
         return repo.findCredential().isPresent();
     }

@@ -6,8 +6,10 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import io.quarkus.arc.profile.IfBuildProfile;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,8 +29,9 @@ import tools.jackson.databind.node.ObjectNode;
  * {@link PolicyEntity}, with scalar columns kept in sync for querying.
  */
 @Slf4j
-@Service
+@ApplicationScoped
 @RequiredArgsConstructor
+@IfBuildProfile("saas")
 public class JpaPolicyStore implements PolicyStore {
 
     private final PolicyRepository repository;
@@ -64,11 +67,13 @@ public class JpaPolicyStore implements PolicyStore {
         // team's queue (max + 1), so setting up a policy adds it last by default.
         entity.setSortOrder(
                 repository
-                        .findById(id)
+                        .findByIdOptional(id)
                         .map(PolicyEntity::getSortOrder)
                         .orElseGet(() -> nextSortOrder(stored.teamId())));
         entity.setPolicyJson(objectMapper.writeValueAsString(stored));
-        repository.save(entity);
+        // The id is always assigned, so this is Spring Data's save: merge, which updates an
+        // existing row instead of failing the insert a plain persist() would attempt.
+        repository.getEntityManager().merge(entity);
         return stored;
     }
 
@@ -92,24 +97,28 @@ public class JpaPolicyStore implements PolicyStore {
     public void reorder(Long teamId, List<String> orderedIds) {
         int position = 0;
         for (String id : orderedIds) {
-            PolicyEntity entity = repository.findById(id).orElse(null);
+            PolicyEntity entity = repository.findByIdOptional(id).orElse(null);
             // Ignore unknown ids and any policy outside the caller's team — a reorder can't reach
             // across teams.
             if (entity == null || !Objects.equals(entity.getTeamId(), teamId)) {
                 continue;
             }
+            // Managed entity inside @Transactional; the update flushes on commit.
             entity.setSortOrder(position++);
-            repository.save(entity);
         }
     }
 
     @Override
     public Optional<Policy> get(String id) {
-        return repository.findById(id).flatMap(this::toPolicy);
+        return repository.findByIdOptional(id).flatMap(this::toPolicy);
     }
 
     @Override
+    @Transactional
     public List<Policy> all() {
+        // @Transactional is required even for reads: the scheduled folder-watch/schedule triggers
+        // call this from a background virtual-thread executor where no request context or
+        // transaction is active, so Panache would otherwise throw ContextNotActiveException.
         return repository.findAllOrdered().stream()
                 .map(this::toPolicy)
                 .flatMap(Optional::stream)
@@ -117,6 +126,7 @@ public class JpaPolicyStore implements PolicyStore {
     }
 
     @Override
+    @Transactional
     public List<Policy> findByTeam(Long teamId) {
         return repository.findByTeam(teamId).stream()
                 .map(this::toPolicy)
@@ -125,11 +135,13 @@ public class JpaPolicyStore implements PolicyStore {
     }
 
     @Override
+    @Transactional
     public boolean anyPolicyReferences(String assetId) {
         return assetId != null && !assetId.isBlank() && repository.anyMentioning(assetId);
     }
 
     @Override
+    @Transactional
     public List<PolicyBinding> findBindingsByTriggerType(String triggerType) {
         List<Policy> enabled =
                 repository.findByEnabledTrue().stream()
@@ -140,12 +152,9 @@ public class JpaPolicyStore implements PolicyStore {
     }
 
     @Override
+    @Transactional
     public boolean delete(String id) {
-        if (!repository.existsById(id)) {
-            return false;
-        }
-        repository.deleteById(id);
-        return true;
+        return repository.deleteById(id);
     }
 
     // Skip (don't fail) rows whose JSON can't be read - e.g. written by another app version/key.

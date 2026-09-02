@@ -3,7 +3,7 @@ package stirling.software.proprietary.failure;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.stereotype.Component;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 
@@ -14,7 +14,7 @@ import lombok.RequiredArgsConstructor;
  * <p>Re-acknowledging is a no-op that keeps the original actor and timestamp, so the first person
  * to pick it up stays credited.
  */
-@Component
+@ApplicationScoped
 @RequiredArgsConstructor
 public class AcknowledgeAction implements FailureAction {
 

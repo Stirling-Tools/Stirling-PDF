@@ -5,10 +5,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
+import jakarta.transaction.Transactional;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,10 +32,12 @@ import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 
 /** CRUD for {@link IntegrationConfig}; delegates ownership and masking to shared services. */
-@Service
+@ApplicationScoped
 @RequiredArgsConstructor
 @Slf4j
-@Transactional(readOnly = true)
+// jakarta.transaction.Transactional has no readOnly attribute, so read methods use SUPPORTS to
+// join an existing transaction rather than force a new one.
+@Transactional(Transactional.TxType.SUPPORTS)
 public class IntegrationConfigService {
 
     private static final ResourceType TYPE = ResourceType.INTEGRATION_CONFIG;
@@ -47,8 +50,9 @@ public class IntegrationConfigService {
     private final ApplicationProperties applicationProperties;
     // Bean-discovered extension points: features that understand a type contribute its config
     // schema and report what still references a config, without this module depending on them.
-    private final List<IntegrationConfigValidator> validators;
-    private final List<IntegrationConfigUsageCheck> usageChecks;
+    // Spring List<T>-of-all-beans -> CDI Instance<T>, which is iterable over every bean of a type.
+    private final Instance<IntegrationConfigValidator> validators;
+    private final Instance<IntegrationConfigUsageCheck> usageChecks;
 
     // ---- commands ----
 
@@ -173,8 +177,9 @@ public class IntegrationConfigService {
                         .flatMap(check -> check.usagesOf(cfg.getId()).stream())
                         .toList();
         if (!usages.isEmpty()) {
-            throw new ResponseStatusException(
-                    HttpStatus.CONFLICT, "Integration is in use by: " + String.join(", ", usages));
+            throw new WebApplicationException(
+                    "Integration is in use by: " + String.join(", ", usages),
+                    Response.Status.CONFLICT);
         }
         // Drop grants sharing this config so they do not dangle as dead rows.
         grantRepository.deleteByResourceTypeAndResourceId(TYPE, String.valueOf(cfg.getId()));
@@ -225,7 +230,7 @@ public class IntegrationConfigService {
                 continue;
             }
             repository
-                    .findById(cid)
+                    .findByIdOptional(cid)
                     .filter(c -> ownership.canUse(TYPE, c, currentUser))
                     .ifPresent(c -> byId.put(c.getId(), c));
         }
@@ -258,7 +263,7 @@ public class IntegrationConfigService {
                 try {
                     validator.validate(config == null ? Map.of() : config);
                 } catch (IllegalArgumentException e) {
-                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+                    throw new WebApplicationException(e.getMessage(), Response.Status.BAD_REQUEST);
                 }
             }
         }
@@ -272,18 +277,19 @@ public class IntegrationConfigService {
 
     private IntegrationConfig load(Long id) {
         return repository
-                .findById(id)
+                .findByIdOptional(id)
                 .orElseThrow(
                         () ->
-                                new ResponseStatusException(
-                                        HttpStatus.NOT_FOUND, "Integration not found"));
+                                new WebApplicationException(
+                                        "Integration not found", Response.Status.NOT_FOUND));
     }
 
     private String writeJson(Map<String, Object> config) {
         try {
             return OBJECT_MAPPER.writeValueAsString(config == null ? Map.of() : config);
         } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid config payload");
+            throw new WebApplicationException(
+                    "Invalid config payload", Response.Status.BAD_REQUEST);
         }
     }
 
@@ -302,12 +308,12 @@ public class IntegrationConfigService {
 
     private <T> T require(T value, String field) {
         if (value == null || (value instanceof String s && s.isBlank())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, field + " is required");
+            throw new WebApplicationException(field + " is required", Response.Status.BAD_REQUEST);
         }
         return value;
     }
 
-    private ResponseStatusException forbidden(String message) {
-        return new ResponseStatusException(HttpStatus.FORBIDDEN, message);
+    private WebApplicationException forbidden(String message) {
+        return new WebApplicationException(message, Response.Status.FORBIDDEN);
     }
 }

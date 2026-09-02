@@ -1,14 +1,20 @@
 package stirling.software.common.util;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.springframework.ui.Model;
-import org.springframework.web.servlet.ModelAndView;
 
+/**
+ * MIGRATION (Spring -> JAX-RS): the production {@code ErrorUtils} no longer depends on Spring MVC
+ * {@code org.springframework.ui.Model} / {@code ModelAndView}. Both methods now take and return a
+ * plain {@code Map<String, Object>} model holder. Tests updated to the new signatures while keeping
+ * the original assertions about the populated keys.
+ */
 class ErrorUtilsTest {
 
     @Nested
@@ -18,39 +24,36 @@ class ErrorUtilsTest {
         @Test
         @DisplayName("should add error message to model")
         void addsErrorMessage() {
-            Model model = mock(Model.class);
+            Map<String, Object> model = new HashMap<>();
             Exception ex = new RuntimeException("test error");
 
             ErrorUtils.exceptionToModel(model, ex);
 
-            verify(model).addAttribute("errorMessage", "test error");
+            assertEquals("test error", model.get("errorMessage"));
         }
 
         @Test
         @DisplayName("should add stack trace to model")
         void addsStackTrace() {
-            Model model = mock(Model.class);
+            Map<String, Object> model = new HashMap<>();
             Exception ex = new RuntimeException("test error");
 
             ErrorUtils.exceptionToModel(model, ex);
 
-            verify(model)
-                    .addAttribute(
-                            eq("stackTrace"),
-                            argThat(
-                                    arg ->
-                                            arg instanceof String s
-                                                    && s.contains("RuntimeException")
-                                                    && s.contains("test error")));
+            Object stackTrace = model.get("stackTrace");
+            assertInstanceOf(String.class, stackTrace);
+            String s = (String) stackTrace;
+            assertTrue(s.contains("RuntimeException"));
+            assertTrue(s.contains("test error"));
         }
 
         @Test
         @DisplayName("should return the same model instance")
         void returnsSameModel() {
-            Model model = mock(Model.class);
+            Map<String, Object> model = new HashMap<>();
             Exception ex = new RuntimeException("test");
 
-            Model result = ErrorUtils.exceptionToModel(model, ex);
+            Map<String, Object> result = ErrorUtils.exceptionToModel(model, ex);
 
             assertSame(model, result);
         }
@@ -58,12 +61,13 @@ class ErrorUtilsTest {
         @Test
         @DisplayName("should handle exception with null message")
         void nullExceptionMessage() {
-            Model model = mock(Model.class);
+            Map<String, Object> model = new HashMap<>();
             Exception ex = new RuntimeException((String) null);
 
             ErrorUtils.exceptionToModel(model, ex);
 
-            verify(model).addAttribute("errorMessage", null);
+            assertTrue(model.containsKey("errorMessage"));
+            assertNull(model.get("errorMessage"));
         }
     }
 
@@ -72,26 +76,26 @@ class ErrorUtilsTest {
     class ExceptionToModelViewTests {
 
         @Test
-        @DisplayName("should create ModelAndView with error message")
+        @DisplayName("should create model holder with error message")
         void addsErrorMessage() {
-            Model model = mock(Model.class);
+            Map<String, Object> model = new HashMap<>();
             Exception ex = new RuntimeException("view error");
 
-            ModelAndView result = ErrorUtils.exceptionToModelView(model, ex);
+            Map<String, Object> result = ErrorUtils.exceptionToModelView(model, ex);
 
             assertNotNull(result);
-            assertEquals("view error", result.getModel().get("errorMessage"));
+            assertEquals("view error", result.get("errorMessage"));
         }
 
         @Test
-        @DisplayName("should create ModelAndView with stack trace")
+        @DisplayName("should create model holder with stack trace")
         void addsStackTrace() {
-            Model model = mock(Model.class);
+            Map<String, Object> model = new HashMap<>();
             Exception ex = new RuntimeException("view error");
 
-            ModelAndView result = ErrorUtils.exceptionToModelView(model, ex);
+            Map<String, Object> result = ErrorUtils.exceptionToModelView(model, ex);
 
-            String stackTrace = (String) result.getModel().get("stackTrace");
+            String stackTrace = (String) result.get("stackTrace");
             assertNotNull(stackTrace);
             assertTrue(stackTrace.contains("RuntimeException"));
             assertTrue(stackTrace.contains("view error"));
@@ -100,15 +104,15 @@ class ErrorUtilsTest {
         @Test
         @DisplayName("should handle nested exception")
         void nestedException() {
-            Model model = mock(Model.class);
+            Map<String, Object> model = new HashMap<>();
             Exception cause = new IllegalArgumentException("root cause");
             Exception ex = new RuntimeException("wrapper", cause);
 
-            ModelAndView result = ErrorUtils.exceptionToModelView(model, ex);
+            Map<String, Object> result = ErrorUtils.exceptionToModelView(model, ex);
 
-            String stackTrace = (String) result.getModel().get("stackTrace");
+            String stackTrace = (String) result.get("stackTrace");
             assertTrue(stackTrace.contains("root cause"));
-            assertEquals("wrapper", result.getModel().get("errorMessage"));
+            assertEquals("wrapper", result.get("errorMessage"));
         }
     }
 }

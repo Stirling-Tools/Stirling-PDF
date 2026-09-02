@@ -2,7 +2,7 @@ package stirling.software.proprietary.policy.network;
 
 import java.io.IOException;
 
-import org.springframework.stereotype.Component;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 
@@ -11,7 +11,7 @@ import lombok.RequiredArgsConstructor;
  * host is guarded against private addresses before every connect, since it comes from a portal user
  * and each operation opens its own short-lived session (there is no long-lived pool to guard once).
  */
-@Component
+@ApplicationScoped
 @RequiredArgsConstructor
 public class RemoteFileClientFactory {
 

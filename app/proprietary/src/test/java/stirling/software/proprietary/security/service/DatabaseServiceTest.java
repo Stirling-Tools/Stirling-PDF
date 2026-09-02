@@ -5,12 +5,17 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.verify;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
+import java.util.logging.Logger;
 
 import javax.sql.DataSource;
 
@@ -19,11 +24,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.jdbc.datasource.DriverManagerDataSource;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.FileInfo;
+import stirling.software.common.testsupport.ReflectionTestUtils;
 import stirling.software.proprietary.security.database.DatabaseNotificationServiceInterface;
 
 class DatabaseServiceTest {
@@ -34,6 +38,56 @@ class DatabaseServiceTest {
 
     private DatabaseService databaseService;
     private ApplicationProperties.Datasource datasourceProps;
+
+    /**
+     * Minimal {@link DataSource} backed by {@link DriverManager}. Replaces Spring JDBC's {@code
+     * DriverManagerDataSource}; {@code DatabaseService} only ever calls {@code getConnection()}.
+     * The H2 driver is auto-registered via the JDBC SPI (H2 is on the runtime classpath), so the
+     * in-memory URL resolves without referencing any H2 class at compile time.
+     */
+    private record DriverManagerDataSource(String url, String user, String password)
+            implements DataSource {
+        @Override
+        public Connection getConnection() throws SQLException {
+            return DriverManager.getConnection(url, user, password);
+        }
+
+        @Override
+        public Connection getConnection(String username, String pass) throws SQLException {
+            return DriverManager.getConnection(url, username, pass);
+        }
+
+        @Override
+        public PrintWriter getLogWriter() {
+            return null;
+        }
+
+        @Override
+        public void setLogWriter(PrintWriter out) {}
+
+        @Override
+        public void setLoginTimeout(int seconds) {}
+
+        @Override
+        public int getLoginTimeout() {
+            return 0;
+        }
+
+        @Override
+        public Logger getParentLogger() {
+            return Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
+        }
+
+        @Override
+        public <T> T unwrap(Class<T> iface) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public boolean isWrapperFor(Class<?> iface) {
+            return false;
+        }
+    }
 
     @BeforeEach
     void setUp() {

@@ -2,7 +2,7 @@ package stirling.software.proprietary.failure;
 
 import java.util.Map;
 
-import org.springframework.stereotype.Component;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 
@@ -14,7 +14,7 @@ import lombok.RequiredArgsConstructor;
  * <p>Recurrences of this exact failure fold onto the dismissed row, which is what makes "stop
  * showing me this" hold for a source that re-lists the same failing file each sweep.
  */
-@Component
+@ApplicationScoped
 @RequiredArgsConstructor
 public class DismissAction implements FailureAction {
 

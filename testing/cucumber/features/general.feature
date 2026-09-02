@@ -32,7 +32,6 @@ Feature: API Validation
         And the pdf contains 20 pages
         And the request data includes
             | parameter   | value         |
-            | fileInput   | fileInput     |
             | pageNumbers | <pageNumbers> |
         When I send the API request to the endpoint "/api/v1/general/split-pages"
         And this operation is run 5 times in parallel
@@ -55,7 +54,6 @@ Feature: API Validation
         And the pdf contains 20 pages
         And the request data includes
             | parameter  | value        |
-            | fileInput  | fileInput    |
             | splitType  | <splitType>  |
             | splitValue | <splitValue> |
         When I send the API request to the endpoint "/api/v1/general/split-by-size-or-count"

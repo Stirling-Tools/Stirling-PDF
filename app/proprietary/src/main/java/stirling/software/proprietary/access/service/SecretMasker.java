@@ -7,10 +7,10 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-import org.springframework.stereotype.Component;
+import jakarta.enterprise.context.ApplicationScoped;
 
 /** Masks, merges and sanitizes secret values in a config map, recursing into nested maps/lists. */
-@Component
+@ApplicationScoped
 public class SecretMasker {
 
     public static final String MASK = "********";

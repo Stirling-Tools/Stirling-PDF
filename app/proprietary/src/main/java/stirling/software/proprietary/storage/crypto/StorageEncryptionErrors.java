@@ -1,7 +1,7 @@
 package stirling.software.proprietary.storage.crypto;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
 
 /**
  * Shared HTTP translation for encryption failures, so every path that serves stored bytes answers a
@@ -13,10 +13,10 @@ public final class StorageEncryptionErrors {
 
     private StorageEncryptionErrors() {}
 
-    public static ResponseStatusException revoked(StorageKeyRevokedException cause) {
-        return new ResponseStatusException(
-                HttpStatus.FORBIDDEN,
+    public static WebApplicationException revoked(StorageKeyRevokedException cause) {
+        return new WebApplicationException(
                 "Access to this file has been revoked (its encryption key is disabled)",
-                cause);
+                cause,
+                Response.Status.FORBIDDEN);
     }
 }

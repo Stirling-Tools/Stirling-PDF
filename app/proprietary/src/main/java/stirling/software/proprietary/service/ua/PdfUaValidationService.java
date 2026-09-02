@@ -6,7 +6,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.stereotype.Service;
 import org.verapdf.gf.foundry.VeraGreenfieldFoundryProvider;
 import org.verapdf.pdfa.Foundries;
 import org.verapdf.pdfa.PDFAParser;
@@ -16,6 +15,7 @@ import org.verapdf.pdfa.results.TestAssertion;
 import org.verapdf.pdfa.results.ValidationResult;
 
 import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -27,7 +27,7 @@ import stirling.software.proprietary.pdf.ua.PdfUaProfile;
  * Validates a document against a PDF/UA profile using veraPDF, the oracle a conversion is declared
  * against. It checks only the machine-verifiable subset, so a clean result is not "accessible".
  */
-@Service
+@ApplicationScoped
 @Slf4j
 public class PdfUaValidationService {
 

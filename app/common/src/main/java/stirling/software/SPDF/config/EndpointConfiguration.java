@@ -6,9 +6,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.stereotype.Service;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.PdfaLevelAServiceInterface;
 
-@Service
+@ApplicationScoped
 @Slf4j
 public class EndpointConfiguration {
 
@@ -55,14 +56,16 @@ public class EndpointConfiguration {
     private final boolean runningProOrHigher;
     private final boolean pdfUaAvailable;
 
+    @Inject
     public EndpointConfiguration(
             ApplicationProperties applicationProperties,
-            @Qualifier("runningProOrHigher") boolean runningProOrHigher,
-            @Autowired(required = false) PdfaLevelAServiceInterface pdfaLevelAService) {
+            @Named("runningProOrHigher") boolean runningProOrHigher,
+            Instance<PdfaLevelAServiceInterface> pdfaLevelAService) {
         this.applicationProperties = applicationProperties;
         this.runningProOrHigher = runningProOrHigher;
         // The PDF/UA tagger ships in the proprietary module, and so do its endpoints.
-        this.pdfUaAvailable = pdfaLevelAService != null;
+        // MIGRATION: @Autowired(required = false) -> CDI Instance<>, resolved via isResolvable().
+        this.pdfUaAvailable = pdfaLevelAService != null && pdfaLevelAService.isResolvable();
         init();
         processEnvironmentConfigs();
     }

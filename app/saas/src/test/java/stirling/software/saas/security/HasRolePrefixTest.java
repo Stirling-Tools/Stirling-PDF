@@ -11,8 +11,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.authorization.AuthorityAuthorizationManager;
 import org.springframework.security.authorization.AuthorizationResult;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
+
+import stirling.software.common.security.Authentication;
+import stirling.software.common.security.SimpleGrantedAuthority;
 
 /**
  * Verifies what Spring Security's {@link AuthorityAuthorizationManager#hasRole(String)} actually

@@ -9,7 +9,8 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.springframework.stereotype.Service;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -47,7 +48,7 @@ import technology.tabula.extractors.SpreadsheetExtractionAlgorithm;
  *   <li>Rotated tables (90°/270° pages) may produce incorrect bounds.
  * </ul>
  */
-@Service
+@ApplicationScoped
 @Slf4j
 public class TabulaTableParser implements TableParser {
 

@@ -32,8 +32,20 @@ public class DesktopClientUtils {
      * @return true if desktop client, false if web browser
      */
     public static boolean isDesktopClient(HttpServletRequest request) {
-        String userAgent = request.getHeader("User-Agent");
+        return isDesktopClientByUserAgent(request.getHeader("User-Agent"));
+    }
 
+    /**
+     * Detect if the request is from a desktop client (Tauri app) based on its User-Agent header.
+     *
+     * <p>RESTEasy Reactive overload: on reactive request threads the servlet {@code
+     * HttpServletRequest} is not active, so callers extract the User-Agent via JAX-RS {@code
+     * HttpHeaders} and pass it here directly.
+     *
+     * @param userAgent the request User-Agent header value (may be {@code null})
+     * @return true if desktop client, false if web browser
+     */
+    public static boolean isDesktopClientByUserAgent(String userAgent) {
         if (userAgent == null) {
             return false;
         }

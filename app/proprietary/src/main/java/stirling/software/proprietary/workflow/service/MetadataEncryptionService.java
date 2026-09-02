@@ -10,7 +10,7 @@ import javax.crypto.Cipher;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
-import org.springframework.stereotype.Service;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +25,7 @@ import stirling.software.common.model.ApplicationProperties;
  * <p>Encrypted values are prefixed with {@value #ENC_PREFIX} so that legacy plaintext values
  * written before this service was introduced can still be decrypted transparently.
  */
-@Service
+@ApplicationScoped
 @RequiredArgsConstructor
 @Slf4j
 public class MetadataEncryptionService {

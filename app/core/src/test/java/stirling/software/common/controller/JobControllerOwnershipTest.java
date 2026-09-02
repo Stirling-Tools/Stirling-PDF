@@ -24,11 +24,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.test.util.ReflectionTestUtils;
 
+import jakarta.enterprise.inject.Instance;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.core.Response;
 
 import stirling.software.common.cluster.ClusterBackplane;
 import stirling.software.common.cluster.JobStore;
@@ -39,11 +38,18 @@ import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.JobOwnershipService;
 import stirling.software.common.service.JobQueue;
 import stirling.software.common.service.TaskManager;
+import stirling.software.common.testsupport.ReflectionTestUtils;
 
 /**
  * Sticky-410 ownership contract for {@link JobController}: peer-owned jobs return 410 Gone with
  * ownedBy/currentNode fields; locally-owned and no-entry cases return 200. FileStorage is never
  * touched on the 410 path. Manual mock construction so tests can vary backplane/jobstore combos.
+ *
+ * <p>Migration: the controller returns {@code jakarta.ws.rs.core.Response} and resolves the
+ * optional {@code JobOwnershipService} / {@code StickyMissRecorder} via CDI {@code Instance<>}
+ * fields rather than Spring beans. {@link #makeController} therefore injects {@code Instance}
+ * wrappers - an unresolvable JobOwnershipService (security disabled) and a resolvable
+ * StickyMissRecorder so the sticky-miss metric is recorded on the 410 path.
  */
 class JobControllerOwnershipTest {
 
@@ -73,10 +79,30 @@ class JobControllerOwnershipTest {
         stickyMissRecorder = mock(StickyMissRecorder.class);
     }
 
+    /** A resolvable CDI Instance backed by {@code value}. */
+    @SuppressWarnings("unchecked")
+    private static <T> Instance<T> resolvable(T value) {
+        Instance<T> instance = mock(Instance.class);
+        lenient().when(instance.isResolvable()).thenReturn(true);
+        lenient().when(instance.get()).thenReturn(value);
+        return instance;
+    }
+
+    /** An unresolvable CDI Instance (the bean is absent). */
+    @SuppressWarnings("unchecked")
+    private static <T> Instance<T> absent() {
+        Instance<T> instance = mock(Instance.class);
+        lenient().when(instance.isResolvable()).thenReturn(false);
+        return instance;
+    }
+
     private JobController makeController(ClusterBackplane backplane, JobStore store) {
         JobController c =
                 new JobController(taskManager, fileStorage, jobQueue, request, backplane, store);
-        ReflectionTestUtils.setField(c, "stickyMissRecorder", stickyMissRecorder);
+        // @Inject Instance<> fields are not populated outside CDI; default ownership to absent
+        // (security disabled) and provide a resolvable sticky-miss recorder.
+        ReflectionTestUtils.setField(c, "jobOwnershipService", absent());
+        ReflectionTestUtils.setField(c, "stickyMissRecorder", resolvable(stickyMissRecorder));
         return c;
     }
 
@@ -114,13 +140,13 @@ class JobControllerOwnershipTest {
         when(taskManager.findJobKeyByFileId(FILE_ID)).thenReturn(JOB_ID);
         when(jobStore.get(JOB_ID)).thenReturn(Optional.of(entryOwnedBy(PEER_NODE)));
 
-        ResponseEntity<?> response = makeController().downloadFile(FILE_ID);
+        Response response = makeController().downloadFile(FILE_ID);
 
-        assertEquals(HttpStatus.GONE, response.getStatusCode());
-        assertEquals("0", response.getHeaders().getFirst("Retry-After"));
+        assertEquals(Response.Status.GONE.getStatusCode(), response.getStatus());
+        assertEquals("0", response.getHeaderString("Retry-After"));
 
-        assertInstanceOf(Map.class, response.getBody());
-        Map<?, ?> body = (Map<?, ?>) response.getBody();
+        assertInstanceOf(Map.class, response.getEntity());
+        Map<?, ?> body = (Map<?, ?>) response.getEntity();
         assertEquals(3, body.size(), "exactly: message, ownedBy, currentNode");
         assertEquals(PEER_NODE, body.get("ownedBy"));
         assertEquals(LOCAL_NODE, body.get("currentNode"));
@@ -150,9 +176,9 @@ class JobControllerOwnershipTest {
                         entryPresent ? Optional.of(entryOwnedBy(ownerNodeId)) : Optional.empty());
         when(fileStorage.retrieveBytes(FILE_ID)).thenReturn("payload".getBytes());
 
-        ResponseEntity<?> response = makeController().downloadFile(FILE_ID);
+        Response response = makeController().downloadFile(FILE_ID);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode(), scenario);
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus(), scenario);
         verify(fileStorage).retrieveBytes(FILE_ID);
         verify(stickyMissRecorder, never()).recordStickyMiss();
     }
@@ -165,9 +191,9 @@ class JobControllerOwnershipTest {
         when(jobStore.get(JOB_ID)).thenReturn(Optional.of(entryOwnedBy(LOCAL_NODE)));
         when(fileStorage.retrieveBytes(FILE_ID)).thenReturn("payload".getBytes());
 
-        ResponseEntity<?> response = makeController().getJobResult(JOB_ID);
+        Response response = makeController().getJobResult(JOB_ID);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
     }
 
     private enum Endpoint {
@@ -207,7 +233,7 @@ class JobControllerOwnershipTest {
             }
         }
 
-        ResponseEntity<?> response =
+        Response response =
                 switch (endpoint) {
                     case DOWNLOAD_FILE -> makeController().downloadFile(FILE_ID);
                     case GET_JOB_RESULT -> makeController().getJobResult(JOB_ID);
@@ -217,8 +243,8 @@ class JobControllerOwnershipTest {
                     case CANCEL_JOB -> makeController().cancelJob(JOB_ID);
                 };
 
-        assertEquals(HttpStatus.GONE, response.getStatusCode());
-        Map<?, ?> body = (Map<?, ?>) response.getBody();
+        assertEquals(Response.Status.GONE.getStatusCode(), response.getStatus());
+        Map<?, ?> body = (Map<?, ?>) response.getEntity();
         assertEquals(PEER_NODE, body.get("ownedBy"));
         assertEquals(LOCAL_NODE, body.get("currentNode"));
         verify(stickyMissRecorder).recordStickyMiss();
@@ -241,14 +267,14 @@ class JobControllerOwnershipTest {
             when(jobQueue.isJobQueued(JOB_ID)).thenReturn(false);
         }
 
-        ResponseEntity<?> response =
+        Response response =
                 switch (endpoint) {
                     case GET_JOB_STATUS -> makeController().getJobStatus(JOB_ID);
                     case CANCEL_JOB -> makeController().cancelJob(JOB_ID);
                     default -> throw new IllegalArgumentException(endpoint.name());
                 };
 
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
         verify(stickyMissRecorder, never()).recordStickyMiss();
     }
 
@@ -258,9 +284,9 @@ class JobControllerOwnershipTest {
         when(taskManager.findJobKeyByFileId(FILE_ID)).thenReturn(JOB_ID);
         when(fileStorage.retrieveBytes(FILE_ID)).thenReturn("payload".getBytes());
 
-        ResponseEntity<?> response = makeController(null, jobStore).downloadFile(FILE_ID);
+        Response response = makeController(null, jobStore).downloadFile(FILE_ID);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
         verify(fileStorage).retrieveBytes(FILE_ID);
     }
 
@@ -270,9 +296,9 @@ class JobControllerOwnershipTest {
         when(taskManager.findJobKeyByFileId(FILE_ID)).thenReturn(JOB_ID);
         when(fileStorage.retrieveBytes(FILE_ID)).thenReturn("payload".getBytes());
 
-        ResponseEntity<?> response = makeController(clusterBackplane, null).downloadFile(FILE_ID);
+        Response response = makeController(clusterBackplane, null).downloadFile(FILE_ID);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
         verify(fileStorage).retrieveBytes(FILE_ID);
     }
 
@@ -285,11 +311,11 @@ class JobControllerOwnershipTest {
         when(fileStorage.retrieveBytes(FILE_ID)).thenReturn("payload".getBytes());
 
         JobController c = makeController();
-        ReflectionTestUtils.setField(c, "stickyMissRecorder", null);
+        ReflectionTestUtils.setField(c, "stickyMissRecorder", absent());
 
-        ResponseEntity<?> response = c.downloadFile(FILE_ID);
+        Response response = c.downloadFile(FILE_ID);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
     }
 
     @Test
@@ -303,10 +329,10 @@ class JobControllerOwnershipTest {
 
         // We still 410: owner is "node-peer", local is null → they don't match. Rather than
         // silently 200-from-wrong-disk (which would serve garbage), we surface the mismatch.
-        ResponseEntity<?> response = makeController().downloadFile(FILE_ID);
+        Response response = makeController().downloadFile(FILE_ID);
 
-        assertEquals(HttpStatus.GONE, response.getStatusCode());
-        Map<?, ?> body = (Map<?, ?>) response.getBody();
+        assertEquals(Response.Status.GONE.getStatusCode(), response.getStatus());
+        Map<?, ?> body = (Map<?, ?>) response.getEntity();
         assertEquals("", body.get("currentNode"), "blank when localNodeId is null");
         assertEquals(PEER_NODE, body.get("ownedBy"));
     }
@@ -320,10 +346,10 @@ class JobControllerOwnershipTest {
         lenient().when(jobOwnershipService.validateJobAccess(JOB_ID)).thenReturn(true);
 
         JobController c = makeController();
-        ReflectionTestUtils.setField(c, "jobOwnershipService", jobOwnershipService);
-        ResponseEntity<?> response = c.downloadFile(FILE_ID);
+        ReflectionTestUtils.setField(c, "jobOwnershipService", resolvable(jobOwnershipService));
+        Response response = c.downloadFile(FILE_ID);
 
-        assertEquals(HttpStatus.GONE, response.getStatusCode());
+        assertEquals(Response.Status.GONE.getStatusCode(), response.getStatus());
     }
 
     @Test
@@ -337,11 +363,11 @@ class JobControllerOwnershipTest {
         lenient().when(jobOwnershipService.validateJobAccess(JOB_ID)).thenReturn(false);
 
         JobController c = makeController();
-        ReflectionTestUtils.setField(c, "jobOwnershipService", jobOwnershipService);
-        ResponseEntity<?> response = c.downloadFile(FILE_ID);
+        ReflectionTestUtils.setField(c, "jobOwnershipService", resolvable(jobOwnershipService));
+        Response response = c.downloadFile(FILE_ID);
 
-        assertEquals(HttpStatus.GONE, response.getStatusCode());
-        Map<?, ?> body = (Map<?, ?>) response.getBody();
+        assertEquals(Response.Status.GONE.getStatusCode(), response.getStatus());
+        Map<?, ?> body = (Map<?, ?>) response.getEntity();
         assertEquals(PEER_NODE, body.get("ownedBy"));
         verify(fileStorage, never()).retrieveBytes(FILE_ID);
     }
@@ -356,11 +382,11 @@ class JobControllerOwnershipTest {
         lenient().when(jobOwnershipService.validateJobAccess(JOB_ID)).thenReturn(false);
 
         JobController c = makeController();
-        ReflectionTestUtils.setField(c, "jobOwnershipService", jobOwnershipService);
-        ResponseEntity<?> response = c.getJobStatus(JOB_ID);
+        ReflectionTestUtils.setField(c, "jobOwnershipService", resolvable(jobOwnershipService));
+        Response response = c.getJobStatus(JOB_ID);
 
-        assertEquals(HttpStatus.GONE, response.getStatusCode());
-        Map<?, ?> body = (Map<?, ?>) response.getBody();
+        assertEquals(Response.Status.GONE.getStatusCode(), response.getStatus());
+        Map<?, ?> body = (Map<?, ?>) response.getEntity();
         assertEquals(PEER_NODE, body.get("ownedBy"));
     }
 
@@ -375,11 +401,11 @@ class JobControllerOwnershipTest {
         lenient().when(jobOwnershipService.validateJobAccess(JOB_ID)).thenReturn(false);
 
         JobController c = makeController();
-        ReflectionTestUtils.setField(c, "jobOwnershipService", jobOwnershipService);
-        ResponseEntity<?> response = c.cancelJob(JOB_ID);
+        ReflectionTestUtils.setField(c, "jobOwnershipService", resolvable(jobOwnershipService));
+        Response response = c.cancelJob(JOB_ID);
 
-        assertEquals(HttpStatus.GONE, response.getStatusCode());
-        Map<?, ?> body = (Map<?, ?>) response.getBody();
+        assertEquals(Response.Status.GONE.getStatusCode(), response.getStatus());
+        Map<?, ?> body = (Map<?, ?>) response.getEntity();
         assertEquals(PEER_NODE, body.get("ownedBy"));
         verify(taskManager, never()).setError(JOB_ID, "Job was cancelled by user");
     }
@@ -412,9 +438,9 @@ class JobControllerOwnershipTest {
         when(taskManager.getJobResult(JOB_ID)).thenReturn(completedJobWithFile());
         when(fileStorage.retrieveBytes(FILE_ID)).thenReturn("payload".getBytes());
 
-        ResponseEntity<?> response = makeController().downloadFile(FILE_ID);
+        Response response = makeController().downloadFile(FILE_ID);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
         verify(fileStorage).retrieveBytes(FILE_ID);
         verify(stickyMissRecorder, never()).recordStickyMiss();
     }
@@ -425,10 +451,10 @@ class JobControllerOwnershipTest {
         when(jobStore.get(JOB_ID)).thenThrow(new RuntimeException("Valkey command timeout"));
         when(taskManager.getJobResult(JOB_ID)).thenReturn(null);
 
-        ResponseEntity<?> response = makeController().getJobStatus(JOB_ID);
+        Response response = makeController().getJobStatus(JOB_ID);
 
-        assertEquals(HttpStatus.SERVICE_UNAVAILABLE, response.getStatusCode());
-        assertEquals("1", response.getHeaders().getFirst("Retry-After"));
+        assertEquals(Response.Status.SERVICE_UNAVAILABLE.getStatusCode(), response.getStatus());
+        assertEquals("1", response.getHeaderString("Retry-After"));
         verify(stickyMissRecorder, never()).recordStickyMiss();
     }
 
@@ -438,9 +464,9 @@ class JobControllerOwnershipTest {
         when(jobStore.get(JOB_ID)).thenThrow(new RuntimeException("Valkey command timeout"));
         when(taskManager.getJobResult(JOB_ID)).thenReturn(completedJobWithFile());
 
-        ResponseEntity<?> response = makeController().getJobStatus(JOB_ID);
+        Response response = makeController().getJobStatus(JOB_ID);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
     }
 
     @Test
@@ -451,11 +477,11 @@ class JobControllerOwnershipTest {
         when(taskManager.findJobKeyByFileId(FILE_ID))
                 .thenThrow(new RuntimeException("Valkey command timeout"));
 
-        ResponseEntity<?> response = makeController().downloadFile(FILE_ID);
+        Response response = makeController().downloadFile(FILE_ID);
 
-        assertEquals(HttpStatus.SERVICE_UNAVAILABLE, response.getStatusCode());
-        assertEquals("1", response.getHeaders().getFirst("Retry-After"));
-        Map<?, ?> body = (Map<?, ?>) response.getBody();
+        assertEquals(Response.Status.SERVICE_UNAVAILABLE.getStatusCode(), response.getStatus());
+        assertEquals("1", response.getHeaderString("Retry-After"));
+        Map<?, ?> body = (Map<?, ?>) response.getEntity();
         assertTrue(((String) body.get("message")).toLowerCase().contains("unavailable"));
         verify(fileStorage, never()).retrieveBytes(FILE_ID);
     }
@@ -468,11 +494,11 @@ class JobControllerOwnershipTest {
         when(taskManager.findJobKeyByFileId(FILE_ID))
                 .thenThrow(new RuntimeException("Valkey command timeout"));
 
-        ResponseEntity<?> response = makeController().getFileMetadata(FILE_ID);
+        Response response = makeController().getFileMetadata(FILE_ID);
 
-        assertEquals(HttpStatus.SERVICE_UNAVAILABLE, response.getStatusCode());
-        assertEquals("1", response.getHeaders().getFirst("Retry-After"));
-        Map<?, ?> body = (Map<?, ?>) response.getBody();
+        assertEquals(Response.Status.SERVICE_UNAVAILABLE.getStatusCode(), response.getStatus());
+        assertEquals("1", response.getHeaderString("Retry-After"));
+        Map<?, ?> body = (Map<?, ?>) response.getEntity();
         assertTrue(((String) body.get("message")).toLowerCase().contains("unavailable"));
         verify(fileStorage, never()).retrieveBytes(FILE_ID);
     }

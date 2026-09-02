@@ -1,34 +1,37 @@
 package stirling.software.proprietary.policy.asset;
 
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.ContentDisposition;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.server.ResponseStatusException;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.github.pixee.security.Filenames;
+import io.quarkus.arc.profile.IfBuildProfile;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 import stirling.software.proprietary.policy.store.PolicyStore;
@@ -39,8 +42,9 @@ import stirling.software.proprietary.policy.store.PolicyStore;
  * step's {@code fileParameters} as {@code asset:<id>} - so triggered and scheduled runs have the
  * file without anyone re-supplying it. Team-scoped exactly like the policies that reference them.
  */
-@RestController
-@RequestMapping("/api/v1/policies/assets")
+@ApplicationScoped
+@IfBuildProfile("saas")
+@Path("/api/v1/policies/assets")
 @Hidden
 @RequiredArgsConstructor
 @Tag(name = "Policies", description = "Run tool pipelines on the backend")
@@ -55,23 +59,26 @@ public class PolicyAssetController {
     private final PolicyManagementAuthority policyManagementAuthority;
     private final ApplicationProperties applicationProperties;
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @POST
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces(MediaType.APPLICATION_JSON)
     @Operation(
             summary = "Upload a pipeline supporting file",
             description =
                     "Stores a supporting file (multipart field 'file') for pipeline steps to"
                             + " reference from their fileParameters as 'asset:<id>', and returns"
                             + " its metadata including the assigned id.")
-    public ResponseEntity<PolicyAsset> upload(@RequestPart("file") MultipartFile file)
-            throws IOException {
+    public PolicyAsset upload(@RestForm("file") FileUpload fileUpload) throws IOException {
         requirePolicyEditingAllowed();
+        MultipartFile file = FileUploadMultipartFile.of(fileUpload);
         if (file == null || file.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Uploaded file is empty");
+            throw new WebApplicationException(
+                    "Uploaded file is empty", Response.Status.BAD_REQUEST);
         }
         if (file.getSize() > MAX_ASSET_BYTES) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Supporting files may be at most " + (MAX_ASSET_BYTES / (1024 * 1024)) + " MB");
+            throw new WebApplicationException(
+                    "Supporting files may be at most " + (MAX_ASSET_BYTES / (1024 * 1024)) + " MB",
+                    Response.Status.BAD_REQUEST);
         }
         String fileName = Filenames.toSimpleFileName(file.getOriginalFilename());
         if (fileName == null || fileName.isBlank()) {
@@ -86,10 +93,11 @@ public class PolicyAssetController {
                         policyAccessGuard.ownerForNewPolicy(),
                         policyAccessGuard.teamForNewPolicy(),
                         System.currentTimeMillis());
-        return ResponseEntity.ok(assetStore.save(meta, file.getBytes()));
+        return assetStore.save(meta, file.getBytes());
     }
 
-    @GetMapping
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
     @Operation(
             summary = "List stored supporting files",
             description =
@@ -99,7 +107,8 @@ public class PolicyAssetController {
         return policyAccessGuard.visibleFrom(assetStore);
     }
 
-    @GetMapping("/{assetId}/content")
+    @GET
+    @Path("/{assetId}/content")
     @Operation(
             summary = "Download a stored supporting file",
             description =
@@ -107,7 +116,7 @@ public class PolicyAssetController {
                             + " like upload and delete: supporting files include signing"
                             + " certificates, so reading the bytes back needs the same authority"
                             + " that put them there, not merely team membership.")
-    public ResponseEntity<Resource> content(@PathVariable String assetId) {
+    public Response content(@PathParam("assetId") String assetId) {
         requirePolicyEditingAllowed();
         PolicyAsset asset = accessibleAsset(assetId);
         byte[] bytes =
@@ -115,29 +124,25 @@ public class PolicyAssetController {
                         .content(assetId)
                         .orElseThrow(
                                 () ->
-                                        new ResponseStatusException(
-                                                HttpStatus.NOT_FOUND, "No asset: " + assetId));
-        MediaType mediaType = MediaType.APPLICATION_OCTET_STREAM;
+                                        new WebApplicationException(
+                                                "No asset: " + assetId, Response.Status.NOT_FOUND));
+        MediaType mediaType = MediaType.APPLICATION_OCTET_STREAM_TYPE;
         try {
             if (asset.contentType() != null) {
-                mediaType = MediaType.parseMediaType(asset.contentType());
+                mediaType = MediaType.valueOf(asset.contentType());
             }
         } catch (RuntimeException ignored) {
             // Stored content type unparsable: serve as a generic binary.
         }
-        return ResponseEntity.ok()
-                .contentType(mediaType)
+        return Response.ok(bytes, mediaType)
                 .header(
                         HttpHeaders.CONTENT_DISPOSITION,
-                        // UTF-8 so a non-ASCII filename encodes per RFC 5987 instead of mangling.
-                        ContentDisposition.attachment()
-                                .filename(asset.fileName(), StandardCharsets.UTF_8)
-                                .build()
-                                .toString())
-                .body(new ByteArrayResource(bytes));
+                        contentDispositionAttachment(asset.fileName()))
+                .build();
     }
 
-    @DeleteMapping("/{assetId}")
+    @DELETE
+    @Path("/{assetId}")
     @Operation(
             summary = "Delete a stored supporting file",
             description =
@@ -145,7 +150,7 @@ public class PolicyAssetController {
                             + " pipeline's step returns 409 - remove or replace the binding first."
                             + " (Assets are also cleaned up automatically when the pipelines"
                             + " referencing them are saved without them or deleted.)")
-    public ResponseEntity<Void> delete(@PathVariable String assetId) {
+    public Response delete(@PathParam("assetId") String assetId) {
         requirePolicyEditingAllowed();
         accessibleAsset(assetId);
         boolean referenced =
@@ -155,22 +160,22 @@ public class PolicyAssetController {
                                         PolicyAssetRefs.referencedAssetIds(policy.steps())
                                                 .contains(assetId));
         if (referenced) {
-            throw new ResponseStatusException(
-                    HttpStatus.CONFLICT, "Asset is still referenced by a pipeline step");
+            throw new WebApplicationException(
+                    "Asset is still referenced by a pipeline step", Response.Status.CONFLICT);
         }
         assetStore.delete(assetId);
-        return ResponseEntity.noContent().build();
+        return Response.noContent().build();
     }
 
-    /** The asset, scoped to the caller's team — another team's asset reads as not-found. */
+    /** The asset, scoped to the caller's team - another team's asset reads as not-found. */
     private PolicyAsset accessibleAsset(String assetId) {
         return assetStore
                 .get(assetId)
                 .filter(policyAccessGuard::canAccess)
                 .orElseThrow(
                         () ->
-                                new ResponseStatusException(
-                                        HttpStatus.NOT_FOUND, "No asset: " + assetId));
+                                new WebApplicationException(
+                                        "No asset: " + assetId, Response.Status.NOT_FOUND));
     }
 
     /** Same gate as policy edits (see {@code PolicyController#requirePolicyEditingAllowed}). */
@@ -179,9 +184,19 @@ public class PolicyAssetController {
             return;
         }
         if (!policyManagementAuthority.canEditPolicies()) {
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN,
-                    "Policies may only be created or modified by a team leader");
+            throw new WebApplicationException(
+                    "Policies may only be created or modified by a team leader",
+                    Response.Status.FORBIDDEN);
         }
+    }
+
+    /**
+     * {@code Content-Disposition: attachment} with an RFC 5987 UTF-8 filename, mirroring Spring's
+     * {@code ContentDisposition.attachment().filename(name, UTF_8)} so a non-ASCII filename encodes
+     * rather than mangling.
+     */
+    private static String contentDispositionAttachment(String filename) {
+        String encoded = URLEncoder.encode(filename, StandardCharsets.UTF_8).replace("+", "%20");
+        return "attachment; filename=\"" + filename + "\"; filename*=UTF-8''" + encoded;
     }
 }

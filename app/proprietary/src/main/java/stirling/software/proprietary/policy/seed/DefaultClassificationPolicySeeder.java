@@ -4,11 +4,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.event.EventListener;
-import org.springframework.stereotype.Component;
-import org.springframework.transaction.event.TransactionPhase;
-import org.springframework.transaction.event.TransactionalEventListener;
+import io.quarkus.arc.profile.IfBuildProfile;
+import io.quarkus.runtime.StartupEvent;
+
+import jakarta.annotation.Priority;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
+import jakarta.enterprise.event.TransactionPhase;
+import jakarta.interceptor.Interceptor;
+import jakarta.transaction.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +31,8 @@ import stirling.software.proprietary.security.service.TeamService;
  * unowned: nobody created it, and an owner here would have to name a real user.
  */
 @Slf4j
-@Component
+@ApplicationScoped
+@IfBuildProfile("saas")
 @RequiredArgsConstructor
 public class DefaultClassificationPolicySeeder {
 
@@ -45,17 +50,24 @@ public class DefaultClassificationPolicySeeder {
 
     // The default team is created during startup, before the entity event listener is guaranteed
     // wired, so ensure it once the context is fully ready (self-hosted first boot).
-    @EventListener(ApplicationReadyEvent.class)
+    // Priority above the default 2500 keeps this after InitialSecuritySetup creates that team, and
+    // @Transactional gives the Panache read the transaction a startup observer otherwise lacks.
+    @Transactional
+    void onStart(@Observes @Priority(Interceptor.Priority.APPLICATION + 1000) StartupEvent event) {
+        seedDefaultTeamOnStartup();
+    }
+
     public void seedDefaultTeamOnStartup() {
         teamRepository
                 .findByName(TeamService.DEFAULT_TEAM_NAME)
                 .ifPresent(team -> seedIfMissing(team.getId(), team.getName()));
     }
 
-    // Seeds inside the new team's own transaction: rollback leaves no policy behind, and the
-    // store's pessimistic lock needs a live transaction, which AFTER_COMMIT cannot offer.
-    @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
-    public void onTeamCreated(TeamCreatedEvent event) {
+    // Any team created at runtime (admin-created, SaaS sign-ups). Seeds inside the team's own
+    // transaction: rollback still leaves no policy behind, and the store's pessimistic lock needs a
+    // live transaction, which AFTER_SUCCESS cannot offer.
+    public void onTeamCreated(
+            @Observes(during = TransactionPhase.BEFORE_COMPLETION) TeamCreatedEvent event) {
         seedIfMissing(event.teamId(), event.teamName());
     }
 

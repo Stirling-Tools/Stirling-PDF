@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import org.springframework.stereotype.Service;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 
@@ -21,7 +21,7 @@ import stirling.software.common.model.tool.ToolIOSpec;
  * chain can be checked without a round trip. {@code testing/tool-io-cases.json} pins all three to
  * the same answers.
  */
-@Service
+@ApplicationScoped
 @RequiredArgsConstructor
 public class ToolChainValidator {
 

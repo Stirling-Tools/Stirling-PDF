@@ -2,13 +2,13 @@ package stirling.software.proprietary.integration.purview;
 
 import java.util.Map;
 
-import org.springframework.stereotype.Component;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import stirling.software.proprietary.integration.model.IntegrationType;
 import stirling.software.proprietary.integration.service.IntegrationConfigValidator;
 
 /** The Purview connection schema, enforced when the config is saved. */
-@Component
+@ApplicationScoped
 public class PurviewIntegrationValidator implements IntegrationConfigValidator {
 
     @Override

@@ -1,22 +1,13 @@
 package stirling.software.proprietary.security.session;
 
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.security.core.session.SessionRegistryImpl;
+import jakarta.enterprise.context.ApplicationScoped;
 
-import stirling.software.proprietary.security.database.repository.SessionRepository;
-
-@Configuration
+@ApplicationScoped
 public class SessionRegistryConfig {
 
-    @Bean
-    public SessionRegistryImpl sessionRegistry() {
-        return new SessionRegistryImpl();
-    }
-
-    @Bean
-    public SessionPersistentRegistry sessionPersistentRegistry(
-            SessionRepository sessionRepository) {
-        return new SessionPersistentRegistry(sessionRepository);
-    }
+    // MIGRATION: the @Produces SessionPersistentRegistry producer was removed. That class is
+    // already an @ApplicationScoped CDI bean with an injectable constructor taking
+    // SessionRepository,
+    // so the producer was a second @Default bean of the same type and made every injection point
+    // ambiguous. Quarkus auto-discovers the bean directly.
 }

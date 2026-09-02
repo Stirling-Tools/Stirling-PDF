@@ -3,7 +3,7 @@ package stirling.software.proprietary.policy.source;
 import java.util.List;
 import java.util.Objects;
 
-import org.springframework.stereotype.Component;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 
@@ -17,7 +17,7 @@ import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
  * only when login is enabled; single-user deployments (login disabled) pass every check. Mirrors
  * {@link stirling.software.proprietary.policy.config.PolicyAccessGuard}.
  */
-@Component
+@ApplicationScoped
 @RequiredArgsConstructor
 public class SourceAccessGuard {
 

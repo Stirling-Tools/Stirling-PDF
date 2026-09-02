@@ -23,10 +23,11 @@ import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +38,7 @@ import stirling.software.proprietary.workflow.model.CertificateType;
 import stirling.software.proprietary.workflow.model.UserServerCertificateEntity;
 import stirling.software.proprietary.workflow.repository.UserServerCertificateRepository;
 
-@Service
+@ApplicationScoped
 @Slf4j
 @RequiredArgsConstructor
 public class UserServerCertificateService {
@@ -64,7 +65,7 @@ public class UserServerCertificateService {
 
         User user =
                 userRepository
-                        .findById(userId)
+                        .findByIdOptional(userId)
                         .orElseThrow(() -> new IllegalArgumentException("User not found"));
         return generateUserCertificate(user);
     }
@@ -160,7 +161,8 @@ public class UserServerCertificateService {
         entity.setValidTo(
                 LocalDateTime.ofInstant(cert.getNotAfter().toInstant(), ZoneId.systemDefault()));
 
-        return certificateRepository.save(entity);
+        certificateRepository.persist(entity);
+        return entity;
     }
 
     /** Upload user-provided certificate */
@@ -172,8 +174,9 @@ public class UserServerCertificateService {
         // Validate keystore
         byte[] keystoreBytes = p12Stream.readNBytes(10 * 1024 * 1024 + 1); // read at most 10 MB + 1
         if (keystoreBytes.length > 10 * 1024 * 1024) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Keystore file exceeds maximum allowed size of 10 MB");
+            throw new WebApplicationException(
+                    "Keystore file exceeds maximum allowed size of 10 MB",
+                    Response.Status.BAD_REQUEST);
         }
         KeyStore keyStore = KeyStore.getInstance("PKCS12");
         keyStore.load(new ByteArrayInputStream(keystoreBytes), password.toCharArray());
@@ -203,11 +206,12 @@ public class UserServerCertificateService {
         entity.setValidTo(
                 LocalDateTime.ofInstant(cert.getNotAfter().toInstant(), ZoneId.systemDefault()));
 
-        return certificateRepository.save(entity);
+        certificateRepository.persist(entity);
+        return entity;
     }
 
     /** Get user's KeyStore for signing operations */
-    @Transactional(readOnly = true)
+    @Transactional
     public KeyStore getUserKeyStore(Long userId) throws Exception {
         UserServerCertificateEntity cert =
                 certificateRepository
@@ -223,7 +227,7 @@ public class UserServerCertificateService {
     }
 
     /** Get user's keystore password */
-    @Transactional(readOnly = true)
+    @Transactional
     public String getUserKeystorePassword(Long userId) {
         UserServerCertificateEntity cert =
                 certificateRepository
@@ -240,13 +244,13 @@ public class UserServerCertificateService {
     }
 
     /** Check if user has certificate */
-    @Transactional(readOnly = true)
+    @Transactional
     public boolean hasUserCertificate(Long userId) {
         return certificateRepository.findByUserId(userId).isPresent();
     }
 
     /** Get certificate info (without keystore data) */
-    @Transactional(readOnly = true)
+    @Transactional
     public Optional<UserServerCertificateEntity> getCertificateInfo(Long userId) {
         return certificateRepository.findByUserId(userId);
     }

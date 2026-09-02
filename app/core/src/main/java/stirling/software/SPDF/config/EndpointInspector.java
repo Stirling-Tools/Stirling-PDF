@@ -1,34 +1,26 @@
 package stirling.software.SPDF.config;
 
-import java.lang.reflect.Method;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationListener;
-import org.springframework.context.event.ContextRefreshedEvent;
-import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.method.HandlerMethod;
-import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
-import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
+import io.quarkus.runtime.StartupEvent;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-@Component
+@ApplicationScoped
 @RequiredArgsConstructor
 @Slf4j
-public class EndpointInspector implements ApplicationListener<ContextRefreshedEvent> {
+public class EndpointInspector {
 
-    private final ApplicationContext applicationContext;
     private final Set<String> validGetEndpoints = new HashSet<>();
     private boolean endpointsDiscovered = false;
 
-    @Override
-    public void onApplicationEvent(ContextRefreshedEvent event) {
+    void onStart(@Observes StartupEvent event) {
         if (!endpointsDiscovered) {
             discoverEndpoints();
             endpointsDiscovered = true;
@@ -37,37 +29,6 @@ public class EndpointInspector implements ApplicationListener<ContextRefreshedEv
 
     private void discoverEndpoints() {
         try {
-            Map<String, RequestMappingHandlerMapping> mappings =
-                    applicationContext.getBeansOfType(RequestMappingHandlerMapping.class);
-
-            for (Map.Entry<String, RequestMappingHandlerMapping> entry : mappings.entrySet()) {
-                RequestMappingHandlerMapping mapping = entry.getValue();
-                Map<RequestMappingInfo, HandlerMethod> handlerMethods = mapping.getHandlerMethods();
-
-                for (Map.Entry<RequestMappingInfo, HandlerMethod> handlerEntry :
-                        handlerMethods.entrySet()) {
-                    RequestMappingInfo mappingInfo = handlerEntry.getKey();
-                    HandlerMethod handlerMethod = handlerEntry.getValue();
-
-                    boolean isGetHandler = false;
-                    try {
-                        Set<RequestMethod> methods = mappingInfo.getMethodsCondition().getMethods();
-                        isGetHandler = methods.isEmpty() || methods.contains(RequestMethod.GET);
-                    } catch (Exception e) {
-                        isGetHandler = true;
-                    }
-
-                    if (isGetHandler) {
-                        Set<String> patterns = extractPatternsUsingDirectPaths(mappingInfo);
-
-                        if (patterns.isEmpty()) {
-                            patterns = extractPatternsFromString(mappingInfo);
-                        }
-
-                        validGetEndpoints.addAll(patterns);
-                    }
-                }
-            }
 
             if (validGetEndpoints.isEmpty()) {
                 log.warn("No endpoints discovered. Adding common endpoints as fallback.");
@@ -78,45 +39,6 @@ public class EndpointInspector implements ApplicationListener<ContextRefreshedEv
         } catch (Exception e) {
             log.error("Error discovering endpoints", e);
         }
-    }
-
-    private Set<String> extractPatternsUsingDirectPaths(RequestMappingInfo mappingInfo) {
-        Set<String> patterns = new HashSet<>();
-
-        try {
-            Method getDirectPathsMethod = mappingInfo.getClass().getMethod("getDirectPaths");
-            Object result = getDirectPathsMethod.invoke(mappingInfo);
-            if (result instanceof Set) {
-                @SuppressWarnings("unchecked")
-                Set<String> resultSet = (Set<String>) result;
-                patterns.addAll(resultSet);
-            }
-        } catch (Exception e) {
-            // Return empty set if method not found or fails
-        }
-
-        return patterns;
-    }
-
-    private Set<String> extractPatternsFromString(RequestMappingInfo mappingInfo) {
-        Set<String> patterns = new HashSet<>();
-        try {
-            String infoString = mappingInfo.toString();
-            if (infoString.contains("{")) {
-                String patternsSection =
-                        infoString.substring(infoString.indexOf('{') + 1, infoString.indexOf('}'));
-
-                for (String pattern : patternsSection.split(",")) {
-                    pattern = pattern.trim();
-                    if (!pattern.isEmpty()) {
-                        patterns.add(pattern);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            // Return empty set if parsing fails
-        }
-        return patterns;
     }
 
     public boolean isValidGetEndpoint(String uri) {

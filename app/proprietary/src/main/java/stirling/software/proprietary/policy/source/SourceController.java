@@ -4,25 +4,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ProblemDetail;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
-
+import io.quarkus.arc.All;
+import io.quarkus.arc.profile.IfBuildProfile;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
-import lombok.RequiredArgsConstructor;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.policy.config.FolderAccessDeniedException;
@@ -41,10 +40,10 @@ import stirling.software.proprietary.util.SecretMasker;
  * reports how many reference each one. Editing follows the same team-leader rule as policies, and
  * everything is scoped to the caller's team.
  */
-@RestController
-@RequestMapping("/api/v1/sources")
+@ApplicationScoped
+@IfBuildProfile("saas")
+@Path("/api/v1/sources")
 @Hidden
-@RequiredArgsConstructor
 @Tag(name = "Sources", description = "Reusable policy input connections")
 public class SourceController {
 
@@ -67,7 +66,32 @@ public class SourceController {
     private final ApplicationProperties applicationProperties;
     private final List<InputSource> inputSources;
 
-    @GetMapping
+    // Explicit constructor instead of Lombok so the List<InputSource> injection point can carry
+    // @All, which is how CDI collects every bean of a type the way Spring's List autowiring did.
+    @Inject
+    public SourceController(
+            SourceStore sourceStore,
+            SourceAccessGuard sourceAccessGuard,
+            SourceOverviewService overviewService,
+            PolicyStore policyStore,
+            PolicyAccessGuard policyAccessGuard,
+            PolicyManagementAuthority policyManagementAuthority,
+            PolicyTriggerManager policyTriggerManager,
+            ApplicationProperties applicationProperties,
+            @All List<InputSource> inputSources) {
+        this.sourceStore = sourceStore;
+        this.sourceAccessGuard = sourceAccessGuard;
+        this.overviewService = overviewService;
+        this.policyStore = policyStore;
+        this.policyAccessGuard = policyAccessGuard;
+        this.policyManagementAuthority = policyManagementAuthority;
+        this.policyTriggerManager = policyTriggerManager;
+        this.applicationProperties = applicationProperties;
+        this.inputSources = inputSources;
+    }
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
     @Operation(
             summary = "Sources overview",
             description =
@@ -77,47 +101,53 @@ public class SourceController {
         return overviewService.overview();
     }
 
-    @GetMapping("/{sourceId}")
+    @GET
+    @Path("/{sourceId}")
+    @Produces(MediaType.APPLICATION_JSON)
     @Operation(
             summary = "Get a source by id",
             description =
                     "Secret-bearing options are returned as a redaction sentinel, never their"
                             + " stored values; an edit that sends the sentinel back keeps them.")
-    public ResponseEntity<Source> get(@PathVariable String sourceId) {
+    public Response get(@PathParam("sourceId") String sourceId) {
         return sourceStore
                 .get(sourceId)
                 .filter(sourceAccessGuard::canAccess)
                 .map(SourceController::withMaskedSecrets)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+                .map(masked -> Response.ok(masked).build())
+                .orElseGet(() -> Response.status(Response.Status.NOT_FOUND).build());
     }
 
-    @GetMapping("/{sourceId}/document-counts")
+    @GET
+    @Path("/{sourceId}/document-counts")
+    @Produces(MediaType.APPLICATION_JSON)
     @Operation(
             summary = "Daily document counts for a source",
             description =
                     "The trailing 30-day per-day document series (oldest first) for the source's"
                             + " sparkline.")
-    public ResponseEntity<List<Long>> documentCounts(@PathVariable String sourceId) {
+    public Response documentCounts(@PathParam("sourceId") String sourceId) {
         // The editor is virtual: its series is tracked per team, not against a persisted source.
         if (EditorSource.ID.equals(sourceId)) {
-            return ResponseEntity.ok(overviewService.editorDailySeries());
+            return Response.ok(overviewService.editorDailySeries()).build();
         }
         return sourceStore
                 .get(sourceId)
                 .filter(sourceAccessGuard::canAccess)
-                .map(source -> ResponseEntity.ok(overviewService.dailySeries(source.id())))
-                .orElseGet(() -> ResponseEntity.notFound().build());
+                .map(source -> Response.ok(overviewService.dailySeries(source.id())).build())
+                .orElseGet(() -> Response.status(Response.Status.NOT_FOUND).build());
     }
 
-    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     @Operation(
             summary = "Create or update a source",
             description =
                     "Stores an input connection (type + config). A blank id is assigned; owner and"
                             + " team are stamped server-side. The config is validated against the"
                             + " matching source type.")
-    public ResponseEntity<Source> save(@RequestBody Source source) {
+    public Response save(Source source) {
         requireSourceEditingAllowed();
         requireNotEditor(source.id(), source.type());
         boolean isCreate = source.id() == null || source.id().isBlank();
@@ -125,59 +155,44 @@ public class SourceController {
         try {
             validateConfig(owned);
         } catch (FolderAccessDeniedException e) {
-            // Surfaced with a machine-readable code by handleFolderAccessDenied so the portal can
-            // link to the Folder Access settings; don't flatten it into a plain 400 here.
+            // Surfaced with a machine-readable code by FolderAccessDeniedExceptionMapper so the
+            // portal can link to Folder Access settings; don't flatten it into a plain 400 here.
             throw e;
         } catch (IllegalArgumentException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+            throw new WebApplicationException(e.getMessage(), Response.Status.BAD_REQUEST);
         }
         Source saved = sourceStore.save(owned);
         // An edited folder source can change which directory needs watching, so re-sync trigger
         // registrations now instead of waiting for the next reconcile.
         policyTriggerManager.notifyPoliciesChanged();
-        return ResponseEntity.ok(revealOnCreate(saved, isCreate));
+        return Response.ok(revealOnCreate(saved, isCreate)).build();
     }
 
-    @DeleteMapping("/{sourceId}")
+    @DELETE
+    @Path("/{sourceId}")
     @Operation(
             summary = "Delete a source",
             description =
                     "Removes a source that no policy references. A source still in use returns 409"
                             + " so the connection can't be pulled out from under a live policy.")
-    public ResponseEntity<Void> delete(@PathVariable String sourceId) {
+    public Response delete(@PathParam("sourceId") String sourceId) {
         requireSourceEditingAllowed();
         requireNotEditor(sourceId, null);
         Source source = sourceStore.get(sourceId).filter(sourceAccessGuard::canAccess).orElse(null);
         if (source == null) {
-            return ResponseEntity.notFound().build();
+            return Response.status(Response.Status.NOT_FOUND).build();
         }
         List<String> referencing = referencingPolicyNames(sourceId);
         if (!referencing.isEmpty()) {
-            throw new ResponseStatusException(
-                    HttpStatus.CONFLICT,
+            throw new WebApplicationException(
                     "Source is referenced by "
                             + referencing.size()
                             + " policy(ies): "
-                            + String.join(", ", referencing));
+                            + String.join(", ", referencing),
+                    Response.Status.CONFLICT);
         }
         sourceStore.delete(sourceId);
-        return ResponseEntity.noContent().build();
-    }
-
-    /**
-     * A folder source was rejected for pointing outside the allowed roots. Return a 400 carrying
-     * {@link #FOLDER_ACCESS_DENIED_CODE} so the portal can offer a link to the Folder Access
-     * settings, while other guard rejections (SaaS mode, the protected config dir) fall through to
-     * the global handler as plain 400s the admin can't fix by editing the allowlist.
-     */
-    @ExceptionHandler(FolderAccessDeniedException.class)
-    public ResponseEntity<ProblemDetail> handleFolderAccessDenied(FolderAccessDeniedException ex) {
-        ProblemDetail problem =
-                ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
-        problem.setProperty("code", FOLDER_ACCESS_DENIED_CODE);
-        return ResponseEntity.badRequest()
-                .contentType(MediaType.APPLICATION_PROBLEM_JSON)
-                .body(problem);
+        return Response.noContent().build();
     }
 
     /**
@@ -192,7 +207,8 @@ public class SourceController {
             Source existing = sourceStore.get(id).orElse(null);
             if (existing != null) {
                 if (!sourceAccessGuard.canAccess(existing)) {
-                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No source: " + id);
+                    throw new WebApplicationException(
+                            "No source: " + id, Response.Status.NOT_FOUND);
                 }
                 return withOwnerAndTeam(incoming, existing.owner(), existing.teamId());
             }
@@ -289,9 +305,9 @@ public class SourceController {
             return;
         }
         if (!policyManagementAuthority.canEditPolicies()) {
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN,
-                    "Sources may only be created or modified by a team leader");
+            throw new WebApplicationException(
+                    "Sources may only be created or modified by a team leader",
+                    Response.Status.FORBIDDEN);
         }
     }
 
@@ -301,9 +317,9 @@ public class SourceController {
      */
     private static void requireNotEditor(String id, String type) {
         if (EditorSource.ID.equals(id) || EditorSource.TYPE.equals(type)) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "The editor is a built-in source and cannot be created, edited, or deleted");
+            throw new WebApplicationException(
+                    "The editor is a built-in source and cannot be created, edited, or deleted",
+                    Response.Status.BAD_REQUEST);
         }
     }
 

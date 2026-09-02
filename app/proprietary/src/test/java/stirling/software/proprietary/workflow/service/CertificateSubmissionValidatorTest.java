@@ -30,8 +30,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
+
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
 
 import stirling.software.common.service.PdfSigningService;
 import stirling.software.proprietary.workflow.dto.CertificateInfo;
@@ -212,11 +213,11 @@ class CertificateSubmissionValidatorTest {
         }
 
         assertThatThrownBy(() -> validator.validateAndExtractInfo(p12, "P12", "wrong-password"))
-                .isInstanceOf(ResponseStatusException.class)
+                .isInstanceOf(WebApplicationException.class)
                 .satisfies(
                         ex ->
-                                assertThat(((ResponseStatusException) ex).getStatusCode())
-                                        .isEqualTo(HttpStatus.BAD_REQUEST));
+                                assertThat(((WebApplicationException) ex).getResponse().getStatus())
+                                        .isEqualTo(Response.Status.BAD_REQUEST.getStatusCode()));
     }
 
     // ---- Corrupt keystore bytes ----
@@ -226,11 +227,11 @@ class CertificateSubmissionValidatorTest {
         byte[] garbage = "this is not a keystore".getBytes();
 
         assertThatThrownBy(() -> validator.validateAndExtractInfo(garbage, "P12", "password"))
-                .isInstanceOf(ResponseStatusException.class)
+                .isInstanceOf(WebApplicationException.class)
                 .satisfies(
                         ex ->
-                                assertThat(((ResponseStatusException) ex).getStatusCode())
-                                        .isEqualTo(HttpStatus.BAD_REQUEST));
+                                assertThat(((WebApplicationException) ex).getResponse().getStatus())
+                                        .isEqualTo(Response.Status.BAD_REQUEST.getStatusCode()));
     }
 
     // ---- Expired certificate ----
@@ -245,12 +246,13 @@ class CertificateSubmissionValidatorTest {
         }
 
         assertThatThrownBy(() -> validator.validateAndExtractInfo(p12, "P12", "password"))
-                .isInstanceOf(ResponseStatusException.class)
+                .isInstanceOf(WebApplicationException.class)
                 .satisfies(
                         ex -> {
-                            ResponseStatusException rse = (ResponseStatusException) ex;
-                            assertThat(rse.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-                            assertThat(rse.getReason()).contains("expired");
+                            WebApplicationException wae = (WebApplicationException) ex;
+                            assertThat(wae.getResponse().getStatus())
+                                    .isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
+                            assertThat(wae.getMessage()).contains("expired");
                         });
     }
 
@@ -266,12 +268,13 @@ class CertificateSubmissionValidatorTest {
         }
 
         assertThatThrownBy(() -> validator.validateAndExtractInfo(p12, "P12", "password"))
-                .isInstanceOf(ResponseStatusException.class)
+                .isInstanceOf(WebApplicationException.class)
                 .satisfies(
                         ex -> {
-                            ResponseStatusException rse = (ResponseStatusException) ex;
-                            assertThat(rse.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-                            assertThat(rse.getReason()).contains("not yet valid");
+                            WebApplicationException wae = (WebApplicationException) ex;
+                            assertThat(wae.getResponse().getStatus())
+                                    .isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
+                            assertThat(wae.getMessage()).contains("not yet valid");
                         });
     }
 
@@ -294,12 +297,13 @@ class CertificateSubmissionValidatorTest {
                         anyBoolean());
 
         assertThatThrownBy(() -> validator.validateAndExtractInfo(p12, "P12", "password"))
-                .isInstanceOf(ResponseStatusException.class)
+                .isInstanceOf(WebApplicationException.class)
                 .satisfies(
                         ex -> {
-                            ResponseStatusException rse = (ResponseStatusException) ex;
-                            assertThat(rse.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-                            assertThat(rse.getReason()).contains("compatible");
+                            WebApplicationException wae = (WebApplicationException) ex;
+                            assertThat(wae.getResponse().getStatus())
+                                    .isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
+                            assertThat(wae.getMessage()).contains("compatible");
                         });
     }
 

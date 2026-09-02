@@ -2,10 +2,10 @@ package stirling.software.proprietary.failure;
 
 import java.util.List;
 
-import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClientResponseException;
-
 import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,14 +18,16 @@ import tools.jackson.databind.ObjectMapper;
 
 /**
  * Maps a thrown failure onto a {@link FailureKind}. A tool's 4xx arrives as a {@link
- * RestClientResponseException} whose body is the Problem Details document carrying {@code
- * errorCode}, so this matches on codes rather than exception messages.
+ * WebApplicationException} - the migrated {@code InternalApiClient} returns the upstream status, so
+ * {@code PolicyExecutor} rethrows a non-OK tool response as one carrying that status and body. The
+ * body is the Problem Details document carrying {@code errorCode}, so this matches on codes rather
+ * than exception messages.
  *
  * <p>Anything unrecognised becomes {@link FailureKind#UNKNOWN}, so every failed run still gets a
  * record.
  */
 @Slf4j
-@Service
+@ApplicationScoped
 @RequiredArgsConstructor
 public class FailureClassifier {
 
@@ -71,7 +73,7 @@ public class FailureClassifier {
 
     private FailureKind classifyOne(Throwable throwable) {
         // A tool step's 4xx/5xx: the Problem Details body names the error code.
-        if (throwable instanceof RestClientResponseException responseException) {
+        if (throwable instanceof WebApplicationException responseException) {
             String code = errorCodeFromBody(responseException);
             if (code != null) {
                 return FailureKind.byErrorCode(code).orElse(FailureKind.UNKNOWN);
@@ -88,8 +90,8 @@ public class FailureClassifier {
      * Pull {@code errorCode} from a Problem Details body, or null when the body is absent, not
      * JSON, or has no such property (an entitlement sentinel has {@code error} instead).
      */
-    private String errorCodeFromBody(RestClientResponseException exception) {
-        String body = exception.getResponseBodyAsString();
+    private String errorCodeFromBody(WebApplicationException exception) {
+        String body = bodyOf(exception.getResponse());
         if (body == null || body.isBlank()) {
             return null;
         }
@@ -105,5 +107,17 @@ public class FailureClassifier {
             log.debug("Downstream error body was not JSON; classifying as UNKNOWN");
             return null;
         }
+    }
+
+    /**
+     * The response body as text. Null for the bodyless {@code WebApplicationException}s our own
+     * resources throw for their 4xx, which then fall through to the error-code-provider check.
+     */
+    private static String bodyOf(Response response) {
+        if (response == null) {
+            return null;
+        }
+        Object entity = response.getEntity();
+        return entity == null ? null : entity.toString();
     }
 }

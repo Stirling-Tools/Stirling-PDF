@@ -5,12 +5,13 @@ import java.time.Instant;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
+import io.quarkus.arc.profile.IfBuildProfile;
+import io.quarkus.scheduler.Scheduled;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -29,7 +30,10 @@ import stirling.software.proprietary.policy.store.PolicyStore;
  * throughout: the policy write has already committed, so a failure is logged, not propagated.
  */
 @Slf4j
-@Service
+@ApplicationScoped
+// PolicyStore's only bean (JpaPolicyStore) is saas-gated, so this must be too or CDI cannot
+// satisfy it in the other flavors.
+@IfBuildProfile("saas")
 public class PolicyAssetCleaner {
 
     // An upload sits unreferenced until the save that binds it, so the window has to outlast a
@@ -40,7 +44,7 @@ public class PolicyAssetCleaner {
     private final PolicyStore policyStore;
     private final Supplier<Instant> clock;
 
-    @Autowired
+    @Inject
     public PolicyAssetCleaner(PolicyAssetStore assetStore, PolicyStore policyStore) {
         this(assetStore, policyStore, Instant::now);
     }
@@ -76,7 +80,7 @@ public class PolicyAssetCleaner {
      * upload is unreferenced everywhere or nowhere. Runs at startup too, so an instance restarted
      * more often than daily still reclaims; the age cutoff is what keeps fresh uploads safe.
      */
-    @Scheduled(fixedDelay = 1, timeUnit = TimeUnit.DAYS)
+    @Scheduled(every = "24h", concurrentExecution = Scheduled.ConcurrentExecution.SKIP)
     public void sweepAbandonedUploads() {
         long cutoff = clock.get().minus(ABANDONED_UPLOAD_AGE).toEpochMilli();
         try {

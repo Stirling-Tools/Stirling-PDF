@@ -2,7 +2,7 @@ package stirling.software.proprietary.policy.network;
 
 import java.util.Map;
 
-import org.springframework.stereotype.Component;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 
@@ -16,7 +16,7 @@ import stirling.software.proprietary.integration.service.IntegrationConfigValida
  * fails in the form rather than in a sweep. A live connectivity check runs later, when the source
  * that uses the connection is saved ({@link NetworkInputSource#validate}).
  */
-@Component
+@ApplicationScoped
 @RequiredArgsConstructor
 public class NetworkIntegrationValidator implements IntegrationConfigValidator {
 

@@ -6,8 +6,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -15,7 +14,7 @@ import lombok.extern.slf4j.Slf4j;
  * Service for tracking Weekly Active Users (WAU) in no-login mode. Uses in-memory storage with
  * automatic cleanup of old entries.
  */
-@Service
+@ApplicationScoped
 @Slf4j
 public class WeeklyActiveUsersService {
 

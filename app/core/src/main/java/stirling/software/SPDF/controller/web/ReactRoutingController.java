@@ -4,36 +4,41 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.List;
+import java.nio.file.Paths;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.core.Ordered;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.CacheControl;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.converter.StringHttpMessageConverter;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.servlet.function.RouterFunction;
-import org.springframework.web.servlet.function.RouterFunctions;
-import org.springframework.web.servlet.function.ServerResponse;
-import org.springframework.web.servlet.function.support.RouterFunctionMapping;
-import org.springframework.web.util.HtmlUtils;
-import org.springframework.web.util.JavaScriptUtils;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import jakarta.annotation.PostConstruct;
-import jakarta.servlet.http.HttpServletRequest;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.NotFoundException;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.CacheControl;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import stirling.software.common.configuration.InstallationPathConfig;
+import stirling.software.common.model.io.ClassPathResource;
+import stirling.software.common.model.io.FileSystemResource;
+import stirling.software.common.model.io.Resource;
 
-@Controller
+// NOTE: SPA forwarding controller. The forwarding routes below cover the SPA "clean URL" paths the
+// app historically matched with Spring's negative-lookahead regex route. RESTEasy Reactive DOES
+// support per-segment regex constraints in @Path templates, so each catch-all segment is
+// constrained to {seg:[^/.]+} - one path segment that contains no '.'. This mirrors Spring's
+// "match only dot-less segments" rule: requests for real files (which always carry an extension,
+// e.g. /assets/index-abc.js, /sw.js, /manifest.json) do NOT match these templates and therefore
+// fall through to Quarkus' static-resource handler (META-INF/resources), which serves them with the
+// correct Content-Type. This precedence detail is critical: a matching JAX-RS route is answered
+// BEFORE the static handler runs, so an unconstrained {path} catch-all would shadow every asset and
+// return index.html (text/html) for .js/.css - exactly the "white screen / wrong MIME" bug. One-,
+// two- and (via forwardDeepPaths) three-or-more-segment dot-less SPA routes are matched here.
+@Path("")
+@ApplicationScoped
 public class ReactRoutingController {
 
     private static final org.slf4j.Logger log =
@@ -64,12 +69,12 @@ public class ReactRoutingController {
                     "og_images",
                     "samples");
 
-    // After the annotated controllers (order 0), before the resource chain
-    // (LOWEST_PRECEDENCE - 1).
-    private static final int SPA_FALLBACK_ORDER = Ordered.LOWEST_PRECEDENCE - 2;
-
-    @Value("${server.servlet.context-path:/}")
-    private String contextPath;
+    // server.servlet.context-path has no direct Quarkus equivalent (it maps to
+    // quarkus.http.root-path
+    // at build time). Kept as a configurable property so the index.html base href rewrite still
+    // works.
+    @ConfigProperty(name = "server.servlet.context-path", defaultValue = "/")
+    String contextPath;
 
     private String cachedIndexHtml;
     private String cachedCallbackHtml;
@@ -113,7 +118,8 @@ public class ReactRoutingController {
         this.mobileSignHtmlExists = this.cachedMobileSignHtml != null;
 
         // Check for external index.html first (customFiles/static/)
-        Path externalIndexPath = Path.of(InstallationPathConfig.getStaticPath(), "index.html");
+        java.nio.file.Path externalIndexPath =
+                Paths.get(InstallationPathConfig.getStaticPath(), "index.html");
         log.debug("Checking for custom index.html at: {}", externalIndexPath);
         if (Files.exists(externalIndexPath) && Files.isReadable(externalIndexPath)) {
             log.info("Using custom index.html from: {}", externalIndexPath);
@@ -183,7 +189,8 @@ public class ReactRoutingController {
 
     private Resource getIndexHtmlResource() {
         // Check external location first
-        Path externalIndexPath = Path.of(InstallationPathConfig.getStaticPath(), "index.html");
+        java.nio.file.Path externalIndexPath =
+                Paths.get(InstallationPathConfig.getStaticPath(), "index.html");
         if (Files.exists(externalIndexPath) && Files.isReadable(externalIndexPath)) {
             return new FileSystemResource(externalIndexPath.toFile());
         }
@@ -194,7 +201,8 @@ public class ReactRoutingController {
 
     private String readStaticHtml(String filename) {
         try {
-            Path external = Path.of(InstallationPathConfig.getStaticPath(), filename);
+            java.nio.file.Path external =
+                    Paths.get(InstallationPathConfig.getStaticPath(), filename);
             if (Files.exists(external) && Files.isReadable(external)) {
                 return Files.readString(external, StandardCharsets.UTF_8);
             }
@@ -214,135 +222,164 @@ public class ReactRoutingController {
         return Boolean.parseBoolean(System.getProperty("STIRLING_PDF_TAURI_MODE", "false"));
     }
 
-    @GetMapping(
-            value = {"/", "/index.html"},
-            produces = MediaType.TEXT_HTML_VALUE)
-    public ResponseEntity<String> serveRootPage(HttpServletRequest request) {
+    @GET
+    @Path("/")
+    @Produces(MediaType.TEXT_HTML)
+    public Response serveRootPage() {
         // Swap ONLY the root page for SaaS. SPA entry points that delegate to serveIndexHtml
         // (/auth/callback, /share/{token}, forwarded routes) keep serving the normal shell.
         if (saasLandingExists && cachedSaasLandingHtml != null) {
-            return ResponseEntity.ok()
-                    .cacheControl(CacheControl.noCache().mustRevalidate())
-                    .contentType(MediaType.TEXT_HTML)
-                    .body(cachedSaasLandingHtml);
+            return Response.ok(cachedSaasLandingHtml)
+                    .cacheControl(noCacheMustRevalidate())
+                    .type(MediaType.TEXT_HTML)
+                    .build();
         }
-        return serveIndexHtml(request);
+        return serveIndexHtml();
     }
 
-    public ResponseEntity<String> serveIndexHtml(HttpServletRequest request) {
+    @GET
+    @Path("/index.html")
+    @Produces(MediaType.TEXT_HTML)
+    public Response serveIndexHtmlPage() {
+        if (saasLandingExists && cachedSaasLandingHtml != null) {
+            return Response.ok(cachedSaasLandingHtml)
+                    .cacheControl(noCacheMustRevalidate())
+                    .type(MediaType.TEXT_HTML)
+                    .build();
+        }
+        return serveIndexHtml();
+    }
+
+    public Response serveIndexHtml() {
         try {
             if (indexHtmlExists && cachedIndexHtml != null) {
-                return ResponseEntity.ok()
-                        .cacheControl(CacheControl.noCache().mustRevalidate())
-                        .contentType(MediaType.TEXT_HTML)
-                        .body(cachedIndexHtml);
+                return Response.ok(cachedIndexHtml)
+                        .cacheControl(noCacheMustRevalidate())
+                        .type(MediaType.TEXT_HTML)
+                        .build();
             }
             // Fallback: process on each request (dev mode or cache failed)
-            return ResponseEntity.ok()
-                    .cacheControl(CacheControl.noCache().mustRevalidate())
-                    .contentType(MediaType.TEXT_HTML)
-                    .body(processIndexHtml());
+            return Response.ok(processIndexHtml())
+                    .cacheControl(noCacheMustRevalidate())
+                    .type(MediaType.TEXT_HTML)
+                    .build();
         } catch (Exception ex) {
             log.error("Failed to serve index.html, returning fallback", ex);
-            return ResponseEntity.ok()
-                    .cacheControl(CacheControl.noCache().mustRevalidate())
-                    .contentType(MediaType.TEXT_HTML)
-                    .body(buildFallbackHtml());
+            return Response.ok(buildFallbackHtml())
+                    .cacheControl(noCacheMustRevalidate())
+                    .type(MediaType.TEXT_HTML)
+                    .build();
         }
     }
 
-    @GetMapping(value = "/auth/callback", produces = MediaType.TEXT_HTML_VALUE)
-    public ResponseEntity<String> serveAuthCallback(HttpServletRequest request) {
-        return serveIndexHtml(request);
+    private static CacheControl noCacheMustRevalidate() {
+        CacheControl cc = new CacheControl();
+        cc.setNoCache(true);
+        cc.setMustRevalidate(true);
+        return cc;
     }
 
-    @GetMapping(value = "/share/{token}", produces = MediaType.TEXT_HTML_VALUE)
-    public ResponseEntity<String> serveShareLinkPage(HttpServletRequest request) {
-        return serveIndexHtml(request);
+    @GET
+    @Path("/auth/callback")
+    @Produces(MediaType.TEXT_HTML)
+    public Response serveAuthCallback() {
+        return serveIndexHtml();
     }
 
-    @GetMapping(value = "/mobile-scanner", produces = MediaType.TEXT_HTML_VALUE)
-    public ResponseEntity<String> serveMobileScanner(HttpServletRequest request) {
+    @GET
+    @Path("/share/{token}")
+    @Produces(MediaType.TEXT_HTML)
+    public Response serveShareLinkPage(@PathParam("token") String token) {
+        return serveIndexHtml();
+    }
+
+    // Desktop (Tauri) serves the SPA from its own webview, so a phone scanning the QR cannot load
+    // the React /mobile-scanner route; serve the self-contained static upload page instead.
+    @GET
+    @Path("/mobile-scanner")
+    @Produces(MediaType.TEXT_HTML)
+    public Response serveMobileScanner() {
         if (isDesktopMode() && mobileUploadHtmlExists) {
-            return ResponseEntity.ok()
-                    .cacheControl(CacheControl.noCache().mustRevalidate())
-                    .contentType(MediaType.TEXT_HTML)
-                    .body(cachedMobileUploadHtml);
+            return Response.ok(cachedMobileUploadHtml)
+                    .cacheControl(noCacheMustRevalidate())
+                    .type(MediaType.TEXT_HTML)
+                    .build();
         }
-        return serveIndexHtml(request);
+        return serveIndexHtml();
     }
 
-    @GetMapping(value = "/mobile-sign", produces = MediaType.TEXT_HTML_VALUE)
-    public ResponseEntity<String> serveMobileSign(HttpServletRequest request) {
+    // Same reason as /mobile-scanner: the phone that scans the QR cannot load the React
+    // /mobile-sign route from the desktop build, so serve the self-contained static page.
+    @GET
+    @Path("/mobile-sign")
+    @Produces(MediaType.TEXT_HTML)
+    public Response serveMobileSign() {
         if (isDesktopMode() && mobileSignHtmlExists) {
-            return ResponseEntity.ok()
-                    .cacheControl(CacheControl.noCache().mustRevalidate())
-                    .contentType(MediaType.TEXT_HTML)
-                    .body(cachedMobileSignHtml);
+            return Response.ok(cachedMobileSignHtml)
+                    .cacheControl(noCacheMustRevalidate())
+                    .type(MediaType.TEXT_HTML)
+                    .build();
         }
-        return serveIndexHtml(request);
+        return serveIndexHtml();
     }
 
-    @GetMapping(value = "/auth/callback/tauri", produces = MediaType.TEXT_HTML_VALUE)
-    public ResponseEntity<String> serveTauriAuthCallback(HttpServletRequest request) {
+    @GET
+    @Path("/auth/callback/tauri")
+    @Produces(MediaType.TEXT_HTML)
+    public Response serveTauriAuthCallback() {
         // cachedCallbackHtml is always initialized in @PostConstruct
-        return ResponseEntity.ok().contentType(MediaType.TEXT_HTML).body(cachedCallbackHtml);
+        return Response.ok(cachedCallbackHtml).type(MediaType.TEXT_HTML).build();
     }
 
     // `files` was historically a backend static-asset directory and was therefore
     // in the exclusion list - removing it lets /files and /files/<folder-uuid>
     // forward to the SPA index.html, which is what FileManagerView expects.
-    // (Real storage endpoints live under /api/v1/storage/files, already
-    // excluded by the leading `api` token in the same regex.)
-    @GetMapping(
-            "/{path:^(?!api|static|robots\\.txt|favicon\\.ico|manifest.*\\.json|pipeline|pdfjs|pdfjs-legacy|pdfium|vendor|fonts|images|css|js|assets|locales|modern-logo|classic-logo|Login|og_images|samples)[^\\.]*$}")
-    public ResponseEntity<String> forwardRootPaths(HttpServletRequest request) throws IOException {
-        return serveIndexHtml(request);
-    }
-
-    @GetMapping(
-            "/{path:^(?!api|static|pipeline|pdfjs|pdfjs-legacy|pdfium|vendor|fonts|images|css|js|assets|locales|modern-logo|classic-logo|Login|og_images|samples)[^\\.]*}/{subpath:^(?!.*\\.).*$}")
-    public ResponseEntity<String> forwardNestedPaths(HttpServletRequest request)
-            throws IOException {
-        return serveIndexHtml(request);
-    }
-
-    // The regex mappings above only cover 1- and 2-segment paths (Spring path variables cannot
-    // span '/'), so deep SPA links like /processor/pipelines/new 404d on direct navigation.
+    // (Real storage endpoints live under /api/v1/storage/files, matched by their own JAX-RS
+    // resources which take precedence over this catch-all.)
     //
-    // Registered as its own mapping rather than exposed as a bare RouterFunction @Bean:
-    // Spring's own RouterFunctionMapping is ordered -1, ahead of the annotated controllers at
-    // order 0, so a plain bean would shadow every dot-free backend route the denylist below
-    // does not name (/v1/api-docs, /error, /actuator, ...). LOWEST_PRECEDENCE - 2 puts it after
-    // the controllers and before the resource chain (LOWEST_PRECEDENCE - 1), which is the only
-    // position where a catch-all fallback is safe.
-    @Bean
-    public RouterFunctionMapping spaDeepLinkFallbackMapping() {
-        RouterFunction<ServerResponse> fallback =
-                RouterFunctions.route(
-                        request -> {
-                            HttpServletRequest servletRequest = request.servletRequest();
-                            return "GET".equals(servletRequest.getMethod())
-                                    && isSpaFallbackRoute(
-                                            stripContextPath(
-                                                    servletRequest.getContextPath(),
-                                                    servletRequest.getRequestURI()));
-                        },
-                        request ->
-                                ServerResponse.ok()
-                                        .cacheControl(CacheControl.noCache().mustRevalidate())
-                                        .contentType(MediaType.TEXT_HTML)
-                                        .body(serveIndexHtml(request.servletRequest()).getBody()));
-        RouterFunctionMapping mapping = new RouterFunctionMapping(fallback);
-        mapping.setOrder(SPA_FALLBACK_ORDER);
-        mapping.setMessageConverters(
-                List.of(new StringHttpMessageConverter(StandardCharsets.UTF_8)));
-        return mapping;
+    // The {path:[^/.]+} constraint matches a single dot-less segment, mirroring the original Spring
+    // route's "no '.'" rule. Dot-bearing paths (real static files such as /favicon.ico,
+    // /manifest.json, /sw.js) do not match and fall through to the static-resource handler.
+    @GET
+    @Path("/{path:[^/.]+}")
+    @Produces(MediaType.TEXT_HTML)
+    public Response forwardRootPaths(@PathParam("path") String path) throws IOException {
+        return serveIndexHtml();
+    }
+
+    // Two-segment SPA routes (e.g. /tools/merge, /files/<uuid>). Both segments are constrained to
+    // be
+    // dot-less, so asset requests like /assets/index-abc.js (subpath carries a '.') fall through to
+    // the static-resource handler instead of being answered with index.html.
+    @GET
+    @Path("/{path:[^/.]+}/{subpath:[^/.]+}")
+    @Produces(MediaType.TEXT_HTML)
+    public Response forwardNestedPaths(
+            @PathParam("path") String path, @PathParam("subpath") String subpath)
+            throws IOException {
+        return serveIndexHtml();
+    }
+
+    // The two routes above only cover 1- and 2-segment paths, so deep SPA links like
+    // /processor/pipelines/new 404d on direct navigation. Unlike Spring path variables, a JAX-RS
+    // template regex may span '/', so one catch-all covers the rest. The regex requires two
+    // separators, so it never overlaps with the 1- and 2-segment templates, and JAX-RS sorts it
+    // behind every literal route. The denylist is what keeps backend-owned first segments
+    // (/api/..., /assets/...) from being answered with index.html; anything it rejects becomes a
+    // 404 so the static handler and the error pages still win.
+    @GET
+    @Path("/{path:[^./]+/[^./]+/[^.]+}")
+    @Produces(MediaType.TEXT_HTML)
+    public Response forwardDeepPaths(@PathParam("path") String path) throws IOException {
+        if (!isSpaFallbackRoute("/" + path)) {
+            throw new NotFoundException();
+        }
+        return serveIndexHtml();
     }
 
     // Dot-free paths only, so requests for real files still fall through to the resource
-    // handlers. This is a denylist, so it is only safe because the mapping above runs after
-    // the annotated controllers - see spaDeepLinkFallbackMapping.
+    // handlers. This is a denylist, so it is only safe because the template above is the
+    // lowest-priority route in this resource - see forwardDeepPaths.
     static boolean isSpaFallbackRoute(String path) {
         if (path == null || path.isEmpty() || "/".equals(path) || path.indexOf('.') >= 0) {
             return false;
@@ -353,21 +390,14 @@ public class ReactRoutingController {
                 && !NON_SPA_FIRST_SEGMENTS.contains(segments[0]);
     }
 
-    private static String stripContextPath(String contextPath, String uri) {
-        if (contextPath != null && !contextPath.isBlank() && uri.startsWith(contextPath)) {
-            return uri.substring(contextPath.length());
-        }
-        return uri;
-    }
-
     private String buildFallbackHtml() {
         String baseUrl = contextPath.endsWith("/") ? contextPath : contextPath + "/";
 
         // Escape for HTML attribute context
-        String escapedBaseUrlHtml = HtmlUtils.htmlEscape(baseUrl);
+        String escapedBaseUrlHtml = htmlEscape(baseUrl);
 
         // Escape for JavaScript string context
-        String escapedBaseUrlJs = JavaScriptUtils.javaScriptEscape(baseUrl);
+        String escapedBaseUrlJs = javaScriptEscape(baseUrl);
 
         String serverUrl = "(window.location.origin + '" + escapedBaseUrlJs + "')";
         return """
@@ -423,10 +453,10 @@ public class ReactRoutingController {
         String baseUrl = contextPath.endsWith("/") ? contextPath : contextPath + "/";
 
         // Escape for HTML attribute context
-        String escapedBaseUrlHtml = HtmlUtils.htmlEscape(baseUrl);
+        String escapedBaseUrlHtml = htmlEscape(baseUrl);
 
         // Escape for JavaScript string context
-        String escapedBaseUrlJs = JavaScriptUtils.javaScriptEscape(baseUrl);
+        String escapedBaseUrlJs = javaScriptEscape(baseUrl);
 
         String serverUrl = "(window.location.origin + '" + escapedBaseUrlJs + "')";
         return """
@@ -663,5 +693,53 @@ public class ReactRoutingController {
                 </html>
                 """
                 .formatted(escapedBaseUrlHtml, serverUrl);
+    }
+
+    // Local replacements for the former Spring HtmlUtils/JavaScriptUtils escapers (no Quarkus or
+    // Jakarta equivalent and commons-text is not a dependency). These mirror the subset of behavior
+    // required for the context-path string injected into the fallback/callback HTML.
+    private static String htmlEscape(String input) {
+        if (input == null) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder(input.length());
+        for (int i = 0; i < input.length(); i++) {
+            char c = input.charAt(i);
+            switch (c) {
+                case '&' -> sb.append("&amp;");
+                case '<' -> sb.append("&lt;");
+                case '>' -> sb.append("&gt;");
+                case '"' -> sb.append("&quot;");
+                case '\'' -> sb.append("&#39;");
+                default -> sb.append(c);
+            }
+        }
+        return sb.toString();
+    }
+
+    private static String javaScriptEscape(String input) {
+        if (input == null) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder(input.length());
+        for (int i = 0; i < input.length(); i++) {
+            char c = input.charAt(i);
+            switch (c) {
+                case '"' -> sb.append("\\\"");
+                case '\'' -> sb.append("\\'");
+                case '\\' -> sb.append("\\\\");
+                case '/' -> sb.append("\\/");
+                case '\n' -> sb.append("\\n");
+                case '\r' -> sb.append("\\r");
+                case '\t' -> sb.append("\\t");
+                case '\b' -> sb.append("\\b");
+                case '\f' -> sb.append("\\f");
+                case '<' -> sb.append("\\u003C");
+                case '>' -> sb.append("\\u003E");
+                case '&' -> sb.append("\\u0026");
+                default -> sb.append(c);
+            }
+        }
+        return sb.toString();
     }
 }

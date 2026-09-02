@@ -8,16 +8,16 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 /**
- * Unit tests for the increment/insert/increment race protocol. {@code @Async} has no proxy in a
- * plain Mockito test, so {@code record()} runs inline and is directly testable.
+ * Unit tests for the increment/insert/increment race protocol. The audit executor runs tasks inline
+ * here, so {@code record()} completes before the assertions and is directly testable.
  */
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ApiKeyUsageRecorder")
@@ -26,7 +26,12 @@ class ApiKeyUsageRecorderTest {
     private static final long KEY = 7L;
 
     @Mock private ApiKeyUsageWriter writer;
-    @InjectMocks private ApiKeyUsageRecorder recorder;
+    private ApiKeyUsageRecorder recorder;
+
+    @BeforeEach
+    void setUp() {
+        recorder = new ApiKeyUsageRecorder(writer, Runnable::run);
+    }
 
     @Test
     @DisplayName("a null key id is a no-op")

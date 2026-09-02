@@ -3,7 +3,7 @@ package stirling.software.proprietary.policy.output;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.stereotype.Service;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +23,7 @@ import stirling.software.proprietary.policy.source.SourceStore;
  * skipped; if none resolve, delivery falls back to inline so the run still completes.
  */
 @Slf4j
-@Service
+@ApplicationScoped
 @RequiredArgsConstructor
 public class PolicyOutputResolver {
 

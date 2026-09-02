@@ -1,33 +1,47 @@
 package stirling.software.SPDF.config;
 
-import java.util.List;
+import java.io.IOException;
+import java.util.Collection;
 
-import org.springframework.stereotype.Component;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.multipart.MultipartHttpServletRequest;
-import org.springframework.web.servlet.HandlerInterceptor;
-
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.Part;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.service.PdfMetricsService;
 
-@Component
+/**
+ * Counts PDFs processed through the API so usage can be reported.
+ *
+ * <p>MIGRATION: was a Spring {@code HandlerInterceptor#afterCompletion}. Quarkus has no MVC
+ * interceptor chain, so this is a servlet {@link Filter} that records after the chain returns - the
+ * same "response is finished, then measure" point. The file count comes from the servlet {@link
+ * Part} API instead of Spring's {@code MultipartHttpServletRequest#getMultiFileMap()}.
+ */
+@ApplicationScoped
 @Slf4j
 @RequiredArgsConstructor
-public class PdfMetricsInterceptor implements HandlerInterceptor {
+public class PdfMetricsInterceptor implements Filter {
 
     private final PdfMetricsService pdfMetricsService;
 
     @Override
-    public void afterCompletion(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            Object handler,
-            Exception ex) {
+    public void doFilter(
+            ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
+            throws IOException, ServletException {
+        HttpServletRequest request = (HttpServletRequest) servletRequest;
+        HttpServletResponse response = (HttpServletResponse) servletResponse;
+
+        filterChain.doFilter(request, response);
+
         try {
             if (!pdfMetricsService.isEnabled()) {
                 return;
@@ -42,7 +56,9 @@ public class PdfMetricsInterceptor implements HandlerInterceptor {
             if (path == null || !path.contains("/api/v1/")) {
                 return;
             }
-            if (!(request instanceof MultipartHttpServletRequest multipart)) {
+            String contentType = request.getContentType();
+            if (contentType == null
+                    || !contentType.toLowerCase().startsWith("multipart/form-data")) {
                 return;
             }
             if (isFromEditor(request)) {
@@ -50,8 +66,13 @@ public class PdfMetricsInterceptor implements HandlerInterceptor {
             }
 
             int fileCount = 0;
-            for (List<MultipartFile> bucket : multipart.getMultiFileMap().values()) {
-                fileCount += bucket.size();
+            Collection<Part> parts = request.getParts();
+            if (parts != null) {
+                for (Part part : parts) {
+                    if (part.getSubmittedFileName() != null && part.getSize() > 0) {
+                        fileCount++;
+                    }
+                }
             }
             if (fileCount == 0) {
                 return;

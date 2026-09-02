@@ -4,23 +4,29 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
+import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import org.eclipse.microprofile.config.Config;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import org.springframework.core.env.StandardEnvironment;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
+
+import io.smallrye.config.SmallRyeConfig;
 
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.io.Resource;
 import stirling.software.common.model.job.ResultFile;
 import stirling.software.proprietary.policy.config.FolderAccessGuard;
 import stirling.software.proprietary.policy.ledger.FolderIdentities;
@@ -44,17 +50,8 @@ class FolderOutputSinkTest {
 
     @BeforeEach
     void setUp() {
-        ApplicationProperties properties = new ApplicationProperties();
-        properties.getPolicies().setAllowedFolderRoots(List.of(tempDir.toString()));
         ledger = new InProcessProcessedLedger();
-        sink =
-                new FolderOutputSink(
-                        new FolderAccessGuard(
-                                properties,
-                                new RuntimePathConfig(properties),
-                                new StandardEnvironment(),
-                                new InProcessSourceStore()),
-                        ledger);
+        sink = new FolderOutputSink(guardRootedAt(tempDir), ledger);
     }
 
     @Test
@@ -112,16 +109,7 @@ class FolderOutputSinkTest {
     void recordsAnOutputBeforeItBecomesVisible() throws IOException {
         Path out = tempDir.resolve("out");
         VisibilityAssertingLedger orderedLedger = new VisibilityAssertingLedger();
-        ApplicationProperties properties = new ApplicationProperties();
-        properties.getPolicies().setAllowedFolderRoots(List.of(tempDir.toString()));
-        FolderOutputSink orderedSink =
-                new FolderOutputSink(
-                        new FolderAccessGuard(
-                                properties,
-                                new RuntimePathConfig(properties),
-                                new StandardEnvironment(),
-                                new InProcessSourceStore()),
-                        orderedLedger);
+        FolderOutputSink orderedSink = new FolderOutputSink(guardRootedAt(tempDir), orderedLedger);
 
         orderedSink.deliver(
                 POLICY_RUN, List.of(named("a.pdf", "aaa")), OutputSpec.folder(out.toString()));
@@ -184,13 +172,64 @@ class FolderOutputSinkTest {
         assertFalse(Files.exists(tempDir.resolve("escape.pdf")));
     }
 
-    private static ByteArrayResource named(String filename, String content) {
-        return new ByteArrayResource(content.getBytes()) {
-            @Override
-            public String getFilename() {
-                return filename;
-            }
-        };
+    /** A guard that allows only {@code root}, with the {@code saas} profile inactive. */
+    private static FolderAccessGuard guardRootedAt(Path root) {
+        ApplicationProperties properties = new ApplicationProperties();
+        properties.getPolicies().setAllowedFolderRoots(List.of(root.toString()));
+        return new FolderAccessGuard(
+                properties,
+                new RuntimePathConfig(properties),
+                configWithNoProfiles(),
+                new InProcessSourceStore());
+    }
+
+    /** A {@link Config} whose unwrapped {@link SmallRyeConfig} reports no active profile. */
+    private static Config configWithNoProfiles() {
+        SmallRyeConfig smallRyeConfig = mock(SmallRyeConfig.class);
+        when(smallRyeConfig.getProfiles()).thenReturn(List.of());
+        Config config = mock(Config.class);
+        when(config.unwrap(SmallRyeConfig.class)).thenReturn(smallRyeConfig);
+        return config;
+    }
+
+    private static Resource named(String filename, String content) {
+        return new ByteArrayBackedResource(content.getBytes(), filename);
+    }
+
+    /** In-memory {@link Resource} with a stable filename. */
+    private static final class ByteArrayBackedResource implements Resource {
+        private final byte[] bytes;
+        private final String filename;
+
+        ByteArrayBackedResource(byte[] bytes, String filename) {
+            this.bytes = bytes;
+            this.filename = filename;
+        }
+
+        @Override
+        public InputStream getInputStream() {
+            return new ByteArrayInputStream(bytes);
+        }
+
+        @Override
+        public boolean exists() {
+            return true;
+        }
+
+        @Override
+        public String getFilename() {
+            return filename;
+        }
+
+        @Override
+        public long contentLength() {
+            return bytes.length;
+        }
+
+        @Override
+        public File getFile() throws IOException {
+            throw new IOException("not file-backed");
+        }
     }
 
     /** Fails the delivery if an output is visible at its final path before being recorded. */

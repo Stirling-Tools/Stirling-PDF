@@ -5,9 +5,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.core.env.Environment;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.eclipse.microprofile.config.Config;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 
 import lombok.RequiredArgsConstructor;
 
@@ -23,15 +24,17 @@ import stirling.software.proprietary.security.repository.TeamMembershipRepositor
  * last-leader guards) via SaasTeamService, so these mutations no-op on the saas profile to avoid
  * corrupting its accounting.
  */
-@Service
+@ApplicationScoped
 @RequiredArgsConstructor
 public class TeamMembershipService {
 
     private final TeamMembershipRepository membershipRepository;
-    private final Environment environment;
+    private final Config config;
 
     private boolean isSaas() {
-        return Arrays.asList(environment.getActiveProfiles()).contains("saas");
+        // Spring's Environment.getActiveProfiles() -> the Quarkus profile(s), comma separated.
+        String activeProfiles = config.getOptionalValue("quarkus.profile", String.class).orElse("");
+        return Arrays.asList(activeProfiles.split(",")).contains("saas");
     }
 
     /** Reflects users.team_id into membership rows, preserving an existing role on the team. */
@@ -86,7 +89,7 @@ public class TeamMembershipService {
     }
 
     /** Owner user ids for a team. */
-    @Transactional(readOnly = true)
+    @Transactional
     public List<Long> ownerUserIds(Long teamId) {
         return membershipRepository.findByTeamIdAndRole(teamId, TeamRole.LEADER).stream()
                 .map(row -> row.getUser().getId())

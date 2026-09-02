@@ -8,7 +8,8 @@ import org.commonmark.ext.gfm.tables.TablesExtension;
 import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.HtmlRenderer;
-import org.springframework.stereotype.Service;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 
@@ -27,7 +28,7 @@ import stirling.software.common.util.TempFileManager;
  * returns {@code null} if the conversion runtime (WeasyPrint) is unavailable, so the signature is
  * still recorded and the buyer keeps the on-the-fly download.
  */
-@Service
+@ApplicationScoped
 @RequiredArgsConstructor
 public class AgreementPdfRenderer {
 

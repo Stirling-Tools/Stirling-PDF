@@ -5,10 +5,9 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import jakarta.annotation.PreDestroy;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.cluster.s3.S3Clients;
@@ -30,14 +29,14 @@ import software.amazon.awssdk.services.s3.S3Configuration;
  * guarded against private addresses before a client is ever built, since they come from portal
  * users rather than the operator.
  */
-@Service
+@ApplicationScoped
 public class S3ConnectionPool {
 
     private final ApplicationProperties applicationProperties;
     private final Function<S3Config, S3Client> clientFactory;
     private final Map<S3Config, S3Client> clients = new ConcurrentHashMap<>();
 
-    @Autowired
+    @Inject
     public S3ConnectionPool(ApplicationProperties applicationProperties) {
         this(applicationProperties, S3ConnectionPool::buildClient);
     }

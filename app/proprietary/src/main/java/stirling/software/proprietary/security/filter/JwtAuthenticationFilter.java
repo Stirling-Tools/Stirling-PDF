@@ -8,32 +8,36 @@ import static stirling.software.proprietary.security.model.AuthenticationType.WE
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import org.slf4j.MDC;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.web.AuthenticationEntryPoint;
-import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
-import org.springframework.web.filter.OncePerRequestFilter;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.exception.UnsupportedProviderException;
-import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
+import stirling.software.common.security.Authentication;
+import stirling.software.common.security.AuthenticationException;
+import stirling.software.common.security.GrantedAuthority;
+import stirling.software.common.security.SecurityContextHolder;
+import stirling.software.common.security.SimpleGrantedAuthority;
+import stirling.software.common.security.UsernameNotFoundException;
+import stirling.software.common.security.UsernamePasswordAuthenticationToken;
+import stirling.software.proprietary.security.JwtAuthenticationEntryPoint;
 import stirling.software.proprietary.security.model.AuthenticationType;
+import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.model.exception.AuthenticationFailureException;
 import stirling.software.proprietary.security.service.ApiKeyAuthenticationService;
 import stirling.software.proprietary.security.service.ApiKeyAuthenticationService.ApiKeyAuthentication;
@@ -42,23 +46,30 @@ import stirling.software.proprietary.security.service.JwtServiceInterface;
 import stirling.software.proprietary.security.service.UserService;
 
 @Slf4j
-@RequiredArgsConstructor
-public class JwtAuthenticationFilter extends OncePerRequestFilter {
+@ApplicationScoped
+public class JwtAuthenticationFilter implements Filter {
 
-    private final JwtServiceInterface jwtService;
-    private final UserService userService;
-    private final CustomUserDetailsService userDetailsService;
-    private final AuthenticationEntryPoint authenticationEntryPoint;
-    private final ApplicationProperties.Security securityProperties;
-    private final ApiKeyAuthenticationService apiKeyAuthenticationService;
+    @Inject JwtServiceInterface jwtService;
+    @Inject UserService userService;
+    @Inject CustomUserDetailsService userDetailsService;
+    // JwtAuthenticationEntryPoint is now a plain CDI bean (it only writes a 401
+    // JSON/error to the response); inject the concrete type instead of the former
+    // Spring Security AuthenticationEntryPoint interface.
+    @Inject JwtAuthenticationEntryPoint authenticationEntryPoint;
+    @Inject ApplicationProperties.Security securityProperties;
+    @Inject ApiKeyAuthenticationService apiKeyAuthenticationService;
 
     @Override
-    protected void doFilterInternal(
-            HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-            throws ServletException, IOException {
+    public void doFilter(
+            ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
+            throws IOException, ServletException {
+        HttpServletRequest request = (HttpServletRequest) servletRequest;
+        HttpServletResponse response = (HttpServletResponse) servletResponse;
+
         // Start clean so a pooled thread can't inherit a prior request's key label. This filter
         // runs before UserAuthenticationFilter, so in JWT mode it owns the API-key label lifecycle.
         MDC.remove(ApiKeyAuthenticationService.AUDIT_LABEL_MDC_KEY);
+
         if (!jwtService.isJwtEnabled()) {
             filterChain.doFilter(request, response);
             return;
@@ -152,9 +163,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         return false;
                     }
 
+                    List<GrantedAuthority> authorities =
+                            resolved.get().user().getAuthorities().stream()
+                                    .map(
+                                            a ->
+                                                    (GrantedAuthority)
+                                                            new SimpleGrantedAuthority(
+                                                                    a.getAuthority()))
+                                    .toList();
                     authentication =
-                            new ApiKeyAuthenticationToken(
-                                    resolved.get().user(), apiKey, resolved.get().authorities());
+                            new UsernamePasswordAuthenticationToken(
+                                    resolved.get().user(), apiKey, authorities);
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                     if (resolved.get().auditLabel() != null) {
                         MDC.put(
@@ -183,14 +202,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             processUserAuthenticationType(claims, username);
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+            // loadUserByUsername now returns the User entity directly (the former
+            // UserDetailsService/UserDetails Spring contract was dropped during migration).
+            User userDetails = userDetailsService.loadUserByUsername(username);
 
             if (userDetails != null) {
+                List<GrantedAuthority> authorities =
+                        userDetails.getAuthorities().stream()
+                                .map(
+                                        a ->
+                                                (GrantedAuthority)
+                                                        new SimpleGrantedAuthority(
+                                                                a.getAuthority()))
+                                .toList();
                 UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(
-                                userDetails, null, userDetails.getAuthorities());
+                        new UsernamePasswordAuthenticationToken(userDetails, null, authorities);
 
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                authToken.setDetails(request);
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             } else {
                 throw new UsernameNotFoundException("User not found: " + username);
@@ -225,10 +253,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
     }
 
+    // Accepts any Exception so both the application's AuthenticationFailureException
+    // (extends RuntimeException) and the security-compat AuthenticationException can be
+    // passed through to the entry point, which shapes the 401 response.
     private void handleAuthenticationFailure(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            AuthenticationException authException)
+            HttpServletRequest request, HttpServletResponse response, Exception authException)
             throws IOException, ServletException {
         authenticationEntryPoint.commence(request, response, authException);
     }

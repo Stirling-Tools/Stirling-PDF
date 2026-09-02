@@ -21,14 +21,13 @@ import java.util.function.Predicate;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.MediaType;
-import org.springframework.stereotype.Service;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import io.github.pixee.security.ZipSecurity;
 
 import jakarta.annotation.PreDestroy;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -41,17 +40,17 @@ import stirling.software.common.model.job.JobStats;
 import stirling.software.common.model.job.ResultFile;
 
 /** Manages async tasks and their results */
-@Service
+@ApplicationScoped
 @Slf4j
 public class TaskManager {
     private final Map<String, JobResult> jobResults = new ConcurrentHashMap<>();
 
-    @Value("${stirling.jobResultExpiryMinutes:30}")
-    private int jobResultExpiryMinutes = 30;
+    @ConfigProperty(name = "stirling.jobResultExpiryMinutes", defaultValue = "30")
+    int jobResultExpiryMinutes;
 
     /** Maximum age of a task that never reached a terminal state. */
-    @Value("${stirling.job.pendingExpiryMinutes:1440}")
-    private int pendingJobExpiryMinutes = 1440;
+    @ConfigProperty(name = "stirling.job.pendingExpiryMinutes", defaultValue = "1440")
+    int pendingJobExpiryMinutes;
 
     private final FileStorage fileStorage;
     private final JobStore jobStore;
@@ -60,7 +59,7 @@ public class TaskManager {
             Executors.newSingleThreadScheduledExecutor(
                     Thread.ofVirtual().name("task-cleanup-", 0).factory());
 
-    @Autowired
+    @Inject
     public TaskManager(
             FileStorage fileStorage, JobStore jobStore, ClusterBackplane clusterBackplane) {
         this.fileStorage = fileStorage;
@@ -564,24 +563,27 @@ public class TaskManager {
     /** Determine content type based on file extension */
     private String determineContentType(String fileName) {
         if (fileName == null) {
-            return MediaType.APPLICATION_OCTET_STREAM_VALUE;
+            // jakarta.ws.rs.core.MediaType lacks PDF/JPEG/PNG constants and uses no _VALUE
+            // suffix, so the original Spring MediaType.*_VALUE strings are inlined here verbatim
+            // to preserve exact behavior.
+            return "application/octet-stream";
         }
 
         String lowerName = fileName.toLowerCase(Locale.ROOT);
         if (lowerName.endsWith(".pdf")) {
-            return MediaType.APPLICATION_PDF_VALUE;
+            return "application/pdf";
         } else if (lowerName.endsWith(".txt")) {
-            return MediaType.TEXT_PLAIN_VALUE;
+            return "text/plain";
         } else if (lowerName.endsWith(".json")) {
-            return MediaType.APPLICATION_JSON_VALUE;
+            return "application/json";
         } else if (lowerName.endsWith(".xml")) {
-            return MediaType.APPLICATION_XML_VALUE;
+            return "application/xml";
         } else if (lowerName.endsWith(".jpg") || lowerName.endsWith(".jpeg")) {
-            return MediaType.IMAGE_JPEG_VALUE;
+            return "image/jpeg";
         } else if (lowerName.endsWith(".png")) {
-            return MediaType.IMAGE_PNG_VALUE;
+            return "image/png";
         } else {
-            return MediaType.APPLICATION_OCTET_STREAM_VALUE;
+            return "application/octet-stream";
         }
     }
 
@@ -659,8 +661,8 @@ public class TaskManager {
         if (jobStore != null) {
             // Propagate JobStore failures: returning null on a backplane outage would conflate
             // "no such file" with "lookup unavailable" and the caller would respond 404 to a
-            // transient blip that should be retried. Let Spring's exception handler surface a
-            // 5xx so clients know to retry.
+            // transient blip that should be retried. Let the framework's exception handler
+            // surface a 5xx so clients know to retry.
             try {
                 return jobStore.findJobIdByFileId(fileId).orElse(null);
             } catch (RuntimeException e) {

@@ -72,17 +72,19 @@ import org.apache.xmpbox.schema.PDFAIdentificationSchema;
 import org.apache.xmpbox.schema.XMPBasicSchema;
 import org.apache.xmpbox.xml.DomXmpParser;
 import org.apache.xmpbox.xml.XmpSerializer;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.server.ResponseStatusException;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -92,6 +94,8 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.PdfaLevelAServiceInterface;
@@ -103,6 +107,8 @@ import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @ConvertApi
+@jakarta.ws.rs.Path("/api/v1/convert")
+@ApplicationScoped
 @Slf4j
 public class ConvertPDFToPDFA {
 
@@ -110,17 +116,21 @@ public class ConvertPDFToPDFA {
     private final RuntimePathConfig runtimePathConfig;
     private final stirling.software.SPDF.service.VeraPDFService veraPDFService;
     // Level A needs the proprietary tagger; core builds convert at level B instead.
+    // MIGRATION: @Autowired(required = false) -> CDI Instance<>, resolved via isResolvable().
     private final PdfaLevelAServiceInterface pdfaLevelAService;
     private final TempFileManager tempFileManager;
 
     public ConvertPDFToPDFA(
             RuntimePathConfig runtimePathConfig,
             stirling.software.SPDF.service.VeraPDFService veraPDFService,
-            @Autowired(required = false) PdfaLevelAServiceInterface pdfaLevelAService,
+            Instance<PdfaLevelAServiceInterface> pdfaLevelAService,
             TempFileManager tempFileManager) {
         this.runtimePathConfig = runtimePathConfig;
         this.veraPDFService = veraPDFService;
-        this.pdfaLevelAService = pdfaLevelAService;
+        this.pdfaLevelAService =
+                pdfaLevelAService != null && pdfaLevelAService.isResolvable()
+                        ? pdfaLevelAService.get()
+                        : null;
         this.tempFileManager = tempFileManager;
     }
 
@@ -589,8 +599,11 @@ public class ConvertPDFToPDFA {
         }
     }
 
+    @POST
+    @jakarta.ws.rs.Path("/pdf/pdfa")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             value = "/pdf/pdfa",
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @ToolIO(produces = ToolFormat.PDF)
@@ -600,13 +613,22 @@ public class ConvertPDFToPDFA {
                     "This endpoint converts a PDF file to a PDF/A or PDF/X file using Ghostscript"
                             + " (preferred) or PDFBox/LibreOffice (fallback). PDF/A is a format designed for"
                             + " long-term archiving, while PDF/X is optimized for print production.")
-    public ResponseEntity<Resource> pdfToPdfA(@ModelAttribute PdfToPdfARequest request)
+    public Response pdfToPdfA(
+            @RestForm("fileInput") FileUpload fileUpload,
+            @RestForm("outputFormat") String outputFormat,
+            @RestForm("strict") Boolean strict,
+            @RestForm("pdfUa") Boolean pdfUa)
             throws Exception {
+        PdfToPdfARequest request = new PdfToPdfARequest();
+        request.setFileInput(FileUploadMultipartFile.of(fileUpload));
+        request.setOutputFormat(outputFormat);
+        request.setStrict(strict);
+        request.setPdfUa(pdfUa);
+
         MultipartFile inputFile = request.getFileInput();
-        String outputFormat = request.getOutputFormat();
 
         // Validate input file type
-        if (!MediaType.APPLICATION_PDF_VALUE.equals(inputFile.getContentType())) {
+        if (!"application/pdf".equals(inputFile.getContentType())) {
             log.error("Invalid input file type: {}", inputFile.getContentType());
             throw ExceptionUtils.createPdfFileRequiredException();
         }
@@ -639,8 +661,8 @@ public class ConvertPDFToPDFA {
         return missing;
     }
 
-    private ResponseEntity<Resource> handlePdfXConversion(
-            MultipartFile inputFile, String outputFormat) throws Exception {
+    private Response handlePdfXConversion(MultipartFile inputFile, String outputFormat)
+            throws Exception {
         PdfXProfile profile = PdfXProfile.fromRequest(outputFormat);
 
         String originalFileName = Filenames.toSimpleFileName(inputFile.getOriginalFilename());
@@ -1887,7 +1909,7 @@ public class ConvertPDFToPDFA {
         return result;
     }
 
-    private ResponseEntity<Resource> handlePdfAConversion(
+    private Response handlePdfAConversion(
             MultipartFile inputFile, String outputFormat, boolean strict, boolean declarePdfUa)
             throws Exception {
         PdfaProfile profile = PdfaProfile.fromRequest(outputFormat);
@@ -2002,11 +2024,11 @@ public class ConvertPDFToPDFA {
             throws IOException {
         // Tagging is the only route to level A, so an untagged file cannot answer a strict request.
         if (!levelAReached) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
+            throw new WebApplicationException(
                     "Strict PDF/A mode enabled: the document could not be tagged, so "
                             + profile.getDisplayName()
-                            + " was not reached. It is valid at level B.");
+                            + " was not reached. It is valid at level B.",
+                    Response.Status.BAD_REQUEST);
         }
         try (InputStream is = new ByteArrayInputStream(pdfBytes)) {
             List<stirling.software.SPDF.model.api.security.PDFVerificationResult> results =
@@ -2022,20 +2044,21 @@ public class ConvertPDFToPDFA {
                         results.stream()
                                 .map(r -> r.getStandard() + ": " + r.getComplianceSummary())
                                 .collect(Collectors.joining("; "));
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST,
+                throw new WebApplicationException(
                         "Strict PDF/A mode enabled: the output is not perfectly compliant with "
                                 + profile.getDisplayName()
                                 + ". Details: "
-                                + details);
+                                + details,
+                        Response.Status.BAD_REQUEST);
             }
         } catch (Exception e) {
-            if (e instanceof ResponseStatusException) {
-                throw (ResponseStatusException) e;
+            if (e instanceof WebApplicationException) {
+                throw (WebApplicationException) e;
             }
             log.error("Error during strict PDF/A verification", e);
-            throw new ResponseStatusException(
-                    HttpStatus.INTERNAL_SERVER_ERROR, "Error during strict PDF/A verification");
+            throw new WebApplicationException(
+                    "Error during strict PDF/A verification",
+                    Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 

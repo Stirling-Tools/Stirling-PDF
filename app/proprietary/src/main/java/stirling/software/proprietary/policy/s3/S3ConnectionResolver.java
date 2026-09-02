@@ -3,15 +3,15 @@ package stirling.software.proprietary.policy.s3;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.security.Authentication;
+import stirling.software.common.security.SecurityContextHolder;
+import stirling.software.common.security.UserDetails;
 import stirling.software.proprietary.access.model.ResourceType;
 import stirling.software.proprietary.access.service.OwnershipService;
 import stirling.software.proprietary.integration.model.IntegrationConfig;
@@ -35,9 +35,10 @@ import tools.jackson.databind.ObjectMapper;
  * referencing source or policy was access-checked when it was saved.
  */
 @Slf4j
-@Service
+@ApplicationScoped
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
+// jakarta.transaction.Transactional has no readOnly hint; the reads are unchanged without it.
+@Transactional
 public class S3ConnectionResolver {
 
     static final String CONNECTION_ID_OPTION = "connectionId";
@@ -57,7 +58,7 @@ public class S3ConnectionResolver {
         }
         IntegrationConfig connection =
                 connections
-                        .findById(connectionId)
+                        .findByIdOptional(connectionId)
                         .filter(cfg -> cfg.getIntegrationType() == IntegrationType.S3)
                         .filter(this::usableByCurrentUser)
                         // Existence and access collapse into one error: a caller must not be able

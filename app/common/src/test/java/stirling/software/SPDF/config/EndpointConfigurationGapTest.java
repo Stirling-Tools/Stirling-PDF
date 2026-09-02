@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Set;
@@ -13,6 +15,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+
+import jakarta.enterprise.inject.Instance;
 
 import stirling.software.SPDF.config.EndpointConfiguration.DisableReason;
 import stirling.software.SPDF.config.EndpointConfiguration.EndpointAvailability;
@@ -40,7 +44,21 @@ class EndpointConfigurationGapTest {
     private EndpointConfiguration build(
             boolean runningProOrHigher, PdfaLevelAServiceInterface pdfaLevelAService) {
         return new EndpointConfiguration(
-                applicationProperties, runningProOrHigher, pdfaLevelAService);
+                applicationProperties, runningProOrHigher, instanceOf(pdfaLevelAService));
+    }
+
+    /**
+     * MIGRATION: the constructor takes a CDI {@code Instance<>} (Spring's optional
+     * {@code @Autowired(required = false)}), so a null service becomes an unsatisfied handle.
+     */
+    @SuppressWarnings("unchecked")
+    private static Instance<PdfaLevelAServiceInterface> instanceOf(
+            PdfaLevelAServiceInterface service) {
+        Instance<PdfaLevelAServiceInterface> handle = mock(Instance.class);
+        when(handle.isResolvable()).thenReturn(service != null);
+        when(handle.isUnsatisfied()).thenReturn(service == null);
+        when(handle.get()).thenReturn(service);
+        return handle;
     }
 
     /** Default config: not pro, no removals, url-to-pdf disabled (default System flag is false). */

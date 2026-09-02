@@ -6,12 +6,14 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Profile;
-import org.springframework.scheduling.annotation.SchedulingConfigurer;
-import org.springframework.scheduling.config.FixedDelayTask;
-import org.springframework.scheduling.config.ScheduledTaskRegistrar;
-import org.springframework.stereotype.Service;
+import io.quarkus.arc.profile.IfBuildProfile;
+import io.quarkus.runtime.StartupEvent;
+import io.quarkus.scheduler.Scheduled;
+import io.quarkus.scheduler.Scheduler;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
+import jakarta.inject.Inject;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -27,13 +29,14 @@ import stirling.software.proprietary.billing.BillingCategory;
  * periods with unsynced usage are reported so nothing is stranded when the period rolls over
  * between syncs.
  */
+// Arc cannot gate a bean on a runtime property, so the metering flag no longer removes this bean;
+// the startup hook schedules nothing unless the flags are on, as bean-absence used to.
 @Slf4j
-@Service
-@Profile("!saas")
-@ConditionalOnProperty(
-        name = "stirling.billing.account-link.metering.enabled",
-        havingValue = "true")
-public class UsageSyncService implements SchedulingConfigurer {
+@ApplicationScoped
+@IfBuildProfile("!saas")
+public class UsageSyncService {
+
+    static final String SYNC_JOB = "account-link-usage-sync";
 
     // First run waits out startup churn; then every interval.
     private static final Duration INITIAL_DELAY = Duration.ofMinutes(5);
@@ -44,6 +47,9 @@ public class UsageSyncService implements SchedulingConfigurer {
     private final AccountLinkClient client;
     private final EntitlementCache entitlementCache;
     private final AccountLinkProperties properties;
+
+    // Field-injected so the constructor stays the one callers and tests already build with.
+    @Inject Scheduler scheduler;
 
     public UsageSyncService(
             UsageCounterRepository counters,
@@ -62,14 +68,24 @@ public class UsageSyncService implements SchedulingConfigurer {
 
     /**
      * Registers the daily sync, binding the interval from {@code metering.sync-interval-hours} in
-     * code rather than a {@code @Scheduled} SpEL string so a bad interval fails at boot/test rather
-     * than only on a flags-on run.
+     * code rather than a {@code @Scheduled} config expression so a bad interval fails at boot/test
+     * rather than only on a flags-on run.
      */
-    @Override
-    public void configureTasks(ScheduledTaskRegistrar registrar) {
-        Duration interval = Duration.ofHours(properties.getMetering().getSyncIntervalHours());
-        registrar.addFixedDelayTask(
-                new FixedDelayTask(this::scheduledSync, interval, INITIAL_DELAY));
+    void registerSyncJob(@Observes StartupEvent event) {
+        AccountLinkProperties.Metering metering = properties.getMetering();
+        // Metering needs the master flag too, so either flag off leaves the instance unscheduled.
+        if (!properties.isEnabled() || !metering.isEnabled()) {
+            return;
+        }
+        Duration interval = Duration.ofHours(metering.getSyncIntervalHours());
+        scheduler
+                .newJob(SYNC_JOB)
+                .setInterval(interval.toString())
+                .setDelayed(INITIAL_DELAY.toString())
+                // SKIP keeps the job non-reentrant, as the Spring fixed-delay task was.
+                .setConcurrentExecution(Scheduled.ConcurrentExecution.SKIP)
+                .setTask(execution -> scheduledSync())
+                .schedule();
     }
 
     public void scheduledSync() {
@@ -82,8 +98,8 @@ public class UsageSyncService implements SchedulingConfigurer {
 
     /**
      * Reports every period with unsynced usage and refreshes the cached entitlement from the reply.
-     * Single daily caller (non-reentrant {@code fixedDelay}), so no internal locking. No-op when
-     * unlinked or when nothing is pending.
+     * Single daily caller (the job is non-reentrant), so no internal locking. No-op when unlinked
+     * or when nothing is pending.
      */
     public void syncNow() {
         Optional<DeviceCredential> cred = credentialStore.get();
@@ -178,7 +194,7 @@ public class UsageSyncService implements SchedulingConfigurer {
 
     private AccountLinkSyncState loadState() {
         return syncState
-                .findById(AccountLinkSyncState.SINGLETON_ID)
+                .findByIdOptional(AccountLinkSyncState.SINGLETON_ID)
                 .orElseGet(
                         () -> {
                             AccountLinkSyncState s = new AccountLinkSyncState();

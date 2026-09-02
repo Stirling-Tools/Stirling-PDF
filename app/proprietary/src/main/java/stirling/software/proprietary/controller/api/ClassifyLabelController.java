@@ -10,22 +10,25 @@ import java.util.Set;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -57,8 +60,9 @@ import tools.jackson.databind.node.ObjectNode;
  * not a thing only the Classification policy may do.
  */
 @Slf4j
-@RestController
-@RequestMapping("/api/v1/ai/tools")
+@Hidden
+@ApplicationScoped
+@Path("/api/v1/ai/tools")
 @Tag(name = "AI Tools", description = "Dispatchable AI-backed tools.")
 public class ClassifyLabelController {
 
@@ -90,7 +94,7 @@ public class ClassifyLabelController {
             AiFeatureGate aiFeatureGate,
             ObjectMapper objectMapper,
             ClassificationLabelProvider labelProvider,
-            @Autowired(required = false) UserServiceInterface userService) {
+            Instance<UserServiceInterface> userService) {
         this.pdfDocumentFactory = pdfDocumentFactory;
         this.tempFileManager = tempFileManager;
         this.pdfContentExtractor = pdfContentExtractor;
@@ -99,10 +103,12 @@ public class ClassifyLabelController {
         this.aiFeatureGate = aiFeatureGate;
         this.objectMapper = objectMapper;
         this.labelProvider = labelProvider;
-        this.userService = userService;
+        this.userService = userService.isResolvable() ? userService.get() : null;
     }
 
-    @PostMapping(value = "/classify-and-label", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @POST
+    @Path("/classify-and-label")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     // PDF in, the same PDF out with a verdict on it, so a chain can be checked across this step.
     @ToolIO(accepts = ToolFormat.PDF, produces = ToolFormat.PDF)
     @Operation(
@@ -110,13 +116,15 @@ public class ClassifyLabelController {
             description =
                     "Reads the first two and last two pages, classifies the document via the AI"
                             + " engine, and stores the result in the StirlingPDFClassification"
-                            + " metadata field. A document that already carries a verdict is"
-                            + " passed through untouched unless reclassify=true.")
-    public ResponseEntity<Resource> classifyAndLabel(
-            @RequestParam("fileInput") MultipartFile fileInput,
-            @RequestParam(value = "reclassify", defaultValue = "false") boolean reclassify)
+                            + " metadata field. Dispatched by the Classification policy; not"
+                            + " intended for direct client use. A document that already carries a"
+                            + " verdict is passed through untouched unless reclassify=true.")
+    public Response classifyAndLabel(
+            @RestForm("fileInput") FileUpload fileInputUpload,
+            @RestForm("reclassify") @DefaultValue("false") boolean reclassify)
             throws IOException {
         aiFeatureGate.requireClassify();
+        MultipartFile fileInput = FileUploadMultipartFile.of(fileInputUpload);
         try (PDDocument document = pdfDocumentFactory.load(fileInput, true)) {
             String fileName = safeFileName(fileInput.getOriginalFilename());
 

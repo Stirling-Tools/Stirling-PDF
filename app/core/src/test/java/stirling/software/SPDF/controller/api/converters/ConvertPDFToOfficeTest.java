@@ -13,6 +13,7 @@ import java.io.File;
 import java.nio.file.Files;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,37 +22,26 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockMultipartFile;
+
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import stirling.software.SPDF.model.api.converters.PdfToPresentationRequest;
 import stirling.software.SPDF.model.api.converters.PdfToTextOrRTFRequest;
 import stirling.software.SPDF.model.api.converters.PdfToWordRequest;
 import stirling.software.common.configuration.RuntimePathConfig;
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.api.PDFFile;
+import stirling.software.common.model.multipart.ByteArrayMultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.testsupport.TestFileUploads;
 import stirling.software.common.util.GeneralUtils;
-import stirling.software.common.util.PDFToFile;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @ExtendWith(MockitoExtension.class)
 class ConvertPDFToOfficeTest {
-    private static ResponseEntity<Resource> streamingOk(byte[] bytes) {
-        return ResponseEntity.ok(new ByteArrayResource(bytes));
-    }
-
-    private static byte[] drainBody(ResponseEntity<Resource> response) throws java.io.IOException {
-        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
-        try (java.io.InputStream __in = response.getBody().getInputStream()) {
-            __in.transferTo(baos);
-        }
-        return baos.toByteArray();
-    }
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private TempFileManager tempFileManager;
@@ -75,48 +65,37 @@ class ConvertPDFToOfficeTest {
                         });
     }
 
-    private MockMultipartFile createPdfFile() {
-        return new MockMultipartFile(
+    private FileUpload createPdfUpload() {
+        return TestFileUploads.of("pdf-content".getBytes(), "document.pdf", "application/pdf");
+    }
+
+    private MultipartFile createPdfFile() {
+        return new ByteArrayMultipartFile(
                 "fileInput", "document.pdf", "application/pdf", "pdf-content".getBytes());
     }
 
     @Test
-    void processPdfToPresentation_delegatesToPdfToFile() throws Exception {
-        MockMultipartFile pdfFile = createPdfFile();
+    void processPdfToPresentation_delegatesToPdfToFile() {
         PdfToPresentationRequest request = new PdfToPresentationRequest();
-        request.setFileInput(pdfFile);
+        request.setFileInput(createPdfFile());
         request.setOutputFormat("pptx");
 
-        ResponseEntity<Resource> expectedResponse = streamingOk("pptx-content".getBytes());
-
-        try (MockedStatic<PDFToFile> mock =
-                Mockito.mockStatic(PDFToFile.class, Mockito.CALLS_REAL_METHODS)) {
-            PDFToFile pdfToFile = Mockito.mock(PDFToFile.class);
-
-            // We can't easily mock the constructor, so test via the actual endpoint
-            // which creates PDFToFile internally. Instead, verify the method doesn't throw
-            // with proper mocking of the utility.
-        }
-
-        // Since PDFToFile is created internally (not injected), we verify
-        // by checking that the method runs without NPE and exercises the code path
+        // PDFToFile is created internally (not injected) and shells out to LibreOffice, so the
+        // happy path is covered by integration tests. Here we assert the request wiring only.
         assertNotNull(request.getOutputFormat());
         assertEquals("pptx", request.getOutputFormat());
     }
 
     @Test
     void processPdfToRTForTXT_withTxtFormat_usesStripper() throws Exception {
-        MockMultipartFile pdfFile = createPdfFile();
-        PdfToTextOrRTFRequest request = new PdfToTextOrRTFRequest();
-        request.setFileInput(pdfFile);
-        request.setOutputFormat("txt");
+        FileUpload pdfFile = createPdfUpload();
 
         // Use a real PDDocument so PDFTextStripper.getText() works without NPE
         PDDocument realDoc = new PDDocument();
         realDoc.addPage(new org.apache.pdfbox.pdmodel.PDPage());
-        when(pdfDocumentFactory.load(pdfFile)).thenReturn(realDoc);
+        when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(realDoc);
 
-        ResponseEntity<Resource> expectedResponse = streamingOk("text content".getBytes());
+        Response expectedResponse = Response.ok("text content".getBytes()).build();
 
         try (MockedStatic<GeneralUtils> guMock = Mockito.mockStatic(GeneralUtils.class);
                 MockedStatic<WebResponseUtils> wrMock =
@@ -131,7 +110,7 @@ class ConvertPDFToOfficeTest {
                                             any(TempFile.class), anyString(), any(MediaType.class)))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<Resource> response = controller.processPdfToRTForTXT(request);
+            Response response = controller.processPdfToRTForTXT(pdfFile, "txt");
 
             assertSame(expectedResponse, response);
         }
@@ -161,8 +140,7 @@ class ConvertPDFToOfficeTest {
     @Test
     void processPdfToXML_delegatesCorrectly() {
         PDFFile file = new PDFFile();
-        MockMultipartFile pdfFile = createPdfFile();
-        file.setFileInput(pdfFile);
+        file.setFileInput(createPdfFile());
         assertNotNull(file.getFileInput());
     }
 }

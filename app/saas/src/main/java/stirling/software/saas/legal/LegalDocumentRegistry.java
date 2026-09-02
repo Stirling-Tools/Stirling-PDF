@@ -10,15 +10,15 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.stereotype.Service;
-
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.common.model.io.ClassPathResource;
 
 /**
  * Loads the versioned legal-document registry from {@code legal/manifest.json} on startup and
@@ -35,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
  * agreement's Order Form) fill the rest.
  */
 @Slf4j
-@Service
+@ApplicationScoped
 public class LegalDocumentRegistry {
 
     private static final String MANIFEST = "legal/manifest.json";

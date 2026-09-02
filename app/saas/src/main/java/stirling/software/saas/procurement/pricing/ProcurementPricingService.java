@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-import org.springframework.stereotype.Service;
+import jakarta.enterprise.context.ApplicationScoped;
 
 /**
  * The canonical enterprise pricing engine (D71) — the single server-side definition the quote
@@ -25,7 +25,7 @@ import org.springframework.stereotype.Service;
  * SSO / SCIM / RBAC / audit are always included. Money is USD only; amounts are in minor units
  * (cents). Rates come from {@link PricingRates} (Stripe-backed in prod).
  */
-@Service
+@ApplicationScoped
 public class ProcurementPricingService {
 
     private static final double LOG2 = Math.log(2.0);

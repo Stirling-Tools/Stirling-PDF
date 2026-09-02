@@ -5,7 +5,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import org.springframework.stereotype.Service;
+import io.quarkus.arc.profile.IfBuildProfile;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,7 +24,8 @@ import stirling.software.proprietary.policy.store.PolicyStore;
 import stirling.software.proprietary.policy.webhook.WebhookConfig;
 
 @Slf4j
-@Service
+@ApplicationScoped
+@IfBuildProfile("saas")
 @RequiredArgsConstructor
 public class WebhookTrigger implements PolicyTrigger {
 

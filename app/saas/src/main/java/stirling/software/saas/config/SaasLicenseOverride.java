@@ -1,25 +1,34 @@
 package stirling.software.saas.config;
 
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
+import io.quarkus.arc.profile.IfBuildProfile;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Produces;
+import jakarta.inject.Named;
+import jakarta.inject.Singleton;
 
 /** Saas mode is unconditionally ENTERPRISE (every tenant is a paying Stripe customer). */
-@Configuration
-@Profile("saas")
+@ApplicationScoped
+@IfBuildProfile("saas")
 public class SaasLicenseOverride {
 
-    @Bean(name = "runningProOrHigher")
+    @Produces
+    @Singleton
+    @Named("runningProOrHigher")
     public boolean runningProOrHigherSaas() {
         return true;
     }
 
-    @Bean(name = "license")
+    @Produces
+    @Singleton
+    @Named("license")
     public String licenseTypeSaas() {
         return "ENTERPRISE";
     }
 
-    @Bean(name = "runningEE")
+    @Produces
+    @Singleton
+    @Named("runningEE")
     public boolean runningEnterpriseSaas() {
         return true;
     }

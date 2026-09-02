@@ -27,13 +27,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.web.multipart.MultipartFile;
 
-import stirling.software.SPDF.model.api.SplitPdfBySectionsRequest;
+import jakarta.ws.rs.core.Response;
+
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.testsupport.TestFileUploads;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 
@@ -91,218 +90,148 @@ class SplitPdfBySectionsControllerTest {
     @DisplayName("Should split all pages into halves with merge")
     void shouldSplitAllPagesHalvesMerged() throws Exception {
         byte[] pdfBytes = createPdf(2);
-        MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
-
-        SplitPdfBySectionsRequest request = new SplitPdfBySectionsRequest();
-        request.setFileInput(file);
-        request.setHorizontalDivisions(1); // 2 columns
-        request.setVerticalDivisions(0); // 1 row
-        request.setMerge(true);
-        request.setPageNumbers("all");
-
         setupFactory();
 
-        var response = controller.splitPdf(request);
+        // horizontalDivisions=1 (2 columns), verticalDivisions=0 (1 row), merge=true
+        Response response =
+                controller.splitPdf(TestFileUploads.pdf(pdfBytes), null, "all", null, 1, 0, true);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(200);
+        assertThat(response.getEntity()).isNotNull();
     }
 
     @Test
     @DisplayName("Should split all pages into quarters without merge")
     void shouldSplitAllPagesQuartersNoMerge() throws Exception {
         byte[] pdfBytes = createPdf(1);
-        MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
-
-        SplitPdfBySectionsRequest request = new SplitPdfBySectionsRequest();
-        request.setFileInput(file);
-        request.setHorizontalDivisions(1); // 2 columns
-        request.setVerticalDivisions(1); // 2 rows
-        request.setMerge(false);
-        request.setPageNumbers("all");
-
         setupFactory();
 
-        var response = controller.splitPdf(request);
+        // horizontalDivisions=1 (2 columns), verticalDivisions=1 (2 rows), merge=false
+        Response response =
+                controller.splitPdf(TestFileUploads.pdf(pdfBytes), null, "all", null, 1, 1, false);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getStatus()).isEqualTo(200);
     }
 
     @Test
     @DisplayName("Should split with SPLIT_ALL mode")
     void shouldSplitAllMode() throws Exception {
         byte[] pdfBytes = createPdf(2);
-        MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
-
-        SplitPdfBySectionsRequest request = new SplitPdfBySectionsRequest();
-        request.setFileInput(file);
-        request.setHorizontalDivisions(0);
-        request.setVerticalDivisions(1);
-        request.setMerge(true);
-        request.setSplitMode("SPLIT_ALL");
-
         setupFactory();
 
-        var response = controller.splitPdf(request);
+        Response response =
+                controller.splitPdf(
+                        TestFileUploads.pdf(pdfBytes), null, null, "SPLIT_ALL", 0, 1, true);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getStatus()).isEqualTo(200);
     }
 
     @Test
     @DisplayName("Should split with SPLIT_ALL_EXCEPT_FIRST mode")
     void shouldSplitExceptFirst() throws Exception {
         byte[] pdfBytes = createPdf(3);
-        MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
-
-        SplitPdfBySectionsRequest request = new SplitPdfBySectionsRequest();
-        request.setFileInput(file);
-        request.setHorizontalDivisions(1);
-        request.setVerticalDivisions(0);
-        request.setMerge(true);
-        request.setSplitMode("SPLIT_ALL_EXCEPT_FIRST");
-
         setupFactory();
 
-        var response = controller.splitPdf(request);
+        Response response =
+                controller.splitPdf(
+                        TestFileUploads.pdf(pdfBytes),
+                        null,
+                        null,
+                        "SPLIT_ALL_EXCEPT_FIRST",
+                        1,
+                        0,
+                        true);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getStatus()).isEqualTo(200);
     }
 
     @Test
     @DisplayName("Should split with SPLIT_ALL_EXCEPT_LAST mode")
     void shouldSplitExceptLast() throws Exception {
         byte[] pdfBytes = createPdf(3);
-        MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
-
-        SplitPdfBySectionsRequest request = new SplitPdfBySectionsRequest();
-        request.setFileInput(file);
-        request.setHorizontalDivisions(1);
-        request.setVerticalDivisions(0);
-        request.setMerge(true);
-        request.setSplitMode("SPLIT_ALL_EXCEPT_LAST");
-
         setupFactory();
 
-        var response = controller.splitPdf(request);
+        Response response =
+                controller.splitPdf(
+                        TestFileUploads.pdf(pdfBytes),
+                        null,
+                        null,
+                        "SPLIT_ALL_EXCEPT_LAST",
+                        1,
+                        0,
+                        true);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getStatus()).isEqualTo(200);
     }
 
     @Test
     @DisplayName("Should split with SPLIT_ALL_EXCEPT_FIRST_AND_LAST mode")
     void shouldSplitExceptFirstAndLast() throws Exception {
         byte[] pdfBytes = createPdf(4);
-        MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
-
-        SplitPdfBySectionsRequest request = new SplitPdfBySectionsRequest();
-        request.setFileInput(file);
-        request.setHorizontalDivisions(1);
-        request.setVerticalDivisions(0);
-        request.setMerge(true);
-        request.setSplitMode("SPLIT_ALL_EXCEPT_FIRST_AND_LAST");
-
         setupFactory();
 
-        var response = controller.splitPdf(request);
+        Response response =
+                controller.splitPdf(
+                        TestFileUploads.pdf(pdfBytes),
+                        null,
+                        null,
+                        "SPLIT_ALL_EXCEPT_FIRST_AND_LAST",
+                        1,
+                        0,
+                        true);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getStatus()).isEqualTo(200);
     }
 
     @Test
     @DisplayName("Should split custom pages without merge")
     void shouldSplitCustomPagesNoMerge() throws Exception {
         byte[] pdfBytes = createPdf(3);
-        MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
-
-        SplitPdfBySectionsRequest request = new SplitPdfBySectionsRequest();
-        request.setFileInput(file);
-        request.setHorizontalDivisions(0);
-        request.setVerticalDivisions(1);
-        request.setMerge(false);
-        request.setSplitMode("CUSTOM");
-        request.setPageNumbers("1,3");
-
         setupFactory();
 
-        var response = controller.splitPdf(request);
+        Response response =
+                controller.splitPdf(
+                        TestFileUploads.pdf(pdfBytes), null, "1,3", "CUSTOM", 0, 1, false);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getStatus()).isEqualTo(200);
     }
 
     @Test
     @DisplayName("Should throw for CUSTOM mode with no page numbers")
     void shouldThrowForCustomModeNoPages() throws Exception {
         byte[] pdfBytes = createPdf(2);
-        MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
-
-        SplitPdfBySectionsRequest request = new SplitPdfBySectionsRequest();
-        request.setFileInput(file);
-        request.setHorizontalDivisions(1);
-        request.setVerticalDivisions(0);
-        request.setMerge(false);
-        request.setSplitMode("CUSTOM");
-        request.setPageNumbers("");
-
         setupFactory();
 
-        assertThrows(Exception.class, () -> controller.splitPdf(request));
+        assertThrows(
+                Exception.class,
+                () ->
+                        controller.splitPdf(
+                                TestFileUploads.pdf(pdfBytes), null, "", "CUSTOM", 1, 0, false));
     }
 
     @Test
     @DisplayName("Should handle single page PDF with merge")
     void shouldHandleSinglePageMerge() throws Exception {
         byte[] pdfBytes = createPdf(1);
-        MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
-
-        SplitPdfBySectionsRequest request = new SplitPdfBySectionsRequest();
-        request.setFileInput(file);
-        request.setHorizontalDivisions(2); // 3 columns
-        request.setVerticalDivisions(2); // 3 rows = 9 sections
-        request.setMerge(true);
-
         setupFactory();
 
-        var response = controller.splitPdf(request);
+        // horizontalDivisions=2 (3 columns), verticalDivisions=2 (3 rows) = 9 sections
+        Response response =
+                controller.splitPdf(TestFileUploads.pdf(pdfBytes), null, null, null, 2, 2, true);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getStatus()).isEqualTo(200);
     }
 
     @Test
     @DisplayName("Should split into thirds vertically")
     void shouldSplitThirdsVertically() throws Exception {
         byte[] pdfBytes = createPdf(1);
-        MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
-
-        SplitPdfBySectionsRequest request = new SplitPdfBySectionsRequest();
-        request.setFileInput(file);
-        request.setHorizontalDivisions(0); // 1 column
-        request.setVerticalDivisions(2); // 3 rows
-        request.setMerge(true);
-
         setupFactory();
 
-        var response = controller.splitPdf(request);
+        // horizontalDivisions=0 (1 column), verticalDivisions=2 (3 rows)
+        Response response =
+                controller.splitPdf(TestFileUploads.pdf(pdfBytes), null, null, null, 0, 2, true);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getStatus()).isEqualTo(200);
     }
 }

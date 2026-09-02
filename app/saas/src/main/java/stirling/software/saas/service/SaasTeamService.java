@@ -4,10 +4,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
+import io.quarkus.arc.profile.IfBuildProfile;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,8 +29,8 @@ import stirling.software.saas.repository.SaasTeamExtensionsRepository;
 import stirling.software.saas.repository.TeamInvitationRepository;
 
 /** SaaS-only team management: invitations, personal teams, seat caps, paid-subscription gating. */
-@Service
-@Profile("saas")
+@ApplicationScoped
+@IfBuildProfile("saas")
 @RequiredArgsConstructor
 @Slf4j
 public class SaasTeamService {
@@ -40,7 +40,6 @@ public class SaasTeamService {
     private final TeamInvitationRepository invitationRepository;
     private final UserRepository userRepository;
     private final BillingSubscriptionRepository billingSubscriptionRepository;
-    private final RestTemplate restTemplate;
     private final RateLimitService rateLimitService;
     private final SupabaseConfigurationProperties supabaseConfig;
     private final UserRoleService userRoleService;
@@ -115,7 +114,7 @@ public class SaasTeamService {
         // Refetch so the entity is managed by the current session.
         user =
                 userRepository
-                        .findById(userId)
+                        .findByIdOptional(userId)
                         .orElseThrow(
                                 () -> new IllegalArgumentException("User not found: " + userId));
 
@@ -123,7 +122,8 @@ public class SaasTeamService {
 
         Team team = new Team();
         team.setName(personalTeamName);
-        Team savedTeam = teamRepository.save(team);
+        teamRepository.persist(team);
+        Team savedTeam = team;
 
         saasTeamExtensionService.setPersonal(savedTeam, true);
         saasTeamExtensionService.setSeats(savedTeam, 1, 1);
@@ -137,12 +137,12 @@ public class SaasTeamService {
         membership.setRole(TeamRole.LEADER);
         membership.setInvitedAt(LocalDateTime.now());
         membership.setAcceptedAt(LocalDateTime.now());
-        membershipRepository.save(membership);
+        membershipRepository.persist(membership);
 
         // Update user's team_id to point to personal team
         Team oldTeam = user.getTeam();
         user.setTeam(savedTeam);
-        userRepository.save(user);
+        userRepository.persist(user);
 
         // A freshly-created personal team is the user's durable home team.
         saasUserExtensionService.setHomeTeamId(user, savedTeam.getId());
@@ -222,7 +222,7 @@ public class SaasTeamService {
     public TeamInvitation inviteUserToTeam(Long teamId, String inviteeEmail, User inviter) {
         Team team =
                 teamRepository
-                        .findById(teamId)
+                        .findByIdOptional(teamId)
                         .orElseThrow(() -> new IllegalArgumentException("Team not found"));
 
         // Validate: inviter is team leader
@@ -295,7 +295,8 @@ public class SaasTeamService {
 
         userRepository.findByEmail(inviteeEmail).ifPresent(invitation::setInviteeUser);
 
-        TeamInvitation savedInvitation = invitationRepository.save(invitation);
+        invitationRepository.persist(invitation);
+        TeamInvitation savedInvitation = invitation;
 
         // Send invitation email
         sendInvitationEmail(savedInvitation);
@@ -320,7 +321,7 @@ public class SaasTeamService {
         acceptInvitation(invitationToken, acceptingUser);
 
         // Re-read the user post-accept; acceptInvitation refetches+saves them.
-        User user = userRepository.findById(acceptingUser.getId()).orElse(acceptingUser);
+        User user = userRepository.findByIdOptional(acceptingUser.getId()).orElse(acceptingUser);
         Team userTeam = user.getTeam();
         if (userTeam == null || !hasActivePaidSubscription(userTeam)) {
             log.warn(
@@ -354,7 +355,7 @@ public class SaasTeamService {
         final long userId = acceptingUser.getId();
         acceptingUser =
                 userRepository
-                        .findById(userId)
+                        .findByIdOptional(userId)
                         .orElseThrow(
                                 () -> new IllegalArgumentException("User not found: " + userId));
 
@@ -374,7 +375,7 @@ public class SaasTeamService {
 
         if (invitation.isExpired()) {
             invitation.setStatus(InvitationStatus.EXPIRED);
-            invitationRepository.save(invitation);
+            invitationRepository.persist(invitation);
             throw new IllegalStateException("Invitation expired");
         }
 
@@ -451,7 +452,7 @@ public class SaasTeamService {
 
         // Don't set inviteeUser; acceptance is recorded via status + TeamMembership row.
         invitation.setStatus(InvitationStatus.ACCEPTED);
-        invitationRepository.save(invitation);
+        invitationRepository.persist(invitation);
 
         log.info(
                 "User {} accepted invitation to team {}",
@@ -699,16 +700,20 @@ public class SaasTeamService {
                             invitation.getInviter().getEmail(),
                             invitation.getInvitationToken());
 
-            // Create headers with authorization
-            org.springframework.http.HttpHeaders headers =
-                    new org.springframework.http.HttpHeaders();
-            headers.set("Authorization", "Bearer " + edgeFunctionSecret);
-            headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
+            String requestJson =
+                    new com.fasterxml.jackson.databind.ObjectMapper()
+                            .writeValueAsString(requestBody);
 
-            org.springframework.http.HttpEntity<EmailInvitationRequest> entity =
-                    new org.springframework.http.HttpEntity<>(requestBody, headers);
+            java.net.http.HttpRequest httpRequest =
+                    java.net.http.HttpRequest.newBuilder()
+                            .uri(java.net.URI.create(url))
+                            .header("Content-Type", "application/json")
+                            .header("Authorization", "Bearer " + edgeFunctionSecret)
+                            .POST(java.net.http.HttpRequest.BodyPublishers.ofString(requestJson))
+                            .build();
 
-            restTemplate.postForEntity(url, entity, String.class);
+            java.net.http.HttpClient.newHttpClient()
+                    .send(httpRequest, java.net.http.HttpResponse.BodyHandlers.ofString());
 
             log.info(
                     "Sent invitation email to {} for team {}",
@@ -738,7 +743,7 @@ public class SaasTeamService {
 
         Team team =
                 teamRepository
-                        .findById(teamId)
+                        .findByIdOptional(teamId)
                         .orElseThrow(() -> new IllegalArgumentException("Team not found"));
 
         // Handle seat reduction: automatically remove excess members if reducing below current
@@ -839,7 +844,7 @@ public class SaasTeamService {
             log.info("Team {} converted from STANDARD to PERSONAL (maxSeats reduced to 1)", teamId);
         }
 
-        teamRepository.save(team);
+        teamRepository.persist(team);
 
         log.info(
                 "Team {} seat allocation updated: maxSeats={}, seatsUsed={}, isPersonal={}",
@@ -863,7 +868,7 @@ public class SaasTeamService {
         final long userId = user.getId();
         final User refetchedUser =
                 userRepository
-                        .findById(userId)
+                        .findByIdOptional(userId)
                         .orElseThrow(
                                 () -> new IllegalArgumentException("User not found: " + userId));
 

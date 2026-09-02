@@ -7,7 +7,7 @@ import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.stereotype.Service;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +29,7 @@ import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
  * <p>The read scope decides who sees an incident; {@link #availableActions} decides who may act.
  */
 @Slf4j
-@Service
+@ApplicationScoped
 @RequiredArgsConstructor
 public class FileRunEventService {
 

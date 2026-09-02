@@ -3,9 +3,10 @@ package stirling.software.proprietary.mcp.tools;
 import java.io.IOException;
 import java.util.Base64;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.http.MediaType;
-import org.springframework.stereotype.Component;
+import io.quarkus.arc.lookup.LookupIfProperty;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.core.MediaType;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.FileStorage;
@@ -20,8 +21,8 @@ import tools.jackson.databind.node.ObjectNode;
  * Fetches a stored file's content by fileId, returned inline as base64. For large results that were
  * not returned inline by an operation.
  */
-@Component
-@ConditionalOnProperty(name = "mcp.enabled", havingValue = "true")
+@ApplicationScoped
+@LookupIfProperty(name = "mcp.enabled", stringValue = "true")
 public class StirlingDownloadTool implements McpTool {
 
     private final ObjectMapper mapper;
@@ -102,7 +103,7 @@ public class StirlingDownloadTool implements McpTool {
                     McpResponses.resourceBlock(
                             mapper,
                             "stirling://file/" + fileId,
-                            MediaType.APPLICATION_OCTET_STREAM_VALUE,
+                            MediaType.APPLICATION_OCTET_STREAM,
                             Base64.getEncoder().encodeToString(bytes)));
         } catch (SecurityException e) {
             return McpResponses.error(mapper, "Unknown or inaccessible fileId '" + fileId + "'.");

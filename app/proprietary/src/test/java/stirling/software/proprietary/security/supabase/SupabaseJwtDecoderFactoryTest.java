@@ -1,26 +1,40 @@
 package stirling.software.proprietary.security.supabase;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import java.lang.reflect.Field;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.JwtException;
 
+/**
+ * MIGRATION (Spring -> Quarkus): {@code SupabaseJwtDecoderFactory} no longer produces a Spring
+ * Security {@code org.springframework.security.oauth2.jwt.JwtDecoder} (Quarkus has no {@code
+ * JwtDecoder} abstraction; bearer verification is wired via quarkus-oidc / smallrye-jwt). The
+ * fail-closed contract is now expressed by {@link SupabaseJwtDecoderFactory#jwksUri()} returning
+ * {@code null} when no issuer is configured (so token verification must reject every token). The
+ * {@code properties} collaborator is field-injected, so it is set by reflection here.
+ */
 class SupabaseJwtDecoderFactoryTest {
 
     @Test
-    void factoryReturnsFailClosedDecoderWhenIssuerMissing() {
+    void jwksUriIsNullWhenIssuerMissing_failClosed() throws Exception {
         SupabaseUserLoginProperties props = new SupabaseUserLoginProperties();
         props.setEnabled(true);
         // issuer intentionally not set
-        SupabaseJwtDecoderFactory factory = new SupabaseJwtDecoderFactory(props);
+        SupabaseJwtDecoderFactory factory = factoryWith(props);
 
-        JwtDecoder decoder = factory.supabaseUserLoginJwtDecoder();
+        assertThat(factory.jwksUri()).isNull();
+    }
 
-        assertThatThrownBy(() -> decoder.decode("any-token"))
-                .isInstanceOf(JwtException.class)
-                .hasMessageContaining("not configured");
+    @Test
+    void jwksUriIsComputedFromIssuerWhenConfigured() throws Exception {
+        SupabaseUserLoginProperties props = new SupabaseUserLoginProperties();
+        props.setEnabled(true);
+        props.setIssuer("https://example.supabase.co/auth/v1");
+        SupabaseJwtDecoderFactory factory = factoryWith(props);
+
+        assertThat(factory.jwksUri())
+                .isEqualTo("https://example.supabase.co/auth/v1/.well-known/jwks.json");
     }
 
     @Test
@@ -45,5 +59,14 @@ class SupabaseJwtDecoderFactoryTest {
         props.setEnabled(true);
         props.setIssuer("   ");
         assertThat(props.isJwtConfigured()).isFalse();
+    }
+
+    private static SupabaseJwtDecoderFactory factoryWith(SupabaseUserLoginProperties props)
+            throws Exception {
+        SupabaseJwtDecoderFactory factory = new SupabaseJwtDecoderFactory();
+        Field f = SupabaseJwtDecoderFactory.class.getDeclaredField("properties");
+        f.setAccessible(true);
+        f.set(factory, props);
+        return factory;
     }
 }

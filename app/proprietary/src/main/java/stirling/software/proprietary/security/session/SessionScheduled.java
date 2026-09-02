@@ -2,12 +2,13 @@ package stirling.software.proprietary.security.session;
 
 import java.time.Duration;
 
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
+import io.quarkus.scheduler.Scheduled;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 
-@Component
+@ApplicationScoped
 @RequiredArgsConstructor
 public class SessionScheduled {
 

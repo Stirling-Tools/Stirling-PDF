@@ -4,21 +4,22 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
-
+import io.quarkus.arc.profile.IfBuildProfile;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
-import jakarta.servlet.http.HttpServletRequest;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.HeaderParam;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,8 +30,9 @@ import stirling.software.proprietary.policy.source.SourceStore;
 import stirling.software.proprietary.policy.trigger.WebhookTrigger;
 
 @Slf4j
-@RestController
-@RequestMapping("/api/v1/webhooks")
+@ApplicationScoped
+@IfBuildProfile("saas")
+@Path("/api/v1/webhooks")
 @Hidden
 @RequiredArgsConstructor
 @Tag(name = "Webhooks", description = "Inbound webhook source receiver")
@@ -45,37 +47,41 @@ public class WebhookReceiverController {
     private final WebhookTrigger webhookTrigger;
     private final ApplicationProperties applicationProperties;
 
-    @PostMapping("/{webhookId}")
+    @POST
+    @Path("/{webhookId}")
+    @Produces(MediaType.APPLICATION_JSON)
     @Operation(
             summary = "Deliver a document to a webhook source",
             description =
                     "The body is the raw document; sign it with the source's secret and present"
                             + " 'sha256=<hex>' in the X-Stirling-Signature header. Returns 202 once"
                             + " the document is spooled for the referencing policies.")
-    public ResponseEntity<WebhookDeliveryResponse> receive(
-            @PathVariable String webhookId,
-            @RequestHeader(value = SIGNATURE_HEADER, required = false) String signature,
-            @RequestHeader(value = FILENAME_HEADER, required = false) String filename,
-            HttpServletRequest request) {
+    public Response receive(
+            @PathParam("webhookId") String webhookId,
+            @HeaderParam(SIGNATURE_HEADER) String signature,
+            @HeaderParam(FILENAME_HEADER) String filename,
+            @Context HttpHeaders headers,
+            InputStream requestBody) {
         if (!WebhookIds.isValidId(webhookId)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No such webhook");
+            throw new WebApplicationException("No such webhook", Response.Status.NOT_FOUND);
         }
         Source source = findWebhookSource(webhookId);
         if (source == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No such webhook");
+            throw new WebApplicationException("No such webhook", Response.Status.NOT_FOUND);
         }
 
         WebhookConfig config = WebhookConfig.from(source.options());
-        byte[] body = readBoundedBody(request);
+        byte[] body = readBoundedBody(headers, requestBody);
         if (!WebhookSignatures.verify(config.signingSecret(), body, signature)) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid signature");
+            throw new WebApplicationException("Invalid signature", Response.Status.UNAUTHORIZED);
         }
         if (!source.enabled()) {
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN, "Webhook source is paused; deliveries are not accepted");
+            throw new WebApplicationException(
+                    "Webhook source is paused; deliveries are not accepted",
+                    Response.Status.FORBIDDEN);
         }
         if (body.length == 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Empty request body");
+            throw new WebApplicationException("Empty request body", Response.Status.BAD_REQUEST);
         }
 
         String storedName = stageToSpool(webhookId, filename, body);
@@ -86,9 +92,8 @@ public class WebhookReceiverController {
                 storedName,
                 body.length,
                 webhookId);
-        return ResponseEntity.accepted()
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(new WebhookDeliveryResponse(true, storedName, body.length));
+        return Response.accepted(new WebhookDeliveryResponse(true, storedName, body.length))
+                .build();
     }
 
     private Source findWebhookSource(String webhookId) {
@@ -110,40 +115,54 @@ public class WebhookReceiverController {
                     spool.store(webhookId, filename, body).getFileName().toString());
         } catch (IOException e) {
             log.error("Could not spool webhook delivery for {}: {}", webhookId, e.getMessage());
-            throw new ResponseStatusException(
-                    HttpStatus.INTERNAL_SERVER_ERROR, "Could not store delivery");
+            throw new WebApplicationException(
+                    "Could not store delivery", Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 
-    private byte[] readBoundedBody(HttpServletRequest request) {
+    private byte[] readBoundedBody(HttpHeaders headers, InputStream requestBody) {
         long maxBytes = applicationProperties.getPolicies().getWebhookMaxBytes();
-        long declared = request.getContentLengthLong();
+        long declared = declaredLength(headers);
         if (declared < 0) {
-            throw new ResponseStatusException(
-                    HttpStatus.LENGTH_REQUIRED, "A Content-Length header is required");
+            throw new WebApplicationException(
+                    "A Content-Length header is required", Response.Status.LENGTH_REQUIRED);
         }
         if (declared > maxBytes) {
-            throw new ResponseStatusException(
-                    HttpStatus.PAYLOAD_TOO_LARGE,
-                    "Delivery exceeds the " + maxBytes + "-byte limit");
+            throw new WebApplicationException(
+                    "Delivery exceeds the " + maxBytes + "-byte limit",
+                    Response.Status.REQUEST_ENTITY_TOO_LARGE);
         }
         byte[] body = new byte[(int) declared];
         int total = 0;
-        try (InputStream in = request.getInputStream()) {
+        // A body-less POST arrives as a null entity; treat it as empty rather than NPE-ing.
+        try (InputStream in = requestBody == null ? InputStream.nullInputStream() : requestBody) {
             int read;
             while (total < body.length
                     && (read = in.read(body, total, body.length - total)) != -1) {
                 total += read;
             }
             if (total == body.length && in.read() != -1) {
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST, "Body exceeds the declared Content-Length");
+                throw new WebApplicationException(
+                        "Body exceeds the declared Content-Length", Response.Status.BAD_REQUEST);
             }
         } catch (IOException e) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Could not read request body");
+            throw new WebApplicationException(
+                    "Could not read request body", Response.Status.BAD_REQUEST);
         }
         return total == body.length ? body : Arrays.copyOf(body, total);
+    }
+
+    // Mirrors the servlet getContentLengthLong() this used to read: -1 when absent or unparseable.
+    private static long declaredLength(HttpHeaders headers) {
+        String declared = headers.getHeaderString(HttpHeaders.CONTENT_LENGTH);
+        if (declared == null) {
+            return -1;
+        }
+        try {
+            return Long.parseLong(declared.trim());
+        } catch (NumberFormatException e) {
+            return -1;
+        }
     }
 
     public record WebhookDeliveryResponse(boolean accepted, String filename, int bytes) {}

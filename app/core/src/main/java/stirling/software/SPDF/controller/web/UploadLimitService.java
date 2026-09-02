@@ -2,18 +2,20 @@ package stirling.software.SPDF.controller.web;
 
 import java.util.Locale;
 
-import org.springframework.stereotype.Service;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
 
-@Service
+@ApplicationScoped
 @Slf4j
 public class UploadLimitService {
 
     private final ApplicationProperties applicationProperties;
 
+    @Inject
     public UploadLimitService(ApplicationProperties applicationProperties) {
         this.applicationProperties = applicationProperties;
     }

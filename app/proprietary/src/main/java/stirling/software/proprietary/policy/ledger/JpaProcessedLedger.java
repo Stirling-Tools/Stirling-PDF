@@ -6,11 +6,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.event.EventListener;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.stereotype.Service;
+import io.quarkus.runtime.StartupEvent;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
+import jakarta.inject.Inject;
+import jakarta.persistence.PersistenceException;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -22,7 +23,7 @@ import lombok.extern.slf4j.Slf4j;
  * after a restart every PROCESSING row is stale.
  */
 @Slf4j
-@Service
+@ApplicationScoped
 public class JpaProcessedLedger implements ProcessedLedger {
 
     private static final int STAMP_CHUNK = 500;
@@ -30,7 +31,7 @@ public class JpaProcessedLedger implements ProcessedLedger {
     private final ProcessedFileRepository repository;
     private final Supplier<Long> nowMillis;
 
-    @Autowired
+    @Inject
     public JpaProcessedLedger(ProcessedFileRepository repository) {
         this(repository, System::currentTimeMillis);
     }
@@ -87,7 +88,7 @@ public class JpaProcessedLedger implements ProcessedLedger {
                                 ProcessedFileStatus.PROCESSING,
                                 now));
                 return true;
-            } catch (DataIntegrityViolationException concurrentClaim) {
+            } catch (PersistenceException concurrentClaim) {
                 return false;
             }
         }
@@ -163,7 +164,7 @@ public class JpaProcessedLedger implements ProcessedLedger {
                     new ProcessedFileEntity(
                             policyId, identityHash, identity, gate, contentHash, status, now);
             repository.saveAndFlush(row);
-        } catch (DataIntegrityViolationException concurrentInsert) {
+        } catch (PersistenceException concurrentInsert) {
             repository.settle(policyId, identityHash, gate, contentHash, status, now);
         }
     }
@@ -199,8 +200,13 @@ public class JpaProcessedLedger implements ProcessedLedger {
         repository.deleteByPolicy(policyId);
     }
 
+    // Spring hung @EventListener(ApplicationReadyEvent) on recoverInterrupted() itself; a CDI
+    // observer needs the event parameter, and the interface method has none, hence the delegate.
+    void onStart(@Observes StartupEvent event) {
+        recoverInterrupted();
+    }
+
     @Override
-    @EventListener(ApplicationReadyEvent.class)
     public void recoverInterrupted() {
         int recovered = repository.markAllProcessingInterrupted(nowMillis.get());
         if (recovered > 0) {

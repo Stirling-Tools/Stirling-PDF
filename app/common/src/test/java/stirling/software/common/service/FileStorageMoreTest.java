@@ -17,13 +17,13 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import stirling.software.common.cluster.inprocess.LocalDiskFileStore;
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.io.FileSystemResource;
 import stirling.software.common.service.FileStorage.StoredFile;
 
 class FileStorageMoreTest {
