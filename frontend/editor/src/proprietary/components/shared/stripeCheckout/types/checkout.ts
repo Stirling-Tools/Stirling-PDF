@@ -22,6 +22,7 @@ export interface StripeCheckoutProps {
 export type CheckoutStage =
   | "email"
   | "plan-selection"
+  | "capacity"
   | "payment"
   | "success"
   | "error";

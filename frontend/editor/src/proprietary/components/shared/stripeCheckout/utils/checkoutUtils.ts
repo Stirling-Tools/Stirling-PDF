@@ -36,6 +36,12 @@ export const getModalTitle = (
         "Select Billing Period - {{planName}}",
         { planName },
       );
+    case "capacity":
+      return t(
+        "payment.capacityStage.modalTitle",
+        "Choose Capacity - {{planName}}",
+        { planName },
+      );
     case "payment":
       return t(
         "payment.paymentStage.modalTitle",

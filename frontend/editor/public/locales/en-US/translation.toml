@@ -6278,6 +6278,21 @@ upgradeSuccess = "Payment successful! Your subscription has been upgraded. The l
 upgradeTitle = "Upgrade to {{planName}}"
 yearly = "Yearly"
 
+[payment.capacityStage]
+addedUsers = "+{{users}} users"
+continue = "Continue to payment"
+coversUpTo = "Covers up to"
+enterpriseQuote = "Get an enterprise quote"
+heading = "How many users do you need?"
+lineItem = "Servers x {{servers}}"
+minimumForCurrentUsers = "You have {{users}} users, so you need at least {{servers}} servers."
+modalTitle = "Choose Capacity - {{planName}}"
+serversLabel = "Servers"
+subheading = "Each server covers {{users}} users. Add servers to cover more."
+totalMonthly = "Total, billed monthly"
+totalYearly = "Total, billed yearly"
+userTotal = "{{users}} users"
+
 [payment.emailStage]
 continue = "Continue"
 description = "We'll use this to send your license key and receipts."
