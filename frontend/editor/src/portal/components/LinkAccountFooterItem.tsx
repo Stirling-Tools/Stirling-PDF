@@ -14,8 +14,9 @@ import { LinkIcon } from "@portal/components/icons";
 export function LinkAccountFooterItem() {
   const { t } = useTranslation();
   const { openLinkModal } = useUI();
-  const { linkState } = useLink();
-  if (linkState !== "unlinked") return null;
+  const { linkState, statusKnown } = useLink();
+  // Hidden until the status is actually known, or a linked instance flashes a "link" button.
+  if (!statusKnown || linkState !== "unlinked") return null;
   return (
     <NavItem
       id="account-link"

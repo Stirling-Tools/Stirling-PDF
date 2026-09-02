@@ -46,7 +46,7 @@ export interface UseAccountLink {
 
 export function useAccountLink(): UseAccountLink {
   const applyLinkFacts = useApplyLinkFacts();
-  const { markSaasSessionChanged } = useLink();
+  const { markSaasSessionChanged, markStatusKnown } = useLink();
   const [status, setStatus] = useState<LinkStatus | null>(null);
   const [phase, setPhase] = useState<LinkPhase>("idle");
   const [error, setError] = useState<string | null>(null);
@@ -80,6 +80,9 @@ export function useAccountLink(): UseAccountLink {
           setStatus(s);
           // A linked instance is at least linked-free; subscription comes from the wallet.
           if (s.linked) applyLinkFacts(true, false);
+          // Only a real answer counts. Marking this on failure too would put us back to
+          // treating "could not ask" as "not linked", which is what gated linked instances.
+          markStatusKnown();
         }
       })
       .catch(() => {
@@ -91,7 +94,7 @@ export function useAccountLink(): UseAccountLink {
     return () => {
       cancelled = true;
     };
-  }, [applyLinkFacts]);
+  }, [applyLinkFacts, markStatusKnown]);
 
   // SSO return: an SSO sign-in we kicked off has redirected back and the SaaS
   // session is now in the shared Supabase client. The pending marker carries the

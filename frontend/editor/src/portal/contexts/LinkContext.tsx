@@ -66,6 +66,16 @@ interface LinkContextValue {
    */
   saasSessionNonce: number;
   markSaasSessionChanged: () => void;
+  /**
+   * Whether the instance's link status has actually been read back yet.
+   *
+   * `linkState` starts at "unlinked" because the type has no third value, so without this a
+   * linked instance is indistinguishable from one we have not asked about. Anything that
+   * BLOCKS on being unlinked has to wait for this; anything that merely reports state need not.
+   */
+  statusKnown: boolean;
+  /** Called once the status endpoint has actually answered. */
+  markStatusKnown: () => void;
 }
 
 const LinkContext = createContext<LinkContextValue | null>(null);
@@ -73,11 +83,19 @@ const LinkContext = createContext<LinkContextValue | null>(null);
 export function LinkProvider({
   children,
   initialState = "unlinked",
+  statusKnown: initialStatusKnown = true,
 }: {
   children: ReactNode;
   initialState?: LinkState;
+  /**
+   * Whether `initialState` is authoritative. Defaults to true so a pinned state (stories, tests)
+   * is believed as given; the app passes false because it has to go and ask first.
+   */
+  statusKnown?: boolean;
 }) {
   const [linkState, setLinkState] = useState<LinkState>(initialState);
+  const [statusKnown, setStatusKnown] = useState(initialStatusKnown);
+  const markStatusKnown = useCallback(() => setStatusKnown(true), []);
   const [saasSessionNonce, setSaasSessionNonce] = useState(0);
   const markSaasSessionChanged = useCallback(
     () => setSaasSessionNonce((n) => n + 1),
@@ -92,8 +110,16 @@ export function LinkProvider({
       featuresUnlocked: unlocked,
       saasSessionNonce,
       markSaasSessionChanged,
+      statusKnown,
+      markStatusKnown,
     };
-  }, [linkState, saasSessionNonce, markSaasSessionChanged]);
+  }, [
+    linkState,
+    saasSessionNonce,
+    markSaasSessionChanged,
+    statusKnown,
+    markStatusKnown,
+  ]);
   return <LinkContext.Provider value={value}>{children}</LinkContext.Provider>;
 }
 

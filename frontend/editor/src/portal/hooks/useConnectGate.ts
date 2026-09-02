@@ -40,7 +40,7 @@ export interface ConnectGate {
  * extra request.
  */
 export function useConnectGate(): ConnectGate {
-  const { isLinked } = useLink();
+  const { isLinked, statusKnown } = useLink();
   const { openLinkModal } = useUI();
   const devBypass = useDevConnectBypass();
 
@@ -51,10 +51,15 @@ export function useConnectGate(): ConnectGate {
   });
 
   const available = Boolean(query.data?.accountLinkAvailable);
-  const loading = query.isPending;
+  // Both answers have to be in. The link status arrives separately from the app config and
+  // starts out as "unlinked" simply because the type has no third value, so gating before it
+  // lands blocks and nags an instance that is in fact linked. If the status call fails we never
+  // learn the answer and stay open: a gate that cannot read its own precondition should not be
+  // the thing standing in the way.
+  const loading = query.isPending || !statusKnown;
   // Dev-only, and absent from every build. See useDevConnectBypass for why this cannot be a
   // setting: the gate is currently the only thing enforcing that these features need a link.
-  const gated = available && !isLinked && !devBypass;
+  const gated = available && statusKnown && !isLinked && !devBypass;
 
   const connect = useCallback(() => openLinkModal(), [openLinkModal]);
 
