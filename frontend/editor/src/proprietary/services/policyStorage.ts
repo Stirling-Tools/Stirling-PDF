@@ -19,6 +19,7 @@ function defaultState(categoryId: string): PolicyState {
     configured: false,
     status: "default",
     sources: ["editor"],
+    runsOnEditor: true,
     scopeTypes: [],
     // Empty by default; the wizard defaults the reviewer to the signed-in user.
     reviewerEmail: "",
@@ -54,7 +55,14 @@ export function loadPolicies(): PoliciesByCategory {
   // category gets a default rather than being undefined.
   const out: PoliciesByCategory = {};
   loadPolicyCatalog().categories.forEach((cat, index) => {
-    const merged = { ...defaultState(cat.id), ...(parsed[cat.id] ?? {}) };
+    const stored = parsed[cat.id];
+    const merged = { ...defaultState(cat.id), ...(stored ?? {}) };
+    // Migration: a row stored before runsOnEditor existed has no such field, so the default (true)
+    // would put a tile narrowed to non-editor sources on the editor until the first reconcile lands.
+    // Derive it from the legacy signal (the editor in its sources), mirroring the decode rule.
+    if (stored && stored.runsOnEditor === undefined) {
+      merged.runsOnEditor = (stored.sources ?? []).includes("editor");
+    }
     // Migration: clear the obsolete persisted reviewer email so it re-defaults
     // to the real signed-in user.
     if (merged.reviewerEmail === STALE_REVIEWER_EMAIL)
@@ -64,6 +72,11 @@ export function loadPolicies(): PoliciesByCategory {
     if (merged.order == null) merged.order = index;
     out[cat.id] = merged;
   });
+  // Builder pipelines key by their own id, so the walk above misses them. Carried through as
+  // stored: a tile's defaults would mark them built-in and put them on the editor uninvited.
+  for (const [key, state] of Object.entries(parsed)) {
+    if (!out[key] && state) out[key] = state as PolicyState;
+  }
   return out;
 }
 
@@ -115,6 +128,26 @@ export function reorderPolicies(
     if (next[id]) next[id] = { ...next[id], order: index };
   });
   persist(next);
+  return next;
+}
+
+/**
+ * Drop cached entries entirely (no default seeded back). For builder pipelines the backend has
+ * deleted: keyed by their own id, they have no built-in category to fall back to, so a left-behind
+ * entry keeps a dead backendId that the auto-run still tries to dispatch. Built-in categories are
+ * never forgotten - they reseed on the next read anyway.
+ */
+export function forgetPolicies(ids: string[]): PoliciesByCategory {
+  const current = loadPolicies();
+  const catalogIds = new Set(loadPolicyCatalog().categories.map((c) => c.id));
+  const next: PoliciesByCategory = { ...current };
+  let removed = false;
+  for (const id of ids) {
+    if (catalogIds.has(id) || !(id in next)) continue;
+    delete next[id];
+    removed = true;
+  }
+  if (removed) persist(next);
   return next;
 }
 

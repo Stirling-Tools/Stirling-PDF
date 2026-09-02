@@ -85,6 +85,7 @@ function offer(id: string): NotificationActionOffer {
     id,
     labelKey: `portal.failures.action.${id.toLowerCase()}`,
     defaultLabel: id,
+    slot: "SECONDARY",
     enabled: true,
     disabledReasonKey: null,
   };

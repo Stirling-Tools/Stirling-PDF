@@ -39,9 +39,9 @@ ext {
     guavaVersion = "33.6.0-jre"
     jinjavaVersion = "2.8.4"
     bucket4jVersion = "8.19.0"
-    archunitVersion = "1.4.2"
+    archunitVersion = "1.5.0"
     batikVersion = "1.19"
-    jpdfiumVersion = "1.0.4"
+    jpdfiumVersion = "1.1.3"
     jwtVersion = "0.13.0"
     awsSdkVersion = "2.51.3"
     jschVersion = "2.28.6"
@@ -51,8 +51,8 @@ ext {
     testcontainersMinioVersion = "1.21.4"
     // Security CVE overrides for Spring Boot 4 BOM-managed transitives
     nettyVersion = "4.2.16.Final"
-    jackson2Version = "2.22.1"
-    // jackson-annotations ships 2-component versions (2.22, not 2.22.1)
+    jackson2Version = "2.22.2"
+    // jackson-annotations ships 2-component versions (2.22, not 2.22.2)
     jackson2AnnotationsVersion = "2.22"
     // Jackson 3 (tools.jackson) used by Spring Boot 4; stays on Spring's 3.1.x line
     jackson3Version = "3.1.5"
@@ -291,7 +291,6 @@ subprojects {
 
     dependencies {
         implementation 'org.springframework.boot:spring-boot-starter-actuator'
-        implementation 'io.github.pixee:java-security-toolkit:1.2.3'
 
         //tmp for security bumps
         implementation "ch.qos.logback:logback-core:$logback"
@@ -333,7 +332,7 @@ subprojects {
         systemProperty 'apple.awt.UIElement', 'true'
 
         testLogging {
-            events "started", "failed"
+            events "skipped", "failed"
             showExceptions = true
             showCauses = true
             showStackTraces = true
@@ -569,6 +568,13 @@ subprojects {
                 }
             }
 
+            // Lazy initialization defers bean creation until first use,
+            // reducing dev-mode RSS significantly (heap drops ~40-60%).
+            // Enable with: ./gradlew bootRun -PlazyInit=true
+            if (rootProject.findProperty('lazyInit') == 'true') {
+                runtimeArgs.add("-Dspring.main.lazy-initialization=true")
+                logger.lifecycle("Lazy initialization enabled (-PlazyInit=true)")
+            }
             jvmArgs = runtimeArgs
         }
     }

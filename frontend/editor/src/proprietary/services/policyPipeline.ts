@@ -11,7 +11,7 @@
  * using that registry.
  */
 
-import { resolveRunOn } from "@app/policies/runOn";
+import { resolveRunOn, type PolicyRunOn } from "@app/policies/runOn";
 import type { AutomationConfig } from "@app/types/automation";
 import type { ToolRegistry } from "@app/data/toolsTaxonomy";
 import type { PolicyFolderSettings } from "@app/types/policies";
@@ -56,6 +56,14 @@ export interface BackendPolicy {
   trigger: BackendTriggerConfig | null;
   steps: BackendPipelineStep[];
   output: BackendOutputSpec;
+  /** Whether the editor runs this policy per file, and on which moment. */
+  editor?: BackendEditorConfig;
+}
+
+/** Mirrors the backend `EditorConfig`. */
+export interface BackendEditorConfig {
+  allowed: boolean;
+  runOn: PolicyRunOn;
 }
 
 /**
@@ -217,6 +225,7 @@ export interface PolicyToStore {
    */
   pipelineSteps: BackendPipelineStep[];
   sources: string[];
+  runsOnEditor: boolean;
   scopeTypes: string[];
   reviewerEmail: string;
   fieldValues: Record<string, boolean | string | string[]>;
@@ -233,6 +242,8 @@ export interface DecodedPolicy {
   /** Null if the stored policy carried no automation blob. */
   automation: AutomationConfig | null;
   sources: string[];
+  /** Whether the editor runs this policy per file, straight from the policy's own flag. */
+  runsOnEditor: boolean;
   scopeTypes: string[];
   reviewerEmail: string;
   fieldValues: Record<string, boolean | string | string[]>;
@@ -280,7 +291,6 @@ export function buildBackendPolicy(input: PolicyToStore): BackendPolicy {
         maxRetries: input.folder.maxRetries,
         retryDelayMinutes: input.folder.retryDelayMinutes,
         automation: input.automation,
-        runOn: input.folder.runOn,
         // Policy-level metadata (no trigger bag to hold it any more).
         categoryId: input.categoryId,
         sources: input.sources,
@@ -288,6 +298,10 @@ export function buildBackendPolicy(input: PolicyToStore): BackendPolicy {
         reviewerEmail: input.reviewerEmail,
         fieldValues: input.fieldValues,
       },
+    },
+    editor: {
+      allowed: input.runsOnEditor,
+      runOn: input.folder.runOn,
     },
   };
 }
@@ -298,6 +312,7 @@ export function fromBackendPolicy(policy: BackendPolicy): DecodedPolicy {
   // Metadata lives in output.options; legacy records kept it in trigger.options,
   // so merge both (output wins) to decode either shape.
   const meta = { ...(policy.trigger?.options ?? {}), ...output };
+  const editor = policy.editor;
   const str = (v: unknown, fallback = "") =>
     typeof v === "string" ? v : fallback;
   const num = (v: unknown, fallback: number) =>
@@ -316,8 +331,9 @@ export function fromBackendPolicy(policy: BackendPolicy): DecodedPolicy {
     reviewerEmail: str(meta.reviewerEmail),
     fieldValues:
       (meta.fieldValues as DecodedPolicy["fieldValues"] | undefined) ?? {},
+    runsOnEditor: editor?.allowed === true,
     folder: {
-      runOn: resolveRunOn(meta.runOn, categoryId),
+      runOn: resolveRunOn(editor?.runOn, categoryId),
       // Legacy/missing output.mode defaults to new_version, not new_file.
       outputMode: output.mode === "new_file" ? "new_file" : "new_version",
       outputName: str(output.name),

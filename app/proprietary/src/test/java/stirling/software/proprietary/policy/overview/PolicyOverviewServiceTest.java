@@ -15,6 +15,7 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
+import stirling.software.proprietary.policy.model.EditorConfig;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineInput;
 import stirling.software.proprietary.policy.model.PipelineStep;
@@ -221,6 +222,44 @@ class PolicyOverviewServiceTest {
                         List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
                         OutputSpec.inline(),
                         teamId));
+    }
+
+    @Test
+    void editorPolicyReportsItsRunMomentRatherThanReadingAsManual() {
+        policyStore.save(
+                new Policy(
+                        null,
+                        "Editor flatten",
+                        "owner",
+                        true,
+                        List.of(),
+                        List.of(new PipelineStep("/api/v1/misc/flatten", Map.of())),
+                        OutputSpec.inline(),
+                        List.of(),
+                        1L,
+                        EditorConfig.onUpload()));
+
+        PolicyView view = find(service.overview(), "Editor flatten");
+
+        assertEquals("editor-upload", view.trigger());
+    }
+
+    @Test
+    void sweptPolicyWithNoTriggeredInputIsStillManual() {
+        policyStore.save(
+                new Policy(
+                        null,
+                        "Swept compress",
+                        "owner",
+                        true,
+                        List.of(),
+                        List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
+                        OutputSpec.inline(),
+                        1L));
+
+        PolicyView view = find(service.overview(), "Swept compress");
+
+        assertEquals("manual", view.trigger());
     }
 
     private static PolicyView find(PoliciesOverviewResponse response, String name) {

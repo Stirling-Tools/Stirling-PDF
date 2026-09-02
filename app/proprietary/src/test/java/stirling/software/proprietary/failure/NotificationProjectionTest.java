@@ -2,6 +2,7 @@ package stirling.software.proprietary.failure;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.when;
 
 import java.util.List;
 
@@ -121,6 +122,32 @@ class NotificationProjectionTest {
         }
 
         @Test
+        void holdsBackAFailureNamingNoDocumentBecauseTheBellCouldOnlySaySo() {
+            // The only row the bell can offer nothing for. The review surface still lists it.
+            given(FailureKind.UNKNOWN, ACTOR, null);
+            given(FailureKind.INPUT_PASSWORD_PROTECTED, ACTOR, "f-1");
+
+            assertThat(controller.list(null).notifications())
+                    .singleElement()
+                    .satisfies(row -> assertThat(row.fileId()).isEqualTo("f-1"));
+        }
+
+        @Test
+        void keepsARunScopedFailureThatStillNamesADocument() {
+            // An editor-reported tool failure is RUN-scoped but names the file it ran on, so
+            // filtering on the kind's scope rather than the row would have dropped it.
+            given(FailureKind.UNKNOWN, ACTOR, "f-2");
+
+            assertThat(controller.list(null).notifications())
+                    .singleElement()
+                    .satisfies(
+                            row -> {
+                                assertThat(row.kindId()).isEqualTo("UNKNOWN");
+                                assertThat(row.fileId()).isEqualTo("f-2");
+                            });
+        }
+
+        @Test
         void namesTheSourceThatFedAnUnattendedRunSoItsFileIdIsNotMistakenForAClientsOwn() {
             // Without the source a client looks up a hash it can never resolve and calls it
             // missing.
@@ -162,7 +189,53 @@ class NotificationProjectionTest {
                                 assertThat(action.labelKey()).startsWith("portal.failures.action.");
                                 assertThat(action.defaultLabel()).isNotBlank();
                                 assertThat(action.execution()).isNotNull();
+                                assertThat(action.slot()).isNotNull();
                             });
+        }
+    }
+
+    @Nested
+    @DisplayName("the response says whether the caller reviews the team")
+    class ReviewerFlag {
+
+        @Test
+        void trueForAReviewerSoTheClientFiltersNothing() {
+            when(authority.canEditPolicies()).thenReturn(true);
+
+            assertThat(controller.list(null).viewerReviewsTeam()).isTrue();
+        }
+
+        @Test
+        void falseForAMemberSoTheClientHidesRowsForFilesItDoesNotHold() {
+            when(authority.canEditPolicies()).thenReturn(false);
+
+            assertThat(controller.list(null).viewerReviewsTeam()).isFalse();
+        }
+    }
+
+    @Nested
+    @DisplayName("the response names the viewer, opaquely, for a client to scope read state on")
+    class ViewerKey {
+
+        @Test
+        void steadyForOneViewerAcrossReads() {
+            assertThat(controller.list(null).viewerKey())
+                    .isEqualTo(controller.list(null).viewerKey())
+                    .isNotBlank();
+        }
+
+        @Test
+        void differentForAnotherViewerSoOneCannotInheritTheOthersMarker() {
+            String mine = controller.list(null).viewerKey();
+            when(userService.getCurrentUsername()).thenReturn("someone.else@example.com");
+
+            assertThat(controller.list(null).viewerKey()).isNotEqualTo(mine);
+        }
+
+        @Test
+        void neverTheUsernameItself() {
+            // It lands in that browser's storage, and a client only needs to tell viewers apart.
+            assertThat(controller.list(null).viewerKey()).doesNotContain(ACTOR);
         }
     }
 }

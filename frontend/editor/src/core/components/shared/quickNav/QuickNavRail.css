@@ -1,0 +1,173 @@
+/* ========== QUICK NAV RAIL ========== */
+
+.quick-nav-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+}
+
+.quick-nav-rail-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--quicknav-item-gap);
+  flex-shrink: 0;
+  width: 100%;
+}
+
+/* The glyph stays at the sidebar's scale; the button fills the rail for hit area. */
+.quick-nav-rail-item {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 2.25rem;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--c-text-subtle);
+  cursor: pointer;
+  transition:
+    background-color var(--motion-fast),
+    color var(--motion-fast);
+}
+
+.quick-nav-rail-item svg,
+.quick-nav-rail-item img {
+  width: 1.125rem;
+  height: 1.125rem;
+  color: inherit;
+  fill: currentColor;
+}
+
+/* Taller than wide (71x79), so height drives the width. */
+.quick-nav-rail-item .sui-brandmark {
+  width: auto;
+  height: 1.125rem;
+}
+
+.quick-nav-rail-item[aria-disabled="true"] .sui-brandmark,
+.quick-nav-rail-item[aria-disabled="true"] svg[viewBox="0 0 256 256"] {
+  filter: grayscale(1);
+}
+
+.quick-nav-rail-item:hover {
+  background: var(--c-hover);
+  color: var(--c-text);
+}
+
+/* Opacity rather than a colour: there is no disabled-text token. */
+.quick-nav-rail-item[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.quick-nav-rail-item[aria-disabled="true"]:hover {
+  background: transparent;
+  color: var(--c-primary);
+}
+
+.quick-nav-rail-item:focus-visible {
+  outline: 0.125rem solid var(--c-primary);
+  outline-offset: -0.125rem;
+}
+
+.quick-nav-rail-badge {
+  position: absolute;
+  top: 0.125rem;
+  inset-inline-end: 0.125rem;
+  min-width: 0.875rem;
+  height: 0.875rem;
+  padding: 0 0.1875rem;
+  border-radius: var(--radius-pill);
+  /* The solid step: 9px numerals need the darker end of the ramp. */
+  background: var(--c-danger-solid);
+  color: var(--c-text-on-primary);
+  font-size: 0.5625rem;
+  font-weight: var(--font-weight-semibold);
+  line-height: 0.875rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+.quick-nav-rail-badge[data-tone="warning"] {
+  background: var(--c-warning-solid);
+}
+
+/* Top margin only: the group below supplies the other half, centring the rule. */
+.quick-nav-rail-divider {
+  width: 100%;
+  height: 0;
+  margin: var(--quicknav-item-gap) 0 0;
+  border: 0;
+  border-top: 1px solid var(--c-border);
+}
+
+.quick-nav-rail-footer {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--quicknav-item-gap);
+  width: 100%;
+  flex-shrink: 0;
+}
+
+/* ---- Brand: one header row tall, so it lines up with the sidebar's wordmark ---- */
+.quick-nav-brand {
+  width: 100%;
+  height: var(--nav-header-h);
+  flex-shrink: 0;
+  /* The bar's inset supplies part of the gap; only the remainder is added here. */
+  margin-bottom: calc(var(--quicknav-item-gap) - var(--quicknav-surface-pad));
+}
+
+.quick-nav-brand-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+
+.quick-nav-brand-button:focus-visible {
+  outline: 0.125rem solid var(--c-primary);
+  outline-offset: -0.125rem;
+  border-radius: var(--radius-md);
+}
+
+/* The "on" state: a solid block with the glyph knocked out, hover owning the tints. */
+.quick-nav-rail-item[aria-current="true"],
+.quick-nav-rail-item[aria-current="true"]:hover,
+.quick-nav-rail-item[aria-pressed="true"],
+.quick-nav-rail-item[aria-pressed="true"]:hover {
+  background: var(--c-text);
+  color: var(--c-surface);
+}
+
+/* On a dark ground full ink is white, so mix the block back toward the surface. */
+[data-theme="dark"] .quick-nav-rail-item[aria-current="true"],
+[data-theme="dark"] .quick-nav-rail-item[aria-current="true"]:hover,
+[data-theme="dark"] .quick-nav-rail-item[aria-pressed="true"],
+[data-theme="dark"] .quick-nav-rail-item[aria-pressed="true"]:hover,
+html[data-app-theme="midnight"] .quick-nav-rail-item[aria-current="true"],
+html[data-app-theme="midnight"] .quick-nav-rail-item[aria-current="true"]:hover,
+html[data-app-theme="midnight"] .quick-nav-rail-item[aria-pressed="true"],
+html[data-app-theme="midnight"] .quick-nav-rail-item[aria-pressed="true"]:hover,
+[data-mantine-color-scheme="dark"] .quick-nav-rail-item[aria-current="true"],
+[data-mantine-color-scheme="dark"]
+  .quick-nav-rail-item[aria-current="true"]:hover,
+[data-mantine-color-scheme="dark"] .quick-nav-rail-item[aria-pressed="true"],
+[data-mantine-color-scheme="dark"]
+  .quick-nav-rail-item[aria-pressed="true"]:hover {
+  background: color-mix(in srgb, var(--c-text) 80%, var(--c-surface));
+  color: var(--c-surface);
+}

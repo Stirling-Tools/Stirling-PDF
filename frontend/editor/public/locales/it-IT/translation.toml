@@ -3526,7 +3526,6 @@ label = "Posizione Y"
 
 [crop.error]
 failed = "Impossibile ritagliare il PDF"
-invalidArea = "L’area di ritaglio supera i limiti del PDF"
 
 [crop.preview]
 title = "Selezione area di ritaglio"

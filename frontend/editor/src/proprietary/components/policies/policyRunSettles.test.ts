@@ -7,20 +7,19 @@ import type { PolicyRunRecord } from "@app/components/policies/policyRunStore";
  * effect used to skip those runs entirely, so `imported` never flipped and the
  * file's badge + blocking overlay spun forever - on every engine.
  */
-const run = (overrides: Partial<PolicyRunRecord> = {}): PolicyRunRecord =>
-  ({
-    runId: "r",
-    categoryId: "security",
-    fileId: "f",
-    fileName: "f.pdf",
-    fileSize: 1,
-    target: "saas",
-    status: "COMPLETED",
-    outputs: [],
-    error: null,
-    startedAt: 0,
-    ...overrides,
-  }) as PolicyRunRecord;
+const run = (overrides: Partial<PolicyRunRecord> = {}): PolicyRunRecord => ({
+  runId: "r",
+  categoryId: "security",
+  fileId: "f",
+  fileName: "f.pdf",
+  fileSize: 1,
+  target: "saas",
+  status: "COMPLETED",
+  outputs: [],
+  error: null,
+  startedAt: 0,
+  ...overrides,
+});
 
 describe("finishedWithNothingToDeliver", () => {
   it("settles a completed run that produced no output", () => {
