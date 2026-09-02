@@ -9,10 +9,7 @@
  */
 
 import type { ReactNode } from "react";
-import type {
-  AutomationConfig,
-  AutomationOperation,
-} from "@app/types/automation";
+import type { AutomationOperation } from "@app/types/automation";
 
 /** Lifecycle status of a policy category for the current user/org. */
 export type PolicyStatus = "default" | "active" | "paused";
@@ -152,53 +149,4 @@ export interface PolicyFolderSettings {
   outputNamePosition: "prefix" | "suffix" | "auto-number";
   maxRetries: number;
   retryDelayMinutes: number;
-}
-
-/** Everything the shared policy wizard collects, handed back on submit. */
-export interface PolicyWizardResult {
-  /** The saved workflow automation (created on setup, updated in place on edit). */
-  automation: AutomationConfig;
-  fieldValues: Record<string, boolean | string | string[]>;
-  sources: string[];
-  runsOnEditor: boolean;
-  scopeTypes: string[];
-  reviewerEmail: string;
-  /** Output + retry settings for the backing folder. */
-  folder: PolicyFolderSettings;
-  /**
-   * Backend pipeline steps (each `operation` is a tool ENDPOINT path), built
-   * from the workflow via the tool registry in the wizard's Workflow step — the
-   * hook persists these to the backend without needing the registry itself.
-   * Structurally matches policyPipeline's `BackendPipelineStep` (inlined here to
-   * avoid a types↔services import cycle).
-   */
-  pipelineSteps: {
-    operation: string;
-    parameters: Record<string, unknown>;
-    fileParameters?: Record<string, string>;
-  }[];
-  /** Operation ids whose endpoint couldn't be resolved (dropped from steps). */
-  unresolvedOps: string[];
-}
-
-/**
- * What the locked tool-config page hands back on save. Unlike the wizard's
- * result it carries the tool `operations` directly (the page owns a fixed,
- * configure-only chain — there's no separate saved automation), plus the
- * endpoint-mapped pipeline steps. Used for both first-time configure and edits
- * of a preset policy.
- */
-export interface PolicyConfigResult {
-  /** The enabled tools (in order) as automation operations. */
-  operations: AutomationOperation[];
-  /** Endpoint-mapped backend steps built from `operations` via the registry. */
-  pipelineSteps: PolicyWizardResult["pipelineSteps"];
-  /** Operation ids whose endpoint couldn't be resolved (dropped from steps). */
-  unresolvedOps: string[];
-  fieldValues: Record<string, boolean | string | string[]>;
-  sources: string[];
-  runsOnEditor: boolean;
-  scopeTypes: string[];
-  reviewerEmail: string;
-  folder: PolicyFolderSettings;
 }

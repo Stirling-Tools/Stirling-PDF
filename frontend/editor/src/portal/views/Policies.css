@@ -218,11 +218,6 @@
   white-space: nowrap;
 }
 
-.portal-policies__activity-retry {
-  flex-shrink: 0;
-  font-size: 0.75rem;
-}
-
 /* Error expand/collapse for long activity messages */
 .portal-policies__activity-error {
   display: block;

@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import {
   loadPolicies,
   updatePolicy,
-  resetPolicy,
   onPoliciesChange,
 } from "@app/services/policyStorage";
 
@@ -35,18 +34,6 @@ describe("policyStorage", () => {
     const p = loadPolicies();
     expect(p.security.fieldValues).toEqual({ detectPII: false });
     expect(p.security.reviewerEmail).toBe("x@y.com");
-  });
-
-  it("resetPolicy reverts a category to unconfigured default", () => {
-    updatePolicy("compliance", {
-      configured: true,
-      status: "active",
-      reviewerEmail: "a@b.com",
-    });
-    resetPolicy("compliance");
-    const p = loadPolicies();
-    expect(p.compliance.configured).toBe(false);
-    expect(p.compliance.status).toBe("default");
   });
 
   it("heals missing categories from corrupt/partial storage", () => {

@@ -2,7 +2,6 @@ import { describe, it, expect } from "vitest";
 import {
   isClassificationCategory,
   localVerdictNeedsEscalation,
-  orderRewritesFirst,
   orderedRewritingCategories,
   policyDeliversOutputFiles,
   policyRewritesDocument,
@@ -38,32 +37,6 @@ describe("policy capabilities", () => {
   it("expects output files from rewriting policies only", () => {
     expect(policyDeliversOutputFiles("security")).toBe(true);
     expect(policyDeliversOutputFiles("classification")).toBe(false);
-  });
-});
-
-describe("orderRewritesFirst", () => {
-  it("moves annotating policies to the end, preserving other order", () => {
-    expect(
-      orderRewritesFirst(["classification", "security", "compliance"]),
-    ).toEqual(["security", "compliance", "classification"]);
-  });
-
-  it("leaves an order without an annotating policy untouched", () => {
-    expect(orderRewritesFirst(["security", "compliance"])).toEqual([
-      "security",
-      "compliance",
-    ]);
-  });
-
-  it("is a no-op when the annotating policy is already last", () => {
-    expect(orderRewritesFirst(["security", "classification"])).toEqual([
-      "security",
-      "classification",
-    ]);
-  });
-
-  it("handles the annotating policy as the only one", () => {
-    expect(orderRewritesFirst(["classification"])).toEqual(["classification"]);
   });
 });
 
