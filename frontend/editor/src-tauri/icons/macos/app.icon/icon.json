@@ -1,0 +1,34 @@
+{
+  "fill": {
+    "solid": "srgb:0.55686,0.19216,0.19216,1.00000"
+  },
+  "groups": [
+    {
+      "name": "Mark",
+      "layers": [
+        {
+          "image-name": "mark-left.svg",
+          "name": "Mark Left",
+          "hidden": false,
+          "position": {
+            "scale": 1.0,
+            "translation-in-points": [0, 0]
+          }
+        },
+        {
+          "image-name": "mark-right.svg",
+          "name": "Mark Right",
+          "hidden": false,
+          "position": {
+            "scale": 1.0,
+            "translation-in-points": [0, 0]
+          },
+          "opacity": 0.6
+        }
+      ]
+    }
+  ],
+  "supported-platforms": {
+    "squares": "shared"
+  }
+}
