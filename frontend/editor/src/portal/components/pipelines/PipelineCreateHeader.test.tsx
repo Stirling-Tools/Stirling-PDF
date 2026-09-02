@@ -27,6 +27,10 @@ function renderHeader(overrides: Partial<PipelineCreateHeaderProps> = {}) {
   render(
     <PipelineCreateHeader
       name="Claims redaction"
+      icon=""
+      onIconChange={vi.fn()}
+      required={false}
+      onRequiredChange={vi.fn()}
       canSave
       blockers={[]}
       saving={false}

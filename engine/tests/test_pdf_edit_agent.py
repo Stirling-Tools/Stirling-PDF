@@ -144,7 +144,7 @@ def test_selection_prompt_says_nothing_about_output_formats(runtime: AppRuntime)
     # Compatibility is only raised once a plan has actually failed, so the operation list stays
     # about what each tool does. Leaking format hints here re-inflates an already large prompt.
     agent = StubPdfEditAgent(runtime, _ANY_SELECTION)
-    prompt = agent._build_selection_prompt(PdfEditRequest(user_message="anything", files=[]), list(OPERATIONS), [])
+    prompt = agent._build_selection_prompt(PdfEditRequest(user_message="anything", files=[]), list(OPERATIONS))
     assert "outputs:" not in prompt
     assert "IMAGE (several files)" not in prompt
 

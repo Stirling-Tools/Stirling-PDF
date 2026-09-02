@@ -26,16 +26,25 @@ import React, {
 } from "react";
 
 import { folderStorage } from "@app/services/folderStorage";
+import { virtualFolderStorage } from "@app/services/virtualFolderStorage";
+import { localFolderStorage } from "@app/services/localFolderStorage";
 import { folderSyncService } from "@app/services/folderSyncService";
 import {
   FolderBreadcrumbEntry,
   FolderId,
+  FolderKind,
   FolderRecord,
   FolderTreeNode,
   ROOT_FOLDER_ID,
   createFolderId,
+  diskFolderId,
+  diskFolderPath,
+  folderKind,
+  isDiskFolderId,
   pickFolderColor,
 } from "@app/types/folder";
+import { directoryKey } from "@app/services/localFolderStorage";
+import { makeDiskDirectory } from "@app/services/localFolderContents";
 import { useIndexedDB } from "@app/contexts/IndexedDBContext";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useAuth } from "@app/auth/UseSession";
@@ -88,9 +97,11 @@ interface FolderContextValue {
     ok: boolean;
     reason?: "endpoint-missing" | "network" | "server" | "client";
   }>;
+  /** Create a folder. A child takes its parent's kind; only a root create chooses. */
   createFolder: (
     name: string,
     parentFolderId?: FolderId | null,
+    kind?: FolderKind,
   ) => Promise<FolderRecord>;
   renameFolder: (id: FolderId, name: string) => Promise<FolderRecord | null>;
   moveFolder: (
@@ -102,6 +113,14 @@ interface FolderContextValue {
     appearance: { color?: string; icon?: string | null },
   ) => Promise<FolderRecord | null>;
   deleteFolder: (id: FolderId) => Promise<FolderId[]>;
+  /** Idempotent per directory: mounting one already mounted returns its record. */
+  mountLocalFolder: (directory: string, name: string) => Promise<FolderRecord>;
+  registerDiskSubfolders: (parentId: FolderId, records: FolderRecord[]) => void;
+  /**
+   * Rebuild the records behind a disk-subfolder id, for a link arriving before any
+   * listing ran. True when it sits under a known mount and is now registered.
+   */
+  resolveDiskFolder: (id: FolderId) => boolean;
 
   getChildFolderIds: (parentId: FolderId | null) => FolderId[];
   isDescendant: (candidateId: FolderId, ancestorId: FolderId | null) => boolean;
@@ -144,6 +163,25 @@ function buildTree(folders: FolderRecord[]): FolderTreeNode[] {
     }));
   };
   return build(ROOT_FOLDER_ID, 0);
+}
+
+/** The record a subdirectory of a mount presents as: kind local, path as id. */
+function diskSubfolderRecord(
+  path: string,
+  name: string,
+  parentFolderId: FolderId,
+): FolderRecord {
+  const now = Date.now();
+  return {
+    id: diskFolderId(path),
+    kind: "local",
+    name,
+    parentFolderId,
+    directory: path,
+    color: pickFolderColor(name),
+    createdAt: now,
+    updatedAt: now,
+  };
 }
 
 /** Convert a server-side error to a banner-ready user message. */
@@ -241,7 +279,26 @@ function shouldStrandedReset(
 }
 
 export function FolderProvider({ children }: FolderProviderProps) {
-  const [folders, setFolders] = useState<FolderRecord[]>([]);
+  const [storedFolders, setFolders] = useState<FolderRecord[]>([]);
+  // Never persisted: a directory is its own record, so a listing rebuilds these.
+  const [diskSubfolders, setDiskSubfolders] = useState<
+    Map<FolderId, FolderRecord[]>
+  >(() => new Map());
+  const folders = useMemo(() => {
+    const known = new Set(storedFolders.map((f) => f.id));
+    const synthesized: FolderRecord[] = [];
+    for (const records of diskSubfolders.values()) {
+      for (const record of records) {
+        if (!known.has(record.id)) {
+          known.add(record.id);
+          synthesized.push(record);
+        }
+      }
+    }
+    return synthesized.length
+      ? [...storedFolders, ...synthesized]
+      : storedFolders;
+  }, [storedFolders, diskSubfolders]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   // Start `false` so folder-mutation buttons are disabled until the first
@@ -269,9 +326,14 @@ export function FolderProvider({ children }: FolderProviderProps) {
   const refresh = useCallback(async () => {
     setLoading(true);
     try {
-      const all = await folderStorage.getAllFolders();
+      // Three systems of record behind one list; kind says which rules a row follows.
+      const [server, virtual, local] = await Promise.all([
+        folderStorage.getAllFolders(),
+        virtualFolderStorage.getAllFolders(),
+        localFolderStorage.getAllFolders(),
+      ]);
       if (!mountedRef.current) return;
-      setFolders(all);
+      setFolders([...server, ...virtual, ...local]);
     } catch (err) {
       console.error("[FolderContext] cache read failed", err);
       if (mountedRef.current) {
@@ -342,7 +404,11 @@ export function FolderProvider({ children }: FolderProviderProps) {
         console.warn("[FolderContext] cache replace failed", cacheErr);
       }
       if (mountedRef.current) {
-        setFolders(remote);
+        // Server-wins is for server rows: the other kinds have no server copy.
+        setFolders((prev) => [
+          ...remote,
+          ...prev.filter((f) => folderKind(f) !== "server"),
+        ]);
         setServerReachable(true);
         setError(null);
       }
@@ -519,11 +585,65 @@ export function FolderProvider({ children }: FolderProviderProps) {
     [bumpFolderRevision, folders, handleStaleFolder],
   );
 
+  /** The kind of an existing folder, or throw — mutations must never guess. */
+  const requireKind = useCallback(
+    (id: FolderId): FolderKind => {
+      const folder = foldersById.get(id);
+      if (!folder) throw new Error(`Unknown folder: ${id}`);
+      return folderKind(folder);
+    },
+    [foldersById],
+  );
+
   const createFolder = useCallback(
     async (
       name: string,
       parentFolderId: FolderId | null = currentFolderId,
+      kind?: FolderKind,
     ): Promise<FolderRecord> => {
+      // A child's kind is its parent's: one subtree, one system of record.
+      const effectiveKind: FolderKind =
+        parentFolderId !== null
+          ? requireKind(parentFolderId)
+          : (kind ?? "server");
+      if (effectiveKind === "local") {
+        // A mount's subfolder is a directory: make it on disk, present it as a
+        // listing would. Mount roots come from the picker, never here.
+        const parent = parentFolderId ? foldersById.get(parentFolderId) : null;
+        if (!parent?.directory) {
+          throw new Error("Cannot create a folder outside a mounted directory");
+        }
+        const path = await makeDiskDirectory(parent.directory, name);
+        if (path === null) {
+          throw new Error("This build cannot create folders on disk");
+        }
+        const record = diskSubfolderRecord(path, name, parent.id);
+        if (mountedRef.current) {
+          setDiskSubfolders((prev) => {
+            const next = new Map(prev);
+            const siblings = (next.get(parent.id) ?? []).filter(
+              (f) => f.id !== record.id,
+            );
+            next.set(parent.id, [...siblings, record]);
+            return next;
+          });
+          setError(null);
+        }
+        bumpFolderRevision();
+        return record;
+      }
+      if (effectiveKind === "virtual") {
+        const record = await virtualFolderStorage.createFolder(
+          name,
+          parentFolderId,
+        );
+        if (mountedRef.current) {
+          setFolders((prev) => [...prev, record]);
+          setError(null);
+        }
+        bumpFolderRevision();
+        return record;
+      }
       const color = pickFolderColor(name);
       // Client-side id makes server idempotency check safe on retry.
       const id = createFolderId();
@@ -549,11 +669,41 @@ export function FolderProvider({ children }: FolderProviderProps) {
       }
       return result;
     },
-    [currentFolderId, runFolderMutation],
+    [
+      currentFolderId,
+      requireKind,
+      storageBackedByServer,
+      bumpFolderRevision,
+      runFolderMutation,
+    ],
+  );
+
+  /** Apply a mutated non-server record to state; the store already has it. */
+  const applyOwnedRecord = useCallback(
+    (record: FolderRecord | null): FolderRecord | null => {
+      if (record !== null && mountedRef.current) {
+        setFolders((prev) =>
+          prev.map((f) => (f.id === record.id ? record : f)),
+        );
+        setError(null);
+      }
+      bumpFolderRevision();
+      return record;
+    },
+    [bumpFolderRevision],
   );
 
   const renameFolder = useCallback(
     async (id: FolderId, name: string) => {
+      const kind = requireKind(id);
+      if (kind === "local") {
+        throw new Error("A local folder takes its name from its directory");
+      }
+      if (kind === "virtual") {
+        return applyOwnedRecord(
+          await virtualFolderStorage.updateFolder(id, { name }),
+        );
+      }
       return runFolderMutation(
         () => folderSyncService.update(id, { name }),
         async (record) => {
@@ -565,11 +715,23 @@ export function FolderProvider({ children }: FolderProviderProps) {
         id,
       );
     },
-    [runFolderMutation],
+    [applyOwnedRecord, requireKind, runFolderMutation],
   );
 
   const moveFolder = useCallback(
     async (id: FolderId, newParentId: FolderId | null) => {
+      const kind = requireKind(id);
+      if (newParentId !== null && requireKind(newParentId) !== kind) {
+        throw new Error("Folders can only move within their own kind");
+      }
+      if (kind === "local") {
+        throw new Error("A local folder sits where its directory sits");
+      }
+      if (kind === "virtual") {
+        return applyOwnedRecord(
+          await virtualFolderStorage.moveFolder(id, newParentId),
+        );
+      }
       return runFolderMutation(
         () =>
           folderSyncService.update(id, {
@@ -585,7 +747,7 @@ export function FolderProvider({ children }: FolderProviderProps) {
         id,
       );
     },
-    [runFolderMutation],
+    [applyOwnedRecord, requireKind, runFolderMutation],
   );
 
   const updateFolderAppearance = useCallback(
@@ -593,6 +755,23 @@ export function FolderProvider({ children }: FolderProviderProps) {
       id: FolderId,
       appearance: { color?: string; icon?: string | null },
     ) => {
+      const kind = requireKind(id);
+      if (kind === "local") {
+        throw new Error("Local folders cannot be recoloured yet");
+      }
+      if (kind === "virtual") {
+        // Only the fields the picker sent: it sends one key per interaction, and the
+        // store's spread persists an explicit undefined, so passing both would erase
+        // the one the user did not touch. icon: null clears the icon, deliberately.
+        const updates: { color?: string; icon?: string } = {};
+        if (appearance.color !== undefined) updates.color = appearance.color;
+        if (appearance.icon !== undefined) {
+          updates.icon = appearance.icon ?? undefined;
+        }
+        return applyOwnedRecord(
+          await virtualFolderStorage.updateFolder(id, updates),
+        );
+      }
       return runFolderMutation(
         () =>
           folderSyncService.update(id, {
@@ -608,11 +787,50 @@ export function FolderProvider({ children }: FolderProviderProps) {
         id,
       );
     },
-    [runFolderMutation],
+    [applyOwnedRecord, requireKind, runFolderMutation],
   );
 
   const deleteFolder = useCallback(
     async (id: FolderId): Promise<FolderId[]> => {
+      const kind = requireKind(id);
+      if (kind === "local") {
+        if (isDiskFolderId(id)) {
+          throw new Error(
+            "Subfolders of a mounted directory are removed on disk",
+          );
+        }
+        // Removes the record and nothing else; the directory is the user's.
+        await localFolderStorage.removeFolder(id);
+        if (mountedRef.current) {
+          setError(null);
+          setFolders((prev) => prev.filter((f) => f.id !== id));
+          if (currentFolderId === id) {
+            setCurrentFolderId(ROOT_FOLDER_ID);
+          }
+        }
+        bumpFolderRevision();
+        return [id];
+      }
+      if (kind === "virtual") {
+        // Same shape as the server path: subtree delete, strand-reset, detach files.
+        const removed = await virtualFolderStorage.deleteFolder(id);
+        const removedSet = new Set(removed);
+        if (mountedRef.current) {
+          setError(null);
+          setFolders((prev) => prev.filter((f) => !removedSet.has(f.id)));
+          if (
+            currentFolderId &&
+            shouldStrandedReset(currentFolderId, removedSet, folders)
+          ) {
+            setCurrentFolderId(ROOT_FOLDER_ID);
+          }
+        }
+        bumpFolderRevision();
+        await clearFolderForFiles(removed).catch((e) =>
+          console.warn("[FolderContext] virtual folder file cleanup", e),
+        );
+        return removed;
+      }
       // Custom path (not runFolderMutation) because we have two best-effort
       // cleanups to coordinate, and need to reset currentFolderId BEFORE the
       // cleanups so the user isn't stranded inside a tombstone if the cache
@@ -680,7 +898,92 @@ export function FolderProvider({ children }: FolderProviderProps) {
       currentFolderId,
       folders,
       handleStaleFolder,
+      requireKind,
     ],
+  );
+
+  const mountLocalFolder = useCallback(
+    async (directory: string, name: string): Promise<FolderRecord> => {
+      const record = await localFolderStorage.mountDirectory(directory, name);
+      if (mountedRef.current) {
+        setError(null);
+        // Idempotent mount can hand back a record that's already listed.
+        setFolders((prev) =>
+          prev.some((f) => f.id === record.id) ? prev : [...prev, record],
+        );
+      }
+      bumpFolderRevision();
+      return record;
+    },
+    [bumpFolderRevision],
+  );
+
+  const registerDiskSubfolders = useCallback(
+    (parentId: FolderId, records: FolderRecord[]) => {
+      setDiskSubfolders((prev) => {
+        const before = prev.get(parentId) ?? [];
+        const same =
+          before.length === records.length &&
+          before.every(
+            (f, i) => f.id === records[i]?.id && f.name === records[i]?.name,
+          );
+        if (same) return prev;
+        const next = new Map(prev);
+        next.set(parentId, records);
+        return next;
+      });
+    },
+    [],
+  );
+
+  const resolveDiskFolder = useCallback(
+    (id: FolderId): boolean => {
+      const path = diskFolderPath(id);
+      if (path === null) return false;
+      const pathKey = directoryKey(path);
+      // The deepest mount containing the path: nested mounts give a shorter chain.
+      let mount: FolderRecord | null = null;
+      let mountKeyLength = -1;
+      for (const folder of storedFolders) {
+        if (folderKind(folder) !== "local" || !folder.directory) continue;
+        const key = directoryKey(folder.directory);
+        const prefix = key.endsWith("/") ? key : `${key}/`;
+        if (pathKey.startsWith(prefix) && key.length > mountKeyLength) {
+          mount = folder;
+          mountKeyLength = key.length;
+        }
+      }
+      if (!mount?.directory) return false;
+      // Rebuild every level between the mount and the path, each as a child
+      // of the one above, so breadcrumbs and the tree have the whole chain.
+      const sep = path.includes("\\") ? "\\" : "/";
+      const mountDir = mount.directory.replace(/[\\/]+$/, "");
+      const rest = path
+        .slice(mountDir.length)
+        .split(/[\\/]+/)
+        .filter(Boolean);
+      const additions: Array<[FolderId, FolderRecord]> = [];
+      let parentId: FolderId = mount.id;
+      let current = mountDir;
+      for (const segment of rest) {
+        current = `${current}${sep}${segment}`;
+        const record = diskSubfolderRecord(current, segment, parentId);
+        additions.push([parentId, record]);
+        parentId = record.id;
+      }
+      setDiskSubfolders((prev) => {
+        const next = new Map(prev);
+        for (const [parent, record] of additions) {
+          const siblings = next.get(parent) ?? [];
+          if (!siblings.some((f) => f.id === record.id)) {
+            next.set(parent, [...siblings, record]);
+          }
+        }
+        return next;
+      });
+      return true;
+    },
+    [storedFolders],
   );
 
   const value = useMemo<FolderContextValue>(
@@ -698,6 +1001,9 @@ export function FolderProvider({ children }: FolderProviderProps) {
       refresh,
       pullFromServer,
       createFolder,
+      mountLocalFolder,
+      registerDiskSubfolders,
+      resolveDiskFolder,
       renameFolder,
       moveFolder,
       updateFolderAppearance,
@@ -717,6 +1023,9 @@ export function FolderProvider({ children }: FolderProviderProps) {
       refresh,
       pullFromServer,
       createFolder,
+      mountLocalFolder,
+      registerDiskSubfolders,
+      resolveDiskFolder,
       renameFolder,
       moveFolder,
       updateFolderAppearance,

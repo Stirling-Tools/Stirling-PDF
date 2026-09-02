@@ -27,7 +27,7 @@ from stirling.contracts import (
 )
 from stirling.logging import Pretty
 from stirling.models import OPERATIONS, ApiModel, ParamToolModel, ToolEndpoint
-from stirling.services import AppRuntime, ToolChainStep, blocking, validate_tool_chain
+from stirling.services import AppRuntime, ToolChainStep, blocking, language_directive, validate_tool_chain
 
 logger = logging.getLogger(__name__)
 
@@ -282,9 +282,7 @@ class PdfEditAgent:
             unavailable_operations,
             allow_need_content=can_request_content,
         )
-        return await agent.select(
-            self._build_selection_prompt(request, supported_operations, repair_note)
-        )
+        return await agent.select(self._build_selection_prompt(request, supported_operations, repair_note))
 
     def _build_selection_agent(
         self,
@@ -348,6 +346,7 @@ class PdfEditAgent:
             f"Conversation history:\n{format_conversation_history(request.conversation_history)}\n"
             f"Files: {format_file_names(request.files)}\n"
             f"Extracted page text:\n{format_page_text(request.page_text)}\n"
+            f"{language_directive()}\n"
             f"User request: {request.user_message}"
         )
 
