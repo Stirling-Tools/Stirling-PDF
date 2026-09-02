@@ -13,14 +13,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import lombok.Getter;
 import lombok.Setter;
 
-/**
- * Self-hosted side of combined-billing "Mode A" (connected self-hosted).
- *
- * <p>Binds the {@code stirling.billing.account-link.*} keys. {@link #enabled} mirrors the same flag
- * the gated beans test with {@code @ConditionalOnProperty}; it is kept here only so non-conditional
- * code (e.g. the gate's flag-off short-circuit, exposed status) can read it. The whole feature is
- * <b>off by default</b> and <b>dark</b> — when off nothing gates and the link endpoints 404.
- */
+/** Self-hosted side of combined billing: this instance bills through a linked SaaS team. */
 @Getter
 @Setter
 @ApplicationScoped
@@ -31,12 +24,7 @@ public class AccountLinkProperties {
     /** Master switch. When {@code false} (default) the feature is fully inert. */
     private boolean enabled = false;
 
-    /**
-     * Base URL of the SaaS backend this instance links to (register + entitlement live there).
-     *
-     * <p>STUB: defaults to the public cloud host; an operator overrides it for staging. There is no
-     * existing SaaS-base-url property in the self-hosted profile, so this is introduced here.
-     */
+    /** Base URL of the SaaS backend this instance links to (register + entitlement live there). */
     private String saasBaseUrl = "https://stirling.com/app";
 
     /** Cached entitlement is reused for this long before a refresh is attempted. */
@@ -45,7 +33,7 @@ public class AccountLinkProperties {
     /** Connect/read timeout for the outbound SaaS calls. */
     private int requestTimeoutSeconds = 10;
 
-    /** Phase 2 usage metering + daily sync. Keyed under {@code …account-link.metering.*}. */
+    /** Phase 2 usage metering + daily sync. */
     private final Metering metering = new Metering();
 
     /**
@@ -89,7 +77,7 @@ public class AccountLinkProperties {
     @Setter
     public static class Metering {
 
-        /** Turns on usage metering, the daily sync, and cap enforcement. Default off. */
+        /** Turns on usage metering, the daily sync, and cap enforcement. */
         private boolean enabled = false;
 
         /**
@@ -102,12 +90,7 @@ public class AccountLinkProperties {
          */
         private int graceDays = 3;
 
-        /**
-         * Dedup window for identical input sets. A re-run of the same inputs within this window is
-         * treated as workflow chaining and not re-charged; the same inputs run again after it are
-         * billed afresh. Mirrors the cloud's {@code payg.lineage.workflow-window} so the same op
-         * costs the same on the instance and in the cloud.
-         */
+        /** Dedup window for identical input sets. */
         private Duration workflowWindow = Duration.ofMinutes(5);
     }
 }

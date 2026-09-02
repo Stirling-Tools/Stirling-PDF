@@ -708,7 +708,7 @@ public class ProcurementService {
     private String writeLineItems(QuoteBreakdown breakdown) {
         try {
             return OBJECT_MAPPER.writeValueAsString(breakdown.lineItems());
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             log.warn("[procurement] failed to serialise line items", e);
             return "[]";
         }

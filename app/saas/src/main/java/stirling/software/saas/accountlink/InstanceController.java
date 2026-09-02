@@ -33,9 +33,9 @@ import stirling.software.saas.payg.policy.PricingPolicy;
 import stirling.software.saas.payg.policy.PricingPolicyService;
 
 /**
- * Instance-facing surface (combined-billing "Mode A"), authenticated by the <b>device
- * credential</b> — not a user JWT. Separate path prefix ({@code /api/v1/instance/**}) so the device
- * credential is scoped here and nowhere else.
+ * Instance-facing surface (combined billing), authenticated by the <b>device credential</b> — not a
+ * user JWT. Separate path prefix ({@code /api/v1/instance/**}) so the device credential is scoped
+ * here and nowhere else.
  *
  * <p>{@code GET /whoami} is the MVP round-trip proof: a registered instance presenting a valid
  * device credential gets back its resolved {@code instanceId} + {@code teamId}. {@code GET

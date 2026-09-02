@@ -112,7 +112,9 @@ class InMemoryFileRunEventRepository extends FileRunEventRepository {
     @Override
     public int reopenIfResolved(String id) {
         FileRunEventEntity entity = rows.get(id);
-        if (entity == null || entity.getStatus() != FileRunEventStatus.RESOLVED) {
+        if (entity == null
+                || (entity.getStatus() != FileRunEventStatus.RESOLVED
+                        && entity.getStatus() != FileRunEventStatus.FILE_REMOVED)) {
             return 0;
         }
         entity.setStatus(FileRunEventStatus.NEW);

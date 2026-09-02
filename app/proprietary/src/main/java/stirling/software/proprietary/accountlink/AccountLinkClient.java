@@ -24,22 +24,6 @@ import tools.jackson.databind.node.ObjectNode;
 /**
  * Outbound calls from a self-hosted instance to its linked SaaS backend (combined-billing "Mode
  * A").
- *
- * <p>Calls:
- *
- * <ul>
- *   <li>{@link #register} — relays the admin's short-lived Supabase JWT to {@code POST
- *       /api/v1/account-link/register}; the SaaS side mints + returns a device credential.
- *   <li>{@link #fetchEntitlement} — authenticates with the stored device credential against {@code
- *       GET /api/v1/instance/entitlement}; what the local gate consults.
- *   <li>{@link #reportUsage} — daily usage sync ({@code POST /api/v1/instance/sync}); reports
- *       cumulative units and returns the refreshed entitlement.
- *   <li>{@link #revokeSelf} — self-revokes the credential on local unlink ({@code POST
- *       /api/v1/instance/revoke-self}).
- * </ul>
- *
- * <p>Uses {@code java.net.http.HttpClient} (the established self-hosted outbound pattern; see
- * {@code AiEngineClient}); base URL + client are injectable so tests can stub SaaS.
  */
 // Arc cannot gate a bean on a runtime property, so the account-link flag no longer removes this
 // bean; it holds no state and only its flag-gated callers ever issue a call.
@@ -73,13 +57,7 @@ public class AccountLinkClient {
         this.httpClient = httpClient;
     }
 
-    /** The device credential a successful {@link #register} returns. */
-    public record RegisterResult(String deviceId, String deviceSecret, Long teamId) {}
-
-    /**
-     * A non-2xx reply from the SaaS account-link API. Carries the upstream status so the caller can
-     * map auth failures (401/403) through rather than masking everything as a 502.
-     */
+    /** A non-2xx reply from the SaaS account-link API. */
     public static class UpstreamException extends IOException {
         private final int status;
 
@@ -93,11 +71,7 @@ public class AccountLinkClient {
         }
     }
 
-    /**
-     * Authoritative deny (401/403) — the device credential is revoked or invalid. Unlike a
-     * transport/server failure (which returns {@code null} and fails open), the cache must BLOCK on
-     * this. Unchecked so it propagates through {@link #fetchEntitlement}'s transport try/catch.
-     */
+    /** Authoritative deny (401/403) — the device credential is revoked or invalid. */
     public static final class RevokedException extends RuntimeException {
         private final int status;
 
@@ -111,46 +85,142 @@ public class AccountLinkClient {
         }
     }
 
+    /** What the SaaS side hands back when it records a connect handshake. */
+    public record ConnectRequestResult(
+            String requestId, int expiresInSeconds, String authorizeUrl) {}
+
+    public enum ConnectClaimOutcome {
+        /** Approved and collected; the credential fields are populated. */
+        GRANTED,
+        /** A re-authentication was approved. */
+        CONFIRMED,
+        /** No human decision yet. */
+        PENDING,
+        /** Declined, expired or already used. */
+        REJECTED,
+        /** SaaS unreachable or erroring. */
+        UNAVAILABLE
+    }
+
+    public record ConnectClaimResult(
+            ConnectClaimOutcome outcome, String deviceId, String deviceSecret, Long teamId) {
+        static ConnectClaimResult of(ConnectClaimOutcome outcome) {
+            return new ConnectClaimResult(outcome, null, null, null);
+        }
+    }
+
+    /** Opens a connect handshake. */
+    public ConnectRequestResult connectRequest(
+            String name, String callbackUrl, String nonce, String claimSecret) throws IOException {
+        return connectRequest(name, callbackUrl, nonce, claimSecret, null);
+    }
+
     /**
-     * Relays the admin Supabase JWT to the SaaS register endpoint and returns the minted
-     * credential.
-     *
-     * @throws IOException on transport failure or a non-2xx response (caller surfaces to the
-     *     admin).
+     * As {@link #connectRequest}, but presenting an existing device credential so the SaaS side
+     * treats this as a re-authentication and pins the handshake to the team we already belong to.
      */
-    public RegisterResult register(String supabaseJwt, String instanceName) throws IOException {
-        String body =
-                instanceName == null || instanceName.isBlank()
-                        ? "{}"
-                        : "{\"name\":" + mapper.writeValueAsString(instanceName) + "}";
-        HttpRequest request =
+    public ConnectRequestResult connectRequest(
+            String name,
+            String callbackUrl,
+            String nonce,
+            String claimSecret,
+            DeviceCredential credential)
+            throws IOException {
+        ObjectNode root = mapper.createObjectNode();
+        if (name != null && !name.isBlank()) {
+            root.put("name", name);
+        }
+        root.put("callbackUrl", callbackUrl);
+        root.put("nonce", nonce);
+        root.put("claimSecret", claimSecret);
+
+        HttpRequest.Builder builder =
                 HttpRequest.newBuilder()
-                        .uri(uri("/api/v1/account-link/register"))
-                        .header("Authorization", "Bearer " + supabaseJwt)
+                        .uri(uri("/api/v1/account-link/connect/request"))
                         .header("Content-Type", "application/json")
                         .header("Accept", "application/json")
                         .timeout(timeout())
-                        .POST(HttpRequest.BodyPublishers.ofString(body))
-                        .build();
+                        .POST(HttpRequest.BodyPublishers.ofString(mapper.writeValueAsString(root)));
+        if (credential != null) {
+            builder.header(HEADER_DEVICE_ID, credential.getDeviceId())
+                    .header(HEADER_DEVICE_SECRET, credential.getDeviceSecret());
+        }
 
-        HttpResponse<String> response = send(request);
+        HttpResponse<String> response = send(builder.build());
         if (response.statusCode() / 100 != 2) {
             throw new UpstreamException(response.statusCode(), response.body());
         }
-        JsonNode root = mapper.readTree(response.body());
-        String deviceId = text(root, "deviceId");
-        String deviceSecret = text(root, "deviceSecret");
-        if (deviceId == null || deviceSecret == null) {
-            throw new IOException("SaaS register response missing deviceId/deviceSecret");
+        JsonNode body = mapper.readTree(response.body());
+        String requestId = text(body, "requestId");
+        if (requestId == null) {
+            throw new IOException("SaaS connect response missing requestId");
         }
-        Long teamId = root.hasNonNull("teamId") ? root.get("teamId").asLong() : null;
-        return new RegisterResult(deviceId, deviceSecret, teamId);
+        String authorizeUrl = text(body, "authorizeUrl");
+        if (authorizeUrl == null || !isAbsoluteHttpUrl(authorizeUrl)) {
+            throw new IOException("SaaS connect response carried no usable authorizeUrl");
+        }
+        return new ConnectRequestResult(requestId, body.path("expiresIn").asInt(0), authorizeUrl);
+    }
+
+    /**
+     * Collects the device credential for an approved handshake, proving possession of the claim
+     * secret.
+     */
+    public ConnectClaimResult connectClaim(String requestId, String claimSecret) {
+        HttpResponse<String> response;
+        try {
+            ObjectNode root = mapper.createObjectNode();
+            root.put("requestId", requestId);
+            root.put("claimSecret", claimSecret);
+            HttpRequest request =
+                    HttpRequest.newBuilder()
+                            .uri(uri("/api/v1/account-link/connect/claim"))
+                            .header("Content-Type", "application/json")
+                            .header("Accept", "application/json")
+                            .timeout(timeout())
+                            .POST(
+                                    HttpRequest.BodyPublishers.ofString(
+                                            mapper.writeValueAsString(root)))
+                            .build();
+            response = send(request);
+        } catch (Exception e) {
+            log.debug("Connect claim failed (transport): {}", e.getMessage());
+            return ConnectClaimResult.of(ConnectClaimOutcome.UNAVAILABLE);
+        }
+        int status = response.statusCode();
+        if (status == 202) {
+            return ConnectClaimResult.of(ConnectClaimOutcome.PENDING);
+        }
+        if (status >= 500 && status <= 599) {
+            return ConnectClaimResult.of(ConnectClaimOutcome.UNAVAILABLE);
+        }
+        if (status < 200 || status > 299) {
+            return ConnectClaimResult.of(ConnectClaimOutcome.REJECTED);
+        }
+        try {
+            JsonNode body = mapper.readTree(response.body());
+            Long teamId = body.hasNonNull("teamId") ? body.get("teamId").asLong() : null;
+            // A re-authentication says so explicitly and carries no credential, so an absent
+            // credential is only an error when we were expecting one.
+            if ("confirmed".equals(text(body, "status"))) {
+                return new ConnectClaimResult(ConnectClaimOutcome.CONFIRMED, null, null, teamId);
+            }
+            String deviceId = text(body, "deviceId");
+            String deviceSecret = text(body, "deviceSecret");
+            if (deviceId == null || deviceSecret == null) {
+                log.warn("Connect claim succeeded but the reply carried no credential");
+                return ConnectClaimResult.of(ConnectClaimOutcome.REJECTED);
+            }
+            return new ConnectClaimResult(
+                    ConnectClaimOutcome.GRANTED, deviceId, deviceSecret, teamId);
+        } catch (RuntimeException e) {
+            log.debug("Connect claim parse failed: {}", e.getMessage());
+            return ConnectClaimResult.of(ConnectClaimOutcome.REJECTED);
+        }
     }
 
     /**
      * Revokes this instance's own credential on the SaaS side, authenticated by that credential.
-     * Best-effort: returns {@code false} if SaaS is unreachable or rejects, so the caller (local
-     * unlink) can still clear locally and log the orphan for follow-up. Idempotent on SaaS.
      */
     public boolean revokeSelf(String deviceId, String deviceSecret) {
         try {
@@ -175,17 +245,7 @@ public class AccountLinkClient {
         }
     }
 
-    /**
-     * Fetches the current entitlement using the stored device credential. Three outcomes:
-     *
-     * <ul>
-     *   <li>2xx → the parsed snapshot.
-     *   <li>401/403 → {@link RevokedException} (authoritative deny — revoked/invalid credential);
-     *       the caller must BLOCK, not fail open.
-     *   <li>transport failure, other non-2xx (e.g. 5xx), or a malformed body → {@code null}
-     *       ("unknown" — the caller fails open).
-     * </ul>
-     */
+    /** Fetches the current entitlement using the stored device credential. */
     public InstanceEntitlement fetchEntitlement(String deviceId, String deviceSecret) {
         HttpResponse<String> response;
         try {
@@ -225,9 +285,6 @@ public class AccountLinkClient {
     /**
      * Reports the period's cumulative per-category units to {@code POST /api/v1/instance/sync} and
      * returns the fresh entitlement in the same reply — one round-trip both reports and refreshes.
-     * SaaS bills the delta against its last-seen cumulative, so resending the same totals is
-     * idempotent. Same three outcomes as {@link #fetchEntitlement}; on {@code null} the caller must
-     * not advance its last-synced markers so the usage retries next sync.
      */
     public InstanceEntitlement reportUsage(
             String deviceId,
@@ -360,5 +417,20 @@ public class AccountLinkClient {
 
     private static String text(JsonNode node, String field) {
         return node.hasNonNull(field) ? node.get(field).asText() : null;
+    }
+
+    /** Absolute http(s) with a host. */
+    static boolean isAbsoluteHttpUrl(String candidate) {
+        try {
+            URI uri = URI.create(candidate.strip());
+            String scheme = uri.getScheme();
+            return uri.isAbsolute()
+                    && scheme != null
+                    && ("http".equalsIgnoreCase(scheme) || "https".equalsIgnoreCase(scheme))
+                    && uri.getHost() != null
+                    && !uri.getHost().isBlank();
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
     }
 }

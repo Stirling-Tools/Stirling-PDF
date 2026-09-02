@@ -31,6 +31,10 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.cluster.JobStore;
 import stirling.software.common.cluster.JobStoreEntry;
 
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
+
 /**
  * Valkey-backed {@link JobStore}. Each job is one hash; a reverse index maps fileId to jobId.
  *
@@ -48,8 +52,10 @@ public class ValkeyJobStore implements JobStore {
     private static final String FILE_INDEX_PREFIX = "stirling:file2job:";
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
-    private static final TypeReference<List<String>> LIST_STRING = new TypeReference<>() {};
-    private static final TypeReference<Map<String, String>> MAP_STRING = new TypeReference<>() {};
+    private static final TypeReference<List<String>> LIST_STRING =
+            new TypeReference<List<String>>() {};
+    private static final TypeReference<Map<String, String>> MAP_STRING =
+            new TypeReference<Map<String, String>>() {};
 
     // String-keyed, byte-valued command groups mirror the original byte-level access so JSON
     // payloads and ids round-trip exactly as they did via StringRedisTemplate's byte commands.
@@ -266,7 +272,7 @@ public class ValkeyJobStore implements JobStore {
         }
         try {
             return MAPPER.readValue(v.toString(), MAP_STRING);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             log.warn(
                     "JobStore {} field 'resultMeta' is not valid JSON '{}' - treating as empty",
                     key,
@@ -278,7 +284,7 @@ public class ValkeyJobStore implements JobStore {
     private static String writeJson(Object value) {
         try {
             return MAPPER.writeValueAsString(value);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new IllegalStateException("Failed to JSON-serialize JobStore field", e);
         }
     }
@@ -287,7 +293,7 @@ public class ValkeyJobStore implements JobStore {
         try {
             List<String> parsed = MAPPER.readValue(json, LIST_STRING);
             return parsed == null ? new ArrayList<>() : parsed;
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             log.warn(
                     "JobStore {} field 'fileIds' is not valid JSON '{}' - treating as empty",
                     key,

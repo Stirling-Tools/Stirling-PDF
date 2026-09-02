@@ -303,8 +303,12 @@ docs/type3/signatures/
 
 **/application-dev-local.properties
 
-# AI agent session/local files - may contain tokens and secrets
-.claude/
+# AI agent session/local files - may contain tokens and secrets. .claude keeps
+# its two shared pieces: settings.json (the comment-lint hook) and skills/.
+.claude/*
+!.claude/settings.json
+!.claude/skills/
+.claude/settings.local.json
 .agents/
 .cursor/
 .codex/

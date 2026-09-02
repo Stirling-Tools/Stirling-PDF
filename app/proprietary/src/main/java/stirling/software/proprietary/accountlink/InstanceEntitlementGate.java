@@ -8,7 +8,7 @@ import io.quarkus.arc.profile.IfBuildProfile;
 import jakarta.enterprise.context.ApplicationScoped;
 
 /**
- * Decides whether a request may proceed under combined-billing "Mode A" on a self-hosted instance.
+ * Decides whether a request may proceed under combined billing on a self-hosted instance.
  *
  * <p>Rules (in order):
  *

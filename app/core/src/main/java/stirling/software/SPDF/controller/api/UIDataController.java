@@ -98,7 +98,8 @@ public class UIDataController {
 
         try (InputStream is = resource.getInputStream()) {
             Map<String, List<Dependency>> licenseData =
-                    objectMapper.readValue(is, new TypeReference<>() {});
+                    objectMapper.readValue(
+                            is, new TypeReference<Map<String, List<Dependency>>>() {});
             data.setDependencies(licenseData.get("dependencies"));
         } catch (IOException e) {
             log.error("Failed to load licenses data", e);

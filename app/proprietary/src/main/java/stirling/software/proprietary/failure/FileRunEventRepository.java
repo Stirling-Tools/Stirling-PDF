@@ -86,8 +86,8 @@ public class FileRunEventRepository implements PanacheRepositoryBase<FileRunEven
     }
 
     /**
-     * Reopen a resolved incident whose failure has recurred. Guarded on the current status so only
-     * {@code RESOLVED} flips; a concurrent dismiss is never overwritten back to {@code NEW}.
+     * A recurrence reopens {@code RESOLVED} (the fix did not hold) and {@code FILE_REMOVED} (the
+     * document is back). Guarded, so a reviewer's {@code DISMISSED} is never overwritten.
      */
     @Transactional
     public int reopenIfResolved(String id) {
@@ -96,8 +96,9 @@ public class FileRunEventRepository implements PanacheRepositoryBase<FileRunEven
                         "update FileRunEventEntity e set e.status ="
                                 + " stirling.software.proprietary.failure.FileRunEventStatus.NEW,"
                                 + " e.statusActor = null, e.statusAt = null where e.id = ?1 and"
-                                + " e.status ="
-                                + " stirling.software.proprietary.failure.FileRunEventStatus.RESOLVED",
+                                + " e.status in"
+                                + " (stirling.software.proprietary.failure.FileRunEventStatus.RESOLVED,"
+                                + " stirling.software.proprietary.failure.FileRunEventStatus.FILE_REMOVED)",
                         id);
         clearAfterBulkUpdate(updated);
         return updated;

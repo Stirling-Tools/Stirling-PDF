@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -21,7 +22,7 @@ public class WeeklyActiveUsersService {
     private final Map<String, Instant> activeBrowsers = new ConcurrentHashMap<>();
 
     // Track total unique browsers seen (overall)
-    private long totalUniqueBrowsers = 0;
+    private final AtomicLong totalUniqueBrowsers = new AtomicLong(0);
 
     // Application start time
     private final Instant startTime = Instant.now();
@@ -36,12 +37,12 @@ public class WeeklyActiveUsersService {
             return;
         }
 
-        boolean isNewBrowser = !activeBrowsers.containsKey(browserId);
-        activeBrowsers.put(browserId, Instant.now());
+        Instant now = Instant.now();
+        Instant previous = activeBrowsers.put(browserId, now);
 
-        if (isNewBrowser) {
-            totalUniqueBrowsers++;
-            log.debug("New browser recorded: {} (Total: {})", browserId, totalUniqueBrowsers);
+        if (previous == null) {
+            long total = totalUniqueBrowsers.incrementAndGet();
+            log.debug("New browser recorded: {} (Total: {})", browserId, total);
         }
     }
 
@@ -61,7 +62,7 @@ public class WeeklyActiveUsersService {
      * @return Total unique browsers count
      */
     public long getTotalUniqueBrowsers() {
-        return totalUniqueBrowsers;
+        return totalUniqueBrowsers.get();
     }
 
     /**
@@ -88,7 +89,8 @@ public class WeeklyActiveUsersService {
         activeBrowsers.entrySet().removeIf(entry -> entry.getValue().isBefore(sevenDaysAgo));
     }
 
-    /** Manual cleanup trigger (can be called by scheduled task if needed) */
+    /** Scheduled cleanup trigger running every hour */
+    @Scheduled(fixedRate = 3600000)
     public void performCleanup() {
         int sizeBefore = activeBrowsers.size();
         cleanupOldEntries();

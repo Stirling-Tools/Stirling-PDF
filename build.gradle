@@ -41,11 +41,11 @@ ext {
     gsonVersion = "2.14.0"
     guavaVersion = "33.6.0-jre"
     jinjavaVersion = "2.8.4"
-    jackson2Version = "2.22.1"
+    jackson2Version = "2.22.2"
     bucket4jVersion = "8.19.0"
-    archunitVersion = "1.4.2"
+    archunitVersion = "1.5.0"
     batikVersion = "1.19"
-    jpdfiumVersion = "1.0.4"
+    jpdfiumVersion = "1.1.3"
     jwtVersion = "0.13.0"
     awsSdkVersion = "2.51.3"
     jschVersion = "2.28.6"
@@ -401,7 +401,7 @@ subprojects {
         systemProperty 'apple.awt.UIElement', 'true'
 
         testLogging {
-            events "started", "failed"
+            events "skipped", "failed"
             showExceptions = true
             showCauses = true
             showStackTraces = true

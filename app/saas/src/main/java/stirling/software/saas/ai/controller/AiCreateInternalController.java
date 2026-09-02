@@ -138,7 +138,7 @@ public class AiCreateInternalController {
                             .getTypeFactory()
                             .constructCollectionType(
                                     List.class, AiCreateController.DraftSection.class));
-        } catch (JsonProcessingException exc) {
+        } catch (JacksonException exc) {
             log.warn("Failed to parse draft sections payload", exc);
             return null;
         }
@@ -154,7 +154,7 @@ public class AiCreateInternalController {
                     objectMapper
                             .getTypeFactory()
                             .constructMapType(Map.class, String.class, Object.class));
-        } catch (JsonProcessingException exc) {
+        } catch (JacksonException exc) {
             log.warn("Failed to parse outline constraints payload", exc);
             return null;
         }

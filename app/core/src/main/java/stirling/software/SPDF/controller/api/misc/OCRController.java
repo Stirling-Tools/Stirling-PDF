@@ -114,9 +114,9 @@ public class OCRController {
             summary = "Process a PDF file with OCR",
             description =
                     "This endpoint processes a PDF file using OCR (Optical Character Recognition)."
-                            + " Users can specify languages, sidecar, deskew, clean, cleanFinal, ocrType,"
-                            + " ocrRenderType, and removeImagesAfter options. Uses OCRmyPDF if available,"
-                            + " falls back to Tesseract.")
+                            + " Users can specify languages, sidecar, deskew, rotatePages, clean, cleanFinal,"
+                            + " ocrType, ocrRenderType, and removeImagesAfter options. Uses OCRmyPDF if"
+                            + " available, falls back to Tesseract.")
     public Response processPdfWithOCR(
             @RestForm("fileInput") FileUpload fileUpload,
             @RestForm("fileId") String fileId,
@@ -125,6 +125,7 @@ public class OCRController {
             @RestForm("languages") List<String> languages,
             @RestForm("sidecar") boolean sidecar,
             @RestForm("deskew") boolean deskew,
+            @RestForm("rotatePages") boolean rotatePages,
             @RestForm("clean") boolean clean,
             @RestForm("cleanFinal") boolean cleanFinal,
             @RestForm("ocrType") String ocrType,
@@ -138,6 +139,7 @@ public class OCRController {
         request.setLanguages(languages);
         request.setSidecar(sidecar);
         request.setDeskew(deskew);
+        request.setRotatePages(rotatePages);
         request.setClean(clean);
         request.setCleanFinal(cleanFinal);
         request.setOcrType(ocrType);
@@ -148,6 +150,7 @@ public class OCRController {
         List<String> selectedLanguages = request.getLanguages();
         boolean sidecarFlag = request.isSidecar();
         Boolean deskewFlag = request.isDeskew();
+        Boolean rotatePagesFlag = request.isRotatePages();
         Boolean cleanFlag = request.isClean();
         Boolean cleanFinalFlag = request.isCleanFinal();
         String ocrTypeValue = request.getOcrType();
@@ -189,6 +192,7 @@ public class OCRController {
                         selectedLanguages,
                         sidecarFlag,
                         deskewFlag,
+                        rotatePagesFlag,
                         cleanFlag,
                         cleanFinalFlag,
                         ocrTypeValue,
@@ -273,6 +277,7 @@ public class OCRController {
             List<String> selectedLanguages,
             Boolean sidecar,
             Boolean deskew,
+            Boolean rotatePages,
             Boolean clean,
             Boolean cleanFinal,
             String ocrType,
@@ -304,6 +309,10 @@ public class OCRController {
 
         if (deskew != null && deskew) {
             command.add("--deskew");
+        }
+        if (rotatePages != null && rotatePages) {
+            // Tesseract OSD-based automatic page orientation correction (90/180/270)
+            command.add("--rotate-pages");
         }
         if (clean != null && clean) {
             command.add("--clean");

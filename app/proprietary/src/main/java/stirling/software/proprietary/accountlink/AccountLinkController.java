@@ -44,6 +44,7 @@ import lombok.extern.slf4j.Slf4j;
 public class AccountLinkController {
 
     private final AccountLinkService service;
+    private final ConnectService connectService;
     private final LocalUsageService localUsageService;
     // Metering has its own flag; with it off (or the bean absent) /sync-now reports 409.
     private final Instance<UsageSyncService> syncServiceProvider;
@@ -51,17 +52,19 @@ public class AccountLinkController {
 
     public AccountLinkController(
             AccountLinkService service,
+            ConnectService connectService,
             LocalUsageService localUsageService,
             Instance<UsageSyncService> syncServiceProvider,
             AccountLinkProperties properties) {
         this.service = service;
+        this.connectService = connectService;
         this.localUsageService = localUsageService;
         this.syncServiceProvider = syncServiceProvider;
         this.properties = properties;
     }
 
-    /** {@code supabaseJwt} is the admin's short-lived token the portal already holds. */
-    public record LinkRequest(String supabaseJwt, String name) {}
+    /** {@code callbackUrl} is the portal telling us where its own callback route lives. */
+    public record ConnectStartRequest(String name, String callbackUrl) {}
 
     @POST
     @Path("/link")

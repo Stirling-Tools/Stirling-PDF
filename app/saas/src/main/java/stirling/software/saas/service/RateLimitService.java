@@ -114,19 +114,13 @@ public class RateLimitService {
     public void cleanupExpiredBuckets() {
         long now = System.currentTimeMillis();
 
-        int hourlyRemoved =
-                (int)
-                        hourlyLimits.entrySet().stream()
-                                .filter(e -> e.getValue().getResetTime() < now)
-                                .peek(e -> hourlyLimits.remove(e.getKey()))
-                                .count();
+        int hourlyBefore = hourlyLimits.size();
+        hourlyLimits.entrySet().removeIf(e -> e.getValue().getResetTime() < now);
+        int hourlyRemoved = hourlyBefore - hourlyLimits.size();
 
-        int dailyRemoved =
-                (int)
-                        dailyLimits.entrySet().stream()
-                                .filter(e -> e.getValue().getResetTime() < now)
-                                .peek(e -> dailyLimits.remove(e.getKey()))
-                                .count();
+        int dailyBefore = dailyLimits.size();
+        dailyLimits.entrySet().removeIf(e -> e.getValue().getResetTime() < now);
+        int dailyRemoved = dailyBefore - dailyLimits.size();
 
         if (hourlyRemoved + dailyRemoved > 0) {
             log.debug(

@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.proprietary.model.TeamCreatedEvent;
+import stirling.software.proprietary.policy.model.EditorConfig;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
@@ -110,9 +111,8 @@ public class DefaultClassificationPolicySeeder {
     static Policy defaultPolicy(Long teamId) {
         Map<String, Object> options = new HashMap<>();
         options.put("categoryId", CATEGORY);
-        options.put("runOn", "upload");
         options.put("mode", "new_version");
-        options.put("sources", List.of("editor"));
+        options.put("sources", List.of());
         options.put("scopeTypes", List.of());
         options.put("reviewerEmail", "");
         return new Policy(
@@ -125,6 +125,9 @@ public class DefaultClassificationPolicySeeder {
                 List.of(),
                 List.of(new PipelineStep(CLASSIFY_ENDPOINT, Map.of())),
                 new OutputSpec("inline", options),
-                teamId);
+                List.of(),
+                teamId,
+                // Classification runs in the editor on every upload.
+                EditorConfig.onUpload());
     }
 }

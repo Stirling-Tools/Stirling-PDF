@@ -45,6 +45,10 @@ export interface PolicyRunRecord {
   /** Set while an auto-retry is pending after a transient (queue-full) rejection, so the activity
    *  feed shows a soft "busy" row instead of a hard failure during the backoff window. */
   retrying?: boolean;
+  /** A run computed entirely in the browser - it has no server run behind it,
+   *  so it must never be polled for status (a status poll 404s and would flip a
+   *  succeeded run to FAILED) or reconciled against the server. */
+  browserLocal?: boolean;
   /** Epoch ms when the run was dispatched. */
   startedAt: number;
 }

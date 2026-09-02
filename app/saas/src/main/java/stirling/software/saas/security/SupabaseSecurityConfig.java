@@ -43,6 +43,7 @@ public class SupabaseSecurityConfig {
     private final SaasTeamService saasTeamService;
     private final ApplicationProperties applicationProperties;
     private final ApiKeyAuthenticationService apiKeyAuthenticationService;
+    private final Environment environment;
 
     @ConfigProperty(name = "app.supabase.issuer", defaultValue = "")
     String issuer;
@@ -152,7 +153,23 @@ public class SupabaseSecurityConfig {
                 origins.add(desktopOrigin);
             }
         }
-        if (origins.stream().anyMatch(o -> o.contains("*"))) {
+        // Outside production, allow loopback on ANY port. Several dev servers run side by side
+        // (editor, saas web app, one per flavour under test) and their ports move, so pinning a
+        // list means every new local environment shows up as an opaque CORS failure. Unlike a
+        // wildcard subdomain, a wildcard port on loopback cannot be taken over: nothing but this
+        // machine can answer on it, so there is no lapsed-DNS or abandoned-vhost risk. Absent in
+        // production, where the profile check below is false.
+        if (!operatorOverride && isNonProduction()) {
+            origins.addAll(LOOPBACK_ANY_PORT);
+            log.info(
+                    "Non-production profile active: allowing loopback CORS origins on any port {}",
+                    LOOPBACK_ANY_PORT);
+        }
+        // Loopback port wildcards are exempt: the warning below is about hostname takeover, which
+        // does not apply to an origin only this machine can serve.
+        if (origins.stream()
+                .filter(o -> !LOOPBACK_ANY_PORT.contains(o))
+                .anyMatch(o -> o.contains("*"))) {
             log.warn(
                     "CORS origins contain a wildcard paired with allowCredentials=true: {}."
                             + " Wildcard subdomains can be taken over by an attacker (lapsed DNS,"

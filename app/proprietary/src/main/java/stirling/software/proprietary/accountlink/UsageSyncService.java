@@ -20,8 +20,8 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.proprietary.billing.BillingCategory;
 
 /**
- * Daily usage sender for combined-billing "Mode A". Reports each period's cumulative per-category
- * usage to SaaS, which bills the delta against its own last-seen totals.
+ * Daily usage sender for combined billing. Reports each period's cumulative per-category usage to
+ * SaaS, which bills the delta against its own last-seen totals.
  *
  * <p>Resilience: the sync seq is persisted before the report so it never regresses across
  * restarts/failures; a transport failure leaves the {@code lastSyncedUnits} markers untouched so
