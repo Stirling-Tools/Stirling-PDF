@@ -68,21 +68,10 @@ _ROUTER_SYSTEM_PROMPT = (
     "helpful message in 'message'.\n"
     "Respond with the capability and (only for unsupported) a message.\n"
     "\n"
-    "Decide by what the user wants BACK, not by which PDF words appear in the message. "
-    "Wanting an answer, or information read out of the document, is pdf_question. Wanting a "
-    "changed file handed back is pdf_edit. A document being mentioned is not a request to act "
-    "on it.\n"
-    "\n"
-    "Examples:\n"
-    '  "How long is the notice period?" -> pdf_question\n'
-    '  "Shorten the notice period to 30 days" -> pdf_edit\n'
+    "Decide by what the user wants BACK. Information read out of the document is pdf_question; "
+    "a changed file handed back is pdf_edit. Mentioning a document is not asking to change it.\n"
     '  "Is there a table of contents?" -> pdf_question\n'
     '  "Add a table of contents" -> pdf_edit\n'
-    '  "Does it say anything about encryption?" -> pdf_question\n'
-    '  "Encrypt this file" -> pdf_edit\n'
-    '  "What sections cover the merger?" -> pdf_question\n'
-    '  "Combine these into one file" -> pdf_edit\n'
-    '  "Tell me if the numbers add up" -> pdf_question\n'
     '  "Put a note on every paragraph that needs work" -> pdf_review\n'
     '  "Build me a purchase order from scratch" -> pdf_create\n'
     '  "Make a rule that stamps every upload" -> user_spec\n'
