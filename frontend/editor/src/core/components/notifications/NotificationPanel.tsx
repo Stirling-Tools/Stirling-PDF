@@ -65,6 +65,8 @@ export function NotificationPanel({
       if (panel.current?.contains(target)) return;
       // A trigger closes this itself; counting it as outside would reopen it.
       if (target.closest?.("[data-notifications-trigger]")) return;
+      // The overflow menu is portaled out, so a click in it would read as outside the panel.
+      if (target.closest?.(".notification-bell__menu")) return;
       onClose();
     };
     const closeOnEscape = (event: KeyboardEvent) => {
@@ -98,7 +100,7 @@ export function NotificationPanel({
 
       {notifications.length === 0 ? (
         <p className="notification-bell__empty">
-          {t("notifications.empty", "Nothing to report.")}
+          {t("notifications.empty", "You're all caught up.")}
         </p>
       ) : (
         <ul className="notification-bell__list">
@@ -107,6 +109,7 @@ export function NotificationPanel({
               {index === 0 && dividedAt > 0 && (
                 <li aria-hidden>
                   <DividerWithText
+                    className="notification-bell__divider notification-bell__divider--new"
                     text={t("notifications.section.new", "New")}
                   />
                 </li>
@@ -115,6 +118,7 @@ export function NotificationPanel({
               {index === dividedAt && dividedAt > 0 && (
                 <li aria-hidden>
                   <DividerWithText
+                    className="notification-bell__divider"
                     text={t("notifications.section.earlier", "Earlier")}
                   />
                 </li>

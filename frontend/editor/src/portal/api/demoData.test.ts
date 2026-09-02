@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import {
   disablePortalDemoData,
   enablePortalDemoData,
@@ -7,6 +7,15 @@ import {
 } from "@portal/api/demoData";
 
 describe("portal demo data seam", () => {
+  // The first enable dynamically imports msw and the handler set. On a loaded
+  // machine that one-time module load alone can blow a test's 5s budget, so
+  // warm it here rather than charging it to whichever test happens to run
+  // first.
+  beforeAll(async () => {
+    await enablePortalDemoData();
+    disablePortalDemoData();
+  }, 30_000);
+
   afterEach(() => disablePortalDemoData());
 
   it("is inert until enabled", async () => {

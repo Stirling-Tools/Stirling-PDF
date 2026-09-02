@@ -31,6 +31,7 @@ vi.mock("@app/hooks/usePolicies", () => ({
     policies: {
       security: {
         configured: true,
+        runsOnEditor: true,
         status: "active",
         backendId: "backend-security",
         runOn: "upload",
