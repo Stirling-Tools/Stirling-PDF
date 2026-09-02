@@ -8662,7 +8662,6 @@ defaultName = "{{category}} Pipeline"
 
 [portal.policies.card]
 comingSoon = "Upgrade to Enterprise"
-notSetUp = "Not set up"
 requiresAiEngine = "Requires AI engine"
 
 [portal.policies.categories.classification]
@@ -9026,29 +9025,6 @@ docsEnforced = "Docs processed"
 active = "Active"
 paused = "Paused"
 
-[portal.policies.summary.active]
-description = "Enforcing on upload/export"
-label = "Active policies"
-
-[portal.policies.summary.categories]
-description = "Available to configure"
-label = "Categories"
-
-[portal.policies.summary.docsEnforced]
-description = "Across active policies"
-label = "Docs enforced"
-
-[portal.policies.summary.paused]
-description = "Configured but not firing"
-label = "Paused"
-
-[portal.policies.table]
-appliesTo = "Applies to"
-docs = "Docs enforced"
-enforces = "Enforces"
-policy = "Policy"
-status = "Status"
-
 [portal.policies.wizard.actions]
 cancel = "Cancel"
 customise = "Customise"
@@ -9101,9 +9077,6 @@ setUp = "Set up {{category}} pipeline"
 
 [portal.policies.wizard.workflow]
 description = "Choose what this pipeline does to every document it processes."
-
-[portal.policySummary.action]
-setUp = "Set up"
 
 [portal.processorFlow]
 footnote = "Counts are over the last 24 hours. Flow speed is illustrative."

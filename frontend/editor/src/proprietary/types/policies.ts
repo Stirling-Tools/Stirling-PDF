@@ -55,19 +55,6 @@ export interface PolicyCategory {
   requiresAiEngine?: boolean;
 }
 
-/**
- * The three-up summary stats shown at the foot of a configured policy's detail,
- * derived live from the user's uploaded files.
- */
-export interface PolicyStats {
-  /** Documents enforced (rendered with toLocaleString). */
-  enforced: number;
-  /** Human-formatted data-processed figure, e.g. "2.3 GB". */
-  dataProcessed: string;
-  /** Human-formatted active-for figure, e.g. "12d", or "—" when idle. */
-  activeFor: string;
-}
-
 /** The narrative + field configuration backing a category. */
 export interface PolicyConfigDef {
   /** One-line summary of what the policy enforces. */
@@ -93,25 +80,6 @@ export interface PolicySource {
   label: string;
   desc: string;
   icon: ReactNode;
-}
-
-/** An entry in a policy's recent-activity feed (derived from real uploads). */
-export interface PolicyActivityItem {
-  /** Document the policy acted on. */
-  doc: string;
-  /** What the policy did, e.g. "Classified as Contract • 3 tables extracted". */
-  action: string;
-  /** Relative timestamp, e.g. "2h ago". */
-  time: string;
-  /**
-   * "enforced" (clean green), "flagged" (needs review, amber), or "processing"
-   * (in progress — enforcement currently running, blue).
-   */
-  status: "enforced" | "flagged" | "processing";
-  /** The backend run this row reflects — used to offer Retry on a failed run. */
-  runId?: string;
-  /** The file the run acted on — needed to re-run it on Retry. */
-  fileId?: string;
 }
 
 /** Per-category runtime state held in the local cache. */
