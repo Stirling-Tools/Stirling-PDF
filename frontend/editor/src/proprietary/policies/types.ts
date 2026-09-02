@@ -110,6 +110,11 @@ export interface PolicyDecodedState {
   outputNamePosition: "prefix" | "suffix" | "auto-number";
   maxRetries: number;
   retryDelayMinutes: number;
+  /**
+   * `output.options` keys the codec does not model (e.g. the editor's automation blob), kept verbatim
+   * so re-encoding preserves them instead of silently dropping a key the frontend can't read.
+   */
+  extraOptions?: Record<string, unknown>;
   steps: WirePipelineStep[];
 }
 

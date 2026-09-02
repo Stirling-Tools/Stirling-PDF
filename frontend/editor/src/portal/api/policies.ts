@@ -84,6 +84,8 @@ export interface PolicyState {
   status: PolicyStatus;
   /** Org-mandated policy (see the pipeline `Policy.required`). */
   required: boolean;
+  /** Options the wizard doesn't model, preserved so a wizard save round-trips them (see codec). */
+  extraOptions?: Record<string, unknown>;
   sources: string[];
   /** Whether the editor runs this policy per file; stored, not derived from `sources`. */
   runsOnEditor?: boolean;
@@ -102,6 +104,8 @@ export interface PolicyState {
 
 export interface PolicySetupResult {
   required: boolean;
+  /** Stored options the wizard doesn't model, carried through so a save preserves them (see codec). */
+  extraOptions?: Record<string, unknown>;
   fieldValues: Record<string, boolean | string | string[]>;
   sources: string[];
   runsOnEditor: boolean;
@@ -446,6 +450,7 @@ function decoratePolicy(
     configured: true,
     status,
     required: decoded.required,
+    extraOptions: decoded.extraOptions,
     sources: decoded.sources,
     runsOnEditor: decoded.runsOnEditor,
     scopeTypes: decoded.scopeTypes,
@@ -678,6 +683,7 @@ export function buildWireFromSetup(
       name: policyDisplayName(entry, t),
       enabled,
       required: result.required,
+      extraOptions: result.extraOptions,
       categoryId: entry.category.id,
       sources: result.sources,
       runsOnEditor: result.runsOnEditor,
@@ -710,6 +716,7 @@ export function buildWireFromState(
       name: policyDisplayName(entry, t),
       enabled,
       required: s.required,
+      extraOptions: s.extraOptions,
       categoryId: entry.category.id,
       sources: s.sources,
       // Carry the stored value through: pause/resume must not re-derive it.

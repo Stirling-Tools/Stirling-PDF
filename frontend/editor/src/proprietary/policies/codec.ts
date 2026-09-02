@@ -19,6 +19,22 @@ const DEFAULTS = {
   retryDelayMinutes: 5,
 } as const;
 
+// The options-bag keys this codec models. Anything else in a stored bag is unknown to the frontend
+// and preserved via PolicyDecodedState.extraOptions. Keep in sync with WireOutputOptions.
+const MODELLED_OPTION_KEYS: ReadonlySet<string> = new Set([
+  "runOn",
+  "mode",
+  "name",
+  "position",
+  "maxRetries",
+  "retryDelayMinutes",
+  "categoryId",
+  "sources",
+  "scopeTypes",
+  "reviewerEmail",
+  "fieldValues",
+]);
+
 export function toWirePolicy(state: PolicyDecodedState): WirePolicy {
   const options: WireOutputOptions = {
     runOn: state.runOn,
@@ -41,7 +57,9 @@ export function toWirePolicy(state: PolicyDecodedState): WirePolicy {
     required: state.required,
     trigger: null,
     steps: state.steps,
-    output: { type: "inline", options },
+    // Unmodelled keys go under the typed ones, which always win, so preserving them can't corrupt a
+    // known field.
+    output: { type: "inline", options: { ...state.extraOptions, ...options } },
     // Omitting this makes the backend stamp EditorConfig.disabled(), so a pause or a
     // wizard save would quietly take the policy off the editor.
     editor: { allowed: state.runsOnEditor, runOn: state.runOn },
@@ -84,6 +102,11 @@ export function fromWirePolicy(policy: WirePolicy): PolicyDecodedState {
     outputNamePosition: position,
     maxRetries: num(raw.maxRetries, DEFAULTS.maxRetries),
     retryDelayMinutes: num(raw.retryDelayMinutes, DEFAULTS.retryDelayMinutes),
+    extraOptions: Object.fromEntries(
+      Object.entries(raw as Record<string, unknown>).filter(
+        ([key]) => !MODELLED_OPTION_KEYS.has(key),
+      ),
+    ),
     steps: Array.isArray(policy.steps) ? policy.steps : [],
   };
 }

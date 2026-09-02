@@ -192,4 +192,17 @@ describe("fromWirePolicy → round-trip", () => {
     delete (wire.output.options as Record<string, unknown>).fieldValues;
     expect(fromWirePolicy(wire).fieldValues).toEqual({});
   });
+
+  it("preserves options keys the codec does not model", () => {
+    const wire = toWirePolicy(FULL_STATE);
+    // An editor-authored blob the portal codec has no field for.
+    (wire.output.options as Record<string, unknown>).automation = { name: "x" };
+    const decoded = fromWirePolicy(wire);
+    expect(decoded.extraOptions).toEqual({ automation: { name: "x" } });
+    // Round-trips back onto the bag rather than being dropped on the next save.
+    expect(
+      (toWirePolicy(decoded).output.options as Record<string, unknown>)
+        .automation,
+    ).toEqual({ name: "x" });
+  });
 });

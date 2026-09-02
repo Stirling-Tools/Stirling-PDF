@@ -117,6 +117,32 @@ describe("PolicySetupWizard", () => {
     ]);
   });
 
+  it("preserves stored sources and unmodelled options on save", async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    const entry = editEntry([
+      { operation: "/api/v1/security/auto-redact", parameters: {} },
+    ]);
+    // A customised policy carries a stored source the wizard has no UI for and an editor-authored
+    // blob the codec doesn't model. A wizard save must round-trip both, not silently drop them.
+    entry.policy!.state.sources = ["src-contracts"];
+    entry.policy!.state.extraOptions = { automation: { name: "x" } };
+
+    render(
+      <PolicySetupWizard
+        entry={entry}
+        onClose={vi.fn()}
+        onSubmit={onSubmit}
+        onCustomise={vi.fn()}
+      />,
+    );
+    await submitWizard(SAVE_CHANGES);
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    const result = onSubmit.mock.calls[0][1] as PolicySetupResult;
+    expect(result.sources).toEqual(["src-contracts"]);
+    expect(result.extraOptions).toEqual({ automation: { name: "x" } });
+  });
+
   it("hides the Purview step when no Purview tenant is connected", async () => {
     fetchIntegrations.mockResolvedValue([]);
     const entry: CatalogueEntry = {

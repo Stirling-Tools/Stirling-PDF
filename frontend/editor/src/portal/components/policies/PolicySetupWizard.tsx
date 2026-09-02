@@ -337,12 +337,13 @@ function PolicySetupWizardBody({
     );
     return {
       required,
-      // A template always runs in the editor. A pipeline takes exactly one input, and the simple
-      // wizard has no field to bind a stored source, so real sources never applied here; anyone
-      // wanting a folder or bucket source uses Customise, which drops into the full builder.
+      // Preserve any stored options this wizard has no UI for (a customised policy's sources, an
+      // editor-authored automation blob) rather than wiping them on save; the builder is where
+      // those are actually edited.
+      extraOptions: policy?.state.extraOptions,
       runsOnEditor: true,
       fieldValues,
-      sources: [],
+      sources: policy?.state.sources ?? [],
       scopeTypes,
       reviewerEmail,
       outputMode,
