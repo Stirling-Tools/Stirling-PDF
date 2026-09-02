@@ -27,4 +27,20 @@ describe("parseSimplePolicy", () => {
     const entry = parseSimplePolicy(classificationPolicy(false));
     expect(entry?.policy?.state.required).toBe(false);
   });
+
+  it("reads runOn from editor, not the stale options bag", () => {
+    // The builder writes the current runOn to `editor` and leaves the legacy options-bag copy
+    // behind, so the two disagree here on purpose; `editor` must win.
+    const policy: Policy = {
+      ...classificationPolicy(false),
+      output: {
+        type: "inline",
+        options: { categoryId: "classification", runOn: "upload" },
+      },
+      editor: { allowed: true, runOn: "export" },
+    };
+    const entry = parseSimplePolicy(policy);
+    expect(entry?.policy?.state.runOn).toBe("export");
+    expect(entry?.policy?.state.runsOnEditor).toBe(true);
+  });
 });

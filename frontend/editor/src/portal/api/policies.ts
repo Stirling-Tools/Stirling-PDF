@@ -594,6 +594,7 @@ export function parseSimplePolicy(
       type: "inline",
       options: (policy.output?.options ?? {}) as Partial<WireOutputOptions>,
     },
+    editor: policy.editor,
   };
   const decorated = decoratePolicy(fromWirePolicy(wire), runs, false);
   if (!decorated) return null;
