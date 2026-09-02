@@ -9,14 +9,13 @@
  * watermarks, compression — are unmetered, no matter where they're triggered
  * from. The distinction is the <em>type of work</em> (manual tool vs
  * automation / AI / API), not where the click happens, because automation and
- * AI also have UI surfaces. The one-time free grant (default 500) applies
- * <em>only</em> to the three billable categories — it is a lifetime allowance,
- * not a monthly one, and a team keeps any unused portion after subscribing.
+ * AI also have UI surfaces. The free grant applies <em>only</em> to the three
+ * billable categories, and resets each billing period.
  *
  * <p>Layout: a slim <b>Editor plan</b> card (always-free tools only — no dates,
  * no metered split) on top, then a single <b>Processor plan</b> card that
- * two-columns the upgrade pitch + benefits (left) against the one-time free
- * meter stacked over the call-to-action (right).
+ * two-columns the upgrade pitch + benefits (left) against the free-grant meter
+ * stacked over the call-to-action (right).
  *
  * <p>Two variants:
  *   - {@link PaygFreeLeader} — the right column's CTA opens the upgrade modal.
@@ -47,8 +46,6 @@ import {
   type FreeSnapshot,
 } from "@app/components/shared/config/configSections/usageMeters";
 
-// ─── Editor plan card (always-free tools only) ────────────────────────────
-
 interface EditorPlanCardProps {
   /** Role pill text on the right. */
   pill: string;
@@ -58,8 +55,8 @@ interface EditorPlanCardProps {
 
 /**
  * The top card: the free Editor plan. Manual tools only, no billing window —
- * the one-time grant lives in the Processor card below, so there's no period
- * to show here.
+ * the metered grant lives in the Processor card below, so there's no period to
+ * show here.
  */
 function EditorPlanCard({ pill, leader }: EditorPlanCardProps) {
   const { t } = useTranslation();
@@ -92,8 +89,6 @@ function EditorPlanCard({ pill, leader }: EditorPlanCardProps) {
     </div>
   );
 }
-
-// ─── Processor plan card (two-column: pitch + benefits | meter + CTA) ──────
 
 interface ProcessorCardProps {
   snap: FreeSnapshot;
@@ -207,8 +202,6 @@ function ProcessorCard({ snap, isLeader, onTurnOn }: ProcessorCardProps) {
   );
 }
 
-// ─── Free LEADER ──────────────────────────────────────────────────────────
-
 export interface PaygFreeLeaderProps {
   /**
    * Called when the user finishes the {@link UpgradeModal} checkout flow.
@@ -264,8 +257,6 @@ function PaygFreeLeaderInner({ onUpgraded }: PaygFreeLeaderProps = {}) {
     </div>
   );
 }
-
-// ─── Free MEMBER ──────────────────────────────────────────────────────────
 
 function PaygFreeMemberInner() {
   useRenderCount("PaygFreeMember");

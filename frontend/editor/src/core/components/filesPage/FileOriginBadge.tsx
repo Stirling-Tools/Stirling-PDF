@@ -11,6 +11,7 @@ interface FileOriginBadgeProps {
   origin: FileOrigin;
   /** Compact (icon-only) vs full (icon + text). */
   compact?: boolean;
+  tooltip?: string;
 }
 
 const styles = {
@@ -44,6 +45,7 @@ const styles = {
 export function FileOriginBadge({
   origin,
   compact = false,
+  tooltip,
 }: FileOriginBadgeProps) {
   const { t } = useTranslation();
 
@@ -88,7 +90,7 @@ export function FileOriginBadge({
   );
 
   return (
-    <Tooltip label={config.tooltip} withinPortal>
+    <Tooltip label={tooltip ?? config.tooltip} withinPortal>
       {badge}
     </Tooltip>
   );

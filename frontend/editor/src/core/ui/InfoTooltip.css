@@ -1,0 +1,19 @@
+.sui-info {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--c-text-subtle);
+  cursor: pointer;
+  line-height: 0;
+}
+.sui-info:hover {
+  color: var(--c-text);
+}
+.sui-info:focus-visible {
+  outline: 2px solid var(--c-primary);
+  outline-offset: 2px;
+  border-radius: 999px;
+}
