@@ -7,7 +7,7 @@ import CropSquareIcon from "@mui/icons-material/CropSquare";
 import FilterNoneIcon from "@mui/icons-material/FilterNone";
 import CloseIcon from "@mui/icons-material/Close";
 import { getDesktopOs, DesktopOs } from "@app/services/platformService";
-import styles from "./WindowTitleBar.module.css";
+import styles from "@app/components/WindowTitleBar.module.css";
 
 // Seed from the UA so the bar (and its reserved height) is present on the first
 // frame on Windows, avoiding a layout shift. getDesktopOs() confirms it right
@@ -53,7 +53,9 @@ export function WindowTitleBar() {
     } else {
       root.style.removeProperty("--titlebar-h");
     }
-    return () => root.style.removeProperty("--titlebar-h");
+    return () => {
+      root.style.removeProperty("--titlebar-h");
+    };
   }, [active]);
 
   // Keep the maximize/restore icon in sync with the actual window state
