@@ -8,13 +8,21 @@ import PowerSettingsNewRoundedIcon from "@mui/icons-material/PowerSettingsNewRou
 import ReplayRoundedIcon from "@mui/icons-material/ReplayRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
-import { ActionIcon, Button, Dropdown, Input } from "@app/ui";
+import { ActionIcon, Button, Dropdown, IconPicker, Input } from "@app/ui";
 import { PipelineBlockerTooltip } from "@portal/components/pipelines/PipelineBlockerTooltip";
+import { PIPELINE_ICON_OPTIONS } from "@portal/components/pipelines/pipelineIcon";
+import { EnforceAsPolicyControl } from "@portal/components/pipelines/EnforceAsPolicyControl";
 import "@portal/components/pipelines/PipelineEditHeader.css";
 
 export interface PipelineEditHeaderProps {
   name: string;
   onNameChange: (name: string) => void;
+  /** Row icon key (see pipelineIcon); chosen from the picker beside the name. */
+  icon: string;
+  onIconChange: (key: string) => void;
+  /** "Enforce as policy" toggle, shown in the actions row. */
+  required: boolean;
+  onRequiredChange: (required: boolean) => void;
 
   /** The pipeline's live state. Toggling it takes effect immediately, not on save. */
   enabled: boolean;
@@ -49,6 +57,10 @@ export interface PipelineEditHeaderProps {
 export function PipelineEditHeader({
   name,
   onNameChange,
+  icon,
+  onIconChange,
+  required,
+  onRequiredChange,
   enabled,
   onTogglePause,
   togglingEnabled,
@@ -116,6 +128,13 @@ export function PipelineEditHeader({
           <ArrowBackRoundedIcon style={{ fontSize: "1.25rem" }} />
         </ActionIcon>
 
+        <IconPicker
+          value={icon}
+          onChange={onIconChange}
+          options={PIPELINE_ICON_OPTIONS}
+          ariaLabel={t("portal.pipelines.builder.icon.label")}
+        />
+
         {renaming ? (
           <Input
             ref={inputRef}
@@ -145,6 +164,11 @@ export function PipelineEditHeader({
       </div>
 
       <div className="portal-pipeline-edit-header__actions">
+        <EnforceAsPolicyControl
+          required={required}
+          onRequiredChange={onRequiredChange}
+        />
+
         {/* Pause and Save both write the whole policy, so they are mutually exclusive: neither can
             start while the other is committing, or the two writes race and the loser's version wins. */}
         <Button
