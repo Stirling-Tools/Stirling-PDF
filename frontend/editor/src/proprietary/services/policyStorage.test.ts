@@ -60,6 +60,43 @@ describe("policyStorage", () => {
     expect(p.routing.configured).toBe(false);
   });
 
+  it("migrates a pre-runsOnEditor row narrowed to non-editor sources off the editor", () => {
+    // Stored before runsOnEditor existed: no such field, sources exclude the editor.
+    localStorage.setItem(
+      "stirling-policies-state",
+      JSON.stringify({
+        security: { configured: true, status: "active", sources: ["s3"] },
+      }),
+    );
+    // Without the migration the default (true) would wrongly win.
+    expect(loadPolicies().security.runsOnEditor).toBe(false);
+  });
+
+  it("migrates a pre-runsOnEditor row listing the editor onto the editor", () => {
+    localStorage.setItem(
+      "stirling-policies-state",
+      JSON.stringify({
+        security: { configured: true, status: "active", sources: ["editor"] },
+      }),
+    );
+    expect(loadPolicies().security.runsOnEditor).toBe(true);
+  });
+
+  it("leaves an explicit runsOnEditor untouched", () => {
+    localStorage.setItem(
+      "stirling-policies-state",
+      JSON.stringify({
+        security: {
+          configured: true,
+          status: "active",
+          sources: ["editor"],
+          runsOnEditor: false,
+        },
+      }),
+    );
+    expect(loadPolicies().security.runsOnEditor).toBe(false);
+  });
+
   it("fires a change event on update", () => {
     const cb = vi.fn();
     const off = onPoliciesChange(cb);

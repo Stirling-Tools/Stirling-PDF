@@ -22,11 +22,12 @@ const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY;
 
 export const isSaasSupabaseConfigured = Boolean(url && key);
 
-/** OAuth providers the hosted SaaS login offers (mirrors the SaaS editor login). */
-export const SAAS_OAUTH_PROVIDERS = ["google", "github", "apple", "azure"];
-
-/** sessionStorage marker set before an SSO redirect so the return can finish the link. */
-export const PENDING_LINK_KEY = "stirling-account-link-pending";
+/*
+ * SAAS_OAUTH_PROVIDERS and PENDING_LINK_KEY are gone. They served an in-portal SSO sign-in that
+ * could not work: the provider only redirects to allow-listed URLs, so a customer's origin was
+ * never returned to and the admin was left on stirling.com. Provider choice now happens on our own
+ * origin during the connect handshake, where the redirect can actually complete.
+ */
 
 let configured = false;
 
@@ -38,7 +39,7 @@ let configured = false;
 export function ensureSaasSupabase() {
   if (!isSaasSupabaseConfigured) return null;
   if (!configured) {
-    configureSupabase({ url: url as string, key: key as string });
+    configureSupabase({ url: url, key: key });
     configured = true;
   }
   return getSupabaseClient();

@@ -16,6 +16,9 @@ export type FileId = string & { readonly [tag]: "FileId" };
 export interface ToolOperation {
   toolId: ToolId;
   timestamp: number;
+  /** Overrides the tool's own name in history. Set by a policy run to its pipeline's name, since
+   *  every policy records the same "automate" toolId. */
+  label?: string;
 }
 
 /**

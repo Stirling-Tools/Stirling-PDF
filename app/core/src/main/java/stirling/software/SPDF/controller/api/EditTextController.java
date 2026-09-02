@@ -237,7 +237,7 @@ public class EditTextController {
 
         Matcher matcher = edit.pattern().matcher(joined);
         List<MatchSpan> spans = new ArrayList<>();
-        StringBuffer interpolation = new StringBuffer();
+        StringBuilder interpolation = new StringBuilder();
         int previousAppendPosition = 0;
         while (matcher.find()) {
             if (matcher.start() == matcher.end()) {

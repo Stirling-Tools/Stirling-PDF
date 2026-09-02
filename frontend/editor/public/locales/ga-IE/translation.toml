@@ -3526,7 +3526,6 @@ label = "Suíomh Y"
 
 [crop.error]
 failed = "Theip ar an PDF a bhearradh"
-invalidArea = "Téann an limistéar bearrtha thar theorainneacha an PDF"
 
 [crop.preview]
 title = "Roghnú Limistéir Bhearrtha"

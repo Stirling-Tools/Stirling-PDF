@@ -80,12 +80,8 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({
         setMobilePane("content");
       }
     };
-    window.addEventListener("appConfig:navigate", handler as EventListener);
-    return () =>
-      window.removeEventListener(
-        "appConfig:navigate",
-        handler as EventListener,
-      );
+    window.addEventListener("appConfig:navigate", handler);
+    return () => window.removeEventListener("appConfig:navigate", handler);
   }, []);
 
   // When the modal opens via a /settings/<section> deep link (navigateToSettings — e.g. the
@@ -122,9 +118,8 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({
         setNotice(detail.notice);
       }
     };
-    window.addEventListener("appConfig:notice", handler as EventListener);
-    return () =>
-      window.removeEventListener("appConfig:notice", handler as EventListener);
+    window.addEventListener("appConfig:notice", handler);
+    return () => window.removeEventListener("appConfig:notice", handler);
   }, []);
 
   // Full-screen overlays that live inside our React tree (e.g. the PAYG
@@ -140,9 +135,8 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({
         | undefined;
       setOverlayActive(Boolean(detail?.open));
     };
-    window.addEventListener("appConfig:overlay", handler as EventListener);
-    return () =>
-      window.removeEventListener("appConfig:overlay", handler as EventListener);
+    window.addEventListener("appConfig:overlay", handler);
+    return () => window.removeEventListener("appConfig:overlay", handler);
   }, []);
 
   const colors = useMemo(

@@ -1,6 +1,8 @@
 import { useState, type ReactNode } from "react";
 import { MantineProvider } from "@mantine/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { LinkProvider, type LinkState } from "@processor/contexts/LinkContext";
+import { UIProvider } from "@processor/contexts/UIContext";
 
 /**
  * Wraps a processor component under test in a fresh QueryClient (retries off for
@@ -25,5 +27,22 @@ export function ProcessorTestProviders({ children }: { children: ReactNode }) {
     <TestQueryProvider>
       <MantineProvider>{children}</MantineProvider>
     </TestQueryProvider>
+  );
+}
+
+/** {@link ProcessorTestProviders} plus the contexts the connect gate reads. Unlinked by default. */
+export function ProcessorViewProviders({
+  children,
+  linkState = "unlinked",
+}: {
+  children: ReactNode;
+  linkState?: LinkState;
+}) {
+  return (
+    <ProcessorTestProviders>
+      <LinkProvider initialState={linkState}>
+        <UIProvider>{children}</UIProvider>
+      </LinkProvider>
+    </ProcessorTestProviders>
   );
 }

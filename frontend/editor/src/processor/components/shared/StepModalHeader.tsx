@@ -55,10 +55,12 @@ export function StepModalHeader({
       <div className="processor-stepmodal__head-top">
         {brand ? (
           <div className="processor-stepmodal__brand">
+            {/* `wordmark`, not `wordmark-light-only`: theme.css hides the former in dark mode and
+                has no rule for the latter, so both used to render at once. */}
             <img
               src={wordmarkLight}
               alt="Stirling"
-              className="processor-stepmodal__wordmark wordmark-light-only"
+              className="processor-stepmodal__wordmark wordmark"
             />
             <img
               src={wordmarkDark}

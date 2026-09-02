@@ -17,7 +17,10 @@ import {
   teamSaasHandlers,
   resetTeamSaasStore,
 } from "@processor/mocks/handlers/teamSaas";
-import { createProcessorQueryClient } from "@processor/queryClient";
+import {
+  getProcessorQueryClient,
+  resetProcessorQueryClient,
+} from "@processor/queryClient";
 import { qk } from "@processor/queries/keys";
 
 /**
@@ -25,6 +28,16 @@ import { qk } from "@processor/queries/keys";
  * roster from cache with no refetch, and the SaaS roster + teams queries share
  * one /team/my resolve. Same SaaS mocks as Users.saas.test.tsx.
  */
+
+vi.mock("@processor/hooks/useConnectGate", () => ({
+  useConnectGate: () => ({
+    gated: false,
+    loading: false,
+    available: false,
+    connect: vi.fn(),
+    guard: (fn: unknown) => fn,
+  }),
+}));
 
 vi.mock("@app/auth", () => ({
   getStoredToken: () => null,
@@ -101,11 +114,14 @@ function renderUsers(client: QueryClient): RenderResult {
   );
 }
 
+// The client outlives a mount now, so each case starts from a cold one.
+beforeEach(resetProcessorQueryClient);
+
 describe("Users view caching", () => {
   it("serves the roster from cache on remount (no refetch)", async () => {
     // One client across both mounts — the real app keeps it at the processor root,
     // above the router, for exactly this reason.
-    const client = createProcessorQueryClient();
+    const client = getProcessorQueryClient();
 
     const first = renderUsers(client);
     expect(await screen.findByText("leader@acme.com")).toBeInTheDocument();
@@ -119,7 +135,7 @@ describe("Users view caching", () => {
   });
 
   it("collapses the SaaS /team/my call to one per mount", async () => {
-    const client = createProcessorQueryClient();
+    const client = getProcessorQueryClient();
     renderUsers(client);
     await screen.findByText("leader@acme.com");
 

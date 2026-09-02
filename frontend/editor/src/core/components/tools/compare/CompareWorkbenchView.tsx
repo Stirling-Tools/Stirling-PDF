@@ -28,7 +28,6 @@ import {
   updateToastProgress,
   dismissToast,
 } from "@app/components/toast";
-import type { ToastLocation } from "@app/components/toast/types";
 
 interface CompareWorkbenchViewProps {
   data: CompareWorkbenchData | null;
@@ -323,7 +322,7 @@ const CompareTextWorkbenchView = ({ data }: CompareTextWorkbenchViewProps) => {
             "At least one of these PDFs are very large, scrolling won't be smooth until the rendering is complete",
           ),
           body: `${countsText} ${t("compare.rendering.pagesRendered", "pages rendered")}`,
-          location: "bottom-right" as ToastLocation,
+          location: "bottom-right",
           isPersistentPopup: true,
           durationMs: 0,
           expandable: false,
@@ -337,7 +336,7 @@ const CompareTextWorkbenchView = ({ data }: CompareTextWorkbenchViewProps) => {
             "At least one of these PDFs are very large, scrolling won't be smooth until the rendering is complete",
           ),
           body: `${countsText} ${t("compare.rendering.pagesRendered", "pages rendered")}`,
-          location: "bottom-right" as ToastLocation,
+          location: "bottom-right",
           isPersistentPopup: true,
           alertType: "neutral", // ensure it stays neutral until completion
         });
@@ -452,7 +451,7 @@ const CompareTextWorkbenchView = ({ data }: CompareTextWorkbenchViewProps) => {
             "compare.rendering.pageNotReadyBody",
             "Some pages are still rendering. Navigation will snap once they are ready.",
           ),
-          location: "bottom-right" as ToastLocation,
+          location: "bottom-right",
           isPersistentPopup: false,
           durationMs: 2500,
         });

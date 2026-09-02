@@ -1,6 +1,9 @@
 package stirling.software.proprietary.failure;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static stirling.software.proprietary.failure.FailureActionSlot.OVERFLOW;
+import static stirling.software.proprietary.failure.FailureActionSlot.RESOLUTION;
+import static stirling.software.proprietary.failure.FailureActionSlot.SECONDARY;
 import static stirling.software.proprietary.failure.FailureAudience.ANYONE_WHO_SEES;
 import static stirling.software.proprietary.failure.FailureAudience.OWNER;
 import static stirling.software.proprietary.failure.FailureAudience.TEAM_REVIEWER;
@@ -34,9 +37,12 @@ class FailureKindTest {
 
     /** In full, so a declaration pairing the right action with the wrong audience cannot pass. */
     private static FailureKind.OfferedAction offered(
-            FailureActionId id, FailureAudience audience, String labelKeySuffix) {
+            FailureActionId id,
+            FailureAudience audience,
+            FailureActionSlot slot,
+            String labelKeySuffix) {
         return new FailureKind.OfferedAction(
-                id, "processor.failures.action." + labelKeySuffix, audience);
+                id, "processor.failures.action." + labelKeySuffix, audience, slot);
     }
 
     @Nested
@@ -70,27 +76,6 @@ class FailureKindTest {
             assertThat(kind.getId()).matches("^[A-Z][A-Z0-9_]*$");
         }
 
-        @ParameterizedTest
-        @EnumSource(FailureKind.class)
-        void declaresItsActionsInTheSameOrderAsEveryOtherKind(FailureKind kind) {
-            // Declaration order is display order and the first usable offer is the row's primary,
-            // so
-            // two kinds disagreeing would flip the solid button between rows.
-            List<FailureActionId> ranking =
-                    List.of(
-                            FailureActionId.VIEW_FILE,
-                            FailureActionId.VIEW_IN_PROCESSOR,
-                            FailureActionId.DISMISS);
-
-            List<FailureActionId> declared = kind.getActions();
-            assertThat(ranking)
-                    .as("%s declares an action the shared ranking does not rank", kind.getId())
-                    .containsAll(declared);
-            assertThat(declared)
-                    .as("%s declares its actions out of the shared order", kind.getId())
-                    .isEqualTo(ranking.stream().filter(declared::contains).toList());
-        }
-
         @Test
         void idsAreUnique() {
             Set<String> ids = new HashSet<>();
@@ -121,12 +106,13 @@ class FailureKindTest {
 
         @ParameterizedTest
         @EnumSource(FailureKind.class)
-        void everyOfferSaysWhoItIsFor(FailureKind kind) {
-            // Read per row to decide what a caller is shown, so a null would leak a button.
+        void everyOfferSaysWhoItIsForAndWhereItGoes(FailureKind kind) {
+            // Both decide what a caller is shown, so a missing one places a button by accident.
             for (FailureKind.OfferedAction offer : kind.getOfferedActions()) {
                 assertThat(offer.audience())
                         .as("%s offers %s", kind.getId(), offer.id())
                         .isNotNull();
+                assertThat(offer.slot()).as("%s offers %s", kind.getId(), offer.id()).isNotNull();
             }
         }
 
@@ -136,6 +122,17 @@ class FailureKindTest {
             // The same action twice would be two buttons with one meaning, and labelKeyFor would
             // answer for the first.
             assertThat(kind.getActions()).doesNotHaveDuplicates();
+        }
+
+        @ParameterizedTest
+        @EnumSource(FailureKind.class)
+        void declaresAtMostOneResolution(FailureKind kind) {
+            // Two things that both claim to fix it is a sign of two kinds wearing one id.
+            assertThat(
+                            kind.getOfferedActions().stream()
+                                    .filter(offer -> offer.slot() == FailureActionSlot.RESOLUTION)
+                                    .toList())
+                    .hasSizeLessThanOrEqualTo(1);
         }
 
         @Test
@@ -232,16 +229,18 @@ class FailureKindTest {
     class Unknown {
 
         @Test
-        void offersItsOwnerTheirDocumentAndTheRunToWhoeverReviews() {
-            // Nothing here is known to be fixable, so the offers are just the places to look.
+        void offersARetryToItsOwnerAndTheRunToWhoeverReviews() {
+            // No known fix, so no resolution; a retry is still worth offering for a one-off.
             assertThat(FailureKind.UNKNOWN.getOfferedActions())
                     .containsExactly(
-                            offered(FailureActionId.VIEW_FILE, OWNER, "viewFile"),
+                            offered(FailureActionId.OPEN_IN_TOOL, OWNER, SECONDARY, "openInTool"),
+                            offered(FailureActionId.VIEW_FILE, OWNER, SECONDARY, "viewFile"),
                             offered(
                                     FailureActionId.VIEW_IN_PROCESSOR,
                                     TEAM_REVIEWER,
+                                    OVERFLOW,
                                     "viewInProcessor"),
-                            offered(FailureActionId.DISMISS, ANYONE_WHO_SEES, "dismiss"));
+                            offered(FailureActionId.DISMISS, ANYONE_WHO_SEES, OVERFLOW, "dismiss"));
         }
 
         @Test
@@ -294,16 +293,19 @@ class FailureKindTest {
         }
 
         @Test
-        void offersTheDocumentToItsOwnerAndTheRunToItsReviewer() {
-            // The point of the audiences: only the owner holds the document.
+        void aKindWithSomethingToFixOffersTheFixToItsOwnerAndTheRunToItsReviewer() {
+            // Only the owner has the password, so a reviewer is offered the run and a dismiss.
             assertThat(FailureKind.INPUT_PASSWORD_PROTECTED.getOfferedActions())
                     .containsExactly(
-                            offered(FailureActionId.VIEW_FILE, OWNER, "viewFile"),
+                            offered(FailureActionId.DECRYPT, OWNER, RESOLUTION, "decrypt"),
+                            offered(FailureActionId.VIEW_FILE, OWNER, SECONDARY, "viewFile"),
                             offered(
                                     FailureActionId.VIEW_IN_PROCESSOR,
                                     TEAM_REVIEWER,
+                                    OVERFLOW,
                                     "viewInProcessor"),
-                            offered(FailureActionId.DISMISS, ANYONE_WHO_SEES, "dismiss"));
+                            offered(FailureActionId.OPEN_IN_TOOL, OWNER, OVERFLOW, "openInTool"),
+                            offered(FailureActionId.DISMISS, ANYONE_WHO_SEES, OVERFLOW, "dismiss"));
         }
 
         @Test
@@ -333,10 +335,8 @@ class FailureKindTest {
             assertThat(FailureKind.UNKNOWN.labelKeyFor(FailureActionId.DISMISS))
                     .isEqualTo(FailureKind.genericLabelKey(FailureActionId.DISMISS))
                     .isEqualTo("processor.failures.action.dismiss");
-            assertThat(
-                            FailureKind.INPUT_PASSWORD_PROTECTED.labelKeyFor(
-                                    FailureActionId.VIEW_IN_PROCESSOR))
-                    .isEqualTo("processor.failures.action.viewInProcessor");
+            assertThat(FailureKind.INPUT_PASSWORD_PROTECTED.labelKeyFor(FailureActionId.DECRYPT))
+                    .isEqualTo("processor.failures.action.decrypt");
         }
 
         @Test

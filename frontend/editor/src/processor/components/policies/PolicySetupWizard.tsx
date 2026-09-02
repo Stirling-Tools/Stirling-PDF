@@ -268,8 +268,14 @@ function PolicySetupWizardBody({
   const [fieldValues, setFieldValues] = useState(() =>
     resolveFieldValues(entry),
   );
-  const [sources, setSources] = useState<string[]>(
-    policy?.state.sources ?? ["editor"],
+  // Real sources only; editor participation is its own flag, not an entry here.
+  const [sources, setSources] = useState<string[]>(() =>
+    (policy?.state.sources ?? []).filter((s) => s !== "editor"),
+  );
+  // Whether the policy runs in the editor. Defaults on for a new policy (the common case);
+  // on edit it comes straight from the stored flag, never re-derived from the sources list.
+  const [runsOnEditor, setRunsOnEditor] = useState<boolean>(
+    policy?.state.runsOnEditor ?? true,
   );
 
   const sourcesAsync = useSources();
@@ -361,6 +367,12 @@ function PolicySetupWizardBody({
   }
 
   function toggleSource(id: string) {
+    // The editor is not a real source: its tile toggles the runsOnEditor flag instead of
+    // adding "editor" to the sources list.
+    if (id === "editor") {
+      setRunsOnEditor((on) => !on);
+      return;
+    }
     setSources((prev) =>
       prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id],
     );
@@ -382,6 +394,7 @@ function PolicySetupWizardBody({
       await onSubmit(entry, {
         fieldValues,
         sources,
+        runsOnEditor,
         scopeTypes,
         reviewerEmail,
         outputMode,
@@ -457,7 +470,7 @@ function PolicySetupWizardBody({
         variant="underline"
         ariaLabel={t("processor.policies.wizard.tabs.ariaLabel")}
         activeKey={step}
-        onChange={(k) => setStep(k as Step)}
+        onChange={(k) => setStep(k)}
         items={[
           {
             key: "workflow",
@@ -604,7 +617,8 @@ function PolicySetupWizardBody({
             // loaded list is never empty - no "no sources" state exists.
             <div className="processor-policies__sources">
               {availableSources.map((src) => {
-                const on = sources.includes(src.id);
+                const on =
+                  src.id === "editor" ? runsOnEditor : sources.includes(src.id);
                 return (
                   <Button
                     key={src.id}
@@ -642,7 +656,7 @@ function PolicySetupWizardBody({
             {t("processor.policies.wizard.output.heading")}
           </h3>
           <div className="processor-policies__fields">
-            {sources.includes("editor") && (
+            {runsOnEditor && (
               <>
                 <FormField
                   label={t("processor.policies.wizard.output.runOn.label")}

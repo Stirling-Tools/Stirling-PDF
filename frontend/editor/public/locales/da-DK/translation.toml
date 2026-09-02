@@ -3526,7 +3526,6 @@ label = "Y-position"
 
 [crop.error]
 failed = "Kunne ikke beskære PDF"
-invalidArea = "Beskæringsområdet strækker sig ud over PDF'ens grænser"
 
 [crop.preview]
 title = "Valg af beskæringsområde"

@@ -3526,7 +3526,6 @@ label = "Poziția Y"
 
 [crop.error]
 failed = "Nu s-a putut decupa PDF-ul"
-invalidArea = "Zona de decupare depășește limitele PDF-ului"
 
 [crop.preview]
 title = "Selecție zonă de decupare"

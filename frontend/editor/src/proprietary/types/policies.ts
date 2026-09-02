@@ -120,6 +120,10 @@ export interface PolicyState {
   status: PolicyStatus;
   /** Selected sources (ids from POLICY_SOURCES). */
   sources: string[];
+  /** The policy's own name. Set for builder pipelines, which have no built-in category label. */
+  name?: string;
+  /** Whether the policy runs in the editor as each file passes through (resolved at decode). */
+  runsOnEditor?: boolean;
   /** When non-empty, narrows the policy to these document types. */
   scopeTypes: string[];
   /** Email that low-confidence enforcements are routed to. */
@@ -188,6 +192,7 @@ export interface PolicyWizardResult {
   automation: AutomationConfig;
   fieldValues: Record<string, boolean | string | string[]>;
   sources: string[];
+  runsOnEditor: boolean;
   scopeTypes: string[];
   reviewerEmail: string;
   /** Output + retry settings for the backing folder. */
@@ -224,6 +229,7 @@ export interface PolicyConfigResult {
   unresolvedOps: string[];
   fieldValues: Record<string, boolean | string | string[]>;
   sources: string[];
+  runsOnEditor: boolean;
   scopeTypes: string[];
   reviewerEmail: string;
   folder: PolicyFolderSettings;

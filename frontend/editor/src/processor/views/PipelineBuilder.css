@@ -196,6 +196,18 @@
   color: var(--c-text-subtle);
 }
 
+/* A field label that carries an info icon explaining the choice. */
+.processor-builder__label-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  cursor: help;
+}
+
+.processor-builder__label-hint svg {
+  color: var(--c-text-subtle);
+}
+
 .processor-builder__input-row
   .processor-builder__source-edit:hover:not(:disabled) {
   color: var(--c-accent-fg, var(--c-primary));

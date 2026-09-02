@@ -32,8 +32,10 @@ export async function fetchPoliciesByCategory(): Promise<
   const byCategory = new Map<string, DecodedPolicy>();
   stored.forEach((policy, index) => {
     const decoded = fromBackendPolicy(policy);
-    if (decoded.categoryId)
-      byCategory.set(decoded.categoryId, { ...decoded, order: index });
+    // A pipeline built on the Pipelines page has no category tile, so it keys by its own id
+    // rather than being dropped - one set to run on the editor still has to reach the auto-run.
+    const key = decoded.categoryId || decoded.id;
+    if (key) byCategory.set(key, { ...decoded, order: index });
   });
   return byCategory;
 }
@@ -50,7 +52,9 @@ export function decodedToState(
   return {
     configured: true,
     status: decoded.enabled ? "active" : "paused",
+    name: decoded.name,
     sources: decoded.sources,
+    runsOnEditor: decoded.runsOnEditor,
     scopeTypes: decoded.scopeTypes,
     reviewerEmail: decoded.reviewerEmail,
     fieldValues: decoded.fieldValues,
@@ -62,8 +66,8 @@ export function decodedToState(
     backendId: decoded.id,
     // Server-side run-order position (team-wide); drives the settings reorder list.
     order: decoded.order,
-    // Catalog-category policies are built-in defaults (not deletable).
-    isDefault: true,
+    // Catalog-category policies are built-in defaults (not deletable); a builder pipeline is not.
+    isDefault: Boolean(decoded.categoryId),
   };
 }
 

@@ -3,7 +3,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 
 const h = vi.hoisted(() => ({
-  prefs: { loginLandingView: "processor" as "processor" | "editor" },
+  prefs: { loginLandingView: "processor" },
   update: vi.fn(),
   get: vi.fn(),
 }));

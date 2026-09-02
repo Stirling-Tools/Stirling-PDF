@@ -7,8 +7,11 @@ import { ProcessorSearchBar } from "@processor/components/ProcessorSearchBar";
 import { useUI } from "@processor/contexts/UIContext";
 import { MenuIcon, SearchIcon } from "@processor/components/icons";
 import { Logo } from "@app/ui/Logo";
+import "@app/components/layout/WorkspaceFrame.css";
+import { QuickNavHostBridge } from "@app/components/shared/quickNav/QuickNavHostBridge";
 import "@processor/components/AppShell.css";
 import { NotificationBell } from "@app/components/notifications/NotificationBell";
+import { useIsPhone } from "@app/hooks/useIsMobile";
 
 /**
  * Compact header shown only under the mobile breakpoint (CSS-hidden on
@@ -58,8 +61,10 @@ function MobileTopbar() {
  * prop-free.
  */
 export function AppShell({ children }: { children: ReactNode }) {
-  const { mobileNavOpen, closeMobileNav } = useUI();
+  const { mobileNavOpen, closeMobileNav, openSettings } = useUI();
   const { pathname } = useLocation();
+  // Below this width the rail, and the bell it carries, is gone.
+  const isPhone = useIsPhone();
 
   // Navigating (tap on a nav row, back button, deep link) always dismisses the
   // drawer. Depends on pathname only: the close fn's identity changes with any
@@ -79,7 +84,11 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="processor-shell">
-      <Sidebar />
+      {/* processorAccess: being here is proof the processor is available. */}
+      <QuickNavHostBridge processorAccess onOpenSettings={() => openSettings()} />
+      <div className="workspace-frame">
+        <Sidebar />
+      </div>
       {mobileNavOpen && (
         <div
           className="processor-shell__scrim"
@@ -90,9 +99,12 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="processor-shell__main">
         <MobileTopbar />
         <ProcessorSearchBar />
-        <div className="processor-shell__notifications">
-          <NotificationBell />
-        </div>
+        {/* Phone only: above that the rail carries it, and this would be a second. */}
+        {isPhone && (
+          <div className="processor-shell__notifications">
+            <NotificationBell />
+          </div>
+        )}
         <main className="processor-shell__view">{children}</main>
       </div>
     </div>

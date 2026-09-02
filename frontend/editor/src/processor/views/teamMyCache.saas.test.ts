@@ -10,7 +10,10 @@ import {
 } from "vitest";
 import { setupServer } from "msw/node";
 import { http, HttpResponse } from "msw";
-import { createProcessorQueryClient } from "@processor/queryClient";
+import {
+  getProcessorQueryClient,
+  resetProcessorQueryClient,
+} from "@processor/queryClient";
 import { qk } from "@processor/queries/keys";
 import { usersBackend } from "@app/processor/usersBackend";
 
@@ -69,9 +72,12 @@ beforeEach(() => {
   teamName = "Old name";
 });
 
+// The client outlives a mount now, so each case starts from a cold one.
+beforeEach(resetProcessorQueryClient);
+
 describe("SaaS /team/my resolution cache", () => {
   it("dedupes within staleTime but re-resolves after invalidation", async () => {
-    const client = createProcessorQueryClient();
+    const client = getProcessorQueryClient();
 
     // Two resolves within staleTime → one network call (the collapse).
     expect((await usersBackend.fetchTeams())[0]?.name).toBe("Old name");
