@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -23,11 +23,13 @@ import { PolicyCatalogueTable } from "@portal/components/policies/PolicyCatalogu
 import { PolicyDetailPanel } from "@portal/components/policies/PolicyDetailPanel";
 import { PolicySetupWizard } from "@portal/components/policies/PolicySetupWizard";
 import { useAiEngineEnabled } from "@portal/hooks/useAiEngineEnabled";
+import { useConnectGate } from "@portal/hooks/useConnectGate";
 import "@portal/views/Policies.css";
 
 export function Policies() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const { gated, connect } = useConnectGate();
   const state = usePoliciesOverview();
   const { data, loading, error: fetchError } = state;
   const { isLoading } = useSectionFlags(state);
@@ -38,18 +40,27 @@ export function Policies() {
   const [pageError, setPageError] = useState<string | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
 
+  // Held in a ref so the effects below do not re-run on its identity. They write back to the URL,
+  // so a callback that changes each render would loop: strip the param, re-render, run again.
+  const connectRef = useRef(connect);
+  connectRef.current = connect;
+
+  // Deep link from the Home processor flow. It sets the wizard directly rather than going through
+  // openEntry, so the gate belongs here too: guarding openEntry alone would leave ?setup= as a way
+  // past it.
   useEffect(() => {
     const setupId = searchParams.get("setup");
     if (!setupId || !data) return;
     const entry = data.catalogue.find((e) => e.category.id === setupId);
     if (entry && !entry.category.comingSoon) {
-      if (entry.policy) setDetail(entry);
+      if (gated) connectRef.current();
+      else if (entry.policy) setDetail(entry);
       else setWizard(entry);
     }
     const next = new URLSearchParams(searchParams);
     next.delete("setup");
     setSearchParams(next, { replace: true });
-  }, [searchParams, data, setSearchParams]);
+  }, [searchParams, data, setSearchParams, gated]);
 
   const { enabled: aiEngineEnabled, loading: aiEngineLoading } =
     useAiEngineEnabled();
@@ -95,6 +106,13 @@ export function Policies() {
 
   const openEntry = useCallback(
     (entry: CatalogueEntry) => {
+      // Ask rather than open an editor whose save would fail; viewing the catalogue stays open.
+      // Via the ref so this keeps its identity: the deep-link effect depends on it and writes the
+      // URL back, which would otherwise loop.
+      if (gated) {
+        connectRef.current();
+        return;
+      }
       // Block setup of an AI-required policy until the engine is confirmed on (so a
       // click during the app-config load can't open a wizard for a disabled
       // feature); a configured policy stays openable so it can be paused/deleted.
@@ -103,7 +121,7 @@ export function Policies() {
       if (entry.policy) setDetail(entry);
       else setWizard(entry);
     },
-    [aiEngineEnabled],
+    [aiEngineEnabled, gated],
   );
 
   // Open a category passed as ?category=<id> (deep link from the super

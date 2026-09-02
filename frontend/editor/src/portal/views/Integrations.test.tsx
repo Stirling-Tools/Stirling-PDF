@@ -21,6 +21,16 @@ const TestProvider = ({ children }: { children: React.ReactNode }) => (
 const render = (ui: Parameters<typeof baseRender>[0]) =>
   baseRender(ui, { wrapper: TestProvider });
 
+vi.mock("@portal/hooks/useConnectGate", () => ({
+  useConnectGate: () => ({
+    gated: false,
+    loading: false,
+    available: false,
+    connect: vi.fn(),
+    guard: (fn: unknown) => fn,
+  }),
+}));
+
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (key: string) => key,

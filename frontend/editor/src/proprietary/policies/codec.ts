@@ -41,6 +41,9 @@ export function toWirePolicy(state: PolicyDecodedState): WirePolicy {
     trigger: null,
     steps: state.steps,
     output: { type: "inline", options },
+    // Omitting this makes the backend stamp EditorConfig.disabled(), so a pause or a
+    // wizard save would quietly take the policy off the editor.
+    editor: { allowed: state.runsOnEditor, runOn: state.runOn },
   };
 }
 
@@ -63,10 +66,17 @@ export function fromWirePolicy(policy: WirePolicy): PolicyDecodedState {
     enabled: policy.enabled,
     categoryId,
     sources: Array.isArray(raw.sources) ? raw.sources : [],
+    runsOnEditor: policy.editor?.allowed === true,
     scopeTypes: Array.isArray(raw.scopeTypes) ? raw.scopeTypes : [],
     reviewerEmail: str(raw.reviewerEmail),
     fieldValues: raw.fieldValues ?? {},
-    runOn: resolveRunOn(raw.runOn, categoryId),
+    // The moment lives on `editor` now, but only carries meaning while the editor
+    // runs it (EditorConfig coerces a disabled policy's runOn to "upload"); fall back
+    // to the legacy options bag otherwise so the wizard still shows what was chosen.
+    runOn: resolveRunOn(
+      policy.editor?.allowed ? policy.editor.runOn : raw.runOn,
+      categoryId,
+    ),
     outputMode: raw.mode === "new_file" ? "new_file" : "new_version",
     outputName: str(raw.name),
     outputNamePosition: position,

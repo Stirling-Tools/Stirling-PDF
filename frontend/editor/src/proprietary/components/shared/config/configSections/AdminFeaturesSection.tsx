@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react";
+import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import {
@@ -50,11 +50,11 @@ export default function AdminFeaturesSection() {
     setSettings,
     loading,
     saving,
-    fetchSettings,
     saveSettings,
     isFieldPending,
   } = useAdminSettings<FeaturesSettingsData>({
     sectionName: "features",
+    enabled: loginEnabled,
     fetchTransformer: async (): Promise<
       FeaturesSettingsData & { _pending?: Record<string, unknown> }
     > => {
@@ -103,12 +103,6 @@ export default function AdminFeaturesSection() {
       };
     },
   });
-
-  useEffect(() => {
-    if (loginEnabled) {
-      fetchSettings();
-    }
-  }, [loginEnabled]);
 
   const { isDirty, resetToSnapshot, markSaved } = useSettingsDirty(
     settings,

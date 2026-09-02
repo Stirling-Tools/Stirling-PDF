@@ -25,6 +25,10 @@ const chromiumViewport = {
   viewport: STUBBED_VIEWPORT,
 };
 
+// Dedicated dev-server port via V2_PORT so local runs don't collide with a
+// vite already on 5173 from other parallel work. Defaults to 5173.
+const DEV_PORT = process.env.V2_PORT ?? "5173";
+
 export default defineConfig({
   testDir: "./src/core/tests",
   testMatch: "**/*.spec.ts",
@@ -49,7 +53,7 @@ export default defineConfig({
   expect: { timeout: 10_000 },
 
   use: {
-    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:5173",
+    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? `http://localhost:${DEV_PORT}`,
     trace: "on-first-retry",
     screenshot: "only-on-failure",
     video: "on-first-retry",
@@ -107,7 +111,14 @@ export default defineConfig({
     {
       name: "stubbed-webkit",
       testDir: "./src/core/tests/stubbed",
-      use: { ...devices["Desktop Safari"], viewport: STUBBED_VIEWPORT },
+      // Desktop Safari ships deviceScaleFactor 2; the editor now renders
+      // bitmaps at dpr x zoom, so leaving it would 4x every page raster in
+      // this suite. The HiDPI spec opts into 2x deliberately where it matters.
+      use: {
+        ...devices["Desktop Safari"],
+        viewport: STUBBED_VIEWPORT,
+        deviceScaleFactor: 1,
+      },
     },
   ],
 
@@ -117,9 +128,9 @@ export default defineConfig({
     // blew the 30s navigationTimeout under --workers=3 - see
     // all-tool-pages-load.spec.ts). Locally, keep `vite` dev for HMR.
     command: process.env.CI
-      ? "npx vite preview --port 5173 --strictPort"
-      : "npx vite",
-    url: process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:5173",
+      ? `npx vite preview --port ${DEV_PORT} --strictPort`
+      : `npx vite --port ${DEV_PORT} --strictPort`,
+    url: process.env.PLAYWRIGHT_BASE_URL ?? `http://localhost:${DEV_PORT}`,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
   },

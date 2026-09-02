@@ -14,6 +14,8 @@ export async function createStirlingFilesAndStubs(
   files: File[],
   parentStub: StirlingFileStub,
   toolId: ToolId,
+  /** Shown instead of the tool's name in version history (a policy passes its pipeline name). */
+  label?: string,
 ): Promise<{ stirlingFiles: StirlingFile[]; stubs: StirlingFileStub[] }> {
   const stirlingFiles: StirlingFile[] = [];
   const stubs: StirlingFileStub[] = [];
@@ -22,7 +24,7 @@ export async function createStirlingFilesAndStubs(
     const processedFileMetadata = await generateProcessedFileMetadata(file);
     const childStub = createChildStub(
       parentStub,
-      { toolId, timestamp: Date.now() },
+      { toolId, timestamp: Date.now(), ...(label ? { label } : {}) },
       file,
       processedFileMetadata?.thumbnailUrl,
       processedFileMetadata,
