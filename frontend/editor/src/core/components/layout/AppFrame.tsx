@@ -11,17 +11,15 @@ export function AppFrame() {
   return (
     <QuickNavHostProvider>
       <div className="app-frame">
-        {/* Desktop (Windows) custom window chrome; null on web + macOS/Linux. It
-            spans the full width above the rail so the panel dividers meet a clean
-            edge instead of the native caption. */}
+        {/* Desktop (Windows) window controls, drawn as a fixed overlay in the
+            top-right corner so the rail and panels run to the window edge; null
+            on web + macOS/Linux. */}
         <WindowTitleBar />
-        <div className="app-frame__body">
-          <QuickNavRailHost />
-          <div className="app-frame__content">
-            <Suspense fallback={<LoadingFallback />}>
-              <Outlet />
-            </Suspense>
-          </div>
+        <QuickNavRailHost />
+        <div className="app-frame__content">
+          <Suspense fallback={<LoadingFallback />}>
+            <Outlet />
+          </Suspense>
         </div>
       </div>
     </QuickNavHostProvider>

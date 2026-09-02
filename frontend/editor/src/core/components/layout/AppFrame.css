@@ -1,19 +1,11 @@
 /* ========== APP FRAME ========== */
-/* A column: the optional custom title bar (desktop), then the rail + app row. */
+/* The rail's column, then whichever app is mounted, so a switch changes only the app. */
 .app-frame {
   display: flex;
-  flex-direction: column;
   height: 100vh;
   height: 100dvh; /* track mobile browser chrome */
   overflow: hidden;
   background-color: var(--c-bg);
-}
-
-/* The rail's column, then whichever app is mounted, so a switch changes only the app. */
-.app-frame__body {
-  display: flex;
-  flex: 1;
-  min-height: 0;
 }
 
 /* min-width: 0 so the app shrinks instead of forcing the frame past the window. */

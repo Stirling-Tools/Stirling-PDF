@@ -16,10 +16,11 @@ const seedIsWindows =
   typeof navigator !== "undefined" && /Windows/i.test(navigator.userAgent);
 
 /**
- * Custom in-app window title bar for the Windows desktop build. The native
- * caption is removed in Rust (decorations:false), so this draws the themed drag
- * region + minimize/maximize/close controls in its place, letting the app chrome
- * run edge to edge. Renders nothing on macOS/Linux (native decorations kept) and
+ * Custom window controls for the Windows desktop build. The native caption is
+ * removed in Rust (decorations:false), so this draws minimize/maximize/close as
+ * a fixed overlay pinned to the top-right corner — the rail and panels run all
+ * the way to the window edge, and the app chrome reserves the corner via
+ * --wincontrols-w. Renders nothing on macOS/Linux (native decorations kept) and
  * in the browser build (core stub). tao provides edge/corner resize for the
  * undecorated window, so no manual resize handles are needed here.
  */
@@ -43,18 +44,21 @@ export function WindowTitleBar() {
     };
   }, []);
 
-  // Reserve the bar's height for the rest of the app. AppLayout sizes itself as
-  // calc(100dvh - var(--titlebar-h)); everywhere else the var is unset (0).
-  // Layout effect so it lands before paint and nothing overflows for a frame.
+  // The controls are a fixed overlay in the top-right corner. Publish their
+  // width so app chrome at the top-right (the tool panel header) can pad clear
+  // of them; unset (0) everywhere else. Layout effect so it lands before paint.
   useIsomorphicEffect(() => {
     const root = document.documentElement;
     if (active) {
-      root.style.setProperty("--titlebar-h", "2rem");
+      root.style.setProperty("--wincontrols-w", "8.625rem"); // 3 x 46px
+      root.style.setProperty("--wincontrols-h", "2rem");
     } else {
-      root.style.removeProperty("--titlebar-h");
+      root.style.removeProperty("--wincontrols-w");
+      root.style.removeProperty("--wincontrols-h");
     }
     return () => {
-      root.style.removeProperty("--titlebar-h");
+      root.style.removeProperty("--wincontrols-w");
+      root.style.removeProperty("--wincontrols-h");
     };
   }, [active]);
 
@@ -73,6 +77,36 @@ export function WindowTitleBar() {
         unlisten = u;
       });
     return () => unlisten?.();
+  }, [active]);
+
+  // Let the window be dragged (and double-click-maximized) from any
+  // non-interactive spot in the top strip. data-tauri-drag-region only fires
+  // when the bare container is the click target, which leaves most of a busy
+  // toolbar undraggable; a document-level hit test covers the whole top.
+  useEffect(() => {
+    if (!active) return;
+    const TOP_STRIP_PX = 48;
+    const INTERACTIVE =
+      "button, a[href], input, textarea, select, label, summary," +
+      '[role="button"], [role="tab"], [role="menuitem"], [role="switch"],' +
+      '[role="slider"], [contenteditable="true"], [data-no-window-drag]';
+    const draggableAt = (e: MouseEvent) => {
+      if (e.button !== 0 || e.clientY > TOP_STRIP_PX) return false;
+      const el = e.target as Element | null;
+      return !!el && !el.closest(INTERACTIVE);
+    };
+    const onMouseDown = (e: MouseEvent) => {
+      if (draggableAt(e)) void getCurrentWindow().startDragging();
+    };
+    const onDoubleClick = (e: MouseEvent) => {
+      if (draggableAt(e)) void getCurrentWindow().toggleMaximize();
+    };
+    document.addEventListener("mousedown", onMouseDown);
+    document.addEventListener("dblclick", onDoubleClick);
+    return () => {
+      document.removeEventListener("mousedown", onMouseDown);
+      document.removeEventListener("dblclick", onDoubleClick);
+    };
   }, [active]);
 
   if (!active) return null;

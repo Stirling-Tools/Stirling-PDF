@@ -1,17 +1,15 @@
-/* Custom Windows title bar (see WindowTitleBar.tsx). Full-width strip above the
-   rail + panels; the drag region is the empty area, controls sit top-right. */
+/* Custom Windows window controls (see WindowTitleBar.tsx): a fixed cluster in
+   the top-right corner, overlaying the app chrome — which reserves the corner
+   via --wincontrols-w. Kept above app overlays so the controls stay usable. */
 .titleBar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 1500;
   display: flex;
-  align-items: stretch;
-  justify-content: flex-end;
-  flex: 0 0 auto;
-  height: var(--titlebar-h, 2rem);
-  background: var(--c-bg);
+  height: 2rem;
   user-select: none;
   -webkit-user-select: none;
-  /* Keep the window controls above app overlays so they stay usable. */
-  position: relative;
-  z-index: 1500;
 }
 
 .controls {

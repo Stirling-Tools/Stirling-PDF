@@ -21,7 +21,9 @@
   align-items: center;
   gap: 1rem;
   min-height: 48px;
-  padding: 0 0.75rem;
+  /* Right padding also clears the desktop window-controls overlay so the whole
+     grid (search + actions) reflows inside it (0 unless Windows custom chrome). */
+  padding: 0 calc(0.75rem + var(--wincontrols-w, 0px)) 0 0.75rem;
   border-bottom: 1px solid var(--c-border-subtle);
   background: var(--c-bg-raised);
   flex-shrink: 0;

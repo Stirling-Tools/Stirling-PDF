@@ -22,15 +22,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         }
       `}</style>
       <div
-        style={{
-          // Viewport height minus the desktop custom title bar. --titlebar-h is
-          // unset (0) on web/macOS/Linux, so this stays 100dvh there. Kept
-          // viewport-relative on purpose: an ancestor (ThemeProvider) is only
-          // min-height:100vh, so a percentage height here would collapse.
-          height: "calc(100dvh - var(--titlebar-h, 0px))",
-          display: "flex",
-          flexDirection: "column",
-        }}
+        style={{ height: "100dvh", display: "flex", flexDirection: "column" }}
       >
         {banner}
         <div style={{ flex: 1, minHeight: 0, height: 0 }}>{children}</div>
