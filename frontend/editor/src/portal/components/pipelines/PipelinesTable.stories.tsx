@@ -55,6 +55,8 @@ export const NotAuthoredHere: Story = {
         id: "pipe-invoices",
         name: "Rotate invoices",
         enabled: true,
+        required: false,
+        icon: "",
         status: "active",
         trigger: "folder-watch",
         sources: [{ id: "src-invoices", name: "compress-invoices" }],
