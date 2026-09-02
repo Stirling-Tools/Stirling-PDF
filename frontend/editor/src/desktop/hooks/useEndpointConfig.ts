@@ -2,6 +2,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   useSyncExternalStore,
 } from "react";
@@ -77,11 +78,15 @@ export function useEndpointEnabled(endpoint: string): {
     retryDelay: RETRY_DELAY_MS,
   });
 
-  // Re-run only when readiness or the endpoint changes; queryClient/queryKey
-  // are stable and deliberately excluded.
+  // Skipped on mount for the same reason as above: the query is already running.
+  const seenReadiness = useRef<string | null>(null);
+  const readinessMark = `${backendOnline}:${offline}:${endpoint}`;
   useEffect(() => {
-    if (ready) void queryClient.invalidateQueries({ queryKey });
-  }, [backendOnline, offline, endpoint]);
+    const first = seenReadiness.current === null;
+    seenReadiness.current = readinessMark;
+    if (first || !ready) return;
+    void queryClient.invalidateQueries({ queryKey });
+  }, [readinessMark]);
 
   return {
     enabled: endpoint ? (data ?? true) : null,
@@ -105,12 +110,16 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
   const { ready, backendOnline, offline } = useBackendReadiness();
   const wanted = endpoints ?? [];
   const key = wanted.join(",");
-  const queryKey = qk.endpointsAvailability();
+  // Keyed by the endpoint set, not shared across consumers. A constant key
+  // would assert the value is caller-independent, and on two paths it is not:
+  // the self-hosted-offline check and the legacy ?endpoints= fallback both
+  // resolve only the endpoints they were handed. Consumers pass disjoint sets,
+  // so a shared entry would leave the second consumer's endpoints unresolved
+  // and reading as available. Prefix invalidation below still covers every set.
+  const queryKey = [...qk.endpointsAvailability(), key];
 
   const { data, isPending, refetch } = useQuery({
     queryKey,
-    // key drives the legacy fallback param and the offline per-endpoint checks;
-    // the shared cache entry is still the whole map, projected per consumer.
     queryFn: () => resolveEndpointsAvailability(key ? key.split(",") : []),
     enabled: wanted.length > 0 && ready,
     staleTime: CONFIG_STALE_TIME,
@@ -118,16 +127,26 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
     retryDelay: RETRY_DELAY_MS,
   });
 
-  // A reconnect (readiness flips) forces the swap from offline to remote data.
+  // A reconnect forces the swap from offline to remote data. Skipped on mount:
+  // the query is already fetching, and invalidating would double the request.
+  const seenReadiness = useRef<string | null>(null);
+  const readinessMark = `${backendOnline}:${offline}`;
   useEffect(() => {
-    if (ready) void queryClient.invalidateQueries({ queryKey });
-  }, [backendOnline, offline]);
+    const first = seenReadiness.current === null;
+    seenReadiness.current = readinessMark;
+    if (first || !ready) return;
+    void queryClient.invalidateQueries({
+      queryKey: qk.endpointsAvailability(),
+    });
+  }, [readinessMark]);
 
   const projected = useMemo(() => {
     const status: Record<string, boolean> = {};
     const details: Record<string, EndpointAvailabilityDetails> = {};
     if (!data) return { status, details };
     for (const endpoint of key ? key.split(",") : []) {
+      // Safe because the entry is per-set: a miss here means the server does
+      // not know the endpoint, which the old code also treated as available.
       const detail = data[endpoint] ?? OPTIMISTIC;
       status[endpoint] = detail.enabled;
       details[endpoint] = detail;

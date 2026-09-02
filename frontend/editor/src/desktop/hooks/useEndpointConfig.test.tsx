@@ -9,6 +9,8 @@ import {
 } from "vitest";
 import { renderHook, waitFor, act } from "@testing-library/react";
 import { TestQueryProvider } from "@app/tests/utils/TestQueryProvider";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import type { ReactNode } from "react";
 import {
   useEndpointEnabled,
   useMultipleEndpointsEnabled,
@@ -113,6 +115,8 @@ vi.mock("@app/services/endpointAvailabilityService", () => ({
 }));
 
 const NONE: string[] = [];
+const NARROW = ["merge"];
+const WIDE = ["merge", "ocr", "compress"];
 
 function appConfig(dependenciesReady: boolean) {
   return { data: { dependenciesReady } };
@@ -152,6 +156,11 @@ describe("desktop useMultipleEndpointsEnabled", () => {
 
     await waitFor(() => expect(result.current.loading).toBe(false));
     expect(result.current.endpointStatus).toEqual({ merge: true, ocr: false });
+    // Once, not twice: the readiness effect must not invalidate on mount.
+    const availabilityCalls = mockGet.mock.calls.filter((c) =>
+      String(c[0]).includes("endpoints-availability"),
+    );
+    expect(availabilityCalls).toHaveLength(1);
   });
 
   it("marks locally-disabled endpoints available in SaaS mode", async () => {
@@ -306,6 +315,46 @@ describe("desktop useMultipleEndpointsEnabled", () => {
     // on the stale offline answer.
     setSelfHostedStatus("online");
     await waitFor(() => expect(result.current.endpointStatus.merge).toBe(true));
+  });
+
+  it("resolves each consumer's own endpoints when they ask for disjoint sets", async () => {
+    // The offline path resolves only the endpoints it is handed. If consumers
+    // shared one cache entry, the second would project endpoints nobody
+    // checked and read them as available.
+    mode = "selfhosted";
+    selfHostedStatus = "offline";
+    mockLocalSupport.mockImplementation((endpoint: string) =>
+      Promise.resolve(endpoint === "merge"),
+    );
+
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: false, gcTime: Infinity } },
+    });
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <QueryClientProvider client={client}>{children}</QueryClientProvider>
+    );
+
+    const { result } = renderHook(
+      () => ({
+        narrow: useMultipleEndpointsEnabled(NARROW),
+        wide: useMultipleEndpointsEnabled(WIDE),
+      }),
+      { wrapper },
+    );
+
+    await waitFor(() => expect(result.current.wide.loading).toBe(false));
+
+    // ocr and compress were genuinely probed and are unsupported locally.
+    expect(result.current.wide.endpointStatus).toEqual({
+      merge: true,
+      ocr: false,
+      compress: false,
+    });
+    expect(mockLocalSupport).toHaveBeenCalledWith("ocr", expect.anything());
+    expect(mockLocalSupport).toHaveBeenCalledWith(
+      "compress",
+      expect.anything(),
+    );
   });
 
   it("reports nothing loading when asked for no endpoints", async () => {
