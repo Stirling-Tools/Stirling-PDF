@@ -29,13 +29,16 @@ from stirling.contracts import (
 from stirling.documents import RagCapability
 from stirling.models import PrincipalId
 from stirling.models.agent_tool_models import AgentToolId, MathAuditorAgentParams
+from stirling.product_docs import DocsCapability
 from stirling.services import AppRuntime, require_current_user_id
+from stirling.services.tracking import current_user_id
 
 logger = logging.getLogger(__name__)
 
 
 PDF_QUESTION_SYSTEM_PROMPT = (
-    "You answer questions about PDF documents using three retrieval tools:\n"
+    "You answer questions about the user's PDF documents and about Stirling PDF "
+    "itself, using these retrieval tools:\n"
     "\n"
     "1. search_knowledge(query) - returns the passages most semantically similar "
     "to the query. Use it for targeted lookups: a specific fact, a named section, "
@@ -54,8 +57,20 @@ PDF_QUESTION_SYSTEM_PROMPT = (
     "the question is about logical or textual consistency of the content (NOT "
     "numerical math). One call audits the entire document set.\n"
     "\n"
-    "Pick the right tool, call it, then answer from what you got back. Do not "
-    "guess or use outside knowledge.\n"
+    "4. search_docs(query) - searches the Stirling PDF product documentation. Use it "
+    "when the question is about the application rather than about a file: what a "
+    "setting does, how to install or configure something, how to enable a feature, "
+    "what one of the app's tools is for. It knows nothing about the user's documents, "
+    "and the first three tools know nothing about the application - so a question that "
+    "spans both (for example 'why did compression not shrink THIS file?') deserves a "
+    "call to each.\n"
+    "\n"
+    "Some questions arrive with no file attached at all. Those are almost always about "
+    "Stirling PDF itself: use search_docs.\n"
+    "\n"
+    "Call the tools you need - usually one, both when the question spans the document "
+    "and the application - then answer from what they returned. Do not guess or use "
+    "outside knowledge.\n"
     "\n"
     "Guidelines:\n"
     "- If the retrieved content does not support a confident answer, return not_found.\n"
@@ -66,10 +81,12 @@ PDF_QUESTION_SYSTEM_PROMPT = (
     "- The reason is shown directly to the end user, so write it in plain, friendly "
     "language. One or two short sentences.\n"
     "- NEVER mention 'RAG', 'retrieval', 'chunks', 'search results', 'targeted search', "
-    "'search_knowledge', 'read_full_document', 'find_contradictions', or other "
-    "implementation details.\n"
+    "'search_knowledge', 'read_full_document', 'find_contradictions', 'search_docs', or "
+    "other implementation details.\n"
     "- For questions where the answer just isn't in the document, say so directly: "
     "'I couldn't find that information in the document.'\n"
+    "- For a question about Stirling PDF that the documentation does not cover, say that "
+    "instead: 'The documentation doesn't cover that.' Never answer it from memory.\n"
     "- Do not make it sound like you're choosing not to answer."
 )
 
@@ -138,7 +155,11 @@ class PdfQuestionAgent:
             answer = await self._synthesise_math_answer(request.user_message, verdict)
             return PdfQuestionAnswerResponse(answer=answer, evidence=[])
 
-        if await self._math_intent_classifier.classify(request.user_message):
+        # Only with a document in hand: the math specialist audits attached figures, and the
+        # classifier sees the message alone. Now that file-less product questions route here,
+        # "how does it calculate the compression percentage?" would otherwise plan a
+        # math-auditor step with no input file, which the Java tool rejects outright.
+        if request.files and await self._math_intent_classifier.classify(request.user_message):
             # First turn — emit a one-step plan calling the math specialist,
             # with resume_with set so the caller comes back with the verdict
             # in artifacts (handled by the resume branch above).
@@ -161,8 +182,19 @@ class PdfQuestionAgent:
             )
         )
 
+    @staticmethod
+    def _principals_for(files: list[AiFile]) -> list[PrincipalId]:
+        """A turn with no files touches no per-user storage, so it must not demand an id
+        that login-disabled self-hosts never send - that is exactly the deployment most
+        likely to ask how to turn login on. An empty principal set is fail-closed in the
+        store, so document search finds nothing while the docs tool still works."""
+        if not files:
+            user_id = current_user_id.get()
+            return [PrincipalId(user_id)] if user_id else []
+        return [PrincipalId(require_current_user_id())]
+
     async def _find_missing_files(self, files: list[AiFile]) -> list[AiFile]:
-        principals = [PrincipalId(require_current_user_id())]
+        principals = self._principals_for(files)
         missing: list[AiFile] = []
         for file in files:
             if not await self.runtime.documents.has_collection(file.id, principals=principals):
@@ -170,14 +202,16 @@ class PdfQuestionAgent:
         return missing
 
     async def _run_answer_agent(self, request: PdfQuestionRequest) -> PdfQuestionTerminalResponse:
-        """Drive a single smart-model agent with both retrieval tools.
+        """Drive a single smart-model agent with every retrieval tool.
 
-        The agent picks ``search_knowledge`` for targeted lookups and
-        ``read_full_document`` for whole-document questions. Removing the
-        upstream classifier keeps that judgement in the same call that writes
-        the answer, and lets the agent mix tools when the question warrants it.
+        The agent picks ``search_knowledge`` for targeted lookups,
+        ``read_full_document`` for whole-document questions, and ``search_docs``
+        for questions about Stirling PDF itself. Removing the upstream classifier
+        keeps that judgement in the same call that writes the answer, and lets the
+        agent mix tools when the question warrants it - which is why a docs lookup
+        is a tool here rather than a seventh arm on the top-level router.
         """
-        principals = [PrincipalId(require_current_user_id())]
+        principals = self._principals_for(request.files)
         rag = RagCapability(
             documents=self.runtime.documents,
             principals=principals,
@@ -185,6 +219,7 @@ class PdfQuestionAgent:
             top_k=self.runtime.settings.rag_default_top_k,
             max_searches=self.runtime.settings.rag_max_searches,
         )
+        docs = DocsCapability(self.runtime)
         whole_doc = WholeDocReaderCapability(
             runtime=self.runtime,
             files=request.files,
@@ -208,8 +243,8 @@ class PdfQuestionAgent:
             system_prompt=PDF_QUESTION_SYSTEM_PROMPT,
             # pydantic-ai accepts a list of (string-or-callable) instruction sources;
             # it resolves each at run time and concatenates them for the model.
-            instructions=[rag.instructions, whole_doc.instructions, contradiction.instructions],
-            toolsets=[rag.toolset, whole_doc.toolset, contradiction.toolset],
+            instructions=[rag.instructions, whole_doc.instructions, contradiction.instructions, docs.instructions],
+            toolsets=[rag.toolset, whole_doc.toolset, contradiction.toolset, docs.toolset],
             model_settings=self.runtime.smart_model_settings,
         )
         prompt = self._build_prompt(request)
@@ -232,5 +267,5 @@ class PdfQuestionAgent:
             f"Conversation history:\n{history}\n"
             f"Files: {format_file_names(request.files)}\n"
             f"Question: {request.question}\n"
-            "Pick the right retrieval tool for this question, then answer from what it returns."
+            "Call the tools this question needs, then answer from what they return."
         )

@@ -67,12 +67,12 @@ def runtime_with_stub_docs(runtime: AppRuntime) -> AppRuntime:
 
 
 @pytest.mark.anyio
-async def test_run_answer_agent_builds_agent_with_three_toolsets(
+async def test_run_answer_agent_builds_agent_with_four_toolsets(
     runtime_with_stub_docs: AppRuntime,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """``_run_answer_agent`` constructs an ``Agent`` with all three retrieval
-    toolsets (rag, whole-doc, contradiction). We intercept the Agent
+    """``_run_answer_agent`` constructs an ``Agent`` with all four retrieval
+    toolsets (rag, whole-doc, contradiction, product-docs). We intercept the Agent
     constructor and inspect what was wired.
 
     Uses pytest's ``monkeypatch`` fixture rather than direct attribute
@@ -124,17 +124,17 @@ async def test_run_answer_agent_builds_agent_with_three_toolsets(
 
     toolsets = captured.get("toolsets")
     assert isinstance(toolsets, list)
-    assert len(toolsets) == 3
+    assert len(toolsets) == 4
 
     # Inspect the registered tool names. A regression that double-wired
     # one capability (e.g. two ``rag.toolset`` and dropping
-    # ``contradiction.toolset``) would still satisfy ``len == 3`` but
+    # ``contradiction.toolset``) would still satisfy ``len == 4`` but
     # the union of tool names would not include ``find_contradictions``.
     tool_names: set[str] = set()
     for ts in toolsets:
         assert isinstance(ts, FunctionToolset), f"expected FunctionToolset, got {type(ts).__name__}"
         tool_names.update(ts.tools.keys())
 
-    assert tool_names == {"search_knowledge", "read_full_document", "find_contradictions"}, (
+    assert tool_names == {"search_knowledge", "read_full_document", "find_contradictions", "search_docs"}, (
         f"unexpected toolset wiring; tool names = {sorted(tool_names)}"
     )

@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any, cast
 
 import pytest
+from pydantic_ai import ToolDefinition
 
 from stirling.contracts import PageText
 from stirling.documents.chunker import chunk_text
@@ -523,6 +525,59 @@ class TestRagCapability:
         cap = RagCapability(documents, principals=OWNER_PRINCIPALS)
         instructions = cap.instructions
         assert callable(instructions)
+
+    def test_empty_collections_is_no_scope_not_every_scope(self, documents: DocumentService) -> None:
+        """`collections=[]` means this turn has no documents. It used to be indistinguishable
+        from `None` because both are falsy, so a question asked with no file attached searched
+        everything the caller had ever ingested and could answer from an unrelated PDF."""
+        cap = RagCapability(documents, principals=OWNER_PRINCIPALS, collections=[])
+        instructions = cap.instructions
+        assert isinstance(instructions, str)
+        assert "No documents are attached" in instructions
+
+    @pytest.mark.anyio
+    async def test_empty_collections_withholds_the_search_tool(self, documents: DocumentService) -> None:
+        await documents.ingest(
+            FileId("unrelated"),
+            _pages("A contract about roofing."),
+            source="contract.pdf",
+            owner_id=OWNER,
+            read_principals=OWNER_PRINCIPALS,
+            expires_at=None,
+        )
+        cap = RagCapability(documents, principals=OWNER_PRINCIPALS, collections=[])
+        tool_def = ToolDefinition(name="search_knowledge", description="", parameters_json_schema={})
+        assert await cap._prepare_search_knowledge(cast(Any, None), tool_def) is None
+
+    @pytest.mark.anyio
+    async def test_empty_collections_never_reaches_an_unrelated_document(self, documents: DocumentService) -> None:
+        await documents.ingest(
+            FileId("unrelated"),
+            _pages("A contract about roofing."),
+            source="contract.pdf",
+            owner_id=OWNER,
+            read_principals=OWNER_PRINCIPALS,
+            expires_at=None,
+        )
+        cap = RagCapability(documents, principals=OWNER_PRINCIPALS, collections=[])
+        result = await _invoke_search_knowledge(cap, "roofing")
+        assert "roofing" not in result
+        assert "No documents are attached" in result
+
+    @pytest.mark.anyio
+    async def test_none_collections_still_searches_everything_readable(self, documents: DocumentService) -> None:
+        """The unscoped behaviour is deliberate for callers that want it; only [] changed."""
+        await documents.ingest(
+            FileId("col-a"),
+            _pages("Alpha content about roofing."),
+            source="a.pdf",
+            owner_id=OWNER,
+            read_principals=OWNER_PRINCIPALS,
+            expires_at=None,
+        )
+        cap = RagCapability(documents, principals=OWNER_PRINCIPALS, collections=None)
+        result = await _invoke_search_knowledge(cap, "roofing")
+        assert "roofing" in result
 
     @pytest.mark.anyio
     async def test_dynamic_instructions_list_available_collections(self, documents: DocumentService) -> None:

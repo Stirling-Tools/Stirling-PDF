@@ -69,7 +69,11 @@ class WholeDocReaderCapability:
 
     @property
     def instructions(self) -> str:
-        names = ", ".join(f.name for f in self._files) if self._files else "the attached documents"
+        # Silent when the tool is withheld. Describing a tool the model cannot call is worse
+        # than saying nothing: it invites the model to answer as if it had read a document.
+        if not self._files:
+            return ""
+        names = ", ".join(f.name for f in self._files)
         return (
             "You have a 'read_full_document' tool that reads every page of "
             f"{names} in parallel and returns notes relevant to a query. "
@@ -89,8 +93,11 @@ class WholeDocReaderCapability:
         ctx: RunContext[None],
         tool_def: ToolDefinition,
     ) -> ToolDefinition | None:
-        """Hide the tool from the agent's toolset once the per-run budget is spent.
+        """Hide the tool from the agent's toolset once the per-run budget is spent, or when
+        there is no document to read - a product question arrives with no files attached.
         Mirrors the search_knowledge prepare callback."""
+        if not self._files:
+            return None
         if self._read_count >= self._max_reads:
             return None
         return tool_def

@@ -59,12 +59,17 @@ class _RouteDecision(ApiModel):
 _ROUTER_SYSTEM_PROMPT = (
     "You are the top-level router. Choose exactly one capability that best handles the request:\n"
     "- pdf_edit: modify or convert one or more attached PDFs.\n"
-    "- pdf_question: answer questions about the contents of the attached PDFs.\n"
+    # The arms stay terse and parallel on purpose, and only pdf_question carries the docs
+    # clause. Measured on a local 7B: lengthening pdf_create stole user_spec, worked examples
+    # inside user_spec stole it for pdf_edit, and the same hint as a standalone trailing line
+    # stole it again. Kept inside the arm it scores 23/24 against 20/24 without it.
+    "- pdf_question: answer questions about the contents of the attached PDFs, or about how "
+    "to use, configure or install Stirling PDF itself; a question arriving with no file is "
+    "usually this one.\n"
     "- user_spec: create or define an agent spec.\n"
     "- pdf_review: return the PDF with review comments/annotations attached.\n"
-    "- pdf_create: generate a NEW document from scratch (invoice, report, letter) - no input file.\n"
-    "- unsupported: none of the above fit, or the user asks about the assistant itself; put a "
-    "helpful message in 'message'.\n"
+    "- pdf_create: generate a NEW document from scratch (invoice, report, letter).\n"
+    "- unsupported: none of the above fit; put a helpful message in 'message'.\n"
     "Respond with the capability and (only for unsupported) a message."
 )
 
@@ -83,7 +88,11 @@ class OrchestratorAgent:
                 ToolOutput(
                     self.delegate_pdf_question,
                     name="delegate_pdf_question",
-                    description="Delegate questions about PDF contents and return the PDF question result.",
+                    description=(
+                        "Delegate questions about PDF contents, and questions about how to use,"
+                        " configure or install Stirling PDF itself; a question arriving with no"
+                        " file is usually this one."
+                    ),
                 ),
                 ToolOutput(
                     self.delegate_user_spec,
@@ -108,7 +117,8 @@ class OrchestratorAgent:
                         "Delegate requests to create a new PDF document from scratch based on a"
                         " description. Use this when the user wants to generate a new document"
                         " (e.g. 'create an invoice', 'write a report', 'make a contract',"
-                        " 'draft a letter'). No input file is required."
+                        " 'draft a letter'). Choose it on that intent, not on the absence of an"
+                        " attached file — a question about the app also arrives with no file."
                     ),
                 ),
                 ToolOutput(
@@ -124,15 +134,18 @@ class OrchestratorAgent:
                 "You are the top-level orchestrator. "
                 "Choose exactly one output function that best handles the request. "
                 "Use delegate_pdf_edit for any request to modify or convert one or more PDFs. "
-                "Use delegate_pdf_question for questions about the contents of the attached PDFs. "
+                "Use delegate_pdf_question for questions about the contents of the attached"
+                " PDFs, or about how to use, configure or install Stirling PDF itself; a"
+                " question arriving with no file is usually this one. "
                 "Use delegate_user_spec for requests to create or define an agent spec. "
                 "Use delegate_pdf_review when the user wants the PDF returned with review"
                 " comments attached — anything like 'review this', 'annotate with comments',"
                 " 'leave feedback on the PDF'. "
                 "Use delegate_pdf_create when the user wants to generate a new document from"
-                " scratch with no input file — invoices, reports, letters, contracts, etc. "
-                "Use unsupported_capability when the user asks about the assistant itself "
-                "or when none of the other outputs fit; supply a helpful message."
+                " scratch — invoices, reports, letters, contracts, etc. "
+                "Choose on intent, not on whether a file is attached. "
+                "Use unsupported_capability only when none of the other outputs fit;"
+                " supply a helpful message."
             ),
             model_settings=runtime.fast_model_settings,
         )

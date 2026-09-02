@@ -129,6 +129,10 @@ engine: &engine
   - .github/workflows/ai-engine.yml
   - Taskfile.yml
   - .taskfiles/engine.yml
+  # The engine ships its own byte-identical copy of the docs manifest and asserts the two
+  # agree. A PR touching only the frontend copy must still run that gate, or the assistant
+  # and the portal end up serving different manuals.
+  - frontend/editor/src/portal/generated/docsManifest.json
 
 # Files that can make the committed generated API models (frontend tool API
 # types and engine tool models) stale: their Java sources, generators,

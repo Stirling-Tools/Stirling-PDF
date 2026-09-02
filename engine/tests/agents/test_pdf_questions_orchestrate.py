@@ -20,9 +20,10 @@ from stirling.contracts import (
     SupportedCapability,
 )
 from stirling.contracts.ledger import Discrepancy, DiscrepancyKind, Severity, Verdict
-from stirling.models import FileId
+from stirling.models import FileId, PrincipalId, UserId
 from stirling.models.agent_tool_models import AgentToolId
 from stirling.services.runtime import AppRuntime
+from stirling.services.tracking import current_user_id
 
 
 @dataclass
@@ -69,6 +70,54 @@ async def test_orchestrate_classifier_true_returns_math_audit_plan(runtime: AppR
     assert response.resume_with == SupportedCapability.PDF_QUESTION
     assert len(response.steps) == 1
     assert response.steps[0].tool == AgentToolId.MATH_AUDITOR_AGENT
+
+
+def test_principals_require_a_user_id_when_files_are_attached(runtime: AppRuntime) -> None:
+    """Anything touching per-user document storage must still fail closed."""
+    token = current_user_id.set(None)
+    try:
+        with pytest.raises(RuntimeError, match="X-User-Id"):
+            PdfQuestionAgent._principals_for([AiFile(id=FileId("f1"), name="a.pdf")])
+    finally:
+        current_user_id.reset(token)
+
+
+def test_principals_tolerate_a_missing_user_id_when_no_files_are_attached(runtime: AppRuntime) -> None:
+    """The whole reason a login-disabled self-host can ask a product question. Java sends no
+    X-User-Id when security is off, and a file-less turn touches no per-user storage - an empty
+    principal set is fail-closed in the store, so nothing is widened by tolerating it."""
+    token = current_user_id.set(None)
+    try:
+        assert PdfQuestionAgent._principals_for([]) == []
+    finally:
+        current_user_id.reset(token)
+
+
+def test_principals_still_use_the_user_id_when_one_is_present(runtime: AppRuntime) -> None:
+    token = current_user_id.set(UserId("bob"))
+    try:
+        assert PdfQuestionAgent._principals_for([]) == [PrincipalId("bob")]
+    finally:
+        current_user_id.reset(token)
+
+
+@pytest.mark.anyio
+async def test_orchestrate_never_plans_a_math_audit_without_a_file(runtime: AppRuntime) -> None:
+    """The math specialist audits figures in an attached document, and the classifier only
+    sees the message text. Product questions now route here with no file, so a numeric-
+    sounding one ("how does it calculate the compression percentage?") would otherwise plan
+    a math-auditor step with no input - which the Java tool rejects outright."""
+    agent = PdfQuestionAgent(runtime)
+    request = OrchestratorRequest(user_message="how does Stirling calculate the compression percentage?")
+
+    classifier = AsyncMock(return_value=True)
+    with patch.object(agent._math_intent_classifier, "classify", classifier):
+        with patch.object(agent, "handle", AsyncMock(return_value="handled")) as handle:
+            response = await agent.orchestrate(request)
+
+    assert response == "handled"
+    handle.assert_awaited_once()
+    classifier.assert_not_awaited()
 
 
 @pytest.mark.anyio

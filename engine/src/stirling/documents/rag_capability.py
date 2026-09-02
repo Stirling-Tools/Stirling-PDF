@@ -12,6 +12,13 @@ from stirling.models import FileId, PrincipalId
 
 logger = logging.getLogger(__name__)
 
+_NO_DOCUMENTS_INSTRUCTIONS = (
+    "No documents are attached to this conversation, so there is no document "
+    "knowledge base to search. Answer from the other tools and context you have."
+)
+
+_NO_DOCUMENTS_RESULT = "No documents are attached to this conversation, so there is nothing to search."
+
 
 class RagCapability:
     """Bundles RAG instructions and the ``search_knowledge`` toolset for agent injection.
@@ -29,8 +36,14 @@ class RagCapability:
             toolsets=[rag.toolset],
         )
 
-    When no collections are pinned, the instructions are generated dynamically at
-    run time so the agent sees the collections the caller can read.
+    ``collections`` has three states, and the difference between the last two matters:
+
+    * a non-empty list - search exactly those collections.
+    * ``None`` - unscoped. Instructions are generated at run time so the agent sees every
+      collection the caller can read, and searches span all of them.
+    * ``[]`` - this turn has no documents at all. The tool is withheld entirely. Passing the
+      caller's attached files straight through therefore does the right thing when there are
+      none, instead of silently widening to their whole corpus.
 
     Lifecycle: a ``RagCapability`` instance is intended to live for the duration of a
     single agent run and binds to one caller's principal set.
@@ -59,10 +72,20 @@ class RagCapability:
         self._toolset = toolset
 
     @property
+    def _no_documents_in_scope(self) -> bool:
+        """An explicitly empty scope, as opposed to None's unscoped. Named because the
+        obvious spelling, ``not self._collections``, silently means the opposite."""
+        return self._collections is not None and not self._collections
+
+    @property
     def instructions(self) -> str | Callable[[], Awaitable[str]]:
-        if self._collections:
-            return self._static_instructions_text(self._collections)
-        return self._dynamic_instructions
+        # None and [] are different scopes, not the same falsy one: None is "search
+        # everything this caller can read", [] is "this turn has no documents".
+        if self._collections is None:
+            return self._dynamic_instructions
+        if not self._collections:
+            return _NO_DOCUMENTS_INSTRUCTIONS
+        return self._static_instructions_text(self._collections)
 
     @property
     def toolset(self) -> AbstractToolset[None]:
@@ -102,6 +125,10 @@ class RagCapability:
         """Remove the search tool from the agent's toolset once the per-run search
         budget is exhausted. The agent then has no choice but to answer from what it
         has already retrieved, which prevents runaway search loops."""
+        # An explicitly empty scope means no documents are in play this turn; offering
+        # a document search would only invite an answer sourced from an unrelated file.
+        if self._no_documents_in_scope:
+            return None
         if self._search_count >= self._max_searches:
             return None
         return tool_def
@@ -116,9 +143,12 @@ class RagCapability:
         Returns:
             Formatted text with the most relevant knowledge base excerpts.
         """
+        # Defensive: prepare() already withholds the tool in this state.
+        if self._no_documents_in_scope:
+            return _NO_DOCUMENTS_RESULT
         self._search_count += 1
         k = max_results if max_results is not None else self._top_k
-        if self._collections:
+        if self._collections is not None:
             all_results = []
             for col in self._collections:
                 col_results = await self._documents.search(query, principals=self._principals, collection=col, top_k=k)

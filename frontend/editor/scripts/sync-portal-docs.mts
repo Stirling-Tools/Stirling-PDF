@@ -27,6 +27,14 @@ const SITE = "https://docs.stirlingpdf.com";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const OUT = resolve(HERE, "../src/portal/generated/docsManifest.json");
+// The AI engine answers product questions from the same corpus. It is a separate service
+// with its own image, and both engine images COPY the whole engine/src tree, so writing a
+// second copy in there is all the shipping it needs - and the publish workflow hashes that
+// tree, so a docs sync busts the engine image cache on its own.
+const ENGINE_OUT = resolve(
+  HERE,
+  "../../../engine/src/stirling/product_docs/docs_manifest.json",
+);
 
 /* ── Minimal tar reader (ustar + pax/GNU long names) ─────────────────────── */
 
@@ -141,13 +149,18 @@ async function main(): Promise<void> {
     siteBaseUrl: SITE,
   });
 
-  mkdirSync(dirname(OUT), { recursive: true });
-  writeFileSync(OUT, JSON.stringify(manifest, null, 2) + "\n", "utf8");
+  const serialised = JSON.stringify(manifest, null, 2) + "\n";
+  // Byte-identical copies so engine/tests/test_product_docs.py can assert they agree.
+  for (const dest of [OUT, ENGINE_OUT]) {
+    mkdirSync(dirname(dest), { recursive: true });
+    writeFileSync(dest, serialised, "utf8");
+  }
 
   const items = manifest.nav.reduce((n, s) => n + s.items.length, 0);
   console.log(
     `Wrote ${manifest.nav.length} sections, ${items} docs → ${OUT.replace(/.*[/\\]frontend[/\\]/, "frontend/")}`,
   );
+  console.log(`  and → ${ENGINE_OUT.replace(/.*[/\\]engine[/\\]/, "engine/")}`);
   for (const s of manifest.nav) {
     console.log(`  ${s.icon} ${s.label} (${s.items.length})`);
   }
