@@ -5,7 +5,9 @@ import { PdfiumPageRenderer } from "@app/tools/pdfTextEditor/pdfium/PdfiumPageRe
 import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
 import type { PageSnapshot } from "@app/tools/pdfTextEditor/types";
 import { TextRunOverlay } from "@app/tools/pdfTextEditor/components/TextRunOverlay";
+import { TableOverlay } from "@app/tools/pdfTextEditor/components/TableOverlay";
 import { ImageHandle } from "@app/tools/pdfTextEditor/components/ImageHandle";
+import type { EditorStore } from "@app/tools/pdfTextEditor/store/EditorStore";
 import { AnnotationOutline } from "@app/tools/pdfTextEditor/components/AnnotationOutline";
 import { DisplayTransform } from "@app/tools/pdfTextEditor/model/DisplayTransform";
 import { PageGuides } from "@app/tools/pdfTextEditor/components/PageRulers";
@@ -13,6 +15,8 @@ import { useDevicePixelRatio } from "@app/tools/pdfTextEditor/hooks/useDevicePix
 
 interface PageViewProps {
   document: EditorDocument;
+  /** Store, for the table overlay's dispatch/selection. */
+  store: EditorStore;
   page: PageSnapshot;
   /** Fires when the page enters the viewport for the first time. */
   onFirstVisible?: (pageIndex: number) => void;
@@ -66,6 +70,7 @@ function nearestScrollRoot(el: HTMLElement): HTMLElement | null {
 // positioned, editable element per text run.
 export function PageView({
   document,
+  store,
   page,
   scale,
   widthMode,
@@ -239,6 +244,8 @@ export function PageView({
     >
       <canvas
         ref={canvasRef}
+        // Lets a rebuild sample the scan's own colours off the rendered page.
+        data-page-canvas={page.pageIndex}
         style={{
           display: "block",
           width: raster.width,
@@ -340,6 +347,14 @@ export function PageView({
             }
           />
         ))}
+        {/* Grid + empty-cell editors sit below the run overlays so filled
+            cells are edited through their own run. */}
+        <TableOverlay
+          page={page}
+          transform={transform}
+          scale={cssScale}
+          store={store}
+        />
         {page.runs.map((run) => (
           <TextRunOverlay
             key={run.id}

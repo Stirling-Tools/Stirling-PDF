@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import HighlightAltIcon from "@mui/icons-material/HighlightAltOutlined";
 import TextFieldsIcon from "@mui/icons-material/TextFieldsOutlined";
 import ImageIcon from "@mui/icons-material/ImageOutlined";
+import TableChartIcon from "@mui/icons-material/TableChartOutlined";
 import SearchIcon from "@mui/icons-material/SearchOutlined";
 import HelpIcon from "@mui/icons-material/HelpOutlineOutlined";
 import { Button } from "@app/ui/Button";
@@ -39,6 +40,9 @@ interface SidebarProps {
   /** True while the next page click drops a new text box. */
   addTextArmed: boolean;
   onToggleAddText: () => void;
+  /** True while the next page click drops a new table. */
+  addTableArmed: boolean;
+  onToggleAddTable: () => void;
   onPickImage: () => void;
 }
 
@@ -67,6 +71,8 @@ export function EditorSidebar({
   onShowHelp,
   addTextArmed,
   onToggleAddText,
+  addTableArmed,
+  onToggleAddTable,
   onPickImage,
 }: SidebarProps) {
   const { t } = useTranslation();
@@ -149,10 +155,13 @@ export function EditorSidebar({
 
       {/* Insert applies in either tab and to no selection in particular, so it
           rides with the sticky header rather than inside a panel. */}
+      {/* Three insert buttons share a ~260px panel, so the labels are the bare
+          noun and the verb lives in the tooltip. The armed state is the filled
+          variant, not a longer label: a label that grows on click cannot fit
+          three to a row and clipped "Add image" off the panel. */}
       <Group
-        gap="xs"
+        gap={6}
         grow
-        wrap="nowrap"
         px="md"
         py="xs"
         style={{
@@ -163,28 +172,63 @@ export function EditorSidebar({
           borderBottom: "1px solid var(--mantine-color-default-border)",
         }}
       >
-        <Button
-          size="sm"
-          variant={addTextArmed ? "primary" : "secondary"}
-          accent={addTextArmed ? "default" : "neutral"}
-          leftSection={<TextFieldsIcon fontSize="small" />}
-          onClick={onToggleAddText}
-          data-testid="pdf-editor-add-text"
+        <Tooltip
+          label={
+            addTextArmed
+              ? t(
+                  "pdfTextEditor.sidebar.clickPageToAddText",
+                  "Click page to add text",
+                )
+              : t("pdfTextEditor.sidebar.addText", "Add text")
+          }
         >
-          {addTextArmed
-            ? t("pdfTextEditor.sidebar.clickPageToAddText", "Click page")
-            : t("pdfTextEditor.sidebar.addText", "Add text")}
-        </Button>
-        <Button
-          size="sm"
-          variant="secondary"
-          accent="neutral"
-          leftSection={<ImageIcon fontSize="small" />}
-          onClick={onPickImage}
-          data-testid="pdf-editor-add-image"
+          <Button
+            size="sm"
+            variant={addTextArmed ? "primary" : "secondary"}
+            accent={addTextArmed ? "default" : "neutral"}
+            leftSection={<TextFieldsIcon fontSize="small" />}
+            onClick={onToggleAddText}
+            px="xs"
+            data-testid="pdf-editor-add-text"
+          >
+            {t("pdfTextEditor.sidebar.text", "Text")}
+          </Button>
+        </Tooltip>
+        <Tooltip
+          label={
+            addTableArmed
+              ? t(
+                  "pdfTextEditor.sidebar.clickPageToAddTable",
+                  "Click page to add a table",
+                )
+              : t("pdfTextEditor.sidebar.addTable", "Add table")
+          }
         >
-          {t("pdfTextEditor.sidebar.addImage", "Add image")}
-        </Button>
+          <Button
+            size="sm"
+            variant={addTableArmed ? "primary" : "secondary"}
+            accent={addTableArmed ? "default" : "neutral"}
+            leftSection={<TableChartIcon fontSize="small" />}
+            onClick={onToggleAddTable}
+            px="xs"
+            data-testid="pdf-editor-add-table"
+          >
+            {t("pdfTextEditor.sidebar.table", "Table")}
+          </Button>
+        </Tooltip>
+        <Tooltip label={t("pdfTextEditor.sidebar.addImage", "Add image")}>
+          <Button
+            size="sm"
+            variant="secondary"
+            accent="neutral"
+            leftSection={<ImageIcon fontSize="small" />}
+            onClick={onPickImage}
+            px="xs"
+            data-testid="pdf-editor-add-image"
+          >
+            {t("pdfTextEditor.sidebar.image", "Image")}
+          </Button>
+        </Tooltip>
       </Group>
 
       <Box>

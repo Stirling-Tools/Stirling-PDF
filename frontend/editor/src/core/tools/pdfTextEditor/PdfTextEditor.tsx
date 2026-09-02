@@ -553,6 +553,12 @@ export default function PdfTextEditor(_props: BaseToolProps) {
             store.getState().mode === "addText" ? "select" : "addText",
           )
         }
+        addTableArmed={state.mode === "addTable"}
+        onToggleAddTable={() =>
+          store.setMode(
+            store.getState().mode === "addTable" ? "select" : "addTable",
+          )
+        }
         onPickImage={() =>
           document
             .querySelector<HTMLInputElement>(

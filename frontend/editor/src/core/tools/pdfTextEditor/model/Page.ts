@@ -2,7 +2,9 @@ import { TextRun } from "@app/tools/pdfTextEditor/model/TextRun";
 import { ImageObject } from "@app/tools/pdfTextEditor/model/ImageObject";
 import { DisplayTransform } from "@app/tools/pdfTextEditor/model/DisplayTransform";
 import type { AnnotationBox } from "@app/tools/pdfTextEditor/model/AnnotationBox";
+import type { TableModel } from "@app/tools/pdfTextEditor/model/TableModel";
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
+import type { PageRuleSnapshot } from "@app/tools/pdfTextEditor/types";
 
 /** Wraps one PDFium page pointer. */
 export class Page {
@@ -17,6 +19,15 @@ export class Page {
   images: ImageObject[];
   /** Text-carrying annotations: rendered by the canvas, not editable. */
   annotations: AnnotationBox[];
+  // Bounding boxes of the thin filled/stroked paths the page draws - table
+  // rules, underlines, borders. Table recognition snaps its grid onto these so
+  // the overlay lands on the lines the reader can see.
+  rules: PageRuleSnapshot[];
+  /** Filled area boxes (row shading and the like) in page coords. */
+  fills: PageRuleSnapshot[];
+  // Session tables the editor drew on this page. Not serialized: the PDF keeps
+  // only the ruling lines + cell text; this tracks them as an editable grid.
+  tables: TableModel[];
   /** True if any object on this page has uncommitted mutation. */
   dirty: boolean;
   /** True if the lazy reader has populated runs/images. */
@@ -46,15 +57,26 @@ export class Page {
     this.runs = [];
     this.images = [];
     this.annotations = [];
+    this.tables = [];
     this.dirty = false;
     this.loaded = false;
     this.revision = 0;
+    this.rules = [];
+    this.fills = [];
     this.needsGenerateContent = false;
     this.regenerated = false;
   }
 
   setRuns(runs: TextRun[]): void {
     this.runs = runs;
+  }
+
+  setRules(rules: PageRuleSnapshot[]): void {
+    this.rules = rules;
+  }
+
+  setFills(fills: PageRuleSnapshot[]): void {
+    this.fills = fills;
   }
 
   setImages(images: ImageObject[]): void {

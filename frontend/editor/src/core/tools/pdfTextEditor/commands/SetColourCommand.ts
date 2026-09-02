@@ -86,7 +86,7 @@ export class SetColourCommand implements Command {
 }
 
 /** Read an object's current fill colour (0-255 RGBA), or null on failure. */
-function readObjFill(
+export function readObjFill(
   m: import("@embedpdf/pdfium").WrappedPdfiumModule,
   objPtr: number,
 ): RGBA | null {
