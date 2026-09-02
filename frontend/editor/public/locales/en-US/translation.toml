@@ -8274,11 +8274,6 @@ undeclared-operation = "Can't check what this step accepts"
 [portal.pipelines.builder.icon]
 label = "Change icon"
 
-[portal.pipelines.builder.metadata]
-helper = "Temporary raw view of the policy's metadata (run/output settings, sources, scope). Edited here until it gets a proper UI; leave it as-is if unsure."
-invalid = "Not valid JSON. The last valid version is kept until this is fixed."
-label = "Policy metadata (advanced)"
-
 [portal.pipelines.composer]
 addTool = "Add a tool"
 create = "Create pipeline"

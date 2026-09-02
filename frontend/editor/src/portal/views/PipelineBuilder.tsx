@@ -66,7 +66,6 @@ import {
 } from "@portal/api/pipelineAssets";
 import { clearProcessedHistory } from "@portal/api/policies";
 import { DestinationPicker } from "@portal/components/pipelines/DestinationPicker";
-import { PolicyMetadataDevEditor } from "@portal/components/pipelines/PolicyMetadataDevEditor";
 import { availableOutputModes } from "@portal/components/pipelines/outputModes";
 import { type SourceView } from "@portal/api/sources";
 import { useSources } from "@portal/queries/sources";
@@ -281,8 +280,8 @@ export function PipelineBuilder() {
   // the template category glyph in the list; a custom pipeline defaults to none until picked.
   const [icon, setIcon] = useState("");
   // The policy metadata bag carried on output.options (runOn, sources, output naming, scope,
-  // reviewer, fieldValues...). Preserved verbatim through an edit so a customised policy never loses
-  // its simple-only settings; edited in the output inspector's dev section until it gets real UI.
+  // reviewer, fieldValues...). Seeded on load and written back untouched, so a customised policy
+  // never loses its simple-only settings even though the builder has no UI for them.
   const [outputOptions, setOutputOptions] = useState<Record<string, unknown>>(
     {},
   );
@@ -1281,19 +1280,13 @@ export function PipelineBuilder() {
 
     if (selected === "output") {
       return (
-        <>
-          <DestinationPicker
-            sources={writableSources}
-            value={outputIds}
-            onChange={setOutputIds}
-            onCreateNew={() => createSourceFor("output")}
-            onEdit={(sourceId) => setSourceModal({ open: true, sourceId })}
-          />
-          <PolicyMetadataDevEditor
-            value={outputOptions}
-            onChange={setOutputOptions}
-          />
-        </>
+        <DestinationPicker
+          sources={writableSources}
+          value={outputIds}
+          onChange={setOutputIds}
+          onCreateNew={() => createSourceFor("output")}
+          onEdit={(sourceId) => setSourceModal({ open: true, sourceId })}
+        />
       );
     }
 
