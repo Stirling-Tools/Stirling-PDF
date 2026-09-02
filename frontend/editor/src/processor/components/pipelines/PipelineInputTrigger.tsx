@@ -77,11 +77,17 @@ export function PipelineInputTrigger({
           options={[
             {
               value: "upload",
-              label: t("processor.pipelines.builder.runOnUpload", "Every upload"),
+              label: t(
+                "processor.pipelines.builder.runOnUpload",
+                "Every upload",
+              ),
             },
             {
               value: "export",
-              label: t("processor.pipelines.builder.runOnExport", "Every export"),
+              label: t(
+                "processor.pipelines.builder.runOnExport",
+                "Every export",
+              ),
             },
           ]}
         />
@@ -130,7 +136,9 @@ export function PipelineInputTrigger({
             }
             options={SCHEDULE_UNITS.map((unit) => ({
               value: unit,
-              label: t(`processor.pipelines.composer.unit.${unit.toLowerCase()}`),
+              label: t(
+                `processor.pipelines.composer.unit.${unit.toLowerCase()}`,
+              ),
             }))}
           />
         </div>

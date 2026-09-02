@@ -43,7 +43,9 @@ vi.mock("@app/auth/supabase/supabaseClient", () => ({
   getSupabaseClient: () => null,
   configureSupabase: vi.fn(),
 }));
-vi.mock("@processor/auth/saasSupabase", () => ({ ensureSaasSupabase: vi.fn() }));
+vi.mock("@processor/auth/saasSupabase", () => ({
+  ensureSaasSupabase: vi.fn(),
+}));
 
 vi.mock("@processor/hooks/useUsersData", () => ({
   useUsersData: () => ({

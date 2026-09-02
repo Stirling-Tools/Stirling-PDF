@@ -74,11 +74,9 @@ public class PricingPolicy implements Serializable {
     private Integer fileUnitCap = 1000;
 
     /**
-     * One-time lifetime free document grant handed to a team on creation. {@code 0} (default) means
-     * no free grant. NOT per-cycle: it never replenishes and a team keeps any unused portion after
-     * subscribing. The value is copied into {@code payg_team_extensions.free_units_remaining} when
-     * the team's sidecar row is created (V14 trigger, updated in V19); from then on the per-team
-     * counter is authoritative and this column is only the seed for new teams.
+     * Free document grant a team gets each billing period; {@code 0} (default) means none. The
+     * size, not the balance: {@code payg_team_extensions.free_units_remaining} is reset to it at
+     * each period boundary and does not carry over.
      */
     @Column(name = "free_tier_units", nullable = false)
     private Long freeTierUnits = 0L;

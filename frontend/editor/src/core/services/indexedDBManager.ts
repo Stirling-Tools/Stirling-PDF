@@ -465,7 +465,9 @@ class IndexedDBManager {
 export const DATABASE_CONFIGS = {
   FILES: {
     name: "stirling-pdf-files",
-    version: 9,
+    // v10 existed briefly with only one of the two browser-folder stores; v11 declares
+    // both, so every v10 profile upgrades to a full schema.
+    version: 11,
     stores: [
       {
         name: "files",
@@ -481,6 +483,27 @@ export const DATABASE_CONFIGS = {
       },
       {
         name: "folders",
+        keyPath: "id",
+        indexes: [
+          {
+            name: "parentFolderId",
+            keyPath: "parentFolderId",
+            unique: false,
+          },
+          { name: "name", keyPath: "name", unique: false },
+          { name: "createdAt", keyPath: "createdAt", unique: false },
+        ],
+      },
+      {
+        name: "local_folders",
+        keyPath: "id",
+        indexes: [{ name: "name", keyPath: "name", unique: false }],
+      },
+      // Browser-owned folders (kind "virtual"), deliberately a separate store from
+      // `folders`: that one is a cache the server sync wipes wholesale on every pull,
+      // and these rows have no server copy to be restored from.
+      {
+        name: "virtual_folders",
         keyPath: "id",
         indexes: [
           {

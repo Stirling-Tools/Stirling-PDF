@@ -93,6 +93,26 @@ vi.mock("@app/services/folderStorage", () => ({
   },
 }));
 
+// The virtual store is exercised by its own suite (virtualFolderStorage.test);
+// here it only needs to exist and be empty so the merged load resolves.
+vi.mock("@app/services/virtualFolderStorage", () => ({
+  virtualFolderStorage: {
+    getAllFolders: vi.fn(() => Promise.resolve([])),
+    createFolder: vi.fn(),
+    updateFolder: vi.fn(),
+    moveFolder: vi.fn(),
+    deleteFolder: vi.fn(() => Promise.resolve([])),
+  },
+}));
+
+vi.mock("@app/services/localFolderStorage", () => ({
+  localFolderStorage: {
+    getAllFolders: vi.fn(() => Promise.resolve([])),
+    mountDirectory: vi.fn(),
+    removeFolder: vi.fn(() => Promise.resolve()),
+  },
+}));
+
 vi.mock("@app/contexts/IndexedDBContext", () => ({
   useIndexedDB: () => ({
     clearFolderForFiles: vi.fn().mockResolvedValue(undefined),

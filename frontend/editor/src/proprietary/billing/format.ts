@@ -50,9 +50,9 @@ export function formatMoneyMajor(
 
 /**
  * Paid PDFs a monthly cap buys — mirror of the backend's {@code docCapForMoney}:
- * floor(capMinor / rate). The one-time free grant is a separate lifetime pool and
- * is NOT added here. Returns null when there's no cap or no resolvable rate (the
- * caller hides the estimate).
+ * floor(capMinor / rate). The free grant is a separate per-period pool and is NOT
+ * added here. Returns null when there's no cap or no resolvable rate (the caller
+ * hides the estimate).
  */
 export function docCapForMoney(
   capUsdMajor: number | null,
@@ -87,8 +87,6 @@ export function formatPeriodDate(
     return datePart;
   }
 }
-
-// ─── Prepaid bundle pricing (run-based brain) ───────────────────────────────
 
 /**
  * "12 months for the price of 10" — months granted vs paid. Mirrors the Stripe

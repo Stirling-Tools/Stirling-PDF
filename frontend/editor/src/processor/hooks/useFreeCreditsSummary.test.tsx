@@ -55,7 +55,7 @@ describe("useFreeCreditsSummary (self-hosted) — wallet behind the link gate", 
   });
 
   it("hides the meter once the team subscribes", async () => {
-    // The grant is a lifetime pool that survives subscribing, so a paying team
+    // A paying team's headline number is spend against its cap, so a paying team
     // would otherwise sit on a spent meter forever.
     fetchWallet.mockResolvedValue({
       status: "subscribed",

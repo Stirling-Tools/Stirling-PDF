@@ -22,16 +22,22 @@ vi.mock("@processor/hooks/useConnectGate", () => ({
   }),
 }));
 
+// Deterministic i18n: keys returned verbatim. initReactI18next/Trans are exported too because the
+// unified page pulls in modules (the policy wizard/catalogue) that reference them at import time.
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (key: string) => key,
     i18n: { changeLanguage: vi.fn() },
   }),
+  initReactI18next: { type: "3rdParty", init: () => {} },
+  Trans: (props: { children?: unknown }) => props.children,
 }));
 
 const fetchPipelines = vi.fn();
+const fetchPipeline = vi.fn();
 vi.mock("@processor/api/pipelines", () => ({
   fetchPipelines: () => fetchPipelines(),
+  fetchPipeline: (id: string) => fetchPipeline(id),
 }));
 
 import { Pipelines } from "@processor/views/Pipelines";
@@ -93,7 +99,9 @@ describe("Pipelines when the account is not connected", () => {
     fetchPipelines.mockResolvedValue({ kpis: [], pipelines: [] });
     renderAt("/processor/pipelines");
     await screen.findByText("processor.pipelines.empty.title");
-    fireEvent.click(screen.getByText("processor.pipelines.actions.newPipeline"));
+    fireEvent.click(
+      screen.getByText("processor.pipelines.actions.newCustomPipeline"),
+    );
     expect(connect).toHaveBeenCalled();
     expect(screen.queryByText("builder")).toBeNull();
   });

@@ -35,7 +35,10 @@ export function ConnectAccountRail() {
     <section className="processor-connect-rail">
       <div className="processor-connect-rail__text">
         <b className="processor-connect-rail__title">
-          {t("processor.accountLink.rail.title", "Connect your Stirling account")}
+          {t(
+            "processor.accountLink.rail.title",
+            "Connect your Stirling account",
+          )}
         </b>
         <span className="processor-connect-rail__sub">
           {t(

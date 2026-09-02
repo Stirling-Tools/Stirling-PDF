@@ -122,7 +122,8 @@ export const FILE_RUN_EVENTS: FileRunEvent[] = [
     origin: "TOOL",
     remedy: "NEEDS_USER_INPUT",
     titleKey: "processor.failures.kind.inputPasswordProtected.title",
-    descriptionKey: "processor.failures.kind.inputPasswordProtected.description",
+    descriptionKey:
+      "processor.failures.kind.inputPasswordProtected.description",
     defaultTitle: "Password-protected document",
     detail: "remove-password: The PDF Document is passworded",
     policyId: null,

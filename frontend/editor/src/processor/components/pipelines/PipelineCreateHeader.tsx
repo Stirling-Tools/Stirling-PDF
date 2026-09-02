@@ -1,12 +1,20 @@
 import { useTranslation } from "react-i18next";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
-import { ActionIcon, Button, Input } from "@app/ui";
+import { ActionIcon, Button, IconPicker, Input } from "@app/ui";
 import { PipelineBlockerTooltip } from "@processor/components/pipelines/PipelineBlockerTooltip";
+import { PIPELINE_ICON_OPTIONS } from "@processor/components/pipelines/pipelineIcon";
+import { EnforceAsPolicyControl } from "@processor/components/pipelines/EnforceAsPolicyControl";
 import "@processor/components/pipelines/PipelineCreateHeader.css";
 
 export interface PipelineCreateHeaderProps {
   name: string;
   onNameChange: (name: string) => void;
+  /** Row icon key (see pipelineIcon); chosen from the picker beside the name. */
+  icon: string;
+  onIconChange: (key: string) => void;
+  /** "Enforce as policy" toggle, shown in the actions row. */
+  required: boolean;
+  onRequiredChange: (required: boolean) => void;
 
   canSave: boolean;
   /** Everything still owed before the pipeline can be created, shown on the disabled create button. */
@@ -28,6 +36,10 @@ export interface PipelineCreateHeaderProps {
 export function PipelineCreateHeader({
   name,
   onNameChange,
+  icon,
+  onIconChange,
+  required,
+  onRequiredChange,
   canSave,
   blockers,
   saving,
@@ -49,6 +61,13 @@ export function PipelineCreateHeader({
         <ArrowBackRoundedIcon style={{ fontSize: "1.25rem" }} />
       </ActionIcon>
 
+      <IconPicker
+        value={icon}
+        onChange={onIconChange}
+        options={PIPELINE_ICON_OPTIONS}
+        ariaLabel={t("processor.pipelines.builder.icon.label")}
+      />
+
       <Input
         className="processor-pipeline-create-header__name"
         value={name}
@@ -58,6 +77,11 @@ export function PipelineCreateHeader({
       />
 
       <div className="processor-pipeline-create-header__actions">
+        <EnforceAsPolicyControl
+          required={required}
+          onRequiredChange={onRequiredChange}
+        />
+
         {/* The pair share one tooltip target because a disabled button swallows its own hover - the
             wrapper is what the pointer lands on. */}
         <PipelineBlockerTooltip

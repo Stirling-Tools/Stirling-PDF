@@ -30,6 +30,10 @@ function renderHeader(overrides: Partial<PipelineEditHeaderProps> = {}) {
   render(
     <PipelineEditHeader
       name="Claims redaction"
+      icon=""
+      onIconChange={vi.fn()}
+      required={false}
+      onRequiredChange={vi.fn()}
       enabled
       togglingEnabled={false}
       canSave

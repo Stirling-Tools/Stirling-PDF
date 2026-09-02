@@ -62,7 +62,9 @@ export function EndpointReferenceSection() {
             {v.endpoints.map((e) => (
               <div key={e.endpoint} className="processor-docs__endpoint-row">
                 <MethodBadge method={"POST"} />
-                <code className="processor-docs__endpoint-path">{e.endpoint}</code>
+                <code className="processor-docs__endpoint-path">
+                  {e.endpoint}
+                </code>
                 <span className="processor-docs__endpoint-name">{e.name}</span>
                 <span className="processor-docs__endpoint-fields">
                   {t("processor.docs.endpoints.fieldCount", {

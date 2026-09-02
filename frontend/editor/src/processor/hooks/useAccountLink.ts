@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { isSaasSupabaseConfigured } from "@processor/auth/saasSupabase";
-import { fetchStatus, unlinkInstance, type LinkStatus } from "@processor/api/link";
+import {
+  fetchStatus,
+  unlinkInstance,
+  type LinkStatus,
+} from "@processor/api/link";
 import { useApplyLinkFacts } from "@processor/contexts/LinkContext";
 
 /** Reads and clears THIS instance's link status. */
