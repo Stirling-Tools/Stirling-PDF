@@ -80,7 +80,7 @@ vi.mock("@app/hooks/usePolicies", () => ({
       classification: {
         configured: true,
         runsOnEditor: true,
-        status: "active",
+        enabled: true,
         backendId: "backend-classification",
         runOn: "upload",
         order: 0,
@@ -90,7 +90,7 @@ vi.mock("@app/hooks/usePolicies", () => ({
       security: {
         configured: true,
         runsOnEditor: true,
-        status: "active",
+        enabled: true,
         backendId: "backend-security",
         runOn: securityRunOn.value,
         order: 1,

@@ -11,9 +11,6 @@
 import type { ReactNode } from "react";
 import type { AutomationOperation } from "@app/types/automation";
 
-/** Lifecycle status of a policy category for the current user/org. */
-export type PolicyStatus = "default" | "active" | "paused";
-
 /** A configurable field within a policy's settings. */
 export type PolicyFieldType = "toggle" | "select" | "chips" | "text";
 
@@ -82,7 +79,9 @@ export interface PolicySource {
 /** Per-category runtime state held in the local cache. */
 export interface PolicyState {
   configured: boolean;
-  status: PolicyStatus;
+  /** Whether the backend policy is enabled (fires on the editor). Meaningful only
+   *  when `configured`; false otherwise. Mirrors the backend `Policy.enabled`. */
+  enabled: boolean;
   /** Selected sources (ids from POLICY_SOURCES). */
   sources: string[];
   /** The policy's own name. Set for builder pipelines, which have no built-in category label. */

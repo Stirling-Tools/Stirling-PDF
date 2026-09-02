@@ -96,7 +96,7 @@ describe("usePolicies", () => {
       JSON.stringify({
         "be-deleted": {
           configured: true,
-          status: "active",
+          enabled: true,
           backendId: "be-deleted",
           sources: ["editor"],
           runsOnEditor: true,

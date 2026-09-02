@@ -11,7 +11,7 @@ import type { PoliciesByCategory } from "@app/types/policies";
 const rewriter = (order: number) =>
   ({
     configured: true,
-    status: "active",
+    enabled: true,
     backendId: `backend-${order}`,
     runsOnEditor: true,
     runOn: "upload",
@@ -57,7 +57,7 @@ describe("orderedRewritingCategories", () => {
   it("excludes inactive, non-editor, export-triggered, and unconfigured policies", () => {
     const mixed = {
       security: rewriter(0),
-      inactive: { ...rewriter(1), status: "paused" },
+      inactive: { ...rewriter(1), enabled: false },
       notEditor: { ...rewriter(2), runsOnEditor: false },
       onExport: { ...rewriter(3), runOn: "export" },
       unconfigured: { ...rewriter(4), configured: false },

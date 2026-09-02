@@ -17,7 +17,7 @@ function defaultState(categoryId: string): PolicyState {
   // actually configured + active; this is just the empty local-cache shape.
   return {
     configured: false,
-    status: "default",
+    enabled: false,
     sources: ["editor"],
     runsOnEditor: true,
     scopeTypes: [],

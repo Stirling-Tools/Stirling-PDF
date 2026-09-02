@@ -53,7 +53,7 @@ export function usePolicyLocalPasses(): void {
     for (const [categoryId, s] of Object.entries(policies)) {
       const active =
         s.configured &&
-        s.status === "active" &&
+        s.enabled &&
         s.backendId &&
         s.runsOnEditor &&
         (s.runOn ?? "upload") === "upload";

@@ -48,7 +48,7 @@ export function decodedToState(
 ): PolicyState {
   return {
     configured: true,
-    status: decoded.enabled ? "active" : "paused",
+    enabled: decoded.enabled,
     name: decoded.name,
     sources: decoded.sources,
     runsOnEditor: decoded.runsOnEditor,

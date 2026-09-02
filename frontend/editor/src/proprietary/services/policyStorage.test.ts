@@ -13,17 +13,17 @@ describe("policyStorage", () => {
   it("defaults every category to unconfigured (backend is the source of truth)", () => {
     const p = loadPolicies();
     expect(p.ingestion.configured).toBe(false);
-    expect(p.ingestion.status).toBe("default");
+    expect(p.ingestion.enabled).toBe(false);
     expect(p.security.configured).toBe(false);
-    expect(p.security.status).toBe("default");
+    expect(p.security.enabled).toBe(false);
     expect(p.retention.configured).toBe(false);
   });
 
   it("persists an update and reflects it on reload", () => {
-    updatePolicy("security", { configured: true, status: "active" });
+    updatePolicy("security", { configured: true, enabled: true });
     const reloaded = loadPolicies();
     expect(reloaded.security.configured).toBe(true);
-    expect(reloaded.security.status).toBe("active");
+    expect(reloaded.security.enabled).toBe(true);
     // Other categories untouched.
     expect(reloaded.retention.configured).toBe(false);
   });
@@ -39,7 +39,7 @@ describe("policyStorage", () => {
   it("heals missing categories from corrupt/partial storage", () => {
     localStorage.setItem(
       "stirling-policies-state",
-      JSON.stringify({ ingestion: { configured: true, status: "active" } }),
+      JSON.stringify({ ingestion: { configured: true, enabled: true } }),
     );
     const p = loadPolicies();
     // Missing category gets a default rather than being undefined.
@@ -52,7 +52,7 @@ describe("policyStorage", () => {
     localStorage.setItem(
       "stirling-policies-state",
       JSON.stringify({
-        security: { configured: true, status: "active", sources: ["s3"] },
+        security: { configured: true, enabled: true, sources: ["s3"] },
       }),
     );
     // Without the migration the default (true) would wrongly win.
@@ -63,7 +63,7 @@ describe("policyStorage", () => {
     localStorage.setItem(
       "stirling-policies-state",
       JSON.stringify({
-        security: { configured: true, status: "active", sources: ["editor"] },
+        security: { configured: true, enabled: true, sources: ["editor"] },
       }),
     );
     expect(loadPolicies().security.runsOnEditor).toBe(true);
@@ -75,7 +75,7 @@ describe("policyStorage", () => {
       JSON.stringify({
         security: {
           configured: true,
-          status: "active",
+          enabled: true,
           sources: ["editor"],
           runsOnEditor: false,
         },
@@ -87,10 +87,10 @@ describe("policyStorage", () => {
   it("fires a change event on update", () => {
     const cb = vi.fn();
     const off = onPoliciesChange(cb);
-    updatePolicy("routing", { status: "paused" });
+    updatePolicy("routing", { enabled: false });
     expect(cb).toHaveBeenCalledTimes(1);
     off();
-    updatePolicy("routing", { status: "active" });
+    updatePolicy("routing", { enabled: true });
     expect(cb).toHaveBeenCalledTimes(1); // not called after unsubscribe
   });
 });

@@ -64,7 +64,7 @@ export function usePolicies() {
           : {
               ...local[cat.id],
               configured: false,
-              status: "default",
+              enabled: false,
               backendId: undefined,
             };
       }

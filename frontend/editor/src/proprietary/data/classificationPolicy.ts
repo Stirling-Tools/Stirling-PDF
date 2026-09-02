@@ -57,7 +57,7 @@ export function orderedRewritingCategories(
     .filter(
       ([id, s]) =>
         s.configured &&
-        s.status === "active" &&
+        s.enabled &&
         Boolean(s.backendId) &&
         s.runsOnEditor &&
         (s.runOn ?? "upload") === "upload" &&

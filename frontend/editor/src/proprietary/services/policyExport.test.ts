@@ -42,7 +42,7 @@ const { enforceExportPolicies } = await import("@app/services/policyExport");
 const exportPolicy = (over: Partial<PolicyState>): PolicyState =>
   ({
     configured: true,
-    status: "active",
+    enabled: true,
     backendId: "backend-1",
     sources: [],
     runsOnEditor: false,
