@@ -81,13 +81,19 @@ export function WindowTitleBar() {
     return () => unlisten?.();
   }, [active]);
 
-  // Let the window be dragged (and double-click-maximized) from any
-  // non-interactive spot in the top strip. data-tauri-drag-region only fires
-  // when the bare container is the click target, which leaves most of a busy
-  // toolbar undraggable; a document-level hit test covers the whole top.
+  // Let the window be dragged, and double-click-maximized, from any
+  // non-interactive spot in the top strip. data-tauri-drag-region only fires on
+  // bare container backgrounds, leaving most of a busy toolbar undraggable, so a
+  // document-level hit test covers the whole top instead.
+  //
+  // startDragging() must NOT run on mousedown: it enters the OS drag loop and
+  // swallows the browser's dblclick. So begin the drag on the first real move,
+  // and detect a double-click from the interval between mousedowns.
   useEffect(() => {
     if (!active) return;
     const TOP_STRIP_PX = 48;
+    const DOUBLE_CLICK_MS = 500;
+    const DRAG_THRESHOLD_PX = 4;
     const INTERACTIVE =
       "button, a[href], input, textarea, select, label, summary," +
       '[role="button"], [role="tab"], [role="menuitem"], [role="switch"],' +
@@ -97,17 +103,44 @@ export function WindowTitleBar() {
       const el = e.target as Element | null;
       return !!el && !el.closest(INTERACTIVE);
     };
+    let pending: { x: number; y: number } | null = null;
+    let lastDownAt = 0;
     const onMouseDown = (e: MouseEvent) => {
-      if (draggableAt(e)) void getCurrentWindow().startDragging();
+      if (!draggableAt(e)) {
+        pending = null;
+        return;
+      }
+      const now = Date.now();
+      if (now - lastDownAt < DOUBLE_CLICK_MS) {
+        pending = null;
+        lastDownAt = 0;
+        void getCurrentWindow().toggleMaximize();
+        return;
+      }
+      lastDownAt = now;
+      pending = { x: e.clientX, y: e.clientY };
     };
-    const onDoubleClick = (e: MouseEvent) => {
-      if (draggableAt(e)) void getCurrentWindow().toggleMaximize();
+    const onMouseMove = (e: MouseEvent) => {
+      if (!pending) return;
+      if (
+        Math.abs(e.clientX - pending.x) > DRAG_THRESHOLD_PX ||
+        Math.abs(e.clientY - pending.y) > DRAG_THRESHOLD_PX
+      ) {
+        pending = null;
+        lastDownAt = 0; // a drag is not the first half of a double-click
+        void getCurrentWindow().startDragging();
+      }
+    };
+    const onMouseUp = () => {
+      pending = null;
     };
     document.addEventListener("mousedown", onMouseDown);
-    document.addEventListener("dblclick", onDoubleClick);
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
     return () => {
       document.removeEventListener("mousedown", onMouseDown);
-      document.removeEventListener("dblclick", onDoubleClick);
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
     };
   }, [active]);
 
