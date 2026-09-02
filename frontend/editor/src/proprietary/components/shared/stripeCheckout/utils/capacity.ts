@@ -18,6 +18,11 @@ export const SELF_SERVE_MAX_SERVERS = 5;
 /** Resulting capacity at which an enterprise quote is also worth offering. */
 export const ENTERPRISE_ADVISORY_USERS = 1000;
 
+/** Servers needed to cover a given number of users. Always at least one. */
+export function serversForUsers(users: number): number {
+  return Math.max(1, Math.ceil(Math.max(0, users) / USERS_PER_SERVER));
+}
+
 /** Users covered by a given number of servers. */
 export function usersForServers(servers: number): number {
   return Math.max(1, servers) * USERS_PER_SERVER;

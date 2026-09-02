@@ -19,6 +19,7 @@ import { useCheckoutSession } from "@app/components/shared/stripeCheckout/hooks/
 import { EmailStage } from "@app/components/shared/stripeCheckout/stages/EmailStage";
 import { PlanSelectionStage } from "@app/components/shared/stripeCheckout/stages/PlanSelectionStage";
 import { CapacityStage } from "@app/components/shared/stripeCheckout/stages/CapacityStage";
+import { serversForUsers } from "@app/components/shared/stripeCheckout/utils/capacity";
 import { PaymentStage } from "@app/components/shared/stripeCheckout/stages/PaymentStage";
 import { SuccessStage } from "@app/components/shared/stripeCheckout/stages/SuccessStage";
 import { ErrorStage } from "@app/components/shared/stripeCheckout/stages/ErrorStage";
@@ -115,7 +116,13 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
   // Plan selection handler
   const handlePlanSelect = (period: "monthly" | "yearly") => {
     checkoutState.setSelectedPeriod(period);
-    navigation.goToStage(sellsCapacity ? "capacity" : "payment");
+    if (sellsCapacity) {
+      // Arrive on the capacity an installation already needs rather than on a blocked "1".
+      checkoutState.setServerQuantity(serversForUsers(minimumSeats));
+      navigation.goToStage("capacity");
+      return;
+    }
+    navigation.goToStage("payment");
   };
 
   // Close handler

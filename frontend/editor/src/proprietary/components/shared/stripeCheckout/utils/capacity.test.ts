@@ -4,6 +4,7 @@ import {
   SELF_SERVE_MAX_SERVERS,
   ENTERPRISE_ADVISORY_USERS,
   usersForServers,
+  serversForUsers,
   shouldOfferEnterprise,
 } from "@app/components/shared/stripeCheckout/utils/capacity";
 
@@ -17,6 +18,25 @@ describe("usersForServers", () => {
     // Zero would read as "no capacity" and price the plan at nothing.
     expect(usersForServers(0)).toBe(USERS_PER_SERVER);
     expect(usersForServers(-2)).toBe(USERS_PER_SERVER);
+  });
+});
+
+describe("serversForUsers", () => {
+  it("rounds part-full servers up", () => {
+    expect(serversForUsers(1)).toBe(1);
+    expect(serversForUsers(USERS_PER_SERVER)).toBe(1);
+    expect(serversForUsers(USERS_PER_SERVER + 1)).toBe(2);
+    expect(serversForUsers(240)).toBe(3);
+  });
+
+  it("never returns zero servers", () => {
+    // Checkout seeds the stepper from this, and a zero would render a blocked stage.
+    expect(serversForUsers(0)).toBe(1);
+    expect(serversForUsers(-5)).toBe(1);
+  });
+
+  it("round-trips with usersForServers", () => {
+    expect(serversForUsers(usersForServers(4))).toBe(4);
   });
 });
 

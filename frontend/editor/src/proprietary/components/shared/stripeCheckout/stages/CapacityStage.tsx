@@ -8,6 +8,7 @@ import {
   USERS_PER_SERVER,
   SELF_SERVE_MAX_SERVERS,
   usersForServers,
+  serversForUsers,
   shouldOfferEnterprise,
 } from "@app/components/shared/stripeCheckout/utils/capacity";
 
@@ -45,8 +46,9 @@ export const CapacityStage: React.FC<CapacityStageProps> = ({
   const total = unitPrice * serverQuantity;
 
   // Never sell less capacity than is already in use; reducing capacity happens at renewal rather
-  // than by stranding accounts that already exist.
-  const minServers = Math.max(1, Math.ceil(currentUsers / USERS_PER_SERVER));
+  // than by stranding accounts that already exist. The stage is entered pre-seeded to this minimum,
+  // so the guard below only fires if a caller passes something lower.
+  const minServers = serversForUsers(currentUsers);
   const belowCurrentUsage = serverQuantity < minServers;
   const offerEnterprise = shouldOfferEnterprise(serverQuantity);
 
