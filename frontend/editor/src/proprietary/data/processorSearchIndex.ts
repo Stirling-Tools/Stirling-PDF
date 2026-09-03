@@ -1,6 +1,5 @@
 import {
   PORTAL_BASENAME,
-  PORTAL_REVIEW_ENABLED,
   PORTAL_REVIEW_PATH,
 } from "@app/routes/portalBasename";
 // A static leaf module (its portal import is type-only), so it doesn't pull
@@ -60,18 +59,13 @@ const VIEWS: ProcessorSearchEntry[] = [
     path: `${PORTAL_BASENAME}/documents`,
     keywords: ["audit", "files"],
   },
-  // Gated with the screen: search must not offer a destination with no route.
-  ...(PORTAL_REVIEW_ENABLED
-    ? [
-        {
-          id: "review",
-          labelKey: "portal.nav.review",
-          labelFallback: "Review",
-          path: `${PORTAL_BASENAME}${PORTAL_REVIEW_PATH}`,
-          keywords: ["failures", "errors", "triage", "retry"],
-        } satisfies ProcessorSearchEntry,
-      ]
-    : []),
+  {
+    id: "review",
+    labelKey: "portal.nav.review",
+    labelFallback: "Review",
+    path: `${PORTAL_BASENAME}${PORTAL_REVIEW_PATH}`,
+    keywords: ["failures", "errors", "triage", "retry"],
+  },
   {
     id: "integrations",
     labelKey: "portal.nav.integrations",

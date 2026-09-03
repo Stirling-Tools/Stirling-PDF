@@ -8,6 +8,3 @@ export const PORTAL_BASENAME = "/processor";
 
 /** Here because whoever links to the review screen and whoever renders it are in different layers. */
 export const PORTAL_REVIEW_PATH = "/review";
-
-/** Gates the review route, its nav tab, its search entry and the bell action that links to it. */
-export const PORTAL_REVIEW_ENABLED = import.meta.env.DEV;

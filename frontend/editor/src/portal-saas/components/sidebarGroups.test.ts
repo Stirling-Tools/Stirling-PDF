@@ -12,7 +12,6 @@ describe("sidebarGroups (SaaS)", () => {
       "sources",
       "pipelines",
       "documents",
-      // Dev-only in a build, but Vitest runs as dev, so the base group carries it here.
       "review",
     ]);
   });

@@ -11,7 +11,6 @@ import { ViewerContext } from "@app/contexts/ViewerContext";
 import { getToolUrlPath } from "@app/data/toolsTaxonomy";
 import {
   PORTAL_BASENAME,
-  PORTAL_REVIEW_ENABLED,
   PORTAL_REVIEW_PATH,
 } from "@app/routes/portalBasename";
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
@@ -451,8 +450,7 @@ export function useNotificationActions(): ClientActionRegistry {
     };
 
     const viewInProcessor: ClientActionSpec = {
-      // Same flag the screen is gated on, so this can never point at a missing route.
-      available: () => PORTAL_REVIEW_ENABLED,
+      available: () => true,
       closesPanel: true,
       run: () => navigate(REVIEW_DESTINATION),
     };

@@ -12,7 +12,6 @@ import { EditorAdmin } from "@portal/views/EditorAdmin";
 import { Infrastructure } from "@portal/views/Infrastructure";
 import { PortalBillingGate } from "@portal/components/billing/PortalBillingGate";
 import { ConnectGuardedRoute } from "@portal/components/account-link/ConnectGuardedRoute";
-import { PORTAL_REVIEW_ENABLED } from "@app/routes/portalBasename";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
 
 // Lazy so the generated docs manifest (bundled JSON) lands in its own chunk.
@@ -81,10 +80,7 @@ export function ViewRouter() {
           path working, preserving its query (e.g. onboarding's ?setup=<category>). */}
       <Route path={rel(VIEW_PATHS.policies)} element={<PoliciesRedirect />} />
       <Route path={rel(VIEW_PATHS.documents)} element={<Documents />} />
-      {/* Without the route, the catch-all below sends the path home. */}
-      {PORTAL_REVIEW_ENABLED && (
-        <Route path={rel(VIEW_PATHS.review)} element={<Review />} />
-      )}
+      <Route path={rel(VIEW_PATHS.review)} element={<Review />} />
       <Route path={rel(VIEW_PATHS.editor)} element={<EditorAdmin />} />
       <Route
         path={rel(VIEW_PATHS.infrastructure)}

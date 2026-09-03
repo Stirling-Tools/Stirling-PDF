@@ -61,10 +61,7 @@ export const FILE_RUN_EVENTS: FileRunEvent[] = [
     occurrences: 1,
     status: "NEW",
     statusActor: null,
-    actions: [
-      acknowledgeOffer(),
-      dismissOffer(),
-    ],
+    actions: [acknowledgeOffer(), dismissOffer()],
     createdAt: NOW - HOUR,
     lastSeenAt: NOW - HOUR,
   },
@@ -170,10 +167,7 @@ export const FILE_RUN_EVENTS: FileRunEvent[] = [
     occurrences: 3,
     status: "DISMISSED",
     statusActor: "ops@example.com",
-    actions: [
-      acknowledgeOffer(false),
-      dismissOffer(false),
-    ],
+    actions: [acknowledgeOffer(false), dismissOffer(false)],
     createdAt: NOW - 30 * HOUR,
     lastSeenAt: NOW - 26 * HOUR,
   },
