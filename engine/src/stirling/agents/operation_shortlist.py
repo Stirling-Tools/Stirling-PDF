@@ -4,11 +4,19 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from typing import Protocol
 
-from stirling.documents import EmbeddingService
 from stirling.models import OPERATIONS, ToolEndpoint
 
 logger = logging.getLogger(__name__)
+
+
+class TextEmbedder(Protocol):
+    """The slice of an embedding service the shortlist needs; ``EmbeddingService`` satisfies it."""
+
+    async def embed_documents(self, texts: list[str]) -> list[list[float]]: ...
+
+    async def embed_query(self, text: str) -> list[float]: ...
 
 
 def retrieval_text(operation: ToolEndpoint) -> str:
@@ -26,7 +34,7 @@ def _cosine(left: list[float], right: list[float]) -> float:
 
 
 class OperationShortlist:
-    def __init__(self, embedder: EmbeddingService) -> None:
+    def __init__(self, embedder: TextEmbedder) -> None:
         self._embedder = embedder
         self._vectors: dict[ToolEndpoint, list[float]] | None = None
         self._lock = asyncio.Lock()
