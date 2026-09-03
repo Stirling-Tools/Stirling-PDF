@@ -23,7 +23,7 @@ public class AddWatermarkRequest extends PDFFile {
     private String watermarkType;
 
     @Schema(description = "The watermark text", defaultValue = "Stirling Software")
-    private String watermarkText;
+    private String watermarkText = "Stirling Software";
 
     @Schema(description = "The watermark image")
     private MultipartFile watermarkImage;
@@ -32,32 +32,32 @@ public class AddWatermarkRequest extends PDFFile {
             description = "The selected alphabet",
             allowableValues = {"roman", "arabic", "japanese", "korean", "chinese", "thai"},
             defaultValue = "roman")
-    private String alphabet;
+    private String alphabet = "roman";
 
     @Schema(description = "The font size of the watermark text", defaultValue = "30")
     @DecimalMin(value = "1.0", message = "Font size must be at least 1.0")
-    private float fontSize;
+    private float fontSize = 30;
 
     @Schema(description = "The rotation of the watermark in degrees", defaultValue = "0")
-    private float rotation;
+    private float rotation = 0;
 
     @Schema(description = "The opacity of the watermark (0.0 - 1.0)", defaultValue = "0.5")
-    private float opacity;
+    private float opacity = 0.5f;
 
     @Schema(description = "The width spacer between watermark elements", defaultValue = "50")
     @Min(value = 0, message = "Width spacer must be non-negative")
-    private int widthSpacer;
+    private int widthSpacer = 50;
 
     @Schema(description = "The height spacer between watermark elements", defaultValue = "50")
     @Min(value = 0, message = "Height spacer must be non-negative")
-    private int heightSpacer;
+    private int heightSpacer = 50;
 
     @Schema(description = "The color for watermark", defaultValue = "#d3d3d3")
-    private String customColor;
+    private String customColor = "#d3d3d3";
 
     @Schema(
             description = "Convert the redacted PDF to an image",
             defaultValue = "false",
             requiredMode = Schema.RequiredMode.REQUIRED)
-    private Boolean convertPDFToImage;
+    private Boolean convertPDFToImage = false;
 }
