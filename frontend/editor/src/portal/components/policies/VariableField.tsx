@@ -107,8 +107,6 @@ export function VariableField({
     [groups, t],
   );
 
-  // ---- value <-> DOM -------------------------------------------------------
-
   /** Read the editor back as the `{{path}}` text the pipeline stores. */
   const serialise = useCallback((): string => {
     const editor = editorRef.current;
@@ -266,8 +264,6 @@ export function VariableField({
     hydrate(emitted.current);
   }, [i18n?.language, raw, hydrate]);
 
-  // ---- undo ----------------------------------------------------------------
-
   // The browser's own undo cannot see a box we removed in script, so structural edits snapshot the
   // serialised value instead. Typing is left alone: that undo already works.
   const snapshot = useCallback(() => {
@@ -296,8 +292,6 @@ export function VariableField({
     setDepth({ undo: undos.current.length, redo: redos.current.length });
     setAnnouncement(t(`${PREFIX}.redone`));
   }, [commit, hydrate, serialise, t]);
-
-  // ---- caret ---------------------------------------------------------------
 
   const remember = useCallback(() => {
     const editor = editorRef.current;
@@ -353,8 +347,6 @@ export function VariableField({
     const rect = range.getBoundingClientRect();
     return rect.width || rect.height ? rect : null;
   }, []);
-
-  // ---- editing -------------------------------------------------------------
 
   const selectToken = useCallback((box: HTMLElement | null) => {
     editorRef.current
@@ -472,8 +464,6 @@ export function VariableField({
     },
     [anchorAt, selectToken],
   );
-
-  // ---- handlers ------------------------------------------------------------
 
   const onEditorInput = useCallback(() => {
     remember();
@@ -646,8 +636,6 @@ export function VariableField({
     );
   }, [hydrate, remember, serialise]);
 
-  // ---- the list ------------------------------------------------------------
-
   const matches = picker
     ? variableSuggestions(
         picker.kind === "trigger" ? picker.partial : "",
@@ -676,8 +664,6 @@ export function VariableField({
     document.addEventListener("mousedown", away);
     return () => document.removeEventListener("mousedown", away);
   }, [closePicker, picker, selectToken]);
-
-  // ---- raw mode ------------------------------------------------------------
 
   const toggleRaw = useCallback(() => {
     closePicker();
