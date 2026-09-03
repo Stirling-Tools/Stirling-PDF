@@ -20,7 +20,7 @@ permissions:
 
 jobs:
   frontend-a11y:
-    name: ${{ matrix.theme }}
+    name: frontend-a11y (${{ matrix.theme }})
     strategy:
       # A red theme must still report; it must not cancel the other one.
       fail-fast: false
@@ -47,7 +47,7 @@ jobs:
       - name: Install Task
         uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
       - name: a11y gate (changed stories, ${{ matrix.theme }})
-        run: task frontend:storybook:a11y:changed THEME=${{ matrix.theme }} -- origin/${{ github.base_ref || 'main' }}
+        run: task frontend:storybook:a11y:changed A11Y_THEME=${{ matrix.theme }} -- origin/${{ github.base_ref || 'main' }}
       - name: Upload scan reports
         # The reports carry the offending selector and help text for each
         # violation; without them a red run can only be understood by
