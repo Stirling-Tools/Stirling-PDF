@@ -501,6 +501,7 @@ public class UserService implements UserServiceInterface {
      * @throws SQLException If a database error occurs
      * @throws UnsupportedProviderException If an unsupported provider is specified
      */
+    @Transactional
     public User saveUserCore(SaveUserRequest request)
             throws IllegalArgumentException, SQLException, UnsupportedProviderException {
 
@@ -582,7 +583,14 @@ public class UserService implements UserServiceInterface {
             return;
         }
         UserLicenseSettingsService settings = licenseSettingsService.getIfAvailable();
-        if (settings == null || !settings.wouldExceedLimit(1)) {
+        if (settings == null) {
+            return;
+        }
+        // Serialise admission before counting. The lock is held until saveUserCore's transaction
+        // commits, by which point our own insert is part of the count everyone else sees, so two
+        // concurrent creations at the last free seat cannot both be admitted.
+        settings.lockForUserAdmission();
+        if (!settings.wouldExceedLimit(1)) {
             return;
         }
         long current = getTotalUsersCount();
