@@ -382,15 +382,8 @@ export function DownloadsProcessingWizard({
             <li>
               {t(
                 "processingFolders.downloads.keepsOriginals",
-                "Your files stay where they are — originals are never moved or deleted.",
+                "Files are processed in place — each becomes its processed version, right where it is.",
               )}
-            </li>
-            <li>
-              {t("processingFolders.downloads.outputs", {
-                subdir: "Stirling Processed",
-                defaultValue:
-                  'Results are saved into a "{{subdir}}" folder alongside them.',
-              })}
             </li>
             {capped && (
               <li>

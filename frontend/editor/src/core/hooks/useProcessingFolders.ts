@@ -18,6 +18,12 @@ export interface ProcessingRunInfo {
   stepCount: number;
 }
 
+/** One file in a working folder, with its place in the pipeline. */
+export interface MountedFileState {
+  name: string;
+  state: "done" | "processing" | "failed" | "waiting";
+}
+
 export interface ProcessingFoldersApi {
   /** The folder's processing state; undefined means an ordinary folder. */
   stateFor: (folder: FolderRecord) => ProcessingFolderState | undefined;
@@ -27,6 +33,8 @@ export interface ProcessingFoldersApi {
   anyEnabled: boolean;
   /** The record's runs that are currently executing (or queued to). */
   listActiveRuns: (recordId: string) => Promise<ProcessingRunInfo[]>;
+  /** A disk-backed record's files with their per-file pipeline state. */
+  listFiles: (recordId: string) => Promise<MountedFileState[]>;
   /** Attach the default (classification) pipeline, or resume a paused one. */
   enable: (folder: FolderRecord) => Promise<void>;
   /** Pause processing; the pair and its processed-history stay, so resuming
@@ -52,6 +60,7 @@ export function useProcessingFolders(): ProcessingFoldersApi {
     enabledFolderIds: EMPTY_IDS,
     anyEnabled: false,
     listActiveRuns: async () => [],
+    listFiles: async () => [],
     enable: async () => {},
     disable: async () => {},
     remove: async () => {},

@@ -4114,6 +4114,7 @@ title = "You haven't shared any files yet"
 [filesPage.diskState]
 all = "All"
 done = "Ready"
+failed = "Failed"
 doneHint = "Processed — opens the result"
 processing = "Processing"
 waiting = "Waiting"
@@ -4192,7 +4193,7 @@ sweep = "Process files now"
 
 [filesPage.processingSetup]
 cancel = "Cancel"
-lead = "Anything added to this folder runs these steps. Originals are never changed."
+lead = "Anything added to this folder runs these steps, in place — each file becomes its processed version."
 start = "Start processing"
 title = "Process “{{name}}”"
 
@@ -9134,11 +9135,10 @@ explain_other = "Stirling can classify the {{count}} PDFs already in your Downlo
 failed = "Could not set that up. Your files have not been changed."
 finished_one = "Classified {{count}} file and opened {{opened}} of them here, ready to work on."
 finished_other = "Classified {{count}} files and opened {{opened}} of them here, ready to work on."
-keepsOriginals = "Your files stay where they are — originals are never moved or deleted."
+keepsOriginals = "Files are processed in place — each becomes its processed version, right where it is."
 nothingNew_one = "Nothing new to process — this {{count}} file has already been through."
 nothingNew_other = "Nothing new to process — these {{count}} files have already been through."
 notNow = "Not now"
-outputs = 'Results are saved into a "{{subdir}}" folder alongside them.'
 progressCounts = "of {{total}} processed"
 someFailed_one = "{{count}} could not be processed and was left untouched."
 someFailed_other = "{{count}} could not be processed and were left untouched."

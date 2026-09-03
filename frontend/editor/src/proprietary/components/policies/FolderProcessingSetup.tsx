@@ -108,7 +108,7 @@ export function FolderProcessingSetup({
       <p className="folder-setup__lead">
         {t(
           "filesPage.processingSetup.lead",
-          "Anything added to this folder runs these steps. Originals are never changed.",
+          "Anything added to this folder runs these steps, in place — each file becomes its processed version.",
         )}
       </p>
       <CardRail itemWidth="16rem" itemHeight="10.75rem">

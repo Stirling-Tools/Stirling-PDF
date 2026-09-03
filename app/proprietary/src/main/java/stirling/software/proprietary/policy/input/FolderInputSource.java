@@ -160,15 +160,17 @@ public class FolderInputSource implements InputSource {
                             success -> {
                                 if (config.track()) {
                                     // Track mode never removes the input: the directory belongs to
-                                    // the user (their Downloads, a scan drop), so a processed file
-                                    // is recorded and left exactly where they put it. The hash is
-                                    // taken at the claimed version only — a file replaced or
-                                    // removed mid-run settles null rather than recording the
-                                    // replacement's bytes under the old gate.
+                                    // the user (their Downloads, a scan drop). A successful run
+                                    // settles at the file's CURRENT version, because an in-place
+                                    // pipeline legitimately replaces the input with its result —
+                                    // settling at the claimed version would leave the result
+                                    // claimable and the folder re-processing its own output
+                                    // forever. The trade: an external edit landing mid-run is
+                                    // recorded as processed without another pass.
                                     ctx.settle(
                                             identity,
-                                            claimedGate,
-                                            claimedHash(file, claimedGate, contentHash),
+                                            success ? currentGate(file, claimedGate) : claimedGate,
+                                            null,
                                             success);
                                     return;
                                 }
@@ -177,6 +179,15 @@ public class FolderInputSource implements InputSource {
                             }));
         }
         return work;
+    }
+
+    /** The file's stat gate as it is now; the claimed gate when it cannot be read. */
+    private static String currentGate(Path file, String claimedGate) {
+        try {
+            return FolderIdentities.statGate(file);
+        } catch (IOException gone) {
+            return claimedGate;
+        }
     }
 
     /**

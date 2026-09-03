@@ -36,6 +36,8 @@ import stirling.software.proprietary.policy.engine.PolicyRunner;
 import stirling.software.proprietary.policy.engine.PolicyValidator;
 import stirling.software.proprietary.policy.engine.SweepKind;
 import stirling.software.proprietary.policy.engine.SweepOutcome;
+import stirling.software.proprietary.policy.ledger.ClaimState;
+import stirling.software.proprietary.policy.ledger.FolderIdentities;
 import stirling.software.proprietary.policy.ledger.ProcessedLedger;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineInput;
@@ -86,9 +88,6 @@ public class ProcessingFolderController {
      * its place in the ledger and is picked up by later sweeps rather than dropped.
      */
     static final int DISK_SWEEP_LIMIT = 100;
-
-    /** Where a disk-backed folder's results land, relative to the directory it watches. */
-    static final String DISK_OUTPUT_SUBDIR = "Stirling Processed";
 
     /** The trigger that watches a directory for arrivals. */
     static final String WATCH_TRIGGER = "folder-watch";
@@ -295,7 +294,12 @@ public class ProcessingFolderController {
     }
 
     /** One file in a mounted directory, as the file manager needs to list it. */
-    public record MountedFileView(String name, long sizeBytes, long lastModified) {}
+    public record MountedFileView(
+            String name,
+            long sizeBytes,
+            long lastModified,
+            /** Its place in the folder's pipeline: done, processing, failed, or waiting. */
+            String state) {}
 
     @GetMapping("/{id}/files")
     @Operation(
@@ -315,9 +319,27 @@ public class ProcessingFolderController {
         // Re-check on read: the permitted roots may have narrowed since the folder was created.
         Path permitted = folderAccessGuard.requirePermitted(directory);
         try (Stream<Path> entries = Files.list(permitted)) {
-            return entries.filter(Files::isRegularFile)
-                    .filter(path -> !path.getFileName().toString().startsWith("."))
-                    .map(ProcessingFolderController::toMountedFile)
+            List<Path> files =
+                    entries.filter(Files::isRegularFile)
+                            .filter(path -> !path.getFileName().toString().startsWith("."))
+                            .toList();
+            // The ledger is the per-file truth: processed in place leaves nothing else to
+            // read a file's state from.
+            Path canonicalDir = FolderIdentities.canonicalDir(permitted);
+            Map<String, ClaimState> states =
+                    processedLedger.statesFor(
+                            policy.id(),
+                            files.stream()
+                                    .map(f -> FolderIdentities.identity(canonicalDir, permitted, f))
+                                    .toList());
+            return files.stream()
+                    .map(
+                            f ->
+                                    toMountedFile(
+                                            f,
+                                            states.get(
+                                                    FolderIdentities.identity(
+                                                            canonicalDir, permitted, f))))
                     .filter(Objects::nonNull)
                     .toList();
         } catch (IOException e) {
@@ -326,15 +348,28 @@ public class ProcessingFolderController {
         }
     }
 
-    private static MountedFileView toMountedFile(Path path) {
+    private static MountedFileView toMountedFile(Path path, ClaimState state) {
         try {
             return new MountedFileView(
                     path.getFileName().toString(),
                     Files.size(path),
-                    Files.getLastModifiedTime(path).toMillis());
+                    Files.getLastModifiedTime(path).toMillis(),
+                    stateLabel(state));
         } catch (IOException vanished) {
             return null; // listed then removed; the next read tells the truth
         }
+    }
+
+    /** The client-facing name of a ledger state; no row means the file is still waiting. */
+    private static String stateLabel(ClaimState state) {
+        if (state == null) {
+            return "waiting";
+        }
+        return switch (state.status()) {
+            case DONE -> "done";
+            case ERROR -> "failed";
+            case PROCESSING, INTERRUPTED -> "processing";
+        };
     }
 
     /** The disk directory a processing folder watches, or null when it is storage-backed. */
@@ -518,17 +553,15 @@ public class ProcessingFolderController {
     }
 
     /**
-     * Where results go. A storage-backed folder writes back into app storage. A disk-backed one
-     * writes into a subdirectory of the directory it watches, so the user's own files are never
-     * rewritten and the results sit next to them. That subdirectory is outside the source's
-     * (non-recursive) scan, and the sink records each output in the ledger, so a run's results are
-     * never mistaken for new work.
+     * Where results go. Both kinds process in place: a storage-backed folder writes new versions
+     * over its stored files, and a disk-backed one replaces the watched file with its result — the
+     * folder's contents simply become their processed selves. The sink records each replacement in
+     * the ledger at the result's version, and the input source settles its claim the same way, so a
+     * sweep never mistakes the folder's own output for new work.
      *
      * <p>Writing to disk rather than app storage is what makes this work on an install with no
      * accounts and no file storage — a desktop app, where the server is the user's own machine and
      * there is nothing to store a file against.
-     *
-     * <p>TEMPORARY: the subdirectory name is fixed. It is expected to become a per-folder option.
      */
     private OutputSpec outputSpecFor(SaveProcessingFolderRequest request, Folder folder) {
         Map<String, Object> options =
@@ -538,9 +571,8 @@ public class ProcessingFolderController {
             options.putIfAbsent("folderId", folder.getId().toString());
             return new OutputSpec("storage", options);
         }
-        options.put(
-                "directory",
-                Path.of(request.directory().trim()).resolve(DISK_OUTPUT_SUBDIR).toString());
+        options.put("directory", request.directory().trim());
+        options.put("replace", true);
         return new OutputSpec("folder", options);
     }
 

@@ -549,6 +549,15 @@
   color: var(--c-text-muted);
 }
 
+.files-page-state-badge.is-failed {
+  color: var(--c-danger, var(--c-text));
+  border-color: color-mix(
+    in srgb,
+    var(--c-danger, var(--c-text)) 40%,
+    transparent
+  );
+}
+
 .files-page-state-badge.is-done {
   color: var(--c-success, var(--c-primary));
   border-color: color-mix(

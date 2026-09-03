@@ -216,7 +216,7 @@ class ProcessingFolderControllerTest {
     }
 
     @Test
-    void aDiskFolderWritesItsResultsBesideTheOriginals() {
+    void aDiskFolderProcessesInPlace() {
         var view =
                 controller
                         .save(
@@ -235,13 +235,10 @@ class ProcessingFolderControllerTest {
 
         Policy stored = policyStore.get(view.id()).orElseThrow();
         // Disk, not app storage: an install with no accounts and no file storage has nothing to
-        // store a result against, and the watched directory is the one place that always exists.
+        // store a result against. Results replace the watched files in place.
         assertThat(stored.output().type()).isEqualTo("folder");
-        assertThat(stored.output().options().get("directory").toString())
-                .endsWith("Stirling Processed");
-        // The originals themselves are never written over.
-        assertThat(stored.output().options().get("directory").toString())
-                .isNotEqualTo("/tmp/Downloads");
+        assertThat(stored.output().options().get("directory")).isEqualTo("/tmp/Downloads");
+        assertThat(stored.output().options().get("replace")).isEqualTo(true);
     }
 
     @Test

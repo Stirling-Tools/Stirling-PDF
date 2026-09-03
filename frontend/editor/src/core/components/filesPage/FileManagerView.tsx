@@ -78,10 +78,7 @@ import {
   FilesPageEntry,
   type DiskFileState,
 } from "@app/components/filesPage/FileGrid";
-import {
-  useProcessingFolders,
-  type ProcessingRunInfo,
-} from "@app/hooks/useProcessingFolders";
+import { useProcessingFolders } from "@app/hooks/useProcessingFolders";
 import { FolderProcessingSetup } from "@app/components/policies/FolderProcessingSetup";
 import SuperSearch from "@app/components/shared/superSearch/SuperSearch";
 import { useEditorSearchScopes } from "@app/hooks/useSuperSearch";
@@ -580,44 +577,25 @@ export default function FileManagerView() {
   const outputDirectory = currentLocalDirectory
     ? currentProcessing?.outputDirectory
     : undefined;
-  const [outputEntries, setOutputEntries] = useState<DiskFileEntry[]>([]);
-  useEffect(() => {
-    if (!outputDirectory || !canListDirectory) {
-      setOutputEntries([]);
-      return;
-    }
-    let cancelled = false;
-    listDirectory(outputDirectory)
-      .then((listed) => {
-        if (!cancelled) setOutputEntries(listed?.files ?? []);
-      })
-      .catch(() => {
-        // The output directory only exists once a run has delivered into it,
-        // so unreadable reads as empty rather than as an error.
-        if (!cancelled) setOutputEntries([]);
-      })
-      .finally(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, [outputDirectory]);
-
-  // What is running right now — polled while the master folder is open so
-  // the Processing section and its count stay live.
-  const [activeRuns, setActiveRuns] = useState<ProcessingRunInfo[] | null>(
-    null,
+  // Per-file pipeline state, straight from the backend's ledger — processing
+  // in place leaves nothing else (no output folder) to infer a file's state
+  // from. Polled while the folder is open so badges follow the sweep live.
+  const [fileStates, setFileStates] = useState<Map<string, DiskFileState>>(
+    new Map(),
   );
   const processingRecordId = currentProcessing?.id;
-  const { listActiveRuns } = processingApi;
+  const { listFiles } = processingApi;
   useEffect(() => {
     if (!outputDirectory || !processingRecordId) {
-      setActiveRuns(null);
+      setFileStates(new Map());
       return;
     }
     let cancelled = false;
     const tick = async () => {
-      const runs = await listActiveRuns(processingRecordId);
-      if (!cancelled) setActiveRuns(runs);
+      const files = await listFiles(processingRecordId).catch(() => []);
+      if (!cancelled) {
+        setFileStates(new Map(files.map((f) => [f.name, f.state])));
+      }
     };
     void tick();
     const timer = setInterval(() => void tick(), 3000);
@@ -625,40 +603,17 @@ export default function FileManagerView() {
       cancelled = true;
       clearInterval(timer);
     };
-  }, [outputDirectory, processingRecordId, listActiveRuns]);
+  }, [outputDirectory, processingRecordId, listFiles]);
 
   const [processingSetupFolder, setProcessingSetupFolder] =
     useState<FolderRecord | null>(null);
-
-  // Opening a processed file opens its result: the whole point of the folder
-  // is the processed copy, and the untouched original stays on disk. Files
-  // without a result yet are inert (the grid renders them locked).
-  const openDiskFileResult = useCallback(
-    async (entry: DiskFileEntry) => {
-      if (!outputDirectory) {
-        await openDiskFile(entry);
-        return;
-      }
-      const result = outputEntries.find((o) => o.name === entry.name);
-      if (result) await openDiskFile(result);
-    },
-    [outputDirectory, outputEntries, openDiskFile],
-  );
 
   const [diskStateFilter, setDiskStateFilter] = useState<DiskFileState | "all">(
     "all",
   );
   const diskStateFor = useCallback(
-    (name: string): DiskFileState => {
-      // A result with the same name is the definition of processed: outputs
-      // land beside the originals under the same file name.
-      if (outputEntries.some((o) => o.name === name)) return "done";
-      if ((activeRuns ?? []).some((run) => run.fileName === name)) {
-        return "processing";
-      }
-      return "waiting";
-    },
-    [outputEntries, activeRuns],
+    (name: string): DiskFileState => fileStates.get(name) ?? "waiting",
+    [fileStates],
   );
 
   const entries = useMemo<FilesPageEntry[]>(() => {
@@ -2018,21 +1973,21 @@ export default function FileManagerView() {
           >
             {outputDirectory && (
               <div className="files-page-state-filters">
-                {(["all", "done", "processing", "waiting"] as const).map(
-                  (value) => (
-                    <button
-                      key={value}
-                      type="button"
-                      className={diskStateFilter === value ? "is-active" : ""}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setDiskStateFilter(value);
-                      }}
-                    >
-                      {t(`filesPage.diskState.${value}`, value)}
-                    </button>
-                  ),
-                )}
+                {(
+                  ["all", "done", "processing", "failed", "waiting"] as const
+                ).map((value) => (
+                  <button
+                    key={value}
+                    type="button"
+                    className={diskStateFilter === value ? "is-active" : ""}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDiskStateFilter(value);
+                    }}
+                  >
+                    {t(`filesPage.diskState.${value}`, value)}
+                  </button>
+                ))}
               </div>
             )}
             <FileGrid
@@ -2050,7 +2005,7 @@ export default function FileManagerView() {
               onSetSelection={setSelectedFileIds}
               onOpenFolder={handleOpenFolder}
               onStartProcessing={setProcessingSetupFolder}
-              onOpenDiskFile={(entry) => void openDiskFileResult(entry)}
+              onOpenDiskFile={(entry) => void openDiskFile(entry)}
               onOpenFile={handleOpenFile}
               onMoveFiles={moveFilesTo}
               onMoveFolder={moveFolderTo}

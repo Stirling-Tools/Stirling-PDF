@@ -45,6 +45,13 @@ public class FolderOutputSink implements PolicyOutputSink {
     static final String TYPE = FolderAccessGuard.FOLDER_TYPE;
     static final String DIRECTORY_OPTION = "directory";
 
+    /**
+     * When set, an output overwrites the same-named file instead of picking a unique name.
+     * Processing folders use it to process in place: the watched file becomes its result, and the
+     * ledger row recorded at the result's version keeps the sweep from re-claiming it.
+     */
+    static final String REPLACE_OPTION = "replace";
+
     // Staging entries are renamed away within one delivery; anything older is a crash leftover.
     private static final Duration STALE_TMP_AGE = Duration.ofDays(1);
 
@@ -76,6 +83,7 @@ public class FolderOutputSink implements PolicyOutputSink {
         Files.createDirectories(tmpDir);
         sweepStaleTmp(tmpDir);
 
+        boolean replace = Boolean.parseBoolean(String.valueOf(spec.options().get(REPLACE_OPTION)));
         List<ResultFile> results = new ArrayList<>();
         for (int i = 0; i < outputs.size(); i++) {
             Resource resource = outputs.get(i);
@@ -85,7 +93,8 @@ public class FolderOutputSink implements PolicyOutputSink {
             long size = Files.size(staged);
             // Size and mtime survive the rename.
             String gate = FolderIdentities.statGate(staged);
-            Path target = moveIntoPlace(delivery, canonicalDir, name, staged, gate, contentHash);
+            Path target =
+                    moveIntoPlace(delivery, canonicalDir, name, staged, gate, contentHash, replace);
             String contentType =
                     MediaTypeFactory.getMediaType(name)
                             .orElse(MediaType.APPLICATION_OCTET_STREAM)
@@ -135,8 +144,29 @@ public class FolderOutputSink implements PolicyOutputSink {
             String name,
             Path staged,
             String gate,
-            String contentHash)
+            String contentHash,
+            boolean replace)
             throws IOException {
+        if (replace) {
+            Path target = dir.resolve(name);
+            if (delivery.policyId() != null) {
+                processedLedger.recordOutput(
+                        delivery.policyId(), target.toString(), gate, contentHash);
+            }
+            try {
+                Files.move(
+                        staged,
+                        target,
+                        StandardCopyOption.ATOMIC_MOVE,
+                        StandardCopyOption.REPLACE_EXISTING);
+            } catch (IOException failed) {
+                if (delivery.policyId() != null) {
+                    processedLedger.forgetOutput(delivery.policyId(), target.toString(), gate);
+                }
+                throw failed;
+            }
+            return target;
+        }
         while (true) {
             Path target = uniqueTarget(dir, name);
             if (delivery.policyId() != null) {

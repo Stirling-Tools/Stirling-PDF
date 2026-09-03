@@ -99,7 +99,7 @@ function useFolderOriginBadge(folder: FolderRecord): {
 export type FilesPageViewMode = "grid" | "list";
 
 /** A disk file's place in its working folder's pipeline, when one is attached. */
-export type DiskFileState = "done" | "processing" | "waiting";
+export type DiskFileState = "done" | "processing" | "failed" | "waiting";
 
 export interface FilesPageEntry {
   kind: "folder" | "file" | "diskFile";
@@ -1970,6 +1970,11 @@ function DiskFileCard({
             {t("filesPage.diskState.processing", "Processing")}
           </span>
         )}
+        {state === "failed" && (
+          <span className="files-page-state-badge is-failed">
+            {t("filesPage.diskState.failed", "Failed")}
+          </span>
+        )}
         {state === "waiting" && (
           <span className="files-page-state-badge">
             {t("filesPage.diskState.waiting", "Waiting")}
@@ -2099,6 +2104,11 @@ function DiskFileRow({
           <span className="files-page-state-badge">
             <Loader size="0.65rem" />
             {t("filesPage.diskState.processing", "Processing")}
+          </span>
+        )}
+        {state === "failed" && (
+          <span className="files-page-state-badge is-failed">
+            {t("filesPage.diskState.failed", "Failed")}
           </span>
         )}
         {state === "waiting" && (

@@ -208,6 +208,8 @@ export interface MountedFile {
   name: string;
   sizeBytes: number;
   lastModified: number;
+  /** Its place in the folder's pipeline: done, processing, failed, or waiting. */
+  state: "done" | "processing" | "failed" | "waiting";
 }
 
 /**

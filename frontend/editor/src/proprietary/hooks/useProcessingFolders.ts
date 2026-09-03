@@ -3,6 +3,7 @@ import {
   CLASSIFY_OPERATION,
   classificationDefaults,
   deleteProcessingFolder,
+  fetchMountedFiles,
   fetchProcessingFolderRuns,
   fetchProcessingFolders,
   saveProcessingFolder,
@@ -15,6 +16,7 @@ import { folderKind, type FolderRecord } from "@app/types/folder";
 // The core stub declares the contract this shadows; import it from @core
 // explicitly, since @app/hooks/useProcessingFolders resolves back to this file.
 import type {
+  MountedFileState,
   ProcessingFolderState,
   ProcessingFoldersApi,
   ProcessingRunInfo,
@@ -23,6 +25,7 @@ import type {
 // Consumers import the contract's types from @app, which resolves here in
 // builds that carry this shadow — so it must re-export what the stub declares.
 export type {
+  MountedFileState,
   ProcessingFolderState,
   ProcessingFoldersApi,
   ProcessingRunInfo,
@@ -238,6 +241,15 @@ export function useProcessingFolders(): ProcessingFoldersApi {
     [],
   );
 
+  const listFiles = useCallback(
+    async (recordId: string): Promise<MountedFileState[]> =>
+      (await fetchMountedFiles(recordId)).map((file) => ({
+        name: file.name,
+        state: file.state,
+      })),
+    [],
+  );
+
   const sweep = useCallback(
     async (folder: FolderRecord) => {
       const existing = recordFor(folder);
@@ -259,6 +271,7 @@ export function useProcessingFolders(): ProcessingFoldersApi {
       enabledFolderIds,
       anyEnabled,
       listActiveRuns,
+      listFiles,
       enable,
       disable,
       remove,
@@ -269,6 +282,7 @@ export function useProcessingFolders(): ProcessingFoldersApi {
       enabledFolderIds,
       anyEnabled,
       listActiveRuns,
+      listFiles,
       enable,
       disable,
       remove,
