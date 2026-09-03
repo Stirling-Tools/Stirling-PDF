@@ -75,6 +75,25 @@ public interface StoredFileRepository extends JpaRepository<StoredFile, Long> {
                     + "(SELECT ws FROM WorkflowSession ws WHERE ws.owner = :user)")
     void clearWorkflowSessionReferencesByOwner(@Param("user") User user);
 
+    // Guarded compare-and-bump: returns 0 when another writer got there first (409 upstream).
+    // Row lock serializes concurrent editors; coalesce backfills legacy null versions.
+    @Modifying
+    @Query(
+            "UPDATE StoredFile f SET f.contentVersion = COALESCE(f.contentVersion, 0) + 1 "
+                    + "WHERE f.id = :id AND COALESCE(f.contentVersion, 0) = :expected")
+    int bumpContentVersionIfMatches(@Param("id") Long id, @Param("expected") long expected);
+
+    // Unconditional bump for legacy clients that don't send a base version.
+    @Modifying
+    @Query(
+            "UPDATE StoredFile f SET f.contentVersion = COALESCE(f.contentVersion, 0) + 1 "
+                    + "WHERE f.id = :id")
+    int bumpContentVersion(@Param("id") Long id);
+
+    // Scalar projection: reads the DB, not the stale first-level cache entity.
+    @Query("SELECT COALESCE(f.contentVersion, 0) FROM StoredFile f WHERE f.id = :id")
+    Long findContentVersionById(@Param("id") Long id);
+
     // ---- storage encryption at rest ----------------------------------------------------
 
     long countByEncryptionKeyIdIsNull();

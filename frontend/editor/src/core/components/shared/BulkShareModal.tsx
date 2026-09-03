@@ -21,6 +21,7 @@ import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from "@app/styles/zIndex";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import type { StirlingFileStub } from "@app/types/fileContext";
 import { uploadHistoryChains } from "@app/services/serverStorageUpload";
+import { SharedFileConflictError } from "@app/services/sharedFileSave";
 import { fileStorage } from "@app/services/fileStorage";
 import { useFileActions } from "@app/contexts/FileContext";
 import type { FileId } from "@app/types/file";
@@ -117,31 +118,40 @@ const BulkShareModal: React.FC<BulkShareModalProps> = ({
         rootIds.length === 1 && remoteIds.length === 1
           ? remoteIds[0]
           : undefined;
+      // Only guard when the selected files agree on one base version.
+      const baseVersions = Array.from(
+        new Set(
+          files
+            .filter((file) => file.remoteStorageId === existingRemoteId)
+            .map((file) => file.remoteVersionBase)
+            .filter((v): v is number => typeof v === "number"),
+        ),
+      );
 
       const {
         remoteId: storedId,
         updatedAt,
+        version,
         chain,
-      } = await uploadHistoryChains(rootIds, existingRemoteId);
+      } = await uploadHistoryChains(rootIds, existingRemoteId, {
+        baseVersion: baseVersions.length === 1 ? baseVersions[0] : undefined,
+      });
 
       const shareResponse = await createShareLink(storedId);
       setShareToken(shareResponse.token ?? null);
 
       for (const stub of chain) {
-        actions.updateStirlingFileStub(stub.id, {
+        const updates = {
           remoteStorageId: storedId,
           remoteStorageUpdatedAt: updatedAt,
           remoteOwnedByCurrentUser: true,
           remoteSharedViaLink: false,
           remoteHasShareLinks: true,
-        });
-        await fileStorage.updateFileMetadata(stub.id, {
-          remoteStorageId: storedId,
-          remoteStorageUpdatedAt: updatedAt,
-          remoteOwnedByCurrentUser: true,
-          remoteSharedViaLink: false,
-          remoteHasShareLinks: true,
-        });
+          remoteVersionBase: version,
+          remoteVersionLatest: version,
+        };
+        actions.updateStirlingFileStub(stub.id, updates);
+        await fileStorage.updateFileMetadata(stub.id, updates);
       }
 
       alert({
@@ -154,6 +164,15 @@ const BulkShareModal: React.FC<BulkShareModalProps> = ({
         await onShared();
       }
     } catch (error: unknown) {
+      if (error instanceof SharedFileConflictError) {
+        setErrorMessage(
+          t(
+            "storageCollab.conflictBody",
+            "Someone else saved a newer version since you last synced. You can fetch their version to merge manually, or overwrite it with yours.",
+          ),
+        );
+        return;
+      }
       console.error("Failed to generate share link:", error);
       setErrorMessage(
         t(

@@ -44,6 +44,8 @@ interface StoredFileResponse {
   owner?: string | null;
   ownedByCurrentUser?: boolean;
   accessRole?: string | null;
+  canEdit?: boolean;
+  version?: number | null;
   shareLinks?: Array<{ token?: string | null }>;
   sharedUsers?: Array<{ username?: string | null }>;
   sharedWithUsers?: string[];
@@ -57,6 +59,9 @@ interface AccessedShareLinkResponse {
   fileName?: string | null;
   owner?: string | null;
   ownedByCurrentUser?: boolean;
+  accessRole?: string | null;
+  canEdit?: boolean;
+  version?: number | null;
   createdAt?: string | null;
   lastAccessedAt?: string | null;
 }
@@ -200,6 +205,10 @@ export async function reconcileServerFiles(
             ? serverFile.ownedByCurrentUser
             : stub.remoteOwnedByCurrentUser,
         remoteAccessRole: serverFile.accessRole ?? stub.remoteAccessRole,
+        remoteCanEdit:
+          typeof serverFile.canEdit === "boolean"
+            ? serverFile.canEdit
+            : stub.remoteCanEdit,
         remoteSharedViaLink: stub.remoteSharedViaLink,
         remoteHasShareLinks: Boolean(serverFile.shareLinks?.length),
         remoteHasUserShares: Boolean(
@@ -209,6 +218,10 @@ export async function reconcileServerFiles(
           typeof updatedAtMs === "number" && Number.isFinite(updatedAtMs)
             ? updatedAtMs
             : stub.remoteStorageUpdatedAt,
+        remoteVersionLatest:
+          typeof serverFile.version === "number"
+            ? serverFile.version
+            : stub.remoteVersionLatest,
         // Server is authoritative for cloud-stored files. Don't fall back to
         // stub.folderId on null - that would resurrect a stale folder pointer
         // after the server SET_NULL'd it (e.g. owner deleted the folder).
@@ -258,6 +271,10 @@ export async function reconcileServerFiles(
             ? file.ownedByCurrentUser
             : undefined,
         remoteAccessRole: file.accessRole ?? undefined,
+        remoteCanEdit:
+          typeof file.canEdit === "boolean" ? file.canEdit : undefined,
+        remoteVersionLatest:
+          typeof file.version === "number" ? file.version : undefined,
         remoteSharedViaLink: false,
         remoteHasShareLinks: Boolean(file.shareLinks?.length),
         remoteHasUserShares: Boolean(
@@ -376,6 +393,11 @@ export async function reconcileServerFiles(
         remoteStorageUpdatedAt: lastModified,
         remoteOwnerUsername: link.owner ?? undefined,
         remoteOwnedByCurrentUser: false,
+        remoteAccessRole: link.accessRole ?? undefined,
+        remoteCanEdit:
+          typeof link.canEdit === "boolean" ? link.canEdit : undefined,
+        remoteVersionLatest:
+          typeof link.version === "number" ? link.version : undefined,
         remoteSharedViaLink: true,
         remoteHasShareLinks: false,
         remoteShareToken: link.shareToken,
@@ -490,6 +512,9 @@ export async function materializeServerStubs(
         remoteOwnerUsername: stub.remoteOwnerUsername,
         remoteOwnedByCurrentUser: stub.remoteOwnedByCurrentUser,
         remoteAccessRole: stub.remoteAccessRole,
+        // Bytes just came from the server head, so base == latest here.
+        remoteVersionBase: stub.remoteVersionLatest,
+        remoteVersionLatest: stub.remoteVersionLatest,
         remoteSharedViaLink: isSharedStub ? true : false,
         remoteHasShareLinks: stub.remoteHasShareLinks,
         remoteShareToken: isSharedStub ? stub.remoteShareToken : undefined,

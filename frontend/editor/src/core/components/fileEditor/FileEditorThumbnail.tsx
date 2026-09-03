@@ -11,6 +11,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import UnarchiveIcon from "@mui/icons-material/Unarchive";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import CloudSyncIcon from "@mui/icons-material/CloudSync";
 import LinkIcon from "@mui/icons-material/Link";
 import HistoryIcon from "@mui/icons-material/History";
 import PushPinIcon from "@mui/icons-material/PushPin";
@@ -45,6 +46,8 @@ import { downloadFileWithPolicy as downloadFile } from "@app/services/exportWith
 import { PrivateContent } from "@app/components/shared/PrivateContent";
 import UploadToServerModal from "@app/components/shared/UploadToServerModal";
 import ShareFileModal from "@app/components/shared/ShareFileModal";
+import SaveToSharedModal from "@app/components/shared/SaveToSharedModal";
+import { canEditSharedFile } from "@app/hooks/useSharedFileActions";
 import { VersionHistoryModal } from "@app/components/filesPage/VersionHistoryModal";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useFileThumbnail } from "@app/hooks/useFileThumbnail";
@@ -152,6 +155,7 @@ const FileEditorThumbnail = ({
   const isOwnedOrLocal = file.remoteOwnedByCurrentUser !== false;
   const isSharedFile =
     file.remoteOwnedByCurrentUser === false || file.remoteSharedViaLink;
+  const isSharedEditor = sharingEnabled && canEditSharedFile(file);
   const localUpdatedAt = file.createdAt ?? file.lastModified ?? 0;
   const remoteUpdatedAt = file.remoteStorageUpdatedAt ?? 0;
   const isUploaded = Boolean(file.remoteStorageId);
@@ -182,6 +186,7 @@ const FileEditorThumbnail = ({
   const [isDragging, setIsDragging] = useState(false);
   const [showCloseModal, setShowCloseModal] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showSaveToSharedModal, setShowSaveToSharedModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showSharedEditNotice, setShowSharedEditNotice] = useState(false);
   const sharedEditNoticeShownRef = useRef(false);
@@ -400,6 +405,25 @@ const FileEditorThumbnail = ({
             },
           ]
         : []),
+      ...(isSharedEditor && file.isLeaf
+        ? [
+            {
+              id: "saveToShared",
+              icon: <CloudSyncIcon style={{ fontSize: 20 }} />,
+              label: t("storageCollab.saveToShared", "Save to shared file"),
+              disabled: policyEnforcing,
+              tooltip: policyEnforcing
+                ? enforcingTooltip(
+                    t("storageCollab.saveToShared", "Save to shared file"),
+                  )
+                : undefined,
+              onClick: (e: React.MouseEvent) => {
+                e.stopPropagation();
+                setShowSaveToSharedModal(true);
+              },
+            },
+          ]
+        : []),
       ...(canShare
         ? [
             {
@@ -475,6 +499,8 @@ const FileEditorThumbnail = ({
     policyEnforcing,
     canUpload,
     canShare,
+    isSharedEditor,
+    file.isLeaf,
     isUploaded,
     pinFile,
     unpinFile,
@@ -730,20 +756,29 @@ const FileEditorThumbnail = ({
         </Stack>
       </Modal>
 
-      {/* Shared edit notice modal */}
+      {/* Shared edit notice modal - copy depends on the recipient's role */}
       <Modal
         opened={showSharedEditNotice}
         onClose={() => setShowSharedEditNotice(false)}
-        title={t("fileManager.sharedEditNoticeTitle", "Read-only server copy")}
+        title={
+          isSharedEditor
+            ? t("storageCollab.sharedEditorNoticeTitle", "Shared file")
+            : t("fileManager.sharedEditNoticeTitle", "Read-only server copy")
+        }
         centered
         size="auto"
       >
         <Stack gap="md">
           <Text size="sm">
-            {t(
-              "fileManager.sharedEditNoticeBody",
-              "You do not have edit rights to the server version of this file. Any edits you make will be saved as a local copy.",
-            )}
+            {isSharedEditor
+              ? t(
+                  "storageCollab.sharedEditorNoticeBody",
+                  "You have editor access. Use “Save to shared file” after editing to publish your changes for everyone with access.",
+                )
+              : t(
+                  "fileManager.sharedEditNoticeBody",
+                  "You do not have edit rights to the server version of this file. Any edits you make will be saved as a local copy.",
+                )}
           </Text>
           <Group justify="flex-end" gap="sm">
             <Button onClick={() => setShowSharedEditNotice(false)}>
@@ -757,6 +792,13 @@ const FileEditorThumbnail = ({
         <UploadToServerModal
           opened={showUploadModal}
           onClose={() => setShowUploadModal(false)}
+          file={file}
+        />
+      )}
+      {isSharedEditor && (
+        <SaveToSharedModal
+          opened={showSaveToSharedModal}
+          onClose={() => setShowSaveToSharedModal(false)}
           file={file}
         />
       )}

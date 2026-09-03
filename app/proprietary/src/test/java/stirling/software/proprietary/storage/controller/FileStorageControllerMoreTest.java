@@ -105,9 +105,34 @@ class FileStorageControllerMoreTest {
             MultipartFile file = mock(MultipartFile.class);
             StoredFileResponse resp = StoredFileResponse.builder().id(2L).build();
             when(fileStorageService.requireAuthenticatedUser()).thenReturn(u);
-            when(fileStorageService.updateFileResponse(u, 5L, file, null, null)).thenReturn(resp);
+            when(fileStorageService.updateFileResponse(u, 5L, file, null, null, null))
+                    .thenReturn(resp);
 
-            assertThat(controller.updateFile(5L, file, null, null)).isSameAs(resp);
+            assertThat(controller.updateFile(5L, file, null, null, null)).isSameAs(resp);
+        }
+
+        @Test
+        void updateFile_parsesIfMatchHeader() {
+            User u = user();
+            MultipartFile file = mock(MultipartFile.class);
+            StoredFileResponse resp = StoredFileResponse.builder().id(2L).build();
+            when(fileStorageService.requireAuthenticatedUser()).thenReturn(u);
+            when(fileStorageService.updateFileResponse(u, 5L, file, null, null, 7L))
+                    .thenReturn(resp);
+
+            assertThat(controller.updateFile(5L, file, null, null, "\"7\"")).isSameAs(resp);
+        }
+
+        @Test
+        void updateFile_invalidIfMatchHeader_badRequest() {
+            User u = user();
+            MultipartFile file = mock(MultipartFile.class);
+            when(fileStorageService.requireAuthenticatedUser()).thenReturn(u);
+
+            assertThatThrownBy(() -> controller.updateFile(5L, file, null, null, "abc"))
+                    .isInstanceOf(ResponseStatusException.class)
+                    .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
+                    .isEqualTo(400);
         }
 
         @Test
