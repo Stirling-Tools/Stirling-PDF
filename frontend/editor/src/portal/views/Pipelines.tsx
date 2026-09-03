@@ -26,7 +26,6 @@ import {
 import { qk } from "@portal/queries/keys";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
 import { PipelinesIcon } from "@portal/components/icons";
-import { KpiStrip } from "@portal/components/pipelines/KpiStrip";
 import { PipelinesTable } from "@portal/components/pipelines/PipelinesTable";
 import { PipelineTemplateCard } from "@portal/components/pipelines/PipelineTemplateCard";
 import { PolicyDetailPanel } from "@portal/components/policies/PolicyDetailPanel";
@@ -49,7 +48,7 @@ export function Pipelines() {
   const { guard } = useConnectGate();
 
   const listState = usePipelines();
-  const { data: overview, loading: overviewLoading } = listState;
+  const { data: overview } = listState;
   const { isLoading: listLoading } = useSectionFlags(listState);
 
   const catalogueState = usePoliciesOverview();
@@ -263,8 +262,6 @@ export function Pipelines() {
         <h2 className="portal-pipelines__section-title">
           {t("portal.pipelines.all.title")}
         </h2>
-
-        {hasPipelines && <KpiStrip data={overview} loading={overviewLoading} />}
 
         {listLoading && (
           <div className="portal-pipelines__table-skeleton" aria-hidden>

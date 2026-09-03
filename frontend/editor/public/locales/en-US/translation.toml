@@ -8612,11 +8612,6 @@ failed_other = "Failed after {{done}} of {{count}} steps"
 running_one = "Running the only step"
 running_other = "Running step {{done}} of {{count}}"
 
-[portal.pipelines.kpi]
-active = "Active"
-paused = "Paused"
-total = "Pipelines"
-
 [portal.pipelines.run]
 allProcessed_one = "Nothing to run: the source's {{count}} document has already been processed."
 allProcessed_other = "Nothing to run: all {{count}} documents in the sources have already been processed."
@@ -9465,11 +9460,6 @@ body = "Delete \"{{name}}\"? This can't be undone. Policies that reference it wo
 cancel = "Cancel"
 confirm = "Delete"
 title = "Delete source?"
-
-[portal.sources.kpi]
-inUse = "In use"
-total = "Connections"
-unused = "Unused"
 
 [portal.sources.networkFields.connection]
 helperText = "The saved connection with the server address and credentials. Shared by every source that uses it."
