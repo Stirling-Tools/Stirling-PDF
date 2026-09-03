@@ -21,14 +21,13 @@ export interface QuickNavRailContainerProps extends Omit<
   QuickNavRailBaseProps,
   "footer"
 > {
-  /** The rail owns the settings and account controls, so the sidebars drop their own row. */
-  onOpenSettings?: () => void;
-  /** The avatar's own destination; falls back to settings. */
+  /** The rail owns the account control, so the sidebars drop their own row. */
   onOpenAccount?: () => void;
-  /** Settings is a page like any other; the gear marks it the way apps do. */
-  settingsActive?: boolean;
-  /** The account section specifically, so the avatar can claim it instead. */
+  /** Marks the avatar current for the whole settings page, which it now owns. */
   accountActive?: boolean;
+  /** Omitted in builds with no docs to browse. */
+  onOpenDocs?: () => void;
+  docsActive?: boolean;
   /** Omitted in builds with no processor to invite anyone into. */
   onInvite?: () => void;
   onToggleNotifications?: () => void;
@@ -39,10 +38,10 @@ export interface QuickNavRailContainerProps extends Omit<
 
 /** The fixed-width column the rail sits in. */
 export function QuickNavRailContainer({
-  onOpenSettings,
   onOpenAccount,
-  settingsActive = false,
   accountActive = false,
+  onOpenDocs,
+  docsActive = false,
   onInvite,
   onToggleNotifications,
   notificationsOpen,
@@ -77,32 +76,32 @@ export function QuickNavRailContainer({
                   onClick={onInvite}
                 />
               )}
-              {onOpenSettings && (
+              {onOpenDocs && (
                 <RailButton
-                  label={t("quickNav.settings", "Settings")}
+                  label={t("quickNav.docs", "Documentation")}
                   icon={
-                    settingsActive ? (
+                    docsActive ? (
                       <LocalIcon
-                        icon="settings-rounded"
+                        icon="help-rounded"
                         width="1.125rem"
                         height="1.125rem"
                       />
                     ) : (
                       <LocalIcon
-                        icon="settings-outline-rounded"
+                        icon="help-outline-rounded"
                         width="1.125rem"
                         height="1.125rem"
                       />
                     )
                   }
-                  current={settingsActive}
-                  testId="settings-button"
-                  onClick={onOpenSettings}
+                  current={docsActive}
+                  testId="docs-button"
+                  onClick={onOpenDocs}
                 />
               )}
-              {onOpenSettings && (
+              {onOpenAccount && (
                 <QuickNavRailAccount
-                  onOpenSettings={onOpenAccount ?? onOpenSettings}
+                  onOpen={onOpenAccount}
                   identity={identity}
                   active={accountActive}
                 />

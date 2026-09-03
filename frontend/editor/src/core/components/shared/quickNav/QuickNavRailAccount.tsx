@@ -5,16 +5,16 @@ import type { QuickNavIdentity } from "@app/contexts/QuickNavHostContext";
 import "@app/components/shared/quickNav/QuickNavRailAccount.css";
 
 export interface QuickNavRailAccountProps {
-  onOpenSettings: () => void;
+  onOpen: () => void;
   /** Null between apps; the disc still renders, so the bar keeps its shape. */
   identity: QuickNavIdentity | null;
   /** Drawn as the current destination while the settings page is open. */
   active?: boolean;
 }
 
-/** The avatar is the way to your own account; the gear beside it is everything else. */
+/** The avatar is the only way into settings, and lands on your own account. */
 export function QuickNavRailAccount({
-  onOpenSettings,
+  onOpen,
   identity,
   active = false,
 }: QuickNavRailAccountProps) {
@@ -37,7 +37,7 @@ export function QuickNavRailAccount({
             src={profilePictureUrl ?? undefined}
             name={displayName}
             size="sm"
-            onClick={onOpenSettings}
+            onClick={onOpen}
             ariaLabel={label}
             ariaCurrent={active ? "page" : undefined}
             className="quick-nav-rail-avatar"

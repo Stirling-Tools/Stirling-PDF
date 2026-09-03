@@ -182,15 +182,16 @@ export async function runToolAndWaitForReview(
 export const SETTINGS_SURFACE = ".settings-page";
 
 /**
- * Go to the global Settings page, which opens on its first section. Pass
- * `section` to land on a named one instead. Returns the page's root locator so
- * callers can scope further queries to it.
+ * Go to the global Settings page by the rail's avatar, the only entry there is,
+ * which opens on the Account section. Pass `section` to land on a named one
+ * instead. Returns the page's root locator so callers can scope further
+ * queries to it.
  */
 export async function openSettings(
   page: Page,
   section?: string | RegExp,
 ): Promise<Locator> {
-  await page.locator('[data-testid="settings-button"]').first().click();
+  await page.locator('[data-testid="config-button"]').first().click();
   const surface = page.locator(SETTINGS_SURFACE);
   await expect(surface).toBeVisible({ timeout: 5_000 });
   if (section) {

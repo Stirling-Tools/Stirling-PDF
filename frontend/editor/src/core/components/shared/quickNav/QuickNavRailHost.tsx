@@ -30,7 +30,6 @@ export function QuickNavRailHost() {
 
   const path = stripBasePath(pathname);
   const inSettings = path.startsWith("/settings");
-  const inAccount = path.startsWith("/settings/account");
   const inDocs = path.startsWith(DOCS_PATH);
   const inPortal = path.startsWith(PORTAL_BASENAME);
   // Settings and the docs browser are pages in their own right, so neither app
@@ -65,50 +64,76 @@ export function QuickNavRailHost() {
     return { disabled: Boolean(reason), reason };
   };
 
-  const apps: QuickNavEntry[] = [
-    {
-      id: "processor",
-      label: t("quickNav.processor", "Processor"),
-      // Two literals, not a computed name: the offline icon bundle scans for `icon="..."`.
-      icon: inPortal ? (
-        <LocalIcon icon="memory-rounded" width={SIZE} height={SIZE} />
-      ) : (
-        <LocalIcon icon="memory-outline-rounded" width={SIZE} height={SIZE} />
-      ),
-      current: inPortal,
-      disabled: HAS_PORTAL && !inPortal && !host?.portalAccess,
-      reason:
-        HAS_PORTAL && !inPortal && !host?.portalAccess
-          ? t("quickNav.noProcessorAccess", "Ask an admin for processor access")
-          : undefined,
-      onClick: () => {
-        if (inPortal) {
-          returnHome();
-          return;
-        }
-        if (inEditor) saveEditorReturnPath();
-        go(PORTAL_BASENAME);
-      },
+  // The three apps you switch between. Reader is a mode over the editor rather
+  // than a place of its own, but it leads the group because it is where most
+  // visits start.
+  const reader: QuickNavEntry = {
+    id: "reader",
+    label: t("quickNav.reader", "Reader"),
+    icon: (
+      <LocalIcon icon="menu-book-outline-rounded" width={SIZE} height={SIZE} />
+    ),
+    pressed: Boolean(host?.readerMode),
+    // From the processor there is no editor to toggle - see pendingReaderMode.
+    onClick: () => {
+      const setMode = host?.actions.current?.setReaderMode;
+      if (setMode) {
+        setMode(!host?.readerMode);
+        return;
+      }
+      requestReaderMode();
+      go(EDITOR_BASENAME);
     },
-    {
-      id: "editor",
-      label: t("quickNav.editor", "Editor"),
-      icon: inEditor ? (
-        <LocalIcon icon="edit-rounded" width={SIZE} height={SIZE} />
-      ) : (
-        <LocalIcon icon="edit-outline-rounded" width={SIZE} height={SIZE} />
-      ),
-      current: inEditor,
-      onClick: () => {
-        if (inEditor) {
-          returnHome();
-          return;
-        }
-        // Back to where you left the editor, not its front door.
-        navigate(takeEditorReturnPath() ?? EDITOR_BASENAME);
-      },
+  };
+
+  const editor: QuickNavEntry = {
+    id: "editor",
+    label: t("quickNav.editor", "Editor"),
+    icon: inEditor ? (
+      <LocalIcon icon="edit-rounded" width={SIZE} height={SIZE} />
+    ) : (
+      <LocalIcon icon="edit-outline-rounded" width={SIZE} height={SIZE} />
+    ),
+    current: inEditor,
+    onClick: () => {
+      if (inEditor) {
+        returnHome();
+        return;
+      }
+      // Back to where you left the editor, not its front door.
+      navigate(takeEditorReturnPath() ?? EDITOR_BASENAME);
     },
-  ];
+  };
+
+  const processor: QuickNavEntry = {
+    id: "processor",
+    label: t("quickNav.processor", "Processor"),
+    // Two literals, not a computed name: the offline icon bundle scans for `icon="..."`.
+    icon: inPortal ? (
+      <LocalIcon icon="memory-rounded" width={SIZE} height={SIZE} />
+    ) : (
+      <LocalIcon icon="memory-outline-rounded" width={SIZE} height={SIZE} />
+    ),
+    current: inPortal,
+    disabled: HAS_PORTAL && !inPortal && !host?.portalAccess,
+    reason:
+      HAS_PORTAL && !inPortal && !host?.portalAccess
+        ? t("quickNav.noProcessorAccess", "Ask an admin for processor access")
+        : undefined,
+    onClick: () => {
+      if (inPortal) {
+        returnHome();
+        return;
+      }
+      if (inEditor) saveEditorReturnPath();
+      go(PORTAL_BASENAME);
+    },
+  };
+
+  // Editor and processor only pair off where there is a processor to reach.
+  const apps: QuickNavEntry[] = HAS_PORTAL
+    ? [reader, editor, processor]
+    : [reader];
 
   const within: QuickNavEntry[] = [
     {
@@ -118,28 +143,6 @@ export function QuickNavRailHost() {
         <LocalIcon icon="folder-outline-rounded" width={SIZE} height={SIZE} />
       ),
       onClick: () => go("/files"),
-    },
-    {
-      id: "reader",
-      label: t("quickNav.reader", "Reader"),
-      icon: (
-        <LocalIcon
-          icon="menu-book-outline-rounded"
-          width={SIZE}
-          height={SIZE}
-        />
-      ),
-      pressed: Boolean(host?.readerMode),
-      // From the processor there is no editor to toggle - see pendingReaderMode.
-      onClick: () => {
-        const setMode = host?.actions.current?.setReaderMode;
-        if (setMode) {
-          setMode(!host?.readerMode);
-          return;
-        }
-        requestReaderMode();
-        go(EDITOR_BASENAME);
-      },
     },
     {
       id: "automate",
@@ -165,38 +168,13 @@ export function QuickNavRailHost() {
     },
   ];
 
-  // Reference material, not a workspace: its own group beside the apps.
-  const reference: QuickNavEntry[] = HAS_DOCS
-    ? [
-        {
-          id: "docs",
-          label: t("quickNav.docs", "Documentation"),
-          icon: (
-            <LocalIcon
-              icon="import-contacts-outline-rounded"
-              width={SIZE}
-              height={SIZE}
-            />
-          ),
-          current: inDocs,
-          onClick: () => go(DOCS_PATH),
-        },
-      ]
-    : [];
+  // Reference material, not a workspace: it sits at the foot of the bar under a
+  // question mark rather than competing with the apps for the top.
+  const openDocs = HAS_DOCS ? () => go(DOCS_PATH) : undefined;
 
-  // In the app, the app decides (mobile settings has its own pane to return to);
-  // anywhere else the rail just goes to the settings page.
-  const openSettings = () => {
-    if (inSettings) {
-      host?.actions.current?.openSettings?.();
-      return;
-    }
-    rememberSettingsOrigin();
-    go("/settings");
-  };
-
-  // Your own account, the section the avatar stands for. Inside settings it is
-  // a tab switch (replace); from an app it is an entry like the gear's.
+  // The avatar is the only way into settings now, so it lands on the account
+  // section and the page's own nav carries the rest. Inside settings it is a
+  // tab switch (replace); from an app it is a navigation.
   const openAccount = () => {
     if (inSettings) {
       navigate("/settings/account", { replace: true });
@@ -211,13 +189,14 @@ export function QuickNavRailHost() {
 
   return (
     <QuickNavRailContainer
-      groups={HAS_PORTAL ? [apps, within, reference] : [within, reference]}
+      groups={[apps, within]}
       onReturnHome={returnHome}
       identity={host?.identity ?? null}
-      onOpenSettings={openSettings}
       onOpenAccount={openAccount}
-      settingsActive={inSettings && !inAccount}
-      accountActive={inAccount}
+      // The avatar stands for the whole page, not just its own section.
+      accountActive={inSettings}
+      onOpenDocs={openDocs}
+      docsActive={inDocs}
       onInvite={
         // Spelt out: VIEW_PATHS lives in the portal, which core cannot import.
         HAS_PORTAL && host?.portalAccess
