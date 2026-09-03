@@ -58,19 +58,8 @@ public record Policy(
             Long teamId,
             EditorConfig editor) {
         this(
-                id,
-                name,
-                owner,
-                enabled,
-                required,
-                icon,
-                inputs,
-                steps,
-                output,
-                outputIds,
-                teamId,
-                editor,
-                null);
+                id, name, owner, enabled, required, icon, inputs, steps, output, outputIds, teamId,
+                editor, null);
     }
 
     /**
@@ -90,19 +79,8 @@ public record Policy(
             Long teamId,
             EditorConfig editor) {
         this(
-                id,
-                name,
-                owner,
-                enabled,
-                false,
-                "",
-                inputs,
-                steps,
-                output,
-                outputIds,
-                teamId,
-                editor,
-                null);
+                id, name, owner, enabled, false, "", inputs, steps, output, outputIds, teamId,
+                editor, null);
     }
 
     /** Without editor participation: a swept or on-demand policy carrying a provenance marker. */
@@ -118,18 +96,7 @@ public record Policy(
             Long teamId,
             String origin) {
         this(
-                id,
-                name,
-                owner,
-                enabled,
-                false,
-                "",
-                inputs,
-                steps,
-                output,
-                outputIds,
-                teamId,
-                null,
+                id, name, owner, enabled, false, "", inputs, steps, output, outputIds, teamId, null,
                 origin);
     }
 
@@ -150,18 +117,7 @@ public record Policy(
             List<String> outputIds,
             Long teamId) {
         this(
-                id,
-                name,
-                owner,
-                enabled,
-                false,
-                "",
-                inputs,
-                steps,
-                output,
-                outputIds,
-                teamId,
-                null,
+                id, name, owner, enabled, false, "", inputs, steps, output, outputIds, teamId, null,
                 null);
     }
 
@@ -237,8 +193,19 @@ public record Policy(
     /** A copy referencing the given saved output destinations. */
     public Policy withOutputIds(List<String> newOutputIds) {
         return new Policy(
-                id, name, owner, enabled, required, icon, inputs, steps, output, newOutputIds,
-                teamId, editor, origin);
+                id,
+                name,
+                owner,
+                enabled,
+                required,
+                icon,
+                inputs,
+                steps,
+                output,
+                newOutputIds,
+                teamId,
+                editor,
+                origin);
     }
 
     /** Provenance is stamped server-side; a caller cannot label its own creation as migrated. */
