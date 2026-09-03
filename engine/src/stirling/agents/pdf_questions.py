@@ -29,7 +29,7 @@ from stirling.contracts import (
 from stirling.documents import RagCapability
 from stirling.models import PrincipalId
 from stirling.models.agent_tool_models import AgentToolId, MathAuditorAgentParams
-from stirling.services import AppRuntime, require_current_user_id
+from stirling.services import AppRuntime, language_directive, require_current_user_id
 
 logger = logging.getLogger(__name__)
 
@@ -223,6 +223,7 @@ class PdfQuestionAgent:
         forbids invented figures; the LLM only restates Verdict facts.
         """
         prompt = f"User question:\n{user_message}\n\nMath audit Verdict (JSON):\n{verdict.model_dump_json()}"
+        prompt += f"\n\n{language_directive()}"
         result = await self._math_synth_agent.run(prompt)
         return result.output
 
@@ -233,4 +234,5 @@ class PdfQuestionAgent:
             f"Files: {format_file_names(request.files)}\n"
             f"Question: {request.question}\n"
             "Pick the right retrieval tool for this question, then answer from what it returns."
+            f"\n{language_directive()}"
         )
