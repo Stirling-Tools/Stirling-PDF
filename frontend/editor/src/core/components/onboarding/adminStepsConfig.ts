@@ -182,12 +182,12 @@ const ADMIN_STEP_SPECS: AdminStepSpec[] = [
   },
   {
     step: AdminTourStep.WRAP_UP,
-    selector: '[data-tour="admin-help-nav"]',
+    selector: '[data-tour="admin-about-nav"]',
     contentKey: "adminOnboarding.wrapUp",
     contentDefault:
-      "That's the admin tour! You've seen the enterprise features that make Stirling PDF a powerful, customisable solution for organisations. You can replay it anytime — just open <strong>Settings</strong> and find it here in the <strong>Tours</strong> section under Help.",
+      "That's the admin tour! You've seen the enterprise features that make Stirling PDF a powerful, customisable solution for organisations. You can replay it anytime — just open <strong>Settings</strong> and find it here under <strong>About</strong>.",
     position: "right",
-    section: "help",
+    section: "about",
     waitForSelectorOnEnter: true,
   },
 ];

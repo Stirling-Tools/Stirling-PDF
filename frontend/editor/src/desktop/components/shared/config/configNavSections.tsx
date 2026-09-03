@@ -73,16 +73,16 @@ export const useConfigNavSections = (
     ],
   };
 
-  // In local mode only show Preferences + Connection Mode + Legal — everything
+  // In local mode only show Preferences + Connection Mode + About — everything
   // else requires a server and will 500 or show irrelevant admin UI.
   if (isLocalMode) {
     const result: ConfigNavSection[] = [];
     if (sections.length > 0) result.push(sections[0]);
     result.push(connectionModeSection);
-    const legalSection = sections.find((section) =>
-      section.items.some((item) => item.key === "legal"),
-    );
-    if (legalSection) result.push(legalSection);
+    // Matched on the group id: its items were four rows and are now one, and a
+    // miss here drops the group silently.
+    const aboutSection = sections.find((section) => section.id === "about");
+    if (aboutSection) result.push(aboutSection);
     return result;
   }
 

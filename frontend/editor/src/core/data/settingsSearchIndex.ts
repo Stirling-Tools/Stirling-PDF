@@ -102,4 +102,46 @@ export const SETTINGS_SEARCH_INDEX: SettingsSearchEntry[] = [
     labelFallback: "Keyboard Shortcuts",
     keywords: ["hotkey", "shortcut", "keybinding", "keyboard"],
   },
+  // --- About: one row per card the four folded rows became, carrying the
+  // labels and search terms those rows had.
+  {
+    section: "about",
+    anchor: "help",
+    labelKey: "settings.help.label",
+    labelFallback: "Tours",
+    keywords: ["tour", "walkthrough", "guide", "onboarding", "help"],
+  },
+  {
+    section: "about",
+    anchor: "legal",
+    labelKey: "settings.legal.label",
+    labelFallback: "Legal",
+    keywords: ["terms", "privacy", "policy", "cookie", "consent", "gdpr"],
+  },
+  {
+    section: "about",
+    anchor: "frontendThirdPartyLicenses",
+    labelKey: "settings.licenses.frontendLabel",
+    labelFallback: "Frontend Licenses",
+    keywords: [
+      "licence",
+      "license",
+      "attribution",
+      "dependencies",
+      "open source",
+    ],
+  },
+  {
+    section: "about",
+    anchor: "backendThirdPartyLicenses",
+    labelKey: "settings.licenses.backendLabel",
+    labelFallback: "Backend Licenses",
+    keywords: [
+      "licence",
+      "license",
+      "attribution",
+      "dependencies",
+      "open source",
+    ],
+  },
 ];

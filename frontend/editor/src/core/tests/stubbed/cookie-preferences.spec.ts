@@ -19,7 +19,7 @@ test.describe("18. Cookie Preferences", () => {
       // inside the "About" group the page ships folded.
       await openSettings(page);
       await expandSettingsGroups(page);
-      const legalNav = page.locator('[data-tour="admin-legal-nav"]').first();
+      const legalNav = page.locator('[data-tour="admin-about-nav"]').first();
       await expect(legalNav).toBeVisible({ timeout: 5000 });
       await legalNav.click();
 

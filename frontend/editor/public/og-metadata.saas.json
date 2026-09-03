@@ -532,6 +532,11 @@
       "title": "Frontend Third Party Licenses Settings - Stirling PDF",
       "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
     },
+    "/settings/about": {
+      "image": "/og_images/home.png",
+      "title": "About Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
     "/settings/payg": {
       "image": "/og_images/home.png",
       "title": "Payg Settings - Stirling PDF",
@@ -733,6 +738,7 @@
     "/settings/legal": "/settings/legal",
     "/settings/backendThirdPartyLicenses": "/settings/backendThirdPartyLicenses",
     "/settings/frontendThirdPartyLicenses": "/settings/frontendThirdPartyLicenses",
+    "/settings/about": "/settings/about",
     "/settings/payg": "/settings/payg",
     "/settings/account-link": "/settings/account-link",
     "/settings/users": "/settings/users",

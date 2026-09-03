@@ -2,12 +2,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import HotkeysSection from "@app/components/shared/config/configSections/HotkeysSection";
 import GeneralSection from "@app/components/shared/config/configSections/GeneralSection";
-import HelpSection from "@app/components/shared/config/configSections/HelpSection";
-import LegalSection from "@app/components/shared/config/configSections/LegalSection";
-import {
-  BackendThirdPartyLicensesSection,
-  FrontendThirdPartyLicensesSection,
-} from "@app/components/shared/config/configSections/ThirdPartyLicensesSection";
+import AboutSection from "@app/components/shared/config/configSections/AboutSection";
 import type {
   ConfigNavItem,
   ConfigNavSection,
@@ -63,53 +58,23 @@ export const useConfigNavSections = (
         },
       ],
     },
-    // Reference material: read once, rarely revisited, so it starts folded.
+    // Reference material: read once and rarely revisited, so it is one page
+    // rather than four rows you have to open in turn.
     {
       id: "about",
       title: t("settings.about.title", "About"),
-      collapsedByDefault: true,
       items: [
         {
-          key: "help",
-          label: t("settings.help.label", "Tours"),
+          key: "about",
+          label: t("settings.about.title", "About"),
           description: t(
-            "settings.help.description",
-            "Guided walkthroughs of the editor and the admin area.",
+            "settings.about.description",
+            "Tours, legal documents and the licences of everything bundled with this build.",
           ),
           icon: "help-rounded",
           component: (
-            <HelpSection isAdmin={_isAdmin} onRequestClose={onRequestClose} />
+            <AboutSection isAdmin={_isAdmin} onRequestClose={onRequestClose} />
           ),
-        },
-        {
-          key: "legal",
-          label: t("settings.legal.label", "Legal"),
-          description: t(
-            "settings.legal.description",
-            "Terms, privacy policy and your cookie preferences.",
-          ),
-          icon: "gavel-rounded",
-          component: <LegalSection />,
-        },
-        {
-          key: "backendThirdPartyLicenses",
-          label: t("settings.licenses.backendLabel", "Backend Licenses"),
-          description: t(
-            "settings.licenses.backendDescription",
-            "Licenses for backend dependencies bundled with this server.",
-          ),
-          icon: "article-rounded",
-          component: <BackendThirdPartyLicensesSection />,
-        },
-        {
-          key: "frontendThirdPartyLicenses",
-          label: t("settings.licenses.frontendLabel", "Frontend Licenses"),
-          description: t(
-            "settings.licenses.frontendDescription",
-            "Licenses for frontend dependencies bundled into the release build.",
-          ),
-          icon: "code-rounded",
-          component: <FrontendThirdPartyLicensesSection />,
         },
       ],
     },

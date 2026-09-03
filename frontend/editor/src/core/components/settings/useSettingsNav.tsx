@@ -1,6 +1,7 @@
 import { useConfigNavSections } from "@app/components/shared/config/configNavSections";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import type { SettingsNav } from "@app/components/settings/settingsNavTypes";
+import { BASE_SECTION_ALIASES } from "@app/data/settingsAliases";
 
 export type { SettingsNav };
 
@@ -21,5 +22,5 @@ export function useSettingsNav(onLeave: () => void): SettingsNav {
     onLeave,
     config?.showSettingsWhenNoLogin ?? true,
   );
-  return { sections };
+  return { sections, aliases: BASE_SECTION_ALIASES };
 }

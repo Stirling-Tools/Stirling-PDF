@@ -44,6 +44,9 @@ export function useSettingsNav(onLeave: () => void): SettingsNav {
   return {
     ...base,
     sections,
-    aliases: portalSections.length > 0 ? PORTAL_SECTION_ALIASES : undefined,
+    aliases:
+      portalSections.length > 0
+        ? { ...base.aliases, ...PORTAL_SECTION_ALIASES }
+        : base.aliases,
   };
 }

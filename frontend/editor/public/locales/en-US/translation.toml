@@ -10538,6 +10538,7 @@ backToSections = "All settings"
 title = "Settings"
 
 [settings.about]
+description = "Tours, legal documents and the licences of everything bundled with this build."
 title = "About"
 
 [settings.ai]

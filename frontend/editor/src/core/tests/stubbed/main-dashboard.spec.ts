@@ -106,7 +106,7 @@ test.describe("2. Main Dashboard / Home Page", () => {
 
       await openSettings(page);
       await expandSettingsGroups(page);
-      const legalNav = page.locator('[data-tour="admin-legal-nav"]').first();
+      const legalNav = page.locator('[data-tour="admin-about-nav"]').first();
       await expect(legalNav).toBeVisible({ timeout: 10000 });
       await legalNav.click();
 

@@ -213,7 +213,7 @@ test.describe("15.7 Tour selectors - admin modal nav items", () => {
     "adminConnections",
     "adminAudit",
     "adminUsage",
-    "help",
+    "about",
   ] as const;
 
   for (const section of adminNavSections) {

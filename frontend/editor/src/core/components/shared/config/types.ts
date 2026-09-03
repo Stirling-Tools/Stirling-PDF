@@ -41,6 +41,8 @@ export const VALID_NAV_KEYS = [
   "legal",
   "backendThirdPartyLicenses",
   "frontendThirdPartyLicenses",
+  // Holds all four of the rows above; they stay listed so their deep links alias.
+  "about",
   "payg",
   "account-link",
   // Server administration moved off the processor's own nav (see
