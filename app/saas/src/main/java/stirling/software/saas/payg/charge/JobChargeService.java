@@ -401,23 +401,27 @@ public class JobChargeService {
     }
 
     /**
-     * First-step failure on a freshly-opened process: mimic a successful Stripe
-     * meter_event_adjustment(cancel) by flipping the shadow row to {@link
-     * ShadowChargeStatus#REFUNDED}, and close the process so a same-input retry can't lineage-join
-     * into a refunded chain for free work.
+     * Release a charge whose work never produced anything: flip the shadow row to {@link
+     * ShadowChargeStatus#REFUNDED}, hand back the units it drew, and close the process so a
+     * same-input retry cannot lineage-join into a refunded chain for free work.
+     *
+     * <p><b>Only valid before the meter has fired.</b> It reverses this side's movements — the free
+     * grant, the prepaid pools, the ledger — and cannot unsend a Stripe meter event. Callers are
+     * the first-step 5xx path (pre-meter by construction) and a policy run settling a failure,
+     * which is pre-meter because an async run's meter is deferred until it succeeds.
      *
      * <p>Idempotent: re-invoking on an already-REFUNDED row or already-CLOSED process is a silent
      * no-op.
      */
     @Transactional
-    public void markFirstStepFailed(UUID jobId, String refundReason) {
+    public void releaseUnmeteredCharge(UUID jobId, String refundReason) {
         Objects.requireNonNull(jobId, "jobId");
         LocalDateTime now = LocalDateTime.now();
 
         Optional<PaygShadowCharge> rowOpt = shadowRepository.findFirstByJobIdOrderByIdAsc(jobId);
         if (rowOpt.isEmpty()) {
             log.debug(
-                    "markFirstStepFailed: no shadow row for job {} (PAYG not active for team?)",
+                    "releaseUnmeteredCharge: no shadow row for job {} (PAYG not active for team?)",
                     jobId);
         } else {
             PaygShadowCharge row = rowOpt.get();
@@ -463,7 +467,7 @@ public class JobChargeService {
 
         ProcessingJob job = jobRepository.findById(jobId).orElse(null);
         if (job == null) {
-            log.warn("markFirstStepFailed: no ProcessingJob with id {}", jobId);
+            log.warn("releaseUnmeteredCharge: no ProcessingJob with id {}", jobId);
             return;
         }
         if (job.getStatus() == JobStatus.OPEN) {

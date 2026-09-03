@@ -36,6 +36,7 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.service.AutomationRunContext;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
+import stirling.software.proprietary.policy.controller.PolicyRunRoutes;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.model.User;
@@ -80,7 +81,9 @@ import stirling.software.saas.util.AuthenticationUtils;
 @Profile("saas")
 public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
 
-    static final String ATTR_JOB_ID = PaygChargeInterceptor.class.getName() + ".JOB_ID";
+    /** Read by {@code SaasPolicyRunCharges} too: an async run settles its charge after the fact. */
+    public static final String ATTR_JOB_ID = PaygChargeInterceptor.class.getName() + ".JOB_ID";
+
     static final String ATTR_DISPOSITION = PaygChargeInterceptor.class.getName() + ".DISPOSITION";
     static final String ATTR_INPUT_TEMP_FILES =
             PaygChargeInterceptor.class.getName() + ".INPUT_TEMP_FILES";
@@ -377,7 +380,7 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
 
         if (status >= 500) {
             if (disposition == ChargeOutcome.Disposition.OPENED) {
-                chargeService.markFirstStepFailed(jobId, "first-step-5xx:" + status);
+                chargeService.releaseUnmeteredCharge(jobId, "first-step-5xx:" + status);
                 refundsCounter.increment();
             } else {
                 chargeService.decrementStepCount(jobId);
@@ -387,7 +390,7 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
         if (status >= 400) {
             // 4xx: customer paid for the attempt. No OUTPUT recording, no refund.
             // Still a successful-from-billing-standpoint OPENED process — meter it below.
-            meterIfOpened(jobId, disposition);
+            meterUnlessSettledLater(request, jobId, disposition);
             return;
         }
 
@@ -396,8 +399,21 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
         // document) added no units and must not re-meter. The process stays OPEN for further
         // lineage joins; StaleJobCloser closing it later is a no-op at Stripe thanks to the shared
         // idempotency key. metering is best-effort and must never break the response teardown.
-        meterIfOpened(jobId, disposition);
+        meterUnlessSettledLater(request, jobId, disposition);
         recordOutputs(request, response, jobId);
+    }
+
+    /**
+     * Meter now unless the response only means "accepted": a policy run's outcome arrives later, so
+     * {@code PolicyRunCharges} meters it on success and releases the charge on failure. A run that
+     * reports neither leaves its process open for the stale sweep to close and meter as before.
+     */
+    private void meterUnlessSettledLater(
+            HttpServletRequest request, UUID jobId, ChargeOutcome.Disposition disposition) {
+        if (PolicyRunRoutes.matches(request)) {
+            return;
+        }
+        meterIfOpened(jobId, disposition);
     }
 
     /**

@@ -127,7 +127,8 @@ class PolicyFailureAttributionTest {
                         new PolicyOutputResolver(new InProcessSourceStore()),
                         resourceMonitor,
                         jobQueue,
-                        new PolicyAssetResolver(new InProcessPolicyAssetStore()));
+                        new PolicyAssetResolver(new InProcessPolicyAssetStore()),
+                        Optional.empty());
 
         lenient()
                 .when(jobOwnershipService.createScopedJobKey(anyString()))

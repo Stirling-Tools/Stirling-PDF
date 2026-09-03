@@ -2,7 +2,9 @@ package stirling.software.proprietary.policy.model;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 
 import stirling.software.common.model.job.ResultFile;
@@ -71,6 +73,14 @@ public class PolicyRun {
     private volatile Instant updatedAt = Instant.now();
 
     /**
+     * Opaque reference to the charge this run was submitted under, or null when the caller is not
+     * charged for runs. Read via {@link #takeChargeToken()}, never a getter: settling twice would
+     * either bill twice or release an already-released charge.
+     */
+    @Getter(AccessLevel.NONE)
+    private volatile String chargeToken;
+
+    /**
      * All three attribution references are required rather than defaulted: a run with none is a
      * real case (an unattended sweep of a generator pipeline), but it should be stated at the call
      * site. Overloads that omitted them would make losing the attribution the frictionless option,
@@ -89,6 +99,21 @@ public class PolicyRun {
         this.definition = definition;
         this.fileIdentity = fileIdentity;
         this.triggeringUser = triggeringUser;
+    }
+
+    /** Set once, on the request thread that submitted the run. */
+    public void chargedAs(String token) {
+        this.chargeToken = token;
+    }
+
+    /**
+     * The charge to settle, and only for whoever asks first: a run reaches one terminal state, but
+     * several paths lead there and each would otherwise settle it again.
+     */
+    public synchronized Optional<String> takeChargeToken() {
+        String token = chargeToken;
+        chargeToken = null;
+        return Optional.ofNullable(token);
     }
 
     public int stepCount() {

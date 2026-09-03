@@ -203,9 +203,74 @@ class PaygChargeInterceptorTest {
         verify(jobService).appendStep(eq(jobId), any(), status.capture(), any(), any(), any());
         assertThat(status.getValue()).isEqualTo(JobStepStatus.OK);
         verify(jobService).recordOutput(eq(jobId), any());
-        verify(chargeService, never()).markFirstStepFailed(any(), any());
+        verify(chargeService, never()).releaseUnmeteredCharge(any(), any());
         verify(chargeService, never()).decrementStepCount(any());
         // Success on an OPENED process is the primary meter trigger — fires now, not at close.
+        verify(chargeService).meterJobUsage(jobId);
+    }
+
+    @Test
+    void afterCompletion_accepted_policyRun_defersTheMeterToTheRun() throws Exception {
+        // 202 says the run was accepted, not that it worked. Metering here bills a run that may
+        // still fail on the document, and a meter event cannot be unsent — so the run settles it.
+        authenticateWithApiKey(makeUser(7L, 42L));
+        UUID jobId = UUID.randomUUID();
+        when(chargeService.openProcess(any(), anyList()))
+                .thenReturn(new ChargeOutcome(jobId, 1, ChargeOutcome.Disposition.OPENED));
+
+        MockMultipartHttpServletRequest req = newMultipart();
+        req.setRequestURI("/api/v1/policies/pol-1/run");
+        req.addFile(new MockMultipartFile("file", "x.pdf", "application/pdf", "abc".getBytes()));
+        MockHttpServletResponse res = new MockHttpServletResponse();
+        res.setStatus(202);
+
+        interceptor.preHandle(req, res, handlerMethodForFakeController());
+        interceptor.afterCompletion(req, res, handlerMethodForFakeController(), null);
+
+        verify(chargeService, never()).meterJobUsage(any());
+        // Left open on purpose: the stale sweep still bills a run that never reports either way.
+        verify(chargeService, never()).releaseUnmeteredCharge(any(), any());
+    }
+
+    @Test
+    void afterCompletion_4xx_policyRun_stillDefersRatherThanChargingForTheAttempt()
+            throws Exception {
+        // A run refused at submission produced nothing at all, so the attempt is not billable
+        // either; the deferral covers both statuses rather than only the accepted one.
+        authenticateWithApiKey(makeUser(7L, 42L));
+        UUID jobId = UUID.randomUUID();
+        when(chargeService.openProcess(any(), anyList()))
+                .thenReturn(new ChargeOutcome(jobId, 1, ChargeOutcome.Disposition.OPENED));
+
+        MockMultipartHttpServletRequest req = newMultipart();
+        req.setRequestURI("/api/v1/policies/pol-1/run");
+        req.addFile(new MockMultipartFile("file", "x.pdf", "application/pdf", "abc".getBytes()));
+        MockHttpServletResponse res = new MockHttpServletResponse();
+        res.setStatus(400);
+
+        interceptor.preHandle(req, res, handlerMethodForFakeController());
+        interceptor.afterCompletion(req, res, handlerMethodForFakeController(), null);
+
+        verify(chargeService, never()).meterJobUsage(any());
+    }
+
+    @Test
+    void afterCompletion_2xx_readingARun_metersAsNormal() throws Exception {
+        // Only the execute routes defer. Reading a run's status is an ordinary request.
+        authenticateWithApiKey(makeUser(7L, 42L));
+        UUID jobId = UUID.randomUUID();
+        when(chargeService.openProcess(any(), anyList()))
+                .thenReturn(new ChargeOutcome(jobId, 1, ChargeOutcome.Disposition.OPENED));
+
+        MockMultipartHttpServletRequest req = newMultipart();
+        req.setRequestURI("/api/v1/policies/runs");
+        req.addFile(new MockMultipartFile("file", "x.pdf", "application/pdf", "abc".getBytes()));
+        MockHttpServletResponse res = new MockHttpServletResponse();
+        res.setStatus(200);
+
+        interceptor.preHandle(req, res, handlerMethodForFakeController());
+        interceptor.afterCompletion(req, res, handlerMethodForFakeController(), null);
+
         verify(chargeService).meterJobUsage(jobId);
     }
 
@@ -244,7 +309,7 @@ class PaygChargeInterceptorTest {
         interceptor.preHandle(req, res, handlerMethodForFakeController());
         interceptor.afterCompletion(req, res, handlerMethodForFakeController(), null);
 
-        verify(chargeService).markFirstStepFailed(eq(jobId), eq("first-step-5xx:503"));
+        verify(chargeService).releaseUnmeteredCharge(eq(jobId), eq("first-step-5xx:503"));
         verify(chargeService, never()).decrementStepCount(any());
         verify(jobService, never()).recordOutput(any(), any());
         verify(jobService)
@@ -270,7 +335,7 @@ class PaygChargeInterceptorTest {
         interceptor.afterCompletion(req, res, handlerMethodForFakeController(), null);
 
         verify(chargeService).decrementStepCount(jobId);
-        verify(chargeService, never()).markFirstStepFailed(any(), any());
+        verify(chargeService, never()).releaseUnmeteredCharge(any(), any());
     }
 
     @Test
@@ -288,7 +353,7 @@ class PaygChargeInterceptorTest {
         interceptor.preHandle(req, res, handlerMethodForFakeController());
         interceptor.afterCompletion(req, res, handlerMethodForFakeController(), null);
 
-        verify(chargeService, never()).markFirstStepFailed(any(), any());
+        verify(chargeService, never()).releaseUnmeteredCharge(any(), any());
         verify(chargeService, never()).decrementStepCount(any());
         verify(jobService, never()).recordOutput(any(), any());
         verify(jobService)

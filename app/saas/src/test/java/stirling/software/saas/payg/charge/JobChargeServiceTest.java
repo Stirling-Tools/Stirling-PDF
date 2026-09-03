@@ -629,7 +629,7 @@ class JobChargeServiceTest {
     }
 
     @Test
-    void markFirstStepFailed_flipsShadowRowAndClosesProcess() {
+    void releaseUnmeteredCharge_flipsShadowRowAndClosesProcess() {
         UUID jobId = UUID.randomUUID();
         PaygShadowCharge row = chargedShadowRow(jobId, 100L, 4, BillingCategory.API);
         row.setPolicyId(7L);
@@ -637,7 +637,7 @@ class JobChargeServiceTest {
         ProcessingJob job = openJob(jobId);
         when(jobRepo.findById(jobId)).thenReturn(java.util.Optional.of(job));
 
-        service.markFirstStepFailed(jobId, "first-step-5xx:503");
+        service.releaseUnmeteredCharge(jobId, "first-step-5xx:503");
 
         assertThat(row.getStatus()).isEqualTo(ShadowChargeStatus.REFUNDED);
         assertThat(row.getRefundedAt()).isNotNull();
@@ -666,7 +666,7 @@ class JobChargeServiceTest {
     }
 
     @Test
-    void markFirstStepFailed_withFreeConsumed_restoresGrantToCounter() {
+    void releaseUnmeteredCharge_withFreeConsumed_restoresGrantToCounter() {
         // A first-step failure is pre-meter: nothing billed to Stripe, but the grant moved at
         // charge time. The refund must hand exactly those free units back to the team's counter.
         UUID jobId = UUID.randomUUID();
@@ -679,14 +679,14 @@ class JobChargeServiceTest {
         ext.setFreeUnitsPeriodStart(PERIOD_START);
         when(teamExtRepo.findByIdForUpdate(100L)).thenReturn(Optional.of(ext));
 
-        service.markFirstStepFailed(jobId, "first-step-5xx:503");
+        service.releaseUnmeteredCharge(jobId, "first-step-5xx:503");
 
         assertThat(ext.getFreeUnitsRemaining()).isEqualTo(GRANT);
         verify(teamExtRepo).save(ext);
     }
 
     @Test
-    void markFirstStepFailed_refundAfterPeriodTurned_doesNotExceedTheGrant() {
+    void releaseUnmeteredCharge_refundAfterPeriodTurned_doesNotExceedTheGrant() {
         // The charge's period is over and the grant already reset, so the restore is capped.
         UUID jobId = UUID.randomUUID();
         PaygShadowCharge row = chargedShadowRow(jobId, 100L, 10, 3, BillingCategory.API);
@@ -698,14 +698,14 @@ class JobChargeServiceTest {
         ext.setFreeUnitsPeriodStart(PERIOD_START.minusMonths(1));
         when(teamExtRepo.findByIdForUpdate(100L)).thenReturn(Optional.of(ext));
 
-        service.markFirstStepFailed(jobId, "first-step-5xx:503");
+        service.releaseUnmeteredCharge(jobId, "first-step-5xx:503");
 
         assertThat(ext.getFreeUnitsRemaining()).isEqualTo(GRANT);
         assertThat(ext.getFreeUnitsPeriodStart()).isEqualTo(PERIOD_START);
     }
 
     @Test
-    void markFirstStepFailed_alreadyRefunded_isNoOp() {
+    void releaseUnmeteredCharge_alreadyRefunded_isNoOp() {
         UUID jobId = UUID.randomUUID();
         PaygShadowCharge row = new PaygShadowCharge();
         row.setJobId(jobId);
@@ -715,7 +715,7 @@ class JobChargeServiceTest {
         job.setStatus(JobStatus.CLOSED);
         when(jobRepo.findById(jobId)).thenReturn(java.util.Optional.of(job));
 
-        service.markFirstStepFailed(jobId, "first-step-5xx:500");
+        service.releaseUnmeteredCharge(jobId, "first-step-5xx:500");
 
         verify(shadowRepo, never()).save(any());
         verify(jobRepo, never()).save(any());
@@ -724,20 +724,20 @@ class JobChargeServiceTest {
     }
 
     @Test
-    void markFirstStepFailed_noShadowRow_stillClosesProcess() {
+    void releaseUnmeteredCharge_noShadowRow_stillClosesProcess() {
         UUID jobId = UUID.randomUUID();
         when(shadowRepo.findFirstByJobIdOrderByIdAsc(jobId)).thenReturn(java.util.Optional.empty());
         ProcessingJob job = openJob(jobId);
         when(jobRepo.findById(jobId)).thenReturn(java.util.Optional.of(job));
 
-        service.markFirstStepFailed(jobId, "first-step-5xx:503");
+        service.releaseUnmeteredCharge(jobId, "first-step-5xx:503");
 
         assertThat(job.getStatus()).isEqualTo(JobStatus.CLOSED);
         verify(jobRepo).save(job);
     }
 
     @Test
-    void markFirstStepFailed_trimsLongRefundReason() {
+    void releaseUnmeteredCharge_trimsLongRefundReason() {
         UUID jobId = UUID.randomUUID();
         PaygShadowCharge row = new PaygShadowCharge();
         row.setStatus(ShadowChargeStatus.CHARGED);
@@ -745,7 +745,7 @@ class JobChargeServiceTest {
         when(jobRepo.findById(jobId)).thenReturn(java.util.Optional.empty());
 
         String oversized = "x".repeat(200);
-        service.markFirstStepFailed(jobId, oversized);
+        service.releaseUnmeteredCharge(jobId, oversized);
 
         assertThat(row.getRefundReason()).hasSize(128);
     }
