@@ -492,6 +492,10 @@ public class ProcessingFolderController {
                 "stat",
                 "recursive",
                 false,
+                // Only documents the pipeline can accept: a Downloads folder is full of zips and
+                // installers, and each one would otherwise burn sweep budget on a doomed run.
+                "extensions",
+                List.of(".pdf"),
                 "limit",
                 DISK_SWEEP_LIMIT);
     }

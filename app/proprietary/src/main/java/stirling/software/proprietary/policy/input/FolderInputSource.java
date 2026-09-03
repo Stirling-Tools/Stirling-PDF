@@ -9,8 +9,10 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -37,9 +39,11 @@ import stirling.software.proprietary.policy.model.PolicyInputs;
  * with no removal, for a directory the user owns and expects to stay intact - their Downloads, a
  * scanner drop), or "snapshot" (stateless, every run sees the full set); "recursive" descends into
  * subdirectories; "identity" is "stat" (default, any size/mtime change is a new version) or "hash"
- * (content-verified, so a touch does not reprocess). Hidden files and directories, including the
- * legacy {@code .stirling} work dir, are never picked up, and files mid-write are skipped by the
- * readiness check.
+ * (content-verified, so a touch does not reprocess); "extensions" restricts the sweep to files with
+ * one of the given suffixes (dot optional, case-insensitive) - anything else in the directory is
+ * entirely out of scope, not a skipped failure. Hidden files and directories, including the legacy
+ * {@code .stirling} work dir, are never picked up, and files mid-write are skipped by the readiness
+ * check.
  */
 @Slf4j
 @Service
@@ -84,6 +88,19 @@ public class FolderInputSource implements InputSource {
         }
         Path canonicalDir = FolderIdentities.canonicalDir(inputDir);
         List<Path> present = listFiles(inputDir, config.recursive());
+        // Filtered before anything observes the listing: an out-of-scope file is invisible to the
+        // ledger and the sweep alike, so it neither burns the sweep limit nor parks as a failure.
+        if (!config.extensions().isEmpty()) {
+            present.removeIf(
+                    file ->
+                            config.extensions().stream()
+                                    .noneMatch(
+                                            ext ->
+                                                    file.getFileName()
+                                                            .toString()
+                                                            .toLowerCase(Locale.ROOT)
+                                                            .endsWith(ext)));
+        }
         // Smallest first: a sweep's first results should appear within seconds of it starting,
         // not after the largest document in the folder. Unsizeable entries (vanished mid-listing)
         // sort last and resolve their own fate at claim time.
@@ -320,7 +337,8 @@ public class FolderInputSource implements InputSource {
             boolean track,
             boolean recursive,
             boolean hashIdentity,
-            int limit) {
+            int limit,
+            List<String> extensions) {
 
         private static final String DIRECTORY_OPTION = "directory";
         private static final String MODE_OPTION = "mode";
@@ -331,6 +349,7 @@ public class FolderInputSource implements InputSource {
         private static final String IDENTITY_STAT = "stat";
         private static final String IDENTITY_HASH = "hash";
         private static final String LIMIT_OPTION = "limit";
+        private static final String EXTENSIONS_OPTION = "extensions";
 
         static FolderConfig from(Map<String, Object> options) {
             Object directory = options.get(DIRECTORY_OPTION);
@@ -359,8 +378,19 @@ public class FolderInputSource implements InputSource {
                     throw new IllegalArgumentException("folder input 'limit' must be a number", e);
                 }
             }
+            List<String> extensions = List.of();
+            if (options.get(EXTENSIONS_OPTION) instanceof Collection<?> values) {
+                extensions =
+                        values.stream()
+                                .map(String::valueOf)
+                                .map(String::trim)
+                                .filter(value -> !value.isEmpty())
+                                .map(value -> value.startsWith(".") ? value : "." + value)
+                                .map(value -> value.toLowerCase(Locale.ROOT))
+                                .toList();
+            }
             return new FolderConfig(
-                    Path.of(directory.toString()), snapshot, track, recurse, hash, max);
+                    Path.of(directory.toString()), snapshot, track, recurse, hash, max, extensions);
         }
     }
 }

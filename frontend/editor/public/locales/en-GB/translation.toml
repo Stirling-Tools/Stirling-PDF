@@ -9086,6 +9086,36 @@ summary = "Owns a team — manages its members' resources and shared configs."
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · Unlimited"
 
+[processingFolders.downloads]
+approve = "Process my Downloads"
+capped = "You have {{found}} PDFs; the first {{limit}} are processed now and the rest follow."
+close = "Done"
+explain_one = "Stirling can classify the {{count}} PDF already in your Downloads folder and open the results here."
+explain_other = "Stirling can classify the {{count}} PDFs already in your Downloads folder and open the results here."
+failed = "Could not set that up. Your files have not been changed."
+finished_one = "Classified {{count}} file and opened {{opened}} of them here, ready to work on."
+finished_other = "Classified {{count}} files and opened {{opened}} of them here, ready to work on."
+keepsOriginals = "Your files stay where they are — originals are never moved or deleted."
+nothingNew_one = "Nothing new to process — this {{count}} file has already been through."
+nothingNew_other = "Nothing new to process — these {{count}} files have already been through."
+notNow = "Not now"
+outputs = 'Results are saved into a "{{subdir}}" folder alongside them.'
+progressCounts = "of {{total}} processed"
+someFailed_one = "{{count}} could not be processed and was left untouched."
+someFailed_other = "{{count}} could not be processed and were left untouched."
+stillRunning = "Some files are still being processed in the background."
+title = "Organise your Downloads?"
+trigger_one = "Process {{count}} PDF in Downloads"
+trigger_other = "Process {{count}} PDFs in Downloads"
+typesFound_one = "{{count}} document type found"
+typesFound_other = "{{count}} document types found"
+working = "Processing …"
+
+[processingFolders.downloads.wall]
+classified = "Classified"
+failed = "Failed"
+waiting = "Waiting …"
+
 [printFile]
 title = "Print File"
 
