@@ -28,6 +28,7 @@ import {
   serialiseFilesPageDragPayload,
 } from "@app/components/filesPage/dragDrop";
 import { useDropTarget } from "@app/components/filesPage/useDropTarget";
+import { useOpenFolder } from "@app/components/filesPage/useOpenFolder";
 
 /**
  * Hard cap on folder-tree render depth. The backend already enforces an
@@ -71,7 +72,8 @@ export function FolderTreeSidebar({
   onMoveFilesIntoFolder,
 }: FolderTreeSidebarProps) {
   const { t } = useTranslation();
-  const { tree, currentFolderId, setCurrentFolderId } = useFolders();
+  const { tree, currentFolderId } = useFolders();
+  const openFolder = useOpenFolder();
   const {
     currentTab,
     setCurrentTab,
@@ -98,7 +100,7 @@ export function FolderTreeSidebar({
           if (currentTab !== "all" && currentTab !== "cloud") {
             setCurrentTab("all");
           }
-          setCurrentFolderId(ROOT_FOLDER_ID);
+          openFolder(ROOT_FOLDER_ID);
         }}
         onDropFiles={(fileIds) =>
           onMoveFilesIntoFolder(ROOT_FOLDER_ID, fileIds)
@@ -121,7 +123,7 @@ export function FolderTreeSidebar({
             if (currentTab !== "all" && currentTab !== "cloud") {
               setCurrentTab("all");
             }
-            setCurrentFolderId(id);
+            openFolder(id);
           }}
           onMoveFolder={async (folderId, newParentId) => {
             // Route through filesPage.moveFolderTo so the cycle case

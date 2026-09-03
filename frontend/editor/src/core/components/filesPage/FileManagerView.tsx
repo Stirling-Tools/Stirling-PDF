@@ -38,10 +38,10 @@ import { FilesToolbarFilterMenu } from "@app/components/filesPage/FilesToolbarFi
 import { FilesToolbarSortMenu } from "@app/components/filesPage/FilesToolbarSortMenu";
 import { NewFolderButton } from "@app/components/filesPage/NewFolderButton";
 
-import { stripBasePath } from "@app/constants/app";
 import { useAuth } from "@app/auth/UseSession";
 import { useSharingEnabled } from "@app/hooks/useSharingEnabled";
 import { useFolders } from "@app/contexts/FolderContext";
+import { useOpenFolder } from "@app/components/filesPage/useOpenFolder";
 import { useFileActions } from "@app/contexts/file/fileHooks";
 import { useAllFiles } from "@app/contexts/FileContext";
 import { useFileHandler } from "@app/hooks/useFileHandler";
@@ -107,6 +107,7 @@ export default function FileManagerView() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
+  const openFolder = useOpenFolder();
   const searchScopes = useEditorSearchScopes();
 
   // Hide Shared tab when storageSharingEnabled is false.
@@ -220,35 +221,28 @@ export default function FileManagerView() {
   const foldersById = folders.foldersById;
   const currentFolderId = folders.currentFolderId;
 
-  // Which folder the path last selected. The two effects below keep the path and the
-  // selection in step, and each uses this to tell its own write from the other's.
-  const pathSelectedRef = useRef<string | null>(null);
-
-  // Path -> selection. Covers arrival, a deep link, and back/forward.
+  // The path selects the folder - see useOpenFolder - and this applies it, on arrival,
+  // on a deep link, and on back/forward alike. Re-runs as the folder map fills in.
   useEffect(() => {
     const match = location.pathname.match(/^\/files\/([^/]+)/);
     const param = match?.[1] ?? null;
     if (param === null) {
-      pathSelectedRef.current = null;
       setCurrentFolderId(ROOT_FOLDER_ID);
       return;
     }
     if (foldersById.has(param as FolderId)) {
-      pathSelectedRef.current = param;
       setCurrentFolderId(param as FolderId);
       return;
     }
     if (isDiskFolderId(param) && resolveDiskFolder(param as FolderId)) {
       // A mount subdirectory deep link: rebuilt from the id, mapped next render.
-      pathSelectedRef.current = param;
       setCurrentFolderId(param as FolderId);
       return;
     }
     // Not known yet is not the same as not real: folders load asynchronously, and a
-    // mount's subdirectories arrive with the listing that finds them. Wait for the map
-    // to fill - this re-runs as it does - and only fall back once it cannot.
+    // mount's subdirectories arrive with the listing that finds them. Leave the path
+    // unapplied so this re-runs as the map fills, and only fall back once it cannot.
     if (!folders.loading) {
-      pathSelectedRef.current = null;
       setCurrentFolderId(ROOT_FOLDER_ID);
     }
   }, [
@@ -268,22 +262,6 @@ export default function FileManagerView() {
       setCurrentTab("all");
     }
   }, [sharingEnabled, currentTab, setCurrentTab]);
-
-  // Selection -> path, for a folder opened here. Pushed, not replaced: each folder is
-  // its own history entry, so Back walks up the tree rather than out of the library.
-  useEffect(() => {
-    const stripped = stripBasePath(window.location.pathname);
-    if (!stripped.startsWith("/files")) return;
-    const selected = currentFolderId === null ? null : String(currentFolderId);
-    // The path already says this, being what selected the folder. Writing it again
-    // overwrites the entry a back or forward just landed on.
-    if (pathSelectedRef.current === selected) return;
-    const target = selected === null ? "/files" : `/files/${selected}`;
-    if (stripped !== target) {
-      pathSelectedRef.current = selected;
-      navigate(target);
-    }
-  }, [currentFolderId, navigate]);
 
   // ─── visible items (current folder + sort + search) ─────────────────────
 
@@ -853,10 +831,10 @@ export default function FileManagerView() {
 
   const handleOpenFolder = useCallback(
     (id: FolderId) => {
-      folders.setCurrentFolderId(id);
+      openFolder(id);
       clearSelection();
     },
-    [folders, clearSelection],
+    [openFolder, clearSelection],
   );
 
   // ─── full-page drag-and-drop for OS uploads ─────────────────────────────
@@ -2128,6 +2106,7 @@ function Breadcrumbs() {
   const { t } = useTranslation();
   const folders = useFolders();
   const filesPage = useFilesPage();
+  const openFolder = useOpenFolder();
   const trail = folders.breadcrumbs;
   return (
     <nav
@@ -2141,7 +2120,7 @@ function Breadcrumbs() {
             <Button
               variant="tertiary"
               className={`files-page-breadcrumb${isLast ? " is-current" : ""}`}
-              onClick={() => folders.setCurrentFolderId(entry.id)}
+              onClick={() => openFolder(entry.id)}
               onDragOver={(e) => {
                 if (e.dataTransfer.types.includes(FILES_PAGE_DRAG_TYPE)) {
                   e.preventDefault();

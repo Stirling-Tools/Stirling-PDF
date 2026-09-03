@@ -17,6 +17,7 @@ interface SeedFile {
 interface SeedFolder {
   id: string;
   name: string;
+  parentFolderId?: string;
 }
 
 async function seedFiles(
@@ -93,7 +94,7 @@ async function seedFiles(
             id: folder.id,
             kind: "virtual",
             name: folder.name,
-            parentFolderId: null,
+            parentFolderId: folder.parentFolderId ?? null,
             createdAt: now,
             updatedAt: now,
           });
@@ -983,6 +984,46 @@ test.describe("Files page", () => {
       await expect(page.getByText(/Something went wrong/i)).toHaveCount(0);
       // Still a working library, not a husk.
       await expect(page.getByRole("tree", { name: /Folders/i })).toBeVisible();
+    });
+
+    /**
+     * Back walks up one level per press. The selection used to be pushed into the
+     * path by an effect watching it, which could not tell a folder opened here from
+     * the folder a pop had just navigated away from - so the first press appeared to
+     * do nothing: the pop landed on the parent and the child was pushed straight back
+     * on top of it.
+     */
+    test("back steps up one folder per press", async ({ page }) => {
+      const NESTED = "11111111-2222-4333-8444-555555555556";
+      await seedFiles(
+        page,
+        [
+          {
+            id: "nav-nested",
+            name: "nav-nested.pdf",
+            remoteStorageId: null,
+            folderId: NESTED,
+          },
+        ],
+        [
+          { id: FOLDER_ID, name: "Invoices" },
+          { id: NESTED, name: "Paid", parentFolderId: FOLDER_ID },
+        ],
+      );
+      await page.goto("/files", { waitUntil: "domcontentloaded" });
+
+      const tree = page.getByRole("tree", { name: /Folders/i });
+      await expect(tree).toBeVisible({ timeout: 10_000 });
+      await tree.getByRole("treeitem", { name: /Invoices/i }).click();
+      await expect(page).toHaveURL(new RegExp(FOLDER_ID), { timeout: 5_000 });
+      await tree.getByRole("treeitem", { name: /Paid/i }).click();
+      await expect(page).toHaveURL(new RegExp(NESTED), { timeout: 5_000 });
+
+      await page.goBack();
+      await expect(page).toHaveURL(new RegExp(FOLDER_ID), { timeout: 5_000 });
+      await page.goBack();
+      await expect(page).toHaveURL(/\/files\/?$/, { timeout: 5_000 });
+      await expect(page.getByText(/Something went wrong/i)).toHaveCount(0);
     });
 
     /** Each folder is its own history entry, so Back walks up the tree rather than
