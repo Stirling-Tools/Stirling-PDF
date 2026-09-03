@@ -85,10 +85,8 @@ const noExplicitAnyExcludes = [
   "editor/src/core/components/viewer/RedactionSelectionMenu.tsx",
   "editor/src/core/tools/annotate/useAnnotationSelection.ts",
   "editor/src/core/types/fileContext.ts",
-  "editor/src/core/types/fileIdSafety.d.ts",
   "editor/src/core/types/automation.ts",
   "editor/src/core/types/tool.ts",
-  "editor/src/core/utils/settingsPendingHelper.ts",
 ];
 
 export default defineConfig({
