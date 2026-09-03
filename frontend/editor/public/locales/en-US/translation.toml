@@ -10420,7 +10420,6 @@ expired = "Your session has expired. Please refresh the page and try again."
 
 [settings]
 backToSections = "All settings"
-leave = "Exit settings"
 title = "Settings"
 
 [settings.about]

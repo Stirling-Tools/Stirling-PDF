@@ -211,7 +211,7 @@ const SettingsPageInner: React.FC = () => {
             accent="neutral"
             onClick={handleLeave}
             data-testid="settings-back"
-            aria-label={t("settings.leave", "Exit settings")}
+            aria-label={t("common.back", "Back")}
           >
             <LocalIcon icon="arrow-back" width={20} height={20} />
           </ActionIcon>

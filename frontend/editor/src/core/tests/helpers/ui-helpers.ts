@@ -209,9 +209,8 @@ export async function openSettings(
 }
 
 /**
- * Leave Settings the way a user does - the page's own Back control - and assert
- * the page is gone before returning. Back restores the originating URL, which
- * the rail's app entries (portal-only builds) do not.
+ * Leave Settings by the page's own Back control, which restores the originating
+ * URL, and assert the page is gone before returning.
  */
 export async function closeSettings(page: Page): Promise<void> {
   const surface = page.locator(SETTINGS_SURFACE);
@@ -232,6 +231,11 @@ export async function closeSettings(page: Page): Promise<void> {
 
 /** Unfold every sidebar group, for checks that scan the whole section list. */
 export async function expandSettingsGroups(page: Page): Promise<void> {
+  // Wait for the aside to render its groups first; evaluateAll on an empty set
+  // is a silent no-op that surfaces later as an unrelated missing-item failure.
+  await expect(
+    page.locator(`${SETTINGS_SURFACE} .settings-page__group`).first(),
+  ).toBeAttached({ timeout: 5_000 });
   await page
     .locator(`${SETTINGS_SURFACE} .settings-page__group[aria-expanded="false"]`)
     .evaluateAll((buttons) =>
