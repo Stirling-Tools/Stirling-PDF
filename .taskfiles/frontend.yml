@@ -308,19 +308,30 @@ tasks:
 
       Pass a base ref through CLI_ARGS, e.g.
         task frontend:storybook:a11y:changed -- origin/release
+
+      Both themes run by default. THEME=light or THEME=dark scans one, which is
+      how CI splits the two themes across concurrent jobs.
     vars:
       BASE: '{{.CLI_ARGS | default "origin/main"}}'
+      THEME: '{{.THEME | default "both"}}'
       CHANGED:
         sh: node .storybook/a11y-changed.mjs {{.CLI_ARGS | default "origin/main"}}
     cmds:
       - cmd: |
           if [ -z '{{.CHANGED}}' ]; then
-            echo "a11y: no story files affected vs {{.BASE}} — nothing to check"
+            echo "a11y: no story files affected vs {{.BASE}} - nothing to check"
             exit 0
           fi
           rc=0
-          task frontend:storybook:a11y:light -- {{.CHANGED}} || rc=1
-          task frontend:storybook:a11y:dark -- {{.CHANGED}} || rc=1
+          # Anything but light/dark scans both, so a typo cannot skip a theme.
+          case '{{.THEME}}' in
+            light) task frontend:storybook:a11y:light -- {{.CHANGED}} || rc=1 ;;
+            dark)  task frontend:storybook:a11y:dark -- {{.CHANGED}} || rc=1 ;;
+            *)
+              task frontend:storybook:a11y:light -- {{.CHANGED}} || rc=1
+              task frontend:storybook:a11y:dark -- {{.CHANGED}} || rc=1
+              ;;
+          esac
           exit $rc
 
   storybook:a11y:record:
