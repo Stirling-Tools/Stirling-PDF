@@ -23,6 +23,8 @@ const policies = vi.hoisted(() => ({
       backendId?: string;
       // The rest of what the chain order is built from, so a test can make a policy eligible for it.
       configured?: boolean;
+      // Both eligibility flags, so the fixture is a runnable policy under either filter.
+      status?: string;
       enabled?: boolean;
       runOn?: string;
       runsOnEditor?: boolean;
@@ -213,6 +215,7 @@ describe("rechainPolicyOnDocument rejoining the chain", () => {
     return {
       backendId,
       configured: true,
+      status: "active",
       enabled: true,
       runOn: "upload",
       runsOnEditor: true,
