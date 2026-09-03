@@ -6292,8 +6292,8 @@ perMonth = "/mo"
 perYear = "/yr"
 renewalNote = "Renews at {{total}}{{period}}. Cancel any time in Usage & Billing."
 subheading = "Covers everyone you invite, in blocks of {{users}} users."
-userTotal = "{{users}} users"
 usersLabel = "Users"
+userTotal = "{{users}} users"
 
 [payment.emailStage]
 continue = "Continue"
