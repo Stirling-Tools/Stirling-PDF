@@ -234,6 +234,13 @@
   font-weight: 600;
 }
 
+/* "Enforce as policy" — the last choice in the simple wizard, set off from the settings above. */
+.portal-policies__wizard-enforce {
+  margin-top: 0.75rem;
+  padding-top: 0.875rem;
+  border-top: 1px solid var(--c-border-subtle);
+}
+
 .portal-policies__fields {
   display: flex;
   flex-direction: column;
@@ -272,26 +279,6 @@
   border-top: 1px dashed var(--c-border);
   padding-top: 0.75rem;
   margin-top: 0.75rem;
-}
-
-/* Sources picker */
-/* Selectable source tiles: a vertical stack of full-width shared Buttons
-   (icon · name · check). Layout is the Button's own leftSection/label/
-   rightSection — only the selected border/tint is added here. */
-.portal-policies__sources {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.portal-policies__source--on {
-  border-color: var(--c-primary);
-}
-
-.portal-policies__source-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
 }
 
 .portal-policies__link {

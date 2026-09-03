@@ -314,7 +314,7 @@ export function buildProcessorEntityGroups(
         t,
         (categoryId) =>
           navigate(
-            `${toPortalPath(VIEW_PATHS.policies)}?category=${encodeURIComponent(categoryId)}`,
+            `${toPortalPath(VIEW_PATHS.pipelines)}?setup=${encodeURIComponent(categoryId)}`,
           ),
         ENTITY_GROUP_LIMIT,
       )

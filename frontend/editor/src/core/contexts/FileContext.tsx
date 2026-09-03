@@ -267,6 +267,8 @@ function FileContextInner({
         skipWorkspaceDispatch?: boolean;
         skipUploadTracking?: boolean;
         derivedFromTool?: boolean;
+        /** Folder every added file is born into (see AddFileOptions). */
+        folderId?: string;
       },
     ): Promise<StirlingFile[]> => {
       const stirlingFiles = await addFiles(
