@@ -64,6 +64,32 @@ interface FolderTreeSidebarProps {
 // anyone re-wired the component into a non-embed surface they'd ship an
 // always-enabled mutation button against a possibly-offline server.
 // Deleted to remove the trap.
+/**
+ * A name that gives way in the middle when the row is too narrow for it, keeping both
+ * ends readable - folder names tend to differ at the end, where a plain end-ellipsis
+ * would cut. The split is fixed; the CSS decides whether the head actually elides.
+ */
+function MiddleTruncated({
+  text,
+  className,
+}: {
+  text: string;
+  className: string;
+}) {
+  const TAIL = 6;
+  if (text.length <= TAIL + 4) {
+    return <span className={className}>{text}</span>;
+  }
+  return (
+    <span className={className} title={text}>
+      <span className="files-page-tree-name-head">
+        {text.slice(0, text.length - TAIL)}
+      </span>
+      <span className="files-page-tree-name-tail">{text.slice(-TAIL)}</span>
+    </span>
+  );
+}
+
 export function FolderTreeSidebar({
   fileCounts,
   onRequestNewFolder,
@@ -410,7 +436,10 @@ function TreeNodeRow({
         <span className="files-page-tree-icon">
           <FolderThumbnail color={node.folder.color} size="tree" />
         </span>
-        <span className="files-page-tree-name">{node.folder.name}</span>
+        <MiddleTruncated
+          className="files-page-tree-name"
+          text={node.folder.name}
+        />
         <span className="files-page-tree-count">
           {fileCounts.get(node.folder.id) ?? 0}
         </span>

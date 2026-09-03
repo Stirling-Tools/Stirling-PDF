@@ -937,6 +937,128 @@ test.describe("Files page", () => {
     });
   });
 
+  test.describe("Folder chrome stability", () => {
+    const CHROME_FOLDER = "11111111-2222-4333-8444-555555555561";
+    test.use({ autoGoto: false });
+
+    /** The column is sized by the user, not by its contents: a long name has to give
+     *  way inside the row rather than push the panel wider. */
+    test("a long folder name does not widen the tree panel", async ({
+      page,
+    }) => {
+      await stubStorageApis(page);
+      await seedFiles(
+        page,
+        [{ id: "w-1", name: "w-1.pdf", remoteStorageId: null }],
+        [
+          {
+            id: CHROME_FOLDER,
+            name: "Quarterly reconciliation attachments 2024 final v3",
+          },
+        ],
+      );
+      await gotoFilesPage(page);
+
+      const panel = page.locator('.folder-tree-panel[data-active="true"]');
+      await expect(panel).toBeVisible({ timeout: 10_000 });
+      await expect(
+        page.getByRole("treeitem", { name: /Quarterly/i }),
+      ).toBeVisible();
+
+      const width = await panel.evaluate(
+        (el) => el.getBoundingClientRect().width,
+      );
+      expect(width).toBeLessThanOrEqual(280);
+      // Clipped inside the row rather than laid out at full length.
+      const clipped = await page
+        .locator(".files-page-tree-name-head")
+        .first()
+        .evaluate((el) => el.scrollWidth > el.clientWidth);
+      expect(clipped).toBe(true);
+    });
+
+    /** A deep trail of long names is the case that grows the bar. */
+    test("a deep trail does not change the header height", async ({ page }) => {
+      const ids = [
+        "11111111-2222-4333-8444-555555555571",
+        "11111111-2222-4333-8444-555555555572",
+        "11111111-2222-4333-8444-555555555573",
+        "11111111-2222-4333-8444-555555555574",
+      ];
+      const names = [
+        "Client engagements and retainers",
+        "Quarterly reconciliation attachments",
+        "Supporting documentation bundle 2024",
+        "Signed originals awaiting countersignature",
+      ];
+      await stubStorageApis(page);
+      await seedFiles(
+        page,
+        [{ id: "d-1", name: "d-1.pdf", remoteStorageId: null }],
+        ids.map((id, i) => ({
+          id,
+          name: names[i],
+          parentFolderId: i === 0 ? undefined : ids[i - 1],
+        })),
+      );
+      await gotoFilesPage(page);
+
+      const header = page.locator(".files-page-header");
+      const atRoot = await header.evaluate(
+        (el) => el.getBoundingClientRect().height,
+      );
+
+      const tree = page.getByRole("tree", { name: /Folders/i });
+      for (let i = 0; i < names.length; i += 1) {
+        await tree
+          .getByRole("treeitem", {
+            name: new RegExp(names[i].slice(0, 12), "i"),
+          })
+          .first()
+          .click();
+        await expect(page).toHaveURL(new RegExp(ids[i]), { timeout: 5_000 });
+      }
+      const deep = await header.evaluate(
+        (el) => el.getBoundingClientRect().height,
+      );
+      expect(deep).toBe(atRoot);
+      // Two crumbs, whatever the depth; the rest live behind the overflow menu.
+      await expect(page.locator(".files-page-breadcrumb")).toHaveCount(2);
+      await expect(
+        page.locator(".files-page-breadcrumb-overflow"),
+      ).toBeVisible();
+    });
+
+    /** Walking into a folder must not resize the bar the breadcrumb sits in - the
+     *  grid below it would jump by however much the header grew. */
+    test("entering a folder does not change the header height", async ({
+      page,
+    }) => {
+      await stubStorageApis(page);
+      await seedFiles(
+        page,
+        [{ id: "h-1", name: "h-1.pdf", remoteStorageId: null }],
+        [{ id: CHROME_FOLDER, name: "Invoices" }],
+      );
+      await gotoFilesPage(page);
+
+      const header = page.locator(".files-page-header");
+      const atRoot = await header.evaluate(
+        (el) => el.getBoundingClientRect().height,
+      );
+
+      await page.getByRole("treeitem", { name: /Invoices/i }).click();
+      await expect(page).toHaveURL(new RegExp(CHROME_FOLDER), {
+        timeout: 5_000,
+      });
+      const inFolder = await header.evaluate(
+        (el) => el.getBoundingClientRect().height,
+      );
+
+      expect(inFolder).toBe(atRoot);
+    });
+  });
+
   test.describe("Folder navigation", () => {
     const FOLDER_ID = "11111111-2222-4333-8444-555555555555";
     test.beforeEach(async ({ page }) => {

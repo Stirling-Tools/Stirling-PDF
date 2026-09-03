@@ -65,15 +65,15 @@
   display: flex;
   align-items: center;
   gap: 0.25rem;
-  font-size: 0.95rem;
+  font-size: 0.8125rem;
   min-width: 0;
-  overflow-x: auto;
-  scrollbar-width: none;
+  /* Fixed, and never wrapping: the trail shares a row with the search and the
+     action buttons, and any growth here moves the grid below it. Length is handled
+     by showing fewer crumbs, not by taking more space. */
+  height: 2rem;
+  flex-wrap: nowrap;
+  overflow: hidden;
 }
-.files-page-breadcrumbs::-webkit-scrollbar {
-  display: none;
-}
-
 .files-page-breadcrumb {
   background: none;
   border: none;
@@ -87,10 +87,20 @@
     background-color 0.12s ease,
     color 0.12s ease;
   white-space: nowrap;
-  max-width: 18rem;
+  max-width: 14rem;
+  min-width: 0;
+  height: 1.5rem;
+  line-height: 1.5rem;
+  padding: 0 0.375rem;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* The parents that don't fit, root included. */
+.files-page-breadcrumb-overflow {
+  flex-shrink: 0;
+}
+
 .files-page-breadcrumb:hover,
 .files-page-breadcrumb.is-current {
   background: var(--c-hover);
