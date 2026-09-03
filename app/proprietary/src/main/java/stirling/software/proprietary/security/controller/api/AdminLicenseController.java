@@ -237,6 +237,10 @@ public class AdminLicenseController {
             ApplicationProperties.Premium premium = applicationProperties.getPremium();
             response.put("enabled", premium.isEnabled());
             response.put("maxUsers", premium.getMaxUsers());
+            // Presentation only, so the plan page can say "2 servers, 100 users each" rather than a
+            // bare 200. Both are 0 on a licence issued before the cap.
+            response.put("serverQuantity", premium.getServerQuantity());
+            response.put("userBlockSize", premium.getUserBlockSize());
             response.put("hasKey", premium.getKey() != null && !premium.getKey().trim().isEmpty());
 
             // Include license key for upgrades (admin-only endpoint)

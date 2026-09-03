@@ -13,7 +13,6 @@
 
 import { resolveRunOn, type PolicyRunOn } from "@app/policies/runOn";
 import type { AutomationConfig } from "@app/types/automation";
-import type { ToolRegistry } from "@app/data/toolsTaxonomy";
 import type { PolicyFolderSettings } from "@app/types/policies";
 
 /** A single backend pipeline step: a tool endpoint path + its scalar params. */
@@ -27,14 +26,6 @@ export interface BackendPipelineStep {
 export interface BackendOutputSpec {
   type: string;
   options: Record<string, unknown>;
-}
-
-/** The engine-level pipeline the `/run` endpoint accepts (as JSON). */
-export interface BackendPipelineDefinition {
-  name: string;
-  steps: BackendPipelineStep[];
-  /** Destinations a run's files are delivered to; a single inline entry for one-off/editor runs. */
-  outputs: BackendOutputSpec[];
 }
 
 /** How a stored policy is triggered ("manual" | "folder" | "schedule" | "s3"). */
@@ -111,127 +102,6 @@ export interface PolicyRunView {
   createdAt: number;
 }
 
-/**
- * Operations that run as policy pipeline steps but are NOT user-facing tools, so
- * they have no tool-registry entry and never appear in the tool picker. Maps the
- * operation id straight to its backend endpoint.
- */
-const POLICY_OPERATION_ENDPOINTS: Record<string, string> = {
-  // Document classification — dispatched only by the Classification policy.
-  classify: "/api/v1/ai/tools/classify-and-label",
-};
-
-/** Resolve a frontend operation id to its backend tool endpoint path. */
-function resolveEndpoint(
-  operation: string,
-  parameters: Record<string, unknown>,
-  toolRegistry: Partial<ToolRegistry>,
-): string | null {
-  const config = toolRegistry[operation as keyof ToolRegistry]?.operationConfig;
-  const endpoint = config?.endpoint;
-  if (endpoint) {
-    const resolved =
-      typeof endpoint === "function" ? endpoint(parameters) : endpoint;
-    if (resolved) return resolved;
-  }
-  // Policy-only operations have no registry entry; resolve them directly.
-  return POLICY_OPERATION_ENDPOINTS[operation] ?? null;
-}
-
-/**
- * Convert a tool's UI parameters into the exact scalar form-fields its backend
- * endpoint expects, by running the same `buildFormData` the client-side runner
- * uses (the one source of truth for the request shape) and keeping its non-file
- * fields. This is what makes the stored steps "marry up" with the engine: e.g.
- * redact's `wordsToRedact: string[]` becomes the `listOfText` string the
- * /auto-redact endpoint reads. Falls back to the raw params if the tool has no
- * transform (or it throws), so tools without one are unaffected.
- */
-function toApiParameters(
-  config: ToolRegistry[keyof ToolRegistry]["operationConfig"] | undefined,
-  parameters: Record<string, unknown>,
-): Record<string, unknown> {
-  const build = config?.buildFormData;
-  if (typeof build !== "function") return parameters;
-  const dummy = new File([], "input.pdf", { type: "application/pdf" });
-  // buildFormData takes a File (single-file tools) or File[] (multi) — try both.
-  for (const fileArg of [dummy, [dummy]]) {
-    try {
-      const formData = build(parameters, fileArg as never);
-      const out: Record<string, unknown> = {};
-      // Keep scalar fields; skip File entries (the document(s) the engine feeds
-      // separately, and any supporting-file blobs).
-      formData.forEach((value, key) => {
-        if (typeof value === "string") out[key] = value;
-      });
-      return out;
-    } catch {
-      // Wrong file-arg shape for this tool — try the other, then give up.
-    }
-  }
-  return parameters;
-}
-
-/**
- * Map a frontend automation to the backend pipeline definition. Steps whose
- * endpoint can't be resolved from the registry are dropped (and reported), so
- * the backend never receives an unrunnable operation id.
- */
-export function buildPipelineDefinition(
-  automation: Pick<AutomationConfig, "name" | "operations">,
-  toolRegistry: Partial<ToolRegistry>,
-): { definition: BackendPipelineDefinition; unresolved: string[] } {
-  const unresolved: string[] = [];
-  const steps: BackendPipelineStep[] = [];
-  for (const op of automation.operations) {
-    const parameters = (op.parameters ?? {}) as Record<string, unknown>;
-    const endpoint = resolveEndpoint(op.operation, parameters, toolRegistry);
-    if (!endpoint) {
-      unresolved.push(op.operation);
-      continue;
-    }
-    const config =
-      toolRegistry[op.operation as keyof ToolRegistry]?.operationConfig;
-    steps.push({
-      operation: endpoint,
-      parameters: toApiParameters(config, parameters),
-    });
-  }
-  return {
-    definition: {
-      name: automation.name,
-      steps,
-      outputs: [{ type: "inline", options: {} }],
-    },
-    unresolved,
-  };
-}
-
-/** A frontend policy ready to persist on the backend (the full settings set). */
-export interface PolicyToStore {
-  /** Existing backend id (blank/omitted → create). */
-  id?: string;
-  /** The frontend catalog category this policy belongs to (1 policy per category). */
-  categoryId: string;
-  name: string;
-  /** Active (enabled) vs paused/off. */
-  enabled: boolean;
-  /** Full frontend automation, stashed for a lossless UI round-trip. */
-  automation: AutomationConfig;
-  /**
-   * The engine-runnable steps (endpoint paths), pre-built from `automation` via
-   * the tool registry by the caller that has it (the wizard). The store layer
-   * has no registry, so it receives these ready-made.
-   */
-  pipelineSteps: BackendPipelineStep[];
-  sources: string[];
-  runsOnEditor: boolean;
-  scopeTypes: string[];
-  reviewerEmail: string;
-  fieldValues: Record<string, boolean | string | string[]>;
-  folder: PolicyFolderSettings;
-}
-
 /** The decoded policy read back from the backend. */
 export interface DecodedPolicy {
   id: string;
@@ -261,50 +131,6 @@ const DEFAULT_FOLDER: PolicyFolderSettings = {
   maxRetries: 3,
   retryDelayMinutes: 5,
 };
-
-/**
- * Map a frontend policy to the backend {@link BackendPolicy} for persistence.
- * Policies are manual-only (client-driven): the editor fires runs on upload /
- * before export via /run, so `trigger` is null (a server-side folder-watch or
- * schedule trigger doesn't fit the in-editor model, and a null trigger skips
- * trigger validation on the backend). The backend models only
- * name/enabled/trigger/steps/output, so the policy-level extras (categoryId,
- * sources, scope, reviewer, fields) and the output + retry settings all ride in
- * `output.options`; the full frontend automation is stashed in
- * `output.options.automation` for a lossless UI round-trip (while `steps`
- * carries the endpoint-mapped pipeline the engine runs, pre-built by the caller).
- */
-export function buildBackendPolicy(input: PolicyToStore): BackendPolicy {
-  return {
-    id: input.id ?? "",
-    name: input.name,
-    owner: "",
-    enabled: input.enabled,
-    trigger: null,
-    steps: input.pipelineSteps,
-    output: {
-      type: "inline",
-      options: {
-        mode: input.folder.outputMode,
-        name: input.folder.outputName,
-        position: input.folder.outputNamePosition,
-        maxRetries: input.folder.maxRetries,
-        retryDelayMinutes: input.folder.retryDelayMinutes,
-        automation: input.automation,
-        // Policy-level metadata (no trigger bag to hold it any more).
-        categoryId: input.categoryId,
-        sources: input.sources,
-        scopeTypes: input.scopeTypes,
-        reviewerEmail: input.reviewerEmail,
-        fieldValues: input.fieldValues,
-      },
-    },
-    editor: {
-      allowed: input.runsOnEditor,
-      runOn: input.folder.runOn,
-    },
-  };
-}
 
 /** Decode a stored backend policy back into the frontend settings. */
 export function fromBackendPolicy(policy: BackendPolicy): DecodedPolicy {

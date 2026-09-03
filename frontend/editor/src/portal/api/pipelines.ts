@@ -3,6 +3,11 @@ import {
   type SupportingFileBindings,
   type ToolApiStep,
 } from "@app/hooks/tools/shared/toolAutomation";
+import type {
+  PolicyRunView,
+  PolicyRunStatus,
+  RunOutputFile,
+} from "@app/policies/types";
 
 /**
  * Pipelines service layer: the backend contract.
@@ -132,37 +137,10 @@ export interface TriggerInfo {
   supportedSourceTypes: string[];
 }
 
-export type PolicyRunStatus =
-  | "PENDING"
-  | "RUNNING"
-  | "WAITING_FOR_INPUT"
-  | "COMPLETED"
-  | "FAILED"
-  | "CANCELLED";
-
-/** One file a run produced, downloadable via /api/v1/general/files/{fileId}. */
-export interface RunOutputFile {
-  fileId: string;
-  fileName: string | null;
-}
-
-/** A run's current state. Mirrors the backend `PolicyRunView`. */
-export interface PolicyRunView {
-  runId: string;
-  policyId: string | null;
-  status: PolicyRunStatus;
-  currentStep: number;
-  stepCount: number;
-  /** Human-readable failure message; set when status is FAILED. */
-  error: string | null;
-  errorCode: string | null;
-  /**
-   * Files the run produced, present once it completes. Whole-run, not per step: the backend keeps
-   * one flat list, so nothing here can be attributed to an individual step.
-   */
-  outputs?: RunOutputFile[] | null;
-  createdAt: number;
-}
+// One run view for the whole app: the builder test-run poll and the catalogue runs list read the
+// same backend PolicyRunView, so the type is defined once in the codec (imported above) and
+// re-exported here for callers that reach it through the pipelines API.
+export type { PolicyRunView, PolicyRunStatus, RunOutputFile };
 
 /** GET /api/v1/policies/overview: KPI strip + one row per policy for the admin. */
 export async function fetchPipelines(): Promise<PipelinesOverviewResponse> {

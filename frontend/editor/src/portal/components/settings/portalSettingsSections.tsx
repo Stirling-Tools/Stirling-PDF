@@ -1,5 +1,6 @@
 import { Suspense, lazy, type ComponentType } from "react";
 import { LoadingFallback } from "@app/components/shared/LoadingFallback";
+import { useEnterpriseEnabled } from "@portal/hooks/useEnterpriseEnabled";
 import { PortalSettingsSectionHost } from "@portal/components/settings/PortalSettingsSectionHost";
 import { accountLinkSettings } from "@portal/components/settings/accountLinkSettings";
 
@@ -17,6 +18,22 @@ const Audit = lazy(async () => {
   const m = await import("@portal/components/infrastructure/AuditTab");
   return { default: m.AuditTab };
 });
+
+const EncryptionPanel = lazy(async () => {
+  const m = await import("@portal/components/infrastructure/EncryptionPanel");
+  return { default: m.EncryptionPanel };
+});
+
+/** Treat "still resolving" as available: flashing "your licence records no audit
+ *  trail" at an Enterprise operator is worse than the notice arriving a beat late. */
+function Encryption() {
+  const enterprise = useEnterpriseEnabled();
+  return (
+    <EncryptionPanel
+      auditAvailable={enterprise.loading || enterprise.enabled}
+    />
+  );
+}
 
 const Billing = lazy(async () => {
   const m = await import("@portal/components/settings/BillingSettingsSection");
@@ -56,6 +73,7 @@ function hosted(View: ComponentType, { padded = false } = {}) {
 export const PortalUsersSection = hosted(Users);
 export const PortalApiKeysSection = hosted(ApiKeys, { padded: true });
 export const PortalAuditSection = hosted(Audit, { padded: true });
+export const PortalEncryptionSection = hosted(Encryption, { padded: true });
 export const PortalBillingSection = hosted(Billing);
 
 /** Self-hosted only: on SaaS the signed-in account IS the account, so there is

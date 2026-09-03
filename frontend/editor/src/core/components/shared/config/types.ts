@@ -48,6 +48,7 @@ export const VALID_NAV_KEYS = [
   "users",
   "billing",
   "audit",
+  "storage",
 ] as const;
 
 // Derive the type from the array

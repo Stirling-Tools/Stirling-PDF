@@ -37,6 +37,7 @@ function portalSection(
 const UsersSection = portalSection((m) => m.PortalUsersSection);
 const ApiKeysSection = portalSection((m) => m.PortalApiKeysSection);
 const AuditSection = portalSection((m) => m.PortalAuditSection);
+const EncryptionSection = portalSection((m) => m.PortalEncryptionSection);
 const BillingSection = portalSection((m) => m.PortalBillingSection);
 const AccountLinkSection = portalSection((m) => m.PortalAccountLinkSection);
 
@@ -116,6 +117,28 @@ export function buildPortalSettingsSections(
       ],
     },
   ];
+  if (EncryptionSection) {
+    groups.push({
+      id: "server",
+      title: t("settings.server.title", "Server"),
+      items: [
+        {
+          key: "storage",
+          label: t(
+            "portal.infrastructure.encryption.heading",
+            "Encryption at rest",
+          ),
+          description: t(
+            "portal.infrastructure.encryption.subheading",
+            "Stored files are encrypted before they reach disk, the database or object storage.",
+          ),
+          icon: "encrypted-rounded",
+          component: <EncryptionSection />,
+          fullBleed: true,
+        },
+      ],
+    });
+  }
   if (includeAudit) {
     groups.push({
       id: "security",

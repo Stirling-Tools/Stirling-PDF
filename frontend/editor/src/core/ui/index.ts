@@ -33,6 +33,7 @@ export * from "@app/ui/StatTile";
 
 // Feedback
 export * from "@app/ui/Spinner";
+export * from "@app/ui/Tooltip";
 export * from "@app/ui/Skeleton";
 export * from "@app/ui/Avatar";
 export * from "@app/ui/Chip";

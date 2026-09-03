@@ -67,7 +67,7 @@ function activeExportPolicies(): ExportPolicy[] {
       .filter(
         ([, s]) =>
           s.configured &&
-          s.status === "active" &&
+          s.enabled &&
           s.backendId &&
           s.runsOnEditor &&
           s.runOn === "export",
