@@ -40,7 +40,7 @@ describe("fromBackendPolicy", () => {
   it("decodes a stored policy's output.options bag into frontend settings", () => {
     const decoded = fromBackendPolicy(backendPolicy);
     expect(decoded.id).toBe("p1");
-    expect(decoded.categoryId).toBe("security");
+    expect(decoded.policyKey).toBe("security");
     expect(decoded.enabled).toBe(true);
     expect(decoded.sources).toEqual([]);
     expect(decoded.runsOnEditor).toBe(true);
