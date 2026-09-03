@@ -9,20 +9,6 @@
  */
 
 import type { ReactNode } from "react";
-import type { AutomationOperation } from "@app/types/automation";
-
-/** A configurable field within a policy's settings. */
-export type PolicyFieldType = "toggle" | "select" | "chips" | "text";
-
-export interface PolicyField {
-  label: string;
-  key: string;
-  type: PolicyFieldType;
-  /** Current value: boolean (toggle), string (select/text), string[] (chips). */
-  value: boolean | string | string[];
-  /** Options for select/chips. */
-  options?: string[];
-}
 
 /** Static definition of a policy category (the "what it does"). */
 export interface PolicyCategory {
@@ -49,40 +35,13 @@ export interface PolicyCategory {
   requiresAiEngine?: boolean;
 }
 
-/** The narrative + field configuration backing a category. */
-export interface PolicyConfigDef {
-  /** One-line summary of what the policy enforces. */
-  summary: string;
-  /** Pipeline-like rule chips shown in the "Enforces" section. */
-  rules: string[];
-  /** Human label for the scope this policy applies to. */
-  scopeLabel: string;
-  /** Editable settings fields. */
-  fields: PolicyField[];
-  /**
-   * The preset pipeline this category seeds a new policy with — the real,
-   * editable tool steps (same shape as the backend's `PipelineStep` and the
-   * Watch Folders automation `operations`). Configuring a policy starts from
-   * these and the user can edit them.
-   */
-  defaultOperations: AutomationOperation[];
-}
-
-/** A document a source can ingest, used in the wizard's "Sources" step. */
-export interface PolicySource {
-  id: string;
-  label: string;
-  desc: string;
-  icon: ReactNode;
-}
-
 /** Per-category runtime state held in the local cache. */
 export interface PolicyState {
   configured: boolean;
   /** Whether the backend policy is enabled (fires on the editor). Meaningful only
    *  when `configured`; false otherwise. Mirrors the backend `Policy.enabled`. */
   enabled: boolean;
-  /** Selected sources (ids from POLICY_SOURCES). */
+  /** Selected source ids. */
   sources: string[];
   /** The policy's own name. Set for builder pipelines, which have no built-in category label. */
   name?: string;
