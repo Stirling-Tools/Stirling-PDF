@@ -229,24 +229,29 @@ const SettingsPageInner: React.FC = () => {
             const open =
               holdsActive ||
               !(collapsed[groupId] ?? section.collapsedByDefault ?? false);
+            // A header that toggles a single row costs a line and a click to
+            // show what it already named; the row stands on its own instead.
+            const solo = section.items.length === 1;
             return (
               <div key={groupId} className="modal-nav-section">
-                <button
-                  type="button"
-                  className="settings-page__group"
-                  aria-expanded={open}
-                  aria-controls={`settings-group-${groupId}`}
-                  onClick={() => toggleGroup(groupId, open)}
-                >
-                  <span>{section.title}</span>
-                  <LocalIcon
-                    icon="expand-more-rounded"
-                    width={16}
-                    height={16}
-                    className="settings-page__group-chevron"
-                  />
-                </button>
-                {open && (
+                {!solo && (
+                  <button
+                    type="button"
+                    className="settings-page__group"
+                    aria-expanded={open}
+                    aria-controls={`settings-group-${groupId}`}
+                    onClick={() => toggleGroup(groupId, open)}
+                  >
+                    <span>{section.title}</span>
+                    <LocalIcon
+                      icon="expand-more-rounded"
+                      width={16}
+                      height={16}
+                      className="settings-page__group-chevron"
+                    />
+                  </button>
+                )}
+                {(solo || open) && (
                   <div
                     id={`settings-group-${groupId}`}
                     className="modal-nav-section-items"
