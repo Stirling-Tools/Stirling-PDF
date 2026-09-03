@@ -76,8 +76,7 @@ import {
 import {
   FileGrid,
   FilesPageEntry,
-  PROCESSING_SECTION_LABELS,
-  ProcessingSectionId,
+  type DiskFileState,
 } from "@app/components/filesPage/FileGrid";
 import {
   useProcessingFolders,
@@ -571,11 +570,9 @@ export default function FileManagerView() {
     [addFiles, navActions, navigate, folders, t],
   );
 
-  // ──── processing-folder sections (Inputs / Outputs / Processing) ────
-  // A mount with processing attached presents as a master folder of three
-  // fixed sections instead of a flat listing: the untouched originals, the
-  // processed results (wherever the record says they land), and what is
-  // running right now. Pure presentation — no stored folder backs a section.
+  // A working folder lists its real contents; each file wears its pipeline
+  // state (ready / processing / waiting), a state filter narrows the listing,
+  // and a not-yet-processed file is inert until its result exists.
   const processingApi = useProcessingFolders();
   const currentProcessing = currentFolder
     ? processingApi.stateFor(currentFolder)
@@ -583,25 +580,13 @@ export default function FileManagerView() {
   const outputDirectory = currentLocalDirectory
     ? currentProcessing?.outputDirectory
     : undefined;
-  const rawSection = new URLSearchParams(location.search).get("section");
-  const processingSection: ProcessingSectionId | null =
-    outputDirectory &&
-    (rawSection === "inputs" ||
-      rawSection === "outputs" ||
-      rawSection === "processing")
-      ? rawSection
-      : null;
-
   const [outputEntries, setOutputEntries] = useState<DiskFileEntry[]>([]);
-  const [outputLoading, setOutputLoading] = useState(false);
   useEffect(() => {
     if (!outputDirectory || !canListDirectory) {
       setOutputEntries([]);
-      setOutputLoading(false);
       return;
     }
     let cancelled = false;
-    setOutputLoading(true);
     listDirectory(outputDirectory)
       .then((listed) => {
         if (!cancelled) setOutputEntries(listed?.files ?? []);
@@ -611,9 +596,7 @@ export default function FileManagerView() {
         // so unreadable reads as empty rather than as an error.
         if (!cancelled) setOutputEntries([]);
       })
-      .finally(() => {
-        if (!cancelled) setOutputLoading(false);
-      });
+      .finally(() => {});
     return () => {
       cancelled = true;
     };
@@ -647,17 +630,36 @@ export default function FileManagerView() {
   const [processingSetupFolder, setProcessingSetupFolder] =
     useState<FolderRecord | null>(null);
 
-  const openProcessingSection = useCallback(
-    (id: ProcessingSectionId) => {
-      if (!currentFolderId) return;
-      navigate(`/files/${currentFolderId}?section=${id}`);
+  // Opening a processed file opens its result: the whole point of the folder
+  // is the processed copy, and the untouched original stays on disk. Files
+  // without a result yet are inert (the grid renders them locked).
+  const openDiskFileResult = useCallback(
+    async (entry: DiskFileEntry) => {
+      if (!outputDirectory) {
+        await openDiskFile(entry);
+        return;
+      }
+      const result = outputEntries.find((o) => o.name === entry.name);
+      if (result) await openDiskFile(result);
     },
-    [navigate, currentFolderId],
+    [outputDirectory, outputEntries, openDiskFile],
   );
-  const clearProcessingSection = useCallback(() => {
-    if (!currentFolderId) return;
-    navigate(`/files/${currentFolderId}`);
-  }, [navigate, currentFolderId]);
+
+  const [diskStateFilter, setDiskStateFilter] = useState<DiskFileState | "all">(
+    "all",
+  );
+  const diskStateFor = useCallback(
+    (name: string): DiskFileState => {
+      // A result with the same name is the definition of processed: outputs
+      // land beside the originals under the same file name.
+      if (outputEntries.some((o) => o.name === name)) return "done";
+      if ((activeRuns ?? []).some((run) => run.fileName === name)) {
+        return "processing";
+      }
+      return "waiting";
+    },
+    [outputEntries, activeRuns],
+  );
 
   const entries = useMemo<FilesPageEntry[]>(() => {
     // When searching, items may come from anywhere in the subtree, so we
@@ -683,53 +685,17 @@ export default function FileManagerView() {
         list
           .filter((disk) => !needle || disk.name.toLowerCase().includes(needle))
           .sort(compare[filesPage.sortMode] ?? compare["modified-desc"]!)
-          .map<FilesPageEntry>((disk) => ({ kind: "diskFile", disk }));
-      // A processing folder's root is its three sections; a search cuts
-      // through them straight to the originals.
-      if (outputDirectory && processingSection === null && !inSearch) {
-        return [
-          {
-            kind: "section",
-            section: {
-              id: "inputs",
-              count: diskLoading ? null : diskEntries.length,
-            },
-          },
-          {
-            kind: "section",
-            section: {
-              id: "outputs",
-              count: outputLoading ? null : outputEntries.length,
-            },
-          },
-          {
-            kind: "section",
-            section: {
-              id: "processing",
-              count: activeRuns === null ? null : activeRuns.length,
-            },
-          },
-        ];
-      }
-      if (processingSection === "outputs") {
-        return toDiskEntries(outputEntries);
-      }
-      if (processingSection === "processing") {
-        return (activeRuns ?? [])
+          .map<FilesPageEntry>((disk) => ({
+            kind: "diskFile",
+            disk,
+            diskState: outputDirectory ? diskStateFor(disk.name) : undefined,
+          }))
           .filter(
-            (run) =>
-              !needle || (run.fileName ?? "").toLowerCase().includes(needle),
-          )
-          .map<FilesPageEntry>((run) => ({
-            kind: "run",
-            run: {
-              runId: run.runId,
-              fileName: run.fileName ?? "\u2026",
-              currentStep: run.currentStep,
-              stepCount: run.stepCount,
-            },
-          }));
-      }
+            (entry) =>
+              diskStateFilter === "all" ||
+              entry.diskState === undefined ||
+              entry.diskState === diskStateFilter,
+          );
       return [
         ...visibleFolders.map<FilesPageEntry>((folder) => ({
           kind: "folder",
@@ -766,12 +732,9 @@ export default function FileManagerView() {
     currentFolderId,
     currentLocalDirectory,
     diskEntries,
-    diskLoading,
     outputDirectory,
-    processingSection,
-    outputEntries,
-    outputLoading,
-    activeRuns,
+    diskStateFor,
+    diskStateFilter,
     filesPage.sortMode,
     pathForFolderId,
   ]);
@@ -1299,12 +1262,7 @@ export default function FileManagerView() {
     <div className="files-page" ref={dropZoneRef}>
       <header className="files-page-header">
         {/* Breadcrumb only for folder-rooted tabs. */}
-        {(currentTab === "all" || currentTab === "cloud") && (
-          <Breadcrumbs
-            section={processingSection}
-            onClearSection={clearProcessingSection}
-          />
-        )}
+        {(currentTab === "all" || currentTab === "cloud") && <Breadcrumbs />}
         {(currentTab === "local" ||
           currentTab === "recent" ||
           currentTab === "shared" ||
@@ -2058,18 +2016,28 @@ export default function FileManagerView() {
             className="files-page-content"
             onClick={handleContentBackgroundClick}
           >
+            {outputDirectory && (
+              <div className="files-page-state-filters">
+                {(["all", "done", "processing", "waiting"] as const).map(
+                  (value) => (
+                    <button
+                      key={value}
+                      type="button"
+                      className={diskStateFilter === value ? "is-active" : ""}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDiskStateFilter(value);
+                      }}
+                    >
+                      {t(`filesPage.diskState.${value}`, value)}
+                    </button>
+                  ),
+                )}
+              </div>
+            )}
             <FileGrid
               entries={entries}
-              loading={
-                loading ||
-                // The master view's section cards render instantly (their
-                // counts fill in); only a section's own listing skeletons.
-                (outputDirectory && processingSection === null
-                  ? false
-                  : processingSection === "outputs"
-                    ? outputLoading
-                    : diskLoading)
-              }
+              loading={loading || diskLoading}
               currentTab={currentTab}
               searchActive={search.trim().length > 0}
               serverReachable={folders.serverReachable}
@@ -2081,9 +2049,8 @@ export default function FileManagerView() {
               onSelectFile={handleSelectFile}
               onSetSelection={setSelectedFileIds}
               onOpenFolder={handleOpenFolder}
-              onOpenSection={openProcessingSection}
               onStartProcessing={setProcessingSetupFolder}
-              onOpenDiskFile={(entry) => void openDiskFile(entry)}
+              onOpenDiskFile={(entry) => void openDiskFileResult(entry)}
               onOpenFile={handleOpenFile}
               onMoveFiles={moveFilesTo}
               onMoveFolder={moveFolderTo}
@@ -2329,15 +2296,7 @@ export default function FileManagerView() {
   );
 }
 
-function Breadcrumbs({
-  section,
-  onClearSection,
-}: {
-  /** Active processing-folder section, shown as the trailing crumb. */
-  section: ProcessingSectionId | null;
-  /** Return from a section to the folder's own (sectioned) root. */
-  onClearSection: () => void;
-}) {
+function Breadcrumbs() {
   const { t } = useTranslation();
   const folders = useFolders();
   const filesPage = useFilesPage();
@@ -2353,12 +2312,8 @@ function Breadcrumbs({
           <React.Fragment key={entry.id ?? "root"}>
             <Button
               variant="tertiary"
-              className={`files-page-breadcrumb${isLast && !section ? " is-current" : ""}`}
-              onClick={() =>
-                isLast && section
-                  ? onClearSection()
-                  : folders.setCurrentFolderId(entry.id)
-              }
+              className={`files-page-breadcrumb${isLast ? " is-current" : ""}`}
+              onClick={() => folders.setCurrentFolderId(entry.id)}
               onDragOver={(e) => {
                 if (e.dataTransfer.types.includes(FILES_PAGE_DRAG_TYPE)) {
                   e.preventDefault();
@@ -2426,24 +2381,6 @@ function Breadcrumbs({
           </React.Fragment>
         );
       })}
-      {section && (
-        <>
-          <KeyboardArrowRightIcon
-            className="files-page-breadcrumb-sep"
-            fontSize="small"
-            aria-hidden="true"
-          />
-          <Button
-            variant="tertiary"
-            className="files-page-breadcrumb is-current"
-          >
-            {t(
-              PROCESSING_SECTION_LABELS[section].key,
-              PROCESSING_SECTION_LABELS[section].fallback,
-            )}
-          </Button>
-        </>
-      )}
     </nav>
   );
 }

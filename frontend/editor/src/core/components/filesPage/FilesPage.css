@@ -530,6 +530,71 @@
   background: currentColor;
 }
 
+/* Per-file processing state on a working folder's listing. The badge names the
+   state; a not-yet-processed file is also inert (no open, no menu) until its
+   result exists, and reads that way. */
+.files-page-state-badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  background: var(--c-surface-raised);
+  border: 1px solid var(--c-border-subtle);
+  color: var(--c-text-muted);
+}
+
+.files-page-state-badge.is-done {
+  color: var(--c-success, var(--c-primary));
+  border-color: color-mix(
+    in srgb,
+    var(--c-success, var(--c-primary)) 40%,
+    transparent
+  );
+}
+
+.files-page-card.is-locked,
+.files-page-list-row.is-locked {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.files-page-card.is-locked .files-page-card-actions {
+  display: none;
+}
+
+/* State filter chips above a working folder's listing. */
+.files-page-state-filters {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0 0 0.6rem;
+  flex-wrap: wrap;
+}
+
+.files-page-state-filters button {
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--c-text-muted);
+  background: var(--c-surface-raised);
+  border: 1px solid var(--c-border-subtle);
+  border-radius: 999px;
+  padding: 0.15rem 0.7rem;
+  cursor: pointer;
+}
+
+.files-page-state-filters button.is-active {
+  color: var(--c-text);
+  border-color: var(--c-primary);
+  background: var(--c-primary-subtle, var(--c-surface));
+}
+
 /* Parent-folder breadcrumb shown on cards/rows during recursive search so
    the user can tell which folder each hit lives in without navigating. */
 .files-page-card-path {

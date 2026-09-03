@@ -4440,6 +4440,14 @@ title = "Nothing shared with you"
 hint = "Create a share link or invite a teammate from any of your files to see it here."
 title = "You haven't shared any files yet"
 
+[filesPage.diskState]
+all = "All"
+done = "Ready"
+doneHint = "Processed — opens the result"
+processing = "Processing"
+waiting = "Waiting"
+waitingHint = "Not processed yet — available once its result exists"
+
 [filesPage.error]
 actionFailed = "Could not {{action}}."
 actionFailedDetail = "Could not {{action}}: {{message}}"
