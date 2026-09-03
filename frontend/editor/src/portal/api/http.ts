@@ -21,13 +21,6 @@
  *                             state rather than silently routing to the wrong
  *                             domain.
  *
- * Pick the domain from what the endpoint IS, never from whether SaaS happens to
- * be configured. "A SaaS URL is set" is not "I am the SaaS build": a linked
- * self-hosted instance is both configured and still the owner of its own data,
- * and routing on that read sent its audit trail and Documents feed to the cloud.
- * If an endpoint exists in both flavors it belongs on `.local`, which already
- * resolves per flavor via the localBackend seam.
- *
  * Endpoints that don't have a real backend yet still target their eventual
  * domain (almost always `.local`): with Mocks=on the MSW handlers intercept;
  * with Mocks=off they hit the real backend and 404 until the route ships, then
