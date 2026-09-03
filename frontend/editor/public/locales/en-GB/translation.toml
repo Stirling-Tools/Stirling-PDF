@@ -4175,6 +4175,23 @@ localHint = "Only stored in this browser"
 shared = "Shared"
 sharedHint = "Shared with you via link"
 
+[filesPage.processing]
+active = "Processing folder"
+paused = "Processing paused"
+start = "Process files in this folder…"
+stop = "Stop processing this folder"
+sweep = "Process files now"
+
+[filesPage.processingSections]
+inputs = "Inputs"
+inputsHint = "Your originals — never changed"
+outputs = "Outputs"
+outputsHint = "Processed results"
+processing = "Processing"
+processingHint = "Being processed right now"
+runStep = "Step {{current}} of {{total}}"
+running = "Processing…"
+
 [filesPage.search]
 clear = "Clear filter"
 label = "Filter files by name"
