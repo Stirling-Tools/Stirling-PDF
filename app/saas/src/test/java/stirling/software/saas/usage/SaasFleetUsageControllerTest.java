@@ -32,6 +32,7 @@ import stirling.software.proprietary.repository.PersistentAuditEventRepository;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.TeamMembershipRepository;
+import stirling.software.saas.security.UserTeamResolver;
 
 @ExtendWith(MockitoExtension.class)
 class SaasFleetUsageControllerTest {
@@ -47,13 +48,26 @@ class SaasFleetUsageControllerTest {
     void setUp() {
         controller =
                 new SaasFleetUsageController(
-                        userRepository, memberRepo, auditRepository, auditConfig);
+                        userRepository,
+                        memberRepo,
+                        new UserTeamResolver(memberRepo),
+                        auditRepository,
+                        auditConfig);
     }
 
     /** An Authentication whose principal is a User (AuthenticationUtils returns it directly). */
     private Authentication authFor(long userId) {
+        return authFor(userId, null);
+    }
+
+    private Authentication authFor(long userId, Long teamId) {
         User user = mock(User.class);
-        when(user.getId()).thenReturn(userId);
+        lenient().when(user.getId()).thenReturn(userId);
+        if (teamId != null) {
+            Team team = mock(Team.class);
+            lenient().when(team.getId()).thenReturn(teamId);
+            lenient().when(user.getTeam()).thenReturn(team);
+        }
         Authentication auth = mock(Authentication.class);
         when(auth.getPrincipal()).thenReturn(user);
         return auth;
@@ -75,10 +89,9 @@ class SaasFleetUsageControllerTest {
     @Test
     @DisplayName("figures are scoped to the caller's team members")
     void teamScopedFigures() {
-        Authentication auth = authFor(1L);
+        Authentication auth = authFor(1L, 42L);
         TeamMembership leader = memberOf(42L, "leader@acme.test");
         TeamMembership bob = memberOf(42L, "bob@acme.test");
-        when(memberRepo.findPrimaryMembership(1L)).thenReturn(List.of(leader));
         when(memberRepo.findByTeamId(42L)).thenReturn(List.of(leader, bob));
         when(auditConfig.isLevelEnabled(AuditLevel.STANDARD)).thenReturn(true);
         when(auditRepository.countDistinctPrincipalsBySourceExcludingTypeAndPrincipalInAfter(
@@ -106,9 +119,8 @@ class SaasFleetUsageControllerTest {
     @Test
     @DisplayName("audit-derived figures are null when auditing is below STANDARD")
     void auditOffYieldsNulls() {
-        Authentication auth = authFor(1L);
+        Authentication auth = authFor(1L, 42L);
         TeamMembership leader = memberOf(42L, "leader@acme.test");
-        when(memberRepo.findPrimaryMembership(1L)).thenReturn(List.of(leader));
         when(memberRepo.findByTeamId(42L)).thenReturn(List.of(leader));
         when(auditConfig.isLevelEnabled(AuditLevel.STANDARD)).thenReturn(false);
 
@@ -126,9 +138,8 @@ class SaasFleetUsageControllerTest {
     @Test
     @DisplayName("active is clamped to deployed (a subset)")
     void activeClampedToDeployed() {
-        Authentication auth = authFor(1L);
+        Authentication auth = authFor(1L, 42L);
         TeamMembership leader = memberOf(42L, "leader@acme.test");
-        when(memberRepo.findPrimaryMembership(1L)).thenReturn(List.of(leader));
         when(memberRepo.findByTeamId(42L)).thenReturn(List.of(leader));
         when(auditConfig.isLevelEnabled(AuditLevel.STANDARD)).thenReturn(true);
         when(auditRepository.countDistinctPrincipalsBySourceExcludingTypeAndPrincipalInAfter(
@@ -148,7 +159,6 @@ class SaasFleetUsageControllerTest {
     @DisplayName("a caller with no team gets an empty fleet, not a 500")
     void noTeamReturnsEmpty() {
         Authentication auth = authFor(1L);
-        when(memberRepo.findPrimaryMembership(1L)).thenReturn(List.of());
 
         FleetUsageStats stats = controller.fleetStats(auth).getBody();
 

@@ -3,6 +3,7 @@ package stirling.software.saas.usage;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
@@ -19,12 +20,12 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.proprietary.audit.AuditLevel;
 import stirling.software.proprietary.config.AuditConfigurationProperties;
-import stirling.software.proprietary.model.TeamMembership;
 import stirling.software.proprietary.model.api.usage.FleetUsageStats;
 import stirling.software.proprietary.repository.PersistentAuditEventRepository;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.TeamMembershipRepository;
+import stirling.software.saas.security.UserTeamResolver;
 import stirling.software.saas.util.AuthenticationUtils;
 
 /**
@@ -53,6 +54,7 @@ public class SaasFleetUsageController {
 
     private final UserRepository userRepository;
     private final TeamMembershipRepository memberRepo;
+    private final UserTeamResolver userTeamResolver;
     private final PersistentAuditEventRepository auditRepository;
     private final AuditConfigurationProperties auditConfig;
 
@@ -67,13 +69,13 @@ public class SaasFleetUsageController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        List<TeamMembership> primary = memberRepo.findPrimaryMembership(user.getId());
-        if (primary.isEmpty()) {
+        Optional<Long> resolvedTeam = userTeamResolver.teamId(user);
+        if (resolvedTeam.isEmpty()) {
             // Authenticated caller without a team — shouldn't happen post-migration; report an
             // empty fleet rather than 500.
             return ResponseEntity.ok(new FleetUsageStats(0L, null, null));
         }
-        Long teamId = primary.get(0).getTeam().getId();
+        Long teamId = resolvedTeam.get();
 
         List<String> members =
                 memberRepo.findByTeamId(teamId).stream()
