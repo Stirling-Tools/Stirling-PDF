@@ -315,6 +315,13 @@ export function FolderProvider({ children }: FolderProviderProps) {
     setFolderRevision((r) => r + 1);
   }, []);
 
+  /**
+   * Orders the two writers of `folders`: the cache read in {@link refresh} and the server pull.
+   * Each claims a token before writing, and a read whose token is stale is dropped rather than
+   * applied - otherwise a slow cache read lands after the pull and blanks the rows it just set.
+   */
+  const folderWrite = useRef(0);
+
   const mountedRef = useRef(true);
   useEffect(() => {
     mountedRef.current = true;
@@ -324,6 +331,7 @@ export function FolderProvider({ children }: FolderProviderProps) {
   }, []);
 
   const refresh = useCallback(async () => {
+    const token = ++folderWrite.current;
     setLoading(true);
     try {
       // Three systems of record behind one list; kind says which rules a row follows.
@@ -333,6 +341,8 @@ export function FolderProvider({ children }: FolderProviderProps) {
         localFolderStorage.getAllFolders(),
       ]);
       if (!mountedRef.current) return;
+      // A pull landed while this read was out, so its rows are the newer truth.
+      if (token !== folderWrite.current) return;
       setFolders([...server, ...virtual, ...local]);
     } catch (err) {
       console.error("[FolderContext] cache read failed", err);
@@ -404,6 +414,7 @@ export function FolderProvider({ children }: FolderProviderProps) {
         console.warn("[FolderContext] cache replace failed", cacheErr);
       }
       if (mountedRef.current) {
+        folderWrite.current += 1;
         // Server-wins is for server rows: the other kinds have no server copy.
         setFolders((prev) => [
           ...remote,

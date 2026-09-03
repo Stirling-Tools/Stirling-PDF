@@ -67,11 +67,20 @@ vi.mock("@app/auth/UseSession", () => ({
 // Stateful IDB mock - the revision-driven refresh re-reads getAllFolders
 // after every state change, so a stateless [] mock would clobber pull results.
 const { mockIdb } = vi.hoisted(() => ({
-  mockIdb: { folders: [] as { id: string }[] },
+  mockIdb: { folders: [] as { id: string }[], slowNextRead: false },
 }));
 vi.mock("@app/services/folderStorage", () => ({
   folderStorage: {
-    getAllFolders: vi.fn(() => Promise.resolve([...mockIdb.folders])),
+    getAllFolders: vi.fn(() => {
+      const snapshot = [...mockIdb.folders];
+      if (mockIdb.slowNextRead) {
+        mockIdb.slowNextRead = false;
+        return new Promise((resolve) =>
+          setTimeout(() => resolve(snapshot), 50),
+        );
+      }
+      return Promise.resolve(snapshot);
+    }),
     replaceAll: vi.fn((next: { id: string }[]) => {
       mockIdb.folders = [...next];
       return Promise.resolve();
@@ -264,6 +273,7 @@ describe("FolderContext stale-folder 404 cleanup", () => {
     mockDelete.mockReset();
     // Reset the stateful IDB mock so each test starts with an empty cache.
     mockIdb.folders = [];
+    mockIdb.slowNextRead = false;
     // Signed-in, non-anonymous user so pullFromServer runs.
     mockAuth.user = { id: "test-user", is_anonymous: false };
     mockAuth.isAnonymous = false;
@@ -418,5 +428,27 @@ describe("FolderContext stale-folder 404 cleanup", () => {
     expect(threw).toBe(true);
     expect(screen.getByTestId("count").textContent).toBe("1");
     expect(screen.getByTestId("error").textContent).not.toBe("<null>");
+  });
+
+  test("a slow cache read cannot blank folders the server pull already applied", async () => {
+    // Mount runs two writers of `folders`: the cache read and the server pull. The cache is
+    // empty until the pull fills it, so a read that resolves last would apply that empty
+    // snapshot over the freshly pulled rows and strand every id in the tree.
+    const parent = makeFolder("parent");
+    const child = makeFolder("child", parent.id);
+    mockIdb.slowNextRead = true;
+
+    const api = await setupWithFolders([parent, child]);
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 120));
+    });
+
+    expect(screen.getByTestId("count").textContent).toBe("2");
+    // Still addressable: a mutation here used to throw "Unknown folder".
+    mockUpdate.mockResolvedValueOnce({ ...parent, name: "renamed" });
+    await act(async () => {
+      await api.current.rename(parent.id, "renamed");
+    });
+    expect(screen.getByTestId("error").textContent).toBe("<null>");
   });
 });
