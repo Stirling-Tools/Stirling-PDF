@@ -393,7 +393,7 @@ describe("SourceModal", () => {
 
     fireEvent.click(screen.getByText("portal.sources.types.folder.label"));
     expect(
-      screen.getByLabelText(/portal\.integrations\.typedName/),
+      screen.getByLabelText(/portal\.sources\.wizard\.name/),
     ).toBeInTheDocument();
   });
 
