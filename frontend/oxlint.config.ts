@@ -74,7 +74,7 @@ const modernGlobals: OxlintGlobals = {
 
 // Folders not yet conformant to the stricter no-explicit-any rule
 const noExplicitAnyExcludes = [
-  "editor/src/core/components/shared/config/configSections/*.{js,mjs,jsx,ts,tsx}",
+  "editor/src/core/components/shared/config/configSections/ProviderCard.tsx",
   "editor/src/core/components/viewer/layerUtils.ts",
   "editor/src/core/components/viewer/SignatureAPIBridge.tsx",
   "editor/src/core/components/viewer/HistoryAPIBridge.tsx",
