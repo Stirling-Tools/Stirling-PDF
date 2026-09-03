@@ -12,10 +12,14 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.env.Environment;
+import org.springframework.http.HttpMethod;
 import org.springframework.mock.env.MockEnvironment;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -350,6 +354,82 @@ class SupabaseSecurityConfigMoreTest {
 
             assertThat(auth.getAuthorities().stream().map(a -> a.getAuthority()).toList())
                     .contains("ROLE_LIMITED_API_USER");
+        }
+    }
+
+    @Nested
+    @DisplayName("linked-instance CORS")
+    class LinkedInstanceCors {
+
+        /** An origin no allow-list could ever contain: a customer's own deployment. */
+        private static final String SELF_HOSTED = "http://54.175.155.236:7779";
+
+        private CorsConfigurationSource source(boolean accountLinkEnabled) {
+            SupabaseSecurityConfig cfg = config(new ApplicationProperties());
+            ReflectionTestUtils.setField(cfg, "accountLinkEnabled", accountLinkEnabled);
+            return cfg.corsConfigurationSource();
+        }
+
+        private CorsConfiguration resolve(CorsConfigurationSource source, String path) {
+            return source.getCorsConfiguration(new MockHttpServletRequest("GET", path));
+        }
+
+        @ParameterizedTest
+        @ValueSource(
+                strings = {
+                    "/api/v1/payg/wallet",
+                    "/api/v1/payg/wallet/refresh",
+                    "/api/v1/payg/invoices",
+                    "/api/v1/payg/cap",
+                    "/api/v1/procurement/quote",
+                    "/api/v1/legal/consent",
+                    "/api/v1/proprietary/ui-data/documents",
+                    "/api/v1/proprietary/ui-data/audit-export",
+                    "/api/v1/proprietary/ui-data/infrastructure/audit-log"
+                })
+        @DisplayName("every apiClient.saas path is readable from any origin")
+        void portalReadsAllowAnyOrigin(String path) {
+            CorsConfiguration cfg = resolve(source(true), path);
+
+            assertThat(cfg.checkOrigin(SELF_HOSTED)).isEqualTo("*");
+            // The wildcard is only defensible without credentials. These must never both be set:
+            // the browser rejects the pair outright, and it would be an open credentialed API.
+            assertThat(cfg.getAllowCredentials()).isNotEqualTo(Boolean.TRUE);
+        }
+
+        @Test
+        @DisplayName("PATCH is allowed; the cap endpoint needs it")
+        void patchAllowed() {
+            CorsConfiguration cfg = resolve(source(true), "/api/v1/payg/cap");
+
+            assertThat(cfg.checkHttpMethod(HttpMethod.PATCH)).isNotNull();
+        }
+
+        @ParameterizedTest
+        @ValueSource(
+                strings = {
+                    "/api/v1/instance/sync",
+                    // Same prefix as the portal reads above, but not portal surface. Widening
+                    // ui-data to "/**" would hand these to any origin too.
+                    "/api/v1/proprietary/ui-data/admin-settings",
+                    "/api/v1/proprietary/ui-data/database",
+                    "/api/v1/proprietary/ui-data/teams"
+                })
+        @DisplayName("every other path keeps the credentialed allow-list")
+        void otherPathsUnchanged(String path) {
+            CorsConfiguration cfg = resolve(source(true), path);
+
+            assertThat(cfg.getAllowCredentials()).isTrue();
+            assertThat(cfg.checkOrigin(SELF_HOSTED)).isNull();
+        }
+
+        @Test
+        @DisplayName("no wildcard at all when account linking is off")
+        void flagOffKeepsAllowList() {
+            CorsConfiguration cfg = resolve(source(false), "/api/v1/payg/wallet");
+
+            assertThat(cfg.getAllowCredentials()).isTrue();
+            assertThat(cfg.checkOrigin(SELF_HOSTED)).isNull();
         }
     }
 }
