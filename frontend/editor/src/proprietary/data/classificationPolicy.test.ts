@@ -2,7 +2,6 @@ import { describe, it, expect } from "vitest";
 import {
   isClassificationCategory,
   localVerdictNeedsEscalation,
-  orderRewritesFirst,
   orderedRewritingCategories,
   policyDeliversOutputFiles,
   policyRewritesDocument,
@@ -12,7 +11,7 @@ import type { PoliciesByCategory } from "@app/types/policies";
 const rewriter = (order: number) =>
   ({
     configured: true,
-    status: "active",
+    enabled: true,
     backendId: `backend-${order}`,
     runsOnEditor: true,
     runOn: "upload",
@@ -41,32 +40,6 @@ describe("policy capabilities", () => {
   });
 });
 
-describe("orderRewritesFirst", () => {
-  it("moves annotating policies to the end, preserving other order", () => {
-    expect(
-      orderRewritesFirst(["classification", "security", "compliance"]),
-    ).toEqual(["security", "compliance", "classification"]);
-  });
-
-  it("leaves an order without an annotating policy untouched", () => {
-    expect(orderRewritesFirst(["security", "compliance"])).toEqual([
-      "security",
-      "compliance",
-    ]);
-  });
-
-  it("is a no-op when the annotating policy is already last", () => {
-    expect(orderRewritesFirst(["security", "classification"])).toEqual([
-      "security",
-      "classification",
-    ]);
-  });
-
-  it("handles the annotating policy as the only one", () => {
-    expect(orderRewritesFirst(["classification"])).toEqual(["classification"]);
-  });
-});
-
 describe("orderedRewritingCategories", () => {
   it("lists only file-producing policies, ordered by order, excluding classification", () => {
     const policies = {
@@ -84,7 +57,7 @@ describe("orderedRewritingCategories", () => {
   it("excludes inactive, non-editor, export-triggered, and unconfigured policies", () => {
     const mixed = {
       security: rewriter(0),
-      inactive: { ...rewriter(1), status: "paused" },
+      inactive: { ...rewriter(1), enabled: false },
       notEditor: { ...rewriter(2), runsOnEditor: false },
       onExport: { ...rewriter(3), runOn: "export" },
       unconfigured: { ...rewriter(4), configured: false },
