@@ -256,31 +256,6 @@
   font-weight: 600;
   color: var(--c-text);
 }
-.sui-dtc__note-line {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.375rem;
-  min-width: 0;
-}
-.sui-dtc__peek {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  padding: 0.125rem;
-  border: 0;
-  background: none;
-  border-radius: var(--radius-sm, 0.25rem);
-  color: var(--c-text-subtle);
-  cursor: pointer;
-}
-.sui-dtc__peek:hover {
-  color: var(--c-text);
-  background: var(--c-hover);
-}
-.sui-dtc__peek svg {
-  display: block;
-}
 .sui-dtc__entity-suffix {
   font-size: 0.75rem;
   font-weight: 400;
@@ -291,11 +266,17 @@
   color: var(--c-text-subtle);
 }
 
+/* An action row sizes the column, it does not squeeze into it: without nowrap +
+   no-shrink the labels wrap and a long one is clipped mid-word. */
 .sui-dtc__actions {
   display: flex;
   align-items: center;
   justify-content: flex-end;
+  flex-wrap: nowrap;
   gap: 0.25rem;
+}
+.sui-dtc__actions > * {
+  flex-shrink: 0;
 }
 .sui-dtc__menu-item--danger {
   color: var(--c-danger);

@@ -63,25 +63,6 @@ function KebabGlyph() {
   );
 }
 
-function EyeGlyph() {
-  return (
-    <svg
-      width="12"
-      height="12"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" />
-      <circle cx="12" cy="12" r="3" />
-    </svg>
-  );
-}
-
 /** An item in a kebab action menu. */
 export interface CellMenuItem {
   label: string;
@@ -400,29 +381,6 @@ function caps<T>(
   });
 }
 
-export interface CellPeek {
-  /** Accessible name (the control is icon-only). */
-  label: string;
-  onClick: () => void;
-}
-
-function renderPeek(peek: CellPeek): ReactNode {
-  return (
-    <button
-      type="button"
-      className="sui-dtc__peek"
-      aria-label={peek.label}
-      title={peek.label}
-      onClick={(e) => {
-        e.stopPropagation();
-        peek.onClick();
-      }}
-    >
-      <EyeGlyph />
-    </button>
-  );
-}
-
 function entity<T>(
   o: Common & {
     /** Semantic leading icon (component owns its size + colour container). */
@@ -432,8 +390,6 @@ function entity<T>(
     suffix?: (row: T) => string | null | undefined;
     /** Secondary muted line under the name. */
     note?: (row: T) => string | null | undefined;
-    /** Small eye beside the note, opening the row's detail. */
-    peek?: (row: T) => CellPeek | null | undefined;
     sortBy?: (row: T) => SortValue;
   },
 ): DataTableColumn<T> {
@@ -443,12 +399,10 @@ function entity<T>(
     fit: false,
     sortValue: o.sortBy ?? ((r) => o.primary(r)),
     sortFn: "alphanumeric",
-    interactive: o.peek !== undefined,
     renderCell: (r) => {
       const icon = o.icon?.(r);
       const suffix = o.suffix?.(r);
       const note = o.note?.(r);
-      const peek = o.peek?.(r);
       return (
         <div className="sui-dtc__entity">
           {icon != null && (
@@ -462,15 +416,8 @@ function entity<T>(
               {suffix && (
                 <span className="sui-dtc__entity-suffix">{suffix}</span>
               )}
-              {/* No note line to sit on, so it rides the title. */}
-              {peek && !note && renderPeek(peek)}
             </span>
-            {note && (
-              <span className="sui-dtc__note-line">
-                <span className="sui-dtc__note">{note}</span>
-                {peek && renderPeek(peek)}
-              </span>
-            )}
+            {note && <span className="sui-dtc__note">{note}</span>}
           </div>
         </div>
       );

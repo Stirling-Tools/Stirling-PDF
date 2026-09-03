@@ -12,7 +12,7 @@ import type {
   FileRunEvent,
 } from "@portal/api/fileRunEvents";
 
-/** The failures table: its states, its copy, faceted filtering, and acting on a row. */
+/** The review table: its states, its copy, faceted filtering, and acting on a row. */
 
 const fetchFileRunEvents = vi.fn();
 const applyFileRunEventAction = vi.fn();
@@ -53,9 +53,8 @@ vi.mock("react-i18next", () => ({
         "portal.failures.kind.unknown.title": "Unrecognised failure",
         "portal.failures.action.acknowledge": "Acknowledge",
         "portal.failures.action.dismiss": "Dismiss",
-        "portal.failures.empty.title": "No failures recorded",
+        "portal.failures.empty.title": "Nothing needs your attention",
         "portal.failures.occurrences": "occurrences",
-        "portal.failures.cause.inputRequired": "Input required",
         "portal.failures.scope.open": "Open",
         "portal.failures.scope.closed": "Closed",
         "portal.failures.outcome.dismissed": "Dismissed",
@@ -137,64 +136,42 @@ describe("FileRunEventList", () => {
     sourcesData.mockReturnValue(null);
   });
 
-  it("shows the kind's sentence, never the raw log, and no document name", async () => {
+  it("shows the kind's title alone: no second line, no raw error, no document name", async () => {
     fetchFileRunEvents.mockResolvedValue([event()]);
 
     render(<FileRunEventList />);
 
     expect(await screen.findByText("Password-protected document")).toBeTruthy();
-    // The human copy the bell uses, not the diagnostic.
+    // The kind's sentence only repeats its title, so the row does not carry one.
     expect(
-      screen.getByText(
+      screen.queryByText(
         "Your file is password protected, so the run could not read it.",
       ),
-    ).toBeTruthy();
+    ).toBeNull();
     expect(screen.queryByText("The PDF Document is passworded")).toBeNull();
     // No file identity either; the record deliberately holds none.
     expect(screen.queryByText("f-1")).toBeNull();
   });
 
-  it("opens the raw log in a modal from the eye on the row's title", async () => {
+  it("opens the raw error in a modal from the row's own action", async () => {
     fetchFileRunEvents.mockResolvedValue([event()]);
 
     render(<FileRunEventList />);
     await screen.findByText("Password-protected document");
 
-    fireEvent.click(screen.getByRole("button", { name: "View log" }));
+    fireEvent.click(screen.getByRole("button", { name: "View error" }));
 
     expect(screen.getByText("The PDF Document is passworded")).toBeTruthy();
-    expect(screen.getByText("Copy log")).toBeTruthy();
+    expect(screen.getAllByText("Copy error").length).toBeGreaterThan(0);
   });
 
-  it("offers no eye on a row with no diagnostic to show", async () => {
+  it("offers no View error on a row with no diagnostic to show", async () => {
     fetchFileRunEvents.mockResolvedValue([event({ detail: null })]);
 
     render(<FileRunEventList />);
     await screen.findByText("Password-protected document");
 
-    expect(screen.queryByRole("button", { name: "View log" })).toBeNull();
-  });
-
-  it("files each row under its directory cause, never the server's stage", async () => {
-    fetchFileRunEvents.mockResolvedValue([
-      // A classified kind takes its directory grouping...
-      event(),
-      // ...and anything unclassified is just unrecognised, wherever it failed.
-      event({
-        id: "fre-2",
-        kindId: "SOMETHING_NEW",
-        stage: "INTERNAL",
-        titleKey: "portal.failures.kind.somethingNew.title",
-        descriptionKey: "portal.failures.kind.somethingNew.description",
-        defaultTitle: "Brand-new failure",
-      }),
-    ]);
-
-    render(<FileRunEventList />);
-
-    expect(await screen.findByText("Input required")).toBeTruthy();
-    expect(screen.getByText("Unrecognised")).toBeTruthy();
-    expect(screen.queryByText(/internal/i)).toBeNull();
+    expect(screen.queryByRole("button", { name: "View error" })).toBeNull();
   });
 
   it("names the person whose editor hit it, and where it failed", async () => {
@@ -299,9 +276,9 @@ describe("FileRunEventList", () => {
     expect(screen.queryByText("Unrecognised failure")).toBeNull();
     expect(screen.getAllByText("Password-protected document")).toHaveLength(2);
 
-    // Second facet chains on top: dana AND failed-in-policy.
+    // Second facet chains on top: dana AND raised-in-policy.
     fireEvent.click(
-      screen.getByRole("button", { name: "Failed in", expanded: false }),
+      screen.getByRole("button", { name: "Raised in", expanded: false }),
     );
     fireEvent.click(
       screen.getByRole("menuitemcheckbox", { name: /Policy run/ }),
@@ -327,7 +304,7 @@ describe("FileRunEventList", () => {
 
     fireEvent.change(
       screen.getByRole("textbox", {
-        name: "Search failures, users and logs",
+        name: "Search issues, users and errors",
       }),
       {
         target: { value: "502" },
@@ -338,12 +315,14 @@ describe("FileRunEventList", () => {
     expect(screen.getByText("Unrecognised failure")).toBeTruthy();
   });
 
-  it("shows an empty state when there is nothing to triage", async () => {
+  it("says nothing needs attention, not that no errors exist", async () => {
     fetchFileRunEvents.mockResolvedValue([]);
 
     render(<FileRunEventList />);
 
-    expect(await screen.findByText("No failures recorded")).toBeTruthy();
+    expect(
+      await screen.findByText("Nothing needs your attention"),
+    ).toBeTruthy();
   });
 
   it("explains itself rather than erroring when the server has no failure registry", async () => {
@@ -353,7 +332,7 @@ describe("FileRunEventList", () => {
     render(<FileRunEventList />);
 
     expect(await screen.findByText("Nothing to review")).toBeTruthy();
-    expect(screen.queryByText("No failures recorded")).toBeNull();
+    expect(screen.queryByText("Nothing needs your attention")).toBeNull();
   });
 
   it("says so for a caller the server refuses", async () => {

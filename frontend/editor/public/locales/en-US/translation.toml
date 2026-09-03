@@ -8126,29 +8126,23 @@ title = "Something went wrong on this page"
 
 [portal.failures]
 closedBySystem = "Stirling"
-noMatches = "No failures match the current filters"
+noMatches = "Nothing matches the current filters"
 occurrences = "{{count}} occurrences"
-searchPlaceholder = "Search failures, users and logs"
+searchPlaceholder = "Search issues, users and errors"
 
 [portal.failures.action]
 acknowledge = "Acknowledge"
 decrypt = "Decrypt and retry"
 dismiss = "Dismiss"
-dismissSkipFile = "Skip this file"
 openInTool = "Retry"
 viewFile = "View file"
 viewInProcessor = "View in processor"
 
-[portal.failures.cause]
-inputRequired = "Input required"
-unknown = "Unrecognised"
-
 [portal.failures.columns]
-cause = "Cause"
 closedBy = "Closed by"
 date = "Date"
-failure = "Failure"
-origin = "Failed in"
+failure = "Issue"
+origin = "Raised in"
 outcome = "Outcome"
 source = "Source"
 user = "User"
@@ -8160,16 +8154,15 @@ unattended = "This file was fed by a folder, bucket or webhook, so nobody's brow
 unavailable = "Not available for this failure."
 
 [portal.failures.empty]
-description = "Policy runs that fail will appear here with the actions you can take."
-title = "No failures recorded"
+description = "Anything from a policy run or an editor tool that needs a look will appear here."
+title = "Nothing needs your attention"
 
 [portal.failures.emptyClosed]
-description = "Failures you dismiss or resolve are kept here with their outcome."
+description = "Items you dismiss or resolve are kept here with their outcome."
 title = "Nothing closed yet"
 
 [portal.failures.filters]
-cause = "Cause"
-origin = "Failed in"
+origin = "Raised in"
 source = "Source"
 type = "Type"
 user = "User"
@@ -8180,11 +8173,11 @@ title = "Password-protected document"
 
 [portal.failures.kind.unknown]
 description = "Something went wrong that Stirling does not recognise yet."
-title = "Unrecognised failure"
+title = "Unrecognised issue"
 
 [portal.failures.log]
-copy = "Copy log"
-view = "View log"
+copy = "Copy error"
+view = "View error"
 
 [portal.failures.origin]
 pipeline = "Pipeline"
@@ -8198,7 +8191,7 @@ open = "Open"
 resolved = "Resolved"
 
 [portal.failures.scope]
-ariaLabel = "Failure state"
+ariaLabel = "Review state"
 closed = "Closed"
 open = "Open"
 
@@ -8206,7 +8199,7 @@ open = "Open"
 editor = "Editor"
 
 [portal.failures.unavailable]
-description = "Recorded failures are visible to team leaders on workspaces that run policies."
+description = "This queue is visible to team leaders on workspaces that run policies."
 title = "Nothing to review"
 
 [portal.home.download]
@@ -9572,7 +9565,7 @@ subtitle = "Your free trial runs through {{date}}. No card required."
 title = "Enterprise trial"
 
 [portal.review]
-subtitle = "Failures recorded from your policy runs and your team's editors, with the actions you can take."
+subtitle = "Anything from your policy runs and your team's editors that needs your attention."
 title = "Review"
 
 [portal.settings.groups]

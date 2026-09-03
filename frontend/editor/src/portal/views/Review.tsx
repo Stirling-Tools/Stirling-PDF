@@ -10,17 +10,17 @@ export function Review() {
 
   return (
     <div className="portal-review">
-      <header className="portal-review__head">
+      <div className="portal-review__head">
         <h1 className="portal-review__title">
           {t("portal.review.title", "Review")}
         </h1>
         <p className="portal-review__sub">
           {t(
             "portal.review.subtitle",
-            "Failures recorded from your policy runs and your team's editors, with the actions you can take.",
+            "Anything from your policy runs and your team's editors that needs your attention.",
           )}
         </p>
-      </header>
+      </div>
 
       <FileRunEventList />
     </div>

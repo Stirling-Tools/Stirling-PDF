@@ -19,8 +19,8 @@ const render = (
   options?: Parameters<typeof baseRender>[1],
 ) => baseRender(ui, { wrapper: MantineProvider, ...options });
 
-/** The [Dismiss][menu] shape, the promotion order inside the menu, and that a
- * client-executed offer never reaches this surface. */
+/** The one-button shape, what falls back into the menu, and that a client-executed
+ * offer never reaches this surface. */
 
 // Mirrors i18next closely enough: a known key resolves, an unknown one falls back.
 const t = ((key: string, second?: { defaultValue?: string } | string) => {
@@ -119,7 +119,7 @@ describe("buildFailureActionCells", () => {
     expect(screen.getByRole("button", { name: "Dismiss" })).toBeTruthy();
     openMenu();
     const items = screen.getAllByRole("menuitem").map((el) => el.textContent);
-    expect(items).toEqual(["Acknowledge", "Copy log"]);
+    expect(items).toEqual(["Acknowledge", "Copy error"]);
   });
 
   it("drops every client-executed offer: reviewing stays in the processor", () => {
@@ -153,7 +153,70 @@ describe("buildFailureActionCells", () => {
 
     openMenu();
     const items = screen.getAllByRole("menuitem").map((el) => el.textContent);
-    expect(items).toEqual(["Acknowledge", "Copy log"]);
+    expect(items).toEqual(["Acknowledge", "Copy error"]);
+  });
+
+  it("tucks View error into the menu when Dismiss holds the button slot", () => {
+    const onViewError = vi.fn();
+    render(
+      <>
+        {renderCellActions(
+          build(
+            event([
+              offer({
+                id: "DISMISS",
+                labelKey: "portal.failures.action.dismiss",
+                defaultLabel: "Dismiss",
+                slot: "OVERFLOW",
+              }),
+            ]),
+            { onViewError },
+          ),
+        )}
+      </>,
+    );
+
+    const labels = screen
+      .getAllByRole("button")
+      .map((el) => el.getAttribute("aria-label") ?? el.textContent);
+    expect(labels).toEqual(["Dismiss", "More options"]);
+
+    openMenu();
+    expect(screen.getAllByRole("menuitem").map((el) => el.textContent)).toEqual(
+      ["View error", "Copy error"],
+    );
+    fireEvent.click(screen.getByRole("menuitem", { name: "View error" }));
+    expect(onViewError).toHaveBeenCalled();
+  });
+
+  it("gives View error the button slot on a row with nothing to act on", () => {
+    const onViewError = vi.fn();
+    render(
+      <>
+        {renderCellActions(
+          build(
+            event([
+              offer({
+                id: "DISMISS",
+                labelKey: "portal.failures.action.dismiss",
+                defaultLabel: "Dismiss",
+                slot: "OVERFLOW",
+                enabled: false,
+                disabledReasonKey: "portal.failures.disabled.closed",
+              }),
+            ]),
+            { onViewError },
+          ),
+        )}
+      </>,
+    );
+
+    const labels = screen
+      .getAllByRole("button")
+      .map((el) => el.getAttribute("aria-label") ?? el.textContent);
+    expect(labels).toEqual(["View error", "More options"]);
+    fireEvent.click(screen.getByRole("button", { name: "View error" }));
+    expect(onViewError).toHaveBeenCalled();
   });
 
   it("posts the offer it was clicked with", () => {
@@ -193,7 +256,7 @@ describe("buildFailureActionCells", () => {
 
     expect(screen.getByRole("button", { name: "Dismiss" })).toBeTruthy();
     openMenu();
-    fireEvent.click(screen.getByRole("menuitem", { name: "Copy log" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Copy error" }));
     expect(onCopyLog).toHaveBeenCalled();
   });
 
@@ -220,7 +283,7 @@ describe("buildFailureActionCells", () => {
     expect(screen.queryByRole("button", { name: "Dismiss" })).toBeNull();
     // The log outlives the incident.
     openMenu();
-    expect(screen.getByRole("menuitem", { name: "Copy log" })).toBeTruthy();
+    expect(screen.getByRole("menuitem", { name: "Copy error" })).toBeTruthy();
   });
 
   it("renders nothing at all for a row with no offers and no log", () => {

@@ -16,13 +16,10 @@ const HOUR = 3_600_000;
 /** Fixed base so fixtures are stable across renders and snapshots. */
 const NOW = Date.UTC(2026, 6, 31, 12, 0, 0);
 
-function acknowledgeOffer(
-  enabled = true,
-  labelKey?: string,
-): FailureActionOffer {
+function acknowledgeOffer(enabled = true): FailureActionOffer {
   return {
     id: "ACKNOWLEDGE",
-    labelKey: labelKey ?? "portal.failures.action.acknowledge",
+    labelKey: "portal.failures.action.acknowledge",
     defaultLabel: "Acknowledge",
     execution: "SERVER",
     slot: "SECONDARY",
@@ -31,10 +28,10 @@ function acknowledgeOffer(
   };
 }
 
-function dismissOffer(enabled = true, labelKey?: string): FailureActionOffer {
+function dismissOffer(enabled = true): FailureActionOffer {
   return {
     id: "DISMISS",
-    labelKey: labelKey ?? "portal.failures.action.dismiss",
+    labelKey: "portal.failures.action.dismiss",
     defaultLabel: "Dismiss",
     execution: "SERVER",
     slot: "OVERFLOW",
@@ -65,8 +62,8 @@ export const FILE_RUN_EVENTS: FileRunEvent[] = [
     status: "NEW",
     statusActor: null,
     actions: [
-      acknowledgeOffer(true, "portal.failures.action.acknowledge"),
-      dismissOffer(true, "portal.failures.action.dismissSkipFile"),
+      acknowledgeOffer(),
+      dismissOffer(),
     ],
     createdAt: NOW - HOUR,
     lastSeenAt: NOW - HOUR,
@@ -147,7 +144,7 @@ export const FILE_RUN_EVENTS: FileRunEvent[] = [
     statusActor: null,
     // A colleague's own upload. Nothing here acts on the document, so triage is just
     // acknowledging or clearing the row.
-    actions: [dismissOffer(true, "portal.failures.action.dismissSkipFile")],
+    actions: [dismissOffer()],
     createdAt: NOW - 4 * HOUR,
     lastSeenAt: NOW - 4 * HOUR,
   },
@@ -174,8 +171,8 @@ export const FILE_RUN_EVENTS: FileRunEvent[] = [
     status: "DISMISSED",
     statusActor: "ops@example.com",
     actions: [
-      acknowledgeOffer(false, "portal.failures.action.acknowledge"),
-      dismissOffer(false, "portal.failures.action.dismissSkipFile"),
+      acknowledgeOffer(false),
+      dismissOffer(false),
     ],
     createdAt: NOW - 30 * HOUR,
     lastSeenAt: NOW - 26 * HOUR,

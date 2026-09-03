@@ -15,7 +15,6 @@ import {
 import { formatRelativeTime } from "@app/utils/timeUtils";
 import type {
   FileRunEvent,
-  FailureSeverity,
   FileRunEventScope,
 } from "@portal/api/fileRunEvents";
 import {
@@ -24,16 +23,9 @@ import {
 } from "@portal/queries/fileRunEvents";
 import { useSources } from "@portal/queries/sources";
 import { buildFailureActionCells } from "@portal/components/failures/failureActionCells";
-import { causeOf } from "@portal/components/failures/failureCauses";
 import { outcomeOf } from "@portal/components/failures/failureOutcomes";
 
-/** Recorded policy-run and editor-tool failures, sharing the notification bell's copy. */
-
-const SEVERITY_TONE: Record<FailureSeverity, "danger" | "warning" | "info"> = {
-  ERROR: "danger",
-  WARNING: "warning",
-  INFO: "info",
-};
+/** The review queue: what a policy run or an editor tool needs a human to look at. */
 
 export function FileRunEventList() {
   const { t } = useTranslation();
@@ -41,19 +33,12 @@ export function FileRunEventList() {
   const { data: events, error } = useFileRunEvents(scope);
   const { apply } = useFileRunEventActions();
   const [busy, setBusy] = useState<{ id: string; action: string } | null>(null);
-  /** The row whose raw log is open in the modal. */
+  /** The row whose raw error is open in the modal. */
   const [logOf, setLogOf] = useState<FileRunEvent | null>(null);
 
   // Server keys, with the English fallbacks that carry a kind this build has no copy for.
   const titleFor = (event: FileRunEvent) =>
     t(event.titleKey, { defaultValue: event.defaultTitle });
-  const descriptionFor = (event: FileRunEvent) =>
-    t(event.descriptionKey, { defaultValue: "" }) || null;
-  // From the directory, never the server's stage: "INTERNAL" reads as a verdict on fault.
-  const causeFor = (event: FileRunEvent) => {
-    const cause = causeOf(event.kindId);
-    return t(cause.labelKey, cause.defaultLabel);
-  };
   const originFor = (event: FileRunEvent) =>
     t(`portal.failures.origin.${event.origin.toLowerCase()}`, event.origin);
   // The record stores an id; falls back to it while the list loads, or for a deleted source.
@@ -84,30 +69,24 @@ export function FileRunEventList() {
         getValue: titleFor,
       },
       {
-        key: "user",
-        label: t("portal.failures.filters.user", "User"),
-        getValue: (event) => event.actor,
-      },
-      {
         key: "source",
         label: t("portal.failures.filters.source", "Source"),
         getValue: sourceFor,
       },
       {
-        key: "cause",
-        label: t("portal.failures.filters.cause", "Cause"),
-        getValue: causeFor,
+        key: "user",
+        label: t("portal.failures.filters.user", "User"),
+        getValue: (event) => event.actor,
       },
       {
         key: "origin",
-        label: t("portal.failures.filters.origin", "Failed in"),
+        label: t("portal.failures.filters.origin", "Raised in"),
         getValue: originFor,
       },
     ],
     searchText: (event) =>
       [
         titleFor(event),
-        descriptionFor(event) ?? "",
         event.detail ?? "",
         event.runId ?? "",
         event.actor ?? "",
@@ -117,7 +96,7 @@ export function FileRunEventList() {
       ].join(" "),
     searchPlaceholder: t(
       "portal.failures.searchPlaceholder",
-      "Search failures, users and logs",
+      "Search issues, users and errors",
     ),
   });
 
@@ -140,7 +119,7 @@ export function FileRunEventList() {
   const columns: DataTableColumn<FileRunEvent>[] = [
     column.entity({
       key: "failure",
-      header: t("portal.failures.columns.failure", "Failure"),
+      header: t("portal.failures.columns.failure", "Issue"),
       sortable: true,
       primary: titleFor,
       // A folded repeat is one row; the count rides the title.
@@ -150,31 +129,20 @@ export function FileRunEventList() {
               count: event.occurrences,
             })
           : null,
-      // The kind's own sentence, not the raw log: that stays behind the eye.
-      note: descriptionFor,
-      peek: (event) =>
-        event.detail
-          ? {
-              label: t("portal.failures.log.view", "View log"),
-              onClick: () => setLogOf(event),
-            }
-          : null,
     }),
-    column.badge({
-      key: "cause",
-      header: t("portal.failures.columns.cause", "Cause"),
-      sortable: true,
-      get: (event) => ({
-        tone: SEVERITY_TONE[event.severity],
-        label: causeFor(event),
-      }),
-    }),
-    // What kind of work failed: a policy run, a pipeline, or someone's editor tool.
+    // What kind of work raised it: a policy run, a pipeline, or someone's editor tool.
     column.text({
       key: "origin",
-      header: t("portal.failures.columns.origin", "Failed in"),
+      header: t("portal.failures.columns.origin", "Raised in"),
       sortable: true,
       get: originFor,
+    }),
+    // Source before user: the system that fed the document, then the person, if any.
+    column.muted({
+      key: "source",
+      header: t("portal.failures.columns.source", "Source"),
+      sortable: true,
+      get: sourceFor,
     }),
     // An unattended file has no user, so its source is the only attribution.
     column.muted({
@@ -184,13 +152,7 @@ export function FileRunEventList() {
       get: (event) => event.actor,
       placeholder: "-",
     }),
-    column.muted({
-      key: "source",
-      header: t("portal.failures.columns.source", "Source"),
-      sortable: true,
-      get: sourceFor,
-    }),
-    // Relative in the row; the log modal carries the full timestamp.
+    // Relative in the row; the error modal carries the full timestamp.
     column.muted({
       key: "date",
       header: t("portal.failures.columns.date", "Date"),
@@ -230,6 +192,7 @@ export function FileRunEventList() {
           t,
           busyActionId: busy?.id === event.id ? busy.action : null,
           onAction: (actionId) => runAction(event, actionId),
+          onViewError: event.detail ? () => setLogOf(event) : undefined,
           onCopyLog: () => copyLog(event),
         }),
     }),
@@ -247,7 +210,7 @@ export function FileRunEventList() {
           title={t("portal.failures.unavailable.title", "Nothing to review")}
           description={t(
             "portal.failures.unavailable.description",
-            "Recorded failures are visible to team leaders on workspaces that run policies.",
+            "This queue is visible to team leaders on workspaces that run policies.",
           )}
         />
       ) : (
@@ -266,24 +229,27 @@ export function FileRunEventList() {
                         "portal.failures.emptyClosed.title",
                         "Nothing closed yet",
                       )
-                    : t("portal.failures.empty.title", "No failures recorded")
+                    : t(
+                        "portal.failures.empty.title",
+                        "Nothing needs your attention",
+                      )
                 }
                 description={
                   scope === "closed"
                     ? t(
                         "portal.failures.emptyClosed.description",
-                        "Failures you dismiss or resolve are kept here with their outcome.",
+                        "Items you dismiss or resolve are kept here with their outcome.",
                       )
                     : t(
                         "portal.failures.empty.description",
-                        "Policy runs that fail will appear here with the actions you can take.",
+                        "Anything from a policy run or an editor tool that needs a look will appear here.",
                       )
                 }
               />
             ) : (
               t(
                 "portal.failures.noMatches",
-                "No failures match the current filters",
+                "Nothing matches the current filters",
               )
             )
           }
@@ -297,7 +263,7 @@ export function FileRunEventList() {
                   onChange={setScope}
                   ariaLabel={t(
                     "portal.failures.scope.ariaLabel",
-                    "Failure state",
+                    "Review state",
                   )}
                 />
               }
@@ -317,7 +283,7 @@ export function FileRunEventList() {
         }
         footer={
           <Button variant="secondary" onClick={() => logOf && copyLog(logOf)}>
-            {t("portal.failures.log.copy", "Copy log")}
+            {t("portal.failures.log.copy", "Copy error")}
           </Button>
         }
       >
