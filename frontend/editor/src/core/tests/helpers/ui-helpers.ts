@@ -209,21 +209,22 @@ export async function openSettings(
 }
 
 /**
- * Leave Settings the way a user does - the rail's Editor entry - and assert the
- * page is gone before returning.
+ * Leave Settings the way a user does - the page's own Back control - and assert
+ * the page is gone before returning. Back restores the originating URL, which
+ * the rail's app entries (portal-only builds) do not.
  */
 export async function closeSettings(page: Page): Promise<void> {
   const surface = page.locator(SETTINGS_SURFACE);
+  const back = page.locator('[data-testid="settings-back"]').first();
+  // Assert the exit exists before the retry loop, or a control that is missing
+  // in this build reads as an opaque timeout below instead of a named failure.
+  await expect(back).toBeVisible({ timeout: 5_000 });
   // A click can be swallowed by a re-render, leaving the page up; retry until
   // it is gone. A genuinely broken exit still fails - every retry misses and
   // the page stays past the cap.
   await expect(async () => {
     if (await surface.isVisible().catch(() => false)) {
-      await page
-        .locator('.quick-nav-rail-item[aria-label="Editor"]')
-        .first()
-        .click({ timeout: 2_000 })
-        .catch(() => {});
+      await back.click({ timeout: 2_000 }).catch(() => {});
     }
     await expect(surface).not.toBeVisible({ timeout: 2_000 });
   }).toPass({ timeout: 12_000 });

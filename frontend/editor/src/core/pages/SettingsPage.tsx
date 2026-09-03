@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Badge, Tooltip } from "@mantine/core";
 import LocalIcon from "@app/components/shared/LocalIcon";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { SettingsMobileBackButton } from "@app/components/shared/config/SettingsMobileBackButton";
 import { SettingsNavChevron } from "@app/components/shared/config/SettingsNavChevron";
 import { useSettingsNav } from "@app/components/settings/useSettingsNav";
@@ -141,6 +142,11 @@ const SettingsPageInner: React.FC = () => {
     [confirmIfDirty],
   );
 
+  const handleLeave = useCallback(
+    () => requestNavigation(leave),
+    [requestNavigation, leave],
+  );
+
   // Sections dispatch `appConfig:navigate` to send the user to a sibling tab.
   useEffect(() => {
     const handler = (ev: Event) => {
@@ -199,6 +205,16 @@ const SettingsPageInner: React.FC = () => {
         aria-label={t("settings.title", "Settings")}
       >
         <div className="settings-page__nav-head">
+          {/* The page's own exit: the rail's app entries only ship with the portal. */}
+          <ActionIcon
+            variant="tertiary"
+            accent="neutral"
+            onClick={handleLeave}
+            data-testid="settings-back"
+            aria-label={t("settings.leave", "Exit settings")}
+          >
+            <LocalIcon icon="arrow-back" width={20} height={20} />
+          </ActionIcon>
           <span className="settings-page__nav-title">
             {t("settings.title", "Settings")}
           </span>
