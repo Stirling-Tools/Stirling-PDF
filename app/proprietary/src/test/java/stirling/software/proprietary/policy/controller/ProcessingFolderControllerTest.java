@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -19,21 +20,23 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.server.ResponseStatusException;
 
 import stirling.software.common.model.ApplicationProperties;
-import stirling.software.common.service.ToolChainValidator;
 import stirling.software.common.service.UserServiceInterface;
-import stirling.software.proprietary.policy.asset.PolicyAssetStore;
+import stirling.software.proprietary.policy.config.FolderAccessGuard;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 import stirling.software.proprietary.policy.engine.PolicyRunner;
 import stirling.software.proprietary.policy.engine.PolicyValidator;
 import stirling.software.proprietary.policy.engine.SweepOutcome;
+import stirling.software.proprietary.policy.input.InputSource;
 import stirling.software.proprietary.policy.input.StorageFolderInputSource;
 import stirling.software.proprietary.policy.ledger.ProcessedLedger;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
+import stirling.software.proprietary.policy.output.PolicyOutputSink;
 import stirling.software.proprietary.policy.output.StorageOutputSink;
 import stirling.software.proprietary.policy.source.InProcessSourceStore;
 import stirling.software.proprietary.policy.store.InProcessPolicyStore;
+import stirling.software.proprietary.policy.trigger.PolicyTrigger;
 import stirling.software.proprietary.policy.trigger.PolicyTriggerManager;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.storage.model.Folder;
@@ -61,8 +64,12 @@ class ProcessingFolderControllerTest {
     @Mock private StorageProvider storageProvider;
     @Mock private UserServiceInterface userService;
     @Mock private PolicyManagementAuthority policyManagementAuthority;
-    @Mock private PolicyAssetStore assetStore;
-    @Mock private ToolChainValidator toolChainValidator;
+    @Mock private FolderAccessGuard folderAccessGuard;
+    @Mock private PolicyTrigger folderWatchTrigger;
+    @Mock private InputSource diskFolderSource;
+    @Mock private stirling.software.proprietary.policy.asset.PolicyAssetStore assetStore;
+    @Mock private stirling.software.common.service.ToolChainValidator toolChainValidator;
+    @Mock private PolicyOutputSink diskFolderSink;
 
     private final InProcessPolicyStore policyStore = new InProcessPolicyStore();
     private final InProcessSourceStore sourceStore = new InProcessSourceStore();
@@ -86,8 +93,26 @@ class ProcessingFolderControllerTest {
         folder.setOwner(user);
 
         lenient().when(fileStorageService.requireAuthenticatedUser()).thenReturn(user);
-        lenient().when(folderRepository.findById(FOLDER_ID)).thenReturn(Optional.of(folder));
-        lenient().when(folderRepository.existsById(FOLDER_ID)).thenReturn(true);
+        // A disk-backed folder creates a storage folder to deliver its results into, then looks it
+        // up again on the next save. The double has to remember what it stored for that second
+        // lookup to find anything — otherwise every save mints a fresh folder.
+        Map<UUID, Folder> folders = new HashMap<>();
+        folders.put(FOLDER_ID, folder);
+        lenient()
+                .when(folderRepository.saveAndFlush(any(Folder.class)))
+                .thenAnswer(
+                        invocation -> {
+                            Folder saved = invocation.getArgument(0);
+                            folders.put(saved.getId(), saved);
+                            return saved;
+                        });
+        lenient()
+                .when(folderRepository.findById(any(UUID.class)))
+                .thenAnswer(
+                        invocation -> Optional.ofNullable(folders.get(invocation.getArgument(0))));
+        lenient()
+                .when(folderRepository.existsById(any(UUID.class)))
+                .thenAnswer(invocation -> folders.containsKey(invocation.getArgument(0)));
         lenient().when(userService.getCurrentUsername()).thenReturn("reece");
         lenient().when(policyManagementAuthority.currentUserTeamId()).thenReturn(3L);
         lenient()
@@ -96,15 +121,23 @@ class ProcessingFolderControllerTest {
 
         PolicyAccessGuard accessGuard =
                 new PolicyAccessGuard(userService, properties, policyManagementAuthority);
+        // The real FolderWatchTrigger is a bean; without one registered the validator reads
+        // "folder-watch" as an unknown trigger type.
+        lenient().when(folderWatchTrigger.type()).thenReturn("folder-watch");
+        // Likewise the disk folder source and sink: real beans in the app, stubbed here so a
+        // disk-backed folder validates without touching the filesystem.
+        lenient().when(diskFolderSource.supports(any())).thenReturn(true);
+        lenient().when(diskFolderSink.supports(any())).thenReturn(true);
         PolicyValidator validator =
                 new PolicyValidator(
-                        List.of(),
+                        List.of(folderWatchTrigger),
                         List.of(
                                 new StorageFolderInputSource(
                                         storedFileRepository,
                                         folderRepository,
                                         storageProvider,
-                                        properties)),
+                                        properties),
+                                diskFolderSource),
                         List.of(
                                 new StorageOutputSink(
                                         storedFileRepository,
@@ -112,7 +145,8 @@ class ProcessingFolderControllerTest {
                                         fileStorageService,
                                         processedLedger,
                                         storageProvider,
-                                        properties)),
+                                        properties),
+                                diskFolderSink),
                         List.of(),
                         sourceStore,
                         assetStore,
@@ -127,7 +161,9 @@ class ProcessingFolderControllerTest {
                         processedLedger,
                         folderRepository,
                         fileStorageService,
-                        accessGuard);
+                        accessGuard,
+                        folderAccessGuard,
+                        properties);
     }
 
     @Test
@@ -140,11 +176,102 @@ class ProcessingFolderControllerTest {
         assertThat(ProcessingFolderController.isProcessingFolder(stored)).isTrue();
         assertThat(stored.owner()).isEqualTo("reece");
         assertThat(stored.teamId()).isEqualTo(3L);
-        assertThat(stored.sourceIds()).hasSize(1);
-        var source = sourceStore.get(stored.sourceIds().get(0)).orElseThrow();
+        assertThat(stored.inputs()).hasSize(1);
+        var source = sourceStore.get(stored.inputs().get(0).sourceId()).orElseThrow();
         assertThat(source.type()).isEqualTo("storage-folder");
         assertThat(source.options()).containsEntry("folderId", FOLDER_ID.toString());
         verify(policyRunner).run(stored);
+    }
+
+    @Test
+    void aDiskFolderIsWatchedSoArrivalsProcessThemselves() {
+        var view =
+                controller
+                        .save(
+                                new ProcessingFolderController.SaveProcessingFolderRequest(
+                                        null,
+                                        null,
+                                        "/tmp/Downloads",
+                                        true,
+                                        List.of(
+                                                new PipelineStep(
+                                                        "/api/v1/misc/flatten",
+                                                        Map.of("flattenOnlyForms", false),
+                                                        Map.of())),
+                                        Map.of()))
+                        .getBody();
+
+        Policy stored = policyStore.get(view.id()).orElseThrow();
+        // Without a trigger the engine treats the policy as manual-only: the creating sweep would
+        // run and the directory would never be processed again.
+        assertThat(stored.inputs()).hasSize(1);
+        assertThat(stored.inputs().get(0).trigger()).isNotNull();
+        assertThat(stored.inputs().get(0).trigger().type()).isEqualTo("folder-watch");
+        var source = sourceStore.get(stored.inputs().get(0).sourceId()).orElseThrow();
+        assertThat(source.type()).isEqualTo("folder");
+        // Never "consume": the directory is the user's own and must stay intact.
+        assertThat(source.options()).containsEntry("mode", "track");
+        assertThat(source.options()).containsEntry("limit", 100);
+    }
+
+    @Test
+    void aDiskFolderWritesItsResultsBesideTheOriginals() {
+        var view =
+                controller
+                        .save(
+                                new ProcessingFolderController.SaveProcessingFolderRequest(
+                                        null,
+                                        null,
+                                        "/tmp/Downloads",
+                                        true,
+                                        List.of(
+                                                new PipelineStep(
+                                                        "/api/v1/misc/flatten",
+                                                        Map.of("flattenOnlyForms", false),
+                                                        Map.of())),
+                                        Map.of()))
+                        .getBody();
+
+        Policy stored = policyStore.get(view.id()).orElseThrow();
+        // Disk, not app storage: an install with no accounts and no file storage has nothing to
+        // store a result against, and the watched directory is the one place that always exists.
+        assertThat(stored.output().type()).isEqualTo("folder");
+        assertThat(stored.output().options().get("directory").toString())
+                .endsWith("Stirling Processed");
+        // The originals themselves are never written over.
+        assertThat(stored.output().options().get("directory").toString())
+                .isNotEqualTo("/tmp/Downloads");
+    }
+
+    @Test
+    void aDiskFolderReportsTheDirectoryItWatchesNotWhereResultsGo() {
+        var view =
+                controller
+                        .save(
+                                new ProcessingFolderController.SaveProcessingFolderRequest(
+                                        null,
+                                        null,
+                                        "/tmp/Downloads",
+                                        true,
+                                        List.of(
+                                                new PipelineStep(
+                                                        "/api/v1/misc/flatten",
+                                                        Map.of("flattenOnlyForms", false),
+                                                        Map.of())),
+                                        Map.of()))
+                        .getBody();
+
+        // The client shows this as the folder's address, so it has to be the watched directory —
+        // reading it off the output made the folder advertise its own results subdirectory.
+        assertThat(view.directory()).isEqualTo("/tmp/Downloads");
+        assertThat(view.folderId()).isNull();
+    }
+
+    @Test
+    void aStorageFolderStaysManualUntilTheArrivalTriggerExists() {
+        var view = controller.save(request(null, "new_version")).getBody();
+
+        assertThat(policyStore.get(view.id()).orElseThrow().inputs().get(0).trigger()).isNull();
     }
 
     @Test
@@ -205,6 +332,7 @@ class ProcessingFolderControllerTest {
         return new ProcessingFolderController.SaveProcessingFolderRequest(
                 id,
                 FOLDER_ID.toString(),
+                null,
                 true,
                 List.of(
                         new PipelineStep(
