@@ -153,7 +153,7 @@ export function Pipelines() {
       id: stored?.backendId,
       name: stored?.name ?? wire.name,
       icon: stored?.icon,
-      enabled: wire.enabled,
+      enabled: stored ? stored.status !== "paused" : wire.enabled,
       required: wire.required,
       inputs: [],
       steps: wire.steps,
@@ -172,7 +172,8 @@ export function Pipelines() {
   ) {
     setPageError(null);
     try {
-      await savePolicy(buildWireFromSetup(entry, result, t));
+      const enabled = entry.policy?.state.status !== "paused";
+      await savePolicy(buildWireFromSetup(entry, result, t, enabled));
       setWizard(null);
       setDetail(null);
       refetch();

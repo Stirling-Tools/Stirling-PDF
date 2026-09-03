@@ -19,6 +19,7 @@ function DraftProbe() {
       pipeline page
       <span data-testid="draft-icon">{draft?.icon ?? ""}</span>
       <span data-testid="draft-name">{draft?.name ?? ""}</span>
+      <span data-testid="draft-enabled">{String(draft?.enabled ?? "")}</span>
     </div>
   );
 }
@@ -57,6 +58,13 @@ vi.mock("@portal/api/pipelines", () => ({
   fetchPipeline: (id: string) => fetchPipeline(id),
   savePipeline: (policy: unknown) => savePipeline(policy),
 }));
+
+// Spy the wizard's save without stubbing the rest of the module (parseSimplePolicy et al. stay real).
+const savePolicy = vi.fn();
+vi.mock("@portal/api/policies", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@portal/api/policies")>();
+  return { ...actual, savePolicy: (body: unknown) => savePolicy(body) };
+});
 
 // The template gallery is out of scope here: keep the catalogue empty so the test focuses on the
 // pipelines list.
@@ -120,7 +128,23 @@ describe("Pipelines view", () => {
     });
     savePipeline.mockReset();
     savePipeline.mockResolvedValue(undefined);
+    savePolicy.mockReset();
+    savePolicy.mockResolvedValue(undefined);
   });
+
+  /** A template-representable, currently-paused policy. */
+  const pausedPolicy = {
+    id: "plc-redaction",
+    name: "Redaction sweep",
+    enabled: false,
+    required: false,
+    icon: "shield",
+    inputs: [],
+    steps: [{ operation: "/api/v1/security/auto-redact", parameters: {} }],
+    output: { type: "inline", options: { categoryId: "security" } },
+    outputIds: [],
+    editor: { allowed: true, runOn: "upload" },
+  };
 
   it("opens the builder when creating a pipeline", async () => {
     renderView();
@@ -194,6 +218,40 @@ describe("Pipelines view", () => {
     expect(await screen.findByTestId("draft-icon")).toHaveTextContent("shield");
     expect(screen.getByTestId("draft-name")).toHaveTextContent(
       "My custom redaction",
+    );
+  });
+
+  it("keeps a paused policy paused when saved from the wizard", async () => {
+    fetchPipeline.mockResolvedValue(pausedPolicy);
+
+    renderView();
+    fireEvent.click(await screen.findByText("Redaction sweep")); // detail panel
+    fireEvent.click(
+      await screen.findByText("portal.policies.detail.actions.editSettings"),
+    ); // wizard
+    fireEvent.click(
+      await screen.findByText("portal.policies.wizard.actions.saveChanges"),
+    );
+
+    await waitFor(() => expect(savePolicy).toHaveBeenCalled());
+    // The wizard has no enabled control, so a save must not silently re-enable a paused policy.
+    expect(savePolicy.mock.calls[0][0]).toMatchObject({ enabled: false });
+  });
+
+  it("keeps a paused policy paused when customising from the wizard", async () => {
+    fetchPipeline.mockResolvedValue(pausedPolicy);
+
+    renderView();
+    fireEvent.click(await screen.findByText("Redaction sweep")); // detail panel
+    fireEvent.click(
+      await screen.findByText("portal.policies.detail.actions.editSettings"),
+    ); // wizard
+    fireEvent.click(
+      await screen.findByText("portal.policies.wizard.actions.customise"),
+    ); // hand off to the builder
+
+    expect(await screen.findByTestId("draft-enabled")).toHaveTextContent(
+      "false",
     );
   });
 
