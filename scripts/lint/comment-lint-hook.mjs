@@ -23,7 +23,7 @@
 
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { delimiter, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -64,6 +64,15 @@ if (result.status !== FOUND) {
   process.exit(1);
 }
 
+// The linter names every finding before it exits 1, so an empty report means
+// Task never launched - reporting it as findings sends Claude after nothing.
+if (!result.output.trim()) {
+  process.stderr.write(
+    "comment-lint could not run (Task produced no output), so comments in this turn were not checked.\n",
+  );
+  process.exit(1);
+}
+
 // The linter's own report already names the file, line, rule and the standard, so
 // it is passed through rather than rewritten.
 process.stderr.write(`${result.output.trim()}\n\nFix these before finishing.\n`);
@@ -89,10 +98,19 @@ function taskCommand() {
     resolve(nodeDir, "../lib/node_modules/@go-task/cli/bin", exe),
     resolve(REPO, "node_modules/@go-task/cli/bin", exe),
   ];
-  for (const candidate of candidates) {
+  for (const candidate of [...candidates, ...onPath(exe)]) {
     if (existsSync(candidate)) return { command: candidate, shell: false };
   }
   return { command: process.platform === "win32" ? "task.cmd" : "task", shell: process.platform === "win32" };
+}
+
+// Scoop installs task.exe with no task.cmd beside it, so the Windows fallback
+// resolves to nothing; find the binary on PATH before settling for that.
+function onPath(exe) {
+  return (process.env.PATH ?? "")
+    .split(delimiter)
+    .filter(Boolean)
+    .map((dir) => join(dir.replace(/^"|"$/g, ""), exe));
 }
 
 function run() {
