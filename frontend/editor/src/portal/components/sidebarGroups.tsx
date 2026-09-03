@@ -1,4 +1,5 @@
 import { type ReactNode } from "react";
+import { PORTAL_REVIEW_ENABLED } from "@app/routes/portalBasename";
 import { type ViewId } from "@portal/contexts/ViewContext";
 import {
   HomeIcon,
@@ -7,6 +8,7 @@ import {
   IntegrationsIcon,
   PipelinesIcon,
   DocumentsIcon,
+  ReviewIcon,
   InfrastructureIcon,
   UsageIcon,
   DocsIcon,
@@ -37,6 +39,9 @@ export const GROUP_PROCESSOR: NavEntry[] = [
   { id: "sources", icon: <SourcesIcon /> },
   { id: "pipelines", icon: <PipelinesIcon /> },
   { id: "documents", icon: <DocumentsIcon /> },
+  ...(PORTAL_REVIEW_ENABLED
+    ? [{ id: "review", icon: <ReviewIcon /> } satisfies NavEntry]
+    : []),
 ];
 
 // The wider platform around the processor: people, connections, infra, billing, docs.

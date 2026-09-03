@@ -1,5 +1,5 @@
 import { http, HttpResponse, delay } from "msw";
-import type { FileRunEvent } from "@portal/api/fileRunEvents";
+import { isClosedStatus, type FileRunEvent } from "@portal/api/fileRunEvents";
 import { FILE_RUN_EVENTS } from "@portal/mocks/fileRunEvents";
 
 /**
@@ -24,15 +24,15 @@ export const fileRunEventsHandlers = [
     await delay(120);
     const url = new URL(request.url);
     const status = url.searchParams.get("status");
+    const closed = url.searchParams.get("closed") === "true";
     const kindId = url.searchParams.get("kindId");
 
-    // Mirrors the server: no status asked for means the open queue, so a dismissed
-    // row leaves the list instead of sitting there with its buttons greyed out.
+    // Mirrors the server: a dismissed row leaves the open queue for the closed one.
     const filtered = events.filter(
       (event) =>
         (status
           ? event.status === status
-          : event.status !== "DISMISSED" && event.status !== "RESOLVED") &&
+          : isClosedStatus(event.status) === closed) &&
         (!kindId || event.kindId === kindId),
     );
     return HttpResponse.json({

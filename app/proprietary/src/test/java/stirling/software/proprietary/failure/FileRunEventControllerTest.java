@@ -108,7 +108,7 @@ class FileRunEventControllerTest {
             given(FailureKind.UNKNOWN, TEAM, "mine");
             given(FailureKind.UNKNOWN, 99L, "theirs");
 
-            assertThat(controller.list(null, null, null).events())
+            assertThat(controller.list(null, false, null, null).events())
                     .extracting(FileRunEventView::fileId)
                     .containsExactly("mine");
         }
@@ -117,7 +117,7 @@ class FileRunEventControllerTest {
         void carriesTheCopyKeysAndTheEnglishFallback() {
             given(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f1");
 
-            FileRunEventView view = controller.list(null, null, null).events().getFirst();
+            FileRunEventView view = controller.list(null, false, null, null).events().getFirst();
 
             assertThat(view.titleKey())
                     .isEqualTo("portal.failures.kind.inputPasswordProtected.title");
@@ -134,7 +134,7 @@ class FileRunEventControllerTest {
             given(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f1");
 
             List<FileRunEventView.ActionView> actions =
-                    controller.list(null, null, null).events().getFirst().actions();
+                    controller.list(null, false, null, null).events().getFirst().actions();
 
             assertThat(actions)
                     .extracting(FileRunEventView.ActionView::id)
@@ -148,7 +148,7 @@ class FileRunEventControllerTest {
             // build with no copy for a newly shipped action still needs.
             given(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f1");
 
-            assertThat(controller.list(null, null, null).events().getFirst().actions())
+            assertThat(controller.list(null, false, null, null).events().getFirst().actions())
                     .allSatisfy(
                             action -> {
                                 assertThat(action.defaultLabel()).isNotBlank();
@@ -174,7 +174,7 @@ class FileRunEventControllerTest {
 
             List<FileRunEventView.ActionView> actions =
                     controller
-                            .list(FileRunEventStatus.DISMISSED, null, null)
+                            .list(FileRunEventStatus.DISMISSED, false, null, null)
                             .events()
                             .getFirst()
                             .actions();
@@ -185,22 +185,42 @@ class FileRunEventControllerTest {
         }
 
         @Test
+        void listsEverySettledRowWhenAskedForTheClosedQueue() {
+            // Their own runs, or a RUN-scoped kind would fold all three into one incident.
+            FileRunEvent dismissed =
+                    givenHitBy("author@example.com", FailureKind.UNKNOWN, TEAM, "dismissed");
+            givenHitBy("author@example.com", FailureKind.UNKNOWN, TEAM, "removed");
+            givenHitBy("author@example.com", FailureKind.UNKNOWN, TEAM, "still-open");
+            // One of each terminal disposition, which no single status filter could have returned.
+            controller.act(dismissed.id(), "DISMISS", null);
+            // Reported by the owner whose editor held it, which is who the row is filed under.
+            store.markFilesRemoved(TEAM, "author@example.com", List.of("removed"));
+
+            assertThat(controller.list(null, true, null, null).events())
+                    .extracting(FileRunEventView::fileId)
+                    .containsExactlyInAnyOrder("dismissed", "removed");
+            assertThat(controller.list(null, false, null, null).events())
+                    .extracting(FileRunEventView::fileId)
+                    .containsExactly("still-open");
+        }
+
+        @Test
         void filtersByStatusAndByKind() {
             FileRunEvent locked = given(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "locked");
             given(FailureKind.UNKNOWN, TEAM, "open");
             controller.act(locked.id(), "DISMISS", null);
 
-            assertThat(controller.list(FileRunEventStatus.DISMISSED, null, null).events())
+            assertThat(controller.list(FileRunEventStatus.DISMISSED, false, null, null).events())
                     .extracting(FileRunEventView::fileId)
                     .containsExactly("locked");
             // A dismissed row is decided, so the default queue holds only the other one.
-            assertThat(controller.list(null, null, null).events())
+            assertThat(controller.list(null, false, null, null).events())
                     .extracting(FileRunEventView::fileId)
                     .containsExactly("open");
-            assertThat(controller.list(null, "INPUT_PASSWORD_PROTECTED", null).events())
+            assertThat(controller.list(null, false, "INPUT_PASSWORD_PROTECTED", null).events())
                     .extracting(FileRunEventView::fileId)
                     .isEmpty();
-            assertThat(controller.list(null, "NO_SUCH_KIND", null).events()).isEmpty();
+            assertThat(controller.list(null, false, "NO_SUCH_KIND", null).events()).isEmpty();
         }
 
         @Test
@@ -213,9 +233,9 @@ class FileRunEventControllerTest {
             }
 
             // Over-large and non-positive limits are both coerced rather than rejected.
-            assertThat(controller.list(null, null, 100_000).events()).hasSize(5);
-            assertThat(controller.list(null, null, 2).events()).hasSize(2);
-            assertThat(controller.list(null, null, 0).events()).hasSize(1);
+            assertThat(controller.list(null, false, null, 100_000).events()).hasSize(5);
+            assertThat(controller.list(null, false, null, 2).events()).hasSize(2);
+            assertThat(controller.list(null, false, null, 0).events()).hasSize(1);
         }
 
         @Test
@@ -227,7 +247,7 @@ class FileRunEventControllerTest {
                 given(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "newer-" + i);
             }
 
-            assertThat(controller.list(null, "UNKNOWN", 1).events())
+            assertThat(controller.list(null, false, "UNKNOWN", 1).events())
                     .extracting(FileRunEventView::fileId)
                     .containsExactly("old-unknown");
         }
@@ -352,7 +372,7 @@ class FileRunEventControllerTest {
             givenHitBy("colleague@example.com", FailureKind.UNKNOWN, TEAM, "theirs");
             when(authority.canEditPolicies()).thenReturn(false);
 
-            assertThat(controller.list(null, null, null).events())
+            assertThat(controller.list(null, false, null, null).events())
                     .extracting(FileRunEventView::fileId)
                     .containsExactly("mine");
         }
@@ -363,7 +383,7 @@ class FileRunEventControllerTest {
             givenHitBy("colleague@example.com", FailureKind.UNKNOWN, TEAM, "theirs");
             when(authority.canEditPolicies()).thenReturn(true);
 
-            assertThat(controller.list(null, null, null).events())
+            assertThat(controller.list(null, false, null, null).events())
                     .extracting(FileRunEventView::fileId)
                     .containsExactlyInAnyOrder("mine", "theirs");
         }
@@ -417,7 +437,7 @@ class FileRunEventControllerTest {
                                     userService,
                                     unsecured));
 
-            assertThatCode(() -> noLogin.list(null, null, null)).doesNotThrowAnyException();
+            assertThatCode(() -> noLogin.list(null, false, null, null)).doesNotThrowAnyException();
             // Not merely permitted: the role is never consulted at all, which is what makes the
             // carve-out independent of however the authority answers with no users configured.
             verify(authority, never()).canEditPolicies();
@@ -435,7 +455,7 @@ class FileRunEventControllerTest {
             given(FailureKind.UNKNOWN, 99L, "theirs");
 
             FileRunEventController.FileRunEventsResponse response =
-                    controller.list(null, null, null);
+                    controller.list(null, false, null, null);
 
             assertThat(response.events()).isEmpty();
             assertThat(
@@ -464,7 +484,7 @@ class FileRunEventControllerTest {
             given(FailureKind.UNKNOWN, null, "unteamed");
             given(FailureKind.UNKNOWN, TEAM, "teamed");
 
-            assertThat(noLogin.list(null, null, null).events())
+            assertThat(noLogin.list(null, false, null, null).events())
                     .extracting(FileRunEventView::fileId)
                     .containsExactly("unteamed");
         }
@@ -486,7 +506,7 @@ class FileRunEventControllerTest {
                                             new EditorFailureReport(
                                                     "compress", "E004", List.of("f-1"), "boom")))
                     .doesNotThrowAnyException();
-            assertThat(controller.list(null, null, null).events())
+            assertThat(controller.list(null, false, null, null).events())
                     .extracting(FileRunEventView::fileId)
                     .containsExactly("f-1");
         }
@@ -518,7 +538,14 @@ class FileRunEventControllerTest {
                     new EditorFailureReport("compress", "E004", atLimit, "boom");
 
             assertThat(controller.report(report).getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
-            assertThat(store.list(TEAM, null, null, null, EditorFailureReport.MAX_FILE_IDS + 10))
+            assertThat(
+                            store.list(
+                                    TEAM,
+                                    null,
+                                    false,
+                                    null,
+                                    null,
+                                    EditorFailureReport.MAX_FILE_IDS + 10))
                     .hasSize(EditorFailureReport.MAX_FILE_IDS);
         }
 
@@ -540,7 +567,14 @@ class FileRunEventControllerTest {
                                                             overLimit,
                                                             "boom"))))
                     .isEqualTo(HttpStatus.BAD_REQUEST);
-            assertThat(store.list(TEAM, null, null, null, EditorFailureReport.MAX_FILE_IDS + 10))
+            assertThat(
+                            store.list(
+                                    TEAM,
+                                    null,
+                                    false,
+                                    null,
+                                    null,
+                                    EditorFailureReport.MAX_FILE_IDS + 10))
                     .isEmpty();
         }
 

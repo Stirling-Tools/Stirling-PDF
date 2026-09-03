@@ -109,9 +109,9 @@ export const I18N_PROJECTS: TranslationProject[] = [
       // "portal.policies.operations" - the shape heuristic treats that interpolation as one
       // segment, so this whole catalogue-driven family is matched here instead.
       /^portal\.policies\.operations\./,
-      // A failure's disabled reason arrives from the server as a key and is rendered with
-      // t(thatKey), so nothing in source names it, but the copy still has to exist.
+      // Server-sent keys rendered with t(thatKey), so nothing in source names them.
       /^portal\.failures\.disabled\./,
+      /^portal\.failures\.action\./,
       // Encryption panel copy keyed by backend enum values: key status, write
       // state, migration state, and the reason a status read was refused. Each
       // is t(`...${value}`) where the value comes from the API response.

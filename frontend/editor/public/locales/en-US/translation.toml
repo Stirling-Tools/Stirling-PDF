@@ -3304,6 +3304,7 @@ title = "Choose color"
 actions = "Actions"
 back = "Back"
 cancel = "Cancel"
+clearFilters = "Clear filters"
 close = "Close"
 codeSample = "Code sample"
 collapse = "Collapse"
@@ -3315,6 +3316,7 @@ done = "Done"
 enterValue = "Enter value"
 error = "Error"
 expand = "Expand"
+filterEmpty = "Nothing to filter on"
 loading = "Loading..."
 next = "Next"
 open = "Open"
@@ -3324,6 +3326,7 @@ refresh = "Refresh"
 remaining = "Remaining"
 retry = "Retry"
 save = "Save"
+search = "Search"
 stepOf = "Step {{current}} of {{total}}"
 
 [compare]
@@ -8122,16 +8125,13 @@ retry = "Try again"
 title = "Something went wrong on this page"
 
 [portal.failures]
-fromSource = "From source {{source}}"
+closedBySystem = "Stirling"
+noMatches = "No failures match the current filters"
 occurrences = "{{count}} occurrences"
-reportedBy = "Hit by {{actor}}"
-runReference = "Run {{runId}}"
-subtitle = "Failures recorded from your policy runs and your team's editors, with the actions you can take."
-title = "Failures"
+searchPlaceholder = "Search failures, users and logs"
 
 [portal.failures.action]
 acknowledge = "Acknowledge"
-confirm = "Are you sure?"
 decrypt = "Decrypt and retry"
 dismiss = "Dismiss"
 dismissSkipFile = "Skip this file"
@@ -8139,13 +8139,19 @@ openInTool = "Retry"
 viewFile = "View file"
 viewInProcessor = "View in processor"
 
-[portal.failures.debug]
-copyJson = "Copy JSON"
-dismissAll = "Dismiss all ({{total}})"
-dismissing = "Dismissing..."
-hideJson = "Hide raw JSON ({{total}})"
-refresh = "Refresh failures"
-showJson = "Show raw JSON ({{total}})"
+[portal.failures.cause]
+inputRequired = "Input required"
+unknown = "Unrecognised"
+
+[portal.failures.columns]
+cause = "Cause"
+closedBy = "Closed by"
+date = "Date"
+failure = "Failure"
+origin = "Failed in"
+outcome = "Outcome"
+source = "Source"
+user = "User"
 
 [portal.failures.disabled]
 closed = "This failure is already closed."
@@ -8157,6 +8163,17 @@ unavailable = "Not available for this failure."
 description = "Policy runs that fail will appear here with the actions you can take."
 title = "No failures recorded"
 
+[portal.failures.emptyClosed]
+description = "Failures you dismiss or resolve are kept here with their outcome."
+title = "Nothing closed yet"
+
+[portal.failures.filters]
+cause = "Cause"
+origin = "Failed in"
+source = "Source"
+type = "Type"
+user = "User"
+
 [portal.failures.kind.inputPasswordProtected]
 description = "Your file is password protected, so the run could not read it."
 title = "Password-protected document"
@@ -8165,17 +8182,32 @@ title = "Password-protected document"
 description = "Something went wrong that Stirling does not recognise yet."
 title = "Unrecognised failure"
 
+[portal.failures.log]
+copy = "Copy log"
+view = "View log"
+
 [portal.failures.origin]
 pipeline = "Pipeline"
-policy = "Policy"
-tool = "Tool run"
+policy = "Policy run"
+tool = "Editor tool"
 
-[portal.failures.stage]
-blocked = "Blocked"
-input = "Input"
-internal = "Internal"
-never_ran = "Never ran"
-output = "Output"
+[portal.failures.outcome]
+dismissed = "Dismissed"
+fileRemoved = "File deleted"
+open = "Open"
+resolved = "Resolved"
+
+[portal.failures.scope]
+ariaLabel = "Failure state"
+closed = "Closed"
+open = "Open"
+
+[portal.failures.source]
+editor = "Editor"
+
+[portal.failures.unavailable]
+description = "Recorded failures are visible to team leaders on workspaces that run policies."
+title = "Nothing to review"
 
 [portal.home.download]
 back = "Back"
@@ -8600,6 +8632,7 @@ integrations = "Integrations"
 pipelines = "Pipelines"
 policies = "Policies"
 procurement = "Procurement"
+review = "Review"
 sources = "Sources"
 usage = "Usage & Billing"
 users = "Users"
@@ -9537,6 +9570,10 @@ extend = "Extend 7 days"
 maxed = "Maxed out"
 subtitle = "Your free trial runs through {{date}}. No card required."
 title = "Enterprise trial"
+
+[portal.review]
+subtitle = "Failures recorded from your policy runs and your team's editors, with the actions you can take."
+title = "Review"
 
 [portal.settings.groups]
 admin = "Admin"

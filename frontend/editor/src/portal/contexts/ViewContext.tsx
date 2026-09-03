@@ -1,6 +1,9 @@
 import { useCallback, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { PORTAL_BASENAME } from "@app/routes/portalBasename";
+import {
+  PORTAL_BASENAME,
+  PORTAL_REVIEW_PATH,
+} from "@app/routes/portalBasename";
 
 export type ViewId =
   | "home"
@@ -11,6 +14,7 @@ export type ViewId =
   | "policies"
   | "pipelines"
   | "documents"
+  | "review"
   | "infrastructure"
   | "usage"
   | "docs"
@@ -25,6 +29,8 @@ export const VIEW_PATHS: Record<ViewId, string> = {
   policies: "/policies",
   pipelines: "/pipelines",
   documents: "/documents",
+  // Shared with the notification action that deep-links here, which cannot import portal code.
+  review: PORTAL_REVIEW_PATH,
   infrastructure: "/infrastructure",
   usage: "/usage",
   docs: "/docs",
