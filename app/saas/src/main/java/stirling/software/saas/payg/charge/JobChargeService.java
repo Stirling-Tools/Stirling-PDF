@@ -407,8 +407,9 @@ public class JobChargeService {
      *
      * <p><b>Only valid before the meter has fired.</b> It reverses this side's movements — the free
      * grant, the prepaid pools, the ledger — and cannot unsend a Stripe meter event. Callers are
-     * the first-step 5xx path (pre-meter by construction) and a policy run settling a failure,
-     * which is pre-meter because an async run's meter is deferred until it succeeds.
+     * the interceptor's error-status path (pre-meter by construction, the meter fires only on
+     * success) and a policy run settling a failure, pre-meter because a run's steps never meter on
+     * their own.
      *
      * <p>Idempotent: re-invoking on an already-REFUNDED row or already-CLOSED process is a silent
      * no-op.
@@ -450,7 +451,7 @@ public class JobChargeService {
                     refund.setPolicyId(row.getPolicyId());
                     refund.setBillingCategory(category);
                     ledgerRepository.save(refund);
-                    // First-step failures are pre-meter: nothing was billed, only the grant moved.
+                    // Pre-meter by contract: nothing was billed, only the grant moved.
                     int freeConsumed =
                             row.getFreeUnitsConsumed() == null ? 0 : row.getFreeUnitsConsumed();
                     if (freeConsumed > 0 && row.getTeamId() != null) {
@@ -573,7 +574,7 @@ public class JobChargeService {
      * committed by the time either caller runs) and the POST is best-effort. Never throws — see
      * {@link PaygMeterReportingService}.
      *
-     * <p>Skips: no shadow row (not PAYG-tracked), REFUNDED row (first-step failure — never billed),
+     * <p>Skips: no shadow row (not PAYG-tracked), REFUNDED row (released before billing),
      * BYPASSED/uncategorised, zero units, free-tier team (no Stripe customer), or usage still
      * within the app-side free allowance.
      */

@@ -162,7 +162,8 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
                         .register(meterRegistry);
         this.refundsCounter =
                 Counter.builder("payg.filter.refunds")
-                        .description("First-step 5xx refunds applied to shadow rows")
+                        .description(
+                                "Charges released because the request returned an error status")
                         .register(meterRegistry);
         this.preHandleTimer =
                 Timer.builder("payg.filter.duration")
