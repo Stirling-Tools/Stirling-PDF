@@ -83,6 +83,7 @@ public class FileToPdf {
         try (TempDirectory tempUnzippedDir = new TempDirectory(tempFileManager)) {
             try (ZipInputStream zipIn =
                     ZipSecurity.createHardenedInputStream(Files.newInputStream(zipFilePath))) {
+                ZipBombGuard.Budget budget = new ZipBombGuard.Budget();
                 ZipEntry entry = zipIn.getNextEntry();
                 while (entry != null) {
                     Path filePath =
@@ -99,12 +100,12 @@ public class FileToPdf {
                         if (entry.getName().toLowerCase(Locale.ROOT).endsWith(".html")
                                 || entry.getName().toLowerCase(Locale.ROOT).endsWith(".htm")) {
                             String content =
-                                    new String(zipIn.readAllBytes(), StandardCharsets.UTF_8);
+                                    new String(budget.readEntry(zipIn), StandardCharsets.UTF_8);
                             String sanitizedContent =
                                     sanitizeHtmlContent(content, customHtmlSanitizer);
                             Files.writeString(filePath, sanitizedContent);
                         } else {
-                            Files.copy(zipIn, filePath);
+                            budget.copyEntry(zipIn, filePath);
                         }
                     }
                     zipIn.closeEntry();
