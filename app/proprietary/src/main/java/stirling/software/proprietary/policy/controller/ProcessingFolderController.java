@@ -485,8 +485,11 @@ public class ProcessingFolderController {
                 directory.trim(),
                 "mode",
                 "track",
+                // Stat identity, not hash: the first sweep would otherwise content-hash every
+                // file in the directory before a single run starts, and the user is watching.
+                // A re-touched file reprocessing is the right trade for a folder someone owns.
                 "identity",
-                "hash",
+                "stat",
                 "recursive",
                 false,
                 "limit",

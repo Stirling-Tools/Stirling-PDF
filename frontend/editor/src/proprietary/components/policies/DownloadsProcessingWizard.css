@@ -81,3 +81,119 @@
   width: 100%;
   justify-content: flex-start;
 }
+
+/* ---- The card wall: every file in the sweep, lighting up as its run settles. ---- */
+
+/* Counts header above the wall ("12 of 100 · 4 types found"). */
+.downloads-wizard__counts {
+  font-size: 0.82rem;
+  color: var(--c-text-muted);
+}
+
+.downloads-wizard__counts strong {
+  color: var(--c-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.downloads-wizard__wall {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+  gap: 0.5rem;
+  max-height: 55vh;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+.downloads-wizard__card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-height: 4.4rem;
+  padding: 0.5rem 0.6rem;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border-subtle);
+  border-radius: var(--radius-sm, 4px);
+  transition:
+    border-color 0.25s ease,
+    opacity 0.25s ease;
+}
+
+.downloads-wizard__card--pending {
+  opacity: 0.65;
+}
+
+.downloads-wizard__card--running {
+  border-color: var(--c-primary);
+}
+
+.downloads-wizard__card--done {
+  border-color: var(--c-success, var(--c-primary));
+}
+
+.downloads-wizard__card--failed {
+  border-color: var(--c-danger-text, var(--c-border-subtle));
+  opacity: 0.8;
+}
+
+.downloads-wizard__card-name {
+  font-size: 0.72rem;
+  color: var(--c-text);
+  word-break: break-all;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.downloads-wizard__card-status {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-height: 1.15rem;
+  font-size: 0.68rem;
+  color: var(--c-text-muted);
+}
+
+/* Lightweight CSS spinner — the wall can hold a hundred cards, so no widget per card. */
+.downloads-wizard__spin {
+  width: 0.7rem;
+  height: 0.7rem;
+  flex: none;
+  border: 2px solid var(--c-border-subtle);
+  border-top-color: var(--c-primary);
+  border-radius: 50%;
+  animation: downloads-wizard-spin 0.7s linear infinite;
+}
+
+@keyframes downloads-wizard-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* The reveal: the discovered document type, popping in as the run settles. */
+.downloads-wizard__chip {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  padding: 0.1rem 0.45rem;
+  border: 1px solid var(--c-primary);
+  border-radius: 999px;
+  color: var(--c-primary);
+  font-size: 0.68rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  animation: downloads-wizard-chip-in 0.3s ease;
+}
+
+@keyframes downloads-wizard-chip-in {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

@@ -13,13 +13,24 @@
 import {
   fetchProcessingFolderRuns,
   fetchRunOutputFile,
+  type ProcessingFolderRun,
   type ProcessingRunOutput,
 } from "@app/services/processingFolderApi";
 
 const TERMINAL = ["COMPLETED", "FAILED", "CANCELLED"];
-/** Poll cadence and budget: up to ~15 minutes of 1s polls, as sweeps are per-file jobs. */
+/**
+ * Poll cadence: fast at first — the sweep takes smallest files first, so the
+ * earliest finishes land within seconds and the user is watching hardest right
+ * after clicking — then a steady 1s. The budget allows ~15 minutes overall, as
+ * sweeps are per-file jobs.
+ */
+const FAST_POLL_MS = 400;
+const FAST_POLLS = 25;
 const POLL_MS = 1000;
-const MAX_POLLS = 900;
+const MAX_POLLS = 925;
+/** Result downloads run a few at a time: parallel enough to keep up with a burst
+ *  of finishes, bounded so a hundred results don't open a hundred requests. */
+const FETCH_CONCURRENCY = 4;
 
 export interface SweepDeliveryProgress {
   /** Runs that completed successfully so far. */
@@ -32,7 +43,53 @@ export interface SweepDeliveryProgress {
   stalled: boolean;
 }
 
+/** One run's outcome, with the result files that were opened for it. */
+export interface RunSettlement {
+  runId: string;
+  /** The input document's display name, when the run's source recorded one. */
+  fileName: string | null;
+  failed: boolean;
+  files: File[];
+}
+
+export interface SweepDeliveryCallbacks {
+  /** Called after every poll with cumulative counts. */
+  onProgress?: (progress: SweepDeliveryProgress) => void;
+  /** Called after every poll with the folder's raw runs — live per-file state. */
+  onRuns?: (runs: ProcessingFolderRun[]) => void;
+  /** Called once per run as it settles, with the files opened for it. */
+  onSettled?: (settlement: RunSettlement) => void;
+}
+
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/** Map with a bounded number of in-flight promises; failed items resolve null. */
+async function mapBounded<T, R>(
+  items: T[],
+  limit: number,
+  fn: (item: T) => Promise<R>,
+): Promise<(R | null)[]> {
+  const results: (R | null)[] = new Array(items.length).fill(null);
+  let next = 0;
+  const workers = Array.from(
+    { length: Math.min(limit, items.length) },
+    async () => {
+      while (next < items.length) {
+        const index = next++;
+        try {
+          results[index] = await fn(items[index]);
+        } catch (e) {
+          // Logged rather than swallowed: a fetch that fails for every file is
+          // indistinguishable from the pipeline producing nothing, and looks
+          // like the feature simply not working.
+          console.warn("[processing folders] could not open a result", e);
+        }
+      }
+    },
+  );
+  await Promise.all(workers);
+  return results;
+}
 
 /**
  * Poll `policyId`'s runs until `expected` of them have settled, opening each
@@ -48,9 +105,15 @@ export async function deliverSweepResults(
     files: File[],
     options?: { selectFiles?: boolean },
   ) => Promise<unknown>,
-  onProgress?: (progress: SweepDeliveryProgress) => void,
+  callbacks?:
+    | SweepDeliveryCallbacks
+    | ((progress: SweepDeliveryProgress) => void),
 ): Promise<SweepDeliveryProgress> {
-  const alreadyOpened = new Set<string>();
+  const { onProgress, onRuns, onSettled } =
+    typeof callbacks === "function"
+      ? { onProgress: callbacks }
+      : (callbacks ?? {});
+  const alreadySettled = new Set<string>();
   const progress: SweepDeliveryProgress = {
     processed: 0,
     failed: 0,
@@ -58,49 +121,49 @@ export async function deliverSweepResults(
     stalled: false,
   };
 
-  const openInWorkbench = async (outputs: ProcessingRunOutput[]) => {
-    if (outputs.length === 0) return;
-    const files: File[] = [];
-    for (const output of outputs) {
-      // Downloads are sequential so a hundred results don't open a hundred
-      // parallel requests, and one failure costs one file rather than the
-      // batch — it still exists where the run put it either way.
-      try {
-        files.push(await fetchRunOutputFile(output));
-      } catch (e) {
-        // Logged rather than swallowed: a fetch that fails for every file is
-        // indistinguishable from the pipeline producing nothing, and looks
-        // like the feature simply not working.
-        console.warn(
-          `[processing folders] could not open result ${output.fileId}`,
-          e,
-        );
-      }
-    }
-    if (files.length === 0) return;
-    // Never select what is delivered: a selection isn't meaningful across a
-    // folderful of results, and re-selecting on every batch re-renders the
-    // whole growing file list once a second for the length of the sweep.
-    await addFiles(files);
-    progress.opened += files.length;
-  };
+  const fetchRunFiles = async (
+    outputs: ProcessingRunOutput[],
+  ): Promise<File[]> =>
+    (await mapBounded(outputs, FETCH_CONCURRENCY, fetchRunOutputFile)).filter(
+      (file): file is File => file !== null,
+    );
 
   for (let attempt = 0; attempt < MAX_POLLS; attempt++) {
     const runs = await fetchProcessingFolderRuns(policyId).catch(() => []);
+    onRuns?.(runs);
     const settled = runs.filter((run) => TERMINAL.includes(run.status));
     const done = settled.filter((run) => run.status === "COMPLETED");
     progress.processed = done.length;
     progress.failed = settled.length - done.length;
 
-    const fresh = done.filter(
-      (run) => run.runId && !alreadyOpened.has(run.runId),
+    const fresh = settled.filter(
+      (run) => run.runId && !alreadySettled.has(run.runId),
     );
-    fresh.forEach((run) => alreadyOpened.add(run.runId!));
-    await openInWorkbench(fresh.flatMap((run) => run.outputs ?? []));
+    fresh.forEach((run) => alreadySettled.add(run.runId!));
+
+    const opened: File[] = [];
+    for (const run of fresh) {
+      const failed = run.status !== "COMPLETED";
+      const files = failed ? [] : await fetchRunFiles(run.outputs ?? []);
+      opened.push(...files);
+      onSettled?.({
+        runId: run.runId!,
+        fileName: run.fileName ?? null,
+        failed,
+        files,
+      });
+    }
+    if (opened.length > 0) {
+      // One addFiles per poll batch, and never selecting what is delivered: a
+      // selection isn't meaningful across a folderful of results, and both
+      // choices avoid re-rendering the whole growing file list per result.
+      await addFiles(opened);
+      progress.opened += opened.length;
+    }
     onProgress?.({ ...progress });
 
     if (settled.length >= expected) return progress;
-    await delay(POLL_MS);
+    await delay(attempt < FAST_POLLS ? FAST_POLL_MS : POLL_MS);
   }
   progress.stalled = true;
   onProgress?.({ ...progress });

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Loader } from "@mantine/core";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -13,12 +13,25 @@ import {
 } from "@app/services/processingFolderApi";
 import { deliverSweepResults } from "@app/services/processingRunDelivery";
 import { refreshProcessingFolders } from "@app/hooks/useProcessingFolders";
+import { readClassificationLabelsFromFile } from "@app/services/fileClassification";
+import { useLabelName } from "@app/data/labelDisplay";
 import { useFileHandler } from "@app/hooks/useFileHandler";
 import { useFolders } from "@app/contexts/FolderContext";
 import { canListDirectory } from "@app/services/localFolderContents";
+import apiClient from "@app/services/apiClient";
 import "@app/components/policies/DownloadsProcessingWizard.css";
 
 type Phase = "asking" | "working" | "done" | "failed";
+
+type CardPhase = "pending" | "running" | "done" | "failed";
+
+/** One document in the sweep, as the wall shows it lighting up. */
+interface CardState {
+  name: string;
+  state: CardPhase;
+  /** Classification label ids read from the delivered result's metadata. */
+  labels: string[];
+}
 
 interface DownloadsProcessingWizardProps {
   /** Renders nothing until true, so the offer never competes with a first load. */
@@ -32,11 +45,17 @@ interface DownloadsProcessingWizardProps {
  * (the browser cannot see the machine's paths) and counts what is waiting; approving composes a
  * processing folder over it. The first sweep is capped server-side, and anything beyond the cap is
  * picked up by later sweeps rather than dropped.
+ *
+ * <p>While the sweep runs, the dialog is a wall of the actual documents — one card per file the
+ * sweep took on, built from the runs feed itself so it never promises a file the sweep skipped.
+ * Each card lights up as its run starts and flips to the document type the classifier discovered,
+ * read from the delivered result's own metadata.
  */
 export function DownloadsProcessingWizard({
   active = true,
 }: DownloadsProcessingWizardProps) {
   const { t } = useTranslation();
+  const labelName = useLabelName();
   const [suggestion, setSuggestion] = useState<DownloadsSuggestion | null>(
     null,
   );
@@ -49,6 +68,7 @@ export function DownloadsProcessingWizard({
   const [skipped, setSkipped] = useState(0);
   const [stalled, setStalled] = useState(false);
   const [opened, setOpened] = useState(0);
+  const [cards, setCards] = useState<CardState[]>([]);
   const { addFiles } = useFileHandler();
   const { mountLocalFolder } = useFolders();
 
@@ -72,6 +92,10 @@ export function DownloadsProcessingWizard({
           if (cancelled) return;
           if (next.available && next.pdfCount > 0) {
             setSuggestion(next);
+            // Warm the AI engine while the user reads the offer, so the first
+            // classify pays no cold start. Best-effort; the run would warm it
+            // anyway, just visibly slower.
+            void apiClient.get("/api/v1/ai/health").catch(() => {});
             return;
           }
           // A definite answer: Downloads is missing, not permitted, or empty. Nothing to wait for.
@@ -102,19 +126,75 @@ export function DownloadsProcessingWizard({
     setSkipped(0);
     setStalled(false);
     setOpened(0);
+    setCards([]);
   };
 
   /**
    * Deliver the sweep's results into the workbench as they settle, mirroring
-   * the shared delivery's progress into this dialog's own display state.
+   * the shared delivery's progress onto the card wall and the counts line.
    */
   const trackRuns = useCallback(
     async (policyId: string, expected: number) => {
-      await deliverSweepResults(policyId, expected, addFiles, (progress) => {
-        setProcessed(progress.processed);
-        setFailed(progress.failed);
-        setOpened(progress.opened);
-        if (progress.stalled) setStalled(true);
+      await deliverSweepResults(policyId, expected, addFiles, {
+        onProgress: (progress) => {
+          setProcessed(progress.processed);
+          setFailed(progress.failed);
+          setOpened(progress.opened);
+          if (progress.stalled) setStalled(true);
+        },
+        // The wall is built from the runs feed itself: one card per run the
+        // sweep actually started, appearing on the first poll and switching
+        // state as its run moves. Nothing here invents a file.
+        onRuns: (runs) => {
+          setCards((prev) => {
+            const byName = new Map(prev.map((card) => [card.name, card]));
+            const next: CardState[] = [...prev];
+            for (const run of [...runs].reverse()) {
+              const name = run.fileName?.trim();
+              if (!name) continue;
+              const terminal = ["COMPLETED", "FAILED", "CANCELLED"].includes(
+                run.status,
+              );
+              const state: CardPhase = !terminal
+                ? "running"
+                : run.status === "COMPLETED"
+                  ? "done"
+                  : "failed";
+              const existing = byName.get(name);
+              if (!existing) {
+                const card: CardState = { name, state, labels: [] };
+                byName.set(name, card);
+                next.push(card);
+              } else if (
+                existing.state !== state &&
+                existing.state !== "done"
+              ) {
+                const index = next.indexOf(existing);
+                next[index] = { ...existing, state };
+                byName.set(name, next[index]);
+              }
+            }
+            return next;
+          });
+        },
+        // The reveal: read the discovered document type off the delivered
+        // result's own metadata and flip it onto the card.
+        onSettled: (settlement) => {
+          const name = settlement.fileName?.trim();
+          if (!name || settlement.failed || settlement.files.length === 0) {
+            return;
+          }
+          void readClassificationLabelsFromFile(settlement.files[0]).then(
+            (labels) => {
+              if (!labels || labels.length === 0) return;
+              setCards((prev) =>
+                prev.map((card) =>
+                  card.name === name ? { ...card, labels } : card,
+                ),
+              );
+            },
+          );
+        },
       });
     },
     [addFiles],
@@ -172,10 +252,21 @@ export function DownloadsProcessingWizard({
     }
   };
 
+  /** Distinct document types discovered so far, for the counts line. */
+  const typesFound = useMemo(() => {
+    const ids = new Set<string>();
+    for (const card of cards) {
+      for (const label of card.labels) ids.add(label);
+    }
+    return ids.size;
+  }, [cards]);
+
   if (!suggestion) return null;
 
   const capped = suggestion.pdfCount > suggestion.limit;
   const total = Math.min(suggestion.pdfCount, suggestion.limit);
+  const sweepTotal = started || total;
+  const settled = processed + failed;
 
   if (!open) {
     return (
@@ -195,11 +286,48 @@ export function DownloadsProcessingWizard({
     );
   }
 
+  const wall = cards.length > 0 && (
+    <div className="downloads-wizard__wall">
+      {cards.map((card) => (
+        <div
+          key={card.name}
+          className={`downloads-wizard__card downloads-wizard__card--${card.state}`}
+        >
+          <span className="downloads-wizard__card-name">{card.name}</span>
+          <span className="downloads-wizard__card-status">
+            {card.state === "running" && (
+              <span className="downloads-wizard__spin" aria-hidden />
+            )}
+            {card.state === "pending" &&
+              t("processingFolders.downloads.wall.waiting", "Waiting…")}
+            {card.state === "failed" &&
+              t("processingFolders.downloads.wall.failed", "Failed")}
+            {card.state === "done" &&
+              (card.labels.length > 0 ? (
+                card.labels.map((label) => (
+                  <span key={label} className="downloads-wizard__chip">
+                    {labelName(label)}
+                  </span>
+                ))
+              ) : (
+                <>
+                  {t(
+                    "processingFolders.downloads.wall.classified",
+                    "Classified",
+                  )}
+                </>
+              ))}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+
   return (
     <Modal
       open
       onClose={phase === "working" ? () => {} : close}
-      width="sm"
+      width={phase === "asking" ? "sm" : "lg"}
       title={
         <span className="downloads-wizard__title">
           <FolderSpecialIcon fontSize="small" />
@@ -273,52 +401,67 @@ export function DownloadsProcessingWizard({
       )}
 
       {phase === "working" && (
-        <div className="downloads-wizard__body downloads-wizard__progress">
-          <Loader size="sm" />
-          <p>
-            {t("processingFolders.downloads.progress", {
-              done: processed + failed,
-              total: started || total,
-              defaultValue: "Processing {{done}} of {{total}} files…",
+        <div className="downloads-wizard__body">
+          <p className="downloads-wizard__counts">
+            <strong>{settled}</strong>{" "}
+            {t("processingFolders.downloads.progressCounts", {
+              total: sweepTotal,
+              defaultValue: "of {{total}} processed",
             })}
+            {typesFound > 0 && (
+              <>
+                {" · "}
+                {t("processingFolders.downloads.typesFound", {
+                  count: typesFound,
+                  defaultValue: "{{count}} document types found",
+                })}
+              </>
+            )}
           </p>
           <div className="downloads-wizard__bar" role="progressbar">
             <span
               style={{
-                width: `${
-                  (started || total) === 0
-                    ? 0
-                    : Math.round(
-                        ((processed + failed) / (started || total)) * 100,
-                      )
-                }%`,
+                width: `${sweepTotal === 0 ? 0 : Math.round((settled / sweepTotal) * 100)}%`,
               }}
             />
           </div>
+          {wall || (
+            <div className="downloads-wizard__progress">
+              <Loader size="sm" />
+            </div>
+          )}
         </div>
       )}
 
       {phase === "done" && (
-        <div className="downloads-wizard__body downloads-wizard__progress">
-          <CheckCircleIcon className="downloads-wizard__tick" />
-          {started === 0 ? (
-            <p>
-              {t("processingFolders.downloads.nothingNew", {
-                count: skipped,
-                defaultValue:
-                  "Nothing new to process — these {{count}} files have already been through.",
-              })}
-            </p>
-          ) : (
-            <p>
-              {t("processingFolders.downloads.finished", {
-                count: processed,
-                opened,
-                defaultValue:
-                  "Classified {{count}} files and opened {{opened}} of them here, ready to work on.",
-              })}
-            </p>
-          )}
+        <div className="downloads-wizard__body">
+          <p className="downloads-wizard__counts">
+            <CheckCircleIcon
+              className="downloads-wizard__tick"
+              fontSize="inherit"
+            />{" "}
+            {started === 0
+              ? t("processingFolders.downloads.nothingNew", {
+                  count: skipped,
+                  defaultValue:
+                    "Nothing new to process — these {{count}} files have already been through.",
+                })
+              : t("processingFolders.downloads.finished", {
+                  count: processed,
+                  opened,
+                  defaultValue:
+                    "Classified {{count}} files and opened {{opened}} of them here, ready to work on.",
+                })}
+            {typesFound > 0 && (
+              <>
+                {" · "}
+                {t("processingFolders.downloads.typesFound", {
+                  count: typesFound,
+                  defaultValue: "{{count}} document types found",
+                })}
+              </>
+            )}
+          </p>
           {failed > 0 && (
             <p className="downloads-wizard__warn">
               {t("processingFolders.downloads.someFailed", {
@@ -336,6 +479,7 @@ export function DownloadsProcessingWizard({
               )}
             </p>
           )}
+          {wall}
         </div>
       )}
 
