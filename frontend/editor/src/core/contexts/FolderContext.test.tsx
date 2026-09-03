@@ -437,10 +437,10 @@ describe("FolderContext stale-folder 404 cleanup", () => {
 });
 
 /**
- * A mounted directory's subfolders are synthesised from the path in the URL rather
- * than stored, so `resolveDiskFolder` is a setState reached from an effect that
- * re-runs whenever the folder list changes. It has to be a no-op the second time or
- * that pair spins until React gives up with "Maximum update depth exceeded".
+ * A mounted directory's subfolders are synthesised from the path rather than stored,
+ * so `resolveDiskFolder` is a setState reached from an effect that re-runs on every
+ * folder change. It has to be a no-op the second time or the pair spins until React
+ * gives up with "Maximum update depth exceeded".
  */
 describe("FolderContext disk subfolder resolution", () => {
   const MOUNT_DIR = "C:\\Users\\test\\Docs";

@@ -971,9 +971,9 @@ export function FolderProvider({ children }: FolderProviderProps) {
         additions.push([parentId, record]);
         parentId = record.id;
       }
-      // The rebuilt chain has to end at the id that was asked for. One that
-      // normalises to a different id registers nothing the caller can find, and a
-      // caller that retries whenever the folder list changes would never settle.
+      // The rebuilt chain has to end at the id asked for: a path that normalises to
+      // a different one registers nothing the caller can find, leaving it to ask
+      // again on every folder change.
       if (parentId !== id) return false;
       setDiskSubfolders((prev) => {
         let next: typeof prev | null = null;

@@ -247,8 +247,8 @@ export default function FileManagerView() {
       return;
     }
     // Not known yet is not the same as not real: folders load asynchronously, and a
-    // mount's subdirectories arrive with the listing that finds them. Leave the path
-    // unapplied so this re-runs as the map fills, and only fall back once it cannot.
+    // mount's subdirectories arrive with the listing that finds them. Falling back to
+    // the root waits until the map can no longer turn up the folder named here.
     if (!folders.loading) {
       setCurrentFolderId(ROOT_FOLDER_ID);
     }

@@ -977,7 +977,7 @@ test.describe("Files page", () => {
       expect(clipped).toBe(true);
     });
 
-    /** A deep trail of long names is the case that grows the bar. */
+    /** Depth is what grows the bar, so the trail has to stop showing more of it. */
     test("a deep trail does not change the header height", async ({ page }) => {
       const ids = [
         "11111111-2222-4333-8444-555555555571",
@@ -1109,11 +1109,10 @@ test.describe("Files page", () => {
     });
 
     /**
-     * Back walks up one level per press. The selection used to be pushed into the
-     * path by an effect watching it, which could not tell a folder opened here from
-     * the folder a pop had just navigated away from - so the first press appeared to
-     * do nothing: the pop landed on the parent and the child was pushed straight back
-     * on top of it.
+     * Back walks up one level per press, and lands where it says it does. Anything
+     * that writes the path in response to the selection can push the folder being
+     * left back on top of the entry just landed on, which reads as a press that did
+     * nothing.
      */
     test("back steps up one folder per press", async ({ page }) => {
       const NESTED = "11111111-2222-4333-8444-555555555556";
