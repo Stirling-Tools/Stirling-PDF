@@ -557,6 +557,11 @@
       "title": "Audit Settings - Stirling PDF",
       "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
     },
+    "/settings/storage": {
+      "image": "/og_images/home.png",
+      "title": "Storage Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
     "/signup": {
       "image": "/og_images/home.png",
       "title": "Sign Up - Stirling PDF",
@@ -733,6 +738,7 @@
     "/settings/users": "/settings/users",
     "/settings/billing": "/settings/billing",
     "/settings/audit": "/settings/audit",
+    "/settings/storage": "/settings/storage",
     "/signup": "/signup",
     "/processor": "/processor"
   }

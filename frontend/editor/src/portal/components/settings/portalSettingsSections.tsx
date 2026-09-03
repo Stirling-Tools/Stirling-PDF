@@ -61,9 +61,9 @@ function hosted(View: ComponentType, { padded = false } = {}) {
 
 /**
  * The processor's server administration as settings sections: the org roster,
- * API keys and audit, and the account's billing. They configure the whole
- * deployment rather than a step in a document pipeline, so they belong on the
- * settings page and the processor keeps only its workflow.
+ * API keys, audit, encryption at rest, and the account's billing. They
+ * configure the whole deployment rather than a step in a document pipeline, so
+ * they belong on the settings page and the processor keeps only its workflow.
  *
  * Each is a portal-authored view wrapped in {@link PortalSettingsSectionHost}
  * for the contexts it expects. The nav entries that mount these (labels, keys,
