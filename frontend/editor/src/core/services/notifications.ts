@@ -61,10 +61,7 @@ export interface FetchedNotifications {
   notifications: AppNotification[];
   /** A reviewer keeps rows whose document this browser does not hold; a member does not. */
   viewerReviewsTeam: boolean;
-  /**
-   * Opaque id for the signed-in viewer, for scoping this browser's read state. Null when the
-   * server did not say, which must read as "cannot scope" rather than as a viewer of its own.
-   */
+  /** Opaque id for the viewer, for scoping read state. Null means the server did not say. */
   viewerKey: string | null;
 }
 

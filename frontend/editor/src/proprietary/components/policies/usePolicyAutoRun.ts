@@ -3,7 +3,13 @@
  * Policies sharing a trigger run as an ordered chain so their effects accumulate.
  */
 
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useSyncExternalStore,
+} from "react";
 import {
   useAllFiles,
   useFileManagement,
@@ -11,6 +17,11 @@ import {
 } from "@app/contexts/FileContext";
 import { fileStorage } from "@app/services/fileStorage";
 import { refreshNotificationsNow } from "@app/hooks/useNotifications";
+import {
+  isAwaitingUnlock,
+  pendingUnlocksVersion,
+  subscribeToPendingUnlocks,
+} from "@app/services/pendingUnlocks";
 import { useIndexedDB } from "@app/contexts/IndexedDBContext";
 import i18n from "@app/i18n";
 import {
@@ -152,6 +163,14 @@ export function usePolicyAutoRun(): void {
   // Chain-continuations handled this session, so the next policy fires once per run.
   const chained = useRef<Set<string>>(new Set());
 
+  // Answering a prompt has to re-run the dispatch effect, or a released file waits for the
+  // next unrelated render to be picked up.
+  const unlocksVersion = useSyncExternalStore(
+    subscribeToPendingUnlocks,
+    pendingUnlocksVersion,
+    pendingUnlocksVersion,
+  );
+
   // Latest policies, read from inside the stable retry callback (which has no deps).
   const policiesRef = useRef(policies);
   policiesRef.current = policies;
@@ -226,6 +245,10 @@ export function usePolicyAutoRun(): void {
       // Input-mode policies cover uploads only; tool-produced files are left to
       // export-mode policies at export time.
       if (stub.derivedFromTool) continue;
+      // Held while the unlock prompt is open: the run would fail on a document the user is
+      // about to decrypt, bill for it, and leave a row about a version soon replaced. Skipping
+      // the prompt releases it, so a document nobody unlocks still records its failure.
+      if (isAwaitingUnlock(stub.id)) continue;
       const key = dispatchKey(firstCategory, stub.id);
       // Skip if already run (persisted) or in flight - the in-memory guard covers the async wait.
       if (
@@ -241,7 +264,7 @@ export function usePolicyAutoRun(): void {
         })
         .finally(() => dispatching.current.delete(key));
     }
-  }, [fileStubs, policies, orderedUploadCategories]);
+  }, [fileStubs, policies, orderedUploadCategories, unlocksVersion]);
 
   // Once a run's output lands, fire the next upload policy on it - success only, once per
   // run. isDispatched guards re-dispatch across reloads.

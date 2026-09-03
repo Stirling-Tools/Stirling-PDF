@@ -5,20 +5,22 @@ import type {
   NotificationActionSlot,
 } from "@app/services/notifications";
 
-// Pinned against the shapes the server sends: what is left over depends on what won the buttons.
+// Slot and key order both copy FailureKind.java, which FailureKindTest pins: declared order is the
+// tiebreak within a slot, so a fixture that drifts from it tests a shape no server sends.
 
-/** The offers as `FailureKind` declares them for an unrecognised failure. */
+/** The offers as `FailureKind.UNKNOWN` declares them. */
 const UNKNOWN_OFFERS: Record<string, NotificationActionOffer> = {
   OPEN_IN_TOOL: offer("OPEN_IN_TOOL", "SECONDARY"),
-  VIEW_IN_PROCESSOR: offer("VIEW_IN_PROCESSOR", "SECONDARY"),
-  VIEW_FILE: offer("VIEW_FILE", "OVERFLOW"),
+  VIEW_FILE: offer("VIEW_FILE", "SECONDARY"),
+  VIEW_IN_PROCESSOR: offer("VIEW_IN_PROCESSOR", "OVERFLOW"),
 };
 
+/** The offers as `FailureKind.INPUT_PASSWORD_PROTECTED` declares them. */
 const PASSWORD_OFFERS: Record<string, NotificationActionOffer> = {
   DECRYPT: offer("DECRYPT", "RESOLUTION"),
+  VIEW_FILE: offer("VIEW_FILE", "SECONDARY"),
+  VIEW_IN_PROCESSOR: offer("VIEW_IN_PROCESSOR", "OVERFLOW"),
   OPEN_IN_TOOL: offer("OPEN_IN_TOOL", "OVERFLOW"),
-  VIEW_FILE: offer("VIEW_FILE", "OVERFLOW"),
-  VIEW_IN_PROCESSOR: offer("VIEW_IN_PROCESSOR", "SECONDARY"),
 };
 
 /** The reasons the server sends with an action it would refuse. */
@@ -100,12 +102,12 @@ function promoted(list: NotificationActionOffer[]) {
 }
 
 describe("promoteActions", () => {
-  it("gives the owner the retry, and keeps the rest quiet behind it", () => {
+  it("gives the owner the retry, with their own document beside it", () => {
     // No portal access, so the server never offered the processor link.
     expect(promoted(unknown("OPEN_IN_TOOL", "VIEW_FILE"))).toEqual({
       primary: "OPEN_IN_TOOL",
-      secondary: null,
-      overflow: ["VIEW_FILE"],
+      secondary: "VIEW_FILE",
+      overflow: [],
       withheldReasonKey: null,
     });
   });
@@ -115,7 +117,7 @@ describe("promoteActions", () => {
     expect(
       promoted(
         refusing(
-          unknown("OPEN_IN_TOOL", "VIEW_IN_PROCESSOR", "VIEW_FILE"),
+          unknown("OPEN_IN_TOOL", "VIEW_FILE", "VIEW_IN_PROCESSOR"),
           NO_DOCUMENT,
           "OPEN_IN_TOOL",
           "VIEW_FILE",
@@ -134,7 +136,7 @@ describe("promoteActions", () => {
     expect(
       promoted(
         refusing(
-          unknown("OPEN_IN_TOOL", "VIEW_IN_PROCESSOR", "VIEW_FILE"),
+          unknown("OPEN_IN_TOOL", "VIEW_FILE", "VIEW_IN_PROCESSOR"),
           UNATTENDED,
           "OPEN_IN_TOOL",
           "VIEW_FILE",
@@ -160,23 +162,24 @@ describe("promoteActions", () => {
 
   it("leads a password failure with the unlock, not the plain retry", () => {
     // Running it again unchanged is a second answer to the same problem, so it drops behind.
-    expect(promoted(password("DECRYPT", "OPEN_IN_TOOL", "VIEW_FILE"))).toEqual({
+    expect(promoted(password("DECRYPT", "VIEW_FILE", "OPEN_IN_TOOL"))).toEqual({
       primary: "DECRYPT",
-      secondary: null,
-      overflow: ["OPEN_IN_TOOL", "VIEW_FILE"],
+      secondary: "VIEW_FILE",
+      overflow: ["OPEN_IN_TOOL"],
       withheldReasonKey: null,
     });
   });
 
-  it("gives a reviewer their own password failure the unlock plus the queue", () => {
+  it("gives a reviewer their own password failure the unlock, then the document", () => {
+    // The queue is a reviewer's route to the policy, not to this document: it stays in the menu.
     expect(
       promoted(
-        password("DECRYPT", "OPEN_IN_TOOL", "VIEW_FILE", "VIEW_IN_PROCESSOR"),
+        password("DECRYPT", "VIEW_FILE", "VIEW_IN_PROCESSOR", "OPEN_IN_TOOL"),
       ),
     ).toEqual({
       primary: "DECRYPT",
-      secondary: "VIEW_IN_PROCESSOR",
-      overflow: ["OPEN_IN_TOOL", "VIEW_FILE"],
+      secondary: "VIEW_FILE",
+      overflow: ["VIEW_IN_PROCESSOR", "OPEN_IN_TOOL"],
       withheldReasonKey: null,
     });
   });
@@ -206,16 +209,17 @@ describe("promoteActions", () => {
       action.id !== "DECRYPT" && canRun(action);
 
     const { primary, secondary, overflow } = promoteActions(
-      password("DECRYPT", "OPEN_IN_TOOL", "VIEW_FILE", "VIEW_IN_PROCESSOR"),
+      password("DECRYPT", "VIEW_FILE", "VIEW_IN_PROCESSOR", "OPEN_IN_TOOL"),
       inProcessor,
       knowsAction,
     );
 
-    expect(primary?.id).toBe("VIEW_IN_PROCESSOR");
+    // The runner-up takes the row, and nothing is promoted into the secondary slot behind it.
+    expect(primary?.id).toBe("VIEW_FILE");
     expect(secondary).toBeNull();
     expect(overflow.map((action) => action.id)).toEqual([
+      "VIEW_IN_PROCESSOR",
       "OPEN_IN_TOOL",
-      "VIEW_FILE",
     ]);
   });
 
@@ -283,7 +287,7 @@ describe("promoteActions", () => {
   it("takes the reason from the best action lost, not the first declared", () => {
     // Two refusals, one row: the reader gets the one they would have reached for first.
     const list = [
-      offer("VIEW_FILE", "OVERFLOW", {
+      offer("OPEN_IN_TOOL", "OVERFLOW", {
         enabled: false,
         disabledReasonKey: CLOSED,
       }),

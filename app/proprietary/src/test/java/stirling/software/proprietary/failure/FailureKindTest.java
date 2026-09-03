@@ -275,6 +275,16 @@ class FailureKindTest {
         }
 
         @Test
+        void everyCodeAKindClaimsIsPinned() {
+            // The bell mirrors these in KIND_ERROR_CODES (notificationRetry.ts) to tell one file's
+            // stashed failure from another's. Adding a code here without adding it there makes a
+            // retry match the wrong incident, so this fails until both move together.
+            assertThat(FailureKind.INPUT_PASSWORD_PROTECTED.getErrorCodes())
+                    .containsExactly("E004");
+            assertThat(FailureKind.UNKNOWN.getErrorCodes()).isEmpty();
+        }
+
+        @Test
         void byErrorCodeIsEmptyForACodeNoKindHasAdoptedYet() {
             // E001 is PDF_CORRUPTED: a real error code, deliberately not yet a kind.
             assertThat(FailureKind.byErrorCode("E001")).isEmpty();
