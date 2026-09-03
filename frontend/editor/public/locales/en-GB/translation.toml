@@ -4192,6 +4192,7 @@ stop = "Stop processing this folder"
 sweep = "Process files now"
 
 [filesPage.processingSetup]
+back = "Back"
 cancel = "Cancel"
 lead = "Anything added to this folder runs these steps, in place — each file becomes its processed version."
 start = "Start processing"

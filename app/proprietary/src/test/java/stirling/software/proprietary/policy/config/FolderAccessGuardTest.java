@@ -35,6 +35,8 @@ class FolderAccessGuardTest {
 
     private FolderAccessGuard guard(List<String> allowedRoots, String... activeProfiles) {
         ApplicationProperties properties = new ApplicationProperties();
+        // The allowlist gates logged-in installs; without login the operator is trusted.
+        properties.getSecurity().setEnableLogin(true);
         properties.getPolicies().setAllowedFolderRoots(allowedRoots);
         StandardEnvironment environment = new StandardEnvironment();
         environment.setActiveProfiles(activeProfiles);
@@ -45,6 +47,7 @@ class FolderAccessGuardTest {
     private FolderAccessGuard guardWithStorage(
             List<String> allowedRoots, boolean storageEnabled, String provider, String basePath) {
         ApplicationProperties properties = new ApplicationProperties();
+        properties.getSecurity().setEnableLogin(true);
         properties.getPolicies().setAllowedFolderRoots(allowedRoots);
         ApplicationProperties.Storage storage = properties.getStorage();
         storage.setEnabled(storageEnabled);
@@ -59,6 +62,7 @@ class FolderAccessGuardTest {
 
     private FolderAccessGuard guardWithWatchedFolder(String watchedDir) {
         ApplicationProperties properties = new ApplicationProperties();
+        properties.getSecurity().setEnableLogin(true);
         properties
                 .getSystem()
                 .getCustomPaths()
@@ -94,6 +98,18 @@ class FolderAccessGuardTest {
         assertThrows(
                 FolderAccessDeniedException.class,
                 () -> guard.requirePermitted(tempDir.resolve("..").resolve("escaped")));
+    }
+
+    @Test
+    void permitsAnyDirectoryForTheLocalOperatorWhenLoginIsOff() {
+        ApplicationProperties properties = new ApplicationProperties();
+        FolderAccessGuard localGuard =
+                new FolderAccessGuard(
+                        properties,
+                        new RuntimePathConfig(properties),
+                        new StandardEnvironment(),
+                        sourceStore);
+        assertEquals(tempDir.toAbsolutePath().normalize(), localGuard.requirePermitted(tempDir));
     }
 
     @Test

@@ -11,6 +11,7 @@ import {
 } from "@app/policies/catalog";
 import { PipelineTemplateCard } from "@app/components/policies/PipelineTemplateCard";
 import { PolicySetupWizard } from "@app/components/policies/PolicySetupWizard";
+import { Button } from "@app/ui/Button";
 import {
   saveProcessingFolder,
   type ProcessingFolderStep,
@@ -86,13 +87,51 @@ export function FolderProcessingSetup({
   };
 
   if (wizardEntry) {
+    // The wizard supplies the middle — the pipeline controls — and this dialog
+    // stays the frame, so setting up a folder feels like the folder's own
+    // flow rather than a visit to the portal.
     return (
       <PolicySetupWizard
         entry={wizardEntry}
         onClose={() => setWizardEntry(null)}
         onSubmit={submit}
         enforceControl={false}
-      />
+      >
+        {({ content, submit: startProcessing, submitting, canSubmit }) => (
+          <Modal
+            open
+            onClose={submitting ? () => {} : close}
+            width="lg"
+            title={t("filesPage.processingSetup.title", "Process “{{name}}”", {
+              name: folder.name,
+            })}
+            subtitle={t(wizardEntry.category.label, wizardEntry.category.id)}
+            footer={
+              <div className="folder-setup__foot">
+                <Button
+                  variant="tertiary"
+                  size="sm"
+                  onClick={() => setWizardEntry(null)}
+                  disabled={submitting}
+                >
+                  {t("filesPage.processingSetup.back", "Back")}
+                </Button>
+                <Button
+                  size="sm"
+                  style={{ marginLeft: "auto" }}
+                  onClick={startProcessing}
+                  loading={submitting}
+                  disabled={!canSubmit}
+                >
+                  {t("filesPage.processingSetup.start", "Start processing")}
+                </Button>
+              </div>
+            }
+          >
+            {content}
+          </Modal>
+        )}
+      </PolicySetupWizard>
     );
   }
 

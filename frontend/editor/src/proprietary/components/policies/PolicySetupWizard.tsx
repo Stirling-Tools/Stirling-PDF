@@ -25,6 +25,16 @@ import { PolicyWatermarkConfig } from "@app/components/policies/PolicyWatermarkC
 import { ClassificationLabelsSection } from "@app/components/policies/ClassificationLabelsSection";
 import "@app/components/policies/PolicySetupWizard.css";
 
+/** What a host frame needs to wrap the form: the middle content plus submit state. */
+export interface PolicySetupFrame {
+  content: ReactNode;
+  submit: () => void;
+  submitting: boolean;
+  error: string | null;
+  /** False while no step is enabled, when submitting would be a no-op. */
+  canSubmit: boolean;
+}
+
 interface PolicySetupWizardProps {
   /** The category being configured, or null when closed. */
   entry: CatalogueEntry | null;
@@ -52,6 +62,12 @@ interface PolicySetupWizardProps {
   formatError?: (e: unknown) => string;
   /** Whether the org-enforcement choice applies on this surface (it doesn't for folders). */
   enforceControl?: boolean;
+  /**
+   * Frame the form yourself: receives the middle content (the pipeline controls) and the
+   * submit state, and returns the surrounding chrome. Without it the portal's own modal
+   * renders — title, Customise, enforce footer and all.
+   */
+  children?: (frame: PolicySetupFrame) => ReactNode;
 }
 
 /** A policy step plus whether it runs. */
@@ -214,6 +230,7 @@ export function PolicySetupWizard({
   purviewConfig,
   formatError,
   enforceControl,
+  children,
 }: PolicySetupWizardProps) {
   // Re-key the wizard on the opened category so all state resets cleanly when a
   // different category is opened (avoids stale field values bleeding across).
@@ -228,7 +245,9 @@ export function PolicySetupWizard({
       purviewConfig={purviewConfig}
       formatError={formatError}
       enforceControl={enforceControl}
-    />
+    >
+      {children}
+    </PolicySetupWizardBody>
   ) : null;
 }
 
@@ -241,6 +260,7 @@ function PolicySetupWizardBody({
   purviewConfig,
   formatError,
   enforceControl = true,
+  children,
 }: {
   entry: CatalogueEntry;
   onClose: () => void;
@@ -253,6 +273,7 @@ function PolicySetupWizardBody({
   }) => ReactNode;
   formatError?: (e: unknown) => string;
   enforceControl?: boolean;
+  children?: (frame: PolicySetupFrame) => ReactNode;
 }) {
   const { t } = useTranslation();
 
@@ -378,59 +399,9 @@ function PolicySetupWizardBody({
     }
   }
 
-  return (
-    <Modal
-      open
-      onClose={onClose}
-      width="lg"
-      title={
-        <span className="portal-policies__wizard-title">
-          <PolicyCategoryBadge category={category} />
-          {isEdit
-            ? t("portal.policies.wizard.title.edit", {
-                category: t(category.label),
-              })
-            : t("portal.policies.wizard.title.setUp", {
-                category: t(category.label),
-              })}
-        </span>
-      }
-      subtitle={t(config.summary)}
-      footer={
-        <div className="portal-policies__wizard-foot">
-          <Button variant="tertiary" size="sm" onClick={onClose}>
-            {t("portal.policies.wizard.actions.cancel")}
-          </Button>
-          <Button
-            variant="tertiary"
-            size="sm"
-            onClick={customise}
-            disabled={!onCustomise}
-            title={
-              onCustomise
-                ? undefined
-                : t(
-                    "portal.policies.wizard.actions.customiseUnavailable",
-                    "The full builder lives on Processor",
-                  )
-            }
-            leftSection={<TuneRoundedIcon style={{ fontSize: "1.05rem" }} />}
-          >
-            {t("portal.policies.wizard.actions.customise")}
-          </Button>
-          <Button
-            size="sm"
-            style={{ marginLeft: "auto" }}
-            onClick={submit}
-            loading={submitting}
-          >
-            {isEdit
-              ? t("portal.policies.wizard.actions.saveChanges")
-              : t("portal.policies.wizard.actions.enablePolicy")}
-          </Button>
-        </div>
-      }
-    >
+  const canSubmit = enabledTools.length > 0;
+  const content = (
+    <>
       {error && (
         <Banner
           tone="danger"
@@ -537,6 +508,65 @@ function PolicySetupWizardBody({
           />
         </div>
       )}
+    </>
+  );
+  if (children) {
+    return children({ content, submit, submitting, error, canSubmit });
+  }
+  return (
+    <Modal
+      open
+      onClose={onClose}
+      width="lg"
+      title={
+        <span className="portal-policies__wizard-title">
+          <PolicyCategoryBadge category={category} />
+          {isEdit
+            ? t("portal.policies.wizard.title.edit", {
+                category: t(category.label),
+              })
+            : t("portal.policies.wizard.title.setUp", {
+                category: t(category.label),
+              })}
+        </span>
+      }
+      subtitle={t(config.summary)}
+      footer={
+        <div className="portal-policies__wizard-foot">
+          <Button variant="tertiary" size="sm" onClick={onClose}>
+            {t("portal.policies.wizard.actions.cancel")}
+          </Button>
+          <Button
+            variant="tertiary"
+            size="sm"
+            onClick={customise}
+            disabled={!onCustomise}
+            title={
+              onCustomise
+                ? undefined
+                : t(
+                    "portal.policies.wizard.actions.customiseUnavailable",
+                    "The full builder lives on Processor",
+                  )
+            }
+            leftSection={<TuneRoundedIcon style={{ fontSize: "1.05rem" }} />}
+          >
+            {t("portal.policies.wizard.actions.customise")}
+          </Button>
+          <Button
+            size="sm"
+            style={{ marginLeft: "auto" }}
+            onClick={submit}
+            loading={submitting}
+          >
+            {isEdit
+              ? t("portal.policies.wizard.actions.saveChanges")
+              : t("portal.policies.wizard.actions.enablePolicy")}
+          </Button>
+        </div>
+      }
+    >
+      {content}
     </Modal>
   );
 }
