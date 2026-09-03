@@ -971,15 +971,21 @@ export function FolderProvider({ children }: FolderProviderProps) {
         additions.push([parentId, record]);
         parentId = record.id;
       }
+      // The rebuilt chain has to end at the id that was asked for. One that
+      // normalises to a different id registers nothing the caller can find, and a
+      // caller that retries whenever the folder list changes would never settle.
+      if (parentId !== id) return false;
       setDiskSubfolders((prev) => {
-        const next = new Map(prev);
+        let next: typeof prev | null = null;
         for (const [parent, record] of additions) {
-          const siblings = next.get(parent) ?? [];
-          if (!siblings.some((f) => f.id === record.id)) {
-            next.set(parent, [...siblings, record]);
-          }
+          const siblings = (next ?? prev).get(parent) ?? [];
+          if (siblings.some((f) => f.id === record.id)) continue;
+          next = next ?? new Map(prev);
+          next.set(parent, [...siblings, record]);
         }
-        return next;
+        // Unchanged has to mean unchanged: a fresh Map rebuilds `folders`, which
+        // re-runs the effects that resolve a path - straight back into here.
+        return next ?? prev;
       });
       return true;
     },
