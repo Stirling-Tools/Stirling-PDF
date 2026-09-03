@@ -7569,6 +7569,8 @@ heading = "What do you want to connect?"
 noResultsBody = "We do not support it yet - tell us about it and we will look at adding it."
 noResultsTitle = "Nothing matches \"{{query}}\""
 searchPlaceholder = "Search integrations - try \"sign\", \"ocr\" or a product name"
+tasksInfo = "Show the tasks {{name}} adds"
+tasksTitle = "Tasks you can add"
 
 [portal.connections.types.api]
 description = "Call any HTTP API from a policy. You choose the URL, authentication and payload."
@@ -8424,6 +8426,7 @@ connected = "Connected"
 
 [portal.integrations.table]
 integration = "Integration"
+tasks = "Tasks"
 worksWith = "Works with"
 
 [portal.integrations.worksWith]
@@ -8479,6 +8482,7 @@ discard = "Discard changes"
 editorDestination = "Editor"
 editorDestinationDetail = "Replaces the file you ran it on"
 editorDestinationHelp = "This pipeline runs on the files in your workspace, and its results replace the file it ran on. There is nowhere else to send them."
+fixStepFields = "Fix the highlighted fields"
 inputs = "Input"
 inputSource = "Input source"
 inputTrigger = "Trigger"
@@ -8857,6 +8861,11 @@ note = "Submits the document. Retrieving the signed copy is not yet supported, b
 description = "Author the call yourself: path, method, body and response handling."
 label = "Call a custom API"
 
+[portal.policies.operations.discordAttach]
+description = "Uploads the processed document to a channel, with an optional message."
+label = "Attach the document to Discord"
+note = "Discord caps uploads at 25 MB by default; a channel's Nitro tier can raise it. Set the limit your channel allows."
+
 [portal.policies.operations.discordNotify]
 description = "Tells a channel that the policy handled a document."
 label = "Post a message to Discord"
@@ -8865,12 +8874,16 @@ label = "Post a message to Discord"
 description = "Records what the policy did as a searchable document."
 label = "Index an audit event in Elasticsearch"
 
+[portal.policies.operations.errors]
+invalidNumber = "Enter a number greater than zero, or leave it blank for no limit."
+unknownVariable = "'{{path}}' is not a variable this step can use, so every run would fail."
+
 [portal.policies.operations.fields.bodyMode]
 helperText = "Multipart suits upload APIs; JSON suits APIs that want the file inside a payload; binary sends the raw bytes."
 label = "How to send the document"
 
 [portal.policies.operations.fields.bodyTemplate]
-helperText = "A JSON body sent as-is. {{document.base64}} carries the file; {{document.*}} and {{run.*}} are filled in per document."
+helperText = "A JSON body sent as-is. Add variables with the button below, or by typing @ or / - use File contents to carry the document itself."
 label = "JSON body"
 
 [portal.policies.operations.fields.connection]
@@ -8901,8 +8914,12 @@ placeholder = "stirling-audit"
 label = "Issue key"
 placeholder = "OPS-42"
 
+[portal.policies.operations.fields.maxFileMb]
+helperText = "Skip the upload if the document is larger, in MB. Discord allows 25 by default, more on higher Nitro tiers. Leave blank for no limit."
+label = "Maximum file size (MB)"
+
 [portal.policies.operations.fields.message]
-helperText = "Sent as the message body. {{document.*}} and {{run.*}} are filled in per document."
+helperText = "Sent as the message body. Add variables with the button below, or by typing @ or /."
 label = "Message"
 
 [portal.policies.operations.fields.method]
@@ -8918,13 +8935,18 @@ label = "Path"
 placeholder = "/v1/scan"
 
 [portal.policies.operations.fields.remotePath]
-helperText = "Where in the drive to write it. {{document.filename}} is filled in per document."
+helperText = "Where in the drive to write it. Add variables with the + button, or by typing @ or /."
 label = "Destination path"
-placeholder = "Processed/{{document.filename}}"
+placeholder = "e.g. Processed/invoice.pdf"
 
 [portal.policies.operations.fields.responseMode]
 helperText = "Report leaves the document untouched. Replace swaps it for whatever comes back."
 label = "What to do with the reply"
+
+[portal.policies.operations.fields.shareRemotePath]
+helperText = "The file to share, as it is stored in Nextcloud. Match the path an earlier Upload step wrote to."
+label = "File to share"
+placeholder = "e.g. Processed/invoice.pdf"
 
 [portal.policies.operations.fields.signerEmail]
 label = "Signer's email"
@@ -8932,15 +8954,19 @@ placeholder = "signer@acme.com"
 
 [portal.policies.operations.fields.subject]
 label = "Subject"
-placeholder = "Processed: {{document.filename}}"
+placeholder = "e.g. Processed: invoice.pdf"
 
 [portal.policies.operations.fields.text]
-helperText = "Presidio analyses this text. Use {{document.title}} or paste the text you want checked."
+helperText = "Presidio analyses this text. Add the Title variable, or paste the text you want checked."
 label = "Text to check"
 
 [portal.policies.operations.fields.to]
 label = "To"
 placeholder = "records@acme.com"
+
+[portal.policies.operations.fields.transitionId]
+label = "Transition ID"
+placeholder = "31"
 
 [portal.policies.operations.fields.username]
 label = "Nextcloud username"
@@ -8953,6 +8979,15 @@ label = "Post a message to Google Chat"
 [portal.policies.operations.jiraAttach]
 description = "Files the processed document onto an issue."
 label = "Attach to a Jira issue"
+
+[portal.policies.operations.jiraComment]
+description = "Adds a comment to an issue - useful with a link from an earlier step."
+label = "Comment on a Jira issue"
+
+[portal.policies.operations.jiraTransition]
+description = "Moves an issue to another status, e.g. to Done once processed."
+label = "Transition a Jira issue"
+note = "Give the transition's id, not the status name. List them with GET /rest/api/3/issue/{key}/transitions."
 
 [portal.policies.operations.mailgunEmail]
 description = "Sends the processed document as an attachment."
@@ -8975,6 +9010,11 @@ label = "Send the document to n8n"
 description = "Your workflow processes the document and the file it returns replaces it."
 label = "Process the document in n8n"
 note = "Set the Webhook node to respond \"Using Respond to Webhook Node\", and return a file. On the default \"Immediately\" setting n8n replies with an acknowledgement, and that would replace the document."
+
+[portal.policies.operations.nextcloudShareLink]
+description = "Creates a public link to a file already in Nextcloud, to post or email."
+label = "Create a Nextcloud share link"
+note = "Share a file that is already in Nextcloud - run an Upload step first. The link comes back in this step's response, for a later step to use."
 
 [portal.policies.operations.nextcloudUpload]
 description = "Writes the processed document into a folder."
@@ -9048,6 +9088,113 @@ docs = "Docs enforced"
 enforces = "Enforces"
 policy = "Policy"
 status = "Status"
+
+[portal.policies.variables]
+add = "Add variable"
+added = "Added {{label}}"
+addTitle = "Add variable"
+changed = "Changed to {{label}}"
+changeTitle = "Change variable"
+editAsBoxes = "Back to boxes"
+editAsText = "Edit as text"
+enterToAdd = "Enter to add"
+enterToChange = "Enter to change"
+exampleTag = "Example"
+fromStep = "{{label}} from step {{n}}"
+intro = "A variable is filled in per document when the step runs, so one step works for every file that passes through. Add one with the button, or by typing @ or / in any text field."
+introSteps = "A step can also use an earlier step's answer. That reply is parsed once, so a dotted path reaches any field inside it."
+menuLabel = "Variables"
+noMatches = "Nothing matches that"
+rawLabel = "Value as text"
+redo = "Redo"
+redone = "Redone"
+remove = "Remove"
+removed = "Removed {{label}}"
+removeToken = "Remove {{label}}"
+search = "Search"
+title = "Variables you can use"
+tokenLabel = "Variable: {{label}}. Press Enter to change it."
+triggerHint = "or type @ or /"
+undo = "Undo"
+undone = "Undone"
+unnamedTitle = "No name for this path. Saved as {{path}}"
+
+[portal.policies.variables.defs]
+classification = "The classifier's whole verdict, as JSON"
+classification_label = "The label the classifier chose"
+document_author = "Author from the PDF metadata"
+document_base64 = "The file itself, base64-encoded - for JSON bodies that carry the document"
+document_contentType = "MIME type, e.g. application/pdf"
+document_created = "Created date from the PDF metadata (ISO 8601)"
+document_creator = "Creating application from the PDF metadata"
+document_encrypted = "Whether the PDF is encrypted (true/false)"
+document_extension = "File extension, lowercased, e.g. pdf"
+document_filename = "The file's name, e.g. invoice.pdf"
+document_keywords = "Keywords from the PDF metadata"
+document_modified = "Modified date from the PDF metadata (ISO 8601)"
+document_pageCount = "Number of pages"
+document_producer = "Producer from the PDF metadata"
+document_sha256 = "SHA-256 of the file - what audit systems key on"
+document_sizeBytes = "File size in bytes"
+document_subject = "Subject from the PDF metadata"
+document_title = "Title from the PDF metadata"
+run_policyName = "The policy or pipeline this run belongs to"
+run_runId = "Unique id of this run"
+run_timestamp = "When the step ran (ISO 8601)"
+sensitivityLabel_labelId = "The label's id in Microsoft Purview"
+sensitivityLabel_name = "The sensitivity label's name, e.g. Confidential"
+sensitivityLabel_protected = "Whether the label applies protection (true/false)"
+steps_body = "That step's whole JSON answer - add a dotted path to reach into it"
+steps_status = "The HTTP status that step's call returned"
+
+[portal.policies.variables.groups.classification]
+description = "The classifier's verdict, when a classification step has run."
+label = "Classification"
+
+[portal.policies.variables.groups.document]
+description = "Facts about the document flowing through the run."
+label = "Document"
+
+[portal.policies.variables.groups.run]
+description = "Facts about this run of the policy or pipeline."
+label = "Run"
+
+[portal.policies.variables.groups.sensitivityLabel]
+description = "The Microsoft Purview label already on the document, if any."
+label = "Sensitivity label"
+
+[portal.policies.variables.groups.steps]
+description = "Earlier steps' answers. Replace 1 with the step's position in the chain; add a dotted path to reach into its JSON reply."
+example = "Reaches the share link inside a Nextcloud share-link step's reply - create the link in step 1, post it in step 2's message."
+label = "Earlier steps"
+
+[portal.policies.variables.labels]
+classification = "Classification verdict"
+classification_label = "Classification"
+document_author = "Author"
+document_base64 = "File contents"
+document_contentType = "File type"
+document_created = "Created date"
+document_creator = "Created with"
+document_encrypted = "Encrypted"
+document_extension = "File extension"
+document_filename = "File name"
+document_keywords = "Keywords"
+document_modified = "Modified date"
+document_pageCount = "Page count"
+document_producer = "Produced by"
+document_sha256 = "Fingerprint"
+document_sizeBytes = "File size"
+document_subject = "Subject"
+document_title = "Title"
+run_policyName = "Policy name"
+run_runId = "Run ID"
+run_timestamp = "Time run"
+sensitivityLabel_labelId = "Sensitivity label ID"
+sensitivityLabel_name = "Sensitivity label"
+sensitivityLabel_protected = "Protected"
+steps_body = "Full response"
+steps_status = "Status code"
 
 [portal.policies.wizard.actions]
 cancel = "Cancel"

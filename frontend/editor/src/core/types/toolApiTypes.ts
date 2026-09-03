@@ -561,6 +561,7 @@ export interface IntegrationExternalApiCallRequest {
   headers?: string;
   includeContext?: boolean;
   includeFile?: boolean;
+  maxRequestBytes?: number;
   method?: string;
   path?: string;
   requireTrue?: string;

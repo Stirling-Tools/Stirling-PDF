@@ -5,6 +5,7 @@ import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import {
   Banner,
   Button,
+  type CellDetail,
   column,
   DataTable,
   type DataTableColumn,
@@ -29,7 +30,10 @@ import {
   type ConnectionCategory,
   type CreatableConnectionType,
 } from "@portal/components/sources/connectionTypes";
-import { STEP_OPERATIONS } from "@portal/components/policies/stepOperations";
+import {
+  STEP_OPERATIONS,
+  operationsForConnectionType,
+} from "@portal/components/policies/stepOperations";
 import { COMING_SOON_SOURCE_TYPES } from "@portal/components/sources/sourceTypes";
 import { useConnectGate } from "@portal/hooks/useConnectGate";
 import "@portal/theme/surface.css";
@@ -42,8 +46,9 @@ import "@portal/views/Integrations.css";
  * by vendor (two S3 buckets is normal, not an error), every instance a row you
  * can edit or remove, with "add another" on the vendor's group header. Then
  * Available - the supported vendors, each saying what it works with (sources,
- * policies, pipelines). Coming-soon source connectors close the list so
- * "do you support X?" is answered honestly instead of hidden.
+ * policies, pipelines) and which tasks it unlocks, so "what would connecting
+ * this let me do?" is answered on the row. Coming-soon source connectors close
+ * the list so "do you support X?" is answered honestly instead of hidden.
  *
  * Setup itself stays in the shared {@link ConnectionModal}; every entry point
  * here pins the vendor, so the modal opens straight on the right form.
@@ -87,6 +92,8 @@ type IntegrationRow = {
   title: string;
   subtitle: string;
   worksWith: WorksWith[];
+  /** The policy/pipeline tasks this vendor unlocks, each with its explanation. */
+  tasks: CellDetail[];
 } & (
   | { kind: "instance"; connection: IntegrationConfig; canManage: boolean }
   | { kind: "available"; typeId: string }
@@ -259,6 +266,21 @@ export function Integrations() {
     [t],
   );
 
+  // The tasks a vendor unlocks, answering "what would connecting this let me do?"
+  // on the row itself. The custom-call entry follows the same server gate the rest
+  // of the UI honours - advertising a task the server refuses would be a dead end.
+  const allowCustom = capabilities?.customApi !== false;
+  const tasksFor = useCallback(
+    (typeId: string): CellDetail[] =>
+      operationsForConnectionType(typeId)
+        .filter((op) => allowCustom || !op.custom)
+        .map((op) => ({
+          label: t(op.labelKey),
+          description: t(op.descriptionKey),
+        })),
+    [allowCustom, t],
+  );
+
   const columns = useMemo<DataTableColumn<IntegrationRow>[]>(
     () => [
       column.entity({
@@ -272,6 +294,13 @@ export function Integrations() {
         key: "worksWith",
         header: t("portal.integrations.table.worksWith"),
         get: (r) => worksWithText(r.worksWith),
+      }),
+      column.details({
+        key: "tasks",
+        header: t("portal.integrations.table.tasks"),
+        get: (r) => r.tasks,
+        toggleLabel: (r) =>
+          t("portal.connections.picker2.tasksInfo", { name: r.title }),
       }),
       column.actions({
         key: "actions",
@@ -332,6 +361,7 @@ export function Integrations() {
           title: c.name,
           subtitle: connectionDetail(c),
           worksWith: worksWith(type),
+          tasks: tasksFor(type.id),
           connection: c,
           canManage: !!c.canManage,
         })),
@@ -348,6 +378,7 @@ export function Integrations() {
           title: t(type.labelKey),
           subtitle: t(type.descriptionKey),
           worksWith: worksWith(type),
+          tasks: tasksFor(type.id),
           typeId: type.id,
         })),
       });
@@ -364,11 +395,12 @@ export function Integrations() {
           title: t(entry.labelKey),
           subtitle: t(entry.descriptionKey),
           worksWith: ["sources"],
+          tasks: [],
         })),
       });
     }
     return gs;
-  }, [connectedGroups, availableTypes, comingSoon, t, openCreate]);
+  }, [connectedGroups, availableTypes, comingSoon, t, openCreate, tasksFor]);
 
   return (
     <div className="portal-integrations">

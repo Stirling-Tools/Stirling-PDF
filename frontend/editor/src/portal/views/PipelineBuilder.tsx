@@ -610,8 +610,8 @@ export function PipelineBuilder() {
   // saving on it here where the fix is one click away.
   const unconfiguredStepLabels = steps
     .filter(
-      (step) =>
-        !integrationStepConfigured(step) ||
+      (step, i) =>
+        !integrationStepConfigured(step, i + 1) ||
         stepNeedsConfiguring(step, allTools),
     )
     .map(stepLabel);
@@ -1140,13 +1140,19 @@ export function PipelineBuilder() {
     });
   }
 
-  /** Why a step cannot be saved yet, if anything. */
-  function stepWarning(step: WorkingToolStep): string | undefined {
+  /** Why a step cannot be saved yet, if anything. `position` is 1-based. */
+  function stepWarning(
+    step: WorkingToolStep,
+    position: number,
+  ): string | undefined {
     if (isIntegrationStep(step)) {
       if (!stepOperation(step))
         return t("portal.pipelines.builder.chooseOperation");
-      if (!integrationStepConfigured(step))
+      // No account is the first thing to fix; a bad field or an unfillable {{steps.N}} is the rest.
+      if (!(step.params as Record<string, unknown>).connectionId)
         return t("portal.pipelines.builder.chooseAccount");
+      if (!integrationStepConfigured(step, position))
+        return t("portal.pipelines.builder.fixStepFields");
       return undefined;
     }
     if (stepNeedsConfiguring(step, allTools))
@@ -1178,7 +1184,7 @@ export function PipelineBuilder() {
     label: stepLabel(step),
     detail: stepDetail(step),
     icon: stepIcon(step),
-    warning: stepWarning(step),
+    warning: stepWarning(step, i + 1),
     inputWarning: stepInputWarning(i),
     runState: stepRunState(i),
   }));
@@ -1298,6 +1304,7 @@ export function PipelineBuilder() {
       return (
         <PipelineStepSettings
           step={selectedStep}
+          stepPosition={chosenSteps[0] + 1}
           registry={allTools}
           onChange={(params) => updateStepParams(chosenSteps[0], params)}
           assetNames={assetNames}
