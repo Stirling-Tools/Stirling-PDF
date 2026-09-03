@@ -193,7 +193,6 @@ const SettingsPageInner: React.FC = () => {
     <div className="settings-page" data-tour="settings-modal">
       <QuickNavHostBridge
         portalAccess={Boolean(otherApp)}
-        onOpenSettings={() => setMobilePane("nav")}
         requestNavigation={requestNavigation}
       />
 

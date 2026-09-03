@@ -490,7 +490,6 @@ export default function HomePage() {
       <HomePageExtensions />
       <QuickNavHostBridge
         portalAccess={Boolean(otherApp)}
-        onOpenSettings={openSettings}
         requestNavigation={requestNavigation}
         readerMode={readerMode}
         onSetReaderMode={setReaderMode}
