@@ -211,7 +211,9 @@ public class GlobalExceptionHandler {
                 String lower = msg.toLowerCase(java.util.Locale.ROOT);
                 if (lower.contains("broken pipe")
                         || lower.contains("connection reset")
-                        || lower.contains("an established connection was aborted")) {
+                        || lower.contains("an established connection was aborted")
+                        || lower.contains("idle timeout expired")
+                        || lower.contains("failed to write")) {
                     return true;
                 }
             }

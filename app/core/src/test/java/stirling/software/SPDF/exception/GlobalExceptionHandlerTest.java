@@ -258,6 +258,24 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    void handleIOException_idleTimeout_returns_empty_body() {
+        IOException ex =
+                new IOException(
+                        "ServletOutputStream failed to write: java.util.concurrent"
+                                + ".TimeoutException: Idle timeout expired: 30000/30000 ms");
+        ResponseEntity<ProblemDetail> resp = handler.handleIOException(ex, request);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, resp.getStatusCode());
+        assertNull(resp.getBody());
+    }
+
+    @Test
+    void handleIOException_writeFailureInCause_returns_empty_body() {
+        IOException ex = new IOException("wrapper", new IOException("failed to write"));
+        ResponseEntity<ProblemDetail> resp = handler.handleIOException(ex, request);
+        assertNull(resp.getBody());
+    }
+
+    @Test
     void handleIOException_noSuchFile_returns_500() {
         NoSuchFileException ex = new NoSuchFileException("/tmp/abc123.pdf");
         ResponseEntity<ProblemDetail> resp = handler.handleIOException(ex, request);
