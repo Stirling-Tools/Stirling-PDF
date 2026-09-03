@@ -23,9 +23,9 @@ const policies = vi.hoisted(() => ({
       backendId?: string;
       // The rest of what the chain order is built from, so a test can make a policy eligible for it.
       configured?: boolean;
-      status?: string;
+      enabled?: boolean;
       runOn?: string;
-      sources?: string[];
+      runsOnEditor?: boolean;
       order?: number;
     }
   >,
@@ -213,9 +213,8 @@ describe("rechainPolicyOnDocument rejoining the chain", () => {
     return {
       backendId,
       configured: true,
-      status: "active",
+      enabled: true,
       runOn: "upload",
-      sources: [],
       runsOnEditor: true,
       order,
     };
