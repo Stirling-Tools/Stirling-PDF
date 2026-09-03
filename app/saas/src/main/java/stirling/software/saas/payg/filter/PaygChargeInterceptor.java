@@ -378,19 +378,17 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
             log.debug("appendStep failed for job {}: {}", jobId, e.getMessage());
         }
 
-        if (status >= 500) {
+        // Any error status: the caller received no document, so there is nothing to bill for. A
+        // rejected input (a corrupt PDF, a locked one, the wrong file type) is as unbillable as a
+        // fault of ours — the work either produced what was asked for or it did not. Requests the
+        // entitlement guard refuses never reach here, having opened no charge at all.
+        if (status >= 400) {
             if (disposition == ChargeOutcome.Disposition.OPENED) {
-                chargeService.releaseUnmeteredCharge(jobId, "first-step-5xx:" + status);
+                chargeService.releaseUnmeteredCharge(jobId, "failed-" + status);
                 refundsCounter.increment();
             } else {
                 chargeService.decrementStepCount(jobId);
             }
-            return;
-        }
-        if (status >= 400) {
-            // 4xx: customer paid for the attempt. No OUTPUT recording, no refund.
-            // Still a successful-from-billing-standpoint OPENED process — meter it below.
-            meterUnlessSettledLater(request, jobId, disposition);
             return;
         }
 

@@ -233,10 +233,9 @@ class PaygChargeInterceptorTest {
     }
 
     @Test
-    void afterCompletion_4xx_policyRun_stillDefersRatherThanChargingForTheAttempt()
-            throws Exception {
-        // A run refused at submission produced nothing at all, so the attempt is not billable
-        // either; the deferral covers both statuses rather than only the accepted one.
+    void afterCompletion_4xx_policyRun_releasesRatherThanDeferring() throws Exception {
+        // A run refused at submission never starts, so nothing will settle it later: this is the
+        // last chance to release the charge, and the ordinary failure path takes it.
         authenticateWithApiKey(makeUser(7L, 42L));
         UUID jobId = UUID.randomUUID();
         when(chargeService.openProcess(any(), anyList()))
@@ -251,6 +250,7 @@ class PaygChargeInterceptorTest {
         interceptor.preHandle(req, res, handlerMethodForFakeController());
         interceptor.afterCompletion(req, res, handlerMethodForFakeController(), null);
 
+        verify(chargeService).releaseUnmeteredCharge(eq(jobId), eq("failed-400"));
         verify(chargeService, never()).meterJobUsage(any());
     }
 
@@ -295,7 +295,7 @@ class PaygChargeInterceptorTest {
     }
 
     @Test
-    void afterCompletion_5xx_opened_callsMarkFirstStepFailed() throws Exception {
+    void afterCompletion_5xx_opened_releasesTheCharge() throws Exception {
         authenticateWithApiKey(makeUser(7L, 42L));
         UUID jobId = UUID.randomUUID();
         when(chargeService.openProcess(any(), anyList()))
@@ -309,7 +309,7 @@ class PaygChargeInterceptorTest {
         interceptor.preHandle(req, res, handlerMethodForFakeController());
         interceptor.afterCompletion(req, res, handlerMethodForFakeController(), null);
 
-        verify(chargeService).releaseUnmeteredCharge(eq(jobId), eq("first-step-5xx:503"));
+        verify(chargeService).releaseUnmeteredCharge(eq(jobId), eq("failed-503"));
         verify(chargeService, never()).decrementStepCount(any());
         verify(jobService, never()).recordOutput(any(), any());
         verify(jobService)
@@ -339,7 +339,7 @@ class PaygChargeInterceptorTest {
     }
 
     @Test
-    void afterCompletion_4xx_appendsFailedStepNoRefundNoOutputs() throws Exception {
+    void afterCompletion_4xx_releasesTheChargeAndRecordsNoOutput() throws Exception {
         authenticateWithApiKey(makeUser(7L, 42L));
         UUID jobId = UUID.randomUUID();
         when(chargeService.openProcess(any(), anyList()))
@@ -353,13 +353,34 @@ class PaygChargeInterceptorTest {
         interceptor.preHandle(req, res, handlerMethodForFakeController());
         interceptor.afterCompletion(req, res, handlerMethodForFakeController(), null);
 
-        verify(chargeService, never()).releaseUnmeteredCharge(any(), any());
-        verify(chargeService, never()).decrementStepCount(any());
         verify(jobService, never()).recordOutput(any(), any());
         verify(jobService)
                 .appendStep(eq(jobId), any(), eq(JobStepStatus.FAILED), any(), any(), eq("422"));
-        // 4xx is a full charge (customer paid for the attempt), so it still meters.
-        verify(chargeService).meterJobUsage(jobId);
+        // The caller got no document, so the charge is released rather than metered.
+        verify(chargeService).releaseUnmeteredCharge(eq(jobId), eq("failed-422"));
+        verify(chargeService, never()).meterJobUsage(any());
+    }
+
+    @Test
+    void afterCompletion_4xx_joined_decrementsRatherThanReleasingTheWholeProcess()
+            throws Exception {
+        // A later chained step failing does not undo the units the OPENED step already drew.
+        authenticateWithApiKey(makeUser(7L, 42L));
+        UUID jobId = UUID.randomUUID();
+        when(chargeService.openProcess(any(), anyList()))
+                .thenReturn(new ChargeOutcome(jobId, 0, ChargeOutcome.Disposition.JOINED));
+
+        MockMultipartHttpServletRequest req = newMultipart();
+        req.addFile(new MockMultipartFile("file", "x.pdf", "application/pdf", "abc".getBytes()));
+        MockHttpServletResponse res = new MockHttpServletResponse();
+        res.setStatus(400);
+
+        interceptor.preHandle(req, res, handlerMethodForFakeController());
+        interceptor.afterCompletion(req, res, handlerMethodForFakeController(), null);
+
+        verify(chargeService).decrementStepCount(jobId);
+        verify(chargeService, never()).releaseUnmeteredCharge(any(), any());
+        verify(chargeService, never()).meterJobUsage(any());
     }
 
     @Test

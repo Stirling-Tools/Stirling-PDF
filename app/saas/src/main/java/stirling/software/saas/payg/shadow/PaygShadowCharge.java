@@ -96,7 +96,7 @@ public class PaygShadowCharge implements Serializable {
     @Column(name = "refunded_at")
     private LocalDateTime refundedAt;
 
-    /** Free-form reason, e.g. {@code "first-step-5xx:503"}. */
+    /** Free-form reason, e.g. {@code "failed-503"} or {@code "policy-run-failed:..."}. */
     @Column(name = "refund_reason", length = 128)
     private String refundReason;
 
