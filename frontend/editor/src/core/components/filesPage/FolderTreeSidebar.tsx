@@ -28,6 +28,7 @@ import {
   serialiseFilesPageDragPayload,
 } from "@app/components/filesPage/dragDrop";
 import { useDropTarget } from "@app/components/filesPage/useDropTarget";
+import { useOpenFolder } from "@app/components/filesPage/useOpenFolder";
 
 /**
  * Hard cap on folder-tree render depth. The backend already enforces an
@@ -63,6 +64,32 @@ interface FolderTreeSidebarProps {
 // anyone re-wired the component into a non-embed surface they'd ship an
 // always-enabled mutation button against a possibly-offline server.
 // Deleted to remove the trap.
+/**
+ * A name that gives way in the middle when the row is too narrow for it, keeping both
+ * ends readable - folder names tend to differ at the end, where a plain end-ellipsis
+ * would cut. The split is fixed; the CSS decides whether the head actually elides.
+ */
+function MiddleTruncated({
+  text,
+  className,
+}: {
+  text: string;
+  className: string;
+}) {
+  const TAIL = 6;
+  if (text.length <= TAIL + 4) {
+    return <span className={className}>{text}</span>;
+  }
+  return (
+    <span className={className} title={text}>
+      <span className="files-page-tree-name-head">
+        {text.slice(0, text.length - TAIL)}
+      </span>
+      <span className="files-page-tree-name-tail">{text.slice(-TAIL)}</span>
+    </span>
+  );
+}
+
 export function FolderTreeSidebar({
   fileCounts,
   onRequestNewFolder,
@@ -71,8 +98,15 @@ export function FolderTreeSidebar({
   onMoveFilesIntoFolder,
 }: FolderTreeSidebarProps) {
   const { t } = useTranslation();
-  const { tree, currentFolderId, setCurrentFolderId } = useFolders();
-  const { currentTab, setCurrentTab, moveFolderTo } = useFilesPage();
+  const { tree, currentFolderId } = useFolders();
+  const openFolder = useOpenFolder();
+  const {
+    currentTab,
+    setCurrentTab,
+    moveFolderTo,
+    originFilter,
+    setOriginFilter,
+  } = useFilesPage();
 
   return (
     <div
@@ -92,15 +126,15 @@ export function FolderTreeSidebar({
           if (currentTab !== "all" && currentTab !== "cloud") {
             setCurrentTab("all");
           }
-          setCurrentFolderId(ROOT_FOLDER_ID);
+          openFolder(ROOT_FOLDER_ID);
         }}
         onDropFiles={(fileIds) =>
           onMoveFilesIntoFolder(ROOT_FOLDER_ID, fileIds)
         }
       />
       <LocalRow
-        isActive={currentTab === "local"}
-        onSelect={() => setCurrentTab("local")}
+        isActive={originFilter === "local"}
+        onSelect={() => setOriginFilter("local")}
       />
       {tree.map((node) => (
         <TreeNodeRow
@@ -115,7 +149,7 @@ export function FolderTreeSidebar({
             if (currentTab !== "all" && currentTab !== "cloud") {
               setCurrentTab("all");
             }
-            setCurrentFolderId(id);
+            openFolder(id);
           }}
           onMoveFolder={async (folderId, newParentId) => {
             // Route through filesPage.moveFolderTo so the cycle case
@@ -198,10 +232,9 @@ interface LocalRowProps {
 }
 
 /**
- * Pinned pseudo-folder row that selects the Local tab. Local files don't
- * belong to a folder (folders are a cloud concept) so this row is not a
- * drop target and has no count badge - the Local view scopes by predicate
- * (`remoteStorageId == null`), not by folderId.
+ * Sets the source filter to local, and nothing else: it narrows whatever view you
+ * are in rather than being a place of its own. Not a drop target and no count
+ * badge - a local file has no folder to be counted under.
  */
 function LocalRow({ isActive, onSelect }: LocalRowProps) {
   const { t } = useTranslation();
@@ -403,7 +436,10 @@ function TreeNodeRow({
         <span className="files-page-tree-icon">
           <FolderThumbnail color={node.folder.color} size="tree" />
         </span>
-        <span className="files-page-tree-name">{node.folder.name}</span>
+        <MiddleTruncated
+          className="files-page-tree-name"
+          text={node.folder.name}
+        />
         <span className="files-page-tree-count">
           {fileCounts.get(node.folder.id) ?? 0}
         </span>

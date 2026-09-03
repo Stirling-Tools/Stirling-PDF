@@ -485,6 +485,10 @@ export async function materializeServerStubs(
       const primary = ingested[ingested.length - 1]!;
       const newId = primary.fileId as FileId;
       const remoteUpdates = {
+        // The ingest above made a new local file, which starts in no folder. Without
+        // carrying membership across, materialising a file to open it moves it to the
+        // library root - the copy is the file as far as the library is concerned.
+        folderId: stub.folderId ?? null,
         remoteStorageId: stub.remoteStorageId,
         remoteStorageUpdatedAt: stub.remoteStorageUpdatedAt,
         remoteOwnerUsername: stub.remoteOwnerUsername,
