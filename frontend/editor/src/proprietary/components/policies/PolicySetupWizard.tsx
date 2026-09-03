@@ -50,6 +50,8 @@ interface PolicySetupWizardProps {
   }) => ReactNode;
   /** Turns a submit failure into user-facing copy; defaults to the error's own message. */
   formatError?: (e: unknown) => string;
+  /** Whether the org-enforcement choice applies on this surface (it doesn't for folders). */
+  enforceControl?: boolean;
 }
 
 /** A policy step plus whether it runs. */
@@ -211,6 +213,7 @@ export function PolicySetupWizard({
   hasPurviewConnection,
   purviewConfig,
   formatError,
+  enforceControl,
 }: PolicySetupWizardProps) {
   // Re-key the wizard on the opened category so all state resets cleanly when a
   // different category is opened (avoids stale field values bleeding across).
@@ -224,6 +227,7 @@ export function PolicySetupWizard({
       hasPurviewConnection={hasPurviewConnection}
       purviewConfig={purviewConfig}
       formatError={formatError}
+      enforceControl={enforceControl}
     />
   ) : null;
 }
@@ -236,6 +240,7 @@ function PolicySetupWizardBody({
   hasPurviewConnection = false,
   purviewConfig,
   formatError,
+  enforceControl = true,
 }: {
   entry: CatalogueEntry;
   onClose: () => void;
@@ -247,6 +252,7 @@ function PolicySetupWizardBody({
     onChange: (params: PolicyParams<"purviewApplyLabel">) => void;
   }) => ReactNode;
   formatError?: (e: unknown) => string;
+  enforceControl?: boolean;
 }) {
   const { t } = useTranslation();
 
@@ -395,16 +401,23 @@ function PolicySetupWizardBody({
           <Button variant="tertiary" size="sm" onClick={onClose}>
             {t("portal.policies.wizard.actions.cancel")}
           </Button>
-          {onCustomise && (
-            <Button
-              variant="tertiary"
-              size="sm"
-              onClick={customise}
-              leftSection={<TuneRoundedIcon style={{ fontSize: "1.05rem" }} />}
-            >
-              {t("portal.policies.wizard.actions.customise")}
-            </Button>
-          )}
+          <Button
+            variant="tertiary"
+            size="sm"
+            onClick={customise}
+            disabled={!onCustomise}
+            title={
+              onCustomise
+                ? undefined
+                : t(
+                    "portal.policies.wizard.actions.customiseUnavailable",
+                    "The full builder lives on Processor",
+                  )
+            }
+            leftSection={<TuneRoundedIcon style={{ fontSize: "1.05rem" }} />}
+          >
+            {t("portal.policies.wizard.actions.customise")}
+          </Button>
           <Button
             size="sm"
             style={{ marginLeft: "auto" }}
@@ -516,12 +529,14 @@ function PolicySetupWizardBody({
         </div>
       )}
 
-      <div className="portal-policies__wizard-enforce">
-        <EnforceAsPolicyControl
-          required={required}
-          onRequiredChange={setRequired}
-        />
-      </div>
+      {enforceControl && (
+        <div className="portal-policies__wizard-enforce">
+          <EnforceAsPolicyControl
+            required={required}
+            onRequiredChange={setRequired}
+          />
+        </div>
+      )}
     </Modal>
   );
 }

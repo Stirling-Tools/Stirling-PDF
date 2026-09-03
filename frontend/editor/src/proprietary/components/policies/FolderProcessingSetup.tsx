@@ -91,6 +91,7 @@ export function FolderProcessingSetup({
         entry={wizardEntry}
         onClose={() => setWizardEntry(null)}
         onSubmit={submit}
+        enforceControl={false}
       />
     );
   }
