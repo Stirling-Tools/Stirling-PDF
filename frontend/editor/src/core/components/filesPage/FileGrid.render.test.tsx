@@ -91,5 +91,8 @@ describe("FileGrid item memoization", () => {
     const rerendered = badgeRenders.n - initialRenders;
     const perCard = initialRenders / 4;
     expect(rerendered).toBe(perCard);
-  });
+    // Mounting the real provider tree and four thumbnail-bearing cards costs a few
+    // seconds on its own, which the default per-test budget cannot absorb once the
+    // suite runs this file alongside the others.
+  }, 20_000);
 });
