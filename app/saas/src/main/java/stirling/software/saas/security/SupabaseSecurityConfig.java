@@ -297,18 +297,12 @@ public class SupabaseSecurityConfig {
      * the customer deployed on, so these cannot be served by an allow-list. See {@link
      * #linkedInstanceCors()}.
      *
-     * <p>The first three prefixes host portal endpoints only. {@code ui-data} does not, so those
-     * are listed one by one: the same prefix also serves admin-settings, database, teams, account
-     * and login, none of which the portal reads cross-origin.
+     * <p>All three host cloud-only endpoints, which is what makes a prefix safe here: billing,
+     * procurement and legal documents have no self-hosted equivalent. Anything the instance also
+     * serves itself belongs on {@code apiClient.local} instead of here.
      */
     private static final List<String> LINKED_INSTANCE_PATHS =
-            List.of(
-                    "/api/v1/payg/**",
-                    "/api/v1/procurement/**",
-                    "/api/v1/legal/**",
-                    "/api/v1/proprietary/ui-data/documents",
-                    "/api/v1/proprietary/ui-data/audit-export",
-                    "/api/v1/proprietary/ui-data/infrastructure/audit-log");
+            List.of("/api/v1/payg/**", "/api/v1/procurement/**", "/api/v1/legal/**");
 
     /**
      * Profiles that mean "a developer's machine or a preview environment", never the production

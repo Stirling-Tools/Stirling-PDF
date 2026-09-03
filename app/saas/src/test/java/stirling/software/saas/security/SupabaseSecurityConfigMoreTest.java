@@ -382,10 +382,7 @@ class SupabaseSecurityConfigMoreTest {
                     "/api/v1/payg/invoices",
                     "/api/v1/payg/cap",
                     "/api/v1/procurement/quote",
-                    "/api/v1/legal/consent",
-                    "/api/v1/proprietary/ui-data/documents",
-                    "/api/v1/proprietary/ui-data/audit-export",
-                    "/api/v1/proprietary/ui-data/infrastructure/audit-log"
+                    "/api/v1/legal/consent"
                 })
         @DisplayName("every apiClient.saas path is readable from any origin")
         void portalReadsAllowAnyOrigin(String path) {
@@ -409,11 +406,13 @@ class SupabaseSecurityConfigMoreTest {
         @ValueSource(
                 strings = {
                     "/api/v1/instance/sync",
-                    // Same prefix as the portal reads above, but not portal surface. Widening
-                    // ui-data to "/**" would hand these to any origin too.
+                    // The instance serves its own audit trail and Documents feed, so the portal
+                    // reads these from apiClient.local. They must never need cross-origin access.
+                    "/api/v1/proprietary/ui-data/documents",
+                    "/api/v1/proprietary/ui-data/audit-export",
+                    "/api/v1/proprietary/ui-data/infrastructure/audit-log",
                     "/api/v1/proprietary/ui-data/admin-settings",
-                    "/api/v1/proprietary/ui-data/database",
-                    "/api/v1/proprietary/ui-data/teams"
+                    "/api/v1/proprietary/ui-data/database"
                 })
         @DisplayName("every other path keeps the credentialed allow-list")
         void otherPathsUnchanged(String path) {
