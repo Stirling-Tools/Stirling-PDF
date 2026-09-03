@@ -66,7 +66,12 @@ import { getFileOrigin } from "@app/components/filesPage/fileOrigin";
 
 import { FileId } from "@app/types/file";
 import { StirlingFileStub } from "@app/types/fileContext";
-import { FolderId, ROOT_FOLDER_ID, folderKind } from "@app/types/folder";
+import {
+  FolderId,
+  FolderRecord,
+  ROOT_FOLDER_ID,
+  folderKind,
+} from "@app/types/folder";
 
 import {
   FileGrid,
@@ -78,6 +83,7 @@ import {
   useProcessingFolders,
   type ProcessingRunInfo,
 } from "@app/hooks/useProcessingFolders";
+import { FolderProcessingSetup } from "@app/components/policies/FolderProcessingSetup";
 import SuperSearch from "@app/components/shared/superSearch/SuperSearch";
 import { useEditorSearchScopes } from "@app/hooks/useSuperSearch";
 import { FileDetailsPanel } from "@app/components/filesPage/FileDetailsPanel";
@@ -637,6 +643,9 @@ export default function FileManagerView() {
       clearInterval(timer);
     };
   }, [outputDirectory, processingRecordId, listActiveRuns]);
+
+  const [processingSetupFolder, setProcessingSetupFolder] =
+    useState<FolderRecord | null>(null);
 
   const openProcessingSection = useCallback(
     (id: ProcessingSectionId) => {
@@ -2073,6 +2082,7 @@ export default function FileManagerView() {
               onSetSelection={setSelectedFileIds}
               onOpenFolder={handleOpenFolder}
               onOpenSection={openProcessingSection}
+              onStartProcessing={setProcessingSetupFolder}
               onOpenDiskFile={(entry) => void openDiskFile(entry)}
               onOpenFile={handleOpenFile}
               onMoveFiles={moveFilesTo}
@@ -2159,6 +2169,11 @@ export default function FileManagerView() {
           />
         )}
       </div>
+
+      <FolderProcessingSetup
+        folder={processingSetupFolder}
+        onClose={() => setProcessingSetupFolder(null)}
+      />
 
       {/* Drawer hosts the details panel on ≤800px viewports. */}
       {isCompactDetailsViewport && (

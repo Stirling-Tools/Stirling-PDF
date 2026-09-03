@@ -148,6 +148,8 @@ interface FileGridProps {
   onOpenFolder: (id: FolderId) => void;
   /** Open one of a processing folder's sections. */
   onOpenSection?: (id: ProcessingSectionId) => void;
+  /** Open the processing setup dialog for a folder (recipes + steps). */
+  onStartProcessing?: (folder: FolderRecord) => void;
   /** "Add to workspace". */
   onOpenFile: (file: StirlingFileStub) => void;
   onOpenDiskFile?: (entry: DiskFileEntry) => void;
@@ -468,6 +470,7 @@ function GridView(props: FileGridProps) {
     onSelectFile,
     onOpenFolder,
     onOpenSection,
+    onStartProcessing,
     onOpenFile,
     onOpenDiskFile,
     onMoveFiles,
@@ -496,6 +499,7 @@ function GridView(props: FileGridProps) {
           return (
             <FolderCard
               key={`folder-${entry.folder.id}`}
+              onStartProcessing={onStartProcessing}
               folder={entry.folder}
               fileCount={entry.folderFileCount ?? 0}
               parentPath={entry.parentPath}
@@ -549,6 +553,7 @@ function GridView(props: FileGridProps) {
 }
 
 interface FolderCardProps {
+  onStartProcessing?: (folder: FolderRecord) => void;
   folder: FolderRecord;
   fileCount: number;
   /** Subtitle for search results outside current folder. */
@@ -566,6 +571,7 @@ interface FolderCardProps {
 }
 
 function FolderCard({
+  onStartProcessing,
   folder,
   fileCount,
   parentPath,
@@ -736,7 +742,12 @@ function FolderCard({
                 disabled={false}
                 onRun={() => void runProcessing("process folder now")}
                 onStop={() => void stopProcessing("pause processing folder")}
-                onStart={() => void startProcessing("process folder")}
+                onStart={() =>
+                  onStartProcessing
+                    ? onStartProcessing(folder)
+                    : void startProcessing("process folder")
+                }
+                onResume={() => void startProcessing("resume processing")}
                 onRemove={() =>
                   void removeProcessing("remove processing folder")
                 }
@@ -783,7 +794,12 @@ function FolderCard({
                   disabledHint={offlineHint}
                   onRun={() => void runProcessing("process folder now")}
                   onStop={() => void stopProcessing("pause processing folder")}
-                  onStart={() => void startProcessing("process folder")}
+                  onStart={() =>
+                    onStartProcessing
+                      ? onStartProcessing(folder)
+                      : void startProcessing("process folder")
+                  }
+                  onResume={() => void startProcessing("resume processing")}
                   onRemove={() =>
                     void removeProcessing("remove processing folder")
                   }
@@ -821,6 +837,7 @@ function ProcessingMenuItems({
   onRun,
   onStop,
   onStart,
+  onResume,
   onRemove,
 }: {
   processing: ProcessingFolderState | undefined;
@@ -830,6 +847,7 @@ function ProcessingMenuItems({
   onRun: () => void;
   onStop: () => void;
   onStart: () => void;
+  onResume: () => void;
   onRemove: () => void;
 }) {
   const { t } = useTranslation();
@@ -852,7 +870,7 @@ function ProcessingMenuItems({
       <>
         <Menu.Item
           leftSection={<AutoModeIcon fontSize="small" />}
-          onClick={onStart}
+          onClick={onResume}
           disabled={disabled}
           title={disabled ? disabledHint : undefined}
         >
@@ -1480,6 +1498,7 @@ function ListView(
     onSetSelection,
     onOpenFolder,
     onOpenSection,
+    onStartProcessing,
     onOpenFile,
     onOpenDiskFile,
     onMoveFiles,
@@ -1596,6 +1615,7 @@ function ListView(
           return (
             <FolderRow
               key={`folder-${entry.folder.id}`}
+              onStartProcessing={onStartProcessing}
               folder={entry.folder}
               fileCount={entry.folderFileCount ?? 0}
               parentPath={entry.parentPath}
@@ -1648,6 +1668,7 @@ function ListView(
 }
 
 interface FolderRowProps {
+  onStartProcessing?: (folder: FolderRecord) => void;
   folder: FolderRecord;
   fileCount: number;
   parentPath?: string;
@@ -1663,6 +1684,7 @@ interface FolderRowProps {
 }
 
 function FolderRow({
+  onStartProcessing,
   folder,
   fileCount,
   parentPath,
@@ -1856,7 +1878,12 @@ function FolderRow({
                 disabled={false}
                 onRun={() => void runProcessing("process folder now")}
                 onStop={() => void stopProcessing("pause processing folder")}
-                onStart={() => void startProcessing("process folder")}
+                onStart={() =>
+                  onStartProcessing
+                    ? onStartProcessing(folder)
+                    : void startProcessing("process folder")
+                }
+                onResume={() => void startProcessing("resume processing")}
                 onRemove={() =>
                   void removeProcessing("remove processing folder")
                 }
@@ -1903,7 +1930,12 @@ function FolderRow({
                   disabledHint={offlineHint}
                   onRun={() => void runProcessing("process folder now")}
                   onStop={() => void stopProcessing("pause processing folder")}
-                  onStart={() => void startProcessing("process folder")}
+                  onStart={() =>
+                    onStartProcessing
+                      ? onStartProcessing(folder)
+                      : void startProcessing("process folder")
+                  }
+                  onResume={() => void startProcessing("resume processing")}
                   onRemove={() =>
                     void removeProcessing("remove processing folder")
                   }

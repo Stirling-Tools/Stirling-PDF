@@ -4534,6 +4534,20 @@ start = "Process files in this folder…"
 stop = "Stop processing this folder"
 sweep = "Process files now"
 
+[filesPage.processingSetup]
+cancel = "Cancel"
+lead = "Anything added to this folder runs these steps. Originals are never changed."
+start = "Start processing"
+title = "Process “{{name}}”"
+
+[filesPage.processingSetup.recipes]
+classify = "Classify & organise"
+classifyBlurb = "Identify each document’s type and label it, so the folder sorts itself."
+compress = "Shrink everything"
+compressBlurb = "Compress arrivals to a balanced size. Originals stay untouched."
+flatten = "Flatten & classify"
+flattenBlurb = "Bake forms and annotations into the page, then label the result."
+
 [filesPage.processingSections]
 inputs = "Inputs"
 inputsHint = "Your originals — never changed"
