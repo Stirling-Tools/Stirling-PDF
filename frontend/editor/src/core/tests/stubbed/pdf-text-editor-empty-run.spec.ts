@@ -2,16 +2,9 @@ import { test, expect } from "@app/tests/helpers/stub-test-base";
 import type { Page } from "@playwright/test";
 import path from "path";
 
-/**
- * Emptying a text box must actually empty it, in the PDF as well as the model.
- *
- * `FPDFText_SetText` traps ("unreachable", a raw WASM abort) when handed an
- * empty string. An Add-text box is base-14 from the start, so its edits take
- * the in-place SetText fast path - and clearing one threw inside PDFium AFTER
- * the model had already been set to "". The throw escaped the React handler
- * with nothing shown, leaving the model saying empty while the PDFium object
- * still held every character. Saving then brought the "deleted" text back.
- */
+// Emptying a text box must empty it in the PDF, not just the model.
+// FPDFText_SetText traps on an empty string, so the deleted text used to
+// survive in the object and reappear on save.
 
 const SAMPLE_PDF = path.join(
   import.meta.dirname,

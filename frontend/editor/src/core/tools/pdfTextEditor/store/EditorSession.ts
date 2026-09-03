@@ -1,16 +1,8 @@
 import { useSyncExternalStore } from "react";
 import type { FileId } from "@app/types/file";
 
-/**
- * What the editor's canvas top bar needs from the tool panel.
- *
- * The two surfaces are siblings, not ancestor and descendant: the panel is the
- * tool, and the canvas is a workbench view registered by id and mounted
- * somewhere else entirely, so no React context reaches from one to the other.
- * They already share the EditorStore singleton for document state; this is the
- * same seam for the things only the panel can do - anything touching the
- * workbench's file list has to run where the FileContext is.
- */
+// What the canvas top bar needs from the tool panel. They are siblings, not
+// ancestor and descendant, so no React context reaches between them.
 export interface EditorSession {
   /** Name of the open document, or null before one is opened. */
   fileName: string | null;
@@ -48,12 +40,7 @@ function getSnapshot(): EditorSession | null {
   return current;
 }
 
-/**
- * The live session, or null while the panel is not mounted.
- *
- * A null session means the canvas is on its own - it must degrade to view-only
- * controls rather than render a Save button that cannot save.
- */
+/** The live session, or null while the panel is not mounted. */
 export function useEditorSession(): EditorSession | null {
   return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 }

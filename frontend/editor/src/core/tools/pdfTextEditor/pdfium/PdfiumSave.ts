@@ -44,9 +44,8 @@ export class PdfiumSave {
     // The writer the shim hands back is the FPDF_FILEWRITE the flagged
     // entry point expects, so incremental mode needs no extra plumbing.
     const withFlags = (m as unknown as SaveFlagsModule).FPDF_SaveAsCopy;
-    // Falling back to the unflagged entry point would REWRITE a document the
-    // caller asked to append to - the one thing incremental mode exists to
-    // prevent - so refuse rather than quietly break its signatures.
+    // The unflagged entry point would REWRITE a document the caller asked to
+    // append to, so refuse rather than quietly break its signatures.
     if (options.incremental && typeof withFlags !== "function") {
       throw new Error(
         "This PDF needs a signature-preserving incremental save, but the " +
@@ -57,9 +56,8 @@ export class PdfiumSave {
 
     const writerPtr = m.PDFiumExt_OpenFileWriter();
     try {
-      // PDFium reports a failed save by return code, not by throwing. Ignoring
-      // it meant a failure produced an empty/partial buffer that the editor
-      // then wrote over the user's file.
+      // PDFium reports a failed save by return code, not by throwing; ignoring
+      // it wrote a partial buffer over the user's file.
       const ok =
         options.incremental && typeof withFlags === "function"
           ? withFlags(doc.docPtr, writerPtr, FPDF_INCREMENTAL)

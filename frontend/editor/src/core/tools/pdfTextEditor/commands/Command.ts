@@ -17,14 +17,8 @@ export interface Command {
   coalesceIgnoresTimeWindow?(previous: Command | null): boolean;
 }
 
-/**
- * A command failed to apply/revert but the document was put back as it was.
- *
- * Only `CompositeCommand` can promise this - it knows which children ran and
- * can undo exactly those. The store reads it to decide whether the run model
- * still describes the page (surface the error) or has to be rebuilt from
- * PDFium (throw the history away).
- */
+// A command failed but the document was put back as it was. Only
+// CompositeCommand can promise this; the store uses it to skip the rebuild.
 export class RolledBackError extends Error {
   readonly cause: unknown;
 

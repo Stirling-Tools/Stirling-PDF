@@ -3,13 +3,8 @@ import type { Page } from "@playwright/test";
 import path from "path";
 import { uploadFiles } from "@app/tests/helpers/ui-helpers";
 
-/**
- * Opening a second document must not silently bin the first one's edits.
- *
- * Every route in disposes the open PDFium document and its whole undo history,
- * so a stray click in the file switcher used to throw away everything the user
- * had typed with no warning at all.
- */
+// Opening a second document disposes the first and its undo history, so every
+// route in has to ask before discarding unsaved edits.
 
 const SAMPLE_PDF = path.join(
   import.meta.dirname,

@@ -9,14 +9,8 @@ interface Props {
   onCancel: () => void;
 }
 
-/**
- * Last stop before the editor throws away unsaved edits.
- *
- * Opening another document disposes the one in memory along with its whole
- * undo history, so every route into that - the file switcher, a drop onto the
- * canvas - has to pass through here first. Cancel is the default action: the
- * user reaching for a file list has not asked to lose anything.
- */
+// Last stop before unsaved edits are thrown away. Opening a document disposes
+// the one in memory, so the switcher and a canvas drop both come through here.
 export function DiscardChangesModal({
   incomingFileName,
   onConfirm,

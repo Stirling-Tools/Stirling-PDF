@@ -69,10 +69,8 @@ export class HistoryStack {
     try {
       cmd.apply(doc);
     } catch (err) {
-      // Same contract undo/redo already honoured: a command that threw is NOT
-      // recorded, because a history entry whose apply half-ran cannot be
-      // reverted. Pushing first would have made the next undo run a revert
-      // against changes that were never made.
+      // Not recorded: a history entry whose apply half-ran cannot be reverted,
+      // so the next undo would revert changes that were never made.
       this.lastCoalesceKey = null;
       throw new HistoryStepError("apply", err);
     }

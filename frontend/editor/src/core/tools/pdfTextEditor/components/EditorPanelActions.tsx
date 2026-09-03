@@ -22,20 +22,8 @@ interface Props {
   onShowHelp: () => void;
 }
 
-/**
- * Where the editor finishes, in the place every other tool finishes.
- *
- * Every tool in the app pins its primary action to the bottom of this panel
- * (see `createToolFlow`'s executeButton and its sticky `executeFooter`), so the
- * editor's Save belongs here too - a user who has learnt where "the button that
- * does the thing" lives should not have to learn a second answer for one tool.
- *
- * It is here at every width, and it is the ONLY Save: a primary action that
- * appears in two places, or moves between them, is worse than one that is
- * always in the same place. Find, help and the file switcher ride along only on
- * phones, where the panel covers the canvas and the toolbar carrying them is
- * off screen entirely.
- */
+// The one Save, pinned to the panel foot like every other tool's primary
+// action (createToolFlow's executeFooter). Extras ride along on phones only.
 export function EditorPanelActions({
   compact,
   openedFileName,
@@ -52,9 +40,8 @@ export function EditorPanelActions({
     <Box
       px="md"
       py="sm"
-      // Sticky, not flex-pinned: the tool renders inside ToolPanel's own
-      // ScrollArea, where height:100% resolves to content height, so a
-      // flex-column footer would just sit wherever the content ended.
+      // Sticky, not flex-pinned: inside ToolPanel's ScrollArea height:100%
+      // resolves to content height.
       style={{
         position: "sticky",
         bottom: 0,

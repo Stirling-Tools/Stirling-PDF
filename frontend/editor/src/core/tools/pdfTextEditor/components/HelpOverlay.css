@@ -41,4 +41,13 @@
    shortcut is not. */
 .pdf-editor-help__keys {
   flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+/* Separates alternative bindings, e.g. F3 / Ctrl + G. */
+.pdf-editor-help__or {
+  color: var(--c-text-muted);
+  font-size: 0.75rem;
 }

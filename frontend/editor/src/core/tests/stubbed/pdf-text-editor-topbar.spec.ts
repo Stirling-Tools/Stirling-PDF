@@ -2,13 +2,8 @@ import { test, expect } from "@app/tests/helpers/stub-test-base";
 import type { Page } from "@playwright/test";
 import path from "path";
 
-/**
- * The editor's actions live in the canvas top bar, not the side panel.
- *
- * Insert, Find, help and Save used to sit in the tool panel, which put the two
- * most-used verbs at the bottom of a scrolling column on the far side of the
- * screen. These pin them where a document editor's toolbar has always been.
- */
+// The page verbs live in the canvas top bar; Save lives in the panel footer
+// like every other tool's primary action.
 
 const SAMPLE_PDF = path.join(
   import.meta.dirname,

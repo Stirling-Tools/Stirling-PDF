@@ -34,13 +34,8 @@ interface SidebarProps {
 type TabId = "selected" | "document";
 
 /**
- * The editor's side panel: a properties inspector, and nothing else.
- *
- * Two tabs. "Selected" only ever shows what can act on what is picked right
- * now; "Document" holds the facts about the file and its reading settings.
- * The verbs - insert, find, save, help - moved to the canvas top bar, where a
- * document editor's toolbar has always been; a panel that carried them made the
- * user cross the screen for the two things they do most.
+ * A properties inspector, and nothing else: "Selected" acts on the selection,
+ * "Document" holds the file's facts. The verbs live in the canvas top bar.
  */
 export function EditorSidebar({
   store,

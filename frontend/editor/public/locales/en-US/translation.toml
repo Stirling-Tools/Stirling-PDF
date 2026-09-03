@@ -6466,58 +6466,38 @@ tooltip = "Keyboard shortcuts (?)"
 
 [pdfTextEditor.help.clipboard]
 copyDesc = "Copy selected text"
-copyKey = "Ctrl + C"
 cutDesc = "Cut selected (copy + delete)"
-cutKey = "Ctrl + X"
 heading = "Clipboard"
 pasteDesc = "Paste clipboard text as new run"
-pasteKey = "Ctrl + V"
 pastePlainDesc = "Paste as plain text"
-pastePlainKey = "Ctrl + Shift + V"
 
 [pdfTextEditor.help.document]
 escDesc = "Clear selection / close find / close help"
-escKey = "Esc"
 heading = "Document"
 helpDesc = "This help"
-helpKey = "? / F1"
 saveDesc = "Save to your workspace"
-saveKey = "Ctrl + S"
 
 [pdfTextEditor.help.editing]
 deleteDesc = "Remove selected"
-deleteKey = "Delete"
 duplicateDesc = "Duplicate selected"
-duplicateKey = "Ctrl + D"
 groupDesc = "Group selected runs into one paragraph"
-groupKey = "Ctrl + M"
 heading = "Editing"
 marqueeDesc = "Marquee multi-select"
-marqueeKey = "Ctrl + Shift + Drag"
 moveDesc = "Move text run"
-moveKey = "Ctrl + Click + Drag"
 selectAllDesc = "Select all"
-selectAllKey = "Ctrl + A"
 shiftClickDesc = "Add / remove a run from selection"
-shiftClickKey = "Ctrl + Click / Shift + Click"
 undoRedoDesc = "Undo / Redo"
-undoRedoKey = "Ctrl + Z / Ctrl + Y"
 
 [pdfTextEditor.help.find]
 heading = "Find & replace"
 nextDesc = "Next match (add Shift for previous)"
-nextKey = "F3 / Ctrl + G"
 openDesc = "Open find bar (and replace)"
-openKey = "Ctrl + F"
 
 [pdfTextEditor.help.navigation]
 firstLastDesc = "First / last page"
-firstLastKey = "Ctrl + Home / Ctrl + End"
 heading = "Navigation"
 pageDesc = "Previous / next page"
-pageKey = "PageUp / PageDown"
 zoomDesc = "Zoom in / out"
-zoomKey = "Ctrl + Wheel"
 
 [pdfTextEditor.inspector]
 document = "Document"

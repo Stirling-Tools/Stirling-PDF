@@ -3,14 +3,8 @@ import type { Page } from "@playwright/test";
 import fs from "fs";
 import path from "path";
 
-/**
- * A signed PDF must come out of the editor still carrying its signed revision.
- *
- * The tool claims that saving a signed document APPENDS a revision rather than
- * rewriting the file, which is the only way the bytes a signature covers stay
- * intact. Nothing checked that end to end, so this reads the file the editor
- * actually hands back and compares it, byte for byte, with what went in.
- */
+// A signed save must APPEND a revision, never rewrite. Compares the bytes the
+// editor hands back with what went in.
 
 const SIGNED = path.join(
   import.meta.dirname,
