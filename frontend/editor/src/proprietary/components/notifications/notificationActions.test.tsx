@@ -857,7 +857,7 @@ describe("retrying an attended policy run", () => {
   });
 
   it("says an untracked plain re-run cannot be delivered either", async () => {
-    // Same hole without a password: the cache could not place the policy, so nothing polls the run.
+    // Same hole without a password: the run went, but nothing here can poll or import it.
     rerunPolicy.mockResolvedValue({ ok: true, tracked: false });
 
     expect(await registry().OPEN_IN_TOOL?.run(policyContext())).toEqual({
@@ -865,6 +865,34 @@ describe("retrying an attended policy run", () => {
       message:
         "The policy re-run started, but its result cannot be delivered here, so this failure stays open.",
     });
+    expect(reportNotificationResolved).not.toHaveBeenCalled();
+  });
+
+  it("says a policy this browser cannot place was not run, so nothing was billed for", async () => {
+    // Refused before submission, so a repeat press explains again rather than charging again.
+    rerunPolicy.mockResolvedValue({ ok: false, reason: "unplaceable" });
+
+    expect(await registry().OPEN_IN_TOOL?.run(policyContext())).toEqual({
+      ok: false,
+      message:
+        "This policy is not available in this browser, so it cannot be run again from here.",
+    });
+    expect(reportNotificationResolved).not.toHaveBeenCalled();
+  });
+
+  it("keeps the unlocked document when the policy cannot be placed, and says the policy did not run", async () => {
+    rechainPolicyOnDocument.mockResolvedValue({
+      ok: false,
+      reason: "unplaceable",
+    });
+
+    expect(await registry().DECRYPT?.run(policyContext(), "hunter2")).toEqual({
+      ok: false,
+      message:
+        "The document was unlocked and opened here, but the policy could not be run on it again.",
+    });
+    // The password still bought them the unlocked document; only the re-run was refused.
+    expect(consumeFiles).toHaveBeenCalled();
     expect(reportNotificationResolved).not.toHaveBeenCalled();
   });
 

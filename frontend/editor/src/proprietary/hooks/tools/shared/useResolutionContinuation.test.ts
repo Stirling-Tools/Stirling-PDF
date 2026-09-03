@@ -167,6 +167,23 @@ describe("useResolutionContinuation", () => {
     expect(fetchNotifications).not.toHaveBeenCalled();
   });
 
+  it("leaves the row open when the policy cannot be placed here, having submitted nothing", async () => {
+    fetchNotifications.mockResolvedValue({
+      notifications: [policyRow()],
+      viewerReviewsTeam: false,
+    });
+    rechainPolicyOnDocument.mockResolvedValue({
+      ok: false,
+      reason: "unplaceable",
+    });
+
+    continuation()(unlockRun());
+
+    await waitFor(() => expect(rechainPolicyOnDocument).toHaveBeenCalled());
+    expect(reportNotificationResolved).not.toHaveBeenCalled();
+    expect(refreshNotificationsNow).not.toHaveBeenCalled();
+  });
+
   it("leaves the row open when the re-run cannot be delivered", async () => {
     fetchNotifications.mockResolvedValue({
       notifications: [policyRow()],

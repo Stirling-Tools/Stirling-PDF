@@ -5513,6 +5513,7 @@ noDocumentLinked = "This failure is not linked to a specific document, so it can
 notOnThisDevice = "This document is not on this device, so it cannot be opened or retried here."
 occurrences = "{{count}} times"
 open = "Notifications"
+policyNotHere = "This policy is not available in this browser, so it cannot be run again from here."
 rerunRejected = "The policy could not be run again just now. Try again in a moment."
 rerunUndelivered = "The policy re-run started, but its result cannot be delivered here, so this failure stays open."
 retryUnavailable = "This document can no longer be retried from this browser."

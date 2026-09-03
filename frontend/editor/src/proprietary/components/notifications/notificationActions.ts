@@ -329,6 +329,20 @@ export function useNotificationActions(): ClientActionRegistry {
           ),
         };
       }
+      if (outcome.reason === "unplaceable") {
+        return {
+          ok: false,
+          message: adopted
+            ? t(
+                "notifications.unlockedNotRerun",
+                "The document was unlocked and opened here, but the policy could not be run on it again.",
+              )
+            : t(
+                "notifications.policyNotHere",
+                "This policy is not available in this browser, so it cannot be run again from here.",
+              ),
+        };
+      }
       if (adopted) {
         return {
           ok: false,

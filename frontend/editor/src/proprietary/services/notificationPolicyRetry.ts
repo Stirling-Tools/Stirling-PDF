@@ -27,6 +27,8 @@ export type PolicyRerunOutcome =
   /** Running on the server, with nothing here to collect it. See {@link submit}. */
   | { ok: true; tracked: false }
   | { ok: false; reason: "missingFile" }
+  /** The local policy cache cannot place the policy, so nothing was submitted. */
+  | { ok: false; reason: "unplaceable" }
   /** The server refused the run. `message` is its own, or null when it gave nothing usable. */
   | { ok: false; reason: "rejected"; message: string | null };
 
@@ -90,6 +92,9 @@ async function submit(
 ): Promise<PolicyRerunOutcome> {
   // Resolved before the run, so a lookup that throws cannot leave a live run unrecorded.
   const categoryId = resume?.categoryId ?? categoryForPolicy(target.policyId);
+  // Nothing here could poll or import what such a run produced, so it would bill and deliver
+  // nothing, and the row would go on offering the same click. Refused before it costs anything.
+  if (!categoryId) return { ok: false, reason: "unplaceable" };
   // At the resume point where there is one, so the rest of the chain carries on from there.
   const policyId = resume?.policyId ?? target.policyId;
   const runTarget = resolvePolicyRunTarget();
@@ -102,7 +107,7 @@ async function submit(
   }
 
   // The run already went, so it is left to run: refusing now only wastes a second submission.
-  if (!categoryId || !workspaceFileId) return { ok: true, tracked: false };
+  if (!workspaceFileId) return { ok: true, tracked: false };
 
   // Marks (category, file) dispatched as it records: the pair has run once, and this is it again.
   recordRunStart({

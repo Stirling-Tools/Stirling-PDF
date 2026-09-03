@@ -86,16 +86,17 @@ describe("rerunPolicy", () => {
     expect(isDispatched("security", "f-1")).toBe(true);
   });
 
-  it("still runs a policy the local cache cannot place, and says the run is untracked", async () => {
-    // A run with no category cannot be imported or chained, so nothing delivers its output.
+  it("submits nothing for a policy the local cache cannot place", async () => {
+    // A run with no category cannot be imported or chained, so it would bill and deliver nothing,
+    // and the row would keep offering the same click.
     policies.value = {};
     getStirlingFile.mockResolvedValue(new File(["%PDF-1.7"], "invoice.pdf"));
 
     await expect(rerunPolicy(target)).resolves.toEqual({
-      ok: true,
-      tracked: false,
+      ok: false,
+      reason: "unplaceable",
     });
-    expect(runStoredPolicy).toHaveBeenCalled();
+    expect(runStoredPolicy).not.toHaveBeenCalled();
     expect(getRun("run-1")).toBeUndefined();
   });
 
@@ -151,6 +152,16 @@ describe("rechainPolicyOnDocument", () => {
     expect(runStoredPolicy).toHaveBeenCalledWith("pol-1", [unlocked], "f-1");
     expect(getRun("run-1")).toMatchObject({ fileId: "f-unlocked" });
     expect(isDispatched("security", "f-unlocked")).toBe(true);
+  });
+
+  it("submits nothing when the cache cannot place the policy, even with the bytes in hand", async () => {
+    policies.value = {};
+
+    await expect(
+      rechainPolicyOnDocument(target, unlocked, "f-unlocked"),
+    ).resolves.toEqual({ ok: false, reason: "unplaceable" });
+
+    expect(runStoredPolicy).not.toHaveBeenCalled();
   });
 
   it("runs untracked rather than filing the output against the wrong document, and admits it", async () => {
