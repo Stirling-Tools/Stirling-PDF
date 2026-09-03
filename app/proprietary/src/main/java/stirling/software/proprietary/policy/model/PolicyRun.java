@@ -2,7 +2,6 @@ package stirling.software.proprietary.policy.model;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Optional;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -72,13 +71,9 @@ public class PolicyRun {
     private volatile List<ResultFile> outputs = List.of();
     private volatile Instant updatedAt = Instant.now();
 
-    /**
-     * Opaque reference to the charge this run was submitted under, or null when the caller is not
-     * charged for runs. Read via {@link #takeChargeToken()}, never a getter: settling twice would
-     * either bill twice or release an already-released charge.
-     */
+    /** Guards {@link #claimChargeSettlement()}: settling twice bills twice or releases twice. */
     @Getter(AccessLevel.NONE)
-    private volatile String chargeToken;
+    private boolean chargeSettled;
 
     /**
      * All three attribution references are required rather than defaulted: a run with none is a
@@ -101,19 +96,16 @@ public class PolicyRun {
         this.triggeringUser = triggeringUser;
     }
 
-    /** Set once, on the request thread that submitted the run. */
-    public void chargedAs(String token) {
-        this.chargeToken = token;
-    }
-
     /**
-     * The charge to settle, and only for whoever asks first: a run reaches one terminal state, but
-     * several paths lead there and each would otherwise settle it again.
+     * True for the first caller only: a run reaches one terminal state, but several paths lead
+     * there and each would otherwise settle its charges again.
      */
-    public synchronized Optional<String> takeChargeToken() {
-        String token = chargeToken;
-        chargeToken = null;
-        return Optional.ofNullable(token);
+    public synchronized boolean claimChargeSettlement() {
+        if (chargeSettled) {
+            return false;
+        }
+        chargeSettled = true;
+        return true;
     }
 
     public int stepCount() {

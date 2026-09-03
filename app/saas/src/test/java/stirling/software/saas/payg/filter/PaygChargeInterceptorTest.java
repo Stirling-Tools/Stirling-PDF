@@ -210,40 +210,43 @@ class PaygChargeInterceptorTest {
     }
 
     @Test
-    void afterCompletion_accepted_policyRun_defersTheMeterToTheRun() throws Exception {
-        // 202 says the run was accepted, not that it worked. Metering here bills a run that may
-        // still fail on the document, and a meter event cannot be unsent — so the run settles it.
+    void afterCompletion_2xx_stepInsideAutomationRun_leavesTheMeterToTheRun() throws Exception {
+        // A run may still fail on a later step, and a meter event cannot be unsent, so a step that
+        // OPENED a process inside a run does not meter it. The run settles every process under
+        // its run id when it finishes; the process stays open for that, not released here.
         authenticateWithApiKey(makeUser(7L, 42L));
         UUID jobId = UUID.randomUUID();
         when(chargeService.openProcess(any(), anyList()))
                 .thenReturn(new ChargeOutcome(jobId, 1, ChargeOutcome.Disposition.OPENED));
 
         MockMultipartHttpServletRequest req = newMultipart();
-        req.setRequestURI("/api/v1/policies/pol-1/run");
         req.addFile(new MockMultipartFile("file", "x.pdf", "application/pdf", "abc".getBytes()));
+        req.addHeader("X-Stirling-Automation", "true");
+        req.addHeader("X-Stirling-Run-Id", "user-1:run-abc");
         MockHttpServletResponse res = new MockHttpServletResponse();
-        res.setStatus(202);
+        res.setStatus(200);
 
         interceptor.preHandle(req, res, handlerMethodForFakeController());
         interceptor.afterCompletion(req, res, handlerMethodForFakeController(), null);
 
+        verify(jobService).appendStep(eq(jobId), any(), eq(JobStepStatus.OK), any(), any(), any());
         verify(chargeService, never()).meterJobUsage(any());
-        // Left open on purpose: the stale sweep still bills a run that never reports either way.
         verify(chargeService, never()).releaseUnmeteredCharge(any(), any());
     }
 
     @Test
-    void afterCompletion_4xx_policyRun_releasesRatherThanDeferring() throws Exception {
-        // A run refused at submission never starts, so nothing will settle it later: this is the
-        // last chance to release the charge, and the ordinary failure path takes it.
+    void afterCompletion_4xx_stepInsideAutomationRun_stillReleasesItsOwnProcess() throws Exception {
+        // The failing step knows it produced nothing, so it releases what it opened right away;
+        // the run's own settle then finds nothing left open for it.
         authenticateWithApiKey(makeUser(7L, 42L));
         UUID jobId = UUID.randomUUID();
         when(chargeService.openProcess(any(), anyList()))
                 .thenReturn(new ChargeOutcome(jobId, 1, ChargeOutcome.Disposition.OPENED));
 
         MockMultipartHttpServletRequest req = newMultipart();
-        req.setRequestURI("/api/v1/policies/pol-1/run");
         req.addFile(new MockMultipartFile("file", "x.pdf", "application/pdf", "abc".getBytes()));
+        req.addHeader("X-Stirling-Automation", "true");
+        req.addHeader("X-Stirling-Run-Id", "user-1:run-abc");
         MockHttpServletResponse res = new MockHttpServletResponse();
         res.setStatus(400);
 
@@ -255,16 +258,18 @@ class PaygChargeInterceptorTest {
     }
 
     @Test
-    void afterCompletion_2xx_readingARun_metersAsNormal() throws Exception {
-        // Only the execute routes defer. Reading a run's status is an ordinary request.
+    void afterCompletion_2xx_automationHeaderWithoutRunId_metersAsAStandaloneCall()
+            throws Exception {
+        // Only a run can settle later. An automation call that names no run is its own charge and
+        // bills on its own success, exactly like any other standalone call.
         authenticateWithApiKey(makeUser(7L, 42L));
         UUID jobId = UUID.randomUUID();
         when(chargeService.openProcess(any(), anyList()))
                 .thenReturn(new ChargeOutcome(jobId, 1, ChargeOutcome.Disposition.OPENED));
 
         MockMultipartHttpServletRequest req = newMultipart();
-        req.setRequestURI("/api/v1/policies/runs");
         req.addFile(new MockMultipartFile("file", "x.pdf", "application/pdf", "abc".getBytes()));
+        req.addHeader("X-Stirling-Automation", "true");
         MockHttpServletResponse res = new MockHttpServletResponse();
         res.setStatus(200);
 
@@ -272,26 +277,6 @@ class PaygChargeInterceptorTest {
         interceptor.afterCompletion(req, res, handlerMethodForFakeController(), null);
 
         verify(chargeService).meterJobUsage(jobId);
-    }
-
-    @Test
-    void afterCompletion_2xx_joined_doesNotMeter() throws Exception {
-        // A JOINED follow-up step (chained tool on the same document) added no units when it
-        // joined — it must not re-meter; the OPENED step already did.
-        authenticateWithApiKey(makeUser(7L, 42L));
-        UUID jobId = UUID.randomUUID();
-        when(chargeService.openProcess(any(), anyList()))
-                .thenReturn(new ChargeOutcome(jobId, 0, ChargeOutcome.Disposition.JOINED));
-
-        MockMultipartHttpServletRequest req = newMultipart();
-        req.addFile(new MockMultipartFile("file", "x.pdf", "application/pdf", "abc".getBytes()));
-        MockHttpServletResponse res = new MockHttpServletResponse();
-        res.setStatus(200);
-
-        interceptor.preHandle(req, res, handlerMethodForFakeController());
-        interceptor.afterCompletion(req, res, handlerMethodForFakeController(), null);
-
-        verify(chargeService, never()).meterJobUsage(any());
     }
 
     @Test

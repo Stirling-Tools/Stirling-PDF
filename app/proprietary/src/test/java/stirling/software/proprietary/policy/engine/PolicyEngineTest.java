@@ -187,10 +187,9 @@ class PolicyEngineTest {
     }
 
     @Test
-    void aSucceededRunIsWhatBillsTheChargeItWasSubmittedUnder() throws Exception {
-        // The 202 that accepted this run did not meter it, so success here is the billable moment.
+    void aSucceededRunIsWhatBillsTheChargesItsStepsOpened() throws Exception {
+        // No step metered on its own, so success here is the billable moment for the whole run.
         charging = runCharges;
-        when(runCharges.openedForCurrentRequest()).thenReturn(Optional.of("charge-1"));
         setUp();
         when(toolMetadataService.isMultiInput(anyString())).thenReturn(false);
         when(toolMetadataService.shouldUnpackZipResponse(anyString())).thenReturn(false);
@@ -206,14 +205,36 @@ class PolicyEngineTest {
         PolicyRun run = handle.completion().get(10, TimeUnit.SECONDS);
 
         assertEquals(PolicyRunStatus.COMPLETED, run.getStatus());
-        verify(runCharges).settleBilled("charge-1");
+        verify(runCharges).settleBilled(run.getRunId());
         verify(runCharges, never()).settleUnbilled(anyString(), anyString());
     }
 
     @Test
-    void aFailedRunReleasesTheChargeInsteadOfBillingForNothing() throws Exception {
+    void aSettleThatThrowsDoesNotTurnADeliveredRunIntoAFailedOne() throws Exception {
         charging = runCharges;
-        when(runCharges.openedForCurrentRequest()).thenReturn(Optional.of("charge-1"));
+        setUp();
+        doThrow(new IllegalStateException("db down")).when(runCharges).settleBilled(anyString());
+        when(toolMetadataService.isMultiInput(anyString())).thenReturn(false);
+        when(toolMetadataService.shouldUnpackZipResponse(anyString())).thenReturn(false);
+        stubEndpoint(ROTATE, pdf("rotated", "rotated.pdf"));
+        when(fileStorage.storeInputStream(any(InputStream.class), anyString()))
+                .thenReturn(new StoredFile("file-1", 4L));
+
+        PolicyRunHandle handle =
+                engine.submit(
+                        definition(new PipelineStep(ROTATE, Map.of())),
+                        PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
+                        PolicyProgressListener.NOOP);
+        PolicyRun run = handle.completion().get(10, TimeUnit.SECONDS);
+
+        assertEquals(PolicyRunStatus.COMPLETED, run.getStatus());
+        verify(taskManager).setComplete(run.getRunId());
+        verify(runCharges, never()).settleUnbilled(anyString(), anyString());
+    }
+
+    @Test
+    void aFailedRunReleasesItsChargesInsteadOfBillingForNothing() throws Exception {
+        charging = runCharges;
         setUp();
         when(toolMetadataService.isMultiInput(ROTATE)).thenReturn(false);
         when(internalApiClient.post(eq(ROTATE), any())).thenThrow(new RuntimeException("boom"));
@@ -226,15 +247,15 @@ class PolicyEngineTest {
         PolicyRun run = handle.completion().get(10, TimeUnit.SECONDS);
 
         assertEquals(PolicyRunStatus.FAILED, run.getStatus());
-        verify(runCharges).settleUnbilled(eq("charge-1"), anyString());
+        verify(runCharges).settleUnbilled(eq(run.getRunId()), anyString());
         verify(runCharges, never()).settleBilled(anyString());
     }
 
     @Test
     void settlesOnceEvenThoughEveryFailurePathWouldSettle() throws Exception {
-        // The token is taken, not read: a second settle would release an already-released charge.
+        // Settlement is claimed, not repeated: a second settle would release an already-released
+        // charge.
         charging = runCharges;
-        when(runCharges.openedForCurrentRequest()).thenReturn(Optional.of("charge-1"));
         setUp();
         when(toolMetadataService.isMultiInput(ROTATE)).thenReturn(false);
         when(internalApiClient.post(eq(ROTATE), any())).thenThrow(new RuntimeException("boom"));
@@ -246,7 +267,7 @@ class PolicyEngineTest {
                         PolicyProgressListener.NOOP);
         PolicyRun run = handle.completion().get(10, TimeUnit.SECONDS);
 
-        assertThat(run.takeChargeToken()).isEmpty();
+        assertThat(run.claimChargeSettlement()).isFalse();
         verify(runCharges, times(1)).settleUnbilled(anyString(), anyString());
     }
 

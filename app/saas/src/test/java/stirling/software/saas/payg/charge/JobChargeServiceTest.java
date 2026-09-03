@@ -3,6 +3,7 @@ package stirling.software.saas.payg.charge;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
@@ -626,6 +627,60 @@ class JobChargeServiceTest {
                                         List.of()))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("inputs must not be empty");
+    }
+
+    @Test
+    void meterRun_closesEveryProcessStillOpenUnderTheRun() {
+        UUID a = UUID.randomUUID();
+        UUID b = UUID.randomUUID();
+        when(jobRepo.findByRunIdAndStatus("user-1:run-abc", JobStatus.OPEN))
+                .thenReturn(List.of(openJob(a), openJob(b)));
+
+        int closed = service.meterRun("user-1:run-abc");
+
+        // close() is the meter path: the afterCommit hook posts to Stripe under the same
+        // idempotency key the stale sweep would use, so the two never double-bill.
+        assertThat(closed).isEqualTo(2);
+        verify(jobService).close(a);
+        verify(jobService).close(b);
+        verify(shadowRepo, never()).save(any());
+    }
+
+    @Test
+    void releaseRun_releasesEveryProcessStillOpenUnderTheRun() {
+        UUID a = UUID.randomUUID();
+        UUID b = UUID.randomUUID();
+        ProcessingJob jobA = openJob(a);
+        ProcessingJob jobB = openJob(b);
+        when(jobRepo.findByRunIdAndStatus("user-1:run-abc", JobStatus.OPEN))
+                .thenReturn(List.of(jobA, jobB));
+        when(jobRepo.findById(a)).thenReturn(java.util.Optional.of(jobA));
+        when(jobRepo.findById(b)).thenReturn(java.util.Optional.of(jobB));
+        PaygShadowCharge rowA = chargedShadowRow(a, 100L, 3, BillingCategory.AUTOMATION);
+        when(shadowRepo.findFirstByJobIdOrderByIdAsc(a)).thenReturn(java.util.Optional.of(rowA));
+        when(shadowRepo.findFirstByJobIdOrderByIdAsc(b)).thenReturn(java.util.Optional.empty());
+
+        int released = service.releaseRun("user-1:run-abc", "policy-run-failed:step 2");
+
+        assertThat(released).isEqualTo(2);
+        assertThat(rowA.getStatus()).isEqualTo(ShadowChargeStatus.REFUNDED);
+        assertThat(rowA.getRefundReason()).isEqualTo("policy-run-failed:step 2");
+        assertThat(jobA.getStatus()).isEqualTo(JobStatus.CLOSED);
+        assertThat(jobB.getStatus()).isEqualTo(JobStatus.CLOSED);
+        verify(meterReporter, never()).recordUsage(any(), any(), anyInt(), any(), any(), any());
+    }
+
+    @Test
+    void meterRun_andReleaseRun_ignoreARunWithNothingOpen() {
+        // A step that failed with an error status already released its own process, and a run
+        // the sweep already closed has nothing left; neither is an error for the run's settle.
+        when(jobRepo.findByRunIdAndStatus("user-1:run-abc", JobStatus.OPEN)).thenReturn(List.of());
+
+        assertThat(service.meterRun("user-1:run-abc")).isZero();
+        assertThat(service.releaseRun("user-1:run-abc", "policy-run-failed:boom")).isZero();
+
+        verify(jobService, never()).close(any());
+        verify(shadowRepo, never()).save(any());
     }
 
     @Test

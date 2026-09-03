@@ -36,7 +36,6 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.service.AutomationRunContext;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
-import stirling.software.proprietary.policy.controller.PolicyRunRoutes;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.model.User;
@@ -65,9 +64,11 @@ import stirling.software.saas.util.AuthenticationUtils;
  * without multipart inputs short-circuit inside {@code doPreHandle} without touching the charge
  * service.
  *
- * <p>{@code afterCompletion}: branches on HTTP status — 2xx hashes the response body for OUTPUT
- * lineage; 4xx records a step append for audit; 5xx triggers refund-and-close (OPENED) or
- * step-quota return (JOINED). Closes all input temp files and the response wrapper at the end.
+ * <p>{@code afterCompletion}: branches on HTTP status — 2xx meters the process this request OPENED
+ * and hashes the response body for OUTPUT lineage; any error status releases the charge (OPENED) or
+ * returns the step slot (JOINED), since the caller received no document. A step inside an
+ * automation run never meters here: its run settles every process under the run id when it
+ * finishes. Closes all input temp files and the response wrapper at the end.
  *
  * <p>Fail-open everywhere: any unexpected {@link RuntimeException} is swallowed, logged at WARN,
  * and counted on {@code payg.filter.errors}. The customer's tool call always proceeds.
@@ -81,9 +82,8 @@ import stirling.software.saas.util.AuthenticationUtils;
 @Profile("saas")
 public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
 
-    /** Read by {@code SaasPolicyRunCharges} too: an async run settles its charge after the fact. */
-    public static final String ATTR_JOB_ID = PaygChargeInterceptor.class.getName() + ".JOB_ID";
-
+    static final String ATTR_JOB_ID = PaygChargeInterceptor.class.getName() + ".JOB_ID";
+    static final String ATTR_RUN_ID = PaygChargeInterceptor.class.getName() + ".RUN_ID";
     static final String ATTR_DISPOSITION = PaygChargeInterceptor.class.getName() + ".DISPOSITION";
     static final String ATTR_INPUT_TEMP_FILES =
             PaygChargeInterceptor.class.getName() + ".INPUT_TEMP_FILES";
@@ -299,6 +299,9 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
                 (hasAutomationHeader(request) && headerRunId != null && !headerRunId.isBlank())
                         ? headerRunId
                         : null;
+        if (runId != null) {
+            request.setAttribute(ATTR_RUN_ID, runId);
+        }
         ChargeContext ctx =
                 new ChargeContext(
                         currentUser.getId(),
@@ -396,22 +399,16 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
         // Only the OPENED request meters — JOINED follow-up steps (chained tools on the same
         // document) added no units and must not re-meter. The process stays OPEN for further
         // lineage joins; StaleJobCloser closing it later is a no-op at Stripe thanks to the shared
-        // idempotency key. metering is best-effort and must never break the response teardown.
-        meterUnlessSettledLater(request, jobId, disposition);
-        recordOutputs(request, response, jobId);
-    }
-
-    /**
-     * Meter now unless the response only means "accepted": a policy run's outcome arrives later, so
-     * {@code PolicyRunCharges} meters it on success and releases the charge on failure. A run that
-     * reports neither leaves its process open for the stale sweep to close and meter as before.
-     */
-    private void meterUnlessSettledLater(
-            HttpServletRequest request, UUID jobId, ChargeOutcome.Disposition disposition) {
-        if (PolicyRunRoutes.matches(request)) {
-            return;
+        // idempotency key. Metering is best-effort and must never break the response teardown.
+        //
+        // A step inside an automation run is the exception and does not meter on its own: the run
+        // may still fail on a later step, and a meter event cannot be unsent. The run settles every
+        // process under its run id once it knows its outcome (PolicyRunCharges); one that never
+        // reports leaves them to the stale sweep, which bills them as it always has.
+        if (request.getAttribute(ATTR_RUN_ID) == null) {
+            meterIfOpened(jobId, disposition);
         }
-        meterIfOpened(jobId, disposition);
+        recordOutputs(request, response, jobId);
     }
 
     /**

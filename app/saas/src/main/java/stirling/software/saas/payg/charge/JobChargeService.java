@@ -478,6 +478,41 @@ public class JobChargeService {
     }
 
     /**
+     * Bills every process still open under {@code runId}. A tool step inside an automation run does
+     * not meter on its own (see {@code PaygChargeInterceptor}); the run reports here once it has
+     * delivered. Each process closes with the same idempotency key the stale sweep uses, so one the
+     * sweep already closed is not billed twice.
+     *
+     * @return how many processes were closed
+     */
+    @Transactional
+    public int meterRun(String runId) {
+        Objects.requireNonNull(runId, "runId");
+        List<ProcessingJob> open = jobRepository.findByRunIdAndStatus(runId, JobStatus.OPEN);
+        for (ProcessingJob job : open) {
+            close(job.getId());
+        }
+        return open.size();
+    }
+
+    /**
+     * Releases every process still open under {@code runId}: the run failed, so none of its steps'
+     * units are owed. A step that already released its own process on an error status is skipped by
+     * the status filter.
+     *
+     * @return how many processes were released
+     */
+    @Transactional
+    public int releaseRun(String runId, String refundReason) {
+        Objects.requireNonNull(runId, "runId");
+        List<ProcessingJob> open = jobRepository.findByRunIdAndStatus(runId, JobStatus.OPEN);
+        for (ProcessingJob job : open) {
+            releaseUnmeteredCharge(job.getId(), refundReason);
+        }
+        return open.size();
+    }
+
+    /**
      * Closes a process and — as a fallback — meters its usage. The primary meter trigger is the
      * charge interceptor's {@code afterCompletion} on a successful request (see {@link
      * #meterJobUsage(UUID)}); this close-time meter exists to catch processes that were never

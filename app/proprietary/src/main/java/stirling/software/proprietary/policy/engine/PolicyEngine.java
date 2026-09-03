@@ -8,6 +8,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Consumer;
 
 import org.slf4j.MDC;
 import org.springframework.core.io.Resource;
@@ -219,8 +220,6 @@ public class PolicyEngine {
         }
         PolicyRun run =
                 new PolicyRun(runId, policyId, definition, sourceId, fileIdentity, triggeringUser);
-        // Read here because it comes off the request, which the worker thread below will not have.
-        runCharges.flatMap(PolicyRunCharges::openedForCurrentRequest).ifPresent(run::chargedAs);
         registry.register(run);
         CompletableFuture<PolicyRun> completion = new CompletableFuture<>();
         PolicyProgressListener tracking = trackingListener(runId, run, listener);
@@ -422,20 +421,33 @@ public class PolicyEngine {
                 cause);
     }
 
-    /**
-     * The run produced what was asked of it, so the charge it was submitted under stands. A build
-     * with no charging has no token to settle, and does nothing.
-     */
+    /** The run produced what was asked of it, so the charges its steps opened stand. */
     private void settleBilled(PolicyRun run) {
-        runCharges.ifPresent(charges -> run.takeChargeToken().ifPresent(charges::settleBilled));
+        settleOnce(run, charges -> charges.settleBilled(run.getRunId()));
     }
 
-    /** The run failed, so the charge is released rather than billed for work nobody received. */
+    /** The run failed, so its charges are released rather than billed for work nobody received. */
     private void settleUnbilled(PolicyRun run, String reason) {
-        runCharges.ifPresent(
-                charges ->
-                        run.takeChargeToken()
-                                .ifPresent(token -> charges.settleUnbilled(token, reason)));
+        settleOnce(run, charges -> charges.settleUnbilled(run.getRunId(), reason));
+    }
+
+    /**
+     * Billing never changes a run's outcome: a settle that threw after {@code run.complete} would
+     * otherwise land in the failure handlers and report a delivered run as failed. A build with no
+     * charging does nothing.
+     */
+    private void settleOnce(PolicyRun run, Consumer<PolicyRunCharges> settle) {
+        if (runCharges.isEmpty() || !run.claimChargeSettlement()) {
+            return;
+        }
+        try {
+            settle.accept(runCharges.get());
+        } catch (RuntimeException e) {
+            log.error(
+                    "Policy run {} finished but its charges could not be settled",
+                    run.getRunId(),
+                    e);
+        }
     }
 
     private WaitState suspend(PolicyInputRequiredException e) {

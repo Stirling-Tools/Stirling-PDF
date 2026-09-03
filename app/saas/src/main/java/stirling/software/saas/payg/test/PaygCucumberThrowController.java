@@ -30,8 +30,8 @@ import stirling.software.common.enumeration.ResourceWeight;
  * <p>{@link AutoJobPostMapping} consumes {@code multipart/form-data} so the filter's {@code
  * MultipartHttpServletRequest} cast runs and the input lineage hash is computed before the
  * controller throws. The PAYG filter chain therefore sees: preHandle → openProcess (CHARGED row
- * written) → controller throws → afterCompletion observes status 500 → markFirstStepFailed (row →
- * REFUNDED, job → CLOSED).
+ * written) → controller throws → afterCompletion observes status 500 → releaseUnmeteredCharge (row
+ * → REFUNDED, job → CLOSED).
  *
  * <p>The thrown {@link IllegalStateException} is unwrapped by {@code GlobalExceptionHandler}'s
  * RuntimeException handler — it has no IOException / IllegalArgument / BaseAppException cause, so
