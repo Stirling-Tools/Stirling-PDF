@@ -1,0 +1,83 @@
+.downloads-wizard__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.downloads-wizard__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  font-size: 0.9rem;
+  color: var(--c-text);
+}
+
+.downloads-wizard__path {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.8rem;
+  color: var(--c-text-muted);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border-subtle);
+  border-radius: var(--radius-sm, 4px);
+  padding: 0.35rem 0.5rem;
+  word-break: break-all;
+}
+
+.downloads-wizard__facts {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.84rem;
+  color: var(--c-text-muted);
+}
+
+.downloads-wizard__progress {
+  align-items: center;
+  text-align: center;
+}
+
+/* Fills as runs settle; width is driven inline from the settled/total ratio. */
+.downloads-wizard__bar {
+  width: 100%;
+  height: 0.35rem;
+  border-radius: 999px;
+  background: var(--c-border-subtle);
+  overflow: hidden;
+}
+
+.downloads-wizard__bar > span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--c-primary);
+  transition: width 0.3s ease;
+}
+
+.downloads-wizard__tick {
+  color: var(--c-success, var(--c-primary));
+}
+
+.downloads-wizard__warn {
+  color: var(--c-danger-text, var(--c-text));
+  font-size: 0.84rem;
+}
+
+.downloads-wizard__foot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+/* The entry point: a compact row in the side panel holding the button that opens the offer. */
+.downloads-wizard__trigger {
+  display: flex;
+  padding: 0.5rem;
+}
+
+.downloads-wizard__trigger > * {
+  width: 100%;
+  justify-content: flex-start;
+}
