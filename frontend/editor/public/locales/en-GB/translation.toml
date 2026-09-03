@@ -4186,6 +4186,7 @@ sharedHint = "Shared with you via link"
 
 [filesPage.processing]
 active = "Processing folder"
+section = "Processing"
 paused = "Processing paused"
 start = "Process files in this folder…"
 stop = "Stop processing this folder"

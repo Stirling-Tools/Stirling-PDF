@@ -604,6 +604,43 @@
   background: var(--c-primary-subtle, var(--c-surface));
 }
 
+/* A working folder's per-state counts, one dotted chip per non-zero state. */
+.files-page-folder-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.3rem;
+}
+
+.files-page-folder-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--c-text-muted);
+}
+
+.files-page-folder-stat::before {
+  content: "";
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 50%;
+  background: var(--c-border-strong);
+}
+
+.files-page-folder-stat.is-done::before {
+  background: var(--c-success, var(--c-primary));
+}
+
+.files-page-folder-stat.is-processing::before {
+  background: var(--c-primary);
+}
+
+.files-page-folder-stat.is-failed::before {
+  background: var(--c-danger, var(--c-text));
+}
+
 /* Parent-folder breadcrumb shown on cards/rows during recursive search so
    the user can tell which folder each hit lives in without navigating. */
 .files-page-card-path {

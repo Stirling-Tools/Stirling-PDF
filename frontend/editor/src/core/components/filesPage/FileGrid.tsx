@@ -1,4 +1,10 @@
-import React, { useCallback, useMemo, useRef } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useTranslation } from "react-i18next";
 import { Checkbox, Loader, Menu, Tooltip } from "@mantine/core";
 import { Button } from "@app/ui/Button";
@@ -18,6 +24,9 @@ import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
 import AutoModeIcon from "@mui/icons-material/AutoMode";
+import PlayArrowIcon from "@mui/icons-material/PlayArrow";
+import PauseIcon from "@mui/icons-material/Pause";
+import ReplayIcon from "@mui/icons-material/Replay";
 import TaskAltIcon from "@mui/icons-material/TaskAlt";
 import SearchIcon from "@mui/icons-material/Search";
 
@@ -573,6 +582,7 @@ function FolderCard({
     disable: disableProcessing,
     remove: removeProcessingFolder,
     sweep: sweepProcessing,
+    listFiles: listProcessingFiles,
   } = useProcessingFolders();
   const processing = processingStateFor(folder);
   // Each action surfaces its own failure the way a failed drop does; the
@@ -668,11 +678,21 @@ function FolderCard({
         )}
         <div className="files-page-card-meta">
           {processing ? (
-            <span className="files-page-processing-tag">
-              {processing.enabled
-                ? t("filesPage.processing.active", "Processing folder")
-                : t("filesPage.processing.paused", "Processing paused")}
-            </span>
+            <>
+              <span className="files-page-processing-tag">
+                {processing.enabled
+                  ? t("filesPage.processing.active", "Processing folder")
+                  : t("filesPage.processing.paused", "Processing paused")}
+              </span>
+              {fileCount > 0 && (
+                <span>
+                  {" · "}
+                  {t("filesPage.folderItems", "{{count}} items", {
+                    count: fileCount,
+                  })}
+                </span>
+              )}
+            </>
           ) : fileCount === 0 ? (
             t("filesPage.folder", "Folder")
           ) : (
@@ -681,6 +701,12 @@ function FolderCard({
             })
           )}
         </div>
+        {processing && (
+          <ProcessingFolderStats
+            recordId={processing.id}
+            listFiles={listProcessingFiles}
+          />
+        )}
       </div>
       <div className="files-page-card-actions">
         <Menu shadow="md" position="bottom-end" withinPortal>
@@ -789,6 +815,59 @@ function FolderCard({
 }
 
 /**
+ * A working folder's live per-state counts, on its card: how much is done,
+ * running, failed, or still waiting. Light polling — a handful of processing
+ * folders at most, and the numbers are the card's whole story.
+ */
+function ProcessingFolderStats({
+  recordId,
+  listFiles,
+}: {
+  recordId: string;
+  listFiles: (recordId: string) => Promise<{ state: string }[]>;
+}) {
+  const { t } = useTranslation();
+  const [counts, setCounts] = useState<Record<string, number> | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    const tick = async () => {
+      const files = await listFiles(recordId).catch(() => []);
+      if (cancelled) return;
+      const next: Record<string, number> = {};
+      for (const file of files) {
+        next[file.state] = (next[file.state] ?? 0) + 1;
+      }
+      setCounts(next);
+    };
+    void tick();
+    const timer = setInterval(() => void tick(), 5000);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, [recordId, listFiles]);
+  if (!counts) return null;
+  const parts = (
+    [
+      ["done", t("filesPage.diskState.done", "Ready")],
+      ["processing", t("filesPage.diskState.processing", "Processing")],
+      ["failed", t("filesPage.diskState.failed", "Failed")],
+      ["waiting", t("filesPage.diskState.waiting", "Waiting")],
+    ] as const
+  ).filter(([state]) => (counts[state] ?? 0) > 0);
+  if (parts.length === 0) return null;
+  return (
+    <div className="files-page-folder-stats">
+      {parts.map(([state, label]) => (
+        <span key={state} className={`files-page-folder-stat is-${state}`}>
+          {counts[state]} {label}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+/**
  * The processing entries of a folder's action menu. Every folder kind carries
  * these - including mounts, whose other edit actions are hidden. `continuous`
  * marks a folder whose engine processes arrivals on its own, where an explicit
@@ -816,16 +895,22 @@ function ProcessingMenuItems({
   onRemove: () => void;
 }) {
   const { t } = useTranslation();
+  const heading = (
+    <Menu.Label>{t("filesPage.processing.section", "Processing")}</Menu.Label>
+  );
   if (!processing) {
     return (
-      <Menu.Item
-        leftSection={<AutoModeIcon fontSize="small" />}
-        onClick={onStart}
-        disabled={disabled}
-        title={disabled ? disabledHint : undefined}
-      >
-        {t("filesPage.processing.start", "Process files in this folder…")}
-      </Menu.Item>
+      <>
+        {heading}
+        <Menu.Item
+          leftSection={<AutoModeIcon fontSize="small" />}
+          onClick={onStart}
+          disabled={disabled}
+          title={disabled ? disabledHint : undefined}
+        >
+          {t("filesPage.processing.start", "Process files in this folder…")}
+        </Menu.Item>
+      </>
     );
   }
   if (!processing.enabled) {
@@ -833,8 +918,9 @@ function ProcessingMenuItems({
     // what was already done. Removing is the destructive option, named as such.
     return (
       <>
+        {heading}
         <Menu.Item
-          leftSection={<AutoModeIcon fontSize="small" />}
+          leftSection={<PlayArrowIcon fontSize="small" />}
           onClick={onResume}
           disabled={disabled}
           title={disabled ? disabledHint : undefined}
@@ -842,6 +928,7 @@ function ProcessingMenuItems({
           {t("filesPage.processing.resume", "Resume processing")}
         </Menu.Item>
         <Menu.Item
+          color="red"
           leftSection={<AutoModeIcon fontSize="small" />}
           onClick={onRemove}
           disabled={disabled}
@@ -854,18 +941,16 @@ function ProcessingMenuItems({
   }
   return (
     <>
+      {heading}
       {!continuous && (
         <Menu.Item
-          leftSection={<AutoModeIcon fontSize="small" />}
+          leftSection={<ReplayIcon fontSize="small" />}
           onClick={onRun}
         >
           {t("filesPage.processing.sweep", "Process files now")}
         </Menu.Item>
       )}
-      <Menu.Item
-        leftSection={<AutoModeIcon fontSize="small" />}
-        onClick={onStop}
-      >
+      <Menu.Item leftSection={<PauseIcon fontSize="small" />} onClick={onStop}>
         {t("filesPage.processing.stop", "Pause processing")}
       </Menu.Item>
     </>
