@@ -2,15 +2,8 @@ import { test, expect } from "@app/tests/helpers/stub-test-base";
 import type { Page } from "@playwright/test";
 import path from "path";
 
-/**
- * The find bar's layout, the way a code editor builds one.
- *
- * Two rows fenced off from the page by their own rules, the match count and
- * the option toggles inside the search field, and navigation beside it. The
- * toggles being inside the field is the part that needs a test: Mantine makes
- * an input's section inert by default so clicks fall through to the input, so
- * a real button placed there silently stops responding.
- */
+// Find bar layout. The toggles sit inside the input, where Mantine makes
+// sections inert by default - so a real button there silently stops working.
 
 const SAMPLE_PDF = path.join(
   import.meta.dirname,

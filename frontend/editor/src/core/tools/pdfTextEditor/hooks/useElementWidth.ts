@@ -1,15 +1,7 @@
 import { useEffect, useState, type RefObject } from "react";
 
-/**
- * The element's own width in pixels, tracked as it resizes.
- *
- * A CSS container query can hide a control that does not fit, but it cannot
- * move one into a menu - that is a change of markup, not of style. So the one
- * place the toolbar needs to make a structural decision has to measure.
- *
- * Returns null until the first observation, so a caller can render its roomy
- * layout rather than flashing the compact one on mount.
- */
+// The element's own width, tracked as it resizes. A container query can hide a
+// control but cannot move it into a menu, so that decision has to measure.
 export function useElementWidth(
   ref: RefObject<HTMLElement | null>,
 ): number | null {

@@ -23,11 +23,8 @@ export class PdfiumTextWriter {
    */
   static commitRunText(doc: EditorDocument, page: Page, run: TextRun): boolean {
     if (!run.pdfiumObjPtr) return false;
-    // A text object with no characters is not a thing PDFium will build:
     // FPDFText_SetText traps ("unreachable") on an empty string rather than
-    // returning false, which used to escape as a raw WASM error the moment a
-    // user selected all the text in a box and pressed Delete. Emptying a run
-    // is the overlay path's job - it paints the cover rect and emits nothing.
+    // returning false. Emptying a run is the overlay path's job.
     if (run.text.length === 0) return false;
     const m = doc.module;
     const ptr = writeUtf16(m, run.text);

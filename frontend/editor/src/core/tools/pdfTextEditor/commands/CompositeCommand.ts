@@ -32,14 +32,8 @@ export class CompositeCommand implements Command {
     this.run(doc, reversed, "revert");
   }
 
-  /**
-   * Run every child in order, undoing the ones that already ran if one throws.
-   *
-   * A group is ONE undo step, so half of it landing is worse than none of it:
-   * the model would describe a page that no longer matches and the user's next
-   * undo would revert children that never applied. Rolling back keeps the
-   * document exactly as it was found, which is what `RolledBackError` promises.
-   */
+  // Run every child, undoing the ones that ran if one throws. A group is ONE
+  // undo step, so half of it landing would leave the model describing nothing.
   private run(
     doc: EditorDocument,
     order: Command[],
@@ -56,9 +50,8 @@ export class CompositeCommand implements Command {
             if (phase === "apply") done[i].revert(doc);
             else done[i].apply(doc);
           } catch {
-            // The rollback itself failed, so the document is genuinely
-            // half-changed - report the original failure unwrapped so the
-            // caller rebuilds instead of trusting the model.
+            // Rollback failed too, so the document really is half-changed:
+            // report unwrapped so the caller rebuilds.
             throw err;
           }
         }

@@ -22,9 +22,8 @@ import { useEditorSession } from "@app/tools/pdfTextEditor/store/EditorSession";
 import { useElementWidth } from "@app/tools/pdfTextEditor/hooks/useElementWidth";
 import "@app/tools/pdfTextEditor/components/EditorTopBar.css";
 
-// Below this the insert/find/help controls stop being buttons and become one
-// menu. Chosen so the contextual formatting group - the reason a selection is
-// made at all - still gets room beside them rather than scrolling out of view.
+// Below this, insert/find/help collapse into one menu so the contextual
+// formatting group still has room.
 const COMPACT_BELOW_PX = 900;
 
 interface EditorTopBarProps {
@@ -43,22 +42,8 @@ interface EditorTopBarProps {
 }
 
 /**
- * Everything you do TO the document, in the place editors have always put it.
- *
- * The side panel used to carry the file you are editing, Insert, Find, help and
- * Save, which meant the two most common verbs in the tool lived at the bottom
- * of a scrolling panel on the far side of the screen from the page. They read
- * left to right the way a document editor's toolbar does: what file this is,
- * undo/redo, what you can add, what you can find, then the selection's own
- * formatting.
- *
- * Saving is deliberately NOT here. Every other tool pins its primary action to
- * the bottom of the side panel, and one tool answering "where is the button"
- * differently from the rest is worse than the extra travel - see
- * EditorPanelActions.
- *
- * Narrow bars fold insert, find and help into one overflow menu rather than
- * scrolling them out of sight - see COMPACT_BELOW_PX.
+ * File identity, undo/redo, insert, find and the selection's formatting.
+ * Save is not here - it sits in EditorPanelActions like every other tool's.
  */
 export function EditorTopBar({
   controller,

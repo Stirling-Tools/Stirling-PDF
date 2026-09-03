@@ -2810,13 +2810,10 @@ test.describe("PDF text editor - multi-page", () => {
       timeout: 30_000,
     });
 
-    // Pick the first text run on page 2 (index 2). Skip if it has none.
+    // Page 2's runs are read lazily once it scrolls into view, so wait for
+    // them. Skipping on an empty count made this silently stop testing.
     const runs = page.locator('[data-testid^="pdf-editor-run-p2-"]');
-    const count = await runs.count();
-    if (count === 0) {
-      test.skip(true, "Multi-page fixture page 2 has no editable text runs");
-      return;
-    }
+    await expect(runs.first()).toBeAttached({ timeout: 30_000 });
 
     const target = runs.first();
     const runTestId = (await target.getAttribute("data-testid")) ?? "";

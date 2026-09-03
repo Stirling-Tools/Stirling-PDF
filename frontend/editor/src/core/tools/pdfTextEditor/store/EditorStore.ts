@@ -81,9 +81,8 @@ export interface EditorViewState {
   widthMode: WidthMode;
   /** Show per-page rulers and alignment guides. */
   showRulers: boolean;
-  // Find and shortcuts are opened from the canvas top bar but rendered beside
-  // the pages, and the panel's keyboard shortcuts drive both - so the flags
-  // live on the store both surfaces already share.
+  // Opened from the canvas top bar but rendered elsewhere, so the flags live on
+  // the store both surfaces share.
   findOpen: boolean;
   helpOpen: boolean;
 }
@@ -439,8 +438,7 @@ export class EditorStore {
   }
 
   // A half-applied command leaves the run model describing objects that no
-  // longer match the page, so rebuild it from PDFium rather than guess. A
-  // command that rolled itself back changed nothing, so it keeps its history.
+  // longer match the page, so rebuild rather than guess.
   private recoverFromBrokenStep(err?: unknown): void {
     const doc = this.doc;
     if (!doc) return;

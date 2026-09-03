@@ -14,19 +14,14 @@ interface Props {
   currentFileName: string;
   /** Unsaved-changes marker, shown as a dot beside the name. */
   dirty: boolean;
-  // Ask the editor to open the picked file. It may refuse - a dirty document
-  // gets a confirmation first - so the workbench selection is NOT moved here;
-  // the editor syncs it once the open actually goes ahead.
+  // The editor may refuse - a dirty document is confirmed first - so the
+  // workbench selection is synced by the editor, not here.
   onPick: (file: File) => void;
 }
 
 /**
- * Which document you are editing, and how to edit a different one.
- *
- * Sits at the top-left of the toolbar because that is where a document editor
- * puts the document's name; picking from it is the same gesture as any other
- * app's file title menu. With fewer than two PDFs in the workbench there is
- * nothing to switch to, so it collapses to a plain name.
+ * Which document you are editing, and how to switch. Collapses to a plain name
+ * when the workbench holds fewer than two PDFs.
  */
 export function EditorFileSwitcher({
   currentFileId,

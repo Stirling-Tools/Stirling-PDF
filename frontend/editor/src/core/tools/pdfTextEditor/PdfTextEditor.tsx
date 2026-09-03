@@ -490,9 +490,8 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   const openDocument = useCallback(
     (file: File, fromDisk: boolean) => {
       if (!fromDisk) {
-        // Deferred until the open is agreed: moving the workbench selection
-        // for an open the user then cancels leaves the rest of the app
-        // pointing at a file the editor is not editing.
+        // Deferred until the open is agreed, or a cancelled open would leave
+        // the app pointing at a file the editor is not editing.
         const fileId = (file as File & { fileId?: FileId }).fileId;
         if (fileId != null) setSelectedFiles([fileId]);
         openWorkbenchFile(file);
@@ -547,9 +546,8 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       ?.click();
   }, []);
 
-  // Publish what the canvas top bar cannot reach on its own. Kept in an effect
-  // so the canvas always sees the CURRENT handlers, and retracted on unmount so
-  // a stale Save can never fire against a panel that is gone.
+  // Publish what the canvas top bar cannot reach on its own, and retract it on
+  // unmount so a stale Save cannot fire against a panel that is gone.
   useEffect(() => {
     setEditorSession({
       fileName: openedFileName,

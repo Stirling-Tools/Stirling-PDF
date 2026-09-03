@@ -1,10 +1,6 @@
 /**
- * Checks the bytes a save produced before anything writes them anywhere.
- *
- * PDFium's save path reports failure by return code, and a writer that gave
- * back nothing still hands over a zero-length buffer. Without these the editor
- * would replace the user's workbench file with that buffer and clear the dirty
- * flag - a total loss with no error anywhere.
+ * Checks on the bytes a save produced, before they overwrite anything.
+ * PDFium reports failure by return code and still hands back a buffer.
  */
 
 const PDF_HEADER = "%PDF-";
@@ -39,13 +35,7 @@ function hasTrailingEof(bytes: Uint8Array): boolean {
   return false;
 }
 
-/**
- * Throw unless `bytes` look like a whole PDF.
- *
- * Cheap structural checks only - header, plausible length, terminating marker.
- * They are not a validator; they are the difference between "the save failed
- * quietly" and "the save failed loudly".
- */
+/** Throw unless `bytes` look like a whole PDF: header, length, EOF marker. */
 export function assertSavedPdf(bytes: Uint8Array): void {
   if (bytes.length < MIN_PDF_BYTES) {
     throw new Error(
@@ -67,15 +57,8 @@ export function assertSavedPdf(bytes: Uint8Array): void {
   }
 }
 
-/**
- * Throw unless `saved` is `original` plus an appended revision.
- *
- * This is what makes the signature-preserving claim checkable rather than
- * hopeful: an incremental save may only ADD bytes, so every byte a signature
- * covers has to still be there, unchanged, at the same offset. A full rewrite
- * that slipped through the incremental path fails here instead of silently
- * shipping a document whose signatures no longer verify.
- */
+// Throw unless `saved` is `original` plus an appended revision: an incremental
+// save may only ADD, or the bytes a signature covers have moved.
 export function assertIncrementalAppend(
   saved: Uint8Array,
   original: Uint8Array,

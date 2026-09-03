@@ -43,9 +43,7 @@ export async function exportToBlob(
     }
   }
 
-  // Checked LAST, on the bytes that will actually be written: the incremental
-  // path is the tool's signature-preserving promise, and a promise nothing
-  // verifies is just a comment.
+  // Checked LAST, on the bytes that will actually be written.
   if (incremental) assertIncrementalAppend(bytes, doc.openedBytes);
 
   return { blob: pdfBlob(bytes), filename: exportName(sourceName) };
