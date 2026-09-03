@@ -34,6 +34,7 @@ import stirling.software.proprietary.policy.config.FolderAccessGuard;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.engine.PolicyRunner;
 import stirling.software.proprietary.policy.engine.PolicyValidator;
+import stirling.software.proprietary.policy.engine.SweepKind;
 import stirling.software.proprietary.policy.engine.SweepOutcome;
 import stirling.software.proprietary.policy.ledger.ProcessedLedger;
 import stirling.software.proprietary.policy.model.OutputSpec;
@@ -116,7 +117,11 @@ public class ProcessingFolderController {
             /** Runs the creating sweep started; 0 means there was nothing new to process. */
             int startedRuns,
             /** Files the sweep skipped because this folder had already processed them. */
-            int alreadyProcessed) {}
+            int alreadyProcessed,
+            /** Files skipped because an earlier run failed on them and they stayed parked. */
+            int parked,
+            /** Files the sweep took on again after an earlier failure. */
+            int retried) {}
 
     /**
      * Create/update payload. A null id creates; a present id updates the caller's own record.
@@ -272,7 +277,7 @@ public class ProcessingFolderController {
         // Process the backlog: everything already in the folder runs once, now. The counts go back
         // to the caller so a client can report real progress — and can tell "nothing new to do"
         // apart from "work started", instead of waiting for runs that were never going to appear.
-        SweepOutcome outcome = policyRunner.run(saved);
+        SweepOutcome outcome = policyRunner.run(saved, SweepKind.USER);
         log.debug(
                 "Processing folder {} created; backlog sweep started {} runs ({} already processed,"
                         + " {} listed)",
@@ -281,7 +286,12 @@ public class ProcessingFolderController {
                 outcome.alreadyProcessed(),
                 outcome.filesListed());
         return ResponseEntity.ok(
-                toView(saved, outcome.runIds().size(), outcome.alreadyProcessed()));
+                toView(
+                        saved,
+                        outcome.runIds().size(),
+                        outcome.alreadyProcessed(),
+                        outcome.parked(),
+                        outcome.retried()));
     }
 
     /** One file in a mounted directory, as the file manager needs to list it. */
@@ -347,7 +357,7 @@ public class ProcessingFolderController {
     public ResponseEntity<SweepOutcome> sweep(@PathVariable String id) {
         User user = currentUserOrNull();
         Policy policy = requireOwn(id, user);
-        return ResponseEntity.accepted().body(policyRunner.run(policy));
+        return ResponseEntity.accepted().body(policyRunner.run(policy, SweepKind.USER));
     }
 
     @DeleteMapping("/{id}")
@@ -535,7 +545,7 @@ public class ProcessingFolderController {
     }
 
     private ProcessingFolderView toView(Policy policy) {
-        return toView(policy, 0, 0);
+        return toView(policy, 0, 0, 0, 0);
     }
 
     /**
@@ -544,7 +554,8 @@ public class ProcessingFolderController {
      * address, and a client that groups by folderId pick up the output folder instead of the
      * watched one.
      */
-    private ProcessingFolderView toView(Policy policy, int startedRuns, int alreadyProcessed) {
+    private ProcessingFolderView toView(
+            Policy policy, int startedRuns, int alreadyProcessed, int parked, int retried) {
         Map<String, Object> output = new HashMap<>(policy.output().options());
         output.remove(SURFACE_OPTION);
         String sourceId = soleSourceId(policy);
@@ -560,6 +571,8 @@ public class ProcessingFolderController {
                 policy.steps(),
                 output,
                 startedRuns,
-                alreadyProcessed);
+                alreadyProcessed,
+                parked,
+                retried);
     }
 }

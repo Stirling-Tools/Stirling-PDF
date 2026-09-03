@@ -31,6 +31,10 @@ export interface ProcessingFolder {
   startedRuns: number;
   /** Files the creating sweep skipped because this folder had already processed them. */
   alreadyProcessed: number;
+  /** Files skipped because an earlier run failed on them and they stayed parked. */
+  parked: number;
+  /** Files the sweep took on again after an earlier failure. */
+  retried: number;
 }
 
 /**
@@ -73,6 +77,10 @@ export interface SweepOutcome {
   runIds: string[];
   filesListed: number;
   alreadyProcessed: number;
+  /** Files skipped because an earlier run failed on them and they stayed parked. */
+  parked: number;
+  /** Files the sweep took on again after an earlier failure. */
+  retried: number;
 }
 
 /** Run the pipeline over the folder's current contents now. */

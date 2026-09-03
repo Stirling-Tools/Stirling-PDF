@@ -59,6 +59,7 @@ import stirling.software.proprietary.policy.engine.PolicyRunHandle;
 import stirling.software.proprietary.policy.engine.PolicyRunRegistry;
 import stirling.software.proprietary.policy.engine.PolicyRunner;
 import stirling.software.proprietary.policy.engine.PolicyValidator;
+import stirling.software.proprietary.policy.engine.SweepKind;
 import stirling.software.proprietary.policy.engine.SweepOutcome;
 import stirling.software.proprietary.policy.ledger.ProcessedLedger;
 import stirling.software.proprietary.policy.model.OutputSpec;
@@ -637,6 +638,7 @@ public class PolicyController {
                             + " and in-flight counts - so an empty result explains itself. Requires"
                             + " the policy-management role.")
     public ResponseEntity<SweepOutcome> trigger(@PathVariable String policyId) {
+        // A person asked: retry files parked by earlier failures as part of the sweep.
         requirePolicySweepAllowed();
         Policy policy =
                 policyStore
@@ -646,7 +648,7 @@ public class PolicyController {
                                 () ->
                                         new ResponseStatusException(
                                                 HttpStatus.NOT_FOUND, "No policy: " + policyId));
-        return ResponseEntity.accepted().body(policyRunner.run(policy));
+        return ResponseEntity.accepted().body(policyRunner.run(policy, SweepKind.USER));
     }
 
     private static void requireRunnable(PipelineDefinition definition) {

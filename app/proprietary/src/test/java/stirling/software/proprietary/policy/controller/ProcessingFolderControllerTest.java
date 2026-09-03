@@ -26,6 +26,7 @@ import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 import stirling.software.proprietary.policy.engine.PolicyRunner;
 import stirling.software.proprietary.policy.engine.PolicyValidator;
+import stirling.software.proprietary.policy.engine.SweepKind;
 import stirling.software.proprietary.policy.engine.SweepOutcome;
 import stirling.software.proprietary.policy.input.InputSource;
 import stirling.software.proprietary.policy.input.StorageFolderInputSource;
@@ -116,8 +117,8 @@ class ProcessingFolderControllerTest {
         lenient().when(userService.getCurrentUsername()).thenReturn("reece");
         lenient().when(policyManagementAuthority.currentUserTeamId()).thenReturn(3L);
         lenient()
-                .when(policyRunner.run(any()))
-                .thenReturn(new SweepOutcome(List.of("run-1"), 1, 0, 0, 0));
+                .when(policyRunner.run(any(), any()))
+                .thenReturn(new SweepOutcome(List.of("run-1"), 1, 0, 0, 0, 0));
 
         PolicyAccessGuard accessGuard =
                 new PolicyAccessGuard(userService, properties, policyManagementAuthority);
@@ -180,7 +181,7 @@ class ProcessingFolderControllerTest {
         var source = sourceStore.get(stored.inputs().get(0).sourceId()).orElseThrow();
         assertThat(source.type()).isEqualTo("storage-folder");
         assertThat(source.options()).containsEntry("folderId", FOLDER_ID.toString());
-        verify(policyRunner).run(stored);
+        verify(policyRunner).run(stored, SweepKind.USER);
     }
 
     @Test

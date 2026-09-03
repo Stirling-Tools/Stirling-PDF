@@ -94,6 +94,26 @@ public interface ProcessedFileRepository
             @Param("maxAttempts") int maxAttempts,
             @Param("now") long now);
 
+    /**
+     * Retry of an ERROR row at the same gate, for a user-invoked sweep. Unbounded: unlike the
+     * automatic INTERRUPTED retry, a person clicking again is the rate limiter.
+     */
+    @Modifying
+    @Transactional
+    @Query(
+            "update ProcessedFileEntity e set e.status ="
+                    + " stirling.software.proprietary.policy.ledger.ProcessedFileStatus.PROCESSING,"
+                    + " e.attempts = e.attempts + 1, e.lastSeen = :now, e.updatedAt = :now"
+                    + " where e.policyId = :policyId and e.identityHash = :identityHash"
+                    + " and e.status ="
+                    + " stirling.software.proprietary.policy.ledger.ProcessedFileStatus.ERROR"
+                    + " and e.signature = :gate")
+    int retryErrorAtGate(
+            @Param("policyId") String policyId,
+            @Param("identityHash") String identityHash,
+            @Param("gate") String gate,
+            @Param("now") long now);
+
     /** Bounded retry of an INTERRUPTED row whose gate moved but whose content is unchanged. */
     @Modifying
     @Transactional

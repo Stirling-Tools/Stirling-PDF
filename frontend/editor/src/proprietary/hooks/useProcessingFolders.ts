@@ -151,6 +151,21 @@ export function useProcessingFolders(): ProcessingFoldersApi {
 
   const enable = useCallback(
     async (folder: FolderRecord) => {
+      // A paused pair resumes with its own steps and its history intact;
+      // only a folder with no pair composes a fresh classification default.
+      const paused = recordFor(folder);
+      if (paused && !paused.enabled) {
+        await saveProcessingFolder({
+          id: paused.id,
+          folderId: paused.folderId ?? undefined,
+          directory: paused.directory ?? undefined,
+          enabled: true,
+          steps: paused.steps,
+          output: paused.output,
+        });
+        await load(true);
+        return;
+      }
       switch (folderKind(folder)) {
         case "local": {
           const saved = await saveProcessingFolder({
@@ -175,10 +190,29 @@ export function useProcessingFolders(): ProcessingFoldersApi {
       }
       await load(true);
     },
-    [addFiles],
+    [recordFor, addFiles],
   );
 
+  // Pause, never delete: the pair keeps its processed-history, so resuming
+  // picks up only what is genuinely new instead of re-running everything.
   const disable = useCallback(
+    async (folder: FolderRecord) => {
+      const existing = recordFor(folder);
+      if (!existing) return;
+      await saveProcessingFolder({
+        id: existing.id,
+        folderId: existing.folderId ?? undefined,
+        directory: existing.directory ?? undefined,
+        enabled: false,
+        steps: existing.steps,
+        output: existing.output,
+      });
+      await load(true);
+    },
+    [recordFor],
+  );
+
+  const remove = useCallback(
     async (folder: FolderRecord) => {
       const existing = recordFor(folder);
       if (!existing) return;
@@ -227,6 +261,7 @@ export function useProcessingFolders(): ProcessingFoldersApi {
       listActiveRuns,
       enable,
       disable,
+      remove,
       sweep,
     }),
     [
@@ -236,6 +271,7 @@ export function useProcessingFolders(): ProcessingFoldersApi {
       listActiveRuns,
       enable,
       disable,
+      remove,
       sweep,
     ],
   );

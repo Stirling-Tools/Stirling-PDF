@@ -600,6 +600,7 @@ function FolderCard({
     stateFor: processingStateFor,
     enable: enableProcessing,
     disable: disableProcessing,
+    remove: removeProcessingFolder,
     sweep: sweepProcessing,
   } = useProcessingFolders();
   const processing = processingStateFor(folder);
@@ -615,6 +616,10 @@ function FolderCard({
     );
   const runProcessing = (label: string) =>
     Promise.resolve(sweepProcessing(folder)).catch((err) =>
+      surfaceDrop(err, label),
+    );
+  const removeProcessing = (label: string) =>
+    Promise.resolve(removeProcessingFolder(folder)).catch((err) =>
       surfaceDrop(err, label),
     );
   const kebabRef = useRef<HTMLButtonElement>(null);
@@ -730,8 +735,11 @@ function FolderCard({
                 processing={processing}
                 disabled={false}
                 onRun={() => void runProcessing("process folder now")}
-                onStop={() => void stopProcessing("stop processing folder")}
+                onStop={() => void stopProcessing("pause processing folder")}
                 onStart={() => void startProcessing("process folder")}
+                onRemove={() =>
+                  void removeProcessing("remove processing folder")
+                }
               />
             )}
             {/* Only a mount root can be removed; a subdirectory is the
@@ -774,8 +782,11 @@ function FolderCard({
                   disabled={editsDisabled}
                   disabledHint={offlineHint}
                   onRun={() => void runProcessing("process folder now")}
-                  onStop={() => void stopProcessing("stop processing folder")}
+                  onStop={() => void stopProcessing("pause processing folder")}
                   onStart={() => void startProcessing("process folder")}
+                  onRemove={() =>
+                    void removeProcessing("remove processing folder")
+                  }
                 />
                 <Menu.Divider />
                 <Menu.Item
@@ -810,6 +821,7 @@ function ProcessingMenuItems({
   onRun,
   onStop,
   onStart,
+  onRemove,
 }: {
   processing: ProcessingFolderState | undefined;
   continuous?: boolean;
@@ -818,9 +830,46 @@ function ProcessingMenuItems({
   onRun: () => void;
   onStop: () => void;
   onStart: () => void;
+  onRemove: () => void;
 }) {
   const { t } = useTranslation();
-  return processing ? (
+  if (!processing) {
+    return (
+      <Menu.Item
+        leftSection={<AutoModeIcon fontSize="small" />}
+        onClick={onStart}
+        disabled={disabled}
+        title={disabled ? disabledHint : undefined}
+      >
+        {t("filesPage.processing.start", "Process files in this folder…")}
+      </Menu.Item>
+    );
+  }
+  if (!processing.enabled) {
+    // Paused, not gone: the pair kept its history, so resuming never re-runs
+    // what was already done. Removing is the destructive option, named as such.
+    return (
+      <>
+        <Menu.Item
+          leftSection={<AutoModeIcon fontSize="small" />}
+          onClick={onStart}
+          disabled={disabled}
+          title={disabled ? disabledHint : undefined}
+        >
+          {t("filesPage.processing.resume", "Resume processing")}
+        </Menu.Item>
+        <Menu.Item
+          leftSection={<AutoModeIcon fontSize="small" />}
+          onClick={onRemove}
+          disabled={disabled}
+          title={disabled ? disabledHint : undefined}
+        >
+          {t("filesPage.processing.remove", "Remove processing")}
+        </Menu.Item>
+      </>
+    );
+  }
+  return (
     <>
       {!continuous && (
         <Menu.Item
@@ -834,18 +883,9 @@ function ProcessingMenuItems({
         leftSection={<AutoModeIcon fontSize="small" />}
         onClick={onStop}
       >
-        {t("filesPage.processing.stop", "Stop processing this folder")}
+        {t("filesPage.processing.stop", "Pause processing")}
       </Menu.Item>
     </>
-  ) : (
-    <Menu.Item
-      leftSection={<AutoModeIcon fontSize="small" />}
-      onClick={onStart}
-      disabled={disabled}
-      title={disabled ? disabledHint : undefined}
-    >
-      {t("filesPage.processing.start", "Process files in this folder…")}
-    </Menu.Item>
   );
 }
 
@@ -1663,6 +1703,7 @@ function FolderRow({
     stateFor: processingStateFor,
     enable: enableProcessing,
     disable: disableProcessing,
+    remove: removeProcessingFolder,
     sweep: sweepProcessing,
   } = useProcessingFolders();
   const processing = processingStateFor(folder);
@@ -1678,6 +1719,10 @@ function FolderRow({
     );
   const runProcessing = (label: string) =>
     Promise.resolve(sweepProcessing(folder)).catch((err) =>
+      surfaceDrop(err, label),
+    );
+  const removeProcessing = (label: string) =>
+    Promise.resolve(removeProcessingFolder(folder)).catch((err) =>
       surfaceDrop(err, label),
     );
   const kebabRef = useRef<HTMLButtonElement>(null);
@@ -1810,8 +1855,11 @@ function FolderRow({
                 processing={processing}
                 disabled={false}
                 onRun={() => void runProcessing("process folder now")}
-                onStop={() => void stopProcessing("stop processing folder")}
+                onStop={() => void stopProcessing("pause processing folder")}
                 onStart={() => void startProcessing("process folder")}
+                onRemove={() =>
+                  void removeProcessing("remove processing folder")
+                }
               />
             )}
             {/* Only a mount root can be removed; a subdirectory is the
@@ -1854,8 +1902,11 @@ function FolderRow({
                   disabled={editsDisabled}
                   disabledHint={offlineHint}
                   onRun={() => void runProcessing("process folder now")}
-                  onStop={() => void stopProcessing("stop processing folder")}
+                  onStop={() => void stopProcessing("pause processing folder")}
                   onStart={() => void startProcessing("process folder")}
+                  onRemove={() =>
+                    void removeProcessing("remove processing folder")
+                  }
                 />
                 <Menu.Divider />
                 <Menu.Item

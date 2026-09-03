@@ -98,6 +98,19 @@ public class InProcessProcessedLedger implements ProcessedLedger {
     }
 
     @Override
+    public synchronized boolean reclaimFailed(String policyId, String identity, String gate) {
+        Map<String, Row> rows = rowsByPolicy.get(policyId);
+        Row row = rows == null ? null : rows.get(identity);
+        if (row == null || row.status != ProcessedFileStatus.ERROR || !gate.equals(row.gate)) {
+            return false;
+        }
+        row.status = ProcessedFileStatus.PROCESSING;
+        row.attempts++;
+        row.lastSeen = nowMillis.get();
+        return true;
+    }
+
+    @Override
     public synchronized void settle(
             String policyId,
             String identity,

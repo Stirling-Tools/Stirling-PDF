@@ -27,10 +27,13 @@ export interface ProcessingFoldersApi {
   anyEnabled: boolean;
   /** The record's runs that are currently executing (or queued to). */
   listActiveRuns: (recordId: string) => Promise<ProcessingRunInfo[]>;
-  /** Attach the default (classification) pipeline to a folder. */
+  /** Attach the default (classification) pipeline, or resume a paused one. */
   enable: (folder: FolderRecord) => Promise<void>;
-  /** Remove the processing behaviour; the folder and its files stay. */
+  /** Pause processing; the pair and its processed-history stay, so resuming
+   *  never re-runs what was already done. */
   disable: (folder: FolderRecord) => Promise<void>;
+  /** Remove the processing behaviour and its history; the folder and files stay. */
+  remove: (folder: FolderRecord) => Promise<void>;
   /** Process the folder's current contents now. */
   sweep: (folder: FolderRecord) => Promise<void>;
 }
@@ -51,6 +54,7 @@ export function useProcessingFolders(): ProcessingFoldersApi {
     listActiveRuns: async () => [],
     enable: async () => {},
     disable: async () => {},
+    remove: async () => {},
     sweep: async () => {},
   };
 }

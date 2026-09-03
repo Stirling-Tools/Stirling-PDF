@@ -31,6 +31,7 @@ final class PolicySweep implements ResolveContext {
     private final Map<String, ClaimState> prefetched = new HashMap<>();
     private final Set<String> prefetchedIdentities = new HashSet<>();
     private boolean cleanupVetoed;
+    private int retried;
 
     PolicySweep(String policyId, SweepKind kind, ProcessedLedger ledger) {
         this.policyId = policyId;
@@ -44,6 +45,18 @@ final class PolicySweep implements ResolveContext {
                 prefetchedIdentities.contains(identity)
                         ? prefetched.get(identity)
                         : ledger.statesFor(policyId, List.of(identity)).get(identity);
+        // A user-invoked sweep retries parked failures: the click usually follows fixing
+        // whatever failed them, and only the unattended watcher owes a poison file caution.
+        if (kind == SweepKind.USER
+                && observed != null
+                && observed.status() == ProcessedFileStatus.ERROR
+                && gate.equals(observed.gate())
+                && ledger.reclaimFailed(policyId, identity, gate)) {
+            retried++;
+            prefetchedIdentities.add(identity);
+            prefetched.put(identity, new ClaimState(ProcessedFileStatus.PROCESSING, gate, null));
+            return true;
+        }
         boolean claimed = ledger.claim(policyId, identity, gate, contentHash, observed);
         if (claimed) {
             // A nested source surfacing the same file later in this sweep sees it in flight
@@ -68,7 +81,7 @@ final class PolicySweep implements ResolveContext {
 
     @Override
     public synchronized void reportPresent(Collection<String> identities) {
-        if (kind == SweepKind.FULL) {
+        if (kind != SweepKind.LIGHT) {
             present.addAll(identities);
         }
         prefetched.putAll(ledger.statesFor(policyId, identities));
@@ -80,7 +93,7 @@ final class PolicySweep implements ResolveContext {
     }
 
     synchronized boolean cleanupAllowed() {
-        return kind == SweepKind.FULL && !cleanupVetoed;
+        return kind != SweepKind.LIGHT && !cleanupVetoed;
     }
 
     synchronized Set<String> presentIdentities() {
@@ -112,6 +125,7 @@ final class PolicySweep implements ResolveContext {
                 present.size(),
                 alreadyProcessed,
                 parked,
-                Math.max(0, processing - runIds.size()));
+                Math.max(0, processing - runIds.size()),
+                retried);
     }
 }

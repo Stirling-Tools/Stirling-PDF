@@ -52,6 +52,14 @@ public interface ProcessedLedger {
                 statesFor(policyId, List.of(identity)).get(identity));
     }
 
+    /**
+     * Take a parked failure back into PROCESSING at the same gate. Only a user-invoked sweep calls
+     * this — the unattended watcher never retries a failing file until it changes — and it is
+     * unbounded because a person clicking again is the rate limiter. False when the row is no
+     * longer a same-gate failure (raced by another sweep, or the file changed).
+     */
+    boolean reclaimFailed(String policyId, String identity, String gate);
+
     /** Record a claimed file's outcome at its final version ({@code finalContentHash} nullable). */
     void settle(
             String policyId,

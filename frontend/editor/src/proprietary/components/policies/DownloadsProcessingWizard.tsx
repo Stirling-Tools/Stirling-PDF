@@ -66,6 +66,8 @@ export function DownloadsProcessingWizard({
   const [error, setError] = useState<string | null>(null);
   const [started, setStarted] = useState(0);
   const [skipped, setSkipped] = useState(0);
+  const [retried, setRetried] = useState(0);
+  const [parkedCount, setParkedCount] = useState(0);
   const [stalled, setStalled] = useState(false);
   const [opened, setOpened] = useState(0);
   const [cards, setCards] = useState<CardState[]>([]);
@@ -124,6 +126,8 @@ export function DownloadsProcessingWizard({
     setError(null);
     setStarted(0);
     setSkipped(0);
+    setRetried(0);
+    setParkedCount(0);
     setStalled(false);
     setOpened(0);
     setCards([]);
@@ -227,6 +231,8 @@ export function DownloadsProcessingWizard({
       // processed, which is a finished state, not something to wait for.
       setStarted(folder.startedRuns);
       setSkipped(folder.alreadyProcessed);
+      setRetried(folder.retried);
+      setParkedCount(folder.parked);
       // The new folder was created outside the hook's own actions; refresh the shared list so the
       // files page and any other consumer pick it up without a reload.
       void refreshProcessingFolders();
@@ -417,6 +423,15 @@ export function DownloadsProcessingWizard({
                 })}
               </>
             )}
+            {retried > 0 && (
+              <>
+                {" · "}
+                {t("processingFolders.downloads.retrying", {
+                  count: retried,
+                  defaultValue: "retrying {{count}} that failed last time",
+                })}
+              </>
+            )}
           </p>
           <div className="downloads-wizard__bar" role="progressbar">
             <span
@@ -441,11 +456,17 @@ export function DownloadsProcessingWizard({
               fontSize="inherit"
             />{" "}
             {started === 0
-              ? t("processingFolders.downloads.nothingNew", {
-                  count: skipped,
-                  defaultValue:
-                    "Nothing new to process — these {{count}} files have already been through.",
-                })
+              ? parkedCount > 0
+                ? t("processingFolders.downloads.stillParked", {
+                    count: parkedCount,
+                    defaultValue:
+                      "{{count}} files failed earlier and were not retried — fix the cause, then run again.",
+                  })
+                : t("processingFolders.downloads.nothingNew", {
+                    count: skipped,
+                    defaultValue:
+                      "Nothing new to process — these {{count}} files have already been through.",
+                  })
               : t("processingFolders.downloads.finished", {
                   count: processed,
                   opened,

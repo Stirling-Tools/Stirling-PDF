@@ -47,6 +47,7 @@ import stirling.software.proprietary.policy.engine.PolicyRunHandle;
 import stirling.software.proprietary.policy.engine.PolicyRunRegistry;
 import stirling.software.proprietary.policy.engine.PolicyRunner;
 import stirling.software.proprietary.policy.engine.PolicyValidator;
+import stirling.software.proprietary.policy.engine.SweepKind;
 import stirling.software.proprietary.policy.engine.SweepOutcome;
 import stirling.software.proprietary.policy.ledger.ProcessedLedger;
 import stirling.software.proprietary.policy.model.OutputSpec;
@@ -821,8 +822,8 @@ class PolicyControllerTest {
             Policy p = policy("a", 1L);
             when(policyStore.get("a")).thenReturn(Optional.of(p));
             when(policyAccessGuard.canAccess(p)).thenReturn(true);
-            SweepOutcome outcome = new SweepOutcome(List.of("run-a", "run-b"), 3, 1, 0, 0);
-            when(policyRunner.run(p)).thenReturn(outcome);
+            SweepOutcome outcome = new SweepOutcome(List.of("run-a", "run-b"), 3, 1, 0, 0, 0);
+            when(policyRunner.run(p, SweepKind.USER)).thenReturn(outcome);
 
             ResponseEntity<SweepOutcome> response = controller.trigger("a");
 
@@ -870,8 +871,8 @@ class PolicyControllerTest {
             Policy p = policy("a", 1L);
             when(policyStore.get("a")).thenReturn(Optional.of(p));
             when(policyAccessGuard.canAccess(p)).thenReturn(true);
-            SweepOutcome outcome = new SweepOutcome(List.of("run-a"), 1, 0, 0, 0);
-            when(policyRunner.run(p)).thenReturn(outcome);
+            SweepOutcome outcome = new SweepOutcome(List.of("run-a"), 1, 0, 0, 0, 0);
+            when(policyRunner.run(p, SweepKind.USER)).thenReturn(outcome);
 
             ResponseEntity<SweepOutcome> response = controller.trigger("a");
 
@@ -889,8 +890,8 @@ class PolicyControllerTest {
             Policy p = policy("a", null);
             when(policyStore.get("a")).thenReturn(Optional.of(p));
             when(policyAccessGuard.canAccess(p)).thenReturn(true);
-            SweepOutcome outcome = new SweepOutcome(List.of("run-a"), 1, 0, 0, 0);
-            when(policyRunner.run(p)).thenReturn(outcome);
+            SweepOutcome outcome = new SweepOutcome(List.of("run-a"), 1, 0, 0, 0, 0);
+            when(policyRunner.run(p, SweepKind.USER)).thenReturn(outcome);
 
             assertThat(controller.trigger("a").getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
             verify(policyManagementAuthority, never()).canTriggerPolicies();
