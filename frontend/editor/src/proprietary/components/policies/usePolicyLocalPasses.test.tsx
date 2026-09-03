@@ -328,6 +328,8 @@ describe("usePolicyLocalPasses delivery", () => {
       }),
     );
     expect(mocks.runPolicyOnFile).not.toHaveBeenCalled();
+    // The verdict stands, so the local pass is the billable run.
+    expect(mocks.meter).toHaveBeenCalledTimes(1);
   });
 
   it("never escalates when the AI engine is off, however unsure the verdict", async () => {
@@ -347,6 +349,9 @@ describe("usePolicyLocalPasses delivery", () => {
       }),
     );
     expect(mocks.runPolicyOnFile).not.toHaveBeenCalled();
+    // AI is off, so the unsure verdict is final and never escalates - it must still be billed once
+    // here, not fall through the gap between local and (never-run) server billing.
+    expect(mocks.meter).toHaveBeenCalledTimes(1);
   });
 
   it("does not run on upload when the policy is set to run on export", async () => {

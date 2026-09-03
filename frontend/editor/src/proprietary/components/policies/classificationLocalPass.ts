@@ -66,9 +66,19 @@ export const classificationLocalPass: LocalPass = {
       },
       // A confident local verdict stands; anything less asks the AI engine, which overwrites it.
       needsServerRun: localVerdictNeedsEscalation(verdict.confidence),
+      // Billed by the engine only if it does not escalate (see meter's contract).
+      meter: verdict.meter,
     };
   },
 };
+
+/** One file's local classification verdict. {@link meter} is present only when the run should be
+ *  charged (first pass, not a heal re-run); the engine fires it iff no server run follows. */
+interface ClassificationVerdict {
+  labels: string[];
+  confidence: HeuristicConfidence;
+  meter?: () => void;
+}
 
 /** Classify one file, metering exactly once; null = no verdict, retried later. */
 async function classifyStub(
@@ -76,7 +86,7 @@ async function classifyStub(
   fileName: string,
   fileSize: number,
   pageCount: number,
-): Promise<{ labels: string[]; confidence: HeuristicConfidence } | null> {
+): Promise<ClassificationVerdict | null> {
   let file: StirlingFile | null = null;
   for (let i = 0; i < FILE_WAIT_TRIES; i++) {
     file = await fileStorage.getStirlingFile(fileId).catch(() => null);
@@ -127,16 +137,18 @@ async function classifyStub(
         (alreadyMetered ? " [heal: not re-metered]" : ""),
     );
     if (debug && result.explain) logExplanation(fileName, result);
-    // Meter the local pass only when its verdict stands: an unsure verdict escalates to the AI
-    // run, which is billed there instead (avoids double-charging one classification). Metered on
-    // the first pass only; a healing re-run of an undelivered result is not a new billable run.
-    if (!alreadyMetered && !localVerdictNeedsEscalation(result.confidence)) {
-      meterAutomationRun({
-        automationName: "Classification",
-        operations: [CLASSIFY_STEP],
-        inputs: [{ pages: pageCount, bytes: fileSize }],
-      });
-    }
+    // The billable classify run. The engine fires this only when no server run follows: an AI
+    // escalation bills the run, or - when the verdict stands, or the AI engine is off so nothing
+    // escalates - this local pass does. Never both. First pass only; a heal re-run of an
+    // undelivered result is not a new charge.
+    const meter = alreadyMetered
+      ? undefined
+      : () =>
+          meterAutomationRun({
+            automationName: "Classification",
+            operations: [CLASSIFY_STEP],
+            inputs: [{ pages: pageCount, bytes: fileSize }],
+          });
     markDispatched(CLASSIFICATION_CATEGORY_ID, fileId);
     // Labels, no output file - the same settle shape the server-run classification uses.
     updateRun(runId, {
@@ -144,7 +156,7 @@ async function classifyStub(
       imported: true,
       outputFileIds: [fileId as string],
     });
-    return { labels, confidence: result.confidence };
+    return { labels, confidence: result.confidence, meter };
   } catch (err) {
     // Never persist a verdict for an unreadable file - the failure may be
     // environmental, so it must stay eligible to retry (and meter) later.
