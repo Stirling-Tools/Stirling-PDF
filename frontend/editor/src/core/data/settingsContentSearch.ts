@@ -33,11 +33,9 @@ const SECTION_TRANSLATION_PREFIXES: Partial<Record<string, string[]>> = {
   adminDatabase: ["admin.settings.database"],
   adminAdvanced: ["admin.settings.advanced"],
   adminFolderAccess: ["admin.settings.folderAccess"],
-  // The four AI tabs all render slices of the one admin.settings.ai subtree.
-  adminAiGeneral: ["admin.settings.ai"],
-  adminAiModels: ["admin.settings.ai"],
-  adminAiDocuments: ["admin.settings.ai"],
-  adminAiLimits: ["admin.settings.ai"],
+  // One page now, so one entry: mapping four keys at the same subtree returned
+  // four byte-identical results for every AI query.
+  adminAi: ["admin.settings.ai"],
   adminSecurity: ["admin.settings.security"],
   adminMcp: ["admin.settings.mcp"],
   adminConnections: [

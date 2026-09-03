@@ -144,4 +144,40 @@ export const SETTINGS_SEARCH_INDEX: SettingsSearchEntry[] = [
       "open source",
     ],
   },
+  // --- AI engine: one row per card the four folded rows became.
+  {
+    section: "adminAi",
+    anchor: "adminAiGeneral",
+    labelKey: "admin.settings.ai.general.connection",
+    labelFallback: "Connection",
+    keywords: ["ai", "engine", "url", "timeout", "enable", "connection"],
+  },
+  {
+    section: "adminAi",
+    anchor: "adminAiCapabilities",
+    labelKey: "admin.settings.ai.general.capabilities.title",
+    labelFallback: "Capabilities",
+    keywords: ["chat", "features", "classify", "math", "comment"],
+  },
+  {
+    section: "adminAi",
+    anchor: "adminAiModels",
+    labelKey: "settings.ai.models",
+    labelFallback: "Models & Providers",
+    keywords: ["llm", "openai", "anthropic", "ollama", "model", "provider"],
+  },
+  {
+    section: "adminAi",
+    anchor: "adminAiDocuments",
+    labelKey: "settings.ai.documents",
+    labelFallback: "Documents & RAG",
+    keywords: ["rag", "embedding", "retrieval", "vector", "index", "search"],
+  },
+  {
+    section: "adminAi",
+    anchor: "adminAiLimits",
+    labelKey: "settings.ai.limits",
+    labelFallback: "Limits & Performance",
+    keywords: ["tokens", "rate", "concurrency", "guardrail", "performance"],
+  },
 ];

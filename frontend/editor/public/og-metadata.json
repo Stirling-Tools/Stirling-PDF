@@ -510,6 +510,11 @@
       "title": "Admin Ai Limits Settings - Stirling PDF",
       "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
     },
+    "/settings/adminAi": {
+      "image": "/og_images/home.png",
+      "title": "Admin Ai Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
     "/settings/help": {
       "image": "/og_images/home.png",
       "title": "Help Settings - Stirling PDF",
@@ -721,6 +726,7 @@
     "/settings/adminAiModels": "/settings/adminAiModels",
     "/settings/adminAiDocuments": "/settings/adminAiDocuments",
     "/settings/adminAiLimits": "/settings/adminAiLimits",
+    "/settings/adminAi": "/settings/adminAi",
     "/settings/help": "/settings/help",
     "/settings/legal": "/settings/legal",
     "/settings/backendThirdPartyLicenses": "/settings/backendThirdPartyLicenses",

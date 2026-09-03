@@ -17,10 +17,7 @@ import AdminPlanSection from "@app/components/shared/config/configSections/Admin
 import AdminFeaturesSection from "@app/components/shared/config/configSections/AdminFeaturesSection";
 import AdminEndpointsSection from "@app/components/shared/config/configSections/AdminEndpointsSection";
 import AdminMcpSection from "@app/components/shared/config/configSections/AdminMcpSection";
-import AdminAiGeneralSection from "@app/components/shared/config/configSections/AdminAiGeneralSection";
-import AdminAiModelsSection from "@app/components/shared/config/configSections/AdminAiModelsSection";
-import AdminAiDocumentsSection from "@app/components/shared/config/configSections/AdminAiDocumentsSection";
-import AdminAiLimitsSection from "@app/components/shared/config/configSections/AdminAiLimitsSection";
+import AdminAiSection from "@app/components/shared/config/configSections/AdminAiSection";
 import AdminAuditSection from "@app/components/shared/config/configSections/AdminAuditSection";
 import AdminUsageSection from "@app/components/shared/config/configSections/AdminUsageSection";
 import AdminStorageSharingSection from "@app/components/shared/config/configSections/AdminStorageSharingSection";
@@ -311,47 +308,14 @@ export const useConfigNavSections = (
         title: t("settings.ai.title", "AI"),
         items: [
           {
-            key: "adminAiGeneral",
+            key: "adminAi",
             label: t("settings.ai.general", "AI Engine"),
             description: t(
-              "admin.settings.ai.general.description",
-              "Connect Stirling to the Python AI engine and choose which AI capabilities are exposed. Changes apply on restart.",
+              "admin.settings.ai.description",
+              "Connect Stirling to the Python AI engine, choose its models, and set the guardrails it runs under.",
             ),
             icon: "smart-toy-rounded",
-            component: <AdminAiGeneralSection />,
-            ...gated,
-          },
-          {
-            key: "adminAiModels",
-            label: t("settings.ai.models", "Models & Providers"),
-            description: t(
-              "admin.settings.ai.models.description",
-              "Choose the LLM provider and the smart/fast models the AI engine uses. Applied to the AI engine when saved.",
-            ),
-            icon: "psychology",
-            component: <AdminAiModelsSection />,
-            ...gated,
-          },
-          {
-            key: "adminAiDocuments",
-            label: t("settings.ai.documents", "Documents & RAG"),
-            description: t(
-              "admin.settings.ai.documents.description",
-              "Configure the embedding model and retrieval settings used to answer questions over documents. Applied to the AI engine when saved.",
-            ),
-            icon: "description",
-            component: <AdminAiDocumentsSection />,
-            ...gated,
-          },
-          {
-            key: "adminAiLimits",
-            label: t("settings.ai.limits", "Limits & Performance"),
-            description: t(
-              "admin.settings.ai.limits.description",
-              "Guardrails for how much work AI requests may do and how many run concurrently. Applied to the AI engine when saved.",
-            ),
-            icon: "speed",
-            component: <AdminAiLimitsSection />,
+            component: <AdminAiSection />,
             ...gated,
           },
         ],

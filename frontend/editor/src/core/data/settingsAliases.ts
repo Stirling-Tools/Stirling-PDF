@@ -14,4 +14,8 @@ export const BASE_SECTION_ALIASES: Partial<Record<string, NavKey>> = {
   legal: "about",
   backendThirdPartyLicenses: "about",
   frontendThirdPartyLicenses: "about",
+  adminAiGeneral: "adminAi",
+  adminAiModels: "adminAi",
+  adminAiDocuments: "adminAi",
+  adminAiLimits: "adminAi",
 };

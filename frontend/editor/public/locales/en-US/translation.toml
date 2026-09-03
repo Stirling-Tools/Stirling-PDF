@@ -726,7 +726,11 @@ reindexNote = "If you changed the embedding model, re-index existing documents s
 description = "Number of most-relevant chunks retrieved per search."
 label = "Top K"
 
+[admin.settings.ai]
+description = "Connect Stirling to the Python AI engine, choose its models, and set the guardrails it runs under."
+
 [admin.settings.ai.general]
+connection = "Connection"
 description = "Connect Stirling to the Python AI engine and choose which AI capabilities are exposed. Changes apply on restart."
 title = "AI Engine"
 
