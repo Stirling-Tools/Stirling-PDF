@@ -207,6 +207,12 @@
   width: 100%;
 }
 
+.portal-policies__detail-readonly {
+  margin-right: auto;
+  color: var(--c-text-muted);
+  font-size: 0.8125rem;
+}
+
 .portal-policies__wizard-banner {
   margin-top: 0.75rem;
 }

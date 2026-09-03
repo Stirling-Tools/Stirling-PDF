@@ -782,6 +782,38 @@ class PolicyControllerTest {
     }
 
     @Nested
+    @DisplayName("permissions")
+    class Permissions {
+
+        @Test
+        @DisplayName("a manager may manage policies")
+        void managerCanManage() {
+            applicationProperties.getSecurity().setEnableLogin(true);
+            when(policyManagementAuthority.canEditPolicies()).thenReturn(true);
+
+            assertThat(controller.permissions().canManagePolicies()).isTrue();
+        }
+
+        @Test
+        @DisplayName("a non-manager may not manage policies")
+        void nonManagerCannotManage() {
+            applicationProperties.getSecurity().setEnableLogin(true);
+            when(policyManagementAuthority.canEditPolicies()).thenReturn(false);
+
+            assertThat(controller.permissions().canManagePolicies()).isFalse();
+        }
+
+        @Test
+        @DisplayName("single-user (login off) may manage policies without a role")
+        void singleUserCanManage() {
+            applicationProperties.getSecurity().setEnableLogin(false);
+
+            assertThat(controller.permissions().canManagePolicies()).isTrue();
+            verify(policyManagementAuthority, never()).canEditPolicies();
+        }
+    }
+
+    @Nested
     @DisplayName("runStoredPolicy")
     class RunStoredPolicy {
 

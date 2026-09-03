@@ -41,6 +41,7 @@ vi.mock("@portal/api/pipelines", () => ({
   deletePipeline: (id: string) => deletePipeline(id),
   triggerPipeline: (id: string) => triggerPipeline(id),
   fetchRun: (runId: string) => fetchRun(runId),
+  fetchPolicyPermissions: () => Promise.resolve({ canManagePolicies: true }),
 }));
 
 const uploadPipelineAsset = vi.fn();

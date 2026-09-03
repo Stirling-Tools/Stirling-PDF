@@ -53,10 +53,12 @@ vi.mock("react-i18next", () => ({
 const fetchPipelines = vi.fn();
 const fetchPipeline = vi.fn();
 const savePipeline = vi.fn();
+const fetchPolicyPermissions = vi.fn();
 vi.mock("@portal/api/pipelines", () => ({
   fetchPipelines: () => fetchPipelines(),
   fetchPipeline: (id: string) => fetchPipeline(id),
   savePipeline: (policy: unknown) => savePipeline(policy),
+  fetchPolicyPermissions: () => fetchPolicyPermissions(),
 }));
 
 // Spy the wizard's save without stubbing the rest of the module (parseSimplePolicy et al. stay real).
@@ -130,6 +132,8 @@ describe("Pipelines view", () => {
     savePipeline.mockResolvedValue(undefined);
     savePolicy.mockReset();
     savePolicy.mockResolvedValue(undefined);
+    fetchPolicyPermissions.mockReset();
+    fetchPolicyPermissions.mockResolvedValue({ canManagePolicies: true });
   });
 
   /** A template-representable, currently-paused policy. */
@@ -253,6 +257,40 @@ describe("Pipelines view", () => {
     expect(await screen.findByTestId("draft-enabled")).toHaveTextContent(
       "false",
     );
+  });
+
+  it("locks a required policy for a non-manager (read-only detail)", async () => {
+    fetchPolicyPermissions.mockResolvedValue({ canManagePolicies: false });
+    fetchPipeline.mockResolvedValue({
+      id: "plc-redaction",
+      name: "Redaction sweep",
+      enabled: true,
+      required: true,
+      icon: "shield",
+      inputs: [],
+      steps: [{ operation: "/api/v1/security/auto-redact", parameters: {} }],
+      output: { type: "inline", options: { categoryId: "security" } },
+      outputIds: [],
+      editor: { allowed: true, runOn: "upload" },
+    });
+
+    renderView();
+    fireEvent.click(await screen.findByText("Redaction sweep")); // detail panel
+
+    // The manager-only note shows and the modify actions are locked.
+    expect(
+      await screen.findByText("portal.policies.detail.managerOnly"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", {
+        name: "portal.policies.detail.actions.editSettings",
+      }),
+    ).toBeDisabled();
+    expect(
+      screen.getByRole("button", {
+        name: "portal.policies.detail.actions.pause",
+      }),
+    ).toBeDisabled();
   });
 
   it("shows create + connect-source CTAs when empty", async () => {

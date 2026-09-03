@@ -67,6 +67,7 @@ import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.PipelineValidation;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.PolicyInputs;
+import stirling.software.proprietary.policy.model.PolicyPermissions;
 import stirling.software.proprietary.policy.model.PolicyRun;
 import stirling.software.proprietary.policy.model.PolicyRunStatus;
 import stirling.software.proprietary.policy.model.PolicyRunView;
@@ -530,6 +531,17 @@ public class PolicyController {
                 .map(TriggerInfo::of)
                 .sorted(Comparator.comparing(TriggerInfo::type))
                 .toList();
+    }
+
+    @GetMapping("/permissions")
+    @Operation(
+            summary = "The caller's policy-management permissions",
+            description =
+                    "Whether the caller may create or modify org-mandated (required) policies, so the"
+                            + " UI can gate the enforce-as-policy control and a required policy's"
+                            + " edit/pause/delete. Ordinary pipelines are open to any team member.")
+    public PolicyPermissions permissions() {
+        return new PolicyPermissions(policyEditingAllowed());
     }
 
     @GetMapping("/{policyId}")

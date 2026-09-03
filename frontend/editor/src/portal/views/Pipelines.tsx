@@ -31,6 +31,7 @@ import { PipelineTemplateCard } from "@portal/components/pipelines/PipelineTempl
 import { PolicyDetailPanel } from "@portal/components/policies/PolicyDetailPanel";
 import { PolicySetupWizard } from "@portal/components/policies/PolicySetupWizard";
 import { useAiEngineEnabled } from "@portal/hooks/useAiEngineEnabled";
+import { useCanManagePolicies } from "@portal/queries/policyPermissions";
 import { useConnectGate } from "@portal/hooks/useConnectGate";
 import "@portal/views/Pipelines.css";
 
@@ -56,6 +57,7 @@ export function Pipelines() {
 
   const { enabled: aiEngineEnabled, loading: aiEngineLoading } =
     useAiEngineEnabled();
+  const canManagePolicies = useCanManagePolicies();
 
   const [detail, setDetail] = useState<CatalogueEntry | null>(null);
   const [wizard, setWizard] = useState<CatalogueEntry | null>(null);
@@ -321,6 +323,7 @@ export function Pipelines() {
       <PolicyDetailPanel
         policy={detail?.policy ?? null}
         busy={busy}
+        canManagePolicies={canManagePolicies}
         onClose={() => setDetail(null)}
         onEdit={handleEdit}
         onTogglePause={handleTogglePause}
@@ -330,6 +333,7 @@ export function Pipelines() {
 
       <PolicySetupWizard
         entry={wizard}
+        canManagePolicies={canManagePolicies}
         onClose={() => setWizard(null)}
         onSubmit={handleSubmit}
         onCustomise={handleCustomise}

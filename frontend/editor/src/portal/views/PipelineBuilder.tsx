@@ -69,6 +69,7 @@ import { DestinationPicker } from "@portal/components/pipelines/DestinationPicke
 import { availableOutputModes } from "@portal/components/pipelines/outputModes";
 import { type SourceView } from "@portal/api/sources";
 import { useSources } from "@portal/queries/sources";
+import { useCanManagePolicies } from "@portal/queries/policyPermissions";
 import { SourceModal } from "@portal/components/sources/SourceModal";
 import { EDITOR_SOURCE_TYPE } from "@portal/components/sources/sourceTypes";
 import { useAsync } from "@portal/hooks/useAsync";
@@ -227,6 +228,7 @@ export function PipelineBuilder() {
     [id],
   );
   const sourcesState = useSources();
+  const canManagePolicies = useCanManagePolicies();
   const triggersState = useAsync<TriggerInfo[]>(
     async () => await fetchTriggers(),
     [],
@@ -1319,6 +1321,7 @@ export function PipelineBuilder() {
           onIconChange={setIcon}
           required={required}
           onRequiredChange={setRequired}
+          canManagePolicies={canManagePolicies}
           enabled={enabled}
           onTogglePause={handleTogglePause}
           togglingEnabled={togglingEnabled}
@@ -1341,6 +1344,7 @@ export function PipelineBuilder() {
           onIconChange={setIcon}
           required={required}
           onRequiredChange={setRequired}
+          canManagePolicies={canManagePolicies}
           canSave={canSave}
           blockers={blockers}
           saving={submitting}
