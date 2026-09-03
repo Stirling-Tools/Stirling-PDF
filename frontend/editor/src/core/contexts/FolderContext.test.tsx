@@ -333,10 +333,13 @@ describe("FolderContext stale-folder 404 cleanup", () => {
         </FolderProvider>
       </MemoryRouter>,
     );
+    // Wait on the probe's captured api, not the DOM. The DOM commits before the
+    // passive effect that rebinds `apiRef`, so a DOM-only wait can hand back an
+    // api from the previous render whose folder map is still empty - `rename`
+    // then throws "Unknown folder". Only bites when the runner is slow enough
+    // for React to yield between the commit and its passive effects.
     await waitFor(() =>
-      expect(screen.getByTestId("count").textContent).toBe(
-        String(initial.length),
-      ),
+      expect(apiRef.current?.folderCount).toBe(initial.length),
     );
     if (!apiRef.current) throw new Error("ApiProbe never reported ready");
     return apiRef as { current: ProbeApi };
