@@ -17,7 +17,7 @@ function defaultState(categoryId: string): PolicyState {
   // actually configured + active; this is just the empty local-cache shape.
   return {
     configured: false,
-    status: "default",
+    enabled: false,
     sources: ["editor"],
     runsOnEditor: true,
     scopeTypes: [],
@@ -114,24 +114,6 @@ export function updatePolicy(
 }
 
 /**
- * Persist a new execution order. Assigns `order` 0..n-1 to the given categories in
- * the sequence provided, so after any reorder every listed policy has an explicit,
- * contiguous order (no reliance on the catalog-index default). Categories omitted
- * from the list keep their current order.
- */
-export function reorderPolicies(
-  orderedCategoryIds: string[],
-): PoliciesByCategory {
-  const current = loadPolicies();
-  const next: PoliciesByCategory = { ...current };
-  orderedCategoryIds.forEach((id, index) => {
-    if (next[id]) next[id] = { ...next[id], order: index };
-  });
-  persist(next);
-  return next;
-}
-
-/**
  * Drop cached entries entirely (no default seeded back). For builder pipelines the backend has
  * deleted: keyed by their own id, they have no built-in category to fall back to, so a left-behind
  * entry keeps a dead backendId that the auto-run still tries to dispatch. Built-in categories are
@@ -149,18 +131,6 @@ export function forgetPolicies(ids: string[]): PoliciesByCategory {
   }
   if (removed) persist(next);
   return next;
-}
-
-/** Reset a category to its unconfigured default (the "Delete policy" action). */
-export function resetPolicy(categoryId: string): PoliciesByCategory {
-  return updatePolicy(categoryId, {
-    ...defaultState(categoryId),
-    configured: false,
-    status: "default",
-    // Drop the backing-folder + backend links (the caller deletes those).
-    folderId: undefined,
-    backendId: undefined,
-  });
 }
 
 /** Subscribe to policy-state changes (same-tab). Returns an unsubscribe fn. */

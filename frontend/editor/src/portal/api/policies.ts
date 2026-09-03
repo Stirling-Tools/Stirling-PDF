@@ -29,15 +29,7 @@ import type {
   WirePolicy,
 } from "@app/policies/types";
 
-export type {
-  PolicyActivityItem,
-  PolicyDecodedState,
-  PolicyRunView,
-  PolicyStats,
-  WireOutputOptions,
-  WireOutputSpec,
-  WirePolicy,
-} from "@app/policies/types";
+export type { PolicyRunView, WirePolicy } from "@app/policies/types";
 
 // Re-export the wire step type under the legacy name components depend on.
 export type { WirePipelineStep as PipelineStep } from "@app/policies/types";
@@ -46,9 +38,7 @@ export type { WirePipelineStep as PipelineStep } from "@app/policies/types";
 /*  Catalogue model — portal-specific                                        */
 /* ──────────────────────────────────────────────────────────────────────── */
 
-export type PolicyStatus = "active" | "paused";
-
-export type PolicyRowStatus = "active" | "paused" | "setup";
+type PolicyStatus = "active" | "paused";
 
 export type PolicyFieldType = "toggle" | "select" | "chips" | "text";
 
@@ -130,15 +120,7 @@ export interface DecoratedPolicy {
   activity: import("@app/policies/types").PolicyActivityItem[];
 }
 
-export interface PoliciesSummary {
-  active: number;
-  paused: number;
-  categories: number;
-  docsEnforced: number;
-}
-
 export interface PoliciesResponse {
-  summary: PoliciesSummary;
   catalogue: CatalogueEntry[];
 }
 
@@ -156,7 +138,7 @@ export interface CatalogueEntry {
  * i18n keys keyed by endpoint; labels stored steps in the detail view. Mostly
  * {@link ToolEndpoint}s, plus the AI classify endpoint, which isn't part of the generated union.
  */
-export const ENDPOINT_LABELS: Partial<
+const ENDPOINT_LABELS: Partial<
   Record<ToolEndpoint | "/api/v1/ai/tools/classify-and-label", string>
 > = {
   "/api/v1/security/auto-redact": "portal.policies.endpoints.autoRedact",
@@ -423,17 +405,6 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
   },
 };
 
-export const POLICY_DOC_TYPES: string[] = [
-  "contracts",
-  "invoices",
-  "taxDocuments",
-  "hrRecords",
-  "insurance",
-  "medicalPhi",
-  "legalFilings",
-  "financialReports",
-];
-
 // ── Client-side catalogue assembly ───────────────────────────────────────────
 
 function decoratePolicy(
@@ -517,25 +488,7 @@ export function assemblePolicies(
     return { category, config: POLICY_CONFIG[category.id], policy };
   });
 
-  const active = wirePolicies.filter((p) => p.enabled).length;
-  const paused = wirePolicies.filter((p) => !p.enabled).length;
-  const enabledPolicyIds = new Set(
-    wirePolicies.filter((p) => p.enabled).map((p) => p.id),
-  );
-  const docsEnforced = runs.filter(
-    (r) =>
-      r.status === "COMPLETED" &&
-      r.policyId != null &&
-      enabledPolicyIds.has(r.policyId),
-  ).length;
-  const summary: PoliciesSummary = {
-    active,
-    paused,
-    categories: POLICY_CATEGORIES.length,
-    docsEnforced,
-  };
-
-  return { summary, catalogue };
+  return { catalogue };
 }
 
 /**
@@ -611,13 +564,6 @@ export function parseSimplePolicy(
       state: { ...decorated.state, name: policy.name, icon: policy.icon },
     },
   };
-}
-
-/** GET /api/v1/policies/{id} — one stored policy's raw record. */
-export async function fetchPolicy(id: string): Promise<WirePolicy> {
-  return apiClient.local.json<WirePolicy>(
-    `/api/v1/policies/${encodeURIComponent(id)}`,
-  );
 }
 
 /**

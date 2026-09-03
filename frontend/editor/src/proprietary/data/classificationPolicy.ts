@@ -44,14 +44,6 @@ export function policyRequiresAiEngine(categoryId: string): boolean {
   return isClassificationCategory(categoryId);
 }
 
-/** Order annotating policies last; everything else keeps the order it was given. */
-export function orderRewritesFirst(categoryIds: string[]): string[] {
-  return [
-    ...categoryIds.filter(policyRewritesDocument),
-    ...categoryIds.filter((id) => !policyRewritesDocument(id)),
-  ];
-}
-
 /**
  * The active editor upload policies the generic runner dispatches and chains, in run order. Only
  * file-producing policies: an annotating policy (classification) has no output to chain onto and
@@ -65,7 +57,7 @@ export function orderedRewritingCategories(
     .filter(
       ([id, s]) =>
         s.configured &&
-        s.status === "active" &&
+        s.enabled &&
         Boolean(s.backendId) &&
         s.runsOnEditor &&
         (s.runOn ?? "upload") === "upload" &&

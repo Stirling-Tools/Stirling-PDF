@@ -53,7 +53,7 @@ vi.mock("@app/hooks/usePolicies", () => ({
       classification: {
         configured: true,
         runsOnEditor: true,
-        status: "active",
+        enabled: true,
         backendId: "backend-classification",
         runOn: "upload",
         order: 0,

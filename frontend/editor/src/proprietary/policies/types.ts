@@ -70,6 +70,12 @@ export type PolicyRunStatus =
   | "FAILED"
   | "CANCELLED";
 
+/** One file a run produced, downloadable via /api/v1/general/files/{fileId}. */
+export interface RunOutputFile {
+  fileId: string;
+  fileName: string | null;
+}
+
 export interface PolicyRunView {
   runId: string;
   policyId: string | null;
@@ -79,7 +85,7 @@ export interface PolicyRunView {
   error: string | null;
   errorCode?: string | null;
   errorSubscribed?: boolean | null;
-  outputs: { fileId: string; fileName: string }[];
+  outputs?: RunOutputFile[] | null;
   /** Creation timestamp in epoch milliseconds. */
   createdAt: number;
 }
