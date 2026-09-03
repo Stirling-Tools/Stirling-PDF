@@ -328,7 +328,9 @@ class FileRunEventControllerTest {
 
             assertThat(locked.actions())
                     .extracting(FailureKindView.ActionDeclaration::labelKey)
-                    .contains("processor.failures.action.viewFile", "processor.failures.action.dismiss");
+                    .contains(
+                            "processor.failures.action.viewFile",
+                            "processor.failures.action.dismiss");
         }
 
         @Test
