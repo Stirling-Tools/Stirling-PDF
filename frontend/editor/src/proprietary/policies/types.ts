@@ -36,14 +36,27 @@ export interface WireOutputSpec {
   options: Partial<WireOutputOptions>;
 }
 
+/**
+ * Mirrors `EditorConfig.java`. Absent only on records that never went through the
+ * backend (hand-built fixtures); a stored policy always carries it, derived from
+ * the legacy `output.options` bag when it predates the field.
+ */
+export interface WireEditorConfig {
+  allowed: boolean;
+  runOn: "upload" | "export";
+}
+
 export interface WirePolicy {
   id: string;
   name: string;
   owner?: string;
   enabled: boolean;
+  /** Org-mandated policy; first-class on the record (see the pipeline `Policy.required`). */
+  required?: boolean;
   trigger: null;
   steps: WirePipelineStep[];
   output: WireOutputSpec;
+  editor?: WireEditorConfig;
   teamId?: string;
 }
 
@@ -78,8 +91,16 @@ export interface PolicyDecodedState {
   id: string;
   name: string;
   enabled: boolean;
+  /** Org-mandated policy; first-class on the record, not part of the options bag. */
+  required: boolean;
   categoryId: string;
   sources: string[];
+  /**
+   * Whether the editor runs this policy per file. Its own field, not derived from
+   * `sources`: the seeded Classification policy is editor-run with empty sources,
+   * so re-deriving on write would silently take it off the editor.
+   */
+  runsOnEditor: boolean;
   scopeTypes: string[];
   reviewerEmail: string;
   fieldValues: Record<string, boolean | string | string[]>;
@@ -89,6 +110,11 @@ export interface PolicyDecodedState {
   outputNamePosition: "prefix" | "suffix" | "auto-number";
   maxRetries: number;
   retryDelayMinutes: number;
+  /**
+   * `output.options` keys the codec does not model (e.g. the editor's automation blob), kept verbatim
+   * so re-encoding preserves them instead of silently dropping a key the frontend can't read.
+   */
+  extraOptions?: Record<string, unknown>;
   steps: WirePipelineStep[];
 }
 

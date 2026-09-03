@@ -32,17 +32,11 @@ vi.mock("react-i18next", () => ({
   initReactI18next: { type: "3rdParty", init: vi.fn() },
 }));
 
-const fetchSources = vi.fn();
-vi.mock("@portal/api/sources", () => ({
-  fetchSources: () => fetchSources(),
-}));
-
 const fetchIntegrations = vi.fn();
 vi.mock("@portal/api/integrations", () => ({
   fetchIntegrations: () => fetchIntegrations(),
 }));
 
-const CONTINUE = "portal.policies.wizard.actions.continue";
 const SAVE_CHANGES = "portal.policies.wizard.actions.saveChanges";
 const ENABLE = "portal.policies.wizard.actions.enablePolicy";
 
@@ -60,6 +54,7 @@ function editEntry(steps: PipelineStep[]): CatalogueEntry {
     state: {
       configured: true,
       status: "active",
+      required: true,
       sources: ["editor"],
       scopeTypes: [],
       reviewerEmail: "",
@@ -80,15 +75,13 @@ function editEntry(steps: PipelineStep[]): CatalogueEntry {
   return { category: security, config: securityConfig, policy };
 }
 
-/** Advance the wizard from the workflow tab to the settings tab and submit. */
+/** Submit the single-page wizard. */
 async function submitWizard(saveLabel: string) {
-  fireEvent.click(await screen.findByRole("button", { name: CONTINUE }));
   fireEvent.click(await screen.findByRole("button", { name: saveLabel }));
 }
 
 describe("PolicySetupWizard", () => {
   beforeEach(() => {
-    fetchSources.mockResolvedValue({ sources: [] });
     fetchIntegrations.mockResolvedValue([]);
   });
 
@@ -102,7 +95,12 @@ describe("PolicySetupWizard", () => {
     ]);
 
     render(
-      <PolicySetupWizard entry={entry} onClose={vi.fn()} onSubmit={onSubmit} />,
+      <PolicySetupWizard
+        entry={entry}
+        onClose={vi.fn()}
+        onSubmit={onSubmit}
+        onCustomise={vi.fn()}
+      />,
     );
     await submitWizard(SAVE_CHANGES);
 
@@ -117,6 +115,32 @@ describe("PolicySetupWizard", () => {
     ]);
   });
 
+  it("preserves stored sources and unmodelled options on save", async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    const entry = editEntry([
+      { operation: "/api/v1/security/auto-redact", parameters: {} },
+    ]);
+    // A customised policy carries a stored source the wizard has no UI for and an editor-authored
+    // blob the codec doesn't model. A wizard save must round-trip both, not silently drop them.
+    entry.policy!.state.sources = ["src-contracts"];
+    entry.policy!.state.extraOptions = { automation: { name: "x" } };
+
+    render(
+      <PolicySetupWizard
+        entry={entry}
+        onClose={vi.fn()}
+        onSubmit={onSubmit}
+        onCustomise={vi.fn()}
+      />,
+    );
+    await submitWizard(SAVE_CHANGES);
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    const result = onSubmit.mock.calls[0][1] as PolicySetupResult;
+    expect(result.sources).toEqual(["src-contracts"]);
+    expect(result.extraOptions).toEqual({ automation: { name: "x" } });
+  });
+
   it("hides the Purview step when no Purview tenant is connected", async () => {
     fetchIntegrations.mockResolvedValue([]);
     const entry: CatalogueEntry = {
@@ -126,7 +150,12 @@ describe("PolicySetupWizard", () => {
     };
 
     render(
-      <PolicySetupWizard entry={entry} onClose={vi.fn()} onSubmit={vi.fn()} />,
+      <PolicySetupWizard
+        entry={entry}
+        onClose={vi.fn()}
+        onSubmit={vi.fn()}
+        onCustomise={vi.fn()}
+      />,
     );
 
     // Sanitize is in the same chain and always shows, so once it renders the chain has loaded.
@@ -146,7 +175,12 @@ describe("PolicySetupWizard", () => {
     };
 
     render(
-      <PolicySetupWizard entry={entry} onClose={vi.fn()} onSubmit={vi.fn()} />,
+      <PolicySetupWizard
+        entry={entry}
+        onClose={vi.fn()}
+        onSubmit={vi.fn()}
+        onCustomise={vi.fn()}
+      />,
     );
 
     await waitFor(() =>
@@ -163,7 +197,12 @@ describe("PolicySetupWizard", () => {
     };
 
     render(
-      <PolicySetupWizard entry={entry} onClose={vi.fn()} onSubmit={onSubmit} />,
+      <PolicySetupWizard
+        entry={entry}
+        onClose={vi.fn()}
+        onSubmit={onSubmit}
+        onCustomise={vi.fn()}
+      />,
     );
     await submitWizard(ENABLE);
 
@@ -177,5 +216,28 @@ describe("PolicySetupWizard", () => {
     // Redact carries the preset PII patterns as the backend's listOfText.
     const redact = result.steps[0].parameters as { listOfText?: string };
     expect(redact.listOfText).toBeTruthy();
+  });
+
+  it("defaults a new security policy to enforcing on export", async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    const entry: CatalogueEntry = {
+      category: security,
+      config: securityConfig,
+      policy: null,
+    };
+
+    render(
+      <PolicySetupWizard
+        entry={entry}
+        onClose={vi.fn()}
+        onSubmit={onSubmit}
+        onCustomise={vi.fn()}
+      />,
+    );
+    await submitWizard(ENABLE);
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    const result = onSubmit.mock.calls[0][1] as PolicySetupResult;
+    expect(result.runOn).toBe("export");
   });
 });

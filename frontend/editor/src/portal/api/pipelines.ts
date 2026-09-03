@@ -57,6 +57,14 @@ export interface Policy {
   name: string;
   owner?: string | null;
   enabled: boolean;
+  /**
+   * Org-mandated ("this is a policy your organisation requires"). First-class, independent of the
+   * trigger: a required pipeline can't be paused, disabled, or deleted by an ordinary member, and
+   * enforces on their documents when its trigger targets the editor. Admin-only to set.
+   */
+  required?: boolean;
+  /** Row icon key (see pipelineIcon); chosen in the builder. Empty falls back to the category glyph. */
+  icon?: string;
   inputs: PipelineInput[];
   steps: PipelineStep[];
   /**
@@ -70,6 +78,8 @@ export interface Policy {
    * output} is used.
    */
   outputIds: string[];
+  /** Whether the editor runs this policy per file, and on which moment. */
+  editor?: { allowed: boolean; runOn: "upload" | "export" };
   teamId?: number | null;
 }
 
@@ -87,6 +97,10 @@ export interface PipelineView {
   id: string;
   name: string;
   enabled: boolean;
+  /** Org-mandated policy (see {@link Policy.required}); surfaced as a "Required" badge in the list. */
+  required: boolean;
+  /** Icon key for the list row (see pipelineIcon). Empty when none set; may be a category id. */
+  icon: string;
   status: PipelineStatus;
   /** Trigger summary: "manual" or the trigger type (e.g. "schedule"). */
   trigger: string;

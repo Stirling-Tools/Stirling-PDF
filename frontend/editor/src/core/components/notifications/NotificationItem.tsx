@@ -1,17 +1,25 @@
 import { useState } from "react";
 import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui";
+import { Menu, Tooltip } from "@mantine/core";
+import { ActionIcon, Button } from "@app/ui";
+import LocalIcon from "@app/components/shared/LocalIcon";
 import { isResolvableHere } from "@app/hooks/useNotifications";
 import type { NotificationDocumentState } from "@app/hooks/useNotifications";
 import type {
   ClientActionRegistry,
   NotificationActionContext,
 } from "@app/components/notifications/notificationActions";
+import { promoteActions } from "@app/components/notifications/notificationActionSlots";
 import type {
   AppNotification,
   NotificationActionOffer,
 } from "@app/services/notifications";
+
+/** The kind's own sentence, sharing the portal's copy. */
+function summaryKeyOf(titleKey: string): string {
+  return titleKey.replace(/\.title$/, ".description");
+}
 
 /**
  * The server's reason wins, being about the failure rather than this browser. Otherwise only what we
@@ -35,12 +43,12 @@ function noteFor(
   if (!notification.fileId)
     return t(
       "notifications.noDocumentLinked",
-      "This failure is not linked to a specific document, so there is nothing to open here.",
+      "This failure is not linked to a specific document, so it cannot be opened or retried here.",
     );
   return isResolvableHere(notification)
     ? t(
         "notifications.notOnThisDevice",
-        "This document is not on this device, so it cannot be opened here.",
+        "This document is not on this device, so it cannot be opened or retried here.",
       )
     : null;
 }
@@ -53,7 +61,7 @@ interface NotificationItemProps {
   onDismissPanel: () => void;
 }
 
-/** Its own component because the last attempt's message and its expanded state are per-row. */
+/** Its own component because the last attempt's message and the copy state are per-row. */
 export function NotificationItem({
   notification,
   unread,
@@ -64,7 +72,6 @@ export function NotificationItem({
   const { t } = useTranslation();
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
-  const [expanded, setExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const title = t(notification.titleKey, notification.defaultTitle);
@@ -73,23 +80,17 @@ export function NotificationItem({
     hasLocalFile: documentState.hasLocalFile,
   };
 
-  // An id this build has never heard of is skipped rather than rendered unwired: the server ships
-  // new kinds, and new actions, ahead of the clients that understand them.
-  const usable = notification.actions.filter((offer) => {
-    if (!offer.enabled) return false;
-    const spec = registry[offer.id];
-    return spec ? spec.available(context) : false;
-  });
-
-  // Only from an action this build would otherwise have rendered: a reason about one it cannot
-  // perform anyway is not this row's explanation.
-  const withheldReasonKey =
-    notification.actions.find(
-      (offer) =>
-        !offer.enabled &&
-        offer.disabledReasonKey !== null &&
-        registry[offer.id] !== undefined,
-    )?.disabledReasonKey ?? null;
+  const { primary, secondary, overflow, withheldReasonKey } = promoteActions(
+    notification.actions,
+    (offer) => {
+      const spec = registry[offer.id];
+      // An id this build has never heard of: skipped rather than rendered unwired.
+      if (!spec) return false;
+      return spec.available(context);
+    },
+    // A reason from an action this build could not have rendered explains nothing.
+    (offer) => registry[offer.id] !== undefined,
+  );
 
   const labelOf = (offer: NotificationActionOffer) =>
     t(offer.labelKey, offer.defaultLabel);
@@ -129,6 +130,7 @@ export function NotificationItem({
   };
 
   const note = noteFor(notification, documentState, withheldReasonKey, t);
+  const summary = t(summaryKeyOf(notification.titleKey), { defaultValue: "" });
 
   return (
     <li
@@ -151,62 +153,71 @@ export function NotificationItem({
         </span>
       )}
 
-      {notification.detail && (
-        <>
-          <span
-            className={
-              expanded
-                ? "notification-bell__detail notification-bell__detail--full"
-                : "notification-bell__detail"
-            }
-          >
-            {notification.detail}
-          </span>
-          <span className="notification-bell__chrome">
-            <button
-              type="button"
-              className="notification-bell__chip"
-              aria-label={`${t("notifications.detail.copy", "Copy error")}: ${title}`}
-              onClick={() => void copyDetail()}
-            >
-              {copied
-                ? t("notifications.detail.copied", "Copied")
-                : t("notifications.detail.copy", "Copy error")}
-            </button>
-            <button
-              type="button"
-              className="notification-bell__chip"
-              aria-expanded={expanded}
-              aria-label={`${
-                expanded
-                  ? t("notifications.detail.less", "Show less")
-                  : t("notifications.detail.more", "Show full message")
-              }: ${title}`}
-              onClick={() => setExpanded((wasExpanded) => !wasExpanded)}
-            >
-              {expanded
-                ? t("notifications.detail.less", "Show less")
-                : t("notifications.detail.more", "Show full message")}
-            </button>
-          </span>
-        </>
-      )}
+      {summary && <span className="notification-bell__detail">{summary}</span>}
 
       {note && <span className="notification-bell__note">{note}</span>}
 
-      {/* In the kind's declared order, the first leading. */}
-      {usable.length > 0 && (
+      {/* The menu is not gated on a button existing: a row with no action still owns its log. */}
+      {(primary || notification.detail) && (
         <span className="notification-bell__actions">
-          {usable.map((offer, index) => (
+          {primary && (
             <ActionButton
-              key={offer.id}
-              variant={index === 0 ? "primary" : "secondary"}
+              variant="primary"
               rowTitle={title}
-              label={labelOf(offer)}
-              busy={busy === offer.id}
-              onRun={() => void run(offer)}
+              label={labelOf(primary)}
+              busy={busy === primary.id}
+              onRun={() => void run(primary)}
             />
-          ))}
+          )}
+          {secondary && (
+            <ActionButton
+              variant="secondary"
+              rowTitle={title}
+              label={labelOf(secondary)}
+              busy={busy === secondary.id}
+              onRun={() => void run(secondary)}
+            />
+          )}
+          {(overflow.length > 0 || notification.detail) && (
+            <Menu withinPortal position="bottom-end" shadow="md" width={180}>
+              <Menu.Target>
+                <Tooltip
+                  label={t("notifications.action.more", "More options")}
+                  withinPortal
+                >
+                  <ActionIcon
+                    variant="tertiary"
+                    size="sm"
+                    className="notification-bell__more"
+                    aria-label={`${t("notifications.action.more", "More options")}: ${title}`}
+                  >
+                    <LocalIcon icon="more-horiz" width={14} height={14} />
+                  </ActionIcon>
+                </Tooltip>
+              </Menu.Target>
+              <Menu.Dropdown className="notification-bell__menu">
+                {overflow.map((offer) => (
+                  <Menu.Item
+                    key={offer.id}
+                    disabled={busy === offer.id}
+                    onClick={() => void run(offer)}
+                  >
+                    {labelOf(offer)}
+                  </Menu.Item>
+                ))}
+                {notification.detail && (
+                  <Menu.Item
+                    closeMenuOnClick={false}
+                    onClick={() => void copyDetail()}
+                  >
+                    {copied
+                      ? t("notifications.action.copiedLog", "Copied")
+                      : t("notifications.action.copyLog", "Copy log")}
+                  </Menu.Item>
+                )}
+              </Menu.Dropdown>
+            </Menu>
+          )}
         </span>
       )}
 
@@ -220,7 +231,8 @@ export function NotificationItem({
 }
 
 interface ActionButtonProps {
-  variant: "primary" | "secondary";
+  /** Solid for the row's answer, outlined for its runner-up, ghost for the rest. */
+  variant: "primary" | "secondary" | "tertiary";
   rowTitle: string;
   label: string;
   busy: boolean;

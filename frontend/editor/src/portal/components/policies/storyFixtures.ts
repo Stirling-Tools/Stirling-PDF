@@ -29,6 +29,7 @@ export function decorateForStory(categoryId: string): DecoratedPolicy {
   const state: PolicyState = {
     configured: true,
     status: decoded.enabled ? "active" : "paused",
+    required: decoded.required,
     sources: decoded.sources,
     scopeTypes: decoded.scopeTypes,
     reviewerEmail: decoded.reviewerEmail,
