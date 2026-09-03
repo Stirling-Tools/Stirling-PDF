@@ -213,6 +213,13 @@ class PolicyControllerTest {
         return new Policy(id, "name", "owner", true, List.of(), List.of(), null, teamId);
     }
 
+    /** An org-mandated (required=true) policy, for the manager-only gate. */
+    private static Policy requiredPolicy(String id, Long teamId) {
+        return new Policy(
+                id, "name", "owner", true, true, "", List.of(), List.of(), null, List.of(), teamId,
+                null);
+    }
+
     private static Policy s3OutputPolicy(String id, String secret) {
         OutputSpec output =
                 new OutputSpec(
@@ -416,7 +423,6 @@ class PolicyControllerTest {
         @DisplayName("saves a new policy when editing is allowed")
         void savesNew() {
             applicationProperties.getSecurity().setEnableLogin(true);
-            when(policyManagementAuthority.canEditPolicies()).thenReturn(true);
             when(policyAccessGuard.ownerForNewPolicy()).thenReturn("alice");
             when(policyAccessGuard.teamForNewPolicy()).thenReturn(7L);
             Policy incoming = policy(null, null);
@@ -453,12 +459,28 @@ class PolicyControllerTest {
         }
 
         @Test
-        @DisplayName("forbidden when login enabled and caller cannot edit")
-        void forbidden() {
+        @DisplayName("a non-manager may save an ordinary (non-required) pipeline")
+        void allowsPipelineForNonManager() {
+            applicationProperties.getSecurity().setEnableLogin(true);
+            when(policyAccessGuard.ownerForNewPolicy()).thenReturn("bob");
+            when(policyAccessGuard.teamForNewPolicy()).thenReturn(7L);
+            when(policyStore.save(any())).thenAnswer(i -> i.getArgument(0));
+
+            ResponseEntity<Policy> response = controller.savePolicy(policy(null, null));
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            verify(policyStore).save(any());
+            // The manager gate is never consulted for an ordinary pipeline.
+            verify(policyManagementAuthority, never()).canEditPolicies();
+        }
+
+        @Test
+        @DisplayName("forbidden when a non-manager creates a required policy")
+        void forbidsCreatingRequiredPolicy() {
             applicationProperties.getSecurity().setEnableLogin(true);
             when(policyManagementAuthority.canEditPolicies()).thenReturn(false);
 
-            assertThatThrownBy(() -> controller.savePolicy(policy(null, null)))
+            assertThatThrownBy(() -> controller.savePolicy(requiredPolicy(null, null)))
                     .isInstanceOf(ResponseStatusException.class)
                     .satisfies(
                             e ->
@@ -466,6 +488,25 @@ class PolicyControllerTest {
                                             .isEqualTo(HttpStatus.FORBIDDEN));
             verify(policyStore, never()).save(any());
             verify(policyTriggerManager, never()).notifyPoliciesChanged();
+        }
+
+        @Test
+        @DisplayName("forbidden when a non-manager demotes an existing required policy")
+        void forbidsModifyingExistingRequiredPolicy() {
+            applicationProperties.getSecurity().setEnableLogin(true);
+            when(policyManagementAuthority.canEditPolicies()).thenReturn(false);
+            Policy existing = requiredPolicy("p1", 7L);
+            when(policyStore.get("p1")).thenReturn(Optional.of(existing));
+            when(policyAccessGuard.canAccess(existing)).thenReturn(true);
+
+            // Incoming is non-required (a demote attempt), but the stored record is required.
+            assertThatThrownBy(() -> controller.savePolicy(policy("p1", 7L)))
+                    .isInstanceOf(ResponseStatusException.class)
+                    .satisfies(
+                            e ->
+                                    assertThat(((ResponseStatusException) e).getStatusCode())
+                                            .isEqualTo(HttpStatus.FORBIDDEN));
+            verify(policyStore, never()).save(any());
         }
 
         @Test
@@ -640,10 +681,29 @@ class PolicyControllerTest {
         }
 
         @Test
-        @DisplayName("forbidden when login enabled and caller cannot edit")
-        void forbidden() {
+        @DisplayName("a non-manager may delete an ordinary (non-required) pipeline")
+        void allowsDeletingPipelineForNonManager() {
+            applicationProperties.getSecurity().setEnableLogin(true);
+            Policy p = policy("a", 1L);
+            when(policyStore.get("a")).thenReturn(Optional.of(p));
+            when(policyAccessGuard.canAccess(p)).thenReturn(true);
+            when(policyStore.delete("a")).thenReturn(true);
+
+            ResponseEntity<Void> response = controller.deletePolicy("a");
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+            verify(policyStore).delete("a");
+            verify(policyManagementAuthority, never()).canEditPolicies();
+        }
+
+        @Test
+        @DisplayName("forbidden when a non-manager deletes a required policy")
+        void forbidsDeletingRequiredPolicy() {
             applicationProperties.getSecurity().setEnableLogin(true);
             when(policyManagementAuthority.canEditPolicies()).thenReturn(false);
+            Policy p = requiredPolicy("a", 1L);
+            when(policyStore.get("a")).thenReturn(Optional.of(p));
+            when(policyAccessGuard.canAccess(p)).thenReturn(true);
 
             assertThatThrownBy(() -> controller.deletePolicy("a"))
                     .isInstanceOf(ResponseStatusException.class)
@@ -651,6 +711,7 @@ class PolicyControllerTest {
                             e ->
                                     assertThat(((ResponseStatusException) e).getStatusCode())
                                             .isEqualTo(HttpStatus.FORBIDDEN));
+            verify(policyStore, never()).delete(any());
         }
     }
 
@@ -687,10 +748,28 @@ class PolicyControllerTest {
         }
 
         @Test
-        @DisplayName("forbidden when login enabled and caller cannot edit")
-        void forbidden() {
+        @DisplayName("a non-manager may clear an ordinary (non-required) pipeline's history")
+        void allowsClearingPipelineForNonManager() {
+            applicationProperties.getSecurity().setEnableLogin(true);
+            Policy p = policy("a", 1L);
+            when(policyStore.get("a")).thenReturn(Optional.of(p));
+            when(policyAccessGuard.canAccess(p)).thenReturn(true);
+
+            ResponseEntity<Void> response = controller.clearProcessedHistory("a");
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+            verify(processedLedger).clearPolicy("a");
+            verify(policyManagementAuthority, never()).canEditPolicies();
+        }
+
+        @Test
+        @DisplayName("forbidden when a non-manager clears a required policy's history")
+        void forbidsClearingRequiredPolicy() {
             applicationProperties.getSecurity().setEnableLogin(true);
             when(policyManagementAuthority.canEditPolicies()).thenReturn(false);
+            Policy p = requiredPolicy("a", 1L);
+            when(policyStore.get("a")).thenReturn(Optional.of(p));
+            when(policyAccessGuard.canAccess(p)).thenReturn(true);
 
             assertThatThrownBy(() -> controller.clearProcessedHistory("a"))
                     .isInstanceOf(ResponseStatusException.class)
@@ -698,6 +777,7 @@ class PolicyControllerTest {
                             e ->
                                     assertThat(((ResponseStatusException) e).getStatusCode())
                                             .isEqualTo(HttpStatus.FORBIDDEN));
+            verify(processedLedger, never()).clearPolicy(any());
         }
     }
 
