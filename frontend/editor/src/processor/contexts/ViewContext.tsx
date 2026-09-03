@@ -1,0 +1,85 @@
+import { useCallback, useMemo } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { PROCESSOR_BASENAME } from "@app/routes/processorBasename";
+
+export type ViewId =
+  | "home"
+  | "editor"
+  | "users"
+  | "sources"
+  | "integrations"
+  | "policies"
+  | "pipelines"
+  | "documents"
+  | "infrastructure"
+  | "usage"
+  | "docs"
+  | "settings";
+
+export const VIEW_PATHS: Record<ViewId, string> = {
+  home: "/",
+  editor: "/editor",
+  users: "/users",
+  sources: "/sources",
+  integrations: "/integrations",
+  policies: "/policies",
+  pipelines: "/pipelines",
+  documents: "/documents",
+  infrastructure: "/infrastructure",
+  usage: "/usage",
+  docs: "/docs",
+  settings: "/settings",
+};
+
+/**
+ * The processor is mounted as a route-set under this base path inside the editor
+ * app (see the admin-route seam). VIEW_PATHS stay expressed as logical processor
+ * paths; this facade adds/strips the base so components keep navigating by
+ * ViewId without knowing where the processor is mounted. The constant lives in
+ * core so processor-free build flavors can reference the mount point too.
+ */
+export { PROCESSOR_BASENAME };
+
+/** Logical view path -> full app path (e.g. "/users" -> "/processor/users"). */
+export function toProcessorPath(viewPath: string): string {
+  return `${PROCESSOR_BASENAME}${viewPath === "/" ? "" : viewPath}`;
+}
+
+const PATH_TO_VIEW: Record<string, ViewId> = Object.fromEntries(
+  (Object.entries(VIEW_PATHS) as Array<[ViewId, string]>).map(
+    ([view, path]) => [path, view],
+  ),
+);
+
+function deriveActiveView(pathname: string): ViewId {
+  // Strip the processor base, then match against the logical VIEW_PATHS.
+  let inner = pathname.startsWith(PROCESSOR_BASENAME)
+    ? pathname.slice(PROCESSOR_BASENAME.length)
+    : pathname;
+  if (inner === "") inner = "/";
+  // Exact match first; otherwise treat the first segment as the view.
+  if (PATH_TO_VIEW[inner]) return PATH_TO_VIEW[inner];
+  const firstSegment = "/" + inner.split("/").filter(Boolean)[0];
+  return PATH_TO_VIEW[firstSegment] ?? "home";
+}
+
+interface ViewContextValue {
+  activeView: ViewId;
+  setActiveView: (view: ViewId) => void;
+}
+
+/**
+ * Facade over react-router so components navigate by `ViewId` (activeView /
+ * setActiveView) while URLs stay the source of truth. There is no
+ * <ViewProvider> — the router is the provider; App.tsx supplies <BrowserRouter>.
+ */
+export function useView(): ViewContextValue {
+  const { pathname } = useLocation();
+  const navigate = useNavigate();
+  const activeView = useMemo(() => deriveActiveView(pathname), [pathname]);
+  const setActiveView = useCallback(
+    (view: ViewId) => navigate(toProcessorPath(VIEW_PATHS[view])),
+    [navigate],
+  );
+  return { activeView, setActiveView };
+}

@@ -3,7 +3,7 @@ import { parse } from "smol-toml";
 
 /**
  * i18next backend that loads TOML translation files over HTTP. Shared by the
- * editor and portal so both apps consume the same locale format and the same
+ * editor and processor so both apps consume the same locale format and the same
  * Crowdin-managed `public/locales/{lng}/{ns}.toml` layout.
  */
 export interface TomlBackendOptions {

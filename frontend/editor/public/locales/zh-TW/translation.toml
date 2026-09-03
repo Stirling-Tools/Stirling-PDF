@@ -6464,10 +6464,13 @@ thirtyDays = "30 天"
 threeYears = "3 年"
 webhook = "Webhook"
 
-[portal]
+[printFile]
+title = "列印檔案"
+
+[processor]
 comingSoon = "即將推出"
 
-[portal.accountLink.card]
+[processor.accountLink.card]
 billingNote = "自動處理會從您的組織錢包扣款。"
 eyebrow = "帳戶連結"
 linkButton = "連結您的 Stirling 帳戶"
@@ -6478,37 +6481,37 @@ notLinked = "未連結"
 title = "將此組織連結到其 Stirling 帳戶"
 unlink = "取消連結"
 
-[portal.accountLink.card.error]
+[processor.accountLink.card.error]
 title = "無法連結"
 
-[portal.accountLink.card.loginNotConfigured]
+[processor.accountLink.card.loginNotConfigured]
 after = "以啟用與託管的 Stirling 帳戶進行帳戶連結。在 dev 中，您可以從連結對話方塊模擬登入。"
 before = "設定"
 title = "尚未設定 SaaS 登入"
 
-[portal.accountLink.gate]
+[processor.accountLink.gate]
 action = "連結帳戶"
 description = "連結此組織的 Stirling 帳戶以使用可計費功能。"
 title = "連結以解鎖"
 titleFeature = "連結以解鎖 {{feature}}"
 
-[portal.accountLink.instances]
+[processor.accountLink.instances]
 active = "啟用中"
 revoke = "撤銷"
 revoked = "已撤銷"
 unnamed = "未命名執行個體"
 
-[portal.accountLink.instances.columns]
+[processor.accountLink.instances.columns]
 instance = "執行個體"
 lastSeen = "上次出現"
 linked = "已連結"
 status = "狀態"
 
-[portal.accountLink.instances.empty]
+[processor.accountLink.instances.empty]
 description = "連結此組織的帳戶，然後註冊您的自架執行個體，即可在此查看。"
 title = "沒有已連結的執行個體"
 
-[portal.accountLink.instances.time]
+[processor.accountLink.instances.time]
 daysAgo_one = "{{count}} 天前"
 daysAgo_other = "{{count}} 天前"
 hoursAgo_one = "{{count}} 小時前"
@@ -6518,36 +6521,36 @@ minutesAgo_one = "{{count}} 分鐘前"
 minutesAgo_other = "{{count}} 分鐘前"
 never = "從未"
 
-[portal.accountLink.modal]
+[processor.accountLink.modal]
 linkSubtitle = "登入此伺服器應計費的帳戶。"
 linkTitle = "連結您的 Stirling 帳戶"
 reauthSubtitle = "您的工作階段已過期 — 請重新登入您的 Stirling 帳戶。您的執行個體會保持連結。"
 reauthTitle = "再次登入"
 simulateSignIn = "模擬登入（dev）"
 
-[portal.accountLink.modal.loginNotConfigured]
+[processor.accountLink.modal.loginNotConfigured]
 after = "以啟用應用程式內與託管的 Stirling 帳戶連結。"
 and = "和"
 before = "設定"
 title = "尚未設定 SaaS 登入"
 
-[portal.accountLink.panel]
+[processor.accountLink.panel]
 instancesSub = "註冊到此組織的每個自架執行個體。撤銷憑證可立即中斷其自動存取。"
 instancesTitle = "已連結的執行個體"
 revokeError = "無法撤銷執行個體"
 sub = "將此自架組織連結到其 Stirling 帳戶，讓自動處理從您的組織錢包扣款。"
 
-[portal.accountLink.panel.loadError]
+[processor.accountLink.panel.loadError]
 forbidden = "只有團隊擁有者可以檢視組織已連結的執行個體。"
 generic = "無法載入團隊已連結的執行個體。請稍後再試。"
 title = "無法載入已連結的執行個體"
 
-[portal.accountLink.state]
+[processor.accountLink.state]
 free = "Editor 方案"
 subscribed = "Processor 方案"
 unlinked = "未連結"
 
-[portal.assistant]
+[processor.assistant]
 close = "關閉助理"
 error = "無法連線到助理。"
 errorWithDetail = "無法連線到助理：{{detail}}"
@@ -6559,33 +6562,33 @@ title = "助理"
 tryAsking = "試著詢問"
 typing = "正在輸入"
 
-[portal.auth]
+[processor.auth]
 loading = "載入中"
 redirectingToEditor = "正在重新導向至編輯器..."
 
-[portal.billing.activation]
+[processor.billing.activation]
 maybeLater = "稍後再說"
 title = "啟用 Processor"
 
-[portal.billing.activation.payg]
+[processor.billing.activation.payg]
 sub = "設定每月上限。依使用量付費。"
 title = "隨用隨付"
 
-[portal.billing.activation.prepay]
+[processor.billing.activation.prepay]
 badge = "免費 2 個月"
 sub = "一張發票，以卡片或銀行轉帳付款。"
 title = "預付一年"
 
-[portal.billing.checkout]
+[processor.billing.checkout]
 noClientSecret = "Edge function 未傳回 client_secret。"
 title = "啟用 Processor 方案"
 
-[portal.billing.checkout.activationSlow]
+[processor.billing.checkout.activationSlow]
 body = "您的付款已成功，但啟用花費的時間比平常稍長。它會自動啟用 — 關閉此視窗後，很快就會顯示在這裡。"
 close = "關閉"
 title = "快完成了"
 
-[portal.billing.checkout.cap]
+[processor.billing.checkout.cap]
 amountAria = "每月支出上限"
 back = "返回"
 continue = "繼續付款"
@@ -6596,30 +6599,30 @@ note = "您的帳單絕不會超過上限。處理只會暫停。"
 perMonth = "/ 月"
 title = "設定您的支出上限"
 
-[portal.billing.checkout.card]
+[processor.billing.checkout.card]
 fields = "卡號 · MM / YY · CVC · ZIP"
 label = "卡片詳細資料"
 note = "卡片詳細資料由 Stripe 收集。Stirling 絕不儲存 PAN 或 CVC。"
 
-[portal.billing.checkout.error]
+[processor.billing.checkout.error]
 title = "無法開始結帳"
 
-[portal.billing.checkout.finalizing]
+[processor.billing.checkout.finalizing]
 body = "您的付款已完成。我們正在您的已連結執行個體上啟用計量處理 — 這通常需要幾秒鐘。"
 hint = "請保持此視窗開啟。"
 title = "正在啟用您的 Processor 方案..."
 
-[portal.billing.checkout.pay]
+[processor.billing.checkout.pay]
 limit = "每月支出上限 {{amount}}/月。達到上限時處理會暫停。"
 limitNoCap = "無支出上限。處理不會暫停。發票每月開立。"
 
-[portal.billing.enterpriseUpsell]
+[processor.billing.enterpriseUpsell]
 cta = "建立您的 Enterprise 報價"
 description = "承諾用量折扣、隔離部署、自訂 MSA 與安全性審查，以及第三方經銷商合作。"
 eyebrow = "用量折扣 · 1M+ PDFs"
 title = "Stirling Enterprise"
 
-[portal.billing.freeEditors]
+[processor.billing.freeEditors]
 activeThisMonth = "本月活躍"
 cost = "費用"
 editorsDeployed = "已部署的編輯器"
@@ -6628,7 +6631,7 @@ pdfsEdited = "已編輯 PDFs"
 subtitle = "可部署於任何地方，供整個團隊使用。"
 title = "免費 PDF 編輯器"
 
-[portal.billing.freePlan]
+[processor.billing.freePlan]
 checkoutErrorTitle = "無法開始結帳"
 currentPlan = "目前方案"
 freeForever = "永久免費"
@@ -6641,7 +6644,7 @@ switchOnProcessor = "啟用 Processor →"
 unlimitedUsers = "不限使用者數"
 viewQuote = "檢視報價"
 
-[portal.billing.invoices]
+[processor.billing.invoices]
 columnAmount = "金額"
 columnDate = "日期"
 columnDescription = "描述"
@@ -6665,12 +6668,12 @@ title = "發票歷史記錄"
 viewAriaLabel = "在 Stripe 中檢視發票 {{number}}"
 viewLink = "檢視 ↗"
 
-[portal.billing.linkPrompt]
+[processor.billing.linkPrompt]
 cta = "連結 Stirling 帳戶"
 description = "手動 PDF 編輯 — 檢視、簽署、合併、分割、浮水印、壓縮、轉換、手動 OCR — 無論是否連結，一律免費。連結即可取得 500 個免費 PDFs 的計量處理額度（自動化、AI 和 API）；需要更多時，啟用 Processor 方案，只需為使用量付費。"
 title = "連結您的 Stirling 帳戶"
 
-[portal.billing.paymentMethod]
+[processor.billing.paymentMethod]
 billedMonthly = "每月計費"
 cardEnding = "{{brand}} 末四碼 {{last4}}"
 cardFallback = "卡片"
@@ -6680,7 +6683,7 @@ managedSub = "您的卡片與帳單詳細資料會安全地保存在 Stripe 的�
 managedTitle = "由 Stripe 管理"
 update = "更新"
 
-[portal.billing.pdfsProcessed]
+[processor.billing.pdfsProcessed]
 emptyPeriod = "本期間尚無計量處理。"
 eyebrow = "本期間已處理 PDFs"
 legendValue_one = "{{formatted}} PDFs"
@@ -6699,14 +6702,14 @@ unit = "計量 PDFs"
 unitsPending_one = "{{units}} 個計量單位等待從連結的執行個體同步"
 unitsPending_other = "{{units}} 個計量單位等待從連結的執行個體同步"
 
-[portal.billing.prepaid]
+[processor.billing.prepaid]
 capSuffix = "共 {{total}} 預付 credits"
 expires = "{{date}} 到期"
 eyebrow = "預付容量"
 note = "在計量計費之前使用，且不受您的支出上限限制。"
 topUp = "加值"
 
-[portal.billing.prepaid.buy]
+[processor.billing.prepaid.buy]
 back = "返回"
 calcTitle = "計算您的年度付款"
 cancel = "取消"
@@ -6719,7 +6722,7 @@ loadingTitle = "正在載入您的報價"
 payTitle = "支付您的年度費用"
 step = "步驟 {{current}} / {{total}}"
 
-[portal.billing.prepaid.calc]
+[processor.billing.prepaid.calc]
 change = "變更"
 deployRow = "部署"
 done = "完成"
@@ -6738,10 +6741,10 @@ sizingRow = "規模"
 sizingValue = "{{label}} · {{desc}}"
 usersLabel = "使用者總數"
 
-[portal.billing.prepaid.consent]
+[processor.billing.prepaid.consent]
 label = "我了解當我的預付容量用完或 12 個月後到期時，除非我取消，處理會自動以標準計量隨用隨付費率繼續（最高至我的支出上限），且我可以隨時從帳單入口網站取消。"
 
-[portal.billing.prepaid.deploy]
+[processor.billing.prepaid.deploy]
 cloud = "Stirling Cloud"
 cloudDesc = "由 Stirling 管理。數分鐘內上線。"
 cloudValue = "Stirling Cloud · 代管"
@@ -6749,12 +6752,12 @@ selfhost = "自架"
 selfhostDesc = "在私人基礎架構上執行。相同費率。"
 selfhostValue = "自架 · 私人基礎架構"
 
-[portal.billing.prepaid.offer]
+[processor.billing.prepaid.offer]
 cta = "檢視優惠"
 subtitle = "預付一年 PDF 處理費用並獲得兩個月免費，在計量計費之前使用，且不受您的支出上限限制。"
 title = "以 10 個月價格取得 12 個月"
 
-[portal.billing.prepaid.pay]
+[processor.billing.prepaid.pay]
 accountName = "帳戶持有人姓名"
 accountNamePlaceholder = "例如 Jane Smith"
 companyName = "公司名稱（選填）"
@@ -6764,7 +6767,7 @@ payOnline = "線上付款"
 poNumber = "PO 編號（選填）"
 poNumberPlaceholder = "例如 PO-2026-0142"
 
-[portal.billing.prepaid.pipelines]
+[processor.billing.prepaid.pipelines]
 advanced = "進階"
 advancedDesc = "Pipelines 會驅動您大部分的處理。"
 none = "無"
@@ -6772,7 +6775,7 @@ noneDesc = "尚未執行 pipelines。您可以隨時啟用。"
 standard = "標準"
 standardDesc = "少數 pipelines 會重新處理抵達的 PDFs。"
 
-[portal.billing.prepaid.posture]
+[processor.billing.prepaid.posture]
 essentials = "基本"
 essentialsDesc = "分類、預設項目，加上分享"
 governed = "受治理"
@@ -6780,12 +6783,12 @@ governedDesc = "新增安全性與路由"
 regulated = "受規範"
 regulatedDesc = "每個類別，包含合規、保留、擷取"
 
-[portal.billing.prepaid.review]
+[processor.billing.prepaid.review]
 download = "下載報價（PDF）"
 downloading = "準備中…"
 share = "分享以供核准"
 
-[portal.billing.prepaid.size]
+[processor.billing.prepaid.size]
 compact = "精簡"
 compactDesc = "檔案小於 25 MB，無資料費用"
 heavy = "大量"
@@ -6793,12 +6796,12 @@ heavyDesc = "掃描或影像較多，通常 50 MB+"
 standard = "標準"
 standardDesc = "多為小檔案，部分掃描超過 25 MB"
 
-[portal.billing.prepaid.state]
+[processor.billing.prepaid.state]
 exhausted = "已用完"
 healthy = "剩餘充足"
 low = "即將用完"
 
-[portal.billing.spendLimit]
+[processor.billing.spendLimit]
 adjustLimit = "調整限制"
 cancel = "取消"
 capControlNote = "變更會立即套用 — 您可隨時提高或降低上限。"
@@ -6818,12 +6821,12 @@ thisPeriodUncapped = "本期間 {{amount}} · 無上限"
 usedThisMonth = "本月已使用 {{amount}}"
 useSuggested = "使用建議 · {{amount}} / 月"
 
-[portal.billing.spendLimit.projection]
+[processor.billing.spendLimit.projection]
 body_one = "以 {{rate}}/天計算，您約 {{count}} 天後會達到上限（約 {{monthEnd}} 月底）。建議限制約 {{suggested}}。"
 body_other = "以 {{rate}}/天計算，您約 {{count}} 天後會達到上限（約 {{monthEnd}} 月底）。建議限制約 {{suggested}}。"
 label = "預計會超出。"
 
-[portal.billing.spendThisMonth]
+[processor.billing.spendThisMonth]
 eyebrow = "本月支出"
 freeRemaining_one = "剩餘 {{formatted}} 個免費 PDF"
 freeRemaining_other = "剩餘 {{formatted}} 個免費 PDFs"
@@ -6832,17 +6835,17 @@ processed_other = "已處理 {{formattedCount}} 個 PDFs。"
 processedWithRate_one = "已處理 {{formattedCount}} 個 PDF，每個 {{rate}}。"
 processedWithRate_other = "已處理 {{formattedCount}} 個 PDFs，每個 {{rate}}。"
 
-[portal.billing.subscribedPlan.capWarn]
+[processor.billing.subscribedPlan.capWarn]
 approachingBody = "現在提高上限，讓自動處理永不暫停。"
 approachingTitle = "您已達每月支出限制的 {{pct}}%"
 raiseLimit = "提高限制"
 reachedBody = "計量處理已暫停，直到您提高限制或週期重設。不限量 PDF 編輯仍可使用。"
 reachedTitle = "已達每月支出限制"
 
-[portal.billing.subscribedPlan.portalError]
+[processor.billing.subscribedPlan.portalError]
 title = "無法開啟 Stripe 入口網站"
 
-[portal.billing.walletMeter]
+[processor.billing.walletMeter]
 barAria = "Free PDFs remaining"
 capSuffix_one = "已使用 {{allowance}} 個免費 PDFs"
 capSuffix_other = "已使用 {{allowance}} 個免費 PDFs"
@@ -6855,7 +6858,7 @@ title_other = "免費處理 {{allowance}} 個 PDFs"
 titleWithRate_one = "免費處理 {{allowance}} 個 PDFs，之後 {{rate}}/PDF"
 titleWithRate_other = "免費處理 {{allowance}} 個 PDFs，之後 {{rate}}/PDF"
 
-[portal.components.billingUnit]
+[processor.components.billingUnit]
 approval = "核准"
 check = "檢查"
 event = "事件"
@@ -6864,11 +6867,11 @@ review = "審查"
 session = "工作階段"
 signature = "簽章"
 
-[portal.components.maturity]
+[processor.components.maturity]
 beta = "Beta"
 ga = "GA"
 
-[portal.connections]
+[processor.connections]
 createTitle = "新增連線"
 createTitleFor = "連接 {{name}}"
 delete = "刪除"
@@ -6876,369 +6879,369 @@ edit = "編輯"
 editTitle = "編輯連線"
 unsupportedType = "此連線類型無法在此編輯。"
 
-[portal.connections.categories.advanced]
+[processor.connections.categories.advanced]
 description = "適用於我們尚未支援的服務。"
 label = "進階"
 
-[portal.connections.categories.audit]
+[processor.connections.categories.audit]
 description = "在您的稽核人員已查看的位置記錄文件發生的事件。"
 label = "稽核與合規記錄"
 
-[portal.connections.categories.notify]
+[processor.connections.categories.notify]
 description = "告知另一個系統發生了某件事。"
 label = "通知與工作流程"
 
-[portal.connections.categories.security]
+[processor.connections.categories.security]
 description = "在文件繼續移動前掃描或標記文件。"
 label = "安全性與分類"
 
-[portal.connections.categories.signing]
+[processor.connections.categories.signing]
 description = "將文件送出以進行簽署或公證。"
 label = "電子簽署與公證"
 
-[portal.connections.categories.storage]
+[processor.connections.categories.storage]
 description = "處理後文件的目的地 - bucket、drive、ticket 或 page。"
 label = "檔案與附件"
 
-[portal.connections.commonFields.accessToken]
+[processor.connections.commonFields.accessToken]
 helperText = "Stirling 會加密儲存此項目，且不會再次顯示。"
 label = "Access token"
 
-[portal.connections.commonFields.apiKey]
+[processor.connections.commonFields.apiKey]
 label = "API key"
 
-[portal.connections.commonFields.apiToken]
+[processor.connections.commonFields.apiToken]
 label = "API token"
 
-[portal.connections.commonFields.baseUrl]
+[processor.connections.commonFields.baseUrl]
 helperText = "使用此連線的步驟只能呼叫此 URL 下的路徑，絕不能呼叫其他主機。"
 label = "伺服器 URL"
 
-[portal.connections.commonFields.email]
+[processor.connections.commonFields.email]
 label = "Email"
 
-[portal.connections.commonFields.host]
+[processor.connections.commonFields.host]
 label = "Host"
 
-[portal.connections.commonFields.password]
+[processor.connections.commonFields.password]
 label = "密碼"
 
-[portal.connections.commonFields.port]
+[processor.connections.commonFields.port]
 label = "Port"
 
-[portal.connections.commonFields.username]
+[processor.connections.commonFields.username]
 label = "使用者名稱"
 
-[portal.connections.commonFields.webhookUrl]
+[processor.connections.commonFields.webhookUrl]
 helperText = "貼上服務提供給您的 URL。只能呼叫其下的路徑。"
 label = "Webhook URL"
 
-[portal.connections.fields]
+[processor.connections.fields]
 name = "連線名稱"
 namePlaceholder = "例如 Production"
 
-[portal.connections.picker]
+[processor.connections.picker]
 cancel = "取消"
 createNew = "新增連線..."
 placeholder = "選擇連線"
 save = "儲存連線"
 
-[portal.connections.picker2]
+[processor.connections.picker2]
 back = "變更整合"
 heading = "您想連接什麼？"
 noResultsBody = "我們尚未支援它 - 告訴我們，我們會考慮新增。"
 noResultsTitle = "沒有符合「{{query}}」的項目"
 searchPlaceholder = "搜尋整合 - 試試「sign」、「ocr」或產品名稱"
 
-[portal.connections.types.api]
+[processor.connections.types.api]
 description = "從 policy 呼叫任何 HTTP API。您可以選擇 URL、驗證與 payload。"
 label = "自訂 API"
 
-[portal.connections.types.api.fields.authType]
+[processor.connections.types.api.fields.authType]
 label = "驗證"
 
-[portal.connections.types.api.fields.authType.options.basic]
+[processor.connections.types.api.fields.authType.options.basic]
 label = "使用者名稱與密碼"
 
-[portal.connections.types.api.fields.authType.options.bearer]
+[processor.connections.types.api.fields.authType.options.bearer]
 label = "Bearer token"
 
-[portal.connections.types.api.fields.authType.options.header]
+[processor.connections.types.api.fields.authType.options.header]
 label = "自訂 header 中的 token"
 
-[portal.connections.types.api.fields.authType.options.none]
+[processor.connections.types.api.fields.authType.options.none]
 label = "無"
 
-[portal.connections.types.api.fields.authType.options.tokenLogin]
+[processor.connections.types.api.fields.authType.options.tokenLogin]
 label = "登入以取得 token"
 
-[portal.connections.types.api.fields.baseUrl]
+[processor.connections.types.api.fields.baseUrl]
 helperText = "使用此連線的步驟只能呼叫此 URL 下的路徑，絕不能呼叫其他主機。"
 label = "Base URL"
 placeholder = "https://api.example.com/v1"
 
-[portal.connections.types.api.fields.headerName]
+[processor.connections.types.api.fields.headerName]
 label = "Header 名稱"
 placeholder = "X-API-Key"
 
-[portal.connections.types.api.fields.loginPath]
+[processor.connections.types.api.fields.loginPath]
 label = "登入路徑"
 placeholder = "/auth/login"
 
-[portal.connections.types.api.fields.password]
+[processor.connections.types.api.fields.password]
 label = "密碼"
 
-[portal.connections.types.api.fields.resultUrlHosts]
+[processor.connections.types.api.fields.resultUrlHosts]
 helperText = "如果 API 回覆下載連結，只能擷取這些 hosts。以逗號分隔。留空則只允許基礎 URL 自身的 host。"
 label = "允許的結果 hosts"
 
-[portal.connections.types.api.fields.token]
+[processor.connections.types.api.fields.token]
 label = "Token"
 
-[portal.connections.types.api.fields.tokenHeaderName]
+[processor.connections.types.api.fields.tokenHeaderName]
 label = "以此 header 傳送 token"
 
-[portal.connections.types.api.fields.tokenResponseHeader]
+[processor.connections.types.api.fields.tokenResponseHeader]
 helperText = "登入呼叫回傳 token 的 response header，例如 X-Auth-Token。"
 label = "Token response header"
 
-[portal.connections.types.api.fields.username]
+[processor.connections.types.api.fields.username]
 label = "使用者名稱"
 
-[portal.connections.types.clamav]
+[processor.connections.types.clamav]
 baseUrlPlaceholder = "http://clamav-rest:9000"
 description = "在您執行的伺服器上掃描文件是否有惡意軟體 - 任何內容都不會離開您的網路。"
 label = "ClamAV（自架）"
 
-[portal.connections.types.cloudmersive]
+[processor.connections.types.cloudmersive]
 description = "在 policy 中對文件進行病毒與內容掃描。"
 label = "Cloudmersive"
 
-[portal.connections.types.cloudmersiveadvanced]
+[processor.connections.types.cloudmersiveadvanced]
 description = "封鎖包含巨集、可執行檔、指令碼或嵌入物件的文件 - 不只是已知惡意軟體。"
 label = "Cloudmersive Advanced Scan"
 
-[portal.connections.types.confluence]
+[processor.connections.types.confluence]
 baseUrlPlaceholder = "https://your-site.atlassian.net/wiki/api/v2"
 description = "將處理後的文件附加到 Confluence 頁面。"
 label = "Confluence"
 
-[portal.connections.types.consigno]
+[processor.connections.types.consigno]
 description = "將文件傳送至 ConsignO Cloud (Notarius) 進行電子簽署與公證。"
 label = "ConsignO Cloud"
 
-[portal.connections.types.consigno.fields.baseUrl]
+[processor.connections.types.consigno.fields.baseUrl]
 helperText = "您的 ConsignO Cloud 環境，包含 /api/v1。"
 label = "伺服器 URL"
 placeholder = "https://your-org.consignocloud.com/api/v1"
 
-[portal.connections.types.consigno.fields.clientId]
+[processor.connections.types.consigno.fields.clientId]
 label = "API key"
 
-[portal.connections.types.consigno.fields.clientSecret]
+[processor.connections.types.consigno.fields.clientSecret]
 label = "API secret"
 
-[portal.connections.types.consigno.fields.password]
+[processor.connections.types.consigno.fields.password]
 label = "密碼"
 
-[portal.connections.types.consigno.fields.tenantId]
+[processor.connections.types.consigno.fields.tenantId]
 helperText = "僅在您的組織使用 tenants 時需要。"
 label = "Tenant"
 
-[portal.connections.types.consigno.fields.username]
+[processor.connections.types.consigno.fields.username]
 label = "使用者名稱"
 
-[portal.connections.types.discord]
+[processor.connections.types.discord]
 baseUrlPlaceholder = "https://discord.com/api/webhooks/..."
 description = "當 policy 處理文件時，將訊息發布到 Discord。"
 label = "Discord"
 
-[portal.connections.types.elastic]
+[processor.connections.types.elastic]
 baseUrlPlaceholder = "https://your-cluster:9200"
 description = "每次 policy 處理文件時，在 Elasticsearch 中建立稽核事件索引。"
 label = "Elasticsearch"
 
-[portal.connections.types.ftp]
+[processor.connections.types.ftp]
 description = "輪詢 FTP 或 FTPS 伺服器以取得新文件。"
 hostPlaceholder = "ftp.example.com"
 label = "FTP / FTPS"
 
-[portal.connections.types.ftp.fields.passive]
+[processor.connections.types.ftp.fields.passive]
 label = "連線模式"
 
-[portal.connections.types.ftp.fields.passive.options]
+[processor.connections.types.ftp.fields.passive.options]
 active = "主動"
 passive = "被動（建議）"
 
-[portal.connections.types.ftp.fields.security]
+[processor.connections.types.ftp.fields.security]
 helperText = "純 FTP 會以未加密方式傳送認證與檔案；如果伺服器支援，請選擇 FTPS。"
 label = "加密"
 
-[portal.connections.types.ftp.fields.security.options]
+[processor.connections.types.ftp.fields.security.options]
 explicit = "FTPS（explicit / AUTH TLS）"
 implicit = "FTPS（implicit）"
 none = "無（純 FTP）"
 
-[portal.connections.types.googlechat]
+[processor.connections.types.googlechat]
 baseUrlPlaceholder = "https://chat.googleapis.com/v1/spaces/..."
 description = "當 policy 執行時，將訊息發布到 Google Chat space。"
 label = "Google Chat"
 
-[portal.connections.types.jira]
+[processor.connections.types.jira]
 baseUrlPlaceholder = "https://your-site.atlassian.net"
 description = "將處理後的文件附加到 Jira issue。"
 label = "Jira"
 
-[portal.connections.types.mailgun]
+[processor.connections.types.mailgun]
 description = "當 policy 執行時，透過 Email 傳送文件或通知。"
 label = "Mailgun"
 
-[portal.connections.types.n8n]
+[processor.connections.types.n8n]
 baseUrlPlaceholder = "https://your-n8n/webhook/9f2c-..."
 description = "Hand documents to an n8n workflow, and take back whatever it produces."
 label = "n8n"
 
-[portal.connections.types.n8n.fields.authType]
+[processor.connections.types.n8n.fields.authType]
 helperText = "Match the Authentication set on the n8n Webhook node."
 label = "Webhook authentication"
 
-[portal.connections.types.n8n.fields.authType.options.basic]
+[processor.connections.types.n8n.fields.authType.options.basic]
 label = "Basic auth"
 
-[portal.connections.types.n8n.fields.authType.options.header]
+[processor.connections.types.n8n.fields.authType.options.header]
 label = "Header auth"
 
-[portal.connections.types.n8n.fields.authType.options.none]
+[processor.connections.types.n8n.fields.authType.options.none]
 label = "None"
 
-[portal.connections.types.n8n.fields.headerName]
+[processor.connections.types.n8n.fields.headerName]
 helperText = "The header name from the n8n credential, not its value."
 label = "Header name"
 placeholder = "X-N8N-Key"
 
-[portal.connections.types.n8n.fields.token]
+[processor.connections.types.n8n.fields.token]
 label = "Header value"
 
-[portal.connections.types.nextcloud]
+[processor.connections.types.nextcloud]
 baseUrlPlaceholder = "https://your-server/remote.php/dav"
 description = "將處理後的文件存入 Nextcloud。"
 label = "Nextcloud"
 
-[portal.connections.types.nextcloud.fields.appPassword]
+[processor.connections.types.nextcloud.fields.appPassword]
 label = "App password"
 
-[portal.connections.types.presidio]
+[processor.connections.types.presidio]
 baseUrlPlaceholder = "http://presidio-analyzer:3000"
 description = "使用您執行的 Presidio 伺服器偵測文件文字中的個人資料。"
 label = "Presidio（自架）"
 
-[portal.connections.types.purview]
+[processor.connections.types.purview]
 description = "讀取並套用 Microsoft Purview 敏感度標籤到 PDFs。"
 label = "Microsoft Purview"
 
-[portal.connections.types.purview.fields.clientId]
+[processor.connections.types.purview.fields.clientId]
 helperText = "選填。只有在需要依名稱選取標籤時才需要；沒有它也能標記。"
 label = "Application (client) ID"
 
-[portal.connections.types.purview.fields.clientSecret]
+[processor.connections.types.purview.fields.clientSecret]
 label = "Client secret"
 
-[portal.connections.types.purview.fields.tenantId]
+[processor.connections.types.purview.fields.tenantId]
 helperText = "會加蓋到每個標籤作為其 SiteId，讓支援 Purview 的工具知道是哪個組織套用的。"
 label = "Directory (tenant) ID"
 placeholder = "cb46c030-1825-4e81-a295-151c039dbf02"
 
-[portal.connections.types.s3]
+[processor.connections.types.s3]
 description = "來源可讀取且 pipeline 輸出可寫入的 S3 bucket。"
 label = "S3 storage"
 
-[portal.connections.types.s3.fields.accessKeyId]
+[processor.connections.types.s3.fields.accessKeyId]
 label = "Access key ID"
 
-[portal.connections.types.s3.fields.bucket]
+[processor.connections.types.s3.fields.bucket]
 label = "Bucket"
 
-[portal.connections.types.s3.fields.endpoint]
+[processor.connections.types.s3.fields.endpoint]
 helperText = "AWS 請留空。若使用 MinIO 或其他 S3 相容儲存，請設定此項。"
 label = "Endpoint"
 
-[portal.connections.types.s3.fields.region]
+[processor.connections.types.s3.fields.region]
 label = "Region"
 
-[portal.connections.types.s3.fields.secretAccessKey]
+[processor.connections.types.s3.fields.secretAccessKey]
 label = "Secret access key"
 
-[portal.connections.types.sendgrid]
+[processor.connections.types.sendgrid]
 description = "當 policy 執行時，透過 Email 傳送文件或通知。"
 label = "SendGrid"
 
-[portal.connections.types.sftp]
+[processor.connections.types.sftp]
 description = "輪詢 SFTP (SSH) 伺服器以取得新文件。"
 hostPlaceholder = "sftp.example.com"
 label = "SFTP"
 
-[portal.connections.types.sftp.fields.hostKeyFingerprint]
+[processor.connections.types.sftp.fields.hostKeyFingerprint]
 helperText = "選填。伺服器的 SHA-256 host key fingerprint（來自 `ssh-keyscan host | ssh-keygen -lf -`）。設定後，只接受提供此 key 的伺服器；留空時，首次連線時看到的 key 會被釘選，之後若變更會被拒絕。"
 label = "Host key fingerprint"
 placeholder = "SHA256:..."
 
-[portal.connections.types.sftp.fields.passphrase]
+[processor.connections.types.sftp.fields.passphrase]
 label = "Key passphrase"
 
-[portal.connections.types.sftp.fields.password]
+[processor.connections.types.sftp.fields.password]
 helperText = "如果您改用 private key 驗證，請留空。"
 
-[portal.connections.types.sftp.fields.privateKey]
+[processor.connections.types.sftp.fields.privateKey]
 helperText = "選填。貼上 OpenSSH private key，以使用 key 而非密碼進行驗證。"
 label = "Private key"
 
-[portal.connections.types.slack]
+[processor.connections.types.slack]
 description = "當 policy 處理文件時，將訊息發布到 Slack。"
 label = "Slack"
 
-[portal.connections.types.smb]
+[processor.connections.types.smb]
 description = "監看 SMB / CIFS 網路共用（Windows 或 Samba）。"
 hostPlaceholder = "fileserver.example.com"
 label = "SMB / 網路共用"
 
-[portal.connections.types.smb.fields.domain]
+[processor.connections.types.smb.fields.domain]
 helperText = "選填。如果您的伺服器使用 Windows domain 或工作群組，請填寫。"
 label = "Domain"
 
-[portal.connections.types.smb.fields.share]
+[processor.connections.types.smb.fields.share]
 label = "Share"
 placeholder = "documents"
 
-[portal.connections.types.splunk]
+[processor.connections.types.splunk]
 baseUrlPlaceholder = "https://your-splunk:8088"
 description = "每次 policy 處理文件時，將稽核事件傳送至 Splunk。"
 label = "Splunk"
 
-[portal.connections.types.sumologic]
+[processor.connections.types.sumologic]
 baseUrlPlaceholder = "https://endpoint.collection.sumologic.com/receiver/v1/http/..."
 description = "將稽核事件傳送至 Sumo Logic HTTP collector。"
 label = "Sumo Logic"
 
-[portal.connections.types.teams]
+[processor.connections.types.teams]
 baseUrlPlaceholder = "https://your-org.webhook.office.com/webhookb2/..."
 description = "當 policy 執行時，將訊息發布到 Teams 頻道。"
 label = "Microsoft Teams"
 
-[portal.connections.types.webhook]
+[processor.connections.types.webhook]
 baseUrlPlaceholder = "https://example.com/hooks/documents"
 description = "將每份文件或僅其詳細資料發布到您選擇的 URL。"
 label = "Webhook"
 
-[portal.connections.types.zapier]
+[processor.connections.types.zapier]
 baseUrlPlaceholder = "https://hooks.zapier.com/hooks/catch/..."
 description = "從 policy 觸發 Zap 或 Make scenario。"
 label = "Zapier & Make"
 
-[portal.docs]
+[processor.docs]
 browse = "瀏覽文件"
 viewSource = "在 GitHub 上檢視來源"
 
-[portal.docs.authentication]
+[processor.docs.authentication]
 codeCaption = "每個請求"
 eyebrow = "開始使用"
 lead = "所有請求都使用 bearer token 驗證。金鑰依環境設定範圍，除非輪替，否則永不過期。"
@@ -7246,13 +7249,13 @@ liveKey = "Production keys — 依您的方案計費並受速率限制。"
 testKey = "Sandbox keys — 免費，傳回合成 fixtures。"
 title = "驗證"
 
-[portal.docs.components]
+[processor.docs.components]
 codeCaption = "嵌入檢視器"
 eyebrow = "元件"
 lead = "可嵌入的 UI，用於審查佇列和文件檢查。可使用您自己的樣式，或使用隨附主題。"
 title = "隨插即用檢視器"
 
-[portal.docs.endpoints]
+[processor.docs.endpoints]
 eyebrow = "API 參考"
 fieldCount_one = "{{count}} 個欄位"
 fieldCount_other = "{{count}} 個欄位"
@@ -7261,45 +7264,45 @@ filterAriaLabel = "依垂直領域篩選 endpoints"
 lead = "每種文件類型都是 typed endpoint。POST 檔案，接收經 schema 驗證的 JSON。可在下方依垂直領域篩選。"
 title = "Endpoints"
 
-[portal.docs.errors]
+[processor.docs.errors]
 codeCaption = "422 Unprocessable Entity"
 eyebrow = "API 參考"
 lead = "錯誤會傳回穩定的機器可讀 code，以及給使用者閱讀的訊息。4xx body 一律包含用於支援的 request_id。"
 title = "錯誤"
 
-[portal.docs.nav]
+[processor.docs.nav]
 ariaLabel = "文件"
 
-[portal.docs.nav.empty]
+[processor.docs.nav.empty]
 description = "無法載入文件索引。"
 title = "文件無法使用"
 
-[portal.docs.quickstart]
+[processor.docs.quickstart]
 eyebrow = "開始使用"
 lead = "將您的第一份文件傳送到 typed endpoint，並透過三個步驟取回結構化 JSON。無需模型訓練，也無需 prompt engineering。"
 title = "Quickstart"
 
-[portal.docs.quickstart.callout]
+[processor.docs.quickstart.callout]
 bodyAfterLink = "以取得可複製貼上的範例。"
 bodyBeforeLink = "將相同呼叫接入管線，以串接驗證、遮蔽和交付 — 或透過 MCP 暴露給代理程式。請參閱"
 label = "下一步："
 link = "Playbooks"
 
-[portal.docs.quickstart.step1]
+[processor.docs.quickstart.step1]
 body = "從 Infrastructure 分頁建立有範圍的金鑰。金鑰包含速率限制和選用的 IP 允許清單。將其匯出到您的 shell："
 title = "發行 API key"
 
-[portal.docs.quickstart.step2]
+[processor.docs.quickstart.step2]
 body = "POST 檔案到任何 typed endpoint。endpoint 會決定您取回的 schema — 這裡是發票擷取器。"
 snippetCaption = "擷取發票"
 title = "傳送文件"
 
-[portal.docs.quickstart.step3]
+[processor.docs.quickstart.step3]
 body = "每個回應都會根據 endpoint schema 驗證，並提供信心分數和逐欄位來源。"
 codeCaption = "200 OK"
 title = "讀取結構化結果"
 
-[portal.docs.rateLimits]
+[processor.docs.rateLimits]
 burst = "Burst"
 codeCaption = "429 Too Many Requests"
 concurrency = "並行數"
@@ -7308,47 +7311,47 @@ lead = "限制會隨您的方案擴充。429 回應包含 Retry-After header；S
 requestsPerMinute = "請求 / 分鐘"
 title = "速率限制與配額"
 
-[portal.docs.recipes]
+[processor.docs.recipes]
 cloneButton = "複製 recipe"
 eyebrow = "PLAYBOOKS"
 lead = "串接來源、操作和目的地的端對端模式。每個都對應到可複製的管線。"
 title = "Recipes"
 
-[portal.docs.sdks]
+[processor.docs.sdks]
 eyebrow = "SDKS"
 lead = "第一方用戶端，具備 typed responses、自動重試和串流上傳。全部追蹤相同的 endpoint 目錄。"
 title = "官方 SDKs"
 
-[portal.docs.sdks.status]
+[processor.docs.sdks.status]
 beta = "Beta"
 deprecated = "已淘汰"
 
-[portal.docs.skills]
+[processor.docs.skills]
 eyebrow = "SKILLS"
 lead = "代理程式以單一工具呼叫的內建命名能力。每項 skill 都是附有 evals 的確定性操作鏈。"
 title = "代理程式 skills"
 
-[portal.docs.toc]
+[processor.docs.toc]
 title = "本頁內容"
 
-[portal.docs.webhooks]
+[processor.docs.webhooks]
 codeCaption = "document.processed"
 eyebrow = "API 參考"
 lead = "訂閱 document.processed、pipeline.completed 和 quota.threshold 事件。Payloads 使用 HMAC-SHA256 簽署。"
 title = "Webhooks"
 
-[portal.docs.webhooks.callout]
+[processor.docs.webhooks.callout]
 afterHelper = "helper。"
 beforeHelper = "header，再信任 payload。SDKs 隨附"
 beforeSignature = "驗證"
 
-[portal.documents]
+[processor.documents]
 exportCsv = "匯出 CSV"
 search = "依檔名、ID 搜尋..."
 subtitle = "您的組織已處理的每份文件，包含其完整處理紀錄。內容存取需經請求核准。"
 title = "文件"
 
-[portal.documents.audit]
+[processor.documents.audit]
 approved = "已核准"
 archived = "已封存"
 elevation = "權限提升"
@@ -7358,44 +7361,44 @@ flagged = "需要審查"
 ingested = "已擷取"
 reviewed = "審查中"
 
-[portal.documents.drawer]
+[processor.documents.drawer]
 sectionsAriaLabel = "文件詳細資料區段"
 
-[portal.documents.drawer.tabs]
+[processor.documents.drawer.tabs]
 audit = "稽核"
 extractions = "擷取結果"
 overview = "概覽"
 
-[portal.documents.elevation]
+[processor.documents.elevation]
 requestAccess = "要求存取"
 
-[portal.documents.elevation.active]
+[processor.documents.elevation.active]
 description = "臨時授權 — 存取會被記錄並有時間限制。"
 descriptionFourEyes = "臨時授權 — 已通知同儕審查者（四眼原則）。"
 title = "存取權將於 {{time}} 後到期"
 
-[portal.documents.elevation.gated]
+[processor.documents.elevation.gated]
 description = "內容受零常駐存取保護。提出要求會啟動有時間限制的授權。"
 descriptionFourEyes = "內容受零常駐存取保護。提出要求會啟動有時間限制的授權，並通知同儕審查者（四眼原則）。"
 title = "敏感文件"
 
-[portal.documents.extractions]
+[processor.documents.extractions]
 empty = "此文件未擷取任何欄位。"
 masked = "擷取的欄位已隱藏。請要求限時存取以檢視此文件的內容。"
 
-[portal.documents.extractions.columns]
+[processor.documents.extractions.columns]
 confidence = "信心度"
 field = "欄位"
 value = "值"
 
-[portal.documents.filters]
+[processor.documents.filters]
 all = "全部"
 ariaLabel = "依狀態篩選文件"
 flagged = "已標記"
 inReview = "審查中"
 processed = "已處理"
 
-[portal.documents.overview]
+[processor.documents.overview]
 action = "管線 / 動作"
 product = "產品"
 received = "時間"
@@ -7403,26 +7406,26 @@ status = "狀態"
 type = "類型"
 user = "使用者"
 
-[portal.documents.queue.empty]
+[processor.documents.queue.empty]
 connectSource = "連接來源"
 createPipeline = "建立 pipeline"
 description = "當來源將文件送入您的管線時，它們會出現在這裡供審查。"
 title = "佇列中沒有文件"
 
-[portal.documents.status]
+[processor.documents.status]
 error = "錯誤"
 flagged = "需要審查"
 inReview = "審查中"
 processed = "已處理"
 
-[portal.documents.table]
+[processor.documents.table]
 auto = "自動"
 editorAction = "編輯器"
 empty = "沒有符合此篩選條件的文件。"
 rowActions = "列動作"
 sensitiveLabel = "敏感"
 
-[portal.documents.table.columns]
+[processor.documents.table.columns]
 action = "管線 / 動作"
 document = "文件"
 labels = "Labels"
@@ -7431,11 +7434,11 @@ status = "狀態"
 time = "時間"
 user = "使用者"
 
-[portal.editorAdmin]
+[processor.editorAdmin]
 subtitle = "部署 Stirling PDF 編輯器，將自託管執行個體配對到您的組織，並在同一處管理運行中的機群 — 目標、健康狀態、憑證與離線啟用。"
 title = "編輯器部署"
 
-[portal.editorAdmin.health.columns]
+[processor.editorAdmin.health.columns]
 activeUsers = "活躍使用者"
 host = "主機"
 lastSeen = "上次出現"
@@ -7444,11 +7447,11 @@ status = "狀態"
 target = "Target"
 version = "版本"
 
-[portal.editorAdmin.health.empty]
+[processor.editorAdmin.health.empty]
 description = "部署目標並完成配對，即可在此查看即時執行個體健康狀態。"
 title = "沒有執行個體回報"
 
-[portal.editorAdmin.offlineActivation]
+[processor.editorAdmin.offlineActivation]
 enterpriseTag = "Enterprise"
 generateButton = "產生離線套件"
 lockCopy = "離線和 on-prem 啟用屬於 Enterprise。"
@@ -7456,67 +7459,67 @@ subtitle = "為沒有對外網路路徑的離線或 on-prem 安裝產生已簽�
 talkToSales = "聯絡銷售"
 title = "隔離網路啟用"
 
-[portal.editorAdmin.offlineActivation.readyBanner]
+[processor.editorAdmin.offlineActivation.readyBanner]
 description = "{{file}} 已簽署並可傳輸。它可啟用一個執行個體，並將於 14 天後到期。"
 title = "套件已就緒"
 
-[portal.editorAdmin.pairing]
+[processor.editorAdmin.pairing]
 generated = "已產生 ✓"
 generateNewCode = "產生新代碼"
 lockCopy = "IaC 佈建屬於 Enterprise。"
 rotate = "輪換"
 talkToSales = "聯絡銷售"
 
-[portal.editorAdmin.sections.health]
+[processor.editorAdmin.sections.health]
 sub = "每個回報中的編輯器執行個體 — 版本、區域、狀態、上次出現時間與活躍使用者。"
 title = "執行個體健康狀態"
 
-[portal.editorAdmin.sections.pairing]
+[processor.editorAdmin.sections.pairing]
 sub = "將自託管編輯器連接到此組織。產生 token、交付短代碼，或透過 IaC 串接。"
 title = "配對"
 
-[portal.editorAdmin.sections.targets]
+[processor.editorAdmin.sections.targets]
 sub = "編輯器執行的位置。複製片段以建立自託管執行個體，或使用無需維運的 Managed Cloud。"
 title = "部署目標"
 
-[portal.editorAdmin.serviceToken]
+[processor.editorAdmin.serviceToken]
 currentToken = "目前 token"
 lastRotated = "上次輪換"
 rotateButton = "輪換服務 token"
 subtitle = "執行個體使用此憑證向組織驗證。請依排程輪換，或在懷疑外洩後立即輪換。"
 title = "服務 token"
 
-[portal.editorAdmin.serviceToken.rotatedBanner]
+[processor.editorAdmin.serviceToken.rotatedBanner]
 description = "已發行新 token。請在 24 小時寬限期內更新每個自託管執行個體的 STIRLING_SERVICE_TOKEN，否則它們會離線。"
 title = "輪換運行中的執行個體"
 
-[portal.editorAdmin.status]
+[processor.editorAdmin.status]
 degraded = "效能降低"
 healthy = "健康"
 offline = "離線"
 pairing = "配對中"
 
-[portal.editorAdmin.targets]
+[processor.editorAdmin.targets]
 instanceCount_one = "{{count}} 個執行個體"
 instanceCount_other = "{{count}} 個執行個體"
 talkToSales = "聯絡銷售"
 upgradePlan = "升級方案"
 
-[portal.editorAdmin.targets.lock]
+[processor.editorAdmin.targets.lock]
 enterprise = "On-prem 和 Kubernetes 自託管屬於 Enterprise。"
 paid = "付費方案可解鎖使用 Docker 和 Kubernetes 的自託管。"
 
-[portal.editorAdmin.targets.state]
+[processor.editorAdmin.targets.state]
 available = "可用"
 locked = "已鎖定"
 running = "執行中"
 
-[portal.errorBoundary]
+[processor.errorBoundary]
 description = "此檢視發生未預期的錯誤。請再試一次，或從側邊欄選擇其他區段。"
 retry = "再試一次"
 title = "此頁面發生問題"
 
-[portal.failures]
+[processor.failures]
 fromSource = "From source {{source}}"
 occurrences = "{{count}} occurrences"
 reportedBy = "Hit by {{actor}}"
@@ -7524,7 +7527,7 @@ runReference = "Run {{runId}}"
 subtitle = "Failures recorded from your policy runs and your team's editors, with the actions you can take."
 title = "Failures"
 
-[portal.failures.action]
+[processor.failures.action]
 acknowledge = "Acknowledge"
 confirm = "Are you sure?"
 dismiss = "Dismiss"
@@ -7532,7 +7535,7 @@ dismissSkipFile = "Skip this file"
 viewFile = "檢視檔案"
 viewInProcessor = "在處理器中檢視"
 
-[portal.failures.debug]
+[processor.failures.debug]
 copyJson = "Copy JSON"
 dismissAll = "Dismiss all ({{total}})"
 dismissing = "Dismissing..."
@@ -7540,37 +7543,37 @@ hideJson = "Hide raw JSON ({{total}})"
 refresh = "Refresh failures"
 showJson = "Show raw JSON ({{total}})"
 
-[portal.failures.disabled]
+[processor.failures.disabled]
 closed = "This failure is already closed."
 noDocument = "此失敗未記錄於特定文件，因此這裡沒有可開啟的內容。"
 unattended = "此檔案是由資料夾、bucket 或 webhook 提供，因此沒有人的瀏覽器持有它可供開啟。"
 unavailable = "Not available for this failure."
 
-[portal.failures.empty]
+[processor.failures.empty]
 description = "Policy runs that fail will appear here with the actions you can take."
 title = "No failures recorded"
 
-[portal.failures.kind.inputPasswordProtected]
+[processor.failures.kind.inputPasswordProtected]
 description = "The pipeline could not open the document because it is password-protected. Unlock it and run it again, or skip this file."
 title = "Password-protected document"
 
-[portal.failures.kind.unknown]
+[processor.failures.kind.unknown]
 description = "This run failed for a reason Stirling does not yet recognise. The raw message is shown below."
 title = "Unrecognised failure"
 
-[portal.failures.origin]
+[processor.failures.origin]
 pipeline = "Pipeline"
 policy = "Policy"
 tool = "Tool run"
 
-[portal.failures.stage]
+[processor.failures.stage]
 blocked = "Blocked"
 input = "Input"
 internal = "Internal"
 never_ran = "Never ran"
 output = "Output"
 
-[portal.home.download]
+[processor.home.download]
 back = "返回"
 body = "下載桌面應用程式或自架伺服器。"
 done = "完成"
@@ -7580,7 +7583,7 @@ sectionDesktop = "桌面應用程式"
 sectionSelfHosted = "自架"
 title = "安裝 Stirling PDF Editor"
 
-[portal.home.download.docker]
+[processor.home.download.docker]
 detailBody = "在您的伺服器上執行官方 image。"
 note = "於 :8080 開啟。預設登入：admin / stirling。"
 tagline = "在 container 中執行伺服器"
@@ -7589,27 +7592,27 @@ variantFat = "完整"
 variantLite = "超輕量"
 variantStandard = "標準"
 
-[portal.home.download.kubernetes]
+[processor.home.download.kubernetes]
 detailBody = "安裝官方 Helm chart。"
 note = "為 /configs 新增 PVC 以保留設定。"
 tagline = "使用 Helm 部署到叢集"
 title = "Kubernetes"
 
-[portal.home.download.linux]
+[processor.home.download.linux]
 detailBody = "適用於您發行版的原生建置。"
 guideBtn = "檢視 Linux 安裝選項"
 note = "常見發行版可使用 AppImage、.deb 和 .rpm 建置。"
 tagline = "適用於您發行版的原生桌面應用程式"
 title = "Linux"
 
-[portal.home.download.mac]
+[processor.home.download.mac]
 altLabel = "或透過 Homebrew"
 detailBody = "執行安裝程式，或使用 Homebrew。"
 downloadBtn = "下載 macOS 版"
 tagline = "適用於 Apple silicon 和 Intel 的原生應用程式"
 title = "macOS"
 
-[portal.home.download.manual]
+[processor.home.download.manual]
 detailBody = "在裸機伺服器上執行 .jar。"
 downloadBtn = "下載 .jar"
 note = "需要 Java 21+。於 :8080 開啟；預設登入 admin / stirling。"
@@ -7617,73 +7620,73 @@ runLabel = "然後執行"
 tagline = "在裸機伺服器上執行 .jar"
 title = "手動伺服器設定"
 
-[portal.home.download.windows]
+[processor.home.download.windows]
 altLabel = "或透過 winget"
 detailBody = "執行安裝程式，或使用套件管理器。"
 downloadBtn = "下載安裝程式"
 tagline = "適用於 Microsoft Windows 的原生應用程式"
 title = "Windows"
 
-[portal.home.editor]
+[processor.home.editor]
 activeOfDeployed = "本月 {{total}} 個中有 {{active}} 個啟用"
 name = "Stirling PDF 編輯器"
 open = "在瀏覽器中開啟"
 updated = "已於 {{time}} 更新"
 
-[portal.home.editor.deploy]
+[processor.home.editor.deploy]
 finish = "完成部署"
 options = "檢視部署選項"
 start = "部署 Editor"
 
-[portal.home.editor.target]
+[processor.home.editor.target]
 cloud = "Managed Cloud"
 docker = "自託管 · Docker"
 kubernetes = "自託管 · Kubernetes"
 
-[portal.home.greeting]
+[processor.home.greeting]
 afternoon = "午安"
 evening = "晚安"
 morning = "早安"
 
-[portal.infrastructure]
+[processor.infrastructure]
 manageEditorDeployment = "管理編輯器部署"
 sectionsAriaLabel = "基礎設施區段"
 subtitle = "您 Stirling 工作區的部署、憑證、安全狀態、儲存空間與稽核軌跡。"
 title = "基礎設施"
 
-[portal.infrastructure.apiKeys]
+[processor.infrastructure.apiKeys]
 createKey = "建立金鑰"
 heading = "API 金鑰"
 subheading = "具每金鑰速率限制、權限與 IP 允許清單的範圍化憑證。"
 
-[portal.infrastructure.apiKeys.card]
+[processor.infrastructure.apiKeys.card]
 created = "已建立"
 lastUsed = "上次使用"
 revoke = "撤銷金鑰"
 usageMonth = "本月用量"
 usageToday = "今日用量"
 
-[portal.infrastructure.apiKeys.empty]
+[processor.infrastructure.apiKeys.empty]
 description = "建立範圍化金鑰以開始呼叫 Stirling API。"
 title = "尚無 API 金鑰"
 
-[portal.infrastructure.apiKeys.error]
+[processor.infrastructure.apiKeys.error]
 load = "無法載入您的 API 金鑰。請再試一次。"
 
-[portal.infrastructure.apiKeys.revoke]
+[processor.infrastructure.apiKeys.revoke]
 body = "要撤銷「{{name}}」嗎？任何仍使用此金鑰的整合都會立即開始收到 401 錯誤。此操作無法復原。"
 cancel = "取消"
 confirm = "撤銷金鑰"
 title = "撤銷 API 金鑰"
 
-[portal.infrastructure.audit]
+[processor.infrastructure.audit]
 filterAriaLabel = "依類別篩選稽核事件"
 heading = "稽核記錄"
 latencyValue = "{{value}} ms"
 noEventsInCategory = "此類別沒有事件。"
 subheading = "工作區中每個驗證、設定與處理事件。"
 
-[portal.infrastructure.audit.columns]
+[processor.infrastructure.audit.columns]
 actor = "執行者"
 event = "事件"
 latency = "延遲"
@@ -7691,11 +7694,11 @@ status = "狀態"
 target = "資源"
 timestamp = "時間戳記"
 
-[portal.infrastructure.audit.empty]
+[processor.infrastructure.audit.empty]
 description = "工作區活動發生時會顯示在這裡。"
 title = "沒有稽核事件"
 
-[portal.infrastructure.audit.export]
+[processor.infrastructure.audit.export]
 cancel = "取消"
 error = "匯出失敗。請再試一次。"
 exportButton = "匯出"
@@ -7706,7 +7709,7 @@ open = "匯出"
 subtitle = "將稽核事件下載為 CSV 或 JSON。選擇要包含的欄位。"
 title = "匯出稽核記錄"
 
-[portal.infrastructure.audit.export.fields]
+[processor.infrastructure.audit.export.fields]
 date = "日期"
 documentName = "文件名稱"
 ipAddress = "IP 位址"
@@ -7714,7 +7717,7 @@ outcome = "結果"
 tool = "工具"
 username = "使用者名稱"
 
-[portal.infrastructure.audit.filters]
+[processor.infrastructure.audit.filters]
 all = "全部"
 auth = "驗證"
 config = "設定"
@@ -7723,17 +7726,17 @@ policy = "政策"
 processing = "處理"
 security = "安全性"
 
-[portal.infrastructure.audit.forbidden]
+[processor.infrastructure.audit.forbidden]
 description = "稽核記錄可供團隊負責人和管理員使用。請向您的團隊負責人或管理員要求存取權。"
 title = "您沒有存取權"
 
-[portal.infrastructure.audit.metrics]
+[processor.infrastructure.audit.metrics]
 config = "設定"
 policy = "政策"
 processing = "處理"
 totalEvents = "事件總數 · 24h"
 
-[portal.infrastructure.auditCatLabel]
+[processor.infrastructure.auditCatLabel]
 auth = "身分驗證"
 config = "設定"
 elevation = "權限提升"
@@ -7741,13 +7744,13 @@ policy = "政策"
 processing = "處理"
 security = "安全性"
 
-[portal.infrastructure.auditStatusLabel]
+[processor.infrastructure.auditStatusLabel]
 danger = "錯誤"
 info = "資訊"
 success = "成功"
 warning = "警告"
 
-[portal.infrastructure.createKey]
+[processor.infrastructure.createKey]
 cancel = "取消"
 createKey = "建立金鑰"
 done = "完成"
@@ -7760,11 +7763,11 @@ subtitleCreated = "立即複製此秘密 — 之後不會再顯示。"
 title = "建立 API 金鑰"
 titleCreated = "金鑰已建立"
 
-[portal.infrastructure.keyLabel]
+[processor.infrastructure.keyLabel]
 active = "啟用"
 revoked = "已撤銷"
 
-[portal.infrastructure.tabs]
+[processor.infrastructure.tabs]
 apiKeys = "API 金鑰"
 audit = "稽核記錄"
 deployments = "部署"
@@ -7772,7 +7775,7 @@ models = "模型"
 security = "安全性"
 storage = "儲存空間"
 
-[portal.integrations]
+[processor.integrations]
 availableHeading = "可用"
 comingSoonHeading = "即將推出"
 connect = "連線"
@@ -7784,7 +7787,7 @@ subtitle = "Stirling 可連接的一切。憑證只需在此建立一次，之�
 title = "整合"
 typedName = "{{tool}} 名稱"
 
-[portal.integrations.filters]
+[processor.integrations.filters]
 all = "全部"
 audit = "稽核"
 connected = "已連線"
@@ -7793,29 +7796,29 @@ security = "安全性"
 signing = "簽署"
 storage = "儲存"
 
-[portal.integrations.noResults]
+[processor.integrations.noResults]
 description = "No integrations match your filters. Try a different category or search."
 title = "No matches"
 
-[portal.integrations.status]
+[processor.integrations.status]
 connected = "已連線"
 
-[portal.integrations.table]
+[processor.integrations.table]
 integration = "整合"
 worksWith = "搭配使用"
 
-[portal.integrations.worksWith]
+[processor.integrations.worksWith]
 pipelines = "管線"
 policies = "政策"
 sources = "來源"
 
-[portal.legal]
+[processor.legal]
 draft = "{{label}} · 草稿"
 loadError = "無法載入此文件。請再試一次。"
 loading = "載入中…"
 title = "法律文件"
 
-[portal.nav]
+[processor.nav]
 agent-builder = "代理程式建構器"
 components = "元件"
 docs = "開發者文件"
@@ -7831,18 +7834,18 @@ sources = "來源"
 usage = "用量與帳單"
 users = "使用者"
 
-[portal.nav.section]
+[processor.nav.section]
 platform = "PDF 平台"
 processor = "PDF 處理器"
 
-[portal.pipelines]
+[processor.pipelines]
 subtitle = "後端上的每個自動化文件管線：在一組來源上依序執行的操作鏈，並由觸發器執行。點擊列以查看其步驟與來源。"
 title = "管線"
 
-[portal.pipelines.actions]
+[processor.pipelines.actions]
 newPipeline = "新增管線"
 
-[portal.pipelines.builder]
+[processor.pipelines.builder]
 activate = "Activate"
 back = "返回管線"
 cannotFollow = "無法接收 {{produced}}"
@@ -7874,7 +7877,7 @@ unsavedTitle = "未儲存的變更"
 usesDefaults = "使用預設設定執行"
 viewDefinition = "View definition"
 
-[portal.pipelines.builder.blocker]
+[processor.pipelines.builder.blocker]
 destination = "Choose a destination"
 heading = "To create this pipeline:"
 incompatible = "Fix steps that can't run in order: {{tools}}"
@@ -7884,7 +7887,7 @@ schedule = "Set how often it runs"
 setup = "Finish setting up: {{tools}}"
 source = "Choose an input source"
 
-[portal.pipelines.builder.diagnostic]
+[processor.pipelines.builder.diagnostic]
 fan-in = "合併前一步的每個檔案"
 fan-out = "對前一步的每個檔案執行一次"
 format-mismatch = "需要 {{accepts}}，但前一步產生 {{produced}}"
@@ -7892,7 +7895,7 @@ output-uncertain = "可能不會執行：前一步的輸出取決於其設定方
 source-mismatch = "需要 {{accepts}}，但此管線的輸入是 {{produced}}"
 undeclared-operation = "無法檢查此步驟接受的內容"
 
-[portal.pipelines.composer]
+[processor.pipelines.composer]
 addTool = "新增工具"
 create = "建立管線"
 createPaused = "Create paused"
@@ -7907,7 +7910,7 @@ scheduleEvery = "執行間隔"
 trigger = "觸發器"
 triggerManual = "僅手動"
 
-[portal.pipelines.composer.runsEvery]
+[processor.pipelines.composer.runsEvery]
 days_one = "Runs every day"
 days_other = "Runs every {{count}} days"
 hours_one = "Runs every hour"
@@ -7915,56 +7918,56 @@ hours_other = "Runs every {{count}} hours"
 minutes_one = "Runs every minute"
 minutes_other = "Runs every {{count}} minutes"
 
-[portal.pipelines.composer.unit]
+[processor.pipelines.composer.unit]
 days = "天"
 hours = "小時"
 minutes = "分鐘"
 
-[portal.pipelines.definition]
+[processor.pipelines.definition]
 subtitle = "The pipeline as it would be saved."
 title = "Definition"
 
-[portal.pipelines.delete]
+[processor.pipelines.delete]
 body = "要刪除 \"{{name}}\" 嗎？此操作無法復原。"
 cancel = "取消"
 confirm = "刪除"
 title = "刪除管線？"
 
-[portal.pipelines.detail]
+[processor.pipelines.detail]
 clearHistory = "清除歷程記錄"
 delete = "刪除管線"
 run = "立即執行"
 
-[portal.pipelines.empty]
+[processor.pipelines.empty]
 action = "建立管線"
 connectSource = "連線來源"
 description = "建立您的第一個管線：選擇執行來源、串接操作，並選擇輸出位置。"
 title = "尚無管線"
 
-[portal.pipelines.graph]
+[processor.pipelines.graph]
 addFirstTool = "Add a tool"
 dragHint = "Drop on a line to move it"
 insertHere = "Add a tool here"
 removeNode = "Remove {{name}}"
 showError = "Show why {{name}} failed"
 
-[portal.pipelines.graph.add]
+[processor.pipelines.graph.add]
 input = "Add a source"
 output = "Add a destination"
 
-[portal.pipelines.graph.run]
+[processor.pipelines.graph.run]
 done = "Done"
 failed = "Failed"
 running = "Running"
 
-[portal.pipelines.inspector]
+[processor.pipelines.inspector]
 multipleBody = "Drag any of them onto a line to move them together, or press Delete to remove them."
 multipleSelected_one = "{{count}} step selected"
 multipleSelected_other = "{{count}} steps selected"
 noSelectionBody = "Pick a node in the graph to change what it does."
 noSelectionTitle = "Nothing selected"
 
-[portal.pipelines.inspector.status]
+[processor.pipelines.inspector.status]
 completed_one = "Finished the only step"
 completed_other = "Finished all {{count}} steps"
 failed_one = "Failed on the only step"
@@ -7972,12 +7975,12 @@ failed_other = "Failed after {{done}} of {{count}} steps"
 running_one = "Running the only step"
 running_other = "Running step {{done}} of {{count}}"
 
-[portal.pipelines.kpi]
+[processor.pipelines.kpi]
 active = "啟用中"
 paused = "已暫停"
 total = "管線"
 
-[portal.pipelines.run]
+[processor.pipelines.run]
 allProcessed_one = "沒有可執行項目：來源的 {{count}} 份文件已經處理過。"
 allProcessed_other = "沒有可執行項目：來源中的全部 {{count}} 份文件已經處理過。"
 completed_one = "執行已完成。"
@@ -7990,151 +7993,151 @@ parked_other = "沒有可執行項目：{{count}} 份文件先前失敗且已暫
 running = "執行已開始；仍在進行中。"
 timeout = "執行時間比預期更長；它可能仍會在背景完成。"
 
-[portal.pipelines.status]
+[processor.pipelines.status]
 active = "啟用中"
 paused = "已暫停"
 
-[portal.pipelines.table]
+[processor.pipelines.table]
 name = "管線"
 sources = "來源"
 status = "狀態"
 steps = "步驟"
 trigger = "Trigger"
 
-[portal.pipelines.trigger]
+[processor.pipelines.trigger]
 folder-watch = "資料夾監看"
 manual = "手動"
 schedule = "已排程"
 
-[portal.policies]
+[processor.policies]
 defaultName = "{{category}} 政策"
 subtitle = "常駐自動化，可對每個文件強制執行工具管線。每項政策會在上傳或匯出時觸發，執行其工具鏈，並將強制版本與原始檔一併儲存。"
 title = "政策"
 
-[portal.policies.card]
+[processor.policies.card]
 comingSoon = "升級到 Enterprise"
 notSetUp = "尚未設定"
 requiresAiEngine = "需要 AI 引擎"
 
-[portal.policies.categories.classification]
+[processor.policies.categories.classification]
 desc = "上傳時識別每份文件的類型，並標記其中繼資料以便歸檔與搜尋。"
 label = "分類"
 
-[portal.policies.categories.compliance]
+[processor.policies.categories.compliance]
 desc = "對每個文件強制執行 HIPAA、GDPR、SOC 2 或 FedRAMP 要求。"
 label = "合規性"
 
-[portal.policies.categories.ingestion]
+[processor.policies.categories.ingestion]
 desc = "分類文件、擷取結構化資料、強制命名慣例並正規化頁面。"
 label = "擷取"
 
-[portal.policies.categories.retention]
+[processor.policies.categories.retention]
 desc = "設定文件保留時間、何時封存以及何時刪除。"
 label = "保留"
 
-[portal.policies.categories.routing]
+[processor.policies.categories.routing]
 desc = "自動將文件路由到正確的團隊、資料夾或系統。"
 label = "路由"
 
-[portal.policies.categories.security]
+[processor.policies.categories.security]
 desc = "偵測 PII、遮蔽、移除主動內容並為文件加上浮水印。"
 label = "安全性"
 
-[portal.policies.config]
+[processor.policies.config]
 scopeAll = "所有文件"
 
-[portal.policies.config.classification]
+[processor.policies.config.classification]
 summary = "依據您團隊的標籤分類每份上傳的文件，並標記其中繼資料。"
 
-[portal.policies.config.classification.rules]
+[processor.policies.config.classification.rules]
 0 = "分類"
 1 = "標記中繼資料"
 
-[portal.policies.config.compliance]
+[processor.policies.config.compliance]
 summary = "在文件離開系統前，依監管框架驗證文件。"
 
-[portal.policies.config.compliance.fields]
+[processor.policies.config.compliance.fields]
 accessLog = "存取記錄"
 auditTrail = "稽核軌跡"
 frameworks = "框架"
 onViolation = "不合規時"
 
-[portal.policies.config.compliance.rules]
+[processor.policies.config.compliance.rules]
 0 = "框架掃描"
 1 = "強制動作"
 2 = "稽核軌跡"
 
-[portal.policies.config.ingestion]
+[processor.policies.config.ingestion]
 summary = "分類文件、擷取結構化資料、強制命名並正規化頁面。"
 
-[portal.policies.config.ingestion.fields]
+[processor.policies.config.ingestion.fields]
 belowThreshold = "低於閾值"
 minConfidence = "最低信心度"
 
-[portal.policies.config.ingestion.rules]
+[processor.policies.config.ingestion.rules]
 0 = "分類"
 1 = "擷取"
 2 = "命名"
 3 = "正規化"
 
-[portal.policies.config.purview]
+[processor.policies.config.purview]
 label = "套用 Microsoft Purview 敏感度標籤"
 
-[portal.policies.config.purview.fields]
+[processor.policies.config.purview.fields]
 connection = "Purview 租用戶"
 labelId = "標籤 ID"
 labelIdHelp = "來自 Purview 入口網站的標籤 GUID。套用標籤會將其中繼資料寫入 PDF；它無法加密，加密需要 Microsoft 用戶端。"
 labelName = "標籤名稱（選填）"
 labelNameHelp = "與 ID 一起記錄，讓人員和工具能辨識標籤。"
 
-[portal.policies.config.purview.fields.method]
+[processor.policies.config.purview.fields.method]
 help = "Purview 會區分由政策套用的標籤與人員選擇的標籤。"
 label = "標籤的記錄方式"
 privileged = "作為人員選擇"
 standard = "作為自動套用"
 
-[portal.policies.config.purviewRead]
+[processor.policies.config.purviewRead]
 label = "讀取 Microsoft Purview 標籤"
 
-[portal.policies.config.purviewRead.fields]
+[processor.policies.config.purviewRead.fields]
 connection = "Purview 租用戶"
 connectionHelp = "讀取文件已帶有的標籤，讓後續步驟可依此處理。"
 
-[portal.policies.config.retention]
+[processor.policies.config.retention]
 summary = "強制文件保留時間、何時封存以及何時刪除。"
 
-[portal.policies.config.retention.fields]
+[processor.policies.config.retention.fields]
 archiveAfter = "封存於"
 immutableHold = "不可變保留"
 keepFor = "保留時間"
 
-[portal.policies.config.retention.rules]
+[processor.policies.config.retention.rules]
 0 = "保留保持"
 1 = "自動封存"
 2 = "刪除封鎖"
 
-[portal.policies.config.routing]
+[processor.policies.config.routing]
 summary = "根據類型與分類將文件路由到正確目的地。"
 
-[portal.policies.config.routing.fields]
+[processor.policies.config.routing.fields]
 destination = "目的地"
 notify = "路由時通知"
 webhookUrl = "Webhook URL"
 
-[portal.policies.config.routing.rules]
+[processor.policies.config.routing.rules]
 0 = "自動分類"
 1 = "路由到資料夾"
 2 = "Webhook 通知"
 
-[portal.policies.config.security]
+[processor.policies.config.security]
 summary = "偵測並遮蔽 PII、移除主動內容 (JavaScript)，並為文件加上浮水印。"
 
-[portal.policies.config.security.rules]
+[processor.policies.config.security.rules]
 0 = "遮蔽 PII"
 1 = "移除 JavaScript"
 2 = "浮水印"
 
-[portal.policies.detail]
+[processor.policies.detail]
 enforces = "強制執行"
 onEveryExport = "每次匯出時"
 onEveryUpload = "每次上傳時"
@@ -8146,7 +8149,7 @@ showLess = "顯示較少"
 showMore = "顯示更多"
 sources = "來源"
 
-[portal.policies.detail.actions]
+[processor.policies.detail.actions]
 clearHistory = "清除已處理歷史紀錄"
 delete = "刪除"
 editSettings = "編輯設定"
@@ -8154,17 +8157,17 @@ pause = "暫停"
 resume = "繼續"
 runNow = "立即執行"
 
-[portal.policies.detail.clearHistory]
+[processor.policies.detail.clearHistory]
 body = "此政策將忘記所有已處理過的檔案，並在下次執行時重新處理其來源中目前的所有內容。檔案本身不會被變更。此操作無法復原。"
 cancel = "取消"
 confirm = "清除歷史紀錄"
 title = "清除已處理歷史紀錄？"
 
-[portal.policies.detail.emptyActivity]
+[processor.policies.detail.emptyActivity]
 description = "此政策執行後，文件會顯示在這裡。"
 title = "尚無活動"
 
-[portal.policies.endpoints]
+[processor.policies.endpoints]
 addWatermark = "浮水印"
 autoRedact = "遮蔽 PII"
 classifyAndLabel = "分類"
@@ -8173,375 +8176,375 @@ flatten = "扁平化"
 ocrPdf = "OCR"
 sanitizePdf = "移除 JavaScript"
 
-[portal.policies.offline]
+[processor.policies.offline]
 description = "您的政策已儲存，連線恢復後會顯示。"
 retry = "重試"
 title = "後端無法使用"
 
-[portal.policies.operations]
+[processor.policies.operations]
 change = "變更此步驟的作用"
 noResults = "沒有符合的步驟。請嘗試產品名稱，或「scan」、「notify」、「attach」。"
 searchPlaceholder = "搜尋步驟 - 試試「scan」、「attach」或產品名稱"
 
-[portal.policies.operations.bodyMode]
+[processor.policies.operations.bodyMode]
 binary = "原始檔案位元組"
 json = "在 JSON payload 內"
 multipart = "作為檔案上傳（multipart）"
 
-[portal.policies.operations.clamavScan]
+[processor.policies.operations.clamavScan]
 description = "您自己的 ClamAV 伺服器會檢查文件；沒有任何內容會離開您的網路。"
 label = "掃描病毒（自行託管）"
 
-[portal.policies.operations.cloudmersiveAdvancedScan]
+[processor.policies.operations.cloudmersiveAdvancedScan]
 description = "拒絕含有巨集、可執行檔、指令碼或嵌入物件的文件。"
 label = "封鎖主動式內容"
 
-[portal.policies.operations.cloudmersiveScan]
+[processor.policies.operations.cloudmersiveScan]
 description = "Cloudmersive 會檢查文件；若不乾淨，執行會停止。"
 label = "掃描病毒"
 
-[portal.policies.operations.confluenceAttach]
+[processor.policies.operations.confluenceAttach]
 description = "將處理後的文件歸檔到頁面。"
 label = "附加到 Confluence 頁面"
 
-[portal.policies.operations.consignoSubmit]
+[processor.policies.operations.consignoSubmit]
 description = "將文件提交到 ConsignO Cloud 進行簽署。"
 label = "送出簽署（ConsignO）"
 note = "提交文件。尚不支援擷取已簽署的副本，因為步驟無法將結果傳遞給後續步驟。"
 
-[portal.policies.operations.customApiCall]
+[processor.policies.operations.customApiCall]
 description = "自行編寫呼叫：路徑、方法、主體和回應處理。"
 label = "呼叫自訂 API"
 
-[portal.policies.operations.discordNotify]
+[processor.policies.operations.discordNotify]
 description = "通知頻道政策已處理文件。"
 label = "發佈訊息到 Discord"
 
-[portal.policies.operations.elasticIndex]
+[processor.policies.operations.elasticIndex]
 description = "將政策執行內容記錄為可搜尋的文件。"
 label = "在 Elasticsearch 中索引稽核事件"
 
-[portal.policies.operations.fields.bodyMode]
+[processor.policies.operations.fields.bodyMode]
 helperText = "Multipart 適合上傳 API；JSON 適合需要檔案位於 payload 內的 API；binary 會傳送原始位元組。"
 label = "如何傳送文件"
 
-[portal.policies.operations.fields.bodyTemplate]
+[processor.policies.operations.fields.bodyTemplate]
 helperText = "依原樣傳送的 JSON 主體。{{document.base64}} 會攜帶檔案；{{document.*}} 和 {{run.*}} 會依每份文件填入。"
 label = "JSON 主體"
 
-[portal.policies.operations.fields.connection]
+[processor.policies.operations.fields.connection]
 label = "帳戶"
 
-[portal.policies.operations.fields.domain]
+[processor.policies.operations.fields.domain]
 label = "Mailgun 網域"
 placeholder = "mg.acme.com"
 
-[portal.policies.operations.fields.fileFieldName]
+[processor.policies.operations.fields.fileFieldName]
 helperText = "API 預期文件所在的表單欄位。"
 label = "檔案欄位名稱"
 placeholder = "file"
 
-[portal.policies.operations.fields.from]
+[processor.policies.operations.fields.from]
 label = "寄件者"
 placeholder = "processor@acme.com"
 
-[portal.policies.operations.fields.headers]
+[processor.policies.operations.fields.headers]
 helperText = "標頭名稱/值配對的 JSON 物件。系統會為您新增連線的憑證。"
 label = "Headers"
 
-[portal.policies.operations.fields.index]
+[processor.policies.operations.fields.index]
 label = "Index"
 placeholder = "stirling-audit"
 
-[portal.policies.operations.fields.issueKey]
+[processor.policies.operations.fields.issueKey]
 label = "Issue key"
 placeholder = "OPS-42"
 
-[portal.policies.operations.fields.message]
+[processor.policies.operations.fields.message]
 helperText = "作為訊息主體傳送。{{document.*}} 和 {{run.*}} 會依每份文件填入。"
 label = "訊息"
 
-[portal.policies.operations.fields.method]
+[processor.policies.operations.fields.method]
 label = "Method"
 
-[portal.policies.operations.fields.pageId]
+[processor.policies.operations.fields.pageId]
 label = "Page ID"
 placeholder = "66186"
 
-[portal.policies.operations.fields.path]
+[processor.policies.operations.fields.path]
 helperText = "附加到連線的基礎 URL。它永遠無法到達其他主機。"
 label = "路徑"
 placeholder = "/v1/scan"
 
-[portal.policies.operations.fields.remotePath]
+[processor.policies.operations.fields.remotePath]
 helperText = "寫入到磁碟機中的位置。{{document.filename}} 會依每份文件填入。"
 label = "目的地路徑"
 placeholder = "Processed/{{document.filename}}"
 
-[portal.policies.operations.fields.responseMode]
+[processor.policies.operations.fields.responseMode]
 helperText = "報告會讓文件保持不變。取代會將其換成回傳的任何內容。"
 label = "如何處理回覆"
 
-[portal.policies.operations.fields.signerEmail]
+[processor.policies.operations.fields.signerEmail]
 label = "簽署者電子郵件"
 placeholder = "signer@acme.com"
 
-[portal.policies.operations.fields.subject]
+[processor.policies.operations.fields.subject]
 label = "主旨"
 placeholder = "Processed: {{document.filename}}"
 
-[portal.policies.operations.fields.text]
+[processor.policies.operations.fields.text]
 helperText = "Presidio 會分析此文字。使用 {{document.title}} 或貼上您要檢查的文字。"
 label = "要檢查的文字"
 
-[portal.policies.operations.fields.to]
+[processor.policies.operations.fields.to]
 label = "收件者"
 placeholder = "records@acme.com"
 
-[portal.policies.operations.fields.username]
+[processor.policies.operations.fields.username]
 label = "Nextcloud 使用者名稱"
 placeholder = "svc-stirling"
 
-[portal.policies.operations.googlechatNotify]
+[processor.policies.operations.googlechatNotify]
 description = "通知聊天室政策已處理文件。"
 label = "發佈訊息到 Google Chat"
 
-[portal.policies.operations.jiraAttach]
+[processor.policies.operations.jiraAttach]
 description = "將處理後的文件歸檔到議題。"
 label = "附加到 Jira 議題"
 
-[portal.policies.operations.mailgunEmail]
+[processor.policies.operations.mailgunEmail]
 description = "將處理後的文件作為附件傳送。"
 label = "以電子郵件傳送文件（Mailgun）"
 
-[portal.policies.operations.n8nGate]
+[processor.policies.operations.n8nGate]
 description = "Your workflow decides whether the run carries on."
 label = "Ask an n8n workflow to approve"
 note = "The workflow must reply with {\"approved\": true}. Anything else — including a timeout — stops the run and parks the document."
 
-[portal.policies.operations.n8nNotify]
+[processor.policies.operations.n8nNotify]
 description = "Sends the run's details, not the document."
 label = "Tell an n8n workflow"
 
-[portal.policies.operations.n8nSend]
+[processor.policies.operations.n8nSend]
 description = "Sends the document and the run's details to your workflow."
 label = "Send the document to n8n"
 
-[portal.policies.operations.n8nTransform]
+[processor.policies.operations.n8nTransform]
 description = "Your workflow processes the document and the file it returns replaces it."
 label = "Process the document in n8n"
 note = "Set the Webhook node to respond \"Using Respond to Webhook Node\", and return a file. On the default \"Immediately\" setting n8n replies with an acknowledgement, and that would replace the document."
 
-[portal.policies.operations.nextcloudUpload]
+[processor.policies.operations.nextcloudUpload]
 description = "將處理後的文件寫入資料夾。"
 label = "上傳到 Nextcloud"
 
-[portal.policies.operations.presidioAnalyze]
+[processor.policies.operations.presidioAnalyze]
 description = "您自己的 Presidio 伺服器會回報其找到的個人資料。"
 label = "偵測個人資料"
 note = "Presidio 讀取文字，而非檔案。請提供您要檢查的文字 — 文件本身不會上傳。"
 
-[portal.policies.operations.responseMode]
+[processor.policies.operations.responseMode]
 replace = "以回覆取代文件"
 report = "保留文件，記錄回覆"
 
-[portal.policies.operations.sendgridEmail]
+[processor.policies.operations.sendgridEmail]
 description = "將處理後的文件作為附件傳送。"
 label = "以電子郵件傳送文件（SendGrid）"
 
-[portal.policies.operations.slackNotify]
+[processor.policies.operations.slackNotify]
 description = "通知頻道政策已處理文件。"
 label = "發佈訊息到 Slack"
 
-[portal.policies.operations.splunkEvent]
+[processor.policies.operations.splunkEvent]
 description = "在稽核人員已查看的位置記錄政策執行內容。"
 label = "傳送稽核事件到 Splunk"
 
-[portal.policies.operations.sumologicEvent]
+[processor.policies.operations.sumologicEvent]
 description = "將政策執行內容記錄到 HTTP collector。"
 label = "傳送稽核事件到 Sumo Logic"
 
-[portal.policies.operations.teamsNotify]
+[processor.policies.operations.teamsNotify]
 description = "通知頻道政策已處理文件。"
 label = "發佈訊息到 Teams"
 
-[portal.policies.operations.webhookPost]
+[processor.policies.operations.webhookPost]
 description = "將文件本身傳送到您選擇的 URL。"
 label = "將文件發佈到 webhook"
 
-[portal.policies.operations.zapierNotify]
+[processor.policies.operations.zapierNotify]
 description = "將執行詳細資料交給您的自動化。"
 label = "觸發 Zap 或 Make scenario"
 
-[portal.policies.stats]
+[processor.policies.stats]
 activeFor = "作用中"
 dataProcessed = "已處理資料"
 docsEnforced = "已套用文件"
 
-[portal.policies.status]
+[processor.policies.status]
 active = "作用中"
 paused = "已暫停"
 
-[portal.policies.summary.active]
+[processor.policies.summary.active]
 description = "在上傳/匯出時套用"
 label = "作用中政策"
 
-[portal.policies.summary.categories]
+[processor.policies.summary.categories]
 description = "可供設定"
 label = "類別"
 
-[portal.policies.summary.docsEnforced]
+[processor.policies.summary.docsEnforced]
 description = "跨作用中政策"
 label = "已套用文件"
 
-[portal.policies.summary.paused]
+[processor.policies.summary.paused]
 description = "已設定但未觸發"
 label = "已暫停"
 
-[portal.policies.table]
+[processor.policies.table]
 appliesTo = "套用至"
 docs = "已強制執行的文件"
 enforces = "強制執行"
 policy = "政策"
 status = "狀態"
 
-[portal.policies.wizard.actions]
+[processor.policies.wizard.actions]
 back = "返回"
 cancel = "取消"
 continue = "繼續"
 enablePolicy = "啟用政策"
 saveChanges = "儲存變更"
 
-[portal.policies.wizard.capability.classify]
+[processor.policies.wizard.capability.classify]
 desc = "從您團隊的標籤識別文件類型並加以標記，讓文件可依類別歸檔與搜尋。"
 label = "分類文件"
 
-[portal.policies.wizard.capability.compress]
+[processor.policies.wizard.capability.compress]
 desc = "將文件壓縮為較小的檔案大小。"
 label = "減少檔案大小"
 
-[portal.policies.wizard.capability.flatten]
+[processor.policies.wizard.capability.flatten]
 desc = "將表單欄位與註解合併到頁面中，使其無法編輯。"
 label = "將文件扁平化"
 
-[portal.policies.wizard.capability.ocr]
+[processor.policies.wizard.capability.ocr]
 desc = "執行 OCR，讓掃描頁面變成可選取、可搜尋的文字。"
 label = "讓文字可搜尋"
 
-[portal.policies.wizard.capability.redact]
+[processor.policies.wizard.capability.redact]
 desc = "尋找並塗黑敏感詳細資料，例如社會安全碼和卡號，使其無法被讀取。"
 label = "遮蔽敏感資訊"
 
-[portal.policies.wizard.capability.sanitize]
+[processor.policies.wizard.capability.sanitize]
 desc = "移除隱藏的 JavaScript，讓文件開啟時不會自動執行任何內容。"
 label = "移除主動內容"
 
-[portal.policies.wizard.capability.timestampPdf]
+[processor.policies.wizard.capability.timestampPdf]
 desc = "使用獨立的時間戳記授權單位，證明文件在某個時間點以此確切形式存在。只會傳送雜湊值 - 文件永遠不會離開您的伺服器。"
 label = "新增可信任時間戳記"
 
-[portal.policies.wizard.capability.watermark]
+[processor.policies.wizard.capability.watermark]
 desc = "在每一頁加上可見標記（例如「機密」）。"
 label = "套用浮水印"
 
-[portal.policies.wizard.classification]
+[processor.policies.wizard.classification]
 description = "每份上傳的文件都會依內建標籤分類，並以符合的類型標記。標籤集會在整個團隊中共用。"
 labelsHeading = "分類標籤"
 
-[portal.policies.wizard.errors]
+[processor.policies.wizard.errors]
 noTools = "請先在工作流程中啟用至少一項工具。"
 saveFailed = "無法儲存政策。請再試一次。"
 
-[portal.policies.wizard.output]
+[processor.policies.wizard.output]
 heading = "輸出與執行"
 
-[portal.policies.wizard.output.filenameRule]
+[processor.policies.wizard.output.filenameRule]
 autoNumber = "自動編號"
 label = "檔名規則"
 placeholder = "要新增的文字（選用）"
 prefix = "前綴"
 suffix = "後綴"
 
-[portal.policies.wizard.output.outputAs]
+[processor.policies.wizard.output.outputAs]
 label = "輸出為"
 newFile = "新檔案"
 newVersion = "新版本"
 
-[portal.policies.wizard.output.runOn]
+[processor.policies.wizard.output.runOn]
 export = "匯出"
 helper = "政策觸發時：在上傳時，或匯出前。"
 label = "執行於"
 upload = "上傳"
 
-[portal.policies.wizard.settings]
+[processor.policies.wizard.settings]
 heading = "設定"
 
-[portal.policies.wizard.sources]
+[processor.policies.wizard.sources]
 heading = "來源"
 loading = "正在載入來源…"
 
-[portal.policies.wizard.tabs]
+[processor.policies.wizard.tabs]
 ariaLabel = "設定步驟"
 settings = "設定"
 workflow = "動作"
 
-[portal.policies.wizard.title]
+[processor.policies.wizard.title]
 edit = "編輯 {{category}} 政策"
 setUp = "設定 {{category}} 政策"
 
-[portal.policies.wizard.workflow]
+[processor.policies.wizard.workflow]
 description = "選擇此政策對每份處理的文件執行的動作。"
 
-[portal.policySummary.action]
+[processor.policySummary.action]
 setUp = "設定"
 
-[portal.processorFlow]
+[processor.processorFlow]
 footnote = "計數為過去 24 小時內的數據。流程速度僅供示意。"
 liveBadge = "即時"
 stats = "{{connected}} 已連線 · 已處理 {{processed}} 個 PDF"
 title = "PDF 處理器"
 
-[portal.processorFlow.lens]
+[processor.processorFlow.lens]
 ariaLabel = "檢視模式"
 flow = "流程"
 sankey = "桑基圖"
 
-[portal.processorFlow.outcomes]
+[processor.processorFlow.outcomes]
 count = "{{n}} · 24h"
 failed = "失敗"
 heading = "結果"
 success = "已交付"
 
-[portal.processorFlow.policies]
+[processor.processorFlow.policies]
 activeCount = "{{n}} 個啟用"
 count = "{{n}} · 24h"
 heading = "政策"
 setUp = "設定"
 soon = "即將推出"
 
-[portal.processorFlow.sankey]
+[processor.processorFlow.sankey]
 waist = "政策 · {{n}} 個啟用"
 
-[portal.processorFlow.sankey.empty]
+[processor.processorFlow.sankey.empty]
 description = "連線來源並開啟政策，即可觀看文件流經處理器。"
 title = "尚無流程"
 
-[portal.processorFlow.sources]
+[processor.processorFlow.sources]
 comingSoonTag = "連線"
 editor = "Stirling PDF Editor"
 heading = "來源"
 perDay = "{{n}} / 24h"
 
-[portal.processorFlow.sources.comingSoon]
+[processor.processorFlow.sources.comingSoon]
 apiMcp = "API · MCP"
 cloud = "Drive · Box · S3"
 email = "Email intake"
 
-[portal.procurement]
+[processor.procurement]
 subtitle = "讓您的團隊完成評估、簽約並導入。所有文件集中在一處。"
 title = "採購"
 
-[portal.procurement.agreement]
+[processor.procurement.agreement]
 agreeCta = "同意並訂閱"
 confidential = "機密"
 confirm = "我已閱讀並同意 Stirling Enterprise Agreement。"
@@ -8563,7 +8566,7 @@ signatoryTitle = "簽署人職稱"
 signatoryTitlePlaceholder = "例如 總法律顧問"
 signError = "無法記錄您的簽署。請再試一次。"
 
-[portal.procurement.builder]
+[processor.procurement.builder]
 addons = "附加項目"
 addressLine1 = "地址第 1 行"
 addressLine1Placeholder = "500 Howard St"
@@ -8643,7 +8646,7 @@ volumePlaceholder = "例如 1,000,000"
 years_one = "{{count}} 年"
 years_other = "{{count}} 年"
 
-[portal.procurement.documents]
+[processor.procurement.documents]
 agreement = "企業協議"
 agreementSub = "MSA、Order Form 和 DPA 合併為一份簽署文件。"
 download = "下載"
@@ -8663,10 +8666,10 @@ subtitle = "您的交易文件，可隨時存取。"
 title = "文件"
 view = "檢視"
 
-[portal.procurement.error]
+[processor.procurement.error]
 title = "發生錯誤"
 
-[portal.procurement.hero]
+[processor.procurement.hero]
 barAria = "第 {{current}} 階段，共 {{total}} 階段"
 ctaAgreement = "檢閱並簽署協議"
 ctaExploring = "設定您的試用"
@@ -8689,36 +8692,36 @@ sentencePayment = "採購單與付款"
 sentenceQuote = "審閱並接受您的報價"
 sentenceTrial = "設定您的試用工作區"
 
-[portal.procurement.journey]
+[processor.procurement.journey]
 daysLeft_one = "剩餘 {{count}} 天"
 daysLeft_other = "剩餘 {{count}} 天"
 
-[portal.procurement.journeySteps.agreement]
+[processor.procurement.journeySteps.agreement]
 blurb = "一個簽名涵蓋 MSA、order form、EULA 和 DPA。"
 gatingAction = "檢閱並簽署您的協議"
 label = "協議"
 
-[portal.procurement.journeySteps.implementation]
+[processor.procurement.journeySteps.implementation]
 blurb = "佈建您的工作區並執行 go-live playbook。"
 gatingAction = "正在佈建您的工作區"
 label = "實作"
 
-[portal.procurement.journeySteps.payment]
+[processor.procurement.journeySteps.payment]
 blurb = "以卡片、銀行轉帳或採購單付款。"
 gatingAction = "確認付款"
 label = "付款"
 
-[portal.procurement.journeySteps.quote]
+[processor.procurement.journeySteps.quote]
 blurb = "檢閱承諾數量定價與合約期限。"
 gatingAction = "接受您的報價"
 label = "報價"
 
-[portal.procurement.journeySteps.trial]
+[processor.procurement.journeySteps.trial]
 blurb = "以您的文件和工作流程評估 Stirling。"
 gatingAction = "建立您的報價"
 label = "試用"
 
-[portal.procurement.license]
+[processor.procurement.license]
 copied = "已複製"
 copy = "複製金鑰"
 downloadError = "目前尚無法產生離線授權檔 — 請稍後再試。"
@@ -8729,21 +8732,21 @@ subtitle = "使用此金鑰啟用自行託管的執行個體，或保留作為�
 title = "您的授權金鑰"
 trialFileHint = "這是您的試用授權檔案。協議就緒後，請回來再次下載 — 與線上授權金鑰不同，.lic 檔案不會自行更新。"
 
-[portal.procurement.link]
+[processor.procurement.link]
 cta = "連結帳戶"
 description = "採購流程會在您連結的 Stirling 帳戶上執行：我們會用它來佈建試用、為報價定價並開始計費。連結帳戶即可開始。"
 eyebrow = "Enterprise"
 title = "連結您的帳戶以開始"
 
-[portal.procurement.live]
+[processor.procurement.live]
 description = "您的訂閱已啟用，授權已核發。您的團隊已完成佈建，計費也已開始。"
 eyebrow = "上線"
 title = "您已在 Stirling Enterprise 上線"
 
-[portal.procurement.milestone]
+[processor.procurement.milestone]
 downloadError = "目前尚無法下載報價 PDF — 請稍後再試。"
 
-[portal.procurement.payment]
+[processor.procurement.payment]
 description = "您的報價已被接受，授權也已啟用 — 您的團隊可以立即開始。準備好時支付第一張發票；您可以在這裡付款或下載，不需要 email。"
 downloadAgreement = "下載已簽署協議"
 downloadInvoice = "下載發票"
@@ -8751,7 +8754,7 @@ eyebrow = "付款"
 title = "訂閱已建立"
 viewInvoice = "檢視並支付發票"
 
-[portal.procurement.review]
+[processor.procurement.review]
 acceptCta = "接受報價"
 annual = "年度費用（第 1 年）"
 downloadCta = "下載報價"
@@ -8760,14 +8763,14 @@ renewal = "期限結束後以 {{amount}}/年續約（+{{pct}}% CPI）"
 tcv = "{{years}} 年期，預先全額支付：{{tcv}}"
 validUntil = "有效至 {{date}}"
 
-[portal.procurement.schedule]
+[processor.procurement.schedule]
 fallback = "無法載入排程工具。"
 fallbackLink = "在新分頁開啟排程"
 loading = "正在載入排程器..."
 subtitle = "您的解決方案工程師會帶領您的團隊完成推出流程。請選擇適合您的時間。"
 title = "安排通話"
 
-[portal.procurement.setup]
+[processor.procurement.setup]
 airgap = "隔離網路"
 airgapSub = "封閉，無對外連線"
 back = "返回"
@@ -8797,7 +8800,7 @@ viewEula = "閱讀"
 workEmail = "工作電子郵件"
 workEmailPlaceholder = "you@company.com"
 
-[portal.procurement.trial]
+[processor.procurement.trial]
 body = "延長會增加 7 天，並通知您的解決方案工程師。"
 bodyMaxed = "您已用完所有延長次數 — 如果需要更多時間，請聯絡您的解決方案工程師。"
 cancel = "取消試用"
@@ -8806,32 +8809,32 @@ maxed = "已達上限"
 subtitle = "您的免費試用持續到 {{date}}。不需要卡片。"
 title = "Enterprise 試用"
 
-[portal.settings.groups]
+[processor.settings.groups]
 admin = "管理員"
 
-[portal.settings.sections]
+[processor.settings.sections]
 account-link = "帳戶連結"
 
-[portal.shell.sidebar]
+[processor.shell.sidebar]
 appEditor = "編輯器"
 appProcessor = "處理器"
 linkAccount = "連結 Stirling 帳戶"
 primaryNav = "主要導覽"
 switchApp = "切換應用程式"
 
-[portal.shell.topbar]
+[processor.shell.topbar]
 closeNav = "關閉導覽"
 openNav = "開啟導覽"
 search = "搜尋"
 
-[portal.sources]
+[processor.sources]
 subtitle = "可重複使用的輸入連線，將文件送入 Stirling。設定一次連線後，即可從任意數量的政策參照它。點擊一列可查看其設定，以及使用它的政策。"
 title = "來源"
 
-[portal.sources.actions]
+[processor.sources.actions]
 connectSource = "連接來源"
 
-[portal.sources.builder]
+[processor.sources.builder]
 advanced = "進階"
 back = "返回來源"
 backToSource = "返回來源設定"
@@ -8846,167 +8849,167 @@ delete = "刪除"
 editTitle = "編輯來源"
 save = "儲存變更"
 
-[portal.sources.builder.folderAccess]
+[processor.sources.builder.folderAccess]
 description = "資料夾自動化只能使用管理員允許的資料夾。請在資料夾存取設定中新增，然後再試一次。"
 openSettings = "資料夾存取設定"
 title = "不允許此資料夾"
 
-[portal.sources.delete]
+[processor.sources.delete]
 body = "刪除「{{name}}」？此操作無法復原。參照它的政策需要更新。"
 cancel = "取消"
 confirm = "刪除"
 title = "刪除來源？"
 
-[portal.sources.kpi]
+[processor.sources.kpi]
 inUse = "使用中"
 total = "連線"
 unused = "未使用"
 
-[portal.sources.networkFields.connection]
+[processor.sources.networkFields.connection]
 helperText = "儲存的連線，包含伺服器位址和憑證。會由參照它的每個來源重複使用。"
 label = "連線"
 
-[portal.sources.networkFields.directory]
+[processor.sources.networkFields.directory]
 helperText = "要輪詢的伺服器資料夾，相對於登入主目錄或分享根目錄。留空表示根目錄。"
 label = "資料夾"
 placeholder = "incoming/"
 
-[portal.sources.networkFields.mode]
+[processor.sources.networkFields.mode]
 helperText = "消耗會在每個政策處理完檔案後，將該檔案從伺服器移除。"
 label = "讀取模式"
 
-[portal.sources.networkFields.mode.options]
+[processor.sources.networkFields.mode.options]
 consume = "消耗：每個檔案只處理一次"
 snapshot = "快照：每次執行都重新讀取資料夾"
 
-[portal.sources.networkFields.recursive]
+[processor.sources.networkFields.recursive]
 helperText = "如果您的檔案整理在巢狀資料夾中，請包含子資料夾，或僅監看最上層。"
 label = "資料夾深度"
 
-[portal.sources.networkFields.recursive.options]
+[processor.sources.networkFields.recursive.options]
 all = "包含子資料夾"
 top = "僅最上層"
 
-[portal.sources.status]
+[processor.sources.status]
 active = "作用中"
 disabled = "已停用"
 unused = "未使用"
 
-[portal.sources.table]
+[processor.sources.table]
 documents = "文件"
 source = "來源"
 status = "狀態"
 type = "Type"
 usedBy = "政策"
 
-[portal.sources.types.box]
+[processor.sources.types.box]
 description = "從您團隊已分享的 Box 資料夾拉取文件。"
 label = "Box"
 
-[portal.sources.types.dropbox]
+[processor.sources.types.dropbox]
 description = "從共用 Dropbox 資料夾拉取文件。"
 label = "Dropbox"
 
-[portal.sources.types.editor]
+[processor.sources.types.editor]
 description = "您的團隊在編輯器中處理過的文件，涵蓋政策和 AI 執行。"
 label = "編輯器"
 noPolicies = "尚無從編輯器執行的政策。"
 
-[portal.sources.types.email]
+[processor.sources.types.email]
 description = "將傳送到專用信箱的附件轉換為文件。"
 label = "電子郵件收件匣"
 
-[portal.sources.types.folder]
+[processor.sources.types.folder]
 description = "監看伺服器上的目錄以取得新文件。"
 label = "資料夾"
 
-[portal.sources.types.folder.fields.directory]
+[processor.sources.types.folder.fields.directory]
 helperText = "Stirling 監看以處理檔案的絕對路徑。"
 label = "目錄路徑"
 placeholder = "/data/incoming"
 
-[portal.sources.types.folder.fields.identity]
+[processor.sources.types.folder.fields.identity]
 helperText = "內容檢查會讀取每個變更的檔案，因此重新命名和 touch 但未改變內容的檔案不會重新處理。"
 label = "變更偵測"
 
-[portal.sources.types.folder.fields.identity.options]
+[processor.sources.types.folder.fields.identity.options]
 hash = "大小、日期與內容檢查"
 stat = "大小與修改日期"
 
-[portal.sources.types.folder.fields.mode]
+[processor.sources.types.folder.fields.mode]
 helperText = "是否在處理後將原始檔案保留在原位。如果原始檔案保留在原位，下次管線掃描來源時會重新處理它。"
 label = "讀取模式"
 
-[portal.sources.types.folder.fields.mode.options]
+[processor.sources.types.folder.fields.mode.options]
 consume = "消耗：每個檔案只處理一次"
 snapshot = "快照：每次執行都重新讀取資料夾"
 
-[portal.sources.types.folder.fields.recursive]
+[processor.sources.types.folder.fields.recursive]
 helperText = "如果您的檔案整理在巢狀資料夾中，請包含子資料夾，或僅監看最上層。"
 label = "資料夾深度"
 
-[portal.sources.types.folder.fields.recursive.options]
+[processor.sources.types.folder.fields.recursive.options]
 all = "包含子資料夾"
 top = "僅最上層"
 
-[portal.sources.types.ftp]
+[processor.sources.types.ftp]
 description = "輪詢 FTP 或 FTPS 伺服器資料夾以尋找新文件。"
 label = "FTP"
 
-[portal.sources.types.googledrive]
+[processor.sources.types.googledrive]
 description = "從共用 Google Drive 資料夾拉取文件。"
 label = "Google Drive"
 
-[portal.sources.types.network]
+[processor.sources.types.network]
 description = "監看 SMB 網路共用中的新文件。"
 label = "網路磁碟機"
 
-[portal.sources.types.onedrive]
+[processor.sources.types.onedrive]
 description = "監看 OneDrive 資料夾中的新文件。"
 label = "OneDrive"
 
-[portal.sources.types.s3]
+[processor.sources.types.s3]
 description = "從 Amazon S3 或 S3 相容儲存貯體拉取文件。"
 label = "Amazon S3"
 
-[portal.sources.types.s3.fields.connection]
+[processor.sources.types.s3.fields.connection]
 helperText = "儲存的連線，包含儲存貯體和憑證。會由參照它的每個來源和管線輸出重複使用。"
 label = "連線"
 
-[portal.sources.types.s3.fields.mode]
+[processor.sources.types.s3.fields.mode]
 helperText = "消耗會在每個政策處理完物件後，將該物件從儲存貯體移除。"
 label = "讀取模式"
 
-[portal.sources.types.s3.fields.mode.options]
+[processor.sources.types.s3.fields.mode.options]
 consume = "消耗：每個物件只處理一次"
 snapshot = "快照：每次執行都重新讀取儲存貯體"
 
-[portal.sources.types.s3.fields.prefix]
+[processor.sources.types.s3.fields.prefix]
 helperText = "只會處理鍵以此前置詞開頭的物件。"
 label = "鍵前置詞"
 placeholder = "incoming/"
 
-[portal.sources.types.sftp]
+[processor.sources.types.sftp]
 description = "輪詢 SFTP 投遞資料夾以尋找新文件。"
 label = "SFTP"
 
-[portal.sources.types.sharepoint]
+[processor.sources.types.sharepoint]
 description = "從 SharePoint 文件庫拉取文件。"
 label = "SharePoint"
 
-[portal.sources.types.unknown]
+[processor.sources.types.unknown]
 label = "來源"
 
-[portal.sources.types.webhook]
+[processor.sources.types.webhook]
 createNote = "建立此 webhook 時會產生交付 URL 和簽署密鑰。傳送者將文件 POST 到該 URL，參照的政策會在到達時執行。"
 description = "透過來自任何外部系統的已簽署 HTTP POST 接收文件。"
 label = "Webhook"
 
-[portal.sources.types.webhook.detail]
+[processor.sources.types.webhook.detail]
 deliveryUrl = "交付 URL"
 secretNote = "簽署密鑰只會在建立 webhook 時顯示一次。重新建立來源即可輪替。"
 
-[portal.sources.types.webhook.reveal]
+[processor.sources.types.webhook.reveal]
 copy = "複製"
 done = "完成"
 secret = "簽署密鑰"
@@ -9016,78 +9019,75 @@ title = "Webhook 已建立"
 url = "交付 URL"
 usage = "將每份文件以原始請求主體 POST 到交付 URL，並使用 binary content type（application/pdf 或 application/octet-stream）。參照的政策會在到達時自動執行。"
 
-[portal.sources.wizard]
+[processor.sources.wizard]
 name = "名稱"
 namePlaceholder = "例如 理賠收件"
 type = "類型"
 
-[portal.stepModal]
+[processor.stepModal]
 close = "關閉"
 
-[portal.usage]
+[processor.usage]
 managePayment = "管理付款"
 subtitle = "在單一主控台中管理 Stirling 已計費的每份 PDF 的用量、發票和方案。"
 title = "用量與帳務"
 
-[portal.usage.error]
+[processor.usage.error]
 loadWallet = "無法載入錢包"
 openStripePortal = "無法開啟 Stripe portal"
 walletUnavailable = "錢包無法使用：{{status}} {{statusText}}"
 
-[portal.usage.sessionExpired]
+[processor.usage.sessionExpired]
 action = "重新登入"
 body = "您的 Stirling 帳戶工作階段已過期。請重新登入以檢視帳務 — 您的執行個體會保持連結。"
 title = "工作階段已過期"
 
-[portal.users]
+[processor.users]
 title = "使用者"
 
-[portal.users.roles.admin]
+[processor.users.roles.admin]
 label = "管理員（組織擁有者）"
 summary = "對工作區、設定和成員擁有完整治理權限。"
 
-[portal.users.roles.admin.permissions]
+[processor.users.roles.admin.permissions]
 0 = "管理使用者、團隊和角色"
 1 = "管理所有整合，包含 S3 連線"
 2 = "授予或撤銷 portal 存取權"
 3 = "Team Owner 可執行的一切"
 
-[portal.users.roles.guest]
+[processor.users.roles.guest]
 label = "訪客"
 summary = "有限或僅限網頁存取；無法持有個人設定。"
 
-[portal.users.roles.guest.permissions]
+[processor.users.roles.guest.permissions]
 0 = "僅限網頁 / demo 使用"
 1 = "無 API keys 或整合"
 2 = "無 portal 存取權"
 3 = "在共用範圍內唯讀"
 
-[portal.users.roles.member]
+[processor.users.roles.member]
 label = "成員"
 summary = "一般使用者 — 使用共用資源及自己的設定。"
 
-[portal.users.roles.member.permissions]
+[processor.users.roles.member.permissions]
 0 = "使用編輯器和共用整合"
 1 = "建立個人 API 與 MCP 設定"
 2 = "查看與其共用的團隊設定"
 3 = "無 S3 或工作區管理權限"
 
-[portal.users.roles.team_owner]
+[processor.users.roles.team_owner]
 label = "團隊擁有者"
 summary = "擁有團隊 — 管理其成員資源和共用設定。"
 
-[portal.users.roles.team_owner.permissions]
+[processor.users.roles.team_owner.permissions]
 0 = "建立並管理團隊的 S3 連線"
 1 = "管理團隊擁有的整合設定"
 2 = "透過預設政策取得 portal 存取權"
 3 = "成員可執行的一切"
 
-[portal.users.seats]
+[processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · 無限制"
-
-[printFile]
-title = "列印檔案"
 
 [provider.googledrive]
 name = "Google Drive"

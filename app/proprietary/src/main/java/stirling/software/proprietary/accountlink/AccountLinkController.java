@@ -47,7 +47,7 @@ public class AccountLinkController {
         this.syncServiceProvider = syncServiceProvider;
     }
 
-    /** {@code callbackUrl} is the portal telling us where its own callback route lives. */
+    /** {@code callbackUrl} is the processor telling us where its own callback route lives. */
     public record ConnectStartRequest(String name, String callbackUrl) {}
 
     /** {@code nonce} comes from the callback fragment the approval page redirected to. */
@@ -147,8 +147,8 @@ public class AccountLinkController {
     }
 
     /**
-     * Locally accrued usage not yet reported to SaaS — the portal adds it to the SaaS-synced spend
-     * so "current usage" includes work done since the last daily sync.
+     * Locally accrued usage not yet reported to SaaS — the processor adds it to the SaaS-synced
+     * spend so "current usage" includes work done since the last daily sync.
      */
     @GetMapping("/usage")
     public ResponseEntity<LocalUsageService.LocalUsage> usage() {

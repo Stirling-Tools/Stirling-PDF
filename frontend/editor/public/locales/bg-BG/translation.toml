@@ -6464,10 +6464,13 @@ thirtyDays = "30 дни"
 threeYears = "3 години"
 webhook = "Webhook"
 
-[portal]
+[printFile]
+title = "Печат на файл"
+
+[processor]
 comingSoon = "Очаквайте скоро"
 
-[portal.accountLink.card]
+[processor.accountLink.card]
 billingNote = "Автоматичната обработка се таксува към портфейла на вашата организация."
 eyebrow = "Свързване на акаунт"
 linkButton = "Свържете своя Stirling акаунт"
@@ -6478,37 +6481,37 @@ notLinked = "Не е свързан"
 title = "Свържете тази организация с нейния Stirling акаунт"
 unlink = "Прекъсни връзката"
 
-[portal.accountLink.card.error]
+[processor.accountLink.card.error]
 title = "Не можа да се свърже"
 
-[portal.accountLink.card.loginNotConfigured]
+[processor.accountLink.card.loginNotConfigured]
 after = "за да активирате свързване на акаунт с хоствания Stirling акаунт. В dev можете да симулирате влизане от диалога за свързване."
 before = "Задайте"
 title = "SaaS входът не е конфигуриран"
 
-[portal.accountLink.gate]
+[processor.accountLink.gate]
 action = "Свържи акаунт"
 description = "Свържете Stirling акаунта на тази организация, за да използвате платени функции."
 title = "Свържете, за да отключите"
 titleFeature = "Свържете, за да отключите {{feature}}"
 
-[portal.accountLink.instances]
+[processor.accountLink.instances]
 active = "Активна"
 revoke = "Отмени"
 revoked = "Отменена"
 unnamed = "Неименувана инстанция"
 
-[portal.accountLink.instances.columns]
+[processor.accountLink.instances.columns]
 instance = "Инстанция"
 lastSeen = "Последно видяна"
 linked = "Свързана"
 status = "Статус"
 
-[portal.accountLink.instances.empty]
+[processor.accountLink.instances.empty]
 description = "Свържете акаунта на тази организация, след което регистрирайте своите self-hosted инстанции, за да ги видите тук."
 title = "Няма свързани инстанции"
 
-[portal.accountLink.instances.time]
+[processor.accountLink.instances.time]
 daysAgo_one = "преди {{count}} д"
 daysAgo_other = "преди {{count}} д"
 hoursAgo_one = "преди {{count}} ч"
@@ -6518,36 +6521,36 @@ minutesAgo_one = "преди {{count}} мин"
 minutesAgo_other = "преди {{count}} мин"
 never = "никога"
 
-[portal.accountLink.modal]
+[processor.accountLink.modal]
 linkSubtitle = "Влезте в акаунта, към който този сървър трябва да таксува."
 linkTitle = "Свържете своя Stirling акаунт"
 reauthSubtitle = "Сесията ви изтече — влезте отново във вашия Stirling акаунт. Вашата инстанция остава свързана."
 reauthTitle = "Влезте отново"
 simulateSignIn = "Симулирай влизане (dev)"
 
-[portal.accountLink.modal.loginNotConfigured]
+[processor.accountLink.modal.loginNotConfigured]
 after = "за да активирате свързване в приложението с хоствания Stirling акаунт."
 and = "и"
 before = "Задайте"
 title = "SaaS входът не е конфигуриран"
 
-[portal.accountLink.panel]
+[processor.accountLink.panel]
 instancesSub = "Всяка self-hosted инстанция, регистрирана към тази организация. Отменете идентификационни данни, за да прекъснете незабавно автоматичния ѝ достъп."
 instancesTitle = "Свързани инстанции"
 revokeError = "Инстанцията не можа да бъде отменена"
 sub = "Свържете тази self-hosted организация с нейния Stirling акаунт, така че автоматичната обработка да се таксува към портфейла на вашата организация."
 
-[portal.accountLink.panel.loadError]
+[processor.accountLink.panel.loadError]
 forbidden = "Само собственикът на екипа може да вижда свързаните инстанции на организацията."
 generic = "Свързаните инстанции на екипа не можаха да бъдат заредени. Опитайте отново след малко."
 title = "Свързаните инстанции не можаха да бъдат заредени"
 
-[portal.accountLink.state]
+[processor.accountLink.state]
 free = "План Editor"
 subscribed = "План Processor"
 unlinked = "Не е свързан"
 
-[portal.assistant]
+[processor.assistant]
 close = "Затвори асистента"
 error = "Асистентът не можа да бъде достигнат."
 errorWithDetail = "Асистентът не можа да бъде достигнат: {{detail}}"
@@ -6559,33 +6562,33 @@ title = "Асистент"
 tryAsking = "Опитайте да попитате"
 typing = "Писане"
 
-[portal.auth]
+[processor.auth]
 loading = "Зареждане"
 redirectingToEditor = "Пренасочване към редактора..."
 
-[portal.billing.activation]
+[processor.billing.activation]
 maybeLater = "Може би по-късно"
 title = "Включете Processor"
 
-[portal.billing.activation.payg]
+[processor.billing.activation.payg]
 sub = "Задайте месечен лимит. Плащате за това, което изпълнявате."
 title = "Плащане според употребата"
 
-[portal.billing.activation.prepay]
+[processor.billing.activation.prepay]
 badge = "2 месеца безплатно"
 sub = "Една фактура, карта или банков превод."
 title = "Предплатете година"
 
-[portal.billing.checkout]
+[processor.billing.checkout]
 noClientSecret = "Edge функцията не върна client_secret."
 title = "Включете план Processor"
 
-[portal.billing.checkout.activationSlow]
+[processor.billing.checkout.activationSlow]
 body = "Плащането ви е успешно, но активирането отнема малко повече от обичайното. Ще се включи автоматично — затворете това и скоро ще се появи тук."
 close = "Затвори"
 title = "Почти готово"
 
-[portal.billing.checkout.cap]
+[processor.billing.checkout.cap]
 amountAria = "Месечен лимит за разходи"
 back = "Назад"
 continue = "Продължи към плащане"
@@ -6596,30 +6599,30 @@ note = "Никога няма да бъдете таксувани над лим
 perMonth = "/ мес."
 title = "Задайте лимита си за разходи"
 
-[portal.billing.checkout.card]
+[processor.billing.checkout.card]
 fields = "Номер на карта · MM / YY · CVC · ZIP"
 label = "Данни за карта"
 note = "Данните за картата се събират от Stripe. Stirling никога не съхранява PAN или CVC."
 
-[portal.billing.checkout.error]
+[processor.billing.checkout.error]
 title = "Checkout не можа да стартира"
 
-[portal.billing.checkout.finalizing]
+[processor.billing.checkout.finalizing]
 body = "Плащането ви премина. Включваме измерваната обработка във вашите свързани инстанции — това обикновено отнема няколко секунди."
 hint = "Моля, оставете този прозорец отворен."
 title = "Активиране на вашия план Processor..."
 
-[portal.billing.checkout.pay]
+[processor.billing.checkout.pay]
 limit = "Месечен лимит за разходи {{amount}}/мес. Обработката спира на пауза при достигане на лимита."
 limitNoCap = "Без лимит за разходи. Обработката няма да спира на пауза. Фактурите се издават месечно."
 
-[portal.billing.enterpriseUpsell]
+[processor.billing.enterpriseUpsell]
 cta = "Създайте своята Enterprise оферта"
 description = "Отстъпки за договорен обем, air-gapped внедряване, персонализирани MSA и прегледи на сигурността, и партньорства с дистрибутори трети страни."
 eyebrow = "Отстъпка за обем · 1M+ PDF"
 title = "Stirling Enterprise"
 
-[portal.billing.freeEditors]
+[processor.billing.freeEditors]
 activeThisMonth = "Активни този месец"
 cost = "Цена"
 editorsDeployed = "Внедрени редактори"
@@ -6628,7 +6631,7 @@ pdfsEdited = "Редактирани PDF"
 subtitle = "Внедрете навсякъде, за целия си екип."
 title = "Безплатни PDF редактори"
 
-[portal.billing.freePlan]
+[processor.billing.freePlan]
 checkoutErrorTitle = "Checkout не можа да стартира"
 currentPlan = "Текущ план"
 freeForever = "Безплатно завинаги"
@@ -6641,7 +6644,7 @@ switchOnProcessor = "Включи Processor →"
 unlimitedUsers = "Неограничени потребители"
 viewQuote = "Преглед на оферта"
 
-[portal.billing.invoices]
+[processor.billing.invoices]
 columnAmount = "Сума"
 columnDate = "Дата"
 columnDescription = "Описание"
@@ -6665,12 +6668,12 @@ title = "История на фактурите"
 viewAriaLabel = "Виж фактура {{number}} в Stripe"
 viewLink = "Виж ↗"
 
-[portal.billing.linkPrompt]
+[processor.billing.linkPrompt]
 cta = "Свържи Stirling акаунт"
 description = "Ръчната PDF редакция — преглед, подписване, обединяване, разделяне, воден знак, компресиране, конвертиране, ръчен OCR — винаги е безплатна, независимо дали е свързана или не. Свържете, за да получите 500 безплатни PDF за измервана обработка (автоматизация, AI и API); когато ви потрябват още, включете план Processor и плащайте само за използваното."
 title = "Свържете своя Stirling акаунт"
 
-[portal.billing.paymentMethod]
+[processor.billing.paymentMethod]
 billedMonthly = "Таксува се месечно"
 cardEnding = "{{brand}} завършваща на {{last4}}"
 cardFallback = "Карта"
@@ -6680,7 +6683,7 @@ managedSub = "Вашата карта и данни за таксуване се
 managedTitle = "Управлява се в Stripe"
 update = "Актуализирай"
 
-[portal.billing.pdfsProcessed]
+[processor.billing.pdfsProcessed]
 emptyPeriod = "Все още няма измервана обработка за този период."
 eyebrow = "PDF, обработени през този период"
 legendValue_one = "{{formatted}} PDF"
@@ -6699,14 +6702,14 @@ unit = "измервани PDF"
 unitsPending_one = "{{units}} мерна единица очаква синхронизация от свързани instances"
 unitsPending_other = "{{units}} мерни единици очакват синхронизация от свързани instances"
 
-[portal.billing.prepaid]
+[processor.billing.prepaid]
 capSuffix = "от {{total}} предплатени кредита"
 expires = "Изтича {{date}}"
 eyebrow = "Предплатен капацитет"
 note = "Използва се преди таксуването по измерване и извън лимита ви за разходи."
 topUp = "Допълване"
 
-[portal.billing.prepaid.buy]
+[processor.billing.prepaid.buy]
 back = "Назад"
 calcTitle = "Изчислете годишното си плащане"
 cancel = "Отказ"
@@ -6719,7 +6722,7 @@ loadingTitle = "Зареждане на офертата ви"
 payTitle = "Платете за годината си"
 step = "Стъпка {{current}} от {{total}}"
 
-[portal.billing.prepaid.calc]
+[processor.billing.prepaid.calc]
 change = "Промяна"
 deployRow = "Внедряване"
 done = "Готово"
@@ -6738,10 +6741,10 @@ sizingRow = "Оразмеряване"
 sizingValue = "{{label}} · {{desc}}"
 usersLabel = "Общо потребители"
 
-[portal.billing.prepaid.consent]
+[processor.billing.prepaid.consent]
 label = "Разбирам, че когато предплатеният ми капацитет бъде изчерпан или изтече след 12 месеца, обработката автоматично продължава по стандартната такса за pay-as-you-go според измерването (до лимита ми за разходи), освен ако не отменя, и че мога да отменя по всяко време от billing portal."
 
-[portal.billing.prepaid.deploy]
+[processor.billing.prepaid.deploy]
 cloud = "Stirling Cloud"
 cloudDesc = "Управлявано от Stirling. Активно за минути."
 cloudValue = "Stirling Cloud · Управлявано"
@@ -6749,12 +6752,12 @@ selfhost = "Self-hosted"
 selfhostDesc = "Работи върху частна инфраструктура. Същата тарифа."
 selfhostValue = "Self-hosted · Частна инфраструктура"
 
-[portal.billing.prepaid.offer]
+[processor.billing.prepaid.offer]
 cta = "Преглед на офертата"
 subtitle = "Предплатете година PDF обработка и получете два месеца безплатно, използвани преди таксуването по измерване, извън лимита ви за разходи."
 title = "Вземете 12 месеца на цената на 10"
 
-[portal.billing.prepaid.pay]
+[processor.billing.prepaid.pay]
 accountName = "Име на титуляр на акаунта"
 accountNamePlaceholder = "напр. Jane Smith"
 companyName = "Име на компания (по избор)"
@@ -6764,7 +6767,7 @@ payOnline = "Плащане онлайн"
 poNumber = "PO номер (по избор)"
 poNumberPlaceholder = "напр. PO-2026-0142"
 
-[portal.billing.prepaid.pipelines]
+[processor.billing.prepaid.pipelines]
 advanced = "Разширени"
 advancedDesc = "Pipelines управляват по-голямата част от обработката ви."
 none = "Няма"
@@ -6772,7 +6775,7 @@ noneDesc = "Все още не изпълнявате pipelines. Включет�
 standard = "Стандартни"
 standardDesc = "Няколко pipelines преобработват пристигащи PDF файлове."
 
-[portal.billing.prepaid.posture]
+[processor.billing.prepaid.posture]
 essentials = "Основни"
 essentialsDesc = "Класификация, по подразбиране, плюс Споделяне"
 governed = "Управлявани"
@@ -6780,12 +6783,12 @@ governedDesc = "Добавя Сигурност и Маршрутизиране"
 regulated = "Регулирани"
 regulatedDesc = "Всяка категория, вкл. Compliance, Retention, Ingestion"
 
-[portal.billing.prepaid.review]
+[processor.billing.prepaid.review]
 download = "Изтегляне на оферта (PDF)"
 downloading = "Подготовка…"
 share = "споделяне за одобрение"
 
-[portal.billing.prepaid.size]
+[processor.billing.prepaid.size]
 compact = "Компактни"
 compactDesc = "Файлове под 25 MB, без такси за данни"
 heavy = "Тежки"
@@ -6793,12 +6796,12 @@ heavyDesc = "Сканирани или с много изображения, р�
 standard = "Стандартни"
 standardDesc = "Предимно малки, някои сканирания над 25 MB"
 
-[portal.billing.prepaid.state]
+[processor.billing.prepaid.state]
 exhausted = "Изчерпан"
 healthy = "Остава много"
 low = "На изчерпване"
 
-[portal.billing.spendLimit]
+[processor.billing.spendLimit]
 adjustLimit = "Коригирай лимита"
 cancel = "Отказ"
 capControlNote = "Промените се прилагат незабавно — увеличете или намалете тавана по всяко време."
@@ -6818,12 +6821,12 @@ thisPeriodUncapped = "{{amount}} този период · без таван"
 usedThisMonth = "{{amount}} използвани този месец"
 useSuggested = "Използвай предложеното · {{amount}} / месец"
 
-[portal.billing.spendLimit.projection]
+[processor.billing.spendLimit.projection]
 body_one = "При {{rate}}/ден ще достигнете тавана след ~{{count}} ден (~{{monthEnd}} в края на месеца). Предложен лимит ~{{suggested}}."
 body_other = "При {{rate}}/ден ще достигнете тавана след ~{{count}} дни (~{{monthEnd}} в края на месеца). Предложен лимит ~{{suggested}}."
 label = "Прогнозира се надвишаване."
 
-[portal.billing.spendThisMonth]
+[processor.billing.spendThisMonth]
 eyebrow = "Разходи този месец"
 freeRemaining_one = "Остава {{formatted}} безплатен PDF"
 freeRemaining_other = "Остават {{formatted}} безплатни PDF файла"
@@ -6832,17 +6835,17 @@ processed_other = "Обработени {{formattedCount}} PDF."
 processedWithRate_one = "Обработен {{formattedCount}} PDF, по {{rate}} всеки."
 processedWithRate_other = "Обработени {{formattedCount}} PDF, по {{rate}} всеки."
 
-[portal.billing.subscribedPlan.capWarn]
+[processor.billing.subscribedPlan.capWarn]
 approachingBody = "Увеличете го сега, за да не спира автоматичната обработка."
 approachingTitle = "Вие сте на {{pct}}% от месечния си лимит на разходите"
 raiseLimit = "Увеличи лимита"
 reachedBody = "Измерваната обработка е на пауза, докато не увеличите лимита или цикълът не се нулира. Неограничената PDF редакция продължава да работи."
 reachedTitle = "Месечният лимит на разходите е достигнат"
 
-[portal.billing.subscribedPlan.portalError]
+[processor.billing.subscribedPlan.portalError]
 title = "Stripe порталът не можа да бъде отворен"
 
-[portal.billing.walletMeter]
+[processor.billing.walletMeter]
 barAria = "Free PDFs remaining"
 capSuffix_one = "от {{allowance}} безплатни PDF използвани"
 capSuffix_other = "от {{allowance}} безплатни PDF използвани"
@@ -6855,7 +6858,7 @@ title_other = "Обработете {{allowance}} PDF безплатно"
 titleWithRate_one = "Обработете {{allowance}} PDF безплатно, после {{rate}}/PDF"
 titleWithRate_other = "Обработете {{allowance}} PDF безплатно, после {{rate}}/PDF"
 
-[portal.components.billingUnit]
+[processor.components.billingUnit]
 approval = "одобрение"
 check = "проверка"
 event = "събитие"
@@ -6864,11 +6867,11 @@ review = "преглед"
 session = "сесия"
 signature = "подпис"
 
-[portal.components.maturity]
+[processor.components.maturity]
 beta = "Beta"
 ga = "GA"
 
-[portal.connections]
+[processor.connections]
 createTitle = "Нова връзка"
 createTitleFor = "Свързване на {{name}}"
 delete = "Изтриване"
@@ -6876,369 +6879,369 @@ edit = "Редактиране"
 editTitle = "Редактиране на връзка"
 unsupportedType = "Този тип връзка не може да се редактира тук."
 
-[portal.connections.categories.advanced]
+[processor.connections.categories.advanced]
 description = "За услуга, която все още не поддържаме."
 label = "Разширени"
 
-[portal.connections.categories.audit]
+[processor.connections.categories.audit]
 description = "Записвайте какво се е случило с документ там, където вашите одитори вече проверяват."
 label = "Одит и compliance logging"
 
-[portal.connections.categories.notify]
+[processor.connections.categories.notify]
 description = "Уведомете друга система, че нещо се е случило."
 label = "Известяване и workflow"
 
-[portal.connections.categories.security]
+[processor.connections.categories.security]
 description = "Сканирайте или етикетирайте документ, преди да продължи."
 label = "Сигурност и класификация"
 
-[portal.connections.categories.signing]
+[processor.connections.categories.signing]
 description = "Изпратете документ за подписване или нотариална заверка."
 label = "Електронен подпис и нотариална заверка"
 
-[portal.connections.categories.storage]
+[processor.connections.categories.storage]
 description = "Къде попадат обработените документи - bucket, drive, ticket или page."
 label = "Файл и прикачване"
 
-[portal.connections.commonFields.accessToken]
+[processor.connections.commonFields.accessToken]
 helperText = "Stirling съхранява това криптирано и никога не го показва отново."
 label = "Access token"
 
-[portal.connections.commonFields.apiKey]
+[processor.connections.commonFields.apiKey]
 label = "API key"
 
-[portal.connections.commonFields.apiToken]
+[processor.connections.commonFields.apiToken]
 label = "API token"
 
-[portal.connections.commonFields.baseUrl]
+[processor.connections.commonFields.baseUrl]
 helperText = "Стъпките, използващи тази връзка, могат да извикват само пътища под този URL, никога друг host."
 label = "Server URL"
 
-[portal.connections.commonFields.email]
+[processor.connections.commonFields.email]
 label = "Email"
 
-[portal.connections.commonFields.host]
+[processor.connections.commonFields.host]
 label = "Host"
 
-[portal.connections.commonFields.password]
+[processor.connections.commonFields.password]
 label = "Password"
 
-[portal.connections.commonFields.port]
+[processor.connections.commonFields.port]
 label = "Port"
 
-[portal.connections.commonFields.username]
+[processor.connections.commonFields.username]
 label = "Username"
 
-[portal.connections.commonFields.webhookUrl]
+[processor.connections.commonFields.webhookUrl]
 helperText = "Поставете URL, който услугата ви е дала. Могат да се извикват само пътища под него."
 label = "Webhook URL"
 
-[portal.connections.fields]
+[processor.connections.fields]
 name = "Име на връзка"
 namePlaceholder = "напр. Production"
 
-[portal.connections.picker]
+[processor.connections.picker]
 cancel = "Отказ"
 createNew = "Нова връзка..."
 placeholder = "Изберете връзка"
 save = "Запазване на връзка"
 
-[portal.connections.picker2]
+[processor.connections.picker2]
 back = "Промяна на интеграция"
 heading = "Какво искате да свържете?"
 noResultsBody = "Все още не го поддържаме - кажете ни за него и ще разгледаме добавянето му."
 noResultsTitle = "Нищо не съвпада с \"{{query}}\""
 searchPlaceholder = "Търсене на интеграции - опитайте \"sign\", \"ocr\" или име на продукт"
 
-[portal.connections.types.api]
+[processor.connections.types.api]
 description = "Извикайте произволен HTTP API от правило. Вие избирате URL, удостоверяването и payload."
 label = "Custom API"
 
-[portal.connections.types.api.fields.authType]
+[processor.connections.types.api.fields.authType]
 label = "Удостоверяване"
 
-[portal.connections.types.api.fields.authType.options.basic]
+[processor.connections.types.api.fields.authType.options.basic]
 label = "Username и password"
 
-[portal.connections.types.api.fields.authType.options.bearer]
+[processor.connections.types.api.fields.authType.options.bearer]
 label = "Bearer token"
 
-[portal.connections.types.api.fields.authType.options.header]
+[processor.connections.types.api.fields.authType.options.header]
 label = "Token в custom header"
 
-[portal.connections.types.api.fields.authType.options.none]
+[processor.connections.types.api.fields.authType.options.none]
 label = "Няма"
 
-[portal.connections.types.api.fields.authType.options.tokenLogin]
+[processor.connections.types.api.fields.authType.options.tokenLogin]
 label = "Вход за token"
 
-[portal.connections.types.api.fields.baseUrl]
+[processor.connections.types.api.fields.baseUrl]
 helperText = "Стъпките, използващи тази връзка, могат да извикват само пътища под този URL, никога друг host."
 label = "Базов URL"
 placeholder = "https://api.example.com/v1"
 
-[portal.connections.types.api.fields.headerName]
+[processor.connections.types.api.fields.headerName]
 label = "Име на header"
 placeholder = "X-API-Key"
 
-[portal.connections.types.api.fields.loginPath]
+[processor.connections.types.api.fields.loginPath]
 label = "Път за вход"
 placeholder = "/auth/login"
 
-[portal.connections.types.api.fields.password]
+[processor.connections.types.api.fields.password]
 label = "Password"
 
-[portal.connections.types.api.fields.resultUrlHosts]
+[processor.connections.types.api.fields.resultUrlHosts]
 helperText = "Ако API отговори с връзка за изтегляне, могат да се извличат само тези hosts. Разделете със запетаи. Оставете празно, за да разрешите само собствения host на базовия URL."
 label = "Разрешени hosts за резултати"
 
-[portal.connections.types.api.fields.token]
+[processor.connections.types.api.fields.token]
 label = "Token"
 
-[portal.connections.types.api.fields.tokenHeaderName]
+[processor.connections.types.api.fields.tokenHeaderName]
 label = "Изпращане на token като този header"
 
-[portal.connections.types.api.fields.tokenResponseHeader]
+[processor.connections.types.api.fields.tokenResponseHeader]
 helperText = "Header-ът на отговора, в който login извикването връща token, напр. X-Auth-Token."
 label = "Header за token в отговора"
 
-[portal.connections.types.api.fields.username]
+[processor.connections.types.api.fields.username]
 label = "Username"
 
-[portal.connections.types.clamav]
+[processor.connections.types.clamav]
 baseUrlPlaceholder = "http://clamav-rest:9000"
 description = "Сканирайте документи за malware на server, който управлявате - нищо не напуска мрежата ви."
 label = "ClamAV (self-hosted)"
 
-[portal.connections.types.cloudmersive]
+[processor.connections.types.cloudmersive]
 description = "Сканиране за вируси и съдържание за документи в правило."
 label = "Cloudmersive"
 
-[portal.connections.types.cloudmersiveadvanced]
+[processor.connections.types.cloudmersiveadvanced]
 description = "Блокирайте документи, съдържащи macros, executables, scripts или embedded objects - не само познат malware."
 label = "Cloudmersive Advanced Scan"
 
-[portal.connections.types.confluence]
+[processor.connections.types.confluence]
 baseUrlPlaceholder = "https://your-site.atlassian.net/wiki/api/v2"
 description = "Прикачване на обработени документи към Confluence page."
 label = "Confluence"
 
-[portal.connections.types.consigno]
+[processor.connections.types.consigno]
 description = "Изпращайте документи към ConsignO Cloud (Notarius) за електронен подпис и нотариална заверка."
 label = "ConsignO Cloud"
 
-[portal.connections.types.consigno.fields.baseUrl]
+[processor.connections.types.consigno.fields.baseUrl]
 helperText = "Вашата ConsignO Cloud среда, включително /api/v1."
 label = "Server URL"
 placeholder = "https://your-org.consignocloud.com/api/v1"
 
-[portal.connections.types.consigno.fields.clientId]
+[processor.connections.types.consigno.fields.clientId]
 label = "API key"
 
-[portal.connections.types.consigno.fields.clientSecret]
+[processor.connections.types.consigno.fields.clientSecret]
 label = "API secret"
 
-[portal.connections.types.consigno.fields.password]
+[processor.connections.types.consigno.fields.password]
 label = "Password"
 
-[portal.connections.types.consigno.fields.tenantId]
+[processor.connections.types.consigno.fields.tenantId]
 helperText = "Необходимо само ако организацията ви използва tenants."
 label = "Tenant"
 
-[portal.connections.types.consigno.fields.username]
+[processor.connections.types.consigno.fields.username]
 label = "Username"
 
-[portal.connections.types.discord]
+[processor.connections.types.discord]
 baseUrlPlaceholder = "https://discord.com/api/webhooks/..."
 description = "Публикувайте съобщение в Discord, когато правило обработи документ."
 label = "Discord"
 
-[portal.connections.types.elastic]
+[processor.connections.types.elastic]
 baseUrlPlaceholder = "https://your-cluster:9200"
 description = "Индексирайте audit event в Elasticsearch всеки път, когато правило обработи документ."
 label = "Elasticsearch"
 
-[portal.connections.types.ftp]
+[processor.connections.types.ftp]
 description = "Проверявайте FTP или FTPS server за нови документи."
 hostPlaceholder = "ftp.example.com"
 label = "FTP / FTPS"
 
-[portal.connections.types.ftp.fields.passive]
+[processor.connections.types.ftp.fields.passive]
 label = "Режим на връзка"
 
-[portal.connections.types.ftp.fields.passive.options]
+[processor.connections.types.ftp.fields.passive.options]
 active = "Активен"
 passive = "Пасивен (препоръчително)"
 
-[portal.connections.types.ftp.fields.security]
+[processor.connections.types.ftp.fields.security]
 helperText = "Обикновеният FTP изпраща идентификационни данни и файлове некриптирани; изберете FTPS, ако server го поддържа."
 label = "Криптиране"
 
-[portal.connections.types.ftp.fields.security.options]
+[processor.connections.types.ftp.fields.security.options]
 explicit = "FTPS (explicit / AUTH TLS)"
 implicit = "FTPS (implicit)"
 none = "Няма (обикновен FTP)"
 
-[portal.connections.types.googlechat]
+[processor.connections.types.googlechat]
 baseUrlPlaceholder = "https://chat.googleapis.com/v1/spaces/..."
 description = "Публикувайте съобщение в Google Chat space, когато правило се изпълнява."
 label = "Google Chat"
 
-[portal.connections.types.jira]
+[processor.connections.types.jira]
 baseUrlPlaceholder = "https://your-site.atlassian.net"
 description = "Прикачване на обработени документи към Jira issue."
 label = "Jira"
 
-[portal.connections.types.mailgun]
+[processor.connections.types.mailgun]
 description = "Изпратете документ или известие по email, когато правило се изпълнява."
 label = "Mailgun"
 
-[portal.connections.types.n8n]
+[processor.connections.types.n8n]
 baseUrlPlaceholder = "https://your-n8n/webhook/9f2c-..."
 description = "Hand documents to an n8n workflow, and take back whatever it produces."
 label = "n8n"
 
-[portal.connections.types.n8n.fields.authType]
+[processor.connections.types.n8n.fields.authType]
 helperText = "Match the Authentication set on the n8n Webhook node."
 label = "Webhook authentication"
 
-[portal.connections.types.n8n.fields.authType.options.basic]
+[processor.connections.types.n8n.fields.authType.options.basic]
 label = "Basic auth"
 
-[portal.connections.types.n8n.fields.authType.options.header]
+[processor.connections.types.n8n.fields.authType.options.header]
 label = "Header auth"
 
-[portal.connections.types.n8n.fields.authType.options.none]
+[processor.connections.types.n8n.fields.authType.options.none]
 label = "None"
 
-[portal.connections.types.n8n.fields.headerName]
+[processor.connections.types.n8n.fields.headerName]
 helperText = "The header name from the n8n credential, not its value."
 label = "Header name"
 placeholder = "X-N8N-Key"
 
-[portal.connections.types.n8n.fields.token]
+[processor.connections.types.n8n.fields.token]
 label = "Header value"
 
-[portal.connections.types.nextcloud]
+[processor.connections.types.nextcloud]
 baseUrlPlaceholder = "https://your-server/remote.php/dav"
 description = "Записвайте обработени документи в Nextcloud."
 label = "Nextcloud"
 
-[portal.connections.types.nextcloud.fields.appPassword]
+[processor.connections.types.nextcloud.fields.appPassword]
 label = "App password"
 
-[portal.connections.types.presidio]
+[processor.connections.types.presidio]
 baseUrlPlaceholder = "http://presidio-analyzer:3000"
 description = "Откривайте лични данни в текста на документа чрез Presidio server, който управлявате."
 label = "Presidio (self-hosted)"
 
-[portal.connections.types.purview]
+[processor.connections.types.purview]
 description = "Четете и прилагайте Microsoft Purview sensitivity labels върху PDF файлове."
 label = "Microsoft Purview"
 
-[portal.connections.types.purview.fields.clientId]
+[processor.connections.types.purview.fields.clientId]
 helperText = "По избор. Нужно само за избор на етикети по име; етикетирането работи и без него."
 label = "Application (client) ID"
 
-[portal.connections.types.purview.fields.clientSecret]
+[processor.connections.types.purview.fields.clientSecret]
 label = "Client secret"
 
-[portal.connections.types.purview.fields.tenantId]
+[processor.connections.types.purview.fields.tenantId]
 helperText = "Поставя се върху всеки етикет като негов SiteId, така че Purview-aware tools да знаят коя организация го е приложила."
 label = "Directory (tenant) ID"
 placeholder = "cb46c030-1825-4e81-a295-151c039dbf02"
 
-[portal.connections.types.s3]
+[processor.connections.types.s3]
 description = "S3 bucket, от който източниците могат да четат и в който pipeline изходите могат да записват."
 label = "S3 storage"
 
-[portal.connections.types.s3.fields.accessKeyId]
+[processor.connections.types.s3.fields.accessKeyId]
 label = "Access key ID"
 
-[portal.connections.types.s3.fields.bucket]
+[processor.connections.types.s3.fields.bucket]
 label = "Bucket"
 
-[portal.connections.types.s3.fields.endpoint]
+[processor.connections.types.s3.fields.endpoint]
 helperText = "Оставете празно за AWS. Задайте това за MinIO или друго S3-съвместимо хранилище."
 label = "Endpoint"
 
-[portal.connections.types.s3.fields.region]
+[processor.connections.types.s3.fields.region]
 label = "Region"
 
-[portal.connections.types.s3.fields.secretAccessKey]
+[processor.connections.types.s3.fields.secretAccessKey]
 label = "Secret access key"
 
-[portal.connections.types.sendgrid]
+[processor.connections.types.sendgrid]
 description = "Изпратете документ или известие по email, когато правило се изпълнява."
 label = "SendGrid"
 
-[portal.connections.types.sftp]
+[processor.connections.types.sftp]
 description = "Проверявайте SFTP (SSH) server за нови документи."
 hostPlaceholder = "sftp.example.com"
 label = "SFTP"
 
-[portal.connections.types.sftp.fields.hostKeyFingerprint]
+[processor.connections.types.sftp.fields.hostKeyFingerprint]
 helperText = "По избор. SHA-256 fingerprint на host key на server-а (от `ssh-keyscan host | ssh-keygen -lf -`). Когато е зададен, се приема само server, представящ този ключ; когато е празно, ключът, видян при първото свързване, се pin-ва и по-късни промени се отказват."
 label = "Fingerprint на host key"
 placeholder = "SHA256:..."
 
-[portal.connections.types.sftp.fields.passphrase]
+[processor.connections.types.sftp.fields.passphrase]
 label = "Passphrase за ключ"
 
-[portal.connections.types.sftp.fields.password]
+[processor.connections.types.sftp.fields.password]
 helperText = "Оставете празно, ако се удостоверявате с private key вместо това."
 
-[portal.connections.types.sftp.fields.privateKey]
+[processor.connections.types.sftp.fields.privateKey]
 helperText = "По избор. Поставете OpenSSH private key, за да се удостоверите с ключ вместо с password."
 label = "Private key"
 
-[portal.connections.types.slack]
+[processor.connections.types.slack]
 description = "Публикувайте съобщение в Slack, когато правило обработи документ."
 label = "Slack"
 
-[portal.connections.types.smb]
+[processor.connections.types.smb]
 description = "Наблюдавайте SMB / CIFS network share (Windows или Samba)."
 hostPlaceholder = "fileserver.example.com"
 label = "SMB / Network share"
 
-[portal.connections.types.smb.fields.domain]
+[processor.connections.types.smb.fields.domain]
 helperText = "По избор. Windows domain или workgroup, ако server-ът ви използва такъв."
 label = "Domain"
 
-[portal.connections.types.smb.fields.share]
+[processor.connections.types.smb.fields.share]
 label = "Share"
 placeholder = "documents"
 
-[portal.connections.types.splunk]
+[processor.connections.types.splunk]
 baseUrlPlaceholder = "https://your-splunk:8088"
 description = "Изпращайте audit event към Splunk всеки път, когато правило обработи документ."
 label = "Splunk"
 
-[portal.connections.types.sumologic]
+[processor.connections.types.sumologic]
 baseUrlPlaceholder = "https://endpoint.collection.sumologic.com/receiver/v1/http/..."
 description = "Изпращайте audit event към Sumo Logic HTTP collector."
 label = "Sumo Logic"
 
-[portal.connections.types.teams]
+[processor.connections.types.teams]
 baseUrlPlaceholder = "https://your-org.webhook.office.com/webhookb2/..."
 description = "Публикувайте съобщение в Teams channel, когато правило се изпълнява."
 label = "Microsoft Teams"
 
-[portal.connections.types.webhook]
+[processor.connections.types.webhook]
 baseUrlPlaceholder = "https://example.com/hooks/documents"
 description = "Публикувайте всеки документ или само детайлите към URL, който изберете."
 label = "Webhook"
 
-[portal.connections.types.zapier]
+[processor.connections.types.zapier]
 baseUrlPlaceholder = "https://hooks.zapier.com/hooks/catch/..."
 description = "Задействайте Zap или Make scenario от правило."
 label = "Zapier & Make"
 
-[portal.docs]
+[processor.docs]
 browse = "Преглед на документи"
 viewSource = "Преглед на source в GitHub"
 
-[portal.docs.authentication]
+[processor.docs.authentication]
 codeCaption = "всяка заявка"
 eyebrow = "GETTING STARTED"
 lead = "Всички заявки се удостоверяват с bearer token. Ключовете са ограничени по среда и никога не изтичат, освен ако не бъдат ротирани."
@@ -7246,13 +7249,13 @@ liveKey = "Production ключове — таксувани, с ограниче
 testKey = "Sandbox ключове — безплатни, връщат синтетични fixtures."
 title = "Удостоверяване"
 
-[portal.docs.components]
+[processor.docs.components]
 codeCaption = "вграждане на viewer"
 eyebrow = "COMPONENTS"
 lead = "Вградим UI за опашки за преглед и инспекция на документи. Донесете свои стилове или използвайте доставената тема."
 title = "Готови viewers"
 
-[portal.docs.endpoints]
+[processor.docs.endpoints]
 eyebrow = "API REFERENCE"
 fieldCount_one = "{{count}} поле"
 fieldCount_other = "{{count}} полета"
@@ -7261,45 +7264,45 @@ filterAriaLabel = "Филтрирай endpoints по vertical"
 lead = "Всеки тип документ е typed endpoint. POST файл, получете schema-validated JSON. Филтрирайте по vertical по-долу."
 title = "Endpoints"
 
-[portal.docs.errors]
+[processor.docs.errors]
 codeCaption = "422 Unprocessable Entity"
 eyebrow = "API REFERENCE"
 lead = "Грешките връщат стабилен машинно четим код плюс човешко съобщение. Тялото на 4xx винаги включва request_id за поддръжка."
 title = "Грешки"
 
-[portal.docs.nav]
+[processor.docs.nav]
 ariaLabel = "Документация"
 
-[portal.docs.nav.empty]
+[processor.docs.nav.empty]
 description = "Индексът на документацията не можа да бъде зареден."
 title = "Документацията не е налична"
 
-[portal.docs.quickstart]
+[processor.docs.quickstart]
 eyebrow = "GETTING STARTED"
 lead = "Изпратете първия си документ към typed endpoint и получете структуриран JSON обратно в три стъпки. Без обучение на модел, без prompt engineering."
 title = "Quickstart"
 
-[portal.docs.quickstart.callout]
+[processor.docs.quickstart.callout]
 bodyAfterLink = "за рецепти за copy-paste."
 bodyBeforeLink = "свържете същото извикване в pipeline, за да веригирате валидиране, заличаване и доставка — или го изложете на агент чрез MCP. Вижте"
 label = "Следващо:"
 link = "Playbooks"
 
-[portal.docs.quickstart.step1]
+[processor.docs.quickstart.step1]
 body = "Създайте scoped key от раздел Infrastructure. Ключовете носят rate limits и незадължителен IP allowlist. Експортирайте го във вашия shell:"
 title = "Издайте API ключ"
 
-[portal.docs.quickstart.step2]
+[processor.docs.quickstart.step2]
 body = "POST файл към който и да е typed endpoint. Endpoint определя схемата, която получавате обратно — тук, invoice extractor."
 snippetCaption = "извличане на фактура"
 title = "Изпратете документ"
 
-[portal.docs.quickstart.step3]
+[processor.docs.quickstart.step3]
 body = "Всеки отговор се валидира спрямо endpoint схемата, с confidence score и provenance за всяко поле."
 codeCaption = "200 OK"
 title = "Прочетете структурирания резултат"
 
-[portal.docs.rateLimits]
+[processor.docs.rateLimits]
 burst = "Burst"
 codeCaption = "429 Too Many Requests"
 concurrency = "Едновременност"
@@ -7308,47 +7311,47 @@ lead = "Лимитите се мащабират според вашия пла�
 requestsPerMinute = "Заявки / минута"
 title = "Rate limits и квоти"
 
-[portal.docs.recipes]
+[processor.docs.recipes]
 cloneButton = "Клонирай рецепта"
 eyebrow = "PLAYBOOKS"
 lead = "End-to-end модели, които свързват източници, операции и дестинации. Всеки съответства на pipeline, който можете да клонирате."
 title = "Рецепти"
 
-[portal.docs.sdks]
+[processor.docs.sdks]
 eyebrow = "SDKS"
 lead = "First-party клиенти с typed responses, автоматични повторения и streaming uploads. Всички следват един и същ endpoint каталог."
 title = "Официални SDKs"
 
-[portal.docs.sdks.status]
+[processor.docs.sdks.status]
 beta = "Beta"
 deprecated = "Deprecated"
 
-[portal.docs.skills]
+[processor.docs.skills]
 eyebrow = "SKILLS"
 lead = "Включени, именувани способности, които вашият агент извиква като един инструмент. Всяко skill е детерминирана верига от операции с прикачени evals."
 title = "Умения на агент"
 
-[portal.docs.toc]
+[processor.docs.toc]
 title = "На тази страница"
 
-[portal.docs.webhooks]
+[processor.docs.webhooks]
 codeCaption = "document.processed"
 eyebrow = "API REFERENCE"
 lead = "Абонирайте се за събития document.processed, pipeline.completed и quota.threshold. Payloads се подписват с HMAC-SHA256."
 title = "Webhooks"
 
-[portal.docs.webhooks.callout]
+[processor.docs.webhooks.callout]
 afterHelper = "helper."
 beforeHelper = "header спрямо вашата signing secret, преди да се доверите на payload. SDKs доставят"
 beforeSignature = "Проверете"
 
-[portal.documents]
+[processor.documents]
 exportCsv = "Експортирай CSV"
 search = "Търсене по име на файл, ID..."
 subtitle = "Всеки документ, обработен от вашата организация, с пълния му запис на обработка. Достъпът до съдържание изисква заявка."
 title = "Документи"
 
-[portal.documents.audit]
+[processor.documents.audit]
 approved = "Одобрено"
 archived = "Архивирано"
 elevation = "Повишаване на достъпа"
@@ -7358,44 +7361,44 @@ flagged = "Нуждае се от преглед"
 ingested = "Прието"
 reviewed = "В преглед"
 
-[portal.documents.drawer]
+[processor.documents.drawer]
 sectionsAriaLabel = "Секции с подробности за документа"
 
-[portal.documents.drawer.tabs]
+[processor.documents.drawer.tabs]
 audit = "Одит"
 extractions = "Извличания"
 overview = "Общ преглед"
 
-[portal.documents.elevation]
+[processor.documents.elevation]
 requestAccess = "Заяви достъп"
 
-[portal.documents.elevation.active]
+[processor.documents.elevation.active]
 description = "Временен достъп — достъпът се записва и е ограничен във времето."
 descriptionFourEyes = "Временен достъп — партньор за преглед беше уведомен (четири очи)."
 title = "Достъпът изтича след {{time}}"
 
-[portal.documents.elevation.gated]
+[processor.documents.elevation.gated]
 description = "Съдържанието е защитено чрез нулев постоянен достъп. Заявката стартира ограничен във времето достъп."
 descriptionFourEyes = "Съдържанието е защитено чрез нулев постоянен достъп. Заявката стартира ограничен във времето достъп и уведомява партньор за преглед (четири очи)."
 title = "Чувствителен документ"
 
-[portal.documents.extractions]
+[processor.documents.extractions]
 empty = "От този документ не бяха извлечени полета."
 masked = "Извлечените полета са скрити. Заявете временен достъп, за да видите съдържанието на този документ."
 
-[portal.documents.extractions.columns]
+[processor.documents.extractions.columns]
 confidence = "Увереност"
 field = "Поле"
 value = "Стойност"
 
-[portal.documents.filters]
+[processor.documents.filters]
 all = "Всички"
 ariaLabel = "Филтриране на документи по статус"
 flagged = "Маркирани"
 inReview = "В преглед"
 processed = "Обработени"
 
-[portal.documents.overview]
+[processor.documents.overview]
 action = "Pipeline / Действие"
 product = "Продукт"
 received = "Време"
@@ -7403,26 +7406,26 @@ status = "Статус"
 type = "Тип"
 user = "Потребител"
 
-[portal.documents.queue.empty]
+[processor.documents.queue.empty]
 connectSource = "Свързване на източник"
 createPipeline = "Създаване на pipeline"
 description = "Когато източниците подават документи към вашите pipelines, те ще се появят тук за преглед."
 title = "Няма документи в опашката"
 
-[portal.documents.status]
+[processor.documents.status]
 error = "Грешка"
 flagged = "Нуждае се от преглед"
 inReview = "В преглед"
 processed = "Обработено"
 
-[portal.documents.table]
+[processor.documents.table]
 auto = "Автоматично"
 editorAction = "Редактор"
 empty = "Няма документи, отговарящи на този филтър."
 rowActions = "Действия за реда"
 sensitiveLabel = "Чувствителен"
 
-[portal.documents.table.columns]
+[processor.documents.table.columns]
 action = "Pipeline / Действие"
 document = "Документ"
 labels = "Labels"
@@ -7431,11 +7434,11 @@ status = "Статус"
 time = "Време"
 user = "Потребител"
 
-[portal.editorAdmin]
+[processor.editorAdmin]
 subtitle = "Разгърнете Stirling PDF Editor, свържете самостоятелно хоствани инстанции към вашата организация и управлявайте работещия флот — цели, здраве, удостоверения и офлайн активация на едно място."
 title = "Разгръщане на редактора"
 
-[portal.editorAdmin.health.columns]
+[processor.editorAdmin.health.columns]
 activeUsers = "Активни потребители"
 host = "Host"
 lastSeen = "Последно видян"
@@ -7444,11 +7447,11 @@ status = "Статус"
 target = "Target"
 version = "Версия"
 
-[portal.editorAdmin.health.empty]
+[processor.editorAdmin.health.empty]
 description = "Разгърнете цел и я свържете, за да виждате тук здравето на инстанциите на живо."
 title = "Няма докладващи инстанции"
 
-[portal.editorAdmin.offlineActivation]
+[processor.editorAdmin.offlineActivation]
 enterpriseTag = "Enterprise"
 generateButton = "Генерирай офлайн пакет"
 lockCopy = "Офлайн и on-prem активацията е част от Enterprise."
@@ -7456,67 +7459,67 @@ subtitle = "Генерирайте подписан пакет за актива
 talkToSales = "Свържете се с продажбите"
 title = "Активация в изолирана мрежа"
 
-[portal.editorAdmin.offlineActivation.readyBanner]
+[processor.editorAdmin.offlineActivation.readyBanner]
 description = "{{file}} е подписан и готов за прехвърляне. Той активира една инстанция и изтича след 14 дни."
 title = "Пакетът е готов"
 
-[portal.editorAdmin.pairing]
+[processor.editorAdmin.pairing]
 generated = "Генерирано ✓"
 generateNewCode = "Генерирай нов код"
 lockCopy = "IaC provisioning е част от Enterprise."
 rotate = "Ротирай"
 talkToSales = "Свържете се с продажбите"
 
-[portal.editorAdmin.sections.health]
+[processor.editorAdmin.sections.health]
 sub = "Всяка инстанция на Editor докладва — версия, регион, статус, последно видяна и активни потребители."
 title = "Здраве на инстанциите"
 
-[portal.editorAdmin.sections.pairing]
+[processor.editorAdmin.sections.pairing]
 sub = "Свържете самостоятелно хостван редактор към тази организация. Генерирайте token, предайте кратък код или го свържете чрез IaC."
 title = "Свързване"
 
-[portal.editorAdmin.sections.targets]
+[processor.editorAdmin.sections.targets]
 sub = "Къде работи Editor. Копирайте snippet, за да стартирате самостоятелно хоствана инстанция, или използвайте Managed Cloud без операции."
 title = "Цели за разгръщане"
 
-[portal.editorAdmin.serviceToken]
+[processor.editorAdmin.serviceToken]
 currentToken = "Текущ token"
 lastRotated = "Последно ротиран"
 rotateButton = "Ротирай service token"
 subtitle = "Инстанциите се удостоверяват към организацията с това удостоверение. Ротирайте го по график или веднага след подозирано изтичане."
 title = "Service token"
 
-[portal.editorAdmin.serviceToken.rotatedBanner]
+[processor.editorAdmin.serviceToken.rotatedBanner]
 description = "Издаден е нов token. Актуализирайте STIRLING_SERVICE_TOKEN на всяка самостоятелно хоствана инстанция в рамките на 24-часовия гратисен прозорец, иначе ще преминат offline."
 title = "Ротирайте работещите инстанции"
 
-[portal.editorAdmin.status]
+[processor.editorAdmin.status]
 degraded = "Влошено"
 healthy = "Здраво"
 offline = "Offline"
 pairing = "Свързване"
 
-[portal.editorAdmin.targets]
+[processor.editorAdmin.targets]
 instanceCount_one = "{{count}} инстанция"
 instanceCount_other = "{{count}} инстанции"
 talkToSales = "Свържете се с продажбите"
 upgradePlan = "Надстройте плана"
 
-[portal.editorAdmin.targets.lock]
+[processor.editorAdmin.targets.lock]
 enterprise = "On-prem и Kubernetes самостоятелно хостване са част от Enterprise."
 paid = "Самостоятелното хостване с Docker и Kubernetes се отключва с платен план."
 
-[portal.editorAdmin.targets.state]
+[processor.editorAdmin.targets.state]
 available = "Налично"
 locked = "Заключено"
 running = "Работи"
 
-[portal.errorBoundary]
+[processor.errorBoundary]
 description = "Този изглед срещна неочаквана грешка. Опитайте отново или изберете друга секция от страничната лента."
 retry = "Опитайте отново"
 title = "Нещо се обърка на тази страница"
 
-[portal.failures]
+[processor.failures]
 fromSource = "From source {{source}}"
 occurrences = "{{count}} occurrences"
 reportedBy = "Hit by {{actor}}"
@@ -7524,7 +7527,7 @@ runReference = "Run {{runId}}"
 subtitle = "Failures recorded from your policy runs and your team's editors, with the actions you can take."
 title = "Failures"
 
-[portal.failures.action]
+[processor.failures.action]
 acknowledge = "Acknowledge"
 confirm = "Are you sure?"
 dismiss = "Dismiss"
@@ -7532,7 +7535,7 @@ dismissSkipFile = "Skip this file"
 viewFile = "Преглед на файла"
 viewInProcessor = "Преглед в процесора"
 
-[portal.failures.debug]
+[processor.failures.debug]
 copyJson = "Copy JSON"
 dismissAll = "Dismiss all ({{total}})"
 dismissing = "Dismissing..."
@@ -7540,37 +7543,37 @@ hideJson = "Hide raw JSON ({{total}})"
 refresh = "Refresh failures"
 showJson = "Show raw JSON ({{total}})"
 
-[portal.failures.disabled]
+[processor.failures.disabled]
 closed = "This failure is already closed."
 noDocument = "Тази грешка не е записана за конкретен документ, така че тук няма какво да се отвори."
 unattended = "Този файл е подаден от папка, bucket или webhook, така че ничий браузър не го държи, за да го отвори."
 unavailable = "Not available for this failure."
 
-[portal.failures.empty]
+[processor.failures.empty]
 description = "Policy runs that fail will appear here with the actions you can take."
 title = "No failures recorded"
 
-[portal.failures.kind.inputPasswordProtected]
+[processor.failures.kind.inputPasswordProtected]
 description = "The pipeline could not open the document because it is password-protected. Unlock it and run it again, or skip this file."
 title = "Password-protected document"
 
-[portal.failures.kind.unknown]
+[processor.failures.kind.unknown]
 description = "This run failed for a reason Stirling does not yet recognise. The raw message is shown below."
 title = "Unrecognised failure"
 
-[portal.failures.origin]
+[processor.failures.origin]
 pipeline = "Pipeline"
 policy = "Policy"
 tool = "Tool run"
 
-[portal.failures.stage]
+[processor.failures.stage]
 blocked = "Blocked"
 input = "Input"
 internal = "Internal"
 never_ran = "Never ran"
 output = "Output"
 
-[portal.home.download]
+[processor.home.download]
 back = "Назад"
 body = "Изтеглете desktop app или self-host-нете server-а."
 done = "Готово"
@@ -7580,7 +7583,7 @@ sectionDesktop = "Desktop app"
 sectionSelfHosted = "Self-hosted"
 title = "Инсталирайте Stirling PDF Editor"
 
-[portal.home.download.docker]
+[processor.home.download.docker]
 detailBody = "Стартирайте официалния image на вашия server."
 note = "Отваря се на :8080. Вход по подразбиране: admin / stirling."
 tagline = "Стартирайте server-а в container"
@@ -7589,27 +7592,27 @@ variantFat = "Пълен"
 variantLite = "Ultra-Lite"
 variantStandard = "Стандартен"
 
-[portal.home.download.kubernetes]
+[processor.home.download.kubernetes]
 detailBody = "Инсталирайте официалния Helm chart."
 note = "Добавете PVC за /configs, за да запазвате настройките."
 tagline = "Разположете в клъстер с Helm"
 title = "Kubernetes"
 
-[portal.home.download.linux]
+[processor.home.download.linux]
 detailBody = "Нативни компилации за вашата дистрибуция."
 guideBtn = "Вижте опциите за инсталиране на Linux"
 note = "Налични са AppImage, .deb и .rpm компилации за популярни дистрибуции."
 tagline = "Нативно настолно приложение за вашата дистрибуция"
 title = "Linux"
 
-[portal.home.download.mac]
+[processor.home.download.mac]
 altLabel = "Или чрез Homebrew"
 detailBody = "Стартирайте инсталатора или използвайте Homebrew."
 downloadBtn = "Изтегляне за macOS"
 tagline = "Нативно приложение за Apple silicon и Intel"
 title = "macOS"
 
-[portal.home.download.manual]
+[processor.home.download.manual]
 detailBody = "Стартирайте .jar на bare metal сървър."
 downloadBtn = "Изтегляне на .jar"
 note = "Изисква Java 21+. Отваря се на :8080; вход по подразбиране admin / stirling."
@@ -7617,73 +7620,73 @@ runLabel = "След това го стартирайте"
 tagline = "Стартирайте .jar на bare metal сървър"
 title = "Ръчна настройка на сървър"
 
-[portal.home.download.windows]
+[processor.home.download.windows]
 altLabel = "Или чрез winget"
 detailBody = "Стартирайте инсталатора или използвайте мениджър на пакети."
 downloadBtn = "Изтегляне на инсталатор"
 tagline = "Нативно приложение за Microsoft Windows"
 title = "Windows"
 
-[portal.home.editor]
+[processor.home.editor]
 activeOfDeployed = "{{active}} от {{total}} активни този месец"
 name = "Stirling PDF Editor"
 open = "Отвори в браузър"
 updated = "актуализирано {{time}}"
 
-[portal.home.editor.deploy]
+[processor.home.editor.deploy]
 finish = "Завършете разполагането"
 options = "Вижте опциите за разполагане"
 start = "Разполагане на Editor"
 
-[portal.home.editor.target]
+[processor.home.editor.target]
 cloud = "Managed Cloud"
 docker = "Самостоятелно хостван · Docker"
 kubernetes = "Самостоятелно хостван · Kubernetes"
 
-[portal.home.greeting]
+[processor.home.greeting]
 afternoon = "Добър ден"
 evening = "Добър вечер"
 morning = "Добро утро"
 
-[portal.infrastructure]
+[processor.infrastructure]
 manageEditorDeployment = "Управление на разгръщането на Editor"
 sectionsAriaLabel = "Секции на инфраструктурата"
 subtitle = "Разгръщания, удостоверения, състояние на сигурността, storage и одитната следа за вашето Stirling работно пространство."
 title = "Инфраструктура"
 
-[portal.infrastructure.apiKeys]
+[processor.infrastructure.apiKeys]
 createKey = "Създай ключ"
 heading = "API ключове"
 subheading = "Ограничени удостоверения с лимити на заявките за всеки ключ, разрешения и IP allowlists."
 
-[portal.infrastructure.apiKeys.card]
+[processor.infrastructure.apiKeys.card]
 created = "Създаден"
 lastUsed = "Последно използван"
 revoke = "Отмяна на ключ"
 usageMonth = "Използване този месец"
 usageToday = "Използване днес"
 
-[portal.infrastructure.apiKeys.empty]
+[processor.infrastructure.apiKeys.empty]
 description = "Създайте ограничен ключ, за да започнете да извиквате Stirling API."
 title = "Все още няма API ключове"
 
-[portal.infrastructure.apiKeys.error]
+[processor.infrastructure.apiKeys.error]
 load = "API ключовете ви не можаха да бъдат заредени. Моля, опитайте отново."
 
-[portal.infrastructure.apiKeys.revoke]
+[processor.infrastructure.apiKeys.revoke]
 body = "Да се отмени ли „{{name}}“? Всяка интеграция, която все още използва този ключ, веднага ще започне да получава грешки 401. Това не може да бъде отменено."
 cancel = "Отказ"
 confirm = "Отмяна на ключ"
 title = "Отмяна на API ключ"
 
-[portal.infrastructure.audit]
+[processor.infrastructure.audit]
 filterAriaLabel = "Филтриране на одитни събития по категория"
 heading = "Одитни logs"
 latencyValue = "{{value}} ms"
 noEventsInCategory = "Няма събития в тази категория."
 subheading = "Всяко удостоверяване, конфигурация и събитие за обработка във вашето работно пространство."
 
-[portal.infrastructure.audit.columns]
+[processor.infrastructure.audit.columns]
 actor = "Извършител"
 event = "Събитие"
 latency = "Латентност"
@@ -7691,11 +7694,11 @@ status = "Статус"
 target = "Ресурс"
 timestamp = "Timestamp"
 
-[portal.infrastructure.audit.empty]
+[processor.infrastructure.audit.empty]
 description = "Активността в работното пространство ще се появява тук, когато се случва."
 title = "Няма одитни събития"
 
-[portal.infrastructure.audit.export]
+[processor.infrastructure.audit.export]
 cancel = "Отказ"
 error = "Експортът не бе успешен. Моля, опитайте отново."
 exportButton = "Експорт"
@@ -7706,7 +7709,7 @@ open = "Експорт"
 subtitle = "Изтеглете одитните събития като CSV или JSON. Изберете кои колони да включите."
 title = "Експорт на одитен log"
 
-[portal.infrastructure.audit.export.fields]
+[processor.infrastructure.audit.export.fields]
 date = "Дата"
 documentName = "Име на документ"
 ipAddress = "IP адрес"
@@ -7714,7 +7717,7 @@ outcome = "Резултат"
 tool = "Инструмент"
 username = "Потребителско име"
 
-[portal.infrastructure.audit.filters]
+[processor.infrastructure.audit.filters]
 all = "Всички"
 auth = "Auth"
 config = "Config"
@@ -7723,17 +7726,17 @@ policy = "Политика"
 processing = "Обработка"
 security = "Сигурност"
 
-[portal.infrastructure.audit.forbidden]
+[processor.infrastructure.audit.forbidden]
 description = "Одитният log е достъпен за ръководители на екипи и администратори. Поискайте достъп от вашия ръководител на екип или администратор."
 title = "Нямате достъп"
 
-[portal.infrastructure.audit.metrics]
+[processor.infrastructure.audit.metrics]
 config = "Config"
 policy = "Политика"
 processing = "Обработка"
 totalEvents = "Общо събития · 24h"
 
-[portal.infrastructure.auditCatLabel]
+[processor.infrastructure.auditCatLabel]
 auth = "Удостоверяване"
 config = "Конфигурация"
 elevation = "Повишаване"
@@ -7741,13 +7744,13 @@ policy = "Политика"
 processing = "Обработка"
 security = "Сигурност"
 
-[portal.infrastructure.auditStatusLabel]
+[processor.infrastructure.auditStatusLabel]
 danger = "Грешка"
 info = "Информация"
 success = "Успех"
 warning = "Предупреждение"
 
-[portal.infrastructure.createKey]
+[processor.infrastructure.createKey]
 cancel = "Отказ"
 createKey = "Създай ключ"
 done = "Готово"
@@ -7760,11 +7763,11 @@ subtitleCreated = "Копирайте тази тайна сега — няма 
 title = "Създай API ключ"
 titleCreated = "Ключът е създаден"
 
-[portal.infrastructure.keyLabel]
+[processor.infrastructure.keyLabel]
 active = "Активен"
 revoked = "Отменен"
 
-[portal.infrastructure.tabs]
+[processor.infrastructure.tabs]
 apiKeys = "API ключове"
 audit = "Одитни logs"
 deployments = "Разгръщания"
@@ -7772,7 +7775,7 @@ models = "Модели"
 security = "Сигурност"
 storage = "Storage"
 
-[portal.integrations]
+[processor.integrations]
 availableHeading = "Налични"
 comingSoonHeading = "Очаквайте скоро"
 connect = "Свързване"
@@ -7784,7 +7787,7 @@ subtitle = "Всичко, с което Stirling може да комуники�
 title = "Интеграции"
 typedName = "Име на {{tool}}"
 
-[portal.integrations.filters]
+[processor.integrations.filters]
 all = "Всички"
 audit = "Одит"
 connected = "Свързани"
@@ -7793,29 +7796,29 @@ security = "Сигурност"
 signing = "Подписване"
 storage = "Съхранение"
 
-[portal.integrations.noResults]
+[processor.integrations.noResults]
 description = "No integrations match your filters. Try a different category or search."
 title = "No matches"
 
-[portal.integrations.status]
+[processor.integrations.status]
 connected = "Свързано"
 
-[portal.integrations.table]
+[processor.integrations.table]
 integration = "Интеграция"
 worksWith = "Работи с"
 
-[portal.integrations.worksWith]
+[processor.integrations.worksWith]
 pipelines = "Конвейери"
 policies = "Политики"
 sources = "Източници"
 
-[portal.legal]
+[processor.legal]
 draft = "{{label}} · чернова"
 loadError = "Този документ не можа да бъде зареден. Моля, опитайте отново."
 loading = "Зареждане…"
 title = "Правен документ"
 
-[portal.nav]
+[processor.nav]
 agent-builder = "Agent Builder"
 components = "Компоненти"
 docs = "Developer Docs"
@@ -7831,18 +7834,18 @@ sources = "Източници"
 usage = "Използване и фактуриране"
 users = "Потребители"
 
-[portal.nav.section]
+[processor.nav.section]
 platform = "PDF платформа"
 processor = "PDF Processor"
 
-[portal.pipelines]
+[processor.pipelines]
 subtitle = "Всеки автоматизиран document pipeline на backend: подредена верига от операции върху набор от източници, стартирана от trigger. Щракнете върху ред за неговите стъпки и източници."
 title = "Pipelines"
 
-[portal.pipelines.actions]
+[processor.pipelines.actions]
 newPipeline = "Нов pipeline"
 
-[portal.pipelines.builder]
+[processor.pipelines.builder]
 activate = "Activate"
 back = "Назад към pipelines"
 cannotFollow = "Не може да приеме {{produced}}"
@@ -7874,7 +7877,7 @@ unsavedTitle = "Незапазени промени"
 usesDefaults = "Изпълнява се с настройки по подразбиране"
 viewDefinition = "View definition"
 
-[portal.pipelines.builder.blocker]
+[processor.pipelines.builder.blocker]
 destination = "Choose a destination"
 heading = "To create this pipeline:"
 incompatible = "Fix steps that can't run in order: {{tools}}"
@@ -7884,7 +7887,7 @@ schedule = "Set how often it runs"
 setup = "Finish setting up: {{tools}}"
 source = "Choose an input source"
 
-[portal.pipelines.builder.diagnostic]
+[processor.pipelines.builder.diagnostic]
 fan-in = "Комбинира всеки файл от предишната стъпка"
 fan-out = "Изпълнява се веднъж за всеки файл от предишната стъпка"
 format-mismatch = "Нуждае се от {{accepts}}, но предишната стъпка произвежда {{produced}}"
@@ -7892,7 +7895,7 @@ output-uncertain = "Може да не се изпълни: изходът на 
 source-mismatch = "Нуждае се от {{accepts}}, но входът на този конвейер е {{produced}}"
 undeclared-operation = "Не може да се провери какво приема тази стъпка"
 
-[portal.pipelines.composer]
+[processor.pipelines.composer]
 addTool = "Добави инструмент"
 create = "Създай pipeline"
 createPaused = "Create paused"
@@ -7907,7 +7910,7 @@ scheduleEvery = "Изпълнявай на всеки"
 trigger = "Trigger"
 triggerManual = "Само ръчно"
 
-[portal.pipelines.composer.runsEvery]
+[processor.pipelines.composer.runsEvery]
 days_one = "Runs every day"
 days_other = "Runs every {{count}} days"
 hours_one = "Runs every hour"
@@ -7915,56 +7918,56 @@ hours_other = "Runs every {{count}} hours"
 minutes_one = "Runs every minute"
 minutes_other = "Runs every {{count}} minutes"
 
-[portal.pipelines.composer.unit]
+[processor.pipelines.composer.unit]
 days = "дни"
 hours = "часа"
 minutes = "минути"
 
-[portal.pipelines.definition]
+[processor.pipelines.definition]
 subtitle = "The pipeline as it would be saved."
 title = "Definition"
 
-[portal.pipelines.delete]
+[processor.pipelines.delete]
 body = "Да се изтрие ли \"{{name}}\"? Това не може да бъде отменено."
 cancel = "Отказ"
 confirm = "Изтрий"
 title = "Изтриване на pipeline?"
 
-[portal.pipelines.detail]
+[processor.pipelines.detail]
 clearHistory = "Изчистване на историята"
 delete = "Изтрий pipeline"
 run = "Изпълни сега"
 
-[portal.pipelines.empty]
+[processor.pipelines.empty]
 action = "Създай pipeline"
 connectSource = "Свързване на източник"
 description = "Създайте първия си pipeline: изберете източниците, върху които се изпълнява, свържете операциите и изберете къде да отива изходът."
 title = "Все още няма pipelines"
 
-[portal.pipelines.graph]
+[processor.pipelines.graph]
 addFirstTool = "Add a tool"
 dragHint = "Drop on a line to move it"
 insertHere = "Add a tool here"
 removeNode = "Remove {{name}}"
 showError = "Show why {{name}} failed"
 
-[portal.pipelines.graph.add]
+[processor.pipelines.graph.add]
 input = "Add a source"
 output = "Add a destination"
 
-[portal.pipelines.graph.run]
+[processor.pipelines.graph.run]
 done = "Done"
 failed = "Failed"
 running = "Running"
 
-[portal.pipelines.inspector]
+[processor.pipelines.inspector]
 multipleBody = "Drag any of them onto a line to move them together, or press Delete to remove them."
 multipleSelected_one = "{{count}} step selected"
 multipleSelected_other = "{{count}} steps selected"
 noSelectionBody = "Pick a node in the graph to change what it does."
 noSelectionTitle = "Nothing selected"
 
-[portal.pipelines.inspector.status]
+[processor.pipelines.inspector.status]
 completed_one = "Finished the only step"
 completed_other = "Finished all {{count}} steps"
 failed_one = "Failed on the only step"
@@ -7972,12 +7975,12 @@ failed_other = "Failed after {{done}} of {{count}} steps"
 running_one = "Running the only step"
 running_other = "Running step {{done}} of {{count}}"
 
-[portal.pipelines.kpi]
+[processor.pipelines.kpi]
 active = "Активни"
 paused = "Поставени на пауза"
 total = "Pipelines"
 
-[portal.pipelines.run]
+[processor.pipelines.run]
 allProcessed_one = "Няма нищо за изпълнение: {{count}} документът на източника вече е обработен."
 allProcessed_other = "Няма нищо за изпълнение: всички {{count}} документа в източниците вече са обработени."
 completed_one = "Изпълнението завърши."
@@ -7990,151 +7993,151 @@ parked_other = "Няма нищо за изпълнение: {{count}} доку�
 running = "Изпълнението започна; все още е в ход."
 timeout = "Изпълнението отнема повече от очакваното; може все още да завърши във фонов режим."
 
-[portal.pipelines.status]
+[processor.pipelines.status]
 active = "Активен"
 paused = "На пауза"
 
-[portal.pipelines.table]
+[processor.pipelines.table]
 name = "Pipeline"
 sources = "Източници"
 status = "Статус"
 steps = "Стъпки"
 trigger = "Trigger"
 
-[portal.pipelines.trigger]
+[processor.pipelines.trigger]
 folder-watch = "Наблюдение на папка"
 manual = "Ръчно"
 schedule = "По график"
 
-[portal.policies]
+[processor.policies]
 defaultName = "Политика за {{category}}"
 subtitle = "Постоянни автоматизации, които налагат tool pipeline върху всеки документ. Всяка политика се задейства при качване или експорт, изпълнява веригата си от инструменти и запазва наложената версия до оригинала."
 title = "Политики"
 
-[portal.policies.card]
+[processor.policies.card]
 comingSoon = "Надстройте до Enterprise"
 notSetUp = "Не е настроено"
 requiresAiEngine = "Изисква AI engine"
 
-[portal.policies.categories.classification]
+[processor.policies.categories.classification]
 desc = "Идентифицирайте типа на всеки документ при качване и маркирайте метаданните му за архивиране и търсене."
 label = "Класификация"
 
-[portal.policies.categories.compliance]
+[processor.policies.categories.compliance]
 desc = "Налагайте изискванията на HIPAA, GDPR, SOC 2 или FedRAMP върху всеки документ."
 label = "Съответствие"
 
-[portal.policies.categories.ingestion]
+[processor.policies.categories.ingestion]
 desc = "Класифицирайте документи, извличайте структурирани данни, налагайте конвенции за именуване и нормализирайте страници."
 label = "Приемане"
 
-[portal.policies.categories.retention]
+[processor.policies.categories.retention]
 desc = "Задайте колко дълго се пазят документите, кога да се архивират и кога да се изтриват."
 label = "Задържане"
 
-[portal.policies.categories.routing]
+[processor.policies.categories.routing]
 desc = "Автоматично насочвайте документи към правилния екип, папка или система."
 label = "Routing"
 
-[portal.policies.categories.security]
+[processor.policies.categories.security]
 desc = "Откривайте PII, редактирайте, премахвайте активно съдържание и поставяйте водни знаци на документи."
 label = "Сигурност"
 
-[portal.policies.config]
+[processor.policies.config]
 scopeAll = "Всички документи"
 
-[portal.policies.config.classification]
+[processor.policies.config.classification]
 summary = "Класифицира всеки качен документ спрямо етикетите на вашия екип и маркира метаданните му."
 
-[portal.policies.config.classification.rules]
+[processor.policies.config.classification.rules]
 0 = "Класифициране"
 1 = "Маркиране на метаданни"
 
-[portal.policies.config.compliance]
+[processor.policies.config.compliance]
 summary = "Валидира документи спрямо регулаторни рамки, преди да напуснат системата."
 
-[portal.policies.config.compliance.fields]
+[processor.policies.config.compliance.fields]
 accessLog = "Log за достъп"
 auditTrail = "Одитна следа"
 frameworks = "Рамки"
 onViolation = "При несъответствие"
 
-[portal.policies.config.compliance.rules]
+[processor.policies.config.compliance.rules]
 0 = "Сканиране по рамка"
 1 = "Налагане на действие"
 2 = "Одитна следа"
 
-[portal.policies.config.ingestion]
+[processor.policies.config.ingestion]
 summary = "Класифицира документи, извлича структурирани данни, налага именуване и нормализира страници."
 
-[portal.policies.config.ingestion.fields]
+[processor.policies.config.ingestion.fields]
 belowThreshold = "Под прага"
 minConfidence = "Минимална увереност"
 
-[portal.policies.config.ingestion.rules]
+[processor.policies.config.ingestion.rules]
 0 = "Класифициране"
 1 = "Извличане"
 2 = "Именуване"
 3 = "Нормализиране"
 
-[portal.policies.config.purview]
+[processor.policies.config.purview]
 label = "Прилагане на етикет за чувствителност на Microsoft Purview"
 
-[portal.policies.config.purview.fields]
+[processor.policies.config.purview.fields]
 connection = "Purview tenant"
 labelId = "Label ID"
 labelIdHelp = "GUID на етикета от портала Purview. Прилагането на етикет записва метаданните му върху PDF; не може да криптира, за което е нужен Microsoft клиентът."
 labelName = "Име на етикет (по избор)"
 labelNameHelp = "Записва се заедно с ID, за да могат хората и инструментите да разпознаят етикета."
 
-[portal.policies.config.purview.fields.method]
+[processor.policies.config.purview.fields.method]
 help = "Purview различава етикет, приложен от политика, от такъв, избран от човек."
 label = "Как се записва етикетът"
 privileged = "Като избран от човек"
 standard = "Като приложен автоматично"
 
-[portal.policies.config.purviewRead]
+[processor.policies.config.purviewRead]
 label = "Четене на етикет на Microsoft Purview"
 
-[portal.policies.config.purviewRead.fields]
+[processor.policies.config.purviewRead.fields]
 connection = "Purview tenant"
 connectionHelp = "Чете етикета, който документът вече носи, така че следващите стъпки да могат да действат според него."
 
-[portal.policies.config.retention]
+[processor.policies.config.retention]
 summary = "Налага колко дълго се пазят документите, кога да се архивират и кога да се изтриват."
 
-[portal.policies.config.retention.fields]
+[processor.policies.config.retention.fields]
 archiveAfter = "Архивиране след"
 immutableHold = "Неизменяемо задържане"
 keepFor = "Пази за"
 
-[portal.policies.config.retention.rules]
+[processor.policies.config.retention.rules]
 0 = "Задържане за съхранение"
 1 = "Автоархивиране"
 2 = "Блокиране на изтриване"
 
-[portal.policies.config.routing]
+[processor.policies.config.routing]
 summary = "Насочва документи към правилната дестинация въз основа на тип и класификация."
 
-[portal.policies.config.routing.fields]
+[processor.policies.config.routing.fields]
 destination = "Дестинация"
 notify = "Уведомяване при routing"
 webhookUrl = "Webhook URL"
 
-[portal.policies.config.routing.rules]
+[processor.policies.config.routing.rules]
 0 = "Автокласифициране"
 1 = "Насочване към папка"
 2 = "Webhook уведомяване"
 
-[portal.policies.config.security]
+[processor.policies.config.security]
 summary = "Открива и редактира PII, премахва активно съдържание (JavaScript) и поставя водни знаци на документи."
 
-[portal.policies.config.security.rules]
+[processor.policies.config.security.rules]
 0 = "Редактиране на PII"
 1 = "Премахване на JavaScript"
 2 = "Воден знак"
 
-[portal.policies.detail]
+[processor.policies.detail]
 enforces = "Налага"
 onEveryExport = "При всеки експорт"
 onEveryUpload = "При всяко качване"
@@ -8146,7 +8149,7 @@ showLess = "Покажи по-малко"
 showMore = "Покажи повече"
 sources = "Източници"
 
-[portal.policies.detail.actions]
+[processor.policies.detail.actions]
 clearHistory = "Изчистване на историята на обработката"
 delete = "Изтриване"
 editSettings = "Редактиране на настройките"
@@ -8154,17 +8157,17 @@ pause = "Пауза"
 resume = "Възобновяване"
 runNow = "Изпълни сега"
 
-[portal.policies.detail.clearHistory]
+[processor.policies.detail.clearHistory]
 body = "Тази политика ще забрави всеки файл, който вече е обработила, и при следващото изпълнение ще обработи отново всичко, което в момента е в нейните източници. Самите файлове не се променят. Това не може да бъде отменено."
 cancel = "Отказ"
 confirm = "Изчистване на историята"
 title = "Да се изчисти ли историята на обработката?"
 
-[portal.policies.detail.emptyActivity]
+[processor.policies.detail.emptyActivity]
 description = "Документите ще се появят тук, след като тази политика се изпълни."
 title = "Все още няма активност"
 
-[portal.policies.endpoints]
+[processor.policies.endpoints]
 addWatermark = "Воден знак"
 autoRedact = "Редактиране на PII"
 classifyAndLabel = "Класифициране"
@@ -8173,375 +8176,375 @@ flatten = "Изравняване"
 ocrPdf = "OCR"
 sanitizePdf = "Премахване на JavaScript"
 
-[portal.policies.offline]
+[processor.policies.offline]
 description = "Вашите политики са запазени и ще се появят, когато връзката бъде възстановена."
 retry = "Повторен опит"
 title = "Backend не е наличен"
 
-[portal.policies.operations]
+[processor.policies.operations]
 change = "Промяна на това, което прави тази стъпка"
 noResults = "Няма стъпка, която да съвпада с това. Опитайте име на продукт или \"scan\", \"notify\", \"attach\"."
 searchPlaceholder = "Търсене на стъпки - опитайте \"scan\", \"attach\" или име на продукт"
 
-[portal.policies.operations.bodyMode]
+[processor.policies.operations.bodyMode]
 binary = "Сурови байтове на файла"
 json = "Вътре в JSON payload"
 multipart = "Като качване на файл (multipart)"
 
-[portal.policies.operations.clamavScan]
+[processor.policies.operations.clamavScan]
 description = "Вашият собствен ClamAV сървър проверява документа; нищо не напуска мрежата ви."
 label = "Сканиране за вируси (self-hosted)"
 
-[portal.policies.operations.cloudmersiveAdvancedScan]
+[processor.policies.operations.cloudmersiveAdvancedScan]
 description = "Отхвърля документи, съдържащи макроси, изпълними файлове, скриптове или вградени обекти."
 label = "Блокиране на активно съдържание"
 
-[portal.policies.operations.cloudmersiveScan]
+[processor.policies.operations.cloudmersiveScan]
 description = "Cloudmersive проверява документа и изпълнението спира, ако той не е чист."
 label = "Сканиране за вируси"
 
-[portal.policies.operations.confluenceAttach]
+[processor.policies.operations.confluenceAttach]
 description = "Архивира обработения документ на страница."
 label = "Прикачване към Confluence страница"
 
-[portal.policies.operations.consignoSubmit]
+[processor.policies.operations.consignoSubmit]
 description = "Изпраща документа към ConsignO Cloud за подписване."
 label = "Изпращане за подпис (ConsignO)"
 note = "Изпраща документа. Получаването на подписаното копие все още не се поддържа, защото стъпка не може да предаде резултат към следваща стъпка."
 
-[portal.policies.operations.customApiCall]
+[processor.policies.operations.customApiCall]
 description = "Създайте извикването сами: път, метод, тяло и обработка на отговора."
 label = "Извикване на персонализиран API"
 
-[portal.policies.operations.discordNotify]
+[processor.policies.operations.discordNotify]
 description = "Уведомява канал, че политиката е обработила документ."
 label = "Публикуване на съобщение в Discord"
 
-[portal.policies.operations.elasticIndex]
+[processor.policies.operations.elasticIndex]
 description = "Записва какво е направила политиката като документ с възможност за търсене."
 label = "Индексиране на одитно събитие в Elasticsearch"
 
-[portal.policies.operations.fields.bodyMode]
+[processor.policies.operations.fields.bodyMode]
 helperText = "Multipart е подходящ за API за качване; JSON е подходящ за API, които искат файла вътре в payload; binary изпраща суровите байтове."
 label = "Как да се изпрати документът"
 
-[portal.policies.operations.fields.bodyTemplate]
+[processor.policies.operations.fields.bodyTemplate]
 helperText = "JSON body, изпратено както е. {{document.base64}} съдържа файла; {{document.*}} и {{run.*}} се попълват за всеки документ."
 label = "JSON body"
 
-[portal.policies.operations.fields.connection]
+[processor.policies.operations.fields.connection]
 label = "Акаунт"
 
-[portal.policies.operations.fields.domain]
+[processor.policies.operations.fields.domain]
 label = "Mailgun domain"
 placeholder = "mg.acme.com"
 
-[portal.policies.operations.fields.fileFieldName]
+[processor.policies.operations.fields.fileFieldName]
 helperText = "Полето във формуляра, под което API очаква документа."
 label = "Име на поле за файл"
 placeholder = "file"
 
-[portal.policies.operations.fields.from]
+[processor.policies.operations.fields.from]
 label = "От"
 placeholder = "processor@acme.com"
 
-[portal.policies.operations.fields.headers]
+[processor.policies.operations.fields.headers]
 helperText = "JSON обект с двойки име/стойност на headers. Идентификационните данни на връзката се добавят автоматично."
 label = "Headers"
 
-[portal.policies.operations.fields.index]
+[processor.policies.operations.fields.index]
 label = "Индекс"
 placeholder = "stirling-audit"
 
-[portal.policies.operations.fields.issueKey]
+[processor.policies.operations.fields.issueKey]
 label = "Ключ на issue"
 placeholder = "OPS-42"
 
-[portal.policies.operations.fields.message]
+[processor.policies.operations.fields.message]
 helperText = "Изпраща се като тяло на съобщението. {{document.*}} и {{run.*}} се попълват за всеки документ."
 label = "Съобщение"
 
-[portal.policies.operations.fields.method]
+[processor.policies.operations.fields.method]
 label = "Метод"
 
-[portal.policies.operations.fields.pageId]
+[processor.policies.operations.fields.pageId]
 label = "Page ID"
 placeholder = "66186"
 
-[portal.policies.operations.fields.path]
+[processor.policies.operations.fields.path]
 helperText = "Добавя се към базовия URL на връзката. Никога не може да достигне друг host."
 label = "Път"
 placeholder = "/v1/scan"
 
-[portal.policies.operations.fields.remotePath]
+[processor.policies.operations.fields.remotePath]
 helperText = "Къде в drive да бъде записано. {{document.filename}} се попълва за всеки документ."
 label = "Път на дестинацията"
 placeholder = "Processed/{{document.filename}}"
 
-[portal.policies.operations.fields.responseMode]
+[processor.policies.operations.fields.responseMode]
 helperText = "Отчетът оставя документа непроменен. Замяната го сменя с това, което се върне."
 label = "Какво да се направи с отговора"
 
-[portal.policies.operations.fields.signerEmail]
+[processor.policies.operations.fields.signerEmail]
 label = "Имейл на подписващия"
 placeholder = "signer@acme.com"
 
-[portal.policies.operations.fields.subject]
+[processor.policies.operations.fields.subject]
 label = "Тема"
 placeholder = "Обработено: {{document.filename}}"
 
-[portal.policies.operations.fields.text]
+[processor.policies.operations.fields.text]
 helperText = "Presidio анализира този текст. Използвайте {{document.title}} или поставете текста, който искате да бъде проверен."
 label = "Текст за проверка"
 
-[portal.policies.operations.fields.to]
+[processor.policies.operations.fields.to]
 label = "До"
 placeholder = "records@acme.com"
 
-[portal.policies.operations.fields.username]
+[processor.policies.operations.fields.username]
 label = "Nextcloud потребителско име"
 placeholder = "svc-stirling"
 
-[portal.policies.operations.googlechatNotify]
+[processor.policies.operations.googlechatNotify]
 description = "Уведомява пространство, че политиката е обработила документ."
 label = "Публикуване на съобщение в Google Chat"
 
-[portal.policies.operations.jiraAttach]
+[processor.policies.operations.jiraAttach]
 description = "Архивира обработения документ към issue."
 label = "Прикачване към Jira issue"
 
-[portal.policies.operations.mailgunEmail]
+[processor.policies.operations.mailgunEmail]
 description = "Изпраща обработения документ като прикачен файл."
 label = "Изпращане на документа по имейл (Mailgun)"
 
-[portal.policies.operations.n8nGate]
+[processor.policies.operations.n8nGate]
 description = "Your workflow decides whether the run carries on."
 label = "Ask an n8n workflow to approve"
 note = "The workflow must reply with {\"approved\": true}. Anything else — including a timeout — stops the run and parks the document."
 
-[portal.policies.operations.n8nNotify]
+[processor.policies.operations.n8nNotify]
 description = "Sends the run's details, not the document."
 label = "Tell an n8n workflow"
 
-[portal.policies.operations.n8nSend]
+[processor.policies.operations.n8nSend]
 description = "Sends the document and the run's details to your workflow."
 label = "Send the document to n8n"
 
-[portal.policies.operations.n8nTransform]
+[processor.policies.operations.n8nTransform]
 description = "Your workflow processes the document and the file it returns replaces it."
 label = "Process the document in n8n"
 note = "Set the Webhook node to respond \"Using Respond to Webhook Node\", and return a file. On the default \"Immediately\" setting n8n replies with an acknowledgement, and that would replace the document."
 
-[portal.policies.operations.nextcloudUpload]
+[processor.policies.operations.nextcloudUpload]
 description = "Записва обработения документ в папка."
 label = "Качване в Nextcloud"
 
-[portal.policies.operations.presidioAnalyze]
+[processor.policies.operations.presidioAnalyze]
 description = "Вашият собствен Presidio сървър отчита личните данни, които намира."
 label = "Откриване на лични данни"
 note = "Presidio чете текст, не файлове. Дайте му текста, който искате да бъде проверен — самият документ не се качва."
 
-[portal.policies.operations.responseMode]
+[processor.policies.operations.responseMode]
 replace = "Замяна на документа с отговора"
 report = "Запазване на документа, записване на отговора"
 
-[portal.policies.operations.sendgridEmail]
+[processor.policies.operations.sendgridEmail]
 description = "Изпраща обработения документ като прикачен файл."
 label = "Изпращане на документа по имейл (SendGrid)"
 
-[portal.policies.operations.slackNotify]
+[processor.policies.operations.slackNotify]
 description = "Уведомява канал, че политиката е обработила документ."
 label = "Публикуване на съобщение в Slack"
 
-[portal.policies.operations.splunkEvent]
+[processor.policies.operations.splunkEvent]
 description = "Записва какво е направила политиката там, където вашите одитори вече проверяват."
 label = "Изпращане на одитно събитие към Splunk"
 
-[portal.policies.operations.sumologicEvent]
+[processor.policies.operations.sumologicEvent]
 description = "Записва какво е направила политиката към HTTP collector."
 label = "Изпращане на одитно събитие към Sumo Logic"
 
-[portal.policies.operations.teamsNotify]
+[processor.policies.operations.teamsNotify]
 description = "Уведомява канал, че политиката е обработила документ."
 label = "Публикуване на съобщение в Teams"
 
-[portal.policies.operations.webhookPost]
+[processor.policies.operations.webhookPost]
 description = "Изпраща самия документ към URL, който изберете."
 label = "Публикуване на документа към webhook"
 
-[portal.policies.operations.zapierNotify]
+[processor.policies.operations.zapierNotify]
 description = "Предава детайлите за изпълнението към вашата автоматизация."
 label = "Задействане на Zap или Make сценарий"
 
-[portal.policies.stats]
+[processor.policies.stats]
 activeFor = "Активна"
 dataProcessed = "Обработени данни"
 docsEnforced = "Приложени документи"
 
-[portal.policies.status]
+[processor.policies.status]
 active = "Активна"
 paused = "На пауза"
 
-[portal.policies.summary.active]
+[processor.policies.summary.active]
 description = "Прилага се при качване/експорт"
 label = "Активни политики"
 
-[portal.policies.summary.categories]
+[processor.policies.summary.categories]
 description = "Налични за конфигуриране"
 label = "Категории"
 
-[portal.policies.summary.docsEnforced]
+[processor.policies.summary.docsEnforced]
 description = "В активните политики"
 label = "Приложени документи"
 
-[portal.policies.summary.paused]
+[processor.policies.summary.paused]
 description = "Конфигурирани, но не се задействат"
 label = "На пауза"
 
-[portal.policies.table]
+[processor.policies.table]
 appliesTo = "Прилага се за"
 docs = "Наложени документи"
 enforces = "Налага"
 policy = "Политика"
 status = "Състояние"
 
-[portal.policies.wizard.actions]
+[processor.policies.wizard.actions]
 back = "Назад"
 cancel = "Отказ"
 continue = "Продължи"
 enablePolicy = "Активиране на политика"
 saveChanges = "Запазване на промените"
 
-[portal.policies.wizard.capability.classify]
+[processor.policies.wizard.capability.classify]
 desc = "Идентифицира типа на документа от етикетите на вашия екип и го маркира, така че да се архивира и търси по категория."
 label = "Класифициране на документа"
 
-[portal.policies.wizard.capability.compress]
+[processor.policies.wizard.capability.compress]
 desc = "Компресира документа до по-малък размер на файла."
 label = "Намаляване на размера на файла"
 
-[portal.policies.wizard.capability.flatten]
+[processor.policies.wizard.capability.flatten]
 desc = "Обединява полетата на формуляра и анотациите в страницата, така че да не могат да бъдат редактирани."
 label = "Изравняване на документа"
 
-[portal.policies.wizard.capability.ocr]
+[processor.policies.wizard.capability.ocr]
 desc = "Изпълнява OCR, така че сканираните страници да станат избираем и търсим текст."
 label = "Направи текста търсим"
 
-[portal.policies.wizard.capability.redact]
+[processor.policies.wizard.capability.redact]
 desc = "Намира и заличава чувствителни данни — като номера за социално осигуряване и номера на карти — така че да не могат да бъдат прочетени."
 label = "Заличаване на чувствителна информация"
 
-[portal.policies.wizard.capability.sanitize]
+[processor.policies.wizard.capability.sanitize]
 desc = "Премахва скрит JavaScript, така че нищо да не може да се стартира автоматично при отваряне на документа."
 label = "Премахване на активно съдържание"
 
-[portal.policies.wizard.capability.timestampPdf]
+[processor.policies.wizard.capability.timestampPdf]
 desc = "Доказва, че документът е съществувал в точно тази форма в даден момент, използвайки независим орган за timestamp. Изпраща се само hash - документът никога не напуска вашия сървър."
 label = "Добавяне на доверен timestamp"
 
-[portal.policies.wizard.capability.watermark]
+[processor.policies.wizard.capability.watermark]
 desc = "Поставя видим знак (напр. „Поверително“) върху всяка страница."
 label = "Прилагане на воден знак"
 
-[portal.policies.wizard.classification]
+[processor.policies.wizard.classification]
 description = "Всеки качен документ се класифицира спрямо вградените етикети и се маркира с типовете, които му подхождат. Наборът от етикети е споделен за целия ви екип."
 labelsHeading = "Етикети за класификация"
 
-[portal.policies.wizard.errors]
+[processor.policies.wizard.errors]
 noTools = "Първо активирайте поне един инструмент в работния процес."
 saveFailed = "Политиката не можа да бъде запазена. Моля, опитайте отново."
 
-[portal.policies.wizard.output]
+[processor.policies.wizard.output]
 heading = "Изход и изпълнение"
 
-[portal.policies.wizard.output.filenameRule]
+[processor.policies.wizard.output.filenameRule]
 autoNumber = "Автоматично номериране"
 label = "Правило за име на файл"
 placeholder = "Текст за добавяне (по избор)"
 prefix = "Префикс"
 suffix = "Суфикс"
 
-[portal.policies.wizard.output.outputAs]
+[processor.policies.wizard.output.outputAs]
 label = "Изход като"
 newFile = "Нов файл"
 newVersion = "Нова версия"
 
-[portal.policies.wizard.output.runOn]
+[processor.policies.wizard.output.runOn]
 export = "Експорт"
 helper = "Кога се задейства политиката: при качване или преди експорт."
 label = "Изпълнение при"
 upload = "Качване"
 
-[portal.policies.wizard.settings]
+[processor.policies.wizard.settings]
 heading = "Настройки"
 
-[portal.policies.wizard.sources]
+[processor.policies.wizard.sources]
 heading = "Източници"
 loading = "Зареждане на източници…"
 
-[portal.policies.wizard.tabs]
+[processor.policies.wizard.tabs]
 ariaLabel = "Стъпки за настройка"
 settings = "Настройки"
 workflow = "Действия"
 
-[portal.policies.wizard.title]
+[processor.policies.wizard.title]
 edit = "Редактиране на политика за {{category}}"
 setUp = "Настройване на политика за {{category}}"
 
-[portal.policies.wizard.workflow]
+[processor.policies.wizard.workflow]
 description = "Изберете какво прави тази политика с всеки документ, който обработва."
 
-[portal.policySummary.action]
+[processor.policySummary.action]
 setUp = "Настройване"
 
-[portal.processorFlow]
+[processor.processorFlow]
 footnote = "Броят е за последните 24 часа. Скоростта на потока е илюстративна."
 liveBadge = "На живо"
 stats = "{{connected}} свързани · {{processed}} PDF обработени"
 title = "PDF Processor"
 
-[portal.processorFlow.lens]
+[processor.processorFlow.lens]
 ariaLabel = "Режим на преглед"
 flow = "Поток"
 sankey = "Sankey"
 
-[portal.processorFlow.outcomes]
+[processor.processorFlow.outcomes]
 count = "{{n}} · 24h"
 failed = "Неуспешни"
 heading = "Резултати"
 success = "Доставени"
 
-[portal.processorFlow.policies]
+[processor.processorFlow.policies]
 activeCount = "{{n}} активни"
 count = "{{n}} · 24h"
 heading = "Политики"
 setUp = "Настройване"
 soon = "Скоро"
 
-[portal.processorFlow.sankey]
+[processor.processorFlow.sankey]
 waist = "Политики · {{n}} активни"
 
-[portal.processorFlow.sankey.empty]
+[processor.processorFlow.sankey.empty]
 description = "Свържете източник и включете политика, за да наблюдавате как документите преминават през processor."
 title = "Все още няма поток"
 
-[portal.processorFlow.sources]
+[processor.processorFlow.sources]
 comingSoonTag = "Свързване"
 editor = "Stirling PDF Editor"
 heading = "Източници"
 perDay = "{{n}} / 24h"
 
-[portal.processorFlow.sources.comingSoon]
+[processor.processorFlow.sources.comingSoon]
 apiMcp = "API · MCP"
 cloud = "Drive · Box · S3"
 email = "Приемане по имейл"
 
-[portal.procurement]
+[processor.procurement]
 subtitle = "Оценете, договорете и въведете екипа си в работа. Всеки документ на едно място."
 title = "Procurement"
 
-[portal.procurement.agreement]
+[processor.procurement.agreement]
 agreeCta = "Съгласие и абониране"
 confidential = "Поверително"
 confirm = "Прочетох и приемам Stirling Enterprise Agreement."
@@ -8563,7 +8566,7 @@ signatoryTitle = "Длъжност на подписващия"
 signatoryTitlePlaceholder = "напр. главен юрисконсулт"
 signError = "Подписът ви не можа да бъде записан. Моля, опитайте отново."
 
-[portal.procurement.builder]
+[processor.procurement.builder]
 addons = "Добавки"
 addressLine1 = "Адресен ред 1"
 addressLine1Placeholder = "500 Howard St"
@@ -8643,7 +8646,7 @@ volumePlaceholder = "напр. 1 000 000"
 years_one = "{{count}} година"
 years_other = "{{count}} години"
 
-[portal.procurement.documents]
+[processor.procurement.documents]
 agreement = "Enterprise Agreement"
 agreementSub = "MSA, Order Form и DPA в един подпис."
 download = "Изтегляне"
@@ -8663,10 +8666,10 @@ subtitle = "Вашите документи по сделката, наличн�
 title = "Документи"
 view = "Преглед"
 
-[portal.procurement.error]
+[processor.procurement.error]
 title = "Нещо се обърка"
 
-[portal.procurement.hero]
+[processor.procurement.hero]
 barAria = "Етап {{current}} от {{total}}"
 ctaAgreement = "Преглед и подпис на споразумението"
 ctaExploring = "Настройте пробния си период"
@@ -8689,36 +8692,36 @@ sentencePayment = "поръчка за покупка и плащане"
 sentenceQuote = "преглед и приемане на вашата оферта"
 sentenceTrial = "настройване на пробното ви работно пространство"
 
-[portal.procurement.journey]
+[processor.procurement.journey]
 daysLeft_one = "Остава {{count}} ден"
 daysLeft_other = "Остават {{count}} дни"
 
-[portal.procurement.journeySteps.agreement]
+[processor.procurement.journeySteps.agreement]
 blurb = "Един подпис покрива MSA, order form, EULA и DPA."
 gatingAction = "Прегледайте и подпишете споразумението си"
 label = "Споразумение"
 
-[portal.procurement.journeySteps.implementation]
+[processor.procurement.journeySteps.implementation]
 blurb = "Осигурете работното си пространство и изпълнете go-live playbook."
 gatingAction = "Осигуряване на вашето работно пространство"
 label = "Внедряване"
 
-[portal.procurement.journeySteps.payment]
+[processor.procurement.journeySteps.payment]
 blurb = "Платете с карта, банков превод или срещу purchase order."
 gatingAction = "Потвърдете плащането"
 label = "Плащане"
 
-[portal.procurement.journeySteps.quote]
+[processor.procurement.journeySteps.quote]
 blurb = "Прегледайте ценообразуването за ангажиран обем и срока на договора."
 gatingAction = "Приемете офертата си"
 label = "Оферта"
 
-[portal.procurement.journeySteps.trial]
+[processor.procurement.journeySteps.trial]
 blurb = "Оценете Stirling спрямо вашите документи и работни процеси."
 gatingAction = "Създайте офертата си"
 label = "Trial"
 
-[portal.procurement.license]
+[processor.procurement.license]
 copied = "Копирано"
 copy = "Копиране на ключ"
 downloadError = "Файлът за офлайн лиценз все още не можа да бъде генериран — моля, опитайте отново след малко."
@@ -8729,21 +8732,21 @@ subtitle = "Активирайте self-hosted инстанция с този к
 title = "Вашият лицензионен ключ"
 trialFileHint = "Това е вашият пробен лицензионен файл. След като споразумението ви е в сила, върнете се и го изтеглете отново — за разлика от онлайн лицензионния ключ, .lic файлът няма да се актуализира сам."
 
-[portal.procurement.link]
+[processor.procurement.link]
 cta = "Свързване на акаунт"
 description = "Procurement работи чрез вашия свързан Stirling акаунт: така предоставяме trial, изчисляваме офертата и стартираме таксуването. Свържете акаунт, за да започнете."
 eyebrow = "Enterprise"
 title = "Свържете акаунта си, за да започнете"
 
-[portal.procurement.live]
+[processor.procurement.live]
 description = "Вашият абонамент е активен и лицензът ви е издаден. Екипът ви е осигурен и таксуването е започнало."
 eyebrow = "Live"
 title = "Вече сте на живо със Stirling Enterprise"
 
-[portal.procurement.milestone]
+[processor.procurement.milestone]
 downloadError = "PDF офертата все още не можа да бъде изтеглена — моля, опитайте отново след малко."
 
-[portal.procurement.payment]
+[processor.procurement.payment]
 description = "Вашата оферта е приета и лицензът ви вече е активен — екипът ви може да започне веднага. Платете първата фактура, когато сте готови; можете да я платите или изтеглите тук, без да е нужен email."
 downloadAgreement = "Изтегляне на подписаното споразумение"
 downloadInvoice = "Изтегляне на фактура"
@@ -8751,7 +8754,7 @@ eyebrow = "Плащане"
 title = "Абонаментът е създаден"
 viewInvoice = "Преглед и плащане на фактура"
 
-[portal.procurement.review]
+[processor.procurement.review]
 acceptCta = "Приемане на офертата"
 annual = "Годишна такса (година 1)"
 downloadCta = "Изтегляне на офертата"
@@ -8760,14 +8763,14 @@ renewal = "Подновява се на {{amount}}/година след сро�
 tcv = "{{years}}-годишен срок, платен изцяло предварително: {{tcv}}"
 validUntil = "Валидно до {{date}}"
 
-[portal.procurement.schedule]
+[processor.procurement.schedule]
 fallback = "Планировчикът не можа да бъде зареден."
 fallbackLink = "Отваряне на планирането в нов раздел"
 loading = "Зареждане на планировчика..."
 subtitle = "Вашият solutions engineer ще преведе екипа ви през внедряването. Изберете удобно за вас време."
 title = "Насрочване на разговор"
 
-[portal.procurement.setup]
+[processor.procurement.setup]
 airgap = "Air-gapped"
 airgapSub = "Изолирано, без изходяща връзка"
 back = "Назад"
@@ -8797,7 +8800,7 @@ viewEula = "Прочетете го"
 workEmail = "Служебен имейл"
 workEmailPlaceholder = "you@company.com"
 
-[portal.procurement.trial]
+[processor.procurement.trial]
 body = "Удължаването добавя 7 дни и уведомява вашия solutions engineer."
 bodyMaxed = "Използвали сте всички удължения — говорете с вашия solutions engineer, ако ви трябва още време."
 cancel = "Отказ на trial"
@@ -8806,32 +8809,32 @@ maxed = "Достигнат максимум"
 subtitle = "Вашият безплатен trial продължава до {{date}}. Не се изисква карта."
 title = "Enterprise trial"
 
-[portal.settings.groups]
+[processor.settings.groups]
 admin = "Администратор"
 
-[portal.settings.sections]
+[processor.settings.sections]
 account-link = "Свързване на акаунт"
 
-[portal.shell.sidebar]
+[processor.shell.sidebar]
 appEditor = "Редактор"
 appProcessor = "Процесор"
 linkAccount = "Свързване на Stirling акаунт"
 primaryNav = "Основна навигация"
 switchApp = "Превключване на приложение"
 
-[portal.shell.topbar]
+[processor.shell.topbar]
 closeNav = "Затваряне на навигацията"
 openNav = "Отваряне на навигацията"
 search = "Търсене"
 
-[portal.sources]
+[processor.sources]
 subtitle = "Повторно използваеми входни връзки, които подават документи към Stirling. Конфигурирайте връзка веднъж, след това я използвайте в произволен брой политики. Щракнете върху ред за конфигурацията ѝ и кои политики я използват."
 title = "Източници"
 
-[portal.sources.actions]
+[processor.sources.actions]
 connectSource = "Свързване на източник"
 
-[portal.sources.builder]
+[processor.sources.builder]
 advanced = "Разширени"
 back = "Назад към източниците"
 backToSource = "Назад към настройката на източника"
@@ -8846,167 +8849,167 @@ delete = "Изтриване"
 editTitle = "Редактиране на източник"
 save = "Запазване на промените"
 
-[portal.sources.builder.folderAccess]
+[processor.sources.builder.folderAccess]
 description = "Автоматизациите за папки могат да използват само папки, разрешени от администратор. Добавете я в настройките за достъп до папки, след това опитайте отново."
 openSettings = "Настройки за достъп до папки"
 title = "Тази папка не е разрешена"
 
-[portal.sources.delete]
+[processor.sources.delete]
 body = "Да се изтрие ли „{{name}}“? Това не може да бъде отменено. Политиките, които го използват, ще трябва да бъдат актуализирани."
 cancel = "Отказ"
 confirm = "Изтриване"
 title = "Да се изтрие ли източникът?"
 
-[portal.sources.kpi]
+[processor.sources.kpi]
 inUse = "В употреба"
 total = "Връзки"
 unused = "Неизползвани"
 
-[portal.sources.networkFields.connection]
+[processor.sources.networkFields.connection]
 helperText = "Запазената връзка със сървърния адрес и идентификационните данни. Използва се повторно от всеки източник, който я посочва."
 label = "Връзка"
 
-[portal.sources.networkFields.directory]
+[processor.sources.networkFields.directory]
 helperText = "Папка на сървъра за проверка, относително към home при вход или корена на споделянето. Оставете празно за корена."
 label = "Папка"
 placeholder = "incoming/"
 
-[portal.sources.networkFields.mode]
+[processor.sources.networkFields.mode]
 helperText = "Consume премахва всеки файл от сървъра, след като всяка политика го обработи."
 label = "Режим на четене"
 
-[portal.sources.networkFields.mode.options]
+[processor.sources.networkFields.mode.options]
 consume = "Consume: обработване на всеки файл веднъж"
 snapshot = "Snapshot: повторно четене на папката при всяко изпълнение"
 
-[portal.sources.networkFields.recursive]
+[processor.sources.networkFields.recursive]
 helperText = "Включете подпапки, ако файловете ви са организирани във вложени папки, или наблюдавайте само най-горното ниво."
 label = "Дълбочина на папката"
 
-[portal.sources.networkFields.recursive.options]
+[processor.sources.networkFields.recursive.options]
 all = "Включване на подпапки"
 top = "Само най-горно ниво"
 
-[portal.sources.status]
+[processor.sources.status]
 active = "Активен"
 disabled = "Деактивиран"
 unused = "Неизползван"
 
-[portal.sources.table]
+[processor.sources.table]
 documents = "Документи"
 source = "Източник"
 status = "Статус"
 type = "Type"
 usedBy = "Политики"
 
-[portal.sources.types.box]
+[processor.sources.types.box]
 description = "Изтегляйте документи от Box папки, които екипът ви вече споделя."
 label = "Box"
 
-[portal.sources.types.dropbox]
+[processor.sources.types.dropbox]
 description = "Изтегляйте документи от споделена Dropbox папка."
 label = "Dropbox"
 
-[portal.sources.types.editor]
+[processor.sources.types.editor]
 description = "Документи, които екипът ви е обработил в editor, в изпълнения на политики и AI."
 label = "Редактор"
 noPolicies = "Все още няма политики, изпълнени от editor."
 
-[portal.sources.types.email]
+[processor.sources.types.email]
 description = "Превръщайте прикачени файлове, изпратени до специална пощенска кутия, в документи."
 label = "Имейл входяща кутия"
 
-[portal.sources.types.folder]
+[processor.sources.types.folder]
 description = "Наблюдава директория на сървъра за нови документи."
 label = "Папка"
 
-[portal.sources.types.folder.fields.directory]
+[processor.sources.types.folder.fields.directory]
 helperText = "Абсолютен път, който Stirling наблюдава за файлове за обработка."
 label = "Път до директория"
 placeholder = "/data/incoming"
 
-[portal.sources.types.folder.fields.identity]
+[processor.sources.types.folder.fields.identity]
 helperText = "Проверката на съдържанието чете всеки променен файл, така че преименувания и докосвания, които не променят съдържанието, не се обработват повторно."
 label = "Откриване на промени"
 
-[portal.sources.types.folder.fields.identity.options]
+[processor.sources.types.folder.fields.identity.options]
 hash = "Размер, дата и проверка на съдържанието"
 stat = "Размер и дата на промяна"
 
-[portal.sources.types.folder.fields.mode]
+[processor.sources.types.folder.fields.mode]
 helperText = "Дали оригиналният файл да остане на място, след като бъде обработен. Ако оригиналният файл остане на място, той ще бъде обработен отново следващия път, когато работният поток сканира източника."
 label = "Режим на четене"
 
-[portal.sources.types.folder.fields.mode.options]
+[processor.sources.types.folder.fields.mode.options]
 consume = "Consume: обработи всеки файл веднъж"
 snapshot = "Snapshot: препрочитай папката при всяко изпълнение"
 
-[portal.sources.types.folder.fields.recursive]
+[processor.sources.types.folder.fields.recursive]
 helperText = "Включете подпапки, ако файловете ви са организирани във вложени папки, или наблюдавайте само най-горното ниво."
 label = "Дълбочина на папката"
 
-[portal.sources.types.folder.fields.recursive.options]
+[processor.sources.types.folder.fields.recursive.options]
 all = "Включване на подпапки"
 top = "Само най-горно ниво"
 
-[portal.sources.types.ftp]
+[processor.sources.types.ftp]
 description = "Проверявайте папка на FTP или FTPS сървър за нови документи."
 label = "FTP"
 
-[portal.sources.types.googledrive]
+[processor.sources.types.googledrive]
 description = "Изтегляйте документи от споделени Google Drive папки."
 label = "Google Drive"
 
-[portal.sources.types.network]
+[processor.sources.types.network]
 description = "Наблюдавайте SMB network share за нови документи."
 label = "Мрежово устройство"
 
-[portal.sources.types.onedrive]
+[processor.sources.types.onedrive]
 description = "Наблюдавайте OneDrive папки за нови документи."
 label = "OneDrive"
 
-[portal.sources.types.s3]
+[processor.sources.types.s3]
 description = "Изтегляйте документи от Amazon S3 или S3-съвместим bucket."
 label = "Amazon S3"
 
-[portal.sources.types.s3.fields.connection]
+[processor.sources.types.s3.fields.connection]
 helperText = "Запазената връзка, съдържаща bucket и идентификационните данни. Използва се повторно от всеки източник и изход на конвейер, който я посочва."
 label = "Връзка"
 
-[portal.sources.types.s3.fields.mode]
+[processor.sources.types.s3.fields.mode]
 helperText = "Consume премахва всеки object от bucket, след като всяка политика го обработи."
 label = "Режим на четене"
 
-[portal.sources.types.s3.fields.mode.options]
+[processor.sources.types.s3.fields.mode.options]
 consume = "Consume: обработване на всеки object веднъж"
 snapshot = "Snapshot: повторно четене на bucket при всяко изпълнение"
 
-[portal.sources.types.s3.fields.prefix]
+[processor.sources.types.s3.fields.prefix]
 helperText = "Обработват се само object-и, чиито ключове започват с този prefix."
 label = "Key prefix"
 placeholder = "incoming/"
 
-[portal.sources.types.sftp]
+[processor.sources.types.sftp]
 description = "Проверявайте SFTP drop папка за нови документи."
 label = "SFTP"
 
-[portal.sources.types.sharepoint]
+[processor.sources.types.sharepoint]
 description = "Изтегляйте документи от библиотеки с документи на SharePoint."
 label = "SharePoint"
 
-[portal.sources.types.unknown]
+[processor.sources.types.unknown]
 label = "Източник"
 
-[portal.sources.types.webhook]
+[processor.sources.types.webhook]
 createNote = "Delivery URL и тайна за подписване се генерират, когато създадете този webhook. Подателите изпращат POST документи към този URL и посочващите политики се изпълняват при пристигане."
 description = "Получавайте документи чрез подписан HTTP POST от всяка външна система."
 label = "Webhook"
 
-[portal.sources.types.webhook.detail]
+[processor.sources.types.webhook.detail]
 deliveryUrl = "Delivery URL"
 secretNote = "Тайната за подписване се показва веднъж, когато webhook бъде създаден. Създайте източника отново, за да я смените."
 
-[portal.sources.types.webhook.reveal]
+[processor.sources.types.webhook.reveal]
 copy = "Копиране"
 done = "Готово"
 secret = "Тайна за подписване"
@@ -9016,78 +9019,75 @@ title = "Webhook създаден"
 url = "Delivery URL"
 usage = "POST всеки документ като сурово тяло на заявката към delivery URL с binary content type (application/pdf или application/octet-stream). Посочващите политики се изпълняват автоматично при пристигане."
 
-[portal.sources.wizard]
+[processor.sources.wizard]
 name = "Име"
 namePlaceholder = "напр. Прием на искове"
 type = "Тип"
 
-[portal.stepModal]
+[processor.stepModal]
 close = "Затваряне"
 
-[portal.usage]
+[processor.usage]
 managePayment = "Управление на плащане"
 subtitle = "Потребление, фактури и управление на планове за всеки PDF, таксуван от Stirling, в една конзола."
 title = "Употреба и таксуване"
 
-[portal.usage.error]
+[processor.usage.error]
 loadWallet = "Wallet не можа да бъде зареден"
 openStripePortal = "Stripe portal не можа да бъде отворен"
 walletUnavailable = "Wallet не е наличен: {{status}} {{statusText}}"
 
-[portal.usage.sessionExpired]
+[processor.usage.sessionExpired]
 action = "Влезте отново"
 body = "Сесията на вашия Stirling акаунт е изтекла. Влезте отново, за да видите таксуването — вашата инстанция остава свързана."
 title = "Сесията е изтекла"
 
-[portal.users]
+[processor.users]
 title = "Потребители"
 
-[portal.users.roles.admin]
+[processor.users.roles.admin]
 label = "Администратор (собственик на организация)"
 summary = "Пълно управление на работното пространство, настройките и членовете."
 
-[portal.users.roles.admin.permissions]
+[processor.users.roles.admin.permissions]
 0 = "Управление на потребители, екипи и роли"
 1 = "Управление на всички интеграции, вкл. S3 връзки"
 2 = "Предоставяне или отнемане на достъп до портала"
 3 = "Всичко, което може собственикът на екип"
 
-[portal.users.roles.guest]
+[processor.users.roles.guest]
 label = "Гост"
 summary = "Ограничен или само web достъп; не може да има лични конфигурации."
 
-[portal.users.roles.guest.permissions]
+[processor.users.roles.guest.permissions]
 0 = "Само web / demo употреба"
 1 = "Без API ключове или интеграции"
 2 = "Без достъп до портала"
 3 = "Само за четене, където е споделено"
 
-[portal.users.roles.member]
+[processor.users.roles.member]
 label = "Член"
 summary = "Обикновен потребител — работи със споделени ресурси и собствени конфигурации."
 
-[portal.users.roles.member.permissions]
+[processor.users.roles.member.permissions]
 0 = "Използване на редактора и споделените интеграции"
 1 = "Създаване на лични API & MCP конфигурации"
 2 = "Вижда екипни конфигурации, споделени с него"
 3 = "Без S3 или управление на работното пространство"
 
-[portal.users.roles.team_owner]
+[processor.users.roles.team_owner]
 label = "Собственик на екип"
 summary = "Притежава екип — управлява ресурсите на членовете му и споделените конфигурации."
 
-[portal.users.roles.team_owner.permissions]
+[processor.users.roles.team_owner.permissions]
 0 = "Създаване и управление на S3 връзките на екипа"
 1 = "Управление на конфигурации на интеграции, притежавани от екипа"
 2 = "Достъп до портала чрез политиката по подразбиране"
 3 = "Всичко, което може членът"
 
-[portal.users.seats]
+[processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · Неограничено"
-
-[printFile]
-title = "Печат на файл"
 
 [provider.googledrive]
 name = "Google Drive"

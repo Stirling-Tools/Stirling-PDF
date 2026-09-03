@@ -54,7 +54,7 @@ public class SaasTeamService {
     public static final String INTERNAL_TEAM_NAME = "Internal";
 
     /**
-     * Persist a user and their personal team atomically: an account with no team has no portal
+     * Persist a user and their personal team atomically: an account with no team has no processor
      * access and no way to acquire one, so a teamless user must never be committed. Constraint
      * violations (the concurrent-signup race) propagate for the caller to resolve.
      */

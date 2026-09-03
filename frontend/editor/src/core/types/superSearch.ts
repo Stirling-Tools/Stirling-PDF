@@ -60,7 +60,7 @@ export interface SuperSearchQueryOptions {
 export interface SuperSearchGates {
   isAdmin: boolean;
   loginEnabled: boolean;
-  portalAccessible?: boolean;
+  processorAccessible?: boolean;
   /**
    * Whether no-login mode keeps the read-only admin settings preview
    * (`system.showSettingsWhenNoLogin`, default true). Mirrors the settings
@@ -106,28 +106,28 @@ export const PORTAL_ENTITY_SCOPE_DEFS: readonly PortalEntityScopeDef[] = [
   {
     id: "portal-users",
     viewId: "users",
-    labelKey: "portal.nav.users",
+    labelKey: "processor.nav.users",
     labelFallback: "Users",
     aliases: ["user", "users", "member", "members"],
   },
   {
     id: "portal-policies",
     viewId: "policies",
-    labelKey: "portal.nav.policies",
+    labelKey: "processor.nav.policies",
     labelFallback: "Policies",
     aliases: ["policy", "policies"],
   },
   {
     id: "portal-pipelines",
     viewId: "pipelines",
-    labelKey: "portal.nav.pipelines",
+    labelKey: "processor.nav.pipelines",
     labelFallback: "Pipelines",
     aliases: ["pipeline", "pipelines"],
   },
   {
     id: "portal-sources",
     viewId: "sources",
-    labelKey: "portal.nav.sources",
+    labelKey: "processor.nav.sources",
     labelFallback: "Sources",
     aliases: ["source", "sources"],
   },

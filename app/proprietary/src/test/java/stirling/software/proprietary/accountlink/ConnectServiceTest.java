@@ -99,7 +99,7 @@ class ConnectServiceTest {
     }
 
     @Test
-    void resolveCallback_honoursThePortalsOwnCallbackWhenTheBrowserOriginAgrees() {
+    void resolveCallback_honoursTheProcessorsOwnCallbackWhenTheBrowserOriginAgrees() {
         // The frontend is the only party that knows its router's base path.
         String requested = "http://localhost:5173/app/account-link/callback";
 

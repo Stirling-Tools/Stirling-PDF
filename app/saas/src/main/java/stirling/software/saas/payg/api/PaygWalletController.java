@@ -392,7 +392,7 @@ public class PaygWalletController {
      * Drops the caller's team snapshot + billing cache so the next {@code GET /wallet} reflects a
      * billing state that just changed out-of-band. The subscription flip is written by a Postgres
      * function ({@code payg_link_subscription}) with no Java event to invalidate on, so a client
-     * that knows a change just happened — the portal while finalizing a checkout — pokes the cache
+     * that knows a change just happened — the processor while finalizing a checkout — pokes the cache
      * here rather than waiting out the ~30s TTL. Team-scoped to the caller: a client can only
      * refresh its own team, and a no-team caller is a cheap no-op.
      */

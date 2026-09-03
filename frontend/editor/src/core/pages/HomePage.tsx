@@ -521,7 +521,7 @@ export default function HomePage() {
     <div className="h-screen overflow-hidden">
       <HomePageExtensions />
       <QuickNavHostBridge
-        portalAccess={Boolean(otherApp)}
+        processorAccess={Boolean(otherApp)}
         onOpenSettings={() => setConfigModalOpen(true)}
         requestNavigation={requestNavigation}
         readerMode={readerMode}

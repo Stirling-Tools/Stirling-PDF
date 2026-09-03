@@ -3,8 +3,8 @@ package stirling.software.proprietary.policy.overview;
 import java.util.List;
 
 /**
- * One row in the unified Pipelines overview: a stored policy shown for the admin portal, with its
- * referenced sources resolved to names and its pipeline summarised. This surface lists every
+ * One row in the unified Pipelines overview: a stored policy shown for the admin processor, with
+ * its referenced sources resolved to names and its pipeline summarised. This surface lists every
  * backend policy - both the pipelines built in the full builder and the friendly "suggested"
  * policies - so a {@code required} policy (one the org mandates) reads the same as any other
  * pipeline here.

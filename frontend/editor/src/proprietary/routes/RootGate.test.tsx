@@ -23,13 +23,15 @@ function httpError(status: number) {
 // Configure the two backend endpoints. teamMy === "404" simulates self-hosted.
 function backend(opts: {
   role: string;
-  portalAccess: boolean;
+  processorAccess: boolean;
   teamMy: unknown[] | "404";
 }) {
   h.get.mockImplementation((url: string) => {
     if (url === "/api/v1/auth/me") {
       return Promise.resolve({
-        data: { user: { role: opts.role, portalAccess: opts.portalAccess } },
+        data: {
+          user: { role: opts.role, processorAccess: opts.processorAccess },
+        },
       });
     }
     if (url === "/api/v1/team/my") {
@@ -82,14 +84,14 @@ describe("RootGate", () => {
   beforeEach(() => {
     h.landingView = "processor";
     h.get.mockReset();
-    // The portal only exists in some builds; the decision is a no-op without it.
-    vi.stubEnv("VITE_INCLUDE_PORTAL", "true");
+    // The processor only exists in some builds; the decision is a no-op without it.
+    vi.stubEnv("VITE_INCLUDE_PROCESSOR", "true");
     vi.stubEnv("VITE_LOGIN_LANDING_MODE", "dynamic");
   });
   afterEach(() => vi.unstubAllEnvs());
 
   it("renders the app untouched on every path but /", async () => {
-    backend({ role: "ROLE_ADMIN", portalAccess: true, teamMy: "404" });
+    backend({ role: "ROLE_ADMIN", processorAccess: true, teamMy: "404" });
     renderAt("/compress");
     expect(appMounted()).toBe(true);
     expect(at()).toBe("/compress");
@@ -97,19 +99,19 @@ describe("RootGate", () => {
   });
 
   it("sends a processor user to the processor", async () => {
-    backend({ role: "USER", portalAccess: true, teamMy: "404" });
+    backend({ role: "USER", processorAccess: true, teamMy: "404" });
     renderAt("/");
     await waitFor(() => expect(at()).toBe("/processor"));
   });
 
   it("sends everyone else to the editor", async () => {
-    backend({ role: "USER", portalAccess: false, teamMy: "404" });
+    backend({ role: "USER", processorAccess: false, teamMy: "404" });
     renderAt("/");
     await waitFor(() => expect(at()).toBe("/editor"));
   });
 
   it("never boots the app on the way to the processor", async () => {
-    backend({ role: "USER", portalAccess: true, teamMy: "404" });
+    backend({ role: "USER", processorAccess: true, teamMy: "404" });
     renderAt("/");
     expect(appMounted()).toBe(false); // deciding
     await waitFor(() => expect(at()).toBe("/processor"));
@@ -125,14 +127,14 @@ describe("RootGate", () => {
   });
 
   it("survives StrictMode's double-invoke", async () => {
-    backend({ role: "USER", portalAccess: true, teamMy: "404" });
+    backend({ role: "USER", processorAccess: true, teamMy: "404" });
     renderAt("/", true);
     await waitFor(() => expect(at()).toBe("/processor"));
   });
 
   it("honours the per-user editor override without a lookup", async () => {
     h.landingView = "editor";
-    backend({ role: "ROLE_ADMIN", portalAccess: true, teamMy: "404" });
+    backend({ role: "ROLE_ADMIN", processorAccess: true, teamMy: "404" });
     renderAt("/");
     await waitFor(() => expect(at()).toBe("/editor"));
     expect(h.get).not.toHaveBeenCalled();
@@ -140,16 +142,16 @@ describe("RootGate", () => {
 
   it("routes everyone to the editor when the soft-release flag is off", async () => {
     vi.stubEnv("VITE_LOGIN_LANDING_MODE", "editor");
-    backend({ role: "ROLE_ADMIN", portalAccess: true, teamMy: "404" });
+    backend({ role: "ROLE_ADMIN", processorAccess: true, teamMy: "404" });
     renderAt("/");
     await waitFor(() => expect(at()).toBe("/editor"));
     expect(h.get).not.toHaveBeenCalled();
   });
 
   it("routes to the editor when this build ships no processor", async () => {
-    vi.stubEnv("VITE_INCLUDE_PORTAL", "false");
+    vi.stubEnv("VITE_INCLUDE_PROCESSOR", "false");
     vi.stubEnv("DEV", false);
-    backend({ role: "ROLE_ADMIN", portalAccess: true, teamMy: "404" });
+    backend({ role: "ROLE_ADMIN", processorAccess: true, teamMy: "404" });
     renderAt("/");
     await waitFor(() => expect(at()).toBe("/editor"));
     expect(h.get).not.toHaveBeenCalled();

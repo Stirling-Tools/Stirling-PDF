@@ -56,7 +56,7 @@ function notification(
     ownership: "MINE",
     severity: "ERROR",
     status: "NEW",
-    titleKey: `portal.failures.kind.${id}.title`,
+    titleKey: `processor.failures.kind.${id}.title`,
     defaultTitle: id,
     detail: "boom",
     fileId: "f-1",

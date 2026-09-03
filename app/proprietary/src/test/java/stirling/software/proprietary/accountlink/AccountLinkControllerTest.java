@@ -40,7 +40,7 @@ class AccountLinkControllerTest {
                         service, connectService, mock(LocalUsageService.class), syncProvider);
     }
 
-    // These asserted POST /link's error mapping, which distinguished 401/403 so the portal could
+    // These asserted POST /link's error mapping, which distinguished 401/403 so the processor could
     // prompt a re-sign-in. That endpoint is gone with the JWT relay, and the distinction went with
     // it: connect/start carries no user token, so an upstream refusal is never the admin's session
     // and everything non-transport is a plain gateway failure.

@@ -22,7 +22,7 @@ export interface NotificationActionOffer {
   /** English fallback, for a build with no copy for `labelKey`. */
   defaultLabel: string;
   slot: NotificationActionSlot;
-  /** False renders no button in the bell, and a disabled one in the portal's queue. */
+  /** False renders no button in the bell, and a disabled one in the processor's queue. */
   enabled: boolean;
   disabledReasonKey: string | null;
 }

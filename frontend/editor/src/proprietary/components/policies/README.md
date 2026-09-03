@@ -1,8 +1,8 @@
 # Policies (editor)
 
 Automation-backed document-enforcement policies. The editor side is
-**enforcement only**: policies are configured in the admin portal
-(`src/portal/views/Policies.tsx`); the editor runs enabled policies on
+**enforcement only**: policies are configured in the admin processor
+(`src/processor/views/Policies.tsx`); the editor runs enabled policies on
 uploaded files, blocks the file's exit points while a run is in flight, and
 badges files a policy has produced. Always on in the proprietary/SaaS builds;
 the core (OSS) build has no implementation (`usePoliciesEnabled` stub = false),

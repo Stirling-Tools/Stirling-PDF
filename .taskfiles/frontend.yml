@@ -308,19 +308,31 @@ tasks:
 
       Pass a base ref through CLI_ARGS, e.g.
         task frontend:storybook:a11y:changed -- origin/release
+
+      Both themes run by default. A11Y_THEME=light or A11Y_THEME=dark scans one,
+      which is how CI splits the two themes across concurrent jobs. The name is
+      prefixed because Task reads plain env vars, and THEME is a common one.
     vars:
       BASE: '{{.CLI_ARGS | default "origin/main"}}'
+      A11Y_THEME: '{{.A11Y_THEME | default "both"}}'
       CHANGED:
         sh: node .storybook/a11y-changed.mjs {{.CLI_ARGS | default "origin/main"}}
     cmds:
       - cmd: |
           if [ -z '{{.CHANGED}}' ]; then
-            echo "a11y: no story files affected vs {{.BASE}} — nothing to check"
+            echo "a11y: no story files affected vs {{.BASE}} - nothing to check"
             exit 0
           fi
           rc=0
-          task frontend:storybook:a11y:light -- {{.CHANGED}} || rc=1
-          task frontend:storybook:a11y:dark -- {{.CHANGED}} || rc=1
+          # Anything but light/dark scans both, so a typo cannot skip a theme.
+          case '{{.A11Y_THEME}}' in
+            light) task frontend:storybook:a11y:light -- {{.CHANGED}} || rc=1 ;;
+            dark)  task frontend:storybook:a11y:dark -- {{.CHANGED}} || rc=1 ;;
+            *)
+              task frontend:storybook:a11y:light -- {{.CHANGED}} || rc=1
+              task frontend:storybook:a11y:dark -- {{.CHANGED}} || rc=1
+              ;;
+          esac
           exit $rc
 
   storybook:a11y:record:
@@ -348,7 +360,7 @@ tasks:
     desc: "Lint stylesheets for duplicate selectors"
     deps: [install]
     cmds:
-      # Covers the whole editor tree, including the portal/processor layer and
+      # Covers the whole editor tree, including the processor layer and
       # public/css. Vendored CSS and build output are excluded via ignoreFiles
       # in stylelint.config.mjs.
       - npx stylelint "editor/**/*.css"
@@ -462,12 +474,12 @@ tasks:
       - task: typecheck:_run
         vars: { PROJECT: editor/src/prototypes/tsconfig.json }
 
-  typecheck:portal:
-    desc: "Typecheck developer portal build variant"
+  typecheck:processor:
+    desc: "Typecheck developer processor build variant"
     deps: [install]
     cmds:
       - task: typecheck:_run
-        vars: { PROJECT: editor/src/portal/tsconfig.json }
+        vars: { PROJECT: editor/src/processor/tsconfig.json }
 
   typecheck:storybook:
     desc: "Typecheck Storybook config and stories"
@@ -486,7 +498,7 @@ tasks:
       - task: typecheck:cloud
       - task: typecheck:scripts
       - task: typecheck:prototypes
-      - task: typecheck:portal
+      - task: typecheck:processor
       - task: typecheck:storybook
 
   # ============================================================

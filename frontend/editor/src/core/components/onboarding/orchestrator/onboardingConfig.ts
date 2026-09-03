@@ -95,7 +95,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     id: "processor-intro",
     type: "modal-slide",
     slideId: "processor-intro",
-    // Admins can manage policies in the portal/processor; regular users can't.
+    // Admins can manage policies in the processor; regular users can't.
     condition: (ctx) => ctx.effectiveIsAdmin,
   },
   {

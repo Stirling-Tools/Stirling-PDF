@@ -42,7 +42,7 @@
   --landing-stack-w: 224px;
   --landing-stack-h: 176px;
 
-  /* --shadow-* is intentionally NOT defined here: editor (drop shadows) and SUI/portal (inset hairlines) reuse the name with different values. */
+  /* --shadow-* is intentionally NOT defined here: editor (drop shadows) and SUI/processor (inset hairlines) reuse the name with different values. */
 
   /* ── Typography ── */
   --font-sans:

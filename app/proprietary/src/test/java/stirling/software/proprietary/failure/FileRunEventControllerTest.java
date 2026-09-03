@@ -120,9 +120,9 @@ class FileRunEventControllerTest {
             FileRunEventView view = controller.list(null, null, null).events().getFirst();
 
             assertThat(view.titleKey())
-                    .isEqualTo("portal.failures.kind.inputPasswordProtected.title");
+                    .isEqualTo("processor.failures.kind.inputPasswordProtected.title");
             assertThat(view.descriptionKey())
-                    .isEqualTo("portal.failures.kind.inputPasswordProtected.description");
+                    .isEqualTo("processor.failures.kind.inputPasswordProtected.description");
             assertThat(view.defaultTitle()).isNotBlank();
             assertThat(view.detail()).isEqualTo("the raw failure message");
         }
@@ -181,7 +181,10 @@ class FileRunEventControllerTest {
 
             assertThat(actions).noneMatch(FileRunEventView.ActionView::enabled);
             assertThat(actions)
-                    .allMatch(a -> "portal.failures.disabled.closed".equals(a.disabledReasonKey()));
+                    .allMatch(
+                            a ->
+                                    "processor.failures.disabled.closed"
+                                            .equals(a.disabledReasonKey()));
         }
 
         @Test
@@ -325,7 +328,9 @@ class FileRunEventControllerTest {
 
             assertThat(locked.actions())
                     .extracting(FailureKindView.ActionDeclaration::labelKey)
-                    .contains("portal.failures.action.viewFile", "portal.failures.action.dismiss");
+                    .contains(
+                            "processor.failures.action.viewFile",
+                            "processor.failures.action.dismiss");
         }
 
         @Test

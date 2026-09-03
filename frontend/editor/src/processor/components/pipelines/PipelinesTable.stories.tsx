@@ -1,0 +1,47 @@
+import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { PipelineView } from "@processor/api/pipelines";
+import { PipelinesTable } from "@processor/components/pipelines/PipelinesTable";
+
+const PIPELINES: PipelineView[] = [
+  {
+    id: "pipe-intake",
+    name: "Claims intake",
+    enabled: true,
+    required: false,
+    icon: "shield",
+    status: "active",
+    trigger: "folder-watch",
+    sources: [{ id: "src-claims", name: "Claims intake" }],
+    steps: ["redact", "sanitize", "watermark"],
+    output: "folder",
+    owner: "jane@stirlingpdf.com",
+  },
+  {
+    id: "pipe-archive",
+    name: "Archive reprocess",
+    enabled: false,
+    required: true,
+    icon: "compress",
+    status: "paused",
+    trigger: "manual",
+    sources: [],
+    steps: [],
+    output: "inline",
+    owner: "jane@stirlingpdf.com",
+  },
+];
+
+const meta: Meta<typeof PipelinesTable> = {
+  title: "Processor/Pipelines/PipelinesTable",
+  component: PipelinesTable,
+  parameters: { layout: "padded" },
+  args: { pipelines: PIPELINES, onRowClick: () => {} },
+};
+export default meta;
+type Story = StoryObj<typeof PipelinesTable>;
+
+export const Default: Story = {};
+
+export const Empty: Story = {
+  args: { pipelines: [] },
+};

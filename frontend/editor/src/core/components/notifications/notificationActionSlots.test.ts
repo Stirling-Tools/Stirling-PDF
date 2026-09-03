@@ -22,9 +22,9 @@ const PASSWORD_OFFERS: Record<string, NotificationActionOffer> = {
 };
 
 /** The reasons the server sends with an action it would refuse. */
-const NO_DOCUMENT = "portal.failures.disabled.noDocument";
-const UNATTENDED = "portal.failures.disabled.unattended";
-const CLOSED = "portal.failures.disabled.closed";
+const NO_DOCUMENT = "processor.failures.disabled.noDocument";
+const UNATTENDED = "processor.failures.disabled.unattended";
+const CLOSED = "processor.failures.disabled.closed";
 
 function offer(
   id: string,
@@ -33,7 +33,7 @@ function offer(
 ): NotificationActionOffer {
   return {
     id,
-    labelKey: `portal.failures.action.${id.toLowerCase()}`,
+    labelKey: `processor.failures.action.${id.toLowerCase()}`,
     defaultLabel: id,
     slot,
     enabled: true,
@@ -101,7 +101,7 @@ function promoted(list: NotificationActionOffer[]) {
 
 describe("promoteActions", () => {
   it("gives the owner the retry, and keeps the rest quiet behind it", () => {
-    // No portal access, so the server never offered the processor link.
+    // No processor access, so the server never offered the processor link.
     expect(promoted(unknown("OPEN_IN_TOOL", "VIEW_FILE"))).toEqual({
       primary: "OPEN_IN_TOOL",
       secondary: null,

@@ -12,7 +12,7 @@ import {
   toUnderscoreLanguages,
 } from "@app/i18n/languages";
 
-// Language metadata and code helpers are shared with the portal via
+// Language metadata and code helpers are shared with the processor via
 // @app/i18n. Re-export them so existing `@app/i18n` consumers are unchanged.
 export {
   supportedLanguages,

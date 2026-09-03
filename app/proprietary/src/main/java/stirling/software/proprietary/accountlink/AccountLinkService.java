@@ -28,7 +28,7 @@ public class AccountLinkService {
         this.entitlementCache = entitlementCache;
     }
 
-    /** Status of this instance's link, for the portal's "Account link" card. */
+    /** Status of this instance's link, for the processor's "Account link" card. */
     public record LinkStatus(boolean linked, String deviceId, Long teamId, String linkedAt) {}
 
     /**
@@ -45,7 +45,7 @@ public class AccountLinkService {
                                 log.warn(
                                         "Account-link: SaaS self-revoke failed for device {};"
                                                 + " clearing locally anyway (admin can revoke"
-                                                + " from the portal).",
+                                                + " from the processor).",
                                         c.getDeviceId());
                             }
                         });

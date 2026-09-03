@@ -508,7 +508,7 @@ class FileRunEventServiceTest {
                             action -> {
                                 assertThat(action.enabled()).isFalse();
                                 assertThat(action.disabledReasonKey())
-                                        .isEqualTo("portal.failures.disabled.unattended");
+                                        .isEqualTo("processor.failures.disabled.unattended");
                             });
         }
 
@@ -542,7 +542,7 @@ class FileRunEventServiceTest {
                             action -> {
                                 assertThat(action.enabled()).isFalse();
                                 assertThat(action.disabledReasonKey())
-                                        .isEqualTo("portal.failures.disabled.noDocument");
+                                        .isEqualTo("processor.failures.disabled.noDocument");
                             });
         }
 
@@ -598,7 +598,7 @@ class FileRunEventServiceTest {
             assertThat(actions)
                     .allMatch(
                             action ->
-                                    "portal.failures.disabled.closed"
+                                    "processor.failures.disabled.closed"
                                             .equals(action.disabledReasonKey()));
         }
 
@@ -620,8 +620,8 @@ class FileRunEventServiceTest {
             assertThat(service.availableActions(event))
                     .extracting(FileRunEventService.AvailableAction::labelKey)
                     .containsExactly(
-                            "portal.failures.action.viewInProcessor",
-                            "portal.failures.action.dismiss");
+                            "processor.failures.action.viewInProcessor",
+                            "processor.failures.action.dismiss");
         }
     }
 

@@ -25,24 +25,24 @@ function httpError(status: number) {
   return Object.assign(new Error("http"), { response: { status } });
 }
 
-// Self-hosted admin (portalAccess true, no /team/my) → eligible.
+// Self-hosted admin (processorAccess true, no /team/my) → eligible.
 function eligibleBackend() {
   h.get.mockImplementation((url: string) => {
     if (url === "/api/v1/auth/me") {
       return Promise.resolve({
-        data: { user: { role: "ROLE_ADMIN", portalAccess: true } },
+        data: { user: { role: "ROLE_ADMIN", processorAccess: true } },
       });
     }
     return Promise.reject(httpError(404));
   });
 }
 
-// Self-hosted member (no portalAccess) → not eligible.
+// Self-hosted member (no processorAccess) → not eligible.
 function memberBackend() {
   h.get.mockImplementation((url: string) => {
     if (url === "/api/v1/auth/me") {
       return Promise.resolve({
-        data: { user: { role: "USER", portalAccess: false } },
+        data: { user: { role: "USER", processorAccess: false } },
       });
     }
     return Promise.reject(httpError(404));
@@ -58,7 +58,7 @@ function renderSetting() {
 }
 
 beforeEach(() => {
-  vi.stubEnv("VITE_INCLUDE_PORTAL", "true");
+  vi.stubEnv("VITE_INCLUDE_PROCESSOR", "true");
   vi.stubEnv("VITE_LOGIN_LANDING_MODE", "dynamic");
   h.prefs = { loginLandingView: "processor" };
   h.update.mockReset();
@@ -91,8 +91,8 @@ describe("LoginLandingSetting", () => {
     expect(screen.queryByText("After signing in")).not.toBeInTheDocument();
   });
 
-  it("renders nothing when the portal is not bundled", () => {
-    vi.stubEnv("VITE_INCLUDE_PORTAL", "");
+  it("renders nothing when the processor is not bundled", () => {
+    vi.stubEnv("VITE_INCLUDE_PROCESSOR", "");
     vi.stubEnv("DEV", false);
     eligibleBackend();
     renderSetting();

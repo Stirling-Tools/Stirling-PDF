@@ -12,8 +12,8 @@ export const qk = {
   groupEnabled: (group: string) => ["editor", "groupEnabled", group] as const,
   signingSessions: () => ["editor", "signingSessions"] as const,
   /** Keyed on the asking identity: two users must never share one answer. */
-  portalAccess: (userId: string | null) =>
-    ["editor", "portalAccess", userId] as const,
+  processorAccess: (userId: string | null) =>
+    ["editor", "processorAccess", userId] as const,
   teamDetails: (teamId: number) => ["editor", "teamDetails", teamId] as const,
   teams: () => ["editor", "teams"] as const,
   users: () => ["editor", "users"] as const,

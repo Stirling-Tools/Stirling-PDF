@@ -1,6 +1,6 @@
 // Shared source of truth for a policy category's outline icon, keyed by category
 // id (not a parallel icon-name vocabulary). Used by the editor's policy
-// definitions and the portal's catalogue cards, summaries, and setup wizard.
+// definitions and the processor's catalogue cards, summaries, and setup wizard.
 
 import type { ReactNode } from "react";
 import type { SxProps, Theme } from "@mui/material";

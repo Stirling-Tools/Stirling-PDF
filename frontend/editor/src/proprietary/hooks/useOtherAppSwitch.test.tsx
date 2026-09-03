@@ -4,7 +4,7 @@ import { renderHook } from "@testing-library/react";
 const mocks = vi.hoisted(() => ({
   navigate: vi.fn(),
   requestNavigation: vi.fn(),
-  portalAccess: true,
+  processorAccess: true,
 }));
 
 // The hook reads window.location for the return path (not useLocation), because
@@ -13,7 +13,7 @@ vi.mock("react-router-dom", () => ({
   useNavigate: () => mocks.navigate,
 }));
 vi.mock("@app/auth/context", () => ({
-  useAuth: () => ({ portalAccess: mocks.portalAccess }),
+  useAuth: () => ({ processorAccess: mocks.processorAccess }),
 }));
 vi.mock("@app/contexts/NavigationContext", () => ({
   useNavigationActions: () => ({
@@ -27,13 +27,13 @@ import { takeEditorReturnPath } from "@app/services/workbenchSession";
 beforeEach(() => {
   sessionStorage.clear();
   vi.clearAllMocks();
-  mocks.portalAccess = true;
+  mocks.processorAccess = true;
   window.history.pushState({}, "", "/");
 });
 
 describe("useOtherAppSwitch", () => {
-  it("offers no switch without portal access", () => {
-    mocks.portalAccess = false;
+  it("offers no switch without processor access", () => {
+    mocks.processorAccess = false;
     const { result } = renderHook(() => useOtherAppSwitch());
     expect(result.current).toBeNull();
   });

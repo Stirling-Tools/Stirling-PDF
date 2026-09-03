@@ -27,7 +27,7 @@ async function restoreEnabled(
 }
 
 const NO_RESTORE = "this build ships the workbench restore off";
-const NO_PORTAL = "this build ships no processor to switch to";
+const NO_PROCESSOR = "this build ships no processor to switch to";
 
 // Switching editor -> processor unmounts every editor provider; the session record
 // in sessionStorage is what brings the workbench back on return.
@@ -40,7 +40,7 @@ test.describe("Workbench survives the editor/processor switch", () => {
         username: "owner",
         email: "owner@example.com",
         role: "ROLE_USER",
-        portalAccess: true,
+        processorAccess: true,
       },
     },
     seedJwt: true,
@@ -51,7 +51,7 @@ test.describe("Workbench survives the editor/processor switch", () => {
   }) => {
     test.skip(!(await restoreEnabled(page)), NO_RESTORE);
 
-    // Portal endpoints the processor shell fetches on mount.
+    // Processor endpoints the processor shell fetches on mount.
     for (const [pattern, json] of [
       ["**/api/v1/policies", []],
       ["**/api/v1/policies/runs", []],
@@ -78,7 +78,7 @@ test.describe("Workbench survives the editor/processor switch", () => {
     const processorMark = page.getByRole("button", { name: /^Processor$/i });
     test.skip(
       !(await processorMark.isVisible({ timeout: 5_000 }).catch(() => false)),
-      NO_PORTAL,
+      NO_PROCESSOR,
     );
     await processorMark.click();
     await expect(page).toHaveURL(/\/processor/, { timeout: 15000 });
@@ -126,7 +126,7 @@ test.describe("The view survives a reload", () => {
         username: "owner",
         email: "o@e.com",
         role: "ROLE_USER",
-        portalAccess: true,
+        processorAccess: true,
       },
     },
     seedJwt: true,

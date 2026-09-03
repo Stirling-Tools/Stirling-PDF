@@ -46,7 +46,7 @@ import stirling.software.saas.util.AuthenticationUtils;
 /**
  * The enterprise procurement journey for a linked team: read the deal snapshot, start/extend a
  * (mock-licensed) trial, build a server-priced quote, and accept it. Stripe checkout itself is a
- * Supabase edge function the portal calls with the accepted quote — this controller never touches
+ * Supabase edge function the processor calls with the accepted quote — this controller never touches
  * Stripe. The caller's team is resolved from the authenticated principal; a team id is never
  * trusted from the request. Mutations require the team leader.
  */
@@ -235,7 +235,7 @@ public class ProcurementController {
 
     /**
      * The team's deal snapshot. Always 200 with a single shape; an unstarted procurement returns an
-     * empty snapshot ({@code dealId == null}) so the portal can render the "start" state without
+     * empty snapshot ({@code dealId == null}) so the processor can render the "start" state without
      * special-casing an empty body.
      */
     @GetMapping
@@ -502,7 +502,7 @@ public class ProcurementController {
      * {@code /provision}, which runs earlier at accept and deliberately leaves the stage alone.
      *
      * <p>Answers 200 when the team has no deal at all, rather than erroring: a committed
-     * subscription can be closed directly in Stripe by sales with no portal deal behind it, and a
+     * subscription can be closed directly in Stripe by sales with no processor deal behind it, and a
      * non-2xx would have Stripe retry a webhook that can never succeed.
      *
      * <p>{@code invoiceId} is what makes this idempotent without swallowing renewals: the same

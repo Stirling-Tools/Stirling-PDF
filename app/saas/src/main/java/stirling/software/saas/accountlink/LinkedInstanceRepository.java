@@ -21,7 +21,7 @@ public interface LinkedInstanceRepository extends JpaRepository<LinkedInstance, 
      */
     Optional<LinkedInstance> findByDeviceIdAndRevokedAtIsNull(String deviceId);
 
-    /** Backs the portal "Linked instances" list (includes revoked, newest first). */
+    /** Backs the processor "Linked instances" list (includes revoked, newest first). */
     List<LinkedInstance> findByTeamIdOrderByCreatedAtDesc(Long teamId);
 
     /** Active (non-revoked) linked instances on a team — the orphan guard's count. */

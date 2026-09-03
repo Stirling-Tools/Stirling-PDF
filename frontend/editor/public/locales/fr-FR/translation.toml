@@ -6464,10 +6464,13 @@ thirtyDays = "30 jours"
 threeYears = "3 ans"
 webhook = "Webhook"
 
-[portal]
+[printFile]
+title = "Imprimer le fichier"
+
+[processor]
 comingSoon = "Bientôt disponible"
 
-[portal.accountLink.card]
+[processor.accountLink.card]
 billingNote = "Le traitement sans surveillance est facturé sur le portefeuille de votre organisation."
 eyebrow = "Liaison de compte"
 linkButton = "Lier votre compte Stirling"
@@ -6478,37 +6481,37 @@ notLinked = "Non lié"
 title = "Lier cette organisation à son compte Stirling"
 unlink = "Dissocier"
 
-[portal.accountLink.card.error]
+[processor.accountLink.card.error]
 title = "Impossible de lier"
 
-[portal.accountLink.card.loginNotConfigured]
+[processor.accountLink.card.loginNotConfigured]
 after = "pour activer la liaison de compte avec le compte Stirling hébergé. En dev, vous pouvez simuler la connexion depuis la boîte de dialogue de liaison."
 before = "Définir"
 title = "Connexion SaaS non configurée"
 
-[portal.accountLink.gate]
+[processor.accountLink.gate]
 action = "Lier le compte"
 description = "Liez le compte Stirling de cette organisation pour utiliser les fonctionnalités facturables."
 title = "Lier pour déverrouiller"
 titleFeature = "Lier pour déverrouiller {{feature}}"
 
-[portal.accountLink.instances]
+[processor.accountLink.instances]
 active = "Actif"
 revoke = "Révoquer"
 revoked = "Révoqué"
 unnamed = "Instance sans nom"
 
-[portal.accountLink.instances.columns]
+[processor.accountLink.instances.columns]
 instance = "Instance"
 lastSeen = "Dernière activité"
 linked = "Lié"
 status = "Statut"
 
-[portal.accountLink.instances.empty]
+[processor.accountLink.instances.empty]
 description = "Liez le compte de cette organisation, puis enregistrez vos instances auto-hébergées pour les voir ici."
 title = "Aucune instance liée"
 
-[portal.accountLink.instances.time]
+[processor.accountLink.instances.time]
 daysAgo_one = "il y a {{count}} j"
 daysAgo_other = "il y a {{count}} j"
 hoursAgo_one = "il y a {{count}} h"
@@ -6518,36 +6521,36 @@ minutesAgo_one = "il y a {{count}} min"
 minutesAgo_other = "il y a {{count}} min"
 never = "jamais"
 
-[portal.accountLink.modal]
+[processor.accountLink.modal]
 linkSubtitle = "Connectez-vous au compte auquel ce serveur doit être facturé."
 linkTitle = "Lier votre compte Stirling"
 reauthSubtitle = "Votre session a expiré — reconnectez-vous à votre compte Stirling. Votre instance reste liée."
 reauthTitle = "Se reconnecter"
 simulateSignIn = "Simuler la connexion (dev)"
 
-[portal.accountLink.modal.loginNotConfigured]
+[processor.accountLink.modal.loginNotConfigured]
 after = "pour activer la liaison dans l’application avec le compte Stirling hébergé."
 and = "et"
 before = "Définir"
 title = "Connexion SaaS non configurée"
 
-[portal.accountLink.panel]
+[processor.accountLink.panel]
 instancesSub = "Chaque instance auto-hébergée enregistrée auprès de cette organisation. Révoquez un identifiant pour couper immédiatement son accès sans surveillance."
 instancesTitle = "Instances liées"
 revokeError = "Impossible de révoquer l’instance"
 sub = "Liez cette organisation auto-hébergée à son compte Stirling afin que le traitement sans surveillance soit facturé sur le portefeuille de votre organisation."
 
-[portal.accountLink.panel.loadError]
+[processor.accountLink.panel.loadError]
 forbidden = "Seul le propriétaire de l’équipe peut voir les instances liées de l’organisation."
 generic = "Impossible de charger les instances liées de l’équipe. Réessayez dans un instant."
 title = "Impossible de charger les instances liées"
 
-[portal.accountLink.state]
+[processor.accountLink.state]
 free = "Plan Editor"
 subscribed = "Plan Processor"
 unlinked = "Non lié"
 
-[portal.assistant]
+[processor.assistant]
 close = "Fermer l’assistant"
 error = "Impossible de joindre l’assistant."
 errorWithDetail = "Impossible de joindre l’assistant : {{detail}}"
@@ -6559,33 +6562,33 @@ title = "Assistant"
 tryAsking = "Essayez de demander"
 typing = "Saisie en cours"
 
-[portal.auth]
+[processor.auth]
 loading = "Chargement"
 redirectingToEditor = "Redirection vers l’éditeur..."
 
-[portal.billing.activation]
+[processor.billing.activation]
 maybeLater = "Peut-être plus tard"
 title = "Activer le Processor"
 
-[portal.billing.activation.payg]
+[processor.billing.activation.payg]
 sub = "Définissez une limite mensuelle. Payez ce que vous exécutez."
 title = "Paiement à l’usage"
 
-[portal.billing.activation.prepay]
+[processor.billing.activation.prepay]
 badge = "2 mois gratuits"
 sub = "Une seule facture, par carte ou virement bancaire."
 title = "Prépayez une année"
 
-[portal.billing.checkout]
+[processor.billing.checkout]
 noClientSecret = "La fonction Edge n’a renvoyé aucun client_secret."
 title = "Activer le plan Processor"
 
-[portal.billing.checkout.activationSlow]
+[processor.billing.checkout.activationSlow]
 body = "Votre paiement a réussi, mais l’activation prend un peu plus de temps que d’habitude. Elle s’activera automatiquement : fermez ceci et elle apparaîtra ici sous peu."
 close = "Fermer"
 title = "Presque terminé"
 
-[portal.billing.checkout.cap]
+[processor.billing.checkout.cap]
 amountAria = "Limite de dépenses mensuelle"
 back = "Retour"
 continue = "Continuer vers le paiement"
@@ -6596,30 +6599,30 @@ note = "Vous n’êtes jamais facturé au-delà de votre limite. Le traitement e
 perMonth = "/ mois"
 title = "Définissez votre limite de dépenses"
 
-[portal.billing.checkout.card]
+[processor.billing.checkout.card]
 fields = "Numéro de carte · MM / AA · CVC · ZIP"
 label = "Détails de la carte"
 note = "Détails de la carte collectés par Stripe. Stirling ne stocke jamais le PAN ni le CVC."
 
-[portal.billing.checkout.error]
+[processor.billing.checkout.error]
 title = "Impossible de démarrer le paiement"
 
-[portal.billing.checkout.finalizing]
+[processor.billing.checkout.finalizing]
 body = "Votre paiement est passé. Nous activons le traitement mesuré sur vos instances liées ; cela prend généralement quelques secondes."
 hint = "Veuillez garder cette fenêtre ouverte."
 title = "Activation de votre plan Processor..."
 
-[portal.billing.checkout.pay]
+[processor.billing.checkout.pay]
 limit = "Limite de dépenses mensuelle {{amount}}/mois. Le traitement s’interrompt à la limite."
 limitNoCap = "Aucune limite de dépenses. Le traitement ne s’interrompra pas. Les factures sont émises mensuellement."
 
-[portal.billing.enterpriseUpsell]
+[processor.billing.enterpriseUpsell]
 cta = "Créer votre devis Enterprise"
 description = "Remises sur volume engagé, déploiement isolé, MSA personnalisés et examens de sécurité, et partenariats avec des distributeurs tiers."
 eyebrow = "Remise sur volume · 1M+ PDF"
 title = "Stirling Enterprise"
 
-[portal.billing.freeEditors]
+[processor.billing.freeEditors]
 activeThisMonth = "Actifs ce mois-ci"
 cost = "Coût"
 editorsDeployed = "Éditeurs déployés"
@@ -6628,7 +6631,7 @@ pdfsEdited = "PDF modifiés"
 subtitle = "Déployez partout, pour toute votre équipe."
 title = "Éditeurs PDF gratuits"
 
-[portal.billing.freePlan]
+[processor.billing.freePlan]
 checkoutErrorTitle = "Impossible de démarrer le paiement"
 currentPlan = "Plan actuel"
 freeForever = "Gratuit pour toujours"
@@ -6641,7 +6644,7 @@ switchOnProcessor = "Activer Processor →"
 unlimitedUsers = "Utilisateurs illimités"
 viewQuote = "Voir le devis"
 
-[portal.billing.invoices]
+[processor.billing.invoices]
 columnAmount = "Montant"
 columnDate = "Date"
 columnDescription = "Description"
@@ -6665,12 +6668,12 @@ title = "Historique des factures"
 viewAriaLabel = "Voir la facture {{number}} dans Stripe"
 viewLink = "Voir ↗"
 
-[portal.billing.linkPrompt]
+[processor.billing.linkPrompt]
 cta = "Lier le compte Stirling"
 description = "La modification manuelle de PDF — afficher, signer, fusionner, diviser, filigraner, compresser, convertir, OCR manuel — est toujours gratuite, que le compte soit lié ou non. Liez votre compte pour réclamer 500 PDF gratuits de traitement mesuré (automatisation, AI et API) ; lorsque vous aurez besoin de plus, activez le plan Processor et ne payez que ce que vous utilisez."
 title = "Lier votre compte Stirling"
 
-[portal.billing.paymentMethod]
+[processor.billing.paymentMethod]
 billedMonthly = "Facturé mensuellement"
 cardEnding = "{{brand}} se terminant par {{last4}}"
 cardFallback = "Carte"
@@ -6680,7 +6683,7 @@ managedSub = "Votre carte et vos informations de facturation sont conservées en
 managedTitle = "Géré dans Stripe"
 update = "Mettre à jour"
 
-[portal.billing.pdfsProcessed]
+[processor.billing.pdfsProcessed]
 emptyPeriod = "Aucun traitement mesuré pour le moment sur cette période."
 eyebrow = "PDF traités sur cette période"
 legendValue_one = "{{formatted}} PDF"
@@ -6699,14 +6702,14 @@ unit = "PDF mesurés"
 unitsPending_one = "{{units}} unité de compteur en attente de synchronisation depuis les instances liées"
 unitsPending_other = "{{units}} unités de compteur en attente de synchronisation depuis les instances liées"
 
-[portal.billing.prepaid]
+[processor.billing.prepaid]
 capSuffix = "sur {{total}} crédits prépayés"
 expires = "Expire le {{date}}"
 eyebrow = "Capacité prépayée"
 note = "Utilisée avant la facturation à l’usage et en dehors de votre limite de dépenses."
 topUp = "Recharger"
 
-[portal.billing.prepaid.buy]
+[processor.billing.prepaid.buy]
 back = "Retour"
 calcTitle = "Calculez votre paiement annuel"
 cancel = "Annuler"
@@ -6719,7 +6722,7 @@ loadingTitle = "Chargement de votre devis"
 payTitle = "Payez votre année"
 step = "Étape {{current}} sur {{total}}"
 
-[portal.billing.prepaid.calc]
+[processor.billing.prepaid.calc]
 change = "Modifier"
 deployRow = "Déploiement"
 done = "Terminé"
@@ -6738,10 +6741,10 @@ sizingRow = "Dimensionnement"
 sizingValue = "{{label}} · {{desc}}"
 usersLabel = "Utilisateurs au total"
 
-[portal.billing.prepaid.consent]
+[processor.billing.prepaid.consent]
 label = "Je comprends que lorsque ma capacité prépayée est épuisée ou expire après 12 mois, le traitement continue automatiquement au tarif standard de paiement à l’usage (jusqu’à ma limite de dépenses), sauf si j’annule, et que je peux annuler à tout moment depuis le portail de facturation."
 
-[portal.billing.prepaid.deploy]
+[processor.billing.prepaid.deploy]
 cloud = "Stirling Cloud"
 cloudDesc = "Géré par Stirling. Opérationnel en quelques minutes."
 cloudValue = "Stirling Cloud · Géré"
@@ -6749,12 +6752,12 @@ selfhost = "Auto-hébergé"
 selfhostDesc = "Fonctionne sur une infrastructure privée. Même tarif."
 selfhostValue = "Auto-hébergé · Infrastructure privée"
 
-[portal.billing.prepaid.offer]
+[processor.billing.prepaid.offer]
 cta = "Examiner l’offre"
 subtitle = "Prépayez une année de traitement PDF et obtenez deux mois gratuits, utilisés avant la facturation à l’usage, en dehors de votre limite de dépenses."
 title = "Obtenez 12 mois pour le prix de 10"
 
-[portal.billing.prepaid.pay]
+[processor.billing.prepaid.pay]
 accountName = "Nom du titulaire du compte"
 accountNamePlaceholder = "p. ex. Jane Smith"
 companyName = "Nom de l’entreprise (facultatif)"
@@ -6764,7 +6767,7 @@ payOnline = "Payer en ligne"
 poNumber = "Numéro de commande (facultatif)"
 poNumberPlaceholder = "p. ex. PO-2026-0142"
 
-[portal.billing.prepaid.pipelines]
+[processor.billing.prepaid.pipelines]
 advanced = "Avancé"
 advancedDesc = "Les pipelines assurent l’essentiel de votre traitement."
 none = "Aucun"
@@ -6772,7 +6775,7 @@ noneDesc = "Aucun pipeline en cours pour l’instant. Activez-les à tout moment
 standard = "Standard"
 standardDesc = "Quelques pipelines retraitent les PDFs entrants."
 
-[portal.billing.prepaid.posture]
+[processor.billing.prepaid.posture]
 essentials = "Essentiels"
 essentialsDesc = "Classification, par défaut, plus Partage"
 governed = "Gouverné"
@@ -6780,12 +6783,12 @@ governedDesc = "Ajoute Sécurité et Routage"
 regulated = "Réglementé"
 regulatedDesc = "Toutes les catégories, incl. Conformité, Conservation, Ingestion"
 
-[portal.billing.prepaid.review]
+[processor.billing.prepaid.review]
 download = "Télécharger le devis (PDF)"
 downloading = "Préparation…"
 share = "partager pour approbation"
 
-[portal.billing.prepaid.size]
+[processor.billing.prepaid.size]
 compact = "Compact"
 compactDesc = "Fichiers de moins de 25 MB, sans frais de données"
 heavy = "Lourd"
@@ -6793,12 +6796,12 @@ heavyDesc = "Numérisés ou riches en images, régulièrement 50 MB+"
 standard = "Standard"
 standardDesc = "Principalement petits, quelques scans au-delà de 25 MB"
 
-[portal.billing.prepaid.state]
+[processor.billing.prepaid.state]
 exhausted = "Épuisée"
 healthy = "Il en reste beaucoup"
 low = "Bientôt épuisée"
 
-[portal.billing.spendLimit]
+[processor.billing.spendLimit]
 adjustLimit = "Ajuster la limite"
 cancel = "Annuler"
 capControlNote = "Les modifications s’appliquent immédiatement — augmentez ou réduisez le plafond à tout moment."
@@ -6818,12 +6821,12 @@ thisPeriodUncapped = "{{amount}} cette période · sans plafond"
 usedThisMonth = "{{amount}} utilisé ce mois-ci"
 useSuggested = "Utiliser la suggestion · {{amount}} / mois"
 
-[portal.billing.spendLimit.projection]
+[processor.billing.spendLimit.projection]
 body_one = "À {{rate}}/jour, vous atteindrez le plafond dans ~{{count}} jour (~{{monthEnd}} fin de mois). Limite suggérée ~{{suggested}}."
 body_other = "À {{rate}}/jour, vous atteindrez le plafond dans ~{{count}} jours (~{{monthEnd}} fin de mois). Limite suggérée ~{{suggested}}."
 label = "Dépassement prévu."
 
-[portal.billing.spendThisMonth]
+[processor.billing.spendThisMonth]
 eyebrow = "Dépenses ce mois-ci"
 freeRemaining_one = "{{formatted}} PDF gratuit restant"
 freeRemaining_other = "{{formatted}} PDFs gratuits restants"
@@ -6832,17 +6835,17 @@ processed_other = "{{formattedCount}} PDF traités."
 processedWithRate_one = "{{formattedCount}} PDF traité, à {{rate}} chacun."
 processedWithRate_other = "{{formattedCount}} PDF traités, à {{rate}} chacun."
 
-[portal.billing.subscribedPlan.capWarn]
+[processor.billing.subscribedPlan.capWarn]
 approachingBody = "Augmentez-la maintenant pour que le traitement automatisé ne soit jamais interrompu."
 approachingTitle = "Vous êtes à {{pct}}% de votre limite de dépenses mensuelle"
 raiseLimit = "Augmenter la limite"
 reachedBody = "Le traitement mesuré est en pause jusqu’à ce que vous augmentiez la limite ou que le cycle soit réinitialisé. La modification illimitée de PDF continue de fonctionner."
 reachedTitle = "Limite de dépenses mensuelle atteinte"
 
-[portal.billing.subscribedPlan.portalError]
+[processor.billing.subscribedPlan.portalError]
 title = "Impossible d’ouvrir le portail Stripe"
 
-[portal.billing.walletMeter]
+[processor.billing.walletMeter]
 barAria = "Free PDFs remaining"
 capSuffix_one = "sur {{allowance}} PDF gratuits utilisés"
 capSuffix_other = "sur {{allowance}} PDF gratuits utilisés"
@@ -6855,7 +6858,7 @@ title_other = "Traitez {{allowance}} PDF gratuitement"
 titleWithRate_one = "Traitez {{allowance}} PDF gratuitement, puis {{rate}}/PDF"
 titleWithRate_other = "Traitez {{allowance}} PDF gratuitement, puis {{rate}}/PDF"
 
-[portal.components.billingUnit]
+[processor.components.billingUnit]
 approval = "approbation"
 check = "vérification"
 event = "événement"
@@ -6864,11 +6867,11 @@ review = "examen"
 session = "session"
 signature = "signature"
 
-[portal.components.maturity]
+[processor.components.maturity]
 beta = "Beta"
 ga = "GA"
 
-[portal.connections]
+[processor.connections]
 createTitle = "Nouvelle connexion"
 createTitleFor = "Connecter {{name}}"
 delete = "Supprimer"
@@ -6876,369 +6879,369 @@ edit = "Modifier"
 editTitle = "Modifier la connexion"
 unsupportedType = "Ce type de connexion ne peut pas être modifié ici."
 
-[portal.connections.categories.advanced]
+[processor.connections.categories.advanced]
 description = "Pour un service que nous ne prenons pas encore en charge."
 label = "Avancé"
 
-[portal.connections.categories.audit]
+[processor.connections.categories.audit]
 description = "Enregistrez ce qui est arrivé à un document, là où vos auditeurs consultent déjà."
 label = "Journalisation d’audit et de conformité"
 
-[portal.connections.categories.notify]
+[processor.connections.categories.notify]
 description = "Informer un autre système qu’un événement s’est produit."
 label = "Notification et workflow"
 
-[portal.connections.categories.security]
+[processor.connections.categories.security]
 description = "Analyser ou étiqueter un document avant qu’il ne poursuive son chemin."
 label = "Sécurité et classification"
 
-[portal.connections.categories.signing]
+[processor.connections.categories.signing]
 description = "Envoyer un document pour signature ou notarisation."
 label = "Signature électronique et notarisation"
 
-[portal.connections.categories.storage]
+[processor.connections.categories.storage]
 description = "Où les documents traités aboutissent - un bucket, un drive, un ticket ou une page."
 label = "Fichier et pièce jointe"
 
-[portal.connections.commonFields.accessToken]
+[processor.connections.commonFields.accessToken]
 helperText = "Stirling stocke ceci chiffré et ne l’affiche plus jamais."
 label = "Token d’accès"
 
-[portal.connections.commonFields.apiKey]
+[processor.connections.commonFields.apiKey]
 label = "Clé API"
 
-[portal.connections.commonFields.apiToken]
+[processor.connections.commonFields.apiToken]
 label = "Token API"
 
-[portal.connections.commonFields.baseUrl]
+[processor.connections.commonFields.baseUrl]
 helperText = "Les étapes utilisant cette connexion ne peuvent appeler que des chemins sous cette URL, jamais un autre hôte."
 label = "URL du serveur"
 
-[portal.connections.commonFields.email]
+[processor.connections.commonFields.email]
 label = "Email"
 
-[portal.connections.commonFields.host]
+[processor.connections.commonFields.host]
 label = "Hôte"
 
-[portal.connections.commonFields.password]
+[processor.connections.commonFields.password]
 label = "Mot de passe"
 
-[portal.connections.commonFields.port]
+[processor.connections.commonFields.port]
 label = "Port"
 
-[portal.connections.commonFields.username]
+[processor.connections.commonFields.username]
 label = "Nom d’utilisateur"
 
-[portal.connections.commonFields.webhookUrl]
+[processor.connections.commonFields.webhookUrl]
 helperText = "Collez l’URL fournie par le service. Seuls les chemins sous celle-ci peuvent être appelés."
 label = "URL Webhook"
 
-[portal.connections.fields]
+[processor.connections.fields]
 name = "Nom de la connexion"
 namePlaceholder = "p. ex. Production"
 
-[portal.connections.picker]
+[processor.connections.picker]
 cancel = "Annuler"
 createNew = "Nouvelle connexion..."
 placeholder = "Sélectionner une connexion"
 save = "Enregistrer la connexion"
 
-[portal.connections.picker2]
+[processor.connections.picker2]
 back = "Changer d’intégration"
 heading = "Que voulez-vous connecter ?"
 noResultsBody = "Nous ne le prenons pas encore en charge - dites-nous de quoi il s’agit et nous envisagerons de l’ajouter."
 noResultsTitle = "Aucun résultat ne correspond à \"{{query}}\""
 searchPlaceholder = "Rechercher des intégrations - essayez \"sign\", \"ocr\" ou un nom de produit"
 
-[portal.connections.types.api]
+[processor.connections.types.api]
 description = "Appelez n’importe quelle API HTTP depuis une politique. Vous choisissez l’URL, l’authentification et la charge utile."
 label = "API personnalisée"
 
-[portal.connections.types.api.fields.authType]
+[processor.connections.types.api.fields.authType]
 label = "Authentification"
 
-[portal.connections.types.api.fields.authType.options.basic]
+[processor.connections.types.api.fields.authType.options.basic]
 label = "Nom d’utilisateur et mot de passe"
 
-[portal.connections.types.api.fields.authType.options.bearer]
+[processor.connections.types.api.fields.authType.options.bearer]
 label = "Token Bearer"
 
-[portal.connections.types.api.fields.authType.options.header]
+[processor.connections.types.api.fields.authType.options.header]
 label = "Token dans un en-tête personnalisé"
 
-[portal.connections.types.api.fields.authType.options.none]
+[processor.connections.types.api.fields.authType.options.none]
 label = "Aucune"
 
-[portal.connections.types.api.fields.authType.options.tokenLogin]
+[processor.connections.types.api.fields.authType.options.tokenLogin]
 label = "Se connecter pour obtenir un token"
 
-[portal.connections.types.api.fields.baseUrl]
+[processor.connections.types.api.fields.baseUrl]
 helperText = "Les étapes utilisant cette connexion ne peuvent appeler que des chemins sous cette URL, jamais un autre hôte."
 label = "URL de base"
 placeholder = "https://api.example.com/v1"
 
-[portal.connections.types.api.fields.headerName]
+[processor.connections.types.api.fields.headerName]
 label = "Nom de l’en-tête"
 placeholder = "X-API-Key"
 
-[portal.connections.types.api.fields.loginPath]
+[processor.connections.types.api.fields.loginPath]
 label = "Chemin de connexion"
 placeholder = "/auth/login"
 
-[portal.connections.types.api.fields.password]
+[processor.connections.types.api.fields.password]
 label = "Mot de passe"
 
-[portal.connections.types.api.fields.resultUrlHosts]
+[processor.connections.types.api.fields.resultUrlHosts]
 helperText = "Si l’API répond avec un lien de téléchargement, seuls ces hôtes peuvent être récupérés. Séparez-les par des virgules. Laissez vide pour autoriser uniquement l’hôte propre à l’URL de base."
 label = "Hôtes de résultat autorisés"
 
-[portal.connections.types.api.fields.token]
+[processor.connections.types.api.fields.token]
 label = "Token"
 
-[portal.connections.types.api.fields.tokenHeaderName]
+[processor.connections.types.api.fields.tokenHeaderName]
 label = "Envoyer le token avec cet en-tête"
 
-[portal.connections.types.api.fields.tokenResponseHeader]
+[processor.connections.types.api.fields.tokenResponseHeader]
 helperText = "L’en-tête de réponse dans lequel l’appel de connexion renvoie le token, p. ex. X-Auth-Token."
 label = "En-tête de réponse du token"
 
-[portal.connections.types.api.fields.username]
+[processor.connections.types.api.fields.username]
 label = "Nom d’utilisateur"
 
-[portal.connections.types.clamav]
+[processor.connections.types.clamav]
 baseUrlPlaceholder = "http://clamav-rest:9000"
 description = "Analysez les documents à la recherche de malwares sur un serveur que vous exploitez - rien ne quitte votre réseau."
 label = "ClamAV (auto-hébergé)"
 
-[portal.connections.types.cloudmersive]
+[processor.connections.types.cloudmersive]
 description = "Analyse antivirus et de contenu pour les documents dans une politique."
 label = "Cloudmersive"
 
-[portal.connections.types.cloudmersiveadvanced]
+[processor.connections.types.cloudmersiveadvanced]
 description = "Bloquez les documents contenant des macros, exécutables, scripts ou objets intégrés - pas seulement les malwares connus."
 label = "Analyse avancée Cloudmersive"
 
-[portal.connections.types.confluence]
+[processor.connections.types.confluence]
 baseUrlPlaceholder = "https://your-site.atlassian.net/wiki/api/v2"
 description = "Joindre des documents traités à une page Confluence."
 label = "Confluence"
 
-[portal.connections.types.consigno]
+[processor.connections.types.consigno]
 description = "Envoyez des documents à ConsignO Cloud (Notarius) pour signature électronique et notarisation."
 label = "ConsignO Cloud"
 
-[portal.connections.types.consigno.fields.baseUrl]
+[processor.connections.types.consigno.fields.baseUrl]
 helperText = "Votre environnement ConsignO Cloud, incluant /api/v1."
 label = "URL du serveur"
 placeholder = "https://your-org.consignocloud.com/api/v1"
 
-[portal.connections.types.consigno.fields.clientId]
+[processor.connections.types.consigno.fields.clientId]
 label = "Clé API"
 
-[portal.connections.types.consigno.fields.clientSecret]
+[processor.connections.types.consigno.fields.clientSecret]
 label = "Secret API"
 
-[portal.connections.types.consigno.fields.password]
+[processor.connections.types.consigno.fields.password]
 label = "Mot de passe"
 
-[portal.connections.types.consigno.fields.tenantId]
+[processor.connections.types.consigno.fields.tenantId]
 helperText = "Nécessaire uniquement si votre organisation utilise des tenants."
 label = "Tenant"
 
-[portal.connections.types.consigno.fields.username]
+[processor.connections.types.consigno.fields.username]
 label = "Nom d’utilisateur"
 
-[portal.connections.types.discord]
+[processor.connections.types.discord]
 baseUrlPlaceholder = "https://discord.com/api/webhooks/..."
 description = "Publier un message sur Discord lorsqu’une politique traite un document."
 label = "Discord"
 
-[portal.connections.types.elastic]
+[processor.connections.types.elastic]
 baseUrlPlaceholder = "https://your-cluster:9200"
 description = "Indexer un événement d’audit dans Elasticsearch chaque fois qu’une politique traite un document."
 label = "Elasticsearch"
 
-[portal.connections.types.ftp]
+[processor.connections.types.ftp]
 description = "Interroger un serveur FTP ou FTPS pour récupérer de nouveaux documents."
 hostPlaceholder = "ftp.example.com"
 label = "FTP / FTPS"
 
-[portal.connections.types.ftp.fields.passive]
+[processor.connections.types.ftp.fields.passive]
 label = "Mode de connexion"
 
-[portal.connections.types.ftp.fields.passive.options]
+[processor.connections.types.ftp.fields.passive.options]
 active = "Actif"
 passive = "Passif (recommandé)"
 
-[portal.connections.types.ftp.fields.security]
+[processor.connections.types.ftp.fields.security]
 helperText = "Le FTP simple envoie les identifiants et les fichiers sans chiffrement ; choisissez FTPS si le serveur le prend en charge."
 label = "Chiffrement"
 
-[portal.connections.types.ftp.fields.security.options]
+[processor.connections.types.ftp.fields.security.options]
 explicit = "FTPS (explicite / AUTH TLS)"
 implicit = "FTPS (implicite)"
 none = "Aucun (FTP simple)"
 
-[portal.connections.types.googlechat]
+[processor.connections.types.googlechat]
 baseUrlPlaceholder = "https://chat.googleapis.com/v1/spaces/..."
 description = "Publier un message dans un espace Google Chat lorsqu’une politique s’exécute."
 label = "Google Chat"
 
-[portal.connections.types.jira]
+[processor.connections.types.jira]
 baseUrlPlaceholder = "https://your-site.atlassian.net"
 description = "Joindre des documents traités à un ticket Jira."
 label = "Jira"
 
-[portal.connections.types.mailgun]
+[processor.connections.types.mailgun]
 description = "Envoyer un document ou une notification par email lorsqu’une politique s’exécute."
 label = "Mailgun"
 
-[portal.connections.types.n8n]
+[processor.connections.types.n8n]
 baseUrlPlaceholder = "https://your-n8n/webhook/9f2c-..."
 description = "Hand documents to an n8n workflow, and take back whatever it produces."
 label = "n8n"
 
-[portal.connections.types.n8n.fields.authType]
+[processor.connections.types.n8n.fields.authType]
 helperText = "Match the Authentication set on the n8n Webhook node."
 label = "Webhook authentication"
 
-[portal.connections.types.n8n.fields.authType.options.basic]
+[processor.connections.types.n8n.fields.authType.options.basic]
 label = "Basic auth"
 
-[portal.connections.types.n8n.fields.authType.options.header]
+[processor.connections.types.n8n.fields.authType.options.header]
 label = "Header auth"
 
-[portal.connections.types.n8n.fields.authType.options.none]
+[processor.connections.types.n8n.fields.authType.options.none]
 label = "None"
 
-[portal.connections.types.n8n.fields.headerName]
+[processor.connections.types.n8n.fields.headerName]
 helperText = "The header name from the n8n credential, not its value."
 label = "Header name"
 placeholder = "X-N8N-Key"
 
-[portal.connections.types.n8n.fields.token]
+[processor.connections.types.n8n.fields.token]
 label = "Header value"
 
-[portal.connections.types.nextcloud]
+[processor.connections.types.nextcloud]
 baseUrlPlaceholder = "https://your-server/remote.php/dav"
 description = "Classer les documents traités dans Nextcloud."
 label = "Nextcloud"
 
-[portal.connections.types.nextcloud.fields.appPassword]
+[processor.connections.types.nextcloud.fields.appPassword]
 label = "Mot de passe d’application"
 
-[portal.connections.types.presidio]
+[processor.connections.types.presidio]
 baseUrlPlaceholder = "http://presidio-analyzer:3000"
 description = "Détecter les données personnelles dans le texte des documents à l’aide d’un serveur Presidio que vous exploitez."
 label = "Presidio (auto-hébergé)"
 
-[portal.connections.types.purview]
+[processor.connections.types.purview]
 description = "Lire et appliquer des libellés de sensibilité Microsoft Purview sur les PDFs."
 label = "Microsoft Purview"
 
-[portal.connections.types.purview.fields.clientId]
+[processor.connections.types.purview.fields.clientId]
 helperText = "Facultatif. Nécessaire uniquement pour choisir les libellés par nom ; l’étiquetage fonctionne sans cela."
 label = "ID d’application (client)"
 
-[portal.connections.types.purview.fields.clientSecret]
+[processor.connections.types.purview.fields.clientSecret]
 label = "Secret client"
 
-[portal.connections.types.purview.fields.tenantId]
+[processor.connections.types.purview.fields.tenantId]
 helperText = "Apposé sur chaque libellé comme SiteId, afin que les outils compatibles Purview sachent quelle organisation l’a appliqué."
 label = "ID d’annuaire (tenant)"
 placeholder = "cb46c030-1825-4e81-a295-151c039dbf02"
 
-[portal.connections.types.s3]
+[processor.connections.types.s3]
 description = "Un bucket S3 depuis lequel les sources peuvent lire et vers lequel les sorties de pipeline peuvent écrire."
 label = "Stockage S3"
 
-[portal.connections.types.s3.fields.accessKeyId]
+[processor.connections.types.s3.fields.accessKeyId]
 label = "ID de clé d’accès"
 
-[portal.connections.types.s3.fields.bucket]
+[processor.connections.types.s3.fields.bucket]
 label = "Bucket"
 
-[portal.connections.types.s3.fields.endpoint]
+[processor.connections.types.s3.fields.endpoint]
 helperText = "Laissez vide pour AWS. Définissez ceci pour MinIO ou un autre stockage compatible S3."
 label = "Endpoint"
 
-[portal.connections.types.s3.fields.region]
+[processor.connections.types.s3.fields.region]
 label = "Région"
 
-[portal.connections.types.s3.fields.secretAccessKey]
+[processor.connections.types.s3.fields.secretAccessKey]
 label = "Clé d’accès secrète"
 
-[portal.connections.types.sendgrid]
+[processor.connections.types.sendgrid]
 description = "Envoyer un document ou une notification par email lorsqu’une politique s’exécute."
 label = "SendGrid"
 
-[portal.connections.types.sftp]
+[processor.connections.types.sftp]
 description = "Interroger un serveur SFTP (SSH) pour récupérer de nouveaux documents."
 hostPlaceholder = "sftp.example.com"
 label = "SFTP"
 
-[portal.connections.types.sftp.fields.hostKeyFingerprint]
+[processor.connections.types.sftp.fields.hostKeyFingerprint]
 helperText = "Facultatif. L’empreinte SHA-256 de la clé d’hôte du serveur (depuis `ssh-keyscan host | ssh-keygen -lf -`). Lorsqu’elle est définie, seul un serveur présentant cette clé est accepté ; lorsqu’elle est vide, la clé vue à la première connexion est épinglée et les changements ultérieurs sont refusés."
 label = "Empreinte de clé d’hôte"
 placeholder = "SHA256:..."
 
-[portal.connections.types.sftp.fields.passphrase]
+[processor.connections.types.sftp.fields.passphrase]
 label = "Phrase secrète de la clé"
 
-[portal.connections.types.sftp.fields.password]
+[processor.connections.types.sftp.fields.password]
 helperText = "Laissez vide si vous vous authentifiez avec une clé privée à la place."
 
-[portal.connections.types.sftp.fields.privateKey]
+[processor.connections.types.sftp.fields.privateKey]
 helperText = "Facultatif. Collez une clé privée OpenSSH pour vous authentifier avec une clé plutôt qu’un mot de passe."
 label = "Clé privée"
 
-[portal.connections.types.slack]
+[processor.connections.types.slack]
 description = "Publier un message sur Slack lorsqu’une politique traite un document."
 label = "Slack"
 
-[portal.connections.types.smb]
+[processor.connections.types.smb]
 description = "Surveiller un partage réseau SMB / CIFS (Windows ou Samba)."
 hostPlaceholder = "fileserver.example.com"
 label = "SMB / Partage réseau"
 
-[portal.connections.types.smb.fields.domain]
+[processor.connections.types.smb.fields.domain]
 helperText = "Facultatif. Le domaine ou groupe de travail Windows, si votre serveur en utilise un."
 label = "Domaine"
 
-[portal.connections.types.smb.fields.share]
+[processor.connections.types.smb.fields.share]
 label = "Partage"
 placeholder = "documents"
 
-[portal.connections.types.splunk]
+[processor.connections.types.splunk]
 baseUrlPlaceholder = "https://your-splunk:8088"
 description = "Envoyer un événement d’audit à Splunk chaque fois qu’une politique traite un document."
 label = "Splunk"
 
-[portal.connections.types.sumologic]
+[processor.connections.types.sumologic]
 baseUrlPlaceholder = "https://endpoint.collection.sumologic.com/receiver/v1/http/..."
 description = "Envoyer un événement d’audit à un collecteur HTTP Sumo Logic."
 label = "Sumo Logic"
 
-[portal.connections.types.teams]
+[processor.connections.types.teams]
 baseUrlPlaceholder = "https://your-org.webhook.office.com/webhookb2/..."
 description = "Publier un message dans un canal Teams lorsqu’une politique s’exécute."
 label = "Microsoft Teams"
 
-[portal.connections.types.webhook]
+[processor.connections.types.webhook]
 baseUrlPlaceholder = "https://example.com/hooks/documents"
 description = "Publier chaque document, ou seulement les détails, vers une URL de votre choix."
 label = "Webhook"
 
-[portal.connections.types.zapier]
+[processor.connections.types.zapier]
 baseUrlPlaceholder = "https://hooks.zapier.com/hooks/catch/..."
 description = "Déclencher un scénario Zap ou Make depuis une politique."
 label = "Zapier & Make"
 
-[portal.docs]
+[processor.docs]
 browse = "Parcourir les docs"
 viewSource = "Voir la source sur GitHub"
 
-[portal.docs.authentication]
+[processor.docs.authentication]
 codeCaption = "chaque requête"
 eyebrow = "BIEN DÉMARRER"
 lead = "Toutes les requêtes s’authentifient avec un bearer token. Les clés sont limitées par environnement et n’expirent jamais sauf rotation."
@@ -7246,13 +7249,13 @@ liveKey = "Clés de production — facturées, limitées en débit selon votre p
 testKey = "Clés sandbox — gratuites, renvoient des fixtures synthétiques."
 title = "Authentification"
 
-[portal.docs.components]
+[processor.docs.components]
 codeCaption = "intégrer la visionneuse"
 eyebrow = "COMPOSANTS"
 lead = "UI intégrable pour les files d’examen et l’inspection de documents. Apportez vos propres styles ou utilisez le thème fourni."
 title = "Visionneuses prêtes à intégrer"
 
-[portal.docs.endpoints]
+[processor.docs.endpoints]
 eyebrow = "RÉFÉRENCE API"
 fieldCount_one = "{{count}} champ"
 fieldCount_other = "{{count}} champs"
@@ -7261,45 +7264,45 @@ filterAriaLabel = "Filtrer les endpoints par vertical"
 lead = "Chaque type de document est un endpoint typé. POST un fichier, recevez un JSON validé par schéma. Filtrez par vertical ci-dessous."
 title = "Endpoints"
 
-[portal.docs.errors]
+[processor.docs.errors]
 codeCaption = "422 Unprocessable Entity"
 eyebrow = "RÉFÉRENCE API"
 lead = "Les erreurs renvoient un code stable lisible par machine, ainsi qu’un message lisible par humain. Le corps 4xx inclut toujours un request_id pour l’assistance."
 title = "Erreurs"
 
-[portal.docs.nav]
+[processor.docs.nav]
 ariaLabel = "Documentation"
 
-[portal.docs.nav.empty]
+[processor.docs.nav.empty]
 description = "L’index de la documentation n’a pas pu être chargé."
 title = "Docs indisponibles"
 
-[portal.docs.quickstart]
+[processor.docs.quickstart]
 eyebrow = "BIEN DÉMARRER"
 lead = "Envoyez votre premier document à un endpoint typé et récupérez du JSON structuré en trois étapes. Aucun entraînement de modèle, aucune ingénierie de prompt."
 title = "Quickstart"
 
-[portal.docs.quickstart.callout]
+[processor.docs.quickstart.callout]
 bodyAfterLink = "pour des recettes prêtes à copier-coller."
 bodyBeforeLink = "intégrez le même appel dans un pipeline pour chaîner validation, masquage et livraison — ou exposez-le à un agent via MCP. Voir"
 label = "Ensuite :"
 link = "Playbooks"
 
-[portal.docs.quickstart.step1]
+[processor.docs.quickstart.step1]
 body = "Créez une clé limitée depuis l’onglet Infrastructure. Les clés comportent des limites de débit et une allowlist IP facultative. Exportez-la dans votre shell :"
 title = "Émettre une clé API"
 
-[portal.docs.quickstart.step2]
+[processor.docs.quickstart.step2]
 body = "POST un fichier vers n’importe quel endpoint typé. L’endpoint détermine le schéma que vous récupérez — ici, l’extracteur de factures."
 snippetCaption = "extraire une facture"
 title = "Envoyer un document"
 
-[portal.docs.quickstart.step3]
+[processor.docs.quickstart.step3]
 body = "Chaque réponse est validée par rapport au schéma de l’endpoint, avec un score de confiance et une provenance par champ."
 codeCaption = "200 OK"
 title = "Lire le résultat structuré"
 
-[portal.docs.rateLimits]
+[processor.docs.rateLimits]
 burst = "Burst"
 codeCaption = "429 Too Many Requests"
 concurrency = "Concurrence"
@@ -7308,47 +7311,47 @@ lead = "Les limites évoluent avec votre plan. Une réponse 429 inclut un en-tê
 requestsPerMinute = "Requêtes / minute"
 title = "Limites de débit et quotas"
 
-[portal.docs.recipes]
+[processor.docs.recipes]
 cloneButton = "Cloner la recette"
 eyebrow = "PLAYBOOKS"
 lead = "Modèles de bout en bout qui chaînent sources, opérations et destinations. Chacun correspond à un pipeline que vous pouvez cloner."
 title = "Recettes"
 
-[portal.docs.sdks]
+[processor.docs.sdks]
 eyebrow = "SDKS"
 lead = "Clients first-party avec réponses typées, nouvelles tentatives automatiques et importations en streaming. Tous suivent le même catalogue d’endpoints."
 title = "SDK officiels"
 
-[portal.docs.sdks.status]
+[processor.docs.sdks.status]
 beta = "Beta"
 deprecated = "Obsolète"
 
-[portal.docs.skills]
+[processor.docs.skills]
 eyebrow = "COMPÉTENCES"
 lead = "Capacités nommées et groupées que votre agent invoque comme un seul outil. Chaque compétence est une chaîne d’opérations déterministe avec des évaluations associées."
 title = "Compétences d’agent"
 
-[portal.docs.toc]
+[processor.docs.toc]
 title = "Sur cette page"
 
-[portal.docs.webhooks]
+[processor.docs.webhooks]
 codeCaption = "document.processed"
 eyebrow = "RÉFÉRENCE API"
 lead = "Abonnez-vous aux événements document.processed, pipeline.completed et quota.threshold. Les payloads sont signés avec HMAC-SHA256."
 title = "Webhooks"
 
-[portal.docs.webhooks.callout]
+[processor.docs.webhooks.callout]
 afterHelper = "d’aide."
 beforeHelper = "par rapport à votre secret de signature avant de faire confiance à un payload. Les SDK fournissent un utilitaire"
 beforeSignature = "Vérifiez le"
 
-[portal.documents]
+[processor.documents]
 exportCsv = "Exporter CSV"
 search = "Rechercher par nom de fichier, ID..."
 subtitle = "Chaque document traité par votre organisation, avec son enregistrement de traitement complet. L’accès au contenu est soumis à demande."
 title = "Documents"
 
-[portal.documents.audit]
+[processor.documents.audit]
 approved = "Approuvé"
 archived = "Archivé"
 elevation = "Élévation"
@@ -7358,44 +7361,44 @@ flagged = "Nécessite une vérification"
 ingested = "Ingéré"
 reviewed = "En vérification"
 
-[portal.documents.drawer]
+[processor.documents.drawer]
 sectionsAriaLabel = "Sections de détail du document"
 
-[portal.documents.drawer.tabs]
+[processor.documents.drawer.tabs]
 audit = "Audit"
 extractions = "Extractions"
 overview = "Aperçu"
 
-[portal.documents.elevation]
+[processor.documents.elevation]
 requestAccess = "Demander l’accès"
 
-[portal.documents.elevation.active]
+[processor.documents.elevation.active]
 description = "Accès temporaire — l’accès est journalisé et limité dans le temps."
 descriptionFourEyes = "Accès temporaire — un réviseur pair a été notifié (quatre yeux)."
 title = "L’accès expire dans {{time}}"
 
-[portal.documents.elevation.gated]
+[processor.documents.elevation.gated]
 description = "Le contenu est protégé par un accès permanent nul. La demande démarre un accès limité dans le temps."
 descriptionFourEyes = "Le contenu est protégé par un accès permanent nul. La demande démarre un accès limité dans le temps et notifie un réviseur pair (quatre yeux)."
 title = "Document sensible"
 
-[portal.documents.extractions]
+[processor.documents.extractions]
 empty = "Aucun champ n’a été extrait de ce document."
 masked = "Les champs extraits sont masqués. Demandez un accès temporaire pour consulter le contenu de ce document."
 
-[portal.documents.extractions.columns]
+[processor.documents.extractions.columns]
 confidence = "Confiance"
 field = "Champ"
 value = "Valeur"
 
-[portal.documents.filters]
+[processor.documents.filters]
 all = "Tous"
 ariaLabel = "Filtrer les documents par statut"
 flagged = "Signalés"
 inReview = "En vérification"
 processed = "Traités"
 
-[portal.documents.overview]
+[processor.documents.overview]
 action = "Pipeline / Action"
 product = "Produit"
 received = "Heure"
@@ -7403,26 +7406,26 @@ status = "Statut"
 type = "Type"
 user = "Utilisateur"
 
-[portal.documents.queue.empty]
+[processor.documents.queue.empty]
 connectSource = "Connecter une source"
 createPipeline = "Créer un pipeline"
 description = "À mesure que les sources alimentent vos pipelines en documents, ils apparaîtront ici pour vérification."
 title = "Aucun document dans la file d’attente"
 
-[portal.documents.status]
+[processor.documents.status]
 error = "Erreur"
 flagged = "Nécessite une vérification"
 inReview = "En vérification"
 processed = "Traité"
 
-[portal.documents.table]
+[processor.documents.table]
 auto = "Auto"
 editorAction = "Éditeur"
 empty = "Aucun document ne correspond à ce filtre."
 rowActions = "Actions de ligne"
 sensitiveLabel = "Sensible"
 
-[portal.documents.table.columns]
+[processor.documents.table.columns]
 action = "Pipeline / Action"
 document = "Document"
 labels = "Labels"
@@ -7431,11 +7434,11 @@ status = "Statut"
 time = "Heure"
 user = "Utilisateur"
 
-[portal.editorAdmin]
+[processor.editorAdmin]
 subtitle = "Déployez Stirling PDF Editor, associez des instances auto-hébergées à votre organisation et gérez le parc en cours d’exécution — cibles, santé, identifiants et activation hors ligne au même endroit."
 title = "Déploiement de l’éditeur"
 
-[portal.editorAdmin.health.columns]
+[processor.editorAdmin.health.columns]
 activeUsers = "Utilisateurs actifs"
 host = "Hôte"
 lastSeen = "Dernière activité"
@@ -7444,11 +7447,11 @@ status = "Statut"
 target = "Target"
 version = "Version"
 
-[portal.editorAdmin.health.empty]
+[processor.editorAdmin.health.empty]
 description = "Déployez une cible et associez-la pour voir ici la santé des instances en direct."
 title = "Aucune instance ne signale"
 
-[portal.editorAdmin.offlineActivation]
+[processor.editorAdmin.offlineActivation]
 enterpriseTag = "Enterprise"
 generateButton = "Générer le bundle hors ligne"
 lockCopy = "L’activation hors ligne et on-prem fait partie d’Enterprise."
@@ -7456,67 +7459,67 @@ subtitle = "Générez un bundle d’activation signé pour une installation hors
 talkToSales = "Contacter l’équipe commerciale"
 title = "Activation air-gapped"
 
-[portal.editorAdmin.offlineActivation.readyBanner]
+[processor.editorAdmin.offlineActivation.readyBanner]
 description = "{{file}} est signé et prêt à être transféré. Il active une instance et expire dans 14 jours."
 title = "Bundle prêt"
 
-[portal.editorAdmin.pairing]
+[processor.editorAdmin.pairing]
 generated = "Généré ✓"
 generateNewCode = "Générer un nouveau code"
 lockCopy = "Le provisionnement IaC fait partie d’Enterprise."
 rotate = "Faire tourner"
 talkToSales = "Contacter l’équipe commerciale"
 
-[portal.editorAdmin.sections.health]
+[processor.editorAdmin.sections.health]
 sub = "Chaque instance d’éditeur qui signale — version, région, statut, dernière activité et utilisateurs actifs."
 title = "Santé des instances"
 
-[portal.editorAdmin.sections.pairing]
+[processor.editorAdmin.sections.pairing]
 sub = "Connectez un éditeur auto-hébergé à cette organisation. Générez un jeton, transmettez un code court ou configurez-le via IaC."
 title = "Association"
 
-[portal.editorAdmin.sections.targets]
+[processor.editorAdmin.sections.targets]
 sub = "Où l’éditeur s’exécute. Copiez un extrait pour lancer une instance auto-hébergée, ou utilisez Managed Cloud sans opérations."
 title = "Cibles de déploiement"
 
-[portal.editorAdmin.serviceToken]
+[processor.editorAdmin.serviceToken]
 currentToken = "Jeton actuel"
 lastRotated = "Dernière rotation"
 rotateButton = "Faire tourner le jeton de service"
 subtitle = "Les instances s’authentifient auprès de l’organisation avec cet identifiant. Faites-le tourner selon un calendrier ou immédiatement après une fuite suspectée."
 title = "Jeton de service"
 
-[portal.editorAdmin.serviceToken.rotatedBanner]
+[processor.editorAdmin.serviceToken.rotatedBanner]
 description = "Un nouveau jeton a été émis. Mettez à jour le STIRLING_SERVICE_TOKEN de chaque instance auto-hébergée dans la fenêtre de grâce de 24 h, sinon elles passeront hors ligne."
 title = "Faire tourner les instances en cours d’exécution"
 
-[portal.editorAdmin.status]
+[processor.editorAdmin.status]
 degraded = "Dégradé"
 healthy = "Sain"
 offline = "Hors ligne"
 pairing = "Association"
 
-[portal.editorAdmin.targets]
+[processor.editorAdmin.targets]
 instanceCount_one = "{{count}} instance"
 instanceCount_other = "{{count}} instances"
 talkToSales = "Contacter l’équipe commerciale"
 upgradePlan = "Mettre à niveau le plan"
 
-[portal.editorAdmin.targets.lock]
+[processor.editorAdmin.targets.lock]
 enterprise = "L’auto-hébergement on-prem et Kubernetes fait partie d’Enterprise."
 paid = "L’auto-hébergement avec Docker et Kubernetes se débloque avec un plan payant."
 
-[portal.editorAdmin.targets.state]
+[processor.editorAdmin.targets.state]
 available = "Disponible"
 locked = "Verrouillé"
 running = "En cours d’exécution"
 
-[portal.errorBoundary]
+[processor.errorBoundary]
 description = "Cette vue a rencontré une erreur inattendue. Réessayez ou choisissez une autre section dans la barre latérale."
 retry = "Réessayer"
 title = "Un problème est survenu sur cette page"
 
-[portal.failures]
+[processor.failures]
 fromSource = "From source {{source}}"
 occurrences = "{{count}} occurrences"
 reportedBy = "Hit by {{actor}}"
@@ -7524,7 +7527,7 @@ runReference = "Run {{runId}}"
 subtitle = "Failures recorded from your policy runs and your team's editors, with the actions you can take."
 title = "Failures"
 
-[portal.failures.action]
+[processor.failures.action]
 acknowledge = "Acknowledge"
 confirm = "Are you sure?"
 dismiss = "Dismiss"
@@ -7532,7 +7535,7 @@ dismissSkipFile = "Skip this file"
 viewFile = "Afficher le fichier"
 viewInProcessor = "Afficher dans le processeur"
 
-[portal.failures.debug]
+[processor.failures.debug]
 copyJson = "Copy JSON"
 dismissAll = "Dismiss all ({{total}})"
 dismissing = "Dismissing..."
@@ -7540,37 +7543,37 @@ hideJson = "Hide raw JSON ({{total}})"
 refresh = "Refresh failures"
 showJson = "Show raw JSON ({{total}})"
 
-[portal.failures.disabled]
+[processor.failures.disabled]
 closed = "This failure is already closed."
 noDocument = "Cet échec n’a pas été enregistré pour un document spécifique, il n’y a donc rien à ouvrir ici."
 unattended = "Ce fichier a été fourni par un dossier, un bucket ou un webhook, aucun navigateur d’utilisateur ne le conserve donc pour l’ouvrir."
 unavailable = "Not available for this failure."
 
-[portal.failures.empty]
+[processor.failures.empty]
 description = "Policy runs that fail will appear here with the actions you can take."
 title = "No failures recorded"
 
-[portal.failures.kind.inputPasswordProtected]
+[processor.failures.kind.inputPasswordProtected]
 description = "The pipeline could not open the document because it is password-protected. Unlock it and run it again, or skip this file."
 title = "Password-protected document"
 
-[portal.failures.kind.unknown]
+[processor.failures.kind.unknown]
 description = "This run failed for a reason Stirling does not yet recognise. The raw message is shown below."
 title = "Unrecognised failure"
 
-[portal.failures.origin]
+[processor.failures.origin]
 pipeline = "Pipeline"
 policy = "Policy"
 tool = "Tool run"
 
-[portal.failures.stage]
+[processor.failures.stage]
 blocked = "Blocked"
 input = "Input"
 internal = "Internal"
 never_ran = "Never ran"
 output = "Output"
 
-[portal.home.download]
+[processor.home.download]
 back = "Retour"
 body = "Téléchargez l’application de bureau ou auto-hébergez le serveur."
 done = "Terminé"
@@ -7580,7 +7583,7 @@ sectionDesktop = "Application de bureau"
 sectionSelfHosted = "Auto-hébergé"
 title = "Installer l’éditeur Stirling PDF"
 
-[portal.home.download.docker]
+[processor.home.download.docker]
 detailBody = "Exécutez l’image officielle sur votre serveur."
 note = "S’ouvre sur :8080. Connexion par défaut : admin / stirling."
 tagline = "Exécuter le serveur dans un conteneur"
@@ -7589,27 +7592,27 @@ variantFat = "Fat"
 variantLite = "Ultra-Lite"
 variantStandard = "Standard"
 
-[portal.home.download.kubernetes]
+[processor.home.download.kubernetes]
 detailBody = "Installez le chart Helm officiel."
 note = "Ajoutez un PVC pour /configs afin de conserver les paramètres."
 tagline = "Déployer sur un cluster avec Helm"
 title = "Kubernetes"
 
-[portal.home.download.linux]
+[processor.home.download.linux]
 detailBody = "Versions natives pour votre distribution."
 guideBtn = "Voir les options d’installation Linux"
 note = "Des versions AppImage, .deb et .rpm sont disponibles pour les distributions courantes."
 tagline = "Application de bureau native pour votre distribution"
 title = "Linux"
 
-[portal.home.download.mac]
+[processor.home.download.mac]
 altLabel = "Ou via Homebrew"
 detailBody = "Exécutez l’installateur ou utilisez Homebrew."
 downloadBtn = "Télécharger pour macOS"
 tagline = "Application native pour Apple silicon et Intel"
 title = "macOS"
 
-[portal.home.download.manual]
+[processor.home.download.manual]
 detailBody = "Exécutez le .jar sur un serveur bare metal."
 downloadBtn = "Télécharger le .jar"
 note = "Nécessite Java 21+. S’ouvre sur :8080 ; identifiant par défaut admin / stirling."
@@ -7617,73 +7620,73 @@ runLabel = "Puis exécutez-le"
 tagline = "Exécutez le .jar sur un serveur bare metal"
 title = "Configuration manuelle du serveur"
 
-[portal.home.download.windows]
+[processor.home.download.windows]
 altLabel = "Ou via winget"
 detailBody = "Exécutez l’installateur ou utilisez un gestionnaire de paquets."
 downloadBtn = "Télécharger l’installateur"
 tagline = "Application native pour Microsoft Windows"
 title = "Windows"
 
-[portal.home.editor]
+[processor.home.editor]
 activeOfDeployed = "{{active}} sur {{total}} actifs ce mois-ci"
 name = "Stirling PDF Editor"
 open = "Ouvrir dans le navigateur"
 updated = "mis à jour {{time}}"
 
-[portal.home.editor.deploy]
+[processor.home.editor.deploy]
 finish = "Terminer le déploiement"
 options = "Voir les options de déploiement"
 start = "Déployer l’éditeur"
 
-[portal.home.editor.target]
+[processor.home.editor.target]
 cloud = "Managed Cloud"
 docker = "Auto-hébergé · Docker"
 kubernetes = "Auto-hébergé · Kubernetes"
 
-[portal.home.greeting]
+[processor.home.greeting]
 afternoon = "Bon après-midi"
 evening = "Bonsoir"
 morning = "Bonjour"
 
-[portal.infrastructure]
+[processor.infrastructure]
 manageEditorDeployment = "Gérer le déploiement de l’éditeur"
 sectionsAriaLabel = "Sections d’infrastructure"
 subtitle = "Déploiements, identifiants, posture de sécurité, stockage et piste d’audit pour votre espace de travail Stirling."
 title = "Infrastructure"
 
-[portal.infrastructure.apiKeys]
+[processor.infrastructure.apiKeys]
 createKey = "Créer une clé"
 heading = "Clés API"
 subheading = "Identifiants délimités avec limites de débit par clé, permissions et listes d’autorisation IP."
 
-[portal.infrastructure.apiKeys.card]
+[processor.infrastructure.apiKeys.card]
 created = "Créée"
 lastUsed = "Dernière utilisation"
 revoke = "Révoquer la clé"
 usageMonth = "Utilisation ce mois-ci"
 usageToday = "Utilisation aujourd’hui"
 
-[portal.infrastructure.apiKeys.empty]
+[processor.infrastructure.apiKeys.empty]
 description = "Créez une clé délimitée pour commencer à appeler l’API Stirling."
 title = "Aucune clé API pour le moment"
 
-[portal.infrastructure.apiKeys.error]
+[processor.infrastructure.apiKeys.error]
 load = "Impossible de charger vos clés API. Veuillez réessayer."
 
-[portal.infrastructure.apiKeys.revoke]
+[processor.infrastructure.apiKeys.revoke]
 body = "Révoquer \"{{name}}\" ? Toute intégration utilisant encore cette clé commencera immédiatement à recevoir des erreurs 401. Cette action est irréversible."
 cancel = "Annuler"
 confirm = "Révoquer la clé"
 title = "Révoquer la clé API"
 
-[portal.infrastructure.audit]
+[processor.infrastructure.audit]
 filterAriaLabel = "Filtrer les événements d’audit par catégorie"
 heading = "Journaux d’audit"
 latencyValue = "{{value}} ms"
 noEventsInCategory = "Aucun événement dans cette catégorie."
 subheading = "Chaque événement d’authentification, de configuration et de traitement dans votre espace de travail."
 
-[portal.infrastructure.audit.columns]
+[processor.infrastructure.audit.columns]
 actor = "Acteur"
 event = "Événement"
 latency = "Latence"
@@ -7691,11 +7694,11 @@ status = "Statut"
 target = "Ressource"
 timestamp = "Horodatage"
 
-[portal.infrastructure.audit.empty]
+[processor.infrastructure.audit.empty]
 description = "L’activité de l’espace de travail apparaîtra ici au fur et à mesure."
 title = "Aucun événement d’audit"
 
-[portal.infrastructure.audit.export]
+[processor.infrastructure.audit.export]
 cancel = "Annuler"
 error = "Échec de l’exportation. Veuillez réessayer."
 exportButton = "Exporter"
@@ -7706,7 +7709,7 @@ open = "Exporter"
 subtitle = "Téléchargez les événements d’audit au format CSV ou JSON. Choisissez les colonnes à inclure."
 title = "Exporter le journal d’audit"
 
-[portal.infrastructure.audit.export.fields]
+[processor.infrastructure.audit.export.fields]
 date = "Date"
 documentName = "Nom du document"
 ipAddress = "Adresse IP"
@@ -7714,7 +7717,7 @@ outcome = "Résultat"
 tool = "Outil"
 username = "Nom d’utilisateur"
 
-[portal.infrastructure.audit.filters]
+[processor.infrastructure.audit.filters]
 all = "Tous"
 auth = "Auth"
 config = "Config"
@@ -7723,17 +7726,17 @@ policy = "Stratégie"
 processing = "Traitement"
 security = "Sécurité"
 
-[portal.infrastructure.audit.forbidden]
+[processor.infrastructure.audit.forbidden]
 description = "Le journal d’audit est disponible pour les responsables d’équipe et les administrateurs. Demandez l’accès à votre responsable d’équipe ou à un administrateur."
 title = "Vous n’avez pas accès"
 
-[portal.infrastructure.audit.metrics]
+[processor.infrastructure.audit.metrics]
 config = "Config"
 policy = "Stratégie"
 processing = "Traitement"
 totalEvents = "Événements totaux · 24 h"
 
-[portal.infrastructure.auditCatLabel]
+[processor.infrastructure.auditCatLabel]
 auth = "Authentification"
 config = "Config"
 elevation = "Élévation"
@@ -7741,13 +7744,13 @@ policy = "Stratégie"
 processing = "Traitement"
 security = "Sécurité"
 
-[portal.infrastructure.auditStatusLabel]
+[processor.infrastructure.auditStatusLabel]
 danger = "Erreur"
 info = "Info"
 success = "Succès"
 warning = "Avertissement"
 
-[portal.infrastructure.createKey]
+[processor.infrastructure.createKey]
 cancel = "Annuler"
 createKey = "Créer une clé"
 done = "Terminé"
@@ -7760,11 +7763,11 @@ subtitleCreated = "Copiez ce secret maintenant — il ne sera plus affiché."
 title = "Créer une clé API"
 titleCreated = "Clé créée"
 
-[portal.infrastructure.keyLabel]
+[processor.infrastructure.keyLabel]
 active = "Active"
 revoked = "Révoquée"
 
-[portal.infrastructure.tabs]
+[processor.infrastructure.tabs]
 apiKeys = "Clés API"
 audit = "Journaux d’audit"
 deployments = "Déploiements"
@@ -7772,7 +7775,7 @@ models = "Modèles"
 security = "Sécurité"
 storage = "Stockage"
 
-[portal.integrations]
+[processor.integrations]
 availableHeading = "Disponible"
 comingSoonHeading = "Bientôt disponible"
 connect = "Connecter"
@@ -7784,7 +7787,7 @@ subtitle = "Tout ce avec quoi Stirling peut communiquer. Les identifiants sont c
 title = "Intégrations"
 typedName = "Nom de {{tool}}"
 
-[portal.integrations.filters]
+[processor.integrations.filters]
 all = "Tous"
 audit = "Audit"
 connected = "Connecté"
@@ -7793,29 +7796,29 @@ security = "Sécurité"
 signing = "Signature"
 storage = "Stockage"
 
-[portal.integrations.noResults]
+[processor.integrations.noResults]
 description = "No integrations match your filters. Try a different category or search."
 title = "No matches"
 
-[portal.integrations.status]
+[processor.integrations.status]
 connected = "Connecté"
 
-[portal.integrations.table]
+[processor.integrations.table]
 integration = "Intégration"
 worksWith = "Fonctionne avec"
 
-[portal.integrations.worksWith]
+[processor.integrations.worksWith]
 pipelines = "Pipelines"
 policies = "Stratégies"
 sources = "Sources"
 
-[portal.legal]
+[processor.legal]
 draft = "{{label}} · brouillon"
 loadError = "Impossible de charger ce document. Veuillez réessayer."
 loading = "Chargement…"
 title = "Document juridique"
 
-[portal.nav]
+[processor.nav]
 agent-builder = "Constructeur d’agents"
 components = "Composants"
 docs = "Docs développeur"
@@ -7831,18 +7834,18 @@ sources = "Sources"
 usage = "Utilisation et facturation"
 users = "Utilisateurs"
 
-[portal.nav.section]
+[processor.nav.section]
 platform = "Plateforme PDF"
 processor = "Processeur PDF"
 
-[portal.pipelines]
+[processor.pipelines]
 subtitle = "Chaque pipeline de documents automatisé sur le backend : une chaîne ordonnée d’opérations sur un ensemble de sources, exécutée sur un déclencheur. Cliquez sur une ligne pour voir ses étapes et sources."
 title = "Pipelines"
 
-[portal.pipelines.actions]
+[processor.pipelines.actions]
 newPipeline = "Nouveau pipeline"
 
-[portal.pipelines.builder]
+[processor.pipelines.builder]
 activate = "Activate"
 back = "Retour aux pipelines"
 cannotFollow = "Impossible d’accepter {{produced}}"
@@ -7874,7 +7877,7 @@ unsavedTitle = "Modifications non enregistrées"
 usesDefaults = "S’exécute avec les paramètres par défaut"
 viewDefinition = "View definition"
 
-[portal.pipelines.builder.blocker]
+[processor.pipelines.builder.blocker]
 destination = "Choose a destination"
 heading = "To create this pipeline:"
 incompatible = "Fix steps that can't run in order: {{tools}}"
@@ -7884,7 +7887,7 @@ schedule = "Set how often it runs"
 setup = "Finish setting up: {{tools}}"
 source = "Choose an input source"
 
-[portal.pipelines.builder.diagnostic]
+[processor.pipelines.builder.diagnostic]
 fan-in = "Combine tous les fichiers de l’étape précédente"
 fan-out = "S’exécute une fois par fichier de l’étape précédente"
 format-mismatch = "Nécessite {{accepts}}, mais l’étape précédente produit {{produced}}"
@@ -7892,7 +7895,7 @@ output-uncertain = "Peut ne pas s’exécuter : la sortie de l’étape précéd
 source-mismatch = "Nécessite {{accepts}}, mais l’entrée de ce pipeline est {{produced}}"
 undeclared-operation = "Impossible de vérifier ce que cette étape accepte"
 
-[portal.pipelines.composer]
+[processor.pipelines.composer]
 addTool = "Ajouter un outil"
 create = "Créer le pipeline"
 createPaused = "Create paused"
@@ -7907,7 +7910,7 @@ scheduleEvery = "Exécuter tous les"
 trigger = "Déclencheur"
 triggerManual = "Manuel uniquement"
 
-[portal.pipelines.composer.runsEvery]
+[processor.pipelines.composer.runsEvery]
 days_one = "Runs every day"
 days_other = "Runs every {{count}} days"
 hours_one = "Runs every hour"
@@ -7915,56 +7918,56 @@ hours_other = "Runs every {{count}} hours"
 minutes_one = "Runs every minute"
 minutes_other = "Runs every {{count}} minutes"
 
-[portal.pipelines.composer.unit]
+[processor.pipelines.composer.unit]
 days = "jours"
 hours = "heures"
 minutes = "minutes"
 
-[portal.pipelines.definition]
+[processor.pipelines.definition]
 subtitle = "The pipeline as it would be saved."
 title = "Definition"
 
-[portal.pipelines.delete]
+[processor.pipelines.delete]
 body = "Supprimer \"{{name}}\" ? Cette action est irréversible."
 cancel = "Annuler"
 confirm = "Supprimer"
 title = "Supprimer le pipeline ?"
 
-[portal.pipelines.detail]
+[processor.pipelines.detail]
 clearHistory = "Effacer l’historique"
 delete = "Supprimer le pipeline"
 run = "Exécuter maintenant"
 
-[portal.pipelines.empty]
+[processor.pipelines.empty]
 action = "Créer un pipeline"
 connectSource = "Connecter une source"
 description = "Créez votre premier pipeline : choisissez les sources sur lesquelles il s’exécute, enchaînez les opérations et choisissez où va la sortie."
 title = "Aucun pipeline pour le moment"
 
-[portal.pipelines.graph]
+[processor.pipelines.graph]
 addFirstTool = "Add a tool"
 dragHint = "Drop on a line to move it"
 insertHere = "Add a tool here"
 removeNode = "Remove {{name}}"
 showError = "Show why {{name}} failed"
 
-[portal.pipelines.graph.add]
+[processor.pipelines.graph.add]
 input = "Add a source"
 output = "Add a destination"
 
-[portal.pipelines.graph.run]
+[processor.pipelines.graph.run]
 done = "Done"
 failed = "Failed"
 running = "Running"
 
-[portal.pipelines.inspector]
+[processor.pipelines.inspector]
 multipleBody = "Drag any of them onto a line to move them together, or press Delete to remove them."
 multipleSelected_one = "{{count}} step selected"
 multipleSelected_other = "{{count}} steps selected"
 noSelectionBody = "Pick a node in the graph to change what it does."
 noSelectionTitle = "Nothing selected"
 
-[portal.pipelines.inspector.status]
+[processor.pipelines.inspector.status]
 completed_one = "Finished the only step"
 completed_other = "Finished all {{count}} steps"
 failed_one = "Failed on the only step"
@@ -7972,12 +7975,12 @@ failed_other = "Failed after {{done}} of {{count}} steps"
 running_one = "Running the only step"
 running_other = "Running step {{done}} of {{count}}"
 
-[portal.pipelines.kpi]
+[processor.pipelines.kpi]
 active = "Actifs"
 paused = "En pause"
 total = "Pipelines"
 
-[portal.pipelines.run]
+[processor.pipelines.run]
 allProcessed_one = "Rien à exécuter : le {{count}} document de la source a déjà été traité."
 allProcessed_other = "Rien à exécuter : les {{count}} documents des sources ont déjà été traités."
 completed_one = "Exécution terminée."
@@ -7990,151 +7993,151 @@ parked_other = "Rien à exécuter : {{count}} documents ont échoué précédemm
 running = "Exécution démarrée ; toujours en cours."
 timeout = "L’exécution prend plus de temps que prévu ; elle peut encore se terminer en arrière-plan."
 
-[portal.pipelines.status]
+[processor.pipelines.status]
 active = "Actif"
 paused = "En pause"
 
-[portal.pipelines.table]
+[processor.pipelines.table]
 name = "Pipeline"
 sources = "Sources"
 status = "Statut"
 steps = "Étapes"
 trigger = "Trigger"
 
-[portal.pipelines.trigger]
+[processor.pipelines.trigger]
 folder-watch = "Surveillance de dossier"
 manual = "Manuel"
 schedule = "Planifié"
 
-[portal.policies]
+[processor.policies]
 defaultName = "Stratégie {{category}}"
 subtitle = "Automatisations permanentes qui appliquent un pipeline d’outils à chaque document. Chaque politique se déclenche lors du téléversement ou de l’exportation, exécute sa chaîne d’outils et enregistre la version appliquée à côté de l’original."
 title = "Politiques"
 
-[portal.policies.card]
+[processor.policies.card]
 comingSoon = "Passer à Enterprise"
 notSetUp = "Non configuré"
 requiresAiEngine = "Nécessite le moteur AI"
 
-[portal.policies.categories.classification]
+[processor.policies.categories.classification]
 desc = "Identifiez le type de chaque document lors du téléversement et marquez ses métadonnées pour le classement et la recherche."
 label = "Classification"
 
-[portal.policies.categories.compliance]
+[processor.policies.categories.compliance]
 desc = "Appliquez les exigences HIPAA, GDPR, SOC 2 ou FedRAMP à chaque document."
 label = "Conformité"
 
-[portal.policies.categories.ingestion]
+[processor.policies.categories.ingestion]
 desc = "Classifiez les documents, extrayez des données structurées, appliquez des conventions de nommage et normalisez les pages."
 label = "Ingestion"
 
-[portal.policies.categories.retention]
+[processor.policies.categories.retention]
 desc = "Définissez la durée de conservation des documents, quand les archiver et quand les supprimer."
 label = "Rétention"
 
-[portal.policies.categories.routing]
+[processor.policies.categories.routing]
 desc = "Acheminez automatiquement les documents vers la bonne équipe, le bon dossier ou le bon système."
 label = "Routage"
 
-[portal.policies.categories.security]
+[processor.policies.categories.security]
 desc = "Détectez les PII, caviardez, supprimez le contenu actif et ajoutez un filigrane aux documents."
 label = "Sécurité"
 
-[portal.policies.config]
+[processor.policies.config]
 scopeAll = "Tous les documents"
 
-[portal.policies.config.classification]
+[processor.policies.config.classification]
 summary = "Classe chaque document téléversé selon les étiquettes de votre équipe et marque ses métadonnées."
 
-[portal.policies.config.classification.rules]
+[processor.policies.config.classification.rules]
 0 = "Classer"
 1 = "Marquer les métadonnées"
 
-[portal.policies.config.compliance]
+[processor.policies.config.compliance]
 summary = "Valide les documents par rapport aux cadres réglementaires avant qu’ils ne quittent le système."
 
-[portal.policies.config.compliance.fields]
+[processor.policies.config.compliance.fields]
 accessLog = "Journal d’accès"
 auditTrail = "Piste d’audit"
 frameworks = "Cadres"
 onViolation = "En cas de non-conformité"
 
-[portal.policies.config.compliance.rules]
+[processor.policies.config.compliance.rules]
 0 = "Analyse du cadre"
 1 = "Appliquer l’action"
 2 = "Piste d’audit"
 
-[portal.policies.config.ingestion]
+[processor.policies.config.ingestion]
 summary = "Classifie les documents, extrait des données structurées, applique le nommage et normalise les pages."
 
-[portal.policies.config.ingestion.fields]
+[processor.policies.config.ingestion.fields]
 belowThreshold = "Sous le seuil"
 minConfidence = "Confiance min."
 
-[portal.policies.config.ingestion.rules]
+[processor.policies.config.ingestion.rules]
 0 = "Classifier"
 1 = "Extraire"
 2 = "Nommer"
 3 = "Normaliser"
 
-[portal.policies.config.purview]
+[processor.policies.config.purview]
 label = "Appliquer une étiquette de sensibilité Microsoft Purview"
 
-[portal.policies.config.purview.fields]
+[processor.policies.config.purview.fields]
 connection = "Tenant Purview"
 labelId = "ID de l’étiquette"
 labelIdHelp = "Le GUID de l’étiquette, depuis le portail Purview. L’application d’une étiquette écrit ses métadonnées sur le PDF ; elle ne peut pas chiffrer, ce qui nécessite le client Microsoft."
 labelName = "Nom de l’étiquette (facultatif)"
 labelNameHelp = "Enregistré avec l’ID afin que les personnes et les outils puissent reconnaître l’étiquette."
 
-[portal.policies.config.purview.fields.method]
+[processor.policies.config.purview.fields.method]
 help = "Purview distingue une étiquette appliquée par une stratégie d’une étiquette choisie par une personne."
 label = "Mode d’enregistrement de l’étiquette"
 privileged = "Comme choisie par une personne"
 standard = "Comme appliquée automatiquement"
 
-[portal.policies.config.purviewRead]
+[processor.policies.config.purviewRead]
 label = "Lire une étiquette Microsoft Purview"
 
-[portal.policies.config.purviewRead.fields]
+[processor.policies.config.purviewRead.fields]
 connection = "Tenant Purview"
 connectionHelp = "Lit l’étiquette que le document porte déjà, afin que les étapes ultérieures puissent agir en conséquence."
 
-[portal.policies.config.retention]
+[processor.policies.config.retention]
 summary = "Applique la durée de conservation des documents, quand les archiver et quand les supprimer."
 
-[portal.policies.config.retention.fields]
+[processor.policies.config.retention.fields]
 archiveAfter = "Archiver après"
 immutableHold = "Conservation immuable"
 keepFor = "Conserver pendant"
 
-[portal.policies.config.retention.rules]
+[processor.policies.config.retention.rules]
 0 = "Blocage de rétention"
 1 = "Archivage automatique"
 2 = "Blocage de suppression"
 
-[portal.policies.config.routing]
+[processor.policies.config.routing]
 summary = "Achemine les documents vers la bonne destination selon le type et la classification."
 
-[portal.policies.config.routing.fields]
+[processor.policies.config.routing.fields]
 destination = "Destination"
 notify = "Notifier lors du routage"
 webhookUrl = "Webhook URL"
 
-[portal.policies.config.routing.rules]
+[processor.policies.config.routing.rules]
 0 = "Classification automatique"
 1 = "Acheminer vers le dossier"
 2 = "Notification webhook"
 
-[portal.policies.config.security]
+[processor.policies.config.security]
 summary = "Détecte et caviarde les PII, supprime le contenu actif (JavaScript) et ajoute un filigrane aux documents."
 
-[portal.policies.config.security.rules]
+[processor.policies.config.security.rules]
 0 = "Caviarder les PII"
 1 = "Supprimer JavaScript"
 2 = "Filigrane"
 
-[portal.policies.detail]
+[processor.policies.detail]
 enforces = "Applique"
 onEveryExport = "À chaque exportation"
 onEveryUpload = "À chaque téléversement"
@@ -8146,7 +8149,7 @@ showLess = "Afficher moins"
 showMore = "Afficher plus"
 sources = "Sources"
 
-[portal.policies.detail.actions]
+[processor.policies.detail.actions]
 clearHistory = "Effacer l’historique des traitements"
 delete = "Supprimer"
 editSettings = "Modifier les paramètres"
@@ -8154,17 +8157,17 @@ pause = "Mettre en pause"
 resume = "Reprendre"
 runNow = "Exécuter maintenant"
 
-[portal.policies.detail.clearHistory]
+[processor.policies.detail.clearHistory]
 body = "Cette politique oubliera chaque fichier qu’elle a déjà traité et retraitera tout ce qui se trouve actuellement dans ses sources lors de la prochaine exécution. Les fichiers eux-mêmes ne sont pas modifiés. Cette action est irréversible."
 cancel = "Annuler"
 confirm = "Effacer l’historique"
 title = "Effacer l’historique des traitements ?"
 
-[portal.policies.detail.emptyActivity]
+[processor.policies.detail.emptyActivity]
 description = "Les documents apparaîtront ici une fois cette politique exécutée."
 title = "Aucune activité pour le moment"
 
-[portal.policies.endpoints]
+[processor.policies.endpoints]
 addWatermark = "Filigrane"
 autoRedact = "Masquer les PII"
 classifyAndLabel = "Classer"
@@ -8173,375 +8176,375 @@ flatten = "Aplatir"
 ocrPdf = "OCR"
 sanitizePdf = "Supprimer JavaScript"
 
-[portal.policies.offline]
+[processor.policies.offline]
 description = "Vos politiques sont enregistrées et apparaîtront une fois la connexion rétablie."
 retry = "Réessayer"
 title = "Backend indisponible"
 
-[portal.policies.operations]
+[processor.policies.operations]
 change = "Changer l’action de cette étape"
 noResults = "Aucune étape ne correspond. Essayez un nom de produit, ou \"scan\", \"notify\", \"attach\"."
 searchPlaceholder = "Rechercher des étapes — essayez \"scan\", \"attach\" ou un nom de produit"
 
-[portal.policies.operations.bodyMode]
+[processor.policies.operations.bodyMode]
 binary = "Octets bruts du fichier"
 json = "Dans une charge utile JSON"
 multipart = "Comme téléversement de fichier (multipart)"
 
-[portal.policies.operations.clamavScan]
+[processor.policies.operations.clamavScan]
 description = "Votre propre serveur ClamAV vérifie le document ; rien ne quitte votre réseau."
 label = "Rechercher des virus (auto-hébergé)"
 
-[portal.policies.operations.cloudmersiveAdvancedScan]
+[processor.policies.operations.cloudmersiveAdvancedScan]
 description = "Rejette les documents contenant des macros, exécutables, scripts ou objets intégrés."
 label = "Bloquer le contenu actif"
 
-[portal.policies.operations.cloudmersiveScan]
+[processor.policies.operations.cloudmersiveScan]
 description = "Cloudmersive vérifie le document et l’exécution s’arrête s’il n’est pas sans menace."
 label = "Rechercher des virus"
 
-[portal.policies.operations.confluenceAttach]
+[processor.policies.operations.confluenceAttach]
 description = "Classe le document traité sur une page."
 label = "Joindre à une page Confluence"
 
-[portal.policies.operations.consignoSubmit]
+[processor.policies.operations.consignoSubmit]
 description = "Soumet le document à ConsignO Cloud pour signature."
 label = "Envoyer pour signature (ConsignO)"
 note = "Soumet le document. La récupération de la copie signée n’est pas encore prise en charge, car une étape ne peut pas transmettre un résultat à une étape ultérieure."
 
-[portal.policies.operations.customApiCall]
+[processor.policies.operations.customApiCall]
 description = "Définissez vous-même l’appel : chemin, méthode, corps et traitement de la réponse."
 label = "Appeler une API personnalisée"
 
-[portal.policies.operations.discordNotify]
+[processor.policies.operations.discordNotify]
 description = "Informe un canal que la stratégie a traité un document."
 label = "Publier un message sur Discord"
 
-[portal.policies.operations.elasticIndex]
+[processor.policies.operations.elasticIndex]
 description = "Enregistre ce que la stratégie a fait sous forme de document consultable."
 label = "Indexer un événement d’audit dans Elasticsearch"
 
-[portal.policies.operations.fields.bodyMode]
+[processor.policies.operations.fields.bodyMode]
 helperText = "Multipart convient aux API de téléversement ; JSON convient aux API qui veulent le fichier dans une charge utile ; binary envoie les octets bruts."
 label = "Comment envoyer le document"
 
-[portal.policies.operations.fields.bodyTemplate]
+[processor.policies.operations.fields.bodyTemplate]
 helperText = "Un corps JSON envoyé tel quel. {{document.base64}} contient le fichier ; {{document.*}} et {{run.*}} sont renseignés pour chaque document."
 label = "Corps JSON"
 
-[portal.policies.operations.fields.connection]
+[processor.policies.operations.fields.connection]
 label = "Compte"
 
-[portal.policies.operations.fields.domain]
+[processor.policies.operations.fields.domain]
 label = "Domaine Mailgun"
 placeholder = "mg.acme.com"
 
-[portal.policies.operations.fields.fileFieldName]
+[processor.policies.operations.fields.fileFieldName]
 helperText = "Le champ de formulaire sous lequel l’API attend le document."
 label = "Nom du champ de fichier"
 placeholder = "file"
 
-[portal.policies.operations.fields.from]
+[processor.policies.operations.fields.from]
 label = "De"
 placeholder = "processor@acme.com"
 
-[portal.policies.operations.fields.headers]
+[processor.policies.operations.fields.headers]
 helperText = "Un objet JSON de paires nom/valeur d’en-tête. L’identifiant de la connexion est ajouté pour vous."
 label = "En-têtes"
 
-[portal.policies.operations.fields.index]
+[processor.policies.operations.fields.index]
 label = "Index"
 placeholder = "stirling-audit"
 
-[portal.policies.operations.fields.issueKey]
+[processor.policies.operations.fields.issueKey]
 label = "Clé du ticket"
 placeholder = "OPS-42"
 
-[portal.policies.operations.fields.message]
+[processor.policies.operations.fields.message]
 helperText = "Envoyé comme corps du message. {{document.*}} et {{run.*}} sont renseignés pour chaque document."
 label = "Message"
 
-[portal.policies.operations.fields.method]
+[processor.policies.operations.fields.method]
 label = "Méthode"
 
-[portal.policies.operations.fields.pageId]
+[processor.policies.operations.fields.pageId]
 label = "ID de page"
 placeholder = "66186"
 
-[portal.policies.operations.fields.path]
+[processor.policies.operations.fields.path]
 helperText = "Ajouté à l’URL de base de la connexion. Il ne peut jamais atteindre un autre hôte."
 label = "Chemin"
 placeholder = "/v1/scan"
 
-[portal.policies.operations.fields.remotePath]
+[processor.policies.operations.fields.remotePath]
 helperText = "Emplacement où l’écrire dans le lecteur. {{document.filename}} est renseigné pour chaque document."
 label = "Chemin de destination"
 placeholder = "Processed/{{document.filename}}"
 
-[portal.policies.operations.fields.responseMode]
+[processor.policies.operations.fields.responseMode]
 helperText = "Rapport laisse le document intact. Remplacer l’échange contre ce qui est renvoyé."
 label = "Que faire de la réponse"
 
-[portal.policies.operations.fields.signerEmail]
+[processor.policies.operations.fields.signerEmail]
 label = "E-mail du signataire"
 placeholder = "signer@acme.com"
 
-[portal.policies.operations.fields.subject]
+[processor.policies.operations.fields.subject]
 label = "Objet"
 placeholder = "Processed: {{document.filename}}"
 
-[portal.policies.operations.fields.text]
+[processor.policies.operations.fields.text]
 helperText = "Presidio analyse ce texte. Utilisez {{document.title}} ou collez le texte que vous souhaitez vérifier."
 label = "Texte à vérifier"
 
-[portal.policies.operations.fields.to]
+[processor.policies.operations.fields.to]
 label = "À"
 placeholder = "records@acme.com"
 
-[portal.policies.operations.fields.username]
+[processor.policies.operations.fields.username]
 label = "Nom d’utilisateur Nextcloud"
 placeholder = "svc-stirling"
 
-[portal.policies.operations.googlechatNotify]
+[processor.policies.operations.googlechatNotify]
 description = "Informe un espace que la stratégie a traité un document."
 label = "Publier un message sur Google Chat"
 
-[portal.policies.operations.jiraAttach]
+[processor.policies.operations.jiraAttach]
 description = "Classe le document traité dans un ticket."
 label = "Joindre à un ticket Jira"
 
-[portal.policies.operations.mailgunEmail]
+[processor.policies.operations.mailgunEmail]
 description = "Envoie le document traité en pièce jointe."
 label = "Envoyer le document par e-mail (Mailgun)"
 
-[portal.policies.operations.n8nGate]
+[processor.policies.operations.n8nGate]
 description = "Your workflow decides whether the run carries on."
 label = "Ask an n8n workflow to approve"
 note = "The workflow must reply with {\"approved\": true}. Anything else — including a timeout — stops the run and parks the document."
 
-[portal.policies.operations.n8nNotify]
+[processor.policies.operations.n8nNotify]
 description = "Sends the run's details, not the document."
 label = "Tell an n8n workflow"
 
-[portal.policies.operations.n8nSend]
+[processor.policies.operations.n8nSend]
 description = "Sends the document and the run's details to your workflow."
 label = "Send the document to n8n"
 
-[portal.policies.operations.n8nTransform]
+[processor.policies.operations.n8nTransform]
 description = "Your workflow processes the document and the file it returns replaces it."
 label = "Process the document in n8n"
 note = "Set the Webhook node to respond \"Using Respond to Webhook Node\", and return a file. On the default \"Immediately\" setting n8n replies with an acknowledgement, and that would replace the document."
 
-[portal.policies.operations.nextcloudUpload]
+[processor.policies.operations.nextcloudUpload]
 description = "Écrit le document traité dans un dossier."
 label = "Téléverser vers Nextcloud"
 
-[portal.policies.operations.presidioAnalyze]
+[processor.policies.operations.presidioAnalyze]
 description = "Votre propre serveur Presidio signale les données personnelles qu’il trouve."
 label = "Détecter les données personnelles"
 note = "Presidio lit du texte, pas des fichiers. Fournissez-lui le texte que vous souhaitez vérifier — le document lui-même n’est pas téléversé."
 
-[portal.policies.operations.responseMode]
+[processor.policies.operations.responseMode]
 replace = "Remplacer le document par la réponse"
 report = "Conserver le document, enregistrer la réponse"
 
-[portal.policies.operations.sendgridEmail]
+[processor.policies.operations.sendgridEmail]
 description = "Envoie le document traité en pièce jointe."
 label = "Envoyer le document par e-mail (SendGrid)"
 
-[portal.policies.operations.slackNotify]
+[processor.policies.operations.slackNotify]
 description = "Informe un canal que la stratégie a traité un document."
 label = "Publier un message sur Slack"
 
-[portal.policies.operations.splunkEvent]
+[processor.policies.operations.splunkEvent]
 description = "Enregistre ce que la stratégie a fait, là où vos auditeurs consultent déjà."
 label = "Envoyer un événement d’audit à Splunk"
 
-[portal.policies.operations.sumologicEvent]
+[processor.policies.operations.sumologicEvent]
 description = "Enregistre ce que la stratégie a fait dans un collecteur HTTP."
 label = "Envoyer un événement d’audit à Sumo Logic"
 
-[portal.policies.operations.teamsNotify]
+[processor.policies.operations.teamsNotify]
 description = "Informe un canal que la stratégie a traité un document."
 label = "Publier un message sur Teams"
 
-[portal.policies.operations.webhookPost]
+[processor.policies.operations.webhookPost]
 description = "Envoie le document lui-même à l’URL de votre choix."
 label = "Publier le document vers un webhook"
 
-[portal.policies.operations.zapierNotify]
+[processor.policies.operations.zapierNotify]
 description = "Transmet les détails de l’exécution à votre automatisation."
 label = "Déclencher un Zap ou un scénario Make"
 
-[portal.policies.stats]
+[processor.policies.stats]
 activeFor = "Actif"
 dataProcessed = "Données traitées"
 docsEnforced = "Docs appliqués"
 
-[portal.policies.status]
+[processor.policies.status]
 active = "Actif"
 paused = "En pause"
 
-[portal.policies.summary.active]
+[processor.policies.summary.active]
 description = "Application lors de l’upload/export"
 label = "Politiques actives"
 
-[portal.policies.summary.categories]
+[processor.policies.summary.categories]
 description = "Disponibles à configurer"
 label = "Catégories"
 
-[portal.policies.summary.docsEnforced]
+[processor.policies.summary.docsEnforced]
 description = "Sur les politiques actives"
 label = "Docs appliqués"
 
-[portal.policies.summary.paused]
+[processor.policies.summary.paused]
 description = "Configurées mais non déclenchées"
 label = "En pause"
 
-[portal.policies.table]
+[processor.policies.table]
 appliesTo = "S’applique à"
 docs = "Docs appliqués"
 enforces = "Applique"
 policy = "Stratégie"
 status = "Statut"
 
-[portal.policies.wizard.actions]
+[processor.policies.wizard.actions]
 back = "Retour"
 cancel = "Annuler"
 continue = "Continuer"
 enablePolicy = "Activer la politique"
 saveChanges = "Enregistrer les modifications"
 
-[portal.policies.wizard.capability.classify]
+[processor.policies.wizard.capability.classify]
 desc = "Identifie le type du document à partir des étiquettes de votre équipe et le marque, afin qu’il soit classé et recherché par catégorie."
 label = "Classer le document"
 
-[portal.policies.wizard.capability.compress]
+[processor.policies.wizard.capability.compress]
 desc = "Compresse le document pour réduire la taille du fichier."
 label = "Réduire la taille du fichier"
 
-[portal.policies.wizard.capability.flatten]
+[processor.policies.wizard.capability.flatten]
 desc = "Fusionne les champs de formulaire et les annotations dans la page afin qu’ils ne puissent pas être modifiés."
 label = "Aplatir le document"
 
-[portal.policies.wizard.capability.ocr]
+[processor.policies.wizard.capability.ocr]
 desc = "Exécute OCR afin que les pages numérisées deviennent du texte sélectionnable et recherchable."
 label = "Rendre le texte recherchable"
 
-[portal.policies.wizard.capability.redact]
+[processor.policies.wizard.capability.redact]
 desc = "Trouve et noircit les informations sensibles — comme les numéros de sécurité sociale et de carte — afin qu’elles ne puissent pas être lues."
 label = "Masquer les informations sensibles"
 
-[portal.policies.wizard.capability.sanitize]
+[processor.policies.wizard.capability.sanitize]
 desc = "Supprime le JavaScript masqué afin que rien ne puisse s’exécuter automatiquement à l’ouverture du document."
 label = "Retirer le contenu actif"
 
-[portal.policies.wizard.capability.timestampPdf]
+[processor.policies.wizard.capability.timestampPdf]
 desc = "Prouve que le document existait sous cette forme exacte à un moment donné, à l’aide d’une autorité d’horodatage indépendante. Seul un hash est envoyé - le document ne quitte jamais votre serveur."
 label = "Ajouter un horodatage de confiance"
 
-[portal.policies.wizard.capability.watermark]
+[processor.policies.wizard.capability.watermark]
 desc = "Appose une marque visible (p. ex. « Confidentiel ») sur chaque page."
 label = "Appliquer un filigrane"
 
-[portal.policies.wizard.classification]
+[processor.policies.wizard.classification]
 description = "Chaque document téléversé est classé selon les étiquettes intégrées et marqué avec les types qui conviennent. L’ensemble d’étiquettes est partagé par toute votre équipe."
 labelsHeading = "Étiquettes de classification"
 
-[portal.policies.wizard.errors]
+[processor.policies.wizard.errors]
 noTools = "Activez d’abord au moins un outil dans le flux de travail."
 saveFailed = "Impossible d’enregistrer la politique. Veuillez réessayer."
 
-[portal.policies.wizard.output]
+[processor.policies.wizard.output]
 heading = "Sortie et exécution"
 
-[portal.policies.wizard.output.filenameRule]
+[processor.policies.wizard.output.filenameRule]
 autoNumber = "Numérotation automatique"
 label = "Règle de nom de fichier"
 placeholder = "Texte à ajouter (facultatif)"
 prefix = "Préfixe"
 suffix = "Suffixe"
 
-[portal.policies.wizard.output.outputAs]
+[processor.policies.wizard.output.outputAs]
 label = "Sortie en tant que"
 newFile = "Nouveau fichier"
 newVersion = "Nouvelle version"
 
-[portal.policies.wizard.output.runOn]
+[processor.policies.wizard.output.runOn]
 export = "Export"
 helper = "Quand la politique se déclenche : lors de l’upload ou avant l’export."
 label = "Exécuter lors de"
 upload = "Upload"
 
-[portal.policies.wizard.settings]
+[processor.policies.wizard.settings]
 heading = "Paramètres"
 
-[portal.policies.wizard.sources]
+[processor.policies.wizard.sources]
 heading = "Sources"
 loading = "Chargement des sources…"
 
-[portal.policies.wizard.tabs]
+[processor.policies.wizard.tabs]
 ariaLabel = "Étapes de configuration"
 settings = "Paramètres"
 workflow = "Actions"
 
-[portal.policies.wizard.title]
+[processor.policies.wizard.title]
 edit = "Modifier la politique {{category}}"
 setUp = "Configurer la politique {{category}}"
 
-[portal.policies.wizard.workflow]
+[processor.policies.wizard.workflow]
 description = "Choisissez ce que cette politique fait à chaque document qu’elle traite."
 
-[portal.policySummary.action]
+[processor.policySummary.action]
 setUp = "Configurer"
 
-[portal.processorFlow]
+[processor.processorFlow]
 footnote = "Les compteurs portent sur les dernières 24 heures. La vitesse du flux est illustrative."
 liveBadge = "En direct"
 stats = "{{connected}} connectés · {{processed}} PDF traités"
 title = "Processeur PDF"
 
-[portal.processorFlow.lens]
+[processor.processorFlow.lens]
 ariaLabel = "Mode d’affichage"
 flow = "Flux"
 sankey = "Sankey"
 
-[portal.processorFlow.outcomes]
+[processor.processorFlow.outcomes]
 count = "{{n}} · 24 h"
 failed = "Échec"
 heading = "Résultats"
 success = "Livrés"
 
-[portal.processorFlow.policies]
+[processor.processorFlow.policies]
 activeCount = "{{n}} actives"
 count = "{{n}} · 24 h"
 heading = "Stratégies"
 setUp = "Configurer"
 soon = "Bientôt"
 
-[portal.processorFlow.sankey]
+[processor.processorFlow.sankey]
 waist = "Stratégies · {{n}} actives"
 
-[portal.processorFlow.sankey.empty]
+[processor.processorFlow.sankey.empty]
 description = "Connectez une source et activez une stratégie pour voir les documents circuler dans le processeur."
 title = "Aucun flux pour le moment"
 
-[portal.processorFlow.sources]
+[processor.processorFlow.sources]
 comingSoonTag = "Connecter"
 editor = "Éditeur Stirling PDF"
 heading = "Sources"
 perDay = "{{n}} / 24 h"
 
-[portal.processorFlow.sources.comingSoon]
+[processor.processorFlow.sources.comingSoon]
 apiMcp = "API · MCP"
 cloud = "Drive · Box · S3"
 email = "Réception des e-mails"
 
-[portal.procurement]
+[processor.procurement]
 subtitle = "Faites évaluer, contractualiser et intégrer votre équipe. Chaque document au même endroit."
 title = "Achats"
 
-[portal.procurement.agreement]
+[processor.procurement.agreement]
 agreeCta = "Accepter et s’abonner"
 confidential = "Confidentiel"
 confirm = "J’ai lu et j’accepte le Stirling Enterprise Agreement."
@@ -8563,7 +8566,7 @@ signatoryTitle = "Fonction du signataire"
 signatoryTitlePlaceholder = "p. ex. Directeur juridique"
 signError = "Impossible d’enregistrer votre signature. Veuillez réessayer."
 
-[portal.procurement.builder]
+[processor.procurement.builder]
 addons = "Modules complémentaires"
 addressLine1 = "Adresse ligne 1"
 addressLine1Placeholder = "500 Howard St"
@@ -8643,7 +8646,7 @@ volumePlaceholder = "p. ex. 1 000 000"
 years_one = "{{count}} an"
 years_other = "{{count}} ans"
 
-[portal.procurement.documents]
+[processor.procurement.documents]
 agreement = "Contrat Entreprise"
 agreementSub = "MSA, bon de commande et DPA en une seule signature."
 download = "Télécharger"
@@ -8663,10 +8666,10 @@ subtitle = "Vos documents contractuels, disponibles à tout moment."
 title = "Documents"
 view = "Voir"
 
-[portal.procurement.error]
+[processor.procurement.error]
 title = "Une erreur s’est produite"
 
-[portal.procurement.hero]
+[processor.procurement.hero]
 barAria = "Étape {{current}} sur {{total}}"
 ctaAgreement = "Vérifier et signer le contrat"
 ctaExploring = "Configurer votre essai"
@@ -8689,36 +8692,36 @@ sentencePayment = "bon de commande et paiement"
 sentenceQuote = "examiner et accepter votre devis"
 sentenceTrial = "configurer votre espace d’essai"
 
-[portal.procurement.journey]
+[processor.procurement.journey]
 daysLeft_one = "{{count}} jour restant"
 daysLeft_other = "{{count}} jours restants"
 
-[portal.procurement.journeySteps.agreement]
+[processor.procurement.journeySteps.agreement]
 blurb = "Une seule signature couvre MSA, order form, EULA et DPA."
 gatingAction = "Vérifier et signer votre contrat"
 label = "Contrat"
 
-[portal.procurement.journeySteps.implementation]
+[processor.procurement.journeySteps.implementation]
 blurb = "Provisionnez votre espace de travail et exécutez le plan de mise en production."
 gatingAction = "Provisionnement de votre espace de travail"
 label = "Implémentation"
 
-[portal.procurement.journeySteps.payment]
+[processor.procurement.journeySteps.payment]
 blurb = "Payez par carte, virement bancaire ou sur bon de commande."
 gatingAction = "Confirmer le paiement"
 label = "Paiement"
 
-[portal.procurement.journeySteps.quote]
+[processor.procurement.journeySteps.quote]
 blurb = "Vérifiez la tarification au volume engagé et la durée du contrat."
 gatingAction = "Accepter votre devis"
 label = "Devis"
 
-[portal.procurement.journeySteps.trial]
+[processor.procurement.journeySteps.trial]
 blurb = "Évaluez Stirling avec vos documents et flux de travail."
 gatingAction = "Créer votre devis"
 label = "Essai"
 
-[portal.procurement.license]
+[processor.procurement.license]
 copied = "Copié"
 copy = "Copier la clé"
 downloadError = "Impossible de générer le fichier de licence hors ligne pour le moment — veuillez réessayer dans un instant."
@@ -8729,21 +8732,21 @@ subtitle = "Activez une instance auto-hébergée avec cette clé, ou conservez-l
 title = "Votre clé de licence"
 trialFileHint = "Ceci est votre fichier de licence d’essai. Une fois votre contrat en place, revenez le télécharger à nouveau — contrairement à la clé de licence en ligne, le fichier .lic ne se mettra pas à jour tout seul."
 
-[portal.procurement.link]
+[processor.procurement.link]
 cta = "Lier le compte"
 description = "Les achats s’exécutent sur votre compte Stirling lié : c’est ainsi que nous provisionnons l’essai, tarifons votre devis et lançons la facturation. Liez un compte pour commencer."
 eyebrow = "Enterprise"
 title = "Liez votre compte pour commencer"
 
-[portal.procurement.live]
+[processor.procurement.live]
 description = "Votre abonnement est actif et votre licence est émise. Votre équipe est provisionnée et la facturation a commencé."
 eyebrow = "En ligne"
 title = "Vous êtes en ligne sur Stirling Enterprise"
 
-[portal.procurement.milestone]
+[processor.procurement.milestone]
 downloadError = "Impossible de télécharger le PDF du devis pour le moment — veuillez réessayer dans un instant."
 
-[portal.procurement.payment]
+[processor.procurement.payment]
 description = "Votre devis est accepté et votre licence est déjà active — votre équipe peut commencer immédiatement. Payez la première facture lorsque vous êtes prêt ; vous pouvez la payer ou la télécharger ici, sans email."
 downloadAgreement = "Télécharger le contrat signé"
 downloadInvoice = "Télécharger la facture"
@@ -8751,7 +8754,7 @@ eyebrow = "Paiement"
 title = "Abonnement créé"
 viewInvoice = "Voir et payer la facture"
 
-[portal.procurement.review]
+[processor.procurement.review]
 acceptCta = "Accepter le devis"
 annual = "Frais annuels (année 1)"
 downloadCta = "Télécharger le devis"
@@ -8760,14 +8763,14 @@ renewal = "Renouvellement à {{amount}}/an après la durée (+{{pct}} % IPC)"
 tcv = "Durée de {{years}} ans, payée intégralement d’avance : {{tcv}}"
 validUntil = "Valable jusqu’au {{date}}"
 
-[portal.procurement.schedule]
+[processor.procurement.schedule]
 fallback = "Impossible de charger le planificateur."
 fallbackLink = "Ouvrir la planification dans un nouvel onglet"
 loading = "Chargement du planificateur..."
 subtitle = "Votre solutions engineer guidera votre équipe tout au long du déploiement. Choisissez un créneau qui vous convient."
 title = "Planifier un appel"
 
-[portal.procurement.setup]
+[processor.procurement.setup]
 airgap = "Air-gapped"
 airgapSub = "Fermé, sans trafic sortant"
 back = "Retour"
@@ -8797,7 +8800,7 @@ viewEula = "Lire"
 workEmail = "E-mail professionnel"
 workEmailPlaceholder = "you@company.com"
 
-[portal.procurement.trial]
+[processor.procurement.trial]
 body = "La prolongation ajoute 7 jours et informe votre solutions engineer."
 bodyMaxed = "Vous avez utilisé toutes vos prolongations — parlez à votre solutions engineer si vous avez besoin de plus de temps."
 cancel = "Annuler l’essai"
@@ -8806,32 +8809,32 @@ maxed = "Limite atteinte"
 subtitle = "Votre essai gratuit est valable jusqu’au {{date}}. Aucune carte requise."
 title = "Essai Enterprise"
 
-[portal.settings.groups]
+[processor.settings.groups]
 admin = "Admin"
 
-[portal.settings.sections]
+[processor.settings.sections]
 account-link = "Lien du compte"
 
-[portal.shell.sidebar]
+[processor.shell.sidebar]
 appEditor = "Éditeur"
 appProcessor = "Processor"
 linkAccount = "Lier un compte Stirling"
 primaryNav = "Navigation principale"
 switchApp = "Changer d’application"
 
-[portal.shell.topbar]
+[processor.shell.topbar]
 closeNav = "Fermer la navigation"
 openNav = "Ouvrir la navigation"
 search = "Rechercher"
 
-[portal.sources]
+[processor.sources]
 subtitle = "Connexions d’entrée réutilisables qui fournissent des documents à Stirling. Configurez une connexion une fois, puis référencez-la depuis autant de politiques que nécessaire. Cliquez sur une ligne pour voir sa configuration et les politiques qui l’utilisent."
 title = "Sources"
 
-[portal.sources.actions]
+[processor.sources.actions]
 connectSource = "Connecter une source"
 
-[portal.sources.builder]
+[processor.sources.builder]
 advanced = "Avancé"
 back = "Retour aux sources"
 backToSource = "Retour à la configuration de la source"
@@ -8846,167 +8849,167 @@ delete = "Supprimer"
 editTitle = "Modifier la source"
 save = "Enregistrer les modifications"
 
-[portal.sources.builder.folderAccess]
+[processor.sources.builder.folderAccess]
 description = "Les automatisations de dossiers ne peuvent utiliser que les dossiers autorisés par un administrateur. Ajoutez-le dans les paramètres d’accès aux dossiers, puis réessayez."
 openSettings = "Paramètres d’accès aux dossiers"
 title = "Ce dossier n’est pas autorisé"
 
-[portal.sources.delete]
+[processor.sources.delete]
 body = "Supprimer \"{{name}}\" ? Cette action est irréversible. Les politiques qui y font référence devront être mises à jour."
 cancel = "Annuler"
 confirm = "Supprimer"
 title = "Supprimer la source ?"
 
-[portal.sources.kpi]
+[processor.sources.kpi]
 inUse = "En cours d’utilisation"
 total = "Connexions"
 unused = "Inutilisées"
 
-[portal.sources.networkFields.connection]
+[processor.sources.networkFields.connection]
 helperText = "La connexion enregistrée avec l’adresse du serveur et les identifiants. Réutilisée par chaque source qui la référence."
 label = "Connexion"
 
-[portal.sources.networkFields.directory]
+[processor.sources.networkFields.directory]
 helperText = "Dossier du serveur à interroger, relatif au dossier personnel de connexion ou à la racine du partage. Laissez vide pour la racine."
 label = "Dossier"
 placeholder = "incoming/"
 
-[portal.sources.networkFields.mode]
+[processor.sources.networkFields.mode]
 helperText = "Consommer supprime chaque fichier du serveur une fois que chaque stratégie l’a traité."
 label = "Mode de lecture"
 
-[portal.sources.networkFields.mode.options]
+[processor.sources.networkFields.mode.options]
 consume = "Consommer : traiter chaque fichier une seule fois"
 snapshot = "Instantané : relire le dossier à chaque exécution"
 
-[portal.sources.networkFields.recursive]
+[processor.sources.networkFields.recursive]
 helperText = "Incluez les sous-dossiers si vos fichiers sont organisés dans des dossiers imbriqués, ou surveillez uniquement le niveau supérieur."
 label = "Profondeur du dossier"
 
-[portal.sources.networkFields.recursive.options]
+[processor.sources.networkFields.recursive.options]
 all = "Inclure les sous-dossiers"
 top = "Niveau supérieur uniquement"
 
-[portal.sources.status]
+[processor.sources.status]
 active = "Actif"
 disabled = "Désactivé"
 unused = "Inutilisé"
 
-[portal.sources.table]
+[processor.sources.table]
 documents = "Documents"
 source = "Source"
 status = "Statut"
 type = "Type"
 usedBy = "Politiques"
 
-[portal.sources.types.box]
+[processor.sources.types.box]
 description = "Récupérez des documents depuis les dossiers Box que votre équipe partage déjà."
 label = "Box"
 
-[portal.sources.types.dropbox]
+[processor.sources.types.dropbox]
 description = "Récupérez des documents depuis un dossier Dropbox partagé."
 label = "Dropbox"
 
-[portal.sources.types.editor]
+[processor.sources.types.editor]
 description = "Documents que votre équipe a traités dans l’éditeur, à travers les exécutions de stratégies et AI."
 label = "Éditeur"
 noPolicies = "Aucune stratégie exécutée depuis l’éditeur pour le moment."
 
-[portal.sources.types.email]
+[processor.sources.types.email]
 description = "Transformez les pièces jointes envoyées à une boîte dédiée en documents."
 label = "Boîte de réception e-mail"
 
-[portal.sources.types.folder]
+[processor.sources.types.folder]
 description = "Surveille un répertoire sur le serveur pour les nouveaux documents."
 label = "Dossier"
 
-[portal.sources.types.folder.fields.directory]
+[processor.sources.types.folder.fields.directory]
 helperText = "Chemin absolu que Stirling surveille pour trouver les fichiers à traiter."
 label = "Chemin du répertoire"
 placeholder = "/data/incoming"
 
-[portal.sources.types.folder.fields.identity]
+[processor.sources.types.folder.fields.identity]
 helperText = "La vérification du contenu lit chaque fichier modifié ; ainsi, les renommages et les mises à jour d’horodatage qui ne modifient pas le contenu ne sont pas retraités."
 label = "Détection des changements"
 
-[portal.sources.types.folder.fields.identity.options]
+[processor.sources.types.folder.fields.identity.options]
 hash = "Vérification de la taille, de la date et du contenu"
 stat = "Taille et date de modification"
 
-[portal.sources.types.folder.fields.mode]
+[processor.sources.types.folder.fields.mode]
 helperText = "Indique s’il faut laisser le fichier original en place après son traitement. Si le fichier original est laissé en place, il sera retraité la prochaine fois que le pipeline analysera la source."
 label = "Mode de lecture"
 
-[portal.sources.types.folder.fields.mode.options]
+[processor.sources.types.folder.fields.mode.options]
 consume = "Consommer : traiter chaque fichier une fois"
 snapshot = "Instantané : relire le dossier à chaque exécution"
 
-[portal.sources.types.folder.fields.recursive]
+[processor.sources.types.folder.fields.recursive]
 helperText = "Incluez les sous-dossiers si vos fichiers sont organisés dans des dossiers imbriqués, ou surveillez uniquement le niveau supérieur."
 label = "Profondeur du dossier"
 
-[portal.sources.types.folder.fields.recursive.options]
+[processor.sources.types.folder.fields.recursive.options]
 all = "Inclure les sous-dossiers"
 top = "Niveau supérieur uniquement"
 
-[portal.sources.types.ftp]
+[processor.sources.types.ftp]
 description = "Interrogez un dossier de serveur FTP ou FTPS pour détecter de nouveaux documents."
 label = "FTP"
 
-[portal.sources.types.googledrive]
+[processor.sources.types.googledrive]
 description = "Récupérez des documents depuis des dossiers Google Drive partagés."
 label = "Google Drive"
 
-[portal.sources.types.network]
+[processor.sources.types.network]
 description = "Surveillez un partage réseau SMB pour détecter de nouveaux documents."
 label = "Lecteur réseau"
 
-[portal.sources.types.onedrive]
+[processor.sources.types.onedrive]
 description = "Surveillez des dossiers OneDrive pour détecter de nouveaux documents."
 label = "OneDrive"
 
-[portal.sources.types.s3]
+[processor.sources.types.s3]
 description = "Récupérez des documents depuis un bucket Amazon S3 ou compatible S3."
 label = "Amazon S3"
 
-[portal.sources.types.s3.fields.connection]
+[processor.sources.types.s3.fields.connection]
 helperText = "La connexion enregistrée contenant le bucket et les identifiants. Réutilisée par chaque source et sortie de pipeline qui la référence."
 label = "Connexion"
 
-[portal.sources.types.s3.fields.mode]
+[processor.sources.types.s3.fields.mode]
 helperText = "Consommer supprime chaque objet du bucket une fois que chaque stratégie l’a traité."
 label = "Mode de lecture"
 
-[portal.sources.types.s3.fields.mode.options]
+[processor.sources.types.s3.fields.mode.options]
 consume = "Consommer : traiter chaque objet une seule fois"
 snapshot = "Instantané : relire le bucket à chaque exécution"
 
-[portal.sources.types.s3.fields.prefix]
+[processor.sources.types.s3.fields.prefix]
 helperText = "Seuls les objets dont les clés commencent par ce préfixe sont traités."
 label = "Préfixe de clé"
 placeholder = "incoming/"
 
-[portal.sources.types.sftp]
+[processor.sources.types.sftp]
 description = "Interrogez un dossier de dépôt SFTP pour détecter de nouveaux documents."
 label = "SFTP"
 
-[portal.sources.types.sharepoint]
+[processor.sources.types.sharepoint]
 description = "Récupérez des documents depuis des bibliothèques de documents SharePoint."
 label = "SharePoint"
 
-[portal.sources.types.unknown]
+[processor.sources.types.unknown]
 label = "Source"
 
-[portal.sources.types.webhook]
+[processor.sources.types.webhook]
 createNote = "Une URL de livraison et un secret de signature sont générés lorsque vous créez ce webhook. Les expéditeurs envoient les documents en POST à cette URL et les stratégies référencées s’exécutent à l’arrivée."
 description = "Recevez des documents via HTTP POST signé depuis n’importe quel système externe."
 label = "Webhook"
 
-[portal.sources.types.webhook.detail]
+[processor.sources.types.webhook.detail]
 deliveryUrl = "URL de livraison"
 secretNote = "Le secret de signature est affiché une seule fois, lors de la création du webhook. Recréez la source pour le renouveler."
 
-[portal.sources.types.webhook.reveal]
+[processor.sources.types.webhook.reveal]
 copy = "Copier"
 done = "Terminé"
 secret = "Secret de signature"
@@ -9016,78 +9019,75 @@ title = "Webhook créé"
 url = "URL de livraison"
 usage = "Envoyez chaque document en POST comme corps brut de la requête vers l’URL de livraison avec un type de contenu binaire (application/pdf ou application/octet-stream). Les stratégies référencées s’exécutent automatiquement à l’arrivée."
 
-[portal.sources.wizard]
+[processor.sources.wizard]
 name = "Nom"
 namePlaceholder = "p. ex. Réception des demandes"
 type = "Type"
 
-[portal.stepModal]
+[processor.stepModal]
 close = "Fermer"
 
-[portal.usage]
+[processor.usage]
 managePayment = "Gérer le paiement"
 subtitle = "Consommation, factures et gestion du plan pour chaque PDF que Stirling a facturé, dans une seule console."
 title = "Utilisation et facturation"
 
-[portal.usage.error]
+[processor.usage.error]
 loadWallet = "Impossible de charger le wallet"
 openStripePortal = "Impossible d’ouvrir le portail Stripe"
 walletUnavailable = "Wallet indisponible : {{status}} {{statusText}}"
 
-[portal.usage.sessionExpired]
+[processor.usage.sessionExpired]
 action = "Se reconnecter"
 body = "Votre session de compte Stirling a expiré. Reconnectez-vous pour voir la facturation — votre instance reste liée."
 title = "Session expirée"
 
-[portal.users]
+[processor.users]
 title = "Utilisateurs"
 
-[portal.users.roles.admin]
+[processor.users.roles.admin]
 label = "Admin (propriétaire de l’organisation)"
 summary = "Gouvernance complète de l’espace de travail, des paramètres et des membres."
 
-[portal.users.roles.admin.permissions]
+[processor.users.roles.admin.permissions]
 0 = "Gérer les utilisateurs, les équipes et les rôles"
 1 = "Gérer toutes les intégrations, y compris les connexions S3"
 2 = "Accorder ou révoquer l’accès au portail"
 3 = "Tout ce qu’un Team Owner peut faire"
 
-[portal.users.roles.guest]
+[processor.users.roles.guest]
 label = "Invité"
 summary = "Accès limité ou web uniquement ; ne peut pas avoir de configurations personnelles."
 
-[portal.users.roles.guest.permissions]
+[processor.users.roles.guest.permissions]
 0 = "Utilisation web uniquement / démo"
 1 = "Aucune clé API ni intégration"
 2 = "Aucun accès au portail"
 3 = "Lecture seule lorsque partagé"
 
-[portal.users.roles.member]
+[processor.users.roles.member]
 label = "Membre"
 summary = "Utilisateur standard — travaille avec les ressources partagées et ses propres configurations."
 
-[portal.users.roles.member.permissions]
+[processor.users.roles.member.permissions]
 0 = "Utiliser l’éditeur et les intégrations partagées"
 1 = "Créer des configurations API et MCP personnelles"
 2 = "Voir les configurations d’équipe partagées avec lui"
 3 = "Aucune gestion de S3 ni de l’espace de travail"
 
-[portal.users.roles.team_owner]
+[processor.users.roles.team_owner]
 label = "Team owner"
 summary = "Possède une équipe — gère les ressources de ses membres et les configurations partagées."
 
-[portal.users.roles.team_owner.permissions]
+[processor.users.roles.team_owner.permissions]
 0 = "Créer et gérer les connexions S3 de l’équipe"
 1 = "Gérer les configurations d’intégration appartenant à l’équipe"
 2 = "Accès au portail via la politique par défaut"
 3 = "Tout ce qu’un Membre peut faire"
 
-[portal.users.seats]
+[processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · Illimité"
-
-[printFile]
-title = "Imprimer le fichier"
 
 [provider.googledrive]
 name = "Google Drive"

@@ -7,7 +7,7 @@ import { hasLocalFile } from "@app/services/localFilePresence";
 
 /**
  * One polled store for however many bells are mounted. A module store rather than a context because
- * the portal mounts its bell as a sibling of AppProviders, so there is no single tree to provide in.
+ * the processor mounts its bell as a sibling of AppProviders, so there is no single tree to provide in.
  */
 
 // TODO: read state is per-browser. Move it server-side when notifications get their own table.

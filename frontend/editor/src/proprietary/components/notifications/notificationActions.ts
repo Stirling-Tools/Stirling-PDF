@@ -9,9 +9,9 @@ import {
 import { NavigationActionsContext } from "@app/contexts/NavigationContext";
 import { ViewerContext } from "@app/contexts/ViewerContext";
 import {
-  PORTAL_BASENAME,
-  PORTAL_FAILURES_ANCHOR,
-} from "@app/routes/portalBasename";
+  PROCESSOR_BASENAME,
+  PROCESSOR_FAILURES_ANCHOR,
+} from "@app/routes/processorBasename";
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 import { fileStorage } from "@app/services/fileStorage";
 import type { FileId } from "@app/types/file";
@@ -30,13 +30,13 @@ export {
 };
 
 /**
- * The portal mounts as a sibling of `AppProviders`, so in the processor shell none of the workbench
+ * The processor mounts as a sibling of `AppProviders`, so in the processor shell none of the workbench
  * contexts exist above this hook. That is why contexts are read raw and a document is handed over.
  */
 
 const HANDOFF_KEY = "stirling.notifications.pendingSelection";
 
-const FAILURES_DESTINATION = `${PORTAL_BASENAME}/documents#${PORTAL_FAILURES_ANCHOR}`;
+const FAILURES_DESTINATION = `${PROCESSOR_BASENAME}/documents#${PROCESSOR_FAILURES_ANCHOR}`;
 
 /** False when storage refused it: navigating anyway lands the user in an editor with nothing open. */
 function stashSelection(fileId: string): boolean {
@@ -141,7 +141,7 @@ export function useNotificationActions(): ClientActionRegistry {
 
     const viewInProcessor: ClientActionSpec = {
       // Its destination is dev-only until failures get a review screen; the other half of this gate
-      // is in portal/views/Documents, and both lift together.
+      // is in processor/views/Documents, and both lift together.
       available: () => import.meta.env.DEV,
       closesPanel: true,
       run: () => navigate(FAILURES_DESTINATION),

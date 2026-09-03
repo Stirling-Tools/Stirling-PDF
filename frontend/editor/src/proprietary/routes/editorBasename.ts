@@ -4,6 +4,6 @@
  *
  * Navigating here always lands on the editor - no role lookup, no redirect -
  * which is what makes it the escape hatch for processor users who want the
- * editor. Mirrors PORTAL_BASENAME ("/processor").
+ * editor. Mirrors PROCESSOR_BASENAME ("/processor").
  */
 export const EDITOR_BASENAME = "/editor";

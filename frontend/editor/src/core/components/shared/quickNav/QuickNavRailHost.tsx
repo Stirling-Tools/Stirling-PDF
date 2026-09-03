@@ -11,8 +11,8 @@ import {
   takeEditorReturnPath,
 } from "@app/services/workbenchSession";
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
-import { PORTAL_BASENAME } from "@app/routes/portalBasename";
-import { HAS_PORTAL } from "@app/routes/hasPortal";
+import { PROCESSOR_BASENAME } from "@app/routes/processorBasename";
+import { HAS_PROCESSOR } from "@app/routes/hasProcessor";
 
 const SIZE = "1.125rem";
 
@@ -25,13 +25,13 @@ export function QuickNavRailHost() {
 
   const appMounted = Boolean(host?.appMounted);
 
-  const inPortal = pathname.startsWith(PORTAL_BASENAME);
+  const inProcessor = pathname.startsWith(PROCESSOR_BASENAME);
 
   // Only the app knows its own default state.
   const returnHome = () => {
     const reset = host?.actions.current?.goToDefaultState;
     if (reset) reset();
-    else navigate(inPortal ? PORTAL_BASENAME : EDITOR_BASENAME);
+    else navigate(inProcessor ? PROCESSOR_BASENAME : EDITOR_BASENAME);
   };
 
   // Guarded where the app supplies a guard, so leaving mid-edit still prompts.
@@ -60,37 +60,37 @@ export function QuickNavRailHost() {
       id: "processor",
       label: t("quickNav.processor", "Processor"),
       // Two literals, not a computed name: the offline icon bundle scans for `icon="..."`.
-      icon: inPortal ? (
+      icon: inProcessor ? (
         <LocalIcon icon="memory-rounded" width={SIZE} height={SIZE} />
       ) : (
         <LocalIcon icon="memory-outline-rounded" width={SIZE} height={SIZE} />
       ),
-      current: inPortal,
-      disabled: HAS_PORTAL && !inPortal && !host?.portalAccess,
+      current: inProcessor,
+      disabled: HAS_PROCESSOR && !inProcessor && !host?.processorAccess,
       reason:
-        HAS_PORTAL && !inPortal && !host?.portalAccess
+        HAS_PROCESSOR && !inProcessor && !host?.processorAccess
           ? t("quickNav.noProcessorAccess", "Ask an admin for processor access")
           : undefined,
       onClick: () => {
-        if (inPortal) {
+        if (inProcessor) {
           returnHome();
           return;
         }
         saveEditorReturnPath();
-        go(PORTAL_BASENAME);
+        go(PROCESSOR_BASENAME);
       },
     },
     {
       id: "editor",
       label: t("quickNav.editor", "Editor"),
-      icon: inPortal ? (
+      icon: inProcessor ? (
         <LocalIcon icon="edit-outline-rounded" width={SIZE} height={SIZE} />
       ) : (
         <LocalIcon icon="edit-rounded" width={SIZE} height={SIZE} />
       ),
-      current: !inPortal,
+      current: !inProcessor,
       onClick: () => {
-        if (!inPortal) {
+        if (!inProcessor) {
           returnHome();
           return;
         }
@@ -163,14 +163,14 @@ export function QuickNavRailHost() {
 
   return (
     <QuickNavRailContainer
-      groups={HAS_PORTAL ? [apps, within] : [within]}
+      groups={HAS_PROCESSOR ? [apps, within] : [within]}
       onReturnHome={returnHome}
       identity={host?.identity ?? null}
       onOpenSettings={host?.hasSettings ? openSettings : undefined}
       onInvite={
-        // Spelt out: VIEW_PATHS lives in the portal, which core cannot import.
-        HAS_PORTAL && host?.portalAccess
-          ? () => go(`${PORTAL_BASENAME}/users`)
+        // Spelt out: VIEW_PATHS lives in the processor, which core cannot import.
+        HAS_PROCESSOR && host?.processorAccess
+          ? () => go(`${PROCESSOR_BASENAME}/users`)
           : undefined
       }
       onToggleNotifications={() =>

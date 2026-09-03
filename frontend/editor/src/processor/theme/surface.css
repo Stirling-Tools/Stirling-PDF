@@ -1,0 +1,7 @@
+/* The processor's own in-page surface. Same look as SUI's `.sui-surface`, owned here because a
+   `sui-` class belongs to the component that emits it — feature markup doesn't apply one. */
+.processor-surface {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border-subtle);
+  border-radius: var(--radius-nav);
+}

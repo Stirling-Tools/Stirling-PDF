@@ -13,7 +13,7 @@ const CLOUD_SOURCE = "editor/src/cloud/**/*.{js,mjs,jsx,ts,tsx}";
 const aliasOverRelative = {
   regex: "^\\.",
   message:
-    "Use a workspace alias (@app/* for editor, @portal/* for portal) instead of relative imports.",
+    "Use a workspace alias (@app/* for editor, @processor/* for processor) instead of relative imports.",
 };
 const aliasOverSrc = {
   regex: "^src/",
@@ -97,7 +97,7 @@ export default defineConfig({
   },
   ignorePatterns: [
     "dist",
-    "dist-portal",
+    "dist-processor",
     "node_modules",
     "playwright-report",
     "storybook-static",

@@ -66,7 +66,7 @@ function notification(
     ownership: "MINE",
     severity: "ERROR",
     status: "NEW",
-    titleKey: "portal.failures.kind.inputPasswordProtected.title",
+    titleKey: "processor.failures.kind.inputPasswordProtected.title",
     defaultTitle: "Password-protected document",
     detail: "The PDF Document is passworded",
     fileId: "f-1",
@@ -83,7 +83,7 @@ function notification(
 function offer(id: string): NotificationActionOffer {
   return {
     id,
-    labelKey: `portal.failures.action.${id.toLowerCase()}`,
+    labelKey: `processor.failures.action.${id.toLowerCase()}`,
     defaultLabel: id,
     slot: "SECONDARY",
     enabled: true,
@@ -131,7 +131,7 @@ const inEditor = ({ children }: { children: ReactNode }) => (
   </MemoryRouter>
 );
 
-/** The processor shell: the portal mounts above the app's providers, so there is none. */
+/** The processor shell: the processor mounts above the app's providers, so there is none. */
 const inProcessor = ({ children }: { children: ReactNode }) => (
   <MemoryRouter>{children}</MemoryRouter>
 );

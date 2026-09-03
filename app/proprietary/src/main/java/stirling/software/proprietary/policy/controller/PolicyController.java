@@ -509,7 +509,7 @@ public class PolicyController {
             description =
                     "Returns the KPI strip plus one row per policy the caller's team owns, each with"
                             + " its referenced sources resolved to names, its pipeline steps, and a"
-                            + " trigger/output summary. Backs the portal's all-pipelines surface.")
+                            + " trigger/output summary. Backs the processor's all-pipelines surface.")
     public PoliciesOverviewResponse overview() {
         return policyOverviewService.overview();
     }

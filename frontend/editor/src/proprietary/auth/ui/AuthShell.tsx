@@ -8,7 +8,7 @@ export interface AuthShellProps {
 }
 
 /**
- * The login card shell shared by the editor and the portal: a single narrow
+ * The login card shell shared by the editor and the processor: a single narrow
  * card centered on the screen. Purely presentational - callers provide the
  * form (children) and an optional footer.
  */

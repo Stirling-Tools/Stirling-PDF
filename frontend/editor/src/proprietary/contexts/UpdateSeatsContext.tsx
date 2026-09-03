@@ -52,7 +52,7 @@ export const UpdateSeatsProvider: React.FC<UpdateSeatsProviderProps> = ({
   useEffect(() => {
     // CRITICAL FIX: Don't run billing check on auth routes to prevent race conditions
     // during SAML/OAuth callback. This check only matters after successful billing
-    // portal redirects, which never happen on auth routes.
+    // processor redirects, which never happen on auth routes.
     const isAuthRoute =
       location.pathname === "/login" ||
       location.pathname === "/signup" ||
