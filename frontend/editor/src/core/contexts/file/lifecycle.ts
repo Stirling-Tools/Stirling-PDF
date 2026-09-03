@@ -9,8 +9,36 @@ import {
   StirlingFileStub,
   ProcessedFilePage,
 } from "@app/types/fileContext";
+import { cancelDiskConflict } from "@app/services/diskConflictPrompt";
 
 const DEBUG = process.env.NODE_ENV === "development";
+
+// Disk-link fields are stamped long after the record was stored, so updates to
+// them are mirrored into IndexedDB - in memory only, the link dies on reload.
+const DISK_LINK_FIELDS = [
+  "localFilePath",
+  "isDirty",
+  "diskSyncedSize",
+  "diskSyncedModifiedMs",
+  "orphanedFilePath",
+  "diskConflictAt",
+  "diskReloadedAt",
+] as const satisfies readonly (keyof StirlingFileStub)[];
+
+function diskLinkUpdates(
+  updates: Partial<StirlingFileStub>,
+): Partial<StirlingFileStub> | null {
+  const persisted: Partial<StirlingFileStub> = {};
+  let found = false;
+  for (const field of DISK_LINK_FIELDS) {
+    if (field in updates) {
+      // Object.assign-style copy keeps each field's own type.
+      (persisted as Record<string, unknown>)[field] = updates[field];
+      found = true;
+    }
+  }
+  return found ? persisted : null;
+}
 
 /**
  * Resource tracking and cleanup utilities
@@ -42,6 +70,7 @@ export class FileLifecycleManager {
     fileId: FileId,
     stateRef?: React.MutableRefObject<FileContextState>,
   ): void => {
+    cancelDiskConflict(fileId);
     // Use comprehensive cleanup (same as removeFiles)
     this.cleanupAllResourcesForFile(fileId, stateRef);
 
@@ -120,6 +149,9 @@ export class FileLifecycleManager {
     stateRef?: React.MutableRefObject<FileContextState>,
   ): void => {
     fileIds.forEach((fileId) => {
+      // A queued conflict for a file that is gone would name it in a blocking
+      // modal whose Use-disk button then no-ops against the filesRef guard.
+      cancelDiskConflict(fileId);
       // Clean up all resources for this file
       this.cleanupAllResourcesForFile(fileId, stateRef);
     });
@@ -211,6 +243,46 @@ export class FileLifecycleManager {
       type: "UPDATE_FILE_RECORD",
       payload: { id: fileId, updates },
     });
+
+    // Fire-and-forget: the dispatch above is what the UI reads, and a storage
+    // hiccup must not stall it. Worst case the link reverts to its stored value.
+    const linkUpdates = diskLinkUpdates(updates);
+    if (linkUpdates) {
+      void import("@app/services/fileStorage")
+        .then(({ fileStorage }) =>
+          fileStorage.updateFileMetadata(fileId, linkUpdates),
+        )
+        .catch((error) =>
+          console.error(
+            `[Lifecycle] Failed to persist disk link for ${fileId}:`,
+            error,
+          ),
+        );
+    }
+
+    // A save just made disk and app agree, so re-baseline against the file we
+    // wrote. Without this the next open reads it back as an external change.
+    if (updates.isDirty === false && updates.localFilePath) {
+      const path = updates.localFilePath;
+      void import("@app/services/diskFileSync")
+        .then(({ refreshDiskBaselineAfterSave }) =>
+          refreshDiskBaselineAfterSave(fileId, path),
+        )
+        .then((baseline) => {
+          if (baseline) {
+            this.dispatch({
+              type: "UPDATE_FILE_RECORD",
+              payload: { id: fileId, updates: baseline },
+            });
+          }
+        })
+        .catch((error) =>
+          console.error(
+            `[Lifecycle] Failed to re-baseline ${fileId} after save:`,
+            error,
+          ),
+        );
+    }
   };
 
   /**

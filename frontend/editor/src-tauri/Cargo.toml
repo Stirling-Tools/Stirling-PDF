@@ -39,6 +39,7 @@ tauri-plugin-updater = "2"
 tauri-plugin-window-state = "2.2.1"
 keyring = { version = "3.6.1", features = ["apple-native", "windows-native"] }
 tokio = { version = "1.50", features = ["time", "sync"] }
+notify = "8.2"
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "rustls-tls-native-roots"] }
 tiny_http = "0.12"
 url = "2.5"

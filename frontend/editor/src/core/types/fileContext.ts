@@ -50,6 +50,19 @@ export interface StirlingFileStub extends BaseFileMetadata {
   thumbnailUrl?: string; // Generated thumbnail blob URL for visual display
   blobUrl?: string; // File access blob URL for downloads/processing
   localFilePath?: string; // Original local filesystem path (desktop app only)
+  // Size/mtime of the disk file the last time we read it. An external edit moves
+  // one of them, which is how a stale stored copy is spotted without hashing.
+  diskSyncedSize?: number;
+  diskSyncedModifiedMs?: number;
+  // Disk path whose original is deleted, kept so the badge keeps saying "not on
+  // disk" long after the toast has gone.
+  orphanedFilePath?: string;
+  // Epoch ms of an unresolved divergence: disk moved on while we held unsaved
+  // edits, so two real versions exist and the user has not picked one yet.
+  diskConflictAt?: number;
+  // Epoch ms of the last pickup of an external edit, so the user can tell whose
+  // version is on screen instead of having to catch a toast.
+  diskReloadedAt?: number;
   processedFile?: ProcessedFileMetadata; // PDF page data and processing results
   insertAfterPageId?: string; // Page ID after which this file should be inserted
   isPinned?: boolean; // Protected from tool consumption (replace/remove)
@@ -372,6 +385,8 @@ export interface FileContextActions {
     id: FileId,
     updates: Partial<StirlingFileStub>,
   ) => void;
+  /** Re-check open files against their disk originals (desktop file watcher); no-op without a disk link. */
+  resyncFilesFromDisk: (fileIds: FileId[]) => Promise<void>;
   reorderFiles: (orderedFileIds: FileId[]) => void;
   clearAllFiles: () => Promise<void>;
   clearAllData: () => Promise<void>;
