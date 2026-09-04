@@ -493,11 +493,13 @@ test.describe("Page Editor tracks", () => {
       await dismissTourTooltip(page);
       await switchView(page, "Page Editor");
 
-      const lane = page.locator("[data-track-lane]");
       await expect(page.locator("section[aria-label]").first()).toContainText(
         "300 pages",
         { timeout: 60_000 },
       );
+      // A single file opens wrapped; this test is about the single-row window.
+      await page.getByRole("button", { name: "Wrap pages" }).click();
+      const lane = page.locator("[data-track-lane]");
 
       // Mounting all 300 is what made a click cost ~700ms and a drag ~300ms per
       // pointer move, since every tile is a dnd-kit draggable AND droppable.
@@ -526,7 +528,7 @@ test.describe("Page Editor tracks", () => {
     }
   });
 
-  test("wrapping lays pages out in rows without horizontal scroll, still virtualised", async ({
+  test("a single file wraps on entry: rows, no horizontal scroll, still virtualised", async ({
     page,
   }) => {
     // Enough pages that one row overflows and a wrapped one spans many rows, so
@@ -557,27 +559,17 @@ test.describe("Page Editor tracks", () => {
         { timeout: 60_000 },
       );
 
-      // Single row: the lane scrolls horizontally past its own width.
+      // One file, so the editor opens wrapped: no horizontal overflow.
       await expect
         .poll(
-          () => lane.evaluate((el) => el.scrollWidth > el.clientWidth + 1),
+          () => lane.evaluate((el) => el.scrollWidth <= el.clientWidth + 1),
           {
             timeout: 30_000,
           },
         )
         .toBe(true);
 
-      await page.getByRole("button", { name: "Wrap pages" }).click();
-
-      // Wrapped: no horizontal overflow any more.
-      await expect
-        .poll(
-          () => lane.evaluate((el) => el.scrollWidth <= el.clientWidth + 1),
-          { timeout: 30_000 },
-        )
-        .toBe(true);
-
-      // The pages now occupy more than one row (distinct vertical offsets).
+      // The pages occupy more than one row (distinct vertical offsets).
       await expect
         .poll(
           () =>
@@ -597,8 +589,60 @@ test.describe("Page Editor tracks", () => {
       const mounted = await page.locator("[data-page-id]").count();
       expect(mounted).toBeGreaterThan(0);
       expect(mounted).toBeLessThan(200);
+
+      // Toggling off drops back to a single scrolling row.
+      await page.getByRole("button", { name: "Wrap pages" }).click();
+      await expect
+        .poll(
+          () => lane.evaluate((el) => el.scrollWidth > el.clientWidth + 1),
+          {
+            timeout: 30_000,
+          },
+        )
+        .toBe(true);
     } finally {
       fs.rmSync(wrapPdf, { force: true });
+    }
+  });
+
+  test("several files open unwrapped, in scrolling rows", async ({ page }) => {
+    // A long track so a single row overflows; paired with a second file so the
+    // editor sees more than one and leaves wrapping off.
+    const doc = await PDFDocument.create();
+    const font = await doc.embedFont(StandardFonts.Helvetica);
+    for (let i = 1; i <= 60; i++) {
+      doc
+        .addPage([595, 842])
+        .drawText(`page ${i}`, { x: 60, y: 700, size: 28, font });
+    }
+    const longPdf = path.join(os.tmpdir(), `tracks-multi-${process.pid}.pdf`);
+    fs.writeFileSync(longPdf, await doc.save());
+
+    try {
+      await page.setViewportSize({ width: 1280, height: 800 });
+      await page.goto("/editor", {
+        waitUntil: "domcontentloaded",
+        timeout: 120_000,
+      });
+      await uploadFiles(page, [longPdf, SAMPLE_PDF]);
+      await dismissTourTooltip(page);
+      await switchView(page, "Page Editor");
+
+      const longTrack = track(page, path.basename(longPdf));
+      await expect(longTrack).toContainText("60 pages", { timeout: 60_000 });
+
+      // Two files: the long track stays in a single horizontally scrolling row.
+      const lane = longTrack.locator("[data-track-lane]");
+      await expect
+        .poll(
+          () => lane.evaluate((el) => el.scrollWidth > el.clientWidth + 1),
+          {
+            timeout: 30_000,
+          },
+        )
+        .toBe(true);
+    } finally {
+      fs.rmSync(longPdf, { force: true });
     }
   });
 

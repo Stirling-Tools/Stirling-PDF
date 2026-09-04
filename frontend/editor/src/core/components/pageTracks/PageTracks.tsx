@@ -36,7 +36,8 @@ const TRACK_PREFIX = "track:";
 const ZONE_PREFIX = "zone:";
 const HANDLE_PREFIX = "trackhandle:";
 
-const WRAP_STORAGE_KEY = "pageTracks.wrap";
+const isPdfName = (name: string | undefined): boolean =>
+  name?.toLowerCase().endsWith(".pdf") ?? false;
 
 const ZOOM_MIN = 0.5;
 const ZOOM_MAX = 3.0;
@@ -166,25 +167,13 @@ export default function PageTracks() {
   // Off = one horizontally scrolling row per track (virtualised along its
   // lane). On = pages wrap onto as many rows as fit and each track grows as
   // tall as it needs, with the rows virtualised against the outer scroller.
-  // Persisted as a per-viewer view preference.
-  const [wrap, setWrap] = useState<boolean>(() => {
-    try {
-      return localStorage.getItem(WRAP_STORAGE_KEY) === "1";
-    } catch {
-      return false;
-    }
-  });
-  const toggleWrap = useCallback(() => {
-    setWrap((prev) => {
-      const next = !prev;
-      try {
-        localStorage.setItem(WRAP_STORAGE_KEY, next ? "1" : "0");
-      } catch {
-        // A viewer with storage blocked simply doesn't persist the choice.
-      }
-      return next;
-    });
-  }, []);
+  const [wrap, setWrap] = useState<boolean>(
+    () =>
+      fileState.files.ids.filter((id) =>
+        isPdfName(fileState.files.byId[id]?.name),
+      ).length === 1,
+  );
+  const toggleWrap = useCallback(() => setWrap((prev) => !prev), []);
 
   // Scales the page tiles only: the tracks, headers and bar keep their size.
   const [zoom, setZoom] = useState(1);
