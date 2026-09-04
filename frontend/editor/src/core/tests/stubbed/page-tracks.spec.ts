@@ -726,6 +726,38 @@ test.describe("Page Editor tracks", () => {
       .toBeGreaterThan(pillBefore.width + 1);
   });
 
+  test("the page's view button opens a large preview of that page", async ({
+    page,
+  }) => {
+    await openPageEditor(page);
+    const rotated = track(page, "rotated-pages.pdf");
+    const firstTile = rotated.locator("[data-page-id]").first();
+    await expect(firstTile).toBeVisible({ timeout: 30_000 });
+
+    await firstTile.hover();
+    await firstTile.getByRole("button", { name: "View page" }).click();
+
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toBeVisible();
+    await expect(dialog).toContainText("Page 1 of 4");
+    await expect(dialog.locator("img")).toBeVisible({ timeout: 30_000 });
+
+    // Previous is disabled on the first page; Next pages forward.
+    await expect(
+      dialog.getByRole("button", { name: "Previous page" }),
+    ).toBeDisabled();
+    await dialog.getByRole("button", { name: "Next page" }).click();
+    await expect(dialog).toContainText("Page 2 of 4");
+
+    // Viewing must not select the page: the modal portals to the body but is a
+    // React child of the track, so its events must not bubble to the tiles.
+    const anySelected = page.locator('[data-page-id][data-selected="true"]');
+    await expect(anySelected).toHaveCount(0);
+    await page.keyboard.press("Escape");
+    await expect(dialog).toBeHidden();
+    await expect(anySelected).toHaveCount(0);
+  });
+
   test("the eye opens that track's file in the viewer", async ({ page }) => {
     await openPageEditor(page);
     const sample = track(page, "sample.pdf");

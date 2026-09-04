@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import RotateLeftIcon from "@mui/icons-material/RotateLeft";
 import RotateRightIcon from "@mui/icons-material/RotateRight";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlineRounded";
+import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import { Checkbox } from "@app/ui/Checkbox";
 import HoverActionMenu, {
   HoverAction,
@@ -42,6 +43,8 @@ export interface TrackPageTileProps {
     pageId: string,
     modifiers: { shift: boolean },
   ) => void;
+  /** Opens the track's page-view modal starting at this page. */
+  onViewPage: (pageId: string) => void;
   onRotate: (pageIds: string[], delta: number) => void;
   onDelete: (pageIds: string[]) => void;
 }
@@ -58,6 +61,7 @@ function TrackPageTileImpl({
   dropAfterLast,
   thumbnails,
   onSelect,
+  onViewPage,
   onRotate,
   onDelete,
 }: TrackPageTileProps) {
@@ -98,6 +102,15 @@ function TrackPageTileImpl({
   const hoverActions = useMemo<HoverAction[]>(
     () => [
       {
+        id: "view",
+        icon: <VisibilityOutlinedIcon style={{ fontSize: 16 }} />,
+        label: t("pageTracks.viewPage", "View page"),
+        onClick: (event) => {
+          event.stopPropagation();
+          onViewPage(page.id);
+        },
+      },
+      {
         id: "rotate-left",
         icon: <RotateLeftIcon style={{ fontSize: 16 }} />,
         label: t("pageTracks.rotateLeft", "Rotate left"),
@@ -126,7 +139,7 @@ function TrackPageTileImpl({
         },
       },
     ],
-    [t, onRotate, onDelete, page.id],
+    [t, onViewPage, onRotate, onDelete, page.id],
   );
 
   return (
