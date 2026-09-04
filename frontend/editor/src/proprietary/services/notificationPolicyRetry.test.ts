@@ -77,7 +77,7 @@ describe("rerunPolicy", () => {
     expect(getRun("run-1")).toMatchObject({
       runId: "run-1",
       // The category the import step needs, and what the chain continues from.
-      categoryId: "security",
+      policyKey: "security",
       // The document that failed is still the document in the workspace, so the output belongs to it.
       fileId: "f-1",
       fileName: "invoice.pdf",
@@ -223,16 +223,16 @@ describe("rechainPolicyOnDocument rejoining the chain", () => {
     };
   }
 
-  /** A completed run of `categoryId` that turned `fileId` into `outputFileId`. */
+  /** A completed run of `policyKey` that turned `fileId` into `outputFileId`. */
   function completedRun(
     runId: string,
-    categoryId: string,
+    policyKey: string,
     fileId: string,
     outputFileId: string,
   ) {
     recordRunStart({
       runId,
-      categoryId,
+      policyKey,
       fileId,
       fileName: "invoice.pdf",
       fileSize: 1,
@@ -274,7 +274,7 @@ describe("rechainPolicyOnDocument rejoining the chain", () => {
     // Filed under the resumed policy's category, so security still runs on watermark's output.
     expect(runStoredPolicy).toHaveBeenCalledWith("pol-w", [unlocked], "f-1");
     expect(getRun("run-1")).toMatchObject({
-      categoryId: "watermark",
+      policyKey: "watermark",
       fileId: "f-unlocked",
     });
   });

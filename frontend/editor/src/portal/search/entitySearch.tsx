@@ -208,7 +208,7 @@ export function rankPortalPolicyResults(
   entries: CatalogueEntry[],
   trimmed: string,
   t: Translate,
-  openPolicy: (categoryId: string) => void,
+  openPolicy: (policyKey: string) => void,
   limit = ENTITY_GROUP_LIMIT,
 ): SuperSearchResult[] {
   return rankByFuzzy(
@@ -312,9 +312,9 @@ export function buildProcessorEntityGroups(
         entities.policies,
         trimmed,
         t,
-        (categoryId) =>
+        (policyKey) =>
           navigate(
-            `${toPortalPath(VIEW_PATHS.pipelines)}?setup=${encodeURIComponent(categoryId)}`,
+            `${toPortalPath(VIEW_PATHS.pipelines)}?setup=${encodeURIComponent(policyKey)}`,
           ),
         ENTITY_GROUP_LIMIT,
       )

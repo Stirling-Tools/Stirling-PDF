@@ -26,7 +26,7 @@ interface PolicyEnforcingOverlayProps {
   accentVar?: string;
   /** Category of the enforcing policy — picks its shared icon (shield for
    *  security, label for classification, …); generic shield when unknown. */
-  categoryId?: string;
+  policyKey?: string;
 }
 
 /**
@@ -39,7 +39,7 @@ export function PolicyEnforcingOverlay({
   zIndex = 200,
   onDismiss,
   accentVar,
-  categoryId,
+  policyKey,
 }: PolicyEnforcingOverlayProps) {
   const { t } = useTranslation();
   if (!enforcing) return null;
@@ -92,8 +92,8 @@ export function PolicyEnforcingOverlay({
                 : undefined
             }
           >
-            {categoryId ? (
-              policyCategoryIcon(categoryId, { fontSize: 26 })
+            {policyKey ? (
+              policyCategoryIcon(policyKey, { fontSize: 26 })
             ) : (
               <ShieldOutlinedIcon style={{ fontSize: 26 }} />
             )}

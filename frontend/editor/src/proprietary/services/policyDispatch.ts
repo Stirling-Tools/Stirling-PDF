@@ -29,7 +29,7 @@ const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /** Resolve the file's bytes, fire a backend run, and record it. */
 export async function runPolicyOnFile(
-  categoryId: string,
+  policyKey: string,
   backendId: string,
   fileId: FileId,
   fileName: string,
@@ -58,7 +58,7 @@ export async function runPolicyOnFile(
   }
   if (!file) {
     // File genuinely gone (removed before it could run) — mark so we don't loop.
-    markDispatched(categoryId, fileId);
+    markDispatched(policyKey, fileId);
     return;
   }
   // Bounded upload window — see MAX_CONCURRENT_DISPATCHES. Only the POST is
@@ -72,7 +72,7 @@ export async function runPolicyOnFile(
     // recordRunStart marks this (policy, file) dispatched as it records the run.
     recordRunStart({
       runId,
-      categoryId,
+      policyKey,
       fileId,
       fileName,
       fileSize: file.size,
@@ -87,10 +87,10 @@ export async function runPolicyOnFile(
     // the absent run simply won't appear in the activity feed. If the backend did
     // start a run we never recorded, reconcileServerRuns rediscovers it.
     console.debug(
-      `[PolicyAutoRun] Failed to dispatch policy ${categoryId} (${backendId}):`,
+      `[PolicyAutoRun] Failed to dispatch policy ${policyKey} (${backendId}):`,
       err,
     );
-    markDispatched(categoryId, fileId);
+    markDispatched(policyKey, fileId);
   } finally {
     releaseDispatchSlot();
   }
