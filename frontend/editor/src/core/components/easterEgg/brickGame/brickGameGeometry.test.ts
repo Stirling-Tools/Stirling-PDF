@@ -2,10 +2,11 @@ import { describe, expect, it } from "vitest";
 import {
   type Box,
   type Quad,
+  easeOutBack,
   lerpPose,
   logoPose,
   paddlePose,
-} from "@app/components/easterEgg/paperjam/paperjamGeometry";
+} from "@app/components/easterEgg/brickGame/brickGameGeometry";
 
 const spanX = (quad: Quad) => ({
   min: Math.min(...quad.map((p) => p.x)),
@@ -72,6 +73,22 @@ describe("logoPose", () => {
     // The mark is taller than it is wide, so a square box letterboxes sideways.
     expect(spanX(b).max - spanX(a).min).toBeLessThan(box.w);
     expect(spanY(a).max - spanY(a).min).toBeGreaterThan(0);
+  });
+});
+
+describe("easeOutBack", () => {
+  it("pins both ends so the mark starts at the logo and lands on the paddle", () => {
+    expect(easeOutBack(0)).toBeCloseTo(0);
+    expect(easeOutBack(1)).toBeCloseTo(1);
+  });
+
+  it("overshoots, then settles back", () => {
+    const peak = Math.max(
+      ...Array.from({ length: 99 }, (_, i) => easeOutBack((i + 1) / 100)),
+    );
+    expect(peak).toBeGreaterThan(1);
+    // Small enough that the paddle never leaves the playfield on the way past.
+    expect(peak).toBeLessThan(1.12);
   });
 });
 

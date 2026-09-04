@@ -112,8 +112,15 @@ export function lerpPose(from: MarkPose, to: MarkPose, t: number): MarkPose {
   return { a: lerpQuad(from.a, to.a, t), b: lerpQuad(from.b, to.b, t) };
 }
 
-export function easeOutCubic(t: number): number {
-  return 1 - Math.pow(1 - t, 3);
+/**
+ * Overshoots the target slightly and settles back, so the mark arrives with a
+ * weight to it rather than easing politely to a stop. The overshoot is small
+ * enough that the paddle never leaves the playfield on the way past.
+ */
+export function easeOutBack(t: number): number {
+  const overshoot = 1.22;
+  const p = t - 1;
+  return 1 + (overshoot + 1) * p ** 3 + overshoot * p ** 2;
 }
 
 export function clamp(value: number, min: number, max: number): number {

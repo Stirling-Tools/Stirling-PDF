@@ -1,0 +1,206 @@
+/* The game's own little arcade cabinet.
+   The playfield is deliberately dark in both themes so the paper bricks read as
+   paper either way; only the mark itself takes its colour from the brand tokens.
+   Everything the canvas paints is declared here and read back through
+   getComputedStyle, so the palette stays in the stylesheet where it belongs. */
+
+.brick-game-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(0.25rem);
+}
+
+.brick-game-cabinet {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  width: min(100%, 60rem);
+  /* Read by the canvas renderer, not used by any rule below. */
+  --brick-game-field: rgba(0, 0, 0, 0.92);
+  --brick-game-field-edge: rgba(255, 255, 255, 0.14);
+  --brick-game-page: #fff;
+  --brick-game-page-edge: rgba(0, 0, 0, 0.3);
+  --brick-game-ball: #fff;
+  --brick-game-mark: var(--c-brand-mark);
+  --brick-game-mark-soft: var(--c-brand-mark-soft);
+  --brick-game-power-wide: var(--c-accent-solid);
+  --brick-game-power-slow: var(--c-warning);
+  --brick-game-power-multi: var(--c-success);
+  --brick-game-power-life: var(--c-brand-mark);
+}
+
+.brick-game-cabinet:focus {
+  outline: none;
+}
+
+.brick-game-hud {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: #fff;
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.brick-game-hud__stat {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+/* Pushes the whole readout to the right, where the title used to sit. */
+.brick-game-hud__stat--first {
+  margin-left: auto;
+}
+
+.brick-game-hud__stat b {
+  color: #fff;
+  font-weight: 600;
+}
+
+.brick-game-effects {
+  display: flex;
+  gap: 0.375rem;
+}
+
+.brick-game-effect {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.0625rem 0.375rem;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 0.6875rem;
+  font-weight: 600;
+}
+
+.brick-game-effect--wide {
+  background: var(--c-accent-solid);
+}
+
+.brick-game-effect--slow {
+  background: var(--c-warning);
+}
+
+.brick-game-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: #fff;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.brick-game-close:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.brick-game-close:focus-visible {
+  outline: 0.125rem solid var(--c-primary);
+  outline-offset: 0.125rem;
+}
+
+.brick-game-stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 800 / 560;
+  max-height: 74vh;
+  margin-inline: auto;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.brick-game-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+
+/* Unlocked, the pointer is still what aims, so the arrow is only in the way. */
+.brick-game-canvas--aiming {
+  cursor: none;
+}
+
+.brick-game-banner {
+  position: absolute;
+  inset: 0;
+  color: #fff;
+  text-align: center;
+  /* Clicks belong to the canvas underneath, which serves the next ball. */
+  pointer-events: none;
+}
+
+/* Sits in the clear band between the wall of pages and the paddle. Centred in
+   the stage it landed on the bottom row of pages, and white text on a white
+   page thumbnail was unreadable. `top` is used rather than percentage padding
+   because a percentage padding resolves against the containing block's WIDTH
+   even on the block axis, which on this 800x560 stage is the wrong reference. */
+.brick-game-banner__plate {
+  position: absolute;
+  top: 64%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  max-width: calc(100% - 2rem);
+  padding: 0.5rem 1.125rem 0.625rem;
+  border-radius: var(--radius-md);
+  /* A plate behind the text, so it stays legible whatever the page shows. */
+  background: rgba(0, 0, 0, 0.74);
+}
+
+.brick-game-banner__headline {
+  font-size: 1.375rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.brick-game-banner__detail {
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.8125rem;
+}
+
+.brick-game-hint {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 0.75rem;
+  text-align: center;
+}
+
+@media (max-width: 40rem) {
+  .brick-game-hud__stat--best {
+    display: none;
+  }
+
+  /* The plate is sized in rem but placed as a share of the playfield, so on a
+     small stage it covers far more of the field. Shrinking it keeps the longest
+     message from wrapping down onto the paddle. */
+  .brick-game-banner__plate {
+    /* Lifted as well as shrunk: a wrapped message grows downwards, towards the
+       paddle. There is far more spare field above the plate than below it. */
+    top: 58%;
+    padding: 0.375rem 0.75rem 0.5rem;
+  }
+
+  .brick-game-banner__headline {
+    font-size: 1.0625rem;
+  }
+
+  .brick-game-banner__detail {
+    font-size: 0.75rem;
+  }
+}
