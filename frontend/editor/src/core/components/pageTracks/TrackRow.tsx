@@ -25,6 +25,7 @@ import { Track } from "@app/components/pageTracks/types";
 import { TrackThumbnailStore } from "@app/components/pageTracks/hooks/useTrackThumbnails";
 import { PageClickModifiers } from "@app/components/pageTracks/hooks/useTrackSelection";
 import TrackPageTile from "@app/components/pageTracks/TrackPageTile";
+import TrackPageViewModal from "@app/components/pageTracks/TrackPageViewModal";
 import {
   TRACK_GEOMETRY,
   rootFontSizePx,
@@ -133,6 +134,9 @@ function TrackRowImpl({
   // survives track reorder via the row's fileId key; a save remounts the row,
   // which reasonably reopens it.
   const [collapsed, setCollapsed] = useState(false);
+  // Which page (by id) the view modal is showing, or null when closed. Kept by
+  // id, not index, so an edit that reorders pages doesn't jump the preview.
+  const [viewPageId, setViewPageId] = useState<string | null>(null);
   // Zoom scales the tile dimensions (and gaps) only; everything derived here,
   // and the CSS vars the tiles read, moves with it so the geometry and the
   // virtualiser stay in agreement at any zoom.
@@ -281,6 +285,13 @@ function TrackRowImpl({
   const collapseLabel = collapsed
     ? t("pageTracks.track.expand", "Expand")
     : t("pageTracks.track.collapse", "Collapse");
+
+  const handleViewPage = useCallback((pageId: string) => {
+    setViewPageId(pageId);
+  }, []);
+  // -1 once the shown page has been deleted, which closes the modal.
+  const viewIndex =
+    viewPageId == null ? -1 : track.pages.findIndex((p) => p.id === viewPageId);
 
   return (
     <section
@@ -466,6 +477,7 @@ function TrackRowImpl({
                       }
                       thumbnails={thumbnails}
                       onSelect={onSelectPage}
+                      onViewPage={handleViewPage}
                       onRotate={onRotate}
                       onDelete={onDelete}
                     />
@@ -498,6 +510,7 @@ function TrackRowImpl({
                       }
                       thumbnails={thumbnails}
                       onSelect={onSelectPage}
+                      onViewPage={handleViewPage}
                       onRotate={onRotate}
                       onDelete={onDelete}
                     />
@@ -506,6 +519,29 @@ function TrackRowImpl({
               })}
             </div>
           )}
+        </div>
+      )}
+
+      {viewIndex >= 0 && (
+        // The modal portals to the body but is a React child of this section,
+        // so its events would bubble through the React tree to the lane/tiles.
+        // Contain them so a backdrop click can't clear or change the selection.
+        <div
+          style={{ display: "contents" }}
+          onClick={(event) => event.stopPropagation()}
+          onDoubleClick={(event) => event.stopPropagation()}
+          onPointerDown={(event) => event.stopPropagation()}
+          onKeyDown={(event) => event.stopPropagation()}
+        >
+          <TrackPageViewModal
+            pages={track.pages}
+            index={viewIndex}
+            onIndexChange={(next) =>
+              setViewPageId(track.pages[next]?.id ?? null)
+            }
+            thumbnails={thumbnails}
+            onClose={() => setViewPageId(null)}
+          />
         </div>
       )}
     </section>

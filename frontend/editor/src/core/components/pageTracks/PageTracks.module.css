@@ -271,6 +271,44 @@
   pointer-events: auto;
 }
 
+/* ── Page view modal ─────────────────────────────────────────────────────── */
+
+.pageViewBody {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Previous/next buttons flanking the page; fixed so the page gets the space. */
+.pageViewNav {
+  flex: 0 0 auto;
+}
+
+.pageViewStage {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 12rem;
+  min-height: 12rem;
+}
+
+/* Fills most of the screen; the quarter-turn variant swaps the caps so a
+   rotated (landscape) page still fits within the viewport after the CSS turn. */
+.pageViewImage {
+  max-width: 80vw;
+  max-height: 82vh;
+  object-fit: contain;
+  border-radius: 0.375rem;
+  background: var(--c-surface);
+  box-shadow: var(--shadow-md);
+}
+
+.pageViewQuarter {
+  max-width: 82vh;
+  max-height: 80vw;
+}
+
 /* ── Unsaved-changes marker on the save button ───────────────────────────── */
 
 .saveButton {
