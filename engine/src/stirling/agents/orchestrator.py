@@ -7,6 +7,7 @@ from typing import Literal, assert_never
 from pydantic import ConfigDict, Field
 from pydantic_ai import Agent
 from pydantic_ai.output import NativeOutput, ToolOutput
+from pydantic_ai.settings import ModelSettings
 from pydantic_ai.tools import RunContext
 
 from stirling.agents.output_mode import output_retries, uses_tool_output
@@ -65,8 +66,21 @@ _ROUTER_SYSTEM_PROMPT = (
     "- pdf_create: generate a NEW document from scratch (invoice, report, letter) - no input file.\n"
     "- unsupported: none of the above fit, or the user asks about the assistant itself; put a "
     "helpful message in 'message'.\n"
-    "Respond with the capability and (only for unsupported) a message."
+    "Respond with the capability and (only for unsupported) a message.\n"
+    "\n"
+    "Decide by what the user wants BACK. Information read out of the document is pdf_question; "
+    "a changed file handed back is pdf_edit. Mentioning a document is not asking to change it.\n"
+    '  "Is there a table of contents?" -> pdf_question\n'
+    '  "Add a table of contents" -> pdf_edit\n'
+    '  "Put a note on every paragraph that needs work" -> pdf_review\n'
+    '  "Build me a purchase order from scratch" -> pdf_create\n'
+    '  "Make a rule that stamps every upload" -> user_spec\n'
+    '  "Which version of the app is this?" -> unsupported'
 )
+
+
+def _router_model_settings(runtime: AppRuntime) -> ModelSettings:
+    return {**runtime.fast_model_settings, "temperature": 0.0}
 
 
 class OrchestratorAgent:
@@ -146,7 +160,7 @@ class OrchestratorAgent:
                 output_type=NativeOutput([_RouteDecision]),
                 retries=output_retries(runtime.settings.chat_provider),
                 system_prompt=_ROUTER_SYSTEM_PROMPT,
-                model_settings=runtime.fast_model_settings,
+                model_settings=_router_model_settings(runtime),
             )
             if self._route_via_enum
             else None
