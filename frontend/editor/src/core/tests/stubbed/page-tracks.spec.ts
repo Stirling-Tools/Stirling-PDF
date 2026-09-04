@@ -602,6 +602,55 @@ test.describe("Page Editor tracks", () => {
     }
   });
 
+  test("collapsing a track hides its pages, and the header keeps the count", async ({
+    page,
+  }) => {
+    await openPageEditor(page);
+    const rotated = track(page, "rotated-pages.pdf");
+    await expect(rotated.locator("[data-page-id]")).toHaveCount(4, {
+      timeout: 30_000,
+    });
+
+    await rotated
+      .getByRole("button", { name: "Collapse", exact: true })
+      .click();
+    await expect(rotated.locator("[data-page-id]")).toHaveCount(0);
+    // The header, with its page count, stays visible while collapsed.
+    await expect(rotated).toContainText("4 pages");
+
+    await rotated.getByRole("button", { name: "Expand", exact: true }).click();
+    await expect(rotated.locator("[data-page-id]")).toHaveCount(4);
+  });
+
+  test("zooming scales the pages while the header keeps its size", async ({
+    page,
+  }) => {
+    await openPageEditor(page);
+    const rotated = track(page, "rotated-pages.pdf");
+    const firstTile = rotated.locator("[data-page-id]").first();
+    await expect(firstTile).toBeVisible({ timeout: 30_000 });
+
+    const tileBefore = await firstTile.boundingBox();
+    const headerBefore = await rotated.locator("header").boundingBox();
+    if (!tileBefore || !headerBefore) throw new Error("track is not laid out");
+
+    await page.getByRole("button", { name: "Zoom in" }).click();
+    await page.getByRole("button", { name: "Zoom in" }).click();
+
+    // The page tile grows...
+    await expect
+      .poll(async () => (await firstTile.boundingBox())?.width ?? 0, {
+        timeout: 30_000,
+      })
+      .toBeGreaterThan(tileBefore.width + 1);
+
+    // ...while the header (UI chrome) keeps its height.
+    const headerAfter = await rotated.locator("header").boundingBox();
+    expect(Math.round(headerAfter?.height ?? 0)).toBe(
+      Math.round(headerBefore.height),
+    );
+  });
+
   test("the eye opens that track's file in the viewer", async ({ page }) => {
     await openPageEditor(page);
     const sample = track(page, "sample.pdf");

@@ -14,6 +14,8 @@ import RotateRightIcon from "@mui/icons-material/RotateRight";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlineRounded";
 import SelectAllIcon from "@mui/icons-material/SelectAll";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { FileId } from "@app/types/file";
@@ -47,6 +49,8 @@ export interface TrackRowProps {
   dropHint: DropHint | null;
   /** Pages wrap onto multiple rows instead of one horizontally scrolling row. */
   wrap: boolean;
+  /** Scales the page tiles (and their gaps) without resizing the rest of the UI. */
+  zoom: number;
   /** The scrolling container wrap-mode rows are virtualised against. */
   scrollerRef: React.RefObject<HTMLDivElement | null>;
   /** Bumped by the parent when the stacked track heights change, forcing this
@@ -81,6 +85,7 @@ function TrackRowImpl({
   draggingIds,
   dropHint,
   wrap,
+  zoom,
   scrollerRef,
   layoutVersion,
   trackDropBefore,
@@ -122,26 +127,33 @@ function TrackRowImpl({
   // each render, re-measured on drag start and hit-tested on every move.
   const laneRef = useRef<HTMLDivElement | null>(null);
   const laneInnerRef = useRef<HTMLDivElement | null>(null);
+  // Collapsed hides the lane, leaving just the header. Local (not lifted) so it
+  // survives track reorder via the row's fileId key; a save remounts the row,
+  // which reasonably reopens it.
+  const [collapsed, setCollapsed] = useState(false);
+  // Zoom scales the tile dimensions (and gaps) only; everything derived here,
+  // and the CSS vars the tiles read, moves with it so the geometry and the
+  // virtualiser stay in agreement at any zoom.
   const geometry = useMemo(() => {
     const px = rootFontSizePx();
+    const tileWidthRem = TRACK_GEOMETRY.tileWidthRem * zoom;
+    const tileHeightRem = TRACK_GEOMETRY.tileCanvasHeightRem * zoom;
+    const tileFooterRem = TRACK_GEOMETRY.tileFooterHeightRem * zoom;
+    const gapRem = TRACK_GEOMETRY.gapRem * zoom;
     return {
-      gapPx: TRACK_GEOMETRY.gapRem * px,
-      tileWidthPx: TRACK_GEOMETRY.tileWidthRem * px,
+      gapPx: gapRem * px,
+      tileWidthPx: tileWidthRem * px,
       // Distance between the left edges of adjacent tiles (tile + gap).
-      colStride: (TRACK_GEOMETRY.tileWidthRem + TRACK_GEOMETRY.gapRem) * px,
+      colStride: (tileWidthRem + gapRem) * px,
       // Distance between the top edges of adjacent wrapped rows.
-      rowStride:
-        (TRACK_GEOMETRY.tileCanvasHeightRem +
-          TRACK_GEOMETRY.tileFooterHeightRem +
-          TRACK_GEOMETRY.gapRem) *
-        px,
+      rowStride: (tileHeightRem + tileFooterRem + gapRem) * px,
       cssVars: {
-        "--pt-tile-w": `${TRACK_GEOMETRY.tileWidthRem}rem`,
-        "--pt-tile-h": `${TRACK_GEOMETRY.tileCanvasHeightRem}rem`,
-        "--pt-tile-footer-h": `${TRACK_GEOMETRY.tileFooterHeightRem}rem`,
+        "--pt-tile-w": `${tileWidthRem}rem`,
+        "--pt-tile-h": `${tileHeightRem}rem`,
+        "--pt-tile-footer-h": `${tileFooterRem}rem`,
       } as React.CSSProperties,
     };
-  }, []);
+  }, [zoom]);
 
   const pageCount = track.pages.length;
 
@@ -149,13 +161,16 @@ function TrackRowImpl({
   const [laneWidth, setLaneWidth] = useState(0);
   // Seed the width synchronously before the first wrap paint so the column
   // count is right immediately; the observer keeps it current on resize.
-  // 0.75rem matches the lane's horizontal padding in the stylesheet.
+  // 0.75rem matches the lane's horizontal padding in the stylesheet. Re-runs
+  // when the lane remounts on expand so the width is right again straight away.
   useLayoutEffect(() => {
     const element = laneRef.current;
     if (!element) return;
     const padding = 2 * 0.75 * rootFontSizePx();
     setLaneWidth(Math.max(0, element.clientWidth - padding));
-  }, [wrap]);
+  }, [wrap, collapsed]);
+  // Keyed on `collapsed` so the observer follows the lane element as it
+  // unmounts (collapse) and remounts (expand).
   useEffect(() => {
     const element = laneRef.current;
     if (!element || typeof ResizeObserver === "undefined") return;
@@ -164,7 +179,7 @@ function TrackRowImpl({
     });
     observer.observe(element);
     return () => observer.disconnect();
-  }, []);
+  }, [collapsed]);
 
   const columns = useMemo(() => {
     if (!wrap || laneWidth <= 0) return 1;
@@ -210,7 +225,15 @@ function TrackRowImpl({
       scroller.getBoundingClientRect().top +
       scroller.scrollTop;
     setScrollMargin((prev) => (Math.abs(prev - margin) > 0.5 ? margin : prev));
-  }, [wrap, layoutVersion, columns, rowCount, pageCount, scrollerRef]);
+  }, [
+    wrap,
+    collapsed,
+    layoutVersion,
+    columns,
+    rowCount,
+    pageCount,
+    scrollerRef,
+  ]);
 
   const virtualizer = useVirtualizer({
     count: wrap ? rowCount : pageCount,
@@ -220,6 +243,12 @@ function TrackRowImpl({
     overscan: wrap ? 3 : TRACK_GEOMETRY.overscan,
     scrollMargin: wrap ? scrollMargin : 0,
   });
+
+  // Zoom changes every tile's size, so drop the cached measurements and
+  // re-derive them from the new estimate.
+  useLayoutEffect(() => {
+    virtualizer.measure();
+  }, [virtualizer, zoom, wrap]);
 
   const setLaneRef = useCallback(
     (element: HTMLDivElement | null) => {
@@ -246,6 +275,9 @@ function TrackRowImpl({
   );
 
   const hintActive = dropHint?.fileId === track.fileId;
+  const collapseLabel = collapsed
+    ? t("pageTracks.track.expand", "Expand")
+    : t("pageTracks.track.collapse", "Collapse");
 
   return (
     <section
@@ -270,6 +302,22 @@ function TrackRowImpl({
         className={styles.trackHeader}
         {...handleListeners}
       >
+        <Tooltip content={collapseLabel}>
+          <ActionIcon
+            className={styles.trackCollapse}
+            variant="quiet"
+            size="sm"
+            aria-label={collapseLabel}
+            aria-expanded={!collapsed}
+            onClick={() => setCollapsed((value) => !value)}
+          >
+            {collapsed ? (
+              <ChevronRightIcon sx={{ fontSize: "1.25rem" }} />
+            ) : (
+              <ExpandMoreIcon sx={{ fontSize: "1.25rem" }} />
+            )}
+          </ActionIcon>
+        </Tooltip>
         <span className={styles.trackName} title={name}>
           {name}
         </span>
@@ -354,107 +402,109 @@ function TrackRowImpl({
         </div>
       </header>
 
-      <div
-        ref={setLaneRef}
-        data-track-lane={track.fileId}
-        className={[
-          styles.lane,
-          wrap ? styles.laneWrap : "",
-          track.pages.length === 0 ? styles.laneEmpty : "",
-        ]
-          .filter(Boolean)
-          .join(" ")}
-        // Only a click on the lane itself, never one that bubbled up from a
-        // page: clicking a tile would otherwise select it and immediately
-        // clear it again.
-        onClick={(event) => {
-          if (event.target === event.currentTarget) onClearSelection();
-        }}
-      >
-        {track.pages.length === 0 && (
-          <span className={styles.laneHint}>
-            {t(
-              "pageTracks.emptyTrack",
-              "No pages left. Drag pages here, or save to close this file.",
-            )}
-          </span>
-        )}
-        {pageCount > 0 && (
-          <div
-            ref={laneInnerRef}
-            className={styles.laneInner}
-            style={
-              wrap
-                ? { width: "100%", height: virtualizer.getTotalSize() }
-                : { width: virtualizer.getTotalSize() }
-            }
-          >
-            {virtualizer.getVirtualItems().map((item) => {
-              // Single row: each virtual item is a page, placed along the lane.
-              if (!wrap) {
-                const page = track.pages[item.index];
-                if (!page) return null;
-                return (
-                  <TrackPageTile
-                    key={page.id}
-                    page={page}
-                    trackFileId={track.fileId}
-                    position={item.index + 1}
-                    offsetX={item.start}
-                    offsetY={0}
-                    selected={selectedIds.has(page.id)}
-                    dragging={draggingIds.has(page.id)}
-                    dropBefore={
-                      hintActive && dropHint?.beforePageId === page.id
-                    }
-                    dropAfterLast={
-                      hintActive &&
-                      dropHint?.beforePageId == null &&
-                      item.index === pageCount - 1
-                    }
-                    thumbnails={thumbnails}
-                    onSelect={onSelectPage}
-                    onRotate={onRotate}
-                    onDelete={onDelete}
-                  />
-                );
+      {!collapsed && (
+        <div
+          ref={setLaneRef}
+          data-track-lane={track.fileId}
+          className={[
+            styles.lane,
+            wrap ? styles.laneWrap : "",
+            track.pages.length === 0 ? styles.laneEmpty : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+          // Only a click on the lane itself, never one that bubbled up from a
+          // page: clicking a tile would otherwise select it and immediately
+          // clear it again.
+          onClick={(event) => {
+            if (event.target === event.currentTarget) onClearSelection();
+          }}
+        >
+          {track.pages.length === 0 && (
+            <span className={styles.laneHint}>
+              {t(
+                "pageTracks.emptyTrack",
+                "No pages left. Drag pages here, or save to close this file.",
+              )}
+            </span>
+          )}
+          {pageCount > 0 && (
+            <div
+              ref={laneInnerRef}
+              className={styles.laneInner}
+              style={
+                wrap
+                  ? { width: "100%", height: virtualizer.getTotalSize() }
+                  : { width: virtualizer.getTotalSize() }
               }
-              // Wrap: each virtual item is a row of up to `columns` pages.
-              const rowTop = item.start - scrollMargin;
-              const rowStartIndex = item.index * columns;
-              return Array.from({ length: columns }, (_unused, col) => {
-                const pageIndex = rowStartIndex + col;
-                const page = track.pages[pageIndex];
-                if (!page) return null;
-                return (
-                  <TrackPageTile
-                    key={page.id}
-                    page={page}
-                    trackFileId={track.fileId}
-                    position={pageIndex + 1}
-                    offsetX={col * wrapColStride}
-                    offsetY={rowTop}
-                    selected={selectedIds.has(page.id)}
-                    dragging={draggingIds.has(page.id)}
-                    dropBefore={
-                      hintActive && dropHint?.beforePageId === page.id
-                    }
-                    dropAfterLast={
-                      hintActive &&
-                      dropHint?.beforePageId == null &&
-                      pageIndex === pageCount - 1
-                    }
-                    thumbnails={thumbnails}
-                    onSelect={onSelectPage}
-                    onRotate={onRotate}
-                    onDelete={onDelete}
-                  />
-                );
-              });
-            })}
-          </div>
-        )}
-      </div>
+            >
+              {virtualizer.getVirtualItems().map((item) => {
+                // Single row: each virtual item is a page, placed along the lane.
+                if (!wrap) {
+                  const page = track.pages[item.index];
+                  if (!page) return null;
+                  return (
+                    <TrackPageTile
+                      key={page.id}
+                      page={page}
+                      trackFileId={track.fileId}
+                      position={item.index + 1}
+                      offsetX={item.start}
+                      offsetY={0}
+                      selected={selectedIds.has(page.id)}
+                      dragging={draggingIds.has(page.id)}
+                      dropBefore={
+                        hintActive && dropHint?.beforePageId === page.id
+                      }
+                      dropAfterLast={
+                        hintActive &&
+                        dropHint?.beforePageId == null &&
+                        item.index === pageCount - 1
+                      }
+                      thumbnails={thumbnails}
+                      onSelect={onSelectPage}
+                      onRotate={onRotate}
+                      onDelete={onDelete}
+                    />
+                  );
+                }
+                // Wrap: each virtual item is a row of up to `columns` pages.
+                const rowTop = item.start - scrollMargin;
+                const rowStartIndex = item.index * columns;
+                return Array.from({ length: columns }, (_unused, col) => {
+                  const pageIndex = rowStartIndex + col;
+                  const page = track.pages[pageIndex];
+                  if (!page) return null;
+                  return (
+                    <TrackPageTile
+                      key={page.id}
+                      page={page}
+                      trackFileId={track.fileId}
+                      position={pageIndex + 1}
+                      offsetX={col * wrapColStride}
+                      offsetY={rowTop}
+                      selected={selectedIds.has(page.id)}
+                      dragging={draggingIds.has(page.id)}
+                      dropBefore={
+                        hintActive && dropHint?.beforePageId === page.id
+                      }
+                      dropAfterLast={
+                        hintActive &&
+                        dropHint?.beforePageId == null &&
+                        pageIndex === pageCount - 1
+                      }
+                      thumbnails={thumbnails}
+                      onSelect={onSelectPage}
+                      onRotate={onRotate}
+                      onDelete={onDelete}
+                    />
+                  );
+                });
+              })}
+            </div>
+          )}
+        </div>
+      )}
     </section>
   );
 }

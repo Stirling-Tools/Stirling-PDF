@@ -20,6 +20,7 @@ import {
   useNavigationGuard,
 } from "@app/contexts/NavigationContext";
 import { useViewer } from "@app/contexts/ViewerContext";
+import { useWheelZoom } from "@app/hooks/useWheelZoom";
 import { FileId } from "@app/types/file";
 import { useTrackWorkspace } from "@app/components/pageTracks/hooks/useTrackWorkspace";
 import { useTrackSelection } from "@app/components/pageTracks/hooks/useTrackSelection";
@@ -36,6 +37,13 @@ const ZONE_PREFIX = "zone:";
 const HANDLE_PREFIX = "trackhandle:";
 
 const WRAP_STORAGE_KEY = "pageTracks.wrap";
+
+const ZOOM_MIN = 0.5;
+const ZOOM_MAX = 3.0;
+const ZOOM_STEP = 0.1;
+// Rounded each step so repeated +/- 0.1 doesn't drift off the bounds.
+const clampZoom = (value: number): number =>
+  Math.round(Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, value)) * 10) / 10;
 
 /**
  * Droppables nest (zone > lane > page), so the hit has to be picked by what is
@@ -178,6 +186,17 @@ export default function PageTracks() {
     });
   }, []);
 
+  // Scales the page tiles only: the tracks, headers and bar keep their size.
+  const [zoom, setZoom] = useState(1);
+  const zoomIn = useCallback(
+    () => setZoom((z) => clampZoom(z + ZOOM_STEP)),
+    [],
+  );
+  const zoomOut = useCallback(
+    () => setZoom((z) => clampZoom(z - ZOOM_STEP)),
+    [],
+  );
+
   // The scrolling container each wrap-mode lane virtualises its rows against.
   const scrollerRef = useRef<HTMLDivElement | null>(null);
   const contentRef = useRef<HTMLDivElement | null>(null);
@@ -195,6 +214,36 @@ export default function PageTracks() {
     observer.observe(content);
     return () => observer.disconnect();
   }, []);
+
+  // Ctrl/Cmd + wheel zooms, matching the Multi-Tool page editor.
+  useWheelZoom({ ref: scrollerRef, onZoomIn: zoomIn, onZoomOut: zoomOut });
+
+  // Ctrl/Cmd + '+' / '-' zoom, '0' resets. Matches the Multi-Tool shortcuts.
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (!(event.ctrlKey || event.metaKey)) return;
+      const target = event.target as HTMLElement | null;
+      if (
+        target?.tagName === "INPUT" ||
+        target?.tagName === "TEXTAREA" ||
+        target?.isContentEditable
+      ) {
+        return;
+      }
+      if (event.key === "=" || event.key === "+") {
+        event.preventDefault();
+        zoomIn();
+      } else if (event.key === "-" || event.key === "_") {
+        event.preventDefault();
+        zoomOut();
+      } else if (event.key === "0") {
+        event.preventDefault();
+        setZoom(1);
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [zoomIn, zoomOut]);
 
   const totalPages = useMemo(() => totalPageCount(workspace), [workspace]);
   const changedSet = useMemo(() => new Set(changedFileIds), [changedFileIds]);
@@ -470,6 +519,10 @@ export default function PageTracks() {
     saving,
     wrap,
     onToggleWrap: toggleWrap,
+    canZoomIn: zoom < ZOOM_MAX,
+    canZoomOut: zoom > ZOOM_MIN,
+    onZoomIn: zoomIn,
+    onZoomOut: zoomOut,
     onSelectAll: selection.selectAll,
     onDeselectAll: selection.clear,
     onRotate: rotateSelection,
@@ -561,6 +614,7 @@ export default function PageTracks() {
                   draggingIds={draggingIds}
                   dropHint={dropHint}
                   wrap={wrap}
+                  zoom={zoom}
                   scrollerRef={scrollerRef}
                   layoutVersion={layoutVersion}
                   trackDropBefore={
