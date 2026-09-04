@@ -4289,6 +4289,7 @@ back = "Back"
 backToFolder = "Back to {{folder}}"
 backToMyFiles = "Back to File library"
 breadcrumbs = "Folder path"
+breadcrumbsOverflow = "Show parent folders"
 bulkActions = "Actions"
 cancel = "Cancel"
 classification = "Classification"
@@ -4410,7 +4411,6 @@ everywhereHint = "Deletes the file from this device and the cloud."
 
 [filesPage.empty]
 hint = "Drop PDFs anywhere on this page to upload, or use the New folder button to organize your files."
-newFolderCta = "Create folder"
 title = "This folder is empty"
 uploadCta = "Upload files"
 
@@ -4419,10 +4419,6 @@ hint = "Upload a file to start, or create a folder to organize."
 offlineHint = "Reconnect to load your cloud library."
 offlineTitle = "No cached cloud files"
 title = "No cloud files yet"
-
-[filesPage.empty.local]
-hint = "Files saved without uploading stay here. Drop a file to add one."
-title = "No local-only files"
 
 [filesPage.empty.noResults]
 hint = "No files in this folder match your filter. Try a different term or clear the filter."
@@ -5545,13 +5541,19 @@ count = "{{remaining}} of {{total}}"
 label = "Free credits"
 
 [notifications]
+adoptFailed = "The document was unlocked but could not be opened here. Try the tool directly."
 empty = "You're all caught up."
 handoffUnavailable = "This browser will not let the processor pass the document to the editor. Open it from the editor instead."
 noDocumentLinked = "This failure is not linked to a specific document, so it cannot be opened or retried here."
 notOnThisDevice = "This document is not on this device, so it cannot be opened or retried here."
 occurrences = "{{count}} times"
 open = "Notifications"
+rerunRejected = "The policy could not be run again just now. Try again in a moment."
+rerunUndelivered = "The policy re-run started, but its result cannot be delivered here, so this failure stays open."
+retryUnavailable = "This document can no longer be retried from this browser."
 title = "Notifications"
+unlockedNotRerun = "The document was unlocked and opened here, but the policy could not be run on it again."
+unlockedRerunUndelivered = "The document was unlocked and the policy re-run started, but its result cannot be delivered here, so this failure stays open."
 unread = "Unread"
 
 [notifications.action]

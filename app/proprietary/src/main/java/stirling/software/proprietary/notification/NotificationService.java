@@ -41,7 +41,6 @@ public class NotificationService {
         return fileRunEvents.reviewsTeam();
     }
 
-    /** Opaque and stable, so a shared browser can keep one viewer's read state off another's. */
     public String callerViewerKey() {
         return fileRunEvents.viewerKey();
     }

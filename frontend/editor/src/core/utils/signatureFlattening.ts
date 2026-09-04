@@ -29,6 +29,38 @@ interface MinimalFileContextSelectors {
   getFile: (id: FileId) => StirlingFile | undefined;
 }
 
+/**
+ * The subset of EmbedPDF's annotation payload this flattener reads. EmbedPDF
+ * types `getPageAnnotations` as `any[]`; geometry and image fields vary by
+ * annotation source, so each accessor path is optional.
+ */
+interface AnnotationRect {
+  origin?: { x?: number; y?: number };
+  size?: { width?: number; height?: number };
+  x?: number;
+  y?: number;
+  left?: number;
+  top?: number;
+  width?: number;
+  height?: number;
+}
+
+interface SignatureAnnotation {
+  id: string;
+  rect?: AnnotationRect;
+  bounds?: AnnotationRect;
+  rectangle?: AnnotationRect;
+  position?: AnnotationRect;
+  imageSrc?: unknown;
+  imageData?: unknown;
+  appearance?: unknown;
+  stampData?: unknown;
+  contents?: unknown;
+  data?: unknown;
+  customData?: unknown;
+  asset?: unknown;
+}
+
 interface SignatureFlatteningOptions {
   signatureApiRef: React.RefObject<SignatureAPI | null>;
   getImageData: (id: string) => string | undefined;
@@ -62,7 +94,10 @@ export async function flattenSignatures(
 
   try {
     // Step 1: Extract all annotations from EmbedPDF before export
-    const allAnnotations: Array<{ pageIndex: number; annotations: any[] }> = [];
+    const allAnnotations: Array<{
+      pageIndex: number;
+      annotations: SignatureAnnotation[];
+    }> = [];
 
     if (signatureApiRef?.current) {
       const scrollState = getScrollState();
@@ -209,7 +244,7 @@ export async function flattenSignatures(
 
 type SignatureAnnotationsByPage = Array<{
   pageIndex: number;
-  annotations: any[];
+  annotations: SignatureAnnotation[];
 }>;
 
 function extractImageDataUrl(
@@ -238,7 +273,7 @@ function extractImageDataUrl(
 }
 
 function getAnnotationImageData(
-  annotation: any,
+  annotation: SignatureAnnotation,
   getImageData: (id: string) => string | undefined,
 ): string | undefined {
   // EmbedPDF can replace fields such as imageData/appearance with an internal

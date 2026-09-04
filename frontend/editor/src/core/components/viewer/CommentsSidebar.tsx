@@ -28,6 +28,7 @@ import {
   PdfAnnotationReplyType,
   type PdfAnnotationObject,
   type PdfTextAnnoObject,
+  type Rect,
 } from "@embedpdf/models";
 import { useCommentAuthor } from "@app/contexts/CommentAuthorContext";
 import { useViewer } from "@app/contexts/ViewerContext";
@@ -637,7 +638,7 @@ export function CommentsSidebar({
   );
 
   const handleSendReply = useCallback(
-    (pageIndex: number, parentId: string, parentRect: any) => {
+    (pageIndex: number, parentId: string, parentRect: Rect | undefined) => {
       const key = `${pageIndex}_${parentId}_reply`;
       const text = replyDrafts[key]?.trim();
       if (!text || !provides?.createAnnotation) return;

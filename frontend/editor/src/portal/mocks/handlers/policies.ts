@@ -30,12 +30,12 @@ export function getCataloguePolicies(): WirePolicy[] {
 }
 
 let idCounter = 0;
-function nextId(categoryId: string): string {
+function nextId(policyKey: string): string {
   idCounter += 1;
-  return `pol_${categoryId}_${Date.now().toString(36)}_${idCounter}`;
+  return `pol_${policyKey}_${Date.now().toString(36)}_${idCounter}`;
 }
 
-function categoryId(wire: WirePolicy): string {
+function policyKey(wire: WirePolicy): string {
   return wire.output?.options?.categoryId ?? "";
 }
 
@@ -62,10 +62,10 @@ export const policiesHandlers = [
   http.post("/api/v1/policies", async ({ request }) => {
     await delay(120);
     const incoming = (await request.json()) as WirePolicy;
-    const catId = categoryId(incoming);
+    const catId = policyKey(incoming);
     const existing = incoming.id
       ? store.find((p) => p.id === incoming.id)
-      : store.find((p) => categoryId(p) === catId);
+      : store.find((p) => policyKey(p) === catId);
     const id = existing?.id ?? nextId(catId);
     const saved: WirePolicy = {
       ...incoming,

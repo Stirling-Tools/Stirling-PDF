@@ -13,7 +13,6 @@ import {
   Menu,
   MultiSelect,
   Select,
-  Text,
   TextInput,
   Tooltip,
 } from "@mantine/core";
@@ -25,7 +24,6 @@ import CloseIcon from "@mui/icons-material/Close";
 import SearchIcon from "@mui/icons-material/Search";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import QrCode2Icon from "@mui/icons-material/QrCode2";
-import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
 import GridViewIcon from "@mui/icons-material/GridView";
 import ViewListIcon from "@mui/icons-material/ViewList";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -34,19 +32,18 @@ import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
-import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
-import DriveFolderUploadIcon from "@mui/icons-material/DriveFolderUpload";
-import CloudIcon from "@mui/icons-material/Cloud";
+import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { FilesToolbarBulkMenu } from "@app/components/filesPage/FilesToolbarBulkMenu";
 import { FilesToolbarCount } from "@app/components/filesPage/FilesToolbarCount";
 import { FilesToolbarFilterMenu } from "@app/components/filesPage/FilesToolbarFilterMenu";
 import { FilesToolbarSortMenu } from "@app/components/filesPage/FilesToolbarSortMenu";
+import { NewFolderButton } from "@app/components/filesPage/NewFolderButton";
 
-import { stripBasePath } from "@app/constants/app";
 import { useAuth } from "@app/auth/UseSession";
 import { useSharingEnabled } from "@app/hooks/useSharingEnabled";
 import { useFolders } from "@app/contexts/FolderContext";
+import { useOpenFolder } from "@app/components/filesPage/useOpenFolder";
 import { useFileActions } from "@app/contexts/file/fileHooks";
 import { useAllFiles } from "@app/contexts/FileContext";
 import { useFileHandler } from "@app/hooks/useFileHandler";
@@ -66,7 +63,12 @@ import { getFileOrigin } from "@app/components/filesPage/fileOrigin";
 
 import { FileId } from "@app/types/file";
 import { StirlingFileStub } from "@app/types/fileContext";
-import { FolderId, ROOT_FOLDER_ID, folderKind } from "@app/types/folder";
+import {
+  FolderBreadcrumbEntry,
+  FolderId,
+  ROOT_FOLDER_ID,
+  folderKind,
+} from "@app/types/folder";
 
 import { FileGrid, FilesPageEntry } from "@app/components/filesPage/FileGrid";
 import SuperSearch from "@app/components/shared/superSearch/SuperSearch";
@@ -112,6 +114,7 @@ export default function FileManagerView() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
+  const openFolder = useOpenFolder();
   const searchScopes = useEditorSearchScopes();
 
   // Hide Shared tab when storageSharingEnabled is false.
@@ -225,21 +228,37 @@ export default function FileManagerView() {
   const foldersById = folders.foldersById;
   const currentFolderId = folders.currentFolderId;
 
-  // Sync the URL into FolderContext.
+  // The path selects the folder - see useOpenFolder - and this applies it, on arrival,
+  // on a deep link, and on back/forward alike. Re-runs as the folder map fills in.
   useEffect(() => {
     const match = location.pathname.match(/^\/files\/([^/]+)/);
     const param = match?.[1] ?? null;
     if (param === null) {
       setCurrentFolderId(ROOT_FOLDER_ID);
-    } else if (foldersById.has(param as FolderId)) {
+      return;
+    }
+    if (foldersById.has(param as FolderId)) {
       setCurrentFolderId(param as FolderId);
-    } else if (isDiskFolderId(param) && resolveDiskFolder(param as FolderId)) {
+      return;
+    }
+    if (isDiskFolderId(param) && resolveDiskFolder(param as FolderId)) {
       // A mount subdirectory deep link: rebuilt from the id, mapped next render.
       setCurrentFolderId(param as FolderId);
-    } else {
+      return;
+    }
+    // Not known yet is not the same as not real: folders load asynchronously, and a
+    // mount's subdirectories arrive with the listing that finds them. Falling back to
+    // the root waits until the map can no longer turn up the folder named here.
+    if (!folders.loading) {
       setCurrentFolderId(ROOT_FOLDER_ID);
     }
-  }, [location.pathname, foldersById, setCurrentFolderId, resolveDiskFolder]);
+  }, [
+    location.pathname,
+    foldersById,
+    setCurrentFolderId,
+    resolveDiskFolder,
+    folders.loading,
+  ]);
 
   // Bounce off any share-related tab when sharing isn't enabled.
   useEffect(() => {
@@ -250,17 +269,6 @@ export default function FileManagerView() {
       setCurrentTab("all");
     }
   }, [sharingEnabled, currentTab, setCurrentTab]);
-
-  // Push folder selection into the URL while still on /files.
-  useEffect(() => {
-    const stripped = stripBasePath(window.location.pathname);
-    if (!stripped.startsWith("/files")) return;
-    const target =
-      currentFolderId === null ? "/files" : `/files/${currentFolderId}`;
-    if (stripped !== target) {
-      navigate(target, { replace: true });
-    }
-  }, [currentFolderId, navigate]);
 
   // ─── visible items (current folder + sort + search) ─────────────────────
 
@@ -290,7 +298,6 @@ export default function FileManagerView() {
   const visibleFolders = useMemo(() => {
     // Folders only appear in cloud-rooted tabs.
     if (
-      currentTab === "local" ||
       currentTab === "recent" ||
       currentTab === "shared" ||
       currentTab === "sharedByMe"
@@ -301,6 +308,12 @@ export default function FileManagerView() {
     const matched = folders.folders.filter((f) => {
       // The Cloud tab is the server's view: browser folders and mounts aren't on it.
       if (currentTab === "cloud" && folderKind(f) !== "server") return false;
+      // A folder answers to the source filter the way its files would: a server
+      // folder is cloud, a browser folder and a mount are both local.
+      if (originFilter !== "all") {
+        const folderOrigin = folderKind(f) === "server" ? "cloud" : "local";
+        if (folderOrigin !== originFilter) return false;
+      }
       if (search) {
         // Subtree-wide name match; exclude the current folder itself.
         return (
@@ -315,18 +328,19 @@ export default function FileManagerView() {
     return matched.sort((a, b) =>
       a.name.localeCompare(b.name, undefined, { sensitivity: "base" }),
     );
-  }, [folders.folders, currentFolderId, search, currentTab, subtreeFolderIds]);
+  }, [
+    folders.folders,
+    currentFolderId,
+    search,
+    currentTab,
+    subtreeFolderIds,
+    originFilter,
+  ]);
 
   // Files in current folder, pre-filter. Drives the type-filter dropdown.
   const filesInCurrentFolder = useMemo(() => {
     // Tab overrides folder navigation for Local/Recent/Shared.
     switch (currentTab) {
-      case "local":
-        // Both halves: a local file inside a browser folder belongs to that folder,
-        // not here as well.
-        return allFiles.filter(
-          (f) => f.remoteStorageId == null && (f.folderId ?? null) === null,
-        );
       case "cloud":
         // Cloud bucket; search widens to subtree, else direct-folder match.
         return allFiles.filter((f) => {
@@ -753,26 +767,40 @@ export default function FileManagerView() {
       const proceed = async () => {
         clearFilesPageReturnRoute();
 
+        // Already in the workspace: nothing to fetch or add, so just go to it. Sending
+        // it through materialize and add again has no reason to succeed - the bytes
+        // are already spoken for.
+        const alreadyOpen = stubs.filter((stub) =>
+          activeWorkspaceFileIdSet.has(stub.id as string),
+        );
+        const toOpen = stubs.filter(
+          (stub) => !activeWorkspaceFileIdSet.has(stub.id as string),
+        );
+
         // Server-only stubs have no bytes in IDB; download + ingest first.
-        const materialized = await materializeServerStubs(stubs, {
+        const materialized = await materializeServerStubs(toOpen, {
           addFiles: fileActions.addFilesWithOptions,
           updateStub: fileActions.updateStirlingFileStub,
         });
-        if (materialized.length !== stubs.length) {
+        if (materialized.length !== toOpen.length) {
           // At least one server download failed; refresh so the grid
           // reflects any successful ingests and the user can retry.
           await refresh();
           return;
         }
 
-        await fileActions.addStirlingFileStubs(materialized, {
-          selectFiles: false,
-        });
-        // Branch on requested stubs so already-active files still activate.
-        if (materialized.length === 1) {
-          setActiveFileId(materialized[0].id);
+        if (materialized.length > 0) {
+          await fileActions.addStirlingFileStubs(materialized, {
+            selectFiles: false,
+          });
+        }
+
+        // Every file the user asked for, whether it arrived now or was already there.
+        const opened = [...alreadyOpen, ...materialized];
+        if (opened.length === 1) {
+          setActiveFileId(opened[0].id);
           navActions.setWorkbench("viewer");
-        } else if (materialized.length > 1) {
+        } else if (opened.length > 1) {
           navActions.setWorkbench("fileEditor");
         }
         navigate(EDITOR_BASENAME);
@@ -790,6 +818,8 @@ export default function FileManagerView() {
       navigate,
       requestNavigation,
       clearFilesPageReturnRoute,
+      activeWorkspaceFileIdSet,
+      refresh,
     ],
   );
 
@@ -808,10 +838,10 @@ export default function FileManagerView() {
 
   const handleOpenFolder = useCallback(
     (id: FolderId) => {
-      folders.setCurrentFolderId(id);
+      openFolder(id);
       clearSelection();
     },
-    [folders, clearSelection],
+    [openFolder, clearSelection],
   );
 
   // ─── full-page drag-and-drop for OS uploads ─────────────────────────────
@@ -1094,14 +1124,12 @@ export default function FileManagerView() {
   // disabled item's caption.
   const serverFolderDisabledReason = useServerFolderBlock() ?? undefined;
 
-  const { addLocalFolder, createFolderHere, createFolderHereBlockedReason } =
-    useNewFolderFlow();
+  const { addLocalFolder } = useNewFolderFlow();
 
   // null = New folder actionable; string = disabled tooltip reason.
   const newFolderDisabledReason: string | null = useMemo(() => {
     // Only All/Cloud render folders, so creating one elsewhere would look inert.
     if (
-      currentTab === "local" ||
       currentTab === "recent" ||
       currentTab === "shared" ||
       currentTab === "sharedByMe"
@@ -1143,8 +1171,7 @@ export default function FileManagerView() {
       <header className="files-page-header">
         {/* Breadcrumb only for folder-rooted tabs. */}
         {(currentTab === "all" || currentTab === "cloud") && <Breadcrumbs />}
-        {(currentTab === "local" ||
-          currentTab === "recent" ||
+        {(currentTab === "recent" ||
           currentTab === "shared" ||
           currentTab === "sharedByMe") && (
           <div
@@ -1155,13 +1182,11 @@ export default function FileManagerView() {
               color: "var(--c-text)",
             }}
           >
-            {currentTab === "local"
-              ? t("filesPage.tabName.local", "Local")
-              : currentTab === "recent"
-                ? t("filesPage.tabName.recent", "Recent")
-                : currentTab === "shared"
-                  ? t("filesPage.tabName.shared", "Shared with me")
-                  : t("filesPage.tabName.sharedByMe", "Shared by me")}
+            {currentTab === "recent"
+              ? t("filesPage.tabName.recent", "Recent")
+              : currentTab === "shared"
+                ? t("filesPage.tabName.shared", "Shared with me")
+                : t("filesPage.tabName.sharedByMe", "Shared by me")}
           </div>
         )}
         {(() => {
@@ -1223,89 +1248,15 @@ export default function FileManagerView() {
                     <RefreshIcon />
                   </ActionIcon>
                 </Tooltip>
-                {newFolderDisabledReason ? (
-                  <Tooltip
-                    label={newFolderDisabledReason}
-                    withinPortal
-                    multiline
-                    w={220}
-                  >
-                    <span style={{ display: "inline-flex" }}>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        leftSection={<CreateNewFolderIcon fontSize="small" />}
-                        disabled
-                        style={{ pointerEvents: "auto" }}
-                      >
-                        {t("filesPage.newFolder", "New folder")}
-                      </Button>
-                    </span>
-                  </Tooltip>
-                ) : folders.currentFolderId !== null || !canPickDirectory ? (
-                  // Nothing to choose: a subfolder inherits its parent's kind, and on
-                  // the web everything lives on the server. Straight to the dialog.
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    leftSection={<CreateNewFolderIcon fontSize="small" />}
-                    onClick={() =>
-                      folders.currentFolderId !== null
-                        ? openNewFolderDialog()
-                        : openNewFolderDialog(null, "server")
-                    }
-                  >
-                    {t("filesPage.newFolder", "New folder")}
-                  </Button>
-                ) : (
-                  // Desktop root: two peer destinations, so the button is the menu.
-                  <Menu shadow="md" position="bottom-end" withinPortal>
-                    <Menu.Target>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        leftSection={<CreateNewFolderIcon fontSize="small" />}
-                        rightSection={<ArrowDropDownIcon fontSize="small" />}
-                      >
-                        {t("filesPage.newFolder", "New folder")}
-                      </Button>
-                    </Menu.Target>
-                    <Menu.Dropdown>
-                      <Menu.Item
-                        leftSection={
-                          <DriveFolderUploadIcon
-                            fontSize="small"
-                            style={{ marginRight: "0.3rem" }}
-                          />
-                        }
-                        onClick={() => void addLocalFolder()}
-                      >
-                        {t(
-                          "filesPage.newFolderMenu.addExisting",
-                          "Add local folder",
-                        )}
-                      </Menu.Item>
-                      <Menu.Item
-                        className="files-page-new-folder-option"
-                        leftSection={<CloudIcon fontSize="small" />}
-                        disabled={Boolean(serverFolderDisabledReason)}
-                        onClick={() => openNewFolderDialog(null, "server")}
-                      >
-                        {t(
-                          "filesPage.newFolderMenu.server",
-                          "New folder on the server",
-                        )}
-                        <Text size="xs" c="dimmed">
-                          {serverFolderDisabledReason ??
-                            t(
-                              "filesPage.newFolderMenu.serverHint",
-                              "Synced to your account, available wherever you sign in.",
-                            )}
-                        </Text>
-                      </Menu.Item>
-                    </Menu.Dropdown>
-                  </Menu>
-                )}
+                <NewFolderButton
+                  label={t("filesPage.newFolder", "New folder")}
+                  disabledReason={newFolderDisabledReason}
+                  serverDisabledReason={serverFolderDisabledReason}
+                  currentFolderId={folders.currentFolderId}
+                  canAddLocalFolder={canPickDirectory}
+                  onAddLocalFolder={() => void addLocalFolder()}
+                  onOpenDialog={openNewFolderDialog}
+                />
                 <Button
                   size="sm"
                   leftSection={<UploadFileIcon fontSize="small" />}
@@ -1902,6 +1853,7 @@ export default function FileManagerView() {
               currentTab={currentTab}
               searchActive={search.trim().length > 0}
               serverReachable={folders.serverReachable}
+              onActionError={folders.setError}
               selectedFileIds={selectedFileIds}
               activeWorkspaceFileIds={activeWorkspaceFileIdSet}
               viewMode={viewMode}
@@ -1944,11 +1896,17 @@ export default function FileManagerView() {
               // (disabled tooltips, native file picker, dialog) is
               // identical regardless of where the user clicks from.
               onEmptyUpload={() => fileInputRef.current?.click()}
-              onEmptyCreateFolder={createFolderHere}
-              // A single-click shortcut, so it also blocks where it has nothing safe
-              // to do, unlike the header button whose menu still offers the choices.
-              newFolderDisabledReason={
-                newFolderDisabledReason ?? createFolderHereBlockedReason
+              emptyNewFolderControl={
+                <NewFolderButton
+                  label={t("filesPage.newFolder", "New folder")}
+                  size="md"
+                  disabledReason={newFolderDisabledReason}
+                  serverDisabledReason={serverFolderDisabledReason}
+                  currentFolderId={folders.currentFolderId}
+                  canAddLocalFolder={canPickDirectory}
+                  onAddLocalFolder={() => void addLocalFolder()}
+                  onOpenDialog={openNewFolderDialog}
+                />
               }
             />
             {isDraggingExternal && (
@@ -2155,77 +2113,121 @@ function Breadcrumbs() {
   const { t } = useTranslation();
   const folders = useFolders();
   const filesPage = useFilesPage();
+  const openFolder = useOpenFolder();
   const trail = folders.breadcrumbs;
+
+  const reportFailure = (err: unknown, detailKey: string, plainKey: string) => {
+    folders.setError(
+      err instanceof Error
+        ? t(detailKey, {
+            message: err.message,
+            defaultValue: `Could not move: ${err.message}`,
+          })
+        : t(plainKey, "Could not move."),
+    );
+  };
+
+  /** A crumb is a drop target for the folder it names. */
+  const dropHandlers = (target: FolderBreadcrumbEntry) => ({
+    onDragOver: (e: React.DragEvent) => {
+      if (e.dataTransfer.types.includes(FILES_PAGE_DRAG_TYPE)) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "move";
+      }
+    },
+    onDrop: (e: React.DragEvent) => {
+      e.preventDefault();
+      const payload = parseFilesPageDragPayload(e.dataTransfer);
+      if (!payload) return;
+      if (payload.kind === "files") {
+        // Through moveFilesTo so the revision bumps and the grid refreshes, and a
+        // rejection reaches the banner rather than only the console.
+        void filesPage.moveFilesTo(payload.fileIds, target.id).catch((err) => {
+          console.error("[breadcrumb] drop failed", err);
+          reportFailure(
+            err,
+            "filesPage.error.moveFilesFailedDetail",
+            "filesPage.error.moveFilesFailed",
+          );
+        });
+      } else if (payload.kind === "folder") {
+        // Through moveFolderTo so the client-side cycle guard fires before the
+        // server call: dropping an ancestor on a descendant crumb has its own
+        // message, not the generic banner.
+        void filesPage
+          .moveFolderTo(payload.folderId, target.id)
+          .catch((err) => {
+            console.error("[breadcrumb] folder drop failed", err);
+            reportFailure(
+              err,
+              "filesPage.error.moveFolderFailedDetail",
+              "filesPage.error.moveFolderFailed",
+            );
+          });
+      }
+    },
+  });
+
+  // Two crumbs at most. Everything above them, the root included, moves into the
+  // overflow menu: a deep trail otherwise grows the bar it sits in, and the folder
+  // you are actually in is the one that scrolls out of sight.
+  const VISIBLE = 2;
+  const split = Math.max(0, trail.length - VISIBLE);
+  const hidden = trail.slice(0, split);
+  const shown = trail.slice(split);
+
   return (
     <nav
       className="files-page-breadcrumbs"
       aria-label={t("filesPage.breadcrumbs", "Folder path")}
     >
-      {trail.map((entry, idx) => {
-        const isLast = idx === trail.length - 1;
+      {hidden.length > 0 && (
+        <>
+          <Menu shadow="md" position="bottom-start" withinPortal>
+            <Menu.Target>
+              <ActionIcon
+                variant="quiet"
+                size="sm"
+                className="files-page-breadcrumb-overflow"
+                aria-label={t(
+                  "filesPage.breadcrumbsOverflow",
+                  "Show parent folders",
+                )}
+              >
+                <MoreHorizIcon fontSize="small" />
+              </ActionIcon>
+            </Menu.Target>
+            <Menu.Dropdown>
+              {hidden.map((entry) => (
+                <Menu.Item
+                  key={entry.id ?? "root"}
+                  onClick={() => openFolder(entry.id)}
+                >
+                  {entry.name}
+                </Menu.Item>
+              ))}
+            </Menu.Dropdown>
+          </Menu>
+          <KeyboardArrowRightIcon
+            className="files-page-breadcrumb-sep"
+            fontSize="small"
+            aria-hidden="true"
+          />
+        </>
+      )}
+      {shown.map((entry, idx) => {
+        const isLast = idx === shown.length - 1;
         return (
           <React.Fragment key={entry.id ?? "root"}>
-            <Button
-              variant="tertiary"
+            <button
+              type="button"
               className={`files-page-breadcrumb${isLast ? " is-current" : ""}`}
-              onClick={() => folders.setCurrentFolderId(entry.id)}
-              onDragOver={(e) => {
-                if (e.dataTransfer.types.includes(FILES_PAGE_DRAG_TYPE)) {
-                  e.preventDefault();
-                  e.dataTransfer.dropEffect = "move";
-                }
-              }}
-              onDrop={(e) => {
-                e.preventDefault();
-                const payload = parseFilesPageDragPayload(e.dataTransfer);
-                if (!payload) return;
-                if (payload.kind === "files") {
-                  // Route through moveFilesTo (→ IndexedDBContext.moveFilesToFolder)
-                  // so the revision bumps and the grid refreshes. Surface
-                  // rejection via the banner - console-only was invisible
-                  // to non-dev users.
-                  void filesPage
-                    .moveFilesTo(payload.fileIds, entry.id)
-                    .catch((err) => {
-                      console.error("[breadcrumb] drop failed", err);
-                      folders.setError(
-                        err instanceof Error
-                          ? t("filesPage.error.moveFilesFailedDetail", {
-                              message: err.message,
-                              defaultValue: `Could not move files: ${err.message}`,
-                            })
-                          : t(
-                              "filesPage.error.moveFilesFailed",
-                              "Could not move files.",
-                            ),
-                      );
-                    });
-                } else if (payload.kind === "folder") {
-                  // Route through moveFolderTo so the client-side cycle guard fires
-                  // before the server call - otherwise dragging an ancestor onto a
-                  // child crumb shows the generic banner instead of the localized
-                  // "Can't move a folder into one of its own subfolders." message.
-                  void filesPage
-                    .moveFolderTo(payload.folderId, entry.id)
-                    .catch((err) => {
-                      console.error("[breadcrumb] folder drop failed", err);
-                      folders.setError(
-                        err instanceof Error
-                          ? t("filesPage.error.moveFolderFailedDetail", {
-                              message: err.message,
-                              defaultValue: `Could not move folder: ${err.message}`,
-                            })
-                          : t(
-                              "filesPage.error.moveFolderFailed",
-                              "Could not move folder.",
-                            ),
-                      );
-                    });
-                }
-              }}
+              title={entry.name}
+              onClick={() => openFolder(entry.id)}
+              {...dropHandlers(entry)}
             >
               {entry.name}
-            </Button>
+            </button>
             {!isLast && (
               <KeyboardArrowRightIcon
                 className="files-page-breadcrumb-sep"

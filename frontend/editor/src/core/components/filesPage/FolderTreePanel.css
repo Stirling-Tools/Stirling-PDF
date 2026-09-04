@@ -168,10 +168,25 @@
 
 .files-page-tree-name {
   flex: 1;
+  min-width: 0;
+  display: flex;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   margin-left: 12px;
+}
+
+/* Head elides, tail is kept whole: together they read as one name broken in the
+   middle, so both ends stay visible at any column width. */
+.files-page-tree-name-head {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.files-page-tree-name-tail {
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .files-page-tree-count {

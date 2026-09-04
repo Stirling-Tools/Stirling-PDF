@@ -7,12 +7,12 @@
 
 import { loadPolicyCatalog } from "@app/services/policyCatalog";
 import { defaultRunOn } from "@app/policies/runOn";
-import type { PoliciesByCategory, PolicyState } from "@app/types/policies";
+import type { PoliciesByKey, PolicyState } from "@app/types/policies";
 
 const STORAGE_KEY = "stirling-policies-state";
 export const POLICIES_CHANGE_EVENT = "stirling:policies-changed";
 
-function defaultState(categoryId: string): PolicyState {
+function defaultState(policyKey: string): PolicyState {
   // Unconfigured by default. The backend is the source of truth for what's
   // actually configured + active; this is just the empty local-cache shape.
   return {
@@ -28,7 +28,7 @@ function defaultState(categoryId: string): PolicyState {
     outputMode: "new_version",
     // No rename by default — the output keeps the input's filename.
     outputName: "",
-    runOn: defaultRunOn(categoryId),
+    runOn: defaultRunOn(policyKey),
     // Every catalog category is a shipped, built-in policy → default (not
     // deletable).
     isDefault: true,
@@ -40,20 +40,20 @@ function defaultState(categoryId: string): PolicyState {
 const STALE_REVIEWER_EMAIL = "matt@stirlingpdf.com";
 
 /** Read the full policy state, seeding + healing any missing categories. */
-export function loadPolicies(): PoliciesByCategory {
-  let parsed: Partial<PoliciesByCategory> = {};
+export function loadPolicies(): PoliciesByKey {
+  let parsed: Partial<PoliciesByKey> = {};
   try {
     const raw =
       typeof localStorage !== "undefined"
         ? localStorage.getItem(STORAGE_KEY)
         : null;
-    if (raw) parsed = JSON.parse(raw) as Partial<PoliciesByCategory>;
+    if (raw) parsed = JSON.parse(raw) as Partial<PoliciesByKey>;
   } catch {
     // Corrupt/unavailable storage — fall back to seed.
   }
   // Always reconcile against the current category list so a newly-added
   // category gets a default rather than being undefined.
-  const out: PoliciesByCategory = {};
+  const out: PoliciesByKey = {};
   loadPolicyCatalog().categories.forEach((cat, index) => {
     const stored = parsed[cat.id];
     const merged = { ...defaultState(cat.id), ...(stored ?? {}) };
@@ -80,7 +80,7 @@ export function loadPolicies(): PoliciesByCategory {
   return out;
 }
 
-function persist(state: PoliciesByCategory): void {
+function persist(state: PoliciesByKey): void {
   try {
     if (typeof localStorage !== "undefined") {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -95,17 +95,17 @@ function persist(state: PoliciesByCategory): void {
 
 /** Merge a partial update into one category's state and persist. */
 export function updatePolicy(
-  categoryId: string,
+  policyKey: string,
   patch: Partial<PolicyState>,
-): PoliciesByCategory {
+): PoliciesByKey {
   const current = loadPolicies();
-  const next: PoliciesByCategory = {
+  const next: PoliciesByKey = {
     ...current,
     // Fall back to defaults so a not-yet-seeded category id still yields a
     // complete PolicyState rather than a partial.
-    [categoryId]: {
-      ...defaultState(categoryId),
-      ...current[categoryId],
+    [policyKey]: {
+      ...defaultState(policyKey),
+      ...current[policyKey],
       ...patch,
     },
   };
@@ -119,10 +119,10 @@ export function updatePolicy(
  * entry keeps a dead backendId that the auto-run still tries to dispatch. Built-in categories are
  * never forgotten - they reseed on the next read anyway.
  */
-export function forgetPolicies(ids: string[]): PoliciesByCategory {
+export function forgetPolicies(ids: string[]): PoliciesByKey {
   const current = loadPolicies();
   const catalogIds = new Set(loadPolicyCatalog().categories.map((c) => c.id));
-  const next: PoliciesByCategory = { ...current };
+  const next: PoliciesByKey = { ...current };
   let removed = false;
   for (const id of ids) {
     if (catalogIds.has(id) || !(id in next)) continue;
