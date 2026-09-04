@@ -351,6 +351,15 @@ public class ConfigController {
                             .getProperty(
                                     "stirling.billing.account-link.enabled", Boolean.class, false));
 
+            // Pipeline store. Hosted by the SaaS backend and flagged there; a self-hosted portal
+            // reaches it over the account link, so the frontend also treats accountLinkAvailable
+            // as "the store is reachable". Read from the environment for the same reason as above.
+            configData.put(
+                    "storeAvailable",
+                    applicationContext
+                            .getEnvironment()
+                            .getProperty("stirling.store.enabled", Boolean.class, false));
+
             // AI Engine settings
             ApplicationProperties.AiEngine aiEngineConfig = applicationProperties.getAiEngine();
             configData.put("aiEngineEnabled", aiEngineConfig.isEnabled());

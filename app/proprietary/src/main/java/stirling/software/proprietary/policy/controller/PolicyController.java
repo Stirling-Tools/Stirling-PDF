@@ -405,7 +405,8 @@ public class PolicyController {
                 policy.output(),
                 policy.outputIds(),
                 teamId,
-                policy.editor());
+                policy.editor(),
+                policy.storeId());
     }
 
     /** Output secrets never leave the server: reads return the redaction sentinel instead. */
