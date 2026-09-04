@@ -21,6 +21,8 @@ import {
 } from "@app/contexts/NavigationContext";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useWheelZoom } from "@app/hooks/useWheelZoom";
+import { PrivateContent } from "@app/components/shared/PrivateContent";
+import { truncateCenter } from "@app/utils/textUtils";
 import { FileId } from "@app/types/file";
 import { useTrackWorkspace } from "@app/components/pageTracks/hooks/useTrackWorkspace";
 import { useTrackSelection } from "@app/components/pageTracks/hooks/useTrackSelection";
@@ -631,7 +633,12 @@ export default function PageTracks() {
               <div key={fileId} className={styles.track}>
                 <header className={styles.trackHeader}>
                   <span className={styles.trackName}>
-                    {fileState.files.byId[fileId]?.name ?? fileId}
+                    <PrivateContent>
+                      {truncateCenter(
+                        fileState.files.byId[fileId]?.name ?? fileId,
+                        40,
+                      )}
+                    </PrivateContent>
                   </span>
                   <span className={styles.trackMeta}>
                     {t("pageTracks.readingPages", "Reading pages...")}

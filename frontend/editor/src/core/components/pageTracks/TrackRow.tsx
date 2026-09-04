@@ -18,6 +18,8 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Tooltip } from "@app/components/shared/Tooltip";
+import { PrivateContent } from "@app/components/shared/PrivateContent";
+import { truncateCenter } from "@app/utils/textUtils";
 import { FileId } from "@app/types/file";
 import { Track } from "@app/components/pageTracks/types";
 import { TrackThumbnailStore } from "@app/components/pageTracks/hooks/useTrackThumbnails";
@@ -319,8 +321,8 @@ function TrackRowImpl({
             )}
           </ActionIcon>
         </Tooltip>
-        <span className={styles.trackName} title={name}>
-          {name}
+        <span className={styles.trackName}>
+          <PrivateContent>{truncateCenter(name, 40)}</PrivateContent>
         </span>
         <span className={styles.trackMeta}>
           {[
