@@ -273,7 +273,7 @@ const LicenseKeySection: React.FC<LicenseKeySectionProps> = ({
                         "Enter your premium or enterprise license key. Premium features will be automatically enabled when a key is provided.",
                       )}
                     >
-                      t("admin.settings.premium.key.label", "License Key")
+                      {t("admin.settings.premium.key.label", "License Key")}
                     </SettingsFieldLabel>
                   }
                   value={licenseKeyInput}

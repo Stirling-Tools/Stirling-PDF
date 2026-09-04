@@ -43,8 +43,7 @@ export function AuthenticationCard({
                   "The authentication method to use for user login",
                 )}
               >
-                t( "admin.settings.security.loginMethod.label", "Login Method",
-                )
+                {t("admin.settings.security.loginMethod.label", "Login Method")}
               </SettingsFieldLabel>
             }
             value={settings?.loginMethod || "all"}

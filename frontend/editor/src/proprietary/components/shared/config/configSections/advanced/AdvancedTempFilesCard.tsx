@@ -27,9 +27,10 @@ export function AdvancedTempFilesCard({
                   "Base directory for temporary files (leave empty for default: java.io.tmpdir/stirling-pdf)",
                 )}
               >
-                t(
-                "admin.settings.advanced.tempFileManagement.baseTmpDir.label",
-                "Base Temp Directory", )
+                {t(
+                  "admin.settings.advanced.tempFileManagement.baseTmpDir.label",
+                  "Base Temp Directory",
+                )}
               </SettingsFieldLabel>
             }
             value={settings.tempFileManagement?.baseTmpDir || ""}
@@ -59,9 +60,10 @@ export function AdvancedTempFilesCard({
                   "Directory for LibreOffice temp files (leave empty for default: baseTmpDir/libreoffice)",
                 )}
               >
-                t(
-                "admin.settings.advanced.tempFileManagement.libreofficeDir.label",
-                "LibreOffice Temp Directory", )
+                {t(
+                  "admin.settings.advanced.tempFileManagement.libreofficeDir.label",
+                  "LibreOffice Temp Directory",
+                )}
               </SettingsFieldLabel>
             }
             value={settings.tempFileManagement?.libreofficeDir || ""}
@@ -91,9 +93,10 @@ export function AdvancedTempFilesCard({
                   "System temp directory to clean (only used if cleanupSystemTemp is enabled)",
                 )}
               >
-                t(
-                "admin.settings.advanced.tempFileManagement.systemTempDir.label",
-                "System Temp Directory", )
+                {t(
+                  "admin.settings.advanced.tempFileManagement.systemTempDir.label",
+                  "System Temp Directory",
+                )}
               </SettingsFieldLabel>
             }
             value={settings.tempFileManagement?.systemTempDir || ""}
@@ -123,8 +126,10 @@ export function AdvancedTempFilesCard({
                   "Prefix for temp file names",
                 )}
               >
-                t( "admin.settings.advanced.tempFileManagement.prefix.label",
-                "Temp File Prefix", )
+                {t(
+                  "admin.settings.advanced.tempFileManagement.prefix.label",
+                  "Temp File Prefix",
+                )}
               </SettingsFieldLabel>
             }
             value={settings.tempFileManagement?.prefix || "stirling-pdf-"}
@@ -151,9 +156,10 @@ export function AdvancedTempFilesCard({
                   "Maximum age in hours before temp files are cleaned up",
                 )}
               >
-                t(
-                "admin.settings.advanced.tempFileManagement.maxAgeHours.label",
-                "Max Age (hours)", )
+                {t(
+                  "admin.settings.advanced.tempFileManagement.maxAgeHours.label",
+                  "Max Age (hours)",
+                )}
               </SettingsFieldLabel>
             }
             value={settings.tempFileManagement?.maxAgeHours ?? 24}
@@ -181,9 +187,10 @@ export function AdvancedTempFilesCard({
                   "How often to run cleanup (in minutes)",
                 )}
               >
-                t(
-                "admin.settings.advanced.tempFileManagement.cleanupIntervalMinutes.label",
-                "Cleanup Interval (minutes)", )
+                {t(
+                  "admin.settings.advanced.tempFileManagement.cleanupIntervalMinutes.label",
+                  "Cleanup Interval (minutes)",
+                )}
               </SettingsFieldLabel>
             }
             value={settings.tempFileManagement?.cleanupIntervalMinutes ?? 30}

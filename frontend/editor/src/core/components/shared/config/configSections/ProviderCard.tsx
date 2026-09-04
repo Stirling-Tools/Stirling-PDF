@@ -129,7 +129,7 @@ export default function ProviderCard({
             key={field.key}
             label={
               <SettingsFieldLabel info={field.description}>
-                field.label
+                {field.label}
               </SettingsFieldLabel>
             }
             placeholder={field.placeholder}
@@ -145,7 +145,7 @@ export default function ProviderCard({
             key={field.key}
             label={
               <SettingsFieldLabel info={field.description}>
-                field.label
+                {field.label}
               </SettingsFieldLabel>
             }
             placeholder={field.placeholder}
@@ -166,7 +166,7 @@ export default function ProviderCard({
             key={field.key}
             label={
               <SettingsFieldLabel info={field.description}>
-                field.label
+                {field.label}
               </SettingsFieldLabel>
             }
             placeholder={field.placeholder}
@@ -183,7 +183,7 @@ export default function ProviderCard({
             key={field.key}
             label={
               <SettingsFieldLabel info={field.description}>
-                field.label
+                {field.label}
               </SettingsFieldLabel>
             }
             placeholder={field.placeholder}

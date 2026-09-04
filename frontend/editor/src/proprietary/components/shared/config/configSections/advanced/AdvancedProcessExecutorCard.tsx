@@ -33,9 +33,10 @@ export function AdvancedProcessExecutorCard({
                         "Maximum concurrent instances",
                       )}
                     >
-                      t(
-                      "admin.settings.advanced.processExecutor.sessionLimit.label",
-                      "Session Limit", )
+                      {t(
+                        "admin.settings.advanced.processExecutor.sessionLimit.label",
+                        "Session Limit",
+                      )}
                     </SettingsFieldLabel>
                   }
                   value={
@@ -66,9 +67,10 @@ export function AdvancedProcessExecutorCard({
                         "Maximum execution time",
                       )}
                     >
-                      t(
-                      "admin.settings.advanced.processExecutor.timeout.label",
-                      "Timeout (minutes)", )
+                      {t(
+                        "admin.settings.advanced.processExecutor.timeout.label",
+                        "Timeout (minutes)",
+                      )}
                     </SettingsFieldLabel>
                   }
                   value={
@@ -113,9 +115,10 @@ export function AdvancedProcessExecutorCard({
                         "Maximum concurrent instances",
                       )}
                     >
-                      t(
-                      "admin.settings.advanced.processExecutor.sessionLimit.label",
-                      "Session Limit", )
+                      {t(
+                        "admin.settings.advanced.processExecutor.sessionLimit.label",
+                        "Session Limit",
+                      )}
                     </SettingsFieldLabel>
                   }
                   value={
@@ -146,9 +149,10 @@ export function AdvancedProcessExecutorCard({
                         "Maximum execution time",
                       )}
                     >
-                      t(
-                      "admin.settings.advanced.processExecutor.timeout.label",
-                      "Timeout (minutes)", )
+                      {t(
+                        "admin.settings.advanced.processExecutor.timeout.label",
+                        "Timeout (minutes)",
+                      )}
                     </SettingsFieldLabel>
                   }
                   value={
@@ -190,9 +194,10 @@ export function AdvancedProcessExecutorCard({
                         "Maximum concurrent instances",
                       )}
                     >
-                      t(
-                      "admin.settings.advanced.processExecutor.sessionLimit.label",
-                      "Session Limit", )
+                      {t(
+                        "admin.settings.advanced.processExecutor.sessionLimit.label",
+                        "Session Limit",
+                      )}
                     </SettingsFieldLabel>
                   }
                   value={
@@ -223,9 +228,10 @@ export function AdvancedProcessExecutorCard({
                         "Maximum execution time",
                       )}
                     >
-                      t(
-                      "admin.settings.advanced.processExecutor.timeout.label",
-                      "Timeout (minutes)", )
+                      {t(
+                        "admin.settings.advanced.processExecutor.timeout.label",
+                        "Timeout (minutes)",
+                      )}
                     </SettingsFieldLabel>
                   }
                   value={
@@ -270,9 +276,10 @@ export function AdvancedProcessExecutorCard({
                         "Maximum concurrent instances",
                       )}
                     >
-                      t(
-                      "admin.settings.advanced.processExecutor.sessionLimit.label",
-                      "Session Limit", )
+                      {t(
+                        "admin.settings.advanced.processExecutor.sessionLimit.label",
+                        "Session Limit",
+                      )}
                     </SettingsFieldLabel>
                   }
                   value={
@@ -303,9 +310,10 @@ export function AdvancedProcessExecutorCard({
                         "Maximum execution time",
                       )}
                     >
-                      t(
-                      "admin.settings.advanced.processExecutor.timeout.label",
-                      "Timeout (minutes)", )
+                      {t(
+                        "admin.settings.advanced.processExecutor.timeout.label",
+                        "Timeout (minutes)",
+                      )}
                     </SettingsFieldLabel>
                   }
                   value={
@@ -350,9 +358,10 @@ export function AdvancedProcessExecutorCard({
                         "Maximum concurrent instances",
                       )}
                     >
-                      t(
-                      "admin.settings.advanced.processExecutor.sessionLimit.label",
-                      "Session Limit", )
+                      {t(
+                        "admin.settings.advanced.processExecutor.sessionLimit.label",
+                        "Session Limit",
+                      )}
                     </SettingsFieldLabel>
                   }
                   value={
@@ -383,9 +392,10 @@ export function AdvancedProcessExecutorCard({
                         "Maximum execution time",
                       )}
                     >
-                      t(
-                      "admin.settings.advanced.processExecutor.timeout.label",
-                      "Timeout (minutes)", )
+                      {t(
+                        "admin.settings.advanced.processExecutor.timeout.label",
+                        "Timeout (minutes)",
+                      )}
                     </SettingsFieldLabel>
                   }
                   value={
@@ -430,9 +440,10 @@ export function AdvancedProcessExecutorCard({
                         "Maximum concurrent instances",
                       )}
                     >
-                      t(
-                      "admin.settings.advanced.processExecutor.sessionLimit.label",
-                      "Session Limit", )
+                      {t(
+                        "admin.settings.advanced.processExecutor.sessionLimit.label",
+                        "Session Limit",
+                      )}
                     </SettingsFieldLabel>
                   }
                   value={
@@ -463,9 +474,10 @@ export function AdvancedProcessExecutorCard({
                         "Maximum execution time",
                       )}
                     >
-                      t(
-                      "admin.settings.advanced.processExecutor.timeout.label",
-                      "Timeout (minutes)", )
+                      {t(
+                        "admin.settings.advanced.processExecutor.timeout.label",
+                        "Timeout (minutes)",
+                      )}
                     </SettingsFieldLabel>
                   }
                   value={
@@ -510,9 +522,10 @@ export function AdvancedProcessExecutorCard({
                         "Maximum concurrent instances",
                       )}
                     >
-                      t(
-                      "admin.settings.advanced.processExecutor.sessionLimit.label",
-                      "Session Limit", )
+                      {t(
+                        "admin.settings.advanced.processExecutor.sessionLimit.label",
+                        "Session Limit",
+                      )}
                     </SettingsFieldLabel>
                   }
                   value={
@@ -543,9 +556,10 @@ export function AdvancedProcessExecutorCard({
                         "Maximum execution time",
                       )}
                     >
-                      t(
-                      "admin.settings.advanced.processExecutor.timeout.label",
-                      "Timeout (minutes)", )
+                      {t(
+                        "admin.settings.advanced.processExecutor.timeout.label",
+                        "Timeout (minutes)",
+                      )}
                     </SettingsFieldLabel>
                   }
                   value={
@@ -587,9 +601,10 @@ export function AdvancedProcessExecutorCard({
                         "Maximum concurrent instances",
                       )}
                     >
-                      t(
-                      "admin.settings.advanced.processExecutor.sessionLimit.label",
-                      "Session Limit", )
+                      {t(
+                        "admin.settings.advanced.processExecutor.sessionLimit.label",
+                        "Session Limit",
+                      )}
                     </SettingsFieldLabel>
                   }
                   value={
@@ -620,9 +635,10 @@ export function AdvancedProcessExecutorCard({
                         "Maximum execution time",
                       )}
                     >
-                      t(
-                      "admin.settings.advanced.processExecutor.timeout.label",
-                      "Timeout (minutes)", )
+                      {t(
+                        "admin.settings.advanced.processExecutor.timeout.label",
+                        "Timeout (minutes)",
+                      )}
                     </SettingsFieldLabel>
                   }
                   value={
@@ -667,9 +683,10 @@ export function AdvancedProcessExecutorCard({
                         "Maximum concurrent instances",
                       )}
                     >
-                      t(
-                      "admin.settings.advanced.processExecutor.sessionLimit.label",
-                      "Session Limit", )
+                      {t(
+                        "admin.settings.advanced.processExecutor.sessionLimit.label",
+                        "Session Limit",
+                      )}
                     </SettingsFieldLabel>
                   }
                   value={
@@ -700,9 +717,10 @@ export function AdvancedProcessExecutorCard({
                         "Maximum execution time",
                       )}
                     >
-                      t(
-                      "admin.settings.advanced.processExecutor.timeout.label",
-                      "Timeout (minutes)", )
+                      {t(
+                        "admin.settings.advanced.processExecutor.timeout.label",
+                        "Timeout (minutes)",
+                      )}
                     </SettingsFieldLabel>
                   }
                   value={
@@ -747,9 +765,10 @@ export function AdvancedProcessExecutorCard({
                         "Maximum concurrent instances",
                       )}
                     >
-                      t(
-                      "admin.settings.advanced.processExecutor.sessionLimit.label",
-                      "Session Limit", )
+                      {t(
+                        "admin.settings.advanced.processExecutor.sessionLimit.label",
+                        "Session Limit",
+                      )}
                     </SettingsFieldLabel>
                   }
                   value={
@@ -780,9 +799,10 @@ export function AdvancedProcessExecutorCard({
                         "Maximum execution time",
                       )}
                     >
-                      t(
-                      "admin.settings.advanced.processExecutor.timeout.label",
-                      "Timeout (minutes)", )
+                      {t(
+                        "admin.settings.advanced.processExecutor.timeout.label",
+                        "Timeout (minutes)",
+                      )}
                     </SettingsFieldLabel>
                   }
                   value={

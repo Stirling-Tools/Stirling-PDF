@@ -308,7 +308,7 @@ const StaticCheckoutModal: React.FC<StaticCheckoutModalProps> = ({
                         "Paste the license key from your email",
                       )}
                     >
-                      t("admin.settings.premium.key.label", "License Key")
+                      {t("admin.settings.premium.key.label", "License Key")}
                     </SettingsFieldLabel>
                   }
                   value={licenseKey}
