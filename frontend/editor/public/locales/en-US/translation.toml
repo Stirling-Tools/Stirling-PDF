@@ -10048,10 +10048,6 @@ customPaddingLabel = "Custom Extra Padding"
 useRegexLabel = "Use Regex"
 wholeWordSearchLabel = "Whole Word Search"
 
-[redact.auto.settings]
-advancedTitle = "Advanced"
-title = "Redaction Settings"
-
 [redact.auto.wordsToRedact]
 add = "Add"
 examples = "Examples: Confidential, Top-Secret"
@@ -10070,11 +10066,29 @@ instructions = "Select text or draw areas on the PDF to mark content for redacti
 title = "Redaction Tools"
 
 [redact.modeSelector]
-automatic = "Automatic"
-automaticDisabledTooltip = "Select files in the file manager to redact multiple files at once"
 manual = "Manual"
 mode = "Mode"
+searchAndRedact = "Search & Redact"
+searchAndRedactDisabledTooltip = "Add files to the workbench to use Search & Redact"
 title = "Redaction Method"
+
+[redact.searchAndRedact]
+caseSensitive = "Case sensitive"
+colorLabel = "Redaction Color"
+controlsTitle = "Search & Redact Controls"
+instructions = "Enter text to find in the PDF. You can then redact all matches at once."
+matchesFound = "{{count}} matches found on {{pages}} page(s)"
+noMatches = "No matches found"
+noMatchesRedacted = "No matches found to redact"
+onPages = "Pages: {{pages}}"
+redactButton = "Redact All Matches"
+redactFailed = "Redaction failed"
+searchButton = "Search"
+searchFailed = "Search failed"
+searchLabel = "Search Text"
+searchPlaceholder = "Enter text to search for..."
+title = "Search & Redact"
+wholeWord = "Whole word"
 
 [redact.tooltip.advanced.color]
 text = "Customize the appearance of redaction boxes. Black is standard, but you can choose any color. Padding adds extra space around the found text."

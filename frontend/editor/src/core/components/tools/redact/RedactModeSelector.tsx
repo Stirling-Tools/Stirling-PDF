@@ -25,12 +25,12 @@ export default function RedactModeSelector({
       options={[
         {
           value: "automatic" as const,
-          label: t("redact.modeSelector.automatic", "Automatic"),
-          disabled: !hasAnyFiles, // Allow switching to automatic whenever files exist; selection can happen after
+          label: t("redact.modeSelector.searchAndRedact", "Search & Redact"),
+          disabled: !hasAnyFiles, // Allow switching whenever files exist; selection can happen after
           tooltip: !hasAnyFiles
             ? t(
-                "redact.modeSelector.automaticDisabledTooltip",
-                "Upload files to use automatic redaction",
+                "redact.modeSelector.searchAndRedactDisabledTooltip",
+                "Add files to the workbench to use Search & Redact",
               )
             : undefined,
         },

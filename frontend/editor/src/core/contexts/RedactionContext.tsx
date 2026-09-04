@@ -14,6 +14,16 @@ import { RedactionMode } from "@embedpdf/plugin-redaction";
 /**
  * API interface that the EmbedPDF bridge will implement
  */
+export interface SearchRedactOptions {
+  caseSensitive?: boolean;
+  wholeWord?: boolean;
+}
+
+export interface SearchTextResult {
+  totalCount: number;
+  foundOnPages: number[];
+}
+
 export interface RedactionAPI {
   toggleRedact: () => void;
   enableRedact: () => void;
@@ -23,6 +33,13 @@ export interface RedactionAPI {
   commitAllPending: () => void;
   getActiveType: () => RedactionMode | null;
   getPendingCount: () => number;
+  // Search and Redact methods
+  searchText: (
+    text: string,
+    options?: SearchRedactOptions,
+  ) => Promise<SearchTextResult>;
+  redactText: (text: string, options?: SearchRedactOptions) => Promise<boolean>;
+  clearSearch: () => void;
 }
 
 /**
@@ -70,6 +87,13 @@ interface RedactionActions {
   // Legacy UI actions (for backwards compatibility with UI)
   activateTextSelection: () => void;
   activateMarquee: () => void;
+  // Search and Redact
+  searchText: (
+    text: string,
+    options?: SearchRedactOptions,
+  ) => Promise<SearchTextResult>;
+  redactText: (text: string, options?: SearchRedactOptions) => Promise<boolean>;
+  clearSearch: () => void;
 }
 
 /**
@@ -228,6 +252,40 @@ export const RedactionProvider: React.FC<{ children: ReactNode }> = ({
     }
   }, [setActiveType]);
 
+  // Search and Redact proxy methods
+  const searchText = useCallback(
+    async (
+      text: string,
+      options?: SearchRedactOptions,
+    ): Promise<SearchTextResult> => {
+      if (!redactionApiRef.current?.searchText) {
+        throw new Error("Redaction API bridge not ready");
+      }
+      return redactionApiRef.current.searchText(text, options);
+    },
+    [],
+  );
+
+  const redactText = useCallback(
+    async (text: string, options?: SearchRedactOptions): Promise<boolean> => {
+      if (!redactionApiRef.current?.redactText) {
+        throw new Error("Redaction API bridge not ready");
+      }
+      const result = await redactionApiRef.current.redactText(text, options);
+      if (result) {
+        setRedactionsApplied(true);
+      }
+      return result;
+    },
+    [setRedactionsApplied],
+  );
+
+  const clearSearch = useCallback(() => {
+    if (redactionApiRef.current?.clearSearch) {
+      redactionApiRef.current.clearSearch();
+    }
+  }, []);
+
   const contextValue: RedactionContextValue = {
     ...state,
     redactionApiRef,
@@ -245,6 +303,9 @@ export const RedactionProvider: React.FC<{ children: ReactNode }> = ({
     activateManualRedact,
     activateTextSelection,
     activateMarquee,
+    searchText,
+    redactText,
+    clearSearch,
   };
 
   return (
