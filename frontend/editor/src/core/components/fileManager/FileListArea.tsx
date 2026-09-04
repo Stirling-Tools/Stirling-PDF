@@ -1,10 +1,12 @@
 import React from "react";
 import { Center, ScrollArea, Text, Stack } from "@mantine/core";
 import CloudIcon from "@mui/icons-material/Cloud";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutlineRounded";
 import { useTranslation } from "react-i18next";
 import FileListItem from "@app/components/fileManager/FileListItem";
 import FileHistoryGroup from "@app/components/fileManager/FileHistoryGroup";
 import EmptyFilesState from "@app/components/fileManager/EmptyFilesState";
+import { Button } from "@app/ui/Button";
 import { useFileManagerContext } from "@app/contexts/FileManagerContext";
 
 interface FileListAreaProps {
@@ -29,7 +31,9 @@ const FileListArea: React.FC<FileListAreaProps> = ({
     onFileDoubleClick,
     onDownloadSingle,
     isLoading,
+    loadError,
     activeFileIds,
+    refreshRecentFiles,
   } = useFileManagerContext();
   const { t } = useTranslation();
 
@@ -44,15 +48,7 @@ const FileListArea: React.FC<FileListAreaProps> = ({
         scrollbarSize={8}
       >
         <Stack gap={0}>
-          {recentFiles.length === 0 && !isLoading ? (
-            <EmptyFilesState />
-          ) : recentFiles.length === 0 && isLoading ? (
-            <Center style={{ height: "12.5rem" }}>
-              <Text c="dimmed" ta="center">
-                {t("fileManager.loadingFiles", "Loading files...")}
-              </Text>
-            </Center>
-          ) : (
+          {recentFiles.length > 0 ? (
             filteredFiles.map((file, index) => {
               // All files in filteredFiles are now leaf files only
               const historyFiles = loadedHistoryFiles.get(file.id) || [];
@@ -84,6 +80,39 @@ const FileListArea: React.FC<FileListAreaProps> = ({
                 </React.Fragment>
               );
             })
+          ) : isLoading ? (
+            <Center style={{ height: "12.5rem" }}>
+              <Text c="dimmed" ta="center">
+                {t("fileManager.loadingFiles", "Loading files...")}
+              </Text>
+            </Center>
+          ) : loadError ? (
+            <Center style={{ height: "12.5rem" }}>
+              <Stack align="center" gap="sm">
+                <ErrorOutlineIcon
+                  style={{
+                    fontSize: "3rem",
+                    color: "var(--mantine-color-gray-5)",
+                  }}
+                />
+                <Text c="dimmed" ta="center">
+                  {t(
+                    "fileManager.loadFailed",
+                    "Couldn't load your recent files",
+                  )}
+                </Text>
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    void refreshRecentFiles();
+                  }}
+                >
+                  {t("fileManager.loadFailedRetry", "Try again")}
+                </Button>
+              </Stack>
+            </Center>
+          ) : (
+            <EmptyFilesState />
           )}
         </Stack>
       </ScrollArea>
