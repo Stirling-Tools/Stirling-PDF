@@ -2,13 +2,12 @@ import { test, expect } from "@app/tests/helpers/stub-test-base";
 
 test.describe("26. Workspace Features", () => {
   test.beforeEach(async ({ page }) => {
-    // Open settings dialog
-    await page
-      .getByRole("button", { name: /settings/i })
-      .first()
-      .click();
-    const settingsDialog = page.locator(".settings-page");
-    await expect(settingsDialog).toBeVisible({ timeout: 5000 });
+    // Straight to the page: the rail's settings cog is gone, settings is
+    // reached from the account menu or by URL.
+    await page.goto("/settings");
+    await expect(page.locator(".settings-page")).toBeVisible({
+      timeout: 30_000,
+    });
   });
 
   test.describe("26.1 Team Members", () => {

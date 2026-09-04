@@ -22,7 +22,7 @@ const TARGETS = [
   ["/settings/adminSecurity#auditLogging", "auditLogging"],
   // The link the mail card and the mobile-upload card point at.
   ["/settings/adminGeneral#frontendUrl", "frontendUrl"],
-  ["/settings/adminGeneral?focus=adminMcp", "adminMcp"],
+  ["/settings/adminConnections?focus=adminMcp", "adminMcp"],
 ] as const;
 
 for (const [url, anchor] of TARGETS) {
