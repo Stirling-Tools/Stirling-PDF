@@ -236,9 +236,6 @@ export class ZipFileService {
 
           // Create File object
           const extractedFile = new File(
-            // JSZip returns Uint8Array<ArrayBufferLike>; the bytes are always
-            // ArrayBuffer-backed, so assert that to satisfy BlobPart (TS 5.7+
-            // made TypedArrays generic over their buffer).
             [content as Uint8Array<ArrayBuffer>],
             this.sanitizeFilename(filename),
             {

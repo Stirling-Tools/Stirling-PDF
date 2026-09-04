@@ -17,12 +17,6 @@ import { FileId } from "@app/types/file";
 import type { StoredStirlingFileRecord } from "@app/services/fileStorage";
 import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
 
-// The persisted storage record (StoredStirlingFileRecord) is what this picker is
-// meant to receive; its fields are reused rather than re-declared. The picker is
-// unwired today (its only caller passes []) and also defensively reconstructs a
-// File from a raw `file` or an `arrayBuffer()` accessor, and reads the runtime
-// stub's `processedFile` - none of which are on the persisted record, so they're
-// added here as optional extras.
 type StoredFileItem = Partial<StoredStirlingFileRecord> & {
   id: FileId;
   file?: File;
