@@ -1,14 +1,7 @@
 import { useTranslation } from "react-i18next";
+import { SettingsToggleRow } from "@app/components/shared/config/SettingsToggleRow";
 import { InfoTooltip } from "@app/ui/InfoTooltip";
-import {
-  TextInput,
-  NumberInput,
-  Switch,
-  Stack,
-  Paper,
-  Text,
-  Group,
-} from "@mantine/core";
+import { TextInput, NumberInput, Stack, Paper, Group } from "@mantine/core";
 import PendingBadge from "@app/components/shared/config/PendingBadge";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
 import type { GeneralCardProps } from "@app/components/shared/config/configSections/server/serverCardProps";
@@ -30,46 +23,30 @@ export function ServerCertificateCard({
   return (
     <Paper withBorder p="md" radius="md">
       <Stack gap="md">
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
+        <SettingsToggleRow
+          label={t(
+            "admin.settings.features.serverCertificate.enabled.label",
+            "Enable Certificate Signing",
+          )}
+          info={t(
+            "admin.settings.features.serverCertificate.enabled.description",
+            'Offer "Sign with Stirling-PDF" using a certificate this server generates',
+          )}
+          pending={isFieldPending("serverCertificate.enabled")}
+          checked={settings.serverCertificate?.enabled ?? true}
+          onChange={(checked) => {
+            if (!loginEnabled) return;
+            setSettings({
+              ...settings,
+              serverCertificate: {
+                ...settings.serverCertificate,
+                enabled: checked,
+              },
+            });
           }}
-        >
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <Text fw={500} size="sm">
-              {t(
-                "admin.settings.features.serverCertificate.enabled.label",
-                "Enable Server Certificate",
-              )}{" "}
-              <InfoTooltip
-                label={t(
-                  "admin.settings.features.serverCertificate.enabled.description",
-                  'Enable server-side certificate for "Sign with Stirling-PDF" option',
-                )}
-              />
-            </Text>
-          </div>
-          <Group gap="xs">
-            <Switch
-              checked={settings.serverCertificate?.enabled ?? true}
-              onChange={(e) => {
-                if (!loginEnabled) return;
-                setSettings({
-                  ...settings,
-                  serverCertificate: {
-                    ...settings.serverCertificate,
-                    enabled: e.target.checked,
-                  },
-                });
-              }}
-              disabled={!loginEnabled}
-              styles={getDisabledStyles()}
-            />
-            <PendingBadge show={isFieldPending("serverCertificate.enabled")} />
-          </Group>
-        </div>
+          disabled={!loginEnabled}
+          styles={getDisabledStyles()}
+        />
 
         <div>
           <TextInput
@@ -146,48 +123,30 @@ export function ServerCertificateCard({
           />
         </div>
 
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
+        <SettingsToggleRow
+          label={t(
+            "admin.settings.features.serverCertificate.regenerateOnStartup.label",
+            "Regenerate on Startup",
+          )}
+          info={t(
+            "admin.settings.features.serverCertificate.regenerateOnStartup.description",
+            "Generate new certificate on each application startup",
+          )}
+          pending={isFieldPending("serverCertificate.regenerateOnStartup")}
+          checked={settings.serverCertificate?.regenerateOnStartup ?? false}
+          onChange={(checked) => {
+            if (!loginEnabled) return;
+            setSettings({
+              ...settings,
+              serverCertificate: {
+                ...settings.serverCertificate,
+                regenerateOnStartup: checked,
+              },
+            });
           }}
-        >
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <Text fw={500} size="sm">
-              {t(
-                "admin.settings.features.serverCertificate.regenerateOnStartup.label",
-                "Regenerate on Startup",
-              )}{" "}
-              <InfoTooltip
-                label={t(
-                  "admin.settings.features.serverCertificate.regenerateOnStartup.description",
-                  "Generate new certificate on each application startup",
-                )}
-              />
-            </Text>
-          </div>
-          <Group gap="xs">
-            <Switch
-              checked={settings.serverCertificate?.regenerateOnStartup ?? false}
-              onChange={(e) => {
-                if (!loginEnabled) return;
-                setSettings({
-                  ...settings,
-                  serverCertificate: {
-                    ...settings.serverCertificate,
-                    regenerateOnStartup: e.target.checked,
-                  },
-                });
-              }}
-              disabled={!loginEnabled}
-              styles={getDisabledStyles()}
-            />
-            <PendingBadge
-              show={isFieldPending("serverCertificate.regenerateOnStartup")}
-            />
-          </Group>
-        </div>
+          disabled={!loginEnabled}
+          styles={getDisabledStyles()}
+        />
       </Stack>
     </Paper>
   );

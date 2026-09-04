@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { Stack, Paper, Text, Switch, Divider } from "@mantine/core";
+import { Stack, Paper, Divider } from "@mantine/core";
+import { SettingsToggleRow } from "@app/components/shared/config/SettingsToggleRow";
 import LoginAgreementEditor from "@app/components/shared/config/configSections/LoginAgreementEditor";
 import type { LegalCardProps } from "@app/components/shared/config/configSections/security/securityCardProps";
 
@@ -14,57 +15,45 @@ export function LoginAgreementCard({
   return (
     <Paper withBorder p="md" radius="md">
       <Stack gap="md">
-        <div>
-          <Text size="sm" c="dimmed">
-            {t(
-              "admin.settings.legal.loginAgreement.description",
-              "Show a disclaimer users must accept after logging in. The text follows each user's language.",
-            )}
-          </Text>
-        </div>
-
-        <Switch
+        <SettingsToggleRow
           label={t(
             "admin.settings.legal.loginAgreement.enabled.label",
             "Enable login agreement",
           )}
+          info={t(
+            "admin.settings.legal.loginAgreement.restartNote",
+            "Enabling or disabling the agreement applies after a restart, like other settings. Text edits below apply immediately.",
+          )}
           checked={settings.loginAgreement?.enabled ?? false}
-          onChange={(e) =>
+          onChange={(checked) =>
             setSettings({
               ...settings,
               loginAgreement: {
                 ...settings.loginAgreement,
-                enabled: e.currentTarget.checked,
+                enabled: checked,
               },
             })
           }
           disabled={!loginEnabled}
         />
 
-        <Switch
+        <SettingsToggleRow
           label={t(
             "admin.settings.legal.loginAgreement.anonymous.label",
             "Show in anonymous (no-login) mode",
           )}
           checked={settings.loginAgreement?.showInAnonymousMode ?? true}
-          onChange={(e) =>
+          onChange={(checked) =>
             setSettings({
               ...settings,
               loginAgreement: {
                 ...settings.loginAgreement,
-                showInAnonymousMode: e.currentTarget.checked,
+                showInAnonymousMode: checked,
               },
             })
           }
           disabled={!loginEnabled}
         />
-
-        <Text size="xs" c="dimmed">
-          {t(
-            "admin.settings.legal.loginAgreement.restartNote",
-            "Enabling or disabling the agreement applies after a restart, like other settings. Text edits below apply immediately.",
-          )}
-        </Text>
 
         <Divider />
 

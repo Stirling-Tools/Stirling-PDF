@@ -138,6 +138,10 @@ export default function AdminLegalPrivacyPage() {
             "admin.settings.legal.loginAgreement.title",
             "Login agreement",
           )}
+          description={t(
+            "admin.settings.legal.loginAgreement.description",
+            "Show a disclaimer users must accept after logging in. The text follows each user's language.",
+          )}
         >
           <LoginAgreementCard {...legalCard} />
         </SettingsCard>

@@ -1,0 +1,37 @@
+.settings-toggle {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.settings-toggle__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.settings-toggle__label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--c-text);
+}
+
+/* Long labels wrap instead of shoving the switch off the row. */
+.settings-toggle__title {
+  min-width: 0;
+}
+
+.settings-toggle__control {
+  flex-shrink: 0;
+}
+
+.settings-toggle__note {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--c-text-subtle);
+}

@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
+import { SettingsToggleRow } from "@app/components/shared/config/SettingsToggleRow";
 import { InfoTooltip } from "@app/ui/InfoTooltip";
 import {
-  Switch,
   Stack,
   Paper,
   Text,
@@ -26,48 +26,31 @@ export function HtmlUrlSecurityCard({
   return (
     <Paper withBorder p="md" radius="md">
       <Stack gap="md">
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <Text fw={500} size="sm">
-              {t(
-                "admin.settings.security.htmlUrlSecurity.enabled.label",
-                "Enable URL Security",
-              )}{" "}
-              <InfoTooltip
-                label={t(
-                  "admin.settings.security.htmlUrlSecurity.enabled.description",
-                  "Enable URL security restrictions for HTML to PDF conversions",
-                )}
-              />
-            </Text>
-          </div>
-          <Group gap="xs">
-            <Switch
-              name="html_urlSecurity_enabled"
-              checked={settings?.html?.urlSecurity?.enabled || false}
-              onChange={(e) =>
-                setSettings({
-                  ...settings,
-                  html: {
-                    ...settings?.html,
-                    urlSecurity: {
-                      ...settings?.html?.urlSecurity,
-                      enabled: e.target.checked,
-                    },
-                  },
-                })
-              }
-              disabled={!loginEnabled}
-            />
-            <PendingBadge show={isFieldPending("html.urlSecurity.enabled")} />
-          </Group>
-        </div>
+        <SettingsToggleRow
+          label={t(
+            "admin.settings.security.htmlUrlSecurity.enabled.label",
+            "Enable URL Security",
+          )}
+          info={t(
+            "admin.settings.security.htmlUrlSecurity.enabled.description",
+            "Enable URL security restrictions for HTML to PDF conversions",
+          )}
+          pending={isFieldPending("html.urlSecurity.enabled")}
+          checked={settings?.html?.urlSecurity?.enabled || false}
+          onChange={(checked) =>
+            setSettings({
+              ...settings,
+              html: {
+                ...settings?.html,
+                urlSecurity: {
+                  ...settings?.html?.urlSecurity,
+                  enabled: checked,
+                },
+              },
+            })
+          }
+          disabled={!loginEnabled}
+        />
 
         <div>
           <Select
@@ -305,198 +288,117 @@ export function HtmlUrlSecurityCard({
                   )}
                 </Text>
 
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <Text fw={500} size="sm">
-                      {t(
-                        "admin.settings.security.htmlUrlSecurity.blockPrivateNetworks.label",
-                        "Block Private Networks",
-                      )}{" "}
-                      <InfoTooltip
-                        label={t(
-                          "admin.settings.security.htmlUrlSecurity.blockPrivateNetworks.description",
-                          "Block RFC 1918 private networks (10.x.x.x, 192.168.x.x, 172.16-31.x.x)",
-                        )}
-                      />
-                    </Text>
-                  </div>
-                  <Group gap="xs">
-                    <Switch
-                      name="html_urlSecurity_blockPrivateNetworks"
-                      checked={
-                        settings?.html?.urlSecurity?.blockPrivateNetworks ||
-                        false
-                      }
-                      onChange={(e) =>
-                        setSettings({
-                          ...settings,
-                          html: {
-                            ...settings?.html,
-                            urlSecurity: {
-                              ...settings?.html?.urlSecurity,
-                              blockPrivateNetworks: e.target.checked,
-                            },
-                          },
-                        })
-                      }
-                      disabled={!loginEnabled}
-                    />
-                    <PendingBadge
-                      show={isFieldPending(
-                        "html.urlSecurity.blockPrivateNetworks",
-                      )}
-                    />
-                  </Group>
-                </div>
+                <SettingsToggleRow
+                  label={t(
+                    "admin.settings.security.htmlUrlSecurity.blockPrivateNetworks.label",
+                    "Block Private Networks",
+                  )}
+                  info={t(
+                    "admin.settings.security.htmlUrlSecurity.blockPrivateNetworks.description",
+                    "Block RFC 1918 private networks (10.x.x.x, 192.168.x.x, 172.16-31.x.x)",
+                  )}
+                  pending={isFieldPending(
+                    "html.urlSecurity.blockPrivateNetworks",
+                  )}
+                  checked={
+                    settings?.html?.urlSecurity?.blockPrivateNetworks || false
+                  }
+                  onChange={(checked) =>
+                    setSettings({
+                      ...settings,
+                      html: {
+                        ...settings?.html,
+                        urlSecurity: {
+                          ...settings?.html?.urlSecurity,
+                          blockPrivateNetworks: checked,
+                        },
+                      },
+                    })
+                  }
+                  disabled={!loginEnabled}
+                />
 
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <Text fw={500} size="sm">
-                      {t(
-                        "admin.settings.security.htmlUrlSecurity.blockLocalhost.label",
-                        "Block Localhost",
-                      )}{" "}
-                      <InfoTooltip
-                        label={t(
-                          "admin.settings.security.htmlUrlSecurity.blockLocalhost.description",
-                          "Block localhost and loopback addresses (127.x.x.x, ::1)",
-                        )}
-                      />
-                    </Text>
-                  </div>
-                  <Group gap="xs">
-                    <Switch
-                      name="html_urlSecurity_blockLocalhost"
-                      checked={
-                        settings?.html?.urlSecurity?.blockLocalhost || false
-                      }
-                      onChange={(e) =>
-                        setSettings({
-                          ...settings,
-                          html: {
-                            ...settings?.html,
-                            urlSecurity: {
-                              ...settings?.html?.urlSecurity,
-                              blockLocalhost: e.target.checked,
-                            },
-                          },
-                        })
-                      }
-                      disabled={!loginEnabled}
-                    />
-                    <PendingBadge
-                      show={isFieldPending("html.urlSecurity.blockLocalhost")}
-                    />
-                  </Group>
-                </div>
+                <SettingsToggleRow
+                  label={t(
+                    "admin.settings.security.htmlUrlSecurity.blockLocalhost.label",
+                    "Block Localhost",
+                  )}
+                  info={t(
+                    "admin.settings.security.htmlUrlSecurity.blockLocalhost.description",
+                    "Block localhost and loopback addresses (127.x.x.x, ::1)",
+                  )}
+                  pending={isFieldPending("html.urlSecurity.blockLocalhost")}
+                  checked={settings?.html?.urlSecurity?.blockLocalhost || false}
+                  onChange={(checked) =>
+                    setSettings({
+                      ...settings,
+                      html: {
+                        ...settings?.html,
+                        urlSecurity: {
+                          ...settings?.html?.urlSecurity,
+                          blockLocalhost: checked,
+                        },
+                      },
+                    })
+                  }
+                  disabled={!loginEnabled}
+                />
 
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <Text fw={500} size="sm">
-                      {t(
-                        "admin.settings.security.htmlUrlSecurity.blockLinkLocal.label",
-                        "Block Link-Local Addresses",
-                      )}{" "}
-                      <InfoTooltip
-                        label={t(
-                          "admin.settings.security.htmlUrlSecurity.blockLinkLocal.description",
-                          "Block link-local addresses (169.254.x.x, fe80::/10)",
-                        )}
-                      />
-                    </Text>
-                  </div>
-                  <Group gap="xs">
-                    <Switch
-                      name="html_urlSecurity_blockLinkLocal"
-                      checked={
-                        settings?.html?.urlSecurity?.blockLinkLocal || false
-                      }
-                      onChange={(e) =>
-                        setSettings({
-                          ...settings,
-                          html: {
-                            ...settings?.html,
-                            urlSecurity: {
-                              ...settings?.html?.urlSecurity,
-                              blockLinkLocal: e.target.checked,
-                            },
-                          },
-                        })
-                      }
-                      disabled={!loginEnabled}
-                    />
-                    <PendingBadge
-                      show={isFieldPending("html.urlSecurity.blockLinkLocal")}
-                    />
-                  </Group>
-                </div>
+                <SettingsToggleRow
+                  label={t(
+                    "admin.settings.security.htmlUrlSecurity.blockLinkLocal.label",
+                    "Block Link-Local Addresses",
+                  )}
+                  info={t(
+                    "admin.settings.security.htmlUrlSecurity.blockLinkLocal.description",
+                    "Block link-local addresses (169.254.x.x, fe80::/10)",
+                  )}
+                  pending={isFieldPending("html.urlSecurity.blockLinkLocal")}
+                  checked={settings?.html?.urlSecurity?.blockLinkLocal || false}
+                  onChange={(checked) =>
+                    setSettings({
+                      ...settings,
+                      html: {
+                        ...settings?.html,
+                        urlSecurity: {
+                          ...settings?.html?.urlSecurity,
+                          blockLinkLocal: checked,
+                        },
+                      },
+                    })
+                  }
+                  disabled={!loginEnabled}
+                />
 
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <Text fw={500} size="sm">
-                      {t(
-                        "admin.settings.security.htmlUrlSecurity.blockCloudMetadata.label",
-                        "Block Cloud Metadata Endpoints",
-                      )}{" "}
-                      <InfoTooltip
-                        label={t(
-                          "admin.settings.security.htmlUrlSecurity.blockCloudMetadata.description",
-                          "Block cloud provider metadata endpoints (169.254.169.254)",
-                        )}
-                      />
-                    </Text>
-                  </div>
-                  <Group gap="xs">
-                    <Switch
-                      name="html_urlSecurity_blockCloudMetadata"
-                      checked={
-                        settings?.html?.urlSecurity?.blockCloudMetadata || false
-                      }
-                      onChange={(e) =>
-                        setSettings({
-                          ...settings,
-                          html: {
-                            ...settings?.html,
-                            urlSecurity: {
-                              ...settings?.html?.urlSecurity,
-                              blockCloudMetadata: e.target.checked,
-                            },
-                          },
-                        })
-                      }
-                      disabled={!loginEnabled}
-                    />
-                    <PendingBadge
-                      show={isFieldPending(
-                        "html.urlSecurity.blockCloudMetadata",
-                      )}
-                    />
-                  </Group>
-                </div>
+                <SettingsToggleRow
+                  label={t(
+                    "admin.settings.security.htmlUrlSecurity.blockCloudMetadata.label",
+                    "Block Cloud Metadata Endpoints",
+                  )}
+                  info={t(
+                    "admin.settings.security.htmlUrlSecurity.blockCloudMetadata.description",
+                    "Block cloud provider metadata endpoints (169.254.169.254)",
+                  )}
+                  pending={isFieldPending(
+                    "html.urlSecurity.blockCloudMetadata",
+                  )}
+                  checked={
+                    settings?.html?.urlSecurity?.blockCloudMetadata || false
+                  }
+                  onChange={(checked) =>
+                    setSettings({
+                      ...settings,
+                      html: {
+                        ...settings?.html,
+                        urlSecurity: {
+                          ...settings?.html?.urlSecurity,
+                          blockCloudMetadata: checked,
+                        },
+                      },
+                    })
+                  }
+                  disabled={!loginEnabled}
+                />
               </Stack>
             </Accordion.Panel>
           </Accordion.Item>

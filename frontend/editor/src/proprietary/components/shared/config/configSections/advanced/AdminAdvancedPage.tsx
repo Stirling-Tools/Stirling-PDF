@@ -11,10 +11,7 @@ import { SettingsStickyFooter } from "@app/components/shared/config/SettingsStic
 import apiClient from "@app/services/apiClient";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
 import LoginRequiredBanner from "@app/components/shared/config/LoginRequiredBanner";
-import {
-  AdvancedSettingsData,
-  DEFAULT_DATASOURCE,
-} from "@app/components/shared/config/configSections/advanced/advancedSettings";
+import { AdvancedSettingsData } from "@app/components/shared/config/configSections/advanced/advancedSettings";
 import { AdvancedFeatureFlagsCard } from "@app/components/shared/config/configSections/advanced/AdvancedFeatureFlagsCard";
 import { AdvancedProcessingCard } from "@app/components/shared/config/configSections/advanced/AdvancedProcessingCard";
 import { AdvancedTempFilesCard } from "@app/components/shared/config/configSections/advanced/AdvancedTempFilesCard";
@@ -79,8 +76,6 @@ export default function AdminAdvancedPage() {
           cleanupSystemTemp: false,
         },
         processExecutor: processExecutorData || {},
-        // The Database row read this same response; a slice, not a third GET.
-        datasource: systemData.datasource || { ...DEFAULT_DATASOURCE },
       };
 
       // Merge pending blocks from both endpoints
@@ -104,9 +99,6 @@ export default function AdminAdvancedPage() {
       if (systemData._pending?.tempFileManagement) {
         pendingBlock.tempFileManagement =
           systemData._pending.tempFileManagement;
-      }
-      if (systemData._pending?.datasource) {
-        pendingBlock.datasource = systemData._pending.datasource;
       }
       if (processExecutorData._pending) {
         pendingBlock.processExecutor = processExecutorData._pending;

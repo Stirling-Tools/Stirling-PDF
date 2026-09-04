@@ -1,7 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { InfoTooltip } from "@app/ui/InfoTooltip";
-import { Stack, Paper, Group, Switch } from "@mantine/core";
-import PendingBadge from "@app/components/shared/config/PendingBadge";
+import { Stack, Paper } from "@mantine/core";
+import { SettingsToggleRow } from "@app/components/shared/config/SettingsToggleRow";
 import type { UiDefaultsCardProps } from "@app/components/shared/config/configSections/server/serverCardProps";
 
 /**
@@ -19,63 +18,43 @@ export function UserDefaultsCard({
   return (
     <Paper withBorder p="md" radius="md">
       <Stack gap="md">
-        <Switch
-          label={
-            <Group gap="xs">
-              <span>
-                {t(
-                  "admin.settings.endpoints.defaultHideUnavailableTools.label",
-                  "Hide unavailable tools by default",
-                )}
-              </span>
-              <PendingBadge
-                show={isFieldPending("defaultHideUnavailableTools")}
-              />
-              <InfoTooltip
-                label={t(
-                  "admin.settings.endpoints.defaultHideUnavailableTools.description",
-                  "Remove disabled tools instead of showing them greyed out",
-                )}
-              />
-            </Group>
-          }
+        <SettingsToggleRow
+          label={t(
+            "admin.settings.endpoints.defaultHideUnavailableTools.label",
+            "Hide unavailable tools by default",
+          )}
+          info={t(
+            "admin.settings.endpoints.defaultHideUnavailableTools.description",
+            "Remove disabled tools instead of showing them greyed out",
+          )}
+          pending={isFieldPending("defaultHideUnavailableTools")}
           checked={settings.defaultHideUnavailableTools || false}
-          onChange={(e) => {
+          onChange={(checked) => {
             if (!loginEnabled) return;
             setSettings({
               ...settings,
-              defaultHideUnavailableTools: e.currentTarget.checked,
+              defaultHideUnavailableTools: checked,
             });
           }}
           disabled={!loginEnabled}
         />
 
-        <Switch
-          label={
-            <Group gap="xs">
-              <span>
-                {t(
-                  "admin.settings.endpoints.defaultHideUnavailableConversions.label",
-                  "Hide unavailable conversions by default",
-                )}
-              </span>
-              <PendingBadge
-                show={isFieldPending("defaultHideUnavailableConversions")}
-              />
-              <InfoTooltip
-                label={t(
-                  "admin.settings.endpoints.defaultHideUnavailableConversions.description",
-                  "Remove disabled conversion options instead of showing them greyed out",
-                )}
-              />
-            </Group>
-          }
+        <SettingsToggleRow
+          label={t(
+            "admin.settings.endpoints.defaultHideUnavailableConversions.label",
+            "Hide unavailable conversions by default",
+          )}
+          info={t(
+            "admin.settings.endpoints.defaultHideUnavailableConversions.description",
+            "Remove disabled conversion options instead of showing them greyed out",
+          )}
+          pending={isFieldPending("defaultHideUnavailableConversions")}
           checked={settings.defaultHideUnavailableConversions || false}
-          onChange={(e) => {
+          onChange={(checked) => {
             if (!loginEnabled) return;
             setSettings({
               ...settings,
-              defaultHideUnavailableConversions: e.currentTarget.checked,
+              defaultHideUnavailableConversions: checked,
             });
           }}
           disabled={!loginEnabled}

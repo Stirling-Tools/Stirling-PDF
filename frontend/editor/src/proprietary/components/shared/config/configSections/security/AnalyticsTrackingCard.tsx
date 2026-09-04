@@ -1,7 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { InfoTooltip } from "@app/ui/InfoTooltip";
-import { Switch, Stack, Paper, Text, Group } from "@mantine/core";
-import PendingBadge from "@app/components/shared/config/PendingBadge";
+import { SettingsToggleRow } from "@app/components/shared/config/SettingsToggleRow";
+import { Stack, Paper } from "@mantine/core";
 import type { PrivacyCardProps } from "@app/components/shared/config/configSections/security/securityCardProps";
 
 /** Anonymous product analytics and the performance metrics endpoint. */
@@ -17,81 +16,49 @@ export function AnalyticsTrackingCard({
   return (
     <Paper withBorder p="md" radius="md">
       <Stack gap="md">
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
+        <SettingsToggleRow
+          label={t(
+            "admin.settings.privacy.enableAnalytics.label",
+            "Enable Analytics",
+          )}
+          info={t(
+            "admin.settings.privacy.enableAnalytics.description",
+            "Collect anonymous usage analytics to help improve the application",
+          )}
+          pending={isFieldPending("enableAnalytics")}
+          checked={settings?.enableAnalytics || false}
+          onChange={(checked) => {
+            if (!loginEnabled) return;
+            setSettings({
+              ...settings,
+              enableAnalytics: checked,
+            });
           }}
-        >
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <Text fw={500} size="sm">
-              {t(
-                "admin.settings.privacy.enableAnalytics.label",
-                "Enable Analytics",
-              )}{" "}
-              <InfoTooltip
-                label={t(
-                  "admin.settings.privacy.enableAnalytics.description",
-                  "Collect anonymous usage analytics to help improve the application",
-                )}
-              />
-            </Text>
-          </div>
-          <Group gap="xs">
-            <Switch
-              checked={settings?.enableAnalytics || false}
-              onChange={(e) => {
-                if (!loginEnabled) return;
-                setSettings({
-                  ...settings,
-                  enableAnalytics: e.target.checked,
-                });
-              }}
-              disabled={!loginEnabled}
-              styles={getDisabledStyles()}
-            />
-            <PendingBadge show={isFieldPending("enableAnalytics")} />
-          </Group>
-        </div>
+          disabled={!loginEnabled}
+          styles={getDisabledStyles()}
+        />
 
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
+        <SettingsToggleRow
+          label={t(
+            "admin.settings.privacy.metricsEnabled.label",
+            "Enable Metrics",
+          )}
+          info={t(
+            "admin.settings.privacy.metricsEnabled.description",
+            "Enable collection of performance and usage metrics",
+          )}
+          pending={isFieldPending("metricsEnabled")}
+          checked={settings?.metricsEnabled || false}
+          onChange={(checked) => {
+            if (!loginEnabled) return;
+            setSettings({
+              ...settings,
+              metricsEnabled: checked,
+            });
           }}
-        >
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <Text fw={500} size="sm">
-              {t(
-                "admin.settings.privacy.metricsEnabled.label",
-                "Enable Metrics",
-              )}{" "}
-              <InfoTooltip
-                label={t(
-                  "admin.settings.privacy.metricsEnabled.description",
-                  "Enable collection of performance and usage metrics",
-                )}
-              />
-            </Text>
-          </div>
-          <Group gap="xs">
-            <Switch
-              checked={settings?.metricsEnabled || false}
-              onChange={(e) => {
-                if (!loginEnabled) return;
-                setSettings({
-                  ...settings,
-                  metricsEnabled: e.target.checked,
-                });
-              }}
-              disabled={!loginEnabled}
-              styles={getDisabledStyles()}
-            />
-            <PendingBadge show={isFieldPending("metricsEnabled")} />
-          </Group>
-        </div>
+          disabled={!loginEnabled}
+          styles={getDisabledStyles()}
+        />
       </Stack>
     </Paper>
   );

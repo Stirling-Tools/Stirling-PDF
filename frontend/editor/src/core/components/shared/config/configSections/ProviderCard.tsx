@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { InfoTooltip } from "@app/ui/InfoTooltip";
+import { SettingsToggleRow } from "@app/components/shared/config/SettingsToggleRow";
 import { SettingsFieldLabel } from "@app/components/shared/config/SettingsFieldLabel";
 import {
   Paper,
@@ -9,7 +9,6 @@ import {
   Stack,
   TextInput,
   Textarea,
-  Switch,
   NumberInput,
   TagsInput,
   Anchor,
@@ -101,25 +100,14 @@ export default function ProviderCard({
     switch (field.type) {
       case "switch":
         return (
-          <div
+          <SettingsToggleRow
             key={field.key}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <Text fw={500} size="sm">
-                {field.label} <InfoTooltip label={field.description} />
-              </Text>
-            </div>
-            <Switch
-              checked={value || false}
-              onChange={(e) => handleFieldChange(field.key, e.target.checked)}
-              disabled={disabled}
-            />
-          </div>
+            label={field.label}
+            info={field.description}
+            checked={value || false}
+            onChange={(checked) => handleFieldChange(field.key, checked)}
+            disabled={disabled}
+          />
         );
 
       case "password":

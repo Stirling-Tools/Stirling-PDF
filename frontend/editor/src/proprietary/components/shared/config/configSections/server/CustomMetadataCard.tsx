@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
+import { SettingsToggleRow } from "@app/components/shared/config/SettingsToggleRow";
 import { InfoTooltip } from "@app/ui/InfoTooltip";
-import { TextInput, Switch, Stack, Paper, Text, Group } from "@mantine/core";
+import { TextInput, Stack, Paper, Group } from "@mantine/core";
 import PendingBadge from "@app/components/shared/config/PendingBadge";
 import type { GeneralCardProps } from "@app/components/shared/config/configSections/server/serverCardProps";
 
@@ -16,46 +17,28 @@ export function CustomMetadataCard({
   return (
     <Paper withBorder p="md" radius="md">
       <Stack gap="md">
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <Text fw={500} size="sm">
-              {t(
-                "admin.settings.general.customMetadata.autoUpdate.label",
-                "Auto Update Metadata",
-              )}{" "}
-              <InfoTooltip
-                label={t(
-                  "admin.settings.general.customMetadata.autoUpdate.description",
-                  "Automatically update PDF metadata on all processed documents",
-                )}
-              />
-            </Text>
-          </div>
-          <Group gap="xs">
-            <Switch
-              checked={settings.customMetadata?.autoUpdateMetadata || false}
-              onChange={(e) =>
-                setSettings({
-                  ...settings,
-                  customMetadata: {
-                    ...settings.customMetadata,
-                    autoUpdateMetadata: e.target.checked,
-                  },
-                })
-              }
-              disabled={!loginEnabled}
-            />
-            <PendingBadge
-              show={isFieldPending("customMetadata.autoUpdateMetadata")}
-            />
-          </Group>
-        </div>
+        <SettingsToggleRow
+          label={t(
+            "admin.settings.general.customMetadata.autoUpdate.label",
+            "Auto Update Metadata",
+          )}
+          info={t(
+            "admin.settings.general.customMetadata.autoUpdate.description",
+            "Automatically update PDF metadata on all processed documents",
+          )}
+          pending={isFieldPending("customMetadata.autoUpdateMetadata")}
+          checked={settings.customMetadata?.autoUpdateMetadata || false}
+          onChange={(checked) =>
+            setSettings({
+              ...settings,
+              customMetadata: {
+                ...settings.customMetadata,
+                autoUpdateMetadata: checked,
+              },
+            })
+          }
+          disabled={!loginEnabled}
+        />
 
         <div>
           <TextInput

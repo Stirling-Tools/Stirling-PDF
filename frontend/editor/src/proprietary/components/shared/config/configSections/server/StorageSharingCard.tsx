@@ -1,8 +1,7 @@
 import { useTranslation } from "react-i18next";
-import { InfoTooltip } from "@app/ui/InfoTooltip";
-import { Anchor, Group, Paper, Switch, Text } from "@mantine/core";
+import { Anchor, Paper, Stack } from "@mantine/core";
 import { useNavigate } from "react-router-dom";
-import PendingBadge from "@app/components/shared/config/PendingBadge";
+import { SettingsToggleRow } from "@app/components/shared/config/SettingsToggleRow";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
 import type { StorageSharingCardProps } from "@app/components/shared/config/configSections/server/serverCardProps";
 
@@ -27,112 +26,71 @@ export function StorageSharingCard({
   const mailEnabled = Boolean(settings.mail?.enabled);
 
   return (
-    <>
-      <Paper withBorder p="sm" radius="md">
-        <Group justify="space-between" align="flex-start" wrap="nowrap">
-          <div>
-            <Group gap="xs" align="center">
-              <Text fw={600} size="sm">
-                {t(
-                  "admin.settings.storage.enabled.label",
-                  "Enable Server File Storage",
-                )}
-              </Text>
-              {isFieldPending("enabled") && <PendingBadge show={true} />}
-              <InfoTooltip
-                label={t(
-                  "admin.settings.storage.enabled.description",
-                  "Allow users to store files on the server.",
-                )}
-              />
-            </Group>
-          </div>
-          <Switch
-            checked={storageEnabled}
-            onChange={(e) =>
-              setSettings({ ...settings, enabled: e.currentTarget.checked })
-            }
-            disabled={!loginEnabled}
-            styles={getDisabledStyles()}
-            style={{ flexShrink: 0 }}
-          />
-        </Group>
-      </Paper>
+    <Paper withBorder p="md" radius="md">
+      <Stack gap="md">
+        <SettingsToggleRow
+          label={t(
+            "admin.settings.storage.enabled.label",
+            "Enable Server File Storage",
+          )}
+          info={t(
+            "admin.settings.storage.enabled.description",
+            "Allow users to store files on the server.",
+          )}
+          pending={isFieldPending("enabled")}
+          checked={storageEnabled}
+          onChange={(checked) => setSettings({ ...settings, enabled: checked })}
+          disabled={!loginEnabled}
+          styles={getDisabledStyles()}
+        />
 
-      <Paper withBorder p="sm" radius="md">
-        <Group justify="space-between" align="flex-start" wrap="nowrap">
-          <div>
-            <Group gap="xs" align="center">
-              <Text fw={600} size="sm">
-                {t(
-                  "admin.settings.storage.sharing.enabled.label",
-                  "Enable Sharing",
-                )}
-              </Text>
-              {isFieldPending("sharing.enabled") && (
-                <PendingBadge show={true} />
-              )}
-              <InfoTooltip
-                label={t(
-                  "admin.settings.storage.sharing.enabled.description",
-                  "Allow users to share stored files.",
-                )}
-              />
-            </Group>
-          </div>
-          <Switch
-            checked={settings.sharing?.enabled ?? false}
-            onChange={(e) =>
-              setSettings({
-                ...settings,
-                sharing: {
-                  ...settings.sharing,
-                  enabled: e.currentTarget.checked,
-                },
-              })
-            }
-            disabled={!loginEnabled || !storageEnabled}
-            styles={getDisabledStyles()}
-            style={{ flexShrink: 0 }}
-          />
-        </Group>
-      </Paper>
+        <SettingsToggleRow
+          label={t(
+            "admin.settings.storage.sharing.enabled.label",
+            "Enable Sharing",
+          )}
+          info={t(
+            "admin.settings.storage.sharing.enabled.description",
+            "Allow users to share stored files.",
+          )}
+          pending={isFieldPending("sharing.enabled")}
+          checked={settings.sharing?.enabled ?? false}
+          onChange={(checked) =>
+            setSettings({
+              ...settings,
+              sharing: { ...settings.sharing, enabled: checked },
+            })
+          }
+          disabled={!loginEnabled || !storageEnabled}
+          styles={getDisabledStyles()}
+        />
 
-      <Paper withBorder p="sm" radius="md">
-        <Group justify="space-between" align="flex-start" wrap="nowrap">
-          <div>
-            <Group gap="xs" align="center">
-              <Text fw={600} size="sm">
-                {t(
-                  "admin.settings.storage.sharing.links.label",
-                  "Enable Share Links",
-                )}
-              </Text>
-              {isFieldPending("sharing.linkEnabled") && (
-                <PendingBadge show={true} />
-              )}
-              <InfoTooltip
-                label={t(
-                  "admin.settings.storage.sharing.links.description",
-                  "Allow sharing via signed-in links.",
-                )}
-              />
-            </Group>
-            {!frontendUrlConfigured && (
-              <Text size="xs" c="var(--color-amber-dark)">
+        <SettingsToggleRow
+          label={t(
+            "admin.settings.storage.sharing.links.label",
+            "Enable Share Links",
+          )}
+          info={t(
+            "admin.settings.storage.sharing.links.description",
+            "Allow sharing via signed-in links.",
+          )}
+          pending={isFieldPending("sharing.linkEnabled")}
+          note={
+            !frontendUrlConfigured && (
+              <>
                 {t(
                   "admin.settings.storage.sharing.links.frontendUrlNote",
                   "Requires a Frontend URL. ",
                 )}
                 <Anchor
-                  href="#"
+                  href="#frontendUrl"
                   onClick={(e) => {
                     e.preventDefault();
                     document
                       .getElementById("frontendUrl")
                       ?.scrollIntoView({ behavior: "smooth", block: "start" });
                   }}
-                  c="var(--color-amber-dark)"
+                  inherit
                   td="underline"
                 >
                   {t(
@@ -140,62 +98,46 @@ export function StorageSharingCard({
                     "Configure in System Settings",
                   )}
                 </Anchor>
-              </Text>
-            )}
-          </div>
-          <Switch
-            checked={settings.sharing?.linkEnabled ?? false}
-            onChange={(e) =>
-              setSettings({
-                ...settings,
-                sharing: {
-                  ...settings.sharing,
-                  linkEnabled: e.currentTarget.checked,
-                },
-              })
-            }
-            disabled={
-              !loginEnabled || !sharingEnabled || !frontendUrlConfigured
-            }
-            styles={getDisabledStyles()}
-            style={{ flexShrink: 0 }}
-          />
-        </Group>
-      </Paper>
+              </>
+            )
+          }
+          checked={settings.sharing?.linkEnabled ?? false}
+          onChange={(checked) =>
+            setSettings({
+              ...settings,
+              sharing: { ...settings.sharing, linkEnabled: checked },
+            })
+          }
+          disabled={!loginEnabled || !sharingEnabled || !frontendUrlConfigured}
+          styles={getDisabledStyles()}
+        />
 
-      <Paper withBorder p="sm" radius="md">
-        <Group justify="space-between" align="flex-start" wrap="nowrap">
-          <div>
-            <Group gap="xs" align="center">
-              <Text fw={600} size="sm">
-                {t(
-                  "admin.settings.storage.sharing.email.label",
-                  "Enable Email Sharing",
-                )}
-              </Text>
-              {isFieldPending("sharing.emailEnabled") && (
-                <PendingBadge show={true} />
-              )}
-              <InfoTooltip
-                label={t(
-                  "admin.settings.storage.sharing.email.description",
-                  "Allow sharing with email addresses.",
-                )}
-              />
-            </Group>
-            {!mailEnabled && (
-              <Text size="xs" c="var(--color-amber-dark)">
+        <SettingsToggleRow
+          label={t(
+            "admin.settings.storage.sharing.email.label",
+            "Enable Email Sharing",
+          )}
+          info={t(
+            "admin.settings.storage.sharing.email.description",
+            "Allow sharing with email addresses.",
+          )}
+          pending={isFieldPending("sharing.emailEnabled")}
+          note={
+            !mailEnabled && (
+              <>
                 {t(
                   "admin.settings.storage.sharing.email.mailNote",
                   "Requires mail configuration. ",
                 )}
                 <Anchor
-                  href="#"
+                  href="#adminConnections"
                   onClick={(e) => {
                     e.preventDefault();
-                    navigate("/settings/adminSecurity?focus=adminConnections");
+                    navigate(
+                      "/settings/adminConnections?focus=adminConnections",
+                    );
                   }}
-                  c="var(--color-amber-dark)"
+                  inherit
                   td="underline"
                 >
                   {t(
@@ -203,65 +145,41 @@ export function StorageSharingCard({
                     "Configure Mail Settings",
                   )}
                 </Anchor>
-              </Text>
-            )}
-          </div>
-          <Switch
-            checked={settings.sharing?.emailEnabled ?? false}
-            onChange={(e) =>
-              setSettings({
-                ...settings,
-                sharing: {
-                  ...settings.sharing,
-                  emailEnabled: e.currentTarget.checked,
-                },
-              })
-            }
-            disabled={!loginEnabled || !sharingEnabled || !mailEnabled}
-            styles={getDisabledStyles()}
-            style={{ flexShrink: 0 }}
-          />
-        </Group>
-      </Paper>
+              </>
+            )
+          }
+          checked={settings.sharing?.emailEnabled ?? false}
+          onChange={(checked) =>
+            setSettings({
+              ...settings,
+              sharing: { ...settings.sharing, emailEnabled: checked },
+            })
+          }
+          disabled={!loginEnabled || !sharingEnabled || !mailEnabled}
+          styles={getDisabledStyles()}
+        />
 
-      <Paper withBorder p="sm" radius="md">
-        <Group justify="space-between" align="flex-start" wrap="nowrap">
-          <div>
-            <Group gap="xs" align="center">
-              <Text fw={600} size="sm">
-                {t(
-                  "admin.settings.storage.signing.enabled.label",
-                  "Enable Group Signing",
-                )}
-              </Text>
-              {isFieldPending("signing.enabled") && (
-                <PendingBadge show={true} />
-              )}
-              <InfoTooltip
-                label={t(
-                  "admin.settings.storage.signing.enabled.description",
-                  "Allow users to create multi-participant document signing sessions. Requires server file storage to be enabled.",
-                )}
-              />
-            </Group>
-          </div>
-          <Switch
-            checked={settings.signing?.enabled ?? false}
-            onChange={(e) =>
-              setSettings({
-                ...settings,
-                signing: {
-                  ...settings.signing,
-                  enabled: e.currentTarget.checked,
-                },
-              })
-            }
-            disabled={!loginEnabled || !storageEnabled}
-            styles={getDisabledStyles()}
-            style={{ flexShrink: 0 }}
-          />
-        </Group>
-      </Paper>
-    </>
+        <SettingsToggleRow
+          label={t(
+            "admin.settings.storage.signing.enabled.label",
+            "Enable Group Signing",
+          )}
+          info={t(
+            "admin.settings.storage.signing.enabled.description",
+            "Allow users to create multi-participant document signing sessions. Requires server file storage to be enabled.",
+          )}
+          pending={isFieldPending("signing.enabled")}
+          checked={settings.signing?.enabled ?? false}
+          onChange={(checked) =>
+            setSettings({
+              ...settings,
+              signing: { ...settings.signing, enabled: checked },
+            })
+          }
+          disabled={!loginEnabled || !storageEnabled}
+          styles={getDisabledStyles()}
+        />
+      </Stack>
+    </Paper>
   );
 }

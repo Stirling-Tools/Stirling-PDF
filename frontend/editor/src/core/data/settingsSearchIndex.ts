@@ -226,12 +226,12 @@ export const SETTINGS_SEARCH_INDEX: SettingsSearchEntry[] = [
   {
     section: "adminGeneral",
     anchor: "adminFeatures",
-    labelKey: "settings.configuration.features",
-    labelFallback: "Server certificate",
+    labelKey: "admin.settings.features.serverCertificate.label",
+    labelFallback: "Certificate Signing",
     keywords: ["certificate", "signing", "sign with stirling"],
   },
   {
-    section: "adminGeneral",
+    section: "adminConnections",
     anchor: "adminMcp",
     labelKey: "settings.configuration.mcp",
     labelFallback: "MCP Server",

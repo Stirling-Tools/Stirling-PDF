@@ -1,16 +1,8 @@
 import { useTranslation } from "react-i18next";
+import { SettingsToggleRow } from "@app/components/shared/config/SettingsToggleRow";
 import { InfoTooltip } from "@app/ui/InfoTooltip";
 import { useNavigate } from "react-router-dom";
-import {
-  NumberInput,
-  Switch,
-  Stack,
-  Paper,
-  Text,
-  Group,
-  Alert,
-  Badge,
-} from "@mantine/core";
+import { NumberInput, Stack, Paper, Group, Alert, Badge } from "@mantine/core";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import PendingBadge from "@app/components/shared/config/PendingBadge";
 import type { SecurityCardProps } from "@app/components/shared/config/configSections/security/securityCardProps";
@@ -43,42 +35,25 @@ export function AuditLoggingCard({
           </Badge>
         </Group>
 
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <Text fw={500} size="sm">
-              {t(
-                "admin.settings.security.audit.enabled.label",
-                "Enable Audit Logging",
-              )}{" "}
-              <InfoTooltip
-                label={t(
-                  "admin.settings.security.audit.enabled.description",
-                  "Track user actions and system events for compliance and security monitoring",
-                )}
-              />
-            </Text>
-          </div>
-          <Group gap="xs">
-            <Switch
-              name="audit_enabled"
-              checked={settings?.audit?.enabled || false}
-              onChange={(e) =>
-                setSettings({
-                  ...settings,
-                  audit: { ...settings?.audit, enabled: e.target.checked },
-                })
-              }
-              disabled={!loginEnabled}
-            />
-            <PendingBadge show={isFieldPending("audit.enabled")} />
-          </Group>
-        </div>
+        <SettingsToggleRow
+          label={t(
+            "admin.settings.security.audit.enabled.label",
+            "Enable Audit Logging",
+          )}
+          info={t(
+            "admin.settings.security.audit.enabled.description",
+            "Track user actions and system events for compliance and security monitoring",
+          )}
+          pending={isFieldPending("audit.enabled")}
+          checked={settings?.audit?.enabled || false}
+          onChange={(checked) =>
+            setSettings({
+              ...settings,
+              audit: { ...settings?.audit, enabled: checked },
+            })
+          }
+          disabled={!loginEnabled}
+        />
 
         <div>
           <NumberInput
@@ -160,127 +135,74 @@ export function AuditLoggingCard({
           )}
         </Alert>
 
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <Text fw={500} size="sm">
-              {t(
-                "admin.settings.security.audit.captureFileHash.label",
-                "Capture File Hash",
-              )}{" "}
-              <InfoTooltip
-                label={t(
-                  "admin.settings.security.audit.captureFileHash.description",
-                  "Store MD5 hash of processed files for audit trail verification",
-                )}
-              />
-            </Text>
-          </div>
-          <Group gap="xs">
-            <Switch
-              name="audit_captureFileHash"
-              checked={settings?.audit?.captureFileHash || false}
-              onChange={(e) =>
-                setSettings({
-                  ...settings,
-                  audit: {
-                    ...settings?.audit,
-                    captureFileHash: e.target.checked,
-                  },
-                })
-              }
-              disabled={!loginEnabled}
-            />
-            <PendingBadge show={isFieldPending("audit.captureFileHash")} />
-          </Group>
-        </div>
+        <SettingsToggleRow
+          label={t(
+            "admin.settings.security.audit.captureFileHash.label",
+            "Capture File Hash",
+          )}
+          info={t(
+            "admin.settings.security.audit.captureFileHash.description",
+            "Store MD5 hash of processed files for audit trail verification",
+          )}
+          pending={isFieldPending("audit.captureFileHash")}
+          checked={settings?.audit?.captureFileHash || false}
+          onChange={(checked) =>
+            setSettings({
+              ...settings,
+              audit: {
+                ...settings?.audit,
+                captureFileHash: checked,
+              },
+            })
+          }
+          disabled={!loginEnabled}
+        />
 
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <Text fw={500} size="sm">
-              {t(
-                "admin.settings.security.audit.capturePdfAuthor.label",
-                "Capture PDF Author",
-              )}{" "}
-              <InfoTooltip
-                label={t(
-                  "admin.settings.security.audit.capturePdfAuthor.description",
-                  "Extract author field from PDF documents during processing",
-                )}
-              />
-            </Text>
-          </div>
-          <Group gap="xs">
-            <Switch
-              name="audit_capturePdfAuthor"
-              checked={settings?.audit?.capturePdfAuthor || false}
-              onChange={(e) =>
-                setSettings({
-                  ...settings,
-                  audit: {
-                    ...settings?.audit,
-                    capturePdfAuthor: e.target.checked,
-                  },
-                })
-              }
-              disabled={!loginEnabled}
-            />
-            <PendingBadge show={isFieldPending("audit.capturePdfAuthor")} />
-          </Group>
-        </div>
+        <SettingsToggleRow
+          label={t(
+            "admin.settings.security.audit.capturePdfAuthor.label",
+            "Capture PDF Author",
+          )}
+          info={t(
+            "admin.settings.security.audit.capturePdfAuthor.description",
+            "Extract author field from PDF documents during processing",
+          )}
+          pending={isFieldPending("audit.capturePdfAuthor")}
+          checked={settings?.audit?.capturePdfAuthor || false}
+          onChange={(checked) =>
+            setSettings({
+              ...settings,
+              audit: {
+                ...settings?.audit,
+                capturePdfAuthor: checked,
+              },
+            })
+          }
+          disabled={!loginEnabled}
+        />
 
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <Text fw={500} size="sm">
-              {t(
-                "admin.settings.security.audit.captureOperationResults.label",
-                "Capture Operation Results",
-              )}{" "}
-              <InfoTooltip
-                label={t(
-                  "admin.settings.security.audit.captureOperationResults.description",
-                  "Store output file information and processing results in audit logs",
-                )}
-              />
-            </Text>
-          </div>
-          <Group gap="xs">
-            <Switch
-              name="audit_captureOperationResults"
-              checked={settings?.audit?.captureOperationResults || false}
-              onChange={(e) =>
-                setSettings({
-                  ...settings,
-                  audit: {
-                    ...settings?.audit,
-                    captureOperationResults: e.target.checked,
-                  },
-                })
-              }
-              disabled={!loginEnabled}
-            />
-            <PendingBadge
-              show={isFieldPending("audit.captureOperationResults")}
-            />
-          </Group>
-        </div>
+        <SettingsToggleRow
+          label={t(
+            "admin.settings.security.audit.captureOperationResults.label",
+            "Capture Operation Results",
+          )}
+          info={t(
+            "admin.settings.security.audit.captureOperationResults.description",
+            "Store output file information and processing results in audit logs",
+          )}
+          pending={isFieldPending("audit.captureOperationResults")}
+          checked={settings?.audit?.captureOperationResults || false}
+          onChange={(checked) =>
+            setSettings({
+              ...settings,
+              audit: {
+                ...settings?.audit,
+                captureOperationResults: checked,
+              },
+            })
+          }
+          disabled={!loginEnabled}
+        />
       </Stack>
     </Paper>
   );

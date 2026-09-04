@@ -1,12 +1,11 @@
 import { useNavigate } from "react-router-dom";
+import { SettingsToggleRow } from "@app/components/shared/config/SettingsToggleRow";
 import { InfoTooltip } from "@app/ui/InfoTooltip";
 import { useTranslation } from "react-i18next";
 import {
   NumberInput,
-  Switch,
   Stack,
   Paper,
-  Text,
   Group,
   TextInput,
   Select,
@@ -62,42 +61,24 @@ export function DatabaseConfigCard({
 
       <Paper withBorder p="md" radius="md">
         <Stack gap="md">
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
+          <SettingsToggleRow
+            label={t(
+              "admin.settings.database.enableCustom.label",
+              "Enable Custom Database",
+            )}
+            info={t(
+              "admin.settings.database.enableCustom.description",
+              "Use your own custom database configuration instead of the default embedded database",
+            )}
+            pending={isFieldPending("datasource.enableCustomDatabase")}
+            checked={datasource?.enableCustomDatabase || false}
+            onChange={(checked) => {
+              if (!loginEnabled) return;
+              setDatasource({ enableCustomDatabase: checked });
             }}
-          >
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <Text fw={500} size="sm">
-                {t(
-                  "admin.settings.database.enableCustom.label",
-                  "Enable Custom Database",
-                )}{" "}
-                <InfoTooltip
-                  label={t(
-                    "admin.settings.database.enableCustom.description",
-                    "Use your own custom database configuration instead of the default embedded database",
-                  )}
-                />
-              </Text>
-            </div>
-            <Group gap="xs">
-              <Switch
-                checked={datasource?.enableCustomDatabase || false}
-                onChange={(e) => {
-                  if (!loginEnabled) return;
-                  setDatasource({ enableCustomDatabase: e.target.checked });
-                }}
-                disabled={!loginEnabled}
-                styles={getDisabledStyles()}
-              />
-              <PendingBadge
-                show={isFieldPending("datasource.enableCustomDatabase")}
-              />
-            </Group>
-          </div>
+            disabled={!loginEnabled}
+            styles={getDisabledStyles()}
+          />
 
           {datasource?.enableCustomDatabase && (
             <>

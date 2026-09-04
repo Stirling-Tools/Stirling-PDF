@@ -1,7 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { InfoTooltip } from "@app/ui/InfoTooltip";
-import { Switch, Stack, Paper, Text, Group } from "@mantine/core";
-import PendingBadge from "@app/components/shared/config/PendingBadge";
+import { SettingsToggleRow } from "@app/components/shared/config/SettingsToggleRow";
+import { Stack, Paper } from "@mantine/core";
 import type { PrivacyCardProps } from "@app/components/shared/config/configSections/security/securityCardProps";
 
 /** Whether search engines are allowed to index this instance. */
@@ -17,43 +16,27 @@ export function SearchEngineVisibilityCard({
   return (
     <Paper withBorder p="md" radius="md">
       <Stack gap="md">
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
+        <SettingsToggleRow
+          label={t(
+            "admin.settings.privacy.googleVisibility.label",
+            "Google Visibility",
+          )}
+          info={t(
+            "admin.settings.privacy.googleVisibility.description",
+            "Allow search engines to index this application",
+          )}
+          pending={isFieldPending("googleVisibility")}
+          checked={settings?.googleVisibility || false}
+          onChange={(checked) => {
+            if (!loginEnabled) return;
+            setSettings({
+              ...settings,
+              googleVisibility: checked,
+            });
           }}
-        >
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <Text fw={500} size="sm">
-              {t(
-                "admin.settings.privacy.googleVisibility.label",
-                "Google Visibility",
-              )}{" "}
-              <InfoTooltip
-                label={t(
-                  "admin.settings.privacy.googleVisibility.description",
-                  "Allow search engines to index this application",
-                )}
-              />
-            </Text>
-          </div>
-          <Group gap="xs">
-            <Switch
-              checked={settings?.googleVisibility || false}
-              onChange={(e) => {
-                if (!loginEnabled) return;
-                setSettings({
-                  ...settings,
-                  googleVisibility: e.target.checked,
-                });
-              }}
-              disabled={!loginEnabled}
-              styles={getDisabledStyles()}
-            />
-            <PendingBadge show={isFieldPending("googleVisibility")} />
-          </Group>
-        </div>
+          disabled={!loginEnabled}
+          styles={getDisabledStyles()}
+        />
       </Stack>
     </Paper>
   );

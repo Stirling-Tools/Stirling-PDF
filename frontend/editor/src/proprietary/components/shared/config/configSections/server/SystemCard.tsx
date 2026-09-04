@@ -1,9 +1,9 @@
 import { useMemo } from "react";
+import { SettingsToggleRow } from "@app/components/shared/config/SettingsToggleRow";
 import { InfoTooltip } from "@app/ui/InfoTooltip";
 import { useTranslation } from "react-i18next";
 import {
   TextInput,
-  Switch,
   Stack,
   Paper,
   Text,
@@ -337,211 +337,126 @@ export function SystemCard({
         </div>
 
         {/* Hide Disabled Tools Settings */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: "1rem",
-          }}
-        >
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <Text fw={500} size="sm">
-              {t(
-                "admin.settings.general.hideDisabledTools.googleDrive.label",
-                "Hide Google Drive",
-              )}{" "}
-              <InfoTooltip
-                label={t(
-                  "admin.settings.general.hideDisabledTools.googleDrive.description",
-                  "Hide Google Drive button when not enabled",
-                )}
-              />
-            </Text>
-          </div>
-          <Group gap="xs">
-            <Switch
-              checked={settings.ui?.hideDisabledTools?.googleDrive || false}
-              onChange={(e) =>
-                setSettings({
-                  ...settings,
-                  ui: {
-                    ...settings.ui,
-                    hideDisabledTools: {
-                      ...settings.ui?.hideDisabledTools,
-                      googleDrive: e.target.checked,
-                    },
-                  },
-                })
-              }
-              disabled={!loginEnabled}
-            />
-            <PendingBadge
-              show={isFieldPending("ui.hideDisabledTools.googleDrive")}
-            />
-          </Group>
-        </div>
+        <SettingsToggleRow
+          label={t(
+            "admin.settings.general.hideDisabledTools.googleDrive.label",
+            "Hide Google Drive",
+          )}
+          info={t(
+            "admin.settings.general.hideDisabledTools.googleDrive.description",
+            "Hide Google Drive button when not enabled",
+          )}
+          pending={isFieldPending("ui.hideDisabledTools.googleDrive")}
+          checked={settings.ui?.hideDisabledTools?.googleDrive || false}
+          onChange={(checked) =>
+            setSettings({
+              ...settings,
+              ui: {
+                ...settings.ui,
+                hideDisabledTools: {
+                  ...settings.ui?.hideDisabledTools,
+                  googleDrive: checked,
+                },
+              },
+            })
+          }
+          disabled={!loginEnabled}
+        />
 
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <Text fw={500} size="sm">
-              {t(
-                "admin.settings.general.hideDisabledTools.mobileScanner.label",
-                "Hide Mobile Scanner",
-              )}{" "}
-              <InfoTooltip
-                label={t(
-                  "admin.settings.general.hideDisabledTools.mobileScanner.description",
-                  "Hide mobile QR scanner button when not enabled",
-                )}
-              />
-            </Text>
-          </div>
-          <Group gap="xs">
-            <Switch
-              checked={settings.ui?.hideDisabledTools?.mobileQRScanner || false}
-              onChange={(e) =>
-                setSettings({
-                  ...settings,
-                  ui: {
-                    ...settings.ui,
-                    hideDisabledTools: {
-                      ...settings.ui?.hideDisabledTools,
-                      mobileQRScanner: e.target.checked,
-                    },
-                  },
-                })
-              }
-              disabled={!loginEnabled}
-            />
-            <PendingBadge
-              show={isFieldPending("ui.hideDisabledTools.mobileQRScanner")}
-            />
-          </Group>
-        </div>
+        <SettingsToggleRow
+          label={t(
+            "admin.settings.general.hideDisabledTools.mobileScanner.label",
+            "Hide Mobile Scanner",
+          )}
+          info={t(
+            "admin.settings.general.hideDisabledTools.mobileScanner.description",
+            "Hide mobile QR scanner button when not enabled",
+          )}
+          pending={isFieldPending("ui.hideDisabledTools.mobileQRScanner")}
+          checked={settings.ui?.hideDisabledTools?.mobileQRScanner || false}
+          onChange={(checked) =>
+            setSettings({
+              ...settings,
+              ui: {
+                ...settings.ui,
+                hideDisabledTools: {
+                  ...settings.ui?.hideDisabledTools,
+                  mobileQRScanner: checked,
+                },
+              },
+            })
+          }
+          disabled={!loginEnabled}
+        />
 
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <Text fw={500} size="sm">
-              {t(
-                "admin.settings.general.showUpdate.label",
-                "Show Update Notifications",
-              )}{" "}
-              <InfoTooltip
-                label={t(
-                  "admin.settings.general.showUpdate.description",
-                  "Display notifications when a new version is available",
-                )}
-              />
-            </Text>
-          </div>
-          <Group gap="xs">
-            <Switch
-              checked={settings.system?.showUpdate || false}
-              onChange={(e) =>
-                setSettings({
-                  ...settings,
-                  system: {
-                    ...settings.system,
-                    showUpdate: e.target.checked,
-                  },
-                })
-              }
-              disabled={!loginEnabled}
-            />
-            <PendingBadge show={isFieldPending("system.showUpdate")} />
-          </Group>
-        </div>
+        <SettingsToggleRow
+          label={t(
+            "admin.settings.general.showUpdate.label",
+            "Show Update Notifications",
+          )}
+          info={t(
+            "admin.settings.general.showUpdate.description",
+            "Display notifications when a new version is available",
+          )}
+          pending={isFieldPending("system.showUpdate")}
+          checked={settings.system?.showUpdate || false}
+          onChange={(checked) =>
+            setSettings({
+              ...settings,
+              system: {
+                ...settings.system,
+                showUpdate: checked,
+              },
+            })
+          }
+          disabled={!loginEnabled}
+        />
 
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <Text fw={500} size="sm">
-              {t(
-                "admin.settings.general.showUpdateOnlyAdmin.label",
-                "Show Updates to Admins Only",
-              )}{" "}
-              <InfoTooltip
-                label={t(
-                  "admin.settings.general.showUpdateOnlyAdmin.description",
-                  "Restrict update notifications to admin users only",
-                )}
-              />
-            </Text>
-          </div>
-          <Group gap="xs">
-            <Switch
-              checked={settings.system?.showUpdateOnlyAdmin || false}
-              onChange={(e) =>
-                setSettings({
-                  ...settings,
-                  system: {
-                    ...settings.system,
-                    showUpdateOnlyAdmin: e.target.checked,
-                  },
-                })
-              }
-              disabled={!loginEnabled}
-            />
-            <PendingBadge show={isFieldPending("system.showUpdateOnlyAdmin")} />
-          </Group>
-        </div>
+        <SettingsToggleRow
+          label={t(
+            "admin.settings.general.showUpdateOnlyAdmin.label",
+            "Show Updates to Admins Only",
+          )}
+          info={t(
+            "admin.settings.general.showUpdateOnlyAdmin.description",
+            "Restrict update notifications to admin users only",
+          )}
+          pending={isFieldPending("system.showUpdateOnlyAdmin")}
+          checked={settings.system?.showUpdateOnlyAdmin || false}
+          onChange={(checked) =>
+            setSettings({
+              ...settings,
+              system: {
+                ...settings.system,
+                showUpdateOnlyAdmin: checked,
+              },
+            })
+          }
+          disabled={!loginEnabled}
+        />
 
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <Text fw={500} size="sm">
-              {t(
-                "admin.settings.general.customHTMLFiles.label",
-                "Custom HTML Files",
-              )}{" "}
-              <InfoTooltip
-                label={t(
-                  "admin.settings.general.customHTMLFiles.description",
-                  "Allow serving custom HTML files from the customFiles directory",
-                )}
-              />
-            </Text>
-          </div>
-          <Group gap="xs">
-            <Switch
-              checked={settings.system?.customHTMLFiles || false}
-              onChange={(e) =>
-                setSettings({
-                  ...settings,
-                  system: {
-                    ...settings.system,
-                    customHTMLFiles: e.target.checked,
-                  },
-                })
-              }
-              disabled={!loginEnabled}
-            />
-            <PendingBadge show={isFieldPending("system.customHTMLFiles")} />
-          </Group>
-        </div>
+        <SettingsToggleRow
+          label={t(
+            "admin.settings.general.customHTMLFiles.label",
+            "Custom HTML Files",
+          )}
+          info={t(
+            "admin.settings.general.customHTMLFiles.description",
+            "Allow serving custom HTML files from the customFiles directory",
+          )}
+          pending={isFieldPending("system.customHTMLFiles")}
+          checked={settings.system?.customHTMLFiles || false}
+          onChange={(checked) =>
+            setSettings({
+              ...settings,
+              system: {
+                ...settings.system,
+                customHTMLFiles: checked,
+              },
+            })
+          }
+          disabled={!loginEnabled}
+        />
       </Stack>
     </Paper>
   );

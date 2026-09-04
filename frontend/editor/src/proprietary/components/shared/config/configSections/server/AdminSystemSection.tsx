@@ -21,7 +21,6 @@ import type {
   EndpointsSettingsData,
   FolderAccessSettingsData,
   GeneralSettingsData,
-  McpSettingsData,
   StorageSharingSettingsData,
   UiDefaultsSettingsData,
 } from "@app/components/shared/config/configSections/server/serverSettings";
@@ -33,7 +32,6 @@ import { FolderAccessCard } from "@app/components/shared/config/configSections/s
 import { CustomPathsCard } from "@app/components/shared/config/configSections/server/CustomPathsCard";
 import { CustomMetadataCard } from "@app/components/shared/config/configSections/server/CustomMetadataCard";
 import { ServerCertificateCard } from "@app/components/shared/config/configSections/server/ServerCertificateCard";
-import { McpCard } from "@app/components/shared/config/configSections/server/McpCard";
 import "@app/components/shared/config/configSections/server/AdminSystemSection.css";
 
 /** Every admin section this page drafts, and so every key a save invalidates. */
@@ -43,7 +41,6 @@ const SECTION_NAMES = [
   "endpoints",
   "storage",
   "policies",
-  "mcp",
 ] as const;
 
 /**
@@ -51,9 +48,9 @@ const SECTION_NAMES = [
  * under one Save bar, so the page owns one composite dirty flag rather than a
  * flag per hook, and the cards below are presentational.
  *
- * Two things the split rows got away with and this page cannot:
- * saves run one after another (general and mcp both PUT the flat settings
- * endpoint), and a save refetches every section, because the System card writes
+ * Two things the split rows got away with and this page cannot: saves run one
+ * after another (several sections PUT the same flat settings endpoint), and a
+ * save refetches every section, because the System card writes
  * system.frontendUrl that the storage section reads under its own key.
  */
 export default function AdminSystemSection() {
@@ -312,46 +309,6 @@ export default function AdminSystemSection() {
     enabled: loginEnabled,
   });
 
-  const {
-    settings: mcp,
-    setSettings: setMcp,
-    loading: mcpLoading,
-    saving: mcpSaving,
-    saveSettings: saveMcp,
-    isFieldPending: isMcpFieldPending,
-  } = useAdminSettings<McpSettingsData>({
-    sectionName: "mcp",
-    // The standalone MCP row passed no `enabled` and fetched with login off. It
-    // has to gate like its neighbours now, or its late arrival reads as an edit.
-    enabled: loginEnabled,
-    fetchTransformer: async (): Promise<
-      McpSettingsData & { _pending?: Partial<McpSettingsData> }
-    > => {
-      const response = await apiClient.get<
-        McpSettingsData & { _pending?: Partial<McpSettingsData> }
-      >("/api/v1/admin/settings/section/mcp");
-      return response.data || {};
-    },
-    // Save nested auth.* keys as dot-notation through the root endpoint so siblings are preserved.
-    saveTransformer: (s: McpSettingsData) => ({
-      sectionData: {},
-      deltaSettings: {
-        "mcp.enabled": s.enabled ?? false,
-        "mcp.scopesEnabled": s.scopesEnabled ?? true,
-        "mcp.allowedOperations": s.allowedOperations ?? [],
-        "mcp.blockedOperations": s.blockedOperations ?? [],
-        "mcp.auth.mode": s.auth?.mode ?? "oauth",
-        "mcp.auth.issuerUri": s.auth?.issuerUri ?? "",
-        "mcp.auth.jwksUri": s.auth?.jwksUri ?? "",
-        "mcp.auth.resourceId": s.auth?.resourceId ?? "",
-        "mcp.auth.acceptedAudiences": s.auth?.acceptedAudiences ?? [],
-        "mcp.auth.usernameClaim": s.auth?.usernameClaim ?? "sub",
-        "mcp.auth.requireExistingAccount":
-          s.auth?.requireExistingAccount ?? true,
-      },
-    }),
-  });
-
   // Every hook's loading, and the ternary because a disabled query never
   // settles: a composite draft always has keys, so this is the only guard left
   // between useSettingsDirty and a snapshot taken mid-fetch.
@@ -360,13 +317,12 @@ export default function AdminSystemSection() {
       uiLoading ||
       endpointsLoading ||
       storageLoading ||
-      policiesLoading ||
-      mcpLoading
+      policiesLoading
     : false;
 
   const composite = useMemo(
-    () => ({ general, uiDefaults, endpoints, storage, folderAccess, mcp }),
-    [general, uiDefaults, endpoints, storage, folderAccess, mcp],
+    () => ({ general, uiDefaults, endpoints, storage, folderAccess }),
+    [general, uiDefaults, endpoints, storage, folderAccess],
   );
 
   const { isDirty, resetToSnapshot, markSaved } = useSettingsDirty(
@@ -408,9 +364,8 @@ export default function AdminSystemSection() {
       saveEndpoints,
       saveStorage,
       savePolicies,
-      saveMcp,
     ]) {
-      // Sequential, not Promise.all: general and mcp PUT the same flat settings
+      // Sequential, not Promise.all: these sections PUT the same flat settings
       // endpoint and would overwrite each other's merge. A clean section's save
       // is a no-op, so running all six costs nothing.
       const [result] = await Promise.allSettled([save()]);
@@ -452,7 +407,6 @@ export default function AdminSystemSection() {
     setEndpoints(original.endpoints);
     setStorage(original.storage);
     setFolderAccess(original.folderAccess);
-    setMcp(original.mcp);
     setNewRoot("");
   }, [
     resetToSnapshot,
@@ -461,7 +415,6 @@ export default function AdminSystemSection() {
     setEndpoints,
     setStorage,
     setFolderAccess,
-    setMcp,
   ]);
 
   if (loading) {
@@ -611,11 +564,11 @@ export default function AdminSystemSection() {
           id="adminFeatures"
           title={t(
             "admin.settings.features.serverCertificate.label",
-            "Server Certificate",
+            "Certificate Signing",
           )}
           description={t(
             "admin.settings.features.serverCertificate.description",
-            'Configure server-side certificate generation for "Sign with Stirling-PDF" functionality',
+            'Generate the certificate that backs the "Sign with Stirling-PDF" signing feature.',
           )}
           badge={
             <Badge
@@ -635,22 +588,6 @@ export default function AdminSystemSection() {
         >
           <ServerCertificateCard {...generalCard} />
         </SettingsCard>
-
-        <SettingsCard
-          id="adminMcp"
-          title={t("settings.configuration.mcp", "MCP Server")}
-          description={t(
-            "admin.settings.mcp.description",
-            "Expose this server's tools to MCP clients, and choose which ones.",
-          )}
-        >
-          <McpCard
-            settings={mcp}
-            setSettings={setMcp}
-            isFieldPending={isMcpFieldPending}
-            loginEnabled={loginEnabled}
-          />
-        </SettingsCard>
       </Stack>
 
       <SettingsStickyFooter
@@ -660,8 +597,7 @@ export default function AdminSystemSection() {
           uiSaving ||
           endpointsSaving ||
           storageSaving ||
-          policiesSaving ||
-          mcpSaving
+          policiesSaving
         }
         loginEnabled={loginEnabled}
         onSave={handleSave}

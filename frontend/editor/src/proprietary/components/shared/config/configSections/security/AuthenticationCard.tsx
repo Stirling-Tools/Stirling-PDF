@@ -1,15 +1,8 @@
 import { useTranslation } from "react-i18next";
+import { SettingsToggleRow } from "@app/components/shared/config/SettingsToggleRow";
 import { SettingsFieldLabel } from "@app/components/shared/config/SettingsFieldLabel";
 import { InfoTooltip } from "@app/ui/InfoTooltip";
-import {
-  NumberInput,
-  Switch,
-  Stack,
-  Paper,
-  Text,
-  Group,
-  Select,
-} from "@mantine/core";
+import { NumberInput, Stack, Paper, Group, Select } from "@mantine/core";
 import PendingBadge from "@app/components/shared/config/PendingBadge";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 import type { SecurityCardProps } from "@app/components/shared/config/configSections/security/securityCardProps";
@@ -26,36 +19,19 @@ export function AuthenticationCard({
   return (
     <Paper withBorder p="md" radius="md">
       <Stack gap="md">
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <Text fw={500} size="sm">
-              {t("admin.settings.security.enableLogin.label", "Enable Login")}{" "}
-              <InfoTooltip
-                label={t(
-                  "admin.settings.security.enableLogin.description",
-                  "Require users to log in before accessing the application",
-                )}
-              />
-            </Text>
-          </div>
-          <Group gap="xs">
-            <Switch
-              name="enableLogin"
-              checked={settings?.enableLogin || false}
-              onChange={(e) =>
-                setSettings({ ...settings, enableLogin: e.target.checked })
-              }
-              disabled={!loginEnabled}
-            />
-            <PendingBadge show={isFieldPending("enableLogin")} />
-          </Group>
-        </div>
+        <SettingsToggleRow
+          label={t("admin.settings.security.enableLogin.label", "Enable Login")}
+          info={t(
+            "admin.settings.security.enableLogin.description",
+            "Require users to log in before accessing the application",
+          )}
+          pending={isFieldPending("enableLogin")}
+          checked={settings?.enableLogin || false}
+          onChange={(checked) =>
+            setSettings({ ...settings, enableLogin: checked })
+          }
+          disabled={!loginEnabled}
+        />
 
         <div>
           <Select

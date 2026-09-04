@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
+import { SettingsToggleRow } from "@app/components/shared/config/SettingsToggleRow";
 import { InfoTooltip } from "@app/ui/InfoTooltip";
-import { NumberInput, Switch, Stack, Paper, Text, Group } from "@mantine/core";
+import { NumberInput, Stack, Paper, Group } from "@mantine/core";
 import PendingBadge from "@app/components/shared/config/PendingBadge";
 import type { SecurityCardProps } from "@app/components/shared/config/configSections/security/securityCardProps";
 
@@ -16,45 +17,28 @@ export function SessionsJwtCard({
   return (
     <Paper withBorder p="md" radius="md">
       <Stack gap="md">
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <Text fw={500} size="sm">
-              {t(
-                "admin.settings.security.jwt.enableKeyCleanup.label",
-                "Enable Key Cleanup",
-              )}{" "}
-              <InfoTooltip
-                label={t(
-                  "admin.settings.security.jwt.enableKeyCleanup.description",
-                  "Automatically remove old JWT keys after retention period",
-                )}
-              />
-            </Text>
-          </div>
-          <Group gap="xs">
-            <Switch
-              name="jwt_enableKeyCleanup"
-              checked={settings?.jwt?.enableKeyCleanup || false}
-              onChange={(e) =>
-                setSettings({
-                  ...settings,
-                  jwt: {
-                    ...settings?.jwt,
-                    enableKeyCleanup: e.target.checked,
-                  },
-                })
-              }
-              disabled={!loginEnabled}
-            />
-            <PendingBadge show={isFieldPending("jwt.enableKeyCleanup")} />
-          </Group>
-        </div>
+        <SettingsToggleRow
+          label={t(
+            "admin.settings.security.jwt.enableKeyCleanup.label",
+            "Enable Key Cleanup",
+          )}
+          info={t(
+            "admin.settings.security.jwt.enableKeyCleanup.description",
+            "Automatically remove old JWT keys after retention period",
+          )}
+          pending={isFieldPending("jwt.enableKeyCleanup")}
+          checked={settings?.jwt?.enableKeyCleanup || false}
+          onChange={(checked) =>
+            setSettings({
+              ...settings,
+              jwt: {
+                ...settings?.jwt,
+                enableKeyCleanup: checked,
+              },
+            })
+          }
+          disabled={!loginEnabled}
+        />
 
         <div>
           <NumberInput
@@ -206,42 +190,25 @@ export function SessionsJwtCard({
           />
         </div>
 
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <Text fw={500} size="sm">
-              {t(
-                "admin.settings.security.jwt.secureCookie.label",
-                "Secure Cookie",
-              )}{" "}
-              <InfoTooltip
-                label={t(
-                  "admin.settings.security.jwt.secureCookie.description",
-                  "Require HTTPS for JWT cookies (recommended for production)",
-                )}
-              />
-            </Text>
-          </div>
-          <Group gap="xs">
-            <Switch
-              name="jwt_secureCookie"
-              checked={settings?.jwt?.secureCookie || false}
-              onChange={(e) =>
-                setSettings({
-                  ...settings,
-                  jwt: { ...settings?.jwt, secureCookie: e.target.checked },
-                })
-              }
-              disabled={!loginEnabled}
-            />
-            <PendingBadge show={isFieldPending("jwt.secureCookie")} />
-          </Group>
-        </div>
+        <SettingsToggleRow
+          label={t(
+            "admin.settings.security.jwt.secureCookie.label",
+            "Secure Cookie",
+          )}
+          info={t(
+            "admin.settings.security.jwt.secureCookie.description",
+            "Require HTTPS for JWT cookies (recommended for production)",
+          )}
+          pending={isFieldPending("jwt.secureCookie")}
+          checked={settings?.jwt?.secureCookie || false}
+          onChange={(checked) =>
+            setSettings({
+              ...settings,
+              jwt: { ...settings?.jwt, secureCookie: checked },
+            })
+          }
+          disabled={!loginEnabled}
+        />
       </Stack>
     </Paper>
   );

@@ -34,26 +34,6 @@ import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 import "@app/components/shared/config/settingsSections.css";
 import "@app/pages/SettingsPage.css";
 
-const COLLAPSED_GROUPS_KEY = "stirling.settingsCollapsedGroups";
-
-/** Which sidebar groups the user folded or unfolded, by group id. */
-function readCollapsedGroups(): Record<string, boolean> {
-  try {
-    const raw = window.localStorage.getItem(COLLAPSED_GROUPS_KEY);
-    return raw ? (JSON.parse(raw) as Record<string, boolean>) : {};
-  } catch {
-    return {};
-  }
-}
-
-function writeCollapsedGroups(value: Record<string, boolean>): void {
-  try {
-    window.localStorage.setItem(COLLAPSED_GROUPS_KEY, JSON.stringify(value));
-  } catch {
-    // Storage unavailable: the fold state just does not survive a reload.
-  }
-}
-
 /** `/settings/people` -> "people". Null for `/settings` itself. */
 function sectionFromPath(pathname: string): string | null {
   const match = stripBasePath(pathname).match(/\/settings\/([^/?#]+)/);
@@ -77,16 +57,6 @@ const SettingsPageInner: React.FC = () => {
   const [mobilePane, setMobilePane] = useState<"nav" | "content">(() =>
     sectionFromPath(window.location.pathname) ? "content" : "nav",
   );
-  const [collapsed, setCollapsed] =
-    useState<Record<string, boolean>>(readCollapsedGroups);
-  const toggleGroup = useCallback((groupId: string, fold: boolean) => {
-    setCollapsed((prev) => {
-      const next = { ...prev, [groupId]: fold };
-      writeCollapsedGroups(next);
-      return next;
-    });
-  }, []);
-
   // Leaving restores where the user came from (the editor, the processor,
   // wherever) by replacement, or the editor for a deep link with no origin.
   const leave = useCallback(() => {
@@ -247,130 +217,109 @@ const SettingsPageInner: React.FC = () => {
         <div className="modal-nav-scroll">
           {sections.map((section) => {
             const groupId = section.id ?? section.title;
-            // The group you are in never hides its own row, whatever was remembered.
-            const holdsActive = section.items.some(
-              (i) => i.key === activeItem?.key,
-            );
-            const open =
-              holdsActive ||
-              !(collapsed[groupId] ?? section.collapsedByDefault ?? false);
             // A header that toggles a single row costs a line and a click to
             // show what it already named; the row stands on its own instead.
             const solo = section.items.length === 1;
             return (
               <div key={groupId} className="modal-nav-section">
                 {!solo && (
-                  <button
-                    type="button"
-                    className="settings-page__group"
-                    aria-expanded={open}
-                    aria-controls={`settings-group-${groupId}`}
-                    onClick={() => toggleGroup(groupId, open)}
-                  >
-                    <span>{section.title}</span>
-                    <LocalIcon
-                      icon="expand-more-rounded"
-                      width={16}
-                      height={16}
-                      className="settings-page__group-chevron"
-                    />
-                  </button>
+                  // A plain label, not a disclosure: the rail is short enough
+                  // that hiding rows only cost a click to find them again.
+                  <h2 className="settings-page__group">{section.title}</h2>
                 )}
-                {(solo || open) && (
-                  <div
-                    id={`settings-group-${groupId}`}
-                    className="modal-nav-section-items"
-                  >
-                    {section.items.map((item) => {
-                      const isActive = activeItem?.key === item.key;
-                      const isDisabled = item.disabled ?? false;
-                      const showPlanWarning =
-                        item.key === "adminPlan" &&
-                        licenseAlert.active &&
-                        licenseAlert.audience === "admin";
-                      const row = (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (!isDisabled) void handleNavigation(item.key);
-                          }}
-                          className={`modal-nav-item ${isActive ? "active" : ""} ${isMobile ? "mobile" : ""}`}
-                          data-tour={`admin-${item.key}-nav`}
-                          aria-current={isActive ? "page" : undefined}
-                          // Not `disabled`: it stays focusable, so the tooltip
-                          // saying why it is off is reachable by keyboard.
-                          aria-disabled={isDisabled || undefined}
-                        >
+                <div
+                  id={`settings-group-${groupId}`}
+                  className="modal-nav-section-items"
+                >
+                  {section.items.map((item) => {
+                    const isActive = activeItem?.key === item.key;
+                    const isDisabled = item.disabled ?? false;
+                    const showPlanWarning =
+                      item.key === "adminPlan" &&
+                      licenseAlert.active &&
+                      licenseAlert.audience === "admin";
+                    const row = (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (!isDisabled) void handleNavigation(item.key);
+                        }}
+                        className={`modal-nav-item ${isActive ? "active" : ""} ${isMobile ? "mobile" : ""}`}
+                        data-tour={`admin-${item.key}-nav`}
+                        aria-current={isActive ? "page" : undefined}
+                        // Not `disabled`: it stays focusable, so the tooltip
+                        // saying why it is off is reachable by keyboard.
+                        aria-disabled={isDisabled || undefined}
+                      >
+                        <LocalIcon
+                          icon={item.icon}
+                          width={18}
+                          height={18}
+                          className="settings-page__nav-icon"
+                        />
+                        <span className="settings-page__nav-label">
+                          {item.label}
+                        </span>
+                        {item.badge && (
+                          <Badge
+                            size="xs"
+                            variant="light"
+                            color={item.badgeColor ?? "orange"}
+                            className="modal-nav-item-badge"
+                          >
+                            {item.badge}
+                          </Badge>
+                        )}
+                        {showPlanWarning && (
                           <LocalIcon
-                            icon={item.icon}
-                            width={18}
-                            height={18}
-                            className="settings-page__nav-icon"
+                            icon="warning-rounded"
+                            width={14}
+                            height={14}
+                            className="settings-page__nav-warning"
                           />
-                          <span className="settings-page__nav-label">
-                            {item.label}
-                          </span>
-                          {item.badge && (
-                            <Badge
-                              size="xs"
-                              variant="light"
-                              color={item.badgeColor ?? "orange"}
-                              className="modal-nav-item-badge"
-                            >
-                              {item.badge}
-                            </Badge>
-                          )}
-                          {showPlanWarning && (
-                            <LocalIcon
-                              icon="warning-rounded"
-                              width={14}
-                              height={14}
-                              className="settings-page__nav-warning"
-                            />
-                          )}
-                          <SettingsNavChevron show={isMobile} />
-                        </button>
-                      );
-                      return isDisabled && item.disabledTooltip ? (
-                        <Tooltip
-                          key={item.key}
-                          label={item.disabledTooltip}
-                          position="right"
-                          withArrow
-                          zIndex={Z_INDEX_OVER_CONFIG_MODAL}
-                        >
-                          {row}
-                        </Tooltip>
-                      ) : (
-                        <React.Fragment key={item.key}>
-                          {row}
-                          {isActive && headings.length > 1 && (
-                            <ul className="settings-page__subnav">
-                              {headings.map((h) => (
-                                <li key={h.id}>
-                                  <button
-                                    type="button"
-                                    className="settings-page__subnav-item"
-                                    onClick={() =>
-                                      document
-                                        .getElementById(h.id)
-                                        ?.scrollIntoView({
-                                          behavior: "smooth",
-                                          block: "start",
-                                        })
-                                    }
-                                  >
-                                    {h.label}
-                                  </button>
-                                </li>
-                              ))}
-                            </ul>
-                          )}
-                        </React.Fragment>
-                      );
-                    })}
-                  </div>
-                )}
+                        )}
+                        <SettingsNavChevron show={isMobile} />
+                      </button>
+                    );
+                    return isDisabled && item.disabledTooltip ? (
+                      <Tooltip
+                        key={item.key}
+                        label={item.disabledTooltip}
+                        position="right"
+                        withArrow
+                        zIndex={Z_INDEX_OVER_CONFIG_MODAL}
+                      >
+                        {row}
+                      </Tooltip>
+                    ) : (
+                      <React.Fragment key={item.key}>
+                        {row}
+                        {isActive && headings.length > 1 && (
+                          <ul className="settings-page__subnav">
+                            {headings.map((h) => (
+                              <li key={h.id}>
+                                <button
+                                  type="button"
+                                  className="settings-page__subnav-item"
+                                  onClick={() =>
+                                    document
+                                      .getElementById(h.id)
+                                      ?.scrollIntoView({
+                                        behavior: "smooth",
+                                        block: "start",
+                                      })
+                                  }
+                                >
+                                  {h.label}
+                                </button>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </React.Fragment>
+                    );
+                  })}
+                </div>
               </div>
             );
           })}

@@ -48,41 +48,13 @@
 }
 
 .settings-page__group {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
   margin: 0;
   padding: 0.25rem var(--space-3);
-  border: none;
-  border-radius: var(--radius-nav);
-  background: none;
-  font: inherit;
   font-size: 0.6875rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--c-text-subtle);
-  cursor: pointer;
-}
-
-.settings-page__group:hover {
-  color: var(--c-text-muted);
-  background: var(--c-hover);
-}
-
-.settings-page__group:focus-visible {
-  outline: 2px solid var(--c-accent-fg, var(--c-primary));
-  outline-offset: -2px;
-}
-
-.settings-page__group-chevron {
-  flex-shrink: 0;
-  transition: transform var(--motion-fast);
-}
-
-.settings-page__group[aria-expanded="false"] .settings-page__group-chevron {
-  transform: rotate(-90deg);
 }
 
 .settings-page .modal-nav-section-items {

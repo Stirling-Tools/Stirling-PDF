@@ -1081,12 +1081,12 @@ description = "Configure optional features and functionality."
 title = "Features"
 
 [admin.settings.features.serverCertificate]
-description = "Configure server-side certificate generation for \"Sign with Stirling-PDF\" functionality"
-label = "Server Certificate"
+description = "Generate the certificate that backs the \"Sign with Stirling-PDF\" signing feature."
+label = "Certificate Signing"
 
 [admin.settings.features.serverCertificate.enabled]
-description = "Enable server-side certificate for \"Sign with Stirling-PDF\" option"
-label = "Enable Server Certificate"
+description = "Offer \"Sign with Stirling-PDF\" using a certificate this server generates"
+label = "Enable Certificate Signing"
 
 [admin.settings.features.serverCertificate.organizationName]
 description = "Organization name for generated certificates"

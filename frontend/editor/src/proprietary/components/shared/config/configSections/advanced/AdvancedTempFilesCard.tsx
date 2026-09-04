@@ -1,16 +1,7 @@
 import { useTranslation } from "react-i18next";
-import { InfoTooltip } from "@app/ui/InfoTooltip";
+import { SettingsToggleRow } from "@app/components/shared/config/SettingsToggleRow";
 import { SettingsFieldLabel } from "@app/components/shared/config/SettingsFieldLabel";
-import {
-  NumberInput,
-  Switch,
-  Stack,
-  Paper,
-  Text,
-  Group,
-  TextInput,
-} from "@mantine/core";
-import PendingBadge from "@app/components/shared/config/PendingBadge";
+import { NumberInput, Stack, Paper, TextInput } from "@mantine/core";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
 import type { AdvancedCardProps } from "@app/components/shared/config/configSections/advanced/advancedCardProps";
 
@@ -211,91 +202,55 @@ export function AdvancedTempFilesCard({
           />
         </div>
 
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
+        <SettingsToggleRow
+          label={t(
+            "admin.settings.advanced.tempFileManagement.startupCleanup.label",
+            "Startup Cleanup",
+          )}
+          info={t(
+            "admin.settings.advanced.tempFileManagement.startupCleanup.description",
+            "Clean up old temp files on application startup",
+          )}
+          pending={isFieldPending("tempFileManagement.startupCleanup")}
+          checked={settings.tempFileManagement?.startupCleanup ?? true}
+          onChange={(checked) => {
+            if (!loginEnabled) return;
+            setSettings({
+              ...settings,
+              tempFileManagement: {
+                ...settings.tempFileManagement,
+                startupCleanup: checked,
+              },
+            });
           }}
-        >
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <Text fw={500} size="sm">
-              {t(
-                "admin.settings.advanced.tempFileManagement.startupCleanup.label",
-                "Startup Cleanup",
-              )}{" "}
-              <InfoTooltip
-                label={t(
-                  "admin.settings.advanced.tempFileManagement.startupCleanup.description",
-                  "Clean up old temp files on application startup",
-                )}
-              />
-            </Text>
-          </div>
-          <Group gap="xs">
-            <Switch
-              checked={settings.tempFileManagement?.startupCleanup ?? true}
-              onChange={(e) => {
-                if (!loginEnabled) return;
-                setSettings({
-                  ...settings,
-                  tempFileManagement: {
-                    ...settings.tempFileManagement,
-                    startupCleanup: e.target.checked,
-                  },
-                });
-              }}
-              disabled={!loginEnabled}
-              styles={getDisabledStyles()}
-            />
-            <PendingBadge
-              show={isFieldPending("tempFileManagement.startupCleanup")}
-            />
-          </Group>
-        </div>
+          disabled={!loginEnabled}
+          styles={getDisabledStyles()}
+        />
 
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
+        <SettingsToggleRow
+          label={t(
+            "admin.settings.advanced.tempFileManagement.cleanupSystemTemp.label",
+            "Cleanup System Temp",
+          )}
+          info={t(
+            "admin.settings.advanced.tempFileManagement.cleanupSystemTemp.description",
+            "Whether to clean broader system temp directory (use with caution)",
+          )}
+          pending={isFieldPending("tempFileManagement.cleanupSystemTemp")}
+          checked={settings.tempFileManagement?.cleanupSystemTemp ?? false}
+          onChange={(checked) => {
+            if (!loginEnabled) return;
+            setSettings({
+              ...settings,
+              tempFileManagement: {
+                ...settings.tempFileManagement,
+                cleanupSystemTemp: checked,
+              },
+            });
           }}
-        >
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <Text fw={500} size="sm">
-              {t(
-                "admin.settings.advanced.tempFileManagement.cleanupSystemTemp.label",
-                "Cleanup System Temp",
-              )}{" "}
-              <InfoTooltip
-                label={t(
-                  "admin.settings.advanced.tempFileManagement.cleanupSystemTemp.description",
-                  "Whether to clean broader system temp directory (use with caution)",
-                )}
-              />
-            </Text>
-          </div>
-          <Group gap="xs">
-            <Switch
-              checked={settings.tempFileManagement?.cleanupSystemTemp ?? false}
-              onChange={(e) => {
-                if (!loginEnabled) return;
-                setSettings({
-                  ...settings,
-                  tempFileManagement: {
-                    ...settings.tempFileManagement,
-                    cleanupSystemTemp: e.target.checked,
-                  },
-                });
-              }}
-              disabled={!loginEnabled}
-              styles={getDisabledStyles()}
-            />
-            <PendingBadge
-              show={isFieldPending("tempFileManagement.cleanupSystemTemp")}
-            />
-          </Group>
-        </div>
+          disabled={!loginEnabled}
+          styles={getDisabledStyles()}
+        />
       </Stack>
     </Paper>
   );

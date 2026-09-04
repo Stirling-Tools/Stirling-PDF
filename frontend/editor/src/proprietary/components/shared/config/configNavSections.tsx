@@ -318,7 +318,6 @@ export const useConfigNavSections = (
       {
         id: "advanced",
         title: t("settings.configuration.advanced", "Advanced"),
-        collapsedByDefault: true,
         items: [
           {
             key: "adminAdvanced",

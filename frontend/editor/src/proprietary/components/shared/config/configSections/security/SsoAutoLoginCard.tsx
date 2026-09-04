@@ -1,8 +1,7 @@
 import { useTranslation } from "react-i18next";
-import { InfoTooltip } from "@app/ui/InfoTooltip";
+import { SettingsToggleRow } from "@app/components/shared/config/SettingsToggleRow";
 import { useNavigate } from "react-router-dom";
-import { Stack, Paper, Text, Group, Switch, Badge } from "@mantine/core";
-import PendingBadge from "@app/components/shared/config/PendingBadge";
+import { Stack, Paper, Group, Badge } from "@mantine/core";
 import type { ConnectionsCardProps } from "@app/components/shared/config/configSections/security/securityCardProps";
 
 /** Send unauthenticated users straight to the SSO provider. */
@@ -34,43 +33,27 @@ export function SsoAutoLoginCard({
           </Badge>
         </Group>
 
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
+        <SettingsToggleRow
+          label={t(
+            "admin.settings.connections.ssoAutoLogin.enable",
+            "Enable SSO Auto Login",
+          )}
+          info={t(
+            "admin.settings.connections.ssoAutoLogin.description",
+            "Automatically redirect to SSO login when authentication is required",
+          )}
+          pending={isFieldPending("ssoAutoLogin")}
+          checked={settings?.ssoAutoLogin || false}
+          onChange={(checked) => {
+            if (!loginEnabled) return; // Block change when login disabled
+            setSettings({
+              ...settings,
+              ssoAutoLogin: checked,
+            });
           }}
-        >
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <Text fw={500} size="sm">
-              {t(
-                "admin.settings.connections.ssoAutoLogin.enable",
-                "Enable SSO Auto Login",
-              )}{" "}
-              <InfoTooltip
-                label={t(
-                  "admin.settings.connections.ssoAutoLogin.description",
-                  "Automatically redirect to SSO login when authentication is required",
-                )}
-              />
-            </Text>
-          </div>
-          <Group gap="xs">
-            <Switch
-              checked={settings?.ssoAutoLogin || false}
-              onChange={(e) => {
-                if (!loginEnabled) return; // Block change when login disabled
-                setSettings({
-                  ...settings,
-                  ssoAutoLogin: e.target.checked,
-                });
-              }}
-              disabled={!loginEnabled}
-              styles={getDisabledStyles()}
-            />
-            <PendingBadge show={isFieldPending("ssoAutoLogin")} />
-          </Group>
-        </div>
+          disabled={!loginEnabled}
+          styles={getDisabledStyles()}
+        />
       </Stack>
     </Paper>
   );

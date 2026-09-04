@@ -87,6 +87,4 @@ export interface ConfigNavSection {
   id?: string;
   title: string;
   items: ConfigNavItem[];
-  /** Start folded in the sidebar; opening it (or landing in it) unfolds. */
-  collapsedByDefault?: boolean;
 }

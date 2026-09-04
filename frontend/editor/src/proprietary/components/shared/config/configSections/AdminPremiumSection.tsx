@@ -1,9 +1,9 @@
 import { useCallback } from "react";
+import { SettingsToggleRow } from "@app/components/shared/config/SettingsToggleRow";
 import { InfoTooltip } from "@app/ui/InfoTooltip";
 import { Trans, useTranslation } from "react-i18next";
 import {
   TextInput,
-  Switch,
   Stack,
   Paper,
   Text,
@@ -187,40 +187,24 @@ export default function AdminPremiumSection() {
               />
             </div>
 
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
+            <SettingsToggleRow
+              label={t(
+                "admin.settings.premium.enabled.label",
+                "Enable Premium Features",
+              )}
+              info={t(
+                "admin.settings.premium.enabled.description",
+                "Enable license key checks for pro/enterprise features",
+              )}
+              pending={isFieldPending("enabled")}
+              checked={settings.enabled || false}
+              onChange={(checked) => {
+                if (!loginEnabled) return;
+                setSettings({ ...settings, enabled: checked });
               }}
-            >
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <Text fw={500} size="sm">
-                  {t(
-                    "admin.settings.premium.enabled.label",
-                    "Enable Premium Features",
-                  )}{" "}
-                  <InfoTooltip
-                    label={t(
-                      "admin.settings.premium.enabled.description",
-                      "Enable license key checks for pro/enterprise features",
-                    )}
-                  />
-                </Text>
-              </div>
-              <Group gap="xs">
-                <Switch
-                  checked={settings.enabled || false}
-                  onChange={(e) => {
-                    if (!loginEnabled) return;
-                    setSettings({ ...settings, enabled: e.target.checked });
-                  }}
-                  disabled={!loginEnabled}
-                  styles={getDisabledStyles()}
-                />
-                <PendingBadge show={isFieldPending("enabled")} />
-              </Group>
-            </div>
+              disabled={!loginEnabled}
+              styles={getDisabledStyles()}
+            />
           </Stack>
         </Paper>
       </Stack>
