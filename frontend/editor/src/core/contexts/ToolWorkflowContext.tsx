@@ -113,9 +113,9 @@ interface ToolWorkflowContextValue extends ToolWorkflowState {
     view: CustomWorkbenchViewRegistration<T>,
   ) => void;
   unregisterCustomWorkbenchView: (id: string) => void;
-  setCustomWorkbenchViewData: (
+  setCustomWorkbenchViewData: <T>(
     id: string,
-    data: unknown | ((prev: unknown) => unknown),
+    data: T | ((prev: T) => T),
   ) => void;
   clearCustomWorkbenchViewData: (id: string) => void;
 }
@@ -313,12 +313,12 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   );
 
   const setCustomWorkbenchViewData = useCallback(
-    (id: string, dataOrUpdater: unknown | ((prev: unknown) => unknown)) => {
+    <T,>(id: string, dataOrUpdater: T | ((prev: T) => T)) => {
       setCustomViewData((prev) => {
-        const currentData = prev[id];
+        const currentData = prev[id] as T;
         const newData =
           typeof dataOrUpdater === "function"
-            ? dataOrUpdater(currentData)
+            ? (dataOrUpdater as (prev: T) => T)(currentData)
             : dataOrUpdater;
         return { ...prev, [id]: newData };
       });
