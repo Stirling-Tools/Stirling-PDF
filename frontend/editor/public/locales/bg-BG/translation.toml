@@ -41,7 +41,7 @@ false = "Невярно"
 fileNotSavedToDisk = "Не е записан на диска"
 fileSavedToDisk = "Файлът е записан на диска"
 fileSelected = "Избрано: {{filename}}"
-filesSelected = "избрани файлове"
+filesSelected = "{{count}} файла"
 font = "Шрифт"
 fontSizeTooltip = "Размер на текста за номера на страници в точки. По-големите числа правят по-голям текст."
 fontTypeTooltip = "Семейство шрифтове за номерата на страниците. Изберете спрямо стила на документа."
@@ -3526,7 +3526,6 @@ label = "Y позиция"
 
 [crop.error]
 failed = "Неуспешно изрязване на PDF"
-invalidArea = "Областта за изрязване излиза извън границите на PDF"
 
 [crop.preview]
 title = "Избор на област за изрязване"
@@ -3969,6 +3968,7 @@ back = "Назад"
 backToFolder = "Назад към {{folder}}"
 backToMyFiles = "Назад към Моите файлове"
 breadcrumbs = "Път на папката"
+bulkActions = "Действия"
 cancel = "Отказ"
 classification = "Класификация"
 clearSelection = "Изчистете избора"
@@ -4142,6 +4142,11 @@ totalSize = "Общ размер"
 type = "Тип"
 versionHistory = "Път на версиите"
 
+[filesPage.filters]
+activeCount = "{{count}} активни филтъра"
+clearAll = "Изчистване на филтрите"
+label = "Филтри"
+
 [filesPage.folderName]
 cancel = "Отказ"
 error = "Папката не можа да бъде записана. Опитайте отново."
@@ -4176,6 +4181,7 @@ label = "Filter files by name"
 placeholder = "Filter files…"
 
 [filesPage.sort]
+label = "Сортиране на файлове"
 modifiedAsc = "Най-старите първо"
 modifiedDesc = "Най-новите първо"
 nameAsc = "Име A→Z"
@@ -4305,11 +4311,14 @@ issues = "GitHub"
 [formFill]
 allSaved = "Всичко е запазено"
 analyzingFields = "Analysing form fields..."
+applyFailed = "Промените не можаха да бъдат приложени"
 extractCsvError = "Неуспешно извличане на CSV"
 extractXlsxError = "Неуспешно извличане на XLSX"
 filled = "filled"
 flattenAfterFilling = "Фиксиране след попълване"
+goToPage = "Отидете на тази страница"
 noFields = "No fillable form fields found in this PDF."
+page = "Страница"
 placeholderEnter = "Enter"
 placeholderSelect = "Select"
 requiredAbbreviation = "зад."
@@ -4318,7 +4327,82 @@ rescanFields = "Пресканирайте полетата"
 rescanFormFields = "Пресканирайте полетата на формуляра"
 save = "Запазете"
 saveShortcut = "Ctrl+S за запазване"
+skippedEdits_one = "1 промяна не можа да бъде приложена:"
+skippedEdits_other = "{{count}} промени не можаха да бъдат приложени:"
+skippedEditsTruncated = "Още {{count}} не са показани."
 unsavedChanges = "Незапазени промени"
+
+[formFill.create]
+commit = "Добавяне на {{count}} поле(та) към PDF"
+empty = "Все още няма начертани полета."
+failed = "Неуспешно добавяне на полета"
+goToField = "Отидете на това поле"
+hint = "Изберете тип поле, след което го начертайте на страницата."
+placing = "Начертайте поле {{type}} на страницата. Натиснете Esc, за да спрете."
+preview = "Задръжте за преглед"
+previewHelp = "Задръжте, за да видите как ще изглеждат полетата след добавяне, без контурите за редактиране."
+removeField = "Премахване на поле"
+
+[formFill.editor]
+action = "Действие на бутона"
+actionHelp = "Какво прави бутонът при щракване."
+actionNone = "Няма"
+actionPrint = "Печат"
+actionReset = "Нулиране на формуляра"
+actionSubmit = "Изпращане към URL"
+actionUri = "Отваряне на URL"
+actionUrl = "URL"
+actionUrlHelp = "Адресът, който бутонът отваря или към който изпраща."
+addOption = "Добавяне на опция"
+caption = "Надпис на бутона"
+captionHelp = "Текстът, отпечатан върху лицето на бутона."
+defaultValue = "Стойност по подразбиране"
+defaultValueHelp = "Какво съдържа полето, преди някой да го попълни. Оставете празно за празно поле."
+fontSize = "Размер на шрифта"
+fontSizeHelp = "Размер на текста в полето. Оставете празно, за да позволите на четеца да го оразмери според мястото."
+label = "Етикет"
+labelHelp = "Текстът, показван на този, който попълва формуляра. Оставете празно, за да се използва името на полето."
+maxLength = "Максимална дължина (comb)"
+maxLengthHelp = "Ограничава броя знаци, които се побират, начертани като равномерно разположени кутийки."
+multiline = "Многоредово"
+multilineHelp = "Позволява повече от един ред текст и пренасяне в края на полето."
+multiSelect = "Разрешаване на множествен избор"
+multiSelectHelp = "Позволява да бъде избрана повече от една опция едновременно."
+name = "Име на поле"
+nameHelp = "Вътрешното име на полето. Използва се при експортиране на данни или попълване на формуляра от друга система, затова го направете уникално и без интервали."
+optionGap = "Разстояние между опциите"
+optionGapHelp = "Разстояние между бутоните, в точки. Оставете празно, за да се разпределят равномерно надолу в полето."
+optionPlaceholder = "Опция {{n}}"
+options = "Опции"
+optionsEmpty = "Добавете поне една опция."
+optionsHelp = "Изборите, предлагани в списъка. Всеки се съхранява както е въведен, затова ги дръжте кратки и различими."
+optionSize = "Размер на опцията"
+optionSizeHelp = "Ширина и височина на всеки бутон, в точки. Оставете празно, за да се поберат в полето, което сте начертали."
+readOnly = "Само за четене"
+readOnlyHelp = "Показва стойност, но не позволява редактиране."
+removeOption = "Премахване на опция"
+required = "Задължително"
+requiredHelp = "Формулярът не може да бъде изпратен, докато това поле не бъде попълнено."
+signatureNote = "Само заместител - тук не подписвате. Той маркира къде трябва да бъде подписът, така че подписващ PDF инструмент (Adobe Acrobat, услуга за подписване и др.) да постави подписа на това място при подписване на документа."
+tooltip = "Подсказка"
+tooltipHelp = "Подсказката, показвана когато някой задържи курсора върху полето в PDF четец."
+type = "Тип"
+typeHelp = "Какъв вид поле е това. Промяната му изгражда полето наново, затова текущата му стойност не се пренася."
+
+[formFill.mode]
+create = "Създаване"
+fill = "Попълване"
+label = "Режим на редактора на формуляри"
+modify = "Промяна"
+
+[formFill.modify]
+commit = "Запазване на {{count}} промяна(и)"
+delete = "Изтриване"
+empty = "Този PDF все още няма полета на формуляр."
+failed = "Неуспешно запазване на промените"
+groupSizeHint = "Използвайте размер на опцията"
+hint = "Изберете поле, за да редактирате свойствата му, плъзнете го по страницата или го изтрийте."
+restore = "Възстановяване"
 
 [formFill.sidebar]
 close = "Затворете страничната лента"
@@ -4584,6 +4668,10 @@ title = "Промяна на метаданни"
 desc = "Промяна на ограниченията и разрешенията на документа"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Промяна на правата"
+
+[home.classify]
+desc = "Определете какъв вид документ е това и го маркирайте."
+title = "Класифициране"
 
 [home.compare]
 desc = "Сравнява и показва разликите между 2 PDF документа"
@@ -5097,6 +5185,30 @@ openProcessor = "Open PDF Processor"
 [navFooter.credits]
 count = "{{remaining}} of {{total}}"
 label = "Free credits"
+
+[notifications]
+empty = "Няма нищо за докладване."
+handoffUnavailable = "Този браузър няма да позволи на процесора да предаде документа на редактора. Вместо това го отворете от редактора."
+noDocumentLinked = "Тази грешка не е свързана с конкретен документ, така че тук няма какво да се отвори."
+notOnThisDevice = "Този документ не е на това устройство, така че не може да бъде отворен тук."
+occurrences = "{{count}} пъти"
+open = "Известия"
+title = "Известия"
+unread = "Непрочетени"
+
+[notifications.action]
+failed = "Това не проработи. Опитайте отново след малко."
+unavailable = "Не е налично за това известие."
+
+[notifications.detail]
+copied = "Копирано"
+copy = "Копиране на грешка"
+less = "Показване на по-малко"
+more = "Показване на пълното съобщение"
+
+[notifications.section]
+earlier = "По-рано"
+new = "Нови"
 
 [oauth.error]
 message = "Удостоверяването беше неуспешно. Можете да затворите този прозорец и да опитате отново."
@@ -6735,8 +6847,8 @@ barAria = "Free PDFs remaining"
 capSuffix_one = "от {{allowance}} безплатни PDF използвани"
 capSuffix_other = "от {{allowance}} безплатни PDF използвани"
 eyebrow = "Пробен Processor"
-statusLabel_one = "остават {{remaining}}"
-statusLabel_other = "остават {{remaining}}"
+statusLabel_one = "{{used}} използван"
+statusLabel_other = "{{used}} използвани"
 sub = "Използвайте PDF Editor безплатно. Платете за автоматична обработка на PDF."
 title_one = "Обработете {{allowance}} PDF безплатно"
 title_other = "Обработете {{allowance}} PDF безплатно"
@@ -7417,6 +7529,8 @@ acknowledge = "Acknowledge"
 confirm = "Are you sure?"
 dismiss = "Dismiss"
 dismissSkipFile = "Skip this file"
+viewFile = "Преглед на файла"
+viewInProcessor = "Преглед в процесора"
 
 [portal.failures.debug]
 copyJson = "Copy JSON"
@@ -7428,6 +7542,8 @@ showJson = "Show raw JSON ({{total}})"
 
 [portal.failures.disabled]
 closed = "This failure is already closed."
+noDocument = "Тази грешка не е записана за конкретен документ, така че тук няма какво да се отвори."
+unattended = "Този файл е подаден от папка, bucket или webhook, така че ничий браузър не го държи, за да го отвори."
 unavailable = "Not available for this failure."
 
 [portal.failures.empty]
@@ -8716,7 +8832,9 @@ title = "Източници"
 connectSource = "Свързване на източник"
 
 [portal.sources.builder]
+advanced = "Разширени"
 back = "Назад към източниците"
+backToSource = "Назад към настройката на източника"
 backToTypes = "Всички типове източници"
 cancel = "Отказ"
 chooseHint = "Изберете откъде идват документите. Конекторите в сиво са в процес на разработка."
@@ -8726,7 +8844,6 @@ create = "Създаване на източник"
 createTitle = "Свързване на източник"
 delete = "Изтриване"
 editTitle = "Редактиране на източник"
-enabled = "Активирано"
 save = "Запазване на промените"
 
 [portal.sources.builder.folderAccess]
@@ -8763,6 +8880,7 @@ consume = "Consume: обработване на всеки файл веднъж
 snapshot = "Snapshot: повторно четене на папката при всяко изпълнение"
 
 [portal.sources.networkFields.recursive]
+helperText = "Включете подпапки, ако файловете ви са организирани във вложени папки, или наблюдавайте само най-горното ниво."
 label = "Дълбочина на папката"
 
 [portal.sources.networkFields.recursive.options]
@@ -8816,6 +8934,7 @@ hash = "Размер, дата и проверка на съдържанието
 stat = "Размер и дата на промяна"
 
 [portal.sources.types.folder.fields.mode]
+helperText = "Дали оригиналният файл да остане на място, след като бъде обработен. Ако оригиналният файл остане на място, той ще бъде обработен отново следващия път, когато работният поток сканира източника."
 label = "Режим на четене"
 
 [portal.sources.types.folder.fields.mode.options]
@@ -8823,6 +8942,7 @@ consume = "Consume: обработи всеки файл веднъж"
 snapshot = "Snapshot: препрочитай папката при всяко изпълнение"
 
 [portal.sources.types.folder.fields.recursive]
+helperText = "Включете подпапки, ако файловете ви са организирани във вложени папки, или наблюдавайте само най-горното ниво."
 label = "Дълбочина на папката"
 
 [portal.sources.types.folder.fields.recursive.options]
@@ -9696,7 +9816,9 @@ toolNotAvailableLocally = "Вашият Stirling-PDF сървър е офлай�
 expired = "Вашата сесия е изтекла. Моля, опреснете страницата и опитайте отново."
 
 [settings]
+backToSections = "Всички настройки"
 close = "Затворете"
+title = "Настройки"
 
 [settings.ai]
 documents = "Документи и RAG"
@@ -10635,6 +10757,7 @@ ariaLabel = "Super search"
 filtersAriaLabel = "Search filters"
 hint = "Type to search"
 placeholder = "Search Stirling"
+placeholderShort = "Търсене"
 showLess = "Show less"
 showMore = "Show {{count}} more"
 
@@ -10831,6 +10954,7 @@ searchPlaceholder = "Търсене на инструменти..."
 
 [toolPicker.subcategories]
 advancedFormatting = "Разширено форматиране"
+ai = "AI"
 automation = "Автоматизация"
 developerTools = "Инструменти за разработчици"
 documentReview = "Преглед на документ"
@@ -11335,8 +11459,11 @@ columnDefault = "Колона {{index}}"
 convertToPdf = "Конвертирай в PDF"
 csvStats = "{{rows}} реда · {{columns}} колони · {{size}}"
 emptyFile = "Празен файл"
+htmlHidePreview = "Скриване на прегледа"
 htmlPreview = "HTML визуализация"
+htmlPreviewMobileHidden = "HTML страниците са оформени за ширини на настолен компютър, затова прегледът тук е изключен по подразбиране."
 htmlPreviewWarning = "HTML визуализация — външните ресурси може да не се заредят · {{size}}"
+htmlShowPreview = "Показване на прегледа въпреки това"
 invalidJson = "Невалиден JSON — показване на суровото съдържание"
 lineNumbers = "Номера на редовете"
 loading = "Зареждане..."
@@ -11683,6 +11810,7 @@ exportAll = "Експортиране на PDF"
 exportSelected = "Експортиране на избраните страници"
 formFill = "Попълване на формуляр"
 hideToolbar = "Hide toolbar"
+moreActions = "Още действия"
 multiTool = "Мултиинструмент"
 panMode = "Режим на преместване"
 print = "Печат на PDF"
@@ -11703,6 +11831,8 @@ selectAll = "Избиране на всички"
 selectByNumber = "Избор по номера на страници"
 selectLanguage = "Избор на език"
 share = "Сподели"
+showAllTools = "Показване на всички инструменти"
+showFewerTools = "Свиване на лентата с инструменти"
 showToolbar = "Show toolbar"
 toggleAnnotations = "Превключване на видимостта на анотациите"
 toggleAttachments = "Превключване на прикачените файлове"

@@ -95,22 +95,32 @@ public class StorageEncryptionAdminController {
                         .toList();
         String fingerprint = null;
         Integer masterKeyVersion = null;
+        String masterKeySource = null;
         if (encryptionState.isMaterialised()) {
             try {
                 FileEncryptionKeyService keyService = encryptionState.keyService();
                 fingerprint = keyService.masterKey().fingerprint();
                 masterKeyVersion = keyService.masterKey().currentVersion();
+                masterKeySource = keyService.masterKey().source().wireName();
             } catch (StorageEncryptionException ignored) {
                 // Materialisation failed; status still reports counts and key rows.
             }
         }
+        // Counted in the database so the total stays right if `keys` is ever paged.
+        long pendingRotationRows =
+                masterKeyVersion == null
+                        ? 0
+                        : keyRepository.countByMasterKeyVersionLessThan(masterKeyVersion);
         return new StorageEncryptionStatusResponse(
                 encryptionState.isWriteEnabled(),
                 encryptionState.isMaterialised(),
                 fingerprint,
                 masterKeyVersion,
+                masterKeySource,
+                applicationProperties.getStorage().getProvider(),
                 storedFileRepository.countByEncryptionKeyIdIsNotNull(),
                 storedFileRepository.countByEncryptionKeyIdIsNull(),
+                pendingRotationRows,
                 keys);
     }
 

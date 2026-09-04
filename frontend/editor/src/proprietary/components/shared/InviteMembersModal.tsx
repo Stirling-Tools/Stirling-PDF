@@ -460,7 +460,7 @@ export default function InviteMembersModal({
               <SegmentedControl
                 value={inviteMode}
                 onChange={(value) => {
-                  setInviteMode(value as "email" | "direct" | "link");
+                  setInviteMode(value);
                   setGeneratedInviteLink(null);
                 }}
                 options={[

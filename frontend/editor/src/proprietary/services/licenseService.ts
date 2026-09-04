@@ -42,6 +42,7 @@ export interface CheckoutSessionRequest {
   current_license_key?: string; // Current license key for upgrades
   requires_seats?: boolean; // Whether to add adjustable seat pricing
   seat_count?: number; // Initial number of seats for enterprise plans (user can adjust in Stripe UI)
+  server_quantity?: number; // Blocks of users to buy; the Stripe line item counts these
   email?: string; // Customer email for checkout pre-fill
   successUrl?: string;
   cancelUrl?: string;
@@ -186,7 +187,7 @@ const licenseService = {
         {
           id: "selfhosted:server:monthly",
           lookupKey: "selfhosted:server:monthly",
-          name: "Server - Monthly",
+          name: "Team - Monthly",
           price: getPriceInfo("selfhosted:server:monthly"),
           currency: currencySymbol,
           period: "/month",
@@ -197,7 +198,7 @@ const licenseService = {
         {
           id: "selfhosted:server:yearly",
           lookupKey: "selfhosted:server:yearly",
-          name: "Server - Yearly",
+          name: "Team - Yearly",
           price: getPriceInfo("selfhosted:server:yearly"),
           currency: currencySymbol,
           period: "/year",
@@ -297,7 +298,7 @@ const licenseService = {
     if (serverMonthly || serverYearly) {
       groups.push({
         tier: "server",
-        name: "Server",
+        name: "Team",
         monthly: serverMonthly || null,
         yearly: serverYearly || null,
         features: (serverMonthly || serverYearly)!.features,
@@ -352,6 +353,7 @@ const licenseService = {
         current_license_key: request.current_license_key,
         requires_seats: request.requires_seats,
         seat_count: request.seat_count || 1,
+        server_quantity: request.server_quantity || 1,
         email: request.email,
         callback_base_url: baseUrl,
         ui_mode: checkoutMode,

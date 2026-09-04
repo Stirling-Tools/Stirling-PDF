@@ -58,6 +58,12 @@
   margin-bottom: 0.625rem;
 }
 
+.portal-infra__section-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
 .portal-infra__section-title {
   margin: 0;
   font-size: 0.9375rem;

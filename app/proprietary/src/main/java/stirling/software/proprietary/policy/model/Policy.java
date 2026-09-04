@@ -1,6 +1,7 @@
 package stirling.software.proprietary.policy.model;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * A stored automation: ordered tool steps, input bindings, and output destinations.
@@ -20,17 +21,59 @@ public record Policy(
         String name,
         String owner,
         boolean enabled,
+        boolean required,
+        String icon,
         List<PipelineInput> inputs,
         List<PipelineStep> steps,
         OutputSpec output,
         List<String> outputIds,
-        Long teamId) {
+        Long teamId,
+        EditorConfig editor) {
 
     public Policy {
+        icon = icon == null ? "" : icon;
         inputs = inputs == null ? List.of() : List.copyOf(inputs);
         steps = steps == null ? List.of() : steps;
         output = output == null ? OutputSpec.inline() : output;
         outputIds = outputIds == null ? List.of() : List.copyOf(outputIds);
+        editor = editor == null ? EditorConfig.disabled() : editor;
+    }
+
+    /**
+     * Without the {@code required} flag, {@code icon}, or editor participation: defaults to not
+     * org-required, no icon, and a swept/on-demand policy. Kept for the many callers and tests
+     * written before those fields; the frontend and stores that care use the full constructor.
+     */
+    public Policy(
+            String id,
+            String name,
+            String owner,
+            boolean enabled,
+            List<PipelineInput> inputs,
+            List<PipelineStep> steps,
+            OutputSpec output,
+            List<String> outputIds,
+            Long teamId) {
+        this(id, name, owner, enabled, false, "", inputs, steps, output, outputIds, teamId, null);
+    }
+
+    /**
+     * Without the {@code required} flag or {@code icon} but with explicit editor participation: the
+     * seeded Classification policy runs on the editor, so it must set {@link EditorConfig} even
+     * though it predates the org-required and icon fields.
+     */
+    public Policy(
+            String id,
+            String name,
+            String owner,
+            boolean enabled,
+            List<PipelineInput> inputs,
+            List<PipelineStep> steps,
+            OutputSpec output,
+            List<String> outputIds,
+            Long teamId,
+            EditorConfig editor) {
+        this(id, name, owner, enabled, false, "", inputs, steps, output, outputIds, teamId, editor);
     }
 
     /**
@@ -70,6 +113,14 @@ public record Policy(
         return inputs.stream().map(PipelineInput::sourceId).toList();
     }
 
+    /**
+     * The moment this policy fires in the editor ("upload" / "export"), or empty when the editor
+     * does not run it. Legacy blobs are lifted onto {@link EditorConfig} when they are read.
+     */
+    public Optional<String> editorRunOn() {
+        return editor.allowed() ? Optional.of(editor.runOn()) : Optional.empty();
+    }
+
     /** The distinct trigger types configured across this policy's inputs (manual inputs aside). */
     public List<String> triggerTypes() {
         return inputs.stream()
@@ -82,17 +133,33 @@ public record Policy(
 
     /** A copy with the inline output replaced (e.g. resolved for the engine, or migrated). */
     public Policy withOutput(OutputSpec resolved) {
-        return new Policy(id, name, owner, enabled, inputs, steps, resolved, outputIds, teamId);
+        return new Policy(
+                id, name, owner, enabled, required, icon, inputs, steps, resolved, outputIds,
+                teamId, editor);
     }
 
     /** A copy under a different owner (e.g. moving a seed off a placeholder name). */
     public Policy withOwner(String newOwner) {
-        return new Policy(id, name, newOwner, enabled, inputs, steps, output, outputIds, teamId);
+        return new Policy(
+                id, name, newOwner, enabled, required, icon, inputs, steps, output, outputIds,
+                teamId, editor);
     }
 
     /** A copy referencing the given saved output destinations. */
     public Policy withOutputIds(List<String> newOutputIds) {
-        return new Policy(id, name, owner, enabled, inputs, steps, output, newOutputIds, teamId);
+        return new Policy(
+                id,
+                name,
+                owner,
+                enabled,
+                required,
+                icon,
+                inputs,
+                steps,
+                output,
+                newOutputIds,
+                teamId,
+                editor);
     }
 
     /**
