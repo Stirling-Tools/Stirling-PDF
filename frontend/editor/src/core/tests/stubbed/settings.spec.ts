@@ -189,8 +189,9 @@ test.describe("Settings page", () => {
     // Zero pushes during 8 intra-modal clicks - the regression would show
     // up here as `after.push - baseline.push >= 1`.
     expect(after.push - baseline.push).toBe(0);
-    // Exactly 8 replaces - one per click.
-    expect(after.replace - baseline.replace).toBe(8);
+    // At least one replace per click. Not an exact count any more: the sub-nav
+    // also replaces the URL's #slug as the reader lands on a new section.
+    expect(after.replace - baseline.replace).toBeGreaterThanOrEqual(8);
   });
 
   test("close returns to origin URL even after switching tabs (no history pile-up)", async ({

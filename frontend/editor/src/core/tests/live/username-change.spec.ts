@@ -6,13 +6,10 @@ test.describe("22. Username Change Flow", () => {
     test("should update username successfully", async ({ page }) => {
       await loginAndSetup(page);
 
-      // Open settings dialog
-      await page
-        .getByRole("button", { name: /settings/i })
-        .first()
-        .click();
+      // Settings is reached by URL or the account menu; the rail has no cog.
+      await page.goto("/settings");
       const settingsDialog = page.locator(".settings-page");
-      await expect(settingsDialog).toBeVisible({ timeout: 5000 });
+      await expect(settingsDialog).toBeVisible({ timeout: 30_000 });
 
       // Navigate to Account Settings section
       const accountNav = page.getByText(/Account Settings/i).first();

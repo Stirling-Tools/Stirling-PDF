@@ -210,21 +210,15 @@ export async function openSettings(
 }
 
 /**
- * Leave Settings by the page's own Back control, which restores the originating
- * URL, and assert the page is gone before returning.
+ * Leave Settings the way a reader does now that the nav has no Back control:
+ * browser back, which lands on the origin because tab switches replace.
  */
 export async function closeSettings(page: Page): Promise<void> {
   const surface = page.locator(SETTINGS_SURFACE);
-  const back = page.locator('[data-testid="settings-back"]').first();
-  // Assert the exit exists before the retry loop, or a control that is missing
-  // in this build reads as an opaque timeout below instead of a named failure.
-  await expect(back).toBeVisible({ timeout: 5_000 });
-  // A click can be swallowed by a re-render, leaving the page up; retry until
-  // it is gone. A genuinely broken exit still fails - every retry misses and
-  // the page stays past the cap.
+  // Retry: one back can land on another /settings entry if a spec pushed one.
   await expect(async () => {
     if (await surface.isVisible().catch(() => false)) {
-      await back.click({ timeout: 2_000 }).catch(() => {});
+      await page.goBack({ timeout: 2_000 }).catch(() => {});
     }
     await expect(surface).not.toBeVisible({ timeout: 2_000 });
   }).toPass({ timeout: 12_000 });

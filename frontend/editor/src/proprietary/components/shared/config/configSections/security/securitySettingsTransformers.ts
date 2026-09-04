@@ -74,13 +74,11 @@ export function saveSecuritySettings(
   const { audit, html, ...securitySettings } = settings;
 
   const deltaSettings: Record<string, unknown> = {
-    // Security settings
     "security.enableLogin": securitySettings.enableLogin,
     "security.loginMethod": securitySettings.loginMethod,
     "security.loginAttemptCount": securitySettings.loginAttemptCount,
     "security.loginResetTimeMinutes": securitySettings.loginResetTimeMinutes,
     "security.xFrameOptions": securitySettings.xFrameOptions,
-    // JWT settings
     "security.jwt.enableKeyCleanup": securitySettings.jwt?.enableKeyCleanup,
     "security.jwt.tokenExpiryMinutes": securitySettings.jwt?.tokenExpiryMinutes,
     "security.jwt.desktopTokenExpiryMinutes":
@@ -284,7 +282,6 @@ export function saveConnectionsSettings(
     });
   }
 
-  // Mail settings
   if (currentSettings.mail) {
     const mail = currentSettings.mail as Record<string, unknown>;
     Object.keys(mail).forEach((key) => {
@@ -292,7 +289,6 @@ export function saveConnectionsSettings(
     });
   }
 
-  // Telegram settings
   if (currentSettings.telegram) {
     const telegram = currentSettings.telegram as Record<string, unknown>;
     Object.keys(telegram).forEach((key) => {
@@ -300,13 +296,11 @@ export function saveConnectionsSettings(
     });
   }
 
-  // SSO Auto Login
   if (currentSettings?.ssoAutoLogin !== undefined) {
     deltaSettings["premium.proFeatures.ssoAutoLogin"] =
       currentSettings.ssoAutoLogin;
   }
 
-  // Mobile Scanner settings
   if (currentSettings?.enableMobileScanner !== undefined) {
     deltaSettings["system.enableMobileScanner"] =
       currentSettings.enableMobileScanner;
@@ -328,7 +322,6 @@ export function saveConnectionsSettings(
       currentSettings.mobileScannerStretchToFit;
   }
 
-  // Google Drive settings
   if (currentSettings?.googleDriveEnabled !== undefined) {
     deltaSettings["premium.proFeatures.googleDrive.enabled"] =
       currentSettings.googleDriveEnabled;

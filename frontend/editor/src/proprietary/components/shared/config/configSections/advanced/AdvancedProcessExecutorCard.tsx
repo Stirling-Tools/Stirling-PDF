@@ -15,7 +15,6 @@ export function AdvancedProcessExecutorCard({
     <Paper withBorder p="md" radius="md">
       <Stack gap="md">
         <Accordion variant="separated">
-          {/* LibreOffice */}
           <Accordion.Item value="libreOffice">
             <Accordion.Control>
               {t(
@@ -97,7 +96,6 @@ export function AdvancedProcessExecutorCard({
             </Accordion.Panel>
           </Accordion.Item>
 
-          {/* PDF to HTML */}
           <Accordion.Item value="pdfToHtml">
             <Accordion.Control>
               {t(
@@ -179,7 +177,6 @@ export function AdvancedProcessExecutorCard({
             </Accordion.Panel>
           </Accordion.Item>
 
-          {/* QPDF */}
           <Accordion.Item value="qpdf">
             <Accordion.Control>
               {t("admin.settings.advanced.processExecutor.qpdf", "QPDF")}
@@ -340,7 +337,6 @@ export function AdvancedProcessExecutorCard({
             </Accordion.Panel>
           </Accordion.Item>
 
-          {/* Python OpenCV */}
           <Accordion.Item value="pythonOpenCv">
             <Accordion.Control>
               {t(
@@ -422,7 +418,6 @@ export function AdvancedProcessExecutorCard({
             </Accordion.Panel>
           </Accordion.Item>
 
-          {/* WeasyPrint */}
           <Accordion.Item value="weasyPrint">
             <Accordion.Control>
               {t(
@@ -504,7 +499,6 @@ export function AdvancedProcessExecutorCard({
             </Accordion.Panel>
           </Accordion.Item>
 
-          {/* Install App */}
           <Accordion.Item value="installApp">
             <Accordion.Control>
               {t(
@@ -586,7 +580,6 @@ export function AdvancedProcessExecutorCard({
             </Accordion.Panel>
           </Accordion.Item>
 
-          {/* Calibre */}
           <Accordion.Item value="calibre">
             <Accordion.Control>
               {t("admin.settings.advanced.processExecutor.calibre", "Calibre")}
@@ -665,7 +658,6 @@ export function AdvancedProcessExecutorCard({
             </Accordion.Panel>
           </Accordion.Item>
 
-          {/* Ghostscript */}
           <Accordion.Item value="ghostscript">
             <Accordion.Control>
               {t(
@@ -747,7 +739,6 @@ export function AdvancedProcessExecutorCard({
             </Accordion.Panel>
           </Accordion.Item>
 
-          {/* OCRmyPDF */}
           <Accordion.Item value="ocrMyPdf">
             <Accordion.Control>
               {t(

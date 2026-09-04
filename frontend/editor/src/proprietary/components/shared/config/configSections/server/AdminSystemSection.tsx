@@ -169,7 +169,6 @@ export default function AdminSystemSection() {
     },
     saveTransformer: (settings: GeneralSettingsData) => {
       const deltaSettings: Record<string, unknown> = {
-        // UI settings
         "ui.appNameNavbar": settings.ui?.appNameNavbar,
         "ui.languages": settings.ui?.languages,
         "ui.logoStyle": settings.ui?.logoStyle,
@@ -177,14 +176,12 @@ export default function AdminSystemSection() {
           settings.ui?.hideDisabledTools?.googleDrive,
         "ui.hideDisabledTools.mobileQRScanner":
           settings.ui?.hideDisabledTools?.mobileQRScanner,
-        // System settings
         "system.defaultLocale": settings.system?.defaultLocale,
         "system.showUpdate": settings.system?.showUpdate,
         "system.showUpdateOnlyAdmin": settings.system?.showUpdateOnlyAdmin,
         "system.customHTMLFiles": settings.system?.customHTMLFiles,
         "system.fileUploadLimit": settings.system?.fileUploadLimit,
         "system.frontendUrl": settings.system?.frontendUrl,
-        // Premium custom metadata
         "premium.proFeatures.customMetadata.autoUpdateMetadata":
           settings.customMetadata?.autoUpdateMetadata,
         "premium.proFeatures.customMetadata.author":
@@ -601,7 +598,6 @@ export default function AdminSystemSection() {
         onDiscard={handleDiscard}
       />
 
-      {/* Restart Confirmation Modal */}
       <RestartConfirmationModal
         opened={restartModalOpened}
         onClose={closeRestartModal}

@@ -9,11 +9,11 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { LoadingFallback } from "@app/components/shared/LoadingFallback";
 import { useSectionHeadings } from "@app/components/settings/useSectionHeadings";
+import { useActiveHeading } from "@app/components/settings/useActiveHeading";
 import { InfoTooltip } from "@app/ui/InfoTooltip";
 import LoginRequiredBanner from "@app/components/shared/config/LoginRequiredBanner";
 import { Badge, Tooltip } from "@mantine/core";
 import LocalIcon from "@app/components/shared/LocalIcon";
-import { ActionIcon } from "@app/ui/ActionIcon";
 import { SettingsMobileBackButton } from "@app/components/shared/config/SettingsMobileBackButton";
 import { SettingsNavChevron } from "@app/components/shared/config/SettingsNavChevron";
 import { useSettingsNav } from "@app/components/settings/useSettingsNav";
@@ -123,11 +123,6 @@ const SettingsPageInner: React.FC = () => {
     [confirmIfDirty],
   );
 
-  const handleLeave = useCallback(
-    () => requestNavigation(leave),
-    [requestNavigation, leave],
-  );
-
   // Sections dispatch `appConfig:navigate` to send the user to a sibling tab.
   useEffect(() => {
     const handler = (ev: Event) => {
@@ -142,6 +137,12 @@ const SettingsPageInner: React.FC = () => {
       );
   }, [switchSection]);
 
+  const headings = useSectionHeadings(activeItem?.key, contentRef);
+  const { active: activeHeading, focus: focusHeading } = useActiveHeading(
+    contentRef,
+    headings,
+  );
+
   // Deep link: /settings/{section}?focus={anchor} scrolls to and briefly
   // highlights one control (the global super search jumps straight to a row).
   // `#anchor` means the same thing, so in-app links written either way work.
@@ -152,38 +153,17 @@ const SettingsPageInner: React.FC = () => {
     if (!focus) return;
     let raf = 0;
     const timer = window.setTimeout(() => {
-      raf = window.requestAnimationFrame(() => {
-        const el = document.getElementById(focus);
-        if (!el) return;
-        // Unfold first, or there is nothing to scroll to: the anchor is either
-        // a folded card's own toggle, or a control inside its hidden panel.
-        if (el.getAttribute("aria-expanded") === "false") {
-          el.click();
-        } else {
-          el.closest(".settings-card__panel[hidden]")
-            ?.parentElement?.querySelector<HTMLButtonElement>(
-              ".settings-card__toggle",
-            )
-            ?.click();
-        }
-        el.scrollIntoView({ behavior: "smooth", block: "center" });
-        el.classList.add("settings-focus-target");
-        window.setTimeout(
-          () => el.classList.remove("settings-focus-target"),
-          1800,
-        );
-      });
+      raf = window.requestAnimationFrame(() => focusHeading(focus));
     }, 150);
     return () => {
       window.clearTimeout(timer);
       if (raf) window.cancelAnimationFrame(raf);
     };
-  }, [activeItem, location.search, location.hash]);
+  }, [activeItem, location.search, location.hash, focusHeading]);
 
   // Sections that bring their own page header get the whole pane; on mobile the
   // bar stays anyway, because it carries the only way back to the list.
   const fullBleed = activeItem?.fullBleed ?? false;
-  const headings = useSectionHeadings(activeItem?.key, contentRef);
 
   return (
     <div className="settings-page" data-tour="settings-modal">
@@ -200,16 +180,6 @@ const SettingsPageInner: React.FC = () => {
         aria-label={t("settings.title", "Settings")}
       >
         <div className="settings-page__nav-head">
-          {/* The page's own exit: the rail's app entries only ship with the portal. */}
-          <ActionIcon
-            variant="tertiary"
-            accent="neutral"
-            onClick={handleLeave}
-            data-testid="settings-back"
-            aria-label={t("common.back", "Back")}
-          >
-            <LocalIcon icon="arrow-back" width={20} height={20} />
-          </ActionIcon>
           <span className="settings-page__nav-title">
             {t("settings.title", "Settings")}
           </span>
@@ -303,20 +273,19 @@ const SettingsPageInner: React.FC = () => {
                           <ul className="settings-page__subnav">
                             {headings.map((h) => (
                               <li key={h.id}>
-                                <button
-                                  type="button"
+                                <a
+                                  href={`#${h.id}`}
                                   className="settings-page__subnav-item"
-                                  onClick={() =>
-                                    document
-                                      .getElementById(h.id)
-                                      ?.scrollIntoView({
-                                        behavior: "smooth",
-                                        block: "start",
-                                      })
+                                  aria-current={
+                                    activeHeading === h.id ? "true" : undefined
                                   }
+                                  onClick={(event) => {
+                                    event.preventDefault();
+                                    focusHeading(h.id);
+                                  }}
                                 >
                                   {h.label}
-                                </button>
+                                </a>
                               </li>
                             ))}
                           </ul>

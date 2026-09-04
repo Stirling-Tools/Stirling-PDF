@@ -299,12 +299,20 @@
   color: var(--c-text-subtle);
   font-size: 0.8125rem;
   text-align: start;
+  text-decoration: none;
   cursor: pointer;
 }
 
 .settings-page__subnav-item:hover {
   background: var(--c-hover);
   color: var(--c-text);
+}
+
+/* Follows the scroll, so the rail always says where you are. */
+.settings-page__subnav-item[aria-current="true"] {
+  color: var(--c-text);
+  font-weight: 600;
+  box-shadow: inset 2px 0 0 var(--c-accent-fg, var(--c-primary));
 }
 
 .settings-page__subnav-item:focus-visible {
