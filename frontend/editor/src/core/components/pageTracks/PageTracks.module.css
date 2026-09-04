@@ -196,8 +196,10 @@
   justify-content: space-between;
   gap: 0.25rem;
   height: var(--pt-tile-footer-h);
-  padding: 0 0.375rem;
-  font-size: 0.6875rem;
+  /* Padding and the page number scale with the tile (--pt-zoom) so the number
+     stays proportionate at every zoom instead of overflowing a shrunk footer. */
+  padding: 0 calc(0.375rem * var(--pt-zoom, 1));
+  font-size: calc(0.6875rem * var(--pt-zoom, 1));
   color: var(--c-text-muted);
   min-width: 0;
 }
@@ -232,11 +234,18 @@
  * Compacted from the shared pill's defaults: the same component carries up to
  * six actions on a 20rem file card, and three at that scale would overflow a
  * page tile a third of the width.
+ *
+ * Scaled by --pt-zoom (the compound selector outranks the shared .hoverMenu's
+ * own transform, which centres it) so the controls keep their proportion to the
+ * tile at every zoom instead of swamping a shrunken page. Anchored bottom-centre
+ * so it stays put over the page while it scales.
  */
-.pagePill {
+.tile .pagePill {
   gap: 0.25rem;
   padding: 0.25rem 0.5rem;
   z-index: 2;
+  transform: translateX(-50%) scale(var(--pt-zoom, 1));
+  transform-origin: center bottom;
 }
 
 /* CSS-hover driven visibility, matching the file cards in Active Files. */

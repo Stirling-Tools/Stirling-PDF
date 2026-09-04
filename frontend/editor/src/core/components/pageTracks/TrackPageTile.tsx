@@ -204,7 +204,9 @@ function TrackPageTileImpl({
       </div>
 
       <div className={styles.tileFooter}>
-        <span className={styles.tileIndex}>{position}</span>
+        <span className={styles.tileIndex} data-page-index={position}>
+          {position}
+        </span>
       </div>
     </div>
   );
