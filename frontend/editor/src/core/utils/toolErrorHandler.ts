@@ -12,7 +12,11 @@ import { normalizeAxiosErrorData } from "@app/services/errorUtils";
  * {@link axios.isAxiosError} recognises both real and Tauri-shaped errors.
  */
 export const extractErrorMessage = (error: unknown): string => {
-  if (axios.isAxiosError(error) && typeof error.response?.data === "string") {
+  if (
+    axios.isAxiosError(error) &&
+    typeof error.response?.data === "string" &&
+    error.response.data.length > 0
+  ) {
     return error.response.data;
   }
   if (error instanceof Error && error.message) {
@@ -28,7 +32,11 @@ export const extractErrorMessage = (error: unknown): string => {
  */
 export const createStandardErrorHandler = (fallbackMessage: string) => {
   return (error: unknown): string => {
-    if (axios.isAxiosError(error) && typeof error.response?.data === "string") {
+    if (
+      axios.isAxiosError(error) &&
+      typeof error.response?.data === "string" &&
+      error.response.data.length > 0
+    ) {
       return error.response.data;
     }
     if (error instanceof Error && error.message) {
