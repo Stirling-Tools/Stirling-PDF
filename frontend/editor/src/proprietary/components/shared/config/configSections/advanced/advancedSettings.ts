@@ -10,7 +10,10 @@ export interface DatasourceSettingsData {
   name?: string;
 }
 
-/** What the server returns when `system.datasource` is missing entirely. */
+/**
+ * Placeholder values for the custom-database form when `system.datasource` is
+ * missing. `type` pre-fills the picker; it does not say what is running.
+ */
 export const DEFAULT_DATASOURCE: DatasourceSettingsData = {
   enableCustomDatabase: false,
   customDatabaseUrl: "",
@@ -21,6 +24,19 @@ export const DEFAULT_DATASOURCE: DatasourceSettingsData = {
   port: 5432,
   name: "postgres",
 };
+
+/**
+ * Is the server on its own embedded H2, the only database it can back up?
+ *
+ * Custom database off settles it on its own - the pre-filled `type` above is a
+ * form default, and reading it first hid backups on every stock install.
+ */
+export function isEmbeddedH2Database(
+  datasource: DatasourceSettingsData | undefined,
+): boolean {
+  if (datasource?.enableCustomDatabase !== true) return true;
+  return (datasource.type || "").toLowerCase() === "h2";
+}
 
 export interface AdvancedSettingsData {
   enableAlphaFunctionality?: boolean;

@@ -1,4 +1,5 @@
 import { useCallback, useMemo } from "react";
+import { TierBadge } from "@app/components/shared/config/TierBadge";
 import { useTranslation } from "react-i18next";
 import { SettingsCard } from "@app/components/shared/config/SettingsCard";
 import { Stack, Loader } from "@mantine/core";
@@ -13,6 +14,7 @@ import { useLoginRequired } from "@app/hooks/useLoginRequired";
 import LoginRequiredBanner from "@app/components/shared/config/LoginRequiredBanner";
 import {
   DEFAULT_DATASOURCE,
+  isEmbeddedH2Database,
   type DatasourceSettingsData,
 } from "@app/components/shared/config/configSections/advanced/advancedSettings";
 import { DatabaseConfigCard } from "@app/components/shared/config/configSections/advanced/DatabaseConfigCard";
@@ -84,11 +86,10 @@ export default function AdminDatabasePage() {
 
   // Backups only exist for the embedded database; a custom one is the
   // operator's to back up.
-  const isEmbeddedH2 = useMemo(() => {
-    const type = (settings.datasource?.type || "").toLowerCase();
-    if (settings.datasource?.enableCustomDatabase === true) return false;
-    return type === "" || type === "h2";
-  }, [settings.datasource?.type, settings.datasource?.enableCustomDatabase]);
+  const isEmbeddedH2 = useMemo(
+    () => isEmbeddedH2Database(settings.datasource),
+    [settings.datasource],
+  );
 
   const handleSave = async () => {
     if (!validateLoginEnabled()) return;
@@ -129,6 +130,7 @@ export default function AdminDatabasePage() {
             "admin.settings.database.connectionDescription",
             "Point Stirling at an external database instead of the embedded one.",
           )}
+          badge={<TierBadge tier="ENTERPRISE" />}
         >
           <DatabaseConfigCard
             settings={settings}

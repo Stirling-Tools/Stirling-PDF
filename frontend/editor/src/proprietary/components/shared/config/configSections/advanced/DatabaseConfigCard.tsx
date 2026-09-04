@@ -1,4 +1,3 @@
-import { useNavigate } from "react-router-dom";
 import { SettingsToggleRow } from "@app/components/shared/config/SettingsToggleRow";
 import { InfoTooltip } from "@app/ui/InfoTooltip";
 import { useTranslation } from "react-i18next";
@@ -9,7 +8,6 @@ import {
   Group,
   TextInput,
   Select,
-  Badge,
 } from "@mantine/core";
 import PendingBadge from "@app/components/shared/config/PendingBadge";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
@@ -30,7 +28,6 @@ export function DatabaseConfigCard({
   loginEnabled,
 }: AdvancedCardProps) {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const { getDisabledStyles } = useLoginRequired();
 
   const datasource = settings.datasource;
@@ -42,22 +39,7 @@ export function DatabaseConfigCard({
 
   return (
     <>
-      <div>
-        <Group justify="flex-end" align="center">
-          <Badge
-            color="grape"
-            size="lg"
-            style={{ cursor: "pointer" }}
-            onClick={() => navigate("/settings/adminPlan")}
-            title={t(
-              "admin.settings.badge.clickToUpgrade",
-              "Click to view plan details",
-            )}
-          >
-            ENTERPRISE
-          </Badge>
-        </Group>
-      </div>
+      <div></div>
 
       <Paper withBorder p="md" radius="md">
         <Stack gap="md">

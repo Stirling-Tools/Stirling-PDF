@@ -313,22 +313,6 @@ export function DatabaseBackupsCard({
   return (
     <>
       <Stack gap="md">
-        <Group justify="space-between" align="center">
-          <Group gap="xs">
-            {databaseVersion && (
-              <Badge color="blue" variant="light">
-                {t("admin.settings.database.version", "H2 Version")}:{" "}
-                {databaseVersion}
-              </Badge>
-            )}
-            <Badge color={isEmbeddedH2 ? "green" : "red"} variant="light">
-              {isEmbeddedH2
-                ? t("admin.settings.database.embedded", "Embedded H2")
-                : t("admin.settings.database.external", "External DB")}
-            </Badge>
-          </Group>
-        </Group>
-
         {!isEmbeddedH2 && (
           <Alert
             icon={<LocalIcon icon="info" width="1.2rem" height="1.2rem" />}
@@ -361,6 +345,15 @@ export function DatabaseBackupsCard({
                       "Manage backups",
                     )}
                   </Text>
+                  <Badge color="green" variant="light" size="sm">
+                    {t("admin.settings.database.embedded", "Embedded H2")}
+                  </Badge>
+                  {databaseVersion && (
+                    <Badge color="blue" variant="light" size="sm">
+                      {t("admin.settings.database.version", "H2 Version")}:{" "}
+                      {databaseVersion}
+                    </Badge>
+                  )}
                 </Group>
                 <Group gap="xs">
                   <Button

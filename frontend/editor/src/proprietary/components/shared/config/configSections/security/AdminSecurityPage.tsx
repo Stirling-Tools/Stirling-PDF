@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo } from "react";
+import { TierBadge } from "@app/components/shared/config/TierBadge";
 import { useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { SettingsCard } from "@app/components/shared/config/SettingsCard";
@@ -220,6 +221,7 @@ export default function AdminSecurityPage() {
             "admin.settings.connections.ssoAutoLogin.label",
             "SSO Auto Login",
           )}
+          badge={<TierBadge tier="PRO" />}
         >
           <SsoAutoLoginCard {...connectionsCard} />
         </SettingsCard>
@@ -241,6 +243,7 @@ export default function AdminSecurityPage() {
         <SettingsCard
           id="auditLogging"
           title={t("admin.settings.security.audit.label", "Audit Logging")}
+          badge={<TierBadge tier="ENTERPRISE" />}
         >
           <AuditLoggingCard {...securityCard} />
         </SettingsCard>
