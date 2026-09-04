@@ -105,6 +105,8 @@ public final class SaasSchemaOwnership {
                     "storage_cleanup_entries",
                     "stored_file_blobs",
                     "stored_files",
+                    "tool_chain_stats",
+                    "tool_usage_stats",
                     "user_license_settings",
                     "user_server_certificates",
                     "workflow_participants",

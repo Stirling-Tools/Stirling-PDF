@@ -63,6 +63,7 @@ public class ApplicationProperties {
     private Ui ui = new Ui();
     private Endpoints endpoints = new Endpoints();
     private Metrics metrics = new Metrics();
+    private ToolRecommendations toolRecommendations = new ToolRecommendations();
     private AutomaticallyGenerated automaticallyGenerated = new AutomaticallyGenerated();
 
     private Mail mail = new Mail();
@@ -1349,6 +1350,17 @@ public class ApplicationProperties {
     @Data
     public static class Metrics {
         private boolean enabled = true;
+    }
+
+    @Data
+    public static class ToolRecommendations {
+        // Extra off-switch on top of system.enableAnalytics, which must also consent to tracking.
+        private boolean enabled = true;
+        // How long usage and workflow rollups are kept before the retention sweep removes them.
+        private int retentionDays = 180;
+        // Scoring lookback window; events in the recent window count double.
+        private int windowDays = 30;
+        private int recentWindowDays = 7;
     }
 
     @Data
