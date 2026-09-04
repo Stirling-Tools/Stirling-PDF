@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { SettingsCard } from "@app/components/shared/config/SettingsCard";
 import {
   Alert,
   Box,
@@ -359,13 +360,11 @@ export function AccountCards() {
 
   return (
     <>
-      <section className="preferences-section__card">
-        <h2 className="preferences-section__heading" id="account">
-          {t("account.accountSettings", "Account")}
-        </h2>
-        <Text size="xs" c="dimmed">
-          {t("changeCreds.header", "Update Your Account Details")}
-        </Text>
+      <SettingsCard
+        id="account"
+        title={t("account.accountSettings", "Account")}
+        description={t("changeCreds.header", "Update Your Account Details")}
+      >
         <Paper withBorder p="md" radius="md">
           <Stack gap="sm">
             <Text size="sm" c="dimmed">
@@ -420,20 +419,18 @@ export function AccountCards() {
             </Stack>
           </Stack>
         </Paper>
-      </section>
+      </SettingsCard>
 
-      <section className="preferences-section__card">
-        <h2 className="preferences-section__heading" id="twoFactor">
-          {t("account.mfa.title", "Two-factor authentication")}
-        </h2>
+      <SettingsCard
+        id="twoFactor"
+        title={t("account.mfa.title", "Two-factor authentication")}
+        description={t(
+          "account.mfa.description",
+          "Add an extra layer of security to your account.",
+        )}
+      >
         <Paper withBorder p="md" radius="md">
           <Stack gap="sm">
-            <Text size="sm" c="dimmed">
-              {t(
-                "account.mfa.description",
-                "Add an extra layer of security to your account.",
-              )}
-            </Text>
             {isSsoUser ? (
               <Alert
                 icon={<LocalIcon icon="info" width="1rem" height="1rem" />}
@@ -483,7 +480,7 @@ export function AccountCards() {
             )}
           </Stack>
         </Paper>
-      </section>
+      </SettingsCard>
 
       <Modal
         opened={passwordModalOpen}

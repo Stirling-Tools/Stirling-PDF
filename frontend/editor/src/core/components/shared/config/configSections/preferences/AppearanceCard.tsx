@@ -1,4 +1,5 @@
 import { Paper, Stack, Text } from "@mantine/core";
+import { InfoTooltip } from "@app/ui/InfoTooltip";
 import { useTranslation } from "react-i18next";
 import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { useTheme } from "@app/components/shared/ThemeProvider";
@@ -24,13 +25,13 @@ export function AppearanceCard() {
           >
             <div style={{ flex: 1, minWidth: 0 }}>
               <Text fw={500} size="sm">
-                {t("settings.general.theme", "Theme")}
-              </Text>
-              <Text size="xs" c="dimmed" mt={4}>
-                {t(
-                  "settings.general.themeDescription",
-                  "Choose light, dark, or follow your system so it switches automatically.",
-                )}
+                {t("settings.general.theme", "Theme")}{" "}
+                <InfoTooltip
+                  label={t(
+                    "settings.general.themeDescription",
+                    "Choose light, dark, or follow your system so it switches automatically.",
+                  )}
+                />
               </Text>
             </div>
             <SegmentedControl
@@ -66,13 +67,13 @@ export function AppearanceCard() {
         >
           <div style={{ flex: 1, minWidth: 0 }}>
             <Text fw={500} size="sm">
-              {t("settings.general.language", "Language")}
-            </Text>
-            <Text size="xs" c="dimmed" mt={4}>
-              {t(
-                "settings.general.languageDescription",
-                "Choose the display language",
-              )}
+              {t("settings.general.language", "Language")}{" "}
+              <InfoTooltip
+                label={t(
+                  "settings.general.languageDescription",
+                  "Choose the display language",
+                )}
+              />
             </Text>
           </div>
           <LanguageSelector position="bottom-end" offset={6} />

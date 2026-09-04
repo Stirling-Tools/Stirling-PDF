@@ -1,6 +1,6 @@
-import { useState, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { SettingsCard } from "@app/components/shared/config/SettingsCard";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { AdminSetupBanner } from "@app/components/shared/config/configSections/preferences/AdminSetupBanner";
 import { AppearanceCard } from "@app/components/shared/config/configSections/preferences/AppearanceCard";
@@ -57,7 +57,7 @@ export default function PreferencesSection({
 }: PreferencesSectionProps) {
   const { t } = useTranslation();
   const { config } = useAppConfig();
-  const [hotkeysOpen, setHotkeysOpen] = useState(focusIsHotkeys);
+  const startHotkeysOpen = focusIsHotkeys();
 
   // Same condition the standalone section used: a version to report, or the
   // desktop updater. Not mounting the card is what skips the update check.
@@ -71,72 +71,53 @@ export default function PreferencesSection({
 
         {accountSlot}
 
-        <section className="preferences-section__card">
-          <h2 className="preferences-section__heading" id="appearance">
-            {t("settings.preferences.appearance", "Appearance")}
-          </h2>
+        <SettingsCard
+          id="appearance"
+          title={t("settings.preferences.appearance", "Appearance")}
+        >
           <AppearanceCard />
-        </section>
+        </SettingsCard>
 
-        <section className="preferences-section__card">
-          <h2 className="preferences-section__heading" id="editorDefaults">
-            {t("settings.preferences.editorDefaults", "Editor defaults")}
-          </h2>
+        <SettingsCard
+          id="editorDefaults"
+          title={t("settings.preferences.editorDefaults", "Editor defaults")}
+        >
           <EditorDefaultsCard />
           {editorDefaultsSlot}
-        </section>
+        </SettingsCard>
 
-        <section className="preferences-section__card">
-          <h2 className="preferences-section__heading" id="downloads">
-            {t("settings.preferences.downloads", "Downloads")}
-          </h2>
+        <SettingsCard
+          id="downloads"
+          title={t("settings.preferences.downloads", "Downloads")}
+        >
           <DownloadsCard />
-        </section>
+        </SettingsCard>
 
         {showUpdates && (
-          <section className="preferences-section__card">
-            <h2 className="preferences-section__heading" id="softwareUpdates">
-              {t("settings.general.updates.title", "Software Updates")}
-            </h2>
+          <SettingsCard
+            id="softwareUpdates"
+            title={t("settings.general.updates.title", "Software Updates")}
+          >
             <SoftwareUpdatesCard
               desktopInstall={desktopInstall}
               desktopUpdateMode={desktopUpdateMode}
             />
-          </section>
+          </SettingsCard>
         )}
 
-        <section className="preferences-section__card">
-          <h2 className="preferences-section__heading" id="hotkeys">
-            <button
-              type="button"
-              className="preferences-section__disclosure"
-              aria-expanded={hotkeysOpen}
-              aria-controls="preferences-hotkeys-panel"
-              onClick={() => setHotkeysOpen((open) => !open)}
-            >
-              <LocalIcon
-                icon="expand-more-rounded"
-                width={16}
-                height={16}
-                className="preferences-section__disclosure-chevron"
-              />
-              {t("settings.hotkeys.title", "Keyboard Shortcuts")}
-            </button>
-          </h2>
-          <div
-            id="preferences-hotkeys-panel"
-            className="preferences-section__panel"
-            hidden={!hotkeysOpen}
-          >
-            <p className="preferences-section__description">
-              {t(
-                "settings.hotkeys.description",
-                'Customize keyboard shortcuts for quick tool access. Click "Change shortcut" and press a new key combination. Press Esc to cancel.',
-              )}
-            </p>
-            {hotkeysOpen && <HotkeysCard />}
-          </div>
-        </section>
+        <SettingsCard
+          id="hotkeys"
+          title={t("settings.hotkeys.title", "Keyboard Shortcuts")}
+          description={t(
+            "settings.hotkeys.description",
+            'Customize keyboard shortcuts for quick tool access. Click "Change shortcut" and press a new key combination. Press Esc to cancel.',
+          )}
+          // A row per registered tool, so it stays shut and unmounted until asked for.
+          defaultCollapsed={!startHotkeysOpen}
+          lazy
+        >
+          <HotkeysCard />
+        </SettingsCard>
       </div>
     </div>
   );

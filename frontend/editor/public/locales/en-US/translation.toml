@@ -967,6 +967,7 @@ enable = "Enable SSO Auto Login"
 label = "SSO Auto Login"
 
 [admin.settings.database]
+connection = "Connection"
 actions = "Actions"
 backupCreated = "Backup created successfully"
 backupDescription = "Manage H2 backups directly from the admin console."
@@ -1119,6 +1120,7 @@ placeholder = "/data/inbox"
 remove = "Remove folder root"
 
 [admin.settings.general]
+branding = "Branding & appearance"
 description = "Configure system-wide application settings including branding and default behavior."
 system = "System"
 title = "System Settings"

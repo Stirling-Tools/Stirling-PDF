@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { InfoTooltip } from "@app/ui/InfoTooltip";
 import { useNavigate } from "react-router-dom";
 import {
   NumberInput,
@@ -54,13 +55,13 @@ export function AuditLoggingCard({
               {t(
                 "admin.settings.security.audit.enabled.label",
                 "Enable Audit Logging",
-              )}
-            </Text>
-            <Text size="xs" c="dimmed" mt={4}>
-              {t(
-                "admin.settings.security.audit.enabled.description",
-                "Track user actions and system events for compliance and security monitoring",
-              )}
+              )}{" "}
+              <InfoTooltip
+                label={t(
+                  "admin.settings.security.audit.enabled.description",
+                  "Track user actions and system events for compliance and security monitoring",
+                )}
+              />
             </Text>
           </div>
           <Group gap="xs">
@@ -91,12 +92,14 @@ export function AuditLoggingCard({
                   )}
                 </span>
                 <PendingBadge show={isFieldPending("audit.level")} />
+                <InfoTooltip
+                  label={t(
+                    "admin.settings.security.audit.level.description",
+                    "0=OFF, 1=BASIC, 2=STANDARD, 3=VERBOSE",
+                  )}
+                />
               </Group>
             }
-            description={t(
-              "admin.settings.security.audit.level.description",
-              "0=OFF, 1=BASIC, 2=STANDARD, 3=VERBOSE",
-            )}
             value={settings?.audit?.level || 2}
             onChange={(value) =>
               setSettings({
@@ -122,12 +125,14 @@ export function AuditLoggingCard({
                   )}
                 </span>
                 <PendingBadge show={isFieldPending("audit.retentionDays")} />
+                <InfoTooltip
+                  label={t(
+                    "admin.settings.security.audit.retentionDays.description",
+                    "Number of days to retain audit logs",
+                  )}
+                />
               </Group>
             }
-            description={t(
-              "admin.settings.security.audit.retentionDays.description",
-              "Number of days to retain audit logs",
-            )}
             value={settings?.audit?.retentionDays || 90}
             onChange={(value) =>
               setSettings({
@@ -167,13 +172,13 @@ export function AuditLoggingCard({
               {t(
                 "admin.settings.security.audit.captureFileHash.label",
                 "Capture File Hash",
-              )}
-            </Text>
-            <Text size="xs" c="dimmed" mt={4}>
-              {t(
-                "admin.settings.security.audit.captureFileHash.description",
-                "Store MD5 hash of processed files for audit trail verification",
-              )}
+              )}{" "}
+              <InfoTooltip
+                label={t(
+                  "admin.settings.security.audit.captureFileHash.description",
+                  "Store MD5 hash of processed files for audit trail verification",
+                )}
+              />
             </Text>
           </div>
           <Group gap="xs">
@@ -207,13 +212,13 @@ export function AuditLoggingCard({
               {t(
                 "admin.settings.security.audit.capturePdfAuthor.label",
                 "Capture PDF Author",
-              )}
-            </Text>
-            <Text size="xs" c="dimmed" mt={4}>
-              {t(
-                "admin.settings.security.audit.capturePdfAuthor.description",
-                "Extract author field from PDF documents during processing",
-              )}
+              )}{" "}
+              <InfoTooltip
+                label={t(
+                  "admin.settings.security.audit.capturePdfAuthor.description",
+                  "Extract author field from PDF documents during processing",
+                )}
+              />
             </Text>
           </div>
           <Group gap="xs">
@@ -247,13 +252,13 @@ export function AuditLoggingCard({
               {t(
                 "admin.settings.security.audit.captureOperationResults.label",
                 "Capture Operation Results",
-              )}
-            </Text>
-            <Text size="xs" c="dimmed" mt={4}>
-              {t(
-                "admin.settings.security.audit.captureOperationResults.description",
-                "Store output file information and processing results in audit logs",
-              )}
+              )}{" "}
+              <InfoTooltip
+                label={t(
+                  "admin.settings.security.audit.captureOperationResults.description",
+                  "Store output file information and processing results in audit logs",
+                )}
+              />
             </Text>
           </div>
           <Group gap="xs">

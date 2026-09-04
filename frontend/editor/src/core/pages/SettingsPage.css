@@ -327,3 +327,10 @@
   outline: 0.125rem solid var(--c-primary);
   outline-offset: -0.125rem;
 }
+
+/* The page's own (i) sits beside the title, not under it. */
+.settings-page__title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}

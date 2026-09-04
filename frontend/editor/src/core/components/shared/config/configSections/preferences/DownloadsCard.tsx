@@ -1,4 +1,5 @@
 import { useEffect, useId, useState } from "react";
+import { InfoTooltip } from "@app/ui/InfoTooltip";
 import {
   NumberInput,
   Paper,
@@ -53,13 +54,13 @@ export function DownloadsCard() {
           >
             <div style={{ flex: 1, minWidth: 0 }}>
               <Text id={autoUnzipLabelId} fw={500} size="sm">
-                {t("settings.general.autoUnzip", "Auto-unzip API responses")}
-              </Text>
-              <Text size="xs" c="dimmed" mt={4}>
-                {t(
-                  "settings.general.autoUnzipDescription",
-                  "Automatically extract files from ZIP responses",
-                )}
+                {t("settings.general.autoUnzip", "Auto-unzip API responses")}{" "}
+                <InfoTooltip
+                  label={t(
+                    "settings.general.autoUnzipDescription",
+                    "Automatically extract files from ZIP responses",
+                  )}
+                />
               </Text>
             </div>
             <Switch
@@ -95,13 +96,13 @@ export function DownloadsCard() {
                 {t(
                   "settings.general.autoUnzipFileLimit",
                   "Auto-unzip file limit",
-                )}
-              </Text>
-              <Text size="xs" c="dimmed" mt={4}>
-                {t(
-                  "settings.general.autoUnzipFileLimitDescription",
-                  "Maximum number of files to extract from ZIP",
-                )}
+                )}{" "}
+                <InfoTooltip
+                  label={t(
+                    "settings.general.autoUnzipFileLimitDescription",
+                    "Maximum number of files to extract from ZIP",
+                  )}
+                />
               </Text>
             </div>
             <NumberInput

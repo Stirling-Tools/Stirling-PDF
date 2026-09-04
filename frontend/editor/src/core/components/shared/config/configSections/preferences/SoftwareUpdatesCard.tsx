@@ -1,4 +1,5 @@
 import { useEffect, useId, useState } from "react";
+import { InfoTooltip } from "@app/ui/InfoTooltip";
 import { Badge, Group, Paper, Select, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";
@@ -223,18 +224,20 @@ export function SoftwareUpdatesCard({
                     )}
                   </Badge>
                 )}
+                <InfoTooltip
+                  label={
+                    desktopUpdateMode.locked
+                      ? t(
+                          "settings.general.updates.updateBehaviorLockedDescription",
+                          "Your administrator has configured how Stirling-PDF handles updates on this machine. Contact them to change this.",
+                        )
+                      : t(
+                          "settings.general.updates.updateBehaviorDescription",
+                          "Choose whether to prompt before installing updates, install them automatically, or skip update checks entirely.",
+                        )
+                  }
+                />
               </Group>
-              <Text size="xs" c="dimmed">
-                {desktopUpdateMode.locked
-                  ? t(
-                      "settings.general.updates.updateBehaviorLockedDescription",
-                      "Your administrator has configured how Stirling-PDF handles updates on this machine. Contact them to change this.",
-                    )
-                  : t(
-                      "settings.general.updates.updateBehaviorDescription",
-                      "Choose whether to prompt before installing updates, install them automatically, or skip update checks entirely.",
-                    )}
-              </Text>
               <Select
                 aria-labelledby={updateModeLabelId}
                 disabled={desktopUpdateMode.locked}

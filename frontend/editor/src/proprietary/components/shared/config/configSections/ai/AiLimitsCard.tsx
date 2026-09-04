@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { InfoTooltip } from "@app/ui/InfoTooltip";
 import { NumberInput, Stack, Paper, Group } from "@mantine/core";
 import PendingBadge from "@app/components/shared/config/PendingBadge";
 import type { AiEngineLimits } from "@app/components/shared/config/configSections/aiEngineSettings";
@@ -31,12 +32,14 @@ export function AiLimitsCard({
                 )}
               </span>
               <PendingBadge show={isFieldPending("limits.maxPages")} />
+              <InfoTooltip
+                label={t(
+                  "admin.settings.ai.limits.maxPages.description",
+                  "Guardrail: reject AI requests over this many PDF pages.",
+                )}
+              />
             </Group>
           }
-          description={t(
-            "admin.settings.ai.limits.maxPages.description",
-            "Guardrail: reject AI requests over this many PDF pages.",
-          )}
           value={settings.limits?.maxPages ?? 0}
           onChange={(value) => setLimits({ maxPages: Number(value) })}
           min={1}
@@ -52,12 +55,14 @@ export function AiLimitsCard({
                 )}
               </span>
               <PendingBadge show={isFieldPending("limits.maxCharacters")} />
+              <InfoTooltip
+                label={t(
+                  "admin.settings.ai.limits.maxCharacters.description",
+                  "Guardrail: reject AI requests whose extracted text exceeds this length.",
+                )}
+              />
             </Group>
           }
-          description={t(
-            "admin.settings.ai.limits.maxCharacters.description",
-            "Guardrail: reject AI requests whose extracted text exceeds this length.",
-          )}
           value={settings.limits?.maxCharacters ?? 0}
           onChange={(value) => setLimits({ maxCharacters: Number(value) })}
           min={1}
@@ -75,12 +80,14 @@ export function AiLimitsCard({
               <PendingBadge
                 show={isFieldPending("limits.modelMaxConcurrency")}
               />
+              <InfoTooltip
+                label={t(
+                  "admin.settings.ai.limits.modelMaxConcurrency.description",
+                  "Maximum simultaneous in-flight model calls across the whole engine.",
+                )}
+              />
             </Group>
           }
-          description={t(
-            "admin.settings.ai.limits.modelMaxConcurrency.description",
-            "Maximum simultaneous in-flight model calls across the whole engine.",
-          )}
           value={settings.limits?.modelMaxConcurrency ?? 0}
           onChange={(value) =>
             setLimits({ modelMaxConcurrency: Number(value) })

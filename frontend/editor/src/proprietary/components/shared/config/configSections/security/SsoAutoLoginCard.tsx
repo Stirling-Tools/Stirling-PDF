@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { InfoTooltip } from "@app/ui/InfoTooltip";
 import { useNavigate } from "react-router-dom";
 import { Stack, Paper, Text, Group, Switch, Badge } from "@mantine/core";
 import PendingBadge from "@app/components/shared/config/PendingBadge";
@@ -45,13 +46,13 @@ export function SsoAutoLoginCard({
               {t(
                 "admin.settings.connections.ssoAutoLogin.enable",
                 "Enable SSO Auto Login",
-              )}
-            </Text>
-            <Text size="xs" c="dimmed" mt={4}>
-              {t(
-                "admin.settings.connections.ssoAutoLogin.description",
-                "Automatically redirect to SSO login when authentication is required",
-              )}
+              )}{" "}
+              <InfoTooltip
+                label={t(
+                  "admin.settings.connections.ssoAutoLogin.description",
+                  "Automatically redirect to SSO login when authentication is required",
+                )}
+              />
             </Text>
           </div>
           <Group gap="xs">

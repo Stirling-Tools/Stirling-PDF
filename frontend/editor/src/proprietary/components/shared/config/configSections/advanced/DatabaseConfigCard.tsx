@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { InfoTooltip } from "@app/ui/InfoTooltip";
 import { useTranslation } from "react-i18next";
 import {
   NumberInput,
@@ -73,13 +74,13 @@ export function DatabaseConfigCard({
                 {t(
                   "admin.settings.database.enableCustom.label",
                   "Enable Custom Database",
-                )}
-              </Text>
-              <Text size="xs" c="dimmed" mt={4}>
-                {t(
-                  "admin.settings.database.enableCustom.description",
-                  "Use your own custom database configuration instead of the default embedded database",
-                )}
+                )}{" "}
+                <InfoTooltip
+                  label={t(
+                    "admin.settings.database.enableCustom.description",
+                    "Use your own custom database configuration instead of the default embedded database",
+                  )}
+                />
               </Text>
             </div>
             <Group gap="xs">
@@ -113,12 +114,14 @@ export function DatabaseConfigCard({
                       <PendingBadge
                         show={isFieldPending("datasource.customDatabaseUrl")}
                       />
+                      <InfoTooltip
+                        label={t(
+                          "admin.settings.database.customUrl.description",
+                          "Full JDBC connection string (e.g., jdbc:postgresql://localhost:5432/postgres). If provided, individual connection settings below are not used.",
+                        )}
+                      />
                     </Group>
                   }
-                  description={t(
-                    "admin.settings.database.customUrl.description",
-                    "Full JDBC connection string (e.g., jdbc:postgresql://localhost:5432/postgres). If provided, individual connection settings below are not used.",
-                  )}
                   value={datasource?.customDatabaseUrl || ""}
                   onChange={(e) =>
                     setDatasource({ customDatabaseUrl: e.target.value })
@@ -139,12 +142,14 @@ export function DatabaseConfigCard({
                         )}
                       </span>
                       <PendingBadge show={isFieldPending("datasource.type")} />
+                      <InfoTooltip
+                        label={t(
+                          "admin.settings.database.type.description",
+                          "Type of database (not used if custom URL is provided)",
+                        )}
+                      />
                     </Group>
                   }
-                  description={t(
-                    "admin.settings.database.type.description",
-                    "Type of database (not used if custom URL is provided)",
-                  )}
                   value={datasource?.type || "postgresql"}
                   onChange={(value) =>
                     setDatasource({ type: value || "postgresql" })
@@ -176,12 +181,14 @@ export function DatabaseConfigCard({
                       <PendingBadge
                         show={isFieldPending("datasource.hostName")}
                       />
+                      <InfoTooltip
+                        label={t(
+                          "admin.settings.database.hostName.description",
+                          "Database server hostname (not used if custom URL is provided)",
+                        )}
+                      />
                     </Group>
                   }
-                  description={t(
-                    "admin.settings.database.hostName.description",
-                    "Database server hostname (not used if custom URL is provided)",
-                  )}
                   value={datasource?.hostName || ""}
                   onChange={(e) => setDatasource({ hostName: e.target.value })}
                   placeholder="localhost"
@@ -197,12 +204,14 @@ export function DatabaseConfigCard({
                         {t("admin.settings.database.port.label", "Port")}
                       </span>
                       <PendingBadge show={isFieldPending("datasource.port")} />
+                      <InfoTooltip
+                        label={t(
+                          "admin.settings.database.port.description",
+                          "Database server port (not used if custom URL is provided)",
+                        )}
+                      />
                     </Group>
                   }
-                  description={t(
-                    "admin.settings.database.port.description",
-                    "Database server port (not used if custom URL is provided)",
-                  )}
                   value={datasource?.port || 5432}
                   onChange={(value) => setDatasource({ port: Number(value) })}
                   min={1}
@@ -222,12 +231,14 @@ export function DatabaseConfigCard({
                         )}
                       </span>
                       <PendingBadge show={isFieldPending("datasource.name")} />
+                      <InfoTooltip
+                        label={t(
+                          "admin.settings.database.name.description",
+                          "Name of the database (not used if custom URL is provided)",
+                        )}
+                      />
                     </Group>
                   }
-                  description={t(
-                    "admin.settings.database.name.description",
-                    "Name of the database (not used if custom URL is provided)",
-                  )}
                   value={datasource?.name || ""}
                   onChange={(e) => setDatasource({ name: e.target.value })}
                   placeholder="postgres"
@@ -248,12 +259,14 @@ export function DatabaseConfigCard({
                       <PendingBadge
                         show={isFieldPending("datasource.username")}
                       />
+                      <InfoTooltip
+                        label={t(
+                          "admin.settings.database.username.description",
+                          "Database authentication username",
+                        )}
+                      />
                     </Group>
                   }
-                  description={t(
-                    "admin.settings.database.username.description",
-                    "Database authentication username",
-                  )}
                   value={datasource?.username || ""}
                   onChange={(e) => setDatasource({ username: e.target.value })}
                   placeholder="postgres"

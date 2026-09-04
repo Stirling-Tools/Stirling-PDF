@@ -1,4 +1,5 @@
 import { useCallback, useMemo } from "react";
+import { InfoTooltip } from "@app/ui/InfoTooltip";
 import { useTranslation } from "react-i18next";
 import { TextInput, Textarea, Stack, Paper, Text, Group } from "@mantine/core";
 import PendingBadge from "@app/components/shared/config/PendingBadge";
@@ -93,13 +94,6 @@ export function CustomPathsCard({
   return (
     <Paper withBorder p="md" radius="md">
       <Stack gap="md">
-        <Text size="xs" c="dimmed">
-          {t(
-            "admin.settings.general.customPaths.description",
-            "Configure custom file system paths for pipeline processing and external tools",
-          )}
-        </Text>
-
         <Text fw={500} size="sm" mt="xs">
           {t(
             "admin.settings.general.customPaths.pipeline.label",
@@ -120,12 +114,14 @@ export function CustomPathsCard({
                 <PendingBadge
                   show={isFieldPending("customPaths.pipeline.pipelineDir")}
                 />
+                <InfoTooltip
+                  label={t(
+                    "admin.settings.general.customPaths.pipeline.pipelineDir.description",
+                    "Base directory for pipeline resources (leave empty for default: /pipeline)",
+                  )}
+                />
               </Group>
             }
-            description={t(
-              "admin.settings.general.customPaths.pipeline.pipelineDir.description",
-              "Base directory for pipeline resources (leave empty for default: /pipeline)",
-            )}
             value={settings.customPaths?.pipeline?.pipelineDir || ""}
             onChange={(e) =>
               setSettings({
@@ -160,12 +156,14 @@ export function CustomPathsCard({
                     isFieldPending("customPaths.pipeline.watchedFoldersDir")
                   }
                 />
+                <InfoTooltip
+                  label={t(
+                    "admin.settings.general.customPaths.pipeline.watchedFoldersDirs.description",
+                    "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)",
+                  )}
+                />
               </Group>
             }
-            description={t(
-              "admin.settings.general.customPaths.pipeline.watchedFoldersDirs.description",
-              "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)",
-            )}
             value={watchedFoldersInput}
             onChange={(e) => {
               const parsedDirs = parseWatchedFoldersInput(e.target.value);
@@ -216,12 +214,14 @@ export function CustomPathsCard({
                     "customPaths.pipeline.finishedFoldersDir",
                   )}
                 />
+                <InfoTooltip
+                  label={t(
+                    "admin.settings.general.customPaths.pipeline.finishedFoldersDir.description",
+                    "Directory where processed PDFs are outputted (leave empty for default: /pipeline/finishedFolders)",
+                  )}
+                />
               </Group>
             }
-            description={t(
-              "admin.settings.general.customPaths.pipeline.finishedFoldersDir.description",
-              "Directory where processed PDFs are outputted (leave empty for default: /pipeline/finishedFolders)",
-            )}
             value={settings.customPaths?.pipeline?.finishedFoldersDir || ""}
             onChange={(e) =>
               setSettings({
@@ -260,12 +260,14 @@ export function CustomPathsCard({
                 <PendingBadge
                   show={isFieldPending("customPaths.operations.weasyprint")}
                 />
+                <InfoTooltip
+                  label={t(
+                    "admin.settings.general.customPaths.operations.weasyprint.description",
+                    "Path to WeasyPrint executable for HTML to PDF conversion (leave empty for default: /opt/venv/bin/weasyprint)",
+                  )}
+                />
               </Group>
             }
-            description={t(
-              "admin.settings.general.customPaths.operations.weasyprint.description",
-              "Path to WeasyPrint executable for HTML to PDF conversion (leave empty for default: /opt/venv/bin/weasyprint)",
-            )}
             value={settings.customPaths?.operations?.weasyprint || ""}
             onChange={(e) =>
               setSettings({
@@ -297,12 +299,14 @@ export function CustomPathsCard({
                 <PendingBadge
                   show={isFieldPending("customPaths.operations.unoconvert")}
                 />
+                <InfoTooltip
+                  label={t(
+                    "admin.settings.general.customPaths.operations.unoconvert.description",
+                    "Path to LibreOffice unoconvert for document conversions (leave empty for default: /opt/venv/bin/unoconvert)",
+                  )}
+                />
               </Group>
             }
-            description={t(
-              "admin.settings.general.customPaths.operations.unoconvert.description",
-              "Path to LibreOffice unoconvert for document conversions (leave empty for default: /opt/venv/bin/unoconvert)",
-            )}
             value={settings.customPaths?.operations?.unoconvert || ""}
             onChange={(e) =>
               setSettings({

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { SettingsFieldLabel } from "@app/components/shared/config/SettingsFieldLabel";
 import {
   Modal,
   Text,
@@ -300,11 +301,16 @@ const StaticCheckoutModal: React.FC<StaticCheckoutModalProps> = ({
                 </Text>
 
                 <TextInput
-                  label={t("admin.settings.premium.key.label", "License Key")}
-                  description={t(
-                    "plan.static.licenseActivation.keyDescription",
-                    "Paste the license key from your email",
-                  )}
+                  label={
+                    <SettingsFieldLabel
+                      info={t(
+                        "plan.static.licenseActivation.keyDescription",
+                        "Paste the license key from your email",
+                      )}
+                    >
+                      t("admin.settings.premium.key.label", "License Key")
+                    </SettingsFieldLabel>
+                  }
                   value={licenseKey}
                   onChange={(e) => setLicenseKey(e.target.value)}
                   placeholder="00000000-0000-0000-0000-000000000000"

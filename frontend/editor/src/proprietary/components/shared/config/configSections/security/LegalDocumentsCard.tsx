@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { InfoTooltip } from "@app/ui/InfoTooltip";
 import { TextInput, Stack, Paper, Text, Group, Alert } from "@mantine/core";
 import WarningIcon from "@mui/icons-material/Warning";
 import PendingBadge from "@app/components/shared/config/PendingBadge";
@@ -49,12 +50,14 @@ export function LegalDocumentsCard({
                     )}
                   </span>
                   <PendingBadge show={isFieldPending("termsAndConditions")} />
+                  <InfoTooltip
+                    label={t(
+                      "admin.settings.legal.termsAndConditions.description",
+                      "URL or filename to terms and conditions",
+                    )}
+                  />
                 </Group>
               }
-              description={t(
-                "admin.settings.legal.termsAndConditions.description",
-                "URL or filename to terms and conditions",
-              )}
               value={settings.termsAndConditions || ""}
               onChange={(e) =>
                 setSettings({
@@ -78,12 +81,14 @@ export function LegalDocumentsCard({
                     )}
                   </span>
                   <PendingBadge show={isFieldPending("privacyPolicy")} />
+                  <InfoTooltip
+                    label={t(
+                      "admin.settings.legal.privacyPolicy.description",
+                      "URL or filename to privacy policy",
+                    )}
+                  />
                 </Group>
               }
-              description={t(
-                "admin.settings.legal.privacyPolicy.description",
-                "URL or filename to privacy policy",
-              )}
               value={settings.privacyPolicy || ""}
               onChange={(e) =>
                 setSettings({ ...settings, privacyPolicy: e.target.value })
@@ -106,12 +111,14 @@ export function LegalDocumentsCard({
                   <PendingBadge
                     show={isFieldPending("accessibilityStatement")}
                   />
+                  <InfoTooltip
+                    label={t(
+                      "admin.settings.legal.accessibilityStatement.description",
+                      "URL or filename to accessibility statement",
+                    )}
+                  />
                 </Group>
               }
-              description={t(
-                "admin.settings.legal.accessibilityStatement.description",
-                "URL or filename to accessibility statement",
-              )}
               value={settings.accessibilityStatement || ""}
               onChange={(e) =>
                 setSettings({
@@ -135,12 +142,14 @@ export function LegalDocumentsCard({
                     )}
                   </span>
                   <PendingBadge show={isFieldPending("cookiePolicy")} />
+                  <InfoTooltip
+                    label={t(
+                      "admin.settings.legal.cookiePolicy.description",
+                      "URL or filename to cookie policy",
+                    )}
+                  />
                 </Group>
               }
-              description={t(
-                "admin.settings.legal.cookiePolicy.description",
-                "URL or filename to cookie policy",
-              )}
               value={settings.cookiePolicy || ""}
               onChange={(e) =>
                 setSettings({ ...settings, cookiePolicy: e.target.value })
@@ -158,12 +167,14 @@ export function LegalDocumentsCard({
                     {t("admin.settings.legal.impressum.label", "Impressum")}
                   </span>
                   <PendingBadge show={isFieldPending("impressum")} />
+                  <InfoTooltip
+                    label={t(
+                      "admin.settings.legal.impressum.description",
+                      "URL or filename to impressum (required in some jurisdictions)",
+                    )}
+                  />
                 </Group>
               }
-              description={t(
-                "admin.settings.legal.impressum.description",
-                "URL or filename to impressum (required in some jurisdictions)",
-              )}
               value={settings.impressum || ""}
               onChange={(e) =>
                 setSettings({ ...settings, impressum: e.target.value })

@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { InfoTooltip } from "@app/ui/InfoTooltip";
 import { TextInput, Switch, Stack, Paper, Text, Group } from "@mantine/core";
 import PendingBadge from "@app/components/shared/config/PendingBadge";
 import type { GeneralCardProps } from "@app/components/shared/config/configSections/server/serverCardProps";
@@ -27,13 +28,13 @@ export function CustomMetadataCard({
               {t(
                 "admin.settings.general.customMetadata.autoUpdate.label",
                 "Auto Update Metadata",
-              )}
-            </Text>
-            <Text size="xs" c="dimmed" mt={4}>
-              {t(
-                "admin.settings.general.customMetadata.autoUpdate.description",
-                "Automatically update PDF metadata on all processed documents",
-              )}
+              )}{" "}
+              <InfoTooltip
+                label={t(
+                  "admin.settings.general.customMetadata.autoUpdate.description",
+                  "Automatically update PDF metadata on all processed documents",
+                )}
+              />
             </Text>
           </div>
           <Group gap="xs">
@@ -67,12 +68,14 @@ export function CustomMetadataCard({
                   )}
                 </span>
                 <PendingBadge show={isFieldPending("customMetadata.author")} />
+                <InfoTooltip
+                  label={t(
+                    "admin.settings.general.customMetadata.author.description",
+                    "Default author for PDF metadata (e.g., username)",
+                  )}
+                />
               </Group>
             }
-            description={t(
-              "admin.settings.general.customMetadata.author.description",
-              "Default author for PDF metadata (e.g., username)",
-            )}
             value={settings.customMetadata?.author || ""}
             onChange={(e) =>
               setSettings({
@@ -99,12 +102,14 @@ export function CustomMetadataCard({
                   )}
                 </span>
                 <PendingBadge show={isFieldPending("customMetadata.creator")} />
+                <InfoTooltip
+                  label={t(
+                    "admin.settings.general.customMetadata.creator.description",
+                    "Default creator for PDF metadata",
+                  )}
+                />
               </Group>
             }
-            description={t(
-              "admin.settings.general.customMetadata.creator.description",
-              "Default creator for PDF metadata",
-            )}
             value={settings.customMetadata?.creator || ""}
             onChange={(e) =>
               setSettings({
@@ -133,12 +138,14 @@ export function CustomMetadataCard({
                 <PendingBadge
                   show={isFieldPending("customMetadata.producer")}
                 />
+                <InfoTooltip
+                  label={t(
+                    "admin.settings.general.customMetadata.producer.description",
+                    "Default producer for PDF metadata",
+                  )}
+                />
               </Group>
             }
-            description={t(
-              "admin.settings.general.customMetadata.producer.description",
-              "Default producer for PDF metadata",
-            )}
             value={settings.customMetadata?.producer || ""}
             onChange={(e) =>
               setSettings({

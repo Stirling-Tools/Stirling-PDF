@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { NumberInput, Stack, Paper, Text, Accordion } from "@mantine/core";
+import { SettingsFieldLabel } from "@app/components/shared/config/SettingsFieldLabel";
+import { NumberInput, Stack, Paper, Accordion } from "@mantine/core";
 import type { AdvancedCardProps } from "@app/components/shared/config/configSections/advanced/advancedCardProps";
 
 /** Per-executor concurrency and timeouts. */
@@ -13,13 +14,6 @@ export function AdvancedProcessExecutorCard({
   return (
     <Paper withBorder p="md" radius="md">
       <Stack gap="md">
-        <Text size="xs" c="dimmed">
-          {t(
-            "admin.settings.advanced.processExecutor.description",
-            "Configure session limits and timeouts for each process executor",
-          )}
-        </Text>
-
         <Accordion variant="separated">
           {/* LibreOffice */}
           <Accordion.Item value="libreOffice">
@@ -32,14 +26,18 @@ export function AdvancedProcessExecutorCard({
             <Accordion.Panel>
               <Stack gap="sm">
                 <NumberInput
-                  label={t(
-                    "admin.settings.advanced.processExecutor.sessionLimit.label",
-                    "Session Limit",
-                  )}
-                  description={t(
-                    "admin.settings.advanced.processExecutor.sessionLimit.description",
-                    "Maximum concurrent instances",
-                  )}
+                  label={
+                    <SettingsFieldLabel
+                      info={t(
+                        "admin.settings.advanced.processExecutor.sessionLimit.description",
+                        "Maximum concurrent instances",
+                      )}
+                    >
+                      t(
+                      "admin.settings.advanced.processExecutor.sessionLimit.label",
+                      "Session Limit", )
+                    </SettingsFieldLabel>
+                  }
                   value={
                     settings.processExecutor?.sessionLimit
                       ?.libreOfficeSessionLimit ?? 1
@@ -61,14 +59,18 @@ export function AdvancedProcessExecutorCard({
                   disabled={!loginEnabled}
                 />
                 <NumberInput
-                  label={t(
-                    "admin.settings.advanced.processExecutor.timeout.label",
-                    "Timeout (minutes)",
-                  )}
-                  description={t(
-                    "admin.settings.advanced.processExecutor.timeout.description",
-                    "Maximum execution time",
-                  )}
+                  label={
+                    <SettingsFieldLabel
+                      info={t(
+                        "admin.settings.advanced.processExecutor.timeout.description",
+                        "Maximum execution time",
+                      )}
+                    >
+                      t(
+                      "admin.settings.advanced.processExecutor.timeout.label",
+                      "Timeout (minutes)", )
+                    </SettingsFieldLabel>
+                  }
                   value={
                     settings.processExecutor?.timeoutMinutes
                       ?.libreOfficetimeoutMinutes ?? 30
@@ -104,14 +106,18 @@ export function AdvancedProcessExecutorCard({
             <Accordion.Panel>
               <Stack gap="sm">
                 <NumberInput
-                  label={t(
-                    "admin.settings.advanced.processExecutor.sessionLimit.label",
-                    "Session Limit",
-                  )}
-                  description={t(
-                    "admin.settings.advanced.processExecutor.sessionLimit.description",
-                    "Maximum concurrent instances",
-                  )}
+                  label={
+                    <SettingsFieldLabel
+                      info={t(
+                        "admin.settings.advanced.processExecutor.sessionLimit.description",
+                        "Maximum concurrent instances",
+                      )}
+                    >
+                      t(
+                      "admin.settings.advanced.processExecutor.sessionLimit.label",
+                      "Session Limit", )
+                    </SettingsFieldLabel>
+                  }
                   value={
                     settings.processExecutor?.sessionLimit
                       ?.pdfToHtmlSessionLimit ?? 1
@@ -133,14 +139,18 @@ export function AdvancedProcessExecutorCard({
                   disabled={!loginEnabled}
                 />
                 <NumberInput
-                  label={t(
-                    "admin.settings.advanced.processExecutor.timeout.label",
-                    "Timeout (minutes)",
-                  )}
-                  description={t(
-                    "admin.settings.advanced.processExecutor.timeout.description",
-                    "Maximum execution time",
-                  )}
+                  label={
+                    <SettingsFieldLabel
+                      info={t(
+                        "admin.settings.advanced.processExecutor.timeout.description",
+                        "Maximum execution time",
+                      )}
+                    >
+                      t(
+                      "admin.settings.advanced.processExecutor.timeout.label",
+                      "Timeout (minutes)", )
+                    </SettingsFieldLabel>
+                  }
                   value={
                     settings.processExecutor?.timeoutMinutes
                       ?.pdfToHtmltimeoutMinutes ?? 20
@@ -173,14 +183,18 @@ export function AdvancedProcessExecutorCard({
             <Accordion.Panel>
               <Stack gap="sm">
                 <NumberInput
-                  label={t(
-                    "admin.settings.advanced.processExecutor.sessionLimit.label",
-                    "Session Limit",
-                  )}
-                  description={t(
-                    "admin.settings.advanced.processExecutor.sessionLimit.description",
-                    "Maximum concurrent instances",
-                  )}
+                  label={
+                    <SettingsFieldLabel
+                      info={t(
+                        "admin.settings.advanced.processExecutor.sessionLimit.description",
+                        "Maximum concurrent instances",
+                      )}
+                    >
+                      t(
+                      "admin.settings.advanced.processExecutor.sessionLimit.label",
+                      "Session Limit", )
+                    </SettingsFieldLabel>
+                  }
                   value={
                     settings.processExecutor?.sessionLimit?.qpdfSessionLimit ??
                     4
@@ -202,14 +216,18 @@ export function AdvancedProcessExecutorCard({
                   disabled={!loginEnabled}
                 />
                 <NumberInput
-                  label={t(
-                    "admin.settings.advanced.processExecutor.timeout.label",
-                    "Timeout (minutes)",
-                  )}
-                  description={t(
-                    "admin.settings.advanced.processExecutor.timeout.description",
-                    "Maximum execution time",
-                  )}
+                  label={
+                    <SettingsFieldLabel
+                      info={t(
+                        "admin.settings.advanced.processExecutor.timeout.description",
+                        "Maximum execution time",
+                      )}
+                    >
+                      t(
+                      "admin.settings.advanced.processExecutor.timeout.label",
+                      "Timeout (minutes)", )
+                    </SettingsFieldLabel>
+                  }
                   value={
                     settings.processExecutor?.timeoutMinutes
                       ?.qpdfTimeoutMinutes ?? 30
@@ -245,14 +263,18 @@ export function AdvancedProcessExecutorCard({
             <Accordion.Panel>
               <Stack gap="sm">
                 <NumberInput
-                  label={t(
-                    "admin.settings.advanced.processExecutor.sessionLimit.label",
-                    "Session Limit",
-                  )}
-                  description={t(
-                    "admin.settings.advanced.processExecutor.sessionLimit.description",
-                    "Maximum concurrent instances",
-                  )}
+                  label={
+                    <SettingsFieldLabel
+                      info={t(
+                        "admin.settings.advanced.processExecutor.sessionLimit.description",
+                        "Maximum concurrent instances",
+                      )}
+                    >
+                      t(
+                      "admin.settings.advanced.processExecutor.sessionLimit.label",
+                      "Session Limit", )
+                    </SettingsFieldLabel>
+                  }
                   value={
                     settings.processExecutor?.sessionLimit
                       ?.tesseractSessionLimit ?? 1
@@ -274,14 +296,18 @@ export function AdvancedProcessExecutorCard({
                   disabled={!loginEnabled}
                 />
                 <NumberInput
-                  label={t(
-                    "admin.settings.advanced.processExecutor.timeout.label",
-                    "Timeout (minutes)",
-                  )}
-                  description={t(
-                    "admin.settings.advanced.processExecutor.timeout.description",
-                    "Maximum execution time",
-                  )}
+                  label={
+                    <SettingsFieldLabel
+                      info={t(
+                        "admin.settings.advanced.processExecutor.timeout.description",
+                        "Maximum execution time",
+                      )}
+                    >
+                      t(
+                      "admin.settings.advanced.processExecutor.timeout.label",
+                      "Timeout (minutes)", )
+                    </SettingsFieldLabel>
+                  }
                   value={
                     settings.processExecutor?.timeoutMinutes
                       ?.tesseractTimeoutMinutes ?? 30
@@ -317,14 +343,18 @@ export function AdvancedProcessExecutorCard({
             <Accordion.Panel>
               <Stack gap="sm">
                 <NumberInput
-                  label={t(
-                    "admin.settings.advanced.processExecutor.sessionLimit.label",
-                    "Session Limit",
-                  )}
-                  description={t(
-                    "admin.settings.advanced.processExecutor.sessionLimit.description",
-                    "Maximum concurrent instances",
-                  )}
+                  label={
+                    <SettingsFieldLabel
+                      info={t(
+                        "admin.settings.advanced.processExecutor.sessionLimit.description",
+                        "Maximum concurrent instances",
+                      )}
+                    >
+                      t(
+                      "admin.settings.advanced.processExecutor.sessionLimit.label",
+                      "Session Limit", )
+                    </SettingsFieldLabel>
+                  }
                   value={
                     settings.processExecutor?.sessionLimit
                       ?.pythonOpenCvSessionLimit ?? 8
@@ -346,14 +376,18 @@ export function AdvancedProcessExecutorCard({
                   disabled={!loginEnabled}
                 />
                 <NumberInput
-                  label={t(
-                    "admin.settings.advanced.processExecutor.timeout.label",
-                    "Timeout (minutes)",
-                  )}
-                  description={t(
-                    "admin.settings.advanced.processExecutor.timeout.description",
-                    "Maximum execution time",
-                  )}
+                  label={
+                    <SettingsFieldLabel
+                      info={t(
+                        "admin.settings.advanced.processExecutor.timeout.description",
+                        "Maximum execution time",
+                      )}
+                    >
+                      t(
+                      "admin.settings.advanced.processExecutor.timeout.label",
+                      "Timeout (minutes)", )
+                    </SettingsFieldLabel>
+                  }
                   value={
                     settings.processExecutor?.timeoutMinutes
                       ?.pythonOpenCvtimeoutMinutes ?? 30
@@ -389,14 +423,18 @@ export function AdvancedProcessExecutorCard({
             <Accordion.Panel>
               <Stack gap="sm">
                 <NumberInput
-                  label={t(
-                    "admin.settings.advanced.processExecutor.sessionLimit.label",
-                    "Session Limit",
-                  )}
-                  description={t(
-                    "admin.settings.advanced.processExecutor.sessionLimit.description",
-                    "Maximum concurrent instances",
-                  )}
+                  label={
+                    <SettingsFieldLabel
+                      info={t(
+                        "admin.settings.advanced.processExecutor.sessionLimit.description",
+                        "Maximum concurrent instances",
+                      )}
+                    >
+                      t(
+                      "admin.settings.advanced.processExecutor.sessionLimit.label",
+                      "Session Limit", )
+                    </SettingsFieldLabel>
+                  }
                   value={
                     settings.processExecutor?.sessionLimit
                       ?.weasyPrintSessionLimit ?? 16
@@ -418,14 +456,18 @@ export function AdvancedProcessExecutorCard({
                   disabled={!loginEnabled}
                 />
                 <NumberInput
-                  label={t(
-                    "admin.settings.advanced.processExecutor.timeout.label",
-                    "Timeout (minutes)",
-                  )}
-                  description={t(
-                    "admin.settings.advanced.processExecutor.timeout.description",
-                    "Maximum execution time",
-                  )}
+                  label={
+                    <SettingsFieldLabel
+                      info={t(
+                        "admin.settings.advanced.processExecutor.timeout.description",
+                        "Maximum execution time",
+                      )}
+                    >
+                      t(
+                      "admin.settings.advanced.processExecutor.timeout.label",
+                      "Timeout (minutes)", )
+                    </SettingsFieldLabel>
+                  }
                   value={
                     settings.processExecutor?.timeoutMinutes
                       ?.weasyPrinttimeoutMinutes ?? 30
@@ -461,14 +503,18 @@ export function AdvancedProcessExecutorCard({
             <Accordion.Panel>
               <Stack gap="sm">
                 <NumberInput
-                  label={t(
-                    "admin.settings.advanced.processExecutor.sessionLimit.label",
-                    "Session Limit",
-                  )}
-                  description={t(
-                    "admin.settings.advanced.processExecutor.sessionLimit.description",
-                    "Maximum concurrent instances",
-                  )}
+                  label={
+                    <SettingsFieldLabel
+                      info={t(
+                        "admin.settings.advanced.processExecutor.sessionLimit.description",
+                        "Maximum concurrent instances",
+                      )}
+                    >
+                      t(
+                      "admin.settings.advanced.processExecutor.sessionLimit.label",
+                      "Session Limit", )
+                    </SettingsFieldLabel>
+                  }
                   value={
                     settings.processExecutor?.sessionLimit
                       ?.installAppSessionLimit ?? 1
@@ -490,14 +536,18 @@ export function AdvancedProcessExecutorCard({
                   disabled={!loginEnabled}
                 />
                 <NumberInput
-                  label={t(
-                    "admin.settings.advanced.processExecutor.timeout.label",
-                    "Timeout (minutes)",
-                  )}
-                  description={t(
-                    "admin.settings.advanced.processExecutor.timeout.description",
-                    "Maximum execution time",
-                  )}
+                  label={
+                    <SettingsFieldLabel
+                      info={t(
+                        "admin.settings.advanced.processExecutor.timeout.description",
+                        "Maximum execution time",
+                      )}
+                    >
+                      t(
+                      "admin.settings.advanced.processExecutor.timeout.label",
+                      "Timeout (minutes)", )
+                    </SettingsFieldLabel>
+                  }
                   value={
                     settings.processExecutor?.timeoutMinutes
                       ?.installApptimeoutMinutes ?? 60
@@ -530,14 +580,18 @@ export function AdvancedProcessExecutorCard({
             <Accordion.Panel>
               <Stack gap="sm">
                 <NumberInput
-                  label={t(
-                    "admin.settings.advanced.processExecutor.sessionLimit.label",
-                    "Session Limit",
-                  )}
-                  description={t(
-                    "admin.settings.advanced.processExecutor.sessionLimit.description",
-                    "Maximum concurrent instances",
-                  )}
+                  label={
+                    <SettingsFieldLabel
+                      info={t(
+                        "admin.settings.advanced.processExecutor.sessionLimit.description",
+                        "Maximum concurrent instances",
+                      )}
+                    >
+                      t(
+                      "admin.settings.advanced.processExecutor.sessionLimit.label",
+                      "Session Limit", )
+                    </SettingsFieldLabel>
+                  }
                   value={
                     settings.processExecutor?.sessionLimit
                       ?.calibreSessionLimit ?? 1
@@ -559,14 +613,18 @@ export function AdvancedProcessExecutorCard({
                   disabled={!loginEnabled}
                 />
                 <NumberInput
-                  label={t(
-                    "admin.settings.advanced.processExecutor.timeout.label",
-                    "Timeout (minutes)",
-                  )}
-                  description={t(
-                    "admin.settings.advanced.processExecutor.timeout.description",
-                    "Maximum execution time",
-                  )}
+                  label={
+                    <SettingsFieldLabel
+                      info={t(
+                        "admin.settings.advanced.processExecutor.timeout.description",
+                        "Maximum execution time",
+                      )}
+                    >
+                      t(
+                      "admin.settings.advanced.processExecutor.timeout.label",
+                      "Timeout (minutes)", )
+                    </SettingsFieldLabel>
+                  }
                   value={
                     settings.processExecutor?.timeoutMinutes
                       ?.calibretimeoutMinutes ?? 30
@@ -602,14 +660,18 @@ export function AdvancedProcessExecutorCard({
             <Accordion.Panel>
               <Stack gap="sm">
                 <NumberInput
-                  label={t(
-                    "admin.settings.advanced.processExecutor.sessionLimit.label",
-                    "Session Limit",
-                  )}
-                  description={t(
-                    "admin.settings.advanced.processExecutor.sessionLimit.description",
-                    "Maximum concurrent instances",
-                  )}
+                  label={
+                    <SettingsFieldLabel
+                      info={t(
+                        "admin.settings.advanced.processExecutor.sessionLimit.description",
+                        "Maximum concurrent instances",
+                      )}
+                    >
+                      t(
+                      "admin.settings.advanced.processExecutor.sessionLimit.label",
+                      "Session Limit", )
+                    </SettingsFieldLabel>
+                  }
                   value={
                     settings.processExecutor?.sessionLimit
                       ?.ghostscriptSessionLimit ?? 8
@@ -631,14 +693,18 @@ export function AdvancedProcessExecutorCard({
                   disabled={!loginEnabled}
                 />
                 <NumberInput
-                  label={t(
-                    "admin.settings.advanced.processExecutor.timeout.label",
-                    "Timeout (minutes)",
-                  )}
-                  description={t(
-                    "admin.settings.advanced.processExecutor.timeout.description",
-                    "Maximum execution time",
-                  )}
+                  label={
+                    <SettingsFieldLabel
+                      info={t(
+                        "admin.settings.advanced.processExecutor.timeout.description",
+                        "Maximum execution time",
+                      )}
+                    >
+                      t(
+                      "admin.settings.advanced.processExecutor.timeout.label",
+                      "Timeout (minutes)", )
+                    </SettingsFieldLabel>
+                  }
                   value={
                     settings.processExecutor?.timeoutMinutes
                       ?.ghostscriptTimeoutMinutes ?? 30
@@ -674,14 +740,18 @@ export function AdvancedProcessExecutorCard({
             <Accordion.Panel>
               <Stack gap="sm">
                 <NumberInput
-                  label={t(
-                    "admin.settings.advanced.processExecutor.sessionLimit.label",
-                    "Session Limit",
-                  )}
-                  description={t(
-                    "admin.settings.advanced.processExecutor.sessionLimit.description",
-                    "Maximum concurrent instances",
-                  )}
+                  label={
+                    <SettingsFieldLabel
+                      info={t(
+                        "admin.settings.advanced.processExecutor.sessionLimit.description",
+                        "Maximum concurrent instances",
+                      )}
+                    >
+                      t(
+                      "admin.settings.advanced.processExecutor.sessionLimit.label",
+                      "Session Limit", )
+                    </SettingsFieldLabel>
+                  }
                   value={
                     settings.processExecutor?.sessionLimit
                       ?.ocrMyPdfSessionLimit ?? 2
@@ -703,14 +773,18 @@ export function AdvancedProcessExecutorCard({
                   disabled={!loginEnabled}
                 />
                 <NumberInput
-                  label={t(
-                    "admin.settings.advanced.processExecutor.timeout.label",
-                    "Timeout (minutes)",
-                  )}
-                  description={t(
-                    "admin.settings.advanced.processExecutor.timeout.description",
-                    "Maximum execution time",
-                  )}
+                  label={
+                    <SettingsFieldLabel
+                      info={t(
+                        "admin.settings.advanced.processExecutor.timeout.description",
+                        "Maximum execution time",
+                      )}
+                    >
+                      t(
+                      "admin.settings.advanced.processExecutor.timeout.label",
+                      "Timeout (minutes)", )
+                    </SettingsFieldLabel>
+                  }
                   value={
                     settings.processExecutor?.timeoutMinutes
                       ?.ocrMyPdfTimeoutMinutes ?? 30

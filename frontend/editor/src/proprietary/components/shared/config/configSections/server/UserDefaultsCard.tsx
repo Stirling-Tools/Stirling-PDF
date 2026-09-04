@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { Stack, Paper, Text, Group, Switch } from "@mantine/core";
+import { InfoTooltip } from "@app/ui/InfoTooltip";
+import { Stack, Paper, Group, Switch } from "@mantine/core";
 import PendingBadge from "@app/components/shared/config/PendingBadge";
 import type { UiDefaultsCardProps } from "@app/components/shared/config/configSections/server/serverCardProps";
 
@@ -18,13 +19,6 @@ export function UserDefaultsCard({
   return (
     <Paper withBorder p="md" radius="md">
       <Stack gap="md">
-        <Text size="xs" c="dimmed">
-          {t(
-            "admin.settings.endpoints.userDefaultsDescription",
-            "Set default values for user preferences. Users can override these in their personal settings.",
-          )}
-        </Text>
-
         <Switch
           label={
             <Group gap="xs">
@@ -37,12 +31,14 @@ export function UserDefaultsCard({
               <PendingBadge
                 show={isFieldPending("defaultHideUnavailableTools")}
               />
+              <InfoTooltip
+                label={t(
+                  "admin.settings.endpoints.defaultHideUnavailableTools.description",
+                  "Remove disabled tools instead of showing them greyed out",
+                )}
+              />
             </Group>
           }
-          description={t(
-            "admin.settings.endpoints.defaultHideUnavailableTools.description",
-            "Remove disabled tools instead of showing them greyed out",
-          )}
           checked={settings.defaultHideUnavailableTools || false}
           onChange={(e) => {
             if (!loginEnabled) return;
@@ -66,12 +62,14 @@ export function UserDefaultsCard({
               <PendingBadge
                 show={isFieldPending("defaultHideUnavailableConversions")}
               />
+              <InfoTooltip
+                label={t(
+                  "admin.settings.endpoints.defaultHideUnavailableConversions.description",
+                  "Remove disabled conversion options instead of showing them greyed out",
+                )}
+              />
             </Group>
           }
-          description={t(
-            "admin.settings.endpoints.defaultHideUnavailableConversions.description",
-            "Remove disabled conversion options instead of showing them greyed out",
-          )}
           checked={settings.defaultHideUnavailableConversions || false}
           onChange={(e) => {
             if (!loginEnabled) return;

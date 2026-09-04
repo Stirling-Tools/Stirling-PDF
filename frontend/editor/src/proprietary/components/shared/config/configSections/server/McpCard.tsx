@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { InfoTooltip } from "@app/ui/InfoTooltip";
 import {
   TextInput,
   Textarea,
@@ -52,13 +53,13 @@ export function McpCard({
           <Group justify="space-between" align="flex-start" wrap="nowrap">
             <div>
               <Text fw={500} size="sm">
-                {t("admin.settings.mcp.enabled.label", "Enable MCP Server")}
-              </Text>
-              <Text size="xs" c="dimmed" mt={4}>
-                {t(
-                  "admin.settings.mcp.enabled.description",
-                  "When off (default), no /mcp endpoint, metadata, or MCP beans are loaded.",
-                )}
+                {t("admin.settings.mcp.enabled.label", "Enable MCP Server")}{" "}
+                <InfoTooltip
+                  label={t(
+                    "admin.settings.mcp.enabled.description",
+                    "When off (default), no /mcp endpoint, metadata, or MCP beans are loaded.",
+                  )}
+                />
               </Text>
             </div>
             <Group gap="xs">
@@ -79,12 +80,14 @@ export function McpCard({
                   {t("admin.settings.mcp.mode.label", "Authentication mode")}
                 </span>
                 <PendingBadge show={isFieldPending("auth.mode")} />
+                <InfoTooltip
+                  label={t(
+                    "admin.settings.mcp.mode.description",
+                    "OAuth needs an external IdP. API key uses a Stirling per-user API key (X-API-KEY) - simplest for self-host.",
+                  )}
+                />
               </Group>
             }
-            description={t(
-              "admin.settings.mcp.mode.description",
-              "OAuth needs an external IdP. API key uses a Stirling per-user API key (X-API-KEY) - simplest for self-host.",
-            )}
             data={[
               { value: "oauth", label: "OAuth 2.1 (external IdP)" },
               { value: "apikey", label: "API key (Stirling per-user key)" },
@@ -122,12 +125,14 @@ export function McpCard({
                       )}
                     </span>
                     <PendingBadge show={isFieldPending("auth.issuerUri")} />
+                    <InfoTooltip
+                      label={t(
+                        "admin.settings.mcp.issuerUri.description",
+                        "Your OAuth2 authorization server (must publish /.well-known/openid-configuration). Required when enabled.",
+                      )}
+                    />
                   </Group>
                 }
-                description={t(
-                  "admin.settings.mcp.issuerUri.description",
-                  "Your OAuth2 authorization server (must publish /.well-known/openid-configuration). Required when enabled.",
-                )}
                 value={settings.auth?.issuerUri || ""}
                 onChange={(e) => setAuth({ issuerUri: e.target.value })}
                 placeholder="https://auth.example.com"
@@ -141,12 +146,14 @@ export function McpCard({
                       {t("admin.settings.mcp.resourceId.label", "Resource ID")}
                     </span>
                     <PendingBadge show={isFieldPending("auth.resourceId")} />
+                    <InfoTooltip
+                      label={t(
+                        "admin.settings.mcp.resourceId.description",
+                        "This server's public /mcp URL. Tokens must list it in their audience (RFC 8707) or they are rejected.",
+                      )}
+                    />
                   </Group>
                 }
-                description={t(
-                  "admin.settings.mcp.resourceId.description",
-                  "This server's public /mcp URL. Tokens must list it in their audience (RFC 8707) or they are rejected.",
-                )}
                 value={settings.auth?.resourceId || ""}
                 onChange={(e) => setAuth({ resourceId: e.target.value })}
                 placeholder={mcpUrl}
@@ -165,12 +172,14 @@ export function McpCard({
                     <PendingBadge
                       show={isFieldPending("auth.acceptedAudiences")}
                     />
+                    <InfoTooltip
+                      label={t(
+                        "admin.settings.mcp.acceptedAudiences.description",
+                        "Extra token audience values accepted besides the Resource ID (comma or space separated). Leave blank for strict RFC 8707. Needed for IdPs that cannot mint resource audiences - e.g. Supabase's OAuth server always issues aud=authenticated.",
+                      )}
+                    />
                   </Group>
                 }
-                description={t(
-                  "admin.settings.mcp.acceptedAudiences.description",
-                  "Extra token audience values accepted besides the Resource ID (comma or space separated). Leave blank for strict RFC 8707. Needed for IdPs that cannot mint resource audiences - e.g. Supabase's OAuth server always issues aud=authenticated.",
-                )}
                 value={(settings.auth?.acceptedAudiences || []).join(" ")}
                 onChange={(e) =>
                   setAuth({ acceptedAudiences: parseOpList(e.target.value) })
@@ -189,12 +198,14 @@ export function McpCard({
                       )}
                     </span>
                     <PendingBadge show={isFieldPending("auth.jwksUri")} />
+                    <InfoTooltip
+                      label={t(
+                        "admin.settings.mcp.jwksUri.description",
+                        "Leave blank to discover it from the issuer. Set only if your IdP serves keys at a non-standard URL.",
+                      )}
+                    />
                   </Group>
                 }
-                description={t(
-                  "admin.settings.mcp.jwksUri.description",
-                  "Leave blank to discover it from the issuer. Set only if your IdP serves keys at a non-standard URL.",
-                )}
                 value={settings.auth?.jwksUri || ""}
                 onChange={(e) => setAuth({ jwksUri: e.target.value })}
                 placeholder={t(
@@ -210,13 +221,13 @@ export function McpCard({
                     {t(
                       "admin.settings.mcp.scopes.label",
                       "Enforce OAuth scopes",
-                    )}
-                  </Text>
-                  <Text size="xs" c="dimmed" mt={4}>
-                    {t(
-                      "admin.settings.mcp.scopes.description",
-                      "Require mcp.tools.read for read ops and mcp.tools.write for write/AI ops.",
-                    )}
+                    )}{" "}
+                    <InfoTooltip
+                      label={t(
+                        "admin.settings.mcp.scopes.description",
+                        "Require mcp.tools.read for read ops and mcp.tools.write for write/AI ops.",
+                      )}
+                    />
                   </Text>
                 </div>
                 <Group gap="xs">
@@ -240,13 +251,13 @@ export function McpCard({
                     {t(
                       "admin.settings.mcp.requireAccount.label",
                       "Require an existing Stirling account",
-                    )}
-                  </Text>
-                  <Text size="xs" c="dimmed" mt={4}>
-                    {t(
-                      "admin.settings.mcp.requireAccount.description",
-                      "Only let tokens through if their subject maps to a provisioned, enabled Stirling user.",
-                    )}
+                    )}{" "}
+                    <InfoTooltip
+                      label={t(
+                        "admin.settings.mcp.requireAccount.description",
+                        "Only let tokens through if their subject maps to a provisioned, enabled Stirling user.",
+                      )}
+                    />
                   </Text>
                 </div>
                 <Group gap="xs">
@@ -273,12 +284,14 @@ export function McpCard({
                       )}
                     </span>
                     <PendingBadge show={isFieldPending("auth.usernameClaim")} />
+                    <InfoTooltip
+                      label={t(
+                        "admin.settings.mcp.usernameClaim.description",
+                        "JWT claim matched against a Stirling username (e.g. sub, email, preferred_username).",
+                      )}
+                    />
                   </Group>
                 }
-                description={t(
-                  "admin.settings.mcp.usernameClaim.description",
-                  "JWT claim matched against a Stirling username (e.g. sub, email, preferred_username).",
-                )}
                 value={settings.auth?.usernameClaim || ""}
                 onChange={(e) => setAuth({ usernameClaim: e.target.value })}
                 placeholder="sub"
@@ -294,12 +307,14 @@ export function McpCard({
                   {t("admin.settings.mcp.allowedOps.label", "Allowed tools")}
                 </span>
                 <PendingBadge show={isFieldPending("allowedOperations")} />
+                <InfoTooltip
+                  label={t(
+                    "admin.settings.mcp.allowedOps.description",
+                    "If set, ONLY these operation ids are exposed (an allow-list; comma or space separated). Leave blank to expose all enabled tools except any blocked below.",
+                  )}
+                />
               </Group>
             }
-            description={t(
-              "admin.settings.mcp.allowedOps.description",
-              "If set, ONLY these operation ids are exposed (an allow-list; comma or space separated). Leave blank to expose all enabled tools except any blocked below.",
-            )}
             value={(settings.allowedOperations || []).join(" ")}
             onChange={(e) =>
               setSettings({
@@ -321,12 +336,14 @@ export function McpCard({
                   {t("admin.settings.mcp.blockedOps.label", "Blocked tools")}
                 </span>
                 <PendingBadge show={isFieldPending("blockedOperations")} />
+                <InfoTooltip
+                  label={t(
+                    "admin.settings.mcp.blockedOps.description",
+                    "Operation ids to hide from MCP (comma or space separated), e.g. add-password remove-password. Leave blank to expose all enabled tools.",
+                  )}
+                />
               </Group>
             }
-            description={t(
-              "admin.settings.mcp.blockedOps.description",
-              "Operation ids to hide from MCP (comma or space separated), e.g. add-password remove-password. Leave blank to expose all enabled tools.",
-            )}
             value={(settings.blockedOperations || []).join(" ")}
             onChange={(e) =>
               setSettings({

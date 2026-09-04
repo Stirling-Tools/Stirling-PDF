@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { InfoTooltip } from "@app/ui/InfoTooltip";
 import { Switch, Stack, Paper, Text, Group } from "@mantine/core";
 import PendingBadge from "@app/components/shared/config/PendingBadge";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
@@ -29,13 +30,13 @@ export function AdvancedFeatureFlagsCard({
               {t(
                 "admin.settings.advanced.enableAlphaFunctionality.label",
                 "Enable Alpha Features",
-              )}
-            </Text>
-            <Text size="xs" c="dimmed" mt={4}>
-              {t(
-                "admin.settings.advanced.enableAlphaFunctionality.description",
-                "Enable experimental and alpha-stage features (may be unstable)",
-              )}
+              )}{" "}
+              <InfoTooltip
+                label={t(
+                  "admin.settings.advanced.enableAlphaFunctionality.description",
+                  "Enable experimental and alpha-stage features (may be unstable)",
+                )}
+              />
             </Text>
           </div>
           <Group gap="xs">
@@ -67,13 +68,13 @@ export function AdvancedFeatureFlagsCard({
               {t(
                 "admin.settings.advanced.enableUrlToPDF.label",
                 "Enable URL to PDF",
-              )}
-            </Text>
-            <Text size="xs" c="dimmed" mt={4}>
-              {t(
-                "admin.settings.advanced.enableUrlToPDF.description",
-                "Allow conversion of web pages to PDF documents (internal use only)",
-              )}
+              )}{" "}
+              <InfoTooltip
+                label={t(
+                  "admin.settings.advanced.enableUrlToPDF.description",
+                  "Allow conversion of web pages to PDF documents (internal use only)",
+                )}
+              />
             </Text>
           </div>
           <Group gap="xs">
@@ -105,13 +106,13 @@ export function AdvancedFeatureFlagsCard({
               {t(
                 "admin.settings.advanced.disableSanitize.label",
                 "Disable HTML Sanitization",
-              )}
-            </Text>
-            <Text size="xs" c="dimmed" mt={4}>
-              {t(
-                "admin.settings.advanced.disableSanitize.description",
-                "Disable HTML sanitization (WARNING: Security risk - can lead to XSS injections)",
-              )}
+              )}{" "}
+              <InfoTooltip
+                label={t(
+                  "admin.settings.advanced.disableSanitize.description",
+                  "Disable HTML sanitization (WARNING: Security risk - can lead to XSS injections)",
+                )}
+              />
             </Text>
           </div>
           <Group gap="xs">

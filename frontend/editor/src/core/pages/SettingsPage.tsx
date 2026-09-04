@@ -9,6 +9,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { LoadingFallback } from "@app/components/shared/LoadingFallback";
 import { useSectionHeadings } from "@app/components/settings/useSectionHeadings";
+import { InfoTooltip } from "@app/ui/InfoTooltip";
 import { Badge, Tooltip } from "@mantine/core";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { ActionIcon } from "@app/ui/ActionIcon";
@@ -394,12 +395,15 @@ const SettingsPageInner: React.FC = () => {
                 {activeGroup && (
                   <span className="settings-page__eyebrow">{activeGroup}</span>
                 )}
-                <h1 className="settings-page__title">{activeItem.label}</h1>
-                {activeItem.description && (
-                  <p className="settings-page__description">
-                    {activeItem.description}
-                  </p>
-                )}
+                <div className="settings-page__title-row">
+                  <h1 className="settings-page__title">{activeItem.label}</h1>
+                  {activeItem.description && (
+                    <InfoTooltip
+                      label={activeItem.description}
+                      position="right"
+                    />
+                  )}
+                </div>
               </header>
             )}
             {/* Its own boundary: a section that suspends must not take the

@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { InfoTooltip } from "@app/ui/InfoTooltip";
 import { Stack, Paper, Group, MultiSelect } from "@mantine/core";
 import PendingBadge from "@app/components/shared/config/PendingBadge";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
@@ -136,12 +137,14 @@ export function EndpointManagementCard({
                   )}
                 </span>
                 <PendingBadge show={isFieldPending("toRemove")} />
+                <InfoTooltip
+                  label={t(
+                    "admin.settings.endpoints.toRemove.description",
+                    "Select individual endpoints to disable",
+                  )}
+                />
               </Group>
             }
-            description={t(
-              "admin.settings.endpoints.toRemove.description",
-              "Select individual endpoints to disable",
-            )}
             value={settings.toRemove || []}
             onChange={(value) => {
               if (!loginEnabled) return;
@@ -176,12 +179,14 @@ export function EndpointManagementCard({
                   )}
                 </span>
                 <PendingBadge show={isFieldPending("groupsToRemove")} />
+                <InfoTooltip
+                  label={t(
+                    "admin.settings.endpoints.groupsToRemove.description",
+                    "Select endpoint groups to disable",
+                  )}
+                />
               </Group>
             }
-            description={t(
-              "admin.settings.endpoints.groupsToRemove.description",
-              "Select endpoint groups to disable",
-            )}
             value={settings.groupsToRemove || []}
             onChange={(value) => {
               if (!loginEnabled) return;

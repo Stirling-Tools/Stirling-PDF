@@ -237,6 +237,10 @@ export default function AdminAdvancedPage() {
             "admin.settings.advanced.tempFileManagement.label",
             "Temp File Management",
           )}
+          description={t(
+            "admin.settings.advanced.tempFileManagement.description",
+            "Configure temporary file storage and cleanup behavior",
+          )}
         >
           <AdvancedTempFilesCard {...card} />
         </SettingsCard>
@@ -246,6 +250,10 @@ export default function AdminAdvancedPage() {
           title={t(
             "admin.settings.advanced.processExecutor.label",
             "Process Executor Limits",
+          )}
+          description={t(
+            "admin.settings.advanced.processExecutor.description",
+            "Configure session limits and timeouts for each process executor",
           )}
         >
           <AdvancedProcessExecutorCard {...card} />

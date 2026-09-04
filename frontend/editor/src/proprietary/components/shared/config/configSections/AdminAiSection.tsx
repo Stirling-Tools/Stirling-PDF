@@ -225,6 +225,10 @@ export default function AdminAiSection() {
             "admin.settings.ai.general.capabilities.title",
             "Capabilities",
           )}
+          description={t(
+            "admin.settings.ai.general.capabilities.description",
+            "Turn individual AI features on or off. Disabled features are hidden in the app.",
+          )}
         >
           <AiCapabilitiesCard {...card} />
         </SettingsCard>

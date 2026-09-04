@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { InfoTooltip } from "@app/ui/InfoTooltip";
 import {
   TextInput,
   NumberInput,
@@ -29,13 +30,6 @@ export function ServerCertificateCard({
   return (
     <Paper withBorder p="md" radius="md">
       <Stack gap="md">
-        <Text size="xs" c="dimmed">
-          {t(
-            "admin.settings.features.serverCertificate.description",
-            'Configure server-side certificate generation for "Sign with Stirling-PDF" functionality',
-          )}
-        </Text>
-
         <div
           style={{
             display: "flex",
@@ -48,13 +42,13 @@ export function ServerCertificateCard({
               {t(
                 "admin.settings.features.serverCertificate.enabled.label",
                 "Enable Server Certificate",
-              )}
-            </Text>
-            <Text size="xs" c="dimmed" mt={4}>
-              {t(
-                "admin.settings.features.serverCertificate.enabled.description",
-                'Enable server-side certificate for "Sign with Stirling-PDF" option',
-              )}
+              )}{" "}
+              <InfoTooltip
+                label={t(
+                  "admin.settings.features.serverCertificate.enabled.description",
+                  'Enable server-side certificate for "Sign with Stirling-PDF" option',
+                )}
+              />
             </Text>
           </div>
           <Group gap="xs">
@@ -90,12 +84,14 @@ export function ServerCertificateCard({
                 <PendingBadge
                   show={isFieldPending("serverCertificate.organizationName")}
                 />
+                <InfoTooltip
+                  label={t(
+                    "admin.settings.features.serverCertificate.organizationName.description",
+                    "Organization name for generated certificates",
+                  )}
+                />
               </Group>
             }
-            description={t(
-              "admin.settings.features.serverCertificate.organizationName.description",
-              "Organization name for generated certificates",
-            )}
             value={
               settings.serverCertificate?.organizationName || "Stirling PDF Inc"
             }
@@ -126,12 +122,14 @@ export function ServerCertificateCard({
                 <PendingBadge
                   show={isFieldPending("serverCertificate.validity")}
                 />
+                <InfoTooltip
+                  label={t(
+                    "admin.settings.features.serverCertificate.validity.description",
+                    "Number of days the certificate will be valid",
+                  )}
+                />
               </Group>
             }
-            description={t(
-              "admin.settings.features.serverCertificate.validity.description",
-              "Number of days the certificate will be valid",
-            )}
             value={settings.serverCertificate?.validity ?? 365}
             onChange={(value) =>
               setSettings({
@@ -160,13 +158,13 @@ export function ServerCertificateCard({
               {t(
                 "admin.settings.features.serverCertificate.regenerateOnStartup.label",
                 "Regenerate on Startup",
-              )}
-            </Text>
-            <Text size="xs" c="dimmed" mt={4}>
-              {t(
-                "admin.settings.features.serverCertificate.regenerateOnStartup.description",
-                "Generate new certificate on each application startup",
-              )}
+              )}{" "}
+              <InfoTooltip
+                label={t(
+                  "admin.settings.features.serverCertificate.regenerateOnStartup.description",
+                  "Generate new certificate on each application startup",
+                )}
+              />
             </Text>
           </div>
           <Group gap="xs">

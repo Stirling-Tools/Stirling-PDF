@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { InfoTooltip } from "@app/ui/InfoTooltip";
 import { isAxiosError } from "axios";
 import { useTranslation } from "react-i18next";
 import {
@@ -265,12 +266,14 @@ export function AdvancedProcessingCard({
                   {t("admin.settings.advanced.maxDPI.label", "Maximum DPI")}
                 </span>
                 <PendingBadge show={isFieldPending("maxDPI")} />
+                <InfoTooltip
+                  label={t(
+                    "admin.settings.advanced.maxDPI.description",
+                    "Maximum DPI for image processing (0 = unlimited)",
+                  )}
+                />
               </Group>
             }
-            description={t(
-              "admin.settings.advanced.maxDPI.description",
-              "Maximum DPI for image processing (0 = unlimited)",
-            )}
             value={settings.maxDPI || 0}
             onChange={(value) =>
               setSettings({ ...settings, maxDPI: Number(value) })
@@ -293,12 +296,14 @@ export function AdvancedProcessingCard({
                   )}
                 </span>
                 <PendingBadge show={isFieldPending("tessdataDir")} />
+                <InfoTooltip
+                  label={t(
+                    "admin.settings.advanced.tessdataDir.description",
+                    "Path to the directory containing Tessdata files for OCR",
+                  )}
+                />
               </Group>
             }
-            description={t(
-              "admin.settings.advanced.tessdataDir.description",
-              "Path to the directory containing Tessdata files for OCR",
-            )}
             value={settings.tessdataDir || ""}
             onChange={(e) =>
               setSettings({ ...settings, tessdataDir: e.target.value })

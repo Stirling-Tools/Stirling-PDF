@@ -1,4 +1,5 @@
 import { useCallback } from "react";
+import { InfoTooltip } from "@app/ui/InfoTooltip";
 import { Trans, useTranslation } from "react-i18next";
 import {
   TextInput,
@@ -169,12 +170,14 @@ export default function AdminPremiumSection() {
                       {t("admin.settings.premium.key.label", "License Key")}
                     </span>
                     <PendingBadge show={isFieldPending("key")} />
+                    <InfoTooltip
+                      label={t(
+                        "admin.settings.premium.key.description",
+                        "Enter your premium or enterprise license key",
+                      )}
+                    />
                   </Group>
                 }
-                description={t(
-                  "admin.settings.premium.key.description",
-                  "Enter your premium or enterprise license key",
-                )}
                 value={settings.key || ""}
                 onChange={(e) =>
                   setSettings({ ...settings, key: e.target.value })
@@ -196,13 +199,13 @@ export default function AdminPremiumSection() {
                   {t(
                     "admin.settings.premium.enabled.label",
                     "Enable Premium Features",
-                  )}
-                </Text>
-                <Text size="xs" c="dimmed" mt={4}>
-                  {t(
-                    "admin.settings.premium.enabled.description",
-                    "Enable license key checks for pro/enterprise features",
-                  )}
+                  )}{" "}
+                  <InfoTooltip
+                    label={t(
+                      "admin.settings.premium.enabled.description",
+                      "Enable license key checks for pro/enterprise features",
+                    )}
+                  />
                 </Text>
               </div>
               <Group gap="xs">

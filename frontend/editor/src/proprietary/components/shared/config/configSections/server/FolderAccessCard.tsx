@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { InfoTooltip } from "@app/ui/InfoTooltip";
 import { useTranslation } from "react-i18next";
 import {
   Alert,
@@ -105,13 +106,13 @@ export function FolderAccessCard({
               {t(
                 "admin.settings.folderAccess.roots.label",
                 "Allowed folder roots",
-              )}
-            </Text>
-            <Text size="xs" c="dimmed">
-              {t(
-                "admin.settings.folderAccess.roots.hint",
-                "Enter absolute paths, for example /data/inbox.",
-              )}
+              )}{" "}
+              <InfoTooltip
+                label={t(
+                  "admin.settings.folderAccess.roots.hint",
+                  "Enter absolute paths, for example /data/inbox.",
+                )}
+              />
             </Text>
           </div>
 
@@ -191,13 +192,13 @@ export function FolderAccessCard({
                 {t(
                   "admin.settings.folderAccess.implied.title",
                   "Always allowed",
-                )}
-              </Text>
-              <Text size="xs" c="dimmed">
-                {t(
-                  "admin.settings.folderAccess.implied.description",
-                  "These Stirling-managed directories are always permitted and can't be changed here.",
-                )}
+                )}{" "}
+                <InfoTooltip
+                  label={t(
+                    "admin.settings.folderAccess.implied.description",
+                    "These Stirling-managed directories are always permitted and can't be changed here.",
+                  )}
+                />
               </Text>
             </div>
             <Stack gap="xs">

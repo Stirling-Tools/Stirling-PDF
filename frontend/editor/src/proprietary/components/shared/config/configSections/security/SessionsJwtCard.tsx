@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { InfoTooltip } from "@app/ui/InfoTooltip";
 import { NumberInput, Switch, Stack, Paper, Text, Group } from "@mantine/core";
 import PendingBadge from "@app/components/shared/config/PendingBadge";
 import type { SecurityCardProps } from "@app/components/shared/config/configSections/security/securityCardProps";
@@ -27,13 +28,13 @@ export function SessionsJwtCard({
               {t(
                 "admin.settings.security.jwt.enableKeyCleanup.label",
                 "Enable Key Cleanup",
-              )}
-            </Text>
-            <Text size="xs" c="dimmed" mt={4}>
-              {t(
-                "admin.settings.security.jwt.enableKeyCleanup.description",
-                "Automatically remove old JWT keys after retention period",
-              )}
+              )}{" "}
+              <InfoTooltip
+                label={t(
+                  "admin.settings.security.jwt.enableKeyCleanup.description",
+                  "Automatically remove old JWT keys after retention period",
+                )}
+              />
             </Text>
           </div>
           <Group gap="xs">
@@ -67,12 +68,14 @@ export function SessionsJwtCard({
                   )}
                 </span>
                 <PendingBadge show={isFieldPending("jwt.tokenExpiryMinutes")} />
+                <InfoTooltip
+                  label={t(
+                    "admin.settings.security.jwt.tokenExpiryMinutes.description",
+                    "Access token lifetime in minutes for web clients (default: 1440 = 24 hours)",
+                  )}
+                />
               </Group>
             }
-            description={t(
-              "admin.settings.security.jwt.tokenExpiryMinutes.description",
-              "Access token lifetime in minutes for web clients (default: 1440 = 24 hours)",
-            )}
             value={settings?.jwt?.tokenExpiryMinutes || 1440}
             onChange={(value) =>
               setSettings({
@@ -103,12 +106,14 @@ export function SessionsJwtCard({
                 <PendingBadge
                   show={isFieldPending("jwt.desktopTokenExpiryMinutes")}
                 />
+                <InfoTooltip
+                  label={t(
+                    "admin.settings.security.jwt.desktopTokenExpiryMinutes.description",
+                    "Access token lifetime in minutes for desktop clients. Desktop apps automatically detected via User-Agent and receive longer sessions for better UX (default: 43200 = 30 days)",
+                  )}
+                />
               </Group>
             }
-            description={t(
-              "admin.settings.security.jwt.desktopTokenExpiryMinutes.description",
-              "Access token lifetime in minutes for desktop clients. Desktop apps automatically detected via User-Agent and receive longer sessions for better UX (default: 43200 = 30 days)",
-            )}
             value={settings?.jwt?.desktopTokenExpiryMinutes || 43200}
             onChange={(value) =>
               setSettings({
@@ -139,12 +144,14 @@ export function SessionsJwtCard({
                 <PendingBadge
                   show={isFieldPending("jwt.allowedClockSkewSeconds")}
                 />
+                <InfoTooltip
+                  label={t(
+                    "admin.settings.security.jwt.allowedClockSkewSeconds.description",
+                    "Tolerance for client/server time drift during token validation (default: 60 seconds)",
+                  )}
+                />
               </Group>
             }
-            description={t(
-              "admin.settings.security.jwt.allowedClockSkewSeconds.description",
-              "Tolerance for client/server time drift during token validation (default: 60 seconds)",
-            )}
             value={settings?.jwt?.allowedClockSkewSeconds ?? 60}
             onChange={(value) =>
               setSettings({
@@ -175,12 +182,14 @@ export function SessionsJwtCard({
                 <PendingBadge
                   show={isFieldPending("jwt.refreshGraceMinutes")}
                 />
+                <InfoTooltip
+                  label={t(
+                    "admin.settings.security.jwt.refreshGraceMinutes.description",
+                    "Allow token refresh within this many minutes after expiry (default: 15 minutes, max 3 attempts)",
+                  )}
+                />
               </Group>
             }
-            description={t(
-              "admin.settings.security.jwt.refreshGraceMinutes.description",
-              "Allow token refresh within this many minutes after expiry (default: 15 minutes, max 3 attempts)",
-            )}
             value={settings?.jwt?.refreshGraceMinutes ?? 15}
             onChange={(value) =>
               setSettings({
@@ -209,13 +218,13 @@ export function SessionsJwtCard({
               {t(
                 "admin.settings.security.jwt.secureCookie.label",
                 "Secure Cookie",
-              )}
-            </Text>
-            <Text size="xs" c="dimmed" mt={4}>
-              {t(
-                "admin.settings.security.jwt.secureCookie.description",
-                "Require HTTPS for JWT cookies (recommended for production)",
-              )}
+              )}{" "}
+              <InfoTooltip
+                label={t(
+                  "admin.settings.security.jwt.secureCookie.description",
+                  "Require HTTPS for JWT cookies (recommended for production)",
+                )}
+              />
             </Text>
           </div>
           <Group gap="xs">

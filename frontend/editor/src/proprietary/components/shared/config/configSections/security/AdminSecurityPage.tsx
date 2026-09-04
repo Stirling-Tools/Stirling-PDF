@@ -230,6 +230,10 @@ export default function AdminSecurityPage() {
             "admin.settings.security.htmlUrlSecurity.label",
             "HTML URL Security",
           )}
+          description={t(
+            "admin.settings.security.htmlUrlSecurity.description",
+            "Configure URL access restrictions for HTML processing to prevent SSRF attacks",
+          )}
         >
           <HtmlUrlSecurityCard {...securityCard} />
         </SettingsCard>

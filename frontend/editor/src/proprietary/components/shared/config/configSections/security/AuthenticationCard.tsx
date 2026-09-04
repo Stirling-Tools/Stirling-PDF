@@ -1,4 +1,6 @@
 import { useTranslation } from "react-i18next";
+import { SettingsFieldLabel } from "@app/components/shared/config/SettingsFieldLabel";
+import { InfoTooltip } from "@app/ui/InfoTooltip";
 import {
   NumberInput,
   Switch,
@@ -33,13 +35,13 @@ export function AuthenticationCard({
         >
           <div style={{ flex: 1, minWidth: 0 }}>
             <Text fw={500} size="sm">
-              {t("admin.settings.security.enableLogin.label", "Enable Login")}
-            </Text>
-            <Text size="xs" c="dimmed" mt={4}>
-              {t(
-                "admin.settings.security.enableLogin.description",
-                "Require users to log in before accessing the application",
-              )}
+              {t("admin.settings.security.enableLogin.label", "Enable Login")}{" "}
+              <InfoTooltip
+                label={t(
+                  "admin.settings.security.enableLogin.description",
+                  "Require users to log in before accessing the application",
+                )}
+              />
             </Text>
           </div>
           <Group gap="xs">
@@ -58,14 +60,17 @@ export function AuthenticationCard({
         <div>
           <Select
             name="loginMethod"
-            label={t(
-              "admin.settings.security.loginMethod.label",
-              "Login Method",
-            )}
-            description={t(
-              "admin.settings.security.loginMethod.description",
-              "The authentication method to use for user login",
-            )}
+            label={
+              <SettingsFieldLabel
+                info={t(
+                  "admin.settings.security.loginMethod.description",
+                  "The authentication method to use for user login",
+                )}
+              >
+                t( "admin.settings.security.loginMethod.label", "Login Method",
+                )
+              </SettingsFieldLabel>
+            }
             value={settings?.loginMethod || "all"}
             onChange={(value) =>
               setSettings({ ...settings, loginMethod: value || "all" })
@@ -125,12 +130,14 @@ export function AuthenticationCard({
                   )}
                 </span>
                 <PendingBadge show={isFieldPending("loginAttemptCount")} />
+                <InfoTooltip
+                  label={t(
+                    "admin.settings.security.loginAttemptCount.description",
+                    "Maximum number of failed login attempts before account lockout",
+                  )}
+                />
               </Group>
             }
-            description={t(
-              "admin.settings.security.loginAttemptCount.description",
-              "Maximum number of failed login attempts before account lockout",
-            )}
             value={settings?.loginAttemptCount || 0}
             onChange={(value) =>
               setSettings({ ...settings, loginAttemptCount: Number(value) })
@@ -153,12 +160,14 @@ export function AuthenticationCard({
                   )}
                 </span>
                 <PendingBadge show={isFieldPending("loginResetTimeMinutes")} />
+                <InfoTooltip
+                  label={t(
+                    "admin.settings.security.loginResetTimeMinutes.description",
+                    "Time before failed login attempts are reset",
+                  )}
+                />
               </Group>
             }
-            description={t(
-              "admin.settings.security.loginResetTimeMinutes.description",
-              "Time before failed login attempts are reset",
-            )}
             value={settings?.loginResetTimeMinutes || 0}
             onChange={(value) =>
               setSettings({
@@ -184,12 +193,14 @@ export function AuthenticationCard({
                   )}
                 </span>
                 <PendingBadge show={isFieldPending("xFrameOptions")} />
+                <InfoTooltip
+                  label={t(
+                    "admin.settings.security.xFrameOptions.description",
+                    "Controls whether the application can be embedded in iframes",
+                  )}
+                />
               </Group>
             }
-            description={t(
-              "admin.settings.security.xFrameOptions.description",
-              "Controls whether the application can be embedded in iframes",
-            )}
             value={settings?.xFrameOptions || "DENY"}
             onChange={(value) =>
               setSettings({ ...settings, xFrameOptions: value || "DENY" })

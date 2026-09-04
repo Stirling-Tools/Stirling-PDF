@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { InfoTooltip } from "@app/ui/InfoTooltip";
 import { Switch, Stack, Paper, Text, Group } from "@mantine/core";
 import PendingBadge from "@app/components/shared/config/PendingBadge";
 import type { PrivacyCardProps } from "@app/components/shared/config/configSections/security/securityCardProps";
@@ -28,13 +29,13 @@ export function AnalyticsTrackingCard({
               {t(
                 "admin.settings.privacy.enableAnalytics.label",
                 "Enable Analytics",
-              )}
-            </Text>
-            <Text size="xs" c="dimmed" mt={4}>
-              {t(
-                "admin.settings.privacy.enableAnalytics.description",
-                "Collect anonymous usage analytics to help improve the application",
-              )}
+              )}{" "}
+              <InfoTooltip
+                label={t(
+                  "admin.settings.privacy.enableAnalytics.description",
+                  "Collect anonymous usage analytics to help improve the application",
+                )}
+              />
             </Text>
           </div>
           <Group gap="xs">
@@ -66,13 +67,13 @@ export function AnalyticsTrackingCard({
               {t(
                 "admin.settings.privacy.metricsEnabled.label",
                 "Enable Metrics",
-              )}
-            </Text>
-            <Text size="xs" c="dimmed" mt={4}>
-              {t(
-                "admin.settings.privacy.metricsEnabled.description",
-                "Enable collection of performance and usage metrics",
-              )}
+              )}{" "}
+              <InfoTooltip
+                label={t(
+                  "admin.settings.privacy.metricsEnabled.description",
+                  "Enable collection of performance and usage metrics",
+                )}
+              />
             </Text>
           </div>
           <Group gap="xs">

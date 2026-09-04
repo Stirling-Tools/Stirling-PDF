@@ -268,6 +268,15 @@ export async function mockAppApis(
     (route: Route) => route.fulfill({ json: { impliedRoots: [] } }),
   );
 
+  // Same trap on the merged Legal and Advanced pages, which each pull in a
+  // card that fetches on mount.
+  await page.route("**/api/v1/admin/login-agreement/**", (route: Route) =>
+    route.fulfill({ json: { content: "", enabled: false } }),
+  );
+  await page.route("**/api/v1/ui-data/tessdata-languages", (route: Route) =>
+    route.fulfill({ json: { languages: [] } }),
+  );
+
   // Info sub-resources
   await page.route("**/api/v1/info/wau", (route: Route) =>
     route.fulfill({ json: { count: 0 } }),

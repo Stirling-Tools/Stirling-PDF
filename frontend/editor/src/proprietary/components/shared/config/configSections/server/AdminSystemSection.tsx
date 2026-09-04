@@ -486,7 +486,7 @@ export default function AdminSystemSection() {
 
         <SettingsCard
           id="adminGeneral"
-          title={t("admin.settings.general.system", "System")}
+          title={t("admin.settings.general.branding", "Branding & appearance")}
         >
           <SystemCard {...generalCard} />
         </SettingsCard>
@@ -496,6 +496,10 @@ export default function AdminSystemSection() {
           title={t(
             "admin.settings.endpoints.userDefaults",
             "User Preference Defaults",
+          )}
+          description={t(
+            "admin.settings.endpoints.userDefaultsDescription",
+            "Set default values for user preferences. Users can override these in their personal settings.",
           )}
         >
           <UserDefaultsCard
@@ -570,6 +574,10 @@ export default function AdminSystemSection() {
         <SettingsCard
           id="adminGeneralCustomPaths"
           title={t("admin.settings.general.customPaths.label", "Custom Paths")}
+          description={t(
+            "admin.settings.general.customPaths.description",
+            "Configure custom file system paths for pipeline processing and external tools",
+          )}
         >
           <CustomPathsCard {...generalCard} />
         </SettingsCard>
@@ -606,8 +614,8 @@ export default function AdminSystemSection() {
             "Server Certificate",
           )}
           description={t(
-            "admin.settings.features.description",
-            "Configure optional features and functionality.",
+            "admin.settings.features.serverCertificate.description",
+            'Configure server-side certificate generation for "Sign with Stirling-PDF" functionality',
           )}
           badge={
             <Badge

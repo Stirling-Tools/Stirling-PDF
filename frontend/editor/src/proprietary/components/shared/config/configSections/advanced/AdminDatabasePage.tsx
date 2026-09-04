@@ -124,7 +124,7 @@ export default function AdminDatabasePage() {
 
         <SettingsCard
           id="adminDatabase"
-          title={t("admin.settings.database.configuration", "Database")}
+          title={t("admin.settings.database.connection", "Connection")}
           description={t(
             "admin.settings.database.description",
             "Connect a custom database, and back up or restore the one in use.",
@@ -151,6 +151,10 @@ export default function AdminDatabasePage() {
         <SettingsCard
           id="adminDatabaseBackups"
           title={t("admin.settings.database.backupTitle", "Backups & Restore")}
+          description={t(
+            "admin.settings.database.backupDescription",
+            "Manage H2 backups directly from the admin console.",
+          )}
         >
           <DatabaseBackupsCard isEmbeddedH2={isEmbeddedH2} />
         </SettingsCard>

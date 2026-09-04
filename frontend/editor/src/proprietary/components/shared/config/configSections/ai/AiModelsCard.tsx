@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { InfoTooltip } from "@app/ui/InfoTooltip";
 import {
   TextInput,
   NumberInput,
@@ -69,12 +70,14 @@ export function AiModelsCard({
                   {t("admin.settings.ai.models.provider.label", "Provider")}
                 </span>
                 <PendingBadge show={isFieldPending("models.provider")} />
+                <InfoTooltip
+                  label={t(
+                    "admin.settings.ai.models.provider.description",
+                    "Which LLM provider the engine talks to.",
+                  )}
+                />
               </Group>
             }
-            description={t(
-              "admin.settings.ai.models.provider.description",
-              "Which LLM provider the engine talks to.",
-            )}
             data={[
               { value: "anthropic", label: "Anthropic" },
               { value: "openai", label: "OpenAI" },
@@ -113,12 +116,14 @@ export function AiModelsCard({
                   )}
                 </span>
                 <PendingBadge show={isFieldPending("models.smartModel")} />
+                <InfoTooltip
+                  label={t(
+                    "admin.settings.ai.models.smartModel.description",
+                    "High-capability model for complex reasoning. Free text; suggestions are hints only.",
+                  )}
+                />
               </Group>
             }
-            description={t(
-              "admin.settings.ai.models.smartModel.description",
-              "High-capability model for complex reasoning. Free text; suggestions are hints only.",
-            )}
             data={modelSuggestions}
             value={settings.models?.smartModel || ""}
             onChange={(value) => setModels({ smartModel: value })}
@@ -135,12 +140,14 @@ export function AiModelsCard({
                   {t("admin.settings.ai.models.fastModel.label", "Fast model")}
                 </span>
                 <PendingBadge show={isFieldPending("models.fastModel")} />
+                <InfoTooltip
+                  label={t(
+                    "admin.settings.ai.models.fastModel.description",
+                    "Cheaper, faster model for lightweight tasks. Free text; suggestions are hints only.",
+                  )}
+                />
               </Group>
             }
-            description={t(
-              "admin.settings.ai.models.fastModel.description",
-              "Cheaper, faster model for lightweight tasks. Free text; suggestions are hints only.",
-            )}
             data={modelSuggestions}
             value={settings.models?.fastModel || ""}
             onChange={(value) => setModels({ fastModel: value })}
@@ -160,12 +167,14 @@ export function AiModelsCard({
                   )}
                 </span>
                 <PendingBadge show={isFieldPending("models.smartMaxTokens")} />
+                <InfoTooltip
+                  label={t(
+                    "admin.settings.ai.models.smartMaxTokens.description",
+                    "Maximum output tokens for the smart model.",
+                  )}
+                />
               </Group>
             }
-            description={t(
-              "admin.settings.ai.models.smartMaxTokens.description",
-              "Maximum output tokens for the smart model.",
-            )}
             value={settings.models?.smartMaxTokens ?? 0}
             onChange={(value) => setModels({ smartMaxTokens: Number(value) })}
             min={1}
@@ -181,12 +190,14 @@ export function AiModelsCard({
                   )}
                 </span>
                 <PendingBadge show={isFieldPending("models.fastMaxTokens")} />
+                <InfoTooltip
+                  label={t(
+                    "admin.settings.ai.models.fastMaxTokens.description",
+                    "Maximum output tokens for the fast model.",
+                  )}
+                />
               </Group>
             }
-            description={t(
-              "admin.settings.ai.models.fastMaxTokens.description",
-              "Maximum output tokens for the fast model.",
-            )}
             value={settings.models?.fastMaxTokens ?? 0}
             onChange={(value) => setModels({ fastMaxTokens: Number(value) })}
             min={1}
@@ -198,12 +209,14 @@ export function AiModelsCard({
                 <Group gap="xs">
                   <span>{apiKeyLabel}</span>
                   <PendingBadge show={isFieldPending("models.apiKey")} />
+                  <InfoTooltip
+                    label={t(
+                      "admin.settings.ai.models.apiKey.description",
+                      "Leave blank to use the engine's own environment credential. Applies to self-hosted single-engine deployments.",
+                    )}
+                  />
                 </Group>
               }
-              description={t(
-                "admin.settings.ai.models.apiKey.description",
-                "Leave blank to use the engine's own environment credential. Applies to self-hosted single-engine deployments.",
-              )}
               // Keep the field blank when a key is already stored (returned masked as "********");
               // a pre-filled sentinel would corrupt the key on append, so bind the real value only once typed.
               value={apiKeyDirty ? (settings.models?.apiKey ?? "") : ""}
@@ -233,12 +246,14 @@ export function AiModelsCard({
                     )}
                   </span>
                   <PendingBadge show={isFieldPending("models.baseUrl")} />
+                  <InfoTooltip
+                    label={t(
+                      "admin.settings.ai.models.baseUrl.description",
+                      "Base URL of the OpenAI-compatible / Ollama endpoint, e.g. http://ollama:11434/v1.",
+                    )}
+                  />
                 </Group>
               }
-              description={t(
-                "admin.settings.ai.models.baseUrl.description",
-                "Base URL of the OpenAI-compatible / Ollama endpoint, e.g. http://ollama:11434/v1.",
-              )}
               value={settings.models?.baseUrl || ""}
               onChange={(e) => setModels({ baseUrl: e.target.value })}
               placeholder="http://ollama:11434/v1"

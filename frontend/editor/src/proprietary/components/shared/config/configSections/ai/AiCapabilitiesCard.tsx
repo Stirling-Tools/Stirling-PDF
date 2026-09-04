@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Stack, Paper, Text, Group, Switch } from "@mantine/core";
 import PendingBadge from "@app/components/shared/config/PendingBadge";
+import { InfoTooltip } from "@app/ui/InfoTooltip";
 import type { AiEngineFeatures } from "@app/components/shared/config/configSections/aiEngineSettings";
 import type { AiCardProps } from "@app/components/shared/config/configSections/ai/aiCardProps";
 
@@ -23,14 +24,12 @@ function FeatureSwitch({
 }: FeatureSwitchProps) {
   return (
     <Group justify="space-between" align="flex-start" wrap="nowrap">
-      <div>
+      <Group gap={4} wrap="nowrap">
         <Text fw={500} size="sm">
           {label}
         </Text>
-        <Text size="xs" c="dimmed" mt={4}>
-          {description}
-        </Text>
-      </div>
+        <InfoTooltip label={description} />
+      </Group>
       <Group gap="xs">
         <Switch
           checked={checked}
@@ -63,18 +62,6 @@ export function AiCapabilitiesCard({
   return (
     <Paper withBorder p="md" radius="md">
       <Stack gap="md">
-        <div>
-          <Text fw={600} size="sm">
-            {t("admin.settings.ai.general.capabilities.title", "Capabilities")}
-          </Text>
-          <Text size="xs" c="dimmed" mt={4}>
-            {t(
-              "admin.settings.ai.general.capabilities.description",
-              "Turn individual AI features on or off. Disabled features are hidden in the app.",
-            )}
-          </Text>
-        </div>
-
         <FeatureSwitch
           label={t(
             "admin.settings.ai.general.features.chat.label",

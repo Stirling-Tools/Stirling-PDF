@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { InfoTooltip } from "@app/ui/InfoTooltip";
 import {
   Switch,
   Stack,
@@ -25,15 +26,6 @@ export function HtmlUrlSecurityCard({
   return (
     <Paper withBorder p="md" radius="md">
       <Stack gap="md">
-        <div>
-          <Text size="xs" c="dimmed">
-            {t(
-              "admin.settings.security.htmlUrlSecurity.description",
-              "Configure URL access restrictions for HTML processing to prevent SSRF attacks",
-            )}
-          </Text>
-        </div>
-
         <div
           style={{
             display: "flex",
@@ -46,13 +38,13 @@ export function HtmlUrlSecurityCard({
               {t(
                 "admin.settings.security.htmlUrlSecurity.enabled.label",
                 "Enable URL Security",
-              )}
-            </Text>
-            <Text size="xs" c="dimmed" mt={4}>
-              {t(
-                "admin.settings.security.htmlUrlSecurity.enabled.description",
-                "Enable URL security restrictions for HTML to PDF conversions",
-              )}
+              )}{" "}
+              <InfoTooltip
+                label={t(
+                  "admin.settings.security.htmlUrlSecurity.enabled.description",
+                  "Enable URL security restrictions for HTML to PDF conversions",
+                )}
+              />
             </Text>
           </div>
           <Group gap="xs">
@@ -89,12 +81,14 @@ export function HtmlUrlSecurityCard({
                   )}
                 </span>
                 <PendingBadge show={isFieldPending("html.urlSecurity.level")} />
+                <InfoTooltip
+                  label={t(
+                    "admin.settings.security.htmlUrlSecurity.level.description",
+                    "MAX: whitelist only, MEDIUM: block internal networks, OFF: no restrictions",
+                  )}
+                />
               </Group>
             }
-            description={t(
-              "admin.settings.security.htmlUrlSecurity.level.description",
-              "MAX: whitelist only, MEDIUM: block internal networks, OFF: no restrictions",
-            )}
             value={settings?.html?.urlSecurity?.level || "MEDIUM"}
             onChange={(value) =>
               setSettings({
@@ -166,12 +160,14 @@ export function HtmlUrlSecurityCard({
                             "html.urlSecurity.allowedDomains",
                           )}
                         />
+                        <InfoTooltip
+                          label={t(
+                            "admin.settings.security.htmlUrlSecurity.allowedDomains.description",
+                            "One domain per line (e.g., cdn.example.com). Only these domains allowed when level is MAX",
+                          )}
+                        />
                       </Group>
                     }
-                    description={t(
-                      "admin.settings.security.htmlUrlSecurity.allowedDomains.description",
-                      "One domain per line (e.g., cdn.example.com). Only these domains allowed when level is MAX",
-                    )}
                     value={
                       settings?.html?.urlSecurity?.allowedDomains?.join("\n") ||
                       ""
@@ -216,12 +212,14 @@ export function HtmlUrlSecurityCard({
                             "html.urlSecurity.blockedDomains",
                           )}
                         />
+                        <InfoTooltip
+                          label={t(
+                            "admin.settings.security.htmlUrlSecurity.blockedDomains.description",
+                            "One domain per line (e.g., malicious.com). Additional domains to block",
+                          )}
+                        />
                       </Group>
                     }
-                    description={t(
-                      "admin.settings.security.htmlUrlSecurity.blockedDomains.description",
-                      "One domain per line (e.g., malicious.com). Additional domains to block",
-                    )}
                     value={
                       settings?.html?.urlSecurity?.blockedDomains?.join("\n") ||
                       ""
@@ -264,12 +262,14 @@ export function HtmlUrlSecurityCard({
                         <PendingBadge
                           show={isFieldPending("html.urlSecurity.internalTlds")}
                         />
+                        <InfoTooltip
+                          label={t(
+                            "admin.settings.security.htmlUrlSecurity.internalTlds.description",
+                            "One TLD per line (e.g., .local, .internal). Block domains with these TLD patterns",
+                          )}
+                        />
                       </Group>
                     }
-                    description={t(
-                      "admin.settings.security.htmlUrlSecurity.internalTlds.description",
-                      "One TLD per line (e.g., .local, .internal). Block domains with these TLD patterns",
-                    )}
                     value={
                       settings?.html?.urlSecurity?.internalTlds?.join("\n") ||
                       ""
@@ -317,13 +317,13 @@ export function HtmlUrlSecurityCard({
                       {t(
                         "admin.settings.security.htmlUrlSecurity.blockPrivateNetworks.label",
                         "Block Private Networks",
-                      )}
-                    </Text>
-                    <Text size="xs" c="dimmed" mt={4}>
-                      {t(
-                        "admin.settings.security.htmlUrlSecurity.blockPrivateNetworks.description",
-                        "Block RFC 1918 private networks (10.x.x.x, 192.168.x.x, 172.16-31.x.x)",
-                      )}
+                      )}{" "}
+                      <InfoTooltip
+                        label={t(
+                          "admin.settings.security.htmlUrlSecurity.blockPrivateNetworks.description",
+                          "Block RFC 1918 private networks (10.x.x.x, 192.168.x.x, 172.16-31.x.x)",
+                        )}
+                      />
                     </Text>
                   </div>
                   <Group gap="xs">
@@ -367,13 +367,13 @@ export function HtmlUrlSecurityCard({
                       {t(
                         "admin.settings.security.htmlUrlSecurity.blockLocalhost.label",
                         "Block Localhost",
-                      )}
-                    </Text>
-                    <Text size="xs" c="dimmed" mt={4}>
-                      {t(
-                        "admin.settings.security.htmlUrlSecurity.blockLocalhost.description",
-                        "Block localhost and loopback addresses (127.x.x.x, ::1)",
-                      )}
+                      )}{" "}
+                      <InfoTooltip
+                        label={t(
+                          "admin.settings.security.htmlUrlSecurity.blockLocalhost.description",
+                          "Block localhost and loopback addresses (127.x.x.x, ::1)",
+                        )}
+                      />
                     </Text>
                   </div>
                   <Group gap="xs">
@@ -414,13 +414,13 @@ export function HtmlUrlSecurityCard({
                       {t(
                         "admin.settings.security.htmlUrlSecurity.blockLinkLocal.label",
                         "Block Link-Local Addresses",
-                      )}
-                    </Text>
-                    <Text size="xs" c="dimmed" mt={4}>
-                      {t(
-                        "admin.settings.security.htmlUrlSecurity.blockLinkLocal.description",
-                        "Block link-local addresses (169.254.x.x, fe80::/10)",
-                      )}
+                      )}{" "}
+                      <InfoTooltip
+                        label={t(
+                          "admin.settings.security.htmlUrlSecurity.blockLinkLocal.description",
+                          "Block link-local addresses (169.254.x.x, fe80::/10)",
+                        )}
+                      />
                     </Text>
                   </div>
                   <Group gap="xs">
@@ -461,13 +461,13 @@ export function HtmlUrlSecurityCard({
                       {t(
                         "admin.settings.security.htmlUrlSecurity.blockCloudMetadata.label",
                         "Block Cloud Metadata Endpoints",
-                      )}
-                    </Text>
-                    <Text size="xs" c="dimmed" mt={4}>
-                      {t(
-                        "admin.settings.security.htmlUrlSecurity.blockCloudMetadata.description",
-                        "Block cloud provider metadata endpoints (169.254.169.254)",
-                      )}
+                      )}{" "}
+                      <InfoTooltip
+                        label={t(
+                          "admin.settings.security.htmlUrlSecurity.blockCloudMetadata.description",
+                          "Block cloud provider metadata endpoints (169.254.169.254)",
+                        )}
+                      />
                     </Text>
                   </div>
                   <Group gap="xs">

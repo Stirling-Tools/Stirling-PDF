@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { InfoTooltip } from "@app/ui/InfoTooltip";
 import { useTranslation } from "react-i18next";
 import {
   TextInput,
@@ -71,13 +72,13 @@ export function AiConnectionCard({
           <Group justify="space-between" align="flex-start" wrap="nowrap">
             <div>
               <Text fw={500} size="sm">
-                {t("admin.settings.ai.general.enabled.label", "Enable AI")}
-              </Text>
-              <Text size="xs" c="dimmed" mt={4}>
-                {t(
-                  "admin.settings.ai.general.enabled.description",
-                  "Master switch. When off, no AI tools, agents, or engine calls are available.",
-                )}
+                {t("admin.settings.ai.general.enabled.label", "Enable AI")}{" "}
+                <InfoTooltip
+                  label={t(
+                    "admin.settings.ai.general.enabled.description",
+                    "Master switch. When off, no AI tools, agents, or engine calls are available.",
+                  )}
+                />
               </Text>
             </div>
             <Group gap="xs">
@@ -102,12 +103,14 @@ export function AiConnectionCard({
                   {t("admin.settings.ai.general.url.label", "AI engine URL")}
                 </span>
                 <PendingBadge show={isFieldPending("url")} />
+                <InfoTooltip
+                  label={t(
+                    "admin.settings.ai.general.url.description",
+                    "Internal URL of the Python AI engine, e.g. http://stirling-pdf-engine:5001.",
+                  )}
+                />
               </Group>
             }
-            description={t(
-              "admin.settings.ai.general.url.description",
-              "Internal URL of the Python AI engine, e.g. http://stirling-pdf-engine:5001.",
-            )}
             value={settings.url || ""}
             onChange={(e) => setSettings({ ...settings, url: e.target.value })}
             placeholder="http://stirling-pdf-engine:5001"
@@ -135,12 +138,14 @@ export function AiConnectionCard({
                   )}
                 </span>
                 <PendingBadge show={isFieldPending("timeoutSeconds")} />
+                <InfoTooltip
+                  label={t(
+                    "admin.settings.ai.general.timeoutSeconds.description",
+                    "Timeout for standard AI requests to the engine.",
+                  )}
+                />
               </Group>
             }
-            description={t(
-              "admin.settings.ai.general.timeoutSeconds.description",
-              "Timeout for standard AI requests to the engine.",
-            )}
             value={settings.timeoutSeconds ?? 0}
             onChange={(value) =>
               setSettings({ ...settings, timeoutSeconds: Number(value) })
@@ -161,12 +166,14 @@ export function AiConnectionCard({
                 <PendingBadge
                   show={isFieldPending("longRunningTimeoutSeconds")}
                 />
+                <InfoTooltip
+                  label={t(
+                    "admin.settings.ai.general.longRunningTimeoutSeconds.description",
+                    "Timeout for heavier agent operations such as document generation.",
+                  )}
+                />
               </Group>
             }
-            description={t(
-              "admin.settings.ai.general.longRunningTimeoutSeconds.description",
-              "Timeout for heavier agent operations such as document generation.",
-            )}
             value={settings.longRunningTimeoutSeconds ?? 0}
             onChange={(value) =>
               setSettings({
@@ -188,12 +195,14 @@ export function AiConnectionCard({
                   )}
                 </span>
                 <PendingBadge show={isFieldPending("streamTimeoutSeconds")} />
+                <InfoTooltip
+                  label={t(
+                    "admin.settings.ai.general.streamTimeoutSeconds.description",
+                    "Timeout for streamed (token-by-token) chat responses.",
+                  )}
+                />
               </Group>
             }
-            description={t(
-              "admin.settings.ai.general.streamTimeoutSeconds.description",
-              "Timeout for streamed (token-by-token) chat responses.",
-            )}
             value={settings.streamTimeoutSeconds ?? 0}
             onChange={(value) =>
               setSettings({

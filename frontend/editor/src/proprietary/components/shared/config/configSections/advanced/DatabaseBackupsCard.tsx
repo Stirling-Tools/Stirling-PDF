@@ -314,12 +314,6 @@ export function DatabaseBackupsCard({
     <>
       <Stack gap="md">
         <Group justify="space-between" align="center">
-          <Text size="sm" c="dimmed">
-            {t(
-              "admin.settings.database.backupDescription",
-              "Manage H2 backups directly from the admin console.",
-            )}
-          </Text>
           <Group gap="xs">
             {databaseVersion && (
               <Badge color="blue" variant="light">

@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { InfoTooltip } from "@app/ui/InfoTooltip";
 import { useNavigate } from "react-router-dom";
 import {
   Stack,
@@ -51,13 +52,13 @@ export function MobileUploadQrCard({
               {t(
                 "admin.settings.connections.mobileScanner.enable",
                 "Enable QR Code Upload",
-              )}
-            </Text>
-            <Text size="xs" c="dimmed" mt={4}>
-              {t(
-                "admin.settings.connections.mobileScanner.description",
-                "Allow users to upload files from mobile devices by scanning a QR code",
-              )}
+              )}{" "}
+              <InfoTooltip
+                label={t(
+                  "admin.settings.connections.mobileScanner.description",
+                  "Allow users to upload files from mobile devices by scanning a QR code",
+                )}
+              />
             </Text>
             <Text size="xs" c="var(--color-amber-dark)" mt={8} fw={500}>
               {t(
@@ -114,13 +115,13 @@ export function MobileUploadQrCard({
                 {t(
                   "admin.settings.connections.mobileScannerConvertToPdf",
                   "Convert Images to PDF",
-                )}
-              </Text>
-              <Text size="xs" c="dimmed" mb="sm">
-                {t(
-                  "admin.settings.connections.mobileScannerConvertToPdfDesc",
-                  "Automatically convert uploaded images to PDF format. If disabled, images will be kept as-is.",
-                )}
+                )}{" "}
+                <InfoTooltip
+                  label={t(
+                    "admin.settings.connections.mobileScannerConvertToPdfDesc",
+                    "Automatically convert uploaded images to PDF format. If disabled, images will be kept as-is.",
+                  )}
+                />
               </Text>
               <Group gap="xs">
                 <Switch
@@ -149,13 +150,13 @@ export function MobileUploadQrCard({
                     {t(
                       "admin.settings.connections.mobileScannerImageResolution",
                       "Image Resolution",
-                    )}
-                  </Text>
-                  <Text size="xs" c="dimmed" mb="sm">
-                    {t(
-                      "admin.settings.connections.mobileScannerImageResolutionDesc",
-                      'Resolution of uploaded images. "Reduced" scales images to max 1200px to reduce file size.',
-                    )}
+                    )}{" "}
+                    <InfoTooltip
+                      label={t(
+                        "admin.settings.connections.mobileScannerImageResolutionDesc",
+                        'Resolution of uploaded images. "Reduced" scales images to max 1200px to reduce file size.',
+                      )}
+                    />
                   </Text>
                   <Group gap="xs">
                     <Select
@@ -202,13 +203,13 @@ export function MobileUploadQrCard({
                     {t(
                       "admin.settings.connections.mobileScannerPageFormat",
                       "Page Format",
-                    )}
-                  </Text>
-                  <Text size="xs" c="dimmed" mb="sm">
-                    {t(
-                      "admin.settings.connections.mobileScannerPageFormatDesc",
-                      'PDF page size for converted images. "Keep" uses original image dimensions.',
-                    )}
+                    )}{" "}
+                    <InfoTooltip
+                      label={t(
+                        "admin.settings.connections.mobileScannerPageFormatDesc",
+                        'PDF page size for converted images. "Keep" uses original image dimensions.',
+                      )}
+                    />
                   </Text>
                   <Group gap="xs">
                     <Select
@@ -262,13 +263,13 @@ export function MobileUploadQrCard({
                     {t(
                       "admin.settings.connections.mobileScannerStretchToFit",
                       "Stretch to Fit",
-                    )}
-                  </Text>
-                  <Text size="xs" c="dimmed" mb="sm">
-                    {t(
-                      "admin.settings.connections.mobileScannerStretchToFitDesc",
-                      "Stretch images to fill the entire page. If disabled, images are centered with preserved aspect ratio.",
-                    )}
+                    )}{" "}
+                    <InfoTooltip
+                      label={t(
+                        "admin.settings.connections.mobileScannerStretchToFitDesc",
+                        "Stretch images to fill the entire page. If disabled, images are centered with preserved aspect ratio.",
+                      )}
+                    />
                   </Text>
                   <Group gap="xs">
                     <Switch

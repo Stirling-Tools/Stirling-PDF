@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { InfoTooltip } from "@app/ui/InfoTooltip";
 import { Switch, Stack, Paper, Text, Group } from "@mantine/core";
 import PendingBadge from "@app/components/shared/config/PendingBadge";
 import type { PrivacyCardProps } from "@app/components/shared/config/configSections/security/securityCardProps";
@@ -28,13 +29,13 @@ export function SearchEngineVisibilityCard({
               {t(
                 "admin.settings.privacy.googleVisibility.label",
                 "Google Visibility",
-              )}
-            </Text>
-            <Text size="xs" c="dimmed" mt={4}>
-              {t(
-                "admin.settings.privacy.googleVisibility.description",
-                "Allow search engines to index this application",
-              )}
+              )}{" "}
+              <InfoTooltip
+                label={t(
+                  "admin.settings.privacy.googleVisibility.description",
+                  "Allow search engines to index this application",
+                )}
+              />
             </Text>
           </div>
           <Group gap="xs">

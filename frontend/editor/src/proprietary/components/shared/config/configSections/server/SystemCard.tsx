@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { InfoTooltip } from "@app/ui/InfoTooltip";
 import { useTranslation } from "react-i18next";
 import {
   TextInput,
@@ -98,12 +99,14 @@ export function SystemCard({
                   )}
                 </span>
                 <PendingBadge show={isFieldPending("ui.appNameNavbar")} />
+                <InfoTooltip
+                  label={t(
+                    "admin.settings.general.appNameNavbar.description",
+                    "The name displayed in the navigation bar",
+                  )}
+                />
               </Group>
             }
-            description={t(
-              "admin.settings.general.appNameNavbar.description",
-              "The name displayed in the navigation bar",
-            )}
             value={settings.ui?.appNameNavbar || ""}
             onChange={(e) =>
               setSettings({
@@ -123,13 +126,13 @@ export function SystemCard({
                 {t("admin.settings.general.logoStyle.label", "Logo Style")}
               </span>
               <PendingBadge show={isFieldPending("ui.logoStyle")} />
+              <InfoTooltip
+                label={t(
+                  "admin.settings.general.logoStyle.description",
+                  "Choose between the modern minimalist logo or the classic S icon",
+                )}
+              />
             </Group>
-          </Text>
-          <Text size="xs" c="dimmed" mb="xs">
-            {t(
-              "admin.settings.general.logoStyle.description",
-              "Choose between the modern minimalist logo or the classic S icon",
-            )}
           </Text>
           <SegmentedControl
             value={logoStyleValue}
@@ -200,12 +203,14 @@ export function SystemCard({
                   )}
                 </span>
                 <PendingBadge show={isFieldPending("ui.languages")} />
+                <InfoTooltip
+                  label={t(
+                    "admin.settings.general.languages.description",
+                    "Limit which languages are available (empty = all languages)",
+                  )}
+                />
               </Group>
             }
-            description={t(
-              "admin.settings.general.languages.description",
-              "Limit which languages are available (empty = all languages)",
-            )}
             value={selectedLanguages}
             onChange={(value) =>
               setSettings({
@@ -239,12 +244,14 @@ export function SystemCard({
                   )}
                 </span>
                 <PendingBadge show={isFieldPending("system.defaultLocale")} />
+                <InfoTooltip
+                  label={t(
+                    "admin.settings.general.defaultLocale.description",
+                    "The default language for new users (e.g., en_US, es_ES)",
+                  )}
+                />
               </Group>
             }
-            description={t(
-              "admin.settings.general.defaultLocale.description",
-              "The default language for new users (e.g., en_US, es_ES)",
-            )}
             value={settings.system?.defaultLocale || ""}
             onChange={(value) =>
               setSettings({
@@ -275,12 +282,14 @@ export function SystemCard({
                   )}
                 </span>
                 <PendingBadge show={isFieldPending("system.fileUploadLimit")} />
+                <InfoTooltip
+                  label={t(
+                    "admin.settings.general.fileUploadLimit.description",
+                    "Maximum file upload size (e.g., 100MB, 1GB)",
+                  )}
+                />
               </Group>
             }
-            description={t(
-              "admin.settings.general.fileUploadLimit.description",
-              "Maximum file upload size (e.g., 100MB, 1GB)",
-            )}
             value={settings.system?.fileUploadLimit || ""}
             onChange={(e) =>
               setSettings({
@@ -307,12 +316,14 @@ export function SystemCard({
                   )}
                 </span>
                 <PendingBadge show={isFieldPending("system.frontendUrl")} />
+                <InfoTooltip
+                  label={t(
+                    "admin.settings.general.frontendUrl.description",
+                    "Base URL for frontend (e.g., https://pdf.example.com). Used for email invite links and mobile QR code uploads. Leave empty to use backend URL.",
+                  )}
+                />
               </Group>
             }
-            description={t(
-              "admin.settings.general.frontendUrl.description",
-              "Base URL for frontend (e.g., https://pdf.example.com). Used for email invite links and mobile QR code uploads. Leave empty to use backend URL.",
-            )}
             value={settings.system?.frontendUrl || ""}
             onChange={(e) =>
               setSettings({
@@ -339,13 +350,13 @@ export function SystemCard({
               {t(
                 "admin.settings.general.hideDisabledTools.googleDrive.label",
                 "Hide Google Drive",
-              )}
-            </Text>
-            <Text size="xs" c="dimmed" mt={4}>
-              {t(
-                "admin.settings.general.hideDisabledTools.googleDrive.description",
-                "Hide Google Drive button when not enabled",
-              )}
+              )}{" "}
+              <InfoTooltip
+                label={t(
+                  "admin.settings.general.hideDisabledTools.googleDrive.description",
+                  "Hide Google Drive button when not enabled",
+                )}
+              />
             </Text>
           </div>
           <Group gap="xs">
@@ -383,13 +394,13 @@ export function SystemCard({
               {t(
                 "admin.settings.general.hideDisabledTools.mobileScanner.label",
                 "Hide Mobile Scanner",
-              )}
-            </Text>
-            <Text size="xs" c="dimmed" mt={4}>
-              {t(
-                "admin.settings.general.hideDisabledTools.mobileScanner.description",
-                "Hide mobile QR scanner button when not enabled",
-              )}
+              )}{" "}
+              <InfoTooltip
+                label={t(
+                  "admin.settings.general.hideDisabledTools.mobileScanner.description",
+                  "Hide mobile QR scanner button when not enabled",
+                )}
+              />
             </Text>
           </div>
           <Group gap="xs">
@@ -427,13 +438,13 @@ export function SystemCard({
               {t(
                 "admin.settings.general.showUpdate.label",
                 "Show Update Notifications",
-              )}
-            </Text>
-            <Text size="xs" c="dimmed" mt={4}>
-              {t(
-                "admin.settings.general.showUpdate.description",
-                "Display notifications when a new version is available",
-              )}
+              )}{" "}
+              <InfoTooltip
+                label={t(
+                  "admin.settings.general.showUpdate.description",
+                  "Display notifications when a new version is available",
+                )}
+              />
             </Text>
           </div>
           <Group gap="xs">
@@ -466,13 +477,13 @@ export function SystemCard({
               {t(
                 "admin.settings.general.showUpdateOnlyAdmin.label",
                 "Show Updates to Admins Only",
-              )}
-            </Text>
-            <Text size="xs" c="dimmed" mt={4}>
-              {t(
-                "admin.settings.general.showUpdateOnlyAdmin.description",
-                "Restrict update notifications to admin users only",
-              )}
+              )}{" "}
+              <InfoTooltip
+                label={t(
+                  "admin.settings.general.showUpdateOnlyAdmin.description",
+                  "Restrict update notifications to admin users only",
+                )}
+              />
             </Text>
           </div>
           <Group gap="xs">
@@ -505,13 +516,13 @@ export function SystemCard({
               {t(
                 "admin.settings.general.customHTMLFiles.label",
                 "Custom HTML Files",
-              )}
-            </Text>
-            <Text size="xs" c="dimmed" mt={4}>
-              {t(
-                "admin.settings.general.customHTMLFiles.description",
-                "Allow serving custom HTML files from the customFiles directory",
-              )}
+              )}{" "}
+              <InfoTooltip
+                label={t(
+                  "admin.settings.general.customHTMLFiles.description",
+                  "Allow serving custom HTML files from the customFiles directory",
+                )}
+              />
             </Text>
           </div>
           <Group gap="xs">

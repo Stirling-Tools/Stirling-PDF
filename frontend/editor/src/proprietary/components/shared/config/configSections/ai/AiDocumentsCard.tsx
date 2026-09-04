@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { InfoTooltip } from "@app/ui/InfoTooltip";
 import {
   TextInput,
   NumberInput,
@@ -80,12 +81,14 @@ export function AiDocumentsCard({
                   )}
                 </span>
                 <PendingBadge show={isFieldPending("rag.embeddingProvider")} />
+                <InfoTooltip
+                  label={t(
+                    "admin.settings.ai.documents.embeddingProvider.description",
+                    "Provider used to turn document text into vector embeddings.",
+                  )}
+                />
               </Group>
             }
-            description={t(
-              "admin.settings.ai.documents.embeddingProvider.description",
-              "Provider used to turn document text into vector embeddings.",
-            )}
             data={[
               { value: "voyageai", label: "VoyageAI" },
               { value: "openai", label: "OpenAI" },
@@ -125,12 +128,14 @@ export function AiDocumentsCard({
                   )}
                 </span>
                 <PendingBadge show={isFieldPending("rag.embeddingModel")} />
+                <InfoTooltip
+                  label={t(
+                    "admin.settings.ai.documents.embeddingModel.description",
+                    "Embedding model name. Free text; suggestions are hints only.",
+                  )}
+                />
               </Group>
             }
-            description={t(
-              "admin.settings.ai.documents.embeddingModel.description",
-              "Embedding model name. Free text; suggestions are hints only.",
-            )}
             data={embeddingSuggestions}
             value={settings.rag?.embeddingModel || ""}
             onChange={(value) => setRag({ embeddingModel: value })}
@@ -146,12 +151,14 @@ export function AiDocumentsCard({
                 <Group gap="xs">
                   <span>{embeddingApiKeyLabel}</span>
                   <PendingBadge show={isFieldPending("rag.embeddingApiKey")} />
+                  <InfoTooltip
+                    label={t(
+                      "admin.settings.ai.documents.embeddingApiKey.description",
+                      "Leave blank to use the engine's own environment credential. Applies to self-hosted single-engine deployments.",
+                    )}
+                  />
                 </Group>
               }
-              description={t(
-                "admin.settings.ai.documents.embeddingApiKey.description",
-                "Leave blank to use the engine's own environment credential. Applies to self-hosted single-engine deployments.",
-              )}
               // Blank when a key is already stored (returned masked as "********") so
               // appending to the sentinel can't corrupt the saved key.
               value={
@@ -186,12 +193,14 @@ export function AiDocumentsCard({
                     )}
                   </span>
                   <PendingBadge show={isFieldPending("rag.embeddingBaseUrl")} />
+                  <InfoTooltip
+                    label={t(
+                      "admin.settings.ai.documents.embeddingBaseUrl.description",
+                      "Base URL of the OpenAI-compatible / Ollama embeddings endpoint, e.g. http://ollama:11434/v1. Must point at a trusted internal endpoint (SSRF-sensitive).",
+                    )}
+                  />
                 </Group>
               }
-              description={t(
-                "admin.settings.ai.documents.embeddingBaseUrl.description",
-                "Base URL of the OpenAI-compatible / Ollama embeddings endpoint, e.g. http://ollama:11434/v1. Must point at a trusted internal endpoint (SSRF-sensitive).",
-              )}
               value={settings.rag?.embeddingBaseUrl || ""}
               onChange={(e) => setRag({ embeddingBaseUrl: e.target.value })}
               placeholder="http://ollama:11434/v1"
@@ -205,12 +214,14 @@ export function AiDocumentsCard({
                   {t("admin.settings.ai.documents.topK.label", "Top K")}
                 </span>
                 <PendingBadge show={isFieldPending("rag.topK")} />
+                <InfoTooltip
+                  label={t(
+                    "admin.settings.ai.documents.topK.description",
+                    "Number of most-relevant chunks retrieved per search.",
+                  )}
+                />
               </Group>
             }
-            description={t(
-              "admin.settings.ai.documents.topK.description",
-              "Number of most-relevant chunks retrieved per search.",
-            )}
             value={settings.rag?.topK ?? 0}
             onChange={(value) => setRag({ topK: Number(value) })}
             min={1}
@@ -226,12 +237,14 @@ export function AiDocumentsCard({
                   )}
                 </span>
                 <PendingBadge show={isFieldPending("rag.maxSearches")} />
+                <InfoTooltip
+                  label={t(
+                    "admin.settings.ai.documents.maxSearches.description",
+                    "Maximum number of retrieval searches the agent may run per request.",
+                  )}
+                />
               </Group>
             }
-            description={t(
-              "admin.settings.ai.documents.maxSearches.description",
-              "Maximum number of retrieval searches the agent may run per request.",
-            )}
             value={settings.rag?.maxSearches ?? 0}
             onChange={(value) => setRag({ maxSearches: Number(value) })}
             min={0}

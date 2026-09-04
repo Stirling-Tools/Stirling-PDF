@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { InfoTooltip } from "@app/ui/InfoTooltip";
 import { Anchor, Group, Paper, Switch, Text } from "@mantine/core";
 import { useNavigate } from "react-router-dom";
 import PendingBadge from "@app/components/shared/config/PendingBadge";
@@ -38,13 +39,13 @@ export function StorageSharingCard({
                 )}
               </Text>
               {isFieldPending("enabled") && <PendingBadge show={true} />}
+              <InfoTooltip
+                label={t(
+                  "admin.settings.storage.enabled.description",
+                  "Allow users to store files on the server.",
+                )}
+              />
             </Group>
-            <Text size="xs" c="dimmed">
-              {t(
-                "admin.settings.storage.enabled.description",
-                "Allow users to store files on the server.",
-              )}
-            </Text>
           </div>
           <Switch
             checked={storageEnabled}
@@ -71,13 +72,13 @@ export function StorageSharingCard({
               {isFieldPending("sharing.enabled") && (
                 <PendingBadge show={true} />
               )}
+              <InfoTooltip
+                label={t(
+                  "admin.settings.storage.sharing.enabled.description",
+                  "Allow users to share stored files.",
+                )}
+              />
             </Group>
-            <Text size="xs" c="dimmed">
-              {t(
-                "admin.settings.storage.sharing.enabled.description",
-                "Allow users to share stored files.",
-              )}
-            </Text>
           </div>
           <Switch
             checked={settings.sharing?.enabled ?? false}
@@ -110,13 +111,13 @@ export function StorageSharingCard({
               {isFieldPending("sharing.linkEnabled") && (
                 <PendingBadge show={true} />
               )}
+              <InfoTooltip
+                label={t(
+                  "admin.settings.storage.sharing.links.description",
+                  "Allow sharing via signed-in links.",
+                )}
+              />
             </Group>
-            <Text size="xs" c="dimmed">
-              {t(
-                "admin.settings.storage.sharing.links.description",
-                "Allow sharing via signed-in links.",
-              )}
-            </Text>
             {!frontendUrlConfigured && (
               <Text size="xs" c="var(--color-amber-dark)">
                 {t(
@@ -175,13 +176,13 @@ export function StorageSharingCard({
               {isFieldPending("sharing.emailEnabled") && (
                 <PendingBadge show={true} />
               )}
+              <InfoTooltip
+                label={t(
+                  "admin.settings.storage.sharing.email.description",
+                  "Allow sharing with email addresses.",
+                )}
+              />
             </Group>
-            <Text size="xs" c="dimmed">
-              {t(
-                "admin.settings.storage.sharing.email.description",
-                "Allow sharing with email addresses.",
-              )}
-            </Text>
             {!mailEnabled && (
               <Text size="xs" c="var(--color-amber-dark)">
                 {t(
@@ -236,13 +237,13 @@ export function StorageSharingCard({
               {isFieldPending("signing.enabled") && (
                 <PendingBadge show={true} />
               )}
+              <InfoTooltip
+                label={t(
+                  "admin.settings.storage.signing.enabled.description",
+                  "Allow users to create multi-participant document signing sessions. Requires server file storage to be enabled.",
+                )}
+              />
             </Group>
-            <Text size="xs" c="dimmed">
-              {t(
-                "admin.settings.storage.signing.enabled.description",
-                "Allow users to create multi-participant document signing sessions. Requires server file storage to be enabled.",
-              )}
-            </Text>
           </div>
           <Switch
             checked={settings.signing?.enabled ?? false}

@@ -5,6 +5,9 @@
 }
 
 .settings-card__heading {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
   margin: 0;
 }
 
@@ -12,7 +15,9 @@
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  width: 100%;
+  /* Only as wide as its text, so the (i) and badge sit next to the title
+     rather than being pushed to the far edge. */
+  width: auto;
   padding: 0.25rem 0;
   border: 0;
   background: none;
@@ -40,12 +45,6 @@
 
 .settings-card__toggle[aria-expanded="false"] .settings-card__chevron {
   transform: rotate(-90deg);
-}
-
-.settings-card__description {
-  margin: -0.25rem 0 0;
-  font-size: 0.8125rem;
-  color: var(--c-text-subtle);
 }
 
 .settings-card__panel {

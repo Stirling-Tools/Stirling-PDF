@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { InfoTooltip } from "@app/ui/InfoTooltip";
+import { SettingsFieldLabel } from "@app/components/shared/config/SettingsFieldLabel";
 import {
   Paper,
   Group,
@@ -109,10 +111,7 @@ export default function ProviderCard({
           >
             <div style={{ flex: 1, minWidth: 0 }}>
               <Text fw={500} size="sm">
-                {field.label}
-              </Text>
-              <Text size="xs" c="dimmed" mt={4}>
-                {field.description}
+                {field.label} <InfoTooltip label={field.description} />
               </Text>
             </div>
             <Switch
@@ -140,8 +139,11 @@ export default function ProviderCard({
         return (
           <Textarea
             key={field.key}
-            label={field.label}
-            description={field.description}
+            label={
+              <SettingsFieldLabel info={field.description}>
+                field.label
+              </SettingsFieldLabel>
+            }
             placeholder={field.placeholder}
             value={value}
             onChange={(e) => handleFieldChange(field.key, e.target.value)}
@@ -153,8 +155,11 @@ export default function ProviderCard({
         return (
           <NumberInput
             key={field.key}
-            label={field.label}
-            description={field.description}
+            label={
+              <SettingsFieldLabel info={field.description}>
+                field.label
+              </SettingsFieldLabel>
+            }
             placeholder={field.placeholder}
             value={value}
             onChange={(num) => handleFieldChange(field.key, num)}
@@ -171,8 +176,11 @@ export default function ProviderCard({
         return (
           <TagsInput
             key={field.key}
-            label={field.label}
-            description={field.description}
+            label={
+              <SettingsFieldLabel info={field.description}>
+                field.label
+              </SettingsFieldLabel>
+            }
             placeholder={field.placeholder}
             value={tagValue}
             onChange={(vals) => handleFieldChange(field.key, vals)}
@@ -185,8 +193,11 @@ export default function ProviderCard({
         return (
           <TextInput
             key={field.key}
-            label={field.label}
-            description={field.description}
+            label={
+              <SettingsFieldLabel info={field.description}>
+                field.label
+              </SettingsFieldLabel>
+            }
             placeholder={field.placeholder}
             value={value}
             onChange={(e) => handleFieldChange(field.key, e.target.value)}

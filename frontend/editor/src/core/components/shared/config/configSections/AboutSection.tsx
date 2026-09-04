@@ -1,6 +1,5 @@
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { SettingsCard } from "@app/components/shared/config/SettingsCard";
 import HelpSection from "@app/components/shared/config/configSections/HelpSection";
 import LegalSection from "@app/components/shared/config/configSections/LegalSection";
 import {
@@ -28,101 +27,56 @@ export default function AboutSection({
   onRequestClose,
 }: AboutSectionProps) {
   const { t } = useTranslation();
-  // Both lists are hundreds of rows; showing them open buries everything above.
-  const [openList, setOpenList] = useState<"frontend" | "backend" | null>(null);
-
   return (
     <div className="settings-section-container">
       <div className="about-section">
-        <section className="about-section__card">
-          <h2 className="about-section__heading" id="help">
-            {t("settings.help.label", "Tours")}
-          </h2>
-          <p className="about-section__description">
-            {t(
-              "settings.help.description",
-              "Guided walkthroughs of the editor and the admin area.",
-            )}
-          </p>
+        <SettingsCard
+          id="help"
+          title={t("settings.help.label", "Tours")}
+          description={t(
+            "settings.help.description",
+            "Guided walkthroughs of the editor and the admin area.",
+          )}
+        >
           <HelpSection isAdmin={isAdmin} onRequestClose={onRequestClose} />
-        </section>
+        </SettingsCard>
 
-        <section className="about-section__card">
-          <h2 className="about-section__heading" id="legal">
-            {t("settings.legal.label", "Legal")}
-          </h2>
-          <p className="about-section__description">
-            {t(
-              "settings.legal.description",
-              "Terms, privacy policy and your cookie preferences.",
-            )}
-          </p>
+        <SettingsCard
+          id="legal"
+          title={t("settings.legal.label", "Legal")}
+          description={t(
+            "settings.legal.description",
+            "Terms, privacy policy and your cookie preferences.",
+          )}
+        >
           <LegalSection />
-        </section>
+        </SettingsCard>
 
-        <section className="about-section__card">
-          <h2 className="about-section__heading">
-            <button
-              type="button"
-              id="frontendThirdPartyLicenses"
-              className="about-section__disclosure"
-              aria-expanded={openList === "frontend"}
-              aria-controls="about-frontend-licenses"
-              onClick={() =>
-                setOpenList((open) => (open === "frontend" ? null : "frontend"))
-              }
-            >
-              <LocalIcon
-                icon="expand-more-rounded"
-                width={16}
-                height={16}
-                className="about-section__disclosure-chevron"
-              />
-              {t("settings.licenses.frontendLabel", "Frontend Licenses")}
-            </button>
-          </h2>
-          <p className="about-section__description">
-            {t(
-              "settings.licenses.frontendDescription",
-              "Licenses for frontend dependencies bundled into the release build.",
-            )}
-          </p>
-          <div id="about-frontend-licenses" hidden={openList !== "frontend"}>
-            {openList === "frontend" && <FrontendThirdPartyLicensesSection />}
-          </div>
-        </section>
+        <SettingsCard
+          id="frontendThirdPartyLicenses"
+          title={t("settings.licenses.frontendLabel", "Frontend Licenses")}
+          description={t(
+            "settings.licenses.frontendDescription",
+            "Licenses for frontend dependencies bundled into the release build.",
+          )}
+          defaultCollapsed
+          lazy
+        >
+          <FrontendThirdPartyLicensesSection />
+        </SettingsCard>
 
-        <section className="about-section__card">
-          <h2 className="about-section__heading">
-            <button
-              type="button"
-              id="backendThirdPartyLicenses"
-              className="about-section__disclosure"
-              aria-expanded={openList === "backend"}
-              aria-controls="about-backend-licenses"
-              onClick={() =>
-                setOpenList((open) => (open === "backend" ? null : "backend"))
-              }
-            >
-              <LocalIcon
-                icon="expand-more-rounded"
-                width={16}
-                height={16}
-                className="about-section__disclosure-chevron"
-              />
-              {t("settings.licenses.backendLabel", "Backend Licenses")}
-            </button>
-          </h2>
-          <p className="about-section__description">
-            {t(
-              "settings.licenses.backendDescription",
-              "Licenses for backend dependencies bundled with this server.",
-            )}
-          </p>
-          <div id="about-backend-licenses" hidden={openList !== "backend"}>
-            {openList === "backend" && <BackendThirdPartyLicensesSection />}
-          </div>
-        </section>
+        <SettingsCard
+          id="backendThirdPartyLicenses"
+          title={t("settings.licenses.backendLabel", "Backend Licenses")}
+          description={t(
+            "settings.licenses.backendDescription",
+            "Licenses for backend dependencies bundled with this server.",
+          )}
+          defaultCollapsed
+          lazy
+        >
+          <BackendThirdPartyLicensesSection />
+        </SettingsCard>
       </div>
     </div>
   );
