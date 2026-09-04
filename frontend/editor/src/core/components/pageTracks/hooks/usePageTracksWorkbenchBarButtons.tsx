@@ -5,6 +5,8 @@ import RotateRightIcon from "@mui/icons-material/RotateRight";
 import UndoIcon from "@mui/icons-material/Undo";
 import RedoIcon from "@mui/icons-material/Redo";
 import WrapTextIcon from "@mui/icons-material/WrapText";
+import ZoomInIcon from "@mui/icons-material/ZoomIn";
+import ZoomOutIcon from "@mui/icons-material/ZoomOut";
 import {
   useWorkbenchBarButtons,
   WorkbenchBarButtonWithAction,
@@ -23,6 +25,10 @@ export interface PageTracksBarParams {
   saving: boolean;
   wrap: boolean;
   onToggleWrap: () => void;
+  canZoomIn: boolean;
+  canZoomOut: boolean;
+  onZoomIn: () => void;
+  onZoomOut: () => void;
   onSelectAll: () => void;
   onDeselectAll: () => void;
   onRotate: (delta: number) => void;
@@ -42,6 +48,10 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
     saving,
     wrap,
     onToggleWrap,
+    canZoomIn,
+    canZoomOut,
+    onZoomIn,
+    onZoomOut,
     onSelectAll,
     onDeselectAll,
     onRotate,
@@ -54,6 +64,8 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
 
   const labels = {
     wrap: t("pageTracks.wrap.label", "Wrap pages"),
+    zoomIn: t("pageTracks.zoomIn", "Zoom in"),
+    zoomOut: t("pageTracks.zoomOut", "Zoom out"),
     selectAll: t("workbenchBar.selectAll", "Select All"),
     deselectAll: t("workbenchBar.deselectAll", "Deselect All"),
     rotateLeft: t("pageTracks.rotateLeft", "Rotate left"),
@@ -79,6 +91,28 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
         visible: hasPages,
         active: wrap,
         onClick: onToggleWrap,
+      },
+      {
+        id: "tracks-zoom-out",
+        icon: <ZoomOutIcon sx={{ fontSize: "1.25rem" }} />,
+        tooltip: labels.zoomOut,
+        ariaLabel: labels.zoomOut,
+        section: "top" as const,
+        order: 6,
+        disabled: !canZoomOut,
+        visible: hasPages,
+        onClick: onZoomOut,
+      },
+      {
+        id: "tracks-zoom-in",
+        icon: <ZoomInIcon sx={{ fontSize: "1.25rem" }} />,
+        tooltip: labels.zoomIn,
+        ariaLabel: labels.zoomIn,
+        section: "top" as const,
+        order: 7,
+        disabled: !canZoomIn,
+        visible: hasPages,
+        onClick: onZoomIn,
       },
       {
         id: "tracks-select-all",
@@ -201,6 +235,8 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
     ],
     [
       labels.wrap,
+      labels.zoomIn,
+      labels.zoomOut,
       labels.selectAll,
       labels.deselectAll,
       labels.rotateLeft,
@@ -219,6 +255,10 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
       saving,
       wrap,
       onToggleWrap,
+      canZoomIn,
+      canZoomOut,
+      onZoomIn,
+      onZoomOut,
       onSelectAll,
       onDeselectAll,
       onRotate,

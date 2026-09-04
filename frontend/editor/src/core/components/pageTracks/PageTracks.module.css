@@ -55,6 +55,11 @@
   min-width: 0;
 }
 
+/* The disclosure chevron: leftmost in the header, never squeezed. */
+.trackCollapse {
+  flex: 0 0 auto;
+}
+
 /* Sits after the page count, so a long filename must not squeeze it. */
 .trackLeadAction {
   flex: 0 0 auto;

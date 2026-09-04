@@ -6077,6 +6077,8 @@ saving = "Saving..."
 savingProgress = "Saving {{done}} of {{total}}"
 selectPage = "Select page {{number}}"
 undo = "Undo"
+zoomIn = "Zoom in"
+zoomOut = "Zoom out"
 
 [pageTracks.delete]
 page = "Delete page"
@@ -6087,6 +6089,8 @@ body = "Add PDFs to expand them into editable page tracks"
 title = "No PDF files loaded"
 
 [pageTracks.track]
+collapse = "Collapse"
+expand = "Expand"
 toggleSelection = "Select all pages"
 
 [pageTracks.wrap]
