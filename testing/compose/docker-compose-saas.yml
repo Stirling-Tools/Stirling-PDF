@@ -1,7 +1,8 @@
 services:
   # ---------------------------------------------------------------------
   # Postgres holding the stirling_pdf schema, built by Hibernate
-  # ddl-auto=create-drop when the backend starts (see below). Exposed on
+  # ddl-auto=update when the backend starts (see below). No volume, so
+  # `docker compose down` gives the next run a clean database. Exposed on
   # host port 5433 so the cucumber harness can connect via psycopg from
   # features/steps/payg_*.
   # ---------------------------------------------------------------------
@@ -14,8 +15,9 @@ services:
     ports:
       - "5433:5432"
     volumes:
-      # Bootstrap stirling_pdf schema + seed test team / api key.
-      # Runs once when the container is first created.
+      # Creates the schemas Hibernate's entities live in. Runs once when
+      # the container is first created; the seed rows come later from the
+      # seed-saas service, once the backend has built the tables.
       - ./payg/saas-init.sql:/docker-entrypoint-initdb.d/00-init.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
@@ -64,25 +66,32 @@ services:
       ENABLE_SAAS: "true"
       DISABLE_ADDITIONAL_FEATURES: "false"
 
-      # Datasource — point Flyway + JPA at the test postgres.
+      # Datasource: the throwaway postgres above.
       SAAS_DB_URL: "jdbc:postgresql://postgres-saas:5432/postgres"
       SAAS_DB_USERNAME: "postgres"
       SAAS_DB_PASSWORD: "postgres"
       SAAS_DB_PROJECT_REF: "disabled"
 
-      # On a clean test postgres the Supabase-provisioned `users`/`teams`
-      # tables don't exist, so we let Hibernate's `ddl-auto=create-drop`
-      # build the full schema from the entity graph. The default-pricing-
-      # policy row (seeded in production by the Supabase migrations) is
-      # re-seeded here by testing/compose/payg/saas-seed.sql.
-      SPRING_JPA_HIBERNATE_DDL_AUTO: "create-drop"
+      # The saas profile hides the Supabase-owned tables (users, teams,
+      # payg_*, wallet_*, ...) from Hibernate via MigrationOwnedSchemaFilter,
+      # because in a real SaaS database the Supabase migrations create them.
+      # This throwaway postgres has no Supabase migrations, so Hibernate must
+      # own everything: the default provider below shows it every table
+      # again. `update` rather than `create-drop`: create-drop wipes the
+      # schema on shutdown, leaving nothing to inspect after a failed run,
+      # and a fresh database is one `docker compose down` away anyway. The
+      # default pricing policy row the migrations would seed comes from
+      # testing/compose/payg/saas-seed.sql instead.
+      SPRING_JPA_HIBERNATE_DDL_AUTO: "update"
+      SPRING_JPA_PROPERTIES_HIBERNATE_HBM2DDL_SCHEMA_FILTER_PROVIDER: "org.hibernate.tool.schema.internal.DefaultSchemaFilterProvider"
 
       # Disable Supabase JWT enforcement for the test profile. The
       # PaygChargeInterceptor resolves via ApiKey-token authority — that
       # path is what we cover here.
       SPRING_AUTOCONFIGURE_EXCLUDE: "org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration"
 
-      # Test API key matching the user seeded by saas-init.sql.
+      # Test API key. The backend creates CUSTOM_API_USER for it at boot;
+      # saas-seed.sql then moves that user into the cucumber team.
       SECURITY_CUSTOMGLOBALAPIKEY: "payg-cucumber-key"
       SECURITY_ENABLELOGIN: "false"
 
@@ -94,6 +103,34 @@ services:
 
       SYSTEM_DEFAULTLOCALE: "en-US"
       SYSTEM_MAXFILESIZE: "100"
+    networks:
+      - payg-cucumber-network
+
+  # ---------------------------------------------------------------------
+  # One-shot seed, run once the backend reports healthy. These rows can't
+  # go in /docker-entrypoint-initdb.d: the tables they target don't exist
+  # until Hibernate builds them, which happens when the backend boots, long
+  # after postgres has finished initialising. Exits 0 and stays exited; a
+  # re-run is safe because every statement in the file is idempotent.
+  # ---------------------------------------------------------------------
+  seed-saas:
+    image: postgres:17-alpine
+    container_name: payg-cucumber-seed
+    depends_on:
+      stirling-pdf-saas:
+        condition: service_healthy
+    restart: "no"
+    environment:
+      PGPASSWORD: postgres
+    volumes:
+      - ./payg/saas-seed.sql:/seed.sql:ro
+    command:
+      - psql
+      - --host=postgres-saas
+      - --username=postgres
+      - --dbname=postgres
+      - --set=ON_ERROR_STOP=1
+      - --file=/seed.sql
     networks:
       - payg-cucumber-network
 
