@@ -6089,6 +6089,9 @@ title = "No PDF files loaded"
 [pageTracks.track]
 toggleSelection = "Select all pages"
 
+[pageTracks.wrap]
+label = "Wrap pages"
+
 [payg.activity]
 docs = "docs"
 empty = "No billable activity yet this period."

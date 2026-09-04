@@ -4,6 +4,7 @@ import RotateLeftIcon from "@mui/icons-material/RotateLeft";
 import RotateRightIcon from "@mui/icons-material/RotateRight";
 import UndoIcon from "@mui/icons-material/Undo";
 import RedoIcon from "@mui/icons-material/Redo";
+import WrapTextIcon from "@mui/icons-material/WrapText";
 import {
   useWorkbenchBarButtons,
   WorkbenchBarButtonWithAction,
@@ -20,6 +21,8 @@ export interface PageTracksBarParams {
   canRedo: boolean;
   isDirty: boolean;
   saving: boolean;
+  wrap: boolean;
+  onToggleWrap: () => void;
   onSelectAll: () => void;
   onDeselectAll: () => void;
   onRotate: (delta: number) => void;
@@ -37,6 +40,8 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
     canRedo,
     isDirty,
     saving,
+    wrap,
+    onToggleWrap,
     onSelectAll,
     onDeselectAll,
     onRotate,
@@ -48,6 +53,7 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
   const { t } = useTranslation();
 
   const labels = {
+    wrap: t("pageTracks.wrap.label", "Wrap pages"),
     selectAll: t("workbenchBar.selectAll", "Select All"),
     deselectAll: t("workbenchBar.deselectAll", "Deselect All"),
     rotateLeft: t("pageTracks.rotateLeft", "Rotate left"),
@@ -63,6 +69,17 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
 
   const buttons = useMemo<WorkbenchBarButtonWithAction[]>(
     () => [
+      {
+        id: "tracks-wrap",
+        icon: <WrapTextIcon sx={{ fontSize: "1.25rem" }} />,
+        tooltip: labels.wrap,
+        ariaLabel: labels.wrap,
+        section: "top" as const,
+        order: 5,
+        visible: hasPages,
+        active: wrap,
+        onClick: onToggleWrap,
+      },
       {
         id: "tracks-select-all",
         icon: <LocalIcon icon="select-all" width="1.5rem" height="1.5rem" />,
@@ -183,6 +200,7 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
       },
     ],
     [
+      labels.wrap,
       labels.selectAll,
       labels.deselectAll,
       labels.rotateLeft,
@@ -199,6 +217,8 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
       canRedo,
       isDirty,
       saving,
+      wrap,
+      onToggleWrap,
       onSelectAll,
       onDeselectAll,
       onRotate,
