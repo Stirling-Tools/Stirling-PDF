@@ -1,11 +1,10 @@
 """
-Orchestrator ``delegate_pdf_review`` contract test.
+PDF-review delegate contract test.
 
-The real orchestrator delegates PDF-review requests via a pydantic-ai tool
-output. Exercising the full ``agent.run(...)`` call would hit the LLM and
-requires building a real ``RunContext`` — so instead this test invokes
-``delegate_pdf_review`` directly with a minimal ``deps`` stand-in. That's
-enough to verify the wire contract the orchestrator produces:
+The orchestrator routes PDF-review requests to ``PdfReviewAgent.orchestrate``
+(the orchestrator merely selects the delegate; the review logic lives on the
+agent). Exercising the agent directly avoids the LLM routing call and verifies
+the wire contract the delegate produces for a plain prose-review request:
 
 * it returns an ``EditPlanResponse``;
 * with exactly one step;
@@ -16,13 +15,11 @@ enough to verify the wire contract the orchestrator produces:
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from stirling.agents import OrchestratorAgent
+from stirling.agents import PdfReviewAgent
 from stirling.contracts import AiFile, OrchestratorRequest
 from stirling.contracts.pdf_edit import EditPlanResponse
 from stirling.models import FileId
@@ -30,27 +27,28 @@ from stirling.models.agent_tool_models import AgentToolId, PdfCommentAgentParams
 from stirling.services.runtime import AppRuntime
 
 
-@dataclass(frozen=True)
-class _FakeDeps:
-    request: OrchestratorRequest
-
-
 @pytest.mark.anyio
-async def test_delegate_pdf_review_wires_prompt_to_tool_step(runtime: AppRuntime) -> None:
-    orchestrator = OrchestratorAgent(runtime)
+async def test_pdf_review_wires_prompt_to_tool_step(runtime: AppRuntime) -> None:
+    review_agent = PdfReviewAgent(runtime)
     request = OrchestratorRequest(
         user_message="please add review comments flagging ambiguous dates",
         files=[AiFile(id=FileId("contract-id"), name="contract.pdf")],
     )
-    ctx = SimpleNamespace(deps=_FakeDeps(request=request))
 
-    # PdfReviewAgent now classifies math intent locally via a tiny LLM. Stub it
-    # to false so this test stays focused on the prose-review wire contract.
-    with patch(
-        "stirling.agents.pdf_review.MathIntentClassifier.classify",
-        new=AsyncMock(return_value=False),
+    # PdfReviewAgent classifies math and contradiction intent locally via tiny
+    # LLMs. Stub both to false so this test stays focused on the prose-review
+    # wire contract.
+    with (
+        patch(
+            "stirling.agents.pdf_review.MathIntentClassifier.classify",
+            new=AsyncMock(return_value=False),
+        ),
+        patch(
+            "stirling.agents.pdf_review.ContradictionIntentClassifier.classify",
+            new=AsyncMock(return_value=False),
+        ),
     ):
-        response = await orchestrator.delegate_pdf_review(ctx)  # type: ignore[arg-type]
+        response = await review_agent.orchestrate(request)
 
     assert isinstance(response, EditPlanResponse)
     assert len(response.steps) == 1
