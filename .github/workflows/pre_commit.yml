@@ -31,10 +31,14 @@ jobs:
           cache-dependency-glob: |
             engine/pyproject.toml
             engine/uv.lock
-          cache-suffix: pre-commit
 
       - name: Install Task
         uses: ./.github/actions/setup-task
 
       - name: Run pre-commit checks
         run: task pre-commit
+
+      # The fixture corpus checks the comment rules themselves, so it runs here
+      # rather than on every local commit.
+      - name: Check the comment-lint fixture corpus
+        run: task pre-commit:comment-lint:selftest

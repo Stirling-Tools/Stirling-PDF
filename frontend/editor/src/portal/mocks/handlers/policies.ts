@@ -20,12 +20,13 @@ import type { PolicyRunView, WirePolicy } from "@app/policies/types";
 let store: WirePolicy[] = seedPolicies();
 let runs: PolicyRunView[] = seedPolicyRuns();
 
-export function resetPoliciesStore(
-  seed?: WirePolicy[],
-  seedRuns?: PolicyRunView[],
-): void {
-  store = seed ? [...seed] : seedPolicies();
-  runs = seedRuns ? [...seedRuns] : seedPolicyRuns();
+/**
+ * The catalogue (suggested-policy) records, for the unified Pipelines overview to merge in - the
+ * real backend keeps a single store, so its overview already sees these; the mock's two stores must
+ * be joined here to match.
+ */
+export function getCataloguePolicies(): WirePolicy[] {
+  return store;
 }
 
 let idCounter = 0;
@@ -35,7 +36,7 @@ function nextId(categoryId: string): string {
 }
 
 function categoryId(wire: WirePolicy): string {
-  return (wire.output?.options?.categoryId as string | undefined) ?? "";
+  return wire.output?.options?.categoryId ?? "";
 }
 
 export const policiesHandlers = [

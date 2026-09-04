@@ -42,7 +42,6 @@ jobs:
           cache-dependency-glob: |
             engine/pyproject.toml
             engine/uv.lock
-          cache-suffix: generated-models
 
       - name: Restore cache Gradle User Home
         if: inputs.use_shared_cache

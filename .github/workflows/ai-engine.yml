@@ -34,7 +34,6 @@ jobs:
           cache-dependency-glob: |
             engine/pyproject.toml
             engine/uv.lock
-          cache-suffix: ai-engine
 
       - name: Install Task
         uses: ./.github/actions/setup-task

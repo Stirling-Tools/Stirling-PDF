@@ -45,6 +45,10 @@ export interface PolicyRunRecord {
   /** Set while an auto-retry is pending after a transient (queue-full) rejection, so the activity
    *  feed shows a soft "busy" row instead of a hard failure during the backoff window. */
   retrying?: boolean;
+  /** A run computed entirely in the browser - it has no server run behind it,
+   *  so it must never be polled for status (a status poll 404s and would flip a
+   *  succeeded run to FAILED) or reconciled against the server. */
+  browserLocal?: boolean;
   /** Epoch ms when the run was dispatched. */
   startedAt: number;
 }
@@ -205,6 +209,27 @@ export function dispatchKey(categoryId: string, fileId: string): string {
 /** Whether this (policy, file) pair has already been dispatched. */
 export function isDispatched(categoryId: string, fileId: string): boolean {
   return state.dispatched.includes(dispatchKey(categoryId, fileId));
+}
+
+/** Walked back through this document's lineage. Only a COMPLETED server run counts as applied. */
+export function appliedCategoriesFor(fileId: string): Set<string> {
+  const applied = new Set<string>();
+  let cursor: string | null = fileId;
+  // A lineage cannot outrun the recorded runs, and the bound also breaks a hand-edited cycle.
+  for (let step = 0; step < state.runs.length; step++) {
+    if (cursor === null) break;
+    const child: string = cursor;
+    cursor = null;
+    for (const run of state.runs) {
+      // A local first pass is not the policy's run: counting it would skip the escalation.
+      if (run.status !== "COMPLETED" || run.browserLocal) continue;
+      if (!(run.outputFileIds ?? []).includes(child)) continue;
+      applied.add(run.categoryId);
+      // An annotating run names its input as its own output, so it adds no lineage step.
+      if (run.fileId !== child) cursor = run.fileId;
+    }
+  }
+  return applied;
 }
 
 /** Record a newly-dispatched run (marks it dispatched + adds the record). */

@@ -17,6 +17,8 @@ export const useFileHandler = () => {
         autoUnzip?: boolean;
         /** Skip the upload metric - the file isn't new to the system (e.g. a copy). */
         skipUploadTracking?: boolean;
+        /** Folder every added file is born into (see AddFileOptions). */
+        folderId?: string;
       } = {},
     ): Promise<StirlingFile[]> => {
       // Merge default options with passed options - passed options take precedence

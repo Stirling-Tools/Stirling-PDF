@@ -62,22 +62,28 @@ function activeExportPolicies(): ExportPolicy[] {
   const labels = new Map(
     loadPolicyCatalog().categories.map((c) => [c.id, c.label]),
   );
-  return Object.entries(loadPolicies())
-    .filter(
-      ([, s]) =>
-        s.configured &&
-        s.status === "active" &&
-        s.backendId &&
-        (s.sources.length === 0 || s.sources.includes("editor")) &&
-        s.runOn === "export",
-    )
-    .map(([id, s]) => ({
-      categoryId: id,
-      backendId: s.backendId as string,
-      label: labels.get(id) ?? "Policy",
-      outputMode: s.outputMode === "new_file" ? "new_file" : "new_version",
-      accent: `var(--color-${ROW_ACCENT[id] ?? "blue"})`,
-    }));
+  return (
+    Object.entries(loadPolicies())
+      .filter(
+        ([, s]) =>
+          s.configured &&
+          s.enabled &&
+          s.backendId &&
+          s.runsOnEditor &&
+          s.runOn === "export",
+      )
+      // Same team-wide run order the upload path uses: enforcement is not commutative (a watermark
+      // then a flatten is not a flatten then a watermark), so both paths must agree on the sequence.
+      .sort(([, a], [, b]) => (a.order ?? 0) - (b.order ?? 0))
+      .map(([id, s]) => ({
+        categoryId: id,
+        backendId: s.backendId as string,
+        // A builder pipeline has no built-in category, so it labels by its own name.
+        label: labels.get(id) ?? s.name ?? "Policy",
+        outputMode: s.outputMode === "new_file" ? "new_file" : "new_version",
+        accent: `var(--color-${ROW_ACCENT[id] ?? "blue"})`,
+      }))
+  );
 }
 
 /** Run one policy on a file and resolve the enforced bytes + run info (throws on
@@ -222,7 +228,7 @@ export async function enforceExportPolicies(
             fileId,
             fileName: file.name,
             fileSize: file.size,
-            target: versionRun!.target,
+            target: versionRun.target,
             status: "COMPLETED",
             outputs: versionRun.outputs,
             error: null,

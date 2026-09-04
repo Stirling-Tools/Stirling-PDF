@@ -20,6 +20,8 @@ export const useCheckoutState = (planGroup: PlanTierGroup) => {
   const [selectedPeriod, setSelectedPeriod] = useState<"monthly" | "yearly">(
     planGroup.yearly ? "yearly" : "monthly",
   );
+  // Blocks of users to buy. Only the Team tier asks; every other tier stays at one.
+  const [serverQuantity, setServerQuantity] = useState<number>(1);
   const [installationId, setInstallationId] = useState<string | null>(null);
   const [currentLicenseKey, setCurrentLicenseKey] = useState<string | null>(
     null,
@@ -50,6 +52,7 @@ export const useCheckoutState = (planGroup: PlanTierGroup) => {
     setCurrentLicenseKey(null);
     setLicenseKey(null);
     setSelectedPeriod(planGroup.yearly ? "yearly" : "monthly");
+    setServerQuantity(1);
   }, [planGroup]);
 
   return {
@@ -64,6 +67,8 @@ export const useCheckoutState = (planGroup: PlanTierGroup) => {
     setEmailError,
     selectedPeriod,
     setSelectedPeriod,
+    serverQuantity,
+    setServerQuantity,
     installationId,
     setInstallationId,
     currentLicenseKey,

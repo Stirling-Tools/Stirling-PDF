@@ -14,13 +14,9 @@
   column-gap: 8px;
   min-height: 38px;
   padding: 0 8px;
-  /* No left margin: the file sidebar's own 0.5rem padding already provides the
-     gutter on that side, so adding one here would double it and leave the bar
-     further from the sidebar than it is from the tool panel. */
-  margin: var(--nav-gutter) var(--nav-gutter) 0 0;
+  /* Flush, not a floating card: the same surface and hairline as the sidebars. */
   background-color: var(--c-surface);
-  border: 1px solid var(--c-border-subtle);
-  border-radius: var(--radius-nav);
+  border-bottom: 1px solid var(--c-border-subtle);
   flex-shrink: 0;
   z-index: 50;
 }
@@ -151,15 +147,18 @@
 /* ---- Tool buttons (own full-width row, always below the top row) ---- */
 .workbench-bar-center {
   order: 4;
-  flex: 0 0 100%;
+  /* Wider by the bar's paddings, cancelled by the negative margin, so the rule spans. */
+  flex: 0 0 calc(100% + 16px);
   min-width: 0;
-  max-width: 100%;
+  max-width: calc(100% + 16px);
+  margin-inline: -8px;
   position: relative;
   display: flex;
   align-items: center;
   /* Symmetric side padding leaves room for the retract handle pinned right
-     without knocking the centred tool icons off-centre. */
-  padding: 4px 36px;
+     without knocking the centred tool icons off-centre. The extra 8px each side
+     absorbs the negative margin. */
+  padding: 4px 44px;
   border-top: 1px solid var(--c-border-subtle);
 }
 
@@ -327,6 +326,9 @@
   }
 
   .workbench-bar-center {
+    flex-basis: 100%;
+    max-width: 100%;
+    margin-inline: 0;
     padding: 2px 4px 2px 8px;
   }
 

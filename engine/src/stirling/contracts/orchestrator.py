@@ -42,6 +42,8 @@ class OrchestratorRequest(ApiModel):
     conversation_history: list[ConversationMessage] = Field(default_factory=list)
     artifacts: list[WorkflowArtifact] = Field(default_factory=list)
     resume_with: SupportedCapability | None = None
+    # Reply language (IETF tag); unset falls back to the message's own language.
+    locale: str | None = None
     # See `PdfEditRequest.enabled_endpoints`.
     enabled_endpoints: Annotated[list[ToolEndpoint], BeforeValidator(drop_unknown_tool_endpoints)] = Field(
         default_factory=list

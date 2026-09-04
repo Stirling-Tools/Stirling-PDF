@@ -1,6 +1,12 @@
 package stirling.software.proprietary.failure;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static stirling.software.proprietary.failure.FailureActionSlot.OVERFLOW;
+import static stirling.software.proprietary.failure.FailureActionSlot.RESOLUTION;
+import static stirling.software.proprietary.failure.FailureActionSlot.SECONDARY;
+import static stirling.software.proprietary.failure.FailureAudience.ANYONE_WHO_SEES;
+import static stirling.software.proprietary.failure.FailureAudience.OWNER;
+import static stirling.software.proprietary.failure.FailureAudience.TEAM_REVIEWER;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -28,6 +34,16 @@ import stirling.software.common.util.ExceptionUtils;
  * button that fails at runtime.
  */
 class FailureKindTest {
+
+    /** In full, so a declaration pairing the right action with the wrong audience cannot pass. */
+    private static FailureKind.OfferedAction offered(
+            FailureActionId id,
+            FailureAudience audience,
+            FailureActionSlot slot,
+            String labelKeySuffix) {
+        return new FailureKind.OfferedAction(
+                id, "portal.failures.action." + labelKeySuffix, audience, slot);
+    }
 
     @Nested
     @DisplayName("every kind is well formed")
@@ -86,6 +102,37 @@ class FailureKindTest {
             for (FailureActionId action : kind.getActions()) {
                 assertThat(kind.labelKeyFor(action)).startsWith("portal.failures.action.");
             }
+        }
+
+        @ParameterizedTest
+        @EnumSource(FailureKind.class)
+        void everyOfferSaysWhoItIsForAndWhereItGoes(FailureKind kind) {
+            // Both decide what a caller is shown, so a missing one places a button by accident.
+            for (FailureKind.OfferedAction offer : kind.getOfferedActions()) {
+                assertThat(offer.audience())
+                        .as("%s offers %s", kind.getId(), offer.id())
+                        .isNotNull();
+                assertThat(offer.slot()).as("%s offers %s", kind.getId(), offer.id()).isNotNull();
+            }
+        }
+
+        @ParameterizedTest
+        @EnumSource(FailureKind.class)
+        void offersEachActionAtMostOnce(FailureKind kind) {
+            // The same action twice would be two buttons with one meaning, and labelKeyFor would
+            // answer for the first.
+            assertThat(kind.getActions()).doesNotHaveDuplicates();
+        }
+
+        @ParameterizedTest
+        @EnumSource(FailureKind.class)
+        void declaresAtMostOneResolution(FailureKind kind) {
+            // Two things that both claim to fix it is a sign of two kinds wearing one id.
+            assertThat(
+                            kind.getOfferedActions().stream()
+                                    .filter(offer -> offer.slot() == FailureActionSlot.RESOLUTION)
+                                    .toList())
+                    .hasSizeLessThanOrEqualTo(1);
         }
 
         @Test
@@ -182,10 +229,18 @@ class FailureKindTest {
     class Unknown {
 
         @Test
-        void offersOnlyTheActionThatClearsIt() {
-            // Nothing here can be fixed, so "seen it" and "clear it" would be the same decision.
-            // Offering both just asks the reviewer to press two buttons to reach one outcome.
-            assertThat(FailureKind.UNKNOWN.getActions()).containsExactly(FailureActionId.DISMISS);
+        void offersARetryToItsOwnerAndTheRunToWhoeverReviews() {
+            // No known fix, so no resolution; a retry is still worth offering for a one-off.
+            assertThat(FailureKind.UNKNOWN.getOfferedActions())
+                    .containsExactly(
+                            offered(FailureActionId.OPEN_IN_TOOL, OWNER, SECONDARY, "openInTool"),
+                            offered(FailureActionId.VIEW_FILE, OWNER, SECONDARY, "viewFile"),
+                            offered(
+                                    FailureActionId.VIEW_IN_PROCESSOR,
+                                    TEAM_REVIEWER,
+                                    OVERFLOW,
+                                    "viewInProcessor"),
+                            offered(FailureActionId.DISMISS, ANYONE_WHO_SEES, OVERFLOW, "dismiss"));
         }
 
         @Test
@@ -220,6 +275,16 @@ class FailureKindTest {
         }
 
         @Test
+        void everyCodeAKindClaimsIsPinned() {
+            // The bell mirrors these in KIND_ERROR_CODES (notificationRetry.ts) to tell one file's
+            // stashed failure from another's. Adding a code here without adding it there makes a
+            // retry match the wrong incident, so this fails until both move together.
+            assertThat(FailureKind.INPUT_PASSWORD_PROTECTED.getErrorCodes())
+                    .containsExactly("E004");
+            assertThat(FailureKind.UNKNOWN.getErrorCodes()).isEmpty();
+        }
+
+        @Test
         void byErrorCodeIsEmptyForACodeNoKindHasAdoptedYet() {
             // E001 is PDF_CORRUPTED: a real error code, deliberately not yet a kind.
             assertThat(FailureKind.byErrorCode("E001")).isEmpty();
@@ -238,24 +303,50 @@ class FailureKindTest {
         }
 
         @Test
-        void aKindWithSomethingToFixOffersTheFixAndAWayToSkipIt() {
-            assertThat(FailureKind.INPUT_PASSWORD_PROTECTED.getActions())
-                    .containsExactly(FailureActionId.ACKNOWLEDGE, FailureActionId.DISMISS);
+        void aKindWithSomethingToFixOffersTheFixToItsOwnerAndTheRunToItsReviewer() {
+            // Only the owner has the password, so a reviewer is offered the run and a dismiss.
+            assertThat(FailureKind.INPUT_PASSWORD_PROTECTED.getOfferedActions())
+                    .containsExactly(
+                            offered(FailureActionId.DECRYPT, OWNER, RESOLUTION, "decrypt"),
+                            offered(FailureActionId.VIEW_FILE, OWNER, SECONDARY, "viewFile"),
+                            offered(
+                                    FailureActionId.VIEW_IN_PROCESSOR,
+                                    TEAM_REVIEWER,
+                                    OVERFLOW,
+                                    "viewInProcessor"),
+                            offered(FailureActionId.OPEN_IN_TOOL, OWNER, OVERFLOW, "openInTool"),
+                            offered(FailureActionId.DISMISS, ANYONE_WHO_SEES, OVERFLOW, "dismiss"));
         }
 
         @Test
-        void overriddenLabelWinsOverTheGenericOne() {
-            String label =
-                    FailureKind.INPUT_PASSWORD_PROTECTED.labelKeyFor(FailureActionId.DISMISS);
-            assertThat(label).isEqualTo("portal.failures.action.dismissSkipFile");
-            assertThat(label).isNotEqualTo(FailureKind.genericLabelKey(FailureActionId.DISMISS));
+        void noKindOffersAcknowledgeAnyMore() {
+            // Kept in the vocabulary for rows already ACKNOWLEDGED; offered by nothing, so
+            // dispatchable by nothing.
+            for (FailureKind kind : FailureKind.values()) {
+                assertThat(kind.declares(FailureActionId.ACKNOWLEDGE))
+                        .as("%s offers ACKNOWLEDGE", kind.getId())
+                        .isFalse();
+            }
         }
 
         @Test
-        void genericLabelIsUsedWhenAKindDeclaresNoOverride() {
+        void everyKindLabelsItsActionsWithTheSharedWordingToday() {
+            // The per-kind override still exists for wording that reads badly in context.
+            for (FailureKind kind : FailureKind.values()) {
+                for (FailureActionId action : kind.getActions()) {
+                    assertThat(kind.labelKeyFor(action))
+                            .isEqualTo(FailureKind.genericLabelKey(action));
+                }
+            }
+        }
+
+        @Test
+        void genericLabelIsDerivedFromTheActionId() {
             assertThat(FailureKind.UNKNOWN.labelKeyFor(FailureActionId.DISMISS))
                     .isEqualTo(FailureKind.genericLabelKey(FailureActionId.DISMISS))
                     .isEqualTo("portal.failures.action.dismiss");
+            assertThat(FailureKind.INPUT_PASSWORD_PROTECTED.labelKeyFor(FailureActionId.DECRYPT))
+                    .isEqualTo("portal.failures.action.decrypt");
         }
 
         @Test
