@@ -162,17 +162,17 @@ function TrackPageTileImpl({
         }
       }}
     >
-      <div className={styles.tileCheckbox} onClick={stop}>
-        <Checkbox
-          checked={selected}
-          aria-label={t("pageTracks.selectPage", "Select page {{number}}", {
-            number: position,
-          })}
-          onChange={() => onSelect(trackFileId, page.id, { shift: false })}
-        />
-      </div>
+      <div className={styles.thumbBox}>
+        <div className={styles.tileCheckbox} onClick={stop}>
+          <Checkbox
+            checked={selected}
+            aria-label={t("pageTracks.selectPage", "Select page {{number}}", {
+              number: position,
+            })}
+            onChange={() => onSelect(trackFileId, page.id, { shift: false })}
+          />
+        </div>
 
-      <div className={styles.canvas}>
         {thumbnail ? (
           <PrivateContent>
             <img
@@ -203,10 +203,8 @@ function TrackPageTileImpl({
         />
       </div>
 
-      <div className={styles.tileFooter}>
-        <span className={styles.tileIndex} data-page-index={position}>
-          {position}
-        </span>
+      <div className={styles.pageNumber} data-page-index={position}>
+        {position}
       </div>
     </div>
   );
