@@ -1,0 +1,105 @@
+<title>Stirling Endpoint Benchmark</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{--paper:#eef1f2;--surface:#fff;--surface-2:#f6f8f8;--ink:#141c21;--ink-2:#41545d;--ink-3:#6d818a;
+    --rule:#d3dbde;--rule-2:#e4eaec;--signal:#0b6b63;--signal-soft:#d8ecea;--warn:#a05605;--warn-soft:#f7e8d4;
+    --crit:#9d2b26;--crit-soft:#f6dedd}
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#0b1215;--surface:#111b1f;--surface-2:#162327;
+    --ink:#e4ecee;--ink-2:#9fb3ba;--ink-3:#71888f;--rule:#22343a;--rule-2:#1a2a2f;--signal:#4ecdc0;--signal-soft:#0f2f2c;
+    --warn:#e0993d;--warn-soft:#33240f;--crit:#e2716b;--crit-soft:#331716}}
+  :root[data-theme="dark"]{--paper:#0b1215;--surface:#111b1f;--surface-2:#162327;--ink:#e4ecee;--ink-2:#9fb3ba;--ink-3:#71888f;
+    --rule:#22343a;--rule-2:#1a2a2f;--signal:#4ecdc0;--signal-soft:#0f2f2c;--warn:#e0993d;--warn-soft:#33240f;
+    --crit:#e2716b;--crit-soft:#331716}
+  *{box-sizing:border-box}
+  body{background:var(--paper);color:var(--ink);margin:0;padding:0 20px 80px;font-family:"IBM Plex Sans",system-ui,sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1000px;margin:0 auto}
+  h1,h2,h3{font-family:"IBM Plex Sans Condensed","IBM Plex Sans",sans-serif;text-wrap:balance;margin:0}
+  .mono{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums}
+  header{padding:44px 0 24px;border-bottom:2px solid var(--ink)}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--signal);font-weight:600}
+  h1{font-size:clamp(30px,5vw,44px);line-height:1.05;font-weight:700;margin:10px 0 12px;letter-spacing:-.015em}
+  .standfirst{font-size:17px;color:var(--ink-2);max-width:66ch;margin:0}
+  .rig{display:flex;flex-wrap:wrap;gap:0;border:1px solid var(--rule);background:var(--surface);margin:20px 0 0;border-radius:3px;overflow:hidden}
+  .rig div{flex:1 1 120px;padding:11px 14px;border-right:1px solid var(--rule-2)}
+  .rig div:last-child{border-right:0}
+  .rig dt{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:600;margin:0 0 3px}
+  .rig dd{margin:0;font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:500}
+  section{padding:36px 0;border-bottom:1px solid var(--rule)}
+  h2{font-size:23px;font-weight:700;letter-spacing:-.01em;margin:0 0 6px}
+  .sub{color:var(--ink-3);font-size:14px;margin:0 0 22px}
+  .tablewrap{overflow-x:auto;border:1px solid var(--rule);border-radius:3px;background:var(--surface);margin-bottom:20px}
+  table{border-collapse:collapse;width:100%;min-width:560px;font-size:13px}
+  th{font-family:"IBM Plex Sans Condensed",sans-serif;text-align:left;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);padding:9px 12px;border-bottom:1px solid var(--rule);font-weight:600;background:var(--surface-2);white-space:nowrap}
+  td{padding:8px 12px;border-bottom:1px solid var(--rule-2)}
+  tr:last-child td{border-bottom:0}
+  td.n{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .tool{font-weight:600;text-transform:capitalize}
+  .dim{color:var(--ink-3);font-size:12px}
+  .hi2{color:var(--crit);font-weight:600}
+  .chip{display:inline-block;font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:600;padding:2px 8px;border-radius:2px;min-width:44px;text-align:center}
+  .chip.ok{background:var(--signal-soft);color:var(--signal)}
+  .chip.warn{background:var(--warn-soft);color:var(--warn)}
+  .chip.crit{background:var(--crit-soft);color:var(--crit)}
+  .grouphead{font-size:15px;font-weight:700;margin:6px 0 10px;display:flex;align-items:baseline;gap:10px;text-transform:uppercase;letter-spacing:.04em}
+  .gcount{font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:500;color:var(--ink-3);text-transform:none;letter-spacing:0}
+  .bands{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .bandcard{background:var(--surface);border:1px solid var(--rule);border-radius:3px;padding:16px 18px}
+  .bandcard .big{font-family:"IBM Plex Sans Condensed",sans-serif;font-size:34px;font-weight:700;line-height:1}
+  .bandcard .lbl{font-size:12.5px;color:var(--ink-2);margin-top:6px}
+  .bandcard.crit{border-left:3px solid var(--crit)}
+  .bandcard.warn{border-left:3px solid var(--warn)}
+  .bandcard.ok{border-left:3px solid var(--signal)}
+  .finding{border-left:2px solid var(--rule);padding:0 0 0 16px;margin:0 0 18px}
+  .finding.bug{border-left-color:var(--crit)}
+  .finding h3{font-size:15px;font-weight:600;margin:0 0 4px}
+  .finding p{margin:0;color:var(--ink-2);font-size:14px}
+  .caveat{font-size:13px;color:var(--ink-3);max-width:80ch}
+  .caveat li{margin-bottom:7px}
+  code{font-family:"IBM Plex Mono",monospace;font-size:.9em;background:var(--surface-2);padding:1px 5px;border-radius:2px;border:1px solid var(--rule-2)}
+  footer{padding:26px 0 0;font-size:12.5px;color:var(--ink-3);font-family:"IBM Plex Mono",monospace}
+  @media(max-width:620px){.bands{grid-template-columns:1fr}}
+</style>
+<div class="wrap">
+<header>
+  <div class="eyebrow">Per-endpoint benchmark · Stirling PDF</div>
+  <h1>Every tool, measured</h1>
+  <p class="standfirst">CPU cost, peak memory and measured maximum throughput for __NTOTAL__ file-processing endpoints, at __CORES__ vCPU. Sorted so the tools that need optimising rise to the top.</p>
+  <dl class="rig">
+    <div><dt>Endpoints</dt><dd>__NTOTAL__</dd></div>
+    <div><dt>Heavy (&gt;10 cs)</dt><dd>__NHEAVY__</dd></div>
+    <div><dt>Moderate</dt><dd>__NMOD__</dd></div>
+    <div><dt>Light</dt><dd>__NLIGHT__</dd></div>
+  </dl>
+</header>
+<section>
+  <h2>Where the cost is</h2>
+  <p class="sub">CPU per request (core-seconds: one core busy for one second) sets how many of an operation a node can run at once.</p>
+  <div class="bands">
+    <div class="bandcard crit"><div class="big">__NHEAVY__</div><div class="lbl"><strong>Heavy</strong> — over 10 core-seconds each. These define the capacity ceiling.</div></div>
+    <div class="bandcard warn"><div class="big">__NMOD__</div><div class="lbl"><strong>Moderate</strong> — 2-10 core-seconds. Fine at normal load.</div></div>
+    <div class="bandcard ok"><div class="big">__NLIGHT__</div><div class="lbl"><strong>Light</strong> — under 2 core-seconds. Effectively free.</div></div>
+  </div>
+</section>
+<section>
+  <h2>Optimisation candidates</h2>
+  <p class="sub">The eight most expensive endpoints — highest-value targets for improvement.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Tool</th><th>CPU / req</th><th>Latency</th><th>Max req/s</th><th>Test input</th></tr></thead>
+    <tbody>__HEAVYROWS__</tbody>
+  </table></div>
+</section>
+<section>
+  <h2>Full results by category</h2>
+  <p class="sub">All __NTOTAL__ endpoints. CPU chip colour marks the cost band. Max req/s measured at concurrency __CORES__; scales roughly linearly with core count.</p>
+  __GROUPS__
+</section>
+<section style="border-bottom:0">
+  <h2>Method</h2>
+  <ul class="caveat">
+    <li>One node at __CORES__ vCPU. CPU and memory read from the container cgroup; CPU is core-seconds per request (median of 3). Max req/s measured directly at concurrency __CORES__.</li>
+    <li>Peak MB is the container high-water mark including page cache, so it overstates process memory for I/O-heavy tools — treat as an upper bound.</li>
+    <li>Each endpoint used one representative input with schema-default parameters, so cost scales with document size and settings. Full data: <code>endpoint_benchmark.csv</code>.</li>
+  </ul>
+</section>
+<footer>__NTOTAL__ endpoints · __CORES__ vCPU · CPU core-seconds + measured max throughput</footer>
+</div>

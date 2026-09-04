@@ -1,0 +1,15 @@
+# Generated inputs and outputs - reproduced by run.sh
+fixtures/
+apidocs.json
+catalog.json
+stress_*.json
+throughput.json
+camp_*.json
+campaign_*.json
+endpoint_*.json
+endpoint_benchmark.csv
+report.html
+*.log
+.venv/
+__pycache__/
+lib/__pycache__/

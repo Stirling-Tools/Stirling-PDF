@@ -1,0 +1,4 @@
+requests>=2.31
+pymupdf>=1.24
+pillow>=10.0
+numpy>=1.26

@@ -1,0 +1,6 @@
+FROM stirlingtools/stirling-pdf:latest
+USER root
+RUN rm -f /app/app.jar && rm -rf /app/lib && mkdir -p /app/lib
+COPY app.jar /app/app.jar
+COPY lib/ /app/lib/
+RUN chown -R stirlingpdfuser:stirlingpdfgroup /app/app.jar /app/lib
