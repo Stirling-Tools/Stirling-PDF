@@ -2,26 +2,26 @@ import {
   Suspense,
   lazy,
   useCallback,
-  useMemo,
   useRef,
   useState,
   type ReactNode,
 } from "react";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useAllFiles } from "@app/contexts/file/fileHooks";
-import { collectThumbnailSources } from "@app/components/easterEgg/collectThumbnails";
+import { thumbnailGenerationService } from "@app/services/thumbnailGenerationService";
+import {
+  type ThumbnailRequest,
+  planThumbnails,
+} from "@app/components/easterEgg/collectThumbnails";
+import type { StirlingFile } from "@app/types/fileContext";
 
 // Its own chunk: nothing here is fetched unless somebody actually finds it.
 const BrickGame = lazy(
   () => import("@app/components/easterEgg/brickGame/BrickGame"),
 );
 
-/**
- * How long to wait for thumbnails before opening regardless. They are blob URLs
- * already in memory, so this is normally not reached; it exists so a stalled
- * decode cannot hold the game shut.
- */
-const DECODE_BUDGET_MS = 500;
+/** Small: the bricks are 49x68, so anything larger is detail nobody sees. */
+const THUMBNAIL_SCALE = 0.3;
 
 export interface BrandFlourish {
   /**
@@ -32,7 +32,7 @@ export interface BrandFlourish {
   overlay: ReactNode;
 }
 
-function loadImage(src: string): Promise<HTMLImageElement | null> {
+function decode(src: string): Promise<HTMLImageElement | null> {
   return new Promise((resolve) => {
     const image = new Image();
     image.onload = () => resolve(image);
@@ -41,25 +41,65 @@ function loadImage(src: string): Promise<HTMLImageElement | null> {
   });
 }
 
-/** Whichever thumbnails decode inside the budget; a slow or broken one is dropped. */
-async function loadWithinBudget(
-  sources: readonly string[],
-): Promise<HTMLImageElement[]> {
-  if (sources.length === 0) return [];
-  const settled = new Map<number, HTMLImageElement>();
-  const loads = sources.map((src, index) =>
-    loadImage(src).then((image) => {
-      if (image) settled.set(index, image);
-    }),
-  );
-  await Promise.race([
-    Promise.all(loads),
-    new Promise((resolve) => setTimeout(resolve, DECODE_BUDGET_MS)),
-  ]);
-  // Kept in source order so the wall reads like the document.
-  return sources
-    .map((_, index) => settled.get(index))
-    .filter((image): image is HTMLImageElement => Boolean(image));
+/**
+ * Renders the planned pages, reusing anything already generated.
+ *
+ * Work is grouped into one service call per file, and `onBatch` fires as each
+ * file lands so the wall fills in progressively rather than waiting on the
+ * slowest document. Order is kept against the plan, so pages stay interleaved
+ * across files however they arrive.
+ */
+async function renderPlan(
+  plan: readonly ThumbnailRequest[],
+  files: readonly StirlingFile[],
+  onBatch: (images: HTMLImageElement[]) => void,
+): Promise<void> {
+  const sources = new Map<number, string>();
+  const missingByFile = new Map<number, number[]>();
+  plan.forEach((request, index) => {
+    if (request.existing) {
+      sources.set(index, request.existing);
+      return;
+    }
+    const pending = missingByFile.get(request.fileIndex) ?? [];
+    pending.push(index);
+    missingByFile.set(request.fileIndex, pending);
+  });
+
+  const publish = async () => {
+    const ordered = plan
+      .map((_, index) => sources.get(index))
+      .filter((src): src is string => Boolean(src));
+    const decoded = await Promise.all(ordered.map(decode));
+    onBatch(decoded.filter((img): img is HTMLImageElement => Boolean(img)));
+  };
+
+  // Anything the app had already rendered goes up straight away.
+  if (sources.size > 0) await publish();
+
+  for (const [fileIndex, planIndexes] of missingByFile) {
+    const file = files[fileIndex];
+    if (!file) continue;
+    try {
+      const buffer = await file.arrayBuffer();
+      const results = await thumbnailGenerationService.generateThumbnails(
+        file.fileId,
+        buffer,
+        planIndexes.map((index) => plan[index].pageNumber),
+        { scale: THUMBNAIL_SCALE },
+      );
+      for (const result of results) {
+        if (!result.success || !result.thumbnail) continue;
+        const planIndex = planIndexes.find(
+          (index) => plan[index].pageNumber === result.pageNumber,
+        );
+        if (planIndex !== undefined) sources.set(planIndex, result.thumbnail);
+      }
+      await publish();
+    } catch {
+      // A document that will not render just leaves its bricks blank.
+    }
+  }
 }
 
 /**
@@ -74,30 +114,30 @@ async function loadWithinBudget(
 export function useBrandFlourish(): BrandFlourish {
   const { config } = useAppConfig();
   const enabled = config?.enableEasterEggs === true;
-  const { fileStubs } = useAllFiles();
+  const { files, fileStubs } = useAllFiles();
   const [origin, setOrigin] = useState<DOMRect | null>(null);
-  const [images, setImages] = useState<readonly HTMLImageElement[]>([]);
   const [open, setOpen] = useState(false);
-  const openingRef = useRef(false);
+  const [images, setImages] = useState<readonly HTMLImageElement[]>([]);
+  // Read at trigger time, so the render pass never restarts on a re-render.
+  const filesRef = useRef(files);
+  const stubsRef = useRef(fileStubs);
+  filesRef.current = files;
+  stubsRef.current = fileStubs;
+  const runRef = useRef(0);
 
-  const thumbnailSources = useMemo(
-    () => collectThumbnailSources(fileStubs),
-    [fileStubs],
-  );
-
-  const trigger = useCallback(
-    (originRect: DOMRect | null) => {
-      if (openingRef.current || open) return;
-      openingRef.current = true;
-      setOrigin(originRect);
-      void loadWithinBudget(thumbnailSources).then((loaded) => {
-        setImages(loaded);
-        setOpen(true);
-        openingRef.current = false;
-      });
-    },
-    [open, thumbnailSources],
-  );
+  const trigger = useCallback((originRect: DOMRect | null) => {
+    setOrigin(originRect);
+    setImages([]);
+    setOpen(true);
+    // Opening does not wait on the pages: the game starts with blank ones and
+    // they arrive while the fly-in is still running.
+    const run = ++runRef.current;
+    const plan = planThumbnails(stubsRef.current);
+    void renderPlan(plan, filesRef.current, (loaded) => {
+      // A game closed and reopened mid-render must not be fed the old pages.
+      if (runRef.current === run) setImages(loaded);
+    });
+  }, []);
 
   const close = useCallback(() => setOpen(false), []);
 

@@ -49,6 +49,7 @@ function resolvePalette(host: HTMLElement): Palette {
     powerSlow: read("--brick-game-power-slow", "#fff"),
     powerMulti: read("--brick-game-power-multi", "#fff"),
     powerLife: read("--brick-game-power-life", "#fff"),
+    powerBane: read("--brick-game-power-bane", "#fff"),
   };
   probe.remove();
   return palette;
@@ -122,8 +123,7 @@ export default function BrickGame({
     bricksLeft: 0,
     best: 0,
     balls: 1,
-    wide: 0,
-    slow: 0,
+    effects: [],
   });
 
   // Read once, at construction, so a re-render cannot restart the game by
@@ -182,6 +182,11 @@ export default function BrickGame({
       gameRef.current = null;
     };
   }, [resize]);
+
+  // Pages are rendered asynchronously, so they arrive after the game is built.
+  useEffect(() => {
+    gameRef.current?.setImages(images ?? []);
+  }, [images]);
 
   // Pointer lock keeps the aim from running out of the playfield mid-rally.
   useEffect(() => {
@@ -266,6 +271,15 @@ export default function BrickGame({
     gameRef.current?.act();
   };
 
+  useEffect(() => {
+    // Focus the shell rather than the close button, so the keys the game wants
+    // are not being handed to a button that would act on them.
+    cabinetRef.current?.focus();
+    // The click burst that got in here happened before this overlay existed, so
+    // it may have left a selection behind in the chrome underneath.
+    window.getSelection()?.removeAllRanges();
+  }, []);
+
   const banner = BANNERS[status.phase];
 
   return createPortal(
@@ -280,16 +294,16 @@ export default function BrickGame({
       >
         <div className="brick-game-hud">
           <div className="brick-game-effects">
-            {status.wide > 0 && (
-              <span className="brick-game-effect brick-game-effect--wide">
-                Wide {status.wide}s
+            {status.effects.map((effect) => (
+              <span
+                key={effect.kind}
+                className={`brick-game-effect brick-game-effect--${
+                  effect.bad ? "bad" : "good"
+                }`}
+              >
+                {effect.label} {effect.seconds}s
               </span>
-            )}
-            {status.slow > 0 && (
-              <span className="brick-game-effect brick-game-effect--slow">
-                Slow {status.slow}s
-              </span>
-            )}
+            ))}
           </div>
           <span className="brick-game-hud__stat brick-game-hud__stat--first">
             Score <b>{status.score}</b>

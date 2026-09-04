@@ -42,9 +42,11 @@ const PADDLE_W = 132;
 const PADDLE_H = 16;
 const PADDLE_Y = FIELD_H - 48;
 const PADDLE_KEY_SPEED = 620;
-/** How much the wide power-up adds, and how long every timed effect lasts. */
-const WIDE_FACTOR = 1.55;
+/** Paddle-width and ball-speed multipliers, good and bad, and their duration. */
+const WIDE_SCALE = 1.55;
+const SHRINK_SCALE = 0.62;
 const SLOW_FACTOR = 0.62;
+const FAST_FACTOR = 1.4;
 const EFFECT_S = 12;
 
 const BALL_R = 7;
@@ -57,7 +59,7 @@ const MAX_BALLS = 6;
 /** Angle spread applied when a split adds balls either side of the original. */
 const SPLIT_SPREAD = 0.45;
 
-const DROP_CHANCE = 0.22;
+const DROP_CHANCE = 0.24;
 const POWERUP_W = 30;
 const POWERUP_H = 20;
 const POWERUP_FALL_SPEED = 145;
@@ -83,7 +85,18 @@ const BEST_SCORE_KEY = "stirling.easterEgg.best";
 
 export type GamePhase = "intro" | "ready" | "playing" | "lost" | "won";
 
-export type PowerKind = "wide" | "slow" | "multi" | "life";
+/** Worth catching. */
+export type BoonKind = "wide" | "slow" | "multi" | "life";
+/** Worth dodging. */
+export type BaneKind = "shrink" | "fast" | "reverse";
+export type DropKind = BoonKind | BaneKind;
+
+export interface ActiveEffect {
+  kind: DropKind;
+  label: string;
+  seconds: number;
+  bad: boolean;
+}
 
 export interface GameStatus {
   phase: GamePhase;
@@ -92,9 +105,8 @@ export interface GameStatus {
   bricksLeft: number;
   best: number;
   balls: number;
-  /** Seconds left on each timed effect; 0 means inactive. */
-  wide: number;
-  slow: number;
+  /** Whatever is currently running, good or bad, for the HUD to show. */
+  effects: ActiveEffect[];
 }
 
 export interface Palette {
@@ -109,6 +121,8 @@ export interface Palette {
   powerSlow: string;
   powerMulti: string;
   powerLife: string;
+  /** Every bane shares one colour, so "do not catch this" is learnt once. */
+  powerBane: string;
 }
 
 interface Ball {
@@ -132,19 +146,47 @@ interface Brick {
   appearAt: number;
 }
 
-interface Powerup {
+interface Drop {
   x: number;
   y: number;
-  kind: PowerKind;
+  kind: DropKind;
 }
 
-const POWER_ORDER: PowerKind[] = ["wide", "slow", "multi", "life"];
-/** Cumulative weights over POWER_ORDER; an extra ball is the rarest. */
-const POWER_WEIGHTS = [0.34, 0.62, 0.87, 1];
+/** A multiplier that expires, used for both the paddle and the ball. */
+interface TimedEffect {
+  kind: DropKind;
+  factor: number;
+  remaining: number;
+}
 
-function pickPowerKind(roll: number): PowerKind {
-  for (let i = 0; i < POWER_WEIGHTS.length; i++) {
-    if (roll < POWER_WEIGHTS[i]) return POWER_ORDER[i];
+/**
+ * The drop table. Boons come first so a low roll is always good news, and they
+ * hold about two thirds of the range: banes are there to be dodged, not to make
+ * a good run feel unlucky. An extra ball is the rarest thing in the game.
+ */
+const DROP_TABLE: { kind: DropKind; upTo: number }[] = [
+  { kind: "wide", upTo: 0.2 },
+  { kind: "slow", upTo: 0.4 },
+  { kind: "multi", upTo: 0.56 },
+  { kind: "life", upTo: 0.65 },
+  { kind: "shrink", upTo: 0.79 },
+  { kind: "fast", upTo: 0.92 },
+  { kind: "reverse", upTo: 1 },
+];
+
+const BANES: ReadonlySet<DropKind> = new Set<DropKind>([
+  "shrink",
+  "fast",
+  "reverse",
+]);
+
+export function isBane(kind: DropKind): boolean {
+  return BANES.has(kind);
+}
+
+function pickDropKind(roll: number): DropKind {
+  for (const entry of DROP_TABLE) {
+    if (roll < entry.upTo) return entry.kind;
   }
   return "wide";
 }
@@ -196,7 +238,6 @@ export class BrickGame {
   private readonly palette: Palette;
   private readonly onStatus: (status: GameStatus) => void;
   private readonly introFrom: MarkPose | null;
-  private readonly images: readonly HTMLImageElement[];
 
   private bricks: Brick[];
   private phase: GamePhase = "intro";
@@ -209,11 +250,14 @@ export class BrickGame {
   private pointerX: number | null = null;
 
   private balls: Ball[] = [];
-  private powerups: Powerup[] = [];
-  private wideRemaining = 0;
-  private slowRemaining = 0;
-  private slowApplied = false;
+  private drops: Drop[] = [];
+  /** One at a time each, so opposites replace rather than cancel confusingly. */
+  private paddleEffect: TimedEffect | null = null;
+  private ballEffect: TimedEffect | null = null;
+  private reverseRemaining = 0;
+  private ballFactorApplied = 1;
   private nextBallSpeed = BALL_SPEED_START;
+  private images: readonly HTMLImageElement[];
 
   private introElapsed = 0;
   private accumulator = 0;
@@ -260,6 +304,18 @@ export class BrickGame {
     this.rafId = null;
   }
 
+  /**
+   * Faces the bricks with these thumbnails. Called after construction because
+   * the pages are rendered asynchronously; the wall starts blank and fills in,
+   * usually while the fly-in is still running.
+   */
+  setImages(images: readonly HTMLImageElement[]): void {
+    this.images = images;
+    for (const [index, brick] of this.bricks.entries()) {
+      brick.image = images.length > 0 ? index % images.length : -1;
+    }
+  }
+
   /** Absolute pointer position; null hands the paddle back to the keyboard. */
   setPointer(fieldX: number | null): void {
     this.pointerX = fieldX;
@@ -292,17 +348,48 @@ export class BrickGame {
     this.score = 0;
     this.lives = START_LIVES;
     this.nextBallSpeed = BALL_SPEED_START;
-    this.powerups = [];
-    this.wideRemaining = 0;
-    this.slowRemaining = 0;
-    this.slowApplied = false;
+    this.clearBoard();
     this.phase = "ready";
     this.resetBalls();
     this.emit();
   }
 
   private get paddleW(): number {
-    return this.wideRemaining > 0 ? PADDLE_W * WIDE_FACTOR : PADDLE_W;
+    return PADDLE_W * (this.paddleEffect?.factor ?? 1);
+  }
+
+  private get ballFactor(): number {
+    return this.ballEffect?.factor ?? 1;
+  }
+
+  private get activeEffects(): ActiveEffect[] {
+    const effects: ActiveEffect[] = [];
+    const push = (kind: DropKind, label: string, remaining: number) => {
+      effects.push({
+        kind,
+        label,
+        seconds: Math.max(1, Math.ceil(remaining)),
+        bad: isBane(kind),
+      });
+    };
+    if (this.paddleEffect) {
+      push(
+        this.paddleEffect.kind,
+        this.paddleEffect.kind === "wide" ? "Wide" : "Narrow",
+        this.paddleEffect.remaining,
+      );
+    }
+    if (this.ballEffect) {
+      push(
+        this.ballEffect.kind,
+        this.ballEffect.kind === "slow" ? "Slow" : "Fast",
+        this.ballEffect.remaining,
+      );
+    }
+    if (this.reverseRemaining > 0) {
+      push("reverse", "Reversed", this.reverseRemaining);
+    }
+    return effects;
   }
 
   private get bricksLeft(): number {
@@ -317,8 +404,7 @@ export class BrickGame {
       bricksLeft: this.bricksLeft,
       best: this.best,
       balls: this.balls.length,
-      wide: Math.max(0, Math.ceil(this.wideRemaining)),
-      slow: Math.max(0, Math.ceil(this.slowRemaining)),
+      effects: this.activeEffects,
     });
   }
 
@@ -356,9 +442,9 @@ export class BrickGame {
     this.emit();
   }
 
-  /** A ball's speed with the slow effect folded in. */
+  /** A ball's speed with any slow or fast effect folded in. */
   private liveSpeed(ball: Ball): number {
-    return ball.speed * (this.slowRemaining > 0 ? SLOW_FACTOR : 1);
+    return ball.speed * this.ballFactor;
   }
 
   private frame = (now: number): void => {
@@ -388,7 +474,7 @@ export class BrickGame {
     }
 
     this.tickEffects(dt);
-    this.movePowerups(dt);
+    this.moveDrops(dt);
 
     this.accumulator += dt;
     while (this.accumulator >= PHYSICS_STEP) {
@@ -402,37 +488,49 @@ export class BrickGame {
   }
 
   private tickEffects(dt: number): void {
-    const wideWas = this.wideRemaining > 0;
-    if (this.wideRemaining > 0) this.wideRemaining -= dt;
-    if (this.slowRemaining > 0) this.slowRemaining -= dt;
+    const before = this.activeEffects.length;
 
-    // Velocity carries the slow factor, so it has to be rescaled on each flip.
-    const slowNow = this.slowRemaining > 0;
-    if (slowNow !== this.slowApplied) {
-      this.slowApplied = slowNow;
+    if (this.paddleEffect) {
+      this.paddleEffect.remaining -= dt;
+      if (this.paddleEffect.remaining <= 0) this.paddleEffect = null;
+    }
+    if (this.ballEffect) {
+      this.ballEffect.remaining -= dt;
+      if (this.ballEffect.remaining <= 0) this.ballEffect = null;
+    }
+    if (this.reverseRemaining > 0) this.reverseRemaining -= dt;
+
+    // Velocity carries the speed factor, so it is rescaled whenever it changes.
+    if (this.ballFactor !== this.ballFactorApplied) {
+      this.ballFactorApplied = this.ballFactor;
       for (const ball of this.balls) this.rescale(ball);
     }
-    if (wideWas !== this.wideRemaining > 0) this.emit();
+    if (this.activeEffects.length !== before) this.emit();
   }
 
   private movePaddle(dt: number): void {
+    const reversed = this.reverseRemaining > 0;
     if (this.pointerX !== null) {
-      this.paddleX = this.pointerX - this.paddleW / 2;
+      // Mirrored rather than negated, so the pointer still maps onto the field.
+      // Relative nudges land in pointerX too, so they invert with it.
+      const aim = reversed ? FIELD_W - this.pointerX : this.pointerX;
+      this.paddleX = aim - this.paddleW / 2;
     } else if (this.paddleKeyDir !== 0) {
-      this.paddleX += this.paddleKeyDir * PADDLE_KEY_SPEED * dt;
+      const dir = reversed ? -this.paddleKeyDir : this.paddleKeyDir;
+      this.paddleX += dir * PADDLE_KEY_SPEED * dt;
     }
     this.paddleX = clamp(this.paddleX, 0, FIELD_W - this.paddleW);
   }
 
-  private movePowerups(dt: number): void {
-    if (this.powerups.length === 0) return;
+  private moveDrops(dt: number): void {
+    if (this.drops.length === 0) return;
     const top = PADDLE_Y;
     const left = this.paddleX;
     const right = this.paddleX + this.paddleW;
-    const survivors: Powerup[] = [];
+    const survivors: Drop[] = [];
     let caught = false;
 
-    for (const drop of this.powerups) {
+    for (const drop of this.drops) {
       drop.y += POWERUP_FALL_SPEED * dt;
       const overlapsPaddle =
         drop.y + POWERUP_H >= top &&
@@ -447,18 +545,28 @@ export class BrickGame {
       if (drop.y <= FIELD_H) survivors.push(drop);
     }
 
-    this.powerups = survivors;
+    this.drops = survivors;
     if (caught) this.emit();
   }
 
-  private collect(kind: PowerKind): void {
-    this.score += POWERUP_SCORE;
+  private collect(kind: DropKind): void {
+    // Banes are their own punishment; no points are taken for catching one.
+    if (!isBane(kind)) this.score += POWERUP_SCORE;
     switch (kind) {
       case "wide":
-        this.wideRemaining = EFFECT_S;
+        this.paddleEffect = { kind, factor: WIDE_SCALE, remaining: EFFECT_S };
+        break;
+      case "shrink":
+        this.paddleEffect = { kind, factor: SHRINK_SCALE, remaining: EFFECT_S };
         break;
       case "slow":
-        this.slowRemaining = EFFECT_S;
+        this.ballEffect = { kind, factor: SLOW_FACTOR, remaining: EFFECT_S };
+        break;
+      case "fast":
+        this.ballEffect = { kind, factor: FAST_FACTOR, remaining: EFFECT_S };
+        break;
+      case "reverse":
+        this.reverseRemaining = EFFECT_S;
         break;
       case "life":
         this.lives += 1;
@@ -467,6 +575,8 @@ export class BrickGame {
         this.splitBalls();
         break;
     }
+    // A paddle that just changed width must not straddle the wall.
+    this.paddleX = clamp(this.paddleX, 0, FIELD_W - this.paddleW);
   }
 
   /** Adds a ball either side of each existing one, up to the cap. */
@@ -586,10 +696,10 @@ export class BrickGame {
 
   private maybeDrop(brick: Brick): void {
     if (Math.random() >= DROP_CHANCE) return;
-    this.powerups.push({
+    this.drops.push({
       x: brick.x + (BRICK_W - POWERUP_W) / 2,
       y: brick.y + (BRICK_H - POWERUP_H) / 2,
-      kind: pickPowerKind(Math.random()),
+      kind: pickDropKind(Math.random()),
     });
   }
 
@@ -608,11 +718,8 @@ export class BrickGame {
       this.finish("lost");
       return;
     }
-    // A fresh ball arrives with the board's effects cleared.
-    this.powerups = [];
-    this.wideRemaining = 0;
-    this.slowRemaining = 0;
-    this.slowApplied = false;
+    // A fresh ball arrives with the board's effects cleared, good and bad.
+    this.clearBoard();
     this.phase = "ready";
     this.resetBalls();
     this.emit();
@@ -624,9 +731,18 @@ export class BrickGame {
       this.best = this.score;
       writeBest(this.best);
     }
-    this.powerups = [];
+    this.clearBoard();
     this.resetBalls();
     this.emit();
+  }
+
+  /** Drops in flight and every timed effect, gone. */
+  private clearBoard(): void {
+    this.drops = [];
+    this.paddleEffect = null;
+    this.ballEffect = null;
+    this.reverseRemaining = 0;
+    this.ballFactorApplied = 1;
   }
 
   private draw(): void {
@@ -647,7 +763,7 @@ export class BrickGame {
     ctx.strokeRect(0.5, 0.5, FIELD_W - 1, FIELD_H - 1);
 
     this.drawBricks();
-    this.drawPowerups();
+    this.drawDrops();
     this.drawMark();
     if (this.phase === "playing" || this.phase === "ready") this.drawBalls();
   }
@@ -731,7 +847,7 @@ export class BrickGame {
     );
   }
 
-  private powerColour(kind: PowerKind): string {
+  private dropColour(kind: DropKind): string {
     switch (kind) {
       case "wide":
         return this.palette.powerWide;
@@ -741,18 +857,35 @@ export class BrickGame {
         return this.palette.powerMulti;
       case "life":
         return this.palette.powerLife;
+      default:
+        return this.palette.powerBane;
     }
   }
 
-  private drawPowerups(): void {
+  private drawDrops(): void {
     const { ctx } = this;
-    for (const drop of this.powerups) {
+    for (const drop of this.drops) {
       const cx = drop.x + POWERUP_W / 2;
       const cy = drop.y + POWERUP_H / 2;
+      const bane = isBane(drop.kind);
+
       ctx.save();
       ctx.beginPath();
-      ctx.roundRect(drop.x, drop.y, POWERUP_W, POWERUP_H, 5);
-      ctx.fillStyle = this.powerColour(drop.kind);
+      if (bane) {
+        // Banes are spiked as well as red: shape carries at a glance, and it
+        // still reads for anyone who cannot tell the colours apart.
+        const spike = 5;
+        ctx.moveTo(drop.x, cy);
+        ctx.lineTo(drop.x + spike, drop.y);
+        ctx.lineTo(drop.x + POWERUP_W - spike, drop.y);
+        ctx.lineTo(drop.x + POWERUP_W, cy);
+        ctx.lineTo(drop.x + POWERUP_W - spike, drop.y + POWERUP_H);
+        ctx.lineTo(drop.x + spike, drop.y + POWERUP_H);
+        ctx.closePath();
+      } else {
+        ctx.roundRect(drop.x, drop.y, POWERUP_W, POWERUP_H, 5);
+      }
+      ctx.fillStyle = this.dropColour(drop.kind);
       ctx.fill();
 
       // Glyphs are drawn rather than set as text, so no font has to load.
@@ -760,24 +893,39 @@ export class BrickGame {
       ctx.fillStyle = this.palette.page;
       ctx.lineWidth = 1.6;
       ctx.lineCap = "round";
+      ctx.beginPath();
       switch (drop.kind) {
-        case "wide": {
-          ctx.beginPath();
+        case "wide":
+          // Outward arrows.
           ctx.moveTo(cx - 8, cy);
           ctx.lineTo(cx + 8, cy);
-          ctx.moveTo(cx - 8, cy);
-          ctx.lineTo(cx - 5, cy - 3);
-          ctx.moveTo(cx - 8, cy);
-          ctx.lineTo(cx - 5, cy + 3);
-          ctx.moveTo(cx + 8, cy);
-          ctx.lineTo(cx + 5, cy - 3);
-          ctx.moveTo(cx + 8, cy);
-          ctx.lineTo(cx + 5, cy + 3);
+          for (const [tip, inner] of [
+            [cx - 8, cx - 5],
+            [cx + 8, cx + 5],
+          ]) {
+            ctx.moveTo(tip, cy);
+            ctx.lineTo(inner, cy - 3);
+            ctx.moveTo(tip, cy);
+            ctx.lineTo(inner, cy + 3);
+          }
           ctx.stroke();
           break;
-        }
-        case "slow": {
-          ctx.beginPath();
+        case "shrink":
+          // The same arrows, turned inward.
+          ctx.moveTo(cx - 8, cy);
+          ctx.lineTo(cx + 8, cy);
+          for (const [tip, outer] of [
+            [cx - 4, cx - 7],
+            [cx + 4, cx + 7],
+          ]) {
+            ctx.moveTo(tip, cy);
+            ctx.lineTo(outer, cy - 3);
+            ctx.moveTo(tip, cy);
+            ctx.lineTo(outer, cy + 3);
+          }
+          ctx.stroke();
+          break;
+        case "slow":
           ctx.arc(cx, cy, 5.5, 0, Math.PI * 2);
           ctx.stroke();
           ctx.beginPath();
@@ -786,8 +934,30 @@ export class BrickGame {
           ctx.lineTo(cx + 3, cy);
           ctx.stroke();
           break;
-        }
-        case "multi": {
+        case "fast":
+          // Stacked chevrons, the usual shorthand for speed.
+          for (const dy of [-3.5, 1]) {
+            ctx.moveTo(cx - 5, cy + dy);
+            ctx.lineTo(cx, cy + dy + 3.5);
+            ctx.lineTo(cx + 5, cy + dy);
+          }
+          ctx.stroke();
+          break;
+        case "reverse":
+          // A U-turn: right along the bottom, back along the top.
+          ctx.moveTo(cx - 6, cy + 3.5);
+          ctx.lineTo(cx + 3, cy + 3.5);
+          ctx.arc(cx + 3, cy, 3.5, Math.PI / 2, -Math.PI / 2, false);
+          ctx.lineTo(cx - 6, cy - 3.5);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(cx - 6, cy - 3.5);
+          ctx.lineTo(cx - 3, cy - 6);
+          ctx.moveTo(cx - 6, cy - 3.5);
+          ctx.lineTo(cx - 3, cy - 1);
+          ctx.stroke();
+          break;
+        case "multi":
           for (const [dx, dy] of [
             [-6, 2],
             [0, -3],
@@ -798,16 +968,13 @@ export class BrickGame {
             ctx.fill();
           }
           break;
-        }
-        case "life": {
-          ctx.beginPath();
+        case "life":
           ctx.moveTo(cx - 5, cy);
           ctx.lineTo(cx + 5, cy);
           ctx.moveTo(cx, cy - 5);
           ctx.lineTo(cx, cy + 5);
           ctx.stroke();
           break;
-        }
       }
       ctx.restore();
     }

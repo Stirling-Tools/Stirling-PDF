@@ -2,94 +2,127 @@ import { describe, expect, it } from "vitest";
 import type { StirlingFileStub } from "@app/types/fileContext";
 import {
   MAX_THUMBNAILS,
-  collectThumbnailSources,
+  planThumbnails,
 } from "@app/components/easterEgg/collectThumbnails";
 
-/** Only the two thumbnail-bearing fields matter to the collector. */
+/** Only the thumbnail-bearing fields matter to the planner. */
 function stub(options: {
   pages?: (string | undefined)[];
+  totalPages?: number;
   thumbnailUrl?: string;
 }): StirlingFileStub {
+  const hasProcessed =
+    options.pages !== undefined || options.totalPages !== undefined;
   return {
     thumbnailUrl: options.thumbnailUrl,
-    processedFile: options.pages
-      ? { pages: options.pages.map((thumbnail) => ({ thumbnail })) }
+    processedFile: hasProcessed
+      ? {
+          pages: (options.pages ?? []).map((thumbnail) => ({ thumbnail })),
+          totalPages: options.totalPages,
+        }
       : undefined,
   } as StirlingFileStub;
 }
 
-describe("collectThumbnailSources", () => {
-  it("returns nothing when no file has a thumbnail yet", () => {
-    expect(collectThumbnailSources([])).toEqual([]);
-    expect(collectThumbnailSources([stub({}), stub({ pages: [] })])).toEqual(
-      [],
-    );
+/** Compact "file:page" view of a plan, for readable expectations. */
+const shape = (plan: ReturnType<typeof planThumbnails>) =>
+  plan.map((r) => `${r.fileIndex}:${r.pageNumber}`);
+
+describe("planThumbnails", () => {
+  it("plans nothing when there are no files", () => {
+    expect(planThumbnails([])).toEqual([]);
   });
 
-  it("takes every page of a single document in order", () => {
-    const sources = collectThumbnailSources([
-      stub({ pages: ["a1", "a2", "a3"] }),
-    ]);
-    expect(sources).toEqual(["a1", "a2", "a3"]);
+  it("plans the first page of a file nothing has looked at yet", () => {
+    // A freshly opened file has no page data at all, so page 1 is all we know.
+    const plan = planThumbnails([stub({})]);
+    expect(shape(plan)).toEqual(["0:1"]);
+    expect(plan[0].existing).toBeUndefined();
   });
 
   it("interleaves files so a long document cannot crowd the others out", () => {
-    const sources = collectThumbnailSources([
-      stub({ pages: ["a1", "a2", "a3", "a4"] }),
-      stub({ pages: ["b1"] }),
-      stub({ pages: ["c1", "c2"] }),
+    const plan = planThumbnails([
+      stub({ totalPages: 4 }),
+      stub({ totalPages: 1 }),
+      stub({ totalPages: 2 }),
     ]);
-    // One page from each file, then back round for the deeper ones.
-    expect(sources).toEqual(["a1", "b1", "c1", "a2", "c2", "a3", "a4"]);
+    expect(shape(plan)).toEqual([
+      "0:1",
+      "1:1",
+      "2:1",
+      "0:2",
+      "2:2",
+      "0:3",
+      "0:4",
+    ]);
   });
 
-  it("represents every file even when the cap is reached", () => {
-    const long = Array.from({ length: 100 }, (_, i) => `a${i}`);
-    const sources = collectThumbnailSources([
-      stub({ pages: long }),
-      stub({ pages: ["b1"] }),
-      stub({ pages: ["c1"] }),
+  it("represents every file even when the wall fills up", () => {
+    const plan = planThumbnails([
+      stub({ totalPages: 500 }),
+      stub({ totalPages: 500 }),
+      stub({ totalPages: 500 }),
     ]);
-    expect(sources).toHaveLength(MAX_THUMBNAILS);
-    expect(sources).toContain("b1");
-    expect(sources).toContain("c1");
+    expect(plan).toHaveLength(MAX_THUMBNAILS);
+    const files = new Set(plan.map((r) => r.fileIndex));
+    expect([...files].sort()).toEqual([0, 1, 2]);
   });
 
-  it("falls back to a file's own thumbnail until it has been paged out", () => {
-    const sources = collectThumbnailSources([
-      stub({ thumbnailUrl: "file-a" }),
-      stub({ pages: ["b1", "b2"] }),
-    ]);
-    expect(sources).toEqual(["file-a", "b1", "b2"]);
+  it("fills the whole wall from one document when it is the only one open", () => {
+    const plan = planThumbnails([stub({ totalPages: 500 })]);
+    expect(plan).toHaveLength(MAX_THUMBNAILS);
+    // Distinct pages, so the wall is not the same page over and over.
+    expect(new Set(plan.map((r) => r.pageNumber)).size).toBe(MAX_THUMBNAILS);
   });
 
-  it("prefers page thumbnails over the file's own", () => {
-    const sources = collectThumbnailSources([
+  it("shares the wall out evenly between several documents", () => {
+    const plan = planThumbnails([
+      stub({ totalPages: 500 }),
+      stub({ totalPages: 500 }),
+      stub({ totalPages: 500 }),
+    ]);
+    const perFile = [0, 1, 2].map(
+      (i) => plan.filter((r) => r.fileIndex === i).length,
+    );
+    expect(perFile).toEqual([13, 13, 13]);
+  });
+
+  it("reuses a page thumbnail the app has already rendered", () => {
+    const plan = planThumbnails([stub({ pages: ["a1", "a2"] })]);
+    expect(plan.map((r) => r.existing)).toEqual(["a1", "a2"]);
+  });
+
+  it("marks pages with no thumbnail for rendering", () => {
+    const plan = planThumbnails([stub({ pages: ["a1", undefined, "a3"] })]);
+    expect(shape(plan)).toEqual(["0:1", "0:2", "0:3"]);
+    expect(plan.map((r) => r.existing)).toEqual(["a1", undefined, "a3"]);
+  });
+
+  it("uses a file's own thumbnail for its first page only", () => {
+    const plan = planThumbnails([
+      stub({ totalPages: 2, thumbnailUrl: "file-a" }),
+    ]);
+    expect(plan[0].existing).toBe("file-a");
+    expect(plan[1].existing).toBeUndefined();
+  });
+
+  it("prefers a page thumbnail over the file's own", () => {
+    const plan = planThumbnails([
       stub({ pages: ["a1"], thumbnailUrl: "file-a" }),
     ]);
-    expect(sources).toEqual(["a1"]);
-  });
-
-  it("skips pages with no thumbnail rather than leaving a hole", () => {
-    const sources = collectThumbnailSources([
-      stub({ pages: ["a1", undefined, "a3"] }),
-    ]);
-    expect(sources).toEqual(["a1", "a3"]);
+    expect(plan[0].existing).toBe("a1");
   });
 
   it("does not spend two bricks on the same image", () => {
-    const sources = collectThumbnailSources([
+    const plan = planThumbnails([
       stub({ pages: ["shared", "a2"] }),
       stub({ pages: ["shared"] }),
     ]);
-    expect(sources).toEqual(["shared", "a2"]);
+    expect(plan.map((r) => r.existing)).toEqual(["shared", "a2"]);
   });
 
   it("honours a caller-supplied cap", () => {
-    const sources = collectThumbnailSources(
-      [stub({ pages: ["a1", "a2", "a3"] })],
-      2,
-    );
-    expect(sources).toEqual(["a1", "a2"]);
+    const plan = planThumbnails([stub({ totalPages: 5 })], 2);
+    expect(plan).toHaveLength(2);
   });
 });

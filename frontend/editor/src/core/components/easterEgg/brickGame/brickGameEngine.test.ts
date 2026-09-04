@@ -18,6 +18,7 @@ const PALETTE: Palette = {
   powerSlow: "#9",
   powerMulti: "#a",
   powerLife: "#b",
+  powerBane: "#c",
 };
 
 interface DrawnImage {
@@ -135,6 +136,11 @@ function concedeABall({ game, run }: Harness): void {
   game.act();
   game.setPointer(0);
   run(600);
+}
+
+/** Seconds left on a named effect, or 0 when it is not running. */
+function effectSeconds(status: GameStatus, kind: string): number {
+  return status.effects.find((e) => e.kind === kind)?.seconds ?? 0;
 }
 
 beforeEach(() => {
@@ -334,8 +340,7 @@ describe("BrickGame", () => {
       game.act();
       run(240);
       expect(status().score).toBeGreaterThan(0);
-      expect(status().wide).toBe(0);
-      expect(status().slow).toBe(0);
+      expect(status().effects).toEqual([]);
     });
 
     /**
@@ -354,34 +359,35 @@ describe("BrickGame", () => {
       return best;
     }
 
-    it("widens the paddle when a wide drop is caught", () => {
-      alwaysDrop(0.1);
+    it.each([
+      ["wide", 0.1],
+      ["slow", 0.3],
+      ["shrink", 0.7],
+      ["fast", 0.85],
+      ["reverse", 0.97],
+    ])("runs the %s effect when that drop is caught", (kind, roll) => {
+      alwaysDrop(roll as number);
       const harness = setup();
       harness.game.act();
-      expect(peak(harness, (s) => s.wide)).toBeGreaterThan(0);
-    });
-
-    it("slows the ball when a slow drop is caught", () => {
-      alwaysDrop(0.5);
-      const harness = setup();
-      harness.game.act();
-      expect(peak(harness, (s) => s.slow)).toBeGreaterThan(0);
+      expect(
+        peak(harness, (s) => effectSeconds(s, kind as string)),
+      ).toBeGreaterThan(0);
     });
 
     it("clears the board's effects when a ball is conceded", () => {
       alwaysDrop(0.1);
       const harness = setup();
       harness.game.act();
-      expect(peak(harness, (s) => s.wide)).toBeGreaterThan(0);
+      expect(peak(harness, (s) => effectSeconds(s, "wide"))).toBeGreaterThan(0);
       // Run the paddle off and let the ball go.
       harness.game.setPointer(0);
       harness.run(900);
       expect(harness.status().lives).toBeLessThan(3);
-      expect(harness.status().wide).toBe(0);
+      expect(harness.status().effects).toEqual([]);
     });
 
     it("splits into more balls when a multi drop is caught", () => {
-      alwaysDrop(0.75);
+      alwaysDrop(0.45);
       const { game, status, run } = setup();
       game.act();
       expect(status().balls).toBe(1);
@@ -390,7 +396,7 @@ describe("BrickGame", () => {
     });
 
     it("grants a ball in reserve when a life drop is caught", () => {
-      alwaysDrop(0.95);
+      alwaysDrop(0.6);
       const { game, status, run } = setup();
       game.act();
       run(600);
@@ -398,7 +404,7 @@ describe("BrickGame", () => {
     });
 
     it("only concedes when the last ball is lost", () => {
-      alwaysDrop(0.75);
+      alwaysDrop(0.45);
       const harness = setup();
       harness.game.act();
       harness.run(600);
