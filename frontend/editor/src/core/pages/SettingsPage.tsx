@@ -173,14 +173,28 @@ const SettingsPageInner: React.FC = () => {
 
   // Deep link: /settings/{section}?focus={anchor} scrolls to and briefly
   // highlights one control (the global super search jumps straight to a row).
+  // `#anchor` means the same thing, so in-app links written either way work.
   useEffect(() => {
-    const focus = new URLSearchParams(location.search).get("focus");
+    const focus =
+      new URLSearchParams(location.search).get("focus") ||
+      decodeURIComponent(location.hash.replace(/^#/, ""));
     if (!focus) return;
     let raf = 0;
     const timer = window.setTimeout(() => {
       raf = window.requestAnimationFrame(() => {
         const el = document.getElementById(focus);
         if (!el) return;
+        // Unfold first, or there is nothing to scroll to: the anchor is either
+        // a folded card's own toggle, or a control inside its hidden panel.
+        if (el.getAttribute("aria-expanded") === "false") {
+          el.click();
+        } else {
+          el.closest(".settings-card__panel[hidden]")
+            ?.parentElement?.querySelector<HTMLButtonElement>(
+              ".settings-card__toggle",
+            )
+            ?.click();
+        }
         el.scrollIntoView({ behavior: "smooth", block: "center" });
         el.classList.add("settings-focus-target");
         window.setTimeout(
@@ -193,7 +207,7 @@ const SettingsPageInner: React.FC = () => {
       window.clearTimeout(timer);
       if (raf) window.cancelAnimationFrame(raf);
     };
-  }, [activeItem, location.search]);
+  }, [activeItem, location.search, location.hash]);
 
   // Sections that bring their own page header get the whole pane; on mobile the
   // bar stays anyway, because it carries the only way back to the list.
