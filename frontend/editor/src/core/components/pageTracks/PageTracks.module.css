@@ -126,52 +126,67 @@
 
 /* ── Tile ────────────────────────────────────────────────────────────────── */
 
+/* A transparent wrapper stacking the page over its number. The visible "card"
+   is the thumbnail box, matching Active Files: a page floats on a soft shadow
+   rather than sitting in a bordered container. */
 .tile {
   position: absolute;
   top: 0;
   width: var(--pt-tile-w);
+  display: flex;
+  flex-direction: column;
   cursor: grab;
   user-select: none;
-  border-radius: var(--radius-sm);
-  outline: 1px solid var(--c-border-subtle);
-  outline-offset: -1px;
-  background: var(--c-surface-raised);
-  transition:
-    outline-color 0.15s ease,
-    box-shadow 0.15s ease;
-}
-
-.tile:hover {
-  outline-color: var(--c-border-strong);
-}
-
-.tileSelected {
-  outline: 2px solid var(--c-primary);
-  outline-offset: -2px;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-primary) 22%, transparent);
 }
 
 .tileDragging {
   opacity: 0.35;
 }
 
-.canvas {
+/* A transparent, fixed-size centring area (so rows stay virtualisable). The
+   card look lives on the page itself, not this box, so the shadow hugs the
+   actual page and rotates with it instead of showing a fixed rectangle around
+   a turned page. Lifts the page on hover. */
+.thumbBox {
   position: relative;
   height: var(--pt-tile-h);
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
-  background: var(--c-surface-sunken);
-  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  transition: transform 0.2s ease;
 }
 
+.thumbBox:hover {
+  transform: translateY(-1px);
+}
+
+/* The page carries the floating-card look: rounded, soft-shadowed, no border.
+   The shadow is on the image, so a rotated page's shadow turns with it. */
 .thumb {
   width: auto;
   height: auto;
   max-width: 100%;
   max-height: 100%;
-  transition: transform 0.2s ease-in-out;
+  border-radius: 0.375rem;
+  background: var(--c-surface);
+  box-shadow: var(--shadow-md);
+  transition:
+    transform 0.2s ease-in-out,
+    box-shadow 0.15s ease;
+}
+
+.thumbBox:hover .thumb,
+.thumbBox:hover .thumbPending {
+  box-shadow: var(--shadow-lg);
+}
+
+/* Selection reads as a ring hugging the page (so it turns with a rotated page),
+   not an outlined tile. */
+.tileSelected .thumb,
+.tileSelected .thumbPending {
+  box-shadow:
+    0 0 0 2px var(--c-primary),
+    0 0 0 5px color-mix(in srgb, var(--c-primary) 22%, transparent);
 }
 
 /*
@@ -186,25 +201,19 @@
 .thumbPending {
   width: 60%;
   height: 78%;
-  border-radius: 2px;
+  border-radius: 0.375rem;
   background: var(--c-hover);
+  box-shadow: var(--shadow-md);
 }
 
-.tileFooter {
+/* Just the page number as plain centred text below the page, scaled with zoom. */
+.pageNumber {
+  height: var(--pt-tile-footer-h);
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.25rem;
-  height: var(--pt-tile-footer-h);
-  /* Padding and the page number scale with the tile (--pt-zoom) so the number
-     stays proportionate at every zoom instead of overflowing a shrunk footer. */
-  padding: 0 calc(0.375rem * var(--pt-zoom, 1));
-  font-size: calc(0.6875rem * var(--pt-zoom, 1));
+  justify-content: center;
+  font-size: calc(0.75rem * var(--pt-zoom, 1));
   color: var(--c-text-muted);
-  min-width: 0;
-}
-
-.tileIndex {
   font-variant-numeric: tabular-nums;
 }
 
