@@ -46,8 +46,10 @@ export interface ProcessingFoldersApi {
   anyEnabled: boolean;
   /** The record's runs that are currently executing (or queued to). */
   listActiveRuns: (recordId: string) => Promise<ProcessingRunInfo[]>;
-  /** A disk-backed record's files with their per-file pipeline state. */
+  /** The record's files with their per-file pipeline state, whatever it watches. */
   listFiles: (recordId: string) => Promise<MountedFileState[]>;
+  /** Retry one failed file now; other parked failures stay parked. */
+  retryFile: (recordId: string, name: string) => Promise<void>;
   /** Attach the default (classification) pipeline, or resume a paused one. */
   enable: (folder: FolderRecord) => Promise<void>;
   /** Pause processing; the pair and its processed-history stay, so resuming
@@ -75,6 +77,7 @@ export function useProcessingFolders(): ProcessingFoldersApi {
     anyEnabled: false,
     listActiveRuns: async () => [],
     listFiles: async () => [],
+    retryFile: async () => {},
     enable: async () => {},
     disable: async () => {},
     remove: async () => {},

@@ -140,6 +140,8 @@ interface FileGridProps {
   /** "Add to workspace". */
   onOpenFile: (file: StirlingFileStub) => void;
   onOpenDiskFile?: (entry: DiskFileEntry) => void;
+  /** Retry a failed file (by name) in the open working folder. */
+  onRetryFile?: (name: string) => void;
   onMoveFiles: (
     fileIds: FileId[],
     targetFolderId: FolderId | null,
@@ -459,6 +461,7 @@ function GridView(props: FileGridProps) {
     onStartProcessing,
     onOpenFile,
     onOpenDiskFile,
+    onRetryFile,
     onMoveFiles,
     onMoveFolder,
     onRenameFolder,
@@ -498,6 +501,9 @@ function GridView(props: FileGridProps) {
               state={entry.diskState}
               entry={entry.disk}
               onOpen={() => onOpenDiskFile?.(entry.disk!)}
+              onRetry={
+                onRetryFile ? () => onRetryFile(entry.disk!.name) : undefined
+              }
             />
           );
         }
@@ -506,6 +512,10 @@ function GridView(props: FileGridProps) {
             <FileCard
               key={`file-${entry.file.id}`}
               file={entry.file}
+              processingState={entry.diskState}
+              onRetryProcessing={
+                onRetryFile ? () => onRetryFile(entry.file!.name) : undefined
+              }
               parentPath={entry.parentPath}
               isSelected={selectedFileIds.has(entry.file.id)}
               isInWorkspace={
@@ -1218,6 +1228,10 @@ interface FileCardProps extends FileMenuHandlers {
   multiSelectActive: boolean;
   onClick: (e: React.MouseEvent) => void;
   onDoubleClick: () => void;
+  /** The file's place in its folder's pipeline, when one is attached. */
+  processingState?: DiskFileState;
+  /** Retry this file after a failed run. */
+  onRetryProcessing?: () => void;
 }
 
 function FileCard({
@@ -1229,6 +1243,8 @@ function FileCard({
   multiSelectActive,
   onClick,
   onDoubleClick,
+  processingState,
+  onRetryProcessing,
   ...menuHandlers
 }: FileCardProps) {
   const { t } = useTranslation();
@@ -1339,6 +1355,7 @@ function FileCard({
         <div className="files-page-card-origin">
           <FileOriginBadge origin={getFileOrigin(file)} compact />
         </div>
+        <FileStateBadge state={processingState} onRetry={onRetryProcessing} />
       </div>
       <div className="files-page-card-body">
         <div className="files-page-card-name" title={file.name}>
@@ -1386,6 +1403,7 @@ function ListView(
     onStartProcessing,
     onOpenFile,
     onOpenDiskFile,
+    onRetryFile,
     onMoveFiles,
     onMoveFolder,
     onRenameFolder,
@@ -1512,6 +1530,9 @@ function ListView(
               state={entry.diskState}
               entry={entry.disk}
               onOpen={() => onOpenDiskFile?.(entry.disk!)}
+              onRetry={
+                onRetryFile ? () => onRetryFile(entry.disk!.name) : undefined
+              }
             />
           );
         }
@@ -1520,6 +1541,10 @@ function ListView(
             <FileRow
               key={`file-${entry.file.id}`}
               file={entry.file}
+              processingState={entry.diskState}
+              onRetryProcessing={
+                onRetryFile ? () => onRetryFile(entry.file!.name) : undefined
+              }
               parentPath={entry.parentPath}
               isSelected={selectedFileIds.has(entry.file.id)}
               isInWorkspace={
@@ -1853,6 +1878,10 @@ interface FileRowProps extends FileMenuHandlers {
   multiSelectActive: boolean;
   onClick: (e: React.MouseEvent) => void;
   onOpen: () => void;
+  /** The file's place in its folder's pipeline, when one is attached. */
+  processingState?: DiskFileState;
+  /** Retry this file after a failed run. */
+  onRetryProcessing?: () => void;
 }
 
 function FileRow({
@@ -1864,6 +1893,8 @@ function FileRow({
   multiSelectActive,
   onClick,
   onOpen,
+  processingState,
+  onRetryProcessing,
   ...menuHandlers
 }: FileRowProps) {
   const { t } = useTranslation();
@@ -1991,6 +2022,7 @@ function FileRow({
         </span>
         <FileOriginBadge origin={getFileOrigin(file)} compact />
         <PolicyBadges fileId={file.id} />
+        <FileStateBadge state={processingState} onRetry={onRetryProcessing} />
         {isInWorkspace && (
           <span className="files-page-row-open-pill">
             <span className="files-page-card-open-dot" />
@@ -2016,6 +2048,60 @@ function FileRow({
 // Re-export root constant for caller convenience
 export { ROOT_FOLDER_ID };
 
+/** A file's place in its folder's pipeline; a failed one offers a retry. */
+function FileStateBadge({
+  state,
+  onRetry,
+}: {
+  state?: DiskFileState;
+  onRetry?: () => void;
+}) {
+  const { t } = useTranslation();
+  if (!state) return null;
+  if (state === "done") {
+    return (
+      <span className="files-page-state-badge is-done">
+        <TaskAltIcon style={{ fontSize: "0.85rem" }} />
+        {t("filesPage.diskState.done", "Ready")}
+      </span>
+    );
+  }
+  if (state === "processing") {
+    return (
+      <span className="files-page-state-badge">
+        <Loader size="0.7rem" />
+        {t("filesPage.diskState.processing", "Processing")}
+      </span>
+    );
+  }
+  if (state === "failed") {
+    return (
+      <span className="files-page-state-badge is-failed">
+        {t("filesPage.diskState.failed", "Failed")}
+        {onRetry && (
+          <button
+            type="button"
+            className="files-page-state-retry"
+            onClick={(e) => {
+              e.stopPropagation();
+              onRetry();
+            }}
+            title={t("filesPage.diskState.retryHint", "Run this file again")}
+          >
+            <ReplayIcon style={{ fontSize: "0.8rem" }} />
+            {t("filesPage.diskState.retry", "Retry")}
+          </button>
+        )}
+      </span>
+    );
+  }
+  return (
+    <span className="files-page-state-badge">
+      {t("filesPage.diskState.waiting", "Waiting")}
+    </span>
+  );
+}
+
 /**
  * No stub behind it, so no selection, move, rename or delete: the disk owns the
  * file and the only affordance is adding it to the workspace.
@@ -2024,10 +2110,12 @@ function DiskFileCard({
   entry,
   state,
   onOpen,
+  onRetry,
 }: {
   entry: DiskFileEntry;
   state?: DiskFileState;
   onOpen: () => void;
+  onRetry?: () => void;
 }) {
   const { t } = useTranslation();
   const thumbnail = useDiskThumbnail(entry);
@@ -2082,28 +2170,7 @@ function DiskFileCard({
             compact
           />
         </div>
-        {state === "done" && (
-          <span className="files-page-state-badge is-done">
-            <TaskAltIcon style={{ fontSize: "0.85rem" }} />
-            {t("filesPage.diskState.done", "Ready")}
-          </span>
-        )}
-        {state === "processing" && (
-          <span className="files-page-state-badge">
-            <Loader size="0.7rem" />
-            {t("filesPage.diskState.processing", "Processing")}
-          </span>
-        )}
-        {state === "failed" && (
-          <span className="files-page-state-badge is-failed">
-            {t("filesPage.diskState.failed", "Failed")}
-          </span>
-        )}
-        {state === "waiting" && (
-          <span className="files-page-state-badge">
-            {t("filesPage.diskState.waiting", "Waiting")}
-          </span>
-        )}
+        <FileStateBadge state={state} onRetry={onRetry} />
       </div>
       <div className="files-page-card-body">
         <div className="files-page-card-name" title={entry.name}>
@@ -2148,10 +2215,12 @@ function DiskFileRow({
   entry,
   state,
   onOpen,
+  onRetry,
 }: {
   entry: DiskFileEntry;
   state?: DiskFileState;
   onOpen: () => void;
+  onRetry?: () => void;
 }) {
   const { t } = useTranslation();
   const thumbnail = useDiskThumbnail(entry);
@@ -2218,28 +2287,7 @@ function DiskFileRow({
           )}
           compact
         />
-        {state === "done" && (
-          <span className="files-page-state-badge is-done">
-            <TaskAltIcon style={{ fontSize: "0.8rem" }} />
-            {t("filesPage.diskState.done", "Ready")}
-          </span>
-        )}
-        {state === "processing" && (
-          <span className="files-page-state-badge">
-            <Loader size="0.65rem" />
-            {t("filesPage.diskState.processing", "Processing")}
-          </span>
-        )}
-        {state === "failed" && (
-          <span className="files-page-state-badge is-failed">
-            {t("filesPage.diskState.failed", "Failed")}
-          </span>
-        )}
-        {state === "waiting" && (
-          <span className="files-page-state-badge">
-            {t("filesPage.diskState.waiting", "Waiting")}
-          </span>
-        )}
+        <FileStateBadge state={state} onRetry={onRetry} />
       </span>
       <span role="gridcell">{ext || t("filesPage.file", "File")}</span>
       <span role="gridcell">{formatFileSize(entry.sizeBytes)}</span>

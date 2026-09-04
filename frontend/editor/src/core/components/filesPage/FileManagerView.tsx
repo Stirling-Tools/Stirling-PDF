@@ -584,9 +584,15 @@ export default function FileManagerView() {
     new Map(),
   );
   const processingRecordId = currentProcessing?.id;
-  const { listFiles } = processingApi;
+  // The state layer applies inside any working folder: a disk mount's
+  // directory listing or a server folder's stored files, both joined to the
+  // same ledger behind listFiles.
+  const processingView = Boolean(
+    processingRecordId && (outputDirectory || !currentLocalDirectory),
+  );
+  const { listFiles, retryFile } = processingApi;
   useEffect(() => {
-    if (!outputDirectory || !processingRecordId) {
+    if (!processingView || !processingRecordId) {
       setFileStates(new Map());
       return;
     }
@@ -603,7 +609,7 @@ export default function FileManagerView() {
       cancelled = true;
       clearInterval(timer);
     };
-  }, [outputDirectory, processingRecordId, listFiles]);
+  }, [processingView, processingRecordId, listFiles]);
 
   const [processingSetupFolder, setProcessingSetupFolder] =
     useState<FolderRecord | null>(null);
@@ -614,6 +620,46 @@ export default function FileManagerView() {
   const diskStateFor = useCallback(
     (name: string): DiskFileState => fileStates.get(name) ?? "waiting",
     [fileStates],
+  );
+  // Counts for the filter chips, from the same states the badges wear.
+  const stateCounts = useMemo(() => {
+    const counts: Record<DiskFileState, number> = {
+      done: 0,
+      processing: 0,
+      failed: 0,
+      waiting: 0,
+    };
+    for (const state of fileStates.values()) counts[state] += 1;
+    return counts;
+  }, [fileStates]);
+  const retryDiskFile = useCallback(
+    (name: string) => {
+      if (!processingRecordId) return;
+      void retryFile(processingRecordId, name)
+        .then(() =>
+          // Show the retry took, ahead of the next poll.
+          setFileStates((prev) => {
+            const next = new Map(prev);
+            next.set(name, "processing");
+            return next;
+          }),
+        )
+        .catch((err) =>
+          folders.setError(
+            err instanceof Error
+              ? t("filesPage.error.retryFailedDetail", {
+                  name,
+                  message: err.message,
+                  defaultValue: `Could not retry ${name}: ${err.message}`,
+                })
+              : t("filesPage.error.retryFailed", {
+                  name,
+                  defaultValue: `Could not retry ${name}.`,
+                }),
+          ),
+        );
+    },
+    [processingRecordId, retryFile, folders, t],
   );
 
   const entries = useMemo<FilesPageEntry[]>(() => {
@@ -670,14 +716,22 @@ export default function FileManagerView() {
             ? pathForFolderId(folder.parentFolderId) || undefined
             : undefined,
       })),
-      ...visibleFiles.map<FilesPageEntry>((file) => ({
-        kind: "file",
-        file,
-        parentPath:
-          inSearch && (file.folderId ?? null) !== (currentFolderId ?? null)
-            ? pathForFolderId(file.folderId ?? null) || undefined
-            : undefined,
-      })),
+      ...visibleFiles
+        .map<FilesPageEntry>((file) => ({
+          kind: "file",
+          file,
+          diskState: processingView ? diskStateFor(file.name) : undefined,
+          parentPath:
+            inSearch && (file.folderId ?? null) !== (currentFolderId ?? null)
+              ? pathForFolderId(file.folderId ?? null) || undefined
+              : undefined,
+        }))
+        .filter(
+          (entry) =>
+            diskStateFilter === "all" ||
+            entry.diskState === undefined ||
+            entry.diskState === diskStateFilter,
+        ),
     ];
   }, [
     visibleFolders,
@@ -688,6 +742,7 @@ export default function FileManagerView() {
     currentLocalDirectory,
     diskEntries,
     outputDirectory,
+    processingView,
     diskStateFor,
     diskStateFilter,
     filesPage.sortMode,
@@ -1971,7 +2026,7 @@ export default function FileManagerView() {
             className="files-page-content"
             onClick={handleContentBackgroundClick}
           >
-            {outputDirectory && (
+            {processingView && (
               <div className="files-page-state-filters">
                 {(
                   ["all", "done", "processing", "failed", "waiting"] as const
@@ -1986,6 +2041,11 @@ export default function FileManagerView() {
                     }}
                   >
                     {t(`filesPage.diskState.${value}`, value)}
+                    {value !== "all" && stateCounts[value] > 0 && (
+                      <span className="files-page-state-count">
+                        {stateCounts[value]}
+                      </span>
+                    )}
                   </button>
                 ))}
               </div>
@@ -2006,6 +2066,7 @@ export default function FileManagerView() {
               onOpenFolder={handleOpenFolder}
               onStartProcessing={setProcessingSetupFolder}
               onOpenDiskFile={(entry) => void openDiskFile(entry)}
+              onRetryFile={retryDiskFile}
               onOpenFile={handleOpenFile}
               onMoveFiles={moveFilesTo}
               onMoveFolder={moveFolderTo}

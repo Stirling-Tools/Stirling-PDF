@@ -60,6 +60,14 @@ public interface ProcessedLedger {
      */
     boolean reclaimFailed(String policyId, String identity, String gate);
 
+    /**
+     * Forget a parked failure so the file reads as never processed and the next sweep claims it
+     * fresh, whatever its version. Per-file retry is built on this: unlike {@link #reclaimFailed}
+     * it does not put the row in flight, so any sweep — not just a user-invoked one — picks the
+     * file up. False when the row is not currently a failure.
+     */
+    boolean forgetFailure(String policyId, String identity);
+
     /** Record a claimed file's outcome at its final version ({@code finalContentHash} nullable). */
     void settle(
             String policyId,

@@ -604,6 +604,29 @@
   background: var(--c-primary-subtle, var(--c-surface));
 }
 
+/* Count on a filter chip ("Failed 3"). */
+.files-page-state-count {
+  margin-left: 0.3rem;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.75;
+}
+
+/* Retry on a failed file's badge; must stay clickable inside an inert card. */
+.files-page-state-retry {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  margin-left: 0.3rem;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  text-decoration: underline;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
 /* A working folder's per-state counts, one dotted chip per non-zero state. */
 .files-page-folder-stats {
   display: flex;

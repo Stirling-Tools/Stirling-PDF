@@ -3,6 +3,8 @@ package stirling.software.proprietary.policy.controller;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -39,6 +41,7 @@ import stirling.software.proprietary.policy.engine.SweepOutcome;
 import stirling.software.proprietary.policy.ledger.ClaimState;
 import stirling.software.proprietary.policy.ledger.FolderIdentities;
 import stirling.software.proprietary.policy.ledger.ProcessedLedger;
+import stirling.software.proprietary.policy.ledger.StorageFileIdentities;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineInput;
 import stirling.software.proprietary.policy.model.PipelineStep;
@@ -49,8 +52,11 @@ import stirling.software.proprietary.policy.source.SourceStore;
 import stirling.software.proprietary.policy.store.PolicyStore;
 import stirling.software.proprietary.policy.trigger.PolicyTriggerManager;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.storage.model.FilePurpose;
 import stirling.software.proprietary.storage.model.Folder;
+import stirling.software.proprietary.storage.model.StoredFile;
 import stirling.software.proprietary.storage.repository.FolderRepository;
+import stirling.software.proprietary.storage.repository.StoredFileRepository;
 import stirling.software.proprietary.storage.service.FileStorageService;
 
 /**
@@ -99,6 +105,7 @@ public class ProcessingFolderController {
     private final PolicyTriggerManager policyTriggerManager;
     private final ProcessedLedger processedLedger;
     private final FolderRepository folderRepository;
+    private final StoredFileRepository storedFileRepository;
     private final FileStorageService fileStorageService;
     private final PolicyAccessGuard policyAccessGuard;
     private final FolderAccessGuard folderAccessGuard;
@@ -303,18 +310,18 @@ public class ProcessingFolderController {
 
     @GetMapping("/{id}/files")
     @Operation(
-            summary = "List the files in a disk-backed processing folder",
+            summary = "List a processing folder's files with their pipeline state",
             description =
-                    "The directory itself is the source of truth — nothing is mirrored into app"
-                            + " storage — so the file manager reads its contents through here."
-                            + " Empty for a storage-backed folder, whose files are ordinary stored"
-                            + " files.")
+                    "A disk-backed folder reads the directory itself — nothing is mirrored"
+                            + " into app storage. A storage-backed folder lists its stored"
+                            + " files. Both carry each file's place in the pipeline, from the"
+                            + " ledger.")
     public List<MountedFileView> files(@PathVariable String id) {
         User user = currentUserOrNull();
         Policy policy = requireOwn(id, user);
         Path directory = watchedDirectory(policy);
         if (directory == null) {
-            return List.of();
+            return storageFiles(policy);
         }
         // Re-check on read: the permitted roots may have narrowed since the folder was created.
         Path permitted = folderAccessGuard.requirePermitted(directory);
@@ -372,6 +379,67 @@ public class ProcessingFolderController {
         };
     }
 
+    /**
+     * A storage-backed folder's files, joined to the ledger the same way the disk listing is. The
+     * stored files themselves are what the client already lists; this adds where each one stands in
+     * the folder's pipeline, keyed by the identity the storage source claims by.
+     */
+    private List<MountedFileView> storageFiles(Policy policy) {
+        UUID folderId = storageFolderId(policy);
+        if (folderId == null) {
+            return List.of();
+        }
+        List<StoredFile> files =
+                storedFileRepository.findAllByFolderId(folderId).stream()
+                        .filter(
+                                file ->
+                                        file.getPurpose() == null
+                                                || file.getPurpose() == FilePurpose.GENERIC)
+                        .toList();
+        Map<String, ClaimState> states =
+                processedLedger.statesFor(
+                        policy.id(), files.stream().map(StorageFileIdentities::identity).toList());
+        return files.stream()
+                .map(
+                        file ->
+                                new MountedFileView(
+                                        file.getOriginalFilename(),
+                                        file.getSizeBytes(),
+                                        lastModifiedMillis(file),
+                                        stateLabel(
+                                                states.get(StorageFileIdentities.identity(file)))))
+                .toList();
+    }
+
+    private static long lastModifiedMillis(StoredFile file) {
+        LocalDateTime updatedAt = file.getUpdatedAt();
+        return updatedAt == null
+                ? 0
+                : updatedAt.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+    }
+
+    /** The storage folder a storage-backed processing folder watches; null when disk-backed. */
+    private UUID storageFolderId(Policy policy) {
+        String sourceId = soleSourceId(policy);
+        if (sourceId == null) {
+            return null;
+        }
+        Object raw =
+                sourceStore
+                        .get(sourceId)
+                        .filter(source -> SOURCE_TYPE.equals(source.type()))
+                        .map(source -> source.options().get("folderId"))
+                        .orElse(null);
+        if (raw == null) {
+            return null;
+        }
+        try {
+            return UUID.fromString(String.valueOf(raw));
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
     /** The disk directory a processing folder watches, or null when it is storage-backed. */
     private Path watchedDirectory(Policy policy) {
         String sourceId = soleSourceId(policy);
@@ -393,6 +461,65 @@ public class ProcessingFolderController {
         User user = currentUserOrNull();
         Policy policy = requireOwn(id, user);
         return ResponseEntity.accepted().body(policyRunner.run(policy, SweepKind.USER));
+    }
+
+    /** Per-file retry: the name of the failed file within the folder. */
+    public record RetryFileRequest(String name) {}
+
+    @PostMapping("/{id}/files/retry")
+    @Operation(
+            summary = "Retry one failed file",
+            description =
+                    "Forgets the file's parked failure so it reads as never processed, then"
+                            + " sweeps so it runs again now. Only the named file is retried:"
+                            + " the sweep is a light one, which leaves every other parked"
+                            + " failure parked.")
+    public ResponseEntity<SweepOutcome> retryFile(
+            @PathVariable String id, @RequestBody RetryFileRequest request) {
+        User user = currentUserOrNull();
+        Policy policy = requireOwn(id, user);
+        if (request == null || request.name() == null || request.name().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "a file name is required");
+        }
+        String name = request.name().trim();
+        String identity = identityForName(policy, name);
+        if (identity == null || !processedLedger.forgetFailure(policy.id(), identity)) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT, "'" + name + "' has no failure to retry");
+        }
+        // LIGHT, not USER: the forgotten row makes this one file claimable as new work, and a
+        // light sweep leaves every other parked failure parked — retrying all of them is
+        // the user-invoked sweep's job, not this file's.
+        return ResponseEntity.accepted().body(policyRunner.run(policy, SweepKind.LIGHT));
+    }
+
+    /** The ledger identity of a named file in this folder; null when no such file is listed. */
+    private String identityForName(Policy policy, String name) {
+        Path directory = watchedDirectory(policy);
+        if (directory == null) {
+            UUID folderId = storageFolderId(policy);
+            if (folderId == null) {
+                return null;
+            }
+            return storedFileRepository.findAllByFolderId(folderId).stream()
+                    .filter(file -> name.equals(file.getOriginalFilename()))
+                    .map(StorageFileIdentities::identity)
+                    .findFirst()
+                    .orElse(null);
+        }
+        Path permitted = folderAccessGuard.requirePermitted(directory);
+        Path file = permitted.resolve(name).normalize();
+        // A name addresses a single entry of the watched directory; anything resolving
+        // elsewhere (traversal, an absolute path) is not a file this folder lists.
+        if (!permitted.equals(file.getParent())) {
+            return null;
+        }
+        try {
+            return FolderIdentities.identity(
+                    FolderIdentities.canonicalDir(permitted), permitted, file);
+        } catch (IOException e) {
+            return null;
+        }
     }
 
     @DeleteMapping("/{id}")

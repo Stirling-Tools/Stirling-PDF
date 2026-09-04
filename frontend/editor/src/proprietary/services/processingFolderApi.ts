@@ -203,7 +203,7 @@ export async function fetchRunOutputFile(
   });
 }
 
-/** One file in a mounted (disk-backed) processing folder. */
+/** One file in a processing folder, with its place in the pipeline. */
 export interface MountedFile {
   name: string;
   sizeBytes: number;
@@ -213,12 +213,26 @@ export interface MountedFile {
 }
 
 /**
- * The contents of a disk-backed processing folder, read from the directory itself — the folder is
- * mounted, not mirrored, so the filesystem stays the single source of truth.
+ * A processing folder's files with their per-file pipeline state. A disk-backed
+ * folder reads the directory itself — mounted, not mirrored — and a
+ * storage-backed one lists its stored files.
  */
 export async function fetchMountedFiles(id: string): Promise<MountedFile[]> {
   const res = await apiClient.get<MountedFile[]>(
     `/api/v1/processing-folders/${id}/files`,
   );
   return res.data ?? [];
+}
+
+/**
+ * Retry one failed file: its parked failure is forgotten and a light sweep
+ * runs it again now, leaving every other parked failure parked.
+ */
+export async function retryMountedFile(
+  id: string,
+  name: string,
+): Promise<void> {
+  await apiClient.post(`/api/v1/processing-folders/${id}/files/retry`, {
+    name,
+  });
 }

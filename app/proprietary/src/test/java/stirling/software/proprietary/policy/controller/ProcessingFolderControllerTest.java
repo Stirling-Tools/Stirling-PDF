@@ -3,9 +3,13 @@ package stirling.software.proprietary.policy.controller;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +34,8 @@ import stirling.software.proprietary.policy.engine.SweepKind;
 import stirling.software.proprietary.policy.engine.SweepOutcome;
 import stirling.software.proprietary.policy.input.InputSource;
 import stirling.software.proprietary.policy.input.StorageFolderInputSource;
+import stirling.software.proprietary.policy.ledger.ClaimState;
+import stirling.software.proprietary.policy.ledger.ProcessedFileStatus;
 import stirling.software.proprietary.policy.ledger.ProcessedLedger;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
@@ -41,6 +47,7 @@ import stirling.software.proprietary.policy.trigger.PolicyTrigger;
 import stirling.software.proprietary.policy.trigger.PolicyTriggerManager;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.storage.model.Folder;
+import stirling.software.proprietary.storage.model.StoredFile;
 import stirling.software.proprietary.storage.provider.StorageProvider;
 import stirling.software.proprietary.storage.repository.FolderRepository;
 import stirling.software.proprietary.storage.repository.StoredFileRepository;
@@ -161,6 +168,7 @@ class ProcessingFolderControllerTest {
                         policyTriggerManager,
                         processedLedger,
                         folderRepository,
+                        storedFileRepository,
                         fileStorageService,
                         accessGuard,
                         folderAccessGuard,
@@ -323,6 +331,65 @@ class ProcessingFolderControllerTest {
                         null));
 
         assertThat(controller.list()).hasSize(1);
+    }
+
+    @Test
+    void aStorageFolderListsItsFilesWithTheirLedgerState() {
+        var view = controller.save(request(null, "new_version")).getBody();
+        StoredFile done = storedFile(11L, "done.pdf");
+        StoredFile waiting = storedFile(12L, "waiting.pdf");
+        when(storedFileRepository.findAllByFolderId(FOLDER_ID)).thenReturn(List.of(done, waiting));
+        when(processedLedger.statesFor(eq(view.id()), any()))
+                .thenReturn(
+                        Map.of("storage:11", new ClaimState(ProcessedFileStatus.DONE, "g", null)));
+
+        var files = controller.files(view.id());
+
+        assertThat(files).hasSize(2);
+        assertThat(files.get(0).name()).isEqualTo("done.pdf");
+        assertThat(files.get(0).state()).isEqualTo("done");
+        assertThat(files.get(1).state()).isEqualTo("waiting");
+    }
+
+    @Test
+    void retryForgetsOneFailureAndRunsALightSweep() {
+        var view = controller.save(request(null, "new_version")).getBody();
+        StoredFile doc = storedFile(11L, "doc.pdf");
+        when(storedFileRepository.findAllByFolderId(FOLDER_ID)).thenReturn(List.of(doc));
+        when(processedLedger.forgetFailure(view.id(), "storage:11")).thenReturn(true);
+
+        controller.retryFile(view.id(), new ProcessingFolderController.RetryFileRequest("doc.pdf"));
+
+        Policy stored = policyStore.get(view.id()).orElseThrow();
+        // Light, not user-invoked: only the forgotten file may run again; other parked
+        // failures stay parked.
+        verify(policyRunner).run(stored, SweepKind.LIGHT);
+    }
+
+    @Test
+    void retryRefusesAFileWithNoParkedFailure() {
+        var view = controller.save(request(null, "new_version")).getBody();
+        StoredFile doc = storedFile(11L, "doc.pdf");
+        when(storedFileRepository.findAllByFolderId(FOLDER_ID)).thenReturn(List.of(doc));
+        when(processedLedger.forgetFailure(view.id(), "storage:11")).thenReturn(false);
+
+        assertThatThrownBy(
+                        () ->
+                                controller.retryFile(
+                                        view.id(),
+                                        new ProcessingFolderController.RetryFileRequest("doc.pdf")))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("no failure");
+    }
+
+    /** A stored file double with just what the listing reads. */
+    private static StoredFile storedFile(long id, String name) {
+        StoredFile file = mock(StoredFile.class);
+        lenient().when(file.getId()).thenReturn(id);
+        lenient().when(file.getOriginalFilename()).thenReturn(name);
+        lenient().when(file.getSizeBytes()).thenReturn(100L);
+        lenient().when(file.getUpdatedAt()).thenReturn(LocalDateTime.of(2026, 1, 1, 0, 0));
+        return file;
     }
 
     private static ProcessingFolderController.SaveProcessingFolderRequest request(

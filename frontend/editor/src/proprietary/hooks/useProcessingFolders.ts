@@ -6,6 +6,7 @@ import {
   fetchMountedFiles,
   fetchProcessingFolderRuns,
   fetchProcessingFolders,
+  retryMountedFile,
   saveProcessingFolder,
   sweepProcessingFolder,
   type ProcessingFolder,
@@ -269,6 +270,11 @@ export function useProcessingFolders(): ProcessingFoldersApi {
     [],
   );
 
+  const retryFile = useCallback(
+    async (recordId: string, name: string) => retryMountedFile(recordId, name),
+    [],
+  );
+
   const sweep = useCallback(
     async (folder: FolderRecord) => {
       const existing = recordFor(folder);
@@ -292,6 +298,7 @@ export function useProcessingFolders(): ProcessingFoldersApi {
       anyEnabled,
       listActiveRuns,
       listFiles,
+      retryFile,
       enable,
       disable,
       remove,
@@ -304,6 +311,7 @@ export function useProcessingFolders(): ProcessingFoldersApi {
       anyEnabled,
       listActiveRuns,
       listFiles,
+      retryFile,
       enable,
       disable,
       remove,
