@@ -12,51 +12,46 @@ export function AppearanceCard() {
   const { setTheme, themeMode } = useTheme();
 
   return (
-    <>
-      <Paper withBorder p="md" radius="md">
-        <Stack gap="md">
-          <div
-            id="setting-theme"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <Text fw={500} size="sm">
-                {t("settings.general.theme", "Theme")}{" "}
-                <InfoTooltip
-                  label={t(
-                    "settings.general.themeDescription",
-                    "Choose light, dark, or follow your system so it switches automatically.",
-                  )}
-                />
-              </Text>
-            </div>
-            <SegmentedControl
-              value={themeMode}
-              onChange={(val) => setTheme(val as ThemeMode)}
-              options={[
-                {
-                  label: t("settings.general.themeLight", "Light"),
-                  value: "light",
-                },
-                {
-                  label: t("settings.general.themeDark", "Dark"),
-                  value: "dark",
-                },
-                {
-                  label: t("settings.general.themeSystem", "System"),
-                  value: "system",
-                },
-              ]}
-            />
+    <Paper withBorder p="md" radius="md">
+      <Stack gap="md">
+        <div
+          id="setting-theme"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <Text fw={500} size="sm">
+              {t("settings.general.theme", "Theme")}{" "}
+              <InfoTooltip
+                label={t(
+                  "settings.general.themeDescription",
+                  "Choose light, dark, or follow your system so it switches automatically.",
+                )}
+              />
+            </Text>
           </div>
-        </Stack>
-      </Paper>
-
-      <Paper withBorder p="md" radius="md">
+          <SegmentedControl
+            value={themeMode}
+            onChange={(val) => setTheme(val as ThemeMode)}
+            options={[
+              {
+                label: t("settings.general.themeLight", "Light"),
+                value: "light",
+              },
+              {
+                label: t("settings.general.themeDark", "Dark"),
+                value: "dark",
+              },
+              {
+                label: t("settings.general.themeSystem", "System"),
+                value: "system",
+              },
+            ]}
+          />
+        </div>
         <div
           id="setting-language"
           style={{
@@ -78,7 +73,7 @@ export function AppearanceCard() {
           </div>
           <LanguageSelector position="bottom-end" offset={6} />
         </div>
-      </Paper>
-    </>
+      </Stack>
+    </Paper>
   );
 }

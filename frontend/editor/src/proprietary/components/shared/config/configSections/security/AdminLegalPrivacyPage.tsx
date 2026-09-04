@@ -125,8 +125,8 @@ export default function AdminLegalPrivacyPage() {
           id="adminLegal"
           title={t("settings.policiesPrivacy.legal", "Legal documents")}
           description={t(
-            "admin.settings.legal.description",
-            "Configure links to legal documents and policies.",
+            "admin.settings.legal.documentsDescription",
+            "Links users are shown for terms, privacy, cookies and the impressum.",
           )}
         >
           <LegalDocumentsCard {...legalCard} />

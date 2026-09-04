@@ -857,7 +857,8 @@ clickToUpgrade = "Click to view plan details"
 
 [admin.settings.connections]
 connect = "Connect"
-description = "Configure external authentication providers like OAuth2 and SAML."
+connectedServicesDescription = "Services this server is wired up to. Sign-in providers live under Sign-in & security."
+description = "Mail, Telegram, Drive, and uploading from a phone."
 disconnect = "Disconnect"
 disconnected = "Provider disconnected successfully"
 disconnectError = "Failed to disconnect provider"
@@ -968,6 +969,7 @@ label = "SSO Auto Login"
 
 [admin.settings.database]
 connection = "Connection"
+connectionDescription = "Point Stirling at an external database instead of the embedded one."
 actions = "Actions"
 backupCreated = "Backup created successfully"
 backupDescription = "Manage H2 backups directly from the admin console."
@@ -988,7 +990,7 @@ deleteConfirmAction = "Delete backup"
 deleteFailed = "Failed to delete backup"
 deleteSuccess = "Backup deleted"
 deleteTitle = "Delete backup"
-description = "Configure custom database connection settings for enterprise deployments."
+description = "Connect a custom database, and back up or restore the one in use."
 download = "Download"
 downloadFailed = "Failed to download backup"
 embedded = "Embedded H2"
@@ -1121,7 +1123,7 @@ remove = "Remove folder root"
 
 [admin.settings.general]
 branding = "Branding & appearance"
-description = "Configure system-wide application settings including branding and default behavior."
+description = "How this server runs: branding, storage, the tools it exposes, and the paths it may touch."
 system = "System"
 title = "System Settings"
 ui = "User Interface"
@@ -1241,7 +1243,8 @@ description = "Restrict update notifications to admin users only"
 label = "Show Updates to Admins Only"
 
 [admin.settings.legal]
-description = "Configure links to legal documents and policies."
+description = "Legal documents, the login agreement, analytics and search visibility."
+documentsDescription = "Links users are shown for terms, privacy, cookies and the impressum."
 title = "Legal Documents"
 
 [admin.settings.legal.accessibilityStatement]
@@ -1461,7 +1464,7 @@ title = "Premium Features Distributed"
 
 [admin.settings.privacy]
 analytics = "Analytics & Tracking"
-description = "Configure privacy and data collection settings."
+description = "What this server reports about itself, and to whom."
 searchEngine = "Search Engine Visibility"
 title = "Privacy"
 

@@ -2,8 +2,8 @@ import { useCallback, useEffect, useState } from "react";
 import { InfoTooltip } from "@app/ui/InfoTooltip";
 import { useTranslation } from "react-i18next";
 import {
-  Alert,
   Code,
+  Divider,
   Group,
   Paper,
   Stack,
@@ -87,120 +87,109 @@ export function FolderAccessCard({
   );
 
   return (
-    <>
-      <PendingBadge show={isFieldPending("allowedFolderRoots")} />
+    <Paper withBorder p="md" radius="md">
+      <Stack gap="md">
+        <Group gap="xs" align="center">
+          <Text fw={500} size="sm">
+            {t(
+              "admin.settings.folderAccess.roots.label",
+              "Allowed folder roots",
+            )}
+          </Text>
+          <PendingBadge show={isFieldPending("allowedFolderRoots")} />
+          <InfoTooltip
+            label={t(
+              "admin.settings.folderAccess.roots.hint",
+              "Enter absolute paths, for example /data/inbox.",
+            )}
+          />
+        </Group>
 
-      <Alert variant="light" color="blue">
-        <Text size="xs">
+        <Text size="xs" c="dimmed">
           {t(
             "admin.settings.folderAccess.securityNote",
             "Leave this empty to disable folder sources and outputs entirely. Stirling's own configuration directory is always off-limits, and folder access is always disabled in hosted (SaaS) mode.",
           )}
         </Text>
-      </Alert>
 
-      <Paper withBorder p="sm" radius="md">
-        <Stack gap="sm">
-          <div>
-            <Text fw={600} size="sm">
-              {t(
-                "admin.settings.folderAccess.roots.label",
-                "Allowed folder roots",
-              )}{" "}
-              <InfoTooltip
-                label={t(
-                  "admin.settings.folderAccess.roots.hint",
-                  "Enter absolute paths, for example /data/inbox.",
-                )}
-              />
-            </Text>
-          </div>
+        {roots.length === 0 ? (
+          <Text size="sm" c="dimmed" fs="italic">
+            {t(
+              "admin.settings.folderAccess.roots.empty",
+              "No folders allowed. Folder sources and outputs are currently disabled.",
+            )}
+          </Text>
+        ) : (
+          <Stack gap="xs">
+            {roots.map((root) => (
+              <Group key={root} justify="space-between" wrap="nowrap" gap="xs">
+                <Code style={{ wordBreak: "break-all" }}>{root}</Code>
+                <Button
+                  variant="tertiary"
+                  aria-label={t(
+                    "admin.settings.folderAccess.roots.remove",
+                    "Remove folder root",
+                  )}
+                  leftSection={
+                    <LocalIcon
+                      icon="close-rounded"
+                      width="1.1rem"
+                      height="1.1rem"
+                    />
+                  }
+                  onClick={() => removeRoot(root)}
+                  disabled={!loginEnabled}
+                  style={{ flexShrink: 0 }}
+                />
+              </Group>
+            ))}
+          </Stack>
+        )}
 
-          {roots.length === 0 ? (
-            <Text size="sm" c="dimmed" fs="italic">
-              {t(
-                "admin.settings.folderAccess.roots.empty",
-                "No folders allowed. Folder sources and outputs are currently disabled.",
-              )}
-            </Text>
-          ) : (
-            <Stack gap="xs">
-              {roots.map((root) => (
-                <Group
-                  key={root}
-                  justify="space-between"
-                  wrap="nowrap"
-                  gap="xs"
-                >
-                  <Code style={{ wordBreak: "break-all" }}>{root}</Code>
-                  <Button
-                    variant="tertiary"
-                    aria-label={t(
-                      "admin.settings.folderAccess.roots.remove",
-                      "Remove folder root",
-                    )}
-                    leftSection={
-                      <LocalIcon
-                        icon="close-rounded"
-                        width="1.1rem"
-                        height="1.1rem"
-                      />
-                    }
-                    onClick={() => removeRoot(root)}
-                    disabled={!loginEnabled}
-                    style={{ flexShrink: 0 }}
-                  />
-                </Group>
-              ))}
-            </Stack>
-          )}
+        <Group gap="xs" align="flex-end" wrap="nowrap">
+          <TextInput
+            style={{ flex: 1 }}
+            value={newRoot}
+            onChange={(e) => setNewRoot(e.currentTarget.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                addRoot();
+              }
+            }}
+            placeholder={t(
+              "admin.settings.folderAccess.roots.placeholder",
+              "/data/inbox",
+            )}
+            disabled={!loginEnabled}
+            styles={getDisabledStyles()}
+          />
+          <Button
+            variant="secondary"
+            onClick={addRoot}
+            disabled={!loginEnabled || newRoot.trim().length === 0}
+          >
+            {t("admin.settings.folderAccess.roots.add", "Add")}
+          </Button>
+        </Group>
 
-          <Group gap="xs" align="flex-end" wrap="nowrap">
-            <TextInput
-              style={{ flex: 1 }}
-              value={newRoot}
-              onChange={(e) => setNewRoot(e.currentTarget.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  addRoot();
-                }
-              }}
-              placeholder={t(
-                "admin.settings.folderAccess.roots.placeholder",
-                "/data/inbox",
-              )}
-              disabled={!loginEnabled}
-              styles={getDisabledStyles()}
-            />
-            <Button
-              variant="secondary"
-              onClick={addRoot}
-              disabled={!loginEnabled || newRoot.trim().length === 0}
-            >
-              {t("admin.settings.folderAccess.roots.add", "Add")}
-            </Button>
-          </Group>
-        </Stack>
-      </Paper>
-
-      {impliedRoots.length > 0 && (
-        <Paper withBorder p="sm" radius="md">
-          <Stack gap="sm">
-            <div>
-              <Text fw={600} size="sm">
+        {impliedRoots.length > 0 && (
+          <>
+            <Divider />
+            <Group gap="xs" align="center">
+              <Text fw={500} size="sm">
                 {t(
                   "admin.settings.folderAccess.implied.title",
                   "Always allowed",
-                )}{" "}
-                <InfoTooltip
-                  label={t(
-                    "admin.settings.folderAccess.implied.description",
-                    "These Stirling-managed directories are always permitted and can't be changed here.",
-                  )}
-                />
+                )}
               </Text>
-            </div>
+              <InfoTooltip
+                label={t(
+                  "admin.settings.folderAccess.implied.description",
+                  "These Stirling-managed directories are always permitted and can't be changed here.",
+                )}
+              />
+            </Group>
             <Stack gap="xs">
               {impliedRoots.map((root) => (
                 <Group
@@ -220,9 +209,9 @@ export function FolderAccessCard({
                 </Group>
               ))}
             </Stack>
-          </Stack>
-        </Paper>
-      )}
-    </>
+          </>
+        )}
+      </Stack>
+    </Paper>
   );
 }

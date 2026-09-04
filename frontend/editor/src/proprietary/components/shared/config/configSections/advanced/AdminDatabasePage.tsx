@@ -126,8 +126,8 @@ export default function AdminDatabasePage() {
           id="adminDatabase"
           title={t("admin.settings.database.connection", "Connection")}
           description={t(
-            "admin.settings.database.description",
-            "Connect a custom database, and back up or restore the one in use.",
+            "admin.settings.database.connectionDescription",
+            "Point Stirling at an external database instead of the embedded one.",
           )}
         >
           <DatabaseConfigCard
