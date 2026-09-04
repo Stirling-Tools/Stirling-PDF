@@ -86,7 +86,6 @@ const noExplicitAnyExcludes = [
   "editor/src/core/tools/annotate/useAnnotationSelection.ts",
   "editor/src/core/types/fileContext.ts",
   "editor/src/core/types/automation.ts",
-  "editor/src/core/types/tool.ts",
 ];
 
 export default defineConfig({
