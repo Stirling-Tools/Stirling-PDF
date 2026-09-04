@@ -43,6 +43,18 @@ function RedactionAPIBridgeInner({ documentId }: { documentId: string }) {
     };
   }, [setBridgeReady]);
 
+  // The interaction mode is viewer-global, so a stranded redaction mode would block
+  // selection for the next document.
+  useEffect(() => {
+    return () => {
+      try {
+        redactionProvides?.endRedact();
+      } catch {
+        /* document already torn down */
+      }
+    };
+  }, [redactionProvides]);
+
   // Sync EmbedPDF state to our context
   useEffect(() => {
     if (state) {
