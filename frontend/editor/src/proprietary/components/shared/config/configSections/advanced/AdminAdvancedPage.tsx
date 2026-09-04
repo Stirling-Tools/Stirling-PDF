@@ -10,7 +10,6 @@ import { useSettingsDirty } from "@app/hooks/useSettingsDirty";
 import { SettingsStickyFooter } from "@app/components/shared/config/SettingsStickyFooter";
 import apiClient from "@app/services/apiClient";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
-import LoginRequiredBanner from "@app/components/shared/config/LoginRequiredBanner";
 import { AdvancedSettingsData } from "@app/components/shared/config/configSections/advanced/advancedSettings";
 import { AdvancedFeatureFlagsCard } from "@app/components/shared/config/configSections/advanced/AdvancedFeatureFlagsCard";
 import { AdvancedProcessingCard } from "@app/components/shared/config/configSections/advanced/AdvancedProcessingCard";
@@ -207,8 +206,6 @@ export default function AdminAdvancedPage() {
   return (
     <div className="settings-section-container">
       <Stack gap="lg" className="settings-section-content">
-        <LoginRequiredBanner show={!loginEnabled} />
-
         <SettingsCard
           id="adminAdvancedFeatures"
           title={t("admin.settings.advanced.features", "Feature Flags")}

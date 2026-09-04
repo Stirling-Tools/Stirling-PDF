@@ -1,8 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { SettingsToggleRow } from "@app/components/shared/config/SettingsToggleRow";
 import { InfoTooltip } from "@app/ui/InfoTooltip";
-import { NumberInput, Stack, Paper, Group, Alert } from "@mantine/core";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { NumberInput, Stack, Paper, Group } from "@mantine/core";
 import PendingBadge from "@app/components/shared/config/PendingBadge";
 import type { SecurityCardProps } from "@app/components/shared/config/configSections/security/securityCardProps";
 
@@ -104,20 +103,6 @@ export function AuditLoggingCard({
           />
         </div>
 
-        <Alert
-          color="yellow"
-          icon={<LocalIcon icon="info" />}
-          title={t(
-            "admin.settings.security.audit.advancedOptions.title",
-            "Advanced Options",
-          )}
-        >
-          {t(
-            "admin.settings.security.audit.advancedOptions.description",
-            "The following options increase processing time and memory usage. Enable only if truly needed.",
-          )}
-        </Alert>
-
         <SettingsToggleRow
           label={t(
             "admin.settings.security.audit.captureFileHash.label",
@@ -128,6 +113,10 @@ export function AuditLoggingCard({
             "Store MD5 hash of processed files for audit trail verification",
           )}
           pending={isFieldPending("audit.captureFileHash")}
+          warnWhenOn={t(
+            "admin.settings.security.audit.advancedOptions.cost",
+            "Now increasing processing time and memory usage on every operation.",
+          )}
           checked={settings?.audit?.captureFileHash || false}
           onChange={(checked) =>
             setSettings({
@@ -151,6 +140,10 @@ export function AuditLoggingCard({
             "Extract author field from PDF documents during processing",
           )}
           pending={isFieldPending("audit.capturePdfAuthor")}
+          warnWhenOn={t(
+            "admin.settings.security.audit.advancedOptions.cost",
+            "Now increasing processing time and memory usage on every operation.",
+          )}
           checked={settings?.audit?.capturePdfAuthor || false}
           onChange={(checked) =>
             setSettings({
@@ -174,6 +167,10 @@ export function AuditLoggingCard({
             "Store output file information and processing results in audit logs",
           )}
           pending={isFieldPending("audit.captureOperationResults")}
+          warnWhenOn={t(
+            "admin.settings.security.audit.advancedOptions.cost",
+            "Now increasing processing time and memory usage on every operation.",
+          )}
           checked={settings?.audit?.captureOperationResults || false}
           onChange={(checked) =>
             setSettings({

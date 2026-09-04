@@ -23,6 +23,8 @@ import {
 import type { AiCardProps } from "@app/components/shared/config/configSections/ai/aiCardProps";
 
 interface AiDocumentsCardProps extends AiCardProps {
+  /** The picked embedding model differs from the one the server indexed with. */
+  embeddingModelChanged: boolean;
   embeddingApiKeyDirty: boolean;
   setEmbeddingApiKeyDirty: (dirty: boolean) => void;
 }
@@ -33,6 +35,7 @@ export function AiDocumentsCard({
   setSettings,
   isFieldPending,
   embeddingApiKeyDirty,
+  embeddingModelChanged,
   setEmbeddingApiKeyDirty,
 }: AiDocumentsCardProps) {
   const { t } = useTranslation();
@@ -252,22 +255,24 @@ export function AiDocumentsCard({
         </Stack>
       </Paper>
 
-      <Alert
-        variant="light"
-        color="orange"
-        title={t(
-          "admin.settings.ai.documents.reindexNote.title",
-          "Re-index required",
-        )}
-        icon={<LocalIcon icon="warning-rounded" width="1rem" height="1rem" />}
-      >
-        <Text size="xs">
-          {t(
-            "admin.settings.ai.documents.reindexNote.body",
-            "Changing the embedding model takes effect immediately, but documents indexed with the previous model must be re-indexed for search to return correct results.",
+      {embeddingModelChanged && (
+        <Alert
+          variant="light"
+          color="orange"
+          title={t(
+            "admin.settings.ai.documents.reindexNote.title",
+            "Re-index required",
           )}
-        </Text>
-      </Alert>
+          icon={<LocalIcon icon="warning-rounded" width="1rem" height="1rem" />}
+        >
+          <Text size="xs">
+            {t(
+              "admin.settings.ai.documents.reindexNote.body",
+              "You changed the embedding model. Documents indexed with the previous model must be re-indexed for search to return correct results.",
+            )}
+          </Text>
+        </Alert>
+      )}
     </>
   );
 }

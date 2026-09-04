@@ -12,7 +12,6 @@ import { useSettingsDirty } from "@app/hooks/useSettingsDirty";
 import { SettingsStickyFooter } from "@app/components/shared/config/SettingsStickyFooter";
 import apiClient from "@app/services/apiClient";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
-import LoginRequiredBanner from "@app/components/shared/config/LoginRequiredBanner";
 import { usePreferences } from "@app/contexts/PreferencesContext";
 import { useUnsavedChanges } from "@app/contexts/UnsavedChangesContext";
 import { qk } from "@app/query/keys";
@@ -435,8 +434,6 @@ export default function AdminSystemSection() {
   return (
     <div className="settings-section-container">
       <Stack gap="lg" className="settings-section-content">
-        <LoginRequiredBanner show={!loginEnabled} />
-
         <SettingsCard
           id="adminGeneral"
           title={t("admin.settings.general.branding", "Branding & appearance")}

@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next";
 import { LoadingFallback } from "@app/components/shared/LoadingFallback";
 import { useSectionHeadings } from "@app/components/settings/useSectionHeadings";
 import { InfoTooltip } from "@app/ui/InfoTooltip";
+import LoginRequiredBanner from "@app/components/shared/config/LoginRequiredBanner";
 import { Badge, Tooltip } from "@mantine/core";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { ActionIcon } from "@app/ui/ActionIcon";
@@ -221,7 +222,11 @@ const SettingsPageInner: React.FC = () => {
             // show what it already named; the row stands on its own instead.
             const solo = section.items.length === 1;
             return (
-              <div key={groupId} className="modal-nav-section">
+              <div
+                key={groupId}
+                className="modal-nav-section"
+                data-group={!solo || undefined}
+              >
                 {!solo && (
                   // A plain label, not a disclosure: the rail is short enough
                   // that hiding rows only cost a click to find them again.
@@ -369,6 +374,9 @@ const SettingsPageInner: React.FC = () => {
                 </div>
               </header>
             )}
+            {/* Once, here: every admin section used to draw this itself, so an
+                admin with login off met the same block on all thirteen. */}
+            <LoginRequiredBanner show={activeItem?.disabled ?? false} />
             {/* Its own boundary: a section that suspends must not take the
                 nav and the header down with it. */}
             <Suspense fallback={<LoadingFallback />}>

@@ -35,3 +35,10 @@
   font-size: 0.75rem;
   color: var(--c-text-subtle);
 }
+
+/* Only on once the switch is on, so the cost is stated when it applies. */
+.settings-toggle__warning {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--color-amber-dark, var(--c-text-subtle));
+}

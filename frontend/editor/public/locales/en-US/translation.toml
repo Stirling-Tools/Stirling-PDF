@@ -1407,8 +1407,8 @@ description = "JWT claim matched against a Stirling username (e.g. sub, email, p
 label = "Username claim"
 
 [admin.settings.plan.noData]
-message = "Plans data is not available at the moment."
-title = "No data available"
+message = "This server could not reach the licence service. Retry, or check the licence key."
+title = "No plan data"
 
 [admin.settings.premium]
 description = "Configure your premium or enterprise license key."
@@ -1498,9 +1498,7 @@ label = "Audit Logging"
 showDetails = "Show audit level details"
 
 [admin.settings.security.audit.advancedOptions]
-description = "The following options increase processing time and memory usage. Enable only if truly needed."
-title = "Advanced Options"
-
+cost = "Now increasing processing time and memory usage on every operation."
 [admin.settings.security.audit.captureFileHash]
 description = "Extract SHA-256 hash of uploaded PDF files for integrity verification. Independent of audit level."
 label = "Capture File Hash (SHA-256)"
@@ -1909,8 +1907,8 @@ disabledMessage = "Enable audit logging in your application configuration to tra
 enterpriseRequired = "Enterprise License Required"
 enterpriseRequiredMessage = "The audit logging system is an enterprise feature. Please upgrade to an enterprise license to access audit logs and analytics."
 goToSettings = "Go to Audit Settings"
-notAvailable = "Audit system not available"
-notAvailableMessage = "The audit system is not configured or not available."
+notAvailable = "Audit logging is off"
+notAvailableMessage = "Turn it on in Sign-in & security to start recording activity."
 
 [audit.charts]
 byType = "Events by Type"
@@ -11772,8 +11770,8 @@ title = "URL To PDF"
 aboutUsageAnalytics = "About Usage Analytics"
 configureSettings = "Configure Analytics Settings"
 error = "Error loading usage statistics"
-noData = "No data available"
-noDataMessage = "No usage statistics are currently available."
+noData = "No usage yet"
+noDataMessage = "Endpoint activity appears here once people start running tools."
 usageAnalyticsExplanation = "Usage analytics track endpoint requests and tool usage patterns. Combined with the Audit Logging dashboard, you get complete visibility into system activity, performance, and security events."
 viewAuditLogs = "View Audit Logs"
 

@@ -17,6 +17,8 @@ export interface SettingsToggleRowProps {
   styles?: SwitchProps["styles"];
   /** An unmet prerequisite, shown under the label. */
   note?: ReactNode;
+  /** A consequence of switching this on, shown only once it is on. */
+  warnWhenOn?: ReactNode;
   /** Controls this toggle reveals when it is on. */
   children?: ReactNode;
 }
@@ -36,6 +38,7 @@ export function SettingsToggleRow({
   disabled = false,
   styles,
   note,
+  warnWhenOn,
   children,
 }: SettingsToggleRowProps) {
   return (
@@ -55,6 +58,9 @@ export function SettingsToggleRow({
         />
       </div>
       {note && <p className="settings-toggle__note">{note}</p>}
+      {warnWhenOn && checked && (
+        <p className="settings-toggle__warning">{warnWhenOn}</p>
+      )}
       {children}
     </div>
   );

@@ -21,7 +21,6 @@ import { useSettingsDirty } from "@app/hooks/useSettingsDirty";
 import PendingBadge from "@app/components/shared/config/PendingBadge";
 import { SettingsStickyFooter } from "@app/components/shared/config/SettingsStickyFooter";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
-import LoginRequiredBanner from "@app/components/shared/config/LoginRequiredBanner";
 
 interface PremiumSettingsData {
   key?: string;
@@ -90,7 +89,6 @@ export default function AdminPremiumSection() {
   return (
     <div className="settings-section-container">
       <Stack gap="lg" className="settings-section-content">
-        <LoginRequiredBanner show={!loginEnabled} />
         <div>
           <Text fw={600} size="lg">
             {t("admin.settings.premium.title", "Premium & Enterprise")}

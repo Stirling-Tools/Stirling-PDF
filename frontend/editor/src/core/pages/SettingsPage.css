@@ -44,17 +44,29 @@
 
 .settings-page .modal-nav-section {
   margin: 0;
-  padding-top: var(--space-4);
+  padding-top: var(--space-2);
+}
+
+/* Rule a real group, and the run of loose rows that follows one. Ruling every
+   section instead just stripes the rail. */
+.settings-page .modal-nav-section[data-group],
+.settings-page
+  .modal-nav-section[data-group]
+  + .modal-nav-section:not([data-group]) {
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--c-border-subtle);
 }
 
 .settings-page__group {
   margin: 0;
-  padding: 0.25rem var(--space-3);
+  padding: 0 var(--space-3) 0.15rem;
   font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+  font-weight: 500;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--c-text-subtle);
+  opacity: 0.75;
 }
 
 .settings-page .modal-nav-section-items {

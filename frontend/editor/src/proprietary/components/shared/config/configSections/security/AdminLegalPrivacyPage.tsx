@@ -9,7 +9,6 @@ import { useAdminSettings } from "@app/hooks/useAdminSettings";
 import { useSettingsDirty } from "@app/hooks/useSettingsDirty";
 import { SettingsStickyFooter } from "@app/components/shared/config/SettingsStickyFooter";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
-import LoginRequiredBanner from "@app/components/shared/config/LoginRequiredBanner";
 import type {
   LegalSettingsData,
   PrivacySettingsData,
@@ -119,8 +118,6 @@ export default function AdminLegalPrivacyPage() {
   return (
     <div className="settings-section-container">
       <Stack gap="lg" className="settings-section-content">
-        <LoginRequiredBanner show={!loginEnabled} />
-
         <SettingsCard
           id="adminLegal"
           title={t("settings.policiesPrivacy.legal", "Legal documents")}

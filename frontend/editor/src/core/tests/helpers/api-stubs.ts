@@ -261,6 +261,20 @@ export async function mockAppApis(
     route.fulfill({ json: {} }),
   );
 
+  // An empty section never gets a dirty-tracking snapshot, so anything that
+  // compares saved-vs-current reads as unchanged. Give aiEngine real values.
+  await page.route(
+    "**/api/v1/admin/settings/section/aiEngine",
+    (route: Route) =>
+      route.fulfill({
+        json: {
+          enabled: false,
+          url: "http://stirling-pdf-engine:5001",
+          rag: { embeddingProvider: "voyageai", embeddingModel: "voyage-3" },
+        },
+      }),
+  );
+
   // Folder access reads this on every visit to the System page; unstubbed it
   // 401s in a retry loop and the refresh failures sign the session out.
   await page.route(

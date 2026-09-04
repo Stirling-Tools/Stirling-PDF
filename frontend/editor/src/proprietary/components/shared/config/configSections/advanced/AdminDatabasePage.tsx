@@ -11,7 +11,6 @@ import { useSettingsDirty } from "@app/hooks/useSettingsDirty";
 import { SettingsStickyFooter } from "@app/components/shared/config/SettingsStickyFooter";
 import apiClient from "@app/services/apiClient";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
-import LoginRequiredBanner from "@app/components/shared/config/LoginRequiredBanner";
 import {
   DEFAULT_DATASOURCE,
   isEmbeddedH2Database,
@@ -121,8 +120,6 @@ export default function AdminDatabasePage() {
   return (
     <div className="settings-section-container">
       <Stack gap="lg" className="settings-section-content">
-        <LoginRequiredBanner show={!loginEnabled} />
-
         <SettingsCard
           id="adminDatabase"
           title={t("admin.settings.database.connection", "Connection")}

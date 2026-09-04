@@ -10,7 +10,6 @@ import { useSettingsDirty } from "@app/hooks/useSettingsDirty";
 import { SettingsStickyFooter } from "@app/components/shared/config/SettingsStickyFooter";
 import apiClient from "@app/services/apiClient";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
-import LoginRequiredBanner from "@app/components/shared/config/LoginRequiredBanner";
 import {
   AiEngineSettingsData,
   AiEngineApiResponse,
@@ -148,6 +147,13 @@ export default function AdminAiSection() {
     loading,
   );
 
+  // resetToSnapshot only reads the saved copy, so the warning can compare
+  // against what the server has actually indexed with.
+  const saved = resetToSnapshot();
+  const embeddingModelChanged =
+    saved.rag?.embeddingModel !== settings.rag?.embeddingModel ||
+    saved.rag?.embeddingProvider !== settings.rag?.embeddingProvider;
+
   const handleSave = async () => {
     // Read the pre-save state first: markSaved and the refetch both move the
     // snapshot, and the branches below need to know what actually changed.
@@ -206,8 +212,6 @@ export default function AdminAiSection() {
   return (
     <div className="settings-section-container">
       <Stack gap="lg" className="settings-section-content">
-        <LoginRequiredBanner show={!loginEnabled} />
-
         <SettingsCard
           id="adminAiGeneral"
           title={t("admin.settings.ai.general.connection", "Connection")}
@@ -258,6 +262,7 @@ export default function AdminAiSection() {
         >
           <AiDocumentsCard
             {...card}
+            embeddingModelChanged={embeddingModelChanged}
             embeddingApiKeyDirty={embeddingApiKeyDirty}
             setEmbeddingApiKeyDirty={setEmbeddingApiKeyDirty}
           />

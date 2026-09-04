@@ -10,7 +10,6 @@ import apiClient from "@app/services/apiClient";
 import { useSettingsDirty } from "@app/hooks/useSettingsDirty";
 import { SettingsStickyFooter } from "@app/components/shared/config/SettingsStickyFooter";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
-import LoginRequiredBanner from "@app/components/shared/config/LoginRequiredBanner";
 import type { ConnectionsSettingsData } from "@app/components/shared/config/configSections/security/securitySettingsTypes";
 import {
   fetchConnectionsSettings,
@@ -149,8 +148,6 @@ export default function AdminIntegrationsPage() {
   return (
     <div className="settings-section-container">
       <Stack gap="lg" className="settings-section-content">
-        <LoginRequiredBanner show={!loginEnabled} />
-
         <SettingsCard
           id="adminConnections"
           title={t(
