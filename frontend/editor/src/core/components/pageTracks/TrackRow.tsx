@@ -148,6 +148,7 @@ function TrackRowImpl({
       // Distance between the top edges of adjacent wrapped rows.
       rowStride: (tileHeightRem + tileFooterRem + gapRem) * px,
       cssVars: {
+        "--pt-zoom": `${zoom}`,
         "--pt-tile-w": `${tileWidthRem}rem`,
         "--pt-tile-h": `${tileHeightRem}rem`,
         "--pt-tile-footer-h": `${tileFooterRem}rem`,

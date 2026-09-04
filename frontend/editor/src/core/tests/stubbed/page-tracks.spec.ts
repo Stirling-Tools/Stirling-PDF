@@ -674,8 +674,13 @@ test.describe("Page Editor tracks", () => {
     const firstTile = rotated.locator("[data-page-id]").first();
     await expect(firstTile).toBeVisible({ timeout: 30_000 });
 
+    const pageNumber = firstTile.locator("[data-page-index]");
+    const fontSize = () =>
+      pageNumber.evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
+
     const tileBefore = await firstTile.boundingBox();
     const headerBefore = await rotated.locator("header").boundingBox();
+    const fontBefore = await fontSize();
     if (!tileBefore || !headerBefore) throw new Error("track is not laid out");
 
     await page.getByRole("button", { name: "Zoom in" }).click();
@@ -688,11 +693,37 @@ test.describe("Page Editor tracks", () => {
       })
       .toBeGreaterThan(tileBefore.width + 1);
 
+    // ...and so does the page number...
+    await expect
+      .poll(fontSize, { timeout: 30_000 })
+      .toBeGreaterThan(fontBefore);
+
     // ...while the header (UI chrome) keeps its height.
     const headerAfter = await rotated.locator("header").boundingBox();
     expect(Math.round(headerAfter?.height ?? 0)).toBe(
       Math.round(headerBefore.height),
     );
+  });
+
+  test("the hover controls scale with the page on zoom", async ({ page }) => {
+    await openPageEditor(page);
+    const rotated = track(page, "rotated-pages.pdf");
+    const firstTile = rotated.locator("[data-page-id]").first();
+    await expect(firstTile).toBeVisible({ timeout: 30_000 });
+
+    const pill = firstTile.locator('[data-hover-action-menu="true"]');
+    const pillBefore = await pill.boundingBox();
+    if (!pillBefore) throw new Error("hover controls are not laid out");
+
+    await page.getByRole("button", { name: "Zoom in" }).click();
+    await page.getByRole("button", { name: "Zoom in" }).click();
+
+    // The pill grows with the page, so its buttons stay proportionate.
+    await expect
+      .poll(async () => (await pill.boundingBox())?.width ?? 0, {
+        timeout: 30_000,
+      })
+      .toBeGreaterThan(pillBefore.width + 1);
   });
 
   test("the eye opens that track's file in the viewer", async ({ page }) => {
