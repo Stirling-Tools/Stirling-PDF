@@ -261,6 +261,13 @@ export async function mockAppApis(
     route.fulfill({ json: {} }),
   );
 
+  // Folder access reads this on every visit to the System page; unstubbed it
+  // 401s in a retry loop and the refresh failures sign the session out.
+  await page.route(
+    "**/api/v1/admin/settings/policies/implied-folder-roots",
+    (route: Route) => route.fulfill({ json: { impliedRoots: [] } }),
+  );
+
   // Info sub-resources
   await page.route("**/api/v1/info/wau", (route: Route) =>
     route.fulfill({ json: { count: 0 } }),
