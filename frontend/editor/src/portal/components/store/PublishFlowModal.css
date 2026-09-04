@@ -1,0 +1,134 @@
+/* Small step-name row under the shared step header. */
+.portal-store__publish-steps {
+  display: flex;
+  gap: 1rem;
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+}
+
+.portal-store__publish-step {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--c-text-subtle);
+}
+
+.portal-store__publish-step.is-current {
+  color: var(--c-text);
+}
+
+.portal-store__publish-step.is-done {
+  color: var(--c-accent-text);
+}
+
+.portal-store__publish-details {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(16rem, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+
+@media (max-width: 48rem) {
+  .portal-store__publish-details {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.portal-store__publish-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.portal-store__publish-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.portal-store__publish-label {
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--c-text-subtle);
+  font-weight: 600;
+}
+
+.portal-store__publish-counter {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+/* Multi-line control styled like the shared Input; no textarea primitive exists yet. */
+.portal-store__textarea {
+  width: 100%;
+  min-height: 5rem;
+  padding: 0.5rem 0.75rem;
+  resize: vertical;
+  font: inherit;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--c-text);
+  background: var(--c-input-bg);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-md);
+  transition:
+    border-color var(--motion-fast),
+    box-shadow var(--motion-fast);
+}
+
+.portal-store__textarea:focus {
+  outline: none;
+  border-color: var(--c-primary);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--c-primary) 16%, transparent);
+}
+
+.portal-store__publish-loading,
+.portal-store__publish-checks,
+.portal-store__publish-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.portal-store__publish-summary {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 0.5rem 1rem;
+  margin: 0;
+  padding: 0.875rem 1rem;
+  border: 1px solid var(--c-border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--c-surface-sunken);
+  font-size: 0.8125rem;
+}
+
+.portal-store__publish-summary dt {
+  color: var(--c-text-subtle);
+  font-weight: 600;
+}
+
+.portal-store__publish-summary dd {
+  margin: 0;
+  color: var(--c-text);
+  min-width: 0;
+}
+
+.portal-store__publish-chain {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.portal-store__publish-footer-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.portal-store__publish-muted {
+  font-size: 0.75rem;
+  color: var(--c-text-subtle);
+}

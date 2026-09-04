@@ -1,0 +1,20 @@
+.portal-store__id {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.portal-store__id-text {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.6875rem;
+  padding: 0.125rem 0.375rem;
+  border-radius: var(--radius-sm);
+  background: var(--c-neutral-fill);
+  color: var(--c-text-subtle);
+  white-space: nowrap;
+}
+
+.portal-store__id-copy {
+  color: var(--c-text-subtle);
+}

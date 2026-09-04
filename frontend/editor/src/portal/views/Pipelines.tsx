@@ -33,6 +33,8 @@ import { PolicyDetailPanel } from "@portal/components/policies/PolicyDetailPanel
 import { PolicySetupWizard } from "@portal/components/policies/PolicySetupWizard";
 import { useAiEngineEnabled } from "@portal/hooks/useAiEngineEnabled";
 import { useConnectGate } from "@portal/hooks/useConnectGate";
+import { useStoreAvailable } from "@portal/hooks/useStoreAvailable";
+import { StoreIcon } from "@portal/components/icons";
 import "@portal/views/Pipelines.css";
 
 /**
@@ -47,6 +49,7 @@ export function Pipelines() {
   const [searchParams, setSearchParams] = useSearchParams();
   // Building and editing a pipeline both need a linked account, so both ask for one first (#7581).
   const { guard } = useConnectGate();
+  const storeAvailable = useStoreAvailable();
 
   const listState = usePipelines();
   const { data: overview, loading: overviewLoading } = listState;
@@ -247,13 +250,25 @@ export function Pipelines() {
             {t("portal.pipelines.subtitle")}
           </p>
         </div>
-        <Button
-          fat
-          onClick={openCreate}
-          leftSection={<AddRoundedIcon style={{ fontSize: "1.125rem" }} />}
-        >
-          {t("portal.pipelines.actions.newCustomPipeline")}
-        </Button>
+        <div className="portal-pipelines__head-actions">
+          {storeAvailable && (
+            <Button
+              fat
+              variant="secondary"
+              onClick={() => navigate(toPortalPath(VIEW_PATHS.store))}
+              leftSection={<StoreIcon size={18} />}
+            >
+              {t("portal.store.browseStore")}
+            </Button>
+          )}
+          <Button
+            fat
+            onClick={openCreate}
+            leftSection={<AddRoundedIcon style={{ fontSize: "1.125rem" }} />}
+          >
+            {t("portal.pipelines.actions.newCustomPipeline")}
+          </Button>
+        </div>
       </header>
 
       {pageError && <Banner tone="danger" description={pageError} />}

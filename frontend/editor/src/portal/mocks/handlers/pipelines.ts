@@ -97,6 +97,9 @@ function seedPipelines(): StoredPolicy[] {
       name: "Onboarding OCR (paused)",
       owner: "ops@acme.com",
       enabled: false,
+      // Installed from the store: the builder shows the "From the store" link and the team's
+      // Published tab can Republish it.
+      storeId: "sp-3f9d2h1p",
       inputs: [],
       steps: [
         { operation: "/api/v1/misc/ocr-pdf", parameters: {} },
@@ -172,6 +175,7 @@ function toView(policy: OverviewPolicy): PipelineView {
         ? outputIds.map((id) => SOURCE_NAMES[id] ?? id).join(", ")
         : (policy.output?.type ?? "inline"),
     owner: policy.owner ?? "you@acme.com",
+    storeId: policy.storeId ?? null,
   };
 }
 
@@ -281,6 +285,34 @@ export const pipelinesHandlers = [
     if (!policy) return undefined;
     await delay(120);
     return HttpResponse.json(policy);
+  }),
+
+  // Store install: a paused copy of a manifest, named uniquely, linked back by storeId.
+  http.post("/api/v1/policies/import", async ({ request }) => {
+    const body = (await request.json()) as {
+      name: string;
+      icon: string;
+      storeId: string;
+      steps: Policy["steps"];
+    };
+    await delay(150);
+    const taken = new Set(store.map((p) => p.name));
+    let name = body.name;
+    for (let n = 2; taken.has(name); n++) name = `${body.name} (${n})`;
+    const saved: StoredPolicy = {
+      id: nextId(),
+      name,
+      owner: "you@acme.com",
+      enabled: false,
+      icon: body.icon,
+      storeId: body.storeId,
+      inputs: [],
+      steps: body.steps,
+      output: { type: "inline", options: {} },
+      outputIds: [],
+    };
+    store = [...store, saved];
+    return HttpResponse.json(saved);
   }),
 
   // Create or update a pipeline. The catalogue page's bodies carry a `categoryId`;

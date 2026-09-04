@@ -8597,6 +8597,7 @@ pipelines = "Pipelines"
 policies = "Policies"
 procurement = "Procurement"
 sources = "Sources"
+store = "Pipeline store"
 usage = "Usage & Billing"
 users = "Users"
 
@@ -9750,6 +9751,212 @@ type = "Type"
 
 [portal.stepModal]
 close = "Close"
+
+[portal.store]
+browseStore = "Browse store"
+fromStore = "From the store"
+loadError = "Couldn't load the store"
+loadMore = "Load more"
+results_one = "{{count}} pipeline"
+results_other = "{{count}} pipelines"
+subtitle = "Ready-made pipelines shared by other Stirling users. Install one into your own server or cloud team, then connect your sources and destinations."
+title = "Pipeline store"
+
+[portal.store.card]
+byStirling = "By Stirling"
+copied = "Copied"
+copyId = "Copy id"
+idPending = "assigned on publish"
+installs_one = "{{formatted}} install"
+installs_other = "{{formatted}} installs"
+moreTools = "+{{count}} more"
+needsConnection = "Needs a connection"
+star = "Star"
+starred = "Starred"
+unstar = "Remove star"
+updated = "Updated {{when}}"
+view = "View"
+
+[portal.store.detail]
+authorHidden = "Author hidden, shown only to the publisher's team"
+authorHiddenShort = "Hidden"
+authorTeam = "{{name}}, your team"
+breadcrumb = "Pipeline store"
+chosenOnInstall = "Chosen when you install"
+copyLink = "Copy link"
+downloadJson = "Download JSON"
+graphTitle = "Tool chain"
+inspectorEmpty = "Select a step to see its settings."
+inspectorTitle = "Step settings"
+installFailed = "Couldn't install this pipeline"
+installServer = "Install to this server"
+installServerCaption = "Creates a paused copy on this server. Nothing runs until you connect it."
+installTeam = "Install to your team"
+installTeamCaption = "Creates a paused copy in your team. Nothing runs until you connect it."
+meta = "{{category}}, Updated {{updated}}, First published {{firstPublished}}"
+moreActions = "More actions"
+noSettings = "This step has no settings."
+notFound = "This pipeline is not in the store."
+setOnInstall = "Set on install"
+shareLabel = "Share"
+yourDestination = "Your destination"
+yourSource = "Your source"
+
+[portal.store.detail.compatibility]
+any = "Works with any current Stirling PDF."
+minimum = "Needs Stirling PDF {{version}} or later"
+title = "Compatibility"
+
+[portal.store.detail.latestChange]
+hint = "Installed copies are not changed when a listing is republished. Install again to get the newer copy."
+none = "No change notes yet."
+title = "Latest change"
+
+[portal.store.detail.metrics]
+author = "Author"
+installs = "Installs"
+stars = "Stars"
+tools = "Tools"
+updated = "Updated"
+
+[portal.store.detail.notIncluded]
+destination = "Destination: you choose where results go."
+schedule = "Schedule: installed copies start paused."
+secrets = "Secrets and connections: credentials never leave the publisher."
+source = "Source: you choose where documents come from."
+title = "Not included"
+
+[portal.store.empty]
+description = "Try another search or clear the filters."
+publishedDescription = "Open a pipeline in the builder and choose Publish to store."
+publishedTitle = "Your team has not published anything"
+starredDescription = "Star a pipeline in the store to keep it here."
+starredTitle = "Nothing starred yet"
+title = "No pipelines match"
+
+[portal.store.filters]
+categoryLabel = "Category"
+clear = "Clear filters"
+search = "Search by name, description, tool or id"
+sortLabel = "Sort"
+
+[portal.store.filters.category]
+all = "All categories"
+classification = "Classification"
+compliance = "Compliance"
+ingestion = "Ingestion"
+retention = "Retention"
+routing = "Routing"
+security = "Security"
+
+[portal.store.filters.sort]
+installs = "Most installed"
+newest = "Newest"
+stars = "Top starred"
+
+[portal.store.findings]
+hide = "Hide"
+none = "No findings. This pipeline is ready to publish."
+show = "Show"
+whereStep = "Step {{step}}, {{tool}}"
+whereStepOnly = "Step {{step}}"
+
+[portal.store.findings.block]
+title = "Blocks publishing"
+
+[portal.store.findings.info]
+title = "Removed automatically"
+
+[portal.store.findings.warn]
+title = "Worth checking"
+
+[portal.store.findings.where]
+details = "Details"
+input = "Input"
+output = "Output"
+
+[portal.store.publish]
+action = "Publish to store"
+back = "Back"
+blockedBanner_one = "{{count}} problem blocks publishing. Fix it, then run the checks again."
+blockedBanner_other = "{{count}} problems block publishing. Fix them, then run the checks again."
+cancel = "Cancel"
+category = "Category"
+checksFailed = "Couldn't run the checks"
+consent = "I have the right to share this pipeline and it contains no confidential data, personal data or credentials."
+continue = "Continue"
+counter = "{{count}}/{{max}}"
+description = "Description"
+descriptionHelp = "20 to 500 characters"
+fixToContinue_one = "Fix {{count}} problem to continue"
+fixToContinue_other = "Fix {{count}} problems to continue"
+name = "Name"
+nameHelp = "3 to 80 characters"
+preview = "Store preview"
+publish = "Publish"
+publishFailed = "Couldn't publish"
+published = "Published to the store"
+republish = "Republish"
+republishBanner = "This pipeline is already in the store. Publishing replaces the store copy under the same id. Existing installs are copies and are not changed."
+runAgain = "Run checks again"
+saveFirst = "Save your changes first"
+step = "Step {{current}} of {{total}}"
+title = "Publish to the Pipeline store"
+whatChanged = "What changed"
+whatChangedHelp = "Optional, up to 300 characters. Shown on the listing."
+
+[portal.store.publish.steps]
+checks = "Checks"
+confirm = "Confirm"
+details = "Details"
+
+[portal.store.publish.summary]
+none = "Nothing"
+publishedAs = "Published as"
+removed = "Removed"
+steps_one = "{{count}} step"
+steps_other = "{{count}} steps"
+toolChain = "Tool chain"
+worthChecking = "Worth checking"
+
+[portal.store.publish.whoSees]
+body = "Members of your team see you as the author. Everyone else sees no author. Your email is never shown anywhere in the store."
+title = "Who sees your name"
+
+[portal.store.published]
+banner = "Only members of your team can see who published these. Everyone else sees each pipeline with no author."
+loadError = "Couldn't load your team's listings"
+
+[portal.store.published.actions]
+copyLink = "Copy link"
+label = "Actions"
+remove = "Remove from store"
+republish = "Republish"
+view = "View in store"
+
+[portal.store.published.remove]
+body_one = "{{name}} has {{count}} install. Removing it hides the listing; existing installs keep their copies. Republish brings it back under the same id."
+body_other = "{{name}} has {{count}} installs. Removing it hides the listing; existing installs keep their copies. Republish brings it back under the same id."
+cancel = "Cancel"
+confirm = "Remove"
+title = "Remove from the store?"
+
+[portal.store.published.status]
+LISTED = "Listed"
+REMOVED = "Removed"
+
+[portal.store.published.table]
+installs = "Installs"
+lastPublished = "Last published"
+pipeline = "Pipeline"
+publishedBy = "Published by"
+stars = "Stars"
+status = "Status"
+
+[portal.store.tabs]
+browse = "Browse"
+published = "Published by your team"
+starred = "Starred"
 
 [portal.usage]
 managePayment = "Manage Payment"

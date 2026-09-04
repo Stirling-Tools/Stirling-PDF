@@ -86,6 +86,8 @@ export interface Policy {
   /** Whether the editor runs this policy per file, and on which moment. */
   editor?: { allowed: boolean; runOn: "upload" | "export" };
   teamId?: number | null;
+  /** The store listing this pipeline was installed from, or was published as. A copy keeps only this link. */
+  storeId?: string | null;
 }
 
 /** Overview row status: enabled (fires automatically) or paused. */
@@ -115,6 +117,8 @@ export interface PipelineView {
   /** Output sink type (e.g. "inline", "folder"). */
   output: string;
   owner: string;
+  /** Set when the pipeline came from (or was published to) the Pipeline store. */
+  storeId?: string | null;
 }
 
 export interface PipelineKpi {

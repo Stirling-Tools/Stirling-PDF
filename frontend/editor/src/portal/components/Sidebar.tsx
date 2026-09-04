@@ -12,6 +12,7 @@ import { useView, type ViewId } from "@portal/contexts/ViewContext";
 import { useUI } from "@portal/contexts/UIContext";
 import { LinkAccountFooterItem } from "@portal/components/LinkAccountFooterItem";
 import { useConnectGate } from "@portal/hooks/useConnectGate";
+import { useStoreAvailable } from "@portal/hooks/useStoreAvailable";
 import { CloseIcon } from "@portal/components/icons";
 import {
   GROUP_PROCESSOR,
@@ -45,6 +46,7 @@ export function Sidebar() {
   const credits = useFreeCreditsSummary();
   const openPlan = useOpenPlan();
   const { gated, connect } = useConnectGate();
+  const storeAvailable = useStoreAvailable();
 
   // Collapse is a desktop-only affordance: on mobile the sidebar is an
   // off-canvas drawer, so the icon-rail state never applies there.
@@ -54,7 +56,11 @@ export function Sidebar() {
   // a takeover modal (matching the marketing prototype).
 
   function renderGroup(entries: NavEntry[]) {
-    return entries.map((entry) => {
+    // A store entry with no store behind it is noise, not a gate: drop it rather than ask.
+    const visible = entries.filter(
+      (entry) => !entry.requiresStore || storeAvailable,
+    );
+    return visible.map((entry) => {
       const label = t(`portal.nav.${entry.id}`);
       const item = (
         <NavItem
