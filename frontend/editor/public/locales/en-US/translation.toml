@@ -968,8 +968,6 @@ enable = "Enable SSO Auto Login"
 label = "SSO Auto Login"
 
 [admin.settings.database]
-connection = "Connection"
-connectionDescription = "Point Stirling at an external database instead of the embedded one."
 actions = "Actions"
 backupCreated = "Backup created successfully"
 backupDescription = "Manage H2 backups directly from the admin console."
@@ -982,6 +980,8 @@ configuration = "Database Configuration"
 confirmCodeLabel = "Enter the confirmation code to proceed"
 confirmImport = "Confirm import"
 confirmImportTitle = "Confirm database import"
+connection = "Connection"
+connectionDescription = "Point Stirling at an external database instead of the embedded one."
 createBackup = "Create backup"
 created = "Created"
 delete = "Delete"
@@ -1499,6 +1499,7 @@ showDetails = "Show audit level details"
 
 [admin.settings.security.audit.advancedOptions]
 cost = "Now increasing processing time and memory usage on every operation."
+
 [admin.settings.security.audit.captureFileHash]
 description = "Extract SHA-256 hash of uploaded PDF files for integrity verification. Independent of audit level."
 label = "Capture File Hash (SHA-256)"
