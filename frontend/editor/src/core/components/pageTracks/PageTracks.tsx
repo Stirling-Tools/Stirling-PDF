@@ -35,6 +35,8 @@ const TRACK_PREFIX = "track:";
 const ZONE_PREFIX = "zone:";
 const HANDLE_PREFIX = "trackhandle:";
 
+const WRAP_STORAGE_KEY = "pageTracks.wrap";
+
 /**
  * Droppables nest (zone > lane > page), so the hit has to be picked by what is
  * being dragged: a track header only ever lands on a whole track, while a page
@@ -152,6 +154,47 @@ export default function PageTracks() {
   const [trackDropTarget, setTrackDropTarget] = useState<
     FileId | null | undefined
   >(undefined);
+
+  // Off = one horizontally scrolling row per track (virtualised along its
+  // lane). On = pages wrap onto as many rows as fit and each track grows as
+  // tall as it needs, with the rows virtualised against the outer scroller.
+  // Persisted as a per-viewer view preference.
+  const [wrap, setWrap] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem(WRAP_STORAGE_KEY) === "1";
+    } catch {
+      return false;
+    }
+  });
+  const toggleWrap = useCallback(() => {
+    setWrap((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem(WRAP_STORAGE_KEY, next ? "1" : "0");
+      } catch {
+        // A viewer with storage blocked simply doesn't persist the choice.
+      }
+      return next;
+    });
+  }, []);
+
+  // The scrolling container each wrap-mode lane virtualises its rows against.
+  const scrollerRef = useRef<HTMLDivElement | null>(null);
+  const contentRef = useRef<HTMLDivElement | null>(null);
+  // Bumped whenever the stacked height of the tracks changes, so every lane
+  // re-measures its offset within the scroller: one track growing shifts the
+  // ones below it, and their row positions depend on that offset.
+  const [layoutVersion, setLayoutVersion] = useState(0);
+
+  useEffect(() => {
+    const content = contentRef.current;
+    if (!content || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(() => {
+      setLayoutVersion((version) => version + 1);
+    });
+    observer.observe(content);
+    return () => observer.disconnect();
+  }, []);
 
   const totalPages = useMemo(() => totalPageCount(workspace), [workspace]);
   const changedSet = useMemo(() => new Set(changedFileIds), [changedFileIds]);
@@ -425,6 +468,8 @@ export default function PageTracks() {
     canRedo,
     isDirty,
     saving,
+    wrap,
+    onToggleWrap: toggleWrap,
     onSelectAll: selection.selectAll,
     onDeselectAll: selection.clear,
     onRotate: rotateSelection,
@@ -488,61 +533,73 @@ export default function PageTracks() {
         onDragCancel={handleDragCancel}
       >
         <div
+          ref={scrollerRef}
           className={styles.scroller}
           data-scrolling-container="true"
           onClick={(event) => {
             if (event.target === event.currentTarget) clearSelection();
           }}
         >
-          {workspace.order.map((fileId) => {
-            const track = workspace.tracks[fileId];
-            if (!track) return null;
-            const stub = fileState.files.byId[fileId];
-            return (
-              <TrackRow
-                key={fileId}
-                track={track}
-                name={stub?.name ?? fileId}
-                versionNumber={stub?.versionNumber}
-                selectedIds={selection.selectedIds}
-                draggingIds={draggingIds}
-                dropHint={dropHint}
-                trackDropBefore={
-                  draggingTrack != null && trackDropTarget === fileId
-                }
-                trackDropAfterLast={
-                  draggingTrack != null &&
-                  trackDropTarget === null &&
-                  fileId === workspace.order[workspace.order.length - 1]
-                }
-                trackDragging={draggingTrack === fileId}
-                changed={changedSet.has(fileId)}
-                thumbnails={thumbnails}
-                onSelectPage={selection.selectPage}
-                onSelectTrack={selection.selectTrack}
-                onOpenInViewer={openInViewer}
-                onClearSelection={clearSelection}
-                onRotate={rotatePages}
-                onDelete={deletePages}
-              />
-            );
-          })}
+          <div
+            ref={contentRef}
+            className={styles.scrollerContent}
+            onClick={(event) => {
+              if (event.target === event.currentTarget) clearSelection();
+            }}
+          >
+            {workspace.order.map((fileId) => {
+              const track = workspace.tracks[fileId];
+              if (!track) return null;
+              const stub = fileState.files.byId[fileId];
+              return (
+                <TrackRow
+                  key={fileId}
+                  track={track}
+                  name={stub?.name ?? fileId}
+                  versionNumber={stub?.versionNumber}
+                  selectedIds={selection.selectedIds}
+                  draggingIds={draggingIds}
+                  dropHint={dropHint}
+                  wrap={wrap}
+                  scrollerRef={scrollerRef}
+                  layoutVersion={layoutVersion}
+                  trackDropBefore={
+                    draggingTrack != null && trackDropTarget === fileId
+                  }
+                  trackDropAfterLast={
+                    draggingTrack != null &&
+                    trackDropTarget === null &&
+                    fileId === workspace.order[workspace.order.length - 1]
+                  }
+                  trackDragging={draggingTrack === fileId}
+                  changed={changedSet.has(fileId)}
+                  thumbnails={thumbnails}
+                  onSelectPage={selection.selectPage}
+                  onSelectTrack={selection.selectTrack}
+                  onOpenInViewer={openInViewer}
+                  onClearSelection={clearSelection}
+                  onRotate={rotatePages}
+                  onDelete={deletePages}
+                />
+              );
+            })}
 
-          {pendingFileIds.map((fileId) => (
-            <div key={fileId} className={styles.track}>
-              <header className={styles.trackHeader}>
-                <span className={styles.trackName}>
-                  {fileState.files.byId[fileId]?.name ?? fileId}
-                </span>
-                <span className={styles.trackMeta}>
-                  {t("pageTracks.readingPages", "Reading pages...")}
-                </span>
-              </header>
-              <div className={`${styles.lane} ${styles.laneEmpty}`}>
-                <Loader size="sm" />
+            {pendingFileIds.map((fileId) => (
+              <div key={fileId} className={styles.track}>
+                <header className={styles.trackHeader}>
+                  <span className={styles.trackName}>
+                    {fileState.files.byId[fileId]?.name ?? fileId}
+                  </span>
+                  <span className={styles.trackMeta}>
+                    {t("pageTracks.readingPages", "Reading pages...")}
+                  </span>
+                </header>
+                <div className={`${styles.lane} ${styles.laneEmpty}`}>
+                  <Loader size="sm" />
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
         <DragOverlay dropAnimation={null}>

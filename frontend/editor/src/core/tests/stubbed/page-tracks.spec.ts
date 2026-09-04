@@ -526,6 +526,82 @@ test.describe("Page Editor tracks", () => {
     }
   });
 
+  test("wrapping lays pages out in rows without horizontal scroll, still virtualised", async ({
+    page,
+  }) => {
+    // Enough pages that one row overflows and a wrapped one spans many rows, so
+    // both the no-scroll and the still-virtualised claims are actually tested.
+    const doc = await PDFDocument.create();
+    const font = await doc.embedFont(StandardFonts.Helvetica);
+    for (let i = 1; i <= 300; i++) {
+      doc
+        .addPage([595, 842])
+        .drawText(`page ${i}`, { x: 60, y: 700, size: 28, font });
+    }
+    const wrapPdf = path.join(os.tmpdir(), `tracks-wrap-${process.pid}.pdf`);
+    fs.writeFileSync(wrapPdf, await doc.save());
+
+    try {
+      await page.setViewportSize({ width: 1280, height: 800 });
+      await page.goto("/editor", {
+        waitUntil: "domcontentloaded",
+        timeout: 120_000,
+      });
+      await uploadFiles(page, wrapPdf);
+      await dismissTourTooltip(page);
+      await switchView(page, "Page Editor");
+
+      const lane = page.locator("[data-track-lane]");
+      await expect(page.locator("section[aria-label]").first()).toContainText(
+        "300 pages",
+        { timeout: 60_000 },
+      );
+
+      // Single row: the lane scrolls horizontally past its own width.
+      await expect
+        .poll(
+          () => lane.evaluate((el) => el.scrollWidth > el.clientWidth + 1),
+          {
+            timeout: 30_000,
+          },
+        )
+        .toBe(true);
+
+      await page.getByRole("button", { name: "Wrap pages" }).click();
+
+      // Wrapped: no horizontal overflow any more.
+      await expect
+        .poll(
+          () => lane.evaluate((el) => el.scrollWidth <= el.clientWidth + 1),
+          { timeout: 30_000 },
+        )
+        .toBe(true);
+
+      // The pages now occupy more than one row (distinct vertical offsets).
+      await expect
+        .poll(
+          () =>
+            page
+              .locator("[data-page-id]")
+              .evaluateAll(
+                (nodes) =>
+                  new Set(
+                    nodes.map((n) => Math.round((n as HTMLElement).offsetTop)),
+                  ).size,
+              ),
+          { timeout: 30_000 },
+        )
+        .toBeGreaterThan(1);
+
+      // Still virtualised: a 300-page track mounts only a window, not all of it.
+      const mounted = await page.locator("[data-page-id]").count();
+      expect(mounted).toBeGreaterThan(0);
+      expect(mounted).toBeLessThan(200);
+    } finally {
+      fs.rmSync(wrapPdf, { force: true });
+    }
+  });
+
   test("the eye opens that track's file in the viewer", async ({ page }) => {
     await openPageEditor(page);
     const sample = track(page, "sample.pdf");

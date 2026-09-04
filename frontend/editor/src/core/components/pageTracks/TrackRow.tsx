@@ -1,4 +1,11 @@
-import React, { useCallback, useMemo, useRef } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { useTranslation } from "react-i18next";
@@ -38,6 +45,13 @@ export interface TrackRowProps {
   selectedIds: Set<string>;
   draggingIds: Set<string>;
   dropHint: DropHint | null;
+  /** Pages wrap onto multiple rows instead of one horizontally scrolling row. */
+  wrap: boolean;
+  /** The scrolling container wrap-mode rows are virtualised against. */
+  scrollerRef: React.RefObject<HTMLDivElement | null>;
+  /** Bumped by the parent when the stacked track heights change, forcing this
+   *  lane to re-measure its offset within the scroller. */
+  layoutVersion: number;
   /** Draw the track-reorder line above this track. */
   trackDropBefore: boolean;
   /** Draw it below (last track, moving to the end). */
@@ -66,6 +80,9 @@ function TrackRowImpl({
   selectedIds,
   draggingIds,
   dropHint,
+  wrap,
+  scrollerRef,
+  layoutVersion,
   trackDropBefore,
   trackDropAfterLast,
   trackDragging,
@@ -104,11 +121,19 @@ function TrackRowImpl({
   // dnd-kit draggable AND droppable, so the whole set gets re-registered on
   // each render, re-measured on drag start and hit-tested on every move.
   const laneRef = useRef<HTMLDivElement | null>(null);
+  const laneInnerRef = useRef<HTMLDivElement | null>(null);
   const geometry = useMemo(() => {
     const px = rootFontSizePx();
     return {
-      tileWidth: TRACK_GEOMETRY.tileWidthRem * px,
-      stride: (TRACK_GEOMETRY.tileWidthRem + TRACK_GEOMETRY.gapRem) * px,
+      gapPx: TRACK_GEOMETRY.gapRem * px,
+      // Distance between the left edges of adjacent tiles (tile + gap).
+      colStride: (TRACK_GEOMETRY.tileWidthRem + TRACK_GEOMETRY.gapRem) * px,
+      // Distance between the top edges of adjacent wrapped rows.
+      rowStride:
+        (TRACK_GEOMETRY.tileCanvasHeightRem +
+          TRACK_GEOMETRY.tileFooterHeightRem +
+          TRACK_GEOMETRY.gapRem) *
+        px,
       cssVars: {
         "--pt-tile-w": `${TRACK_GEOMETRY.tileWidthRem}rem`,
         "--pt-tile-h": `${TRACK_GEOMETRY.tileCanvasHeightRem}rem`,
@@ -117,12 +142,66 @@ function TrackRowImpl({
     };
   }, []);
 
+  const pageCount = track.pages.length;
+
+  // Wrap mode packs as many whole tiles as the lane's content width allows.
+  const [laneWidth, setLaneWidth] = useState(0);
+  // Seed the width synchronously before the first wrap paint so the column
+  // count is right immediately; the observer keeps it current on resize.
+  // 0.75rem matches the lane's horizontal padding in the stylesheet.
+  useLayoutEffect(() => {
+    const element = laneRef.current;
+    if (!element) return;
+    const padding = 2 * 0.75 * rootFontSizePx();
+    setLaneWidth(Math.max(0, element.clientWidth - padding));
+  }, [wrap]);
+  useEffect(() => {
+    const element = laneRef.current;
+    if (!element || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver((entries) => {
+      setLaneWidth(entries[0]?.contentRect.width ?? 0);
+    });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+
+  const columns = useMemo(() => {
+    if (!wrap || laneWidth <= 0) return 1;
+    return Math.max(
+      1,
+      Math.floor((laneWidth + geometry.gapPx) / geometry.colStride),
+    );
+  }, [wrap, laneWidth, geometry.gapPx, geometry.colStride]);
+
+  const rowCount = wrap ? Math.ceil(pageCount / columns) : pageCount;
+
+  // Wrap-mode rows are virtualised against the shared outer scroller, so each
+  // lane needs the offset of its content within that scroller's scroll height.
+  // One track above growing or shrinking shifts this, which is why the parent
+  // bumps layoutVersion on any height change.
+  const [scrollMargin, setScrollMargin] = useState(0);
+  useLayoutEffect(() => {
+    if (!wrap) {
+      setScrollMargin((prev) => (prev === 0 ? prev : 0));
+      return;
+    }
+    const inner = laneInnerRef.current;
+    const scroller = scrollerRef.current;
+    if (!inner || !scroller) return;
+    const margin =
+      inner.getBoundingClientRect().top -
+      scroller.getBoundingClientRect().top +
+      scroller.scrollTop;
+    setScrollMargin((prev) => (Math.abs(prev - margin) > 0.5 ? margin : prev));
+  }, [wrap, layoutVersion, columns, rowCount, pageCount, scrollerRef]);
+
   const virtualizer = useVirtualizer({
-    count: track.pages.length,
-    horizontal: true,
-    getScrollElement: () => laneRef.current,
-    estimateSize: () => geometry.stride,
-    overscan: TRACK_GEOMETRY.overscan,
+    count: wrap ? rowCount : pageCount,
+    horizontal: !wrap,
+    getScrollElement: () => (wrap ? scrollerRef.current : laneRef.current),
+    estimateSize: () => (wrap ? geometry.rowStride : geometry.colStride),
+    overscan: wrap ? 3 : TRACK_GEOMETRY.overscan,
+    scrollMargin: wrap ? scrollMargin : 0,
   });
 
   const setLaneRef = useCallback(
@@ -263,6 +342,7 @@ function TrackRowImpl({
         data-track-lane={track.fileId}
         className={[
           styles.lane,
+          wrap ? styles.laneWrap : "",
           track.pages.length === 0 ? styles.laneEmpty : "",
         ]
           .filter(Boolean)
@@ -282,35 +362,78 @@ function TrackRowImpl({
             )}
           </span>
         )}
-        {track.pages.length > 0 && (
+        {pageCount > 0 && (
           <div
+            ref={laneInnerRef}
             className={styles.laneInner}
-            style={{ width: virtualizer.getTotalSize() }}
+            style={
+              wrap
+                ? { width: "100%", height: virtualizer.getTotalSize() }
+                : { width: virtualizer.getTotalSize() }
+            }
           >
             {virtualizer.getVirtualItems().map((item) => {
-              const page = track.pages[item.index];
-              if (!page) return null;
-              return (
-                <TrackPageTile
-                  key={page.id}
-                  page={page}
-                  trackFileId={track.fileId}
-                  position={item.index + 1}
-                  offsetX={item.start}
-                  selected={selectedIds.has(page.id)}
-                  dragging={draggingIds.has(page.id)}
-                  dropBefore={hintActive && dropHint?.beforePageId === page.id}
-                  dropAfterLast={
-                    hintActive &&
-                    dropHint?.beforePageId == null &&
-                    item.index === track.pages.length - 1
-                  }
-                  thumbnails={thumbnails}
-                  onSelect={onSelectPage}
-                  onRotate={onRotate}
-                  onDelete={onDelete}
-                />
-              );
+              // Single row: each virtual item is a page, placed along the lane.
+              if (!wrap) {
+                const page = track.pages[item.index];
+                if (!page) return null;
+                return (
+                  <TrackPageTile
+                    key={page.id}
+                    page={page}
+                    trackFileId={track.fileId}
+                    position={item.index + 1}
+                    offsetX={item.start}
+                    offsetY={0}
+                    selected={selectedIds.has(page.id)}
+                    dragging={draggingIds.has(page.id)}
+                    dropBefore={
+                      hintActive && dropHint?.beforePageId === page.id
+                    }
+                    dropAfterLast={
+                      hintActive &&
+                      dropHint?.beforePageId == null &&
+                      item.index === pageCount - 1
+                    }
+                    thumbnails={thumbnails}
+                    onSelect={onSelectPage}
+                    onRotate={onRotate}
+                    onDelete={onDelete}
+                  />
+                );
+              }
+              // Wrap: each virtual item is a row of up to `columns` pages.
+              const rowTop = item.start - scrollMargin;
+              const rowStartIndex = item.index * columns;
+              return Array.from({ length: columns }, (_unused, col) => {
+                const pageIndex = rowStartIndex + col;
+                const page = track.pages[pageIndex];
+                if (!page) return null;
+                return (
+                  <TrackPageTile
+                    key={page.id}
+                    page={page}
+                    trackFileId={track.fileId}
+                    position={pageIndex + 1}
+                    offsetX={col * geometry.colStride}
+                    offsetY={rowTop}
+                    selected={selectedIds.has(page.id)}
+                    dragging={draggingIds.has(page.id)}
+                    dropBefore={
+                      hintActive && dropHint?.beforePageId === page.id
+                    }
+                    dropAfterLast={
+                      hintActive &&
+                      dropHint?.beforePageId == null &&
+                      pageIndex === pageCount - 1
+                    }
+                    thumbnails={thumbnails}
+                    onSelect={onSelectPage}
+                    onRotate={onRotate}
+                    onDelete={onDelete}
+                  />
+                );
+              });
             })}
           </div>
         )}

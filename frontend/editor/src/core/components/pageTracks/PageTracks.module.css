@@ -10,10 +10,18 @@
   flex: 1 1 0;
   min-height: 0;
   overflow-y: auto;
-  padding: var(--space-4);
+}
+
+/* Holds the stack of tracks. Separate from the scroll container so its height
+   tracks the content (the wrap-mode row virtualiser measures each lane's
+   offset within this scrolling content). min-height fills the viewport so a
+   click below the last track still lands here to clear the selection. */
+.scrollerContent {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
+  padding: var(--space-4);
+  min-height: 100%;
 }
 
 /* ── Track ───────────────────────────────────────────────────────────────── */
@@ -82,6 +90,13 @@
   padding: 0.75rem;
   overflow-x: auto;
   overflow-y: hidden;
+}
+
+/* Wrap mode: pages flow onto as many rows as needed and the lane grows to fit,
+   so it neither scrolls horizontally nor clips. Row virtualisation runs against
+   the outer scroller instead of the lane. */
+.laneWrap {
+  overflow: visible;
 }
 
 /* Sized by the virtualiser; the tiles inside are absolutely placed, so the

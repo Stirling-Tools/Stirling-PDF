@@ -28,6 +28,8 @@ export interface TrackPageTileProps {
   position: number;
   /** Horizontal offset within the lane, from the virtualiser. */
   offsetX: number;
+  /** Vertical offset within the lane (0 in single-row mode; row top in wrap). */
+  offsetY: number;
   selected: boolean;
   dragging: boolean;
   /** Draw the insertion line on this tile's leading edge. */
@@ -49,6 +51,7 @@ function TrackPageTileImpl({
   trackFileId,
   position,
   offsetX,
+  offsetY,
   selected,
   dragging,
   dropBefore,
@@ -138,7 +141,7 @@ function TrackPageTileImpl({
       ]
         .filter(Boolean)
         .join(" ")}
-      style={{ left: offsetX }}
+      style={{ left: offsetX, top: offsetY }}
       {...attributes}
       {...listeners}
       data-page-id={page.id}
