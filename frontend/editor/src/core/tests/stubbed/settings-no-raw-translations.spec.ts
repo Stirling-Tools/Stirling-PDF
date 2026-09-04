@@ -3,9 +3,8 @@ import { test, expect } from "@app/tests/helpers/stub-test-base";
 test.use({ stubOptions: { enableLogin: true, isAdmin: true }, seedJwt: true });
 
 /**
- * A `t()` call placed as JSX children instead of `{t()}` renders its own source
- * as text. The translation tests cannot see it - the key is referenced, it just
- * never gets called - so the only place to catch it is the rendered page.
+ * A `t()` call placed as JSX children instead of `{t()}` prints its own source.
+ * The key still counts as referenced, so only the rendered page catches it.
  */
 const PAGES = [
   "adminGeneral",
