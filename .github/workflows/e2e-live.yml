@@ -23,6 +23,10 @@ jobs:
           egress-policy: audit
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Install native dependencies (libvips, jemalloc, heif/avif/jxl plugins, poppler)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libvips-dev libjemalloc2 libheif1 libheif-plugin-libde265 libheif-plugin-x265 libheif-plugin-ffmpegdec libheif-plugin-aomdec libheif-plugin-aomenc libjxl0.7 poppler-utils
 
       - name: Restore cache Gradle User Home
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0

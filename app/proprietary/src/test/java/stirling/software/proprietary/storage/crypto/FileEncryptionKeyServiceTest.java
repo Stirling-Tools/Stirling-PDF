@@ -214,9 +214,7 @@ class FileEncryptionKeyServiceTest {
                                         winnerKek,
                                         winner.getKeyId()
                                                 .toString()
-                                                .getBytes(
-                                                        java.nio.charset.StandardCharsets
-                                                                .US_ASCII))));
+                                                .getBytes(StandardCharsets.US_ASCII))));
 
         doAnswer(
                         inv -> {

@@ -8,6 +8,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 class PdfToCbrUtilsTest {
 
+    private final TempFileManager tempFileManager = mock(TempFileManager.class);
+
     @Test
     void isPdfFile_pdfExtension_returnsTrue() {
         MultipartFile file = mock(MultipartFile.class);
@@ -52,14 +54,18 @@ class PdfToCbrUtilsTest {
 
     @Test
     void convertPdfToCbr_nullFile_throwsException() {
-        assertThrows(Exception.class, () -> PdfToCbrUtils.convertPdfToCbr(null, 300, null));
+        assertThrows(
+                Exception.class,
+                () -> PdfToCbrUtils.convertPdfToCbr(null, 300, null, tempFileManager));
     }
 
     @Test
     void convertPdfToCbr_emptyFile_throwsException() {
         MultipartFile file = mock(MultipartFile.class);
         when(file.isEmpty()).thenReturn(true);
-        assertThrows(Exception.class, () -> PdfToCbrUtils.convertPdfToCbr(file, 300, null));
+        assertThrows(
+                Exception.class,
+                () -> PdfToCbrUtils.convertPdfToCbr(file, 300, null, tempFileManager));
     }
 
     @Test
@@ -67,7 +73,9 @@ class PdfToCbrUtilsTest {
         MultipartFile file = mock(MultipartFile.class);
         when(file.isEmpty()).thenReturn(false);
         when(file.getOriginalFilename()).thenReturn("image.png");
-        assertThrows(Exception.class, () -> PdfToCbrUtils.convertPdfToCbr(file, 300, null));
+        assertThrows(
+                Exception.class,
+                () -> PdfToCbrUtils.convertPdfToCbr(file, 300, null, tempFileManager));
     }
 
     @Test
@@ -75,6 +83,8 @@ class PdfToCbrUtilsTest {
         MultipartFile file = mock(MultipartFile.class);
         when(file.isEmpty()).thenReturn(false);
         when(file.getOriginalFilename()).thenReturn(null);
-        assertThrows(Exception.class, () -> PdfToCbrUtils.convertPdfToCbr(file, 300, null));
+        assertThrows(
+                Exception.class,
+                () -> PdfToCbrUtils.convertPdfToCbr(file, 300, null, tempFileManager));
     }
 }

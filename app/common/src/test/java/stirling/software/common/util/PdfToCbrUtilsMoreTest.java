@@ -2,6 +2,7 @@ package stirling.software.common.util;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.mock;
@@ -96,7 +97,10 @@ class PdfToCbrUtilsMoreTest {
                 assertThatThrownBy(
                                 () ->
                                         PdfToCbrUtils.convertPdfToCbr(
-                                                pdfMultipart(onePageImagePdf()), 72, factory))
+                                                pdfMultipart(onePageImagePdf()),
+                                                72,
+                                                factory,
+                                                mock(TempFileManager.class)))
                         .isInstanceOf(IOException.class);
             }
             doc.close();
@@ -124,7 +128,10 @@ class PdfToCbrUtilsMoreTest {
                 assertThatThrownBy(
                                 () ->
                                         PdfToCbrUtils.convertPdfToCbr(
-                                                pdfMultipart(onePageImagePdf()), 72, factory))
+                                                pdfMultipart(onePageImagePdf()),
+                                                72,
+                                                factory,
+                                                mock(TempFileManager.class)))
                         .isInstanceOf(IOException.class)
                         .hasMessageContaining("RAR");
             }
@@ -152,7 +159,10 @@ class PdfToCbrUtilsMoreTest {
                 assertThatThrownBy(
                                 () ->
                                         PdfToCbrUtils.convertPdfToCbr(
-                                                pdfMultipart(onePageImagePdf()), 72, factory))
+                                                pdfMultipart(onePageImagePdf()),
+                                                72,
+                                                factory,
+                                                mock(TempFileManager.class)))
                         .isInstanceOf(Exception.class);
             } finally {
                 // Clear the interrupt flag set by the handler so it doesn't leak into later tests.
@@ -169,14 +179,16 @@ class PdfToCbrUtilsMoreTest {
         @Test
         @DisplayName("a zero-page document raises a no-pages exception before rendering")
         void zeroPageDocument() throws Exception {
-            try (PDDocument empty = new PDDocument()) {
-                CustomPDFDocumentFactory factory = factoryReturning(empty);
-                assertThatThrownBy(
-                                () ->
-                                        PdfToCbrUtils.convertPdfToCbr(
-                                                pdfMultipart(onePageImagePdf()), 72, factory))
-                        .isInstanceOf(Exception.class);
-            }
+            assumeTrue(RenderingUtils.isLibVipsAvailable(), "libvips not available");
+            // A PDF with 0 pages or invalid empty PDF bytes
+            MultipartFile emptyPdf =
+                    new MockMultipartFile("file", "comic.pdf", "application/pdf", new byte[0]);
+            CustomPDFDocumentFactory factory = mock(CustomPDFDocumentFactory.class);
+            assertThatThrownBy(
+                            () ->
+                                    PdfToCbrUtils.convertPdfToCbr(
+                                            emptyPdf, 72, factory, mock(TempFileManager.class)))
+                    .isInstanceOf(Exception.class);
         }
     }
 

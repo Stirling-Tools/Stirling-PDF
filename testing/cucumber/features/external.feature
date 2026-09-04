@@ -186,6 +186,12 @@ Feature: API Validation
             | jpeg   |
             | jpg    |
             | gif    |
+            | heic   |
+            | heif   |
+            | avif   |
+            | jxl    |
+            | jp2    |
+
 
     @libre @positive @topdf
     Scenario Outline: Convert PDF to various types

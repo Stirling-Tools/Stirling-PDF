@@ -3,13 +3,13 @@ package stirling.software.SPDF.controller.api.converters;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 
 import java.io.IOException;
+import java.nio.file.Path;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -40,7 +40,6 @@ import stirling.software.SPDF.model.api.converters.ConvertToImageRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.CbrUtils;
 import stirling.software.common.util.CbzUtils;
-import stirling.software.common.util.CheckProgramInstall;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.PdfToCbrUtils;
 import stirling.software.common.util.PdfToCbzUtils;
@@ -422,7 +421,7 @@ class ConvertImgPDFControllerGapTest {
                 p2c.when(
                                 () ->
                                         PdfToCbrUtils.convertPdfToCbr(
-                                                eq(file), eq(150), eq(pdfDocumentFactory)))
+                                                eq(file), eq(150), eq(pdfDocumentFactory), any()))
                         .thenReturn(cbrBytes);
                 gu.when(() -> GeneralUtils.generateFilename("doc", "_converted.cbr"))
                         .thenReturn("doc_converted.cbr");
@@ -459,7 +458,7 @@ class ConvertImgPDFControllerGapTest {
                 p2c.when(
                                 () ->
                                         PdfToCbrUtils.convertPdfToCbr(
-                                                eq(file), eq(300), eq(pdfDocumentFactory)))
+                                                eq(file), eq(300), eq(pdfDocumentFactory), any()))
                         .thenReturn(cbrBytes);
                 gu.when(() -> GeneralUtils.generateFilename("doc", "_converted.cbr"))
                         .thenReturn("doc_converted.cbr");
@@ -477,7 +476,7 @@ class ConvertImgPDFControllerGapTest {
                 p2c.verify(
                         () ->
                                 PdfToCbrUtils.convertPdfToCbr(
-                                        eq(file), eq(300), eq(pdfDocumentFactory)));
+                                        eq(file), eq(300), eq(pdfDocumentFactory), any()));
             }
         }
     }
@@ -519,8 +518,7 @@ class ConvertImgPDFControllerGapTest {
                 pu.when(
                                 () ->
                                         PdfUtils.convertFromPdf(
-                                                eq(pdfDocumentFactory),
-                                                any(byte[].class),
+                                                any(Path.class),
                                                 eq("PNG"),
                                                 eq(ImageType.RGB),
                                                 eq(true),
@@ -571,8 +569,7 @@ class ConvertImgPDFControllerGapTest {
                 pu.when(
                                 () ->
                                         PdfUtils.convertFromPdf(
-                                                eq(pdfDocumentFactory),
-                                                any(byte[].class),
+                                                any(Path.class),
                                                 eq("JPG"),
                                                 eq(ImageType.GRAY),
                                                 eq(false),
@@ -622,8 +619,7 @@ class ConvertImgPDFControllerGapTest {
                 pu.when(
                                 () ->
                                         PdfUtils.convertFromPdf(
-                                                eq(pdfDocumentFactory),
-                                                any(byte[].class),
+                                                any(Path.class),
                                                 eq("PNG"),
                                                 eq(ImageType.BINARY),
                                                 eq(true),
@@ -674,8 +670,7 @@ class ConvertImgPDFControllerGapTest {
                 pu.when(
                                 () ->
                                         PdfUtils.convertFromPdf(
-                                                eq(pdfDocumentFactory),
-                                                any(byte[].class),
+                                                any(Path.class),
                                                 eq("PNG"),
                                                 eq(ImageType.RGB),
                                                 eq(true),
@@ -698,8 +693,8 @@ class ConvertImgPDFControllerGapTest {
         }
 
         @Test
-        @DisplayName("webp requested without Python throws the python-required IOException")
-        void webpWithoutPythonThrows() throws Exception {
+        @DisplayName("webp format delegates to PdfUtils.convertFromPdf with WEBP format")
+        void webpFormatDelegatesToPdfUtils() throws Exception {
             byte[] pdfBytes = tinyPdfBytes(1);
             MockMultipartFile file = imagePdf(pdfBytes);
 
@@ -715,26 +710,35 @@ class ConvertImgPDFControllerGapTest {
             Mockito.when(pdfDocumentFactory.load(any(MockMultipartFile.class)))
                     .thenReturn(tinyDocument(1));
 
-            try (MockedStatic<PdfUtils> pu = Mockito.mockStatic(PdfUtils.class);
-                    MockedStatic<CheckProgramInstall> cpi =
-                            Mockito.mockStatic(CheckProgramInstall.class)) {
+            byte[] webpBytes = "webp-image".getBytes();
+            ResponseEntity<byte[]> expected = ResponseEntity.ok(webpBytes);
 
-                // webp renders to PNG first, then requires Python for the final conversion.
+            try (MockedStatic<PdfUtils> pu = Mockito.mockStatic(PdfUtils.class);
+                    MockedStatic<WebResponseUtils> wr =
+                            Mockito.mockStatic(WebResponseUtils.class)) {
+
                 pu.when(
                                 () ->
                                         PdfUtils.convertFromPdf(
-                                                eq(pdfDocumentFactory),
-                                                any(byte[].class),
-                                                eq("png"),
+                                                any(Path.class),
+                                                eq("WEBP"),
                                                 any(ImageType.class),
                                                 anyBoolean(),
                                                 anyInt(),
                                                 any(String.class),
                                                 anyBoolean()))
-                        .thenReturn("png-image".getBytes());
-                cpi.when(CheckProgramInstall::isPythonAvailable).thenReturn(false);
+                        .thenReturn(webpBytes);
+                wr.when(
+                                () ->
+                                        WebResponseUtils.bytesToWebResponse(
+                                                eq(webpBytes),
+                                                any(String.class),
+                                                any(MediaType.class)))
+                        .thenReturn(expected);
 
-                assertThrows(IOException.class, () -> controller.convertToImage(request));
+                ResponseEntity<?> response = controller.convertToImage(request);
+
+                assertSame(expected, response);
             }
         }
     }
