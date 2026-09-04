@@ -46,6 +46,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.configuration.CorsPaths;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.RequestUriUtils;
 import stirling.software.proprietary.security.model.User;
@@ -375,7 +376,9 @@ public class SupabaseSecurityConfig {
         cfg.setAllowCredentials(true);
         cfg.setMaxAge(3600L);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", cfg);
+        for (String pathPattern : CorsPaths.CROSS_ORIGIN_PATTERNS) {
+            source.registerCorsConfiguration(pathPattern, cfg);
+        }
         return source;
     }
 

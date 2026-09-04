@@ -17,6 +17,7 @@ import org.springframework.web.servlet.resource.EncodedResourceResolver;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.common.configuration.CorsPaths;
 import stirling.software.common.model.ApplicationProperties;
 
 @Configuration
@@ -241,8 +242,14 @@ public class WebMvcConfig implements WebMvcConfigurer {
             logger.debug(
                     "No CORS allowed origins configured in settings.yml"
                             + " (system.corsAllowedOrigins); WebMvcConfig allowing all origins.");
-            registry.addMapping("/**")
-                    .allowedOriginPatterns("*")
+            registerCorsMappings(registry, new String[] {"*"});
+        }
+    }
+
+    private void registerCorsMappings(CorsRegistry registry, String[] allowedOriginPatterns) {
+        for (String pathPattern : CorsPaths.CROSS_ORIGIN_PATTERNS) {
+            registry.addMapping(pathPattern)
+                    .allowedOriginPatterns(allowedOriginPatterns)
                     .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
                     .allowedHeaders(
                             "Authorization",

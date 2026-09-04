@@ -178,7 +178,7 @@ class SupabaseSecurityConfigMoreTest {
 
         private CorsConfiguration cors(CorsConfigurationSource source) {
             UrlBasedCorsConfigurationSource ub = (UrlBasedCorsConfigurationSource) source;
-            return ub.getCorsConfigurations().get("/**");
+            return ub.getCorsConfigurations().get("/api/**");
         }
 
         @Test
