@@ -1,5 +1,6 @@
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
+import { SettingsCard } from "@app/components/shared/config/SettingsCard";
 import { Stack, Loader } from "@mantine/core";
 import { alert } from "@app/components/toast";
 import RestartConfirmationModal from "@app/components/shared/config/RestartConfirmationModal";
@@ -216,42 +217,39 @@ export default function AdminAdvancedPage() {
       <Stack gap="lg" className="settings-section-content">
         <LoginRequiredBanner show={!loginEnabled} />
 
-        <section className="admin-advanced__card">
-          <h2 className="admin-advanced__heading" id="adminAdvancedFeatures">
-            {t("admin.settings.advanced.features", "Feature Flags")}
-          </h2>
+        <SettingsCard
+          id="adminAdvancedFeatures"
+          title={t("admin.settings.advanced.features", "Feature Flags")}
+        >
           <AdvancedFeatureFlagsCard {...card} />
-        </section>
+        </SettingsCard>
 
-        <section className="admin-advanced__card">
-          <h2 className="admin-advanced__heading" id="adminAdvancedProcessing">
-            {t("admin.settings.advanced.processing", "Processing")}
-          </h2>
+        <SettingsCard
+          id="adminAdvancedProcessing"
+          title={t("admin.settings.advanced.processing", "Processing")}
+        >
           <AdvancedProcessingCard {...card} />
-        </section>
+        </SettingsCard>
 
-        <section className="admin-advanced__card">
-          <h2 className="admin-advanced__heading" id="adminAdvancedTempFiles">
-            {t(
-              "admin.settings.advanced.tempFileManagement.label",
-              "Temp File Management",
-            )}
-          </h2>
+        <SettingsCard
+          id="adminAdvancedTempFiles"
+          title={t(
+            "admin.settings.advanced.tempFileManagement.label",
+            "Temp File Management",
+          )}
+        >
           <AdvancedTempFilesCard {...card} />
-        </section>
+        </SettingsCard>
 
-        <section className="admin-advanced__card">
-          <h2
-            className="admin-advanced__heading"
-            id="adminAdvancedProcessExecutor"
-          >
-            {t(
-              "admin.settings.advanced.processExecutor.label",
-              "Process Executor Limits",
-            )}
-          </h2>
+        <SettingsCard
+          id="adminAdvancedProcessExecutor"
+          title={t(
+            "admin.settings.advanced.processExecutor.label",
+            "Process Executor Limits",
+          )}
+        >
           <AdvancedProcessExecutorCard {...card} />
-        </section>
+        </SettingsCard>
       </Stack>
 
       <SettingsStickyFooter

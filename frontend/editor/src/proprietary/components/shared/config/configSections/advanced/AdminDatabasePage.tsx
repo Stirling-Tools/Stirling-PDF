@@ -1,5 +1,6 @@
 import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { SettingsCard } from "@app/components/shared/config/SettingsCard";
 import { Stack, Loader } from "@mantine/core";
 import { alert } from "@app/components/toast";
 import RestartConfirmationModal from "@app/components/shared/config/RestartConfirmationModal";
@@ -121,23 +122,21 @@ export default function AdminDatabasePage() {
       <Stack gap="lg" className="settings-section-content">
         <LoginRequiredBanner show={!loginEnabled} />
 
-        <section className="admin-advanced__card">
-          <h2 className="admin-advanced__heading" id="adminDatabase">
-            {t("admin.settings.database.configuration", "Database")}
-          </h2>
-          <p className="admin-advanced__description">
-            {t(
-              "admin.settings.database.description",
-              "Connect a custom database, and back up or restore the one in use.",
-            )}
-          </p>
+        <SettingsCard
+          id="adminDatabase"
+          title={t("admin.settings.database.configuration", "Database")}
+          description={t(
+            "admin.settings.database.description",
+            "Connect a custom database, and back up or restore the one in use.",
+          )}
+        >
           <DatabaseConfigCard
             settings={settings}
             setSettings={setSettings}
             isFieldPending={isFieldPending}
             loginEnabled={loginEnabled}
           />
-        </section>
+        </SettingsCard>
       </Stack>
 
       <SettingsStickyFooter
@@ -149,12 +148,12 @@ export default function AdminDatabasePage() {
       />
 
       <div className="settings-section-content">
-        <section className="admin-advanced__card">
-          <h2 className="admin-advanced__heading" id="adminDatabaseBackups">
-            {t("admin.settings.database.backupTitle", "Backups & Restore")}
-          </h2>
+        <SettingsCard
+          id="adminDatabaseBackups"
+          title={t("admin.settings.database.backupTitle", "Backups & Restore")}
+        >
           <DatabaseBackupsCard isEmbeddedH2={isEmbeddedH2} />
-        </section>
+        </SettingsCard>
       </div>
 
       <RestartConfirmationModal

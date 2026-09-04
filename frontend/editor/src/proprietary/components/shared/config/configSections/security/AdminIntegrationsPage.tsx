@@ -1,5 +1,6 @@
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
+import { SettingsCard } from "@app/components/shared/config/SettingsCard";
 import { Stack, Loader } from "@mantine/core";
 import { alert } from "@app/components/toast";
 import RestartConfirmationModal from "@app/components/shared/config/RestartConfirmationModal";
@@ -99,41 +100,39 @@ export default function AdminIntegrationsPage() {
       <Stack gap="lg" className="settings-section-content">
         <LoginRequiredBanner show={!loginEnabled} />
 
-        <section className="admin-security__card">
-          <h2 className="admin-security__heading" id="adminConnections">
-            {t(
-              "admin.settings.connections.linkedServices",
-              "Connected services",
-            )}
-          </h2>
-          <p className="admin-security__description">
-            {t(
-              "admin.settings.connections.description",
-              "Single sign-on providers and the other services this server talks to.",
-            )}
-          </p>
+        <SettingsCard
+          id="adminConnections"
+          title={t(
+            "admin.settings.connections.linkedServices",
+            "Connected services",
+          )}
+          description={t(
+            "admin.settings.connections.description",
+            "Single sign-on providers and the other services this server talks to.",
+          )}
+        >
           <LinkedServicesCard {...card} providers={linkedProviders} />
-        </section>
+        </SettingsCard>
 
-        <section className="admin-security__card">
-          <h2 className="admin-security__heading" id="integrationsAvailable">
-            {t(
-              "admin.settings.connections.unlinkedServices",
-              "Available services",
-            )}
-          </h2>
+        <SettingsCard
+          id="integrationsAvailable"
+          title={t(
+            "admin.settings.connections.unlinkedServices",
+            "Available services",
+          )}
+        >
           <UnlinkedServicesCard {...card} providers={availableProviders} />
-        </section>
+        </SettingsCard>
 
-        <section className="admin-security__card">
-          <h2 className="admin-security__heading" id="connectionsMobileScanner">
-            {t(
-              "admin.settings.connections.mobileScanner.label",
-              "Mobile upload",
-            )}
-          </h2>
+        <SettingsCard
+          id="connectionsMobileScanner"
+          title={t(
+            "admin.settings.connections.mobileScanner.label",
+            "Mobile upload",
+          )}
+        >
           <MobileUploadQrCard {...card} />
-        </section>
+        </SettingsCard>
       </Stack>
 
       <SettingsStickyFooter

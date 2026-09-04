@@ -8,6 +8,7 @@ import React, {
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { LoadingFallback } from "@app/components/shared/LoadingFallback";
+import { useSectionHeadings } from "@app/components/settings/useSectionHeadings";
 import { Badge, Tooltip } from "@mantine/core";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { ActionIcon } from "@app/ui/ActionIcon";
@@ -60,6 +61,7 @@ function sectionFromPath(pathname: string): string | null {
 
 const SettingsPageInner: React.FC = () => {
   const { t } = useTranslation();
+  const [contentRef, setContentRef] = useState<HTMLDivElement | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
   const isMobile = useIsMobile();
@@ -195,6 +197,7 @@ const SettingsPageInner: React.FC = () => {
   // Sections that bring their own page header get the whole pane; on mobile the
   // bar stays anyway, because it carries the only way back to the list.
   const fullBleed = activeItem?.fullBleed ?? false;
+  const headings = useSectionHeadings(activeItem?.key, contentRef);
 
   return (
     <div className="settings-page" data-tour="settings-modal">
@@ -324,7 +327,31 @@ const SettingsPageInner: React.FC = () => {
                           {row}
                         </Tooltip>
                       ) : (
-                        <React.Fragment key={item.key}>{row}</React.Fragment>
+                        <React.Fragment key={item.key}>
+                          {row}
+                          {isActive && headings.length > 1 && (
+                            <ul className="settings-page__subnav">
+                              {headings.map((h) => (
+                                <li key={h.id}>
+                                  <button
+                                    type="button"
+                                    className="settings-page__subnav-item"
+                                    onClick={() =>
+                                      document
+                                        .getElementById(h.id)
+                                        ?.scrollIntoView({
+                                          behavior: "smooth",
+                                          block: "start",
+                                        })
+                                    }
+                                  >
+                                    {h.label}
+                                  </button>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </React.Fragment>
                       );
                     })}
                   </div>
@@ -349,7 +376,7 @@ const SettingsPageInner: React.FC = () => {
             dropdownClassName="settings-search-dropdown"
           />
         </div>
-        <div className="modal-content-scroll">
+        <div className="modal-content-scroll" ref={setContentRef}>
           {isMobile && (
             <div className="settings-page__mobile-bar modal-header">
               <SettingsMobileBackButton

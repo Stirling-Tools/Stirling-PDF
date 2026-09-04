@@ -215,7 +215,7 @@ export const useConfigNavSections = (
       },
       {
         id: "security",
-        title: t("settings.securityAuth.title", "Security & sign-in"),
+        title: t("settings.securityAuth.security", "Sign-in & security"),
         items: [
           {
             key: "adminSecurity",
@@ -232,6 +232,12 @@ export const useConfigNavSections = (
             ),
             ...gated,
           },
+        ],
+      },
+      {
+        id: "audit",
+        title: t("settings.licensingAnalytics.audit", "Audit log"),
+        items: [
           {
             key: "adminAudit",
             label: t("settings.licensingAnalytics.audit", "Audit log"),

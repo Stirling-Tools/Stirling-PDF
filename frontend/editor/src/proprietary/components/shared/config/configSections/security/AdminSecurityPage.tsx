@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo } from "react";
 import { useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { SettingsCard } from "@app/components/shared/config/SettingsCard";
 import { Stack, Loader } from "@mantine/core";
 import { alert } from "@app/components/toast";
 import RestartConfirmationModal from "@app/components/shared/config/RestartConfirmationModal";
@@ -166,33 +167,33 @@ export default function AdminSecurityPage() {
       <Stack gap="lg" className="settings-section-content">
         <LoginRequiredBanner show={!loginEnabled} />
 
-        <section className="admin-security__card">
-          <h2 className="admin-security__heading" id="securityAuthentication">
-            {t("admin.settings.security.authentication", "Authentication")}
-          </h2>
+        <SettingsCard
+          id="securityAuthentication"
+          title={t("admin.settings.security.authentication", "Authentication")}
+        >
           <AuthenticationCard {...securityCard} />
-        </section>
+        </SettingsCard>
 
-        <section className="admin-security__card">
-          <h2 className="admin-security__heading" id="securityJwt">
-            {t("admin.settings.security.jwt.label", "JWT Configuration")}
-          </h2>
+        <SettingsCard
+          id="securityJwt"
+          title={t("admin.settings.security.jwt.label", "JWT Configuration")}
+        >
           <SessionsJwtCard {...securityCard} />
-        </section>
+        </SettingsCard>
 
         {hasLinked && (
-          <section className="admin-security__card">
-            <h2 className="admin-security__heading" id="adminConnections">
-              {t(
-                "admin.settings.connections.linkedServices",
-                "Linked Services",
-              )}
-            </h2>
+          <SettingsCard
+            id="adminConnections"
+            title={t(
+              "admin.settings.connections.linkedServices",
+              "Linked Services",
+            )}
+          >
             <LinkedServicesCard
               {...connectionsCard}
               providers={linkedProviders}
             />
-          </section>
+          </SettingsCard>
         )}
 
         {availableProviders.length > 0 && (
@@ -213,32 +214,32 @@ export default function AdminSecurityPage() {
           </section>
         )}
 
-        <section className="admin-security__card">
-          <h2 className="admin-security__heading" id="connectionsSsoAutoLogin">
-            {t(
-              "admin.settings.connections.ssoAutoLogin.label",
-              "SSO Auto Login",
-            )}
-          </h2>
+        <SettingsCard
+          id="connectionsSsoAutoLogin"
+          title={t(
+            "admin.settings.connections.ssoAutoLogin.label",
+            "SSO Auto Login",
+          )}
+        >
           <SsoAutoLoginCard {...connectionsCard} />
-        </section>
+        </SettingsCard>
 
-        <section className="admin-security__card">
-          <h2 className="admin-security__heading" id="securityHtmlUrl">
-            {t(
-              "admin.settings.security.htmlUrlSecurity.label",
-              "HTML URL Security",
-            )}
-          </h2>
+        <SettingsCard
+          id="securityHtmlUrl"
+          title={t(
+            "admin.settings.security.htmlUrlSecurity.label",
+            "HTML URL Security",
+          )}
+        >
           <HtmlUrlSecurityCard {...securityCard} />
-        </section>
+        </SettingsCard>
 
-        <section className="admin-security__card">
-          <h2 className="admin-security__heading" id="auditLogging">
-            {t("admin.settings.security.audit.label", "Audit Logging")}
-          </h2>
+        <SettingsCard
+          id="auditLogging"
+          title={t("admin.settings.security.audit.label", "Audit Logging")}
+        >
           <AuditLoggingCard {...securityCard} />
-        </section>
+        </SettingsCard>
       </Stack>
 
       <SettingsStickyFooter

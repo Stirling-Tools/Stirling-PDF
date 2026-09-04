@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { SettingsCard } from "@app/components/shared/config/SettingsCard";
 import { Stack, Loader } from "@mantine/core";
 import { alert } from "@app/components/toast";
 import RestartConfirmationModal from "@app/components/shared/config/RestartConfirmationModal";
@@ -207,72 +208,67 @@ export default function AdminAiSection() {
       <Stack gap="lg" className="settings-section-content">
         <LoginRequiredBanner show={!loginEnabled} />
 
-        <section className="admin-ai__card">
-          <h2 className="admin-ai__heading" id="adminAiGeneral">
-            {t("admin.settings.ai.general.connection", "Connection")}
-          </h2>
-          <p className="admin-ai__description">
-            {t(
-              "admin.settings.ai.general.description",
-              "Connect Stirling to the Python AI engine and choose which AI capabilities are exposed. Changes apply on restart.",
-            )}
-          </p>
+        <SettingsCard
+          id="adminAiGeneral"
+          title={t("admin.settings.ai.general.connection", "Connection")}
+          description={t(
+            "admin.settings.ai.general.description",
+            "Connect Stirling to the Python AI engine and choose which AI capabilities are exposed. Changes apply on restart.",
+          )}
+        >
           <AiConnectionCard {...card} />
-        </section>
+        </SettingsCard>
 
-        <section className="admin-ai__card">
-          <h2 className="admin-ai__heading" id="adminAiCapabilities">
-            {t("admin.settings.ai.general.capabilities.title", "Capabilities")}
-          </h2>
+        <SettingsCard
+          id="adminAiCapabilities"
+          title={t(
+            "admin.settings.ai.general.capabilities.title",
+            "Capabilities",
+          )}
+        >
           <AiCapabilitiesCard {...card} />
-        </section>
+        </SettingsCard>
 
-        <section className="admin-ai__card">
-          <h2 className="admin-ai__heading" id="adminAiModels">
-            {t("settings.ai.models", "Models & Providers")}
-          </h2>
-          <p className="admin-ai__description">
-            {t(
-              "admin.settings.ai.models.description",
-              "Choose the LLM provider and the smart/fast models the AI engine uses. Applied to the AI engine when saved.",
-            )}
-          </p>
+        <SettingsCard
+          id="adminAiModels"
+          title={t("settings.ai.models", "Models & Providers")}
+          description={t(
+            "admin.settings.ai.models.description",
+            "Choose the LLM provider and the smart/fast models the AI engine uses. Applied to the AI engine when saved.",
+          )}
+        >
           <AiModelsCard
             {...card}
             apiKeyDirty={apiKeyDirty}
             setApiKeyDirty={setApiKeyDirty}
           />
-        </section>
+        </SettingsCard>
 
-        <section className="admin-ai__card">
-          <h2 className="admin-ai__heading" id="adminAiDocuments">
-            {t("settings.ai.documents", "Documents & RAG")}
-          </h2>
-          <p className="admin-ai__description">
-            {t(
-              "admin.settings.ai.documents.description",
-              "Configure the embedding model and retrieval settings used to answer questions over documents. Applied to the AI engine when saved.",
-            )}
-          </p>
+        <SettingsCard
+          id="adminAiDocuments"
+          title={t("settings.ai.documents", "Documents & RAG")}
+          description={t(
+            "admin.settings.ai.documents.description",
+            "Configure the embedding model and retrieval settings used to answer questions over documents. Applied to the AI engine when saved.",
+          )}
+        >
           <AiDocumentsCard
             {...card}
             embeddingApiKeyDirty={embeddingApiKeyDirty}
             setEmbeddingApiKeyDirty={setEmbeddingApiKeyDirty}
           />
-        </section>
+        </SettingsCard>
 
-        <section className="admin-ai__card">
-          <h2 className="admin-ai__heading" id="adminAiLimits">
-            {t("settings.ai.limits", "Limits & Performance")}
-          </h2>
-          <p className="admin-ai__description">
-            {t(
-              "admin.settings.ai.limits.description",
-              "Guardrails for how much work AI requests may do and how many run concurrently. Applied to the AI engine when saved.",
-            )}
-          </p>
+        <SettingsCard
+          id="adminAiLimits"
+          title={t("settings.ai.limits", "Limits & Performance")}
+          description={t(
+            "admin.settings.ai.limits.description",
+            "Guardrails for how much work AI requests may do and how many run concurrently. Applied to the AI engine when saved.",
+          )}
+        >
           <AiLimitsCard {...card} />
-        </section>
+        </SettingsCard>
       </Stack>
 
       <SettingsStickyFooter

@@ -1,5 +1,6 @@
 import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { SettingsCard } from "@app/components/shared/config/SettingsCard";
 import { Stack, Loader } from "@mantine/core";
 import { alert } from "@app/components/toast";
 import RestartConfirmationModal from "@app/components/shared/config/RestartConfirmationModal";
@@ -120,48 +121,47 @@ export default function AdminLegalPrivacyPage() {
       <Stack gap="lg" className="settings-section-content">
         <LoginRequiredBanner show={!loginEnabled} />
 
-        <section className="admin-security__card">
-          <h2 className="admin-security__heading" id="adminLegal">
-            {t("settings.policiesPrivacy.legal", "Legal documents")}
-          </h2>
-          <p className="admin-security__description">
-            {t(
-              "admin.settings.legal.description",
-              "Configure links to legal documents and policies.",
-            )}
-          </p>
+        <SettingsCard
+          id="adminLegal"
+          title={t("settings.policiesPrivacy.legal", "Legal documents")}
+          description={t(
+            "admin.settings.legal.description",
+            "Configure links to legal documents and policies.",
+          )}
+        >
           <LegalDocumentsCard {...legalCard} />
-        </section>
+        </SettingsCard>
 
-        <section className="admin-security__card">
-          <h2 className="admin-security__heading" id="legalLoginAgreement">
-            {t("admin.settings.legal.loginAgreement.title", "Login agreement")}
-          </h2>
+        <SettingsCard
+          id="legalLoginAgreement"
+          title={t(
+            "admin.settings.legal.loginAgreement.title",
+            "Login agreement",
+          )}
+        >
           <LoginAgreementCard {...legalCard} />
-        </section>
+        </SettingsCard>
 
-        <section className="admin-security__card">
-          <h2 className="admin-security__heading" id="adminPrivacy">
-            {t("admin.settings.privacy.analytics", "Analytics & Tracking")}
-          </h2>
-          <p className="admin-security__description">
-            {t(
-              "admin.settings.privacy.description",
-              "What this server discloses about itself, and what it reports.",
-            )}
-          </p>
+        <SettingsCard
+          id="adminPrivacy"
+          title={t("admin.settings.privacy.analytics", "Analytics & Tracking")}
+          description={t(
+            "admin.settings.privacy.description",
+            "What this server discloses about itself, and what it reports.",
+          )}
+        >
           <AnalyticsTrackingCard {...privacyCard} />
-        </section>
+        </SettingsCard>
 
-        <section className="admin-security__card">
-          <h2 className="admin-security__heading" id="privacySearchEngine">
-            {t(
-              "admin.settings.privacy.searchEngine",
-              "Search engine visibility",
-            )}
-          </h2>
+        <SettingsCard
+          id="privacySearchEngine"
+          title={t(
+            "admin.settings.privacy.searchEngine",
+            "Search engine visibility",
+          )}
+        >
           <SearchEngineVisibilityCard {...privacyCard} />
-        </section>
+        </SettingsCard>
       </Stack>
 
       <SettingsStickyFooter

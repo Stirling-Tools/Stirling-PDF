@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { SettingsCard } from "@app/components/shared/config/SettingsCard";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Badge, Loader, Stack } from "@mantine/core";
 import { useQueryClient } from "@tanstack/react-query";
@@ -483,81 +484,79 @@ export default function AdminSystemSection() {
       <Stack gap="lg" className="settings-section-content">
         <LoginRequiredBanner show={!loginEnabled} />
 
-        <section className="admin-system__card">
-          <h2 className="admin-system__heading" id="adminGeneral">
-            {t("admin.settings.general.system", "System")}
-          </h2>
+        <SettingsCard
+          id="adminGeneral"
+          title={t("admin.settings.general.system", "System")}
+        >
           <SystemCard {...generalCard} />
-        </section>
+        </SettingsCard>
 
-        <section className="admin-system__card">
-          <h2 className="admin-system__heading" id="adminUserDefaults">
-            {t(
-              "admin.settings.endpoints.userDefaults",
-              "User Preference Defaults",
-            )}
-          </h2>
+        <SettingsCard
+          id="adminUserDefaults"
+          title={t(
+            "admin.settings.endpoints.userDefaults",
+            "User Preference Defaults",
+          )}
+        >
           <UserDefaultsCard
             settings={uiDefaults}
             setSettings={setUiDefaults}
             isFieldPending={isUiFieldPending}
             loginEnabled={loginEnabled}
           />
-        </section>
+        </SettingsCard>
 
-        <section className="admin-system__card">
-          <h2 className="admin-system__heading" id="adminEndpoints">
-            {t("admin.settings.endpoints.management", "Endpoint Management")}
-          </h2>
-          <p className="admin-system__description">
-            {t(
-              "admin.settings.endpoints.description",
-              "Turn individual tools or whole groups off for everyone on this server.",
-            )}
-          </p>
+        <SettingsCard
+          id="adminEndpoints"
+          title={t(
+            "admin.settings.endpoints.management",
+            "Endpoint Management",
+          )}
+          description={t(
+            "admin.settings.endpoints.description",
+            "Turn individual tools or whole groups off for everyone on this server.",
+          )}
+        >
           <EndpointManagementCard
             settings={endpoints}
             setSettings={setEndpoints}
             isFieldPending={isEndpointsFieldPending}
             loginEnabled={loginEnabled}
           />
-        </section>
+        </SettingsCard>
 
-        <section className="admin-system__card">
-          <h2 className="admin-system__heading" id="adminStorageSharing">
-            {t(
-              "settings.configuration.storageSharing",
-              "File Storage & Sharing",
-            )}
-            {/* The retired row wore this badge; a merged row cannot. */}
+        <SettingsCard
+          id="adminStorageSharing"
+          title={t(
+            "settings.configuration.storageSharing",
+            "File Storage & Sharing",
+          )}
+          description={t(
+            "admin.settings.storage.description",
+            "Where files are stored, and whether people can share them by link or email.",
+          )}
+          badge={
             <Badge component="span" color="orange" size="sm">
               {t("toolPanel.alpha", "Alpha")}
             </Badge>
-          </h2>
-          <p className="admin-system__description">
-            {t(
-              "admin.settings.storage.description",
-              "Where files are stored, and whether people can share them by link or email.",
-            )}
-          </p>
+          }
+        >
           <StorageSharingCard
             settings={storage}
             setSettings={setStorage}
             isFieldPending={isStorageFieldPending}
             loginEnabled={loginEnabled}
           />
-        </section>
+        </SettingsCard>
 
-        <section className="admin-system__card">
-          <h2 className="admin-system__heading" id="adminFolderAccess">
-            {t("settings.configuration.folderAccess", "Folder Access")}
-          </h2>
-          <p className="admin-system__description">
-            {t(
-              "admin.settings.folderAccess.description",
-              "Directories that folder sources and folder outputs are allowed to read from and write to.",
-            )}
-          </p>
+        <SettingsCard
+          id="adminFolderAccess"
+          title={t("settings.configuration.folderAccess", "Folder Access")}
+          description={t(
+            "admin.settings.folderAccess.description",
+            "Directories that folder sources and folder outputs are allowed to read from and write to.",
+          )}
+        >
           <FolderAccessCard
             settings={folderAccess}
             setSettings={setFolderAccess}
@@ -566,21 +565,22 @@ export default function AdminSystemSection() {
             newRoot={newRoot}
             setNewRoot={setNewRoot}
           />
-        </section>
+        </SettingsCard>
 
-        <section className="admin-system__card">
-          <h2 className="admin-system__heading" id="adminGeneralCustomPaths">
-            {t("admin.settings.general.customPaths.label", "Custom Paths")}
-          </h2>
+        <SettingsCard
+          id="adminGeneralCustomPaths"
+          title={t("admin.settings.general.customPaths.label", "Custom Paths")}
+        >
           <CustomPathsCard {...generalCard} />
-        </section>
+        </SettingsCard>
 
-        <section className="admin-system__card">
-          <h2 className="admin-system__heading" id="adminGeneralCustomMetadata">
-            {t(
-              "admin.settings.general.customMetadata.label",
-              "Custom Metadata",
-            )}
+        <SettingsCard
+          id="adminGeneralCustomMetadata"
+          title={t(
+            "admin.settings.general.customMetadata.label",
+            "Custom Metadata",
+          )}
+          badge={
             <Badge
               component="span"
               color="grape"
@@ -594,16 +594,22 @@ export default function AdminSystemSection() {
             >
               PRO
             </Badge>
-          </h2>
+          }
+        >
           <CustomMetadataCard {...generalCard} />
-        </section>
+        </SettingsCard>
 
-        <section className="admin-system__card">
-          <h2 className="admin-system__heading" id="adminFeatures">
-            {t(
-              "admin.settings.features.serverCertificate.label",
-              "Server Certificate",
-            )}
+        <SettingsCard
+          id="adminFeatures"
+          title={t(
+            "admin.settings.features.serverCertificate.label",
+            "Server Certificate",
+          )}
+          description={t(
+            "admin.settings.features.description",
+            "Configure optional features and functionality.",
+          )}
+          badge={
             <Badge
               component="span"
               color="grape"
@@ -617,33 +623,26 @@ export default function AdminSystemSection() {
             >
               PRO
             </Badge>
-          </h2>
-          <p className="admin-system__description">
-            {t(
-              "admin.settings.features.description",
-              "Configure optional features and functionality.",
-            )}
-          </p>
+          }
+        >
           <ServerCertificateCard {...generalCard} />
-        </section>
+        </SettingsCard>
 
-        <section className="admin-system__card">
-          <h2 className="admin-system__heading" id="adminMcp">
-            {t("settings.configuration.mcp", "MCP Server")}
-          </h2>
-          <p className="admin-system__description">
-            {t(
-              "admin.settings.mcp.description",
-              "Expose this server's tools to MCP clients, and choose which ones.",
-            )}
-          </p>
+        <SettingsCard
+          id="adminMcp"
+          title={t("settings.configuration.mcp", "MCP Server")}
+          description={t(
+            "admin.settings.mcp.description",
+            "Expose this server's tools to MCP clients, and choose which ones.",
+          )}
+        >
           <McpCard
             settings={mcp}
             setSettings={setMcp}
             isFieldPending={isMcpFieldPending}
             loginEnabled={loginEnabled}
           />
-        </section>
+        </SettingsCard>
       </Stack>
 
       <SettingsStickyFooter

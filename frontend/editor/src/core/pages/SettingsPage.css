@@ -290,3 +290,40 @@
     font-size: 1.5rem;
   }
 }
+
+/* ── Cards of the open section, listed under its nav row ───────────────── */
+
+.settings-page__subnav {
+  list-style: none;
+  margin: 0.125rem 0 0.375rem;
+  padding: 0 0 0 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.0625rem;
+  /* One rule down the group, so the children read as belonging to the row. */
+  border-inline-start: 1px solid var(--c-border-subtle);
+  margin-inline-start: 1rem;
+}
+
+.settings-page__subnav-item {
+  display: block;
+  width: 100%;
+  padding: 0.25rem 0.5rem;
+  border: 0;
+  border-radius: var(--radius-sm, 4px);
+  background: none;
+  color: var(--c-text-subtle);
+  font-size: 0.8125rem;
+  text-align: start;
+  cursor: pointer;
+}
+
+.settings-page__subnav-item:hover {
+  background: var(--c-hover);
+  color: var(--c-text);
+}
+
+.settings-page__subnav-item:focus-visible {
+  outline: 0.125rem solid var(--c-primary);
+  outline-offset: -0.125rem;
+}
