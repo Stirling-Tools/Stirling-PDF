@@ -9698,9 +9698,10 @@ typesFound_one = "{{count}} document type found"
 typesFound_other = "{{count}} document types found"
 working = "Processing …"
 
-[processingFolders.downloads.wall]
-classified = "Classified"
+[processingFolders.wall]
+done = "Done"
 failed = "Failed"
+title = "Processing this folder"
 waiting = "Waiting …"
 
 [printFile]

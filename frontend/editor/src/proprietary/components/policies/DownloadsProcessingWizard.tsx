@@ -12,9 +12,13 @@ import {
   type DownloadsSuggestion,
 } from "@app/services/processingFolderApi";
 import { deliverSweepResults } from "@app/services/processingRunDelivery";
+import {
+  mergeRunsIntoCards,
+  SweepRunWall,
+  type SweepWallCard,
+} from "@app/components/policies/SweepRunWall";
 import { refreshProcessingFolders } from "@app/hooks/useProcessingFolders";
 import { readClassificationLabelsFromFile } from "@app/services/fileClassification";
-import { useLabelName } from "@app/data/labelDisplay";
 import { useFileHandler } from "@app/hooks/useFileHandler";
 import { useFolders } from "@app/contexts/FolderContext";
 import { canListDirectory } from "@app/services/localFolderContents";
@@ -22,16 +26,6 @@ import apiClient from "@app/services/apiClient";
 import "@app/components/policies/DownloadsProcessingWizard.css";
 
 type Phase = "asking" | "working" | "done" | "failed";
-
-type CardPhase = "pending" | "running" | "done" | "failed";
-
-/** One document in the sweep, as the wall shows it lighting up. */
-interface CardState {
-  name: string;
-  state: CardPhase;
-  /** Classification label ids read from the delivered result's metadata. */
-  labels: string[];
-}
 
 interface DownloadsProcessingWizardProps {
   /** Renders nothing until true, so the offer never competes with a first load. */
@@ -55,7 +49,6 @@ export function DownloadsProcessingWizard({
   active = true,
 }: DownloadsProcessingWizardProps) {
   const { t } = useTranslation();
-  const labelName = useLabelName();
   const [suggestion, setSuggestion] = useState<DownloadsSuggestion | null>(
     null,
   );
@@ -70,7 +63,7 @@ export function DownloadsProcessingWizard({
   const [parkedCount, setParkedCount] = useState(0);
   const [stalled, setStalled] = useState(false);
   const [opened, setOpened] = useState(0);
-  const [cards, setCards] = useState<CardState[]>([]);
+  const [cards, setCards] = useState<SweepWallCard[]>([]);
   const { addFiles } = useFileHandler();
   const { mountLocalFolder } = useFolders();
 
@@ -150,36 +143,7 @@ export function DownloadsProcessingWizard({
         // sweep actually started, appearing on the first poll and switching
         // state as its run moves. Nothing here invents a file.
         onRuns: (runs) => {
-          setCards((prev) => {
-            const byName = new Map(prev.map((card) => [card.name, card]));
-            const next: CardState[] = [...prev];
-            for (const run of [...runs].reverse()) {
-              const name = run.fileName?.trim();
-              if (!name) continue;
-              const terminal = ["COMPLETED", "FAILED", "CANCELLED"].includes(
-                run.status,
-              );
-              const state: CardPhase = !terminal
-                ? "running"
-                : run.status === "COMPLETED"
-                  ? "done"
-                  : "failed";
-              const existing = byName.get(name);
-              if (!existing) {
-                const card: CardState = { name, state, labels: [] };
-                byName.set(name, card);
-                next.push(card);
-              } else if (
-                existing.state !== state &&
-                existing.state !== "done"
-              ) {
-                const index = next.indexOf(existing);
-                next[index] = { ...existing, state };
-                byName.set(name, next[index]);
-              }
-            }
-            return next;
-          });
+          setCards((prev) => mergeRunsIntoCards(prev, runs));
         },
         // The reveal: read the discovered document type off the delivered
         // result's own metadata and flip it onto the card.
@@ -292,42 +256,7 @@ export function DownloadsProcessingWizard({
     );
   }
 
-  const wall = cards.length > 0 && (
-    <div className="downloads-wizard__wall">
-      {cards.map((card) => (
-        <div
-          key={card.name}
-          className={`downloads-wizard__card downloads-wizard__card--${card.state}`}
-        >
-          <span className="downloads-wizard__card-name">{card.name}</span>
-          <span className="downloads-wizard__card-status">
-            {card.state === "running" && (
-              <span className="downloads-wizard__spin" aria-hidden />
-            )}
-            {card.state === "pending" &&
-              t("processingFolders.downloads.wall.waiting", "Waiting…")}
-            {card.state === "failed" &&
-              t("processingFolders.downloads.wall.failed", "Failed")}
-            {card.state === "done" &&
-              (card.labels.length > 0 ? (
-                card.labels.map((label) => (
-                  <span key={label} className="downloads-wizard__chip">
-                    {labelName(label)}
-                  </span>
-                ))
-              ) : (
-                <>
-                  {t(
-                    "processingFolders.downloads.wall.classified",
-                    "Classified",
-                  )}
-                </>
-              ))}
-          </span>
-        </div>
-      ))}
-    </div>
-  );
+  const wall = cards.length > 0 && <SweepRunWall cards={cards} />;
 
   return (
     <Modal

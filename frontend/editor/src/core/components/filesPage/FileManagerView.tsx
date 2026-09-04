@@ -80,6 +80,7 @@ import {
 } from "@app/components/filesPage/FileGrid";
 import { useProcessingFolders } from "@app/hooks/useProcessingFolders";
 import { FolderProcessingSetup } from "@app/components/policies/FolderProcessingSetup";
+import { FolderSweepWall } from "@app/components/policies/SweepRunWall";
 import SuperSearch from "@app/components/shared/superSearch/SuperSearch";
 import { useEditorSearchScopes } from "@app/hooks/useSuperSearch";
 import { FileDetailsPanel } from "@app/components/filesPage/FileDetailsPanel";
@@ -2050,6 +2051,7 @@ export default function FileManagerView() {
                 ))}
               </div>
             )}
+            <FolderSweepWall policyId={processingRecordId} />
             <FileGrid
               entries={entries}
               loading={loading || diskLoading}
