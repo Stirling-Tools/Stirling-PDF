@@ -4,6 +4,7 @@ import HotkeysSection from "@app/components/shared/config/configSections/Hotkeys
 import GeneralSection from "@app/components/shared/config/configSections/GeneralSection";
 import HelpSection from "@app/components/shared/config/configSections/HelpSection";
 import LegalSection from "@app/components/shared/config/configSections/LegalSection";
+import OcrSection from "@app/components/shared/config/configSections/OcrSection";
 import {
   BackendThirdPartyLicensesSection,
   FrontendThirdPartyLicensesSection,
@@ -51,6 +52,12 @@ export const useConfigNavSections = (
           label: t("settings.hotkeys.title", "Keyboard Shortcuts"),
           icon: "keyboard-rounded",
           component: <HotkeysSection />,
+        },
+        {
+          key: "ocr",
+          label: t("settings.ocr.title", "Text recognition"),
+          icon: "document-scanner-rounded",
+          component: <OcrSection />,
         },
       ],
     },

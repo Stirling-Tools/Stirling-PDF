@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+<!--
+  The util namespace is declared here, not just linked: tauri-bundler always
+  passes WixUtilExtension to light, but candle picks its extensions by scanning
+  each input file for namespaces, so RemoveFolderEx below only compiles because
+  this declaration is present.
+-->
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+     xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
   <Fragment>
     <Property Id="STIRLING_SERVER_URL" Secure="yes" />
     <Property Id="STIRLING_LOCK_CONNECTION" Secure="yes" />
@@ -13,9 +20,82 @@
     -->
     <Property Id="STIRLING_UPDATE_MODE" Secure="yes" />
 
+    <!--
+      Text recognition. The installer no longer carries a Tesseract runtime -
+      that was ~130 MB in every download for a feature not everyone uses - so
+      the wizard asks, and what is asked for is fetched during the install.
+
+      STIRLING_OCR         — "1" to install text recognition.
+      STIRLING_OCR_LANGS   — comma separated Tesseract language codes, e.g. "spa,eng".
+      STIRLING_OCR_MANIFEST— overrides the catalogue address, for an internal
+                             mirror or an air-gapped deployment.
+
+      All three are public and Secure, so an unattended deploy works without any
+      of the wizard UI:
+        msiexec /i Stirling-PDF.msi /qn STIRLING_OCR=1 STIRLING_OCR_LANGS=spa,eng
+    -->
+    <Property Id="STIRLING_OCR" Secure="yes" />
+    <Property Id="STIRLING_OCR_LANGS" Secure="yes" Value="eng" />
+    <Property Id="STIRLING_OCR_MANIFEST" Secure="yes"
+              Value="https://github.com/samuelsl27/Stirling-PDF/releases/download/ocr-runtime-v1/ocr-manifest.json" />
+
+    <!--
+      One property per checkbox on the OCR page of the wizard. MSI has no list
+      control that can return several values, so a checkbox per language is the
+      shape the toolkit actually supports; they are concatenated into the
+      downloader's argument below. Unticked boxes expand to nothing, so the list
+      arrives with empty slots and possibly a repeated eng - the downloader
+      filters and de-duplicates rather than assuming otherwise.
+
+      Only the common few are offered here. The remaining ~90 are added from
+      inside the application, where there is room to search and show sizes.
+    -->
+    <Property Id="STIRLING_OCR_LANG_SPA" Secure="yes" />
+    <Property Id="STIRLING_OCR_LANG_CAT" Secure="yes" />
+    <Property Id="STIRLING_OCR_LANG_GLG" Secure="yes" />
+    <Property Id="STIRLING_OCR_LANG_EUS" Secure="yes" />
+    <Property Id="STIRLING_OCR_LANG_FRA" Secure="yes" />
+    <Property Id="STIRLING_OCR_LANG_DEU" Secure="yes" />
+    <Property Id="STIRLING_OCR_LANG_POR" Secure="yes" />
+    <Property Id="STIRLING_OCR_LANG_ITA" Secure="yes" />
+
     <DirectoryRef Id="TARGETDIR">
       <Directory Id="AppDataFolder" />
-      <Directory Id="CommonAppDataFolder" />
+      <!--
+        The machine-wide OCR runtime, created here so its permissions can be set.
+
+        The write grant lands on tessdata and nowhere else. The application runs
+        without elevation, so adding a language later has to work for an ordinary
+        user - but that is a reason to make the *data* directory writable, not the
+        one holding tesseract.exe and its DLLs. Granting the parent would let any
+        user drop a DLL next to an executable that later runs, which is a far
+        worse trade than asking for elevation.
+      -->
+      <Directory Id="CommonAppDataFolder">
+        <Directory Id="OcrSharedDataDir" Name="Stirling-PDF">
+          <Directory Id="OcrRuntimeDir" Name="tesseract">
+            <Directory Id="OcrTessdataDir" Name="tessdata">
+              <!--
+                Explicit GUID, not "*". A component whose KeyPath is a directory -
+                which is what a bare CreateFolder produces - cannot have one
+                generated (LGHT0230). It must also stay fixed across releases, or
+                every upgrade would treat this as a different component and the
+                permissions would be reapplied from scratch.
+              -->
+              <Component Id="OcrTessdataPermissionsComponent"
+                         Guid="B5239160-4A05-4BB6-A7DD-0FA44CEB7BE9">
+                <CreateFolder>
+                  <util:PermissionEx User="Users"
+                                     GenericRead="yes"
+                                     GenericWrite="yes"
+                                     GenericExecute="yes"
+                                     Delete="yes" />
+                </CreateFolder>
+              </Component>
+            </Directory>
+          </Directory>
+        </Directory>
+      </Directory>
     </DirectoryRef>
 
     <DirectoryRef Id="INSTALLDIR">
@@ -50,7 +130,55 @@
       <ComponentRef Id="ThumbnailHandlerDllComponent" />
       <ComponentRef Id="ThumbnailHandlerClsidComponent" />
       <ComponentRef Id="ThumbnailHandlerShellexComponent" />
+      <ComponentRef Id="OcrRuntimeCleanupComponent" />
+      <ComponentRef Id="OcrTessdataPermissionsComponent" />
     </ComponentGroup>
+
+    <!--
+      The OCR downloader is a DLL, not another helper exe like the provisioner
+      above, and that is forced rather than chosen: a custom action of type EXE
+      runs out of process and never receives the installer session handle, so it
+      cannot move the progress bar. A DLL entry point is handed the MSIHANDLE.
+
+      Embedded via Binary rather than installed to disk: it is only useful while
+      the wizard is running, and leaving it in the install directory afterwards
+      would be litter.
+    -->
+    <Binary Id="OcrSetupBinary" SourceFile="$(sys.SOURCEFILEDIR)stirling_ocr_setup.dll" />
+
+    <!--
+      Return="ignore" is deliberate and is the most important attribute here. A
+      proxy that wants user credentials, a firewall, or a laptop that lost its
+      wifi mid-wizard are all ordinary, and none of them is a reason to roll back
+      an otherwise good installation of a PDF editor. The action reports what
+      happened to the log, leaves a note the application reads on first launch,
+      and lets the install finish; the retry then happens in the app, with a real
+      interface and without elevation.
+
+      Impersonate="no" so it can write to CommonAppDataFolder on a per-machine
+      install. No Win64 attribute: WiX only accepts that on script actions
+      (CNDL0037), and a native DLL action takes its bitness from the package,
+      which candle builds with -arch x64.
+    -->
+    <CustomAction
+      Id="InstallOcrRuntime"
+      BinaryKey="OcrSetupBinary"
+      DllEntry="OcrDownload"
+      Execute="deferred"
+      Impersonate="no"
+      Return="ignore"
+    />
+
+    <!--
+      A deferred action can read nothing but CustomActionData, so everything it
+      needs is packed into that one string, pipe separated. Same two-action trick
+      the provisioning actions above use.
+    -->
+    <CustomAction
+      Id="SetInstallOcrRuntime"
+      Property="InstallOcrRuntime"
+      Value="[STIRLING_OCR_MANIFEST]|[CommonAppDataFolder]Stirling-PDF\tesseract|[STIRLING_OCR_LANGS],[STIRLING_OCR_LANG_SPA],[STIRLING_OCR_LANG_CAT],[STIRLING_OCR_LANG_GLG],[STIRLING_OCR_LANG_EUS],[STIRLING_OCR_LANG_FRA],[STIRLING_OCR_LANG_DEU],[STIRLING_OCR_LANG_POR],[STIRLING_OCR_LANG_ITA]"
+    />
 
     <CustomAction
       Id="WriteProvisioningFilePerUser"
@@ -92,6 +220,30 @@
       <Custom Action="WriteProvisioningFilePerUser" After="SetWriteProvisioningFilePerUser">(STIRLING_SERVER_URL &lt;&gt; &quot;&quot; OR STIRLING_LOGIN_AGREEMENT &lt;&gt; &quot;&quot; OR STIRLING_UPDATE_MODE &lt;&gt; &quot;&quot;) AND (NOT ALLUSERS OR ALLUSERS=0)</Custom>
       <Custom Action="SetWriteProvisioningFileAllUsers" After="InstallFiles">(STIRLING_SERVER_URL &lt;&gt; &quot;&quot; OR STIRLING_LOGIN_AGREEMENT &lt;&gt; &quot;&quot; OR STIRLING_UPDATE_MODE &lt;&gt; &quot;&quot;) AND (ALLUSERS=1 OR ALLUSERS=2)</Custom>
       <Custom Action="WriteProvisioningFileAllUsers" After="SetWriteProvisioningFileAllUsers">(STIRLING_SERVER_URL &lt;&gt; &quot;&quot; OR STIRLING_LOGIN_AGREEMENT &lt;&gt; &quot;&quot; OR STIRLING_UPDATE_MODE &lt;&gt; &quot;&quot;) AND (ALLUSERS=1 OR ALLUSERS=2)</Custom>
+
+      <!-- Only when asked for, and never while uninstalling. -->
+      <Custom Action="SetInstallOcrRuntime" After="InstallFiles">STIRLING_OCR=&quot;1&quot; AND NOT REMOVE</Custom>
+      <Custom Action="InstallOcrRuntime" After="SetInstallOcrRuntime">STIRLING_OCR=&quot;1&quot; AND NOT REMOVE</Custom>
     </InstallExecuteSequence>
+
+    <!--
+      The MSI does not know about anything the action downloaded, because none of
+      it is in the file table. Without this, uninstalling leaves ~40 MB behind.
+      The path is stashed in the registry so RemoveFolderEx can find it later.
+    -->
+    <DirectoryRef Id="TARGETDIR">
+      <Component Id="OcrRuntimeCleanupComponent" Guid="*">
+        <RegistryKey Root="HKLM" Key="SOFTWARE\Stirling-PDF\OCR">
+          <RegistryValue Id="OcrRuntimePath" Name="RuntimePath" Type="string"
+                         Value="[CommonAppDataFolder]Stirling-PDF\tesseract" KeyPath="yes" />
+        </RegistryKey>
+        <util:RemoveFolderEx On="uninstall" Property="OCRRUNTIMEPATH" />
+      </Component>
+    </DirectoryRef>
+
+    <Property Id="OCRRUNTIMEPATH">
+      <RegistrySearch Id="OcrRuntimePathSearch" Root="HKLM"
+                      Key="SOFTWARE\Stirling-PDF\OCR" Name="RuntimePath" Type="raw" />
+    </Property>
   </Fragment>
 </Wix>

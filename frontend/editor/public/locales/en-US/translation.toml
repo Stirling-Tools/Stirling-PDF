@@ -5614,13 +5614,26 @@ failed = "OCR operation failed"
 [ocr.languagePicker]
 additionalLanguages = "Looking for additional languages?"
 loading = "Loading available languages..."
-viewSetupGuide = "View setup guide →"
+manageLanguages = "Add languages →"
 
 [ocr.operation]
 submit = "Process OCR and Review"
 
 [ocr.results]
 title = "OCR Results"
+
+[ocr.runtime]
+apply = "Apply"
+applyWithSize = "Apply ({{size}} to download)"
+catalogueUnreachable = "The list of installable OCR components could not be reached. Anything already installed still works."
+engineFailed = "Could not install the OCR engine."
+engineMissing = "Text recognition is not installed yet."
+engineUnavailable = "No OCR engine is offered for this platform"
+failed = "Something went wrong"
+installEngine = "Install OCR ({{size}})"
+languages = "Languages"
+restartRequired = "Restart Stirling-PDF to finish enabling OCR."
+title = "OCR setup"
 
 [ocr.settings]
 title = "Settings"
@@ -10758,6 +10771,10 @@ audit = "Audit"
 plan = "Plan"
 title = "Licensing & Analytics"
 usageAnalytics = "Usage Analytics"
+
+[settings.ocr]
+description = "Text recognition is downloaded when you want it, so the installer stays small. Add or remove languages at any time."
+title = "Text recognition"
 
 [settings.planBilling]
 currentPlan = "Current Plan"

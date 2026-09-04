@@ -4,6 +4,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,6 +21,7 @@ import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.apache.pdfbox.pdfwriter.compress.CompressParameters;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.rendering.ImageType;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.core.io.Resource;
@@ -61,6 +63,20 @@ import stirling.software.common.util.WebResponseUtils;
 @RequiredArgsConstructor
 public class OCRController {
 
+    /**
+     * Resolution pages are rasterised at before Tesseract sees them.
+     *
+     * <p>{@code system.maxDPI} is documented as "maximum allowed DPI" and defaults to 500, and this
+     * used to adopt that number as the target - which is a misreading of a ceiling, and the reason
+     * forcing OCR on an ordinary A4 document failed on the desktop app: 500 DPI is 24 megapixels,
+     * or about 92 MB per page in memory, against a 2 GB heap. {@code AutoRotateController} already
+     * reads the setting the right way, choosing its own resolution and clamping to the maximum.
+     *
+     * <p>300 is the resolution Tesseract's own documentation asks for; beyond it the extra pixels
+     * cost memory and time without buying accuracy.
+     */
+    private static final int OCR_RENDER_DPI = 300;
+
     private final ApplicationProperties applicationProperties;
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
@@ -87,6 +103,65 @@ public class OCRController {
                 .map(file -> file.getName().replace(".traineddata", ""))
                 .filter(lang -> !"osd".equalsIgnoreCase(lang))
                 .toList();
+    }
+
+    /**
+     * Resolution to rasterise at, honouring {@code system.maxDPI} as the ceiling it is documented
+     * to be rather than as a target.
+     */
+    static int ocrRenderDpi(ApplicationProperties properties) {
+        if (properties == null || properties.getSystem() == null) {
+            return OCR_RENDER_DPI;
+        }
+        return Math.min(OCR_RENDER_DPI, properties.getSystem().getMaxDPI());
+    }
+
+    /**
+     * Records what the heap looks like before each page is rasterised.
+     *
+     * <p>At debug level, because it is a diagnostic rather than something an operator wants in
+     * their logs on every run. It earned its place: an out-of-memory failure on page 11 of an
+     * ordinary 19-page document could not be explained by reading the code, and this separates the
+     * two possibilities that reading cannot - a leak shows as used memory climbing page after page,
+     * a one-off spike shows as a flat line and then a fall off a cliff.
+     */
+    private static void logHeapBefore(int pageNumber, int pageCount, int dpi) {
+        if (!log.isDebugEnabled()) {
+            return;
+        }
+        Runtime runtime = Runtime.getRuntime();
+        long usedMb = (runtime.totalMemory() - runtime.freeMemory()) / (1024 * 1024);
+        long maxMb = runtime.maxMemory() / (1024 * 1024);
+        log.debug(
+                "OCR page {}/{} at {} DPI - heap {} MB used of {} MB max",
+                pageNumber,
+                pageCount,
+                dpi,
+                usedMb,
+                maxMb);
+    }
+
+    /**
+     * Whether Tesseract can safely be sent to {@code tessDataPath} with {@code --tessdata-dir}.
+     *
+     * <p>The {@code pdf} the OCR command ends with is not an output format: it is the name of a
+     * config file Tesseract loads from {@code <tessdata>/configs}. Pointing the engine at a
+     * directory holding nothing but {@code .traineddata} files - exactly the layout the
+     * documentation tells users to assemble - makes that lookup fail, and Tesseract then <em>exits
+     * 0 having written no file at all</em>, so the failure does not even surface as a non-zero
+     * return code. Falling back to the engine's own default directory ignores the configured path,
+     * but it still produces a PDF.
+     */
+    static boolean hasTesseractConfigs(String tessDataPath) {
+        if (tessDataPath == null || tessDataPath.isBlank()) {
+            return false;
+        }
+        try {
+            return Files.isReadable(Path.of(tessDataPath, "configs", "pdf"));
+        } catch (InvalidPathException e) {
+            log.debug("Unusable tessdata directory: {}", tessDataPath, e);
+            return false;
+        }
     }
 
     @AutoJobPostMapping(
@@ -346,6 +421,14 @@ public class OCRController {
             List<String> selectedLanguages, String ocrType, Path tempInputFile, Path tempOutputFile)
             throws IOException, InterruptedException {
 
+        String tessDataPath = runtimePathConfig.getTessDataPath();
+        boolean useTessdataDir = hasTesseractConfigs(tessDataPath);
+        if (!useTessdataDir) {
+            log.debug(
+                    "Leaving Tesseract on its own tessdata directory: {} has no configs/pdf",
+                    tessDataPath);
+        }
+
         // Create temp directory for Tesseract processing
         try (TempDirectory tempDir = new TempDirectory(tempFileManager)) {
             File tempOutputDir = new File(tempDir.getPath().toFile(), "output");
@@ -389,32 +472,37 @@ public class OCRController {
                                     String.format(Locale.ROOT, "page_%d.pdf", pageNum));
 
                     if (shouldOcr) {
-                        // Convert page to image
-                        BufferedImage image;
-
-                        // Use global maximum DPI setting, fallback to 300 if not set
-                        int renderDpi = 300; // Default fallback
-                        if (applicationProperties != null
-                                && applicationProperties.getSystem() != null) {
-                            renderDpi = applicationProperties.getSystem().getMaxDPI();
-                        }
-                        final int dpi = renderDpi;
+                        final int dpi = ocrRenderDpi(applicationProperties);
                         final int currentPageNum = pageNum;
 
-                        image =
+                        logHeapBefore(currentPageNum + 1, pageCount, dpi);
+
+                        // GRAY, not the RGB default: Tesseract converts to greyscale itself, so
+                        // colour is a quarter of the memory spent on work that gets undone. An A4
+                        // page at 300 DPI is 8.7 megapixels - 35 MB in RGB, 8.7 MB here.
+                        BufferedImage image =
                                 ExceptionUtils.handleOomRendering(
                                         currentPageNum + 1,
                                         dpi,
-                                        () -> pdfRenderer.renderImageWithDPI(currentPageNum, dpi));
+                                        () ->
+                                                pdfRenderer.renderImageWithDPI(
+                                                        currentPageNum, dpi, ImageType.GRAY));
                         File imagePath =
                                 new File(
                                         tempImagesDir,
                                         String.format(Locale.ROOT, "page_%d.png", pageNum));
-                        ImageIO.write(image, "png", imagePath);
+                        try {
+                            ImageIO.write(image, "png", imagePath);
+                        } finally {
+                            // The raster is written and never read again; flushing releases the
+                            // image's cached data now rather than leaving it to the collector. The
+                            // memory saving on this path comes from GRAY above, not from here.
+                            image.flush();
+                        }
 
                         // Build OCR command
                         List<String> command = new ArrayList<>();
-                        command.add("tesseract");
+                        command.add(runtimePathConfig.getTesseractPath());
                         command.add(imagePath.toString());
                         String outputBase =
                                 new File(
@@ -424,6 +512,15 @@ public class OCRController {
                         command.add(outputBase);
                         command.add("-l");
                         command.add(String.join("+", selectedLanguages));
+                        // Send the engine to the very directory the language list was read from.
+                        // Without this Tesseract resolves tessdata next to its own binary, so
+                        // system.tessdataDir moves the picker but not the OCR, and the two end up
+                        // disagreeing about which languages exist. Position matters: every
+                        // argument after "pdf" is parsed as another config file name.
+                        if (useTessdataDir) {
+                            command.add("--tessdata-dir");
+                            command.add(tessDataPath);
+                        }
                         command.add("pdf"); // Always output PDF
 
                         ProcessExecutorResult result =
