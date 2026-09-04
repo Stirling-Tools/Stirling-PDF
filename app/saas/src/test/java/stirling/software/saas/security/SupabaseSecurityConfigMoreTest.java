@@ -382,7 +382,10 @@ class SupabaseSecurityConfigMoreTest {
                     "/api/v1/payg/invoices",
                     "/api/v1/payg/cap",
                     "/api/v1/procurement/quote",
-                    "/api/v1/legal/consent"
+                    "/api/v1/legal/consent",
+                    // The Settings page's "who is linked" table, and its revoke button.
+                    "/api/v1/account-link/instances",
+                    "/api/v1/account-link/instances/42/revoke"
                 })
         @DisplayName("every apiClient.saas path is readable from any origin")
         void portalReadsAllowAnyOrigin(String path) {
@@ -412,7 +415,11 @@ class SupabaseSecurityConfigMoreTest {
                     "/api/v1/proprietary/ui-data/audit-export",
                     "/api/v1/proprietary/ui-data/infrastructure/audit-log",
                     "/api/v1/proprietary/ui-data/admin-settings",
-                    "/api/v1/proprietary/ui-data/database"
+                    "/api/v1/proprietary/ui-data/database",
+                    // The handshake is server-side plus our own approval page, never the
+                    // customer's origin.
+                    "/api/v1/account-link/connect/request",
+                    "/api/v1/account-link/connect/claim"
                 })
         @DisplayName("every other path keeps the credentialed allow-list")
         void otherPathsUnchanged(String path) {
