@@ -77,6 +77,7 @@ public class ApplicationProperties {
     private ProcessExecutor processExecutor = new ProcessExecutor();
     private PdfEditor pdfEditor = new PdfEditor();
     private AiEngine aiEngine = new AiEngine();
+    private FormDetection formDetection = new FormDetection();
     private Mcp mcp = new Mcp();
     private InternalApi internalApi = new InternalApi();
     private Cluster cluster = new Cluster();
@@ -438,6 +439,28 @@ public class ApplicationProperties {
             private boolean pdfComment = true;
             private boolean classify = true;
         }
+    }
+
+    /**
+     * Auto Form Detection settings. The model itself is downloaded on demand by an admin (see
+     * {@code /api/v1/form/form-detection-model/*}); only lightweight pointers are persisted here.
+     */
+    @Data
+    public static class FormDetection {
+        /** Master on/off switch for the whole feature (admin-controlled). */
+        private boolean enabled = true;
+
+        /** Id of the installed model; blank means none installed. */
+        private String activeModelId = "";
+
+        /** Optional override dir; blank uses {@code <configs>/models/form-detection}. */
+        private String modelDir = "";
+
+        /**
+         * Read-only dir of image-baked models, activated on startup when none is active and read in
+         * place rather than copied. Blank disables seeding.
+         */
+        private String preinstalledModelDir = "";
     }
 
     /**

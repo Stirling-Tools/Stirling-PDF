@@ -2,8 +2,11 @@ package stirling.software.common.util;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -349,13 +352,39 @@ public class YamlHelper {
 
     public MappingNode save(Path saveFilePath) throws IOException {
         if (!saveFilePath.equals(originalFilePath)) {
-            Files.writeString(saveFilePath, convertNodeToYaml(getUpdatedRootNode()));
+            writeAtomically(saveFilePath, convertNodeToYaml(getUpdatedRootNode()));
         }
         return (MappingNode) getUpdatedRootNode();
     }
 
     public void saveOverride(Path saveFilePath) throws IOException {
-        Files.writeString(saveFilePath, convertNodeToYaml(getUpdatedRootNode()));
+        writeAtomically(saveFilePath, convertNodeToYaml(getUpdatedRootNode()));
+    }
+
+    /**
+     * Write via a sibling temp file and rename. A direct write truncates first, so a crash or a
+     * full disk part-way through would leave settings.yml half-written and the app unable to boot.
+     */
+    private static void writeAtomically(Path target, String content) throws IOException {
+        Path dir = target.getParent() != null ? target.getParent() : Path.of(".");
+        Path tmp = Files.createTempFile(dir, ".yaml-", ".tmp");
+        try {
+            Files.writeString(tmp, content);
+            try {
+                Files.move(
+                        tmp,
+                        target,
+                        StandardCopyOption.REPLACE_EXISTING,
+                        StandardCopyOption.ATOMIC_MOVE);
+            } catch (AtomicMoveNotSupportedException e) {
+                Files.move(tmp, target, StandardCopyOption.REPLACE_EXISTING);
+            } catch (FileSystemException e) {
+                // Bind-mounted files (docker) reject rename with EBUSY; write in place
+                Files.writeString(target, content);
+            }
+        } finally {
+            Files.deleteIfExists(tmp);
+        }
     }
 
     /**

@@ -396,7 +396,8 @@ public class SupabaseSecurityConfig {
                 List.of(
                         "WWW-Authenticate",
                         "X-Stirling-Skipped-Field-Edits",
-                        "X-Stirling-Skipped-Field-Edits-Total"));
+                        "X-Stirling-Skipped-Field-Edits-Total",
+                        "X-Stirling-Detected-Fields"));
         cfg.setAllowCredentials(true);
         cfg.setMaxAge(3600L);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

@@ -936,6 +936,15 @@ public class FormUtils {
     }
 
     private void ensureAppearances(PDAcroForm acroForm) {
+        ensureAppearances(acroForm, null, false);
+    }
+
+    /**
+     * With {@code onlyFields} set, regenerates only those. {@code preserveNeedAppearances} keeps
+     * the viewer-side flag on for untouched fields that still rely on it.
+     */
+    private void ensureAppearances(
+            PDAcroForm acroForm, List<PDField> onlyFields, boolean preserveNeedAppearances) {
         if (acroForm == null) return;
 
         acroForm.setNeedAppearances(true);
@@ -964,10 +973,21 @@ public class FormUtils {
                         "Unable to ensure default font resources before refresh: {}",
                         fontPrep.getMessage());
             }
-            acroForm.refreshAppearances();
+            if (onlyFields != null) {
+                if (!onlyFields.isEmpty()) {
+                    acroForm.refreshAppearances(onlyFields);
+                }
+            } else {
+                acroForm.refreshAppearances();
+            }
         } catch (IOException e) {
             log.warn("Failed to refresh form appearances: {}", e.getMessage(), e);
             return; // Don't set NeedAppearances to false if refresh failed
+        }
+
+        // Pre-existing fields that were not refreshed may still rely on viewer-side generation.
+        if (onlyFields != null && preserveNeedAppearances) {
+            return;
         }
 
         // After successful appearance generation, set NeedAppearances to false
@@ -989,6 +1009,104 @@ public class FormUtils {
             return null;
         }
     }
+
+    /**
+     * Create AcroForm fields from definitions, uniquifying names against existing fields. Creates
+     * the AcroForm with a Helvetica default resource when the document has none.
+     */
+    public List<CreatedField> addFields(
+            PDDocument document, List<NewFormFieldDefinition> definitions) throws IOException {
+        if (document == null || definitions == null || definitions.isEmpty()) {
+            return List.of();
+        }
+        List<CreatedField> created = new ArrayList<>();
+        PDDocumentCatalog documentCatalog = document.getDocumentCatalog();
+        PDAcroForm acroForm = documentCatalog.getAcroForm();
+        boolean priorNeedAppearances =
+                acroForm != null && Boolean.TRUE.equals(acroForm.getNeedAppearances());
+        if (acroForm == null) {
+            acroForm = new PDAcroForm(document);
+            PDResources dr = new PDResources();
+            dr.put(COSName.getPDFName("Helv"), new PDType1Font(Standard14Fonts.FontName.HELVETICA));
+            acroForm.setDefaultResources(dr);
+            acroForm.setNeedAppearances(true);
+            documentCatalog.setAcroForm(acroForm);
+        }
+
+        Set<String> existingNames = new java.util.HashSet<>();
+        for (PDField field : acroForm.getFieldTree()) {
+            if (field.getPartialName() != null) {
+                existingNames.add(field.getPartialName());
+            }
+        }
+
+        int pageCount = document.getNumberOfPages();
+        List<PDField> createdFields = new ArrayList<>();
+        List<Map.Entry<String, NewFormFieldDefinition>> createdButtons = new ArrayList<>();
+        for (NewFormFieldDefinition definition : definitions) {
+            Integer pageIndex = definition.pageIndex();
+            if (pageIndex == null
+                    || pageIndex < 0
+                    || pageIndex >= pageCount
+                    || definition.x() == null
+                    || definition.y() == null
+                    || definition.width() == null
+                    || definition.height() == null) {
+                continue;
+            }
+            // A degenerate rect would otherwise get a synthetic default rectangle downstream.
+            if (definition.width() <= 0 || definition.height() <= 0) {
+                continue;
+            }
+            PDPage page = document.getPage(pageIndex);
+            PDRectangle rectangle =
+                    new PDRectangle(
+                            definition.x(),
+                            definition.y(),
+                            definition.width(),
+                            definition.height());
+            FormFieldTypeSupport handler = FormFieldTypeSupport.forTypeName(definition.type());
+            // Signature has no definition-creation path here, so it lands as text. PDFBox can build
+            // a real PDSignatureField, so this is worth revisiting for both callers.
+            if (handler == null
+                    || handler == FormFieldTypeSupport.SIGNATURE
+                    || handler.doesNotsupportsDefinitionCreation()) {
+                handler = FormFieldTypeSupport.TEXT;
+            }
+            String baseName =
+                    (definition.name() != null && !definition.name().isBlank())
+                            ? definition.name()
+                            : handler.typeName() + "_" + (pageIndex + 1);
+            String uniqueName = generateUniqueFieldName(baseName, existingNames);
+            existingNames.add(uniqueName);
+            try {
+                createNewField(
+                        handler,
+                        acroForm,
+                        page,
+                        rectangle,
+                        uniqueName,
+                        definition,
+                        definition.options());
+                PDField field = acroForm.getField(uniqueName);
+                if (field != null) {
+                    createdFields.add(field);
+                    createdButtons.add(Map.entry(uniqueName, definition));
+                    created.add(new CreatedField(handler.typeName(), pageIndex));
+                }
+            } catch (Exception e) {
+                log.warn("Failed to create detected field '{}': {}", uniqueName, e.getMessage());
+            }
+        }
+
+        applyButtonAppearances(document, acroForm, createdButtons);
+        // Refresh only what we added; regenerating pre-existing fields could alter their look.
+        ensureAppearances(acroForm, createdFields, priorNeedAppearances);
+        return List.copyOf(created);
+    }
+
+    /** A field that was actually written, with the type it ended up as after any coercion. */
+    public record CreatedField(String type, int pageIndex) {}
 
     public String filterSingleChoiceSelection(
             String selection, List<String> allowedOptions, String fieldName) {
@@ -3603,8 +3721,8 @@ public class FormUtils {
             }
         }
 
-        // Only link a SEPARATE widget into the field; the merged widget IS the
-        // field dictionary and is already its own widget.
+        // Only link a SEPARATE widget; a merged widget is already the field dictionary.
+        // setWidgets persists the /Kids link - getWidgets() returns a detached copy.
         if (!reuseFieldDict) {
             List<PDAnnotationWidget> widgets = new ArrayList<>(field.getWidgets());
             if (!widgets.contains(widget)) {

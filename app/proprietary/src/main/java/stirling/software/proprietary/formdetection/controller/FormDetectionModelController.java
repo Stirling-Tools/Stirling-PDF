@@ -1,0 +1,111 @@
+package stirling.software.proprietary.formdetection.controller;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.proprietary.formdetection.model.ModelStatusResponse;
+import stirling.software.proprietary.formdetection.service.FormDetectionModelManager;
+
+/**
+ * Admin lifecycle for the detection model. Uses the never-gated {@code form-detection-model} key so
+ * install and status stay reachable while {@code form-detection} itself is disabled.
+ */
+@Slf4j
+@RestController
+@RequestMapping("/api/v1/form/form-detection-model")
+@RequiredArgsConstructor
+@Tag(name = "Auto Form Detection")
+public class FormDetectionModelController {
+
+    private final FormDetectionModelManager manager;
+
+    @GetMapping("/status")
+    @Operation(summary = "Auto Form Detection model status, progress and catalog")
+    public ResponseEntity<ModelStatusResponse> status() {
+        return ResponseEntity.ok(manager.status());
+    }
+
+    @PostMapping("/install")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Install (download + checksum-verify) a catalog model")
+    public ResponseEntity<ModelStatusResponse> install(@RequestBody InstallRequest request) {
+        if (request == null || StringUtils.isBlank(request.getModelId())) {
+            ModelStatusResponse s = manager.status();
+            s.setError("modelId is required");
+            return ResponseEntity.badRequest().body(s);
+        }
+        try {
+            manager.startInstall(request.getModelId());
+            return ResponseEntity.accepted().body(manager.status());
+        } catch (IllegalStateException e) {
+            ModelStatusResponse s = manager.status();
+            s.setError(e.getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(s);
+        } catch (IllegalArgumentException e) {
+            ModelStatusResponse s = manager.status();
+            s.setError(e.getMessage());
+            return ResponseEntity.badRequest().body(s);
+        }
+    }
+
+    @DeleteMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Uninstall a model")
+    public ResponseEntity<ModelStatusResponse> delete(
+            @RequestParam(name = "modelId", required = false) String modelId) {
+        try {
+            manager.deleteModel(modelId);
+            return ResponseEntity.ok(manager.status());
+        } catch (IllegalStateException e) {
+            ModelStatusResponse s = manager.status();
+            s.setError(e.getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(s);
+        }
+    }
+
+    @PostMapping("/config")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Update the feature on/off switch")
+    public ResponseEntity<ModelStatusResponse> config(@RequestBody ConfigRequest request) {
+        if (request == null) {
+            return ResponseEntity.badRequest().body(manager.status());
+        }
+        try {
+            if (request.getEnabled() != null) {
+                manager.setEnabled(request.getEnabled());
+            }
+            return ResponseEntity.ok(manager.status());
+        } catch (IllegalArgumentException e) {
+            ModelStatusResponse s = manager.status();
+            s.setError(e.getMessage());
+            return ResponseEntity.badRequest().body(s);
+        }
+    }
+
+    @Data
+    public static class ConfigRequest {
+        /** Master on/off; {@code null} leaves it unchanged. */
+        private Boolean enabled;
+    }
+
+    @Data
+    public static class InstallRequest {
+        private String modelId;
+    }
+}

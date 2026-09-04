@@ -464,6 +464,17 @@ class EndpointConfigurationGapTest {
         }
 
         @Test
+        @DisplayName(
+                "form-detection defaults to disabled with DEPENDENCY when the proprietary module is absent")
+        void formDetectionDisabledWithoutProprietaryModule() {
+            EndpointConfiguration config = buildDefault();
+            assertFalse(config.isEndpointEnabled("form-detection"));
+            assertEquals(
+                    DisableReason.DEPENDENCY,
+                    config.getEndpointAvailability("form-detection").getReason());
+        }
+
+        @Test
         @DisplayName("non-pro build disables the enterprise group")
         void nonProDisablesEnterprise() {
             EndpointConfiguration config = build(false);
