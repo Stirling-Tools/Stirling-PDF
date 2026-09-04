@@ -159,7 +159,7 @@ export default function AdminSecurityPage() {
   };
 
   // Both services sections are conditional, so the retired nav key rides
-  // whichever renders first and ?focus=adminConnections still lands.
+  // whichever renders first and #adminConnections still lands.
   const hasLinked = linkedProviders.length > 0;
 
   return (

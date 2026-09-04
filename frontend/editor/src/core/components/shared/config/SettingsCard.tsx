@@ -4,7 +4,7 @@ import { InfoTooltip } from "@app/ui/InfoTooltip";
 import "@app/components/shared/config/SettingsCard.css";
 
 export interface SettingsCardProps {
-  /** Doubles as the `?focus=` anchor and the id the nav's card list jumps to. */
+  /** The card's `#slug`, and the id the nav's card list jumps to. */
   id: string;
   title: string;
   /** Shown behind an (i) rather than as a standing line, so the page stays scannable. */

@@ -38,12 +38,12 @@ export function takeSettingsOrigin(): string | null {
  * React Router picks the change up without a hook.
  *
  * @param section land on this section; omit for the page's default
- * @param focus scroll to and highlight this control's row
+ * @param anchor scroll to and highlight this control, by its slug
  */
-export function navigateToSettings(section?: NavKey, focus?: string) {
+export function navigateToSettings(section?: NavKey, anchor?: string) {
   rememberSettingsOrigin();
-  const query = focus ? `?focus=${encodeURIComponent(focus)}` : "";
-  const path = `/settings${section ? `/${section}` : ""}${query}`;
+  const hash = anchor ? `#${encodeURIComponent(anchor)}` : "";
+  const path = `/settings${section ? `/${section}` : ""}${hash}`;
   window.history.pushState({}, "", withBasePath(path));
   window.dispatchEvent(new PopStateEvent("popstate"));
 }

@@ -143,23 +143,20 @@ const SettingsPageInner: React.FC = () => {
     headings,
   );
 
-  // Deep link: /settings/{section}?focus={anchor} scrolls to and briefly
-  // highlights one control (the global super search jumps straight to a row).
-  // `#anchor` means the same thing, so in-app links written either way work.
+  // Deep link: /settings/{section}#{slug} scrolls to and briefly highlights one
+  // control. The slug is the only address; the super search builds the same URL.
   useEffect(() => {
-    const focus =
-      new URLSearchParams(location.search).get("focus") ||
-      decodeURIComponent(location.hash.replace(/^#/, ""));
-    if (!focus) return;
+    const anchor = decodeURIComponent(location.hash.replace(/^#/, ""));
+    if (!anchor) return;
     let raf = 0;
     const timer = window.setTimeout(() => {
-      raf = window.requestAnimationFrame(() => focusHeading(focus));
+      raf = window.requestAnimationFrame(() => focusHeading(anchor));
     }, 150);
     return () => {
       window.clearTimeout(timer);
       if (raf) window.cancelAnimationFrame(raf);
     };
-  }, [activeItem, location.search, location.hash, focusHeading]);
+  }, [activeItem, location.hash, focusHeading]);
 
   // Sections that bring their own page header get the whole pane; on mobile the
   // bar stays anyway, because it carries the only way back to the list.

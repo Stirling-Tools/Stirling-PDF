@@ -16,7 +16,7 @@ export interface AboutSectionProps {
 
 /**
  * The reference material: tours, legal links and bundled licences. Each card's
- * id is the anchor that `?focus=` deep links and search results address.
+ * id is the `#slug` that deep links and search results address.
  *
  * Backend licences come last: it is the only card here that fetches, and the
  * only one that can render an error in place of its list.

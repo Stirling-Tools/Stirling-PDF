@@ -20,6 +20,9 @@ import { rememberSettingsOrigin } from "@app/utils/settingsNavigation";
 const SIZE = "1.125rem";
 
 /** Entries come from the URL, not either app's context, so the rail survives a switch. */
+/** Interpolated, not inlined: a literal "#acc…" reads as a hex colour to theme-lint. */
+const ACCOUNT_ANCHOR = "account";
+
 export function QuickNavRailHost() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -176,12 +179,13 @@ export function QuickNavRailHost() {
   // section and the page's own nav carries the rest. Inside settings it is a
   // tab switch (replace); from an app it is a navigation.
   const openAccount = () => {
+    const target = `/settings/general#${ACCOUNT_ANCHOR}`;
     if (inSettings) {
-      navigate("/settings/general?focus=account", { replace: true });
+      navigate(target, { replace: true });
       return;
     }
     rememberSettingsOrigin();
-    go("/settings/general?focus=account");
+    go(target);
   };
 
   // A route that isn't the app hides the bar - see useSuppressQuickNavRail.

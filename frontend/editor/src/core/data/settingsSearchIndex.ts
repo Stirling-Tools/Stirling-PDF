@@ -5,7 +5,7 @@ import { NavKey } from "@app/components/shared/config/types";
  *
  * Section-level content matching (settingsContentSearch) only navigates to a
  * whole section; this index lets the global super search deep-link to an
- * individual control: navigating to `/settings/{section}?focus={anchor}`,
+ * individual control: navigating to `/settings/{section}#{anchor}`,
  * where `anchor` is the DOM `id` placed on that control's row (see
  * AppConfigModal's focus-scroll effect and the `id=` attributes added to the
  * matching section components).
@@ -13,7 +13,7 @@ import { NavKey } from "@app/components/shared/config/types";
 export interface SettingsSearchEntry {
   /** Settings section this row lives in (nav key, e.g. "general"). */
   section: NavKey;
-  /** DOM id on the control's row; used as the `?focus=` anchor. */
+  /** DOM id on the control's row, and its `#slug` in the URL. */
   anchor: string;
   /** i18n key for the display label. */
   labelKey: string;

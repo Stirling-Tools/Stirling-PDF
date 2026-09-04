@@ -133,9 +133,7 @@ export function StorageSharingCard({
                   href="#adminConnections"
                   onClick={(e) => {
                     e.preventDefault();
-                    navigate(
-                      "/settings/adminConnections?focus=adminConnections",
-                    );
+                    navigate("/settings/adminConnections#adminConnections");
                   }}
                   inherit
                   td="underline"

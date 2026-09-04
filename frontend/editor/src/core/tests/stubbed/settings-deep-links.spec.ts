@@ -3,9 +3,9 @@ import { test, expect } from "@app/tests/helpers/stub-test-base";
 test.use({ stubOptions: { enableLogin: true, isAdmin: true }, seedJwt: true });
 
 /**
- * In-app links into settings are written both ways - `?focus=` from the super
- * search, `#anchor` from the buttons inside banners and cards. Both must land
- * on the control, and both must unfold the card it sits in.
+ * Every in-app link into settings addresses a control by its `#slug` - the
+ * super search, and the buttons inside banners and cards. The link must land on
+ * the control and unfold whatever card it sits in.
  */
 async function openSettings(
   page: import("@playwright/test").Page,
@@ -22,7 +22,7 @@ const TARGETS = [
   ["/settings/adminSecurity#auditLogging", "auditLogging"],
   // The link the mail card and the mobile-upload card point at.
   ["/settings/adminGeneral#frontendUrl", "frontendUrl"],
-  ["/settings/adminConnections?focus=adminMcp", "adminMcp"],
+  ["/settings/adminConnections#adminMcp", "adminMcp"],
 ] as const;
 
 for (const [url, anchor] of TARGETS) {

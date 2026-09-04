@@ -33,10 +33,8 @@ export interface PreferencesSectionProps {
 
 /** True when the URL deep-links at the shortcuts card, which starts collapsed. */
 function focusIsHotkeys(): boolean {
-  const focus =
-    new URLSearchParams(window.location.search).get("focus") ||
-    window.location.hash.replace(/^#/, "");
-  return focus === "hotkeys" || Boolean(focus?.startsWith("setting-hotkeys"));
+  const anchor = window.location.hash.replace(/^#/, "");
+  return anchor === "hotkeys" || anchor.startsWith("setting-hotkeys");
 }
 
 /**

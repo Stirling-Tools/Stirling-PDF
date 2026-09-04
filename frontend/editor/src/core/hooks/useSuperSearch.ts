@@ -335,7 +335,7 @@ export function rankSettingsResults(
     visibleSections.map((s) => [s.key, t(s.labelKey, s.labelFallback)]),
   );
 
-  // Row-level entries (deep-link with ?focus=) take priority. Rows for
+  // Row-level entries (deep-link by slug) take priority. Rows for
   // sections this build/user can't open are dropped with them.
   const rowMatches = rankByFuzzy(
     SETTINGS_SEARCH_INDEX.filter((e) => sectionLabelFor.has(e.section)),
@@ -570,7 +570,7 @@ export function useSuperSearch(
   const openSettings = useCallback(
     (section: string, anchor?: string) => {
       const path = anchor
-        ? `/settings/${section}?focus=${encodeURIComponent(anchor)}`
+        ? `/settings/${section}#${encodeURIComponent(anchor)}`
         : `/settings/${section}`;
       navigate(path);
     },
