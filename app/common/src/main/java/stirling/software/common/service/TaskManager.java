@@ -36,6 +36,7 @@ import stirling.software.common.cluster.ClusterBackplane;
 import stirling.software.common.cluster.JobStore;
 import stirling.software.common.cluster.JobStoreEntry;
 import stirling.software.common.cluster.JobStoreEntry.JobState;
+import stirling.software.common.model.job.JobProgress;
 import stirling.software.common.model.job.JobResult;
 import stirling.software.common.model.job.JobStats;
 import stirling.software.common.model.job.ResultFile;
@@ -213,6 +214,24 @@ public class TaskManager {
      */
     public JobResult getJobResult(String jobId) {
         return jobResults.get(jobId);
+    }
+
+    /**
+     * Update progress for an in-flight job. Silently ignored if the job is already complete or
+     * unknown — progress is best-effort and must never affect job correctness.
+     *
+     * @param jobId the job identifier
+     * @param progress the progress snapshot to publish
+     */
+    public void updateProgress(String jobId, JobProgress progress) {
+        if (jobId == null || progress == null) {
+            return;
+        }
+        JobResult jobResult = jobResults.get(jobId);
+        if (jobResult == null || jobResult.isComplete()) {
+            return;
+        }
+        jobResult.setProgress(progress);
     }
 
     /**

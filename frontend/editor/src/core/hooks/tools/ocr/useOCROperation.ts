@@ -160,6 +160,7 @@ export const ocrOperationConfig = defineSingleFileTool({
   operationType: "ocr",
   endpoint: ENDPOINT,
   defaultParameters,
+  async: true,
 });
 
 export const useOCROperation = () => {

@@ -182,6 +182,7 @@ export const splitOperationConfig = defineSingleFileTool({
   // Full routing set: a stored step maps back to Split though its `method` selector is frontend-only.
   endpoints: Array.from(new Set(Object.values(SPLIT_ENDPOINTS))),
   defaultParameters,
+  async: true,
 });
 
 export const useSplitOperation = () => {

@@ -63,6 +63,7 @@ export const mergeOperationConfig = defineMultiFileTool({
   endpoint: ENDPOINT,
   filePrefix: "merged_",
   defaultParameters,
+  async: true,
 });
 
 export const useMergeOperation = () => {

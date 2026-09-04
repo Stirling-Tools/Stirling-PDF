@@ -34,6 +34,7 @@ import stirling.software.common.model.tool.ToolArity;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.JobProgressService;
 import stirling.software.common.util.FormUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.TempFile;
@@ -49,6 +50,7 @@ public class SplitPDFController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
+    private final JobProgressService jobProgressService;
 
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
@@ -66,6 +68,7 @@ public class SplitPDFController {
             throws IOException {
 
         MultipartFile file = request.getFileInput();
+        jobProgressService.report(1, "Loading PDF");
         TempFile outputTempFile = new TempFile(tempFileManager, ".zip");
         try {
             try (TempFile sourceTempFile = new TempFile(tempFileManager, ".pdf")) {
@@ -93,6 +96,7 @@ public class SplitPDFController {
                         pageNumbers.stream().map(String::valueOf).collect(Collectors.joining(",")));
 
                 String baseFilename = GeneralUtils.removeExtension(file.getOriginalFilename());
+                int totalSplits = pageNumbers.size();
                 try (ZipOutputStream zipOut =
                         new ZipOutputStream(Files.newOutputStream(outputTempFile.getPath()))) {
                     if (hasForm) {
@@ -124,6 +128,7 @@ public class SplitPDFController {
         try (PdfDocument sourceDoc = PdfDocument.open(source.toPath())) {
             int previousPageNumber = 0;
             for (int splitIndex = 0; splitIndex < pageNumbers.size(); splitIndex++) {
+                reportSplitProgress(splitIndex, pageNumbers.size());
                 int splitPoint = pageNumbers.get(splitIndex);
                 try (TempFile splitTemp = new TempFile(tempFileManager, ".pdf")) {
                     try (PdfDocument splitDoc =
@@ -142,6 +147,7 @@ public class SplitPDFController {
             throws IOException {
         int previousPageNumber = 0;
         for (int splitIndex = 0; splitIndex < pageNumbers.size(); splitIndex++) {
+            reportSplitProgress(splitIndex, pageNumbers.size());
             int splitPoint = pageNumbers.get(splitIndex);
             Set<Integer> keep = new HashSet<>();
             for (int i = previousPageNumber; i <= splitPoint; i++) {
@@ -159,6 +165,13 @@ public class SplitPDFController {
                 writeEntry(zipOut, baseFilename, splitIndex + 1, splitDoc);
             }
         }
+    }
+
+    private void reportSplitProgress(int splitIndex, int totalSplits) {
+        jobProgressService.report(
+                splitIndex + 1,
+                totalSplits,
+                "Writing split " + (splitIndex + 1) + " of " + totalSplits);
     }
 
     private void writeEntry(ZipOutputStream zipOut, String baseFilename, int index, Path pdfPath)

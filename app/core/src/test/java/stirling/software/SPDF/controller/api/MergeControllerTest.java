@@ -26,11 +26,13 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.JobProgressService;
 
 @ExtendWith(MockitoExtension.class)
 class MergeControllerTest {
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
+    @Mock private JobProgressService jobProgressService;
 
     @InjectMocks private MergeController mergeController;
 
