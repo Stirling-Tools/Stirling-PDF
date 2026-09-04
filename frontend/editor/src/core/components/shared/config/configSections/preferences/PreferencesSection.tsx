@@ -128,6 +128,12 @@ export default function PreferencesSection({
             className="preferences-section__panel"
             hidden={!hotkeysOpen}
           >
+            <p className="preferences-section__description">
+              {t(
+                "settings.hotkeys.description",
+                'Customize keyboard shortcuts for quick tool access. Click "Change shortcut" and press a new key combination. Press Esc to cancel.',
+              )}
+            </p>
             {hotkeysOpen && <HotkeysCard />}
           </div>
         </section>

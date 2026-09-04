@@ -12,17 +12,12 @@ import { useLoginRequired } from "@app/hooks/useLoginRequired";
 import LoginRequiredBanner from "@app/components/shared/config/LoginRequiredBanner";
 import type {
   ConnectionsSettingsData,
-  LegalSettingsData,
-  PrivacySettingsData,
   SecuritySettingsData,
 } from "@app/components/shared/config/configSections/security/securitySettingsTypes";
 import {
   fetchConnectionsSettings,
-  fetchPrivacySettings,
   fetchSecuritySettings,
   saveConnectionsSettings,
-  saveLegalSettings,
-  savePrivacySettings,
   saveSecuritySettings,
 } from "@app/components/shared/config/configSections/security/securitySettingsTransformers";
 import { useConnectionProviders } from "@app/components/shared/config/configSections/security/connectionProviders";
@@ -31,13 +26,8 @@ import { SessionsJwtCard } from "@app/components/shared/config/configSections/se
 import { LinkedServicesCard } from "@app/components/shared/config/configSections/security/LinkedServicesCard";
 import { UnlinkedServicesCard } from "@app/components/shared/config/configSections/security/UnlinkedServicesCard";
 import { SsoAutoLoginCard } from "@app/components/shared/config/configSections/security/SsoAutoLoginCard";
-import { MobileUploadQrCard } from "@app/components/shared/config/configSections/security/MobileUploadQrCard";
 import { HtmlUrlSecurityCard } from "@app/components/shared/config/configSections/security/HtmlUrlSecurityCard";
 import { AuditLoggingCard } from "@app/components/shared/config/configSections/security/AuditLoggingCard";
-import { AnalyticsTrackingCard } from "@app/components/shared/config/configSections/security/AnalyticsTrackingCard";
-import { SearchEngineVisibilityCard } from "@app/components/shared/config/configSections/security/SearchEngineVisibilityCard";
-import { LegalDocumentsCard } from "@app/components/shared/config/configSections/security/LegalDocumentsCard";
-import { LoginAgreementCard } from "@app/components/shared/config/configSections/security/LoginAgreementCard";
 import "@app/components/shared/config/configSections/security/AdminSecurityPage.css";
 
 /**
@@ -72,36 +62,18 @@ export default function AdminSecurityPage() {
     saveTransformer: saveConnectionsSettings,
   });
 
-  const privacy = useAdminSettings<PrivacySettingsData>({
-    sectionName: "privacy",
-    enabled: loginEnabled,
-    fetchTransformer: fetchPrivacySettings,
-    saveTransformer: savePrivacySettings,
-  });
-
-  const legal = useAdminSettings<LegalSettingsData>({
-    sectionName: "legal",
-    enabled: loginEnabled,
-    saveTransformer: saveLegalSettings,
-  });
-
   // A disabled sub-fetch reports loading forever, so the ternary decides it -
   // a blanket OR would freeze the page on a loader when login is off.
   const loading = loginEnabled
-    ? security.loading ||
-      connections.loading ||
-      privacy.loading ||
-      legal.loading
+    ? security.loading || connections.loading
     : false;
 
   const draft = useMemo(
     () => ({
       security: security.settings,
       connections: connections.settings,
-      privacy: privacy.settings,
-      legal: legal.settings,
     }),
-    [security.settings, connections.settings, privacy.settings, legal.settings],
+    [security.settings, connections.settings],
   );
 
   const { isDirty, resetToSnapshot, markSaved } = useSettingsDirty(
@@ -109,8 +81,10 @@ export default function AdminSecurityPage() {
     loading,
   );
 
+  // Sign-in providers only; Telegram, Drive and SMTP live on Integrations.
   const { linkedProviders, availableProviders } = useConnectionProviders(
     connections.settings,
+    "signin",
   );
 
   // Deep links land on a card id, so the jump waits for the cards to exist.
@@ -132,12 +106,7 @@ export default function AdminSecurityPage() {
     }
 
     const results: PromiseSettledResult<void>[] = [];
-    for (const save of [
-      security.saveSettings,
-      connections.saveSettings,
-      privacy.saveSettings,
-      legal.saveSettings,
-    ]) {
+    for (const save of [security.saveSettings, connections.saveSettings]) {
       // Sequential, not Promise.all: several of these PUT the same flat
       // settings endpoint and would overwrite each other's merge.
       const [result] = await Promise.allSettled([save()]);
@@ -163,15 +132,7 @@ export default function AdminSecurityPage() {
     const original = resetToSnapshot();
     security.setSettings(original.security);
     connections.setSettings(original.connections);
-    privacy.setSettings(original.privacy);
-    legal.setSettings(original.legal);
-  }, [
-    resetToSnapshot,
-    security.setSettings,
-    connections.setSettings,
-    privacy.setSettings,
-    legal.setSettings,
-  ]);
+  }, [resetToSnapshot, security.setSettings, connections.setSettings]);
 
   if (loading) {
     return (
@@ -192,20 +153,6 @@ export default function AdminSecurityPage() {
     settings: connections.settings,
     setSettings: connections.setSettings,
     isFieldPending: connections.isFieldPending,
-    loginEnabled,
-    getDisabledStyles,
-  };
-  const privacyCard = {
-    settings: privacy.settings,
-    setSettings: privacy.setSettings,
-    isFieldPending: privacy.isFieldPending,
-    loginEnabled,
-    getDisabledStyles,
-  };
-  const legalCard = {
-    settings: legal.settings,
-    setSettings: legal.setSettings,
-    isFieldPending: legal.isFieldPending,
     loginEnabled,
     getDisabledStyles,
   };
@@ -277,16 +224,6 @@ export default function AdminSecurityPage() {
         </section>
 
         <section className="admin-security__card">
-          <h2 className="admin-security__heading" id="connectionsMobileScanner">
-            {t(
-              "admin.settings.connections.mobileScanner.label",
-              "Mobile Phone Upload",
-            )}
-          </h2>
-          <MobileUploadQrCard {...connectionsCard} />
-        </section>
-
-        <section className="admin-security__card">
           <h2 className="admin-security__heading" id="securityHtmlUrl">
             {t(
               "admin.settings.security.htmlUrlSecurity.label",
@@ -302,47 +239,11 @@ export default function AdminSecurityPage() {
           </h2>
           <AuditLoggingCard {...securityCard} />
         </section>
-
-        <section className="admin-security__card">
-          <h2 className="admin-security__heading" id="adminPrivacy">
-            {t("admin.settings.privacy.analytics", "Analytics & Tracking")}
-          </h2>
-          <AnalyticsTrackingCard {...privacyCard} />
-        </section>
-
-        <section className="admin-security__card">
-          <h2 className="admin-security__heading" id="privacySearchEngine">
-            {t(
-              "admin.settings.privacy.searchEngine",
-              "Search Engine Visibility",
-            )}
-          </h2>
-          <SearchEngineVisibilityCard {...privacyCard} />
-        </section>
-
-        <section className="admin-security__card">
-          <h2 className="admin-security__heading" id="adminLegal">
-            {t("settings.policiesPrivacy.legal", "Legal documents")}
-          </h2>
-          <LegalDocumentsCard {...legalCard} />
-        </section>
-
-        <section className="admin-security__card">
-          <h2 className="admin-security__heading" id="legalLoginAgreement">
-            {t("admin.settings.legal.loginAgreement.title", "Login Agreement")}
-          </h2>
-          <LoginAgreementCard {...legalCard} />
-        </section>
       </Stack>
 
       <SettingsStickyFooter
         isDirty={isDirty}
-        saving={
-          security.saving ||
-          connections.saving ||
-          privacy.saving ||
-          legal.saving
-        }
+        saving={security.saving || connections.saving}
         loginEnabled={loginEnabled}
         onSave={handleSave}
         onDiscard={handleDiscard}

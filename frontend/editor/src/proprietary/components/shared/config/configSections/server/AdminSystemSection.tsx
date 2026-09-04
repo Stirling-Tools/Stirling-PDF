@@ -509,6 +509,12 @@ export default function AdminSystemSection() {
           <h2 className="admin-system__heading" id="adminEndpoints">
             {t("admin.settings.endpoints.management", "Endpoint Management")}
           </h2>
+          <p className="admin-system__description">
+            {t(
+              "admin.settings.endpoints.description",
+              "Turn individual tools or whole groups off for everyone on this server.",
+            )}
+          </p>
           <EndpointManagementCard
             settings={endpoints}
             setSettings={setEndpoints}
@@ -528,6 +534,12 @@ export default function AdminSystemSection() {
               {t("toolPanel.alpha", "Alpha")}
             </Badge>
           </h2>
+          <p className="admin-system__description">
+            {t(
+              "admin.settings.storage.description",
+              "Where files are stored, and whether people can share them by link or email.",
+            )}
+          </p>
           <StorageSharingCard
             settings={storage}
             setSettings={setStorage}
@@ -540,6 +552,12 @@ export default function AdminSystemSection() {
           <h2 className="admin-system__heading" id="adminFolderAccess">
             {t("settings.configuration.folderAccess", "Folder Access")}
           </h2>
+          <p className="admin-system__description">
+            {t(
+              "admin.settings.folderAccess.description",
+              "Directories that folder sources and folder outputs are allowed to read from and write to.",
+            )}
+          </p>
           <FolderAccessCard
             settings={folderAccess}
             setSettings={setFolderAccess}
@@ -600,6 +618,12 @@ export default function AdminSystemSection() {
               PRO
             </Badge>
           </h2>
+          <p className="admin-system__description">
+            {t(
+              "admin.settings.features.description",
+              "Configure optional features and functionality.",
+            )}
+          </p>
           <ServerCertificateCard {...generalCard} />
         </section>
 
@@ -607,6 +631,12 @@ export default function AdminSystemSection() {
           <h2 className="admin-system__heading" id="adminMcp">
             {t("settings.configuration.mcp", "MCP Server")}
           </h2>
+          <p className="admin-system__description">
+            {t(
+              "admin.settings.mcp.description",
+              "Expose this server's tools to MCP clients, and choose which ones.",
+            )}
+          </p>
           <McpCard
             settings={mcp}
             setSettings={setMcp}

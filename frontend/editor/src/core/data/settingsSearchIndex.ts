@@ -238,21 +238,21 @@ export const SETTINGS_SEARCH_INDEX: SettingsSearchEntry[] = [
     keywords: ["mcp", "model context protocol", "tools"],
   },
   {
-    section: "adminSecurity",
+    section: "adminConnections",
     anchor: "adminConnections",
     labelKey: "settings.configuration.connections",
     labelFallback: "Single sign-on",
     keywords: ["sso", "saml", "oauth", "google", "keycloak", "smtp", "mail"],
   },
   {
-    section: "adminSecurity",
+    section: "adminLegal",
     anchor: "adminPrivacy",
     labelKey: "settings.configuration.privacy",
     labelFallback: "Privacy",
     keywords: ["privacy", "analytics", "tracking", "robots", "metrics"],
   },
   {
-    section: "adminSecurity",
+    section: "adminLegal",
     anchor: "adminLegal",
     labelKey: "settings.configuration.legal",
     labelFallback: "Legal documents",
@@ -266,7 +266,7 @@ export const SETTINGS_SEARCH_INDEX: SettingsSearchEntry[] = [
     keywords: ["audit", "log", "retention", "events"],
   },
   {
-    section: "adminAdvanced",
+    section: "adminDatabase",
     anchor: "adminDatabase",
     labelKey: "settings.configuration.database",
     labelFallback: "Database",

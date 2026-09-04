@@ -51,3 +51,9 @@
   .preferences-section__disclosure-chevron {
   transform: rotate(180deg);
 }
+
+.preferences-section__description {
+  margin: -0.35rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--c-text-subtle);
+}

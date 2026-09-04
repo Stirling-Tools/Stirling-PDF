@@ -26,6 +26,18 @@ const AdminAdvancedPage = lazy(
   () =>
     import("@app/components/shared/config/configSections/advanced/AdminAdvancedPage"),
 );
+const AdminDatabasePage = lazy(
+  () =>
+    import("@app/components/shared/config/configSections/advanced/AdminDatabasePage"),
+);
+const AdminIntegrationsPage = lazy(
+  () =>
+    import("@app/components/shared/config/configSections/security/AdminIntegrationsPage"),
+);
+const AdminLegalPrivacyPage = lazy(
+  () =>
+    import("@app/components/shared/config/configSections/security/AdminLegalPrivacyPage"),
+);
 const AdminAiSection = lazy(
   () => import("@app/components/shared/config/configSections/AdminAiSection"),
 );
@@ -162,7 +174,7 @@ export const useConfigNavSections = (
             key: "adminGeneral",
             label: t("settings.server.system", "System"),
             description: t(
-              "admin.settings.system.description",
+              "admin.settings.general.description",
               "How this server runs: branding, storage, the tools it exposes, and the paths it may touch.",
             ),
             icon: "settings-rounded",
@@ -174,10 +186,25 @@ export const useConfigNavSections = (
             ...gated,
           },
           {
+            key: "adminDatabase",
+            label: t("settings.configuration.database", "Database"),
+            description: t(
+              "admin.settings.database.description",
+              "Connect a custom database, and back up or restore the one in use.",
+            ),
+            icon: "database-rounded",
+            component: (
+              <Suspense fallback={<LoadingFallback />}>
+                <AdminDatabasePage />
+              </Suspense>
+            ),
+            ...gated,
+          },
+          {
             key: "adminUsage",
             label: t("settings.licensingAnalytics.usage", "Usage Analytics"),
             description: t(
-              "admin.settings.usage.description",
+              "settings.licensingAnalytics.usageDescription",
               "Endpoint usage and activity for this server.",
             ),
             icon: "monitoring",
@@ -214,6 +241,48 @@ export const useConfigNavSections = (
             ),
             icon: "fact-check-rounded",
             component: <AdminAuditSection />,
+            ...gated,
+          },
+        ],
+      },
+      {
+        id: "integrations",
+        title: t("settings.configuration.integrations", "Integrations"),
+        items: [
+          {
+            key: "adminConnections",
+            label: t("settings.configuration.integrations", "Integrations"),
+            description: t(
+              "admin.settings.connections.description",
+              "Mail, Telegram, Drive, and uploading from a phone.",
+            ),
+            icon: "hub-rounded",
+            component: (
+              <Suspense fallback={<LoadingFallback />}>
+                <AdminIntegrationsPage />
+              </Suspense>
+            ),
+            ...gated,
+          },
+        ],
+      },
+      {
+        id: "legal",
+        title: t("settings.policiesPrivacy.title", "Legal & privacy"),
+        items: [
+          {
+            key: "adminLegal",
+            label: t("settings.policiesPrivacy.title", "Legal & privacy"),
+            description: t(
+              "admin.settings.legal.description",
+              "Configure links to legal documents and policies.",
+            ),
+            icon: "gavel-rounded",
+            component: (
+              <Suspense fallback={<LoadingFallback />}>
+                <AdminLegalPrivacyPage />
+              </Suspense>
+            ),
             ...gated,
           },
         ],

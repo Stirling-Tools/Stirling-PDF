@@ -33,18 +33,18 @@ const SECTION_TRANSLATION_PREFIXES: Partial<Record<string, string[]>> = {
     "admin.settings.folderAccess",
     "admin.settings.mcp",
   ],
-  adminAdvanced: ["admin.settings.advanced", "admin.settings.database"],
+  adminAdvanced: ["admin.settings.advanced"],
+  adminDatabase: ["admin.settings.database"],
   // One page now, so one entry: mapping four keys at the same subtree returned
   // four byte-identical results for every AI query.
   adminAi: ["admin.settings.ai"],
-  adminSecurity: [
-    "admin.settings.security",
+  adminSecurity: ["admin.settings.security", "admin.settings.connections"],
+  adminConnections: [
     "admin.settings.connections",
-    "admin.settings.privacy",
-    "admin.settings.legal",
     "admin.settings.mail",
     "admin.settings.telegram",
   ],
+  adminLegal: ["admin.settings.legal", "admin.settings.privacy"],
   adminPlan: [
     "settings.planBilling",
     "admin.settings.premium",

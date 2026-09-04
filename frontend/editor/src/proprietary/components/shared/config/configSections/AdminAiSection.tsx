@@ -211,6 +211,12 @@ export default function AdminAiSection() {
           <h2 className="admin-ai__heading" id="adminAiGeneral">
             {t("admin.settings.ai.general.connection", "Connection")}
           </h2>
+          <p className="admin-ai__description">
+            {t(
+              "admin.settings.ai.general.description",
+              "Connect Stirling to the Python AI engine and choose which AI capabilities are exposed. Changes apply on restart.",
+            )}
+          </p>
           <AiConnectionCard {...card} />
         </section>
 
@@ -225,6 +231,12 @@ export default function AdminAiSection() {
           <h2 className="admin-ai__heading" id="adminAiModels">
             {t("settings.ai.models", "Models & Providers")}
           </h2>
+          <p className="admin-ai__description">
+            {t(
+              "admin.settings.ai.models.description",
+              "Choose the LLM provider and the smart/fast models the AI engine uses. Applied to the AI engine when saved.",
+            )}
+          </p>
           <AiModelsCard
             {...card}
             apiKeyDirty={apiKeyDirty}
@@ -236,6 +248,12 @@ export default function AdminAiSection() {
           <h2 className="admin-ai__heading" id="adminAiDocuments">
             {t("settings.ai.documents", "Documents & RAG")}
           </h2>
+          <p className="admin-ai__description">
+            {t(
+              "admin.settings.ai.documents.description",
+              "Configure the embedding model and retrieval settings used to answer questions over documents. Applied to the AI engine when saved.",
+            )}
+          </p>
           <AiDocumentsCard
             {...card}
             embeddingApiKeyDirty={embeddingApiKeyDirty}
@@ -247,6 +265,12 @@ export default function AdminAiSection() {
           <h2 className="admin-ai__heading" id="adminAiLimits">
             {t("settings.ai.limits", "Limits & Performance")}
           </h2>
+          <p className="admin-ai__description">
+            {t(
+              "admin.settings.ai.limits.description",
+              "Guardrails for how much work AI requests may do and how many run concurrently. Applied to the AI engine when saved.",
+            )}
+          </p>
           <AiLimitsCard {...card} />
         </section>
       </Stack>

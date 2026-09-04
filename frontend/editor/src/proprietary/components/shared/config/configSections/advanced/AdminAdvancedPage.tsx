@@ -1,6 +1,6 @@
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { Stack, Loader, Divider } from "@mantine/core";
+import { Stack, Loader } from "@mantine/core";
 import { alert } from "@app/components/toast";
 import RestartConfirmationModal from "@app/components/shared/config/RestartConfirmationModal";
 import { useRestartServer } from "@app/components/shared/config/useRestartServer";
@@ -18,8 +18,6 @@ import { AdvancedFeatureFlagsCard } from "@app/components/shared/config/configSe
 import { AdvancedProcessingCard } from "@app/components/shared/config/configSections/advanced/AdvancedProcessingCard";
 import { AdvancedTempFilesCard } from "@app/components/shared/config/configSections/advanced/AdvancedTempFilesCard";
 import { AdvancedProcessExecutorCard } from "@app/components/shared/config/configSections/advanced/AdvancedProcessExecutorCard";
-import { DatabaseConfigCard } from "@app/components/shared/config/configSections/advanced/DatabaseConfigCard";
-import { DatabaseBackupsCard } from "@app/components/shared/config/configSections/advanced/DatabaseBackupsCard";
 import "@app/components/shared/config/configSections/advanced/AdminAdvancedPage.css";
 
 /**
@@ -166,17 +164,6 @@ export default function AdminAdvancedPage() {
 
       // The Database row's eight keys, unchanged. The hook drops any whose
       // value matches the server, so the masked password is never resent.
-      const datasource = settings.datasource;
-      deltaSettings["system.datasource.enableCustomDatabase"] =
-        datasource?.enableCustomDatabase;
-      deltaSettings["system.datasource.customDatabaseUrl"] =
-        datasource?.customDatabaseUrl;
-      deltaSettings["system.datasource.username"] = datasource?.username;
-      deltaSettings["system.datasource.password"] = datasource?.password;
-      deltaSettings["system.datasource.type"] = datasource?.type;
-      deltaSettings["system.datasource.hostName"] = datasource?.hostName;
-      deltaSettings["system.datasource.port"] = datasource?.port;
-      deltaSettings["system.datasource.name"] = datasource?.name;
 
       return {
         sectionData: {},
@@ -184,18 +171,6 @@ export default function AdminAdvancedPage() {
       };
     },
   });
-
-  const datasourceType = (settings.datasource?.type || "").toLowerCase();
-  const isCustomDatabase = settings.datasource?.enableCustomDatabase === true;
-  const isEmbeddedH2 = useMemo(() => {
-    if (isCustomDatabase === false) {
-      return true;
-    }
-    if (datasourceType === "h2") {
-      return true;
-    }
-    return false;
-  }, [isCustomDatabase, datasourceType]);
 
   const { isDirty, resetToSnapshot, markSaved } = useSettingsDirty(
     settings,
@@ -277,16 +252,6 @@ export default function AdminAdvancedPage() {
           </h2>
           <AdvancedProcessExecutorCard {...card} />
         </section>
-
-        <section className="admin-advanced__card">
-          <h2 className="admin-advanced__heading" id="adminDatabase">
-            {t(
-              "admin.settings.database.configuration",
-              "Database Configuration",
-            )}
-          </h2>
-          <DatabaseConfigCard {...card} />
-        </section>
       </Stack>
 
       <SettingsStickyFooter
@@ -297,22 +262,6 @@ export default function AdminAdvancedPage() {
         onDiscard={handleDiscard}
       />
 
-      <Stack
-        gap="lg"
-        className="settings-section-content"
-        style={{ marginTop: 0 }}
-      >
-        <Divider my="md" />
-
-        <section className="admin-advanced__card">
-          <h2 className="admin-advanced__heading" id="adminDatabaseBackups">
-            {t("admin.settings.database.backupTitle", "Backups & Restore")}
-          </h2>
-          <DatabaseBackupsCard isEmbeddedH2={isEmbeddedH2} />
-        </section>
-      </Stack>
-
-      {/* Restart Confirmation Modal */}
       <RestartConfirmationModal
         opened={restartModalOpened}
         onClose={closeRestartModal}

@@ -1680,9 +1680,6 @@ label = "Enable Share Links"
 description = "Allow users to create multi-participant document signing sessions. Requires server file storage to be enabled."
 label = "Enable Group Signing (Alpha)"
 
-[admin.settings.system]
-description = "How this server runs: branding, storage, the tools it exposes, and the paths it may touch."
-
 [admin.settings.telegram]
 description = "Configure Telegram bot connectivity, access controls, and feedback behavior."
 title = "Telegram Bot"
@@ -1785,9 +1782,6 @@ discard = "Discard Changes"
 hint = "You have unsaved changes"
 message = "You have unsaved changes. Do you want to discard them?"
 title = "Unsaved Changes"
-
-[admin.settings.usage]
-description = "Endpoint usage and activity for this server."
 
 [adminOnboarding]
 adminTools = "Finally, we have advanced administration tools like <strong>Auditing</strong> to track system activity and <strong>Usage Analytics</strong> to monitor how your users interact with the platform."
@@ -10564,6 +10558,7 @@ database = "Database"
 endpoints = "Endpoints"
 features = "Features"
 folderAccess = "Folder Access"
+integrations = "Integrations"
 mcp = "MCP Server"
 storageSharing = "File Storage & Sharing"
 systemSettings = "System Settings"
@@ -10816,6 +10811,7 @@ title = "Upgrade Your Plan"
 [settings.policiesPrivacy]
 legal = "Legal documents"
 privacy = "Privacy"
+title = "Legal & privacy"
 
 [settings.preferences]
 appearance = "Appearance"

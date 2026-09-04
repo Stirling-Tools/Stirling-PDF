@@ -19,3 +19,32 @@
   font-weight: var(--font-weight-semibold, 600);
   color: var(--c-text);
 }
+
+.about-section__description {
+  margin: -0.35rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--c-text-subtle);
+}
+
+.about-section__disclosure {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  text-align: start;
+}
+
+.about-section__disclosure-chevron {
+  transition: transform var(--motion-fast, 120ms);
+}
+
+.about-section__disclosure[aria-expanded="true"]
+  .about-section__disclosure-chevron {
+  transform: rotate(180deg);
+}

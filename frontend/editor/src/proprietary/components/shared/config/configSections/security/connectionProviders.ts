@@ -130,11 +130,20 @@ export function updateProviderSettings(
   }
 }
 
-export function useConnectionProviders(settings: ConnectionsSettingsData): {
+/**
+ * Providers split by what they are for. Signing in belongs on the security
+ * page; wiring the server to Telegram, Drive or a mail host does not.
+ */
+export function useConnectionProviders(
+  settings: ConnectionsSettingsData,
+  category: "signin" | "integration" = "signin",
+): {
   linkedProviders: Provider[];
   availableProviders: Provider[];
 } {
-  const allProviders = useAllProviders();
+  const allProviders = useAllProviders().filter(
+    (p) => (p.category ?? "signin") === category,
+  );
   const linkedProviders = allProviders.filter((p) =>
     isProviderConfigured(settings, p),
   );
