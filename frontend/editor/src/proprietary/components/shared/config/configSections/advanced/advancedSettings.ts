@@ -26,10 +26,8 @@ export const DEFAULT_DATASOURCE: DatasourceSettingsData = {
 };
 
 /**
- * Is the server on its own embedded H2, the only database it can back up?
- *
- * Custom database off settles it on its own - the pre-filled `type` above is a
- * form default, and reading it first hid backups on every stock install.
+ * Is the server on its embedded H2, the only database it can back up? Custom
+ * database off settles it: `type` above is a form default, not what is running.
  */
 export function isEmbeddedH2Database(
   datasource: DatasourceSettingsData | undefined,

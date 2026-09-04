@@ -8,10 +8,8 @@ export interface TierBadgeProps {
 }
 
 /**
- * The licence marker on a settings card's heading.
- *
- * `component="span"` because it sits inside the card's h2, and it belongs there
- * rather than on a row of its own inside the card, which cost a line per card.
+ * The licence marker on a settings card's heading. A span, because it sits
+ * inside the h2 - on its own row inside the card it cost a line each.
  */
 export function TierBadge({ tier }: TierBadgeProps) {
   const { t } = useTranslation();
