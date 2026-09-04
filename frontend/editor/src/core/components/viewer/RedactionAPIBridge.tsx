@@ -87,10 +87,11 @@ function RedactionAPIBridgeInner({ documentId }: { documentId: string }) {
         redactionProvides?.endRedact();
       },
       // Common methods
-      commitAllPending: () => {
-        redactionProvides?.commitAllPending();
-        // Don't set redactionsApplied here - it should only be set after the file is saved
-        // The save operation in applyChanges will handle setting/clearing this flag
+      commitAllPending: async () => {
+        const task = redactionProvides?.commitAllPending();
+        if (task && typeof task.toPromise === "function") {
+          await task.toPromise();
+        }
       },
       getActiveType: () => state?.activeType ?? null,
       getPendingCount: () => state?.pendingCount ?? 0,
