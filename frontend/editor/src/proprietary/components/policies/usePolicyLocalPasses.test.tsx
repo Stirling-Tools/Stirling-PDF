@@ -83,8 +83,8 @@ vi.mock("@app/services/fileStorage", () => ({
 vi.mock("@app/services/heuristic/heuristicClassification", () => ({
   classifyFileHeuristically: (file: File) => mocks.classify(file),
 }));
-vi.mock("@app/services/classificationMeter", () => ({
-  meterClassificationRun: (payload: unknown) => mocks.meter(payload),
+vi.mock("@app/services/automationMeter", () => ({
+  meterAutomationRun: (payload: unknown) => mocks.meter(payload),
 }));
 
 import { usePolicyLocalPasses } from "@app/components/policies/usePolicyLocalPasses";
@@ -306,6 +306,9 @@ describe("usePolicyLocalPasses delivery", () => {
       classificationLabels: ["invoice"],
       classificationConfidence: "low",
     });
+    // ...but the local pass is not metered: the AI run it escalates to bills it instead, so one
+    // classification is charged once.
+    expect(mocks.meter).not.toHaveBeenCalled();
   });
 
   it("lets a confident local verdict stand without asking the AI", async () => {
@@ -325,6 +328,8 @@ describe("usePolicyLocalPasses delivery", () => {
       }),
     );
     expect(mocks.runPolicyOnFile).not.toHaveBeenCalled();
+    // The verdict stands, so the local pass is the billable run.
+    expect(mocks.meter).toHaveBeenCalledTimes(1);
   });
 
   it("never escalates when the AI engine is off, however unsure the verdict", async () => {
@@ -344,6 +349,9 @@ describe("usePolicyLocalPasses delivery", () => {
       }),
     );
     expect(mocks.runPolicyOnFile).not.toHaveBeenCalled();
+    // AI is off, so the unsure verdict is final and never escalates - it must still be billed once
+    // here, not fall through the gap between local and (never-run) server billing.
+    expect(mocks.meter).toHaveBeenCalledTimes(1);
   });
 
   it("does not run on upload when the policy is set to run on export", async () => {
