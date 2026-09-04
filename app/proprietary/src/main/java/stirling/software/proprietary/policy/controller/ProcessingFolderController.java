@@ -3,6 +3,7 @@ package stirling.software.proprietary.policy.controller;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.HashMap;
@@ -40,6 +41,7 @@ import stirling.software.proprietary.policy.engine.SweepKind;
 import stirling.software.proprietary.policy.engine.SweepOutcome;
 import stirling.software.proprietary.policy.ledger.ClaimState;
 import stirling.software.proprietary.policy.ledger.FolderIdentities;
+import stirling.software.proprietary.policy.ledger.ProcessedFileStatus;
 import stirling.software.proprietary.policy.ledger.ProcessedLedger;
 import stirling.software.proprietary.policy.ledger.StorageFileIdentities;
 import stirling.software.proprietary.policy.model.OutputSpec;
@@ -47,6 +49,7 @@ import stirling.software.proprietary.policy.model.PipelineInput;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.TriggerConfig;
+import stirling.software.proprietary.policy.output.FolderOutputSink;
 import stirling.software.proprietary.policy.source.Source;
 import stirling.software.proprietary.policy.source.SourceStore;
 import stirling.software.proprietary.policy.store.PolicyStore;
@@ -306,7 +309,9 @@ public class ProcessingFolderController {
             long sizeBytes,
             long lastModified,
             /** Its place in the folder's pipeline: done, processing, failed, or waiting. */
-            String state) {}
+            String state,
+            /** Whether a pre-processing original is archived and can be restored. */
+            boolean hasOriginal) {}
 
     @GetMapping("/{id}/files")
     @Operation(
@@ -339,6 +344,7 @@ public class ProcessingFolderController {
                             files.stream()
                                     .map(f -> FolderIdentities.identity(canonicalDir, permitted, f))
                                     .toList());
+            Path originals = FolderOutputSink.originalsDir(canonicalDir);
             return files.stream()
                     .map(
                             f ->
@@ -346,7 +352,9 @@ public class ProcessingFolderController {
                                             f,
                                             states.get(
                                                     FolderIdentities.identity(
-                                                            canonicalDir, permitted, f))))
+                                                            canonicalDir, permitted, f)),
+                                            Files.isRegularFile(
+                                                    originals.resolve(f.getFileName().toString()))))
                     .filter(Objects::nonNull)
                     .toList();
         } catch (IOException e) {
@@ -355,13 +363,14 @@ public class ProcessingFolderController {
         }
     }
 
-    private static MountedFileView toMountedFile(Path path, ClaimState state) {
+    private static MountedFileView toMountedFile(Path path, ClaimState state, boolean hasOriginal) {
         try {
             return new MountedFileView(
                     path.getFileName().toString(),
                     Files.size(path),
                     Files.getLastModifiedTime(path).toMillis(),
-                    stateLabel(state));
+                    stateLabel(state),
+                    hasOriginal);
         } catch (IOException vanished) {
             return null; // listed then removed; the next read tells the truth
         }
@@ -407,7 +416,8 @@ public class ProcessingFolderController {
                                         file.getSizeBytes(),
                                         lastModifiedMillis(file),
                                         stateLabel(
-                                                states.get(StorageFileIdentities.identity(file)))))
+                                                states.get(StorageFileIdentities.identity(file))),
+                                        false))
                 .toList();
     }
 
@@ -491,6 +501,67 @@ public class ProcessingFolderController {
         // light sweep leaves every other parked failure parked — retrying all of them is
         // the user-invoked sweep's job, not this file's.
         return ResponseEntity.accepted().body(policyRunner.run(policy, SweepKind.LIGHT));
+    }
+
+    /** Restore request: the file's name within the folder. */
+    public record RevertFileRequest(String name) {}
+
+    @PostMapping("/{id}/files/revert")
+    @Operation(
+            summary = "Restore a file's archived original",
+            description =
+                    "Moves the pre-processing original kept under .stirling/originals back"
+                            + " over the processed file, and settles the ledger at the"
+                            + " restored version so the folder holds the original instead of"
+                            + " immediately re-processing it. Disk-backed folders only:"
+                            + " storage-backed replacement keeps no original.")
+    public MountedFileView revertFile(
+            @PathVariable String id, @RequestBody RevertFileRequest request) {
+        User user = currentUserOrNull();
+        Policy policy = requireOwn(id, user);
+        if (request == null || request.name() == null || request.name().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "a file name is required");
+        }
+        String name = request.name().trim();
+        Path directory = watchedDirectory(policy);
+        if (directory == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT, "only a disk-backed folder keeps originals");
+        }
+        Path permitted = folderAccessGuard.requirePermitted(directory);
+        Path target = permitted.resolve(name).normalize();
+        if (!permitted.equals(target.getParent())) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No such file: " + name);
+        }
+        try {
+            Path canonicalDir = FolderIdentities.canonicalDir(permitted);
+            Path archived = FolderOutputSink.originalsDir(canonicalDir).resolve(name);
+            if (!Files.isRegularFile(archived)) {
+                throw new ResponseStatusException(
+                        HttpStatus.CONFLICT, "'" + name + "' has no original to restore");
+            }
+            String identity = FolderIdentities.identity(canonicalDir, permitted, target);
+            ClaimState state =
+                    processedLedger.statesFor(policy.id(), List.of(identity)).get(identity);
+            if (state != null && state.status() == ProcessedFileStatus.PROCESSING) {
+                throw new ResponseStatusException(
+                        HttpStatus.CONFLICT, "'" + name + "' is being processed right now");
+            }
+            Files.move(
+                    archived,
+                    target,
+                    StandardCopyOption.ATOMIC_MOVE,
+                    StandardCopyOption.REPLACE_EXISTING);
+            // The restored original must not read as new work: settle its row done at the
+            // restored version, so the folder holds it until processing is asked for again.
+            processedLedger.settle(
+                    policy.id(), identity, FolderIdentities.statGate(target), null, true);
+            return toMountedFile(
+                    target, new ClaimState(ProcessedFileStatus.DONE, null, null), false);
+        } catch (IOException e) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_GATEWAY, "Could not restore " + name + ": " + e.getMessage());
+        }
     }
 
     /** The ledger identity of a named file in this folder; null when no such file is listed. */

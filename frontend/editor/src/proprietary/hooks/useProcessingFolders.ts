@@ -7,6 +7,7 @@ import {
   fetchProcessingFolderRuns,
   fetchProcessingFolders,
   retryMountedFile,
+  revertMountedFile,
   saveProcessingFolder,
   sweepProcessingFolder,
   type ProcessingFolder,
@@ -266,12 +267,18 @@ export function useProcessingFolders(): ProcessingFoldersApi {
       (await fetchMountedFiles(recordId)).map((file) => ({
         name: file.name,
         state: file.state,
+        hasOriginal: file.hasOriginal,
       })),
     [],
   );
 
   const retryFile = useCallback(
     async (recordId: string, name: string) => retryMountedFile(recordId, name),
+    [],
+  );
+
+  const revertFile = useCallback(
+    async (recordId: string, name: string) => revertMountedFile(recordId, name),
     [],
   );
 
@@ -299,6 +306,7 @@ export function useProcessingFolders(): ProcessingFoldersApi {
       listActiveRuns,
       listFiles,
       retryFile,
+      revertFile,
       enable,
       disable,
       remove,
@@ -312,6 +320,7 @@ export function useProcessingFolders(): ProcessingFoldersApi {
       listActiveRuns,
       listFiles,
       retryFile,
+      revertFile,
       enable,
       disable,
       remove,

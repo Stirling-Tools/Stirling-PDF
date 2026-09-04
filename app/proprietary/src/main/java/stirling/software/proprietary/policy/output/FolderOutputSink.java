@@ -153,6 +153,7 @@ public class FolderOutputSink implements PolicyOutputSink {
                 processedLedger.recordOutput(
                         delivery.policyId(), target.toString(), gate, contentHash);
             }
+            Path archived = archiveOriginal(dir, target);
             try {
                 Files.move(
                         staged,
@@ -160,6 +161,16 @@ public class FolderOutputSink implements PolicyOutputSink {
                         StandardCopyOption.ATOMIC_MOVE,
                         StandardCopyOption.REPLACE_EXISTING);
             } catch (IOException failed) {
+                if (archived != null) {
+                    try {
+                        Files.move(archived, target, StandardCopyOption.ATOMIC_MOVE);
+                    } catch (IOException lost) {
+                        log.warn(
+                                "Replace of {} failed and its original could not be put back: {}",
+                                target,
+                                lost.getMessage());
+                    }
+                }
                 if (delivery.policyId() != null) {
                     processedLedger.forgetOutput(delivery.policyId(), target.toString(), gate);
                 }
@@ -182,6 +193,37 @@ public class FolderOutputSink implements PolicyOutputSink {
                 }
                 log.debug("Output name {} taken concurrently; re-picking", target);
             }
+        }
+    }
+
+    /** Where a directory's pre-processing originals are kept, beside the staging dir. */
+    public static Path originalsDir(Path dir) {
+        return dir.resolve(".stirling").resolve("originals");
+    }
+
+    /**
+     * Keep the true original before a replace stamps over it: the watched file moves into {@code
+     * .stirling/originals} under its own name, once — a re-run of an already- processed file never
+     * overwrites the archived first version, so a revert always returns exactly what the user put
+     * in. No file at the target (a brand-new name) or a failed rename is not fatal: the replacement
+     * still lands, there is just nothing to revert to.
+     */
+    private static Path archiveOriginal(Path dir, Path target) {
+        if (!Files.exists(target)) {
+            return null;
+        }
+        try {
+            Path originals = originalsDir(dir);
+            Files.createDirectories(originals);
+            Path archived = originals.resolve(target.getFileName().toString());
+            if (Files.exists(archived)) {
+                return null; // the pre-first-processing original is already kept
+            }
+            Files.move(target, archived, StandardCopyOption.ATOMIC_MOVE);
+            return archived;
+        } catch (IOException e) {
+            log.debug("Could not archive original {}: {}", target, e.getMessage());
+            return null;
         }
     }
 

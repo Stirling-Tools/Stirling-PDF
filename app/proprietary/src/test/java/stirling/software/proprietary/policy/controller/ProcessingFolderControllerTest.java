@@ -3,12 +3,16 @@ package stirling.software.proprietary.policy.controller;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -19,6 +23,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.server.ResponseStatusException;
@@ -62,6 +67,8 @@ import stirling.software.proprietary.storage.service.FileStorageService;
 class ProcessingFolderControllerTest {
 
     private static final UUID FOLDER_ID = UUID.randomUUID();
+
+    @TempDir Path tempDir;
 
     @Mock private PolicyRunner policyRunner;
     @Mock private PolicyTriggerManager policyTriggerManager;
@@ -380,6 +387,61 @@ class ProcessingFolderControllerTest {
                                         new ProcessingFolderController.RetryFileRequest("doc.pdf")))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("no failure");
+    }
+
+    @Test
+    void revertRestoresTheArchivedOriginalAndSettlesTheLedger() throws Exception {
+        lenient()
+                .when(folderAccessGuard.requirePermitted(any(Path.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+        var view = controller.save(diskRequest()).getBody();
+        Files.writeString(tempDir.resolve("doc.pdf"), "processed");
+        Path originals = tempDir.resolve(".stirling").resolve("originals");
+        Files.createDirectories(originals);
+        Files.writeString(originals.resolve("doc.pdf"), "original");
+
+        var restored =
+                controller.revertFile(
+                        view.id(), new ProcessingFolderController.RevertFileRequest("doc.pdf"));
+
+        assertThat(Files.readString(tempDir.resolve("doc.pdf"))).isEqualTo("original");
+        assertThat(Files.exists(originals.resolve("doc.pdf"))).isFalse();
+        assertThat(restored.state()).isEqualTo("done");
+        // Settled done at the restored version, so the folder holds the original.
+        verify(processedLedger).settle(eq(view.id()), anyString(), anyString(), isNull(), eq(true));
+    }
+
+    @Test
+    void revertRefusesAFileWithNoArchivedOriginal() throws Exception {
+        lenient()
+                .when(folderAccessGuard.requirePermitted(any(Path.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+        var view = controller.save(diskRequest()).getBody();
+        Files.writeString(tempDir.resolve("doc.pdf"), "processed");
+
+        assertThatThrownBy(
+                        () ->
+                                controller.revertFile(
+                                        view.id(),
+                                        new ProcessingFolderController.RevertFileRequest(
+                                                "doc.pdf")))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("no original");
+    }
+
+    /** A disk-backed folder over the test's own temp directory. */
+    private ProcessingFolderController.SaveProcessingFolderRequest diskRequest() {
+        return new ProcessingFolderController.SaveProcessingFolderRequest(
+                null,
+                null,
+                tempDir.toString(),
+                true,
+                List.of(
+                        new PipelineStep(
+                                "/api/v1/misc/flatten",
+                                Map.of("flattenOnlyForms", false),
+                                Map.of())),
+                Map.of());
     }
 
     /** A stored file double with just what the listing reads. */

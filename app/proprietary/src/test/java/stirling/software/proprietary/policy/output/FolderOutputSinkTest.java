@@ -45,6 +45,9 @@ class FolderOutputSinkTest {
     @BeforeEach
     void setUp() {
         ApplicationProperties properties = new ApplicationProperties();
+        // With login off the guard permits the local operator everywhere; these tests
+        // exercise the allowlist, so they opt into login like a hosted install.
+        properties.getSecurity().setEnableLogin(true);
         properties.getPolicies().setAllowedFolderRoots(List.of(tempDir.toString()));
         ledger = new InProcessProcessedLedger();
         sink =
@@ -113,6 +116,9 @@ class FolderOutputSinkTest {
         Path out = tempDir.resolve("out");
         VisibilityAssertingLedger orderedLedger = new VisibilityAssertingLedger();
         ApplicationProperties properties = new ApplicationProperties();
+        // With login off the guard permits the local operator everywhere; these tests
+        // exercise the allowlist, so they opt into login like a hosted install.
+        properties.getSecurity().setEnableLogin(true);
         properties.getPolicies().setAllowedFolderRoots(List.of(tempDir.toString()));
         FolderOutputSink orderedSink =
                 new FolderOutputSink(
@@ -182,6 +188,34 @@ class FolderOutputSinkTest {
         assertTrue(Files.exists(out.resolve("escape.pdf")));
         assertTrue(Files.exists(out.resolve("deep.pdf")));
         assertFalse(Files.exists(tempDir.resolve("escape.pdf")));
+    }
+
+    @Test
+    void replaceKeepsTheFirstOriginalForRevert() throws IOException {
+        Path out = tempDir.resolve("out");
+        Files.createDirectories(out);
+        Files.writeString(out.resolve("a.pdf"), "original");
+        OutputSpec replace =
+                new OutputSpec("folder", Map.of("directory", out.toString(), "replace", true));
+
+        sink.deliver(POLICY_RUN, List.of(named("a.pdf", "v1")), replace);
+        sink.deliver(POLICY_RUN, List.of(named("a.pdf", "v2")), replace);
+
+        assertEquals("v2", Files.readString(out.resolve("a.pdf")));
+        // The archive holds what the user put in, not any intermediate result.
+        Path archived = out.resolve(".stirling").resolve("originals").resolve("a.pdf");
+        assertEquals("original", Files.readString(archived));
+    }
+
+    @Test
+    void aBrandNewNameArchivesNothing() throws IOException {
+        Path out = tempDir.resolve("out");
+        OutputSpec replace =
+                new OutputSpec("folder", Map.of("directory", out.toString(), "replace", true));
+
+        sink.deliver(POLICY_RUN, List.of(named("a.pdf", "v1")), replace);
+
+        assertFalse(Files.exists(out.resolve(".stirling").resolve("originals").resolve("a.pdf")));
     }
 
     private static ByteArrayResource named(String filename, String content) {

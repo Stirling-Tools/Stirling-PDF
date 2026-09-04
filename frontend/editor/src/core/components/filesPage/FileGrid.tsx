@@ -121,6 +121,8 @@ export interface FilesPageEntry {
   disk?: DiskFileEntry;
   /** The disk file's processing state; absent on a folder with no pipeline. */
   diskState?: DiskFileState;
+  /** Whether the disk file's pre-processing original is archived. */
+  hasOriginal?: boolean;
   /** Parent breadcrumb path for search results outside the current folder. */
   parentPath?: string;
 }
@@ -142,6 +144,8 @@ interface FileGridProps {
   onOpenDiskFile?: (entry: DiskFileEntry) => void;
   /** Retry a failed file (by name) in the open working folder. */
   onRetryFile?: (name: string) => void;
+  /** Restore a file's archived original (by name). */
+  onRevertFile?: (name: string) => void;
   onMoveFiles: (
     fileIds: FileId[],
     targetFolderId: FolderId | null,
@@ -462,6 +466,7 @@ function GridView(props: FileGridProps) {
     onOpenFile,
     onOpenDiskFile,
     onRetryFile,
+    onRevertFile,
     onMoveFiles,
     onMoveFolder,
     onRenameFolder,
@@ -501,6 +506,11 @@ function GridView(props: FileGridProps) {
               state={entry.diskState}
               entry={entry.disk}
               onOpen={() => onOpenDiskFile?.(entry.disk!)}
+              onRevert={
+                onRevertFile && entry.hasOriginal
+                  ? () => onRevertFile(entry.disk!.name)
+                  : undefined
+              }
               onRetry={
                 onRetryFile ? () => onRetryFile(entry.disk!.name) : undefined
               }
@@ -1404,6 +1414,7 @@ function ListView(
     onOpenFile,
     onOpenDiskFile,
     onRetryFile,
+    onRevertFile,
     onMoveFiles,
     onMoveFolder,
     onRenameFolder,
@@ -1530,6 +1541,11 @@ function ListView(
               state={entry.diskState}
               entry={entry.disk}
               onOpen={() => onOpenDiskFile?.(entry.disk!)}
+              onRevert={
+                onRevertFile && entry.hasOriginal
+                  ? () => onRevertFile(entry.disk!.name)
+                  : undefined
+              }
               onRetry={
                 onRetryFile ? () => onRetryFile(entry.disk!.name) : undefined
               }
@@ -2111,11 +2127,13 @@ function DiskFileCard({
   state,
   onOpen,
   onRetry,
+  onRevert,
 }: {
   entry: DiskFileEntry;
   state?: DiskFileState;
   onOpen: () => void;
   onRetry?: () => void;
+  onRevert?: () => void;
 }) {
   const { t } = useTranslation();
   const thumbnail = useDiskThumbnail(entry);
@@ -2203,6 +2221,17 @@ function DiskFileCard({
             >
               {t("filesPage.addToWorkspace", "Add to workspace")}
             </Menu.Item>
+            {onRevert && (
+              <Menu.Item
+                leftSection={<HistoryIcon fontSize="small" />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRevert();
+                }}
+              >
+                {t("filesPage.processing.restore", "Restore original")}
+              </Menu.Item>
+            )}
           </Menu.Dropdown>
         </Menu>
       </div>
@@ -2216,11 +2245,13 @@ function DiskFileRow({
   state,
   onOpen,
   onRetry,
+  onRevert,
 }: {
   entry: DiskFileEntry;
   state?: DiskFileState;
   onOpen: () => void;
   onRetry?: () => void;
+  onRevert?: () => void;
 }) {
   const { t } = useTranslation();
   const thumbnail = useDiskThumbnail(entry);
@@ -2313,6 +2344,14 @@ function DiskFileRow({
             >
               {t("filesPage.addToWorkspace", "Add to workspace")}
             </Menu.Item>
+            {onRevert && (
+              <Menu.Item
+                leftSection={<HistoryIcon fontSize="small" />}
+                onClick={onRevert}
+              >
+                {t("filesPage.processing.restore", "Restore original")}
+              </Menu.Item>
+            )}
           </Menu.Dropdown>
         </Menu>
       </span>

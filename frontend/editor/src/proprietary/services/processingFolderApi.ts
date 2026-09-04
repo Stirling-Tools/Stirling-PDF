@@ -210,6 +210,8 @@ export interface MountedFile {
   lastModified: number;
   /** Its place in the folder's pipeline: done, processing, failed, or waiting. */
   state: "done" | "processing" | "failed" | "waiting";
+  /** Whether a pre-processing original is archived and can be restored. */
+  hasOriginal?: boolean;
 }
 
 /**
@@ -233,6 +235,19 @@ export async function retryMountedFile(
   name: string,
 ): Promise<void> {
   await apiClient.post(`/api/v1/processing-folders/${id}/files/retry`, {
+    name,
+  });
+}
+
+/**
+ * Restore a file's archived pre-processing original, discarding its processed
+ * version. The restored file settles as done, so the folder holds it as-is.
+ */
+export async function revertMountedFile(
+  id: string,
+  name: string,
+): Promise<void> {
+  await apiClient.post(`/api/v1/processing-folders/${id}/files/revert`, {
     name,
   });
 }

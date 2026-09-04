@@ -311,7 +311,7 @@ export function DownloadsProcessingWizard({
             <li>
               {t(
                 "processingFolders.downloads.keepsOriginals",
-                "Files are processed in place — each becomes its processed version, right where it is.",
+                "Files are processed in place — and each original is kept, so you can restore it any time.",
               )}
             </li>
             {capped && (

@@ -584,6 +584,10 @@ export default function FileManagerView() {
   const [fileStates, setFileStates] = useState<Map<string, DiskFileState>>(
     new Map(),
   );
+  // Files whose pre-processing original is archived and can be restored.
+  const [revertables, setRevertables] = useState<ReadonlySet<string>>(
+    new Set(),
+  );
   const processingRecordId = currentProcessing?.id;
   // The state layer applies inside any working folder: a disk mount's
   // directory listing or a server folder's stored files, both joined to the
@@ -591,10 +595,11 @@ export default function FileManagerView() {
   const processingView = Boolean(
     processingRecordId && (outputDirectory || !currentLocalDirectory),
   );
-  const { listFiles, retryFile } = processingApi;
+  const { listFiles, retryFile, revertFile } = processingApi;
   useEffect(() => {
     if (!processingView || !processingRecordId) {
       setFileStates(new Map());
+      setRevertables(new Set());
       return;
     }
     let cancelled = false;
@@ -602,6 +607,9 @@ export default function FileManagerView() {
       const files = await listFiles(processingRecordId).catch(() => []);
       if (!cancelled) {
         setFileStates(new Map(files.map((f) => [f.name, f.state])));
+        setRevertables(
+          new Set(files.filter((f) => f.hasOriginal).map((f) => f.name)),
+        );
       }
     };
     void tick();
@@ -662,6 +670,40 @@ export default function FileManagerView() {
     },
     [processingRecordId, retryFile, folders, t],
   );
+  const revertFolderFile = useCallback(
+    (name: string) => {
+      if (!processingRecordId) return;
+      void revertFile(processingRecordId, name)
+        .then(() => {
+          // Reflect the restore ahead of the next poll.
+          setFileStates((prev) => {
+            const next = new Map(prev);
+            next.set(name, "done");
+            return next;
+          });
+          setRevertables((prev) => {
+            const next = new Set(prev);
+            next.delete(name);
+            return next;
+          });
+        })
+        .catch((err) =>
+          folders.setError(
+            err instanceof Error
+              ? t("filesPage.error.revertFailedDetail", {
+                  name,
+                  message: err.message,
+                  defaultValue: `Could not restore ${name}: ${err.message}`,
+                })
+              : t("filesPage.error.revertFailed", {
+                  name,
+                  defaultValue: `Could not restore ${name}.`,
+                }),
+          ),
+        );
+    },
+    [processingRecordId, revertFile, folders, t],
+  );
 
   const entries = useMemo<FilesPageEntry[]>(() => {
     // When searching, items may come from anywhere in the subtree, so we
@@ -691,6 +733,9 @@ export default function FileManagerView() {
             kind: "diskFile",
             disk,
             diskState: outputDirectory ? diskStateFor(disk.name) : undefined,
+            hasOriginal: outputDirectory
+              ? revertables.has(disk.name)
+              : undefined,
           }))
           .filter(
             (entry) =>
@@ -745,6 +790,7 @@ export default function FileManagerView() {
     outputDirectory,
     processingView,
     diskStateFor,
+    revertables,
     diskStateFilter,
     filesPage.sortMode,
     pathForFolderId,
@@ -2069,6 +2115,7 @@ export default function FileManagerView() {
               onStartProcessing={setProcessingSetupFolder}
               onOpenDiskFile={(entry) => void openDiskFile(entry)}
               onRetryFile={retryDiskFile}
+              onRevertFile={revertFolderFile}
               onOpenFile={handleOpenFile}
               onMoveFiles={moveFilesTo}
               onMoveFolder={moveFolderTo}

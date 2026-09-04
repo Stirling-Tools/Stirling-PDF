@@ -33,6 +33,8 @@ export interface ProcessingRecordSummary {
 export interface MountedFileState {
   name: string;
   state: "done" | "processing" | "failed" | "waiting";
+  /** Whether a pre-processing original is archived and can be restored. */
+  hasOriginal?: boolean;
 }
 
 export interface ProcessingFoldersApi {
@@ -50,6 +52,8 @@ export interface ProcessingFoldersApi {
   listFiles: (recordId: string) => Promise<MountedFileState[]>;
   /** Retry one failed file now; other parked failures stay parked. */
   retryFile: (recordId: string, name: string) => Promise<void>;
+  /** Restore a file's archived original; the folder then holds the original. */
+  revertFile: (recordId: string, name: string) => Promise<void>;
   /** Attach the default (classification) pipeline, or resume a paused one. */
   enable: (folder: FolderRecord) => Promise<void>;
   /** Pause processing; the pair and its processed-history stay, so resuming
@@ -78,6 +82,7 @@ export function useProcessingFolders(): ProcessingFoldersApi {
     listActiveRuns: async () => [],
     listFiles: async () => [],
     retryFile: async () => {},
+    revertFile: async () => {},
     enable: async () => {},
     disable: async () => {},
     remove: async () => {},
