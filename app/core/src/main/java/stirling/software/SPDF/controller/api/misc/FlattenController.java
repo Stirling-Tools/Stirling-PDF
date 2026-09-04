@@ -42,6 +42,9 @@ import stirling.software.common.util.WebResponseUtils;
 @RequiredArgsConstructor
 public class FlattenController {
 
+    // Default when the caller sends no renderDpi; an explicit request still wins up to maxDPI
+    private static final int FLATTEN_RENDER_DPI = 300;
+
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
 
@@ -82,7 +85,6 @@ public class FlattenController {
                 try (PDDocument newDocument =
                         pdfDocumentFactory.createNewDocumentBasedOnOldDocument(document)) {
 
-                    int defaultRenderDpi = 100; // Default fallback
                     ApplicationProperties properties =
                             ApplicationContextProvider.getBean(ApplicationProperties.class);
                     Integer configuredMaxDpi = null;
@@ -93,10 +95,11 @@ public class FlattenController {
                     int maxDpi =
                             (configuredMaxDpi != null && configuredMaxDpi > 0)
                                     ? configuredMaxDpi
-                                    : defaultRenderDpi;
+                                    : FLATTEN_RENDER_DPI;
 
                     Integer requestedDpi = request.getRenderDpi();
-                    int renderDpiTemp = maxDpi;
+                    // maxDpi is a ceiling; without an explicit request use the print-quality target
+                    int renderDpiTemp = Math.min(FLATTEN_RENDER_DPI, maxDpi);
                     if (requestedDpi != null) {
                         renderDpiTemp = Math.min(requestedDpi, maxDpi);
                         renderDpiTemp = Math.max(renderDpiTemp, 72);
