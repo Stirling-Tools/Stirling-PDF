@@ -1,7 +1,9 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import HotkeysSection from "@app/components/shared/config/configSections/HotkeysSection";
+import PreferencesSection from "@app/components/shared/config/configSections/preferences/PreferencesSection";
+// Still referenced by the deprecated createConfigNavSections below.
 import GeneralSection from "@app/components/shared/config/configSections/GeneralSection";
+import HotkeysSection from "@app/components/shared/config/configSections/HotkeysSection";
 import AboutSection from "@app/components/shared/config/configSections/AboutSection";
 import type {
   ConfigNavItem,
@@ -40,21 +42,11 @@ export const useConfigNavSections = (
           key: "general",
           label: t("settings.general.title", "General"),
           description: t(
-            "settings.general.description",
-            "Appearance, language and how the editor behaves by default.",
+            "settings.preferences.description",
+            "How the editor looks and behaves for you, and your account.",
           ),
-          icon: "settings-rounded",
-          component: <GeneralSection hideTitle />,
-        },
-        {
-          key: "hotkeys",
-          label: t("settings.hotkeys.title", "Keyboard Shortcuts"),
-          description: t(
-            "settings.hotkeys.description",
-            'Customize keyboard shortcuts for quick tool access. Click "Change shortcut" and press a new key combination. Press Esc to cancel.',
-          ),
-          icon: "keyboard-rounded",
-          component: <HotkeysSection />,
+          icon: "tune-rounded",
+          component: <PreferencesSection />,
         },
       ],
     },

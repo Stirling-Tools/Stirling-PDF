@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -6,25 +7,33 @@ import {
 } from "@core/components/shared/config/configNavSections";
 import PeopleSection from "@app/components/shared/config/configSections/PeopleSection";
 import TeamsSection from "@app/components/shared/config/configSections/TeamsSection";
-import AdminGeneralSection from "@app/components/shared/config/configSections/AdminGeneralSection";
-import AdminSecuritySection from "@app/components/shared/config/configSections/AdminSecuritySection";
-import AdminConnectionsSection from "@app/components/shared/config/configSections/AdminConnectionsSection";
-import AdminPrivacySection from "@app/components/shared/config/configSections/AdminPrivacySection";
-import AdminDatabaseSection from "@app/components/shared/config/configSections/AdminDatabaseSection";
-import AdminAdvancedSection from "@app/components/shared/config/configSections/AdminAdvancedSection";
-import AdminLegalSection from "@app/components/shared/config/configSections/AdminLegalSection";
 import AdminPlanSection from "@app/components/shared/config/configSections/AdminPlanSection";
-import AdminFeaturesSection from "@app/components/shared/config/configSections/AdminFeaturesSection";
-import AdminEndpointsSection from "@app/components/shared/config/configSections/AdminEndpointsSection";
-import AdminMcpSection from "@app/components/shared/config/configSections/AdminMcpSection";
-import AdminAiSection from "@app/components/shared/config/configSections/AdminAiSection";
+import { LoadingFallback } from "@app/components/shared/LoadingFallback";
+import PreferencesSection from "@core/components/shared/config/configSections/preferences/PreferencesSection";
+
+// Lazy, and rendered inside one Suspense below: these five pages are the bulk of
+// the settings tree, and pulling them all eagerly starved the i18n fetch on a
+// cold load, which left the whole page suspended.
+const AdminSystemSection = lazy(
+  () =>
+    import("@app/components/shared/config/configSections/server/AdminSystemSection"),
+);
+const AdminSecurityPage = lazy(
+  () =>
+    import("@app/components/shared/config/configSections/security/AdminSecurityPage"),
+);
+const AdminAdvancedPage = lazy(
+  () =>
+    import("@app/components/shared/config/configSections/advanced/AdminAdvancedPage"),
+);
+const AdminAiSection = lazy(
+  () => import("@app/components/shared/config/configSections/AdminAiSection"),
+);
+import AccountCards from "@core/components/shared/config/configSections/preferences/AccountCards";
+import { LoginLandingSetting } from "@app/components/shared/config/LoginLandingSetting";
 import AdminAuditSection from "@app/components/shared/config/configSections/AdminAuditSection";
 import AdminUsageSection from "@app/components/shared/config/configSections/AdminUsageSection";
-import AdminStorageSharingSection from "@app/components/shared/config/configSections/AdminStorageSharingSection";
-import AdminFolderAccessSection from "@app/components/shared/config/configSections/AdminFolderAccessSection";
 import ApiKeys from "@app/components/shared/config/configSections/ApiKeys";
-import AccountSection from "@app/components/shared/config/configSections/AccountSection";
-import GeneralWithLoginLanding from "@app/components/shared/config/GeneralWithLoginLanding";
 
 /**
  * Self-hosted settings, grouped by who reaches for them: you, then the people
@@ -55,20 +64,20 @@ export const useConfigNavSections = (
 
   const preferences = sections.find((s) => s.id === "preferences");
   if (preferences) {
+    // Core owns the page; the flavor supplies what core has no concept of.
     preferences.items = preferences.items.map((item) =>
       item.key === "general"
-        ? { ...item, component: <GeneralWithLoginLanding hideTitle /> }
+        ? {
+            ...item,
+            component: (
+              <PreferencesSection
+                editorDefaultsSlot={<LoginLandingSetting />}
+                accountSlot={loginEnabled ? <AccountCards /> : undefined}
+              />
+            ),
+          }
         : item,
     );
-    if (loginEnabled) {
-      preferences.items.push({
-        key: "account",
-        label: t("account.accountSettings", "Account"),
-        description: t("changeCreds.header", "Update Your Account Details"),
-        icon: "person-rounded",
-        component: <AccountSection />,
-      });
-    }
   }
 
   const showAdmin = isAdmin || (!loginEnabled && showSettingsWhenNoLogin);
@@ -151,92 +160,28 @@ export const useConfigNavSections = (
         items: [
           {
             key: "adminGeneral",
-            label: t(
-              "settings.configuration.systemSettings",
-              "System Settings",
-            ),
+            label: t("settings.server.system", "System"),
             description: t(
-              "admin.settings.general.description",
-              "Configure system-wide application settings including branding and default behaviour.",
+              "admin.settings.system.description",
+              "How this server runs: branding, storage, the tools it exposes, and the paths it may touch.",
             ),
             icon: "settings-rounded",
-            component: <AdminGeneralSection />,
-            ...gated,
-          },
-          {
-            key: "adminFeatures",
-            label: t("settings.configuration.features", "Features"),
-            description: t(
-              "admin.settings.features.description",
-              "Configure optional features and functionality.",
+            component: (
+              <Suspense fallback={<LoadingFallback />}>
+                <AdminSystemSection />
+              </Suspense>
             ),
-            icon: "extension-rounded",
-            component: <AdminFeaturesSection />,
-            ...gated,
-          },
-          {
-            key: "adminStorageSharing",
-            label: t(
-              "settings.configuration.storageSharing",
-              "File Storage & Sharing",
-            ),
-            description: t(
-              "admin.settings.storage.description",
-              "Control server storage and sharing options.",
-            ),
-            icon: "storage-rounded",
-            component: <AdminStorageSharingSection />,
-            ...gated,
-            badge: t("toolPanel.alpha", "Alpha"),
-            badgeColor: "orange",
-          },
-          {
-            key: "adminFolderAccess",
-            label: t("settings.configuration.folderAccess", "Folder Access"),
-            description: t(
-              "admin.settings.folderAccess.description",
-              "Directories that folder sources and folder outputs are allowed to read from and write to. This is a security boundary: automations can never be pointed at a server path outside this list.",
-            ),
-            icon: "folder-rounded",
-            component: <AdminFolderAccessSection />,
-            ...gated,
-          },
-          {
-            key: "adminEndpoints",
-            label: t("settings.configuration.endpoints", "Endpoints"),
-            description: t(
-              "admin.settings.endpoints.description",
-              "Control which API endpoints and endpoint groups are available.",
-            ),
-            icon: "api-rounded",
-            component: <AdminEndpointsSection />,
-            ...gated,
-          },
-          {
-            key: "adminMcp",
-            label: t("settings.configuration.mcp", "MCP Server"),
-            description: t(
-              "admin.settings.mcp.description",
-              "Expose Stirling's PDF tools and AI agents to MCP clients over an OAuth-protected endpoint.",
-            ),
-            icon: "smart-toy-rounded",
-            component: <AdminMcpSection />,
             ...gated,
           },
           {
             key: "adminUsage",
-            label: t(
-              "settings.licensingAnalytics.usageAnalytics",
-              "Usage Analytics",
-            ),
+            label: t("settings.licensingAnalytics.usage", "Usage Analytics"),
             description: t(
-              "settings.licensingAnalytics.usageDescription",
-              "How the server is being used: operations, volume and trends over time.",
+              "admin.settings.usage.description",
+              "Endpoint usage and activity for this server.",
             ),
-            icon: "analytics-rounded",
+            icon: "monitoring",
             component: <AdminUsageSection />,
-            // Non-Enterprise users can still click in: the section renders a
-            // demo preview when `!hasEnterpriseLicense`.
             ...gated,
           },
         ],
@@ -250,43 +195,14 @@ export const useConfigNavSections = (
             label: t("settings.securityAuth.security", "Sign-in & security"),
             description: t(
               "admin.settings.security.description",
-              "Configure authentication, login behaviour, and security policies.",
+              "How people sign in, how sessions are held, and what this server discloses about itself.",
             ),
             icon: "shield-rounded",
-            component: <AdminSecuritySection />,
-            ...gated,
-          },
-          {
-            key: "adminConnections",
-            label: t("settings.securityAuth.connections", "Single sign-on"),
-            description: t(
-              "admin.settings.connections.description",
-              "Configure external authentication providers like OAuth2 and SAML.",
+            component: (
+              <Suspense fallback={<LoadingFallback />}>
+                <AdminSecurityPage />
+              </Suspense>
             ),
-            icon: "link-rounded",
-            component: <AdminConnectionsSection />,
-            ...gated,
-          },
-          {
-            key: "adminPrivacy",
-            label: t("settings.policiesPrivacy.privacy", "Privacy"),
-            description: t(
-              "admin.settings.privacy.description",
-              "Configure privacy and data collection settings.",
-            ),
-            icon: "visibility-rounded",
-            component: <AdminPrivacySection />,
-            ...gated,
-          },
-          {
-            key: "adminLegal",
-            label: t("settings.policiesPrivacy.legal", "Legal documents"),
-            description: t(
-              "admin.settings.legal.description",
-              "Configure links to legal documents and policies.",
-            ),
-            icon: "gavel-rounded",
-            component: <AdminLegalSection />,
             ...gated,
           },
           {
@@ -298,7 +214,6 @@ export const useConfigNavSections = (
             ),
             icon: "fact-check-rounded",
             component: <AdminAuditSection />,
-            // Same demo-preview story as adminUsage above.
             ...gated,
           },
         ],
@@ -315,7 +230,11 @@ export const useConfigNavSections = (
               "Connect Stirling to the Python AI engine, choose its models, and set the guardrails it runs under.",
             ),
             icon: "smart-toy-rounded",
-            component: <AdminAiSection />,
+            component: (
+              <Suspense fallback={<LoadingFallback />}>
+                <AdminAiSection />
+              </Suspense>
+            ),
             ...gated,
           },
         ],
@@ -327,25 +246,18 @@ export const useConfigNavSections = (
         collapsedByDefault: true,
         items: [
           {
-            key: "adminDatabase",
-            label: t("settings.configuration.database", "Database"),
-            description: t(
-              "admin.settings.database.description",
-              "Configure custom database connection settings for enterprise deployments.",
-            ),
-            icon: "storage-rounded",
-            component: <AdminDatabaseSection />,
-            ...gated,
-          },
-          {
             key: "adminAdvanced",
             label: t("settings.configuration.advanced", "Advanced"),
             description: t(
               "admin.settings.advanced.description",
-              "Configure advanced features and experimental functionality.",
+              "Feature flags, processing limits, temp files and the database. Set once at install, if ever.",
             ),
             icon: "tune-rounded",
-            component: <AdminAdvancedSection />,
+            component: (
+              <Suspense fallback={<LoadingFallback />}>
+                <AdminAdvancedPage />
+              </Suspense>
+            ),
             ...gated,
           },
         ],

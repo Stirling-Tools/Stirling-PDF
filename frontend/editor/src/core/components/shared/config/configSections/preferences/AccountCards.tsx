@@ -22,7 +22,20 @@ import { useAccountLogout } from "@app/extensions/accountLogout";
 import { BASE_PATH, withBasePath } from "@app/constants/app";
 import { MfaSetupResponse } from "@app/responses/Mfa/MfaResponse";
 
-const AccountSection: React.FC = () => {
+/** The signed-in user's shape is layer-specific, so read fields defensively. */
+function userField(source: unknown, key: string): string | undefined {
+  if (!source || typeof source !== "object") return undefined;
+  const value = (source as Record<string, unknown>)[key];
+  return typeof value === "string" ? value : undefined;
+}
+
+/**
+ * The Account and Two-factor cards of the Preferences page, together because
+ * they share one account fetch, one SSO check and one logout. Passed into the
+ * page's `accountSlot` by the flavors that have accounts; each card carries the
+ * id its retired nav row had, so old deep links still resolve.
+ */
+export function AccountCards() {
   const { t } = useTranslation();
   const { user, signOut } = useAuth();
   const accountLogout = useAccountLogout();
@@ -58,25 +71,23 @@ const AccountSection: React.FC = () => {
   const qrLogoSrc = `${BASE_PATH}/modern-logo/StirlingPDFLogoNoTextDark.svg`;
 
   const authTypeFromMetadata = useMemo(() => {
-    const metadata = user?.app_metadata as
-      | { authType?: string; authenticationType?: string }
-      | undefined;
-    return metadata?.authenticationType ?? metadata?.authType;
-  }, [user?.app_metadata]);
+    const metadata = (user as { app_metadata?: unknown } | null)?.app_metadata;
+    const explicit = userField(metadata, "authenticationType");
+    return explicit ?? userField(metadata, "authType");
+  }, [user]);
 
-  const normalizedAuthType = useMemo(
-    () =>
-      (user?.authenticationType ?? authTypeFromMetadata ?? "").toLowerCase(),
-    [authTypeFromMetadata, user?.authenticationType],
-  );
+  const normalizedAuthType = useMemo(() => {
+    const raw = userField(user, "authenticationType") ?? authTypeFromMetadata;
+    return (raw ?? "").toLowerCase();
+  }, [authTypeFromMetadata, user]);
   const isSsoUser = useMemo(
     () => ["sso", "oauth2", "saml2"].includes(normalizedAuthType),
     [normalizedAuthType],
   );
 
   const userIdentifier = useMemo(
-    () => user?.email || user?.username || "",
-    [user?.email, user?.username],
+    () => userField(user, "email") || userField(user, "username") || "",
+    [user],
   );
 
   const redirectToLogin = useCallback(() => {
@@ -347,122 +358,132 @@ const AccountSection: React.FC = () => {
   };
 
   return (
-    <Stack gap="md">
-      <Paper withBorder p="md" radius="md">
-        <Stack gap="sm">
-          <Text size="sm" c="dimmed">
-            {userIdentifier
-              ? t("settings.general.user", "User") + ": " + userIdentifier
-              : t("account.accountSettings", "Account Settings")}
-          </Text>
+    <>
+      <section className="preferences-section__card">
+        <h2 className="preferences-section__heading" id="account">
+          {t("account.accountSettings", "Account")}
+        </h2>
+        <Text size="xs" c="dimmed">
+          {t("changeCreds.header", "Update Your Account Details")}
+        </Text>
+        <Paper withBorder p="md" radius="md">
+          <Stack gap="sm">
+            <Text size="sm" c="dimmed">
+              {userIdentifier
+                ? t("settings.general.user", "User") + ": " + userIdentifier
+                : t("account.accountSettings", "Account Settings")}
+            </Text>
 
-          <Stack gap="xs">
-            {isSsoUser && (
+            <Stack gap="xs">
+              {isSsoUser && (
+                <Alert
+                  icon={<LocalIcon icon="info" width="1rem" height="1rem" />}
+                  color="blue"
+                  variant="light"
+                >
+                  {t(
+                    "changeCreds.ssoManaged",
+                    "Your account is managed by your identity provider.",
+                  )}
+                </Alert>
+              )}
+
+              <Group gap="sm" wrap="wrap">
+                {!isSsoUser && (
+                  <Button
+                    leftSection={<LocalIcon icon="key-rounded" />}
+                    onClick={() => setPasswordModalOpen(true)}
+                  >
+                    {t("settings.security.password.update", "Update password")}
+                  </Button>
+                )}
+
+                {!isSsoUser && (
+                  <Button
+                    variant="secondary"
+                    leftSection={<LocalIcon icon="edit-rounded" />}
+                    onClick={() => setUsernameModalOpen(true)}
+                  >
+                    {t("account.changeUsername", "Change username")}
+                  </Button>
+                )}
+
+                <Button
+                  variant="secondary"
+                  accent="danger"
+                  leftSection={<LocalIcon icon="logout-rounded" />}
+                  onClick={handleLogout}
+                >
+                  {t("settings.general.logout", "Log out")}
+                </Button>
+              </Group>
+            </Stack>
+          </Stack>
+        </Paper>
+      </section>
+
+      <section className="preferences-section__card">
+        <h2 className="preferences-section__heading" id="twoFactor">
+          {t("account.mfa.title", "Two-factor authentication")}
+        </h2>
+        <Paper withBorder p="md" radius="md">
+          <Stack gap="sm">
+            <Text size="sm" c="dimmed">
+              {t(
+                "account.mfa.description",
+                "Add an extra layer of security to your account.",
+              )}
+            </Text>
+            {isSsoUser ? (
               <Alert
                 icon={<LocalIcon icon="info" width="1rem" height="1rem" />}
                 color="blue"
                 variant="light"
               >
                 {t(
-                  "changeCreds.ssoManaged",
-                  "Your account is managed by your identity provider.",
+                  "account.mfa.ssoManaged",
+                  "Two-factor authentication for this account is managed by your identity provider.",
                 )}
               </Alert>
+            ) : (
+              <Group gap="sm" wrap="wrap">
+                {!mfaEnabled ? (
+                  <Button
+                    leftSection={
+                      <LocalIcon icon="check-circle-outline-rounded" />
+                    }
+                    onClick={handleStartMfaSetup}
+                    loading={mfaLoading}
+                    disabled={changeButtonDisabled}
+                  >
+                    {t(
+                      "account.mfa.enableButton",
+                      "Enable two-factor authentication",
+                    )}
+                  </Button>
+                ) : (
+                  <Button
+                    variant="secondary"
+                    accent="danger"
+                    leftSection={<LocalIcon icon="close-rounded" />}
+                    onClick={() => {
+                      setMfaError("");
+                      setMfaDisableCode("");
+                      setMfaDisableModalOpen(true);
+                    }}
+                    disabled={changeButtonDisabled}
+                  >
+                    {t(
+                      "account.mfa.disableButton",
+                      "Disable two-factor authentication",
+                    )}
+                  </Button>
+                )}
+              </Group>
             )}
-
-            <Group gap="sm" wrap="wrap">
-              {!isSsoUser && (
-                <Button
-                  leftSection={<LocalIcon icon="key-rounded" />}
-                  onClick={() => setPasswordModalOpen(true)}
-                >
-                  {t("settings.security.password.update", "Update password")}
-                </Button>
-              )}
-
-              {!isSsoUser && (
-                <Button
-                  variant="secondary"
-                  leftSection={<LocalIcon icon="edit-rounded" />}
-                  onClick={() => setUsernameModalOpen(true)}
-                >
-                  {t("account.changeUsername", "Change username")}
-                </Button>
-              )}
-
-              <Button
-                variant="secondary"
-                accent="danger"
-                leftSection={<LocalIcon icon="logout-rounded" />}
-                onClick={handleLogout}
-              >
-                {t("settings.general.logout", "Log out")}
-              </Button>
-            </Group>
           </Stack>
-        </Stack>
-      </Paper>
-
-      <Paper withBorder p="md" radius="md">
-        <Stack gap="sm">
-          <Text fw={600}>
-            {t("account.mfa.title", "Two-factor authentication")}
-          </Text>
-          <Text size="sm" c="dimmed">
-            {t(
-              "account.mfa.description",
-              "Add an extra layer of security to your account.",
-            )}
-          </Text>
-          {isSsoUser ? (
-            <Alert
-              icon={<LocalIcon icon="info" width="1rem" height="1rem" />}
-              color="blue"
-              variant="light"
-            >
-              {t(
-                "account.mfa.ssoManaged",
-                "Two-factor authentication for this account is managed by your identity provider.",
-              )}
-            </Alert>
-          ) : (
-            <Group gap="sm" wrap="wrap">
-              {!mfaEnabled ? (
-                <Button
-                  leftSection={
-                    <LocalIcon icon="check-circle-outline-rounded" />
-                  }
-                  onClick={handleStartMfaSetup}
-                  loading={mfaLoading}
-                  disabled={changeButtonDisabled}
-                >
-                  {t(
-                    "account.mfa.enableButton",
-                    "Enable two-factor authentication",
-                  )}
-                </Button>
-              ) : (
-                <Button
-                  variant="secondary"
-                  accent="danger"
-                  leftSection={<LocalIcon icon="close-rounded" />}
-                  onClick={() => {
-                    setMfaError("");
-                    setMfaDisableCode("");
-                    setMfaDisableModalOpen(true);
-                  }}
-                  disabled={changeButtonDisabled}
-                >
-                  {t(
-                    "account.mfa.disableButton",
-                    "Disable two-factor authentication",
-                  )}
-                </Button>
-              )}
-            </Group>
-          )}
-        </Stack>
-      </Paper>
+        </Paper>
+      </section>
 
       <Modal
         opened={passwordModalOpen}
@@ -767,8 +788,8 @@ const AccountSection: React.FC = () => {
           </Stack>
         </form>
       </Modal>
-    </Stack>
+    </>
   );
-};
+}
 
-export default AccountSection;
+export default AccountCards;

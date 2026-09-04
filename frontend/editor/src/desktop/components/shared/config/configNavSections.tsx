@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useConfigNavSections as useProprietaryConfigNavSections } from "@proprietary/components/shared/config/configNavSections";
 import { ConfigNavSection } from "@core/components/shared/config/configNavSections";
 import { ConnectionSettings } from "@app/components/ConnectionSettings";
+import DesktopGeneralSection from "@app/components/shared/config/configSections/GeneralSection";
 import {
   createCloudPlanNavItem,
   createCloudTeamNavItem,
@@ -56,6 +57,17 @@ export const useConfigNavSections = (
     onRequestClose,
     showSettingsWhenNoLogin,
   );
+
+  // Desktop adds file-association defaults and its own update controls to the
+  // Preferences page; core builds the page, desktop supplies its extras.
+  const preferences = sections.find((s) => s.id === "preferences");
+  if (preferences) {
+    preferences.items = preferences.items.map((item) =>
+      item.key === "general"
+        ? { ...item, component: <DesktopGeneralSection /> }
+        : item,
+    );
+  }
 
   const connectionModeSection: ConfigNavSection = {
     title: t("settings.connection.title", "Connection Mode"),

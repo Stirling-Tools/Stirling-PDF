@@ -1,6 +1,13 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  Suspense,
+} from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { LoadingFallback } from "@app/components/shared/LoadingFallback";
 import { Badge, Tooltip } from "@mantine/core";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { ActionIcon } from "@app/ui/ActionIcon";
@@ -368,7 +375,11 @@ const SettingsPageInner: React.FC = () => {
                 )}
               </header>
             )}
-            {activeItem?.component}
+            {/* Its own boundary: a section that suspends must not take the
+                nav and the header down with it. */}
+            <Suspense fallback={<LoadingFallback />}>
+              {activeItem?.component}
+            </Suspense>
           </div>
         </div>
       </div>

@@ -1482,6 +1482,12 @@ now = "Restart Now"
 question = "Would you like to restart the server now or later?"
 title = "Restart Required"
 
+[admin.settings.system]
+description = "How this server runs: branding, storage, the tools it exposes, and the paths it may touch."
+
+[admin.settings.usage]
+description = "Endpoint usage and activity for this server."
+
 [admin.settings.security]
 authentication = "Authentication"
 description = "Configure authentication, login behavior, and security policies."
@@ -10745,6 +10751,7 @@ module = "Module"
 version = "Version"
 
 [settings.licensingAnalytics]
+usage = "Usage Analytics"
 audit = "Audit log"
 auditDescription = "Who did what on this server, and how long that record is kept."
 plan = "Plan"
@@ -10811,6 +10818,10 @@ legal = "Legal documents"
 privacy = "Privacy"
 
 [settings.preferences]
+appearance = "Appearance"
+description = "How the editor looks and behaves for you, and your account."
+downloads = "Downloads"
+editorDefaults = "Editor defaults"
 title = "Preferences"
 
 [settings.security]
@@ -10839,6 +10850,7 @@ telegram = "Telegram"
 title = "Security & sign-in"
 
 [settings.server]
+system = "System"
 title = "Server"
 
 [settings.signOut]

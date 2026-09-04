@@ -177,11 +177,11 @@ export function QuickNavRailHost() {
   // tab switch (replace); from an app it is a navigation.
   const openAccount = () => {
     if (inSettings) {
-      navigate("/settings/account", { replace: true });
+      navigate("/settings/general?focus=account", { replace: true });
       return;
     }
     rememberSettingsOrigin();
-    go("/settings/account");
+    go("/settings/general?focus=account");
   };
 
   // A route that isn't the app hides the bar - see useSuppressQuickNavRail.
