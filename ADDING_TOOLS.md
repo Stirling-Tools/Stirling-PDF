@@ -128,7 +128,7 @@ export default [ToolName] as ToolComponent;
 ## 3. Register Tool in System
 Update these files to register your new tool:
 
-**Tool Registry** (`frontend/editor/src/data/useTranslatedToolRegistry.tsx`):
+**Tool Registry** (`frontend/editor/src/core/data/useTranslatedToolRegistry.tsx`):
 1. Add imports at the top:
 ```typescript
 import [ToolName] from "../tools/[ToolName]";
@@ -147,10 +147,13 @@ import [ToolName]Settings from "../components/tools/[toolName]/[ToolName]Setting
   subcategoryId: SubcategoryId.APPROPRIATE_SUBCATEGORY,
   maxFiles: -1, // or specific number
   endpoints: ["endpoint-name"],
-  operationConfig: [toolName]OperationConfig,
-  settingsComponent: [ToolName]Settings, // if settings exist
+  operationConfig: asRegistryConfig([toolName]OperationConfig),
+  automationSettings: [ToolName]Settings, // or null if no automation settings
+  newInVersion: "2.16.0", // release the tool first ships in
 },
 ```
+
+**"New"/"Updated" badges**: set `newInVersion` to the release the tool first ships in so the tool list shows a "New" badge; use `updatedInVersion` when an existing tool gets a major revamp to show "Updated". Badges expire automatically once that release is more than one minor behind the running app, and per user once they open the tool (see `frontend/editor/src/core/utils/toolFreshness.ts`).
 
 ## 4. Add Tooltips (Optional but Recommended)
 Create user-friendly tooltips to help non-technical users understand your tool. **Use simple, clear language - avoid technical jargon:**

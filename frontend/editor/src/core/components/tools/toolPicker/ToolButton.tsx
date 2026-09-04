@@ -11,6 +11,7 @@ import FitText from "@app/components/shared/FitText";
 import { useHotkeys } from "@app/contexts/HotkeyContext";
 import HotkeyDisplay from "@app/components/hotkeys/HotkeyDisplay";
 import FavoriteStar from "@app/components/tools/toolPicker/FavoriteStar";
+import ToolStatusBadges from "@app/components/tools/shared/ToolStatusBadges";
 import {
   useToolWorkflowActions,
   useToolWorkflowData,
@@ -176,16 +177,11 @@ const ToolButton: React.FC<ToolButtonProps> = ({
             opacity: visuallyUnavailable ? 0.25 : 1,
           }}
         />
-        {tool.versionStatus === "alpha" && (
-          <Badge
-            size="xs"
-            variant="light"
-            color="orange"
-            style={{ flexShrink: 0, opacity: visuallyUnavailable ? 0.25 : 1 }}
-          >
-            {t("toolPanel.alpha", "Alpha")}
-          </Badge>
-        )}
+        <ToolStatusBadges
+          toolId={id}
+          tool={tool}
+          dimmed={visuallyUnavailable}
+        />
         {typeof badgeCount === "number" && badgeCount > 0 && (
           <Badge
             size="sm"

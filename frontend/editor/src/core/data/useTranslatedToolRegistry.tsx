@@ -238,6 +238,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         automationSettings: null,
         supportsAutomate: false,
         synonyms: getSynonyms(t, "sharedSign"),
+        newInVersion: "2.14.0",
       },
       addText: {
         icon: (
@@ -479,6 +480,8 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
           "modify",
           "builder",
         ],
+        // Fill Form became a full Form Editor (create/edit/delete fields).
+        updatedInVersion: "2.15.0",
       },
       changePermissions: {
         icon: <LocalIcon icon="lock-outline" width="1.5rem" height="1.5rem" />,
@@ -676,6 +679,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
             import("@app/components/tools/autoRotate/AutoRotateAutomationSettings"),
         ),
         synonyms: getSynonyms(t, "autoRotate"),
+        newInVersion: "2.15.0",
       },
       split: {
         icon: (
