@@ -126,6 +126,7 @@ function TrackRowImpl({
     const px = rootFontSizePx();
     return {
       gapPx: TRACK_GEOMETRY.gapRem * px,
+      tileWidthPx: TRACK_GEOMETRY.tileWidthRem * px,
       // Distance between the left edges of adjacent tiles (tile + gap).
       colStride: (TRACK_GEOMETRY.tileWidthRem + TRACK_GEOMETRY.gapRem) * px,
       // Distance between the top edges of adjacent wrapped rows.
@@ -174,6 +175,22 @@ function TrackRowImpl({
   }, [wrap, laneWidth, geometry.gapPx, geometry.colStride]);
 
   const rowCount = wrap ? Math.ceil(pageCount / columns) : pageCount;
+
+  // Spread the spare width so a wrapped row fills the lane edge to edge instead
+  // of bunching left. The stride is per-column (not per-row), so a short last
+  // row still lines its tiles up under the columns above it.
+  const wrapColStride = useMemo(() => {
+    if (!wrap || columns <= 1) return geometry.colStride;
+    const gap = (laneWidth - columns * geometry.tileWidthPx) / (columns - 1);
+    return geometry.tileWidthPx + Math.max(geometry.gapPx, gap);
+  }, [
+    wrap,
+    columns,
+    laneWidth,
+    geometry.tileWidthPx,
+    geometry.gapPx,
+    geometry.colStride,
+  ]);
 
   // Wrap-mode rows are virtualised against the shared outer scroller, so each
   // lane needs the offset of its content within that scroller's scroll height.
@@ -415,7 +432,7 @@ function TrackRowImpl({
                     page={page}
                     trackFileId={track.fileId}
                     position={pageIndex + 1}
-                    offsetX={col * geometry.colStride}
+                    offsetX={col * wrapColStride}
                     offsetY={rowTop}
                     selected={selectedIds.has(page.id)}
                     dragging={draggingIds.has(page.id)}
