@@ -24,9 +24,8 @@ export interface SettingsToggleRowProps {
 /**
  * One on/off setting: label left, switch hard right.
  *
- * Every toggle in settings goes through this so the switch never lands on the
- * other side of the row, and so label weight, badge order and the gap between
- * rows stay the same from card to card. Spacing is the parent Stack's job.
+ * Every settings toggle routes through this, so the side, label weight and
+ * badge order cannot drift again. Row spacing is the parent Stack's job.
  */
 export function SettingsToggleRow({
   label,
