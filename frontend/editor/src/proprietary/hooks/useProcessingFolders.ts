@@ -17,6 +17,7 @@ import { folderKind, type FolderRecord } from "@app/types/folder";
 // explicitly, since @app/hooks/useProcessingFolders resolves back to this file.
 import type {
   MountedFileState,
+  ProcessingRecordSummary,
   ProcessingFolderState,
   ProcessingFoldersApi,
   ProcessingRunInfo,
@@ -26,6 +27,7 @@ import type {
 // builds that carry this shadow — so it must re-export what the stub declares.
 export type {
   MountedFileState,
+  ProcessingRecordSummary,
   ProcessingFolderState,
   ProcessingFoldersApi,
   ProcessingRunInfo,
@@ -120,6 +122,23 @@ export function useProcessingFolders(): ProcessingFoldersApi {
       }
     },
     [current],
+  );
+
+  const recordSummaryFor = useCallback(
+    (folder: FolderRecord): ProcessingRecordSummary | undefined => {
+      const record = recordFor(folder);
+      if (!record) return undefined;
+      return {
+        id: record.id,
+        enabled: record.enabled,
+        steps: record.steps.map((step) => ({
+          operation: step.operation,
+          parameters: step.parameters ?? {},
+          assets: step.assets,
+        })),
+      };
+    },
+    [recordFor],
   );
 
   const stateFor = useCallback(
@@ -268,6 +287,7 @@ export function useProcessingFolders(): ProcessingFoldersApi {
   return useMemo(
     () => ({
       stateFor,
+      recordFor: recordSummaryFor,
       enabledFolderIds,
       anyEnabled,
       listActiveRuns,
@@ -279,6 +299,7 @@ export function useProcessingFolders(): ProcessingFoldersApi {
     }),
     [
       stateFor,
+      recordSummaryFor,
       enabledFolderIds,
       anyEnabled,
       listActiveRuns,

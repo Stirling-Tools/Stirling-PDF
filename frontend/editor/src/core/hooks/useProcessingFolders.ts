@@ -18,6 +18,17 @@ export interface ProcessingRunInfo {
   stepCount: number;
 }
 
+/** The editable heart of a processing record: identity, liveness, steps. */
+export interface ProcessingRecordSummary {
+  id: string;
+  enabled: boolean;
+  steps: {
+    operation: string;
+    parameters: Record<string, unknown>;
+    assets?: Record<string, unknown>;
+  }[];
+}
+
 /** One file in a working folder, with its place in the pipeline. */
 export interface MountedFileState {
   name: string;
@@ -27,6 +38,8 @@ export interface MountedFileState {
 export interface ProcessingFoldersApi {
   /** The folder's processing state; undefined means an ordinary folder. */
   stateFor: (folder: FolderRecord) => ProcessingFolderState | undefined;
+  /** The folder's processing record, for editing its steps in place. */
+  recordFor: (folder: FolderRecord) => ProcessingRecordSummary | undefined;
   /** Server-storage folder ids whose processing is enabled, for id-only callers. */
   enabledFolderIds: ReadonlySet<string>;
   /** Whether any processing folder is enabled, whatever it watches. */
@@ -57,6 +70,7 @@ const EMPTY_IDS: ReadonlySet<string> = new Set();
 export function useProcessingFolders(): ProcessingFoldersApi {
   return {
     stateFor: () => undefined,
+    recordFor: () => undefined,
     enabledFolderIds: EMPTY_IDS,
     anyEnabled: false,
     listActiveRuns: async () => [],

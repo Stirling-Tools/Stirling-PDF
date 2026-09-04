@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Modal } from "@app/ui/Modal";
 import { CardRail } from "@app/ui/CardRail";
@@ -16,7 +16,12 @@ import {
   saveProcessingFolder,
   type ProcessingFolderStep,
 } from "@app/services/processingFolderApi";
-import { refreshProcessingFolders } from "@app/hooks/useProcessingFolders";
+import {
+  refreshProcessingFolders,
+  useProcessingFolders,
+} from "@app/hooks/useProcessingFolders";
+import { policyStepFromWire } from "@app/policies/operations";
+import type { WirePipelineStep } from "@app/policies/types";
 import { deliverSweepResults } from "@app/services/processingRunDelivery";
 import { useFileHandler } from "@app/hooks/useFileHandler";
 import { useAiEngineEnabled } from "@app/hooks/useAiEngineEnabled";
@@ -39,6 +44,7 @@ export function FolderProcessingSetup({
   const { t } = useTranslation();
   const { addFiles } = useFileHandler();
   const aiEngineEnabled = useAiEngineEnabled();
+  const { recordFor } = useProcessingFolders();
   const [wizardEntry, setWizardEntry] = useState<CatalogueEntry | null>(null);
 
   // The same catalogue Processor's gallery assembles, with no saved-policy
@@ -51,6 +57,50 @@ export function FolderProcessingSetup({
       }),
     [],
   );
+
+  // Editing: a folder that already has a record opens the wizard directly,
+  // seeded from its saved steps, under the category whose preset covers them.
+  const existing = folder ? recordFor(folder) : undefined;
+  const existingId = existing?.id;
+  useEffect(() => {
+    if (!folder || !existing) return;
+    const savedToolIds = existing.steps
+      .map((step) => policyStepFromWire(step as WirePipelineStep)?.toolId)
+      .filter((id): id is NonNullable<typeof id> => id != null);
+    const category =
+      POLICY_CATEGORIES.find((c) => {
+        const preset = new Set(
+          (POLICY_CONFIG[c.id]?.defaultOperations ?? []).map((op) => op.toolId),
+        );
+        return (
+          savedToolIds.length > 0 && savedToolIds.every((id) => preset.has(id))
+        );
+      }) ?? POLICY_CATEGORIES.find((c) => c.id === "classification")!;
+    const config = POLICY_CONFIG[category.id];
+    setWizardEntry({
+      category,
+      config,
+      policy: {
+        category,
+        config,
+        state: {
+          configured: true,
+          status: existing.enabled ? "active" : "paused",
+          required: false,
+          sources: [],
+          scopeTypes: [],
+          reviewerEmail: "",
+          fieldValues: {},
+        },
+        steps: existing.steps as WirePipelineStep[],
+        stats: { enforced: 0, dataProcessed: "—", activeFor: "—" },
+        activity: [],
+      },
+    });
+    // Re-seed only when the dialog opens for a folder, not on list refreshes
+    // mid-edit.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [folder?.id, existingId]);
 
   if (!folder) return null;
 
@@ -67,12 +117,20 @@ export function FolderProcessingSetup({
       parameters: step.parameters ?? {},
     }));
     const onDisk = folderKind(folder) === "local";
+    // Editing keeps the record's identity and its paused/active state; only
+    // the steps change. A fresh setup starts enabled.
     const saved = await saveProcessingFolder(
       onDisk
-        ? { directory: folder.directory ?? "", enabled: true, steps }
+        ? {
+            id: existing?.id,
+            directory: folder.directory ?? "",
+            enabled: existing ? existing.enabled : true,
+            steps,
+          }
         : {
+            id: existing?.id,
             folderId: folder.id as string,
-            enabled: true,
+            enabled: existing ? existing.enabled : true,
             steps,
             output: { mode: "new_version" },
           },
@@ -111,10 +169,12 @@ export function FolderProcessingSetup({
                 <Button
                   variant="tertiary"
                   size="sm"
-                  onClick={() => setWizardEntry(null)}
+                  onClick={() => (existing ? close() : setWizardEntry(null))}
                   disabled={submitting}
                 >
-                  {t("filesPage.processingSetup.back", "Back")}
+                  {existing
+                    ? t("filesPage.processingSetup.cancel", "Cancel")
+                    : t("filesPage.processingSetup.back", "Back")}
                 </Button>
                 <Button
                   size="sm"

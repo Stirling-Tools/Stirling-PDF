@@ -27,6 +27,7 @@ import AutoModeIcon from "@mui/icons-material/AutoMode";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import PauseIcon from "@mui/icons-material/Pause";
 import ReplayIcon from "@mui/icons-material/Replay";
+import TuneIcon from "@mui/icons-material/Tune";
 import TaskAltIcon from "@mui/icons-material/TaskAlt";
 import SearchIcon from "@mui/icons-material/Search";
 
@@ -739,6 +740,11 @@ function FolderCard({
                     : void startProcessing("process folder")
                 }
                 onResume={() => void startProcessing("resume processing")}
+                onEdit={
+                  onStartProcessing
+                    ? () => onStartProcessing(folder)
+                    : undefined
+                }
                 onRemove={() =>
                   void removeProcessing("remove processing folder")
                 }
@@ -791,6 +797,11 @@ function FolderCard({
                       : void startProcessing("process folder")
                   }
                   onResume={() => void startProcessing("resume processing")}
+                  onEdit={
+                    onStartProcessing
+                      ? () => onStartProcessing(folder)
+                      : undefined
+                  }
                   onRemove={() =>
                     void removeProcessing("remove processing folder")
                   }
@@ -883,6 +894,7 @@ function ProcessingMenuItems({
   onStart,
   onResume,
   onRemove,
+  onEdit,
 }: {
   processing: ProcessingFolderState | undefined;
   continuous?: boolean;
@@ -893,6 +905,8 @@ function ProcessingMenuItems({
   onStart: () => void;
   onResume: () => void;
   onRemove: () => void;
+  /** Open the setup dialog seeded from the existing record; absent hides Edit. */
+  onEdit?: () => void;
 }) {
   const { t } = useTranslation();
   const heading = (
@@ -927,6 +941,16 @@ function ProcessingMenuItems({
         >
           {t("filesPage.processing.resume", "Resume processing")}
         </Menu.Item>
+        {onEdit && (
+          <Menu.Item
+            leftSection={<TuneIcon fontSize="small" />}
+            onClick={onEdit}
+            disabled={disabled}
+            title={disabled ? disabledHint : undefined}
+          >
+            {t("filesPage.processing.edit", "Edit processing…")}
+          </Menu.Item>
+        )}
         <Menu.Item
           color="red"
           leftSection={<AutoModeIcon fontSize="small" />}
@@ -953,6 +977,11 @@ function ProcessingMenuItems({
       <Menu.Item leftSection={<PauseIcon fontSize="small" />} onClick={onStop}>
         {t("filesPage.processing.stop", "Pause processing")}
       </Menu.Item>
+      {onEdit && (
+        <Menu.Item leftSection={<TuneIcon fontSize="small" />} onClick={onEdit}>
+          {t("filesPage.processing.edit", "Edit processing…")}
+        </Menu.Item>
+      )}
     </>
   );
 }
@@ -1729,6 +1758,11 @@ function FolderRow({
                     : void startProcessing("process folder")
                 }
                 onResume={() => void startProcessing("resume processing")}
+                onEdit={
+                  onStartProcessing
+                    ? () => onStartProcessing(folder)
+                    : undefined
+                }
                 onRemove={() =>
                   void removeProcessing("remove processing folder")
                 }
@@ -1781,6 +1815,11 @@ function FolderRow({
                       : void startProcessing("process folder")
                   }
                   onResume={() => void startProcessing("resume processing")}
+                  onEdit={
+                    onStartProcessing
+                      ? () => onStartProcessing(folder)
+                      : undefined
+                  }
                   onRemove={() =>
                     void removeProcessing("remove processing folder")
                   }
