@@ -688,6 +688,9 @@ manualLinks = "Manual downloads: click the links and place the files into the te
 noLanguages = "No tessdata languages found in the configured directory."
 permissionNotice = "The tessdata path is not writable. Downloads will be opened in the browser; please save the .traineddata files manually into the tessdata folder."
 
+[admin.settings.ai]
+description = "Connect Stirling to the Python AI engine, choose its models, and set the guardrails it runs under."
+
 [admin.settings.ai.documents]
 description = "Configure the embedding model and retrieval settings used to answer questions over documents. Applied to the AI engine when saved."
 title = "Documents & RAG"
@@ -725,9 +728,6 @@ reindexNote = "If you changed the embedding model, re-index existing documents s
 [admin.settings.ai.documents.topK]
 description = "Number of most-relevant chunks retrieved per search."
 label = "Top K"
-
-[admin.settings.ai]
-description = "Connect Stirling to the Python AI engine, choose its models, and set the guardrails it runs under."
 
 [admin.settings.ai.general]
 connection = "Connection"
@@ -1482,12 +1482,6 @@ now = "Restart Now"
 question = "Would you like to restart the server now or later?"
 title = "Restart Required"
 
-[admin.settings.system]
-description = "How this server runs: branding, storage, the tools it exposes, and the paths it may touch."
-
-[admin.settings.usage]
-description = "Endpoint usage and activity for this server."
-
 [admin.settings.security]
 authentication = "Authentication"
 description = "Configure authentication, login behavior, and security policies."
@@ -1686,6 +1680,9 @@ label = "Enable Share Links"
 description = "Allow users to create multi-participant document signing sessions. Requires server file storage to be enabled."
 label = "Enable Group Signing (Alpha)"
 
+[admin.settings.system]
+description = "How this server runs: branding, storage, the tools it exposes, and the paths it may touch."
+
 [admin.settings.telegram]
 description = "Configure Telegram bot connectivity, access controls, and feedback behavior."
 title = "Telegram Bot"
@@ -1788,6 +1785,9 @@ discard = "Discard Changes"
 hint = "You have unsaved changes"
 message = "You have unsaved changes. Do you want to discard them?"
 title = "Unsaved Changes"
+
+[admin.settings.usage]
+description = "Endpoint usage and activity for this server."
 
 [adminOnboarding]
 adminTools = "Finally, we have advanced administration tools like <strong>Auditing</strong> to track system activity and <strong>Usage Analytics</strong> to monitor how your users interact with the platform."
@@ -10751,11 +10751,11 @@ module = "Module"
 version = "Version"
 
 [settings.licensingAnalytics]
-usage = "Usage Analytics"
 audit = "Audit log"
 auditDescription = "Who did what on this server, and how long that record is kept."
 plan = "Plan"
 planDescription = "Your licence, seats and what the current plan unlocks."
+usage = "Usage Analytics"
 usageAnalytics = "Usage Analytics"
 usageDescription = "How the server is being used: operations, volume and trends over time."
 
