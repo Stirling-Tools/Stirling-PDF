@@ -324,7 +324,5 @@ export const apiClient = {
     json: saasJson,
     text: saasText,
     blob: saasBlob,
-    /** True when a SaaS base URL is resolvable. Doesn't check session liveness. */
-    isConfigured: (): boolean => saasBaseUrl() !== null,
   },
 } as const;
