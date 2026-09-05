@@ -204,13 +204,13 @@ tags = "img,jpg,bild,foto"
 title = "Lägg till bild"
 
 [addImage.canvas]
-colorPickerTitle = "Choose stroke colour"
+colorPickerTitle = "Välj linjefärg"
 
 [addImage.error]
 failed = "Ett fel uppstod när bilden skulle läggas till i PDF:en."
 
 [addImage.image]
-hint = "Supports PNG, JPEG, GIF, BMP, TIFF, and SVG files. SVG files will be converted to PNG for embedding."
+hint = "Stöder PNG-, JPEG-, GIF-, BMP-, TIFF- och SVG-filer. SVG-filer konverteras till PNG för inbäddning."
 label = "Bildfil"
 name = "Bild"
 placeholder = "Ladda upp en bild"
@@ -232,26 +232,26 @@ resume = "Återuppta placering"
 title = "Resultat för Lägg till bild"
 
 [addImage.saved]
-defaultCanvasLabel = "Drawing signature"
+defaultCanvasLabel = "Ritad signatur"
 defaultImageLabel = "Uppladdad bild"
 defaultLabel = "Bild"
-defaultTextLabel = "Typed signature"
-delete = "Remove"
-emptyTitle = "No saved signatures yet"
-heading = "Saved signatures"
-label = "Label"
-limitTitle = "Limit reached"
-next = "Next"
-personalHeading = "Personal Signatures"
-prev = "Previous"
-savePersonal = "Save Personal"
-saveShared = "Save Shared"
-sharedHeading = "Shared Signatures"
+defaultTextLabel = "Skriven signatur"
+delete = "Ta bort"
+emptyTitle = "Inga sparade signaturer ännu"
+heading = "Sparade signaturer"
+label = "Etikett"
+limitTitle = "Gränsen är nådd"
+next = "Nästa"
+personalHeading = "Personliga signaturer"
+prev = "Föregående"
+savePersonal = "Spara personlig"
+saveShared = "Spara delad"
+sharedHeading = "Delade signaturer"
 
 [addImage.saved.type]
-canvas = "Drawing"
-image = "Upload"
-text = "Text"
+canvas = "Ritning"
+image = "Uppladdning"
+text = "Textsignatur"
 
 [addImage.step]
 createDesc = "Ladda upp bilden du vill lägga till"
@@ -262,16 +262,16 @@ placeDesc = "Klicka på PDF:en för att lägga till bilden"
 configure = "Konfigurera bild"
 
 [addImage.text]
-colorLabel = "Text colour"
-fontLabel = "Font"
-fontSizeLabel = "Font size"
-name = "Text"
-placeholder = "Enter text"
+colorLabel = "Textfärg"
+fontLabel = "Typsnitt"
+fontSizeLabel = "Teckenstorlek"
+name = "Textinnehåll"
+placeholder = "Ange text"
 
 [addImage.type]
-canvas = "Canvas"
-image = "Image"
-saved = "Saved"
+canvas = "Rita"
+image = "Bild"
+saved = "Sparade"
 text = "Text"
 
 [addPageNumbers]
