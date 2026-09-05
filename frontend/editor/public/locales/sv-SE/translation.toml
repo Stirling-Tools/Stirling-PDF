@@ -3464,7 +3464,7 @@ title = "Hur vi använder cookies"
 
 [cookieBanner.popUp.description]
 1 = "Vi använder cookies och annan teknik för att få Stirling PDF att fungera bättre för dig—det hjälper oss att förbättra våra verktyg och fortsätta bygga funktioner du kommer att gilla."
-2 = "If you’d rather not, clicking 'No Thanks' will only enable the essential cookies needed to keep things running smoothly."
+2 = "Om du hellre avstår aktiverar ”Nej tack” bara de nödvändiga cookies som krävs för att allt ska fungera smidigt."
 
 [cookieBanner.preferencesModal]
 acceptAllBtn = "Acceptera alla"
@@ -3485,7 +3485,7 @@ title = "Analys"
 3 = "Din integritet och ditt förtroende är kärnan i det vi gör."
 
 [cookieBanner.preferencesModal.necessary]
-description = "These cookies are essential for the website to function properly. They enable core features like setting your privacy preferences, logging in, and filling out forms—which is why they can’t be turned off."
+description = "De här cookies är nödvändiga för att webbplatsen ska fungera. De möjliggör grundläggande funktioner som integritetsinställningar, inloggning och formulär, och kan därför inte stängas av."
 
 [cookieBanner.preferencesModal.necessary.title]
 1 = "Absolut nödvändiga cookies"
@@ -5393,7 +5393,7 @@ title = "Utdata"
 
 [onboarding]
 activeFiles = "Vyn <strong>Aktiva filer</strong> visar alla PDF:er du har laddat in i verktyget och låter dig välja vilka som ska bearbetas."
-allTools = "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools."
+allTools = "Det här är panelen <strong>Alla verktyg</strong>, där du kan bläddra bland och välja alla tillgängliga PDF-verktyg."
 close = "Stäng"
 cropSettings = "Nu när vi har valt filen vi vill beskära kan vi konfigurera Beskär-verktyget för att välja området som vi vill beskära PDF-filen till."
 dialogLabel = "Kom igång"
