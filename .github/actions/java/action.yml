@@ -1,0 +1,147 @@
+name: Local Java
+description: Configure the JDK already installed on the GitHub Actions runner
+inputs:
+  java-version:
+    description: JDK major version
+    required: false
+    default: "25"
+  distribution:
+    description: Java distribution to use
+    required: false
+    default: temurin
+  architecture:
+    description: Target architecture (x64 or arm64)
+    required: false
+    default: ""
+runs:
+  using: composite
+  steps:
+    - name: Configure preinstalled JDK
+      shell: bash
+      env:
+        JAVA_VERSION: ${{ inputs.java-version }}
+        JAVA_DISTRIBUTION: ${{ inputs.distribution }}
+        JAVA_ARCHITECTURE: ${{ inputs.architecture }}
+        RUNNER_ARCHITECTURE: ${{ runner.arch }}
+        RUNNER_OS_NAME: ${{ runner.os }}
+        TEMURIN_VERSION: 25.0.4+7
+        TEMURIN_RELEASE_TAG: jdk-25.0.4%2B7
+        TEMURIN_X64_ARCHIVE: OpenJDK25U-jdk_x64_mac_hotspot_25.0.4_7.tar.gz
+        TEMURIN_X64_SHA256: a5ac9c46dad47ac06df35e36d096913195d8da1f3f71918828bcc2cfe33869b7
+        TEMURIN_ARM64_ARCHIVE: OpenJDK25U-jdk_aarch64_mac_hotspot_25.0.4_7.tar.gz
+        TEMURIN_ARM64_SHA256: 5a101c54abf5a9f16c0f70d8c38ba99e6567c1ba213378f0bb04497284f051bd
+      run: |
+        set -euo pipefail
+        if [ "${JAVA_VERSION}" != "25" ]; then
+          echo "This repository requires JDK 25; received ${JAVA_VERSION}" >&2
+          exit 1
+        fi
+
+        distribution="$(printf '%s' "${JAVA_DISTRIBUTION}" | tr '[:upper:]' '[:lower:]')"
+        case "${distribution}" in
+          temurin|microsoft) ;;
+          *)
+            echo "Unsupported Java distribution: ${JAVA_DISTRIBUTION}. Supported: temurin, microsoft" >&2
+            exit 1
+            ;;
+        esac
+
+        java_home_is_valid() {
+          candidate="$1"
+          [ -x "${candidate}/bin/java" ] || return 1
+          version_output="$(${candidate}/bin/java -version 2>&1)"
+          printf '%s\n' "${version_output}" | grep -Eq "version \"${JAVA_VERSION}(\\.|\")" || return 1
+          case "${distribution}" in
+            temurin) printf '%s\n' "${version_output}" | grep -Eiq "Temurin|Eclipse Adoptium" ;;
+            microsoft) printf '%s\n' "${version_output}" | grep -Eiq "Microsoft" ;;
+          esac
+        }
+
+        architecture="${JAVA_ARCHITECTURE}"
+        if [ -z "${architecture}" ]; then
+          architecture="${RUNNER_ARCHITECTURE}"
+        fi
+        normalized_architecture="$(printf '%s' "${architecture}" | tr '[:lower:]' '[:upper:]')"
+        case "${normalized_architecture}" in
+          X64|AMD64|X86_64) architecture=X64 ;;
+          ARM64|AARCH64) architecture=ARM64 ;;
+          *) echo "Unsupported runner architecture: ${architecture}" >&2; exit 1 ;;
+        esac
+
+        runner_architecture="$(printf '%s' "${RUNNER_ARCHITECTURE}" | tr '[:lower:]' '[:upper:]')"
+        if [ "${RUNNER_OS_NAME}" = "macOS" ] && [ -n "${JAVA_HOME:-}" ]; then
+          runner_java_binary="${JAVA_HOME}/bin/java"
+          if [ "${runner_architecture}" = "ARM64" ] && file "${runner_java_binary}" | grep -q "arm64"; then
+            echo "JAVA_HOME_${JAVA_VERSION}_ARM64=${JAVA_HOME}" >> "${GITHUB_ENV}"
+          elif [ "${runner_architecture}" = "X64" ] && file "${runner_java_binary}" | grep -q "x86_64"; then
+            echo "JAVA_HOME_${JAVA_VERSION}_X64=${JAVA_HOME}" >> "${GITHUB_ENV}"
+          fi
+        fi
+
+        java_home_variable="JAVA_HOME_${JAVA_VERSION}_${architecture}"
+        java_home="${!java_home_variable:-}"
+        if [ -z "${java_home}" ] && [ "${RUNNER_OS_NAME}" = "macOS" ]; then
+          if [ "${architecture}" = "${runner_architecture}" ] && [ -n "${JAVA_HOME:-}" ]; then
+            java_home="${JAVA_HOME}"
+          fi
+        fi
+        if [ -z "${java_home}" ] && [ "${RUNNER_OS_NAME}" = "macOS" ] && [ "${architecture}" = "X64" ] && [ "${distribution}" = "temurin" ]; then
+          java_home="$(arch -x86_64 /usr/libexec/java_home -v "${JAVA_VERSION}" 2>/dev/null || true)"
+        fi
+        if [ -n "${java_home}" ] && [ "${RUNNER_OS_NAME}" = "macOS" ]; then
+          java_binary="${java_home}/bin/java"
+          if [ "${architecture}" = "X64" ] && ! file "${java_binary}" | grep -q "x86_64"; then
+            java_home=""
+          elif [ "${architecture}" = "ARM64" ] && ! file "${java_binary}" | grep -q "arm64"; then
+            java_home=""
+          fi
+        fi
+        if [ -n "${java_home}" ] && ! java_home_is_valid "${java_home}"; then
+          echo "Ignoring ${java_home_variable}: it does not provide ${distribution} JDK ${JAVA_VERSION}" >&2
+          java_home=""
+        fi
+        if [ -z "${java_home}" ] && [ "${RUNNER_OS_NAME}" = "macOS" ] && [ "${distribution}" = "temurin" ] && { [ "${architecture}" = "X64" ] || [ "${architecture}" = "ARM64" ]; }; then
+          jdk_version="${TEMURIN_VERSION}"
+          if [ "${architecture}" = "X64" ]; then
+            jdk_archive="${TEMURIN_X64_ARCHIVE}"
+            jdk_sha256="${TEMURIN_X64_SHA256}"
+          else
+            jdk_archive="${TEMURIN_ARM64_ARCHIVE}"
+            jdk_sha256="${TEMURIN_ARM64_SHA256}"
+          fi
+          jdk_root="${RUNNER_TEMP}/stirling-temurin-${jdk_version}-${architecture}"
+          archive_path="${jdk_root}/${jdk_archive}"
+          mkdir -p "${jdk_root}"
+          if [ ! -f "${archive_path}" ]; then
+            curl --fail --location --retry 3 --retry-delay 2 \
+              --output "${archive_path}" \
+              "https://github.com/adoptium/temurin25-binaries/releases/download/${TEMURIN_RELEASE_TAG}/${jdk_archive}"
+          fi
+          printf '%s  %s\n' "${jdk_sha256}" "${archive_path}" | shasum -a 256 -c -
+          if [ ! -x "${jdk_root}/Contents/Home/bin/jlink" ]; then
+            rm -rf "${jdk_root}/Contents"
+            tar -xzf "${archive_path}" -C "${jdk_root}"
+          fi
+          java_home="$(find "${jdk_root}" -type d -path '*/Contents/Home' -print -quit)"
+        fi
+        if [ -z "${java_home}" ]; then
+          echo "JDK ${JAVA_VERSION} (${distribution}, ${architecture}) is not installed on this runner (${java_home_variable} is missing)" >&2
+          exit 1
+        fi
+
+        shell_java_home="${java_home}"
+        if command -v cygpath >/dev/null 2>&1; then
+          shell_java_home="$(cygpath --unix "${java_home}")"
+        fi
+
+        export JAVA_HOME="${shell_java_home}"
+        export PATH="${shell_java_home}/bin:${PATH}"
+        echo "JAVA_HOME_${JAVA_VERSION}_${architecture}=${java_home}" >> "${GITHUB_ENV}"
+        echo "JAVA_HOME=${java_home}" >> "${GITHUB_ENV}"
+        echo "${java_home}/bin" >> "${GITHUB_PATH}"
+        java -version 2>&1 | tee "${RUNNER_TEMP}/java-version.txt"
+        case "${distribution}" in
+          temurin) grep -Eiq "Temurin|Eclipse Adoptium" "${RUNNER_TEMP}/java-version.txt" ;;
+          microsoft) grep -Eiq "Microsoft" "${RUNNER_TEMP}/java-version.txt" ;;
+        esac
+        grep -Eq "version \"${JAVA_VERSION}(\.|\")" "${RUNNER_TEMP}/java-version.txt"

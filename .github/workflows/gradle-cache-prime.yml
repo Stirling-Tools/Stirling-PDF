@@ -42,10 +42,9 @@ jobs:
 
       - name: Set up JDK 25
         if: steps.cache-gradle-restore.outputs.cache-hit != 'true'
-        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        uses: ./.github/actions/java
         with:
           java-version: "25"
-          distribution: "temurin"
 
       - name: Resolve backend dependencies
         if: steps.cache-gradle-restore.outputs.cache-hit != 'true'
