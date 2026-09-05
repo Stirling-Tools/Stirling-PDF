@@ -1,0 +1,3 @@
+# H2 versions reviewed with the migration and restore-safety tests.
+runtime=2.4.240
+migration=2.3.232
