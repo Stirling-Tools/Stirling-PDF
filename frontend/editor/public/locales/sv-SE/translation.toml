@@ -6803,10 +6803,10 @@ showCategory = "Visa kategori"
 account = "Kontonummer (etiketterade)"
 card = "Kredit-/betalkort"
 email = "E-postadresser"
-fieldLabel = "PII to redact"
+fieldLabel = "Personuppgifter att maskera"
 iban = "IBAN-nummer"
 phone = "Telefonnummer"
-placeholder = "Select PII types"
+placeholder = "Välj typer av personuppgifter"
 routing = "USA-routingnummer (ABA)"
 ssn = "Social Security-nummer"
 
@@ -8422,8 +8422,8 @@ signing = "Signering"
 storage = "Lagring"
 
 [portal.integrations.noResults]
-description = "No integrations match your filters. Try a different category or search."
-title = "No matches"
+description = "Inga integrationer matchar filtren. Prova en annan kategori eller sökning."
+title = "Inga träffar"
 
 [portal.integrations.status]
 connected = "Ansluten"
@@ -8434,7 +8434,7 @@ worksWith = "Fungerar med"
 
 [portal.integrations.worksWith]
 pipelines = "Pipelines"
-policies = "Policies"
+policies = "Policyer"
 sources = "Källor"
 
 [portal.legal]
@@ -9156,7 +9156,7 @@ setUp = "Konfigurera"
 
 [portal.processorFlow]
 footnote = "Antal avser de senaste 24 timmarna. Flödeshastigheten är illustrativ."
-liveBadge = "Live"
+liveBadge = "Direkt"
 stats = "{{connected}} anslutna · {{processed}} PDF-dokument bearbetade"
 title = "PDF-processor"
 
@@ -9174,7 +9174,7 @@ success = "Levererat"
 [portal.processorFlow.policies]
 activeCount = "{{n}} aktiva"
 count = "{{n}} · 24 h"
-heading = "Policies"
+heading = "Policyer"
 setUp = "Konfigurera"
 soon = "Snart"
 
