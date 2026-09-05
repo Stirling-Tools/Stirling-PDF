@@ -83,6 +83,26 @@ public class JarPathUtil {
         return null;
     }
 
+    private static volatile Boolean restartSupported;
+
+    /**
+     * Whether the running deployment can restart itself. Requires both a runnable application JAR
+     * and the restart-helper.jar to be present on disk. Hosted/containerised deployments and
+     * development runs (classes directory, no helper) can't self-restart, so callers can use this
+     * to avoid offering a restart action that would always fail. The result is cached because the
+     * deployment layout does not change at runtime.
+     *
+     * @return true if a self-restart can be performed
+     */
+    public static boolean restartSupported() {
+        Boolean cached = restartSupported;
+        if (cached == null) {
+            cached = currentJar() != null && restartHelperJar() != null;
+            restartSupported = cached;
+        }
+        return cached;
+    }
+
     /**
      * Gets the java binary path for the current JVM
      *
