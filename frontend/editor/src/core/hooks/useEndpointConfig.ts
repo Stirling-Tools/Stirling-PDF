@@ -16,7 +16,10 @@ function message(error: unknown): string | null {
   return error instanceof Error ? error.message : "Unknown error occurred";
 }
 
-/** Whether one endpoint is enabled. `null` while loading and on failure. */
+/**
+ * Hook to check if a specific endpoint is enabled
+ * This wraps the context for single endpoint checks
+ */
 export function useEndpointEnabled(endpoint: string): {
   enabled: boolean | null;
   loading: boolean;
@@ -61,8 +64,6 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
     queryFn: fetchEndpointsAvailability,
     enabled: wanted.length > 0,
     staleTime: CONFIG_STALE_TIME,
-    // A failure already falls back to enabled, so a retry buys nothing and
-    // doubles a request that fires on load for every logged-out visitor.
     retry: false,
   });
 
