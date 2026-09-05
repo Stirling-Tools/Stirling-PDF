@@ -1881,7 +1881,7 @@ width = "Bredd"
 description = "Det kostnadsfria alternativet till Adobe Acrobat (10M+ nedladdningar)"
 
 [appBanner]
-dismiss = "Dismiss"
+dismiss = "Stäng"
 
 [attachments]
 convertToPdfA3b = "Konvertera till PDF/A-3b"
@@ -1889,8 +1889,8 @@ convertToPdfA3bDescription = "Skapar en arkiv-PDF med inbäddade bilagor"
 convertToPdfA3bTooltip = "PDF/A-3b är ett arkivformat som säkerställer långsiktig bevaring. Det tillåter inbäddning av godtyckliga filformat som bilagor. Konverteringen kräver Ghostscript och kan ta längre tid för stora filer."
 convertToPdfA3bTooltipHeader = "Om konvertering till PDF/A-3b"
 convertToPdfA3bTooltipTitle = "Vad den gör"
-tags = "embed,attach,file,attachment,attachments"
-title = "Add attachments"
+tags = "bädda in,bifoga,fil,bilaga,bilagor"
+title = "Lägg till bilagor"
 
 [audit]
 configureAudit = "Konfigurera granskningsloggning"
@@ -3009,12 +3009,12 @@ tooltip = "Denna åtgärd kommer att använda dina molnkrediter"
 tooltip = "Välj färg från skärmen"
 
 [colorPicker]
-hue = "Hue"
+hue = "Nyans"
 saturation = "Mättnad och ljusstyrka"
 title = "Välj färg"
 
 [common]
-actions = "Actions"
+actions = "Åtgärder"
 back = "Tillbaka"
 cancel = "Avbryt"
 close = "Stäng"
@@ -3030,7 +3030,7 @@ error = "Fel"
 expand = "Fäll ut"
 loading = "Läser in..."
 next = "Nästa"
-open = "Open"
+open = "Öppna"
 preview = "Förhandsgranska"
 previous = "Föregående"
 refresh = "Uppdatera"
@@ -6462,7 +6462,7 @@ warnings = "Varningar"
 webFormat = "Webbformat"
 
 [pdfTextEditor.groupingMode]
-auto = "Auto"
+auto = "Automatiskt"
 paragraph = "Stycke"
 singleLine = "Enkel rad"
 
@@ -8433,7 +8433,7 @@ integration = "Integrering"
 worksWith = "Fungerar med"
 
 [portal.integrations.worksWith]
-pipelines = "Pipelines"
+pipelines = "Arbetsflöden"
 policies = "Policyer"
 sources = "Källor"
 
@@ -8448,11 +8448,11 @@ agent-builder = "Agentbyggare"
 components = "Komponenter"
 docs = "Utvecklardokumentation"
 documents = "Dokument"
-editor = "Editor"
+editor = "Redigerare"
 home = "Hem"
 infrastructure = "Infrastruktur"
 integrations = "Integrationer"
-pipelines = "Pipelines"
+pipelines = "Arbetsflöden"
 policies = "Policyer"
 procurement = "Inköp"
 sources = "Källor"
@@ -9427,7 +9427,7 @@ subtitle = "Din lösningsingenjör går igenom utrullningen med ditt team. Välj
 title = "Boka ett samtal"
 
 [portal.procurement.setup]
-airgap = "Air-gapped"
+airgap = "Luftgap"
 airgapSub = "Isolerad, ingen utgående trafik"
 back = "Tillbaka"
 businessName = "Företagsnamn"
@@ -11456,8 +11456,8 @@ leaveButton = "Lämna team"
 leaveError = "Det gick inte att lämna teamet"
 leaveSuccess = "Du har lämnat teamet"
 loading = "Läser in teaminformation..."
-memberCount_one = "{{count}} member"
-memberCount_other = "{{count}} members"
+memberCount_one = "{{count}} medlem"
+memberCount_other = "{{count}} medlemmar"
 memberCount_zero = "inga medlemmar"
 memberRemoved = "Medlem borttagen"
 namePlaceholder = "Ange teamnamn"
