@@ -16,6 +16,10 @@ import type {
 import type { SignParameters } from "@app/hooks/tools/sign/useSignParameters";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
+import {
+  shouldAutoExitPlacement,
+  shouldRearmPlacement,
+} from "@app/components/viewer/signaturePlacement";
 
 /**
  * Connects the PDF signature (stamp/ink) tools to the shared ViewerContext and SignatureContext.
@@ -185,7 +189,21 @@ export const SignatureAPIBridge = forwardRef<
     isPlacementMode,
     placementPreviewSize,
     setSignaturesApplied,
+    placeMultiple,
+    autoExitAfterStampPlacement,
+    setPlacementMode,
   } = useSignature();
+  // Track the latest toggles in refs so the long-lived onAnnotationEvent
+  // subscription always reads current values without re-subscribing on every
+  // change (which would race with mid-flight create events).
+  const placeMultipleRef = useRef(placeMultiple);
+  useEffect(() => {
+    placeMultipleRef.current = placeMultiple;
+  }, [placeMultiple]);
+  const autoExitRef = useRef(autoExitAfterStampPlacement);
+  useEffect(() => {
+    autoExitRef.current = autoExitAfterStampPlacement;
+  }, [autoExitAfterStampPlacement]);
   const { getZoomState, registerImmediateZoomUpdate } = useViewer();
   const documentReady = useDocumentReady();
   const [currentZoom, setCurrentZoom] = useState(
@@ -299,6 +317,13 @@ export const SignatureAPIBridge = forwardRef<
     applyStampDefaults,
     cssToPdfSize,
   ]);
+
+  // Mirrored so the long-lived create subscription is not rebuilt per config change.
+  const configureStampDefaultsRef = useRef(configureStampDefaults);
+  useEffect(() => {
+    configureStampDefaultsRef.current = configureStampDefaults;
+  }, [configureStampDefaults]);
+  const rearmTimersRef = useRef(new Set<number>());
 
   // Enable keyboard deletion of selected annotations
   useEffect(() => {
@@ -555,6 +580,39 @@ export const SignatureAPIBridge = forwardRef<
       // Mark signatures as not applied when a new signature is placed
       if (event.type === "create") {
         setSignaturesApplied(false);
+
+        // Only pointer placements carry a create context; paste and undo/redo
+        // restores go through createAnnotation without one.
+        const userPlaced = Boolean(event.ctx);
+
+        if (
+          shouldAutoExitPlacement({
+            annotation,
+            placeMultiple: placeMultipleRef.current,
+            autoExitEnabled: autoExitRef.current,
+            userPlaced,
+          })
+        ) {
+          annotationApi.setActiveTool(null);
+          setPlacementMode(false);
+        } else if (
+          shouldRearmPlacement({
+            annotation,
+            placeMultiple: placeMultipleRef.current,
+            autoExitEnabled: autoExitRef.current,
+            userPlaced,
+          })
+        ) {
+          // The plugin calls setActiveTool(null) right after this event fires,
+          // so re-arm on the next task rather than inline.
+          const timer = window.setTimeout(() => {
+            rearmTimersRef.current.delete(timer);
+            configureStampDefaultsRef.current().catch((error) => {
+              console.error("Error re-arming signature placement:", error);
+            });
+          }, 0);
+          rearmTimersRef.current.add(timer);
+        }
       }
 
       const directData =
@@ -573,10 +631,19 @@ export const SignatureAPIBridge = forwardRef<
       }
     });
 
+    const rearmTimers = rearmTimersRef.current;
     return () => {
       unsubscribe?.();
+      rearmTimers.forEach((id) => window.clearTimeout(id));
+      rearmTimers.clear();
     };
-  }, [annotationApi, storeImageData, setSignaturesApplied, documentReady]);
+  }, [
+    annotationApi,
+    storeImageData,
+    setSignaturesApplied,
+    setPlacementMode,
+    documentReady,
+  ]);
 
   useEffect(() => {
     if (!isPlacementMode || !documentReady) {
