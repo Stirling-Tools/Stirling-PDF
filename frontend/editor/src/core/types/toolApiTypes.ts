@@ -251,6 +251,11 @@ export interface AutoSplitPdfRequest {
    */
   duplexMode?: boolean;
 }
+export interface BatchAttachmentRequest {
+  attachments?: string[];
+  convertToPdfA3b?: boolean;
+  opsJson?: string;
+}
 export interface BookletImpositionRequest {
   /**
    * Boolean for if you wish to add border around the pages
@@ -521,6 +526,9 @@ export interface ExtractImageScansRequest {
    * The tolerance for the image scan extraction
    */
   tolerance?: number;
+}
+export interface ExtractSingleAttachmentRequest {
+  attachmentName?: string;
 }
 export interface FileSizeRequest {
   /**
@@ -1567,12 +1575,14 @@ export type ToolEndpoint =
   | "/api/v1/misc/auto-rename"
   | "/api/v1/misc/auto-rotate-pdf"
   | "/api/v1/misc/auto-split-pdf"
+  | "/api/v1/misc/batch-process-attachments"
   | "/api/v1/misc/compress-pdf"
   | "/api/v1/misc/decompress-pdf"
   | "/api/v1/misc/delete-attachment"
   | "/api/v1/misc/extract-attachments"
   | "/api/v1/misc/extract-image-scans"
   | "/api/v1/misc/extract-images"
+  | "/api/v1/misc/extract-single-attachment"
   | "/api/v1/misc/flatten"
   | "/api/v1/misc/list-attachments"
   | "/api/v1/misc/ocr-pdf"
@@ -1671,12 +1681,14 @@ export interface ToolApiParams {
   "/api/v1/misc/auto-rename": ExtractHeaderRequest;
   "/api/v1/misc/auto-rotate-pdf": AutoRotatePdfRequest;
   "/api/v1/misc/auto-split-pdf": AutoSplitPdfRequest;
+  "/api/v1/misc/batch-process-attachments": BatchAttachmentRequest;
   "/api/v1/misc/compress-pdf": OptimizePdfRequest;
   "/api/v1/misc/decompress-pdf": MiscDecompressPdfRequest;
   "/api/v1/misc/delete-attachment": DeleteAttachmentRequest;
   "/api/v1/misc/extract-attachments": ExtractAttachmentsRequest;
   "/api/v1/misc/extract-image-scans": ExtractImageScansRequest;
   "/api/v1/misc/extract-images": PDFExtractImagesRequest;
+  "/api/v1/misc/extract-single-attachment": ExtractSingleAttachmentRequest;
   "/api/v1/misc/flatten": FlattenRequest;
   "/api/v1/misc/list-attachments": ListAttachmentsRequest;
   "/api/v1/misc/ocr-pdf": ProcessPdfWithOcrRequest;
@@ -1776,12 +1788,14 @@ export const TOOL_ENDPOINTS = [
   "/api/v1/misc/auto-rename",
   "/api/v1/misc/auto-rotate-pdf",
   "/api/v1/misc/auto-split-pdf",
+  "/api/v1/misc/batch-process-attachments",
   "/api/v1/misc/compress-pdf",
   "/api/v1/misc/decompress-pdf",
   "/api/v1/misc/delete-attachment",
   "/api/v1/misc/extract-attachments",
   "/api/v1/misc/extract-image-scans",
   "/api/v1/misc/extract-images",
+  "/api/v1/misc/extract-single-attachment",
   "/api/v1/misc/flatten",
   "/api/v1/misc/list-attachments",
   "/api/v1/misc/ocr-pdf",

@@ -467,6 +467,11 @@ export const TOOL_IO: ToolIOTable = {
     produces: "PDF",
     arity: "SIMO",
   },
+  "/api/v1/misc/batch-process-attachments": {
+    accepts: ["PDF"],
+    produces: "PDF",
+    arity: "SISO",
+  },
   "/api/v1/misc/compress-pdf": {
     accepts: ["PDF"],
     produces: "PDF",
@@ -496,6 +501,11 @@ export const TOOL_IO: ToolIOTable = {
     accepts: ["PDF"],
     produces: "IMAGE",
     arity: "SIMO",
+  },
+  "/api/v1/misc/extract-single-attachment": {
+    accepts: ["PDF"],
+    produces: "ANY",
+    arity: "SISO",
   },
   "/api/v1/misc/flatten": { accepts: ["PDF"], produces: "PDF", arity: "SISO" },
   "/api/v1/misc/list-attachments": {

@@ -1,14 +1,9 @@
-/**
- * AddAttachmentsSettings - Shared settings component for both tool UI and automation
- *
- * Allows selecting files to attach to PDFs with optional PDF/A-3b conversion support.
- */
-import { Stack, Text, Group, ScrollArea, Checkbox } from "@mantine/core";
-import { useTranslation } from "react-i18next";
+import { useCallback } from "react";
 import { AddAttachmentsParameters } from "@app/hooks/tools/addAttachments/useAddAttachmentsParameters";
-import LocalIcon from "@app/components/shared/LocalIcon";
-import { Tooltip } from "@app/components/shared/Tooltip";
-import { Button as DSButton } from "@app/ui/Button";
+import { useAttachmentManager } from "@app/hooks/tools/addAttachments/useAttachmentManager";
+import { AttachmentManagerUI } from "@app/components/tools/addAttachments/AttachmentManagerUI";
+import { useFileContext } from "@app/contexts/FileContext";
+
 interface AddAttachmentsSettingsProps {
   parameters: AddAttachmentsParameters;
   onParameterChange: <K extends keyof AddAttachmentsParameters>(
@@ -16,179 +11,73 @@ interface AddAttachmentsSettingsProps {
     value: AddAttachmentsParameters[K],
   ) => void;
   disabled?: boolean;
+  activeFile?: File | null;
+  onFileUpdated?: (file: File) => void;
+  onError?: (errorMessage: string) => void;
 }
 
 const AddAttachmentsSettings = ({
   parameters,
   onParameterChange,
   disabled = false,
+  activeFile = null,
+  onFileUpdated,
+  onError,
 }: AddAttachmentsSettingsProps) => {
-  const { t } = useTranslation();
+  const { addFiles } = useFileContext();
+
+  const handleFileUpdated = useCallback(
+    async (updatedFile: File) => {
+      await addFiles([updatedFile], {
+        selectFiles: true,
+      });
+      onFileUpdated?.(updatedFile);
+    },
+    [addFiles, onFileUpdated],
+  );
+
+  const manager = useAttachmentManager({
+    activeFile,
+    onFileUpdated: handleFileUpdated,
+    onError,
+  });
+
+  const handleStageFiles = (files: File[]) => {
+    manager.stageFiles(files);
+    const updatedStaged = [...(parameters?.attachments || []), ...files];
+    onParameterChange("attachments", updatedStaged);
+  };
+
+  const handleSaveDraft = async () => {
+    const success = await manager.saveDraft(parameters.convertToPdfA3b);
+    if (success) {
+      onParameterChange("attachments", []);
+    }
+  };
 
   return (
-    <Stack gap="md">
-      <Stack gap="xs">
-        <input
-          type="file"
-          multiple
-          onChange={(e) => {
-            const files = Array.from(e.target.files || []);
-            // Append to existing attachments instead of replacing
-            const newAttachments = [
-              ...(parameters.attachments || []),
-              ...files,
-            ];
-            onParameterChange("attachments", newAttachments);
-            // Reset the input so the same file can be selected again
-            e.target.value = "";
-          }}
-          disabled={disabled}
-          style={{ display: "none" }}
-          id="attachments-input"
-        />
-        <DSButton
-          size="sm"
-          as="label"
-          htmlFor="attachments-input"
-          disabled={disabled}
-          leftSection={<LocalIcon icon="add" width="14" height="14" />}
-        >
-          {parameters.attachments?.length > 0
-            ? t("AddAttachmentsRequest.addMoreFiles", "Add more files...")
-            : t("AddAttachmentsRequest.placeholder", "Choose files...")}
-        </DSButton>
-      </Stack>
-
-      {parameters.attachments?.length > 0 && (
-        <Stack gap="xs">
-          <Text size="sm" fw={500}>
-            {t("AddAttachmentsRequest.selectedFiles", "Selected Files")} (
-            {parameters.attachments.length})
-          </Text>
-          <ScrollArea.Autosize
-            mah={300}
-            type="scroll"
-            offsetScrollbars
-            styles={{ viewport: { overflowX: "hidden" } }}
-          >
-            <Stack gap="xs">
-              {parameters.attachments.map((file, index) => (
-                <Group
-                  key={index}
-                  justify="space-between"
-                  p="xs"
-                  style={{
-                    border: "1px solid var(--mantine-color-gray-3)",
-                    borderRadius: "var(--mantine-radius-sm)",
-                    alignItems: "flex-start",
-                  }}
-                >
-                  <Group
-                    gap="xs"
-                    style={{ flex: 1, minWidth: 0, alignItems: "flex-start" }}
-                  >
-                    {/* Filename (two-line clamp, wraps, no icon on the left) */}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div
-                        style={{
-                          fontSize: "var(--mantine-font-size-sm)",
-                          fontWeight: 400,
-                          lineHeight: 1.2,
-                          display: "-webkit-box",
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: "vertical",
-                          overflow: "hidden",
-                          whiteSpace: "normal",
-                          wordBreak: "break-word",
-                        }}
-                        title={file.name}
-                      >
-                        {file.name}
-                      </div>
-                    </div>
-                    <Text size="xs" c="dimmed" style={{ flexShrink: 0 }}>
-                      ({(file.size / 1024).toFixed(1)} KB)
-                    </Text>
-                  </Group>
-                  <DSButton
-                    leftSection={
-                      <LocalIcon icon="close-rounded" width="14" height="14" />
-                    }
-                    aria-label={t(
-                      "AddAttachmentsRequest.removeFile",
-                      "Remove file",
-                    )}
-                    size="sm"
-                    variant="tertiary"
-                    accent="danger"
-                    style={{ flexShrink: 0 }}
-                    onClick={() => {
-                      const newAttachments = (
-                        parameters.attachments || []
-                      ).filter((_, i) => i !== index);
-                      onParameterChange("attachments", newAttachments);
-                    }}
-                    disabled={disabled}
-                  />
-                </Group>
-              ))}
-            </Stack>
-          </ScrollArea.Autosize>
-        </Stack>
-      )}
-
-      {/* PDF/A-3b conversion option with informative tooltip */}
-      <Group gap="xs" align="flex-start">
-        <Checkbox
-          label={
-            <Group gap={4}>
-              <Text size="sm">
-                {t("attachments.convertToPdfA3b", "Convert to PDF/A-3b")}
-              </Text>
-              <Tooltip
-                header={{
-                  title: t(
-                    "attachments.convertToPdfA3bTooltipHeader",
-                    "About PDF/A-3b Conversion",
-                  ),
-                }}
-                tips={[
-                  {
-                    title: t(
-                      "attachments.convertToPdfA3bTooltipTitle",
-                      "What it does",
-                    ),
-                    description: t(
-                      "attachments.convertToPdfA3bTooltip",
-                      "PDF/A-3b is an archival format ensuring long-term preservation. It allows embedding arbitrary file formats as attachments. Conversion requires Ghostscript and may take longer for large files.",
-                    ),
-                  },
-                ]}
-                sidebarTooltip={true}
-                pinOnClick={true}
-              >
-                <LocalIcon
-                  icon="info-outline-rounded"
-                  width="1.25rem"
-                  height="1.25rem"
-                  style={{ color: "var(--icon-files-color)", cursor: "help" }}
-                />
-              </Tooltip>
-            </Group>
-          }
-          description={t(
-            "attachments.convertToPdfA3bDescription",
-            "Creates an archival PDF with embedded attachments",
-          )}
-          checked={parameters.convertToPdfA3b}
-          onChange={(event) =>
-            onParameterChange("convertToPdfA3b", event.currentTarget.checked)
-          }
-          disabled={disabled}
-          styles={{ root: { flex: 1 } }}
-        />
-      </Group>
-    </Stack>
+    <AttachmentManagerUI
+      rows={manager.rows}
+      hasChanges={manager.hasChanges}
+      pendingChangesCount={manager.pendingChangesCount}
+      isLoading={manager.isLoading}
+      isSaving={manager.isSaving}
+      isDownloading={manager.isDownloading}
+      activeAction={manager.activeAction}
+      convertToPdfA3b={parameters?.convertToPdfA3b || false}
+      disabled={disabled}
+      onStageFiles={handleStageFiles}
+      onToggleDeleteRow={manager.toggleDeleteRow}
+      onRestoreRow={manager.restoreRow}
+      onRenameRow={manager.renameRow}
+      onExtractSingle={manager.extractSingle}
+      onExtractAllZip={manager.extractAllZip}
+      onSaveDraft={handleSaveDraft}
+      onDiscardDraft={manager.discardDraft}
+      onConvertToPdfA3bChange={(val) =>
+        onParameterChange("convertToPdfA3b", val)
+      }
+    />
   );
 };
 
