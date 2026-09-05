@@ -28,6 +28,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ResourceMonitor {
 
+    private static final double DEFAULT_CPU_USAGE = 0.5;
+
     @Value("${stirling.resource.memory.critical-threshold:0.9}")
     private double memoryCriticalThreshold = 0.9; // 90% usage is critical
 
@@ -134,9 +136,7 @@ public class ResourceMonitor {
     /** Updates the resource metrics by sampling current system state. */
     private void updateResourceMetrics() {
         try {
-            // Get CPU usage
-            double cpuUsage = osMXBean.getSystemLoadAverage() / osMXBean.getAvailableProcessors();
-            if (cpuUsage < 0) cpuUsage = getAlternativeCpuLoad(); // Fallback if not available
+            double cpuUsage = getCpuUsage();
 
             // Get memory usage
             long heapUsed = memoryMXBean.getHeapMemoryUsage().getUsed();
@@ -185,38 +185,26 @@ public class ResourceMonitor {
         }
     }
 
-    /**
-     * Alternative method to estimate CPU load if getSystemLoadAverage() is not available. This is a
-     * fallback and less accurate than the official JMX method.
-     *
-     * @return Estimated CPU load as a value between 0.0 and 1.0
-     */
-    private double getAlternativeCpuLoad() {
-        try {
-            // Try to get CPU time if available through reflection
-            // This is a fallback since we can't directly cast to platform-specific classes
-            try {
-                java.lang.reflect.Method m =
-                        osMXBean.getClass().getDeclaredMethod("getProcessCpuLoad");
-                m.setAccessible(true);
-                return (double) m.invoke(osMXBean);
-            } catch (Exception e) {
-                // Try the older method
-                try {
-                    java.lang.reflect.Method m =
-                            osMXBean.getClass().getDeclaredMethod("getSystemCpuLoad");
-                    m.setAccessible(true);
-                    return (double) m.invoke(osMXBean);
-                } catch (Exception e2) {
-                    log.trace(
-                            "Could not get CPU load through reflection, assuming moderate load (0.5)");
-                    return 0.5;
-                }
+    private double getCpuUsage() {
+        if (osMXBean instanceof com.sun.management.OperatingSystemMXBean extendedOsMXBean) {
+            double cpuUsage = extendedOsMXBean.getCpuLoad();
+            if (isAvailableCpuSample(cpuUsage)) {
+                return Math.min(cpuUsage, 1.0);
             }
-        } catch (Exception e) {
-            log.trace("Could not get CPU load, assuming moderate load (0.5)");
-            return 0.5; // Default to moderate load
         }
+
+        double loadAverage = osMXBean.getSystemLoadAverage();
+        int availableProcessors = osMXBean.getAvailableProcessors();
+        if (isAvailableCpuSample(loadAverage) && availableProcessors > 0) {
+            return Math.min(loadAverage / availableProcessors, 1.0);
+        }
+
+        log.trace("Could not get CPU load, assuming moderate load ({})", DEFAULT_CPU_USAGE);
+        return DEFAULT_CPU_USAGE;
+    }
+
+    private static boolean isAvailableCpuSample(double cpuSample) {
+        return Double.isFinite(cpuSample) && cpuSample >= 0;
     }
 
     /**
