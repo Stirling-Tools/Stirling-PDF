@@ -203,34 +203,84 @@ class PaygChargeInterceptorTest {
         verify(jobService).appendStep(eq(jobId), any(), status.capture(), any(), any(), any());
         assertThat(status.getValue()).isEqualTo(JobStepStatus.OK);
         verify(jobService).recordOutput(eq(jobId), any());
-        verify(chargeService, never()).markFirstStepFailed(any(), any());
+        verify(chargeService, never()).releaseUnmeteredCharge(any(), any());
         verify(chargeService, never()).decrementStepCount(any());
         // Success on an OPENED process is the primary meter trigger — fires now, not at close.
         verify(chargeService).meterJobUsage(jobId);
     }
 
     @Test
-    void afterCompletion_2xx_joined_doesNotMeter() throws Exception {
-        // A JOINED follow-up step (chained tool on the same document) added no units when it
-        // joined — it must not re-meter; the OPENED step already did.
+    void afterCompletion_2xx_stepInsideAutomationRun_leavesTheMeterToTheRun() throws Exception {
+        // A run may still fail on a later step, and a meter event cannot be unsent, so a step that
+        // OPENED a process inside a run does not meter it. The run settles every process under
+        // its run id when it finishes; the process stays open for that, not released here.
         authenticateWithApiKey(makeUser(7L, 42L));
         UUID jobId = UUID.randomUUID();
         when(chargeService.openProcess(any(), anyList()))
-                .thenReturn(new ChargeOutcome(jobId, 0, ChargeOutcome.Disposition.JOINED));
+                .thenReturn(new ChargeOutcome(jobId, 1, ChargeOutcome.Disposition.OPENED));
 
         MockMultipartHttpServletRequest req = newMultipart();
         req.addFile(new MockMultipartFile("file", "x.pdf", "application/pdf", "abc".getBytes()));
+        req.addHeader("X-Stirling-Automation", "true");
+        req.addHeader("X-Stirling-Run-Id", "user-1:run-abc");
         MockHttpServletResponse res = new MockHttpServletResponse();
         res.setStatus(200);
 
         interceptor.preHandle(req, res, handlerMethodForFakeController());
         interceptor.afterCompletion(req, res, handlerMethodForFakeController(), null);
 
+        verify(jobService).appendStep(eq(jobId), any(), eq(JobStepStatus.OK), any(), any(), any());
+        verify(chargeService, never()).meterJobUsage(any());
+        verify(chargeService, never()).releaseUnmeteredCharge(any(), any());
+    }
+
+    @Test
+    void afterCompletion_4xx_stepInsideAutomationRun_stillReleasesItsOwnProcess() throws Exception {
+        // The failing step knows it produced nothing, so it releases what it opened right away;
+        // the run's own settle then finds nothing left open for it.
+        authenticateWithApiKey(makeUser(7L, 42L));
+        UUID jobId = UUID.randomUUID();
+        when(chargeService.openProcess(any(), anyList()))
+                .thenReturn(new ChargeOutcome(jobId, 1, ChargeOutcome.Disposition.OPENED));
+
+        MockMultipartHttpServletRequest req = newMultipart();
+        req.addFile(new MockMultipartFile("file", "x.pdf", "application/pdf", "abc".getBytes()));
+        req.addHeader("X-Stirling-Automation", "true");
+        req.addHeader("X-Stirling-Run-Id", "user-1:run-abc");
+        MockHttpServletResponse res = new MockHttpServletResponse();
+        res.setStatus(400);
+
+        interceptor.preHandle(req, res, handlerMethodForFakeController());
+        interceptor.afterCompletion(req, res, handlerMethodForFakeController(), null);
+
+        verify(chargeService).releaseUnmeteredCharge(eq(jobId), eq("failed-400"));
         verify(chargeService, never()).meterJobUsage(any());
     }
 
     @Test
-    void afterCompletion_5xx_opened_callsMarkFirstStepFailed() throws Exception {
+    void afterCompletion_2xx_automationHeaderWithoutRunId_metersAsAStandaloneCall()
+            throws Exception {
+        // Only a run can settle later. An automation call that names no run is its own charge and
+        // bills on its own success, exactly like any other standalone call.
+        authenticateWithApiKey(makeUser(7L, 42L));
+        UUID jobId = UUID.randomUUID();
+        when(chargeService.openProcess(any(), anyList()))
+                .thenReturn(new ChargeOutcome(jobId, 1, ChargeOutcome.Disposition.OPENED));
+
+        MockMultipartHttpServletRequest req = newMultipart();
+        req.addFile(new MockMultipartFile("file", "x.pdf", "application/pdf", "abc".getBytes()));
+        req.addHeader("X-Stirling-Automation", "true");
+        MockHttpServletResponse res = new MockHttpServletResponse();
+        res.setStatus(200);
+
+        interceptor.preHandle(req, res, handlerMethodForFakeController());
+        interceptor.afterCompletion(req, res, handlerMethodForFakeController(), null);
+
+        verify(chargeService).meterJobUsage(jobId);
+    }
+
+    @Test
+    void afterCompletion_5xx_opened_releasesTheCharge() throws Exception {
         authenticateWithApiKey(makeUser(7L, 42L));
         UUID jobId = UUID.randomUUID();
         when(chargeService.openProcess(any(), anyList()))
@@ -244,7 +294,7 @@ class PaygChargeInterceptorTest {
         interceptor.preHandle(req, res, handlerMethodForFakeController());
         interceptor.afterCompletion(req, res, handlerMethodForFakeController(), null);
 
-        verify(chargeService).markFirstStepFailed(eq(jobId), eq("first-step-5xx:503"));
+        verify(chargeService).releaseUnmeteredCharge(eq(jobId), eq("failed-503"));
         verify(chargeService, never()).decrementStepCount(any());
         verify(jobService, never()).recordOutput(any(), any());
         verify(jobService)
@@ -270,11 +320,11 @@ class PaygChargeInterceptorTest {
         interceptor.afterCompletion(req, res, handlerMethodForFakeController(), null);
 
         verify(chargeService).decrementStepCount(jobId);
-        verify(chargeService, never()).markFirstStepFailed(any(), any());
+        verify(chargeService, never()).releaseUnmeteredCharge(any(), any());
     }
 
     @Test
-    void afterCompletion_4xx_appendsFailedStepNoRefundNoOutputs() throws Exception {
+    void afterCompletion_4xx_releasesTheChargeAndRecordsNoOutput() throws Exception {
         authenticateWithApiKey(makeUser(7L, 42L));
         UUID jobId = UUID.randomUUID();
         when(chargeService.openProcess(any(), anyList()))
@@ -288,13 +338,34 @@ class PaygChargeInterceptorTest {
         interceptor.preHandle(req, res, handlerMethodForFakeController());
         interceptor.afterCompletion(req, res, handlerMethodForFakeController(), null);
 
-        verify(chargeService, never()).markFirstStepFailed(any(), any());
-        verify(chargeService, never()).decrementStepCount(any());
         verify(jobService, never()).recordOutput(any(), any());
         verify(jobService)
                 .appendStep(eq(jobId), any(), eq(JobStepStatus.FAILED), any(), any(), eq("422"));
-        // 4xx is a full charge (customer paid for the attempt), so it still meters.
-        verify(chargeService).meterJobUsage(jobId);
+        // The caller got no document, so the charge is released rather than metered.
+        verify(chargeService).releaseUnmeteredCharge(eq(jobId), eq("failed-422"));
+        verify(chargeService, never()).meterJobUsage(any());
+    }
+
+    @Test
+    void afterCompletion_4xx_joined_decrementsRatherThanReleasingTheWholeProcess()
+            throws Exception {
+        // A later chained step failing does not undo the units the OPENED step already drew.
+        authenticateWithApiKey(makeUser(7L, 42L));
+        UUID jobId = UUID.randomUUID();
+        when(chargeService.openProcess(any(), anyList()))
+                .thenReturn(new ChargeOutcome(jobId, 0, ChargeOutcome.Disposition.JOINED));
+
+        MockMultipartHttpServletRequest req = newMultipart();
+        req.addFile(new MockMultipartFile("file", "x.pdf", "application/pdf", "abc".getBytes()));
+        MockHttpServletResponse res = new MockHttpServletResponse();
+        res.setStatus(400);
+
+        interceptor.preHandle(req, res, handlerMethodForFakeController());
+        interceptor.afterCompletion(req, res, handlerMethodForFakeController(), null);
+
+        verify(chargeService).decrementStepCount(jobId);
+        verify(chargeService, never()).releaseUnmeteredCharge(any(), any());
+        verify(chargeService, never()).meterJobUsage(any());
     }
 
     @Test

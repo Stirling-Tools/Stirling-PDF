@@ -66,9 +66,9 @@ public class PrepaidBundleService {
      * Return {@code units} to the team's in-term pools on a refund, earliest-expiring first,
      * capping each pool at its original {@code units_total}. Best-effort: units that can't be
      * placed (all in-term pools already at capacity, or every pool expired in the tiny window since
-     * the draw) are dropped with a debug log — first-step-failure refunds are effectively
-     * immediate, so in practice the drawn-from pools are still open and take the units straight
-     * back.
+     * the draw) are dropped with a debug log — a release follows its charge within one request or
+     * one policy run, so in practice the drawn-from pools are still open and take the units
+     * straight back.
      */
     @Transactional
     public int restore(Long teamId, int units) {

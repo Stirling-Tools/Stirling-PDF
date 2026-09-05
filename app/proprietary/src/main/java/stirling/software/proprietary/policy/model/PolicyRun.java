@@ -3,6 +3,7 @@ package stirling.software.proprietary.policy.model;
 import java.time.Instant;
 import java.util.List;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 
 import stirling.software.common.model.job.ResultFile;
@@ -70,6 +71,10 @@ public class PolicyRun {
     private volatile List<ResultFile> outputs = List.of();
     private volatile Instant updatedAt = Instant.now();
 
+    /** Guards {@link #claimChargeSettlement()}: settling twice bills twice or releases twice. */
+    @Getter(AccessLevel.NONE)
+    private boolean chargeSettled;
+
     /**
      * All three attribution references are required rather than defaulted: a run with none is a
      * real case (an unattended sweep of a generator pipeline), but it should be stated at the call
@@ -89,6 +94,18 @@ public class PolicyRun {
         this.definition = definition;
         this.fileIdentity = fileIdentity;
         this.triggeringUser = triggeringUser;
+    }
+
+    /**
+     * True for the first caller only: a run reaches one terminal state, but several paths lead
+     * there and each would otherwise settle its charges again.
+     */
+    public synchronized boolean claimChargeSettlement() {
+        if (chargeSettled) {
+            return false;
+        }
+        chargeSettled = true;
+        return true;
     }
 
     public int stepCount() {

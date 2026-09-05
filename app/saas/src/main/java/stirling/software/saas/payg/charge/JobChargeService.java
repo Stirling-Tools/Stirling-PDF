@@ -401,23 +401,28 @@ public class JobChargeService {
     }
 
     /**
-     * First-step failure on a freshly-opened process: mimic a successful Stripe
-     * meter_event_adjustment(cancel) by flipping the shadow row to {@link
-     * ShadowChargeStatus#REFUNDED}, and close the process so a same-input retry can't lineage-join
-     * into a refunded chain for free work.
+     * Release a charge whose work never produced anything: flip the shadow row to {@link
+     * ShadowChargeStatus#REFUNDED}, hand back the units it drew, and close the process so a
+     * same-input retry cannot lineage-join into a refunded chain for free work.
+     *
+     * <p><b>Only valid before the meter has fired.</b> It reverses this side's movements — the free
+     * grant, the prepaid pools, the ledger — and cannot unsend a Stripe meter event. Callers are
+     * the interceptor's error-status path (pre-meter by construction, the meter fires only on
+     * success) and a policy run settling a failure, pre-meter because a run's steps never meter on
+     * their own.
      *
      * <p>Idempotent: re-invoking on an already-REFUNDED row or already-CLOSED process is a silent
      * no-op.
      */
     @Transactional
-    public void markFirstStepFailed(UUID jobId, String refundReason) {
+    public void releaseUnmeteredCharge(UUID jobId, String refundReason) {
         Objects.requireNonNull(jobId, "jobId");
         LocalDateTime now = LocalDateTime.now();
 
         Optional<PaygShadowCharge> rowOpt = shadowRepository.findFirstByJobIdOrderByIdAsc(jobId);
         if (rowOpt.isEmpty()) {
             log.debug(
-                    "markFirstStepFailed: no shadow row for job {} (PAYG not active for team?)",
+                    "releaseUnmeteredCharge: no shadow row for job {} (PAYG not active for team?)",
                     jobId);
         } else {
             PaygShadowCharge row = rowOpt.get();
@@ -446,7 +451,7 @@ public class JobChargeService {
                     refund.setPolicyId(row.getPolicyId());
                     refund.setBillingCategory(category);
                     ledgerRepository.save(refund);
-                    // First-step failures are pre-meter: nothing was billed, only the grant moved.
+                    // Pre-meter by contract: nothing was billed, only the grant moved.
                     int freeConsumed =
                             row.getFreeUnitsConsumed() == null ? 0 : row.getFreeUnitsConsumed();
                     if (freeConsumed > 0 && row.getTeamId() != null) {
@@ -463,7 +468,7 @@ public class JobChargeService {
 
         ProcessingJob job = jobRepository.findById(jobId).orElse(null);
         if (job == null) {
-            log.warn("markFirstStepFailed: no ProcessingJob with id {}", jobId);
+            log.warn("releaseUnmeteredCharge: no ProcessingJob with id {}", jobId);
             return;
         }
         if (job.getStatus() == JobStatus.OPEN) {
@@ -471,6 +476,41 @@ public class JobChargeService {
             job.setClosedAt(now);
             jobRepository.save(job);
         }
+    }
+
+    /**
+     * Bills every process still open under {@code runId}. A tool step inside an automation run does
+     * not meter on its own (see {@code PaygChargeInterceptor}); the run reports here once it has
+     * delivered. Each process closes with the same idempotency key the stale sweep uses, so one the
+     * sweep already closed is not billed twice.
+     *
+     * @return how many processes were closed
+     */
+    @Transactional
+    public int meterRun(String runId) {
+        Objects.requireNonNull(runId, "runId");
+        List<ProcessingJob> open = jobRepository.findByRunIdAndStatus(runId, JobStatus.OPEN);
+        for (ProcessingJob job : open) {
+            close(job.getId());
+        }
+        return open.size();
+    }
+
+    /**
+     * Releases every process still open under {@code runId}: the run failed, so none of its steps'
+     * units are owed. A step that already released its own process on an error status is skipped by
+     * the status filter.
+     *
+     * @return how many processes were released
+     */
+    @Transactional
+    public int releaseRun(String runId, String refundReason) {
+        Objects.requireNonNull(runId, "runId");
+        List<ProcessingJob> open = jobRepository.findByRunIdAndStatus(runId, JobStatus.OPEN);
+        for (ProcessingJob job : open) {
+            releaseUnmeteredCharge(job.getId(), refundReason);
+        }
+        return open.size();
     }
 
     /**
@@ -534,7 +574,7 @@ public class JobChargeService {
      * committed by the time either caller runs) and the POST is best-effort. Never throws — see
      * {@link PaygMeterReportingService}.
      *
-     * <p>Skips: no shadow row (not PAYG-tracked), REFUNDED row (first-step failure — never billed),
+     * <p>Skips: no shadow row (not PAYG-tracked), REFUNDED row (released before billing),
      * BYPASSED/uncategorised, zero units, free-tier team (no Stripe customer), or usage still
      * within the app-side free allowance.
      */

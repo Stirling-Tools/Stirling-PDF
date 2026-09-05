@@ -20,8 +20,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 
-import tools.jackson.databind.ObjectMapper;
-
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 
@@ -39,6 +37,8 @@ import stirling.software.saas.payg.cap.AiToolRoutes;
 import stirling.software.saas.payg.cap.RequiresFeature;
 import stirling.software.saas.payg.model.FeatureGate;
 import stirling.software.saas.util.AuthenticationUtils;
+
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Hot-path entitlement check. Runs after {@code PaygChargeInterceptor} in the MVC chain and short-

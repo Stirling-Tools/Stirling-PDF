@@ -10,9 +10,8 @@ public enum ShadowChargeStatus {
     /** Default at process open; the would-be charge stands. */
     CHARGED,
     /**
-     * Set when a 5xx first-step failure was observed in the same request's {@code afterCompletion}.
-     * Real-mode equivalent is a successful Stripe {@code meter_event_adjustment} posted in the same
-     * transaction-after-commit hook.
+     * Set when the charge was released before it was metered: the request returned an error status,
+     * or the policy run it belonged to failed. Nothing reached Stripe for this row.
      */
     REFUNDED
 }

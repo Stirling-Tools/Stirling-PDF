@@ -45,6 +45,7 @@ import stirling.software.saas.payg.repository.ProcessingJobStepRepository;
 class JobServiceTest {
 
     private static final Duration WINDOW = Duration.ofMinutes(5);
+    private static final Duration RUN_WINDOW = Duration.ofMinutes(15);
 
     private FakeDetector detector;
     private ProcessingJobRepository jobRepo;
@@ -59,12 +60,15 @@ class JobServiceTest {
         // save() returns the same instance so the service can introspect post-write state.
         when(jobRepo.save(any(ProcessingJob.class))).thenAnswer(inv -> inv.getArgument(0));
         when(stepRepo.save(any(ProcessingJobStep.class))).thenAnswer(inv -> inv.getArgument(0));
-        service = new JobService(detector, jobRepo, stepRepo, WINDOW);
+        service = new JobService(detector, jobRepo, stepRepo, WINDOW, RUN_WINDOW);
     }
 
     @Test
     void constructor_rejectsNonPositiveWindow() {
-        assertThatThrownBy(() -> new JobService(detector, jobRepo, stepRepo, Duration.ZERO))
+        assertThatThrownBy(
+                        () ->
+                                new JobService(
+                                        detector, jobRepo, stepRepo, Duration.ZERO, RUN_WINDOW))
                 .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(
                         () ->
@@ -72,8 +76,37 @@ class JobServiceTest {
                                         detector,
                                         jobRepo,
                                         stepRepo,
-                                        Duration.ofMinutes(5).negated()))
+                                        Duration.ofMinutes(5).negated(),
+                                        RUN_WINDOW))
                 .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void constructor_rejectsARunWindowShorterThanTheWorkflowWindow() {
+        // A run's processes would then go stale before its steps stopped joining them.
+        assertThatThrownBy(
+                        () ->
+                                new JobService(
+                                        detector, jobRepo, stepRepo, WINDOW, Duration.ofMinutes(4)))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void findStale_givesRunScopedProcessesTheLongerWindow() {
+        ArgumentCaptor<LocalDateTime> cutoff = ArgumentCaptor.forClass(LocalDateTime.class);
+        ArgumentCaptor<LocalDateTime> runCutoff = ArgumentCaptor.forClass(LocalDateTime.class);
+        when(jobRepo.findStale(
+                        eq(JobStatus.OPEN), any(LocalDateTime.class), any(LocalDateTime.class)))
+                .thenReturn(List.of());
+
+        service.findStale();
+
+        verify(jobRepo).findStale(eq(JobStatus.OPEN), cutoff.capture(), runCutoff.capture());
+        LocalDateTime now = LocalDateTime.now();
+        assertThat(cutoff.getValue())
+                .isBetween(now.minus(WINDOW).minusSeconds(5), now.minus(WINDOW));
+        assertThat(runCutoff.getValue())
+                .isBetween(now.minus(RUN_WINDOW).minusSeconds(5), now.minus(RUN_WINDOW));
     }
 
     @Test
@@ -289,7 +322,8 @@ class JobServiceTest {
                         42L,
                         1,
                         LocalDateTime.now().minus(Duration.ofMinutes(20)));
-        when(jobRepo.findStale(eq(JobStatus.OPEN), any(LocalDateTime.class)))
+        when(jobRepo.findStale(
+                        eq(JobStatus.OPEN), any(LocalDateTime.class), any(LocalDateTime.class)))
                 .thenReturn(List.of(a, b));
 
         int closed = service.closeStale();
@@ -302,7 +336,9 @@ class JobServiceTest {
 
     @Test
     void closeStale_emptyResult_noSave() {
-        when(jobRepo.findStale(eq(JobStatus.OPEN), any(LocalDateTime.class))).thenReturn(List.of());
+        when(jobRepo.findStale(
+                        eq(JobStatus.OPEN), any(LocalDateTime.class), any(LocalDateTime.class)))
+                .thenReturn(List.of());
         assertThat(service.closeStale()).isZero();
         verify(jobRepo, never()).saveAll(any());
     }
