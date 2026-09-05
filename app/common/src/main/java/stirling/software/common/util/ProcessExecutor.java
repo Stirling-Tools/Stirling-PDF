@@ -202,6 +202,14 @@ public class ProcessExecutor {
         UnoServerPool.UnoServerLease unoLease = null;
         boolean useSemaphore = true;
         List<String> commandToRun = command;
+
+        // Signal the on-demand manager to start unoserver if needed.
+        // Must happen before acquiring the semaphore/lease so the manager has
+        // time to spin up soffice while we wait.
+        if (processType == Processes.LIBRE_OFFICE) {
+            signalUnoServerDemand();
+        }
+
         if (shouldUseUnoServerPool(command)) {
             try {
                 unoLease = unoServerPool.acquireEndpoint(timeoutDuration, TimeUnit.MINUTES);
@@ -535,6 +543,24 @@ public class ProcessExecutor {
             }
         }
         // For relative paths, trust that PATH resolution will work or fail appropriately
+    }
+
+    /**
+     * Signal the on-demand unoserver manager that a conversion is needed. Writes the current epoch
+     * timestamp to /tmp/uno-last-used. The demand manager watches this file. Skips writing when
+     * configured purely with remoteunoserver endpoints.
+     */
+    private static void signalUnoServerDemand() {
+        if (unoServerPool != null && !unoServerPool.hasLocalEndpoints()) {
+            return;
+        }
+        try {
+            Path demandFile = Path.of("/tmp/uno-last-used");
+            String epoch = String.valueOf(System.currentTimeMillis() / 1000);
+            Files.writeString(demandFile, epoch);
+        } catch (IOException e) {
+            log.debug("Could not write unoserver demand file: {}", e.getMessage());
+        }
     }
 
     public enum Processes {
