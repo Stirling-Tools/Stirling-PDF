@@ -815,6 +815,7 @@ public class ApplicationProperties {
             private String useAsUsername;
             private Collection<String> scopes = new ArrayList<>();
             private String provider;
+            private String registrationId;
             private Client client = new Client();
 
             /**
@@ -826,6 +827,14 @@ public class ApplicationProperties {
              * again afterwards.
              */
             private Boolean debugLogging = false;
+
+            public String getEffectiveRegistrationId() {
+                String id =
+                        !ValidationUtils.isStringEmpty(registrationId) ? registrationId : provider;
+                return id == null
+                        ? null
+                        : id.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9\\-._~]", "-");
+            }
 
             public void setScopes(String scopes) {
                 List<String> scopesList =
