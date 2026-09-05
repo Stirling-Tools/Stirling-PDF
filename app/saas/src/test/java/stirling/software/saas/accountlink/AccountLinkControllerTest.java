@@ -6,6 +6,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,6 +26,7 @@ import stirling.software.proprietary.security.database.repository.UserRepository
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.TeamMembershipRepository;
 import stirling.software.saas.accountlink.AccountLinkController.InstanceRow;
+import stirling.software.saas.security.UserTeamResolver;
 import stirling.software.saas.util.AuthenticationUtils;
 
 /**
@@ -49,7 +51,8 @@ class AccountLinkControllerTest {
         // through the controller.
         controller =
                 new AccountLinkController(
-                        service, new LeaderTeamResolver(memberRepo, userRepository));
+                        service,
+                        new LeaderTeamResolver(new UserTeamResolver(memberRepo), userRepository));
         auth =
                 new AnonymousAuthenticationToken(
                         "k", "anonymousUser", List.of(new SimpleGrantedAuthority("ROLE_USER")));
@@ -77,8 +80,6 @@ class AccountLinkControllerTest {
         try (var mocked = org.mockito.Mockito.mockStatic(AuthenticationUtils.class)) {
             mocked.when(() -> AuthenticationUtils.getCurrentUser(auth, userRepository))
                     .thenReturn(user);
-            when(memberRepo.findPrimaryMembership(42L)).thenReturn(List.of());
-
             ResponseEntity<List<InstanceRow>> resp = controller.list(auth);
 
             assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
@@ -93,7 +94,8 @@ class AccountLinkControllerTest {
         try (var mocked = org.mockito.Mockito.mockStatic(AuthenticationUtils.class)) {
             mocked.when(() -> AuthenticationUtils.getCurrentUser(auth, userRepository))
                     .thenReturn(user);
-            when(memberRepo.findPrimaryMembership(42L)).thenReturn(List.of(member));
+            user.setTeam(member.getTeam());
+            when(memberRepo.findByTeamIdAndUserId(7L, 42L)).thenReturn(Optional.of(member));
 
             ResponseEntity<List<InstanceRow>> resp = controller.list(auth);
 
@@ -110,7 +112,8 @@ class AccountLinkControllerTest {
         try (var mocked = org.mockito.Mockito.mockStatic(AuthenticationUtils.class)) {
             mocked.when(() -> AuthenticationUtils.getCurrentUser(auth, userRepository))
                     .thenReturn(user);
-            when(memberRepo.findPrimaryMembership(42L)).thenReturn(List.of(leader));
+            user.setTeam(leader.getTeam());
+            when(memberRepo.findByTeamIdAndUserId(7L, 42L)).thenReturn(Optional.of(leader));
 
             ResponseEntity<List<InstanceRow>> resp = controller.list(auth);
 
@@ -128,7 +131,8 @@ class AccountLinkControllerTest {
         try (var mocked = org.mockito.Mockito.mockStatic(AuthenticationUtils.class)) {
             mocked.when(() -> AuthenticationUtils.getCurrentUser(auth, userRepository))
                     .thenReturn(user);
-            when(memberRepo.findPrimaryMembership(42L)).thenReturn(List.of(leader));
+            user.setTeam(leader.getTeam());
+            when(memberRepo.findByTeamIdAndUserId(7L, 42L)).thenReturn(Optional.of(leader));
 
             ResponseEntity<Void> resp = controller.revoke(11L, auth);
 
@@ -144,7 +148,8 @@ class AccountLinkControllerTest {
         try (var mocked = org.mockito.Mockito.mockStatic(AuthenticationUtils.class)) {
             mocked.when(() -> AuthenticationUtils.getCurrentUser(auth, userRepository))
                     .thenReturn(user);
-            when(memberRepo.findPrimaryMembership(42L)).thenReturn(List.of(leader));
+            user.setTeam(leader.getTeam());
+            when(memberRepo.findByTeamIdAndUserId(7L, 42L)).thenReturn(Optional.of(leader));
 
             ResponseEntity<Void> resp = controller.revoke(11L, auth);
 
