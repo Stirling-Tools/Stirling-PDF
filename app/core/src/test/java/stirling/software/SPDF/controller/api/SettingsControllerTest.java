@@ -147,6 +147,47 @@ class SettingsControllerTest {
     }
 
     @Nested
+    @DisplayName("updateDesktopAnalytics")
+    class UpdateDesktopAnalytics {
+
+        @Test
+        @DisplayName("allows the desktop bundle to change an existing analytics choice")
+        void updatesInDesktopMode() throws Exception {
+            System.setProperty("STIRLING_PDF_TAURI_MODE", "true");
+            when(applicationProperties.getSystem()).thenReturn(system);
+
+            try (MockedStatic<GeneralUtils> generalUtils = mockStatic(GeneralUtils.class)) {
+                ResponseEntity<Map<String, Object>> response =
+                        settingsController.updateDesktopAnalytics(Boolean.FALSE);
+
+                assertEquals(HttpStatus.OK, response.getStatusCode());
+                generalUtils.verify(
+                        () ->
+                                GeneralUtils.saveKeyToSettings(
+                                        "system.enableAnalytics", Boolean.FALSE));
+                verify(system).setEnableAnalytics(Boolean.FALSE);
+            } finally {
+                System.clearProperty("STIRLING_PDF_TAURI_MODE");
+            }
+        }
+
+        @Test
+        @DisplayName("rejects changes outside the desktop bundle")
+        void rejectsOutsideDesktopMode() throws Exception {
+            System.clearProperty("STIRLING_PDF_TAURI_MODE");
+
+            try (MockedStatic<GeneralUtils> generalUtils = mockStatic(GeneralUtils.class)) {
+                ResponseEntity<Map<String, Object>> response =
+                        settingsController.updateDesktopAnalytics(Boolean.FALSE);
+
+                assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+                generalUtils.verify(() -> GeneralUtils.saveKeyToSettings(any(), any()), never());
+                verify(applicationProperties, never()).getSystem();
+            }
+        }
+    }
+
+    @Nested
     @DisplayName("getDisabledEndpoints (get-endpoints-status)")
     class GetDisabledEndpoints {
 
