@@ -7362,13 +7362,13 @@ label = "Fil och bifoga"
 
 [portal.connections.commonFields.accessToken]
 helperText = "Stirling lagrar detta krypterat och visar det aldrig igen."
-label = "Access token"
+label = "Åtkomsttoken"
 
 [portal.connections.commonFields.apiKey]
-label = "API key"
+label = "API-nyckel"
 
 [portal.connections.commonFields.apiToken]
-label = "API token"
+label = "API-token"
 
 [portal.connections.commonFields.baseUrl]
 helperText = "Steg som använder denna anslutning kan bara anropa sökvägar under denna URL, aldrig en annan host."
@@ -7378,7 +7378,7 @@ label = "Server-URL"
 label = "E-post"
 
 [portal.connections.commonFields.host]
-label = "Host"
+label = "Värd"
 
 [portal.connections.commonFields.password]
 label = "Lösenord"
@@ -7391,7 +7391,7 @@ label = "Användarnamn"
 
 [portal.connections.commonFields.webhookUrl]
 helperText = "Klistra in URL som tjänsten gav dig. Endast sökvägar under den kan anropas."
-label = "Webhook URL"
+label = "Webhook-URL"
 
 [portal.connections.fields]
 name = "Anslutningsnamn"
@@ -7421,7 +7421,7 @@ label = "Autentisering"
 label = "Användarnamn och lösenord"
 
 [portal.connections.types.api.fields.authType.options.bearer]
-label = "Bearer token"
+label = "Bearer-token"
 
 [portal.connections.types.api.fields.authType.options.header]
 label = "Token i en anpassad header"
@@ -7434,7 +7434,7 @@ label = "Logga in för en token"
 
 [portal.connections.types.api.fields.baseUrl]
 helperText = "Steg som använder denna anslutning kan bara anropa sökvägar under denna URL, aldrig en annan host."
-label = "Base URL"
+label = "Bas-URL"
 placeholder = "https://api.example.com/v1"
 
 [portal.connections.types.api.fields.headerName]
@@ -7460,7 +7460,7 @@ label = "Skicka token som denna header"
 
 [portal.connections.types.api.fields.tokenResponseHeader]
 helperText = "Svarsheadern som inloggningsanropet returnerar token i, t.ex. X-Auth-Token."
-label = "Token response header"
+label = "Tokensvarshuvud"
 
 [portal.connections.types.api.fields.username]
 label = "Användarnamn"
@@ -7555,29 +7555,29 @@ label = "Mailgun"
 
 [portal.connections.types.n8n]
 baseUrlPlaceholder = "https://your-n8n/webhook/9f2c-..."
-description = "Hand documents to an n8n workflow, and take back whatever it produces."
+description = "Skicka dokument till ett n8n-arbetsflöde och ta emot det som arbetsflödet producerar."
 label = "n8n"
 
 [portal.connections.types.n8n.fields.authType]
-helperText = "Match the Authentication set on the n8n Webhook node."
-label = "Webhook authentication"
+helperText = "Måste matcha autentiseringen som är angiven på n8n:s webhook-nod."
+label = "Webhook-autentisering"
 
 [portal.connections.types.n8n.fields.authType.options.basic]
-label = "Basic auth"
+label = "Grundläggande autentisering"
 
 [portal.connections.types.n8n.fields.authType.options.header]
-label = "Header auth"
+label = "Autentisering via huvud"
 
 [portal.connections.types.n8n.fields.authType.options.none]
-label = "None"
+label = "Ingen"
 
 [portal.connections.types.n8n.fields.headerName]
-helperText = "The header name from the n8n credential, not its value."
-label = "Header name"
+helperText = "Huvudnamnet från n8n-autentiseringsuppgiften, inte dess värde."
+label = "Huvudnamn"
 placeholder = "X-N8N-Key"
 
 [portal.connections.types.n8n.fields.token]
-label = "Header value"
+label = "Huvudvärde"
 
 [portal.connections.types.nextcloud]
 baseUrlPlaceholder = "https://your-server/remote.php/dav"
@@ -7598,14 +7598,14 @@ label = "Microsoft Purview"
 
 [portal.connections.types.purview.fields.clientId]
 helperText = "Valfritt. Behövs bara för att välja etiketter efter namn; etikettering fungerar utan det."
-label = "Application (client) ID"
+label = "Program-ID (klient)"
 
 [portal.connections.types.purview.fields.clientSecret]
-label = "Client secret"
+label = "Klienthemlighet"
 
 [portal.connections.types.purview.fields.tenantId]
 helperText = "Stämplas på varje etikett som dess SiteId, så Purview-medvetna verktyg vet vilken organisation som tillämpade den."
-label = "Directory (tenant) ID"
+label = "Katalog-ID (klientorganisation)"
 placeholder = "cb46c030-1825-4e81-a295-151c039dbf02"
 
 [portal.connections.types.s3]
@@ -7613,20 +7613,20 @@ description = "En S3 bucket som källor kan läsa från och pipeline-utdata kan 
 label = "S3-lagring"
 
 [portal.connections.types.s3.fields.accessKeyId]
-label = "Access key ID"
+label = "Åtkomstnyckel-ID"
 
 [portal.connections.types.s3.fields.bucket]
 label = "Bucket"
 
 [portal.connections.types.s3.fields.endpoint]
 helperText = "Lämna tomt för AWS. Ange detta för MinIO eller en annan S3-kompatibel lagring."
-label = "Endpoint"
+label = "Slutpunkt"
 
 [portal.connections.types.s3.fields.region]
 label = "Region"
 
 [portal.connections.types.s3.fields.secretAccessKey]
-label = "Secret access key"
+label = "Hemlig åtkomstnyckel"
 
 [portal.connections.types.sendgrid]
 description = "Skicka ett dokument eller en avisering via e-post när en policy körs."
@@ -7639,11 +7639,11 @@ label = "SFTP"
 
 [portal.connections.types.sftp.fields.hostKeyFingerprint]
 helperText = "Valfritt. Serverns SHA-256 host key fingerprint (från `ssh-keyscan host | ssh-keygen -lf -`). När den anges accepteras endast en server som presenterar denna nyckel; när den lämnas tom fästs nyckeln som ses vid första anslutningen och senare ändringar nekas."
-label = "Host key fingerprint"
+label = "Värdnyckelns fingeravtryck"
 placeholder = "SHA256:..."
 
 [portal.connections.types.sftp.fields.passphrase]
-label = "Key passphrase"
+label = "Nyckellösenfras"
 
 [portal.connections.types.sftp.fields.password]
 helperText = "Lämna tomt om du autentiserar med en privat nyckel istället."
