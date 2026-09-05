@@ -724,66 +724,72 @@ class FileStorageService {
 
       request.onerror = () => reject(request.error);
       request.onsuccess = (event) => {
-        const cursor = (event.target as IDBRequest).result;
-        if (cursor) {
-          const record = cursor.value as StoredStirlingFileRecord;
-          if (record && record.name && typeof record.size === "number") {
-            const fresh = this.isThumbnailFresh(record);
-            if (
-              record.thumbnail &&
-              maintenanceMayRewrite(record, this.blobValuesSupported)
-            ) {
-              if (fresh) tobump.push(record.id);
-              else toexpire.push(record.id);
+        try {
+          const cursor = (event.target as IDBRequest).result;
+          if (cursor) {
+            const record = cursor.value as StoredStirlingFileRecord;
+            if (record && record.name && typeof record.size === "number") {
+              const fresh = this.isThumbnailFresh(record);
+              if (
+                record.thumbnail &&
+                maintenanceMayRewrite(record, this.blobValuesSupported)
+              ) {
+                if (fresh) tobump.push(record.id);
+                else toexpire.push(record.id);
+              }
+              this.reportIfUnreadable(record);
+              stubs.push({
+                id: record.id,
+                dataUnavailable:
+                  this.unreadableRecords.has(record.id) || undefined,
+                name: record.name,
+                type: record.type,
+                size: record.size,
+                lastModified: record.lastModified,
+                quickKey: record.quickKey,
+                thumbnailUrl: fresh ? record.thumbnail : undefined,
+                isLeaf: record.isLeaf,
+                remoteStorageId: record.remoteStorageId,
+                remoteStorageUpdatedAt: record.remoteStorageUpdatedAt,
+                remoteOwnerUsername: record.remoteOwnerUsername,
+                remoteOwnedByCurrentUser: record.remoteOwnedByCurrentUser,
+                remoteAccessRole: record.remoteAccessRole,
+                remoteSharedViaLink: record.remoteSharedViaLink,
+                remoteHasShareLinks: record.remoteHasShareLinks,
+                remoteShareToken: record.remoteShareToken,
+                versionNumber: record.versionNumber || 1,
+                originalFileId: record.originalFileId || record.id,
+                parentFileId: record.parentFileId,
+                toolHistory: record.toolHistory || [],
+                derivedFromTool:
+                  record.derivedFromTool ?? legacyDerivedFromTool(record),
+                sourceFileIds: record.sourceFileIds,
+                folderId: record.folderId ?? null,
+                createdAt: record.createdAt || Date.now(),
+                classificationLabels: record.classificationLabels,
+                classificationConfidence: record.classificationConfidence,
+              });
             }
-            this.reportIfUnreadable(record);
-            stubs.push({
-              id: record.id,
-              dataUnavailable:
-                this.unreadableRecords.has(record.id) || undefined,
-              name: record.name,
-              type: record.type,
-              size: record.size,
-              lastModified: record.lastModified,
-              quickKey: record.quickKey,
-              thumbnailUrl: fresh ? record.thumbnail : undefined,
-              isLeaf: record.isLeaf,
-              remoteStorageId: record.remoteStorageId,
-              remoteStorageUpdatedAt: record.remoteStorageUpdatedAt,
-              remoteOwnerUsername: record.remoteOwnerUsername,
-              remoteOwnedByCurrentUser: record.remoteOwnedByCurrentUser,
-              remoteAccessRole: record.remoteAccessRole,
-              remoteSharedViaLink: record.remoteSharedViaLink,
-              remoteHasShareLinks: record.remoteHasShareLinks,
-              remoteShareToken: record.remoteShareToken,
-              versionNumber: record.versionNumber || 1,
-              originalFileId: record.originalFileId || record.id,
-              parentFileId: record.parentFileId,
-              toolHistory: record.toolHistory || [],
-              derivedFromTool:
-                record.derivedFromTool ?? legacyDerivedFromTool(record),
-              sourceFileIds: record.sourceFileIds,
-              folderId: record.folderId ?? null,
-              createdAt: record.createdAt || Date.now(),
-              classificationLabels: record.classificationLabels,
-              classificationConfidence: record.classificationConfidence,
-            });
+            cursor.continue();
+          } else {
+            // Only open the writeback transaction when there's something to do -
+            // previously fired two empty transactions per refresh.
+            if (tobump.length > 0) {
+              void this.bumpThumbnailTTL(tobump).catch((e) =>
+                console.warn("[fileStorage] thumbnail TTL bump failed", e),
+              );
+            }
+            if (toexpire.length > 0) {
+              void this.bumpThumbnailTTL(toexpire, true).catch((e) =>
+                console.warn("[fileStorage] thumbnail expire failed", e),
+              );
+            }
+            resolve(stubs);
           }
-          cursor.continue();
-        } else {
-          // Only open the writeback transaction when there's something to do -
-          // previously fired two empty transactions per refresh.
-          if (tobump.length > 0) {
-            void this.bumpThumbnailTTL(tobump).catch((e) =>
-              console.warn("[fileStorage] thumbnail TTL bump failed", e),
-            );
-          }
-          if (toexpire.length > 0) {
-            void this.bumpThumbnailTTL(toexpire, true).catch((e) =>
-              console.warn("[fileStorage] thumbnail expire failed", e),
-            );
-          }
-          resolve(stubs);
+        } catch (error) {
+          // iOS WebKit throws from openCursor()/continue() once the transaction
+          // has gone inactive; reject instead of letting it escape uncaught.
+          reject(error instanceof Error ? error : new Error(String(error)));
         }
       };
     });
@@ -818,70 +824,76 @@ class FileStorageService {
 
       request.onerror = () => reject(request.error);
       request.onsuccess = (event) => {
-        const cursor = (event.target as IDBRequest).result;
-        if (cursor) {
-          const record = cursor.value as StoredStirlingFileRecord;
-          // Only include leaf files (default to true if undefined)
-          if (
-            record &&
-            record.name &&
-            typeof record.size === "number" &&
-            record.isLeaf !== false
-          ) {
-            const fresh = this.isThumbnailFresh(record);
+        try {
+          const cursor = (event.target as IDBRequest).result;
+          if (cursor) {
+            const record = cursor.value as StoredStirlingFileRecord;
+            // Only include leaf files (default to true if undefined)
             if (
-              record.thumbnail &&
-              maintenanceMayRewrite(record, this.blobValuesSupported)
+              record &&
+              record.name &&
+              typeof record.size === "number" &&
+              record.isLeaf !== false
             ) {
-              if (fresh) tobump.push(record.id);
-              else toexpire.push(record.id);
+              const fresh = this.isThumbnailFresh(record);
+              if (
+                record.thumbnail &&
+                maintenanceMayRewrite(record, this.blobValuesSupported)
+              ) {
+                if (fresh) tobump.push(record.id);
+                else toexpire.push(record.id);
+              }
+              this.reportIfUnreadable(record);
+              leafStubs.push({
+                id: record.id,
+                dataUnavailable:
+                  this.unreadableRecords.has(record.id) || undefined,
+                name: record.name,
+                type: record.type,
+                size: record.size,
+                lastModified: record.lastModified,
+                quickKey: record.quickKey,
+                thumbnailUrl: fresh ? record.thumbnail : undefined,
+                isLeaf: record.isLeaf,
+                remoteStorageId: record.remoteStorageId,
+                remoteStorageUpdatedAt: record.remoteStorageUpdatedAt,
+                remoteOwnerUsername: record.remoteOwnerUsername,
+                remoteOwnedByCurrentUser: record.remoteOwnedByCurrentUser,
+                remoteAccessRole: record.remoteAccessRole,
+                remoteSharedViaLink: record.remoteSharedViaLink,
+                remoteHasShareLinks: record.remoteHasShareLinks,
+                remoteShareToken: record.remoteShareToken,
+                versionNumber: record.versionNumber || 1,
+                originalFileId: record.originalFileId || record.id,
+                parentFileId: record.parentFileId,
+                toolHistory: record.toolHistory || [],
+                derivedFromTool:
+                  record.derivedFromTool ?? legacyDerivedFromTool(record),
+                sourceFileIds: record.sourceFileIds,
+                folderId: record.folderId ?? null,
+                createdAt: record.createdAt || Date.now(),
+                classificationLabels: record.classificationLabels,
+                classificationConfidence: record.classificationConfidence,
+              });
             }
-            this.reportIfUnreadable(record);
-            leafStubs.push({
-              id: record.id,
-              dataUnavailable:
-                this.unreadableRecords.has(record.id) || undefined,
-              name: record.name,
-              type: record.type,
-              size: record.size,
-              lastModified: record.lastModified,
-              quickKey: record.quickKey,
-              thumbnailUrl: fresh ? record.thumbnail : undefined,
-              isLeaf: record.isLeaf,
-              remoteStorageId: record.remoteStorageId,
-              remoteStorageUpdatedAt: record.remoteStorageUpdatedAt,
-              remoteOwnerUsername: record.remoteOwnerUsername,
-              remoteOwnedByCurrentUser: record.remoteOwnedByCurrentUser,
-              remoteAccessRole: record.remoteAccessRole,
-              remoteSharedViaLink: record.remoteSharedViaLink,
-              remoteHasShareLinks: record.remoteHasShareLinks,
-              remoteShareToken: record.remoteShareToken,
-              versionNumber: record.versionNumber || 1,
-              originalFileId: record.originalFileId || record.id,
-              parentFileId: record.parentFileId,
-              toolHistory: record.toolHistory || [],
-              derivedFromTool:
-                record.derivedFromTool ?? legacyDerivedFromTool(record),
-              sourceFileIds: record.sourceFileIds,
-              folderId: record.folderId ?? null,
-              createdAt: record.createdAt || Date.now(),
-              classificationLabels: record.classificationLabels,
-              classificationConfidence: record.classificationConfidence,
-            });
+            cursor.continue();
+          } else {
+            if (tobump.length > 0) {
+              void this.bumpThumbnailTTL(tobump).catch((e) =>
+                console.warn("[fileStorage] thumbnail TTL bump failed", e),
+              );
+            }
+            if (toexpire.length > 0) {
+              void this.bumpThumbnailTTL(toexpire, true).catch((e) =>
+                console.warn("[fileStorage] thumbnail expire failed", e),
+              );
+            }
+            resolve(leafStubs);
           }
-          cursor.continue();
-        } else {
-          if (tobump.length > 0) {
-            void this.bumpThumbnailTTL(tobump).catch((e) =>
-              console.warn("[fileStorage] thumbnail TTL bump failed", e),
-            );
-          }
-          if (toexpire.length > 0) {
-            void this.bumpThumbnailTTL(toexpire, true).catch((e) =>
-              console.warn("[fileStorage] thumbnail expire failed", e),
-            );
-          }
-          resolve(leafStubs);
+        } catch (error) {
+          // iOS WebKit throws from openCursor()/continue() once the transaction
+          // has gone inactive; reject instead of letting it escape uncaught.
+          reject(error instanceof Error ? error : new Error(String(error)));
         }
       };
     });
