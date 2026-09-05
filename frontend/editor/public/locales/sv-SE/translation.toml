@@ -6865,6 +6865,60 @@ description = "Länka den här organisationens Stirling-konto för att använda 
 title = "Länka för att låsa upp"
 titleFeature = "Länka för att låsa upp {{feature}}"
 
+[portal.accountLink.connect]
+close = "Stäng"
+notNow = "Inte nu"
+start = "Anslut Stirling-konto"
+step = "Steg {{current}} av {{total}}"
+
+[portal.accountLink.connect.benefits]
+creditsDetail = "500 kostnadsfria per månad"
+creditsLabel = "Krediter"
+processorDetail = "Pipelines, policyer, källor och granskning"
+processorLabel = "Processor"
+teamsDetail = "Kostnadsfritt för upp till 5 användare"
+teamsLabel = "Team"
+
+[portal.accountLink.connect.callback]
+linkedNotSignedIn = "Du är inte inloggad på Stirling i den här webbläsaren, så användning och fakturering kommer att be dig logga in."
+retry = "Försök igen"
+signedInAnyway = "Du är inloggad på Stirling, så fakturering och användning läses in. Endast serverlänken är ofullständig."
+working = "Slutför anslutningen."
+
+[portal.accountLink.connect.callback.expired]
+body = "Anslutningsbegäranden har kort giltighetstid. Starta en ny."
+title = "Begäran har gått ut"
+
+[portal.accountLink.connect.callback.malformed]
+body = "Den här sidan öppnades utan ett giltigt anslutningssvar. Starta anslutningen från inställningarna."
+title = "Det gick inte att läsa svaret"
+
+[portal.accountLink.connect.callback.rejected]
+body = "Begäran avvisades eller har redan använts. Starta en ny om det inte var avsikten."
+title = "Anslutningen slutfördes inte"
+
+[portal.accountLink.connect.callback.unfinished]
+body = "Stirling bekräftade inte anslutningen. Detta är oftast tillfälligt."
+title = "Inte slutförd ännu"
+
+[portal.accountLink.connect.done]
+accountLabel = "Konto"
+addPolicy = "Lägg till en policy"
+buildPipeline = "Skapa en pipeline"
+creditsBarLabel = "Återstående kostnadsfria krediter"
+creditsSuffix = "av {{allowance}} kostnadsfria krediter återstår"
+cta = "Klar"
+inviteTeam = "Bjud in ditt team"
+lede = "Den här servern kör nu med ditt Stirling-konto."
+pendingTitle = "Nästan klar"
+switchOnProcessor = "Aktivera Processor"
+title = "Ansluten"
+
+[portal.accountLink.connect.handoff]
+going = "Tar dig till stirling.com"
+reauthLede = "Din Stirling-session har gått ut. En ny inloggning gör användning och fakturering synlig. Servern förblir ansluten oavsett."
+title = "Ansluter"
+
 [portal.accountLink.instances]
 active = "Aktiv"
 revoke = "Återkalla"
@@ -6892,11 +6946,15 @@ minutesAgo_other = "{{count}} min sedan"
 never = "aldrig"
 
 [portal.accountLink.modal]
+cancel = "Avbryt"
+continueReauth = "Logga in igen"
 linkSubtitle = "Logga in på kontot som den här servern ska faktureras mot."
 linkTitle = "Länka ditt Stirling-konto"
+noAuthorizeUrl = "Stirling angav ingen plats att fortsätta på. Försök igen om en stund."
 reauthSubtitle = "Din session har gått ut — logga in på ditt Stirling-konto igen. Din instans förblir länkad."
 reauthTitle = "Logga in igen"
 simulateSignIn = "Simulera inloggning (dev)"
+startFailed = "Det gick inte att nå Stirling för att starta anslutningen. Kontrollera serverns utgående nätverksåtkomst och försök igen."
 
 [portal.accountLink.modal.loginNotConfigured]
 after = "för att aktivera länkning i appen mot det hostade Stirling-kontot."
@@ -6914,6 +6972,12 @@ sub = "Länka den här self-hosted organisationen till dess Stirling-konto så a
 forbidden = "Endast teamägaren kan visa organisationens länkade instanser."
 generic = "Det gick inte att läsa in teamets länkade instanser. Försök igen om en stund."
 title = "Det gick inte att läsa in länkade instanser"
+
+[portal.accountLink.rail]
+cta = "Anslut"
+later = "Inte nu"
+sub = "Låser upp team, PDF-processor, pipelines och policyer. PDF-redigering är fortsatt kostnadsfri."
+title = "Anslut ditt Stirling-konto"
 
 [portal.accountLink.state]
 free = "Editor-plan"
