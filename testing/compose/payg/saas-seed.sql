@@ -1,25 +1,28 @@
 -- Seed test team / payg policy / wallet_policy in PAYG_SHADOW mode for the
--- cucumber harness. Piped through psql AFTER Hibernate has built the schema
--- on backend startup (compose disables Flyway — see docker-compose-saas.yml
--- for the rationale: saas Flyway migrations assume `users` + `teams` exist
--- because Supabase normally provisions them).
+-- cucumber harness. Applied by the `seed-saas` service in
+-- docker-compose-saas.yml once the backend is healthy, which is the earliest
+-- point at which Hibernate has built the tables these rows target. To re-run
+-- it by hand against a live stack:
+--
+--   psql -h localhost -p 5433 -U postgres -d postgres \
+--        -f testing/compose/payg/saas-seed.sql
+--
+-- In a real SaaS database these tables and their seed rows come from the
+-- Supabase migrations; the harness postgres has none, so Hibernate builds
+-- the tables from the entities (see docker-compose-saas.yml) and this file
+-- supplies the rows. Hibernate's DDL carries no SQL DEFAULTs, so every NOT
+-- NULL column is set explicitly below, including the timestamps that
+-- @CreationTimestamp would normally fill in application-side.
 --
 -- Idempotent — guarded against duplicate keys so re-running on the same
 -- container is safe between scenarios.
 
 -- ---------------------------------------------------------------------------
--- 0. Default pricing policy + per-source step limits (V12 in production).
+-- 0. Default pricing policy + per-source step limits.
 --    Required because PricingPolicyService.getEffectivePolicy() throws if
---    no row has is_default = TRUE. Explicit timestamps because Hibernate's
---    @CreationTimestamp is application-side; direct INSERTs bypass it.
+--    no row has is_default = TRUE. free_tier_units 500 matches the launch
+--    free tier, granted per billing period.
 -- ---------------------------------------------------------------------------
--- NOTE: free_tier_units is supplied explicitly because the cucumber harness
--- disables Flyway (see docker-compose-saas.yml). Hibernate's DDL emits NOT
--- NULL without a SQL DEFAULT (the JPA field default `= 0L` is JVM-side only),
--- so the column would otherwise reject this INSERT. 500 matches the launch
--- free tier, now granted per billing period rather than once per team.
--- (Named free_tier_units_per_cycle here until the rename in V19; the harness
--- builds its schema from Hibernate, so the old name made the INSERT fail.)
 INSERT INTO stirling_pdf.pricing_policy (
     version, effective_from, doc_pages_per_unit, doc_bytes_per_unit,
     min_charge_units, file_unit_cap, free_tier_units, is_default,
@@ -62,12 +65,21 @@ WHERE NOT EXISTS (
 );
 
 -- ---------------------------------------------------------------------------
--- 2. payg_team_extensions sidecar — uses the default pricing policy.
+-- 2. payg_team_extensions sidecar, pinned to the default pricing policy with
+--    a full free-tier grant for the current calendar month. Without this row
+--    the team has no grant and every tool call is refused with
+--    402 PAYG_LIMIT_REACHED.
 -- ---------------------------------------------------------------------------
-INSERT INTO stirling_pdf.payg_team_extensions (team_id, pricing_policy_id, stripe_customer_id)
-SELECT t.team_id, NULL, NULL
+INSERT INTO stirling_pdf.payg_team_extensions (
+    team_id, pricing_policy_id, free_units_remaining, free_units_period_start,
+    created_at, updated_at, version
+)
+SELECT t.team_id, p.policy_id, p.free_tier_units, date_trunc('month', CURRENT_TIMESTAMP),
+       CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
 FROM stirling_pdf.teams t
+CROSS JOIN stirling_pdf.pricing_policy p
 WHERE t.name = 'payg-cucumber-team'
+  AND p.is_default = TRUE
   AND NOT EXISTS (
       SELECT 1 FROM stirling_pdf.payg_team_extensions ext WHERE ext.team_id = t.team_id
   );
@@ -85,8 +97,6 @@ WHERE u.username = 'CUSTOM_API_USER';
 
 -- ---------------------------------------------------------------------------
 -- 4. Team membership row so /teams/* admin paths recognise the user.
---    All timestamp columns set explicitly because Hibernate-generated DDL
---    doesn't carry the Flyway-migration DEFAULT CURRENT_TIMESTAMP.
 -- ---------------------------------------------------------------------------
 INSERT INTO stirling_pdf.team_memberships (
     team_id, user_id, role, invited_at, created_at, updated_at
@@ -102,10 +112,9 @@ WHERE t.name = 'payg-cucumber-team'
   );
 
 -- ---------------------------------------------------------------------------
--- 5. wallet_policy in PAYG_SHADOW mode.
---    auto_group_strategy is the dead column tracked for drop in PR-R11
---    (PAYG_DESIGN.md §7.7) — until that ships, the NOT NULL constraint
---    means we have to populate it. 'AUTO' is the prod default.
+-- 5. wallet_policy in PAYG_SHADOW mode. auto_group_strategy is NOT NULL
+--    with no SQL default, so it has to carry a value; 'AUTO' matches the
+--    entity's field default.
 -- ---------------------------------------------------------------------------
 INSERT INTO stirling_pdf.wallet_policy (
     team_id, engine, cap_period, warn_at_pct, degrade_at_pct,
