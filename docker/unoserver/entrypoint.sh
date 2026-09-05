@@ -18,6 +18,23 @@ case "$RECYCLE_INTERVAL_SECONDS" in ''|*[!0-9]*) log "Invalid UNOSERVER_RECYCLE_
 
 mkdir -p "$PROFILE_DIR"
 
+# LibreOffice network isolation (SSRF guard); default on, LIBREOFFICE_ALLOW_NETWORK=true opts out.
+OFFICE_GUARD_LIB="/usr/local/lib/stirling/soffice_no_network.so"
+OFFICE_LD_PRELOAD=""
+case "$(printf '%s' "${LIBREOFFICE_ALLOW_NETWORK:-false}" | tr '[:upper:]' '[:lower:]')" in
+  1|true|yes|on)
+    log "LibreOffice network isolation DISABLED (LIBREOFFICE_ALLOW_NETWORK=${LIBREOFFICE_ALLOW_NETWORK})"
+    ;;
+  *)
+    if [ -f "$OFFICE_GUARD_LIB" ]; then
+      OFFICE_LD_PRELOAD="$OFFICE_GUARD_LIB"
+      log "LibreOffice network isolation enabled (guard: $OFFICE_GUARD_LIB)"
+    else
+      log "WARNING: LibreOffice network guard missing at $OFFICE_GUARD_LIB; conversions are NOT network-isolated"
+    fi
+    ;;
+esac
+
 start_xvfb() {
   if command -v Xvfb >/dev/null 2>&1 && [ -z "${DISPLAY:-}" ]; then
     Xvfb :99 -screen 0 1024x768x24 -ac +extension GLX +render -noreset >/dev/null 2>&1 &
@@ -46,7 +63,7 @@ start_unoserver() {
   log "Starting unoserver on ${INTERFACE}:${PORT} (uno-port ${UNO_PORT}, timeout ${CONVERSION_TIMEOUT}s, profile ${PROFILE_DIR})"
   # Pass --user-installation as a plain path; unoserver 3.6 wraps it itself
   # and crashes if pre-wrapped as a file:// URI.
-  unoserver \
+  env ${OFFICE_LD_PRELOAD:+LD_PRELOAD="$OFFICE_LD_PRELOAD"} unoserver \
     --interface "$INTERFACE" \
     --port "$PORT" \
     --uno-port "$UNO_PORT" \

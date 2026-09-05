@@ -283,7 +283,7 @@ start_unoserver_instance() {
   local profile_dir="${LIBREOFFICE_PROFILE}/instance_${port}"
   run_as_runtime_user mkdir -p "$profile_dir"
   # --user-installation is a plain path; unoserver 3.6 crashes if pre-wrapped as file://.
-  run_as_runtime_user "$UNOSERVER_BIN" \
+  run_as_runtime_user env ${OFFICE_LD_PRELOAD:+LD_PRELOAD="$OFFICE_LD_PRELOAD"} "$UNOSERVER_BIN" \
     --interface 127.0.0.1 \
     --port "$port" \
     --uno-port "$uno_port" \
@@ -929,6 +929,25 @@ if command_exists Xvfb; then
 else
   log "Xvfb not installed; skipping virtual display setup"
 fi
+
+# ---------- LibreOffice network isolation ----------
+# LD_PRELOAD connect() guard blocks soffice egress (SSRF); default on, LIBREOFFICE_ALLOW_NETWORK=true opts out.
+OFFICE_GUARD_LIB="/usr/local/lib/stirling/soffice_no_network.so"
+OFFICE_LD_PRELOAD=""
+case "$(printf '%s' "${LIBREOFFICE_ALLOW_NETWORK:-false}" | tr '[:upper:]' '[:lower:]')" in
+  1|true|yes|on)
+    log "LibreOffice network isolation DISABLED (LIBREOFFICE_ALLOW_NETWORK=${LIBREOFFICE_ALLOW_NETWORK})"
+    ;;
+  *)
+    if [ -f "$OFFICE_GUARD_LIB" ]; then
+      OFFICE_LD_PRELOAD="$OFFICE_GUARD_LIB"
+      log "LibreOffice network isolation enabled (guard: $OFFICE_GUARD_LIB)"
+    elif command_exists soffice || command_exists unoserver; then
+      log "WARNING: LibreOffice network guard missing at $OFFICE_GUARD_LIB; conversions are NOT network-isolated"
+    fi
+    ;;
+esac
+export OFFICE_LD_PRELOAD
 
 # ---------- unoserver ----------
 # Start LibreOffice UNO server for document conversions.

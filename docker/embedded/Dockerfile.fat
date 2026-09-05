@@ -90,6 +90,14 @@ RUN --mount=type=cache,target=/root/.cache/uv \
       | xargs -0 -r strip --strip-unneeded 2>/dev/null || true; \
     apt-get purge -y binutils; apt-get autoremove -y; rm -rf /var/lib/apt/lists/*
 
+# Compile the network guard here (not only in base) so it ships regardless of the pinned base version.
+FROM ubuntu:noble@sha256:561618e2c15bf2397621dd04f96926663a3b5616c189cf7e38db7e82f5c538ea AS office-guard-build
+RUN apt-get update && apt-get install -y --no-install-recommends gcc libc6-dev && \
+    rm -rf /var/lib/apt/lists/*
+COPY docker/base/security/soffice_no_network.c /tmp/soffice_no_network.c
+RUN gcc -shared -fPIC -O2 -Wall -Werror -o /soffice_no_network.so /tmp/soffice_no_network.c -ldl && \
+    test -s /soffice_no_network.so
+
 
 # Stage 3: Final runtime image on top of pre-built base
 FROM ${BASE_IMAGE}
@@ -113,6 +121,10 @@ COPY --link --from=engine-build --chown=1000:1000 /opt/stirling-engine/python /o
 COPY --link --from=engine-build --chown=1000:1000 /opt/stirling-engine/.venv  /opt/stirling-engine/.venv
 COPY --link --chown=1000:1000 engine/.env  /opt/stirling-engine/.env
 COPY --link --chown=1000:1000 engine/src/  /opt/stirling-engine/src/
+
+# LibreOffice network guard (loaded via LD_PRELOAD for soffice/unoserver only).
+COPY --link --from=office-guard-build \
+     /soffice_no_network.so /usr/local/lib/stirling/soffice_no_network.so
 
 # Fonts go to system dir, root ownership is correct (world-readable)
 COPY app/core/src/main/resources/static/fonts/*.ttf /usr/share/fonts/truetype/

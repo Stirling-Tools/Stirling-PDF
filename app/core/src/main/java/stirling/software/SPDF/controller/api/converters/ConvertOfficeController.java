@@ -87,17 +87,18 @@ public class ConvertOfficeController {
         Path inputPath = workDir.resolve(baseName + "." + extensionLower);
         Path outputPath = workDir.resolve(baseName + ".pdf");
 
-        // Sanitize input before LibreOffice sees it so embedded URLs can't trigger SSRF.
-        if ("html".equals(extensionLower) || "htm".equals(extensionLower)) {
-            String htmlContent = new String(inputFile.getBytes(), StandardCharsets.UTF_8);
+        // Sanitize by CONTENT not extension (a flat-ODF renamed .xml must still be sanitized).
+        byte[] inputBytes = inputFile.getBytes();
+        if (isHtmlContent(inputBytes, extensionLower)) {
+            String htmlContent = new String(inputBytes, StandardCharsets.UTF_8);
             String sanitizedHtml = customHtmlSanitizer.sanitize(htmlContent);
             Files.writeString(inputPath, sanitizedHtml, StandardCharsets.UTF_8);
-        } else if (officeDocumentSanitizer.isSanitizableExtension(extensionLower)) {
-            byte[] sanitized =
-                    officeDocumentSanitizer.sanitize(inputFile.getBytes(), extensionLower);
-            Files.write(inputPath, sanitized);
+        } else if (inputBytes.length == 0) {
+            // Nothing to sanitize; let the converter report the empty input as it always has.
+            Files.write(inputPath, inputBytes);
         } else {
-            Files.copy(inputFile.getInputStream(), inputPath, StandardCopyOption.REPLACE_EXISTING);
+            byte[] sanitized = officeDocumentSanitizer.sanitize(inputBytes, extensionLower);
+            Files.write(inputPath, sanitized);
         }
 
         Path libreOfficeProfile = null;
@@ -205,6 +206,23 @@ public class ConvertOfficeController {
                 .getFileExtensionValidationPattern()
                 .matcher(fileExtension)
                 .matches();
+    }
+
+    // HTML needs CustomHtmlSanitizer; detect by content so HTML renamed .fodt/.xml is caught.
+    private static boolean isHtmlContent(byte[] content, String extensionLower) {
+        if ("html".equals(extensionLower) || "htm".equals(extensionLower)) {
+            return true;
+        }
+        if (content == null || content.length == 0) {
+            return false;
+        }
+        int limit = Math.min(content.length, 1024);
+        String head = new String(content, 0, limit, StandardCharsets.UTF_8);
+        if (!head.isEmpty() && head.charAt(0) == '\uFEFF') {
+            head = head.substring(1);
+        }
+        head = head.stripLeading().toLowerCase(Locale.ROOT);
+        return head.startsWith("<!doctype html") || head.startsWith("<html");
     }
 
     @AutoJobPostMapping(

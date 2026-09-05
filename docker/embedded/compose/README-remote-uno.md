@@ -191,6 +191,65 @@ environment:
   LOGGING_LEVEL_STIRLING_SOFTWARE_COMMON_UTIL_PROCESSEXECUTOR: DEBUG
 ```
 
+## Security hardening (LibreOffice network isolation)
+
+LibreOffice resolves external references embedded in office documents
+(`<draw:image xlink:href="http://...">`, `file://...`, etc.) during conversion.
+Left unchecked this turns document conversion into a Server-Side Request Forgery
+(SSRF) and local-file-readback primitive (see #7628 / #7629).
+
+Two layers protect against this, both **on by default**:
+
+1. **Input sanitization** - uploads are routed to the sanitizer by *content* (not
+   file extension), so flat-ODF (`.fodt`/`.fods`) and look-alike renames (e.g. a
+   flat-ODF sent as `.xml`) have their external and `file:` references stripped
+   before LibreOffice sees them.
+2. **Process network guard** - the LibreOffice/unoserver processes run with an
+   `LD_PRELOAD` guard that blocks all non-loopback outbound connections. Loopback
+   stays open so the unoserver↔soffice UNO bridge keeps working. This applies to
+   the main image and the standalone `stirling-unoserver` image.
+
+To disable the network guard (e.g. you have a legitimate need for LibreOffice to
+fetch remote images and accept the risk), set on the app **and** each unoserver:
+
+```yaml
+environment:
+  LIBREOFFICE_ALLOW_NETWORK: "true"
+```
+
+### Defense in depth: isolate the UNO containers at the network layer
+
+The in-image guard operates inside the container. For a kernel-level guarantee,
+put the `unoserver` containers on an **internal** Docker network with no route to
+your internal services or the internet. They only need to be reachable by the
+Stirling-PDF app:
+
+```yaml
+networks:
+  frontend: {}
+  uno-internal:
+    internal: true   # no egress to the host network / internet
+
+services:
+  stirling-pdf:
+    networks: [frontend, uno-internal]
+  unoserver1:
+    networks: [uno-internal]   # reachable by the app, cannot reach anything else
+  unoserver2:
+    networks: [uno-internal]
+```
+
+This complements (does not replace) the in-image guard: even if a future
+LibreOffice change bypassed the `LD_PRELOAD` guard, an `internal` network still
+prevents egress.
+
+**Residual coverage.** Content sanitization covers OOXML/ODF, flat-ODF and HTML.
+Legacy binary formats (`.doc`/`.xls`/`.ppt`, `.rtf`) are not content-inspected:
+their outbound `http(s)` references are stopped by the network guard, but local
+`file://` reads via such formats rely on the converter running non-root with no
+access to sensitive paths. Isolating the UNO containers as above, and not mounting
+secrets into them, closes that gap in depth.
+
 ## What This Demonstrates
 
 This configuration showcases all the improvements from the PR reviews:

@@ -367,6 +367,16 @@ RUN --mount=type=cache,target=/root/.cache/pip,sharing=locked \
     find /opt/venv -name '*.so' -exec strip --strip-unneeded {} + 2>/dev/null || true
 
 
+# Stage 5: Compile the LibreOffice network guard (LD_PRELOAD connect() SSRF blocker).
+FROM ubuntu:noble@sha256:33ceb71981b602c1a7443a53469e4dba065f7503eab3078a2d7a57a2ab987517 AS office-guard-build
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    apt-get update && apt-get install -y --no-install-recommends gcc libc6-dev && \
+    rm -rf /var/lib/apt/lists/*
+COPY security/soffice_no_network.c /tmp/soffice_no_network.c
+RUN gcc -shared -fPIC -O2 -Wall -Werror -o /soffice_no_network.so /tmp/soffice_no_network.c -ldl && \
+    test -s /soffice_no_network.so
+
+
 # Final runtime image - the actual base image
 FROM eclipse-temurin:25-jre-noble@sha256:b4c93a50fc67612798db73d68ca3b0ee4ebdd51736e59cca370e689b9797037e AS runtime
 
@@ -604,6 +614,8 @@ COPY --link --from=gs-build        /usr/local/bin/gs                /usr/local/b
 COPY --link --from=gs-build        /usr/local/share/ghostscript     /usr/local/share/ghostscript
 # Python venv pre-built (no pip install at runtime, no build tools needed)
 COPY --link --from=python-venv-build /opt/venv /opt/venv
+# LibreOffice network guard (loaded via LD_PRELOAD for soffice/unoserver only).
+COPY --link --from=office-guard-build /soffice_no_network.so /usr/local/lib/stirling/soffice_no_network.so
 
 RUN ldconfig /usr/local/lib && \
     PYTHONDONTWRITEBYTECODE=1 \
