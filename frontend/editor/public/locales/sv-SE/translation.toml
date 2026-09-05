@@ -5763,115 +5763,115 @@ bullet1 = "<strong>all</strong> → väljer alla sidor"
 title = "Särskilda nyckelord"
 
 [payg.activity]
-docs = "docs"
-empty = "No billable activity yet this period."
-subtitle = "Only AI and automation draw from your budget. Everyday tools are free and aren't listed here."
-title = "Recent billable activity"
+docs = "dokument"
+empty = "Ingen debiterbar aktivitet ännu under denna period."
+subtitle = "Endast AI och automation använder din budget. Vardagsverktyg är kostnadsfria och visas inte här."
+title = "Senaste debiterbara aktivitet"
 
 [payg.cap]
-amount = "Cap amount"
-custom = "Custom"
+amount = "Beloppsgräns"
+custom = "Anpassad"
 docsEstimate = "≈ {{docs}} processed PDFs / month"
 docsRate = "at {{rate}} / PDF"
-noCapDesc = "Usage is billed without an upper limit. You can re-enable a cap at any time."
-noCapLabel = "No cap"
-noneShort = "No cap"
-perMonth = "/ month"
-save = "Update cap"
-subtitle = "Set your maximum spend. We convert this to PDFs using the current price tier."
-title = "Monthly spending cap"
+noCapDesc = "Användning debiteras utan övre gräns. Du kan återaktivera en gräns när som helst."
+noCapLabel = "Ingen gräns"
+noneShort = "Ingen gräns"
+perMonth = "/ månad"
+save = "Uppdatera gräns"
+subtitle = "Ange din högsta kostnad. Vi omvandlar den till PDF:er med den aktuella prisnivån."
+title = "Månatligt utgiftstak"
 
 [payg.checkout]
-connecting = "Connecting to Stripe…"
-errorTitle = "Stripe error"
+connecting = "Ansluter till Stripe…"
+errorTitle = "Stripe-fel"
 
 [payg.checkout.error]
-startFailed = "Couldn't start checkout session"
+startFailed = "Kunde inte starta kassasessionen"
 
 [payg.checkout.mock]
-backend = "Backend is in mock mode; no real Stripe session was created."
-continue = "Continue with mock subscription"
-noKey = "VITE_STRIPE_PUBLISHABLE_KEY is unset. Real iframe mounts here once configured."
-title = "Stripe Embedded Checkout (mock mode)"
+backend = "Bakänden är i testläge; ingen riktig Stripe-session skapades."
+continue = "Fortsätt med testprenumeration"
+noKey = "VITE_STRIPE_PUBLISHABLE_KEY är inte angiven. Den riktiga iframe-rutan visas här när den har konfigurerats."
+title = "Inbäddad Stripe-kassa (testläge)"
 
 [payg.confirm]
-body = "Your team can now run automation, AI, and API operations beyond your 500 free PDFs."
+body = "Ditt team kan nu köra automation, AI och API-åtgärder utöver de 500 kostnadsfria PDF-filerna."
 capValue = "{{symbol}}{{amount}} / month"
-noCap = "No cap"
-note = "You can change your cap, cancel, or open the Stripe customer portal any time from this page."
-summaryLabel = "Monthly ceiling"
-title = "Welcome to the Processor plan"
+noCap = "Ingen gräns"
+note = "Du kan ändra gränsen, avsluta eller öppna Stripes kundportal när som helst från denna sida."
+summaryLabel = "Månatligt tak"
+title = "Välkommen till Processor-abonnemanget"
 
 [payg.docHelp]
-billable = "Only automation runs, AI tools, and API calls count. Manual tools in the editor are always free."
-chains = "Running the same file through several steps of one automation counts it once, not once per step."
-perFile = "Each file you process counts as one PDF. Very long or very large files can count as more than one."
-refunds = "If a job fails on its first step, the PDF is credited back automatically."
-toggle = "What counts as a PDF?"
+billable = "Endast automatiseringskörningar, AI-verktyg och API-anrop räknas. Manuella verktyg i redigeraren är alltid kostnadsfria."
+chains = "Om samma fil körs genom flera steg i en automation räknas den en gång, inte en gång per steg."
+perFile = "Varje fil du bearbetar räknas som en PDF. Mycket långa eller stora filer kan räknas som fler än en."
+refunds = "Om ett jobb misslyckas i första steget återställs PDF-krediten automatiskt."
+toggle = "Vad räknas som en PDF?"
 
 [payg.error]
-body = "We couldn't reach the billing service. Refresh the page to try again."
-title = "Couldn't load your plan"
+body = "Det gick inte att nå faktureringstjänsten. Uppdatera sidan och försök igen."
+title = "Kunde inte läsa in ditt abonnemang"
 
 [payg.free.cta]
-benefit1Body = "chain tools, schedule runs, batch process"
-benefit1Title = "Automation pipelines"
-benefit2Body = "summarise, classify, redact, AI-OCR"
-benefit2Title = "AI tools"
-benefit3Body = "call any Stirling endpoint programmatically"
-benefit3Title = "API access"
-button = "Turn on Processor →"
-reassurance = "No minimum · Set a $0 cap to test · Cancel anytime"
-subtitle = "Keep going past your 500 free PDFs with automation, AI, and the API. Set a monthly ceiling, so you stay in control."
-title = "Turn on the Processor plan"
+benefit1Body = "kedja verktyg, schemalägg körningar, batchbearbeta"
+benefit1Title = "Automationspipelines"
+benefit2Body = "sammanfatta, klassificera, maskera, AI-OCR"
+benefit2Title = "AI-verktyg"
+benefit3Body = "anropa valfri Stirling-slutpunkt programmatiskt"
+benefit3Title = "API-åtkomst"
+button = "Aktivera Processor →"
+reassurance = "Ingen miniminivå · Ange en gräns på 0 USD för att testa · Avsluta när som helst"
+subtitle = "Fortsätt efter dina 500 kostnadsfria PDF-filer med automation, AI och API:t. Ange ett månatligt tak så behåller du kontrollen."
+title = "Aktivera Processor-abonnemanget"
 
 [payg.free.editor]
-eyebrow = "Editor plan · Always free"
+eyebrow = "Redigerarabonnemang · Alltid kostnadsfritt"
 
 [payg.free.header]
-freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
-freeTitle = "Unlimited PDF editing"
+freeBody = "Visa, redigera, slå samman, dela, signera, vattenmärka, komprimera, konvertera och kör manuell OCR – hur mycket du vill, oavsett var du startar det."
+freeTitle = "Obegränsad PDF-redigering"
 
 [payg.free.hero]
-barAria = "Free PDFs remaining"
+barAria = "Kostnadsfria PDF-filer kvar"
 capSuffix = "/ {{limit}} free PDFs"
 metaCategories = "Automation · AI · API requests"
 
 [payg.free.member]
-ownerOnly = "Only your team owner can turn on Processor. Manual tools stay free for you to use as much as you like."
+ownerOnly = "Endast teamägaren kan aktivera Processor. Manuella verktyg är fortsatt kostnadsfria att använda hur mycket du vill."
 
 [payg.free.proc]
-eyebrow = "Processor plan · metered"
+eyebrow = "Processor-abonnemang · användningsbaserat"
 
 [payg.free.state]
-approachingLimit = "Approaching limit"
-limitReached = "Limit reached"
-plentyLeft = "Plenty left"
+approachingLimit = "Närmar sig gränsen"
+limitReached = "Gränsen har nåtts"
+plentyLeft = "Gott om kvar"
 
 [payg.gates]
-ai = "AI tools (AI Create, suggestions, AI-OCR)"
-automation = "Automations & pipelines"
-client = "Browser-only tools (viewer, page editor, file management)"
-offsite = "Server tools (compress, OCR, convert, watermark…)"
-pauses = "pauses at cap"
-title = "What happens when the cap is reached"
+ai = "AI-verktyg (AI Create, förslag, AI-OCR)"
+automation = "Automationer och pipelines"
+client = "Endast webbläsarverktyg (visare, sidredigerare, filhantering)"
+offsite = "Serververktyg (komprimera, OCR, konvertera, vattenmärka …)"
+pauses = "pausas vid gränsen"
+title = "Vad som händer när gränsen nås"
 
 [payg.header]
-eyebrow = "Processor plan · {{start}} – {{end}}"
-freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
-freeLabel = "Always free"
-freeTitle = "Unlimited PDF editing"
-meterBody = "{{limit}} free PDFs to start, then billed per PDF up to your cap."
-meterLabel = "Metered"
+eyebrow = "Processor-abonnemang · {{start}}–{{end}}"
+freeBody = "Visa, redigera, slå samman, dela, signera, vattenmärka, komprimera, konvertera och kör manuell OCR – hur mycket du vill, oavsett var du startar det."
+freeLabel = "Alltid kostnadsfritt"
+freeTitle = "Obegränsad PDF-redigering"
+meterBody = "{{limit}} kostnadsfria PDF-filer till att börja med, sedan debitering per PDF upp till din gräns."
+meterLabel = "Användningsbaserat"
 meterTitle = "Automation · AI · API"
 
 [payg.member]
-askLeader = "Only your team owner can change the cap."
+askLeader = "Endast teamägaren kan ändra gränsen."
 
 [payg.members]
-docs = "PDFs"
-subtitle = "Billable PDFs each teammate has processed this period."
-title = "Team member usage"
+docs = "PDF-filer"
+subtitle = "Debiterbara PDF-filer som varje teammedlem har bearbetat under denna period."
+title = "Teammedlemmars användning"
 
 [payg.prepaid]
 chip = "Förbetalt år"
@@ -5896,32 +5896,32 @@ healthy = "Gott om kvar"
 low = "Börjar ta slut"
 
 [payg.role]
-leader = "Team owner"
-member = "Member"
+leader = "Teamägare"
+member = "Medlem"
 
 [payg.signupRequired]
-body = "Stirling PDF gives every signed-up account 500 free operations, enough to keep most workflows humming without paying a cent. You're currently using Stirling as a guest, which doesn't include billable tools like AI, automations, or hosted processing."
-cancel = "Not now"
-cta = "Sign up free"
-subtext = "Creating an account is free and takes a few seconds. No credit card required."
-title = "Sign up to use {{category}}"
+body = "Stirling PDF ger varje registrerat konto 500 kostnadsfria åtgärder, vilket räcker för de flesta arbetsflöden utan kostnad. Du använder för närvarande Stirling som gäst, vilket inte omfattar debiterbara verktyg som AI, automationer eller driftad bearbetning."
+cancel = "Inte nu"
+cta = "Registrera dig gratis"
+subtext = "Det är gratis att skapa ett konto och det tar bara några sekunder. Inget kreditkort krävs."
+title = "Registrera dig för att använda {{category}}"
 
 [payg.signupRequired.category]
-ai = "AI features"
-api = "this tool"
-automation = "automations"
-default = "this feature"
+ai = "AI-funktioner"
+api = "detta verktyg"
+automation = "automationer"
+default = "denna funktion"
 
 [payg.spendCapMeter]
-barAria = "Spend against cap"
-capSuffix = "/ {{amount}} cap"
-metaCategories = "Automation · AI · API spend"
-resets = "Resets each billing period"
+barAria = "Kostnad mot gräns"
+capSuffix = "/ {{amount}} gräns"
+metaCategories = "Automation · AI · API-kostnad"
+resets = "Återställs varje faktureringsperiod"
 
 [payg.state]
-degraded = "Cap reached"
-full = "Healthy"
-warned = "Approaching cap"
+degraded = "Gränsen har nåtts"
+full = "Fungerar normalt"
+warned = "Närmar sig gränsen"
 
 [payg.stripe]
 open = "Open billing portal"
