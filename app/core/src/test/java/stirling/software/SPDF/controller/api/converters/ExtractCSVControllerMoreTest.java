@@ -194,6 +194,31 @@ class ExtractCSVControllerMoreTest {
     }
 
     @Test
+    @DisplayName("cells a spreadsheet would evaluate are written as literal text")
+    void formulaCellsAreQuoted() throws Exception {
+        PDFWithPageNums request = new PDFWithPageNums();
+        request.setFileInput(pdf("table.pdf"));
+        request.setPageNumbers("all");
+
+        when(pdfDocumentFactory.load(request)).thenReturn(docWithPages(1));
+        when(tabulaTableParser.parse(any(PDDocument.class), eq(1)))
+                .thenReturn(
+                        List.of(
+                                fragment(
+                                        List.of(
+                                                List.of("=SUM(A1:A2)", "@SUM(1+1)"),
+                                                List.of("Alice", "-42")))));
+
+        ResponseEntity<?> response = controller.pdfToCsv(request);
+
+        String body = response.getBody().toString();
+        assertThat(body).contains("\"'=SUM(A1:A2)\"").contains("\"'@SUM(1+1)\"");
+        assertThat(body).doesNotContain("\"=SUM(A1:A2)\"").doesNotContain("\"@SUM(1+1)\"");
+        // Text and numeric cells keep their original form.
+        assertThat(body).contains("\"Alice\"").contains("\"-42\"");
+    }
+
+    @Test
     @DisplayName("single table CSV body is quote-wrapped per the EXCEL/QuoteMode.ALL format")
     void csvBodyIsQuoted() throws Exception {
         PDFWithPageNums request = new PDFWithPageNums();
