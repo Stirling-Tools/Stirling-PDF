@@ -5924,69 +5924,69 @@ full = "Fungerar normalt"
 warned = "Närmar sig gränsen"
 
 [payg.stripe]
-open = "Open billing portal"
-subtitle = "Receipts, invoices, payment method, billing currency."
-title = "Manage billing in Stripe"
+open = "Öppna faktureringsportalen"
+subtitle = "Kvitton, fakturor, betalningsmetod och faktureringsvaluta."
+title = "Hantera fakturering i Stripe"
 
 [payg.stripe.toast.unavailable]
-body = "Billing portal isn't available right now. Try again in a moment."
-title = "Billing portal unavailable"
+body = "Faktureringsportalen är inte tillgänglig just nu. Försök igen om en stund."
+title = "Faktureringsportalen är inte tillgänglig"
 
 [payg.upgrade]
-backAria = "Back"
-closeAria = "Close"
+backAria = "Tillbaka"
+closeAria = "Stäng"
 
 [payg.upgrade.button]
-cancel = "Cancel"
-continue = "Continue →"
-finish = "Finish"
+cancel = "Avbryt"
+continue = "Fortsätt →"
+finish = "Slutför"
 
 [payg.upgrade.cap]
-help = "We'll never charge above this. Set $0 if you want to keep everything free while testing."
-title = "Set your monthly spend ceiling"
-usdNote = "Estimated in USD. You can adjust your cap any time after subscribing, in your own currency."
+help = "Vi debiterar aldrig över detta belopp. Ange 0 USD om du vill hålla allt kostnadsfritt under testning."
+title = "Ange ditt månatliga utgiftstak"
+usdNote = "Uppskattat i USD. Efter prenumerationen kan du när som helst justera gränsen i din egen valuta."
 
 [payg.upgrade.checkout]
 capValue = "{{symbol}}{{amount}} / month"
-edit = "Edit"
-help = "Stripe handles your card details. Stirling never sees them."
-loading = "Loading checkout…"
-noCap = "No cap"
-title = "Add your payment method"
+edit = "Redigera"
+help = "Stripe hanterar dina kortuppgifter. Stirling ser dem aldrig."
+loading = "Läser in kassan …"
+noCap = "Ingen gräns"
+title = "Lägg till betalningsmetod"
 
 [payg.upgrade.help]
 aiBody = "summarise, classify, redact, AI-OCR"
-aiTitle = "AI tools"
-apiBody = "programmatic access to any Stirling endpoint"
-apiTitle = "API calls"
-automationBody = "chained tools or scheduled runs that don't need clicks"
-automationTitle = "Automation pipelines"
-footnote = "Manual tools (viewing, editing, merging, splitting, watermarking, compressing, manual OCR) are always free, even past 500. The distinction is the type of work, not where you click."
-title = "What we count toward billing"
+aiTitle = "AI-verktyg"
+apiBody = "programmatisk åtkomst till valfri Stirling-slutpunkt"
+apiTitle = "API-anrop"
+automationBody = "kedjade verktyg eller schemalagda körningar som inte kräver klick"
+automationTitle = "Automationspipelines"
+footnote = "Manuella verktyg (visa, redigera, slå samman, dela, vattenmärka, komprimera och manuell OCR) är alltid kostnadsfria, även efter 500. Skillnaden är arbetstypen, inte var du klickar."
+title = "Vad som räknas vid fakturering"
 
 [payg.upgrade.promise]
-body = "You only pay for automation pipelines, AI tools, and API calls, the work that goes beyond a single click. Edit, merge, split, sign, compress as much as you want, no charge."
-highlight = "Manual tools stay free, always."
+body = "Du betalar bara för automationspipelines, AI-verktyg och API-anrop – arbete som går utöver ett enda klick. Redigera, slå samman, dela, signera och komprimera hur mycket du vill utan kostnad."
+highlight = "Manuella verktyg är alltid kostnadsfria."
 
 [payg.upgrade.steps]
-cap = "Set monthly ceiling"
-payment = "Add payment method"
+cap = "Ange månatligt tak"
+payment = "Lägg till betalningsmetod"
 
 [payg.upgrade.title]
-confirm = "You're subscribed"
-default = "Upgrade to Processor plan"
+confirm = "Du prenumererar nu"
+default = "Uppgradera till Processor-abonnemanget"
 
 [payg.usage]
 breakdown = "AI {{ai}} • Automation {{automation}} • API {{api}}"
-capLine = "{{cap}}/mo cap"
-estBill = "≈ {{amount}} so far this period"
-firstFree = "First {{free}} free"
-noCap = "No monthly cap"
-ofLimitProcessed = "/ {{limit}} PDFs processed"
-processed = "PDFs processed"
-resetsIn = "Resets in {{days}} days"
-resetsTomorrow = "Resets tomorrow"
-thisPeriod = "This billing period"
+capLine = "{{cap}}/mån. gräns"
+estBill = "≈ {{amount}} hittills denna period"
+firstFree = "Första {{free}} kostnadsfria"
+noCap = "Inget månatligt tak"
+ofLimitProcessed = "/ {{limit}} PDF-filer bearbetade"
+processed = "PDF-filer bearbetade"
+resetsIn = "Återställs om {{days}} dagar"
+resetsTomorrow = "Återställs i morgon"
+thisPeriod = "Denna faktureringsperiod"
 
 [payment]
 canCloseWindow = "Du kan nu stänga detta fönster."
