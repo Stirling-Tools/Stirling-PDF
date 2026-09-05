@@ -87,6 +87,16 @@ export function DocumentsIcon(props: IconProps) {
   );
 }
 
+export function ReviewIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M10.3 3.6a2 2 0 0 1 3.4 0l7.5 13.4a2 2 0 0 1-1.7 3H4.5a2 2 0 0 1-1.7-3z" />
+      <line x1="12" y1="9" x2="12" y2="13" />
+      <line x1="12" y1="16.5" x2="12.01" y2="16.5" />
+    </Svg>
+  );
+}
+
 export function InfrastructureIcon(props: IconProps) {
   return (
     <Svg {...props}>

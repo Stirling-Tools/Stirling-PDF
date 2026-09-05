@@ -30,7 +30,7 @@ public class NotificationService {
      * where those are meant to be read, and it lists them unfiltered.
      */
     public List<NotificationView> list(int limit) {
-        return fileRunEvents.list(null, null, limit).stream()
+        return fileRunEvents.list(null, false, null, limit).stream()
                 .filter(event -> event.fileId() != null && !event.fileId().isBlank())
                 .map(this::fromFailure)
                 .toList();

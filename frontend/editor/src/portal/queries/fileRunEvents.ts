@@ -5,7 +5,9 @@ import type { AsyncState } from "@portal/hooks/useAsync";
 import {
   applyFileRunEventAction,
   fetchFileRunEvents,
+  isClosedStatus,
   type FileRunEvent,
+  type FileRunEventScope,
 } from "@portal/api/fileRunEvents";
 import { HttpError } from "@portal/api/http";
 
@@ -31,12 +33,15 @@ function isPermanentRefusal(error: unknown): boolean {
   );
 }
 
-/** Base query: recorded policy failures for the caller's team. */
-export function useFileRunEvents(): AsyncState<FileRunEvent[]> {
+/** Base query: recorded policy failures for the caller's team, open or closed. */
+export function useFileRunEvents(
+  scope: FileRunEventScope = "open",
+): AsyncState<FileRunEvent[]> {
   return toAsyncState(
     useQuery({
-      queryKey: qk.fileRunEvents(),
-      queryFn: () => fetchFileRunEvents({ limit: PAGE_SIZE }),
+      queryKey: qk.fileRunEvents(scope),
+      queryFn: () =>
+        fetchFileRunEvents({ closed: scope === "closed", limit: PAGE_SIZE }),
       // A build without the failure registry 404s and a non-leader gets a 403.
       // Neither improves on retry, and the caller renders nothing either way.
       retry: false,
@@ -61,16 +66,24 @@ export function useFileRunEventActions() {
   const apply = async (eventId: string, actionId: string) => {
     try {
       const updated = await applyFileRunEventAction(eventId, actionId);
-      queryClient.setQueryData<FileRunEvent[]>(qk.fileRunEvents(), (rows) =>
-        (rows ?? []).map((row) => (row.id === updated.id ? updated : row)),
+      queryClient.setQueryData<FileRunEvent[]>(
+        qk.fileRunEvents("open"),
+        (rows) =>
+          // Closing it takes it out of the open queue; anything else updates in place.
+          isClosedStatus(updated.status)
+            ? (rows ?? []).filter((row) => row.id !== updated.id)
+            : (rows ?? []).map((row) =>
+                row.id === updated.id ? updated : row,
+              ),
       );
+      // It has landed in the other list, which would now answer stale.
+      await queryClient.invalidateQueries({
+        queryKey: qk.fileRunEvents("closed"),
+      });
     } catch {
-      await queryClient.invalidateQueries({ queryKey: qk.fileRunEvents() });
+      await queryClient.invalidateQueries({ queryKey: qk.fileRunEventsAll() });
     }
   };
 
-  const refresh = () =>
-    queryClient.invalidateQueries({ queryKey: qk.fileRunEvents() });
-
-  return { apply, refresh };
+  return { apply };
 }

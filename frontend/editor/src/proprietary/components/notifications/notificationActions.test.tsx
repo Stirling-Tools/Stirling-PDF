@@ -619,10 +619,10 @@ describe("useNotificationActions", () => {
     });
   });
 
-  it("links to the recorded failures section of the processor", () => {
+  it("links to the processor's review screen", () => {
     registry().VIEW_IN_PROCESSOR?.run(context());
 
-    expect(navigate).toHaveBeenCalledWith("/processor/documents#failures");
+    expect(navigate).toHaveBeenCalledWith("/processor/review");
   });
 
   it("navigates in place even with a loaded workbench, never opening a tab", () => {
@@ -632,7 +632,7 @@ describe("useNotificationActions", () => {
     registry().VIEW_IN_PROCESSOR?.run(context());
 
     expect(openTab).not.toHaveBeenCalled();
-    expect(navigate).toHaveBeenCalledWith("/processor/documents#failures");
+    expect(navigate).toHaveBeenCalledWith("/processor/review");
     openTab.mockRestore();
   });
 
@@ -642,7 +642,7 @@ describe("useNotificationActions", () => {
     registry(inProcessor).VIEW_IN_PROCESSOR?.run(context());
 
     expect(openTab).not.toHaveBeenCalled();
-    expect(navigate).toHaveBeenCalledWith("/processor/documents#failures");
+    expect(navigate).toHaveBeenCalledWith("/processor/review");
     openTab.mockRestore();
   });
 

@@ -3304,6 +3304,7 @@ title = "Choose color"
 actions = "Actions"
 back = "Back"
 cancel = "Cancel"
+clearFilters = "Clear filters"
 close = "Close"
 codeSample = "Code sample"
 collapse = "Collapse"
@@ -3315,6 +3316,7 @@ done = "Done"
 enterValue = "Enter value"
 error = "Error"
 expand = "Expand"
+filterEmpty = "Nothing to filter on"
 loading = "Loading..."
 next = "Next"
 open = "Open"
@@ -3324,6 +3326,7 @@ refresh = "Refresh"
 remaining = "Remaining"
 retry = "Retry"
 save = "Save"
+search = "Search"
 stepOf = "Step {{current}} of {{total}}"
 
 [compare]
@@ -8118,30 +8121,27 @@ retry = "Try again"
 title = "Something went wrong on this page"
 
 [portal.failures]
-fromSource = "From source {{source}}"
+closedBySystem = "Stirling"
+noMatches = "Nothing matches the current filters"
 occurrences = "{{count}} occurrences"
-reportedBy = "Hit by {{actor}}"
-runReference = "Run {{runId}}"
-subtitle = "Failures recorded from your policy runs and your team's editors, with the actions you can take."
-title = "Failures"
+searchPlaceholder = "Search issues, users and errors"
 
 [portal.failures.action]
 acknowledge = "Acknowledge"
-confirm = "Are you sure?"
 decrypt = "Decrypt and retry"
 dismiss = "Dismiss"
-dismissSkipFile = "Skip this file"
 openInTool = "Retry"
 viewFile = "View file"
 viewInProcessor = "View in processor"
 
-[portal.failures.debug]
-copyJson = "Copy JSON"
-dismissAll = "Dismiss all ({{total}})"
-dismissing = "Dismissing..."
-hideJson = "Hide raw JSON ({{total}})"
-refresh = "Refresh failures"
-showJson = "Show raw JSON ({{total}})"
+[portal.failures.columns]
+closedBy = "Closed by"
+date = "Date"
+failure = "Issue"
+origin = "Raised in"
+outcome = "Outcome"
+source = "Source"
+user = "User"
 
 [portal.failures.disabled]
 closed = "This failure is already closed."
@@ -8150,8 +8150,18 @@ unattended = "This file was fed by a folder, bucket or webhook, so nobody's brow
 unavailable = "Not available for this failure."
 
 [portal.failures.empty]
-description = "Policy runs that fail will appear here with the actions you can take."
-title = "No failures recorded"
+description = "Anything from a policy run or an editor tool that needs a look will appear here."
+title = "Nothing needs your attention"
+
+[portal.failures.emptyClosed]
+description = "Items you dismiss or resolve are kept here with their outcome."
+title = "Nothing closed yet"
+
+[portal.failures.filters]
+origin = "Raised in"
+source = "Source"
+type = "Type"
+user = "User"
 
 [portal.failures.kind.inputPasswordProtected]
 description = "Your file is password protected, so the run could not read it."
@@ -8159,19 +8169,34 @@ title = "Password-protected document"
 
 [portal.failures.kind.unknown]
 description = "Something went wrong that Stirling does not recognise yet."
-title = "Unrecognised failure"
+title = "Unrecognised issue"
+
+[portal.failures.log]
+copy = "Copy error"
+view = "View error"
 
 [portal.failures.origin]
 pipeline = "Pipeline"
-policy = "Policy"
-tool = "Tool run"
+policy = "Policy run"
+tool = "Editor tool"
 
-[portal.failures.stage]
-blocked = "Blocked"
-input = "Input"
-internal = "Internal"
-never_ran = "Never ran"
-output = "Output"
+[portal.failures.outcome]
+dismissed = "Dismissed"
+fileRemoved = "File deleted"
+open = "Open"
+resolved = "Resolved"
+
+[portal.failures.scope]
+ariaLabel = "Review state"
+closed = "Closed"
+open = "Open"
+
+[portal.failures.source]
+editor = "Editor"
+
+[portal.failures.unavailable]
+description = "This queue is visible to team leaders on workspaces that run policies."
+title = "Nothing to review"
 
 [portal.home.download]
 back = "Back"
@@ -8596,6 +8621,7 @@ integrations = "Integrations"
 pipelines = "Pipelines"
 policies = "Policies"
 procurement = "Procurement"
+review = "Review"
 sources = "Sources"
 usage = "Usage & Billing"
 users = "Users"
@@ -9533,6 +9559,10 @@ extend = "Extend 7 days"
 maxed = "Maxed out"
 subtitle = "Your free trial runs through {{date}}. No card required."
 title = "Enterprise trial"
+
+[portal.review]
+subtitle = "Anything from your policy runs and your team's editors that needs your attention."
+title = "Review"
 
 [portal.settings.groups]
 admin = "Admin"
