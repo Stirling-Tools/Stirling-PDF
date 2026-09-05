@@ -12,6 +12,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
@@ -410,6 +411,21 @@ public class UserLicenseSettingsService {
                 "User {} NOT eligible for SAML2: no ENTERPRISE license and not grandfathered",
                 username);
         return false;
+    }
+
+    /**
+     * Serialises user admission against the licensed limit.
+     *
+     * <p>Takes a write lock on the licence row, held until the caller's transaction commits. The
+     * count in {@link #wouldExceedLimit(int)} is only meaningful while nobody else can insert a
+     * user, so a caller must take this lock first and perform its insert in the same transaction.
+     * Declared {@code MANDATORY} because joining the caller's transaction is the whole point: in a
+     * transaction of its own the lock would be released immediately and admission would silently go
+     * back to being racy.
+     */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void lockForUserAdmission() {
+        settingsRepository.lockSettings();
     }
 
     /**
