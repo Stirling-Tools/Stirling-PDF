@@ -26,11 +26,13 @@ class PipelineConfigTest {
             config.setName("my pipeline");
             config.setOperations(List.of(op));
             config.setOutputDir("/out");
+            config.setInputExtensions(List.of("doc", "docx"));
             config.setOutputPattern("{name}-out");
 
             assertThat(config.getName()).isEqualTo("my pipeline");
             assertThat(config.getOperations()).containsExactly(op);
             assertThat(config.getOutputDir()).isEqualTo("/out");
+            assertThat(config.getInputExtensions()).containsExactly("doc", "docx");
             assertThat(config.getOutputPattern()).isEqualTo("{name}-out");
         }
 
