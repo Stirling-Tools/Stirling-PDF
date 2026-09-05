@@ -9762,7 +9762,7 @@ label = "App-ID"
 
 [provider.googledrive.clientId]
 description = "Google OAuth 2.0 Client ID från Google Cloud Console"
-label = "Client ID"
+label = "Klient-ID"
 
 [provider.googledrive.enabled]
 description = "Tillåt användare att importera filer direkt från Google Drive"
@@ -9782,11 +9782,11 @@ label = "Blockera registrering"
 
 [provider.oauth2.generic.clientId]
 description = "OAuth2 Client ID från din leverantör"
-label = "Client ID"
+label = "Klient-ID"
 
 [provider.oauth2.generic.clientSecret]
 description = "OAuth2 Client Secret från din leverantör"
-label = "Client Secret"
+label = "Klienthemlighet"
 
 [provider.oauth2.generic.enabled]
 description = "Aktivera autentisering via en anpassad OAuth2-leverantör"
@@ -9801,8 +9801,8 @@ description = "Namnet på din OAuth2-leverantör (t.ex. Azure AD, Okta)"
 label = "Leverantörsnamn"
 
 [provider.oauth2.generic.scopes]
-description = "Kommaseparerade OAuth2-scopes"
-label = "Scopes"
+description = "Kommaseparerade OAuth2-behörighetsomfång"
+label = "Behörighetsomfång"
 
 [provider.oauth2.generic.useAsUsername]
 description = "Fält att använda som användarnamn"
@@ -9813,15 +9813,15 @@ scope = "Autentisering för inloggning"
 
 [provider.oauth2.github.clientId]
 description = "OAuth2 Client ID från GitHub Developer Settings"
-label = "Client ID"
+label = "Klient-ID"
 
 [provider.oauth2.github.clientSecret]
 description = "OAuth2 Client Secret från GitHub Developer Settings"
-label = "Client Secret"
+label = "Klienthemlighet"
 
 [provider.oauth2.github.scopes]
-description = "Kommaseparerade OAuth2-scopes"
-label = "Scopes"
+description = "Kommaseparerade OAuth2-behörighetsomfång"
+label = "Behörighetsomfång"
 
 [provider.oauth2.github.useAsUsername]
 description = "Fält att använda som användarnamn (email, login, name)"
@@ -9832,15 +9832,15 @@ scope = "Autentisering för inloggning"
 
 [provider.oauth2.google.clientId]
 description = "OAuth2 Client ID från Google Cloud Console"
-label = "Client ID"
+label = "Klient-ID"
 
 [provider.oauth2.google.clientSecret]
 description = "OAuth2 Client Secret från Google Cloud Console"
-label = "Client Secret"
+label = "Klienthemlighet"
 
 [provider.oauth2.google.scopes]
-description = "Kommaseparerade OAuth2-scopes"
-label = "Scopes"
+description = "Kommaseparerade OAuth2-behörighetsomfång"
+label = "Behörighetsomfång"
 
 [provider.oauth2.google.useAsUsername]
 description = "Fält att använda som användarnamn (email, name, given_name, family_name)"
@@ -9851,27 +9851,27 @@ scope = "SSO"
 
 [provider.oauth2.keycloak.clientId]
 description = "OAuth2 Client ID från Keycloak"
-label = "Client ID"
+label = "Klient-ID"
 
 [provider.oauth2.keycloak.clientSecret]
 description = "OAuth2 Client Secret från Keycloak"
-label = "Client Secret"
+label = "Klienthemlighet"
 
 [provider.oauth2.keycloak.issuer]
 description = "URL till Keycloak-realmets OpenID Connect Discovery-slutpunkt"
 label = "Utfärdarens URL"
 
 [provider.oauth2.keycloak.scopes]
-description = "Kommaseparerade OAuth2-scopes"
-label = "Scopes"
+description = "Kommaseparerade OAuth2-behörighetsomfång"
+label = "Behörighetsomfång"
 
 [provider.oauth2.keycloak.useAsUsername]
 description = "Fält att använda som användarnamn (email, name, given_name, family_name, preferred_username)"
 label = "Använd som användarnamn"
 
 [provider.saml2]
-name = "SAML2"
-scope = "SSO (SAML)"
+name = "SAML 2"
+scope = "Enkel inloggning (SAML)"
 
 [provider.saml2.autoCreateUser]
 description = "Skapa automatiskt användarkonton vid första SAML2-inloggningen"
@@ -9891,19 +9891,19 @@ label = "IDP-certifikat"
 
 [provider.saml2.idpIssuer]
 description = "ID för din leverantör"
-label = "IDP Issuer"
+label = "IDP-utfärdare"
 
 [provider.saml2.idpMetadataUri]
 description = "URI till din leverantörs metadata"
-label = "IDP Metadata URI"
+label = "IDP-metadata-URI"
 
 [provider.saml2.idpSingleLoginUrl]
 description = "URL för att initiera SSO"
-label = "IDP Single Login URL"
+label = "IDP-URL för enkel inloggning"
 
 [provider.saml2.idpSingleLogoutUrl]
 description = "URL för att initiera SLO"
-label = "IDP Single Logout URL"
+label = "IDP-URL för enkel utloggning"
 
 [provider.saml2.privateKey]
 description = "Sökväg till din privata nyckel"
