@@ -8692,7 +8692,7 @@ label = "Lagringstid"
 
 [portal.policies.categories.routing]
 desc = "Dirigera dokument automatiskt till rätt team, mapp eller system."
-label = "Routing"
+label = "Dirigering"
 
 [portal.policies.categories.security]
 desc = "Upptäck PII, maskera, ta bort aktivt innehåll och vattenmärk dokument."
@@ -8775,9 +8775,9 @@ keepFor = "Behåll i"
 summary = "Dirigerar dokument till rätt destination baserat på typ och klassificering."
 
 [portal.policies.config.routing.fields]
-destination = "Destination"
+destination = "Mål"
 notify = "Meddela vid routing"
-webhookUrl = "Webhook URL"
+webhookUrl = "Webhook-URL"
 
 [portal.policies.config.routing.rules]
 0 = "Autoklassificera"
@@ -8905,7 +8905,7 @@ placeholder = "processor@acme.com"
 
 [portal.policies.operations.fields.headers]
 helperText = "Ett JSON-objekt med par av header-namn/värde. Anslutningens inloggningsuppgift läggs till åt dig."
-label = "Headers"
+label = "Huvuden"
 
 [portal.policies.operations.fields.index]
 label = "Index"
@@ -8973,22 +8973,22 @@ description = "Skickar det bearbetade dokumentet som en bilaga."
 label = "Skicka dokumentet via e-post (Mailgun)"
 
 [portal.policies.operations.n8nGate]
-description = "Your workflow decides whether the run carries on."
-label = "Ask an n8n workflow to approve"
-note = "The workflow must reply with {\"approved\": true}. Anything else — including a timeout — stops the run and parks the document."
+description = "Ditt arbetsflöde avgör om körningen fortsätter."
+label = "Låt ett n8n-arbetsflöde godkänna"
+note = "Arbetsflödet måste svara med {\"approved\": true}. Allt annat – även en tidsgräns – stoppar körningen och parkerar dokumentet."
 
 [portal.policies.operations.n8nNotify]
-description = "Sends the run's details, not the document."
-label = "Tell an n8n workflow"
+description = "Skickar körningens uppgifter, inte dokumentet."
+label = "Meddela ett n8n-arbetsflöde"
 
 [portal.policies.operations.n8nSend]
-description = "Sends the document and the run's details to your workflow."
-label = "Send the document to n8n"
+description = "Skickar dokumentet och körningens uppgifter till ditt arbetsflöde."
+label = "Skicka dokumentet till n8n"
 
 [portal.policies.operations.n8nTransform]
-description = "Your workflow processes the document and the file it returns replaces it."
-label = "Process the document in n8n"
-note = "Set the Webhook node to respond \"Using Respond to Webhook Node\", and return a file. On the default \"Immediately\" setting n8n replies with an acknowledgement, and that would replace the document."
+description = "Ditt arbetsflöde bearbetar dokumentet och filen det returnerar ersätter det."
+label = "Bearbeta dokumentet i n8n"
+note = "Ställ in webhook-noden att svara med \"Using Respond to Webhook Node\" och returnera en fil. Med standardinställningen \"Immediately\" svarar n8n med en bekräftelse, och den skulle ersätta dokumentet."
 
 [portal.policies.operations.nextcloudUpload]
 description = "Skriver det bearbetade dokumentet till en mapp."
