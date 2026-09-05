@@ -162,7 +162,12 @@ const EmbedPdfViewerContent = ({
   const applyChangesInFlightRef = useRef<Promise<void> | null>(null);
 
   // Get redaction context
-  const { redactionsApplied, setRedactionsApplied } = useRedaction();
+  const {
+    redactionsApplied,
+    setRedactionsApplied,
+    deactivateRedact,
+    setRedactionMode,
+  } = useRedaction();
 
   // Ref for redaction pending tracker API
   const redactionTrackerRef = useRef<RedactionPendingTrackerAPI>(null);
@@ -185,6 +190,13 @@ const EmbedPdfViewerContent = ({
   } = useNavigationGuard();
 
   const { selectedTool } = useNavigationState();
+
+  useEffect(() => {
+    if (selectedTool !== "redact") {
+      setRedactionMode(false);
+      deactivateRedact();
+    }
+  }, [selectedTool, setRedactionMode, deactivateRedact]);
 
   // Form fill context
   const { fetchFields: fetchFormFields, setProviderMode } = useFormFill();

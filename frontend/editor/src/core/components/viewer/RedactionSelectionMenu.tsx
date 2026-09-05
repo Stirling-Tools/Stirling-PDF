@@ -3,9 +3,7 @@ import {
   RedactionSelectionMenuProps,
 } from "@embedpdf/plugin-redaction/react";
 import { PdfAnnotationSubtype } from "@embedpdf/models";
-import { Tooltip, Group } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { ActionIcon } from "@app/ui/ActionIcon";
+import { Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { createPortal } from "react-dom";
 import { useEffect, useState, useRef, useCallback } from "react";
@@ -13,6 +11,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import { useRedaction } from "@app/contexts/RedactionContext";
 import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
+import "@app/components/viewer/TextSelectionMenu.css";
 
 export type { RedactionSelectionMenuProps };
 
@@ -123,55 +122,50 @@ function RedactionSelectionMenuInner({
 
   const menuContent = menuPosition ? (
     <div
+      data-redaction-selection-menu
+      className="embedpdf-floating-menu"
       style={{
         position: "fixed",
         top: `${menuPosition.top}px`,
         left: `${menuPosition.left}px`,
         transform: "translateX(-50%)",
         pointerEvents: "auto",
-        zIndex: 10000, // Very high z-index to appear above everything
-        backgroundColor: "var(--mantine-color-body)",
-        borderRadius: 8,
-        padding: "8px 12px",
-        boxShadow: "0 2px 12px rgba(0, 0, 0, 0.25)",
-        border: "1px solid var(--mantine-color-default-border)",
-        // Fixed size to prevent browser zoom affecting layout
-        fontSize: "14px",
-        minWidth: "180px",
+        zIndex: 10000,
       }}
     >
-      <Group gap="sm" wrap="nowrap" justify="center">
-        <Tooltip label={t("viewer.redaction.removeMark", "Remove this mark")}>
-          <ActionIcon
-            aria-label={t("viewer.redaction.removeMark", "Remove this mark")}
-            variant="secondary"
-            accent="neutral"
-            size="md"
-            onClick={handleRemove}
-          >
-            <DeleteIcon style={{ fontSize: 18 }} />
-          </ActionIcon>
-        </Tooltip>
-
-        <Tooltip
-          label={t(
-            "redact.manual.applyWarning",
-            "⚠️ Permanent application, cannot be undone and the data underneath will be deleted",
-          )}
-          withArrow
-          position="top"
+      <Tooltip
+        label={t("viewer.redaction.removeMark", "Remove this mark")}
+        withArrow
+      >
+        <button
+          type="button"
+          className="embedpdf-floating-btn embedpdf-floating-btn-danger"
+          onClick={handleRemove}
+          aria-label={t("viewer.redaction.removeMark", "Remove this mark")}
         >
-          <Button
-            accent="danger"
-            size="sm"
-            onClick={handleApply}
-            leftSection={<CheckCircleIcon style={{ fontSize: 16 }} />}
-            style={{ flexShrink: 0, whiteSpace: "nowrap" }}
-          >
-            Apply (permanent)
-          </Button>
-        </Tooltip>
-      </Group>
+          <DeleteIcon style={{ fontSize: 18 }} />
+        </button>
+      </Tooltip>
+
+      <div className="embedpdf-floating-divider" />
+
+      <Tooltip
+        label={t(
+          "redact.manual.applyWarning",
+          "⚠️ Permanent application, cannot be undone and the data underneath will be deleted",
+        )}
+        withArrow
+        position="top"
+      >
+        <button
+          type="button"
+          className="embedpdf-floating-badge-btn"
+          onClick={handleApply}
+        >
+          <CheckCircleIcon style={{ fontSize: 16 }} />
+          <span>{t("redact.manual.apply", "Apply")}</span>
+        </button>
+      </Tooltip>
     </div>
   ) : null;
 
