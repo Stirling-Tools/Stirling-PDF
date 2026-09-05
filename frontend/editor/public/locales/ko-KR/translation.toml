@@ -3494,26 +3494,6 @@ description = "These cookies are essential for the website to function properly.
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
-[createPortfolio]
-coverTitle = "Cover page title"
-coverTitlePlaceholder = "PDF Portfolio"
-description = "Every selected file is kept whole inside the new PDF, whatever its type. Readers that don't support portfolios show a cover page with the files attached."
-goToFileEditor = "Go to file editor"
-info = "Combines your files into one PDF that keeps each file whole inside it. Open the result to browse the files and view or save any of them on their own."
-settings = "Portfolio Settings"
-submit = "Create Portfolio"
-title = "Portfolio Results"
-viewerModeHint = "A portfolio needs 2 or more files. Head to the file editor to select them."
-
-[createPortfolio.error]
-failed = "An error occurred while creating the PDF portfolio."
-
-[createPortfolio.tooltip.description]
-title = "What it does"
-
-[createPortfolio.tooltip.header]
-title = "About PDF Portfolios"
-
 [crop]
 autoCrop = "여백 자동 자르기"
 noFileSelected = "자르기를 시작하려면 PDF 파일을 선택하세요"
@@ -4707,11 +4687,6 @@ title = "압축"
 desc = "서로 다른 형식 간 파일 변환"
 tags = "변환,바꾸기"
 title = "변환"
-
-[home.createPortfolio]
-desc = "Bundle multiple files into an Adobe PDF Portfolio"
-tags = "portfolio,collection,package,bundle,combine files,pdf portfolio,adobe portfolio,pdf collection,container"
-title = "Create Portfolio"
 
 [home.crop]
 desc = "PDF를 잘라서 크기 줄이기(텍스트 유지!)"
@@ -11407,7 +11382,6 @@ close = "첨부 파일 닫기"
 closeSidebar = "첨부 파일 사이드바 닫기"
 download = "첨부 파일 다운로드"
 empty = "이 문서에는 첨부 파일이 없습니다"
-loadFailed = "Failed to load attachments"
 loading = "첨부 파일 불러오는 중..."
 noDocument = "첨부 파일을 보려면 PDF를 여세요."
 noMatch = "검색과 일치하는 첨부 파일이 없습니다"
@@ -11415,7 +11389,7 @@ noSupport = "이 뷰어는 첨부 파일을 지원하지 않습니다."
 retry = "다시 시도"
 searchPlaceholder = "첨부 파일 검색"
 title = "첨부 파일"
-untitled = "Untitled"
+
 [viewer.bookmarks]
 addBookmark = "Add bookmark"
 bookmarkTitle = "북마크 제목"
@@ -11496,15 +11470,6 @@ loading = "로딩 중..."
 renderMarkdown = "마크다운 렌더링"
 sortedBy = "정렬 기준: {{column}}"
 textStats = "{{lines}}줄 · {{size}}"
-
-[viewer.portfolio]
-addFile = "Add file"
-count_one = "{{count}} file in this portfolio"
-count_other = "{{count}} files in this portfolio"
-import = "Import into Stirling"
-preview = "Preview"
-searchPlaceholder = "Search files"
-title = "Portfolio"
 
 [viewer.redaction]
 removeMark = "이 표시 제거"

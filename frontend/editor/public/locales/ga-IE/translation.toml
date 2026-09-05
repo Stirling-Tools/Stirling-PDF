@@ -3494,26 +3494,6 @@ description = "Tá na fianáin seo riachtanach chun go bhfeidhmeoidh an suíomh 
 posthog = "Anailísíocht PostHog"
 scarf = "Scairf Picteilín"
 
-[createPortfolio]
-coverTitle = "Cover page title"
-coverTitlePlaceholder = "PDF Portfolio"
-description = "Every selected file is kept whole inside the new PDF, whatever its type. Readers that don't support portfolios show a cover page with the files attached."
-goToFileEditor = "Go to file editor"
-info = "Combines your files into one PDF that keeps each file whole inside it. Open the result to browse the files and view or save any of them on their own."
-settings = "Portfolio Settings"
-submit = "Create Portfolio"
-title = "Portfolio Results"
-viewerModeHint = "A portfolio needs 2 or more files. Head to the file editor to select them."
-
-[createPortfolio.error]
-failed = "An error occurred while creating the PDF portfolio."
-
-[createPortfolio.tooltip.description]
-title = "What it does"
-
-[createPortfolio.tooltip.header]
-title = "About PDF Portfolios"
-
 [crop]
 autoCrop = "Spás bán a bhearradh go huathoibríoch"
 noFileSelected = "Roghnaigh comhad PDF chun tosú ar bhearradh"
@@ -4707,11 +4687,6 @@ title = "Comhbhrúigh"
 desc = "Tiontaigh comhaid idir formáidí éagsúla"
 tags = "tiontaigh,athraigh"
 title = "Tiontaigh"
-
-[home.createPortfolio]
-desc = "Bundle multiple files into an Adobe PDF Portfolio"
-tags = "portfolio,collection,package,bundle,combine files,pdf portfolio,adobe portfolio,pdf collection,container"
-title = "Create Portfolio"
 
 [home.crop]
 desc = "Bearr PDF chun a mhéid a laghdú (coimeádann an téacs!)"
@@ -11407,7 +11382,6 @@ close = "Dún ceangaltáin"
 closeSidebar = "Dún barra taoibh na gceangaltán"
 download = "Íoslódáil ceangaltán"
 empty = "Níl iatáin sa cháipéis seo"
-loadFailed = "Failed to load attachments"
 loading = "Iatáin á luchtú..."
 noDocument = "Oscail PDF chun a iatáin a fheiceáil."
 noMatch = "Ní mheaitseálann aon iatán do chuardach"
@@ -11415,7 +11389,7 @@ noSupport = "Níl tacaíocht iatáin ar fáil don amharcóir seo."
 retry = "Bain triail eile as"
 searchPlaceholder = "Cuardaigh iatáin"
 title = "Iatáin"
-untitled = "Untitled"
+
 [viewer.bookmarks]
 addBookmark = "Add bookmark"
 bookmarkTitle = "Teideal an leabharmhairc"
@@ -11496,15 +11470,6 @@ loading = "Á lódáil..."
 renderMarkdown = "Rindreáil Markdown"
 sortedBy = "Sórtáilte de réir: {{column}}"
 textStats = "{{lines}} líne · {{size}}"
-
-[viewer.portfolio]
-addFile = "Add file"
-count_one = "{{count}} file in this portfolio"
-count_other = "{{count}} files in this portfolio"
-import = "Import into Stirling"
-preview = "Preview"
-searchPlaceholder = "Search files"
-title = "Portfolio"
 
 [viewer.redaction]
 removeMark = "Bain an marc seo"

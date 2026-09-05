@@ -3494,26 +3494,6 @@ description = "These cookies are essential for the website to function properly.
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
-[createPortfolio]
-coverTitle = "Cover page title"
-coverTitlePlaceholder = "PDF Portfolio"
-description = "Every selected file is kept whole inside the new PDF, whatever its type. Readers that don't support portfolios show a cover page with the files attached."
-goToFileEditor = "Go to file editor"
-info = "Combines your files into one PDF that keeps each file whole inside it. Open the result to browse the files and view or save any of them on their own."
-settings = "Portfolio Settings"
-submit = "Create Portfolio"
-title = "Portfolio Results"
-viewerModeHint = "A portfolio needs 2 or more files. Head to the file editor to select them."
-
-[createPortfolio.error]
-failed = "An error occurred while creating the PDF portfolio."
-
-[createPortfolio.tooltip.description]
-title = "What it does"
-
-[createPortfolio.tooltip.header]
-title = "About PDF Portfolios"
-
 [crop]
 autoCrop = "Automaticky orezať biele okraje"
 noFileSelected = "Vyberte súbor PDF a začnite orezávať"
@@ -4707,11 +4687,6 @@ title = "Komprimovať"
 desc = "Konvertovať súbory medzi rôznymi formátmi"
 tags = "konvertovať,transformovať,zmeniť"
 title = "Konvertovať"
-
-[home.createPortfolio]
-desc = "Bundle multiple files into an Adobe PDF Portfolio"
-tags = "portfolio,collection,package,bundle,combine files,pdf portfolio,adobe portfolio,pdf collection,container"
-title = "Create Portfolio"
 
 [home.crop]
 desc = "Orezať PDF na zmenšenie jeho veľkosti (zachováva text!)"
@@ -11407,7 +11382,6 @@ close = "Zavrieť prílohy"
 closeSidebar = "Zavrieť bočný panel príloh"
 download = "Stiahnuť prílohu"
 empty = "Tento dokument neobsahuje žiadne prílohy"
-loadFailed = "Failed to load attachments"
 loading = "Načítavajú sa prílohy..."
 noDocument = "Otvorte PDF, aby ste videli jeho prílohy."
 noMatch = "Žiadne prílohy nezodpovedajú vášmu vyhľadávaniu"
@@ -11415,7 +11389,7 @@ noSupport = "Podpora príloh nie je pre tento prehliadač dostupná."
 retry = "Skúsiť znova"
 searchPlaceholder = "Hľadať prílohy"
 title = "Prílohy"
-untitled = "Untitled"
+
 [viewer.bookmarks]
 addBookmark = "Add bookmark"
 bookmarkTitle = "Názov záložky"
@@ -11496,15 +11470,6 @@ loading = "Načítava sa..."
 renderMarkdown = "Zobraziť Markdown"
 sortedBy = "Zoradené podľa: {{column}}"
 textStats = "{{lines}} riadkov · {{size}}"
-
-[viewer.portfolio]
-addFile = "Add file"
-count_one = "{{count}} file in this portfolio"
-count_other = "{{count}} files in this portfolio"
-import = "Import into Stirling"
-preview = "Preview"
-searchPlaceholder = "Search files"
-title = "Portfolio"
 
 [viewer.redaction]
 removeMark = "Odstrániť toto označenie"

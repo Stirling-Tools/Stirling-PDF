@@ -3494,26 +3494,6 @@ description = "These cookies are essential for the website to function properly.
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
-[createPortfolio]
-coverTitle = "Cover page title"
-coverTitlePlaceholder = "PDF Portfolio"
-description = "Every selected file is kept whole inside the new PDF, whatever its type. Readers that don't support portfolios show a cover page with the files attached."
-goToFileEditor = "Go to file editor"
-info = "Combines your files into one PDF that keeps each file whole inside it. Open the result to browse the files and view or save any of them on their own."
-settings = "Portfolio Settings"
-submit = "Create Portfolio"
-title = "Portfolio Results"
-viewerModeHint = "A portfolio needs 2 or more files. Head to the file editor to select them."
-
-[createPortfolio.error]
-failed = "An error occurred while creating the PDF portfolio."
-
-[createPortfolio.tooltip.description]
-title = "What it does"
-
-[createPortfolio.tooltip.header]
-title = "About PDF Portfolios"
-
 [crop]
 autoCrop = "Tự động cắt khoảng trắng"
 noFileSelected = "Chọn một tệp PDF để bắt đầu cắt xén"
@@ -4707,11 +4687,6 @@ title = "Nén"
 desc = "Chuyển đổi tệp giữa các định dạng khác nhau"
 tags = "chuyển đổi,thay đổi"
 title = "Chuyển đổi"
-
-[home.createPortfolio]
-desc = "Bundle multiple files into an Adobe PDF Portfolio"
-tags = "portfolio,collection,package,bundle,combine files,pdf portfolio,adobe portfolio,pdf collection,container"
-title = "Create Portfolio"
 
 [home.crop]
 desc = "Cắt PDF để giảm kích thước (giữ nguyên văn bản!)"
@@ -11407,7 +11382,6 @@ close = "Đóng tệp đính kèm"
 closeSidebar = "Đóng thanh bên tệp đính kèm"
 download = "Tải xuống tệp đính kèm"
 empty = "Không có tệp đính kèm trong tài liệu này"
-loadFailed = "Failed to load attachments"
 loading = "Đang tải tệp đính kèm..."
 noDocument = "Mở một PDF để xem các tệp đính kèm của nó."
 noMatch = "Không có tệp đính kèm nào khớp với tìm kiếm của bạn"
@@ -11415,7 +11389,7 @@ noSupport = "Trình xem này không hỗ trợ tệp đính kèm."
 retry = "Thử lại"
 searchPlaceholder = "Tìm kiếm tệp đính kèm"
 title = "Tệp đính kèm"
-untitled = "Untitled"
+
 [viewer.bookmarks]
 addBookmark = "Add bookmark"
 bookmarkTitle = "Tiêu đề dấu trang"
@@ -11496,15 +11470,6 @@ loading = "Đang tải..."
 renderMarkdown = "Kết xuất markdown"
 sortedBy = "Sắp xếp theo: {{column}}"
 textStats = "{{lines}} dòng · {{size}}"
-
-[viewer.portfolio]
-addFile = "Add file"
-count_one = "{{count}} file in this portfolio"
-count_other = "{{count}} files in this portfolio"
-import = "Import into Stirling"
-preview = "Preview"
-searchPlaceholder = "Search files"
-title = "Portfolio"
 
 [viewer.redaction]
 removeMark = "Xóa đánh dấu này"

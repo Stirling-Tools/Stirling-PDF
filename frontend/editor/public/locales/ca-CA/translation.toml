@@ -3494,26 +3494,6 @@ description = "These cookies are essential for the website to function properly.
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
-[createPortfolio]
-coverTitle = "Cover page title"
-coverTitlePlaceholder = "PDF Portfolio"
-description = "Every selected file is kept whole inside the new PDF, whatever its type. Readers that don't support portfolios show a cover page with the files attached."
-goToFileEditor = "Go to file editor"
-info = "Combines your files into one PDF that keeps each file whole inside it. Open the result to browse the files and view or save any of them on their own."
-settings = "Portfolio Settings"
-submit = "Create Portfolio"
-title = "Portfolio Results"
-viewerModeHint = "A portfolio needs 2 or more files. Head to the file editor to select them."
-
-[createPortfolio.error]
-failed = "An error occurred while creating the PDF portfolio."
-
-[createPortfolio.tooltip.description]
-title = "What it does"
-
-[createPortfolio.tooltip.header]
-title = "About PDF Portfolios"
-
 [crop]
 autoCrop = "Retalla automàticament els espais en blanc"
 noFileSelected = "Seleccioneu un fitxer PDF per començar a retallar"
@@ -4707,11 +4687,6 @@ title = "Comprimeix"
 desc = "Converteix fitxers entre diferents formats"
 tags = "transforma,canvia"
 title = "Converteix"
-
-[home.createPortfolio]
-desc = "Bundle multiple files into an Adobe PDF Portfolio"
-tags = "portfolio,collection,package,bundle,combine files,pdf portfolio,adobe portfolio,pdf collection,container"
-title = "Create Portfolio"
 
 [home.crop]
 desc = "Talla PDF per reduir la mida (manté el text!)"
@@ -11407,7 +11382,6 @@ close = "Tanca els adjunts"
 closeSidebar = "Tanca la barra lateral d'adjunts"
 download = "Baixa l'adjunt"
 empty = "No hi ha adjunts en aquest document"
-loadFailed = "Failed to load attachments"
 loading = "Carregant els adjunts..."
 noDocument = "Obre un PDF per veure'n els adjunts."
 noMatch = "No hi ha adjunts que coincideixin amb la cerca"
@@ -11415,7 +11389,7 @@ noSupport = "Aquest visor no admet adjunts."
 retry = "Torna-ho a provar"
 searchPlaceholder = "Cerca adjunts"
 title = "Adjunts"
-untitled = "Untitled"
+
 [viewer.bookmarks]
 addBookmark = "Add bookmark"
 bookmarkTitle = "Títol del marcador"
@@ -11496,15 +11470,6 @@ loading = "Carregant..."
 renderMarkdown = "Renderitza Markdown"
 sortedBy = "Ordenat per: {{column}}"
 textStats = "{{lines}} línies · {{size}}"
-
-[viewer.portfolio]
-addFile = "Add file"
-count_one = "{{count}} file in this portfolio"
-count_other = "{{count}} files in this portfolio"
-import = "Import into Stirling"
-preview = "Preview"
-searchPlaceholder = "Search files"
-title = "Portfolio"
 
 [viewer.redaction]
 removeMark = "Elimina aquesta marca"

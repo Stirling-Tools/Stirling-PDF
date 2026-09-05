@@ -3494,26 +3494,6 @@ description = "These cookies are essential for the website to function properly.
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
-[createPortfolio]
-coverTitle = "Cover page title"
-coverTitlePlaceholder = "PDF Portfolio"
-description = "Every selected file is kept whole inside the new PDF, whatever its type. Readers that don't support portfolios show a cover page with the files attached."
-goToFileEditor = "Go to file editor"
-info = "Combines your files into one PDF that keeps each file whole inside it. Open the result to browse the files and view or save any of them on their own."
-settings = "Portfolio Settings"
-submit = "Create Portfolio"
-title = "Portfolio Results"
-viewerModeHint = "A portfolio needs 2 or more files. Head to the file editor to select them."
-
-[createPortfolio.error]
-failed = "An error occurred while creating the PDF portfolio."
-
-[createPortfolio.tooltip.description]
-title = "What it does"
-
-[createPortfolio.tooltip.header]
-title = "About PDF Portfolios"
-
 [crop]
 autoCrop = "اقتصاص تلقائي للمساحات البيضاء"
 noFileSelected = "حدّد ملف PDF لبدء القص"
@@ -4707,11 +4687,6 @@ title = "ضغط ملفات"
 desc = "تحويل الملفات بين صيغ مختلفة"
 tags = "تحويل،تغيير"
 title = "تحويل"
-
-[home.createPortfolio]
-desc = "Bundle multiple files into an Adobe PDF Portfolio"
-tags = "portfolio,collection,package,bundle,combine files,pdf portfolio,adobe portfolio,pdf collection,container"
-title = "Create Portfolio"
 
 [home.crop]
 desc = "اقتصاص ملف PDF لتقليل حجمه (مع الحفاظ على النص!)"
@@ -11407,7 +11382,6 @@ close = "إغلاق المرفقات"
 closeSidebar = "إغلاق الشريط الجانبي للمرفقات"
 download = "تنزيل المرفق"
 empty = "لا توجد مرفقات في هذا المستند"
-loadFailed = "Failed to load attachments"
 loading = "جارٍ تحميل المرفقات..."
 noDocument = "افتح ملف PDF لعرض مرفقاته."
 noMatch = "لا توجد مرفقات تطابق بحثك"
@@ -11415,7 +11389,7 @@ noSupport = "دعم المرفقات غير متاح في هذا العارض."
 retry = "إعادة المحاولة"
 searchPlaceholder = "ابحث في المرفقات"
 title = "المرفقات"
-untitled = "Untitled"
+
 [viewer.bookmarks]
 addBookmark = "Add bookmark"
 bookmarkTitle = "عنوان الإشارة المرجعية"
@@ -11496,15 +11470,6 @@ loading = "جارٍ التحميل..."
 renderMarkdown = "عرض Markdown"
 sortedBy = "مرتّب حسب: {{column}}"
 textStats = "{{lines}} أسطر · {{size}}"
-
-[viewer.portfolio]
-addFile = "Add file"
-count_one = "{{count}} file in this portfolio"
-count_other = "{{count}} files in this portfolio"
-import = "Import into Stirling"
-preview = "Preview"
-searchPlaceholder = "Search files"
-title = "Portfolio"
 
 [viewer.redaction]
 removeMark = "إزالة هذه العلامة"

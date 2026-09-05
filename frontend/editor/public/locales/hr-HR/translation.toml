@@ -3494,26 +3494,6 @@ description = "These cookies are essential for the website to function properly.
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
-[createPortfolio]
-coverTitle = "Cover page title"
-coverTitlePlaceholder = "PDF Portfolio"
-description = "Every selected file is kept whole inside the new PDF, whatever its type. Readers that don't support portfolios show a cover page with the files attached."
-goToFileEditor = "Go to file editor"
-info = "Combines your files into one PDF that keeps each file whole inside it. Open the result to browse the files and view or save any of them on their own."
-settings = "Portfolio Settings"
-submit = "Create Portfolio"
-title = "Portfolio Results"
-viewerModeHint = "A portfolio needs 2 or more files. Head to the file editor to select them."
-
-[createPortfolio.error]
-failed = "An error occurred while creating the PDF portfolio."
-
-[createPortfolio.tooltip.description]
-title = "What it does"
-
-[createPortfolio.tooltip.header]
-title = "About PDF Portfolios"
-
 [crop]
 autoCrop = "Automatski obreži bijeli prostor"
 noFileSelected = "Odaberite PDF datoteku za početak izrezivanja"
@@ -4707,11 +4687,6 @@ title = "Komprimiraj"
 desc = "Pretvorite datoteke između različitih formata"
 tags = "pretvori,promijeni"
 title = "Pretvori"
-
-[home.createPortfolio]
-desc = "Bundle multiple files into an Adobe PDF Portfolio"
-tags = "portfolio,collection,package,bundle,combine files,pdf portfolio,adobe portfolio,pdf collection,container"
-title = "Create Portfolio"
 
 [home.crop]
 desc = "Izrežite PDF kako biste smanjili njegovu veličinu (zadržava tekst!)"
@@ -11407,7 +11382,6 @@ close = "Zatvori privitke"
 closeSidebar = "Zatvori bočnu traku privitaka"
 download = "Preuzmi privitak"
 empty = "Nema priloga u ovom dokumentu"
-loadFailed = "Failed to load attachments"
 loading = "Učitavanje priloga..."
 noDocument = "Otvorite PDF za prikaz njegovih priloga."
 noMatch = "Nema priloga koji odgovaraju vašem pretraživanju"
@@ -11415,7 +11389,7 @@ noSupport = "Podrška za priloge nije dostupna u ovom pregledniku."
 retry = "Pokušaj ponovno"
 searchPlaceholder = "Pretraži priloge"
 title = "Prilozi"
-untitled = "Untitled"
+
 [viewer.bookmarks]
 addBookmark = "Add bookmark"
 bookmarkTitle = "Naslov knjižne oznake"
@@ -11496,15 +11470,6 @@ loading = "Učitavanje..."
 renderMarkdown = "Prikaži Markdown"
 sortedBy = "Sortirano po: {{column}}"
 textStats = "{{lines}} redaka · {{size}}"
-
-[viewer.portfolio]
-addFile = "Add file"
-count_one = "{{count}} file in this portfolio"
-count_other = "{{count}} files in this portfolio"
-import = "Import into Stirling"
-preview = "Preview"
-searchPlaceholder = "Search files"
-title = "Portfolio"
 
 [viewer.redaction]
 removeMark = "Ukloni ovu oznaku"

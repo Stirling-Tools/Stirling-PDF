@@ -3494,26 +3494,6 @@ description = "These cookies are essential for the website to function properly.
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
-[createPortfolio]
-coverTitle = "Cover page title"
-coverTitlePlaceholder = "PDF Portfolio"
-description = "Every selected file is kept whole inside the new PDF, whatever its type. Readers that don't support portfolios show a cover page with the files attached."
-goToFileEditor = "Go to file editor"
-info = "Combines your files into one PDF that keeps each file whole inside it. Open the result to browse the files and view or save any of them on their own."
-settings = "Portfolio Settings"
-submit = "Create Portfolio"
-title = "Portfolio Results"
-viewerModeHint = "A portfolio needs 2 or more files. Head to the file editor to select them."
-
-[createPortfolio.error]
-failed = "An error occurred while creating the PDF portfolio."
-
-[createPortfolio.tooltip.description]
-title = "What it does"
-
-[createPortfolio.tooltip.header]
-title = "About PDF Portfolios"
-
 [crop]
 autoCrop = "برش خودکار فضاهای خالی"
 noFileSelected = "برای شروع برش یک فایل PDF انتخاب کنید"
@@ -4707,11 +4687,6 @@ title = "فشرده‌سازی"
 desc = "تبدیل فایل‌ها بین قالب‌های مختلف"
 tags = "تبدیل,تغییر"
 title = "تبدیل"
-
-[home.createPortfolio]
-desc = "Bundle multiple files into an Adobe PDF Portfolio"
-tags = "portfolio,collection,package,bundle,combine files,pdf portfolio,adobe portfolio,pdf collection,container"
-title = "Create Portfolio"
 
 [home.crop]
 desc = "برش یک PDF برای کاهش اندازه آن (متن را حفظ می‌کند!)"
@@ -11407,7 +11382,6 @@ close = "بستن پیوست‌ها"
 closeSidebar = "بستن نوار کناری پیوست‌ها"
 download = "دانلود پیوست"
 empty = "در این سند هیچ پیوستی وجود ندارد"
-loadFailed = "Failed to load attachments"
 loading = "در حال بارگذاری پیوست‌ها..."
 noDocument = "برای مشاهدهٔ پیوست‌های آن، یک PDF باز کنید."
 noMatch = "هیچ پیوستی با جستجوی شما مطابقت ندارد"
@@ -11415,7 +11389,7 @@ noSupport = "پشتیبانی از پیوست در این نمایشگر در د
 retry = "تلاش دوباره"
 searchPlaceholder = "جستجوی پیوست‌ها"
 title = "پیوست‌ها"
-untitled = "Untitled"
+
 [viewer.bookmarks]
 addBookmark = "Add bookmark"
 bookmarkTitle = "عنوان نشانک"
@@ -11496,15 +11470,6 @@ loading = "در حال بارگذاری..."
 renderMarkdown = "رندر Markdown"
 sortedBy = "مرتب‌شده بر اساس: {{column}}"
 textStats = "{{lines}} خط · {{size}}"
-
-[viewer.portfolio]
-addFile = "Add file"
-count_one = "{{count}} file in this portfolio"
-count_other = "{{count}} files in this portfolio"
-import = "Import into Stirling"
-preview = "Preview"
-searchPlaceholder = "Search files"
-title = "Portfolio"
 
 [viewer.redaction]
 removeMark = "حذف این نشانه"

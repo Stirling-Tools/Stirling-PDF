@@ -3494,26 +3494,6 @@ description = "These cookies are essential for the website to function properly.
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
-[createPortfolio]
-coverTitle = "Cover page title"
-coverTitlePlaceholder = "PDF Portfolio"
-description = "Every selected file is kept whole inside the new PDF, whatever its type. Readers that don't support portfolios show a cover page with the files attached."
-goToFileEditor = "Go to file editor"
-info = "Combines your files into one PDF that keeps each file whole inside it. Open the result to browse the files and view or save any of them on their own."
-settings = "Portfolio Settings"
-submit = "Create Portfolio"
-title = "Portfolio Results"
-viewerModeHint = "A portfolio needs 2 or more files. Head to the file editor to select them."
-
-[createPortfolio.error]
-failed = "An error occurred while creating the PDF portfolio."
-
-[createPortfolio.tooltip.description]
-title = "What it does"
-
-[createPortfolio.tooltip.header]
-title = "About PDF Portfolios"
-
 [crop]
 autoCrop = "Автообрезка пустых полей"
 noFileSelected = "Выберите PDF-файл, чтобы начать обрезку"
@@ -4707,11 +4687,6 @@ title = "Сжать"
 desc = "Преобразование файлов между разными форматами"
 tags = "трансформировать,изменить"
 title = "Преобразовать"
-
-[home.createPortfolio]
-desc = "Bundle multiple files into an Adobe PDF Portfolio"
-tags = "portfolio,collection,package,bundle,combine files,pdf portfolio,adobe portfolio,pdf collection,container"
-title = "Create Portfolio"
 
 [home.crop]
 desc = "Обрезать PDF для уменьшения его размера (сохраняет текст!)"
@@ -11407,7 +11382,6 @@ close = "Закрыть вложения"
 closeSidebar = "Закрыть боковую панель вложений"
 download = "Скачать вложение"
 empty = "В этом документе нет вложений"
-loadFailed = "Failed to load attachments"
 loading = "Загрузка вложений..."
 noDocument = "Откройте PDF, чтобы просмотреть его вложения."
 noMatch = "Нет вложений, соответствующих вашему поиску"
@@ -11415,7 +11389,7 @@ noSupport = "Поддержка вложений недоступна для э�
 retry = "Повторить"
 searchPlaceholder = "Поиск вложений"
 title = "Вложения"
-untitled = "Untitled"
+
 [viewer.bookmarks]
 addBookmark = "Add bookmark"
 bookmarkTitle = "Название закладки"
@@ -11496,15 +11470,6 @@ loading = "Загрузка..."
 renderMarkdown = "Отобразить markdown"
 sortedBy = "Сортировка по: {{column}}"
 textStats = "{{lines}} строк · {{size}}"
-
-[viewer.portfolio]
-addFile = "Add file"
-count_one = "{{count}} file in this portfolio"
-count_other = "{{count}} files in this portfolio"
-import = "Import into Stirling"
-preview = "Preview"
-searchPlaceholder = "Search files"
-title = "Portfolio"
 
 [viewer.redaction]
 removeMark = "Удалить эту метку"

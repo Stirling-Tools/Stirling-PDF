@@ -3494,26 +3494,6 @@ description = "These cookies are essential for the website to function properly.
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
-[createPortfolio]
-coverTitle = "Cover page title"
-coverTitlePlaceholder = "PDF Portfolio"
-description = "Every selected file is kept whole inside the new PDF, whatever its type. Readers that don't support portfolios show a cover page with the files attached."
-goToFileEditor = "Go to file editor"
-info = "Combines your files into one PDF that keeps each file whole inside it. Open the result to browse the files and view or save any of them on their own."
-settings = "Portfolio Settings"
-submit = "Create Portfolio"
-title = "Portfolio Results"
-viewerModeHint = "A portfolio needs 2 or more files. Head to the file editor to select them."
-
-[createPortfolio.error]
-failed = "An error occurred while creating the PDF portfolio."
-
-[createPortfolio.tooltip.description]
-title = "What it does"
-
-[createPortfolio.tooltip.header]
-title = "About PDF Portfolios"
-
 [crop]
 autoCrop = "Recadrer automatiquement les marges blanches"
 noFileSelected = "Sélectionnez un fichier PDF pour commencer le recadrage"
@@ -4707,11 +4687,6 @@ title = "Compresser"
 desc = "Convertir des fichiers entre différents formats"
 tags = "transformer,changer"
 title = "Convertir"
-
-[home.createPortfolio]
-desc = "Bundle multiple files into an Adobe PDF Portfolio"
-tags = "portfolio,collection,package,bundle,combine files,pdf portfolio,adobe portfolio,pdf collection,container"
-title = "Create Portfolio"
 
 [home.crop]
 desc = "Redimensionnez un PDF pour réduire sa taille (en conservant le texte !)."
@@ -11407,7 +11382,6 @@ close = "Fermer les pièces jointes"
 closeSidebar = "Fermer le panneau latéral des pièces jointes"
 download = "Télécharger la pièce jointe"
 empty = "Aucune pièce jointe dans ce document"
-loadFailed = "Failed to load attachments"
 loading = "Chargement des pièces jointes..."
 noDocument = "Ouvrez un PDF pour afficher ses pièces jointes."
 noMatch = "Aucune pièce jointe ne correspond à votre recherche"
@@ -11415,7 +11389,7 @@ noSupport = "La prise en charge des pièces jointes n’est pas disponible pour 
 retry = "Réessayer"
 searchPlaceholder = "Rechercher des pièces jointes"
 title = "Pièces jointes"
-untitled = "Untitled"
+
 [viewer.bookmarks]
 addBookmark = "Add bookmark"
 bookmarkTitle = "Titre du signet"
@@ -11496,15 +11470,6 @@ loading = "Chargement…"
 renderMarkdown = "Afficher le markdown"
 sortedBy = "Trié par : {{column}}"
 textStats = "{{lines}} lignes · {{size}}"
-
-[viewer.portfolio]
-addFile = "Add file"
-count_one = "{{count}} file in this portfolio"
-count_other = "{{count}} files in this portfolio"
-import = "Import into Stirling"
-preview = "Preview"
-searchPlaceholder = "Search files"
-title = "Portfolio"
 
 [viewer.redaction]
 removeMark = "Supprimer cette marque"
