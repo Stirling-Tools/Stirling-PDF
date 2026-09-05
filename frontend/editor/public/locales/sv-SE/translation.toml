@@ -8133,6 +8133,172 @@ subtitleCreated = "Kopiera den här hemligheten nu — den visas inte igen."
 title = "Skapa API-nyckel"
 titleCreated = "Nyckel skapad"
 
+[portal.infrastructure.encryption]
+heading = "Kryptering i vila"
+hintLabel = "Mer om det här avsnittet"
+subheading = "Lagrade filer krypteras innan de når disken, databasen eller objektlagringen."
+unknown = "Okänd"
+
+[portal.infrastructure.encryption.auditNotice]
+description = "Kryptering är aktiv för den här licensen, men händelser för kryptering, dekryptering, återkallelse och export skrivs inte till granskningsspåret. Själva krypteringen påverkas inte."
+title = "Granskningshändelser kräver en Enterprise-licens"
+
+[portal.infrastructure.encryption.coverage]
+decryptOnlyNote = "Nya uppladdningar lagras i klartext. Filer som krypterats tidigare går fortfarande att läsa."
+encrypted = "Krypterade filer"
+heading = "Täckning"
+percentEncrypted = "{{percent}} % krypterat"
+plaintext = "Filer i klartext"
+progressLabel = "{{percent}} % av lagrade filer är krypterade"
+subheading = "Omfattar filer i Mina filer och signeringsflöden. Filer som en pipeline läser direkt från exempelvis nätverkskällor lagras inte här och krypteras därför inte."
+
+[portal.infrastructure.encryption.error]
+action = "Den nyckeländringen kunde inte tillämpas. Försök igen."
+keyMissing = "Den nyckeln finns inte längre. Uppdatera för att se den aktuella listan."
+migrationStart = "Migreringen kunde inte startas. Försök igen."
+rotate = "Omkapslingen kunde inte slutföras. Försök igen."
+
+[portal.infrastructure.encryption.generatedKey]
+backupGuide = "Så säkerhetskopierar du den"
+description = "Ingen krypteringsnyckel konfigurerades, så en skapades på servern. Säkerhetskopiera den nu: om den går förlorad kan krypterade filer inte återställas."
+title = "Den här nyckeln skapades åt dig"
+
+[portal.infrastructure.encryption.keys]
+changedAt = "Ändrades {{when}}"
+changedBy = "Av {{actor}}"
+changedByAt = "Av {{actor}} den {{when}}"
+heading = "Omfångsnycklar"
+keyVersion = "Version {{version}}"
+neverChanged = "Aldrig ändrad"
+restore = "Återställ åtkomst"
+retiredNote = "En pensionerad nyckel dekrypterar fortfarande filerna som lagras under den, men en nyare nyckel kapslar nya uppladdningar."
+revoke = "Återkalla"
+subheading = "En nyckel per omfång. Om du återkallar en nyckel blockeras läsning av allt som lagras under den."
+
+[portal.infrastructure.encryption.keys.columns]
+actions = "Åtgärder"
+lastChange = "Senaste ändring"
+scope = "Omfång"
+status = "Status"
+
+[portal.infrastructure.encryption.keys.empty]
+description = "En nyckel skapas första gången någon laddar upp en fil, inte vid uppstart."
+title = "Inga nycklar ännu"
+
+[portal.infrastructure.encryption.masterKey]
+backend = "Lagringsmotor"
+compareNote = "Jämför detta med fingeravtrycket i nyckelsäkerhetskopian och i uppstartsloggen."
+copied = "Kopierat"
+copy = "Kopiera"
+copyFailed = "Webbläsaren tillät inte kopiering. Fingeravtrycket är markerat, så kopiera det manuellt."
+fingerprint = "Fingeravtryck"
+fingerprintHelp = "Vad används detta fingeravtryck till?"
+heading = "Huvudnyckel"
+notMaterialised = "Nyckelhanteringen har inte startat på den här noden ännu."
+s3StreamingNote = "När något är krypterat strömmas nedladdningar från objektlagringen via den här servern i stället för att omdirigeras, vilket använder dess bandbredd."
+subheading = "Kapslar varje omfångsnyckel. Visas eller accepteras aldrig via API:t."
+version = "Version"
+
+[portal.infrastructure.encryption.migration]
+backlog_one = "{{formatted}} fil lagras i klartext och kan krypteras nu."
+backlog_other = "{{formatted}} filer lagras i klartext och kan krypteras nu."
+encrypted = "Krypterade"
+failedCount = "Misslyckades"
+heading = "Kryptera befintliga filer"
+hint = "Krypterar eftersläpningen av klartextfiler från innan kryptering slogs på. Förloppet hålls i minnet, så en omstart av backend återställer det till inte påbörjat. En ny körning hoppar över filer som redan är krypterade."
+noBacklog = "Alla lagrade filer är redan krypterade."
+progressLabel = "{{processed}} av {{total}} filer krypterade"
+requiresEncryptionOn = "Slå på kryptering innan du kör detta: eftersläpningen krypteras via samma skrivväg som nya uppladdningar."
+runAgain = "Kör igen"
+skipped = "Hoppades över"
+skippedHelp = "Vad betyder hoppades över?"
+skippedNote = "Överhoppade filer ersattes av en användare medan körningen pågick, så deras kopia lämnades orörd."
+start = "Starta"
+startedAt = "Startade {{when}}"
+
+[portal.infrastructure.encryption.migration.confirm]
+cancel = "Avbryt"
+confirm = "Börja kryptera"
+noCancel = "Det finns ingen stoppknapp. När körningen startat fortsätter den tills den är klar eller tills kryptering stängs av."
+rewrites_one = "Skriver om {{formatted}} lagrad fil och ersätter klartextkopian med en krypterad kopia."
+rewrites_other = "Skriver om {{formatted}} lagrade filer och ersätter klartextkopiorna med krypterade kopior."
+throttled = "Jobbet är begränsat och säkert att köra igen. Filer som redan är krypterade hoppas över."
+title = "Kryptera befintlig eftersläpning?"
+
+[portal.infrastructure.encryption.migration.failed]
+description = "Kryptering stängdes av medan migreringen kördes, så de återstående filerna lämnades orörda. Slå på den igen och kör på nytt."
+title = "Körningen stoppades i förtid"
+
+[portal.infrastructure.encryption.migration.state]
+COMPLETED = "Slutförd"
+FAILED = "Misslyckades"
+IDLE = "Inte påbörjad"
+RUNNING = "Körs"
+
+[portal.infrastructure.encryption.revoke]
+cancel = "Avbryt"
+clusterDelay = "I ett kluster tillämpar andra noder detta inom 60 sekunder."
+confirm = "Återkalla åtkomst"
+readsFail = "Filer som redan lagras under den här nyckeln kan inte längre öppnas av någon."
+reversible = "Detta går att återställa. Inget nyckelmaterial tas bort."
+title = "Återkalla åtkomst till den här nyckeln?"
+uploadsContinue = "Nya uppladdningar fortsätter fungera. De får en ny nyckel och förblir därför läsbara."
+
+[portal.infrastructure.encryption.rotation]
+currentVersion = "Aktuell version"
+heading = "Rotation av huvudnyckel"
+hint = "Kapslar om omfångsnycklar med en ny huvudnyckel; filinnehållet skrivs aldrig om. Den nya nyckeln ställs in i konfigurationen och används efter omstart, så denna knapp utför endast omkapslingen."
+pendingRows = "Rader med en äldre version"
+rewrap = "Kapsla om nycklar"
+rewrapped_one = "{{count}} nyckelrad kapslades om."
+rewrapped_other = "{{count}} nyckelrader kapslades om."
+runbook = "Körhandbok för rotation"
+
+[portal.infrastructure.encryption.rotation.confirm]
+cancel = "Avbryt"
+confirm = "Kapsla om nycklar"
+noFiles = "Filinnehållet påverkas inte. Endast nyckeltabellen skrivs om."
+rerunnable = "Säkert att köra igen om den inte blir klar."
+rewraps_one = "Kapslar om {{count}} nyckelrad med den aktuella huvudnyckeln."
+rewraps_other = "Kapslar om {{count}} nyckelrader med den aktuella huvudnyckeln."
+title = "Kapsla om nyckeltabellen?"
+
+[portal.infrastructure.encryption.rotation.pending]
+description = "Ta inte bort den tidigare nyckeln från konfigurationen ännu. Filer under de nycklarna skulle sluta öppnas."
+title_one = "{{count}} nyckelrad använder fortfarande den tidigare huvudnyckeln"
+title_other = "{{count}} nyckelrader använder fortfarande den tidigare huvudnyckeln"
+
+[portal.infrastructure.encryption.scope]
+global = "Alla användare"
+source = "Källa {{id}}"
+team = "Team {{id}}"
+
+[portal.infrastructure.encryption.status]
+ACTIVE = "Aktiv"
+DISABLED = "Återkallad"
+RETIRED = "Pensionerad"
+
+[portal.infrastructure.encryption.unavailable.forbidden]
+description = "Ditt konto saknar behörighet att se krypteringsinställningar."
+title = "Inte tillgängligt för ditt konto"
+
+[portal.infrastructure.encryption.unavailable.registry-unavailable]
+description = "Registret över krypteringsnycklar kunde inte läsas. Kontrollera databasanslutningen och programloggarna."
+title = "Nyckelregistret är inte tillgängligt"
+
+[portal.infrastructure.encryption.unavailable.storage-disabled]
+description = "Fillagring är avstängd på den här servern, så det finns inget att kryptera."
+title = "Lagring är inaktiverad"
+
+[portal.infrastructure.encryption.unavailable.unknown]
+description = "Krypteringsstatus kunde inte läsas in. Försök igen."
+title = "Status är inte tillgänglig"
+
+[portal.infrastructure.encryption.writeState]
+decryptOnly = "Endast dekryptering"
+encrypting = "Krypterar nya uppladdningar"
+off = "Av"
+
 [portal.infrastructure.keyLabel]
 active = "Aktiv"
 revoked = "Återkallad"
