@@ -187,7 +187,7 @@ class ToolDiscovery:
             entry: dict[str, Any] = {
                 "type": "object",
                 "properties": clean_props,
-                "description": body_schema.get("description"),
+                "description": _operation_description(path_item, body_schema),
             }
             # Calculate which fields are actually required (many are marked as required,
             # but have a default set, so they're not really required)
@@ -293,6 +293,14 @@ def _rewrite_refs(obj: object) -> Iterable[str]:
     elif isinstance(obj, list):
         for value in obj:
             yield from _rewrite_refs(value)
+
+
+def _operation_description(path_item: dict[str, Any], body_schema: dict[str, Any]) -> str | None:
+    post = path_item.get("post") or {}
+    for candidate in (body_schema.get("description"), post.get("description"), post.get("summary")):
+        if isinstance(candidate, str) and candidate.strip():
+            return candidate.strip()
+    return None
 
 
 def _tool_name_segments(path: str) -> str:
