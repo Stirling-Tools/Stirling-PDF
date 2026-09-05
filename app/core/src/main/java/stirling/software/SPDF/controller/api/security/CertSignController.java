@@ -1,6 +1,7 @@
 package stirling.software.SPDF.controller.api.security;
 
 import java.awt.*;
+import java.awt.geom.AffineTransform;
 import java.beans.PropertyEditorSupport;
 import java.io.*;
 import java.nio.file.Files;
@@ -10,7 +11,10 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.Calendar;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -74,9 +78,16 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.swagger.StandardPdfResponse;
+import stirling.software.SPDF.model.api.security.CertificateAttribute;
 import stirling.software.SPDF.model.api.security.SignPDFWithCertRequest;
+import stirling.software.SPDF.model.api.security.SignatureBox;
+import stirling.software.SPDF.model.api.security.SignatureLogoPosition;
 import stirling.software.SPDF.pdf.signature.CreateSignatureBase;
+import stirling.software.SPDF.service.CertificateAttributeService;
 import stirling.software.SPDF.service.HardwareKeyStoreService;
+import stirling.software.SPDF.service.SignatureAppearanceLayout;
+import stirling.software.SPDF.service.SignatureLogoPlacement;
+import stirling.software.SPDF.service.SignatureMarkStamper;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.tool.ToolFormat;
@@ -127,6 +138,7 @@ public class CertSignController {
         this.hardwareKeyStoreService = hardwareKeyStoreService;
     }
 
+    /** Signs without a positioned box, keeping the historical appearance and placement. */
     public static void sign(
             CustomPDFDocumentFactory pdfDocumentFactory,
             MultipartFile input,
@@ -138,6 +150,36 @@ public class CertSignController {
             String location,
             String reason,
             Boolean showLogo) {
+        sign(
+                pdfDocumentFactory,
+                input,
+                output,
+                instance,
+                showSignature,
+                pageNumber,
+                name,
+                location,
+                reason,
+                showLogo,
+                null,
+                null,
+                false);
+    }
+
+    public static void sign(
+            CustomPDFDocumentFactory pdfDocumentFactory,
+            MultipartFile input,
+            OutputStream output,
+            CreateSignature instance,
+            Boolean showSignature,
+            Integer pageNumber,
+            String name,
+            String location,
+            String reason,
+            Boolean showLogo,
+            SignatureBox box,
+            List<CertificateAttribute> visibleAttributes,
+            Boolean markAllPages) {
         try (PDDocument doc = pdfDocumentFactory.load(input)) {
             PDSignature signature = new PDSignature();
             signature.setFilter(PDSignature.FILTER_ADOBE_PPKLITE);
@@ -146,10 +188,31 @@ public class CertSignController {
             signature.setLocation(location);
             signature.setReason(reason);
             signature.setSignDate(Calendar.getInstance()); // PDFBox requires Calendar
+
+            // Marks go on before signing so the signature covers them. Stamping afterwards would
+            // modify the document the signature attests to, and every validator would flag it.
+            if (Boolean.TRUE.equals(markAllPages)
+                    && Boolean.TRUE.equals(showSignature)
+                    && box != null) {
+                int stamped =
+                        SignatureMarkStamper.stampOtherPages(
+                                doc,
+                                pageNumber != null ? pageNumber : 0,
+                                box,
+                                instance.displayFields(signature, visibleAttributes),
+                                instance.effectiveLogo(showLogo));
+                log.info(
+                        "Stamped the signature mark on {} page(s); only page {} carries the"
+                                + " signature itself",
+                        stamped,
+                        (pageNumber != null ? pageNumber : 0) + 1);
+            }
+
             if (Boolean.TRUE.equals(showSignature)) {
                 try (SignatureOptions signatureOptions = new SignatureOptions()) {
                     signatureOptions.setVisualSignature(
-                            instance.createVisibleSignature(doc, signature, pageNumber, showLogo));
+                            instance.createVisibleSignature(
+                                    doc, signature, pageNumber, showLogo, box, visibleAttributes));
                     signatureOptions.setPage(pageNumber);
 
                     doc.addSignature(signature, instance, signatureOptions);
@@ -292,6 +355,9 @@ public class CertSignController {
         char[] pin = keystorePassword != null ? keystorePassword.toCharArray() : null;
         CreateSignature createSignature =
                 new CreateSignature(ks, pin, request.getAlias(), signingProvider);
+        createSignature.setCustomLogo(readLogo(request.getLogoImage(), request.getLogoPosition()));
+        createSignature.setAttributeLabels(
+                zipLabels(request.getVisibleAttributes(), request.getVisibleAttributeLabels()));
         TempFile signedOut = tempFileManager.createManagedTempFile(".pdf");
         try (OutputStream os = new FileOutputStream(signedOut.getFile())) {
             sign(
@@ -304,7 +370,14 @@ public class CertSignController {
                     name,
                     location,
                     reason,
-                    showLogo);
+                    showLogo,
+                    SignatureBox.from(
+                            request.getSignatureX(),
+                            request.getSignatureY(),
+                            request.getSignatureWidth(),
+                            request.getSignatureHeight()),
+                    request.getVisibleAttributes(),
+                    request.getMarkAllPages());
         } catch (IOException e) {
             signedOut.close();
             throw e;
@@ -331,6 +404,75 @@ public class CertSignController {
                     argumentName + " - " + errorDescription);
         }
         return file;
+    }
+
+    /**
+     * Reads the uploaded logo, if the request carries one.
+     *
+     * @return the logo to draw, or {@code null} when the request asked for neither an image nor a
+     *     position - which is what keeps the appearance of old for callers that know nothing about
+     *     either
+     */
+    private SignatureLogoPlacement.Logo readLogo(
+            MultipartFile logoImage, SignatureLogoPosition logoPosition) throws IOException {
+        boolean hasImage = logoImage != null && !logoImage.isEmpty();
+        if (!hasImage && logoPosition == null) {
+            return null;
+        }
+        if (!hasImage) {
+            // A position on its own still means something: it moves the bundled mark.
+            return new SignatureLogoPlacement.Logo(null, logoPosition);
+        }
+        if (!isSupportedLogoType(logoImage)) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalidArgument",
+                    "Invalid argument: {0}",
+                    "signature logo - only PNG and JPEG images are supported");
+        }
+        return new SignatureLogoPlacement.Logo(logoImage.getBytes(), logoPosition);
+    }
+
+    /**
+     * PDFBox reads the image from its bytes, so the declared type is only a hint - but rejecting an
+     * obviously wrong upload here gives the user a clear message instead of a decoding failure
+     * halfway through signing.
+     */
+    /**
+     * Pairs each selected attribute with the label the caller wants drawn for it.
+     *
+     * <p>The two lists come from a form, so they can disagree; anything the labels do not cover
+     * keeps the English one, which is the same outcome as sending no labels at all.
+     */
+    private static Map<CertificateAttribute, String> zipLabels(
+            List<CertificateAttribute> attributes, List<String> labels) {
+        if (attributes == null || labels == null) {
+            return Map.of();
+        }
+        Map<CertificateAttribute, String> zipped = new EnumMap<>(CertificateAttribute.class);
+        for (int i = 0; i < Math.min(attributes.size(), labels.size()); i++) {
+            if (attributes.get(i) != null && labels.get(i) != null && !labels.get(i).isBlank()) {
+                zipped.put(attributes.get(i), labels.get(i));
+            }
+        }
+        return zipped;
+    }
+
+    private boolean isSupportedLogoType(MultipartFile logoImage) {
+        String contentType = logoImage.getContentType();
+        if (contentType != null) {
+            String normalised = contentType.toLowerCase(Locale.ROOT);
+            return normalised.equals("image/png")
+                    || normalised.equals("image/jpeg")
+                    || normalised.equals("image/jpg");
+        }
+        String filename = logoImage.getOriginalFilename();
+        if (filename == null) {
+            return false;
+        }
+        String normalised = filename.toLowerCase(Locale.ROOT);
+        return normalised.endsWith(".png")
+                || normalised.endsWith(".jpg")
+                || normalised.endsWith(".jpeg");
     }
 
     private PrivateKey getPrivateKeyFromPEM(byte[] pemBytes, String password)
@@ -365,6 +507,33 @@ public class CertSignController {
     public static class CreateSignature extends CreateSignatureBase {
         File logoFile;
 
+        /**
+         * Logo supplied with the request, if any. It lives on the instance rather than travelling
+         * through {@code sign(...)} because that is where the bundled mark already lives: the
+         * appearance builder owns what the signature looks like.
+         */
+        private SignatureLogoPlacement.Logo customLogo;
+
+        private Map<CertificateAttribute, String> attributeLabels = Map.of();
+
+        /**
+         * Sets what to draw in front of each value.
+         *
+         * <p>Carried on the signer for the same reason the logo is: this class owns how the
+         * signature looks, and {@code sign(...)} already takes thirteen arguments.
+         */
+        public void setAttributeLabels(Map<CertificateAttribute, String> attributeLabels) {
+            this.attributeLabels = attributeLabels != null ? attributeLabels : Map.of();
+        }
+
+        public void setCustomLogo(SignatureLogoPlacement.Logo customLogo) {
+            this.customLogo = customLogo;
+        }
+
+        public SignatureLogoPlacement.Logo getCustomLogo() {
+            return customLogo;
+        }
+
         public CreateSignature(KeyStore keystore, char[] pin)
                 throws KeyStoreException,
                         UnrecoverableKeyException,
@@ -397,8 +566,67 @@ public class CertSignController {
             }
         }
 
+        /** The uploaded logo when there is one, otherwise the mark that ships with the app. */
+        private PDImageXObject loadLogoImage(PDDocument doc) throws IOException {
+            if (customLogo != null && customLogo.image() != null) {
+                return PDImageXObject.createFromByteArray(doc, customLogo.image(), "signatureLogo");
+            }
+            return PDImageXObject.createFromFileByExtension(logoFile, doc);
+        }
+
+        /**
+         * The logo the signature will actually draw, resolved to bytes.
+         *
+         * <p>Handed to the mark stamper so the marks on the other pages carry the same image as the
+         * signature - including the bundled mark, which otherwise only the signature knows how to
+         * find.
+         *
+         * @return the logo, or {@code null} when the signature is not drawing one
+         */
+        public SignatureLogoPlacement.Logo effectiveLogo(Boolean showLogo) throws IOException {
+            if (!Boolean.TRUE.equals(showLogo)) {
+                return null;
+            }
+            if (customLogo != null && customLogo.image() != null) {
+                return new SignatureLogoPlacement.Logo(customLogo.image(), logoPosition());
+            }
+            return new SignatureLogoPlacement.Logo(
+                    Files.readAllBytes(logoFile.toPath()), logoPosition());
+        }
+
+        /** Where the caller asked for the logo, defaulting to the left of the box. */
+        private SignatureLogoPosition logoPosition() {
+            if (customLogo != null && customLogo.position() != null) {
+                return customLogo.position();
+            }
+            return SignatureLogoPosition.LEFT;
+        }
+
+        private static float aspectRatio(PDImageXObject image) {
+            return image.getHeight() == 0
+                    ? 1f
+                    : (float) image.getWidth() / (float) image.getHeight();
+        }
+
+        /**
+         * Whether the legacy placement keeps the image inside the box it is clipped to.
+         *
+         * <p>True for the bundled mark, which is why that path can go on drawing the image at a
+         * size taken from its own pixels rather than from the box.
+         */
+        private static boolean fitsAtLegacySize(PDImageXObject image, PDRectangle bbox) {
+            return LEGACY_LOGO_X * LEGACY_LOGO_SCALE + image.getWidth() * LEGACY_LOGO_SCALE
+                            <= bbox.getWidth()
+                    && image.getHeight() * LEGACY_LOGO_SCALE <= bbox.getHeight();
+        }
+
         public InputStream createVisibleSignature(
-                PDDocument srcDoc, PDSignature signature, Integer pageNumber, Boolean showLogo)
+                PDDocument srcDoc,
+                PDSignature signature,
+                Integer pageNumber,
+                Boolean showLogo,
+                SignatureBox box,
+                List<CertificateAttribute> visibleAttributes)
                 throws IOException {
             // modified from org.apache.pdfbox.examples.signature.CreateVisibleSignature2
             try (PDDocument doc = new PDDocument()) {
@@ -414,9 +642,21 @@ public class CertSignController {
                 acroForm.getCOSObject().setDirect(true);
                 acroFormFields.add(signatureField);
 
-                PDRectangle rect = new PDRectangle(0, 0, 200, 50);
+                // Without a requested box, keep the historical bottom-left placement so existing
+                // callers see no change in where their signatures land.
+                PDPage sourcePage = srcDoc.getPage(pageNumber);
+                PDRectangle rect =
+                        box != null
+                                ? box.toPdfRectangle(sourcePage)
+                                : new PDRectangle(0, 0, 200, 50);
 
                 widget.setRectangle(rect);
+
+                // A page can be stored one way up and displayed another. The box arrived measured
+                // against what the reader sees, so the appearance is drawn that way round and
+                // turned to match the page, or the signature would read sideways.
+                int turn = box != null ? SignatureBox.quarterTurn(sourcePage) : 0;
+                boolean sideways = turn == 90 || turn == 270;
 
                 // from PDVisualSigBuilder.createHolderForm()
                 PDStream stream = new PDStream(doc);
@@ -424,9 +664,15 @@ public class CertSignController {
                 PDResources res = new PDResources();
                 form.setResources(res);
                 form.setFormType(1);
-                PDRectangle bbox = new PDRectangle(rect.getWidth(), rect.getHeight());
+                PDRectangle bbox =
+                        sideways
+                                ? new PDRectangle(rect.getHeight(), rect.getWidth())
+                                : new PDRectangle(rect.getWidth(), rect.getHeight());
                 float height = bbox.getHeight();
                 form.setBBox(bbox);
+                if (turn != 0) {
+                    form.setMatrix(AffineTransform.getRotateInstance(Math.toRadians(turn)));
+                }
                 PDFont font = new PDType1Font(FontName.TIMES_BOLD);
 
                 // from PDVisualSigBuilder.createAppearanceDictionary()
@@ -436,46 +682,60 @@ public class CertSignController {
                 appearance.setNormalAppearance(appearanceStream);
                 widget.setAppearance(appearance);
 
+                // Nothing new asked for means the appearance of old, logo included, so callers
+                // that never heard of these parameters keep the output they already had.
+                boolean legacyAppearance =
+                        box == null && visibleAttributes == null && customLogo == null;
+
+                // The appearance stream draws in its own space: the origin is the bottom-left of
+                // the box, not of the page. Everything below is therefore box-local.
+                PDRectangle textArea = bbox;
+
                 try (PDPageContentStream cs = new PDPageContentStream(doc, appearanceStream)) {
                     if (Boolean.TRUE.equals(showLogo)) {
-                        cs.saveGraphicsState();
-                        PDExtendedGraphicsState extState = new PDExtendedGraphicsState();
-                        extState.setBlendMode(BlendMode.MULTIPLY);
-                        extState.setNonStrokingAlphaConstant(0.5f);
-                        cs.setGraphicsStateParameters(extState);
-                        cs.transform(Matrix.getScaleInstance(0.08f, 0.08f));
-                        PDImageXObject img =
-                                PDImageXObject.createFromFileByExtension(logoFile, doc);
-                        cs.drawImage(img, 100, 0);
-                        cs.restoreGraphicsState();
-                    }
+                        PDImageXObject img = loadLogoImage(doc);
 
-                    // show text
-                    float fontSize = 10;
-                    float leading = fontSize * 1.5f;
-                    cs.beginText();
-                    cs.setFont(font, fontSize);
-                    cs.setNonStrokingColor(Color.black);
-                    cs.newLineAtOffset(fontSize, height - leading);
-                    cs.setLeading(leading);
+                        if (legacyAppearance && fitsAtLegacySize(img, bbox)) {
+                            cs.saveGraphicsState();
+                            PDExtendedGraphicsState extState = new PDExtendedGraphicsState();
+                            extState.setBlendMode(BlendMode.MULTIPLY);
+                            extState.setNonStrokingAlphaConstant(0.5f);
+                            cs.setGraphicsStateParameters(extState);
+                            cs.transform(
+                                    Matrix.getScaleInstance(LEGACY_LOGO_SCALE, LEGACY_LOGO_SCALE));
+                            cs.drawImage(img, LEGACY_LOGO_X, 0);
+                            cs.restoreGraphicsState();
+                        } else if (legacyAppearance) {
+                            // The legacy size comes from the image's own pixels, which is safe only
+                            // for the bundled mark. A larger image would be cut off by the form's
+                            // bounding box, so it is letterboxed into the box instead.
+                            SignatureLogoPlacement.draw(
+                                    cs,
+                                    img,
+                                    SignatureLogoPlacement.fitInside(bbox, aspectRatio(img)),
+                                    true);
+                        } else {
+                            SignatureLogoPosition position = logoPosition();
+                            // The split is pure geometry: the text sizes itself to whatever area
+                            // is left over, so there is nothing about the fields to consult here.
+                            SignatureLogoPlacement.Placement placement =
+                                    SignatureLogoPlacement.place(bbox, aspectRatio(img), position);
+                            SignatureLogoPlacement.draw(
+                                    cs,
+                                    img,
+                                    placement.logoRect(),
+                                    position == SignatureLogoPosition.BEHIND);
+                            textArea = placement.textRect();
+                        }
+                    }
 
                     X509Certificate cert = (X509Certificate) getCertificateChain()[0];
 
-                    // https://stackoverflow.com/questions/2914521/
-                    X500Name x500Name = new X500Name(cert.getSubjectX500Principal().getName());
-                    RDN cn = x500Name.getRDNs(BCStyle.CN)[0];
-                    String name = IETFUtils.valueToString(cn.getFirst().getValue());
-
-                    String date = signature.getSignDate().getTime().toString();
-                    String reason = signature.getReason();
-
-                    cs.showText("Signed by " + name);
-                    cs.newLine();
-                    cs.showText(date);
-                    cs.newLine();
-                    cs.showText(reason);
-
-                    cs.endText();
+                    if (legacyAppearance) {
+                        drawLegacyText(cs, font, height, cert, signature);
+                    } else {
+                        drawAttributeText(cs, font, textArea, signature, visibleAttributes);
+                    }
                 }
 
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -483,5 +743,99 @@ public class CertSignController {
                 return new ByteArrayInputStream(baos.toByteArray());
             }
         }
+
+        /**
+         * The appearance produced before the signature box was configurable. Kept byte-for-byte so
+         * callers that ask for neither a box nor a field selection get exactly what they got
+         * before.
+         */
+        private void drawLegacyText(
+                PDPageContentStream cs,
+                PDFont font,
+                float height,
+                X509Certificate cert,
+                PDSignature signature)
+                throws IOException {
+            float fontSize = 10;
+            float leading = fontSize * 1.5f;
+            cs.beginText();
+            cs.setFont(font, fontSize);
+            cs.setNonStrokingColor(Color.black);
+            cs.newLineAtOffset(fontSize, height - leading);
+            cs.setLeading(leading);
+
+            // https://stackoverflow.com/questions/2914521/
+            X500Name x500Name = new X500Name(cert.getSubjectX500Principal().getName());
+            RDN cn = x500Name.getRDNs(BCStyle.CN)[0];
+            String name = IETFUtils.valueToString(cn.getFirst().getValue());
+
+            cs.showText("Signed by " + name);
+            cs.newLine();
+            cs.showText(signature.getSignDate().getTime().toString());
+            cs.newLine();
+            cs.showText(signature.getReason());
+            cs.endText();
+        }
+
+        /**
+         * The fields the visible signature shows, so the mark stamped on the other pages can render
+         * identical content without duplicating the selection rules.
+         *
+         * <p>Falls back to the fields the legacy appearance showed when no selection was made, so
+         * asking only for a position still yields a sensible signature.
+         */
+        public List<SignatureAppearanceLayout.Field> displayFields(
+                PDSignature signature, List<CertificateAttribute> visibleAttributes)
+                throws IOException {
+            X509Certificate cert = (X509Certificate) getCertificateChain()[0];
+            CertificateAttributeService attributeService = new CertificateAttributeService();
+            Map<CertificateAttribute, String> available =
+                    attributeService.withSignatureDetails(
+                            attributeService.extract(cert),
+                            signature.getSignDate() != null
+                                    ? signature.getSignDate().getTime()
+                                    : null,
+                            signature.getReason(),
+                            signature.getLocation());
+
+            List<CertificateAttribute> selected =
+                    visibleAttributes != null && !visibleAttributes.isEmpty()
+                            ? visibleAttributes
+                            : DEFAULT_VISIBLE_ATTRIBUTES;
+
+            return attributeService.toDisplayFields(available, selected, attributeLabels);
+        }
+
+        /** Draws the selected certificate fields, scaled to whatever box the user drew. */
+        private void drawAttributeText(
+                PDPageContentStream cs,
+                PDFont font,
+                PDRectangle textArea,
+                PDSignature signature,
+                List<CertificateAttribute> visibleAttributes)
+                throws IOException {
+            SignatureAppearanceLayout.draw(
+                    cs,
+                    font,
+                    textArea,
+                    SignatureAppearanceLayout.fit(
+                            displayFields(signature, visibleAttributes),
+                            font,
+                            textArea.getWidth(),
+                            textArea.getHeight()));
+        }
     }
+
+    /** Scale the bundled mark has always been drawn at, before any transform of its own. */
+    private static final float LEGACY_LOGO_SCALE = 0.08f;
+
+    /** Where the bundled mark sits, in the scaled space the legacy transform sets up. */
+    private static final float LEGACY_LOGO_X = 100f;
+
+    /** Fields shown when a box is requested without saying which fields to draw. */
+    private static final List<CertificateAttribute> DEFAULT_VISIBLE_ATTRIBUTES =
+            List.of(
+                    CertificateAttribute.SUBJECT_COMMON_NAME,
+                    CertificateAttribute.SIGNING_TIME,
+                    CertificateAttribute.REASON);
 }

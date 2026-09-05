@@ -1,5 +1,6 @@
 package stirling.software.SPDF.controller.api.security;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -16,6 +17,9 @@ import java.nio.file.Files;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -206,6 +210,125 @@ class CertSignControllerTest {
 
         assertNotNull(response.getBody());
         assertTrue(drainBody(response).length > 0);
+    }
+
+    /**
+     * The appearance produced when nothing new is asked for, operator by operator.
+     *
+     * <p>Every caller that predates the configurable box still comes through here, so this pins the
+     * drawing rather than merely checking that a signature came out: the numbers below are what the
+     * tool has always emitted, and a change to any of them is a change to those callers' documents.
+     */
+    @Test
+    void legacyAppearanceIsUnchanged() throws Exception {
+        MockMultipartFile pdfFile =
+                new MockMultipartFile(
+                        "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+        MockMultipartFile p12File =
+                new MockMultipartFile("p12File", "test-cert.p12", "application/x-pkcs12", p12Bytes);
+
+        SignPDFWithCertRequest request = new SignPDFWithCertRequest();
+        request.setFileInput(pdfFile);
+        request.setCertType("PKCS12");
+        request.setP12File(p12File);
+        request.setPassword("password");
+        request.setShowSignature(true);
+        request.setShowLogo(true);
+        request.setReason("test");
+        request.setLocation("test");
+        request.setName("tester");
+        request.setPageNumber(1);
+
+        byte[] signed = drainBody(certSignController.signPDFWithCert(request, httpRequest));
+
+        String appearance = appearanceOf(signed);
+        // The bundled mark, at the scale and offset it has always had.
+        assertTrue(
+                appearance.contains("0.08 0 0 0.08 0 0 cm"),
+                "the legacy logo transform changed: " + appearance);
+        assertTrue(appearance.contains("100 0 cm") || appearance.contains("100 0 Td"), appearance);
+        // Ten-point type on fifteen-point leading, starting one line down from the top.
+        assertTrue(appearance.contains("10 Tf"), "the legacy type size changed: " + appearance);
+        assertTrue(appearance.contains("15 TL"), "the legacy leading changed: " + appearance);
+        assertTrue(appearance.contains("10 35 Td"), "the legacy first line moved: " + appearance);
+        // The legacy text says "Signed by" with no colon, unlike the configurable appearance.
+        assertTrue(appearance.contains("Signed by "), appearance);
+    }
+
+    /** The normal appearance stream of the first widget, as PDF operators. */
+    private static String appearanceOf(byte[] signed) throws Exception {
+        try (PDDocument doc = Loader.loadPDF(signed)) {
+            PDAnnotationWidget widget =
+                    (PDAnnotationWidget) doc.getPage(0).getAnnotations().getFirst();
+            return new String(
+                    widget.getAppearance()
+                            .getNormalAppearance()
+                            .getAppearanceStream()
+                            .getContentStream()
+                            .toByteArray(),
+                    java.nio.charset.StandardCharsets.ISO_8859_1);
+        }
+    }
+
+    /**
+     * The signature itself, on a page that is stored one way up and shown another.
+     *
+     * <p>The widget lands where the reader would have drawn it, and the appearance is turned to
+     * match, so the signature reads level instead of down the side of the page.
+     */
+    @Test
+    void signatureFollowsTheRotationOfThePage() throws Exception {
+        byte[] rotated;
+        try (PDDocument doc = new PDDocument()) {
+            PDPage page = new PDPage(PDRectangle.A4);
+            page.setRotation(90);
+            doc.addPage(page);
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            doc.save(baos);
+            rotated = baos.toByteArray();
+        }
+
+        MockMultipartFile pdfFile =
+                new MockMultipartFile(
+                        "fileInput", "rotated.pdf", MediaType.APPLICATION_PDF_VALUE, rotated);
+        MockMultipartFile p12File =
+                new MockMultipartFile("p12File", "test-cert.p12", "application/x-pkcs12", p12Bytes);
+
+        SignPDFWithCertRequest request = new SignPDFWithCertRequest();
+        request.setFileInput(pdfFile);
+        request.setCertType("PKCS12");
+        request.setP12File(p12File);
+        request.setPassword("password");
+        request.setShowSignature(true);
+        request.setShowLogo(false);
+        request.setReason("test");
+        request.setName("tester");
+        request.setPageNumber(1);
+        // A wide, short box at the bottom left of the page as the reader sees it.
+        request.setSignatureX(20f);
+        request.setSignatureY(20f);
+        request.setSignatureWidth(200f);
+        request.setSignatureHeight(60f);
+
+        byte[] signed = drainBody(certSignController.signPDFWithCert(request, httpRequest));
+
+        try (PDDocument doc = Loader.loadPDF(signed)) {
+            PDAnnotationWidget widget =
+                    (PDAnnotationWidget) doc.getPage(0).getAnnotations().getFirst();
+            PDRectangle rect = widget.getRectangle();
+
+            // A quarter turn swaps the sides: what the reader sees as 200x60 is stored 60x200.
+            assertEquals(60f, rect.getWidth(), 0.01f);
+            assertEquals(200f, rect.getHeight(), 0.01f);
+
+            // And the appearance carries the matching turn, or it would read down the side.
+            PDAppearanceStream appearance =
+                    widget.getAppearance().getNormalAppearance().getAppearanceStream();
+            assertEquals(200f, appearance.getBBox().getWidth(), 0.01f);
+            assertEquals(60f, appearance.getBBox().getHeight(), 0.01f);
+            assertNotNull(appearance.getMatrix());
+            assertEquals(0f, appearance.getMatrix().getScaleX(), 0.01f);
+        }
     }
 
     @Test

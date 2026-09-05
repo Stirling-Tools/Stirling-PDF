@@ -106,6 +106,7 @@ import { FormFieldCreationOverlay } from "@app/tools/formFill/FormFieldCreationO
 import { FormFieldEditOverlay } from "@app/tools/formFill/FormFieldEditOverlay";
 import { ButtonAppearanceOverlay } from "@app/tools/formFill/ButtonAppearanceOverlay";
 import SignatureFieldOverlay from "@app/components/viewer/SignatureFieldOverlay";
+import SignatureBoxDragOverlay from "@app/components/viewer/SignatureBoxDragOverlay";
 import { CommentsSidebar } from "@app/components/viewer/CommentsSidebar";
 import { CommentAuthorProvider } from "@app/contexts/CommentAuthorContext";
 import { accountService } from "@app/services/accountService";
@@ -1190,6 +1191,17 @@ export function LocalEmbedPDF({
                                       pdfSource={file}
                                       pageWidth={width}
                                       pageHeight={height}
+                                    />
+                                  )}
+
+                                  {/* Drag a signature box onto the page; inert until the
+                                      cert-sign tool asks for placement */}
+                                  {file && (
+                                    <SignatureBoxDragOverlay
+                                      pageIndex={pageIndex}
+                                      pageWidth={width}
+                                      pageHeight={height}
+                                      pdfSource={file}
                                     />
                                   )}
 
