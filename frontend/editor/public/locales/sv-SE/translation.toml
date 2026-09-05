@@ -426,7 +426,7 @@ tags = "text,annotering,etikett"
 title = "Lägg till text"
 
 [addText.canvas]
-colorPickerTitle = "Choose stroke colour"
+colorPickerTitle = "Välj linjefärg"
 
 [addText.error]
 failed = "Ett fel inträffade när text lades till i PDF:en."
@@ -448,26 +448,26 @@ resume = "Återuppta placering"
 title = "Resultat för Lägg till text"
 
 [addText.saved]
-defaultCanvasLabel = "Drawing signature"
-defaultImageLabel = "Uploaded signature"
-defaultLabel = "Signature"
-defaultTextLabel = "Typed signature"
-delete = "Remove"
-emptyTitle = "No saved signatures yet"
-heading = "Saved signatures"
-label = "Label"
-limitTitle = "Limit reached"
-next = "Next"
-personalHeading = "Personal Signatures"
-prev = "Previous"
-savePersonal = "Save Personal"
-saveShared = "Save Shared"
-sharedHeading = "Shared Signatures"
+defaultCanvasLabel = "Ritad signatur"
+defaultImageLabel = "Uppladdad signatur"
+defaultLabel = "Signatur"
+defaultTextLabel = "Skriven signatur"
+delete = "Ta bort"
+emptyTitle = "Inga sparade signaturer ännu"
+heading = "Sparade signaturer"
+label = "Etikett"
+limitTitle = "Gränsen är nådd"
+next = "Nästa"
+personalHeading = "Personliga signaturer"
+prev = "Föregående"
+savePersonal = "Spara personlig"
+saveShared = "Spara delad"
+sharedHeading = "Delade signaturer"
 
 [addText.saved.type]
-canvas = "Drawing"
-image = "Upload"
-text = "Text"
+canvas = "Ritning"
+image = "Uppladdning"
+text = "Textsignatur"
 
 [addText.step]
 createDesc = "Ange texten du vill lägga till"
@@ -486,9 +486,9 @@ name = "Textinnehåll"
 placeholder = "Ange texten du vill lägga till"
 
 [addText.type]
-canvas = "Canvas"
-image = "Image"
-saved = "Saved"
+canvas = "Rita"
+image = "Bild"
+saved = "Sparade"
 text = "Text"
 
 [adjust-contrast]
