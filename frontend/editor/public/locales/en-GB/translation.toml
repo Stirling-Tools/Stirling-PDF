@@ -3494,26 +3494,6 @@ description = "These cookies are essential for the website to function properly.
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
-[createPortfolio]
-coverTitle = "Cover page title"
-coverTitlePlaceholder = "PDF Portfolio"
-description = "Every selected file is kept whole inside the new PDF, whatever its type. Readers that don't support portfolios show a cover page with the files attached."
-goToFileEditor = "Go to file editor"
-info = "Combines your files into one PDF that keeps each file whole inside it. Open the result to browse the files and view or save any of them on their own."
-settings = "Portfolio Settings"
-submit = "Create Portfolio"
-title = "Portfolio Results"
-viewerModeHint = "A portfolio needs 2 or more files. Head to the file editor to select them."
-
-[createPortfolio.error]
-failed = "An error occurred while creating the PDF portfolio."
-
-[createPortfolio.tooltip.description]
-title = "What it does"
-
-[createPortfolio.tooltip.header]
-title = "About PDF Portfolios"
-
 [crop]
 autoCrop = "Auto-crop whitespace"
 noFileSelected = "Add a PDF file to begin cropping"
@@ -4707,11 +4687,6 @@ title = "Compress"
 desc = "Convert files between different formats"
 tags = "transform,change,convert,PDF to Word,PDF to Excel,PDF to image,Word to PDF,Excel to PDF,PowerPoint to PDF,HTML to PDF,export,import,file conversion,format change,save as"
 title = "Convert"
-
-[home.createPortfolio]
-desc = "Bundle multiple files into an Adobe PDF Portfolio"
-tags = "portfolio,collection,package,bundle,combine files,pdf portfolio,adobe portfolio,pdf collection,container"
-title = "Create Portfolio"
 
 [home.crop]
 desc = "Crop a PDF to reduce its size (maintains text!)"
@@ -11407,7 +11382,6 @@ close = "Close attachments"
 closeSidebar = "Close attachments sidebar"
 download = "Download attachment"
 empty = "No attachments in this document"
-loadFailed = "Failed to load attachments"
 loading = "Loading attachments..."
 noDocument = "Open a PDF to view its attachments."
 noMatch = "No attachments match your search"
@@ -11415,7 +11389,6 @@ noSupport = "Attachment support is unavailable for this viewer."
 retry = "Retry"
 searchPlaceholder = "Search attachments"
 title = "Attachments"
-untitled = "Untitled"
 
 [viewer.bookmarks]
 addBookmark = "Add bookmark"
@@ -11497,15 +11470,6 @@ loading = "Loading..."
 renderMarkdown = "Render markdown"
 sortedBy = "Sorted by: {{column}}"
 textStats = "{{lines}} lines · {{size}}"
-
-[viewer.portfolio]
-addFile = "Add file"
-count_one = "{{count}} file in this portfolio"
-count_other = "{{count}} files in this portfolio"
-import = "Import into Stirling"
-preview = "Preview"
-searchPlaceholder = "Search files"
-title = "Portfolio"
 
 [viewer.redaction]
 removeMark = "Remove this mark"
