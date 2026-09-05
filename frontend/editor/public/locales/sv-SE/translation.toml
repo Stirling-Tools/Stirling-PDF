@@ -10484,7 +10484,7 @@ documents = "Dokument och RAG"
 general = "Allmänt"
 limits = "Gränser och prestanda"
 models = "Modeller och leverantörer"
-title = "AI"
+title = "AI-inställningar"
 
 [settings.configuration]
 advanced = "Avancerat"
@@ -10492,7 +10492,7 @@ database = "Databas"
 endpoints = "Slutpunkter"
 features = "Funktioner"
 folderAccess = "Mappåtkomst"
-mcp = "MCP Server"
+mcp = "MCP-server"
 storageSharing = "Fillagring och delning"
 systemSettings = "Systeminställningar"
 title = "Konfiguration"
@@ -10500,14 +10500,14 @@ title = "Konfiguration"
 [settings.connection]
 localDescription = "Du använder den lokala backend utan konto. Vissa verktyg som kräver molnbearbetning eller en självhostad server är inte tillgängliga."
 logout = "Logga ut"
-server = "Server"
+server = "Serveranslutning"
 signIn = "Logga in"
 title = "Anslutningsläge"
 user = "Inloggad som"
 
 [settings.connection.mode]
 local = "Endast lokalt"
-saas = "Stirling Cloud"
+saas = "Stirling Cloud (molntjänst)"
 selfhosted = "Självhostad"
 
 [settings.developer]
@@ -10556,7 +10556,7 @@ themeDark = "Mörkt"
 themeDescription = "Växla mellan ljust och mörkt läge"
 themeLight = "Ljust"
 themeReset = "Återställ temat till standard"
-themeSystem = "System"
+themeSystem = "Följ systemet"
 title = "Allmänt"
 user = "Användare"
 
@@ -10572,7 +10572,7 @@ title = "För systemadministratörer"
 [settings.general.loginLanding]
 description = "Välj vilken app som öppnas när du loggar in på Stirling Cloud."
 editor = "Redigerare"
-processor = "Processor"
+processor = "PDF-processor"
 title = "Efter inloggning"
 
 [settings.general.mode]
@@ -10586,8 +10586,8 @@ tools = "Verktyg"
 
 [settings.general.updates]
 checkForUpdates = "Sök efter uppdateringar"
-currentBackendVersion = "Current Backend Version"
-currentFrontendVersion = "Current Frontend Version"
+currentBackendVersion = "Aktuell backendversion"
+currentFrontendVersion = "Aktuell frontendversion"
 description = "Sök efter uppdateringar och visa versionsinfo"
 latestVersion = "Senaste version"
 managedByAdmin = "Hanteras av administratör"
@@ -10602,7 +10602,7 @@ updateBehaviorError = "Kunde inte ändra uppdateringsbeteende"
 updateBehaviorErrorLocked = "Den här inställningen är låst av din administratör."
 updateBehaviorLockedDescription = "Din administratör har konfigurerat hur Stirling-PDF hanterar uppdateringar på den här datorn. Kontakta dem för att ändra detta."
 updateBehaviorSaved = "Uppdateringsbeteende sparat."
-versionMismatch = "Warning: A mismatch has been detected between the client version and the AppConfig version. Using different versions can lead to compatibility issues, errors, and security risks. Please ensure that server and client are using the same version."
+versionMismatch = "Varning: klientversionen och AppConfig-versionen skiljer sig åt. Olika versioner kan orsaka kompatibilitetsproblem, fel och säkerhetsrisker. Kontrollera att server och klient använder samma version."
 viewDetails = "Visa detaljer"
 
 [settings.general.versionInfo]
@@ -10612,7 +10612,7 @@ server = "Serverversion"
 title = "Versionsinformation"
 
 [settings.general.zoomLevel]
-auto = "Auto"
+auto = "Automatiskt"
 fitPage = "Anpassa till sida"
 fitWidth = "Anpassa till bredd"
 
@@ -10649,16 +10649,16 @@ mac = "Inkludera ⌘ (Command), ⌥ (Option) eller en annan modifierare i ditt k
 windows = "Inkludera Ctrl, Alt eller en annan modifierare i ditt kortkommando."
 
 [settings.legal]
-label = "Legal"
-title = "Legal"
+label = "Juridik"
+title = "Juridik"
 
 [settings.legal.cookiePreferences]
-description = "Review or change your cookie consent choices."
-manage = "Manage"
+description = "Granska eller ändra dina val för samtycke till kakor."
+manage = "Hantera"
 
 [settings.legal.documents]
-description = "Policies and legal information for this service."
-title = "Legal Documents"
+description = "Policyer och juridisk information för denna tjänst."
+title = "Juridiska dokument"
 
 [settings.licenses]
 backendDescription = "Licenser för backend-beroenden som paketeras med denna server."
@@ -10673,11 +10673,11 @@ listDescription = "Listan visas direkt i UI från releasepaketet eller backend-e
 listTitle = "Paketerade beroenden"
 loadError = "Det gick inte att läsa in tredjepartslicenser"
 module = "Modul"
-version = "Version"
+version = "Versionsnummer"
 
 [settings.licensingAnalytics]
 audit = "Granskning"
-plan = "Plan"
+plan = "Prenumeration"
 title = "Licensiering och analys"
 usageAnalytics = "Användningsanalys"
 
@@ -10713,9 +10713,9 @@ trial = "Provperiod"
 
 [settings.planBilling.team]
 managedByTeam = "Hanteras av team"
-memberCount_one = "{{count}} team member"
-memberCount_other = "{{count}} team members"
-memberCount_zero = "no team members"
+memberCount_one = "{{count}} teammedlem"
+memberCount_other = "{{count}} teammedlemmar"
+memberCount_zero = "inga teammedlemmar"
 
 [settings.planBilling.tier]
 enterprise = "Enterprise"
@@ -10777,7 +10777,7 @@ update = "Uppdatera lösenord"
 [settings.securityAuth]
 connections = "Anslutningar"
 security = "Säkerhet"
-telegram = "Telegram"
+telegram = "Telegram-meddelanden"
 title = "Säkerhet och autentisering"
 
 [settings.signOut]
@@ -10786,7 +10786,7 @@ submit = "Logga ut"
 title = "Logga ut"
 
 [settings.team]
-title = "Team"
+title = "Mitt team"
 
 [settings.tooltips]
 enableLoginFirst = "Aktivera inloggningsläge först"
