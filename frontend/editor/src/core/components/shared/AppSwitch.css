@@ -1,0 +1,18 @@
+/* Shortcut hint in the switch menu. Menus are portalled to <body>, so this is a
+   flat class rather than a descendant of the surface that renders it. */
+.sui-app-switch__keys {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.125rem;
+}
+
+.sui-app-switch__keys kbd {
+  font-family: inherit;
+  font-size: 0.7rem;
+  line-height: 1;
+  padding: 0.15rem 0.3rem;
+  border-radius: var(--radius-sm);
+  color: var(--c-text-subtle);
+  background: var(--c-hover);
+  border: 1px solid var(--c-border-subtle);
+}

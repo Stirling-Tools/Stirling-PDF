@@ -23,6 +23,7 @@ import { getFileDocVariant } from "@app/components/shared/filePreview/getFileTyp
 import { detectFileExtension } from "@app/utils/fileUtils";
 import { openExternalUrl } from "@app/utils/safeNavigation";
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
+import { useAppSwitch } from "@app/components/shared/AppSwitchProvider";
 import {
   rankByFuzzy,
   idToWords,
@@ -482,6 +483,7 @@ export function useSuperSearch(
 ): UseSuperSearchResult {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { switchToApp } = useAppSwitch();
   const {
     toolRegistry,
     handleToolSelect,
@@ -581,10 +583,12 @@ export function useSuperSearch(
       if (item.externalUrl) {
         openExternalUrl(item.externalUrl);
       } else {
-        navigate(item.path);
+        // Crossing into the other app from search plays the same transition the
+        // brand switcher does, so the two entry points feel like one system.
+        switchToApp("processor", item.path);
       }
     },
-    [navigate],
+    [switchToApp],
   );
 
   // --- Assemble ----------------------------------------------------------
