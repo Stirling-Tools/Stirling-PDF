@@ -811,10 +811,10 @@ description = "Välj LLM-leverantör och de smarta/snabba modeller som AI-motorn
 title = "Modeller och leverantörer"
 
 [admin.settings.ai.models.apiKey]
-anthropic = "Anthropic API key"
+anthropic = "Anthropic API-nyckel"
 description = "Lämna tomt för att använda motorns egna miljöuppgifter. Gäller för självhostade distributioner med en enda motor."
-generic = "API key"
-openai = "OpenAI API key"
+generic = "API-nyckel"
+openai = "OpenAI API-nyckel"
 setPlaceholder = "Sparad – lämna tomt för att behålla den aktuella nyckeln"
 
 [admin.settings.ai.models.baseUrl]
