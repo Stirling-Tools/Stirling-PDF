@@ -36,6 +36,11 @@ tasks:
     cmds:
       - docker build -t stirling-pdf-engine .
 
+  build:ci:
+    desc: "Build the Ubuntu CI image with Task installed"
+    cmds:
+      - docker build --tag stirling-pdf-ci --file docker/ci/Dockerfile .
+
   up:
     desc: "Start standard docker compose stack"
     cmds:

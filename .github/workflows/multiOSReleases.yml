@@ -69,7 +69,7 @@ jobs:
           distribution: "temurin"
 
       - name: Install Task
-        uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
+        uses: ./.github/actions/setup-task
       - name: Get version number
         id: versionNumber
         run: |
@@ -169,7 +169,7 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install Task
-        uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
+        uses: ./.github/actions/setup-task
 
       - name: Build JAR
         run: ./gradlew build ${{ matrix.variant.build_frontend && '-PbuildWithFrontend=true' || '' }} -x spotlessApply -x spotlessCheck -x test -x sonarqube
@@ -268,7 +268,7 @@ jobs:
           distribution: ${{ matrix.platform == 'windows-11-arm' && 'microsoft' || 'temurin' }}
 
       - name: Install Task
-        uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
+        uses: ./.github/actions/setup-task
 
       # Build the universal JRE before desktop:prepare so the jlink:runtime
       # task short-circuits on its `test -d runtime/jre` status check.

@@ -399,7 +399,7 @@ jobs:
 
       - name: Install Task for Storybook
         if: steps.sb-changes.outputs.storybook == 'true'
-        uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
+        uses: ./.github/actions/setup-task
 
       - name: Build and deploy Storybook
         id: storybook
