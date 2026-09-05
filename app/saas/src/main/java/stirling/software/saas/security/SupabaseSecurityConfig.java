@@ -121,6 +121,12 @@ public class SupabaseSecurityConfig {
                                                 "/api/v1/account-link/connect/request",
                                                 "/api/v1/account-link/connect/claim")
                                         .permitAll()
+                                        // Pipeline store catalogue: browsing needs no account. The
+                                        // JWT filter still runs, so a signed-in viewer's star state
+                                        // rides on the same public response. Every DTO served here
+                                        // is author-free by contract (StoreDtoPrivacyTest).
+                                        .requestMatchers(HttpMethod.GET, "/api/v1/store/public/**")
+                                        .permitAll()
                                         .requestMatchers(
                                                 req ->
                                                         RequestUriUtils.isStaticResource(
@@ -408,8 +414,19 @@ public class SupabaseSecurityConfig {
                 source.registerCorsConfiguration(path, linked);
             }
         }
+        // The pipeline store is a public catalogue reached from whatever origin a portal runs on:
+        // anonymous reads, and writes that carry the signed-in user's bearer token. Same
+        // no-credential posture as the linked-instance paths, but not gated on account linking,
+        // because browsing is meant to work for anyone.
+        source.registerCorsConfiguration("/api/v1/store/**", storeCors());
         source.registerCorsConfiguration("/**", cfg);
         return source;
+    }
+
+    private static CorsConfiguration storeCors() {
+        CorsConfiguration cfg = linkedInstanceCors();
+        cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        return cfg;
     }
 
     /**

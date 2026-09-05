@@ -1,4 +1,5 @@
 import type { Tier } from "@portal/contexts/TierContext";
+import type { StoreListParams } from "@portal/api/store";
 
 /**
  * The portal's TanStack Query keys, in one place. Convention:
@@ -36,4 +37,12 @@ export const qk = {
   usersAuthConfig: () => ["portal", "users", "authConfig"] as const,
   /** SaaS-only shared team directory (/api/v1/team/my) — see the /team/my collapse. */
   teamMy: () => ["portal", "team", "my"] as const,
+
+  // Pipeline store (SaaS-hosted, read over the account link when self-hosted)
+  storeList: (params: StoreListParams) =>
+    ["portal", "store", "list", params] as const,
+  storeListing: (storeId: string) =>
+    ["portal", "store", "listing", storeId] as const,
+  storeStarred: () => ["portal", "store", "starred"] as const,
+  storeTeam: () => ["portal", "store", "team"] as const,
 } as const;

@@ -30,6 +30,7 @@ export function PipelinesTable({ pipelines, onRowClick }: PipelinesTableProps) {
         sortable: true,
         icon: (p) => pipelineIcon(p.icon, "1.25rem"),
         primary: (p) => p.name,
+        suffix: (p) => (p.storeId ? t("portal.store.fromStore") : null),
       }),
       column.text({
         key: "type",

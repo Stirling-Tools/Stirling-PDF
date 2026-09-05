@@ -11,3 +11,8 @@ export function saasApiBase(): string {
   const raw = import.meta.env.VITE_API_BASE_URL ?? "/";
   return raw.replace(/\/+$/, "");
 }
+
+/** SaaS build: the signed-in team is the only install target. */
+export function isSaasBuild(): boolean {
+  return true;
+}

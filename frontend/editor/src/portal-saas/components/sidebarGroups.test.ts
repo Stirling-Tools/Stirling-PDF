@@ -11,6 +11,7 @@ describe("sidebarGroups (SaaS)", () => {
       "home",
       "sources",
       "pipelines",
+      "store",
       "documents",
     ]);
   });

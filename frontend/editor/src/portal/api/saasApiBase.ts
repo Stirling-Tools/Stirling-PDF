@@ -16,3 +16,11 @@ export function saasApiBase(): string | null {
   if (!raw) return null;
   return raw.replace(/\/+$/, "");
 }
+
+/**
+ * Build-flavour signal for features that behave differently on the hosted SaaS app (no separate
+ * instance to install into). The SaaS layer shadows this file and returns {@code true}.
+ */
+export function isSaasBuild(): boolean {
+  return false;
+}

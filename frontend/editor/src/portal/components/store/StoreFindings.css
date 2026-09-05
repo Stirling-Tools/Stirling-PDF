@@ -1,0 +1,109 @@
+.portal-store__findings {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.portal-store__findings-none {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--c-text-subtle);
+}
+
+.portal-store__findings-group {
+  border: 1px solid var(--c-border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--c-surface);
+  overflow: hidden;
+}
+
+.portal-store__findings-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.5rem 0.5rem 0.75rem;
+  background: var(--c-surface-sunken);
+}
+
+.portal-store__findings-icon {
+  display: inline-flex;
+  color: var(--c-text-subtle);
+}
+
+.portal-store__findings-group--block .portal-store__findings-icon {
+  color: var(--c-danger);
+}
+
+.portal-store__findings-group--warn .portal-store__findings-icon {
+  color: var(--c-warning);
+}
+
+.portal-store__findings-title {
+  margin: 0;
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 640;
+  color: var(--c-text);
+}
+
+.portal-store__findings-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.375rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  background: var(--c-neutral-fill);
+  color: var(--c-text-subtle);
+}
+
+.portal-store__findings-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.portal-store__finding {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.625rem 0.75rem;
+  border-top: 1px solid var(--c-border-subtle);
+}
+
+.portal-store__finding-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.portal-store__finding-title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--c-text);
+}
+
+.portal-store__finding-detail {
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--c-text-subtle);
+}
+
+.portal-store__finding-where {
+  flex: none;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.6875rem;
+  padding: 0.125rem 0.375rem;
+  border-radius: var(--radius-sm);
+  background: var(--c-neutral-fill);
+  color: var(--c-text-subtle);
+  white-space: nowrap;
+}
