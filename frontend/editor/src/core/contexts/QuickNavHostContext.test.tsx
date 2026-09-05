@@ -13,6 +13,7 @@ function Probe({ onRead }: { onRead: (value: unknown) => void }) {
     appMounted: host?.appMounted,
     chromeless: host?.chromeless,
     identity: host?.identity,
+    activeTool: host?.activeTool,
     openSettings: Boolean(host?.actions.current?.openSettings),
   });
   return null;
@@ -23,6 +24,11 @@ function App() {
     { identity: { displayName: "Ada", profilePictureUrl: null } },
     { openSettings: () => {} },
   );
+  return null;
+}
+
+function AppWithTool({ tool }: { tool: "automate" | null }) {
+  useRegisterQuickNavHost({ activeTool: tool }, {});
   return null;
 }
 
@@ -69,6 +75,31 @@ describe("QuickNavHostContext", () => {
     );
     expect(after.appMounted).toBe(true);
     expect(after.openSettings).toBe(false);
+  });
+
+  it("clears the open tool when the next app registers without one", () => {
+    let latest: Record<string, unknown> = {};
+    const view = render(
+      <QuickNavHostProvider>
+        <Probe
+          onRead={(value) => (latest = value as Record<string, unknown>)}
+        />
+        <AppWithTool tool="automate" />
+      </QuickNavHostProvider>,
+    );
+    expect(latest.activeTool).toBe("automate");
+
+    act(() => {
+      view.rerender(
+        <QuickNavHostProvider>
+          <Probe
+            onRead={(value) => (latest = value as Record<string, unknown>)}
+          />
+          <AppWithTool tool={null} />
+        </QuickNavHostProvider>,
+      );
+    });
+    expect(latest.activeTool).toBe(null);
   });
 
   it("hides the bar while a route with no app chrome is on screen", () => {

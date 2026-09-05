@@ -5,6 +5,7 @@ import {
   NOTIFICATIONS_PANEL_ID,
 } from "@app/components/notifications/NotificationPanel";
 import { useNotificationActions } from "@app/components/notifications/notificationActions";
+import { useNotificationPasswordPrompt } from "@app/components/notifications/useNotificationPasswordPrompt";
 import { useQuickNavToolReasons } from "@app/components/shared/quickNav/useQuickNavToolReasons";
 import { useNotificationsAvailable } from "@app/components/notifications/useNotificationsAvailable";
 import { useSigningBadgeCount } from "@app/hooks/signing/useSigningBadgeCount";
@@ -22,6 +23,7 @@ export interface QuickNavHostBridgeProps {
   requestNavigation?: (go: () => void) => void;
   onGoToDefaultState?: () => void;
   onSelectTool?: (toolId: ToolId) => void;
+  activeTool?: ToolId | null;
   /** Merged over the reasons worked out here, for what only the app can see. */
   toolReasons?: QuickNavToolReasons;
 }
@@ -34,6 +36,7 @@ export function QuickNavHostBridge({
   onOpenSettings,
   requestNavigation,
   onSelectTool,
+  activeTool = null,
   onGoToDefaultState,
   toolReasons,
 }: QuickNavHostBridgeProps) {
@@ -52,6 +55,8 @@ export function QuickNavHostBridge({
   }, [endpointReasons, toolReasons]);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const closeNotifications = useCallback(() => setNotificationsOpen(false), []);
+  const { requestPassword, promptModal } =
+    useNotificationPasswordPrompt(closeNotifications);
 
   useRegisterQuickNavHost(
     {
@@ -59,6 +64,7 @@ export function QuickNavHostBridge({
       signingBadge,
       portalAccess,
       readerMode,
+      activeTool,
       notificationsOpen,
       toolReasons: mergedToolReasons,
     },
@@ -72,14 +78,21 @@ export function QuickNavHostBridge({
     },
   );
 
-  // Mounted only while open, so a closed panel never subscribes to the poll.
-  if (!notificationsAvailable || !notificationsOpen) return null;
+  if (!notificationsAvailable) return null;
   return (
-    <NotificationPanel
-      id={NOTIFICATIONS_PANEL_ID}
-      onClose={closeNotifications}
-      registry={notificationActions}
-      className="notification-bell__panel--rail"
-    />
+    <>
+      {/* Mounted only while open, so a closed panel never subscribes to the poll. */}
+      {notificationsOpen && (
+        <NotificationPanel
+          id={NOTIFICATIONS_PANEL_ID}
+          onClose={closeNotifications}
+          registry={notificationActions}
+          onRequestPassword={requestPassword}
+          className="notification-bell__panel--rail"
+        />
+      )}
+      {/* Outside the panel: an unlock closes it, and the prompt reports back afterwards. */}
+      {promptModal}
+    </>
   );
 }

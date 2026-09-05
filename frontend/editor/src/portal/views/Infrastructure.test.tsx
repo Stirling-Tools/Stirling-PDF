@@ -25,6 +25,9 @@ vi.mock("@portal/components/infrastructure/ApiKeysTab", () => ({
 vi.mock("@portal/components/infrastructure/AuditTab", () => ({
   AuditTab: () => <div data-testid="audit-tab" />,
 }));
+vi.mock("@portal/components/infrastructure/EncryptionPanel", () => ({
+  EncryptionPanel: () => <div data-testid="storage-tab" />,
+}));
 
 import { Infrastructure } from "@portal/views/Infrastructure";
 
@@ -69,8 +72,9 @@ describe("Infrastructure view", () => {
   it("renders the backend-less tabs as inert: disabled, aria-disabled, never active", () => {
     renderView();
 
+    // Storage is no longer in this list: it reads a real backend now.
     const byLabel = new Map(tabButtons().map((b) => [b.textContent, b]));
-    for (const key of ["deployments", "security", "models", "storage"]) {
+    for (const key of ["deployments", "security", "models"]) {
       const btn = byLabel.get(`${T}.${key}`) as HTMLButtonElement;
       expect(btn).toBeDisabled();
       expect(btn).toHaveAttribute("aria-disabled", "true");
@@ -96,10 +100,24 @@ describe("Infrastructure view", () => {
   });
 
   it("ignores a deep link to a disabled tab and stays on the default", () => {
-    renderView("/infrastructure?tab=storage");
+    renderView("/infrastructure?tab=models");
 
     expect(screen.getByTestId("api-keys-tab")).toBeInTheDocument();
     expect(screen.queryByTestId("audit-tab")).not.toBeInTheDocument();
+  });
+
+  it("switches to the storage tab when clicked", () => {
+    renderView();
+
+    fireEvent.click(screen.getByRole("button", { name: `${T}.storage` }));
+    expect(screen.getByTestId("storage-tab")).toBeInTheDocument();
+    expect(screen.queryByTestId("api-keys-tab")).not.toBeInTheDocument();
+  });
+
+  it("honours ?tab=storage deep links", () => {
+    renderView("/infrastructure?tab=storage");
+
+    expect(screen.getByTestId("storage-tab")).toBeInTheDocument();
   });
 
   it("disables the audit tab (inert, never opens) for non-enterprise users", () => {

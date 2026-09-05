@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.ContentDisposition;
@@ -429,7 +430,7 @@ public class WorkflowParticipantController {
             java.util.List<Map<String, Object>> wetSigs =
                     objectMapper.readValue(
                             request.getWetSignaturesData(),
-                            new TypeReference<java.util.List<Map<String, Object>>>() {});
+                            new TypeReference<List<Map<String, Object>>>() {});
             if (wetSigs.size() > WetSignatureMetadata.MAX_SIGNATURES_PER_PARTICIPANT) {
                 throw new ResponseStatusException(
                         HttpStatus.BAD_REQUEST, "Too many wet signatures submitted");

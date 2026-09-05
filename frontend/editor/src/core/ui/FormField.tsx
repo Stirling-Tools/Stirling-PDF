@@ -5,7 +5,7 @@ import {
   type ReactElement,
   type ReactNode,
 } from "react";
-import { Tooltip } from "@mantine/core";
+import { InfoTooltip } from "@app/ui/InfoTooltip";
 import "@app/ui/FormField.css";
 
 export interface FormFieldProps {
@@ -77,40 +77,7 @@ export function FormField({
               )}
             </label>
           )}
-          {info && (
-            <Tooltip
-              label={info}
-              multiline
-              w={260}
-              withArrow
-              position="top"
-              events={{ hover: true, focus: true, touch: true }}
-            >
-              <button
-                type="button"
-                className="sui-field__info"
-                aria-label={
-                  typeof info === "string" ? info : "More information"
-                }
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  width="14"
-                  height="14"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden
-                >
-                  <circle cx="12" cy="12" r="10" />
-                  <line x1="12" y1="16" x2="12" y2="12" />
-                  <line x1="12" y1="8" x2="12.01" y2="8" />
-                </svg>
-              </button>
-            </Tooltip>
-          )}
+          {info && <InfoTooltip label={info} />}
         </div>
       )}
       <div className="sui-field__control">{child}</div>

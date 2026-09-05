@@ -10,19 +10,19 @@
 /** True when the browser can pick a directory and read files from it. */
 export const canReadLocalFolder: boolean =
   typeof window !== "undefined" &&
-  typeof (window as any).showDirectoryPicker === "function";
+  typeof window.showDirectoryPicker === "function";
 
 /** True when the browser supports writing files (createWritable). Requires Chrome/Edge. */
 export const canWriteLocalFolder: boolean =
   canReadLocalFolder &&
   typeof FileSystemFileHandle !== "undefined" &&
-  typeof (FileSystemFileHandle.prototype as any).createWritable === "function";
+  typeof FileSystemFileHandle.prototype.createWritable === "function";
 
 /** True when the browser supports permission querying across sessions (queryPermission). */
 export const canPersistFsPermission: boolean =
   canReadLocalFolder &&
   typeof FileSystemHandle !== "undefined" &&
-  typeof (FileSystemHandle.prototype as any).queryPermission === "function";
+  typeof FileSystemHandle.prototype.queryPermission === "function";
 
 export const FS_READ_UNSUPPORTED_MSG =
   "Your browser does not support the File System Access API. Use Chrome or Edge.";

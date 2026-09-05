@@ -136,7 +136,7 @@ export function SelectionAPIBridge() {
       api: buildApi(),
     });
 
-    const unsubChange = selection.onSelectionChange((event: any) => {
+    const unsubChange = selection.onSelectionChange((event) => {
       const hasText = !!event?.selection;
       hasSelectionRef.current = hasText;
 

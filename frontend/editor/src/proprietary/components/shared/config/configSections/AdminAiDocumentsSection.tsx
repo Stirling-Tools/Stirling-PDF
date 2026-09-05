@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   NumberInput,
@@ -44,7 +44,6 @@ export default function AdminAiDocumentsSection() {
     setSettings,
     loading,
     saving,
-    fetchSettings,
     saveSettings,
     isFieldPending,
   } = useAdminSettings<AiEngineSettingsData>({
@@ -82,10 +81,6 @@ export default function AdminAiDocumentsSection() {
       return { sectionData: {}, deltaSettings };
     },
   });
-
-  useEffect(() => {
-    fetchSettings();
-  }, []);
 
   const { isDirty, resetToSnapshot, markSaved } = useSettingsDirty(
     settings,

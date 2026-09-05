@@ -357,8 +357,6 @@ class ConnectServiceTest {
         assertThat(status.authorizeUrl()).isEqualTo("https://app.example.com/link?request=req-1");
     }
 
-    // ---------------------------------------------------------------------------------------
-
     /** A start with nothing but the reconstructed request URL, as a headless caller would send. */
     private static ConnectService.CallbackHint fromRequest(String derivedBaseUrl) {
         return new ConnectService.CallbackHint(null, null, derivedBaseUrl);

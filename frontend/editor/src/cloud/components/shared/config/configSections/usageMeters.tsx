@@ -17,12 +17,10 @@ import {
 import "@app/components/shared/config/configSections/Payg.css";
 import "@app/components/shared/config/configSections/PaygFree.css";
 
-// ─── One-time free grant meter ──────────────────────────────────────────────
-
 export interface FreeSnapshot {
-  /** One-time free documents used so far (grant − remaining). */
+  /** Free documents used so far this period (grant − remaining). */
   billableUsed: number;
-  /** The team's one-time free grant size in documents. */
+  /** The team's free grant size in documents, per billing period. */
   billableLimit: number;
 }
 
@@ -64,9 +62,11 @@ export function FreeMeterPanel({ snap }: { snap: FreeSnapshot }) {
       pct={pct}
       barLabel={t("payg.free.hero.barAria", "Free PDFs remaining")}
       figure={remaining.toLocaleString()}
-      capSuffix={t("payg.free.hero.capSuffix", "of {{limit}} free PDFs left", {
-        limit: snap.billableLimit.toLocaleString(),
-      })}
+      capSuffix={t(
+        "payg.free.hero.capSuffix",
+        "of {{limit}} free PDFs left this month",
+        { limit: snap.billableLimit.toLocaleString() },
+      )}
       statusLabel={stateLabel}
       meta={
         <span>
@@ -76,8 +76,6 @@ export function FreeMeterPanel({ snap }: { snap: FreeSnapshot }) {
     />
   );
 }
-
-// ─── Monthly spend-cap meter ────────────────────────────────────────────────
 
 export interface SpendCapSnapshot {
   /** Money spent so far this billing period, in major currency units. */
@@ -106,8 +104,8 @@ export function spendCapSnapshotFromWallet(
 }
 
 /**
- * Sibling of {@link FreeMeterPanel} for the money cap rather than the one-time
- * free grant. Shares the same bar/status styling and the cap-state labels
+ * Sibling of {@link FreeMeterPanel} for the money cap rather than the free
+ * grant. Shares the same bar/status styling and the cap-state labels
  * ({@code payg.state.*}) used by the Plan hero, so it reads as the same meter.
  */
 export function SpendCapMeterPanel({ snap }: { snap: SpendCapSnapshot }) {
@@ -148,8 +146,6 @@ export function SpendCapMeterPanel({ snap }: { snap: SpendCapSnapshot }) {
     />
   );
 }
-
-// ─── Prepaid bundle capacity meter ──────────────────────────────────────────
 
 export interface PrepaidSnapshot {
   /** Prepaid units still available across the team's in-term pools. */

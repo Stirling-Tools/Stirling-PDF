@@ -4,6 +4,7 @@ import { BellIcon, Button } from "@app/ui";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useNotificationActions } from "@app/components/notifications/notificationActions";
 import { NotificationPanel } from "@app/components/notifications/NotificationPanel";
+import { useNotificationPasswordPrompt } from "@app/components/notifications/useNotificationPasswordPrompt";
 import { useNotificationsAvailable } from "@app/components/notifications/useNotificationsAvailable";
 import "@app/components/notifications/NotificationBell.css";
 
@@ -24,6 +25,9 @@ function MountedNotificationBell() {
   // Viewport-fixed, because the workbench bar clips its own overflow.
   const [anchor, setAnchor] = useState<{ top: number; right: number } | null>(
     null,
+  );
+  const { requestPassword, promptModal } = useNotificationPasswordPrompt(() =>
+    setOpen(false),
   );
 
   useLayoutEffect(() => {
@@ -69,9 +73,12 @@ function MountedNotificationBell() {
         <NotificationPanel
           onClose={() => setOpen(false)}
           registry={registry}
+          onRequestPassword={requestPassword}
           style={anchor ? { top: anchor.top, right: anchor.right } : undefined}
         />
       )}
+
+      {promptModal}
     </div>
   );
 }
