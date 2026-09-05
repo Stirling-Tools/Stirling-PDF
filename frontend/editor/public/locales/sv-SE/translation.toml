@@ -2173,7 +2173,7 @@ secureWorkflowDesc = "Säkrar PDF-dokument genom att ta bort potentiellt skadlig
 
 [autoRename]
 description = "Detta verktyg byter automatiskt namn på PDF-filer baserat på deras innehåll. Det analyserar dokumentet för att hitta den mest lämpliga titeln från texten."
-tags = "auto-detect,header-based,organize,relabel,auto rename,automatic rename,smart rename,rename by content,filename,file naming,detect title"
+tags = "autodetektera,rubrikbaserad,organisera,etikettera om,byt namn automatiskt,automatiskt namnbyte,smart namnbyte,byt namn efter innehåll,filnamn,namnge fil,identifiera titel"
 
 [autoRotate]
 submit = "Rotera automatiskt"
@@ -2784,7 +2784,7 @@ title = "Ändra inloggningsuppgifter"
 [changeMetadata]
 filenamePrefix = "metadata"
 submit = "Ändra"
-tags = "edit,modify,update,metadata,properties,document properties,author,title,subject,keywords,creator,producer,info,document info,file properties"
+tags = "redigera,ändra,uppdatera,metadata,egenskaper,dokumentegenskaper,författare,titel,ämne,nyckelord,skapare,producent,info,dokumentinformation,filegenskaper"
 
 [changeMetadata.advanced]
 title = "Avancerade alternativ"
@@ -2892,7 +2892,7 @@ unknown = "Okänt"
 [changePermissions]
 desc = "Ändra dokumentets begränsningar och behörigheter."
 submit = "Ändra behörigheter"
-tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
+tags = "behörigheter,begränsningar,rättigheter,åtkomstkontroll,tillåt,neka,utskrift,kopiering,redigering,ändra behörigheter,säkerhetsinställningar,användarrättigheter"
 title = "Ändra behörigheter"
 
 [changePermissions.error]
@@ -3165,7 +3165,7 @@ message = "Dessa dokument verkar vara mycket olika. Jämförelsen stoppades för
 [compress]
 desc = "Komprimera PDF:er för att minska filstorleken."
 submit = "Komprimera"
-tags = "shrink,reduce,optimize,compress,smaller,downsize,file size,reduce size,minimize,make smaller,decrease size,optimize size"
+tags = "förminska,minska,optimera,komprimera,mindre,filstorlek,minska storlek,minimera,gör mindre,optimera storlek"
 title = "Komprimera"
 
 [compress.compressionLevel]
@@ -3586,7 +3586,7 @@ message = "Stirling-PDF har inte behörighet att uppdatera sig själv på den h�
 title = "Administratörsbehörighet krävs"
 
 [devAirgapped]
-tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
+tags = "luftgap,offline,isolerad,utan internet,frånkopplad,säker,nätverksisolering,fristående"
 
 [devApi]
 tags = "API,development,documentation,developer,REST,integration,endpoints,programmatic,automation,scripting"
