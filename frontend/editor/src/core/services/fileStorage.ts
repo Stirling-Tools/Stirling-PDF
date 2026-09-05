@@ -70,13 +70,20 @@ export function legacyDerivedFromTool(
 /**
  * Can't persist a Blob/File value, so a copy would work? WebKit reports
  * `UnknownError` ("Error preparing Blob/File data...") when it can't write the
- * blob's backing file; a refused structured clone is `DataCloneError`.
+ * blob's backing file; a refused structured clone is `DataCloneError`;
+ * Chromium/WebView2 reports `DataError` when an `InvalidBlob` reaches its blob
+ * writer.
  * Narrow on purpose: retrying quota or duplicate-key failures would fail again
  * and hide the real cause.
  */
 function isBlobValueRejection(error: unknown): boolean {
-  const name = (error as DOMException | null)?.name;
-  return name === "UnknownError" || name === "DataCloneError";
+  const exception = error as DOMException | null;
+  return (
+    exception?.name === "UnknownError" ||
+    exception?.name === "DataCloneError" ||
+    (exception?.name === "DataError" &&
+      exception.message.includes("InvalidBlob"))
+  );
 }
 
 /** This engine loses Blob values, remembered per browser: session-scoped, each
@@ -267,6 +274,7 @@ class FileStorageService {
             };
           } catch (error) {
             this.unwritableRecords.add(id);
+            this.noteBlobRefusal(error);
             console.warn(
               `[fileStorage] thumbnail TTL bump could not be issued for ${id}:`,
               error,
