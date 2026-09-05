@@ -5183,32 +5183,32 @@ uploadWithCount = "Ladda upp ({{total}})"
 validating = "Validerar session..."
 
 [mobileSign]
-clear = "Clear"
-invalidSession = "Session expired"
-invalidSessionMessage = "This QR code is no longer valid. Open the Sign tool on your computer and scan the new code."
-penSizeLabel = "Pen size"
-send = "Send to computer"
-sendAnother = "Send another signature"
-sendError = "Could not send the signature. Check the connection and try again."
-sentMessage = "Signature sent to your computer. You can send another or close this page."
-tabsLabel = "Signature source"
-undo = "Undo"
-validating = "Checking session…"
+clear = "Rensa"
+invalidSession = "Sessionen har gått ut"
+invalidSessionMessage = "Den här QR-koden är inte längre giltig. Öppna Signera på datorn och skanna den nya koden."
+penSizeLabel = "Pennstorlek"
+send = "Skicka till datorn"
+sendAnother = "Skicka en till signatur"
+sendError = "Kunde inte skicka signaturen. Kontrollera anslutningen och försök igen."
+sentMessage = "Signaturen skickades till datorn. Du kan skicka en till eller stänga sidan."
+tabsLabel = "Signaturkälla"
+undo = "Ångra"
+validating = "Kontrollerar sessionen…"
 
 [mobileSign.photo]
-fromGallery = "From gallery"
-hint = "Photograph a signature on white paper, or choose an existing image."
-invalidType = "Please choose an image file."
-takePhoto = "Take a photo"
+fromGallery = "Från galleriet"
+hint = "Fotografera en signatur på vitt papper eller välj en befintlig bild."
+invalidType = "Välj en bildfil."
+takePhoto = "Ta ett foto"
 
 [mobileSign.tab]
-draw = "Draw"
-photo = "Photo"
-type = "Type"
+draw = "Rita"
+photo = "Foto"
+type = "Skriv"
 
 [mobileSign.type]
-placeholder = "Your name"
-previewPlaceholder = "Signature preview"
+placeholder = "Ditt namn"
+previewPlaceholder = "Förhandsvisning av signatur"
 
 [mobileUpload]
 description = "Skanna för att ladda upp foton. Bilder konverteras automatiskt till PDF."
