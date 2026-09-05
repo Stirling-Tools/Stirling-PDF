@@ -12141,6 +12141,7 @@ retry = "Retry"
 searchPlaceholder = "Search attachments"
 title = "Attachments"
 untitled = "Untitled"
+
 [viewer.bookmarks]
 addBookmark = "Add bookmark"
 bookmarkTitle = "Bookmark title"
