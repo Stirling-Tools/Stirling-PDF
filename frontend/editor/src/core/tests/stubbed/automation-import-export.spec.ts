@@ -106,6 +106,42 @@ function makeFolderScanJson(name: string): string {
 }
 
 /**
+ * A real Acrobat Action: one command that maps cleanly (Sanitize Document),
+ * one that cannot be reproduced (an Acrobat JavaScript step), plus an
+ * operator instruction.
+ */
+const ACROBAT_ACTION = `<?xml version="1.0" encoding="UTF-8"?>
+<Workflow xmlns="http://ns.adobe.com/acrobat/workflow/2012" title="Imported Acrobat Action" description="Sanitise then run a script" majorVersion="1" minorVersion="0">
+\t<Sources defaultCommand="WorkflowPlaybackSelectFile"/>
+\t<Group label="Notice">
+\t\t<Instruction label="Run this on scanned intake only." pauseBefore="false"/>
+\t</Group>
+\t<Group label="Clean">
+\t\t<Command name="DIGSIG:SanitizeDocument" pauseBefore="false" promptUser="false"/>
+\t\t<Command name="JavaScript" pauseBefore="false" promptUser="false">
+\t\t\t<Items>
+\t\t\t\t<Item name="ScriptCode" type="text" value="this.flattenPages();"/>
+\t\t\t\t<Item name="ScriptName" type="text" value=""/>
+\t\t\t</Items>
+\t\t</Command>
+\t</Group>
+</Workflow>
+`;
+
+/** A Distiller profile in the shape Adobe writes: 150 dpi, web-optimised. */
+const JOB_OPTIONS = `<<
+  /AutoRotatePages /None
+  /ColorImageResolution 150
+  /GrayImageResolution 150
+  /DownsampleColorImages true
+  /DownsampleGrayImages true
+  /EmbedAllFonts true
+  /Optimize true
+  /CompatibilityLevel 1.4
+>> setdistillerparams
+`;
+
+/**
  * Open the import modal from the "Create New Automation" kebab.
  */
 async function openImportModal(page: Page): Promise<void> {
@@ -155,7 +191,7 @@ test.describe("12. Automation Page — Import / Export", () => {
       const importBtn = page.getByRole("button", { name: /^Import$/ }).last();
       await expect(importBtn).toBeDisabled();
 
-      const textarea = page.getByLabel(/Or paste JSON/i);
+      const textarea = page.getByLabel(/Or paste file contents/i);
       await textarea.fill(makeAutomateJson("Pasted Automate"));
 
       // Detected-format badge should appear.
@@ -207,7 +243,7 @@ test.describe("12. Automation Page — Import / Export", () => {
     }) => {
       await openImportModal(page);
 
-      const textarea = page.getByLabel(/Or paste JSON/i);
+      const textarea = page.getByLabel(/Or paste file contents/i);
       await textarea.fill(makeFolderScanJson("Pasted Folder Scan"));
 
       await expect(page.getByText(/Folder Scanning JSON/).first()).toBeVisible({
@@ -228,7 +264,7 @@ test.describe("12. Automation Page — Import / Export", () => {
     }) => {
       await openImportModal(page);
 
-      const textarea = page.getByLabel(/Or paste JSON/i);
+      const textarea = page.getByLabel(/Or paste file contents/i);
       await textarea.fill("{ this is not valid json");
 
       await expect(page.getByText(/Could not parse/i).first()).toBeVisible({
@@ -257,7 +293,7 @@ test.describe("12. Automation Page — Import / Export", () => {
       });
 
       // The textarea should reflect the dropped content.
-      await expect(page.getByLabel(/Or paste JSON/i)).toHaveValue(
+      await expect(page.getByLabel(/Or paste file contents/i)).toHaveValue(
         /Dropped Automate/,
         { timeout: 5_000 },
       );
@@ -299,6 +335,103 @@ test.describe("12. Automation Page — Import / Export", () => {
     });
   });
 
+  test.describe("12.3b Import modal — Adobe migration formats", () => {
+    test("dropping an Acrobat Action imports it and reports the steps that need work", async ({
+      page,
+    }) => {
+      await openImportModal(page);
+
+      const fileInput = page
+        .getByRole("dialog", { name: /Import automation/i })
+        .locator('input[type="file"]');
+      await fileInput.setInputFiles({
+        name: "Imported Acrobat Action.sequ",
+        mimeType: "application/xml",
+        buffer: Buffer.from(ACROBAT_ACTION),
+      });
+
+      await expect(page.getByText(/Acrobat Action/).first()).toBeVisible({
+        timeout: 5_000,
+      });
+      // Only the sanitise command maps to a tool; the JS step does not. The
+      // unmapped command is named in the warnings panel with a reason, rather
+      // than as a bare list in the summary.
+      await expect(page.getByText(/^1 operation$/)).toBeVisible();
+      await expect(
+        page.getByText(/Check these steps after importing/),
+      ).toBeVisible();
+      await expect(
+        page.getByText(/JavaScript: .*does not run Acrobat's JS API/),
+      ).toBeVisible();
+      // The Action's own operator note is surfaced, not thrown away. Matched
+      // exactly so the raw XML echoed in the paste textarea doesn't also hit.
+      await expect(
+        page.getByText("Run this on scanned intake only.", { exact: true }),
+      ).toBeVisible();
+
+      await page
+        .getByRole("button", { name: /^Import$/ })
+        .last()
+        .click();
+
+      await expect(
+        page.getByRole("button", { name: /Imported Acrobat Action/i }).first(),
+      ).toBeVisible({ timeout: 10_000 });
+    });
+
+    test("dropping a .joboptions file imports it named after the file", async ({
+      page,
+    }) => {
+      await openImportModal(page);
+
+      const fileInput = page
+        .getByRole("dialog", { name: /Import automation/i })
+        .locator('input[type="file"]');
+      await fileInput.setInputFiles({
+        name: "Press Quality.joboptions",
+        mimeType: "application/octet-stream",
+        buffer: Buffer.from(JOB_OPTIONS),
+      });
+
+      await expect(page.getByText(/Distiller job options/).first()).toBeVisible(
+        { timeout: 5_000 },
+      );
+      await expect(page.getByText(/^1 operation$/)).toBeVisible();
+      await expect(
+        page.getByText(/Target PDF version 1.4 is not enforced/),
+      ).toBeVisible();
+
+      await page
+        .getByRole("button", { name: /^Import$/ })
+        .last()
+        .click();
+
+      // The automation takes its name from the file, since a Distiller
+      // profile carries none.
+      await expect(
+        page.getByRole("button", { name: /Press Quality/i }).first(),
+      ).toBeVisible({ timeout: 10_000 });
+    });
+
+    test("pasting an Acrobat Action works without a file name", async ({
+      page,
+    }) => {
+      await openImportModal(page);
+      await page.getByLabel(/Or paste file contents/i).fill(ACROBAT_ACTION);
+
+      await expect(page.getByText(/Acrobat Action/).first()).toBeVisible({
+        timeout: 5_000,
+      });
+      await page
+        .getByRole("button", { name: /^Import$/ })
+        .last()
+        .click();
+      await expect(
+        page.getByRole("button", { name: /Imported Acrobat Action/i }).first(),
+      ).toBeVisible({ timeout: 10_000 });
+    });
+  });
+
   test.describe("12.4 Export — per-automation kebab menu", () => {
     test("saved entry kebab exposes Export and Export for Folder Scanning", async ({
       page,
@@ -306,7 +439,7 @@ test.describe("12. Automation Page — Import / Export", () => {
       // Seed a saved automation by importing one first.
       await openImportModal(page);
       await page
-        .getByLabel(/Or paste JSON/i)
+        .getByLabel(/Or paste file contents/i)
         .fill(makeAutomateJson("Export Menu Seed"));
       await page
         .getByRole("button", { name: /^Import$/ })
@@ -338,7 +471,7 @@ test.describe("12. Automation Page — Import / Export", () => {
     }) => {
       await openImportModal(page);
       await page
-        .getByLabel(/Or paste JSON/i)
+        .getByLabel(/Or paste file contents/i)
         .fill(makeAutomateJson("Download Test"));
       await page
         .getByRole("button", { name: /^Import$/ })
@@ -360,7 +493,7 @@ test.describe("12. Automation Page — Import / Export", () => {
     }) => {
       await openImportModal(page);
       await page
-        .getByLabel(/Or paste JSON/i)
+        .getByLabel(/Or paste file contents/i)
         .fill(makeAutomateJson("Folder Download Test"));
       await page
         .getByRole("button", { name: /^Import$/ })
