@@ -33,6 +33,8 @@ export function formatMinor(
   minor: number,
   currency: string | null | undefined,
 ): string {
+  // Money strings use a stable decimal separator because the compact symbol is
+  // already supplied separately and backend/test contracts expect dot decimals.
   const num = new Intl.NumberFormat("en-US", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 3,
