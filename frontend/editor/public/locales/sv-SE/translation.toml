@@ -6069,16 +6069,89 @@ REVERSE_ORDER = "Vänd dokumentet så att sista sidan blir först och så vidare
 SIDE_STITCH_BOOKLET_SORT = "Ordna sidor för sidhäftad häftesutskrift (optimerad för bindning på sidan)."
 
 [pdfTextEditor]
+confirmReplaceDirty = "Du har osparade ändringar. Vill du ersätta det öppna dokumentet och ignorera dem?"
 conversionFailed = "Det gick inte att konvertera PDF. Försök igen."
 converting = "Konverterar PDF till redigerbart format..."
 currentFile = "Aktuell fil: {{name}}"
+download = "Ladda ned"
+downloadTooltip = "Spara och ladda ned den redigerade PDF-filen"
 imageLabel = "Placerad bild"
 noTextOnPage = "Ingen redigerbar text upptäcktes på denna sida."
 pagePreviewAlt = "Sidförhandsvisning"
 pageSummary = "Sida {{number}} av {{total}}"
-tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
-title = "PDF JSON-redigerare"
+save = "Spara PDF"
+saveTooltip = "Verkställ ändringar i filen på arbetsytan (Ctrl+S)"
+tags = "redigera text,ändra text,uppdatera text,skriv om,rätta,justera,textredigerare,innehållsredigerare"
+title = "PDF-textredigerare"
+unsaved = "(osparad)"
 viewLabel = "PDF-redigerare"
+workbenchLabel = "Redigerare"
+
+[pdfTextEditor.annotations]
+freetext = "Anteckningstext – inte sidtext, så den kan inte redigeras här"
+stamp = "Stämpelanteckning – inte sidtext, så den kan inte redigeras här"
+widget = "Formulärfält – inte sidtext, så det kan inte redigeras här"
+
+[pdfTextEditor.drop]
+hint = "PDF-filer som släpps på redigeringsytan ersätter det öppna dokumentet."
+title = "Släpp en PDF-fil för att öppna den"
+
+[pdfTextEditor.error]
+decodeImage = "Det gick inte att avkoda den valda bilden."
+insertImage = "Det gick inte att infoga den valda bilden."
+
+[pdfTextEditor.find]
+close = "Stäng sökraden"
+count = "{{current}} av {{total}}"
+findPlaceholder = "Sök"
+ignoreAccents = "Ignorera accenter"
+matchCase = "Matcha versaler/gemener"
+next = "Nästa träff"
+noMatches = "Inga träffar"
+previous = "Föregående träff"
+replace = "Ersätt"
+replaceAll = "Ersätt alla"
+replaced = " · {{count}} ersatta"
+replacePlaceholder = "Ersätt med"
+title = "Sök och ersätt"
+typeToSearch = "Skriv för att söka"
+wholeWord = "Hela ord"
+
+[pdfTextEditor.fontPicker]
+builtInGroup = "Inbyggda typsnitt"
+deviceFontsNone = "Inga ytterligare typsnitt på enheten hittades."
+deviceFontsUnavailable = "Typsnitt på enheten är inte tillgängliga. De inbyggda typsnitten fungerar fortfarande."
+deviceGroup = "Typsnitt på enheten"
+documentGroup = "Dokumenttypsnitt"
+label = "Typsnittsfamilj"
+mixed = "Blandat"
+noMatch = "Inget matchande typsnitt"
+placeholder = "Typsnittsfamilj"
+useDeviceFonts = "Använd typsnitt på enheten"
+
+[pdfTextEditor.fonts]
+allPresent = "Alla bokstäver och siffror finns"
+missing = "Saknas: {{glyphs}}"
+title = "Typsnitt"
+
+[pdfTextEditor.fonts.compat]
+info = "Befintlig text redigeras perfekt. Ett nytt tecken som saknas i ett inbäddat typsnitt använder ett standardtypsnitt i stället."
+ok = "Alla typsnitt innehåller hela alfabetet och siffrorna – skriv fritt."
+warnOther = "{{count}} typsnitt saknar vissa bokstäver eller siffror – de skrivs med ett standardtypsnitt i stället."
+
+[pdfTextEditor.fonts.pill]
+info = "Inbäddat"
+ok = "Alla tecken"
+warn = "{{count}} med luckor"
+
+[pdfTextEditor.fonts.status.embedded]
+label = "Inbäddat"
+
+[pdfTextEditor.fonts.status.standard]
+label = "Standard"
+
+[pdfTextEditor.fonts.status.subset]
+label = "Delmängd"
 
 [pdfTextEditor.actions]
 applyChanges = "Verkställ ändringar"
