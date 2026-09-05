@@ -2938,19 +2938,19 @@ text = "För att göra dessa behörigheter oföränderliga, använd verktyget L�
 copy = "Kopiera meddelande"
 
 [chat.emptyState]
-text = "Ask a question about your documents or get help with PDF tools."
+text = "Ställ en fråga om dina dokument eller få hjälp med PDF-verktyg."
 
 [chat.fab]
-close = "Close chat"
-open = "Open Stirling AI assistant"
+close = "Stäng chatt"
+open = "Öppna Stirling AI-assistent"
 
 [chat.header]
 agentMenu = "Alternativ för Stirling-agent"
-assistant = "AI Assistant"
+assistant = "AI-assistent"
 clearChat = "Rensa chatt"
 
 [chat.input]
-disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
+disclaimer = "AI kan göra misstag. Kontrollera alltid resultatet innan du delar det."
 placeholder = "Vad vill du göra?"
 send = "Skicka meddelande"
 
@@ -2963,11 +2963,11 @@ executing_tool_single = "Kör {{tool}}..."
 executing_tool_step = "Kör {{tool}} (steg {{step}} av {{total}})..."
 extracting_content = "Extraherar innehåll från dina dokument..."
 processing = "Bearbetar extraherat innehåll..."
-ranForMinutes_one = "Ran for 1 minute"
-ranForMinutes_other = "Ran for {{count}} minutes"
-ranForMinutesSeconds = "Ran for {{minutes}} min, {{seconds}} sec"
-ranForSeconds_one = "Ran for 1 second"
-ranForSeconds_other = "Ran for {{count}} seconds"
+ranForMinutes_one = "Kördes i 1 minut"
+ranForMinutes_other = "Kördes i {{count}} minuter"
+ranForMinutesSeconds = "Kördes i {{minutes}} min, {{seconds}} sek"
+ranForSeconds_one = "Kördes i 1 sekund"
+ranForSeconds_other = "Kördes i {{count}} sekunder"
 thinking = "Tänker..."
 whole_doc_compression_round = "Sammanställer anteckningar..."
 whole_doc_read_done = "Läste klart dokumentet..."
@@ -2995,7 +2995,7 @@ need_clarification = "Kan du förtydliga din begäran?"
 not_found = "Jag kunde inte hitta den begärda informationen."
 processing = "Bearbetar ({{outcome}})..."
 unsupported_capability = "Funktionen stöds inte: {{capability}}"
-usage_limit_reached = "You've reached your usage limit. Check your plan options to keep going."
+usage_limit_reached = "Du har nått användningsgränsen. Se abonnemangsalternativen för att fortsätta."
 
 [chat.toolsUsed]
 summary_one = "Körde 1 verktyg"
@@ -6651,7 +6651,7 @@ small = "500 krediter"
 xsmall = "100 krediter"
 
 [plan.availablePlans]
-currency = "Billing currency"
+currency = "Faktureringsvaluta"
 subtitle = "Välj den plan som passar dina behov"
 title = "Tillgängliga planer"
 
@@ -6702,10 +6702,10 @@ included = "Ingår"
 name = "Gratis"
 
 [plan.freeLimit]
-cta = "View Processor Plan"
-dismiss = "Maybe Later"
-message = "That's your whole free allowance for automation, AI and the API. Seriously impressive! Keep the momentum going for just pennies a day."
-title = "Woah, {{total}} PDFs Processed!"
+cta = "Visa Processor-abonnemanget"
+dismiss = "Kanske senare"
+message = "Där användes hela din kostnadsfria kvot för automation, AI och API:t. Imponerande! Fortsätt för bara några ören per dag."
+title = "Oj, {{total}} PDF-filer bearbetade!"
 
 [plan.highlights]
 advancedIntegrations = "Avancerade integrationer"
@@ -6740,10 +6740,10 @@ highlight3 = "Inga vattenstämplar"
 name = "Pro"
 
 [plan.spendCap]
-cta = "View Spending Limit"
-dismiss = "Not Now"
-message = "You've made the most of this month's cap. That's a load of automation, AI and API work! Bump it up whenever you like to keep going."
-title = "You're on a Roll!"
+cta = "Visa utgiftsgräns"
+dismiss = "Inte nu"
+message = "Du har använt hela månadens gräns. Det är mycket automation, AI- och API-arbete! Höj den när du vill för att fortsätta."
+title = "Det flyter på!"
 
 [plan.static]
 activateLicense = "Aktivera din licens"
