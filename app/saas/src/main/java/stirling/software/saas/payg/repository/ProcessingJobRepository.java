@@ -7,12 +7,10 @@ import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 
 import stirling.software.saas.payg.job.ProcessingJob;
 import stirling.software.saas.payg.model.JobStatus;
 
-@Repository
 public interface ProcessingJobRepository extends JpaRepository<ProcessingJob, UUID> {
 
     List<ProcessingJob> findByOwnerUserIdAndStatus(Long ownerUserId, JobStatus status);

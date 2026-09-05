@@ -7,7 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import stirling.software.proprietary.security.model.User;
@@ -15,7 +14,6 @@ import stirling.software.proprietary.workflow.model.ParticipantStatus;
 import stirling.software.proprietary.workflow.model.WorkflowParticipant;
 import stirling.software.proprietary.workflow.model.WorkflowSession;
 
-@Repository
 public interface WorkflowParticipantRepository extends JpaRepository<WorkflowParticipant, Long> {
 
     /** Find participant by share token */
