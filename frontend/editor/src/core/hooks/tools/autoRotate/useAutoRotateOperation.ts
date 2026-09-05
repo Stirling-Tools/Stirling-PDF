@@ -22,8 +22,8 @@ import type {
 } from "@app/hooks/tools/shared/toolApiMapping";
 import {
   AutoRotateParameters,
-  AutoRotateDetectionMode,
   defaultParameters,
+  validateAutoRotateParameters,
 } from "@app/hooks/tools/autoRotate/useAutoRotateParameters";
 
 export const AUTO_ROTATE_ENDPOINT =
@@ -49,7 +49,7 @@ export const autoRotateToApiParams = (
 export const autoRotateFromApiParams = (
   apiParams: AutoRotateApiParams,
 ): Partial<AutoRotateParameters> => ({
-  detectionMode: apiParams.detectionMode as AutoRotateDetectionMode,
+  detectionMode: apiParams.detectionMode,
   confidenceThreshold: apiParams.confidenceThreshold,
   inferUndetected: apiParams.inferUndetected,
 });
@@ -169,6 +169,7 @@ export const autoRotateOperationConfig = defineCustomTool<AutoRotateParameters>(
     toApiParams: autoRotateToApiParams,
     fromApiParams: autoRotateFromApiParams,
     defaultParameters,
+    validateParams: validateAutoRotateParameters,
   },
 );
 

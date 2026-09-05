@@ -6,8 +6,10 @@ const FULL_STATE: PolicyDecodedState = {
   id: "pol_123",
   name: "Security Policy",
   enabled: true,
-  categoryId: "security",
+  required: true,
+  policyKey: "security",
   sources: ["editor", "gdrive"],
+  runsOnEditor: true,
   scopeTypes: ["Contracts", "Invoices"],
   reviewerEmail: "admin@example.com",
   fieldValues: { auditTrail: true, frameworks: ["HIPAA"] },
@@ -34,6 +36,14 @@ describe("toWirePolicy", () => {
     expect(toWirePolicy(FULL_STATE).output.type).toBe("inline");
   });
 
+  it("keeps required first-class (not in the options bag)", () => {
+    const wire = toWirePolicy(FULL_STATE);
+    expect(wire.required).toBe(true);
+    expect(
+      (wire.output.options as Record<string, unknown>).required,
+    ).toBeUndefined();
+  });
+
   it("packs metadata into output.options", () => {
     const wire = toWirePolicy(FULL_STATE);
     const opts = wire.output.options;
@@ -42,6 +52,26 @@ describe("toWirePolicy", () => {
     expect(opts.runOn).toBe("upload");
     expect(opts.mode).toBe("new_version");
     expect(opts.position).toBe("prefix");
+  });
+
+  it("sends the editor block so a save never drops editor participation", () => {
+    expect(toWirePolicy(FULL_STATE).editor).toEqual({
+      allowed: true,
+      runOn: "upload",
+    });
+    expect(toWirePolicy({ ...FULL_STATE, runsOnEditor: false }).editor).toEqual(
+      { allowed: false, runOn: "upload" },
+    );
+  });
+
+  it("keeps editor participation that empty sources would have re-derived away", () => {
+    // The seeded Classification policy: editor-run, no sources.
+    const wire = toWirePolicy({
+      ...FULL_STATE,
+      sources: [],
+      runsOnEditor: true,
+    });
+    expect(wire.editor?.allowed).toBe(true);
   });
 
   it("preserves steps at the top level", () => {
@@ -55,7 +85,8 @@ describe("fromWirePolicy → round-trip", () => {
     const wire = toWirePolicy(FULL_STATE);
     const decoded = fromWirePolicy(wire);
     expect(decoded.id).toBe(FULL_STATE.id);
-    expect(decoded.categoryId).toBe(FULL_STATE.categoryId);
+    expect(decoded.required).toBe(FULL_STATE.required);
+    expect(decoded.policyKey).toBe(FULL_STATE.policyKey);
     expect(decoded.sources).toEqual(FULL_STATE.sources);
     expect(decoded.scopeTypes).toEqual(FULL_STATE.scopeTypes);
     expect(decoded.reviewerEmail).toBe(FULL_STATE.reviewerEmail);
@@ -69,9 +100,29 @@ describe("fromWirePolicy → round-trip", () => {
     expect(decoded.steps).toEqual(FULL_STATE.steps);
   });
 
-  it("defaults runOn to upload when missing", () => {
-    const wire = toWirePolicy(FULL_STATE);
+  // The moment has two possible homes now (the `editor` block, and the legacy
+  // options bag), so "nothing stored" means clearing both.
+  const withNoStoredRunOn = (state: PolicyDecodedState) => {
+    const wire = toWirePolicy(state);
     delete (wire.output.options as Record<string, unknown>).runOn;
+    delete wire.editor;
+    return wire;
+  };
+
+  it("defaults a missing runOn to the category default (security → export)", () => {
+    expect(fromWirePolicy(withNoStoredRunOn(FULL_STATE)).runOn).toBe("export");
+  });
+
+  it("defaults a missing runOn to upload for other categories", () => {
+    const wire = withNoStoredRunOn({
+      ...FULL_STATE,
+      policyKey: "classification",
+    });
+    expect(fromWirePolicy(wire).runOn).toBe("upload");
+  });
+
+  it("keeps an explicitly saved upload on a security policy", () => {
+    const wire = toWirePolicy(FULL_STATE);
     expect(fromWirePolicy(wire).runOn).toBe("upload");
   });
 
@@ -98,6 +149,28 @@ describe("fromWirePolicy → round-trip", () => {
     }
   });
 
+  it("reads editor participation off the editor block, not sources", () => {
+    const wire = toWirePolicy(FULL_STATE);
+    expect(fromWirePolicy(wire).runsOnEditor).toBe(true);
+    expect(
+      fromWirePolicy({ ...wire, editor: { allowed: false, runOn: "upload" } })
+        .runsOnEditor,
+    ).toBe(false);
+  });
+
+  it("prefers the editor block's moment over the legacy options bag", () => {
+    const wire = toWirePolicy(FULL_STATE);
+    wire.output.options.runOn = "upload";
+    wire.editor = { allowed: true, runOn: "export" };
+    expect(fromWirePolicy(wire).runOn).toBe("export");
+  });
+
+  it("falls back to the stored moment when the editor does not run it", () => {
+    const wire = toWirePolicy({ ...FULL_STATE, runOn: "export" });
+    wire.editor = { allowed: false, runOn: "upload" };
+    expect(fromWirePolicy(wire).runOn).toBe("export");
+  });
+
   it("handles empty options gracefully", () => {
     const decoded = fromWirePolicy({
       id: "x",
@@ -107,15 +180,49 @@ describe("fromWirePolicy → round-trip", () => {
       steps: [],
       output: { type: "inline", options: {} },
     });
-    expect(decoded.categoryId).toBe("");
+    expect(decoded.policyKey).toBe("");
     expect(decoded.sources).toEqual([]);
+    expect(decoded.runsOnEditor).toBe(false);
     expect(decoded.runOn).toBe("upload");
     expect(decoded.outputMode).toBe("new_version");
+  });
+
+  it("decodes a policy stored before the in-memory rename", () => {
+    // The wire key is frozen as categoryId and every stored policy already carries it, so a
+    // decode that looked for policyKey would read every existing policy as unconfigured.
+    const decoded = fromWirePolicy({
+      id: "legacy",
+      name: "Security Policy",
+      enabled: true,
+      trigger: null,
+      steps: [],
+      output: { type: "inline", options: { categoryId: "security" } },
+    });
+    expect(decoded.policyKey).toBe("security");
+  });
+
+  it("writes the key back under the name the backend reads", () => {
+    expect(toWirePolicy(FULL_STATE).output.options).toMatchObject({
+      categoryId: "security",
+    });
   });
 
   it("defaults fieldValues to empty object when missing", () => {
     const wire = toWirePolicy(FULL_STATE);
     delete (wire.output.options as Record<string, unknown>).fieldValues;
     expect(fromWirePolicy(wire).fieldValues).toEqual({});
+  });
+
+  it("preserves options keys the codec does not model", () => {
+    const wire = toWirePolicy(FULL_STATE);
+    // An editor-authored blob the portal codec has no field for.
+    (wire.output.options as Record<string, unknown>).automation = { name: "x" };
+    const decoded = fromWirePolicy(wire);
+    expect(decoded.extraOptions).toEqual({ automation: { name: "x" } });
+    // Round-trips back onto the bag rather than being dropped on the next save.
+    expect(
+      (toWirePolicy(decoded).output.options as Record<string, unknown>)
+        .automation,
+    ).toEqual({ name: "x" });
   });
 });

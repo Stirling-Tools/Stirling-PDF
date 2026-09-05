@@ -1,5 +1,4 @@
-import { useState, useEffect } from "react";
-import { isAxiosError } from "axios";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Stack,
@@ -19,26 +18,37 @@ import { ActionIcon } from "@app/ui/ActionIcon";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { alert } from "@app/components/toast";
 import { teamService, Team } from "@app/services/teamService";
-import {
-  userManagementService,
-  User,
-} from "@app/services/userManagementService";
+import { type User } from "@app/services/userManagementService";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 import TeamDetailsSection from "@app/components/shared/config/configSections/TeamDetailsSection";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
+import {
+  useTeams,
+  useFetchAdminUsers,
+  useAdminMutation,
+} from "@app/hooks/useAdminDirectory";
 import LoginRequiredBanner from "@app/components/shared/config/LoginRequiredBanner";
+
+const EXAMPLE_TEAMS: Team[] = [
+  { id: 1, name: "Engineering", userCount: 3 },
+  { id: 2, name: "Marketing", userCount: 2 },
+  { id: 3, name: "Internal", userCount: 1 },
+];
 
 export default function TeamsSection() {
   const { t } = useTranslation();
   const { loginEnabled } = useLoginRequired();
-  const [teams, setTeams] = useState<Team[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: fetchedTeams, isPending } = useTeams(loginEnabled);
+  const fetchAdminUsers = useFetchAdminUsers();
+  // Login off means the endpoints are not callable, so the table shows a
+  // worked example instead of an empty state.
+  const teams = loginEnabled ? (fetchedTeams ?? []) : EXAMPLE_TEAMS;
+  const loading = loginEnabled && isPending;
   const [createModalOpened, setCreateModalOpened] = useState(false);
   const [renameModalOpened, setRenameModalOpened] = useState(false);
   const [addMemberModalOpened, setAddMemberModalOpened] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
   const [availableUsers, setAvailableUsers] = useState<User[]>([]);
-  const [processing, setProcessing] = useState(false);
   const [viewingTeamId, setViewingTeamId] = useState<number | null>(null);
 
   // Form states
@@ -49,34 +59,53 @@ export default function TeamsSection() {
     ? availableUsers.filter((user) => user.team?.id !== selectedTeam.id)
     : [];
 
-  useEffect(() => {
-    fetchTeams();
-  }, []);
+  const createTeam = useAdminMutation({
+    write: (name: string) => teamService.createTeam(name),
+    invalidates: ["teams"],
+    success: t("workspace.teams.createTeam.success"),
+    errorFallback: t("workspace.teams.createTeam.error"),
+    onDone: () => {
+      setNewTeamName("");
+      setCreateModalOpened(false);
+    },
+  });
 
-  const fetchTeams = async () => {
-    try {
-      setLoading(true);
-      if (loginEnabled) {
-        const teamsData = await teamService.getTeams();
-        setTeams(teamsData);
-      } else {
-        // Provide example data when login is disabled
-        const exampleTeams: Team[] = [
-          { id: 1, name: "Engineering", userCount: 3 },
-          { id: 2, name: "Marketing", userCount: 2 },
-          { id: 3, name: "Internal", userCount: 1 },
-        ];
-        setTeams(exampleTeams);
-      }
-    } catch (error) {
-      console.error("Failed to fetch teams:", error);
-      alert({ alertType: "error", title: "Failed to load teams" });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const renameTeam = useAdminMutation({
+    write: ({ id, name }: { id: number; name: string }) =>
+      teamService.renameTeam(id, name),
+    invalidates: ["teams"],
+    success: t("workspace.teams.renameTeam.success"),
+    errorFallback: t("workspace.teams.renameTeam.error"),
+    onDone: () => {
+      setRenameTeamName("");
+      setSelectedTeam(null);
+      setRenameModalOpened(false);
+    },
+  });
 
-  const handleCreateTeam = async () => {
+  const deleteTeam = useAdminMutation({
+    write: (id: number) => teamService.deleteTeam(id),
+    invalidates: ["teams"],
+    success: t("workspace.teams.deleteTeam.success"),
+    errorFallback: t("workspace.teams.deleteTeam.error"),
+  });
+
+  // Membership changes a team's count, the member's own team, and both
+  // teams' detail rows.
+  const addMember = useAdminMutation({
+    write: ({ teamId, userId }: { teamId: number; userId: number }) =>
+      teamService.addUserToTeam(teamId, userId),
+    invalidates: ["teams", "teamDetails", "users"],
+    success: t("workspace.teams.addMemberToTeam.success"),
+    errorFallback: t("workspace.teams.addMemberToTeam.error"),
+    onDone: () => {
+      setSelectedUserId("");
+      setSelectedTeam(null);
+      setAddMemberModalOpened(false);
+    },
+  });
+
+  const handleCreateTeam = () => {
     if (!newTeamName.trim()) {
       alert({
         alertType: "error",
@@ -84,32 +113,10 @@ export default function TeamsSection() {
       });
       return;
     }
-
-    try {
-      setProcessing(true);
-      await teamService.createTeam(newTeamName);
-      alert({
-        alertType: "success",
-        title: t("workspace.teams.createTeam.success"),
-      });
-      setNewTeamName("");
-      setCreateModalOpened(false);
-      await fetchTeams();
-    } catch (error: unknown) {
-      console.error("Failed to create team:", error);
-      const errorMessage = isAxiosError(error)
-        ? error.response?.data?.message ||
-          error.response?.data?.error ||
-          error.message
-        : (error instanceof Error ? error.message : undefined) ||
-          t("workspace.teams.createTeam.error");
-      alert({ alertType: "error", title: errorMessage });
-    } finally {
-      setProcessing(false);
-    }
+    createTeam.mutate(newTeamName);
   };
 
-  const handleRenameTeam = async () => {
+  const handleRenameTeam = () => {
     if (!selectedTeam || !renameTeamName.trim()) {
       alert({
         alertType: "error",
@@ -117,33 +124,10 @@ export default function TeamsSection() {
       });
       return;
     }
-
-    try {
-      setProcessing(true);
-      await teamService.renameTeam(selectedTeam.id, renameTeamName);
-      alert({
-        alertType: "success",
-        title: t("workspace.teams.renameTeam.success"),
-      });
-      setRenameTeamName("");
-      setSelectedTeam(null);
-      setRenameModalOpened(false);
-      await fetchTeams();
-    } catch (error: unknown) {
-      console.error("Failed to rename team:", error);
-      const errorMessage = isAxiosError(error)
-        ? error.response?.data?.message ||
-          error.response?.data?.error ||
-          error.message
-        : (error instanceof Error ? error.message : undefined) ||
-          t("workspace.teams.renameTeam.error");
-      alert({ alertType: "error", title: errorMessage });
-    } finally {
-      setProcessing(false);
-    }
+    renameTeam.mutate({ id: selectedTeam.id, name: renameTeamName });
   };
 
-  const handleDeleteTeam = async (team: Team) => {
+  const handleDeleteTeam = (team: Team) => {
     if (team.name === "Internal") {
       alert({
         alertType: "error",
@@ -151,28 +135,8 @@ export default function TeamsSection() {
       });
       return;
     }
-
-    if (!confirm(t("workspace.teams.confirmDelete"))) {
-      return;
-    }
-
-    try {
-      await teamService.deleteTeam(team.id);
-      alert({
-        alertType: "success",
-        title: t("workspace.teams.deleteTeam.success"),
-      });
-      await fetchTeams();
-    } catch (error: unknown) {
-      console.error("Failed to delete team:", error);
-      const errorMessage = isAxiosError(error)
-        ? error.response?.data?.message ||
-          error.response?.data?.error ||
-          error.message
-        : (error instanceof Error ? error.message : undefined) ||
-          t("workspace.teams.deleteTeam.error");
-      alert({ alertType: "error", title: errorMessage });
-    }
+    if (!confirm(t("workspace.teams.confirmDelete"))) return;
+    deleteTeam.mutate(team.id);
   };
 
   const openRenameModal = (team: Team) => {
@@ -198,8 +162,7 @@ export default function TeamsSection() {
     }
     setSelectedTeam(team);
     try {
-      // Fetch all users to show in dropdown
-      const adminData = await userManagementService.getUsers();
+      const adminData = await fetchAdminUsers();
       setAvailableUsers(adminData.users);
       setAddMemberModalOpened(true);
     } catch (error) {
@@ -211,7 +174,7 @@ export default function TeamsSection() {
     }
   };
 
-  const handleAddMember = async () => {
+  const handleAddMember = () => {
     if (!selectedTeam || !selectedUserId) {
       alert({
         alertType: "error",
@@ -219,30 +182,10 @@ export default function TeamsSection() {
       });
       return;
     }
-
-    try {
-      setProcessing(true);
-      await teamService.addUserToTeam(
-        selectedTeam.id,
-        parseInt(selectedUserId),
-      );
-      alert({
-        alertType: "success",
-        title: t("workspace.teams.addMemberToTeam.success"),
-      });
-      setSelectedUserId("");
-      setSelectedTeam(null);
-      setAddMemberModalOpened(false);
-      await fetchTeams();
-    } catch (error) {
-      console.error("Failed to add member to team:", error);
-      alert({
-        alertType: "error",
-        title: t("workspace.teams.addMemberToTeam.error"),
-      });
-    } finally {
-      setProcessing(false);
-    }
+    addMember.mutate({
+      teamId: selectedTeam.id,
+      userId: parseInt(selectedUserId),
+    });
   };
 
   // If viewing team details, render TeamDetailsSection
@@ -252,7 +195,6 @@ export default function TeamsSection() {
         teamId={viewingTeamId}
         onBack={() => {
           setViewingTeamId(null);
-          fetchTeams(); // Refresh teams list
         }}
       />
     );
@@ -298,19 +240,13 @@ export default function TeamsSection() {
         verticalSpacing="sm"
         withRowBorders
         highlightOnHover
-        style={
-          {
-            "--table-border-color": "var(--mantine-color-gray-3)",
-          } as React.CSSProperties
-        }
       >
         <Table.Thead>
-          <Table.Tr style={{ backgroundColor: "var(--mantine-color-gray-0)" }}>
+          <Table.Tr>
             <Table.Th
               style={{
                 fontWeight: 600,
                 fontSize: "0.875rem",
-                color: "var(--mantine-color-gray-7)",
               }}
             >
               {t("workspace.teams.teamName")}
@@ -319,12 +255,15 @@ export default function TeamsSection() {
               style={{
                 fontWeight: 600,
                 fontSize: "0.875rem",
-                color: "var(--mantine-color-gray-7)",
               }}
             >
               {t("workspace.teams.totalMembers")}
             </Table.Th>
-            <Table.Th style={{ width: 50 }}></Table.Th>
+            <Table.Th style={{ width: 50 }}>
+              <span className="sr-only">
+                {t("workspace.teams.teamActions", "Team actions")}
+              </span>
+            </Table.Th>
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
@@ -496,7 +435,7 @@ export default function TeamsSection() {
 
             <Button
               onClick={handleCreateTeam}
-              loading={processing}
+              loading={createTeam.isPending}
               fullWidth
               size="md"
               style={{ marginTop: "var(--mantine-spacing-md)" }}
@@ -562,7 +501,7 @@ export default function TeamsSection() {
 
             <Button
               onClick={handleRenameTeam}
-              loading={processing}
+              loading={renameTeam.isPending}
               fullWidth
               size="md"
               style={{ marginTop: "var(--mantine-spacing-md)" }}
@@ -638,14 +577,14 @@ export default function TeamsSection() {
               availableUsersForSelectedTeam.find(
                 (u) => u.id.toString() === selectedUserId,
               )?.team && (
-                <Text size="xs" c="orange">
+                <Text size="xs" c="var(--color-amber-dark)">
                   {t("workspace.teams.addMemberToTeam.willBeMoved")}
                 </Text>
               )}
 
             <Button
               onClick={handleAddMember}
-              loading={processing}
+              loading={addMember.isPending}
               fullWidth
               size="md"
               style={{ marginTop: "var(--mantine-spacing-md)" }}

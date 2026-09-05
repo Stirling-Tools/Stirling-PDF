@@ -1,35 +1,34 @@
 import { QueryClient } from "@tanstack/react-query";
+import { baseQueryOptions } from "@app/query/queryClient";
 
-/**
- * The portal's TanStack Query client, mounted once at the portal root
- * (PortalApp) so its cache lives above the router — data survives navigating
- * away and back. staleTime 30s: a return visit within 30s serves cache with no
- * network call, then revalidates in the background. Focus refetch is off — admin
- * screens don't need polling.
- */
 let current: QueryClient | null = null;
 
-export function createPortalQueryClient(): QueryClient {
-  current = new QueryClient({
-    defaultOptions: {
-      queries: {
-        staleTime: 30_000,
-        gcTime: 5 * 60_000,
-        retry: 1,
-        refetchOnWindowFocus: false,
-      },
-    },
+/**
+ * One client for the session, not one per mount. The portal is a route, so
+ * switching to the editor unmounts it, and a per-mount client would throw the
+ * cache away and refetch everything on the way back. The editor's own client
+ * sits above the router and never pays that.
+ *
+ * Still a separate instance from the editor's: the two namespace their keys
+ * apart and invalidate independently.
+ */
+export function getPortalQueryClient(): QueryClient {
+  current ??= new QueryClient({
+    defaultOptions: { queries: baseQueryOptions },
   });
   return current;
 }
 
-/**
- * The client created by {@link createPortalQueryClient}, or null if none has
- * been mounted yet. Lets a non-hook module (the SaaS usersBackend's resolveTeam)
- * read/populate the shared cache via ensureQueryData when the portal is mounted,
- * while still working — via a direct fetch — when it isn't (e.g. a unit test
- * that exercises the adapter without the provider).
- */
+/** Null until the portal first mounts, so resolveTeam can fall back to a direct fetch. */
 export function tryGetPortalQueryClient(): QueryClient | null {
   return current;
+}
+
+/**
+ * Drops the cache and the instance holding it. For tests, which need a cold
+ * start between cases; the app never calls it, because signing out is a full
+ * page load.
+ */
+export function resetPortalQueryClient(): void {
+  current = null;
 }

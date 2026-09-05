@@ -1,7 +1,6 @@
 alphabet = "Alphabet"
 apply = "Apply"
 applyAndContinue = "Save & Leave"
-areYouSure = "Are you sure you want to leave?"
 back = "Back"
 black = "Black"
 blue = "Blue"
@@ -46,10 +45,8 @@ filesSelected = "{{count}} files"
 font = "Font"
 fontSizeTooltip = "Size of the page number text in points. Larger numbers create bigger text."
 fontTypeTooltip = "Font family for the page numbers. Choose based on your document style."
-genericSubmit = "Submit"
 green = "Green"
 help = "Help"
-imgPrompt = "Select Image(s)"
 incorrectPasswordMessage = "Current password is incorrect."
 info = "Info"
 invalidUndoData = "Cannot undo: invalid operation data"
@@ -62,7 +59,6 @@ loginAgreementTitle = "Login Agreement"
 logOut = "Log out"
 marginTooltip = "Distance between the page number and the edge of the page."
 moreOptions = "More Options"
-multiPdfPrompt = "Select PDFs (2+)"
 never = "Never"
 no = "No"
 noFileSelected = "No file loaded. Please upload one."
@@ -80,7 +76,6 @@ pageOrderPrompt = "Custom Page Order (Enter a comma-separated list of page numbe
 pages = "Pages"
 pageSelectionPrompt = "Custom Page Selection (Enter a comma-separated list of page numbers 1,5,6 or Functions like 2n+1)"
 password = "Password"
-pdfPrompt = "Select PDF(s)"
 pin = "Pin File (keep active after tool run)"
 pro = "Pro"
 processingComplete = "Your file is ready."
@@ -110,6 +105,7 @@ undoSuccess = "Operation undone successfully"
 unknown = "Unknown"
 unpin = "Unpin File (replace after tool run)"
 unsavedChanges = "You have unsaved changes to your PDF."
+unsavedChangesBody = "You have unsaved changes to your PDF. Are you sure you want to leave?"
 unsavedChangesTitle = "Unsaved Changes"
 unsupported = "Unsupported"
 username = "Username"
@@ -822,6 +818,7 @@ openai = "OpenAI API key"
 setPlaceholder = "Saved - leave blank to keep the current key"
 
 [admin.settings.ai.models.baseUrl]
+contextWindow = "Use a context window of at least 16,384 tokens. Smaller windows silently drop part of the prompt. Ollama defaults to 4,096 - raise OLLAMA_CONTEXT_LENGTH."
 description = "Base URL of the OpenAI-compatible / Ollama endpoint, e.g. http://ollama:11434/v1."
 label = "Provider base URL"
 warning = "The base URL must point at a trusted internal endpoint. The engine will make server-side requests to it, so an untrusted value is SSRF-sensitive."
@@ -1883,6 +1880,9 @@ width = "Width"
 [app]
 description = "The Free Adobe Acrobat alternative (10M+ Downloads)"
 
+[appBanner]
+dismiss = "Dismiss"
+
 [attachments]
 convertToPdfA3b = "Convert to PDF/A-3b"
 convertToPdfA3bDescription = "Creates an archival PDF with embedded attachments"
@@ -2444,33 +2444,6 @@ keywords = "Keywords: odd, even"
 numbers = "Numbers/ranges: 5, 10-20"
 progressions = "Progressions: 3n, 4n+1"
 
-[certificateChoice.tooltip]
-header = "Certificate Types"
-
-[certificateChoice.tooltip.organization]
-bullet1 = "Managed by system administrators"
-bullet2 = "Shared across authorized users"
-bullet3 = "Represents company identity, not individual"
-bullet4 = "Best for: Official documents, team signatures"
-description = "A shared certificate provided by your organization. Used for company-wide signing authority."
-title = "Organization Certificate"
-
-[certificateChoice.tooltip.personal]
-bullet1 = "Generated automatically on first use"
-bullet2 = "Tied to your user account"
-bullet3 = "Cannot be shared with other users"
-bullet4 = "Best for: Personal documents, individual accountability"
-description = "An auto-generated certificate unique to your user account. Suitable for individual signatures."
-title = "Personal Certificate"
-
-[certificateChoice.tooltip.upload]
-bullet1 = "Requires P12/PFX file and password"
-bullet2 = "Can be issued by external Certificate Authorities"
-bullet3 = "Higher trust level for legal documents"
-bullet4 = "Best for: Legally binding contracts, external validation"
-description = "Use your own PKCS#12 certificate file. Provides full control over certificate properties."
-title = "Upload Custom P12"
-
 [certSign]
 awaitingSignatures = "Awaiting signatures"
 chooseCertificate = "Choose Certificate File"
@@ -2797,34 +2770,6 @@ server = "Server"
 stepTitle = "Certificate source"
 upload = "Upload"
 
-[certSign.tooltip.header]
-title = "About Managing Signatures"
-
-[certSign.tooltip.overview]
-bullet1 = "Check existing signatures and their validity"
-bullet2 = "View detailed information about signers and certificates"
-bullet3 = "Add new digital signatures to secure your documents"
-bullet4 = "Multiple files supported with easy navigation"
-text = "This tool lets you check if your PDFs are digitally signed and add new digital signatures. Digital signatures prove who created or approved a document and show if it has been changed since signing."
-title = "What can this tool do?"
-
-[certSign.tooltip.signing]
-bullet1 = "Supports PEM, PKCS12, JKS, and server certificate formats"
-bullet2 = "Option to show or hide signature on the PDF"
-bullet3 = "Add reason, location, and signer name"
-bullet4 = "Choose which page to place visible signatures"
-bullet5 = "Use server certificate for simple 'Sign with Stirling-PDF' option"
-text = "To sign a PDF, you need a digital certificate (like PEM, PKCS12, or JKS). You can choose to make the signature visible on the document or keep it invisible for security only."
-title = "Adding Signatures"
-
-[certSign.tooltip.validation]
-bullet1 = "Shows if signatures are valid or invalid"
-bullet2 = "Displays signer information and signing date"
-bullet3 = "Checks if the document was modified after signing"
-bullet4 = "Can use custom certificates for verification"
-text = "When you check signatures, the tool tells you if they're valid, who signed the document, when it was signed, and whether the document has been changed since signing."
-title = "Checking Signatures"
-
 [changeCreds]
 changeUsername = "Update your username. You will be logged out after updating."
 credsUpdated = "Account updated"
@@ -2992,12 +2937,16 @@ text = "To make these permissions unchangeable, use the Add Password tool to set
 [chat.actions]
 copy = "Copy message"
 
+[chat.emptyState]
+text = "Ask a question about your documents or get help with PDF tools."
+
 [chat.fab]
 close = "Close chat"
 open = "Open Stirling AI assistant"
 
 [chat.header]
 agentMenu = "Stirling agent options"
+assistant = "AI Assistant"
 clearChat = "Clear chat"
 
 [chat.input]
@@ -3053,6 +3002,293 @@ summary_one = "Ran 1 tool"
 summary_other = "Ran {{count}} tools"
 unknownTool = "Unknown tool"
 
+[classification.families]
+correspondence = "Correspondence"
+education = "Education"
+engineering = "Engineering"
+finance = "Financial"
+forms = "Forms"
+government = "Government"
+health = "Medical"
+hr = "HR"
+legal = "Legal"
+operations = "Operations"
+projects = "Projects"
+property = "Property"
+reports = "Reports"
+sales = "Marketing"
+travel = "Travel"
+
+[classification.labels]
+academic-record = "Academic record"
+action-plan = "Action plan"
+addendum = "Addendum"
+advertisement = "Advertisement"
+affidavit = "Affidavit"
+agenda = "Agenda"
+amendment = "Amendment"
+analytics-report = "Analytics report"
+announcement = "Announcement"
+annual-report = "Annual report"
+api-documentation = "API documentation"
+application-form = "Application form"
+appraisal-report = "Appraisal report"
+architecture-document = "Architecture document"
+articles-of-incorporation = "Articles of incorporation"
+assignment-brief = "Assignment brief"
+audit-report = "Audit report"
+balance-sheet = "Balance sheet"
+bank-statement = "Bank statement"
+benefits-summary = "Benefits summary"
+bill-of-lading = "Bill of lading"
+bill-of-materials = "Bill of materials"
+blueprint = "Blueprint"
+board-report = "Board report"
+board-resolution = "Board resolution"
+booking-confirmation = "Booking confirmation"
+brochure = "Brochure"
+budget = "Budget"
+business-plan = "Business plan"
+business-proposal = "Business proposal"
+bylaws = "Bylaws"
+campaign-brief = "Campaign brief"
+case-study = "Case study"
+cash-flow-statement = "Cash flow statement"
+catalog = "Catalog"
+cease-and-desist = "Cease and desist"
+certificate = "Certificate"
+certificate-of-completion = "Certificate of completion"
+change-log = "Change log"
+checklist = "Checklist"
+claim-form = "Claim form"
+closing-statement = "Closing statement"
+complaint-letter = "Complaint letter"
+compliance-document = "Compliance document"
+confirmation-letter = "Confirmation letter"
+consent-form = "Consent form"
+contract = "Contract"
+course-syllabus = "Course syllabus"
+court-filing = "Court filing"
+cover-letter = "Cover letter"
+credit-note = "Credit note"
+customs-declaration = "Customs declaration"
+customs-form = "Customs form"
+cv = "CV"
+datasheet = "Datasheet"
+debit-note = "Debit note"
+deed = "Deed"
+delivery-note = "Delivery note"
+demand-letter = "Demand letter"
+design-document = "Design document"
+diploma = "Diploma"
+discharge-summary = "Discharge summary"
+dissertation = "Dissertation"
+donation-receipt = "Donation receipt"
+dunning-letter = "Dunning letter"
+email-thread = "Email thread"
+employee-handbook = "Employee handbook"
+employment-contract = "Employment contract"
+estimate = "Estimate"
+event-agenda = "Event agenda"
+event-program = "Event program"
+eviction-notice = "Eviction notice"
+exam-paper = "Exam paper"
+expense-report = "Expense report"
+expense-summary = "Expense summary"
+explanation-of-benefits = "Explanation of benefits"
+fact-sheet = "Fact sheet"
+faq-document = "FAQ document"
+feasibility-study = "Feasibility study"
+feedback-form = "Feedback form"
+financial-forecast = "Financial forecast"
+financial-statement = "Financial statement"
+floor-plan = "Floor plan"
+flyer = "Flyer"
+form = "Form"
+franchise-agreement = "Franchise agreement"
+freight-document = "Freight document"
+gift-certificate = "Gift certificate"
+glossary = "Glossary"
+government-notice = "Government notice"
+grade-report = "Grade report"
+grant-agreement = "Grant agreement"
+grant-application = "Grant application"
+hoa-document = "HOA document"
+home-inspection-report = "Home inspection report"
+hr-memo = "HR memo"
+hr-policy = "HR policy"
+immigration-document = "Immigration document"
+immunization-record = "Immunization record"
+incident-report = "Incident report"
+income-statement = "Income statement"
+index = "Index"
+inspection-report = "Inspection report"
+insurance-certificate = "Insurance certificate"
+insurance-claim = "Insurance claim"
+insurance-policy = "Insurance policy"
+intake-form = "Intake form"
+inventory-list = "Inventory list"
+investment-summary = "Investment summary"
+invitation = "Invitation"
+invoice = "Invoice"
+itinerary = "Itinerary"
+job-application = "Job application"
+job-description = "Job description"
+lab-report = "Lab report"
+lease-agreement = "Lease agreement"
+leave-request = "Leave request"
+legal-brief = "Legal brief"
+legal-filing = "Legal filing"
+legal-notice = "Legal notice"
+legal-opinion = "Legal opinion"
+lesson-plan = "Lesson plan"
+letter = "Letter"
+letter-of-intent = "Letter of intent"
+license = "License"
+license-agreement = "License agreement"
+loan-agreement = "Loan agreement"
+loan-document = "Loan document"
+maintenance-log = "Maintenance log"
+manual = "Manual"
+market-research = "Market research"
+marketing-plan = "Marketing plan"
+media-kit = "Media kit"
+medical-invoice = "Medical invoice"
+medical-report = "Medical report"
+meeting-agenda = "Meeting agenda"
+meeting-minutes = "Meeting minutes"
+meeting-notes = "Meeting notes"
+membership-document = "Membership document"
+memo = "Memo"
+memorandum-of-understanding = "Memorandum of understanding"
+mortgage-document = "Mortgage document"
+nda = "NDA"
+newsletter = "Newsletter"
+non-compete-agreement = "Non-compete agreement"
+notice = "Notice"
+offer-letter = "Offer letter"
+onboarding-document = "Onboarding document"
+order-confirmation = "Order confirmation"
+order-form = "Order form"
+organization-chart = "Organization chart"
+packing-slip = "Packing slip"
+partnership-agreement = "Partnership agreement"
+patent = "Patent"
+pathology-report = "Pathology report"
+payment-reminder = "Payment reminder"
+payroll-document = "Payroll document"
+payslip = "Payslip"
+performance-review = "Performance review"
+permit = "Permit"
+petition = "Petition"
+pitch-deck = "Pitch deck"
+power-of-attorney = "Power of attorney"
+prescription = "Prescription"
+presentation = "Presentation"
+press-release = "Press release"
+price-list = "Price list"
+pricing-sheet = "Pricing sheet"
+privacy-policy = "Privacy policy"
+product-sheet = "Product sheet"
+proforma-invoice = "Proforma invoice"
+progress-report = "Progress report"
+project-charter = "Project charter"
+project-plan = "Project plan"
+promotional-material = "Promotional material"
+property-listing = "Property listing"
+proposal = "Proposal"
+public-notice = "Public notice"
+purchase-agreement = "Purchase agreement"
+purchase-order = "Purchase order"
+quality-report = "Quality report"
+quarterly-report = "Quarterly report"
+questionnaire = "Questionnaire"
+quick-start-guide = "Quick start guide"
+quote = "Quote"
+radiology-report = "Radiology report"
+receipt = "Receipt"
+recommendation-letter = "Recommendation letter"
+reference-letter = "Reference letter"
+referral-letter = "Referral letter"
+registration-confirmation = "Registration confirmation"
+registration-form = "Registration form"
+regulatory-filing = "Regulatory filing"
+release-notes = "Release notes"
+remittance-advice = "Remittance advice"
+rental-agreement = "Rental agreement"
+report = "Report"
+request-for-proposal = "Request for proposal"
+request-for-quotation = "Request for quotation"
+requirements-document = "Requirements document"
+research-abstract = "Research abstract"
+research-paper = "Research paper"
+reservation = "Reservation"
+resignation-letter = "Resignation letter"
+resume = "Resume"
+retrospective = "Retrospective"
+return-authorization = "Return authorization"
+risk-assessment = "Risk assessment"
+roadmap = "Roadmap"
+safety-data-sheet = "Safety data sheet"
+safety-procedure = "Safety procedure"
+sales-proposal = "Sales proposal"
+sales-report = "Sales report"
+schematic = "Schematic"
+scope-of-work = "Scope of work"
+service-agreement = "Service agreement"
+service-report = "Service report"
+settlement-agreement = "Settlement agreement"
+shareholder-agreement = "Shareholder agreement"
+shipping-confirmation = "Shipping confirmation"
+specification = "Specification"
+sponsorship-agreement = "Sponsorship agreement"
+standard-operating-procedure = "Standard operating procedure"
+statement-of-account = "Statement of account"
+statement-of-work = "Statement of work"
+status-report = "Status report"
+stock-report = "Stock report"
+study-guide = "Study guide"
+subpoena = "Subpoena"
+subscription-confirmation = "Subscription confirmation"
+supply-order = "Supply order"
+survey-form = "Survey form"
+survey-results = "Survey results"
+sustainability-report = "Sustainability report"
+table-of-contents = "Table of contents"
+tax-form = "Tax form"
+tax-return = "Tax return"
+tax-statement = "Tax statement"
+technical-drawing = "Technical drawing"
+technical-specification = "Technical specification"
+tenancy-agreement = "Tenancy agreement"
+tender-document = "Tender document"
+termination-letter = "Termination letter"
+terms-and-conditions = "Terms and conditions"
+terms-of-service = "Terms of service"
+test-plan = "Test plan"
+test-report = "Test report"
+thesis = "Thesis"
+ticket = "Ticket"
+timeline = "Timeline"
+timesheet = "Timesheet"
+title-document = "Title document"
+training-material = "Training material"
+transcript = "Transcript"
+travel-itinerary = "Travel itinerary"
+trust-document = "Trust document"
+user-guide = "User guide"
+utility-bill = "Utility bill"
+vendor-agreement = "Vendor agreement"
+visa-document = "Visa document"
+waiver = "Waiver"
+warehouse-receipt = "Warehouse receipt"
+warranty-document = "Warranty document"
+waybill = "Waybill"
+white-paper = "White paper"
+will = "Will"
+work-instruction = "Work instruction"
+work-order = "Work order"
+
 [cloudBadge]
 tooltip = "This operation will use your cloud credits"
 
@@ -3060,28 +3296,35 @@ tooltip = "This operation will use your cloud credits"
 tooltip = "Pick color from screen"
 
 [colorPicker]
+hue = "Hue"
+saturation = "Saturation and brightness"
 title = "Choose color"
 
 [common]
+actions = "Actions"
 back = "Back"
 cancel = "Cancel"
 close = "Close"
+codeSample = "Code sample"
 collapse = "Collapse"
 confirm = "Confirm"
 continue = "Continue"
 copied = "Copied!"
 copy = "Copy"
 done = "Done"
+enterValue = "Enter value"
 error = "Error"
 expand = "Expand"
 loading = "Loading..."
 next = "Next"
+open = "Open"
 preview = "Preview"
 previous = "Previous"
 refresh = "Refresh"
 remaining = "Remaining"
 retry = "Retry"
 save = "Save"
+stepOf = "Step {{current}} of {{total}}"
 
 [compare]
 clearSelected = "Clear selected"
@@ -3244,6 +3487,7 @@ title = "Compression Method"
 [compress.settings]
 desiredSize = "Desired File Size"
 desiredSizePlaceholder = "Enter size"
+desiredSizeUnit = "Size unit"
 
 [compress.tooltip.description]
 text = "Compression is an easy way to reduce your file size. Pick File Size to enter a target size and have us adjust quality for you. Pick Quality to set compression strength manually."
@@ -3284,7 +3528,7 @@ enterEmailConfirm = "To confirm deletion, please type your email address ({{emai
 guestDescription = "You are signed in as a guest. Consider upgrading your account above."
 label = "Overview"
 manageAccountPreferences = "Manage your account preferences"
-signedInAs = "Signed in as"
+signedInAs = "Account"
 title = "Account Settings"
 
 [config.account.profilePicture]
@@ -3395,6 +3639,40 @@ integration = "Integration Configuration"
 security = "Security Configuration"
 system = "System Configuration"
 
+[connect]
+loading = "Checking this request."
+redirecting = "Returning you to your server."
+step = "Step {{current}} of {{total}}"
+
+[connect.confirm]
+acknowledge = "I recognise this address and want to connect it to my team"
+approve = "Connect server"
+deny = "Decline"
+lead = "A Stirling server is asking to connect to your team. Check the address below is yours before you approve."
+originLabel = "Address"
+signedInAs = "Signed in as"
+switchAccount = "Use a different account"
+title = "Connect this server?"
+unknownAccount = "an unknown account"
+
+[connect.confirm.insecure]
+body = "This address does not use HTTPS, so your sign-in will be sent over an unencrypted connection. Only approve it on a network you trust."
+label = "Not an encrypted address"
+
+[connect.declined]
+body = "Nothing was connected. You can close this page."
+title = "Request declined"
+
+[connect.error]
+failed = "That did not go through. Only a team owner can connect a server."
+
+[connect.meta]
+title = "Connect a server"
+
+[connect.notFound]
+body = "This connection request is not valid. It may have expired, or already been used. Start another one from your server."
+title = "Request not valid"
+
 [convert]
 autoRotate = "Auto Rotate"
 autoRotateDescription = "Automatically rotate images to better fit the PDF page"
@@ -3446,6 +3724,24 @@ pdfOptions = "PDF Options"
 pdfToCbr = "PDF → CBR"
 pdfToCbz = "PDF → CBZ"
 pdfToEpub = "PDF → EPUB"
+pdfUaAltTextNotice = "Images need a written description before a document can be certified. Descriptions are never generated automatically, because an invented one passes the checker while telling a screen-reader user nothing. Any image left without one is reported, and the file comes back tagged but not certified."
+pdfUaAltTextScanFailed = "The images could not be listed. Convert anyway and the response reports what is missing."
+pdfUaAltTextSingleFileOnly = "Descriptions belong to one document: an image is identified by its position, which is a different image in every file. Convert these {{fileCount}} files to tag them, then convert one at a time to describe its images."
+pdfUaEmbedFonts = "Embed missing fonts"
+pdfUaEmbedFontsHelp = "PDF/UA requires every font to be embedded. Turning this off is faster but usually prevents conformance."
+pdfUaFigureLabel = "Page {{page}} {{kind}}"
+pdfUaFigurePlaceholder = "What this image tells the reader"
+pdfUaFindImages = "Find images needing a description"
+pdfUaLanguage = "Document language"
+pdfUaLanguageHelp = "A BCP-47 tag such as en-GB. Used only when the document does not already declare its own language."
+pdfUaNoImagesNeedingText = "No image is missing a description."
+pdfUaOptions = "PDF/UA Options"
+pdfUaOverrideLanguage = "Replace the document's own language"
+pdfUaOverrideLanguageHelp = "Only tick this if the language above is right and the document's own is wrong. Relabelling a document into a language it is not written in makes a screen reader unintelligible."
+pdfUaProfile = "Conformance level"
+pdfUaSignatureWarning = "This PDF is digitally signed. Tagging rewrites the page content the signature covers, so the signature will stop verifying. Convert first, then re-sign."
+pdfUaTitle = "Document title"
+pdfUaTitleHelp = "Shown by a reader instead of the filename. Left blank, the first heading is used."
 selectSourceFormatFirst = "Choose a source format first"
 settings = "Settings"
 single = "Single"
@@ -3520,24 +3816,6 @@ description = "These cookies are essential for the website to function properly.
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
-[credits.modal]
-advancedMonitoring = "Advanced monitoring"
-allInOneWorkspace = "All-in-one PDF workspace (viewer, tools & agent)"
-apiSandbox = "API sandbox"
-dedicatedSupportSlas = "Dedicated support & SLAs"
-fasterThroughput = "10x faster throughput"
-fullyPrivateFiles = "Fully private files"
-largeFileProcessing = "Large file processing"
-orgWideAccess = "Org-wide access controls"
-premiumAiModels = "Premium AI models"
-prioritySupport = "Priority support"
-privateDocCloud = "Private Document Cloud"
-ragFineTuning = "RAG + fine-tuning"
-secureApiAccess = "Secure API access"
-standardThroughput = "Standard throughput"
-unlimitedApiAccess = "Unlimited API access"
-unlimitedSeats = "Unlimited seats"
-
 [crop]
 autoCrop = "Auto-crop whitespace"
 noFileSelected = "Add a PDF file to begin cropping"
@@ -3570,7 +3848,6 @@ label = "Y Position"
 
 [crop.error]
 failed = "Failed to crop PDF"
-invalidArea = "Crop area extends beyond PDF boundaries"
 
 [crop.preview]
 title = "Crop Area Selection"
@@ -3602,6 +3879,7 @@ message = "Failed to set default PDF handler"
 title = "Error"
 
 [defaultApp.prompt]
+dontRemind = "Don't remind me again"
 message = "Make Stirling PDF your default application for opening PDF files."
 
 [defaultApp.settingsOpened]
@@ -3641,7 +3919,11 @@ tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [dropdownList]
+noItems = "No items available"
+noResults = "No results found"
 searchPlaceholder = "Search..."
+selectLanguages = "Select languages"
+selectOption = "Select an option"
 
 [editableSecretField]
 edit = "Edit"
@@ -3860,7 +4142,6 @@ mobileShort = "Mobile"
 mobileUpload = "Mobile Upload"
 mobileUploadNotAvailable = "Mobile upload not enabled"
 moreOptions = "More options"
-myFiles = "My Files"
 nextFile = "Next file"
 noFiles = "No files available"
 noFilesFound = "No files found matching your search"
@@ -3900,11 +4181,13 @@ shareSelected = "Share Files"
 sharing = "Sharing"
 showAll = "Show All"
 showHistory = "Show History"
+sortBy = "Sort files"
 sortByDate = "Sort by Date"
 sortByName = "Sort by Name"
 sortBySize = "Sort by Size"
 storage = "Storage"
 storageState = "Storage"
+storageUsed = "Storage used"
 synced = "Synced"
 title = "Upload PDF Files"
 toolChain = "Tools Applied"
@@ -3950,29 +4233,35 @@ addFiles = "Add files"
 addingFiles = "Adding files…"
 collapse = "Collapse sidebar"
 customizeGroups = "Customize groups"
+dataLostBody = "This browser lost this file's contents. Upload it again to keep working with it."
+dataLostTitle = "File data is unavailable"
+downloadFailed = "Download failed"
 dropHint = "Open files to get started"
 dropToAdd = "Drop files to add"
+duplicateFailed = "Could not duplicate file"
 expand = "Expand sidebar"
-files = "Files"
 googleDrive = "Google Drive"
 googleDriveDisabled = "Google Drive is not configured"
-leaveMyFiles = "Leave My Files"
-myFiles = "My Files"
+leaveMyFiles = "Leave File library"
+library = "PDF Library"
+myFiles = "File library"
 noFiles = "No files yet"
 openFileManager = "Browse all files & folders"
 openFromComputer = "Open from computer"
 openSettings = "Open settings"
 other = "Other"
 recent = "Recent"
-search = "Search"
-searchPlaceholder = "Search files..."
 viewAll = "View all {{count}} files"
 
 [fileSidebar.fileItem]
 closeViewer = "Close viewer"
+dataLost = "Data lost"
+dataLostTooltip = "This browser lost this file's contents. Upload it again to keep working with it."
 delete = "Delete"
+duplicate = "Duplicate"
 moreActions = "More actions"
 openInViewer = "Open in viewer"
+rename = "Rename"
 savedToServer = "Saved to server"
 updateOnServer = "Update on server"
 uploadToServer = "Upload to server"
@@ -3984,17 +4273,26 @@ reset = "Show all"
 subtitle = "Show or hide categories in the files sidebar."
 title = "Sidebar categories"
 
+[fileSidebar.rename]
+cancel = "Cancel"
+error = "Could not rename the file."
+illegalCharacters = "A file name can't contain \\ / : * ? \" < > |"
+label = "File name"
+save = "Rename"
+title = "Rename file"
+
 [filesPage]
 addToWorkspace = "Add to workspace"
 addToWorkspaceCount = "Add {{count}} to workspace"
 allFiles = "All files"
 back = "Back"
 backToFolder = "Back to {{folder}}"
-backToMyFiles = "Back to My Files"
+backToMyFiles = "Back to File library"
 breadcrumbs = "Folder path"
+breadcrumbsOverflow = "Show parent folders"
+bulkActions = "Actions"
 cancel = "Cancel"
 classification = "Classification"
-clearSearch = "Clear search"
 clearSelection = "Clear selection"
 closeDetails = "Close details"
 create = "Create"
@@ -4025,7 +4323,9 @@ download = "Download"
 downloadAll = "Download all"
 downloadVersion = "Download this version"
 dropOverlay = "Drop files to upload"
-dropOverlaySub = "Files start in Local. Use 'Move to' or 'Save to cloud' to organize them into a folder."
+dropOverlaySub = "Files land in Local. Organize them into folders any time."
+dropOverlaySubFolder = "They'll be added to this folder."
+duplicate = "Duplicate"
 file = "File"
 fileInfo = "File info"
 fileMenu = "File actions"
@@ -4037,13 +4337,19 @@ inPath = "in {{path}}"
 inWorkspace = "Open"
 inWorkspaceAria = "Already in workspace"
 loading = "Loading…"
-localFoldersUnavailable = "Folders are cloud-only - save a file to the cloud to organize it."
+localFolderManagedByDisk = "This folder is managed by its directory on disk."
+moveAcrossKindsBlocked = "These folders live in different places, so one can't go inside the other."
+moveIntoMountCloudSkipped_one = "{{count}} server file stayed in your files. It lives on the server, not on this disk."
+moveIntoMountCloudSkipped_other = "{{count}} server files stayed in your files. They live on the server, not on this disk."
+moveIntoMountFailed_one = "{{count}} file could not be written into the folder."
+moveIntoMountFailed_other = "{{count}} files could not be written into the folder."
+moveIntoVirtualCloudSkipped_one = "{{count}} server file was left in place. Server files can't live in browser-only folders."
+moveIntoVirtualCloudSkipped_other = "{{count}} server files were left in place. Server files can't live in browser-only folders."
 moveSkippedRemote_one = "{{count}} file couldn't be moved on the server (no permission or already deleted)."
 moveSkippedRemote_other = "{{count}} files couldn't be moved on the server (no permission or already deleted)."
 moveTo = "Move to…"
-myFiles = "My Files"
 newFolder = "New folder"
-newFolderStorageDisabled = "Server folder storage isn't enabled. Ask your admin to turn it on."
+newFolderStorageDisabled = "Server folder storage isn't enabled."
 newFolderTabUnavailable = "Switch to All or Cloud to create folders."
 offlineNoFolderEdits = "Server folder sync unavailable - folder changes are disabled. Check sign-in and storage configuration."
 open = "Open"
@@ -4051,19 +4357,20 @@ openVersionInWorkspace = "Open in workspace"
 originFilter = "Filter by source"
 refresh = "Refresh from server"
 remove = "Delete"
+removeLocalFolder = "Remove (files stay on disk)"
 removeVersion = "Remove this version"
 rename = "Rename"
+renamed = "Renamed"
 renameFolder = "Rename folder"
 resizeFolderTree = "Resize folder tree (arrow keys, Shift for bigger steps; double-click to auto-fit)"
 save = "Save"
 saveToServer = "Save to server"
 saveToServerDisabledHint = "Saving to the server isn't enabled on this server. Ask your admin to enable it."
-search = "Search"
-searchPlaceholder = "Search this folder & subfolders"
 selectAll = "Select all"
 selectAllHint = "Click to select all. Tip: hold Ctrl (or Cmd) to add files one at a time, Shift to select a range."
 selectedCount = "{{count}} selected"
 selectFile = "Select file {{name}}"
+serverFolderNeedsConnection = "Sign in to Stirling Cloud or connect a self-hosted server to use server folders."
 shareDisabledHint = "File sharing isn't enabled on this server. Ask your admin to enable it."
 shareManage = "Manage sharing"
 showDetails = "Show details"
@@ -4072,7 +4379,6 @@ summary_one = "{{count}} item"
 summary_other = "{{count}} items"
 tree = "Folders"
 upload = "Upload"
-uploadedToLocal = "Uploaded files start in Local. Use 'Save to cloud' to put them in a folder."
 uploadFromMobile = "Upload from Mobile"
 versionActions = "Version actions"
 versionCollapse = "Collapse middle versions"
@@ -4105,7 +4411,6 @@ everywhereHint = "Deletes the file from this device and the cloud."
 
 [filesPage.empty]
 hint = "Drop PDFs anywhere on this page to upload, or use the New folder button to organize your files."
-newFolderCta = "Create folder"
 title = "This folder is empty"
 uploadCta = "Upload files"
 
@@ -4115,9 +4420,9 @@ offlineHint = "Reconnect to load your cloud library."
 offlineTitle = "No cached cloud files"
 title = "No cloud files yet"
 
-[filesPage.empty.local]
-hint = "Files saved without uploading stay here. Drop a file to add one."
-title = "No local-only files"
+[filesPage.empty.noResults]
+hint = "No files in this folder match your filter. Try a different term or clear the filter."
+title = "No matching files"
 
 [filesPage.empty.recent]
 hint = "Files you open or edit will appear here."
@@ -4134,18 +4439,28 @@ title = "You haven't shared any files yet"
 [filesPage.error]
 actionFailed = "Could not {{action}}."
 actionFailedDetail = "Could not {{action}}: {{message}}"
+addFolderFailed = "Could not add the folder."
+addFolderFailedDetail = "Could not add the folder: {{message}}"
 cloudDeleteFailed_one = "Couldn't delete 1 file from the cloud."
 cloudDeleteFailed_other = "Couldn't delete {{count}} files from the cloud."
 deleteFolderFailed = "Could not delete folder."
 deleteFolderFailedDetail = "Could not delete folder: {{message}}"
+downloadFailed = "Could not download the file."
+duplicateFailed = "Could not duplicate the file."
 folderAppearanceFailed = "Could not update folder appearance."
 folderAppearanceFailedDetail = "Could not update folder appearance: {{message}}"
 moveFilesFailed = "Could not move files."
 moveFilesFailedDetail = "Could not move files: {{message}}"
 moveFolderFailed = "Could not move folder."
 moveFolderFailedDetail = "Could not move folder: {{message}}"
+openDiskFileFailed = "Could not open {{name}}."
+openDiskFileFailedDetail = "Could not open {{name}}: {{message}}"
+readFolderFailed = "Could not read the folder."
+readFolderFailedDetail = "Could not read the folder: {{message}}"
 removeFilesFailed = "Could not remove files."
 removeFilesFailedDetail = "Could not remove files: {{message}}"
+removeFolderFailed = "Could not remove folder."
+removeFolderFailedDetail = "Could not remove folder: {{message}}"
 uploadFilesFailed = "Could not upload files."
 uploadFilesFailedDetail = "Could not upload files: {{message}}"
 
@@ -4155,18 +4470,30 @@ count = "Files"
 folder = "Folder"
 labels = "Labels"
 modified = "Modified"
-name = "Name"
 size = "Size"
-toolHistoryAtVersion = "Cumulative tool chain"
 totalSize = "Total size"
 type = "Type"
 versionHistory = "Version journey"
+
+[filesPage.filters]
+activeCount = "{{count}} filters active"
+clearAll = "Clear filters"
+label = "Filters"
+
+[filesPage.folderKind]
+local = "Local folder"
+virtual = "Browser folder"
 
 [filesPage.folderName]
 cancel = "Cancel"
 error = "Could not save folder. Try again."
 label = "Folder name"
 placeholder = "Folder name"
+
+[filesPage.folderOrigin]
+diskHint = "A folder mounted from a directory on your disk"
+serverHint = "A folder stored on the Stirling server"
+virtualHint = "A folder that lives only in this browser"
 
 [filesPage.moveDialog]
 cancel = "Cancel"
@@ -4181,16 +4508,28 @@ newFolderPlaceholder = "Folder name"
 newFolderToggle = "Create new folder…"
 title = "Move to folder"
 
+[filesPage.newFolderMenu]
+addExisting = "Add local folder"
+server = "New folder on the server"
+serverHint = "Synced to your account, available wherever you sign in."
+
 [filesPage.origin]
 all = "All sources"
 cloud = "Cloud"
 cloudHint = "Stored on the Stirling server"
+diskHint = "A file in the mounted folder on your disk"
 local = "Local"
 localHint = "Only stored in this browser"
 shared = "Shared"
 sharedHint = "Shared with you via link"
 
+[filesPage.search]
+clear = "Clear filter"
+label = "Filter files by name"
+placeholder = "Filter files…"
+
 [filesPage.sort]
+label = "Sort files"
 modifiedAsc = "Oldest first"
 modifiedDesc = "Recent first"
 nameAsc = "Name A→Z"
@@ -4245,6 +4584,7 @@ noFilesInStorageOpen = "No files available in storage. Open some files first."
 open = "Open"
 openFile = "Open File"
 openFiles = "Open Files"
+selectFile = "Select {{name}}"
 selectFromStorage = "Select from Storage"
 upload = "Upload"
 uploadFile = "Upload File"
@@ -4318,16 +4658,99 @@ issues = "GitHub"
 
 [formFill]
 allSaved = "All saved"
+analyzingFields = "Analysing form fields..."
+applyFailed = "Could not apply the changes"
 extractCsvError = "Failed to extract CSV"
 extractXlsxError = "Failed to extract XLSX"
+filled = "filled"
 flattenAfterFilling = "Flatten after filling"
+goToPage = "Go to this page"
+noFields = "No fillable form fields found in this PDF."
+page = "Page"
+placeholderEnter = "Enter"
+placeholderSelect = "Select"
 requiredAbbreviation = "req"
 requiredFieldsError = "Please fill in all required fields"
 rescanFields = "Re-scan fields"
 rescanFormFields = "Re-scan form fields"
 save = "Save"
 saveShortcut = "Ctrl+S to save"
+skippedEdits_one = "1 change could not be applied:"
+skippedEdits_other = "{{count}} changes could not be applied:"
+skippedEditsTruncated = "{{count}} more not listed."
 unsavedChanges = "Unsaved changes"
+
+[formFill.create]
+commit = "Add {{count}} field(s) to PDF"
+empty = "No fields drawn yet."
+failed = "Failed to add fields"
+goToField = "Go to this field"
+hint = "Pick a field type, then draw it on the page."
+placing = "Draw a {{type}} field on the page. Press Esc to stop."
+preview = "Hold to preview"
+previewHelp = "Hold to see the fields as they will look once added, without the editing outlines."
+removeField = "Remove field"
+
+[formFill.editor]
+action = "Button action"
+actionHelp = "What the button does when clicked."
+actionNone = "None"
+actionPrint = "Print"
+actionReset = "Reset form"
+actionSubmit = "Submit to URL"
+actionUri = "Open URL"
+actionUrl = "URL"
+actionUrlHelp = "The address the button opens or submits to."
+addOption = "Add option"
+caption = "Button caption"
+captionHelp = "The text printed on the button face."
+defaultValue = "Default value"
+defaultValueHelp = "What the field contains before anyone fills it in. Leave blank for an empty field."
+fontSize = "Font size"
+fontSizeHelp = "Text size inside the field. Leave blank to let the reader size it to fit."
+label = "Label"
+labelHelp = "The wording shown to whoever fills the form. Leave it blank to fall back to the field name."
+maxLength = "Max length (comb)"
+maxLengthHelp = "Caps how many characters fit, drawn as evenly spaced boxes."
+multiline = "Multi-line"
+multilineHelp = "Allows more than one line of text and wraps at the field's edge."
+multiSelect = "Allow multiple selection"
+multiSelectHelp = "Lets more than one option be chosen at once."
+name = "Field name"
+nameHelp = "The field's internal name. Used when exporting data or filling the form from another system, so keep it unique and free of spaces."
+optionGap = "Option spacing"
+optionGapHelp = "Gap between buttons, in points. Leave blank to spread them evenly down the box."
+optionPlaceholder = "Option {{n}}"
+options = "Options"
+optionsEmpty = "Add at least one option."
+optionsHelp = "The choices offered in the list. Each one is stored as typed, so keep them short and distinct."
+optionSize = "Option size"
+optionSizeHelp = "Width and height of each button, in points. Leave blank to fit them to the box you drew."
+readOnly = "Read-only"
+readOnlyHelp = "Shows a value but stops anyone editing it."
+removeOption = "Remove option"
+required = "Required"
+requiredHelp = "The form cannot be submitted until this field is filled in."
+signatureNote = "Placeholder only - you don't sign here. It marks where a signature belongs so a PDF signer (Adobe Acrobat, a signing service, etc.) places the signature in this spot when the document is signed."
+tooltip = "Tooltip"
+tooltipHelp = "The hint shown when someone hovers the field in a PDF reader."
+type = "Type"
+typeHelp = "What kind of field this is. Changing it rebuilds the field, so its current value is not carried over."
+
+[formFill.mode]
+create = "Create"
+fill = "Fill"
+label = "Form editor mode"
+modify = "Modify"
+
+[formFill.modify]
+commit = "Save {{count}} change(s)"
+delete = "Delete"
+empty = "This PDF has no form fields yet."
+failed = "Failed to save changes"
+groupSizeHint = "Use Option size"
+hint = "Select a field to edit its properties, drag it on the page, or delete it."
+restore = "Restore"
 
 [formFill.sidebar]
 close = "Close sidebar"
@@ -4594,6 +5017,10 @@ desc = "Change document restrictions and permissions"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Change Permissions"
 
+[home.classify]
+desc = "Identify what kind of document this is and tag it."
+title = "Classify"
+
 [home.compare]
 desc = "Compares and shows the differences between 2 PDF Documents"
 tags = "difference,compare,diff,compare PDFs,compare documents,find differences,show differences,changes,what changed,track changes,revisions,version compare,side by side,contrast,delta"
@@ -4655,8 +5082,8 @@ tags = "simplify,remove,interactive,flatten,flatten form,remove form fields,make
 title = "Flatten"
 
 [home.formFill]
-desc = "Fill PDF form fields interactively with a visual editor"
-title = "Fill Form"
+desc = "Fill, create, edit, and delete PDF form fields with a visual editor"
+title = "Form Editor"
 
 [home.getPdfInfo]
 desc = "Grabs any and all information possible on PDFs"
@@ -4872,9 +5299,6 @@ title = "Image to PDF"
 [imageToPdf]
 tags = "conversion,img,jpg,picture,photo"
 
-[infoBanner]
-dismiss = "Dismiss"
-
 [invite]
 acceptError = "Failed to create account"
 accountFor = "Creating account for"
@@ -4906,8 +5330,7 @@ welcomeTitle = "You've been invited!"
 addFiles = "Add Files"
 mobileUpload = "Upload from Mobile"
 openFromComputer = "Open from computer"
-uploadFromComputer = "Upload from computer"
-workbenchEmptyStateHero = "Drop a PDF anywhere"
+uploadFromComputer = "Browse files"
 
 [language]
 direction = "ltr"
@@ -4947,12 +5370,10 @@ enterUsername = "Enter username"
 failedToSignIn = "Failed to sign in with {{provider}}: {{message}}"
 forgotPassword = "Forgot your password?"
 loggingIn = "Logging In..."
-logIn = "Log In"
 login = "Login"
 magicLinkSent = "Magic link sent to {{email}}! Check your email and click the link to sign in."
 mfaCode = "Authentication Code"
 mfaRequired = "Two-factor code required"
-noAccount = "Don't have an account?"
 or = "Or"
 password = "Password"
 passwordChangedSuccess = "Password changed successfully! Please sign in with your new password."
@@ -4972,7 +5393,6 @@ signInWith = "Sign in with"
 title = "Sign in"
 unexpectedError = "Unexpected error: {{message}}"
 updatePassword = "Update password"
-useEmailInstead = "Login with email"
 useMagicLink = "Use magic link instead"
 username = "Username"
 youAreLoggedIn = "You are logged in!"
@@ -5025,40 +5445,74 @@ sort = "Sort"
 title = "Merge Settings Overview"
 
 [mobileScanner]
-addToBatch = "Add to Batch"
+addMore = "Add More"
 back = "Back"
-batchImages = "Batch"
 camera = "Camera"
 cameraAccessDenied = "Camera access denied. Please enable camera access."
 cameraDescription = "Scan documents using your device camera with automatic edge detection"
 capture = "Capture Photo"
 chooseMethod = "Choose Upload Method"
 chooseMethodDescription = "Select how you want to scan and upload documents"
-clearBatch = "Clear"
+clearAll = "Clear All"
+closeTabHint = "You can close this tab now."
+dismiss = "Dismiss"
 edgeDetection = "Edge Detection"
 fileDescription = "Upload existing photos or documents from your device"
+fileReadFailed = "Could not read that file."
 fileUpload = "File Upload"
-flash = "Flash"
 flashlight = "Flashlight"
 httpsRequired = "Camera access requires HTTPS or localhost. Please use HTTPS or access via localhost."
-noSession = "Invalid Session"
+imageCount_one = "{{count}} image"
+imageCount_other = "{{count}} images"
+imagePosition = "Image {{index}} of {{total}}"
+invalidFileType = "Please choose an image file."
 noSessionMessage = "Please scan a valid QR code to access this page."
 processing = "Processing..."
+remove = "Remove"
 retake = "Retake"
+scanAnother = "Scan another"
 selectFilesPrompt = "Select files to upload"
-selectImage = "Select Image"
+selectImages = "Select Images"
 sessionExpired = "This session has expired. Please refresh and try again."
 sessionInvalid = "Session Error"
 sessionNotFound = "Session not found. Please refresh and try again."
 sessionValidationError = "Unable to verify session. Please try again."
+startingCamera = "Starting camera…"
 title = "Mobile Scanner"
-upload = "Upload"
-uploadAll = "Upload All"
 uploadFailed = "Upload failed. Please try again."
 uploading = "Uploading..."
 uploadSuccess = "Upload Successful!"
 uploadSuccessMessage = "Your images have been transferred."
+uploadWithCount = "Upload ({{total}})"
 validating = "Validating session..."
+
+[mobileSign]
+clear = "Clear"
+invalidSession = "Session expired"
+invalidSessionMessage = "This QR code is no longer valid. Open the Sign tool on your computer and scan the new code."
+penSizeLabel = "Pen size"
+send = "Send to computer"
+sendAnother = "Send another signature"
+sendError = "Could not send the signature. Check the connection and try again."
+sentMessage = "Signature sent to your computer. You can send another or close this page."
+tabsLabel = "Signature source"
+undo = "Undo"
+validating = "Checking session…"
+
+[mobileSign.photo]
+fromGallery = "From gallery"
+hint = "Photograph a signature on white paper, or choose an existing image."
+invalidType = "Please choose an image file."
+takePhoto = "Take a photo"
+
+[mobileSign.tab]
+draw = "Draw"
+photo = "Photo"
+type = "Type"
+
+[mobileSign.type]
+placeholder = "Your name"
+previewPlaceholder = "Signature preview"
 
 [mobileUpload]
 description = "Scan to upload photos. Images auto-convert to PDF."
@@ -5078,8 +5532,40 @@ title = "Upload from Mobile"
 tags = "Multi Tool,Multi operation,UI,click drag,front end,client side,interactive,intractable,move,delete,migrate,divide"
 title = "PDF Multi Tool"
 
-[navbar]
-search = "Search"
+[navFooter]
+openEditor = "Open PDF Editor"
+openProcessor = "Open PDF Processor"
+
+[navFooter.credits]
+count = "{{remaining}} of {{total}}"
+label = "Free credits"
+
+[notifications]
+adoptFailed = "The document was unlocked but could not be opened here. Try the tool directly."
+empty = "You're all caught up."
+handoffUnavailable = "This browser will not let the processor pass the document to the editor. Open it from the editor instead."
+noDocumentLinked = "This failure is not linked to a specific document, so it cannot be opened or retried here."
+notOnThisDevice = "This document is not on this device, so it cannot be opened or retried here."
+occurrences = "{{count}} times"
+open = "Notifications"
+rerunRejected = "The policy could not be run again just now. Try again in a moment."
+rerunUndelivered = "The policy re-run started, but its result cannot be delivered here, so this failure stays open."
+retryUnavailable = "This document can no longer be retried from this browser."
+title = "Notifications"
+unlockedNotRerun = "The document was unlocked and opened here, but the policy could not be run on it again."
+unlockedRerunUndelivered = "The document was unlocked and the policy re-run started, but its result cannot be delivered here, so this failure stays open."
+unread = "Unread"
+
+[notifications.action]
+copiedLog = "Copied"
+copyLog = "Copy log"
+failed = "That did not work. Try again in a moment."
+more = "More options"
+unavailable = "Not available for this notification."
+
+[notifications.section]
+earlier = "Earlier"
+new = "New"
 
 [oauth.error]
 message = "Authentication was not successful. You can close this window and try again."
@@ -5208,6 +5694,7 @@ activeFiles = "The <strong>Active Files</strong> view shows all of the PDFs you 
 allTools = "This is the <strong>Tools</strong> panel, where you can browse and select from all available PDF tools."
 close = "Close"
 cropSettings = "Now that we've selected the file we want crop, we can configure the Crop tool to choose the area that we want to crop the PDF to."
+dialogLabel = "Onboarding"
 fileCheckbox = "Files on the workbench are selected for processing. You can select multiple files for batch operations using the left files sidebar."
 fileReplacement = "The modified file will replace the original file in the Workbench automatically, allowing you to easily run it through more tools."
 filesButton = "The <strong>Files</strong> button on the Quick Access bar allows you to upload PDFs to use the tools on."
@@ -5310,10 +5797,10 @@ rolePlaceholder = "Confirm your role"
 roleUser = "User"
 
 [onboarding.serverLicense]
-freeBody = "Our <strong>Open-Core</strong> licensing permits up to <strong>{{freeTierLimit}}</strong> users for free per server. To scale uninterrupted, we recommend the Stirling Server plan - <strong>unlimited seats</strong> and <strong>SSO support</strong> for $99/server/mo."
-freeTitle = "Server License"
-overLimitBody = "Our licensing permits up to <strong>{{freeTierLimit}}</strong> users for free per server. You have <strong>{{overLimitUserCopy}}</strong> Stirling users. To continue uninterrupted, upgrade to the Stirling Server plan - <strong>unlimited seats</strong>, PDF text editing, and full admin control for $99/server/mo."
-overLimitTitle = "Server License Needed"
+freeBody = "Our <strong>Open-Core</strong> licensing permits up to <strong>{{freeTierLimit}}</strong> users for free. To scale uninterrupted, we recommend the Stirling Team plan - <strong>100 users</strong> and <strong>SSO support</strong> for $99/mo."
+freeTitle = "Team plan"
+overLimitBody = "Our licensing permits up to <strong>{{freeTierLimit}}</strong> users for free. You have <strong>{{overLimitUserCopy}}</strong> Stirling users. To continue uninterrupted, upgrade to the Stirling Team plan - <strong>100 users</strong>, PDF text editing, and full admin control for $99/mo."
+overLimitTitle = "Team plan needed"
 seePlans = "See Plans →"
 upgrade = "Upgrade now →"
 
@@ -5644,7 +6131,8 @@ freeBody = "View, edit, merge, split, sign, watermark, compress, convert and man
 freeTitle = "Unlimited PDF editing"
 
 [payg.free.hero]
-capSuffix = "/ {{limit}} free PDFs"
+barAria = "Free PDFs remaining"
+capSuffix = "of {{limit}} free PDFs left this month"
 metaCategories = "Automation · AI · API requests"
 
 [payg.free.member]
@@ -5710,7 +6198,7 @@ leader = "Team owner"
 member = "Member"
 
 [payg.signupRequired]
-body = "Stirling PDF gives every signed-up account 500 free operations, enough to keep most workflows humming without paying a cent. You're currently using Stirling as a guest, which doesn't include billable tools like AI, automations, or hosted processing."
+body = "Stirling PDF gives every signed-up account 500 free operations a month, enough to keep most workflows humming without paying a cent. You're currently using Stirling as a guest, which doesn't include billable tools like AI, automations, or hosted processing."
 cancel = "Not now"
 cta = "Sign up free"
 subtext = "Creating an account is free and takes a few seconds. No credit card required."
@@ -5723,6 +6211,7 @@ automation = "automations"
 default = "this feature"
 
 [payg.spendCapMeter]
+barAria = "Spend against cap"
 capSuffix = "/ {{amount}} cap"
 metaCategories = "Automation · AI · API spend"
 resets = "Resets each billing period"
@@ -5824,6 +6313,23 @@ upgradeSuccess = "Payment successful! Your subscription has been upgraded. The l
 upgradeTitle = "Upgrade to {{planName}}"
 yearly = "Yearly"
 
+[payment.capacityStage]
+continue = "Continue to payment"
+customHint = "Rounded up to the next block of {{users}}."
+customLabel = "Number of users"
+dueToday = "Due today"
+enterpriseQuote = "Get an enterprise quote"
+lineItem = "Team · {{price}}{{period}} per {{block}} users"
+minimumForCurrentUsers = "You have {{users}} users, so the plan must cover at least {{minimum}}."
+modalTitle = "Upgrade to {{planName}}"
+other = "Other"
+perMonth = "/mo"
+perYear = "/yr"
+renewalNote = "Renews at {{total}}{{period}}. Cancel any time in Usage & Billing."
+subheading = "Covers everyone you invite, in blocks of {{users}} users."
+usersLabel = "Users"
+userTotal = "{{users}} users"
+
 [payment.emailStage]
 continue = "Continue"
 description = "We'll use this to send your license key and receipts."
@@ -5893,99 +6399,330 @@ REVERSE_ORDER = "Flip the document so the last page becomes first and so on."
 SIDE_STITCH_BOOKLET_SORT = "Arrange pages for side‑stitch booklet printing (optimized for binding on the side)."
 
 [pdfTextEditor]
-conversionFailed = "Failed to convert PDF. Please try again."
-converting = "Converting PDF to editable format..."
-currentFile = "Current file: {{name}}"
-imageLabel = "Placed image"
-noTextOnPage = "No editable text was detected on this page."
-pagePreviewAlt = "Page preview"
-pageSummary = "Page {{number}} of {{total}}"
+confirmReplaceDirty = "You have unsaved changes. Replace the open document and discard them?"
+download = "Download"
+downloadTooltip = "Save and download the edited PDF"
+save = "Save PDF"
+saveTooltip = "Apply changes to the file in your workspace (Ctrl+S)"
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF Text Editor"
-viewLabel = "PDF Editor"
+unsaved = "(unsaved)"
+workbenchLabel = "Editor"
 
-[pdfTextEditor.actions]
-applyChanges = "Apply Changes"
-clearText = "Clear text"
-downloadCopy = "Download Copy"
-moreOptions = "More options"
-reset = "Reset Changes"
+[pdfTextEditor.annotations]
+freetext = "Annotation text - not page text, so it can't be edited here"
+stamp = "Stamp annotation - not page text, so it can't be edited here"
+widget = "Form field - not page text, so it can't be edited here"
 
-[pdfTextEditor.badges]
-earlyAccess = "Early Access"
-modified = "Edited"
+[pdfTextEditor.drop]
+hint = "Releases on the editor stage replace any open document."
+title = "Drop a PDF to open"
 
-[pdfTextEditor.empty]
-dropzone = "Drag and drop a PDF here, or click to browse"
-dropzoneWithFiles = "Select a file from the Files tab, or drag and drop a PDF here, or click to browse"
-title = "No document loaded"
+[pdfTextEditor.error]
+decodeImage = "Could not decode the selected image."
+insertImage = "Could not insert the selected image."
 
-[pdfTextEditor.errors]
-invalidJson = "Unable to read the JSON file. Ensure it was generated by the PDF to JSON tool."
-pdfConversion = "Unable to convert the edited JSON back into a PDF."
+[pdfTextEditor.find]
+close = "Close find bar"
+count = "{{current}} of {{total}}"
+findPlaceholder = "Find"
+ignoreAccents = "Ignore accents"
+matchCase = "Match case"
+next = "Next match"
+noMatches = "No matches"
+previous = "Previous match"
+replace = "Replace"
+replaceAll = "Replace all"
+replaced = " · {{count}} replaced"
+replacePlaceholder = "Replace with"
+title = "Find & replace"
+typeToSearch = "Type to search"
+wholeWord = "Whole word"
 
-[pdfTextEditor.fontAnalysis]
-allFonts = "All fonts"
-currentPageFonts = "Fonts on this page"
-details = "Font Details"
-embedded = "Embedded"
-fallback = "fallback"
-infoMessage = "Font reproduction information available."
-missing = "missing"
-perfect = "perfect"
-perfectMessage = "All fonts can be reproduced perfectly."
-subset = "subset"
-suggestions = "Notes"
-type = "Type"
-warningMessage = "Some fonts may not render correctly."
-warnings = "Warnings"
-webFormat = "Web Format"
+[pdfTextEditor.fontPicker]
+builtInGroup = "Built-in fonts"
+deviceFontsNone = "No extra device fonts were found."
+deviceFontsUnavailable = "Device fonts are unavailable. The built-in fonts still work."
+deviceGroup = "Device fonts"
+documentGroup = "Document font"
+label = "Font family"
+mixed = "Mixed"
+noMatch = "No matching font"
+placeholder = "Font family"
+useDeviceFonts = "Use device fonts"
 
-[pdfTextEditor.groupingMode]
-auto = "Auto"
-paragraph = "Paragraph"
-singleLine = "Single Line"
+[pdfTextEditor.fonts]
+allPresent = "All letters & numbers present"
+missing = "Missing: {{glyphs}}"
+title = "Fonts"
 
-[pdfTextEditor.manual]
-expandWidth = "Expand to page edge"
-merge = "Merge selection"
-mergeTooltip = "Merge selected boxes"
-resetWidth = "Reset width"
-resizeHandle = "Adjust text width"
-ungroup = "Ungroup selection"
-ungroupTooltip = "Split paragraph back into lines"
-widthMenu = "Width options"
+[pdfTextEditor.fonts.compat]
+info = "Existing text edits perfectly. A new character an embedded font doesn't include falls back to a standard font."
+ok = "Every font includes the full alphabet and digits - type freely."
+warnOther = "{{count}} fonts missing some letters or numbers - typing those uses a standard fallback font."
 
-[pdfTextEditor.modeChange]
+[pdfTextEditor.fonts.pill]
+info = "Embedded"
+ok = "All glyphs"
+warn = "{{count}} with gaps"
+
+[pdfTextEditor.fonts.status.embedded]
+label = "Embedded"
+
+[pdfTextEditor.fonts.status.standard]
+label = "Standard"
+
+[pdfTextEditor.fonts.status.subset]
+label = "Subset"
+
+[pdfTextEditor.help]
+ariaLabel = "Keyboard shortcuts"
+title = "Keyboard shortcuts"
+tooltip = "Keyboard shortcuts (?)"
+
+[pdfTextEditor.help.arrangement]
+alignDesc = "Align edges L / centre / R / T / mid / B"
+alignKey = "Toolbar align"
+distributeDesc = "Equal horizontal / vertical spacing (3+)"
+distributeKey = "Toolbar distribute"
+frontBackDesc = "Bring to front / send to back"
+frontBackKey = "Toolbar front/back"
+heading = "Object arrangement"
+lockDesc = "Lock / unlock selection (session-only)"
+lockKey = "Lock button"
+orderDesc = "Bring forward / send backward (one step)"
+orderKey = "Toolbar ↑ ↓"
+
+[pdfTextEditor.help.clipboard]
+copyDesc = "Copy selected text"
+copyKey = "Ctrl+C"
+cutDesc = "Cut selected (copy + delete)"
+cutKey = "Ctrl+X"
+heading = "Clipboard"
+pasteDesc = "Paste clipboard text as new run"
+pasteKey = "Ctrl+V"
+pastePlainDesc = "Paste as plain text"
+pastePlainKey = "Ctrl+Shift+V"
+
+[pdfTextEditor.help.document]
+escDesc = "Clear selection / close find / close help"
+escKey = "Esc"
+heading = "Document"
+helpDesc = "This help"
+helpKey = "? / F1"
+saveDesc = "Save to your workspace"
+saveKey = "Ctrl+S"
+
+[pdfTextEditor.help.editing]
+clickDesc = "Edit text"
+clickKey = "Click"
+deleteDesc = "Remove selected"
+deleteKey = "Delete"
+duplicateDesc = "Duplicate selected"
+duplicateKey = "Ctrl+D"
+groupDesc = "Group selected runs (Group button)"
+groupKey = "Ctrl+M"
+heading = "Editing"
+marqueeDesc = "Marquee multi-select"
+marqueeKey = "Ctrl+Shift+drag"
+moveDesc = "Move text run"
+moveKey = "Ctrl+Click + drag"
+selectAllDesc = "Select all"
+selectAllKey = "Ctrl+A"
+shiftClickDesc = "Add / remove a run from selection"
+shiftClickKey = "Ctrl+Click / Shift+Click"
+undoRedoDesc = "Undo / Redo"
+undoRedoKey = "Ctrl+Z / Ctrl+Y"
+ungroupDesc = "Ungroup paragraph: select it, click Ungroup"
+ungroupKey = "-"
+
+[pdfTextEditor.help.find]
+enterFindDesc = "Next match"
+enterFindKey = "Enter (in find)"
+enterReplaceDesc = "Replace one (Shift = Replace All)"
+enterReplaceKey = "Enter (in replace)"
+heading = "Find & Replace"
+nextDesc = "Next match (Shift = previous)"
+nextKey = "F3 / Ctrl+G"
+openDesc = "Open find bar (and replace)"
+openKey = "Ctrl+F"
+
+[pdfTextEditor.help.formatting]
+caseDesc = "Change case (upper/lower/title/sentence)"
+caseKey = "Toolbar case (Aa)"
+colourDesc = "Change fill colour"
+colourKey = "Toolbar colour"
+fontFamilyDesc = "Swap to base-14 font"
+fontFamilyKey = "Toolbar font family"
+fontSizeDesc = "Change font size"
+fontSizeKey = "Toolbar font size"
+heading = "Text formatting"
+italicDesc = "Italic"
+italicKey = "Toolbar I"
+
+[pdfTextEditor.help.image]
+flipDesc = "Flip horizontally or vertically"
+flipKey = "Toolbar flip"
+heading = "Image"
+moveDesc = "Move image"
+moveKey = "Drag"
+resizeDesc = "Resize image"
+resizeKey = "Corner drag"
+rotateDesc = "Rotate 90° clockwise or counter-clockwise"
+rotateKey = "Toolbar rotate"
+
+[pdfTextEditor.help.navigation]
+firstLastDesc = "First / last page"
+firstLastKey = "Ctrl+Home / Ctrl+End"
+heading = "Navigation"
+pageDesc = "Next / previous page"
+pageKey = "PageDown / PageUp"
+toolbarZoomDesc = "Manual zoom + Fit to width"
+toolbarZoomKey = "Toolbar zoom"
+zoomDesc = "Zoom in / out"
+zoomKey = "Ctrl+Wheel"
+
+[pdfTextEditor.inspector]
+document = "Document"
+fontEmbedded = "Embedded font · a character it lacks falls back to Helvetica."
+fontGap = "{{name}} · missing {{glyphs}} - typing those falls back to Helvetica."
+geometry = "Position & size"
+height = "Height"
+heightHint = "A text box's height follows its type size and line count."
+image = "Image"
+images = "Images"
+manyImages = "{{count}} images"
+manyText = "Text · {{count}} boxes"
+mixed = "{{count}} objects"
+multiGeometry = "Select a single object to edit its position and size."
+nothingSelected = "Nothing selected"
+nothingSelectedHint = "Click any text or image on the page to edit it here."
+oneImage = "Image"
+oneText = "Text"
+pages = "Pages"
+tabDocument = "Document"
+tabSelected = "Selected"
+textBoxes = "Text boxes"
+width = "Width"
+widthHint = "A text box's width follows its content and wrapping."
+x = "X"
+y = "Y"
+
+[pdfTextEditor.password]
 cancel = "Cancel"
-confirm = "Reset and Change Mode"
-title = "Confirm Mode Change"
-warning = "Changing the text grouping mode will reset all unsaved changes. Are you sure you want to continue?"
+incorrect = "Incorrect password - try again."
+label = "Password"
+open = "Open"
+protected = "This PDF is password-protected."
+protectedNamed = "\"{{fileName}}\" is password-protected."
+title = "Password required"
 
-[pdfTextEditor.options.advanced]
-title = "Advanced Settings"
+[pdfTextEditor.rulers]
+guide = "Alignment guide at {{value}} {{unit}} - drag onto a ruler to remove"
+hint = "Drag from a ruler to add an alignment guide"
+horizontal = "Horizontal ruler"
+unit = "pt"
+vertical = "Vertical ruler"
 
-[pdfTextEditor.options.autoScaleText]
-description = "Automatically scales text horizontally to fit within its original bounding box when font rendering differs from PDF."
-title = "Auto-scale text to fit boxes"
+[pdfTextEditor.run]
+lockedTitle = "Locked - use the Unlock button to edit"
 
-[pdfTextEditor.options.forceSingleElement]
-description = "When enabled, the editor exports each edited text box as one PDF text element to avoid overlapping glyphs or mixed fonts."
-title = "Lock edited text to a single PDF element"
+[pdfTextEditor.saveRisk]
+cancel = "Cancel"
+intro = "Saving the edited copy changes the file. That means:"
+note = "Your edits are kept. The changes listed above are unavoidable when saving the edited copy."
+saveAnyway = "Save anyway"
+title = "Saving will change this PDF"
 
-[pdfTextEditor.options.groupingMode]
-autoDescription = "Automatically detects page type and groups text appropriately."
-paragraphDescription = "Groups aligned lines into multi-line paragraph text boxes."
-singleLineDescription = "Keeps each PDF text line as a separate text box."
-title = "Text Grouping Mode"
+[pdfTextEditor.settings]
+advanced = "Advanced"
+find = "Find in document"
+view = "View"
 
-[pdfTextEditor.pageType]
-paragraph = "Paragraph page"
-sparse = "Sparse text"
+[pdfTextEditor.sidebar]
+addImage = "Add image"
+addText = "Add text"
+clickPageToAddText = "Click page to add text"
+document = "Document"
+group = "Group"
+groupingAuto = "Auto"
+groupingAutoHint = "Groups equal-spaced lines into paragraphs. Changing this re-reads the document and clears undo history."
+groupingLine = "Line"
+groupTooltip = "Merge selected runs into one paragraph (Ctrl+M)"
+groupTooltipDisabled = "Select 2+ runs to merge"
+noFile = "No file loaded"
+noFileHint = "Pick a PDF from the Files panel on the left, or drop one in. The editor will open it automatically."
+opening = "Opening document..."
+paragraph = "Paragraph"
+rulers = "Rulers and guides"
+textBoxWidth = "New text box width"
+textGrouping = "Text grouping"
+ungroup = "Ungroup"
+ungroupTooltip = "Split this paragraph into one run per line"
+ungroupTooltipDisabled = "Select a multi-line paragraph to ungroup"
+widthGrow = "Grow"
+widthGrowHint = "Grow widens a box as you type; Wrap keeps its width and flows onto new lines."
+widthWrap = "Wrap"
 
-[pdfTextEditor.stages]
-processing = "Processing"
-uploading = "Uploading"
+[pdfTextEditor.spellcheck]
+auto = "Automatic"
+enable = "Check spelling as you type"
+language = "Dictionary language"
+
+[pdfTextEditor.stage]
+loadingDocument = "Loading document"
+loadingProgress = "Loading progress"
+noDocument = "No document loaded."
+pickPrompt = "Pick a PDF from the Files panel on the left to begin editing."
+renderingPreview = "Rendering preview"
+
+[pdfTextEditor.toolbar]
+advancedColour = "Advanced colour"
+advancedColourTooltip = "Advanced colour (glyph outline)"
+alignBottom = "Align bottom"
+alignCentre = "Align centre"
+alignLabel = "Align · needs 2+ objects"
+alignLeft = "Align left"
+alignMiddle = "Align middle"
+alignRight = "Align right"
+alignTop = "Align top"
+arrange = "Arrange"
+bringForward = "Bring forward"
+bringToFront = "Bring to front"
+caseLower = "lowercase"
+caseSentence = "Sentence case"
+caseTitle = "Title Case"
+caseUpper = "UPPERCASE"
+changeCase = "Change case"
+changeCaseTooltip = "Change case (text runs only)"
+delete = "Delete selected"
+deleteTooltip = "Delete (Del)"
+distributeHorizontally = "Distribute horizontally"
+distributeLabel = "Distribute · needs 3+ objects"
+distributeVertically = "Distribute vertically"
+editImageExternally = "Edit in another app"
+flipHorizontal = "Flip horizontal"
+flipVertical = "Flip vertical"
+fontColour = "Font colour"
+fontSize = "Font size"
+italic = "Italic"
+italicUnavailable = "This font has no italic version. Load your device fonts or pick another font family."
+lock = "Lock selection"
+lockTooltip = "Lock selection - prevents accidental edits"
+order = "Order"
+outlineColour = "Outline colour"
+outlineWidth = "Outline width (0 = none)"
+redo = "Redo"
+redoTooltip = "Redo (Ctrl+Y)"
+replaceImage = "Replace, keeping placement"
+rotateLeft = "Rotate 90° left"
+rotateRight = "Rotate 90° right"
+sendBackward = "Send backward"
+sendToBack = "Send to back"
+undo = "Undo"
+undoTooltip = "Undo (Ctrl+Z)"
+unlock = "Unlock selection"
+unlockTooltip = "Unlock selection - makes it editable again"
 
 [pdfTextEditor.tooltip.alpha]
 text = "This alpha viewer is still evolving-certain fonts, colors, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing."
@@ -6002,31 +6739,12 @@ title = "Preview Variance"
 text = "This workspace focuses on editing text and repositioning embedded images. Complex page artwork, form widgets, and layered graphics are preserved for export but are not fully editable here."
 title = "Text and Image Focus"
 
-[pdfTextEditor.welcomeBanner]
-bestFor = "Works Best With:"
-bestFor1 = "Simple PDFs containing primarily text and images"
-bestFor2 = "Documents with standard paragraph formatting"
-bestFor3 = "Letters, essays, reports, and basic documents"
-dontShowAgain = "Don't show again"
-experimental = "This is an experimental feature in active development. Expect some instability and issues during use."
-feedback = "This is an early access feature. Please report any issues you encounter to help us improve!"
-gotIt = "Got it"
-howItWorks = "This tool converts your PDF to an editable format where you can modify text content and reposition images. Changes are saved back as a new PDF."
-issue1 = "Text color is not currently preserved (will be added soon)"
-issue2 = "Paragraph mode has more alignment and spacing issues - Single Line mode recommended"
-issue3 = "The preview display differs from the exported PDF - exported PDFs are closer to the original"
-issue4 = "Rotated text alignment may need manual adjustment"
-issue5 = "Transparency and layering effects may vary from original"
-knownIssues = "Known Issues (Being Fixed):"
-limitation1 = "Font rendering may differ slightly from the original PDF"
-limitation2 = "Complex graphics, form fields, and annotations are preserved but not editable"
-limitation3 = "Large files may take time to convert and process"
-limitations = "Current Limitations:"
-notIdealFor = "Not Ideal For:"
-notIdealFor1 = "PDFs with special formatting like bullet points, tables, or multi-column layouts"
-notIdealFor2 = "Magazines, brochures, or heavily designed documents"
-notIdealFor3 = "Instruction manuals with complex layouts"
-title = "Welcome to PDF Text Editor (Early Access)"
+[pdfTextEditor.zoom]
+fit = "Fit"
+fitToWidth = "Fit to width"
+in = "Zoom in"
+out = "Zoom out"
+reset = "Reset zoom to 100%"
 
 [PDFToCSV]
 header = "PDF to CSV"
@@ -6050,6 +6768,11 @@ title = "PDF To Markdown"
 header = "PDF To PDF/A"
 tags = "archive,long-term,standard,conversion,storage,preservation"
 title = "PDF To PDF/A"
+
+[pdfToPDFUA]
+header = "PDF To PDF/UA"
+tags = "accessibility,accessible,tagged,screen reader,wcag,eaa,section 508,conversion"
+title = "PDF To PDF/UA"
 
 [pdfToPDFX]
 tags = "print,standard,conversion,production,prepress,archive"
@@ -6117,7 +6840,7 @@ popular = "Popular"
 selectPlan = "Select Plan"
 showComparison = "Compare All Features"
 upgrade = "Upgrade"
-withServer = "+ Server Plan"
+withServer = "+ Team plan"
 
 [plan.api]
 large = "5,000 Credits"
@@ -6126,6 +6849,7 @@ small = "500 Credits"
 xsmall = "100 Credits"
 
 [plan.availablePlans]
+currency = "Billing currency"
 subtitle = "Choose the plan that fits your needs"
 title = "Available Plans"
 
@@ -6134,8 +6858,8 @@ highlight1 = "Custom pricing"
 highlight2 = "Dedicated support"
 highlight3 = "Latest features"
 name = "Enterprise"
-requiresServer = "Requires Server"
-requiresServerMessage = "Please upgrade to the Server plan first before upgrading to Enterprise."
+requiresServer = "Requires Team plan"
+requiresServerMessage = "Please upgrade to the Team plan first before upgrading to Enterprise."
 
 [plan.feature]
 api = "API Access"
@@ -6160,10 +6884,10 @@ saml = "SAML"
 secureLoginSupport = "Secure Login Support"
 selfHostedDeployment = "Self-hosted deployment"
 sso = "SSO"
-unlimitedUsers = "Unlimited users"
 upToFiveUsers = "Up to 5 users"
 upToFiveUsersLowercase = "up to 5 users"
 usageTracking = "Usage tracking"
+usersIncluded = "100 users included"
 usersLimitedToSeats = "Users limited to seats"
 
 [plan.free]
@@ -6177,7 +6901,7 @@ name = "Free"
 [plan.freeLimit]
 cta = "View Processor Plan"
 dismiss = "Maybe Later"
-message = "That's your whole free allowance for automation, AI and the API. Seriously impressive! Keep the momentum going for just pennies a day."
+message = "That's your whole free allowance for automation, AI and the API this month. Seriously impressive! It resets next month, or keep the momentum going now for just pennies a day."
 title = "Woah, {{total}} PDFs Processed!"
 
 [plan.highlights]
@@ -6192,12 +6916,12 @@ saveWithAnnualBilling = "Save with annual billing"
 selfHosted = "Self-hosted"
 selfHostedOnInfrastructure = "Self-hosted on your infrastructure"
 ssoOAuth = "SSO (OAuth2/OIDC)"
-unlimitedUsers = "Unlimited users"
 upToFiveUsers = "Up to 5 users"
 usageTrackingPrometheus = "Usage tracking & Prometheus"
+usersIncluded = "100 users included"
 
 [plan.licenseWarning]
-body = "You have {{total}} users but the free tier only supports {{limit}} per server. Upgrade to keep Stirling PDF running smoothly."
+body = "You have {{total}} users but the free tier only supports {{limit}}. Upgrade to keep Stirling PDF running smoothly."
 cta = "See plans"
 overLimit = "more than {{limit}}"
 title = "Free self-hosted limit reached"
@@ -6220,7 +6944,7 @@ title = "You're on a Roll!"
 [plan.static]
 activateLicense = "Activate Your License"
 contactToUpgrade = "Contact us to upgrade or customize your plan"
-getLicense = "Get Server License"
+getLicense = "Get the Team plan"
 monthlyBilling = "Monthly Billing"
 selectPeriod = "Select Billing Period"
 upgradeToEnterprise = "Upgrade to Enterprise"
@@ -6240,6 +6964,10 @@ instructions = "Complete your purchase in the Stripe tab. Once your payment is c
 keyDescription = "Paste the license key from your email"
 success = "License Activated!"
 successMessage = "Your license has been successfully activated. You can now close this window."
+
+[plan.team]
+maxUsers = "100 users"
+name = "Team"
 
 [policies.activity]
 outputsUnavailable = "Policy outputs are no longer available to download."
@@ -6281,49 +7009,11 @@ ssn = "Social Security numbers"
 [policy]
 badgeEnforcing = "{{name}} enforcing..."
 badgeRan = "{{name}} policy ran on this file"
+badgeRunning = "{{name}} running..."
 blockingAction = "{{action}} blocked while enforcing policy, please wait..."
 dismiss = "Dismiss overlay"
 enforcingTitle = "Enforcing policy..."
 viewAnyway = "View file (policy still enforcing)"
-
-[policyOption]
-autoRedactPhi = "Auto-redact PHI"
-blockExport = "Block export"
-ccpa = "CCPA"
-contracts = "Contracts"
-documents = "Documents"
-fedramp = "FedRAMP"
-financialReports = "Financial reports"
-flagForReview = "Flag for review"
-gdpr = "GDPR"
-hipaa = "HIPAA"
-hold = "Hold"
-hrRecords = "HR records"
-indefinite = "Indefinite"
-insurance = "Insurance"
-invoices = "Invoices"
-iso27001 = "ISO 27001"
-legalFilings = "Legal filings"
-medicalPhi = "Medical / PHI"
-never = "Never"
-ninetyDays = "90 days"
-oneYear = "1 year"
-p60 = "60%"
-p70 = "70%"
-p80 = "80%"
-p90 = "90%"
-p95 = "95%"
-pciDss = "PCI DSS"
-quarantineDocument = "Quarantine document"
-routeToBucket = "Route to bucket"
-s3Bucket = "S3 bucket"
-sevenYears = "7 years"
-sharePoint = "SharePoint"
-soc2 = "SOC 2"
-taxDocuments = "Tax documents"
-thirtyDays = "30 days"
-threeYears = "3 years"
-webhook = "Webhook"
 
 [portal]
 comingSoon = "Coming soon"
@@ -6347,11 +7037,59 @@ after = "to enable account linking against the hosted Stirling account. In dev y
 before = "Set"
 title = "SaaS login not configured"
 
-[portal.accountLink.gate]
-action = "Link account"
-description = "Link this org's Stirling account to use billable features."
-title = "Link to unlock"
-titleFeature = "Link to unlock {{feature}}"
+[portal.accountLink.connect]
+close = "Close"
+notNow = "Not now"
+start = "Connect Stirling account"
+step = "Step {{current}} of {{total}}"
+
+[portal.accountLink.connect.benefits]
+creditsDetail = "500 free per month"
+creditsLabel = "Credits"
+processorDetail = "Pipelines, policies, sources and audit"
+processorLabel = "Processor"
+teamsDetail = "Free for up to 5 users"
+teamsLabel = "Teams"
+
+[portal.accountLink.connect.callback]
+linkedNotSignedIn = "You are not signed in to Stirling in this browser, so usage and billing will ask you to sign in."
+retry = "Try again"
+signedInAnyway = "You are signed in to Stirling, so billing and usage will load. Only the server link is incomplete."
+working = "Finishing the connection."
+
+[portal.accountLink.connect.callback.expired]
+body = "Connection requests are short lived. Start another one."
+title = "Request expired"
+
+[portal.accountLink.connect.callback.malformed]
+body = "This page was opened without a valid connection response. Start the connection from settings."
+title = "Could not read the response"
+
+[portal.accountLink.connect.callback.rejected]
+body = "This request was declined or has already been used. Start another one if that was not intended."
+title = "Connection not completed"
+
+[portal.accountLink.connect.callback.unfinished]
+body = "Stirling did not confirm the connection. This is usually temporary."
+title = "Not finished yet"
+
+[portal.accountLink.connect.done]
+accountLabel = "Account"
+addPolicy = "Add a policy"
+buildPipeline = "Set up a pipeline"
+creditsBarLabel = "Free credits remaining"
+creditsSuffix = "of {{allowance}} free credits left"
+cta = "Done"
+inviteTeam = "Invite your team"
+lede = "This server now runs against your Stirling account."
+pendingTitle = "Almost there"
+switchOnProcessor = "Switch on the Processor"
+title = "Connected"
+
+[portal.accountLink.connect.handoff]
+going = "Taking you to stirling.com"
+reauthLede = "Your Stirling session expired. Signing in again keeps usage and billing visible. This server stays connected either way."
+title = "Connecting"
 
 [portal.accountLink.instances]
 active = "Active"
@@ -6380,17 +7118,18 @@ minutesAgo_other = "{{count}}m ago"
 never = "never"
 
 [portal.accountLink.modal]
-linkSubtitle = "Sign in to the account this server should bill against."
-linkTitle = "Link your Stirling account"
-reauthSubtitle = "Your session expired — sign back in to your Stirling account. Your instance stays linked."
+cancel = "Cancel"
+continueReauth = "Sign in again"
+linkTitle = "Connect your Stirling account"
+noAuthorizeUrl = "Stirling did not return somewhere to continue. Try again in a moment."
 reauthTitle = "Sign in again"
-simulateSignIn = "Simulate sign-in (dev)"
+startFailed = "Could not reach Stirling to start the connection. Check this server's outbound network access, then try again."
 
 [portal.accountLink.modal.loginNotConfigured]
-after = "to enable in-app linking against the hosted Stirling account."
+after = "so this server can finish the connection when you come back."
 and = "and"
 before = "Set"
-title = "SaaS login not configured"
+title = "Stirling connection not configured"
 
 [portal.accountLink.panel]
 instancesSub = "Every self-hosted instance registered to this org. Revoke a credential to immediately cut off its unattended access."
@@ -6402,6 +7141,12 @@ sub = "Link this self-hosted org to its Stirling account so unattended processin
 forbidden = "Only the team owner can view the org's linked instances."
 generic = "Couldn't load the team's linked instances. Try again in a moment."
 title = "Couldn't load linked instances"
+
+[portal.accountLink.rail]
+cta = "Connect"
+later = "Not now"
+sub = "Unlocks teams, PDF processor, pipelines, and policies. PDF editing stays free."
+title = "Connect your Stirling account"
 
 [portal.accountLink.state]
 free = "Editor plan"
@@ -6490,16 +7235,16 @@ subtitle = "Deploy anywhere, for your whole team."
 title = "Free PDF Editors"
 
 [portal.billing.freePlan]
+anywhere = "Web, desktop & self-hosted"
 checkoutErrorTitle = "Couldn't start checkout"
 currentPlan = "Current plan"
+everyPdfTool = "Every PDF tool"
 freeForever = "Free forever"
 noTeamResolved = "No team is resolved on your wallet yet — refresh and try again."
 ownerOnly = "Only the team owner can switch on the Processor plan."
 payInvoice = "Pay invoice to complete"
 planName = "Editor"
-ssoIncluded = "SSO included"
 switchOnProcessor = "Switch on the Processor →"
-unlimitedUsers = "Unlimited users"
 viewQuote = "View quote"
 
 [portal.billing.invoices]
@@ -6525,11 +7270,6 @@ showMostRecent_other = "Show {{count}} most recent"
 title = "Invoice history"
 viewAriaLabel = "View invoice {{number}} in Stripe"
 viewLink = "View ↗"
-
-[portal.billing.linkPrompt]
-cta = "Link Stirling account"
-description = "Manual PDF editing — view, sign, merge, split, watermark, compress, convert, manual OCR — is always free, linked or not. Link to claim 500 free PDFs of metered processing (automation, AI, and the API); when you need more, turn on the Processor plan and only pay for what you use."
-title = "Link your Stirling account"
 
 [portal.billing.paymentMethod]
 billedMonthly = "Billed monthly"
@@ -6686,8 +7426,8 @@ label = "Projected to exceed."
 
 [portal.billing.spendThisMonth]
 eyebrow = "Spend this month"
-freeRemaining_one = "{{formatted}} free PDF remaining"
-freeRemaining_other = "{{formatted}} free PDFs remaining"
+freeRemaining_one = "{{formatted}} free credit remaining"
+freeRemaining_other = "{{formatted}} free credits remaining"
 processed_one = "{{formattedCount}} PDF processed."
 processed_other = "{{formattedCount}} PDFs processed."
 processedWithRate_one = "{{formattedCount}} PDF processed, at {{rate}} each."
@@ -6704,16 +7444,17 @@ reachedTitle = "Monthly spend limit reached"
 title = "Couldn't open Stripe portal"
 
 [portal.billing.walletMeter]
-capSuffix_one = "of {{allowance}} free PDFs used"
-capSuffix_other = "of {{allowance}} free PDFs used"
+barAria = "Free credits remaining"
+capSuffix_one = "of {{allowance}} free credit left this month"
+capSuffix_other = "of {{allowance}} free credits left this month"
 eyebrow = "Processor trial"
-statusLabel_one = "{{remaining}} left"
-statusLabel_other = "{{remaining}} left"
+statusLabel_one = "{{used}} used"
+statusLabel_other = "{{used}} used"
 sub = "Use the PDF Editor for free. Pay to process PDFs automatically."
-title_one = "Process {{allowance}} PDFs free"
-title_other = "Process {{allowance}} PDFs free"
-titleWithRate_one = "Process {{allowance}} PDFs free, then {{rate}}/PDF"
-titleWithRate_other = "Process {{allowance}} PDFs free, then {{rate}}/PDF"
+title_one = "{{allowance}} free credit every month"
+title_other = "{{allowance}} free credits every month"
+titleWithRate_one = "{{allowance}} free credit every month, then {{rate}} per PDF"
+titleWithRate_other = "{{allowance}} free credits every month, then {{rate}} per PDF"
 
 [portal.components.billingUnit]
 approval = "approval"
@@ -6777,8 +7518,14 @@ label = "Server URL"
 [portal.connections.commonFields.email]
 label = "Email"
 
+[portal.connections.commonFields.host]
+label = "Host"
+
 [portal.connections.commonFields.password]
 label = "Password"
+
+[portal.connections.commonFields.port]
+label = "Port"
 
 [portal.connections.commonFields.username]
 label = "Username"
@@ -6912,6 +7659,27 @@ baseUrlPlaceholder = "https://your-cluster:9200"
 description = "Index an audit event in Elasticsearch each time a policy handles a document."
 label = "Elasticsearch"
 
+[portal.connections.types.ftp]
+description = "Poll an FTP or FTPS server for new documents."
+hostPlaceholder = "ftp.example.com"
+label = "FTP / FTPS"
+
+[portal.connections.types.ftp.fields.passive]
+label = "Connection mode"
+
+[portal.connections.types.ftp.fields.passive.options]
+active = "Active"
+passive = "Passive (recommended)"
+
+[portal.connections.types.ftp.fields.security]
+helperText = "Plain FTP sends credentials and files unencrypted; choose FTPS if the server supports it."
+label = "Encryption"
+
+[portal.connections.types.ftp.fields.security.options]
+explicit = "FTPS (explicit / AUTH TLS)"
+implicit = "FTPS (implicit)"
+none = "None (plain FTP)"
+
 [portal.connections.types.googlechat]
 baseUrlPlaceholder = "https://chat.googleapis.com/v1/spaces/..."
 description = "Post a message to a Google Chat space when a policy runs."
@@ -6925,6 +7693,32 @@ label = "Jira"
 [portal.connections.types.mailgun]
 description = "Email a document or a notification when a policy runs."
 label = "Mailgun"
+
+[portal.connections.types.n8n]
+baseUrlPlaceholder = "https://your-n8n/webhook/9f2c-..."
+description = "Hand documents to an n8n workflow, and take back whatever it produces."
+label = "n8n"
+
+[portal.connections.types.n8n.fields.authType]
+helperText = "Match the Authentication set on the n8n Webhook node."
+label = "Webhook authentication"
+
+[portal.connections.types.n8n.fields.authType.options.basic]
+label = "Basic auth"
+
+[portal.connections.types.n8n.fields.authType.options.header]
+label = "Header auth"
+
+[portal.connections.types.n8n.fields.authType.options.none]
+label = "None"
+
+[portal.connections.types.n8n.fields.headerName]
+helperText = "The header name from the n8n credential, not its value."
+label = "Header name"
+placeholder = "X-N8N-Key"
+
+[portal.connections.types.n8n.fields.token]
+label = "Header value"
 
 [portal.connections.types.nextcloud]
 baseUrlPlaceholder = "https://your-server/remote.php/dav"
@@ -6979,9 +7773,42 @@ label = "Secret access key"
 description = "Email a document or a notification when a policy runs."
 label = "SendGrid"
 
+[portal.connections.types.sftp]
+description = "Poll an SFTP (SSH) server for new documents."
+hostPlaceholder = "sftp.example.com"
+label = "SFTP"
+
+[portal.connections.types.sftp.fields.hostKeyFingerprint]
+helperText = "Optional. The server's SHA-256 host key fingerprint (from `ssh-keyscan host | ssh-keygen -lf -`). When set, only a server presenting this key is accepted; when blank, the key seen on first connect is pinned and later changes are refused."
+label = "Host key fingerprint"
+placeholder = "SHA256:..."
+
+[portal.connections.types.sftp.fields.passphrase]
+label = "Key passphrase"
+
+[portal.connections.types.sftp.fields.password]
+helperText = "Leave blank if you authenticate with a private key instead."
+
+[portal.connections.types.sftp.fields.privateKey]
+helperText = "Optional. Paste an OpenSSH private key to authenticate with a key instead of a password."
+label = "Private key"
+
 [portal.connections.types.slack]
 description = "Post a message to Slack when a policy processes a document."
 label = "Slack"
+
+[portal.connections.types.smb]
+description = "Watch an SMB / CIFS network share (Windows or Samba)."
+hostPlaceholder = "fileserver.example.com"
+label = "SMB / Network share"
+
+[portal.connections.types.smb.fields.domain]
+helperText = "Optional. The Windows domain or workgroup, if your server uses one."
+label = "Domain"
+
+[portal.connections.types.smb.fields.share]
+label = "Share"
+placeholder = "documents"
 
 [portal.connections.types.splunk]
 baseUrlPlaceholder = "https://your-splunk:8088"
@@ -7097,11 +7924,6 @@ title = "Official SDKs"
 beta = "Beta"
 deprecated = "Deprecated"
 
-[portal.docs.search]
-empty = "No matching docs"
-placeholder = "Search docs"
-results = "{{count}} results"
-
 [portal.docs.skills]
 eyebrow = "SKILLS"
 lead = "Bundled, named capabilities your agent invokes as a single tool. Each skill is a deterministic op chain with evals attached."
@@ -7200,11 +8022,11 @@ editorAction = "Editor"
 empty = "No documents match this filter."
 rowActions = "Row actions"
 sensitiveLabel = "Sensitive"
-sensitiveTitle = "Sensitive — access required"
 
 [portal.documents.table.columns]
 action = "Pipeline / Action"
 document = "Document"
+labels = "Labels"
 product = "Product"
 status = "Status"
 time = "Time"
@@ -7220,6 +8042,7 @@ host = "Host"
 lastSeen = "Last seen"
 region = "Region"
 status = "Status"
+target = "Target"
 version = "Version"
 
 [portal.editorAdmin.health.empty]
@@ -7294,6 +8117,62 @@ description = "This view hit an unexpected error. Try again, or pick another sec
 retry = "Try again"
 title = "Something went wrong on this page"
 
+[portal.failures]
+fromSource = "From source {{source}}"
+occurrences = "{{count}} occurrences"
+reportedBy = "Hit by {{actor}}"
+runReference = "Run {{runId}}"
+subtitle = "Failures recorded from your policy runs and your team's editors, with the actions you can take."
+title = "Failures"
+
+[portal.failures.action]
+acknowledge = "Acknowledge"
+confirm = "Are you sure?"
+decrypt = "Decrypt and retry"
+dismiss = "Dismiss"
+dismissSkipFile = "Skip this file"
+openInTool = "Retry"
+viewFile = "View file"
+viewInProcessor = "View in processor"
+
+[portal.failures.debug]
+copyJson = "Copy JSON"
+dismissAll = "Dismiss all ({{total}})"
+dismissing = "Dismissing..."
+hideJson = "Hide raw JSON ({{total}})"
+refresh = "Refresh failures"
+showJson = "Show raw JSON ({{total}})"
+
+[portal.failures.disabled]
+closed = "This failure is already closed."
+noDocument = "This failure was not recorded against a specific document, so there is nothing here to open."
+unattended = "This file was fed by a folder, bucket or webhook, so nobody's browser is holding it to open."
+unavailable = "Not available for this failure."
+
+[portal.failures.empty]
+description = "Policy runs that fail will appear here with the actions you can take."
+title = "No failures recorded"
+
+[portal.failures.kind.inputPasswordProtected]
+description = "Your file is password protected, so the run could not read it."
+title = "Password-protected document"
+
+[portal.failures.kind.unknown]
+description = "Something went wrong that Stirling does not recognise yet."
+title = "Unrecognised failure"
+
+[portal.failures.origin]
+pipeline = "Pipeline"
+policy = "Policy"
+tool = "Tool run"
+
+[portal.failures.stage]
+blocked = "Blocked"
+input = "Input"
+internal = "Internal"
+never_ran = "Never ran"
+output = "Output"
+
 [portal.home.download]
 back = "Back"
 body = "Download the desktop app or self-host the server."
@@ -7349,12 +8228,15 @@ tagline = "Native app for Microsoft Windows"
 title = "Windows"
 
 [portal.home.editor]
-activeUsers = "{{n}} active"
-install = "Install the editor"
-invite = "Invite teammates"
-name = "Stirling PDF Editor"
+activeOfDeployed = "{{active}} of {{total}} active this month"
+name = "PDF Editor"
 open = "Open in browser"
 updated = "updated {{time}}"
+
+[portal.home.editor.deploy]
+finish = "Finish deployment"
+options = "View deployment options"
+start = "Deploy the Editor"
 
 [portal.home.editor.target]
 cloud = "Managed Cloud"
@@ -7366,29 +8248,10 @@ afternoon = "Good afternoon"
 evening = "Good evening"
 morning = "Good morning"
 
-[portal.home.onboarding.enterprise]
-body = "Org-wide SSO + SCIM + RBAC, committed volume pricing, and air-gapped deployment."
-cta = "Start Trial"
-ctaQuote = "Get Quote"
-lead = "For 250+ employees."
-tag = "Enterprise"
-
-[portal.home.onboarding.steps.editor]
-blurb = "Install the desktop app or self-host"
-title = "Download the editor"
-
-[portal.home.onboarding.steps.invite]
-blurb = "Bring your team into the secure workspace"
-title = "Invite teammates"
-
-[portal.home.onboarding.steps.policies]
-blurb = "{{active}} active · {{recommended}} recommended"
-title = "Confirm your policies"
-
 [portal.infrastructure]
 manageEditorDeployment = "Manage Editor deployment"
 sectionsAriaLabel = "Infrastructure sections"
-subtitle = "Deployments, credentials, security posture, storage, and the audit trail for your Stirling workspace."
+subtitle = "API credentials and the audit trail for your Stirling workspace."
 title = "Infrastructure"
 
 [portal.infrastructure.apiKeys]
@@ -7415,11 +8278,6 @@ body = "Revoke \"{{name}}\"? Any integration still using this key will immediate
 cancel = "Cancel"
 confirm = "Revoke key"
 title = "Revoke API key"
-
-[portal.infrastructure.attestationLabel]
-attested = "Attested"
-inScope = "In scope"
-notApplicable = "N/A"
 
 [portal.infrastructure.audit]
 filterAriaLabel = "Filter audit events by category"
@@ -7492,11 +8350,6 @@ info = "Info"
 success = "Success"
 warning = "Warning"
 
-[portal.infrastructure.certLabel]
-certified = "Certified"
-inProgress = "In progress"
-notStarted = "Not started"
-
 [portal.infrastructure.createKey]
 cancel = "Cancel"
 createKey = "Create key"
@@ -7510,237 +8363,175 @@ subtitleCreated = "Copy this secret now — it won't be shown again."
 title = "Create API key"
 titleCreated = "Key created"
 
-[portal.infrastructure.deployLabel]
-live = "Live"
-queued = "Queued"
-rolledBack = "Rolled back"
-rolling = "Rolling out"
+[portal.infrastructure.encryption]
+heading = "Encryption at rest"
+hintLabel = "More about this section"
+subheading = "Stored files are encrypted before they reach disk, the database or object storage."
+unknown = "Unknown"
 
-[portal.infrastructure.deployments]
-msValue = "{{value}} ms"
-throughputValue = "{{value}}/min"
+[portal.infrastructure.encryption.auditNotice]
+description = "Encryption is active on this licence, but encrypt, decrypt, revocation and export events are not written to the audit trail. Encryption itself is unaffected."
+title = "Audit events need an Enterprise licence"
 
-[portal.infrastructure.deployments.deployColumns]
-deployedBy = "Deployed by"
-environment = "Environment"
-product = "Product"
+[portal.infrastructure.encryption.coverage]
+decryptOnlyNote = "New uploads are stored as plaintext. Files encrypted earlier are still readable."
+encrypted = "Encrypted files"
+heading = "Coverage"
+percentEncrypted = "{{percent}}% encrypted"
+plaintext = "Plaintext files"
+progressLabel = "{{percent}}% of stored files encrypted"
+subheading = "Covers files in My Files and signing workflows. Files a pipeline reads in place, including network sources, are not stored here and are not encrypted."
+
+[portal.infrastructure.encryption.error]
+action = "That key change could not be applied. Please try again."
+keyMissing = "That key no longer exists. Refresh to see the current list."
+migrationStart = "The migration could not be started. Please try again."
+rotate = "The re-wrap could not be completed. Please try again."
+
+[portal.infrastructure.encryption.generatedKey]
+backupGuide = "How to back it up"
+description = "No encryption key was configured, so one was created on this server. Back it up now: if it is lost, encrypted files cannot be recovered."
+title = "This key was generated for you"
+
+[portal.infrastructure.encryption.keys]
+changedAt = "Changed {{when}}"
+changedBy = "By {{actor}}"
+changedByAt = "By {{actor}} on {{when}}"
+heading = "Scope keys"
+keyVersion = "Version {{version}}"
+neverChanged = "Never changed"
+restore = "Restore access"
+retiredNote = "A retired key still decrypts the files stored under it, but a newer key wraps new uploads."
+revoke = "Revoke"
+subheading = "One key per scope. Revoking a key blocks reads of everything stored under it."
+
+[portal.infrastructure.encryption.keys.columns]
+actions = "Actions"
+lastChange = "Last change"
+scope = "Scope"
 status = "Status"
+
+[portal.infrastructure.encryption.keys.empty]
+description = "A key is created the first time someone uploads a file, not at startup."
+title = "No keys yet"
+
+[portal.infrastructure.encryption.masterKey]
+backend = "Storage backend"
+compareNote = "Compare this against the fingerprint in your key backup and in the startup log."
+copied = "Copied"
+copy = "Copy"
+copyFailed = "This browser would not allow copying. The fingerprint is selected, so copy it manually."
+fingerprint = "Fingerprint"
+fingerprintHelp = "What is this fingerprint for?"
+heading = "Master key"
+notMaterialised = "The key machinery has not started on this node yet."
+s3StreamingNote = "While anything is encrypted, object-store downloads are streamed through this server rather than redirected, so they use its bandwidth."
+subheading = "Wraps every scope key. Never shown or accepted over the API."
 version = "Version"
-when = "When"
 
-[portal.infrastructure.deployments.recent]
-heading = "Recent deployments"
-subheading = "The latest rollouts across products and environments."
+[portal.infrastructure.encryption.migration]
+backlog_one = "{{formatted}} file is stored as plaintext and can be encrypted now."
+backlog_other = "{{formatted}} files are stored as plaintext and can be encrypted now."
+encrypted = "Encrypted"
+failedCount = "Failed"
+heading = "Encrypt existing files"
+hint = "Encrypts the plaintext backlog left from before encryption was switched on. Progress is held in memory, so a backend restart resets it to not started. Running again skips files that are already encrypted."
+noBacklog = "Every stored file is already encrypted."
+progressLabel = "{{processed}} of {{total}} files encrypted"
+requiresEncryptionOn = "Switch encryption on before running this: the backlog is encrypted using the same write path as new uploads."
+runAgain = "Run again"
+skipped = "Skipped"
+skippedHelp = "What does skipped mean?"
+skippedNote = "Skipped files were replaced by a user while the run was in progress, so their copy was left alone."
+start = "Start"
+startedAt = "Started {{when}}"
 
-[portal.infrastructure.deployments.regionColumns]
-instances = "Instances"
-latency = "Latency"
-load = "Load"
-p99 = "P99"
-region = "Region"
-status = "Status"
-throughput = "Throughput"
-uptime = "Uptime"
-version = "Version"
+[portal.infrastructure.encryption.migration.confirm]
+cancel = "Cancel"
+confirm = "Start encrypting"
+noCancel = "There is no stop control. Once started, the run continues until it finishes or encryption is switched off."
+rewrites_one = "Rewrites {{formatted}} stored file, replacing the plaintext copy with an encrypted one."
+rewrites_other = "Rewrites {{formatted}} stored files, replacing the plaintext copies with encrypted ones."
+throttled = "The job is throttled and safe to re-run. Files already encrypted are skipped."
+title = "Encrypt the existing backlog?"
 
-[portal.infrastructure.deployments.regions]
-heading = "Regions"
-subheading = "Live health for every deployed Stirling region — latency, load, and rollout version."
+[portal.infrastructure.encryption.migration.failed]
+description = "Encryption was switched off while the migration was running, so the remaining files were left untouched. Switch it back on and run again."
+title = "The run stopped early"
 
-[portal.infrastructure.deployments.regions.empty]
-description = "Deployed regions appear here once your workspace is provisioned."
-title = "No regions deployed"
+[portal.infrastructure.encryption.migration.state]
+COMPLETED = "Completed"
+FAILED = "Failed"
+IDLE = "Not started"
+RUNNING = "Running"
+
+[portal.infrastructure.encryption.revoke]
+cancel = "Cancel"
+clusterDelay = "On a cluster, other nodes apply this within 60 seconds."
+confirm = "Revoke access"
+readsFail = "Files already stored under this key stop opening, for everyone."
+reversible = "This is reversible. No key material is deleted."
+title = "Revoke access to this key?"
+uploadsContinue = "New uploads keep working. They get a fresh key, so they stay readable."
+
+[portal.infrastructure.encryption.rotation]
+currentVersion = "Current version"
+heading = "Master key rotation"
+hint = "Re-wraps scope keys under a new master key; file contents are never rewritten. The new key is set in configuration and applied on restart, so this button only performs the re-wrap."
+pendingRows = "Rows on an older version"
+rewrap = "Re-wrap keys"
+rewrapped_one = "{{count}} key row re-wrapped."
+rewrapped_other = "{{count}} key rows re-wrapped."
+runbook = "Rotation runbook"
+
+[portal.infrastructure.encryption.rotation.confirm]
+cancel = "Cancel"
+confirm = "Re-wrap keys"
+noFiles = "File contents are not touched. Only the key table is rewritten."
+rerunnable = "Safe to run again if it does not finish."
+rewraps_one = "Re-wraps {{count}} key row under the current master key."
+rewraps_other = "Re-wraps {{count}} key rows under the current master key."
+title = "Re-wrap the key table?"
+
+[portal.infrastructure.encryption.rotation.pending]
+description = "Do not remove the previous key from configuration yet. Files under those keys would stop opening."
+title_one = "{{count}} key row is still on the previous master key"
+title_other = "{{count}} key rows are still on the previous master key"
+
+[portal.infrastructure.encryption.scope]
+global = "All users"
+source = "Source {{id}}"
+team = "Team {{id}}"
+
+[portal.infrastructure.encryption.status]
+ACTIVE = "Active"
+DISABLED = "Revoked"
+RETIRED = "Retired"
+
+[portal.infrastructure.encryption.unavailable.forbidden]
+description = "Your account does not have permission to view encryption settings."
+title = "Not available for your account"
+
+[portal.infrastructure.encryption.unavailable.registry-unavailable]
+description = "The encryption key registry could not be read. Check the database connection and the application logs."
+title = "Key registry unavailable"
+
+[portal.infrastructure.encryption.unavailable.storage-disabled]
+description = "File storage is switched off on this server, so there is nothing to encrypt."
+title = "Storage is disabled"
+
+[portal.infrastructure.encryption.unavailable.unknown]
+description = "Encryption status could not be loaded. Please try again."
+title = "Status unavailable"
+
+[portal.infrastructure.encryption.writeState]
+decryptOnly = "Decrypt only"
+encrypting = "Encrypting new uploads"
+off = "Off"
 
 [portal.infrastructure.keyLabel]
 active = "Active"
 revoked = "Revoked"
-
-[portal.infrastructure.modelLabel]
-active = "Active"
-degraded = "Degraded"
-disabled = "Disabled"
-
-[portal.infrastructure.models]
-heading = "Models"
-msValue = "{{value}} ms"
-subheading = "The model catalogue and routing that powers document processing across your workspace."
-
-[portal.infrastructure.models.byom]
-description = "Register an on-prem or self-hosted model and pin it to a region for data-residency-bound processing."
-title = "Bring your own model"
-
-[portal.infrastructure.models.catalogue]
-heading = "Catalogue"
-sub = "Managed models available to your workspace, with live latency and cost."
-subEnterprise = "Managed, bring-your-own, and on-prem models — with per-region pinning available."
-
-[portal.infrastructure.models.catalogue.empty]
-description = "Models in your workspace's catalogue appear here."
-title = "No models available"
-
-[portal.infrastructure.models.columns]
-cost = "Cost"
-latency = "Latency"
-load = "Load"
-model = "Model"
-status = "Status"
-type = "Type"
-version = "Version"
-
-[portal.infrastructure.models.cost]
-perCall = "{{price}}/call"
-perThousand = "{{price}}/1k"
-
-[portal.infrastructure.models.metrics]
-activeModels = "Active models"
-avgLatency = "Avg latency"
-included = "Included"
-monthlySpend = "Monthly model spend"
-
-[portal.infrastructure.models.routing]
-empty = "No routing rules configured."
-heading = "Routing rules"
-sub = "Which model handles each operation. The default applies when no narrower rule matches."
-subLocked = "Route operations to specific models — available on paid plans."
-
-[portal.infrastructure.models.routing.lockedBanner]
-description = "Upgrade to Pro to control which model handles each operation and document type."
-title = "Model routing is a paid feature"
-
-[portal.infrastructure.models.routingColumns]
-default = "Default"
-docType = "Document type"
-modelForAria = "Model for {{operation}}"
-operation = "Operation"
-routedTo = "Routed to"
-
-[portal.infrastructure.modelTypeLabel]
-classification = "Classification"
-extraction = "Extraction"
-llm = "LLM"
-ocr = "OCR"
-
-[portal.infrastructure.regionLabel]
-degraded = "Degraded"
-down = "Down"
-healthy = "Healthy"
-
-[portal.infrastructure.security.access.byok]
-description = "Supply a key from your own KMS. Stirling encrypts with it but can still read."
-label = "Bring your own key (BYOK)"
-
-[portal.infrastructure.security.access.hyok]
-description = "Keys never leave your KMS. Stirling holds only ciphertext."
-label = "Hold your own key (HYOK)"
-
-[portal.infrastructure.security.access.stirling]
-description = "Stirling manages encryption keys. Simplest — zero key ops on your side."
-label = "Stirling-held keys"
-
-[portal.infrastructure.security.accessPolicy]
-heading = "Document access policy"
-subheading = "Controls who can decrypt processed documents at rest."
-
-[portal.infrastructure.security.attestations]
-heading = "Compliance attestations"
-noReport = "No report available"
-subheading = "Framework-by-framework audit posture, with reports available on attested controls."
-viewReport = "View report →"
-
-[portal.infrastructure.security.compliance]
-heading = "Compliance"
-subheading = "Attestations and certifications covering the Stirling platform."
-
-[portal.infrastructure.security.empty]
-description = "Your workspace's security configuration will appear here."
-title = "Security posture unavailable"
-
-[portal.infrastructure.security.hyokBanner]
-description = "With HYOK, encryption keys never leave your KMS. Stirling stores and processes only ciphertext you can revoke at any time."
-title = "Stirling cannot decrypt your documents"
-
-[portal.infrastructure.security.ipAllowlist]
-empty = "No IP ranges configured — all IPs allowed."
-heading = "IP allowlist"
-sub = "API access is restricted to these CIDR ranges."
-subLocked = "Restrict API access to known IP ranges — available on paid plans."
-
-[portal.infrastructure.security.ipAllowlist.lockedBanner]
-description = "Upgrade to Pro to restrict API access to specific networks."
-title = "IP allowlisting is a paid feature"
-
-[portal.infrastructure.security.ipColumns]
-added = "Added"
-addedBy = "Added by"
-cidr = "CIDR"
-label = "Label"
-
-[portal.infrastructure.security.keyManagement]
-algorithm = "Algorithm"
-heading = "Encryption key management"
-keyId = "Key identifier"
-lastRotated = "Last rotated"
-rotateKey = "Rotate key"
-rotationPolicy = "Rotation policy"
-subheading = "Custody of the keys that encrypt documents at rest — who can decrypt, and how keys rotate."
-
-[portal.infrastructure.security.managedBanner]
-description = "Bring-your-own-key (BYOK) and hold-your-own-key (HYOK) custody are available on Enterprise. Upgrade to supply keys from your own KMS."
-title = "Keys are managed by Stirling on your plan"
-
-[portal.infrastructure.security.residency.apac]
-description = "ap-southeast-1"
-label = "Asia Pacific"
-
-[portal.infrastructure.security.residency.eu]
-description = "eu-west-1 · GDPR data boundary"
-label = "European Union"
-
-[portal.infrastructure.security.residency.us]
-description = "us-east-1 · us-west-2"
-label = "United States"
-
-[portal.infrastructure.security.residencyHeader]
-heading = "Data residency"
-subheading = "Where documents are stored and processed."
-
-[portal.infrastructure.storage]
-gbValue = "{{value}} GB"
-percentUsed = "{{value}} used"
-
-[portal.infrastructure.storage.empty]
-description = "Connected storage and usage appear here."
-title = "No storage configured"
-
-[portal.infrastructure.storage.lifecycle]
-active = "Active"
-activeRange = "0–{{value}}d"
-archived = "Archived"
-coldStorage = "cold storage"
-deleted = "Deleted"
-never = "never"
-purged = "purged"
-
-[portal.infrastructure.storage.providers]
-connect = "Connect"
-connected = "Connected"
-heading = "Connected providers"
-subheading = "Where processed artifacts are written."
-
-[portal.infrastructure.storage.retention]
-heading = "Retention"
-subheading = "How long artifacts are kept before lifecycle deletion."
-windowLabel = "Default retention window"
-
-[portal.infrastructure.storage.retentionOption]
-days_one = "{{count}} day"
-days_other = "{{count}} days"
-never = "Never delete"
-
-[portal.infrastructure.storage.totalUsage]
-heading = "Total usage"
-progressLabel = "Storage used"
-subheading = "Storage consumed across all connected providers."
 
 [portal.infrastructure.tabs]
 apiKeys = "API Keys"
@@ -7751,11 +8542,9 @@ security = "Security"
 storage = "Storage"
 
 [portal.integrations]
-addAnother = "Add another"
 availableHeading = "Available"
 comingSoonHeading = "Coming soon"
 connect = "Connect"
-connectedHeading = "Connected"
 connectionCount_one = "{{count}} connection"
 connectionCount_other = "{{count}} connections"
 customApi = "Custom API"
@@ -7773,6 +8562,10 @@ security = "Security"
 signing = "Signing"
 storage = "Storage"
 
+[portal.integrations.noResults]
+description = "No integrations match your filters. Try a different category or search."
+title = "No matches"
+
 [portal.integrations.status]
 connected = "Connected"
 
@@ -7784,6 +8577,12 @@ worksWith = "Works with"
 pipelines = "Pipelines"
 policies = "Policies"
 sources = "Sources"
+
+[portal.legal]
+draft = "{{label}} · draft"
+loadError = "Could not load this document. Please try again."
+loading = "Loading…"
+title = "Legal document"
 
 [portal.nav]
 agent-builder = "Agent Builder"
@@ -7797,7 +8596,6 @@ integrations = "Integrations"
 pipelines = "Pipelines"
 policies = "Policies"
 procurement = "Procurement"
-settings = "Settings"
 sources = "Sources"
 usage = "Usage & Billing"
 users = "Users"
@@ -7807,67 +8605,106 @@ platform = "PDF Platform"
 processor = "PDF Processor"
 
 [portal.pipelines]
-subtitle = "Every automated document pipeline on the backend: an ordered chain of operations over a set of sources, run on a trigger. Click a row for its steps and sources."
+subtitle = "Automate your document workflows. Start from a template for a simple, guided setup, or build a custom pipeline from scratch. Enforce any pipeline as a policy to run it on every document."
 title = "Pipelines"
 
 [portal.pipelines.actions]
-newPipeline = "New pipeline"
+newCustomPipeline = "New custom pipeline"
+
+[portal.pipelines.all]
+title = "All pipelines"
 
 [portal.pipelines.builder]
-addStep = "Add tool"
+activate = "Activate"
 back = "Back to pipelines"
+cannotFollow = "Can't take {{produced}}"
 chooseAccount = "Choose an account"
 chooseDestination = "Choose a destination"
 chooseOperation = "Choose what this step does"
 chooseSource = "Choose a source"
 discard = "Discard changes"
-enabled = "Enabled"
+editorDestination = "Editor"
+editorDestinationDetail = "Replaces the file you ran it on"
+editorDestinationHelp = "This pipeline runs on the files in your workspace, and its results replace the file it ran on. There is nowhere else to send them."
 inputs = "Input"
 inputSource = "Input source"
 inputTrigger = "Trigger"
 keepEditing = "Keep editing"
-needsUpload = "Needs an uploaded file"
-noSources = "No sources connected yet. Create one to use it as an input."
+moreActions = "More actions"
+needsConfiguring = "Needs setting up"
+needsDestination = "No destination chosen"
+needsSource = "No source chosen"
 noToolMatches = "No tools match your search."
-pipelineSettings = "Pipeline settings"
+pause = "Pause"
+rename = "Rename pipeline"
+runOn = "Runs on"
+runOnExport = "Every export"
+runOnTooltip = "Choose when this pipeline runs on your files: when you add them, or when you export them."
+runOnUpload = "Every upload"
 searchTools = "Search tools"
-selectToolBody = "Add a tool to build your pipeline."
-selectToolTitle = "No tools yet"
 sendToSystem = "Send to another system"
-stepsNeedSetup = "These steps still need an operation and an account chosen before saving: {{tools}}."
-toolSettings = "Tool settings"
+stepsIncompatible = "These steps can't run on what their prior step produces: {{tools}}."
+stepsNeedSetup = "These steps still need setting up before saving: {{tools}}."
+supportingFiles = "Supporting files"
+testRun = "Test with a file"
 unknownStep = "Unrecognized operation, kept as-is."
 unsavedBody = "You have unsaved changes. Save them before leaving, or discard them?"
 unsavedTitle = "Unsaved changes"
-uploadUnsupported = "Uploaded files aren't supported in pipelines yet, so these steps can't be saved: {{tools}}."
 usesDefaults = "Runs with default settings"
+viewDefinition = "View definition"
+
+[portal.pipelines.builder.blocker]
+destination = "Choose a destination"
+heading = "To create this pipeline:"
+incompatible = "Fix steps that can't run in order: {{tools}}"
+name = "Give the pipeline a name"
+saveHeading = "To save your changes:"
+schedule = "Set how often it runs"
+setup = "Finish setting up: {{tools}}"
+source = "Choose an input source"
+
+[portal.pipelines.builder.diagnostic]
+fan-in = "Combines every incoming file"
+fan-out = "Runs once per incoming file"
+format-mismatch = "Sends {{produced}}, needs {{accepts}}"
+output-uncertain = "May not run: output depends on setup"
+source-mismatch = "Input is {{produced}}, needs {{accepts}}"
+undeclared-operation = "Can't check what this step accepts"
+
+[portal.pipelines.builder.icon]
+label = "Change icon"
 
 [portal.pipelines.composer]
-addTool = "Add tool"
-cancel = "Cancel"
-chainEmpty = "Add a tool to start building your pipeline."
+addTool = "Add a tool"
 create = "Create pipeline"
+createPaused = "Create paused"
 editingUnsupported = "Displaying these tool params for editing is not supported yet."
-moveDown = "Move down"
-moveUp = "Move up"
+editSource = "Edit source"
 name = "Name"
-namePlaceholder = "e.g. Redaction sweep"
+namePlaceholder = "Pipeline name"
 noToolSettings = "This tool has no configurable settings."
-operations_one = "Operation ({{count}})"
-operations_other = "Operations ({{count}})"
 output = "Destination"
-removeStep = "Remove operation"
 save = "Save changes"
 scheduleEvery = "Run every"
-sources = "Sources"
-sourcesLoading = "Loading sources..."
 trigger = "Trigger"
 triggerManual = "Manual only"
+
+[portal.pipelines.composer.runsEvery]
+days_one = "Runs every day"
+days_other = "Runs every {{count}} days"
+hours_one = "Runs every hour"
+hours_other = "Runs every {{count}} hours"
+minutes_one = "Runs every minute"
+minutes_other = "Runs every {{count}} minutes"
 
 [portal.pipelines.composer.unit]
 days = "days"
 hours = "hours"
 minutes = "minutes"
+
+[portal.pipelines.definition]
+subtitle = "The pipeline as it would be saved."
+title = "Definition"
 
 [portal.pipelines.delete]
 body = "Delete \"{{name}}\"? This can't be undone."
@@ -7876,7 +8713,7 @@ confirm = "Delete"
 title = "Delete pipeline?"
 
 [portal.pipelines.detail]
-clearHistory = "Clear history"
+clearHistory = "Process ignored files in source"
 delete = "Delete pipeline"
 run = "Run now"
 
@@ -7885,6 +8722,42 @@ action = "Create a pipeline"
 connectSource = "Connect a source"
 description = "Create your first pipeline: pick the sources it runs over, chain the operations, and choose where output goes."
 title = "No pipelines yet"
+
+[portal.pipelines.enforce]
+desc = "Runs automatically; members can't turn it off"
+info = "What enforcing as a policy means"
+label = "Enforce as policy"
+
+[portal.pipelines.graph]
+addFirstTool = "Add a tool"
+dragHint = "Drop on a line to move it"
+insertHere = "Add a tool here"
+removeNode = "Remove {{name}}"
+showError = "Show why {{name}} failed"
+
+[portal.pipelines.graph.add]
+input = "Add a source"
+output = "Add a destination"
+
+[portal.pipelines.graph.run]
+done = "Done"
+failed = "Failed"
+running = "Running"
+
+[portal.pipelines.inspector]
+multipleBody = "Drag any of them onto a line to move them together, or press Delete to remove them."
+multipleSelected_one = "{{count}} step selected"
+multipleSelected_other = "{{count}} steps selected"
+noSelectionBody = "Pick a node in the graph to change what it does."
+noSelectionTitle = "Nothing selected"
+
+[portal.pipelines.inspector.status]
+completed_one = "Finished the only step"
+completed_other = "Finished all {{count}} steps"
+failed_one = "Failed on the only step"
+failed_other = "Failed after {{done}} of {{count}} steps"
+running_one = "Running the only step"
+running_other = "Running step {{done}} of {{count}}"
 
 [portal.pipelines.kpi]
 active = "Active"
@@ -7898,10 +8771,9 @@ completed_one = "Run completed."
 completed_other = "All {{count}} runs completed."
 empty = "Nothing to run: the sources had no documents to process."
 failed = "Run failed: {{error}}"
-historyCleared = "History cleared. The next run reprocesses everything currently in the sources."
 inFlight = "Nothing new to run: documents are still being processed from an earlier run."
-parked_one = "Nothing to run: {{count}} document failed previously and is parked. Fix the cause, then clear history to retry it."
-parked_other = "Nothing to run: {{count}} documents failed previously and are parked. Fix the cause, then clear history to retry them."
+parked_one = "Nothing to run: {{count}} document failed previously and is parked. Fix the cause, then reprocess the source to retry it."
+parked_other = "Nothing to run: {{count}} documents failed previously and are parked. Fix the cause, then reprocess the source to retry them."
 running = "Run started; still in progress."
 timeout = "Run is taking longer than expected; it may still finish in the background."
 
@@ -7914,20 +8786,29 @@ name = "Pipeline"
 sources = "Sources"
 status = "Status"
 steps = "Steps"
+trigger = "Trigger"
+type = "Type"
+
+[portal.pipelines.templates]
+setUp = "Set up"
+title = "Templates"
 
 [portal.pipelines.trigger]
+editor-export = "Every export"
+editor-upload = "Every upload"
 folder-watch = "Folder watch"
 manual = "Manual"
 schedule = "Scheduled"
 
+[portal.pipelines.type]
+pipeline = "Pipeline"
+policy = "Policy"
+
 [portal.policies]
-defaultName = "{{category}} Policy"
-subtitle = "Standing automations that enforce a tool pipeline on every document. Each policy fires on upload or export, runs its tool chain, and saves the enforced version alongside the original."
-title = "Policies"
+defaultName = "{{category}} Pipeline"
 
 [portal.policies.card]
 comingSoon = "Upgrade to Enterprise"
-notSetUp = "Not set up"
 requiresAiEngine = "Requires AI engine"
 
 [portal.policies.categories.classification]
@@ -8049,13 +8930,12 @@ summary = "Detects and redacts PII, strips active content (JavaScript), and wate
 2 = "Watermark"
 
 [portal.policies.detail]
-enforces = "Enforces"
+enforces = "Steps"
 onEveryExport = "On every export"
 onEveryUpload = "On every upload"
 outputAsNewFile = "as a new file"
 outputAsNewVersion = "as a new version"
 recentActivity = "Recent activity"
-retry = "Retry"
 showLess = "Show less"
 showMore = "Show more"
 sources = "Sources"
@@ -8066,16 +8946,15 @@ delete = "Delete"
 editSettings = "Edit settings"
 pause = "Pause"
 resume = "Resume"
-runNow = "Run now"
 
 [portal.policies.detail.clearHistory]
-body = "This policy will forget every file it has already processed and reprocess everything currently in its sources on the next run. The files themselves are not changed. This cannot be undone."
+body = "This pipeline will forget every file it has already processed and reprocess everything currently in its sources on the next run. The files themselves are not changed. This cannot be undone."
 cancel = "Cancel"
 confirm = "Clear history"
 title = "Clear processed history?"
 
 [portal.policies.detail.emptyActivity]
-description = "Documents will appear here once this policy runs."
+description = "Documents will appear here once this pipeline runs."
 title = "No activity yet"
 
 [portal.policies.endpoints]
@@ -8086,11 +8965,6 @@ compressPdf = "Compress"
 flatten = "Flatten"
 ocrPdf = "OCR"
 sanitizePdf = "Remove JavaScript"
-
-[portal.policies.offline]
-description = "Your policies are saved and will appear once the connection is restored."
-retry = "Retry"
-title = "Backend unavailable"
 
 [portal.policies.operations]
 change = "Change what this step does"
@@ -8228,6 +9102,24 @@ label = "Attach to a Jira issue"
 description = "Sends the processed document as an attachment."
 label = "Email the document (Mailgun)"
 
+[portal.policies.operations.n8nGate]
+description = "Your workflow decides whether the run carries on."
+label = "Ask an n8n workflow to approve"
+note = "The workflow must reply with {\"approved\": true}. Anything else — including a timeout — stops the run and parks the document."
+
+[portal.policies.operations.n8nNotify]
+description = "Sends the run's details, not the document."
+label = "Tell an n8n workflow"
+
+[portal.policies.operations.n8nSend]
+description = "Sends the document and the run's details to your workflow."
+label = "Send the document to n8n"
+
+[portal.policies.operations.n8nTransform]
+description = "Your workflow processes the document and the file it returns replaces it."
+label = "Process the document in n8n"
+note = "Set the Webhook node to respond \"Using Respond to Webhook Node\", and return a file. On the default \"Immediately\" setting n8n replies with an acknowledgement, and that would replace the document."
+
 [portal.policies.operations.nextcloudUpload]
 description = "Writes the processed document into a folder."
 label = "Upload to Nextcloud"
@@ -8272,40 +9164,16 @@ label = "Trigger a Zap or Make scenario"
 [portal.policies.stats]
 activeFor = "Active"
 dataProcessed = "Data processed"
-docsEnforced = "Docs enforced"
+docsEnforced = "Docs processed"
 
 [portal.policies.status]
 active = "Active"
 paused = "Paused"
 
-[portal.policies.summary.active]
-description = "Enforcing on upload/export"
-label = "Active policies"
-
-[portal.policies.summary.categories]
-description = "Available to configure"
-label = "Categories"
-
-[portal.policies.summary.docsEnforced]
-description = "Across active policies"
-label = "Docs enforced"
-
-[portal.policies.summary.paused]
-description = "Configured but not firing"
-label = "Paused"
-
-[portal.policies.table]
-appliesTo = "Applies to"
-docs = "Docs enforced"
-enforces = "Enforces"
-policy = "Policy"
-status = "Status"
-
 [portal.policies.wizard.actions]
-back = "Back"
 cancel = "Cancel"
-continue = "Continue"
-enablePolicy = "Enable policy"
+customise = "Customise"
+enablePolicy = "Create pipeline"
 saveChanges = "Save changes"
 
 [portal.policies.wizard.capability.classify]
@@ -8346,50 +9214,14 @@ labelsHeading = "Classification labels"
 
 [portal.policies.wizard.errors]
 noTools = "Enable at least one tool in the workflow first."
-saveFailed = "Couldn't save the policy. Please try again."
-
-[portal.policies.wizard.output]
-heading = "Output & run"
-
-[portal.policies.wizard.output.filenameRule]
-autoNumber = "Auto-number"
-label = "Filename rule"
-placeholder = "Text to add (optional)"
-prefix = "Prefix"
-suffix = "Suffix"
-
-[portal.policies.wizard.output.outputAs]
-label = "Output as"
-newFile = "New file"
-newVersion = "New version"
-
-[portal.policies.wizard.output.runOn]
-export = "Export"
-helper = "When the policy fires: on upload, or before export."
-label = "Run on"
-upload = "Upload"
-
-[portal.policies.wizard.settings]
-heading = "Settings"
-
-[portal.policies.wizard.sources]
-heading = "Sources"
-loading = "Loading sources…"
-
-[portal.policies.wizard.tabs]
-ariaLabel = "Setup steps"
-settings = "Settings"
-workflow = "Actions"
+saveFailed = "Couldn't save the pipeline. Please try again."
 
 [portal.policies.wizard.title]
-edit = "Edit {{category}} policy"
-setUp = "Set up {{category}} policy"
+edit = "Edit {{category}} pipeline"
+setUp = "Set up {{category}} pipeline"
 
 [portal.policies.wizard.workflow]
-description = "Choose what this policy does to every document it processes."
-
-[portal.policySummary.action]
-setUp = "Set up"
+description = "Choose what this pipeline does to every document it processes."
 
 [portal.processorFlow]
 footnote = "Counts are over the last 24 hours. Flow speed is illustrative."
@@ -8437,19 +9269,27 @@ email = "Email intake"
 subtitle = "Get your team evaluated, contracted, and onboarded. Every document in one place."
 title = "Procurement"
 
-[portal.procurement.action]
-download = "Download"
-pay = "Pay now"
-request = "Request"
-sign = "Review & sign"
-upload = "Upload"
-
 [portal.procurement.agreement]
-agreeCta = "Agree & subscribe"
-confirm = "I have read and agree to the Stirling Enterprise Agreement."
-eyebrow = "Agreement"
-intro = "One combined agreement covers your deal: Master Service Agreement, Order Form, EULA, and Data Processing Agreement. Review it, then agree to accept the quote into a committed subscription."
-title = "Review your enterprise agreement"
+agreeCta = "Sign agreement"
+confidential = "Confidential"
+confirm = "I have read and agree to this Agreement, and I represent that I am authorized to sign it on behalf of the organization named above."
+docName = "Stirling Enterprise Agreement"
+docSub = "MSA, Order Form, EULA and DPA, combined into one signature."
+download = "Download"
+downloadDraftError = "Could not generate the agreement PDF - the document renderer is unavailable. Please try again shortly or contact support."
+downloadError = "Could not download the signed agreement. Please try again."
+legalName = "Legal entity name"
+legalNamePlaceholder = "The legal entity that will sign"
+loadError = "Could not load the agreement. Please try again."
+loading = "Loading the agreement..."
+ref = "Ref {{ref}} · {{version}}"
+requestChanges = "Request changes"
+scrollHint = "Scroll to review"
+signatory = "Signatory name"
+signatoryPlaceholder = "Full name"
+signatoryTitle = "Signatory title"
+signatoryTitlePlaceholder = "e.g. General Counsel"
+signError = "Could not record your signature. Please try again."
 
 [portal.procurement.builder]
 addons = "Add-ons"
@@ -8462,16 +9302,19 @@ businessName = "Business name"
 businessNamePlaceholder = "Your company"
 city = "City"
 cityPlaceholder = "San Francisco"
+completeRequired = "Please complete the required fields (marked *) with a valid email before generating the quote."
 contactEmail = "Contact email"
 contactEmailPlaceholder = "jane@acme.com"
 contactName = "Contact name"
 contactNamePlaceholder = "Jane Doe"
 continue = "Continue"
+done = "Done"
 eula = "I have read and agree to the Stirling Enterprise EULA. It governs the agreement generated from this quote."
 generate = "Generate quote"
-included = "Included"
-indemnification = "IP indemnification"
-indemnificationSub = "We defend qualifying IP claims, per the EULA"
+indemnification = "Enhanced IP Protection"
+indemnificationSub = "Extends our IP defense to patent claims. Baseline copyright, trademark and trade-secret indemnification is included free."
+paperEyebrow = "Enterprise quote"
+paperFor = "Prepared for"
 pdfSize = "PDF size"
 poNumber = "PO number"
 poNumberPlaceholder = "Optional"
@@ -8519,6 +9362,7 @@ training = "Onboarding & training"
 trainingSub = "Live sessions to get your team running"
 users = "Total users"
 usersPlaceholder = "e.g. 250"
+viewEula = "Read it"
 volEstimated = "Estimated from {{count}} users (~2,000 PDFs each, including automation). Edit if you know better."
 volManual = "Using your figure. Re-estimate from your team size any time."
 volNoUsers = "Not sure? Enter your team size and we'll estimate it."
@@ -8527,54 +9371,55 @@ volumePlaceholder = "e.g. 1,000,000"
 years_one = "{{count}} year"
 years_other = "{{count}} years"
 
-[portal.procurement.docs]
-count_one = "{{count}} doc"
-count_other = "{{count}} docs"
-done = "Done"
-here = "You're here"
-hide = "Hide"
-optional = "Optional"
-paidAddon = "Paid add-on"
-show = "Show"
-subtitle = "Everything you need at each step of the journey, surfaced as the deal moves through it."
-supportingSubtitle = "SOC 2, security reviews, tax forms and more, ready when your security or procurement team asks. Some carry a one-time fee."
-supportingTitle = "Supporting your evaluation"
+[portal.procurement.documents]
+agreement = "Enterprise Agreement"
+agreementSub = "MSA, Order Form and DPA in one signature."
+download = "Download"
+eula = "EULA & Commercial Terms"
+eulaSub = "The software and self-serve commercial terms."
+invoice = "Invoice"
+invoiceSub = "Your first subscription invoice."
+laterInvoice = "Available after you accept"
+laterQuote = "Available once your quote is issued"
+quote = "Quote"
+quoteSub = "Your itemised enterprise quote."
+sla = "SLA Exhibit"
+slaSub = "Support tiers and response targets."
+subprocessors = "Subprocessors"
+subprocessorsSub = "Third parties that process data on your behalf."
+subtitle = "Your deal paperwork, available any time."
 title = "Documents"
-upcoming = "Upcoming"
+view = "View"
 
 [portal.procurement.error]
 title = "Something went wrong"
 
 [portal.procurement.hero]
-company = "Your enterprise deal"
-ctaLive = "You're live"
-ctaPayment = "Add payment"
+barAria = "Stage {{current}} of {{total}}"
+ctaAgreement = "Review & sign agreement"
+ctaExploring = "Set up your trial"
 ctaQuote = "Review your quote"
+ctaReviewQuote = "Review quote"
 ctaTrial = "Build your quote"
-eyebrow = "Enterprise procurement"
+documents = "Documents"
+eyebrow = "Enterprise"
+eyebrowCompany = "{{company}} Enterprise"
 inviteTeammates = "Invite teammates"
 licenseKey = "Licence key"
-nextStep = "Next step: {{action}}"
-notStarted = "Not started"
+liveSub = "Your organization is provisioned and your licence is active."
+liveTitle = "You are live on Stirling Enterprise"
+next = "Next: {{stage}}"
 open = "Open procurement"
 scheduleCall = "Schedule a call"
-setup1Sub = "Invite your teammates"
-setup1Title = "Deploy the PDF Editor"
-setup2Sub = "Turn on processing across editors and other sources"
-setup2Title = "Connect the PDF Processor"
-setup3Sub = "Turn on Security, Compliance, Routing, or Retention when you need them"
-setup3Title = "Add recommended policies"
+sentenceAgreement = "review and sign the agreement"
+sentenceLive = "provisioning and rollout"
+sentencePayment = "purchase order and payment"
+sentenceQuote = "review and accept your quote"
+sentenceTrial = "set up your trial workspace"
 
 [portal.procurement.journey]
 daysLeft_one = "{{count}} day left"
 daysLeft_other = "{{count}} days left"
-engineerLabel = "Your solutions engineer"
-eyebrow = "Your rollout"
-live = "You're live on Stirling Enterprise"
-nextStep = "Next step: {{action}}"
-subtitle = "Your solutions engineer is on every step. One next action at a time; the full checklist is below."
-title = "From trial to live, one guided path"
-trialTitle = "Enterprise trial"
 
 [portal.procurement.journeySteps.agreement]
 blurb = "One signature covers MSA, order form, EULA and DPA."
@@ -8623,44 +9468,25 @@ description = "Your subscription is active and your licence is issued. Your team
 eyebrow = "Live"
 title = "You're live on Stirling Enterprise"
 
-[portal.procurement.locked]
-description = "Trial keys, committed-volume quotes, the one-signature agreement, payment, and your document ledger all live here once you start an enterprise evaluation."
-eyebrow = "Enterprise only"
-talkToSales = "Talk to sales"
-title = "The procurement track opens with Enterprise"
-
 [portal.procurement.milestone]
-download = "Download PDF"
 downloadError = "Could not download the quote PDF just yet — please try again in a moment."
-edit = "Edit quote"
-
-[portal.procurement.modal]
-cancel = "Cancel"
-chooseFile = "Choose file"
-close = "Close"
-downloadBody = "Your download will begin shortly."
-downloadCta = "Download"
-downloadTitle = "Download"
-noFile = "No file selected"
-payBody = "Pay your committed contract by card or bank transfer through Stripe. Your workspace provisions as soon as payment clears."
-payCta = "Continue to Stripe"
-payTitle = "Confirm payment"
-requestBodyFree = "We generate this on demand. Confirm and your solutions engineer will send it across shortly."
-requestBodyPaid = "This is a paid add-on. Confirm and your solutions engineer will scope it and send the paperwork."
-requestCta = "Request"
-requestTitle = "Request this document"
-signBody = "Opens the Stirling Enterprise Agreement for e-signature: one signature covers the MSA, order form, EULA and DPA. We countersign automatically and you advance to payment."
-signCta = "Open for signature"
-signTitle = "Review and sign your agreement"
-uploadBody = "Send us your PO and we invoice against it on your terms. Drag in the PDF or pick a file below."
-uploadCta = "Upload purchase order"
-uploadTitle = "Upload your purchase order"
 
 [portal.procurement.payment]
 description = "Your quote is accepted and your licence is already active — your team can start right away. Pay the first invoice when you're ready; you can pay or download it here, no email needed."
+downloadAgreement = "Download signed agreement"
 downloadInvoice = "Download invoice"
+eyebrow = "Payment"
 title = "Subscription created"
 viewInvoice = "View & pay invoice"
+
+[portal.procurement.review]
+acceptCta = "Accept quote"
+annual = "Annual fee (year 1)"
+downloadCta = "Download quote"
+poNumber = "Purchase order: {{po}}"
+renewal = "Renews at {{amount}}/year after the term (+{{pct}}% CPI)"
+tcv = "{{years}}-year term, paid in full up front: {{tcv}}"
+validUntil = "Valid until {{date}}"
 
 [portal.procurement.schedule]
 fallback = "Couldn't load the scheduler."
@@ -8671,25 +9497,33 @@ title = "Schedule a call"
 
 [portal.procurement.setup]
 airgap = "Air-gapped"
-airgapSub = "Fully offline, isolated network. Includes a downloadable licence file."
-cloud = "Cloud"
-cloudSub = "Fully managed by Stirling. Nothing for you to run."
-deployment = "Where will you run Stirling?"
-seats = "Team size"
-seatsHint = "Roughly how many people will use it. You can refine this when you build your quote."
-seatsPlaceholder = "e.g. 250"
+airgapSub = "Sealed, no outbound"
+back = "Back"
+businessName = "Business name"
+businessNamePlaceholder = "Acme Corp"
+cloud = "Stirling Cloud"
+cloudSub = "Managed, fastest start"
+continue = "Continue"
+deployment = "Where should it deploy?"
+eula = "I agree to the Stirling EULA & Commercial Terms."
+fullName = "Full name"
+fullNamePlaceholder = "Your name"
+invites = "Invite teammates · optional"
+invitesPlaceholder = "sam@acme.com, lee@acme.com"
+scheduleCall = "Schedule a call"
+seats = "People testing"
+seatsPlaceholder = "e.g. 15"
 selfhost = "Self-hosted"
-selfhostSub = "Run it in your own cloud or data centre."
+selfhostSub = "Docker or Kubernetes"
 start = "Start trial"
-subtitle = "Tell us how you plan to run Stirling so we can tailor your trial and quote. No card required."
+stepOf = "Step {{n}} of {{total}}"
+subtitle = "Free for 14 days, no card required."
+subtitleDetails = "A few details for your quote and agreement."
+talkFirst = "Prefer to talk first?"
 title = "Set up your trial"
-
-[portal.procurement.status]
-action = "Action needed"
-available = "Available"
-complete = "Complete"
-pending = "Pending"
-request = "On request"
+viewEula = "Read it"
+workEmail = "Work email"
+workEmailPlaceholder = "you@company.com"
 
 [portal.procurement.trial]
 body = "Extending adds 7 days and notifies your solutions engineer."
@@ -8700,22 +9534,6 @@ maxed = "Maxed out"
 subtitle = "Your free trial runs through {{date}}. No card required."
 title = "Enterprise trial"
 
-[portal.procurement.upsell]
-homeBadge = "Enterprise"
-homeBody = "Committed volume pricing, org-wide SSO + SCIM + RBAC, 90-day immutable audit, and a dedicated SE."
-homeCta = "Start Trial →"
-homeHeadline = "Process millions of PDFs."
-
-[portal.search]
-ariaLabel = "Search"
-placeholder = "Search Stirling — endpoints, pipelines, docs…"
-
-[portal.search.empty]
-noActionsDescription = "Quick actions will appear here once they're available."
-noActionsTitle = "No quick actions"
-noMatches = "No matches for \"{{query}}\""
-noMatchesDescription = "Try a different keyword or browse the catalogue."
-
 [portal.settings.groups]
 admin = "Admin"
 
@@ -8725,10 +9543,8 @@ account-link = "Account link"
 [portal.shell.sidebar]
 appEditor = "Editor"
 appProcessor = "Processor"
-brandSuffix = "Stirling Processor"
 linkAccount = "Link Stirling account"
 primaryNav = "Primary navigation"
-switchApp = "Switch app"
 
 [portal.shell.topbar]
 closeNav = "Close navigation"
@@ -8743,7 +9559,9 @@ title = "Sources"
 connectSource = "Connect source"
 
 [portal.sources.builder]
+advanced = "Advanced"
 back = "Back to sources"
+backToSource = "Back to source setup"
 backToTypes = "All source types"
 cancel = "Cancel"
 chooseHint = "Choose where documents come from. Greyed-out connectors are on the way."
@@ -8753,7 +9571,6 @@ create = "Create source"
 createTitle = "Connect a source"
 delete = "Delete"
 editTitle = "Edit source"
-enabled = "Enabled"
 save = "Save changes"
 
 [portal.sources.builder.folderAccess]
@@ -8767,14 +9584,35 @@ cancel = "Cancel"
 confirm = "Delete"
 title = "Delete source?"
 
-[portal.sources.empty]
-description = "Connect a storage location so your policies have somewhere to pull data from."
-title = "No sources connected yet"
-
 [portal.sources.kpi]
 inUse = "In use"
 total = "Connections"
 unused = "Unused"
+
+[portal.sources.networkFields.connection]
+helperText = "The saved connection with the server address and credentials. Shared by every source that uses it."
+label = "Connection"
+
+[portal.sources.networkFields.directory]
+helperText = "The folder on the server to watch, relative to the login home or share root."
+label = "Folder"
+placeholder = "Login home or share root"
+
+[portal.sources.networkFields.mode]
+helperText = "Whether to leave the original file in place after it has been processed. If the original file is left in place, it will be re-processed next time the pipeline scans the source."
+label = "After processing"
+
+[portal.sources.networkFields.mode.options]
+consume = "Delete the file"
+snapshot = "Leave it in place"
+
+[portal.sources.networkFields.recursive]
+helperText = "Include subfolders if your files are organised into nested folders, or watch only the top level."
+label = "Folder depth"
+
+[portal.sources.networkFields.recursive.options]
+all = "Include subfolders"
+top = "Top level only"
 
 [portal.sources.status]
 active = "Active"
@@ -8785,6 +9623,7 @@ unused = "Unused"
 documents = "Documents"
 source = "Source"
 status = "Status"
+type = "Type"
 usedBy = "Policies"
 
 [portal.sources.types.box]
@@ -8809,31 +9648,37 @@ description = "Watch a directory on the server for new documents."
 label = "Folder"
 
 [portal.sources.types.folder.fields.directory]
-helperText = "Absolute path Stirling watches for files to process."
-label = "Directory path"
+helperText = "The absolute path to the folder to watch for new files."
+label = "Folder"
 placeholder = "/data/incoming"
 
 [portal.sources.types.folder.fields.identity]
-helperText = "Content check reads each changed file, so renames and touches that don't alter content are not reprocessed."
+helperText = "Using the file contents for change detection is slower but more accurate."
 label = "Change detection"
 
 [portal.sources.types.folder.fields.identity.options]
-hash = "Size, date and content check"
-stat = "Size and date modified"
+hash = "File Metadata & Content"
+stat = "File Metadata"
 
 [portal.sources.types.folder.fields.mode]
-label = "Read mode"
+helperText = "Whether to leave the original file in place after it has been processed. If the original file is left in place, it will be re-processed next time the pipeline scans the source."
+label = "After processing"
 
 [portal.sources.types.folder.fields.mode.options]
-consume = "Consume: process each file once"
-snapshot = "Snapshot: re-read the folder every run"
+consume = "Delete the file"
+snapshot = "Leave it in place"
 
 [portal.sources.types.folder.fields.recursive]
+helperText = "Include subfolders if your files are organised into nested folders, or watch only the top level."
 label = "Folder depth"
 
 [portal.sources.types.folder.fields.recursive.options]
 all = "Include subfolders"
 top = "Top level only"
+
+[portal.sources.types.ftp]
+description = "Poll an FTP or FTPS server folder for new documents."
+label = "FTP"
 
 [portal.sources.types.googledrive]
 description = "Pull documents from shared Google Drive folders."
@@ -8852,21 +9697,21 @@ description = "Pull documents from an Amazon S3 or S3-compatible bucket."
 label = "Amazon S3"
 
 [portal.sources.types.s3.fields.connection]
-helperText = "The stored connection holding the bucket and credentials. Reused by every source and pipeline output that references it."
+helperText = "The saved connection with the bucket and credentials. Shared by every source and pipeline output that uses it."
 label = "Connection"
 
 [portal.sources.types.s3.fields.mode]
-helperText = "Consume removes each object from the bucket once every policy has processed it."
-label = "Read mode"
+helperText = "Whether to leave the original object in place after it has been processed. If the original object is left in place, it will be re-processed next time the pipeline scans the source."
+label = "After processing"
 
 [portal.sources.types.s3.fields.mode.options]
-consume = "Consume: process each object once"
-snapshot = "Snapshot: re-read the bucket every run"
+consume = "Delete the object"
+snapshot = "Leave it in place"
 
 [portal.sources.types.s3.fields.prefix]
-helperText = "Only objects whose keys start with this prefix are processed."
-label = "Key prefix"
-placeholder = "incoming/"
+helperText = "The folder (key prefix) within the bucket to watch."
+label = "Folder"
+placeholder = "Whole bucket"
 
 [portal.sources.types.sftp]
 description = "Poll an SFTP drop folder for new documents."
@@ -8903,10 +9748,8 @@ name = "Name"
 namePlaceholder = "e.g. Claims intake"
 type = "Type"
 
-[portal.tier]
-enterprise = "Enterprise plan"
-free = "Editor plan"
-pro = "Processor plan"
+[portal.stepModal]
+close = "Close"
 
 [portal.usage]
 managePayment = "Manage Payment"
@@ -8969,14 +9812,6 @@ summary = "Owns a team — manages its members' resources and shared configs."
 [portal.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · Unlimited"
-
-[portal.welcome]
-ariaLabel = "Welcome to Stirling PDF"
-install = "Install the editor"
-invite = "Invite teammates"
-openInBrowser = "Open in browser"
-productName = "PDF Editor"
-stats = "30M downloads · 60+ PDF operations · Free forever"
 
 [printFile]
 title = "Print File"
@@ -9187,6 +10022,16 @@ allTools = "Tools"
 automate = "Automate"
 config = "Config"
 files = "Files"
+
+[quickNav]
+editor = "Editor"
+home = "Stirling"
+invite = "Invite"
+landmark = "Quick navigation"
+noProcessorAccess = "Ask an admin for processor access"
+notifications = "Notifications"
+processor = "Processor"
+reader = "Reader"
 
 [read]
 tags = "view,open,display,read,viewer,PDF viewer,PDF reader,open PDF,view PDF,display PDF,preview,browse"
@@ -9559,6 +10404,14 @@ text = "Rotate your PDF pages clockwise or counterclockwise in 90-degree increme
 [rotate.tooltip.header]
 title = "Rotate Settings Overview"
 
+[ruler]
+clearAll = "Clear all"
+hideAllLabels = "Hide all labels"
+hideSmallLabels = "Hide small labels"
+physicalValues = "Physical"
+scaled = "Scaled"
+showAllLabels = "Show all labels"
+
 [sanitize]
 desc = "Remove potentially harmful elements from PDF files."
 sanitizationResults = "Sanitization Results"
@@ -9609,6 +10462,32 @@ tags = "clean,secure,safe,remove-threats"
 [scalePages]
 tags = "resize,adjust,scale,page size,resize page,scale page,change size,adjust size,enlarge,shrink page,fit to page,A4,letter size"
 title = "Adjust page-scale"
+
+[scaleSettings]
+activeScale = "Active Scale"
+apply = "Apply Scale"
+applyCalibration = "Apply Calibration"
+calculatedScale = "Calculated scale"
+calibrate = "Calibrate"
+calibrating = "Calibrating"
+calibrationDistanceRequired = "Enter a real-world distance greater than zero"
+calibrationInvalid = "Unable to calculate scale from this measurement"
+calibrationPaperDistance = "Measured page distance: {{distance}}"
+calibrationTitle = "Calibrate Scale"
+calibrationTooltip = "Measure a known distance to calculate the scale automatically"
+customScale = "Custom Scale"
+noneSet = "No custom scale set"
+presets = "Preset Scales"
+ratio = "Scale Ratio"
+ratioHelp = "Ratio: 1 page unit = X real-world units"
+ratioPlaceholder = "e.g., 100"
+ratioPositive = "Ratio must be greater than zero"
+ratioRequired = "Ratio is required"
+realDistance = "Real-world distance"
+realDistancePlaceholder = "e.g., 5"
+reset = "Reset to Defaults"
+unit = "Unit"
+unitInvalid = "Invalid unit: {{scaleUnit}}"
 
 [scannerEffect]
 tags = "scan,simulate,create,fake scan,look scanned,scanner effect,make look scanned,photocopy effect,simulate scanner,realistic scan"
@@ -9673,40 +10552,10 @@ toolNotAvailableLocally = "Your Stirling-PDF server is offline and \"{{endpoint}
 [session]
 expired = "Your session has expired. Please refresh the page and try again."
 
-[sessionManagement.tooltip]
-header = "Managing Signing Sessions"
-
-[sessionManagement.tooltip.addParticipants]
-bullet1 = "New participants added to the end of signing order"
-bullet2 = "Cannot add participants after session is finalized"
-bullet3 = "Each participant receives a notification when it's their turn"
-description = "You can add more participants to an active session at any time before finalization."
-title = "Adding Participants"
-
-[sessionManagement.tooltip.finalization]
-bullet1 = "<b>Full finalization</b>: All participants have signed"
-bullet2 = "<b>Partial finalization</b>: Some participants haven't signed yet"
-bullet3 = "Unsigned participants will be excluded from the final document"
-bullet4 = "Once finalized, you can load the signed PDF into active files"
-description = "Finalization combines all signatures into a single signed PDF. This action cannot be undone."
-title = "Session Finalization"
-
-[sessionManagement.tooltip.participantRemoval]
-bullet1 = "Cannot remove participants who have already signed"
-bullet2 = "Removed participants no longer receive notifications"
-bullet3 = "Signing order adjusts automatically"
-description = "Participants can be removed from sessions before they sign."
-title = "Removing Participants"
-
-[sessionManagement.tooltip.signatureOrder]
-bullet1 = "Each signature is applied sequentially to the PDF"
-bullet2 = "Later signers can see earlier signatures"
-bullet3 = "Critical for approval workflows and legal chains of custody"
-description = "The order you specify when creating the session determines who signs first."
-title = "Signature Order"
-
 [settings]
+backToSections = "All settings"
 close = "Close"
+title = "Settings"
 
 [settings.ai]
 documents = "Documents & RAG"
@@ -9754,6 +10603,8 @@ defaultPdfEditor = "Default PDF editor"
 defaultPdfEditorActive = "Stirling PDF is your default PDF editor"
 defaultPdfEditorChecking = "Checking..."
 defaultPdfEditorInactive = "Another application is set as default"
+defaultPdfEditorRemind = "Remind me to set as default"
+defaultPdfEditorRemindDescription = "Show a banner when Stirling PDF is not your default PDF application."
 defaultPdfEditorSet = "Already Default"
 defaultStartupView = "Default view on launch"
 defaultStartupViewDescription = "Choose which view is active when the app starts"
@@ -9944,18 +10795,6 @@ memberCount_one = "{{count}} team member"
 memberCount_other = "{{count}} team members"
 memberCount_zero = "no team members"
 
-[settings.planBilling.tier]
-enterprise = "Enterprise"
-enterpriseDescription = "Custom enterprise features and support"
-free = "Free"
-freeDescription = "50 credits per month"
-team = "Team"
-teamBadge = "Team"
-teamDescription = "500 credits/month included, automatic overage billing for uninterrupted service"
-teamTooltipCredits = "Team plan includes {{credits}} credits/month."
-teamTooltipFineprint = "Only pay for what you use beyond included credits."
-teamTooltipOverage = "Automatic overage billing at {{price}}/credit ensures uninterrupted service."
-
 [settings.planBilling.trial]
 daysRemaining = "{{days}} days remaining"
 daysRemainingFull = "Your trial ends in {{days}} days"
@@ -9981,9 +10820,6 @@ title = "Policies & Privacy"
 
 [settings.preferences]
 title = "Preferences"
-
-[settings.search]
-placeholder = "Search settings pages..."
 
 [settings.security]
 description = "Update your password to keep your account secure."
@@ -10130,6 +10966,7 @@ last = "Last page"
 maintainRatio = "Toggle maintain aspect ratio"
 next = "Next page"
 noSavedSigs = "No saved signatures found"
+penSizePlaceholder = "Type or select pen size (1-200)"
 personalSigs = "Personal Signatures"
 previous = "Previous page"
 redo = "Redo"
@@ -10168,6 +11005,7 @@ backgroundRemovalFailedTitle = "Background removal failed"
 hint = "Upload a PNG or JPG image of your signature"
 label = "Upload signature image"
 placeholder = "Select image file"
+previewAlt = "Current image signature"
 processing = "Processing image..."
 removeBackground = "Remove white background (make transparent)"
 
@@ -10180,6 +11018,17 @@ resumeHint = "Resume placement to click and add your signature."
 saved = "Select a saved signature above, then click anywhere on the PDF to place it."
 text = "After entering your name above, click anywhere on the PDF to place your signature."
 title = "How to add signature"
+
+[sign.mobile]
+createFromPhone = "Mobile upload"
+description = "Scan this QR code with your phone or tablet, draw your signature, and it will appear here automatically."
+error = "Connection Error"
+expiryWarning = "QR Code Expiring Soon"
+expiryWarningMessage = "This QR code will expire in {{seconds}} seconds. A new code will be generated automatically."
+instructions = "Open the camera app on your phone and scan this code. Keep this window open while you draw."
+pollingError = "Error checking for the signature"
+sessionCreateError = "Failed to create session"
+title = "Draw on your phone"
 
 [sign.mode]
 move = "Move Signature"
@@ -10627,6 +11476,24 @@ title = "Upload to Server"
 updateButton = "Update on Server"
 uploadButton = "Upload to Server"
 
+[superSearch]
+all = "All"
+ariaLabel = "Super search"
+filtersAriaLabel = "Search filters"
+hint = "Type to search"
+placeholder = "Search Stirling"
+placeholderShort = "Search"
+showLess = "Show less"
+showMore = "Show {{count}} more"
+
+[superSearch.group]
+docs = "Docs"
+files = "Files"
+pages = "Pages"
+processor = "Processor"
+settings = "Settings"
+tools = "Tools"
+
 [survey]
 title = "Stirling-PDF Survey"
 
@@ -10741,12 +11608,39 @@ selectFilesHint = "Select files in Active Files to run this tool"
 singleFileScope = "Only applying to: {{fileName}}"
 viewerMode = "Switch to the file editor to add multiple files."
 
+[toolFormat]
+ANY = "any file"
+CBR = "a comic book archive (CBR)"
+CBZ = "a comic book archive (CBZ)"
+CSV = "a CSV file"
+EBOOK = "an ebook"
+EMAIL = "an email"
+EXCEL = "a spreadsheet"
+HTML = "a web page"
+IMAGE = "images"
+JAVASCRIPT = "a JavaScript file"
+JSON = "a JSON file"
+MARKDOWN = "a Markdown file"
+NONE = "no file"
+PCL = "a PCL print file"
+PDF = "a PDF"
+PDF_ENCRYPTED = "a password-protected PDF"
+POSTSCRIPT = "a PostScript file"
+PPT = "a presentation"
+TEXT = "a text file"
+VIDEO = "a video"
+WORD = "a Word document"
+XML = "an XML file"
+XPS = "an XPS document"
+ZIP = "a ZIP archive"
+
 [toolPanel]
 alpha = "Alpha"
 backToAllTools = "Back to all tools"
 collapse = "Collapse panel"
 expand = "Expand panel"
 goBack = "Go back"
+pdfTools = "PDF Tools"
 placeholder = "Choose a tool to get started"
 premiumFeature = "Premium feature:"
 toolsHeader = "Tools"
@@ -10783,13 +11677,9 @@ noToolsFound = "No tools found"
 quickAccess = "QUICK ACCESS"
 searchPlaceholder = "Search tools..."
 
-[toolPicker.categories]
-advancedTools = "Advanced Tools"
-recommendedTools = "Recommended Tools"
-standardTools = "Standard Tools"
-
 [toolPicker.subcategories]
 advancedFormatting = "Advanced Formatting"
+ai = "AI"
 automation = "Automation"
 developerTools = "Developer Tools"
 documentReview = "Document Review"
@@ -10800,6 +11690,9 @@ pageFormatting = "Page Formatting"
 removal = "Removal"
 signing = "Signing"
 verification = "Verification"
+
+[toolRenderer]
+notFound = "Tool not found: {{tool}}"
 
 [tools]
 noSearchResults = "No tools found"
@@ -10860,9 +11753,9 @@ urgent = "Urgent"
 attentionBody = "Your admin needs to sign in to see more info. Please contact them immediately."
 attentionBodyAdmin = "Review the license requirements to keep this server compliant."
 attentionTitle = "This server needs admin attention"
-message = "Get the most out of Stirling PDF with unlimited users and advanced features"
+message = "Get the most out of Stirling PDF with 100 users, SSO, and advanced features"
 seeInfo = "See info"
-title = "Upgrade to Server Plan"
+title = "Upgrade to the Team plan"
 upgradeButton = "Upgrade Now"
 
 [URLToPDF]
@@ -10958,6 +11851,13 @@ approver = "Approves policy"
 editor = "Editor"
 processor = "Processor"
 
+[users.columns]
+capabilities = "Capabilities"
+email = "Email"
+person = "Person"
+role = "Role"
+status = "Status"
+
 [users.confirm]
 cancelInviteBody = "Cancel the invitation to {{email}}? They won't be able to join with the current link."
 cancelInviteTitle = "Cancel invitation"
@@ -10977,10 +11877,8 @@ title = "No members yet"
 addToTeam = "Add to team"
 guestCount = "{{count}} guest"
 guests = "Guests"
-guestsDesc = "External collaborators, scoped to what you shared. Editor only."
 ledBy = "led by {{owner}}"
 org = "Organization"
-orgDesc = "Owners with org-wide authority and policy approval"
 owners = "{{count}} owner"
 team = "{{name}} team"
 teamMeta = "{{count}} people"
@@ -11020,12 +11918,14 @@ usernamePlaceholder = "jsmith"
 [users.invites]
 by = "Invited by {{who}}"
 cancel = "Cancel"
-count = "{{count}} pending"
-desc = "Invited people who haven't joined yet. They hold a seat until they accept."
 expiresInDays_one = "Expires in {{count}} day"
 expiresInDays_other = "Expires in {{count}} days"
 expiresToday = "Expires today"
 title = "Pending invitations"
+
+[users.invites.columns]
+expires = "Expires"
+invitee = "Invitee"
 
 [users.loadError]
 description = "Something went wrong reaching the backend, or you don't have access. Try again."
@@ -11216,12 +12116,15 @@ searchPlaceholder = "Search attachments"
 title = "Attachments"
 
 [viewer.bookmarks]
+addBookmark = "Add bookmark"
 bookmarkTitle = "Bookmark title"
 bookmarkTitleRequired = "Bookmark title is required"
 closeSidebar = "Close bookmarks sidebar"
 collapseAll = "Collapse all bookmarks"
+empty = "No bookmarks in this document"
 expandAll = "Expand all bookmarks"
 searchPlaceholder = "Search bookmarks"
+title = "Bookmarks"
 
 [viewer.comments]
 addComment = "Add comment"
@@ -11243,10 +12146,12 @@ locateAnnotation = "Locate in document"
 moreActions = "More actions"
 nComments_one = "{{count}} comment"
 nComments_other = "{{count}} comments"
+noMatch = "No comments match your search"
 pageLabel = "Page {{page}}"
 placingHint = "Click a page to place… (cancel)"
 removeCommentOnly = "Remove comment only"
 saveReply = "Save reply"
+searchPlaceholder = "Search comments"
 title = "Comments"
 typeComment = "Comment"
 typeInsertText = "Insert Text"
@@ -11269,6 +12174,7 @@ unsavedDesc = "You have unsaved changes"
 closeSidebar = "Close layers sidebar"
 hideAll = "Hide all layers"
 showAll = "Show all layers"
+title = "Layers"
 
 [viewer.link]
 delete = "Delete link"
@@ -11278,8 +12184,11 @@ columnDefault = "Column {{index}}"
 convertToPdf = "Convert to PDF"
 csvStats = "{{rows}} rows · {{columns}} columns · {{size}}"
 emptyFile = "Empty file"
+htmlHidePreview = "Hide preview"
 htmlPreview = "HTML preview"
+htmlPreviewMobileHidden = "HTML pages are laid out for desktop widths, so the preview is off by default here."
 htmlPreviewWarning = "HTML preview - external resources may not load · {{size}}"
+htmlShowPreview = "Show preview anyway"
 invalidJson = "Invalid JSON - showing raw content"
 lineNumbers = "Line numbers"
 loading = "Loading..."
@@ -11612,29 +12521,9 @@ title = "Watermark Text"
 image = "Image"
 text = "Text"
 
-[wetSignature.tooltip]
-header = "Signature Creation Methods"
-
-[wetSignature.tooltip.draw]
-bullet1 = "Customize pen color and thickness"
-bullet2 = "Clear and redraw until satisfied"
-bullet3 = "Works on touch devices (tablets, phones)"
-description = "Create a handwritten signature using your mouse or touchscreen. Best for personal, authentic signatures."
-title = "Draw Signature"
-
-[wetSignature.tooltip.type]
-bullet1 = "Choose from multiple fonts"
-bullet2 = "Customize text size and color"
-bullet3 = "Perfect for standardized signatures"
-description = "Generate a signature from typed text. Fast and consistent, suitable for business documents."
-title = "Type Signature"
-
-[wetSignature.tooltip.upload]
-bullet1 = "Supports PNG, JPG, and other image formats"
-bullet2 = "Transparent backgrounds recommended for best results"
-bullet3 = "Image will be resized to fit signature area"
-description = "Upload a pre-created signature image. Ideal if you have a scanned signature or company logo."
-title = "Upload Signature Image"
+[workbench.sessionRestore]
+none = "Your previous files are no longer stored on this device."
+partial = "Restored {{restored}} of {{total}} files. The rest are no longer stored on this device."
 
 [workbenchBar]
 activeFiles = "Active Files"
@@ -11648,7 +12537,9 @@ downloadAll = "Download All"
 exitRedaction = "Exit Redaction Mode"
 exportAll = "Export PDF"
 exportSelected = "Export Selected Pages"
-formFill = "Fill Form"
+formFill = "Form Editor"
+hideToolbar = "Hide toolbar"
+moreActions = "More actions"
 multiTool = "Multi-Tool"
 panMode = "Pan Mode"
 print = "Print PDF"
@@ -11659,6 +12550,7 @@ redact = "Redact"
 rotateLeft = "Rotate Left"
 rotateRight = "Rotate Right"
 ruler = "Ruler / Measure"
+rulerSettings = "Scale Settings"
 save = "Save"
 saveAll = "Save All"
 saveAs = "Save As"
@@ -11668,6 +12560,9 @@ selectAll = "Select All"
 selectByNumber = "Select by Page Numbers"
 selectLanguage = "Select language"
 share = "Share"
+showAllTools = "Show all tools"
+showFewerTools = "Collapse toolbar"
+showToolbar = "Show toolbar"
 toggleAnnotations = "Toggle Annotations Visibility"
 toggleAttachments = "Toggle Attachments"
 toggleBookmarks = "Toggle Bookmarks"

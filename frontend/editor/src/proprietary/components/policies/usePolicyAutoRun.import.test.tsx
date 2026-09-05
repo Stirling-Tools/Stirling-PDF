@@ -37,7 +37,8 @@ vi.mock("@app/hooks/usePolicies", () => ({
     policies: {
       security: {
         configured: true,
-        status: "active",
+        runsOnEditor: true,
+        enabled: true,
         backendId: "backend-1",
         runOn: "upload",
         outputMode: "new_version",
@@ -76,7 +77,7 @@ import {
 function recordCompletedRun() {
   recordRunStart({
     runId: "run-1",
-    categoryId: "security",
+    policyKey: "security",
     fileId: "file-1",
     fileName: "doc.pdf",
     fileSize: 1234,

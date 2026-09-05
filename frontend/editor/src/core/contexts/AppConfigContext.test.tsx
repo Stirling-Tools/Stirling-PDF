@@ -6,7 +6,13 @@ import {
 } from "@app/contexts/AppConfigContext";
 import apiClient from "@app/services/apiClient";
 import { allowConsole, expectConsole } from "@app/tests/failOnConsole";
+import { TestQueryProvider } from "@app/tests/utils/TestQueryProvider";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactNode } from "react";
+
+// The mocks below supply only the fields the code under test reads; cast the
+// partial to apiClient.get's real resolved type (per-platform: axios or Tauri).
+type GetResponse = Awaited<ReturnType<typeof apiClient.get>>;
 
 // Mock apiClient
 vi.mock("@app/services/apiClient");
@@ -26,7 +32,9 @@ describe("AppConfigContext", () => {
   });
 
   const wrapper = ({ children }: { children: ReactNode }) => (
-    <AppConfigProvider>{children}</AppConfigProvider>
+    <TestQueryProvider>
+      <AppConfigProvider>{children}</AppConfigProvider>
+    </TestQueryProvider>
   );
 
   it("should fetch and provide app config on non-auth pages", async () => {
@@ -39,7 +47,7 @@ describe("AppConfigContext", () => {
     vi.mocked(apiClient.get).mockResolvedValueOnce({
       status: 200,
       data: mockConfig,
-    } as any);
+    } as GetResponse);
 
     const { result } = renderHook(() => useAppConfig(), { wrapper });
 
@@ -177,7 +185,7 @@ describe("AppConfigContext", () => {
     vi.mocked(apiClient.get).mockResolvedValueOnce({
       status: 200,
       data: initialConfig,
-    } as any);
+    } as GetResponse);
 
     const { result } = renderHook(() => useAppConfig(), { wrapper });
 
@@ -189,7 +197,7 @@ describe("AppConfigContext", () => {
     vi.mocked(apiClient.get).mockResolvedValueOnce({
       status: 200,
       data: updatedConfig,
-    } as any);
+    } as GetResponse);
 
     // Trigger jwt-available event wrapped in act
     await act(async () => {
@@ -214,7 +222,7 @@ describe("AppConfigContext", () => {
     vi.mocked(apiClient.get).mockResolvedValue({
       status: 200,
       data: mockConfig,
-    } as any);
+    } as GetResponse);
 
     const { result } = renderHook(() => useAppConfig(), { wrapper });
 
@@ -238,7 +246,7 @@ describe("AppConfigContext", () => {
     vi.mocked(apiClient.get).mockResolvedValue({
       status: 200,
       data: mockConfig,
-    } as any);
+    } as GetResponse);
 
     const { result } = renderHook(() => useAppConfig(), { wrapper });
 
@@ -261,9 +269,11 @@ describe("AppConfigContext", () => {
     };
 
     const customWrapper = ({ children }: { children: ReactNode }) => (
-      <AppConfigProvider initialConfig={initialConfig}>
-        {children}
-      </AppConfigProvider>
+      <TestQueryProvider>
+        <AppConfigProvider initialConfig={initialConfig}>
+          {children}
+        </AppConfigProvider>
+      </TestQueryProvider>
     );
 
     const { result } = renderHook(() => useAppConfig(), {
@@ -279,13 +289,232 @@ describe("AppConfigContext", () => {
     expect(apiClient.get).toHaveBeenCalled();
   });
 
+  it("fetches on an auth page once a JWT arrives, flipping loading", async () => {
+    // Signing in on /login must load the config the first-login password
+    // prompt reads. useOnboardingOrchestrator keys its effect on
+    // [config?.enableLogin, configLoading] — both primitives — so the config
+    // value changing is not enough. loading has to go true then false, or the
+    // prompt never opens.
+    Object.defineProperty(window, "location", {
+      value: { pathname: "/login" },
+      writable: true,
+    });
+    let resolveFetch: (value: unknown) => void = () => {};
+    vi.mocked(apiClient.get).mockReturnValue(
+      new Promise((resolve) => {
+        resolveFetch = resolve;
+      }) as never,
+    );
+
+    const { result } = renderHook(() => useAppConfig(), { wrapper });
+    expect(apiClient.get).not.toHaveBeenCalled();
+    expect(result.current.loading).toBe(false);
+
+    await act(async () => {
+      window.dispatchEvent(new CustomEvent("jwt-available"));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    await waitFor(() => expect(result.current.loading).toBe(true));
+
+    await act(async () => {
+      resolveFetch({ status: 200, data: { enableLogin: true, isAdmin: true } });
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    expect(result.current.config).toEqual({
+      enableLogin: true,
+      isAdmin: true,
+    });
+  });
+
+  it("flips loading after sign-in even when a pre-login 401 already cached a config", async () => {
+    // The live sequence: the app loads on "/" while logged out, app-config 401s
+    // and resolves to the login-enabled default, then the user signs in on
+    // /login. That cached default means isPending is already false, so loading
+    // has to track isFetching or useOnboardingOrchestrator — whose effect deps
+    // are [config?.enableLogin, configLoading], both unchanged here — never
+    // re-runs, and the first-login password prompt never opens.
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    const sharedWrapper = ({ children }: { children: ReactNode }) => (
+      <QueryClientProvider client={client}>
+        <AppConfigProvider>{children}</AppConfigProvider>
+      </QueryClientProvider>
+    );
+
+    // Logged out on a non-auth page: 401 → default config, cached.
+    vi.mocked(apiClient.get).mockRejectedValueOnce(
+      Object.assign(new Error("Unauthorized"), {
+        response: { status: 401, data: {} },
+      }),
+    );
+    const loggedOut = renderHook(() => useAppConfig(), {
+      wrapper: sharedWrapper,
+    });
+    await waitFor(() =>
+      expect(loggedOut.result.current.config).toEqual({ enableLogin: true }),
+    );
+    expect(loggedOut.result.current.loading).toBe(false);
+    loggedOut.unmount();
+
+    // Now on /login, with that default still cached.
+    Object.defineProperty(window, "location", {
+      value: { pathname: "/login" },
+      writable: true,
+    });
+    let resolveFetch: (value: unknown) => void = () => {};
+    vi.mocked(apiClient.get).mockReturnValue(
+      new Promise((resolve) => {
+        resolveFetch = resolve;
+      }) as never,
+    );
+
+    const { result } = renderHook(() => useAppConfig(), {
+      wrapper: sharedWrapper,
+    });
+    expect(result.current.loading).toBe(false);
+
+    await act(async () => {
+      window.dispatchEvent(new CustomEvent("jwt-available"));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    await waitFor(() => expect(result.current.loading).toBe(true));
+
+    await act(async () => {
+      resolveFetch({
+        status: 200,
+        data: { enableLogin: true, isAdmin: true },
+      });
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    expect(result.current.config).toEqual({
+      enableLogin: true,
+      isAdmin: true,
+    });
+  });
+
+  it("serves a remounted provider from cache", async () => {
+    vi.mocked(apiClient.get).mockResolvedValue({
+      status: 200,
+      data: { enableLogin: false },
+    } as GetResponse);
+
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    const sharedWrapper = ({ children }: { children: ReactNode }) => (
+      <QueryClientProvider client={client}>
+        <AppConfigProvider>{children}</AppConfigProvider>
+      </QueryClientProvider>
+    );
+
+    const first = renderHook(() => useAppConfig(), { wrapper: sharedWrapper });
+    await waitFor(() => expect(first.result.current.loading).toBe(false));
+    first.unmount();
+
+    const second = renderHook(() => useAppConfig(), { wrapper: sharedWrapper });
+    // Cached, so no loading flash and no second request.
+    expect(second.result.current.loading).toBe(false);
+    expect(second.result.current.config).toEqual({ enableLogin: false });
+    expect(apiClient.get).toHaveBeenCalledTimes(1);
+  });
+
+  it("honours maxRetries for network failures", async () => {
+    expectConsole.error(/\[AppConfig\] Failed to fetch app config/);
+    vi.mocked(apiClient.get).mockRejectedValue(new Error("boom"));
+
+    const retryWrapper = ({ children }: { children: ReactNode }) => (
+      <TestQueryProvider>
+        <AppConfigProvider retryOptions={{ maxRetries: 2, initialDelay: 1 }}>
+          {children}
+        </AppConfigProvider>
+      </TestQueryProvider>
+    );
+
+    const { result } = renderHook(() => useAppConfig(), {
+      wrapper: retryWrapper,
+    });
+
+    await waitFor(() => expect(result.current.error).toBe("boom"));
+    expect(apiClient.get).toHaveBeenCalledTimes(3);
+  });
+
+  it("does not retry a 4xx", async () => {
+    expectConsole.error(/\[AppConfig\] Failed to fetch app config/);
+    vi.mocked(apiClient.get).mockRejectedValue(
+      Object.assign(new Error("nope"), { response: { status: 403, data: {} } }),
+    );
+
+    const retryWrapper = ({ children }: { children: ReactNode }) => (
+      <TestQueryProvider>
+        <AppConfigProvider retryOptions={{ maxRetries: 5, initialDelay: 1 }}>
+          {children}
+        </AppConfigProvider>
+      </TestQueryProvider>
+    );
+
+    const { result } = renderHook(() => useAppConfig(), {
+      wrapper: retryWrapper,
+    });
+
+    await waitFor(() => expect(result.current.error).toBe("nope"));
+    expect(apiClient.get).toHaveBeenCalledTimes(1);
+  });
+
+  it("stays loading when autoFetch is off and nothing seeds a config", async () => {
+    // Unresolved, not in-flight. Matches the pre-migration provider, which
+    // seeded loading from !hasResolvedConfig and never cleared it without a
+    // fetch. Reporting false here would tell consumers a null config is final.
+    const offWrapper = ({ children }: { children: ReactNode }) => (
+      <TestQueryProvider>
+        <AppConfigProvider autoFetch={false}>{children}</AppConfigProvider>
+      </TestQueryProvider>
+    );
+
+    const { result } = renderHook(() => useAppConfig(), {
+      wrapper: offWrapper,
+    });
+
+    expect(result.current.loading).toBe(true);
+    expect(result.current.config).toBeNull();
+    expect(apiClient.get).not.toHaveBeenCalled();
+  });
+
+  it("does not fetch when autoFetch is off", async () => {
+    const offWrapper = ({ children }: { children: ReactNode }) => (
+      <TestQueryProvider>
+        <AppConfigProvider
+          initialConfig={{ enableLogin: false }}
+          bootstrapMode="non-blocking"
+          autoFetch={false}
+        >
+          {children}
+        </AppConfigProvider>
+      </TestQueryProvider>
+    );
+
+    const { result } = renderHook(() => useAppConfig(), {
+      wrapper: offWrapper,
+    });
+
+    expect(result.current.loading).toBe(false);
+    expect(result.current.config).toEqual({ enableLogin: false });
+    expect(apiClient.get).not.toHaveBeenCalled();
+  });
+
   it("should use suppressErrorToast for all config requests", async () => {
     const mockConfig = { enableLogin: true };
 
     vi.mocked(apiClient.get).mockResolvedValueOnce({
       status: 200,
       data: mockConfig,
-    } as any);
+    } as GetResponse);
 
     renderHook(() => useAppConfig(), { wrapper });
 

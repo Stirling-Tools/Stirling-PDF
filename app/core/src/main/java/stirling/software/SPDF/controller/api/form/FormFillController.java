@@ -2,10 +2,20 @@ package stirling.software.SPDF.controller.api.form;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Stream;
+import java.util.zip.CRC32;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.poi.ss.usermodel.*;
@@ -36,6 +46,7 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.CsvSanitizer;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.FormUtils;
+import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
@@ -60,6 +71,25 @@ import tools.jackson.databind.ObjectMapper;
 @RequiredArgsConstructor
 public class FormFillController {
 
+    /** Carries the edits a request asked for but the document could not take, as base64 JSON. */
+    public static final String SKIPPED_EDITS_HEADER = "X-Stirling-Skipped-Field-Edits";
+
+    /** How many were skipped in total, which may exceed the number listed in the header above. */
+    public static final String SKIPPED_EDITS_TOTAL_HEADER = "X-Stirling-Skipped-Field-Edits-Total";
+
+    /** Keeps the header well inside Jetty's response-header budget. */
+    private static final int MAX_REPORTED_SKIPS = 20;
+
+    /** Bytes of encoded header value, well under the container's limit for the whole header set. */
+    private static final int MAX_SKIP_HEADER_BYTES = 4096;
+
+    private static final int MAX_SKIP_FIELD_CHARS = 120;
+
+    /** Entry names inside the {@code ?includeFields=true} bundle. */
+    private static final String FIELDS_ENTRY = "fields.json";
+
+    private static final String DOCUMENT_ENTRY = "document.pdf";
+
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final ObjectMapper objectMapper;
     private final TempFileManager tempFileManager;
@@ -67,6 +97,72 @@ public class FormFillController {
     private ResponseEntity<Resource> saveDocument(PDDocument document, String baseName)
             throws IOException {
         return WebResponseUtils.pdfDocToWebResponse(document, baseName + ".pdf", tempFileManager);
+    }
+
+    /**
+     * Rejects field names PDFBox cannot store before the document is touched, so the caller gets a
+     * 400 naming the offending character instead of a 200 with the field quietly missing.
+     */
+    private static void requireUsableFieldNames(
+            List<FormUtils.NewFormFieldDefinition> adds,
+            List<FormUtils.ModifyFormFieldDefinition> modifies) {
+        Stream<String> problems =
+                Stream.concat(
+                        adds.stream()
+                                .map(FormUtils.NewFormFieldDefinition::name)
+                                .map(FormUtils::invalidFieldNameReason),
+                        // A rename to the same name is not a rename, so a nested field whose
+                        // qualified name already contains a period is left alone.
+                        modifies.stream()
+                                .map(m -> FormUtils.renameProblem(m.targetName(), m.name())));
+        problems.filter(Objects::nonNull)
+                .findFirst()
+                .ifPresent(
+                        reason -> {
+                            throw ExceptionUtils.createIllegalArgumentException(
+                                    "error.invalidArgument", "{0}", reason);
+                        });
+    }
+
+    /**
+     * The body is the updated PDF, so dropped edits travel as a base64 JSON header;
+     * percent-encoding would turn every space into a plus sign.
+     */
+    private ResponseEntity<Resource> withSkippedEdits(
+            ResponseEntity<Resource> response, List<FormUtils.SkippedFieldEdit> skipped) {
+        if (skipped.isEmpty()) {
+            return response;
+        }
+        // A count cap alone is not enough: one very long field name can still overflow the
+        // header budget and turn the response into an error page, losing the edited PDF.
+        List<FormUtils.SkippedFieldEdit> reported = new ArrayList<>();
+        String encoded = "";
+        for (FormUtils.SkippedFieldEdit edit : skipped) {
+            if (reported.size() >= MAX_REPORTED_SKIPS) {
+                break;
+            }
+            reported.add(
+                    new FormUtils.SkippedFieldEdit(
+                            edit.operation(),
+                            FormUtils.abbreviate(edit.target(), MAX_SKIP_FIELD_CHARS),
+                            FormUtils.abbreviate(edit.reason(), MAX_SKIP_FIELD_CHARS)));
+            String candidate =
+                    Base64.getEncoder()
+                            .encodeToString(
+                                    objectMapper
+                                            .writeValueAsString(reported)
+                                            .getBytes(StandardCharsets.UTF_8));
+            if (candidate.length() > MAX_SKIP_HEADER_BYTES) {
+                reported.removeLast();
+                break;
+            }
+            encoded = candidate;
+        }
+        return ResponseEntity.status(response.getStatusCode())
+                .headers(response.getHeaders())
+                .header(SKIPPED_EDITS_TOTAL_HEADER, String.valueOf(skipped.size()))
+                .header(SKIPPED_EDITS_HEADER, encoded)
+                .body(response.getBody());
     }
 
     private static String buildBaseName(MultipartFile file, String suffix) {
@@ -262,6 +358,110 @@ public class FormFillController {
         }
     }
 
+    @PostMapping(value = "/add-fields", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(
+            summary = "Add new form fields",
+            description =
+                    "Creates new form fields in the provided PDF and returns the updated file")
+    public ResponseEntity<Resource> addFields(
+            @Parameter(
+                            description = "The input PDF file",
+                            required = true,
+                            content =
+                                    @Content(
+                                            mediaType = MediaType.APPLICATION_PDF_VALUE,
+                                            schema = @Schema(type = "string", format = "binary")))
+                    @RequestParam("file")
+                    MultipartFile file,
+            @Parameter(
+                            description = "JSON array of new field definitions",
+                            example =
+                                    "[{\"name\":\"NewField\",\"type\":\"text\",\"pageIndex\":0,"
+                                            + "\"x\":50,\"y\":700,\"width\":200,\"height\":20}]")
+                    @RequestPart(value = "fields", required = false)
+                    byte[] fieldsPayload)
+            throws IOException {
+
+        String rawFields = decodePart(fieldsPayload);
+        List<FormUtils.NewFormFieldDefinition> definitions =
+                FormPayloadParser.parseNewFieldDefinitions(objectMapper, rawFields);
+        if (definitions.isEmpty()) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.dataRequired",
+                    "{0} must contain at least one definition",
+                    "fields payload");
+        }
+
+        requireUsableFieldNames(definitions, List.of());
+
+        List<FormUtils.SkippedFieldEdit> skipped = new ArrayList<>();
+        return withSkippedEdits(
+                processSingleFile(
+                        file,
+                        "updated",
+                        document -> FormUtils.addNewFields(document, definitions, skipped)),
+                skipped);
+    }
+
+    @PostMapping(value = "/edit-fields", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(
+            summary = "Apply a batch of form field edits",
+            description =
+                    "Adds, modifies, and deletes form fields in a single request (one document"
+                            + " load/save) and returns the updated file")
+    public ResponseEntity<Resource> editFields(
+            @Parameter(
+                            description = "The input PDF file",
+                            required = true,
+                            content =
+                                    @Content(
+                                            mediaType = MediaType.APPLICATION_PDF_VALUE,
+                                            schema = @Schema(type = "string", format = "binary")))
+                    @RequestParam("file")
+                    MultipartFile file,
+            @Parameter(
+                            description =
+                                    "JSON object with optional 'add', 'modify' and 'delete'"
+                                            + " sections",
+                            example =
+                                    "{\"add\":[{\"name\":\"f\",\"type\":\"text\",\"pageIndex\":0,"
+                                            + "\"x\":50,\"y\":700,\"width\":200,\"height\":20}],"
+                                            + "\"modify\":[],\"delete\":[]}")
+                    @RequestPart(value = "edits", required = false)
+                    byte[] editsPayload,
+            @Parameter(
+                            description =
+                                    "Return a ZIP holding the updated PDF plus the field list it"
+                                            + " produced, instead of the bare PDF. Saves re-uploading"
+                                            + " the result just to read its fields back.")
+                    @RequestParam(value = "includeFields", defaultValue = "false")
+                    boolean includeFields)
+            throws IOException {
+
+        String rawEdits = decodePart(editsPayload);
+        FormUtils.FieldEditBatch batch = FormPayloadParser.parseFieldEdits(objectMapper, rawEdits);
+        if (batch.add().isEmpty() && batch.modify().isEmpty() && batch.delete().isEmpty()) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.dataRequired", "{0} must contain at least one edit", "edits payload");
+        }
+        requireUsableFieldNames(batch.add(), batch.modify());
+
+        List<FormUtils.SkippedFieldEdit> skipped = new ArrayList<>();
+        return withSkippedEdits(
+                processSingleFile(
+                        file,
+                        "updated",
+                        includeFields,
+                        document ->
+                                FormUtils.applyFieldEdits(
+                                        document,
+                                        batch.add(),
+                                        batch.modify(),
+                                        batch.delete(),
+                                        skipped)),
+                skipped);
+    }
+
     @PostMapping(value = "/modify-fields", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Modify existing form fields",
@@ -290,8 +490,15 @@ public class FormFillController {
                     "updates payload");
         }
 
-        return processSingleFile(
-                file, "updated", document -> FormUtils.modifyFormFields(document, modifications));
+        requireUsableFieldNames(List.of(), modifications);
+
+        List<FormUtils.SkippedFieldEdit> skipped = new ArrayList<>();
+        return withSkippedEdits(
+                processSingleFile(
+                        file,
+                        "updated",
+                        document -> FormUtils.modifyFormFields(document, modifications, skipped)),
+                skipped);
     }
 
     @PostMapping(value = "/delete-fields", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -324,8 +531,13 @@ public class FormFillController {
                     "error.dataRequired", "{0} must contain at least one value", "names payload");
         }
 
-        return processSingleFile(
-                file, "updated", document -> FormUtils.deleteFormFields(document, names));
+        List<FormUtils.SkippedFieldEdit> skipped = new ArrayList<>();
+        return withSkippedEdits(
+                processSingleFile(
+                        file,
+                        "updated",
+                        document -> FormUtils.deleteFormFields(document, names, skipped)),
+                skipped);
     }
 
     @PostMapping(value = "/fill", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -363,13 +575,81 @@ public class FormFillController {
 
     private ResponseEntity<Resource> processSingleFile(
             MultipartFile file, String suffix, DocumentProcessor processor) throws IOException {
+        return processSingleFile(file, suffix, false, processor);
+    }
+
+    private ResponseEntity<Resource> processSingleFile(
+            MultipartFile file, String suffix, boolean includeFields, DocumentProcessor processor)
+            throws IOException {
         requirePdf(file);
 
         String baseName = buildBaseName(file, suffix);
         try (PDDocument document = pdfDocumentFactory.load(file)) {
             FormUtils.repairMissingWidgetPageReferences(document);
             processor.accept(document);
-            return saveDocument(document, baseName);
+            return includeFields
+                    ? saveDocumentWithFields(document, baseName)
+                    : saveDocument(document, baseName);
+        }
+    }
+
+    /**
+     * Answers "what fields does the saved file have?" from the document still open here, so the
+     * caller does not have to upload the result back to ask.
+     */
+    private ResponseEntity<Resource> saveDocumentWithFields(PDDocument document, String baseName)
+            throws IOException {
+        TempFile zip = null;
+        boolean zipTransferred = false;
+        try (TempFile pdf = tempFileManager.createManagedTempFile(".pdf")) {
+            document.save(pdf.getFile());
+            // Read the fields after the save so they describe the bytes actually being returned.
+            byte[] fields =
+                    objectMapper.writeValueAsBytes(
+                            FormUtils.extractFormFieldsWithCoordinates(document));
+            zip = tempFileManager.createManagedTempFile(".zip");
+            writeFieldBundle(zip.getPath(), pdf.getPath(), fields);
+            ResponseEntity<Resource> response =
+                    WebResponseUtils.zipFileToWebResponse(zip, baseName + ".zip");
+            zipTransferred = true;
+            return response;
+        } finally {
+            if (zip != null && !zipTransferred) {
+                zip.close();
+            }
+        }
+    }
+
+    /**
+     * Deflates the JSON because it is text, but stores the PDF: its streams are already compressed,
+     * so deflating costs ~25ms per MB to save a few percent.
+     */
+    private static void writeFieldBundle(Path zipPath, Path pdfPath, byte[] fields)
+            throws IOException {
+        long pdfSize = Files.size(pdfPath);
+        CRC32 crc = new CRC32();
+        try (InputStream in = Files.newInputStream(pdfPath)) {
+            byte[] buffer = new byte[8192];
+            for (int read; (read = in.read(buffer)) != -1; ) {
+                crc.update(buffer, 0, read);
+            }
+        }
+        try (ZipOutputStream zip = new ZipOutputStream(Files.newOutputStream(zipPath))) {
+            ZipEntry fieldsEntry = new ZipEntry(FIELDS_ENTRY);
+            fieldsEntry.setMethod(ZipEntry.DEFLATED);
+            zip.putNextEntry(fieldsEntry);
+            zip.write(fields);
+            zip.closeEntry();
+
+            ZipEntry documentEntry = new ZipEntry(DOCUMENT_ENTRY);
+            documentEntry.setMethod(ZipEntry.STORED);
+            documentEntry.setSize(pdfSize);
+            documentEntry.setCompressedSize(pdfSize);
+            documentEntry.setCrc(crc.getValue());
+            zip.putNextEntry(documentEntry);
+            Files.copy(pdfPath, zip);
+            zip.closeEntry();
+            zip.finish();
         }
     }
 

@@ -1,0 +1,55 @@
+/* Desktop (Windows) custom window chrome.
+ *
+ * The window controls are a fixed overlay in the top-right corner (see
+ * WindowTitleBar). These rules keep the app's own chrome clear of that corner.
+ *
+ * Loaded only in the desktop build (imported by WindowTitleBar) and gated on the
+ * data-window-controls flag the overlay sets on <html> only when active, so it
+ * is inert on macOS/Linux (flag never set) and absent from web builds. It
+ * targets core layout class names on purpose: this is the single, contained
+ * coupling point between the desktop chrome and the core layout, kept here in
+ * the desktop layer so the core components stay unaware of window chrome. */
+
+html[data-window-controls="custom"] {
+  --wincontrols-w: 8.625rem; /* three 46px controls */
+  --wincontrols-h: 2rem; /* control height */
+}
+
+/* Files-page toolbar spans the width; reflow search + actions left of the
+   controls by shrinking the grid's right edge. */
+html[data-window-controls="custom"] .files-page-header {
+  padding-right: calc(0.75rem + var(--wincontrols-w));
+}
+
+/* Right panel, expanded: move the header (PDF Tools, or an active tool such as
+   Automate) below the controls instead of squashing its title. */
+html[data-window-controls="custom"] .tool-panel__compact-header,
+html[data-window-controls="custom"] .tool-panel .sui-panelhdr {
+  margin-top: var(--wincontrols-h);
+}
+
+/* Right panel, collapsed: the strip is narrower than the controls, so push its
+   expand toggle straight down. */
+html[data-window-controls="custom"] .tool-panel__collapsed-strip {
+  padding-top: calc(10px + var(--wincontrols-h));
+}
+
+/* Viewer top bar: when the right panel is collapsed the bar widens under the
+   controls. :has() detects the collapsed strip (no flag needed in core) and we
+   push the right cluster clear. --nav-rail-w is the collapsed strip's width, so
+   only the controls' overhang past it is reserved. */
+html[data-window-controls="custom"]
+  .app-frame__content:has(.tool-panel__collapsed-strip)
+  .workbench-bar-globals {
+  margin-right: calc(var(--wincontrols-w) - var(--nav-rail-w));
+}
+
+/* Mobile layout: the top bar spans the full width. Keep the brand top-left
+   (already clear of the top-right controls) and drop the view switcher below
+   them by top-aligning the row and nudging the switcher down. */
+html[data-window-controls="custom"] .mobile-toggle {
+  align-items: flex-start;
+}
+html[data-window-controls="custom"] .mobile-toggle-buttons {
+  margin-top: var(--wincontrols-h);
+}

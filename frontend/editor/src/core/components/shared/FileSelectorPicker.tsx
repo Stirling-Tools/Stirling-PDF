@@ -269,7 +269,7 @@ export function FileSelectorPicker({
               responseType: "blob",
               suppressErrorToast: true,
               skipAuthRedirect: true,
-            } as any,
+            },
           );
           const ct = readResponseHeader(res.headers, "content-type");
           const disp = readResponseHeader(res.headers, "content-disposition");
@@ -287,7 +287,7 @@ export function FileSelectorPicker({
               responseType: "blob",
               suppressErrorToast: true,
               skipAuthRedirect: true,
-            } as any,
+            },
           );
           const ct = readResponseHeader(res.headers, "content-type");
           const disp = readResponseHeader(res.headers, "content-disposition");
@@ -404,6 +404,7 @@ export function FileSelectorPicker({
             }}
             aria-expanded={isOpen}
             aria-haspopup="listbox"
+            aria-disabled={disabled || undefined}
           >
             <Text
               size="sm"

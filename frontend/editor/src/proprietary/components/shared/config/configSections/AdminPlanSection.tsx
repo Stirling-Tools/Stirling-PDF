@@ -12,7 +12,7 @@ import AvailablePlansSection from "@app/components/shared/config/configSections/
 import StaticPlanSection from "@app/components/shared/config/configSections/plan/StaticPlanSection";
 import LicenseKeySection from "@app/components/shared/config/configSections/plan/LicenseKeySection";
 import { alert } from "@app/components/toast";
-import { InfoBanner } from "@app/components/shared/InfoBanner";
+import { AppBanner } from "@app/components/shared/AppBanner";
 import { useLicenseAlert } from "@app/hooks/useLicenseAlert";
 import {
   getPreferredCurrency,
@@ -115,10 +115,10 @@ const AdminPlanSection: React.FC = () => {
       if (currentTier === "free" && planGroup.tier === "enterprise") {
         alert({
           alertType: "warning",
-          title: t("plan.enterprise.requiresServer", "Server Plan Required"),
+          title: t("plan.enterprise.requiresServer", "Requires Team plan"),
           body: t(
             "plan.enterprise.requiresServerMessage",
-            "Please upgrade to the Server plan first before upgrading to Enterprise.",
+            "Please upgrade to the Team plan first before upgrading to Enterprise.",
           ),
         });
         return;
@@ -200,7 +200,7 @@ const AdminPlanSection: React.FC = () => {
       <LoginRequiredBanner show={!loginEnabled} />
 
       {shouldShowLicenseWarning && (
-        <InfoBanner
+        <AppBanner
           icon="warning-rounded"
           tone="warning"
           title={t(
@@ -215,13 +215,6 @@ const AdminPlanSection: React.FC = () => {
           buttonIcon="upgrade-rounded"
           onButtonClick={scrollToPlans}
           dismissible={false}
-          minHeight={68}
-          background="#FFF4E6"
-          borderColor="var(--mantine-color-orange-7)"
-          textColor="#9A3412"
-          iconColor="#EA580C"
-          buttonVariant="filled"
-          buttonColor="orange.7"
         />
       )}
 

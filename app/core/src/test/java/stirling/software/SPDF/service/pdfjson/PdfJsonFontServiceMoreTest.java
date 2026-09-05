@@ -485,9 +485,9 @@ class PdfJsonFontServiceMoreTest {
     class DetectExtra {
 
         @Test
-        @DisplayName("detectFontFlavor recognises ttcf as cff and otf via OTTO")
+        @DisplayName("detectFontFlavor rejects ttcf collections and recognises otf via OTTO")
         void detectFlavorExtra() {
-            assertEquals("cff", service.detectFontFlavor(new byte[] {0x74, 0x74, 0x63, 0x66}));
+            assertNull(service.detectFontFlavor(new byte[] {0x74, 0x74, 0x63, 0x66}));
             List<byte[]> otfVariants = List.of(new byte[] {0x4F, 0x54, 0x54, 0x4F});
             for (byte[] otf : otfVariants) {
                 assertEquals("otf", service.detectFontFlavor(otf));

@@ -6,6 +6,7 @@ import apiClient from "@app/services/apiClient";
 import { zipFileService } from "@app/services/zipFileService";
 import { ResourceManager } from "@app/utils/resourceManager";
 import { AUTOMATION_CONSTANTS } from "@app/constants/automation";
+import { extractErrorMessage } from "@app/utils/toolErrorHandler";
 
 export interface AutomationProcessingOptions {
   timeout?: number;
@@ -97,7 +98,7 @@ export class AutomationFileProcessor {
     try {
       const response = await apiClient.post(endpoint, formData, {
         responseType: options.responseType || "blob",
-        timeout: options.timeout || AUTOMATION_CONSTANTS.OPERATION_TIMEOUT,
+        ...(options.timeout !== undefined ? { timeout: options.timeout } : {}),
       });
 
       if (response.status !== 200) {
@@ -121,13 +122,11 @@ export class AutomationFileProcessor {
         files: [resultFile],
         errors: [],
       };
-    } catch (error: any) {
+    } catch (error) {
       return {
         success: false,
         files: [],
-        errors: [
-          `Automation step failed: ${error.response?.data || error.message}`,
-        ],
+        errors: [`Automation step failed: ${extractErrorMessage(error)}`],
       };
     }
   }
@@ -143,7 +142,7 @@ export class AutomationFileProcessor {
     try {
       const response = await apiClient.post(endpoint, formData, {
         responseType: options.responseType || "blob",
-        timeout: options.timeout || AUTOMATION_CONSTANTS.OPERATION_TIMEOUT,
+        ...(options.timeout !== undefined ? { timeout: options.timeout } : {}),
       });
 
       if (response.status !== 200) {
@@ -158,13 +157,11 @@ export class AutomationFileProcessor {
 
       // Multi-file responses are typically ZIP files
       return await this.extractAutomationZipFiles(response.data);
-    } catch (error: any) {
+    } catch (error) {
       return {
         success: false,
         files: [],
-        errors: [
-          `Automation step failed: ${error.response?.data || error.message}`,
-        ],
+        errors: [`Automation step failed: ${extractErrorMessage(error)}`],
       };
     }
   }
@@ -173,7 +170,7 @@ export class AutomationFileProcessor {
    * Build form data for automation tool operations
    */
   static buildAutomationFormData(
-    parameters: Record<string, any>,
+    parameters: Record<string, unknown>,
     files: File | File[],
     fileFieldName: string = "fileInput",
   ): FormData {
@@ -186,12 +183,15 @@ export class AutomationFileProcessor {
       formData.append(fileFieldName, files);
     }
 
-    // Add parameters
+    // Add parameters. FormData coerces non-Blob values to strings; do it
+    // explicitly so the value type is honest.
     Object.entries(parameters).forEach(([key, value]) => {
       if (Array.isArray(value)) {
-        value.forEach((item) => formData.append(key, item));
+        value.forEach((item) =>
+          formData.append(key, item instanceof Blob ? item : String(item)),
+        );
       } else if (value !== undefined && value !== null) {
-        formData.append(key, value);
+        formData.append(key, value instanceof Blob ? value : String(value));
       }
     });
 

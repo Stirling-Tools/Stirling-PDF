@@ -1,59 +1,74 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button, Tabs, type TabItem } from "@app/ui";
 import { useView } from "@portal/contexts/ViewContext";
-import { DeploymentsTab } from "@portal/components/infrastructure/DeploymentsTab";
+import { useEnterpriseEnabled } from "@portal/hooks/useEnterpriseEnabled";
 import { ApiKeysTab } from "@portal/components/infrastructure/ApiKeysTab";
-import { SecurityTab } from "@portal/components/infrastructure/SecurityTab";
-import { ModelsTab } from "@portal/components/infrastructure/ModelsTab";
-import { StorageTab } from "@portal/components/infrastructure/StorageTab";
 import { AuditTab } from "@portal/components/infrastructure/AuditTab";
+import { EncryptionPanel } from "@portal/components/infrastructure/EncryptionPanel";
 import "@portal/views/Infrastructure.css";
 
-type InfraTab =
-  | "deployments"
-  | "api-keys"
-  | "security"
-  | "models"
-  | "storage"
-  | "audit";
+type InfraTab = "api-keys" | "audit" | "storage";
 
-const INFRA_TABS: InfraTab[] = [
-  "deployments",
-  "api-keys",
-  "security",
-  "models",
-  "storage",
-  "audit",
-];
+/** Shown but inert: no backend behind these screens yet. */
+type DisabledInfraTab = "deployments" | "security" | "models";
 
 export function Infrastructure() {
   const { t } = useTranslation();
-  const [tab, setTab] = useState<InfraTab>("deployments");
+  const [tab, setTab] = useState<InfraTab>("api-keys");
   const { setActiveView } = useView();
   const [searchParams, setSearchParams] = useSearchParams();
+  // Audit is Enterprise-only; disabled (greyed, inert) on non-enterprise instances.
+  const enterprise = useEnterpriseEnabled();
+  const auditEnabled = enterprise.enabled;
+
+  const canOpenTab = useCallback(
+    (key: string) =>
+      key === "api-keys" ||
+      key === "storage" ||
+      (key === "audit" && auditEnabled),
+    [auditEnabled],
+  );
 
   // Deep-link (?tab=<key>) from elsewhere (e.g. the home visualiser's outcome
   // cards → audit log): open that tab, then drop the param.
   useEffect(() => {
     const requested = searchParams.get("tab");
     if (!requested) return;
-    if ((INFRA_TABS as string[]).includes(requested)) {
+    if (canOpenTab(requested)) {
       setTab(requested as InfraTab);
     }
     const next = new URLSearchParams(searchParams);
     next.delete("tab");
     setSearchParams(next, { replace: true });
-  }, [searchParams, setSearchParams]);
+  }, [searchParams, setSearchParams, canOpenTab]);
 
-  const tabs: TabItem<InfraTab>[] = [
-    { key: "deployments", label: t("portal.infrastructure.tabs.deployments") },
+  const tabs: TabItem<InfraTab | DisabledInfraTab>[] = [
     { key: "api-keys", label: t("portal.infrastructure.tabs.apiKeys") },
-    { key: "security", label: t("portal.infrastructure.tabs.security") },
-    { key: "models", label: t("portal.infrastructure.tabs.models") },
+    {
+      key: "audit",
+      label: t("portal.infrastructure.tabs.audit"),
+      disabled: !auditEnabled,
+    },
+    {
+      key: "deployments",
+      label: t("portal.infrastructure.tabs.deployments"),
+      disabled: true,
+    },
+    {
+      key: "security",
+      label: t("portal.infrastructure.tabs.security"),
+      disabled: true,
+    },
+    {
+      key: "models",
+      label: t("portal.infrastructure.tabs.models"),
+      disabled: true,
+    },
+    // Enabled again: unlike the mock-backed tabs removed in #7497, this one
+    // reads the real /api/v1/admin/storage-encryption surface.
     { key: "storage", label: t("portal.infrastructure.tabs.storage") },
-    { key: "audit", label: t("portal.infrastructure.tabs.audit") },
   ];
 
   return (
@@ -67,30 +82,32 @@ export function Infrastructure() {
             {t("portal.infrastructure.subtitle")}
           </p>
         </div>
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={() => setActiveView("editor")}
-        >
+        <Button fat onClick={() => setActiveView("editor")}>
           {t("portal.infrastructure.manageEditorDeployment")}
         </Button>
       </header>
 
-      <Tabs<InfraTab>
+      <Tabs<InfraTab | DisabledInfraTab>
         items={tabs}
         activeKey={tab}
-        onChange={setTab}
+        onChange={(key) => {
+          if (canOpenTab(key)) setTab(key as InfraTab);
+        }}
         variant="underline"
         ariaLabel={t("portal.infrastructure.sectionsAriaLabel")}
       />
 
       <div className="portal-infra__panel">
-        {tab === "deployments" && <DeploymentsTab />}
         {tab === "api-keys" && <ApiKeysTab />}
-        {tab === "security" && <SecurityTab />}
-        {tab === "models" && <ModelsTab />}
-        {tab === "storage" && <StorageTab />}
         {tab === "audit" && <AuditTab />}
+        {tab === "storage" && (
+          // Treat "still resolving" as available: flashing "your licence records
+          // no audit trail" at an Enterprise operator is worse than the notice
+          // arriving a beat late.
+          <EncryptionPanel
+            auditAvailable={enterprise.loading || enterprise.enabled}
+          />
+        )}
       </div>
     </div>
   );

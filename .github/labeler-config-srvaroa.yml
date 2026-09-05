@@ -67,6 +67,7 @@ labels:
       - 'frontend/**'
       - 'frontend/.*'
       - 'frontend/**/.*'
+      - '.taskfiles/frontend.yml'
 
   - label: 'Tauri'
     files:

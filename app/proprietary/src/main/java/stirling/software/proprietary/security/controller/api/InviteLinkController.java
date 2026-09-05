@@ -450,6 +450,25 @@ public class InviteLinkController {
                 return invalidInviteResponse();
             }
 
+            // Re-check the licence limit at redemption. The check when the link was generated
+            // counted the invites outstanding at that moment; users can have been added since, and
+            // a link issued while slots were free must not be able to create the user over the cap.
+            if (userLicenseSettingsService.wouldExceedLimit(1)) {
+                int maxUsers = userLicenseSettingsService.calculateMaxAllowedUsers();
+                log.warn(
+                        "Invite redemption refused for {}: licence limit of {} users reached",
+                        effectiveEmail,
+                        maxUsers);
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(
+                                Map.of(
+                                        "error",
+                                        "This workspace has reached its limit of "
+                                                + maxUsers
+                                                + " users. Ask an administrator to add capacity,"
+                                                + " then use this link again."));
+            }
+
             // Create the user account
             SaveUserRequest.Builder builder =
                     SaveUserRequest.builder()

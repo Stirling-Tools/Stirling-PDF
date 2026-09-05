@@ -8,11 +8,7 @@ import {
   StatTile,
   StatusBadge,
 } from "@app/ui";
-import {
-  humanizeEndpoint,
-  type DecoratedPolicy,
-  type PolicyActivityItem,
-} from "@portal/api/policies";
+import { humanizeEndpoint, type DecoratedPolicy } from "@portal/api/policies";
 import "@portal/views/Policies.css";
 
 interface PolicyDetailPanelProps {
@@ -20,11 +16,9 @@ interface PolicyDetailPanelProps {
   busy?: boolean;
   onClose: () => void;
   onEdit: () => void;
-  onRun?: () => void;
   onTogglePause: () => void;
   onDelete: () => void;
   onClearHistory?: () => void;
-  onRetry?: (item: PolicyActivityItem) => void;
 }
 
 function CheckIcon() {
@@ -104,11 +98,9 @@ export function PolicyDetailPanel({
   busy = false,
   onClose,
   onEdit,
-  onRun,
   onTogglePause,
   onDelete,
   onClearHistory,
-  onRetry,
 }: PolicyDetailPanelProps) {
   const { t } = useTranslation();
   const [confirmingClear, setConfirmingClear] = useState(false);
@@ -116,12 +108,15 @@ export function PolicyDetailPanel({
   const { category, config, state, steps, stats, activity } = policy;
   const isPaused = state.status === "paused";
   const canDelete = state.isDefault !== true;
+  // Editor participation is its own flag (runsOnEditor), not a source. A legacy policy still carries
+  // "editor" in its stored sources until re-saved, so drop it here to count only real watched sources.
+  const realSources = state.sources.filter((s) => s !== "editor");
   // Processed history only exists for watched sources; editor uploads are never ledgered.
   const canClearHistory =
-    onClearHistory !== undefined && state.sources.some((s) => s !== "editor");
+    onClearHistory !== undefined && realSources.length > 0;
 
   const enforceItems = steps.length > 0 ? steps.map((s) => s.operation) : null;
-  const hasEditorSource = state.sources.includes("editor");
+  const hasEditorSource = state.runsOnEditor === true;
   const trigger =
     state.runOn === "export"
       ? t("portal.policies.detail.onEveryExport")
@@ -130,11 +125,6 @@ export function PolicyDetailPanel({
     state.outputMode === "new_file"
       ? t("portal.policies.detail.outputAsNewFile")
       : t("portal.policies.detail.outputAsNewVersion");
-
-  function sourceLabel(id: string) {
-    if (id === "editor") return t("portal.sources.types.editor.label");
-    return id;
-  }
 
   return (
     <>
@@ -155,17 +145,6 @@ export function PolicyDetailPanel({
                 style={{ marginRight: "auto" }}
               >
                 {t("portal.policies.detail.actions.delete")}
-              </Button>
-            )}
-            {onRun && (
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={onRun}
-                disabled={busy}
-                style={canDelete ? undefined : { marginRight: "auto" }}
-              >
-                {t("portal.policies.detail.actions.runNow")}
               </Button>
             )}
             {canClearHistory && (
@@ -196,10 +175,7 @@ export function PolicyDetailPanel({
       >
         {/* Status + trigger strip */}
         <div className="portal-policies__detail-status">
-          <StatusBadge
-            tone={isPaused ? "warning" : "success"}
-            pulse={!isPaused}
-          >
+          <StatusBadge tone={isPaused ? "warning" : "success"}>
             {isPaused
               ? t("portal.policies.status.paused")
               : t("portal.policies.status.active")}
@@ -246,13 +222,13 @@ export function PolicyDetailPanel({
         </div>
 
         {/* Sources */}
-        {state.sources.length > 0 && (
+        {realSources.length > 0 && (
           <div className="portal-policies__detail-inline">
             <span className="portal-policies__detail-inline-label">
               {t("portal.policies.detail.sources")}
             </span>
             <span className="portal-policies__detail-inline-value">
-              {state.sources.map(sourceLabel).join(" · ")}
+              {realSources.join(" · ")}
             </span>
           </div>
         )}
@@ -300,16 +276,6 @@ export function PolicyDetailPanel({
                 <span className="portal-policies__activity-time">
                   {item.time}
                 </span>
-                {item.status === "flagged" && onRetry && (
-                  <Button
-                    type="button"
-                    variant="quiet"
-                    className="portal-policies__link portal-policies__activity-retry"
-                    onClick={() => onRetry(item)}
-                  >
-                    {t("portal.policies.detail.retry")}
-                  </Button>
-                )}
               </div>
             ))}
           </Card>

@@ -28,6 +28,15 @@
   --radius-xl: 16px;
   --radius-pill: 9999px;
 
+  --radius-nav: 0.625rem;
+  --nav-gutter: 0.5rem;
+  /* Every minimised rail is this wide, so they line up as one column of icons. */
+  --nav-rail-w: 3rem;
+  /* Header row, so the rail's brand and a sidebar's wordmark line up. */
+  --nav-header-h: 3rem;
+  --sidebar-w: 16.25rem;
+  --sidebar-collapsed-w: var(--nav-rail-w);
+
   /* ── Layout sizing ── */
   --footer-height: 2rem;
   --landing-stack-w: 224px;
@@ -51,12 +60,14 @@
   --motion-base: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   --motion-slow: 0.3s ease;
   --motion-enter: 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  --motion-spring: 0.22s cubic-bezier(0.32, 0.72, 0, 1);
   --fullscreen-anim-duration-in: 0.28s;
   --fullscreen-anim-duration-out: 0.22s;
 
   /* ── Z-index ladder ── */
   --z-dropdown: 25;
   --z-drawer: 50;
+  --z-popover: 150;
   --z-toast: 200;
   /* Fullscreen tool-picker surfaces (editor) */
   --z-fullscreen-icon-svg: 1;

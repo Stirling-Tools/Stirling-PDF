@@ -1,125 +1,205 @@
-import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Banner, Button, Modal } from "@app/ui";
-import SupabaseLoginForm from "@app/auth/ui/SupabaseLoginForm";
+import { Button } from "@app/ui";
+import { FlowModal } from "@portal/components/shared/FlowModal";
+import { StepModalHeader } from "@portal/components/shared/StepModalHeader";
+import { ConnectAskStep } from "@portal/components/account-link/connect/ConnectAskStep";
+import { ConnectHandoffGhost } from "@portal/components/account-link/connect/ConnectHandoffGhost";
 import {
-  useSupabaseLogin,
-  type SupabaseLoginSession,
-} from "@app/auth/ui/useSupabaseLogin";
-import "@app/auth/ui/auth-theme.css";
-import {
-  ensureSaasSupabase,
-  isSaasSupabaseConfigured,
-  PENDING_LINK_KEY,
-  SAAS_OAUTH_PROVIDERS,
-} from "@portal/auth/saasSupabase";
+  ConnectCallbackView,
+  isRetryableOutcome,
+  type ConnectOutcome,
+} from "@portal/components/account-link/ConnectCallbackView";
+import { useConnectHandoff } from "@portal/hooks/useConnectHandoff";
+import "@portal/views/ConnectCallback.css";
+
+/**
+ * Ordered, so a step's position in this list is its number and the list's length is the total.
+ * Adding or removing a step means editing this and its arm of `stepBody`, nothing else.
+ */
+const STEP_ORDER = ["ask", "handoff", "outcome"] as const;
+
+type StepId = (typeof STEP_ORDER)[number];
 
 interface Props {
   open: boolean;
   onClose: () => void;
-  /**
-   * "link" registers this instance against the signed-in account; "reauth" only
-   * refreshes an expired SaaS session (the instance is already linked). The mode
-   * is persisted across the OAuth redirect so the SSO-return handler doesn't
-   * re-register on a reauth.
-   */
+  /** "reauth" only re-establishes the browser session, so it stays one step with no pitch. */
   mode?: "link" | "reauth";
-  /** Called with the SaaS session after a successful sign-in. */
-  onLinked: (session: SupabaseLoginSession) => void | Promise<void>;
+  /** Published by the callback route; present means the admin is returning from Stirling. */
+  outcome?: ConnectOutcome | null;
 }
 
 /**
- * In-app account-link login. Signs the admin in to their Stirling (SaaS) account
- * via the shared Supabase login (SSO + email/password), then hands the resulting
- * session to the caller to register this instance. No popup; the device secret
- * never reaches the browser. SSO redirects away and is finished by useAccountLink
- * on return.
+ * The progress bar spans the redirect on purpose: the admin leaves on the hand-off and returns on
+ * the outcome step of the dialog they left, rather than being greeted by a different one.
  */
 export function LinkAccountModal({
   open,
   onClose,
   mode = "link",
-  onLinked,
+  outcome = null,
 }: Props) {
   const { t } = useTranslation();
-  useEffect(() => {
-    if (open) ensureSaasSupabase();
-  }, [open]);
-
   const reauth = mode === "reauth";
-  const login = useSupabaseLogin({
-    providers: SAAS_OAUTH_PROVIDERS,
-    // Return to the current page after SSO; the SSO-return handler in
-    // useAccountLink reads the persisted mode so it links vs. only refreshes.
-    redirectTo: window.location.href,
-    onBeforeOAuth: () => sessionStorage.setItem(PENDING_LINK_KEY, mode),
-    onSuccess: async (session) => {
-      await onLinked(session);
-      onClose();
-    },
-  });
+  const handoff = useConnectHandoff(reauth);
+
+  // Busy outranks a stale outcome, or a retry sits on the old result until the browser leaves.
+  let step: StepId = "ask";
+  if (handoff.busy) step = "handoff";
+  else if (outcome) step = "outcome";
+
+  const title = stepTitle();
+  const current = STEP_ORDER.indexOf(step) + 1;
+
+  // Re-auth is one step, so it carries no count and no progress bar.
+  const stepChrome = reauth
+    ? {}
+    : {
+        step: current,
+        total: STEP_ORDER.length,
+        stepLabel: t(
+          "portal.accountLink.connect.step",
+          "Step {{current}} of {{total}}",
+          { current, total: STEP_ORDER.length },
+        ),
+      };
 
   return (
-    <Modal
+    <FlowModal
       open={open}
       onClose={onClose}
-      width="md"
-      title={
-        reauth
-          ? t("portal.accountLink.modal.reauthTitle", "Sign in again")
-          : t(
-              "portal.accountLink.modal.linkTitle",
-              "Link your Stirling account",
-            )
-      }
-      subtitle={
-        reauth
-          ? t(
-              "portal.accountLink.modal.reauthSubtitle",
-              "Your session expired — sign back in to your Stirling account. Your instance stays linked.",
-            )
-          : t(
-              "portal.accountLink.modal.linkSubtitle",
-              "Sign in to the account this server should bill against.",
-            )
-      }
+      label={title}
+      footer={stepFooter()}
     >
-      {isSaasSupabaseConfigured ? (
-        <SupabaseLoginForm state={login} />
-      ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-          <Banner
-            tone="neutral"
-            title={t(
-              "portal.accountLink.modal.loginNotConfigured.title",
-              "SaaS login not configured",
-            )}
-          >
-            {t("portal.accountLink.modal.loginNotConfigured.before", "Set")}{" "}
-            <code>VITE_SUPABASE_URL</code>{" "}
-            {t("portal.accountLink.modal.loginNotConfigured.and", "and")}{" "}
-            <code>VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY</code>{" "}
-            {t(
-              "portal.accountLink.modal.loginNotConfigured.after",
-              "to enable in-app linking against the hosted Stirling account.",
-            )}
-          </Banner>
-          {import.meta.env.DEV && (
-            <Button
-              variant="secondary"
-              onClick={async () => {
-                await onLinked({ access_token: "dev-stub-jwt" });
-                onClose();
-              }}
-            >
-              {t(
-                "portal.accountLink.modal.simulateSignIn",
-                "Simulate sign-in (dev)",
-              )}
-            </Button>
-          )}
-        </div>
-      )}
-    </Modal>
+      <StepModalHeader
+        brand
+        title={title}
+        {...stepChrome}
+        closeLabel={t("portal.accountLink.connect.close", "Close")}
+        onClose={onClose}
+      />
+      {stepBody()}
+    </FlowModal>
   );
+
+  function stepTitle(): string {
+    if (reauth) {
+      return t("portal.accountLink.modal.reauthTitle", "Sign in again");
+    }
+    if (step === "ask") {
+      return t(
+        "portal.accountLink.modal.linkTitle",
+        "Connect your Stirling account",
+      );
+    }
+    if (step === "handoff") {
+      return t("portal.accountLink.connect.handoff.title", "Connecting");
+    }
+    if (outcome?.state === "linked") {
+      return t("portal.accountLink.connect.done.title", "Connected");
+    }
+    return t("portal.accountLink.connect.done.pendingTitle", "Almost there");
+  }
+
+  function stepBody() {
+    switch (step) {
+      case "ask":
+        return <ConnectAskStep reauth={reauth} error={handoff.error} />;
+      case "handoff":
+        return <ConnectHandoffGhost />;
+      case "outcome":
+        return outcome ? (
+          <ConnectCallbackView
+            state={outcome.state}
+            sessionRestored={outcome.sessionRestored}
+            onDone={onClose}
+          />
+        ) : null;
+    }
+  }
+
+  function closeButton() {
+    return (
+      <Button variant="quiet" accent="neutral" onClick={onClose}>
+        {t("portal.accountLink.connect.close", "Close")}
+      </Button>
+    );
+  }
+
+  function retryButton(onRetry: () => void) {
+    return (
+      <Button variant="primary" onClick={onRetry}>
+        {t("portal.accountLink.connect.callback.retry", "Try again")}
+      </Button>
+    );
+  }
+
+  function stepFooter() {
+    if (step === "ask") {
+      const dismiss = reauth
+        ? t("portal.accountLink.modal.cancel", "Cancel")
+        : t("portal.accountLink.connect.notNow", "Not now");
+      const start = reauth
+        ? t("portal.accountLink.modal.continueReauth", "Sign in again")
+        : t("portal.accountLink.connect.start", "Connect Stirling account");
+      return (
+        <>
+          <Button variant="quiet" accent="neutral" onClick={onClose}>
+            {dismiss}
+          </Button>
+          <Button variant="primary" onClick={handoff.begin}>
+            {start}
+          </Button>
+        </>
+      );
+    }
+
+    // The request is out and the browser is leaving; Close so a stall is not a dead end.
+    if (step === "handoff") {
+      return (
+        <>
+          <span />
+          {closeButton()}
+        </>
+      );
+    }
+
+    // A retry over a call that has not answered is how you get two handshakes.
+    if (outcome?.state === "working") {
+      return (
+        <>
+          <span />
+          {closeButton()}
+        </>
+      );
+    }
+
+    // Still open: re-claim rather than spend the approval a leader gave by hand.
+    if (outcome?.reclaim) {
+      return (
+        <>
+          {closeButton()}
+          {retryButton(outcome.reclaim)}
+        </>
+      );
+    }
+
+    if (outcome && isRetryableOutcome(outcome.state)) {
+      return (
+        <>
+          {closeButton()}
+          {retryButton(handoff.begin)}
+        </>
+      );
+    }
+
+    return (
+      <>
+        <span />
+        <Button variant="primary" onClick={onClose}>
+          {t("portal.accountLink.connect.done.cta", "Done")}
+        </Button>
+      </>
+    );
+  }
 }

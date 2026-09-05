@@ -2,13 +2,20 @@
 /* Horizontal toolbar at the top of the workbench area. */
 
 .workbench-bar {
+  /* Flex-wrap layout that reflows by content width (measured in JS, which sets
+     data-wrapped). Roomy: row 1 is [views | search | globals] and the tool
+     icons sit on their own full-width row below. Crowded (data-wrapped): the
+     search bumps to its own row, leaving [views | globals] on row 1 and the
+     tools on row 3 — three rows total. `order` drives the reflow. */
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   align-content: flex-start;
-  min-height: 40px;
+  column-gap: 8px;
+  min-height: 38px;
   padding: 0 8px;
-  background-color: var(--c-bg-raised);
+  /* Flush, not a floating card: the same surface and hairline as the sidebars. */
+  background-color: var(--c-surface);
   border-bottom: 1px solid var(--c-border-subtle);
   flex-shrink: 0;
   z-index: 50;
@@ -16,12 +23,16 @@
 
 /* ---- View switcher (left) ---- */
 .workbench-bar-views {
+  order: 1;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   gap: 2px;
-  flex-shrink: 0;
-  order: 1;
-  height: 40px;
+  /* min-width:0 lets it shrink instead of forcing a wrap; overflow clips labels
+     on very narrow viewports. */
+  min-width: 0;
+  overflow: hidden;
+  height: 38px;
   z-index: 0;
 }
 
@@ -29,7 +40,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 10px;
+  padding: 2px 8px;
   border: none;
   border-radius: 8px;
   background: transparent;
@@ -50,7 +61,7 @@
 
 .workbench-bar-view-btn.active {
   background-color: var(--c-primary-subtle);
-  color: var(--c-accent-fg);
+  color: var(--c-accent-text);
 }
 
 .workbench-bar-view-btn.workbench-bar-back-btn {
@@ -60,7 +71,7 @@
 
 .workbench-bar-view-btn.workbench-bar-back-btn:hover {
   background-color: color-mix(in srgb, var(--c-primary) 12%, transparent);
-  color: var(--c-accent-fg);
+  color: var(--c-accent-text);
 }
 
 .workbench-bar-view-btn svg {
@@ -81,53 +92,132 @@
   height: 16px;
 }
 
-/* ---- Center: tool buttons ---- */
-
-/* Single-row: center sits between views and globals */
-.workbench-bar-center {
+/* ---- Super search ---- */
+/* Roomy: grows to fill the centre between views and globals. */
+.workbench-bar-search {
   order: 2;
   flex: 1 1 auto;
   min-width: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 2px;
-  height: 40px;
-  overflow: hidden;
+  height: 38px;
+  transform: translateX(var(--workbench-bar-search-offset, 0px));
 }
 
-/* Two-row: center drops below views+globals */
-.workbench-bar[data-wrapped="true"] .workbench-bar-center {
+.workbench-bar-search .super-search {
+  flex: 0 1 24rem;
+  width: min(100%, 24rem);
+  max-width: 24rem;
+}
+
+.workbench-bar-search .super-search input {
+  background-color: transparent;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  font-size: 12.5px;
+}
+
+[data-mantine-color-scheme="dark"] .workbench-bar-search .super-search input {
+  background-color: transparent;
+}
+
+/* Crowded: drops to its own full-width row between the top row and the tools. */
+.workbench-bar[data-wrapped="true"] .workbench-bar-search {
   order: 3;
   flex: 0 0 100%;
   height: auto;
   padding: 4px 0;
-  border-top: 1px solid var(--c-border-subtle);
+  transform: none;
+}
+
+/* Two-row: the tool row scrolls sideways instead of wrapping. */
+.workbench-bar[data-wrapped="true"] .workbench-bar-center-scroll {
   justify-content: flex-start;
+  flex-wrap: nowrap;
   overflow-x: auto;
   overflow-y: hidden;
   scrollbar-width: thin;
   -webkit-overflow-scrolling: touch;
 }
-.workbench-bar[data-wrapped="true"] .workbench-bar-center > * {
+.workbench-bar[data-wrapped="true"] .workbench-bar-center-scroll > * {
   flex-shrink: 0;
 }
 
-/* ---- Right: global buttons (theme / language / download) ---- */
+/* ---- Tool buttons (own full-width row, always below the top row) ---- */
+.workbench-bar-center {
+  order: 4;
+  /* Wider by the bar's paddings, cancelled by the negative margin, so the rule spans. */
+  flex: 0 0 calc(100% + 16px);
+  min-width: 0;
+  max-width: calc(100% + 16px);
+  margin-inline: -8px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  /* Symmetric side padding leaves room for the retract handle pinned right
+     without knocking the centred tool icons off-centre. The extra 8px each side
+     absorbs the negative margin. */
+  padding: 4px 44px;
+  border-top: 1px solid var(--c-border-subtle);
+}
+
+.workbench-bar-center-scroll {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+
+/* Retract / reopen handle for the viewer tool row. */
+.workbench-bar-toolbar-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--c-text-subtle);
+  cursor: pointer;
+  padding: 0;
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.workbench-bar-toolbar-handle:hover {
+  color: var(--c-text);
+  background: var(--c-hover);
+}
+
+/* Pinned to the right edge of the tool row. */
+.workbench-bar-toolbar-handle-retract {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+}
+
+/* ---- Right: global buttons (print / download / save / close), row 1 ---- */
 .workbench-bar-globals {
+  order: 3;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   gap: 2px;
-  flex-shrink: 0;
-  order: 3;
-  height: 40px;
+  min-width: 0;
+  height: 38px;
   margin-left: auto;
 }
 
-/* In two-row mode globals moves to row 1 right side */
+/* Crowded: globals stays on row 1, moving up beside the views. */
 .workbench-bar[data-wrapped="true"] .workbench-bar-globals {
   order: 2;
-  margin-left: auto;
 }
 
 /* Shared action icon style - applies to both center and global buttons.
@@ -214,4 +304,83 @@
   min-width: 2.5rem;
   text-align: right;
   white-space: nowrap;
+}
+
+/* ---- Mobile layout (matches useIsMobile's 1024px) ---- */
+@media (max-width: 64rem) {
+  .workbench-bar {
+    margin: var(--nav-gutter) var(--nav-gutter) 0;
+  }
+
+  .workbench-bar-action-icon {
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
+  }
+
+  .workbench-bar-views,
+  .workbench-bar-globals {
+    height: auto;
+    min-height: 44px;
+  }
+
+  .workbench-bar-center {
+    flex-basis: 100%;
+    max-width: 100%;
+    margin-inline: 0;
+    padding: 2px 4px 2px 8px;
+  }
+
+  .workbench-bar-center-scroll {
+    gap: 4px;
+  }
+
+  .workbench-bar[data-wrapped="true"] .workbench-bar-search {
+    order: 2;
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 4px 0;
+  }
+
+  .workbench-bar[data-wrapped="true"] .workbench-bar-globals {
+    order: 3;
+  }
+
+  .workbench-bar[data-wrapped="true"] .workbench-bar-center-scroll {
+    scrollbar-width: none;
+    /* Wider than one 40px icon plus its gap: a 2rem fade always landed
+       mid-glyph, which read as a clipping bug rather than "scroll me". */
+    -webkit-mask-image: linear-gradient(
+      to right,
+      #000 calc(100% - 3.5rem),
+      transparent
+    );
+    mask-image: linear-gradient(
+      to right,
+      #000 calc(100% - 3.5rem),
+      transparent
+    );
+  }
+
+  .workbench-bar[data-wrapped="true"]
+    .workbench-bar-center--expanded
+    .workbench-bar-center-scroll {
+    flex-wrap: wrap;
+    justify-content: center;
+    overflow-x: visible;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+
+  .workbench-bar[data-wrapped="true"]
+    .workbench-bar-center--expanded
+    .workbench-bar-divider {
+    display: none;
+  }
+
+  .workbench-bar-toolbar-handle-expand {
+    flex-shrink: 0;
+    align-self: flex-start;
+  }
 }

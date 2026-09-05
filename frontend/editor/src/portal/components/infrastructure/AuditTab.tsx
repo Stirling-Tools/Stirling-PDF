@@ -2,14 +2,14 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Button,
-  Card,
+  column,
+  DataTable,
+  type DataTableColumn,
   EmptyState,
   MetricCard,
-  StatusBadge,
-  Table,
+  MetricStrip,
   Tabs,
   type TabItem,
-  type TableColumn,
 } from "@app/ui";
 import { useTier } from "@portal/contexts/TierContext";
 import { useSectionFlags } from "@portal/hooks/useAsync";
@@ -21,16 +21,17 @@ import {
 } from "@portal/api/infrastructure";
 import { AuditExportModal } from "@portal/components/infrastructure/AuditExportModal";
 import { SectionHeader } from "@portal/components/infrastructure/SectionHeader";
-import { TableSkeleton } from "@portal/components/infrastructure/TableSkeleton";
 import {
   AUDIT_CAT_LABEL,
-  AUDIT_CAT_TONE,
   AUDIT_STATUS_LABEL,
   AUDIT_TONE,
 } from "@portal/components/infrastructure/infraFormat";
 
 type AuditFilter = "all" | AuditCategory;
 
+// Enterprise-only: the Infrastructure view disables this tab for non-enterprise
+// instances, so this component only ever renders when entitled. The backend still
+// scopes the log to admins / team leads (403 -> forbidden state below).
 export function AuditTab() {
   const { t } = useTranslation();
   const { tier } = useTier();
@@ -56,55 +57,52 @@ export function AuditTab() {
     },
   ];
 
-  const cols: TableColumn<AuditEvent>[] = [
-    {
+  const cols: DataTableColumn<AuditEvent>[] = [
+    column.mono({
       key: "timestamp",
       header: t("portal.infrastructure.audit.columns.timestamp"),
-      render: (e) => <span className="portal-infra__mono">{e.timestamp}</span>,
-    },
-    {
+      sortable: true,
+      get: (e) => e.timestamp,
+    }),
+    column.text({
       key: "event",
       header: t("portal.infrastructure.audit.columns.event"),
-      render: (e) => (
-        <div className="portal-infra__event">
-          <StatusBadge tone={AUDIT_CAT_TONE[e.category]} size="sm">
-            {t(AUDIT_CAT_LABEL[e.category])}
-          </StatusBadge>
-          <span>{e.action}</span>
-        </div>
-      ),
-    },
-    {
+      sortable: true,
+      // "Category: action" on one line - the category as a bold label, no
+      // status-coloured dot. Colour is reserved for the Status column, where it
+      // actually signals an outcome.
+      label: (e) => t(AUDIT_CAT_LABEL[e.category]),
+      get: (e) => e.action,
+    }),
+    column.mono({
       key: "actor",
       header: t("portal.infrastructure.audit.columns.actor"),
-      render: (e) => <span className="portal-infra__mono">{e.actor}</span>,
-    },
-    {
+      sortable: true,
+      get: (e) => e.actor,
+    }),
+    column.text({
       key: "target",
       header: t("portal.infrastructure.audit.columns.target"),
-      render: (e) => e.target,
-    },
-    {
+      sortable: true,
+      get: (e) => e.target,
+    }),
+    column.badge({
       key: "status",
       header: t("portal.infrastructure.audit.columns.status"),
-      render: (e) => (
-        <StatusBadge tone={AUDIT_TONE[e.status]} size="sm">
-          {t(AUDIT_STATUS_LABEL[e.status])}
-        </StatusBadge>
-      ),
-    },
-    {
+      sortable: true,
+      get: (e) => ({
+        tone: AUDIT_TONE[e.status],
+        label: t(AUDIT_STATUS_LABEL[e.status]),
+      }),
+    }),
+    column.number({
       key: "latency",
       header: t("portal.infrastructure.audit.columns.latency"),
-      align: "right",
-      render: (e) => (
-        <span className="portal-infra__mono">
-          {t("portal.infrastructure.audit.latencyValue", {
-            value: e.latencyMs,
-          })}
-        </span>
-      ),
-    },
+      sortable: true,
+      get: (e) => e.latencyMs,
+      format: (n) =>
+        t("portal.infrastructure.audit.latencyValue", { value: n }),
+    }),
   ];
 
   const state = useAuditLog(tier);
@@ -140,7 +138,7 @@ export function AuditTab() {
       />
 
       {data && (
-        <section className="portal-infra__metrics">
+        <MetricStrip layout="row">
           <MetricCard
             label={t("portal.infrastructure.audit.metrics.totalEvents")}
             value={data.summary.totalEvents.toLocaleString()}
@@ -157,7 +155,7 @@ export function AuditTab() {
             label={t("portal.infrastructure.audit.metrics.config")}
             value={data.summary.config.toLocaleString()}
           />
-        </section>
+        </MetricStrip>
       )}
 
       {!forbidden && (
@@ -170,31 +168,31 @@ export function AuditTab() {
         />
       )}
 
-      <Card padding="none">
-        {isLoading && <TableSkeleton rows={6} cols={6} />}
-        {!isLoading && forbidden && (
-          <EmptyState
-            size="compact"
-            title={t("portal.infrastructure.audit.forbidden.title")}
-            description={t("portal.infrastructure.audit.forbidden.description")}
-          />
-        )}
-        {!isLoading && !forbidden && isEmpty && (
-          <EmptyState
-            size="compact"
-            title={t("portal.infrastructure.audit.empty.title")}
-            description={t("portal.infrastructure.audit.empty.description")}
-          />
-        )}
-        {!isEmpty && data && (
-          <Table
-            columns={cols}
-            rows={rows}
-            rowKey={(e) => e.id}
-            empty={t("portal.infrastructure.audit.noEventsInCategory")}
-          />
-        )}
-      </Card>
+      <DataTable
+        columns={cols}
+        rows={rows}
+        rowKey={(e) => e.id}
+        loading={isLoading}
+        empty={
+          forbidden ? (
+            <EmptyState
+              size="compact"
+              title={t("portal.infrastructure.audit.forbidden.title")}
+              description={t(
+                "portal.infrastructure.audit.forbidden.description",
+              )}
+            />
+          ) : isEmpty ? (
+            <EmptyState
+              size="compact"
+              title={t("portal.infrastructure.audit.empty.title")}
+              description={t("portal.infrastructure.audit.empty.description")}
+            />
+          ) : (
+            t("portal.infrastructure.audit.noEventsInCategory")
+          )
+        }
+      />
     </div>
   );
 }
