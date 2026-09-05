@@ -225,6 +225,11 @@
       "title": "Add Attachments - Stirling PDF",
       "description": "Add or remove embedded files (attachments) to/from a PDF"
     },
+    "createPortfolio": {
+      "image": "/og_images/home.png",
+      "title": "Create Portfolio - Stirling PDF",
+      "description": "Bundle multiple files into an Adobe PDF Portfolio"
+    },
     "changeMetadata": {
       "image": "/og_images/change-metadata.png",
       "title": "Change Metadata - Stirling PDF",
@@ -586,6 +591,7 @@
     "/extract-images": "extractImages",
     "/add-stamp": "addStamp",
     "/add-attachments": "addAttachments",
+    "/create-portfolio": "createPortfolio",
     "/change-metadata": "changeMetadata",
     "/overlay-pdfs": "overlayPdfs",
     "/get-pdf-info": "getPdfInfo",
