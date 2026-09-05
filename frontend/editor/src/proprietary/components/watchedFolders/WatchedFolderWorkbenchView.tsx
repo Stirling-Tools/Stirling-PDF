@@ -57,6 +57,7 @@ import {
 } from "@app/hooks/useFolderAutomation";
 import { useLocalFolderPoller } from "@app/hooks/useLocalFolderPoller";
 import { AutomationConfig } from "@app/types/automation";
+import type { WatchedFolderViewData } from "@app/types/watchedFolders";
 import { iconMap } from "@app/components/tools/automate/iconMap";
 import { fileStorage } from "@app/services/fileStorage";
 import { FileId, StirlingFile } from "@app/types/fileContext";
@@ -166,11 +167,7 @@ function FilterSortBar({
 }
 
 interface WatchedFolderWorkbenchViewProps {
-  data: {
-    folderId: string | null;
-    pendingFileId?: string;
-    pendingFileIds?: string[];
-  };
+  data: WatchedFolderViewData;
 }
 
 function RetryCountdown({

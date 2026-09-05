@@ -357,11 +357,9 @@ export const AttachmentSidebar = ({
             continue;
           }
           return Array.isArray(result) ? result : [];
-        } catch (error: any) {
+        } catch (error) {
           const message =
-            typeof error?.message === "string"
-              ? error.message.toLowerCase()
-              : "";
+            error instanceof Error ? error.message.toLowerCase() : "";
           const notReady =
             message.includes("document") &&
             message.includes("not") &&
@@ -424,7 +422,7 @@ export const AttachmentSidebar = ({
 
   const handleDownload = (
     attachment: PdfAttachmentObject,
-    event: React.MouseEvent,
+    event: React.SyntheticEvent,
   ) => {
     event.stopPropagation();
     if (portfolio) {
@@ -617,7 +615,7 @@ export const AttachmentSidebar = ({
 
   const renderAttachments = (attachments: PdfAttachmentObject[]) => {
     return attachments.map((attachment, index) => {
-      const rowClick = (event: React.MouseEvent) => {
+      const rowClick = (event: React.SyntheticEvent) => {
         if (isPortfolio) {
           event.stopPropagation();
           void previewMember(attachment);
@@ -660,7 +658,7 @@ export const AttachmentSidebar = ({
             onKeyDown={(event) => {
               if (event.key === "Enter" || event.key === " ") {
                 event.preventDefault();
-                rowClick(event as any);
+                rowClick(event);
               }
             }}
           >
