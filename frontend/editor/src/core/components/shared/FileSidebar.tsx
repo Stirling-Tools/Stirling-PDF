@@ -246,7 +246,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       [],
     );
     const isMultiTool =
-      currentWorkbench === "pageEditor" && selectedTool === "multiTool";
+      currentWorkbench === "multiTool" && selectedTool === "multiTool";
     const { requestNavigation } = useNavigationGuard();
     const { activeFileId, setActiveFileId } = useViewer();
     const { addFiles } = useFileHandler();

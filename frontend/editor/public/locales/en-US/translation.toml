@@ -6060,6 +6060,47 @@ title = "Page Ranges"
 bullet1 = "<strong>all</strong> → selects all pages"
 title = "Special Keywords"
 
+[pageTracks]
+dragging_one = "{{count}} page"
+dragging_other = "{{count}} pages"
+edited = "edited"
+emptyTrack = "No pages left. Drag pages here, or save to close this file."
+nextPage = "Next page"
+page = "Page {{number}}"
+pageCount_one = "{{count}} page"
+pageCount_other = "{{count}} pages"
+pagePosition = "Page {{number}} of {{total}}"
+prevPage = "Previous page"
+readingPages = "Reading pages..."
+redo = "Redo"
+rotateLeft = "Rotate left"
+rotateRight = "Rotate right"
+saveChanges = "Save changes to all files"
+saving = "Saving..."
+savingProgress = "Saving {{done}} of {{total}}"
+selectPage = "Select page {{number}}"
+undo = "Undo"
+viewError = "Couldn't render this page"
+viewPage = "View page"
+zoomIn = "Zoom in"
+zoomOut = "Zoom out"
+
+[pageTracks.delete]
+page = "Delete page"
+selected = "Delete pages"
+
+[pageTracks.empty]
+body = "Add PDFs to expand them into editable page tracks"
+title = "No PDF files loaded"
+
+[pageTracks.track]
+collapse = "Collapse"
+expand = "Expand"
+toggleSelection = "Select all pages"
+
+[pageTracks.wrap]
+label = "Wrap pages"
+
 [payg.activity]
 docs = "docs"
 empty = "No billable activity yet this period."
@@ -12541,6 +12582,7 @@ formFill = "Form Editor"
 hideToolbar = "Hide toolbar"
 moreActions = "More actions"
 multiTool = "Multi-Tool"
+pageEditor = "Page Editor"
 panMode = "Pan Mode"
 print = "Print PDF"
 readAloud = "Read Aloud"
