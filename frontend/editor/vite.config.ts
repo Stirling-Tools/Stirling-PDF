@@ -7,12 +7,25 @@ import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { defineConfig, loadEnv } from "vite";
 import type { Connect, PluginOption } from "vite";
+import type { PreRenderedAsset } from "rollup";
 import tsconfigPaths from "vite-tsconfig-paths";
 import { viteStaticCopy } from "vite-plugin-static-copy";
 
 const gzipPromise = promisify(gzip);
 const brotliPromise = promisify(brotliCompress);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// Emit pdf.js's hashed .mjs worker assets as .js. Cloudflare caches by file
+// extension (not MIME type) and its default list omits .mjs, so those assets
+// bypassed the edge cache on every request. The extension is irrelevant to a
+// `type: "module"` worker. Renaming at emission time lets Rollup substitute the
+// final filename into every `new URL(..., import.meta.url)` reference itself.
+// Shared by the main build and Vite's worker sub-builds, which do not inherit
+// the main build's output options.
+const mjsToJsAssetFileNames = (assetInfo: PreRenderedAsset) =>
+  assetInfo.names.some((name) => name.endsWith(".mjs"))
+    ? "assets/[name]-[hash].js"
+    : "assets/[name]-[hash][extname]";
 
 function compressStaticCopyPlugin(): PluginOption {
   return {
@@ -374,7 +387,8 @@ export default defineConfig(async ({ mode, command }) => {
       target: "esnext",
       rollupOptions: {
         output: {
-          manualChunks(id) {
+          assetFileNames: mjsToJsAssetFileNames,
+          manualChunks(id: string) {
             if (id.includes("material-symbols-icons.json"))
               return "vendor-iconset";
             if (id.includes("node_modules")) {
@@ -410,6 +424,16 @@ export default defineConfig(async ({ mode, command }) => {
     },
     optimizeDeps: {
       exclude: ["@embedpdf/pdfium"],
+    },
+    // Worker sub-builds do not inherit the main build's output.assetFileNames.
+    // Without this, the pdf.js worker referenced from inside a worker would be
+    // emitted as .mjs (see mjsToJsAssetFileNames above).
+    worker: {
+      rollupOptions: {
+        output: {
+          assetFileNames: mjsToJsAssetFileNames,
+        },
+      },
     },
     // base: "./" produces relative asset URLs which work when dist/ is served
     // at any path (e.g. Spring Boot bundling the frontend at /). But under
