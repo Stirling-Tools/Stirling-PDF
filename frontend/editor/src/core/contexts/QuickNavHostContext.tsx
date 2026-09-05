@@ -41,6 +41,12 @@ export interface QuickNavHostActions {
   toggleNotifications?: () => void;
   goToDefaultState?: () => void;
   requestNavigation?: (go: () => void) => void;
+  /**
+   * Absent unless the app says the hidden novelty features are enabled, which
+   * is the only gate the rail gets - see useBrandFlourish. `originRect` is the
+   * clicked control, for whatever flies out of it.
+   */
+  onBrandFlourish?: (originRect: DOMRect | null) => void;
 }
 
 interface QuickNavHostValue extends QuickNavHostData {
