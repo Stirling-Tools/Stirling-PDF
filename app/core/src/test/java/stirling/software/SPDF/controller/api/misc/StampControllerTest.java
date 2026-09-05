@@ -48,6 +48,7 @@ class StampControllerTest {
     private Method processStampTextMethod;
     private Method processCustomDateFormatMethod;
     private Method calculateImagePositionYMethod;
+    private Method clampImagePositionMethod;
 
     @BeforeEach
     void setUp() throws NoSuchMethodException {
@@ -74,6 +75,29 @@ class StampControllerTest {
                         float.class,
                         float.class);
         calculateImagePositionYMethod.setAccessible(true);
+
+        clampImagePositionMethod =
+                StampController.class.getDeclaredMethod(
+                        "clampImagePosition",
+                        PDRectangle.class,
+                        float.class,
+                        float.class,
+                        float.class,
+                        float.class,
+                        float.class);
+        clampImagePositionMethod.setAccessible(true);
+    }
+
+    private float[] invokeClampImagePosition(
+            PDRectangle pageSize, float x, float y, float width, float height, float rotation)
+            throws Exception {
+        try {
+            return (float[])
+                    clampImagePositionMethod.invoke(
+                            stampController, pageSize, x, y, width, height, rotation);
+        } catch (InvocationTargetException e) {
+            throw (Exception) e.getCause();
+        }
     }
 
     private float invokeCalculateImagePositionY(
@@ -144,6 +168,74 @@ class StampControllerTest {
             assertEquals(240f, yMid, 0.001f);
             float yTop = invokeCalculateImagePositionY(page, 3, 20f, 5f);
             assertEquals(375f, yTop, 0.001f);
+        }
+    }
+
+    @Nested
+    @DisplayName("Image stamp clamp (rotation-aware)")
+    class ImageClampTests {
+
+        @Test
+        @DisplayName("Unrotated override is clamped to [llx, urx-w] x [lly, ury-h] as before")
+        void unrotatedClampMatchesPreviousBehaviour() throws Exception {
+            PDRectangle page = new PDRectangle(0, 0, 600, 800);
+            // Inside bounds: left untouched.
+            float[] inside = invokeClampImagePosition(page, 100f, 200f, 50f, 60f, 0f);
+            assertEquals(100f, inside[0], 0.001f);
+            assertEquals(200f, inside[1], 0.001f);
+            // Past top-right: clamped to urx-w / ury-h.
+            float[] outside = invokeClampImagePosition(page, 590f, 790f, 50f, 60f, 0f);
+            assertEquals(550f, outside[0], 0.001f);
+            assertEquals(740f, outside[1], 0.001f);
+            // Below origin: clamped up to llx / lly.
+            float[] below = invokeClampImagePosition(page, -10f, -10f, 50f, 60f, 0f);
+            assertEquals(0f, below[0], 0.001f);
+            assertEquals(0f, below[1], 0.001f);
+        }
+
+        @Test
+        @DisplayName(
+                "Issue #6784 reproduction: 270-degree stamp is not snapped off the bottom edge")
+        void rotated270OverrideIsNotSnapped() throws Exception {
+            // MediaBox 792x612, square 300x300 stamp, overrideX=0 overrideY=612, rotation=270.
+            PDRectangle page = new PDRectangle(0, 0, 792, 612);
+            float[] clamped = invokeClampImagePosition(page, 0f, 612f, 300f, 300f, 270f);
+            // Before the fix y was snapped from 612 down to 312 (ury - h), placing the stamp at the
+            // wrong corner. The rotated footprint actually fits, so the anchor must stay at 612.
+            assertEquals(0f, clamped[0], 0.001f);
+            assertEquals(612f, clamped[1], 0.001f);
+        }
+
+        @Test
+        @DisplayName("90-degree stamp footprint stays inside the page bounds")
+        void rotated90KeepsFootprintOnPage() throws Exception {
+            PDRectangle page = new PDRectangle(0, 0, 600, 800);
+            // rotate(90) maps the rectangle so its footprint relative to the anchor is
+            // x in [-h, 0] and y in [0, w]. Anchor at (0, 800) overflows the left and top edges, so
+            // both axes are pulled in to keep the bitmap on-page.
+            float[] clamped = invokeClampImagePosition(page, 0f, 800f, 100f, 40f, 90f);
+            assertEquals(40f, clamped[0], 0.001f); // llx - minX = 0 - (-40)
+            assertEquals(700f, clamped[1], 0.001f); // ury - maxY = 800 - 100
+        }
+
+        @Test
+        @DisplayName("180-degree stamp footprint stays inside the page bounds")
+        void rotated180KeepsFootprintOnPage() throws Exception {
+            PDRectangle page = new PDRectangle(0, 0, 600, 800);
+            // rotate(180): footprint relative to anchor is x in [-w, 0], y in [-h, 0].
+            float[] clamped = invokeClampImagePosition(page, 10f, 10f, 100f, 40f, 180f);
+            assertEquals(100f, clamped[0], 0.001f); // llx - minX = 0 - (-100)
+            assertEquals(40f, clamped[1], 0.001f); // lly - minY = 0 - (-40)
+        }
+
+        @Test
+        @DisplayName("Honours non-zero media-box origin")
+        void respectsMediaBoxOrigin() throws Exception {
+            PDRectangle page = new PDRectangle(50f, 100f, 400f, 300f);
+            // Far past the upper-right; unrotated clamp -> urx - w, ury - h.
+            float[] clamped = invokeClampImagePosition(page, 1000f, 1000f, 30f, 20f, 0f);
+            assertEquals(420f, clamped[0], 0.001f); // 450 - 30
+            assertEquals(380f, clamped[1], 0.001f); // 400 - 20
         }
     }
 
