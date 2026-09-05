@@ -74,6 +74,9 @@ interface ToolWorkflowContextValue extends ToolWorkflowState {
   setReaderMode: (mode: boolean) => void;
   setToolPanelMode: (mode: ToolPanelMode) => void;
   setPreviewFile: (file: File | null) => void;
+  /** Register work that turns the current preview into a real file. Tool
+   * selection runs it first, so a tool never acts on the wrong document. */
+  registerPreviewImport: (importFile: (() => Promise<void>) | null) => void;
   setPageEditorFunctions: (functions: PageEditorFunctions | null) => void;
   setSearchQuery: (query: string) => void;
 
@@ -144,6 +147,9 @@ export interface ToolWorkflowActionsValue {
   setReaderMode: (mode: boolean) => void;
   setToolPanelMode: (mode: ToolPanelMode) => void;
   setPreviewFile: (file: File | null) => void;
+  /** Register work that turns the current preview into a real file. Tool
+   * selection runs it first, so a tool never acts on the wrong document. */
+  registerPreviewImport: (importFile: (() => Promise<void>) | null) => void;
   setPageEditorFunctions: (functions: PageEditorFunctions | null) => void;
   setSearchQuery: (query: string) => void;
   registerToolReset: (toolId: string, resetFunction: () => void) => void;
@@ -245,6 +251,16 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
       }
     },
     [actions],
+  );
+
+  // A preview is not in the file store, so tools would resolve to whatever the
+  // viewer had open before it. Whoever owns the preview leaves the import here.
+  const previewImportRef = useRef<(() => Promise<void>) | null>(null);
+  const registerPreviewImport = useCallback(
+    (importFile: (() => Promise<void>) | null) => {
+      previewImportRef.current = importFile;
+    },
+    [],
   );
 
   const setPageEditorFunctions = useCallback(
@@ -476,6 +492,14 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
         return;
       }
 
+      // Promote the preview first, then reopen this selection against the real file.
+      const importPreview = previewImportRef.current;
+      if (importPreview) {
+        previewImportRef.current = null;
+        void importPreview().then(() => handleToolSelect(toolId));
+        return;
+      }
+
       // If we're currently on a custom workbench (e.g., Validate Signature report),
       // selecting any tool should take the user back to the default file manager view.
       const wasInCustomWorkbench = !isBaseWorkbench(navigationState.workbench);
@@ -667,6 +691,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
       setReaderMode: stableSetReaderMode,
       setToolPanelMode: stableSetToolPanelMode,
       setPreviewFile: stableSetPreviewFile,
+      registerPreviewImport,
       setPageEditorFunctions,
       setSearchQuery,
       registerToolReset,
@@ -725,6 +750,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
       setReaderMode,
       setToolPanelMode,
       setPreviewFile,
+      registerPreviewImport,
       setPageEditorFunctions,
       setSearchQuery,
       selectTool: actions.setSelectedTool,

@@ -18,6 +18,7 @@ import { PdfAttachmentObject } from "@embedpdf/models";
 import AttachmentIcon from "@mui/icons-material/AttachmentRounded";
 import CollectionsIcon from "@mui/icons-material/CollectionsBookmarkRounded";
 import DownloadIcon from "@mui/icons-material/DownloadRounded";
+import ImportIcon from "@mui/icons-material/LibraryAddRounded";
 import { useTranslation } from "react-i18next";
 import { SidebarBase } from "@app/components/viewer/SidebarBase";
 import { detectNonPdfFileType, isPdfFile } from "@app/utils/fileUtils";
@@ -212,7 +213,12 @@ export const AttachmentSidebar = ({
   const { files: libraryFiles } = useAllFiles();
   // Member name -> the file it was opened as, so reopening one returns to it.
   const openedMembers = useRef<Map<string, string>>(new Map());
-  const { handleToolSelectForced } = useToolWorkflow();
+  const {
+    handleToolSelectForced,
+    previewFile,
+    setPreviewFile,
+    registerPreviewImport,
+  } = useToolWorkflow();
   const [searchTerm, setSearchTerm] = useState("");
   const [openingMember, setOpeningMember] = useState<string | null>(null);
   const [attachmentSupport, setAttachmentSupport] = useState(() =>
@@ -449,49 +455,61 @@ export const AttachmentSidebar = ({
     [portfolio, attachmentActions],
   );
 
-  // Portfolio: open a member in the viewer instead of downloading it. Types the
-  // viewer can't render (archives, office documents) still download.
-  const handleOpenMember = useCallback(
-    async (attachment: PdfAttachmentObject) => {
-      if (!canPreviewMember(attachment)) {
-        void saveMember(attachment);
-        return;
-      }
+  const memberFile = useCallback(
+    async (attachment: PdfAttachmentObject): Promise<File | null> => {
       const name = attachment.name || "document.pdf";
+      const bytes = portfolio
+        ? await readPortfolioMemberBytes(portfolio.file, name)
+        : null;
+      if (!bytes) return null;
+      return new File([bytes as BlobPart], name, {
+        type: memberMimeType(attachment),
+        // Stable across clicks, so the workbench's own name|size|lastModified
+        // duplicate check recognises a member it already holds.
+        lastModified:
+          attachment.creationDate?.getTime() ??
+          portfolio?.file.lastModified ??
+          0,
+      });
+    },
+    [portfolio],
+  );
 
-      // Reopening a member returns to the file already in the workbench instead
-      // of adding a second copy of it.
-      const opened = openedMembers.current.get(name);
-      if (
-        opened &&
-        libraryFiles.some((f) => isStirlingFile(f) && f.fileId === opened)
-      ) {
-        setActiveFileId(opened);
+  /** The file this member was imported as, if it is still in the workbench. */
+  const importedAs = useCallback(
+    (name: string): string | null => {
+      const fileId = openedMembers.current.get(name);
+      return fileId &&
+        libraryFiles.some((f) => isStirlingFile(f) && f.fileId === fileId)
+        ? fileId
+        : null;
+    },
+    [libraryFiles],
+  );
+
+  // Bring a member into the workbench as a file of its own.
+  const importMember = useCallback(
+    async (attachment: PdfAttachmentObject) => {
+      const name = attachment.name || "document.pdf";
+      const already = importedAs(name);
+      if (already) {
+        setPreviewFile(null);
+        setActiveFileId(already);
         return;
       }
-
       try {
         setOpeningMember(name);
-        const bytes = portfolio
-          ? await readPortfolioMemberBytes(portfolio.file, name)
-          : null;
-        if (!bytes) {
+        const file = await memberFile(attachment);
+        if (!file) {
           void saveMember(attachment);
           return;
         }
-        const file = new File([bytes as BlobPart], name, {
-          type: memberMimeType(attachment),
-          // Stable across clicks, so the workbench's own name|size|lastModified
-          // duplicate check recognises a member it already holds.
-          lastModified:
-            attachment.creationDate?.getTime() ??
-            portfolio?.file.lastModified ??
-            0,
-        });
         const added = await addFiles([file], { selectFiles: true });
         const first = added?.[0];
         if (first) {
           openedMembers.current.set(name, first.fileId);
+          registerPreviewImport(null);
+          setPreviewFile(null);
           setActiveFileId(first.fileId);
         }
       } catch {
@@ -500,8 +518,65 @@ export const AttachmentSidebar = ({
         setOpeningMember(null);
       }
     },
-    [portfolio, saveMember, addFiles, setActiveFileId, libraryFiles],
+    [
+      importedAs,
+      memberFile,
+      saveMember,
+      addFiles,
+      setActiveFileId,
+      setPreviewFile,
+      registerPreviewImport,
+    ],
   );
+
+  // Clicking a member shows it without adding it to the workbench. Tools resolve
+  // their target from the file store, so selecting one imports it first.
+  const previewMember = useCallback(
+    async (attachment: PdfAttachmentObject) => {
+      if (!canPreviewMember(attachment)) {
+        void saveMember(attachment);
+        return;
+      }
+      const name = attachment.name || "document.pdf";
+      const already = importedAs(name);
+      if (already) {
+        setActiveFileId(already);
+        return;
+      }
+      try {
+        setOpeningMember(name);
+        const file = await memberFile(attachment);
+        if (!file) {
+          void saveMember(attachment);
+          return;
+        }
+        setPreviewFile(file);
+        registerPreviewImport(() => importMember(attachment));
+      } catch {
+        void saveMember(attachment);
+      } finally {
+        setOpeningMember(null);
+      }
+    },
+    [
+      importedAs,
+      memberFile,
+      saveMember,
+      setActiveFileId,
+      setPreviewFile,
+      registerPreviewImport,
+      importMember,
+    ],
+  );
+
+  // Drop the pending import once the preview goes, so a dismissed member cannot
+  // be pulled in by the next tool the reader picks.
+  useEffect(() => {
+    if (!previewFile) registerPreviewImport(null);
+  }, [previewFile, registerPreviewImport]);
+
+  // Leave no import behind for a portfolio that is no longer on screen.
+  useEffect(() => () => registerPreviewImport(null), [registerPreviewImport]);
 
   const formatDate = (date?: Date) => {
     if (!date) return "";
@@ -543,7 +618,7 @@ export const AttachmentSidebar = ({
       const rowClick = (event: React.MouseEvent) => {
         if (isPortfolio) {
           event.stopPropagation();
-          void handleOpenMember(attachment);
+          void previewMember(attachment);
         } else {
           handleDownload(attachment, event);
         }
@@ -576,7 +651,7 @@ export const AttachmentSidebar = ({
             title={
               isPortfolio
                 ? canPreviewMember(attachment)
-                  ? t("viewer.portfolio.openInViewer", "Open in viewer")
+                  ? t("viewer.portfolio.preview", "Preview")
                   : t("viewer.attachments.download", "Download attachment")
                 : undefined
             }
@@ -602,18 +677,39 @@ export const AttachmentSidebar = ({
             {isOpening ? (
               <Loader size="xs" />
             ) : (
-              <ActionIcon
-                variant="tertiary"
-                size="sm"
-                className="attachment-item__download-icon"
-                aria-label={t(
-                  "viewer.attachments.download",
-                  "Download attachment",
+              <>
+                {isPortfolio && canPreviewMember(attachment) && (
+                  <ActionIcon
+                    variant="tertiary"
+                    size="sm"
+                    className="attachment-item__download-icon"
+                    aria-label={t(
+                      "viewer.portfolio.import",
+                      "Import into Stirling",
+                    )}
+                    title={t("viewer.portfolio.import", "Import into Stirling")}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      void importMember(attachment);
+                    }}
+                  >
+                    <ImportIcon sx={{ fontSize: "1.2rem" }} />
+                  </ActionIcon>
                 )}
-                onClick={(event) => handleDownload(attachment, event)}
-              >
-                <DownloadIcon sx={{ fontSize: "1.2rem" }} />
-              </ActionIcon>
+                <ActionIcon
+                  variant="tertiary"
+                  size="sm"
+                  className="attachment-item__download-icon"
+                  aria-label={t(
+                    "viewer.attachments.download",
+                    "Download attachment",
+                  )}
+                  title={t("viewer.attachments.download", "Download")}
+                  onClick={(event) => handleDownload(attachment, event)}
+                >
+                  <DownloadIcon sx={{ fontSize: "1.2rem" }} />
+                </ActionIcon>
+              </>
             )}
           </div>
         </div>
