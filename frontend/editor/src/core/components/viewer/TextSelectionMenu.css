@@ -1,0 +1,70 @@
+.text-selection-anchor {
+  position: relative;
+}
+
+.text-selection-popup {
+  position: absolute;
+  left: 50%;
+  z-index: 10000;
+  pointer-events: auto;
+  animation: tsm-fade-in 0.12s ease-out;
+}
+
+.text-selection-popup[data-above] {
+  bottom: calc(100% + 6px);
+  transform: translateX(-50%);
+}
+
+.text-selection-popup:not([data-above]) {
+  top: calc(100% + 6px);
+  transform: translateX(-50%);
+}
+
+@keyframes tsm-fade-in {
+  from {
+    opacity: 0;
+    scale: 0.92;
+  }
+  to {
+    opacity: 1;
+    scale: 1;
+  }
+}
+
+.text-selection-popup-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid var(--c-border);
+  border-radius: 8px;
+  background: var(--c-surface);
+  color: var(--c-text-muted);
+  cursor: pointer;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.15),
+    0 0 0 1px rgba(0, 0, 0, 0.04);
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.text-selection-popup-btn:hover {
+  background: var(--c-hover);
+  color: var(--c-primary);
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.18),
+    0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+
+.text-selection-popup-btn:active {
+  background: var(--c-active);
+  transform: scale(0.95);
+}
+
+.text-selection-popup-btn svg {
+  font-size: 18px;
+}
