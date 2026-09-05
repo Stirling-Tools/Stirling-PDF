@@ -32,6 +32,8 @@ import "@portal/views/Policies.css";
 interface PolicySetupWizardProps {
   /** The category being configured, or null when closed. */
   entry: CatalogueEntry | null;
+  /** Whether the user may manage required policies; gates the enforce toggle and a policy's save. */
+  canManagePolicies?: boolean;
   onClose: () => void;
   /**
    * Fires on submit with the collected settings + built pipeline steps. May be
@@ -199,6 +201,7 @@ function seedTools(entry: CatalogueEntry): ToolState[] {
  */
 export function PolicySetupWizard({
   entry,
+  canManagePolicies = true,
   onClose,
   onSubmit,
   onCustomise,
@@ -209,6 +212,7 @@ export function PolicySetupWizard({
     <PolicySetupWizardBody
       key={entry.category.id}
       entry={entry}
+      canManagePolicies={canManagePolicies}
       onClose={onClose}
       onSubmit={onSubmit}
       onCustomise={onCustomise}
@@ -218,11 +222,13 @@ export function PolicySetupWizard({
 
 function PolicySetupWizardBody({
   entry,
+  canManagePolicies,
   onClose,
   onSubmit,
   onCustomise,
 }: {
   entry: CatalogueEntry;
+  canManagePolicies: boolean;
   onClose: () => void;
   onSubmit: (entry: CatalogueEntry, result: PolicySetupResult) => Promise<void>;
   onCustomise: (entry: CatalogueEntry, result: PolicySetupResult) => void;
@@ -262,6 +268,8 @@ function PolicySetupWizardBody({
   // A suggested policy is something the org requires by nature, so new ones default to required;
   // editing preserves whatever was saved.
   const [required, setRequired] = useState(policy?.state.required ?? true);
+  // A required policy is manager-only to save; a non-manager can't toggle enforce or submit one.
+  const readOnly = required && !canManagePolicies;
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -397,6 +405,7 @@ function PolicySetupWizardBody({
             style={{ marginLeft: "auto" }}
             onClick={submit}
             loading={submitting}
+            disabled={readOnly}
           >
             {isEdit
               ? t("portal.policies.wizard.actions.saveChanges")
@@ -509,6 +518,7 @@ function PolicySetupWizardBody({
         <EnforceAsPolicyControl
           required={required}
           onRequiredChange={setRequired}
+          disabled={!canManagePolicies}
         />
       </div>
     </Modal>

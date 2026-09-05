@@ -15,6 +15,8 @@ export interface PipelineCreateHeaderProps {
   /** "Enforce as policy" toggle, shown in the actions row. */
   required: boolean;
   onRequiredChange: (required: boolean) => void;
+  /** Whether the user may create a required policy; when false the enforce toggle is locked. */
+  canManagePolicies?: boolean;
 
   canSave: boolean;
   /** Everything still owed before the pipeline can be created, shown on the disabled create button. */
@@ -40,6 +42,7 @@ export function PipelineCreateHeader({
   onIconChange,
   required,
   onRequiredChange,
+  canManagePolicies = true,
   canSave,
   blockers,
   saving,
@@ -80,6 +83,7 @@ export function PipelineCreateHeader({
         <EnforceAsPolicyControl
           required={required}
           onRequiredChange={onRequiredChange}
+          disabled={!canManagePolicies}
         />
 
         {/* The pair share one tooltip target because a disabled button swallows its own hover - the

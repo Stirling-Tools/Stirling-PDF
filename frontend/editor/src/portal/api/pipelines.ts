@@ -180,6 +180,21 @@ export async function fetchTriggers(): Promise<TriggerInfo[]> {
 }
 
 /**
+ * The caller's policy-management capability, mirroring the backend gate: whether they may create or
+ * modify org-mandated (required) policies. Ordinary pipelines are editable by any team member.
+ */
+export interface PolicyPermissions {
+  canManagePolicies: boolean;
+}
+
+/** GET /api/v1/policies/permissions: whether the caller may manage required policies. */
+export async function fetchPolicyPermissions(): Promise<PolicyPermissions> {
+  return apiClient.local.json<PolicyPermissions>(
+    "/api/v1/policies/permissions",
+  );
+}
+
+/**
  * What a manual trigger found and started. Mirrors the backend `SweepOutcome`:
  * when `runIds` is empty, the counts say why - no files listed, all already
  * processed at their current version, parked by a failed run, or still in

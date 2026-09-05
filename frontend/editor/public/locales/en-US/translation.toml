@@ -8657,6 +8657,7 @@ viewDefinition = "View definition"
 destination = "Choose a destination"
 heading = "To create this pipeline:"
 incompatible = "Fix steps that can't run in order: {{tools}}"
+managerOnly = "Only an admin or team leader can modify a policy"
 name = "Give the pipeline a name"
 saveHeading = "To save your changes:"
 schedule = "Set how often it runs"
@@ -8727,6 +8728,7 @@ title = "No pipelines yet"
 desc = "Runs automatically; members can't turn it off"
 info = "What enforcing as a policy means"
 label = "Enforce as policy"
+managerOnly = "Only an admin or team leader can enforce a pipeline as a policy"
 
 [portal.pipelines.graph]
 addFirstTool = "Add a tool"
@@ -8758,11 +8760,6 @@ failed_one = "Failed on the only step"
 failed_other = "Failed after {{done}} of {{count}} steps"
 running_one = "Running the only step"
 running_other = "Running step {{done}} of {{count}}"
-
-[portal.pipelines.kpi]
-active = "Active"
-paused = "Paused"
-total = "Pipelines"
 
 [portal.pipelines.run]
 allProcessed_one = "Nothing to run: the source's {{count}} document has already been processed."
@@ -8931,6 +8928,7 @@ summary = "Detects and redacts PII, strips active content (JavaScript), and wate
 
 [portal.policies.detail]
 enforces = "Steps"
+managerOnly = "Only an admin or team leader can modify this policy"
 onEveryExport = "On every export"
 onEveryUpload = "On every upload"
 outputAsNewFile = "as a new file"
@@ -9583,11 +9581,6 @@ body = "Delete \"{{name}}\"? This can't be undone. Policies that reference it wo
 cancel = "Cancel"
 confirm = "Delete"
 title = "Delete source?"
-
-[portal.sources.kpi]
-inUse = "In use"
-total = "Connections"
-unused = "Unused"
 
 [portal.sources.networkFields.connection]
 helperText = "The saved connection with the server address and credentials. Shared by every source that uses it."

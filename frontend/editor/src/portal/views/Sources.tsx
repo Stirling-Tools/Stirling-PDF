@@ -7,7 +7,6 @@ import { useSectionFlags } from "@portal/hooks/useAsync";
 import { useSources } from "@portal/queries/sources";
 import { type SourceView } from "@portal/api/sources";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
-import { KpiStrip } from "@portal/components/sources/KpiStrip";
 import { SourcesTable } from "@portal/components/sources/SourcesTable";
 import { SourceModal } from "@portal/components/sources/SourceModal";
 import { useConnectGate } from "@portal/hooks/useConnectGate";
@@ -19,7 +18,7 @@ export function Sources() {
   const { guard, gated, connect } = useConnectGate();
 
   const state = useSources();
-  const { data, loading } = state;
+  const { data } = state;
   const { isLoading } = useSectionFlags(state);
 
   // Create/edit live in a modal on this list; `?new=1` (old /sources/new deep
@@ -45,11 +44,6 @@ export function Sources() {
   }, [searchParams, setSearchParams, gated]);
 
   const sources = data?.sources ?? [];
-
-  // The editor is a virtual row that's always present, so "empty" means no
-  // configured sources beyond it. Gates the KPI strip.
-  const configuredCount = sources.filter((s) => s.type !== "editor").length;
-  const showKpis = isLoading || configuredCount > 0;
 
   // Connecting a source and editing one both need a linked account.
   const openCreate = guard(() => setModal({ open: true, sourceId: null }));
@@ -79,8 +73,6 @@ export function Sources() {
           </Button>
         </div>
       </header>
-
-      {showKpis && <KpiStrip data={data} loading={loading} />}
 
       {isLoading && (
         <div className="portal-sources__table-skeleton" aria-hidden>

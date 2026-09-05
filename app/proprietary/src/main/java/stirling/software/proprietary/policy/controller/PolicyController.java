@@ -67,6 +67,7 @@ import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.PipelineValidation;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.PolicyInputs;
+import stirling.software.proprietary.policy.model.PolicyPermissions;
 import stirling.software.proprietary.policy.model.PolicyRun;
 import stirling.software.proprietary.policy.model.PolicyRunStatus;
 import stirling.software.proprietary.policy.model.PolicyRunView;
@@ -273,7 +274,6 @@ public class PolicyController {
                     "Stores a policy (trigger config + steps + output + metadata). A blank id is"
                             + " assigned; returns the stored policy with its id.")
     public ResponseEntity<Policy> savePolicy(@RequestBody Policy policy) {
-        requirePolicyEditingAllowed();
         Policy owned = withStoredOutputSecrets(resolveOwnership(policy));
         requireAccessibleSources(owned);
         requireAccessibleOutput(owned);
@@ -288,6 +288,12 @@ public class PolicyController {
                 owned.id() == null || owned.id().isBlank()
                         ? null
                         : policyStore.get(owned.id()).orElse(null);
+        // Only an org-mandated (required) policy is manager-only; an ordinary pipeline is open to
+        // any team member. Gate on the incoming and the stored flag so promoting or demoting is
+        // gated too.
+        if (owned.required() || (previous != null && previous.required())) {
+            requirePolicyEditingAllowed();
+        }
         Policy saved = policyStore.save(owned);
         assetCleaner.cleanupAfterSave(previous, saved);
         // Re-sync trigger registrations now so a new/changed folder-watch policy starts being
@@ -444,15 +450,14 @@ public class PolicyController {
     }
 
     /**
-     * Creating, editing, pausing/resuming, and deleting policies requires the editor role for the
-     * caller's team — a team leader on SaaS (see {@link PolicyManagementAuthority}); the global
-     * admin gets no say on SaaS. Team scoping (which team's policies) is enforced separately by
-     * {@link PolicyAccessGuard}. Every mutation routes through {@link #savePolicy} (pause/resume
-     * re-save with a flipped {@code enabled} flag) or {@link #deletePolicy}, so gating those two
-     * covers them all; runs over the caller's own files ({@code /{id}/run}) stay open to the team,
-     * while source sweeps are gated by {@link #requirePolicySweepAllowed}. Single-user deployments
-     * (login disabled) have no such role, so they trust the local operator. The path allowlist for
-     * folder sources/outputs is enforced separately by {@link PolicyValidator} at validation time.
+     * Managing an org-mandated ({@code required}) policy - creating one, editing/pausing/deleting
+     * an existing one, or promoting/demoting the {@code required} flag - needs the manager role for
+     * the caller's team: an admin self-hosted, a team leader on SaaS (see {@link
+     * PolicyManagementAuthority}). Ordinary pipelines (not required) are open to any team member,
+     * so the mutation endpoints ({@link #savePolicy}, {@link #deletePolicy}, {@link
+     * #clearProcessedHistory}) call this only when the record is or becomes required. Team scoping
+     * (which team's policies) is enforced separately by {@link PolicyAccessGuard}; single-user
+     * deployments (login disabled) have no role, so they trust the local operator.
      */
     private void requirePolicyEditingAllowed() {
         if (!policyEditingAllowed()) {
@@ -528,6 +533,17 @@ public class PolicyController {
                 .toList();
     }
 
+    @GetMapping("/permissions")
+    @Operation(
+            summary = "The caller's policy-management permissions",
+            description =
+                    "Whether the caller may create or modify org-mandated (required) policies, so the"
+                            + " UI can gate the enforce-as-policy control and a required policy's"
+                            + " edit/pause/delete. Ordinary pipelines are open to any team member.")
+    public PolicyPermissions permissions() {
+        return new PolicyPermissions(policyEditingAllowed());
+    }
+
     @GetMapping("/{policyId}")
     @Operation(
             summary = "Get a policy by id",
@@ -547,10 +563,17 @@ public class PolicyController {
     @DeleteMapping("/{policyId}")
     @Operation(summary = "Delete a policy by id")
     public ResponseEntity<Void> deletePolicy(@PathVariable String policyId) {
-        requirePolicyEditingAllowed();
         // Scope to the caller's team: a policy in another team reads as not-found.
         Policy policy = policyStore.get(policyId).filter(policyAccessGuard::canAccess).orElse(null);
-        if (policy != null && policyStore.delete(policyId)) {
+        if (policy == null) {
+            return ResponseEntity.notFound().build();
+        }
+        // Deleting an org-mandated (required) policy is manager-only; a pipeline is open to the
+        // team.
+        if (policy.required()) {
+            requirePolicyEditingAllowed();
+        }
+        if (policyStore.delete(policyId)) {
             processedLedger.clearPolicy(policyId);
             assetCleaner.cleanupAfterDelete(policy);
             // Cancel any now-orphaned folder watch promptly rather than leaving the WatchKey open
@@ -569,12 +592,14 @@ public class PolicyController {
                             + " sweep reprocesses everything currently in its sources. Does not"
                             + " touch the files themselves.")
     public ResponseEntity<Void> clearProcessedHistory(@PathVariable String policyId) {
-        requirePolicyEditingAllowed();
         // Scope to the caller's team: a policy in another team reads as not-found.
-        boolean accessible =
-                policyStore.get(policyId).filter(policyAccessGuard::canAccess).isPresent();
-        if (!accessible) {
+        Policy policy = policyStore.get(policyId).filter(policyAccessGuard::canAccess).orElse(null);
+        if (policy == null) {
             return ResponseEntity.notFound().build();
+        }
+        // Clearing history for an org-mandated (required) policy is manager-only.
+        if (policy.required()) {
+            requirePolicyEditingAllowed();
         }
         processedLedger.clearPolicy(policyId);
         return ResponseEntity.noContent().build();

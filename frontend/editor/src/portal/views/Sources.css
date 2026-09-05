@@ -37,8 +37,6 @@
   max-width: 46rem;
 }
 
-/* Metric strip now uses the shared <MetricStrip>. */
-
 /* Table cells */
 .portal-sources__name-cell {
   display: flex;

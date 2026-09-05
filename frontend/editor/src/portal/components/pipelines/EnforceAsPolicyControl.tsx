@@ -6,6 +6,8 @@ export interface EnforceAsPolicyControlProps {
   /** Org-mandated policy (see Policy.required). */
   required: boolean;
   onRequiredChange: (required: boolean) => void;
+  /** Lock the toggle when the user can't manage required policies (a non-admin/-team-leader). */
+  disabled?: boolean;
 }
 
 /**
@@ -16,6 +18,7 @@ export interface EnforceAsPolicyControlProps {
 export function EnforceAsPolicyControl({
   required,
   onRequiredChange,
+  disabled = false,
 }: EnforceAsPolicyControlProps) {
   const { t } = useTranslation();
   return (
@@ -24,10 +27,15 @@ export function EnforceAsPolicyControl({
         size="sm"
         checked={required}
         onChange={onRequiredChange}
+        disabled={disabled}
         label={t("portal.pipelines.enforce.label")}
       />
       <InfoTooltip
-        label={t("portal.pipelines.enforce.desc")}
+        label={
+          disabled
+            ? t("portal.pipelines.enforce.managerOnly")
+            : t("portal.pipelines.enforce.desc")
+        }
         ariaLabel={t("portal.pipelines.enforce.info")}
         position="bottom"
       />
