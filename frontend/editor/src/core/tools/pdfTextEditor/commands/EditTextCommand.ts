@@ -482,6 +482,18 @@ export class EditTextCommand implements Command {
         // emits land at the same baselines we just established.
         run.paragraphLineHeight = lineHeight;
       }
+    } else {
+      // Nothing emitted, so the run is empty and its objects were removed
+      // above. Left behind, the next edit would read freed pointers.
+      run.pdfiumObjPtr = 0;
+      run.paragraphMemberPtrs = [];
+      run.paragraphMemberContainers = [];
+      run.paragraphMemberFs = [];
+      run.paragraphLeafPtrs = [];
+      run.paragraphLeafContainers = [];
+      // The overlay treats bounds.width as a floor, so a stale one would size
+      // the next text to what was deleted. The emit below re-grows it.
+      run.bounds = { ...run.bounds, width: 0 };
     }
 
     run.mergedFromPtrs = [];

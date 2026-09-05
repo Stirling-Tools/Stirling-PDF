@@ -155,15 +155,19 @@ test.describe("PDF text editor - edge gestures", () => {
     expect(await textOf("Open Source")).toBe(before);
   });
 
-  test("the insert verbs live in the panel, not the canvas strip", async ({
+  test("the insert verbs live in the toolbar, not the panel", async ({
     page,
   }) => {
     await open(page);
-    const panel = page.locator('[data-sidebar="tool-panel"]');
-    await expect(panel.getByTestId("pdf-editor-add-text")).toBeVisible();
-    await expect(panel.getByTestId("pdf-editor-add-image")).toBeVisible();
+    // Insert is a verb aimed at the page, so it sits above the page - the
+    // panel is for the properties of whatever is already selected.
+    const toolbar = page.getByTestId("pdf-editor-toolbar");
+    await expect(toolbar.getByTestId("pdf-editor-add-text")).toBeVisible();
+    await expect(toolbar.getByTestId("pdf-editor-add-image")).toBeVisible();
     await expect(
-      page.getByTestId("pdf-editor-toolbar").getByTestId("pdf-editor-add-text"),
+      page
+        .locator('[data-sidebar="tool-panel"]')
+        .getByTestId("pdf-editor-add-text"),
     ).toHaveCount(0);
   });
 });

@@ -23,10 +23,17 @@ export class PdfiumTextWriter {
    */
   static commitRunText(doc: EditorDocument, page: Page, run: TextRun): boolean {
     if (!run.pdfiumObjPtr) return false;
+    // FPDFText_SetText traps ("unreachable") on an empty string rather than
+    // returning false. Emptying a run is the overlay path's job.
+    if (run.text.length === 0) return false;
     const m = doc.module;
     const ptr = writeUtf16(m, run.text);
     try {
       m.FPDFText_SetText(run.pdfiumObjPtr, ptr);
+    } catch {
+      // Any other trap means the fast path is unusable, which is exactly what
+      // false already means; the caller restores and re-emits.
+      return false;
     } finally {
       m.pdfium.wasmExports.free(ptr);
     }

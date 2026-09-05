@@ -16,3 +16,15 @@ export interface Command {
   // previous undo step however long ago that step ran.
   coalesceIgnoresTimeWindow?(previous: Command | null): boolean;
 }
+
+// A command failed but the document was put back as it was. Only
+// CompositeCommand can promise this; the store uses it to skip the rebuild.
+export class RolledBackError extends Error {
+  readonly cause: unknown;
+
+  constructor(cause: unknown) {
+    super(cause instanceof Error ? cause.message : String(cause));
+    this.name = "RolledBackError";
+    this.cause = cause;
+  }
+}

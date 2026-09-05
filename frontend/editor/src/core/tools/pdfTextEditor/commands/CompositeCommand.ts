@@ -1,4 +1,7 @@
-import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
+import {
+  RolledBackError,
+  type Command,
+} from "@app/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
 
 /** Groups several already-applied commands into one undo/redo step. */
@@ -21,12 +24,40 @@ export class CompositeCommand implements Command {
   }
 
   apply(doc: EditorDocument): void {
-    for (const cmd of this.commands) cmd.apply(doc);
+    this.run(doc, this.commands, "apply");
   }
 
   revert(doc: EditorDocument): void {
-    for (let i = this.commands.length - 1; i >= 0; i--) {
-      this.commands[i].revert(doc);
+    const reversed = [...this.commands].reverse();
+    this.run(doc, reversed, "revert");
+  }
+
+  // Run every child, undoing the ones that ran if one throws. A group is ONE
+  // undo step, so half of it landing would leave the model describing nothing.
+  private run(
+    doc: EditorDocument,
+    order: Command[],
+    phase: "apply" | "revert",
+  ): void {
+    const done: Command[] = [];
+    for (const cmd of order) {
+      try {
+        if (phase === "apply") cmd.apply(doc);
+        else cmd.revert(doc);
+      } catch (err) {
+        for (let i = done.length - 1; i >= 0; i--) {
+          try {
+            if (phase === "apply") done[i].revert(doc);
+            else done[i].apply(doc);
+          } catch {
+            // Rollback failed too, so the document really is half-changed:
+            // report unwrapped so the caller rebuilds.
+            throw err;
+          }
+        }
+        throw new RolledBackError(err);
+      }
+      done.push(cmd);
     }
   }
 

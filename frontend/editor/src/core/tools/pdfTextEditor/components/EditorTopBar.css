@@ -1,0 +1,87 @@
+/* The editor's top bar: a fixed identity block on the left, a scrolling band of
+   controls in the middle, and the finishing actions pinned right. */
+
+.pdf-editor-topbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.5rem;
+  border-bottom: 0.0625rem solid var(--c-border-subtle);
+  background: var(--c-bg-raised);
+  /* The bar itself never scrolls: the Save cluster has to stay reachable no
+     matter how many contextual controls the selection adds. */
+  overflow: hidden;
+  flex: 0 0 auto;
+  /* Queried by width below. The canvas can be narrow while the WINDOW is wide
+     (the tool panel takes its share), so a viewport media query would keep
+     labels the bar has no room for. */
+  container-type: inline-size;
+  container-name: pdfeditortoolbar;
+}
+
+.pdf-editor-topbar__lead,
+.pdf-editor-topbar__trail {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex: 0 0 auto;
+}
+
+/* Only the middle band scrolls, and only when the contextual groups overflow. */
+.pdf-editor-topbar__band {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  /* Room for the thin scrollbar so it never sits on top of the buttons. */
+  padding-bottom: 0.125rem;
+}
+
+.pdf-editor-topbar__file {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-width: 0;
+  max-width: 15rem;
+}
+
+.pdf-editor-topbar__filename {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+/* Unsaved marker: a dot, not the word, so it never squeezes the name. */
+.pdf-editor-topbar__dirty {
+  flex: 0 0 auto;
+  width: 0.4375rem;
+  height: 0.4375rem;
+  border-radius: 50%;
+  background: var(--c-warning);
+}
+
+/* Squeezed: drop the words the icons already say, in order of expendability -
+   the file name (the tooltip still has it), then the Save label. */
+@container pdfeditortoolbar (max-width: 62rem) {
+  .pdf-editor-topbar__filename {
+    display: none;
+  }
+}
+
+@container pdfeditortoolbar (max-width: 52rem) {
+  .pdf-editor-topbar__save-label {
+    display: none;
+  }
+}
+
+@media (max-width: 64rem) {
+  .pdf-editor-topbar__file {
+    max-width: 8rem;
+  }
+}

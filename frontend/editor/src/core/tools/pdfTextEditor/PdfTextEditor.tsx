@@ -3,11 +3,13 @@ import { Alert, Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import DescriptionIcon from "@mui/icons-material/DescriptionOutlined";
 import { downloadFile } from "@app/services/downloadService";
-import { useFileContext } from "@app/contexts/FileContext";
+import { useFileContext, useFileSelection } from "@app/contexts/FileContext";
 import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
 import type { FileId } from "@app/types/file";
 import type { BaseToolProps } from "@app/types/tool";
 import { useEditorStore } from "@app/tools/pdfTextEditor/hooks/useEditorStore";
+import { setEditorSession } from "@app/tools/pdfTextEditor/store/EditorSession";
+import { useIsMobile } from "@app/hooks/useIsMobile";
 import {
   useDocumentLoader,
   ensureAllPagesRead,
@@ -19,11 +21,11 @@ import { useEditorTestGlobal } from "@app/tools/pdfTextEditor/hooks/useEditorTes
 import { useSelectionActions } from "@app/tools/pdfTextEditor/hooks/useSelectionActions";
 import { useEditorKeyboardShortcuts } from "@app/tools/pdfTextEditor/hooks/useEditorKeyboardShortcuts";
 import { useEditorClipboard } from "@app/tools/pdfTextEditor/hooks/useEditorClipboard";
-import { FindBar } from "@app/tools/pdfTextEditor/components/FindBar";
-import { HelpOverlay } from "@app/tools/pdfTextEditor/components/HelpOverlay";
 import { SaveRiskModal } from "@app/tools/pdfTextEditor/components/SaveRiskModal";
+import { DiscardChangesModal } from "@app/tools/pdfTextEditor/components/DiscardChangesModal";
+import { HelpOverlay } from "@app/tools/pdfTextEditor/components/HelpOverlay";
 import { PasswordPromptModal } from "@app/tools/pdfTextEditor/components/PasswordPromptModal";
-import { EditorSaveBar } from "@app/tools/pdfTextEditor/components/EditorSaveBar";
+import { EditorPanelActions } from "@app/tools/pdfTextEditor/components/EditorPanelActions";
 import { EditorSidebar } from "@app/tools/pdfTextEditor/components/EditorSidebar";
 import { EditorFileInputs } from "@app/tools/pdfTextEditor/components/EditorFileInputs";
 import { PageStage } from "@app/tools/pdfTextEditor/components/PageStage";
@@ -49,14 +51,13 @@ const INSERTED_IMAGE_RATIO = 0.4;
 
 export default function PdfTextEditor(_props: BaseToolProps) {
   const { t } = useTranslation();
+  const isMobile = useIsMobile();
   const { store, state } = useEditorStore();
   const load = useDocumentLoader(store);
 
   const [selection, setSelection] = useState<SelectionState>(
     store.selection.value,
   );
-  const [findOpen, setFindOpen] = useState(false);
-  const [helpOpen, setHelpOpen] = useState(false);
   const [openedFileName, setOpenedFileName] = useState<string | null>(null);
   // Set only when the document came from the workbench; a drag-dropped
   // file has no fileId and can only be downloaded. Mirrored into state so the
@@ -68,6 +69,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     setSourceFileId(id);
   }, []);
   const { addFiles, consumeFiles, selectors } = useFileContext();
+  const { setSelectedFiles } = useFileSelection();
   // Saving replaces the workbench file, so for a moment the selection points at
   // a file the editor has not adopted yet. Auto-load must sit that out.
   const [applying, setApplying] = useState(false);
@@ -370,21 +372,24 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     [store],
   );
 
-  const handleFindNext = useCallback((reverse: boolean) => {
-    setFindOpen(true);
-    const button = document.querySelector<HTMLButtonElement>(
-      reverse
-        ? '[data-testid="pdf-editor-find-prev"]'
-        : '[data-testid="pdf-editor-find-next"]',
-    );
-    button?.click();
-  }, []);
+  const handleFindNext = useCallback(
+    (reverse: boolean) => {
+      store.setFindOpen(true);
+      const button = document.querySelector<HTMLButtonElement>(
+        reverse
+          ? '[data-testid="pdf-editor-find-prev"]'
+          : '[data-testid="pdf-editor-find-next"]',
+      );
+      button?.click();
+    },
+    [store],
+  );
 
   const handleEscape = useCallback(() => {
     store.selection.clear();
     store.setMode("select");
-    setHelpOpen(false);
-    setFindOpen(false);
+    store.setHelpOpen(false);
+    store.setFindOpen(false);
   }, [store]);
 
   const handleUngroupSelection = useCallback(() => {
@@ -455,8 +460,11 @@ export default function PdfTextEditor(_props: BaseToolProps) {
         .pages.flatMap((p) => p.runs.map((r) => r.id));
       if (ids.length > 0) store.selection.selectMany(ids);
     }, [store]),
-    onToggleHelp: useCallback(() => setHelpOpen((v) => !v), []),
-    onOpenFind: useCallback(() => setFindOpen(true), []),
+    onToggleHelp: useCallback(
+      () => store.setHelpOpen(!store.getState().helpOpen),
+      [store],
+    ),
+    onOpenFind: useCallback(() => store.setFindOpen(true), [store]),
     onFindNext: handleFindNext,
     onEscape: handleEscape,
     onMergeSelection: handleMergeSelection,
@@ -477,8 +485,18 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       .find((r) => r.id === selection.runIds[0]);
     return !!run && (run.paragraphLineCount ?? 0) > 1;
   })();
-  const onPickPdf = useCallback(
-    (file: File) => {
+  // Opening any document disposes the one in memory - edits, undo history and
+  // all - so both routes in go through `requestOpen` first.
+  const openDocument = useCallback(
+    (file: File, fromDisk: boolean) => {
+      if (!fromDisk) {
+        // Deferred until the open is agreed, or a cancelled open would leave
+        // the app pointing at a file the editor is not editing.
+        const fileId = (file as File & { fileId?: FileId }).fileId;
+        if (fileId != null) setSelectedFiles([fileId]);
+        openWorkbenchFile(file);
+        return;
+      }
       setOpenedFileName(file.name);
       // Dropped/picked from disk: no workbench file to replace yet, but claim
       // it so a later workbench arrival cannot auto-open over these edits.
@@ -486,8 +504,68 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       setSourceFile(null);
       void load(file);
     },
-    [adoptFile, load, setSourceFile],
+    [adoptFile, load, openWorkbenchFile, setSelectedFiles, setSourceFile],
   );
+
+  // A document waiting on the user's answer to "discard your changes?".
+  const [pendingOpen, setPendingOpen] = useState<{
+    file: File;
+    fromDisk: boolean;
+  } | null>(null);
+
+  const requestOpen = useCallback(
+    (file: File, fromDisk: boolean) => {
+      // Read the store, not the render's copy: a keystroke that dirtied the
+      // document in the same tick must still be caught.
+      if (store.getState().dirty) {
+        setPendingOpen({ file, fromDisk });
+        return;
+      }
+      openDocument(file, fromDisk);
+    },
+    [openDocument, store],
+  );
+
+  const onPickPdf = useCallback(
+    (file: File) => requestOpen(file, true),
+    [requestOpen],
+  );
+  const onPickWorkbenchFile = useCallback(
+    (file: File) => requestOpen(file, false),
+    [requestOpen],
+  );
+  const confirmPendingOpen = useCallback(() => {
+    const pending = pendingOpen;
+    setPendingOpen(null);
+    if (pending) openDocument(pending.file, pending.fromDisk);
+  }, [openDocument, pendingOpen]);
+
+  const openImagePicker = useCallback(() => {
+    document
+      .querySelector<HTMLInputElement>('[data-testid="pdf-editor-image-input"]')
+      ?.click();
+  }, []);
+
+  // Publish what the canvas top bar cannot reach on its own, and retract it on
+  // unmount so a stale Save cannot fire against a panel that is gone.
+  useEffect(() => {
+    setEditorSession({
+      fileName: openedFileName,
+      fileId: sourceFileId,
+      save: handleSave,
+      download: handleDownload,
+      pickFile: onPickWorkbenchFile,
+      pickImage: openImagePicker,
+    });
+    return () => setEditorSession(null);
+  }, [
+    openedFileName,
+    sourceFileId,
+    handleSave,
+    handleDownload,
+    onPickWorkbenchFile,
+    openImagePicker,
+  ]);
 
   const handleSubmitPassword = useCallback(
     (password: string) => {
@@ -515,14 +593,13 @@ export default function PdfTextEditor(_props: BaseToolProps) {
         </Alert>
       )}
       <EditorFileInputs onPickPdf={onPickPdf} onPickImage={handleInsertImage} />
-      {findOpen && state.hasDocument && (
-        <FindBar
-          store={store}
-          pages={state.pages}
-          onClose={() => setFindOpen(false)}
-        />
-      )}
-      <HelpOverlay opened={helpOpen} onClose={() => setHelpOpen(false)} />
+      {/* Declared here, not on the canvas: the canvas unmounts whenever the
+          workbench shows something else, and a modal that only exists while
+          the page stack is on screen cannot be opened from the panel. */}
+      <HelpOverlay
+        opened={state.helpOpen}
+        onClose={() => store.setHelpOpen(false)}
+      />
       <SaveRiskModal
         risks={saveRisks}
         onConfirm={handleConfirmSaveRisk}
@@ -533,6 +610,11 @@ export default function PdfTextEditor(_props: BaseToolProps) {
         loading={state.loading}
         onSubmit={handleSubmitPassword}
         onCancel={handleCancelPassword}
+      />
+      <DiscardChangesModal
+        incomingFileName={pendingOpen?.file.name ?? null}
+        onConfirm={confirmPendingOpen}
+        onCancel={() => setPendingOpen(null)}
       />
       <EditorSidebar
         store={store}
@@ -545,30 +627,29 @@ export default function PdfTextEditor(_props: BaseToolProps) {
         onSetGroupingMode={(mode) => store.setGroupingMode(mode)}
         onSetWidthMode={(m) => store.setWidthMode(m)}
         onSetShowRulers={(show) => store.setShowRulers(show)}
-        onOpenFind={() => setFindOpen(true)}
-        onShowHelp={() => setHelpOpen(true)}
-        addTextArmed={state.mode === "addText"}
-        onToggleAddText={() =>
-          store.setMode(
-            store.getState().mode === "addText" ? "select" : "addText",
-          )
-        }
-        onPickImage={() =>
-          document
-            .querySelector<HTMLInputElement>(
-              '[data-testid="pdf-editor-image-input"]',
-            )
-            ?.click()
-        }
       />
+      {/* Every tool pins its primary action to the bottom of this panel, so
+          the editor's Save lives there too, at every width. */}
       {state.hasDocument && (
-        <EditorSaveBar
+        <EditorPanelActions
+          compact={isMobile}
           openedFileName={openedFileName}
           dirty={state.dirty}
           currentFileId={sourceFileId}
-          onPickFile={openWorkbenchFile}
+          onPickFile={onPickWorkbenchFile}
           onSave={handleSave}
           onDownload={handleDownload}
+          // The find bar lives beside the pages, so bring them back first -
+          // on a phone the user still has to leave the panel to see it.
+          onOpenFind={() => {
+            if (store.getState().findOpen) {
+              store.setFindOpen(false);
+              return;
+            }
+            pinWorkbench();
+            store.setFindOpen(true);
+          }}
+          onShowHelp={() => store.setHelpOpen(true)}
         />
       )}
     </Stack>
