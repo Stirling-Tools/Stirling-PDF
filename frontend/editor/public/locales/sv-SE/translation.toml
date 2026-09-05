@@ -21,7 +21,7 @@ confirmCloseSaveFailed_other = "Sparades med fel. {{count}} filer kunde inte spa
 confirmCloseSaveFailedTitle = "Sparandet misslyckades"
 confirmCloseUnsaved = "Den här filen har osparade ändringar."
 confirmCloseUnsavedList_one = "Du har {{count}} fil med osparade ändringar.\n\n{{fileList}}"
-confirmCloseUnsavedList_other = "You have {{count}} files with unsaved changes.\n\n{{fileList}}"
+confirmCloseUnsavedList_other = "Du har {{count}} filer med osparade ändringar.\n\n{{fileList}}"
 custom = "Anpassad..."
 customPosition = "Anpassad position"
 customTextTooltip = "Valfritt anpassat format för sidnummer. Använd {n} som platshållare för numret. Exempel: \"Sida {n}\" visar \"Sida 1\", \"Sida 2\", osv."
@@ -2072,7 +2072,7 @@ importPartialSuccess_other = "Importerades med {{count}} ej mappade åtgärder: 
 importSuccess = "Importerad automatisering: {{name}}"
 invalidStep = "Ogiltigt steg"
 reviewTitle = "Resultat av automatisering"
-tags = "workflow,sequence,automation,automate,batch,batch processing,pipeline,chain,multi-step,recurring,scheduled,automatic,process multiple,bulk operations"
+tags = "arbetsflöde,sekvens,automatisering,automatisera,gruppvis,batch,gruppbearbetning,pipeline,kedja,flersteg,återkommande,schemalagd,automatisk,bearbeta flera,massåtgärder"
 title = "Automatisera"
 
 [automate.config]
@@ -3018,14 +3018,14 @@ actions = "Actions"
 back = "Tillbaka"
 cancel = "Avbryt"
 close = "Stäng"
-codeSample = "Code sample"
+codeSample = "Kodexempel"
 collapse = "Fäll ihop"
 confirm = "Bekräfta"
 continue = "Fortsätt"
 copied = "Kopierat!"
 copy = "Kopiera"
 done = "Klar"
-enterValue = "Enter value"
+enterValue = "Ange värde"
 error = "Fel"
 expand = "Fäll ut"
 loading = "Läser in..."
@@ -3200,7 +3200,7 @@ title = "Komprimeringsmetod"
 [compress.settings]
 desiredSize = "Önskad filstorlek"
 desiredSizePlaceholder = "Ange storlek"
-desiredSizeUnit = "Size unit"
+desiredSizeUnit = "Storleksenhet"
 
 [compress.tooltip.description]
 text = "Komprimering är ett enkelt sätt att minska filstorleken. Välj Filstorlek för att ange en målstorlek så justerar vi kvaliteten åt dig. Välj Kvalitet för att ställa in komprimeringsstyrkan manuellt."
@@ -3861,13 +3861,13 @@ shareSelected = "Dela valda"
 sharing = "Delning"
 showAll = "Visa alla"
 showHistory = "Visa historik"
-sortBy = "Sort files"
+sortBy = "Sortera filer"
 sortByDate = "Sortera efter datum"
 sortByName = "Sortera efter namn"
 sortBySize = "Sortera efter storlek"
 storage = "Lagring"
 storageState = "Lagring"
-storageUsed = "Storage used"
+storageUsed = "Använt lagringsutrymme"
 synced = "Synkroniserad"
 title = "Ladda upp PDF-filer"
 toolChain = "Tillämpade verktyg"
@@ -4639,7 +4639,7 @@ title = "Lägg till sidnummer"
 
 [home.addPassword]
 desc = "Kryptera ditt PDF-dokument med ett lösenord."
-tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
+tags = "kryptera,lösenord,lås,säker,skydda,säkerhet,kryptering,skyddsåtgärd,konfidentiell,privat,begränsa åtkomst"
 title = "Lägg till lösenord"
 
 [home.addStamp]
@@ -4702,7 +4702,7 @@ title = "Ändra metadata"
 
 [home.changePermissions]
 desc = "Ändra dokumentrestriktioner och behörigheter"
-tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
+tags = "behörigheter,begränsningar,rättigheter,åtkomstkontroll,tillåt,neka,utskrift,kopiering,redigering,ändra behörigheter,säkerhetsinställningar,användarrättigheter"
 title = "Ändra behörigheter"
 
 [home.classify]
@@ -4731,7 +4731,7 @@ title = "Beskär PDF"
 
 [home.devAirgapped]
 desc = "Länk till guide för isolerad installation"
-tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
+tags = "luftgap,frånkopplad,isolerad,utan internet,ej ansluten,säker,nätverksisolering,fristående"
 title = "Isolerad installation"
 
 [home.devApi]
@@ -5234,7 +5234,7 @@ openProcessor = "Öppna PDF-processorn"
 
 [navFooter.credits]
 count = "{{remaining}} of {{total}}"
-label = "Free credits"
+label = "Fria krediter"
 
 [notifications]
 adoptFailed = "Dokumentet låstes upp men kunde inte öppnas här. Prova verktyget direkt."
@@ -5396,7 +5396,7 @@ activeFiles = "Vyn <strong>Aktiva filer</strong> visar alla PDF:er du har laddat
 allTools = "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools."
 close = "Stäng"
 cropSettings = "Nu när vi har valt filen vi vill beskära kan vi konfigurera Beskär-verktyget för att välja området som vi vill beskära PDF-filen till."
-dialogLabel = "Onboarding"
+dialogLabel = "Kom igång"
 fileCheckbox = "Att klicka på en av filerna markerar den för bearbetning. Du kan välja flera filer för batchåtgärder."
 fileReplacement = "Den ändrade filen ersätter originalfilen i Arbetsbänken automatiskt, vilket gör det enkelt att köra den genom fler verktyg."
 filesButton = "Knappen <strong>Filer</strong> på snabbåtkomstfältet låter dig ladda upp PDF-filer att använda verktygen på."
@@ -5835,7 +5835,7 @@ freeTitle = "Obegränsad PDF-redigering"
 [payg.free.hero]
 barAria = "Kostnadsfria PDF-filer kvar"
 capSuffix = "/ {{limit}} free PDFs"
-metaCategories = "Automation · AI · API requests"
+metaCategories = "Automatisering · AI · API-begäranden"
 
 [payg.free.member]
 ownerOnly = "Endast teamägaren kan aktivera Processor. Manuella verktyg är fortsatt kostnadsfria att använda hur mycket du vill."
@@ -5977,7 +5977,7 @@ confirm = "Du prenumererar nu"
 default = "Uppgradera till Processor-abonnemanget"
 
 [payg.usage]
-breakdown = "AI {{ai}} • Automation {{automation}} • API {{api}}"
+breakdown = "AI {{ai}} • automatisering {{automation}} • API {{api}}"
 capLine = "{{cap}}/mån. gräns"
 estBill = "≈ {{amount}} hittills denna period"
 firstFree = "Första {{free}} kostnadsfria"
@@ -6573,7 +6573,7 @@ title = "PDF till PDF/A"
 
 [pdfToPDFUA]
 header = "PDF till PDF/UA"
-tags = "accessibility,accessible,tagged,screen reader,wcag,eaa,section 508,conversion"
+tags = "tillgänglighet,tillgänglig,taggad,skärmläsare,wcag,eaa,avsnitt 508,konvertering"
 title = "PDF till PDF/UA"
 
 [pdfToPDFX]
@@ -8429,7 +8429,7 @@ title = "Inga träffar"
 connected = "Ansluten"
 
 [portal.integrations.table]
-integration = "Integration"
+integration = "Integrering"
 worksWith = "Fungerar med"
 
 [portal.integrations.worksWith]
@@ -8511,7 +8511,7 @@ unknownStep = "Okänd åtgärd, behålls som den är."
 unsavedBody = "Du har osparade ändringar. Spara dem innan du lämnar, eller kassera dem?"
 unsavedTitle = "Osparade ändringar"
 usesDefaults = "Körs med standardinställningar"
-viewDefinition = "Visa definition"
+viewDefinition = "Visa arbetsflödesdefinition"
 
 [portal.pipelines.builder.blocker]
 destination = "Välj en destination"
@@ -11097,7 +11097,7 @@ passwordsDoNotMatch = "Lösenorden matchar inte"
 passwordTooShort = "Lösenordet måste vara minst 6 tecken långt"
 pleaseFillAllFields = "Fyll i alla fält"
 signUp = "Registrera dig"
-signUpWith = "Sign up with"
+signUpWith = "Registrera dig med"
 skip = "Skip"
 subtitle = "Gå med i Stirling PDF för att komma igång"
 title = "Skapa ett konto"
@@ -11458,7 +11458,7 @@ leaveSuccess = "Du har lämnat teamet"
 loading = "Läser in teaminformation..."
 memberCount_one = "{{count}} member"
 memberCount_other = "{{count}} members"
-memberCount_zero = "no members"
+memberCount_zero = "inga medlemmar"
 memberRemoved = "Medlem borttagen"
 namePlaceholder = "Ange teamnamn"
 personal = "Personligt"
@@ -12468,7 +12468,7 @@ exitRedaction = "Avsluta maskeringsläge"
 exportAll = "Exportera PDF"
 exportSelected = "Exportera valda sidor"
 formFill = "Fyll i formulär"
-hideToolbar = "Hide toolbar"
+hideToolbar = "Dölj verktygsfält"
 moreActions = "Fler åtgärder"
 multiTool = "Multiverktyg"
 panMode = "Panoreringsläge"
@@ -12492,7 +12492,7 @@ selectLanguage = "Välj språk"
 share = "Dela"
 showAllTools = "Visa alla verktyg"
 showFewerTools = "Fäll ihop verktygsfält"
-showToolbar = "Show toolbar"
+showToolbar = "Visa verktygsfält"
 toggleAnnotations = "Visa/dölj anteckningar"
 toggleAttachments = "Visa/dölj bilagor"
 toggleBookmarks = "Visa/dölj bokmärken"
@@ -12991,7 +12991,7 @@ request-for-quotation = "Offertförfrågan"
 requirements-document = "Kravdokument"
 research-abstract = "Forskningssammanfattning"
 research-paper = "Forskningsartikel"
-reservation = "Reservation"
+reservation = "Bokning"
 resignation-letter = "Uppsägning"
 resume = "CV"
 retrospective = "Retrospektiv"
