@@ -71,6 +71,154 @@ class YamlHelperMoreTest {
         }
 
         @Test
+        @DisplayName("merges a partial Map into an existing block, keeping siblings and comments")
+        void partialMapMergesIntoExistingBlock() {
+            YamlHelper h =
+                    helper(
+                            "sharing:\n"
+                                    + "  enabled: true\n"
+                                    + "  linkEnabled: true # keep me\n"
+                                    + "  emailEnabled: false\n"
+                                    + "  linkExpirationDays: 3\n");
+            assertThat(h.updateValue(List.of("sharing"), Map.of("emailEnabled", true))).isTrue();
+
+            assertThat(h.getValueByExactKeyPath("sharing", "emailEnabled")).isEqualTo("true");
+            assertThat(h.getValueByExactKeyPath("sharing", "enabled")).isEqualTo("true");
+            assertThat(h.getValueByExactKeyPath("sharing", "linkEnabled")).isEqualTo("true");
+            assertThat(h.getValueByExactKeyPath("sharing", "linkExpirationDays")).isEqualTo("3");
+            assertThat(h.convertNodeToYaml(h.getUpdatedRootNode())).contains("# keep me");
+        }
+
+        @Test
+        @DisplayName("a Map merge adds keys the existing block does not have")
+        void partialMapAddsUnknownKeys() {
+            YamlHelper h = helper("sharing:\n  enabled: false\n");
+            Map<String, Object> values = new LinkedHashMap<>();
+            values.put("enabled", true);
+            values.put("emailEnabled", true);
+            assertThat(h.updateValue(List.of("sharing"), values)).isTrue();
+
+            assertThat(h.getValueByExactKeyPath("sharing", "enabled")).isEqualTo("true");
+            assertThat(h.getValueByExactKeyPath("sharing", "emailEnabled")).isEqualTo("true");
+        }
+
+        @Test
+        @DisplayName("a deep partial merge keeps every unrelated nested key, on disk too")
+        void deepMergeKeepsUnrelatedNestedKeys() {
+            YamlHelper h =
+                    helper(
+                            "oauth2:\n"
+                                    + "  enabled: false\n"
+                                    + "  client:\n"
+                                    + "    google:\n"
+                                    + "      clientId: OLD\n"
+                                    + "      clientSecret: SEC\n"
+                                    + "    github:\n"
+                                    + "      clientId: GH\n");
+            assertThat(
+                            h.updateValue(
+                                    List.of("oauth2"),
+                                    Map.of("client", Map.of("google", Map.of("clientId", "NEW")))))
+                    .isTrue();
+
+            // Re-parse the emitted YAML: the siblings must survive the round-trip to disk,
+            // not just the in-memory node tree.
+            YamlHelper reloaded = helper(h.convertNodeToYaml(h.getUpdatedRootNode()));
+            assertThat(reloaded.getValueByExactKeyPath("oauth2", "client", "google", "clientId"))
+                    .isEqualTo("NEW");
+            assertThat(
+                            reloaded.getValueByExactKeyPath(
+                                    "oauth2", "client", "google", "clientSecret"))
+                    .isEqualTo("SEC");
+            assertThat(reloaded.getValueByExactKeyPath("oauth2", "client", "github", "clientId"))
+                    .isEqualTo("GH");
+            assertThat(reloaded.getValueByExactKeyPath("oauth2", "enabled")).isEqualTo("false");
+        }
+
+        @Test
+        @DisplayName("a list inside a merge replaces the whole sequence instead of appending")
+        void listInsideMergeReplacesTheWholeSequence() {
+            YamlHelper h =
+                    helper(
+                            "mcp:\n"
+                                    + "  enabled: true\n"
+                                    + "  allowedOperations:\n"
+                                    + "    - a\n"
+                                    + "    - b\n");
+            assertThat(h.updateValue(List.of("mcp"), Map.of("allowedOperations", List.of("z"))))
+                    .isTrue();
+
+            // A security allowlist must still be shortenable, so the sequence is replaced.
+            List<?> operations = (List<?>) h.getValueByExactKeyPath("mcp", "allowedOperations");
+            assertThat(operations).hasSize(1);
+            assertThat(operations.getFirst()).isEqualTo("z");
+            assertThat(h.getValueByExactKeyPath("mcp", "enabled")).isEqualTo("true");
+        }
+
+        @Test
+        @DisplayName("a null entry in a merge writes null and does not delete the key")
+        void nullEntryDoesNotDeleteTheKey() {
+            YamlHelper h =
+                    helper(
+                            "sharing:\n"
+                                    + "  enabled: true\n"
+                                    + "  linkEnabled: true\n"
+                                    + "  emailEnabled: false\n"
+                                    + "  linkExpirationDays: 3\n");
+            Map<String, Object> values = new LinkedHashMap<>();
+            values.put("emailEnabled", null);
+            assertThat(h.updateValue(List.of("sharing"), values)).isTrue();
+
+            assertThat(h.getValueByExactKeyPath("sharing", "emailEnabled")).isEqualTo("null");
+            assertThat(h.getValueByExactKeyPath("sharing", "enabled")).isEqualTo("true");
+            assertThat(h.getValueByExactKeyPath("sharing", "linkEnabled")).isEqualTo("true");
+            assertThat(h.getValueByExactKeyPath("sharing", "linkExpirationDays")).isEqualTo("3");
+        }
+
+        @Test
+        @DisplayName("merging an empty map leaves every key in the block unchanged")
+        void emptyMapLeavesTheBlockUnchanged() {
+            YamlHelper h =
+                    helper(
+                            "sharing:\n"
+                                    + "  enabled: true\n"
+                                    + "  linkEnabled: true\n"
+                                    + "  emailEnabled: false\n"
+                                    + "  linkExpirationDays: 3\n");
+            h.updateValue(List.of("sharing"), Map.of());
+
+            assertThat(h.getValueByExactKeyPath("sharing", "enabled")).isEqualTo("true");
+            assertThat(h.getValueByExactKeyPath("sharing", "linkEnabled")).isEqualTo("true");
+            assertThat(h.getValueByExactKeyPath("sharing", "emailEnabled")).isEqualTo("false");
+            assertThat(h.getValueByExactKeyPath("sharing", "linkExpirationDays")).isEqualTo("3");
+        }
+
+        @Test
+        @DisplayName("a non-numeric value does not inherit the existing INT tag")
+        void nonNumericValueDoesNotInheritIntTag() {
+            YamlHelper h = helper("sharing:\n  linkExpirationDays: 3\n");
+            assertThat(h.updateValue(List.of("sharing", "linkExpirationDays"), "notanumber"))
+                    .isTrue();
+
+            // !!int 'notanumber' would make settings.yml unloadable and brick the boot.
+            String dumped = h.convertNodeToYaml(h.getUpdatedRootNode());
+            assertThat(dumped).doesNotContain("!!int");
+            assertThat(helper(dumped).getValueByExactKeyPath("sharing", "linkExpirationDays"))
+                    .isEqualTo("notanumber");
+        }
+
+        @Test
+        @DisplayName("a null value does not inherit the existing INT tag")
+        void nullValueDoesNotInheritIntTag() {
+            YamlHelper h = helper("sharing:\n  linkExpirationDays: 3\n");
+            assertThat(h.updateValue(List.of("sharing", "linkExpirationDays"), null)).isTrue();
+
+            String dumped = h.convertNodeToYaml(h.getUpdatedRootNode());
+            assertThat(dumped).doesNotContain("!!int");
+            assertThat(h.getValueByExactKeyPath("sharing", "linkExpirationDays")).isEqualTo("null");
+        }
+
+        @Test
         @DisplayName("replaces a scalar with a List value (SequenceNode)")
         void listValue() {
             YamlHelper h = helper("cfg:\n  items: x\n");

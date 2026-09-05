@@ -136,8 +136,17 @@ public class YamlHelper {
                 } else if ("true".equals(newValue) || "false".equals(newValue)) {
                     newValueNode =
                             new ScalarNode(Tag.BOOL, String.valueOf(newValue), ScalarStyle.PLAIN);
+                } else if (newValue instanceof Map<?, ?> map
+                        && valueNode instanceof MappingNode existingMapping) {
+                    // Merge into the existing block instead of replacing it: callers send
+                    // partial maps (the admin UI only submits changed fields), so replacing
+                    // would delete every sibling key and reset it to the template default.
+                    mergeIntoMappingNode(existingMapping, map);
+                    updatedTuples.add(tuple);
+                    updated = true;
+                    continue;
                 } else if (newValue instanceof Map<?, ?> map) {
-                    // Handle Map objects - convert to MappingNode
+                    // No existing block to merge into - build one from scratch
                     List<NodeTuple> mapTuples = new ArrayList<>();
                     for (Map.Entry<?, ?> entry : map.entrySet()) {
                         ScalarNode mapKeyNode =
@@ -167,6 +176,13 @@ public class YamlHelper {
                                 new ScalarNode(tag, String.valueOf(obj), ScalarStyle.PLAIN));
                     }
                     newValueNode = new SequenceNode(Tag.SEQ, sequenceNodes, FlowStyle.FLOW);
+                } else if (newValue == null) {
+                    // A null must not inherit the old tag: !!int 'null' and !!map 'null'
+                    // make settings.yml unloadable and the app will not boot.
+                    newValueNode = new ScalarNode(Tag.NULL, "null", ScalarStyle.PLAIN);
+                } else if (tag == Tag.INT || tag == Tag.FLOAT) {
+                    // Numeric values were handled above, so this one is not numeric.
+                    newValueNode = convertValueToNode(newValue);
                 } else if (tag == Tag.NULL) {
                     if ("true".equals(newValue)
                             || "false".equals(newValue)
@@ -194,6 +210,31 @@ public class YamlHelper {
         updatedRootNode = node;
 
         return updated;
+    }
+
+    /**
+     * Applies each entry of {@code values} onto {@code target} in place, keeping any key of {@code
+     * target} the map does not mention (along with its comments). Keys absent from {@code target}
+     * are appended.
+     *
+     * <p>The merge is additive-only: an entry can add or overwrite a key but never remove one, and
+     * a null entry writes a null value rather than deleting the key.
+     *
+     * <p>An appended key the settings template does not contain is dropped on the next restart,
+     * because ConfigInitializer merges the user file into the template.
+     */
+    private void mergeIntoMappingNode(MappingNode target, Map<?, ?> values) {
+        for (Map.Entry<?, ?> entry : values.entrySet()) {
+            String key = String.valueOf(entry.getKey());
+            if (updateValue(target, List.of(key), entry.getValue())) {
+                continue;
+            }
+            target.getValue()
+                    .add(
+                            new NodeTuple(
+                                    new ScalarNode(Tag.STR, key, ScalarStyle.PLAIN),
+                                    convertValueToNode(entry.getValue())));
+        }
     }
 
     /**
