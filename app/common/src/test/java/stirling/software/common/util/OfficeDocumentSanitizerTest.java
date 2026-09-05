@@ -443,10 +443,83 @@ class OfficeDocumentSanitizerTest {
     }
 
     @Test
-    void sanitize_unparseableXmlIsRejectedNotPassedThrough() {
-        // Fail closed: XML-detected content that cannot be parsed is rejected, not passed raw.
-        byte[] garbage = "<not-well-formed <<< &amp".getBytes(StandardCharsets.UTF_8);
-        assertThrows(IOException.class, () -> sanitizer.sanitize(garbage, "fodt"));
+    void sanitize_malformedTextStartingWithAngleBracketPassesThrough() throws IOException {
+        // Not well-formed XML, so no office XML filter can import it; LibreOffice renders it as
+        // text. Rejecting it would break ordinary .txt/.csv uploads that happen to start with '<'.
+        for (String text :
+                new String[] {
+                    "<not-well-formed <<< &amp", "<-- draft note\ncontent", "<p>hi<br>there</p>"
+                }) {
+            byte[] bytes = text.getBytes(StandardCharsets.UTF_8);
+            assertArrayEquals(
+                    bytes, sanitizer.sanitize(bytes, "txt"), "must pass through: " + text);
+        }
+    }
+
+    @Test
+    void sanitize_wellFormedXmlBeyondParserLimitsIsRejected() {
+        // Fail closed: well-formed XML the hardened parser refuses must never reach LibreOffice
+        // unsanitized, or nesting past the limit would bypass sanitization.
+        StringBuilder sb = new StringBuilder("<?xml version=\"1.0\"?><r>");
+        int depth = 900; // past MAX_ELEMENT_DEPTH
+        sb.append("<a>".repeat(depth));
+        sb.append("<b/>");
+        sb.append("</a>".repeat(depth));
+        sb.append("</r>");
+        byte[] tooDeep = sb.toString().getBytes(StandardCharsets.UTF_8);
+        assertThrows(IOException.class, () -> sanitizer.sanitize(tooDeep, "fodt"));
+    }
+
+    @Test
+    void sanitize_deeplyNestedZipPartCannotBypassSanitization() throws IOException {
+        // Regression: secure processing caps element depth, and the zip path used to pass an
+        // unparseable part through untouched, letting a nested href reach LibreOffice.
+        StringBuilder sb = new StringBuilder("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
+        sb.append(
+                "<office:document-content"
+                        + " xmlns:office=\"urn:oasis:names:tc:opendocument:xmlns:office:1.0\""
+                        + " xmlns:table=\"urn:oasis:names:tc:opendocument:xmlns:table:1.0\""
+                        + " xmlns:draw=\"urn:oasis:names:tc:opendocument:xmlns:drawing:1.0\""
+                        + " xmlns:xlink=\"http://www.w3.org/1999/xlink\"><office:body><office:text>");
+        int nesting = 100; // XML depth ~305: far past the JDK default of 100, inside our cap
+        sb.append("<table:table><table:table-row><table:table-cell>".repeat(nesting));
+        sb.append("<draw:frame><draw:image xlink:href=\"" + EXTERNAL_URL + "\"/></draw:frame>");
+        sb.append("</table:table-cell></table:table-row></table:table>".repeat(nesting));
+        sb.append("</office:text></office:body></office:document-content>");
+
+        Map<String, byte[]> entries = new LinkedHashMap<>();
+        entries.put("content.xml", sb.toString().getBytes(StandardCharsets.UTF_8));
+        byte[] out = sanitizer.sanitize(zip(entries), "odt");
+
+        String content = new String(unzip(out).get("content.xml"), StandardCharsets.UTF_8);
+        assertFalse(content.contains(EXTERNAL_URL), "nested external href must still be stripped");
+    }
+
+    @Test
+    void sanitize_zipPartBeyondDepthLimitIsRejectedNotPassedThrough() throws IOException {
+        // Past the parser's depth cap there is nothing to strip with, so reject rather than
+        // hand the document to LibreOffice unsanitized.
+        StringBuilder sb =
+                new StringBuilder(
+                        "<?xml version=\"1.0\"?><office:document-content"
+                                + " xmlns:office=\"urn:oasis:names:tc:opendocument:xmlns:office:1.0\">");
+        int depth = 900; // past MAX_ELEMENT_DEPTH
+        sb.append("<a>".repeat(depth));
+        sb.append("</a>".repeat(depth));
+        sb.append("</office:document-content>");
+        Map<String, byte[]> entries = new LinkedHashMap<>();
+        entries.put("content.xml", sb.toString().getBytes(StandardCharsets.UTF_8));
+        byte[] odt = zip(entries);
+        assertThrows(IOException.class, () -> sanitizer.sanitize(odt, "odt"));
+    }
+
+    @Test
+    void sanitize_unparseableZipPartIsRejectedNotPassedThrough() throws IOException {
+        // A part we cannot parse must not be handed to LibreOffice as-is.
+        Map<String, byte[]> entries = new LinkedHashMap<>();
+        entries.put("content.xml", "<office:body <<< broken".getBytes(StandardCharsets.UTF_8));
+        byte[] odt = zip(entries);
+        assertThrows(IOException.class, () -> sanitizer.sanitize(odt, "odt"));
     }
 
     private static byte[] zip(Map<String, byte[]> entries) throws IOException {

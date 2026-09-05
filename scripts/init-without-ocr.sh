@@ -942,7 +942,7 @@ case "$(printf '%s' "${LIBREOFFICE_ALLOW_NETWORK:-false}" | tr '[:upper:]' '[:lo
     if [ -f "$OFFICE_GUARD_LIB" ]; then
       OFFICE_LD_PRELOAD="$OFFICE_GUARD_LIB"
       log "LibreOffice network isolation enabled (guard: $OFFICE_GUARD_LIB)"
-    else
+    elif command_exists soffice || command_exists unoserver; then
       log "WARNING: LibreOffice network guard missing at $OFFICE_GUARD_LIB; conversions are NOT network-isolated"
     fi
     ;;

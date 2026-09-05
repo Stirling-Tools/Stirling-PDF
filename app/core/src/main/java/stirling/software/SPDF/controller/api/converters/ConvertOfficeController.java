@@ -93,6 +93,9 @@ public class ConvertOfficeController {
             String htmlContent = new String(inputBytes, StandardCharsets.UTF_8);
             String sanitizedHtml = customHtmlSanitizer.sanitize(htmlContent);
             Files.writeString(inputPath, sanitizedHtml, StandardCharsets.UTF_8);
+        } else if (inputBytes.length == 0) {
+            // Nothing to sanitize; let the converter report the empty input as it always has.
+            Files.write(inputPath, inputBytes);
         } else {
             byte[] sanitized = officeDocumentSanitizer.sanitize(inputBytes, extensionLower);
             Files.write(inputPath, sanitized);

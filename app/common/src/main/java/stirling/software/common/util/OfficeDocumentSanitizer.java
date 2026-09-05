@@ -3,8 +3,11 @@ package stirling.software.common.util;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -16,6 +19,7 @@ import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParserFactory;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
@@ -29,7 +33,9 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
+import org.xml.sax.XMLReader;
 
 import io.github.pixee.security.ZipSecurity;
 
@@ -55,6 +61,15 @@ public class OfficeDocumentSanitizer {
 
     private static final Set<String> ODF_XML_PARTS =
             Set.of("content.xml", "styles.xml", "meta.xml", "settings.xml");
+
+    private static final String MAX_ELEMENT_DEPTH_PROPERTY =
+            "http://www.oracle.com/xml/jaxp/properties/maxElementDepth";
+
+    // Secure processing defaults to 100, which real documents exceed: LibreOffice emits depth 109
+    // for 35 nested tables, and anything past the cap used to skip sanitization entirely.
+    // 512 clears the deepest document LibreOffice produces by ~3x and stays well inside the
+    // JAXP serializer's stack budget (it recurses per level, ~0.5KB of stack each).
+    private static final int MAX_ELEMENT_DEPTH = 512;
 
     private final SsrfProtectionService ssrfProtectionService;
     private final ApplicationProperties applicationProperties;
@@ -126,7 +141,7 @@ public class OfficeDocumentSanitizer {
         return out.toByteArray();
     }
 
-    // Flat single-file XML: strip all out-of-document refs; fail CLOSED on unparseable.
+    // Flat single-file XML: strip all out-of-document refs; fail CLOSED on unparseable XML.
     byte[] sanitizeFlatXml(byte[] xmlBytes) throws IOException {
         byte[] cleaned = tryStripFlatXml(xmlBytes);
         if (cleaned != null) {
@@ -140,7 +155,40 @@ public class OfficeDocumentSanitizer {
                 return cleaned;
             }
         }
+        // Not well-formed XML, so no office XML filter can import it either (LibreOffice renders
+        // it as plain text). Passing it through keeps .txt/.csv uploads converting as before.
+        if (!isWellFormedXml(xmlBytes)
+                && (withoutDoctype == null || !isWellFormedXml(withoutDoctype))) {
+            log.debug("Content is not well-formed XML; passing through as plain text");
+            return xmlBytes;
+        }
         throw new IOException("XML document could not be parsed for sanitization and was rejected");
+    }
+
+    // Well-formedness only: tells a malformed text file apart from XML we refused to sanitize.
+    private static boolean isWellFormedXml(byte[] xmlBytes) {
+        try {
+            SAXParserFactory factory = SAXParserFactory.newInstance();
+            factory.setNamespaceAware(true);
+            factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+            factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+            factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+            factory.setFeature(
+                    "http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+            XMLReader reader = factory.newSAXParser().getXMLReader();
+            // SAX is iterative, so depth is free here; a deep document must still count as
+            // well-formed or it would slip out through the pass-through branch above.
+            try {
+                reader.setProperty(MAX_ELEMENT_DEPTH_PROPERTY, 0);
+            } catch (SAXException e) {
+                log.debug("Parser does not support {}", MAX_ELEMENT_DEPTH_PROPERTY);
+            }
+            reader.setEntityResolver((publicId, systemId) -> new InputSource(new StringReader("")));
+            reader.parse(new InputSource(new ByteArrayInputStream(xmlBytes)));
+            return true;
+        } catch (ParserConfigurationException | SAXException | IOException e) {
+            return false;
+        }
     }
 
     // Returns null (not the original bytes) to signal a parse failure to the caller.
@@ -212,25 +260,40 @@ public class OfficeDocumentSanitizer {
         return false;
     }
 
-    private byte[] sanitizeEntry(String entryName, byte[] entryBytes) {
+    // Fails CLOSED: a part we cannot parse must not be handed to LibreOffice unsanitized,
+    // or nesting an external href past a parser limit would bypass sanitization entirely.
+    private byte[] sanitizeEntry(String entryName, byte[] entryBytes) throws IOException {
         String lower = entryName.toLowerCase(Locale.ROOT);
+        boolean rels = lower.endsWith(".rels");
+        if (!rels && !isOdfXmlPart(lower)) {
+            return entryBytes;
+        }
         try {
-            if (lower.endsWith(".rels")) {
-                return sanitizeOoxmlRels(entryBytes);
-            }
-            if (isOdfXmlPart(lower)) {
-                return sanitizeOdfXml(entryBytes);
-            }
+            return rels ? sanitizeOoxmlRels(entryBytes) : sanitizeOdfXml(entryBytes);
         } catch (ParserConfigurationException
                 | SAXException
                 | IOException
                 | TransformerException e) {
-            log.warn(
-                    "Failed to parse XML part '{}' for sanitization, leaving as-is: {}",
-                    entryName,
-                    e.getMessage());
+            byte[] withoutDoctype = stripDoctype(entryBytes);
+            if (withoutDoctype != null) {
+                try {
+                    return rels
+                            ? sanitizeOoxmlRels(withoutDoctype)
+                            : sanitizeOdfXml(withoutDoctype);
+                } catch (ParserConfigurationException
+                        | SAXException
+                        | IOException
+                        | TransformerException retry) {
+                    log.debug("Retry without DOCTYPE also failed: {}", retry.getMessage());
+                }
+            }
+            log.warn("XML part '{}' could not be parsed for sanitization: {}", entryName, e);
+            throw new IOException(
+                    "Office document part '"
+                            + entryName
+                            + "' could not be sanitized and was"
+                            + " rejected");
         }
-        return entryBytes;
     }
 
     private boolean isOdfXmlPart(String lowerName) {
@@ -292,35 +355,40 @@ public class OfficeDocumentSanitizer {
     }
 
     // flatMode: flat XML has no package, so strip all refs but #frag/data: (zip keeps relatives).
-    private boolean stripExternalHrefs(Node node, boolean flatMode) {
+    // Iterative so document nesting depth can never cost stack frames.
+    private boolean stripExternalHrefs(Node root, boolean flatMode) {
         boolean modified = false;
-        if (node.getNodeType() == Node.ELEMENT_NODE) {
-            NamedNodeMap attrs = node.getAttributes();
-            List<String> attrsToRemove = new ArrayList<>();
-            for (int i = 0; i < attrs.getLength(); i++) {
-                Node attr = attrs.item(i);
-                String name = attr.getNodeName();
-                if (name == null || !isReferenceAttribute(name)) {
-                    continue;
+        Deque<Node> pending = new ArrayDeque<>();
+        pending.push(root);
+        while (!pending.isEmpty()) {
+            Node node = pending.pop();
+            if (node.getNodeType() == Node.ELEMENT_NODE) {
+                NamedNodeMap attrs = node.getAttributes();
+                List<String> attrsToRemove = new ArrayList<>();
+                for (int i = 0; i < attrs.getLength(); i++) {
+                    Node attr = attrs.item(i);
+                    String name = attr.getNodeName();
+                    if (name == null || !isReferenceAttribute(name)) {
+                        continue;
+                    }
+                    String value = attr.getNodeValue();
+                    boolean dangerous =
+                            flatMode ? isOutsideDocumentRef(value) : isExternalUrl(value);
+                    if (!dangerous || isAdminAllowed(value)) {
+                        continue;
+                    }
+                    log.warn("Stripping reference attribute ({}): {}", name, truncateForLog(value));
+                    attrsToRemove.add(name);
                 }
-                String value = attr.getNodeValue();
-                boolean dangerous = flatMode ? isOutsideDocumentRef(value) : isExternalUrl(value);
-                if (!dangerous || isAdminAllowed(value)) {
-                    continue;
+                Element element = (Element) node;
+                for (String attrName : attrsToRemove) {
+                    element.removeAttribute(attrName);
+                    modified = true;
                 }
-                log.warn("Stripping reference attribute ({}): {}", name, truncateForLog(value));
-                attrsToRemove.add(name);
             }
-            Element element = (Element) node;
-            for (String attrName : attrsToRemove) {
-                element.removeAttribute(attrName);
-                modified = true;
-            }
-        }
-        NodeList children = node.getChildNodes();
-        for (int i = 0; i < children.getLength(); i++) {
-            if (stripExternalHrefs(children.item(i), flatMode)) {
-                modified = true;
+            NodeList children = node.getChildNodes();
+            for (int i = 0; i < children.getLength(); i++) {
+                pending.push(children.item(i));
             }
         }
         return modified;
@@ -401,6 +469,11 @@ public class OfficeDocumentSanitizer {
         factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
         factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
         factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+        try {
+            factory.setAttribute(MAX_ELEMENT_DEPTH_PROPERTY, MAX_ELEMENT_DEPTH);
+        } catch (IllegalArgumentException e) {
+            log.debug("Parser does not support {}", MAX_ELEMENT_DEPTH_PROPERTY);
+        }
         factory.setXIncludeAware(false);
         factory.setExpandEntityReferences(false);
         factory.setNamespaceAware(true);
@@ -416,7 +489,14 @@ public class OfficeDocumentSanitizer {
         transformer.setOutputProperty(OutputKeys.INDENT, "no");
         transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        transformer.transform(new DOMSource(doc), new StreamResult(baos));
+        try {
+            transformer.transform(new DOMSource(doc), new StreamResult(baos));
+        } catch (StackOverflowError e) {
+            // The JAXP serializer recurses per element. MAX_ELEMENT_DEPTH keeps it clear of the
+            // stack, but on a tiny -Xss turn it into a normal failure so callers fail closed
+            // rather than letting an Error escape the request thread.
+            throw new TransformerException("Document too deeply nested to serialize safely");
+        }
         return baos.toByteArray();
     }
 

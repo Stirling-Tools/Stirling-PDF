@@ -51,5 +51,9 @@ int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen) {
         errno = EACCES;
         return -1;
     }
+    if (real_connect == NULL) {
+        errno = ENOSYS; /* never call through a NULL pointer if dlsym failed */
+        return -1;
+    }
     return real_connect(sockfd, addr, addrlen);
 }
