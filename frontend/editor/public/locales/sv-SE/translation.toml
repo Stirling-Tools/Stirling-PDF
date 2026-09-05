@@ -7717,9 +7717,9 @@ eyebrow = "API-REFERENS"
 fieldCount_one = "{{count}} fält"
 fieldCount_other = "{{count}} fält"
 filterAll = "Alla"
-filterAriaLabel = "Filtrera endpoints efter vertikal"
-lead = "Varje dokumenttyp är en typad endpoint. POST:a en fil, ta emot schemavaliderad JSON. Filtrera efter vertikal nedan."
-title = "Endpoints"
+filterAriaLabel = "Filtrera slutpunkter efter användningsområde"
+lead = "Varje dokumenttyp har en typad slutpunkt. POST:a en fil och ta emot schemavaliderad JSON. Filtrera efter användningsområde nedan."
+title = "Slutpunkter"
 
 [portal.docs.errors]
 codeCaption = "422 Unprocessable Entity"
@@ -7737,13 +7737,13 @@ title = "Dokumentation otillgänglig"
 [portal.docs.quickstart]
 eyebrow = "KOM IGÅNG"
 lead = "Skicka ditt första dokument till en typad endpoint och få strukturerad JSON tillbaka i tre steg. Ingen modellträning, ingen prompt engineering."
-title = "Quickstart"
+title = "Snabbstart"
 
 [portal.docs.quickstart.callout]
 bodyAfterLink = "för copy-paste-recept."
 bodyBeforeLink = "koppla samma anrop till en pipeline för att kedja validering, maskering och leverans — eller exponera det för en agent över MCP. Se"
 label = "Nästa:"
-link = "Playbooks"
+link = "Spelplaner"
 
 [portal.docs.quickstart.step1]
 body = "Skapa en avgränsad nyckel från fliken Infrastruktur. Nycklar har hastighetsgränser och en valfri IP-allowlist. Exportera den till ditt shell:"
@@ -7760,7 +7760,7 @@ codeCaption = "200 OK"
 title = "Läs det strukturerade resultatet"
 
 [portal.docs.rateLimits]
-burst = "Burst"
+burst = "Tillfällig topp"
 codeCaption = "429 Too Many Requests"
 concurrency = "Samtidighet"
 eyebrow = "KOM IGÅNG"
@@ -7770,12 +7770,12 @@ title = "Hastighetsgränser och kvoter"
 
 [portal.docs.recipes]
 cloneButton = "Klona recept"
-eyebrow = "PLAYBOOKS"
+eyebrow = "SPELPLANER"
 lead = "End-to-end-mönster som kedjar källor, åtgärder och destinationer. Varje mappar till en pipeline som du kan klona."
 title = "Recept"
 
 [portal.docs.sdks]
-eyebrow = "SDKS"
+eyebrow = "SDK:ER"
 lead = "Förstapartsklienter med typade svar, automatiska omförsök och strömmande uppladdningar. Alla följer samma endpoint-katalog."
 title = "Officiella SDK:er"
 
@@ -7784,7 +7784,7 @@ beta = "Beta"
 deprecated = "Föråldrad"
 
 [portal.docs.skills]
-eyebrow = "SKILLS"
+eyebrow = "FÄRDIGHETER"
 lead = "Medföljande, namngivna förmågor som din agent anropar som ett enda verktyg. Varje skill är en deterministisk åtgärdskedja med kopplade evals."
 title = "Agent-skills"
 
@@ -7795,10 +7795,10 @@ title = "På denna sida"
 codeCaption = "document.processed"
 eyebrow = "API-REFERENS"
 lead = "Prenumerera på händelserna document.processed, pipeline.completed och quota.threshold. Payloads signeras med HMAC-SHA256."
-title = "Webhooks"
+title = "Webhookar"
 
 [portal.docs.webhooks.callout]
-afterHelper = "helper."
+afterHelper = "hjälpfunktion."
 beforeHelper = "headern mot din signeringshemlighet innan du litar på en payload. SDK:er levereras med en"
 beforeSignature = "Verifiera"
 
@@ -7885,7 +7885,7 @@ sensitiveLabel = "Känsligt"
 [portal.documents.table.columns]
 action = "Pipeline / Åtgärd"
 document = "Dokument"
-labels = "Labels"
+labels = "Etiketter"
 product = "Produkt"
 status = "Status"
 time = "Tid"
@@ -7897,11 +7897,11 @@ title = "Editor-distribution"
 
 [portal.editorAdmin.health.columns]
 activeUsers = "Aktiva användare"
-host = "Host"
+host = "Värd"
 lastSeen = "Senast sedd"
 region = "Region"
 status = "Status"
-target = "Target"
+target = "Mål"
 version = "Version"
 
 [portal.editorAdmin.health.empty]
@@ -7953,7 +7953,7 @@ title = "Rotera körande instanser"
 [portal.editorAdmin.status]
 degraded = "Försämrad"
 healthy = "Frisk"
-offline = "Offline"
+offline = "Frånkopplad"
 pairing = "Kopplar"
 
 [portal.editorAdmin.targets]
@@ -9555,7 +9555,7 @@ unused = "Oanvänd"
 documents = "Dokument"
 source = "Källa"
 status = "Status"
-type = "Type"
+type = "Typ"
 usedBy = "Policyer"
 
 [portal.sources.types.box]
