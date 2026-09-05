@@ -4,8 +4,8 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.HashSet;
 import java.util.Set;
@@ -39,6 +39,7 @@ import stirling.software.common.model.tool.ToolArity;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ChecksumUtils;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.TempFile;
@@ -70,7 +71,7 @@ public class ExtractImagesController {
         String imageFormat = request.getFormat();
 
         String baseFilename = GeneralUtils.removeExtension(file.getOriginalFilename());
-        Set<Integer> processedImageHashes = new HashSet<>();
+        Set<String> processedImageKeys = new HashSet<>();
 
         TempFile zipFile = new TempFile(tempFileManager, ".zip");
         try (ZipOutputStream zipStream =
@@ -87,7 +88,7 @@ public class ExtractImagesController {
                         imageFormat,
                         baseFilename,
                         pageIndex + 1,
-                        processedImageHashes,
+                        processedImageKeys,
                         zipStream);
             }
         } catch (Exception e) {
@@ -104,7 +105,7 @@ public class ExtractImagesController {
             String imageFormat,
             String baseFilename,
             int pageNumber,
-            Set<Integer> seenImageHashes,
+            Set<String> seenImageKeys,
             ZipOutputStream zipOutput)
             throws IOException {
         if (page.getResources() == null || page.getResources().getXObjectNames() == null) {
@@ -120,15 +121,14 @@ public class ExtractImagesController {
             try {
                 PDImageXObject imageObject =
                         (PDImageXObject) page.getResources().getXObject(resourceName);
-                int imageHashCode = imageObject.hashCode();
 
-                if (seenImageHashes.contains(imageHashCode)) {
+                String imageKey = imageContentKey(imageObject);
+                if (imageKey != null && !seenImageKeys.add(imageKey)) {
                     continue;
                 }
-                seenImageHashes.add(imageHashCode);
 
                 RenderedImage sourceImage = imageObject.getImage();
-                BufferedImage convertedImage = convertImageToFormat(sourceImage, imageFormat);
+                RenderedImage outputImage = toWritableImage(sourceImage, imageFormat);
 
                 String imagePath =
                         baseFilename
@@ -138,11 +138,14 @@ public class ExtractImagesController {
                                 + imageCount++
                                 + "."
                                 + imageFormat;
-                ByteArrayOutputStream imageBuffer = new ByteArrayOutputStream();
-                ImageIO.write(convertedImage, imageFormat, imageBuffer);
 
                 zipOutput.putNextEntry(new ZipEntry(imagePath));
-                zipOutput.write(imageBuffer.toByteArray());
+                if (!ImageIO.write(outputImage, imageFormat, zipOutput)) {
+                    throw ExceptionUtils.createIllegalArgumentException(
+                            "error.unsupportedImageFormat",
+                            "No image writer is available for format {0}.",
+                            imageFormat);
+                }
                 zipOutput.closeEntry();
 
             } catch (IOException e) {
@@ -152,16 +155,46 @@ public class ExtractImagesController {
         }
     }
 
-    private BufferedImage convertImageToFormat(RenderedImage source, String format) {
-        int width = source.getWidth();
-        int height = source.getHeight();
+    /**
+     * Content fingerprint identifying one embedded image, used to extract a repeated image only
+     * once. Hashes the encoded stream rather than the decoded pixels, so it costs a read of the
+     * already-compressed bytes.
+     *
+     * @return null when the image cannot be hashed, meaning it must be extracted rather than
+     *     treated as a duplicate
+     */
+    private static String imageContentKey(PDImageXObject image) {
+        try (InputStream raw = image.getCOSObject().createRawInputStream()) {
+            return ChecksumUtils.checksum(raw, "SHA-256")
+                    + '_'
+                    + image.getWidth()
+                    + 'x'
+                    + image.getHeight()
+                    + '_'
+                    + image.getBitsPerComponent();
+        } catch (IOException e) {
+            log.warn("Could not fingerprint embedded image, extracting it without dedup", e);
+            return null;
+        }
+    }
 
-        int imageType = BufferedImage.TYPE_INT_RGB;
-        if ("png".equalsIgnoreCase(format)) {
-            imageType = BufferedImage.TYPE_INT_ARGB;
+    /**
+     * Returns an image ImageIO can write in {@code format}, reusing {@code source} when it is
+     * already compatible. Redrawing costs a second full-size buffer, so it is avoided when the
+     * decoded image already has the type the format needs.
+     */
+    private RenderedImage toWritableImage(RenderedImage source, String format) {
+        int requiredType =
+                "png".equalsIgnoreCase(format)
+                        ? BufferedImage.TYPE_INT_ARGB
+                        : BufferedImage.TYPE_INT_RGB;
+
+        if (source instanceof BufferedImage buffered && buffered.getType() == requiredType) {
+            return buffered;
         }
 
-        BufferedImage result = new BufferedImage(width, height, imageType);
+        BufferedImage result =
+                new BufferedImage(source.getWidth(), source.getHeight(), requiredType);
         Graphics2D graphics = result.createGraphics();
         graphics.drawImage((Image) source, 0, 0, null);
         graphics.dispose();
