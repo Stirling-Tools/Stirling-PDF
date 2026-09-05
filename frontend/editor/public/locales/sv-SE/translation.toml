@@ -168,7 +168,7 @@ signedInAs = "Inloggad som: {{email}}"
 tags = "paginera,etikett,organisera,indexera"
 
 [addAttachments]
-tags = "embed,attach,include,attachments,attach files,embed files,include files,add files,file attachment,associated files,supplementary files"
+tags = "bädda in,bifoga,inkludera,bilagor,bifoga filer,inbäddade filer,lägg till filer,filbilaga,associerade filer,kompletterande filer"
 
 [addAttachments.error]
 failed = "Ett fel uppstod när bilagor lades till i PDF-filen."
@@ -285,7 +285,7 @@ positionAndPages = "Position och sidor"
 preview = "Val av position"
 previewDisclaimer = "Förhandsvisningen är ungefärlig. Slutresultatet kan variera beroende på PDF‑typsnittsmetrik."
 submit = "Lägg till sidnummer"
-tags = "number,pagination,count,add page numbers,page numbering,page numbers,footer,header,number pages,sequential,pagination tool"
+tags = "nummer,paginering,antal,lägg till sidnummer,sidnumrering,sidnummer,sidfot,sidhuvud,numrera sidor,sekventiell,pagineringsverktyg"
 title = "Lägg till sidnummer"
 zeroPad = "Bredd för nollutfyllnad (Bates-stämpling)"
 zeroPadTooltip = "Fyll ut sidnummer med inledande nollor (Bates-stämpel) till denna bredd, till exempel 3 ⇒ 001. Ange 0 för att inaktivera."
@@ -305,7 +305,7 @@ title = "Resultat för sidnumrering"
 [addPassword]
 desc = "Kryptera ditt PDF-dokument med ett lösenord."
 submit = "Kryptera"
-tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
+tags = "kryptera,lösenord,lås,säker,skydda,säkerhet,kryptering,skydd,konfidentiell,privat,begränsa åtkomst"
 title = "Lägg till lösenord"
 
 [addPassword.encryption.keyLength]
@@ -353,7 +353,7 @@ title = "Ändra behörigheter"
 
 [addStamp]
 preview = "Förhandsgranska stämpel"
-tags = "stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
+tags = "stämpel,märkning,sigill,godkänd,avvisad,konfidentiell,stämpelverktyg,gummistämpel,datumstämpel,godkännandestämpel,mottagen,makulerad,kopia,original"
 
 [AddStampRequest]
 alphabet = "Alfabet"
@@ -505,7 +505,7 @@ green = "Grön"
 noPreview = "Välj en PDF för förhandsvisning"
 red = "Röd"
 saturation = "Mättnad:"
-tags = "contrast,brightness,saturation,adjust colors,color correction,enhance,lighten,darken,improve quality,color balance,hue,vibrance"
+tags = "kontrast,ljusstyrka,mättnad,justera färger,färgkorrigering,förbättra,ljusa upp,mörka ned,förbättra kvalitet,färgbalans,nyans,färgstyrka"
 title = "Justera kontrast"
 
 [adjustContrast.error]
@@ -1804,7 +1804,7 @@ paragraph2 = "Var god aktivera analyser för att hjälpa Stirling-PDF att växa 
 title = "Vill du göra Stirling PDF bättre?"
 
 [annotate]
-tags = "annotate,highlight,draw,markup,comment,notes,review,redline,feedback,markup tools,sticky notes,shapes,arrows,text box,freehand"
+tags = "annotera,markera,rita,uppmärkning,kommentar,anteckningar,granskning,ändringsmarkering,återkoppling,uppmärkningsverktyg,notislappar,former,pilar,textruta,friform"
 
 [annotation]
 alignCenter = "Centrera"
