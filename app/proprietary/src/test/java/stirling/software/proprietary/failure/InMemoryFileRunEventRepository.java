@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -53,19 +54,18 @@ class InMemoryFileRunEventRepository implements FileRunEventRepository {
         return kindId == null || kindId.equals(entity.getKindId());
     }
 
-    @Override
-    public List<FileRunEventEntity> findByTeam(Long teamId, String kindId, Pageable pageable) {
-        return page(
-                newestFirst(
-                        rows.values().stream()
-                                .filter(e -> sameTeam(e, teamId) && sameKind(e, kindId))
-                                .toList()),
-                pageable);
+    /** Null means the whole team, matching the JPQL's {@code :actor is null} branch. */
+    private static boolean sameActor(FileRunEventEntity entity, String actor) {
+        return actor == null || actor.equals(entity.getActor());
     }
 
     @Override
     public List<FileRunEventEntity> findByTeamAndStatus(
-            Long teamId, FileRunEventStatus status, String kindId, Pageable pageable) {
+            Long teamId,
+            FileRunEventStatus status,
+            String kindId,
+            String actor,
+            Pageable pageable) {
         return page(
                 newestFirst(
                         rows.values().stream()
@@ -73,7 +73,8 @@ class InMemoryFileRunEventRepository implements FileRunEventRepository {
                                         e ->
                                                 sameTeam(e, teamId)
                                                         && e.getStatus() == status
-                                                        && sameKind(e, kindId))
+                                                        && sameKind(e, kindId)
+                                                        && sameActor(e, actor))
                                 .toList()),
                 pageable);
     }
@@ -95,7 +96,9 @@ class InMemoryFileRunEventRepository implements FileRunEventRepository {
     @Override
     public int reopenIfResolved(String id) {
         FileRunEventEntity entity = rows.get(id);
-        if (entity == null || entity.getStatus() != FileRunEventStatus.RESOLVED) {
+        if (entity == null
+                || (entity.getStatus() != FileRunEventStatus.RESOLVED
+                        && entity.getStatus() != FileRunEventStatus.FILE_REMOVED)) {
             return 0;
         }
         entity.setStatus(FileRunEventStatus.NEW);
@@ -122,6 +125,52 @@ class InMemoryFileRunEventRepository implements FileRunEventRepository {
         entity.setStatusActor(actor);
         entity.setStatusAt(now);
         return 1;
+    }
+
+    @Override
+    public int markFilesRemoved(
+            Long teamId,
+            String actor,
+            Collection<String> fileIds,
+            Instant now,
+            Collection<FileRunEventStatus> allowedFrom) {
+        int closed = 0;
+        for (FileRunEventEntity entity : rows.values()) {
+            // Mirrors the real query: scoped by the absence of a source, not by origin.
+            if (entity.getSourceId() != null
+                    || !sameTeam(entity, teamId)
+                    || !Objects.equals(entity.getActor(), actor)
+                    || entity.getFileId() == null
+                    || !fileIds.contains(entity.getFileId())
+                    || !allowedFrom.contains(entity.getStatus())) {
+                continue;
+            }
+            entity.setStatus(FileRunEventStatus.FILE_REMOVED);
+            entity.setStatusActor(actor);
+            entity.setStatusAt(now);
+            closed++;
+        }
+        return closed;
+    }
+
+    @Override
+    public List<FileRunEventEntity> findByTeamAndStatusIn(
+            Long teamId,
+            List<FileRunEventStatus> statuses,
+            String kindId,
+            String actor,
+            Pageable pageable) {
+        return page(
+                newestFirst(
+                        rows.values().stream()
+                                .filter(
+                                        e ->
+                                                sameTeam(e, teamId)
+                                                        && statuses.contains(e.getStatus())
+                                                        && sameKind(e, kindId)
+                                                        && sameActor(e, actor))
+                                .toList()),
+                pageable);
     }
 
     @Override

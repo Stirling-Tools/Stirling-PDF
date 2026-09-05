@@ -185,11 +185,9 @@ export const AttachmentSidebar = ({
             continue;
           }
           return Array.isArray(result) ? result : [];
-        } catch (error: any) {
+        } catch (error) {
           const message =
-            typeof error?.message === "string"
-              ? error.message.toLowerCase()
-              : "";
+            error instanceof Error ? error.message.toLowerCase() : "";
           const notReady =
             message.includes("document") &&
             message.includes("not") &&
@@ -250,7 +248,7 @@ export const AttachmentSidebar = ({
 
   const handleDownload = (
     attachment: PdfAttachmentObject,
-    event: React.MouseEvent,
+    event: React.SyntheticEvent,
   ) => {
     event.stopPropagation();
     attachmentActions.downloadAttachment(attachment);
@@ -296,7 +294,7 @@ export const AttachmentSidebar = ({
           onKeyDown={(event) => {
             if (event.key === "Enter" || event.key === " ") {
               event.preventDefault();
-              handleDownload(attachment, event as any);
+              handleDownload(attachment, event);
             }
           }}
         >
@@ -400,7 +398,7 @@ export const AttachmentSidebar = ({
 
       {attachmentSupport && documentCacheKey && currentError && (
         <Stack gap="xs" align="center" className="sidebar-base__error">
-          <Text size="sm" c="red" ta="center">
+          <Text size="sm" c="var(--color-red-dark)" ta="center">
             {currentError}
           </Text>
           <ActionIcon

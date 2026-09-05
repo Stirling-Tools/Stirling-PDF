@@ -1,5 +1,6 @@
 import { ProcessedFile, ProcessingState, PDFPage } from "@app/types/processing";
 import { ProcessingCache } from "@app/services/processingCache";
+import { ProcessingErrorHandler } from "@app/services/processingErrorHandler";
 import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
 import { createQuickKey } from "@app/types/fileContext";
 
@@ -82,9 +83,7 @@ export class PDFProcessingService {
     } catch (error) {
       console.error("Processing failed for", file.name, ":", error);
       state.status = "error";
-      state.error = (
-        error instanceof Error ? error.message : "Unknown error"
-      ) as any;
+      state.error = ProcessingErrorHandler.createProcessingError(error);
       this.notifyListeners();
 
       // Remove failed processing after delay

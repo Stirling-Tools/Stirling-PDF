@@ -30,11 +30,12 @@ public class PolicyFailureRecorder {
     public void recordRunFailure(
             String runId,
             String policyId,
-            String actor,
+            String sourceId,
             String fileIdentity,
+            String actor,
             String detail,
             Throwable cause) {
-        record(classifier.classify(cause), runId, policyId, actor, fileIdentity, detail);
+        record(classifier.classify(cause), runId, policyId, sourceId, fileIdentity, actor, detail);
     }
 
     /**
@@ -44,21 +45,35 @@ public class PolicyFailureRecorder {
      * pick the wrong one.
      */
     public void recordRunFailureAs(
-            FailureKind kind, String runId, String policyId, String actor, String detail) {
-        record(kind, runId, policyId, actor, null, detail);
+            FailureKind kind,
+            String runId,
+            String policyId,
+            String sourceId,
+            String actor,
+            String detail) {
+        // No document reference: a run rejected at admission never got as far as one.
+        record(kind, runId, policyId, sourceId, null, actor, detail);
     }
 
     private void record(
             FailureKind kind,
             String runId,
             String policyId,
-            String actor,
+            String sourceId,
             String fileIdentity,
+            String actor,
             String detail) {
         try {
             store.record(
                     RecordFailure.forRun(
-                            kind, teamFor(policyId), actor, policyId, runId, fileIdentity, detail));
+                            kind,
+                            teamFor(policyId),
+                            actor,
+                            policyId,
+                            runId,
+                            sourceId,
+                            fileIdentity,
+                            detail));
         } catch (RuntimeException e) {
             // Deliberately swallowed: see the class comment.
             log.warn("Could not record failure event for run {} (kind {})", runId, kind.getId(), e);

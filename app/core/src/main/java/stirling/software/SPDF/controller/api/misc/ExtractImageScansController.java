@@ -53,6 +53,9 @@ import stirling.software.common.util.WebResponseUtils;
 @RequiredArgsConstructor
 public class ExtractImageScansController {
 
+    // Print-quality raster for the extracted scan; capped by system maxDPI
+    private static final int SCAN_RENDER_DPI = 300;
+
     private static final String REPLACEFIRST = "[.][^.]+$";
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
@@ -112,12 +115,12 @@ public class ExtractImageScansController {
                         // Render image and save as temp file
                         BufferedImage image;
 
-                        // Use global maximum DPI setting, fallback to 300 if not set
-                        int renderDpi = 300; // Default fallback
+                        // maxDPI is a safety ceiling for user-supplied values, not a target
+                        int renderDpi = SCAN_RENDER_DPI;
                         ApplicationProperties properties =
                                 ApplicationContextProvider.getBean(ApplicationProperties.class);
                         if (properties != null && properties.getSystem() != null) {
-                            renderDpi = properties.getSystem().getMaxDPI();
+                            renderDpi = Math.min(renderDpi, properties.getSystem().getMaxDPI());
                         }
                         final int dpi = renderDpi;
                         final int pageIndex = i;
@@ -214,7 +217,7 @@ public class ExtractImageScansController {
             } else {
 
                 // Return the processed image as a response
-                byte[] imageBytes = processedImageBytes.get(0);
+                byte[] imageBytes = processedImageBytes.getFirst();
                 finalOutput = tempFileManager.createManagedTempFile(".png");
                 try (OutputStream out = Files.newOutputStream(finalOutput.getPath())) {
                     out.write(imageBytes);

@@ -26,6 +26,9 @@ import {
   clearBulkAddProgress,
 } from "@app/services/bulkAddProgress";
 const DEBUG = process.env.NODE_ENV === "development";
+/** How long a file may sit unhydrated before the console says so. Reporting only:
+ *  the read is never abandoned, because large files legitimately take time. */
+const STALLED_LOAD_MS = 8000;
 const HYDRATION_CONCURRENCY = 2;
 let activeHydrations = 0;
 const hydrationQueue: Array<() => Promise<void>> = [];
@@ -270,6 +273,12 @@ interface AddFileOptions {
   /** When true, marks every added stub as derivedFromTool so the policy
    *  auto-run skips it — used for policy outputs imported via addFiles. */
   derivedFromTool?: boolean;
+  /**
+   * The folder every added file is born into — membership set at creation, atomically
+   * with the stub, instead of a separate move that can fail after the file already
+   * landed somewhere else.
+   */
+  folderId?: string;
 }
 
 /**
@@ -441,6 +450,9 @@ export async function addFiles(
       // Create new filestub with minimal metadata; hydrate thumbnails/processedFile asynchronously
       const fileStub = createNewStirlingFileStub(file, fileId);
       if (options.derivedFromTool) fileStub.derivedFromTool = true;
+      if (options.folderId) {
+        fileStub.folderId = options.folderId as StirlingFileStub["folderId"];
+      }
 
       // Early encryption detection for PDFs — set the flag before dispatch so the
       // viewer gate and modal queue pick it up immediately instead of after hydration
@@ -854,61 +866,78 @@ export async function addStirlingFileStubs(
       // Load File object and hydrate metadata in background (non-blocking)
       const fileId = stub.id;
 
-      // Load File object from IndexedDB asynchronously
-      scheduleMetadataHydration(async () => {
-        const stirlingFile = await fileStorage.getStirlingFile(fileId);
+      // Regenerate page metadata + thumbnails. Queued, because parsing several
+      // PDFs at once is what the concurrency limit exists to bound.
+      const scheduleMetadataFor = (stirlingFile: StirlingFile): void => {
+        scheduleMetadataHydration(async () => {
+          const processedFileMetadata =
+            await generateProcessedFileMetadata(stirlingFile);
+          if (!processedFileMetadata) return;
+
+          const updates: Partial<StirlingFileStub> = {
+            processedFile: processedFileMetadata,
+          };
+
+          // Update thumbnail only if current stub doesn't have one
+          const currentStub = stateRef.current.files.byId[fileId];
+          if (
+            !currentStub?.thumbnailUrl &&
+            processedFileMetadata.thumbnailUrl
+          ) {
+            updates.thumbnailUrl = processedFileMetadata.thumbnailUrl;
+            if (processedFileMetadata.thumbnailUrl.startsWith("blob:")) {
+              lifecycleManager.trackBlobUrl(processedFileMetadata.thumbnailUrl);
+            }
+          }
+
+          lifecycleManager.updateStirlingFileStub(fileId, updates, stateRef);
+        });
+      };
+
+      // Load and publish the File, ahead of any parsing. NOT queued: whether a
+      // file opens at all must not wait on other files' parses.
+      void (async () => {
+        // A storage read that never settles renders as a file that silently won't
+        // open. Name it in the console rather than leaving the user guessing.
+        const stall = setTimeout(
+          () =>
+            console.error(
+              `[Hydration] ${stub.name} (${fileId}) has been loading for ${STALLED_LOAD_MS / 1000}s - the IndexedDB read has not settled`,
+            ),
+          STALLED_LOAD_MS,
+        );
+        const stirlingFile = await fileStorage
+          .getStirlingFile(fileId)
+          .finally(() => clearTimeout(stall));
         if (!stirlingFile) {
+          // A row with no bytes renders empty and its clicks look dead, so take it
+          // back out. Storage keeps the record; fileStorage has said why.
+          console.error(
+            `[Hydration] No readable data for ${stub.name} (${fileId}); removing it from the workbench`,
+          );
+          lifecycleManager.removeFiles([fileId], stateRef);
           return;
         }
 
-        // Store the loaded file in filesRef
         filesRef.current.set(fileId, stirlingFile);
-
-        // Check if processedFile data needs regeneration
-        if (stirlingFile.type.startsWith("application/pdf")) {
-          const needsProcessing =
-            !stub.processedFile ||
-            !stub.processedFile.pages ||
-            stub.processedFile.pages.length === 0 ||
-            stub.processedFile.totalPages !== stub.processedFile.pages.length;
-
-          if (needsProcessing) {
-            // Regenerate metadata
-            const processedFileMetadata =
-              await generateProcessedFileMetadata(stirlingFile);
-
-            if (processedFileMetadata) {
-              const updates: Partial<StirlingFileStub> = {
-                processedFile: processedFileMetadata,
-              };
-
-              // Update thumbnail only if current stub doesn't have one
-              const currentStub = stateRef.current.files.byId[fileId];
-              if (
-                !currentStub?.thumbnailUrl &&
-                processedFileMetadata.thumbnailUrl
-              ) {
-                updates.thumbnailUrl = processedFileMetadata.thumbnailUrl;
-                if (processedFileMetadata.thumbnailUrl.startsWith("blob:")) {
-                  lifecycleManager.trackBlobUrl(
-                    processedFileMetadata.thumbnailUrl,
-                  );
-                }
-              }
-
-              lifecycleManager.updateStirlingFileStub(
-                fileId,
-                updates,
-                stateRef,
-              );
-              return;
-            }
-          }
-        }
-
-        // Stub dispatch triggers re-render so the viewer appears (ADD_FILES alone doesn't update selectors).
+        // filesRef is a ref, so the selectors gating the workbench only see the
+        // file once something dispatches. Parsing it can't be a precondition.
         lifecycleManager.updateStirlingFileStub(fileId, {}, stateRef);
-      });
+
+        const needsProcessing =
+          !stub.processedFile ||
+          !stub.processedFile.pages ||
+          stub.processedFile.pages.length === 0 ||
+          stub.processedFile.totalPages !== stub.processedFile.pages.length;
+        if (
+          stirlingFile.type.startsWith("application/pdf") &&
+          needsProcessing
+        ) {
+          scheduleMetadataFor(stirlingFile);
+        }
+      })().catch((error) =>
+        console.error(`[Hydration] Failed to load ${fileId}:`, error),
+      );
     }
 
     return loadedFiles;

@@ -5,7 +5,7 @@ import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { usePreferences } from "@app/contexts/PreferencesContext";
 import type { LoginLandingView } from "@app/services/preferencesService";
 import {
-  fetchLandsOnProcessor,
+  fetchRootDestination,
   isPortalAvailable,
   loginLandingMode,
 } from "@app/utils/loginLanding";
@@ -13,7 +13,7 @@ import {
 /**
  * Processor-user preference: where to land after signing in (processor vs
  * editor). Shown only to users who default to the processor (see
- * fetchLandsOnProcessor); hidden for members and solo users. Shared by all
+ * fetchRootDestination); hidden for members and solo users. Shared by all
  * flavors.
  */
 export function LoginLandingSetting() {
@@ -27,8 +27,8 @@ export function LoginLandingSetting() {
   useEffect(() => {
     if (!active) return;
     let cancelled = false;
-    void fetchLandsOnProcessor().then((v) => {
-      if (!cancelled) setEligible(v);
+    void fetchRootDestination().then((destination) => {
+      if (!cancelled) setEligible(destination === "processor");
     });
     return () => {
       cancelled = true;
@@ -42,6 +42,7 @@ export function LoginLandingSetting() {
   return (
     <Paper withBorder p="md" radius="md">
       <div
+        id="setting-login-landing"
         style={{
           display: "flex",
           alignItems: "center",

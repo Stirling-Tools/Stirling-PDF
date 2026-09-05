@@ -142,7 +142,8 @@ public class InitialSecuritySetup {
                             .password(initialPassword)
                             .team(team)
                             .role(Role.ADMIN.getRoleId())
-                            .firstLogin(false);
+                            .firstLogin(false)
+                            .bypassUserLimit(true);
             userService.saveUserCore(builder.build());
             log.info("Admin user created: {}", initialUsername);
         } else {
@@ -162,7 +163,8 @@ public class InitialSecuritySetup {
                             .password(defaultPassword)
                             .team(team)
                             .role(Role.ADMIN.getRoleId())
-                            .firstLogin(true);
+                            .firstLogin(true)
+                            .bypassUserLimit(true);
             userService.saveUserCore(builder.build());
             log.info("Default admin user created: {}", defaultUsername);
         }
@@ -178,7 +180,11 @@ public class InitialSecuritySetup {
                             .password(UUID.randomUUID().toString())
                             .team(team)
                             .role(Role.INTERNAL_API_USER.getRoleId())
-                            .firstLogin(false);
+                            .firstLogin(false)
+                            // Excluded from getTotalUsersCount(), so it must not be charged against
+                            // the limit either; an installation at its cap still needs this
+                            // account.
+                            .bypassUserLimit(true);
             userService.saveUserCore(builder.build());
             userService.addApiKeyToUser(Role.INTERNAL_API_USER.getRoleId());
             log.info("Internal API user created: {}", Role.INTERNAL_API_USER.getRoleId());

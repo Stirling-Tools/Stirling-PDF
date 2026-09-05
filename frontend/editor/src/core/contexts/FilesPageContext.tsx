@@ -13,8 +13,15 @@ import { useTranslation } from "react-i18next";
 
 import { FileId } from "@app/types/file";
 import { StirlingFileStub } from "@app/types/fileContext";
-import { FolderId, FolderRecord, ROOT_FOLDER_ID } from "@app/types/folder";
+import {
+  FolderId,
+  FolderKind,
+  FolderRecord,
+  ROOT_FOLDER_ID,
+  folderKind,
+} from "@app/types/folder";
 import { fileStorage } from "@app/services/fileStorage";
+import { writeIntoMount } from "@app/services/mountWrites";
 import { folderSyncService } from "@app/services/folderSyncService";
 import { uploadHistoryChain } from "@app/services/serverStorageUpload";
 import { reconcileServerFiles } from "@app/services/fileSyncService";
@@ -48,17 +55,13 @@ export type FilesPageOriginFilter =
   | "shared-with-me";
 
 /** all|local|cloud|recent|shared filter presets. */
-export type FilesPageTab =
-  | "all"
-  | "local"
-  | "cloud"
-  | "recent"
-  | "shared"
-  | "sharedByMe";
+export type FilesPageTab = "all" | "cloud" | "recent" | "shared" | "sharedByMe";
 
 export interface FolderNameDialogState {
   mode: "new" | "rename" | null;
   parentId?: FolderId | null;
+  /** For a root-level create: the kind the caller chose (menu, not dialog). */
+  kind?: FolderKind;
   folder?: FolderRecord;
 }
 
@@ -102,7 +105,7 @@ interface FilesPageContextValue {
 
   // Dialog state
   folderNameDialog: FolderNameDialogState;
-  openNewFolderDialog: (parentId?: FolderId | null) => void;
+  openNewFolderDialog: (parentId?: FolderId | null, kind?: FolderKind) => void;
   openRenameFolderDialog: (folder: FolderRecord) => void;
   closeFolderNameDialog: () => void;
   submitFolderName: (name: string) => Promise<void>;
@@ -243,8 +246,11 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
     useState<FolderNameDialogState>({ mode: null });
 
   const openNewFolderDialog = useCallback(
-    (parentId: FolderId | null = folders.currentFolderId) => {
-      setFolderNameDialog({ mode: "new", parentId });
+    (
+      parentId: FolderId | null = folders.currentFolderId,
+      kind?: FolderKind,
+    ) => {
+      setFolderNameDialog({ mode: "new", parentId, kind });
     },
     [folders.currentFolderId],
   );
@@ -260,9 +266,11 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
   const submitFolderName = useCallback(
     async (name: string) => {
       if (folderNameDialog.mode === "new") {
+        // Chosen before the dialog opened, and only used at the root.
         await folders.createFolder(
           name,
           folderNameDialog.parentId ?? folders.currentFolderId,
+          folderNameDialog.kind,
         );
       } else if (
         folderNameDialog.mode === "rename" &&
@@ -297,12 +305,88 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
   const moveFilesTo = useCallback(
     async (fileIds: FileId[], folderId: FolderId | null) => {
       if (fileIds.length === 0) return;
-      const stubs = fileIds
-        .map((id) => fileMap.get(id))
-        .filter((s): s is StirlingFileStub => Boolean(s));
+      // fileMap is a render-time snapshot, so a file created moments ago is not in
+      // it yet. Storage is the truth, and falling back keeps it in the move.
+      const fetched = await Promise.all(
+        fileIds.map(
+          (id) => fileMap.get(id) ?? fileStorage.getStirlingFileStub(id),
+        ),
+      );
+      const stubs = fetched.filter((s): s is StirlingFileStub => Boolean(s));
       const localOnly = stubs.filter((s) => s.remoteStorageId == null);
       // Cloud list is mutated below with newly-promoted local files.
       const cloudFiles = stubs.filter((s) => s.remoteStorageId != null);
+
+      const targetFolder =
+        folderId === null ? null : folders.foldersById.get(folderId);
+      const targetKind = targetFolder ? folderKind(targetFolder) : null;
+
+      if (targetKind === "local") {
+        // In a mount means on the disk: write each file into the directory, then retire
+        // the app-side copy once the bytes verifiably landed.
+        const { written, failedCount } = await writeIntoMount(
+          targetFolder?.directory,
+          localOnly.map((stub) => ({
+            name: stub.name,
+            bytes: () => fileStorage.getStirlingFile(stub.id),
+          })),
+        );
+        const movedIds = localOnly
+          .filter((_, i) => written[i])
+          .map((stub) => stub.id);
+        if (movedIds.length > 0) {
+          // Superseded versions go too, or their bytes sit in storage unseen.
+          const orphans = await fileStorage.orphanedAncestorIds(movedIds);
+          await fileActions.removeFiles([...movedIds, ...orphans], true);
+        }
+        // One error slot, two possible failures: report both.
+        const notices: string[] = [];
+        if (failedCount > 0) {
+          notices.push(
+            t("filesPage.moveIntoMountFailed", {
+              count: failedCount,
+              defaultValue:
+                "{{count}} file(s) could not be written into the folder.",
+            }),
+          );
+        }
+        if (cloudFiles.length > 0) {
+          notices.push(
+            t("filesPage.moveIntoMountCloudSkipped", {
+              count: cloudFiles.length,
+              defaultValue:
+                "{{count}} server file(s) stayed in your files. They live on the server, not on this disk.",
+            }),
+          );
+        }
+        if (notices.length > 0) {
+          folders.setError(notices.join(" "));
+        }
+        await refresh();
+        return;
+      }
+
+      if (targetKind === "virtual") {
+        // A browser-owned folder cannot hold server files: the next sync would snap
+        // them back, so they are left where they are and reported.
+        if (cloudFiles.length > 0) {
+          folders.setError(
+            t(
+              "filesPage.moveIntoVirtualCloudSkipped",
+              "{{count}} server file(s) were left in place. Server files can't live in browser-only folders.",
+              { count: cloudFiles.length },
+            ),
+          );
+        }
+        if (localOnly.length > 0) {
+          await indexedDB.moveFilesToFolder(
+            localOnly.map((s) => s.id),
+            folderId,
+          );
+        }
+        await refresh();
+        return;
+      }
 
       if (folderId !== null && localOnly.length > 0) {
         // Per-file uploadHistoryChain so each gets its own remoteStorageId.
@@ -379,7 +463,17 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
-      // Local files moving to ROOT need no cloud write.
+      // Local files moving to the root DO need a write when they are leaving a folder —
+      // their membership is a browser-side folderId that nothing above has touched (the
+      // upload branch only runs for a non-null target).
+      if (folderId === null && localOnly.length > 0) {
+        const leaving = localOnly
+          .filter((s) => (s.folderId ?? null) !== null)
+          .map((s) => s.id);
+        if (leaving.length > 0) {
+          await indexedDB.moveFilesToFolder(leaving, null);
+        }
+      }
       await refresh();
     },
     [indexedDB, refresh, fileMap, folders, t, fileActions],
@@ -396,6 +490,22 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
           ),
         );
         return;
+      }
+      // A subtree is one kind throughout (each kind has its own system of
+      // record), so a cross-kind drop is refused here as a message rather
+      // than surfacing as a thrown error from the context.
+      if (newParentId !== null) {
+        const source = folders.foldersById.get(folderId);
+        const target = folders.foldersById.get(newParentId);
+        if (source && target && folderKind(source) !== folderKind(target)) {
+          folders.setError(
+            t(
+              "filesPage.moveAcrossKindsBlocked",
+              "These folders live in different places, so one can't go inside the other.",
+            ),
+          );
+          return;
+        }
       }
       await folders.moveFolder(folderId, newParentId);
     },
@@ -455,7 +565,10 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
           })
           .map((s) => s.id);
         if (localIds.length > 0) {
-          await fileActions.removeFiles(localIds, true);
+          // Take the superseded versions with it, or their bytes sit in storage
+          // forever - invisible, because listings only show leaves.
+          const orphans = await fileStorage.orphanedAncestorIds(localIds);
+          await fileActions.removeFiles([...localIds, ...orphans], true);
         }
       }
 
@@ -551,10 +664,29 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
 
   const promptDeleteFolder = useCallback(
     (folder: FolderRecord) => {
+      if (folderKind(folder) === "local") {
+        // Removing a mount destroys nothing — the record goes, the directory and every
+        // file in it stay — so there is nothing to warn about and the delete dialog's
+        // "what about the files?" question would be a scary lie.
+        void folders.deleteFolder(folder.id).catch((err) => {
+          folders.setError(
+            err instanceof Error
+              ? t("filesPage.error.removeFolderFailedDetail", {
+                  message: err.message,
+                  defaultValue: `Could not remove folder: ${err.message}`,
+                })
+              : t(
+                  "filesPage.error.removeFolderFailed",
+                  "Could not remove folder.",
+                ),
+          );
+        });
+        return;
+      }
       const fileCount = filesInSubtree(folder.id).length;
       setDeleteFolderDialog({ folder, fileCount });
     },
-    [filesInSubtree],
+    [filesInSubtree, folders, t],
   );
 
   const deleteFolder = useCallback(

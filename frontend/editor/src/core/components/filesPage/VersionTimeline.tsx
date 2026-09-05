@@ -10,7 +10,7 @@ import HistoryIcon from "@mui/icons-material/History";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 
 import { FileId, ToolOperation } from "@app/types/file";
-import { ToolId } from "@app/types/toolId";
+import { toolOperationLabel } from "@app/utils/toolOperationLabel";
 import { StirlingFileStub } from "@app/types/fileContext";
 import { formatFileSize, getFileDate } from "@app/utils/fileUtils";
 import { downloadFileFromStorage } from "@app/utils/downloadUtils";
@@ -64,10 +64,10 @@ function deltaToolFor(
   return curr[priorLen] ?? null;
 }
 
-/** Translated tool name via `home.{toolId}.title`. */
-function ToolLabel({ toolId }: { toolId: ToolId }) {
+/** The operation's own label when it has one, else its translated tool name. */
+function ToolLabel({ operation }: { operation: ToolOperation }) {
   const { t } = useTranslation();
-  return <span>{t(`home.${toolId}.title`, toolId)}</span>;
+  return <span>{toolOperationLabel(operation, t)}</span>;
 }
 
 export interface VersionTimelineProps {
@@ -120,14 +120,14 @@ export function VersionTimeline({
       };
   const rows: Row[] = useMemo(() => {
     if (!collapsible || showAllCollapsed) {
-      return ordered.map((v) => ({ kind: "version", version: v }) as Row);
+      return ordered.map<Row>((v) => ({ kind: "version", version: v }));
     }
     const head = ordered
       .slice(0, 3)
-      .map((v) => ({ kind: "version", version: v }) as Row);
+      .map<Row>((v) => ({ kind: "version", version: v }));
     const tail = ordered
       .slice(-2)
-      .map((v) => ({ kind: "version", version: v }) as Row);
+      .map<Row>((v) => ({ kind: "version", version: v }));
     const hidden = ordered.length - 5;
     return [...head, { kind: "ellipsis", hidden }, ...tail];
   }, [collapsible, showAllCollapsed, ordered]);
@@ -219,7 +219,20 @@ export function VersionTimeline({
                     align="center"
                     style={{ flex: 1, minWidth: 0, flexWrap: "nowrap" }}
                   >
-                    <Badge size="xs" variant={isActive ? "filled" : "light"}>
+                    <Badge
+                      size="xs"
+                      variant={isActive ? "filled" : "light"}
+                      styles={
+                        isActive
+                          ? {
+                              root: {
+                                backgroundColor: "var(--c-accent-solid)",
+                              },
+                              label: { color: "var(--c-text-on-primary)" },
+                            }
+                          : undefined
+                      }
+                    >
                       v{v.versionNumber ?? 1}
                     </Badge>
                     <Text
@@ -229,7 +242,7 @@ export function VersionTimeline({
                       style={{ color: "var(--c-text)" }}
                     >
                       {delta ? (
-                        <ToolLabel toolId={delta.toolId} />
+                        <ToolLabel operation={delta} />
                       ) : (
                         t("filesPage.versionOrigin", "Original upload")
                       )}

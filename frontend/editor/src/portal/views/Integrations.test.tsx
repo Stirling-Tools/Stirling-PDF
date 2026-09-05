@@ -13,6 +13,16 @@ import type { IntegrationConfig } from "@portal/api/integrations";
 const render = (ui: Parameters<typeof baseRender>[0]) =>
   baseRender(ui, { wrapper: MantineProvider });
 
+vi.mock("@portal/hooks/useConnectGate", () => ({
+  useConnectGate: () => ({
+    gated: false,
+    loading: false,
+    available: false,
+    connect: vi.fn(),
+    guard: (fn: unknown) => fn,
+  }),
+}));
+
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (key: string) => key,
@@ -68,39 +78,35 @@ describe("Integrations view", () => {
     ).toBeInTheDocument();
   });
 
-  it("groups connections of the same type and expands to the instances", async () => {
+  it("groups connections of the same type, instances shown as rows (no expand)", async () => {
     fetchIntegrations.mockResolvedValue([
       bucket(1, "Claims"),
       bucket(2, "Archive"),
     ]);
     render(<Integrations />);
 
-    // One connected group row for S3 with the instance count, not two rows.
-    const group = await screen.findByText(
-      "portal.integrations.connectionCount",
-    );
-    expect(group).toBeInTheDocument();
-
-    fireEvent.click(screen.getByText("portal.connections.types.s3.label"));
+    // Instances are rows directly under the S3 vendor group - no expand click.
     expect(await screen.findByText("Claims")).toBeInTheDocument();
     expect(screen.getByText("Archive")).toBeInTheDocument();
+    // Vendor group header shows the instance count and the "add another" action.
     expect(
-      screen.getByText("portal.integrations.addAnother"),
+      screen.getByText("portal.integrations.connectionCount"),
     ).toBeInTheDocument();
+    // Each connected vendor group offers a Connect action (to add another).
+    expect(
+      screen.getAllByText("portal.integrations.connect").length,
+    ).toBeGreaterThan(0);
     // The available band remains for the other, unconnected vendors.
     expect(
       screen.getByText(/portal\.integrations\.availableHeading/),
     ).toBeInTheDocument();
   });
 
-  it("deletes an instance from the expanded group", async () => {
+  it("deletes an instance directly from its row", async () => {
     fetchIntegrations.mockResolvedValueOnce([bucket(5, "Claims")]);
     fetchIntegrations.mockResolvedValueOnce([]);
     render(<Integrations />);
 
-    fireEvent.click(
-      await screen.findByText("portal.connections.types.s3.label"),
-    );
     fireEvent.click(await screen.findByText("portal.connections.delete"));
 
     await waitFor(() => expect(deleteIntegration).toHaveBeenCalledWith(5));
@@ -115,9 +121,6 @@ describe("Integrations view", () => {
     );
     render(<Integrations />);
 
-    fireEvent.click(
-      await screen.findByText("portal.connections.types.s3.label"),
-    );
     fireEvent.click(await screen.findByText("portal.connections.delete"));
 
     expect(

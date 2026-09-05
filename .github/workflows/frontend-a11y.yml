@@ -3,17 +3,12 @@ name: Frontend a11y regression gate
 # Reusable workflow called from build.yml when frontend sources change.
 #
 # Scans the stories this branch touches in real Chromium and runs axe against
-# each. Existing violations are grandfathered in .storybook/a11y-baseline.json;
-# the check fails on a NEW violation — a story breaking a rule it wasn't already
-# breaking — or on a story that fails to render at all.
+# each; the check fails on any axe violation, or on a story that fails to render
+# at all.
 #
 # Only changed stories, because a full sweep is ~30 minutes: far too slow to sit
 # in front of every merge. The whole suite is scanned nightly instead
 # (nightly.yml), which catches anything a branch didn't touch.
-#
-# Advisory for now: this is not in build.yml's all-checks-passed list, so a
-# failure reports without blocking. Promote it once a few weeks of runs show the
-# pass/fail is stable.
 on:
   workflow_call:
 
@@ -26,7 +21,7 @@ jobs:
     timeout-minutes: 25
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
         with:
           egress-policy: audit
       - name: Checkout repository
@@ -41,7 +36,7 @@ jobs:
           cache: "npm"
           cache-dependency-path: frontend/package-lock.json
       - name: Install Task
-        uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
+        uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
       - name: a11y gate (changed stories)
         run: task frontend:storybook:a11y:changed -- origin/${{ github.base_ref || 'main' }}
       - name: Upload scan reports

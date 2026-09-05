@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Skeleton } from "@app/ui";
 import { useUI } from "@portal/contexts/UIContext";
 import { EditorStatusCard } from "@portal/components/EditorStatusCard";
+import { ConnectAccountRail } from "@portal/components/ConnectAccountRail";
 import { ControlledDealStatusHero } from "@portal/components/procurement/ProcurementBanner";
 import { ProcurementFlow } from "@portal/components/procurement/ProcurementFlow";
 import { useProcurement } from "@portal/components/procurement/useProcurement";
@@ -28,10 +29,11 @@ export function HomeHero() {
 
   return (
     <>
+      <ConnectAccountRail />
       {procurement.loading ? (
         // Hold the rail's shape rather than committing to a footer: branching before the snapshot
         // lands paints the no-deal rail first, flashing on every refresh of an active deal.
-        <section className="portal-editor-hero" aria-busy>
+        <section className="portal-surface portal-editor-hero" aria-busy>
           <div className="portal-editor-hero__row">
             <Skeleton width="2rem" height="2rem" />
             <Skeleton width="12rem" height="1rem" />

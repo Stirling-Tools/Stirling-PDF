@@ -144,7 +144,7 @@ def test_selection_prompt_says_nothing_about_output_formats(runtime: AppRuntime)
     # Compatibility is only raised once a plan has actually failed, so the operation list stays
     # about what each tool does. Leaking format hints here re-inflates an already large prompt.
     agent = StubPdfEditAgent(runtime, _ANY_SELECTION)
-    prompt = agent._build_selection_prompt(PdfEditRequest(user_message="anything", files=[]), list(OPERATIONS), [])
+    prompt = agent._build_selection_prompt(PdfEditRequest(user_message="anything", files=[]), list(OPERATIONS))
     assert "outputs:" not in prompt
     assert "IMAGE (several files)" not in prompt
 
@@ -156,7 +156,6 @@ def test_repair_prompt_offers_reorder_or_telling_the_user(runtime: AppRuntime) -
     prompt = agent._build_selection_prompt(
         PdfEditRequest(user_message="anything", files=[]),
         list(OPERATIONS),
-        [],
         "step 3 (SANITIZE_PDF) accepts PDF but the previous step produces IMAGE.",
     )
     assert "SANITIZE_PDF" in prompt
@@ -494,11 +493,13 @@ def test_pdf_edit_selection_prompt_includes_unavailable_operations(runtime: AppR
     )
     supported, unavailable = agent._classify_operations(request)
 
-    prompt = agent._build_selection_prompt(request, supported, unavailable)
+    selection_agent = agent._build_selection_agent(supported, unavailable, allow_need_content=False)
+    system_prompt = "".join(selection_agent.agent._system_prompts)
+    prompt = agent._build_selection_prompt(request, supported)
 
-    assert "Unavailable operations" in prompt
-    assert "OCR_PDF" in prompt
-    assert ToolEndpoint.OCR_PDF.value in prompt
+    assert "NOT currently available" in system_prompt
+    assert "OCR_PDF" in system_prompt
+    assert "OCR_PDF" not in prompt
 
 
 @pytest.mark.anyio

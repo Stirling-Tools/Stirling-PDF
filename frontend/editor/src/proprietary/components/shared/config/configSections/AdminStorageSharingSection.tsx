@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react";
+import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Anchor,
@@ -57,11 +57,11 @@ export default function AdminStorageSharingSection() {
     setSettings,
     loading,
     saving,
-    fetchSettings,
     saveSettings,
     isFieldPending,
   } = useAdminSettings<StorageSharingSettingsData>({
     sectionName: "storage",
+    enabled: loginEnabled,
     fetchTransformer: async () => {
       const [storageResponse, systemResponse, mailResponse] = await Promise.all(
         [
@@ -95,12 +95,6 @@ export default function AdminStorageSharingSection() {
       },
     }),
   });
-
-  useEffect(() => {
-    if (loginEnabled) {
-      fetchSettings();
-    }
-  }, [loginEnabled]);
 
   const storageEnabled = settings.enabled ?? false;
   const sharingEnabled = storageEnabled && (settings.sharing?.enabled ?? false);
@@ -254,7 +248,7 @@ export default function AdminStorageSharingSection() {
                   )}
                 </Text>
                 {!frontendUrlConfigured && (
-                  <Text size="xs" c="orange">
+                  <Text size="xs" c="var(--color-amber-dark)">
                     {t(
                       "admin.settings.storage.sharing.links.frontendUrlNote",
                       "Requires a Frontend URL. ",
@@ -265,7 +259,7 @@ export default function AdminStorageSharingSection() {
                         e.preventDefault();
                         navigate("/settings/adminGeneral#frontendUrl");
                       }}
-                      c="orange"
+                      c="var(--color-amber-dark)"
                       td="underline"
                     >
                       {t(
@@ -317,7 +311,7 @@ export default function AdminStorageSharingSection() {
                   )}
                 </Text>
                 {!mailEnabled && (
-                  <Text size="xs" c="orange">
+                  <Text size="xs" c="var(--color-amber-dark)">
                     {t(
                       "admin.settings.storage.sharing.email.mailNote",
                       "Requires mail configuration. ",
@@ -328,7 +322,7 @@ export default function AdminStorageSharingSection() {
                         e.preventDefault();
                         navigate("/settings/adminConnections");
                       }}
-                      c="orange"
+                      c="var(--color-amber-dark)"
                       td="underline"
                     >
                       {t(

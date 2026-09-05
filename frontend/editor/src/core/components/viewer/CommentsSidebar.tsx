@@ -28,6 +28,7 @@ import {
   PdfAnnotationReplyType,
   type PdfAnnotationObject,
   type PdfTextAnnoObject,
+  type Rect,
 } from "@embedpdf/models";
 import { useCommentAuthor } from "@app/contexts/CommentAuthorContext";
 import { useViewer } from "@app/contexts/ViewerContext";
@@ -287,7 +288,7 @@ function AnnotationTypeIcon({ ann }: { ann: PdfAnnotationObject }) {
       icon={iconName}
       width="1.25rem"
       height="1.25rem"
-      style={{ flexShrink: 0, color: "var(--mantine-color-blue-5)" }}
+      style={{ flexShrink: 0, color: "var(--c-accent-text)" }}
     />
   );
 }
@@ -637,7 +638,7 @@ export function CommentsSidebar({
   );
 
   const handleSendReply = useCallback(
-    (pageIndex: number, parentId: string, parentRect: any) => {
+    (pageIndex: number, parentId: string, parentRect: Rect | undefined) => {
       const key = `${pageIndex}_${parentId}_reply`;
       const text = replyDrafts[key]?.trim();
       if (!text || !provides?.createAnnotation) return;
@@ -1155,7 +1156,10 @@ export function CommentsSidebar({
                                                       );
                                                     }}
                                                   >
-                                                    <Text size="xs" c="blue">
+                                                    <Text
+                                                      size="xs"
+                                                      c="var(--c-accent-text)"
+                                                    >
                                                       {t(
                                                         "annotation.editText",
                                                         "Edit",

@@ -5,13 +5,9 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import type { ConnectOutcome } from "@portal/components/account-link/ConnectCallbackView";
 
 interface UIContextValue {
-  searchOpen: boolean;
-  openSearch: () => void;
-  closeSearch: () => void;
-  toggleSearch: () => void;
-
   /** Off-canvas sidebar drawer on small screens (no-op chrome on desktop). */
   mobileNavOpen: boolean;
   openMobileNav: () => void;
@@ -32,7 +28,8 @@ interface UIContextValue {
    * modal pick its own default. Cleared back to `null` on close.
    */
   settingsInitialSection: string | null;
-  openSettings: (section?: string) => void;
+  settingsInitialFocus: string | null;
+  openSettings: (section?: string, focus?: string) => void;
   closeSettings: () => void;
 
   /**
@@ -50,6 +47,13 @@ interface UIContextValue {
   linkModalMode: "link" | "reauth";
   openLinkModal: (mode?: "link" | "reauth") => void;
   closeLinkModal: () => void;
+  /**
+   * A one-shot signal like {@link UIContextValue.trialSetupRequested}: the callback route and the
+   * dialog mount separately, and there must only ever be one link dialog.
+   */
+  connectOutcome: ConnectOutcome | null;
+  publishConnectOutcome: (outcome: ConnectOutcome) => void;
+  clearConnectOutcome: () => void;
   /**
    * A request to begin the enterprise trial, raised from wherever the buyer said yes (the billing
    * upsell, a sales link). The deal controller lives on Home, so this is a one-shot signal rather
@@ -81,7 +85,6 @@ function writeSidebarCollapsed(collapsed: boolean): void {
 }
 
 export function UIProvider({ children }: { children: ReactNode }) {
-  const [searchOpen, setSearchOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] =
     useState(readSidebarCollapsed);
@@ -90,9 +93,15 @@ export function UIProvider({ children }: { children: ReactNode }) {
   const [settingsInitialSection, setSettingsInitialSection] = useState<
     string | null
   >(null);
+  const [settingsInitialFocus, setSettingsInitialFocus] = useState<
+    string | null
+  >(null);
   const [linkModalOpen, setLinkModalOpen] = useState(false);
   const [trialSetupRequested, setTrialSetupRequested] = useState(false);
   const [linkModalMode, setLinkModalMode] = useState<"link" | "reauth">("link");
+  const [connectOutcome, setConnectOutcome] = useState<ConnectOutcome | null>(
+    null,
+  );
   // When the link modal is opened from inside Settings, remember the section to
   // restore so closing the modal returns the admin to where they were.
   const [reopenSettingsAfterLink, setReopenSettingsAfterLink] = useState<
@@ -101,16 +110,8 @@ export function UIProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<UIContextValue>(
     () => ({
-      // Opening any overlay (search, settings, link modal) dismisses the mobile
-      // nav drawer so overlays never stack on top of it.
-      searchOpen,
-      openSearch: () => {
-        setMobileNavOpen(false);
-        setSearchOpen(true);
-      },
-      closeSearch: () => setSearchOpen(false),
-      toggleSearch: () => setSearchOpen((o) => !o),
-
+      // Opening any overlay (settings, link modal) dismisses the mobile nav
+      // drawer so overlays never stack on top of it.
       mobileNavOpen,
       openMobileNav: () => setMobileNavOpen(true),
       closeMobileNav: () => setMobileNavOpen(false),
@@ -131,14 +132,17 @@ export function UIProvider({ children }: { children: ReactNode }) {
 
       settingsOpen,
       settingsInitialSection,
-      openSettings: (section?: string) => {
+      settingsInitialFocus,
+      openSettings: (section?: string, focus?: string) => {
         setMobileNavOpen(false);
         setSettingsInitialSection(section ?? null);
+        setSettingsInitialFocus(focus ?? null);
         setSettingsOpen(true);
       },
       closeSettings: () => {
         setSettingsOpen(false);
         setSettingsInitialSection(null);
+        setSettingsInitialFocus(null);
       },
 
       linkModalOpen,
@@ -152,6 +156,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
           setReopenSettingsAfterLink("account-link");
           setSettingsOpen(false);
           setSettingsInitialSection(null);
+          setSettingsInitialFocus(null);
         }
         setLinkModalOpen(true);
       },
@@ -161,27 +166,39 @@ export function UIProvider({ children }: { children: ReactNode }) {
         setTrialSetupRequested(true);
       },
       clearTrialSetupRequest: () => setTrialSetupRequested(false),
+      connectOutcome,
+      publishConnectOutcome: (outcome: ConnectOutcome) => {
+        setMobileNavOpen(false);
+        setConnectOutcome(outcome);
+        setLinkModalMode("link");
+        setLinkModalOpen(true);
+      },
+      clearConnectOutcome: () => setConnectOutcome(null),
       closeLinkModal: () => {
         setLinkModalOpen(false);
         setLinkModalMode("link");
+        // A reopen from a CTA is a fresh flow, not a handshake already dismissed.
+        setConnectOutcome(null);
         if (reopenSettingsAfterLink) {
           setSettingsInitialSection(reopenSettingsAfterLink);
+          setSettingsInitialFocus(null);
           setSettingsOpen(true);
           setReopenSettingsAfterLink(null);
         }
       },
     }),
     [
-      searchOpen,
       mobileNavOpen,
       sidebarCollapsed,
       assistantOpen,
       settingsOpen,
       settingsInitialSection,
+      settingsInitialFocus,
       linkModalOpen,
       linkModalMode,
       reopenSettingsAfterLink,
       trialSetupRequested,
+      connectOutcome,
     ],
   );
 

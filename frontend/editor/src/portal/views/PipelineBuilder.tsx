@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
@@ -10,21 +10,23 @@ import {
   Banner,
   Button,
   FormField,
-  Input,
   Modal,
   Select,
   Spinner,
 } from "@app/ui";
 import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
 import {
+  activeFileFields,
+  assetRef,
   deserializeToolStep,
+  extractStepFiles,
   getExecutableTools,
   newWorkingToolStep,
   serializeToolStep,
   stepNeedsConfiguring,
-  stepRequiresUpload,
   updateWorkingStepParams,
   type ExecutableTool,
+  type SupportingFileBindings,
   type WorkingToolStep,
 } from "@app/hooks/tools/shared/toolAutomation";
 import {
@@ -48,13 +50,20 @@ import {
   runPipelineTest,
   savePipeline,
   triggerPipeline,
+  type PipelineStep,
   type Policy,
   type PolicyRunView,
   type RunOutputFile,
+  type TestRunAsset,
   type TriggerConfig,
   type TriggerInfo,
   type TriggerOutcome,
 } from "@portal/api/pipelines";
+import {
+  listPipelineAssets,
+  uploadPipelineAsset,
+  type PolicyAsset,
+} from "@portal/api/pipelineAssets";
 import { clearProcessedHistory } from "@portal/api/policies";
 import { DestinationPicker } from "@portal/components/pipelines/DestinationPicker";
 import { availableOutputModes } from "@portal/components/pipelines/outputModes";
@@ -67,7 +76,10 @@ import { useQueryClient } from "@tanstack/react-query";
 import { qk } from "@portal/queries/keys";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
 import { humanizeOperation } from "@portal/components/pipelines/pipelineOperations";
-import { PipelineHeader } from "@portal/components/pipelines/PipelineHeader";
+import { canonicalPipelineIconKey } from "@portal/components/pipelines/pipelineIcon";
+import { PipelineCreateHeader } from "@portal/components/pipelines/PipelineCreateHeader";
+import { PipelineEditHeader } from "@portal/components/pipelines/PipelineEditHeader";
+import { PipelineGraphToolbar } from "@portal/components/pipelines/PipelineGraphToolbar";
 import { PipelineInspector } from "@portal/components/pipelines/PipelineInspector";
 import { PipelineDefinitionModal } from "@portal/components/pipelines/PipelineDefinitionModal";
 import {
@@ -91,19 +103,15 @@ import {
   newIntegrationStep,
   stepOperation,
 } from "@portal/components/pipelines/integrationStep";
+import {
+  MANUAL,
+  MANUAL_OPTION,
+  PipelineInputTrigger,
+  type EditorRunOn,
+  type ScheduleUnit,
+  type WorkingInput,
+} from "@portal/components/pipelines/PipelineInputTrigger";
 import "@portal/views/PipelineBuilder.css";
-
-type ScheduleUnit = "MINUTES" | "HOURS" | "DAYS";
-
-const SCHEDULE_UNITS: ScheduleUnit[] = ["MINUTES", "HOURS", "DAYS"];
-/** Empty trigger type = manual-only (no automatic trigger). */
-const MANUAL = "";
-/**
- * Sentinel value for the manual choice in the trigger dropdown. Mantine's Select treats an empty
- * string as "no selection" (it shows the placeholder, not the option), so the manual option needs a
- * real value; it maps to/from the empty {@link MANUAL} trigger type at the edges.
- */
-const MANUAL_OPTION = "manual";
 
 const TERMINAL_STATUSES = new Set(["COMPLETED", "FAILED", "CANCELLED"]);
 const POLL_INTERVAL_MS = 1500;
@@ -135,14 +143,6 @@ function parseTrigger(trigger: TriggerConfig | null): {
     return { triggerType: "schedule", count: "1", unit: "HOURS" };
   }
   return { triggerType: trigger.type, count: "1", unit: "HOURS" };
-}
-
-/** One input row in the builder: a source paired with its own trigger config. */
-interface WorkingInput {
-  sourceId: string;
-  triggerType: string;
-  scheduleCount: string;
-  scheduleUnit: ScheduleUnit;
 }
 
 /** The input row with nothing chosen yet: no source, manual trigger. */
@@ -199,11 +199,28 @@ export function PipelineBuilder() {
     ]);
   const { id } = useParams();
   const isEdit = Boolean(id);
+  const location = useLocation();
+  // A Customise hand-off from the simple policy wizard: the in-progress settings as a full pipeline
+  // record, seeded here instead of fetched. When editing an existing policy the id-based fetch still
+  // runs in the background so run/pause/delete act on the last-saved version.
+  const handoff = location.state as { draft?: Policy } | null;
+  const seedDraft = handoff?.draft ?? null;
   const { allTools } = useToolRegistry();
   const executableTools = useMemo(
     () => getExecutableTools(allTools),
     [allTools],
   );
+
+  // Stored supporting files from earlier saves, so a reopened step can label its bindings by name.
+  const assetsState = useAsync<PolicyAsset[]>(
+    async () => await listPipelineAssets(),
+    [],
+  );
+  const assetNames = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const asset of assetsState.data ?? []) map[asset.id] = asset.fileName;
+    return map;
+  }, [assetsState.data]);
 
   const policyState = useAsync<Policy | null>(
     async () => (id ? await fetchPipeline(id) : null),
@@ -214,13 +231,10 @@ export function PipelineBuilder() {
     async () => await fetchTriggers(),
     [],
   );
-  // The editor is a built-in, client-driven source (it runs on editor upload,
-  // not as a pipeline input), so it's excluded from a pipeline's inputs.
+  // Includes the virtual editor source: a valid input, but never a wire input (see save) and not
+  // writable, so isWritableSource keeps it out of the destinations below.
   const availableSources = useMemo<SourceView[]>(
-    () =>
-      (sourcesState.data?.sources ?? []).filter(
-        (source) => source.type !== EDITOR_SOURCE_TYPE,
-      ),
+    () => sourcesState.data?.sources ?? [],
     [sourcesState.data],
   );
   // A destination is a source used as a write target: only writable types (folder/S3, filtered per
@@ -239,6 +253,17 @@ export function PipelineBuilder() {
   // Exactly one input: the row is always present, so the working state is a single object; the
   // wire shape stays a list (see save()).
   const [input, setInput] = useState<WorkingInput>(blankInput);
+  // When the editor is the source, the pipeline fires client-side on each file: on upload as it
+  // arrives, or on export as it leaves. Meaningless for a swept source, which has no such moment.
+  const [runOn, setRunOn] = useState<EditorRunOn>("upload");
+  const isEditorInput = useMemo(
+    () =>
+      availableSources.some(
+        (source) =>
+          source.id === input.sourceId && source.type === EDITOR_SOURCE_TYPE,
+      ),
+    [availableSources, input.sourceId],
+  );
   const [steps, setSteps] = useState<WorkingToolStep[]>([]);
   /** Which node the inspector is editing: an end of the chain, a step, or nothing. */
   const [selected, setSelected] = useState<GraphSelection>(null);
@@ -249,6 +274,19 @@ export function PipelineBuilder() {
   const [testRun, setTestRun] = useState<PolicyRunView | null>(null);
   const [testing, setTesting] = useState(false);
   const [outputIds, setOutputIds] = useState<string[]>([]);
+  // Org-mandated policy (see Policy.required). Admin sets it; members can't pause/delete a required
+  // pipeline, and it enforces on their documents when it runs on the editor.
+  const [required, setRequired] = useState(false);
+  // First-class row icon (see Policy.icon), chosen from the picker in the header. Empty falls back to
+  // the template category glyph in the list; a custom pipeline defaults to none until picked.
+  const [icon, setIcon] = useState("");
+  // The policy metadata bag carried on output.options (runOn, sources, output naming, scope,
+  // reviewer, fieldValues...). Seeded on load and written back untouched, so a customised policy
+  // never loses its simple-only settings even though the builder has no UI for them.
+  const [outputOptions, setOutputOptions] = useState<Record<string, unknown>>(
+    {},
+  );
+  const [outputType, setOutputType] = useState("inline");
   /**
    * Whether the user has asked for each end of the chain yet, distinguishing "not offered" from
    * "offered and still owed a choice" - the two states an empty sourceId cannot tell apart. Only a
@@ -258,10 +296,19 @@ export function PipelineBuilder() {
   const [inputAsked, setInputAsked] = useState(false);
   const [outputAsked, setOutputAsked] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  // Which create action is in flight, so only the button that was clicked (Create / Create paused)
+  // shows its spinner. Null in edit and while idle.
+  const [pendingCreateEnabled, setPendingCreateEnabled] = useState<
+    boolean | null
+  >(null);
   const [error, setError] = useState<string | null>(null);
   const [seeded, setSeeded] = useState(false);
   const [running, setRunning] = useState(false);
-  const [clearingHistory, setClearingHistory] = useState(false);
+  // Pausing/activating an existing pipeline acts immediately (a separate save), not on the next
+  // "Save changes"; this tracks that in-flight toggle.
+  const [togglingEnabled, setTogglingEnabled] = useState(false);
+  // Clearing the processed record then running, so already-handled files go through again.
+  const [reprocessing, setReprocessing] = useState(false);
   const [runResult, setRunResult] = useState<RunResult | null>(null);
   const [pendingDelete, setPendingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -308,18 +355,47 @@ export function PipelineBuilder() {
     };
   }, []);
 
-  // Seed the form once: immediately for a new pipeline, or after the policy loads for an edit.
+  // Seed the form once: immediately for a new pipeline or a Customise hand-off, or after the policy
+  // loads for an edit. A hand-off draft wins over the fetched record (it carries the unsaved wizard
+  // edits), so an edit reached via Customise need not wait for the fetch.
   useEffect(() => {
     if (seeded) return;
-    if (isEdit && !policyState.data) return;
-    const policy = policyState.data ?? undefined;
+    if (isEdit && !seedDraft && !policyState.data) return;
+    const policy = seedDraft ?? policyState.data ?? undefined;
+    // An editor pipeline is recognised by the editor source id, which arrives with the sources
+    // fetch. If the policy loads first, seeding now would latch a blank input and re-save the
+    // pipeline off the editor (editor.allowed:false), so wait for that fetch to settle.
+    if (policy?.editor?.allowed && !sourcesState.data && !sourcesState.error) {
+      return;
+    }
     setName(policy?.name ?? "");
     setEnabled(policy?.enabled ?? true);
+    setRequired(policy?.required ?? false);
+    // Seed the icon from the first-class field; a template hand-off has none yet, so fall back to its
+    // category id. Normalise either to a canonical pickable key - the picker matches its own
+    // vocabulary, not the category-id aliases, so an unnormalised categoryId shows as the default.
+    const seedCategoryId = policy?.output?.options?.categoryId;
+    setIcon(
+      canonicalPipelineIconKey(
+        policy?.icon ??
+          (typeof seedCategoryId === "string" ? seedCategoryId : ""),
+      ),
+    );
+    setOutputOptions(policy?.output?.options ?? {});
+    setOutputType(policy?.output?.type ?? "inline");
     // The one input row is always present: blank for a new pipeline (or a legacy policy saved
     // without inputs), the stored input for an edit. A legacy multi-input policy shows only its
     // first input; saving persists just that one (the backend rejects more anyway).
+    // An editor pipeline has no wire input; it is recognised by its recorded sources.
+    const editorSourceId = (sourcesState.data?.sources ?? []).find(
+      (source) => source.type === EDITOR_SOURCE_TYPE,
+    )?.id;
+    setRunOn(policy?.editor?.runOn === "export" ? "export" : "upload");
     const stored = policy?.inputs[0];
-    if (stored) {
+    const seedsEditor = Boolean(policy?.editor?.allowed && editorSourceId);
+    if (seedsEditor && editorSourceId) {
+      setInput({ ...blankInput(), sourceId: editorSourceId });
+    } else if (stored) {
       const trigger = parseTrigger(stored.trigger);
       setInput({
         sourceId: stored.sourceId,
@@ -333,9 +409,17 @@ export function PipelineBuilder() {
     setSteps(
       (policy?.steps ?? []).map((step) => deserializeToolStep(step, allTools)),
     );
-    setOutputIds(policy?.outputIds ?? []);
+    setOutputIds(seedsEditor ? [] : (policy?.outputIds ?? []));
     setSeeded(true);
-  }, [isEdit, policyState.data, allTools, seeded]);
+  }, [
+    isEdit,
+    seedDraft,
+    policyState.data,
+    allTools,
+    seeded,
+    sourcesState.data,
+    sourcesState.error,
+  ]);
 
   const sourceType = (sourceId: string) =>
     availableSources.find((s) => s.id === sourceId)?.type;
@@ -381,8 +465,8 @@ export function PipelineBuilder() {
   // Changing the source may make the current trigger incompatible (folder-watch on a non-folder);
   // drop it back to manual when that happens so the row can't hold an invalid pairing.
   function changeInputSource(sourceId: string) {
+    const type = sourceType(sourceId);
     setInput((current) => {
-      const type = sourceType(sourceId);
       const trigger = triggers.find((tr) => tr.type === current.triggerType);
       const keepTrigger =
         current.triggerType === MANUAL ||
@@ -393,6 +477,11 @@ export function PipelineBuilder() {
         triggerType: keepTrigger ? current.triggerType : MANUAL,
       };
     });
+    // The editor hands results back to the workspace, so it has no destination to choose.
+    if (type === EDITOR_SOURCE_TYPE) {
+      setOutputIds([]);
+      setOutputAsked(false);
+    }
   }
 
   /** Put an end on the chain and open it, so the click that asks for it also offers the choice. */
@@ -475,6 +564,21 @@ export function PipelineBuilder() {
     );
   }
 
+  /** Drop a step's stored supporting-file binding for one field (the chip's remove action). */
+  function clearStepBinding(index: number, field: string) {
+    setSteps((current) =>
+      current.map((step, i) => {
+        if (i !== index || !step.fileParameters) return step;
+        const next = { ...step.fileParameters };
+        delete next[field];
+        return {
+          ...step,
+          fileParameters: Object.keys(next).length > 0 ? next : undefined,
+        };
+      }),
+    );
+  }
+
   function stepLabel(step: WorkingToolStep): string {
     // An integration step's endpoint is the same for every vendor, so the raw path would read
     // "External api call" for all of them. Name it by the operation instead.
@@ -500,11 +604,6 @@ export function PipelineBuilder() {
     if (isIntegrationStep(step)) return <BrandMark id="api" size={17} />;
     return step.toolId ? allTools[step.toolId]?.icon : undefined;
   }
-
-  // Steps whose params carry an uploaded file can't be saved: the bytes aren't persisted with the
-  // policy, so a later run would send null for that field (see stepRequiresUpload).
-  const uploadStepLabels = steps.filter(stepRequiresUpload).map(stepLabel);
-  const hasUploadSteps = uploadStepLabels.length > 0;
 
   // A step still missing a choice - an integration with no operation or account, a tool whose
   // mandatory parameters are unset - would fail at run time with a raw backend rejection, so block
@@ -587,13 +686,37 @@ export function PipelineBuilder() {
   }
 
   // Track unsaved edits: snapshot the form and compare against the state captured just after
-  // seeding, so leaving the builder can prompt to save or discard.
+  // seeding, so leaving the builder can prompt to save or discard. `enabled` is deliberately left
+  // out: in edit it is toggled and persisted at once (never an unsaved edit), and in create it is
+  // chosen at submit - so it can never be the thing that makes the form dirty.
+  // Per-step dirty signature: the serialized step plus a stable identity (name/size/mtime) of its
+  // fresh file picks - a raw File JSON-stringifies to `{}`, so serializeToolStep (which excludes
+  // Files) can't see a file added or swapped. Memoized on the steps because it probes each tool's
+  // buildFormData; without this it would re-run for every step on any render (e.g. each keystroke in
+  // the name field). Stored bindings are covered by the serialized step.
+  const stepSnapshot = useMemo(
+    () =>
+      steps.map((step) => {
+        const files: Record<string, string[]> = {};
+        for (const [field, picks] of Object.entries(
+          extractStepFiles(step, allTools),
+        )) {
+          files[field] = picks.map(
+            (file) => `${file.name}:${file.size}:${file.lastModified}`,
+          );
+        }
+        return { step: serializeToolStep(step, allTools), files };
+      }),
+    [steps, allTools],
+  );
   const snapshot = JSON.stringify({
     name: name.trim(),
-    enabled,
+    icon,
+    required,
     input,
-    steps: steps.map((step) => serializeToolStep(step, allTools)),
-    uploads: steps.map(stepRequiresUpload),
+    steps: stepSnapshot,
+    outputType,
+    outputOptions,
     outputIds: [...outputIds].sort(),
   });
   const baseline = useRef<string | null>(null);
@@ -602,20 +725,46 @@ export function PipelineBuilder() {
   }, [seeded, snapshot]);
   const dirty = baseline.current !== null && baseline.current !== snapshot;
 
-  // The input needs a source, and a scheduled input needs a positive interval; the pipeline
-  // needs exactly one output destination.
-  const inputValid =
-    input.sourceId !== "" &&
-    (input.triggerType !== "schedule" || Number(input.scheduleCount) > 0);
-  const outputValid = outputIds.length === 1;
-  const canSave =
-    name.trim() !== "" &&
-    inputValid &&
-    outputValid &&
-    !hasUploadSteps &&
-    !hasUnconfiguredSteps &&
-    !hasIncompatibleSteps &&
-    !submitting;
+  // Each validity condition is defined exactly once here, then consumed both by the graph (which
+  // flags each end) and by the blocker list below.
+  const sourceChosen = input.sourceId !== "";
+  // An editor pipeline has no trigger to schedule: it fires as each file passes through.
+  const scheduleValid =
+    isEditorInput ||
+    input.triggerType !== "schedule" ||
+    Number(input.scheduleCount) > 0;
+  const inputValid = sourceChosen && scheduleValid;
+  // Nor a destination: an editor pipeline's results land back in the workspace the file came from.
+  const outputValid = isEditorInput || outputIds.length === 1;
+
+  // The single source of truth for "can this be committed": every reason it can't be, in the order
+  // they appear down the form, so a disabled Create / Save button can say exactly what is still owed.
+  const blockers: string[] = [];
+  if (name.trim() === "")
+    blockers.push(t("portal.pipelines.builder.blocker.name"));
+  // An editor pipeline has the editor as its chosen source and needs no destination, so sourceChosen
+  // is already true and outputValid already passes for it - these checks simply never fire.
+  if (!sourceChosen)
+    blockers.push(t("portal.pipelines.builder.blocker.source"));
+  else if (!scheduleValid)
+    blockers.push(t("portal.pipelines.builder.blocker.schedule"));
+  if (!outputValid)
+    blockers.push(t("portal.pipelines.builder.blocker.destination"));
+  if (hasUnconfiguredSteps)
+    blockers.push(
+      t("portal.pipelines.builder.blocker.setup", {
+        tools: unconfiguredStepLabels.join(", "),
+      }),
+    );
+  if (hasIncompatibleSteps)
+    blockers.push(
+      t("portal.pipelines.builder.blocker.incompatible", {
+        tools: blockingSteps.join(", "),
+      }),
+    );
+
+  // Nothing left to fix, and not already committing.
+  const canSave = blockers.length === 0 && !submitting;
 
   const listPath = toPortalPath(VIEW_PATHS.pipelines);
 
@@ -629,29 +778,131 @@ export function PipelineBuilder() {
     else navigate(destination);
   }
 
-  async function save(destination: string) {
+  /**
+   * The active supporting-file fields of a step, each paired with its fresh in-memory pick(s) and its
+   * stored `asset:<id>` binding (either may be absent). The single source both saving and test-running
+   * read, so the two agree on which fields are active and how a binding is chosen; they differ only in
+   * how a fresh pick is emitted - uploaded as an asset vs. sent inline.
+   */
+  function stepFileFields(
+    step: WorkingToolStep,
+  ): { field: string; fresh: File[] | null; stored: string | null }[] {
+    const fresh = extractStepFiles(step, allTools);
+    const stored = step.fileParameters ?? {};
+    const fields = activeFileFields(step, allTools) ?? Object.keys(stored);
+    return fields.map((field) => ({
+      field,
+      fresh: fresh[field] ?? null,
+      stored: stored[field] ?? null,
+    }));
+  }
+
+  /** A wire step, attaching fileParameters only when it has any. */
+  function toWireStep(
+    operation: string,
+    parameters: Record<string, unknown>,
+    bindings: SupportingFileBindings,
+  ): PipelineStep {
+    return Object.keys(bindings).length > 0
+      ? { operation, parameters, fileParameters: bindings }
+      : { operation, parameters };
+  }
+
+  /**
+   * The wire steps for saving: scalar params from serialization, plus supporting-file bindings. A
+   * fresh pick is uploaded to the asset store (the save-time validator rejects a policy that binds an
+   * asset id that doesn't yet exist); a stored binding the tool still uses is kept when the user
+   * didn't replace it. Uploads run in parallel; any abandoned by a later failure are GC'd server-side.
+   */
+  async function serializeStepsForSave(): Promise<PipelineStep[]> {
+    return Promise.all(
+      steps.map(async (step) => {
+        const { operation, parameters } = serializeToolStep(step, allTools);
+        const entries = await Promise.all(
+          stepFileFields(step).map(async ({ field, fresh, stored }) => {
+            if (fresh?.length) {
+              const ids = await Promise.all(
+                fresh.map((file) =>
+                  uploadPipelineAsset(file).then((a) => a.id),
+                ),
+              );
+              return [field, assetRef(ids)] as const;
+            }
+            return stored ? ([field, stored] as const) : null;
+          }),
+        );
+        const bindings: SupportingFileBindings = Object.fromEntries(
+          entries.filter((e): e is readonly [string, string] => e !== null),
+        );
+        return toWireStep(operation, parameters, bindings);
+      }),
+    );
+  }
+
+  async function save(destination: string, enabledOverride?: boolean) {
     if (!canSave) return;
     setSubmitting(true);
     setError(null);
-    const policy: Policy = {
-      id: policyState.data?.id ?? undefined,
-      name: name.trim(),
-      enabled,
-      // The wire shape stays a list; canSave guarantees the one input has a source.
-      inputs: [{ sourceId: input.sourceId, trigger: buildTriggerFor(input) }],
-      steps: steps.map((step) => serializeToolStep(step, allTools)),
-      // Destinations are the referenced saved sources; the inline output field is
-      // preserved as-is (e.g. an editor policy's membership metadata) or defaults to inline.
-      output: policyState.data?.output ?? { type: "inline", options: {} },
-      outputIds,
-    };
     try {
+      const policy: Policy = {
+        id: policyState.data?.id ?? seedDraft?.id ?? undefined,
+        name: name.trim(),
+        enabled: enabledOverride ?? enabled,
+        required,
+        icon,
+        // The editor is virtual - there is no stored Source to pull from, and nothing server-side
+        // sweeps it - so it is never a wire input; its participation is recorded on `editor` below.
+        inputs: isEditorInput
+          ? []
+          : [{ sourceId: input.sourceId, trigger: buildTriggerFor(input) }],
+        steps: await serializeStepsForSave(),
+        // The output carries the policy metadata bag (categoryId, scope, naming...), edited in the
+        // dev section and preserved verbatim otherwise, so a customised policy never loses it.
+        output: { type: outputType, options: outputOptions },
+        editor: { allowed: isEditorInput, runOn },
+        // An editor pipeline delivers back into the workspace. A stored destination would send the
+        // run to a folder or bucket instead, leaving the editor's copy untouched.
+        outputIds: isEditorInput ? [] : outputIds,
+      };
       await savePipeline(policy);
       await invalidatePipelines();
       navigate(destination);
     } catch (e) {
       setError(errorMessage(e));
       setSubmitting(false);
+      setPendingCreateEnabled(null);
+    }
+  }
+
+  // Create live or paused. The buttons disable until the pipeline is valid, so this only fires on a
+  // saveable pipeline; the flag records which button spins and whether it starts live or paused.
+  function submitCreate(enabledValue: boolean) {
+    setPendingCreateEnabled(enabledValue);
+    void save(listPath, enabledValue);
+  }
+
+  /**
+   * Pause or activate the saved pipeline now, without leaving the builder. It re-saves the
+   * persisted policy with the flag flipped - deliberately NOT the working form - so a pending chain
+   * edit is not silently committed by a pause. The dirty tracker ignores `enabled`, so this never
+   * looks like an unsaved change.
+   */
+  async function handleTogglePause() {
+    // Never run alongside a Save: both write the whole policy, and a concurrent pair would race
+    // (the pause carries the persisted steps, so it could clobber the edits Save is committing).
+    if (togglingEnabled || submitting || !policyState.data) return;
+    const next = !enabled;
+    setTogglingEnabled(true);
+    setError(null);
+    try {
+      await savePipeline({ ...policyState.data, enabled: next });
+      if (!mounted.current) return;
+      setEnabled(next);
+      await invalidatePipelines();
+    } catch (e) {
+      if (mounted.current) setError(errorMessage(e));
+    } finally {
+      if (mounted.current) setTogglingEnabled(false);
     }
   }
 
@@ -671,6 +922,32 @@ export function PipelineBuilder() {
   }
 
   /**
+   * The steps + inline supporting files for a test run. A fresh (in-memory) pick rides along as a
+   * keyed `assets[i]` under a per-step run key; a stored file keeps its `asset:<id>` binding, which
+   * the backend resolves from the pipeline's saved policy (passed as policyId) - no re-fetch needed.
+   */
+  function buildTestSteps(): { steps: PipelineStep[]; assets: TestRunAsset[] } {
+    const assets: TestRunAsset[] = [];
+    const outSteps = steps.map((step, i) => {
+      const { operation, parameters } = serializeToolStep(step, allTools);
+      const bindings: SupportingFileBindings = {};
+      for (const { field, fresh, stored } of stepFileFields(step)) {
+        if (fresh?.length) {
+          // In-memory pick: inline the bytes under a run key.
+          const key = `s${i}_${field}`;
+          bindings[field] = key;
+          for (const file of fresh) assets.push({ key, file });
+        } else if (stored) {
+          // Already an asset: keep its ref for the backend to resolve from the saved policy.
+          bindings[field] = stored;
+        }
+      }
+      return toWireStep(operation, parameters, bindings);
+    });
+    return { steps: outSteps, assets };
+  }
+
+  /**
    * Run the steps as they stand against one uploaded file. Output is forced inline so nothing
    * reaches the pipeline's real destination, and the pipeline need not be saved first - this is
    * how the chain gets checked while it is still being built.
@@ -681,13 +958,17 @@ export function PipelineBuilder() {
     setTestRun(null);
     setRunResult(null);
     try {
+      const { steps: testSteps, assets } = buildTestSteps();
       const { runId } = await runPipelineTest(
         {
           name: name.trim() || t("portal.pipelines.builder.testRun"),
-          steps: steps.map((step) => serializeToolStep(step, allTools)),
+          steps: testSteps,
           output: { type: "inline", options: {} },
         },
         file,
+        assets,
+        // Lets the backend resolve any stored `asset:<id>` refs from this saved policy.
+        policyState.data?.id,
       );
       const final = await awaitRun(runId, (view) => {
         if (mounted.current) setTestRun(view);
@@ -741,39 +1022,45 @@ export function PipelineBuilder() {
     return { tone: "info", text: t("portal.pipelines.run.empty") };
   }
 
+  // Trigger the saved pipeline and report the outcome: what the sweep started (or why it started
+  // nothing), then each run's terminal state. Shared by Run now and the reprocess action.
+  async function reportRun(policyId: string) {
+    const outcome = await triggerPipeline(policyId);
+    const runIds = outcome.runIds;
+    if (runIds.length === 0) {
+      if (mounted.current) setRunResult(emptySweepResult(outcome));
+      return;
+    }
+    const finals = await Promise.all(runIds.map((runId) => awaitRun(runId)));
+    if (!mounted.current) return;
+    const failed = finals.find((r) => r?.status === "FAILED");
+    if (failed) {
+      setRunResult({
+        tone: "danger",
+        text: t("portal.pipelines.run.failed", { error: failed.error ?? "" }),
+      });
+    } else if (finals.some((r) => r === null)) {
+      // Gave up polling before a terminal status; the run may still finish server-side.
+      setRunResult({
+        tone: "warning",
+        text: t("portal.pipelines.run.timeout"),
+      });
+    } else if (finals.every((r) => r?.status === "COMPLETED")) {
+      setRunResult({
+        tone: "success",
+        text: t("portal.pipelines.run.completed", { count: finals.length }),
+      });
+    } else {
+      setRunResult({ tone: "info", text: t("portal.pipelines.run.running") });
+    }
+  }
+
   async function handleRun() {
-    if (running || !id) return;
+    if (running || reprocessing || !id) return;
     setRunning(true);
     setRunResult(null);
     try {
-      const outcome = await triggerPipeline(id);
-      const runIds = outcome.runIds;
-      if (runIds.length === 0) {
-        if (mounted.current) setRunResult(emptySweepResult(outcome));
-        return;
-      }
-      const finals = await Promise.all(runIds.map((runId) => awaitRun(runId)));
-      if (!mounted.current) return;
-      const failed = finals.find((r) => r?.status === "FAILED");
-      if (failed) {
-        setRunResult({
-          tone: "danger",
-          text: t("portal.pipelines.run.failed", { error: failed.error ?? "" }),
-        });
-      } else if (finals.some((r) => r === null)) {
-        // Gave up polling before a terminal status; the run may still finish server-side.
-        setRunResult({
-          tone: "warning",
-          text: t("portal.pipelines.run.timeout"),
-        });
-      } else if (finals.every((r) => r?.status === "COMPLETED")) {
-        setRunResult({
-          tone: "success",
-          text: t("portal.pipelines.run.completed", { count: finals.length }),
-        });
-      } else {
-        setRunResult({ tone: "info", text: t("portal.pipelines.run.running") });
-      }
+      await reportRun(id);
     } catch (e) {
       if (mounted.current)
         setRunResult({ tone: "danger", text: errorMessage(e) });
@@ -783,26 +1070,22 @@ export function PipelineBuilder() {
   }
 
   /**
-   * Forget which source files this pipeline has processed, so the next sweep
-   * reprocesses everything currently in its sources (the standard retry for a
-   * parked-by-failure file). Does not touch the files themselves.
+   * Reprocess everything currently in the sources: forget which files the pipeline already handled,
+   * then run at once so those files - which a normal run skips - go through now. Reports the run's
+   * outcome exactly like Run now; does not touch the files themselves.
    */
-  async function handleClearHistory() {
-    if (clearingHistory || !id) return;
-    setClearingHistory(true);
+  async function handleReprocessAll() {
+    if (running || reprocessing || !id) return;
+    setReprocessing(true);
     setRunResult(null);
     try {
       await clearProcessedHistory(id);
-      if (mounted.current)
-        setRunResult({
-          tone: "success",
-          text: t("portal.pipelines.run.historyCleared"),
-        });
+      await reportRun(id);
     } catch (e) {
       if (mounted.current)
         setRunResult({ tone: "danger", text: errorMessage(e) });
     } finally {
-      if (mounted.current) setClearingHistory(false);
+      if (mounted.current) setReprocessing(false);
     }
   }
 
@@ -838,6 +1121,11 @@ export function PipelineBuilder() {
 
   /** How this input fires, in a few words, for the input node's summary line. */
   function triggerSummary(): string {
+    // The editor has no trigger to schedule; it fires as each file passes through.
+    if (isEditorInput)
+      return runOn === "export"
+        ? t("portal.pipelines.builder.runOnExport", "Every export")
+        : t("portal.pipelines.builder.runOnUpload", "Every upload");
     if (input.triggerType === MANUAL)
       return t("portal.pipelines.composer.triggerManual");
     if (input.triggerType === "schedule")
@@ -861,8 +1149,6 @@ export function PipelineBuilder() {
         return t("portal.pipelines.builder.chooseAccount");
       return undefined;
     }
-    if (stepRequiresUpload(step))
-      return t("portal.pipelines.builder.needsUpload");
     if (stepNeedsConfiguring(step, allTools))
       return t("portal.pipelines.builder.needsConfiguring");
     return undefined;
@@ -952,7 +1238,7 @@ export function PipelineBuilder() {
                     variant="tertiary"
                     className="portal-builder__source-edit"
                     aria-label={t("portal.pipelines.composer.editSource")}
-                    disabled={input.sourceId === ""}
+                    disabled={input.sourceId === "" || isEditorInput}
                     onClick={() =>
                       setSourceModal({ open: true, sourceId: input.sourceId })
                     }
@@ -962,58 +1248,14 @@ export function PipelineBuilder() {
                 </div>
               </FormField>
 
-              <FormField label={t("portal.pipelines.builder.inputTrigger")}>
-                <Select
-                  inputSize="sm"
-                  aria-label={t("portal.pipelines.builder.inputTrigger")}
-                  value={
-                    input.triggerType === MANUAL
-                      ? MANUAL_OPTION
-                      : input.triggerType
-                  }
-                  disabled={input.sourceId === ""}
-                  onChange={(value) =>
-                    updateInput({
-                      triggerType:
-                        value && value !== MANUAL_OPTION ? value : MANUAL,
-                    })
-                  }
-                  options={triggerOptionsFor(input.sourceId)}
-                />
-              </FormField>
-
-              {input.triggerType === "schedule" && (
-                <div className="portal-builder__schedule">
-                  <span className="portal-builder__muted">
-                    {t("portal.pipelines.composer.scheduleEvery")}
-                  </span>
-                  <Input
-                    inputSize="sm"
-                    type="number"
-                    min={1}
-                    value={input.scheduleCount}
-                    invalid={Number(input.scheduleCount) <= 0}
-                    onChange={(e) =>
-                      updateInput({ scheduleCount: e.target.value })
-                    }
-                    className="portal-builder__schedule-count"
-                  />
-                  <Select
-                    inputSize="sm"
-                    value={input.scheduleUnit}
-                    onChange={(value) =>
-                      value &&
-                      updateInput({ scheduleUnit: value as ScheduleUnit })
-                    }
-                    options={SCHEDULE_UNITS.map((unit) => ({
-                      value: unit,
-                      label: t(
-                        `portal.pipelines.composer.unit.${unit.toLowerCase()}`,
-                      ),
-                    }))}
-                  />
-                </div>
-              )}
+              <PipelineInputTrigger
+                input={input}
+                onInputChange={updateInput}
+                triggerOptions={triggerOptionsFor(input.sourceId)}
+                isEditorInput={isEditorInput}
+                runOn={runOn}
+                onRunOnChange={setRunOn}
+              />
             </>
           )}
 
@@ -1026,6 +1268,17 @@ export function PipelineBuilder() {
             {t("portal.sources.actions.connectSource")}
           </Button>
         </>
+      );
+    }
+
+    if (selected === "output" && isEditorInput) {
+      return (
+        <p className="portal-builder__muted">
+          {t(
+            "portal.pipelines.builder.editorDestinationHelp",
+            "This pipeline runs on the files in your workspace, and its results replace the file it ran on. There is nowhere else to send them.",
+          )}
+        </p>
       );
     }
 
@@ -1047,6 +1300,8 @@ export function PipelineBuilder() {
           step={selectedStep}
           registry={allTools}
           onChange={(params) => updateStepParams(chosenSteps[0], params)}
+          assetNames={assetNames}
+          onClearBinding={(field) => clearStepBinding(chosenSteps[0], field)}
         />
       );
     }
@@ -1056,41 +1311,49 @@ export function PipelineBuilder() {
 
   return (
     <div className="portal-builder">
-      <PipelineHeader
-        name={name}
-        onNameChange={setName}
-        enabled={enabled}
-        onEnabledChange={setEnabled}
-        isEdit={isEdit}
-        stepCount={steps.length}
-        canSave={canSave}
-        saving={submitting}
-        onSave={() => save(listPath)}
-        onCancel={() => attemptLeave(listPath)}
-        onBack={() => attemptLeave(listPath)}
-        onTest={handleTest}
-        testing={testing}
-        onRun={handleRun}
-        running={running}
-        onClearHistory={handleClearHistory}
-        clearingHistory={clearingHistory}
-        onDelete={() => setPendingDelete(true)}
-        onViewDefinition={() => setDefinitionOpen(true)}
-        runResult={testSummary}
-        onDownloadOutput={downloadOutput}
-      />
+      {isEdit ? (
+        <PipelineEditHeader
+          name={name}
+          onNameChange={setName}
+          icon={icon}
+          onIconChange={setIcon}
+          required={required}
+          onRequiredChange={setRequired}
+          enabled={enabled}
+          onTogglePause={handleTogglePause}
+          togglingEnabled={togglingEnabled}
+          onBack={() => attemptLeave(listPath)}
+          canSave={canSave}
+          blockers={blockers}
+          saving={submitting}
+          onSave={() => save(listPath)}
+          onRun={handleRun}
+          running={running}
+          onReprocess={handleReprocessAll}
+          reprocessing={reprocessing}
+          onDelete={() => setPendingDelete(true)}
+        />
+      ) : (
+        <PipelineCreateHeader
+          name={name}
+          onNameChange={setName}
+          icon={icon}
+          onIconChange={setIcon}
+          required={required}
+          onRequiredChange={setRequired}
+          canSave={canSave}
+          blockers={blockers}
+          saving={submitting}
+          pendingCreateEnabled={pendingCreateEnabled}
+          onCreate={() => submitCreate(true)}
+          onCreatePaused={() => submitCreate(false)}
+          onBack={() => attemptLeave(listPath)}
+        />
+      )}
 
       {error && <Banner tone="danger" description={error} />}
       {runResult && (
         <Banner tone={runResult.tone} description={runResult.text} />
-      )}
-      {hasUploadSteps && (
-        <Banner
-          tone="warning"
-          description={t("portal.pipelines.builder.uploadUnsupported", {
-            tools: uploadStepLabels.join(", "),
-          })}
-        />
       )}
       {hasUnconfiguredSteps && (
         <Banner
@@ -1110,44 +1373,66 @@ export function PipelineBuilder() {
       )}
 
       <div className="portal-builder__grid">
-        <PipelineGraph
-          // An end is on the chain once it has been asked for or already holds a value, so a
-          // loaded pipeline needs no seeding: its source and destination place themselves.
-          input={
-            inputAsked || inputValid
-              ? {
-                  label:
-                    chosenSource?.name ??
-                    t("portal.pipelines.builder.chooseSource"),
-                  detail: chosenSource ? triggerSummary() : undefined,
-                  warning: inputValid
-                    ? undefined
-                    : t("portal.pipelines.builder.needsSource"),
-                }
-              : null
-          }
-          output={
-            outputAsked || outputValid
-              ? {
-                  label:
-                    chosenDestination?.name ??
-                    t("portal.pipelines.builder.chooseDestination"),
-                  warning: outputValid
-                    ? undefined
-                    : t("portal.pipelines.builder.needsDestination"),
-                }
-              : null
-          }
-          steps={graphSteps}
-          selected={selected}
-          onSelect={setSelected}
-          onAddEnd={addEnd}
-          onRemoveEnd={removeEnd}
-          onInsertStep={setPickerAt}
-          onRemoveSteps={removeSteps}
-          onReorderSteps={reorderSteps}
-          onOpenStepError={(index) => setSelected({ steps: [index] })}
-        />
+        <div className="portal-builder__canvas">
+          <PipelineGraphToolbar
+            stepCount={steps.length}
+            onTest={handleTest}
+            testing={testing}
+            runResult={testSummary}
+            onDownloadOutput={downloadOutput}
+            onViewDefinition={() => setDefinitionOpen(true)}
+          />
+          <PipelineGraph
+            // An end is on the chain once it has been asked for or already holds a value, so a
+            // loaded pipeline needs no seeding: its source and destination place themselves.
+            input={
+              inputAsked || inputValid
+                ? {
+                    label:
+                      chosenSource?.name ??
+                      t("portal.pipelines.builder.chooseSource"),
+                    detail: chosenSource ? triggerSummary() : undefined,
+                    warning: inputValid
+                      ? undefined
+                      : t("portal.pipelines.builder.needsSource"),
+                  }
+                : null
+            }
+            output={
+              isEditorInput
+                ? {
+                    label: t(
+                      "portal.pipelines.builder.editorDestination",
+                      "Editor",
+                    ),
+                    detail: t(
+                      "portal.pipelines.builder.editorDestinationDetail",
+                      "Replaces the file you ran it on",
+                    ),
+                    fixed: true,
+                  }
+                : outputAsked || outputValid
+                  ? {
+                      label:
+                        chosenDestination?.name ??
+                        t("portal.pipelines.builder.chooseDestination"),
+                      warning: outputValid
+                        ? undefined
+                        : t("portal.pipelines.builder.needsDestination"),
+                    }
+                  : null
+            }
+            steps={graphSteps}
+            selected={selected}
+            onSelect={setSelected}
+            onAddEnd={addEnd}
+            onRemoveEnd={removeEnd}
+            onInsertStep={setPickerAt}
+            onRemoveSteps={removeSteps}
+            onReorderSteps={reorderSteps}
+            onOpenStepError={(index) => setSelected({ steps: [index] })}
+          />
+        </div>
 
         <PipelineInspector
           title={

@@ -259,6 +259,16 @@ export default defineConfig(async ({ mode, command }) => {
         };
 
   return {
+    // Per-mode: the default is one shared node_modules/.vite, so two dev servers in
+    // different modes re-optimize over each other and the browser 504s on a stale dep
+    // hash. Anchored to frontend/ because a relative path resolves against the vite
+    // root (editor/) and would create a second node_modules there.
+    cacheDir: resolve(
+      import.meta.dirname,
+      "..",
+      "node_modules",
+      `.vite-${effectiveMode}`,
+    ),
     define: {
       __DEV_WORKTREE_LABEL__: JSON.stringify(devWorktreeLabel),
     },
@@ -335,6 +345,11 @@ export default defineConfig(async ({ mode, command }) => {
       compressStaticCopyPlugin(),
       prerenderOgPlugin(effectiveMode === "saas"),
     ],
+    // Worker bundles are a separate Rollup pass and do NOT inherit `plugins`,
+    // so without this `@app/*` resolves in the app and fails in a worker.
+    worker: {
+      plugins: () => [tsconfigPaths({ projects: [tsconfigProject] })],
+    },
     server: {
       host: true,
       allowedHosts: allowedHosts.length > 0 ? allowedHosts : undefined,

@@ -144,19 +144,15 @@ test.describe("Settings dialog", () => {
       const origReplace = window.history.replaceState.bind(window.history);
       window.history.pushState = function (...args) {
         w.__historyOps.push++;
-        return origPush(
-          ...(args as Parameters<typeof window.history.pushState>),
-        );
+        return origPush(...args);
       };
       window.history.replaceState = function (...args) {
         w.__historyOps.replace++;
-        return origReplace(
-          ...(args as Parameters<typeof window.history.replaceState>),
-        );
+        return origReplace(...args);
       };
     });
 
-    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await page.goto("/editor", { waitUntil: "domcontentloaded" });
     await openSettings(page);
 
     const generalNav = page.locator('[data-tour="admin-general-nav"]').first();
@@ -200,7 +196,7 @@ test.describe("Settings dialog", () => {
     page,
   }) => {
     // Land on / first so the originating URL is unambiguous.
-    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await page.goto("/editor", { waitUntil: "domcontentloaded" });
     await expect(
       page.locator('[data-testid="config-button"]').first(),
     ).toBeVisible({ timeout: 5_000 });

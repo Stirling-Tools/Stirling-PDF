@@ -22,6 +22,10 @@ import {
   getProviderAvatarUrl,
   type ProfilePictureMetadata,
 } from "@app/services/avatarSyncService";
+import {
+  resumeWorkbenchSession,
+  suspendWorkbenchSession,
+} from "@app/services/workbenchSession";
 
 // Extend Supabase User to include optional username for compatibility
 export type User = SupabaseUser & { username?: string };
@@ -73,6 +77,13 @@ interface AuthContextType {
   refreshProStatus: () => Promise<void>;
   refreshProfilePicture: () => Promise<void>;
   refreshProfilePictureMetadata: () => Promise<void>;
+  /**
+   * Session-level permission flags (see the core auth seam). Supabase
+   * sessions don't carry them — consumers treat undefined as "not granted"
+   * and fall back to app-config gates.
+   */
+  isAdmin?: boolean;
+  portalAccess?: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -348,11 +359,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     try {
       setError(null);
+      // Signing out is deliberate, unlike an identity check that merely failed: drop the
+      // workbench record here and stop recording, so the teardown that follows cannot
+      // write it back for whoever signs in next.
+      suspendWorkbenchSession();
+
       const { error } = await supabase.auth.signOut();
 
       if (error) {
         console.error("[Auth Debug] Sign out error:", error);
         setError(error);
+        // The sign-out did not happen and the session stands, so keep recording:
+        // otherwise a still-signed-in user silently stops persisting their workbench.
+        resumeWorkbenchSession();
       } else {
         console.debug("[Auth Debug] Signed out successfully");
         setSession(null);
@@ -360,6 +379,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (err) {
       console.error("[Auth Debug] Unexpected error during sign out:", err);
       setError(err as AuthError);
+      resumeWorkbenchSession();
     }
   };
 
