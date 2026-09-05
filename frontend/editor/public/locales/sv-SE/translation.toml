@@ -3821,7 +3821,6 @@ mobileShort = "Mobil"
 mobileUpload = "Mobiluppladdning"
 mobileUploadNotAvailable = "Mobiluppladdning inte aktiverad"
 moreOptions = "Fler alternativ"
-myFiles = "Mina filer"
 nextFile = "Nästa fil"
 noFiles = "Inga filer tillgängliga"
 noFilesFound = "Inga filer matchade din sökning"
@@ -4017,7 +4016,6 @@ inPath = "i {{path}}"
 inWorkspace = "Öppna"
 inWorkspaceAria = "Redan i arbetsyta"
 loading = "Läser in…"
-localFoldersUnavailable = "Mappar är endast i molnet – spara en fil till molnet för att organisera den."
 localFolderManagedByDisk = "Den här mappen hanteras av katalogen på din disk."
 moveAcrossKindsBlocked = "Dessa mappar finns på olika platser, så den ena kan inte placeras i den andra."
 moveIntoMountCloudSkipped_one = "{{count}} serverfil blev kvar bland dina filer. Den finns på servern, inte på den här disken."
@@ -4029,7 +4027,6 @@ moveIntoVirtualCloudSkipped_other = "{{count}} serverfiler lämnades kvar. Serve
 moveSkippedRemote_one = "{{count}} fil kunde inte flyttas på servern (ingen behörighet eller redan borttagen)."
 moveSkippedRemote_other = "{{count}} filer kunde inte flyttas på servern (ingen behörighet eller redan borttagna)."
 moveTo = "Flytta till…"
-myFiles = "Mina filer"
 newFolder = "Ny mapp"
 newFolderStorageDisabled = "Servermappslagring är inte aktiverad. Be din administratör att slå på den."
 newFolderTabUnavailable = "Byt till Alla eller Moln för att skapa mappar."
@@ -4061,7 +4058,6 @@ summary_one = "{{count}} objekt"
 summary_other = "{{count}} objekt"
 tree = "Mappar"
 upload = "Ladda upp"
-uploadedToLocal = "Uppladdade filer börjar i Lokalt. Använd 'Spara till molnet' för att lägga dem i en mapp."
 uploadFromMobile = "Ladda upp från mobil"
 versionActions = "Versionsåtgärder"
 versionCollapse = "Fäll ihop mellanliggande versioner"
@@ -4094,7 +4090,6 @@ everywhereHint = "Tar bort filen från den här enheten och molnet."
 
 [filesPage.empty]
 hint = "Släpp PDF-filer var som helst på denna sida för att ladda upp, eller använd knappen Ny mapp för att organisera dina filer."
-newFolderCta = "Skapa mapp"
 title = "Denna mapp är tom"
 uploadCta = "Ladda upp filer"
 
@@ -4103,10 +4098,6 @@ hint = "Ladda upp en fil för att börja, eller skapa en mapp för att organiser
 offlineHint = "Återanslut för att läsa in ditt molnbibliotek."
 offlineTitle = "Inga cachade molnfiler"
 title = "Inga molnfiler ännu"
-
-[filesPage.empty.local]
-hint = "Filer som sparas utan uppladdning stannar här. Släpp en fil för att lägga till en."
-title = "Inga lokala filer"
 
 [filesPage.empty.noResults]
 hint = "Inga filer i den här mappen matchar filtret. Prova en annan term eller rensa filtret."
@@ -5134,9 +5125,7 @@ title = "Översikt över sammanfogningsinställningar"
 
 [mobileScanner]
 addMore = "Lägg till fler"
-addToBatch = "Lägg till i batch"
 back = "Tillbaka"
-batchImages = "Batch"
 camera = "Kamera"
 cameraAccessDenied = "Kameraåtkomst nekades. Aktivera kameraåtkomst."
 cameraDescription = "Skanna dokument med din enhets kamera med automatisk kantdetektering"
@@ -5146,26 +5135,22 @@ chooseMethodDescription = "Välj hur du vill skanna och ladda upp dokument"
 clearAll = "Rensa alla"
 closeTabHint = "Du kan stänga den här fliken nu."
 dismiss = "Avfärda"
-clearBatch = "Rensa"
 edgeDetection = "Kantdetektering"
 fileDescription = "Ladda upp befintliga foton eller dokument från din enhet"
 fileReadFailed = "Kunde inte läsa filen."
 fileUpload = "Filuppladdning"
-flash = "Blixt"
 flashlight = "Ficklampa"
 httpsRequired = "Kameraåtkomst kräver HTTPS eller localhost. Använd HTTPS eller anslut via localhost."
 imageCount_one = "{{count}} bild"
 imageCount_other = "{{count}} bilder"
 imagePosition = "Bild {{index}} av {{total}}"
 invalidFileType = "Välj en bildfil."
-noSession = "Ogiltig session"
 noSessionMessage = "Skanna en giltig QR-kod för att komma åt denna sida."
 processing = "Bearbetar..."
 retake = "Ta om"
 remove = "Ta bort"
 scanAnother = "Skanna en till"
 selectFilesPrompt = "Välj filer att ladda upp"
-selectImage = "Välj bild"
 selectImages = "Välj bilder"
 sessionExpired = "Denna session har löpt ut. Uppdatera och försök igen."
 sessionInvalid = "Sessionsfel"
@@ -5173,8 +5158,6 @@ sessionNotFound = "Sessionen hittades inte. Uppdatera och försök igen."
 sessionValidationError = "Det går inte att verifiera sessionen. Försök igen."
 title = "Mobilskanner"
 startingCamera = "Startar kameran…"
-upload = "Ladda upp"
-uploadAll = "Ladda upp alla"
 uploadFailed = "Uppladdningen misslyckades. Försök igen."
 uploading = "Laddar upp..."
 uploadSuccess = "Uppladdning lyckades!"
@@ -5258,12 +5241,6 @@ copyLog = "Kopiera logg"
 failed = "Det fungerade inte. Försök igen om en stund."
 more = "Fler alternativ"
 unavailable = "Inte tillgängligt för den här aviseringen."
-
-[notifications.detail]
-copied = "Kopierat"
-copy = "Kopiera fel"
-less = "Visa mindre"
-more = "Visa hela meddelandet"
 
 [notifications.section]
 earlier = "Tidigare"
@@ -6033,6 +6010,23 @@ savingsAmount = "Du sparar {{amount}}"
 selectMonthly = "Välj månadsvis"
 selectYearly = "Välj årsvis"
 
+[payment.capacityStage]
+continue = "Fortsätt till betalning"
+customHint = "Avrundas uppåt till nästa block om {{users}}."
+customLabel = "Antal användare"
+dueToday = "Förfaller i dag"
+enterpriseQuote = "Begär en offert för Enterprise"
+lineItem = "Team · {{price}}{{period}} per {{block}} användare"
+minimumForCurrentUsers = "Du har {{users}} användare, så planen måste omfatta minst {{minimum}}."
+modalTitle = "Uppgradera till {{planName}}"
+other = "Annat"
+perMonth = "/mån"
+perYear = "/år"
+renewalNote = "Förnyas för {{total}}{{period}}. Avsluta när som helst under Användning och fakturering."
+subheading = "Omfattar alla du bjuder in, i block om {{users}} användare."
+userTotal = "{{users}} användare"
+usersLabel = "Användare"
+
 [pdfCommentAgent]
 submit = "Generera kommentarer"
 
@@ -6085,21 +6079,13 @@ SIDE_STITCH_BOOKLET_SORT = "Ordna sidor för sidhäftad häftesutskrift (optimer
 
 [pdfTextEditor]
 confirmReplaceDirty = "Du har osparade ändringar. Vill du ersätta det öppna dokumentet och ignorera dem?"
-conversionFailed = "Det gick inte att konvertera PDF. Försök igen."
-converting = "Konverterar PDF till redigerbart format..."
-currentFile = "Aktuell fil: {{name}}"
 download = "Ladda ned"
 downloadTooltip = "Spara och ladda ned den redigerade PDF-filen"
-imageLabel = "Placerad bild"
-noTextOnPage = "Ingen redigerbar text upptäcktes på denna sida."
-pagePreviewAlt = "Sidförhandsvisning"
-pageSummary = "Sida {{number}} av {{total}}"
 save = "Spara PDF"
 saveTooltip = "Verkställ ändringar i filen på arbetsytan (Ctrl+S)"
 tags = "redigera text,ändra text,uppdatera text,skriv om,rätta,justera,textredigerare,innehållsredigerare"
 title = "PDF-textredigerare"
 unsaved = "(osparad)"
-viewLabel = "PDF-redigerare"
 workbenchLabel = "Redigerare"
 
 [pdfTextEditor.annotations]
@@ -6424,89 +6410,6 @@ in = "Zooma in"
 out = "Zooma ut"
 reset = "Återställ zoom till 100 %"
 
-[pdfTextEditor.actions]
-applyChanges = "Verkställ ändringar"
-clearText = "Rensa text"
-downloadCopy = "Ladda ned kopia"
-moreOptions = "Fler alternativ"
-reset = "Återställ ändringar"
-
-[pdfTextEditor.badges]
-earlyAccess = "Tidig åtkomst"
-modified = "Redigerad"
-
-[pdfTextEditor.empty]
-dropzone = "Dra och släpp en PDF- eller JSON-fil här, eller klicka för att bläddra"
-dropzoneWithFiles = "Välj en fil från fliken Filer, eller dra och släpp en PDF- eller JSON-fil här, eller klicka för att bläddra"
-title = "Inget dokument inläst"
-
-[pdfTextEditor.errors]
-invalidJson = "Det gick inte att läsa JSON-filen. Kontrollera att den skapades av verktyget PDF till JSON."
-pdfConversion = "Det gick inte att konvertera den redigerade JSON-filen tillbaka till en PDF."
-
-[pdfTextEditor.fontAnalysis]
-allFonts = "Alla typsnitt"
-currentPageFonts = "Typsnitt på denna sida"
-details = "Typsnittsdetaljer"
-embedded = "Inbäddad"
-fallback = "reserv"
-infoMessage = "Information om typsnittsåtergivning finns."
-missing = "saknas"
-perfect = "perfekt"
-perfectMessage = "Alla typsnitt kan återskapas perfekt."
-subset = "delmängd"
-suggestions = "Anteckningar"
-type = "Typ"
-warningMessage = "Vissa typsnitt kanske inte återges korrekt."
-warnings = "Varningar"
-webFormat = "Webbformat"
-
-[pdfTextEditor.groupingMode]
-auto = "Automatiskt"
-paragraph = "Stycke"
-singleLine = "Enkel rad"
-
-[pdfTextEditor.manual]
-expandWidth = "Utöka till sidkant"
-merge = "Slå ihop markering"
-mergeTooltip = "Slå ihop markerade textrutor"
-resetWidth = "Återställ bredd"
-resizeHandle = "Justera textbredd"
-ungroup = "Dela upp markering"
-ungroupTooltip = "Dela upp stycke i rader"
-widthMenu = "Breddalternativ"
-
-[pdfTextEditor.modeChange]
-cancel = "Avbryt"
-confirm = "Återställ och byt läge"
-title = "Bekräfta lägesbyte"
-warning = "Att byta läge för textgruppering återställer alla osparade ändringar. Är du säker på att du vill fortsätta?"
-
-[pdfTextEditor.options.advanced]
-title = "Avancerade inställningar"
-
-[pdfTextEditor.options.autoScaleText]
-description = "Skalar automatiskt text horisontellt så att den ryms i sin ursprungliga begränsningsruta när fontrenderingen skiljer sig från PDF:en."
-title = "Skala text automatiskt för att passa rutor"
-
-[pdfTextEditor.options.forceSingleElement]
-description = "När detta är aktiverat exporterar editorn varje redigerad textruta som ett PDF-textelement för att undvika överlappande tecken eller blandade typsnitt."
-title = "Lås redigerad text till ett enda PDF-element"
-
-[pdfTextEditor.options.groupingMode]
-autoDescription = "Identifierar automatiskt sidtyp och grupperar texten därefter."
-paragraphDescription = "Grupperar justerade rader till flerradiga styckesrutor."
-singleLineDescription = "Behåller varje PDF-textrad som en separat textruta."
-title = "Läge för gruppering av text"
-
-[pdfTextEditor.pageType]
-paragraph = "Styckessida"
-sparse = "Gles text"
-
-[pdfTextEditor.stages]
-processing = "Processing"
-uploading = "Uploading"
-
 [pdfTextEditor.tooltip.alpha]
 text = "Denna alfa‑visare utvecklas fortfarande — vissa typsnitt, färger, transparenteffekter och layoutdetaljer kan avvika något. Kontrollera den genererade PDF:en noggrant innan du delar den."
 title = "Alfa-visare"
@@ -6521,32 +6424,6 @@ title = "Avvikelser i förhandsvisning"
 [pdfTextEditor.tooltip.textFocus]
 text = "Denna arbetsyta fokuserar på att redigera text och flytta inbäddade bilder. Komplex sidgrafik, formulärwidgets och lagergrafik bevaras för export men kan inte redigeras fullt ut här."
 title = "Fokus på text och bild"
-
-[pdfTextEditor.welcomeBanner]
-bestFor = "Fungerar bäst med:"
-bestFor1 = "Enkla PDF:er som främst innehåller text och bilder"
-bestFor2 = "Dokument med standardiserad styckeformatering"
-bestFor3 = "Brev, essäer, rapporter och grundläggande dokument"
-dontShowAgain = "Visa inte igen"
-experimental = "Detta är en experimentell funktion under aktiv utveckling. Räkna med viss instabilitet och problem under användning."
-feedback = "Detta är en tidig åtkomst-funktion. Rapportera gärna problem du stöter på för att hjälpa oss förbättra!"
-gotIt = "Förstått"
-howItWorks = "Detta verktyg konverterar din PDF till ett redigerbart format där du kan ändra textinnehåll och flytta bilder. Ändringar sparas tillbaka som en ny PDF."
-issue1 = "Textfärg bevaras för närvarande inte (läggs till snart)"
-issue2 = "Styckeläge har fler problem med justering och avstånd – läget Enkel rad rekommenderas"
-issue3 = "Förhandsvisningen skiljer sig från exporterad PDF – exporterade PDF:er ligger närmare originalet"
-issue4 = "Roterad text kan kräva manuell justering"
-issue5 = "Transparens- och lagereffekter kan avvika från originalet"
-knownIssues = "Kända problem (åtgärdas):"
-limitation1 = "Fontrendering kan avvika något från den ursprungliga PDF:en"
-limitation2 = "Komplex grafik, formulärfält och annoteringar bevaras men kan inte redigeras"
-limitation3 = "Stora filer kan ta tid att konvertera och bearbeta"
-limitations = "Nuvarande begränsningar:"
-notIdealFor = "Inte idealiskt för:"
-notIdealFor1 = "PDF:er med speciell formatering som punktlistor, tabeller eller flerkolumnslayouter"
-notIdealFor2 = "Tidskrifter, broschyrer eller tungt designade dokument"
-notIdealFor3 = "Instruktionshandböcker med komplex layout"
-title = "Välkommen till PDF Text Editor (Tidig åtkomst)"
 
 [PDFToCSV]
 header = "PDF till CSV"
@@ -6686,7 +6563,6 @@ saml = "SAML"
 secureLoginSupport = "Stöd för säker inloggning"
 selfHostedDeployment = "Självhostad distribution"
 sso = "SSO"
-unlimitedUsers = "Obegränsat antal användare"
 upToFiveUsers = "Upp till 5 användare"
 upToFiveUsersLowercase = "upp till 5 användare"
 usageTracking = "Användningsspårning"
@@ -6719,7 +6595,6 @@ saveWithAnnualBilling = "Spara med årlig fakturering"
 selfHosted = "Självhostad"
 selfHostedOnInfrastructure = "Självhostad på din infrastruktur"
 ssoOAuth = "SSO (OAuth2/OIDC)"
-unlimitedUsers = "Obegränsat antal användare"
 upToFiveUsers = "Upp till 5 användare"
 usageTrackingPrometheus = "Användningsspårning & Prometheus"
 usersIncluded = "100 användare ingår"
@@ -6819,45 +6694,6 @@ dismiss = "Stäng överlägg"
 enforcingTitle = "Tillämpar policy..."
 viewAnyway = "Visa fil (policy tillämpas fortfarande)"
 
-[policyOption]
-autoRedactPhi = "Automatisk maskering av PHI"
-blockExport = "Blockera export"
-ccpa = "CCPA"
-contracts = "Avtal"
-documents = "Dokument"
-fedramp = "FedRAMP"
-financialReports = "Finansiella rapporter"
-flagForReview = "Flagga för granskning"
-gdpr = "GDPR"
-hipaa = "HIPAA"
-hold = "Spärra"
-hrRecords = "HR-poster"
-indefinite = "Tills vidare"
-insurance = "Försäkring"
-invoices = "Fakturor"
-iso27001 = "ISO 27001"
-legalFilings = "Juridiska inlagor"
-medicalPhi = "Medicinskt / PHI"
-never = "Aldrig"
-ninetyDays = "90 dagar"
-oneYear = "1 år"
-p60 = "60%"
-p70 = "70%"
-p80 = "80%"
-p90 = "90%"
-p95 = "95%"
-pciDss = "PCI DSS"
-quarantineDocument = "Sätt dokument i karantän"
-routeToBucket = "Dirigera till bucket"
-s3Bucket = "S3 bucket"
-sevenYears = "7 år"
-sharePoint = "SharePoint"
-soc2 = "SOC 2"
-taxDocuments = "Skattedokument"
-thirtyDays = "30 dagar"
-threeYears = "3 år"
-webhook = "Webhook"
-
 [portal]
 comingSoon = "Kommer snart"
 
@@ -6879,12 +6715,6 @@ title = "Det gick inte att länka"
 after = "för att aktivera kontolänkning mot det hostade Stirling-kontot. I dev kan du simulera inloggning från länkningsdialogen."
 before = "Ange"
 title = "SaaS-inloggning är inte konfigurerad"
-
-[portal.accountLink.gate]
-action = "Länka konto"
-description = "Länka den här organisationens Stirling-konto för att använda fakturerbara funktioner."
-title = "Länka för att låsa upp"
-titleFeature = "Länka för att låsa upp {{feature}}"
 
 [portal.accountLink.connect]
 close = "Stäng"
@@ -6969,12 +6799,9 @@ never = "aldrig"
 [portal.accountLink.modal]
 cancel = "Avbryt"
 continueReauth = "Logga in igen"
-linkSubtitle = "Logga in på kontot som den här servern ska faktureras mot."
 linkTitle = "Länka ditt Stirling-konto"
 noAuthorizeUrl = "Stirling angav ingen plats att fortsätta på. Försök igen om en stund."
-reauthSubtitle = "Din session har gått ut — logga in på ditt Stirling-konto igen. Din instans förblir länkad."
 reauthTitle = "Logga in igen"
-simulateSignIn = "Simulera inloggning (dev)"
 startFailed = "Det gick inte att nå Stirling för att starta anslutningen. Kontrollera serverns utgående nätverksåtkomst och försök igen."
 
 [portal.accountLink.modal.loginNotConfigured]
@@ -7096,9 +6923,7 @@ noTeamResolved = "Inget team har kopplats till din plånbok ännu — uppdatera 
 ownerOnly = "Endast teamägaren kan aktivera Processor-planen."
 payInvoice = "Betala faktura för att slutföra"
 planName = "Editor"
-ssoIncluded = "SSO ingår"
 switchOnProcessor = "Aktivera Processor →"
-unlimitedUsers = "Obegränsat antal användare"
 viewQuote = "Visa offert"
 
 [portal.billing.invoices]
@@ -7124,11 +6949,6 @@ showMostRecent_other = "Visa {{count}} senaste"
 title = "Fakturahistorik"
 viewAriaLabel = "Visa faktura {{number}} i Stripe"
 viewLink = "Visa ↗"
-
-[portal.billing.linkPrompt]
-cta = "Länka Stirling-konto"
-description = "Manuell PDF-redigering — visa, signera, slå samman, dela, vattenmärka, komprimera, konvertera, manuell OCR — är alltid gratis, länkad eller inte. Länka för att få 500 gratis PDF:er med mätt bearbetning (automatisering, AI och API); när du behöver mer aktiverar du Processor-planen och betalar bara för det du använder."
-title = "Länka ditt Stirling-konto"
 
 [portal.billing.paymentMethod]
 billedMonthly = "Faktureras månadsvis"
@@ -8469,7 +8289,6 @@ title = "Arbetsflöden"
 
 [portal.pipelines.actions]
 newCustomPipeline = "Nytt anpassat arbetsflöde"
-newPipeline = "Nytt arbetsflöde"
 
 [portal.pipelines.all]
 title = "Alla pipelines"
@@ -8666,12 +8485,9 @@ policy = "Policy"
 
 [portal.policies]
 defaultName = "{{category}}-policy"
-subtitle = "Stående automatiseringar som tillämpar en verktygspipeline på varje dokument. Varje policy utlöses vid uppladdning eller export, kör sin verktygskedja och sparar den tillämpade versionen bredvid originalet."
-title = "Policyer"
 
 [portal.policies.card]
 comingSoon = "Uppgradera till Enterprise"
-notSetUp = "Inte konfigurerad"
 requiresAiEngine = "Kräver AI-motor"
 
 [portal.policies.categories.classification]
@@ -8799,7 +8615,6 @@ onEveryUpload = "Vid varje uppladdning"
 outputAsNewFile = "som en ny fil"
 outputAsNewVersion = "som en ny version"
 recentActivity = "Senaste aktivitet"
-retry = "Försök igen"
 showLess = "Visa mindre"
 showMore = "Visa mer"
 sources = "Källor"
@@ -8810,7 +8625,6 @@ delete = "Ta bort"
 editSettings = "Redigera inställningar"
 pause = "Pausa"
 resume = "Återuppta"
-runNow = "Kör nu"
 
 [portal.policies.detail.clearHistory]
 body = "Den här policyn kommer att glömma alla filer den redan har bearbetat och bearbeta om allt som för närvarande finns i dess källor vid nästa körning. Själva filerna ändras inte. Detta kan inte ångras."
@@ -8830,11 +8644,6 @@ compressPdf = "Komprimera"
 flatten = "Platta ut"
 ocrPdf = "OCR"
 sanitizePdf = "Ta bort JavaScript"
-
-[portal.policies.offline]
-description = "Dina policyer sparas och visas när anslutningen har återställts."
-retry = "Försök igen"
-title = "Backend inte tillgänglig"
 
 [portal.policies.operations]
 change = "Ändra vad det här steget gör"
@@ -9040,33 +8849,8 @@ docsEnforced = "Dokument tillämpade"
 active = "Aktiv"
 paused = "Pausad"
 
-[portal.policies.summary.active]
-description = "Tillämpas vid uppladdning/export"
-label = "Aktiva policyer"
-
-[portal.policies.summary.categories]
-description = "Tillgängliga att konfigurera"
-label = "Kategorier"
-
-[portal.policies.summary.docsEnforced]
-description = "Över aktiva policyer"
-label = "Dokument tillämpade"
-
-[portal.policies.summary.paused]
-description = "Konfigurerade men körs inte"
-label = "Pausade"
-
-[portal.policies.table]
-appliesTo = "Gäller för"
-docs = "Dokument tillämpade"
-enforces = "Tvingar igenom"
-policy = "Policy"
-status = "Status"
-
 [portal.policies.wizard.actions]
-back = "Tillbaka"
 cancel = "Avbryt"
-continue = "Fortsätt"
 customise = "Anpassa"
 enablePolicy = "Aktivera policy"
 saveChanges = "Spara ändringar"
@@ -9111,48 +8895,12 @@ labelsHeading = "Klassificeringsetiketter"
 noTools = "Aktivera minst ett verktyg i arbetsflödet först."
 saveFailed = "Det gick inte att spara policyn. Försök igen."
 
-[portal.policies.wizard.output]
-heading = "Utdata och körning"
-
-[portal.policies.wizard.output.filenameRule]
-autoNumber = "Automatisk numrering"
-label = "Filnamnsregel"
-placeholder = "Text att lägga till (valfritt)"
-prefix = "Prefix"
-suffix = "Suffix"
-
-[portal.policies.wizard.output.outputAs]
-label = "Utdata som"
-newFile = "Ny fil"
-newVersion = "Ny version"
-
-[portal.policies.wizard.output.runOn]
-export = "Export"
-helper = "När policyn körs: vid uppladdning eller före export."
-label = "Kör vid"
-upload = "Uppladdning"
-
-[portal.policies.wizard.settings]
-heading = "Inställningar"
-
-[portal.policies.wizard.sources]
-heading = "Källor"
-loading = "Läser in källor…"
-
-[portal.policies.wizard.tabs]
-ariaLabel = "Konfigurationssteg"
-settings = "Inställningar"
-workflow = "Åtgärder"
-
 [portal.policies.wizard.title]
 edit = "Redigera policy för {{category}}"
 setUp = "Konfigurera policy för {{category}}"
 
 [portal.policies.wizard.workflow]
 description = "Välj vad denna policy gör med varje dokument den bearbetar."
-
-[portal.policySummary.action]
-setUp = "Konfigurera"
 
 [portal.processorFlow]
 footnote = "Antal avser de senaste 24 timmarna. Flödeshastigheten är illustrativ."
@@ -9476,7 +9224,6 @@ appEditor = "Editor"
 appProcessor = "Processor"
 linkAccount = "Länka Stirling-konto"
 primaryNav = "Primär navigering"
-switchApp = "Byt app"
 
 [portal.shell.topbar]
 closeNav = "Stäng navigering"
@@ -10716,18 +10463,6 @@ managedByTeam = "Hanteras av team"
 memberCount_one = "{{count}} teammedlem"
 memberCount_other = "{{count}} teammedlemmar"
 memberCount_zero = "inga teammedlemmar"
-
-[settings.planBilling.tier]
-enterprise = "Enterprise"
-enterpriseDescription = "Anpassade företagsfunktioner och support"
-free = "Free"
-freeDescription = "50 krediter per månad"
-team = "Team"
-teamBadge = "Team"
-teamDescription = "500 krediter/månad ingår, automatisk debitering vid överförbrukning för oavbruten tjänst"
-teamTooltipCredits = "Team-planen inkluderar {{credits}} krediter/månad."
-teamTooltipFineprint = "Betala bara för det du använder utöver inkluderade krediter."
-teamTooltipOverage = "Automatisk debitering vid överförbrukning med {{price}}/kredit säkerställer oavbruten tjänst."
 
 [settings.planBilling.trial]
 daysRemaining = "{{days}} dagar kvar"
@@ -13058,6 +12793,11 @@ will = "Testamente"
 work-instruction = "Arbetsinstruktion"
 work-order = "Arbetsorder"
 
+[connect]
+loading = "Läser in…"
+redirecting = "Omdirigerar…"
+step = "Steg {{current}} av {{total}}"
+
 [connect.confirm]
 acknowledge = "Jag känner igen den här adressen och vill ansluta den till mitt team"
 approve = "Anslut server"
@@ -13086,28 +12826,6 @@ title = "Anslut en server"
 [connect.notFound]
 body = "Den här anslutningsbegäran är inte giltig. Den kan ha gått ut eller redan använts. Starta en ny från din server."
 title = "Begäran är inte giltig"
-
-[connect]
-loading = "Läser in…"
-redirecting = "Omdirigerar…"
-step = "Steg {{current}} av {{total}}"
-
-[payment.capacityStage]
-continue = "Fortsätt till betalning"
-customHint = "Avrundas uppåt till nästa block om {{users}}."
-customLabel = "Antal användare"
-dueToday = "Förfaller i dag"
-enterpriseQuote = "Begär en offert för Enterprise"
-lineItem = "Team · {{price}}{{period}} per {{block}} användare"
-minimumForCurrentUsers = "Du har {{users}} användare, så planen måste omfatta minst {{minimum}}."
-modalTitle = "Uppgradera till {{planName}}"
-other = "Annat"
-perMonth = "/mån"
-perYear = "/år"
-renewalNote = "Förnyas för {{total}}{{period}}. Avsluta när som helst under Användning och fakturering."
-subheading = "Omfattar alla du bjuder in, i block om {{users}} användare."
-userTotal = "{{users}} användare"
-usersLabel = "Användare"
 
 [quickNav]
 editor = "Redigerare"
