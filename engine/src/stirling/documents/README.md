@@ -17,6 +17,7 @@ from pydantic_ai import Agent
 
 from stirling.services import AppRuntime
 
+
 class MyAgent:
     def __init__(self, runtime: AppRuntime) -> None:
         rag = runtime.rag_capability

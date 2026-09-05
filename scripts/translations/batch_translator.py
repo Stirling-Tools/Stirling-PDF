@@ -160,7 +160,7 @@ Return ONLY the translated JSON. No markdown, no explanations, just the JSON obj
             print(f"Error: AI returned invalid JSON: {e}")
             print(f"Response: {translated_text[:500]}...")
             raise
-        except Exception as e:
+        except (OSError, ValueError, KeyError, RuntimeError) as e:
             print(f"Error during translation: {e}")
             raise
 
@@ -182,11 +182,11 @@ Return ONLY the translated JSON. No markdown, no explanations, just the JSON obj
 
         placeholder_pattern = r"\{[^}]+\}|\{\{[^}]+\}\}"
 
-        for key in original.keys():
+        for key, original_value in original.items():
             if key not in translated:
                 continue
 
-            orig_value = str(original[key])
+            orig_value = str(original_value)
             trans_value = str(translated[key])
 
             # Find all placeholders in original
@@ -366,7 +366,7 @@ Examples:
             if i < len(input_files):
                 time.sleep(args.delay)
 
-        except Exception as e:
+        except (OSError, ValueError, KeyError, RuntimeError) as e:
             print(f"✗ Failed: {e}")
             failed += 1
             continue

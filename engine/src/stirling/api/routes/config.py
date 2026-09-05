@@ -218,7 +218,7 @@ async def apply_config(request: ConfigPushRequest, http_request: Request) -> Con
         save_config(request)
         # Claim the stamp we just wrote so this worker's watcher does not rebuild for it.
         app.state.config_cache_stamp = cache_stamp()
-    except Exception:  # noqa: BLE001 - best-effort persist, never fail the applied push
+    except Exception:  # best-effort persist, never fail the applied push
         logger.warning("Applied AI config but failed to persist the encrypted cache", exc_info=True)
         notes.append(
             "Config applied on this worker but could not be persisted; it will not survive an"
