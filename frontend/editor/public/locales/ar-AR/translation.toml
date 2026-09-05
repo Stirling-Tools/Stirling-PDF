@@ -551,7 +551,7 @@ title = "حجم الصفحة المستهدف"
 bullet1 = "1.0 = الحجم الأصلي"
 bullet2 = "0.5 = نصف الحجم (أصغر 50%)"
 bullet3 = "2.0 = ضعف الحجم (أكبر 200% وقد يُقصّ)"
-text = "يتحكم في مدى كِبر أو صِغر ظهور المحتوى على الصفحة. يُعاد تحجيم المحتوى ويتم توسيطه — إذا كان أكبر من حجم الصفحة فقد يتم قصّه."
+text = "يتحكم في مدى كِبر أو صِغر ظهور المحتوى على الصفحة. يُعاد تحجيم المحتوى ويتم توسيطه - إذا كان أكبر من حجم الصفحة فقد يتم قصّه."
 title = "عامل المقياس"
 
 [admin]
@@ -1254,7 +1254,7 @@ description = "عنوان URL أو اسم الملف الخاص بـ Impressum (
 label = "Impressum"
 
 [admin.settings.legal.loginAgreement]
-defaultLocaleHint = "— تُستخدم كخيار احتياطي عندما لا تحتوي لغة ما على ملف."
+defaultLocaleHint = "- تُستخدم كخيار احتياطي عندما لا تحتوي لغة ما على ملف."
 defaultLocaleLink = "تكوين اللغة الافتراضية"
 description = "عرض إخلاء مسؤولية يجب على المستخدمين قبوله بعد تسجيل الدخول. يتبع النص لغة كل مستخدم."
 discardConfirm = "لديك تغييرات غير محفوظة وسيتم فقدانها. هل تريد تبديل اللغة على أي حال؟"
@@ -2318,7 +2318,7 @@ failed = "حدث خطأ أثناء إنشاء ترتيب الكتيّب."
 
 [bookletImposition.flipOnShortEdge]
 label = "قلب على الحافة القصيرة (الازدواجية التلقائية فقط)"
-manualNote = "غير مطلوب في الوضع اليدوي — ستقلب الرزمة بنفسك"
+manualNote = "غير مطلوب في الوضع اليدوي - ستقلب الرزمة بنفسك"
 tooltip = "فعّلها للطباعة مزدوجة على الحافة القصيرة (تجاهَلها في الوضع اليدوي)"
 
 [bookletImposition.gutterSize]
@@ -2515,10 +2515,10 @@ text = "هو هوية آمنة لتوقيعك تثبت أنك وقّعت. ما �
 title = "ما هي الشهادة؟"
 
 [certSign.certType.tooltip.which]
-bullet1 = "PKCS#12 (.p12 / .pfx) – ملف واحد مدمج (الأكثر شيوعًا)"
-bullet2 = "PFX (.pfx) – نسخة Microsoft من PKCS12"
-bullet3 = "PEM – ملفات .pem منفصلة للمفتاح الخاص والشهادة"
-bullet4 = "JKS – مخزن مفاتيح .jks لـ Java لبيئات التطوير/CI-CD"
+bullet1 = "PKCS#12 (.p12 / .pfx) - ملف واحد مدمج (الأكثر شيوعًا)"
+bullet2 = "PFX (.pfx) - نسخة Microsoft من PKCS12"
+bullet3 = "PEM - ملفات .pem منفصلة للمفتاح الخاص والشهادة"
+bullet4 = "JKS - مخزن مفاتيح .jks لـ Java لبيئات التطوير/CI-CD"
 text = "اختر التنسيق الذي يطابق ملف شهادتك:"
 title = "أي خيار أستخدم؟"
 
@@ -2743,7 +2743,7 @@ submit = "توقيع PDF"
 
 [certSign.signMode.tooltip.auto]
 text = "يوقّع بشهادة <b>موقّعة ذاتيًا</b> على الخادم. نفس <b>ختم كشف العبث</b> و<b>سجل تدقيق</b>؛ عادةً ما يظهر <b>غير مُتحقق</b> في العارضين."
-title = "تلقائي — ختم نظام فوري بلا إعداد"
+title = "تلقائي - ختم نظام فوري بلا إعداد"
 use = "يُستخدم عندما: تحتاج سرعة وهوية داخلية متسقة عبر المراجعات والسجلات."
 
 [certSign.signMode.tooltip.header]
@@ -2751,7 +2751,7 @@ title = "حول تواقيع PDF"
 
 [certSign.signMode.tooltip.manual]
 text = "استخدم ملفات شهادتك لهوية متوافقة مع علامتك التجارية. قد تعرض حالة <b>موثوق</b> عند التعرّف على السلسلة/هيئة الإصدار."
-title = "يدوي — أحضر شهادتك"
+title = "يدوي - أحضر شهادتك"
 use = "للاستخدام: أمام العملاء، قانوني، امتثال."
 
 [certSign.signMode.tooltip.overview]
@@ -3462,7 +3462,7 @@ showPreferencesBtn = "إدارة التفضيلات"
 title = "كيف نستخدم ملفات تعريف الارتباط"
 
 [cookieBanner.popUp.description]
-1 = "نستخدم ملفات تعريف الارتباط وتقنيات أخرى لجعل Stirling PDF يعمل بشكل أفضل لك—نساعدنا على تحسين أدواتنا والاستمرار في بناء ميزات ستحبها."
+1 = "نستخدم ملفات تعريف الارتباط وتقنيات أخرى لجعل Stirling PDF يعمل بشكل أفضل لك - نساعدنا على تحسين أدواتنا والاستمرار في بناء ميزات ستحبها."
 2 = "If you’d rather not, clicking 'No Thanks' will only enable the essential cookies needed to keep things running smoothly."
 
 [cookieBanner.preferencesModal]
@@ -3475,16 +3475,16 @@ subtitle = "استخدام ملفات تعريف الارتباط"
 title = "مركز تفضيلات الموافقة"
 
 [cookieBanner.preferencesModal.analytics]
-description = "تساعدنا هذه الملفات على فهم كيفية استخدام أدواتنا، كي نركّز على بناء الميزات الأكثر قيمة لمجتمعنا. كن مطمئنًا—‏Stirling PDF لا يمكنه ولن يتتبع محتوى المستندات التي تعمل عليها."
+description = "تساعدنا هذه الملفات على فهم كيفية استخدام أدواتنا، كي نركّز على بناء الميزات الأكثر قيمة لمجتمعنا. كن مطمئنًا - ‏Stirling PDF لا يمكنه ولن يتتبع محتوى المستندات التي تعمل عليها."
 title = "التحليلات"
 
 [cookieBanner.preferencesModal.description]
 1 = "يستخدم Stirling PDF ملفات تعريف الارتباط وتقنيات مشابهة لتحسين تجربتك وفهم كيفية استخدام أدواتنا. يساعدنا ذلك على تحسين الأداء وتطوير الميزات التي تهمك وتقديم دعم مستمر لمستخدمينا."
-2 = "لا يمكن لـ Stirling PDF—ولن—يتتبع أو يصل إلى محتوى المستندات التي تستخدمها."
+2 = "لا يمكن لـ Stirling PDF - ولن - يتتبع أو يصل إلى محتوى المستندات التي تستخدمها."
 3 = "خصوصيتك وثقتك في صميم ما نقوم به."
 
 [cookieBanner.preferencesModal.necessary]
-description = "These cookies are essential for the website to function properly. They enable core features like setting your privacy preferences, logging in, and filling out forms—which is why they can’t be turned off."
+description = "These cookies are essential for the website to function properly. They enable core features like setting your privacy preferences, logging in, and filling out forms - which is why they can’t be turned off."
 
 [cookieBanner.preferencesModal.necessary.title]
 1 = "ملفات تعريف الارتباط الضرورية للغاية"
@@ -3900,7 +3900,7 @@ dateDesc = "الأحدث أولاً"
 dateLabel = "الأحدث"
 nameAsc = "من A إلى Z"
 nameDesc = "من Z إلى A"
-nameLabel = "A–Z"
+nameLabel = "A-Z"
 
 [fileSelectorPicker.tabs]
 saved = "ملفات محفوظة"
@@ -5350,7 +5350,7 @@ runButton = "بعد تهيئة الأداة، يتيح لك هذا الزر تش
 selectCropTool = "لنختر أداة <strong>القص</strong> لشرح كيفية استخدام إحدى الأدوات."
 stepOf = "الخطوة {{current}} من {{total}}"
 toolInterface = "هذه هي واجهة أداة <strong>القص</strong>. كما ترى، لا يوجد الكثير هنا لأننا لم نُضِف بعد أي ملفات PDF للعمل عليها."
-workbench = "هذه هي <strong>منضدة العمل</strong> — المنطقة الرئيسية لعرض ملفات PDF وتحريرها."
+workbench = "هذه هي <strong>منضدة العمل</strong> - المنطقة الرئيسية لعرض ملفات PDF وتحريرها."
 wrapUp = "أنت جاهز! تعرّفت على المناطق الرئيسية في التطبيق وكيفية استخدامها. انقر زر <strong>المساعدة</strong> متى شئت لعرض هذه الجولة مرة أخرى."
 
 [onboarding.buttons]
@@ -5413,7 +5413,7 @@ userBody = "ادعُ زملاءك، وخصص الأدوار، واحفظ مست�
 userTitle = "نظرة عامة على الخطة"
 
 [onboarding.processorIntro]
-body = "يشغّل Stirling الآن <strong>السياسات</strong> — قواعد آلية تصنف كل مستند وتؤمّنه وتعالجه عند وصوله. قم بإعدادها وراقب عمليات التشغيل في <strong>المعالج</strong>."
+body = "يشغّل Stirling الآن <strong>السياسات</strong> - قواعد آلية تصنف كل مستند وتؤمّنه وتعالجه عند وصوله. قم بإعدادها وراقب عمليات التشغيل في <strong>المعالج</strong>."
 cta = "استكشاف المعالج"
 title = "استكشف معالج Stirling"
 
@@ -5670,7 +5670,7 @@ title = "مزيل الصفحة"
 description = "اختر الصفحات التي ستُستخدم في العملية. يدعم الصفحات المفردة، والنطاقات، والصيغ، وكلمة all."
 
 [pageSelection.tooltip.complex]
-bullet1 = "<strong>1,3-5,8,2n</strong> → الصفحات 1 و3–5 و8 بالإضافة إلى الصفحات الزوجية"
+bullet1 = "<strong>1,3-5,8,2n</strong> → الصفحات 1 و3-5 و8 بالإضافة إلى الصفحات الزوجية"
 bullet2 = "<strong>10-,2n-1</strong> → من الصفحة 10 حتى النهاية + الصفحات الفردية"
 description = "امزج أنواعًا مختلفة."
 title = "توليفات معقّدة"
@@ -5693,8 +5693,8 @@ description = "استخدم n في الصيغ لأنماط التحديد."
 title = "دوال رياضية"
 
 [pageSelection.tooltip.ranges]
-bullet1 = "<strong>3-6</strong> → يحدد الصفحات 3–6"
-bullet2 = "<strong>10-15</strong> → يحدد الصفحات 10–15"
+bullet1 = "<strong>3-6</strong> → يحدد الصفحات 3-6"
+bullet2 = "<strong>10-15</strong> → يحدد الصفحات 10-15"
 bullet3 = "<strong>5-</strong> → يحدد الصفحات من 5 حتى النهاية"
 description = "استخدم - للصفحات المتتالية."
 title = "نطاقات الصفحات"
@@ -5770,7 +5770,7 @@ title = "Turn on the Processor plan"
 eyebrow = "Editor plan · Always free"
 
 [payg.free.header]
-freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
+freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR - as much as you want, no matter where you trigger it."
 freeTitle = "Unlimited PDF editing"
 
 [payg.free.hero]
@@ -5798,8 +5798,8 @@ pauses = "pauses at cap"
 title = "What happens when the cap is reached"
 
 [payg.header]
-eyebrow = "Processor plan · {{start}} – {{end}}"
-freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
+eyebrow = "Processor plan · {{start}} - {{end}}"
+freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR - as much as you want, no matter where you trigger it."
 freeLabel = "Always free"
 freeTitle = "Unlimited PDF editing"
 meterBody = "{{limit}} free PDFs to start, then billed per PDF up to your cap."
@@ -5819,8 +5819,8 @@ chip = "سنة مدفوعة مسبقًا"
 
 [payg.prepaid.banner]
 exhausted = "تم استخدام سعتك المدفوعة مسبقًا؛ استؤنفت الفوترة المقاسة. اشحن للحفاظ على الخصم."
-expiring_one = "تنتهي سنتك المدفوعة مسبقًا خلال {{count}} يوم. تنتهي السعة غير المستخدمة — اشحن لبدء سنة جديدة."
-expiring_other = "تنتهي سنتك المدفوعة مسبقًا خلال {{count}} أيام. تنتهي السعة غير المستخدمة — اشحن لبدء سنة جديدة."
+expiring_one = "تنتهي سنتك المدفوعة مسبقًا خلال {{count}} يوم. تنتهي السعة غير المستخدمة - اشحن لبدء سنة جديدة."
+expiring_other = "تنتهي سنتك المدفوعة مسبقًا خلال {{count}} أيام. تنتهي السعة غير المستخدمة - اشحن لبدء سنة جديدة."
 low = "تبقى لديك {{pct}}% من سعتك المدفوعة مسبقًا. اشحن في أي وقت للحفاظ على استمرار المعالجة دون انقطاع."
 
 [payg.prepaid.card]
@@ -6120,7 +6120,7 @@ processing = "Processing"
 uploading = "Uploading"
 
 [pdfTextEditor.tooltip.alpha]
-text = "هذا العارض الألفا ما يزال قيد التطوير—قد تتغيّر بعض الخطوط والألوان وتأثيرات الشفافية وتفاصيل التخطيط قليلًا. يرجى التحقق من ملف PDF المُولَّد قبل المشاركة."
+text = "هذا العارض الألفا ما يزال قيد التطوير - قد تتغيّر بعض الخطوط والألوان وتأثيرات الشفافية وتفاصيل التخطيط قليلًا. يرجى التحقق من ملف PDF المُولَّد قبل المشاركة."
 title = "عارض ألفا"
 
 [pdfTextEditor.tooltip.header]
@@ -6521,7 +6521,7 @@ never = "أبدًا"
 [portal.accountLink.modal]
 linkSubtitle = "سجّل الدخول إلى الحساب الذي يجب أن تُفوتر عليه هذه الخادم."
 linkTitle = "ربط حساب Stirling الخاص بك"
-reauthSubtitle = "انتهت صلاحية جلستك — سجّل الدخول مرة أخرى إلى حساب Stirling الخاص بك. يبقى مثيلك مرتبطًا."
+reauthSubtitle = "انتهت صلاحية جلستك - سجّل الدخول مرة أخرى إلى حساب Stirling الخاص بك. يبقى مثيلك مرتبطًا."
 reauthTitle = "تسجيل الدخول مرة أخرى"
 simulateSignIn = "محاكاة تسجيل الدخول (dev)"
 
@@ -6632,7 +6632,7 @@ title = "محررات PDF مجانية"
 checkoutErrorTitle = "تعذر بدء الدفع"
 currentPlan = "الخطة الحالية"
 freeForever = "مجاني إلى الأبد"
-noTeamResolved = "لم يتم تحديد فريق في محفظتك بعد — حدّث وحاول مرة أخرى."
+noTeamResolved = "لم يتم تحديد فريق في محفظتك بعد - حدّث وحاول مرة أخرى."
 ownerOnly = "يمكن لمالك الفريق فقط تشغيل خطة Processor."
 payInvoice = "ادفع الفاتورة للإكمال"
 planName = "Editor"
@@ -6667,7 +6667,7 @@ viewLink = "عرض ↗"
 
 [portal.billing.linkPrompt]
 cta = "ربط حساب Stirling"
-description = "تحرير PDF اليدوي — عرض، توقيع، دمج، تقسيم، علامة مائية، ضغط، تحويل، OCR يدوي — مجاني دائمًا، سواء كان الحساب مرتبطًا أم لا. اربط للحصول على 500 ملف PDF مجاني من المعالجة المقاسة (الأتمتة وAI وAPI)؛ وعندما تحتاج إلى المزيد، شغّل خطة Processor وادفع فقط مقابل ما تستخدمه."
+description = "تحرير PDF اليدوي - عرض، توقيع، دمج، تقسيم، علامة مائية، ضغط، تحويل، OCR يدوي - مجاني دائمًا، سواء كان الحساب مرتبطًا أم لا. اربط للحصول على 500 ملف PDF مجاني من المعالجة المقاسة (الأتمتة وAI وAPI)؛ وعندما تحتاج إلى المزيد، شغّل خطة Processor وادفع فقط مقابل ما تستخدمه."
 title = "ربط حساب Stirling الخاص بك"
 
 [portal.billing.paymentMethod]
@@ -6801,13 +6801,13 @@ low = "توشك على النفاد"
 [portal.billing.spendLimit]
 adjustLimit = "تعديل الحد"
 cancel = "إلغاء"
-capControlNote = "تُطبق التغييرات فورًا — ارفع السقف أو اخفضه في أي وقت."
+capControlNote = "تُطبق التغييرات فورًا - ارفع السقف أو اخفضه في أي وقت."
 capSuffix = "/ الشهر"
 capSuffixWithDocs = "/ الشهر · ≈ {{documents}} مستند"
-displaySub = "تتم فوترة ما تعالجه تلقائيًا فقط — ولا تتجاوز السقف أبدًا."
+displaySub = "تتم فوترة ما تعالجه تلقائيًا فقط - ولا تتجاوز السقف أبدًا."
 editTitle = "تعيين سقفك الشهري"
 eyebrow = "حد الإنفاق"
-guardrailBody = "سقف صارم — لن تتم فوترتك أبدًا بعد تجاوزه. عند بلوغ الحد، تتوقف المعالجة المقاسة مؤقتًا (يستمر تحرير PDF غير المحدود في العمل) حتى ترفعه أو تتم إعادة تعيين الدورة. لا يضيع أي شيء."
+guardrailBody = "سقف صارم - لن تتم فوترتك أبدًا بعد تجاوزه. عند بلوغ الحد، تتوقف المعالجة المقاسة مؤقتًا (يستمر تحرير PDF غير المحدود في العمل) حتى ترفعه أو تتم إعادة تعيين الدورة. لا يضيع أي شيء."
 guardrailLabel = "حاجز الحماية الخاص بك:"
 noCap = "بلا حد"
 pctUsed = "تم استخدام {{pct}}%"
@@ -7242,8 +7242,8 @@ viewSource = "عرض المصدر على GitHub"
 codeCaption = "كل طلب"
 eyebrow = "البدء"
 lead = "تتم مصادقة كل الطلبات باستخدام bearer token. المفاتيح محددة النطاق لكل بيئة ولا تنتهي صلاحيتها إلا إذا تم تدويرها."
-liveKey = "مفاتيح الإنتاج — قابلة للفوترة، ومحدودة المعدل حسب خطتك."
-testKey = "مفاتيح Sandbox — مجانية، وتعيد بيانات تركيبية."
+liveKey = "مفاتيح الإنتاج - قابلة للفوترة، ومحدودة المعدل حسب خطتك."
+testKey = "مفاتيح Sandbox - مجانية، وتعيد بيانات تركيبية."
 title = "المصادقة"
 
 [portal.docs.components]
@@ -7281,7 +7281,7 @@ title = "البدء السريع"
 
 [portal.docs.quickstart.callout]
 bodyAfterLink = "لوصفات النسخ واللصق."
-bodyBeforeLink = "اربط نفس الاستدعاء في مسار معالجة لسلسلة التحقق والتنقيح والتسليم — أو اعرضه لوكيل عبر MCP. راجع"
+bodyBeforeLink = "اربط نفس الاستدعاء في مسار معالجة لسلسلة التحقق والتنقيح والتسليم - أو اعرضه لوكيل عبر MCP. راجع"
 label = "التالي:"
 link = "أدلة التشغيل"
 
@@ -7290,7 +7290,7 @@ body = "أنشئ مفتاحًا محدد النطاق من علامة تبويب
 title = "إصدار مفتاح API"
 
 [portal.docs.quickstart.step2]
-body = "أرسل ملفًا عبر POST إلى أي endpoint بنوع محدد. يحدد endpoint المخطط الذي تحصل عليه — هنا، مستخرج الفواتير."
+body = "أرسل ملفًا عبر POST إلى أي endpoint بنوع محدد. يحدد endpoint المخطط الذي تحصل عليه - هنا، مستخرج الفواتير."
 snippetCaption = "استخراج فاتورة"
 title = "إرسال مستند"
 
@@ -7370,8 +7370,8 @@ overview = "نظرة عامة"
 requestAccess = "طلب الوصول"
 
 [portal.documents.elevation.active]
-description = "منح مؤقت — يتم تسجيل الوصول ومحدد بمدة زمنية."
-descriptionFourEyes = "منح مؤقت — تم إخطار مراجع زميل (مراجعة ثنائية)."
+description = "منح مؤقت - يتم تسجيل الوصول ومحدد بمدة زمنية."
+descriptionFourEyes = "منح مؤقت - تم إخطار مراجع زميل (مراجعة ثنائية)."
 title = "ينتهي الوصول خلال {{time}}"
 
 [portal.documents.elevation.gated]
@@ -7432,7 +7432,7 @@ time = "الوقت"
 user = "المستخدم"
 
 [portal.editorAdmin]
-subtitle = "انشر Stirling PDF Editor، واربط المثيلات المستضافة ذاتيًا بمؤسستك، وشغّل الأسطول النشط — الأهداف والصحة وبيانات الاعتماد والتفعيل دون اتصال في مكان واحد."
+subtitle = "انشر Stirling PDF Editor، واربط المثيلات المستضافة ذاتيًا بمؤسستك، وشغّل الأسطول النشط - الأهداف والصحة وبيانات الاعتماد والتفعيل دون اتصال في مكان واحد."
 title = "نشر المحرر"
 
 [portal.editorAdmin.health.columns]
@@ -7468,7 +7468,7 @@ rotate = "تدوير"
 talkToSales = "تحدث إلى المبيعات"
 
 [portal.editorAdmin.sections.health]
-sub = "كل مثيل Editor يقوم بالإبلاغ — الإصدار والمنطقة والحالة وآخر ظهور والمستخدمون النشطون."
+sub = "كل مثيل Editor يقوم بالإبلاغ - الإصدار والمنطقة والحالة وآخر ظهور والمستخدمون النشطون."
 title = "صحة المثيل"
 
 [portal.editorAdmin.sections.pairing]
@@ -7754,9 +7754,9 @@ done = "تم"
 keyNameLabel = "اسم المفتاح"
 keyNamePlaceholder = "مثال: الإنتاج · الاستيعاب"
 secretKeyCaption = "المفتاح السري"
-secretWarning = "خزّن هذا في مدير أسرار. لا يخزن Stirling إلا تجزئة — ولا توجد طريقة لاستعادته لاحقًا."
+secretWarning = "خزّن هذا في مدير أسرار. لا يخزن Stirling إلا تجزئة - ولا توجد طريقة لاستعادته لاحقًا."
 subtitle = "حدد نطاق المفتاح إلى الحد الأدنى الذي يحتاجه. يمكنك تدويره أو إلغاؤه في أي وقت."
-subtitleCreated = "انسخ هذا السر الآن — لن يتم عرضه مرة أخرى."
+subtitleCreated = "انسخ هذا السر الآن - لن يتم عرضه مرة أخرى."
 title = "إنشاء مفتاح API"
 titleCreated = "تم إنشاء المفتاح"
 
@@ -8317,7 +8317,7 @@ label = "إرسال المستند بالبريد الإلكتروني (Mailgun)
 [portal.policies.operations.n8nGate]
 description = "Your workflow decides whether the run carries on."
 label = "Ask an n8n workflow to approve"
-note = "The workflow must reply with {\"approved\": true}. Anything else — including a timeout — stops the run and parks the document."
+note = "The workflow must reply with {\"approved\": true}. Anything else - including a timeout - stops the run and parks the document."
 
 [portal.policies.operations.n8nNotify]
 description = "Sends the run's details, not the document."
@@ -8339,7 +8339,7 @@ label = "رفع إلى Nextcloud"
 [portal.policies.operations.presidioAnalyze]
 description = "يبلغ خادم Presidio الخاص بك عن البيانات الشخصية التي يجدها."
 label = "اكتشاف البيانات الشخصية"
-note = "يقرأ Presidio النصوص، وليس الملفات. أعطه النص الذي تريد فحصه — لا يتم رفع المستند نفسه."
+note = "يقرأ Presidio النصوص، وليس الملفات. أعطه النص الذي تريد فحصه - لا يتم رفع المستند نفسه."
 
 [portal.policies.operations.responseMode]
 replace = "استبدال المستند بالرد"
@@ -8429,7 +8429,7 @@ desc = "يشغّل OCR بحيث تصبح الصفحات الممسوحة ضوئ�
 label = "جعل النص قابلاً للبحث"
 
 [portal.policies.wizard.capability.redact]
-desc = "يعثر على التفاصيل الحساسة ويحجبها — مثل أرقام الضمان الاجتماعي والبطاقات — بحيث لا يمكن قراءتها."
+desc = "يعثر على التفاصيل الحساسة ويحجبها - مثل أرقام الضمان الاجتماعي والبطاقات - بحيث لا يمكن قراءتها."
 label = "تنقيح المعلومات الحساسة"
 
 [portal.policies.wizard.capability.sanitize]
@@ -8595,11 +8595,11 @@ postalCodePlaceholder = "94105"
 posture = "الحوكمة"
 posture_count = "~{{count}} سياسات"
 posture_essentials = "الأساسيات"
-posture_essentialsSub = "التصنيف + المشاركة — الإعدادات الافتراضية"
+posture_essentialsSub = "التصنيف + المشاركة - الإعدادات الافتراضية"
 posture_governed = "محكوم"
 posture_governedSub = "يضيف الأمان والتوجيه"
 posture_regulated = "منظم"
-posture_regulatedSub = "كل فئة — الامتثال، الاحتفاظ، الإدخال"
+posture_regulatedSub = "كل فئة - الامتثال، الاحتفاظ، الإدخال"
 qbr = "مراجعات أعمال ربع سنوية"
 qbrSub = "يراجع SE الخاص بك الاستخدام وخريطة الطريق كل ربع سنة"
 region = "الولاية / المنطقة"
@@ -8721,13 +8721,13 @@ label = "التجربة"
 [portal.procurement.license]
 copied = "تم النسخ"
 copy = "نسخ المفتاح"
-downloadError = "تعذّر إنشاء ملف الترخيص Offline الآن — يُرجى المحاولة مرة أخرى بعد قليل."
+downloadError = "تعذّر إنشاء ملف الترخيص Offline الآن - يُرجى المحاولة مرة أخرى بعد قليل."
 downloadOffline = "تنزيل ترخيص Offline (.lic)"
 hint = "الصق هذا المفتاح في مثيل self-hosted لتفعيله، أو احتفظ به لسجلاتك. حافظ عليه آمنًا."
 label = "مفتاح الترخيص الخاص بك"
 subtitle = "فعّل نسخة مستضافة ذاتيًا باستخدام هذا المفتاح، أو احتفظ به في سجلاتك."
 title = "مفتاح الترخيص الخاص بك"
-trialFileHint = "هذا ملف الترخيص التجريبي الخاص بك. بمجرد اكتمال اتفاقيتك، عُد ونزّله مرة أخرى — فعلى عكس مفتاح الترخيص عبر الإنترنت، لن يتم تحديث ملف .lic من تلقاء نفسه."
+trialFileHint = "هذا ملف الترخيص التجريبي الخاص بك. بمجرد اكتمال اتفاقيتك، عُد ونزّله مرة أخرى - فعلى عكس مفتاح الترخيص عبر الإنترنت، لن يتم تحديث ملف .lic من تلقاء نفسه."
 
 [portal.procurement.link]
 cta = "ربط الحساب"
@@ -8741,10 +8741,10 @@ eyebrow = "مباشر"
 title = "أنت جاهز للعمل على Stirling Enterprise"
 
 [portal.procurement.milestone]
-downloadError = "تعذّر تنزيل عرض السعر PDF الآن — يُرجى المحاولة مرة أخرى بعد قليل."
+downloadError = "تعذّر تنزيل عرض السعر PDF الآن - يُرجى المحاولة مرة أخرى بعد قليل."
 
 [portal.procurement.payment]
-description = "تم قبول عرض السعر الخاص بك وترخيصك نشط بالفعل — يمكن لفريقك البدء فورًا. ادفع الفاتورة الأولى عندما تكون جاهزًا؛ يمكنك الدفع أو تنزيلها هنا، دون الحاجة إلى بريد إلكتروني."
+description = "تم قبول عرض السعر الخاص بك وترخيصك نشط بالفعل - يمكن لفريقك البدء فورًا. ادفع الفاتورة الأولى عندما تكون جاهزًا؛ يمكنك الدفع أو تنزيلها هنا، دون الحاجة إلى بريد إلكتروني."
 downloadAgreement = "تنزيل الاتفاقية الموقعة"
 downloadInvoice = "تنزيل الفاتورة"
 eyebrow = "الدفع"
@@ -8799,7 +8799,7 @@ workEmailPlaceholder = "you@company.com"
 
 [portal.procurement.trial]
 body = "يضيف التمديد 7 أيام ويُخطر مهندس الحلول الخاص بك."
-bodyMaxed = "لقد استخدمت كل التمديدات — تحدث إلى مهندس الحلول الخاص بك إذا كنت تحتاج إلى مزيد من الوقت."
+bodyMaxed = "لقد استخدمت كل التمديدات - تحدث إلى مهندس الحلول الخاص بك إذا كنت تحتاج إلى مزيد من الوقت."
 cancel = "إلغاء التجربة"
 extend = "تمديد 7 أيام"
 maxed = "بلغ الحد الأقصى"
@@ -9036,7 +9036,7 @@ walletUnavailable = "المحفظة غير متاحة: {{status}} {{statusText}}
 
 [portal.usage.sessionExpired]
 action = "تسجيل الدخول مرة أخرى"
-body = "انتهت صلاحية جلسة حساب Stirling الخاص بك. سجّل الدخول مرة أخرى لعرض الفوترة — يظل مثيلك مرتبطًا."
+body = "انتهت صلاحية جلسة حساب Stirling الخاص بك. سجّل الدخول مرة أخرى لعرض الفوترة - يظل مثيلك مرتبطًا."
 title = "انتهت صلاحية الجلسة"
 
 [portal.users]
@@ -9064,7 +9064,7 @@ summary = "وصول محدود أو عبر الويب فقط؛ لا يمكنه �
 
 [portal.users.roles.member]
 label = "عضو"
-summary = "مستخدم عادي — يعمل مع الموارد المشتركة وتكويناته الخاصة."
+summary = "مستخدم عادي - يعمل مع الموارد المشتركة وتكويناته الخاصة."
 
 [portal.users.roles.member.permissions]
 0 = "استخدام المحرر وعمليات التكامل المشتركة"
@@ -9074,7 +9074,7 @@ summary = "مستخدم عادي — يعمل مع الموارد المشترك
 
 [portal.users.roles.team_owner]
 label = "مالك الفريق"
-summary = "يمتلك فريقًا — يدير موارد أعضائه والتكوينات المشتركة."
+summary = "يمتلك فريقًا - يدير موارد أعضائه والتكوينات المشتركة."
 
 [portal.users.roles.team_owner.permissions]
 0 = "إنشاء وإدارة اتصالات S3 الخاصة بالفريق"
@@ -9352,7 +9352,7 @@ title = "إعدادات التنقيح المتقدمة"
 
 [redact.tooltip.advanced.regex]
 bullet1 = "مثال: \\d{4}-\\d{2}-\\d{2} لمطابقة أي تاريخ بصيغة YYYY-MM-DD"
-bullet2 = "استخدم بحذر — اختبر جيدًا"
+bullet2 = "استخدم بحذر - اختبر جيدًا"
 text = "فعّل التعابير النمطية للمطابقة المتقدمة. مفيد للعثور على أرقام الهواتف أو رسائل البريد أو الأنماط المعقّدة."
 title = "استخدام Regex"
 
@@ -9765,7 +9765,7 @@ failed = "حدث خطأ أثناء استخراج صور المسح."
 
 [scannerImageSplit.tooltip]
 headsUp = "تنبيه"
-headsUpDesc = "الصور المتداخلة أو الخلفيات القريبة جدًا في اللون من الصور قد تقلل الدقة—جرّب خلفية أفتح أو أغمق واترك مساحة أكبر."
+headsUpDesc = "الصور المتداخلة أو الخلفيات القريبة جدًا في اللون من الصور قد تقلل الدقة - جرّب خلفية أفتح أو أغمق واترك مساحة أكبر."
 problem1 = "الصور غير مُكتشفة → زد التسامح إلى 30-50"
 problem2 = "الكثير من الاكتشافات الخاطئة → زد المساحة الدنيا إلى 15000-20000"
 problem3 = "اقتطاعات ضيقة جدًا → زد حجم الحافة إلى 5-10"
@@ -9783,7 +9783,7 @@ useCase2 = "تقسيم دفعات المنضدة المسطحة إلى ملفا�
 useCase3 = "تفكيك الكولاج إلى صور فردية"
 useCase4 = "سحب الصور من المستندات"
 whatThisDoes = "ما الذي تفعله"
-whatThisDoesDesc = "يعثر تلقائيًا على كل صورة ويستخرجها من صفحة ممسوحة أو صورة مركبة—دون قص يدوي."
+whatThisDoesDesc = "يعثر تلقائيًا على كل صورة ويستخرجها من صفحة ممسوحة أو صورة مركبة - دون قص يدوي."
 whenToUse = "متى تُستخدم"
 
 [ScannerImageSplit.selectText]
@@ -11462,9 +11462,9 @@ emptyFile = "ملف فارغ"
 htmlHidePreview = "إخفاء المعاينة"
 htmlPreview = "معاينة HTML"
 htmlPreviewMobileHidden = "تم تصميم صفحات HTML لعرض سطح المكتب، لذلك تكون المعاينة معطلة افتراضيًا هنا."
-htmlPreviewWarning = "معاينة HTML — قد لا يتم تحميل الموارد الخارجية · {{size}}"
+htmlPreviewWarning = "معاينة HTML - قد لا يتم تحميل الموارد الخارجية · {{size}}"
 htmlShowPreview = "إظهار المعاينة على أي حال"
-invalidJson = "JSON غير صالح — عرض المحتوى الخام"
+invalidJson = "JSON غير صالح - عرض المحتوى الخام"
 lineNumbers = "أرقام الأسطر"
 loading = "جارٍ التحميل..."
 renderMarkdown = "عرض Markdown"
@@ -11526,7 +11526,7 @@ create = "Create your first Watched Folder"
 deleteFolder = "Delete folder"
 editFolder = "Edit folder"
 empty = "No watched folders yet"
-emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged — whatever your pipeline does."
+emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged - whatever your pipeline does."
 emptyTitle = "Automate your PDF workflows"
 file = "file"
 files = "files"
@@ -11534,7 +11534,7 @@ pause = "Pause"
 resume = "Resume"
 
 [watchedFolders.howItWorks]
-step1Desc = "Drag PDFs onto any Watched Folder card — or send them from your file list"
+step1Desc = "Drag PDFs onto any Watched Folder card - or send them from your file list"
 step1Title = "Drop files"
 step2Desc = "Your configured tools process each file automatically"
 step2Title = "Pipeline runs"
@@ -11558,18 +11558,18 @@ createFolder = "Create Folder"
 createTitle = "New Watched Folder"
 editTitle = "Edit Watched Folder"
 inputFolder = "Input folder"
-inputFolderNotChosen = "No folder chosen — required for auto-scan"
+inputFolderNotChosen = "No folder chosen - required for auto-scan"
 inputSource = "Input source"
-inputSourceBrowser = "Browser — drop files here"
+inputSourceBrowser = "Browser - drop files here"
 inputSourceLocal = "Local folder (auto-scan)"
-inputSourceLocalUnsupported = "Local folder (auto-scan) — Chrome/Edge only"
+inputSourceLocalUnsupported = "Local folder (auto-scan) - Chrome/Edge only"
 localOutputFolder = "Local output folder"
 maxRetries = "Max retries"
 name = "Folder name"
 namePlaceholder = "My Watched Folder"
 nameRequired = "Folder name is required"
 nameTooLong = "Folder name must be 50 characters or less"
-outputFolderNotSet = "Not set — outputs stay in app"
+outputFolderNotSet = "Not set - outputs stay in app"
 outputFolderUnsupported = "Not supported in this browser"
 outputModeNewDesc = "Output is saved as a new separate file"
 outputModeVersion = "Replace original?"
@@ -11629,9 +11629,9 @@ filterPending = "Pending"
 inputs = "Inputs"
 inputSize = "Input size"
 legendComplete = "Complete"
-noActivity = "No activity yet — drop a PDF to start"
+noActivity = "No activity yet - drop a PDF to start"
 noActivityMatch = "No matching activity"
-noInputFolder = "No input folder — edit to configure"
+noInputFolder = "No input folder - edit to configure"
 outputs = "Outputs"
 pause = "Pause"
 preview = "Preview"
@@ -11639,7 +11639,7 @@ previewInput = "Preview input"
 previewLoadFailed = "Could not load file preview."
 previewOutput = "Preview output"
 queued = "Queued"
-queuedWaiting = "Queued — waiting to run"
+queuedWaiting = "Queued - waiting to run"
 removeEntries = "Remove {{count}} entries"
 removeEntry = "Remove entry"
 removeNotificationsOnly = "Remove notifications only"
@@ -11981,7 +11981,7 @@ success = "تمت دعوة المستخدم/المستخدمين بنجاح"
 [workspace.people.inviteLink]
 copied = "تم نسخ الرابط إلى الحافظة"
 email = "عنوان البريد الإلكتروني"
-emailDescription = "اختياري — اتركه فارغًا للحصول على رابط دعوة عام يمكن لأي شخص استخدامه"
+emailDescription = "اختياري - اتركه فارغًا للحصول على رابط دعوة عام يمكن لأي شخص استخدامه"
 emailPlaceholder = "user@example.com (اختياري)"
 emailSent = "تم إنشاء رابط الدعوة وإرساله عبر البريد الإلكتروني"
 error = "فشل إنشاء رابط الدعوة"

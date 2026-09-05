@@ -115,7 +115,7 @@ yes = "Sim"
 
 [account]
 accountSettings = "Configurações da Conta"
-adminSettings = "Configurações de Administrador – Visualizar e Adicionar Usuários"
+adminSettings = "Configurações de Administrador - Visualizar e Adicionar Usuários"
 changePassword = "Alterar a Senha"
 changeUsername = "Alterar Usuário"
 changeUsernameDescription = "Atualize seu nome de usuário. Você será desconectado após a atualização."
@@ -551,7 +551,7 @@ title = "Tamanho de página desejado"
 bullet1 = "1,0 = Tamanho original"
 bullet2 = "0,5 = Metade do tamanho (50% menor)"
 bullet3 = "2,0 = Dobro do tamanho (200% maior, pode recortar)"
-text = "Controla o quão grande ou pequeno o conteúdo aparece na página. O conteúdo é escalado e centralizado — se o conteúdo escalado for maior que o tamanho da página, ele poderá ser recortado."
+text = "Controla o quão grande ou pequeno o conteúdo aparece na página. O conteúdo é escalado e centralizado - se o conteúdo escalado for maior que o tamanho da página, ele poderá ser recortado."
 title = "Fator de escala"
 
 [admin]
@@ -583,7 +583,7 @@ processing = "Processamento"
 title = "Avançado"
 
 [admin.settings.advanced.disableSanitize]
-description = "AVISO: Risco de segurança — desativar a sanitização de HTML pode levar a vulnerabilidades XSS"
+description = "AVISO: Risco de segurança - desativar a sanitização de HTML pode levar a vulnerabilidades XSS"
 label = "Desativar sanitização de HTML"
 
 [admin.settings.advanced.enableAlphaFunctionality]
@@ -1254,7 +1254,7 @@ description = "URL ou nome de arquivo do impressum (exigido em algumas jurisdiç
 label = "Impressum"
 
 [admin.settings.legal.loginAgreement]
-defaultLocaleHint = "— usado como padrão quando um idioma não tem arquivo."
+defaultLocaleHint = "- usado como padrão quando um idioma não tem arquivo."
 defaultLocaleLink = "Configurar a localidade padrão"
 description = "Mostrar um aviso que os usuários devem aceitar após fazer login. O texto segue o idioma de cada usuário."
 discardConfirm = "Você tem alterações não salvas que serão perdidas. Mudar o idioma mesmo assim?"
@@ -2318,8 +2318,8 @@ failed = "Ocorreu um erro ao criar a imposição de livreto."
 
 [bookletImposition.flipOnShortEdge]
 label = "Virar na borda curta (apenas duplex automático)"
-manualNote = "Não necessário no modo manual — você vira a pilha manualmente"
-tooltip = "Ative para impressão duplex na borda curta (apenas duplex automático — ignorado no modo manual)"
+manualNote = "Não necessário no modo manual - você vira a pilha manualmente"
+tooltip = "Ative para impressão duplex na borda curta (apenas duplex automático - ignorado no modo manual)"
 
 [bookletImposition.gutterSize]
 label = "Tamanho da lombada (pontos)"
@@ -2515,10 +2515,10 @@ text = "É uma identificação segura da sua assinatura que comprova que você a
 title = "O que é um certificado?"
 
 [certSign.certType.tooltip.which]
-bullet1 = "PKCS#12 (.p12 / .pfx) – um arquivo combinado (mais comum)"
-bullet2 = "PFX (.pfx) – versão da Microsoft do PKCS12"
-bullet3 = "PEM – arquivos .pem separados de chave privada e certificado"
-bullet4 = "JKS – keystore .jks Java para fluxos de trabalho de dev / CI-CD"
+bullet1 = "PKCS#12 (.p12 / .pfx) - um arquivo combinado (mais comum)"
+bullet2 = "PFX (.pfx) - versão da Microsoft do PKCS12"
+bullet3 = "PEM - arquivos .pem separados de chave privada e certificado"
+bullet4 = "JKS - keystore .jks Java para fluxos de trabalho de dev / CI-CD"
 text = "Escolha o formato que corresponde ao seu arquivo de certificado:"
 title = "Qual opção devo usar?"
 
@@ -2743,7 +2743,7 @@ submit = "Assinar PDF"
 
 [certSign.signMode.tooltip.auto]
 text = "Assina com um certificado de servidor <b>autoassinado</b>. Mesmo <b>selo à prova de adulteração</b> e <b>trilha de auditoria</b>; normalmente exibe <b>Não verificado</b> nos visualizadores."
-title = "Automático — Selagem instantânea sem configuração"
+title = "Automático - Selagem instantânea sem configuração"
 use = "Use quando: você precisa de rapidez e identidade interna consistente em revisões e registros."
 
 [certSign.signMode.tooltip.header]
@@ -2751,7 +2751,7 @@ title = "Sobre assinaturas de PDF"
 
 [certSign.signMode.tooltip.manual]
 text = "Use seus próprios arquivos de certificado para uma identidade alinhada à marca. Pode exibir <b>Confiável</b> quando sua AC/cadeia for reconhecida."
-title = "Manual — Traga seu certificado"
+title = "Manual - Traga seu certificado"
 use = "Use para: voltado ao cliente, jurídico, conformidade."
 
 [certSign.signMode.tooltip.overview]
@@ -3219,7 +3219,7 @@ title = "Traço"
 [compress.tooltip.qualityAdjustment]
 bullet1 = "Valores menores preservam a qualidade"
 bullet2 = "Valores maiores reduzem o tamanho do arquivo"
-text = "Arraste o controle deslizante para ajustar a intensidade da compressão. Valores menores (1–3) preservam a qualidade, mas resultam em arquivos maiores. Valores maiores (7–9) reduzem mais o arquivo, porém diminuem a clareza das imagens."
+text = "Arraste o controle deslizante para ajustar a intensidade da compressão. Valores menores (1-3) preservam a qualidade, mas resultam em arquivos maiores. Valores maiores (7-9) reduzem mais o arquivo, porém diminuem a clareza das imagens."
 title = "Ajuste de qualidade"
 
 [compressPdfs]
@@ -3480,11 +3480,11 @@ title = "Cookies Analíticos"
 
 [cookieBanner.preferencesModal.description]
 1 = "Stirling PDF utiliza cookies e tecnologias semelhantes para aprimorar sua experiência e entender como nossas ferramentas são utilizadas. Isso nos ajuda a melhorar o desempenho, desenvolver os recursos de seu interesse e fornecer suporte contínuo aos nossos usuários."
-2 = "O Stirling PDF não pode – e nunca irá – rastrear ou acessar o conteúdo dos documentos que você manipula."
+2 = "O Stirling PDF não pode - e nunca irá - rastrear ou acessar o conteúdo dos documentos que você manipula."
 3 = "Sua privacidade e confiança são prioridades para nós."
 
 [cookieBanner.preferencesModal.necessary]
-description = "Estes cookies são essenciais para o bom funcionamento do site. Eles habilitam recursos básicos como definir suas preferências de privacidade, realizar login e preencher formulários – e é por isso que não podem ser desativados."
+description = "Estes cookies são essenciais para o bom funcionamento do site. Eles habilitam recursos básicos como definir suas preferências de privacidade, realizar login e preencher formulários - e é por isso que não podem ser desativados."
 
 [cookieBanner.preferencesModal.necessary.title]
 1 = "Cookies Estritamente Necessários"
@@ -3900,7 +3900,7 @@ dateDesc = "Mais recentes primeiro"
 dateLabel = "Mais recente"
 nameAsc = "De A a Z"
 nameDesc = "De Z a A"
-nameLabel = "A–Z"
+nameLabel = "A-Z"
 
 [fileSelectorPicker.tabs]
 saved = "Arquivos salvos"
@@ -4014,7 +4014,7 @@ inPath = "em {{path}}"
 inWorkspace = "Aberto"
 inWorkspaceAria = "Já no espaço de trabalho"
 loading = "Carregando…"
-localFoldersUnavailable = "As pastas são apenas na nuvem — salve um arquivo na nuvem para organizá-lo."
+localFoldersUnavailable = "As pastas são apenas na nuvem - salve um arquivo na nuvem para organizá-lo."
 moveSkippedRemote_one = "{{count}} file couldn't be moved on the server (no permission or already deleted)."
 moveSkippedRemote_other = "{{count}} files couldn't be moved on the server (no permission or already deleted)."
 moveTo = "Mover para…"
@@ -4022,7 +4022,7 @@ myFiles = "Meus arquivos"
 newFolder = "Nova pasta"
 newFolderStorageDisabled = "O armazenamento de pastas no servidor não está habilitado. Peça ao seu administrador para ativá-lo."
 newFolderTabUnavailable = "Mude para Todos ou Nuvem para criar pastas."
-offlineNoFolderEdits = "Sincronização de pastas do servidor indisponível — alterações em pastas estão desativadas. Verifique o login e a configuração de armazenamento."
+offlineNoFolderEdits = "Sincronização de pastas do servidor indisponível - alterações em pastas estão desativadas. Verifique o login e a configuração de armazenamento."
 open = "Abrir"
 openVersionInWorkspace = "Abrir no espaço de trabalho"
 originFilter = "Filtrar por origem"
@@ -5350,7 +5350,7 @@ runButton = "Depois que a ferramenta for configurada, este botão permite execut
 selectCropTool = "Vamos selecionar a ferramenta de <strong>Recortar</strong> para demonstrar como usar uma das ferramentas."
 stepOf = "Etapa {{current}} de {{total}}"
 toolInterface = "Esta é a interface da ferramenta de <strong>Recortar</strong>. Como você pode ver, não há muito aqui porque ainda não adicionamos nenhum arquivo PDF para trabalhar."
-workbench = "Este é o <strong>Workbench</strong> — a área principal onde você visualiza e edita seus PDFs."
+workbench = "Este é o <strong>Workbench</strong> - a área principal onde você visualiza e edita seus PDFs."
 wrapUp = "Tudo pronto! Você aprendeu sobre as áreas principais do app e como usá-las. Clique no botão <strong>Ajuda</strong> quando quiser para ver este tour novamente."
 
 [onboarding.buttons]
@@ -5413,7 +5413,7 @@ userBody = "Convide colegas, atribua funções e mantenha seus documentos organi
 userTitle = "Visão geral do plano"
 
 [onboarding.processorIntro]
-body = "O Stirling agora executa <strong>Políticas</strong> — regras automatizadas que classificam, protegem e processam cada documento assim que ele chega. Configure-as e monitore as execuções no <strong>Processor</strong>."
+body = "O Stirling agora executa <strong>Políticas</strong> - regras automatizadas que classificam, protegem e processam cada documento assim que ele chega. Configure-as e monitore as execuções no <strong>Processor</strong>."
 cta = "Conheça o Processor"
 title = "Conheça o Stirling Processor"
 
@@ -5670,7 +5670,7 @@ title = "Remover Páginas"
 description = "Escolha quais páginas usar na operação. Suporta páginas únicas, intervalos, fórmulas e a palavra-chave all."
 
 [pageSelection.tooltip.complex]
-bullet1 = "<strong>1,3-5,8,2n</strong> → páginas 1, 3–5, 8, mais as pares"
+bullet1 = "<strong>1,3-5,8,2n</strong> → páginas 1, 3-5, 8, mais as pares"
 bullet2 = "<strong>10-,2n-1</strong> → da página 10 até o fim + páginas ímpares"
 description = "Misture diferentes tipos."
 title = "Combinações complexas"
@@ -5693,8 +5693,8 @@ description = "Use n em fórmulas para padrões."
 title = "Funções matemáticas"
 
 [pageSelection.tooltip.ranges]
-bullet1 = "<strong>3-6</strong> → seleciona as páginas 3–6"
-bullet2 = "<strong>10-15</strong> → seleciona as páginas 10–15"
+bullet1 = "<strong>3-6</strong> → seleciona as páginas 3-6"
+bullet2 = "<strong>10-15</strong> → seleciona as páginas 10-15"
 bullet3 = "<strong>5-</strong> → seleciona da página 5 até o fim"
 description = "Use - para páginas consecutivas."
 title = "Intervalos de páginas"
@@ -5770,7 +5770,7 @@ title = "Turn on the Processor plan"
 eyebrow = "Editor plan · Always free"
 
 [payg.free.header]
-freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
+freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR - as much as you want, no matter where you trigger it."
 freeTitle = "Unlimited PDF editing"
 
 [payg.free.hero]
@@ -5798,8 +5798,8 @@ pauses = "pauses at cap"
 title = "What happens when the cap is reached"
 
 [payg.header]
-eyebrow = "Processor plan · {{start}} – {{end}}"
-freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
+eyebrow = "Processor plan · {{start}} - {{end}}"
+freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR - as much as you want, no matter where you trigger it."
 freeLabel = "Always free"
 freeTitle = "Unlimited PDF editing"
 meterBody = "{{limit}} free PDFs to start, then billed per PDF up to your cap."
@@ -5819,8 +5819,8 @@ chip = "Ano pré-pago"
 
 [payg.prepaid.banner]
 exhausted = "Sua capacidade pré-paga acabou; a cobrança medida foi retomada. Recarregue para manter o desconto."
-expiring_one = "Seu ano pré-pago termina em {{count}} dia. A capacidade não utilizada expira — recarregue para iniciar um novo ano."
-expiring_other = "Seu ano pré-pago termina em {{count}} dias. A capacidade não utilizada expira — recarregue para iniciar um novo ano."
+expiring_one = "Seu ano pré-pago termina em {{count}} dia. A capacidade não utilizada expira - recarregue para iniciar um novo ano."
+expiring_other = "Seu ano pré-pago termina em {{count}} dias. A capacidade não utilizada expira - recarregue para iniciar um novo ano."
 low = "Você está com {{pct}}% da sua capacidade pré-paga. Recarregue a qualquer momento para manter o processamento sem interrupções."
 
 [payg.prepaid.card]
@@ -6015,7 +6015,7 @@ _value = "Modo:"
 BOOKLET_SORT = "Organize as páginas para impressão em folheto (última, primeira, segunda, penúltima, …)."
 CUSTOM = "Use uma sequência personalizada de números de página ou expressões para definir uma nova ordem."
 DUPLEX_SORT = "Intercale frentes e depois versos como se um scanner duplex escaneasse todas as frentes e depois todos os versos (1, n, 2, n-1, …)."
-DUPLICATE = "Duplique cada página de acordo com a contagem na ordem personalizada (por exemplo, 4 duplicatas — cada página 4×)."
+DUPLICATE = "Duplique cada página de acordo com a contagem na ordem personalizada (por exemplo, 4 duplicatas - cada página 4×)."
 ODD_EVEN_MERGE = "Mescle dois PDFs alternando páginas: ímpares do primeiro, pares do segundo."
 ODD_EVEN_SPLIT = "Divida o documento em duas saídas: todas as páginas ímpares e todas as páginas pares."
 REMOVE_FIRST = "Remova a primeira página do documento."
@@ -6120,7 +6120,7 @@ processing = "Processing"
 uploading = "Uploading"
 
 [pdfTextEditor.tooltip.alpha]
-text = "Este visualizador alfa ainda está evoluindo — certas fontes, cores, efeitos de transparência e detalhes de layout podem mudar levemente. Verifique o PDF gerado antes de compartilhar."
+text = "Este visualizador alfa ainda está evoluindo - certas fontes, cores, efeitos de transparência e detalhes de layout podem mudar levemente. Verifique o PDF gerado antes de compartilhar."
 title = "Visualizador alfa"
 
 [pdfTextEditor.tooltip.header]
@@ -6521,7 +6521,7 @@ never = "nunca"
 [portal.accountLink.modal]
 linkSubtitle = "Entre na conta em que este servidor deve ser cobrado."
 linkTitle = "Vincular sua conta Stirling"
-reauthSubtitle = "Sua sessão expirou — entre novamente na sua conta Stirling. Sua instância permanece vinculada."
+reauthSubtitle = "Sua sessão expirou - entre novamente na sua conta Stirling. Sua instância permanece vinculada."
 reauthTitle = "Entrar novamente"
 simulateSignIn = "Simular login (dev)"
 
@@ -6581,7 +6581,7 @@ noClientSecret = "A função Edge não retornou client_secret."
 title = "Ativar o plano Processor"
 
 [portal.billing.checkout.activationSlow]
-body = "Seu pagamento foi aprovado, mas a ativação está demorando um pouco mais que o normal. Ela será ativada automaticamente — feche isto e ela aparecerá aqui em breve."
+body = "Seu pagamento foi aprovado, mas a ativação está demorando um pouco mais que o normal. Ela será ativada automaticamente - feche isto e ela aparecerá aqui em breve."
 close = "Fechar"
 title = "Quase lá"
 
@@ -6605,7 +6605,7 @@ note = "Dados do cartão coletados pela Stripe. O Stirling nunca armazena PAN ou
 title = "Não foi possível iniciar o checkout"
 
 [portal.billing.checkout.finalizing]
-body = "Seu pagamento foi processado. Estamos ativando o processamento medido nas suas instâncias vinculadas — isso geralmente leva alguns segundos."
+body = "Seu pagamento foi processado. Estamos ativando o processamento medido nas suas instâncias vinculadas - isso geralmente leva alguns segundos."
 hint = "Mantenha esta janela aberta."
 title = "Ativando seu plano Processor..."
 
@@ -6632,7 +6632,7 @@ title = "Editores de PDF gratuitos"
 checkoutErrorTitle = "Não foi possível iniciar o checkout"
 currentPlan = "Plano atual"
 freeForever = "Grátis para sempre"
-noTeamResolved = "Nenhuma equipe foi resolvida na sua carteira ainda — atualize e tente novamente."
+noTeamResolved = "Nenhuma equipe foi resolvida na sua carteira ainda - atualize e tente novamente."
 ownerOnly = "Somente o proprietário da equipe pode ativar o plano Processor."
 payInvoice = "Pagar fatura para concluir"
 planName = "Editor"
@@ -6667,7 +6667,7 @@ viewLink = "Ver ↗"
 
 [portal.billing.linkPrompt]
 cta = "Vincular conta Stirling"
-description = "Edição manual de PDF — visualizar, assinar, mesclar, dividir, aplicar marca d'água, comprimir, converter, OCR manual — é sempre gratuita, com vínculo ou sem. Vincule para obter 500 PDFs gratuitos de processamento medido (automação, IA e a API); quando precisar de mais, ative o plano Processor e pague apenas pelo que usar."
+description = "Edição manual de PDF - visualizar, assinar, mesclar, dividir, aplicar marca d'água, comprimir, converter, OCR manual - é sempre gratuita, com vínculo ou sem. Vincule para obter 500 PDFs gratuitos de processamento medido (automação, IA e a API); quando precisar de mais, ative o plano Processor e pague apenas pelo que usar."
 title = "Vincule sua conta Stirling"
 
 [portal.billing.paymentMethod]
@@ -6801,13 +6801,13 @@ low = "Ficando baixa"
 [portal.billing.spendLimit]
 adjustLimit = "Ajustar limite"
 cancel = "Cancelar"
-capControlNote = "As alterações se aplicam imediatamente — aumente ou reduza o teto a qualquer momento."
+capControlNote = "As alterações se aplicam imediatamente - aumente ou reduza o teto a qualquer momento."
 capSuffix = "/ mês"
 capSuffixWithDocs = "/ mês · ≈ {{documents}} documentos"
-displaySub = "Você só é cobrado pelo que processa automaticamente — nunca além do teto."
+displaySub = "Você só é cobrado pelo que processa automaticamente - nunca além do teto."
 editTitle = "Defina seu teto mensal"
 eyebrow = "Limite de gastos"
-guardrailBody = "um teto rígido — você nunca será cobrado além dele. Ao atingir o limite, o processamento medido pausa (a edição ilimitada de PDF continua funcionando) até você aumentá-lo ou o ciclo reiniciar. Nada é perdido."
+guardrailBody = "um teto rígido - você nunca será cobrado além dele. Ao atingir o limite, o processamento medido pausa (a edição ilimitada de PDF continua funcionando) até você aumentá-lo ou o ciclo reiniciar. Nada é perdido."
 guardrailLabel = "Sua proteção:"
 noCap = "sem limite"
 pctUsed = "{{pct}}% usado"
@@ -7242,8 +7242,8 @@ viewSource = "Ver código-fonte no GitHub"
 codeCaption = "cada solicitação"
 eyebrow = "INTRODUÇÃO"
 lead = "Todas as solicitações são autenticadas com um token bearer. As chaves têm escopo por ambiente e nunca expiram, a menos que sejam rotacionadas."
-liveKey = "Chaves de produção — cobradas, com limite de taxa conforme seu plano."
-testKey = "Chaves de Sandbox — gratuitas, retornam fixtures sintéticas."
+liveKey = "Chaves de produção - cobradas, com limite de taxa conforme seu plano."
+testKey = "Chaves de Sandbox - gratuitas, retornam fixtures sintéticas."
 title = "Autenticação"
 
 [portal.docs.components]
@@ -7281,7 +7281,7 @@ title = "Início rápido"
 
 [portal.docs.quickstart.callout]
 bodyAfterLink = "para receitas de copiar e colar."
-bodyBeforeLink = "conecte a mesma chamada a um pipeline para encadear validação, redação e entrega — ou exponha-a a um agente via MCP. Veja"
+bodyBeforeLink = "conecte a mesma chamada a um pipeline para encadear validação, redação e entrega - ou exponha-a a um agente via MCP. Veja"
 label = "Próximo:"
 link = "Playbooks"
 
@@ -7290,7 +7290,7 @@ body = "Crie uma chave com escopo na aba Infraestrutura. As chaves têm limites 
 title = "Emitir uma chave API"
 
 [portal.docs.quickstart.step2]
-body = "Faça POST de um arquivo para qualquer endpoint tipado. O endpoint determina o esquema que você recebe de volta — aqui, o extrator de faturas."
+body = "Faça POST de um arquivo para qualquer endpoint tipado. O endpoint determina o esquema que você recebe de volta - aqui, o extrator de faturas."
 snippetCaption = "extrair uma fatura"
 title = "Enviar um documento"
 
@@ -7370,8 +7370,8 @@ overview = "Visão geral"
 requestAccess = "Solicitar acesso"
 
 [portal.documents.elevation.active]
-description = "Concessão temporária — o acesso é registrado e limitado por tempo."
-descriptionFourEyes = "Concessão temporária — um revisor par foi notificado (four-eyes)."
+description = "Concessão temporária - o acesso é registrado e limitado por tempo."
+descriptionFourEyes = "Concessão temporária - um revisor par foi notificado (four-eyes)."
 title = "O acesso expira em {{time}}"
 
 [portal.documents.elevation.gated]
@@ -7432,7 +7432,7 @@ time = "Hora"
 user = "Usuário"
 
 [portal.editorAdmin]
-subtitle = "Implante o Stirling PDF Editor, emparelhe instâncias auto-hospedadas à sua organização e opere a frota em execução — destinos, integridade, credenciais e ativação offline em um só lugar."
+subtitle = "Implante o Stirling PDF Editor, emparelhe instâncias auto-hospedadas à sua organização e opere a frota em execução - destinos, integridade, credenciais e ativação offline em um só lugar."
 title = "Implantação do Editor"
 
 [portal.editorAdmin.health.columns]
@@ -7468,7 +7468,7 @@ rotate = "Rotacionar"
 talkToSales = "Falar com vendas"
 
 [portal.editorAdmin.sections.health]
-sub = "Cada instância do Editor reportando — versão, região, status, visto por último e usuários ativos."
+sub = "Cada instância do Editor reportando - versão, região, status, visto por último e usuários ativos."
 title = "Integridade da instância"
 
 [portal.editorAdmin.sections.pairing]
@@ -7754,9 +7754,9 @@ done = "Concluído"
 keyNameLabel = "Nome da chave"
 keyNamePlaceholder = "ex.: Produção · ingestão"
 secretKeyCaption = "Chave secreta"
-secretWarning = "Armazene isto em um gerenciador de segredos. O Stirling armazena apenas um hash — não há como recuperá-lo depois."
+secretWarning = "Armazene isto em um gerenciador de segredos. O Stirling armazena apenas um hash - não há como recuperá-lo depois."
 subtitle = "Defina o escopo da chave para o mínimo necessário. Você pode rotacionar ou revogar a qualquer momento."
-subtitleCreated = "Copie este segredo agora — ele não será exibido novamente."
+subtitleCreated = "Copie este segredo agora - ele não será exibido novamente."
 title = "Criar chave de API"
 titleCreated = "Chave criada"
 
@@ -8317,7 +8317,7 @@ label = "Enviar o documento por email (Mailgun)"
 [portal.policies.operations.n8nGate]
 description = "Your workflow decides whether the run carries on."
 label = "Ask an n8n workflow to approve"
-note = "The workflow must reply with {\"approved\": true}. Anything else — including a timeout — stops the run and parks the document."
+note = "The workflow must reply with {\"approved\": true}. Anything else - including a timeout - stops the run and parks the document."
 
 [portal.policies.operations.n8nNotify]
 description = "Sends the run's details, not the document."
@@ -8339,7 +8339,7 @@ label = "Upload para Nextcloud"
 [portal.policies.operations.presidioAnalyze]
 description = "Seu próprio servidor Presidio relata os dados pessoais que encontra."
 label = "Detectar dados pessoais"
-note = "Presidio lê texto, não arquivos. Forneça o texto que você quer verificar — o documento em si não é enviado."
+note = "Presidio lê texto, não arquivos. Forneça o texto que você quer verificar - o documento em si não é enviado."
 
 [portal.policies.operations.responseMode]
 replace = "Substituir o documento pela resposta"
@@ -8429,7 +8429,7 @@ desc = "Executa OCR para que páginas digitalizadas se tornem texto selecionáve
 label = "Tornar o texto pesquisável"
 
 [portal.policies.wizard.capability.redact]
-desc = "Encontra e oculta detalhes sensíveis — como números de CPF e de cartão — para que não possam ser lidos."
+desc = "Encontra e oculta detalhes sensíveis - como números de CPF e de cartão - para que não possam ser lidos."
 label = "Ocultar informações sensíveis"
 
 [portal.policies.wizard.capability.sanitize]
@@ -8595,11 +8595,11 @@ postalCodePlaceholder = "94105"
 posture = "Governança"
 posture_count = "~{{count}} políticas"
 posture_essentials = "Essenciais"
-posture_essentialsSub = "Classificação + Compartilhamento — os padrões"
+posture_essentialsSub = "Classificação + Compartilhamento - os padrões"
 posture_governed = "Governado"
 posture_governedSub = "Adiciona Segurança e Roteamento"
 posture_regulated = "Regulado"
-posture_regulatedSub = "Todas as categorias — Conformidade, Retenção, Ingestão"
+posture_regulatedSub = "Todas as categorias - Conformidade, Retenção, Ingestão"
 qbr = "Revisões de negócios trimestrais"
 qbrSub = "Seu SE revisa uso e roadmap a cada trimestre"
 region = "Estado / região"
@@ -8721,13 +8721,13 @@ label = "Teste"
 [portal.procurement.license]
 copied = "Copiado"
 copy = "Copiar chave"
-downloadError = "Ainda não foi possível gerar o arquivo de licença offline — tente novamente em instantes."
+downloadError = "Ainda não foi possível gerar o arquivo de licença offline - tente novamente em instantes."
 downloadOffline = "Baixar licença offline (.lic)"
 hint = "Cole esta chave em uma instância self-hosted para ativá-la ou guarde-a para seus registros. Mantenha-a segura."
 label = "Sua chave de licença"
 subtitle = "Ative uma instância self-hosted com esta chave ou guarde-a para seus registros."
 title = "Sua chave de licença"
-trialFileHint = "Este é o arquivo de licença do seu teste. Assim que seu contrato estiver em vigor, volte e baixe-o novamente — ao contrário da chave de licença online, o arquivo .lic não será atualizado sozinho."
+trialFileHint = "Este é o arquivo de licença do seu teste. Assim que seu contrato estiver em vigor, volte e baixe-o novamente - ao contrário da chave de licença online, o arquivo .lic não será atualizado sozinho."
 
 [portal.procurement.link]
 cta = "Vincular conta"
@@ -8741,10 +8741,10 @@ eyebrow = "No ar"
 title = "Você está no ar no Stirling Enterprise"
 
 [portal.procurement.milestone]
-downloadError = "Ainda não foi possível baixar o PDF da cotação — tente novamente em instantes."
+downloadError = "Ainda não foi possível baixar o PDF da cotação - tente novamente em instantes."
 
 [portal.procurement.payment]
-description = "Sua cotação foi aceita e sua licença já está ativa — sua equipe pode começar imediatamente. Pague a primeira fatura quando estiver pronto; você pode pagar ou baixá-la aqui, sem precisar de email."
+description = "Sua cotação foi aceita e sua licença já está ativa - sua equipe pode começar imediatamente. Pague a primeira fatura quando estiver pronto; você pode pagar ou baixá-la aqui, sem precisar de email."
 downloadAgreement = "Baixar contrato assinado"
 downloadInvoice = "Baixar fatura"
 eyebrow = "Pagamento"
@@ -8799,7 +8799,7 @@ workEmailPlaceholder = "you@company.com"
 
 [portal.procurement.trial]
 body = "Estender adiciona 7 dias e notifica seu engenheiro de soluções."
-bodyMaxed = "Você usou todas as suas extensões — fale com seu engenheiro de soluções se precisar de mais tempo."
+bodyMaxed = "Você usou todas as suas extensões - fale com seu engenheiro de soluções se precisar de mais tempo."
 cancel = "Cancelar teste"
 extend = "Estender 7 dias"
 maxed = "Esgotado"
@@ -9036,7 +9036,7 @@ walletUnavailable = "Carteira indisponível: {{status}} {{statusText}}"
 
 [portal.usage.sessionExpired]
 action = "Entrar novamente"
-body = "Sua sessão da conta Stirling expirou. Entre novamente para ver o faturamento — sua instância permanece vinculada."
+body = "Sua sessão da conta Stirling expirou. Entre novamente para ver o faturamento - sua instância permanece vinculada."
 title = "Sessão expirada"
 
 [portal.users]
@@ -9064,7 +9064,7 @@ summary = "Acesso limitado ou somente web; não pode manter configurações pess
 
 [portal.users.roles.member]
 label = "Membro"
-summary = "Usuário regular — trabalha com recursos compartilhados e suas próprias configurações."
+summary = "Usuário regular - trabalha com recursos compartilhados e suas próprias configurações."
 
 [portal.users.roles.member.permissions]
 0 = "Usar o editor e integrações compartilhadas"
@@ -9074,7 +9074,7 @@ summary = "Usuário regular — trabalha com recursos compartilhados e suas pró
 
 [portal.users.roles.team_owner]
 label = "Proprietário da equipe"
-summary = "Possui uma equipe — gerencia os recursos e configurações compartilhadas de seus membros."
+summary = "Possui uma equipe - gerencia os recursos e configurações compartilhadas de seus membros."
 
 [portal.users.roles.team_owner.permissions]
 0 = "Criar e gerenciar conexões S3 da equipe"
@@ -9352,7 +9352,7 @@ title = "Configurações avançadas de ocultação"
 
 [redact.tooltip.advanced.regex]
 bullet1 = "Exemplo: \\d{4}-\\d{2}-\\d{2} para corresponder datas no formato YYYY-MM-DD"
-bullet2 = "Use com cautela — teste cuidadosamente"
+bullet2 = "Use com cautela - teste cuidadosamente"
 text = "Ative expressões regulares para correspondência avançada de padrões. Útil para encontrar telefones, e-mails ou padrões complexos."
 title = "Usar Regex"
 
@@ -11234,7 +11234,7 @@ title = "Renomear equipe"
 apply = "Redefinir senha"
 confirm = "Confirmar senha"
 copied = "Copiado para a área de transferência"
-copyHint = "Copie isto agora — não será mostrado novamente."
+copyHint = "Copie isto agora - não será mostrado novamente."
 email = "Enviar email ao usuário sobre a redefinição"
 forceChange = "Exigir alteração de senha no próximo login"
 generate = "Gerar uma senha segura"
@@ -11526,7 +11526,7 @@ create = "Create your first Watched Folder"
 deleteFolder = "Delete folder"
 editFolder = "Edit folder"
 empty = "No watched folders yet"
-emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged — whatever your pipeline does."
+emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged - whatever your pipeline does."
 emptyTitle = "Automate your PDF workflows"
 file = "file"
 files = "files"
@@ -11534,7 +11534,7 @@ pause = "Pause"
 resume = "Resume"
 
 [watchedFolders.howItWorks]
-step1Desc = "Drag PDFs onto any Watched Folder card — or send them from your file list"
+step1Desc = "Drag PDFs onto any Watched Folder card - or send them from your file list"
 step1Title = "Drop files"
 step2Desc = "Your configured tools process each file automatically"
 step2Title = "Pipeline runs"
@@ -11558,18 +11558,18 @@ createFolder = "Create Folder"
 createTitle = "New Watched Folder"
 editTitle = "Edit Watched Folder"
 inputFolder = "Input folder"
-inputFolderNotChosen = "No folder chosen — required for auto-scan"
+inputFolderNotChosen = "No folder chosen - required for auto-scan"
 inputSource = "Input source"
-inputSourceBrowser = "Browser — drop files here"
+inputSourceBrowser = "Browser - drop files here"
 inputSourceLocal = "Local folder (auto-scan)"
-inputSourceLocalUnsupported = "Local folder (auto-scan) — Chrome/Edge only"
+inputSourceLocalUnsupported = "Local folder (auto-scan) - Chrome/Edge only"
 localOutputFolder = "Local output folder"
 maxRetries = "Max retries"
 name = "Folder name"
 namePlaceholder = "My Watched Folder"
 nameRequired = "Folder name is required"
 nameTooLong = "Folder name must be 50 characters or less"
-outputFolderNotSet = "Not set — outputs stay in app"
+outputFolderNotSet = "Not set - outputs stay in app"
 outputFolderUnsupported = "Not supported in this browser"
 outputModeNewDesc = "Output is saved as a new separate file"
 outputModeVersion = "Replace original?"
@@ -11629,9 +11629,9 @@ filterPending = "Pending"
 inputs = "Inputs"
 inputSize = "Input size"
 legendComplete = "Complete"
-noActivity = "No activity yet — drop a PDF to start"
+noActivity = "No activity yet - drop a PDF to start"
 noActivityMatch = "No matching activity"
-noInputFolder = "No input folder — edit to configure"
+noInputFolder = "No input folder - edit to configure"
 outputs = "Outputs"
 pause = "Pause"
 preview = "Preview"
@@ -11639,7 +11639,7 @@ previewInput = "Preview input"
 previewLoadFailed = "Could not load file preview."
 previewOutput = "Preview output"
 queued = "Queued"
-queuedWaiting = "Queued — waiting to run"
+queuedWaiting = "Queued - waiting to run"
 removeEntries = "Remove {{count}} entries"
 removeEntry = "Remove entry"
 removeNotificationsOnly = "Remove notifications only"

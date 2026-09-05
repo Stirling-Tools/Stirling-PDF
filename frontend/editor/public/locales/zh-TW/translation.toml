@@ -551,7 +551,7 @@ title = "目標頁面尺寸"
 bullet1 = "1.0 = 原始大小"
 bullet2 = "0.5 = 一半大小（小 50%）"
 bullet3 = "2.0 = 兩倍大小（大 200%，可能裁切）"
-text = "控制內容在頁面上的大小。內容會縮放並置中—若縮放後的內容大於頁面尺寸，可能會被裁切。"
+text = "控制內容在頁面上的大小。內容會縮放並置中-若縮放後的內容大於頁面尺寸，可能會被裁切。"
 title = "縮放係數"
 
 [admin]
@@ -583,7 +583,7 @@ processing = "處理"
 title = "進階"
 
 [admin.settings.advanced.disableSanitize]
-description = "警告：存在安全風險—停用 HTML 淨化可能導致 XSS 漏洞"
+description = "警告：存在安全風險-停用 HTML 淨化可能導致 XSS 漏洞"
 label = "停用 HTML 淨化"
 
 [admin.settings.advanced.enableAlphaFunctionality]
@@ -1254,7 +1254,7 @@ description = "Impressum 的 URL 或檔名（某些司法管轄區要求提供�
 label = "法律資訊"
 
 [admin.settings.legal.loginAgreement]
-defaultLocaleHint = "— 當語言沒有檔案時，作為後備使用。"
+defaultLocaleHint = "- 當語言沒有檔案時，作為後備使用。"
 defaultLocaleLink = "設定預設語系"
 description = "在使用者登入後顯示必須接受的免責聲明。文字依各使用者的語言顯示。"
 discardConfirm = "您有尚未儲存的變更，將會遺失。仍要切換語言嗎？"
@@ -2318,8 +2318,8 @@ failed = "建立小冊排版時發生錯誤。"
 
 [bookletImposition.flipOnShortEdge]
 label = "以短邊翻轉（僅自動雙面）"
-manualNote = "手動模式不需要—您會自行翻面紙疊"
-tooltip = "啟用短邊雙面列印（僅自動雙面—手動模式會忽略）"
+manualNote = "手動模式不需要-您會自行翻面紙疊"
+tooltip = "啟用短邊雙面列印（僅自動雙面-手動模式會忽略）"
 
 [bookletImposition.gutterSize]
 label = "裝訂邊大小（點）"
@@ -2515,10 +2515,10 @@ text = "它是您簽章的安全身分識別，用以證明簽屬者。若非必
 title = "什麼是憑證？"
 
 [certSign.certType.tooltip.which]
-bullet1 = "PKCS#12（.p12 / .pfx）— 單一合併檔（最常見）"
-bullet2 = "PFX（.pfx）— Microsoft 的 PKCS12 版本"
-bullet3 = "PEM — 分開的私鑰與憑證 .pem 檔"
-bullet4 = "JKS — Java .jks 金鑰庫，適用於開發/CI-CD 工作流程"
+bullet1 = "PKCS#12（.p12 / .pfx）- 單一合併檔（最常見）"
+bullet2 = "PFX（.pfx）- Microsoft 的 PKCS12 版本"
+bullet3 = "PEM - 分開的私鑰與憑證 .pem 檔"
+bullet4 = "JKS - Java .jks 金鑰庫，適用於開發/CI-CD 工作流程"
 text = "選擇與您憑證檔案相符的格式："
 title = "我該使用哪個選項？"
 
@@ -3219,7 +3219,7 @@ title = "線條圖"
 [compress.tooltip.qualityAdjustment]
 bullet1 = "較低數值保留品質"
 bullet2 = "較高數值降低檔案大小"
-text = "拖曳滑桿以調整壓縮強度。較低的數值（1–3）可保留品質但檔案較大；較高的數值（7–9）會更縮小檔案但降低影像清晰度。"
+text = "拖曳滑桿以調整壓縮強度。較低的數值（1-3）可保留品質但檔案較大；較高的數值（7-9）會更縮小檔案但降低影像清晰度。"
 title = "品質調整"
 
 [compressPdfs]
@@ -3462,7 +3462,7 @@ showPreferencesBtn = "管理偏好設定"
 title = "我們如何使用 Cookies"
 
 [cookieBanner.popUp.description]
-1 = "我們使用 Cookies 和其他技術來讓 Stirling PDF 變得更好——幫助我們改善工具並繼續創造您會喜愛的新功能"
+1 = "我們使用 Cookies 和其他技術來讓 Stirling PDF 變得更好-幫助我們改善工具並繼續創造您會喜愛的新功能"
 2 = "如果您仍不想，點選「不，謝謝」只會開啟必要的 Cookies 好讓網站功能保持運作"
 
 [cookieBanner.preferencesModal]
@@ -3475,16 +3475,16 @@ subtitle = "Cookies 的用途"
 title = "喜好設定中心"
 
 [cookieBanner.preferencesModal.analytics]
-description = "這些 Cookies 幫助我們分析您如何使用我們的工具，好讓我們能專注在打造社群最重視的功能。儘管放心—— Stirling PDF 不會且永不追蹤您的文件"
+description = "這些 Cookies 幫助我們分析您如何使用我們的工具，好讓我們能專注在打造社群最重視的功能。儘管放心- Stirling PDF 不會且永不追蹤您的文件"
 title = "分析 Cookies"
 
 [cookieBanner.preferencesModal.description]
 1 = "Stirling PDF 使用 Cookies 與其他相似技術去改善您的體驗和分析您如何使用我們的工具。這有助於我們改善效能、開發您注目的功能，和提供使用者協助。"
-2 = "Stirling PDF 不能——且永遠不會——追蹤或存取您的文件。"
+2 = "Stirling PDF 不能-且永遠不會-追蹤或存取您的文件。"
 3 = "您的隱私和信任是我們的核心理念。"
 
 [cookieBanner.preferencesModal.necessary]
-description = "這些 Cookies 對網站正常運作至關重要。它們讓核心功能，像是隱私設定、登入、填入表格能夠運作——這也是為什麼它們不能被關掉。"
+description = "這些 Cookies 對網站正常運作至關重要。它們讓核心功能，像是隱私設定、登入、填入表格能夠運作-這也是為什麼它們不能被關掉。"
 
 [cookieBanner.preferencesModal.necessary.title]
 1 = "必要的 Cookies"
@@ -3900,7 +3900,7 @@ dateDesc = "最新優先"
 dateLabel = "最新"
 nameAsc = "A 到 Z"
 nameDesc = "Z 到 A"
-nameLabel = "A–Z"
+nameLabel = "A-Z"
 
 [fileSelectorPicker.tabs]
 saved = "已儲存檔案"
@@ -4014,7 +4014,7 @@ inPath = "位於 {{path}}"
 inWorkspace = "開啟"
 inWorkspaceAria = "已在工作區中"
 loading = "載入中…"
-localFoldersUnavailable = "僅支援雲端資料夾—請先將檔案儲存到雲端以進行整理。"
+localFoldersUnavailable = "僅支援雲端資料夾-請先將檔案儲存到雲端以進行整理。"
 moveSkippedRemote_one = "{{count}} file couldn't be moved on the server (no permission or already deleted)."
 moveSkippedRemote_other = "{{count}} files couldn't be moved on the server (no permission or already deleted)."
 moveTo = "移至…"
@@ -4022,7 +4022,7 @@ myFiles = "我的檔案"
 newFolder = "新增資料夾"
 newFolderStorageDisabled = "伺服器資料夾儲存未啟用。請聯絡管理員開啟。"
 newFolderTabUnavailable = "請切換至『全部』或『雲端』以建立資料夾。"
-offlineNoFolderEdits = "無法同步伺服器資料夾—已停用資料夾變更。請檢查登入與儲存設定。"
+offlineNoFolderEdits = "無法同步伺服器資料夾-已停用資料夾變更。請檢查登入與儲存設定。"
 open = "開啟"
 openVersionInWorkspace = "在工作區開啟"
 originFilter = "依來源篩選"
@@ -5350,7 +5350,7 @@ runButton = "設定完成後，使用此按鈕即可在所有已選取的 PDF �
 selectCropTool = "我們先選擇 <strong>裁切</strong> 工具，示範如何使用其中一個工具。"
 stepOf = "步驟 {{current}} / {{total}}"
 toolInterface = "這是 <strong>裁切</strong> 工具介面。如您所見，因為尚未加入任何 PDF 檔可供操作，因此內容不多。"
-workbench = "這裡是 <strong>工作區</strong>——檢視與編輯 PDF 的主要區域。"
+workbench = "這裡是 <strong>工作區</strong>-檢視與編輯 PDF 的主要區域。"
 wrapUp = "大功告成！您已了解此應用程式的主要區域與使用方式。隨時點選 <strong>說明</strong> 按鈕可再度觀看本導覽。"
 
 [onboarding.buttons]
@@ -5413,7 +5413,7 @@ userBody = "邀請隊友、指派角色，並在單一安全的工作區中整�
 userTitle = "方案總覽"
 
 [onboarding.processorIntro]
-body = "Stirling 現在會執行 <strong>Policies</strong> — 自動化規則會在每份文件抵達時進行分類、保護與處理。請在 <strong>Processor</strong> 中設定並監控執行狀態。"
+body = "Stirling 現在會執行 <strong>Policies</strong> - 自動化規則會在每份文件抵達時進行分類、保護與處理。請在 <strong>Processor</strong> 中設定並監控執行狀態。"
 cta = "查看 Processor"
 title = "查看 Stirling Processor"
 
@@ -5670,7 +5670,7 @@ title = "頁面移除"
 description = "選擇要用於此操作的頁面。支援單頁、範圍、公式與 all 關鍵字。"
 
 [pageSelection.tooltip.complex]
-bullet1 = "<strong>1,3-5,8,2n</strong> → 第 1、3–5、8 頁，以及所有偶數頁"
+bullet1 = "<strong>1,3-5,8,2n</strong> → 第 1、3-5、8 頁，以及所有偶數頁"
 bullet2 = "<strong>10-,2n-1</strong> → 從第 10 頁到結尾 + 奇數頁"
 description = "可混合不同類型。"
 title = "複合組合"
@@ -5693,8 +5693,8 @@ description = "在公式中使用 n 以建立規律。"
 title = "數學函式"
 
 [pageSelection.tooltip.ranges]
-bullet1 = "<strong>3-6</strong> → 選取第 3–6 頁"
-bullet2 = "<strong>10-15</strong> → 選取第 10–15 頁"
+bullet1 = "<strong>3-6</strong> → 選取第 3-6 頁"
+bullet2 = "<strong>10-15</strong> → 選取第 10-15 頁"
 bullet3 = "<strong>5-</strong> → 選取第 5 頁到結尾"
 description = "使用 - 表示連續頁面。"
 title = "頁面範圍"
@@ -5770,7 +5770,7 @@ title = "Turn on the Processor plan"
 eyebrow = "Editor plan · Always free"
 
 [payg.free.header]
-freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
+freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR - as much as you want, no matter where you trigger it."
 freeTitle = "Unlimited PDF editing"
 
 [payg.free.hero]
@@ -5798,8 +5798,8 @@ pauses = "pauses at cap"
 title = "What happens when the cap is reached"
 
 [payg.header]
-eyebrow = "Processor plan · {{start}} – {{end}}"
-freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
+eyebrow = "Processor plan · {{start}} - {{end}}"
+freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR - as much as you want, no matter where you trigger it."
 freeLabel = "Always free"
 freeTitle = "Unlimited PDF editing"
 meterBody = "{{limit}} free PDFs to start, then billed per PDF up to your cap."
@@ -5819,8 +5819,8 @@ chip = "預付年費"
 
 [payg.prepaid.banner]
 exhausted = "您的預付容量已用完；計量計費已恢復。加值以保留折扣。"
-expiring_one = "您的預付年度將在 {{count}} 天後結束。未使用容量將到期 — 加值以開始新的一年。"
-expiring_other = "您的預付年度將在 {{count}} 天後結束。未使用容量將到期 — 加值以開始新的一年。"
+expiring_one = "您的預付年度將在 {{count}} 天後結束。未使用容量將到期 - 加值以開始新的一年。"
+expiring_other = "您的預付年度將在 {{count}} 天後結束。未使用容量將到期 - 加值以開始新的一年。"
 low = "您的預付容量只剩 {{pct}}%。隨時加值以保持處理不中斷。"
 
 [payg.prepaid.card]
@@ -6120,7 +6120,7 @@ processing = "Processing"
 uploading = "Uploading"
 
 [pdfTextEditor.tooltip.alpha]
-text = "此 Alpha 檢視器仍在演進中—某些字型、顏色、透明效果與版面細節可能略有變動。分享前請再次確認產生的 PDF。"
+text = "此 Alpha 檢視器仍在演進中-某些字型、顏色、透明效果與版面細節可能略有變動。分享前請再次確認產生的 PDF。"
 title = "Alpha 檢視器"
 
 [pdfTextEditor.tooltip.header]
@@ -6521,7 +6521,7 @@ never = "從未"
 [portal.accountLink.modal]
 linkSubtitle = "登入此伺服器應計費的帳戶。"
 linkTitle = "連結您的 Stirling 帳戶"
-reauthSubtitle = "您的工作階段已過期 — 請重新登入您的 Stirling 帳戶。您的執行個體會保持連結。"
+reauthSubtitle = "您的工作階段已過期 - 請重新登入您的 Stirling 帳戶。您的執行個體會保持連結。"
 reauthTitle = "再次登入"
 simulateSignIn = "模擬登入（dev）"
 
@@ -6581,7 +6581,7 @@ noClientSecret = "Edge function 未傳回 client_secret。"
 title = "啟用 Processor 方案"
 
 [portal.billing.checkout.activationSlow]
-body = "您的付款已成功，但啟用花費的時間比平常稍長。它會自動啟用 — 關閉此視窗後，很快就會顯示在這裡。"
+body = "您的付款已成功，但啟用花費的時間比平常稍長。它會自動啟用 - 關閉此視窗後，很快就會顯示在這裡。"
 close = "關閉"
 title = "快完成了"
 
@@ -6605,7 +6605,7 @@ note = "卡片詳細資料由 Stripe 收集。Stirling 絕不儲存 PAN 或 CVC�
 title = "無法開始結帳"
 
 [portal.billing.checkout.finalizing]
-body = "您的付款已完成。我們正在您的已連結執行個體上啟用計量處理 — 這通常需要幾秒鐘。"
+body = "您的付款已完成。我們正在您的已連結執行個體上啟用計量處理 - 這通常需要幾秒鐘。"
 hint = "請保持此視窗開啟。"
 title = "正在啟用您的 Processor 方案..."
 
@@ -6632,7 +6632,7 @@ title = "免費 PDF 編輯器"
 checkoutErrorTitle = "無法開始結帳"
 currentPlan = "目前方案"
 freeForever = "永久免費"
-noTeamResolved = "您的錢包尚未解析到團隊 — 請重新整理後再試。"
+noTeamResolved = "您的錢包尚未解析到團隊 - 請重新整理後再試。"
 ownerOnly = "只有團隊擁有者可以啟用 Processor 方案。"
 payInvoice = "支付發票以完成"
 planName = "Editor"
@@ -6667,7 +6667,7 @@ viewLink = "檢視 ↗"
 
 [portal.billing.linkPrompt]
 cta = "連結 Stirling 帳戶"
-description = "手動 PDF 編輯 — 檢視、簽署、合併、分割、浮水印、壓縮、轉換、手動 OCR — 無論是否連結，一律免費。連結即可取得 500 個免費 PDFs 的計量處理額度（自動化、AI 和 API）；需要更多時，啟用 Processor 方案，只需為使用量付費。"
+description = "手動 PDF 編輯 - 檢視、簽署、合併、分割、浮水印、壓縮、轉換、手動 OCR - 無論是否連結，一律免費。連結即可取得 500 個免費 PDFs 的計量處理額度（自動化、AI 和 API）；需要更多時，啟用 Processor 方案，只需為使用量付費。"
 title = "連結您的 Stirling 帳戶"
 
 [portal.billing.paymentMethod]
@@ -6801,13 +6801,13 @@ low = "即將用完"
 [portal.billing.spendLimit]
 adjustLimit = "調整限制"
 cancel = "取消"
-capControlNote = "變更會立即套用 — 您可隨時提高或降低上限。"
+capControlNote = "變更會立即套用 - 您可隨時提高或降低上限。"
 capSuffix = "/ 月"
 capSuffixWithDocs = "/ 月 · ≈ {{documents}} 份文件"
-displaySub = "您只會為自動處理的內容付費 — 絕不超過上限。"
+displaySub = "您只會為自動處理的內容付費 - 絕不超過上限。"
 editTitle = "設定您的每月上限"
 eyebrow = "支出限制"
-guardrailBody = "硬性上限 — 您絕不會被收取超過此上限的費用。達到上限時，計量處理會暫停（不限量 PDF 編輯仍可使用），直到您提高上限或週期重設。不會遺失任何內容。"
+guardrailBody = "硬性上限 - 您絕不會被收取超過此上限的費用。達到上限時，計量處理會暫停（不限量 PDF 編輯仍可使用），直到您提高上限或週期重設。不會遺失任何內容。"
 guardrailLabel = "您的防護欄："
 noCap = "無上限"
 pctUsed = "已使用 {{pct}}%"
@@ -7242,8 +7242,8 @@ viewSource = "在 GitHub 上檢視來源"
 codeCaption = "每個請求"
 eyebrow = "開始使用"
 lead = "所有請求都使用 bearer token 驗證。金鑰依環境設定範圍，除非輪替，否則永不過期。"
-liveKey = "Production keys — 依您的方案計費並受速率限制。"
-testKey = "Sandbox keys — 免費，傳回合成 fixtures。"
+liveKey = "Production keys - 依您的方案計費並受速率限制。"
+testKey = "Sandbox keys - 免費，傳回合成 fixtures。"
 title = "驗證"
 
 [portal.docs.components]
@@ -7281,7 +7281,7 @@ title = "Quickstart"
 
 [portal.docs.quickstart.callout]
 bodyAfterLink = "以取得可複製貼上的範例。"
-bodyBeforeLink = "將相同呼叫接入管線，以串接驗證、遮蔽和交付 — 或透過 MCP 暴露給代理程式。請參閱"
+bodyBeforeLink = "將相同呼叫接入管線，以串接驗證、遮蔽和交付 - 或透過 MCP 暴露給代理程式。請參閱"
 label = "下一步："
 link = "Playbooks"
 
@@ -7290,7 +7290,7 @@ body = "從 Infrastructure 分頁建立有範圍的金鑰。金鑰包含速率�
 title = "發行 API key"
 
 [portal.docs.quickstart.step2]
-body = "POST 檔案到任何 typed endpoint。endpoint 會決定您取回的 schema — 這裡是發票擷取器。"
+body = "POST 檔案到任何 typed endpoint。endpoint 會決定您取回的 schema - 這裡是發票擷取器。"
 snippetCaption = "擷取發票"
 title = "傳送文件"
 
@@ -7370,8 +7370,8 @@ overview = "概覽"
 requestAccess = "要求存取"
 
 [portal.documents.elevation.active]
-description = "臨時授權 — 存取會被記錄並有時間限制。"
-descriptionFourEyes = "臨時授權 — 已通知同儕審查者（四眼原則）。"
+description = "臨時授權 - 存取會被記錄並有時間限制。"
+descriptionFourEyes = "臨時授權 - 已通知同儕審查者（四眼原則）。"
 title = "存取權將於 {{time}} 後到期"
 
 [portal.documents.elevation.gated]
@@ -7432,7 +7432,7 @@ time = "時間"
 user = "使用者"
 
 [portal.editorAdmin]
-subtitle = "部署 Stirling PDF 編輯器，將自託管執行個體配對到您的組織，並在同一處管理運行中的機群 — 目標、健康狀態、憑證與離線啟用。"
+subtitle = "部署 Stirling PDF 編輯器，將自託管執行個體配對到您的組織，並在同一處管理運行中的機群 - 目標、健康狀態、憑證與離線啟用。"
 title = "編輯器部署"
 
 [portal.editorAdmin.health.columns]
@@ -7468,7 +7468,7 @@ rotate = "輪換"
 talkToSales = "聯絡銷售"
 
 [portal.editorAdmin.sections.health]
-sub = "每個回報中的編輯器執行個體 — 版本、區域、狀態、上次出現時間與活躍使用者。"
+sub = "每個回報中的編輯器執行個體 - 版本、區域、狀態、上次出現時間與活躍使用者。"
 title = "執行個體健康狀態"
 
 [portal.editorAdmin.sections.pairing]
@@ -7754,9 +7754,9 @@ done = "完成"
 keyNameLabel = "金鑰名稱"
 keyNamePlaceholder = "例如：Production · ingest"
 secretKeyCaption = "秘密金鑰"
-secretWarning = "請將此儲存在 secrets manager 中。Stirling 只會儲存 hash — 之後無法復原。"
+secretWarning = "請將此儲存在 secrets manager 中。Stirling 只會儲存 hash - 之後無法復原。"
 subtitle = "將金鑰範圍限制在最低需求。您可以隨時輪換或撤銷。"
-subtitleCreated = "立即複製此秘密 — 之後不會再顯示。"
+subtitleCreated = "立即複製此秘密 - 之後不會再顯示。"
 title = "建立 API 金鑰"
 titleCreated = "金鑰已建立"
 
@@ -8317,7 +8317,7 @@ label = "以電子郵件傳送文件（Mailgun）"
 [portal.policies.operations.n8nGate]
 description = "Your workflow decides whether the run carries on."
 label = "Ask an n8n workflow to approve"
-note = "The workflow must reply with {\"approved\": true}. Anything else — including a timeout — stops the run and parks the document."
+note = "The workflow must reply with {\"approved\": true}. Anything else - including a timeout - stops the run and parks the document."
 
 [portal.policies.operations.n8nNotify]
 description = "Sends the run's details, not the document."
@@ -8339,7 +8339,7 @@ label = "上傳到 Nextcloud"
 [portal.policies.operations.presidioAnalyze]
 description = "您自己的 Presidio 伺服器會回報其找到的個人資料。"
 label = "偵測個人資料"
-note = "Presidio 讀取文字，而非檔案。請提供您要檢查的文字 — 文件本身不會上傳。"
+note = "Presidio 讀取文字，而非檔案。請提供您要檢查的文字 - 文件本身不會上傳。"
 
 [portal.policies.operations.responseMode]
 replace = "以回覆取代文件"
@@ -8595,11 +8595,11 @@ postalCodePlaceholder = "94105"
 posture = "治理"
 posture_count = "~{{count}} 個政策"
 posture_essentials = "Essentials"
-posture_essentialsSub = "分類 + 分享 — 預設項目"
+posture_essentialsSub = "分類 + 分享 - 預設項目"
 posture_governed = "Governed"
 posture_governedSub = "新增安全性和路由"
 posture_regulated = "Regulated"
-posture_regulatedSub = "所有類別 — 合規、保留、擷取"
+posture_regulatedSub = "所有類別 - 合規、保留、擷取"
 qbr = "季度業務檢討"
 qbrSub = "您的 SE 每季檢視使用情況與 roadmap"
 region = "州 / 地區"
@@ -8721,13 +8721,13 @@ label = "試用"
 [portal.procurement.license]
 copied = "已複製"
 copy = "複製金鑰"
-downloadError = "目前尚無法產生離線授權檔 — 請稍後再試。"
+downloadError = "目前尚無法產生離線授權檔 - 請稍後再試。"
 downloadOffline = "下載離線授權 (.lic)"
 hint = "將此金鑰貼到自架執行個體以啟用，或保留作為記錄。請妥善保管。"
 label = "您的授權金鑰"
 subtitle = "使用此金鑰啟用自行託管的執行個體，或保留作為記錄。"
 title = "您的授權金鑰"
-trialFileHint = "這是您的試用授權檔案。協議就緒後，請回來再次下載 — 與線上授權金鑰不同，.lic 檔案不會自行更新。"
+trialFileHint = "這是您的試用授權檔案。協議就緒後，請回來再次下載 - 與線上授權金鑰不同，.lic 檔案不會自行更新。"
 
 [portal.procurement.link]
 cta = "連結帳戶"
@@ -8741,10 +8741,10 @@ eyebrow = "上線"
 title = "您已在 Stirling Enterprise 上線"
 
 [portal.procurement.milestone]
-downloadError = "目前尚無法下載報價 PDF — 請稍後再試。"
+downloadError = "目前尚無法下載報價 PDF - 請稍後再試。"
 
 [portal.procurement.payment]
-description = "您的報價已被接受，授權也已啟用 — 您的團隊可以立即開始。準備好時支付第一張發票；您可以在這裡付款或下載，不需要 email。"
+description = "您的報價已被接受，授權也已啟用 - 您的團隊可以立即開始。準備好時支付第一張發票；您可以在這裡付款或下載，不需要 email。"
 downloadAgreement = "下載已簽署協議"
 downloadInvoice = "下載發票"
 eyebrow = "付款"
@@ -8799,7 +8799,7 @@ workEmailPlaceholder = "you@company.com"
 
 [portal.procurement.trial]
 body = "延長會增加 7 天，並通知您的解決方案工程師。"
-bodyMaxed = "您已用完所有延長次數 — 如果需要更多時間，請聯絡您的解決方案工程師。"
+bodyMaxed = "您已用完所有延長次數 - 如果需要更多時間，請聯絡您的解決方案工程師。"
 cancel = "取消試用"
 extend = "延長 7 天"
 maxed = "已達上限"
@@ -9036,7 +9036,7 @@ walletUnavailable = "錢包無法使用：{{status}} {{statusText}}"
 
 [portal.usage.sessionExpired]
 action = "重新登入"
-body = "您的 Stirling 帳戶工作階段已過期。請重新登入以檢視帳務 — 您的執行個體會保持連結。"
+body = "您的 Stirling 帳戶工作階段已過期。請重新登入以檢視帳務 - 您的執行個體會保持連結。"
 title = "工作階段已過期"
 
 [portal.users]
@@ -9064,7 +9064,7 @@ summary = "有限或僅限網頁存取；無法持有個人設定。"
 
 [portal.users.roles.member]
 label = "成員"
-summary = "一般使用者 — 使用共用資源及自己的設定。"
+summary = "一般使用者 - 使用共用資源及自己的設定。"
 
 [portal.users.roles.member.permissions]
 0 = "使用編輯器和共用整合"
@@ -9074,7 +9074,7 @@ summary = "一般使用者 — 使用共用資源及自己的設定。"
 
 [portal.users.roles.team_owner]
 label = "團隊擁有者"
-summary = "擁有團隊 — 管理其成員資源和共用設定。"
+summary = "擁有團隊 - 管理其成員資源和共用設定。"
 
 [portal.users.roles.team_owner.permissions]
 0 = "建立並管理團隊的 S3 連線"
@@ -9352,7 +9352,7 @@ title = "進階遮蔽設定"
 
 [redact.tooltip.advanced.regex]
 bullet1 = "範例：\\d{4}-\\d{2}-\\d{2} 可比對任何 YYYY-MM-DD 格式的日期"
-bullet2 = "請小心使用—請徹底測試"
+bullet2 = "請小心使用-請徹底測試"
 text = "啟用正則表示式以進行進階樣式比對。對於尋找電話號碼、電子郵件或複雜模式很有用。"
 title = "使用 Regex"
 
@@ -9533,7 +9533,7 @@ title = "移除頁面設定"
 
 [removePages.tooltip.pageNumbers]
 bullet1 = "單一頁面：1,3,5（移除第 1、3、5 頁）"
-bullet2 = "頁面範圍：1-5,10-15（移除第 1–5 與 10–15 頁）"
+bullet2 = "頁面範圍：1-5,10-15（移除第 1-5 與 10-15 頁）"
 bullet3 = "數學：2n+1（移除奇數頁）"
 bullet4 = "開放範圍：5-（從第 5 頁移除到結尾）"
 text = "指定要從 PDF 移除的頁面。您可以選取單一頁、範圍，或使用數學表達式。"
@@ -9619,8 +9619,8 @@ text = "將 PDF 從 RGB 色域轉換為 CMYK 色域，最佳化專業列印。�
 title = "轉換為 CMYK"
 
 [replaceColor.tooltip.custom]
-bullet1 = "文字顏色—選擇文字元素的顏色"
-bullet2 = "背景顏色—設定文件的背景顏色"
+bullet1 = "文字顏色-選擇文字元素的顏色"
+bullet2 = "背景顏色-設定文件的背景顏色"
 text = "使用顏色選擇器自訂文字與背景顏色。非常適合製作品牌文件或滿足特定無障礙需求。"
 title = "自訂顏色"
 
@@ -9632,10 +9632,10 @@ title = "說明"
 title = "替換與反轉顏色設定總覽"
 
 [replaceColor.tooltip.highContrast]
-bullet1 = "白字黑底—經典深色模式"
-bullet2 = "黑字白底—標準高對比"
-bullet3 = "黃字黑底—高可視性選項"
-bullet4 = "綠字黑底—替代高對比"
+bullet1 = "白字黑底-經典深色模式"
+bullet2 = "黑字白底-標準高對比"
+bullet3 = "黃字黑底-高可視性選項"
+bullet4 = "綠字黑底-替代高對比"
 text = "套用為更佳可讀性與無障礙相容性設計的預設高對比配色。"
 title = "高對比"
 
@@ -9765,17 +9765,17 @@ failed = "擷取相片掃描時發生錯誤。"
 
 [scannerImageSplit.tooltip]
 headsUp = "提醒"
-headsUpDesc = "相片互相重疊或背景顏色與相片非常接近可能降低準確度—請嘗試使用更淺或更深的背景並留出更多空間。"
-problem1 = "未偵測到相片 → 將「容差」提高到 30–50"
-problem2 = "偵測過多誤判 → 將「最小面積」提高到 15,000–20,000"
-problem3 = "裁切過於緊密 → 將「邊框大小」提高到 5–10"
+headsUpDesc = "相片互相重疊或背景顏色與相片非常接近可能降低準確度-請嘗試使用更淺或更深的背景並留出更多空間。"
+problem1 = "未偵測到相片 → 將「容差」提高到 30-50"
+problem2 = "偵測過多誤判 → 將「最小面積」提高到 15,000-20,000"
+problem3 = "裁切過於緊密 → 將「邊框大小」提高到 5-10"
 problem4 = "傾斜的相片未被拉正 → 將「角度閾值」降低到約 5°"
-problem5 = "灰塵/雜訊框 → 將「最小輪廓面積」提高到 1000–2000"
+problem5 = "灰塵/雜訊框 → 將「最小輪廓面積」提高到 1000-2000"
 quickFixes = "快速修正"
 setupTips = "設定提示"
 tip1 = "使用純淨、較淺的背景"
 tip2 = "照片之間留一點間距（約 1 公分）"
-tip3 = "以 300–600 DPI 掃描"
+tip3 = "以 300-600 DPI 掃描"
 tip4 = "清潔掃描器玻璃"
 title = "相片分割器"
 useCase1 = "一次掃描整頁相簿"
@@ -9783,7 +9783,7 @@ useCase2 = "將平台掃描的批次分割成個別檔案"
 useCase3 = "將拼貼拆成獨立相片"
 useCase4 = "從文件中擷取相片"
 whatThisDoes = "功能說明"
-whatThisDoesDesc = "自動從掃描頁或合成影像中找出並擷取各張相片—無須手動裁切。"
+whatThisDoesDesc = "自動從掃描頁或合成影像中找出並擷取各張相片-無須手動裁切。"
 whenToUse = "適用時機"
 
 [ScannerImageSplit.selectText]
@@ -11136,7 +11136,7 @@ status = "Status"
 [users.confirm]
 cancelInviteBody = "要取消對 {{email}} 的邀請嗎？他們將無法使用目前的連結加入。"
 cancelInviteTitle = "取消邀請"
-deleteTeamBody = "刪除 {{name}} 團隊？團隊必須先為空 — 請將其成員移至另一個團隊，且不能仍擁有任何整合設定。"
+deleteTeamBody = "刪除 {{name}} 團隊？團隊必須先為空 - 請將其成員移至另一個團隊，且不能仍擁有任何整合設定。"
 deleteTeamTitle = "刪除團隊"
 disableMfaBody = "移除 {{name}} 的 MFA 註冊？若有要求，他們下次登入時會再次設定。"
 disableMfaTitle = "重設 MFA"
@@ -11179,7 +11179,7 @@ methodDirect = "直接建立帳戶"
 methodEmail = "透過 email 邀請"
 password = "密碼"
 passwordError = "密碼必須至少 8 個字元"
-processorDeferred = "邀請已送出，但尚無法授予 Processor 存取權 — 他們加入後，請從名冊中設定。"
+processorDeferred = "邀請已送出，但尚無法授予 Processor 存取權 - 他們加入後，請從名冊中設定。"
 processorDesc = "治理介面、執行 pipelines、agents 和 API。"
 role = "角色"
 send2 = "傳送邀請"
@@ -11462,9 +11462,9 @@ emptyFile = "空白檔案"
 htmlHidePreview = "隱藏預覽"
 htmlPreview = "HTML 預覽"
 htmlPreviewMobileHidden = "HTML 頁面是以桌面寬度排版，因此此處預設關閉預覽。"
-htmlPreviewWarning = "HTML 預覽 — 外部資源可能無法載入 · {{size}}"
+htmlPreviewWarning = "HTML 預覽 - 外部資源可能無法載入 · {{size}}"
 htmlShowPreview = "仍要顯示預覽"
-invalidJson = "無效的 JSON — 顯示原始內容"
+invalidJson = "無效的 JSON - 顯示原始內容"
 lineNumbers = "行號"
 loading = "載入中..."
 renderMarkdown = "轉譯 Markdown"
@@ -11526,7 +11526,7 @@ create = "Create your first Watched Folder"
 deleteFolder = "Delete folder"
 editFolder = "Edit folder"
 empty = "No watched folders yet"
-emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged — whatever your pipeline does."
+emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged - whatever your pipeline does."
 emptyTitle = "Automate your PDF workflows"
 file = "file"
 files = "files"
@@ -11534,7 +11534,7 @@ pause = "Pause"
 resume = "Resume"
 
 [watchedFolders.howItWorks]
-step1Desc = "Drag PDFs onto any Watched Folder card — or send them from your file list"
+step1Desc = "Drag PDFs onto any Watched Folder card - or send them from your file list"
 step1Title = "Drop files"
 step2Desc = "Your configured tools process each file automatically"
 step2Title = "Pipeline runs"
@@ -11558,18 +11558,18 @@ createFolder = "Create Folder"
 createTitle = "New Watched Folder"
 editTitle = "Edit Watched Folder"
 inputFolder = "Input folder"
-inputFolderNotChosen = "No folder chosen — required for auto-scan"
+inputFolderNotChosen = "No folder chosen - required for auto-scan"
 inputSource = "Input source"
-inputSourceBrowser = "Browser — drop files here"
+inputSourceBrowser = "Browser - drop files here"
 inputSourceLocal = "Local folder (auto-scan)"
-inputSourceLocalUnsupported = "Local folder (auto-scan) — Chrome/Edge only"
+inputSourceLocalUnsupported = "Local folder (auto-scan) - Chrome/Edge only"
 localOutputFolder = "Local output folder"
 maxRetries = "Max retries"
 name = "Folder name"
 namePlaceholder = "My Watched Folder"
 nameRequired = "Folder name is required"
 nameTooLong = "Folder name must be 50 characters or less"
-outputFolderNotSet = "Not set — outputs stay in app"
+outputFolderNotSet = "Not set - outputs stay in app"
 outputFolderUnsupported = "Not supported in this browser"
 outputModeNewDesc = "Output is saved as a new separate file"
 outputModeVersion = "Replace original?"
@@ -11629,9 +11629,9 @@ filterPending = "Pending"
 inputs = "Inputs"
 inputSize = "Input size"
 legendComplete = "Complete"
-noActivity = "No activity yet — drop a PDF to start"
+noActivity = "No activity yet - drop a PDF to start"
 noActivityMatch = "No matching activity"
-noInputFolder = "No input folder — edit to configure"
+noInputFolder = "No input folder - edit to configure"
 outputs = "Outputs"
 pause = "Pause"
 preview = "Preview"
@@ -11639,7 +11639,7 @@ previewInput = "Preview input"
 previewLoadFailed = "Could not load file preview."
 previewOutput = "Preview output"
 queued = "Queued"
-queuedWaiting = "Queued — waiting to run"
+queuedWaiting = "Queued - waiting to run"
 removeEntries = "Remove {{count}} entries"
 removeEntry = "Remove entry"
 removeNotificationsOnly = "Remove notifications only"
@@ -11981,7 +11981,7 @@ success = "已成功邀請使用者"
 [workspace.people.inviteLink]
 copied = "連結已複製到剪貼簿"
 email = "電子郵件地址"
-emailDescription = "選填——留空則產生通用邀請連結，可由任何人使用"
+emailDescription = "選填-留空則產生通用邀請連結，可由任何人使用"
 emailPlaceholder = "user@example.com（選填）"
 emailSent = "已產生邀請連結並透過電子郵件寄送"
 error = "產生邀請連結失敗"

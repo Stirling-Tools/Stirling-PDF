@@ -1254,7 +1254,7 @@ description = "URL ཡང་ན་ཡིག་ཆའི་མིང་ལ་ཡ�
 label = "ཚད་གཞི།"
 
 [admin.settings.legal.loginAgreement]
-defaultLocaleHint = "— སྐད་ཡིག་ཞིག་ལ་ཡིག་ཆ་མེད་ན་ཚབ་སྦེ་བཀོལ།"
+defaultLocaleHint = "- སྐད་ཡིག་ཞིག་ལ་ཡིག་ཆ་མེད་ན་ཚབ་སྦེ་བཀོལ།"
 defaultLocaleLink = "སོར་བཞག་སྐད་ཡིག་སྒྲིག་འགོད"
 description = "ཐོ་འགོད་བྱས་རྗེས་སྤྱོད་མཁན་གྱིས་དང་ལེན་བྱ་དགོས་པའི་ངེས་གསལ་བརྡ་འཕྲིན་སྟོན། ཚིག་ཡིག་ནི་སྤྱོད་མཁན་རེ་རེའི་སྐད་ཡིག་ལྟར་སྟོན་བྱེད།"
 discardConfirm = "ཁྱེད་ལ་སྲུངས་མེད་པའི་བསྒྱུར་བ་ཡོད་པས་བོར་འགྲོ་རེད། དེ་ཡང་སྐད་ཡིག་བརྗེ་དམ།"
@@ -2515,10 +2515,10 @@ text = "དེ་ནི་ཁྱེད་ཀྱི་མཚན་རྟགས་
 title = "ལག་འཁྱེར་ཟེར་བ་གང་ཡིན་ནམ།"
 
 [certSign.certType.tooltip.which]
-bullet1 = "PKCS#12 (.p12 / .pfx) – ཡིག་ཆ་གཅིག་མཉམ་སྡེབ། (མང་ཆེ་བ་)"
-bullet2 = "PFX (.pfx) – མའི་ཀོ་རོ་སོཕཊ་ཀྱི་PKCS12ཡི་ཐོན་རིམ།"
-bullet3 = "PEM – སྒེར་གྱི་ལྡེ་མིག་དང་ལག་ཁྱེར། .pem ཡིག་ཆ།"
-bullet4 = "JKS – Java .jks ལྡེ་མིག་མཛོད་ཁང་། dev / CI-CD ལས་ཀའི་རྒྱུན་རིམ།"
+bullet1 = "PKCS#12 (.p12 / .pfx) - ཡིག་ཆ་གཅིག་མཉམ་སྡེབ། (མང་ཆེ་བ་)"
+bullet2 = "PFX (.pfx) - མའི་ཀོ་རོ་སོཕཊ་ཀྱི་PKCS12ཡི་ཐོན་རིམ།"
+bullet3 = "PEM - སྒེར་གྱི་ལྡེ་མིག་དང་ལག་ཁྱེར། .pem ཡིག་ཆ།"
+bullet4 = "JKS - Java .jks ལྡེ་མིག་མཛོད་ཁང་། dev / CI-CD ལས་ཀའི་རྒྱུན་རིམ།"
 text = "ཁྱེད་རང་གི་ལག་འཁྱེར་ཡིག་ཆ་དང་མཐུན་པའི་རྩ་སྒྲིག་འདེམས་དགོས།"
 title = "ངས་གདམ་ག་གང་བེད་སྤྱོད་གཏོང་དགོས་སམ།"
 
@@ -3900,7 +3900,7 @@ dateDesc = "རྩེར་གསར་པ་དང་པོ"
 dateLabel = "གསར་ཤ"
 nameAsc = "A ནས Z"
 nameDesc = "Z ནས A"
-nameLabel = "A–Z"
+nameLabel = "A-Z"
 
 [fileSelectorPicker.tabs]
 saved = "སྲུངས་ཟིན་པའི་ཡིག་ཆ"
@@ -4014,7 +4014,7 @@ inPath = "{{path}} ནང་"
 inWorkspace = "ཁ་ཕྱེས"
 inWorkspaceAria = "ལས་གནས་ནང་ཡོད་ཟིན"
 loading = "མངོན་གསལ་བཞིན་པ…"
-localFoldersUnavailable = "སྣོད་འགེངས་ཚང་མ cloud ཙམ་ཡིན་པས—སྣོད་འགེངས་ནང་སྒྲིག་འགོད་བྱ་དགོས་ན་ཡིག་ཆ་ཞིག cloud ལ་ཉར།"
+localFoldersUnavailable = "སྣོད་འགེངས་ཚང་མ cloud ཙམ་ཡིན་པས-སྣོད་འགེངས་ནང་སྒྲིག་འགོད་བྱ་དགོས་ན་ཡིག་ཆ་ཞིག cloud ལ་ཉར།"
 moveSkippedRemote_one = "{{count}} file couldn't be moved on the server (no permission or already deleted)."
 moveSkippedRemote_other = "{{count}} files couldn't be moved on the server (no permission or already deleted)."
 moveTo = "སྤོ་བསྒྱུར…"
@@ -4022,7 +4022,7 @@ myFiles = "ངའི་ཡིག་ཆ"
 newFolder = "སྣོད་འགེངས་གསར་པ"
 newFolderStorageDisabled = "སར་བར་སྣོད་འགེངས་ཉར་གསོག་སྤྱོད་མེད། དོ་དམ་པ་ལ་དབང་སྤྲོད་རོགས།"
 newFolderTabUnavailable = "སྣོད་འགེངས་གསར་པ་བཟོ་ནས All ཡང་ན Cloud ལ་སོར་བརྗེ།"
-offlineNoFolderEdits = "སར་བར་སྣོད་འགེངས་མཉམ་འགྲིག་མེད་པས—སྣོད་འགེངས་བཟོ་བཅོས་མི་ཆོག ནང་འཛུལ་དང་ཉར་གསོག་སྒྲིག་འགོད་ཞིབ་བཤེར།"
+offlineNoFolderEdits = "སར་བར་སྣོད་འགེངས་མཉམ་འགྲིག་མེད་པས-སྣོད་འགེངས་བཟོ་བཅོས་མི་ཆོག ནང་འཛུལ་དང་ཉར་གསོག་སྒྲིག་འགོད་ཞིབ་བཤེར།"
 open = "ཁ་ཕྱེ"
 openVersionInWorkspace = "ལས་གནས་ནང་ཁ་ཕྱེ"
 originFilter = "ཁུངས་གཏན་འབེབས"
@@ -5413,7 +5413,7 @@ userBody = "རུ་མི་གདན་འདྲེན་ཞུ་བ་ད�
 userTitle = "འཆར་གཞིའི་སྤྱི་བསྡོམས།"
 
 [onboarding.processorIntro]
-body = "Stirling ད་ལྟ <strong>སྲིད་ཇུས</strong> སྤེལ་བཞིན་ཡོད — ཡིག་ཆ་རེ་རེ་འབྱོར་སྐབས་དེ་དག་རིགས་དབྱེ། བདེ་འཇགས་སྲུང་སྐྱོབ། དང་ལས་སྣོན་བྱེད་པའི་རང་འགུལ་སྒྲིག་སྲོལ་ཡིན། དེ་དག་སྒྲིག་ནས <strong>ལས་སྣོན་ཆས</strong> ནང་སྤེལ་བ་ལྟ་ཞིབ་བྱེད།"
+body = "Stirling ད་ལྟ <strong>སྲིད་ཇུས</strong> སྤེལ་བཞིན་ཡོད - ཡིག་ཆ་རེ་རེ་འབྱོར་སྐབས་དེ་དག་རིགས་དབྱེ། བདེ་འཇགས་སྲུང་སྐྱོབ། དང་ལས་སྣོན་བྱེད་པའི་རང་འགུལ་སྒྲིག་སྲོལ་ཡིན། དེ་དག་སྒྲིག་ནས <strong>ལས་སྣོན་ཆས</strong> ནང་སྤེལ་བ་ལྟ་ཞིབ་བྱེད།"
 cta = "ལས་སྣོན་ཆས་ལ་ལྟ"
 title = "Stirling Processor ལ་ལྟ"
 
@@ -5670,7 +5670,7 @@ title = "ཤོག་ངོས་གཏོར།"
 description = "བཀོལ་སྤྱོད་ཀྱི་ཆེད་དུ་ཤོག་ངོས་གང་བེད་སྤྱོད་གཏོང་དགོས་མིན་འདེམས། ཤོག་ངོས་གཅིག་དང་། ཁྱབ་ཁོངས། ཐབས་གཞི། དེ་བཞིན་གཙོ་ཚིག་ཚང་མ་ལ་རྒྱབ་སྐྱོར་བྱེད།"
 
 [pageSelection.tooltip.complex]
-bullet1 = "<strong>1,3-5,2n</strong> → ཤོག་ངོས་1, 3–5, 8, དང་མཉམ་པའི་ཆ་རྐྱེན།"
+bullet1 = "<strong>1,3-5,2n</strong> → ཤོག་ངོས་1, 3-5, 8, དང་མཉམ་པའི་ཆ་རྐྱེན།"
 bullet2 = "<strong>10-,2n-1</strong> → ཤོག་ངོས་10ནས་མཇུག་བ + ཤོག་ངོས་མ་འདྲ་བ།"
 description = "རིགས་མི་འདྲ་བ་སྲེ་སྦྱོར་བྱེད་པ།"
 title = "མཉམ་སྡེབ་སྣ་ཚོགས་པ།"
@@ -5693,8 +5693,8 @@ description = "དཔེ་རིས་ཀྱི་ཐབས་གཞི་ན�
 title = "རྩིས་རིག་གི་ལས་འགན།"
 
 [pageSelection.tooltip.ranges]
-bullet1 = "<strong>3-6</strong> → ཤོག་ངོས་3–6 འདེམས་པ།"
-bullet2 = "<strong>10-15</strong> → ཤོག་ངོས་10–15"
+bullet1 = "<strong>3-6</strong> → ཤོག་ངོས་3-6 འདེམས་པ།"
+bullet2 = "<strong>10-15</strong> → ཤོག་ངོས་10-15"
 bullet3 = "<strong>5-</strong> → མཇུག་བསྡུ་བར་ཤོག་ངོས་༥ གདམ་གསེས་བྱེད།"
 description = "བེད་སྤྱོད། ཤོག་ངོས་བསྟུད་མར་ལ།"
 title = "ཤོག་ངོས་ཁྱབ་ཁོངས།"
@@ -5770,7 +5770,7 @@ title = "Turn on the Processor plan"
 eyebrow = "Editor plan · Always free"
 
 [payg.free.header]
-freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
+freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR - as much as you want, no matter where you trigger it."
 freeTitle = "Unlimited PDF editing"
 
 [payg.free.hero]
@@ -5798,8 +5798,8 @@ pauses = "pauses at cap"
 title = "What happens when the cap is reached"
 
 [payg.header]
-eyebrow = "Processor plan · {{start}} – {{end}}"
-freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
+eyebrow = "Processor plan · {{start}} - {{end}}"
+freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR - as much as you want, no matter where you trigger it."
 freeLabel = "Always free"
 freeTitle = "Unlimited PDF editing"
 meterBody = "{{limit}} free PDFs to start, then billed per PDF up to your cap."
@@ -5819,8 +5819,8 @@ chip = "སྔོན་སྤྲོད་ལོ"
 
 [payg.prepaid.banner]
 exhausted = "ཁྱེད་ཀྱི་སྔོན་སྤྲོད་ནུས་ཚད་སྤྱད་ཚར་འདུག ཚད་འཇལ་རྩིས་འབུལ་བསྐྱར་སྤེལ་བྱས་ཟིན། ཆག་ཡང་མུ་མཐུད་ཉར་ཆེད་ཁ་སྣོན་བྱེད།"
-expiring_one = "ཁྱེད་ཀྱི་སྔོན་སྤྲོད་ལོ་ཉིན་ {{count}} ནང་ཚར་རྒྱུ་རེད། མ་སྤྱད་པའི་ནུས་ཚད་དུས་ཡོལ་འགྲོ་རྒྱུ་རེད — ལོ་གསར་པ་འགོ་འཛུགས་ཆེད་ཁ་སྣོན་བྱེད།"
-expiring_other = "ཁྱེད་ཀྱི་སྔོན་སྤྲོད་ལོ་ཉིན་ {{count}} ནང་ཚར་རྒྱུ་རེད། མ་སྤྱད་པའི་ནུས་ཚད་དུས་ཡོལ་འགྲོ་རྒྱུ་རེད — ལོ་གསར་པ་འགོ་འཛུགས་ཆེད་ཁ་སྣོན་བྱེད།"
+expiring_one = "ཁྱེད་ཀྱི་སྔོན་སྤྲོད་ལོ་ཉིན་ {{count}} ནང་ཚར་རྒྱུ་རེད། མ་སྤྱད་པའི་ནུས་ཚད་དུས་ཡོལ་འགྲོ་རྒྱུ་རེད - ལོ་གསར་པ་འགོ་འཛུགས་ཆེད་ཁ་སྣོན་བྱེད།"
+expiring_other = "ཁྱེད་ཀྱི་སྔོན་སྤྲོད་ལོ་ཉིན་ {{count}} ནང་ཚར་རྒྱུ་རེད། མ་སྤྱད་པའི་ནུས་ཚད་དུས་ཡོལ་འགྲོ་རྒྱུ་རེད - ལོ་གསར་པ་འགོ་འཛུགས་ཆེད་ཁ་སྣོན་བྱེད།"
 low = "ཁྱེད་ཀྱི་སྔོན་སྤྲོད་ནུས་ཚད་ {{pct}}% ཙམ་ལས་མི་འདུག ལས་སྣོན་མ་ཆད་པར་མུ་མཐུད་ཆེད་དུས་ནམ་ཡང་ཁ་སྣོན་བྱེད།"
 
 [payg.prepaid.card]
@@ -6521,7 +6521,7 @@ never = "ནམ་ཡང་མིན"
 [portal.accountLink.modal]
 linkSubtitle = "server འདིས་རིན་འབབ་བསྡུ་དགོས་པའི་རྩིས་ཐོར་ནང་འཛུལ་བྱོས།"
 linkTitle = "ཁྱེད་ཀྱི Stirling རྩིས་ཐོ་སྦྲེལ"
-reauthSubtitle = "ཁྱེད་ཀྱི་ལས་ཡུན་དུས་ཡོལ་སོང་ — ཁྱེད་ཀྱི Stirling རྩིས་ཐོར་ཡང་བསྐྱར་ནང་འཛུལ་བྱོས། ཁྱེད་ཀྱི་དཔེ་མཚོན་སྦྲེལ་ཟིན་པར་གནས་ཡོད།"
+reauthSubtitle = "ཁྱེད་ཀྱི་ལས་ཡུན་དུས་ཡོལ་སོང་ - ཁྱེད་ཀྱི Stirling རྩིས་ཐོར་ཡང་བསྐྱར་ནང་འཛུལ་བྱོས། ཁྱེད་ཀྱི་དཔེ་མཚོན་སྦྲེལ་ཟིན་པར་གནས་ཡོད།"
 reauthTitle = "ཡང་བསྐྱར་ནང་འཛུལ"
 simulateSignIn = "ནང་འཛུལ་དཔེ་བཟོ (dev)"
 
@@ -6581,7 +6581,7 @@ noClientSecret = "Edge function གིས client_secret ཕྱིར་སློ
 title = "སྤྲོད་ཐབས་ཁ་སྣོན"
 
 [portal.billing.checkout.activationSlow]
-body = "ཁྱེད་ཀྱི་སྤྲོད་དངུལ་ལེགས་གྲུབ་བྱུང་ཡང་། ནུས་སྤེལ་དེ་རྒྱུན་ལས་ཅུང་རིང་ཙམ་འགོར་བཞིན་འདུག དེ་རང་འགུལ་གྱིས་སྤོར་རྒྱུ་ཡིན — འདི་ཁ་རྒྱག་ན། མི་རིང་བར་འདིར་མངོན་ཡོང་།"
+body = "ཁྱེད་ཀྱི་སྤྲོད་དངུལ་ལེགས་གྲུབ་བྱུང་ཡང་། ནུས་སྤེལ་དེ་རྒྱུན་ལས་ཅུང་རིང་ཙམ་འགོར་བཞིན་འདུག དེ་རང་འགུལ་གྱིས་སྤོར་རྒྱུ་ཡིན - འདི་ཁ་རྒྱག་ན། མི་རིང་བར་འདིར་མངོན་ཡོང་།"
 close = "ཁ་རྒྱག"
 title = "ཧ་ལམ་འགྲུབ་ཚར"
 
@@ -6605,7 +6605,7 @@ note = "གཱ་ཞིབ་ཆ་ Stripe ཡིས་བསྡུ་ལེན�
 title = "checkout འགོ་འཛུགས་མ་ཐུབ"
 
 [portal.billing.checkout.finalizing]
-body = "ཁྱེད་ཀྱི་སྤྲོད་དངུལ་འགྲུབ་སོང་། ང་ཚོས་ཁྱེད་ཀྱི་སྦྲེལ་ཟིན་པའི་དཔེ་མཚོན་ཚང་མར་ཚད་འཇལ་ལས་སྒྲུབ་སྤོར་བཞིན་ཡོད — འདི་ལ་སྤྱིར་བཏང་སྐར་ཆ་འགའ་ལས་མི་འགོར།"
+body = "ཁྱེད་ཀྱི་སྤྲོད་དངུལ་འགྲུབ་སོང་། ང་ཚོས་ཁྱེད་ཀྱི་སྦྲེལ་ཟིན་པའི་དཔེ་མཚོན་ཚང་མར་ཚད་འཇལ་ལས་སྒྲུབ་སྤོར་བཞིན་ཡོད - འདི་ལ་སྤྱིར་བཏང་སྐར་ཆ་འགའ་ལས་མི་འགོར།"
 hint = "སྒེའུ་ཁུང་འདི་ཁ་མ་རྒྱག་པར་ཉར་རོགས།"
 title = "ཁྱེད་ཀྱི Processor འཆར་གཞི་ནུས་སྤེལ་བྱེད་བཞིན..."
 
@@ -6632,7 +6632,7 @@ title = "རིན་མེད PDF རྩོམ་སྒྲིག་ཆས"
 checkoutErrorTitle = "checkout འགོ་འཛུགས་མ་ཐུབ"
 currentPlan = "མིག་སྔའི་འཆར་གཞི"
 freeForever = "རྟག་ཏུ་རིན་མེད"
-noTeamResolved = "ཁྱེད་ཀྱི་དངུལ་ཁུག་སྟེང་རུ་ཁག་ད་དུང་གཏན་འཁེལ་མ་བྱུང་ — བསྐྱར་གསོ་བྱས་ནས་ཡང་བསྐྱར་ཚོད་ལྟ་བྱོས།"
+noTeamResolved = "ཁྱེད་ཀྱི་དངུལ་ཁུག་སྟེང་རུ་ཁག་ད་དུང་གཏན་འཁེལ་མ་བྱུང་ - བསྐྱར་གསོ་བྱས་ནས་ཡང་བསྐྱར་ཚོད་ལྟ་བྱོས།"
 ownerOnly = "རུ་ཁག་གི་བདག་པོ་ཁོ་ནས Processor འཆར་གཞི་སྤོར་ཐུབ།"
 payInvoice = "མཇུག་སྒྲུབ་ཆེད་འཛིན་ཤོག་སྤྲོད"
 planName = "Editor"
@@ -6667,7 +6667,7 @@ viewLink = "ལྟ ↗"
 
 [portal.billing.linkPrompt]
 cta = "Stirling རྩིས་ཐོ་སྦྲེལ"
-description = "ལག་སྒུལ PDF རྩོམ་སྒྲིག — ལྟ་བ། མིང་རྟགས་འགོད་པ། མཉམ་སྒྲིལ། དབྱེ་བ། ཆུ་རྟགས། སྡུད་བཙིར། བསྒྱུར་བ། ལག་སྒུལ OCR — ནམ་ཡང་རིན་མེད་ཡིན། སྦྲེལ་ཡོད་མེད་གང་ཡང་འདྲ། ཚད་འཇལ་ལས་སྒྲུབ (automation, AI, དང API) གི་རིན་མེད PDFs 500 ལེན་པར་སྦྲེལ། དེ་ལས་མང་བ་དགོས་དུས། Processor འཆར་གཞི་སྤོར་ནས་ཁྱེད་ཀྱིས་སྤྱད་པ་ཁོ་ནར་རིན་སྤྲོད།"
+description = "ལག་སྒུལ PDF རྩོམ་སྒྲིག - ལྟ་བ། མིང་རྟགས་འགོད་པ། མཉམ་སྒྲིལ། དབྱེ་བ། ཆུ་རྟགས། སྡུད་བཙིར། བསྒྱུར་བ། ལག་སྒུལ OCR - ནམ་ཡང་རིན་མེད་ཡིན། སྦྲེལ་ཡོད་མེད་གང་ཡང་འདྲ། ཚད་འཇལ་ལས་སྒྲུབ (automation, AI, དང API) གི་རིན་མེད PDFs 500 ལེན་པར་སྦྲེལ། དེ་ལས་མང་བ་དགོས་དུས། Processor འཆར་གཞི་སྤོར་ནས་ཁྱེད་ཀྱིས་སྤྱད་པ་ཁོ་ནར་རིན་སྤྲོད།"
 title = "ཁྱེད་ཀྱི Stirling རྩིས་ཐོ་སྦྲེལ"
 
 [portal.billing.paymentMethod]
@@ -6801,10 +6801,10 @@ low = "ཉུང་དུ་འགྲོ་བཞིན་"
 [portal.billing.spendLimit]
 adjustLimit = "ཚད་བཀག་སྒྲིག་"
 cancel = "རྩིས་མེད་"
-capControlNote = "བསྒྱུར་བ་འཕྲལ་དུ་ནུས་པ་ཐོན་ — དུས་ནམ་ཡང་མཐོ་ཚད་སྤར་རམ་དམའ་རུ་གཏོང་།"
+capControlNote = "བསྒྱུར་བ་འཕྲལ་དུ་ནུས་པ་ཐོན་ - དུས་ནམ་ཡང་མཐོ་ཚད་སྤར་རམ་དམའ་རུ་གཏོང་།"
 capSuffix = "/ ཟླ་རེར"
 capSuffixWithDocs = "/ ཟླ་རེར · ≈ ཡིག་ཆ་ {{documents}}"
-displaySub = "ཁྱེད་ཀྱིས་རང་འགུལ་སྒྲིག་གཅོད་བྱས་པ་ཙམ་ལ་རིན་འཐུས་བསྡུ་བ་ཡིན — མཐོ་ཚད་ནས་ནམ་ཡང་མི་བརྒལ།"
+displaySub = "ཁྱེད་ཀྱིས་རང་འགུལ་སྒྲིག་གཅོད་བྱས་པ་ཙམ་ལ་རིན་འཐུས་བསྡུ་བ་ཡིན - མཐོ་ཚད་ནས་ནམ་ཡང་མི་བརྒལ།"
 editTitle = "ཁྱེད་ཀྱི་ཟླ་རེའི་མཐོ་ཚད་སྒྲིག་"
 eyebrow = "འགྲོ་གྲོན་ཚད་བཀག་"
 guardrailBody = "མཐོ་ཚད་གཏན་པོ་ཞིག ཁྱེད་ལ་དེ་ལས་བརྒལ་ནས་ནམ་ཡང་རིན་འཐུས་མི་བསྡུ། ཚད་བཀག་ལ་སླེབས་སྐབས། ཁྱེད་ཀྱིས་དེ་སྤར་བའམ་འཁོར་ཡུན་བསྐྱར་སྒྲིག་བྱེད་པ་བར་ཚད་རྩིས་སྒྲིག་གཅོད་སྐབས་འཇོག་བྱེད་ (PDF རྩོམ་སྒྲིག་ཚད་མེད་མུ་མཐུད་ལས་ཀ་བྱེད)། གང་ཡང་བརླག་མི་འགྲོ།"
@@ -6946,9 +6946,9 @@ save = "འབྲེལ་མཐུད་ཉར།"
 [portal.connections.picker2]
 back = "མཉམ་སྒྲིལ་བསྒྱུར།"
 heading = "ཁྱེད་ཀྱིས་གང་ཞིག་འབྲེལ་མཐུད་བྱེད་འདོད་དམ།"
-noResultsBody = "ང་ཚོས་ད་དུང་དེ་ལ་རྒྱབ་སྐྱོར་མི་བྱེད་ — དེའི་སྐོར་ང་ཚོར་བཤད་རོགས། ང་ཚོས་དེ་སྣོན་རྒྱུར་བལྟ་ངེས།"
+noResultsBody = "ང་ཚོས་ད་དུང་དེ་ལ་རྒྱབ་སྐྱོར་མི་བྱེད་ - དེའི་སྐོར་ང་ཚོར་བཤད་རོགས། ང་ཚོས་དེ་སྣོན་རྒྱུར་བལྟ་ངེས།"
 noResultsTitle = "\"{{query}}\" དང་མཐུན་པ་ཅི་ཡང་མེད།"
-searchPlaceholder = "མཉམ་སྒྲིལ་འཚོལ། — \"sign\", \"ocr\" ཡང་ན་ཐོན་རྫས་མིང་ཞིག་ཚོད་ལྟ་བྱོས།"
+searchPlaceholder = "མཉམ་སྒྲིལ་འཚོལ། - \"sign\", \"ocr\" ཡང་ན་ཐོན་རྫས་མིང་ཞིག་ཚོད་ལྟ་བྱོས།"
 
 [portal.connections.types.api]
 description = "སྲིད་ཇུས་ནས HTTP API གང་རུང་འབོད། URL, བདེན་སྦྱོར་དང payload ཁྱེད་ཀྱིས་འདེམས།"
@@ -7007,7 +7007,7 @@ label = "སྤྱོད་མཁན་མིང་།"
 
 [portal.connections.types.clamav]
 baseUrlPlaceholder = "http://clamav-rest:9000"
-description = "ཁྱེད་ཀྱིས་གཉེར་བའི་ཞབས་ཞུ་ཆས་ཐོག་ཡིག་ཆར malware འཚོལ་ཞིབ་བྱེད། — ཅི་ཡང་ཁྱེད་ཀྱི་དྲ་རྒྱ་ལས་ཕྱིར་མི་འགྲོ།"
+description = "ཁྱེད་ཀྱིས་གཉེར་བའི་ཞབས་ཞུ་ཆས་ཐོག་ཡིག་ཆར malware འཚོལ་ཞིབ་བྱེད། - ཅི་ཡང་ཁྱེད་ཀྱི་དྲ་རྒྱ་ལས་ཕྱིར་མི་འགྲོ།"
 label = "ClamAV (self-hosted)"
 
 [portal.connections.types.cloudmersive]
@@ -7242,8 +7242,8 @@ viewSource = "GitHub ཐོག source ལ་ལྟ།"
 codeCaption = "རེ་ཞུ་རེ་རེ།"
 eyebrow = "འགོ་འཛུགས།"
 lead = "རེ་ཞུ་ཡོངས་ཀྱིས bearer token གྱིས་བདེན་སྦྱོར་བྱེད། Key རྣམས་ཁོར་ཡུག་རེ་རེའི་ཁྱབ་ཁོངས་ཡིན་ཞིང་། rotate མ་བྱས་ན་ནམ་ཡང་དུས་ཚོད་མི་ཡོལ།"
-liveKey = "Production keys — རིན་འབབ་བསྡུ་བ། ཁྱེད་ཀྱི plan ལྟར rate-limited།"
-testKey = "Sandbox keys — རིན་མེད། synthetic fixtures ཕྱིར་སྤྲོད།"
+liveKey = "Production keys - རིན་འབབ་བསྡུ་བ། ཁྱེད་ཀྱི plan ལྟར rate-limited།"
+testKey = "Sandbox keys - རིན་མེད། synthetic fixtures ཕྱིར་སྤྲོད།"
 title = "བདེན་སྦྱོར།"
 
 [portal.docs.components]
@@ -7281,7 +7281,7 @@ title = "མྱུར་འགོ"
 
 [portal.docs.quickstart.callout]
 bodyAfterLink = "ལྟོས།"
-bodyBeforeLink = "validation, redaction, delivery བཅས་སྦྲེལ་བར་འབོད་སྐུར་གཅིག་པ་དེ pipeline ནང་མཐུད་པའམ MCP ཐོག agent ལ་མངོན་པར་བྱོས — copy-paste recipes ཆེད་"
+bodyBeforeLink = "validation, redaction, delivery བཅས་སྦྲེལ་བར་འབོད་སྐུར་གཅིག་པ་དེ pipeline ནང་མཐུད་པའམ MCP ཐོག agent ལ་མངོན་པར་བྱོས - copy-paste recipes ཆེད་"
 label = "རྗེས་མ:"
 link = "Playbooks"
 
@@ -7290,7 +7290,7 @@ body = "Infrastructure tab ནས scoped key ཞིག་བཟོས། Keys �
 title = "API key སྤྲོད"
 
 [portal.docs.quickstart.step2]
-body = "ཡིག་ཆ་ཞིག་རིགས་ཅན endpoint གང་རུང་ལ POST བྱོས། endpoint ཡིས་ཁྱེད་ལ་ཕྱིར་འཐོབ་པའི schema གཏན་འཁེལ་བྱེད — འདིར་འཛིན་ཤོག་འདོན་ཆས་ཡིན།"
+body = "ཡིག་ཆ་ཞིག་རིགས་ཅན endpoint གང་རུང་ལ POST བྱོས། endpoint ཡིས་ཁྱེད་ལ་ཕྱིར་འཐོབ་པའི schema གཏན་འཁེལ་བྱེད - འདིར་འཛིན་ཤོག་འདོན་ཆས་ཡིན།"
 snippetCaption = "འཛིན་ཤོག་འདོན"
 title = "ཡིག་ཆ་སྐུར"
 
@@ -7370,8 +7370,8 @@ overview = "སྤྱི་བཤད"
 requestAccess = "ཐོབ་དབང་རེ་ཞུ"
 
 [portal.documents.elevation.active]
-description = "གནས་སྐབས་ཆོག་མཆན — ཐོབ་དབང་ཟིན་ཐོར་འགོད་ཅིང་དུས་ཚད་ཡོད།"
-descriptionFourEyes = "གནས་སྐབས་ཆོག་མཆན — ལས་རོགས་བསྐྱར་ཞིབ་པར་བརྡ་ཐོ་བཏང་ཟིན (four-eyes)།"
+description = "གནས་སྐབས་ཆོག་མཆན - ཐོབ་དབང་ཟིན་ཐོར་འགོད་ཅིང་དུས་ཚད་ཡོད།"
+descriptionFourEyes = "གནས་སྐབས་ཆོག་མཆན - ལས་རོགས་བསྐྱར་ཞིབ་པར་བརྡ་ཐོ་བཏང་ཟིན (four-eyes)།"
 title = "ཐོབ་དབང {{time}} ནང་དུ་དུས་ཡོལ་འགྲོ"
 
 [portal.documents.elevation.gated]
@@ -7432,7 +7432,7 @@ time = "དུས་ཚོད"
 user = "སྤྱོད་མཁན"
 
 [portal.editorAdmin]
-subtitle = "Stirling PDF Editor འགྲེམ་སྤེལ་བྱོས། self-hosted instances རང་གི org དང་སྦྱོར། གནས་གཅིག་ནས་འཁོར་བཞིན་པའི fleet — targets, health, credentials དང offline activation སྐྱོང་།"
+subtitle = "Stirling PDF Editor འགྲེམ་སྤེལ་བྱོས། self-hosted instances རང་གི org དང་སྦྱོར། གནས་གཅིག་ནས་འཁོར་བཞིན་པའི fleet - targets, health, credentials དང offline activation སྐྱོང་།"
 title = "Editor འགྲེམ་སྤེལ"
 
 [portal.editorAdmin.health.columns]
@@ -7468,7 +7468,7 @@ rotate = "Rotate"
 talkToSales = "Sales ལ་འབྲེལ་གཏུག"
 
 [portal.editorAdmin.sections.health]
-sub = "Editor instance ཚང་མས་ཡར་ཞུ་བྱེད — version, region, status, last seen དང active users།"
+sub = "Editor instance ཚང་མས་ཡར་ཞུ་བྱེད - version, region, status, last seen དང active users།"
 title = "Instance health"
 
 [portal.editorAdmin.sections.pairing]
@@ -7756,7 +7756,7 @@ keyNamePlaceholder = "དཔེར་ན། ཐོན་སྐྱེད་ནང
 secretKeyCaption = "གསང་བའི་ལྡེ་མིག"
 secretWarning = "འདི་གསང་བའི་དོ་དམ་ཆས་ནང་ཉར་ཚགས་བྱོས། Stirling གིས་ནམ་ཡང་ཧེ་ཤ་ཁོ་ན་ཉར་བས། རྗེས་སུ་དེ་སླར་གསོ་བྱེད་ཐབས་མེད།"
 subtitle = "རྗེས་སུ་ངོས་འཛིན་ཐུབ་པའི་ཆེད་ལྡེ་མིག་ལ་མིང་ཞིག་སྤྲོད། ཁྱེད་ཀྱིས་དུས་ནམ་ཡང་དེ་ཕྱིར་འཐེན་བྱེད་ཆོག"
-subtitleCreated = "ད་ལྟ་གསང་བ་འདི་འདྲ་བཤུས་བྱོས — འདི་ཡང་བསྐྱར་མི་སྟོན།"
+subtitleCreated = "ད་ལྟ་གསང་བ་འདི་འདྲ་བཤུས་བྱོས - འདི་ཡང་བསྐྱར་མི་སྟོན།"
 title = "API ལྡེ་མིག་གསར་སྐྲུན"
 titleCreated = "ལྡེ་མིག་གསར་སྐྲུན་ཟིན་པ"
 
@@ -8317,7 +8317,7 @@ label = "ཡིག་ཆ email སྐུར (Mailgun)"
 [portal.policies.operations.n8nGate]
 description = "Your workflow decides whether the run carries on."
 label = "Ask an n8n workflow to approve"
-note = "The workflow must reply with {\"approved\": true}. Anything else — including a timeout — stops the run and parks the document."
+note = "The workflow must reply with {\"approved\": true}. Anything else - including a timeout - stops the run and parks the document."
 
 [portal.policies.operations.n8nNotify]
 description = "Sends the run's details, not the document."
@@ -8339,7 +8339,7 @@ label = "Nextcloud ལ་ཡར་འཇུག"
 [portal.policies.operations.presidioAnalyze]
 description = "ཁྱེད་ཀྱི Presidio server རང་གིས་རྙེད་པའི་མི་སྒེར་གཞི་གྲངས་སྙན་ཞུ་བྱེད།"
 label = "མི་སྒེར་གཞི་གྲངས་རྟོགས་འཛིན"
-note = "Presidio ཡིས་ཡི་གེ་ཀློག་པ་ལས་ཡིག་ཆ་མི་ཀློག ཞིབ་བཤེར་བྱ་འདོད་པའི་ཡི་གེ་སྤྲོད་རོགས — ཡིག་ཆ་རང་ཉིད་ཡར་འཇུག་མི་བྱེད།"
+note = "Presidio ཡིས་ཡི་གེ་ཀློག་པ་ལས་ཡིག་ཆ་མི་ཀློག ཞིབ་བཤེར་བྱ་འདོད་པའི་ཡི་གེ་སྤྲོད་རོགས - ཡིག་ཆ་རང་ཉིད་ཡར་འཇུག་མི་བྱེད།"
 
 [portal.policies.operations.responseMode]
 replace = "ཕྱིར་ལན་གྱིས་ཡིག་ཆ་ཚབ་བརྗེ་བྱེད"
@@ -8595,11 +8595,11 @@ postalCodePlaceholder = "94105"
 posture = "སྐྱོང་སྡོམ"
 posture_count = "~{{count}} སྲིད་ཇུས"
 posture_essentials = "གལ་ཆེའི་ཆ་ཤས"
-posture_essentialsSub = "རིགས་དབྱེ + མཉམ་སྤྱོད — སྔོན་སྒྲིག"
+posture_essentialsSub = "རིགས་དབྱེ + མཉམ་སྤྱོད - སྔོན་སྒྲིག"
 posture_governed = "སྐྱོང་སྡོམ་བྱས་པ"
 posture_governedSub = "བདེ་འཇགས་དང་ལམ་སྟོན་ཁ་སྣོན་བྱེད"
 posture_regulated = "སྒྲིག་སྲོལ་འོག"
-posture_regulatedSub = "རིགས་ཚན་ཚང་མ — མཐུན་སྒྲུབ། ཉར་ཚགས། ནང་འཇུག"
+posture_regulatedSub = "རིགས་ཚན་ཚང་མ - མཐུན་སྒྲུབ། ཉར་ཚགས། ནང་འཇུག"
 qbr = "དུས་ཚིགས་རེའི་ཚོང་ལས་ཞིབ་བཤེར"
 qbrSub = "ཁྱེད་ཀྱི SE ཡིས་དུས་ཚིགས་རེར་སྤྱོད་ཚུལ་དང་ལམ་དཀར་ཞིབ་བཤེར་བྱེད"
 region = "མངའ་སྡེ / ས་ཁུལ"
@@ -8721,13 +8721,13 @@ label = "ཚོད་ལྟ"
 [portal.procurement.license]
 copied = "འདྲ་བཤུས་བྱས་ཟིན"
 copy = "ལྡེ་མིག་འདྲ་བཤུས"
-downloadError = "ད་ལྟ་དྲ་མེད་ཆོག་མཆན་ཡིག་ཆ་བཟོ་མ་ཐུབ — ཅུང་ཙམ་རྗེས་སླར་ཚོད་ལྟ་གནང་རོགས།"
+downloadError = "ད་ལྟ་དྲ་མེད་ཆོག་མཆན་ཡིག་ཆ་བཟོ་མ་ཐུབ - ཅུང་ཙམ་རྗེས་སླར་ཚོད་ལྟ་གནང་རོགས།"
 downloadOffline = "དྲ་མེད་ཆོག་མཆན་ཕབ་ལེན (.lic)"
 hint = "ལྡེ་མིག་འདི་རང་སྐྱོང་དཔེ་མཚོན་ནང་སྦྱར་ནས་ནུས་སློང་བྱེད་ཆོག ཡང་ན་ཁྱེད་ཀྱི་ཟིན་ཐོའི་ཆེད་ཉར་ཆོག དེ་བདེ་འཇགས་སུ་ཉར་རོགས།"
 label = "ཁྱེད་ཀྱི་ཆོག་མཆན་ལྡེ་མིག"
 subtitle = "ལྡེ་མིག་འདིས་རང་སྐྱོང་དཔེ་མཚོན་ནུས་སློང་བྱེད་ཆོག ཡང་ན་ཁྱེད་ཀྱི་ཟིན་ཐོའི་ཆེད་ཉར་ཆོག"
 title = "ཁྱེད་ཀྱི་ཆོག་མཆན་ལྡེ་མིག"
-trialFileHint = "འདི་ནི་ཁྱེད་ཀྱི་ཚོད་སྤྱོད་ཆོག་མཆན་ཡིག་ཆ་ཡིན། གྲོས་མཐུན་གཏན་འཁེལ་བྱས་རྗེས། ཕྱིར་ལོག་ནས་ཡང་བསྐྱར་ཕབ་ལེན་བྱོས — དྲ་ཐོག་ཆོག་མཆན་ལྡེ་མིག་དང་མི་འདྲ་བར། .lic ཡིག་ཆ་རང་འགུལ་གྱིས་གསར་སྒྱུར་མི་བྱེད།"
+trialFileHint = "འདི་ནི་ཁྱེད་ཀྱི་ཚོད་སྤྱོད་ཆོག་མཆན་ཡིག་ཆ་ཡིན། གྲོས་མཐུན་གཏན་འཁེལ་བྱས་རྗེས། ཕྱིར་ལོག་ནས་ཡང་བསྐྱར་ཕབ་ལེན་བྱོས - དྲ་ཐོག་ཆོག་མཆན་ལྡེ་མིག་དང་མི་འདྲ་བར། .lic ཡིག་ཆ་རང་འགུལ་གྱིས་གསར་སྒྱུར་མི་བྱེད།"
 
 [portal.procurement.link]
 cta = "རྩིས་ཐོ་འབྲེལ་མཐུད"
@@ -8741,10 +8741,10 @@ eyebrow = "དངོས་སྤྱོད"
 title = "ཁྱེད་རང Stirling Enterprise ཐོག་དངོས་སྤྱོད་ལ་ཞུགས་ཟིན"
 
 [portal.procurement.milestone]
-downloadError = "ད་ལྟ་གོང་འབོལ PDF ཕབ་ལེན་མ་ཐུབ — སྐད་ཅིག་རྗེས་སླར་ཚོད་ལྟ་བྱོས།"
+downloadError = "ད་ལྟ་གོང་འབོལ PDF ཕབ་ལེན་མ་ཐུབ - སྐད་ཅིག་རྗེས་སླར་ཚོད་ལྟ་བྱོས།"
 
 [portal.procurement.payment]
-description = "ཁྱེད་ཀྱི་གོང་འབོལ་དང་ལེན་བྱས་ཟིན་ཞིང་ཆོག་མཆན་ཡང་ད་སྔ་ནས་འགུལ་སྤྱོད་ནང་ཡོད — ཁྱེད་ཀྱི་ཚོགས་པས་འཕྲལ་དུ་འགོ་འཛུགས་ཆོག གྲ་སྒྲིག་ཡོད་སྐབས་རྩིས་ཤོག་དང་པོ་སྤྲོད། འདི་ནས་སྤྲོད་པའམ་ཕབ་ལེན་བྱེད་ཆོག་ཅིང་། email མི་དགོས།"
+description = "ཁྱེད་ཀྱི་གོང་འབོལ་དང་ལེན་བྱས་ཟིན་ཞིང་ཆོག་མཆན་ཡང་ད་སྔ་ནས་འགུལ་སྤྱོད་ནང་ཡོད - ཁྱེད་ཀྱི་ཚོགས་པས་འཕྲལ་དུ་འགོ་འཛུགས་ཆོག གྲ་སྒྲིག་ཡོད་སྐབས་རྩིས་ཤོག་དང་པོ་སྤྲོད། འདི་ནས་སྤྲོད་པའམ་ཕབ་ལེན་བྱེད་ཆོག་ཅིང་། email མི་དགོས།"
 downloadAgreement = "མིང་རྟགས་བཀོད་པའི་གྲོས་མཐུན་ཕབ་ལེན"
 downloadInvoice = "རྩིས་ཤོག་ཕབ་ལེན"
 eyebrow = "དངུལ་སྤྲོད"
@@ -8799,7 +8799,7 @@ workEmailPlaceholder = "you@company.com"
 
 [portal.procurement.trial]
 body = "དུས་འགྱངས་བྱས་ན་ཉིན་ 7 ཁ་སྣོན་བྱེད་ཅིང་ཁྱེད་ཀྱི་ཐབས་ལམ་བཟོ་འགོད་པར་བརྡ་ཐོ་གཏོང་།"
-bodyMaxed = "ཁྱེད་ཀྱིས་དུས་འགྱངས་ཚང་མ་སྤྱད་ཟིན — དུས་ཚོད་མང་བ་དགོས་ན་ཁྱེད་ཀྱི་ཐབས་ལམ་བཟོ་འགོད་པར་གྲོས་མོལ་བྱོས།"
+bodyMaxed = "ཁྱེད་ཀྱིས་དུས་འགྱངས་ཚང་མ་སྤྱད་ཟིན - དུས་ཚོད་མང་བ་དགོས་ན་ཁྱེད་ཀྱི་ཐབས་ལམ་བཟོ་འགོད་པར་གྲོས་མོལ་བྱོས།"
 cancel = "ཚོད་སྤྱོད་འདོར"
 extend = "ཉིན་ 7 དུས་འགྱངས"
 maxed = "མཐོ་ཚད་ལ་སླེབས"
@@ -9036,7 +9036,7 @@ walletUnavailable = "wallet མེད་པ། {{status}} {{statusText}}"
 
 [portal.usage.sessionExpired]
 action = "ཡང་བསྐྱར་ནང་འཛུལ"
-body = "ཁྱེད་ཀྱི Stirling རྩིས་ཁྲའི session དུས་ཡོལ་ཟིན། རིན་བསྡུ་ལྟ་བར་ཡང་བསྐྱར་ནང་འཛུལ་བྱེད — ཁྱེད་ཀྱི instance འབྲེལ་མཐུད་རང་སོར་གནས།"
+body = "ཁྱེད་ཀྱི Stirling རྩིས་ཁྲའི session དུས་ཡོལ་ཟིན། རིན་བསྡུ་ལྟ་བར་ཡང་བསྐྱར་ནང་འཛུལ་བྱེད - ཁྱེད་ཀྱི instance འབྲེལ་མཐུད་རང་སོར་གནས།"
 title = "Session དུས་ཡོལ"
 
 [portal.users]
@@ -9064,7 +9064,7 @@ summary = "ཚད་བཀག་ཡོད་པའམ web-only འཛུལ་�
 
 [portal.users.roles.member]
 label = "ཚོགས་མི"
-summary = "སྤྱིར་བཏང་སྤྱོད་མཁན — མཉམ་སྤྱོད་ཐོན་ཁུངས་དང་རང་གི configs དང་མཉམ་ལས་བྱེད།"
+summary = "སྤྱིར་བཏང་སྤྱོད་མཁན - མཉམ་སྤྱོད་ཐོན་ཁུངས་དང་རང་གི configs དང་མཉམ་ལས་བྱེད།"
 
 [portal.users.roles.member.permissions]
 0 = "editor དང་མཉམ་སྤྱོད integration སྤྱོད"
@@ -9074,7 +9074,7 @@ summary = "སྤྱིར་བཏང་སྤྱོད་མཁན — མཉ�
 
 [portal.users.roles.team_owner]
 label = "རུ་ཁག་བདག་པོ"
-summary = "རུ་ཁག་ཅིག་བདག་སྐྱོང་བྱེད — དེའི་ཚོགས་མིའི་ཐོན་ཁུངས་དང་མཉམ་སྤྱོད configs དོ་དམ་བྱེད།"
+summary = "རུ་ཁག་ཅིག་བདག་སྐྱོང་བྱེད - དེའི་ཚོགས་མིའི་ཐོན་ཁུངས་དང་མཉམ་སྤྱོད configs དོ་དམ་བྱེད།"
 
 [portal.users.roles.team_owner.permissions]
 0 = "རུ་ཁག་གི S3 འབྲེལ་མཐུད་བង្កើត་ & དོ་དམ"
@@ -11462,9 +11462,9 @@ emptyFile = "ཡིག་ཆ་སྟོང་"
 htmlHidePreview = "སྔོན་ལྟ་སྦས།"
 htmlPreview = "HTML སྔོན་ལྟ"
 htmlPreviewMobileHidden = "HTML ཤོག་ངོས་རྣམས་ཅོག་ངོས་ཞེང་ཚད་ལ་བཀོད་སྒྲིག་བྱས་པས། འདིར་སྔོན་ལྟ་སྔོན་སྒྲིག་གིས་སྒོ་བརྒྱབ་ཡོད།"
-htmlPreviewWarning = "HTML སྔོན་ལྟ — ཕྱི་ཐོན་ཁུངས་ཚུད་མི་སྲིད · {{size}}"
+htmlPreviewWarning = "HTML སྔོན་ལྟ - ཕྱི་ཐོན་ཁུངས་ཚུད་མི་སྲིད · {{size}}"
 htmlShowPreview = "གང་ལྟར་སྔོན་ལྟ་སྟོན།"
-invalidJson = "JSON ནུས་མེད — ནང་དོར་ཐོག་མངོན"
+invalidJson = "JSON ནུས་མེད - ནང་དོར་ཐོག་མངོན"
 lineNumbers = "ཕྲེང་གྲངས"
 loading = "སྒྲུབ་བརྒྱབ..."
 renderMarkdown = "markdown མངོན"
@@ -11526,7 +11526,7 @@ create = "Create your first Watched Folder"
 deleteFolder = "Delete folder"
 editFolder = "Edit folder"
 empty = "No watched folders yet"
-emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged — whatever your pipeline does."
+emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged - whatever your pipeline does."
 emptyTitle = "Automate your PDF workflows"
 file = "file"
 files = "files"
@@ -11534,7 +11534,7 @@ pause = "Pause"
 resume = "Resume"
 
 [watchedFolders.howItWorks]
-step1Desc = "Drag PDFs onto any Watched Folder card — or send them from your file list"
+step1Desc = "Drag PDFs onto any Watched Folder card - or send them from your file list"
 step1Title = "Drop files"
 step2Desc = "Your configured tools process each file automatically"
 step2Title = "Pipeline runs"
@@ -11558,18 +11558,18 @@ createFolder = "Create Folder"
 createTitle = "New Watched Folder"
 editTitle = "Edit Watched Folder"
 inputFolder = "Input folder"
-inputFolderNotChosen = "No folder chosen — required for auto-scan"
+inputFolderNotChosen = "No folder chosen - required for auto-scan"
 inputSource = "Input source"
-inputSourceBrowser = "Browser — drop files here"
+inputSourceBrowser = "Browser - drop files here"
 inputSourceLocal = "Local folder (auto-scan)"
-inputSourceLocalUnsupported = "Local folder (auto-scan) — Chrome/Edge only"
+inputSourceLocalUnsupported = "Local folder (auto-scan) - Chrome/Edge only"
 localOutputFolder = "Local output folder"
 maxRetries = "Max retries"
 name = "Folder name"
 namePlaceholder = "My Watched Folder"
 nameRequired = "Folder name is required"
 nameTooLong = "Folder name must be 50 characters or less"
-outputFolderNotSet = "Not set — outputs stay in app"
+outputFolderNotSet = "Not set - outputs stay in app"
 outputFolderUnsupported = "Not supported in this browser"
 outputModeNewDesc = "Output is saved as a new separate file"
 outputModeVersion = "Replace original?"
@@ -11629,9 +11629,9 @@ filterPending = "Pending"
 inputs = "Inputs"
 inputSize = "Input size"
 legendComplete = "Complete"
-noActivity = "No activity yet — drop a PDF to start"
+noActivity = "No activity yet - drop a PDF to start"
 noActivityMatch = "No matching activity"
-noInputFolder = "No input folder — edit to configure"
+noInputFolder = "No input folder - edit to configure"
 outputs = "Outputs"
 pause = "Pause"
 preview = "Preview"
@@ -11639,7 +11639,7 @@ previewInput = "Preview input"
 previewLoadFailed = "Could not load file preview."
 previewOutput = "Preview output"
 queued = "Queued"
-queuedWaiting = "Queued — waiting to run"
+queuedWaiting = "Queued - waiting to run"
 removeEntries = "Remove {{count}} entries"
 removeEntry = "Remove entry"
 removeNotificationsOnly = "Remove notifications only"

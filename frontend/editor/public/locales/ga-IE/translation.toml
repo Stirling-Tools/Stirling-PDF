@@ -1254,7 +1254,7 @@ description = "URL nó ainm comhaid don impressum (riachtanach i roinnt dlínsí
 label = "Impressum"
 
 [admin.settings.legal.loginAgreement]
-defaultLocaleHint = "— úsáidtear mar chúltaca nuair nach bhfuil comhad ag teanga."
+defaultLocaleHint = "- úsáidtear mar chúltaca nuair nach bhfuil comhad ag teanga."
 defaultLocaleLink = "Cumraigh an logchaighdeán réamhshocraithe"
 description = "Taispeáin séanadh a chaithfidh úsáideoirí glacadh leis i ndiaidh dóibh logáil isteach. Leanann an téacs teanga gach úsáideora."
 discardConfirm = "Tá athruithe gan sábháil agat a chaillfear. Athraigh an teanga mar sin féin?"
@@ -2515,10 +2515,10 @@ text = "Is aitheantas slán é do do shíniú a chruthaíonn gurb tusa a shínig
 title = "Cad é teastas?"
 
 [certSign.certType.tooltip.which]
-bullet1 = "PKCS#12 (.p12 / .pfx) – comhad comhcheangailte amháin (is coitianta)"
-bullet2 = "PFX (.pfx) – leagan Microsoft de PKCS12"
-bullet3 = "PEM – comhaid ar leith .pem don eochair phríobháideach agus don teastas"
-bullet4 = "JKS – stór-eochrach Java .jks do shreafaí oibre dev / CI-CD"
+bullet1 = "PKCS#12 (.p12 / .pfx) - comhad comhcheangailte amháin (is coitianta)"
+bullet2 = "PFX (.pfx) - leagan Microsoft de PKCS12"
+bullet3 = "PEM - comhaid ar leith .pem don eochair phríobháideach agus don teastas"
+bullet4 = "JKS - stór-eochrach Java .jks do shreafaí oibre dev / CI-CD"
 text = "Roghnaigh an fhormáid a mheaitseálann do chomhad teastais:"
 title = "Cén rogha ba chóir dom a úsáid?"
 
@@ -2717,7 +2717,7 @@ expires = "téann in éag"
 listCerts = "Liostaigh teastais"
 loading = "Teastais á léamh…"
 noCerts = "Níor aimsíodh teastais sínithe"
-noDriver = "Níor braitheadh aon tiománaí PKCS#11. Suiteáil tiománaí do thócain (m.sh. OpenSC), ansin oscail é seo arís – nó cuir isteach conair an tiománaí de láimh thíos."
+noDriver = "Níor braitheadh aon tiománaí PKCS#11. Suiteáil tiománaí do thócain (m.sh. OpenSC), ansin oscail é seo arís - nó cuir isteach conair an tiománaí de láimh thíos."
 notYetValid = "ní bailí fós"
 pin = "PIN an tócan"
 pkcs11Hint = "Roghnaigh tiománaí PKCS#11 don tócan, cuir isteach an PIN, ansin liostaigh na teastais ar an tócan."
@@ -2726,7 +2726,7 @@ refresh = "Athnuaigh"
 selectCert = "Roghnaigh teastas"
 selectDriver = "Roghnaigh tiománaí"
 slot = "Sliotán (roghnach)"
-windowsHint = "Roghnaigh teastas ó do stór teastas Windows. Úsáideann an síniú an eochair ar do chárta/tócan – iarrfaidh Windows an PIN."
+windowsHint = "Roghnaigh teastas ó do stór teastas Windows. Úsáideann an síniú an eochair ar do chárta/tócan - iarrfaidh Windows an PIN."
 windowsLoadError = "Níorbh fhéidir stór teastas Windows a léamh"
 
 [certSign.sessions]
@@ -3462,7 +3462,7 @@ showPreferencesBtn = "Bainistigh sainroghanna"
 title = "Conas a Úsáidimid Fianáin"
 
 [cookieBanner.popUp.description]
-1 = "Úsáidimid fianáin agus teicneolaíochtaí eile chun Stirling PDF a dhéanamh níos fearr duit—ag cabhrú linn ár n-uirlisí a fheabhsú agus gnéithe a thógáil a thaitneoidh leat."
+1 = "Úsáidimid fianáin agus teicneolaíochtaí eile chun Stirling PDF a dhéanamh níos fearr duit - ag cabhrú linn ár n-uirlisí a fheabhsú agus gnéithe a thógáil a thaitneoidh leat."
 2 = "Mura mian leat, ní chuirfear ar chumas ach na fianáin riachtanacha atá riachtanach chun go n-oibreoidh rudaí go réidh má chliceálann tú ar 'Níl Go raibh maith agat'."
 
 [cookieBanner.preferencesModal]
@@ -3475,16 +3475,16 @@ subtitle = "Úsáid Fianáin"
 title = "Lárionad Sainroghanna Toilithe"
 
 [cookieBanner.preferencesModal.analytics]
-description = "Cuidíonn na fianáin seo linn a thuiscint conas a úsáidtear ár n-uirlisí, ionas gur féidir linn díriú ar na gnéithe is tábhachtaí dár bpobal a thógáil. Bí cinnte—ní féidir le Stirling PDF agus ní dhéanfaidh sé riamh ábhar na ndoiciméad a n-oibríonn tú leo a rianú."
+description = "Cuidíonn na fianáin seo linn a thuiscint conas a úsáidtear ár n-uirlisí, ionas gur féidir linn díriú ar na gnéithe is tábhachtaí dár bpobal a thógáil. Bí cinnte - ní féidir le Stirling PDF agus ní dhéanfaidh sé riamh ábhar na ndoiciméad a n-oibríonn tú leo a rianú."
 title = "Anailísíocht"
 
 [cookieBanner.preferencesModal.description]
 1 = "Úsáideann Stirling PDF fianáin agus teicneolaíochtaí cosúil leo chun do thaithí a fheabhsú agus chun tuiscint a fháil ar conas a úsáidtear ár n-uirlisí. Cabhraíonn sé seo linn feidhmíocht a fheabhsú, na gnéithe a bhfuil cúram agat fúthu a fhorbairt, agus tacaíocht leanúnach a sholáthar dár n-úsáideoirí."
-2 = "Ní féidir le Stirling PDF—agus ní dhéanfaidh sé riamh—ábhar na ndoiciméad a úsáideann tú a rianú ná a rochtain."
+2 = "Ní féidir le Stirling PDF - agus ní dhéanfaidh sé riamh - ábhar na ndoiciméad a úsáideann tú a rianú ná a rochtain."
 3 = "Tá do phríobháideachas agus do mhuinín i gcroílár ár gcuid oibre."
 
 [cookieBanner.preferencesModal.necessary]
-description = "Tá na fianáin seo riachtanach chun go bhfeidhmeoidh an suíomh Gréasáin i gceart. Cuireann siad gnéithe lárnacha ar chumas amhail do chuid roghanna príobháideachais a shocrú, logáil isteach agus foirmeacha a líonadh—agus is é sin an fáth nach féidir iad a mhúchadh."
+description = "Tá na fianáin seo riachtanach chun go bhfeidhmeoidh an suíomh Gréasáin i gceart. Cuireann siad gnéithe lárnacha ar chumas amhail do chuid roghanna príobháideachais a shocrú, logáil isteach agus foirmeacha a líonadh - agus is é sin an fáth nach féidir iad a mhúchadh."
 
 [cookieBanner.preferencesModal.necessary.title]
 1 = "Fianáin Riachtanacha go Docht"
@@ -3900,7 +3900,7 @@ dateDesc = "Is nuaí ar dtús"
 dateLabel = "Is déanaí"
 nameAsc = "A go Z"
 nameDesc = "Z go A"
-nameLabel = "A–Z"
+nameLabel = "A-Z"
 
 [fileSelectorPicker.tabs]
 saved = "Comhaid sábháilte"
@@ -5413,7 +5413,7 @@ userBody = "Tabhair cuireadh do chomhoibrithe, sann róil, agus coinnigh do dhoi
 userTitle = "Forbhreathnú Plean"
 
 [onboarding.processorIntro]
-body = "Ritheann Stirling <strong>Polasaithe</strong> anois — rialacha uathoibrithe a aicmíonn, a dhaingníonn agus a phróiseálann gach doiciméad de réir mar a thagann sé isteach. Socraigh iad agus déan monatóireacht ar rith sa <strong>Processor</strong>."
+body = "Ritheann Stirling <strong>Polasaithe</strong> anois - rialacha uathoibrithe a aicmíonn, a dhaingníonn agus a phróiseálann gach doiciméad de réir mar a thagann sé isteach. Socraigh iad agus déan monatóireacht ar rith sa <strong>Processor</strong>."
 cta = "Féach ar an Processor"
 title = "Féach ar an Stirling Processor"
 
@@ -5670,7 +5670,7 @@ title = "Bainteoir Leathanach"
 description = "Roghnaigh cé na leathanaigh le húsáid don oibríocht. Tacaíonn sé le leathanaigh aonair, raonta, foirmlí, agus an eochairfhocal all."
 
 [pageSelection.tooltip.complex]
-bullet1 = "<strong>1,3-5,8,2n</strong> → leathanaigh 1, 3–5, 8, móide leathanaigh chothroma"
+bullet1 = "<strong>1,3-5,8,2n</strong> → leathanaigh 1, 3-5, 8, móide leathanaigh chothroma"
 bullet2 = "<strong>10-,2n-1</strong> → ó leathanach 10 go deireadh + leathanaigh chorr"
 description = "Measc cineálacha éagsúla."
 title = "Comhcheangail Chasta"
@@ -5693,8 +5693,8 @@ description = "Úsáid n i bhfoirmlí do phatrúin."
 title = "Feidhmeanna Matamaitice"
 
 [pageSelection.tooltip.ranges]
-bullet1 = "<strong>3-6</strong> → roghnaíonn sé leathanaigh 3–6"
-bullet2 = "<strong>10-15</strong> → roghnaíonn sé leathanaigh 10–15"
+bullet1 = "<strong>3-6</strong> → roghnaíonn sé leathanaigh 3-6"
+bullet2 = "<strong>10-15</strong> → roghnaíonn sé leathanaigh 10-15"
 bullet3 = "<strong>5-</strong> → roghnaíonn sé leathanaigh 5 go deireadh"
 description = "Úsáid - do leathanaigh as a chéile."
 title = "Raonta Leathanach"
@@ -5770,7 +5770,7 @@ title = "Turn on the Processor plan"
 eyebrow = "Editor plan · Always free"
 
 [payg.free.header]
-freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
+freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR - as much as you want, no matter where you trigger it."
 freeTitle = "Unlimited PDF editing"
 
 [payg.free.hero]
@@ -5798,8 +5798,8 @@ pauses = "pauses at cap"
 title = "What happens when the cap is reached"
 
 [payg.header]
-eyebrow = "Processor plan · {{start}} – {{end}}"
-freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
+eyebrow = "Processor plan · {{start}} - {{end}}"
+freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR - as much as you want, no matter where you trigger it."
 freeLabel = "Always free"
 freeTitle = "Unlimited PDF editing"
 meterBody = "{{limit}} free PDFs to start, then billed per PDF up to your cap."
@@ -5819,8 +5819,8 @@ chip = "Bliain réamhíoctha"
 
 [payg.prepaid.banner]
 exhausted = "Tá do chumas réamhíoctha ídithe; tá billeáil mhéadraithe atosaithe. Breisigh chun an lascaine a choinneáil."
-expiring_one = "Críochnaíonn do bhliain réamhíoctha i gceann {{count}} lá. Rachaidh cumas neamhúsáidte in éag — breisigh chun bliain úr a thosú."
-expiring_other = "Críochnaíonn do bhliain réamhíoctha i gceann {{count}} lá. Rachaidh cumas neamhúsáidte in éag — breisigh chun bliain úr a thosú."
+expiring_one = "Críochnaíonn do bhliain réamhíoctha i gceann {{count}} lá. Rachaidh cumas neamhúsáidte in éag - breisigh chun bliain úr a thosú."
+expiring_other = "Críochnaíonn do bhliain réamhíoctha i gceann {{count}} lá. Rachaidh cumas neamhúsáidte in éag - breisigh chun bliain úr a thosú."
 low = "Tá tú síos go {{pct}}% de do chumas réamhíoctha. Breisigh am ar bith chun próiseáil gan bhriseadh a choinneáil."
 
 [payg.prepaid.card]
@@ -6120,7 +6120,7 @@ processing = "Processing"
 uploading = "Uploading"
 
 [pdfTextEditor.tooltip.alpha]
-text = "Tá an breathnóir alfa seo fós ag forbairt—d’fhéadfadh clónna, dathanna, éifeachtaí trédhearcachta agus sonraí leagan amach áirithe athrú beagán. Déan seiceáil dhúbailte ar an PDF ginte sula roinneann tú é."
+text = "Tá an breathnóir alfa seo fós ag forbairt - d’fhéadfadh clónna, dathanna, éifeachtaí trédhearcachta agus sonraí leagan amach áirithe athrú beagán. Déan seiceáil dhúbailte ar an PDF ginte sula roinneann tú é."
 title = "Amharcóir Alfa"
 
 [pdfTextEditor.tooltip.header]
@@ -6145,8 +6145,8 @@ feedback = "Is gné rochtana luaithe í seo. Tabhair tuairisc ar aon fhadhb a mb
 gotIt = "Tuigim"
 howItWorks = "Tiontaíonn an uirlis seo do PDF go formáid in-eagarthóireachta ina féidir leat ábhar téacs a mhodhnú agus íomhánna a athshuíomh. Sábháiltear na hathruithe ar ais mar PDF nua."
 issue1 = "Níl dath an téacs caomhnaithe faoi láthair (cuirfear leis go luath é)"
-issue2 = "Tá níos mó saincheisteanna ailínithe agus spásála i Mód Míre — moltar Mód Líne Aonair"
-issue3 = "Tá an réamhamharc difriúil ón PDF easpórtáilte — tá PDFanna easpórtáilte níos gaire don bhunleagan"
+issue2 = "Tá níos mó saincheisteanna ailínithe agus spásála i Mód Míre - moltar Mód Líne Aonair"
+issue3 = "Tá an réamhamharc difriúil ón PDF easpórtáilte - tá PDFanna easpórtáilte níos gaire don bhunleagan"
 issue4 = "D’fhéadfadh go mbeadh coigeartú láimhe de dhíth ar ailíniú téacs rothlaithe"
 issue5 = "D’fhéadfadh éifeachtaí trédhearcachta agus sraithe a bheith éagsúil ón mbunleagan"
 knownIssues = "Fadhbanna Aitheanta (Á Réiteach):"
@@ -6521,7 +6521,7 @@ never = "riamh"
 [portal.accountLink.modal]
 linkSubtitle = "Sínigh isteach sa chuntas ar cheart don fhreastalaí seo billeáil ina aghaidh."
 linkTitle = "Nasc do chuntas Stirling"
-reauthSubtitle = "Chuaigh do sheisiún in éag — sínigh isteach arís i do chuntas Stirling. Fanann d’áis nasctha."
+reauthSubtitle = "Chuaigh do sheisiún in éag - sínigh isteach arís i do chuntas Stirling. Fanann d’áis nasctha."
 reauthTitle = "Sínigh isteach arís"
 simulateSignIn = "Insamhail síniú isteach (dev)"
 
@@ -6632,7 +6632,7 @@ title = "Eagarthóirí PDF Saor in Aisce"
 checkoutErrorTitle = "Níorbh fhéidir checkout a thosú"
 currentPlan = "Plean reatha"
 freeForever = "Saor in aisce go deo"
-noTeamResolved = "Níl aon fhoireann réitithe ar do sparán fós — athnuaigh agus bain triail eile as."
+noTeamResolved = "Níl aon fhoireann réitithe ar do sparán fós - athnuaigh agus bain triail eile as."
 ownerOnly = "Ní féidir ach le húinéir na foirne an plean Processor a chur ar siúl."
 payInvoice = "Íoc sonrasc chun críochnú"
 planName = "Editor"
@@ -6667,7 +6667,7 @@ viewLink = "Amharc ↗"
 
 [portal.billing.linkPrompt]
 cta = "Nasc cuntas Stirling"
-description = "Tá eagarthóireacht PDF de láimh — amharc, síniú, cumasc, scoilt, comhartha uisce, comhbhrú, tiontú, OCR de láimh — saor in aisce i gcónaí, bíodh sé nasctha nó ná bíodh. Nasc chun 500 PDFs próiseála méadraithe saor in aisce a éileamh (uathoibriú, AI, agus an API); nuair a bheidh níos mó uait, cuir an plean Processor ar siúl agus íoc as an méid a úsáideann tú amháin."
+description = "Tá eagarthóireacht PDF de láimh - amharc, síniú, cumasc, scoilt, comhartha uisce, comhbhrú, tiontú, OCR de láimh - saor in aisce i gcónaí, bíodh sé nasctha nó ná bíodh. Nasc chun 500 PDFs próiseála méadraithe saor in aisce a éileamh (uathoibriú, AI, agus an API); nuair a bheidh níos mó uait, cuir an plean Processor ar siúl agus íoc as an méid a úsáideann tú amháin."
 title = "Nasc do chuntas Stirling"
 
 [portal.billing.paymentMethod]
@@ -6801,13 +6801,13 @@ low = "Ag ísliú"
 [portal.billing.spendLimit]
 adjustLimit = "Coigeartaigh teorainn"
 cancel = "Cealaigh"
-capControlNote = "Cuirtear athruithe i bhfeidhm láithreach — ardaigh nó ísligh an tsíleáil am ar bith."
+capControlNote = "Cuirtear athruithe i bhfeidhm láithreach - ardaigh nó ísligh an tsíleáil am ar bith."
 capSuffix = "/ mí"
 capSuffixWithDocs = "/ mí · ≈ {{documents}} doiciméad"
-displaySub = "Ní bhilleáiltear thú ach as an méid a phróiseálann tú go huathoibríoch — ní théann sé thar an tsíleáil riamh."
+displaySub = "Ní bhilleáiltear thú ach as an méid a phróiseálann tú go huathoibríoch - ní théann sé thar an tsíleáil riamh."
 editTitle = "Socraigh do shíleáil mhíosúil"
 eyebrow = "Teorainn chaiteachais"
-guardrailBody = "síleáil chrua — ní bhilleáiltear thú riamh thar í. Ag an teorainn, cuirtear próiseáil mhéadraithe ar sos (leanann eagarthóireacht PDF gan teorainn ag obair) go dtí go n-ardaíonn tú í nó go n-athshocraíonn an timthriall. Ní chailltear aon rud."
+guardrailBody = "síleáil chrua - ní bhilleáiltear thú riamh thar í. Ag an teorainn, cuirtear próiseáil mhéadraithe ar sos (leanann eagarthóireacht PDF gan teorainn ag obair) go dtí go n-ardaíonn tú í nó go n-athshocraíonn an timthriall. Ní chailltear aon rud."
 guardrailLabel = "Do ráille cosanta:"
 noCap = "gan teorainn"
 pctUsed = "{{pct}}% úsáidte"
@@ -7242,8 +7242,8 @@ viewSource = "Féach ar an bhfoinse ar GitHub"
 codeCaption = "gach iarratas"
 eyebrow = "AG TOSÚ"
 lead = "Fíordheimhnítear gach iarratas le bearer token. Tá eochracha scópáilte de réir timpeallachta agus ní théann siad in éag mura rothlaítear iad."
-liveKey = "Eochracha táirgthe — billeáilte, teoranta ó thaobh ráta de de réir do phlean."
-testKey = "Eochracha sandbox — saor in aisce, filleann siad fixtures sintéiseacha."
+liveKey = "Eochracha táirgthe - billeáilte, teoranta ó thaobh ráta de de réir do phlean."
+testKey = "Eochracha sandbox - saor in aisce, filleann siad fixtures sintéiseacha."
 title = "Fíordheimhniú"
 
 [portal.docs.components]
@@ -7281,7 +7281,7 @@ title = "Quickstart"
 
 [portal.docs.quickstart.callout]
 bodyAfterLink = "le haghaidh oidis copy-paste."
-bodyBeforeLink = "sreangaigh an glao céanna isteach i bpíblíne chun bailíochtú, ceilt agus seachadadh a shlabhrú — nó nochtaigh do ghníomhaire é thar MCP. Féach"
+bodyBeforeLink = "sreangaigh an glao céanna isteach i bpíblíne chun bailíochtú, ceilt agus seachadadh a shlabhrú - nó nochtaigh do ghníomhaire é thar MCP. Féach"
 label = "Ar aghaidh:"
 link = "Playbooks"
 
@@ -7290,7 +7290,7 @@ body = "Cruthaigh eochair scópáilte ón gcluaisín Infrastructure. Iompraíonn
 title = "Eisigh eochair API"
 
 [portal.docs.quickstart.step2]
-body = "POST comhad chuig aon endpoint clóscríofa. Socraíonn an endpoint an scéimre a fhaigheann tú ar ais — anseo, an t-eastóscóir sonraisc."
+body = "POST comhad chuig aon endpoint clóscríofa. Socraíonn an endpoint an scéimre a fhaigheann tú ar ais - anseo, an t-eastóscóir sonraisc."
 snippetCaption = "eastósc sonrasc"
 title = "Seol doiciméad"
 
@@ -7370,8 +7370,8 @@ overview = "Forléargas"
 requestAccess = "Iarr rochtain"
 
 [portal.documents.elevation.active]
-description = "Deontas sealadach — tá rochtain logáilte agus teoranta ó thaobh ama de."
-descriptionFourEyes = "Deontas sealadach — cuireadh athbhreithneoir piara ar an eolas (ceithre shúil)."
+description = "Deontas sealadach - tá rochtain logáilte agus teoranta ó thaobh ama de."
+descriptionFourEyes = "Deontas sealadach - cuireadh athbhreithneoir piara ar an eolas (ceithre shúil)."
 title = "Rachaidh rochtain in éag i {{time}}"
 
 [portal.documents.elevation.gated]
@@ -7432,7 +7432,7 @@ time = "Am"
 user = "Úsáideoir"
 
 [portal.editorAdmin]
-subtitle = "Imscar Stirling PDF Editor, péireáil insteansanna féin-óstáilte le d’eagraíocht, agus oibrigh an flít atá ag rith — spriocanna, sláinte, dintiúir, agus gníomhachtú as líne in aon áit amháin."
+subtitle = "Imscar Stirling PDF Editor, péireáil insteansanna féin-óstáilte le d’eagraíocht, agus oibrigh an flít atá ag rith - spriocanna, sláinte, dintiúir, agus gníomhachtú as líne in aon áit amháin."
 title = "Imscaradh an Eagarthóra"
 
 [portal.editorAdmin.health.columns]
@@ -7468,7 +7468,7 @@ rotate = "Rothlaigh"
 talkToSales = "Labhair le díolacháin"
 
 [portal.editorAdmin.sections.health]
-sub = "Gach insteans Eagarthóra ag tuairisciú isteach — leagan, réigiún, stádas, feicthe go deireanach, agus úsáideoirí gníomhacha."
+sub = "Gach insteans Eagarthóra ag tuairisciú isteach - leagan, réigiún, stádas, feicthe go deireanach, agus úsáideoirí gníomhacha."
 title = "Sláinte insteansanna"
 
 [portal.editorAdmin.sections.pairing]
@@ -7754,9 +7754,9 @@ done = "Déanta"
 keyNameLabel = "Ainm eochrach"
 keyNamePlaceholder = "m.sh. Táirgeadh · ionghabháil"
 secretKeyCaption = "Eochair rúnda"
-secretWarning = "Stóráil é seo i mbainisteoir rúin. Ní stórálann Stirling ach hash riamh — níl aon bhealach ann é a aisghabháil níos déanaí."
+secretWarning = "Stóráil é seo i mbainisteoir rúin. Ní stórálann Stirling ach hash riamh - níl aon bhealach ann é a aisghabháil níos déanaí."
 subtitle = "Scóipigh an eochair chuig an íosmhéid a theastaíonn uaithi. Is féidir leat í a rothlú nó a chúlghairm am ar bith."
-subtitleCreated = "Cóipeáil an rún seo anois — ní thaispeánfar arís é."
+subtitleCreated = "Cóipeáil an rún seo anois - ní thaispeánfar arís é."
 title = "Cruthaigh eochair API"
 titleCreated = "Eochair cruthaithe"
 
@@ -8317,7 +8317,7 @@ label = "Seol an doiciméad ar ríomhphost (Mailgun)"
 [portal.policies.operations.n8nGate]
 description = "Your workflow decides whether the run carries on."
 label = "Ask an n8n workflow to approve"
-note = "The workflow must reply with {\"approved\": true}. Anything else — including a timeout — stops the run and parks the document."
+note = "The workflow must reply with {\"approved\": true}. Anything else - including a timeout - stops the run and parks the document."
 
 [portal.policies.operations.n8nNotify]
 description = "Sends the run's details, not the document."
@@ -8339,7 +8339,7 @@ label = "Uaslódáil chuig Nextcloud"
 [portal.policies.operations.presidioAnalyze]
 description = "Tuairiscíonn do fhreastalaí Presidio féin na sonraí pearsanta a aimsíonn sé."
 label = "Braith sonraí pearsanta"
-note = "Léann Presidio téacs, ní comhaid. Tabhair dó an téacs is mian leat a sheiceáil — ní uaslódáiltear an doiciméad féin."
+note = "Léann Presidio téacs, ní comhaid. Tabhair dó an téacs is mian leat a sheiceáil - ní uaslódáiltear an doiciméad féin."
 
 [portal.policies.operations.responseMode]
 replace = "Cuir an freagra in áit an doiciméid"
@@ -8429,7 +8429,7 @@ desc = "Ritheann sé OCR ionas go mbeidh leathanaigh scanta ina dtéacs inroghna
 label = "Déan an téacs inchuardaithe"
 
 [portal.policies.wizard.capability.redact]
-desc = "Aimsíonn agus dubhaíonn sé sonraí íogaire — amhail uimhreacha Slándála Sóisialta agus cártaí — ionas nach féidir iad a léamh."
+desc = "Aimsíonn agus dubhaíonn sé sonraí íogaire - amhail uimhreacha Slándála Sóisialta agus cártaí - ionas nach féidir iad a léamh."
 label = "Ceil faisnéis íogair"
 
 [portal.policies.wizard.capability.sanitize]
@@ -8595,11 +8595,11 @@ postalCodePlaceholder = "94105"
 posture = "Rialachas"
 posture_count = "~{{count}} polasaí"
 posture_essentials = "Bunriachtanais"
-posture_essentialsSub = "Aicmiú + Comhroinnt — na réamhshocruithe"
+posture_essentialsSub = "Aicmiú + Comhroinnt - na réamhshocruithe"
 posture_governed = "Rialaithe"
 posture_governedSub = "Cuireann Slándáil agus Ródú leis"
 posture_regulated = "Rialáilte"
-posture_regulatedSub = "Gach catagóir — Comhlíonadh, Coinneáil, Iontógáil"
+posture_regulatedSub = "Gach catagóir - Comhlíonadh, Coinneáil, Iontógáil"
 qbr = "Athbhreithnithe gnó ráithiúla"
 qbrSub = "Déanann do SE athbhreithniú ar úsáid agus treochlár gach ráithe"
 region = "Stát / réigiún"
@@ -8721,13 +8721,13 @@ label = "Triail"
 [portal.procurement.license]
 copied = "Cóipeáilte"
 copy = "Cóipeáil eochair"
-downloadError = "Níorbh fhéidir an comhad ceadúnais as líne a ghiniúint fós — bain triail eile as ar ball."
+downloadError = "Níorbh fhéidir an comhad ceadúnais as líne a ghiniúint fós - bain triail eile as ar ball."
 downloadOffline = "Íoslódáil ceadúnas as líne (.lic)"
 hint = "Greamaigh an eochair seo isteach in instance self-hosted chun é a ghníomhachtú, nó coinnigh í do do thaifid. Coinnigh slán í."
 label = "D’eochair cheadúnais"
 subtitle = "Gníomhachtaigh ásc féin-óstáilte leis an eochair seo, nó coinnigh í do do thaifid."
 title = "D'eochair cheadúnais"
-trialFileHint = "Seo do chomhad ceadúnais trialach. Nuair a bheidh do chomhaontú i bhfeidhm, tar ar ais agus íoslódáil arís é — murab ionann agus an eochair cheadúnais ar líne, ní nuashonróidh an comhad .lic é féin."
+trialFileHint = "Seo do chomhad ceadúnais trialach. Nuair a bheidh do chomhaontú i bhfeidhm, tar ar ais agus íoslódáil arís é - murab ionann agus an eochair cheadúnais ar líne, ní nuashonróidh an comhad .lic é féin."
 
 [portal.procurement.link]
 cta = "Nasc cuntas"
@@ -8741,10 +8741,10 @@ eyebrow = "Beo"
 title = "Tá tú beo ar Stirling Enterprise"
 
 [portal.procurement.milestone]
-downloadError = "Níorbh fhéidir an PDF luachana a íoslódáil fós — bain triail eile as ar ball."
+downloadError = "Níorbh fhéidir an PDF luachana a íoslódáil fós - bain triail eile as ar ball."
 
 [portal.procurement.payment]
-description = "Glacadh le do luachan agus tá do cheadúnas gníomhach cheana — is féidir le d’fhoireann tosú láithreach. Íoc an chéad sonrasc nuair atá tú réidh; is féidir leat é a íoc nó a íoslódáil anseo, gan ríomhphost de dhíth."
+description = "Glacadh le do luachan agus tá do cheadúnas gníomhach cheana - is féidir le d’fhoireann tosú láithreach. Íoc an chéad sonrasc nuair atá tú réidh; is féidir leat é a íoc nó a íoslódáil anseo, gan ríomhphost de dhíth."
 downloadAgreement = "Íoslódáil comhaontú sínithe"
 downloadInvoice = "Íoslódáil sonrasc"
 eyebrow = "Íocaíocht"
@@ -8799,7 +8799,7 @@ workEmailPlaceholder = "you@company.com"
 
 [portal.procurement.trial]
 body = "Cuireann síneadh 7 lá leis agus cuireann sé d’innealtóir réiteach ar an eolas."
-bodyMaxed = "Tá do shíntí ar fad úsáidte agat — labhair le d’innealtóir réiteach má tá níos mó ama uait."
+bodyMaxed = "Tá do shíntí ar fad úsáidte agat - labhair le d’innealtóir réiteach má tá níos mó ama uait."
 cancel = "Cealaigh triail"
 extend = "Sín 7 lá"
 maxed = "Uasmhéadaithe"
@@ -9036,7 +9036,7 @@ walletUnavailable = "Níl sparán ar fáil: {{status}} {{statusText}}"
 
 [portal.usage.sessionExpired]
 action = "Sínigh isteach arís"
-body = "Tá seisiún do chuntais Stirling imithe in éag. Sínigh isteach arís chun billeáil a fheiceáil — fanann d’instance nasctha."
+body = "Tá seisiún do chuntais Stirling imithe in éag. Sínigh isteach arís chun billeáil a fheiceáil - fanann d’instance nasctha."
 title = "Seisiún imithe in éag"
 
 [portal.users]
@@ -9064,7 +9064,7 @@ summary = "Rochtain theoranta nó gréasáin amháin; ní féidir cumraíochtaí
 
 [portal.users.roles.member]
 label = "Ball"
-summary = "Úsáideoir rialta — oibríonn sé le hacmhainní comhroinnte agus lena chumraíochtaí féin."
+summary = "Úsáideoir rialta - oibríonn sé le hacmhainní comhroinnte agus lena chumraíochtaí féin."
 
 [portal.users.roles.member.permissions]
 0 = "Úsáid an t-eagarthóir agus comhtháthuithe comhroinnte"
@@ -9074,7 +9074,7 @@ summary = "Úsáideoir rialta — oibríonn sé le hacmhainní comhroinnte agus 
 
 [portal.users.roles.team_owner]
 label = "Úinéir foirne"
-summary = "Is leis/léi foireann — bainistíonn sé/sí acmhainní a ball agus cumraíochtaí comhroinnte."
+summary = "Is leis/léi foireann - bainistíonn sé/sí acmhainní a ball agus cumraíochtaí comhroinnte."
 
 [portal.users.roles.team_owner.permissions]
 0 = "Cruthaigh & bainistigh naisc S3 na foirne"
@@ -9783,7 +9783,7 @@ useCase2 = "Roinn baisceanna leaba chothrom ina gcomhaid ar leith"
 useCase3 = "Bris colláisí ina ngrianghraif aonair"
 useCase4 = "Tarraing grianghraif ó dhoiciméid"
 whatThisDoes = "Cad a dhéanann sé seo"
-whatThisDoesDesc = "Aimsíonn agus bainann sé gach grianghraf ó leathanach scanta nó íomhá chomhdhéanta go huathoibríoch—gan barradh láimhe."
+whatThisDoesDesc = "Aimsíonn agus bainann sé gach grianghraf ó leathanach scanta nó íomhá chomhdhéanta go huathoibríoch - gan barradh láimhe."
 whenToUse = "Cathain le húsáid"
 
 [ScannerImageSplit.selectText]
@@ -11306,9 +11306,9 @@ certExpired = "Tá an teastas imithe in éag"
 certRevocationUnknown = "Tá stádas cúlghairme an teastais anaithnid"
 certRevoked = "Cúlghaireadh an teastas"
 chainInvalid = "Slabhra teastais neamhbhailí"
-documentModified = "Modhníodh an cháipéis tar éis an tsínithe – cuireadh ábhar leis lasmuigh den limistéar sínithe"
+documentModified = "Modhníodh an cháipéis tar éis an tsínithe - cuireadh ábhar leis lasmuigh den limistéar sínithe"
 revocationNotChecked = "Níor seiceáladh stádas cúlghairme"
-selfSigned = "Féinsínithe – níor fíoraíodh aitheantas an tsínitheora"
+selfSigned = "Féinsínithe - níor fíoraíodh aitheantas an tsínitheora"
 signatureInvalid = "Theip ar sheiceáil chriptigrafach an tsínithe"
 trustInvalid = "Níl muinín sa teastas"
 
@@ -11462,9 +11462,9 @@ emptyFile = "Comhad folamh"
 htmlHidePreview = "Folaigh réamhamharc"
 htmlPreview = "Réamhamharc HTML"
 htmlPreviewMobileHidden = "Leagtar amach leathanaigh HTML do leitheadanna deisce, mar sin tá an réamhamharc múchta de réir réamhshocraithe anseo."
-htmlPreviewWarning = "Réamhamharc HTML — seans nach lódálfar acmhainní seachtracha · {{size}}"
+htmlPreviewWarning = "Réamhamharc HTML - seans nach lódálfar acmhainní seachtracha · {{size}}"
 htmlShowPreview = "Taispeáin réamhamharc mar sin féin"
-invalidJson = "JSON neamhbhailí — á thaispeáint amh"
+invalidJson = "JSON neamhbhailí - á thaispeáint amh"
 lineNumbers = "Uimhreacha línte"
 loading = "Á lódáil..."
 renderMarkdown = "Rindreáil Markdown"
@@ -11526,7 +11526,7 @@ create = "Create your first Watched Folder"
 deleteFolder = "Delete folder"
 editFolder = "Edit folder"
 empty = "No watched folders yet"
-emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged — whatever your pipeline does."
+emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged - whatever your pipeline does."
 emptyTitle = "Automate your PDF workflows"
 file = "file"
 files = "files"
@@ -11534,7 +11534,7 @@ pause = "Pause"
 resume = "Resume"
 
 [watchedFolders.howItWorks]
-step1Desc = "Drag PDFs onto any Watched Folder card — or send them from your file list"
+step1Desc = "Drag PDFs onto any Watched Folder card - or send them from your file list"
 step1Title = "Drop files"
 step2Desc = "Your configured tools process each file automatically"
 step2Title = "Pipeline runs"
@@ -11558,18 +11558,18 @@ createFolder = "Create Folder"
 createTitle = "New Watched Folder"
 editTitle = "Edit Watched Folder"
 inputFolder = "Input folder"
-inputFolderNotChosen = "No folder chosen — required for auto-scan"
+inputFolderNotChosen = "No folder chosen - required for auto-scan"
 inputSource = "Input source"
-inputSourceBrowser = "Browser — drop files here"
+inputSourceBrowser = "Browser - drop files here"
 inputSourceLocal = "Local folder (auto-scan)"
-inputSourceLocalUnsupported = "Local folder (auto-scan) — Chrome/Edge only"
+inputSourceLocalUnsupported = "Local folder (auto-scan) - Chrome/Edge only"
 localOutputFolder = "Local output folder"
 maxRetries = "Max retries"
 name = "Folder name"
 namePlaceholder = "My Watched Folder"
 nameRequired = "Folder name is required"
 nameTooLong = "Folder name must be 50 characters or less"
-outputFolderNotSet = "Not set — outputs stay in app"
+outputFolderNotSet = "Not set - outputs stay in app"
 outputFolderUnsupported = "Not supported in this browser"
 outputModeNewDesc = "Output is saved as a new separate file"
 outputModeVersion = "Replace original?"
@@ -11629,9 +11629,9 @@ filterPending = "Pending"
 inputs = "Inputs"
 inputSize = "Input size"
 legendComplete = "Complete"
-noActivity = "No activity yet — drop a PDF to start"
+noActivity = "No activity yet - drop a PDF to start"
 noActivityMatch = "No matching activity"
-noInputFolder = "No input folder — edit to configure"
+noInputFolder = "No input folder - edit to configure"
 outputs = "Outputs"
 pause = "Pause"
 preview = "Preview"
@@ -11639,7 +11639,7 @@ previewInput = "Preview input"
 previewLoadFailed = "Could not load file preview."
 previewOutput = "Preview output"
 queued = "Queued"
-queuedWaiting = "Queued — waiting to run"
+queuedWaiting = "Queued - waiting to run"
 removeEntries = "Remove {{count}} entries"
 removeEntry = "Remove entry"
 removeNotificationsOnly = "Remove notifications only"

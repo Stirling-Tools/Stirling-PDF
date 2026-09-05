@@ -1254,7 +1254,7 @@ description = "Impressum의 URL 또는 파일 이름(일부 관할권에서 필�
 label = "Impressum"
 
 [admin.settings.legal.loginAgreement]
-defaultLocaleHint = "— 언어에 파일이 없을 때 대체값으로 사용됩니다."
+defaultLocaleHint = "- 언어에 파일이 없을 때 대체값으로 사용됩니다."
 defaultLocaleLink = "기본 로케일 설정"
 description = "로그인 후 사용자가 동의해야 하는 고지문을 표시합니다. 텍스트는 각 사용자의 언어를 따릅니다."
 discardConfirm = "저장되지 않은 변경 사항이 있습니다. 그래도 언어를 전환하시겠습니까?"
@@ -2515,10 +2515,10 @@ text = "서명에 사용되는 보안 ID로, 본인이 서명했음을 증명합
 title = "인증서란?"
 
 [certSign.certType.tooltip.which]
-bullet1 = "PKCS#12 (.p12 / .pfx) – 단일 통합 파일(가장 일반적)"
-bullet2 = "PFX (.pfx) – Microsoft의 PKCS12 버전"
-bullet3 = "PEM – 개인 키와 인증서 .pem 파일이 분리됨"
-bullet4 = "JKS – 개발/CI-CD 워크플로우용 Java .jks 키스토어"
+bullet1 = "PKCS#12 (.p12 / .pfx) - 단일 통합 파일(가장 일반적)"
+bullet2 = "PFX (.pfx) - Microsoft의 PKCS12 버전"
+bullet3 = "PEM - 개인 키와 인증서 .pem 파일이 분리됨"
+bullet4 = "JKS - 개발/CI-CD 워크플로우용 Java .jks 키스토어"
 text = "인증서 파일과 일치하는 형식을 선택하세요:"
 title = "어떤 옵션을 사용해야 하나요?"
 
@@ -3462,7 +3462,7 @@ showPreferencesBtn = "환경설정 관리"
 title = "쿠키 사용 방식"
 
 [cookieBanner.popUp.description]
-1 = "우리는 Stirling PDF가 더 잘 작동하도록 쿠키 및 기타 기술을 사용합니다—도구 개선과 여러분이 좋아할 기능 개발에 도움이 됩니다."
+1 = "우리는 Stirling PDF가 더 잘 작동하도록 쿠키 및 기타 기술을 사용합니다-도구 개선과 여러분이 좋아할 기능 개발에 도움이 됩니다."
 2 = "If you’d rather not, clicking 'No Thanks' will only enable the essential cookies needed to keep things running smoothly."
 
 [cookieBanner.preferencesModal]
@@ -3475,7 +3475,7 @@ subtitle = "쿠키 사용"
 title = "동의 환경설정 센터"
 
 [cookieBanner.preferencesModal.analytics]
-description = "이 쿠키는 도구가 어떻게 사용되는지 이해하는 데 도움이 되며, 커뮤니티가 가장 중요하게 여기는 기능 개발에 집중할 수 있게 합니다. 안심하세요—Stirling PDF는 여러분이 작업하는 문서의 내용을 추적할 수 없으며, 앞으로도 절대 그렇게 하지 않습니다."
+description = "이 쿠키는 도구가 어떻게 사용되는지 이해하는 데 도움이 되며, 커뮤니티가 가장 중요하게 여기는 기능 개발에 집중할 수 있게 합니다. 안심하세요-Stirling PDF는 여러분이 작업하는 문서의 내용을 추적할 수 없으며, 앞으로도 절대 그렇게 하지 않습니다."
 title = "분석"
 
 [cookieBanner.preferencesModal.description]
@@ -3484,7 +3484,7 @@ title = "분석"
 3 = "여러분의 프라이버시와 신뢰는 우리의 핵심 가치입니다."
 
 [cookieBanner.preferencesModal.necessary]
-description = "These cookies are essential for the website to function properly. They enable core features like setting your privacy preferences, logging in, and filling out forms—which is why they can’t be turned off."
+description = "These cookies are essential for the website to function properly. They enable core features like setting your privacy preferences, logging in, and filling out forms - which is why they can’t be turned off."
 
 [cookieBanner.preferencesModal.necessary.title]
 1 = "엄격히 필수 쿠키"
@@ -3900,7 +3900,7 @@ dateDesc = "최신순"
 dateLabel = "최신"
 nameAsc = "A → Z"
 nameDesc = "Z → A"
-nameLabel = "A–Z"
+nameLabel = "A-Z"
 
 [fileSelectorPicker.tabs]
 saved = "저장된 파일"
@@ -5413,7 +5413,7 @@ userBody = "팀원을 초대하고 역할을 지정하며 문서를 하나의 �
 userTitle = "플랜 개요"
 
 [onboarding.processorIntro]
-body = "Stirling은 이제 <strong>정책</strong>을 실행합니다 — 문서가 도착할 때마다 분류, 보호, 처리하는 자동화 규칙입니다. <strong>Processor</strong>에서 설정하고 실행을 모니터링하세요."
+body = "Stirling은 이제 <strong>정책</strong>을 실행합니다 - 문서가 도착할 때마다 분류, 보호, 처리하는 자동화 규칙입니다. <strong>Processor</strong>에서 설정하고 실행을 모니터링하세요."
 cta = "Processor 확인하기"
 title = "Stirling Processor 확인하기"
 
@@ -5670,7 +5670,7 @@ title = "페이지 제거기"
 description = "작업에 사용할 페이지를 선택하세요. 단일 페이지, 범위, 수식, 그리고 all 키워드를 지원합니다."
 
 [pageSelection.tooltip.complex]
-bullet1 = "<strong>1,3-5,8,2n</strong> → 1, 3–5, 8페이지 및 짝수 페이지"
+bullet1 = "<strong>1,3-5,8,2n</strong> → 1, 3-5, 8페이지 및 짝수 페이지"
 bullet2 = "<strong>10-,2n-1</strong> → 10페이지부터 끝까지 + 홀수 페이지"
 description = "다양한 유형을 섞어 사용할 수 있습니다."
 title = "복합 조합"
@@ -5693,8 +5693,8 @@ description = "패턴을 위해 수식에서 n을 사용하세요."
 title = "수학 함수"
 
 [pageSelection.tooltip.ranges]
-bullet1 = "<strong>3-6</strong> → 3–6페이지 선택"
-bullet2 = "<strong>10-15</strong> → 10–15페이지 선택"
+bullet1 = "<strong>3-6</strong> → 3-6페이지 선택"
+bullet2 = "<strong>10-15</strong> → 10-15페이지 선택"
 bullet3 = "<strong>5-</strong> → 5페이지부터 끝까지 선택"
 description = "연속된 페이지에는 - 를 사용하세요."
 title = "페이지 범위"
@@ -5770,7 +5770,7 @@ title = "Turn on the Processor plan"
 eyebrow = "Editor plan · Always free"
 
 [payg.free.header]
-freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
+freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR - as much as you want, no matter where you trigger it."
 freeTitle = "Unlimited PDF editing"
 
 [payg.free.hero]
@@ -5798,8 +5798,8 @@ pauses = "pauses at cap"
 title = "What happens when the cap is reached"
 
 [payg.header]
-eyebrow = "Processor plan · {{start}} – {{end}}"
-freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
+eyebrow = "Processor plan · {{start}} - {{end}}"
+freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR - as much as you want, no matter where you trigger it."
 freeLabel = "Always free"
 freeTitle = "Unlimited PDF editing"
 meterBody = "{{limit}} free PDFs to start, then billed per PDF up to your cap."
@@ -5819,8 +5819,8 @@ chip = "선불 연간"
 
 [payg.prepaid.banner]
 exhausted = "선불 용량을 모두 사용했습니다. 종량제 청구가 재개되었습니다. 할인을 유지하려면 충전하세요."
-expiring_one = "선불 연간 기간이 {{count}}일 후 종료됩니다. 사용하지 않은 용량은 만료됩니다 — 새 연도를 시작하려면 충전하세요."
-expiring_other = "선불 연간 기간이 {{count}}일 후 종료됩니다. 사용하지 않은 용량은 만료됩니다 — 새 연도를 시작하려면 충전하세요."
+expiring_one = "선불 연간 기간이 {{count}}일 후 종료됩니다. 사용하지 않은 용량은 만료됩니다 - 새 연도를 시작하려면 충전하세요."
+expiring_other = "선불 연간 기간이 {{count}}일 후 종료됩니다. 사용하지 않은 용량은 만료됩니다 - 새 연도를 시작하려면 충전하세요."
 low = "선불 용량이 {{pct}}% 남았습니다. 처리가 중단되지 않도록 언제든지 충전하세요."
 
 [payg.prepaid.card]
@@ -6521,7 +6521,7 @@ never = "없음"
 [portal.accountLink.modal]
 linkSubtitle = "이 서버에서 청구할 계정으로 로그인하세요."
 linkTitle = "Stirling 계정 연결"
-reauthSubtitle = "세션이 만료되었습니다 — Stirling 계정에 다시 로그인하세요. 인스턴스 연결은 유지됩니다."
+reauthSubtitle = "세션이 만료되었습니다 - Stirling 계정에 다시 로그인하세요. 인스턴스 연결은 유지됩니다."
 reauthTitle = "다시 로그인"
 simulateSignIn = "로그인 시뮬레이션(dev)"
 
@@ -6632,7 +6632,7 @@ title = "무료 PDF Editors"
 checkoutErrorTitle = "Checkout을 시작할 수 없음"
 currentPlan = "현재 플랜"
 freeForever = "영구 무료"
-noTeamResolved = "지갑에서 아직 팀이 확인되지 않았습니다 — 새로 고침 후 다시 시도하세요."
+noTeamResolved = "지갑에서 아직 팀이 확인되지 않았습니다 - 새로 고침 후 다시 시도하세요."
 ownerOnly = "팀 소유자만 Processor 플랜을 켤 수 있습니다."
 payInvoice = "완료하려면 청구서 결제"
 planName = "Editor"
@@ -6667,7 +6667,7 @@ viewLink = "보기 ↗"
 
 [portal.billing.linkPrompt]
 cta = "Stirling 계정 연결"
-description = "수동 PDF 편집 — 보기, 서명, 병합, 분할, 워터마크, 압축, 변환, 수동 OCR — 은 연결 여부와 관계없이 항상 무료입니다. 연결하면 종량제 처리(자동화, AI, API)용 무료 PDF 500개를 받을 수 있습니다. 더 필요할 때 Processor 플랜을 켜고 사용한 만큼만 결제하세요."
+description = "수동 PDF 편집 - 보기, 서명, 병합, 분할, 워터마크, 압축, 변환, 수동 OCR - 은 연결 여부와 관계없이 항상 무료입니다. 연결하면 종량제 처리(자동화, AI, API)용 무료 PDF 500개를 받을 수 있습니다. 더 필요할 때 Processor 플랜을 켜고 사용한 만큼만 결제하세요."
 title = "Stirling 계정 연결"
 
 [portal.billing.paymentMethod]
@@ -6801,13 +6801,13 @@ low = "부족해지는 중"
 [portal.billing.spendLimit]
 adjustLimit = "한도 조정"
 cancel = "취소"
-capControlNote = "변경 사항은 즉시 적용됩니다 — 언제든지 상한을 올리거나 낮출 수 있습니다."
+capControlNote = "변경 사항은 즉시 적용됩니다 - 언제든지 상한을 올리거나 낮출 수 있습니다."
 capSuffix = "/ 월"
 capSuffixWithDocs = "/ 월 · ≈ {{documents}}개 문서"
-displaySub = "자동으로 처리한 것에 대해서만 청구되며 — 상한을 넘지 않습니다."
+displaySub = "자동으로 처리한 것에 대해서만 청구되며 - 상한을 넘지 않습니다."
 editTitle = "월별 상한 설정"
 eyebrow = "지출 한도"
-guardrailBody = "엄격한 상한입니다 — 이 금액을 넘어 청구되지 않습니다. 상한에 도달하면 올리거나 주기가 재설정될 때까지 종량제 처리가 일시 중지됩니다(무제한 PDF 편집은 계속 작동). 손실되는 것은 없습니다."
+guardrailBody = "엄격한 상한입니다 - 이 금액을 넘어 청구되지 않습니다. 상한에 도달하면 올리거나 주기가 재설정될 때까지 종량제 처리가 일시 중지됩니다(무제한 PDF 편집은 계속 작동). 손실되는 것은 없습니다."
 guardrailLabel = "보호 장치:"
 noCap = "상한 없음"
 pctUsed = "{{pct}}% 사용됨"
@@ -7242,8 +7242,8 @@ viewSource = "GitHub에서 소스 보기"
 codeCaption = "모든 요청"
 eyebrow = "시작하기"
 lead = "모든 요청은 bearer token으로 인증됩니다. 키는 환경별로 범위가 지정되며 교체하지 않는 한 만료되지 않습니다."
-liveKey = "Production keys — 청구되며, 플랜에 따라 rate limit이 적용됩니다."
-testKey = "Sandbox keys — 무료이며, synthetic fixtures를 반환합니다."
+liveKey = "Production keys - 청구되며, 플랜에 따라 rate limit이 적용됩니다."
+testKey = "Sandbox keys - 무료이며, synthetic fixtures를 반환합니다."
 title = "인증"
 
 [portal.docs.components]
@@ -7281,7 +7281,7 @@ title = "Quickstart"
 
 [portal.docs.quickstart.callout]
 bodyAfterLink = "에서 복사-붙여넣기용 레시피를 확인하세요."
-bodyBeforeLink = "동일한 호출을 파이프라인에 연결하여 검증, 수정, 전달을 체인으로 이어가거나 — MCP를 통해 agent에 노출하세요."
+bodyBeforeLink = "동일한 호출을 파이프라인에 연결하여 검증, 수정, 전달을 체인으로 이어가거나 - MCP를 통해 agent에 노출하세요."
 label = "다음:"
 link = "Playbooks"
 
@@ -7290,7 +7290,7 @@ body = "Infrastructure 탭에서 범위가 지정된 키를 만드세요. 키에
 title = "API key 발급"
 
 [portal.docs.quickstart.step2]
-body = "typed endpoint에 파일을 POST하세요. endpoint가 반환받을 스키마를 결정합니다 — 여기서는 송장 추출기입니다."
+body = "typed endpoint에 파일을 POST하세요. endpoint가 반환받을 스키마를 결정합니다 - 여기서는 송장 추출기입니다."
 snippetCaption = "송장 추출"
 title = "문서 보내기"
 
@@ -7370,8 +7370,8 @@ overview = "개요"
 requestAccess = "접근 요청"
 
 [portal.documents.elevation.active]
-description = "임시 권한 부여 — 접근이 기록되며 시간 제한이 있습니다."
-descriptionFourEyes = "임시 권한 부여 — 동료 검토자에게 알림이 전송되었습니다(four-eyes)."
+description = "임시 권한 부여 - 접근이 기록되며 시간 제한이 있습니다."
+descriptionFourEyes = "임시 권한 부여 - 동료 검토자에게 알림이 전송되었습니다(four-eyes)."
 title = "접근이 {{time}} 후 만료됩니다"
 
 [portal.documents.elevation.gated]
@@ -7468,7 +7468,7 @@ rotate = "교체"
 talkToSales = "영업팀에 문의"
 
 [portal.editorAdmin.sections.health]
-sub = "보고 중인 모든 Editor 인스턴스 — 버전, 지역, 상태, 마지막 확인, 활성 사용자."
+sub = "보고 중인 모든 Editor 인스턴스 - 버전, 지역, 상태, 마지막 확인, 활성 사용자."
 title = "인스턴스 상태"
 
 [portal.editorAdmin.sections.pairing]
@@ -7756,7 +7756,7 @@ keyNamePlaceholder = "예: Production · ingest"
 secretKeyCaption = "비밀 키"
 secretWarning = "이를 secrets manager에 저장하세요. Stirling은 항상 해시만 저장하므로 나중에 복구할 방법이 없습니다."
 subtitle = "키 범위는 필요한 최소한으로 지정하세요. 언제든지 교체하거나 취소할 수 있습니다."
-subtitleCreated = "지금 이 비밀을 복사하세요 — 다시 표시되지 않습니다."
+subtitleCreated = "지금 이 비밀을 복사하세요 - 다시 표시되지 않습니다."
 title = "API 키 생성"
 titleCreated = "키 생성됨"
 
@@ -8317,7 +8317,7 @@ label = "문서 이메일 보내기(Mailgun)"
 [portal.policies.operations.n8nGate]
 description = "Your workflow decides whether the run carries on."
 label = "Ask an n8n workflow to approve"
-note = "The workflow must reply with {\"approved\": true}. Anything else — including a timeout — stops the run and parks the document."
+note = "The workflow must reply with {\"approved\": true}. Anything else - including a timeout - stops the run and parks the document."
 
 [portal.policies.operations.n8nNotify]
 description = "Sends the run's details, not the document."
@@ -8339,7 +8339,7 @@ label = "Nextcloud에 업로드"
 [portal.policies.operations.presidioAnalyze]
 description = "사용자 자체 Presidio 서버가 발견한 개인 데이터를 보고합니다."
 label = "개인 데이터 감지"
-note = "Presidio는 파일이 아니라 텍스트를 읽습니다. 확인할 텍스트를 제공하세요 — 문서 자체는 업로드되지 않습니다."
+note = "Presidio는 파일이 아니라 텍스트를 읽습니다. 확인할 텍스트를 제공하세요 - 문서 자체는 업로드되지 않습니다."
 
 [portal.policies.operations.responseMode]
 replace = "응답으로 문서 교체"
@@ -8595,11 +8595,11 @@ postalCodePlaceholder = "94105"
 posture = "거버넌스"
 posture_count = "~{{count}}개 정책"
 posture_essentials = "Essentials"
-posture_essentialsSub = "분류 + 공유 — 기본값"
+posture_essentialsSub = "분류 + 공유 - 기본값"
 posture_governed = "Governed"
 posture_governedSub = "보안 및 라우팅 추가"
 posture_regulated = "Regulated"
-posture_regulatedSub = "모든 범주 — 규정 준수, 보존, 수집"
+posture_regulatedSub = "모든 범주 - 규정 준수, 보존, 수집"
 qbr = "분기별 비즈니스 리뷰"
 qbrSub = "담당 SE가 매 분기 사용량과 로드맵을 검토합니다"
 region = "주 / 지역"
@@ -8727,7 +8727,7 @@ hint = "이 키를 self-hosted 인스턴스에 붙여넣어 활성화하거나 �
 label = "라이선스 키"
 subtitle = "이 키로 셀프 호스팅 인스턴스를 활성화하거나 기록용으로 보관하세요."
 title = "라이선스 키"
-trialFileHint = "이것은 평가판 라이선스 파일입니다. 계약이 완료되면 돌아와 다시 다운로드하세요 — 온라인 라이선스 키와 달리 .lic 파일은 자동으로 업데이트되지 않습니다."
+trialFileHint = "이것은 평가판 라이선스 파일입니다. 계약이 완료되면 돌아와 다시 다운로드하세요 - 온라인 라이선스 키와 달리 .lic 파일은 자동으로 업데이트되지 않습니다."
 
 [portal.procurement.link]
 cta = "계정 연결"
@@ -9064,7 +9064,7 @@ summary = "제한적 또는 웹 전용 액세스이며, 개인 구성을 보유�
 
 [portal.users.roles.member]
 label = "구성원"
-summary = "일반 사용자 — 공유 리소스와 자신의 구성을 사용합니다."
+summary = "일반 사용자 - 공유 리소스와 자신의 구성을 사용합니다."
 
 [portal.users.roles.member.permissions]
 0 = "편집기 및 공유 통합 사용"
@@ -9351,7 +9351,7 @@ title = "PDF-Image로 변환"
 title = "고급 가리기 설정"
 
 [redact.tooltip.advanced.regex]
-bullet1 = "예: \\d{4}-\\d{2}-\\d{2} — YYYY-MM-DD 형식의 날짜 매칭"
+bullet1 = "예: \\d{4}-\\d{2}-\\d{2} - YYYY-MM-DD 형식의 날짜 매칭"
 bullet2 = "주의해서 사용하세요 - 충분히 테스트하세요"
 text = "고급 패턴 매칭을 위해 정규식을 활성화합니다. 전화번호, 이메일, 복잡한 패턴 찾기에 유용합니다."
 title = "정규식 사용"
@@ -9783,7 +9783,7 @@ useCase2 = "플랫베드 일괄 스캔을 개별 파일로 분할"
 useCase3 = "콜라주를 개별 사진으로 분리"
 useCase4 = "문서에서 사진 추출"
 whatThisDoes = "기능"
-whatThisDoesDesc = "스캔된 페이지나 합성 이미지에서 각 사진을 자동으로 찾아 추출합니다—수동 크롭이 필요 없습니다."
+whatThisDoesDesc = "스캔된 페이지나 합성 이미지에서 각 사진을 자동으로 찾아 추출합니다-수동 크롭이 필요 없습니다."
 whenToUse = "사용 시점"
 
 [ScannerImageSplit.selectText]
@@ -11462,9 +11462,9 @@ emptyFile = "빈 파일"
 htmlHidePreview = "미리보기 숨기기"
 htmlPreview = "HTML 미리보기"
 htmlPreviewMobileHidden = "HTML 페이지는 데스크톱 너비에 맞게 배치되므로 여기서는 미리보기가 기본적으로 꺼져 있습니다."
-htmlPreviewWarning = "HTML 미리보기 — 외부 리소스가 로드되지 않을 수 있습니다 · {{size}}"
+htmlPreviewWarning = "HTML 미리보기 - 외부 리소스가 로드되지 않을 수 있습니다 · {{size}}"
 htmlShowPreview = "그래도 미리보기 표시"
-invalidJson = "잘못된 JSON — 원본 내용을 표시합니다"
+invalidJson = "잘못된 JSON - 원본 내용을 표시합니다"
 lineNumbers = "줄 번호"
 loading = "로딩 중..."
 renderMarkdown = "마크다운 렌더링"
@@ -11526,7 +11526,7 @@ create = "Create your first Watched Folder"
 deleteFolder = "Delete folder"
 editFolder = "Edit folder"
 empty = "No watched folders yet"
-emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged — whatever your pipeline does."
+emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged - whatever your pipeline does."
 emptyTitle = "Automate your PDF workflows"
 file = "file"
 files = "files"
@@ -11534,7 +11534,7 @@ pause = "Pause"
 resume = "Resume"
 
 [watchedFolders.howItWorks]
-step1Desc = "Drag PDFs onto any Watched Folder card — or send them from your file list"
+step1Desc = "Drag PDFs onto any Watched Folder card - or send them from your file list"
 step1Title = "Drop files"
 step2Desc = "Your configured tools process each file automatically"
 step2Title = "Pipeline runs"
@@ -11558,18 +11558,18 @@ createFolder = "Create Folder"
 createTitle = "New Watched Folder"
 editTitle = "Edit Watched Folder"
 inputFolder = "Input folder"
-inputFolderNotChosen = "No folder chosen — required for auto-scan"
+inputFolderNotChosen = "No folder chosen - required for auto-scan"
 inputSource = "Input source"
-inputSourceBrowser = "Browser — drop files here"
+inputSourceBrowser = "Browser - drop files here"
 inputSourceLocal = "Local folder (auto-scan)"
-inputSourceLocalUnsupported = "Local folder (auto-scan) — Chrome/Edge only"
+inputSourceLocalUnsupported = "Local folder (auto-scan) - Chrome/Edge only"
 localOutputFolder = "Local output folder"
 maxRetries = "Max retries"
 name = "Folder name"
 namePlaceholder = "My Watched Folder"
 nameRequired = "Folder name is required"
 nameTooLong = "Folder name must be 50 characters or less"
-outputFolderNotSet = "Not set — outputs stay in app"
+outputFolderNotSet = "Not set - outputs stay in app"
 outputFolderUnsupported = "Not supported in this browser"
 outputModeNewDesc = "Output is saved as a new separate file"
 outputModeVersion = "Replace original?"
@@ -11629,9 +11629,9 @@ filterPending = "Pending"
 inputs = "Inputs"
 inputSize = "Input size"
 legendComplete = "Complete"
-noActivity = "No activity yet — drop a PDF to start"
+noActivity = "No activity yet - drop a PDF to start"
 noActivityMatch = "No matching activity"
-noInputFolder = "No input folder — edit to configure"
+noInputFolder = "No input folder - edit to configure"
 outputs = "Outputs"
 pause = "Pause"
 preview = "Preview"
@@ -11639,7 +11639,7 @@ previewInput = "Preview input"
 previewLoadFailed = "Could not load file preview."
 previewOutput = "Preview output"
 queued = "Queued"
-queuedWaiting = "Queued — waiting to run"
+queuedWaiting = "Queued - waiting to run"
 removeEntries = "Remove {{count}} entries"
 removeEntry = "Remove entry"
 removeNotificationsOnly = "Remove notifications only"

@@ -1254,7 +1254,7 @@ description = "URL atau nama file untuk impressum (diperlukan di beberapa yurisd
 label = "Impressum"
 
 [admin.settings.legal.loginAgreement]
-defaultLocaleHint = "— digunakan sebagai cadangan ketika suatu bahasa tidak memiliki file."
+defaultLocaleHint = "- digunakan sebagai cadangan ketika suatu bahasa tidak memiliki file."
 defaultLocaleLink = "Konfigurasikan lokal bawaan"
 description = "Tampilkan penafian yang harus disetujui pengguna setelah masuk. Teks mengikuti bahasa masing-masing pengguna."
 discardConfirm = "Anda memiliki perubahan yang belum disimpan dan akan hilang. Tetap ganti bahasa?"
@@ -2515,10 +2515,10 @@ text = "Ini adalah ID aman untuk tanda tangan Anda yang membuktikan Anda yang me
 title = "Apa itu sertifikat?"
 
 [certSign.certType.tooltip.which]
-bullet1 = "PKCS#12 (.p12 / .pfx) – satu file gabungan (paling umum)"
-bullet2 = "PFX (.pfx) – versi PKCS12 dari Microsoft"
-bullet3 = "PEM – file .pem kunci privat dan sertifikat terpisah"
-bullet4 = "JKS – Java .jks keystore untuk workflow dev / CI-CD"
+bullet1 = "PKCS#12 (.p12 / .pfx) - satu file gabungan (paling umum)"
+bullet2 = "PFX (.pfx) - versi PKCS12 dari Microsoft"
+bullet3 = "PEM - file .pem kunci privat dan sertifikat terpisah"
+bullet4 = "JKS - Java .jks keystore untuk workflow dev / CI-CD"
 text = "Pilih format yang sesuai dengan file sertifikat Anda:"
 title = "Opsi mana yang harus saya gunakan?"
 
@@ -3462,7 +3462,7 @@ showPreferencesBtn = "Kelola preferensi"
 title = "Bagaimana kami menggunakan Cookie"
 
 [cookieBanner.popUp.description]
-1 = "Kami menggunakan cookie dan teknologi lain untuk membuat Stirling PDF bekerja lebih baik untuk Anda—membantu kami meningkatkan alat dan terus membangun fitur yang Anda sukai."
+1 = "Kami menggunakan cookie dan teknologi lain untuk membuat Stirling PDF bekerja lebih baik untuk Anda - membantu kami meningkatkan alat dan terus membangun fitur yang Anda sukai."
 2 = "If you’d rather not, clicking 'No Thanks' will only enable the essential cookies needed to keep things running smoothly."
 
 [cookieBanner.preferencesModal]
@@ -3475,16 +3475,16 @@ subtitle = "Penggunaan Cookie"
 title = "Pusat Preferensi Persetujuan"
 
 [cookieBanner.preferencesModal.analytics]
-description = "Cookie ini membantu kami memahami bagaimana alat kami digunakan, sehingga kami dapat fokus membangun fitur yang paling dihargai komunitas kami. Tenang—Stirling PDF tidak dan tidak akan pernah melacak konten dokumen yang Anda kerjakan."
+description = "Cookie ini membantu kami memahami bagaimana alat kami digunakan, sehingga kami dapat fokus membangun fitur yang paling dihargai komunitas kami. Tenang - Stirling PDF tidak dan tidak akan pernah melacak konten dokumen yang Anda kerjakan."
 title = "Analitik"
 
 [cookieBanner.preferencesModal.description]
 1 = "Stirling PDF menggunakan cookie dan teknologi serupa untuk meningkatkan pengalaman Anda dan memahami bagaimana alat kami digunakan. Ini membantu kami meningkatkan kinerja, mengembangkan fitur yang Anda pedulikan, dan memberikan dukungan berkelanjutan kepada pengguna kami."
-2 = "Stirling PDF tidak dapat—dan tidak akan pernah—melacak atau mengakses konten dokumen yang Anda gunakan."
+2 = "Stirling PDF tidak dapat - dan tidak akan pernah - melacak atau mengakses konten dokumen yang Anda gunakan."
 3 = "Privasi dan kepercayaan Anda adalah inti dari apa yang kami lakukan."
 
 [cookieBanner.preferencesModal.necessary]
-description = "These cookies are essential for the website to function properly. They enable core features like setting your privacy preferences, logging in, and filling out forms—which is why they can’t be turned off."
+description = "These cookies are essential for the website to function properly. They enable core features like setting your privacy preferences, logging in, and filling out forms - which is why they can’t be turned off."
 
 [cookieBanner.preferencesModal.necessary.title]
 1 = "Cookie yang Sangat Diperlukan"
@@ -3900,7 +3900,7 @@ dateDesc = "Terbaru dulu"
 dateLabel = "Terbaru"
 nameAsc = "A ke Z"
 nameDesc = "Z ke A"
-nameLabel = "A–Z"
+nameLabel = "A-Z"
 
 [fileSelectorPicker.tabs]
 saved = "File tersimpan"
@@ -5413,7 +5413,7 @@ userBody = "Undang rekan, tetapkan peran, dan jaga dokumen Anda tetap teratur da
 userTitle = "Ringkasan Paket"
 
 [onboarding.processorIntro]
-body = "Stirling kini menjalankan <strong>Kebijakan</strong> — aturan otomatis yang mengklasifikasi, mengamankan, dan memproses setiap dokumen saat tiba. Siapkan dan pantau proses berjalan di <strong>Processor</strong>."
+body = "Stirling kini menjalankan <strong>Kebijakan</strong> - aturan otomatis yang mengklasifikasi, mengamankan, dan memproses setiap dokumen saat tiba. Siapkan dan pantau proses berjalan di <strong>Processor</strong>."
 cta = "Lihat Processor"
 title = "Lihat Stirling Processor"
 
@@ -5670,7 +5670,7 @@ title = "Penghapus Halaman"
 description = "Pilih halaman mana yang digunakan untuk operasi. Mendukung halaman tunggal, rentang, rumus, dan kata kunci all."
 
 [pageSelection.tooltip.complex]
-bullet1 = "<strong>1,3-5,8,2n</strong> → halaman 1, 3–5, 8, ditambah halaman genap"
+bullet1 = "<strong>1,3-5,8,2n</strong> → halaman 1, 3-5, 8, ditambah halaman genap"
 bullet2 = "<strong>10-,2n-1</strong> → dari halaman 10 hingga akhir + halaman ganjil"
 description = "Campurkan berbagai jenis."
 title = "Kombinasi Kompleks"
@@ -5693,8 +5693,8 @@ description = "Gunakan n dalam rumus untuk pola."
 title = "Fungsi Matematika"
 
 [pageSelection.tooltip.ranges]
-bullet1 = "<strong>3-6</strong> → memilih halaman 3–6"
-bullet2 = "<strong>10-15</strong> → memilih halaman 10–15"
+bullet1 = "<strong>3-6</strong> → memilih halaman 3-6"
+bullet2 = "<strong>10-15</strong> → memilih halaman 10-15"
 bullet3 = "<strong>5-</strong> → memilih halaman 5 hingga akhir"
 description = "Gunakan - untuk halaman berurutan."
 title = "Rentang Halaman"
@@ -5770,7 +5770,7 @@ title = "Turn on the Processor plan"
 eyebrow = "Editor plan · Always free"
 
 [payg.free.header]
-freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
+freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR - as much as you want, no matter where you trigger it."
 freeTitle = "Unlimited PDF editing"
 
 [payg.free.hero]
@@ -5798,8 +5798,8 @@ pauses = "pauses at cap"
 title = "What happens when the cap is reached"
 
 [payg.header]
-eyebrow = "Processor plan · {{start}} – {{end}}"
-freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
+eyebrow = "Processor plan · {{start}} - {{end}}"
+freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR - as much as you want, no matter where you trigger it."
 freeLabel = "Always free"
 freeTitle = "Unlimited PDF editing"
 meterBody = "{{limit}} free PDFs to start, then billed per PDF up to your cap."
@@ -5819,8 +5819,8 @@ chip = "Tahun prabayar"
 
 [payg.prepaid.banner]
 exhausted = "Kapasitas prabayar Anda telah habis; tagihan terukur telah dilanjutkan. Isi ulang untuk mempertahankan diskon."
-expiring_one = "Tahun prabayar Anda berakhir dalam {{count}} hari. Kapasitas yang tidak terpakai akan kedaluwarsa — isi ulang untuk memulai tahun baru."
-expiring_other = "Tahun prabayar Anda berakhir dalam {{count}} hari. Kapasitas yang tidak terpakai akan kedaluwarsa — isi ulang untuk memulai tahun baru."
+expiring_one = "Tahun prabayar Anda berakhir dalam {{count}} hari. Kapasitas yang tidak terpakai akan kedaluwarsa - isi ulang untuk memulai tahun baru."
+expiring_other = "Tahun prabayar Anda berakhir dalam {{count}} hari. Kapasitas yang tidak terpakai akan kedaluwarsa - isi ulang untuk memulai tahun baru."
 low = "Kapasitas prabayar Anda tersisa {{pct}}%. Isi ulang kapan saja agar pemrosesan tidak terputus."
 
 [payg.prepaid.card]
@@ -6120,7 +6120,7 @@ processing = "Processing"
 uploading = "Uploading"
 
 [pdfTextEditor.tooltip.alpha]
-text = "Penampil alpha ini masih berkembang—beberapa font, warna, efek transparansi, dan detail tata letak mungkin sedikit bergeser. Harap periksa kembali PDF yang dihasilkan sebelum dibagikan."
+text = "Penampil alpha ini masih berkembang - beberapa font, warna, efek transparansi, dan detail tata letak mungkin sedikit bergeser. Harap periksa kembali PDF yang dihasilkan sebelum dibagikan."
 title = "Penampil Alpha"
 
 [pdfTextEditor.tooltip.header]
@@ -6521,7 +6521,7 @@ never = "tidak pernah"
 [portal.accountLink.modal]
 linkSubtitle = "Masuk ke akun yang harus digunakan server ini untuk penagihan."
 linkTitle = "Tautkan akun Stirling Anda"
-reauthSubtitle = "Sesi Anda kedaluwarsa — masuk kembali ke akun Stirling Anda. Instans Anda tetap tertaut."
+reauthSubtitle = "Sesi Anda kedaluwarsa - masuk kembali ke akun Stirling Anda. Instans Anda tetap tertaut."
 reauthTitle = "Masuk lagi"
 simulateSignIn = "Simulasikan masuk (dev)"
 
@@ -6632,7 +6632,7 @@ title = "Editor PDF Gratis"
 checkoutErrorTitle = "Tidak dapat memulai checkout"
 currentPlan = "Paket saat ini"
 freeForever = "Gratis selamanya"
-noTeamResolved = "Belum ada tim yang ditentukan pada dompet Anda — segarkan dan coba lagi."
+noTeamResolved = "Belum ada tim yang ditentukan pada dompet Anda - segarkan dan coba lagi."
 ownerOnly = "Hanya pemilik tim yang dapat mengaktifkan paket Processor."
 payInvoice = "Bayar faktur untuk menyelesaikan"
 planName = "Editor"
@@ -6667,7 +6667,7 @@ viewLink = "Lihat ↗"
 
 [portal.billing.linkPrompt]
 cta = "Tautkan akun Stirling"
-description = "Pengeditan PDF manual — lihat, tanda tangani, gabung, pisah, watermark, kompres, konversi, OCR manual — selalu gratis, tertaut atau tidak. Tautkan untuk mengklaim 500 PDF gratis dari pemrosesan bermeter (otomatisasi, AI, dan API); saat Anda membutuhkan lebih banyak, aktifkan paket Processor dan hanya bayar yang Anda gunakan."
+description = "Pengeditan PDF manual - lihat, tanda tangani, gabung, pisah, watermark, kompres, konversi, OCR manual - selalu gratis, tertaut atau tidak. Tautkan untuk mengklaim 500 PDF gratis dari pemrosesan bermeter (otomatisasi, AI, dan API); saat Anda membutuhkan lebih banyak, aktifkan paket Processor dan hanya bayar yang Anda gunakan."
 title = "Tautkan akun Stirling Anda"
 
 [portal.billing.paymentMethod]
@@ -6801,13 +6801,13 @@ low = "Hampir habis"
 [portal.billing.spendLimit]
 adjustLimit = "Sesuaikan batas"
 cancel = "Batal"
-capControlNote = "Perubahan berlaku segera — naikkan atau turunkan batas atas kapan saja."
+capControlNote = "Perubahan berlaku segera - naikkan atau turunkan batas atas kapan saja."
 capSuffix = "/ bulan"
 capSuffixWithDocs = "/ bulan · ≈ {{documents}} dokumen"
-displaySub = "Anda hanya ditagih untuk yang Anda proses otomatis — tidak pernah melebihi batas atas."
+displaySub = "Anda hanya ditagih untuk yang Anda proses otomatis - tidak pernah melebihi batas atas."
 editTitle = "Tetapkan batas atas bulanan Anda"
 eyebrow = "Batas pengeluaran"
-guardrailBody = "batas atas yang keras — Anda tidak pernah ditagih melebihinya. Saat mencapai batas, pemrosesan bermeter dijeda (pengeditan PDF tak terbatas tetap berjalan) hingga Anda menaikkannya atau siklus direset. Tidak ada yang hilang."
+guardrailBody = "batas atas yang keras - Anda tidak pernah ditagih melebihinya. Saat mencapai batas, pemrosesan bermeter dijeda (pengeditan PDF tak terbatas tetap berjalan) hingga Anda menaikkannya atau siklus direset. Tidak ada yang hilang."
 guardrailLabel = "Batas pengaman Anda:"
 noCap = "tanpa batas"
 pctUsed = "{{pct}}% digunakan"
@@ -7242,8 +7242,8 @@ viewSource = "Lihat sumber di GitHub"
 codeCaption = "setiap permintaan"
 eyebrow = "MEMULAI"
 lead = "Semua permintaan diautentikasi dengan bearer token. Key dibatasi per environment dan tidak pernah kedaluwarsa kecuali dirotasi."
-liveKey = "Key produksi — ditagih, dibatasi laju sesuai paket Anda."
-testKey = "Key Sandbox — gratis, mengembalikan fixture sintetis."
+liveKey = "Key produksi - ditagih, dibatasi laju sesuai paket Anda."
+testKey = "Key Sandbox - gratis, mengembalikan fixture sintetis."
 title = "Autentikasi"
 
 [portal.docs.components]
@@ -7281,7 +7281,7 @@ title = "Mulai cepat"
 
 [portal.docs.quickstart.callout]
 bodyAfterLink = "untuk resep copy-paste."
-bodyBeforeLink = "hubungkan panggilan yang sama ke pipeline untuk merangkai validasi, redaksi, dan pengiriman — atau ekspos ke agen melalui MCP. Lihat"
+bodyBeforeLink = "hubungkan panggilan yang sama ke pipeline untuk merangkai validasi, redaksi, dan pengiriman - atau ekspos ke agen melalui MCP. Lihat"
 label = "Berikutnya:"
 link = "Playbook"
 
@@ -7290,7 +7290,7 @@ body = "Buat key terlingkup dari tab Infrastruktur. Key membawa batas laju dan a
 title = "Buat API key"
 
 [portal.docs.quickstart.step2]
-body = "POST file ke endpoint bertipe mana pun. Endpoint menentukan skema yang Anda dapatkan kembali — di sini, ekstraktor faktur."
+body = "POST file ke endpoint bertipe mana pun. Endpoint menentukan skema yang Anda dapatkan kembali - di sini, ekstraktor faktur."
 snippetCaption = "ekstrak faktur"
 title = "Kirim dokumen"
 
@@ -7370,8 +7370,8 @@ overview = "Ikhtisar"
 requestAccess = "Minta akses"
 
 [portal.documents.elevation.active]
-description = "Izin sementara — akses dicatat dan dibatasi waktu."
-descriptionFourEyes = "Izin sementara — peninjau sejawat telah diberi tahu (four-eyes)."
+description = "Izin sementara - akses dicatat dan dibatasi waktu."
+descriptionFourEyes = "Izin sementara - peninjau sejawat telah diberi tahu (four-eyes)."
 title = "Akses berakhir dalam {{time}}"
 
 [portal.documents.elevation.gated]
@@ -7432,7 +7432,7 @@ time = "Waktu"
 user = "Pengguna"
 
 [portal.editorAdmin]
-subtitle = "Terapkan Stirling PDF Editor, pasangkan instans yang dihosting sendiri ke organisasi Anda, dan operasikan armada yang berjalan — target, kesehatan, kredensial, dan aktivasi offline di satu tempat."
+subtitle = "Terapkan Stirling PDF Editor, pasangkan instans yang dihosting sendiri ke organisasi Anda, dan operasikan armada yang berjalan - target, kesehatan, kredensial, dan aktivasi offline di satu tempat."
 title = "Penerapan Editor"
 
 [portal.editorAdmin.health.columns]
@@ -7468,7 +7468,7 @@ rotate = "Rotasi"
 talkToSales = "Hubungi penjualan"
 
 [portal.editorAdmin.sections.health]
-sub = "Setiap instans Editor yang melapor — versi, region, status, terakhir terlihat, dan pengguna aktif."
+sub = "Setiap instans Editor yang melapor - versi, region, status, terakhir terlihat, dan pengguna aktif."
 title = "Kesehatan instans"
 
 [portal.editorAdmin.sections.pairing]
@@ -7754,9 +7754,9 @@ done = "Selesai"
 keyNameLabel = "Nama kunci"
 keyNamePlaceholder = "mis. Production · ingest"
 secretKeyCaption = "Kunci rahasia"
-secretWarning = "Simpan ini di pengelola rahasia. Stirling hanya menyimpan hash — tidak ada cara untuk memulihkannya nanti."
+secretWarning = "Simpan ini di pengelola rahasia. Stirling hanya menyimpan hash - tidak ada cara untuk memulihkannya nanti."
 subtitle = "Batasi kunci ke minimum yang dibutuhkan. Anda dapat merotasi atau mencabutnya kapan saja."
-subtitleCreated = "Salin rahasia ini sekarang — tidak akan ditampilkan lagi."
+subtitleCreated = "Salin rahasia ini sekarang - tidak akan ditampilkan lagi."
 title = "Buat API key"
 titleCreated = "Kunci dibuat"
 
@@ -8317,7 +8317,7 @@ label = "Email dokumen (Mailgun)"
 [portal.policies.operations.n8nGate]
 description = "Your workflow decides whether the run carries on."
 label = "Ask an n8n workflow to approve"
-note = "The workflow must reply with {\"approved\": true}. Anything else — including a timeout — stops the run and parks the document."
+note = "The workflow must reply with {\"approved\": true}. Anything else - including a timeout - stops the run and parks the document."
 
 [portal.policies.operations.n8nNotify]
 description = "Sends the run's details, not the document."
@@ -8339,7 +8339,7 @@ label = "Upload ke Nextcloud"
 [portal.policies.operations.presidioAnalyze]
 description = "Server Presidio Anda sendiri melaporkan data pribadi yang ditemukannya."
 label = "Deteksi data pribadi"
-note = "Presidio membaca teks, bukan file. Berikan teks yang ingin Anda periksa — dokumen itu sendiri tidak di-upload."
+note = "Presidio membaca teks, bukan file. Berikan teks yang ingin Anda periksa - dokumen itu sendiri tidak di-upload."
 
 [portal.policies.operations.responseMode]
 replace = "Ganti dokumen dengan balasan"
@@ -8429,7 +8429,7 @@ desc = "Menjalankan OCR agar halaman hasil pindaian menjadi teks yang dapat dipi
 label = "Buat teks dapat dicari"
 
 [portal.policies.wizard.capability.redact]
-desc = "Menemukan dan menghitamkan detail sensitif — seperti nomor Social Security dan kartu — sehingga tidak dapat dibaca."
+desc = "Menemukan dan menghitamkan detail sensitif - seperti nomor Social Security dan kartu - sehingga tidak dapat dibaca."
 label = "Redaksi informasi sensitif"
 
 [portal.policies.wizard.capability.sanitize]
@@ -8595,11 +8595,11 @@ postalCodePlaceholder = "94105"
 posture = "Tata kelola"
 posture_count = "~{{count}} kebijakan"
 posture_essentials = "Esensial"
-posture_essentialsSub = "Klasifikasi + Berbagi — default"
+posture_essentialsSub = "Klasifikasi + Berbagi - default"
 posture_governed = "Terkelola"
 posture_governedSub = "Menambahkan Keamanan dan Routing"
 posture_regulated = "Teregulasi"
-posture_regulatedSub = "Setiap kategori — Kepatuhan, Retensi, Ingesti"
+posture_regulatedSub = "Setiap kategori - Kepatuhan, Retensi, Ingesti"
 qbr = "Tinjauan bisnis triwulanan"
 qbrSub = "SE Anda meninjau penggunaan dan roadmap setiap kuartal"
 region = "Negara bagian / wilayah"
@@ -8721,13 +8721,13 @@ label = "Uji coba"
 [portal.procurement.license]
 copied = "Disalin"
 copy = "Salin kunci"
-downloadError = "Belum dapat membuat file lisensi offline — silakan coba lagi sebentar lagi."
+downloadError = "Belum dapat membuat file lisensi offline - silakan coba lagi sebentar lagi."
 downloadOffline = "Download lisensi offline (.lic)"
 hint = "Tempel kunci ini ke instance self-hosted untuk mengaktifkannya, atau simpan untuk catatan Anda. Jaga tetap aman."
 label = "Kunci lisensi Anda"
 subtitle = "Aktifkan instance self-hosted dengan key ini, atau simpan untuk arsip Anda."
 title = "Key lisensi Anda"
-trialFileHint = "Ini adalah file lisensi uji coba Anda. Setelah perjanjian Anda siap, kembali dan unduh lagi — tidak seperti key lisensi online, file .lic tidak akan diperbarui sendiri."
+trialFileHint = "Ini adalah file lisensi uji coba Anda. Setelah perjanjian Anda siap, kembali dan unduh lagi - tidak seperti key lisensi online, file .lic tidak akan diperbarui sendiri."
 
 [portal.procurement.link]
 cta = "Tautkan akun"
@@ -8741,10 +8741,10 @@ eyebrow = "Live"
 title = "Anda sudah live di Stirling Enterprise"
 
 [portal.procurement.milestone]
-downloadError = "Belum dapat mendownload PDF penawaran — silakan coba lagi sebentar lagi."
+downloadError = "Belum dapat mendownload PDF penawaran - silakan coba lagi sebentar lagi."
 
 [portal.procurement.payment]
-description = "Penawaran Anda diterima dan lisensi Anda sudah aktif — tim Anda dapat langsung mulai. Bayar invoice pertama saat Anda siap; Anda dapat membayar atau mendownloadnya di sini, tanpa perlu email."
+description = "Penawaran Anda diterima dan lisensi Anda sudah aktif - tim Anda dapat langsung mulai. Bayar invoice pertama saat Anda siap; Anda dapat membayar atau mendownloadnya di sini, tanpa perlu email."
 downloadAgreement = "Unduh perjanjian yang ditandatangani"
 downloadInvoice = "Download invoice"
 eyebrow = "Pembayaran"
@@ -8799,7 +8799,7 @@ workEmailPlaceholder = "you@company.com"
 
 [portal.procurement.trial]
 body = "Memperpanjang menambahkan 7 hari dan memberi tahu engineer solusi Anda."
-bodyMaxed = "Anda telah menggunakan semua perpanjangan — bicara dengan engineer solusi Anda jika membutuhkan waktu lebih."
+bodyMaxed = "Anda telah menggunakan semua perpanjangan - bicara dengan engineer solusi Anda jika membutuhkan waktu lebih."
 cancel = "Batalkan uji coba"
 extend = "Perpanjang 7 hari"
 maxed = "Maksimal"
@@ -9036,7 +9036,7 @@ walletUnavailable = "Wallet tidak tersedia: {{status}} {{statusText}}"
 
 [portal.usage.sessionExpired]
 action = "Masuk lagi"
-body = "Sesi akun Stirling Anda telah kedaluwarsa. Masuk lagi untuk melihat penagihan — instance Anda tetap tertaut."
+body = "Sesi akun Stirling Anda telah kedaluwarsa. Masuk lagi untuk melihat penagihan - instance Anda tetap tertaut."
 title = "Sesi kedaluwarsa"
 
 [portal.users]
@@ -9064,7 +9064,7 @@ summary = "Akses terbatas atau hanya web; tidak dapat memiliki konfigurasi priba
 
 [portal.users.roles.member]
 label = "Anggota"
-summary = "Pengguna reguler — bekerja dengan sumber daya bersama dan konfigurasinya sendiri."
+summary = "Pengguna reguler - bekerja dengan sumber daya bersama dan konfigurasinya sendiri."
 
 [portal.users.roles.member.permissions]
 0 = "Gunakan editor dan integrasi bersama"
@@ -9074,7 +9074,7 @@ summary = "Pengguna reguler — bekerja dengan sumber daya bersama dan konfigura
 
 [portal.users.roles.team_owner]
 label = "Pemilik tim"
-summary = "Memiliki tim — mengelola sumber daya anggota dan konfigurasi bersama."
+summary = "Memiliki tim - mengelola sumber daya anggota dan konfigurasi bersama."
 
 [portal.users.roles.team_owner.permissions]
 0 = "Buat & kelola koneksi S3 tim"
@@ -9765,7 +9765,7 @@ failed = "Terjadi kesalahan saat mengekstrak pemindaian gambar."
 
 [scannerImageSplit.tooltip]
 headsUp = "Perhatian"
-headsUpDesc = "Foto yang saling tumpang tindih atau latar belakang yang sangat mirip warnanya dengan foto dapat mengurangi akurasi—cobalah latar yang lebih terang atau lebih gelap dan sisakan lebih banyak ruang."
+headsUpDesc = "Foto yang saling tumpang tindih atau latar belakang yang sangat mirip warnanya dengan foto dapat mengurangi akurasi - cobalah latar yang lebih terang atau lebih gelap dan sisakan lebih banyak ruang."
 problem1 = "Foto tidak terdeteksi → tingkatkan Tolerance ke 30-50"
 problem2 = "Terlalu banyak deteksi keliru → tingkatkan Minimum Area ke 15.000-20.000"
 problem3 = "Pangkas terlalu rapat → tingkatkan Border Size ke 5-10"
@@ -9783,7 +9783,7 @@ useCase2 = "Pisahkan batch flatbed menjadi berkas terpisah"
 useCase3 = "Pecah kolase menjadi foto individual"
 useCase4 = "Ambil foto dari dokumen"
 whatThisDoes = "Apa fungsinya"
-whatThisDoesDesc = "Secara otomatis menemukan dan mengekstrak tiap foto dari halaman hasil pindai atau gambar komposit—tanpa pemotongan manual."
+whatThisDoesDesc = "Secara otomatis menemukan dan mengekstrak tiap foto dari halaman hasil pindai atau gambar komposit - tanpa pemotongan manual."
 whenToUse = "Kapan digunakan"
 
 [ScannerImageSplit.selectText]
@@ -11462,9 +11462,9 @@ emptyFile = "File kosong"
 htmlHidePreview = "Sembunyikan pratinjau"
 htmlPreview = "Pratinjau HTML"
 htmlPreviewMobileHidden = "Halaman HTML ditata untuk lebar desktop, jadi pratinjau dinonaktifkan secara default di sini."
-htmlPreviewWarning = "Pratinjau HTML — sumber eksternal mungkin tidak dimuat · {{size}}"
+htmlPreviewWarning = "Pratinjau HTML - sumber eksternal mungkin tidak dimuat · {{size}}"
 htmlShowPreview = "Tetap tampilkan pratinjau"
-invalidJson = "JSON tidak valid — menampilkan konten mentah"
+invalidJson = "JSON tidak valid - menampilkan konten mentah"
 lineNumbers = "Nomor baris"
 loading = "Memuat..."
 renderMarkdown = "Render markdown"
@@ -11526,7 +11526,7 @@ create = "Create your first Watched Folder"
 deleteFolder = "Delete folder"
 editFolder = "Edit folder"
 empty = "No watched folders yet"
-emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged — whatever your pipeline does."
+emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged - whatever your pipeline does."
 emptyTitle = "Automate your PDF workflows"
 file = "file"
 files = "files"
@@ -11534,7 +11534,7 @@ pause = "Pause"
 resume = "Resume"
 
 [watchedFolders.howItWorks]
-step1Desc = "Drag PDFs onto any Watched Folder card — or send them from your file list"
+step1Desc = "Drag PDFs onto any Watched Folder card - or send them from your file list"
 step1Title = "Drop files"
 step2Desc = "Your configured tools process each file automatically"
 step2Title = "Pipeline runs"
@@ -11558,18 +11558,18 @@ createFolder = "Create Folder"
 createTitle = "New Watched Folder"
 editTitle = "Edit Watched Folder"
 inputFolder = "Input folder"
-inputFolderNotChosen = "No folder chosen — required for auto-scan"
+inputFolderNotChosen = "No folder chosen - required for auto-scan"
 inputSource = "Input source"
-inputSourceBrowser = "Browser — drop files here"
+inputSourceBrowser = "Browser - drop files here"
 inputSourceLocal = "Local folder (auto-scan)"
-inputSourceLocalUnsupported = "Local folder (auto-scan) — Chrome/Edge only"
+inputSourceLocalUnsupported = "Local folder (auto-scan) - Chrome/Edge only"
 localOutputFolder = "Local output folder"
 maxRetries = "Max retries"
 name = "Folder name"
 namePlaceholder = "My Watched Folder"
 nameRequired = "Folder name is required"
 nameTooLong = "Folder name must be 50 characters or less"
-outputFolderNotSet = "Not set — outputs stay in app"
+outputFolderNotSet = "Not set - outputs stay in app"
 outputFolderUnsupported = "Not supported in this browser"
 outputModeNewDesc = "Output is saved as a new separate file"
 outputModeVersion = "Replace original?"
@@ -11629,9 +11629,9 @@ filterPending = "Pending"
 inputs = "Inputs"
 inputSize = "Input size"
 legendComplete = "Complete"
-noActivity = "No activity yet — drop a PDF to start"
+noActivity = "No activity yet - drop a PDF to start"
 noActivityMatch = "No matching activity"
-noInputFolder = "No input folder — edit to configure"
+noInputFolder = "No input folder - edit to configure"
 outputs = "Outputs"
 pause = "Pause"
 preview = "Preview"
@@ -11639,7 +11639,7 @@ previewInput = "Preview input"
 previewLoadFailed = "Could not load file preview."
 previewOutput = "Preview output"
 queued = "Queued"
-queuedWaiting = "Queued — waiting to run"
+queuedWaiting = "Queued - waiting to run"
 removeEntries = "Remove {{count}} entries"
 removeEntry = "Remove entry"
 removeNotificationsOnly = "Remove notifications only"

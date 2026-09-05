@@ -1254,7 +1254,7 @@ description = "URL sau nume de fișier către impressum (necesar în unele juris
 label = "Impressum"
 
 [admin.settings.legal.loginAgreement]
-defaultLocaleHint = "— utilizat ca variantă de rezervă când o limbă nu are fișier."
+defaultLocaleHint = "- utilizat ca variantă de rezervă când o limbă nu are fișier."
 defaultLocaleLink = "Configurați limba implicită"
 description = "Afișează o declinare a responsabilității pe care utilizatorii trebuie să o accepte după autentificare. Textul este afișat în limba fiecărui utilizator."
 discardConfirm = "Aveți modificări nesalvate care vor fi pierdute. Schimbați limba oricum?"
@@ -2515,10 +2515,10 @@ text = "Este un ID sigur pentru semnătura dvs. care dovedește că ați semnat.
 title = "Ce este un certificat?"
 
 [certSign.certType.tooltip.which]
-bullet1 = "PKCS#12 (.p12 / .pfx) – un fișier combinat (cel mai comun)"
-bullet2 = "PFX (.pfx) – versiunea Microsoft a PKCS12"
-bullet3 = "PEM – fișiere .pem separate pentru cheia privată și certificat"
-bullet4 = "JKS – keystore Java .jks pentru fluxuri dev / CI-CD"
+bullet1 = "PKCS#12 (.p12 / .pfx) - un fișier combinat (cel mai comun)"
+bullet2 = "PFX (.pfx) - versiunea Microsoft a PKCS12"
+bullet3 = "PEM - fișiere .pem separate pentru cheia privată și certificat"
+bullet4 = "JKS - keystore Java .jks pentru fluxuri dev / CI-CD"
 text = "Alegeți formatul care se potrivește fișierului certificatului dvs.:"
 title = "Ce opțiune ar trebui să folosesc?"
 
@@ -3462,7 +3462,7 @@ showPreferencesBtn = "Gestionați preferințele"
 title = "Cum folosim cookie-urile"
 
 [cookieBanner.popUp.description]
-1 = "Folosim cookie-uri și alte tehnologii pentru a face Stirling PDF să funcționeze mai bine pentru dvs.—ajutându-ne să ne îmbunătățim instrumentele și să continuăm să dezvoltăm funcții pe placul dvs."
+1 = "Folosim cookie-uri și alte tehnologii pentru a face Stirling PDF să funcționeze mai bine pentru dvs. - ajutându-ne să ne îmbunătățim instrumentele și să continuăm să dezvoltăm funcții pe placul dvs."
 2 = "If you’d rather not, clicking 'No Thanks' will only enable the essential cookies needed to keep things running smoothly."
 
 [cookieBanner.preferencesModal]
@@ -3475,16 +3475,16 @@ subtitle = "Utilizarea cookie-urilor"
 title = "Centrul preferințelor de consimțământ"
 
 [cookieBanner.preferencesModal.analytics]
-description = "Aceste cookie-uri ne ajută să înțelegem cum sunt folosite instrumentele noastre, astfel încât să ne concentrăm pe construirea funcțiilor pe care comunitatea noastră le apreciază cel mai mult. Stați liniștit—Stirling PDF nu poate și nu va urmări conținutul documentelor cu care lucrați."
+description = "Aceste cookie-uri ne ajută să înțelegem cum sunt folosite instrumentele noastre, astfel încât să ne concentrăm pe construirea funcțiilor pe care comunitatea noastră le apreciază cel mai mult. Stați liniștit - Stirling PDF nu poate și nu va urmări conținutul documentelor cu care lucrați."
 title = "Analiză"
 
 [cookieBanner.preferencesModal.description]
 1 = "Stirling PDF folosește cookie-uri și tehnologii similare pentru a vă îmbunătăți experiența și a înțelege cum sunt folosite instrumentele noastre. Aceasta ne ajută să îmbunătățim performanța, să dezvoltăm funcțiile care vă interesează și să oferim suport constant utilizatorilor noștri."
-2 = "Stirling PDF nu poate—și nu va—urmări sau accesa conținutul documentelor pe care le utilizați."
+2 = "Stirling PDF nu poate - și nu va - urmări sau accesa conținutul documentelor pe care le utilizați."
 3 = "Confidențialitatea și încrederea dvs. sunt în centrul a tot ceea ce facem."
 
 [cookieBanner.preferencesModal.necessary]
-description = "These cookies are essential for the website to function properly. They enable core features like setting your privacy preferences, logging in, and filling out forms—which is why they can’t be turned off."
+description = "These cookies are essential for the website to function properly. They enable core features like setting your privacy preferences, logging in, and filling out forms - which is why they can’t be turned off."
 
 [cookieBanner.preferencesModal.necessary.title]
 1 = "Cookie-uri strict necesare"
@@ -3900,7 +3900,7 @@ dateDesc = "Cele mai noi primele"
 dateLabel = "Cele mai recente"
 nameAsc = "De la A la Z"
 nameDesc = "De la Z la A"
-nameLabel = "A–Z"
+nameLabel = "A-Z"
 
 [fileSelectorPicker.tabs]
 saved = "Fișiere salvate"
@@ -5413,7 +5413,7 @@ userBody = "Invite colegi, atribuie roluri și ține documentele organizate înt
 userTitle = "Prezentare plan"
 
 [onboarding.processorIntro]
-body = "Stirling rulează acum <strong>Politici</strong> — reguli automate care clasifică, securizează și procesează fiecare document pe măsură ce sosește. Configurați-le și monitorizați rulările în <strong>Processor</strong>."
+body = "Stirling rulează acum <strong>Politici</strong> - reguli automate care clasifică, securizează și procesează fiecare document pe măsură ce sosește. Configurați-le și monitorizați rulările în <strong>Processor</strong>."
 cta = "Consultați Processor"
 title = "Consultați Stirling Processor"
 
@@ -5670,7 +5670,7 @@ title = "Înlăturare pagini"
 description = "Alegeți ce pagini să folosiți pentru operație. Suportă pagini individuale, intervale, formule și cuvântul cheie all."
 
 [pageSelection.tooltip.complex]
-bullet1 = "<strong>1,3-5,8,2n</strong> → paginile 1, 3–5, 8, plus paginile pare"
+bullet1 = "<strong>1,3-5,8,2n</strong> → paginile 1, 3-5, 8, plus paginile pare"
 bullet2 = "<strong>10-,2n-1</strong> → de la pagina 10 până la final + paginile impare"
 description = "Combinați tipuri diferite."
 title = "Combinații complexe"
@@ -5693,8 +5693,8 @@ description = "Folosiți n în formule pentru modele."
 title = "Funcții matematice"
 
 [pageSelection.tooltip.ranges]
-bullet1 = "<strong>3-6</strong> → selectează paginile 3–6"
-bullet2 = "<strong>10-15</strong> → selectează paginile 10–15"
+bullet1 = "<strong>3-6</strong> → selectează paginile 3-6"
+bullet2 = "<strong>10-15</strong> → selectează paginile 10-15"
 bullet3 = "<strong>5-</strong> → selectează paginile 5 până la final"
 description = "Folosiți - pentru pagini consecutive."
 title = "Intervale de pagini"
@@ -5770,7 +5770,7 @@ title = "Turn on the Processor plan"
 eyebrow = "Editor plan · Always free"
 
 [payg.free.header]
-freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
+freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR - as much as you want, no matter where you trigger it."
 freeTitle = "Unlimited PDF editing"
 
 [payg.free.hero]
@@ -5798,8 +5798,8 @@ pauses = "pauses at cap"
 title = "What happens when the cap is reached"
 
 [payg.header]
-eyebrow = "Processor plan · {{start}} – {{end}}"
-freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
+eyebrow = "Processor plan · {{start}} - {{end}}"
+freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR - as much as you want, no matter where you trigger it."
 freeLabel = "Always free"
 freeTitle = "Unlimited PDF editing"
 meterBody = "{{limit}} free PDFs to start, then billed per PDF up to your cap."
@@ -5819,8 +5819,8 @@ chip = "An plătit în avans"
 
 [payg.prepaid.banner]
 exhausted = "Capacitatea dvs. plătită în avans este epuizată; facturarea contorizată a fost reluată. Reîncărcați pentru a păstra reducerea."
-expiring_one = "Anul dvs. plătit în avans se încheie peste {{count}} zi. Capacitatea neutilizată expiră — reîncărcați pentru a începe un an nou."
-expiring_other = "Anul dvs. plătit în avans se încheie peste {{count}} zile. Capacitatea neutilizată expiră — reîncărcați pentru a începe un an nou."
+expiring_one = "Anul dvs. plătit în avans se încheie peste {{count}} zi. Capacitatea neutilizată expiră - reîncărcați pentru a începe un an nou."
+expiring_other = "Anul dvs. plătit în avans se încheie peste {{count}} zile. Capacitatea neutilizată expiră - reîncărcați pentru a începe un an nou."
 low = "Ați ajuns la {{pct}}% din capacitatea plătită în avans. Reîncărcați oricând pentru a menține procesarea neîntreruptă."
 
 [payg.prepaid.card]
@@ -6120,7 +6120,7 @@ processing = "Processing"
 uploading = "Uploading"
 
 [pdfTextEditor.tooltip.alpha]
-text = "Acest vizualizator alpha este încă în dezvoltare — anumite fonturi, culori, efecte de transparență și detalii de layout pot varia ușor. Verificați încă o dată PDF-ul generat înainte de a-l partaja."
+text = "Acest vizualizator alpha este încă în dezvoltare - anumite fonturi, culori, efecte de transparență și detalii de layout pot varia ușor. Verificați încă o dată PDF-ul generat înainte de a-l partaja."
 title = "Vizualizator Alpha"
 
 [pdfTextEditor.tooltip.header]
@@ -6521,7 +6521,7 @@ never = "niciodată"
 [portal.accountLink.modal]
 linkSubtitle = "Autentifică-te în contul către care ar trebui să factureze acest server."
 linkTitle = "Conectează contul tău Stirling"
-reauthSubtitle = "Sesiunea ta a expirat — autentifică-te din nou în contul tău Stirling. Instanța ta rămâne conectată."
+reauthSubtitle = "Sesiunea ta a expirat - autentifică-te din nou în contul tău Stirling. Instanța ta rămâne conectată."
 reauthTitle = "Autentifică-te din nou"
 simulateSignIn = "Simulează autentificarea (dev)"
 
@@ -6632,7 +6632,7 @@ title = "Editoare PDF gratuite"
 checkoutErrorTitle = "Nu s-a putut porni checkout-ul"
 currentPlan = "Plan curent"
 freeForever = "Gratuit pentru totdeauna"
-noTeamResolved = "Încă nu este rezolvată nicio echipă în portofelul tău — reîmprospătează și încearcă din nou."
+noTeamResolved = "Încă nu este rezolvată nicio echipă în portofelul tău - reîmprospătează și încearcă din nou."
 ownerOnly = "Doar proprietarul echipei poate activa planul Processor."
 payInvoice = "Plătiți factura pentru finalizare"
 planName = "Editor"
@@ -6667,7 +6667,7 @@ viewLink = "Vezi ↗"
 
 [portal.billing.linkPrompt]
 cta = "Conectează contul Stirling"
-description = "Editarea manuală PDF — vizualizare, semnare, îmbinare, divizare, watermark, comprimare, conversie, OCR manual — este întotdeauna gratuită, indiferent dacă este conectată sau nu. Conectează-te pentru a revendica 500 de PDF-uri gratuite de procesare contorizată (automatizare, AI și API); când ai nevoie de mai mult, activează planul Processor și plătești doar pentru ce folosești."
+description = "Editarea manuală PDF - vizualizare, semnare, îmbinare, divizare, watermark, comprimare, conversie, OCR manual - este întotdeauna gratuită, indiferent dacă este conectată sau nu. Conectează-te pentru a revendica 500 de PDF-uri gratuite de procesare contorizată (automatizare, AI și API); când ai nevoie de mai mult, activează planul Processor și plătești doar pentru ce folosești."
 title = "Conectează contul tău Stirling"
 
 [portal.billing.paymentMethod]
@@ -6801,13 +6801,13 @@ low = "Se epuizează"
 [portal.billing.spendLimit]
 adjustLimit = "Ajustează limita"
 cancel = "Anulează"
-capControlNote = "Modificările se aplică imediat — ridică sau coboară plafonul oricând."
+capControlNote = "Modificările se aplică imediat - ridică sau coboară plafonul oricând."
 capSuffix = "/ lună"
 capSuffixWithDocs = "/ lună · ≈ {{documents}} documente"
-displaySub = "Ești facturat doar pentru ceea ce procesezi automat — niciodată peste plafon."
+displaySub = "Ești facturat doar pentru ceea ce procesezi automat - niciodată peste plafon."
 editTitle = "Setează plafonul lunar"
 eyebrow = "Limită de cheltuieli"
-guardrailBody = "un plafon strict — nu ești facturat niciodată peste el. La atingerea plafonului, procesarea contorizată se oprește temporar (editarea nelimitată PDF continuă să funcționeze) până îl mărești sau ciclul se resetează. Nimic nu se pierde."
+guardrailBody = "un plafon strict - nu ești facturat niciodată peste el. La atingerea plafonului, procesarea contorizată se oprește temporar (editarea nelimitată PDF continuă să funcționeze) până îl mărești sau ciclul se resetează. Nimic nu se pierde."
 guardrailLabel = "Protecția ta:"
 noCap = "fără plafon"
 pctUsed = "{{pct}}% folosit"
@@ -7242,8 +7242,8 @@ viewSource = "Vizualizați sursa pe GitHub"
 codeCaption = "fiecare solicitare"
 eyebrow = "ÎNCEPUT"
 lead = "Toate solicitările se autentifică cu un bearer token. Cheile au domeniu per mediu și nu expiră niciodată decât dacă sunt rotite."
-liveKey = "Chei de producție — facturate, limitate ca rată conform planului tău."
-testKey = "Chei Sandbox — gratuite, returnează fixtures sintetice."
+liveKey = "Chei de producție - facturate, limitate ca rată conform planului tău."
+testKey = "Chei Sandbox - gratuite, returnează fixtures sintetice."
 title = "Autentificare"
 
 [portal.docs.components]
@@ -7281,7 +7281,7 @@ title = "Quickstart"
 
 [portal.docs.quickstart.callout]
 bodyAfterLink = "pentru rețete copy-paste."
-bodyBeforeLink = "conectează același apel într-un pipeline pentru a înlănțui validarea, anonimizarea și livrarea — sau expune-l unui agent prin MCP. Vezi"
+bodyBeforeLink = "conectează același apel într-un pipeline pentru a înlănțui validarea, anonimizarea și livrarea - sau expune-l unui agent prin MCP. Vezi"
 label = "Următorul:"
 link = "Playbooks"
 
@@ -7290,7 +7290,7 @@ body = "Creează o cheie cu domeniu din fila Infrastructure. Cheile includ limit
 title = "Emite o API key"
 
 [portal.docs.quickstart.step2]
-body = "Fă POST cu un fișier către orice endpoint tipizat. Endpoint-ul determină schema pe care o primești înapoi — aici, extractorul de facturi."
+body = "Fă POST cu un fișier către orice endpoint tipizat. Endpoint-ul determină schema pe care o primești înapoi - aici, extractorul de facturi."
 snippetCaption = "extrage o factură"
 title = "Trimite un document"
 
@@ -7370,8 +7370,8 @@ overview = "Prezentare generală"
 requestAccess = "Solicitați acces"
 
 [portal.documents.elevation.active]
-description = "Acord temporar — accesul este jurnalizat și limitat în timp."
-descriptionFourEyes = "Acord temporar — un evaluator coleg a fost notificat (patru ochi)."
+description = "Acord temporar - accesul este jurnalizat și limitat în timp."
+descriptionFourEyes = "Acord temporar - un evaluator coleg a fost notificat (patru ochi)."
 title = "Accesul expiră în {{time}}"
 
 [portal.documents.elevation.gated]
@@ -7432,7 +7432,7 @@ time = "Timp"
 user = "Utilizator"
 
 [portal.editorAdmin]
-subtitle = "Implementați Stirling PDF Editor, asociați instanțe self-hosted cu organizația dvs. și operați flota activă — ținte, sănătate, credențiale și activare offline într-un singur loc."
+subtitle = "Implementați Stirling PDF Editor, asociați instanțe self-hosted cu organizația dvs. și operați flota activă - ținte, sănătate, credențiale și activare offline într-un singur loc."
 title = "Implementare Editor"
 
 [portal.editorAdmin.health.columns]
@@ -7468,7 +7468,7 @@ rotate = "Rotiți"
 talkToSales = "Contactați echipa de vânzări"
 
 [portal.editorAdmin.sections.health]
-sub = "Fiecare instanță Editor raportează — versiune, regiune, stare, ultima apariție și utilizatori activi."
+sub = "Fiecare instanță Editor raportează - versiune, regiune, stare, ultima apariție și utilizatori activi."
 title = "Sănătatea instanței"
 
 [portal.editorAdmin.sections.pairing]
@@ -7754,9 +7754,9 @@ done = "Gata"
 keyNameLabel = "Nume cheie"
 keyNamePlaceholder = "de ex. Producție · ingestie"
 secretKeyCaption = "Cheie secretă"
-secretWarning = "Stocați aceasta într-un manager de secrete. Stirling stochează doar un hash — nu există nicio modalitate de a o recupera ulterior."
+secretWarning = "Stocați aceasta într-un manager de secrete. Stirling stochează doar un hash - nu există nicio modalitate de a o recupera ulterior."
 subtitle = "Limitați cheia la minimul necesar. O puteți roti sau revoca oricând."
-subtitleCreated = "Copiați acest secret acum — nu va mai fi afișat."
+subtitleCreated = "Copiați acest secret acum - nu va mai fi afișat."
 title = "Creați cheie API"
 titleCreated = "Cheie creată"
 
@@ -8317,7 +8317,7 @@ label = "Trimiteți documentul prin email (Mailgun)"
 [portal.policies.operations.n8nGate]
 description = "Your workflow decides whether the run carries on."
 label = "Ask an n8n workflow to approve"
-note = "The workflow must reply with {\"approved\": true}. Anything else — including a timeout — stops the run and parks the document."
+note = "The workflow must reply with {\"approved\": true}. Anything else - including a timeout - stops the run and parks the document."
 
 [portal.policies.operations.n8nNotify]
 description = "Sends the run's details, not the document."
@@ -8339,7 +8339,7 @@ label = "Încărcați în Nextcloud"
 [portal.policies.operations.presidioAnalyze]
 description = "Propriul dvs. server Presidio raportează datele personale pe care le găsește."
 label = "Detectați date personale"
-note = "Presidio citește text, nu fișiere. Dați-i textul pe care doriți să îl verificați — documentul în sine nu este încărcat."
+note = "Presidio citește text, nu fișiere. Dați-i textul pe care doriți să îl verificați - documentul în sine nu este încărcat."
 
 [portal.policies.operations.responseMode]
 replace = "Înlocuiți documentul cu răspunsul"
@@ -8429,7 +8429,7 @@ desc = "Rulează OCR astfel încât paginile scanate să devină text selectabil
 label = "Fă textul căutabil"
 
 [portal.policies.wizard.capability.redact]
-desc = "Găsește și acoperă detaliile sensibile — precum numerele de asigurare socială și de card — astfel încât să nu poată fi citite."
+desc = "Găsește și acoperă detaliile sensibile - precum numerele de asigurare socială și de card - astfel încât să nu poată fi citite."
 label = "Redactează informațiile sensibile"
 
 [portal.policies.wizard.capability.sanitize]
@@ -8595,11 +8595,11 @@ postalCodePlaceholder = "94105"
 posture = "Guvernanță"
 posture_count = "~{{count}} politici"
 posture_essentials = "Esențiale"
-posture_essentialsSub = "Clasificare + Partajare — valorile implicite"
+posture_essentialsSub = "Clasificare + Partajare - valorile implicite"
 posture_governed = "Guvernat"
 posture_governedSub = "Adaugă Securitate și Rutare"
 posture_regulated = "Reglementat"
-posture_regulatedSub = "Fiecare categorie — Conformitate, Retenție, Ingestie"
+posture_regulatedSub = "Fiecare categorie - Conformitate, Retenție, Ingestie"
 qbr = "Evaluări trimestriale de business"
 qbrSub = "SE-ul tău revizuiește utilizarea și foaia de parcurs în fiecare trimestru"
 region = "Stat / regiune"
@@ -8721,13 +8721,13 @@ label = "Trial"
 [portal.procurement.license]
 copied = "Copiat"
 copy = "Copiază cheia"
-downloadError = "Fișierul de licență offline nu a putut fi generat încă — încearcă din nou peste câteva momente."
+downloadError = "Fișierul de licență offline nu a putut fi generat încă - încearcă din nou peste câteva momente."
 downloadOffline = "Descarcă licența offline (.lic)"
 hint = "Lipește această cheie într-o instanță self-hosted pentru a o activa sau păstreaz-o pentru evidențele tale. Păstreaz-o în siguranță."
 label = "Cheia ta de licență"
 subtitle = "Activați o instanță self-hosted cu această cheie sau păstrați-o pentru evidențele dvs."
 title = "Cheia dvs. de licență"
-trialFileHint = "Acesta este fișierul dvs. de licență de probă. După ce acordul este în vigoare, reveniți și descărcați-l din nou — spre deosebire de cheia de licență online, fișierul .lic nu se actualizează singur."
+trialFileHint = "Acesta este fișierul dvs. de licență de probă. După ce acordul este în vigoare, reveniți și descărcați-l din nou - spre deosebire de cheia de licență online, fișierul .lic nu se actualizează singur."
 
 [portal.procurement.link]
 cta = "Conectează contul"
@@ -8741,10 +8741,10 @@ eyebrow = "Activ"
 title = "Ești activ pe Stirling Enterprise"
 
 [portal.procurement.milestone]
-downloadError = "Oferta PDF nu a putut fi descărcată încă — încearcă din nou peste câteva momente."
+downloadError = "Oferta PDF nu a putut fi descărcată încă - încearcă din nou peste câteva momente."
 
 [portal.procurement.payment]
-description = "Oferta ta este acceptată și licența este deja activă — echipa ta poate începe imediat. Plătește prima factură când ești pregătit; o poți plăti sau descărca aici, fără email."
+description = "Oferta ta este acceptată și licența este deja activă - echipa ta poate începe imediat. Plătește prima factură când ești pregătit; o poți plăti sau descărca aici, fără email."
 downloadAgreement = "Descărcați acordul semnat"
 downloadInvoice = "Descarcă factura"
 eyebrow = "Plată"
@@ -8799,7 +8799,7 @@ workEmailPlaceholder = "you@company.com"
 
 [portal.procurement.trial]
 body = "Extinderea adaugă 7 zile și notifică inginerul tău de soluții."
-bodyMaxed = "Ai folosit toate extinderile — discută cu inginerul tău de soluții dacă ai nevoie de mai mult timp."
+bodyMaxed = "Ai folosit toate extinderile - discută cu inginerul tău de soluții dacă ai nevoie de mai mult timp."
 cancel = "Anulează trialul"
 extend = "Extinde cu 7 zile"
 maxed = "Limită atinsă"
@@ -9036,7 +9036,7 @@ walletUnavailable = "Portofel indisponibil: {{status}} {{statusText}}"
 
 [portal.usage.sessionExpired]
 action = "Autentifică-te din nou"
-body = "Sesiunea contului tău Stirling a expirat. Autentifică-te din nou pentru a vedea facturarea — instanța ta rămâne conectată."
+body = "Sesiunea contului tău Stirling a expirat. Autentifică-te din nou pentru a vedea facturarea - instanța ta rămâne conectată."
 title = "Sesiune expirată"
 
 [portal.users]
@@ -9064,7 +9064,7 @@ summary = "Acces limitat sau doar web; nu poate avea configurări personale."
 
 [portal.users.roles.member]
 label = "Membru"
-summary = "Utilizator obișnuit — lucrează cu resurse partajate și propriile configurări."
+summary = "Utilizator obișnuit - lucrează cu resurse partajate și propriile configurări."
 
 [portal.users.roles.member.permissions]
 0 = "Folosește editorul și integrările partajate"
@@ -9074,7 +9074,7 @@ summary = "Utilizator obișnuit — lucrează cu resurse partajate și propriile
 
 [portal.users.roles.team_owner]
 label = "Proprietar de echipă"
-summary = "Deține o echipă — gestionează resursele membrilor și configurările partajate."
+summary = "Deține o echipă - gestionează resursele membrilor și configurările partajate."
 
 [portal.users.roles.team_owner.permissions]
 0 = "Creează și gestionează conexiunile S3 ale echipei"
@@ -9765,7 +9765,7 @@ failed = "A apărut o eroare la extragerea scanărilor de imagini."
 
 [scannerImageSplit.tooltip]
 headsUp = "Atenție"
-headsUpDesc = "Fotografiile suprapuse sau fundalurile foarte apropiate ca culoare de fotografii pot reduce acuratețea — încercați un fundal mai deschis sau mai închis și lăsați mai mult spațiu."
+headsUpDesc = "Fotografiile suprapuse sau fundalurile foarte apropiate ca culoare de fotografii pot reduce acuratețea - încercați un fundal mai deschis sau mai închis și lăsați mai mult spațiu."
 problem1 = "Fotografii nedetectate → creșteți Toleranța la 30-50"
 problem2 = "Prea multe detecții false → creșteți Aria minimă la 15.000-20.000"
 problem3 = "Decupaje prea strânse → creșteți Dimensiunea marginii la 5-10"
@@ -9783,7 +9783,7 @@ useCase2 = "Separați loturile de pe platou în fișiere distincte"
 useCase3 = "Împărțiți colajele în fotografii individuale"
 useCase4 = "Extrageți fotografii din documente"
 whatThisDoes = "Ce face"
-whatThisDoesDesc = "Găsește și extrage automat fiecare fotografie dintr-o pagină scanată sau imagine compozit—fără decupare manuală."
+whatThisDoesDesc = "Găsește și extrage automat fiecare fotografie dintr-o pagină scanată sau imagine compozit - fără decupare manuală."
 whenToUse = "Când se folosește"
 
 [ScannerImageSplit.selectText]
@@ -10931,7 +10931,7 @@ recommended = "Recomandat"
 selfHostedOffline = "Necesită serverul dvs. Stirling-PDF (în prezent offline):"
 showDetails = "Afișați detalii"
 unavailable = "Dezactivat de administratorul serverului:"
-unavailableDependency = "Indisponibil – lipsește un instrument necesar pe server:"
+unavailableDependency = "Indisponibil - lipsește un instrument necesar pe server:"
 unfavorite = "Eliminați din favorite"
 
 [toolPanel.modePrompt]
@@ -11462,9 +11462,9 @@ emptyFile = "Fișier gol"
 htmlHidePreview = "Ascunde previzualizarea"
 htmlPreview = "Previzualizare HTML"
 htmlPreviewMobileHidden = "Paginile HTML sunt aranjate pentru lățimi de desktop, așa că previzualizarea este dezactivată implicit aici."
-htmlPreviewWarning = "Previzualizare HTML — resursele externe s-ar putea să nu se încarce · {{size}}"
+htmlPreviewWarning = "Previzualizare HTML - resursele externe s-ar putea să nu se încarce · {{size}}"
 htmlShowPreview = "Afișează oricum previzualizarea"
-invalidJson = "JSON invalid — se afișează conținutul brut"
+invalidJson = "JSON invalid - se afișează conținutul brut"
 lineNumbers = "Numere de linie"
 loading = "Se încarcă..."
 renderMarkdown = "Redați markdown"
@@ -11526,7 +11526,7 @@ create = "Create your first Watched Folder"
 deleteFolder = "Delete folder"
 editFolder = "Edit folder"
 empty = "No watched folders yet"
-emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged — whatever your pipeline does."
+emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged - whatever your pipeline does."
 emptyTitle = "Automate your PDF workflows"
 file = "file"
 files = "files"
@@ -11534,7 +11534,7 @@ pause = "Pause"
 resume = "Resume"
 
 [watchedFolders.howItWorks]
-step1Desc = "Drag PDFs onto any Watched Folder card — or send them from your file list"
+step1Desc = "Drag PDFs onto any Watched Folder card - or send them from your file list"
 step1Title = "Drop files"
 step2Desc = "Your configured tools process each file automatically"
 step2Title = "Pipeline runs"
@@ -11558,18 +11558,18 @@ createFolder = "Create Folder"
 createTitle = "New Watched Folder"
 editTitle = "Edit Watched Folder"
 inputFolder = "Input folder"
-inputFolderNotChosen = "No folder chosen — required for auto-scan"
+inputFolderNotChosen = "No folder chosen - required for auto-scan"
 inputSource = "Input source"
-inputSourceBrowser = "Browser — drop files here"
+inputSourceBrowser = "Browser - drop files here"
 inputSourceLocal = "Local folder (auto-scan)"
-inputSourceLocalUnsupported = "Local folder (auto-scan) — Chrome/Edge only"
+inputSourceLocalUnsupported = "Local folder (auto-scan) - Chrome/Edge only"
 localOutputFolder = "Local output folder"
 maxRetries = "Max retries"
 name = "Folder name"
 namePlaceholder = "My Watched Folder"
 nameRequired = "Folder name is required"
 nameTooLong = "Folder name must be 50 characters or less"
-outputFolderNotSet = "Not set — outputs stay in app"
+outputFolderNotSet = "Not set - outputs stay in app"
 outputFolderUnsupported = "Not supported in this browser"
 outputModeNewDesc = "Output is saved as a new separate file"
 outputModeVersion = "Replace original?"
@@ -11629,9 +11629,9 @@ filterPending = "Pending"
 inputs = "Inputs"
 inputSize = "Input size"
 legendComplete = "Complete"
-noActivity = "No activity yet — drop a PDF to start"
+noActivity = "No activity yet - drop a PDF to start"
 noActivityMatch = "No matching activity"
-noInputFolder = "No input folder — edit to configure"
+noInputFolder = "No input folder - edit to configure"
 outputs = "Outputs"
 pause = "Pause"
 preview = "Preview"
@@ -11639,7 +11639,7 @@ previewInput = "Preview input"
 previewLoadFailed = "Could not load file preview."
 previewOutput = "Preview output"
 queued = "Queued"
-queuedWaiting = "Queued — waiting to run"
+queuedWaiting = "Queued - waiting to run"
 removeEntries = "Remove {{count}} entries"
 removeEntry = "Remove entry"
 removeNotificationsOnly = "Remove notifications only"

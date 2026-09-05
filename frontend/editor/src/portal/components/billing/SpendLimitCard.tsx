@@ -140,7 +140,7 @@ export function SpendLimitCard({
           currency={wallet.currency}
           note={t(
             "portal.billing.spendLimit.capControlNote",
-            "Changes apply immediately — raise or lower the ceiling any time.",
+            "Changes apply immediately - raise or lower the ceiling any time.",
           )}
         />
 
@@ -218,7 +218,7 @@ export function SpendLimitCard({
           <p className="portal-billing__section-sub">
             {t(
               "portal.billing.spendLimit.displaySub",
-              "You're only billed for what you process automatically — never past the ceiling.",
+              "You're only billed for what you process automatically - never past the ceiling.",
             )}
           </p>
         </div>

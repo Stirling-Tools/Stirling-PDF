@@ -551,7 +551,7 @@ title = "Cieľová veľkosť strany"
 bullet1 = "1.0 = Pôvodná veľkosť"
 bullet2 = "0.5 = Polovičná veľkosť (o 50 % menšie)"
 bullet3 = "2.0 = Dvojnásobná veľkosť (o 200 % väčšie, môže orezať)"
-text = "Riadi, ako veľký alebo malý sa obsah zobrazí na strane. Obsah sa škáluje a centrovaný – ak je škálovaný obsah väčší než veľkosť strany, môže byť orezaný."
+text = "Riadi, ako veľký alebo malý sa obsah zobrazí na strane. Obsah sa škáluje a centrovaný - ak je škálovaný obsah väčší než veľkosť strany, môže byť orezaný."
 title = "Faktor mierky"
 
 [admin]
@@ -696,7 +696,7 @@ title = "Dokumenty a RAG"
 description = "Nechajte prázdne, ak chcete použiť vlastné prihlasovacie údaje prostredia engine. Platí pre self-hosted nasadenia s jedným engine."
 generic = "Embedding API key"
 openai = "OpenAI API key"
-setPlaceholder = "Uložené – nechajte prázdne, ak chcete ponechať aktuálny kľúč"
+setPlaceholder = "Uložené - nechajte prázdne, ak chcete ponechať aktuálny kľúč"
 voyageai = "VoyageAI API key"
 
 [admin.settings.ai.documents.embeddingBaseUrl]
@@ -815,7 +815,7 @@ anthropic = "Anthropic API key"
 description = "Nechajte prázdne, ak chcete použiť vlastné prihlasovacie údaje prostredia engine. Platí pre self-hosted nasadenia s jedným engine."
 generic = "API key"
 openai = "OpenAI API key"
-setPlaceholder = "Uložené – nechajte prázdne, ak chcete ponechať aktuálny kľúč"
+setPlaceholder = "Uložené - nechajte prázdne, ak chcete ponechať aktuálny kľúč"
 
 [admin.settings.ai.models.baseUrl]
 description = "Základná URL OpenAI-kompatibilného / Ollama endpointu, napr. http://ollama:11434/v1."
@@ -1254,7 +1254,7 @@ description = "URL alebo názov súboru k Impressu (požadované v niektorých j
 label = "Impressum"
 
 [admin.settings.legal.loginAgreement]
-defaultLocaleHint = "— používa sa ako náhrada, keď pre jazyk neexistuje súbor."
+defaultLocaleHint = "- používa sa ako náhrada, keď pre jazyk neexistuje súbor."
 defaultLocaleLink = "Nastaviť predvolený jazyk"
 description = "Zobraziť vyhlásenie, ktoré musia používatelia po prihlásení prijať. Text sa zobrazuje v jazyku používateľa."
 discardConfirm = "Máte neuložené zmeny, ktoré sa stratia. Chcete aj tak prepnúť jazyk?"
@@ -2022,8 +2022,8 @@ insufficientPermissions = "Nemáte oprávnenie vykonať túto akciu."
 
 [auth.callback]
 completing = "Dokončuje sa overenie"
-invalidToken = "OAuth prihlásenie zlyhalo – neplatný token."
-missingToken = "OAuth prihlásenie zlyhalo – nebol prijatý žiadny token."
+invalidToken = "OAuth prihlásenie zlyhalo - neplatný token."
+missingToken = "OAuth prihlásenie zlyhalo - nebol prijatý žiadny token."
 oauthFailed = "OAuth prihlásenie zlyhalo. Skúste to znova."
 pleaseWait = "Počkajte, kým dokončíme vaše prihlásenie."
 signedOut = "Boli ste odhlásení. Prihláste sa znova."
@@ -2318,8 +2318,8 @@ failed = "Počas vytvárania impozície brožúry došlo k chybe."
 
 [bookletImposition.flipOnShortEdge]
 label = "Preklopiť na krátkej hrane (iba automatická duplexná tlač)"
-manualNote = "V manuálnom režime netreba – balík preklopíte sami"
-tooltip = "Povoľte pre duplexnú tlač na krátkej hrane (iba automatická duplexná tlač – v manuálnom režime sa ignoruje)"
+manualNote = "V manuálnom režime netreba - balík preklopíte sami"
+tooltip = "Povoľte pre duplexnú tlač na krátkej hrane (iba automatická duplexná tlač - v manuálnom režime sa ignoruje)"
 
 [bookletImposition.gutterSize]
 label = "Veľkosť vnútorného okraja (body)"
@@ -2465,7 +2465,7 @@ pemPrivateKeyLabel = "Súkromný kľúč (.pem / .key)"
 pending = "Čaká"
 readyToFinalize = "Pripravené na finalizáciu"
 reason = "Dôvod"
-serverCertMessage = "Používa sa serverový certifikát – nie sú potrebné súbory ani heslo"
+serverCertMessage = "Používa sa serverový certifikát - nie sú potrebné súbory ani heslo"
 showLogo = "Zobraziť logo"
 signatureProgress = "Podpisy: {{signedCount}}/{{totalCount}}"
 signed = "Podpísané"
@@ -2515,10 +2515,10 @@ text = "Je to bezpečný identifikátor vášho podpisu, ktorý dokazuje, že st
 title = "Čo je certifikát?"
 
 [certSign.certType.tooltip.which]
-bullet1 = "PKCS#12 (.p12 / .pfx) – jeden kombinovaný súbor (najbežnejšie)"
-bullet2 = "PFX (.pfx) – Microsoft verzia PKCS12"
-bullet3 = "PEM – samostatné .pem súbory súkromného kľúča a certifikátu"
-bullet4 = "JKS – Java .jks úložisko kľúčov pre dev / CI-CD postupy"
+bullet1 = "PKCS#12 (.p12 / .pfx) - jeden kombinovaný súbor (najbežnejšie)"
+bullet2 = "PFX (.pfx) - Microsoft verzia PKCS12"
+bullet3 = "PEM - samostatné .pem súbory súkromného kľúča a certifikátu"
+bullet4 = "JKS - Java .jks úložisko kľúčov pre dev / CI-CD postupy"
 text = "Vyberte formát, ktorý zodpovedá vášmu súboru certifikátu:"
 title = "Ktorú možnosť mám použiť?"
 
@@ -2717,7 +2717,7 @@ expires = "vyprší"
 listCerts = "Zobraziť certifikáty"
 loading = "Načítavajú sa certifikáty…"
 noCerts = "Nenašli sa žiadne podpisové certifikáty"
-noDriver = "Nebol zistený žiadny ovládač PKCS#11. Nainštalujte ovládač pre váš token (napr. OpenSC), potom to znova otvorte – alebo nižšie zadajte cestu k ovládaču manuálne."
+noDriver = "Nebol zistený žiadny ovládač PKCS#11. Nainštalujte ovládač pre váš token (napr. OpenSC), potom to znova otvorte - alebo nižšie zadajte cestu k ovládaču manuálne."
 notYetValid = "ešte neplatný"
 pin = "PIN tokenu"
 pkcs11Hint = "Vyberte ovládač PKCS#11 pre váš token, zadajte PIN a potom zobrazte certifikáty na tokene."
@@ -2726,7 +2726,7 @@ refresh = "Obnoviť"
 selectCert = "Vybrať certifikát"
 selectDriver = "Vybrať ovládač"
 slot = "Slot (voliteľné)"
-windowsHint = "Vyberte certifikát z vášho úložiska certifikátov Windows. Podpisovanie používa kľúč na vašej karte/tokene – Windows vyzve na zadanie PIN-u."
+windowsHint = "Vyberte certifikát z vášho úložiska certifikátov Windows. Podpisovanie používa kľúč na vašej karte/tokene - Windows vyzve na zadanie PIN-u."
 windowsLoadError = "Nepodarilo sa prečítať úložisko certifikátov Windows"
 
 [certSign.sessions]
@@ -2743,7 +2743,7 @@ submit = "Podpísať PDF"
 
 [certSign.signMode.tooltip.auto]
 text = "Podpisuje serverovým <b>samopodpísaným</b> certifikátom. Rovnaká <b>pečať odhaľujúca zásahy</b> a <b>auditná stopa</b>; v prehliadačoch sa zvyčajne zobrazuje <b>Unverified</b>."
-title = "Automaticky – Bez nastavenia, okamžitá systémová pečať"
+title = "Automaticky - Bez nastavenia, okamžitá systémová pečať"
 use = "Použite, keď: potrebujete rýchlosť a konzistentnú internú identitu naprieč revíziami a záznamami."
 
 [certSign.signMode.tooltip.header]
@@ -2751,7 +2751,7 @@ title = "O podpisoch PDF"
 
 [certSign.signMode.tooltip.manual]
 text = "Použite vlastné súbory certifikátu pre identitu v súlade so značkou. Môže zobraziť <b>Trusted</b>, keď je vaša CA/reťaz rozpoznaná."
-title = "Manuálne – Prinesiete si certifikát"
+title = "Manuálne - Prinesiete si certifikát"
 use = "Použiť na: voči zákazníkom, právne, compliance."
 
 [certSign.signMode.tooltip.overview]
@@ -3219,7 +3219,7 @@ title = "Kresba čiarami"
 [compress.tooltip.qualityAdjustment]
 bullet1 = "Nižšie hodnoty zachovávajú kvalitu"
 bullet2 = "Vyššie hodnoty znižujú veľkosť súboru"
-text = "Potiahnutím posúvača upravte silu kompresie. Nižšie hodnoty (1–3) zachovajú kvalitu, ale vytvoria väčšie súbory. Vyššie hodnoty (7–9) súbor viac zmenšia, no znížia ostrosť obrázkov."
+text = "Potiahnutím posúvača upravte silu kompresie. Nižšie hodnoty (1-3) zachovajú kvalitu, ale vytvoria väčšie súbory. Vyššie hodnoty (7-9) súbor viac zmenšia, no znížia ostrosť obrázkov."
 title = "Nastavenie kvality"
 
 [compressPdfs]
@@ -3462,7 +3462,7 @@ showPreferencesBtn = "Spravovať nastavenia"
 title = "Ako používame súbory cookie"
 
 [cookieBanner.popUp.description]
-1 = "Používame cookies a iné technológie, aby Stirling PDF fungoval lepšie pre vás—pomáhajú nám vylepšovať naše nástroje a ďalej budovať funkcie, ktoré si obľúbite."
+1 = "Používame cookies a iné technológie, aby Stirling PDF fungoval lepšie pre vás - pomáhajú nám vylepšovať naše nástroje a ďalej budovať funkcie, ktoré si obľúbite."
 2 = "If you’d rather not, clicking 'No Thanks' will only enable the essential cookies needed to keep things running smoothly."
 
 [cookieBanner.preferencesModal]
@@ -3475,16 +3475,16 @@ subtitle = "Používanie súborov cookie"
 title = "Centrum nastavení súhlasu"
 
 [cookieBanner.preferencesModal.analytics]
-description = "Tieto súbory cookie nám pomáhajú pochopiť, ako sa naše nástroje používajú, aby sme sa mohli sústrediť na budovanie funkcií, ktoré si naša komunita najviac cení. Bez obáv—Stirling PDF nemôže a nikdy nebude sledovať obsah dokumentov, s ktorými pracujete."
+description = "Tieto súbory cookie nám pomáhajú pochopiť, ako sa naše nástroje používajú, aby sme sa mohli sústrediť na budovanie funkcií, ktoré si naša komunita najviac cení. Bez obáv - Stirling PDF nemôže a nikdy nebude sledovať obsah dokumentov, s ktorými pracujete."
 title = "Analytika"
 
 [cookieBanner.preferencesModal.description]
 1 = "Stirling PDF používa súbory cookie a podobné technológie na zlepšenie vašej skúsenosti a pochopenie toho, ako sa naše nástroje používajú. Pomáha nám to zlepšovať výkon, vyvíjať funkcie, na ktorých vám záleží, a poskytovať priebežnú podporu používateľom."
-2 = "Stirling PDF nemôže—and nikdy nebude—sledovať ani pristupovať k obsahu dokumentov, ktoré používate."
+2 = "Stirling PDF nemôže - and nikdy nebude - sledovať ani pristupovať k obsahu dokumentov, ktoré používate."
 3 = "Vaše súkromie a dôvera sú základom toho, čo robíme."
 
 [cookieBanner.preferencesModal.necessary]
-description = "These cookies are essential for the website to function properly. They enable core features like setting your privacy preferences, logging in, and filling out forms—which is why they can’t be turned off."
+description = "These cookies are essential for the website to function properly. They enable core features like setting your privacy preferences, logging in, and filling out forms - which is why they can’t be turned off."
 
 [cookieBanner.preferencesModal.necessary.title]
 1 = "Nevyhnutne potrebné súbory cookie"
@@ -3900,7 +3900,7 @@ dateDesc = "Najnovšie ako prvé"
 dateLabel = "Najnovšie"
 nameAsc = "A po Z"
 nameDesc = "Z po A"
-nameLabel = "A–Z"
+nameLabel = "A-Z"
 
 [fileSelectorPicker.tabs]
 saved = "Uložené súbory"
@@ -4383,7 +4383,7 @@ readOnlyHelp = "Zobrazuje hodnotu, ale zabraňuje jej úprave."
 removeOption = "Odstrániť možnosť"
 required = "Povinné"
 requiredHelp = "Formulár nemožno odoslať, kým toto pole nie je vyplnené."
-signatureNote = "Iba vyhradené miesto – tu sa nepodpisuje. Označuje, kam patrí podpis, aby podpisovač PDF (Adobe Acrobat, podpisová služba atď.) pri podpísaní dokumentu umiestnil podpis na toto miesto."
+signatureNote = "Iba vyhradené miesto - tu sa nepodpisuje. Označuje, kam patrí podpis, aby podpisovač PDF (Adobe Acrobat, podpisová služba atď.) pri podpísaní dokumentu umiestnil podpis na toto miesto."
 tooltip = "Bublinová nápoveda"
 tooltipHelp = "Nápoveda zobrazená, keď niekto podrží kurzor nad poľom v PDF readeri."
 type = "Typ"
@@ -5413,7 +5413,7 @@ userBody = "Pozvite kolegov, priraďujte roly a udržujte dokumenty organizovan�
 userTitle = "Prehľad plánu"
 
 [onboarding.processorIntro]
-body = "Stirling teraz spúšťa <strong>Pravidlá</strong> — automatizované pravidlá, ktoré klasifikujú, zabezpečujú a spracúvajú každý dokument pri jeho príchode. Nastavte ich a sledujte behy v <strong>Procesore</strong>."
+body = "Stirling teraz spúšťa <strong>Pravidlá</strong> - automatizované pravidlá, ktoré klasifikujú, zabezpečujú a spracúvajú každý dokument pri jeho príchode. Nastavte ich a sledujte behy v <strong>Procesore</strong>."
 cta = "Pozrieť si Procesor"
 title = "Pozrite si Stirling Processor"
 
@@ -5670,7 +5670,7 @@ title = "Odstraňovač stránok"
 description = "Vyberte, ktoré strany sa použijú pre operáciu. Podporuje jednotlivé strany, rozsahy, vzorce a kľúčové slovo all."
 
 [pageSelection.tooltip.complex]
-bullet1 = "<strong>1,3-5,8,2n</strong> → strany 1, 3–5, 8, plus párne"
+bullet1 = "<strong>1,3-5,8,2n</strong> → strany 1, 3-5, 8, plus párne"
 bullet2 = "<strong>10-,2n-1</strong> → od strany 10 po koniec + nepárne strany"
 description = "Miešajte rôzne typy."
 title = "Zložité kombinácie"
@@ -5693,8 +5693,8 @@ description = "Použite n vo vzorcoch pre vzory."
 title = "Matematické funkcie"
 
 [pageSelection.tooltip.ranges]
-bullet1 = "<strong>3-6</strong> → vyberá strany 3–6"
-bullet2 = "<strong>10-15</strong> → vyberá strany 10–15"
+bullet1 = "<strong>3-6</strong> → vyberá strany 3-6"
+bullet2 = "<strong>10-15</strong> → vyberá strany 10-15"
 bullet3 = "<strong>5-</strong> → vyberá strany 5 po koniec"
 description = "Použite - pre po sebe idúce strany."
 title = "Rozsahy strán"
@@ -5770,7 +5770,7 @@ title = "Turn on the Processor plan"
 eyebrow = "Editor plan · Always free"
 
 [payg.free.header]
-freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
+freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR - as much as you want, no matter where you trigger it."
 freeTitle = "Unlimited PDF editing"
 
 [payg.free.hero]
@@ -5798,8 +5798,8 @@ pauses = "pauses at cap"
 title = "What happens when the cap is reached"
 
 [payg.header]
-eyebrow = "Processor plan · {{start}} – {{end}}"
-freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
+eyebrow = "Processor plan · {{start}} - {{end}}"
+freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR - as much as you want, no matter where you trigger it."
 freeLabel = "Always free"
 freeTitle = "Unlimited PDF editing"
 meterBody = "{{limit}} free PDFs to start, then billed per PDF up to your cap."
@@ -5819,8 +5819,8 @@ chip = "Predplatený rok"
 
 [payg.prepaid.banner]
 exhausted = "Vaša predplatená kapacita je vyčerpaná; účtovanie podľa spotreby bolo obnovené. Dobite kredit, aby ste si zachovali zľavu."
-expiring_one = "Váš predplatený rok končí o {{count}} deň. Nevyužitá kapacita vyprší — dobite kredit a začnite nový rok."
-expiring_other = "Váš predplatený rok končí o {{count}} dní. Nevyužitá kapacita vyprší — dobite kredit a začnite nový rok."
+expiring_one = "Váš predplatený rok končí o {{count}} deň. Nevyužitá kapacita vyprší - dobite kredit a začnite nový rok."
+expiring_other = "Váš predplatený rok končí o {{count}} dní. Nevyužitá kapacita vyprší - dobite kredit a začnite nový rok."
 low = "Zostáva vám {{pct}}% predplatenej kapacity. Kredit môžete kedykoľvek dobiť, aby spracovanie pokračovalo bez prerušenia."
 
 [payg.prepaid.card]
@@ -6015,7 +6015,7 @@ _value = "Režim"
 BOOKLET_SORT = "Usporiadať strany pre tlač brožúry (posledná, prvá, druhá, predposledná …)."
 CUSTOM = "Použiť vlastnú postupnosť čísel strán alebo výrazov na definovanie nového poradia."
 DUPLEX_SORT = "Prekladať predné potom zadné, akoby duplexný skener naskenoval najprv všetky predné, potom všetky zadné (1, n, 2, n-1, …)."
-DUPLICATE = "Duplikovať každú stranu podľa zadaného počtu (napr. 4 duplikáty — každá strana 4×)."
+DUPLICATE = "Duplikovať každú stranu podľa zadaného počtu (napr. 4 duplikáty - každá strana 4×)."
 ODD_EVEN_MERGE = "Zlúčiť dva PDF tak, že sa budú striedať strany: nepárne z prvého, párne z druhého."
 ODD_EVEN_SPLIT = "Rozdeliť dokument na dva výstupy: všetky nepárne strany a všetky párne strany."
 REMOVE_FIRST = "Odstrániť prvú stranu dokumentu."
@@ -6120,7 +6120,7 @@ processing = "Processing"
 uploading = "Uploading"
 
 [pdfTextEditor.tooltip.alpha]
-text = "Tento alfa prehliadač sa stále vyvíja—niektoré písma, farby, efekty priehľadnosti a detaily rozloženia sa môžu mierne zmeniť. Pred zdieľaním si, prosím, vygenerované PDF skontrolujte."
+text = "Tento alfa prehliadač sa stále vyvíja - niektoré písma, farby, efekty priehľadnosti a detaily rozloženia sa môžu mierne zmeniť. Pred zdieľaním si, prosím, vygenerované PDF skontrolujte."
 title = "Alfa prehliadač"
 
 [pdfTextEditor.tooltip.header]
@@ -6145,8 +6145,8 @@ feedback = "Toto je funkcia v skorom prístupe. Prosím, nahláste akékoľvek p
 gotIt = "Rozumiem"
 howItWorks = "Tento nástroj konvertuje váš PDF do editovateľného formátu, kde môžete upravovať text a presúvať obrázky. Zmeny sa uložia späť ako nové PDF."
 issue1 = "Farba textu sa zatiaľ nezachováva (čoskoro pribudne)"
-issue2 = "Režim odseku má viac problémov so zarovnaním a rozostupmi – odporúčaný je režim Jednotlivý riadok"
-issue3 = "Zobrazenie v náhľade sa líši od exportovaného PDF – exportované PDF je bližšie originálu"
+issue2 = "Režim odseku má viac problémov so zarovnaním a rozostupmi - odporúčaný je režim Jednotlivý riadok"
+issue3 = "Zobrazenie v náhľade sa líši od exportovaného PDF - exportované PDF je bližšie originálu"
 issue4 = "Zarovnanie otočeného textu môže vyžadovať ručné doladenie"
 issue5 = "Efekty priehľadnosti a vrstvenia sa môžu líšiť od originálu"
 knownIssues = "Známe problémy (opravujeme):"
@@ -6210,7 +6210,7 @@ title = "PDF na jednu stránku"
 failed = "Pri prevode na jednu stránku došlo k chybe."
 
 [pdfToSinglePage.results]
-title = "Výsledky – jedna stránka"
+title = "Výsledky - jedna stránka"
 
 [PDFToText]
 header = "PDF na RTF (Text)"
@@ -6521,7 +6521,7 @@ never = "nikdy"
 [portal.accountLink.modal]
 linkSubtitle = "Prihláste sa do účtu, voči ktorému má tento server účtovať."
 linkTitle = "Prepojiť váš účet Stirling"
-reauthSubtitle = "Platnosť vašej relácie vypršala — znova sa prihláste do svojho účtu Stirling. Vaša inštancia zostane prepojená."
+reauthSubtitle = "Platnosť vašej relácie vypršala - znova sa prihláste do svojho účtu Stirling. Vaša inštancia zostane prepojená."
 reauthTitle = "Znova sa prihlásiť"
 simulateSignIn = "Simulovať prihlásenie (dev)"
 
@@ -6581,7 +6581,7 @@ noClientSecret = "Edge funkcia nevrátila client_secret."
 title = "Zapnúť plán Processor"
 
 [portal.billing.checkout.activationSlow]
-body = "Vaša platba bola úspešná, ale aktivácia trvá o niečo dlhšie než zvyčajne. Zapne sa automaticky – zavrite toto okno a čoskoro sa tu zobrazí."
+body = "Vaša platba bola úspešná, ale aktivácia trvá o niečo dlhšie než zvyčajne. Zapne sa automaticky - zavrite toto okno a čoskoro sa tu zobrazí."
 close = "Zavrieť"
 title = "Už takmer hotovo"
 
@@ -6605,7 +6605,7 @@ note = "Údaje o karte zhromažďuje Stripe. Stirling nikdy neukladá PAN ani CV
 title = "Checkout sa nepodarilo spustiť"
 
 [portal.billing.checkout.finalizing]
-body = "Vaša platba prešla. Zapíname merané spracovanie naprieč vašimi prepojenými inštanciami – zvyčajne to trvá niekoľko sekúnd."
+body = "Vaša platba prešla. Zapíname merané spracovanie naprieč vašimi prepojenými inštanciami - zvyčajne to trvá niekoľko sekúnd."
 hint = "Nechajte toto okno otvorené."
 title = "Aktivuje sa váš plán Processor..."
 
@@ -6632,7 +6632,7 @@ title = "Bezplatné PDF editory"
 checkoutErrorTitle = "Checkout sa nepodarilo spustiť"
 currentPlan = "Aktuálny plán"
 freeForever = "Navždy zadarmo"
-noTeamResolved = "Vo vašej peňaženke zatiaľ nie je vyriešený žiadny tím — obnovte stránku a skúste to znova."
+noTeamResolved = "Vo vašej peňaženke zatiaľ nie je vyriešený žiadny tím - obnovte stránku a skúste to znova."
 ownerOnly = "Plán Processor môže zapnúť iba vlastník tímu."
 payInvoice = "Zaplatiť faktúru na dokončenie"
 planName = "Editor"
@@ -6667,7 +6667,7 @@ viewLink = "Zobraziť ↗"
 
 [portal.billing.linkPrompt]
 cta = "Prepojiť účet Stirling"
-description = "Manuálna úprava PDF — zobrazenie, podpisovanie, zlúčenie, rozdelenie, vodoznak, kompresia, konverzia, manuálne OCR — je vždy bezplatná, či už je účet prepojený alebo nie. Prepojením získate 500 bezplatných PDF meraného spracovania (automatizácia, AI a API); keď budete potrebovať viac, zapnite plán Processor a plaťte iba za to, čo použijete."
+description = "Manuálna úprava PDF - zobrazenie, podpisovanie, zlúčenie, rozdelenie, vodoznak, kompresia, konverzia, manuálne OCR - je vždy bezplatná, či už je účet prepojený alebo nie. Prepojením získate 500 bezplatných PDF meraného spracovania (automatizácia, AI a API); keď budete potrebovať viac, zapnite plán Processor a plaťte iba za to, čo použijete."
 title = "Prepojiť váš účet Stirling"
 
 [portal.billing.paymentMethod]
@@ -6801,13 +6801,13 @@ low = "Dochádza"
 [portal.billing.spendLimit]
 adjustLimit = "Upraviť limit"
 cancel = "Zrušiť"
-capControlNote = "Zmeny sa prejavia okamžite — strop môžete kedykoľvek zvýšiť alebo znížiť."
+capControlNote = "Zmeny sa prejavia okamžite - strop môžete kedykoľvek zvýšiť alebo znížiť."
 capSuffix = "/ mesiac"
 capSuffixWithDocs = "/ mesiac · ≈ {{documents}} dokumentov"
-displaySub = "Účtuje sa vám iba to, čo spracujete automaticky — nikdy nie nad strop."
+displaySub = "Účtuje sa vám iba to, čo spracujete automaticky - nikdy nie nad strop."
 editTitle = "Nastaviť mesačný strop"
 eyebrow = "Limit výdavkov"
-guardrailBody = "pevný strop — nikdy vám nebude účtované nad jeho rámec. Pri dosiahnutí stropu sa merané spracovanie pozastaví (neobmedzená úprava PDF bude naďalej fungovať), kým ho nezvýšite alebo sa cyklus nevynuluje. Nič sa nestratí."
+guardrailBody = "pevný strop - nikdy vám nebude účtované nad jeho rámec. Pri dosiahnutí stropu sa merané spracovanie pozastaví (neobmedzená úprava PDF bude naďalej fungovať), kým ho nezvýšite alebo sa cyklus nevynuluje. Nič sa nestratí."
 guardrailLabel = "Vaše ochranné pravidlo:"
 noCap = "bez stropu"
 pctUsed = "využité {{pct}} %"
@@ -6897,7 +6897,7 @@ description = "Odošlite dokument na podpis alebo notárske overenie."
 label = "E-signature a notárske overenie"
 
 [portal.connections.categories.storage]
-description = "Kam spracované dokumenty skončia – bucket, disk, ticket alebo stránka."
+description = "Kam spracované dokumenty skončia - bucket, disk, ticket alebo stránka."
 label = "Súbor a príloha"
 
 [portal.connections.commonFields.accessToken]
@@ -6946,9 +6946,9 @@ save = "Uložiť pripojenie"
 [portal.connections.picker2]
 back = "Zmeniť integráciu"
 heading = "Čo chcete pripojiť?"
-noResultsBody = "Zatiaľ to nepodporujeme – povedzte nám o tom a pozrieme sa na pridanie podpory."
+noResultsBody = "Zatiaľ to nepodporujeme - povedzte nám o tom a pozrieme sa na pridanie podpory."
 noResultsTitle = "Nič nezodpovedá \"{{query}}\""
-searchPlaceholder = "Hľadať integrácie – skúste \"sign\", \"ocr\" alebo názov produktu"
+searchPlaceholder = "Hľadať integrácie - skúste \"sign\", \"ocr\" alebo názov produktu"
 
 [portal.connections.types.api]
 description = "Volajte ľubovoľné HTTP API z pravidla. Vyberiete URL, overenie a payload."
@@ -7007,7 +7007,7 @@ label = "Používateľské meno"
 
 [portal.connections.types.clamav]
 baseUrlPlaceholder = "http://clamav-rest:9000"
-description = "Skenujte dokumenty na malvér na serveri, ktorý prevádzkujete – nič neopustí vašu sieť."
+description = "Skenujte dokumenty na malvér na serveri, ktorý prevádzkujete - nič neopustí vašu sieť."
 label = "ClamAV (self-hosted)"
 
 [portal.connections.types.cloudmersive]
@@ -7015,7 +7015,7 @@ description = "Skenovanie vírusov a obsahu dokumentov v pravidle."
 label = "Cloudmersive"
 
 [portal.connections.types.cloudmersiveadvanced]
-description = "Blokujte dokumenty obsahujúce makrá, spustiteľné súbory, skripty alebo vložené objekty – nielen známy malvér."
+description = "Blokujte dokumenty obsahujúce makrá, spustiteľné súbory, skripty alebo vložené objekty - nielen známy malvér."
 label = "Cloudmersive Advanced Scan"
 
 [portal.connections.types.confluence]
@@ -7242,8 +7242,8 @@ viewSource = "Zobraziť zdroj na GitHub"
 codeCaption = "každá požiadavka"
 eyebrow = "ZAČÍNAME"
 lead = "Všetky požiadavky sa overujú pomocou bearer tokenu. Kľúče sú obmedzené na prostredie a nikdy nevypršia, pokiaľ nie sú rotované."
-liveKey = "Produkčné kľúče — účtované, s limitom frekvencie podľa vášho plánu."
-testKey = "Sandbox kľúče — bezplatné, vracajú syntetické testovacie dáta."
+liveKey = "Produkčné kľúče - účtované, s limitom frekvencie podľa vášho plánu."
+testKey = "Sandbox kľúče - bezplatné, vracajú syntetické testovacie dáta."
 title = "Autentifikácia"
 
 [portal.docs.components]
@@ -7281,7 +7281,7 @@ title = "Quickstart"
 
 [portal.docs.quickstart.callout]
 bodyAfterLink = "pre recepty na kopírovanie a vloženie."
-bodyBeforeLink = "zapojte rovnaké volanie do pipeline na reťazenie validácie, začiernenia a doručenia — alebo ho sprístupnite agentovi cez MCP. Pozrite si"
+bodyBeforeLink = "zapojte rovnaké volanie do pipeline na reťazenie validácie, začiernenia a doručenia - alebo ho sprístupnite agentovi cez MCP. Pozrite si"
 label = "Ďalej:"
 link = "Playbooky"
 
@@ -7290,7 +7290,7 @@ body = "Vytvorte obmedzený kľúč na karte Infraštruktúra. Kľúče nesú li
 title = "Vydajte API kľúč"
 
 [portal.docs.quickstart.step2]
-body = "Odošlite súbor cez POST na ľubovoľný typovaný endpoint. Endpoint určuje schému, ktorú dostanete späť — tu je extraktor faktúr."
+body = "Odošlite súbor cez POST na ľubovoľný typovaný endpoint. Endpoint určuje schému, ktorú dostanete späť - tu je extraktor faktúr."
 snippetCaption = "extrahovať faktúru"
 title = "Odoslať dokument"
 
@@ -7370,8 +7370,8 @@ overview = "Prehľad"
 requestAccess = "Požiadať o prístup"
 
 [portal.documents.elevation.active]
-description = "Dočasné povolenie — prístup sa zaznamenáva a je časovo obmedzený."
-descriptionFourEyes = "Dočasné povolenie — bol upozornený kolega na kontrolu (princíp štyroch očí)."
+description = "Dočasné povolenie - prístup sa zaznamenáva a je časovo obmedzený."
+descriptionFourEyes = "Dočasné povolenie - bol upozornený kolega na kontrolu (princíp štyroch očí)."
 title = "Prístup vyprší o {{time}}"
 
 [portal.documents.elevation.gated]
@@ -7432,7 +7432,7 @@ time = "Čas"
 user = "Používateľ"
 
 [portal.editorAdmin]
-subtitle = "Nasaďte Stirling PDF Editor, spárujte self-hosted inštancie s vašou organizáciou a spravujte bežiacu flotilu — ciele, stav, prihlasovacie údaje a offline aktiváciu na jednom mieste."
+subtitle = "Nasaďte Stirling PDF Editor, spárujte self-hosted inštancie s vašou organizáciou a spravujte bežiacu flotilu - ciele, stav, prihlasovacie údaje a offline aktiváciu na jednom mieste."
 title = "Nasadenie Editoru"
 
 [portal.editorAdmin.health.columns]
@@ -7468,7 +7468,7 @@ rotate = "Rotovať"
 talkToSales = "Kontaktovať obchodné oddelenie"
 
 [portal.editorAdmin.sections.health]
-sub = "Každá inštancia Editoru odosielajúca hlásenia — verzia, región, stav, naposledy videné a aktívni používatelia."
+sub = "Každá inštancia Editoru odosielajúca hlásenia - verzia, región, stav, naposledy videné a aktívni používatelia."
 title = "Stav inštancií"
 
 [portal.editorAdmin.sections.pairing]
@@ -7754,9 +7754,9 @@ done = "Hotovo"
 keyNameLabel = "Názov kľúča"
 keyNamePlaceholder = "napr. Produkcia · ingest"
 secretKeyCaption = "Tajný kľúč"
-secretWarning = "Uložte ho v správcovi tajomstiev. Stirling vždy ukladá iba hash — neskôr ho nebude možné obnoviť."
+secretWarning = "Uložte ho v správcovi tajomstiev. Stirling vždy ukladá iba hash - neskôr ho nebude možné obnoviť."
 subtitle = "Obmedzte rozsah kľúča na minimum, ktoré potrebuje. Kedykoľvek ho môžete rotovať alebo zrušiť."
-subtitleCreated = "Skopírujte tento tajný kľúč teraz — znova sa už nezobrazí."
+subtitleCreated = "Skopírujte tento tajný kľúč teraz - znova sa už nezobrazí."
 title = "Vytvoriť API kľúč"
 titleCreated = "Kľúč vytvorený"
 
@@ -8181,7 +8181,7 @@ title = "Backend nie je dostupný"
 [portal.policies.operations]
 change = "Zmeniť, čo tento krok vykoná"
 noResults = "Žiadny krok tomu nezodpovedá. Skúste názov produktu alebo „scan“, „notify“, „attach“."
-searchPlaceholder = "Hľadať kroky – skúste „scan“, „attach“ alebo názov produktu"
+searchPlaceholder = "Hľadať kroky - skúste „scan“, „attach“ alebo názov produktu"
 
 [portal.policies.operations.bodyMode]
 binary = "Surové bajty súboru"
@@ -8317,7 +8317,7 @@ label = "Odoslať dokument emailom (Mailgun)"
 [portal.policies.operations.n8nGate]
 description = "Your workflow decides whether the run carries on."
 label = "Ask an n8n workflow to approve"
-note = "The workflow must reply with {\"approved\": true}. Anything else — including a timeout — stops the run and parks the document."
+note = "The workflow must reply with {\"approved\": true}. Anything else - including a timeout - stops the run and parks the document."
 
 [portal.policies.operations.n8nNotify]
 description = "Sends the run's details, not the document."
@@ -8339,7 +8339,7 @@ label = "Nahrať do Nextcloud"
 [portal.policies.operations.presidioAnalyze]
 description = "Váš vlastný server Presidio nahlási osobné údaje, ktoré nájde."
 label = "Zistiť osobné údaje"
-note = "Presidio číta text, nie súbory. Poskytnite mu text, ktorý chcete skontrolovať — samotný dokument sa nenahráva."
+note = "Presidio číta text, nie súbory. Poskytnite mu text, ktorý chcete skontrolovať - samotný dokument sa nenahráva."
 
 [portal.policies.operations.responseMode]
 replace = "Nahradiť dokument odpoveďou"
@@ -8429,7 +8429,7 @@ desc = "Spustí OCR, aby sa zo skenovaných stránok stal vyberateľný a vyhľa
 label = "Urobiť text vyhľadateľným"
 
 [portal.policies.wizard.capability.redact]
-desc = "Nájde a začierni citlivé údaje — napríklad čísla sociálneho poistenia a kariet — aby sa nedali prečítať."
+desc = "Nájde a začierni citlivé údaje - napríklad čísla sociálneho poistenia a kariet - aby sa nedali prečítať."
 label = "Redigovať citlivé informácie"
 
 [portal.policies.wizard.capability.sanitize]
@@ -8595,11 +8595,11 @@ postalCodePlaceholder = "94105"
 posture = "Riadenie"
 posture_count = "~{{count}} politík"
 posture_essentials = "Základy"
-posture_essentialsSub = "Klasifikácia + Zdieľanie — predvolené hodnoty"
+posture_essentialsSub = "Klasifikácia + Zdieľanie - predvolené hodnoty"
 posture_governed = "Riadené"
 posture_governedSub = "Pridáva Zabezpečenie a Smerovanie"
 posture_regulated = "Regulované"
-posture_regulatedSub = "Každá kategória — Compliance, Uchovávanie, Ingestion"
+posture_regulatedSub = "Každá kategória - Compliance, Uchovávanie, Ingestion"
 qbr = "Štvrťročné obchodné hodnotenia"
 qbrSub = "Váš SE každý štvrťrok prehodnotí používanie a plán rozvoja"
 region = "Štát / región"
@@ -8721,13 +8721,13 @@ label = "Skúšobná verzia"
 [portal.procurement.license]
 copied = "Skopírované"
 copy = "Kopírovať kľúč"
-downloadError = "Offline licenčný súbor zatiaľ nebolo možné vygenerovať — skúste to znova o chvíľu."
+downloadError = "Offline licenčný súbor zatiaľ nebolo možné vygenerovať - skúste to znova o chvíľu."
 downloadOffline = "Stiahnuť offline licenciu (.lic)"
 hint = "Vložte tento kľúč do self-hosted inštancie na jej aktiváciu alebo si ho ponechajte pre svoje záznamy. Uchovajte ho bezpečne."
 label = "Váš licenčný kľúč"
 subtitle = "Aktivujte self-hosted inštanciu týmto kľúčom alebo si ho ponechajte pre svoje záznamy."
 title = "Váš licenčný kľúč"
-trialFileHint = "Toto je váš súbor skúšobnej licencie. Keď bude vaša zmluva uzavretá, vráťte sa a stiahnite si ho znova — na rozdiel od online licenčného kľúča sa súbor .lic neaktualizuje sám."
+trialFileHint = "Toto je váš súbor skúšobnej licencie. Keď bude vaša zmluva uzavretá, vráťte sa a stiahnite si ho znova - na rozdiel od online licenčného kľúča sa súbor .lic neaktualizuje sám."
 
 [portal.procurement.link]
 cta = "Prepojiť účet"
@@ -8741,10 +8741,10 @@ eyebrow = "Live"
 title = "Ste live na Stirling Enterprise"
 
 [portal.procurement.milestone]
-downloadError = "PDF ponuky sa zatiaľ nepodarilo stiahnuť — skúste to znova o chvíľu."
+downloadError = "PDF ponuky sa zatiaľ nepodarilo stiahnuť - skúste to znova o chvíľu."
 
 [portal.procurement.payment]
-description = "Vaša ponuka je prijatá a licencia je už aktívna — váš tím môže začať hneď. Zaplaťte prvú faktúru, keď budete pripravení; môžete ju zaplatiť alebo stiahnuť tu, bez potreby emailu."
+description = "Vaša ponuka je prijatá a licencia je už aktívna - váš tím môže začať hneď. Zaplaťte prvú faktúru, keď budete pripravení; môžete ju zaplatiť alebo stiahnuť tu, bez potreby emailu."
 downloadAgreement = "Stiahnuť podpísanú zmluvu"
 downloadInvoice = "Stiahnuť faktúru"
 eyebrow = "Platba"
@@ -8799,7 +8799,7 @@ workEmailPlaceholder = "you@company.com"
 
 [portal.procurement.trial]
 body = "Predĺženie pridá 7 dní a upozorní vášho solutions engineer."
-bodyMaxed = "Využili ste všetky predĺženia — ak potrebujete viac času, kontaktujte svojho solutions engineer."
+bodyMaxed = "Využili ste všetky predĺženia - ak potrebujete viac času, kontaktujte svojho solutions engineer."
 cancel = "Zrušiť skúšobnú verziu"
 extend = "Predĺžiť o 7 dní"
 maxed = "Maximum dosiahnuté"
@@ -9036,7 +9036,7 @@ walletUnavailable = "Peňaženka nie je dostupná: {{status}} {{statusText}}"
 
 [portal.usage.sessionExpired]
 action = "Znova sa prihlásiť"
-body = "Platnosť relácie vášho účtu Stirling vypršala. Ak chcete zobraziť fakturáciu, prihláste sa znova — vaša inštancia zostáva prepojená."
+body = "Platnosť relácie vášho účtu Stirling vypršala. Ak chcete zobraziť fakturáciu, prihláste sa znova - vaša inštancia zostáva prepojená."
 title = "Relácia vypršala"
 
 [portal.users]
@@ -9064,7 +9064,7 @@ summary = "Obmedzený alebo iba webový prístup; nemôže mať osobné konfigur
 
 [portal.users.roles.member]
 label = "Člen"
-summary = "Bežný používateľ — pracuje so zdieľanými zdrojmi a vlastnými konfiguráciami."
+summary = "Bežný používateľ - pracuje so zdieľanými zdrojmi a vlastnými konfiguráciami."
 
 [portal.users.roles.member.permissions]
 0 = "Používať editor a zdieľané integrácie"
@@ -9074,7 +9074,7 @@ summary = "Bežný používateľ — pracuje so zdieľanými zdrojmi a vlastným
 
 [portal.users.roles.team_owner]
 label = "Vlastník tímu"
-summary = "Vlastní tím — spravuje zdroje jeho členov a zdieľané konfigurácie."
+summary = "Vlastní tím - spravuje zdroje jeho členov a zdieľané konfigurácie."
 
 [portal.users.roles.team_owner.permissions]
 0 = "Vytvárať a spravovať S3 pripojenia tímu"
@@ -9352,7 +9352,7 @@ title = "Pokročilé nastavenia redigovania"
 
 [redact.tooltip.advanced.regex]
 bullet1 = "Príklad: \\d{4}-\\d{2}-\\d{2} na zhodu akýchkoľvek dátumov vo formáte YYYY-MM-DD"
-bullet2 = "Používajte opatrne – dôkladne testujte"
+bullet2 = "Používajte opatrne - dôkladne testujte"
 text = "Povoľte regulárne výrazy na pokročilú zhodu vzorov. Užitočné na hľadanie telefónnych čísel, e-mailov alebo komplexných vzorov."
 title = "Použiť Regex"
 
@@ -9619,8 +9619,8 @@ text = "Konvertujte PDF z farebného priestoru RGB do farebného priestoru CMYK,
 title = "Konvertovať na CMYK"
 
 [replaceColor.tooltip.custom]
-bullet1 = "Farba textu – vyberte farbu pre textové prvky"
-bullet2 = "Farba pozadia – nastavte farbu pozadia dokumentu"
+bullet1 = "Farba textu - vyberte farbu pre textové prvky"
+bullet2 = "Farba pozadia - nastavte farbu pozadia dokumentu"
 text = "Definujte vlastné farby textu a pozadia pomocou výberov farieb. Ideálne na vytváranie dokumentov v súlade so značkou alebo pre konkrétne požiadavky prístupnosti."
 title = "Vlastné farby"
 
@@ -9632,10 +9632,10 @@ title = "Opis"
 title = "Prehľad nastavení nahradenia a invertovania farieb"
 
 [replaceColor.tooltip.highContrast]
-bullet1 = "Biele písmo na čiernom pozadí – klasický tmavý režim"
-bullet2 = "Čierne písmo na bielom pozadí – štandardný vysoký kontrast"
-bullet3 = "Žlté písmo na čiernom pozadí – možnosť s vysokou viditeľnosťou"
-bullet4 = "Zelené písmo na čiernom pozadí – alternatívny vysoký kontrast"
+bullet1 = "Biele písmo na čiernom pozadí - klasický tmavý režim"
+bullet2 = "Čierne písmo na bielom pozadí - štandardný vysoký kontrast"
+bullet3 = "Žlté písmo na čiernom pozadí - možnosť s vysokou viditeľnosťou"
+bullet4 = "Zelené písmo na čiernom pozadí - alternatívny vysoký kontrast"
 text = "Použiť preddefinované farebné kombinácie s vysokým kontrastom navrhnuté pre lepšiu čitateľnosť a súlad s prístupnosťou."
 title = "Vysoký kontrast"
 
@@ -9765,17 +9765,17 @@ failed = "Pri extrahovaní naskenovaných obrázkov došlo k chybe."
 
 [scannerImageSplit.tooltip]
 headsUp = "Upozornenie"
-headsUpDesc = "Prekrývajúce sa fotografie alebo pozadia veľmi blízke farbe fotografií môžu znížiť presnosť—skúste svetlejšie alebo tmavšie pozadie a nechajte viac miesta."
-problem1 = "Fotografie nie sú detegované → zvýšte Tolerance na 30–50"
-problem2 = "Príliš veľa falošných detekcií → zvýšte Minimum Area na 15 000–20 000"
-problem3 = "Orezy sú príliš tesné → zvýšte Border Size na 5–10"
+headsUpDesc = "Prekrývajúce sa fotografie alebo pozadia veľmi blízke farbe fotografií môžu znížiť presnosť - skúste svetlejšie alebo tmavšie pozadie a nechajte viac miesta."
+problem1 = "Fotografie nie sú detegované → zvýšte Tolerance na 30-50"
+problem2 = "Príliš veľa falošných detekcií → zvýšte Minimum Area na 15 000-20 000"
+problem3 = "Orezy sú príliš tesné → zvýšte Border Size na 5-10"
 problem4 = "Naklonené fotografie sa nevyrovnávajú → znížte Angle Threshold na ~5°"
-problem5 = "Škvrny/šumové boxy → zvýšte Minimum Contour Area na 1000–2000"
+problem5 = "Škvrny/šumové boxy → zvýšte Minimum Contour Area na 1000-2000"
 quickFixes = "Rýchle opravy"
 setupTips = "Tipy pre nastavenie"
 tip1 = "Použite jednoduché, svetlé pozadie"
 tip2 = "Nechajte malú medzeru (≈1 cm) medzi fotografiami"
-tip3 = "Skenujte pri 300–600 DPI"
+tip3 = "Skenujte pri 300-600 DPI"
 tip4 = "Vyčistite sklo skenera"
 title = "Rozdeľovač fotografií"
 useCase1 = "Naskenujte celé strany albumu naraz"
@@ -9783,7 +9783,7 @@ useCase2 = "Rozdeľte dávky z plochého skenera na samostatné súbory"
 useCase3 = "Rozdeľte koláže na jednotlivé fotografie"
 useCase4 = "Vytiahnite fotografie z dokumentov"
 whatThisDoes = "Čo to robí"
-whatThisDoesDesc = "Automaticky nájde a extrahuje každú fotografiu zo skenovanej strany alebo zloženého obrázka—bez ručného orezávania."
+whatThisDoesDesc = "Automaticky nájde a extrahuje každú fotografiu zo skenovanej strany alebo zloženého obrázka - bez ručného orezávania."
 whenToUse = "Kedy použiť"
 
 [ScannerImageSplit.selectText]
@@ -10556,7 +10556,7 @@ title = "Rozdeliť podľa počtu strán"
 bullet1 = "Vytlačte oddeľovacie listy z odkazu na stiahnutie"
 bullet2 = "Vložte oddeľovacie listy medzi dokumenty"
 bullet3 = "Naskenujte všetky dokumenty spolu ako jedno PDF"
-bullet4 = "Nahrajte – oddeľovacie strany sa automaticky detegujú a odstránia"
+bullet4 = "Nahrajte - oddeľovacie strany sa automaticky detegujú a odstránia"
 bullet5 = "Povoľte duplexný režim, ak skenujete obe strany oddeľovacích listov"
 text = "Automaticky rozdeľujte skenované dokumenty pomocou fyzických oddeľovacích listov s QR kódmi. Perfektné na spracovanie viacerých dokumentov naskenovaných spolu."
 title = "Rozdeliť podľa oddeľovača strán"
@@ -10931,7 +10931,7 @@ recommended = "Odporúčané"
 selfHostedOffline = "Vyžaduje váš server Stirling-PDF (aktuálne offline):"
 showDetails = "Zobraziť podrobnosti"
 unavailable = "Zakázané správcom servera:"
-unavailableDependency = "Nedostupné – chýba požadovaný nástroj na serveri:"
+unavailableDependency = "Nedostupné - chýba požadovaný nástroj na serveri:"
 unfavorite = "Odstrániť z obľúbených"
 
 [toolPanel.modePrompt]
@@ -10940,7 +10940,7 @@ chooseSidebar = "Použiť režim bočného panela"
 description = "Pozrite si obe rozloženia a rozhodnite sa, ako chcete skúmať nástroje Stirling PDF."
 dismiss = "Možno neskôr"
 fullscreenDescription = "Prehliadajte každý nástroj v katalógu, ktorý zakryje pracovný priestor, kým si jeden nevyberiete."
-fullscreenTitle = "Režim na celú obrazovku – (starší)"
+fullscreenTitle = "Režim na celú obrazovku - (starší)"
 recommended = "Odporúčané"
 sidebarDescription = "Majte nástroje vedľa pracovného priestoru pre rýchle prepínanie."
 sidebarTitle = "Režim bočného panela"
@@ -11234,7 +11234,7 @@ title = "Premenovať tím"
 apply = "Resetovať heslo"
 confirm = "Potvrdiť heslo"
 copied = "Skopírované do schránky"
-copyHint = "Skopírujte si ho teraz – už sa znova nezobrazí."
+copyHint = "Skopírujte si ho teraz - už sa znova nezobrazí."
 email = "Poslať používateľovi e-mail o resetovaní"
 forceChange = "Vyžadovať zmenu hesla pri ďalšom prihlásení"
 generate = "Vygenerovať bezpečné heslo"
@@ -11306,9 +11306,9 @@ certExpired = "Platnosť certifikátu vypršala"
 certRevocationUnknown = "Stav odvolania certifikátu neznámy"
 certRevoked = "Certifikát odvolaný"
 chainInvalid = "Certifikačný reťazec neplatný"
-documentModified = "Dokument bol po podpísaní upravený – obsah bol pridaný mimo podpísanej oblasti"
+documentModified = "Dokument bol po podpísaní upravený - obsah bol pridaný mimo podpísanej oblasti"
 revocationNotChecked = "Kontrola odvolania nebola vykonaná"
-selfSigned = "Samopodpísaný – identita podpisujúceho nebola overená"
+selfSigned = "Samopodpísaný - identita podpisujúceho nebola overená"
 signatureInvalid = "Zlyhala kryptografická kontrola podpisu"
 trustInvalid = "Certifikát nie je dôveryhodný"
 
@@ -11462,9 +11462,9 @@ emptyFile = "Prázdny súbor"
 htmlHidePreview = "Skryť náhľad"
 htmlPreview = "Náhľad HTML"
 htmlPreviewMobileHidden = "HTML stránky sú rozložené pre šírky obrazoviek počítačov, preto je tu náhľad predvolene vypnutý."
-htmlPreviewWarning = "Náhľad HTML — externé zdroje sa nemusia načítať · {{size}}"
+htmlPreviewWarning = "Náhľad HTML - externé zdroje sa nemusia načítať · {{size}}"
 htmlShowPreview = "Aj tak zobraziť náhľad"
-invalidJson = "Neplatný JSON — zobrazuje sa surový obsah"
+invalidJson = "Neplatný JSON - zobrazuje sa surový obsah"
 lineNumbers = "Čísla riadkov"
 loading = "Načítava sa..."
 renderMarkdown = "Zobraziť Markdown"
@@ -11526,7 +11526,7 @@ create = "Create your first Watched Folder"
 deleteFolder = "Delete folder"
 editFolder = "Edit folder"
 empty = "No watched folders yet"
-emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged — whatever your pipeline does."
+emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged - whatever your pipeline does."
 emptyTitle = "Automate your PDF workflows"
 file = "file"
 files = "files"
@@ -11534,7 +11534,7 @@ pause = "Pause"
 resume = "Resume"
 
 [watchedFolders.howItWorks]
-step1Desc = "Drag PDFs onto any Watched Folder card — or send them from your file list"
+step1Desc = "Drag PDFs onto any Watched Folder card - or send them from your file list"
 step1Title = "Drop files"
 step2Desc = "Your configured tools process each file automatically"
 step2Title = "Pipeline runs"
@@ -11558,18 +11558,18 @@ createFolder = "Create Folder"
 createTitle = "New Watched Folder"
 editTitle = "Edit Watched Folder"
 inputFolder = "Input folder"
-inputFolderNotChosen = "No folder chosen — required for auto-scan"
+inputFolderNotChosen = "No folder chosen - required for auto-scan"
 inputSource = "Input source"
-inputSourceBrowser = "Browser — drop files here"
+inputSourceBrowser = "Browser - drop files here"
 inputSourceLocal = "Local folder (auto-scan)"
-inputSourceLocalUnsupported = "Local folder (auto-scan) — Chrome/Edge only"
+inputSourceLocalUnsupported = "Local folder (auto-scan) - Chrome/Edge only"
 localOutputFolder = "Local output folder"
 maxRetries = "Max retries"
 name = "Folder name"
 namePlaceholder = "My Watched Folder"
 nameRequired = "Folder name is required"
 nameTooLong = "Folder name must be 50 characters or less"
-outputFolderNotSet = "Not set — outputs stay in app"
+outputFolderNotSet = "Not set - outputs stay in app"
 outputFolderUnsupported = "Not supported in this browser"
 outputModeNewDesc = "Output is saved as a new separate file"
 outputModeVersion = "Replace original?"
@@ -11629,9 +11629,9 @@ filterPending = "Pending"
 inputs = "Inputs"
 inputSize = "Input size"
 legendComplete = "Complete"
-noActivity = "No activity yet — drop a PDF to start"
+noActivity = "No activity yet - drop a PDF to start"
 noActivityMatch = "No matching activity"
-noInputFolder = "No input folder — edit to configure"
+noInputFolder = "No input folder - edit to configure"
 outputs = "Outputs"
 pause = "Pause"
 preview = "Preview"
@@ -11639,7 +11639,7 @@ previewInput = "Preview input"
 previewLoadFailed = "Could not load file preview."
 previewOutput = "Preview output"
 queued = "Queued"
-queuedWaiting = "Queued — waiting to run"
+queuedWaiting = "Queued - waiting to run"
 removeEntries = "Remove {{count}} entries"
 removeEntry = "Remove entry"
 removeNotificationsOnly = "Remove notifications only"
@@ -11698,7 +11698,7 @@ wording = "Text"
 
 [watermark.tooltip.appearance]
 bullet1 = "Otočenie: -360° až 360° pre šikmé vodoznaky"
-bullet2 = "Nepriehľadnosť: 0–100 % na kontrolu priehľadnosti"
+bullet2 = "Nepriehľadnosť: 0-100 % na kontrolu priehľadnosti"
 bullet3 = "Nižšia nepriehľadnosť vytvára jemné vodoznaky"
 text = "Ovládajte, ako vodoznak vyzerá a splýva s dokumentom."
 title = "Nastavenia vzhľadu"
@@ -11981,7 +11981,7 @@ success = "Používatelia boli úspešne pozvaní"
 [workspace.people.inviteLink]
 copied = "Odkaz skopírovaný do schránky"
 email = "E-mailová adresa"
-emailDescription = "Voliteľné – nechajte prázdne pre všeobecný pozývací odkaz použiteľný kýmkoľvek"
+emailDescription = "Voliteľné - nechajte prázdne pre všeobecný pozývací odkaz použiteľný kýmkoľvek"
 emailPlaceholder = "user@example.com (voliteľné)"
 emailSent = "Pozývací odkaz bol vygenerovaný a odoslaný e-mailom"
 error = "Nepodarilo sa vygenerovať pozývací odkaz"

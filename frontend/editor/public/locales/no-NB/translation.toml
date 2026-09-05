@@ -551,7 +551,7 @@ title = "Målstørrelse for side"
 bullet1 = "1.0 = Opprinnelig størrelse"
 bullet2 = "0.5 = Halv størrelse (50% mindre)"
 bullet3 = "2.0 = Dobbel størrelse (200% større, kan beskjæres)"
-text = "Styrer hvor stort eller lite innholdet vises på siden. Innhold skaleres og sentreres – hvis skalert innhold er større enn sidestørrelsen, kan det bli beskåret."
+text = "Styrer hvor stort eller lite innholdet vises på siden. Innhold skaleres og sentreres - hvis skalert innhold er større enn sidestørrelsen, kan det bli beskåret."
 title = "Skaleringsfaktor"
 
 [admin]
@@ -583,7 +583,7 @@ processing = "Behandling"
 title = "Avansert"
 
 [admin.settings.advanced.disableSanitize]
-description = "ADVARSEL: Sikkerhetsrisiko – deaktivering av HTML-sanitering kan føre til XSS-sårbarheter"
+description = "ADVARSEL: Sikkerhetsrisiko - deaktivering av HTML-sanitering kan føre til XSS-sårbarheter"
 label = "Deaktiver HTML-sanitering"
 
 [admin.settings.advanced.enableAlphaFunctionality]
@@ -696,7 +696,7 @@ title = "Dokumenter og RAG"
 description = "La stå tomt for å bruke motorens egen miljølegitimasjon. Gjelder selvhostede enkelmotordistribusjoner."
 generic = "Embedding API key"
 openai = "OpenAI API key"
-setPlaceholder = "Lagret – la stå tomt for å beholde gjeldende nøkkel"
+setPlaceholder = "Lagret - la stå tomt for å beholde gjeldende nøkkel"
 voyageai = "VoyageAI API key"
 
 [admin.settings.ai.documents.embeddingBaseUrl]
@@ -815,7 +815,7 @@ anthropic = "Anthropic API key"
 description = "La stå tomt for å bruke motorens egen miljølegitimasjon. Gjelder selvhostede enkelmotordistribusjoner."
 generic = "API key"
 openai = "OpenAI API key"
-setPlaceholder = "Lagret – la stå tomt for å beholde gjeldende nøkkel"
+setPlaceholder = "Lagret - la stå tomt for å beholde gjeldende nøkkel"
 
 [admin.settings.ai.models.baseUrl]
 description = "Base-URL for OpenAI-kompatibelt / Ollama-endepunkt, f.eks. http://ollama:11434/v1."
@@ -1254,7 +1254,7 @@ description = "URL eller filnavn til impressum (påkrevd i noen jurisdiksjoner)"
 label = "Impressum"
 
 [admin.settings.legal.loginAgreement]
-defaultLocaleHint = "— brukes som reserve når et språk ikke har noen fil."
+defaultLocaleHint = "- brukes som reserve når et språk ikke har noen fil."
 defaultLocaleLink = "Konfigurer standardlokale"
 description = "Vis en ansvarsfraskrivelse som brukerne må godta etter innlogging. Teksten følger brukerens språk."
 discardConfirm = "Du har ulagrede endringer som vil gå tapt. Bytte språk likevel?"
@@ -2022,8 +2022,8 @@ insufficientPermissions = "Du har ikke tillatelse til å utføre denne handlinge
 
 [auth.callback]
 completing = "Fullfører autentisering"
-invalidToken = "OAuth-innlogging mislyktes – ugyldig token."
-missingToken = "OAuth-innlogging mislyktes – ingen token mottatt."
+invalidToken = "OAuth-innlogging mislyktes - ugyldig token."
+missingToken = "OAuth-innlogging mislyktes - ingen token mottatt."
 oauthFailed = "OAuth-innlogging mislyktes. Prøv igjen."
 pleaseWait = "Vent mens vi fullfører innloggingen din."
 signedOut = "Du er logget ut. Logg inn igjen."
@@ -2318,8 +2318,8 @@ failed = "Det oppstod en feil under oppretting av hefteoppsettet."
 
 [bookletImposition.flipOnShortEdge]
 label = "Snu på kortsiden (kun automatisk dupleks)"
-manualNote = "Ikke nødvendig i manuell modus – du snur bunken selv"
-tooltip = "Aktiver for kortside-dupleksutskrift (kun automatisk dupleks – ignorert i manuell modus)"
+manualNote = "Ikke nødvendig i manuell modus - du snur bunken selv"
+tooltip = "Aktiver for kortside-dupleksutskrift (kun automatisk dupleks - ignorert i manuell modus)"
 
 [bookletImposition.gutterSize]
 label = "Størrelse på innbindingsmarg (punkter)"
@@ -2385,7 +2385,7 @@ combineSets = "Kombiner sett"
 every3rd = "Hver tredje"
 first50 = "Første 50"
 last50 = "Siste 50"
-oddWithinExcluding = "Oddetall i 1–20 unntatt 5–7"
+oddWithinExcluding = "Oddetall i 1-20 unntatt 5-7"
 title = "Eksempler"
 
 [bulkSelection.firstNPages]
@@ -2465,7 +2465,7 @@ pemPrivateKeyLabel = "Privat nøkkel (.pem / .key)"
 pending = "Avventer"
 readyToFinalize = "Klar til å ferdigstille"
 reason = "Årsak"
-serverCertMessage = "Bruker serversertifikat – ingen filer eller passord kreves"
+serverCertMessage = "Bruker serversertifikat - ingen filer eller passord kreves"
 showLogo = "Vis logo"
 signatureProgress = "{{signedCount}}/{{totalCount}} signaturer"
 signed = "Signert"
@@ -2515,10 +2515,10 @@ text = "Det er en sikker ID for signaturen din som beviser at du signerte. Med m
 title = "Hva er et sertifikat?"
 
 [certSign.certType.tooltip.which]
-bullet1 = "PKCS#12 (.p12 / .pfx) – én kombinert fil (vanligst)"
-bullet2 = "PFX (.pfx) – Microsofts versjon av PKCS12"
-bullet3 = "PEM – separate .pem-filer for privat nøkkel og sertifikat"
-bullet4 = "JKS – Java .jks nøkkellager for dev / CI-CD-arbeidsflyter"
+bullet1 = "PKCS#12 (.p12 / .pfx) - én kombinert fil (vanligst)"
+bullet2 = "PFX (.pfx) - Microsofts versjon av PKCS12"
+bullet3 = "PEM - separate .pem-filer for privat nøkkel og sertifikat"
+bullet4 = "JKS - Java .jks nøkkellager for dev / CI-CD-arbeidsflyter"
 text = "Velg formatet som samsvarer med sertifikatfilen din:"
 title = "Hvilket alternativ bør jeg bruke?"
 
@@ -2743,7 +2743,7 @@ submit = "Signer PDF"
 
 [certSign.signMode.tooltip.auto]
 text = "Signerer med et server-<b>selvsignert</b> sertifikat. Samme <b>manipulasjonssikre forsegling</b> og <b>revisjonsspor</b>; vises typisk som <b>Ubekreftet</b> i visningsprogrammer."
-title = "Auto – null oppsett, umiddelbar systemforsegling"
+title = "Auto - null oppsett, umiddelbar systemforsegling"
 use = "Bruk når: du trenger hastighet og konsistent intern identitet på tvers av gjennomganger og arkiv."
 
 [certSign.signMode.tooltip.header]
@@ -2751,7 +2751,7 @@ title = "Om PDF-signaturer"
 
 [certSign.signMode.tooltip.manual]
 text = "Bruk dine egne sertifikatfiler for merkevaretilpasset identitet. Kan vise <b>Klarert</b> når CA/kjeden din gjenkjennes."
-title = "Manuell – ta med sertifikatet ditt"
+title = "Manuell - ta med sertifikatet ditt"
 use = "Bruk til: kundevendt, juridisk, etterlevelse."
 
 [certSign.signMode.tooltip.overview]
@@ -3219,7 +3219,7 @@ title = "Strektegning"
 [compress.tooltip.qualityAdjustment]
 bullet1 = "Lavere verdier bevarer kvaliteten"
 bullet2 = "Høyere verdier reduserer filstørrelsen"
-text = "Dra glidebryteren for å justere komprimeringsstyrken. Lavere verdier (1–3) bevarer kvaliteten men gir større filer. Høyere verdier (7–9) krymper filen mer men reduserer bildeklarheten."
+text = "Dra glidebryteren for å justere komprimeringsstyrken. Lavere verdier (1-3) bevarer kvaliteten men gir større filer. Høyere verdier (7-9) krymper filen mer men reduserer bildeklarheten."
 title = "Kvalitetsjustering"
 
 [compressPdfs]
@@ -3462,7 +3462,7 @@ showPreferencesBtn = "Administrer innstillinger"
 title = "Hvordan vi bruker informasjonskapsler"
 
 [cookieBanner.popUp.description]
-1 = "Vi bruker informasjonskapsler og andre teknologier for å gjøre Stirling PDF bedre for deg—som hjelper oss å forbedre verktøyene våre og fortsette å bygge funksjoner du vil like."
+1 = "Vi bruker informasjonskapsler og andre teknologier for å gjøre Stirling PDF bedre for deg - som hjelper oss å forbedre verktøyene våre og fortsette å bygge funksjoner du vil like."
 2 = "If you’d rather not, clicking 'No Thanks' will only enable the essential cookies needed to keep things running smoothly."
 
 [cookieBanner.preferencesModal]
@@ -3475,16 +3475,16 @@ subtitle = "Bruk av informasjonskapsler"
 title = "Senter for samtykkeinnstillinger"
 
 [cookieBanner.preferencesModal.analytics]
-description = "Disse informasjonskapslene hjelper oss å forstå hvordan verktøyene våre brukes, slik at vi kan fokusere på å bygge funksjonene fellesskapet vårt verdsetter mest. Vær trygg—Stirling PDF kan ikke og vil aldri spore innholdet i dokumentene du jobber med."
+description = "Disse informasjonskapslene hjelper oss å forstå hvordan verktøyene våre brukes, slik at vi kan fokusere på å bygge funksjonene fellesskapet vårt verdsetter mest. Vær trygg - Stirling PDF kan ikke og vil aldri spore innholdet i dokumentene du jobber med."
 title = "Analyse"
 
 [cookieBanner.preferencesModal.description]
 1 = "Stirling PDF bruker informasjonskapsler og lignende teknologier for å forbedre opplevelsen din og forstå hvordan verktøyene våre brukes. Dette hjelper oss å forbedre ytelsen, utvikle funksjonene du bryr deg om, og gi løpende støtte til brukerne våre."
-2 = "Stirling PDF kan ikke—og vil aldri—spore eller få tilgang til innholdet i dokumentene du bruker."
+2 = "Stirling PDF kan ikke - og vil aldri - spore eller få tilgang til innholdet i dokumentene du bruker."
 3 = "Personvernet ditt og tilliten din står i sentrum av det vi gjør."
 
 [cookieBanner.preferencesModal.necessary]
-description = "These cookies are essential for the website to function properly. They enable core features like setting your privacy preferences, logging in, and filling out forms—which is why they can’t be turned off."
+description = "These cookies are essential for the website to function properly. They enable core features like setting your privacy preferences, logging in, and filling out forms - which is why they can’t be turned off."
 
 [cookieBanner.preferencesModal.necessary.title]
 1 = "Strengt nødvendige informasjonskapsler"
@@ -3900,7 +3900,7 @@ dateDesc = "Nyeste først"
 dateLabel = "Nyeste"
 nameAsc = "A til Å"
 nameDesc = "Å til A"
-nameLabel = "A–Å"
+nameLabel = "A-Å"
 
 [fileSelectorPicker.tabs]
 saved = "Lagrede filer"
@@ -4014,7 +4014,7 @@ inPath = "i {{path}}"
 inWorkspace = "Åpen"
 inWorkspaceAria = "Allerede i arbeidsområde"
 loading = "Laster…"
-localFoldersUnavailable = "Mapper er kun i skyen – lagre en fil til skyen for å organisere den."
+localFoldersUnavailable = "Mapper er kun i skyen - lagre en fil til skyen for å organisere den."
 moveSkippedRemote_one = "{{count}} file couldn't be moved on the server (no permission or already deleted)."
 moveSkippedRemote_other = "{{count}} files couldn't be moved on the server (no permission or already deleted)."
 moveTo = "Flytt til…"
@@ -4022,7 +4022,7 @@ myFiles = "Mine filer"
 newFolder = "Ny mappe"
 newFolderStorageDisabled = "Serverlagring av mapper er ikke aktivert. Be administratoren om å slå det på."
 newFolderTabUnavailable = "Bytt til Alle eller Sky for å opprette mapper."
-offlineNoFolderEdits = "Serversynk for mapper er utilgjengelig – mappeendringer er deaktivert. Sjekk innlogging og lagringskonfigurasjon."
+offlineNoFolderEdits = "Serversynk for mapper er utilgjengelig - mappeendringer er deaktivert. Sjekk innlogging og lagringskonfigurasjon."
 open = "Åpne"
 openVersionInWorkspace = "Åpne i arbeidsområde"
 originFilter = "Filtrer etter kilde"
@@ -4383,7 +4383,7 @@ readOnlyHelp = "Viser en verdi, men hindrer redigering."
 removeOption = "Fjern alternativ"
 required = "Obligatorisk"
 requiredHelp = "Skjemaet kan ikke sendes inn før dette feltet er fylt ut."
-signatureNote = "Kun plassholder – du signerer ikke her. Den markerer hvor en signatur hører hjemme, slik at en PDF-signerer (Adobe Acrobat, en signeringstjeneste osv.) plasserer signaturen på dette stedet når dokumentet signeres."
+signatureNote = "Kun plassholder - du signerer ikke her. Den markerer hvor en signatur hører hjemme, slik at en PDF-signerer (Adobe Acrobat, en signeringstjeneste osv.) plasserer signaturen på dette stedet når dokumentet signeres."
 tooltip = "Verktøytips"
 tooltipHelp = "Hintet som vises når noen holder pekeren over feltet i en PDF-leser."
 type = "Type"
@@ -5413,7 +5413,7 @@ userBody = "Inviter teammedlemmer, tildel roller og hold dokumentene organiserte
 userTitle = "Planoversikt"
 
 [onboarding.processorIntro]
-body = "Stirling kjører nå <strong>policyer</strong> — automatiserte regler som klassifiserer, sikrer og behandler hvert dokument når det ankommer. Sett dem opp og overvåk kjøringer i <strong>Processor</strong>."
+body = "Stirling kjører nå <strong>policyer</strong> - automatiserte regler som klassifiserer, sikrer og behandler hvert dokument når det ankommer. Sett dem opp og overvåk kjøringer i <strong>Processor</strong>."
 cta = "Sjekk ut Processor"
 title = "Sjekk ut Stirling Processor"
 
@@ -5440,9 +5440,9 @@ rolePlaceholder = "Bekreft rollen din"
 roleUser = "Bruker"
 
 [onboarding.serverLicense]
-freeBody = "Vår <strong>Open-Core</strong>-lisensiering tillater opptil <strong>{{freeTierLimit}}</strong> brukere gratis per server. For å skalere uten avbrudd og få tidlig tilgang til vårt nye <strong>PDF-tekstredigeringsverktøy</strong>, anbefaler vi Stirling Server-planen – full redigering og <strong>ubegrensede plasser</strong> for $99/server/mnd."
+freeBody = "Vår <strong>Open-Core</strong>-lisensiering tillater opptil <strong>{{freeTierLimit}}</strong> brukere gratis per server. For å skalere uten avbrudd og få tidlig tilgang til vårt nye <strong>PDF-tekstredigeringsverktøy</strong>, anbefaler vi Stirling Server-planen - full redigering og <strong>ubegrensede plasser</strong> for $99/server/mnd."
 freeTitle = "Serverlisens"
-overLimitBody = "Lisensieringen vår tillater opptil <strong>{{freeTierLimit}}</strong> brukere gratis per server. Du har <strong>{{overLimitUserCopy}}</strong> Stirling-brukere. For å fortsette uten avbrudd, oppgrader til Stirling Server-planen – <strong>ubegrensede plasser</strong>, PDF-tekstredigering og full admin-kontroll for $99/server/mnd."
+overLimitBody = "Lisensieringen vår tillater opptil <strong>{{freeTierLimit}}</strong> brukere gratis per server. Du har <strong>{{overLimitUserCopy}}</strong> Stirling-brukere. For å fortsette uten avbrudd, oppgrader til Stirling Server-planen - <strong>ubegrensede plasser</strong>, PDF-tekstredigering og full admin-kontroll for $99/server/mnd."
 overLimitTitle = "Serverlisens kreves"
 seePlans = "Se planer →"
 upgrade = "Oppgrader nå →"
@@ -5452,7 +5452,7 @@ body = "Stirling PDF V2 leveres med dusinvis av verktøy og et fornyet grensesni
 title = "Omvisningsoversikt"
 
 [onboarding.welcomeSlide]
-body = "Stirling PDF er nå klart for team i alle størrelser. Denne oppdateringen inkluderer et nytt oppsett, kraftige nye admin-funksjoner og vår mest etterspurte funksjon – <strong>Rediger tekst</strong>."
+body = "Stirling PDF er nå klart for team i alle størrelser. Denne oppdateringen inkluderer et nytt oppsett, kraftige nye admin-funksjoner og vår mest etterspurte funksjon - <strong>Rediger tekst</strong>."
 title = "Velkommen til Stirling"
 
 [onboarding.whatsNew]
@@ -5670,7 +5670,7 @@ title = "Sletting av sider"
 description = "Velg hvilke sider som skal brukes for operasjonen. Støtter enkeltsider, intervaller, formler og nøkkelordet all."
 
 [pageSelection.tooltip.complex]
-bullet1 = "<strong>1,3-5,8,2n</strong> → sidene 1, 3–5, 8, samt partallssidene"
+bullet1 = "<strong>1,3-5,8,2n</strong> → sidene 1, 3-5, 8, samt partallssidene"
 bullet2 = "<strong>10-,2n-1</strong> → fra side 10 til slutt + oddetallssidene"
 description = "Bland ulike typer."
 title = "Komplekse kombinasjoner"
@@ -5693,8 +5693,8 @@ description = "Bruk n i formler for mønstre."
 title = "Matematiske funksjoner"
 
 [pageSelection.tooltip.ranges]
-bullet1 = "<strong>3-6</strong> → velger sidene 3–6"
-bullet2 = "<strong>10-15</strong> → velger sidene 10–15"
+bullet1 = "<strong>3-6</strong> → velger sidene 3-6"
+bullet2 = "<strong>10-15</strong> → velger sidene 10-15"
 bullet3 = "<strong>5-</strong> → velger sidene 5 til slutt"
 description = "Bruk - for sammenhengende sider."
 title = "Sideintervaller"
@@ -5770,7 +5770,7 @@ title = "Turn on the Processor plan"
 eyebrow = "Editor plan · Always free"
 
 [payg.free.header]
-freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
+freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR - as much as you want, no matter where you trigger it."
 freeTitle = "Unlimited PDF editing"
 
 [payg.free.hero]
@@ -5798,8 +5798,8 @@ pauses = "pauses at cap"
 title = "What happens when the cap is reached"
 
 [payg.header]
-eyebrow = "Processor plan · {{start}} – {{end}}"
-freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
+eyebrow = "Processor plan · {{start}} - {{end}}"
+freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR - as much as you want, no matter where you trigger it."
 freeLabel = "Always free"
 freeTitle = "Unlimited PDF editing"
 meterBody = "{{limit}} free PDFs to start, then billed per PDF up to your cap."
@@ -5819,8 +5819,8 @@ chip = "Forhåndsbetalt år"
 
 [payg.prepaid.banner]
 exhausted = "Den forhåndsbetalte kapasiteten din er brukt opp; målt fakturering er gjenopptatt. Fyll på for å beholde rabatten."
-expiring_one = "Det forhåndsbetalte året ditt slutter om {{count}} dag. Ubrukt kapasitet utløper — fyll på for å starte et nytt år."
-expiring_other = "Det forhåndsbetalte året ditt slutter om {{count}} dager. Ubrukt kapasitet utløper — fyll på for å starte et nytt år."
+expiring_one = "Det forhåndsbetalte året ditt slutter om {{count}} dag. Ubrukt kapasitet utløper - fyll på for å starte et nytt år."
+expiring_other = "Det forhåndsbetalte året ditt slutter om {{count}} dager. Ubrukt kapasitet utløper - fyll på for å starte et nytt år."
 low = "Du er nede i {{pct}} % av den forhåndsbetalte kapasiteten din. Fyll på når som helst for å holde behandlingen uavbrutt."
 
 [payg.prepaid.card]
@@ -5961,14 +5961,14 @@ continue = "Fortsett"
 description = "Vi bruker denne til å sende lisensnøkkelen og kvitteringer."
 emailLabel = "E-postadresse"
 emailPlaceholder = "din@email.com"
-modalTitle = "Kom i gang – {{planName}}"
+modalTitle = "Kom i gang - {{planName}}"
 
 [payment.paymentStage]
-modalTitle = "Fullfør betaling – {{planName}}"
+modalTitle = "Fullfør betaling - {{planName}}"
 
 [payment.planStage]
 billedYearly = "Faktureres årlig med {{currency}}{{amount}}"
-modalTitle = "Velg faktureringsperiode – {{planName}}"
+modalTitle = "Velg faktureringsperiode - {{planName}}"
 savePercent = "Spar {{percent}}%"
 savingsAmount = "Du sparer {{amount}}"
 selectMonthly = "Velg månedlig"
@@ -6120,7 +6120,7 @@ processing = "Processing"
 uploading = "Uploading"
 
 [pdfTextEditor.tooltip.alpha]
-text = "Denne alpha-visningen er fortsatt under utvikling—visse skrifter, farger, gjennomsiktighetseffekter og layoutdetaljer kan endres litt. Dobbeltsjekk generert PDF før du deler."
+text = "Denne alpha-visningen er fortsatt under utvikling - visse skrifter, farger, gjennomsiktighetseffekter og layoutdetaljer kan endres litt. Dobbeltsjekk generert PDF før du deler."
 title = "Alpha-visning"
 
 [pdfTextEditor.tooltip.header]
@@ -6145,8 +6145,8 @@ feedback = "Dette er en tidlig tilgang-funksjon. Rapporter gjerne eventuelle pro
 gotIt = "Forstått"
 howItWorks = "Dette verktøyet konverterer PDF-en til et redigerbart format der du kan endre tekstinnhold og flytte bilder. Endringer lagres tilbake som en ny PDF."
 issue1 = "Tekstfarge bevares ikke for øyeblikket (kommer snart)"
-issue2 = "Avsnittsmodus har flere justerings- og avstandsproblemer – Enkeltlinje-modus anbefales"
-issue3 = "Forhåndsvisningen kan avvike fra den eksporterte PDF-en – eksporterte PDF-er er nærmere originalen"
+issue2 = "Avsnittsmodus har flere justerings- og avstandsproblemer - Enkeltlinje-modus anbefales"
+issue3 = "Forhåndsvisningen kan avvike fra den eksporterte PDF-en - eksporterte PDF-er er nærmere originalen"
 issue4 = "Roterte tekster kan trenge manuell justering"
 issue5 = "Gjennomsiktighet og lagdelte effekter kan avvike fra originalen"
 knownIssues = "Kjente problemer (under utbedring):"
@@ -6521,7 +6521,7 @@ never = "aldri"
 [portal.accountLink.modal]
 linkSubtitle = "Logg på kontoen denne serveren skal fakturere mot."
 linkTitle = "Koble til Stirling-kontoen din"
-reauthSubtitle = "Økten din er utløpt — logg på Stirling-kontoen din igjen. Instansen din forblir koblet til."
+reauthSubtitle = "Økten din er utløpt - logg på Stirling-kontoen din igjen. Instansen din forblir koblet til."
 reauthTitle = "Logg på igjen"
 simulateSignIn = "Simuler innlogging (dev)"
 
@@ -6632,7 +6632,7 @@ title = "Gratis PDF-redigeringsprogrammer"
 checkoutErrorTitle = "Kunne ikke starte checkout"
 currentPlan = "Gjeldende plan"
 freeForever = "Gratis for alltid"
-noTeamResolved = "Ingen team er løst på lommeboken din ennå — oppdater og prøv igjen."
+noTeamResolved = "Ingen team er løst på lommeboken din ennå - oppdater og prøv igjen."
 ownerOnly = "Bare teameieren kan slå på Processor-planen."
 payInvoice = "Betal faktura for å fullføre"
 planName = "Editor"
@@ -6667,7 +6667,7 @@ viewLink = "Vis ↗"
 
 [portal.billing.linkPrompt]
 cta = "Koble til Stirling-konto"
-description = "Manuell PDF-redigering — visning, signering, sammenslåing, splitting, vannmerking, komprimering, konvertering, manuell OCR — er alltid gratis, koblet til eller ikke. Koble til for å kreve 500 gratis PDF-er med målt behandling (automatisering, AI og API); når du trenger mer, slår du på Processor-planen og betaler bare for det du bruker."
+description = "Manuell PDF-redigering - visning, signering, sammenslåing, splitting, vannmerking, komprimering, konvertering, manuell OCR - er alltid gratis, koblet til eller ikke. Koble til for å kreve 500 gratis PDF-er med målt behandling (automatisering, AI og API); når du trenger mer, slår du på Processor-planen og betaler bare for det du bruker."
 title = "Koble til Stirling-kontoen din"
 
 [portal.billing.paymentMethod]
@@ -6801,13 +6801,13 @@ low = "Begynner å bli lite"
 [portal.billing.spendLimit]
 adjustLimit = "Juster grense"
 cancel = "Avbryt"
-capControlNote = "Endringer gjelder umiddelbart — hev eller senk taket når som helst."
+capControlNote = "Endringer gjelder umiddelbart - hev eller senk taket når som helst."
 capSuffix = "/ måned"
 capSuffixWithDocs = "/ måned · ≈ {{documents}} dokumenter"
-displaySub = "Du faktureres bare for det du behandler automatisk — aldri over taket."
+displaySub = "Du faktureres bare for det du behandler automatisk - aldri over taket."
 editTitle = "Angi månedstaket ditt"
 eyebrow = "Forbruksgrense"
-guardrailBody = "et hardt tak — du faktureres aldri over det. Ved taket pauses målt behandling (ubegrenset PDF-redigering fortsetter å fungere) til du øker det eller syklusen tilbakestilles. Ingenting går tapt."
+guardrailBody = "et hardt tak - du faktureres aldri over det. Ved taket pauses målt behandling (ubegrenset PDF-redigering fortsetter å fungere) til du øker det eller syklusen tilbakestilles. Ingenting går tapt."
 guardrailLabel = "Din sikkerhetsgrense:"
 noCap = "ingen grense"
 pctUsed = "{{pct}}% brukt"
@@ -6897,7 +6897,7 @@ description = "Send et dokument ut for signering eller notarisering."
 label = "E-signatur og notarisering"
 
 [portal.connections.categories.storage]
-description = "Der behandlede dokumenter ender opp – en bucket, en disk, en sak eller en side."
+description = "Der behandlede dokumenter ender opp - en bucket, en disk, en sak eller en side."
 label = "Fil og legg ved"
 
 [portal.connections.commonFields.accessToken]
@@ -6946,9 +6946,9 @@ save = "Lagre tilkobling"
 [portal.connections.picker2]
 back = "Endre integrasjon"
 heading = "Hva vil du koble til?"
-noResultsBody = "Vi støtter det ikke ennå – fortell oss om det, så ser vi på å legge det til."
+noResultsBody = "Vi støtter det ikke ennå - fortell oss om det, så ser vi på å legge det til."
 noResultsTitle = "Ingenting matcher \"{{query}}\""
-searchPlaceholder = "Søk i integrasjoner – prøv \"sign\", \"ocr\" eller et produktnavn"
+searchPlaceholder = "Søk i integrasjoner - prøv \"sign\", \"ocr\" eller et produktnavn"
 
 [portal.connections.types.api]
 description = "Kall hvilken som helst HTTP API fra en policy. Du velger URL, autentisering og payload."
@@ -7007,7 +7007,7 @@ label = "Brukernavn"
 
 [portal.connections.types.clamav]
 baseUrlPlaceholder = "http://clamav-rest:9000"
-description = "Skann dokumenter for skadevare på en server du kjører – ingenting forlater nettverket ditt."
+description = "Skann dokumenter for skadevare på en server du kjører - ingenting forlater nettverket ditt."
 label = "ClamAV (selvhostet)"
 
 [portal.connections.types.cloudmersive]
@@ -7015,7 +7015,7 @@ description = "Virus- og innholdsskanning for dokumenter i en policy."
 label = "Cloudmersive"
 
 [portal.connections.types.cloudmersiveadvanced]
-description = "Blokker dokumenter som inneholder makroer, kjørbare filer, skript eller innebygde objekter – ikke bare kjent skadevare."
+description = "Blokker dokumenter som inneholder makroer, kjørbare filer, skript eller innebygde objekter - ikke bare kjent skadevare."
 label = "Cloudmersive Advanced Scan"
 
 [portal.connections.types.confluence]
@@ -7242,8 +7242,8 @@ viewSource = "Vis kilde på GitHub"
 codeCaption = "hver forespørsel"
 eyebrow = "KOM I GANG"
 lead = "Alle forespørsler autentiseres med et bearer-token. Nøkler er avgrenset per miljø og utløper aldri med mindre de roteres."
-liveKey = "Produksjonsnøkler — fakturerte, hastighetsbegrenset etter planen din."
-testKey = "Sandbox-nøkler — gratis, returnerer syntetiske testdata."
+liveKey = "Produksjonsnøkler - fakturerte, hastighetsbegrenset etter planen din."
+testKey = "Sandbox-nøkler - gratis, returnerer syntetiske testdata."
 title = "Autentisering"
 
 [portal.docs.components]
@@ -7281,7 +7281,7 @@ title = "Quickstart"
 
 [portal.docs.quickstart.callout]
 bodyAfterLink = "for oppskrifter som kan kopieres og limes inn."
-bodyBeforeLink = "koble samme kall inn i en pipeline for å kjede validering, sladding og levering — eller eksponer det for en agent over MCP. Se"
+bodyBeforeLink = "koble samme kall inn i en pipeline for å kjede validering, sladding og levering - eller eksponer det for en agent over MCP. Se"
 label = "Neste:"
 link = "Playbooks"
 
@@ -7290,7 +7290,7 @@ body = "Opprett en avgrenset nøkkel fra Infrastruktur-fanen. Nøkler har hastig
 title = "Utsted en API-nøkkel"
 
 [portal.docs.quickstart.step2]
-body = "POST en fil til et typet endpoint. Endpointet bestemmer skjemaet du får tilbake — her fakturauttrekkeren."
+body = "POST en fil til et typet endpoint. Endpointet bestemmer skjemaet du får tilbake - her fakturauttrekkeren."
 snippetCaption = "trekk ut en faktura"
 title = "Send et dokument"
 
@@ -7370,8 +7370,8 @@ overview = "Oversikt"
 requestAccess = "Be om tilgang"
 
 [portal.documents.elevation.active]
-description = "Midlertidig tildeling — tilgang logges og er tidsbegrenset."
-descriptionFourEyes = "Midlertidig tildeling — en fagfelle ble varslet (fire øyne)."
+description = "Midlertidig tildeling - tilgang logges og er tidsbegrenset."
+descriptionFourEyes = "Midlertidig tildeling - en fagfelle ble varslet (fire øyne)."
 title = "Tilgang utløper om {{time}}"
 
 [portal.documents.elevation.gated]
@@ -7432,7 +7432,7 @@ time = "Tid"
 user = "Bruker"
 
 [portal.editorAdmin]
-subtitle = "Distribuer Stirling PDF Editor, par selvhostede instanser med organisasjonen din, og drift den kjørende flåten — mål, helse, legitimasjon og offline-aktivering på ett sted."
+subtitle = "Distribuer Stirling PDF Editor, par selvhostede instanser med organisasjonen din, og drift den kjørende flåten - mål, helse, legitimasjon og offline-aktivering på ett sted."
 title = "Editor-distribusjon"
 
 [portal.editorAdmin.health.columns]
@@ -7468,7 +7468,7 @@ rotate = "Roter"
 talkToSales = "Kontakt salg"
 
 [portal.editorAdmin.sections.health]
-sub = "Hver Editor-instans som rapporterer inn — versjon, region, status, sist sett og aktive brukere."
+sub = "Hver Editor-instans som rapporterer inn - versjon, region, status, sist sett og aktive brukere."
 title = "Instanshelse"
 
 [portal.editorAdmin.sections.pairing]
@@ -7754,9 +7754,9 @@ done = "Ferdig"
 keyNameLabel = "Nøkkelnavn"
 keyNamePlaceholder = "f.eks. Produksjon · inntak"
 secretKeyCaption = "Hemmelig nøkkel"
-secretWarning = "Lagre dette i en hemmelighetsbehandler. Stirling lagrer bare en hash — det finnes ingen måte å gjenopprette den senere."
+secretWarning = "Lagre dette i en hemmelighetsbehandler. Stirling lagrer bare en hash - det finnes ingen måte å gjenopprette den senere."
 subtitle = "Avgrens nøkkelen til det minste den trenger. Du kan rotere eller tilbakekalle når som helst."
-subtitleCreated = "Kopier denne hemmeligheten nå — den vises ikke igjen."
+subtitleCreated = "Kopier denne hemmeligheten nå - den vises ikke igjen."
 title = "Opprett API-nøkkel"
 titleCreated = "Nøkkel opprettet"
 
@@ -8181,7 +8181,7 @@ title = "Backend utilgjengelig"
 [portal.policies.operations]
 change = "Endre hva dette trinnet gjør"
 noResults = "Ingen trinn samsvarer med det. Prøv et produktnavn, eller \"scan\", \"notify\", \"attach\"."
-searchPlaceholder = "Søk i trinn – prøv \"scan\", \"attach\" eller et produktnavn"
+searchPlaceholder = "Søk i trinn - prøv \"scan\", \"attach\" eller et produktnavn"
 
 [portal.policies.operations.bodyMode]
 binary = "Rå filbytes"
@@ -8317,7 +8317,7 @@ label = "Send dokumentet på e-post (Mailgun)"
 [portal.policies.operations.n8nGate]
 description = "Your workflow decides whether the run carries on."
 label = "Ask an n8n workflow to approve"
-note = "The workflow must reply with {\"approved\": true}. Anything else — including a timeout — stops the run and parks the document."
+note = "The workflow must reply with {\"approved\": true}. Anything else - including a timeout - stops the run and parks the document."
 
 [portal.policies.operations.n8nNotify]
 description = "Sends the run's details, not the document."
@@ -8339,7 +8339,7 @@ label = "Last opp til Nextcloud"
 [portal.policies.operations.presidioAnalyze]
 description = "Din egen Presidio-server rapporterer personopplysningene den finner."
 label = "Oppdag personopplysninger"
-note = "Presidio leser tekst, ikke filer. Gi den teksten du vil sjekke — selve dokumentet lastes ikke opp."
+note = "Presidio leser tekst, ikke filer. Gi den teksten du vil sjekke - selve dokumentet lastes ikke opp."
 
 [portal.policies.operations.responseMode]
 replace = "Erstatt dokumentet med svaret"
@@ -8429,7 +8429,7 @@ desc = "Kjører OCR slik at skannede sider blir markerbar, søkbar tekst."
 label = "Gjør tekst søkbar"
 
 [portal.policies.wizard.capability.redact]
-desc = "Finner og sladder sensitive detaljer — som personnummer og kortnumre — slik at de ikke kan leses."
+desc = "Finner og sladder sensitive detaljer - som personnummer og kortnumre - slik at de ikke kan leses."
 label = "Sladd sensitiv informasjon"
 
 [portal.policies.wizard.capability.sanitize]
@@ -8437,7 +8437,7 @@ desc = "Fjerner skjult JavaScript slik at ingenting kan kjøre automatisk når d
 label = "Fjern aktivt innhold"
 
 [portal.policies.wizard.capability.timestampPdf]
-desc = "Beviser at dokumentet eksisterte i nøyaktig denne formen på et tidspunkt, ved hjelp av en uavhengig tidsstempelmyndighet. Bare en hash sendes – dokumentet forlater aldri serveren din."
+desc = "Beviser at dokumentet eksisterte i nøyaktig denne formen på et tidspunkt, ved hjelp av en uavhengig tidsstempelmyndighet. Bare en hash sendes - dokumentet forlater aldri serveren din."
 label = "Legg til et betrodd tidsstempel"
 
 [portal.policies.wizard.capability.watermark]
@@ -8548,7 +8548,7 @@ confirm = "Jeg har lest og godtar Stirling Enterprise Agreement."
 docName = "Stirling Enterprise-avtale"
 docSub = "MSA, bestillingsskjema, EULA og DPA, kombinert i én signatur."
 download = "Last ned"
-downloadDraftError = "Kunne ikke generere avtale-PDF-en – dokumentgjengiveren er utilgjengelig. Prøv igjen om litt eller kontakt kundestøtte."
+downloadDraftError = "Kunne ikke generere avtale-PDF-en - dokumentgjengiveren er utilgjengelig. Prøv igjen om litt eller kontakt kundestøtte."
 downloadError = "Kunne ikke laste ned den signerte avtalen. Prøv igjen."
 legalName = "Juridisk enhetsnavn"
 legalNamePlaceholder = "Den juridiske enheten som skal signere"
@@ -8595,11 +8595,11 @@ postalCodePlaceholder = "94105"
 posture = "Styring"
 posture_count = "~{{count}} retningslinjer"
 posture_essentials = "Essensielt"
-posture_essentialsSub = "Klassifisering + deling — standardinnstillingene"
+posture_essentialsSub = "Klassifisering + deling - standardinnstillingene"
 posture_governed = "Styrt"
 posture_governedSub = "Legger til sikkerhet og ruting"
 posture_regulated = "Regulert"
-posture_regulatedSub = "Hver kategori — samsvar, oppbevaring, inntak"
+posture_regulatedSub = "Hver kategori - samsvar, oppbevaring, inntak"
 qbr = "Kvartalsvise forretningsgjennomganger"
 qbrSub = "Din SE gjennomgår bruk og veikart hvert kvartal"
 region = "Stat / region"
@@ -8721,13 +8721,13 @@ label = "Prøveperiode"
 [portal.procurement.license]
 copied = "Kopiert"
 copy = "Kopier nøkkel"
-downloadError = "Kunne ikke generere offline-lisensfilen ennå — prøv igjen om et øyeblikk."
+downloadError = "Kunne ikke generere offline-lisensfilen ennå - prøv igjen om et øyeblikk."
 downloadOffline = "Last ned offline-lisens (.lic)"
 hint = "Lim inn denne nøkkelen i en selvdriftet instans for å aktivere den, eller behold den for arkivet ditt. Oppbevar den trygt."
 label = "Lisensnøkkelen din"
 subtitle = "Aktiver en selvhostet instans med denne nøkkelen, eller behold den for arkivet ditt."
 title = "Lisensnøkkelen din"
-trialFileHint = "Dette er prøvelisensfilen din. Når avtalen din er på plass, kom tilbake og last den ned igjen — i motsetning til den nettbaserte lisensnøkkelen oppdateres ikke .lic-filen av seg selv."
+trialFileHint = "Dette er prøvelisensfilen din. Når avtalen din er på plass, kom tilbake og last den ned igjen - i motsetning til den nettbaserte lisensnøkkelen oppdateres ikke .lic-filen av seg selv."
 
 [portal.procurement.link]
 cta = "Koble til konto"
@@ -8741,10 +8741,10 @@ eyebrow = "I drift"
 title = "Du er i drift på Stirling Enterprise"
 
 [portal.procurement.milestone]
-downloadError = "Kunne ikke laste ned tilbuds-PDF-en ennå — prøv igjen om et øyeblikk."
+downloadError = "Kunne ikke laste ned tilbuds-PDF-en ennå - prøv igjen om et øyeblikk."
 
 [portal.procurement.payment]
-description = "Tilbudet ditt er akseptert og lisensen din er allerede aktiv — teamet ditt kan starte med én gang. Betal den første fakturaen når du er klar; du kan betale eller laste den ned her, ingen e-post nødvendig."
+description = "Tilbudet ditt er akseptert og lisensen din er allerede aktiv - teamet ditt kan starte med én gang. Betal den første fakturaen når du er klar; du kan betale eller laste den ned her, ingen e-post nødvendig."
 downloadAgreement = "Last ned signert avtale"
 downloadInvoice = "Last ned faktura"
 eyebrow = "Betaling"
@@ -8799,7 +8799,7 @@ workEmailPlaceholder = "you@company.com"
 
 [portal.procurement.trial]
 body = "Forlengelse legger til 7 dager og varsler løsningsingeniøren din."
-bodyMaxed = "Du har brukt alle forlengelsene dine — snakk med løsningsingeniøren din hvis du trenger mer tid."
+bodyMaxed = "Du har brukt alle forlengelsene dine - snakk med løsningsingeniøren din hvis du trenger mer tid."
 cancel = "Avbryt prøveperiode"
 extend = "Forleng 7 dager"
 maxed = "Maksimert"
@@ -9036,7 +9036,7 @@ walletUnavailable = "Wallet utilgjengelig: {{status}} {{statusText}}"
 
 [portal.usage.sessionExpired]
 action = "Logg på igjen"
-body = "Stirling-kontoøkten din er utløpt. Logg på igjen for å vise fakturering — instansen din forblir koblet."
+body = "Stirling-kontoøkten din er utløpt. Logg på igjen for å vise fakturering - instansen din forblir koblet."
 title = "Økten er utløpt"
 
 [portal.users]
@@ -9064,7 +9064,7 @@ summary = "Begrenset eller kun nettbasert tilgang; kan ikke ha personlige konfig
 
 [portal.users.roles.member]
 label = "Medlem"
-summary = "Vanlig bruker — arbeider med delte ressurser og egne konfigurasjoner."
+summary = "Vanlig bruker - arbeider med delte ressurser og egne konfigurasjoner."
 
 [portal.users.roles.member.permissions]
 0 = "Bruk editoren og delte integrasjoner"
@@ -9074,7 +9074,7 @@ summary = "Vanlig bruker — arbeider med delte ressurser og egne konfigurasjone
 
 [portal.users.roles.team_owner]
 label = "Teameier"
-summary = "Eier et team — administrerer medlemmenes ressurser og delte konfigurasjoner."
+summary = "Eier et team - administrerer medlemmenes ressurser og delte konfigurasjoner."
 
 [portal.users.roles.team_owner.permissions]
 0 = "Opprett og administrer teamets S3-tilkoblinger"
@@ -9352,7 +9352,7 @@ title = "Avanserte innstillinger for sladding"
 
 [redact.tooltip.advanced.regex]
 bullet1 = "Eksempel: \\d{4}-\\d{2}-\\d{2} for å matche datoer i YYYY-MM-DD-format"
-bullet2 = "Bruk med forsiktighet – test grundig"
+bullet2 = "Bruk med forsiktighet - test grundig"
 text = "Aktiver regulære uttrykk for avansert mønstermatching. Nyttig for å finne telefonnumre, e-poster eller komplekse mønstre."
 title = "Bruk Regex"
 
@@ -9765,17 +9765,17 @@ failed = "Det oppstod en feil under ekstrahering av bildeskanninger."
 
 [scannerImageSplit.tooltip]
 headsUp = "Obs"
-headsUpDesc = "Overlappende bilder eller bakgrunner som er svært like i farge som bildene kan redusere nøyaktigheten – prøv en lysere eller mørkere bakgrunn og la mer plass."
-problem1 = "Bilder oppdages ikke → øk Tolerance til 30–50"
-problem2 = "For mange falske deteksjoner → øk Minimum Area til 15 000–20 000"
-problem3 = "Beskjæringene er for trange → øk Border Size til 5–10"
+headsUpDesc = "Overlappende bilder eller bakgrunner som er svært like i farge som bildene kan redusere nøyaktigheten - prøv en lysere eller mørkere bakgrunn og la mer plass."
+problem1 = "Bilder oppdages ikke → øk Tolerance til 30-50"
+problem2 = "For mange falske deteksjoner → øk Minimum Area til 15 000-20 000"
+problem3 = "Beskjæringene er for trange → øk Border Size til 5-10"
 problem4 = "Skrå bilder rettes ikke ut → senk Angle Threshold til ~5°"
-problem5 = "Støv/støy-bokser → øk Minimum Contour Area til 1000–2000"
+problem5 = "Støv/støy-bokser → øk Minimum Contour Area til 1000-2000"
 quickFixes = "Kjappe fikser"
 setupTips = "Oppsett-tips"
 tip1 = "Bruk en ensfarget, lys bakgrunn"
 tip2 = "La en liten glipe (≈1 cm) mellom bilder"
-tip3 = "Skann på 300–600 DPI"
+tip3 = "Skann på 300-600 DPI"
 tip4 = "Rengjør skannerglass"
 title = "Fotosplitter"
 useCase1 = "Skann hele albumsider i ett"
@@ -9783,7 +9783,7 @@ useCase2 = "Del flatbed-partier i separate filer"
 useCase3 = "Del kollasjer opp i enkeltbilder"
 useCase4 = "Hent bilder fra dokumenter"
 whatThisDoes = "Hva dette gjør"
-whatThisDoesDesc = "Finner og ekstraherer automatisk hvert foto fra en skannet side eller et sammensatt bilde—ingen manuell beskjæring."
+whatThisDoesDesc = "Finner og ekstraherer automatisk hvert foto fra en skannet side eller et sammensatt bilde - ingen manuell beskjæring."
 whenToUse = "Når du bør bruke det"
 
 [ScannerImageSplit.selectText]
@@ -10556,7 +10556,7 @@ title = "Del etter antall sider"
 bullet1 = "Skriv ut skilleark fra nedlastingslenken"
 bullet2 = "Sett inn skilleark mellom dokumentene"
 bullet3 = "Skann alle dokumentene samlet som én PDF"
-bullet4 = "Last opp – skilleark oppdages og fjernes automatisk"
+bullet4 = "Last opp - skilleark oppdages og fjernes automatisk"
 bullet5 = "Aktiver dupleksmodus hvis du skanner begge sider av skillearkene"
 text = "Del automatisk skannede dokumenter ved hjelp av fysiske skilleark med QR-koder. Perfekt for å behandle flere dokumenter skannet sammen."
 title = "Del etter skilleark"
@@ -10931,7 +10931,7 @@ recommended = "Anbefalt"
 selfHostedOffline = "Krever Stirling-PDF-serveren din (for øyeblikket frakoblet):"
 showDetails = "Vis detaljer"
 unavailable = "Deaktivert av serveradministrator:"
-unavailableDependency = "Utilgjengelig – nødvendig verktøy mangler på serveren:"
+unavailableDependency = "Utilgjengelig - nødvendig verktøy mangler på serveren:"
 unfavorite = "Fjern fra favoritter"
 
 [toolPanel.modePrompt]
@@ -11462,9 +11462,9 @@ emptyFile = "Tom fil"
 htmlHidePreview = "Skjul forhåndsvisning"
 htmlPreview = "HTML-forhåndsvisning"
 htmlPreviewMobileHidden = "HTML-sider er utformet for skrivebordsbredder, så forhåndsvisningen er av som standard her."
-htmlPreviewWarning = "HTML-forhåndsvisning — eksterne ressurser kan hende ikke lastes · {{size}}"
+htmlPreviewWarning = "HTML-forhåndsvisning - eksterne ressurser kan hende ikke lastes · {{size}}"
 htmlShowPreview = "Vis forhåndsvisning likevel"
-invalidJson = "Ugyldig JSON — viser rått innhold"
+invalidJson = "Ugyldig JSON - viser rått innhold"
 lineNumbers = "Linjenumre"
 loading = "Laster ..."
 renderMarkdown = "Gjengi Markdown"
@@ -11526,7 +11526,7 @@ create = "Create your first Watched Folder"
 deleteFolder = "Delete folder"
 editFolder = "Edit folder"
 empty = "No watched folders yet"
-emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged — whatever your pipeline does."
+emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged - whatever your pipeline does."
 emptyTitle = "Automate your PDF workflows"
 file = "file"
 files = "files"
@@ -11534,7 +11534,7 @@ pause = "Pause"
 resume = "Resume"
 
 [watchedFolders.howItWorks]
-step1Desc = "Drag PDFs onto any Watched Folder card — or send them from your file list"
+step1Desc = "Drag PDFs onto any Watched Folder card - or send them from your file list"
 step1Title = "Drop files"
 step2Desc = "Your configured tools process each file automatically"
 step2Title = "Pipeline runs"
@@ -11558,18 +11558,18 @@ createFolder = "Create Folder"
 createTitle = "New Watched Folder"
 editTitle = "Edit Watched Folder"
 inputFolder = "Input folder"
-inputFolderNotChosen = "No folder chosen — required for auto-scan"
+inputFolderNotChosen = "No folder chosen - required for auto-scan"
 inputSource = "Input source"
-inputSourceBrowser = "Browser — drop files here"
+inputSourceBrowser = "Browser - drop files here"
 inputSourceLocal = "Local folder (auto-scan)"
-inputSourceLocalUnsupported = "Local folder (auto-scan) — Chrome/Edge only"
+inputSourceLocalUnsupported = "Local folder (auto-scan) - Chrome/Edge only"
 localOutputFolder = "Local output folder"
 maxRetries = "Max retries"
 name = "Folder name"
 namePlaceholder = "My Watched Folder"
 nameRequired = "Folder name is required"
 nameTooLong = "Folder name must be 50 characters or less"
-outputFolderNotSet = "Not set — outputs stay in app"
+outputFolderNotSet = "Not set - outputs stay in app"
 outputFolderUnsupported = "Not supported in this browser"
 outputModeNewDesc = "Output is saved as a new separate file"
 outputModeVersion = "Replace original?"
@@ -11629,9 +11629,9 @@ filterPending = "Pending"
 inputs = "Inputs"
 inputSize = "Input size"
 legendComplete = "Complete"
-noActivity = "No activity yet — drop a PDF to start"
+noActivity = "No activity yet - drop a PDF to start"
 noActivityMatch = "No matching activity"
-noInputFolder = "No input folder — edit to configure"
+noInputFolder = "No input folder - edit to configure"
 outputs = "Outputs"
 pause = "Pause"
 preview = "Preview"
@@ -11639,7 +11639,7 @@ previewInput = "Preview input"
 previewLoadFailed = "Could not load file preview."
 previewOutput = "Preview output"
 queued = "Queued"
-queuedWaiting = "Queued — waiting to run"
+queuedWaiting = "Queued - waiting to run"
 removeEntries = "Remove {{count}} entries"
 removeEntry = "Remove entry"
 removeNotificationsOnly = "Remove notifications only"
@@ -11698,7 +11698,7 @@ wording = "Ordlyd"
 
 [watermark.tooltip.appearance]
 bullet1 = "Rotasjon: -360° til 360° for skrå vannmerker"
-bullet2 = "Opasitet: 0–100 % for gjennomsiktighet"
+bullet2 = "Opasitet: 0-100 % for gjennomsiktighet"
 bullet3 = "Lavere opasitet gir mer diskrete vannmerker"
 text = "Kontroller hvordan vannmerket ser ut og blander seg med dokumentet."
 title = "Utseendeinnstillinger"

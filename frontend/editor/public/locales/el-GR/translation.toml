@@ -1254,7 +1254,7 @@ description = "URL ή όνομα αρχείου για το impressum (απαι�
 label = "Impressum"
 
 [admin.settings.legal.loginAgreement]
-defaultLocaleHint = "— χρησιμοποιείται ως εφεδρική επιλογή όταν μια γλώσσα δεν έχει αρχείο."
+defaultLocaleHint = "- χρησιμοποιείται ως εφεδρική επιλογή όταν μια γλώσσα δεν έχει αρχείο."
 defaultLocaleLink = "Ρύθμιση της προεπιλεγμένης τοπικότητας"
 description = "Εμφάνιση αποποίησης ευθύνης που οι χρήστες πρέπει να αποδεχτούν μετά τη σύνδεση. Το κείμενο ακολουθεί τη γλώσσα κάθε χρήστη."
 discardConfirm = "Έχετε μη αποθηκευμένες αλλαγές που θα χαθούν. Αλλαγή γλώσσας έτσι κι αλλιώς;"
@@ -2515,10 +2515,10 @@ text = "Είναι ένα ασφαλές αναγνωριστικό για τη�
 title = "Τι είναι πιστοποιητικό;"
 
 [certSign.certType.tooltip.which]
-bullet1 = "PKCS#12 (.p12 / .pfx) – ένα ενιαίο αρχείο (το πιο κοινό)"
-bullet2 = "PFX (.pfx) – η έκδοση της Microsoft του PKCS12"
-bullet3 = "PEM – ξεχωριστά αρχεία .pem ιδιωτικού κλειδιού και πιστοποιητικού"
-bullet4 = "JKS – αποθήκη κλειδιών Java .jks για ροές εργασίας dev / CI-CD"
+bullet1 = "PKCS#12 (.p12 / .pfx) - ένα ενιαίο αρχείο (το πιο κοινό)"
+bullet2 = "PFX (.pfx) - η έκδοση της Microsoft του PKCS12"
+bullet3 = "PEM - ξεχωριστά αρχεία .pem ιδιωτικού κλειδιού και πιστοποιητικού"
+bullet4 = "JKS - αποθήκη κλειδιών Java .jks για ροές εργασίας dev / CI-CD"
 text = "Επιλέξτε τη μορφή που ταιριάζει με το αρχείο πιστοποιητικού σας:"
 title = "Ποια επιλογή να χρησιμοποιήσω;"
 
@@ -3462,7 +3462,7 @@ showPreferencesBtn = "Διαχείριση προτιμήσεων"
 title = "Πώς χρησιμοποιούμε τα cookies"
 
 [cookieBanner.popUp.description]
-1 = "Χρησιμοποιούμε cookies και άλλες τεχνολογίες για να λειτουργεί καλύτερα το Stirling PDF για εσάς—βοηθώντας μας να βελτιώνουμε τα εργαλεία μας και να συνεχίζουμε να δημιουργούμε δυνατότητες που θα αγαπήσετε."
+1 = "Χρησιμοποιούμε cookies και άλλες τεχνολογίες για να λειτουργεί καλύτερα το Stirling PDF για εσάς - βοηθώντας μας να βελτιώνουμε τα εργαλεία μας και να συνεχίζουμε να δημιουργούμε δυνατότητες που θα αγαπήσετε."
 2 = "If you’d rather not, clicking 'No Thanks' will only enable the essential cookies needed to keep things running smoothly."
 
 [cookieBanner.preferencesModal]
@@ -3475,16 +3475,16 @@ subtitle = "Χρήση cookies"
 title = "Κέντρο προτιμήσεων συναίνεσης"
 
 [cookieBanner.preferencesModal.analytics]
-description = "Αυτά τα cookies μας βοηθούν να κατανοούμε πώς χρησιμοποιούνται τα εργαλεία μας, ώστε να επικεντρωνόμαστε στην ανάπτυξη των δυνατοτήτων που εκτιμά περισσότερο η κοινότητά μας. Να είστε βέβαιοι—το Stirling PDF δεν μπορεί και ποτέ δεν θα παρακολουθήσει το περιεχόμενο των εγγράφων με τα οποία εργάζεστε."
+description = "Αυτά τα cookies μας βοηθούν να κατανοούμε πώς χρησιμοποιούνται τα εργαλεία μας, ώστε να επικεντρωνόμαστε στην ανάπτυξη των δυνατοτήτων που εκτιμά περισσότερο η κοινότητά μας. Να είστε βέβαιοι - το Stirling PDF δεν μπορεί και ποτέ δεν θα παρακολουθήσει το περιεχόμενο των εγγράφων με τα οποία εργάζεστε."
 title = "Αναλύσεις"
 
 [cookieBanner.preferencesModal.description]
 1 = "Το Stirling PDF χρησιμοποιεί cookies και παρόμοιες τεχνολογίες για να βελτιώσει την εμπειρία σας και να κατανοήσει πώς χρησιμοποιούνται τα εργαλεία μας. Αυτό μας βοηθά να βελτιώνουμε την απόδοση, να αναπτύσσουμε τις δυνατότητες που σας ενδιαφέρουν και να παρέχουμε συνεχή υποστήριξη στους χρήστες μας."
-2 = "Το Stirling PDF δεν μπορεί—και ποτέ δεν θα—παρακολουθήσει ή να αποκτήσει πρόσβαση στο περιεχόμενο των εγγράφων που χρησιμοποιείτε."
+2 = "Το Stirling PDF δεν μπορεί - και ποτέ δεν θα - παρακολουθήσει ή να αποκτήσει πρόσβαση στο περιεχόμενο των εγγράφων που χρησιμοποιείτε."
 3 = "Η ιδιωτικότητά σας και η εμπιστοσύνη σας είναι στο επίκεντρο όσων κάνουμε."
 
 [cookieBanner.preferencesModal.necessary]
-description = "These cookies are essential for the website to function properly. They enable core features like setting your privacy preferences, logging in, and filling out forms—which is why they can’t be turned off."
+description = "These cookies are essential for the website to function properly. They enable core features like setting your privacy preferences, logging in, and filling out forms - which is why they can’t be turned off."
 
 [cookieBanner.preferencesModal.necessary.title]
 1 = "Απολύτως απαραίτητα cookies"
@@ -3900,7 +3900,7 @@ dateDesc = "Νεότερα πρώτα"
 dateLabel = "Πρόσφατα"
 nameAsc = "Α έως Ω"
 nameDesc = "Ω έως Α"
-nameLabel = "Α–Ω"
+nameLabel = "Α-Ω"
 
 [fileSelectorPicker.tabs]
 saved = "Αποθηκευμένα αρχεία"
@@ -5413,7 +5413,7 @@ userBody = "Προσκαλέστε συνεργάτες, αναθέστε ρόλ
 userTitle = "Επισκόπηση πλάνου"
 
 [onboarding.processorIntro]
-body = "Το Stirling εκτελεί πλέον <strong>Πολιτικές</strong> — αυτοματοποιημένους κανόνες που ταξινομούν, ασφαλίζουν και επεξεργάζονται κάθε έγγραφο όταν φτάνει. Ρυθμίστε τις και παρακολουθήστε τις εκτελέσεις στον <strong>Processor</strong>."
+body = "Το Stirling εκτελεί πλέον <strong>Πολιτικές</strong> - αυτοματοποιημένους κανόνες που ταξινομούν, ασφαλίζουν και επεξεργάζονται κάθε έγγραφο όταν φτάνει. Ρυθμίστε τις και παρακολουθήστε τις εκτελέσεις στον <strong>Processor</strong>."
 cta = "Δείτε τον Processor"
 title = "Δείτε τον Stirling Processor"
 
@@ -5670,7 +5670,7 @@ title = "Αφαίρεση σελίδας"
 description = "Επιλέξτε ποιες σελίδες θα χρησιμοποιηθούν για τη λειτουργία. Υποστηρίζει μεμονωμένες σελίδες, εύρη, τύπους και τη λέξη-κλειδί all."
 
 [pageSelection.tooltip.complex]
-bullet1 = "<strong>1,3-5,8,2n</strong> → σελίδες 1, 3–5, 8, συν τις ζυγές"
+bullet1 = "<strong>1,3-5,8,2n</strong> → σελίδες 1, 3-5, 8, συν τις ζυγές"
 bullet2 = "<strong>10-,2n-1</strong> → από τη σελίδα 10 έως το τέλος + περιττές σελίδες"
 description = "Συνδυάστε διαφορετικούς τύπους."
 title = "Σύνθετοι συνδυασμοί"
@@ -5693,8 +5693,8 @@ description = "Χρησιμοποιήστε το n σε τύπους για μο
 title = "Μαθηματικές συναρτήσεις"
 
 [pageSelection.tooltip.ranges]
-bullet1 = "<strong>3-6</strong> → επιλέγει τις σελίδες 3–6"
-bullet2 = "<strong>10-15</strong> → επιλέγει τις σελίδες 10–15"
+bullet1 = "<strong>3-6</strong> → επιλέγει τις σελίδες 3-6"
+bullet2 = "<strong>10-15</strong> → επιλέγει τις σελίδες 10-15"
 bullet3 = "<strong>5-</strong> → επιλέγει τις σελίδες 5 έως το τέλος"
 description = "Χρησιμοποιήστε - για συνεχόμενες σελίδες."
 title = "Εύρη σελίδων"
@@ -5770,7 +5770,7 @@ title = "Turn on the Processor plan"
 eyebrow = "Editor plan · Always free"
 
 [payg.free.header]
-freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
+freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR - as much as you want, no matter where you trigger it."
 freeTitle = "Unlimited PDF editing"
 
 [payg.free.hero]
@@ -5798,8 +5798,8 @@ pauses = "pauses at cap"
 title = "What happens when the cap is reached"
 
 [payg.header]
-eyebrow = "Processor plan · {{start}} – {{end}}"
-freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
+eyebrow = "Processor plan · {{start}} - {{end}}"
+freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR - as much as you want, no matter where you trigger it."
 freeLabel = "Always free"
 freeTitle = "Unlimited PDF editing"
 meterBody = "{{limit}} free PDFs to start, then billed per PDF up to your cap."
@@ -5819,8 +5819,8 @@ chip = "Προπληρωμένο έτος"
 
 [payg.prepaid.banner]
 exhausted = "Η προπληρωμένη χωρητικότητά σας εξαντλήθηκε· η χρέωση βάσει χρήσης συνεχίστηκε. Συμπληρώστε για να διατηρήσετε την έκπτωση."
-expiring_one = "Το προπληρωμένο έτος σας λήγει σε {{count}} ημέρα. Η αχρησιμοποίητη χωρητικότητα λήγει — συμπληρώστε για να ξεκινήσετε ένα νέο έτος."
-expiring_other = "Το προπληρωμένο έτος σας λήγει σε {{count}} ημέρες. Η αχρησιμοποίητη χωρητικότητα λήγει — συμπληρώστε για να ξεκινήσετε ένα νέο έτος."
+expiring_one = "Το προπληρωμένο έτος σας λήγει σε {{count}} ημέρα. Η αχρησιμοποίητη χωρητικότητα λήγει - συμπληρώστε για να ξεκινήσετε ένα νέο έτος."
+expiring_other = "Το προπληρωμένο έτος σας λήγει σε {{count}} ημέρες. Η αχρησιμοποίητη χωρητικότητα λήγει - συμπληρώστε για να ξεκινήσετε ένα νέο έτος."
 low = "Έχετε πέσει στο {{pct}}% της προπληρωμένης χωρητικότητάς σας. Συμπληρώστε οποιαδήποτε στιγμή για να διατηρήσετε την επεξεργασία χωρίς διακοπές."
 
 [payg.prepaid.card]
@@ -6120,7 +6120,7 @@ processing = "Processing"
 uploading = "Uploading"
 
 [pdfTextEditor.tooltip.alpha]
-text = "Αυτός ο προβολέας alpha βρίσκεται υπό εξέλιξη—ορισμένες γραμματοσειρές, χρώματα, εφέ διαφάνειας και λεπτομέρειες διάταξης μπορεί να διαφοροποιηθούν ελαφρώς. Ελέγξτε προσεκτικά το παραγόμενο PDF πριν το κοινοποιήσετε."
+text = "Αυτός ο προβολέας alpha βρίσκεται υπό εξέλιξη - ορισμένες γραμματοσειρές, χρώματα, εφέ διαφάνειας και λεπτομέρειες διάταξης μπορεί να διαφοροποιηθούν ελαφρώς. Ελέγξτε προσεκτικά το παραγόμενο PDF πριν το κοινοποιήσετε."
 title = "Προβολέας Alpha"
 
 [pdfTextEditor.tooltip.header]
@@ -6521,7 +6521,7 @@ never = "ποτέ"
 [portal.accountLink.modal]
 linkSubtitle = "Συνδεθείτε στον λογαριασμό στον οποίο θα πρέπει να χρεώνεται αυτός ο server."
 linkTitle = "Σύνδεση του λογαριασμού σας Stirling"
-reauthSubtitle = "Η συνεδρία σας έληξε — συνδεθείτε ξανά στον λογαριασμό σας Stirling. Το instance σας παραμένει συνδεδεμένο."
+reauthSubtitle = "Η συνεδρία σας έληξε - συνδεθείτε ξανά στον λογαριασμό σας Stirling. Το instance σας παραμένει συνδεδεμένο."
 reauthTitle = "Συνδεθείτε ξανά"
 simulateSignIn = "Προσομοίωση σύνδεσης (dev)"
 
@@ -6632,7 +6632,7 @@ title = "Δωρεάν PDF Editors"
 checkoutErrorTitle = "Δεν ήταν δυνατή η έναρξη του checkout"
 currentPlan = "Τρέχον πλάνο"
 freeForever = "Δωρεάν για πάντα"
-noTeamResolved = "Δεν έχει επιλυθεί ακόμα ομάδα στο πορτοφόλι σας — ανανεώστε και δοκιμάστε ξανά."
+noTeamResolved = "Δεν έχει επιλυθεί ακόμα ομάδα στο πορτοφόλι σας - ανανεώστε και δοκιμάστε ξανά."
 ownerOnly = "Μόνο ο κάτοχος της ομάδας μπορεί να ενεργοποιήσει το πλάνο Processor."
 payInvoice = "Πληρώστε το τιμολόγιο για ολοκλήρωση"
 planName = "Editor"
@@ -6667,7 +6667,7 @@ viewLink = "Προβολή ↗"
 
 [portal.billing.linkPrompt]
 cta = "Σύνδεση λογαριασμού Stirling"
-description = "Η χειροκίνητη επεξεργασία PDF — προβολή, υπογραφή, συγχώνευση, διαίρεση, υδατογράφημα, συμπίεση, μετατροπή, χειροκίνητο OCR — είναι πάντα δωρεάν, συνδεδεμένη ή όχι. Συνδεθείτε για να διεκδικήσετε 500 δωρεάν PDFs μετρημένης επεξεργασίας (αυτοματισμοί, AI και το API). Όταν χρειαστείτε περισσότερα, ενεργοποιήστε το πλάνο Processor και πληρώστε μόνο για ό,τι χρησιμοποιείτε."
+description = "Η χειροκίνητη επεξεργασία PDF - προβολή, υπογραφή, συγχώνευση, διαίρεση, υδατογράφημα, συμπίεση, μετατροπή, χειροκίνητο OCR - είναι πάντα δωρεάν, συνδεδεμένη ή όχι. Συνδεθείτε για να διεκδικήσετε 500 δωρεάν PDFs μετρημένης επεξεργασίας (αυτοματισμοί, AI και το API). Όταν χρειαστείτε περισσότερα, ενεργοποιήστε το πλάνο Processor και πληρώστε μόνο για ό,τι χρησιμοποιείτε."
 title = "Σύνδεση του λογαριασμού σας Stirling"
 
 [portal.billing.paymentMethod]
@@ -6801,13 +6801,13 @@ low = "Εξαντλείται"
 [portal.billing.spendLimit]
 adjustLimit = "Προσαρμογή ορίου"
 cancel = "Ακύρωση"
-capControlNote = "Οι αλλαγές εφαρμόζονται αμέσως — αυξήστε ή μειώστε το ανώτατο όριο οποιαδήποτε στιγμή."
+capControlNote = "Οι αλλαγές εφαρμόζονται αμέσως - αυξήστε ή μειώστε το ανώτατο όριο οποιαδήποτε στιγμή."
 capSuffix = "/ μήνα"
 capSuffixWithDocs = "/ μήνα · ≈ {{documents}} έγγραφα"
-displaySub = "Χρεώνεστε μόνο για ό,τι επεξεργάζεστε αυτόματα — ποτέ πέρα από το ανώτατο όριο."
+displaySub = "Χρεώνεστε μόνο για ό,τι επεξεργάζεστε αυτόματα - ποτέ πέρα από το ανώτατο όριο."
 editTitle = "Ορίστε το μηνιαίο ανώτατο όριό σας"
 eyebrow = "Όριο δαπανών"
-guardrailBody = "ένα αυστηρό ανώτατο όριο — δεν χρεώνεστε ποτέ πέρα από αυτό. Στο όριο, η μετρημένη επεξεργασία διακόπτεται προσωρινά (η απεριόριστη επεξεργασία PDF συνεχίζει να λειτουργεί) μέχρι να το αυξήσετε ή να επαναφερθεί ο κύκλος. Τίποτα δεν χάνεται."
+guardrailBody = "ένα αυστηρό ανώτατο όριο - δεν χρεώνεστε ποτέ πέρα από αυτό. Στο όριο, η μετρημένη επεξεργασία διακόπτεται προσωρινά (η απεριόριστη επεξεργασία PDF συνεχίζει να λειτουργεί) μέχρι να το αυξήσετε ή να επαναφερθεί ο κύκλος. Τίποτα δεν χάνεται."
 guardrailLabel = "Το προστατευτικό σας όριο:"
 noCap = "χωρίς όριο"
 pctUsed = "{{pct}}% χρησιμοποιήθηκε"
@@ -7242,8 +7242,8 @@ viewSource = "Προβολή πηγαίου κώδικα στο GitHub"
 codeCaption = "κάθε αίτημα"
 eyebrow = "ΞΕΚΙΝΩΝΤΑΣ"
 lead = "Όλα τα αιτήματα πιστοποιούνται με bearer token. Τα κλειδιά είναι περιορισμένα ανά περιβάλλον και δεν λήγουν ποτέ, εκτός αν γίνει περιστροφή τους."
-liveKey = "Κλειδιά παραγωγής — χρεώσιμα, με όρια ρυθμού ανάλογα με το πλάνο σας."
-testKey = "Κλειδιά sandbox — δωρεάν, επιστρέφουν συνθετικά fixtures."
+liveKey = "Κλειδιά παραγωγής - χρεώσιμα, με όρια ρυθμού ανάλογα με το πλάνο σας."
+testKey = "Κλειδιά sandbox - δωρεάν, επιστρέφουν συνθετικά fixtures."
 title = "Πιστοποίηση"
 
 [portal.docs.components]
@@ -7281,7 +7281,7 @@ title = "Quickstart"
 
 [portal.docs.quickstart.callout]
 bodyAfterLink = "για συνταγές copy-paste."
-bodyBeforeLink = "συνδέστε την ίδια κλήση σε ένα pipeline για να αλυσιδώσετε επικύρωση, απόκρυψη και παράδοση — ή εκθέστε την σε έναν πράκτορα μέσω MCP. Δείτε"
+bodyBeforeLink = "συνδέστε την ίδια κλήση σε ένα pipeline για να αλυσιδώσετε επικύρωση, απόκρυψη και παράδοση - ή εκθέστε την σε έναν πράκτορα μέσω MCP. Δείτε"
 label = "Επόμενο:"
 link = "Playbooks"
 
@@ -7290,7 +7290,7 @@ body = "Δημιουργήστε ένα περιορισμένο κλειδί α
 title = "Έκδοση API key"
 
 [portal.docs.quickstart.step2]
-body = "Κάντε POST ένα αρχείο σε οποιοδήποτε typed endpoint. Το endpoint καθορίζει το σχήμα που θα λάβετε πίσω — εδώ, ο extractor τιμολογίων."
+body = "Κάντε POST ένα αρχείο σε οποιοδήποτε typed endpoint. Το endpoint καθορίζει το σχήμα που θα λάβετε πίσω - εδώ, ο extractor τιμολογίων."
 snippetCaption = "εξαγωγή τιμολογίου"
 title = "Αποστολή εγγράφου"
 
@@ -7370,8 +7370,8 @@ overview = "Επισκόπηση"
 requestAccess = "Αίτημα πρόσβασης"
 
 [portal.documents.elevation.active]
-description = "Προσωρινή παραχώρηση — η πρόσβαση καταγράφεται και είναι χρονικά περιορισμένη."
-descriptionFourEyes = "Προσωρινή παραχώρηση — ειδοποιήθηκε ένας ομότιμος ελεγκτής (four-eyes)."
+description = "Προσωρινή παραχώρηση - η πρόσβαση καταγράφεται και είναι χρονικά περιορισμένη."
+descriptionFourEyes = "Προσωρινή παραχώρηση - ειδοποιήθηκε ένας ομότιμος ελεγκτής (four-eyes)."
 title = "Η πρόσβαση λήγει σε {{time}}"
 
 [portal.documents.elevation.gated]
@@ -7432,7 +7432,7 @@ time = "Ώρα"
 user = "Χρήστης"
 
 [portal.editorAdmin]
-subtitle = "Αναπτύξτε το Stirling PDF Editor, συζεύξτε self-hosted παρουσίες με τον οργανισμό σας και διαχειριστείτε τον ενεργό στόλο — στόχους, υγεία, διαπιστευτήρια και offline ενεργοποίηση σε ένα μέρος."
+subtitle = "Αναπτύξτε το Stirling PDF Editor, συζεύξτε self-hosted παρουσίες με τον οργανισμό σας και διαχειριστείτε τον ενεργό στόλο - στόχους, υγεία, διαπιστευτήρια και offline ενεργοποίηση σε ένα μέρος."
 title = "Ανάπτυξη Editor"
 
 [portal.editorAdmin.health.columns]
@@ -7468,7 +7468,7 @@ rotate = "Περιστροφή"
 talkToSales = "Μιλήστε με τις πωλήσεις"
 
 [portal.editorAdmin.sections.health]
-sub = "Κάθε παρουσία Editor που αναφέρει — έκδοση, περιοχή, κατάσταση, τελευταία εμφάνιση και ενεργοί χρήστες."
+sub = "Κάθε παρουσία Editor που αναφέρει - έκδοση, περιοχή, κατάσταση, τελευταία εμφάνιση και ενεργοί χρήστες."
 title = "Υγεία παρουσίας"
 
 [portal.editorAdmin.sections.pairing]
@@ -7754,9 +7754,9 @@ done = "Τέλος"
 keyNameLabel = "Όνομα key"
 keyNamePlaceholder = "π.χ. Production · ingest"
 secretKeyCaption = "Secret key"
-secretWarning = "Αποθηκεύστε το σε secrets manager. Το Stirling αποθηκεύει πάντα μόνο hash — δεν υπάρχει τρόπος ανάκτησής του αργότερα."
+secretWarning = "Αποθηκεύστε το σε secrets manager. Το Stirling αποθηκεύει πάντα μόνο hash - δεν υπάρχει τρόπος ανάκτησής του αργότερα."
 subtitle = "Περιορίστε το key στο ελάχιστο που χρειάζεται. Μπορείτε να το περιστρέψετε ή να το ανακαλέσετε ανά πάσα στιγμή."
-subtitleCreated = "Αντιγράψτε αυτό το secret τώρα — δεν θα εμφανιστεί ξανά."
+subtitleCreated = "Αντιγράψτε αυτό το secret τώρα - δεν θα εμφανιστεί ξανά."
 title = "Δημιουργία API key"
 titleCreated = "Το key δημιουργήθηκε"
 
@@ -8317,7 +8317,7 @@ label = "Αποστολή του εγγράφου με email (Mailgun)"
 [portal.policies.operations.n8nGate]
 description = "Your workflow decides whether the run carries on."
 label = "Ask an n8n workflow to approve"
-note = "The workflow must reply with {\"approved\": true}. Anything else — including a timeout — stops the run and parks the document."
+note = "The workflow must reply with {\"approved\": true}. Anything else - including a timeout - stops the run and parks the document."
 
 [portal.policies.operations.n8nNotify]
 description = "Sends the run's details, not the document."
@@ -8339,7 +8339,7 @@ label = "Μεταφόρτωση στο Nextcloud"
 [portal.policies.operations.presidioAnalyze]
 description = "Ο δικός σας Presidio server αναφέρει τα προσωπικά δεδομένα που βρίσκει."
 label = "Εντοπισμός προσωπικών δεδομένων"
-note = "Το Presidio διαβάζει κείμενο, όχι αρχεία. Δώστε του το κείμενο που θέλετε να ελεγχθεί — το ίδιο το έγγραφο δεν μεταφορτώνεται."
+note = "Το Presidio διαβάζει κείμενο, όχι αρχεία. Δώστε του το κείμενο που θέλετε να ελεγχθεί - το ίδιο το έγγραφο δεν μεταφορτώνεται."
 
 [portal.policies.operations.responseMode]
 replace = "Αντικατάσταση του εγγράφου με την απάντηση"
@@ -8429,7 +8429,7 @@ desc = "Εκτελεί OCR ώστε οι σαρωμένες σελίδες να 
 label = "Μετατροπή κειμένου σε αναζητήσιμο"
 
 [portal.policies.wizard.capability.redact]
-desc = "Εντοπίζει και μαυρίζει ευαίσθητες λεπτομέρειες — όπως αριθμούς κοινωνικής ασφάλισης και καρτών — ώστε να μην μπορούν να διαβαστούν."
+desc = "Εντοπίζει και μαυρίζει ευαίσθητες λεπτομέρειες - όπως αριθμούς κοινωνικής ασφάλισης και καρτών - ώστε να μην μπορούν να διαβαστούν."
 label = "Απόκρυψη ευαίσθητων πληροφοριών"
 
 [portal.policies.wizard.capability.sanitize]
@@ -8595,11 +8595,11 @@ postalCodePlaceholder = "94105"
 posture = "Διακυβέρνηση"
 posture_count = "~{{count}} πολιτικές"
 posture_essentials = "Βασικά"
-posture_essentialsSub = "Ταξινόμηση + Κοινή χρήση — οι προεπιλογές"
+posture_essentialsSub = "Ταξινόμηση + Κοινή χρήση - οι προεπιλογές"
 posture_governed = "Με διακυβέρνηση"
 posture_governedSub = "Προσθέτει Ασφάλεια και Δρομολόγηση"
 posture_regulated = "Ρυθμιζόμενο"
-posture_regulatedSub = "Κάθε κατηγορία — Συμμόρφωση, Διατήρηση, Ingestion"
+posture_regulatedSub = "Κάθε κατηγορία - Συμμόρφωση, Διατήρηση, Ingestion"
 qbr = "Τριμηνιαίες επιχειρηματικές ανασκοπήσεις"
 qbrSub = "Ο SE σας ανασκοπεί τη χρήση και τον οδικό χάρτη κάθε τρίμηνο"
 region = "Πολιτεία / περιοχή"
@@ -8721,13 +8721,13 @@ label = "Δοκιμή"
 [portal.procurement.license]
 copied = "Αντιγράφηκε"
 copy = "Αντιγραφή κλειδιού"
-downloadError = "Δεν ήταν δυνατή η δημιουργία του offline αρχείου άδειας ακόμη — δοκιμάστε ξανά σε λίγο."
+downloadError = "Δεν ήταν δυνατή η δημιουργία του offline αρχείου άδειας ακόμη - δοκιμάστε ξανά σε λίγο."
 downloadOffline = "Λήψη offline άδειας (.lic)"
 hint = "Επικολλήστε αυτό το κλειδί σε μια self-hosted παρουσία για να την ενεργοποιήσετε ή κρατήστε το για τα αρχεία σας. Φυλάξτε το με ασφάλεια."
 label = "Το κλειδί άδειάς σας"
 subtitle = "Ενεργοποιήστε μια self-hosted εγκατάσταση με αυτό το κλειδί ή κρατήστε το για τα αρχεία σας."
 title = "Το κλειδί άδειάς σας"
-trialFileHint = "Αυτό είναι το αρχείο δοκιμαστικής άδειάς σας. Μόλις τεθεί σε ισχύ η συμφωνία σας, επιστρέψτε και κατεβάστε το ξανά — σε αντίθεση με το online κλειδί άδειας, το αρχείο .lic δεν θα ενημερωθεί μόνο του."
+trialFileHint = "Αυτό είναι το αρχείο δοκιμαστικής άδειάς σας. Μόλις τεθεί σε ισχύ η συμφωνία σας, επιστρέψτε και κατεβάστε το ξανά - σε αντίθεση με το online κλειδί άδειας, το αρχείο .lic δεν θα ενημερωθεί μόνο του."
 
 [portal.procurement.link]
 cta = "Σύνδεση λογαριασμού"
@@ -8741,10 +8741,10 @@ eyebrow = "Live"
 title = "Είστε live στο Stirling Enterprise"
 
 [portal.procurement.milestone]
-downloadError = "Δεν ήταν δυνατή η λήψη του PDF προσφοράς ακόμη — δοκιμάστε ξανά σε λίγο."
+downloadError = "Δεν ήταν δυνατή η λήψη του PDF προσφοράς ακόμη - δοκιμάστε ξανά σε λίγο."
 
 [portal.procurement.payment]
-description = "Η προσφορά σας έγινε αποδεκτή και η άδειά σας είναι ήδη ενεργή — η ομάδα σας μπορεί να ξεκινήσει αμέσως. Πληρώστε το πρώτο τιμολόγιο όταν είστε έτοιμοι· μπορείτε να το πληρώσετε ή να το κατεβάσετε εδώ, χωρίς να χρειάζεται email."
+description = "Η προσφορά σας έγινε αποδεκτή και η άδειά σας είναι ήδη ενεργή - η ομάδα σας μπορεί να ξεκινήσει αμέσως. Πληρώστε το πρώτο τιμολόγιο όταν είστε έτοιμοι· μπορείτε να το πληρώσετε ή να το κατεβάσετε εδώ, χωρίς να χρειάζεται email."
 downloadAgreement = "Λήψη υπογεγραμμένης συμφωνίας"
 downloadInvoice = "Λήψη τιμολογίου"
 eyebrow = "Πληρωμή"
@@ -8799,7 +8799,7 @@ workEmailPlaceholder = "you@company.com"
 
 [portal.procurement.trial]
 body = "Η επέκταση προσθέτει 7 ημέρες και ειδοποιεί τον μηχανικό λύσεών σας."
-bodyMaxed = "Έχετε χρησιμοποιήσει όλες τις επεκτάσεις σας — μιλήστε με τον μηχανικό λύσεών σας αν χρειάζεστε περισσότερο χρόνο."
+bodyMaxed = "Έχετε χρησιμοποιήσει όλες τις επεκτάσεις σας - μιλήστε με τον μηχανικό λύσεών σας αν χρειάζεστε περισσότερο χρόνο."
 cancel = "Ακύρωση δοκιμής"
 extend = "Επέκταση 7 ημέρες"
 maxed = "Εξαντλήθηκε"
@@ -9036,7 +9036,7 @@ walletUnavailable = "Το πορτοφόλι δεν είναι διαθέσιμ�
 
 [portal.usage.sessionExpired]
 action = "Συνδεθείτε ξανά"
-body = "Η συνεδρία του λογαριασμού Stirling σας έχει λήξει. Συνδεθείτε ξανά για να δείτε τη χρέωση — η παρουσία σας παραμένει συνδεδεμένη."
+body = "Η συνεδρία του λογαριασμού Stirling σας έχει λήξει. Συνδεθείτε ξανά για να δείτε τη χρέωση - η παρουσία σας παραμένει συνδεδεμένη."
 title = "Η συνεδρία έληξε"
 
 [portal.users]
@@ -9064,7 +9064,7 @@ summary = "Περιορισμένη ή μόνο web πρόσβαση· δεν μ
 
 [portal.users.roles.member]
 label = "Μέλος"
-summary = "Κανονικός χρήστης — εργάζεται με κοινόχρηστους πόρους και τις δικές του διαμορφώσεις."
+summary = "Κανονικός χρήστης - εργάζεται με κοινόχρηστους πόρους και τις δικές του διαμορφώσεις."
 
 [portal.users.roles.member.permissions]
 0 = "Χρήση του editor και κοινόχρηστων integrations"
@@ -9074,7 +9074,7 @@ summary = "Κανονικός χρήστης — εργάζεται με κοι�
 
 [portal.users.roles.team_owner]
 label = "Κάτοχος ομάδας"
-summary = "Κατέχει μια ομάδα — διαχειρίζεται τους πόρους των μελών της και τις κοινόχρηστες διαμορφώσεις."
+summary = "Κατέχει μια ομάδα - διαχειρίζεται τους πόρους των μελών της και τις κοινόχρηστες διαμορφώσεις."
 
 [portal.users.roles.team_owner.permissions]
 0 = "Δημιουργία & διαχείριση των συνδέσεων S3 της ομάδας"
@@ -9765,7 +9765,7 @@ failed = "Παρουσιάστηκε σφάλμα κατά την εξαγωγή
 
 [scannerImageSplit.tooltip]
 headsUp = "Προσοχή"
-headsUpDesc = "Επικαλυπτόμενες φωτογραφίες ή φόντα πολύ κοντά σε χρώμα με τις φωτογραφίες μπορεί να μειώσουν την ακρίβεια—δοκιμάστε πιο ανοιχτό ή πιο σκούρο φόντο και αφήστε περισσότερο χώρο."
+headsUpDesc = "Επικαλυπτόμενες φωτογραφίες ή φόντα πολύ κοντά σε χρώμα με τις φωτογραφίες μπορεί να μειώσουν την ακρίβεια - δοκιμάστε πιο ανοιχτό ή πιο σκούρο φόντο και αφήστε περισσότερο χώρο."
 problem1 = "Φωτογραφίες δεν ανιχνεύονται → αυξήστε το Tolerance σε 30-50"
 problem2 = "Πάρα πολλοί ψευδείς εντοπισμοί → αυξήστε το Minimum Area σε 15,000-20,000"
 problem3 = "Τα κοψίματα είναι πολύ σφιχτά → αυξήστε το Border Size σε 5-10"
@@ -9783,7 +9783,7 @@ useCase2 = "Διαχωρίστε παρτίδες επίπεδου σαρωτή 
 useCase3 = "Σπάστε κολάζ σε μεμονωμένες φωτογραφίες"
 useCase4 = "Εξαγάγετε φωτογραφίες από έγγραφα"
 whatThisDoes = "Τι κάνει αυτό"
-whatThisDoesDesc = "Εντοπίζει και εξάγει αυτόματα κάθε φωτογραφία από μια σαρωμένη σελίδα ή σύνθετη εικόνα—χωρίς χειροκίνητο κόψιμο."
+whatThisDoesDesc = "Εντοπίζει και εξάγει αυτόματα κάθε φωτογραφία από μια σαρωμένη σελίδα ή σύνθετη εικόνα - χωρίς χειροκίνητο κόψιμο."
 whenToUse = "Πότε να το χρησιμοποιείτε"
 
 [ScannerImageSplit.selectText]
@@ -11462,9 +11462,9 @@ emptyFile = "Κενό αρχείο"
 htmlHidePreview = "Απόκρυψη προεπισκόπησης"
 htmlPreview = "Προεπισκόπηση HTML"
 htmlPreviewMobileHidden = "Οι σελίδες HTML είναι διαμορφωμένες για πλάτη επιφάνειας εργασίας, οπότε η προεπισκόπηση είναι απενεργοποιημένη από προεπιλογή εδώ."
-htmlPreviewWarning = "Προεπισκόπηση HTML — ενδέχεται να μη φορτωθούν εξωτερικοί πόροι · {{size}}"
+htmlPreviewWarning = "Προεπισκόπηση HTML - ενδέχεται να μη φορτωθούν εξωτερικοί πόροι · {{size}}"
 htmlShowPreview = "Εμφάνιση προεπισκόπησης ούτως ή άλλως"
-invalidJson = "Μη έγκυρο JSON — εμφάνιση ακατέργαστου περιεχομένου"
+invalidJson = "Μη έγκυρο JSON - εμφάνιση ακατέργαστου περιεχομένου"
 lineNumbers = "Αριθμοί γραμμών"
 loading = "Φόρτωση..."
 renderMarkdown = "Απόδοση Markdown"
@@ -11526,7 +11526,7 @@ create = "Create your first Watched Folder"
 deleteFolder = "Delete folder"
 editFolder = "Edit folder"
 empty = "No watched folders yet"
-emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged — whatever your pipeline does."
+emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged - whatever your pipeline does."
 emptyTitle = "Automate your PDF workflows"
 file = "file"
 files = "files"
@@ -11534,7 +11534,7 @@ pause = "Pause"
 resume = "Resume"
 
 [watchedFolders.howItWorks]
-step1Desc = "Drag PDFs onto any Watched Folder card — or send them from your file list"
+step1Desc = "Drag PDFs onto any Watched Folder card - or send them from your file list"
 step1Title = "Drop files"
 step2Desc = "Your configured tools process each file automatically"
 step2Title = "Pipeline runs"
@@ -11558,18 +11558,18 @@ createFolder = "Create Folder"
 createTitle = "New Watched Folder"
 editTitle = "Edit Watched Folder"
 inputFolder = "Input folder"
-inputFolderNotChosen = "No folder chosen — required for auto-scan"
+inputFolderNotChosen = "No folder chosen - required for auto-scan"
 inputSource = "Input source"
-inputSourceBrowser = "Browser — drop files here"
+inputSourceBrowser = "Browser - drop files here"
 inputSourceLocal = "Local folder (auto-scan)"
-inputSourceLocalUnsupported = "Local folder (auto-scan) — Chrome/Edge only"
+inputSourceLocalUnsupported = "Local folder (auto-scan) - Chrome/Edge only"
 localOutputFolder = "Local output folder"
 maxRetries = "Max retries"
 name = "Folder name"
 namePlaceholder = "My Watched Folder"
 nameRequired = "Folder name is required"
 nameTooLong = "Folder name must be 50 characters or less"
-outputFolderNotSet = "Not set — outputs stay in app"
+outputFolderNotSet = "Not set - outputs stay in app"
 outputFolderUnsupported = "Not supported in this browser"
 outputModeNewDesc = "Output is saved as a new separate file"
 outputModeVersion = "Replace original?"
@@ -11629,9 +11629,9 @@ filterPending = "Pending"
 inputs = "Inputs"
 inputSize = "Input size"
 legendComplete = "Complete"
-noActivity = "No activity yet — drop a PDF to start"
+noActivity = "No activity yet - drop a PDF to start"
 noActivityMatch = "No matching activity"
-noInputFolder = "No input folder — edit to configure"
+noInputFolder = "No input folder - edit to configure"
 outputs = "Outputs"
 pause = "Pause"
 preview = "Preview"
@@ -11639,7 +11639,7 @@ previewInput = "Preview input"
 previewLoadFailed = "Could not load file preview."
 previewOutput = "Preview output"
 queued = "Queued"
-queuedWaiting = "Queued — waiting to run"
+queuedWaiting = "Queued - waiting to run"
 removeEntries = "Remove {{count}} entries"
 removeEntry = "Remove entry"
 removeNotificationsOnly = "Remove notifications only"

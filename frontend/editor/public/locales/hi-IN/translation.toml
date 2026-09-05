@@ -1254,7 +1254,7 @@ description = "Impressum का URL या फ़ाइल नाम (कुछ 
 label = "Impressum"
 
 [admin.settings.legal.loginAgreement]
-defaultLocaleHint = "— जब किसी भाषा की फ़ाइल नहीं होती, तब फॉलबैक के रूप में प्रयुक्त।"
+defaultLocaleHint = "- जब किसी भाषा की फ़ाइल नहीं होती, तब फॉलबैक के रूप में प्रयुक्त।"
 defaultLocaleLink = "डिफ़ॉल्ट लोकैल कॉन्फ़िगर करें"
 description = "लॉगिन के बाद उपयोगकर्ताओं को स्वीकार करना आवश्यक अस्वीकरण दिखाएँ। पाठ प्रत्येक उपयोगकर्ता की भाषा के अनुसार दिखेगा।"
 discardConfirm = "आपके बिना सहेजे बदलाव खो जाएँगे। फिर भी भाषा बदलें?"
@@ -2515,10 +2515,10 @@ text = "यह आपके हस्ताक्षर के लिए एक 
 title = "प्रमाणपत्र क्या है?"
 
 [certSign.certType.tooltip.which]
-bullet1 = "PKCS#12 (.p12 / .pfx) – एक संयुक्त फ़ाइल (सबसे आम)"
-bullet2 = "PFX (.pfx) – Microsoft का PKCS12 संस्करण"
-bullet3 = "PEM – अलग private-key और certificate .pem फ़ाइलें"
-bullet4 = "JKS – Java .jks कीस्टोर dev / CI-CD वर्कफ़्लोज़ के लिए"
+bullet1 = "PKCS#12 (.p12 / .pfx) - एक संयुक्त फ़ाइल (सबसे आम)"
+bullet2 = "PFX (.pfx) - Microsoft का PKCS12 संस्करण"
+bullet3 = "PEM - अलग private-key और certificate .pem फ़ाइलें"
+bullet4 = "JKS - Java .jks कीस्टोर dev / CI-CD वर्कफ़्लोज़ के लिए"
 text = "वह फ़ॉर्मैट चुनें जो आपके प्रमाणपत्र फ़ाइल से मेल खाता हो:"
 title = "मुझे कौन सा विकल्प उपयोग करना चाहिए?"
 
@@ -2717,7 +2717,7 @@ expires = "समाप्ति"
 listCerts = "प्रमाणपत्रों की सूची दिखाएँ"
 loading = "प्रमाणपत्र पढ़े जा रहे हैं…"
 noCerts = "हस्ताक्षर हेतु कोई प्रमाणपत्र नहीं मिला"
-noDriver = "कोई PKCS#11 ड्राइवर नहीं मिला। अपने टोकन का ड्राइवर (जैसे OpenSC) इंस्टॉल करें, फिर इसे दोबारा खोलें — या नीचे ड्राइवर पथ मैन्युअल रूप से दर्ज करें।"
+noDriver = "कोई PKCS#11 ड्राइवर नहीं मिला। अपने टोकन का ड्राइवर (जैसे OpenSC) इंस्टॉल करें, फिर इसे दोबारा खोलें - या नीचे ड्राइवर पथ मैन्युअल रूप से दर्ज करें।"
 notYetValid = "अभी तक मान्य नहीं"
 pin = "टोकन PIN"
 pkcs11Hint = "अपने टोकन का PKCS#11 ड्राइवर चुनें, PIN दर्ज करें, फिर टोकन पर मौजूद प्रमाणपत्रों की सूची बनाएं।"
@@ -2726,7 +2726,7 @@ refresh = "ताज़ा करें"
 selectCert = "प्रमाणपत्र चुनें"
 selectDriver = "ड्राइवर चुनें"
 slot = "স्लॉट (वैकल्पिक)"
-windowsHint = "अपने Windows प्रमाणपत्र स्टोर से एक प्रमाणपत्र चुनें। हस्ताक्षर के लिए आपके कार्ड/टोकन पर मौजूद कुंजी का उपयोग होगा — Windows आपसे PIN पूछेगा।"
+windowsHint = "अपने Windows प्रमाणपत्र स्टोर से एक प्रमाणपत्र चुनें। हस्ताक्षर के लिए आपके कार्ड/टोकन पर मौजूद कुंजी का उपयोग होगा - Windows आपसे PIN पूछेगा।"
 windowsLoadError = "Windows प्रमाणपत्र स्टोर पढ़ा नहीं जा सका"
 
 [certSign.sessions]
@@ -3462,7 +3462,7 @@ showPreferencesBtn = "प्राथमिकताएँ प्रबंधि
 title = "हम कुकीज़ का उपयोग कैसे करते हैं"
 
 [cookieBanner.popUp.description]
-1 = "हम Stirling PDF को आपके लिए बेहतर बनाने हेतु कुकीज़ और अन्य तकनीकों का उपयोग करते हैं—जो हमें अपने टूल सुधारने और वे फीचर्स बनाने में मदद करता है जिन्हें आप पसंद करेंगे।"
+1 = "हम Stirling PDF को आपके लिए बेहतर बनाने हेतु कुकीज़ और अन्य तकनीकों का उपयोग करते हैं - जो हमें अपने टूल सुधारने और वे फीचर्स बनाने में मदद करता है जिन्हें आप पसंद करेंगे।"
 2 = "If you’d rather not, clicking 'No Thanks' will only enable the essential cookies needed to keep things running smoothly."
 
 [cookieBanner.preferencesModal]
@@ -3475,16 +3475,16 @@ subtitle = "कुकी उपयोग"
 title = "सहमति प्राथमिकताएँ केंद्र"
 
 [cookieBanner.preferencesModal.analytics]
-description = "ये कुकीज़ हमें समझने में मदद करती हैं कि हमारे टूल कैसे उपयोग हो रहे हैं, ताकि हम उन फीचर्स के निर्माण पर ध्यान दे सकें जिन्हें हमारा समुदाय सबसे अधिक महत्व देता है। निश्चिंत रहें—Stirling PDF आपके काम के दस्तावेज़ों की सामग्री को ट्रैक नहीं कर सकता और कभी नहीं करेगा।"
+description = "ये कुकीज़ हमें समझने में मदद करती हैं कि हमारे टूल कैसे उपयोग हो रहे हैं, ताकि हम उन फीचर्स के निर्माण पर ध्यान दे सकें जिन्हें हमारा समुदाय सबसे अधिक महत्व देता है। निश्चिंत रहें - Stirling PDF आपके काम के दस्तावेज़ों की सामग्री को ट्रैक नहीं कर सकता और कभी नहीं करेगा।"
 title = "एनालिटिक्स"
 
 [cookieBanner.preferencesModal.description]
 1 = "Stirling PDF आपके अनुभव को बेहतर बनाने और यह समझने के लिए कि हमारे टूल कैसे उपयोग होते हैं, कुकीज़ और समान तकनीकों का उपयोग करता है। इससे हमें प्रदर्शन सुधारने, आपकी पसंद के फीचर्स विकसित करने और उपयोगकर्ताओं को निरंतर समर्थन देने में मदद मिलती है।"
-2 = "Stirling PDF आपके उपयोग किए गए दस्तावेज़ों की सामग्री को ट्रैक या एक्सेस नहीं कर सकता—और कभी नहीं करेगा।"
+2 = "Stirling PDF आपके उपयोग किए गए दस्तावेज़ों की सामग्री को ट्रैक या एक्सेस नहीं कर सकता - और कभी नहीं करेगा।"
 3 = "आपकी गोपनीयता और भरोसा हमारे कार्य के मूल में है।"
 
 [cookieBanner.preferencesModal.necessary]
-description = "These cookies are essential for the website to function properly. They enable core features like setting your privacy preferences, logging in, and filling out forms—which is why they can’t be turned off."
+description = "These cookies are essential for the website to function properly. They enable core features like setting your privacy preferences, logging in, and filling out forms - which is why they can’t be turned off."
 
 [cookieBanner.preferencesModal.necessary.title]
 1 = "कड़ाई से आवश्यक कुकीज़"
@@ -3900,7 +3900,7 @@ dateDesc = "सबसे नई पहले"
 dateLabel = "नवीनतम"
 nameAsc = "A से Z"
 nameDesc = "Z से A"
-nameLabel = "A–Z"
+nameLabel = "A-Z"
 
 [fileSelectorPicker.tabs]
 saved = "सहेजी गई फ़ाइलें"
@@ -5413,7 +5413,7 @@ userBody = "टीममेट्स को आमंत्रित करे�
 userTitle = "प्लान अवलोकन"
 
 [onboarding.processorIntro]
-body = "Stirling अब <strong>Policies</strong> चलाता है — automated rules जो हर दस्तावेज़ के आते ही उसे classify, secure, और process करते हैं। इन्हें सेट अप करें और <strong>Processor</strong> में runs monitor करें।"
+body = "Stirling अब <strong>Policies</strong> चलाता है - automated rules जो हर दस्तावेज़ के आते ही उसे classify, secure, और process करते हैं। इन्हें सेट अप करें और <strong>Processor</strong> में runs monitor करें।"
 cta = "Processor देखें"
 title = "Stirling Processor देखें"
 
@@ -5670,7 +5670,7 @@ title = "पृष्ठ हटाने वाला"
 description = "ऑपरेशन के लिए किन पृष्ठों का उपयोग करना है चुनें। एकल पृष्ठ, रेंज, सूत्र, और all कीवर्ड समर्थित।"
 
 [pageSelection.tooltip.complex]
-bullet1 = "<strong>1,3-5,8,2n</strong> → पृष्ठ 1, 3–5, 8, साथ ही सम"
+bullet1 = "<strong>1,3-5,8,2n</strong> → पृष्ठ 1, 3-5, 8, साथ ही सम"
 bullet2 = "<strong>10-,2n-1</strong> → पृष्ठ 10 से अंत तक + विषम पृष्ठ"
 description = "अलग-अलग प्रकार मिलाएं।"
 title = "जटिल संयोजन"
@@ -5693,8 +5693,8 @@ description = "पैटर्न के लिए सूत्रों मे�
 title = "गणितीय फ़ंक्शन"
 
 [pageSelection.tooltip.ranges]
-bullet1 = "<strong>3-6</strong> → पृष्ठ 3–6 चुनता है"
-bullet2 = "<strong>10-15</strong> → पृष्ठ 10–15 चुनता है"
+bullet1 = "<strong>3-6</strong> → पृष्ठ 3-6 चुनता है"
+bullet2 = "<strong>10-15</strong> → पृष्ठ 10-15 चुनता है"
 bullet3 = "<strong>5-</strong> → पृष्ठ 5 से अंत तक चुनता है"
 description = "लगातार पृष्ठों के लिए - का उपयोग करें।"
 title = "पृष्ठ रेंज"
@@ -5770,7 +5770,7 @@ title = "Turn on the Processor plan"
 eyebrow = "Editor plan · Always free"
 
 [payg.free.header]
-freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
+freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR - as much as you want, no matter where you trigger it."
 freeTitle = "Unlimited PDF editing"
 
 [payg.free.hero]
@@ -5798,8 +5798,8 @@ pauses = "pauses at cap"
 title = "What happens when the cap is reached"
 
 [payg.header]
-eyebrow = "Processor plan · {{start}} – {{end}}"
-freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
+eyebrow = "Processor plan · {{start}} - {{end}}"
+freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR - as much as you want, no matter where you trigger it."
 freeLabel = "Always free"
 freeTitle = "Unlimited PDF editing"
 meterBody = "{{limit}} free PDFs to start, then billed per PDF up to your cap."
@@ -5819,8 +5819,8 @@ chip = "Prepaid year"
 
 [payg.prepaid.banner]
 exhausted = "आपकी prepaid capacity उपयोग हो चुकी है; metered billing फिर शुरू हो गई है। discount बनाए रखने के लिए top up करें।"
-expiring_one = "आपका prepaid year {{count}} दिन में समाप्त होगा। unused capacity expire हो जाएगी — नया year शुरू करने के लिए top up करें।"
-expiring_other = "आपका prepaid year {{count}} दिनों में समाप्त होगा। unused capacity expire हो जाएगी — नया year शुरू करने के लिए top up करें।"
+expiring_one = "आपका prepaid year {{count}} दिन में समाप्त होगा। unused capacity expire हो जाएगी - नया year शुरू करने के लिए top up करें।"
+expiring_other = "आपका prepaid year {{count}} दिनों में समाप्त होगा। unused capacity expire हो जाएगी - नया year शुरू करने के लिए top up करें।"
 low = "आपकी prepaid capacity का {{pct}}% बचा है। processing निर्बाध रखने के लिए कभी भी top up करें।"
 
 [payg.prepaid.card]
@@ -6120,7 +6120,7 @@ processing = "Processing"
 uploading = "Uploading"
 
 [pdfTextEditor.tooltip.alpha]
-text = "यह अल्फा व्यूअर अभी विकसित हो रहा है—कुछ फ़ॉन्ट, रंग, पारदर्शिता प्रभाव और लेआउट विवरण हल्के बदल सकते हैं। साझा करने से पहले कृपया जनरेट की गई PDF को दोबारा जाँच लें।"
+text = "यह अल्फा व्यूअर अभी विकसित हो रहा है - कुछ फ़ॉन्ट, रंग, पारदर्शिता प्रभाव और लेआउट विवरण हल्के बदल सकते हैं। साझा करने से पहले कृपया जनरेट की गई PDF को दोबारा जाँच लें।"
 title = "अल्फा व्यूअर"
 
 [pdfTextEditor.tooltip.header]
@@ -6521,7 +6521,7 @@ never = "कभी नहीं"
 [portal.accountLink.modal]
 linkSubtitle = "उस account में sign in करें जिससे इस server का बिल लिया जाना चाहिए।"
 linkTitle = "अपना Stirling account लिंक करें"
-reauthSubtitle = "आपका session समाप्त हो गया — अपने Stirling account में फिर से sign in करें। आपका instance लिंक रहता है।"
+reauthSubtitle = "आपका session समाप्त हो गया - अपने Stirling account में फिर से sign in करें। आपका instance लिंक रहता है।"
 reauthTitle = "फिर से sign in करें"
 simulateSignIn = "sign-in simulate करें (dev)"
 
@@ -6632,7 +6632,7 @@ title = "मुफ़्त PDF Editors"
 checkoutErrorTitle = "checkout शुरू नहीं किया जा सका"
 currentPlan = "वर्तमान प्लान"
 freeForever = "हमेशा मुफ़्त"
-noTeamResolved = "आपके wallet पर अभी कोई team resolved नहीं है — refresh करें और फिर कोशिश करें।"
+noTeamResolved = "आपके wallet पर अभी कोई team resolved नहीं है - refresh करें और फिर कोशिश करें।"
 ownerOnly = "केवल team owner Processor प्लान चालू कर सकता है।"
 payInvoice = "पूरा करने के लिए invoice pay करें"
 planName = "Editor"
@@ -6667,7 +6667,7 @@ viewLink = "देखें ↗"
 
 [portal.billing.linkPrompt]
 cta = "Stirling account लिंक करें"
-description = "Manual PDF editing — view, sign, merge, split, watermark, compress, convert, manual OCR — हमेशा मुफ़्त है, लिंक हो या न हो। metered processing (automation, AI, और API) के 500 मुफ़्त PDFs का दावा करने के लिए लिंक करें; जब आपको अधिक चाहिए, Processor प्लान चालू करें और केवल अपने उपयोग के लिए भुगतान करें।"
+description = "Manual PDF editing - view, sign, merge, split, watermark, compress, convert, manual OCR - हमेशा मुफ़्त है, लिंक हो या न हो। metered processing (automation, AI, और API) के 500 मुफ़्त PDFs का दावा करने के लिए लिंक करें; जब आपको अधिक चाहिए, Processor प्लान चालू करें और केवल अपने उपयोग के लिए भुगतान करें।"
 title = "अपना Stirling account लिंक करें"
 
 [portal.billing.paymentMethod]
@@ -6801,13 +6801,13 @@ low = "कम हो रहा है"
 [portal.billing.spendLimit]
 adjustLimit = "limit समायोजित करें"
 cancel = "रद्द करें"
-capControlNote = "बदलाव तुरंत लागू होते हैं — ceiling को कभी भी बढ़ाएँ या घटाएँ।"
+capControlNote = "बदलाव तुरंत लागू होते हैं - ceiling को कभी भी बढ़ाएँ या घटाएँ।"
 capSuffix = "/ माह"
 capSuffixWithDocs = "/ माह · ≈ {{documents}} दस्तावेज़"
-displaySub = "आपसे केवल अपने-आप process किए गए कार्य का बिल लिया जाता है — ceiling से कभी अधिक नहीं।"
+displaySub = "आपसे केवल अपने-आप process किए गए कार्य का बिल लिया जाता है - ceiling से कभी अधिक नहीं।"
 editTitle = "अपनी मासिक ceiling सेट करें"
 eyebrow = "Spend limit"
-guardrailBody = "एक hard ceiling — आपसे कभी भी इससे अधिक बिल नहीं लिया जाता। cap पर metered processing रुक जाती है (असीमित PDF editing चालू रहती है) जब तक आप इसे बढ़ाते नहीं या cycle reset नहीं होता। कुछ भी खोता नहीं है।"
+guardrailBody = "एक hard ceiling - आपसे कभी भी इससे अधिक बिल नहीं लिया जाता। cap पर metered processing रुक जाती है (असीमित PDF editing चालू रहती है) जब तक आप इसे बढ़ाते नहीं या cycle reset नहीं होता। कुछ भी खोता नहीं है।"
 guardrailLabel = "आपका guardrail:"
 noCap = "कोई cap नहीं"
 pctUsed = "{{pct}}% उपयोग हुआ"
@@ -7242,8 +7242,8 @@ viewSource = "GitHub पर source देखें"
 codeCaption = "हर request"
 eyebrow = "शुरुआत करें"
 lead = "सभी requests bearer token से authenticate होते हैं। Keys environment के अनुसार scoped होती हैं और rotate किए बिना कभी expire नहीं होतीं।"
-liveKey = "Production keys — billed, आपके प्लान के अनुसार rate-limited।"
-testKey = "Sandbox keys — free, synthetic fixtures लौटाती हैं।"
+liveKey = "Production keys - billed, आपके प्लान के अनुसार rate-limited।"
+testKey = "Sandbox keys - free, synthetic fixtures लौटाती हैं।"
 title = "Authentication"
 
 [portal.docs.components]
@@ -7281,7 +7281,7 @@ title = "Quickstart"
 
 [portal.docs.quickstart.callout]
 bodyAfterLink = "copy-paste recipes के लिए।"
-bodyBeforeLink = "validation, redaction, और delivery को chain करने के लिए उसी call को pipeline में wire करें — या MCP पर agent को expose करें। देखें"
+bodyBeforeLink = "validation, redaction, और delivery को chain करने के लिए उसी call को pipeline में wire करें - या MCP पर agent को expose करें। देखें"
 label = "अगला:"
 link = "Playbooks"
 
@@ -7290,7 +7290,7 @@ body = "Infrastructure tab से scoped key बनाएँ। Keys में r
 title = "API key जारी करें"
 
 [portal.docs.quickstart.step2]
-body = "किसी भी typed endpoint पर फ़ाइल POST करें। endpoint तय करता है कि आपको कौन सा schema वापस मिलेगा — यहाँ, invoice extractor।"
+body = "किसी भी typed endpoint पर फ़ाइल POST करें। endpoint तय करता है कि आपको कौन सा schema वापस मिलेगा - यहाँ, invoice extractor।"
 snippetCaption = "invoice extract करें"
 title = "दस्तावेज़ भेजें"
 
@@ -7370,8 +7370,8 @@ overview = "ओवरव्यू"
 requestAccess = "एक्सेस का अनुरोध करें"
 
 [portal.documents.elevation.active]
-description = "अस्थायी अनुमति — एक्सेस लॉग किया जाता है और समय-सीमित है।"
-descriptionFourEyes = "अस्थायी अनुमति — एक सहकर्मी समीक्षक को सूचित किया गया (four-eyes)।"
+description = "अस्थायी अनुमति - एक्सेस लॉग किया जाता है और समय-सीमित है।"
+descriptionFourEyes = "अस्थायी अनुमति - एक सहकर्मी समीक्षक को सूचित किया गया (four-eyes)।"
 title = "एक्सेस {{time}} में समाप्त होगा"
 
 [portal.documents.elevation.gated]
@@ -7432,7 +7432,7 @@ time = "समय"
 user = "उपयोगकर्ता"
 
 [portal.editorAdmin]
-subtitle = "Stirling PDF Editor को डिप्लॉय करें, self-hosted इंस्टेंस को अपने org से पेयर करें, और चल रहे फ़्लीट — टार्गेट, स्वास्थ्य, क्रेडेंशियल और ऑफ़लाइन सक्रियण — को एक ही जगह संचालित करें।"
+subtitle = "Stirling PDF Editor को डिप्लॉय करें, self-hosted इंस्टेंस को अपने org से पेयर करें, और चल रहे फ़्लीट - टार्गेट, स्वास्थ्य, क्रेडेंशियल और ऑफ़लाइन सक्रियण - को एक ही जगह संचालित करें।"
 title = "संपादक डिप्लॉयमेंट"
 
 [portal.editorAdmin.health.columns]
@@ -7468,7 +7468,7 @@ rotate = "रोटेट करें"
 talkToSales = "सेल्स से बात करें"
 
 [portal.editorAdmin.sections.health]
-sub = "हर Editor इंस्टेंस रिपोर्ट कर रहा है — version, क्षेत्र, स्थिति, अंतिम बार देखा गया, और सक्रिय उपयोगकर्ता।"
+sub = "हर Editor इंस्टेंस रिपोर्ट कर रहा है - version, क्षेत्र, स्थिति, अंतिम बार देखा गया, और सक्रिय उपयोगकर्ता।"
 title = "इंस्टेंस स्वास्थ्य"
 
 [portal.editorAdmin.sections.pairing]
@@ -7754,9 +7754,9 @@ done = "पूरा"
 keyNameLabel = "Key name"
 keyNamePlaceholder = "उदा. Production · ingest"
 secretKeyCaption = "Secret key"
-secretWarning = "इसे secrets manager में स्टोर करें। Stirling केवल hash स्टोर करता है — बाद में इसे पुनर्प्राप्त करने का कोई तरीका नहीं है।"
+secretWarning = "इसे secrets manager में स्टोर करें। Stirling केवल hash स्टोर करता है - बाद में इसे पुनर्प्राप्त करने का कोई तरीका नहीं है।"
 subtitle = "Key को न्यूनतम आवश्यकता तक सीमित रखें। आप किसी भी समय रोटेट या revoke कर सकते हैं।"
-subtitleCreated = "इस secret को अभी कॉपी करें — यह फिर से नहीं दिखाया जाएगा।"
+subtitleCreated = "इस secret को अभी कॉपी करें - यह फिर से नहीं दिखाया जाएगा।"
 title = "API key बनाएँ"
 titleCreated = "Key बनाई गई"
 
@@ -8317,7 +8317,7 @@ label = "दस्तावेज़ email करें (Mailgun)"
 [portal.policies.operations.n8nGate]
 description = "Your workflow decides whether the run carries on."
 label = "Ask an n8n workflow to approve"
-note = "The workflow must reply with {\"approved\": true}. Anything else — including a timeout — stops the run and parks the document."
+note = "The workflow must reply with {\"approved\": true}. Anything else - including a timeout - stops the run and parks the document."
 
 [portal.policies.operations.n8nNotify]
 description = "Sends the run's details, not the document."
@@ -8339,7 +8339,7 @@ label = "Nextcloud पर अपलोड करें"
 [portal.policies.operations.presidioAnalyze]
 description = "आपका अपना Presidio server उसे मिले personal data की रिपोर्ट करता है।"
 label = "personal data का पता लगाएँ"
-note = "Presidio text पढ़ता है, files नहीं। उसे वह text दें जिसे आप जाँचना चाहते हैं — दस्तावेज़ स्वयं अपलोड नहीं होता।"
+note = "Presidio text पढ़ता है, files नहीं। उसे वह text दें जिसे आप जाँचना चाहते हैं - दस्तावेज़ स्वयं अपलोड नहीं होता।"
 
 [portal.policies.operations.responseMode]
 replace = "दस्तावेज़ को reply से बदलें"
@@ -8429,7 +8429,7 @@ desc = "OCR चलाता है ताकि स्कैन किए गए
 label = "टेक्स्ट को खोज योग्य बनाएं"
 
 [portal.policies.wizard.capability.redact]
-desc = "संवेदनशील विवरण — जैसे Social Security और कार्ड नंबर — ढूंढता और काला करता है ताकि उन्हें पढ़ा न जा सके।"
+desc = "संवेदनशील विवरण - जैसे Social Security और कार्ड नंबर - ढूंढता और काला करता है ताकि उन्हें पढ़ा न जा सके।"
 label = "संवेदनशील जानकारी संपादित करें"
 
 [portal.policies.wizard.capability.sanitize]
@@ -8595,11 +8595,11 @@ postalCodePlaceholder = "94105"
 posture = "Governance"
 posture_count = "~{{count}} नीतियाँ"
 posture_essentials = "Essentials"
-posture_essentialsSub = "Classification + Sharing — डिफ़ॉल्ट"
+posture_essentialsSub = "Classification + Sharing - डिफ़ॉल्ट"
 posture_governed = "Governed"
 posture_governedSub = "Security और Routing जोड़ता है"
 posture_regulated = "Regulated"
-posture_regulatedSub = "हर category — Compliance, Retention, Ingestion"
+posture_regulatedSub = "हर category - Compliance, Retention, Ingestion"
 qbr = "Quarterly business reviews"
 qbrSub = "आपका SE हर तिमाही उपयोग और roadmap की समीक्षा करता है"
 region = "State / region"
@@ -8721,13 +8721,13 @@ label = "Trial"
 [portal.procurement.license]
 copied = "कॉपी किया गया"
 copy = "Key कॉपी करें"
-downloadError = "Offline licence फ़ाइल अभी जनरेट नहीं की जा सकी — कृपया कुछ देर बाद फिर से प्रयास करें।"
+downloadError = "Offline licence फ़ाइल अभी जनरेट नहीं की जा सकी - कृपया कुछ देर बाद फिर से प्रयास करें।"
 downloadOffline = "Offline licence डाउनलोड करें (.lic)"
 hint = "इसे activate करने के लिए इस key को self-hosted instance में paste करें, या अपने records के लिए रखें। इसे सुरक्षित रखें।"
 label = "आपकी licence key"
 subtitle = "इस key से self-hosted instance सक्रिय करें, या इसे अपने records के लिए रखें।"
 title = "आपकी लाइसेंस key"
-trialFileHint = "यह आपकी trial licence file है। आपका agreement लागू होने के बाद, वापस आएँ और इसे फिर से डाउनलोड करें — online licence key के विपरीत, .lic file अपने आप update नहीं होगी।"
+trialFileHint = "यह आपकी trial licence file है। आपका agreement लागू होने के बाद, वापस आएँ और इसे फिर से डाउनलोड करें - online licence key के विपरीत, .lic file अपने आप update नहीं होगी।"
 
 [portal.procurement.link]
 cta = "Account लिंक करें"
@@ -8741,10 +8741,10 @@ eyebrow = "Live"
 title = "आप Stirling Enterprise पर live हैं"
 
 [portal.procurement.milestone]
-downloadError = "Quote PDF अभी डाउनलोड नहीं किया जा सका — कृपया कुछ देर बाद फिर से प्रयास करें।"
+downloadError = "Quote PDF अभी डाउनलोड नहीं किया जा सका - कृपया कुछ देर बाद फिर से प्रयास करें।"
 
 [portal.procurement.payment]
-description = "आपका quote स्वीकार कर लिया गया है और आपका licence पहले से सक्रिय है — आपकी टीम तुरंत शुरू कर सकती है। तैयार होने पर पहला invoice भुगतान करें; आप इसे यहां भुगतान या डाउनलोड कर सकते हैं, email की आवश्यकता नहीं।"
+description = "आपका quote स्वीकार कर लिया गया है और आपका licence पहले से सक्रिय है - आपकी टीम तुरंत शुरू कर सकती है। तैयार होने पर पहला invoice भुगतान करें; आप इसे यहां भुगतान या डाउनलोड कर सकते हैं, email की आवश्यकता नहीं।"
 downloadAgreement = "signed agreement डाउनलोड करें"
 downloadInvoice = "Invoice डाउनलोड करें"
 eyebrow = "Payment"
@@ -8799,7 +8799,7 @@ workEmailPlaceholder = "you@company.com"
 
 [portal.procurement.trial]
 body = "विस्तार करने से 7 दिन जुड़ते हैं और आपके solutions engineer को सूचना मिलती है।"
-bodyMaxed = "आपने अपने सभी extensions उपयोग कर लिए हैं — यदि आपको अधिक समय चाहिए तो अपने solutions engineer से बात करें।"
+bodyMaxed = "आपने अपने सभी extensions उपयोग कर लिए हैं - यदि आपको अधिक समय चाहिए तो अपने solutions engineer से बात करें।"
 cancel = "Trial रद्द करें"
 extend = "7 दिन बढ़ाएं"
 maxed = "अधिकतम हो गया"
@@ -9036,7 +9036,7 @@ walletUnavailable = "Wallet उपलब्ध नहीं: {{status}} {{status
 
 [portal.usage.sessionExpired]
 action = "फिर से sign in करें"
-body = "आपका Stirling account session समाप्त हो गया है। Billing देखने के लिए फिर से sign in करें — आपका instance linked रहता है।"
+body = "आपका Stirling account session समाप्त हो गया है। Billing देखने के लिए फिर से sign in करें - आपका instance linked रहता है।"
 title = "Session समाप्त"
 
 [portal.users]
@@ -9064,7 +9064,7 @@ summary = "सीमित या केवल web access; personal configs न�
 
 [portal.users.roles.member]
 label = "Member"
-summary = "नियमित user — shared resources और अपने configs के साथ काम करता है।"
+summary = "नियमित user - shared resources और अपने configs के साथ काम करता है।"
 
 [portal.users.roles.member.permissions]
 0 = "Editor और shared integrations का उपयोग करें"
@@ -9074,7 +9074,7 @@ summary = "नियमित user — shared resources और अपने conf
 
 [portal.users.roles.team_owner]
 label = "Team owner"
-summary = "Team का मालिक — उसके members के resources और shared configs प्रबंधित करता है।"
+summary = "Team का मालिक - उसके members के resources और shared configs प्रबंधित करता है।"
 
 [portal.users.roles.team_owner.permissions]
 0 = "Team के S3 connections बनाएं और प्रबंधित करें"
@@ -9765,7 +9765,7 @@ failed = "इमेज स्कैन निकालते समय एक �
 
 [scannerImageSplit.tooltip]
 headsUp = "ध्यान दें"
-headsUpDesc = "ओवरलैपिंग फोटो या फोटो के बहुत नज़दीक रंग की पृष्ठभूमि सटीकता कम कर सकती है—हल्की या गहरी पृष्ठभूमि आज़माएं और अधिक जगह छोड़ें।"
+headsUpDesc = "ओवरलैपिंग फोटो या फोटो के बहुत नज़दीक रंग की पृष्ठभूमि सटीकता कम कर सकती है - हल्की या गहरी पृष्ठभूमि आज़माएं और अधिक जगह छोड़ें।"
 problem1 = "फोटो डिटेक्ट नहीं हो रहे → Tolerance 30-50 तक बढ़ाएं"
 problem2 = "बहुत सारी गलत डिटेक्शन → Minimum Area 15,000-20,000 तक बढ़ाएं"
 problem3 = "क्रॉप बहुत तंग हैं → Border Size 5-10 तक बढ़ाएं"
@@ -9783,7 +9783,7 @@ useCase2 = "फ्लैटबेड बैचों को अलग-अलग 
 useCase3 = "कोलाज को व्यक्तिगत फोटो में तोड़ें"
 useCase4 = "दस्तावेज़ों से फोटो निकालें"
 whatThisDoes = "यह क्या करता है"
-whatThisDoesDesc = "स्कैन्ड पृष्ठ या समग्र छवि से प्रत्येक फोटो को स्वचालित रूप से ढूंढकर निकालता है—मैन्युअल क्रॉपिंग की आवश्यकता नहीं।"
+whatThisDoesDesc = "स्कैन्ड पृष्ठ या समग्र छवि से प्रत्येक फोटो को स्वचालित रूप से ढूंढकर निकालता है - मैन्युअल क्रॉपिंग की आवश्यकता नहीं।"
 whenToUse = "कब उपयोग करें"
 
 [ScannerImageSplit.selectText]
@@ -11306,9 +11306,9 @@ certExpired = "प्रमाणपत्र की वैधता समा�
 certRevocationUnknown = "प्रमाणपत्र रद्द स्थिति अज्ञात"
 certRevoked = "प्रमाणपत्र रद्द"
 chainInvalid = "प्रमाणपत्र श्रृंखला अमान्य"
-documentModified = "हस्ताक्षर के बाद दस्तावेज़ में परिवर्तन किया गया — हस्ताक्षरित क्षेत्र के बाहर सामग्री जोड़ी गई"
+documentModified = "हस्ताक्षर के बाद दस्तावेज़ में परिवर्तन किया गया - हस्ताक्षरित क्षेत्र के बाहर सामग्री जोड़ी गई"
 revocationNotChecked = "रद्दीकरण की जाँच नहीं की गई"
-selfSigned = "स्वहस्ताक्षरित — हस्ताक्षरकर्ता की पहचान सत्यापित नहीं"
+selfSigned = "स्वहस्ताक्षरित - हस्ताक्षरकर्ता की पहचान सत्यापित नहीं"
 signatureInvalid = "हस्ताक्षर क्रिप्टोग्राफ़िक जाँच विफल"
 trustInvalid = "प्रमाणपत्र विश्वस्त नहीं"
 
@@ -11462,9 +11462,9 @@ emptyFile = "खाली फ़ाइल"
 htmlHidePreview = "पूर्वावलोकन छिपाएँ"
 htmlPreview = "HTML पूर्वावलोकन"
 htmlPreviewMobileHidden = "HTML पेज डेस्कटॉप चौड़ाई के लिए लेआउट किए गए हैं, इसलिए यहाँ पूर्वावलोकन डिफ़ॉल्ट रूप से बंद है।"
-htmlPreviewWarning = "HTML पूर्वावलोकन — बाहरी संसाधन लोड नहीं हो सकते · {{size}}"
+htmlPreviewWarning = "HTML पूर्वावलोकन - बाहरी संसाधन लोड नहीं हो सकते · {{size}}"
 htmlShowPreview = "फिर भी पूर्वावलोकन दिखाएँ"
-invalidJson = "अवैध JSON — कच्ची सामग्री दिखाई जा रही है"
+invalidJson = "अवैध JSON - कच्ची सामग्री दिखाई जा रही है"
 lineNumbers = "पंक्ति संख्याएँ"
 loading = "लोड हो रहा है..."
 renderMarkdown = "Markdown रेंडर करें"
@@ -11526,7 +11526,7 @@ create = "Create your first Watched Folder"
 deleteFolder = "Delete folder"
 editFolder = "Edit folder"
 empty = "No watched folders yet"
-emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged — whatever your pipeline does."
+emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged - whatever your pipeline does."
 emptyTitle = "Automate your PDF workflows"
 file = "file"
 files = "files"
@@ -11534,7 +11534,7 @@ pause = "Pause"
 resume = "Resume"
 
 [watchedFolders.howItWorks]
-step1Desc = "Drag PDFs onto any Watched Folder card — or send them from your file list"
+step1Desc = "Drag PDFs onto any Watched Folder card - or send them from your file list"
 step1Title = "Drop files"
 step2Desc = "Your configured tools process each file automatically"
 step2Title = "Pipeline runs"
@@ -11558,18 +11558,18 @@ createFolder = "Create Folder"
 createTitle = "New Watched Folder"
 editTitle = "Edit Watched Folder"
 inputFolder = "Input folder"
-inputFolderNotChosen = "No folder chosen — required for auto-scan"
+inputFolderNotChosen = "No folder chosen - required for auto-scan"
 inputSource = "Input source"
-inputSourceBrowser = "Browser — drop files here"
+inputSourceBrowser = "Browser - drop files here"
 inputSourceLocal = "Local folder (auto-scan)"
-inputSourceLocalUnsupported = "Local folder (auto-scan) — Chrome/Edge only"
+inputSourceLocalUnsupported = "Local folder (auto-scan) - Chrome/Edge only"
 localOutputFolder = "Local output folder"
 maxRetries = "Max retries"
 name = "Folder name"
 namePlaceholder = "My Watched Folder"
 nameRequired = "Folder name is required"
 nameTooLong = "Folder name must be 50 characters or less"
-outputFolderNotSet = "Not set — outputs stay in app"
+outputFolderNotSet = "Not set - outputs stay in app"
 outputFolderUnsupported = "Not supported in this browser"
 outputModeNewDesc = "Output is saved as a new separate file"
 outputModeVersion = "Replace original?"
@@ -11629,9 +11629,9 @@ filterPending = "Pending"
 inputs = "Inputs"
 inputSize = "Input size"
 legendComplete = "Complete"
-noActivity = "No activity yet — drop a PDF to start"
+noActivity = "No activity yet - drop a PDF to start"
 noActivityMatch = "No matching activity"
-noInputFolder = "No input folder — edit to configure"
+noInputFolder = "No input folder - edit to configure"
 outputs = "Outputs"
 pause = "Pause"
 preview = "Preview"
@@ -11639,7 +11639,7 @@ previewInput = "Preview input"
 previewLoadFailed = "Could not load file preview."
 previewOutput = "Preview output"
 queued = "Queued"
-queuedWaiting = "Queued — waiting to run"
+queuedWaiting = "Queued - waiting to run"
 removeEntries = "Remove {{count}} entries"
 removeEntry = "Remove entry"
 removeNotificationsOnly = "Remove notifications only"

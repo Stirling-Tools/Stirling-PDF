@@ -409,7 +409,7 @@ export function WatchedFolderManagementModal({
                         value: "idb",
                         label: t(
                           "watchedFolders.modal.inputSourceBrowser",
-                          "Browser — drop files here",
+                          "Browser - drop files here",
                         ),
                       },
                       {
@@ -421,7 +421,7 @@ export function WatchedFolderManagementModal({
                             )
                           : t(
                               "watchedFolders.modal.inputSourceLocalUnsupported",
-                              "Local folder (auto-scan) — Chrome/Edge only",
+                              "Local folder (auto-scan) - Chrome/Edge only",
                             ),
                         disabled: !canReadLocalFolder,
                       },
@@ -473,7 +473,7 @@ export function WatchedFolderManagementModal({
                               {inputDirName ??
                                 t(
                                   "watchedFolders.modal.inputFolderNotChosen",
-                                  "No folder chosen — required for auto-scan",
+                                  "No folder chosen - required for auto-scan",
                                 )}
                             </Text>
                           </Stack>
@@ -562,7 +562,7 @@ export function WatchedFolderManagementModal({
                             : (outputDirName ??
                               t(
                                 "watchedFolders.modal.outputFolderNotSet",
-                                "Not set — outputs stay in app",
+                                "Not set - outputs stay in app",
                               ))}
                         </Text>
                       </Stack>
