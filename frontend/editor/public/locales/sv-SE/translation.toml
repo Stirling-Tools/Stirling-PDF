@@ -6260,6 +6260,100 @@ toolbarZoomKey = "Zoom i verktygsfältet"
 zoomDesc = "Zooma in / ut"
 zoomKey = "Ctrl+hjul"
 
+[pdfTextEditor.inspector]
+document = "Dokument"
+fontEmbedded = "Inbäddat typsnitt · tecken som saknas använder Helvetica i stället."
+fontGap = "{{name}} · saknar {{glyphs}} – dessa tecken använder Helvetica i stället."
+geometry = "Position och storlek"
+height = "Höjd"
+heightHint = "En textrutas höjd följer teckenstorleken och antalet rader."
+image = "Bild"
+images = "Bilder"
+manyImages = "{{count}} bilder"
+manyText = "Text · {{count}} rutor"
+mixed = "{{count}} objekt"
+multiGeometry = "Välj ett enda objekt för att redigera dess position och storlek."
+nothingSelected = "Inget markerat"
+nothingSelectedHint = "Klicka på en text eller bild på sidan för att redigera den här."
+oneImage = "Bild"
+oneText = "Text"
+pages = "Sidor"
+tabDocument = "Dokument"
+tabSelected = "Markerat"
+textBoxes = "Textrutor"
+width = "Bredd"
+widthHint = "En textrutas bredd följer innehållet och radbrytningen."
+x = "X"
+y = "Y"
+
+[pdfTextEditor.password]
+cancel = "Avbryt"
+incorrect = "Fel lösenord – försök igen."
+label = "Lösenord"
+open = "Öppna"
+protected = "Den här PDF-filen är lösenordsskyddad."
+protectedNamed = "\"{{fileName}}\" är lösenordsskyddad."
+title = "Lösenord krävs"
+
+[pdfTextEditor.rulers]
+guide = "Justeringslinje vid {{value}} {{unit}} – dra den till en linjal för att ta bort den"
+hint = "Dra från en linjal för att lägga till en justeringslinje"
+horizontal = "Vågrät linjal"
+unit = "pt"
+vertical = "Lodrät linjal"
+
+[pdfTextEditor.run]
+lockedTitle = "Låst – använd knappen Lås upp för att redigera"
+
+[pdfTextEditor.saveRisk]
+cancel = "Avbryt"
+intro = "När du sparar den redigerade kopian ändras filen. Det innebär:"
+note = "Dina ändringar behålls. Ändringarna ovan går inte att undvika när den redigerade kopian sparas."
+saveAnyway = "Spara ändå"
+title = "Sparandet ändrar denna PDF-fil"
+
+[pdfTextEditor.settings]
+advanced = "Avancerat"
+find = "Sök i dokument"
+view = "Visa"
+
+[pdfTextEditor.sidebar]
+addImage = "Lägg till bild"
+addText = "Lägg till text"
+clickPageToAddText = "Klicka på sidan för att lägga till text"
+document = "Dokument"
+group = "Gruppera"
+groupingAuto = "Automatiskt"
+groupingAutoHint = "Grupperar rader med samma avstånd till stycken. Ändringen läser om dokumentet och rensar ångrahistoriken."
+groupingLine = "Rad"
+groupTooltip = "Slå ihop markerade textsegment till ett stycke (Ctrl+M)"
+groupTooltipDisabled = "Välj minst 2 segment för att slå ihop dem"
+noFile = "Ingen fil inläst"
+noFileHint = "Välj en PDF-fil i panelen Filer till vänster eller släpp in en. Redigeraren öppnar den automatiskt."
+opening = "Öppnar dokument..."
+paragraph = "Stycke"
+rulers = "Linjal och hjälplinjer"
+textBoxWidth = "Bredd för ny textruta"
+textGrouping = "Textgruppering"
+ungroup = "Dela upp"
+ungroupTooltip = "Dela upp stycket till ett textsegment per rad"
+ungroupTooltipDisabled = "Välj ett flerradigt stycke för att dela upp det"
+widthGrow = "Väx"
+widthGrowHint = "Väx breddar rutan när du skriver; Radbryt behåller bredden och för texten till nya rader."
+widthWrap = "Radbryt"
+
+[pdfTextEditor.spellcheck]
+auto = "Automatiskt"
+enable = "Kontrollera stavning medan du skriver"
+language = "Ordboksspråk"
+
+[pdfTextEditor.stage]
+loadingDocument = "Läser in dokument"
+loadingProgress = "Inläsningsförlopp"
+noDocument = "Inget dokument inläst."
+pickPrompt = "Välj en PDF-fil i panelen Filer till vänster för att börja redigera."
+renderingPreview = "Renderar förhandsvisning"
+
 [pdfTextEditor.actions]
 applyChanges = "Verkställ ändringar"
 clearText = "Rensa text"
