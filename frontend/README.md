@@ -50,6 +50,26 @@ task desktop:dev
 
 This ensures the JLink runtime and backend JAR exist (skipping if already built), then starts Tauri in dev mode.
 
+For local login testing, use the login-enabled variant:
+
+```bash
+task desktop:dev:login
+```
+
+That task reuses the same desktop launcher, but it keeps the backend cache and enables the login flow through the desktop taskfile defaults.
+
+You can override the desktop task defaults inline:
+
+- `JLINK_REUSE_CACHE=false` - force a clean backend JAR/JRE rebuild before launch
+- `DISABLE_ADDITIONAL_FEATURES=false` - keep the full backend feature set for the bundled desktop run
+- `SECURITY_ENABLELOGIN=true` - enable the normal login flow in desktop mode
+
+Example:
+
+```bash
+task desktop:dev:login JLINK_REUSE_CACHE=false DISABLE_ADDITIONAL_FEATURES=false SECURITY_ENABLELOGIN=true
+```
+
 ### Build
 
 ```bash
@@ -77,6 +97,10 @@ task desktop:jlink:jar      # Build backend JAR only
 task desktop:jlink:runtime  # Create JLink custom JRE only
 task desktop:jlink:clean    # Remove JLink artifacts
 ```
+
+`task desktop:jlink` verifies the bundled runtime after it is built. If the
+runtime release file is missing or too old, the verification script will
+rebuild `desktop:jlink:runtime` automatically and re-check the version.
 
 ### Clean
 
