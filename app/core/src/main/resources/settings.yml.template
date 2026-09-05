@@ -329,9 +329,11 @@ metrics:
   enabled: true # 'true' to enable Info APIs (`/api/*`) endpoints, 'false' to disable
 
 # Automatically Generated Settings (Do Not Edit Directly)
+# Generated on first boot and written back here. In a cluster EVERY node must carry the SAME key and
+# UUID (env: AUTOMATICALLYGENERATED_KEY / AUTOMATICALLYGENERATED_UUID) or nodes cannot read each other's data.
 AutomaticallyGenerated:
-  key: example
-  UUID: example
+  key: example # AES key for stored metadata. Differs per node = one node cannot decrypt another's rows.
+  UUID: example # Part of the licence-seat HMAC. Differs per node = peers reject each other's seat count.
   appVersion: 0.35.0
 
 processExecutor:
@@ -443,23 +445,60 @@ mcp:
     requireExistingAccount: true # Reject tokens whose subject has no enabled Stirling account (recommended)
   engineCapabilityRefreshMinutes: 5 # How often to refresh the AI capabilities manifest from the engine
 
-# Cluster configuration. NOT YET ENABLED - scaffolding for later work. Leave at defaults.
+# Multi-node Stirling PDF. Two different things are called "nodes" here: cluster.node.* is THIS
+# Stirling PDF instance, cluster.valkey.* is the shared Valkey - so 'mode: cluster' is Valkey's own.
 cluster:
-  enabled: false # Master switch. 'false' (default) wires the in-process backplane and skips all cluster checks. Single-instance installs do not need to change anything here.
-  backplane: inprocess # Backplane implementation: 'inprocess' (single JVM only) or 'valkey' (multi-node via Valkey/Redis)
-  artifactStore: local # Transient cluster job-artifact backend: 'local' (per-node disk; single-node only) or 's3' (shared object store; required for multi-node). Distinct from 'storage.provider' which controls persistent user uploads - when both are 's3' they share the storage.s3.* credentials block. Multi-node deployments MUST set this to 's3'.
+  enabled: false # Run more than one Stirling PDF node. 'false' (default) = single instance; nothing below applies.
+  backplane: inprocess # How Stirling PDF nodes share state: 'inprocess' (one JVM) or 'valkey'.
+  artifactStore: local # Job artifacts: 'local' (per-node disk) or 's3'. Multi-node MUST use 's3'.
   s3:
-    keyPrefix: transient/ # Bucket key prefix used by the cluster artifact store when artifactStore=s3. Trailing slash recommended. Lets a single bucket host both persistent uploads (storage.s3.*) and transient job artifacts under separate prefixes.
-  valkey:
-    url: "" # Valkey/Redis URL, e.g. 'redis://valkey:6379' or 'rediss://...' for TLS. Required when enabled=true and backplane=valkey.
-    tls:
-      skipCertVerification: false # set to 'true' to skip TLS certificate verification on Valkey connections (dev/test only)
+    keyPrefix: transient/ # Prefix for job artifacts, so one bucket can also hold storage.s3.* uploads.
+
+  # This Stirling PDF instance's own identity.
   node:
-    id: "" # Optional explicit node id. Blank = auto-generated UUID at startup.
-    role: both # 'web' (serves HTTP), 'worker' (runs jobs), or 'both' (default)
-    internalAddress: "" # host:port advertised in the instance registry for peer-to-peer cluster traffic. Blank = derived at startup.
-    scheme: http # 'http' or 'https' - scheme peers use to call this node's /internal/cluster/** endpoints
-    heartbeatIntervalMs: 5000 # Heartbeat publish interval for the instance registry (ms)
+    id: "" # Blank = fresh UUID each boot. Set it for a stable name in monitoring.
+    role: both # 'web' (serves HTTP), 'worker' (runs jobs), or 'both'.
+    internalAddress: "" # host:port other Stirling PDF nodes reach this one on. Blank = derived at startup.
+    scheme: http # Scheme peers use for this node's /internal/cluster/** endpoints.
+    heartbeatIntervalMs: 5000 # How often this node publishes its heartbeat.
+
+  # The Valkey/Redis server every Stirling PDF node shares.
+  valkey:
+    mode: "" # 'standalone' | 'sentinel' | 'cluster'. Blank = inferred from whichever block below is filled in.
+    url: "" # e.g. 'redis://valkey:6379', optionally '/2' to pick a database. STANDALONE ONLY - sentinel and cluster ignore it, so a 'rediss://' url there refuses to boot unless tls.enabled is true.
+    # Two Stirling deployments sharing one Valkey MUST use different database indexes: there is no key
+    # prefix, so on the same index they merge each other's node registries and cross-route job traffic.
+    username: "" # Valkey ACL user. Overrides any user in 'url'.
+    password: "" # Valkey password. Overrides any password in 'url'. Never logged.
+    commandTimeoutMs: 2000 # Per-command timeout, so a slow Valkey cannot stall request threads.
+    clientName: "" # CLIENT SETNAME, so monitoring can tell the Stirling PDF nodes apart. Blank = 'stirling-' + node id; 'off' sends none.
+
+    # mode=sentinel: one Valkey primary plus replicas, with sentinels failing over between them.
+    sentinel:
+      master: "" # The name from 'sentinel monitor <name> ...'. Required for mode=sentinel.
+      nodes: [] # e.g. ['sentinel-1:26379','sentinel-2:26379']. Required for mode=sentinel.
+      username: "" # Sentinel ACL user - separate from the Valkey user above.
+      password: "" # Sentinel password - separate from the Valkey password; setting only that one does NOT authenticate here.
+
+    # mode=cluster: several Valkey nodes sharding the keyspace between them.
+    nodes: [] # e.g. ['valkey-1:6379','valkey-2:6379','valkey-3:6379']. Required for mode=cluster.
+    maxRedirects: 3 # Max MOVED/ASK redirects before a command fails.
+    topologyRefreshMs: 30000 # Periodic topology re-read; refresh on MOVED/ASK/reconnect is always on.
+
+    tls:
+      enabled: false # The only way to get TLS in sentinel/cluster mode. Standalone also accepts a 'rediss://' url.
+      skipCertVerification: false # Skip TLS chain and hostname checks. Dev only.
+
+    # Backplane traffic rides one shared connection, so the pool holds only that today.
+    # These are headroom for a future dedicated-connection path.
+    pool:
+      enabled: true
+      maxActive: 16 # Must be >= 2. Raising it does not change current throughput.
+      maxIdle: 16 # Keep equal to maxActive so idle connections are not churned.
+      minIdle: 0 # Connections kept warm. 0 because nothing borrows from the pool today.
+      maxWaitMillis: 2000 # Must be > 0: negative blocks forever, 0 fails the borrow instantly.
+      timeBetweenEvictionRunsMillis: 30000 # Idle-evictor interval; minIdle only applies while it runs.
+      testOnBorrow: true # Local isOpen() check only, no round trip.
 
 pdfEditor:
   fallback-font: classpath:/static/fonts/NotoSans-Regular.ttf # Override to point at a custom fallback font

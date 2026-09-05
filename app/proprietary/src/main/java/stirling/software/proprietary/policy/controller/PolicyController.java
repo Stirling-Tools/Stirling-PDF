@@ -84,6 +84,12 @@ import stirling.software.proprietary.policy.trigger.PolicyTriggerManager;
 import stirling.software.proprietary.policy.trigger.TriggerInfo;
 import stirling.software.proprietary.util.SecretMasker;
 
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ValueDeserializer;
+import tools.jackson.databind.annotation.JsonDeserialize;
+
 /**
  * Policy CRUD plus pipeline runs (stored or ad-hoc). Runs are async: returns a run id, poll {@code
  * GET /run/{runId}} for status, download outputs via {@code GET /api/v1/general/files/{fileId}}.
@@ -271,8 +277,19 @@ public class PolicyController {
             summary = "Create or update a policy",
             description =
                     "Stores a policy (trigger config + steps + output + metadata). A blank id is"
-                            + " assigned; returns the stored policy with its id.")
-    public ResponseEntity<Policy> savePolicy(@RequestBody Policy policy) {
+                            + " assigned; returns the stored policy with its id. Sources and their"
+                            + " triggers live in 'inputs'; the pre-inputs body shape is rejected"
+                            + " rather than silently bound to nothing.")
+    public ResponseEntity<Policy> savePolicy(@RequestBody PolicySaveRequest request) {
+        requireInputsShape(request.legacyKeys());
+        return savePolicy(request.policy());
+    }
+
+    /**
+     * The save itself, once the body's shape is known good. Also the entry point for callers that
+     * already hold a typed {@link Policy}.
+     */
+    public ResponseEntity<Policy> savePolicy(Policy policy) {
         requirePolicyEditingAllowed();
         Policy owned = withStoredOutputSecrets(resolveOwnership(policy));
         requireAccessibleSources(owned);
@@ -308,6 +325,51 @@ public class PolicyController {
         requirePolicyEditingAllowed();
         policyStore.reorder(policyAccessGuard.teamForNewPolicy(), orderedPolicyIds);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Reject the pre-inputs body shape rather than binding it to nothing: {@code sourceIds} and a
+     * populated {@code trigger} have no field on {@link Policy}, so Jackson drops them and the save
+     * would store a policy that references and watches nothing. Stored blobs in that shape are
+     * migrated on read by the policy store; an inbound request has no such path.
+     */
+    private static void requireInputsShape(List<String> legacyKeys) {
+        if (legacyKeys.isEmpty()) {
+            return;
+        }
+        throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "Unsupported policy field(s): "
+                        + String.join(", ", legacyKeys)
+                        + ". Use 'inputs': sourceIds and trigger moved onto each input.");
+    }
+
+    /**
+     * The save body: the bound policy plus whichever dead pre-inputs keys it still carries. Binding
+     * straight to {@link Policy} would drop them silently, since unknown properties are ignored.
+     */
+    @JsonDeserialize(using = PolicySaveRequest.Deserializer.class)
+    public record PolicySaveRequest(Policy policy, List<String> legacyKeys) {
+
+        /** Reads the policy off the raw body, noting the dead top-level keys it carries. */
+        static final class Deserializer extends ValueDeserializer<PolicySaveRequest> {
+
+            @Override
+            public PolicySaveRequest deserialize(JsonParser parser, DeserializationContext ctxt) {
+                JsonNode root = ctxt.readTree(parser);
+                List<String> legacyKeys = new ArrayList<>();
+                // A null trigger drops nothing, and the editor and portal still send one on
+                // every save.
+                if (root.hasNonNull("trigger")) {
+                    legacyKeys.add("trigger");
+                }
+                if (root.has("sourceIds")) {
+                    legacyKeys.add("sourceIds");
+                }
+                return new PolicySaveRequest(
+                        ctxt.readTreeAsValue(root, Policy.class), List.copyOf(legacyKeys));
+            }
+        }
     }
 
     /**

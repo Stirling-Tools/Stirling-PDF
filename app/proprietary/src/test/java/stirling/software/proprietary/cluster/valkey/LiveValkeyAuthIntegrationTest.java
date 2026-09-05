@@ -18,11 +18,8 @@ import org.testcontainers.utility.DockerImageName;
 import stirling.software.common.model.ApplicationProperties;
 
 /**
- * Live AUTH coverage against a password-protected Valkey. The main {@link
- * LiveValkeyIntegrationTest} runs against a no-auth instance, so the credential-bearing URL path
- * (parse -> RedisStandaloneConfiguration -> real AUTH handshake) was otherwise unexercised. Drives
- * the full production bean method {@code valkeyConnectionFactory()} so the parse, credential
- * wiring, and eager-handshake all run exactly as at boot.
+ * Live AUTH coverage: {@link LiveValkeyIntegrationTest} runs no-auth, so the credential-bearing URL
+ * path is otherwise unexercised. Drives the real {@code valkeyConnectionFactory()} bean.
  */
 @Testcontainers
 @EnabledIf("isDockerAvailable")
