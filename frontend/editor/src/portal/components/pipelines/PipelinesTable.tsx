@@ -1,12 +1,12 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import AccountTreeRounded from "@mui/icons-material/AccountTreeRounded";
 import {
   column,
   DataTable,
   type DataTableColumn,
   type StatusTone,
 } from "@app/ui";
+import { pipelineIcon } from "@portal/components/pipelines/pipelineIcon";
 import type { PipelineStatus, PipelineView } from "@portal/api/pipelines";
 
 const STATUS_TONE: Record<PipelineStatus, StatusTone> = {
@@ -28,8 +28,17 @@ export function PipelinesTable({ pipelines, onRowClick }: PipelinesTableProps) {
         key: "name",
         header: t("portal.pipelines.table.name"),
         sortable: true,
-        icon: () => <AccountTreeRounded />,
+        icon: (p) => pipelineIcon(p.icon, "1.25rem"),
         primary: (p) => p.name,
+      }),
+      column.text({
+        key: "type",
+        header: t("portal.pipelines.table.type", "Type"),
+        sortable: true,
+        get: (p) =>
+          p.required
+            ? t("portal.pipelines.type.policy")
+            : t("portal.pipelines.type.pipeline"),
       }),
       column.text({
         key: "trigger",

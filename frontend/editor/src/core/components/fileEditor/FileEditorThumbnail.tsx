@@ -556,7 +556,7 @@ const FileEditorThumbnail = ({
                 zIndex={2}
                 onDismiss={() => setEnforcingDismissed(true)}
                 accentVar={enforcingPolicy?.accentColor}
-                categoryId={enforcingPolicy?.id}
+                policyKey={enforcingPolicy?.id}
               />
 
               {/* Thumbnail image or loading state */}

@@ -53,7 +53,7 @@ const ShowJS = (props: BaseToolProps) => {
       workbenchId: WORKBENCH_ID,
       label: t("showJS.view.title", "JavaScript"),
       icon: viewIcon,
-      component: ({ data }) => <ShowJSView data={data} />,
+      component: ShowJSView,
     });
 
     return () => {

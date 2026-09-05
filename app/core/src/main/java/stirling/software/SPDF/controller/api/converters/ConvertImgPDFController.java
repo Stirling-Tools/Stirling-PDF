@@ -103,7 +103,12 @@ public class ConvertImgPDFController {
         String imageFormat = request.getImageFormat();
         String singleOrMultiple = request.getSingleOrMultiple();
         String colorType = request.getColorType();
-        int dpi = request.getDpi();
+        // Spring binds an empty dpi form field to null, which the field default cannot cover
+        Integer requestedDpi = request.getDpi();
+        int dpi =
+                (requestedDpi == null || requestedDpi <= 0)
+                        ? ConvertToImageRequest.DEFAULT_DPI
+                        : requestedDpi;
         String pageNumbers = request.getPageNumbers();
         boolean includeAnnotations = Boolean.TRUE.equals(request.getIncludeAnnotations());
         Path tempFile = null;

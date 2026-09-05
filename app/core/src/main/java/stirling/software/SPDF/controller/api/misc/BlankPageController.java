@@ -50,6 +50,10 @@ import stirling.software.common.util.WebResponseUtils;
 @RequiredArgsConstructor
 public class BlankPageController {
 
+    // Lowest resolution that classifies the same as 300-500 DPI. Below this a thin rule can
+    // antialias away and a page with content is dropped as blank.
+    private static final int BLANK_DETECTION_DPI = 150;
+
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
 
@@ -130,12 +134,12 @@ public class BlankPageController {
                         // Render image and save as temp file
                         BufferedImage image;
 
-                        // Use global maximum DPI setting
-                        int renderDpi = 30; // Default fallback
+                        // maxDPI is a safety ceiling for user-supplied values, not a target
+                        int renderDpi = BLANK_DETECTION_DPI;
                         ApplicationProperties properties =
                                 ApplicationContextProvider.getBean(ApplicationProperties.class);
                         if (properties != null && properties.getSystem() != null) {
-                            renderDpi = properties.getSystem().getMaxDPI();
+                            renderDpi = Math.min(renderDpi, properties.getSystem().getMaxDPI());
                         }
                         final int dpi = renderDpi;
                         final int currentPageIndex = pageIndex;

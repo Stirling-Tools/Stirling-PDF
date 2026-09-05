@@ -18,7 +18,7 @@ vi.mock("@app/hooks/usePolicies", () => ({
       security: {
         configured: true,
         runsOnEditor: true,
-        status: "active",
+        enabled: true,
         backendId: "backend-sec",
         runOn: "upload",
         order: 0,
@@ -26,7 +26,7 @@ vi.mock("@app/hooks/usePolicies", () => ({
       compliance: {
         configured: true,
         runsOnEditor: true,
-        status: "active",
+        enabled: true,
         backendId: "backend-comp",
         runOn: "upload",
         order: 1,
@@ -34,7 +34,7 @@ vi.mock("@app/hooks/usePolicies", () => ({
       classification: {
         configured: true,
         runsOnEditor: true,
-        status: "active",
+        enabled: true,
         backendId: "backend-cls",
         runOn: "upload",
         order: 2,
@@ -77,13 +77,13 @@ function setFileStubs(next: typeof fileStubs) {
 
 function completeRun(
   runId: string,
-  categoryId: string,
+  policyKey: string,
   fileId: string,
   outputFileIds: string[],
 ) {
   recordRunStart({
     runId,
-    categoryId,
+    policyKey,
     fileId,
     fileName: "doc.pdf",
     fileSize: 100,
@@ -192,7 +192,7 @@ describe("auto-run ordered chaining", () => {
     // A browser-local heuristic run and a real server run, both left in flight.
     recordRunStart({
       runId: "local-1",
-      categoryId: "classification",
+      policyKey: "classification",
       fileId: "f1",
       fileName: "d.pdf",
       fileSize: 1,
@@ -205,7 +205,7 @@ describe("auto-run ordered chaining", () => {
     });
     recordRunStart({
       runId: "srv-1",
-      categoryId: "security",
+      policyKey: "security",
       fileId: "f2",
       fileName: "d.pdf",
       fileSize: 1,

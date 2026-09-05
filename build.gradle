@@ -452,8 +452,12 @@ subprojects {
     if (name == 'stirling-pdf') {
         apply plugin: 'org.springdoc.openapi-gradle-plugin'
 
+        def openApiPort = rootProject.findProperty('openApiPort')?.toString()
+            ?: new ServerSocket(0).withCloseable { it.localPort }.toString()
+
         openApi {
-            apiDocsUrl = "http://localhost:8080/v1/api-docs"
+            apiDocsUrl = "http://localhost:${openApiPort}/v1/api-docs"
+            customBootRun { args = ["--server.port=${openApiPort}"] }
             outputDir = file("$projectDir")
             outputFileName = "SwaggerDoc.json"
             waitTimeInSeconds = 60 // Increase the wait time to 60 seconds
