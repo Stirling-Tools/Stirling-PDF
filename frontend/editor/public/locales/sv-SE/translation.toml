@@ -694,14 +694,14 @@ title = "Dokument och RAG"
 
 [admin.settings.ai.documents.embeddingApiKey]
 description = "Lämna tomt för att använda motorns egna miljöuppgifter. Gäller för självhostade distributioner med en enda motor."
-generic = "Embedding API key"
-openai = "OpenAI API key"
+generic = "API-nyckel för inbäddningar"
+openai = "OpenAI API-nyckel"
 setPlaceholder = "Sparad – lämna tomt för att behålla den aktuella nyckeln"
-voyageai = "VoyageAI API key"
+voyageai = "VoyageAI API-nyckel"
 
 [admin.settings.ai.documents.embeddingBaseUrl]
 description = "Base URL för den OpenAI-kompatibla / Ollama-embeddings-slutpunkten, t.ex. http://ollama:11434/v1. Måste peka på en betrodd intern slutpunkt (SSRF-känsligt)."
-label = "Embedding base URL"
+label = "Bas-URL för inbäddningar"
 
 [admin.settings.ai.documents.embeddingModel]
 description = "Namn på inbäddningsmodell. Fritext; förslag är endast tips."
@@ -724,7 +724,7 @@ reindexNote = "Om du ändrade inbäddningsmodellen, indexera om befintliga dokum
 
 [admin.settings.ai.documents.topK]
 description = "Antal mest relevanta segment som hämtas per sökning."
-label = "Top K"
+label = "Antal resultat (K)"
 
 [admin.settings.ai.general]
 description = "Anslut Stirling till Python AI-motorn och välj vilka AI-funktioner som ska exponeras. Ändringar tillämpas vid omstart."
@@ -869,9 +869,9 @@ mobileScannerPageFormat = "Sidformat"
 mobileScannerPageFormatDesc = "PDF-sidstorlek för konverterade bilder. \"Behåll\" använder bildens ursprungliga dimensioner."
 mobileScannerStretchToFit = "Sträck för att passa"
 mobileScannerStretchToFitDesc = "Sträck bilder för att fylla hela sidan. Om inaktiverat centreras bilder med bibehållen proportion."
-pageFormatA4 = "A4 (210×297mm)"
+pageFormatA4 = "A4 (210 × 297 mm)"
 pageFormatKeep = "Behåll (ursprungliga dimensioner)"
-pageFormatLetter = "Letter (8.5×11in)"
+pageFormatLetter = "Letter (8,5 × 11 tum)"
 title = "Anslutningar"
 unlinkedServices = "Ej länkade tjänster"
 
@@ -891,12 +891,12 @@ mobileScannerPageFormatDesc = "PDF-sidstorlek för konverterade bilder. \"Behål
 mobileScannerStretchToFit = "Sträck för att passa"
 mobileScannerStretchToFitDesc = "Sträck bilder för att fylla hela sidan. Om inaktiverat centreras bilder med bibehållen proportion."
 note = "Obs! Kräver att Frontend-URL är konfigurerad. "
-pageFormatA4 = "A4 (210×297mm)"
+pageFormatA4 = "A4 (210 × 297 mm)"
 pageFormatKeep = "Behåll (ursprungliga dimensioner)"
-pageFormatLetter = "Letter (8.5×11in)"
+pageFormatLetter = "Letter (8,5 × 11 tum)"
 
 [admin.settings.connections.oauth2]
-label = "OAuth2"
+label = "OAuth 2"
 
 [admin.settings.connections.oauth2.autoCreateUser]
 description = "Skapa automatiskt användarkonton vid första OAuth2-inloggningen"
@@ -935,7 +935,7 @@ description = "Det OAuth2-anspråk som ska användas som användarnamn (t.ex. em
 label = "Använd som användarnamn"
 
 [admin.settings.connections.saml2]
-label = "SAML2"
+label = "SAML 2"
 
 [admin.settings.connections.saml2.autoCreateUser]
 description = "Skapa automatiskt användarkonton vid första SAML2-inloggningen"
@@ -1032,7 +1032,7 @@ placeholder = "Ange databaslösenord"
 
 [admin.settings.database.port]
 description = "Databasserverns port (används inte om anpassad URL anges)"
-label = "Port"
+label = "Databasport"
 
 [admin.settings.database.type]
 description = "Typ av databas (används inte om anpassad URL anges)"
@@ -1111,12 +1111,12 @@ add = "Lägg till"
 empty = "Inga mappar tillåtna. Mappkällor och mappmål är för närvarande inaktiverade."
 hint = "Ange absoluta sökvägar, till exempel /data/inbox."
 label = "Tillåtna mapprötter"
-placeholder = "/data/inbox"
+placeholder = "t.ex. /data/inbox"
 remove = "Ta bort mapprot"
 
 [admin.settings.general]
 description = "Konfigurera programinställningar på systemnivå inklusive varumärke och standardbeteende."
-system = "System"
+system = "Systeminställningar"
 title = "Systeminställningar"
 ui = "Användargränssnitt"
 
@@ -1174,16 +1174,16 @@ description = "Katalog där bearbetade PDF-filer skrivs ut (lämna tomt för sta
 label = "Katalog för färdiga mappar"
 
 [admin.settings.general.customPaths.pipeline.pipelineDir]
-description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
-label = "Pipeline Directory"
+description = "Baskatalog för pipeline-resurser (lämna tomt för standard: /pipeline)"
+label = "Pipeline-katalog"
 
 [admin.settings.general.customPaths.pipeline.watchedFoldersDir]
 description = "Katalog där pipeline övervakar inkommande PDF-filer (lämna tomt för standard: /pipeline/watchedFolders)"
 label = "Katalog för övervakade mappar"
 
 [admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
-description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
-label = "Watched Folders Directories"
+description = "Kataloger där pipelinen övervakar inkommande PDF-filer (en per rad eller kommaseparerade; lämna tomt för standard: /pipeline/watchedFolders)"
+label = "Kataloger för bevakade mappar"
 
 [admin.settings.general.defaultLocale]
 description = "Standardspråk för nya användare (t.ex. en_US, es_ES)"
@@ -1223,7 +1223,7 @@ classic = "Klassisk"
 classicAlt = "Klassisk logotyp"
 description = "Välj mellan den moderna minimalistiska logotypen eller den klassiska S-ikonen"
 label = "Logotypstil"
-modern = "Modern"
+modern = "Modern stil"
 modernAlt = "Modern logotyp"
 
 [admin.settings.general.showUpdate]
@@ -1252,14 +1252,14 @@ title = "Varning om juridiskt ansvar"
 
 [admin.settings.legal.impressum]
 description = "URL eller filnamn till impressum (krävs i vissa jurisdiktioner)"
-label = "Impressum"
+label = "Ansvarsuppgifter"
 
 [admin.settings.legal.loginAgreement]
 defaultLocaleHint = "— används som reserv när ett språk saknar fil."
 defaultLocaleLink = "Konfigurera standardspråket"
 description = "Visa en ansvarsfriskrivning som användare måste godkänna efter inloggning. Texten följer varje användares språk."
 discardConfirm = "Du har osparade ändringar som kommer att gå förlorade. Byt språk ändå?"
-editLabel = "Markdown"
+editLabel = "Redigera Markdown"
 emptyPreview = "Inget att förhandsgranska ännu."
 language = "Språk"
 languageHelp = "Varje språk har en egen fil. Om en användares språk saknar fil faller avtalet tillbaka på standardspråkets fil och därefter på reservtexten."
@@ -1645,7 +1645,7 @@ title = "Letar du efter SSO/SAML-inställningar?"
 deny = "Neka (förhindrar all inramning)"
 description = "Styr om programmet kan bäddas in i iframes"
 disabled = "Inaktiverad (inget X-Frame-Options-huvud)"
-label = "X-Frame-Options"
+label = "Skydd mot iframe-inbäddning (X-Frame-Options)"
 sameorigin = "Samma ursprung (tillåt inramning från samma domän)"
 
 [admin.settings.storage]
@@ -1791,7 +1791,7 @@ welcome = "Välkommen till <strong>Admin-rundturen</strong>! Låt oss utforska d
 wrapUp = "Det var admin-rundturen! Du har sett de företagsfunktioner som gör Stirling PDF till en kraftfull, anpassningsbar lösning för organisationer. Du kan nå denna rundtur när som helst från menyn <strong>Hjälp</strong>."
 
 [adminUserSettings]
-admin = "Admin"
+admin = "Administratör"
 title = "Användarhanteringsinställningar"
 
 [agents]
