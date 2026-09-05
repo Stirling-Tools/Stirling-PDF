@@ -3589,13 +3589,13 @@ title = "Administratörsbehörighet krävs"
 tags = "luftgap,offline,isolerad,utan internet,frånkopplad,säker,nätverksisolering,fristående"
 
 [devApi]
-tags = "API,development,documentation,developer,REST,integration,endpoints,programmatic,automation,scripting"
+tags = "API,utveckling,dokumentation,utvecklare,REST,integration,slutpunkter,programmatisk,automation,skriptning"
 
 [devFolderScanning]
-tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,batch,monitor folder,auto process,folder monitoring"
+tags = "automation,mapp,skanning,bevakad mapp,hot folder,automatisk bearbetning,batch,övervaka mapp,automatisk process,mappbevakning"
 
 [devSsoGuide]
-tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
+tags = "SSO,enkel inloggning,autentisering,SAML,OAuth,OIDC,inloggning,enterprise,identitetsleverantör,IdP"
 
 [dropdownList]
 noItems = "Inga objekt tillgängliga"
@@ -3610,7 +3610,7 @@ editSecretValue = "Redigera hemligt värde"
 
 [editTableOfContents]
 submit = "Tillämpa innehållsförteckning"
-tags = "bookmarks,contents,edit,table of contents,TOC,outline,navigation,chapters,sections,add bookmarks,edit bookmarks,PDF outline"
+tags = "bokmärken,innehåll,redigera,innehållsförteckning,TOC,disposition,navigering,kapitel,avsnitt,lägg till bokmärken,redigera bokmärken,PDF-disposition"
 
 [editTableOfContents.actions]
 clipboardUnavailable = "Åtkomst till Urklipp är inte tillgängligt i denna webbläsare."
@@ -3746,7 +3746,7 @@ tags = "extrahera"
 
 [extractPages]
 submit = "Extrahera sidor"
-tags = "pull,select,copy,extract,extract pages,get pages,pull out,save pages,export pages,copy pages,select pages,specific pages"
+tags = "hämta,välj,kopiera,extrahera,extrahera sidor,hämta sidor,ta ut,spara sidor,exportera sidor,kopiera sidor,välj sidor,specifika sidor"
 title = "Extrahera sidor"
 
 [extractPages.error]
@@ -4300,7 +4300,7 @@ welcomeTitle = "Välkommen!"
 
 [flatten]
 submit = "Platta till"
-tags = "simplify,remove,interactive,flatten,flatten form,remove form fields,make static,finalize form,lock form,disable editing,convert to image,non-editable"
+tags = "förenkla,ta bort,interaktiv,platta ut,platta ut formulär,ta bort formulärfält,gör statisk,slutför formulär,lås formulär,inaktivera redigering,konvertera till bild,ej redigerbar"
 title = "Platta till"
 
 [flatten.error]
