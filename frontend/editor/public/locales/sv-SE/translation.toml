@@ -2122,7 +2122,7 @@ label = "Öppna meny för {{title}}"
 [automate.importModal]
 cancel = "Avbryt"
 confirm = "Importera"
-detectedAutomation = "Automate JSON"
+detectedAutomation = "JSON för automatisering"
 detectedFolderScan = "JSON för mappskanning"
 dropHint = "Släpp JSON här eller klicka för att välja en fil"
 dropSubhint = "Både Automate- och Folder Scanning-konfigurationer accepteras"
@@ -3010,7 +3010,7 @@ tooltip = "Välj färg från skärmen"
 
 [colorPicker]
 hue = "Hue"
-saturation = "Saturation and brightness"
+saturation = "Mättnad och ljusstyrka"
 title = "Välj färg"
 
 [common]
@@ -3037,7 +3037,7 @@ refresh = "Uppdatera"
 remaining = "Återstår"
 retry = "Försök igen"
 save = "Spara"
-stepOf = "Step {{current}} of {{total}}"
+stepOf = "Steg {{current}} av {{total}}"
 
 [compare]
 clearSelected = "Rensa valda"
@@ -3598,11 +3598,11 @@ tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [dropdownList]
-noItems = "No items available"
-noResults = "No results found"
+noItems = "Inga objekt tillgängliga"
+noResults = "Inga resultat hittades"
 searchPlaceholder = "Sök..."
-selectLanguages = "Select languages"
-selectOption = "Select an option"
+selectLanguages = "Välj språk"
+selectOption = "Välj ett alternativ"
 
 [editableSecretField]
 edit = "Redigera"
@@ -3876,7 +3876,7 @@ unzip = "Packa upp"
 updateOnServer = "Uppdatera på servern"
 uploadSelected = "Ladda upp valda"
 uploadToServer = "Ladda upp till servern"
-versionHistory = "Version history"
+versionHistory = "Versionshistorik"
 
 [files]
 addFiles = "Lägg till filer"
@@ -4272,7 +4272,7 @@ noFilesInStorageOpen = "Inga filer tillgängliga i lagringen. Öppna några file
 open = "Öppna"
 openFile = "Öppna fil"
 openFiles = "Öppna filer"
-selectFile = "Select {{name}}"
+selectFile = "Välj {{name}}"
 selectFromStorage = "Välj från lagring"
 upload = "Ladda upp"
 uploadFile = "Ladda upp fil"
@@ -5046,7 +5046,7 @@ signIn = "Logga in"
 accountCreatedSuccess = "Kontot har skapats! Du kan nu logga in."
 backToSignIn = "Tillbaka till inloggning"
 changePasswordWarning = "Byt ditt lösenord efter att du loggat in första gången"
-createAccount = "Create an account"
+createAccount = "Skapa ett konto"
 credentialsUpdated = "Dina uppgifter har uppdaterats. Logga in igen."
 defaultCredentials = "Standardinloggningsuppgifter"
 email = "E-post"
@@ -5229,8 +5229,8 @@ tags = "Multiverktyg,Multioperation,UI,klicka dra,front end,klientsida"
 title = "PDF-multiverktyg"
 
 [navFooter]
-openEditor = "Open PDF Editor"
-openProcessor = "Open PDF Processor"
+openEditor = "Öppna PDF-redigeraren"
+openProcessor = "Öppna PDF-processorn"
 
 [navFooter.credits]
 count = "{{remaining}} of {{total}}"
@@ -6572,9 +6572,9 @@ tags = "arkiv,långtids,standard,konvertering,lagring,bevarande"
 title = "PDF till PDF/A"
 
 [pdfToPDFUA]
-header = "PDF To PDF/UA"
+header = "PDF till PDF/UA"
 tags = "accessibility,accessible,tagged,screen reader,wcag,eaa,section 508,conversion"
-title = "PDF To PDF/UA"
+title = "PDF till PDF/UA"
 
 [pdfToPDFX]
 tags = "tryck,standard,konvertering,produktion,prepress,arkiv"
@@ -8098,7 +8098,7 @@ options = "Visa distributionsalternativ"
 start = "Distribuera editorn"
 
 [portal.home.editor.target]
-cloud = "Managed Cloud"
+cloud = "Hanterat moln"
 docker = "Självhostad · Docker"
 kubernetes = "Självhostad · Kubernetes"
 
@@ -10802,7 +10802,7 @@ connectingTo = "Ansluter till:"
 oauthPending = "Öppnar webbläsaren för autentisering..."
 orContinueWith = "Eller fortsätt med e-post"
 skipSignIn = "Fortsätt utan att logga in"
-sso = "Single Sign-On"
+sso = "Enkel inloggning"
 submit = "Logga in"
 
 [setup.login.error]
@@ -10832,7 +10832,7 @@ title = "Kan inte ansluta till servern"
 subtitle = "Ange URL till din självhostade server"
 testing = "Testar anslutning..."
 title = "Anslut till server"
-useLast = "Last used server: {{serverUrl}}"
+useLast = "Senast använda server: {{serverUrl}}"
 
 [setup.server.error]
 configFetch = "Det gick inte att hämta serverkonfigurationen (status {{status}})"
@@ -11429,7 +11429,7 @@ settings = "Inställningar"
 tools = "Verktyg"
 
 [survey]
-title = "Stirling-PDF Survey"
+title = "Stirling PDF-enkät"
 
 [swagger]
 clickHere = "klicka här"
@@ -11626,7 +11626,7 @@ signing = "Signering"
 verification = "Verifiering"
 
 [toolRenderer]
-notFound = "Tool not found: {{tool}}"
+notFound = "Verktyget hittades inte: {{tool}}"
 
 [tools]
 noSearchResults = "Inga verktyg hittades"
