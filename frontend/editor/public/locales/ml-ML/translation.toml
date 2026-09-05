@@ -3497,9 +3497,9 @@ scarf = "Scarf Pixel"
 [createPortfolio]
 coverTitle = "Cover page title"
 coverTitlePlaceholder = "PDF Portfolio"
-description = "All selected files are bundled into a single PDF Portfolio. Non-PDF files are embedded as-is and can be opened in a portfolio-aware viewer."
+description = "Every selected file is kept whole inside the new PDF, whatever its type. Readers that don't support portfolios show a cover page with the files attached."
 goToFileEditor = "Go to file editor"
-info = "Bundles the selected files into a single Adobe PDF Portfolio (a PDF with a /Collection). Portfolio-aware viewers show the files as a browsable collection; other viewers see a cover page plus the files as attachments."
+info = "Combines your files into one PDF that keeps each file whole inside it. Open the result to browse the files and view or save any of them on their own."
 settings = "Portfolio Settings"
 submit = "Create Portfolio"
 title = "Portfolio Results"
@@ -11407,6 +11407,7 @@ close = "അറ്റാച്ച്മെന്റുകൾ അടയ്ക്�
 closeSidebar = "അറ്റാച്ച്മെന്റുകളുടെ സൈഡ്‌ബാർ അടയ്ക്കുക"
 download = "അറ്റാച്ച്മെന്റ് ഡൗൺലോഡ് ചെയ്യുക"
 empty = "ഈ ഡോക്യുമെന്റിൽ അറ്റാച്ച്മെന്റുകളില്ല"
+loadFailed = "Failed to load attachments"
 loading = "അറ്റാച്ച്മെന്റുകൾ ലോഡ് ചെയ്യുന്നു..."
 noDocument = "അറ്റാച്ച്മെന്റുകൾ കാണാൻ ഒരു PDF തുറക്കുക."
 noMatch = "നിങ്ങളുടെ തിരച്ചിലിനൊത്ത അറ്റാച്ച്മെന്റുകളില്ല"
@@ -11414,7 +11415,7 @@ noSupport = "ഈ വ്യൂവറിൽ അറ്റാച്ച്മെന�
 retry = "വീണ്ടും ശ്രമിക്കുക"
 searchPlaceholder = "അറ്റാച്ച്മെന്റുകൾ തിരയുക"
 title = "അറ്റാച്ച്മെന്റുകൾ"
-
+untitled = "Untitled"
 [viewer.bookmarks]
 addBookmark = "Add bookmark"
 bookmarkTitle = "ബുക്ക്‌മാർക്ക് ശീർഷകം"

@@ -393,7 +393,9 @@ export const AttachmentSidebar = ({
       .catch((error) => {
         if (cancelled) return;
         const message =
-          error instanceof Error ? error.message : "Failed to load attachments";
+          error instanceof Error
+            ? error.message
+            : t("viewer.attachments.loadFailed", "Failed to load attachments");
         const fallback = cacheRef.current.get(key);
         const entry = createEntry({
           status: "error",
@@ -666,7 +668,8 @@ export const AttachmentSidebar = ({
               (MEMBER_ICONS[memberIconKey(attachment)] ?? MEMBER_ICONS.default)}
             <div className="attachment-item__content">
               <Text size="sm" fw={500} className="attachment-item__title">
-                {attachment.name || "Untitled"}
+                {attachment.name ||
+                  t("viewer.attachments.untitled", "Untitled")}
               </Text>
               {meta && (
                 <Text size="xs" c="dimmed" className="attachment-item__meta">

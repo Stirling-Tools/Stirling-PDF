@@ -40,7 +40,7 @@ const CreatePortfolioSettings = ({
       <Text size="xs" c="dimmed">
         {t(
           "createPortfolio.description",
-          "All selected files are bundled into a single PDF Portfolio. Non-PDF files are embedded as-is and can be opened in a portfolio-aware viewer.",
+          "Every selected file is kept whole inside the new PDF, whatever its type. Readers that don't support portfolios show a cover page with the files attached.",
         )}
       </Text>
     </Stack>
