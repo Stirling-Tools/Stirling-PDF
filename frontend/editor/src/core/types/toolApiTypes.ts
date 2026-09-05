@@ -1045,6 +1045,7 @@ export interface RearrangePagesRequest {
    * CUSTOM: Uses order defined in PageNums DUPLICATE: Duplicate pages n times (if Page order defined as 4, then duplicates each page 4 times)REVERSE_ORDER: Reverses the order of all pages.
    * DUPLEX_SORT: Sorts pages as if all fronts were scanned then all backs in reverse (1, n, 2, n-1, ...). BOOKLET_SORT: Arranges pages for booklet printing (last, first, second, second last, ...).
    * ODD_EVEN_SPLIT: Splits and arranges pages into odd and even numbered pages.
+   * ODD_EVEN_MERGE: Interleaves the two halves of the document back together (the inverse of Odd-Even Split).
    * REMOVE_FIRST: Removes the first page.
    * REMOVE_LAST: Removes the last page.
    * REMOVE_FIRST_AND_LAST: Removes both the first and the last pages.
@@ -1057,6 +1058,7 @@ export interface RearrangePagesRequest {
     | "BOOKLET_SORT"
     | "SIDE_STITCH_BOOKLET_SORT"
     | "ODD_EVEN_SPLIT"
+    | "ODD_EVEN_MERGE"
     | "REMOVE_FIRST"
     | "REMOVE_LAST"
     | "REMOVE_FIRST_AND_LAST"
