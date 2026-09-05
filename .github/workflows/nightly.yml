@@ -195,3 +195,16 @@ jobs:
       - name: Tear down
         if: always()
         run: docker compose -f docker/embedded/compose/test_cicd.yml down -v
+
+  # PRs only run the Linux leg to keep desktop-touching PRs affordable. The
+  # platform-specific runtime bugs - Windows WebView2, the macOS jlink runtime
+  # and darwin JPDFium natives - get their coverage here instead. macOS runs the
+  # headless smoke only; there is no WebDriver for WKWebView.
+  desktop-e2e:
+    name: Desktop E2E (linux + windows + macos)
+    permissions:
+      contents: read
+    uses: ./.github/workflows/desktop-e2e.yml
+    with:
+      platform: all
+    secrets: inherit
