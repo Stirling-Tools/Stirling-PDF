@@ -3,6 +3,7 @@
 // init side effects into unit tests that mock react-i18next.
 import i18n from "i18next";
 import { apiClient } from "@portal/api/http";
+import { resolveUserCapacity, type UserCapacity } from "@app/billing";
 import type { Tier } from "@portal/contexts/TierContext";
 
 /** The four org roles, most → least privileged, mapped onto the backend's
@@ -127,6 +128,11 @@ export interface UsersSummary {
   seatsUsed: number;
   /** null = unlimited. */
   seatLimit: number | null;
+  /**
+   * How the limit was set and how it is raised. Absent on backends that don't report
+   * licence packaging, in which case the page shows the counts above and nothing to buy.
+   */
+  capacity?: UserCapacity;
 }
 
 export interface UsersResponse {
@@ -237,6 +243,13 @@ interface AdminSettingsDto {
   emailInvitesEnabled?: boolean;
   totalUsers?: number;
   maxAllowedUsers?: number;
+  disabledUsers?: number;
+  premiumEnabled?: boolean;
+  /** Team plans on the licence, and users per plan. Both 0 on licences issued before the cap. */
+  serverQuantity?: number;
+  userBlockSize?: number;
+  /** Invites issued but not redeemed. They hold a slot the same way a disabled account does. */
+  pendingInvites?: number;
   currentUsername?: string;
 }
 
@@ -269,12 +282,6 @@ function relativeTime(value: number | string | undefined): string {
   return i18n.t("users.activity.yearsAgo", { count: years });
 }
 
-/** 0 / huge sentinel license values mean "no seat limit". */
-function normalizeSeatLimit(max: number | undefined): number | null {
-  if (!max || max <= 0 || max >= 100000) return null;
-  return max;
-}
-
 /**
  * GET /api/v1/proprietary/ui-data/admin-settings adapted onto the portal's
  * UsersResponse. Role = stored authority + team leadership; the role
@@ -303,14 +310,24 @@ export async function fetchUsers(tier: Tier): Promise<UsersResponse> {
     authType: u.authenticationType,
     authority: u.rolesAsString,
   }));
-  const seatLimit = normalizeSeatLimit(data.maxAllowedUsers);
   const seatsUsed = data.totalUsers ?? members.length;
+  const capacity = resolveUserCapacity({
+    used: seatsUsed,
+    maxAllowedUsers: data.maxAllowedUsers,
+    serverQuantity: data.serverQuantity,
+    userBlockSize: data.userBlockSize,
+    premiumEnabled: data.premiumEnabled,
+    disabled: data.disabledUsers,
+    pendingInvites: data.pendingInvites,
+  });
+  const seatLimit = capacity.limit;
   return {
     summary: {
       totalMembers: members.length,
-      pendingInvites: 0,
+      pendingInvites: capacity.pendingInvites,
       seatsUsed,
       seatLimit,
+      capacity,
     },
     members,
     roles: ROLES,

@@ -5,6 +5,7 @@ import { ErrorBoundary } from "@portal/components/ErrorBoundary";
 import { AppShell } from "@portal/components/AppShell";
 import { PortalSettingsHost } from "@portal/components/PortalSettingsHost";
 import { ViewRouter } from "@portal/ViewRouter";
+import { CapacityCheckoutProvider } from "@app/portal/capacityCheckout";
 
 /**
  * The routed view, wrapped in an error boundary so a single view crashing can't
@@ -23,7 +24,8 @@ function RoutedContent() {
 /**
  * The flavor-agnostic portal chrome: the shell (sidebar + search bar + routed
  * view) plus the global overlays that every flavor shares. Requires only the
- * Tier and UI contexts above it — both flavors provide those. Flavor-specific
+ * Tier and UI contexts above it — both flavors provide those. Anything a single
+ * flavor needs below this point comes in through a seam, not a direct import. Flavor-specific
  * overlays (e.g. the self-hosted account-link modal) are mounted by
  * PortalProviders, not here.
  */
@@ -34,9 +36,13 @@ export function PortalChrome() {
     <AppConfigProvider bootstrapMode="non-blocking">
       {/* The pipeline builder reads the tool registry to list and configure operations. */}
       <ToolRegistryProvider>
-        <AppShell>
-          <RoutedContent />
-        </AppShell>
+        {/* Per-flavor: self-hosted mounts the licence checkout so the Users page can sell
+            capacity; SaaS mounts nothing. Inside AppConfigProvider, which it reads. */}
+        <CapacityCheckoutProvider>
+          <AppShell>
+            <RoutedContent />
+          </AppShell>
+        </CapacityCheckoutProvider>
       </ToolRegistryProvider>
       <PortalSettingsHost />
     </AppConfigProvider>

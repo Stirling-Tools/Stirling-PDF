@@ -464,3 +464,11 @@ export const useCheckout = (): CheckoutContextValue => {
   }
   return context;
 };
+
+/**
+ * {@link useCheckout} for surfaces that render in more than one provider stack. The portal
+ * Users page is shared between self-hosted (mounted inside the editor, provider present) and
+ * SaaS (its own stack, no self-hosted checkout), so it has to be able to ask rather than assume.
+ */
+export const useOptionalCheckout = (): CheckoutContextValue | null =>
+  useContext(CheckoutContext) ?? null;

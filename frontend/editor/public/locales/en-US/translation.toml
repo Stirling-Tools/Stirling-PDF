@@ -9769,6 +9769,13 @@ title = "Session expired"
 [portal.users]
 title = "Users"
 
+[portal.users.capacity]
+add = "Add capacity"
+heldNote = "Includes {{disabled}} disabled and {{invited}} invited, which each use a slot."
+updateSeats = "Update seats"
+usedOfLimit = "{{used}} of {{limit}} users"
+usedOnly = "{{used}} users"
+
 [portal.users.roles.admin]
 label = "Admin (Org owner)"
 summary = "Full governance over the workspace, settings and members."

@@ -31,6 +31,7 @@ import LoginRequiredBanner from "@app/components/shared/config/LoginRequiredBann
 import { useNavigate } from "react-router-dom";
 import UpdateSeatsButton from "@app/components/shared/UpdateSeatsButton";
 import { useLicense } from "@app/contexts/LicenseContext";
+import { isUnlimitedUserLimit } from "@app/billing";
 import ChangeUserPasswordModal from "@app/components/shared/ChangeUserPasswordModal";
 import { useAuth } from "@app/auth/UseSession";
 import {
@@ -419,13 +420,19 @@ User: ${user.username}`)
             <Text component="span" fw={600} c="inherit">
               {licenseInfo.totalUsers}
             </Text>
-            <Text component="span" c="dimmed">
-              {" "}
-              /{" "}
-            </Text>
-            <Text component="span" fw={600} c="inherit">
-              {licenseInfo.maxAllowedUsers}
-            </Text>
+            {/* An uncapped licence reports its limit as a sentinel, not an absence, so printing
+                it unguarded shows the raw Integer.MAX_VALUE. */}
+            {!isUnlimitedUserLimit(licenseInfo.maxAllowedUsers) && (
+              <>
+                <Text component="span" c="dimmed">
+                  {" "}
+                  /{" "}
+                </Text>
+                <Text component="span" fw={600} c="inherit">
+                  {licenseInfo.maxAllowedUsers}
+                </Text>
+              </>
+            )}
             <Text component="span" c="dimmed">
               {" "}
               {t("workspace.people.license.users", "users", {
