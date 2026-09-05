@@ -1334,68 +1334,68 @@ description = "Användarnamn för SMTP-autentisering"
 label = "SMTP-användarnamn"
 
 [admin.settings.mcp]
-apikeyNote = "Clients send a Stirling API key in the X-API-KEY header (or Authorization: Bearer <key>). The key maps to its owning Stirling user - only provisioned accounts get in, and actions are audited as that user. Manage keys under Account > API Keys."
-description = "Expose Stirling's PDF tools and AI agents to MCP clients over an OAuth-protected endpoint."
-title = "MCP Server"
+apikeyNote = "Klienter skickar en Stirling API-nyckel i huvudet X-API-KEY (eller Authorization: Bearer <key>). Nyckeln kopplas till sin Stirling-användare – endast etablerade konton kommer in och åtgärder granskas som den användaren. Hantera nycklar under Konto > API-nycklar."
+description = "Exponera Stirlings PDF-verktyg och AI-agenter för MCP-klienter via en OAuth-skyddad slutpunkt."
+title = "MCP-server"
 
 [admin.settings.mcp.acceptedAudiences]
-description = "Extra token audience values accepted besides the Resource ID (comma or space separated). Leave blank for strict RFC 8707. Needed for IdPs that cannot mint resource audiences - e.g. Supabase's OAuth server always issues aud=authenticated."
-label = "Additional accepted audiences (optional)"
+description = "Ytterligare tokenmålgruppsvärden som accepteras utöver resurs-ID:t (komma- eller blankstegsseparerade). Lämna tomt för strikt RFC 8707. Krävs för IdP:er som inte kan utfärda resursmålgrupper, till exempel Supabases OAuth-server som alltid utfärdar aud=authenticated."
+label = "Ytterligare accepterade målgrupper (valfritt)"
 
 [admin.settings.mcp.allowedOps]
-description = "If set, ONLY these operation ids are exposed (an allow-list; comma or space separated). Leave blank to expose all enabled tools except any blocked below."
-label = "Allowed tools"
+description = "Om detta anges exponeras ENDAST dessa åtgärds-ID:n (en tillåtelselista; komma- eller blankstegsseparerad). Lämna tomt för att exponera alla aktiverade verktyg utom de som blockeras nedan."
+label = "Tillåtna verktyg"
 
 [admin.settings.mcp.blockedOps]
-description = "Operation ids to hide from MCP (comma or space separated), e.g. add-password remove-password. Leave blank to expose all enabled tools."
-label = "Blocked tools"
+description = "Åtgärds-ID:n som ska döljas från MCP (komma- eller blankstegsseparerade), t.ex. add-password remove-password. Lämna tomt för att exponera alla aktiverade verktyg."
+label = "Blockerade verktyg"
 
 [admin.settings.mcp.enabled]
-description = "When off (default), no /mcp endpoint, metadata, or MCP beans are loaded."
-label = "Enable MCP Server"
+description = "När den är avstängd (standard) läses ingen /mcp-slutpunkt, metadata eller MCP-komponenter in."
+label = "Aktivera MCP-server"
 
 [admin.settings.mcp.guide]
-step1 = "Enter your OAuth issuer + resource ID above, Save, and restart."
-step1ApiKey = "Create an API key under Account > API Keys (each user uses their own)."
-step2 = "In your MCP client add a"
-step2b = "server pointing at:"
-step3 = "The client auto-discovers OAuth from:"
-step3ApiKey = "Send the key in an"
-step3ApiKeyb = "header (or Authorization: Bearer <key>). No OAuth or metadata discovery is used."
-step4 = "Approve the sign-in; the client retries with a token. Tools appear grouped: convert, pages, misc, security, ai."
-step4ApiKey = "Tools appear grouped: convert, pages, misc, security, ai - and every call is audited as the key's owner."
-tip = "Tip: register the resource ID as an allowed audience in your IdP. Tested with MCP Inspector and Claude Desktop."
-tipApiKey = "Tip: API-key mode needs no external IdP - simplest for self-host. The key maps to its owning Stirling user."
-title = "Connect an MCP client"
+step1 = "Ange OAuth-utfärdaren och resurs-ID:t ovan, spara och starta om."
+step1ApiKey = "Skapa en API-nyckel under Konto > API-nycklar (varje användare använder sin egen)."
+step2 = "Lägg till en"
+step2b = "server som pekar på:"
+step3 = "Klienten hittar OAuth automatiskt från:"
+step3ApiKey = "Skicka nyckeln i ett"
+step3ApiKeyb = "huvud (eller Authorization: Bearer <key>). OAuth eller metadatasökning används inte."
+step4 = "Godkänn inloggningen; klienten försöker igen med en token. Verktygen grupperas som konvertera, sidor, övrigt, säkerhet och AI."
+step4ApiKey = "Verktygen grupperas som konvertera, sidor, övrigt, säkerhet och AI – varje anrop granskas som nyckelns ägare."
+tip = "Tips: registrera resurs-ID:t som en tillåten målgrupp i din IdP. Testat med MCP Inspector och Claude Desktop."
+tipApiKey = "Tips: API-nyckelläget behöver ingen extern IdP – enklast för självhosting. Nyckeln kopplas till sin Stirling-användare."
+title = "Anslut en MCP-klient"
 
 [admin.settings.mcp.issuerUri]
-description = "Your OAuth2 authorization server (must publish /.well-known/openid-configuration). Required when enabled."
-label = "OAuth Issuer URL"
+description = "Din OAuth2-auktoriseringsserver (måste publicera /.well-known/openid-configuration). Krävs när funktionen är aktiverad."
+label = "URL för OAuth-utfärdare"
 
 [admin.settings.mcp.jwksUri]
-description = "Leave blank to discover it from the issuer. Set only if your IdP serves keys at a non-standard URL."
-label = "JWKS URL (optional)"
-placeholder = "Auto-discovered from issuer"
+description = "Lämna tomt för att hitta den från utfärdaren. Ange endast om din IdP tillhandahåller nycklar på en icke-standardiserad URL."
+label = "JWKS-URL (valfritt)"
+placeholder = "Hittas automatiskt från utfärdaren"
 
 [admin.settings.mcp.mode]
-description = "OAuth needs an external IdP. API key uses a Stirling per-user API key (X-API-KEY) - simplest for self-host."
-label = "Authentication mode"
+description = "OAuth behöver en extern IdP. API-nyckel använder en Stirling-API-nyckel per användare (X-API-KEY) – enklast för självhosting."
+label = "Autentiseringsläge"
 
 [admin.settings.mcp.requireAccount]
-description = "Only let tokens through if their subject maps to a provisioned, enabled Stirling user."
-label = "Require an existing Stirling account"
+description = "Tillåt endast token om dess subjekt kopplas till en etablerad och aktiverad Stirling-användare."
+label = "Kräv ett befintligt Stirling-konto"
 
 [admin.settings.mcp.resourceId]
-description = "This server's public /mcp URL. Tokens must list it in their audience (RFC 8707) or they are rejected."
-label = "Resource ID"
+description = "Den här serverns publika /mcp-URL. Token måste ange den i sin målgrupp (RFC 8707), annars avvisas de."
+label = "Resurs-ID"
 
 [admin.settings.mcp.scopes]
-description = "Require mcp.tools.read for read ops and mcp.tools.write for write/AI ops."
-label = "Enforce OAuth scopes"
+description = "Kräv mcp.tools.read för läsåtgärder och mcp.tools.write för skriv-/AI-åtgärder."
+label = "Tvinga OAuth-scope"
 
 [admin.settings.mcp.usernameClaim]
-description = "JWT claim matched against a Stirling username (e.g. sub, email, preferred_username)."
-label = "Username claim"
+description = "JWT-claim som matchas mot ett Stirling-användarnamn (t.ex. sub, email, preferred_username)."
+label = "Claim för användarnamn"
 
 [admin.settings.plan.noData]
 message = "Planinformation är inte tillgänglig just nu."
@@ -1642,11 +1642,11 @@ message = "OAuth2- och SAML2-autentiseringsleverantörer har flyttats till menyn
 title = "Letar du efter SSO/SAML-inställningar?"
 
 [admin.settings.security.xFrameOptions]
-deny = "Deny (Prevents all framing)"
-description = "Controls whether the application can be embedded in iframes"
-disabled = "Disabled (No X-Frame-Options header)"
+deny = "Neka (förhindrar all inramning)"
+description = "Styr om programmet kan bäddas in i iframes"
+disabled = "Inaktiverad (inget X-Frame-Options-huvud)"
 label = "X-Frame-Options"
-sameorigin = "Same Origin (Allow framing from same domain)"
+sameorigin = "Samma ursprung (tillåt inramning från samma domän)"
 
 [admin.settings.storage]
 description = "Styr serverlagring och delningsalternativ."
