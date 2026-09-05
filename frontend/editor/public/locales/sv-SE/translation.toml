@@ -4174,6 +4174,20 @@ error = "Kunde inte spara mappen. Försök igen."
 label = "Mappnamn"
 placeholder = "Mappnamn"
 
+[filesPage.folderKind]
+local = "Lokal mapp"
+virtual = "Webbläsarmapp"
+
+[filesPage.folderOrigin]
+diskHint = "En mapp som monterats från en katalog på disken"
+serverHint = "En mapp som lagras på Stirling-servern"
+virtualHint = "En mapp som endast finns i den här webbläsaren"
+
+[filesPage.newFolderMenu]
+addExisting = "Lägg till lokal mapp"
+server = "Ny mapp på servern"
+serverHint = "Synkroniseras med ditt konto och är tillgänglig var du än loggar in."
+
 [filesPage.moveDialog]
 cancel = "Avbryt"
 confirm = "Flytta hit"
@@ -5119,6 +5133,7 @@ sort = "Sortera"
 title = "Översikt över sammanfogningsinställningar"
 
 [mobileScanner]
+addMore = "Lägg till fler"
 addToBatch = "Lägg till i batch"
 back = "Tillbaka"
 batchImages = "Batch"
@@ -6675,6 +6690,7 @@ unlimitedUsers = "Obegränsat antal användare"
 upToFiveUsers = "Upp till 5 användare"
 upToFiveUsersLowercase = "upp till 5 användare"
 usageTracking = "Användningsspårning"
+usersIncluded = "100 användare ingår"
 usersLimitedToSeats = "Användare begränsade till licensplatser"
 
 [plan.free]
@@ -6706,6 +6722,7 @@ ssoOAuth = "SSO (OAuth2/OIDC)"
 unlimitedUsers = "Obegränsat antal användare"
 upToFiveUsers = "Upp till 5 användare"
 usageTrackingPrometheus = "Användningsspårning & Prometheus"
+usersIncluded = "100 användare ingår"
 
 [plan.licenseWarning]
 body = "Du har {{total}} användare men gratisnivån stöder endast {{limit}} per server. Uppgradera för att hålla Stirling PDF igång smidigt."
@@ -6751,6 +6768,10 @@ instructions = "Slutför ditt köp i Stripe-fliken. När betalningen är klar f�
 keyDescription = "Klistra in licensnyckeln från ditt e‑postmeddelande"
 success = "Licens aktiverad!"
 successMessage = "Din licens har aktiverats. Du kan nu stänga detta fönster."
+
+[plan.team]
+maxUsers = "100 användare"
+name = "Team"
 
 [policies.activity]
 outputsUnavailable = "Policyutdata är inte längre tillgängliga att ladda ned."
@@ -7066,8 +7087,10 @@ subtitle = "Distribuera var som helst, för hela ditt team."
 title = "Gratis PDF-redigerare"
 
 [portal.billing.freePlan]
+anywhere = "Webb, skrivbord och självhostat"
 checkoutErrorTitle = "Det gick inte att starta kassan"
 currentPlan = "Aktuell plan"
+everyPdfTool = "Alla PDF-verktyg"
 freeForever = "Gratis för alltid"
 noTeamResolved = "Inget team har kopplats till din plånbok ännu — uppdatera och försök igen."
 ownerOnly = "Endast teamägaren kan aktivera Processor-planen."
@@ -7964,8 +7987,10 @@ title = "Failures"
 [portal.failures.action]
 acknowledge = "Acknowledge"
 confirm = "Are you sure?"
+decrypt = "Dekryptera och försök igen"
 dismiss = "Dismiss"
 dismissSkipFile = "Skip this file"
+openInTool = "Försök igen"
 viewFile = "Visa fil"
 viewInProcessor = "Visa i bearbetaren"
 
@@ -8443,7 +8468,11 @@ subtitle = "Varje automatiserad dokumentpipeline på backend: en ordnad kedja av
 title = "Pipelines"
 
 [portal.pipelines.actions]
+newCustomPipeline = "Ny anpassad pipeline"
 newPipeline = "Ny pipeline"
+
+[portal.pipelines.all]
+title = "Alla pipelines"
 
 [portal.pipelines.builder]
 activate = "Activate"
@@ -8454,6 +8483,9 @@ chooseDestination = "Välj en destination"
 chooseOperation = "Välj vad det här steget gör"
 chooseSource = "Välj en källa"
 discard = "Kassera ändringar"
+editorDestination = "Redigerare"
+editorDestinationDetail = "Ersätter filen som den kördes på"
+editorDestinationHelp = "Den här pipelinen körs på filerna i arbetsytan och resultatet ersätter filen den kördes på. Det finns ingen annan plats att skicka resultatet till."
 inputs = "Indata"
 inputSource = "Indatakälla"
 inputTrigger = "Utlösare"
@@ -8465,6 +8497,10 @@ needsSource = "No source chosen"
 noToolMatches = "Inga verktyg matchar din sökning."
 pause = "Pause"
 rename = "Rename pipeline"
+runOn = "Körs vid"
+runOnExport = "Varje export"
+runOnTooltip = "Välj när pipelinen körs på dina filer: när du lägger till dem eller när du exporterar dem."
+runOnUpload = "Varje uppladdning"
 searchTools = "Sök verktyg"
 sendToSystem = "Skicka till ett annat system"
 stepsIncompatible = "Dessa steg kan inte köras på det som deras föregående steg producerar: {{tools}}."
@@ -8494,6 +8530,9 @@ format-mismatch = "Behöver {{accepts}}, men föregående steg producerar {{prod
 output-uncertain = "Kanske inte körs: föregående stegs utdata beror på hur det är konfigurerat"
 source-mismatch = "Behöver {{accepts}}, men denna pipelines indata är {{produced}}"
 undeclared-operation = "Kan inte kontrollera vad det här steget accepterar"
+
+[portal.pipelines.builder.icon]
+label = "Ändra ikon"
 
 [portal.pipelines.composer]
 addTool = "Lägg till verktyg"
@@ -8543,6 +8582,11 @@ action = "Skapa en pipeline"
 connectSource = "Anslut en källa"
 description = "Skapa din första pipeline: välj källorna den körs över, kedja åtgärderna och välj vart utdata ska skickas."
 title = "Inga pipelines ännu"
+
+[portal.pipelines.enforce]
+desc = "Körs automatiskt; medlemmar kan inte stänga av den"
+info = "Vad det innebär att framtvinga som policy"
+label = "Framtvinga som policy"
 
 [portal.pipelines.graph]
 addFirstTool = "Add a tool"
@@ -8603,11 +8647,22 @@ sources = "Källor"
 status = "Status"
 steps = "Steg"
 trigger = "Trigger"
+type = "Typ"
+
+[portal.pipelines.templates]
+setUp = "Konfigurera"
+title = "Mallar"
 
 [portal.pipelines.trigger]
+editor-export = "Varje export"
+editor-upload = "Varje uppladdning"
 folder-watch = "Mappbevakning"
 manual = "Manuell"
 schedule = "Schemalagd"
+
+[portal.pipelines.type]
+pipeline = "Pipeline"
+policy = "Policy"
 
 [portal.policies]
 defaultName = "{{category}}-policy"
@@ -9012,6 +9067,7 @@ status = "Status"
 back = "Tillbaka"
 cancel = "Avbryt"
 continue = "Fortsätt"
+customise = "Anpassa"
 enablePolicy = "Aktivera policy"
 saveChanges = "Spara ändringar"
 
@@ -13052,3 +13108,17 @@ renewalNote = "Förnyas för {{total}}{{period}}. Avsluta när som helst under A
 subheading = "Omfattar alla du bjuder in, i block om {{users}} användare."
 userTotal = "{{users}} användare"
 usersLabel = "Användare"
+
+[quickNav]
+editor = "Redigerare"
+home = "Stirling"
+invite = "Bjud in"
+landmark = "Snabbnavigering"
+noProcessorAccess = "Be en administratör om åtkomst till Processor"
+notifications = "Aviseringar"
+processor = "Processor"
+reader = "Läsare"
+
+[workbench.sessionRestore]
+none = "Dina tidigare filer lagras inte längre på den här enheten."
+partial = "Återställde {{restored}} av {{total}} filer. Resten lagras inte längre på den här enheten."
