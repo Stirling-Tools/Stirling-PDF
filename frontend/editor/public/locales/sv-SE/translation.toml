@@ -5477,20 +5477,20 @@ cta = "Kolla in Processor"
 title = "Kolla in Stirling Processor"
 
 [onboarding.saas.freeEditor]
-freeLine = "The editor is now <free>completely free</free>."
-premium = "We've added loads of new features, including <strong>Policies</strong> and <strong>Agent Chat</strong>."
-title = "Welcome to Stirling"
+freeLine = "Redigeraren är nu <free>helt kostnadsfri</free>."
+premium = "Vi har lagt till många nya funktioner, bland annat <strong>policyer</strong> och <strong>agentchatt</strong>."
+title = "Välkommen till Stirling"
 
 [onboarding.saas.team]
-addButton = "Add"
-createBody = "Work on documents together: teammates share files, automations and your plan. Add the first member by email to create your team."
-createTitle = "Create your team"
-inviteBody = "Everyone on your team shares files, automations and your plan. Add teammates by email and they'll get an invitation."
-inviteTitle = "Invite members to your team"
+addButton = "Lägg till"
+createBody = "Arbeta tillsammans med dokument: teammedlemmar delar filer, automationer och abonnemang. Lägg till den första medlemmen via e-post för att skapa teamet."
+createTitle = "Skapa ditt team"
+inviteBody = "Alla i teamet delar filer, automationer och abonnemang. Lägg till teammedlemmar via e-post så får de en inbjudan."
+inviteTitle = "Bjud in medlemmar till teamet"
 
 [onboarding.saas.usage]
-body = "Automations, AI and API requests draw from your free allowance. Manual editing never counts against it."
-title = "Your free Processor allowance"
+body = "Automationer, AI och API-anrop använder din kostnadsfria kvot. Manuell redigering räknas aldrig mot den."
+title = "Din kostnadsfria Processor-kvot"
 
 [onboarding.securityCheck]
 message = "Applikationen har nyligen genomgått stora förändringar. Din serveradmins uppmärksamhet kan krävas. Bekräfta din roll för att fortsätta."
