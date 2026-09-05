@@ -49,9 +49,9 @@ public class FileRunEventController {
     @Operation(
             summary = "List recorded failures",
             description =
-                    "Failures the caller may see, newest first: their team's for a leader, their own"
-                            + " for everyone else. Each row carries its available actions already"
-                            + " resolved.")
+                    "Failures the caller may see, newest first: their team's for a leader, their"
+                        + " own for everyone else. Each row carries its available actions already"
+                        + " resolved.")
     public FileRunEventsResponse list(
             // Spring's converter 400s on a value outside the enum, so no hand-rolled parse.
             @RequestParam(required = false) FileRunEventStatus status,
@@ -99,9 +99,9 @@ public class FileRunEventController {
             summary = "Report a failure hit in the editor",
             description =
                     "For failures the server never sees, because the editor calls tools directly."
-                            + " Open to any authenticated user: whoever's work failed can say so, and"
-                            + " reads it back scoped to themselves. Rejected with 400 if it names"
-                            + " more files than one report may carry.")
+                        + " Open to any authenticated user: whoever's work failed can say so, and"
+                        + " reads it back scoped to themselves. Rejected with 400 if it names more"
+                        + " files than one report may carry.")
     public ResponseEntity<Void> report(@RequestBody EditorFailureReport report) {
         if (report == null || !report.hasOperation()) {
             throw new ResponseStatusException(

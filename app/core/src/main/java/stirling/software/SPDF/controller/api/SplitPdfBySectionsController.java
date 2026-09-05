@@ -62,8 +62,8 @@ public class SplitPdfBySectionsController {
             summary = "Split PDF pages into smaller sections",
             description =
                     "Split each page of a PDF into smaller sections based on the user's choice"
-                            + " which page to split, and how to split ( halves, thirds, quarters, etc.), both"
-                            + " vertically and horizontally.")
+                            + " which page to split, and how to split ( halves, thirds, quarters,"
+                            + " etc.), both vertically and horizontally.")
     public ResponseEntity<Resource> splitPdf(
             @Valid @ModelAttribute SplitPdfBySectionsRequest request) throws Exception {
         MultipartFile file = request.getFileInput();

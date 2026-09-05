@@ -345,7 +345,7 @@ class AiWorkflowServiceMoreTest {
                                 Consumer<String> consumer = inv.getArgument(3);
                                 consumer.accept(
                                         "{\"event\":\"progress\",\"phase\":\"whole_doc_read_started\","
-                                                + "\"question\":\"q\",\"pages\":3,\"slices\":1}");
+                                            + "\"question\":\"q\",\"pages\":3,\"slices\":1}");
                                 consumer.accept("{\"event\":\"heartbeat\"}");
                                 consumer.accept("{\"event\":\"mystery\"}");
                                 consumer.accept(

@@ -43,8 +43,8 @@ public class PolicyOutputResolver {
                             resolved::add,
                             () ->
                                     log.warn(
-                                            "Policy {} references missing output source {}; skipping"
-                                                    + " that destination",
+                                            "Policy {} references missing output source {};"
+                                                    + " skipping that destination",
                                             policy.id(),
                                             outputId));
         }

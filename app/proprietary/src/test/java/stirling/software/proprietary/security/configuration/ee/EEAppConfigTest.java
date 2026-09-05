@@ -45,7 +45,8 @@ class EEAppConfigTest {
         // Real LicenseKeyChecker.requireProOrEnterprise throws on NORMAL; mock that behavior here.
         org.mockito.Mockito.doThrow(
                         new IllegalStateException(
-                                "premium.proFeatures.ssoAutoLogin=true requires a Pro or Enterprise license"))
+                                "premium.proFeatures.ssoAutoLogin=true requires a Pro or Enterprise"
+                                        + " license"))
                 .when(checker)
                 .requireProOrEnterprise("premium.proFeatures.ssoAutoLogin=true");
 
@@ -54,6 +55,7 @@ class EEAppConfigTest {
         assertThatThrownBy(cfg::ssoAutoLogin)
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining(
-                        "premium.proFeatures.ssoAutoLogin=true requires a Pro or Enterprise license");
+                        "premium.proFeatures.ssoAutoLogin=true requires a Pro or Enterprise"
+                                + " license");
     }
 }

@@ -79,9 +79,10 @@ public class AddCommentsController {
             summary = "Add sticky-note comments to a PDF at specified positions or anchored text",
             description =
                     "Attaches PDF Text (sticky-note) annotations to the document. Each CommentSpec"
-                            + " can either supply absolute coordinates or an `anchorText` hint; when provided,"
-                            + " the tool locates the first matching line on the target page and anchors the"
-                            + " icon there (falling back to the coordinates if no match).")
+                        + " can either supply absolute coordinates or an `anchorText` hint; when"
+                        + " provided, the tool locates the first matching line on the target page"
+                        + " and anchors the icon there (falling back to the coordinates if no"
+                        + " match).")
     public ResponseEntity<Resource> addComments(@ModelAttribute AddCommentsRequest request)
             throws IOException {
 

@@ -70,8 +70,8 @@ public class McpRequestSizeFilter extends OncePerRequestFilter {
         response.setContentType("application/json");
         response.getWriter()
                 .write(
-                        "{\"error\":\"payload_too_large\",\"message\":\"MCP request body exceeds the"
-                                + " configured limit of "
+                        "{\"error\":\"payload_too_large\",\"message\":\"MCP request body exceeds"
+                                + " the configured limit of "
                                 + maxBodyBytes
                                 + " bytes.\"}");
     }

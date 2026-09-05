@@ -55,7 +55,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<Object[]> findSettingsByUserIds(@Param("ids") Collection<Long> ids);
 
     @Query(
-            "SELECT u FROM User u JOIN FETCH u.authorities JOIN FETCH u.team WHERE u.team.id = :teamId")
+            "SELECT u FROM User u JOIN FETCH u.authorities JOIN FETCH u.team WHERE u.team.id ="
+                    + " :teamId")
     List<User> findAllByTeamId(@Param("teamId") Long teamId);
 
     long countByTeam(Team team);

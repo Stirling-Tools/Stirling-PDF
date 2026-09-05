@@ -74,7 +74,8 @@ public class GlobalErrorResponseCustomizer implements GlobalOpenApiCustomizer {
     private ApiResponse create400Response() {
         return new ApiResponse()
                 .description(
-                        "Bad request - Invalid input parameters, unsupported format, or corrupted file")
+                        "Bad request - Invalid input parameters, unsupported format, or corrupted"
+                                + " file")
                 .content(
                         new Content()
                                 .addMediaType(
@@ -83,12 +84,14 @@ public class GlobalErrorResponseCustomizer implements GlobalOpenApiCustomizer {
                                                 .schema(
                                                         createErrorSchema(
                                                                 400,
-                                                                "Invalid input parameters or corrupted file",
+                                                                "Invalid input parameters or"
+                                                                        + " corrupted file",
                                                                 "/api/v1/example/endpoint"))
                                                 .example(
                                                         createErrorExample(
                                                                 400,
-                                                                "Invalid input parameters or corrupted file",
+                                                                "Invalid input parameters or"
+                                                                        + " corrupted file",
                                                                 "/api/v1/example/endpoint"))));
     }
 
@@ -103,12 +106,14 @@ public class GlobalErrorResponseCustomizer implements GlobalOpenApiCustomizer {
                                                 .schema(
                                                         createErrorSchema(
                                                                 413,
-                                                                "File size exceeds maximum allowed limit",
+                                                                "File size exceeds maximum allowed"
+                                                                        + " limit",
                                                                 "/api/v1/example/endpoint"))
                                                 .example(
                                                         createErrorExample(
                                                                 413,
-                                                                "File size exceeds maximum allowed limit",
+                                                                "File size exceeds maximum allowed"
+                                                                        + " limit",
                                                                 "/api/v1/example/endpoint"))));
     }
 
@@ -123,12 +128,14 @@ public class GlobalErrorResponseCustomizer implements GlobalOpenApiCustomizer {
                                                 .schema(
                                                         createErrorSchema(
                                                                 422,
-                                                                "File is valid but cannot be processed",
+                                                                "File is valid but cannot be"
+                                                                        + " processed",
                                                                 "/api/v1/example/endpoint"))
                                                 .example(
                                                         createErrorExample(
                                                                 422,
-                                                                "File is valid but cannot be processed",
+                                                                "File is valid but cannot be"
+                                                                        + " processed",
                                                                 "/api/v1/example/endpoint"))));
     }
 
@@ -143,12 +150,14 @@ public class GlobalErrorResponseCustomizer implements GlobalOpenApiCustomizer {
                                                 .schema(
                                                         createErrorSchema(
                                                                 500,
-                                                                "Unexpected error during processing",
+                                                                "Unexpected error during"
+                                                                        + " processing",
                                                                 "/api/v1/example/endpoint"))
                                                 .example(
                                                         createErrorExample(
                                                                 500,
-                                                                "Unexpected error during processing",
+                                                                "Unexpected error during"
+                                                                        + " processing",
                                                                 "/api/v1/example/endpoint"))));
     }
 

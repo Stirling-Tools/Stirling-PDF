@@ -68,10 +68,11 @@ public class ConvertSvgToPDF {
             summary = "Convert SVG to PDF",
             description =
                     "This endpoint converts one or more SVG (Scalable Vector Graphics) files to PDF"
-                            + " format. Each SVG is converted to a separate PDF file. The conversion preserves"
-                            + " vector graphics for crisp output at any resolution - no rasterization occurs."
-                            + " SVG dimensions (width/height) determine the PDF page size; defaults to A4 if"
-                            + " not specified. SVG content is sanitized to prevent XSS attacks.")
+                        + " format. Each SVG is converted to a separate PDF file. The conversion"
+                        + " preserves vector graphics for crisp output at any resolution - no"
+                        + " rasterization occurs. SVG dimensions (width/height) determine the PDF"
+                        + " page size; defaults to A4 if not specified. SVG content is sanitized to"
+                        + " prevent XSS attacks.")
     public ResponseEntity<Resource> convertSvgToPdf(@ModelAttribute SvgToPdfRequest request) {
 
         MultipartFile[] inputFiles = request.getFileInput();

@@ -8,8 +8,11 @@ spotless {
         }
 
         // licenseHeaderFile(file('config/license-header.txt')).updateYearWithLatest(true).yearStringFormat('%s')
-        removeUnusedImports()
-        googleJavaFormat(rootProject.ext.googleJavaFormatVersion).aosp().reorderImports(false)
+        // The google-java-format import remover relies on javac internals that
+        // change between JDK releases. JavaParser keeps this step independent
+        // of the JDK used to run Gradle (the project builds with JDK 25).
+        removeUnusedImports('cleanthat-javaparser-unnecessaryimport')
+        googleJavaFormat(rootProject.ext.googleJavaFormatVersion).aosp().reorderImports(false).reflowLongStrings().skipJavadocFormatting()
 
         importOrder('java', 'javax', 'org', 'com', 'net', 'io', 'jakarta', 'lombok', 'me', 'stirling')
         trimTrailingWhitespace()

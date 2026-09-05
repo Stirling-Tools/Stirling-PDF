@@ -130,7 +130,8 @@ class PdfMarkdownConverterTest {
         if (similarity < THRESHOLD) {
             fail(
                     String.format(
-                            "Markdown output differs from golden file '%s' by %.1f%% (threshold %.0f%%):%n%s",
+                            "Markdown output differs from golden file '%s' by %.1f%% (threshold"
+                                    + " %.0f%%):%n%s",
                             mdName,
                             (1.0 - similarity) * 100,
                             (1.0 - THRESHOLD) * 100,

@@ -211,7 +211,8 @@ public class JwtService implements JwtServiceInterface {
                     keyPair = specificKeyPair.get();
                 } else {
                     log.warn(
-                            "Key ID {} not found in keystore, token may have been signed with an expired key",
+                            "Key ID {} not found in keystore, token may have been signed with an"
+                                    + " expired key",
                             keyId);
 
                     if (keyId.equals(keyPersistenceService.getActiveKey().getKeyId())) {
@@ -259,7 +260,8 @@ public class JwtService implements JwtServiceInterface {
         } catch (ExpiredJwtException e) {
             if (allowExpired) {
                 log.debug(
-                        "Extracting claims from expired token (allowed for refresh grace period): {}",
+                        "Extracting claims from expired token (allowed for refresh grace period):"
+                                + " {}",
                         e.getMessage());
                 return e.getClaims();
             }

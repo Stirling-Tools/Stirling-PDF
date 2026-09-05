@@ -295,7 +295,8 @@ public class FormFillController {
     @Operation(
             summary = "Extract form fields as XLSX",
             description =
-                    "Returns an Excel (XLSX) file containing all form field names and their current values")
+                    "Returns an Excel (XLSX) file containing all form field names and their current"
+                            + " values")
     public ResponseEntity<byte[]> extractXlsx(
             @Parameter(
                             description = "The input PDF file",
@@ -427,8 +428,8 @@ public class FormFillController {
             @Parameter(
                             description =
                                     "Return a ZIP holding the updated PDF plus the field list it"
-                                            + " produced, instead of the bare PDF. Saves re-uploading"
-                                            + " the result just to read its fields back.")
+                                        + " produced, instead of the bare PDF. Saves re-uploading"
+                                        + " the result just to read its fields back.")
                     @RequestParam(value = "includeFields", defaultValue = "false")
                     boolean includeFields)
             throws IOException {

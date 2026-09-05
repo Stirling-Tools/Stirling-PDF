@@ -187,9 +187,8 @@ public interface ProcessedFileRepository
     @Transactional
     @Query(
             "update ProcessedFileEntity e set e.status ="
-                    + " stirling.software.proprietary.policy.ledger.ProcessedFileStatus.INTERRUPTED,"
-                    + " e.updatedAt = :now"
-                    + " where e.status ="
-                    + " stirling.software.proprietary.policy.ledger.ProcessedFileStatus.PROCESSING")
+                + " stirling.software.proprietary.policy.ledger.ProcessedFileStatus.INTERRUPTED,"
+                + " e.updatedAt = :now where e.status ="
+                + " stirling.software.proprietary.policy.ledger.ProcessedFileStatus.PROCESSING")
     int markAllProcessingInterrupted(@Param("now") long now);
 }

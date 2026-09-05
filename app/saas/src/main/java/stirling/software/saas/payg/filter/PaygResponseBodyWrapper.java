@@ -91,7 +91,8 @@ public class PaygResponseBodyWrapper extends HttpServletResponseWrapper implemen
         if (writer != null) {
             // Servlet spec: getOutputStream() and getWriter() are mutually exclusive per request.
             throw new IllegalStateException(
-                    "getWriter() was already called on this response; cannot switch to getOutputStream()");
+                    "getWriter() was already called on this response; cannot switch to"
+                            + " getOutputStream()");
         }
         if (teeOut == null) {
             teeOut = new TeeingServletOutputStream(super.getOutputStream());
@@ -103,7 +104,8 @@ public class PaygResponseBodyWrapper extends HttpServletResponseWrapper implemen
     public PrintWriter getWriter() throws IOException {
         if (teeOut != null) {
             throw new IllegalStateException(
-                    "getOutputStream() was already called on this response; cannot switch to getWriter()");
+                    "getOutputStream() was already called on this response; cannot switch to"
+                            + " getWriter()");
         }
         if (writer == null) {
             String encoding = getCharacterEncoding() != null ? getCharacterEncoding() : "UTF-8";

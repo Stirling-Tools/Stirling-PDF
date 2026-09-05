@@ -62,7 +62,8 @@ public class PdfJsonFontService {
         fontForgeCffConverterAvailable = isCommandAvailable(fontforgeCommand);
         if (!fontForgeCffConverterAvailable) {
             log.warn(
-                    "[FONT-DEBUG] FontForge command '{}' not found; FontForge CFF conversion disabled",
+                    "[FONT-DEBUG] FontForge command '{}' not found; FontForge CFF conversion"
+                            + " disabled",
                     fontforgeCommand);
         } else {
             log.info("[FONT-DEBUG] FontForge command '{}' is available", fontforgeCommand);

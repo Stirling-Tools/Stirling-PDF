@@ -45,8 +45,8 @@ public class ClusterMetrics implements StickyMissRecorder {
                 Counter.builder("stirling_cluster_sticky_miss_total")
                         .description(
                                 "Sticky-session misses: a download for a job whose result lives on"
-                                        + " a peer node landed on this node. High sustained value means"
-                                        + " LB affinity is broken.")
+                                    + " a peer node landed on this node. High sustained value means"
+                                    + " LB affinity is broken.")
                         .register(registry);
         this.rateLimitRejected =
                 Counter.builder("stirling_cluster_ratelimit_rejected_total")

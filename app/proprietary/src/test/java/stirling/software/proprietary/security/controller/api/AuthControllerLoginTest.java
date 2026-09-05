@@ -104,7 +104,8 @@ class AuthControllerLoginTest {
                 .andExpect(
                         jsonPath("$.error")
                                 .value(
-                                        "Username/password authentication is not enabled. Please use the configured authentication method."));
+                                        "Username/password authentication is not enabled. Please"
+                                                + " use the configured authentication method."));
 
         verify(userDetailsService, never()).loadUserByUsername(any());
     }

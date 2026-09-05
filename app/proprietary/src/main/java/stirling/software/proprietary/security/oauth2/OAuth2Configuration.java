@@ -218,7 +218,8 @@ public class OAuth2Configuration {
                 !isStringEmpty(oidcProvider.getIssuer()) || validateProvider(oidcProvider);
         if (isValid) {
             log.info(
-                    "Initialised OIDC OAuth2 provider: registrationId='{}', issuer='{}', redirectUri='{}'",
+                    "Initialised OIDC OAuth2 provider: registrationId='{}', issuer='{}',"
+                            + " redirectUri='{}'",
                     name,
                     oauth.getIssuer(),
                     REDIRECT_URI_PATH + name);

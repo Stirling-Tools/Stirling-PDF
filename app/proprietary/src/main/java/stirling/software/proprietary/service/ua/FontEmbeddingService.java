@@ -85,8 +85,8 @@ public class FontEmbeddingService {
                     missing,
                     "Ghostscript is not installed, so "
                             + missing.size()
-                            + " unembedded font(s) could not be embedded. PDF/UA requires every font"
-                            + " to be embedded.");
+                            + " unembedded font(s) could not be embedded. PDF/UA requires every"
+                            + " font to be embedded.");
         }
 
         Path workingDir = null;

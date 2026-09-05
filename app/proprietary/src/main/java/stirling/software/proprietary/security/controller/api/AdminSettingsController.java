@@ -94,7 +94,7 @@ public class AdminSettingsController {
             summary = "Get all application settings",
             description =
                     "Retrieve all current application settings. Use includePending=true to include"
-                            + " settings that will take effect after restart. Admin access required.")
+                        + " settings that will take effect after restart. Admin access required.")
     @ApiResponses(
             value = {
                 @ApiResponse(responseCode = "200", description = "Settings retrieved successfully"),
@@ -154,7 +154,7 @@ public class AdminSettingsController {
             summary = "Update application settings (delta updates)",
             description =
                     "Update specific application settings using dot notation keys. Only sends"
-                            + " changed values. Changes take effect on restart. Admin access required.")
+                        + " changed values. Changes take effect on restart. Admin access required.")
     @ApiResponses(
             value = {
                 @ApiResponse(responseCode = "200", description = "Settings updated successfully"),
@@ -239,8 +239,8 @@ public class AdminSettingsController {
                     Map.of(
                             "message",
                             String.format(
-                                    "Successfully updated %d setting(s). Changes will take effect on"
-                                            + " application restart.",
+                                    "Successfully updated %d setting(s). Changes will take effect"
+                                            + " on application restart.",
                                     settings.size())));
 
         } catch (IOException e) {
@@ -263,8 +263,9 @@ public class AdminSettingsController {
     @Operation(
             summary = "Get specific settings section",
             description =
-                    "Retrieve settings for a specific section (e.g., security, system, ui). "
-                            + "By default includes pending changes with awaitingRestart flags. Admin access required.")
+                    "Retrieve settings for a specific section (e.g., security, system, ui). By"
+                            + " default includes pending changes with awaitingRestart flags. Admin"
+                            + " access required.")
     @ApiResponses(
             value = {
                 @ApiResponse(
@@ -396,8 +397,8 @@ public class AdminSettingsController {
                     Map.of(
                             "message",
                             String.format(
-                                    "Successfully updated %d setting(s) in section '%s'. Changes will take"
-                                            + " effect on application restart.",
+                                    "Successfully updated %d setting(s) in section '%s'. Changes"
+                                            + " will take effect on application restart.",
                                     updatedCount, escapedSectionName)));
 
         } catch (IOException e) {
@@ -493,11 +494,13 @@ public class AdminSettingsController {
                 String keyName = key.contains(".") ? key.substring(key.lastIndexOf(".") + 1) : key;
                 if (isSensitiveFieldWithPath(keyName, key)) {
                     log.warn(
-                            "Admin attempted to save masked value for sensitive field: {}. This operation is blocked to prevent data loss.",
+                            "Admin attempted to save masked value for sensitive field: {}. This"
+                                    + " operation is blocked to prevent data loss.",
                             key);
                     return ResponseEntity.badRequest()
                             .body(
-                                    "Cannot save masked values for sensitive settings. Please provide the actual value.");
+                                    "Cannot save masked values for sensitive settings. Please"
+                                            + " provide the actual value.");
                 }
             }
 
@@ -531,7 +534,9 @@ public class AdminSettingsController {
     @Operation(
             summary = "Restart the application",
             description =
-                    "Triggers a graceful restart of the Spring Boot application to apply pending settings changes. Uses a restart helper to ensure proper restart. Admin access required.")
+                    "Triggers a graceful restart of the Spring Boot application to apply pending"
+                        + " settings changes. Uses a restart helper to ensure proper restart. Admin"
+                        + " access required.")
     @ApiResponses(
             value = {
                 @ApiResponse(responseCode = "200", description = "Restart initiated successfully"),
@@ -554,7 +559,8 @@ public class AdminSettingsController {
                         .body(
                                 Map.of(
                                         "error",
-                                        "Restart not available in development mode. Please restart the application manually."));
+                                        "Restart not available in development mode. Please restart"
+                                                + " the application manually."));
             }
 
             if (helperJar == null || !Files.isRegularFile(helperJar)) {
@@ -563,7 +569,8 @@ public class AdminSettingsController {
                         .body(
                                 Map.of(
                                         "error",
-                                        "Restart helper not found. Cannot perform application restart."));
+                                        "Restart helper not found. Cannot perform application"
+                                                + " restart."));
             }
 
             // Get current application arguments
@@ -620,7 +627,8 @@ public class AdminSettingsController {
             return ResponseEntity.ok(
                     Map.of(
                             "message",
-                            "Application restart initiated. The server will be back online shortly."));
+                            "Application restart initiated. The server will be back online"
+                                    + " shortly."));
 
         } catch (Exception e) {
             log.error("Failed to initiate restart: {}", e.getMessage(), e);

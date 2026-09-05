@@ -1433,8 +1433,8 @@ class SaasTeamServiceTest {
             assertThatThrownBy(() -> service.acceptInvitation(TOKEN, joiner))
                     .isInstanceOf(IllegalStateException.class)
                     .hasMessage(
-                            "Revoke linked self-hosted instances on this team before joining another"
-                                    + " team.");
+                            "Revoke linked self-hosted instances on this team before joining"
+                                    + " another team.");
 
             // Guard fires before any team mutation.
             verify(membershipRepository, never()).delete(any());

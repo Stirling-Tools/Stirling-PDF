@@ -95,8 +95,8 @@ public class ConvertImgPDFController {
             summary = "Convert PDF to image(s)",
             description =
                     "This endpoint converts a PDF file to image(s) with the specified image format,"
-                            + " color type, and DPI. Users can choose to get a single image or multiple"
-                            + " images.")
+                        + " color type, and DPI. Users can choose to get a single image or multiple"
+                        + " images.")
     public ResponseEntity<?> convertToImage(@ModelAttribute ConvertToImageRequest request)
             throws Exception {
         MultipartFile file = request.getFileInput();

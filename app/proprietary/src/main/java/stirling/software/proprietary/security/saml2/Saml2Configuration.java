@@ -104,7 +104,8 @@ public class Saml2Configuration {
         if (backendUrl == null || backendUrl.isBlank()) {
             backendUrl = "{baseUrl}"; // Fallback to Spring's auto-resolution
             log.warn(
-                    "system.backendUrl not configured - SAML metadata will use request-based URLs. Set system.backendUrl for production use.");
+                    "system.backendUrl not configured - SAML metadata will use request-based URLs."
+                            + " Set system.backendUrl for production use.");
         } else {
             log.info("Using configured backend URL for SAML: {}", backendUrl);
         }
@@ -183,13 +184,13 @@ public class Saml2Configuration {
     private static void logAuthnRequestDetails(AuthnRequest authnRequest) {
         String message =
                 """
-                        AuthnRequest:
+                AuthnRequest:
 
-                        ID: {}
-                        Issuer: {}
-                        IssueInstant: {}
-                        AssertionConsumerService (ACS) URL: {}
-                        """;
+                ID: {}
+                Issuer: {}
+                IssueInstant: {}
+                AssertionConsumerService (ACS) URL: {}
+                """;
         log.debug(
                 message,
                 authnRequest.getID(),
@@ -210,17 +211,17 @@ public class Saml2Configuration {
                                 log.debug("{}: {}", headerName, request.getHeader(headerName)));
         String message =
                 """
-                        HTTP Request Method: {}
-                        Session ID: {}
-                        Request Path: {}
-                        Query String: {}
-                        Remote Address: {}
+                HTTP Request Method: {}
+                Session ID: {}
+                Request Path: {}
+                Query String: {}
+                Remote Address: {}
 
-                        SAML Request Parameters:
+                SAML Request Parameters:
 
-                        SAMLRequest: {}
-                        RelayState: {}
-                        """;
+                SAMLRequest: {}
+                RelayState: {}
+                """;
         log.debug(
                 message,
                 request.getMethod(),

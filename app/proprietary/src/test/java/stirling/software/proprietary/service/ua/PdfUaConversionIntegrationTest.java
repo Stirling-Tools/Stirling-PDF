@@ -83,7 +83,8 @@ class PdfUaConversionIntegrationTest {
             assertNotNull(outcome.pdfBytes(), entry.getKey() + " produced no output");
             report.append(
                     String.format(
-                            "  %-18s declared=%-5s failures=%-3d elements=%-3d artifacts=%-3d altNeeded=%d%n",
+                            "  %-18s declared=%-5s failures=%-3d elements=%-3d artifacts=%-3d"
+                                    + " altNeeded=%d%n",
                             entry.getKey(),
                             outcome.declared(),
                             outcome.validation().totalFailures(),

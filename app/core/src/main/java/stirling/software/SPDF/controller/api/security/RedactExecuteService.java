@@ -73,7 +73,8 @@ class RedactExecuteService {
         boolean hasTextOps = !textValues.isEmpty() || !regexPatterns.isEmpty();
 
         log.info(
-                "[redact/execute] strategy={} textValues={} regexPatterns={} wipePages={} ranges={} imageBoxes={} imagePages={}",
+                "[redact/execute] strategy={} textValues={} regexPatterns={} wipePages={} ranges={}"
+                        + " imageBoxes={} imagePages={}",
                 style.getStrategy(),
                 textValues.size(),
                 regexPatterns.size(),
@@ -107,7 +108,8 @@ class RedactExecuteService {
                 needsOverlayOnly = applyTextRemoval(document, request);
             } else if (overlayOnly) {
                 log.info(
-                        "[redact/execute] overlay-only mode requested — skipping content-stream rewriting");
+                        "[redact/execute] overlay-only mode requested — skipping content-stream"
+                                + " rewriting");
             }
 
             // Reload fresh document on fallback so we overlay onto clean content.
@@ -458,7 +460,8 @@ class RedactExecuteService {
                 }
                 if (end == null) {
                     log.warn(
-                            "[redact/execute] no end anchor after start at (page={}, col={}, y={}) — skipping",
+                            "[redact/execute] no end anchor after start at (page={}, col={}, y={})"
+                                    + " — skipping",
                             start.page + 1,
                             start.col,
                             start.y);

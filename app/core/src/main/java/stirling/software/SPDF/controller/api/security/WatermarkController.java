@@ -75,8 +75,8 @@ public class WatermarkController {
             summary = "Add watermark to a PDF file",
             description =
                     "This endpoint adds a watermark to a given PDF file. Users can specify the"
-                            + " watermark type (text or image), rotation, opacity, width spacer, and height"
-                            + " spacer.")
+                        + " watermark type (text or image), rotation, opacity, width spacer, and"
+                        + " height spacer.")
     public ResponseEntity<Resource> addWatermark(@Valid @ModelAttribute AddWatermarkRequest request)
             throws IOException, Exception {
         MultipartFile pdfFile = request.getFileInput();

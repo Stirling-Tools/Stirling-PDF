@@ -60,10 +60,10 @@ class CustomHtmlSanitizerTest {
                         new String[] {"<p>", "<strong>", "<em>"}),
                 Arguments.of(
                         "<p>Text with <b>bold</b>, <i>italic</i>, <u>underline</u>,"
-                                + " <em>emphasis</em>, <strong>strong</strong>,"
-                                + " <strike>strikethrough</strike>, <s>strike</s>,"
-                                + " <sub>subscript</sub>, <sup>superscript</sup>, <tt>teletype</tt>,"
-                                + " <code>code</code>, <big>big</big>, <small>small</small>.</p>",
+                            + " <em>emphasis</em>, <strong>strong</strong>,"
+                            + " <strike>strikethrough</strike>, <s>strike</s>,"
+                            + " <sub>subscript</sub>, <sup>superscript</sup>, <tt>teletype</tt>,"
+                            + " <code>code</code>, <big>big</big>, <small>small</small>.</p>",
                         new String[] {
                             "<b>bold</b>",
                             "<i>italic</i>",
@@ -271,8 +271,8 @@ class CustomHtmlSanitizerTest {
         // Arrange
         String htmlWithObjects =
                 "<p>Safe content</p><object data=\"data.swf\""
-                        + " type=\"application/x-shockwave-flash\"></object><embed src=\"embed.swf\""
-                        + " type=\"application/x-shockwave-flash\">";
+                    + " type=\"application/x-shockwave-flash\"></object><embed src=\"embed.swf\""
+                    + " type=\"application/x-shockwave-flash\">";
 
         // Act
         String sanitizedHtml = customHtmlSanitizer.sanitize(htmlWithObjects);
@@ -309,11 +309,11 @@ class CustomHtmlSanitizerTest {
         // Arrange
         String complexHtml =
                 "<div class=\"container\">  <h1 style=\"color: blue;\">Welcome</h1>  <p>This is a"
-                        + " <strong>test</strong> with <a href=\"https://example.com\">link</a>.</p> "
-                        + " <table>    <tr><th>Name</th><th>Value</th></tr>    <tr><td>Item"
-                        + " 1</td><td>100</td></tr>  </table>  <img src=\"image.jpg\" alt=\"Test"
-                        + " image\">  <script>alert('XSS');</script>  <iframe"
-                        + " src=\"https://evil.com\"></iframe></div>";
+                    + " <strong>test</strong> with <a href=\"https://example.com\">link</a>.</p> "
+                    + " <table>    <tr><th>Name</th><th>Value</th></tr>    <tr><td>Item"
+                    + " 1</td><td>100</td></tr>  </table>  <img src=\"image.jpg\" alt=\"Test"
+                    + " image\">  <script>alert('XSS');</script>  <iframe"
+                    + " src=\"https://evil.com\"></iframe></div>";
 
         // Act
         String sanitizedHtml = customHtmlSanitizer.sanitize(complexHtml);

@@ -114,7 +114,8 @@ class AuthControllerMfaTest {
                 .andExpect(
                         content()
                                 .json(
-                                        "{\"error\":\"MFA settings are only available for web accounts\"}"));
+                                        "{\"error\":\"MFA settings are only available for web"
+                                                + " accounts\"}"));
     }
 
     @Test

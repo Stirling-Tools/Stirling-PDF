@@ -70,7 +70,8 @@ public interface TeamMembershipRepository extends JpaRepository<TeamMembership, 
      * @return List of team memberships
      */
     @Query(
-            "SELECT tm FROM TeamMembership tm JOIN FETCH tm.user WHERE tm.team.id = :teamId AND tm.role = :role")
+            "SELECT tm FROM TeamMembership tm JOIN FETCH tm.user WHERE tm.team.id = :teamId AND"
+                    + " tm.role = :role")
     List<TeamMembership> findByTeamIdAndRole(
             @Param("teamId") Long teamId, @Param("role") TeamRole role);
 

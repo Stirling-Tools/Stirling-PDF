@@ -175,12 +175,10 @@ public class StripeInvoiceDao {
         }
         String placeholders = invoiceIds.stream().map(id -> "?").collect(Collectors.joining(","));
         String sql =
-                "SELECT i.id AS invoice_id,"
-                        + " (SELECT SUM((l->>'quantity')::int)"
-                        + "    FROM jsonb_array_elements(COALESCE(i.lines->'data', '[]'::jsonb)) AS l"
-                        + "   WHERE l->'price'->'recurring'->>'usage_type' = 'metered') AS qty"
-                        + " FROM stripe.invoices i"
-                        + " WHERE i.id IN ("
+                "SELECT i.id AS invoice_id, (SELECT SUM((l->>'quantity')::int)    FROM"
+                    + " jsonb_array_elements(COALESCE(i.lines->'data', '[]'::jsonb)) AS l   WHERE"
+                    + " l->'price'->'recurring'->>'usage_type' = 'metered') AS qty FROM"
+                    + " stripe.invoices i WHERE i.id IN ("
                         + placeholders
                         + ")";
         try {

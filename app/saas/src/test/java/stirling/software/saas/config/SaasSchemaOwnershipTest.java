@@ -121,7 +121,8 @@ class SaasSchemaOwnershipTest {
                         will not exist on a fresh preview branch.
                           - HIBERNATE_MANAGED: only correct for a table inherited from the \
                         self-hosted app that no Supabase migration creates.
-                        Offending tables -> entities: %s"""
+                        Offending tables -> entities: %s\
+                        """
                                 .formatted(
                                         undeclared.stream()
                                                 .map(t -> t + " (" + mapped.get(t) + ")")

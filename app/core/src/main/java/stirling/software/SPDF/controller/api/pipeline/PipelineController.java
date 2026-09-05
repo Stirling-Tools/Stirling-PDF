@@ -58,8 +58,9 @@ public class PipelineController {
     @Operation(
             summary = "Execute automated PDF processing pipeline",
             description =
-                    "This endpoint processes multiple PDF files through a configurable pipeline of operations. "
-                            + "Users provide files and a JSON configuration defining the sequence of operations to perform.")
+                    "This endpoint processes multiple PDF files through a configurable pipeline of"
+                        + " operations. Users provide files and a JSON configuration defining the"
+                        + " sequence of operations to perform.")
     public ResponseEntity<Resource> handleData(@ModelAttribute HandleDataRequest request)
             throws DatabindException, JacksonException {
         MultipartFile[] files = request.getFileInput();

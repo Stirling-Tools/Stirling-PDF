@@ -57,8 +57,8 @@ public class PosterPdfController {
             summary = "Split large PDF pages into smaller printable chunks",
             description =
                     "This endpoint splits large or oddly-sized PDF pages into smaller chunks"
-                            + " suitable for printing on standard paper sizes (e.g., A4, Letter). Divides each"
-                            + " page into a grid of smaller pages using Apache PDFBox.")
+                        + " suitable for printing on standard paper sizes (e.g., A4, Letter)."
+                        + " Divides each page into a grid of smaller pages using Apache PDFBox.")
     public ResponseEntity<Resource> posterPdf(@ModelAttribute PosterPdfRequest request)
             throws Exception {
 
@@ -214,7 +214,8 @@ public class PosterPdfController {
                             }
 
                             log.trace(
-                                    "Created output page for grid cell [{},{}] of page {}: cropX={}, cropY={}, translate=({}, {})",
+                                    "Created output page for grid cell [{},{}] of page {}:"
+                                            + " cropX={}, cropY={}, translate=({}, {})",
                                     row,
                                     actualCol,
                                     pageIndex,
