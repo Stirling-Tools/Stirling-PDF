@@ -1167,7 +1167,7 @@ description = "Sökväg till WeasyPrint-körbar fil för konvertering från HTML
 label = "WeasyPrint-körbar fil"
 
 [admin.settings.general.customPaths.pipeline]
-label = "Pipeline-kataloger"
+label = "Arbetsflödeskataloger"
 
 [admin.settings.general.customPaths.pipeline.finishedFoldersDir]
 description = "Katalog där bearbetade PDF-filer skrivs ut (lämna tomt för standard: /pipeline/finishedFolders)"
@@ -1175,7 +1175,7 @@ label = "Katalog för färdiga mappar"
 
 [admin.settings.general.customPaths.pipeline.pipelineDir]
 description = "Baskatalog för pipeline-resurser (lämna tomt för standard: /pipeline)"
-label = "Pipeline-katalog"
+label = "Arbetsflödeskatalog"
 
 [admin.settings.general.customPaths.pipeline.watchedFoldersDir]
 description = "Katalog där pipeline övervakar inkommande PDF-filer (lämna tomt för standard: /pipeline/watchedFolders)"
@@ -4746,7 +4746,7 @@ title = "Automatiserad mappskanning"
 
 [home.devSsoGuide]
 desc = "Länk till SSO‑guide"
-tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
+tags = "SSO,enkel inloggning,autentisering,SAML,OAuth,OIDC,inloggning,enterprise,identitetsleverantör,IdP"
 title = "SSO‑guide"
 
 [home.editTableOfContents]
@@ -5863,7 +5863,7 @@ freeLabel = "Alltid kostnadsfritt"
 freeTitle = "Obegränsad PDF-redigering"
 meterBody = "{{limit}} kostnadsfria PDF-filer till att börja med, sedan debitering per PDF upp till din gräns."
 meterLabel = "Användningsbaserat"
-meterTitle = "Automation · AI · API"
+meterTitle = "Automatisering · AI · API"
 
 [payg.member]
 askLeader = "Endast teamägaren kan ändra gränsen."
@@ -5915,7 +5915,7 @@ default = "denna funktion"
 [payg.spendCapMeter]
 barAria = "Kostnad mot gräns"
 capSuffix = "/ {{amount}} gräns"
-metaCategories = "Automation · AI · API-kostnad"
+metaCategories = "Automatisering · AI · API-kostnad"
 resets = "Återställs varje faktureringsperiod"
 
 [payg.state]
@@ -6626,7 +6626,7 @@ title = "Ändra behörigheter"
 
 [pipeline]
 tags = "automatisera,sekvens,skriptad,batchprocess"
-title = "Pipeline (Avancerat)"
+title = "Arbetsflöde (avancerat)"
 
 [plan]
 contact = "Kontakta oss"
@@ -6895,7 +6895,7 @@ step = "Steg {{current}} av {{total}}"
 [portal.accountLink.connect.benefits]
 creditsDetail = "500 kostnadsfria per månad"
 creditsLabel = "Krediter"
-processorDetail = "Pipelines, policyer, källor och granskning"
+processorDetail = "Arbetsflöden, policyer, källor och granskning"
 processorLabel = "Processor"
 teamsDetail = "Kostnadsfritt för upp till 5 användare"
 teamsLabel = "Team"
@@ -6925,7 +6925,7 @@ title = "Inte slutförd ännu"
 [portal.accountLink.connect.done]
 accountLabel = "Konto"
 addPolicy = "Lägg till en policy"
-buildPipeline = "Skapa en pipeline"
+buildPipeline = "Skapa ett arbetsflöde"
 creditsBarLabel = "Återstående kostnadsfria krediter"
 creditsSuffix = "av {{allowance}} kostnadsfria krediter återstår"
 cta = "Klar"
@@ -7188,7 +7188,7 @@ governanceRow = "Styrning"
 governanceValue = "{{label}} · {{count}} policyer"
 handlesLabel = "Din Processor"
 handlesValue = "hanterar {{volume}} krediter / mån"
-pipelinesLabel = "Pipelines"
+pipelinesLabel = "Arbetsflöden"
 policiesMeta = "{{count}} policyer"
 poolCaption = "En pool med {{credits}} krediter för året. Tunga månader lånar från lätta."
 priceLabel = "Ditt år · 12 månader till priset av 10"
@@ -7226,7 +7226,7 @@ poNumberPlaceholder = "t.ex. PO-2026-0142"
 
 [portal.billing.prepaid.pipelines]
 advanced = "Avancerad"
-advancedDesc = "Pipelines driver det mesta av din bearbetning."
+advancedDesc = "Arbetsflöden driver det mesta av din bearbetning."
 none = "Inga"
 noneDesc = "Kör inga pipelines ännu. Slå på dem när som helst."
 standard = "Standard"
@@ -7856,7 +7856,7 @@ inReview = "Under granskning"
 processed = "Bearbetade"
 
 [portal.documents.overview]
-action = "Pipeline / Åtgärd"
+action = "Arbetsflöde / åtgärd"
 product = "Produkt"
 received = "Tid"
 status = "Status"
@@ -7865,7 +7865,7 @@ user = "Användare"
 
 [portal.documents.queue.empty]
 connectSource = "Anslut en källa"
-createPipeline = "Skapa en pipeline"
+createPipeline = "Skapa ett arbetsflöde"
 description = "När källor matar in dokument i dina pipelines visas de här för granskning."
 title = "Inga dokument i kön"
 
@@ -7883,7 +7883,7 @@ rowActions = "Radåtgärder"
 sensitiveLabel = "Känsligt"
 
 [portal.documents.table.columns]
-action = "Pipeline / Åtgärd"
+action = "Arbetsflöde / åtgärd"
 document = "Dokument"
 labels = "Etiketter"
 product = "Produkt"
@@ -8013,15 +8013,15 @@ description = "Misslyckade policykörningar visas här med de åtgärder du kan 
 title = "Inga fel registrerade"
 
 [portal.failures.kind.inputPasswordProtected]
-description = "Pipelinen kunde inte öppna dokumentet eftersom det är lösenordsskyddat. Lås upp det och kör igen, eller hoppa över den här filen."
+description = "Arbetsflödet kunde inte öppna dokumentet eftersom det är lösenordsskyddat. Lås upp det och kör igen, eller hoppa över den här filen."
 title = "Lösenordsskyddat dokument"
 
 [portal.failures.kind.unknown]
-description = "This run failed for a reason Stirling does not yet recognise. The raw message is shown below."
-title = "Unrecognised failure"
+description = "Körningen misslyckades av en anledning som Stirling ännu inte känner igen. Råmeddelandet visas nedan."
+title = "Okänt fel"
 
 [portal.failures.origin]
-pipeline = "Pipeline"
+pipeline = "Arbetsflöde"
 policy = "Policy"
 tool = "Verktygskörning"
 
@@ -8465,11 +8465,11 @@ processor = "PDF-processor"
 
 [portal.pipelines]
 subtitle = "Varje automatiserad dokumentpipeline på backend: en ordnad kedja av åtgärder över en uppsättning källor, körd vid en trigger. Klicka på en rad för dess steg och källor."
-title = "Pipelines"
+title = "Arbetsflöden"
 
 [portal.pipelines.actions]
-newCustomPipeline = "Ny anpassad pipeline"
-newPipeline = "Ny pipeline"
+newCustomPipeline = "Nytt anpassat arbetsflöde"
+newPipeline = "Nytt arbetsflöde"
 
 [portal.pipelines.all]
 title = "Alla pipelines"
@@ -8563,7 +8563,7 @@ hours = "timmar"
 minutes = "minuter"
 
 [portal.pipelines.definition]
-subtitle = "Pipelinen så som den kommer att sparas."
+subtitle = "Arbetsflödet så som det kommer att sparas."
 title = "Definition"
 
 [portal.pipelines.delete]
@@ -8622,7 +8622,7 @@ running_other = "Kör steg {{done}} av {{count}}"
 [portal.pipelines.kpi]
 active = "Aktiva"
 paused = "Pausade"
-total = "Pipelines"
+total = "Arbetsflöden"
 
 [portal.pipelines.run]
 allProcessed_one = "Inget att köra: källans {{count}} dokument har redan bearbetats."
@@ -8642,7 +8642,7 @@ active = "Aktiv"
 paused = "Pausad"
 
 [portal.pipelines.table]
-name = "Pipeline"
+name = "Arbetsflöde"
 sources = "Källor"
 status = "Status"
 steps = "Steg"
@@ -8661,7 +8661,7 @@ manual = "Manuell"
 schedule = "Schemalagd"
 
 [portal.pipelines.type]
-pipeline = "Pipeline"
+pipeline = "Arbetsflöde"
 policy = "Policy"
 
 [portal.policies]
@@ -12196,7 +12196,7 @@ resume = "Återuppta"
 step1Desc = "Dra PDF-filer till valfritt kort för en bevakad mapp – eller skicka dem från fillistan"
 step1Title = "Släpp filer"
 step2Desc = "De konfigurerade verktygen bearbetar varje fil automatiskt"
-step2Title = "Pipelinen körs"
+step2Title = "Arbetsflödet körs"
 step3Desc = "Ladda ned bearbetade filer inifrån mappen"
 step3Title = "Utdata klar"
 title = "Så fungerar bevakade mappar"
