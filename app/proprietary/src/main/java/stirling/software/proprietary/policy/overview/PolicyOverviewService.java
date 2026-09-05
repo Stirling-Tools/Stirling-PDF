@@ -14,18 +14,17 @@ import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
-import stirling.software.proprietary.policy.model.TriggerConfig;
 import stirling.software.proprietary.policy.source.Source;
 import stirling.software.proprietary.policy.source.SourceAccessGuard;
 import stirling.software.proprietary.policy.source.SourceStore;
 import stirling.software.proprietary.policy.store.PolicyStore;
 
 /**
- * Builds the Pipelines overview: every policy the caller's team owns, each annotated with its
- * referenced sources (resolved to display names), its pipeline steps, and a trigger/output summary.
- * Source names are resolved from the team's sources in memory rather than persisted on the policy,
- * so the view always reflects the live source set. This is the "all pipelines" admin surface; the
- * user-facing Policies page builds only a friendly subset of the same backend policies.
+ * Builds the unified Pipelines overview: one row per policy the caller's team owns, with its
+ * sources resolved to live display names, its steps, and a trigger/output summary. This lists EVERY
+ * policy - both pipelines built in the full builder and the friendly "suggested" policies - since
+ * the two surfaces were merged (a policy is a pipeline the org requires). No catalogue filter any
+ * more.
  */
 @Service
 @RequiredArgsConstructor
@@ -37,7 +36,7 @@ public class PolicyOverviewService {
     private final SourceAccessGuard sourceAccessGuard;
 
     public PoliciesOverviewResponse overview() {
-        List<Policy> policies = policyAccessGuard.visibleFrom(policyStore);
+        List<Policy> policies = policyAccessGuard.visibleFrom(policyStore).stream().toList();
         Map<String, String> sourceNames = sourceNames();
 
         List<PolicyView> views =
@@ -72,8 +71,10 @@ public class PolicyOverviewService {
                 policy.id(),
                 policy.name(),
                 policy.enabled(),
+                policy.required(),
+                iconKey(policy),
                 policy.enabled() ? "active" : "paused",
-                triggerSummary(policy.trigger()),
+                triggerSummary(policy),
                 sources,
                 steps,
                 outputSummary(policy, sourceNames),
@@ -95,9 +96,36 @@ public class PolicyOverviewService {
         return outputSummary(policy.output());
     }
 
-    /** A null trigger is a manual-only policy; otherwise the trigger's type keys the summary. */
-    private static String triggerSummary(TriggerConfig trigger) {
-        return trigger == null ? "manual" : trigger.type();
+    /**
+     * The list-row icon key. The policy's first-class {@code icon} wins; otherwise a
+     * template-derived policy falls back to its {@code categoryId} (the template-identity marker
+     * the frontend maps to the category glyph). Empty when neither is set, so the frontend shows
+     * its default.
+     */
+    private static String iconKey(Policy policy) {
+        if (!policy.icon().isBlank()) {
+            return policy.icon();
+        }
+        OutputSpec output = policy.output();
+        if (output != null
+                && output.options().get("categoryId") instanceof String category
+                && !category.isBlank()) {
+            return category;
+        }
+        return "";
+    }
+
+    /**
+     * Summarise a policy's triggers for the overview row: "manual" when no input is triggered,
+     * otherwise the distinct trigger types across its inputs (e.g. "folder-watch, schedule").
+     *
+     * <p>An editor policy has no wire input to trigger, but it is not manual either - it fires in
+     * the editor on every upload or export, so it reports that rather than reading as on-demand.
+     */
+    private static String triggerSummary(Policy policy) {
+        List<String> types = policy.triggerTypes();
+        if (!types.isEmpty()) return String.join(", ", types);
+        return policy.editorRunOn().map(runOn -> "editor-" + runOn).orElse("manual");
     }
 
     private static String outputSummary(OutputSpec output) {

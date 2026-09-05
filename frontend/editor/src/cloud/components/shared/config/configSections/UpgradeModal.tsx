@@ -25,9 +25,9 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBackRounded";
 import ShieldIcon from "@mui/icons-material/ShieldOutlined";
 import CheckCircleIcon from "@mui/icons-material/CheckCircleRounded";
 import { useTranslation } from "react-i18next";
-// eslint-disable-next-line no-restricted-imports
+// oxlint-disable-next-line no-restricted-imports
 import "./UpgradeModal.css";
-// eslint-disable-next-line no-restricted-imports
+// oxlint-disable-next-line no-restricted-imports
 import SpendCapControl from "./SpendCapControl";
 
 /**
@@ -69,10 +69,9 @@ interface UpgradeModalProps {
   /** ISO 4217 currency code for the cap input. Default USD. */
   currency?: "USD" | "EUR" | "GBP";
   /**
-   * The team's one-time free grant in documents — the real {@code
+   * The team's free grant in documents per billing period — the real {@code
    * wallet.freeAllowance}, threaded from the free-leader view so the step copy
-   * quotes the backend's number instead of a hardcoded one. A lifetime grant,
-   * not a monthly one.
+   * quotes the backend's number instead of a hardcoded one.
    */
   freeLimit: number;
   /**

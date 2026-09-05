@@ -118,7 +118,6 @@ export function SelectionAPIBridge() {
 
     const buildApi = () => ({
       copyToClipboard: () => selection.copyToClipboard(),
-      getSelectedText: () => selection.getSelectedText(),
       getFormattedSelection: () => selection.getFormattedSelection(),
       selectAll: async (totalPages: number) => {
         const docId = activeDocumentId;
@@ -137,7 +136,7 @@ export function SelectionAPIBridge() {
       api: buildApi(),
     });
 
-    const unsubChange = selection.onSelectionChange((event: any) => {
+    const unsubChange = selection.onSelectionChange((event) => {
       const hasText = !!event?.selection;
       hasSelectionRef.current = hasText;
 

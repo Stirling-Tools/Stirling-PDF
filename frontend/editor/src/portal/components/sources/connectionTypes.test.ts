@@ -136,6 +136,74 @@ describe("isFieldVisible", () => {
   });
 });
 
+describe("the n8n preset", () => {
+  const n8n = byId("n8n");
+  const field = (key: string) => {
+    const found = n8n.fields.find((f) => f.key === key);
+    if (!found) throw new Error(`no field ${key}`);
+    return found;
+  };
+
+  it("offers only the authentication an n8n Webhook node can be set to", () => {
+    // The node does None, Basic and Header. Offering bearer or the token-login dance would be
+    // auth the operator cannot configure on the other end.
+    expect(field("authType").options?.map((o) => o.value)).toEqual([
+      "NONE",
+      "HEADER",
+      "BASIC",
+    ]);
+  });
+
+  it("shows each credential only for the auth it belongs to", () => {
+    expect(isFieldVisible(field("headerName"), { authType: "HEADER" })).toBe(
+      true,
+    );
+    expect(isFieldVisible(field("headerName"), { authType: "NONE" })).toBe(
+      false,
+    );
+    expect(isFieldVisible(field("username"), { authType: "BASIC" })).toBe(true);
+    expect(isFieldVisible(field("username"), { authType: "HEADER" })).toBe(
+      false,
+    );
+  });
+
+  it("lets the operator's answer override the preset's default of no auth", () => {
+    // buildConnectionConfig spreads presetConfig first, so an unanswered form still yields NONE
+    // but a chosen HEADER must win - otherwise the credential is stored and never sent.
+    const open = buildConnectionConfig(n8n, {
+      baseUrl: "https://n8n.acme.test/webhook/abc",
+    });
+    expect(open.authType).toBe("NONE");
+
+    const secured = buildConnectionConfig(n8n, {
+      baseUrl: "https://n8n.acme.test/webhook/abc",
+      authType: "HEADER",
+      headerName: "X-N8N-Key",
+      token: "s3cr3t",
+    });
+    expect(secured).toMatchObject({
+      authType: "HEADER",
+      headerName: "X-N8N-Key",
+      token: "s3cr3t",
+    });
+  });
+
+  it("recovers an n8n Cloud connection from its host", () => {
+    expect(
+      connectionTypeOf("API", {
+        baseUrl: "https://acme.app.n8n.cloud/webhook/abc",
+      })?.id,
+    ).toBe("n8n");
+  });
+
+  it("recovers a self-hosted n8n from its marker, since the host names nothing", () => {
+    const config = buildConnectionConfig(n8n, {
+      baseUrl: "https://automation.acme.internal/webhook/abc",
+    });
+    expect(connectionTypeOf("API", config)?.id).toBe("n8n");
+  });
+});
+
 describe("resolving a stored connection back to its preset", () => {
   it("keeps a Discord connection as Discord, not the first API preset", () => {
     // Seventeen presets share integrationType "API". Matching on that alone returned whichever

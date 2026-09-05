@@ -79,7 +79,8 @@ export const I18N_PROJECTS: TranslationProject[] = [
       // SignSettings / SavedSignaturesSection resolve every key as
       // t(`${scope}.${key}`); scope and leaf only ever exist as separate literals.
       /^(sign|addText|addImage)\./,
-      // SettingsSearchBar indexes whole subtrees via t(prefix, { returnObjects }).
+      // Super search's settings content matching (settingsContentSearch)
+      // indexes whole subtrees via t(prefix, { returnObjects }).
       /^admin\.settings\./,
       /^settings\./,
       /^account\./,
@@ -108,12 +109,14 @@ export const I18N_PROJECTS: TranslationProject[] = [
       // "portal.policies.operations" - the shape heuristic treats that interpolation as one
       // segment, so this whole catalogue-driven family is matched here instead.
       /^portal\.policies\.operations\./,
-      // Policy field labels + option display copy are looked up with keys
-      // derived from catalogue data (t(`policies.field.${key}`),
-      // t(`policyOption.${id}`)) in the PolicyFieldRows and setup wizards —
-      // invisible to the static scan. The raw catalogue value is the fallback.
-      /^policies\.field\./,
-      /^policyOption\./,
+      // A failure's disabled reason arrives from the server as a key and is rendered with
+      // t(thatKey), so nothing in source names it, but the copy still has to exist.
+      /^portal\.failures\.disabled\./,
+      // Encryption panel copy keyed by backend enum values: key status, write
+      // state, migration state, and the reason a status read was refused. Each
+      // is t(`...${value}`) where the value comes from the API response.
+      /^portal\.infrastructure\.encryption\.(status|writeState|unavailable)\./,
+      /^portal\.infrastructure\.encryption\.migration\.state\./,
     ],
     minUsedKeys: 100,
     minLocaleKeys: 100,
@@ -218,14 +221,15 @@ const extractStaticKeys = (file: string): MissingKey[] => {
     file,
     code,
     ts.ScriptTarget.Latest,
-    true,
+    false,
     getScriptKind(file),
   );
   const found: MissingKey[] = [];
 
   const record = (node: ts.Node, key: string, fallback = "") => {
+    // Pass sourceFile explicitly: the tree is parsed without parent links.
     const { line, character } = sourceFile.getLineAndCharacterOfPosition(
-      node.getStart(),
+      node.getStart(sourceFile),
     );
     found.push({ key, fallback, file, line: line + 1, column: character + 1 });
   };
@@ -287,8 +291,11 @@ const extractStaticKeys = (file: string): MissingKey[] => {
  * (not just t() sites; keys are often assembled in helpers/constants), but
  * only kept if a shape carries an identifier-like static fragment.
  */
-const extractTemplateShapes = (file: string, acc: Set<string>): void => {
-  const code = fs.readFileSync(file, "utf8");
+const extractTemplateShapes = (
+  file: string,
+  code: string,
+  acc: Set<string>,
+): void => {
   if (!code.includes("${")) return;
 
   const sourceFile = ts.createSourceFile(
@@ -317,6 +324,53 @@ const extractTemplateShapes = (file: string, acc: Set<string>): void => {
   };
 
   ts.forEachChild(sourceFile, visit);
+};
+
+interface TrieNode {
+  children: Map<number, TrieNode>;
+  needle?: string;
+}
+
+/**
+ * Which of `needles` appear as a substring of `text`.
+ *
+ * Same answer as `needles.filter((n) => text.includes(n))`, but walks the text
+ * once against a trie of every needle rather than once per needle: the locale
+ * carries thousands of keys and the joined source is tens of MB, so per-key
+ * scanning dominated the suite's runtime.
+ */
+const findSubstrings = (
+  text: string,
+  needles: Iterable<string>,
+): Set<string> => {
+  const root: TrieNode = { children: new Map() };
+  for (const needle of needles) {
+    if (!needle) continue;
+    let node = root;
+    for (let i = 0; i < needle.length; i++) {
+      const code = needle.charCodeAt(i);
+      let next = node.children.get(code);
+      if (!next) {
+        next = { children: new Map() };
+        node.children.set(code, next);
+      }
+      node = next;
+    }
+    node.needle = needle;
+  }
+
+  const found = new Set<string>();
+  for (let start = 0; start < text.length; start++) {
+    let node = root.children.get(text.charCodeAt(start));
+    let at = start;
+    while (node) {
+      if (node.needle !== undefined) found.add(node.needle);
+      at += 1;
+      if (at >= text.length) break;
+      node = node.children.get(text.charCodeAt(at));
+    }
+  }
+  return found;
 };
 
 const shapeToMatcher = (shape: string): RegExp => {
@@ -363,19 +417,24 @@ export function findUnusedKeys(project: TranslationProject): {
 } {
   const localeKeys = Array.from(collectLocaleKeys(project.localeFile));
   const files = listSourceFiles([project.srcRoot]);
-  const source = files.map((file) => fs.readFileSync(file, "utf8")).join("\n");
+  const contents = files.map((file) => fs.readFileSync(file, "utf8"));
+  const source = contents.join("\n");
 
   const shapes = new Set<string>();
-  for (const file of files) extractTemplateShapes(file, shapes);
+  files.forEach((file, i) => extractTemplateShapes(file, contents[i], shapes));
   const matchers = [...shapes].map(shapeToMatcher);
   const patterns = project.ignoredKeyPatterns ?? [];
 
-  const unused = localeKeys.filter((key) => {
-    if (patterns.some((re) => re.test(key))) return false;
+  const candidates = localeKeys.filter(
+    (key) => !patterns.some((re) => re.test(key)),
+  );
+  // Direct: the literal appears anywhere in source (static t(), i18nKey,
+  // constants, comments). Plural variants count when their base is referenced.
+  const referenced = findSubstrings(source, candidates.flatMap(getLookupKeys));
+
+  const unused = candidates.filter((key) => {
     const lookups = getLookupKeys(key);
-    // Direct: the literal appears anywhere in source (static t(), i18nKey,
-    // constants, comments). Plural variants count when their base is referenced.
-    if (lookups.some((k) => source.includes(k))) return false;
+    if (lookups.some((k) => referenced.has(k))) return false;
     // Dynamic: the key matches a template-literal shape from source.
     return !lookups.some((k) => matchers.some((re) => re.test(k)));
   });

@@ -1,11 +1,11 @@
 import { http, HttpResponse, delay } from "msw";
 import type {
   PipelineKpi,
-  PipelineStatus,
   PipelineView,
   PipelinesOverviewResponse,
   Policy,
 } from "@portal/api/pipelines";
+import { getCataloguePolicies } from "@portal/mocks/handlers/policies";
 
 /**
  * Stateful mock for the Pipelines surface so the portal works fully offline with
@@ -40,11 +40,15 @@ function seedPipelines(): StoredPolicy[] {
       name: "Redaction sweep",
       owner: "security@acme.com",
       enabled: true,
-      trigger: {
-        type: "schedule",
-        options: { schedule: { type: "every", count: 6, unit: "HOURS" } },
-      },
-      sourceIds: ["src-claims"],
+      inputs: [
+        {
+          sourceId: "src-claims",
+          trigger: {
+            type: "schedule",
+            options: { schedule: { type: "every", count: 6, unit: "HOURS" } },
+          },
+        },
+      ],
       steps: [
         {
           operation: "/api/v1/security/auto-redact",
@@ -53,26 +57,47 @@ function seedPipelines(): StoredPolicy[] {
         { operation: "/api/v1/security/sanitize-pdf", parameters: {} },
       ],
       output: { type: "inline", options: {} },
-      outputIds: ["src-archive", "src-contracts"],
+      outputIds: ["src-archive"],
     },
     {
       id: "plc-archive",
       name: "Archive compressor",
       owner: "data-eng@acme.com",
       enabled: true,
-      trigger: null,
-      sourceIds: ["src-contracts", "src-archive"],
+      inputs: [{ sourceId: "src-contracts", trigger: null }],
       steps: [{ operation: "/api/v1/misc/compress-pdf", parameters: {} }],
       output: { type: "inline", options: {} },
       outputIds: ["src-contracts"],
+    },
+    {
+      // A chain long enough to overflow the builder's graph column, which is where the graph has to
+      // start scrolling instead of pushing the inspector off the page.
+      id: "plc-long",
+      name: "Full document pipeline",
+      owner: "ops@acme.com",
+      enabled: true,
+      inputs: [{ sourceId: "src-claims", trigger: null }],
+      steps: [
+        { operation: "/api/v1/misc/repair", parameters: {} },
+        { operation: "/api/v1/misc/ocr-pdf", parameters: {} },
+        { operation: "/api/v1/general/rotate-pdf", parameters: {} },
+        { operation: "/api/v1/general/crop", parameters: {} },
+        { operation: "/api/v1/general/remove-pages", parameters: {} },
+        { operation: "/api/v1/misc/add-page-numbers", parameters: {} },
+        { operation: "/api/v1/security/add-watermark", parameters: {} },
+        { operation: "/api/v1/security/sanitize-pdf", parameters: {} },
+        { operation: "/api/v1/misc/flatten", parameters: {} },
+        { operation: "/api/v1/misc/compress-pdf", parameters: {} },
+      ],
+      output: { type: "inline", options: {} },
+      outputIds: ["src-archive"],
     },
     {
       id: "plc-onboarding",
       name: "Onboarding OCR (paused)",
       owner: "ops@acme.com",
       enabled: false,
-      trigger: null,
-      sourceIds: [],
+      inputs: [],
       steps: [
         { operation: "/api/v1/misc/ocr-pdf", parameters: {} },
         { operation: "/api/v1/misc/flatten", parameters: {} },
@@ -91,33 +116,68 @@ function nextId(): string {
   return `plc_${Date.now().toString(36)}_${idCounter}`;
 }
 
-function deriveStatus(policy: StoredPolicy): PipelineStatus {
-  return policy.enabled ? "active" : "paused";
+/** Stored supporting files a step binds as `asset:<id>` (PolicyAssetController), for mock mode. */
+interface StoredAsset {
+  id: string;
+  fileName: string;
+  contentType: string | null;
+  size: number;
+  createdAt: number;
+}
+let assetStore: StoredAsset[] = [];
+let assetCounter = 0;
+function nextAssetId(): string {
+  assetCounter += 1;
+  return `ast_${Date.now().toString(36)}_${assetCounter}`;
 }
 
-function toView(policy: StoredPolicy): PipelineView {
+// A pipeline-store record has inputs/outputIds; a catalogue record (WirePolicy) does not, so both
+// are read defensively here.
+type OverviewPolicy = Partial<Policy> & {
+  id: string;
+  name: string;
+  enabled: boolean;
+};
+
+function toView(policy: OverviewPolicy): PipelineView {
+  const inputs = policy.inputs ?? [];
+  const outputIds = policy.outputIds ?? [];
+  const triggers = [
+    ...new Set(
+      inputs
+        .map((input) => input.trigger?.type)
+        .filter((type): type is string => type != null),
+    ),
+  ];
+  // Mirror the backend: the first-class icon wins, else the template's categoryId marker, else none.
+  const options = policy.output?.options ?? {};
+  const icon =
+    policy.icon ||
+    (typeof options.categoryId === "string" ? options.categoryId : "");
   return {
     id: policy.id,
     name: policy.name,
     enabled: policy.enabled,
-    status: deriveStatus(policy),
-    trigger: policy.trigger?.type ?? "manual",
-    sources: policy.sourceIds.map((id) => ({
-      id,
-      name: SOURCE_NAMES[id] ?? id,
+    required: policy.required ?? false,
+    icon,
+    status: policy.enabled ? "active" : "paused",
+    trigger: triggers.length === 0 ? "manual" : triggers.join(", "),
+    sources: inputs.map((input) => ({
+      id: input.sourceId,
+      name: SOURCE_NAMES[input.sourceId] ?? input.sourceId,
     })),
-    steps: policy.steps.map((s) => s.operation),
+    steps: policy.steps?.map((s) => s.operation) ?? [],
     output:
-      policy.outputIds && policy.outputIds.length > 0
-        ? policy.outputIds.map((id) => SOURCE_NAMES[id] ?? id).join(", ")
+      outputIds.length > 0
+        ? outputIds.map((id) => SOURCE_NAMES[id] ?? id).join(", ")
         : (policy.output?.type ?? "inline"),
     owner: policy.owner ?? "you@acme.com",
   };
 }
 
-function buildKpis(): PipelineKpi[] {
-  const total = store.length;
-  const active = store.filter((p) => p.enabled).length;
+function buildKpis(policies: OverviewPolicy[]): PipelineKpi[] {
+  const total = policies.length;
+  const active = policies.filter((p) => p.enabled).length;
   return [
     { value: total, description: "pipelines" },
     { value: active, description: "running automatically" },
@@ -125,11 +185,18 @@ function buildKpis(): PipelineKpi[] {
   ];
 }
 
+// The unified overview lists EVERY policy (pipelines + catalogue), mirroring the real backend now
+// that the catalogue filter is gone. The two mock stores are joined here, deduped by id.
 function buildOverview(): PipelinesOverviewResponse {
-  const pipelines = store
+  const byId = new Map<string, OverviewPolicy>();
+  for (const p of store) byId.set(p.id, p);
+  for (const p of getCataloguePolicies())
+    if (!byId.has(p.id)) byId.set(p.id, p as OverviewPolicy);
+  const all = [...byId.values()];
+  const pipelines = all
     .map(toView)
     .sort((a, b) => a.name.localeCompare(b.name));
-  return { kpis: buildKpis(), pipelines };
+  return { kpis: buildKpis(all), pipelines };
 }
 
 export const pipelinesHandlers = [
@@ -150,6 +217,33 @@ export const pipelinesHandlers = [
         supportedSourceTypes: ["folder"],
       },
     ]);
+  }),
+
+  // Supporting files. Registered before the `/policies/:id` matcher so "assets" isn't read as an id.
+  http.get("/api/v1/policies/assets", async () => {
+    await delay(80);
+    return HttpResponse.json(assetStore);
+  }),
+
+  http.post("/api/v1/policies/assets", async ({ request }) => {
+    const form = await request.formData();
+    const file = form.get("file");
+    if (!(file instanceof File)) {
+      return HttpResponse.json(
+        { detail: "Uploaded file is empty" },
+        { status: 400 },
+      );
+    }
+    await delay(120);
+    const asset: StoredAsset = {
+      id: nextAssetId(),
+      fileName: file.name || "asset",
+      contentType: file.type || null,
+      size: file.size,
+      createdAt: Date.now(),
+    };
+    assetStore = [...assetStore, asset];
+    return HttpResponse.json(asset);
   }),
 
   // Run status: the mock completes runs immediately, so polling resolves at once.

@@ -11,9 +11,9 @@
  * }
  */
 
-export interface SettingsWithPending<T = any> {
+export interface SettingsWithPending<T = unknown> {
   _pending?: Partial<T>;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 /**
@@ -97,7 +97,7 @@ export function hasPendingChanges<T extends SettingsWithPending>(
 export function getPendingValue<T extends SettingsWithPending>(
   settings: T | null | undefined,
   fieldPath: string,
-): any {
+): unknown {
   if (!settings?._pending) {
     return undefined;
   }
@@ -115,7 +115,7 @@ export function getPendingValue<T extends SettingsWithPending>(
 export function getCurrentValue<T extends SettingsWithPending>(
   settings: T | null | undefined,
   fieldPath: string,
-): any {
+): unknown {
   if (!settings) {
     return undefined;
   }
@@ -130,11 +130,11 @@ export function getCurrentValue<T extends SettingsWithPending>(
 /**
  * Deep merge two objects. Second object takes priority.
  */
-function deepMerge(target: any, source: any): any {
-  if (!source) return target;
-  if (!target) return source;
+function deepMerge(target: unknown, source: unknown): Record<string, unknown> {
+  const base = isPlainObject(target) ? target : {};
+  if (!isPlainObject(source)) return base;
 
-  const result = { ...target };
+  const result: Record<string, unknown> = { ...base };
 
   for (const key in source) {
     if (Object.prototype.hasOwnProperty.call(source, key)) {
@@ -155,17 +155,17 @@ function deepMerge(target: any, source: any): any {
 /**
  * Get nested value using dot notation.
  */
-function getNestedValue(obj: any, path: string): any {
+function getNestedValue(obj: unknown, path: string): unknown {
   if (!obj || !path) return undefined;
 
   const parts = path.split(".");
-  let current = obj;
+  let current: unknown = obj;
 
   for (const part of parts) {
     if (current === null || current === undefined) {
       return undefined;
     }
-    current = current[part];
+    current = (current as Record<string, unknown>)[part];
   }
 
   return current;
@@ -174,8 +174,10 @@ function getNestedValue(obj: any, path: string): any {
 /**
  * Check if value is a plain object (not array, not null, not Date, etc.)
  */
-function isPlainObject(value: any): boolean {
+function isPlainObject(value: unknown): value is Record<string, unknown> {
   return (
-    value !== null && typeof value === "object" && value.constructor === Object
+    value !== null &&
+    typeof value === "object" &&
+    (value as { constructor?: unknown }).constructor === Object
   );
 }

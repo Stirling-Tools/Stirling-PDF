@@ -8,7 +8,9 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import stirling.software.proprietary.policy.asset.PolicyAssetRefs;
 import stirling.software.proprietary.policy.model.Policy;
+import stirling.software.proprietary.policy.model.PolicyBinding;
 
 /**
  * In-memory {@link PolicyStore} for tests and any future no-database mode. {@link JpaPolicyStore}
@@ -32,12 +34,14 @@ public class InProcessPolicyStore implements PolicyStore {
                         policy.name(),
                         policy.owner(),
                         policy.enabled(),
-                        policy.trigger(),
-                        policy.sourceIds(),
+                        policy.required(),
+                        policy.icon(),
+                        policy.inputs(),
                         policy.steps(),
                         policy.output(),
                         policy.outputIds(),
-                        policy.teamId());
+                        policy.teamId(),
+                        policy.editor());
         policies.put(id, stored);
         // Existing policy keeps its position; a new one appends to the end of its team's queue.
         sortOrders.computeIfAbsent(id, key -> nextSortOrder(stored.teamId()));
@@ -77,12 +81,18 @@ public class InProcessPolicyStore implements PolicyStore {
     }
 
     @Override
-    public List<Policy> findByTriggerType(String triggerType) {
+    public boolean anyPolicyReferences(String assetId) {
         return policies.values().stream()
-                .filter(Policy::enabled)
-                .filter(policy -> policy.trigger() != null)
-                .filter(policy -> triggerType.equals(policy.trigger().type()))
-                .toList();
+                .anyMatch(
+                        policy ->
+                                PolicyAssetRefs.referencedAssetIds(policy.steps())
+                                        .contains(assetId));
+    }
+
+    @Override
+    public List<PolicyBinding> findBindingsByTriggerType(String triggerType) {
+        List<Policy> enabled = policies.values().stream().filter(Policy::enabled).toList();
+        return PolicyBinding.matching(enabled, triggerType);
     }
 
     @Override

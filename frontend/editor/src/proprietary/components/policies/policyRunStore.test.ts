@@ -1,5 +1,6 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import {
+  appliedPoliciesFor,
   dispatchKey,
   getRun,
   isDispatched,
@@ -14,7 +15,7 @@ import {
 function rec(over: Partial<PolicyRunRecord>): PolicyRunRecord {
   return {
     runId: "r1",
-    categoryId: "security",
+    policyKey: "security",
     fileId: "f1",
     fileName: "f.pdf",
     fileSize: 10,
@@ -36,6 +37,25 @@ describe("policyRunStore", () => {
   beforeEach(() => {
     localStorage.clear();
     resetPolicyRuns();
+  });
+
+  it("reads a run recorded before the key was renamed", async () => {
+    // Persisted records predate policyKey; without the migration their policy is undefined, so
+    // the badge disappears and the chain re-runs from the start. The store reads storage at
+    // import, so this asserts against a fresh one rather than the module already loaded.
+    localStorage.setItem(
+      "stirling-policy-runs",
+      JSON.stringify({
+        runs: [{ ...rec({}), policyKey: undefined, categoryId: "security" }],
+        dispatched: [],
+        waveStartedAt: 0,
+      }),
+    );
+    vi.resetModules();
+
+    const fresh = await import("@app/components/policies/policyRunStore");
+
+    expect(fresh.getRun("r1")?.policyKey).toBe("security");
   });
 
   it("records a run start and marks the (policy, file) pair dispatched", () => {
@@ -81,6 +101,82 @@ describe("policyRunStore", () => {
     expect(read("stirling-policy-runs").runs).toHaveLength(0);
     // The (policy, file) pair stays dispatched so the auto-run doesn't re-fire on its own.
     expect(isDispatched("security", "f1")).toBe(true);
+  });
+
+  it("a real backend run still claims the dispatch key", () => {
+    recordRunStart(rec({ runId: "srv-1", policyKey: "classification" }));
+    expect(isDispatched("classification", "f1")).toBe(true);
+  });
+
+  describe("appliedPoliciesFor", () => {
+    it("walks a rewriting chain back to the uploaded document", () => {
+      recordRunStart(
+        rec({ runId: "r-w", policyKey: "watermark", fileId: "f1" }),
+      );
+      updateRun("r-w", { status: "COMPLETED", outputFileIds: ["f2"] });
+      recordRunStart(
+        rec({ runId: "r-s", policyKey: "security", fileId: "f2" }),
+      );
+      updateRun("r-s", { status: "COMPLETED", outputFileIds: ["f3"] });
+
+      expect([...appliedPoliciesFor("f3")].sort()).toEqual([
+        "security",
+        "watermark",
+      ]);
+    });
+
+    it("counts an annotating run, which names its input as its own output", () => {
+      recordRunStart(
+        rec({ runId: "r-c", policyKey: "classification", fileId: "f1" }),
+      );
+      updateRun("r-c", { status: "COMPLETED", outputFileIds: ["f1"] });
+
+      expect([...appliedPoliciesFor("f1")]).toEqual(["classification"]);
+    });
+
+    it("does not count a browser-local pass as the policy having run", () => {
+      // The local heuristic settles COMPLETED with the input as its own output. Counting it
+      // would make a retry skip classification, killing the escalation #7667 restored.
+      recordRunStart(
+        rec({
+          runId: "local-c",
+          policyKey: "classification",
+          fileId: "f1",
+          target: "local",
+          browserLocal: true,
+        }),
+      );
+      updateRun("local-c", { status: "COMPLETED", outputFileIds: ["f1"] });
+
+      expect(appliedPoliciesFor("f1").size).toBe(0);
+    });
+
+    it("keeps climbing past an annotating run rather than stalling on it", () => {
+      // The annotating run's output IS its input, so the walk must not treat that as a
+      // lineage step - otherwise the cursor never moves and earlier policies are missed.
+      recordRunStart(
+        rec({ runId: "r-w", policyKey: "watermark", fileId: "f1" }),
+      );
+      updateRun("r-w", { status: "COMPLETED", outputFileIds: ["f2"] });
+      recordRunStart(
+        rec({ runId: "r-c", policyKey: "classification", fileId: "f2" }),
+      );
+      updateRun("r-c", { status: "COMPLETED", outputFileIds: ["f2"] });
+
+      expect([...appliedPoliciesFor("f2")].sort()).toEqual([
+        "classification",
+        "watermark",
+      ]);
+    });
+
+    it("ignores a run that failed, so it stays eligible to run again", () => {
+      recordRunStart(
+        rec({ runId: "r-f", policyKey: "security", fileId: "f1" }),
+      );
+      updateRun("r-f", { status: "FAILED", outputFileIds: ["f2"] });
+
+      expect(appliedPoliciesFor("f2").size).toBe(0);
+    });
   });
 
   it("never evicts in-flight runs, even past the soft cap", () => {

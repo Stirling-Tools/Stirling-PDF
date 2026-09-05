@@ -186,8 +186,9 @@ system:
   maxDPI: 500 # Maximum allowed DPI for PDF to image conversion
   corsAllowedOrigins: [] # List of allowed origins for CORS (e.g. ['http://localhost:5173', 'https://app.example.com']). WARNING: leaving this empty falls back to allowing ALL origins (with credentials), it does NOT disable CORS. Set explicit origins to lock it down.
   backendUrl: "" # Backend base URL for SAML/OAuth/API callbacks (e.g. 'http://localhost:8080' for dev, 'https://api.example.com' for production). REQUIRED for SSO authentication to work correctly. This is where your IdP will send SAML responses and OAuth callbacks. Leave empty to default to 'http://localhost:8080' in development.
-  frontendUrl: "" # Frontend URL for invite email links (e.g. 'https://app.example.com'). Optional - if not set, will use backendUrl. This is the URL users click in invite emails.
+  frontendUrl: "" # Base URL of the web app, as a browser reaches it (e.g. 'https://app.example.com', or 'https://example.com/app' if served under a base path). Optional - if not set, will use backendUrl. Used for any link handed to a browser: invite emails, share links, mobile QR codes, and the account-link handshake.
   enableMobileScanner: true # Enable mobile phone QR code upload feature. Requires frontendUrl to be configured.
+  enableMobileSignature: true # Enable drawing signatures on a phone via QR code from the Sign tool. Requires frontendUrl to be configured.
   mobileScannerSettings:
     convertToPdf: true # Automatically convert uploaded images to PDF format. If false, images are kept as-is.
     imageResolution: full # Image resolution for mobile uploads: 'full' (original size) or 'reduced' (max 1200px on longest side). Only applies when convertToPdf is true.
@@ -292,6 +293,15 @@ storage:
     linkExpirationDays: 3 # Number of days before share links expire
   signing:
     enabled: false # set to 'true' to enable group signing workflow (requires storage.enabled) [ALPHA]
+  # Encryption at rest for stored files (AES-256, per-team keys). Requires a Pro or
+  # Enterprise licence. Key setup, cluster requirements, the encrypt-existing migration,
+  # the revocation kill switch and master-key rotation are documented in
+  # devGuide/STORAGE_ENCRYPTION_AT_REST.md
+  # WARNING: back up the master key (configs/file-encryption.key by default) - losing it
+  # makes every encrypted stored file permanently unrecoverable.
+  encryption:
+    enabled: false # set to 'true' to encrypt stored files at rest
+    auditReads: true # audit every decrypt of an encrypted file (denied decrypts and key lifecycle events are always audited). NOTE: audit events require an Enterprise licence; encryption itself works on Pro.
     userListScope: org # Signing user-picker scope: 'org' (default) = whole instance, else caller's team only.
 autoPipeline:
   outputFolder: "" # Output folder for processed pipeline files (leave empty for default)
@@ -303,7 +313,7 @@ autoPipeline:
 
 ui:
   appNameNavbar: "" # custom app/brand name. NOTE: no longer shown in the navbar (the navbar renders the logo). It IS used as the browser tab title and as the TOTP/2FA issuer label in authenticator apps. Empty falls back to "Stirling PDF"
-  logoStyle: classic # Options: 'classic' (default - classic S icon) or 'modern' (minimalist logo)
+  logoStyle: modern # Options: 'modern' (default - minimalist logo) or 'classic' (legacy S icon)
   languages: [] # If empty, all languages are enabled. To restrict to specific languages, use a whitelist like ["de_DE", "pl_PL", "sv_SE"]. Empty list or not restricting any languages will enable all available languages.
   defaultHideUnavailableTools: false # Default user preference: hide disabled tools instead of greying them out
   defaultHideUnavailableConversions: false # Default user preference: hide disabled conversion options instead of greying them out

@@ -18,9 +18,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 
 import io.swagger.v3.oas.annotations.Hidden;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -30,6 +32,8 @@ import stirling.software.proprietary.security.database.repository.UserRepository
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.TeamMembershipRepository;
 import stirling.software.saas.procurement.config.ProcurementConfigurationProperties;
+import stirling.software.saas.procurement.legal.AgreementSigning;
+import stirling.software.saas.procurement.model.ProcurementAgreementSignature;
 import stirling.software.saas.procurement.model.ProcurementDeal;
 import stirling.software.saas.procurement.model.ProcurementQuote;
 import stirling.software.saas.procurement.model.QuoteDetails;
@@ -178,7 +182,17 @@ public class ProcurementController {
             String taxId) {}
 
     /** Trial setup captured before the trial starts: deployment target + seat count. */
-    public record StartTrialRequest(String deployment, int users) {}
+    /**
+     * Setup step 2 collects the buying entity; all of it is optional so an older client still
+     * starts.
+     */
+    public record StartTrialRequest(
+            String deployment,
+            int users,
+            String businessName,
+            String contactName,
+            String contactEmail,
+            String inviteEmails) {}
 
     public record SnapshotResponse(
             Long dealId,
@@ -190,7 +204,32 @@ public class ProcurementController {
             int trialExtensionsUsed,
             boolean licensed,
             String licenseKey,
+            // Version label of the signed agreement PDF available for download, else null.
+            String agreementSignedVersion,
+            // Buying entity captured at trial setup; null on deals started before that step.
+            String businessName,
+            String contactName,
+            String contactEmail,
             QuoteResponse latestQuote) {}
+
+    /** The filled agreement for review: registry metadata + the rendered markdown body. */
+    public record AgreementDocumentResponse(
+            String docId,
+            String version,
+            String versionLabel,
+            String displayName,
+            String effectiveDate,
+            String status,
+            String markdown) {}
+
+    /** Buyer-supplied signing inputs from the agreement stage. */
+    public record SignAgreementRequest(
+            String customerLegalName,
+            String signatoryName,
+            String signatoryTitle,
+            boolean authorityConfirmed) {}
+
+    public record SignAgreementResponse(Long signatureId, String versionLabel, boolean pdfStored) {}
 
     // ---- endpoints ----------------------------------------------------------
 
@@ -213,7 +252,8 @@ public class ProcurementController {
     }
 
     private static final SnapshotResponse EMPTY_SNAPSHOT =
-            new SnapshotResponse(null, null, null, 0, null, null, 0, false, null, null);
+            new SnapshotResponse(
+                    null, null, null, 0, null, null, 0, false, null, null, null, null, null, null);
 
     /**
      * Download the offline / air-gapped licence file (.lic) for the team — available for an
@@ -239,6 +279,15 @@ public class ProcurementController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    /** Mark the account as looking at enterprise. Idempotent; never disturbs an existing deal. */
+    @PostMapping("/interest")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<SnapshotResponse> recordInterest(Authentication auth) {
+        Long teamId = requireLeader(auth);
+        if (teamId == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        return ResponseEntity.ok(toSnapshot(procurement.recordInterest(teamId), true));
+    }
+
     @PostMapping("/trial/start")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<SnapshotResponse> startTrial(
@@ -248,8 +297,30 @@ public class ProcurementController {
         // Body is optional so an older client (no setup step) still starts a cloud trial.
         String deployment = request != null ? request.deployment() : null;
         int seats = request != null ? request.users() : 0;
-        return ResponseEntity.ok(
-                toSnapshot(procurement.startTrial(teamId, deployment, seats), true));
+        ProcurementDeal deal;
+        try {
+            deal =
+                    procurement.startTrial(
+                            teamId,
+                            deployment,
+                            seats,
+                            request != null ? request.businessName() : null,
+                            request != null ? request.contactName() : null,
+                            request != null ? request.contactEmail() : null,
+                            request != null ? request.inviteEmails() : null);
+        } catch (IllegalStateException e) {
+            // Past the trial the deal holds a committed licence; restarting would replace it.
+            log.warn("[procurement] trial start rejected team={}: {}", teamId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
+        // After the trial exists, so a rejected invite can never stop it starting.
+        if (request != null) {
+            procurement.sendTrialInvites(
+                    teamId,
+                    primaryMembership(auth).map(TeamMembership::getUser).orElse(null),
+                    request.inviteEmails());
+        }
+        return ResponseEntity.ok(toSnapshot(deal, true));
     }
 
     @PostMapping("/trial/extend")
@@ -270,8 +341,17 @@ public class ProcurementController {
             @RequestBody QuoteRequest request, Authentication auth) {
         Long teamId = requireLeader(auth);
         if (teamId == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        return ResponseEntity.ok(
-                toQuote(procurement.buildQuote(teamId, request.toConfig(), request.toDetails())));
+        try {
+            return ResponseEntity.ok(
+                    toQuote(
+                            procurement.buildQuote(
+                                    teamId, request.toConfig(), request.toDetails())));
+        } catch (IllegalStateException e) {
+            // Below the minimum deal size, or the deal is already live. A client error, not a
+            // fault.
+            log.warn("[procurement] quote rejected team={}: {}", teamId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
     }
 
     // Issue + accept are Supabase edge functions (they own Stripe): issue-procurement-quote turns a
@@ -294,6 +374,111 @@ public class ProcurementController {
     }
 
     /**
+     * The filled Stirling Enterprise Agreement (MSA + Order Form + DPA) for the team's current
+     * quote, as markdown, for the buyer to review before signing. 404 when there's no quote yet.
+     */
+    @GetMapping("/agreement/document")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<AgreementDocumentResponse> agreementDocument(Authentication auth) {
+        Long teamId = requireLeader(auth);
+        if (teamId == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        return procurement
+                .agreementDocument(teamId)
+                .<ResponseEntity<AgreementDocumentResponse>>map(
+                        a ->
+                                ResponseEntity.ok(
+                                        new AgreementDocumentResponse(
+                                                a.docId(),
+                                                a.version(),
+                                                a.versionLabel(),
+                                                a.displayName(),
+                                                a.effectiveDate(),
+                                                a.status(),
+                                                a.markdown())))
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    /**
+     * Record a signed agreement: capture the typed legal name / signatory / title / authority, pin
+     * the exact document version + content hash + variable snapshot, and store the rendered PDF
+     * (best-effort). The caller then proceeds to accept the quote as before.
+     */
+    @PostMapping("/agreement/sign")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<SignAgreementResponse> signAgreement(
+            @RequestBody SignAgreementRequest request,
+            Authentication auth,
+            HttpServletRequest http) {
+        Long teamId = requireLeader(auth);
+        if (teamId == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        if (request == null
+                || request.signatoryName() == null
+                || request.signatoryName().isBlank()
+                || !request.authorityConfirmed()) {
+            return ResponseEntity.badRequest().build();
+        }
+        try {
+            ProcurementAgreementSignature sig =
+                    procurement.signAgreement(
+                            teamId,
+                            new AgreementSigning(
+                                    request.customerLegalName(),
+                                    request.signatoryName(),
+                                    request.signatoryTitle(),
+                                    request.authorityConfirmed()),
+                            clientIp(http));
+            return ResponseEntity.ok(
+                    new SignAgreementResponse(
+                            sig.getSignatureId(), sig.getDocumentLabel(), sig.getPdf() != null));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
+    }
+
+    /** Download the stored signed-agreement PDF for the team. 404 if none was rendered/stored. */
+    @GetMapping("/agreement/signature/pdf")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<byte[]> signaturePdf(Authentication auth) {
+        Long teamId = requireLeader(auth);
+        if (teamId == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        return procurement
+                .signedAgreementPdf(teamId)
+                .<ResponseEntity<byte[]>>map(
+                        pdf ->
+                                ResponseEntity.ok()
+                                        .header(
+                                                HttpHeaders.CONTENT_DISPOSITION,
+                                                "attachment;"
+                                                        + " filename=\"stirling-enterprise-agreement.pdf\"")
+                                        .contentType(MediaType.APPLICATION_PDF)
+                                        .body(pdf))
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    /**
+     * Download the current (unsigned) agreement as a PDF — the document shown at the sign step. 404
+     * when there's no quote yet or the render runtime is unavailable.
+     */
+    @GetMapping("/agreement/document/pdf")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<byte[]> agreementDocumentPdf(Authentication auth) {
+        Long teamId = requireLeader(auth);
+        if (teamId == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        return procurement
+                .agreementDocumentPdf(teamId)
+                .<ResponseEntity<byte[]>>map(
+                        pdf ->
+                                ResponseEntity.ok()
+                                        .header(
+                                                HttpHeaders.CONTENT_DISPOSITION,
+                                                "attachment;"
+                                                        + " filename=\"stirling-enterprise-agreement.pdf\"")
+                                        .contentType(MediaType.APPLICATION_PDF)
+                                        .body(pdf))
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    /**
      * Provision on accept: upgrade the team's licence to the committed annual term, valid
      * immediately. Called server-side by the accept edge function (ROLE_ADMIN via X-API-Key) once
      * the subscription + invoice exist, so the buyer is licensed the moment they accept — the deal
@@ -312,8 +497,37 @@ public class ProcurementController {
     }
 
     /**
+     * Go live once payment settles: advance the deal to active and re-affirm the annual licence.
+     * Called server-side by the {@code invoice.paid} webhook (ROLE_ADMIN via X-API-Key), alongside
+     * {@code /provision}, which runs earlier at accept and deliberately leaves the stage alone.
+     *
+     * <p>Answers 200 when the team has no deal at all, rather than erroring: a committed
+     * subscription can be closed directly in Stripe by sales with no portal deal behind it, and a
+     * non-2xx would have Stripe retry a webhook that can never succeed.
+     *
+     * <p>{@code invoiceId} is what makes this idempotent without swallowing renewals: the same
+     * invoice twice is a redelivery, a different one is next year's payment and has to re-issue the
+     * licence. Optional so an older caller still works, at the cost of that distinction.
+     */
+    @PostMapping("/activate")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> activate(
+            @RequestParam("teamId") long teamId,
+            @RequestParam(value = "invoiceId", required = false) String invoiceId) {
+        try {
+            procurement.markLive(teamId, invoiceId);
+        } catch (IllegalStateException e) {
+            log.info(
+                    "[procurement] activate skipped, no deal for team={}: {}",
+                    teamId,
+                    e.getMessage());
+        }
+        return ResponseEntity.ok().build();
+    }
+
+    /**
      * Demo/manual stand-in for the {@code invoice.paid} webhook: mark the deal live (issue the
-     * annual licence, advance to active). The real go-live is webhook-driven once payment settles.
+     * annual licence, advance to active). Production go-live runs through {@code /activate}.
      */
     @PostMapping("/go-live")
     @PreAuthorize("isAuthenticated()")
@@ -361,6 +575,21 @@ public class ProcurementController {
     }
 
     /**
+     * Best-effort client IP for the signature record: first X-Forwarded-For hop, else the peer.
+     *
+     * <p>Informational only. That header is client-set, so {@code signer_ip} is spoofable and is
+     * not evidence of where a signature came from — the document hash and version are what make the
+     * record trustworthy. Treat the address as a hint, never as proof.
+     */
+    private static String clientIp(HttpServletRequest request) {
+        String forwarded = request.getHeader("X-Forwarded-For");
+        if (forwarded != null && !forwarded.isBlank()) {
+            return forwarded.split(",")[0].trim();
+        }
+        return request.getRemoteAddr();
+    }
+
+    /**
      * Build the snapshot for a deal. {@code includeLicenseKey} is true only for the team leader; a
      * member sees {@code licensed} but not the key itself (see {@link #snapshot}). Mutation
      * endpoints are leader-gated, so they always pass true.
@@ -381,6 +610,10 @@ public class ProcurementController {
                 deal.getTrialExtensionsUsed(),
                 deal.getLicenseRef() != null,
                 includeLicenseKey ? deal.getLicenseRef() : null,
+                procurement.signedAgreementLabel(deal.getDealId()).orElse(null),
+                deal.getBusinessName(),
+                deal.getContactName(),
+                deal.getContactEmail(),
                 latest);
     }
 

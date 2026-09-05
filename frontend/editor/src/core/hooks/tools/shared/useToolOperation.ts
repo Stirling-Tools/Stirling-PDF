@@ -21,6 +21,15 @@ import {
   StirlingFileStub,
 } from "@app/types/fileContext";
 import { FILE_EVENTS } from "@app/services/errorUtils";
+import {
+  errorCodeOf,
+  reportToolFailure,
+  wasCancelled,
+} from "@app/services/failureReporting";
+import { stashRetryPayload } from "@app/services/notificationRetry";
+import { refreshNotificationsNow } from "@app/hooks/useNotifications";
+import { useResolutionContinuation } from "@app/hooks/tools/shared/useResolutionContinuation";
+import { useNotificationsAvailable } from "@app/components/notifications/useNotificationsAvailable";
 import { zipFileService } from "@app/services/zipFileService";
 import { getFilenameWithoutExtension } from "@app/utils/fileUtils";
 import {
@@ -119,6 +128,8 @@ export const useToolOperation = <TParams>(
 
   const { checkCredits } = useCreditCheck(config.operationType, endpointString);
   const willUseCloud = useWillUseCloud(endpointString);
+  const continueResolutions = useResolutionContinuation();
+  const notificationsAvailable = useNotificationsAvailable();
 
   // Track last operation for undo functionality
   const lastOperationRef = useRef<{
@@ -126,6 +137,49 @@ export const useToolOperation = <TParams>(
     inputStirlingFileStubs: StirlingFileStub[];
     outputFileIds: FileId[];
   } | null>(null);
+
+  /**
+   * Record a failure and keep what a retry needs. Shared with the batch's per-input failures:
+   * one bad file in twenty is still a failure the user has to be told about.
+   */
+  const reportFailure = useCallback(
+    (
+      error: unknown,
+      fileIds: FileId[],
+      runtimeEndpoint: string | undefined,
+      params: TParams,
+    ) => {
+      if (fileIds.length === 0 || wasCancelled(error)) return;
+
+      void reportToolFailure({
+        operation: config.operationType,
+        error,
+        fileIds,
+      }).then(refreshNotificationsNow);
+
+      // Skipped where nothing could use it: a custom processor's request cannot be replayed
+      // generically, and a build with no bell has nothing to read the stash.
+      if (
+        !runtimeEndpoint ||
+        config.toolType === ToolType.custom ||
+        !notificationsAvailable
+      ) {
+        return;
+      }
+      void errorCodeOf(error).then((errorCode) =>
+        stashRetryPayload({
+          operation: config.operationType,
+          endpoint: runtimeEndpoint,
+          params: params as Record<string, unknown>,
+          fileIds,
+          multiFile: config.toolType === ToolType.multiFile,
+          errorCode,
+          recordedAt: Date.now(),
+        }),
+      );
+    },
+    [config.operationType, config.toolType, notificationsAvailable],
+  );
 
   const executeOperation = useCallback(
     async (params: TParams, selectedFiles: StirlingFile[]): Promise<void> => {
@@ -218,17 +272,14 @@ export const useToolOperation = <TParams>(
       // Listen for global error file id events from HTTP interceptor during this run
       let externalErrorFileIds: string[] = [];
       const errorListener = (e: Event) => {
-        const detail = (e as CustomEvent)?.detail as any;
+        const detail = (e as CustomEvent<{ fileIds?: unknown }>)?.detail;
         if (detail?.fileIds) {
           externalErrorFileIds = Array.isArray(detail.fileIds)
             ? detail.fileIds
             : [];
         }
       };
-      window.addEventListener(
-        FILE_EVENTS.markError,
-        errorListener as EventListener,
-      );
+      window.addEventListener(FILE_EVENTS.markError, errorListener);
 
       try {
         let processedFiles: File[];
@@ -260,9 +311,20 @@ export const useToolOperation = <TParams>(
             );
             processedFiles = result.outputFiles;
             successSourceIds = result.successSourceIds;
+            // Reported here, not in the catch: this loop only throws when EVERY input failed,
+            // so a batch that lost one file to a bad PDF reaches the success path.
+            for (const failed of result.failedInputs) {
+              reportFailure(
+                failed.error,
+                [failed.fileId],
+                runtimeEndpoint,
+                params,
+              );
+            }
             console.debug("[useToolOperation] Multi-file results", {
               outputFiles: processedFiles.length,
               successSources: result.successSourceIds.length,
+              failedInputs: result.failedInputs.length,
             });
             break;
           }
@@ -532,6 +594,17 @@ export const useToolOperation = <TParams>(
               })),
               outputFileIds,
             };
+
+            // Outputs pair with the inputs that produced them, index for index, in this branch.
+            continueResolutions({
+              operation: config.operationType,
+              inputFileIds: validFiles.map((file) => file.fileId),
+              outputs: processedFiles.map((file, index) => ({
+                file,
+                fileId: outputFileIds[index] ?? null,
+                sourceFileId: successSourceIds[index] ?? null,
+              })),
+            });
           } else {
             // Outputs are independent artifacts (format conversion, merge, split).
             // Create fresh root stubs with no parent chain, then swap out only the inputs
@@ -586,9 +659,20 @@ export const useToolOperation = <TParams>(
               })),
               outputFileIds,
             };
+
+            // No per-output provenance here, so only a one-in one-out run can be paired.
+            continueResolutions({
+              operation: config.operationType,
+              inputFileIds: validFiles.map((file) => file.fileId),
+              outputs: processedFiles.map((file, index) => ({
+                file,
+                fileId: outputFileIds[index] ?? null,
+                sourceFileId: null,
+              })),
+            });
           }
         }
-      } catch (error: any) {
+      } catch (error) {
         try {
           const handled = await handle422Error(error, (id) =>
             fileActions.markFileError(id as FileId),
@@ -603,15 +687,20 @@ export const useToolOperation = <TParams>(
           void _e;
         }
 
+        // The whole run failed, so every input is a casualty.
+        reportFailure(
+          error,
+          validFiles.map((file) => file.fileId),
+          runtimeEndpoint,
+          params,
+        );
+
         const errorMessage =
           config.getErrorMessage?.(error) || extractErrorMessage(error);
         actions.setError(errorMessage);
         actions.setStatus("");
       } finally {
-        window.removeEventListener(
-          FILE_EVENTS.markError,
-          errorListener as EventListener,
-        );
+        window.removeEventListener(FILE_EVENTS.markError, errorListener);
         actions.setLoading(false);
         actions.setProgress(null);
       }
@@ -630,6 +719,9 @@ export const useToolOperation = <TParams>(
       extractZipFiles,
       willUseCloud,
       checkCredits,
+      continueResolutions,
+      notificationsAvailable,
+      reportFailure,
     ],
   );
 
@@ -691,21 +783,22 @@ export const useToolOperation = <TParams>(
 
       // Show success message
       actions.setStatus(t("undoSuccess", "Operation undone successfully"));
-    } catch (error: any) {
+    } catch (error) {
       let errorMessage = extractErrorMessage(error);
 
       // Provide more specific error messages based on error type
-      if (error.message?.includes("Mismatch between input files")) {
+      const err = error as { message?: string; name?: string };
+      if (err.message?.includes("Mismatch between input files")) {
         errorMessage = t(
           "undoDataMismatch",
           "Cannot undo: operation data is corrupted",
         );
-      } else if (error.message?.includes("IndexedDB")) {
+      } else if (err.message?.includes("IndexedDB")) {
         errorMessage = t(
           "undoStorageError",
           "Undo completed but some files could not be saved to storage",
         );
-      } else if (error.name === "QuotaExceededError") {
+      } else if (err.name === "QuotaExceededError") {
         errorMessage = t(
           "undoQuotaError",
           "Cannot undo: insufficient storage space",

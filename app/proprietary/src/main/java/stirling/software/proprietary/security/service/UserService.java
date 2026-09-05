@@ -17,6 +17,7 @@ import java.util.UUID;
 import java.util.function.Supplier;
 
 import org.slf4j.MDC;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -51,9 +52,11 @@ import stirling.software.proprietary.security.database.repository.UserRepository
 import stirling.software.proprietary.security.model.AuthenticationType;
 import stirling.software.proprietary.security.model.Authority;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.security.model.exception.UserLimitExceededException;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
+import stirling.software.proprietary.service.UserLicenseSettingsService;
 import stirling.software.proprietary.storage.model.FileShare;
 import stirling.software.proprietary.storage.model.StorageCleanupEntry;
 import stirling.software.proprietary.storage.model.StoredFile;
@@ -96,6 +99,12 @@ public class UserService implements UserServiceInterface {
     private final IntegrationConfigRepository integrationConfigRepository;
     private final TeamMembershipService teamMembershipService;
     private final ApiKeyAuthenticationService apiKeyAuthenticationService;
+
+    // ObjectProvider breaks the cycle: UserLicenseSettingsService injects this service to count
+    // users, and saveUserCore needs it back to enforce the limit. Same pattern that service already
+    // uses for LicenseKeyChecker. Absent outside the security profile, in which case there is no
+    // licence to enforce.
+    private final ObjectProvider<UserLicenseSettingsService> licenseSettingsService;
 
     @Transactional
     public void processSSOPostLogin(
@@ -205,7 +214,7 @@ public class UserService implements UserServiceInterface {
         User user =
                 findByUsernameIgnoreCase(username)
                         .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-        if (user.getApiKey() == null || user.getApiKey().length() == 0) {
+        if (user.getApiKey() == null || user.getApiKey().isEmpty()) {
             user = addApiKeyToUser(username);
         }
         return user.getApiKey();
@@ -499,6 +508,8 @@ public class UserService implements UserServiceInterface {
             throw new IllegalArgumentException(getInvalidUsernameMessage());
         }
 
+        enforceUserLimit(request);
+
         User user = new User();
         user.setUsername(request.getUsername());
 
@@ -559,6 +570,31 @@ public class UserService implements UserServiceInterface {
         databaseService.exportDatabase();
 
         return user;
+    }
+
+    /**
+     * Last line of defence on the licence user limit. Callers that can render a useful message
+     * check {@code wouldExceedLimit} first and fail with their own response; this only fires when a
+     * creation path was added without one.
+     */
+    private void enforceUserLimit(SaveUserRequest request) {
+        if (request.isBypassUserLimit()) {
+            return;
+        }
+        UserLicenseSettingsService settings = licenseSettingsService.getIfAvailable();
+        if (settings == null || !settings.wouldExceedLimit(1)) {
+            return;
+        }
+        long current = getTotalUsersCount();
+        int max = settings.calculateMaxAllowedUsers();
+        log.warn(
+                "Refusing to create user {}: would exceed the licence limit of {} ({} in use). If"
+                        + " this is a legitimate path it should check wouldExceedLimit() first and"
+                        + " return a useful error.",
+                request.getUsername(),
+                max,
+                current);
+        throw new UserLimitExceededException(current, max);
     }
 
     public boolean isUsernameValid(String username) {
@@ -640,14 +676,14 @@ public class UserService implements UserServiceInterface {
         for (Object principal : sessionRegistry.getAllPrincipals()) {
             for (SessionInformation sessionsInformation :
                     sessionRegistry.getAllSessions(principal, false)) {
-                if (principal instanceof UserDetails detailsUser) {
-                    usernameP = detailsUser.getUsername();
-                } else if (principal instanceof OAuth2User oAuth2User) {
-                    usernameP = oAuth2User.getName();
-                } else if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2User) {
-                    usernameP = saml2User.name();
-                } else if (principal instanceof String stringUser) {
-                    usernameP = stringUser;
+                switch (principal) {
+                    case null -> {}
+                    case UserDetails detailsUser -> usernameP = detailsUser.getUsername();
+                    case OAuth2User oAuth2User -> usernameP = oAuth2User.getName();
+                    case CustomSaml2AuthenticatedPrincipal saml2User ->
+                            usernameP = saml2User.name();
+                    case String stringUser -> usernameP = stringUser;
+                    default -> {}
                 }
                 if (usernameP.equalsIgnoreCase(username)) {
                     sessionRegistry.expireSession(sessionsInformation.getSessionId());

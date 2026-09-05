@@ -41,6 +41,11 @@ import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.tool.ToolArity;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
+import stirling.software.common.model.tool.ToolIOCase;
+import stirling.software.common.model.tool.ToolIOWhen;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
@@ -55,6 +60,9 @@ import stirling.software.common.util.WebResponseUtils;
 @Slf4j
 @RequiredArgsConstructor
 public class OCRController {
+
+    // Tesseract's recommended minimum; more pixels cost time without improving recognition
+    private static final int OCR_RENDER_DPI = 300;
 
     private final ApplicationProperties applicationProperties;
     private final CustomPDFDocumentFactory pdfDocumentFactory;
@@ -88,13 +96,20 @@ public class OCRController {
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             value = "/ocr-pdf",
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
+    @ToolIO(
+            produces = ToolFormat.PDF,
+            cases =
+                    @ToolIOCase(
+                            when = @ToolIOWhen(param = "sidecar", matches = "true"),
+                            produces = ToolFormat.ZIP,
+                            arity = ToolArity.SISO))
     @Operation(
             summary = "Process a PDF file with OCR",
             description =
-                    "This endpoint processes a PDF file using OCR (Optical Character Recognition). Users can"
-                            + " specify languages, sidecar, deskew, clean, cleanFinal, ocrType, ocrRenderType,"
-                            + " and removeImagesAfter options. Uses OCRmyPDF if available, falls back to"
-                            + " Tesseract. Input:PDF Output:PDF Type:SI-Conditional")
+                    "This endpoint processes a PDF file using OCR (Optical Character Recognition)."
+                            + " Users can specify languages, sidecar, deskew, clean, cleanFinal, ocrType,"
+                            + " ocrRenderType, and removeImagesAfter options. Uses OCRmyPDF if available,"
+                            + " falls back to Tesseract.")
     public ResponseEntity<Resource> processPdfWithOCR(
             @ModelAttribute ProcessPdfWithOcrRequest request)
             throws IOException, InterruptedException {
@@ -102,6 +117,7 @@ public class OCRController {
         List<String> selectedLanguages = request.getLanguages();
         boolean sidecar = request.isSidecar();
         Boolean deskew = request.isDeskew();
+        Boolean rotatePages = request.isRotatePages();
         Boolean clean = request.isClean();
         Boolean cleanFinal = request.isCleanFinal();
         String ocrType = request.getOcrType();
@@ -142,6 +158,7 @@ public class OCRController {
                         selectedLanguages,
                         sidecar,
                         deskew,
+                        rotatePages,
                         clean,
                         cleanFinal,
                         ocrType,
@@ -224,6 +241,7 @@ public class OCRController {
             List<String> selectedLanguages,
             Boolean sidecar,
             Boolean deskew,
+            Boolean rotatePages,
             Boolean clean,
             Boolean cleanFinal,
             String ocrType,
@@ -255,6 +273,10 @@ public class OCRController {
 
         if (deskew != null && deskew) {
             command.add("--deskew");
+        }
+        if (rotatePages != null && rotatePages) {
+            // Tesseract OSD-based automatic page orientation correction (90/180/270)
+            command.add("--rotate-pages");
         }
         if (clean != null && clean) {
             command.add("--clean");
@@ -373,11 +395,14 @@ public class OCRController {
                         // Convert page to image
                         BufferedImage image;
 
-                        // Use global maximum DPI setting, fallback to 300 if not set
-                        int renderDpi = 300; // Default fallback
+                        // maxDPI is a safety ceiling for user-supplied values, not a target
+                        int renderDpi = OCR_RENDER_DPI;
                         if (applicationProperties != null
                                 && applicationProperties.getSystem() != null) {
-                            renderDpi = applicationProperties.getSystem().getMaxDPI();
+                            renderDpi =
+                                    Math.min(
+                                            renderDpi,
+                                            applicationProperties.getSystem().getMaxDPI());
                         }
                         final int dpi = renderDpi;
                         final int currentPageNum = pageNum;

@@ -25,10 +25,23 @@ export const defaultParameters: RedactParameters = {
   wholeWordSearch: false,
   redactColor: "#000000",
   customPadding: 0.1,
-  convertPDFToImage: true,
+  convertPDFToImage: false,
 };
 
 export type RedactParametersHook = BaseParametersHook<RedactParameters>;
+
+/** Whether these parameters are complete enough to run. Shared by the tool's settings
+ * hook and its operationConfig, so the editor and the pipeline builder agree. */
+export function validateRedactParameters(params: RedactParameters): boolean {
+  if (params.mode === "automatic") {
+    return (
+      params.wordsToRedact.length > 0 &&
+      params.wordsToRedact.some((word) => word.trim().length > 0)
+    );
+  }
+  // Manual mode is not yet supported via this flow
+  return false;
+}
 
 export const useRedactParameters = (): RedactParametersHook => {
   return useBaseParameters({
@@ -40,15 +53,6 @@ export const useRedactParameters = (): RedactParametersHook => {
       // Manual redaction handled client-side (validation prevents this path)
       return "";
     },
-    validateFn: (params) => {
-      if (params.mode === "automatic") {
-        return (
-          params.wordsToRedact.length > 0 &&
-          params.wordsToRedact.some((word) => word.trim().length > 0)
-        );
-      }
-      // Manual mode is not yet supported via this flow
-      return false;
-    },
+    validateFn: validateRedactParameters,
   });
 };

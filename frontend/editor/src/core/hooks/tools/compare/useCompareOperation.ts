@@ -28,7 +28,6 @@ import {
   filterTokensForDiff,
 } from "@app/hooks/tools/compare/operationUtils";
 import { alert, dismissToast } from "@app/components/toast";
-import type { ToastLocation } from "@app/components/toast/types";
 import CompareWorkerCtor from "@app/workers/compareWorker?worker";
 const LONG_RUNNING_PAGE_THRESHOLD = 2000;
 
@@ -406,7 +405,7 @@ export const useCompareOperation = (): CompareOperationHook => {
               "compare.longJob.body",
               "These PDFs together exceed 2,000 pages. Processing can take several minutes.",
             ),
-            location: "bottom-right" as ToastLocation,
+            location: "bottom-right",
             isPersistentPopup: true,
             expandable: false,
           });
@@ -435,7 +434,7 @@ export const useCompareOperation = (): CompareOperationHook => {
               "compare.earlyDissimilarity.body",
               "We're seeing very few similarities so far. You can stop the comparison if these aren't related documents.",
             ),
-            location: "bottom-right" as ToastLocation,
+            location: "bottom-right",
             isPersistentPopup: true,
             expandable: false,
             buttonText: t(
@@ -635,7 +634,7 @@ export const useCompareOperation = (): CompareOperationHook => {
           alertType: "warning",
           title: t("compare.error.title", "Comparison failed"),
           body: resolvedMessage,
-          location: "bottom-right" as ToastLocation,
+          location: "bottom-right",
         });
       } finally {
         const duration = performance.now() - operationStart;
@@ -665,7 +664,7 @@ export const useCompareOperation = (): CompareOperationHook => {
     if (workerRef.current) {
       try {
         workerRef.current.terminate();
-        // eslint-disable-next-line no-empty
+        // oxlint-disable-next-line no-empty
       } catch {}
       workerRef.current = null;
     }

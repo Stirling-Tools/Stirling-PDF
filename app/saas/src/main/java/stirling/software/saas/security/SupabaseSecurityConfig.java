@@ -16,6 +16,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.annotation.Order;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.config.Customizer;
@@ -71,6 +72,7 @@ public class SupabaseSecurityConfig {
     private final SaasTeamService saasTeamService;
     private final ApplicationProperties applicationProperties;
     private final ApiKeyAuthenticationService apiKeyAuthenticationService;
+    private final Environment environment;
 
     @Value("${app.supabase.issuer:}")
     private String issuer;
@@ -82,6 +84,9 @@ public class SupabaseSecurityConfig {
     /** Clock skew tolerance (seconds) applied to the {@code exp} claim. */
     @Value("${app.supabase.clock-skew-seconds:120}")
     private long clockSkewSeconds;
+
+    @Value("${stirling.billing.account-link.enabled:false}")
+    private boolean accountLinkEnabled;
 
     @Bean
     SecurityFilterChain saasSecurityFilterChain(
@@ -104,6 +109,17 @@ public class SupabaseSecurityConfig {
                                 auth.requestMatchers(HttpMethod.OPTIONS, "/**")
                                         .permitAll()
                                         .requestMatchers("/actuator/health", "/api/v1/config/**")
+                                        .permitAll()
+                                        // Account-link connect handshake: an instance calls these
+                                        // before it holds any credential, so there is nothing to
+                                        // authenticate with yet. Neither grants anything on its
+                                        // own — /request records an intent a human must approve,
+                                        // and /claim requires a secret only the instance that
+                                        // created the request has ever held.
+                                        .requestMatchers(
+                                                HttpMethod.POST,
+                                                "/api/v1/account-link/connect/request",
+                                                "/api/v1/account-link/connect/claim")
                                         .permitAll()
                                         .requestMatchers(
                                                 req ->
@@ -144,7 +160,7 @@ public class SupabaseSecurityConfig {
                                                                 SupabaseSecurityConfig
                                                                         ::toAuthentication)));
 
-        // Device-credential auth for linked self-hosted instances (combined-billing Mode A).
+        // Device-credential auth for linked self-hosted instances (combined billing).
         // The filter bean exists only when stirling.billing.account-link.enabled=true; when off it
         // is absent here, so the instance surface cannot authenticate at all until release.
         DeviceCredentialAuthenticationFilter deviceFilter =
@@ -268,6 +284,50 @@ public class SupabaseSecurityConfig {
         }
     }
 
+    /**
+     * Loopback on any port, as Spring origin patterns. Only added outside production; see {@link
+     * #corsConfigurationSource()}.
+     */
+    private static final List<String> LOOPBACK_ANY_PORT =
+            List.of("http://localhost:[*]", "http://127.0.0.1:[*]");
+
+    /**
+     * The surface a linked self-hosted instance calls from its own browser with the signed-in
+     * admin's Supabase JWT, mirroring the frontend's {@code apiClient.saas}. Its origin is whatever
+     * the customer deployed on, so these cannot be served by an allow-list. See {@link
+     * #linkedInstanceCors()}.
+     *
+     * <p>Each hosts cloud-only endpoints, which is what makes a prefix safe here: billing,
+     * procurement, legal documents and the team's roster of linked instances have no self-hosted
+     * equivalent. Anything the instance also serves itself belongs on {@code apiClient.local}
+     * instead of here.
+     *
+     * <p>Only the {@code instances} half of account-link is listed. The {@code connect/*} handshake
+     * never reaches a browser on the customer's origin: the instance backend calls {@code request}
+     * and {@code claim} server-side, and the approval page is served by us.
+     */
+    private static final List<String> LINKED_INSTANCE_PATHS =
+            List.of(
+                    "/api/v1/payg/**",
+                    "/api/v1/procurement/**",
+                    "/api/v1/legal/**",
+                    "/api/v1/account-link/instances/**");
+
+    /**
+     * Profiles that mean "a developer's machine or a preview environment", never the production
+     * deployment. Production runs the bare {@code saas} profile.
+     */
+    private static final List<String> NON_PRODUCTION_PROFILES = List.of("dev", "staging", "local");
+
+    private boolean isNonProduction() {
+        for (String profile : environment.getActiveProfiles()) {
+            if (NON_PRODUCTION_PROFILES.contains(profile)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration cfg = new CorsConfiguration();
@@ -297,7 +357,23 @@ public class SupabaseSecurityConfig {
                 origins.add(desktopOrigin);
             }
         }
-        if (origins.stream().anyMatch(o -> o.contains("*"))) {
+        // Outside production, allow loopback on ANY port. Several dev servers run side by side
+        // (editor, saas web app, one per flavour under test) and their ports move, so pinning a
+        // list means every new local environment shows up as an opaque CORS failure. Unlike a
+        // wildcard subdomain, a wildcard port on loopback cannot be taken over: nothing but this
+        // machine can answer on it, so there is no lapsed-DNS or abandoned-vhost risk. Absent in
+        // production, where the profile check below is false.
+        if (!operatorOverride && isNonProduction()) {
+            origins.addAll(LOOPBACK_ANY_PORT);
+            log.info(
+                    "Non-production profile active: allowing loopback CORS origins on any port {}",
+                    LOOPBACK_ANY_PORT);
+        }
+        // Loopback port wildcards are exempt: the warning below is about hostname takeover, which
+        // does not apply to an origin only this machine can serve.
+        if (origins.stream()
+                .filter(o -> !LOOPBACK_ANY_PORT.contains(o))
+                .anyMatch(o -> o.contains("*"))) {
             log.warn(
                     "CORS origins contain a wildcard paired with allowCredentials=true: {}."
                             + " Wildcard subdomains can be taken over by an attacker (lapsed DNS,"
@@ -316,12 +392,43 @@ public class SupabaseSecurityConfig {
                         "Origin",
                         "X-API-KEY",
                         "X-Browser-Id"));
-        cfg.setExposedHeaders(List.of("WWW-Authenticate"));
+        cfg.setExposedHeaders(
+                List.of(
+                        "WWW-Authenticate",
+                        "X-Stirling-Skipped-Field-Edits",
+                        "X-Stirling-Skipped-Field-Edits-Total"));
         cfg.setAllowCredentials(true);
         cfg.setMaxAge(3600L);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        // Registered ahead of "/**": the source returns the first pattern that matches, not the
+        // most specific one.
+        if (accountLinkEnabled) {
+            CorsConfiguration linked = linkedInstanceCors();
+            for (String path : LINKED_INSTANCE_PATHS) {
+                source.registerCorsConfiguration(path, linked);
+            }
+        }
         source.registerCorsConfiguration("/**", cfg);
         return source;
+    }
+
+    /**
+     * Any-origin CORS for the reads a linked self-hosted instance makes from its own browser, whose
+     * origin cannot be known in advance.
+     *
+     * <p>Safe only because it carries no credentials: this chain is bearer-token only and nothing
+     * in the SaaS module reads a cookie, so the browser attaches no ambient authority and a hostile
+     * page has nothing to ride on. The same reasoning already justifies disabling CSRF here.
+     * Authorisation is unchanged; this decides only who may read the response.
+     */
+    private static CorsConfiguration linkedInstanceCors() {
+        CorsConfiguration cfg = new CorsConfiguration();
+        cfg.setAllowedOrigins(List.of(CorsConfiguration.ALL));
+        cfg.setAllowedMethods(List.of("GET", "POST", "PATCH", "OPTIONS"));
+        cfg.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));
+        cfg.setAllowCredentials(false);
+        cfg.setMaxAge(3600L);
+        return cfg;
     }
 
     /**

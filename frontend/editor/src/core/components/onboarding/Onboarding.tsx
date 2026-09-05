@@ -20,7 +20,6 @@ import {
 import { useOnboardingDownload } from "@app/components/onboarding/useOnboardingDownload";
 import {
   SLIDE_DEFINITIONS,
-  type SlideId,
   type ButtonAction,
 } from "@app/components/onboarding/onboardingFlowConfig";
 import ToolPanelModePrompt from "@app/components/tools/ToolPanelModePrompt";
@@ -322,7 +321,7 @@ export default function Onboarding() {
     ) {
       return null;
     }
-    return SLIDE_DEFINITIONS[currentStep.slideId as SlideId];
+    return SLIDE_DEFINITIONS[currentStep.slideId];
   }, [currentStep]);
 
   const currentSlideContent = useMemo(() => {

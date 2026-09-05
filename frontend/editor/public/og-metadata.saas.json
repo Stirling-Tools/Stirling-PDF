@@ -17,7 +17,7 @@
       "description": "Adds signature to PDF by drawing, text or image"
     },
     "sharedSign": {
-      "image": "/og_images/home.png",
+      "image": "/og_images/shared-sign.png",
       "title": "Shared Signing - Stirling PDF",
       "description": "Request signatures from others and track signing sessions"
     },
@@ -100,6 +100,11 @@
       "image": "/og_images/rotate.png",
       "title": "Rotate - Stirling PDF",
       "description": "Easily rotate your PDFs."
+    },
+    "autoRotate": {
+      "image": "/og_images/home.png",
+      "title": "Auto Rotate - Stirling PDF",
+      "description": "Detect each page's orientation and rotate it upright automatically."
     },
     "annotate": {
       "image": "/og_images/annotate.png",
@@ -191,6 +196,11 @@
       "title": "Compress - Stirling PDF",
       "description": "Compress PDFs to reduce their file size."
     },
+    "classify": {
+      "image": "/og_images/home.png",
+      "title": "Classify - Stirling PDF",
+      "description": "Identify what kind of document this is and tag it."
+    },
     "extractPages": {
       "image": "/og_images/extract-pages.png",
       "title": "Extract Pages - Stirling PDF",
@@ -263,8 +273,8 @@
     },
     "formFill": {
       "image": "/og_images/form-fill.png",
-      "title": "Fill Form - Stirling PDF",
-      "description": "Fill PDF form fields interactively with a visual editor"
+      "title": "Form Editor - Stirling PDF",
+      "description": "Fill, create, edit, and delete PDF form fields with a visual editor"
     },
     "multiTool": {
       "image": "/og_images/multi-tool.png",
@@ -301,14 +311,15 @@
       "title": "Air-gapped Setup - Stirling PDF",
       "description": "Link to air-gapped setup guide"
     },
+    "/editor": {
+      "image": "/og_images/saas/app-editor.png",
+      "title": "Stirling - The world's most secure PDF editor",
+      "ogTitle": "The world's most secure PDF editor",
+      "description": "Edit, sign, redact, and convert PDFs in your browser. Free forever, open source, and self-hostable."
+    },
     "/login": {
       "image": "/og_images/home.png",
       "title": "Sign In - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
-    },
-    "/signup": {
-      "image": "/og_images/home.png",
-      "title": "Sign Up - Stirling PDF",
       "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
     },
     "/mobile-scanner": {
@@ -531,17 +542,16 @@
       "title": "Account Link Settings - Stirling PDF",
       "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
     },
+    "/signup": {
+      "image": "/og_images/home.png",
+      "title": "Sign Up - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
     "/processor": {
       "image": "/og_images/saas/app-processor.png",
       "title": "Stirling Processor - Govern every PDF your organization touches",
       "ogTitle": "Govern every PDF your organization touches",
       "description": "Redaction, retention, and encryption policies enforced everywhere PDFs enter your org. Distribute the free Editor anywhere. 1¢ per PDF."
-    },
-    "/editor": {
-      "image": "/og_images/saas/app-editor.png",
-      "title": "Stirling - The world's most secure PDF editor",
-      "ogTitle": "The world's most secure PDF editor",
-      "description": "Edit, sign, redact, and convert PDFs in your browser. Free forever, open source, and self-hostable."
     }
   },
   "byPath": {
@@ -564,6 +574,7 @@
     "/ocr": "ocr",
     "/add-image": "addImage",
     "/rotate": "rotate",
+    "/auto-rotate": "autoRotate",
     "/annotate": "annotate",
     "/scanner-image-split": "scannerImageSplit",
     "/edit-table-of-contents": "editTableOfContents",
@@ -582,6 +593,7 @@
     "/remove-cert-sign": "removeCertSign",
     "/unlock-p-d-f-forms": "unlockPDFForms",
     "/compress": "compress",
+    "/classify": "classify",
     "/extract-pages": "extractPages",
     "/reorganize-pages": "reorganizePages",
     "/extract-images": "extractImages",
@@ -657,8 +669,8 @@
     "/overlay-pdf": "overlayPdfs",
     "/split-pdf-by-sections": "split",
     "/split-pdf-by-chapters": "split",
+    "/editor": "/editor",
     "/login": "/login",
-    "/signup": "/signup",
     "/mobile-scanner": "/mobile-scanner",
     "/files": "/files",
     "/settings": "/settings",
@@ -703,7 +715,7 @@
     "/settings/frontendThirdPartyLicenses": "/settings/frontendThirdPartyLicenses",
     "/settings/payg": "/settings/payg",
     "/settings/account-link": "/settings/account-link",
-    "/processor": "/processor",
-    "/editor": "/editor"
+    "/signup": "/signup",
+    "/processor": "/processor"
   }
 }

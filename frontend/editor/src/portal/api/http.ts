@@ -212,6 +212,20 @@ async function localForm<T>(
   return unwrap<T>(res);
 }
 
+/** POST a multipart/form-data body (file uploads), via the localBackend seam. The Content-Type is
+ * deliberately left unset so the browser writes it with the multipart boundary. */
+async function localMultipart<T>(path: string, body: FormData): Promise<T> {
+  const res = await fetch(`${localBaseUrl()}${path}`, {
+    method: "POST",
+    headers: { Accept: "application/json", ...(await localAuthHeader()) },
+    body,
+  });
+  if (res.status === 401) {
+    onLocalUnauthorized();
+  }
+  return unwrap<T>(res);
+}
+
 // ────────────────────────────────────────────────────────────────────────────
 // saas — hosted SaaS Java, admin's Supabase JWT
 // ────────────────────────────────────────────────────────────────────────────
@@ -302,6 +316,7 @@ export const apiClient = {
   local: {
     json: localJson,
     form: localForm,
+    multipart: localMultipart,
     blob: localBlob,
   },
   /** Hosted SaaS Java. Admin's Supabase JWT auto-attached. */
@@ -309,7 +324,5 @@ export const apiClient = {
     json: saasJson,
     text: saasText,
     blob: saasBlob,
-    /** True when a SaaS base URL is resolvable. Doesn't check session liveness. */
-    isConfigured: (): boolean => saasBaseUrl() !== null,
   },
 } as const;

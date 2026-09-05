@@ -3,16 +3,6 @@ import type { FileId } from "@app/types/file";
 import type { StirlingFile, StirlingFileStub } from "@app/types/fileContext";
 import type { PagePreview } from "@app/types/compare";
 
-/** Convert hex color (#rrggbb) to rgba() string with alpha; falls back to input if invalid. */
-export const toRgba = (hexColor: string, alpha: number): string => {
-  const hex = hexColor.replace("#", "");
-  if (hex.length !== 6) return hexColor;
-  const r = parseInt(hex.slice(0, 2), 16);
-  const g = parseInt(hex.slice(2, 4), 16);
-  const b = parseInt(hex.slice(4, 6), 16);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-};
-
 /** Normalize rotation to [0, 360). */
 export const normalizeRotation = (deg: number | undefined | null): number => {
   const n = (((deg ?? 0) % 360) + 360) % 360;
@@ -196,7 +186,7 @@ export const getFileFromSelection = (
 ): StirlingFile | null => {
   if (explicit) return explicit;
   if (!fileId) return null;
-  return (selectors.getFile(fileId) as StirlingFile | undefined | null) ?? null;
+  return selectors.getFile(fileId) ?? null;
 };
 
 export const getStubFromSelection = (

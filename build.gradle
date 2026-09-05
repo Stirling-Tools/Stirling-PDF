@@ -6,9 +6,9 @@ plugins {
     id "org.springdoc.openapi-gradle-plugin" version "1.9.0"
     id "io.swagger.swaggerhub" version "1.3.2"
     id "com.diffplug.spotless" version "8.8.0"
-    id "com.github.jk1.dependency-license-report" version "3.1.2"
+    id "com.github.jk1.dependency-license-report"
     //id "nebula.lint" version "19.0.3"
-    id "org.sonarqube" version "7.2.3.7755"
+    id "org.sonarqube" version "7.3.1.8318"
 }
 
 import com.github.jk1.license.render.*
@@ -18,32 +18,37 @@ import groovy.xml.XmlSlurper
 import org.gradle.api.JavaVersion
 import org.gradle.api.tasks.testing.Test
 import org.gradle.jvm.toolchain.JavaLanguageVersion
+import stirling.software.gradle.ModuleLicenseOverrideFilter
 
 ext {
     springBootVersion = "4.0.6"
-    pdfboxVersion = "3.0.7"
-    imageioVersion = "3.13.1"
+    pdfboxVersion = "3.0.8"
+    imageioVersion = "3.14.0"
     lombokVersion = "1.18.46"
-    bouncycastleVersion = "1.84"
-    springSecuritySamlVersion = "7.0.5"
+    bouncycastleVersion = "1.85"
+    springSecuritySamlVersion = "7.1.0"
     openSamlVersion = "5.2.1"
     commonmarkVersion = "0.28.0"
     googleJavaFormatVersion = "1.35.0"
-    logback = "1.5.32"
+    logback = "1.6.3"
     commonsIoVersion = "2.22.0"
     commonsLang3 = "3.20.0"
     rhinoVersion = "1.9.1"
-    okhttpBomVersion = "5.3.2"
+    okhttpBomVersion = "5.4.0"
     gsonVersion = "2.14.0"
     guavaVersion = "33.6.0-jre"
-    jinjavaVersion = "2.8.3"
-    jackson2Version = "2.21.4"
+    jinjavaVersion = "2.8.4"
+    jackson2Version = "2.22.2"
     bucket4jVersion = "8.19.0"
-    archunitVersion = "1.4.2"
+    archunitVersion = "1.5.0"
     batikVersion = "1.19"
-    jpdfiumVersion = "1.0.2"
+    jpdfiumVersion = "1.1.3"
     jwtVersion = "0.13.0"
-    awsSdkVersion = "2.44.12"
+    awsSdkVersion = "2.51.3"
+    jschVersion = "2.28.6"
+    commonsNetVersion = "3.13.0"
+    smbjVersion = "0.14.0"
+    tinkVersion = "1.23.0"
     testcontainersMinioVersion = "1.21.4"
     // junit-platform-launcher version managed by Spring Boot BOM
     modernJavaVersion = 25
@@ -90,6 +95,12 @@ bootJar {
     enabled = false
 }
 
+// :saas is only included for SaaS builds, but a default-flavor clean must still remove artifacts
+// left behind by an earlier SaaS build.
+tasks.named('clean') {
+    delete layout.projectDirectory.dir('app/saas/build')
+}
+
 // Configure main class for the root project
 springBoot {
     mainClass = 'stirling.software.SPDF.SPDFApplication'
@@ -97,7 +108,7 @@ springBoot {
 
 allprojects {
     group = 'stirling.software'
-    version = '2.14.2'
+    version = '2.14.3'
 
     configurations.configureEach {
         exclude group: "org.springframework.boot", module: "spring-boot-starter-tomcat"
@@ -254,7 +265,6 @@ subprojects {
 
     dependencies {
         implementation 'org.springframework.boot:spring-boot-starter-actuator'
-        implementation 'io.github.pixee:java-security-toolkit:1.2.3'
 
         //tmp for security bumps
         implementation "ch.qos.logback:logback-core:$logback"
@@ -291,6 +301,17 @@ subprojects {
 
     tasks.withType(Test).configureEach {
         useJUnitPlatform()
+        jvmArgs '--enable-native-access=ALL-UNNAMED'
+        systemProperty 'java.awt.headless', 'true'
+        systemProperty 'apple.awt.UIElement', 'true'
+
+        testLogging {
+            events "skipped", "failed"
+            showExceptions = true
+            showCauses = true
+            showStackTraces = true
+            exceptionFormat "full"
+        }
         finalizedBy(jacocoReport)
     }
 
@@ -431,8 +452,12 @@ subprojects {
     if (name == 'stirling-pdf') {
         apply plugin: 'org.springdoc.openapi-gradle-plugin'
 
+        def openApiPort = rootProject.findProperty('openApiPort')?.toString()
+            ?: new ServerSocket(0).withCloseable { it.localPort }.toString()
+
         openApi {
-            apiDocsUrl = "http://localhost:8080/v1/api-docs"
+            apiDocsUrl = "http://localhost:${openApiPort}/v1/api-docs"
+            customBootRun { args = ["--server.port=${openApiPort}"] }
             outputDir = file("$projectDir")
             outputFileName = "SwaggerDoc.json"
             waitTimeInSeconds = 60 // Increase the wait time to 60 seconds
@@ -521,6 +546,13 @@ subprojects {
                 }
             }
 
+            // Lazy initialization defers bean creation until first use,
+            // reducing dev-mode RSS significantly (heap drops ~40-60%).
+            // Enable with: ./gradlew bootRun -PlazyInit=true
+            if (rootProject.findProperty('lazyInit') == 'true') {
+                runtimeArgs.add("-Dspring.main.lazy-initialization=true")
+                logger.lifecycle("Lazy initialization enabled (-PlazyInit=true)")
+            }
             jvmArgs = runtimeArgs
         }
     }
@@ -544,6 +576,7 @@ gradle.taskGraph.whenReady { graph ->
 }
 
 def allProjects = ((subprojects as Set<Project>) + project) as Set<Project>
+def moduleLicenseOverridesFile = project.layout.projectDirectory.file("app/license-overrides.json").asFile
 
 licenseReport {
     projects = allProjects
@@ -551,6 +584,15 @@ licenseReport {
     allowedLicensesFile = project.layout.projectDirectory.file("app/allowed-licenses.json").asFile
     outputDir = project.layout.buildDirectory.dir("reports/dependency-license").get().asFile.path
     configurations = [ "productionRuntimeClasspath", "runtimeClasspath" ]
+    filters = [new ModuleLicenseOverrideFilter(moduleLicenseOverridesFile)]
+}
+
+tasks.named('generateLicenseReport') {
+    inputs.file(moduleLicenseOverridesFile)
+}
+
+tasks.named('checkLicensePreparation') {
+    inputs.file(moduleLicenseOverridesFile)
 }
 
 // Configure the forked spring boot run task to properly delegate to the stirling-pdf module

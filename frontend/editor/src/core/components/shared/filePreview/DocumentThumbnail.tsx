@@ -100,7 +100,7 @@ const DocumentThumbnail: React.FC<DocumentThumbnailProps> = ({
               fontWeight: 700,
               letterSpacing: "0.08em",
               textTransform: "uppercase",
-              color: "var(--mantine-color-red-6)",
+              color: "var(--color-red-dark)",
               background: "rgba(220,38,38,0.1)",
               padding: "2px 8px",
               borderRadius: "6px",

@@ -17,25 +17,15 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Tuple
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_SIGNATURES = REPO_ROOT / "docs" / "type3" / "signatures"
-DEFAULT_INDEX = (
-    REPO_ROOT
-    / "app"
-    / "core"
-    / "src"
-    / "main"
-    / "resources"
-    / "type3"
-    / "library"
-    / "index.json"
-)
+DEFAULT_INDEX = REPO_ROOT / "app" / "core" / "src" / "main" / "resources" / "type3" / "library" / "index.json"
 
 
-def normalize_alias(value: Optional[str]) -> Optional[str]:
+def normalize_alias(value: str | None) -> str | None:
     if not value:
         return None
     trimmed = value.strip()
@@ -75,9 +65,9 @@ def iter_signature_fonts(signature_file: Path):
         }
 
 
-def make_alias_index(entries: List[Dict]) -> Tuple[Dict[str, Dict], Dict[str, Dict]]:
-    alias_index: Dict[str, Dict] = {}
-    signature_index: Dict[str, Dict] = {}
+def make_alias_index(entries: list[dict]) -> tuple[dict[str, dict], dict[str, dict]]:
+    alias_index: dict[str, dict] = {}
+    signature_index: dict[str, dict] = {}
     for entry in entries:
         for alias in entry.get("aliases", []) or []:
             normalized = normalize_alias(alias)
@@ -91,7 +81,7 @@ def make_alias_index(entries: List[Dict]) -> Tuple[Dict[str, Dict], Dict[str, Di
     return alias_index, signature_index
 
 
-def ensure_list(container: Dict, key: str) -> List:
+def ensure_list(container: dict, key: str) -> list:
     value = container.get(key)
     if isinstance(value, list):
         return value
@@ -100,11 +90,11 @@ def ensure_list(container: Dict, key: str) -> List:
     return value
 
 
-def merge_sorted_unique(values: Iterable[int]) -> List[int]:
+def merge_sorted_unique(values: Iterable[int]) -> list[int]:
     return sorted({int(v) for v in values if isinstance(v, int)})
 
 
-def normalize_source_path(pdf_path: Optional[str]) -> Optional[str]:
+def normalize_source_path(pdf_path: str | None) -> str | None:
     if not pdf_path:
         return None
     try:
@@ -117,13 +107,13 @@ def normalize_source_path(pdf_path: Optional[str]) -> Optional[str]:
 
 def update_library(
     signatures_dir: Path, index_path: Path, apply_changes: bool
-) -> Tuple[int, int, List[Tuple[str, Path]]]:
+) -> tuple[int, int, list[tuple[str, Path]]]:
     entries = load_json(index_path)
     alias_index, signature_index = make_alias_index(entries)
 
     modifications = 0
     updated_entries = set()
-    unmatched: List[Tuple[str, Path]] = []
+    unmatched: list[tuple[str, Path]] = []
 
     signature_files = sorted(signatures_dir.glob("*.json"))
     if not signature_files:
@@ -198,9 +188,7 @@ def update_library(
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Update Type3 library index using signature dumps."
-    )
+    parser = argparse.ArgumentParser(description="Update Type3 library index using signature dumps.")
     parser.add_argument(
         "--signatures-dir",
         type=Path,
@@ -223,11 +211,7 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    signatures_dir = (
-        args.signatures_dir
-        if args.signatures_dir.is_absolute()
-        else (REPO_ROOT / args.signatures_dir)
-    )
+    signatures_dir = args.signatures_dir if args.signatures_dir.is_absolute() else (REPO_ROOT / args.signatures_dir)
     index_path = args.index if args.index.is_absolute() else (REPO_ROOT / args.index)
 
     if not signatures_dir.exists():
@@ -237,9 +221,7 @@ def main() -> None:
         print(f"Index file not found: {index_path}", file=sys.stderr)
         sys.exit(2)
 
-    modifications, updated_entries, unmatched = update_library(
-        signatures_dir, index_path, apply_changes=args.apply
-    )
+    modifications, updated_entries, unmatched = update_library(signatures_dir, index_path, apply_changes=args.apply)
 
     mode = "APPLIED" if args.apply else "DRY-RUN"
     print(

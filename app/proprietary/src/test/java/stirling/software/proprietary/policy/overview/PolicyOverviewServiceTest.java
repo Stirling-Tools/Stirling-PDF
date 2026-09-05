@@ -15,7 +15,9 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
+import stirling.software.proprietary.policy.model.EditorConfig;
 import stirling.software.proprietary.policy.model.OutputSpec;
+import stirling.software.proprietary.policy.model.PipelineInput;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.TriggerConfig;
@@ -27,9 +29,11 @@ import stirling.software.proprietary.policy.store.InProcessPolicyStore;
 import stirling.software.proprietary.policy.store.PolicyStore;
 
 /**
- * Tests for {@link PolicyOverviewService}: every policy appears once with its sources resolved to
- * names, its steps and trigger/output summarised, and the KPI strip counting active vs paused.
- * Login is disabled so the team guards pass everything through.
+ * Tests for {@link PolicyOverviewService}: every policy the caller's team owns appears once with
+ * its sources resolved to names, its steps and trigger/output summarised, and the KPI strip
+ * counting active vs paused. Since Policies were merged into Pipelines, the suggested ("catalogue")
+ * policies are listed alongside hand-built pipelines - nothing is filtered. Login is disabled so
+ * the team guards pass everything through.
  */
 class PolicyOverviewServiceTest {
 
@@ -57,8 +61,9 @@ class PolicyOverviewServiceTest {
                         "Redaction",
                         "owner",
                         true,
-                        new TriggerConfig("schedule", Map.of()),
-                        List.of(claims.id()),
+                        List.of(
+                                new PipelineInput(
+                                        claims.id(), new TriggerConfig("schedule", Map.of()))),
                         List.of(new PipelineStep("/api/v1/security/auto-redact", Map.of())),
                         OutputSpec.inline()));
         policyStore.save(
@@ -67,7 +72,6 @@ class PolicyOverviewServiceTest {
                         "Archive (paused)",
                         "owner",
                         false,
-                        null,
                         List.of(),
                         List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
                         OutputSpec.inline()));
@@ -95,6 +99,109 @@ class PolicyOverviewServiceTest {
     }
 
     @Test
+    void listsEveryPolicyIncludingSuggestedOnes() {
+        Source inbox = source("Inbox", "/inbox");
+        // A hand-built pipeline.
+        policyStore.save(
+                new Policy(
+                        null,
+                        "Compress pipeline",
+                        "owner",
+                        true,
+                        List.of(),
+                        List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
+                        OutputSpec.inline()));
+        // A folder-watch pipeline.
+        policyStore.save(
+                new Policy(
+                        null,
+                        "Inbox watcher",
+                        "owner",
+                        true,
+                        List.of(
+                                new PipelineInput(
+                                        inbox.id(), new TriggerConfig("folder-watch", Map.of()))),
+                        List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
+                        OutputSpec.inline()));
+        // A suggested ("catalogue") policy (categoryId in output options): now listed too.
+        policyStore.save(
+                new Policy(
+                        null,
+                        "Classification Policy",
+                        "system",
+                        true,
+                        List.of(),
+                        List.of(new PipelineStep("/api/v1/ai/tools/classify-and-label", Map.of())),
+                        new OutputSpec("inline", Map.of("categoryId", "classification"))));
+
+        PoliciesOverviewResponse response = service.overview();
+
+        assertEquals(
+                List.of("Classification Policy", "Compress pipeline", "Inbox watcher"),
+                response.pipelines().stream().map(PolicyView::name).toList());
+        // KPIs count all three.
+        assertEquals(List.of(3L, 3L, 0L), response.kpis().stream().map(PolicyKpi::value).toList());
+    }
+
+    @Test
+    void requiredFlagSurfacesInTheView() {
+        policyStore.save(
+                new Policy(
+                        null,
+                        "Mandatory redaction",
+                        "owner",
+                        true,
+                        true,
+                        "",
+                        List.of(),
+                        List.of(new PipelineStep("/api/v1/security/auto-redact", Map.of())),
+                        OutputSpec.inline(),
+                        List.of(),
+                        null,
+                        EditorConfig.disabled()));
+
+        PolicyView view = find(service.overview(), "Mandatory redaction");
+        assertTrue(view.required());
+    }
+
+    @Test
+    void iconIsExplicitOtherwiseFallsBackToCategory() {
+        // The policy's first-class icon wins.
+        policyStore.save(
+                new Policy(
+                        null,
+                        "Custom with icon",
+                        "owner",
+                        true,
+                        false,
+                        "shield",
+                        List.of(),
+                        List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
+                        OutputSpec.inline(),
+                        List.of(),
+                        null,
+                        EditorConfig.disabled()));
+        // No explicit icon: a template-derived policy falls back to its categoryId marker.
+        policyStore.save(
+                new Policy(
+                        null,
+                        "Template derived",
+                        "owner",
+                        true,
+                        false,
+                        "",
+                        List.of(),
+                        List.of(new PipelineStep("/api/v1/security/auto-redact", Map.of())),
+                        new OutputSpec("inline", Map.of("categoryId", "security")),
+                        List.of(),
+                        null,
+                        EditorConfig.disabled()));
+
+        assertEquals("shield", find(service.overview(), "Custom with icon").icon());
+        assertEquals("security", find(service.overview(), "Template derived").icon());
+    }
+
+    @Test
     void anUnresolvedSourceFallsBackToItsId() {
         policyStore.save(
                 new Policy(
@@ -102,8 +209,7 @@ class PolicyOverviewServiceTest {
                         "Orphan",
                         "owner",
                         true,
-                        null,
-                        List.of("src-missing"),
+                        List.of(PipelineInput.manual("src-missing")),
                         List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
                         OutputSpec.inline()));
 
@@ -170,11 +276,48 @@ class PolicyOverviewServiceTest {
                         name,
                         "owner",
                         true,
-                        null,
-                        List.of(sourceIds),
+                        List.of(sourceIds).stream().map(PipelineInput::manual).toList(),
                         List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
                         OutputSpec.inline(),
                         teamId));
+    }
+
+    @Test
+    void editorPolicyReportsItsRunMomentRatherThanReadingAsManual() {
+        policyStore.save(
+                new Policy(
+                        null,
+                        "Editor flatten",
+                        "owner",
+                        true,
+                        List.of(),
+                        List.of(new PipelineStep("/api/v1/misc/flatten", Map.of())),
+                        OutputSpec.inline(),
+                        List.of(),
+                        1L,
+                        EditorConfig.onUpload()));
+
+        PolicyView view = find(service.overview(), "Editor flatten");
+
+        assertEquals("editor-upload", view.trigger());
+    }
+
+    @Test
+    void sweptPolicyWithNoTriggeredInputIsStillManual() {
+        policyStore.save(
+                new Policy(
+                        null,
+                        "Swept compress",
+                        "owner",
+                        true,
+                        List.of(),
+                        List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
+                        OutputSpec.inline(),
+                        1L));
+
+        PolicyView view = find(service.overview(), "Swept compress");
+
+        assertEquals("manual", view.trigger());
     }
 
     private static PolicyView find(PoliciesOverviewResponse response, String name) {
