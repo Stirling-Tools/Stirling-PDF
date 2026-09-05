@@ -187,7 +187,7 @@ system:
   maxDPI: 500 # Maximum allowed DPI for PDF to image conversion
   corsAllowedOrigins: [] # List of allowed origins for CORS (e.g. ['http://localhost:5173', 'https://app.example.com']). WARNING: leaving this empty falls back to allowing ALL origins (with credentials), it does NOT disable CORS. Set explicit origins to lock it down.
   backendUrl: "" # Backend base URL for SAML/OAuth/API callbacks (e.g. 'http://localhost:8080' for dev, 'https://api.example.com' for production). REQUIRED for SSO authentication to work correctly. This is where your IdP will send SAML responses and OAuth callbacks. Leave empty to default to 'http://localhost:8080' in development.
-  frontendUrl: "" # Frontend URL for invite email links (e.g. 'https://app.example.com'). Optional - if not set, will use backendUrl. This is the URL users click in invite emails.
+  frontendUrl: "" # Base URL of the web app, as a browser reaches it (e.g. 'https://app.example.com', or 'https://example.com/app' if served under a base path). Optional - if not set, will use backendUrl. Used for any link handed to a browser: invite emails, share links, mobile QR codes, and the account-link handshake.
   enableMobileScanner: true # Enable mobile phone QR code upload feature. Requires frontendUrl to be configured.
   enableMobileSignature: true # Enable drawing signatures on a phone via QR code from the Sign tool. Requires frontendUrl to be configured.
   mobileScannerSettings:

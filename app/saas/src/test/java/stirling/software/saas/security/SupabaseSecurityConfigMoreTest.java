@@ -12,8 +12,14 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.env.Environment;
+import org.springframework.http.HttpMethod;
+import org.springframework.mock.env.MockEnvironment;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -48,13 +54,19 @@ class SupabaseSecurityConfigMoreTest {
             apiKeyAuthenticationService;
 
     private SupabaseSecurityConfig config(ApplicationProperties props) {
+        return config(props, new MockEnvironment());
+    }
+
+    /** Loopback CORS origins are only added outside production, so the environment decides. */
+    private SupabaseSecurityConfig config(ApplicationProperties props, Environment environment) {
         return new SupabaseSecurityConfig(
                 userService,
                 teamService,
                 supabaseUserService,
                 saasTeamService,
                 props,
-                apiKeyAuthenticationService);
+                apiKeyAuthenticationService,
+                environment);
     }
 
     @Nested
@@ -205,6 +217,50 @@ class SupabaseSecurityConfigMoreTest {
         }
 
         @Test
+        @DisplayName("production does not allow loopback on arbitrary ports")
+        void productionHasNoLoopbackWildcard() {
+            CorsConfiguration cfg =
+                    cors(config(new ApplicationProperties()).corsConfigurationSource());
+
+            assertThat(cfg.getAllowedOriginPatterns())
+                    .doesNotContain("http://localhost:[*]", "http://127.0.0.1:[*]");
+        }
+
+        @Test
+        @DisplayName("non-production allows loopback on any port so dev servers can move")
+        void devAllowsAnyLoopbackPort() {
+            // Several dev servers run side by side and their ports change; pinning a list turns
+            // every new local environment into an opaque CORS failure.
+            MockEnvironment dev = new MockEnvironment();
+            dev.setActiveProfiles("saas", "dev");
+
+            CorsConfiguration cfg =
+                    cors(config(new ApplicationProperties(), dev).corsConfigurationSource());
+
+            assertThat(cfg.getAllowedOriginPatterns())
+                    .contains("http://localhost:[*]", "http://127.0.0.1:[*]")
+                    // Still credentialed, which is the reason the pattern form matters.
+                    .contains("https://stirling.com");
+            assertThat(cfg.getAllowCredentials()).isTrue();
+        }
+
+        @Test
+        @DisplayName("an operator origin list is respected verbatim even in dev")
+        void operatorOverrideSuppressesLoopbackWildcard() {
+            ApplicationProperties props = new ApplicationProperties();
+            props.getSystem().setCorsAllowedOrigins(List.of("https://custom.example.com"));
+            MockEnvironment dev = new MockEnvironment();
+            dev.setActiveProfiles("saas", "dev");
+
+            CorsConfiguration cfg = cors(config(props, dev).corsConfigurationSource());
+
+            // An operator who set the list meant it; we do not widen it behind their back.
+            assertThat(cfg.getAllowedOriginPatterns())
+                    .contains("https://custom.example.com")
+                    .doesNotContain("http://localhost:[*]");
+        }
+
+        @Test
         @DisplayName("operator override replaces the default origin list")
         void operatorOverrideUsed() {
             ApplicationProperties props = new ApplicationProperties();
@@ -298,6 +354,88 @@ class SupabaseSecurityConfigMoreTest {
 
             assertThat(auth.getAuthorities().stream().map(a -> a.getAuthority()).toList())
                     .contains("ROLE_LIMITED_API_USER");
+        }
+    }
+
+    @Nested
+    @DisplayName("linked-instance CORS")
+    class LinkedInstanceCors {
+
+        /** An origin no allow-list could ever contain: a customer's own deployment. */
+        private static final String SELF_HOSTED = "http://54.175.155.236:7779";
+
+        private CorsConfigurationSource source(boolean accountLinkEnabled) {
+            SupabaseSecurityConfig cfg = config(new ApplicationProperties());
+            ReflectionTestUtils.setField(cfg, "accountLinkEnabled", accountLinkEnabled);
+            return cfg.corsConfigurationSource();
+        }
+
+        private CorsConfiguration resolve(CorsConfigurationSource source, String path) {
+            return source.getCorsConfiguration(new MockHttpServletRequest("GET", path));
+        }
+
+        @ParameterizedTest
+        @ValueSource(
+                strings = {
+                    "/api/v1/payg/wallet",
+                    "/api/v1/payg/wallet/refresh",
+                    "/api/v1/payg/invoices",
+                    "/api/v1/payg/cap",
+                    "/api/v1/procurement/quote",
+                    "/api/v1/legal/consent",
+                    // The Settings page's "who is linked" table, and its revoke button.
+                    "/api/v1/account-link/instances",
+                    "/api/v1/account-link/instances/42/revoke"
+                })
+        @DisplayName("every apiClient.saas path is readable from any origin")
+        void portalReadsAllowAnyOrigin(String path) {
+            CorsConfiguration cfg = resolve(source(true), path);
+
+            assertThat(cfg.checkOrigin(SELF_HOSTED)).isEqualTo("*");
+            // The wildcard is only defensible without credentials. These must never both be set:
+            // the browser rejects the pair outright, and it would be an open credentialed API.
+            assertThat(cfg.getAllowCredentials()).isNotEqualTo(Boolean.TRUE);
+        }
+
+        @Test
+        @DisplayName("PATCH is allowed; the cap endpoint needs it")
+        void patchAllowed() {
+            CorsConfiguration cfg = resolve(source(true), "/api/v1/payg/cap");
+
+            assertThat(cfg.checkHttpMethod(HttpMethod.PATCH)).isNotNull();
+        }
+
+        @ParameterizedTest
+        @ValueSource(
+                strings = {
+                    "/api/v1/instance/sync",
+                    // The instance serves its own audit trail and Documents feed, so the portal
+                    // reads these from apiClient.local. They must never need cross-origin access.
+                    "/api/v1/proprietary/ui-data/documents",
+                    "/api/v1/proprietary/ui-data/audit-export",
+                    "/api/v1/proprietary/ui-data/infrastructure/audit-log",
+                    "/api/v1/proprietary/ui-data/admin-settings",
+                    "/api/v1/proprietary/ui-data/database",
+                    // The handshake is server-side plus our own approval page, never the
+                    // customer's origin.
+                    "/api/v1/account-link/connect/request",
+                    "/api/v1/account-link/connect/claim"
+                })
+        @DisplayName("every other path keeps the credentialed allow-list")
+        void otherPathsUnchanged(String path) {
+            CorsConfiguration cfg = resolve(source(true), path);
+
+            assertThat(cfg.getAllowCredentials()).isTrue();
+            assertThat(cfg.checkOrigin(SELF_HOSTED)).isNull();
+        }
+
+        @Test
+        @DisplayName("no wildcard at all when account linking is off")
+        void flagOffKeepsAllowList() {
+            CorsConfiguration cfg = resolve(source(false), "/api/v1/payg/wallet");
+
+            assertThat(cfg.getAllowCredentials()).isTrue();
+            assertThat(cfg.checkOrigin(SELF_HOSTED)).isNull();
         }
     }
 }

@@ -13,7 +13,8 @@ vi.mock("@app/hooks/usePolicies", () => ({
     policies: {
       security: {
         configured: true,
-        status: "active",
+        runsOnEditor: true,
+        enabled: true,
         backendId: "backend-1",
         runOn: "upload",
       },
@@ -85,7 +86,7 @@ describe("auto-run queue-rejection retry", () => {
 
     recordRunStart({
       runId: "run-1",
-      categoryId: "security",
+      policyKey: "security",
       fileId: "file-1",
       fileName: "doc.pdf",
       fileSize: 1234,
@@ -113,7 +114,13 @@ describe("auto-run queue-rejection retry", () => {
     await act(async () => {
       await vi.advanceTimersByTimeAsync(6000);
     });
-    expect(runStored).toHaveBeenCalledWith("backend-1", [{ size: 1234 }]);
+    // The workspace id travels with the retry too, so a failure of it can still name the
+    // document this browser is holding.
+    expect(runStored).toHaveBeenCalledWith(
+      "backend-1",
+      [{ size: 1234 }],
+      "file-1",
+    );
     expect(getRun("run-1")).toBeUndefined();
     expect(getRun("run-2")?.status).toBe("RUNNING");
   });

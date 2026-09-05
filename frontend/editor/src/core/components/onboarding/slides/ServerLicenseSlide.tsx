@@ -20,8 +20,8 @@ export default function ServerLicenseSlide({
     totalUsers != null ? totalUsers.toLocaleString() : null;
   const overLimitUserCopy = formattedTotalUsers ?? `more than ${freeTierLimit}`;
   const title = isOverLimit
-    ? i18n.t("onboarding.serverLicense.overLimitTitle", "Server License Needed")
-    : i18n.t("onboarding.serverLicense.freeTitle", "Server License");
+    ? i18n.t("onboarding.serverLicense.overLimitTitle", "Team plan needed")
+    : i18n.t("onboarding.serverLicense.freeTitle", "Team plan");
   const key = isOverLimit ? "server-license-over-limit" : "server-license";
 
   const overLimitBody = (
@@ -31,7 +31,7 @@ export default function ServerLicenseSlide({
       components={{
         strong: <strong />,
       }}
-      defaults="Our licensing permits up to <strong>{{freeTierLimit}}</strong> users for free per server. You have <strong>{{overLimitUserCopy}}</strong> Stirling users. To continue uninterrupted, upgrade to the Stirling Server plan - <strong>unlimited seats</strong>, PDF text editing, and full admin control for $99/server/mo."
+      defaults="Our licensing permits up to <strong>{{freeTierLimit}}</strong> users for free. You have <strong>{{overLimitUserCopy}}</strong> Stirling users. To continue uninterrupted, upgrade to the Stirling Team plan - <strong>100 users</strong>, PDF text editing, and full admin control for $99/mo."
     />
   );
 
@@ -42,7 +42,7 @@ export default function ServerLicenseSlide({
       components={{
         strong: <strong />,
       }}
-      defaults="Our <strong>Open-Core</strong> licensing permits up to <strong>{{freeTierLimit}}</strong> users for free per server. To scale uninterrupted, we recommend the Stirling Server plan - <strong>unlimited seats</strong> and <strong>SSO support</strong> for $99/server/mo."
+      defaults="Our <strong>Open-Core</strong> licensing permits up to <strong>{{freeTierLimit}}</strong> users for free. To scale uninterrupted, we recommend the Stirling Team plan - <strong>100 users</strong> and <strong>SSO support</strong> for $99/mo."
     />
   );
 

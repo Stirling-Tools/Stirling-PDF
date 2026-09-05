@@ -3,10 +3,7 @@ package stirling.software.proprietary.failure;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * Disposition of one recorded failure. {@code RESOLVED} is declared but not set yet (it becomes
- * system-set later); the rollup already defines what a repeat means for it, which is to reopen.
- */
+/** Disposition of one recorded failure. {@code RESOLVED} is system-set; a repeat reopens it. */
 public enum FileRunEventStatus {
     NEW(false),
     ACKNOWLEDGED(false),
@@ -14,9 +11,8 @@ public enum FileRunEventStatus {
     RESOLVED(true),
 
     /**
-     * The document this incident was about was deleted from its owner's editor, so there is nothing
-     * left to act on. Distinct from {@code DISMISSED}, which is a reviewer's decision, and from
-     * {@code RESOLVED}, which reopens on recurrence: this one cannot recur, the file is gone.
+     * The document was deleted, so there is nothing left to act on. A recurrence reopens it like
+     * {@code RESOLVED}: a fresh failure is proof the document is back.
      */
     FILE_REMOVED(true);
 

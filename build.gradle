@@ -30,19 +30,19 @@ ext {
     openSamlVersion = "5.2.1"
     commonmarkVersion = "0.28.0"
     googleJavaFormatVersion = "1.35.0"
-    logback = "1.6.1"
+    logback = "1.6.3"
     commonsIoVersion = "2.22.0"
     commonsLang3 = "3.20.0"
     rhinoVersion = "1.9.1"
-    okhttpBomVersion = "5.3.2"
+    okhttpBomVersion = "5.4.0"
     gsonVersion = "2.14.0"
     guavaVersion = "33.6.0-jre"
     jinjavaVersion = "2.8.4"
-    jackson2Version = "2.22.1"
+    jackson2Version = "2.22.2"
     bucket4jVersion = "8.19.0"
-    archunitVersion = "1.4.2"
+    archunitVersion = "1.5.0"
     batikVersion = "1.19"
-    jpdfiumVersion = "1.0.4"
+    jpdfiumVersion = "1.1.3"
     jwtVersion = "0.13.0"
     awsSdkVersion = "2.51.3"
     jschVersion = "2.28.6"
@@ -265,7 +265,6 @@ subprojects {
 
     dependencies {
         implementation 'org.springframework.boot:spring-boot-starter-actuator'
-        implementation 'io.github.pixee:java-security-toolkit:1.2.3'
 
         //tmp for security bumps
         implementation "ch.qos.logback:logback-core:$logback"
@@ -307,7 +306,7 @@ subprojects {
         systemProperty 'apple.awt.UIElement', 'true'
 
         testLogging {
-            events "started", "failed"
+            events "skipped", "failed"
             showExceptions = true
             showCauses = true
             showStackTraces = true
@@ -453,8 +452,12 @@ subprojects {
     if (name == 'stirling-pdf') {
         apply plugin: 'org.springdoc.openapi-gradle-plugin'
 
+        def openApiPort = rootProject.findProperty('openApiPort')?.toString()
+            ?: new ServerSocket(0).withCloseable { it.localPort }.toString()
+
         openApi {
-            apiDocsUrl = "http://localhost:8080/v1/api-docs"
+            apiDocsUrl = "http://localhost:${openApiPort}/v1/api-docs"
+            customBootRun { args = ["--server.port=${openApiPort}"] }
             outputDir = file("$projectDir")
             outputFileName = "SwaggerDoc.json"
             waitTimeInSeconds = 60 // Increase the wait time to 60 seconds
@@ -543,6 +546,13 @@ subprojects {
                 }
             }
 
+            // Lazy initialization defers bean creation until first use,
+            // reducing dev-mode RSS significantly (heap drops ~40-60%).
+            // Enable with: ./gradlew bootRun -PlazyInit=true
+            if (rootProject.findProperty('lazyInit') == 'true') {
+                runtimeArgs.add("-Dspring.main.lazy-initialization=true")
+                logger.lifecycle("Lazy initialization enabled (-PlazyInit=true)")
+            }
             jvmArgs = runtimeArgs
         }
     }

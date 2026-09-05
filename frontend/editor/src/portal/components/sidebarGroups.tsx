@@ -5,7 +5,6 @@ import {
   UsersIcon,
   SourcesIcon,
   IntegrationsIcon,
-  PoliciesIcon,
   PipelinesIcon,
   DocumentsIcon,
   InfrastructureIcon,
@@ -18,6 +17,8 @@ export interface NavEntry {
   icon: ReactNode;
   /** When set, the tab opens this URL in a new tab instead of navigating in-app. */
   externalUrl?: string;
+  /** The whole tab is facts about the linked account, so unlinked is asked rather than navigated. */
+  requiresLink?: boolean;
 }
 
 export interface NavGroup {
@@ -29,11 +30,11 @@ export interface NavGroup {
 // Sidebar nav groups. This is a flavor seam: the SaaS build shadows this file to
 // drop sections not yet shipped there (see src/portal-saas/components/sidebarGroups).
 
-// The processor's own workflow: home plus the pipeline it feeds.
+// The processor's own workflow: home plus the pipeline it feeds. Policies were folded into
+// Pipelines (a policy is a pipeline the org requires), so there's no separate Policies tab.
 export const GROUP_PROCESSOR: NavEntry[] = [
   { id: "home", icon: <HomeIcon /> },
   { id: "sources", icon: <SourcesIcon /> },
-  { id: "policies", icon: <PoliciesIcon /> },
   { id: "pipelines", icon: <PipelinesIcon /> },
   { id: "documents", icon: <DocumentsIcon /> },
 ];
@@ -43,6 +44,6 @@ export const GROUP_PLATFORM: NavEntry[] = [
   { id: "users", icon: <UsersIcon /> },
   { id: "integrations", icon: <IntegrationsIcon /> },
   { id: "infrastructure", icon: <InfrastructureIcon /> },
-  { id: "usage", icon: <UsageIcon /> },
+  { id: "usage", icon: <UsageIcon />, requiresLink: true },
   { id: "docs", icon: <DocsIcon /> },
 ];

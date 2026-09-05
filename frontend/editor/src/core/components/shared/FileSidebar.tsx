@@ -24,7 +24,6 @@ import { useViewer } from "@app/contexts/ViewerContext";
 import { useFileHandler } from "@app/hooks/useFileHandler";
 import { useAccountIdentity } from "@app/hooks/useAccountIdentity";
 import { useFreeCreditsSummary } from "@app/hooks/useFreeCreditsSummary";
-import { useOtherAppSwitch } from "@app/hooks/useOtherAppSwitch";
 import { useOpenPlan } from "@app/hooks/useOpenPlan";
 import { NavFooter } from "@app/components/shared/navFooter/NavFooter";
 import {
@@ -32,8 +31,7 @@ import {
   useIndexedDBRevision,
 } from "@app/contexts/IndexedDBContext";
 import { GoogleDriveIcon } from "@app/components/shared/CloudStorageIcons";
-import { AppSwitcher } from "@app/components/shared/AppSwitcher";
-import { SidebarToggleIcon } from "@app/components/shared/SidebarToggleIcon";
+import { SidebarHeader } from "@app/components/shared/SidebarHeader";
 import type { StirlingFileStub } from "@app/types/fileContext";
 import FolderOpenIcon from "@mui/icons-material/FolderOpen";
 import FolderSpecialIcon from "@mui/icons-material/FolderSpecial";
@@ -41,6 +39,7 @@ import UploadFileIcon from "@mui/icons-material/UploadFile";
 import AddIcon from "@mui/icons-material/Add";
 import OpenInFullIcon from "@mui/icons-material/OpenInFull";
 import type { FileId } from "@app/types/file";
+import type { WatchedFolderViewData } from "@app/types/watchedFolders";
 import { FileItem } from "@app/components/shared/FileSidebarFileItem";
 import { useLabelName } from "@app/data/labelDisplay";
 import { useClassificationEnabled } from "@app/hooks/useClassificationEnabled";
@@ -78,8 +77,9 @@ import { WATCHED_FOLDERS_ENABLED } from "@app/constants/featureFlags";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import "@app/components/shared/FileSidebar.css";
 
-const COLLAPSED_WIDTH = "3.5rem";
-const EXPANDED_WIDTH = "16.25rem"; // ~260px
+// Shared with the processor sidebar via tokens, so the two cannot drift.
+const COLLAPSED_WIDTH = "var(--sidebar-collapsed-w)";
+const EXPANDED_WIDTH = "var(--sidebar-w)";
 
 // Inlined to avoid a circular import with WatchedFoldersRegistration.
 const WATCHED_FOLDER_VIEW_ID = "watchedFolder";
@@ -98,9 +98,11 @@ export interface FileSidebarProps {
   collapsed?: boolean;
   onToggleCollapse?: () => void;
   onOpenSettings?: () => void;
-  /** Accessible name override for the toggle button. */
+  /** The quick nav rail owns the account control, so the footer drops its own row. */
+  accountHoisted?: boolean;
+  /** Accessible name override for the collapse toggle. */
   toggleAriaLabel?: string;
-  /** Icon override for the toggle button (e.g. back-arrow on /files). */
+  /** Icon override for the collapse toggle (e.g. back-arrow on /files). */
   toggleIcon?: React.ReactNode;
   /** Override the Open-from-computer handler (e.g. upload to /files folder). */
   onUploadFiles?: (files: File[]) => void | Promise<void>;
@@ -155,11 +157,12 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       collapsed = false,
       onToggleCollapse,
       onOpenSettings,
+      accountHoisted = false,
+      toggleAriaLabel,
+      toggleIcon,
       onUploadFiles,
       onPickGoogleDriveFiles,
       extraAction,
-      toggleAriaLabel,
-      toggleIcon,
     },
     ref,
   ) {
@@ -190,9 +193,12 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const isWatchedFoldersActive =
       currentWorkbench === WATCHED_FOLDER_WORKBENCH_ID;
     // The folder currently open in the Watched Folders view (null = folder list/home).
-    const activeWatchedFolderId = (customWorkbenchViews.find(
+    const watchedFolderView = customWorkbenchViews.find(
       (v) => v.id === WATCHED_FOLDER_VIEW_ID,
-    )?.data?.folderId ?? null) as string | null;
+    );
+    const activeWatchedFolderId =
+      (watchedFolderView?.data as WatchedFolderViewData | undefined)
+        ?.folderId ?? null;
     // fileId → folderId[] across all watch folders. In the Watched Folders view the
     // sidebar tick reflects "already in the open folder" instead of workbench
     // membership (which is meaningless there - a click sends to the folder, not
@@ -208,7 +214,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const openWatchedFolders = useCallback(() => {
       if (collapsed && onToggleCollapse) onToggleCollapse();
       setCustomWorkbenchViewData(WATCHED_FOLDER_VIEW_ID, { folderId: null });
-      navActions.setWorkbench(WATCHED_FOLDER_WORKBENCH_ID as any);
+      navActions.setWorkbench(WATCHED_FOLDER_WORKBENCH_ID);
     }, [collapsed, onToggleCollapse, setCustomWorkbenchViewData, navActions]);
 
     // Clicking a file's membership dot jumps straight into that folder.
@@ -216,7 +222,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       (folderId: string) => {
         if (collapsed && onToggleCollapse) onToggleCollapse();
         setCustomWorkbenchViewData(WATCHED_FOLDER_VIEW_ID, { folderId });
-        navActions.setWorkbench(WATCHED_FOLDER_WORKBENCH_ID as any);
+        navActions.setWorkbench(WATCHED_FOLDER_WORKBENCH_ID);
       },
       [collapsed, onToggleCollapse, setCustomWorkbenchViewData, navActions],
     );
@@ -249,7 +255,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const { displayName, profilePictureUrl, isAnonymous } =
       useAccountIdentity();
     const credits = useFreeCreditsSummary();
-    const otherApp = useOtherAppSwitch();
     const openPlan = useOpenPlan();
 
     // Leaf files = user-visible files (excludes intermediate tool outputs)
@@ -759,14 +764,16 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           await onUploadFiles(files);
         } else {
           await addFiles(files);
-          if (!isMultiTool) {
+          // A tool that pinned its own workbench surface owns it - switching to
+          // the viewer here strands the upload outside the tool being used.
+          if (!isMultiTool && !currentWorkbench.startsWith("custom:")) {
             navActions.setWorkbench(
               files.length === 1 ? "viewer" : "fileEditor",
             );
           }
         }
       },
-      [addFiles, navActions, isMultiTool, onUploadFiles],
+      [addFiles, navActions, isMultiTool, onUploadFiles, currentWorkbench],
     );
 
     const handleNativeFilePick = useCallback(
@@ -943,25 +950,12 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           </div>
         )}
         <div className="file-sidebar-inner">
-          <div className="file-sidebar-brand">
-            <AppSwitcher collapsed={collapsed} />
-            {onToggleCollapse && (
-              <ActionIcon
-                variant="tertiary"
-                size="md"
-                className="file-sidebar-collapse-toggle"
-                onClick={() => onToggleCollapse()}
-                aria-label={
-                  toggleAriaLabel ??
-                  (collapsed
-                    ? t("fileSidebar.expand", "Expand sidebar")
-                    : t("fileSidebar.collapse", "Collapse sidebar"))
-                }
-              >
-                {toggleIcon ?? <SidebarToggleIcon size={18} />}
-              </ActionIcon>
-            )}
-          </div>
+          <SidebarHeader
+            collapsed={collapsed}
+            onToggleCollapse={onToggleCollapse}
+            toggleAriaLabel={toggleAriaLabel}
+            toggleIcon={toggleIcon}
+          />
 
           {/* Box 1 — top controls (open / my files / cloud). No title. File
               search lives in the global super search (top bar), not here. */}
@@ -984,7 +978,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
             {/* Tooltips only fire when collapsed - when expanded the visible
                 text label below already identifies each row, so a tooltip
                 would just flash a duplicate. Distinct icons (UploadFile for
-                "Open from computer" vs FolderOpen for "My Files") so the
+                "Open from computer" vs FolderOpen for "File library") so the
                 collapsed rail isn't two identical folder icons either. */}
             <Tooltip
               label={t("fileSidebar.openFromComputer", "Open from computer")}
@@ -1003,7 +997,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                 onClick={() => {
                   // "Open from computer" goes straight to the native OS file
                   // picker. The full file manager (recent + drives + folders)
-                  // is reachable via "My Files" below.
+                  // is reachable via "File library" below.
                   nativeFileInputRef.current?.click();
                 }}
                 role="button"
@@ -1080,7 +1074,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
             )}
 
             <Tooltip
-              label={t("fileSidebar.myFiles", "My Files")}
+              label={t("fileSidebar.myFiles", "File library")}
               position="right"
               withinPortal
               disabled={!collapsed}
@@ -1094,7 +1088,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                 }}
                 role="button"
                 tabIndex={0}
-                aria-label={t("fileSidebar.myFiles", "My Files")}
+                aria-label={t("fileSidebar.myFiles", "File library")}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault();
@@ -1105,7 +1099,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                 <FolderOpenIcon className="file-sidebar-action-icon" />
                 {!collapsed && (
                   <span className="file-sidebar-action-label sidebar-content-fade">
-                    {t("fileSidebar.myFiles", "My Files")}
+                    {t("fileSidebar.myFiles", "File library")}
                   </span>
                 )}
               </div>
@@ -1370,15 +1364,15 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         {/* Getting-started checklist, floating above the footer (SaaS only). */}
         <SidebarChecklistSlot collapsed={collapsed} />
 
-        {/* Box 3 — the shared footer: credits, app switch, account row. */}
+        {/* Box 3 — the shared footer: credits, plan, and the account row unless hoisted. */}
         <NavFooter
           className="file-sidebar-footer-box"
           displayName={displayName}
           profilePictureUrl={profilePictureUrl}
           onOpenSettings={onOpenSettings}
+          showAccount={!accountHoisted}
           credits={credits}
           onOpenPlan={openPlan ?? undefined}
-          otherApp={otherApp}
           collapsed={collapsed}
         />
       </div>

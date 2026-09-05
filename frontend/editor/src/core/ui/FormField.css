@@ -5,6 +5,12 @@
   min-width: 0;
 }
 
+.sui-field__label-row {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
 .sui-field__label {
   font-size: 0.75rem;
   font-weight: 600;
@@ -12,6 +18,8 @@
   letter-spacing: 0.06em;
   color: var(--color-section-label);
 }
+
+/* The label's (i) affordance is the shared InfoTooltip primitive (@app/ui/InfoTooltip). */
 
 .sui-field__required {
   /* The base red is a fill colour; as text on the form background it only

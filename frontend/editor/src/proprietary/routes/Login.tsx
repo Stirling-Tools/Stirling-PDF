@@ -7,7 +7,10 @@ import {
 } from "react-router-dom";
 import { Button } from "@app/ui/Button";
 import { isSafePostLoginRedirect } from "@app/auth";
-import { setPostLoginRedirectPath } from "@app/auth/spring/springAuthClient";
+import {
+  setPostLoginRedirectPath,
+  consumePostLoginRedirectPath,
+} from "@app/auth/spring/springAuthClient";
 import { useAuth } from "@app/auth/UseSession";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useTranslation } from "react-i18next";
@@ -207,7 +210,8 @@ export default function Login() {
   useEffect(() => {
     if (loading) return;
     if (!session) return;
-    const returnPath = resolveReturnPath();
+    const stashed = consumePostLoginRedirectPath();
+    const returnPath = resolveReturnPath() ?? stashed;
     if (returnPath) {
       navigate(returnPath, { replace: true });
       return;
