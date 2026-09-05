@@ -22,7 +22,12 @@ export interface QuickNavRailContainerProps extends Omit<
   "footer"
 > {
   /** The rail owns the account control, so the sidebars drop their own row. */
-  onOpenSettings?: () => void;
+  onOpenAccount?: () => void;
+  /** Marks the avatar current for the whole settings page, which it now owns. */
+  accountActive?: boolean;
+  /** Omitted in builds with no docs to browse. */
+  onOpenDocs?: () => void;
+  docsActive?: boolean;
   /** Omitted in builds with no processor to invite anyone into. */
   onInvite?: () => void;
   onToggleNotifications?: () => void;
@@ -33,7 +38,10 @@ export interface QuickNavRailContainerProps extends Omit<
 
 /** The fixed-width column the rail sits in. */
 export function QuickNavRailContainer({
-  onOpenSettings,
+  onOpenAccount,
+  accountActive = false,
+  onOpenDocs,
+  docsActive = false,
   onInvite,
   onToggleNotifications,
   notificationsOpen,
@@ -68,10 +76,34 @@ export function QuickNavRailContainer({
                   onClick={onInvite}
                 />
               )}
-              {onOpenSettings && (
+              {onOpenDocs && (
+                <RailButton
+                  label={t("quickNav.docs", "Documentation")}
+                  icon={
+                    docsActive ? (
+                      <LocalIcon
+                        icon="help-rounded"
+                        width="1.125rem"
+                        height="1.125rem"
+                      />
+                    ) : (
+                      <LocalIcon
+                        icon="help-outline-rounded"
+                        width="1.125rem"
+                        height="1.125rem"
+                      />
+                    )
+                  }
+                  current={docsActive}
+                  testId="docs-button"
+                  onClick={onOpenDocs}
+                />
+              )}
+              {onOpenAccount && (
                 <QuickNavRailAccount
-                  onOpenSettings={onOpenSettings}
+                  onOpen={onOpenAccount}
                   identity={identity}
+                  active={accountActive}
                 />
               )}
             </div>

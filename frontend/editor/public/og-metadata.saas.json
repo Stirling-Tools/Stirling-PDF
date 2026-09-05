@@ -512,6 +512,11 @@
       "title": "Admin Ai Limits Settings - Stirling PDF",
       "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
     },
+    "/settings/adminAi": {
+      "image": "/og_images/home.png",
+      "title": "Admin Ai Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
     "/settings/help": {
       "image": "/og_images/home.png",
       "title": "Help Settings - Stirling PDF",
@@ -532,6 +537,11 @@
       "title": "Frontend Third Party Licenses Settings - Stirling PDF",
       "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
     },
+    "/settings/about": {
+      "image": "/og_images/home.png",
+      "title": "About Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
     "/settings/payg": {
       "image": "/og_images/home.png",
       "title": "Payg Settings - Stirling PDF",
@@ -540,6 +550,26 @@
     "/settings/account-link": {
       "image": "/og_images/home.png",
       "title": "Account Link Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/users": {
+      "image": "/og_images/home.png",
+      "title": "Users Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/billing": {
+      "image": "/og_images/home.png",
+      "title": "Billing Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/audit": {
+      "image": "/og_images/home.png",
+      "title": "Audit Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/storage": {
+      "image": "/og_images/home.png",
+      "title": "Storage Settings - Stirling PDF",
       "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
     },
     "/signup": {
@@ -709,12 +739,18 @@
     "/settings/adminAiModels": "/settings/adminAiModels",
     "/settings/adminAiDocuments": "/settings/adminAiDocuments",
     "/settings/adminAiLimits": "/settings/adminAiLimits",
+    "/settings/adminAi": "/settings/adminAi",
     "/settings/help": "/settings/help",
     "/settings/legal": "/settings/legal",
     "/settings/backendThirdPartyLicenses": "/settings/backendThirdPartyLicenses",
     "/settings/frontendThirdPartyLicenses": "/settings/frontendThirdPartyLicenses",
+    "/settings/about": "/settings/about",
     "/settings/payg": "/settings/payg",
     "/settings/account-link": "/settings/account-link",
+    "/settings/users": "/settings/users",
+    "/settings/billing": "/settings/billing",
+    "/settings/audit": "/settings/audit",
+    "/settings/storage": "/settings/storage",
     "/signup": "/signup",
     "/processor": "/processor"
   }

@@ -146,27 +146,28 @@ test.describe("Super search — bar basics", () => {
     await expect(page).toHaveURL(/\/merge/);
   });
 
-  test("Ctrl+K inside the settings modal closes it and focuses the bar", async ({
+  test("a settings result deep-links to the settings page", async ({
     page,
   }) => {
     const input = page.locator(INPUT);
     await expect(input).toBeVisible();
-    await openSettings(page);
 
-    // The modal traps focus, so the bar's own shortcut is inert; the modal
-    // cedes: it closes itself and hands focus to the bar.
-    await page.keyboard.press("Control+KeyK");
-    await expect(page.locator(".modal-container")).not.toBeVisible();
-    await expect(input).toBeFocused();
-    await expect(input).toHaveAttribute("aria-expanded", "true");
-
-    // Full loop: a settings result deep-links straight back into the modal.
     await input.fill("general");
     await page
       .getByRole("option", { name: /General/ })
       .first()
       .click();
-    await expect(page.locator(".modal-container")).toBeVisible();
+    await expect(page.locator(".settings-page")).toBeVisible();
+    await expect(page).toHaveURL(/\/settings\/general/);
+  });
+
+  test("Ctrl+K on the settings page focuses the shared search bar", async ({
+    page,
+  }) => {
+    await openSettings(page);
+    // Same bar as the editor and the processor, its own input id.
+    await page.keyboard.press("Control+KeyK");
+    await expect(page.locator("#settings-search-input")).toBeFocused();
   });
 });
 

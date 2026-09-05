@@ -1,0 +1,66 @@
+.settings-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2, 0.5rem);
+}
+
+.settings-card__heading {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+}
+
+.settings-card__toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  /* Only as wide as its text, so the (i) and badge sit next to the title
+     rather than being pushed to the far edge. */
+  width: auto;
+  padding: 0.25rem 0;
+  border: 0;
+  background: none;
+  color: var(--c-text);
+  font-size: 0.9375rem;
+  font-weight: var(--font-weight-semibold, 600);
+  text-align: start;
+  cursor: pointer;
+  /* Permanent, not just during the focus pulse: an anchored jump would land
+     the heading under the sticky search bar otherwise. */
+  scroll-margin-top: 1rem;
+}
+
+.settings-card__toggle:focus-visible {
+  outline: 0.125rem solid var(--c-primary);
+  outline-offset: 0.125rem;
+  border-radius: var(--radius-sm, 4px);
+}
+
+.settings-card__chevron {
+  flex-shrink: 0;
+  color: var(--c-text-subtle);
+  transition: transform var(--motion-fast, 120ms);
+}
+
+.settings-card__toggle[aria-expanded="false"] .settings-card__chevron {
+  transform: rotate(-90deg);
+}
+
+.settings-card__panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3, 0.75rem);
+}
+
+/* `display` on the rule above outranks the UA's [hidden] rule, so a collapsed
+   card would keep showing its contents without this. */
+.settings-card__panel[hidden] {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .settings-card__chevron {
+    transition: none;
+  }
+}

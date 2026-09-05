@@ -5,6 +5,8 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { navigateToSettings } from "@app/utils/settingsNavigation";
+import type { NavKey } from "@app/components/shared/config/types";
 import type { ConnectOutcome } from "@portal/components/account-link/ConnectCallbackView";
 
 interface UIContextValue {
@@ -21,23 +23,14 @@ interface UIContextValue {
   closeAssistant: () => void;
   toggleAssistant: () => void;
 
-  /** Settings is a modal overlay, not a route. */
-  settingsOpen: boolean;
   /**
-   * The section the Settings modal should land on when opened. `null` lets the
-   * modal pick its own default. Cleared back to `null` on close.
+   * Leave for the settings page, optionally on a named section and scrolled to
+   * one control. Settings is app-wide and lives outside the processor, so this
+   * navigates rather than opening an overlay.
    */
-  settingsInitialSection: string | null;
-  settingsInitialFocus: string | null;
   openSettings: (section?: string, focus?: string) => void;
-  closeSettings: () => void;
 
-  /**
-   * The account-link login modal. A single top-level instance — never nested in
-   * another overlay. Opening it from within Settings closes Settings first (no
-   * modal-in-modal) and reopens Settings on the account-link section once the
-   * login modal closes, so the admin returns to where they were.
-   */
+  /** The account-link login modal. A single top-level instance. */
   linkModalOpen: boolean;
   /**
    * "link" registers this instance (the normal first-time flow); "reauth" only
@@ -89,25 +82,12 @@ export function UIProvider({ children }: { children: ReactNode }) {
   const [sidebarCollapsed, setSidebarCollapsed] =
     useState(readSidebarCollapsed);
   const [assistantOpen, setAssistantOpen] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const [settingsInitialSection, setSettingsInitialSection] = useState<
-    string | null
-  >(null);
-  const [settingsInitialFocus, setSettingsInitialFocus] = useState<
-    string | null
-  >(null);
   const [linkModalOpen, setLinkModalOpen] = useState(false);
   const [trialSetupRequested, setTrialSetupRequested] = useState(false);
   const [linkModalMode, setLinkModalMode] = useState<"link" | "reauth">("link");
   const [connectOutcome, setConnectOutcome] = useState<ConnectOutcome | null>(
     null,
   );
-  // When the link modal is opened from inside Settings, remember the section to
-  // restore so closing the modal returns the admin to where they were.
-  const [reopenSettingsAfterLink, setReopenSettingsAfterLink] = useState<
-    string | null
-  >(null);
-
   const value = useMemo<UIContextValue>(
     () => ({
       // Opening any overlay (settings, link modal) dismisses the mobile nav
@@ -130,19 +110,9 @@ export function UIProvider({ children }: { children: ReactNode }) {
       closeAssistant: () => setAssistantOpen(false),
       toggleAssistant: () => setAssistantOpen((o) => !o),
 
-      settingsOpen,
-      settingsInitialSection,
-      settingsInitialFocus,
       openSettings: (section?: string, focus?: string) => {
         setMobileNavOpen(false);
-        setSettingsInitialSection(section ?? null);
-        setSettingsInitialFocus(focus ?? null);
-        setSettingsOpen(true);
-      },
-      closeSettings: () => {
-        setSettingsOpen(false);
-        setSettingsInitialSection(null);
-        setSettingsInitialFocus(null);
+        navigateToSettings(section as NavKey | undefined, focus);
       },
 
       linkModalOpen,
@@ -150,14 +120,6 @@ export function UIProvider({ children }: { children: ReactNode }) {
       openLinkModal: (mode: "link" | "reauth" = "link") => {
         setMobileNavOpen(false);
         setLinkModalMode(mode);
-        // Never stack on Settings: close it first, and remember to reopen it on
-        // the account-link section once the login modal closes.
-        if (settingsOpen) {
-          setReopenSettingsAfterLink("account-link");
-          setSettingsOpen(false);
-          setSettingsInitialSection(null);
-          setSettingsInitialFocus(null);
-        }
         setLinkModalOpen(true);
       },
       trialSetupRequested,
@@ -179,24 +141,14 @@ export function UIProvider({ children }: { children: ReactNode }) {
         setLinkModalMode("link");
         // A reopen from a CTA is a fresh flow, not a handshake already dismissed.
         setConnectOutcome(null);
-        if (reopenSettingsAfterLink) {
-          setSettingsInitialSection(reopenSettingsAfterLink);
-          setSettingsInitialFocus(null);
-          setSettingsOpen(true);
-          setReopenSettingsAfterLink(null);
-        }
       },
     }),
     [
       mobileNavOpen,
       sidebarCollapsed,
       assistantOpen,
-      settingsOpen,
-      settingsInitialSection,
-      settingsInitialFocus,
       linkModalOpen,
       linkModalMode,
-      reopenSettingsAfterLink,
       trialSetupRequested,
       connectOutcome,
     ],

@@ -14,7 +14,7 @@ function Probe({ onRead }: { onRead: (value: unknown) => void }) {
     chromeless: host?.chromeless,
     identity: host?.identity,
     activeTool: host?.activeTool,
-    openSettings: Boolean(host?.actions.current?.openSettings),
+    goToDefaultState: Boolean(host?.actions.current?.goToDefaultState),
   });
   return null;
 }
@@ -22,7 +22,7 @@ function Probe({ onRead }: { onRead: (value: unknown) => void }) {
 function App() {
   useRegisterQuickNavHost(
     { identity: { displayName: "Ada", profilePictureUrl: null } },
-    { openSettings: () => {} },
+    { goToDefaultState: () => {} },
   );
   return null;
 }
@@ -58,7 +58,7 @@ describe("QuickNavHostContext", () => {
       displayName: "Ada",
       profilePictureUrl: null,
     });
-    expect(read().openSettings).toBe(true);
+    expect(read().goToDefaultState).toBe(true);
 
     view.rerender(
       <QuickNavHostProvider>
@@ -74,7 +74,7 @@ describe("QuickNavHostContext", () => {
       </QuickNavHostProvider>,
     );
     expect(after.appMounted).toBe(true);
-    expect(after.openSettings).toBe(false);
+    expect(after.goToDefaultState).toBe(false);
   });
 
   it("clears the open tool when the next app registers without one", () => {

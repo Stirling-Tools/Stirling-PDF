@@ -1,8 +1,9 @@
 import { useCallback } from "react";
+import { SettingsToggleRow } from "@app/components/shared/config/SettingsToggleRow";
+import { InfoTooltip } from "@app/ui/InfoTooltip";
 import { Trans, useTranslation } from "react-i18next";
 import {
   TextInput,
-  Switch,
   Stack,
   Paper,
   Text,
@@ -20,7 +21,6 @@ import { useSettingsDirty } from "@app/hooks/useSettingsDirty";
 import PendingBadge from "@app/components/shared/config/PendingBadge";
 import { SettingsStickyFooter } from "@app/components/shared/config/SettingsStickyFooter";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
-import LoginRequiredBanner from "@app/components/shared/config/LoginRequiredBanner";
 
 interface PremiumSettingsData {
   key?: string;
@@ -89,7 +89,6 @@ export default function AdminPremiumSection() {
   return (
     <div className="settings-section-container">
       <Stack gap="lg" className="settings-section-content">
-        <LoginRequiredBanner show={!loginEnabled} />
         <div>
           <Text fw={600} size="lg">
             {t("admin.settings.premium.title", "Premium & Enterprise")}
@@ -169,12 +168,14 @@ export default function AdminPremiumSection() {
                       {t("admin.settings.premium.key.label", "License Key")}
                     </span>
                     <PendingBadge show={isFieldPending("key")} />
+                    <InfoTooltip
+                      label={t(
+                        "admin.settings.premium.key.description",
+                        "Enter your premium or enterprise license key",
+                      )}
+                    />
                   </Group>
                 }
-                description={t(
-                  "admin.settings.premium.key.description",
-                  "Enter your premium or enterprise license key",
-                )}
                 value={settings.key || ""}
                 onChange={(e) =>
                   setSettings({ ...settings, key: e.target.value })
@@ -184,40 +185,24 @@ export default function AdminPremiumSection() {
               />
             </div>
 
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
+            <SettingsToggleRow
+              label={t(
+                "admin.settings.premium.enabled.label",
+                "Enable Premium Features",
+              )}
+              info={t(
+                "admin.settings.premium.enabled.description",
+                "Enable license key checks for pro/enterprise features",
+              )}
+              pending={isFieldPending("enabled")}
+              checked={settings.enabled || false}
+              onChange={(checked) => {
+                if (!loginEnabled) return;
+                setSettings({ ...settings, enabled: checked });
               }}
-            >
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <Text fw={500} size="sm">
-                  {t(
-                    "admin.settings.premium.enabled.label",
-                    "Enable Premium Features",
-                  )}
-                </Text>
-                <Text size="xs" c="dimmed" mt={4}>
-                  {t(
-                    "admin.settings.premium.enabled.description",
-                    "Enable license key checks for pro/enterprise features",
-                  )}
-                </Text>
-              </div>
-              <Group gap="xs">
-                <Switch
-                  checked={settings.enabled || false}
-                  onChange={(e) => {
-                    if (!loginEnabled) return;
-                    setSettings({ ...settings, enabled: e.target.checked });
-                  }}
-                  disabled={!loginEnabled}
-                  styles={getDisabledStyles()}
-                />
-                <PendingBadge show={isFieldPending("enabled")} />
-              </Group>
-            </div>
+              disabled={!loginEnabled}
+              styles={getDisabledStyles()}
+            />
           </Stack>
         </Paper>
       </Stack>

@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Skeleton } from "@app/ui";
 import { useTier } from "@portal/contexts/TierContext";
-import { useView } from "@portal/contexts/ViewContext";
+import { useUI } from "@portal/contexts/UIContext";
 import { useSectionFlags } from "@portal/hooks/useAsync";
 import { useEditorDeployment } from "@portal/queries/infrastructure";
 import { DeploymentSummaryStrip } from "@portal/components/editor-admin/DeploymentSummaryStrip";
@@ -31,14 +31,14 @@ function SectionHead({ title, sub }: { title: string; sub: string }) {
 export function EditorAdmin() {
   const { t } = useTranslation();
   const { tier } = useTier();
-  const { setActiveView } = useView();
+  const { openSettings } = useUI();
   const state = useEditorDeployment(tier);
   const { data } = state;
   const { isLoading } = useSectionFlags(state);
 
   // Lower tiers nudge toward Usage & Billing to upgrade; the snippet shows the
   // value of the higher tier inline before the user gets there.
-  const goUpgrade = () => setActiveView("usage");
+  const goUpgrade = () => openSettings("billing");
 
   return (
     <div className="portal-editor">

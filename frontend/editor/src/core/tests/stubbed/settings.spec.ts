@@ -2,7 +2,7 @@ import { test, expect } from "@app/tests/helpers/stub-test-base";
 import { openSettings, closeSettings } from "@app/tests/helpers/ui-helpers";
 
 /**
- * Consolidated settings-dialog coverage. Was previously three files
+ * Consolidated settings-page coverage. Was previously three files
  * (`settings.spec.ts`, `settings-configuration.spec.ts`,
  * `settings-toggle-behavior.spec.ts`) generated from a numbered test
  * plan; merged here to cut bloat. Logout flow lives in
@@ -10,7 +10,7 @@ import { openSettings, closeSettings } from "@app/tests/helpers/ui-helpers";
  * invalidation.
  */
 
-test.describe("Settings dialog", () => {
+test.describe("Settings page", () => {
   test("opens with sidebar nav and lists General + Keyboard Shortcuts sections", async ({
     page,
   }) => {
@@ -20,7 +20,8 @@ test.describe("Settings dialog", () => {
         timeout: 5_000,
       });
     }
-    // General section is selected by default and exposes version info
+    // Opening General shows its content - version info lives there
+    await openSettings(page, /^General$/);
     await expect(page.getByText(/version/i).first()).toBeVisible({
       timeout: 5_000,
     });
@@ -61,7 +62,7 @@ test.describe("Settings dialog", () => {
   });
 
   test("toggle state persists across dialog open/close", async ({ page }) => {
-    const dialog = await openSettings(page);
+    const dialog = await openSettings(page, /^General$/);
 
     const toggle = dialog
       .locator('input[type="checkbox"][role="switch"], input[role="switch"]')
@@ -83,7 +84,7 @@ test.describe("Settings dialog", () => {
     expect(after).not.toBe(before);
 
     await closeSettings(page);
-    await openSettings(page);
+    await openSettings(page, /^General$/);
 
     const persisted = await toggle.isChecked();
     expect(persisted).toBe(after);
@@ -97,7 +98,7 @@ test.describe("Settings dialog", () => {
   test("segmented controls (e.g. tool-picker mode) persist across reopen", async ({
     page,
   }) => {
-    const dialog = await openSettings(page);
+    const dialog = await openSettings(page, /^General$/);
     const segmented = dialog.locator(".mantine-SegmentedControl-root").first();
     if (!(await segmented.isVisible({ timeout: 3_000 }).catch(() => false))) {
       test.skip(true, "No segmented control on this build");
@@ -112,11 +113,11 @@ test.describe("Settings dialog", () => {
     await labels.nth(1).click();
     await page.waitForTimeout(300);
     await closeSettings(page);
-    await openSettings(page);
+    await openSettings(page, /^General$/);
 
     // Restore
     const restored = page
-      .locator(".mantine-Modal-content .mantine-SegmentedControl-root label")
+      .locator(".settings-page .mantine-SegmentedControl-root label")
       .first();
     await restored.click();
   });
@@ -156,7 +157,7 @@ test.describe("Settings dialog", () => {
     await openSettings(page);
 
     const generalNav = page.locator('[data-tour="admin-general-nav"]').first();
-    const hotkeysNav = page.locator('[data-tour="admin-hotkeys-nav"]').first();
+    const aboutNav = page.locator('[data-tour="admin-about-nav"]').first();
     await expect(generalNav).toBeVisible({ timeout: 5_000 });
 
     // First nav into /settings/* takes the React Router path (push). We
@@ -172,8 +173,8 @@ test.describe("Settings dialog", () => {
 
     // Now do 4 round-trips between two tabs - 8 intra-modal clicks total.
     for (let i = 0; i < 4; i++) {
-      await hotkeysNav.click();
-      await page.waitForURL(/\/settings\/hotkeys/, { timeout: 5_000 });
+      await aboutNav.click();
+      await page.waitForURL(/\/settings\/about/, { timeout: 5_000 });
       await generalNav.click();
       await page.waitForURL(/\/settings\/general/, { timeout: 5_000 });
     }
@@ -188,8 +189,9 @@ test.describe("Settings dialog", () => {
     // Zero pushes during 8 intra-modal clicks - the regression would show
     // up here as `after.push - baseline.push >= 1`.
     expect(after.push - baseline.push).toBe(0);
-    // Exactly 8 replaces - one per click.
-    expect(after.replace - baseline.replace).toBe(8);
+    // At least one replace per click. Not an exact count any more: the sub-nav
+    // also replaces the URL's #slug as the reader lands on a new section.
+    expect(after.replace - baseline.replace).toBeGreaterThanOrEqual(8);
   });
 
   test("close returns to origin URL even after switching tabs (no history pile-up)", async ({
@@ -241,8 +243,11 @@ test.describe("Settings dialog", () => {
     ];
     let visited = 0;
     for (const label of sections) {
-      const nav = page.getByText(label).first();
-      if (await nav.isVisible({ timeout: 1_500 }).catch(() => false)) {
+      const nav = dialog.locator(".modal-nav-item").filter({ hasText: label });
+      const usable =
+        (await nav.isVisible({ timeout: 1_500 }).catch(() => false)) &&
+        (await nav.isEnabled());
+      if (usable) {
         await nav.click();
         await page.waitForTimeout(200);
         const body = await dialog.textContent();

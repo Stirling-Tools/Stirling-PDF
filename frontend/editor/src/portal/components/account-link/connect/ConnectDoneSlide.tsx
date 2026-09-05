@@ -78,7 +78,7 @@ export function ConnectDoneSlide({ onNavigate }: Props) {
               "portal.accountLink.connect.done.switchOnProcessor",
               "Switch on the Processor",
             ),
-            path: toPortalPath(VIEW_PATHS.usage),
+            path: "/settings/billing",
           },
         ]
       : []),
@@ -88,7 +88,7 @@ export function ConnectDoneSlide({ onNavigate }: Props) {
         "portal.accountLink.connect.done.inviteTeam",
         "Invite your team",
       ),
-      path: toPortalPath(VIEW_PATHS.users),
+      path: "/settings/users",
     },
     {
       key: "pipeline",

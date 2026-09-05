@@ -19,7 +19,6 @@ export interface QuickNavHostBridgeProps {
   portalAccess?: boolean;
   readerMode?: boolean;
   onSetReaderMode?: (on: boolean) => void;
-  onOpenSettings: () => void;
   requestNavigation?: (go: () => void) => void;
   onGoToDefaultState?: () => void;
   onSelectTool?: (toolId: ToolId) => void;
@@ -33,7 +32,6 @@ export function QuickNavHostBridge({
   portalAccess = false,
   readerMode = false,
   onSetReaderMode,
-  onOpenSettings,
   requestNavigation,
   onSelectTool,
   activeTool = null,
@@ -69,7 +67,6 @@ export function QuickNavHostBridge({
       toolReasons: mergedToolReasons,
     },
     {
-      openSettings: onOpenSettings,
       requestNavigation,
       selectTool: onSelectTool,
       setReaderMode: onSetReaderMode,

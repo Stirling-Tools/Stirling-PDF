@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { SettingsToggleRow } from "@app/components/shared/config/SettingsToggleRow";
+import { SettingsFieldLabel } from "@app/components/shared/config/SettingsFieldLabel";
 import {
   Paper,
   Group,
@@ -7,7 +9,6 @@ import {
   Stack,
   TextInput,
   Textarea,
-  Switch,
   NumberInput,
   TagsInput,
   Anchor,
@@ -99,28 +100,14 @@ export default function ProviderCard({
     switch (field.type) {
       case "switch":
         return (
-          <div
+          <SettingsToggleRow
             key={field.key}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <Text fw={500} size="sm">
-                {field.label}
-              </Text>
-              <Text size="xs" c="dimmed" mt={4}>
-                {field.description}
-              </Text>
-            </div>
-            <Switch
-              checked={value || false}
-              onChange={(e) => handleFieldChange(field.key, e.target.checked)}
-              disabled={disabled}
-            />
-          </div>
+            label={field.label}
+            info={field.description}
+            checked={value || false}
+            onChange={(checked) => handleFieldChange(field.key, checked)}
+            disabled={disabled}
+          />
         );
 
       case "password":
@@ -140,8 +127,11 @@ export default function ProviderCard({
         return (
           <Textarea
             key={field.key}
-            label={field.label}
-            description={field.description}
+            label={
+              <SettingsFieldLabel info={field.description}>
+                {field.label}
+              </SettingsFieldLabel>
+            }
             placeholder={field.placeholder}
             value={value}
             onChange={(e) => handleFieldChange(field.key, e.target.value)}
@@ -153,8 +143,11 @@ export default function ProviderCard({
         return (
           <NumberInput
             key={field.key}
-            label={field.label}
-            description={field.description}
+            label={
+              <SettingsFieldLabel info={field.description}>
+                {field.label}
+              </SettingsFieldLabel>
+            }
             placeholder={field.placeholder}
             value={value}
             onChange={(num) => handleFieldChange(field.key, num)}
@@ -171,8 +164,11 @@ export default function ProviderCard({
         return (
           <TagsInput
             key={field.key}
-            label={field.label}
-            description={field.description}
+            label={
+              <SettingsFieldLabel info={field.description}>
+                {field.label}
+              </SettingsFieldLabel>
+            }
             placeholder={field.placeholder}
             value={tagValue}
             onChange={(vals) => handleFieldChange(field.key, vals)}
@@ -185,8 +181,11 @@ export default function ProviderCard({
         return (
           <TextInput
             key={field.key}
-            label={field.label}
-            description={field.description}
+            label={
+              <SettingsFieldLabel info={field.description}>
+                {field.label}
+              </SettingsFieldLabel>
+            }
             placeholder={field.placeholder}
             value={value}
             onChange={(e) => handleFieldChange(field.key, e.target.value)}

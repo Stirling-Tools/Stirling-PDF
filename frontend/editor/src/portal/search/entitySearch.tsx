@@ -31,6 +31,7 @@ import {
 } from "@portal/components/icons";
 import type { Tier } from "@portal/contexts/TierContext";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
+import { DOCS_PATH } from "@app/routes/docsRoute";
 import { allDocs, loadDocsNav } from "@portal/docs/manifest/registry";
 import { searchDocs, toPlainText, type SearchDoc } from "@portal/docs/search";
 
@@ -124,7 +125,7 @@ export function rankDocsResults(
         .trim() || result.sectionLabel,
     icon: <DocsIcon />,
     score: result.score,
-    onSelect: () => navigate(`${toPortalPath(VIEW_PATHS.docs)}#${result.id}`),
+    onSelect: () => navigate(`${DOCS_PATH}#${result.id}`),
   }));
 }
 
@@ -294,9 +295,7 @@ export function buildProcessorEntityGroups(
           icon: <UsersIcon />,
           score,
           onSelect: () =>
-            navigate(
-              `${toPortalPath(VIEW_PATHS.users)}?member=${encodeURIComponent(item.id)}`,
-            ),
+            navigate(`/settings/users?member=${encodeURIComponent(item.id)}`),
         }))
     : [];
   if (users.length > 0) {

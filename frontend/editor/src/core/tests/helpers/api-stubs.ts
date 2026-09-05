@@ -190,6 +190,13 @@ export async function mockAppApis(
     route.fulfill({ json: { user } }),
   );
 
+  // The signed-in user's teams. Unstubbed this 401s, and the API client reads a
+  // 401 here as an expired session: refresh, fail, bounce to /login - so any
+  // page that asks (the login-landing setting, the account tab) logs out.
+  await page.route("**/api/v1/team/my", (route: Route) =>
+    route.fulfill({ json: [] }),
+  );
+
   // Tool availability — every tool enabled unless overridden
   await page.route("**/api/v1/config/endpoints-availability", (route: Route) =>
     route.fulfill({
@@ -252,6 +259,36 @@ export async function mockAppApis(
 
   await page.route("**/api/v1/admin/settings/section/**", (route: Route) =>
     route.fulfill({ json: {} }),
+  );
+
+  // An empty section never gets a dirty-tracking snapshot, so anything that
+  // compares saved-vs-current reads as unchanged. Give aiEngine real values.
+  await page.route(
+    "**/api/v1/admin/settings/section/aiEngine",
+    (route: Route) =>
+      route.fulfill({
+        json: {
+          enabled: false,
+          url: "http://stirling-pdf-engine:5001",
+          rag: { embeddingProvider: "voyageai", embeddingModel: "voyage-3" },
+        },
+      }),
+  );
+
+  // Folder access reads this on every visit to the System page; unstubbed it
+  // 401s in a retry loop and the refresh failures sign the session out.
+  await page.route(
+    "**/api/v1/admin/settings/policies/implied-folder-roots",
+    (route: Route) => route.fulfill({ json: { impliedRoots: [] } }),
+  );
+
+  // Same trap on the merged Legal and Advanced pages, which each pull in a
+  // card that fetches on mount.
+  await page.route("**/api/v1/admin/login-agreement/**", (route: Route) =>
+    route.fulfill({ json: { content: "", enabled: false } }),
+  );
+  await page.route("**/api/v1/ui-data/tessdata-languages", (route: Route) =>
+    route.fulfill({ json: { languages: [] } }),
   );
 
   // Info sub-resources

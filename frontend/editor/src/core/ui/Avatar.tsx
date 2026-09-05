@@ -21,6 +21,8 @@ export interface AvatarProps {
   /** Optional click handler — renders as a button when supplied. */
   onClick?: () => void;
   ariaLabel?: string;
+  /** Marks the button as the current destination when it is a nav control. */
+  ariaCurrent?: "page" | "true";
   className?: string;
 }
 
@@ -44,6 +46,7 @@ export function Avatar({
   tone = "blue",
   onClick,
   ariaLabel,
+  ariaCurrent,
   className,
 }: AvatarProps) {
   // A picture URL that 404s (expired signed URL, deleted upload) must not leave
@@ -83,6 +86,7 @@ export function Avatar({
         className={classes}
         onClick={onClick}
         aria-label={ariaLabel ?? name}
+        aria-current={ariaCurrent}
       >
         {content}
       </button>

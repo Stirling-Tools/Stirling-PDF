@@ -1,10 +1,10 @@
 import React, { useId, useState, useEffect } from "react";
+import { InfoTooltip } from "@app/ui/InfoTooltip";
 import {
   Paper,
   Stack,
   Switch,
   Text,
-  Tooltip,
   NumberInput,
   Select,
   Code,
@@ -276,13 +276,13 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
               <Group justify="space-between" align="center">
                 <div>
                   <Text fw={600} size="sm">
-                    {t("settings.general.updates.title", "Software Updates")}
-                  </Text>
-                  <Text size="xs" c="dimmed" mt={4}>
-                    {t(
-                      "settings.general.updates.description",
-                      "Check for updates and view version information",
-                    )}
+                    {t("settings.general.updates.title", "Software Updates")}{" "}
+                    <InfoTooltip
+                      label={t(
+                        "settings.general.updates.description",
+                        "Check for updates and view version information",
+                      )}
+                    />
                   </Text>
                 </div>
                 {updateSummary && (
@@ -417,18 +417,20 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
                       )}
                     </Badge>
                   )}
+                  <InfoTooltip
+                    label={
+                      desktopUpdateMode.locked
+                        ? t(
+                            "settings.general.updates.updateBehaviorLockedDescription",
+                            "Your administrator has configured how Stirling-PDF handles updates on this machine. Contact them to change this.",
+                          )
+                        : t(
+                            "settings.general.updates.updateBehaviorDescription",
+                            "Choose whether to prompt before installing updates, install them automatically, or skip update checks entirely.",
+                          )
+                    }
+                  />
                 </Group>
-                <Text size="xs" c="dimmed">
-                  {desktopUpdateMode.locked
-                    ? t(
-                        "settings.general.updates.updateBehaviorLockedDescription",
-                        "Your administrator has configured how Stirling-PDF handles updates on this machine. Contact them to change this.",
-                      )
-                    : t(
-                        "settings.general.updates.updateBehaviorDescription",
-                        "Choose whether to prompt before installing updates, install them automatically, or skip update checks entirely.",
-                      )}
-                </Text>
                 <Select
                   aria-labelledby={updateModeLabelId}
                   disabled={desktopUpdateMode.locked}
@@ -487,13 +489,13 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
           >
             <div style={{ flex: 1, minWidth: 0 }}>
               <Text fw={500} size="sm">
-                {t("settings.general.theme", "Theme")}
-              </Text>
-              <Text size="xs" c="dimmed" mt={4}>
-                {t(
-                  "settings.general.themeDescription",
-                  "Choose light, dark, or follow your system so it switches automatically.",
-                )}
+                {t("settings.general.theme", "Theme")}{" "}
+                <InfoTooltip
+                  label={t(
+                    "settings.general.themeDescription",
+                    "Choose light, dark, or follow your system so it switches automatically.",
+                  )}
+                />
               </Text>
             </div>
             <SegmentedControl
@@ -530,13 +532,13 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
         >
           <div style={{ flex: 1, minWidth: 0 }}>
             <Text fw={500} size="sm">
-              {t("settings.general.language", "Language")}
-            </Text>
-            <Text size="xs" c="dimmed" mt={4}>
-              {t(
-                "settings.general.languageDescription",
-                "Choose the display language",
-              )}
+              {t("settings.general.language", "Language")}{" "}
+              <InfoTooltip
+                label={t(
+                  "settings.general.languageDescription",
+                  "Choose the display language",
+                )}
+              />
             </Text>
           </div>
           <LanguageSelector position="bottom-end" offset={6} />
@@ -558,13 +560,13 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
                 {t(
                   "settings.general.defaultToolPickerMode",
                   "Default tool picker mode",
-                )}
-              </Text>
-              <Text size="xs" c="dimmed" mt={4}>
-                {t(
-                  "settings.general.defaultToolPickerModeDescription",
-                  "Choose whether the tool picker opens in fullscreen or sidebar by default",
-                )}
+                )}{" "}
+                <InfoTooltip
+                  label={t(
+                    "settings.general.defaultToolPickerModeDescription",
+                    "Choose whether the tool picker opens in fullscreen or sidebar by default",
+                  )}
+                />
               </Text>
             </div>
             <SegmentedControl
@@ -597,13 +599,13 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
                 {t(
                   "settings.general.defaultStartupView",
                   "Default view on launch",
-                )}
-              </Text>
-              <Text size="xs" c="dimmed" mt={4}>
-                {t(
-                  "settings.general.defaultStartupViewDescription",
-                  "Choose which view is active when the app starts",
-                )}
+                )}{" "}
+                <InfoTooltip
+                  label={t(
+                    "settings.general.defaultStartupViewDescription",
+                    "Choose which view is active when the app starts",
+                  )}
+                />
               </Text>
             </div>
             <SegmentedControl
@@ -637,13 +639,13 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
           >
             <div style={{ flex: 1, minWidth: 0 }}>
               <Text id={viewerZoomLabelId} fw={500} size="sm">
-                {t("settings.general.defaultViewerZoom", "Default reader zoom")}
-              </Text>
-              <Text size="xs" c="dimmed" mt={4}>
-                {t(
-                  "settings.general.defaultViewerZoomDescription",
-                  "Set the default zoom level when opening PDFs in the reader",
-                )}
+                {t("settings.general.defaultViewerZoom", "Default reader zoom")}{" "}
+                <InfoTooltip
+                  label={t(
+                    "settings.general.defaultViewerZoomDescription",
+                    "Set the default zoom level when opening PDFs in the reader",
+                  )}
+                />
               </Text>
             </div>
             <Select
@@ -697,13 +699,13 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
                 {t(
                   "settings.general.hideUnavailableTools",
                   "Hide unavailable tools",
-                )}
-              </Text>
-              <Text size="xs" c="dimmed" mt={4}>
-                {t(
-                  "settings.general.hideUnavailableToolsDescription",
-                  "Remove tools that have been disabled by your server instead of showing them greyed out.",
-                )}
+                )}{" "}
+                <InfoTooltip
+                  label={t(
+                    "settings.general.hideUnavailableToolsDescription",
+                    "Remove tools that have been disabled by your server instead of showing them greyed out.",
+                  )}
+                />
               </Text>
             </div>
             <Switch
@@ -730,13 +732,13 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
                 {t(
                   "settings.general.hideUnavailableConversions",
                   "Hide unavailable conversions",
-                )}
-              </Text>
-              <Text size="xs" c="dimmed" mt={4}>
-                {t(
-                  "settings.general.hideUnavailableConversionsDescription",
-                  "Remove disabled conversion options in the Convert tool instead of showing them greyed out.",
-                )}
+                )}{" "}
+                <InfoTooltip
+                  label={t(
+                    "settings.general.hideUnavailableConversionsDescription",
+                    "Remove disabled conversion options in the Convert tool instead of showing them greyed out.",
+                  )}
+                />
               </Text>
             </div>
             <Switch
@@ -750,101 +752,80 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
               }
             />
           </div>
-          <Tooltip
-            label={t(
-              "settings.general.autoUnzipTooltip",
-              "Automatically extract ZIP files returned from API operations. Disable to keep ZIP files intact. This does not affect automation workflows.",
-            )}
-            multiline
-            w={300}
-            withArrow
-          >
-            <div
-              id="setting-auto-unzip"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                cursor: "help",
-              }}
-            >
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <Text id={autoUnzipLabelId} fw={500} size="sm">
-                  {t("settings.general.autoUnzip", "Auto-unzip API responses")}
-                </Text>
-                <Text size="xs" c="dimmed" mt={4}>
-                  {t(
-                    "settings.general.autoUnzipDescription",
-                    "Automatically extract files from ZIP responses",
-                  )}
-                </Text>
-              </div>
-              <Switch
-                aria-labelledby={autoUnzipLabelId}
-                checked={preferences.autoUnzip}
-                onChange={(event) =>
-                  updatePreference("autoUnzip", event.currentTarget.checked)
-                }
-              />
-            </div>
-          </Tooltip>
 
-          <Tooltip
-            label={t(
-              "settings.general.autoUnzipFileLimitTooltip",
-              "Only unzip if the ZIP contains this many files or fewer. Set higher to extract larger ZIPs.",
-            )}
-            multiline
-            w={300}
-            withArrow
+          <div
+            id="setting-auto-unzip"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
           >
-            <div
-              id="setting-auto-unzip-file-limit"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                cursor: "help",
-              }}
-            >
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <Text id={autoUnzipLimitLabelId} fw={500} size="sm">
-                  {t(
-                    "settings.general.autoUnzipFileLimit",
-                    "Auto-unzip file limit",
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <Text id={autoUnzipLabelId} fw={500} size="sm">
+                {t("settings.general.autoUnzip", "Auto-unzip API responses")}{" "}
+                <InfoTooltip
+                  label={t(
+                    "settings.general.autoUnzipTooltip",
+                    "Automatically extract ZIP files returned from API operations. Disable to keep ZIP files intact. This does not affect automation workflows.",
                   )}
-                </Text>
-                <Text size="xs" c="dimmed" mt={4}>
-                  {t(
-                    "settings.general.autoUnzipFileLimitDescription",
-                    "Maximum number of files to extract from ZIP",
-                  )}
-                </Text>
-              </div>
-              <NumberInput
-                aria-labelledby={autoUnzipLimitLabelId}
-                value={fileLimitInput}
-                onChange={setFileLimitInput}
-                onBlur={() => {
-                  const numValue = Number(fileLimitInput);
-                  const finalValue =
-                    !fileLimitInput ||
-                    isNaN(numValue) ||
-                    numValue < 1 ||
-                    numValue > 100
-                      ? DEFAULT_AUTO_UNZIP_FILE_LIMIT
-                      : numValue;
-                  setFileLimitInput(finalValue);
-                  updatePreference("autoUnzipFileLimit", finalValue);
-                }}
-                min={1}
-                max={100}
-                step={1}
-                disabled={!preferences.autoUnzip}
-                style={{ width: 90 }}
-              />
+                />
+              </Text>
             </div>
-          </Tooltip>
+            <Switch
+              aria-labelledby={autoUnzipLabelId}
+              checked={preferences.autoUnzip}
+              onChange={(event) =>
+                updatePreference("autoUnzip", event.currentTarget.checked)
+              }
+            />
+          </div>
+
+          <div
+            id="setting-auto-unzip-file-limit"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <Text id={autoUnzipLimitLabelId} fw={500} size="sm">
+                {t(
+                  "settings.general.autoUnzipFileLimit",
+                  "Auto-unzip file limit",
+                )}{" "}
+                <InfoTooltip
+                  label={t(
+                    "settings.general.autoUnzipFileLimitTooltip",
+                    "Only unzip if the ZIP contains this many files or fewer. Set higher to extract larger ZIPs.",
+                  )}
+                />
+              </Text>
+            </div>
+            <NumberInput
+              aria-labelledby={autoUnzipLimitLabelId}
+              value={fileLimitInput}
+              onChange={setFileLimitInput}
+              onBlur={() => {
+                const numValue = Number(fileLimitInput);
+                const finalValue =
+                  !fileLimitInput ||
+                  isNaN(numValue) ||
+                  numValue < 1 ||
+                  numValue > 100
+                    ? DEFAULT_AUTO_UNZIP_FILE_LIMIT
+                    : numValue;
+                setFileLimitInput(finalValue);
+                updatePreference("autoUnzipFileLimit", finalValue);
+              }}
+              min={1}
+              max={100}
+              step={1}
+              disabled={!preferences.autoUnzip}
+              style={{ width: 90 }}
+            />
+          </div>
         </Stack>
       </Paper>
 

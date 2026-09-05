@@ -688,6 +688,9 @@ manualLinks = "Manual downloads: click the links and place the files into the te
 noLanguages = "No tessdata languages found in the configured directory."
 permissionNotice = "The tessdata path is not writable. Downloads will be opened in the browser; please save the .traineddata files manually into the tessdata folder."
 
+[admin.settings.ai]
+description = "Connect Stirling to the Python AI engine, choose its models, and set the guardrails it runs under."
+
 [admin.settings.ai.documents]
 description = "Configure the embedding model and retrieval settings used to answer questions over documents. Applied to the AI engine when saved."
 title = "Documents & RAG"
@@ -727,6 +730,7 @@ description = "Number of most-relevant chunks retrieved per search."
 label = "Top K"
 
 [admin.settings.ai.general]
+connection = "Connection"
 description = "Connect Stirling to the Python AI engine and choose which AI capabilities are exposed. Changes apply on restart."
 title = "AI Engine"
 
@@ -853,7 +857,8 @@ clickToUpgrade = "Click to view plan details"
 
 [admin.settings.connections]
 connect = "Connect"
-description = "Configure external authentication providers like OAuth2 and SAML."
+connectedServicesDescription = "Services this server is wired up to. Sign-in providers live under Sign-in & security."
+description = "Mail, Telegram, Drive, and uploading from a phone."
 disconnect = "Disconnect"
 disconnected = "Provider disconnected successfully"
 disconnectError = "Failed to disconnect provider"
@@ -975,6 +980,8 @@ configuration = "Database Configuration"
 confirmCodeLabel = "Enter the confirmation code to proceed"
 confirmImport = "Confirm import"
 confirmImportTitle = "Confirm database import"
+connection = "Connection"
+connectionDescription = "Point Stirling at an external database instead of the embedded one."
 createBackup = "Create backup"
 created = "Created"
 delete = "Delete"
@@ -983,7 +990,7 @@ deleteConfirmAction = "Delete backup"
 deleteFailed = "Failed to delete backup"
 deleteSuccess = "Backup deleted"
 deleteTitle = "Delete backup"
-description = "Configure custom database connection settings for enterprise deployments."
+description = "Connect a custom database, and back up or restore the one in use."
 download = "Download"
 downloadFailed = "Failed to download backup"
 embedded = "Embedded H2"
@@ -1076,12 +1083,12 @@ description = "Configure optional features and functionality."
 title = "Features"
 
 [admin.settings.features.serverCertificate]
-description = "Configure server-side certificate generation for \"Sign with Stirling-PDF\" functionality"
-label = "Server Certificate"
+description = "Generate the certificate that backs the \"Sign with Stirling-PDF\" signing feature."
+label = "Certificate Signing"
 
 [admin.settings.features.serverCertificate.enabled]
-description = "Enable server-side certificate for \"Sign with Stirling-PDF\" option"
-label = "Enable Server Certificate"
+description = "Offer \"Sign with Stirling-PDF\" using a certificate this server generates"
+label = "Enable Certificate Signing"
 
 [admin.settings.features.serverCertificate.organizationName]
 description = "Organization name for generated certificates"
@@ -1115,7 +1122,8 @@ placeholder = "/data/inbox"
 remove = "Remove folder root"
 
 [admin.settings.general]
-description = "Configure system-wide application settings including branding and default behavior."
+branding = "Branding & appearance"
+description = "How this server runs: branding, storage, the tools it exposes, and the paths it may touch."
 system = "System"
 title = "System Settings"
 ui = "User Interface"
@@ -1235,7 +1243,8 @@ description = "Restrict update notifications to admin users only"
 label = "Show Updates to Admins Only"
 
 [admin.settings.legal]
-description = "Configure links to legal documents and policies."
+description = "Legal documents, the login agreement, analytics and search visibility."
+documentsDescription = "Links users are shown for terms, privacy, cookies and the impressum."
 title = "Legal Documents"
 
 [admin.settings.legal.accessibilityStatement]
@@ -1398,8 +1407,8 @@ description = "JWT claim matched against a Stirling username (e.g. sub, email, p
 label = "Username claim"
 
 [admin.settings.plan.noData]
-message = "Plans data is not available at the moment."
-title = "No data available"
+message = "This server could not reach the licence service. Retry, or check the licence key."
+title = "No plan data"
 
 [admin.settings.premium]
 description = "Configure your premium or enterprise license key."
@@ -1455,7 +1464,7 @@ title = "Premium Features Distributed"
 
 [admin.settings.privacy]
 analytics = "Analytics & Tracking"
-description = "Configure privacy and data collection settings."
+description = "What this server reports about itself, and to whom."
 searchEngine = "Search Engine Visibility"
 title = "Privacy"
 
@@ -1489,8 +1498,7 @@ label = "Audit Logging"
 showDetails = "Show audit level details"
 
 [admin.settings.security.audit.advancedOptions]
-description = "The following options increase processing time and memory usage. Enable only if truly needed."
-title = "Advanced Options"
+cost = "Now increasing processing time and memory usage on every operation."
 
 [admin.settings.security.audit.captureFileHash]
 description = "Extract SHA-256 hash of uploaded PDF files for integrity verification. Independent of audit level."
@@ -1638,7 +1646,7 @@ description = "Time before failed login attempts are reset"
 label = "Login Reset Time (minutes)"
 
 [admin.settings.security.ssoNotice]
-message = "OAuth2 and SAML2 authentication providers have been moved to the Connections menu for easier management."
+message = "OAuth2 and SAML2 authentication providers live under Single sign-on, next to this section."
 title = "Looking for SSO/SAML settings?"
 
 [admin.settings.security.xFrameOptions]
@@ -1900,8 +1908,8 @@ disabledMessage = "Enable audit logging in your application configuration to tra
 enterpriseRequired = "Enterprise License Required"
 enterpriseRequiredMessage = "The audit logging system is an enterprise feature. Please upgrade to an enterprise license to access audit logs and analytics."
 goToSettings = "Go to Audit Settings"
-notAvailable = "Audit system not available"
-notAvailableMessage = "The audit system is not configured or not available."
+notAvailable = "Audit logging is off"
+notAvailableMessage = "Turn it on in Sign-in & security to start recording activity."
 
 [audit.charts]
 byType = "Events by Type"
@@ -3515,7 +3523,9 @@ tags = "squish,small,tiny"
 
 [config]
 plan = "Plan"
+planDescription = "Your plan, credits and spend limit, and the invoices behind them."
 team = "Team"
+teamDescription = "Who shares this workspace, and invitations still waiting on an answer."
 
 [config.account.overview]
 confirmDelete = "Delete My Account"
@@ -3607,7 +3617,6 @@ description = "Model Context Protocol (MCP) lets AI assistants like Claude use y
 guestInfo = "Guest users can't connect MCP clients. Create an account to use the MCP server and let your AI assistant run Stirling PDF tools on your behalf."
 navLabel = "MCP Server"
 tip = "Every action your assistant runs is performed as your account and counts toward your usage, just like using Stirling PDF directly."
-title = "MCP Server"
 viewApiKeys = "View API keys"
 
 [config.mcp.copy]
@@ -7015,9 +7024,6 @@ dismiss = "Dismiss overlay"
 enforcingTitle = "Enforcing policy..."
 viewAnyway = "View file (policy still enforcing)"
 
-[portal]
-comingSoon = "Coming soon"
-
 [portal.accountLink.card]
 billingNote = "Unattended processing bills against your org wallet."
 eyebrow = "Account link"
@@ -8248,12 +8254,6 @@ afternoon = "Good afternoon"
 evening = "Good evening"
 morning = "Good morning"
 
-[portal.infrastructure]
-manageEditorDeployment = "Manage Editor deployment"
-sectionsAriaLabel = "Infrastructure sections"
-subtitle = "API credentials and the audit trail for your Stirling workspace."
-title = "Infrastructure"
-
 [portal.infrastructure.apiKeys]
 createKey = "Create key"
 heading = "API keys"
@@ -8532,14 +8532,6 @@ off = "Off"
 [portal.infrastructure.keyLabel]
 active = "Active"
 revoked = "Revoked"
-
-[portal.infrastructure.tabs]
-apiKeys = "API Keys"
-audit = "Audit Logs"
-deployments = "Deployments"
-models = "Models"
-security = "Security"
-storage = "Storage"
 
 [portal.integrations]
 availableHeading = "Available"
@@ -9534,9 +9526,6 @@ maxed = "Maxed out"
 subtitle = "Your free trial runs through {{date}}. No card required."
 title = "Enterprise trial"
 
-[portal.settings.groups]
-admin = "Admin"
-
 [portal.settings.sections]
 account-link = "Account link"
 
@@ -10024,6 +10013,8 @@ config = "Config"
 files = "Files"
 
 [quickNav]
+account = "Account"
+docs = "Documentation"
 editor = "Editor"
 home = "Stirling"
 invite = "Invite"
@@ -10554,12 +10545,15 @@ expired = "Your session has expired. Please refresh the page and try again."
 
 [settings]
 backToSections = "All settings"
-close = "Close"
 title = "Settings"
+
+[settings.about]
+description = "Tours, legal documents and the licences of everything bundled with this build."
+title = "About"
 
 [settings.ai]
 documents = "Documents & RAG"
-general = "General"
+general = "AI Engine"
 limits = "Limits & Performance"
 models = "Models & Providers"
 title = "AI"
@@ -10570,12 +10564,13 @@ database = "Database"
 endpoints = "Endpoints"
 features = "Features"
 folderAccess = "Folder Access"
+integrations = "Integrations"
 mcp = "MCP Server"
 storageSharing = "File Storage & Sharing"
 systemSettings = "System Settings"
-title = "Configuration"
 
 [settings.connection]
+description = "Work locally on this machine or connect the app to a Stirling server."
 localDescription = "You are using the local backend without an account. Some tools requiring cloud processing or a self-hosted server are unavailable."
 logout = "Log Out"
 server = "Server"
@@ -10590,13 +10585,12 @@ selfhosted = "Self-Hosted"
 
 [settings.developer]
 apiKeys = "API Keys"
+apiKeysDescription = "Personal keys for calling the Stirling API from scripts and integrations."
 title = "Developer"
 
 [settings.general]
 autoUnzip = "Auto-unzip API responses"
-autoUnzipDescription = "Automatically extract files from ZIP responses"
 autoUnzipFileLimit = "Auto-unzip file limit"
-autoUnzipFileLimitDescription = "Maximum number of files to extract from ZIP"
 autoUnzipFileLimitTooltip = "Only unzip if the ZIP contains this many files or fewer. Set higher to extract larger ZIPs."
 autoUnzipTooltip = "Automatically extract ZIP files returned from API operations. Disable to keep ZIP files intact. This does not affect automation workflows."
 defaultPdfEditor = "Default PDF editor"
@@ -10695,6 +10689,7 @@ fitPage = "Fit page"
 fitWidth = "Fit width"
 
 [settings.help]
+description = "Guided walkthroughs of the editor and the admin area."
 label = "Tours"
 title = "Help"
 
@@ -10727,6 +10722,7 @@ mac = "Include ⌘ (Command), ⌥ (Option), or another modifier in your shortcut
 windows = "Include Ctrl, Alt, or another modifier in your shortcut."
 
 [settings.legal]
+description = "Terms, privacy policy and your cookie preferences."
 label = "Legal"
 title = "Legal"
 
@@ -10754,10 +10750,13 @@ module = "Module"
 version = "Version"
 
 [settings.licensingAnalytics]
-audit = "Audit"
+audit = "Audit log"
+auditDescription = "Who did what on this server, and how long that record is kept."
 plan = "Plan"
-title = "Licensing & Analytics"
+planDescription = "Your licence, seats and what the current plan unlocks."
+usage = "Usage Analytics"
 usageAnalytics = "Usage Analytics"
+usageDescription = "How the server is being used: operations, volume and trends over time."
 
 [settings.planBilling]
 currentPlan = "Current Plan"
@@ -10814,11 +10813,15 @@ subtitle = "Upgrade to Team for:"
 title = "Upgrade Your Plan"
 
 [settings.policiesPrivacy]
-legal = "Legal"
+legal = "Legal documents"
 privacy = "Privacy"
-title = "Policies & Privacy"
+title = "Legal & privacy"
 
 [settings.preferences]
+appearance = "Appearance"
+description = "How the editor looks and behaves for you, and your account."
+downloads = "Downloads"
+editorDefaults = "Editor defaults"
 title = "Preferences"
 
 [settings.security]
@@ -10841,10 +10844,14 @@ success = "Password updated successfully. Please sign in again."
 update = "Update password"
 
 [settings.securityAuth]
-connections = "Connections"
-security = "Security"
+connections = "Single sign-on"
+security = "Sign-in & security"
 telegram = "Telegram"
-title = "Security & Authentication"
+title = "Security & sign-in"
+
+[settings.server]
+system = "System"
+title = "Server"
 
 [settings.signOut]
 confirm = "Are you sure you want to sign out?"
@@ -11766,8 +11773,8 @@ title = "URL To PDF"
 aboutUsageAnalytics = "About Usage Analytics"
 configureSettings = "Configure Analytics Settings"
 error = "Error loading usage statistics"
-noData = "No data available"
-noDataMessage = "No usage statistics are currently available."
+noData = "No usage yet"
+noDataMessage = "Endpoint activity appears here once people start running tools."
 usageAnalyticsExplanation = "Usage analytics track endpoint requests and tool usage patterns. Combined with the Audit Logging dashboard, you get complete visibility into system activity, performance, and security events."
 viewAuditLogs = "View Audit Logs"
 
@@ -12629,7 +12636,6 @@ noMembersFound = "No members found"
 role = "Role"
 searchMembers = "Search members..."
 team = "Team"
-title = "People"
 unlockAccount = "Unlock Account"
 unlockUserError = "Failed to unlock user account"
 unlockUserSuccess = "User account unlocked successfully"
@@ -12783,7 +12789,6 @@ system = "System"
 teamActions = "Team actions"
 teamName = "Team Name"
 teamNotFound = "Team not found"
-title = "Teams"
 totalMembers = "Total Members"
 viewTeam = "View Team"
 

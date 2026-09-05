@@ -19,37 +19,32 @@ import type { TFunction } from "i18next";
  * prefix.
  */
 const SECTION_TRANSLATION_PREFIXES: Partial<Record<string, string[]>> = {
-  general: ["settings.general"],
-  hotkeys: ["settings.hotkeys"],
-  account: ["account"],
+  general: ["settings.general", "settings.hotkeys", "account"],
   people: ["settings.workspace"],
   teams: ["settings.workspace", "settings.team"],
   "api-keys": ["settings.developer"],
   connectionMode: ["settings.connection"],
   planBilling: ["settings.planBilling"],
-  adminGeneral: ["admin.settings.general"],
-  adminFeatures: ["admin.settings.features"],
-  adminEndpoints: ["admin.settings.endpoints"],
-  adminDatabase: ["admin.settings.database"],
+  adminGeneral: [
+    "admin.settings.general",
+    "admin.settings.features",
+    "admin.settings.endpoints",
+    "admin.settings.storageSharing",
+    "admin.settings.folderAccess",
+    "admin.settings.mcp",
+  ],
   adminAdvanced: ["admin.settings.advanced"],
-  adminFolderAccess: ["admin.settings.folderAccess"],
-  // The four AI tabs all render slices of the one admin.settings.ai subtree.
-  adminAiGeneral: ["admin.settings.ai"],
-  adminAiModels: ["admin.settings.ai"],
-  adminAiDocuments: ["admin.settings.ai"],
-  adminAiLimits: ["admin.settings.ai"],
-  adminSecurity: ["admin.settings.security"],
-  adminMcp: ["admin.settings.mcp"],
+  adminDatabase: ["admin.settings.database"],
+  // One page now, so one entry: mapping four keys at the same subtree returned
+  // four byte-identical results for every AI query.
+  adminAi: ["admin.settings.ai"],
+  adminSecurity: ["admin.settings.security", "admin.settings.connections"],
   adminConnections: [
     "admin.settings.connections",
     "admin.settings.mail",
-    "admin.settings.security",
     "admin.settings.telegram",
-    "admin.settings.premium",
-    "admin.settings.general",
-    "settings.securityAuth",
-    "settings.connection",
   ],
+  adminLegal: ["admin.settings.legal", "admin.settings.privacy"],
   adminPlan: [
     "settings.planBilling",
     "admin.settings.premium",
@@ -57,8 +52,6 @@ const SECTION_TRANSLATION_PREFIXES: Partial<Record<string, string[]>> = {
   ],
   adminAudit: ["settings.licensingAnalytics"],
   adminUsage: ["settings.licensingAnalytics"],
-  adminLegal: ["admin.settings.legal"],
-  adminPrivacy: ["admin.settings.privacy"],
 };
 
 export const getTranslationPrefixesForNavKey = (key: string): string[] => {

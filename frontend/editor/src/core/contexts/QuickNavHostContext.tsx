@@ -29,12 +29,9 @@ export interface QuickNavHostData {
   notificationsOpen: boolean;
   /** Translated; absent means usable. */
   toolReasons: QuickNavToolReasons;
-  /** Mirrors `openSettings`, which lives in a ref and so cannot trigger a render. */
-  hasSettings: boolean;
 }
 
 export interface QuickNavHostActions {
-  openSettings?: () => void;
   /** The editor reads its tool from the URL only on mount. */
   selectTool?: (toolId: ToolId) => void;
   setReaderMode?: (on: boolean) => void;
@@ -64,7 +61,6 @@ const EMPTY_DATA: QuickNavHostData = {
   readerMode: false,
   activeTool: null,
   notificationsOpen: false,
-  hasSettings: false,
 };
 
 function sameReasons(
@@ -94,7 +90,6 @@ export function QuickNavHostProvider({ children }: { children: ReactNode }) {
         merged.readerMode === prev.readerMode &&
         merged.activeTool === prev.activeTool &&
         merged.notificationsOpen === prev.notificationsOpen &&
-        merged.hasSettings === prev.hasSettings &&
         merged.identity?.displayName === prev.identity?.displayName &&
         merged.identity?.profilePictureUrl ===
           prev.identity?.profilePictureUrl &&
@@ -150,8 +145,6 @@ export function useRegisterQuickNavHost(
     notificationsOpen,
     toolReasons,
   } = data;
-  const hasSettings = Boolean(actions.openSettings);
-
   useEffect(() => {
     host?.setData({
       appMounted: true,
@@ -164,7 +157,6 @@ export function useRegisterQuickNavHost(
       notificationsOpen: notificationsOpen ?? false,
       // Omitted when unknown, so the last answer survives a re-fetch.
       ...(toolReasons ? { toolReasons } : {}),
-      hasSettings,
     });
     // By field: identity is rebuilt every render.
   }, [
@@ -177,7 +169,6 @@ export function useRegisterQuickNavHost(
     activeTool,
     notificationsOpen,
     toolReasons,
-    hasSettings,
   ]);
 
   const setActions = host?.setActions;

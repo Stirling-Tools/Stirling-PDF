@@ -49,6 +49,8 @@ export interface SettingsSectionEntry {
    * which keys off the local backend's login mode rather than auth state.
    */
   requiresAccount?: boolean;
+  /** Section is the processor's; only a session that can enter it sees it. */
+  requiresPortalAccess?: boolean;
 }
 
 /** Core (OSS) sections — always present in every build. */
@@ -57,32 +59,38 @@ export const SETTINGS_SECTION_REGISTRY: SettingsSectionEntry[] = [
     key: "general",
     labelKey: "settings.general.title",
     labelFallback: "General",
-    keywords: ["theme", "language", "appearance", "preferences", "startup"],
+    keywords: [
+      "theme",
+      "language",
+      "appearance",
+      "preferences",
+      "startup",
+      "hotkey",
+      "shortcut",
+      "keybinding",
+      "keyboard",
+    ],
     groupLabelKey: "settings.preferences.title",
     groupLabelFallback: "Preferences",
   },
   {
-    key: "hotkeys",
-    labelKey: "settings.hotkeys.title",
-    labelFallback: "Keyboard Shortcuts",
-    keywords: ["hotkey", "shortcut", "keybinding", "keyboard"],
-    groupLabelKey: "settings.preferences.title",
-    groupLabelFallback: "Preferences",
-  },
-  {
-    key: "help",
-    labelKey: "settings.help.label",
-    labelFallback: "Tours",
-    keywords: ["help", "tour", "guide", "support", "docs"],
-    groupLabelKey: "settings.help.title",
-    groupLabelFallback: "Help",
-  },
-  {
-    key: "legal",
-    labelKey: "settings.legal.label",
-    labelFallback: "Legal",
-    keywords: ["legal", "terms", "privacy", "licenses"],
-    groupLabelKey: "settings.legal.title",
-    groupLabelFallback: "Legal",
+    key: "about",
+    labelKey: "settings.about.title",
+    labelFallback: "About",
+    keywords: [
+      "about",
+      "tours",
+      "walkthrough",
+      "legal",
+      "terms",
+      "privacy",
+      "cookie",
+      "licence",
+      "license",
+      "attribution",
+      "dependencies",
+    ],
+    groupLabelKey: "settings.about.title",
+    groupLabelFallback: "About",
   },
 ];

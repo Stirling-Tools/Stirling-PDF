@@ -23,10 +23,8 @@
 }
 
 /* Backdrop locks the page and centres the modal. z-index matches
-   Z_INDEX_OVER_SETTINGS_MODAL (styles/zIndex.ts) — must sit above the
-   AppConfigModal's 1300 (Z_INDEX_OVER_FULLSCREEN_SURFACE). The config modal
-   also hides itself while we're open (appConfig:overlay event), so this is
-   belt-and-braces for the brief overlap during open/close transitions. */
+   Z_INDEX_OVER_SETTINGS_MODAL (styles/zIndex.ts), above the settings page and
+   anything it opens. */
 .upm-backdrop {
   position: fixed;
   inset: 0;
