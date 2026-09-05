@@ -7,14 +7,27 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Calendar;
+import java.util.Map;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.common.PDMetadata;
+import org.apache.xmpbox.XMPMetadata;
+import org.apache.xmpbox.schema.AdobePDFSchema;
+import org.apache.xmpbox.schema.DublinCoreSchema;
+import org.apache.xmpbox.schema.XMPBasicSchema;
+import org.apache.xmpbox.schema.XMPSchema;
+import org.apache.xmpbox.xml.DomXmpParser;
+import org.apache.xmpbox.xml.XmpSerializer;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -78,7 +91,7 @@ class PdfMetadataServiceTest {
         @DisplayName("returns null for unparsable input")
         void invalidReturnsNull() {
             assertNull(PdfMetadataService.parseToCalendar("not a date"));
-            assertNull(PdfMetadataService.parseToCalendar("2021-06-15"));
+            assertNull(PdfMetadataService.parseToCalendar("abcd-ef-gh"));
             assertNull(PdfMetadataService.parseToCalendar("2021/13/40 99:99:99"));
         }
 
@@ -96,6 +109,54 @@ class PdfMetadataServiceTest {
                             .toInstant()
                             .toEpochMilli();
             assertEquals(expectedMillis, cal.getTimeInMillis());
+        }
+
+        @Test
+        @DisplayName("parses diverse date formats including 1.1.2025 and ISO")
+        void parsesDiverseDateFormats() {
+            Calendar dotCal = PdfMetadataService.parseToCalendar("1.1.2025");
+            assertNotNull(dotCal);
+            long expectedDot =
+                    LocalDate.of(2025, 1, 1)
+                            .atStartOfDay(ZoneId.systemDefault())
+                            .toInstant()
+                            .toEpochMilli();
+            assertEquals(expectedDot, dotCal.getTimeInMillis());
+
+            Calendar dashCal = PdfMetadataService.parseToCalendar("2021-06-15");
+            assertNotNull(dashCal);
+            long expectedDash =
+                    LocalDate.of(2021, 6, 15)
+                            .atStartOfDay(ZoneId.systemDefault())
+                            .toInstant()
+                            .toEpochMilli();
+            assertEquals(expectedDash, dashCal.getTimeInMillis());
+
+            Calendar slashCal = PdfMetadataService.parseToCalendar("2025/01/01");
+            assertNotNull(slashCal);
+            long expectedSlash =
+                    LocalDate.of(2025, 1, 1)
+                            .atStartOfDay(ZoneId.systemDefault())
+                            .toInstant()
+                            .toEpochMilli();
+            assertEquals(expectedSlash, slashCal.getTimeInMillis());
+
+            Calendar dashTimeCal = PdfMetadataService.parseToCalendar("2025-01-01 14:30:00");
+            assertNotNull(dashTimeCal);
+            long expectedDashTime =
+                    LocalDateTime.of(2025, 1, 1, 14, 30, 0)
+                            .atZone(ZoneId.systemDefault())
+                            .toInstant()
+                            .toEpochMilli();
+            assertEquals(expectedDashTime, dashTimeCal.getTimeInMillis());
+
+            Calendar isoCal = PdfMetadataService.parseToCalendar("2025-01-01T12:00:00Z");
+            assertNotNull(isoCal);
+            assertEquals(
+                    Instant.parse("2025-01-01T12:00:00Z").toEpochMilli(), isoCal.getTimeInMillis());
+
+            Calendar pdfCal = PdfMetadataService.parseToCalendar("D:20250101120000");
+            assertNotNull(pdfCal);
         }
     }
 
@@ -410,6 +471,137 @@ class PdfMetadataServiceTest {
                 PDDocumentInformation info = doc.getDocumentInformation();
                 assertEquals("Metadata Author", info.getAuthor());
                 assertEquals(LABEL, info.getCreator());
+            }
+        }
+    }
+
+    @Nested
+    @DisplayName("synchronizeXmpMetadata(PDDocument, Map)")
+    class SynchronizeXmpMetadataTests {
+
+        @Test
+        @DisplayName("synchronizes all standard and custom fields to XMP stream")
+        void synchronizesStandardAndCustomFields() throws Exception {
+            PdfMetadataService service = nonProService(null);
+            try (PDDocument doc = new PDDocument()) {
+                doc.addPage(new PDPage());
+                PDDocumentInformation info = doc.getDocumentInformation();
+                info.setTitle("XMP Test Title");
+                info.setAuthor("XMP Test Author");
+                info.setSubject("XMP Test Subject");
+                info.setKeywords("tag1, tag2, tag3");
+                info.setCreator("XMP Test Creator");
+                info.setProducer("XMP Test Producer");
+                info.setTrapped("True");
+
+                Calendar creation = Calendar.getInstance();
+                creation.setTimeInMillis(1_700_000_000_000L);
+                Calendar modification = Calendar.getInstance();
+                modification.setTimeInMillis(1_710_000_000_000L);
+                info.setCreationDate(creation);
+                info.setModificationDate(modification);
+
+                Map<String, String> customMetadata =
+                        Map.of(
+                                "Department", "Engineering",
+                                "Project-Code", "Apollo-11");
+
+                service.synchronizeXmpMetadata(doc, customMetadata);
+
+                PDMetadata pdMetadata = doc.getDocumentCatalog().getMetadata();
+                assertNotNull(pdMetadata);
+
+                DomXmpParser parser = new DomXmpParser();
+                parser.setStrictParsing(false);
+                XMPMetadata xmp = parser.parse(new ByteArrayInputStream(pdMetadata.toByteArray()));
+                assertNotNull(xmp);
+
+                DublinCoreSchema dc = xmp.getDublinCoreSchema();
+                assertNotNull(dc);
+                assertEquals("XMP Test Title", dc.getTitle());
+                assertNotNull(dc.getCreators());
+                assertEquals("XMP Test Author", dc.getCreators().get(0));
+                assertEquals("XMP Test Subject", dc.getDescription());
+                assertNotNull(dc.getSubjects());
+                assertEquals(3, dc.getSubjects().size());
+
+                XMPBasicSchema basic = xmp.getXMPBasicSchema();
+                assertNotNull(basic);
+                assertEquals("XMP Test Creator", basic.getCreatorTool());
+                assertNotNull(basic.getCreateDate());
+                assertEquals(1_700_000_000_000L, basic.getCreateDate().getTimeInMillis());
+                assertNotNull(basic.getModifyDate());
+                assertEquals(1_710_000_000_000L, basic.getModifyDate().getTimeInMillis());
+
+                AdobePDFSchema pdfSchema = xmp.getAdobePDFSchema();
+                assertNotNull(pdfSchema);
+                assertEquals("XMP Test Producer", pdfSchema.getProducer());
+                assertEquals("tag1, tag2, tag3", pdfSchema.getKeywords());
+
+                XMPSchema pdfx = xmp.getSchema(PdfMetadataService.PDFX_NAMESPACE);
+                assertNotNull(pdfx);
+                assertEquals("Engineering", pdfx.getUnqualifiedTextPropertyValue("Department"));
+                assertEquals("Apollo-11", pdfx.getUnqualifiedTextPropertyValue("Project-Code"));
+            }
+        }
+
+        @Test
+        @DisplayName("removes deleted custom fields on subsequent synchronization")
+        void removesDeletedCustomFields() throws Exception {
+            PdfMetadataService service = nonProService(null);
+            try (PDDocument doc = new PDDocument()) {
+                doc.addPage(new PDPage());
+
+                service.synchronizeXmpMetadata(doc, Map.of("Field1", "Val1", "Field2", "Val2"));
+                service.synchronizeXmpMetadata(doc, Map.of("Field2", "Val2Updated"));
+
+                PDMetadata pdMetadata = doc.getDocumentCatalog().getMetadata();
+                DomXmpParser parser = new DomXmpParser();
+                parser.setStrictParsing(false);
+                XMPMetadata xmp = parser.parse(new ByteArrayInputStream(pdMetadata.toByteArray()));
+
+                XMPSchema pdfx = xmp.getSchema(PdfMetadataService.PDFX_NAMESPACE);
+                assertNotNull(pdfx);
+                assertNull(pdfx.getUnqualifiedTextPropertyValue("Field1"));
+                assertEquals("Val2Updated", pdfx.getUnqualifiedTextPropertyValue("Field2"));
+            }
+        }
+
+        @Test
+        @DisplayName(
+                "preserves standard PDF/X properties like GTS_PDFXVersion during custom metadata synchronization")
+        void preservesStandardPdfXProperties() throws Exception {
+            PdfMetadataService service = nonProService(null);
+            try (PDDocument doc = new PDDocument()) {
+                doc.addPage(new PDPage());
+
+                XMPMetadata initialXmp = XMPMetadata.createXMPMetadata();
+                XMPSchema pdfxInitial =
+                        new XMPSchema(initialXmp, PdfMetadataService.PDFX_NAMESPACE, "pdfx");
+                pdfxInitial.setTextPropertyValueAsSimple("GTS_PDFXVersion", "PDF/X-1:2001");
+                pdfxInitial.setTextPropertyValueAsSimple("OldCustom", "OldValue");
+                initialXmp.addSchema(pdfxInitial);
+
+                ByteArrayOutputStream xmpBaos = new ByteArrayOutputStream();
+                new XmpSerializer().serialize(initialXmp, xmpBaos, true);
+                PDMetadata pdMetadata = new PDMetadata(doc);
+                pdMetadata.importXMPMetadata(xmpBaos.toByteArray());
+                doc.getDocumentCatalog().setMetadata(pdMetadata);
+
+                service.synchronizeXmpMetadata(doc, Map.of("NewCustom", "NewValue"));
+
+                PDMetadata updatedMetadata = doc.getDocumentCatalog().getMetadata();
+                DomXmpParser parser = new DomXmpParser();
+                parser.setStrictParsing(false);
+                XMPMetadata xmp =
+                        parser.parse(new ByteArrayInputStream(updatedMetadata.toByteArray()));
+
+                XMPSchema pdfx = xmp.getSchema(PdfMetadataService.PDFX_NAMESPACE);
+                assertNotNull(pdfx);
+                assertEquals(
+                        "PDF/X-1:2001", pdfx.getUnqualifiedTextPropertyValue("GTS_PDFXVersion"));
+                assertEquals("NewValue", pdfx.getUnqualifiedTextPropertyValue("NewCustom"));
+                assertNull(pdfx.getUnqualifiedTextPropertyValue("OldCustom"));
             }
         }
     }
