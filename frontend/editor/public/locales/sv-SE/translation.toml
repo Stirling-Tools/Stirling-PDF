@@ -4809,7 +4809,7 @@ title = "OCR / Rensa skanningar"
 
 [home.overlay-pdfs]
 desc = "Överlagrar PDF:er ovanpå en annan PDF"
-tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
+tags = "överlägg,kombinera,slå samman,lager,överlagra,överläggs-PDF,lagra PDF:er,kombinera PDF:er,stapla,överläggssidor,bakgrund,förgrund,komposit"
 title = "Överlagra PDF:er"
 
 [home.pageLayout]
@@ -4828,7 +4828,7 @@ title = "Ordna"
 
 [home.pdfTextEditor]
 desc = "Granska och redigera Stirling PDF JSON-exporter med grupperad textredigering och PDF-återgenerering"
-tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
+tags = "redigera text,ändra text,modifiera text,redigera innehåll,uppdatera text,skriv om,rätta,justera,ändringsmarkera,granska,textredigerare,innehållsredigerare"
 title = "PDF-textredigerare"
 
 [home.pdfToSinglePage]
@@ -4888,7 +4888,7 @@ title = "Reparera"
 
 [home.replaceColor]
 desc = "Ersätt eller invertera färger i PDF‑dokument"
-tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
+tags = "ersätt färg,invertera färg,färgersättning,byt färger,ändra färg,invertera,negativ,byt färg,sök och ersätt färg,konvertera färg,färgändring"
 title = "Ersätt och invertera färg"
 
 [home.rotate]
@@ -6591,7 +6591,7 @@ tags = "enstaka sida"
 [pdfToSinglePage]
 description = "Det här verktyget sammanfogar alla sidor i din PDF till en enda stor sida. Bredden förblir densamma som originalsidornas, men höjden blir summan av alla sidors höjd."
 submit = "Konvertera till en sida"
-tags = "combine,merge,single,single page,one page,merge to single,combine all,stitch pages,concatenate vertical,long page,poster"
+tags = "kombinera,slå samman,enkel,enskild sida,en sida,slå samman till en,kombinera alla,sammanfoga sidor,vertikal sammanfogning,lång sida,affisch"
 title = "PDF till en sida"
 
 [pdfToSinglePage.error]
@@ -9956,7 +9956,7 @@ config = "Konfig"
 files = "Filer"
 
 [read]
-tags = "view,open,display,read,viewer,PDF viewer,PDF reader,open PDF,view PDF,display PDF,preview,browse"
+tags = "visa,öppna,visa innehåll,läsa,visare,PDF-visare,PDF-läsare,öppna PDF,visa PDF,förhandsgranskning,bläddra"
 
 [redact]
 submit = "Manual Redaction"
@@ -10089,7 +10089,7 @@ title = "Om Ta bort annoteringar"
 
 [removeBlanks]
 submit = "Ta bort tomrum"
-tags = "delete,clean,empty,remove blank,delete blank pages,empty pages,white pages,remove empty,clean up,cleanup blank"
+tags = "ta bort,rensa,tom,ta bort tomma,ta bort tomma sidor,tomma sidor,blanka sidor,rensa tomma,rensning"
 title = "Ta bort tomrum"
 
 [removeBlanks.error]
