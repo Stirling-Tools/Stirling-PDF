@@ -3316,28 +3316,28 @@ title = "Uppdatera API-nycklar"
 warning = "⚠️ Varning: Denna åtgärd kommer att generera nya API-nycklar och göra dina tidigare nycklar ogiltiga."
 
 [config.mcp]
-description = "Model Context Protocol (MCP) lets AI assistants like Claude use your Stirling PDF tools directly. Connect a client once and your assistant can convert, edit, secure and process documents on your behalf."
-guestInfo = "Guest users can't connect MCP clients. Create an account to use the MCP server and let your AI assistant run Stirling PDF tools on your behalf."
-navLabel = "MCP Server"
-tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
-title = "MCP Server"
-viewApiKeys = "View API keys"
+description = "Model Context Protocol (MCP) låter AI-assistenter som Claude använda dina Stirling PDF-verktyg direkt. Anslut en klient en gång så kan assistenten konvertera, redigera, skydda och bearbeta dokument åt dig."
+guestInfo = "Gästanvändare kan inte ansluta MCP-klienter. Skapa ett konto för att använda MCP-servern och låta din AI-assistent köra Stirling PDF-verktyg åt dig."
+navLabel = "MCP-server"
+tip = "Varje åtgärd assistenten kör utförs som ditt konto och räknas mot din användning, precis som när du använder Stirling PDF direkt."
+title = "MCP-server"
+viewApiKeys = "Visa API-nycklar"
 
 [config.mcp.copy]
-configLabel = "Config"
-copied = "Copied"
-copy = "Copy"
-endpointLabel = "Endpoint URL"
-tooltip = "Copy {{label}}"
-tooltipCopied = "{{label}} copied"
+configLabel = "Konfiguration"
+copied = "Kopierad"
+copy = "Kopiera"
+endpointLabel = "Slutpunkts-URL"
+tooltip = "Kopiera {{label}}"
+tooltipCopied = "{{label}} kopierad"
 
 [config.mcp.endpoint]
-label = "Your MCP endpoint"
+label = "Din MCP-slutpunkt"
 
 [config.mcp.setup]
-addTo = "Add to"
-hint = "Pick your client, paste the snippet into the file shown, then restart it. You'll sign in with your Stirling account on first use - no keys to copy."
-title = "Connect your AI assistant"
+addTo = "Lägg till i"
+hint = "Välj klient, klistra in kodavsnittet i den visade filen och starta sedan om den. Vid första användningen loggar du in med ditt Stirling-konto – inga nycklar behöver kopieras."
+title = "Anslut din AI-assistent"
 
 [config.overview]
 description = "Aktuella programinställningar och konfigurationsdetaljer."
