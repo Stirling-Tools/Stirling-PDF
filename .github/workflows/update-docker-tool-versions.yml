@@ -1,0 +1,173 @@
+# Checks pinned versions used by the Docker build and opens one pull request
+# per tool. All occurrences of a shared tool version are updated together,
+# including the common base image and the embedded/engine Dockerfiles.
+#
+# The workflow covers externally released tools and images with stable release
+# APIs. Distribution packages installed through Ubuntu/APT are intentionally
+# excluded because their versions are resolved by the configured repositories
+# during the image build.
+
+name: Update Docker tool versions
+
+run-name: Update Docker tool versions (${{ github.event_name }})
+
+on:
+  schedule:
+    - cron: "17 4 * * 1"
+  workflow_dispatch:
+
+jobs:
+  update:
+    permissions:
+      contents: write
+      pull-requests: write
+    name: Update ${{ matrix.name }}
+    runs-on: ubuntu-24.04
+    env:
+      GH_TOKEN: ${{ github.token }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Stirling-PDF base image
+            key: base-image
+            variable: BASE_VERSION
+          - name: Calibre
+            key: calibre
+            variable: CALIBRE_VERSION
+          - name: Ghostscript
+            key: ghostscript
+            variable: GS_VERSION
+          - name: QPDF
+            key: qpdf
+            variable: QPDF_VERSION
+          - name: ImageMagick
+            key: imagemagick
+            variable: IM_VERSION
+          - name: unoserver
+            key: unoserver
+            variable: UNOSERVER_VERSION
+          - name: Task
+            key: task
+            variable: TASK_VERSION
+          - name: Node.js
+            key: node
+            variable: NODE_MAJOR_VERSION
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Find latest release
+        id: latest
+        env:
+          TOOL: ${{ matrix.key }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          case "$TOOL" in
+            base-image)
+              latest=$(curl --fail --silent --show-error \
+                'https://hub.docker.com/v2/repositories/stirlingtools/stirling-pdf-base/tags?page_size=100' \
+                | jq -r '[.results[] | select(.name | test("^[0-9]+\\.[0-9]+\\.[0-9]+$"))] | sort_by(.last_updated) | last | "\(.name)@\(.digest)"')
+              ;;
+            calibre)
+              # The calibre Linux download page is the upstream source for the
+              # binary URL used by docker/base/Dockerfile.
+              latest=$(curl --fail --silent --show-error --location \
+                https://calibre-ebook.com/download_linux \
+                | grep -oP 'latest release of calibre is \K[0-9]+(\.[0-9]+)+' \
+                | head -n 1)
+              ;;
+            ghostscript)
+              tag=$(gh api repos/ArtifexSoftware/ghostpdl-downloads/releases/latest \
+                --jq '.tag_name')
+              latest=$(printf '%s' "$tag" \
+                | sed -E 's/^gs([0-9]{2})([0-9]{2})([0-9])$/\1.\2.\3/')
+              ;;
+            qpdf)
+              latest=$(gh api repos/qpdf/qpdf/releases/latest \
+                --jq '.tag_name' | sed 's/^v//')
+              ;;
+            imagemagick)
+              latest=$(gh api repos/ImageMagick/ImageMagick/releases/latest \
+                --jq '.tag_name')
+              ;;
+            unoserver)
+              latest=$(curl --fail --silent --show-error \
+                https://pypi.org/pypi/unoserver/json | jq -r '.info.version')
+              ;;
+            task)
+              latest=$(gh api repos/go-task/task/releases/latest \
+                --jq '.tag_name' | sed 's/^v//')
+              ;;
+            node)
+              latest=$(curl --fail --silent --show-error \
+                https://nodejs.org/dist/index.json \
+                | jq -r '[.[] | select(.lts != false)] | first | .version' \
+                | sed -E 's/^v([0-9]+).*/\1/')
+              ;;
+            *)
+              echo "Unknown tool: $TOOL" >&2
+              exit 1
+              ;;
+          esac
+
+          if [[ "$TOOL" == "base-image" ]]; then
+            valid_version='^[0-9]+\.[0-9]+\.[0-9]+@sha256:[0-9a-f]{64}$'
+          else
+            valid_version='^[0-9.-]+$'
+          fi
+
+          if [[ -z "$latest" || ! "$latest" =~ $valid_version ]]; then
+            echo "Could not determine a valid version for $TOOL: '$latest'" >&2
+            exit 1
+          fi
+
+          echo "version=$latest" >> "$GITHUB_OUTPUT"
+          echo "$TOOL latest version: $latest"
+
+      - name: Update Dockerfiles
+        id: update
+        env:
+          VERSION: ${{ steps.latest.outputs.version }}
+          VARIABLE: ${{ matrix.variable }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t files < <(
+            find docker engine -type f -name 'Dockerfile*' \
+              -exec grep -l "^ARG ${VARIABLE}=" {} +
+          )
+
+          if (( ${#files[@]} == 0 )); then
+            echo "No Dockerfiles contain ARG ${VARIABLE}" >&2
+            exit 1
+          fi
+
+          for file in "${files[@]}"; do
+            sed -i -E "s/^(ARG ${VARIABLE}=)[^[:space:]]+/\\1${VERSION}/" "$file"
+          done
+
+          if git diff --quiet -- "${files[@]}"; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "${VARIABLE} is already ${VERSION}"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            git diff -- "${files[@]}"
+          fi
+
+      - name: Create pull request
+        if: steps.update.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+        with:
+          branch: automation/docker-version-${{ matrix.key }}
+          delete-branch: true
+          commit-message: "chore(docker): update ${{ matrix.name }} to ${{ steps.latest.outputs.version }}"
+          title: "chore(docker): update ${{ matrix.name }} to ${{ steps.latest.outputs.version }}"
+          body: |
+            Updates `${{ matrix.name }}` to version `${{ steps.latest.outputs.version }}`.
+
+            The version is used by all matching Dockerfiles in this PR.
+          labels: dependencies,docker

@@ -8,9 +8,10 @@ FROM gradle:9.7.1-jdk25@sha256:d868117760a7c92214705f47ed173116a5d13e58d68702f97
 
 # Install Node.js and npm for frontend build
 ARG TASK_VERSION=3.52.0
+ARG NODE_MAJOR_VERSION=22
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
-    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+    && curl -fsSL "https://deb.nodesource.com/setup_${NODE_MAJOR_VERSION}.x" | bash - \
     && apt-get install -y --no-install-recommends nodejs \
     && npm --version \
     && node --version \
