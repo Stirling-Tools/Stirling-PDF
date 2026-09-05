@@ -8,7 +8,7 @@ TOML format only.
 import argparse
 import json
 import os
-import subprocess
+import subprocess  # nosec
 import sys
 from concurrent.futures import ThreadPoolExecutor
 import time
@@ -23,7 +23,7 @@ def run_command(cmd, description=""):
         print(f"Step: {description}")
         print(f"{'=' * 60}")
 
-    result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    result = subprocess.run(cmd, shell=False, capture_output=True, text=True)
 
     if result.stdout:
         print(result.stdout)
@@ -152,10 +152,20 @@ def translate_batches(batch_files, language_code, api_key, timeout=600, model="g
         print(f"\n[{i}/{total}] Translating {batch_file}...")
 
         # Always pass API key since it's required
-        cmd = f'python3 scripts/translations/batch_translator.py "{batch_file}" --language {language_code} --api-key "{api_key}" --model {model}'
+        cmd = [
+            "python3",
+            "scripts/translations/batch_translator.py",
+            batch_file,
+            "--language",
+            language_code,
+            "--api-key",
+            api_key,
+            "--model",
+            model,
+        ]
 
         try:
-            result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=timeout)
+            result = subprocess.run(cmd, shell=False, capture_output=True, text=True, timeout=timeout)
         except subprocess.TimeoutExpired:
             print(f"✗ Timed out after {timeout}s: {batch_file}", file=sys.stderr)
             return None
@@ -223,7 +233,14 @@ def apply_translations(merged_file, language_code):
     """Apply merged translations to the language file."""
     print(f"\n📝 Applying translations to {language_code}...")
 
-    cmd = f"python3 scripts/translations/translation_merger.py {language_code} apply-translations --translations-file {merged_file}"
+    cmd = [
+        "python3",
+        "scripts/translations/translation_merger.py",
+        language_code,
+        "apply-translations",
+        "--translations-file",
+        merged_file,
+    ]
 
     if not run_command(cmd):
         print("✗ Failed to apply translations")
@@ -237,7 +254,7 @@ def beautify_translations(language_code):
     """Beautify translation file to match en-US structure."""
     print(f"\n✨ Beautifying {language_code} translation file...")
 
-    cmd = f"python3 scripts/translations/toml_beautifier.py --language {language_code}"
+    cmd = ["python3", "scripts/translations/toml_beautifier.py", "--language", language_code]
 
     if not run_command(cmd):
         print("✗ Failed to beautify translations")
@@ -269,7 +286,7 @@ def verify_completion(language_code):
     """Check final completion percentage."""
     print("\n📊 Verifying completion...")
 
-    cmd = f"python3 scripts/translations/translation_analyzer.py --language {language_code} --summary"
+    cmd = ["python3", "scripts/translations/translation_analyzer.py", "--language", language_code, "--summary"]
     run_command(cmd)
 
 
