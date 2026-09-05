@@ -155,6 +155,45 @@ Feature: General PDF Operations API Validation
         And the response PDF should contain 1 pages
 
 
+    @crop @positive
+    Scenario: crop only the selected page and keep the others
+        Given I generate a PDF file as "fileInput"
+        And the pdf contains 3 pages
+        And the request data includes
+            | parameter   | value |
+            | x           | 0     |
+            | y           | 0     |
+            | width       | 50    |
+            | height      | 50    |
+            | pageNumbers | 2     |
+        When I send the API request to the endpoint "/api/v1/general/crop"
+        Then the response content type should be "application/pdf"
+        And the response status code should be 200
+        And the response PDF should contain 3 pages
+        And the response PDF page 1 should have width 612 and height 792
+        And the response PDF page 2 should have width 50 and height 50
+        And the response PDF page 3 should have width 612 and height 792
+
+
+    @crop @positive
+    Scenario: legacy requests without pageNumbers crop every page
+        Given I generate a PDF file as "fileInput"
+        And the pdf contains 3 pages
+        And the request data includes
+            | parameter | value |
+            | x         | 0     |
+            | y         | 0     |
+            | width     | 50    |
+            | height    | 50    |
+        When I send the API request to the endpoint "/api/v1/general/crop"
+        Then the response content type should be "application/pdf"
+        And the response status code should be 200
+        And the response PDF should contain 3 pages
+        And the response PDF page 1 should have width 50 and height 50
+        And the response PDF page 2 should have width 50 and height 50
+        And the response PDF page 3 should have width 50 and height 50
+
+
     @pdf-to-single-page @positive
     Scenario: pdf-to-single-page combines all pages into one long page
         Given I generate a PDF file as "fileInput"

@@ -2,6 +2,7 @@ package stirling.software.SPDF.controller.api;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.util.BitSet;
 import java.util.List;
 
 import org.apache.pdfbox.multipdf.LayerUtility;
@@ -129,6 +130,12 @@ public class CropController {
         return endpointConfiguration.isGroupEnabled("Ghostscript");
     }
 
+    private static BitSet pageSelection(CropPdfForm request, PDDocument document) {
+        BitSet selected = new BitSet(document.getNumberOfPages());
+        request.getPageNumbersList(document, false).forEach(selected::set);
+        return selected;
+    }
+
     @AutoJobPostMapping(
             value = "/crop",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
@@ -169,8 +176,14 @@ public class CropController {
                 PDFRenderer renderer = new PDFRenderer(sourceDocument);
                 renderer.setSubsamplingAllowed(true); // Enable subsampling to reduce memory usage
                 LayerUtility layerUtility = new LayerUtility(newDocument);
+                BitSet pagesToCrop = pageSelection(request, sourceDocument);
 
                 for (int i = 0; i < sourceDocument.getNumberOfPages(); i++) {
+                    if (!pagesToCrop.get(i)) {
+                        newDocument.importPage(sourceDocument.getPage(i));
+                        continue;
+                    }
+
                     PDPage sourcePage = sourceDocument.getPage(i);
                     PDRectangle mediaBox = sourcePage.getMediaBox();
 
@@ -222,8 +235,14 @@ public class CropController {
                     pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument)) {
                 int totalPages = sourceDocument.getNumberOfPages();
                 LayerUtility layerUtility = new LayerUtility(newDocument);
+                BitSet pagesToCrop = pageSelection(request, sourceDocument);
 
                 for (int i = 0; i < totalPages; i++) {
+                    if (!pagesToCrop.get(i)) {
+                        newDocument.importPage(sourceDocument.getPage(i));
+                        continue;
+                    }
+
                     PDPage sourcePage = sourceDocument.getPage(i);
 
                     // Create a new page with the size of the source page
@@ -276,7 +295,11 @@ public class CropController {
         TempFile tempOutputFile = null;
 
         try (PDDocument sourceDocument = pdfDocumentFactory.load(request)) {
+            BitSet pagesToCrop = pageSelection(request, sourceDocument);
             for (int i = 0; i < sourceDocument.getNumberOfPages(); i++) {
+                if (!pagesToCrop.get(i)) {
+                    continue;
+                }
                 PDPage page = sourceDocument.getPage(i);
                 PDRectangle cropBox =
                         new PDRectangle(
