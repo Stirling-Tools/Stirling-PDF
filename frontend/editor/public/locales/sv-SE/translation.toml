@@ -7977,44 +7977,44 @@ retry = "Försök igen"
 title = "Något gick fel på den här sidan"
 
 [portal.failures]
-fromSource = "From source {{source}}"
-occurrences = "{{count}} occurrences"
-reportedBy = "Hit by {{actor}}"
-runReference = "Run {{runId}}"
-subtitle = "Failures recorded from your policy runs and your team's editors, with the actions you can take."
-title = "Failures"
+fromSource = "Från källan {{source}}"
+occurrences = "{{count}} förekomster"
+reportedBy = "Rapporterad av {{actor}}"
+runReference = "Körning {{runId}}"
+subtitle = "Fel som registrerats från dina policykörningar och teamets redigerare, med tillgängliga åtgärder."
+title = "Fel"
 
 [portal.failures.action]
-acknowledge = "Acknowledge"
-confirm = "Are you sure?"
+acknowledge = "Bekräfta"
+confirm = "Är du säker?"
 decrypt = "Dekryptera och försök igen"
-dismiss = "Dismiss"
-dismissSkipFile = "Skip this file"
+dismiss = "Avfärda"
+dismissSkipFile = "Hoppa över den här filen"
 openInTool = "Försök igen"
 viewFile = "Visa fil"
 viewInProcessor = "Visa i bearbetaren"
 
 [portal.failures.debug]
-copyJson = "Copy JSON"
-dismissAll = "Dismiss all ({{total}})"
-dismissing = "Dismissing..."
-hideJson = "Hide raw JSON ({{total}})"
-refresh = "Refresh failures"
-showJson = "Show raw JSON ({{total}})"
+copyJson = "Kopiera JSON"
+dismissAll = "Avfärda alla ({{total}})"
+dismissing = "Avfärdar …"
+hideJson = "Dölj rå JSON ({{total}})"
+refresh = "Uppdatera fel"
+showJson = "Visa rå JSON ({{total}})"
 
 [portal.failures.disabled]
-closed = "This failure is already closed."
+closed = "Det här felet är redan stängt."
 noDocument = "Det här felet registrerades inte mot ett specifikt dokument, så det finns inget här att öppna."
 unattended = "Den här filen matades in av en mapp, bucket eller webhook, så ingen webbläsare håller den för öppning."
-unavailable = "Not available for this failure."
+unavailable = "Inte tillgängligt för det här felet."
 
 [portal.failures.empty]
-description = "Policy runs that fail will appear here with the actions you can take."
-title = "No failures recorded"
+description = "Misslyckade policykörningar visas här med de åtgärder du kan vidta."
+title = "Inga fel registrerade"
 
 [portal.failures.kind.inputPasswordProtected]
-description = "The pipeline could not open the document because it is password-protected. Unlock it and run it again, or skip this file."
-title = "Password-protected document"
+description = "Pipelinen kunde inte öppna dokumentet eftersom det är lösenordsskyddat. Lås upp det och kör igen, eller hoppa över den här filen."
+title = "Lösenordsskyddat dokument"
 
 [portal.failures.kind.unknown]
 description = "This run failed for a reason Stirling does not yet recognise. The raw message is shown below."
@@ -8023,14 +8023,14 @@ title = "Unrecognised failure"
 [portal.failures.origin]
 pipeline = "Pipeline"
 policy = "Policy"
-tool = "Tool run"
+tool = "Verktygskörning"
 
 [portal.failures.stage]
-blocked = "Blocked"
-input = "Input"
-internal = "Internal"
-never_ran = "Never ran"
-output = "Output"
+blocked = "Blockerad"
+input = "Indata"
+internal = "Internt"
+never_ran = "Aldrig körd"
+output = "Utdata"
 
 [portal.home.download]
 back = "Tillbaka"
