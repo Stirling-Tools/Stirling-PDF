@@ -184,6 +184,64 @@ class FolderOutputSinkTest {
         assertFalse(Files.exists(tempDir.resolve("escape.pdf")));
     }
 
+    @Test
+    void renamesOutputsWithTheConfiguredPattern() throws IOException {
+        Path out = tempDir.resolve("out");
+
+        sink.deliver(
+                AD_HOC,
+                List.of(named("report.pdf", "x")),
+                new OutputSpec(
+                        "folder",
+                        Map.of(
+                                "directory",
+                                out.toString(),
+                                "filenamePattern",
+                                "archived_{filename}")));
+
+        assertTrue(Files.exists(out.resolve("archived_report.pdf")));
+    }
+
+    @Test
+    void stampsTheDateAndTimeTokensAndKeepsThePatternsOwnExtension() throws IOException {
+        Path out = tempDir.resolve("out");
+
+        sink.deliver(
+                AD_HOC,
+                List.of(named("report.pdf", "x")),
+                new OutputSpec(
+                        "folder",
+                        Map.of(
+                                "directory",
+                                out.toString(),
+                                "filenamePattern",
+                                "{filename}-{date}-{time}.pdf")));
+
+        try (Stream<Path> written = Files.list(out)) {
+            List<String> names =
+                    written.filter(Files::isRegularFile)
+                            .map(path -> path.getFileName().toString())
+                            .toList();
+            assertEquals(1, names.size());
+            assertTrue(names.get(0).matches("report-\\d{8}-\\d{6}\\.pdf"), names.get(0));
+        }
+    }
+
+    @Test
+    void patternCannotWriteOutsideTheTargetDirectory() throws IOException {
+        Path out = tempDir.resolve("out");
+
+        sink.deliver(
+                AD_HOC,
+                List.of(named("report.pdf", "x")),
+                new OutputSpec(
+                        "folder",
+                        Map.of("directory", out.toString(), "filenamePattern", "../{filename}")));
+
+        assertTrue(Files.exists(out.resolve("report.pdf")));
+        assertFalse(Files.exists(tempDir.resolve("report.pdf")));
+    }
+
     private static ByteArrayResource named(String filename, String content) {
         return new ByteArrayResource(content.getBytes()) {
             @Override

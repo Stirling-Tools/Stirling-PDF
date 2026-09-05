@@ -432,6 +432,34 @@ class PolicyControllerTest {
         }
 
         @Test
+        @DisplayName("a caller cannot label its own creation as a migrated pipeline")
+        void savesNewIgnoresClaimedOrigin() {
+            applicationProperties.getSecurity().setEnableLogin(true);
+            when(policyManagementAuthority.canEditPolicies()).thenReturn(true);
+            when(policyStore.save(any())).thenAnswer(i -> i.getArgument(0));
+
+            ResponseEntity<Policy> response =
+                    controller.savePolicy(policy(null, null).withOrigin(Policy.ORIGIN_MIGRATED));
+
+            assertThat(response.getBody().origin()).isNull();
+        }
+
+        @Test
+        @DisplayName("editing a migrated pipeline keeps its provenance")
+        void saveKeepsStoredOrigin() {
+            applicationProperties.getSecurity().setEnableLogin(false);
+            Policy existing = policy("p1", 1L).withOrigin(Policy.ORIGIN_MIGRATED);
+            when(policyStore.get("p1")).thenReturn(Optional.of(existing));
+            when(policyAccessGuard.canAccess(existing)).thenReturn(true);
+            when(policyStore.save(any())).thenAnswer(i -> i.getArgument(0));
+
+            // The builder posts a freshly-built body with no origin on it.
+            ResponseEntity<Policy> response = controller.savePolicy(policy("p1", 1L));
+
+            assertThat(response.getBody().origin()).isEqualTo(Policy.ORIGIN_MIGRATED);
+        }
+
+        @Test
         @DisplayName("saving the sentinel back keeps the stored output secret")
         void saveRestoresOutputSecrets() {
             applicationProperties.getSecurity().setEnableLogin(false);

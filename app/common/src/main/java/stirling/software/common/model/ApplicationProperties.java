@@ -221,9 +221,10 @@ public class ApplicationProperties {
         /**
          * How often (seconds) the folder-watch trigger reconciles its watch registrations and
          * re-runs every folder-watch policy as a safety net for filesystem events that were missed
-         * (NFS, bind mounts, inotify-queue overflow).
+         * (NFS, bind mounts, inotify-queue overflow). The default bounds how long a file can sit
+         * unnoticed after a missed event to one minute.
          */
-        private long watchReconcileSeconds = 300;
+        private long watchReconcileSeconds = 60;
 
         /**
          * How long (milliseconds) the folder-watch trigger keeps draining filesystem events after

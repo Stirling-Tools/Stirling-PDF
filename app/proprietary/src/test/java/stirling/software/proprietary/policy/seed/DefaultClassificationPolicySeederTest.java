@@ -112,6 +112,21 @@ class DefaultClassificationPolicySeederTest {
     }
 
     @Test
+    void keepsTheProvenanceMarkerWhenClearingThePlaceholderOwner() {
+        when(policyStore.findByTeam(7L))
+                .thenReturn(
+                        List.of(
+                                classificationPolicy(7L, "system")
+                                        .withOrigin(Policy.ORIGIN_MIGRATED)));
+
+        seeder().onTeamCreated(new TeamCreatedEvent(7L, "Acme"));
+
+        ArgumentCaptor<Policy> saved = ArgumentCaptor.forClass(Policy.class);
+        verify(policyStore).save(saved.capture());
+        assertThat(saved.getValue().origin()).isEqualTo(Policy.ORIGIN_MIGRATED);
+    }
+
+    @Test
     void leavesADeliberatelyChosenOwnerAlone() {
         when(policyStore.findByTeam(7L)).thenReturn(List.of(classificationPolicy(7L, "alice")));
 

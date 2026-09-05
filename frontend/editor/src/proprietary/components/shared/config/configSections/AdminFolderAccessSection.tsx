@@ -82,6 +82,11 @@ export default function AdminFolderAccessSection() {
           "admin.settings.folderAccess.implied.watchedFolder",
           "Pipeline watched folder",
         );
+      case "finishedFolder":
+        return t(
+          "admin.settings.folderAccess.implied.finishedFolder",
+          "Pipeline finished folder",
+        );
       default:
         return reason;
     }

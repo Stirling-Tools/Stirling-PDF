@@ -97,6 +97,7 @@ public final class SaasSchemaOwnership {
                     "policies",
                     "policy_assets",
                     "policy_completed_migrations",
+                    "policy_imported_pipelines",
                     "policy_processed_files",
                     "policy_source_doc_counts",
                     "policy_source_doc_totals",

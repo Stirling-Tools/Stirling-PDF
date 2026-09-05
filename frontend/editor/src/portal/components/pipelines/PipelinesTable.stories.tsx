@@ -45,3 +45,26 @@ export const Default: Story = {};
 export const Empty: Story = {
   args: { pipelines: [] },
 };
+
+/** A pipeline nobody here authored: converted from a legacy watched-folder config. */
+export const NotAuthoredHere: Story = {
+  args: {
+    pipelines: [
+      ...PIPELINES,
+      {
+        id: "pipe-invoices",
+        name: "Rotate invoices",
+        enabled: true,
+        required: false,
+        icon: "",
+        status: "active",
+        trigger: "folder-watch",
+        sources: [{ id: "src-invoices", name: "compress-invoices" }],
+        steps: ["rotate-pdf"],
+        output: "folder",
+        owner: "",
+        origin: "migrated",
+      },
+    ],
+  },
+};

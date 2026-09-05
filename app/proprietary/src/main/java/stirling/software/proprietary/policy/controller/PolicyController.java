@@ -383,16 +383,20 @@ public class PolicyController {
                 if (!policyAccessGuard.canAccess(existing)) {
                     throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No policy: " + id);
                 }
-                return withOwnerAndTeam(incoming, existing.owner(), existing.teamId());
+                return withOwnerTeamAndOrigin(
+                        incoming, existing.owner(), existing.teamId(), existing.origin());
             }
         }
-        return withOwnerAndTeam(
+        return withOwnerTeamAndOrigin(
                 incoming,
                 policyAccessGuard.ownerForNewPolicy(),
-                policyAccessGuard.teamForNewPolicy());
+                policyAccessGuard.teamForNewPolicy(),
+                // Anything created through this endpoint was built here, whatever the body claims.
+                null);
     }
 
-    private static Policy withOwnerAndTeam(Policy policy, String owner, Long teamId) {
+    private static Policy withOwnerTeamAndOrigin(
+            Policy policy, String owner, Long teamId, String origin) {
         return new Policy(
                 policy.id(),
                 policy.name(),
@@ -405,7 +409,8 @@ public class PolicyController {
                 policy.output(),
                 policy.outputIds(),
                 teamId,
-                policy.editor());
+                policy.editor(),
+                origin);
     }
 
     /** Output secrets never leave the server: reads return the redaction sentinel instead. */

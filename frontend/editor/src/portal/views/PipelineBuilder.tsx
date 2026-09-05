@@ -1351,6 +1351,16 @@ export function PipelineBuilder() {
         />
       )}
 
+      {policyState.data?.origin === "migrated" && (
+        <Banner
+          tone="info"
+          description={t("portal.pipelines.origin.migrated.detail", {
+            defaultValue:
+              "Converted automatically from a watched-folder JSON config. The original file was archived to .stirling/migrated beside that folder, and the folder is now driven by this pipeline.",
+          })}
+        />
+      )}
+
       {error && <Banner tone="danger" description={error} />}
       {runResult && (
         <Banner tone={runResult.tone} description={runResult.text} />

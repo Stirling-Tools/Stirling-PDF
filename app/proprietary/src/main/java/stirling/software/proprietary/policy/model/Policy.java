@@ -28,7 +28,11 @@ public record Policy(
         OutputSpec output,
         List<String> outputIds,
         Long teamId,
-        EditorConfig editor) {
+        EditorConfig editor,
+        String origin) {
+
+    /** Converted from a legacy watched-folder JSON config that predates the policy engine. */
+    public static final String ORIGIN_MIGRATED = "migrated";
 
     public Policy {
         icon = icon == null ? "" : icon;
@@ -39,22 +43,23 @@ public record Policy(
         editor = editor == null ? EditorConfig.disabled() : editor;
     }
 
-    /**
-     * Without the {@code required} flag, {@code icon}, or editor participation: defaults to not
-     * org-required, no icon, and a swept/on-demand policy. Kept for the many callers and tests
-     * written before those fields; the frontend and stores that care use the full constructor.
-     */
+    /** Without a provenance marker: an ordinary policy created through the UI or a seeder. */
     public Policy(
             String id,
             String name,
             String owner,
             boolean enabled,
+            boolean required,
+            String icon,
             List<PipelineInput> inputs,
             List<PipelineStep> steps,
             OutputSpec output,
             List<String> outputIds,
-            Long teamId) {
-        this(id, name, owner, enabled, false, "", inputs, steps, output, outputIds, teamId, null);
+            Long teamId,
+            EditorConfig editor) {
+        this(
+                id, name, owner, enabled, required, icon, inputs, steps, output, outputIds, teamId,
+                editor, null);
     }
 
     /**
@@ -73,7 +78,47 @@ public record Policy(
             List<String> outputIds,
             Long teamId,
             EditorConfig editor) {
-        this(id, name, owner, enabled, false, "", inputs, steps, output, outputIds, teamId, editor);
+        this(
+                id, name, owner, enabled, false, "", inputs, steps, output, outputIds, teamId,
+                editor, null);
+    }
+
+    /** Without editor participation: a swept or on-demand policy carrying a provenance marker. */
+    public Policy(
+            String id,
+            String name,
+            String owner,
+            boolean enabled,
+            List<PipelineInput> inputs,
+            List<PipelineStep> steps,
+            OutputSpec output,
+            List<String> outputIds,
+            Long teamId,
+            String origin) {
+        this(
+                id, name, owner, enabled, false, "", inputs, steps, output, outputIds, teamId, null,
+                origin);
+    }
+
+    /**
+     * Without the {@code required} flag, {@code icon}, editor participation or a provenance marker:
+     * defaults to not org-required, no icon, and a swept/on-demand policy. Kept for the many
+     * callers and tests written before those fields; the frontend and stores that care use the full
+     * constructor.
+     */
+    public Policy(
+            String id,
+            String name,
+            String owner,
+            boolean enabled,
+            List<PipelineInput> inputs,
+            List<PipelineStep> steps,
+            OutputSpec output,
+            List<String> outputIds,
+            Long teamId) {
+        this(
+                id, name, owner, enabled, false, "", inputs, steps, output, outputIds, teamId, null,
+                null);
     }
 
     /**
@@ -135,14 +180,14 @@ public record Policy(
     public Policy withOutput(OutputSpec resolved) {
         return new Policy(
                 id, name, owner, enabled, required, icon, inputs, steps, resolved, outputIds,
-                teamId, editor);
+                teamId, editor, origin);
     }
 
     /** A copy under a different owner (e.g. moving a seed off a placeholder name). */
     public Policy withOwner(String newOwner) {
         return new Policy(
                 id, name, newOwner, enabled, required, icon, inputs, steps, output, outputIds,
-                teamId, editor);
+                teamId, editor, origin);
     }
 
     /** A copy referencing the given saved output destinations. */
@@ -159,7 +204,15 @@ public record Policy(
                 output,
                 newOutputIds,
                 teamId,
-                editor);
+                editor,
+                origin);
+    }
+
+    /** Provenance is stamped server-side; a caller cannot label its own creation as migrated. */
+    public Policy withOrigin(String newOrigin) {
+        return new Policy(
+                id, name, owner, enabled, required, icon, inputs, steps, output, outputIds, teamId,
+                editor, newOrigin);
     }
 
     /**
