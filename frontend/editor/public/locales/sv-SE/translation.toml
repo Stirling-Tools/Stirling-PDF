@@ -10148,7 +10148,7 @@ title = "Resultat för borttagning av certifikat"
 
 [removeImage]
 submit = "Ta bort bild"
-tags = "remove,delete,clean,remove image,delete image,strip images,remove pictures,delete photos,clean images,reduce size,remove graphics"
+tags = "ta bort,radera,rensa,ta bort bild,radera bild,ta bort bilder,ta bort foton,rensa bilder,minska storlek,ta bort grafik"
 title = "Ta bort bild"
 
 [removeImage.error]
@@ -10220,7 +10220,7 @@ description = "Att ta bort lösenordsskydd kräver det lösenord som användes f
 
 [reorganizePages]
 submit = "Omorganisera sidor"
-tags = "rearrange,reorder,organize,reorganize,move pages,page order,sort pages,arrange pages,shuffle,resequence"
+tags = "ordna om,ändra ordning,organisera,omorganisera,flytta sidor,sidordning,sortera sidor,arrangera sidor,blanda,sekvensera om"
 
 [reorganizePages.error]
 failed = "Misslyckades med att omorganisera sidor"
@@ -10382,7 +10382,7 @@ title = "Sanera PDF"
 tags = "rengöra,säkra,säker,ta bort hot"
 
 [scalePages]
-tags = "resize,adjust,scale,page size,resize page,scale page,change size,adjust size,enlarge,shrink page,fit to page,A4,letter size"
+tags = "ändra storlek,justera,skala,sidstorlek,ändra sidstorlek,skala sida,ändra mått,justera mått,förstora,förminska sida,anpassa till sida,A4,letter-storlek"
 title = "Justera sidskala"
 
 [scaleSettings]
@@ -10412,11 +10412,11 @@ unit = "Enhet"
 unitInvalid = "Ogiltig enhet: {{scaleUnit}}"
 
 [scannerEffect]
-tags = "scan,simulate,create,fake scan,look scanned,scanner effect,make look scanned,photocopy effect,simulate scanner,realistic scan"
+tags = "skanna,simulera,skapa,fejkad skanning,ser skannad ut,skannereffekt,ge skannat utseende,kopieringseffekt,simulera skanner,realistisk skanning"
 
 [scannerImageSplit]
 submit = "Extrahera bildskanningar"
-tags = "separate,auto-detect,scans,multi-photo,organize"
+tags = "separera,autodetektera,skanningar,flera foton,organisera"
 title = "Extraherade bilder"
 
 [scannerImageSplit.error]
@@ -11114,7 +11114,7 @@ resultsTitle = "Delningsresultat"
 selectMethod = "Välj en delningsmetod"
 splitPages = "Ange sidor att dela på:"
 submit = "Dela"
-tags = "divide,separate,break,split,extract pages,separate pages,divide document,break apart,separate files,unbind,split by page,divide by chapter"
+tags = "dela,separera,bryt,dela upp,extrahera sidor,separera sidor,dela dokument,dela isär,separera filer,lossa bindning,dela efter sida,dela efter kapitel"
 title = "Dela upp PDF"
 
 [split.error]
@@ -12319,7 +12319,7 @@ watching = "Bevakar: {{name}}"
 [watermark]
 desc = "Lägg till text- eller bildvattenstämplar i PDF‑filer"
 submit = "Lägg till vattenstämpel"
-tags = "stamp,mark,overlay,watermark,branding,logo,confidential,draft,copyright,trademark,text overlay,image overlay,background text"
+tags = "stämpel,märkning,överlägg,vattenmärke,varumärke,logotyp,konfidentiell,utkast,upphovsrätt,varumärke,textöverlägg,bildöverlägg,bakgrundstext"
 title = "Lägg till vattenstämpel"
 
 [watermark.error]
