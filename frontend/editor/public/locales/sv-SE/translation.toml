@@ -11780,17 +11780,17 @@ yearsAgo_one = "för {{count}} år sedan"
 yearsAgo_other = "för {{count}} år sedan"
 
 [users.cap]
-addProcessor = "+ Processor"
+addProcessor = "+ Lägg till Processor"
 approver = "Godkänner policy"
-editor = "Editor"
-processor = "Processor"
+editor = "Redigerare"
+processor = "PDF-processor"
 
 [users.columns]
-capabilities = "Capabilities"
-email = "Email"
+capabilities = "Behörigheter"
+email = "E-postadress"
 person = "Person"
-role = "Role"
-status = "Status"
+role = "Roll"
+status = "Kontostatus"
 
 [users.confirm]
 cancelInviteBody = "Avbryt inbjudan till {{email}}? De kommer inte att kunna gå med via den aktuella länken."
@@ -11820,8 +11820,8 @@ teamMeta = "{{count}} personer"
 [users.invite]
 access = "Åtkomst"
 action = "Bjud in personer"
-authOauth = "OAuth2 / SSO"
-authSaml = "SAML 2.0"
+authOauth = "OAuth 2 / SSO"
+authSaml = "SAML 2"
 authType = "Inloggningsmetod"
 authWeb = "Lösenord"
 create = "Skapa konto"
@@ -11843,7 +11843,7 @@ processorDesc = "Styrningsytan, kör pipelines, agenter och API."
 role = "Roll"
 send2 = "Skicka inbjudan"
 subtitle2 = "De får ett e-postmeddelande för att gå med i din Stirling-arbetsyta."
-team = "Team"
+team = "Tilldela team"
 title = "Bjud in personer"
 username = "Användarnamn"
 usernameError = "Användarnamnet måste vara minst 3 tecken"
@@ -11858,8 +11858,8 @@ expiresToday = "Upphör idag"
 title = "Väntande inbjudningar"
 
 [users.invites.columns]
-expires = "Expires"
-invitee = "Invitee"
+expires = "Upphör"
+invitee = "Inbjuden person"
 
 [users.loadError]
 description = "Något gick fel vid kontakt med backend, eller så har du inte åtkomst. Försök igen."
@@ -11867,7 +11867,7 @@ title = "Kunde inte läsa in medlemmar"
 
 [users.moveTeam]
 apply = "Flytta"
-team = "Team"
+team = "Målteam"
 title = "Flytta till team"
 
 [users.newTeam]
