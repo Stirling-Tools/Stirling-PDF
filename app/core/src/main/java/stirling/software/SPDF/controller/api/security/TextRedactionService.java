@@ -122,7 +122,8 @@ class TextRedactionService {
                 }
             }
 
-            log.debug("Calling JPDFium PdfRedactor.redact (terms={})", terms);
+            // Never log the terms themselves - they are the secret being removed.
+            log.debug("Calling JPDFium PdfRedactor.redact ({} term(s))", terms.size());
             RedactResult result = PdfRedactor.redact(tempIn.toPath(), options);
             log.debug(
                     "JPDFium PdfRedactor.redact complete (matches={})",
