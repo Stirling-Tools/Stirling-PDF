@@ -3494,6 +3494,26 @@ description = "這些 Cookies 對網站正常運作至關重要。它們讓核�
 posthog = "PostHog 分析"
 scarf = "Scarf 像素"
 
+[createPortfolio]
+coverTitle = "Cover page title"
+coverTitlePlaceholder = "PDF Portfolio"
+description = "All selected files are bundled into a single PDF Portfolio. Non-PDF files are embedded as-is and can be opened in a portfolio-aware viewer."
+goToFileEditor = "Go to file editor"
+info = "Bundles the selected files into a single Adobe PDF Portfolio (a PDF with a /Collection). Portfolio-aware viewers show the files as a browsable collection; other viewers see a cover page plus the files as attachments."
+settings = "Portfolio Settings"
+submit = "Create Portfolio"
+title = "Portfolio Results"
+viewerModeHint = "A portfolio needs 2 or more files. Head to the file editor to select them."
+
+[createPortfolio.error]
+failed = "An error occurred while creating the PDF portfolio."
+
+[createPortfolio.tooltip.description]
+title = "What it does"
+
+[createPortfolio.tooltip.header]
+title = "About PDF Portfolios"
+
 [crop]
 autoCrop = "自動裁切空白"
 noFileSelected = "選取一個 PDF 檔以開始裁切"
@@ -4687,6 +4707,11 @@ title = "壓縮"
 desc = "在不同格式之間轉換檔案"
 tags = "轉換,變更,transform,change,convert,PDF to Word,PDF to Excel,PDF to image,Word to PDF,Excel to PDF,PowerPoint to PDF,HTML to PDF,export,import,file conversion,format change,save as"
 title = "轉換"
+
+[home.createPortfolio]
+desc = "Bundle multiple files into an Adobe PDF Portfolio"
+tags = "portfolio,collection,package,bundle,combine files,pdf portfolio,adobe portfolio,pdf collection,container"
+title = "Create Portfolio"
 
 [home.crop]
 desc = "裁剪 PDF 以減少其大小（保持文字！）"
@@ -11470,6 +11495,14 @@ loading = "載入中..."
 renderMarkdown = "轉譯 Markdown"
 sortedBy = "排序依據：{{column}}"
 textStats = "{{lines}} 行 · {{size}}"
+
+[viewer.portfolio]
+addFile = "Add file"
+count_one = "{{count}} file in this portfolio"
+count_other = "{{count}} files in this portfolio"
+openInViewer = "Open in viewer"
+searchPlaceholder = "Search files"
+title = "Portfolio"
 
 [viewer.redaction]
 removeMark = "移除此標記"

@@ -3494,6 +3494,26 @@ description = "These cookies are essential for the website to function properly.
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
+[createPortfolio]
+coverTitle = "Cover page title"
+coverTitlePlaceholder = "PDF Portfolio"
+description = "All selected files are bundled into a single PDF Portfolio. Non-PDF files are embedded as-is and can be opened in a portfolio-aware viewer."
+goToFileEditor = "Go to file editor"
+info = "Bundles the selected files into a single Adobe PDF Portfolio (a PDF with a /Collection). Portfolio-aware viewers show the files as a browsable collection; other viewers see a cover page plus the files as attachments."
+settings = "Portfolio Settings"
+submit = "Create Portfolio"
+title = "Portfolio Results"
+viewerModeHint = "A portfolio needs 2 or more files. Head to the file editor to select them."
+
+[createPortfolio.error]
+failed = "An error occurred while creating the PDF portfolio."
+
+[createPortfolio.tooltip.description]
+title = "What it does"
+
+[createPortfolio.tooltip.header]
+title = "About PDF Portfolios"
+
 [crop]
 autoCrop = "여백 자동 자르기"
 noFileSelected = "자르기를 시작하려면 PDF 파일을 선택하세요"
@@ -4687,6 +4707,11 @@ title = "압축"
 desc = "서로 다른 형식 간 파일 변환"
 tags = "변환,바꾸기"
 title = "변환"
+
+[home.createPortfolio]
+desc = "Bundle multiple files into an Adobe PDF Portfolio"
+tags = "portfolio,collection,package,bundle,combine files,pdf portfolio,adobe portfolio,pdf collection,container"
+title = "Create Portfolio"
 
 [home.crop]
 desc = "PDF를 잘라서 크기 줄이기(텍스트 유지!)"
@@ -11470,6 +11495,14 @@ loading = "로딩 중..."
 renderMarkdown = "마크다운 렌더링"
 sortedBy = "정렬 기준: {{column}}"
 textStats = "{{lines}}줄 · {{size}}"
+
+[viewer.portfolio]
+addFile = "Add file"
+count_one = "{{count}} file in this portfolio"
+count_other = "{{count}} files in this portfolio"
+openInViewer = "Open in viewer"
+searchPlaceholder = "Search files"
+title = "Portfolio"
 
 [viewer.redaction]
 removeMark = "이 표시 제거"

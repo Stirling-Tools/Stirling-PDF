@@ -30,6 +30,7 @@ import { repairOperationConfig } from "@app/hooks/tools/repair/useRepairOperatio
 import { addWatermarkOperationConfig } from "@app/hooks/tools/addWatermark/useAddWatermarkOperation";
 import { addStampOperationConfig } from "@app/components/tools/addStamp/useAddStampOperation";
 import { addAttachmentsOperationConfig } from "@app/hooks/tools/addAttachments/useAddAttachmentsOperation";
+import { createPortfolioOperationConfig } from "@app/hooks/tools/createPortfolio/useCreatePortfolioOperation";
 import { unlockPdfFormsOperationConfig } from "@app/hooks/tools/unlockPdfForms/useUnlockPdfFormsOperation";
 import { singleLargePageOperationConfig } from "@app/hooks/tools/singleLargePage/useSingleLargePageOperation";
 import { ocrOperationConfig } from "@app/hooks/tools/ocr/useOCROperation";
@@ -846,6 +847,31 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         automationSettings: lazySettings(
           () =>
             import("@app/components/tools/addAttachments/AddAttachmentsSettings"),
+        ),
+      },
+      createPortfolio: {
+        icon: (
+          <LocalIcon
+            icon="library-add-outline-rounded"
+            width="1.5rem"
+            height="1.5rem"
+          />
+        ),
+        name: t("home.createPortfolio.title", "Create Portfolio"),
+        component: lazy(() => import("@app/tools/CreatePortfolio")),
+        description: t(
+          "home.createPortfolio.desc",
+          "Bundle multiple files into an Adobe PDF Portfolio",
+        ),
+        categoryId: ToolCategoryId.STANDARD_TOOLS,
+        subcategoryId: SubcategoryId.PAGE_FORMATTING,
+        synonyms: getSynonyms(t, "createPortfolio"),
+        maxFiles: -1,
+        endpoints: ["create-portfolio"],
+        operationConfig: asRegistryConfig(createPortfolioOperationConfig),
+        automationSettings: lazySettings(
+          () =>
+            import("@app/components/tools/createPortfolio/CreatePortfolioSettings"),
         ),
       },
 

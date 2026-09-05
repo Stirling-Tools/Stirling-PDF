@@ -398,6 +398,16 @@ export interface ConvertToPdfRequest {
    */
   fitOption?: "fillPage" | "fitDocumentToImage" | "maintainAspectRatio";
 }
+export interface CreatePortfolioRequest {
+  /**
+   * Title shown on the portfolio cover page.
+   */
+  coverTitle?: string;
+  /**
+   * The files to bundle into the PDF Portfolio.
+   */
+  files: File[];
+}
 export interface CropPdfForm {
   /**
    * Enable auto-crop to detect and remove white space
@@ -532,6 +542,7 @@ export interface FileSizeRequest {
    */
   fileSize?: number;
 }
+export type FlattenPortfolioRequest = Record<string, never>;
 export interface FlattenRequest {
   /**
    * True to flatten only the forms, false to flatten full PDF (Convert page to image)
@@ -1568,12 +1579,14 @@ export type ToolEndpoint =
   | "/api/v1/misc/auto-rotate-pdf"
   | "/api/v1/misc/auto-split-pdf"
   | "/api/v1/misc/compress-pdf"
+  | "/api/v1/misc/create-portfolio"
   | "/api/v1/misc/decompress-pdf"
   | "/api/v1/misc/delete-attachment"
   | "/api/v1/misc/extract-attachments"
   | "/api/v1/misc/extract-image-scans"
   | "/api/v1/misc/extract-images"
   | "/api/v1/misc/flatten"
+  | "/api/v1/misc/flatten-portfolio"
   | "/api/v1/misc/list-attachments"
   | "/api/v1/misc/ocr-pdf"
   | "/api/v1/misc/remove-blanks"
@@ -1672,12 +1685,14 @@ export interface ToolApiParams {
   "/api/v1/misc/auto-rotate-pdf": AutoRotatePdfRequest;
   "/api/v1/misc/auto-split-pdf": AutoSplitPdfRequest;
   "/api/v1/misc/compress-pdf": OptimizePdfRequest;
+  "/api/v1/misc/create-portfolio": CreatePortfolioRequest;
   "/api/v1/misc/decompress-pdf": MiscDecompressPdfRequest;
   "/api/v1/misc/delete-attachment": DeleteAttachmentRequest;
   "/api/v1/misc/extract-attachments": ExtractAttachmentsRequest;
   "/api/v1/misc/extract-image-scans": ExtractImageScansRequest;
   "/api/v1/misc/extract-images": PDFExtractImagesRequest;
   "/api/v1/misc/flatten": FlattenRequest;
+  "/api/v1/misc/flatten-portfolio": FlattenPortfolioRequest;
   "/api/v1/misc/list-attachments": ListAttachmentsRequest;
   "/api/v1/misc/ocr-pdf": ProcessPdfWithOcrRequest;
   "/api/v1/misc/remove-blanks": RemoveBlankPagesRequest;
@@ -1777,12 +1792,14 @@ export const TOOL_ENDPOINTS = [
   "/api/v1/misc/auto-rotate-pdf",
   "/api/v1/misc/auto-split-pdf",
   "/api/v1/misc/compress-pdf",
+  "/api/v1/misc/create-portfolio",
   "/api/v1/misc/decompress-pdf",
   "/api/v1/misc/delete-attachment",
   "/api/v1/misc/extract-attachments",
   "/api/v1/misc/extract-image-scans",
   "/api/v1/misc/extract-images",
   "/api/v1/misc/flatten",
+  "/api/v1/misc/flatten-portfolio",
   "/api/v1/misc/list-attachments",
   "/api/v1/misc/ocr-pdf",
   "/api/v1/misc/remove-blanks",
@@ -1818,6 +1835,7 @@ export const TOOL_FILE_FIELDS = {
   "/api/v1/misc/add-attachments": ["attachments"],
   "/api/v1/misc/add-image": ["imageFile"],
   "/api/v1/misc/add-stamp": ["stampImage"],
+  "/api/v1/misc/create-portfolio": ["files"],
   "/api/v1/security/add-watermark": ["watermarkImage"],
   "/api/v1/security/cert-sign": [
     "privateKeyFile",

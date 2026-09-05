@@ -3494,6 +3494,26 @@ description = "These cookies are essential for the website to function properly.
 posthog = "PostHog 分析"
 scarf = "Scarf Pixel"
 
+[createPortfolio]
+coverTitle = "Cover page title"
+coverTitlePlaceholder = "PDF Portfolio"
+description = "All selected files are bundled into a single PDF Portfolio. Non-PDF files are embedded as-is and can be opened in a portfolio-aware viewer."
+goToFileEditor = "Go to file editor"
+info = "Bundles the selected files into a single Adobe PDF Portfolio (a PDF with a /Collection). Portfolio-aware viewers show the files as a browsable collection; other viewers see a cover page plus the files as attachments."
+settings = "Portfolio Settings"
+submit = "Create Portfolio"
+title = "Portfolio Results"
+viewerModeHint = "A portfolio needs 2 or more files. Head to the file editor to select them."
+
+[createPortfolio.error]
+failed = "An error occurred while creating the PDF portfolio."
+
+[createPortfolio.tooltip.description]
+title = "What it does"
+
+[createPortfolio.tooltip.header]
+title = "About PDF Portfolios"
+
 [crop]
 autoCrop = "自动裁剪空白"
 noFileSelected = "选择一个 PDF 文件开始裁剪"
@@ -4687,6 +4707,11 @@ title = "压缩"
 desc = "在不同格式之间转换文件"
 tags = "转换,更改"
 title = "转换"
+
+[home.createPortfolio]
+desc = "Bundle multiple files into an Adobe PDF Portfolio"
+tags = "portfolio,collection,package,bundle,combine files,pdf portfolio,adobe portfolio,pdf collection,container"
+title = "Create Portfolio"
 
 [home.crop]
 desc = "裁剪 PDF 以减小其文件大小（保留文本！）"
@@ -11470,6 +11495,14 @@ loading = "正在加载..."
 renderMarkdown = "渲染 markdown"
 sortedBy = "排序依据：{{column}}"
 textStats = "{{lines}} 行 · {{size}}"
+
+[viewer.portfolio]
+addFile = "Add file"
+count_one = "{{count}} file in this portfolio"
+count_other = "{{count}} files in this portfolio"
+openInViewer = "Open in viewer"
+searchPlaceholder = "Search files"
+title = "Portfolio"
 
 [viewer.redaction]
 removeMark = "移除此标记"

@@ -3494,6 +3494,26 @@ description = "These cookies are essential for the website to function properly.
 posthog = "PostHog analitika"
 scarf = "Scarf piksel"
 
+[createPortfolio]
+coverTitle = "Cover page title"
+coverTitlePlaceholder = "PDF Portfolio"
+description = "All selected files are bundled into a single PDF Portfolio. Non-PDF files are embedded as-is and can be opened in a portfolio-aware viewer."
+goToFileEditor = "Go to file editor"
+info = "Bundles the selected files into a single Adobe PDF Portfolio (a PDF with a /Collection). Portfolio-aware viewers show the files as a browsable collection; other viewers see a cover page plus the files as attachments."
+settings = "Portfolio Settings"
+submit = "Create Portfolio"
+title = "Portfolio Results"
+viewerModeHint = "A portfolio needs 2 or more files. Head to the file editor to select them."
+
+[createPortfolio.error]
+failed = "An error occurred while creating the PDF portfolio."
+
+[createPortfolio.tooltip.description]
+title = "What it does"
+
+[createPortfolio.tooltip.header]
+title = "About PDF Portfolios"
+
 [crop]
 autoCrop = "Automatski iseci beline"
 noFileSelected = "Izaberite PDF fajl da biste započeli isecanje"
@@ -4687,6 +4707,11 @@ title = "Kompresuj"
 desc = "Konvertujte datoteke između različitih formata"
 tags = "pretvori,transformiši,promeni"
 title = "Konvertuj"
+
+[home.createPortfolio]
+desc = "Bundle multiple files into an Adobe PDF Portfolio"
+tags = "portfolio,collection,package,bundle,combine files,pdf portfolio,adobe portfolio,pdf collection,container"
+title = "Create Portfolio"
 
 [home.crop]
 desc = "Skraćuje PDF radi smanjenja veličine (zadržava tekst!)"
@@ -11470,6 +11495,14 @@ loading = "Učitavanje..."
 renderMarkdown = "Prikaži markdown"
 sortedBy = "Sortirano po: {{column}}"
 textStats = "{{lines}} linija · {{size}}"
+
+[viewer.portfolio]
+addFile = "Add file"
+count_one = "{{count}} file in this portfolio"
+count_other = "{{count}} files in this portfolio"
+openInViewer = "Open in viewer"
+searchPlaceholder = "Search files"
+title = "Portfolio"
 
 [viewer.redaction]
 removeMark = "Ukloni ovu oznaku"

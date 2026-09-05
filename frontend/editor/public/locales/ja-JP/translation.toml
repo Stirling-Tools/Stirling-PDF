@@ -3494,6 +3494,26 @@ description = "これらのCookieはウェブサイトが正常に機能する�
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
+[createPortfolio]
+coverTitle = "Cover page title"
+coverTitlePlaceholder = "PDF Portfolio"
+description = "All selected files are bundled into a single PDF Portfolio. Non-PDF files are embedded as-is and can be opened in a portfolio-aware viewer."
+goToFileEditor = "Go to file editor"
+info = "Bundles the selected files into a single Adobe PDF Portfolio (a PDF with a /Collection). Portfolio-aware viewers show the files as a browsable collection; other viewers see a cover page plus the files as attachments."
+settings = "Portfolio Settings"
+submit = "Create Portfolio"
+title = "Portfolio Results"
+viewerModeHint = "A portfolio needs 2 or more files. Head to the file editor to select them."
+
+[createPortfolio.error]
+failed = "An error occurred while creating the PDF portfolio."
+
+[createPortfolio.tooltip.description]
+title = "What it does"
+
+[createPortfolio.tooltip.header]
+title = "About PDF Portfolios"
+
 [crop]
 autoCrop = "余白を自動トリミング"
 noFileSelected = "トリミングを開始する PDF ファイルを選択してください"
@@ -4687,6 +4707,11 @@ title = "圧縮"
 desc = "異なる形式間でファイルを変換"
 tags = "変換,変更"
 title = "変換"
+
+[home.createPortfolio]
+desc = "Bundle multiple files into an Adobe PDF Portfolio"
+tags = "portfolio,collection,package,bundle,combine files,pdf portfolio,adobe portfolio,pdf collection,container"
+title = "Create Portfolio"
 
 [home.crop]
 desc = "PDFをトリミングしてサイズを縮小します (テキストは維持します！)。"
@@ -11470,6 +11495,14 @@ loading = "読み込み中..."
 renderMarkdown = "Markdown をレンダリング"
 sortedBy = "並び替え基準: {{column}}"
 textStats = "{{lines}} 行 · {{size}}"
+
+[viewer.portfolio]
+addFile = "Add file"
+count_one = "{{count}} file in this portfolio"
+count_other = "{{count}} files in this portfolio"
+openInViewer = "Open in viewer"
+searchPlaceholder = "Search files"
+title = "Portfolio"
 
 [viewer.redaction]
 removeMark = "このマークを削除"

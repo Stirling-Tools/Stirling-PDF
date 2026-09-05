@@ -3494,6 +3494,26 @@ description = "Questi cookie sono essenziali per il corretto funzionamento del s
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
+[createPortfolio]
+coverTitle = "Cover page title"
+coverTitlePlaceholder = "PDF Portfolio"
+description = "All selected files are bundled into a single PDF Portfolio. Non-PDF files are embedded as-is and can be opened in a portfolio-aware viewer."
+goToFileEditor = "Go to file editor"
+info = "Bundles the selected files into a single Adobe PDF Portfolio (a PDF with a /Collection). Portfolio-aware viewers show the files as a browsable collection; other viewers see a cover page plus the files as attachments."
+settings = "Portfolio Settings"
+submit = "Create Portfolio"
+title = "Portfolio Results"
+viewerModeHint = "A portfolio needs 2 or more files. Head to the file editor to select them."
+
+[createPortfolio.error]
+failed = "An error occurred while creating the PDF portfolio."
+
+[createPortfolio.tooltip.description]
+title = "What it does"
+
+[createPortfolio.tooltip.header]
+title = "About PDF Portfolios"
+
 [crop]
 autoCrop = "Ritaglio automatico spazi bianchi"
 noFileSelected = "Seleziona un file PDF per iniziare il ritaglio"
@@ -4687,6 +4707,11 @@ title = "Comprimi"
 desc = "Converti file tra diversi formati"
 tags = "trasforma,cambia"
 title = "Converti"
+
+[home.createPortfolio]
+desc = "Bundle multiple files into an Adobe PDF Portfolio"
+tags = "portfolio,collection,package,bundle,combine files,pdf portfolio,adobe portfolio,pdf collection,container"
+title = "Create Portfolio"
 
 [home.crop]
 desc = "Ritaglia un PDF per ridurne le dimensioni (mantiene il testo!)"
@@ -11470,6 +11495,14 @@ loading = "Caricamento..."
 renderMarkdown = "Renderizza markdown"
 sortedBy = "Ordinato per: {{column}}"
 textStats = "{{lines}} righe · {{size}}"
+
+[viewer.portfolio]
+addFile = "Add file"
+count_one = "{{count}} file in this portfolio"
+count_other = "{{count}} files in this portfolio"
+openInViewer = "Open in viewer"
+searchPlaceholder = "Search files"
+title = "Portfolio"
 
 [viewer.redaction]
 removeMark = "Rimuovi questo contrassegno"
