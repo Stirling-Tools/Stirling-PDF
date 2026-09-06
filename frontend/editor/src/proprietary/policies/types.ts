@@ -56,6 +56,8 @@ export interface WirePolicy {
   name: string;
   owner?: string;
   enabled: boolean;
+  /** Row icon key; first-class on the record (see the pipeline `Policy.icon`). */
+  icon?: string;
   /** Org-mandated policy; first-class on the record (see the pipeline `Policy.required`). */
   required?: boolean;
   trigger: null;
@@ -101,6 +103,7 @@ export interface PolicyRunView {
 export interface PolicyDecodedState {
   id: string;
   name: string;
+  icon: string;
   enabled: boolean;
   /** Org-mandated policy; first-class on the record, not part of the options bag. */
   required: boolean;

@@ -52,6 +52,7 @@ export function toWirePolicy(state: PolicyDecodedState): WirePolicy {
   return {
     id: state.id,
     name: state.name,
+    icon: state.icon,
     owner: "",
     enabled: state.enabled,
     required: state.required,
@@ -82,6 +83,7 @@ export function fromWirePolicy(policy: WirePolicy): PolicyDecodedState {
   return {
     id: policy.id,
     name: policy.name,
+    icon: policy.icon ?? "",
     enabled: policy.enabled,
     required: policy.required ?? false,
     policyKey,

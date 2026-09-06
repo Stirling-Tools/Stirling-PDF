@@ -5,6 +5,7 @@ import type { PolicyDecodedState } from "@app/policies/types";
 const FULL_STATE: PolicyDecodedState = {
   id: "pol_123",
   name: "Security Policy",
+  icon: "shield",
   enabled: true,
   required: true,
   policyKey: "security",

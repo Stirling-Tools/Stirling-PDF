@@ -630,7 +630,8 @@ export function buildWireFromSetup(
     categoryId: entry.category.id,
     ...toWirePolicy({
       id: entry.policy?.state.backendId ?? "",
-      name: policyDisplayName(entry, t),
+      name: entry.policy?.state.name?.trim() || policyDisplayName(entry, t),
+      icon: entry.policy?.state.icon ?? "",
       enabled,
       required: result.required,
       extraOptions: result.extraOptions,
