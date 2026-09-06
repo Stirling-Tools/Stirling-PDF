@@ -25,6 +25,7 @@ import stirling.software.proprietary.security.service.EmailService;
 import stirling.software.proprietary.security.service.SaveUserRequest;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
+import stirling.software.proprietary.security.util.EmailAddresses;
 import stirling.software.proprietary.service.UserLicenseSettingsService;
 
 @InviteApi
@@ -72,8 +73,9 @@ public class InviteLinkController {
 
             // If email is provided, validate and check for conflicts
             if (email != null && !email.trim().isEmpty()) {
-                // Validate email format
-                if (!email.contains("@")) {
+                // The address becomes the account's username at redemption, so it has to be
+                // usable now: a link minted for "a@" only fails when someone tries to redeem it.
+                if (!EmailAddresses.isValid(email)) {
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                             .body(Map.of("error", "Invalid email address"));
                 }
@@ -150,8 +152,11 @@ public class InviteLinkController {
                 }
             } else {
                 Team selectedTeam = teamRepository.findById(effectiveTeamId).orElse(null);
-                if (selectedTeam != null
-                        && TeamService.INTERNAL_TEAM_NAME.equals(selectedTeam.getName())) {
+                if (selectedTeam == null) {
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                            .body(Map.of("error", "Team not found"));
+                }
+                if (TeamService.INTERNAL_TEAM_NAME.equals(selectedTeam.getName())) {
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                             .body(Map.of("error", "Cannot assign users to Internal team"));
                 }
@@ -436,8 +441,7 @@ public class InviteLinkController {
                             .body(Map.of("error", "Email address is required"));
                 }
 
-                // Validate email format
-                if (!email.contains("@")) {
+                if (!EmailAddresses.isValid(email)) {
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                             .body(Map.of("error", "Invalid email address"));
                 }

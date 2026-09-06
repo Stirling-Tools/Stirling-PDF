@@ -40,6 +40,11 @@ public class TeamController {
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/create")
     public ResponseEntity<?> createTeam(@RequestParam("name") String name) {
+        if (name == null || name.isBlank()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "Team name is required."));
+        }
+        name = name.trim();
         if (teamRepository.existsByNameIgnoreCase(name)) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(Map.of("error", "Team name already exists."));
@@ -54,6 +59,11 @@ public class TeamController {
     @PostMapping("/rename")
     public ResponseEntity<?> renameTeam(
             @RequestParam("teamId") Long teamId, @RequestParam("newName") String newName) {
+        if (newName == null || newName.isBlank()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "Team name is required."));
+        }
+        newName = newName.trim();
         Optional<Team> existing = teamRepository.findById(teamId);
         if (existing.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
