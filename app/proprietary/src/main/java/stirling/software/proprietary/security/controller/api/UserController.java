@@ -53,6 +53,7 @@ import stirling.software.proprietary.security.service.SaveUserRequest;
 import stirling.software.proprietary.security.service.TeamMembershipService;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
+import stirling.software.proprietary.security.util.PasswordPolicy;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
 import stirling.software.proprietary.service.UserLicenseSettingsService;
 
@@ -279,6 +280,16 @@ public class UserController {
                                     "New password must be different from the current password"));
         }
 
+        if (!PasswordPolicy.isAcceptable(newPassword)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(
+                            Map.of(
+                                    "error",
+                                    "passwordTooShort",
+                                    "message",
+                                    PasswordPolicy.VIOLATION_MESSAGE));
+        }
+
         User user = userOpt.get();
         if (!userService.isPasswordCorrect(user, currentPassword)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -321,6 +332,15 @@ public class UserController {
         if (!userService.isPasswordCorrect(user, currentPassword)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("error", "incorrectPassword", "message", "Incorrect password"));
+        }
+        if (!PasswordPolicy.isAcceptable(newPassword)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(
+                            Map.of(
+                                    "error",
+                                    "passwordTooShort",
+                                    "message",
+                                    PasswordPolicy.VIOLATION_MESSAGE));
         }
         userService.changePassword(user, newPassword);
         // Logout using Spring's utility
@@ -460,9 +480,9 @@ public class UserController {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(Map.of("error", "Password is required."));
             }
-            if (password.length() < 6) {
+            if (!PasswordPolicy.isAcceptable(password)) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(Map.of("error", "Password must be at least 6 characters."));
+                        .body(Map.of("error", PasswordPolicy.VIOLATION_MESSAGE));
             }
             builder.password(password).firstLogin(forceChange).requireMfa(forceMFA);
         }
@@ -689,6 +709,11 @@ public class UserController {
         if (finalPassword == null || finalPassword.trim().isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("error", "New password is required."));
+        }
+
+        if (!PasswordPolicy.isAcceptable(finalPassword)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", PasswordPolicy.VIOLATION_MESSAGE));
         }
 
         // Set force password change flag before changing password so both are saved together

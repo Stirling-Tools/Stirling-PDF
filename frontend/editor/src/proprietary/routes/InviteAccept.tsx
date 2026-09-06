@@ -21,6 +21,9 @@ import "@app/auth/ui/auth.css";
 import { BASE_PATH } from "@app/constants/app";
 import apiClient from "@app/services/apiClient";
 import { Button } from "@app/ui/Button";
+/** Mirrors the server's PasswordPolicy so the page rejects it inline, not on submit. */
+const MIN_PASSWORD_LENGTH = 8;
+
 interface InviteData {
   email: string | null;
   role: string;
@@ -109,6 +112,15 @@ export default function InviteAccept() {
     // Validate passwords
     if (!password) {
       setError(t("invite.passwordRequired", "Password is required"));
+      return;
+    }
+
+    if (password.length < MIN_PASSWORD_LENGTH) {
+      setError(
+        t("invite.passwordTooShort", "Password must be at least 8 characters", {
+          count: MIN_PASSWORD_LENGTH,
+        }),
+      );
       return;
     }
 
@@ -240,6 +252,9 @@ export default function InviteAccept() {
           <div className="auth-field">
             <PasswordInput
               label={t("invite.choosePassword", "Choose a password")}
+              description={t("invite.passwordHint", "At least 8 characters", {
+                count: MIN_PASSWORD_LENGTH,
+              })}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder={t(
@@ -248,6 +263,7 @@ export default function InviteAccept() {
               )}
               disabled={submitting}
               required
+              minLength={MIN_PASSWORD_LENGTH}
               autoComplete="new-password"
               classNames={{ label: "auth-label" }}
               styles={authInputStyles}

@@ -126,11 +126,29 @@ class UserControllerMoreTest {
                             post("/api/v1/user/change-password")
                                     .principal(auth("me"))
                                     .param("currentPassword", "old")
-                                    .param("newPassword", "new"))
+                                    .param("newPassword", "newpassword"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.message").value("credsUpdated"));
 
-            verify(userService).changePassword(u, "new");
+            verify(userService).changePassword(u, "newpassword");
+        }
+
+        @Test
+        @DisplayName("rejects a new password below the shared minimum length")
+        void tooShort() throws Exception {
+            User u = user("me");
+            when(userService.findByUsernameIgnoreCase("me")).thenReturn(Optional.of(u));
+            when(userService.isPasswordCorrect(u, "old")).thenReturn(true);
+
+            mockMvc.perform(
+                            post("/api/v1/user/change-password")
+                                    .principal(auth("me"))
+                                    .param("currentPassword", "old")
+                                    .param("newPassword", "short"))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.error").value("passwordTooShort"));
+
+            verify(userService, never()).changePassword(any(), any());
         }
     }
 
@@ -182,13 +200,31 @@ class UserControllerMoreTest {
                             post("/api/v1/user/change-password-on-login")
                                     .principal(auth("me"))
                                     .param("currentPassword", "old")
-                                    .param("newPassword", "new")
-                                    .param("confirmPassword", "new"))
+                                    .param("newPassword", "newpassword")
+                                    .param("confirmPassword", "newpassword"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.message").value("credsUpdated"));
 
-            verify(userService).changePassword(u, "new");
+            verify(userService).changePassword(u, "newpassword");
             verify(userService).changeFirstUse(u, false);
+        }
+
+        @Test
+        @DisplayName("rejects a new password below the shared minimum length")
+        void tooShort() throws Exception {
+            User u = user("me");
+            when(userService.findByUsernameIgnoreCase("me")).thenReturn(Optional.of(u));
+
+            mockMvc.perform(
+                            post("/api/v1/user/change-password-on-login")
+                                    .principal(auth("me"))
+                                    .param("currentPassword", "old")
+                                    .param("newPassword", "short")
+                                    .param("confirmPassword", "short"))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.error").value("passwordTooShort"));
+
+            verify(userService, never()).changePassword(any(), any());
         }
     }
 
@@ -259,13 +295,34 @@ class UserControllerMoreTest {
             mockMvc.perform(
                             post("/api/v1/user/admin/saveUser")
                                     .param("username", "new@ex.com")
-                                    .param("password", "secret1")
+                                    .param("password", "secret12")
                                     .param("role", "ROLE_USER")
                                     .param("authType", "web"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.message").value("User created successfully"));
 
             verify(userService).saveUserCore(any());
+        }
+
+        @Test
+        @DisplayName("rejects a password below the shared minimum length")
+        void passwordTooShort() throws Exception {
+            when(userService.isUsernameValid("new@ex.com")).thenReturn(true);
+            when(licenseSettingsService.wouldExceedLimit(1)).thenReturn(false);
+            when(userService.findByUsernameIgnoreCase("new@ex.com")).thenReturn(Optional.empty());
+            when(userService.usernameExistsIgnoreCase("new@ex.com")).thenReturn(false);
+
+            mockMvc.perform(
+                            post("/api/v1/user/admin/saveUser")
+                                    .param("username", "new@ex.com")
+                                    .param("password", "secret1")
+                                    .param("role", "ROLE_USER")
+                                    .param("authType", "web"))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(
+                            jsonPath("$.error").value("Password must be at least 8 characters."));
+
+            verify(userService, never()).saveUserCore(any());
         }
     }
 
@@ -363,12 +420,29 @@ class UserControllerMoreTest {
                             post("/api/v1/user/admin/changePasswordForUser")
                                     .principal(auth("admin"))
                                     .param("username", "bob")
-                                    .param("newPassword", "newpass"))
+                                    .param("newPassword", "newpassword"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.message").value("User password updated successfully"));
 
-            verify(userService).changePassword(target, "newpass");
+            verify(userService).changePassword(target, "newpassword");
             verify(userService).invalidateUserSessions("bob");
+        }
+
+        @Test
+        @DisplayName("rejects a password below the shared minimum length")
+        void tooShort() throws Exception {
+            when(userService.findByUsernameIgnoreCase("bob")).thenReturn(Optional.of(user("bob")));
+
+            mockMvc.perform(
+                            post("/api/v1/user/admin/changePasswordForUser")
+                                    .principal(auth("admin"))
+                                    .param("username", "bob")
+                                    .param("newPassword", "newpass"))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(
+                            jsonPath("$.error").value("Password must be at least 8 characters."));
+
+            verify(userService, never()).changePassword(any(), any());
         }
     }
 

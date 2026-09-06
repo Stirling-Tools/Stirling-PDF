@@ -25,6 +25,7 @@ import stirling.software.proprietary.security.service.EmailService;
 import stirling.software.proprietary.security.service.SaveUserRequest;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
+import stirling.software.proprietary.security.util.PasswordPolicy;
 import stirling.software.proprietary.service.UserLicenseSettingsService;
 
 @InviteApi
@@ -409,6 +410,10 @@ public class InviteLinkController {
             if (password == null || password.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(Map.of("error", "Password is required"));
+            }
+            if (!PasswordPolicy.isAcceptable(password)) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(Map.of("error", PasswordPolicy.VIOLATION_MESSAGE));
             }
 
             Optional<InviteToken> inviteOpt = inviteTokenRepository.findByToken(token);
