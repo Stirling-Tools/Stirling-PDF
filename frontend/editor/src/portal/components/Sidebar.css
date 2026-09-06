@@ -205,3 +205,18 @@ html[data-app-theme="midnight"] .portal-sidebar .sui-navitem.is-active:hover,
     height: auto;
   }
 }
+
+/* Assistant trigger, between the nav groups and the account footer. */
+.portal-sidebar__assistant {
+  margin-top: auto;
+  padding-top: var(--sp-2, 0.5rem);
+}
+
+/* Unread dot: the agent answered while the panel was closed. */
+.portal-sidebar__assistant-dot {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--c-accent, var(--c-brand));
+}

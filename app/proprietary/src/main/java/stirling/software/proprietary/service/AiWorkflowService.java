@@ -71,6 +71,13 @@ public class AiWorkflowService {
 
     private static final String DOCUMENTS_ENDPOINT = "/api/v1/documents";
 
+    // Says what is true and where to go. The editor's "add a PDF to the workbench" advice is
+    // unfollowable here — the processor has no workbench to add one to.
+    private static final String PROCESSOR_DOCUMENT_WORK_REFUSAL =
+            "I can't work on documents here — the processor has no file workspace. Open the editor"
+                    + " to do this to a file, or ask me to make it a rule so it happens to every"
+                    + " file that arrives.";
+
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final AiEngineClient aiEngineClient;
     private final PdfContentExtractor pdfContentExtractor;
@@ -188,21 +195,35 @@ public class AiWorkflowService {
             initialRequest.setLocale(request.getLocale());
             listener.onProgress(AiWorkflowProgressEvent.of(AiWorkflowPhase.ANALYZING));
 
+            // Captured once, outside the loop, so it cannot drift across a multi-turn
+            // continuation the way a hand-copied WorkflowTurnRequest field would.
+            boolean allowDocumentWork = request.getSurface() != AiWorkflowRequest.Surface.processor;
+
             WorkflowState state = new WorkflowState.Pending(initialRequest);
             while (state instanceof WorkflowState.Pending pending) {
-                state = advance(pending.request(), filesById, listener);
+                state = advance(pending.request(), filesById, listener, allowDocumentWork);
             }
             return ((WorkflowState.Terminal) state).response();
         }
     }
 
+    /**
+     * The single choke point for every side effect in a turn. {@code policyExecutor.execute} is
+     * reachable only from {@code onToolCall} and {@code runPlan}, so refusing the arms that lead
+     * there is a complete cut over document work — whatever the engine routed to, and whatever the
+     * client claimed.
+     */
     private WorkflowState advance(
             WorkflowTurnRequest request,
             Map<String, MultipartFile> filesById,
-            ProgressListener listener)
+            ProgressListener listener,
+            boolean allowDocumentWork)
             throws IOException {
         listener.onProgress(AiWorkflowProgressEvent.of(AiWorkflowPhase.CALLING_ENGINE));
         AiWorkflowResponse response = invokeOrchestrator(request, listener);
+        if (!allowDocumentWork && requiresDocumentWork(response.getOutcome())) {
+            return new WorkflowState.Terminal(cannotContinue(PROCESSOR_DOCUMENT_WORK_REFUSAL));
+        }
         return switch (response.getOutcome()) {
             case NEED_CONTENT -> onNeedContent(response, filesById, request, listener);
             case NEED_INGEST -> onNeedIngest(response, filesById, request, listener);
@@ -218,6 +239,26 @@ public class AiWorkflowService {
                     UNSUPPORTED_CAPABILITY,
                     CANNOT_CONTINUE ->
                     new WorkflowState.Terminal(response);
+        };
+    }
+
+    /**
+     * Outcomes that touch documents. {@code GENERATE_FILE} has no producer in the engine today —
+     * document creation reaches Java as a {@code PLAN} whose step is the create-from-html agent —
+     * but it is listed so the arm cannot become a hole if one is ever added.
+     */
+    private static boolean requiresDocumentWork(AiWorkflowOutcome outcome) {
+        return switch (outcome) {
+            case TOOL_CALL, PLAN, GENERATE_FILE, NEED_CONTENT, NEED_INGEST -> true;
+            case ANSWER,
+                    NOT_FOUND,
+                    NEED_CLARIFICATION,
+                    CANNOT_DO,
+                    DRAFT,
+                    COMPLETED,
+                    UNSUPPORTED_CAPABILITY,
+                    CANNOT_CONTINUE ->
+                    false;
         };
     }
 

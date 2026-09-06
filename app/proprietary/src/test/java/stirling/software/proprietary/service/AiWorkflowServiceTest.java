@@ -632,6 +632,149 @@ class AiWorkflowServiceTest {
         return new MockMultipartFile("fileInput", filename, "application/pdf", content.getBytes());
     }
 
+    private static AiWorkflowRequest surfaceRequest(
+            String message, AiWorkflowRequest.Surface surface, MockMultipartFile... files) {
+        AiWorkflowRequest request = requestFor(files, message);
+        request.setSurface(surface);
+        return request;
+    }
+
+    @Test
+    void processorRefusesToolCallWithoutRunningIt() throws IOException {
+        stubOrchestrator(
+                """
+                {"outcome":"tool_call","tool":"%s","parameters":{"angle":90},"rationale":"Rotating"}
+                """
+                        .formatted(ROTATE_ENDPOINT));
+
+        AiWorkflowResponse result =
+                service.orchestrate(
+                        surfaceRequest(
+                                "rotate 90",
+                                AiWorkflowRequest.Surface.processor,
+                                pdf("input.pdf", "bytes")));
+
+        assertEquals(AiWorkflowOutcome.CANNOT_CONTINUE, result.getOutcome());
+        assertTrue(result.getReason().contains("no file workspace"));
+        verify(internalApiClient, never()).post(anyString(), any());
+    }
+
+    @Test
+    void processorRefusesPlanWithoutRunningIt() throws IOException {
+        // pdf_create reaches Java as a PLAN, so this is also the PDF-creation gate.
+        stubOrchestrator(
+                """
+                {"outcome":"plan","summary":"Make an invoice","steps":[{"tool":"%s","parameters":{}}]}
+                """
+                        .formatted(ROTATE_ENDPOINT));
+
+        AiWorkflowResponse result =
+                service.orchestrate(
+                        surfaceRequest("create an invoice", AiWorkflowRequest.Surface.processor));
+
+        assertEquals(AiWorkflowOutcome.CANNOT_CONTINUE, result.getOutcome());
+        verify(internalApiClient, never()).post(anyString(), any());
+    }
+
+    @Test
+    void processorRefusesNeedContentWithCopyThatIsActuallyFollowable() throws IOException {
+        stubOrchestrator(
+                """
+                {"outcome":"need_content","files":[]}
+                """);
+
+        AiWorkflowResponse result =
+                service.orchestrate(
+                        surfaceRequest(
+                                "what does it say",
+                                AiWorkflowRequest.Surface.processor,
+                                pdf("input.pdf", "bytes")));
+
+        assertEquals(AiWorkflowOutcome.CANNOT_CONTINUE, result.getOutcome());
+        // The editor's "add a PDF to the workbench" advice is unfollowable here.
+        assertTrue(!result.getReason().contains("workbench"));
+    }
+
+    @Test
+    void processorLetsPlainAnswersThrough() throws IOException {
+        stubOrchestrator(
+                """
+                {"outcome":"answer","answer":"Stirling runs pipelines."}
+                """);
+
+        AiWorkflowResponse result =
+                service.orchestrate(
+                        surfaceRequest("what is a pipeline", AiWorkflowRequest.Surface.processor));
+
+        // The gate is a subtraction, not a blanket block.
+        assertEquals(AiWorkflowOutcome.ANSWER, result.getOutcome());
+        verify(internalApiClient, never()).post(anyString(), any());
+    }
+
+    @Test
+    void processorIgnoresFilesRatherThanQuietlyProcessingThem() throws IOException {
+        stubOrchestrator(
+                """
+                {"outcome":"tool_call","tool":"%s","parameters":{},"rationale":"Rotating"}
+                """
+                        .formatted(ROTATE_ENDPOINT));
+
+        AiWorkflowResponse result =
+                service.orchestrate(
+                        surfaceRequest(
+                                "rotate",
+                                AiWorkflowRequest.Surface.processor,
+                                pdf("a.pdf", "one"),
+                                pdf("b.pdf", "two")));
+
+        assertEquals(AiWorkflowOutcome.CANNOT_CONTINUE, result.getOutcome());
+        verify(internalApiClient, never()).post(anyString(), any());
+    }
+
+    @Test
+    void absentSurfaceBehavesExactlyLikeToday() throws IOException {
+        MockMultipartFile input = pdf("input.pdf", "original-pdf-bytes");
+        stubOrchestrator(
+                """
+                {"outcome":"tool_call","tool":"%s","parameters":{"angle":90},"rationale":"Rotating"}
+                """
+                        .formatted(ROTATE_ENDPOINT));
+        when(toolMetadataService.isMultiInput(ROTATE_ENDPOINT)).thenReturn(false);
+        when(toolMetadataService.shouldUnpackZipResponse(ROTATE_ENDPOINT)).thenReturn(false);
+        stubEndpoint(ROTATE_ENDPOINT, pdfResource("rotated-bytes", "rotated.pdf"));
+        stubFileStorage();
+
+        AiWorkflowRequest request = requestFor(input, "rotate 90");
+        // Back-compat guard: a stale bundle that never learned about `surface`.
+        assertEquals(AiWorkflowRequest.Surface.editor, request.getSurface());
+
+        AiWorkflowResponse result = service.orchestrate(request);
+
+        assertEquals(AiWorkflowOutcome.COMPLETED, result.getOutcome());
+        verify(internalApiClient, times(1)).post(eq(ROTATE_ENDPOINT), any());
+    }
+
+    @Test
+    void editorSurfaceStillRunsTools() throws IOException {
+        MockMultipartFile input = pdf("input.pdf", "original-pdf-bytes");
+        stubOrchestrator(
+                """
+                {"outcome":"tool_call","tool":"%s","parameters":{"angle":90},"rationale":"Rotating"}
+                """
+                        .formatted(ROTATE_ENDPOINT));
+        when(toolMetadataService.isMultiInput(ROTATE_ENDPOINT)).thenReturn(false);
+        when(toolMetadataService.shouldUnpackZipResponse(ROTATE_ENDPOINT)).thenReturn(false);
+        stubEndpoint(ROTATE_ENDPOINT, pdfResource("rotated-bytes", "rotated.pdf"));
+        stubFileStorage();
+
+        AiWorkflowResponse result =
+                service.orchestrate(
+                        surfaceRequest("rotate 90", AiWorkflowRequest.Surface.editor, input));
+
+        assertEquals(AiWorkflowOutcome.COMPLETED, result.getOutcome());
+        verify(internalApiClient, times(1)).post(eq(ROTATE_ENDPOINT), any());
+    }
+
     private static AiWorkflowRequest requestFor(MockMultipartFile file, String message) {
         return requestFor(new MockMultipartFile[] {file}, message);
     }

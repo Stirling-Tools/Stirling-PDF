@@ -45,6 +45,7 @@ import { BrandMark } from "@app/components/shared/BrandMark";
 import { Logo } from "@app/ui/Logo";
 import { PanelHeader } from "@app/ui/PanelHeader";
 import { ChatQuickActions } from "@app/components/chat/ChatQuickActions";
+import { ProcessorQuickActions } from "@app/components/chat/ProcessorQuickActions";
 import "@app/components/chat/ChatPanel.css";
 
 type TranslateFn = TFunction;
@@ -398,7 +399,7 @@ export interface ChatPanelProps {
 
 export function ChatPanel({ onBack, backLabel }: ChatPanelProps) {
   const { t } = useTranslation();
-  const { messages, isLoading, progressLog, sendMessage, clearChat } =
+  const { messages, isLoading, progressLog, sendMessage, clearChat, surface } =
     useChat();
   const resolveToolName = useToolNameResolver();
   const resolveToolIcon = useToolIconResolver();
@@ -543,12 +544,18 @@ export function ChatPanel({ onBack, backLabel }: ChatPanelProps) {
         </Stack>
       </ScrollArea>
 
-      {showQuickActions && (
-        <ChatQuickActions
-          heading={t("chat.quickActions.heading", "Get started")}
-          onAction={(text) => handleSend(text)}
-        />
-      )}
+      {showQuickActions &&
+        (surface === "processor" ? (
+          <ProcessorQuickActions
+            heading={t("chat.quickActions.heading", "Get started")}
+            onAction={(text) => handleSend(text)}
+          />
+        ) : (
+          <ChatQuickActions
+            heading={t("chat.quickActions.heading", "Get started")}
+            onAction={(text) => handleSend(text)}
+          />
+        ))}
 
       {!showQuickActions && (
         <div className="chat-panel-disclaimer chat-panel-disclaimer--inline">

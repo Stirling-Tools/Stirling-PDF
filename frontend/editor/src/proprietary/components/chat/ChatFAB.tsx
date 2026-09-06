@@ -43,11 +43,10 @@ const FAB_PANEL_THEME = createTheme({
 
 export function ChatFAB() {
   const { t } = useTranslation();
-  // Intentionally separate from useChat().isOpen — the FAB tracks its own
-  // open state so it doesn't interact with the right-rail chat panel.
-  const [isOpen, setIsOpen] = useState(false);
-  const [hasUnviewedResult, setHasUnviewedResult] = useState(false);
-  const { isLoading } = useChat();
+  // Open state and the unviewed-result badge live on the context: the FAB is one host among
+  // several (a quick-access-bar entry is next), and neither is FAB-specific behaviour.
+  const { isOpen, isLoading, openChat, closeChat, hasUnviewedResult } =
+    useChat();
   // Desktop sources this from the SaaS backend (cloud kill switch); web reads it
   // from the local app-config. Either way the AI engine drives FAB visibility.
   const enabled = useAiEngineEnabled();
@@ -57,21 +56,6 @@ export function ChatFAB() {
   const panelThemeRootRef = useRef<HTMLDivElement>(null);
   const { colorScheme } = useMantineColorScheme();
   const panelColorScheme = colorScheme === "dark" ? "dark" : "light";
-
-  // Detect loading → done transition. If the FAB is closed when the agent
-  // finishes, show the tick badge until the user opens the panel.
-  const isOpenRef = useRef(isOpen);
-  isOpenRef.current = isOpen;
-  // Initialize to false, not isLoading: if loading is already in-flight at
-  // mount we never showed the spinner, so we shouldn't show the tick on completion.
-  const prevIsLoadingRef = useRef(false);
-  useEffect(() => {
-    const wasLoading = prevIsLoadingRef.current;
-    prevIsLoadingRef.current = isLoading;
-    if (wasLoading && !isLoading && !isOpenRef.current) {
-      setHasUnviewedResult(true);
-    }
-  }, [isLoading]);
 
   const overlayRef = useRef<HTMLDivElement>(null);
   // Separate bounds element inset by FAB_GAP_PX — react-rnd enforces this
@@ -194,8 +178,7 @@ export function ChatFAB() {
             const pos = getDefaultPos();
             if (pos) setRndPos(pos);
           }
-          setIsOpen(true);
-          setHasUnviewedResult(false);
+          openChat();
         }}
         aria-label={t("chat.fab.open", "Open Stirling AI assistant")}
         aria-expanded={isOpen}
@@ -253,7 +236,7 @@ export function ChatFAB() {
             >
               <div ref={panelThemeRootRef} style={{ display: "contents" }}>
                 <ChatPanel
-                  onBack={() => setIsOpen(false)}
+                  onBack={closeChat}
                   backLabel={t("chat.fab.close", "Close chat")}
                 />
               </div>

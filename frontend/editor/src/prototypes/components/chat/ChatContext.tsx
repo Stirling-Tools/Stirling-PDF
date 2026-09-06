@@ -302,6 +302,12 @@ interface ChatContextValue {
   progress: AiWorkflowProgress | null;
   toggleOpen: () => void;
   setOpen: (open: boolean) => void;
+  // Host-agnostic aliases shared with the proprietary context, so one ChatFAB drives both.
+  openChat: () => void;
+  closeChat: () => void;
+  toggleChat: () => void;
+  /** Prototypes never badge the trigger; the field exists so the shared host compiles. */
+  hasUnviewedResult: boolean;
   sendMessage: (content: string) => Promise<void>;
   cancelMessage: () => void;
 }
@@ -403,6 +409,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     (open: boolean) => dispatch({ type: "SET_OPEN", open }),
     [],
   );
+  const openChat = useCallback(() => setOpen(true), [setOpen]);
+  const closeChat = useCallback(() => setOpen(false), [setOpen]);
 
   const cancelMessage = useCallback(() => {
     const controller = abortRef.current;
@@ -433,6 +441,9 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       try {
         const formData = new FormData();
         formData.append("userMessage", content);
+        // Prototypes only ever run inside the workbench. Sent explicitly rather than relying on
+        // the server default, so this stays correct if that default ever changes.
+        formData.append("surface", "editor");
         activeFiles.forEach((file, i) => {
           formData.append(`fileInputs[${i}].fileInput`, file);
         });
@@ -573,6 +584,10 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         progress: state.progress,
         toggleOpen,
         setOpen,
+        openChat,
+        closeChat,
+        toggleChat: toggleOpen,
+        hasUnviewedResult: false,
         sendMessage,
         cancelMessage,
       }}

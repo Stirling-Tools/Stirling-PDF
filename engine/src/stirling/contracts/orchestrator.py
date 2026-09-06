@@ -10,6 +10,7 @@ from .agent_drafts import AgentDraftResponse
 from .common import (
     AiFile,
     ArtifactKind,
+    AssistantSurface,
     ConversationMessage,
     ExtractedFileText,
     GenerateFileResponse,
@@ -18,6 +19,7 @@ from .common import (
     SupportedCapability,
     ToolReportArtifact,
     WorkflowOutcome,
+    coerce_surface,
     drop_unknown_tool_endpoints,
 )
 from .execution import NextExecutionAction
@@ -48,6 +50,8 @@ class OrchestratorRequest(ApiModel):
     enabled_endpoints: Annotated[list[ToolEndpoint], BeforeValidator(drop_unknown_tool_endpoints)] = Field(
         default_factory=list
     )
+    # Defaulted so an older Java that never sends it keeps the full capability set.
+    surface: Annotated[AssistantSurface, BeforeValidator(coerce_surface)] = AssistantSurface.EDITOR
 
 
 class UnsupportedCapabilityResponse(ApiModel):

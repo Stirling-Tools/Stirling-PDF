@@ -1,0 +1,33 @@
+/* Docked assistant column, right-hand edge of the main area.
+
+   z-index 45 sits above the sticky notifications (30) and below both the mobile nav scrim (75)
+   and SUI modals (100) — so a modal still covers the chat, and opening the mobile drawer does
+   not leave the panel floating over its scrim. */
+.processor-chat {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 45;
+  display: flex;
+  flex-direction: column;
+  width: min(23.75rem, 100%);
+  overflow: hidden;
+  border-left: 1px solid var(--c-border);
+  background: var(--c-bg);
+  box-shadow: var(--shadow-lg, 0 0 2rem rgb(0 0 0 / 12%));
+}
+
+/* Phone: the rail is a drawer and there is no room for a column, so take the screen. */
+@media (max-width: 48rem) {
+  .processor-chat {
+    width: 100%;
+    border-left: none;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .processor-chat {
+    animation: fadeIn var(--motion-fast) both;
+  }
+}

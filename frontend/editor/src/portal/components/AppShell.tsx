@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 import { ActionIcon } from "@app/ui";
 import { Sidebar } from "@portal/components/Sidebar";
+import { ProcessorChatPanel } from "@portal/components/ProcessorChatPanel";
 import { PortalSearchBar } from "@portal/components/PortalSearchBar";
 import { useUI } from "@portal/contexts/UIContext";
 import { MenuIcon, SearchIcon } from "@portal/components/icons";
@@ -106,6 +107,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         )}
         <main className="portal-shell__view">{children}</main>
+        {/* Sibling of <main>, not inside it: <main> is the scroll container, so a child would
+            scroll away with the view. */}
+        <ProcessorChatPanel />
       </div>
     </div>
   );

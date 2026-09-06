@@ -12,7 +12,9 @@ import { useView, type ViewId } from "@portal/contexts/ViewContext";
 import { useUI } from "@portal/contexts/UIContext";
 import { LinkAccountFooterItem } from "@portal/components/LinkAccountFooterItem";
 import { useConnectGate } from "@portal/hooks/useConnectGate";
-import { CloseIcon } from "@portal/components/icons";
+import { CloseIcon, SparklesIcon } from "@portal/components/icons";
+import { useChat } from "@app/components/chat/ChatContext";
+import { useAiEngineEnabled } from "@app/hooks/useAiEngineEnabled";
 import {
   GROUP_PROCESSOR,
   GROUP_PLATFORM,
@@ -45,6 +47,9 @@ export function Sidebar() {
   const credits = useFreeCreditsSummary();
   const openPlan = useOpenPlan();
   const { gated, connect } = useConnectGate();
+  const { isOpen: chatOpen, toggleChat, hasUnviewedResult } = useChat();
+  // Same gate as the editor's FAB: the AI engine being off hides the assistant everywhere.
+  const aiEnabled = useAiEngineEnabled();
 
   // Collapse is a desktop-only affordance: on mobile the sidebar is an
   // off-canvas drawer, so the icon-rail state never applies there.
@@ -132,6 +137,35 @@ export function Sidebar() {
           </NavSurface>
         ))}
       </nav>
+
+      {/* The assistant lives in the rail, not on a floating button: the processor's stacking
+          ladder has no room for an overlay, and this is the trigger shape the editor is
+          moving to as well. */}
+      {aiEnabled && (
+        <div className="portal-sidebar__group portal-sidebar__assistant">
+          <NavItem
+            id="assistant"
+            label={t("portal.assistant.title", "Assistant")}
+            icon={<SparklesIcon size={18} />}
+            isActive={chatOpen}
+            trailing={
+              hasUnviewedResult && !chatOpen ? (
+                <span
+                  className="portal-sidebar__assistant-dot"
+                  aria-label={t(
+                    "chat.processor.newReply",
+                    "New reply from the assistant",
+                  )}
+                />
+              ) : undefined
+            }
+            onClick={() => {
+              closeMobileNav();
+              toggleChat();
+            }}
+          />
+        </div>
+      )}
 
       <NavFooter
         className="portal-sidebar__footer"

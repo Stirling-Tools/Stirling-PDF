@@ -1,10 +1,12 @@
 import {
   createContext,
   useContext,
+  useEffect,
   useReducer,
   useCallback,
   useMemo,
   useRef,
+  useState,
   type ReactNode,
 } from "react";
 import { useTranslation } from "react-i18next";
@@ -26,6 +28,15 @@ export enum ChatRole {
   USER = "user",
   ASSISTANT = "assistant",
 }
+
+/**
+ * Which app the chat is mounted in.
+ *
+ * Java counterpart: AiWorkflowRequest.Surface - values must stay in sync. The processor has no
+ * file workspace, so the backend refuses document work there; this value is what tells it which
+ * surface asked.
+ */
+export type AssistantSurface = "editor" | "processor";
 
 export interface ChatMessage {
   id: string;
@@ -390,6 +401,19 @@ interface ChatContextValue {
   cancelMessage: () => void;
   /** Abort any in-flight request and reset the chat to an empty conversation. */
   clearChat: () => void;
+  /** Which app the chat is mounted in. Drives host-specific UI such as quick actions. */
+  surface: AssistantSurface;
+  /**
+   * Whether the chat panel is showing. Owned here, not by the host, so any trigger — the
+   * floating button today, a quick-access-bar entry later — is a thin shell over the same
+   * state and the move between them touches no chat internals.
+   */
+  isOpen: boolean;
+  openChat: () => void;
+  closeChat: () => void;
+  toggleChat: () => void;
+  /** The agent finished while the panel was closed; cleared when it is next opened. */
+  hasUnviewedResult: boolean;
 }
 
 const ChatContext = createContext<ChatContextValue | null>(null);
@@ -401,11 +425,65 @@ const initialState: ChatState = {
   progressLog: [],
 };
 
+/**
+ * The workbench file layer, or null on a surface that has none.
+ *
+ * The processor mounts the chat outside FileContextProvider, so the file hooks cannot be called
+ * there — they throw rather than returning empty. Passing the bridge in keeps that decision at
+ * the mount point instead of pushing optional variants into the core file hooks.
+ */
+interface ChatFileBridge {
+  files: File[];
+  fileStubs: StirlingFileStub[];
+  actions: ReturnType<typeof useFileActions>["actions"];
+}
+
+/** Stable identities so the refs below don't change on every render when there is no bridge. */
+const NO_FILES: File[] = [];
+const NO_STUBS: StirlingFileStub[] = [];
+
+interface ChatProviderInnerProps {
+  surface: AssistantSurface;
+  fileBridge: ChatFileBridge | null;
+  children: ReactNode;
+}
+
+/** Editor: the chat sits inside the workbench, so it gets the real file layer. */
 export function ChatProvider({ children }: { children: ReactNode }) {
+  const { files, fileStubs } = useAllFiles();
+  const { actions } = useFileActions();
+  const fileBridge = useMemo(
+    () => ({ files, fileStubs, actions }),
+    [files, fileStubs, actions],
+  );
+  return (
+    <ChatProviderInner surface="editor" fileBridge={fileBridge}>
+      {children}
+    </ChatProviderInner>
+  );
+}
+
+/** Processor: no file workspace, so no bridge — and the backend refuses document work. */
+export function ProcessorChatProvider({ children }: { children: ReactNode }) {
+  return (
+    <ChatProviderInner surface="processor" fileBridge={null}>
+      {children}
+    </ChatProviderInner>
+  );
+}
+
+function ChatProviderInner({
+  surface,
+  fileBridge,
+  children,
+}: ChatProviderInnerProps) {
   const { t, i18n } = useTranslation();
   const [state, dispatch] = useReducer(chatReducer, initialState);
-  const { files: activeFiles, fileStubs: activeFileStubs } = useAllFiles();
-  const { actions: fileActions } = useFileActions();
+  const activeFiles = fileBridge?.files ?? NO_FILES;
+  const activeFileStubs = fileBridge?.fileStubs ?? NO_STUBS;
+  const fileActions = fileBridge?.actions ?? null;
+  const [isOpen, setIsOpen] = useState(false);
+  const [hasUnviewedResult, setHasUnviewedResult] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const messagesRef = useRef<ChatMessage[]>(state.messages);
   messagesRef.current = state.messages;
@@ -458,7 +536,9 @@ export function ChatProvider({ children }: { children: ReactNode }) {
               } satisfies AiWorkflowResultFile,
             ]
           : [];
-      if (descriptors.length === 0) return;
+      // No file layer (processor): nothing to import into. The backend refuses document work
+      // on that surface, so reaching here at all would mean the gate had already failed.
+      if (descriptors.length === 0 || !fileActions) return;
 
       const files = await Promise.all(descriptors.map(downloadFile));
 
@@ -510,6 +590,32 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     [fileActions, downloadFile],
   );
 
+  const openChat = useCallback(() => {
+    setIsOpen(true);
+    setHasUnviewedResult(false);
+  }, []);
+  const closeChat = useCallback(() => setIsOpen(false), []);
+  const toggleChat = useCallback(() => {
+    setIsOpen((open) => {
+      if (!open) setHasUnviewedResult(false);
+      return !open;
+    });
+  }, []);
+
+  // Loading -> done while the panel is closed: badge the trigger until it is opened.
+  // Seeded false rather than from isLoading, so a request already in flight at mount (whose
+  // spinner the user never saw) doesn't pop a tick when it lands.
+  const isOpenRef = useRef(isOpen);
+  isOpenRef.current = isOpen;
+  const prevIsLoadingRef = useRef(false);
+  useEffect(() => {
+    const wasLoading = prevIsLoadingRef.current;
+    prevIsLoadingRef.current = state.isLoading;
+    if (wasLoading && !state.isLoading && !isOpenRef.current) {
+      setHasUnviewedResult(true);
+    }
+  }, [state.isLoading]);
+
   const cancelMessage = useCallback(() => {
     abortRef.current?.abort();
   }, []);
@@ -554,6 +660,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         formData.append("userMessage", content);
         // The engine replies in this language instead of guessing.
         if (i18n.language) formData.append("locale", i18n.language);
+        formData.append("surface", surface);
         sourceFiles.forEach((file, i) => {
           formData.append(`fileInputs[${i}].fileInput`, file);
         });
@@ -748,6 +855,12 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       sendMessage,
       cancelMessage,
       clearChat,
+      surface,
+      isOpen,
+      openChat,
+      closeChat,
+      toggleChat,
+      hasUnviewedResult,
     }),
     [
       state.messages,
@@ -757,6 +870,12 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       sendMessage,
       cancelMessage,
       clearChat,
+      surface,
+      isOpen,
+      openChat,
+      closeChat,
+      toggleChat,
+      hasUnviewedResult,
     ],
   );
 

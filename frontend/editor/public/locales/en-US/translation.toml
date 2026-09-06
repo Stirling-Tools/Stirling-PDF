@@ -2954,6 +2954,14 @@ disclaimer = "AI can make mistakes. Be sure to verify the output before sharing.
 placeholder = "What do you want to do?"
 send = "Send message"
 
+[chat.processor]
+newReply = "New reply from the assistant"
+
+[chat.processor.quickActions]
+compressIncoming = "Compress incoming files that are larger than 10 MB"
+redactPii = "Redact personal information before anything is stored"
+stampUploads = "Stamp every uploaded file with the date it arrived"
+
 [chat.progress]
 analyzing = "Analyzing your request..."
 calling_engine = "AI is thinking..."

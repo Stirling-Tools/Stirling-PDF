@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { ToolRegistryProvider } from "@app/contexts/ToolRegistryProvider";
+import { ProcessorChatProvider } from "@app/components/chat/ChatContext";
 import { AppShell } from "@portal/components/AppShell";
 import { Home } from "@portal/views/Home";
 
@@ -14,10 +15,14 @@ const meta: Meta<typeof AppShell> = {
   component: AppShell,
   parameters: { layout: "fullscreen" },
   decorators: [
-    // The shell hosts the portal search bar, which reads the tool registry.
+    // The shell hosts the portal search bar, which reads the tool registry, and the
+    // assistant rail entry, which reads the chat context. PortalChrome supplies both in
+    // the app; a story mounting AppShell directly has to supply them itself.
     (Story) => (
       <ToolRegistryProvider>
-        <Story />
+        <ProcessorChatProvider>
+          <Story />
+        </ProcessorChatProvider>
       </ToolRegistryProvider>
     ),
   ],

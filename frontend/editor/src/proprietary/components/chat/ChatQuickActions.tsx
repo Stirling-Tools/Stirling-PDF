@@ -18,7 +18,7 @@ import type { StirlingFileStub } from "@app/types/fileContext";
 
 const MAX_FILE_PILLS = 3;
 
-interface QuickAction {
+export interface QuickAction {
   key: string;
   icon: React.ReactNode;
   title: string;
@@ -26,7 +26,7 @@ interface QuickAction {
   onClick: () => void;
 }
 
-function QuickActionCard({ action }: { action: QuickAction }) {
+export function QuickActionCard({ action }: { action: QuickAction }) {
   return (
     <Button
       type="button"

@@ -1,6 +1,7 @@
 import { useLocation } from "react-router-dom";
 import { AppConfigProvider } from "@app/contexts/AppConfigContext";
 import { ToolRegistryProvider } from "@app/contexts/ToolRegistryProvider";
+import { ProcessorChatProvider } from "@app/components/chat/ChatContext";
 import { ErrorBoundary } from "@portal/components/ErrorBoundary";
 import { AppShell } from "@portal/components/AppShell";
 import { PortalSettingsHost } from "@portal/components/PortalSettingsHost";
@@ -34,9 +35,15 @@ export function PortalChrome() {
     <AppConfigProvider bootstrapMode="non-blocking">
       {/* The pipeline builder reads the tool registry to list and configure operations. */}
       <ToolRegistryProvider>
-        <AppShell>
-          <RoutedContent />
-        </AppShell>
+        {/* Its own provider, not the editor's: the portal renders outside AppProviders, so
+            there is no ChatProvider (or FileContext) above it. Two instances also means chat
+            history doesn't follow the user between apps — correct, since history here would
+            reference files this surface cannot open. */}
+        <ProcessorChatProvider>
+          <AppShell>
+            <RoutedContent />
+          </AppShell>
+        </ProcessorChatProvider>
       </ToolRegistryProvider>
       <PortalSettingsHost />
     </AppConfigProvider>

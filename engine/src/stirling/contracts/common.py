@@ -94,6 +94,33 @@ class SupportedCapability(StrEnum):
     MATH_AUDITOR_AGENT = "math_auditor_agent"
 
 
+class AssistantSurface(StrEnum):
+    """Which app surface the chat is mounted in.
+
+    Java counterpart: AiWorkflowRequest.Surface - values must stay in sync.
+
+    Advisory only. Java owns the enforcing gate; this narrows what the planner is offered so
+    it stops proposing work that would be refused downstream.
+    """
+
+    EDITOR = "editor"
+    PROCESSOR = "processor"
+
+
+def coerce_surface(value: object) -> AssistantSurface:
+    """Coerce an inbound surface into a known member, falling back to the permissive default.
+
+    Same two-way drift policy as `drop_unknown_tool_endpoints`: an older Java sends nothing and
+    a newer one may send a surface this engine has not learned yet. Neither should fail the
+    request, and neither should silently narrow capabilities — Java has already applied the real
+    gate by the time a response comes back.
+    """
+    try:
+        return AssistantSurface(value)
+    except (ValueError, TypeError):
+        return AssistantSurface.EDITOR
+
+
 class ConversationMessage(ApiModel):
     role: str
     content: str

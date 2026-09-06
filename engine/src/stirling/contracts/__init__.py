@@ -12,6 +12,7 @@ from .comments import CommentSpec
 from .common import (
     AiFile,
     ArtifactKind,
+    AssistantSurface,
     ConversationMessage,
     ExtractedFileText,
     GenerateFileResponse,
@@ -140,6 +141,7 @@ __all__ = [
     "AiFile",
     "AiToolAgentStep",
     "ArtifactKind",
+    "AssistantSurface",
     "CannotContinueExecutionAction",
     "ClassifyDocumentRequest",
     "ClassifyDocumentResponse",
