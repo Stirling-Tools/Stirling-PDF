@@ -5,6 +5,7 @@ import { Button, EmptyState, Skeleton } from "@app/ui";
 import {
   changeMemberRole,
   disableMemberMfa,
+  resendInvite,
   setMemberSuspended,
   unlockMember,
   type Member,
@@ -229,6 +230,18 @@ export function Users() {
       action: () => disableMemberMfa(member),
     });
   }
+  function resendInviteAction(member: Member) {
+    setConfirm({
+      title: t("users.confirm.resendInviteTitle", "Resend invite"),
+      body: t(
+        "users.confirm.resendInviteBody",
+        "Email {{name}} a fresh invitation? This issues a new temporary password, so any earlier invitation stops working.",
+        { name: member.name },
+      ),
+      confirmLabel: t("users.action.resendInvite", "Resend invite"),
+      action: () => resendInvite(member),
+    });
+  }
   function removeUser(member: Member) {
     // SaaS removes from the team (the account survives); self-hosted deletes the account.
     const teamScope = caps.removeScope === "team";
@@ -369,6 +382,7 @@ export function Users() {
             onToggleEnabled={toggleEnabled}
             onUnlock={unlock}
             onDisableMfa={disableMfa}
+            onResendInvite={resendInviteAction}
             onRemove={removeUser}
             onRenameTeam={(team) =>
               setRenameTarget({ id: team.id, name: team.name })

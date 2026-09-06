@@ -36,12 +36,16 @@ const MEMBER: Member = {
 };
 const TEAMS: Team[] = [{ id: 1, name: "Acme", userCount: 1, owners: [] }];
 
-function renderDirectory(caps: typeof saasCaps, teams: Team[] = TEAMS) {
+function renderDirectory(
+  caps: typeof saasCaps,
+  teams: Team[] = TEAMS,
+  members: Member[] = [MEMBER],
+) {
   const onRemove = vi.fn();
   render(
     <MantineProvider>
       <UsersDirectory
-        members={[MEMBER]}
+        members={members}
         teams={teams}
         capabilities={caps}
         processorTeamIds={new Set()}
@@ -56,6 +60,7 @@ function renderDirectory(caps: typeof saasCaps, teams: Team[] = TEAMS) {
         onToggleEnabled={vi.fn()}
         onUnlock={vi.fn()}
         onDisableMfa={vi.fn()}
+        onResendInvite={vi.fn()}
         onRemove={onRemove}
         onRenameTeam={vi.fn()}
         onDeleteTeam={vi.fn()}
@@ -92,6 +97,32 @@ describe("UsersDirectory — remove action gating", () => {
       screen.queryByRole("button", { name: "Team actions" }),
     ).not.toBeInTheDocument();
     expect(screen.queryByText("Rename team")).not.toBeInTheDocument();
+  });
+});
+
+describe("UsersDirectory — never-used invites", () => {
+  const INVITED: Member = { ...MEMBER, firstLogin: true };
+
+  it("self-hosted marks an unused invite and offers Resend invite", async () => {
+    renderDirectory(selfHostedCaps, TEAMS, [INVITED]);
+    expect(screen.getByText("Invited")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Actions for Priya" }));
+    expect(await screen.findByText("Resend invite")).toBeInTheDocument();
+  });
+
+  it("offers no resend once the account has been signed into", async () => {
+    renderDirectory(selfHostedCaps);
+    expect(screen.queryByText("Invited")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Actions for Priya" }));
+    await screen.findByText("Remove from org");
+    expect(screen.queryByText("Resend invite")).not.toBeInTheDocument();
+  });
+
+  it("SaaS has no resend path: its invites are pending records, not accounts", async () => {
+    renderDirectory(saasCaps, TEAMS, [INVITED]);
+    fireEvent.click(screen.getByRole("button", { name: "Actions for Priya" }));
+    await screen.findByText("Remove from team");
+    expect(screen.queryByText("Resend invite")).not.toBeInTheDocument();
   });
 });
 

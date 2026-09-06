@@ -217,10 +217,14 @@ export function InviteMemberModal({
           role,
           teamNum,
         );
-        if (result?.error || result?.errors) {
-          setSubmitError(result.error ?? result.errors ?? null);
+        if (result?.error || !result?.successCount) {
+          setSubmitError(result?.error ?? result?.errors ?? null);
           return;
         }
+        // The account exists but its mail never left, or some addresses in the batch
+        // failed: closing quietly would hide either.
+        const notice = result.warning ?? result.errors;
+        if (notice) onNotice?.(notice);
         if (processor)
           processorApplied = await grantProcessor(
             (m) => m.email === email.trim() || m.username === email.trim(),

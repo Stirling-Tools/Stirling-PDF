@@ -45,6 +45,7 @@ interface UsersDirectoryProps {
   onToggleEnabled: (member: Member) => void;
   onUnlock: (member: Member) => void;
   onDisableMfa: (member: Member) => void;
+  onResendInvite: (member: Member) => void;
   onRemove: (member: Member) => void;
   // Team actions (the team-header kebab).
   onRenameTeam: (team: TeamGroup) => void;
@@ -77,6 +78,7 @@ export function UsersDirectory({
   onToggleEnabled,
   onUnlock,
   onDisableMfa,
+  onResendInvite,
   onRemove,
   onRenameTeam,
   onDeleteTeam,
@@ -153,6 +155,12 @@ export function UsersDirectory({
           onClick: () => onUnlock(m),
         });
       }
+      if (capabilities.resendInvite && m.firstLogin && m.email.includes("@")) {
+        items.push({
+          label: t("users.action.resendInvite", "Resend invite"),
+          onClick: () => onResendInvite(m),
+        });
+      }
       if (capabilities.resetMfa && m.mfaEnabled) {
         items.push({
           label: t("users.action.disableMfa", "Reset MFA"),
@@ -204,6 +212,12 @@ export function UsersDirectory({
           }
           if (m.locked) {
             out.push({ label: t("users.locked", "Locked"), accent: "warning" });
+          }
+          if (m.status !== "suspended" && m.firstLogin) {
+            out.push({
+              label: t("users.pendingInvite", "Invited"),
+              accent: "warning",
+            });
           }
           return out;
         },
@@ -286,6 +300,7 @@ export function UsersDirectory({
     onToggleEnabled,
     onUnlock,
     onDisableMfa,
+    onResendInvite,
     onRemove,
   ]);
 

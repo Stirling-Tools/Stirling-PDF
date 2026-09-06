@@ -255,6 +255,7 @@ const meta: Meta<typeof UsersDirectory> = {
     onToggleEnabled: () => {},
     onUnlock: () => {},
     onDisableMfa: () => {},
+    onResendInvite: () => {},
     onRemove: () => {},
     onRenameTeam: () => {},
     onDeleteTeam: () => {},

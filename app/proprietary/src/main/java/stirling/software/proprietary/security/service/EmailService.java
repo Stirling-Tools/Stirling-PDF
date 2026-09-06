@@ -153,8 +153,9 @@ public class EmailService {
      * @param temporaryPassword The temporary password
      * @param loginUrl The URL to the login page
      * @throws MessagingException If there is an issue with creating or sending the email.
+     *     <p>Deliberately synchronous: the caller reports the outcome to an administrator, and an
+     *     @Async void send would complete before the SMTP failure it hides.
      */
-    @Async
     public void sendInviteEmail(
             String to, String username, String temporaryPassword, String loginUrl)
             throws MessagingException {
@@ -213,8 +214,9 @@ public class EmailService {
      * @param inviteUrl The full URL for accepting the invite
      * @param expiresAt The expiration timestamp
      * @throws MessagingException If there is an issue with creating or sending the email.
+     *     <p>Synchronous for the same reason as {@link #sendInviteEmail}: {@code emailSent} in the
+     *     response has to mean the message actually left.
      */
-    @Async
     public void sendInviteLinkEmail(String to, String inviteUrl, String expiresAt)
             throws MessagingException {
         String subject = "You've been invited to Stirling PDF";

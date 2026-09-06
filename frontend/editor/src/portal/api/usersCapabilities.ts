@@ -36,6 +36,12 @@ export interface UsersCapabilities {
   manageInvitations: boolean;
   /** Create an account directly with a password (self-hosted password login). */
   directCreate: boolean;
+  /**
+   * Re-send the invite email for an account that was created but never used.
+   * Self-hosted only: a SaaS invitation is a pending record that is cancelled and
+   * re-issued rather than an account waiting on a temporary password.
+   */
+  resendInvite: boolean;
   /** Admin password reset. */
   resetPassword: boolean;
   /** Unlock a locked account. */

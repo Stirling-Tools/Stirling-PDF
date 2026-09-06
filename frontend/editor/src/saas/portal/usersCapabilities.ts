@@ -15,6 +15,7 @@ export const usersCapabilities: UsersCapabilities = {
   emailInvite: true,
   manageInvitations: true,
   directCreate: false,
+  resendInvite: false,
   resetPassword: false,
   unlock: false,
   resetMfa: false,

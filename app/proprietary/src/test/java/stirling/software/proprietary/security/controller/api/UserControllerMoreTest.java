@@ -2,6 +2,7 @@ package stirling.software.proprietary.security.controller.api;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -10,6 +11,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.Optional;
+
+import jakarta.mail.MessagingException;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -469,9 +472,115 @@ class UserControllerMoreTest {
                                     .principal(auth("admin"))
                                     .param("emails", "new@ex.com"))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.successCount").value(1));
+                    .andExpect(jsonPath("$.successCount").value(1))
+                    .andExpect(jsonPath("$.deliveredCount").value(1))
+                    .andExpect(jsonPath("$.undelivered").isEmpty())
+                    .andExpect(jsonPath("$.warning").doesNotExist());
 
             verify(userService).saveUserCore(any());
+        }
+
+        @Test
+        @DisplayName("reports the account as created but undelivered when the mail send fails")
+        void mailFailureIsNotReportedAsDelivered() throws Exception {
+            applicationProperties.getMail().setEnableInvites(true);
+            when(licenseSettingsService.wouldExceedLimit(1)).thenReturn(false);
+            when(userService.usernameExistsIgnoreCase("new@ex.com")).thenReturn(false);
+            Team defaultTeam = new Team();
+            defaultTeam.setId(1L);
+            defaultTeam.setName(TeamService.DEFAULT_TEAM_NAME);
+            when(teamRepository.findByName(TeamService.DEFAULT_TEAM_NAME))
+                    .thenReturn(Optional.of(defaultTeam));
+            doThrow(new MessagingException("connection refused"))
+                    .when(emailService)
+                    .sendInviteEmail(eq("new@ex.com"), eq("new@ex.com"), any(), any());
+
+            mockMvc.perform(
+                            post("/api/v1/user/admin/inviteUsers")
+                                    .principal(auth("admin"))
+                                    .param("emails", "new@ex.com"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.successCount").value(1))
+                    .andExpect(jsonPath("$.deliveredCount").value(0))
+                    .andExpect(jsonPath("$.undelivered[0]").value("new@ex.com"))
+                    .andExpect(jsonPath("$.warning").exists());
+        }
+    }
+
+    @Nested
+    @DisplayName("admin/resendInvite")
+    class ResendInvite {
+
+        @BeforeEach
+        void enableInvites() {
+            applicationProperties.getMail().setEnableInvites(true);
+        }
+
+        @Test
+        @DisplayName("returns 404 for an unknown user")
+        void userNotFound() throws Exception {
+            when(userService.findByUsernameIgnoreCase("ghost@ex.com"))
+                    .thenReturn(Optional.empty());
+
+            mockMvc.perform(
+                            post("/api/v1/user/admin/resendInvite")
+                                    .principal(auth("admin"))
+                                    .param("username", "ghost@ex.com"))
+                    .andExpect(status().isNotFound());
+        }
+
+        @Test
+        @DisplayName("refuses an account that has already been signed into")
+        void refusesUsedAccount() throws Exception {
+            User target = user("bob@ex.com");
+            target.setFirstLogin(false);
+            when(userService.findByUsernameIgnoreCase("bob@ex.com"))
+                    .thenReturn(Optional.of(target));
+
+            mockMvc.perform(
+                            post("/api/v1/user/admin/resendInvite")
+                                    .principal(auth("admin"))
+                                    .param("username", "bob@ex.com"))
+                    .andExpect(status().isBadRequest());
+
+            verify(userService, never()).changePassword(any(), any());
+        }
+
+        @Test
+        @DisplayName("rotates the temporary password and mails a fresh invitation")
+        void resends() throws Exception {
+            User target = user("bob@ex.com");
+            target.setFirstLogin(true);
+            when(userService.findByUsernameIgnoreCase("bob@ex.com"))
+                    .thenReturn(Optional.of(target));
+
+            mockMvc.perform(
+                            post("/api/v1/user/admin/resendInvite")
+                                    .principal(auth("admin"))
+                                    .param("username", "bob@ex.com"))
+                    .andExpect(status().isOk());
+
+            verify(userService).changePassword(eq(target), any());
+            verify(userService).invalidateUserSessions("bob@ex.com");
+            verify(emailService).sendInviteEmail(eq("bob@ex.com"), eq("bob@ex.com"), any(), any());
+        }
+
+        @Test
+        @DisplayName("reports a delivery failure instead of a silent success")
+        void reportsDeliveryFailure() throws Exception {
+            User target = user("bob@ex.com");
+            target.setFirstLogin(true);
+            when(userService.findByUsernameIgnoreCase("bob@ex.com"))
+                    .thenReturn(Optional.of(target));
+            doThrow(new MessagingException("connection refused"))
+                    .when(emailService)
+                    .sendInviteEmail(eq("bob@ex.com"), eq("bob@ex.com"), any(), any());
+
+            mockMvc.perform(
+                            post("/api/v1/user/admin/resendInvite")
+                                    .principal(auth("admin"))
+                                    .param("username", "bob@ex.com"))
+                    .andExpect(status().isBadGateway());
         }
     }
 }

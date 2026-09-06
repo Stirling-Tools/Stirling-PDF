@@ -3,6 +3,7 @@ package stirling.software.proprietary.security.controller.api;
 import java.io.IOException;
 import java.security.Principal;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -552,6 +553,7 @@ public class UserController {
 
         int successCount = 0;
         int failureCount = 0;
+        List<String> undelivered = new ArrayList<>();
         StringBuilder errors = new StringBuilder();
 
         // Process each email
@@ -562,10 +564,15 @@ public class UserController {
             }
 
             InviteResult result = processEmailInvite(email, effectiveTeamId, role, loginUrl);
-            if (result.isSuccess()) {
+            if (result.isAccountCreated()) {
                 successCount++;
+                if (!result.isEmailDelivered()) {
+                    undelivered.add(email);
+                }
             } else {
                 failureCount++;
+            }
+            if (result.getErrorMessage() != null) {
                 errors.append(result.getErrorMessage()).append("; ");
             }
         }
@@ -573,18 +580,99 @@ public class UserController {
         Map<String, Object> response = new HashMap<>();
         response.put("successCount", successCount);
         response.put("failureCount", failureCount);
+        response.put("deliveredCount", successCount - undelivered.size());
+        response.put("undelivered", undelivered);
 
-        if (failureCount > 0) {
+        if (errors.length() > 0) {
             response.put("errors", errors.toString());
         }
 
         if (successCount > 0) {
             response.put("message", successCount + " user(s) invited successfully");
+            if (!undelivered.isEmpty()) {
+                response.put(
+                        "warning",
+                        undelivered.size()
+                                + " account(s) were created but their invite email could not be"
+                                + " delivered. Check the mail settings, then resend the"
+                                + " invitation.");
+            }
             return ResponseEntity.ok(response);
         } else {
             response.put("error", "Failed to invite any users");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
+    }
+
+    /**
+     * Re-issue the invitation for an account that has not been used yet: the temporary password
+     * from the original invite is unrecoverable, so a new one is generated and mailed. Restricted
+     * to accounts still on their first login, so this cannot be used to reset a working account.
+     */
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/admin/resendInvite")
+    public ResponseEntity<?> resendInvite(
+            @RequestParam(name = "username") String username, HttpServletRequest request)
+            throws SQLException, UnsupportedProviderException {
+
+        if (!applicationProperties.getMail().isEnableInvites()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "Email invites are not enabled"));
+        }
+        if (emailService.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                    .body(
+                            Map.of(
+                                    "error",
+                                    "Email service is not configured. Please configure SMTP"
+                                            + " settings."));
+        }
+
+        Optional<User> userOpt = userService.findByUsernameIgnoreCase(username);
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "User not found."));
+        }
+        User user = userOpt.get();
+
+        if (!user.isFirstLogin()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(
+                            Map.of(
+                                    "error",
+                                    "This account has already been used. Reset the password"
+                                            + " instead."));
+        }
+        if (user.getUsername() == null || !user.getUsername().contains("@")) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "This account has no email address to invite."));
+        }
+
+        String temporaryPassword = UUID.randomUUID().toString().substring(0, 12);
+        userService.changePassword(user, temporaryPassword);
+        userService.invalidateUserSessions(user.getUsername());
+
+        try {
+            emailService
+                    .get()
+                    .sendInviteEmail(
+                            user.getUsername(),
+                            user.getUsername(),
+                            temporaryPassword,
+                            buildLoginUrl(request));
+        } catch (Exception e) {
+            log.error("Failed to resend invite email to {}: {}", user.getUsername(), e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                    .body(
+                            Map.of(
+                                    "error",
+                                    "The invitation could not be sent: "
+                                            + e.getMessage()
+                                            + ". The temporary password was regenerated, so any"
+                                            + " earlier invitation is now void."));
+        }
+
+        return ResponseEntity.ok(Map.of("message", "Invitation resent to " + user.getUsername()));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -915,10 +1003,11 @@ public class UserController {
             try {
                 emailService.get().sendInviteEmail(email, email, temporaryPassword, loginUrl);
                 log.info("Sent invite email to: {}", email);
-                return InviteResult.success();
+                return InviteResult.invited();
             } catch (Exception emailEx) {
                 log.error("Failed to send invite email to {}: {}", email, emailEx.getMessage());
-                return InviteResult.failure(email + ": User created but email failed to send");
+                return InviteResult.createdButUndelivered(
+                        email + ": account created, but the invite email failed to send");
             }
 
         } catch (Exception e) {
@@ -927,26 +1016,41 @@ public class UserController {
         }
     }
 
-    /** Result object for individual email invite processing. */
+    /**
+     * Outcome of one address. Account creation and mail delivery are reported separately: a created
+     * account whose mail bounced is neither a success the caller can repeat nor a failure they can
+     * ignore, and conflating them is what made a dead SMTP server look like a clean invite.
+     */
     private static class InviteResult {
-        private final boolean success;
+        private final boolean accountCreated;
+        private final boolean emailDelivered;
         private final String errorMessage;
 
-        private InviteResult(boolean success, String errorMessage) {
-            this.success = success;
+        private InviteResult(
+                boolean accountCreated, boolean emailDelivered, String errorMessage) {
+            this.accountCreated = accountCreated;
+            this.emailDelivered = emailDelivered;
             this.errorMessage = errorMessage;
         }
 
-        static InviteResult success() {
-            return new InviteResult(true, null);
+        static InviteResult invited() {
+            return new InviteResult(true, true, null);
+        }
+
+        static InviteResult createdButUndelivered(String errorMessage) {
+            return new InviteResult(true, false, errorMessage);
         }
 
         static InviteResult failure(String errorMessage) {
-            return new InviteResult(false, errorMessage);
+            return new InviteResult(false, false, errorMessage);
         }
 
-        boolean isSuccess() {
-            return success;
+        boolean isAccountCreated() {
+            return accountCreated;
+        }
+
+        boolean isEmailDelivered() {
+            return emailDelivered;
         }
 
         String getErrorMessage() {
