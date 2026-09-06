@@ -7,7 +7,6 @@ import { Pipelines } from "@portal/views/Pipelines";
 import { PipelineBuilder } from "@portal/views/PipelineBuilder";
 import { Sources } from "@portal/views/Sources";
 import { Integrations } from "@portal/views/Integrations";
-import { EditorAdmin } from "@portal/views/EditorAdmin";
 import { Infrastructure } from "@portal/views/Infrastructure";
 import { PortalBillingGate } from "@portal/components/billing/PortalBillingGate";
 import { ConnectGuardedRoute } from "@portal/components/account-link/ConnectGuardedRoute";
@@ -79,7 +78,6 @@ export function ViewRouter() {
           path working, preserving its query (e.g. onboarding's ?setup=<category>). */}
       <Route path={rel(VIEW_PATHS.policies)} element={<PoliciesRedirect />} />
       <Route path={rel(VIEW_PATHS.documents)} element={<Documents />} />
-      <Route path={rel(VIEW_PATHS.editor)} element={<EditorAdmin />} />
       <Route
         path={rel(VIEW_PATHS.infrastructure)}
         element={<Infrastructure />}
