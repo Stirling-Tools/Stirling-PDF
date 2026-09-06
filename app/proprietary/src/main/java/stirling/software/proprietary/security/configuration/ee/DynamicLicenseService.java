@@ -9,14 +9,12 @@ import stirling.software.proprietary.security.configuration.ee.KeygenLicenseVeri
 
 /**
  * Service that provides dynamic license checking instead of cached beans. This ensures that when
- * admins update the license key, the changes are immediately reflected in the UI and config
- * endpoints without requiring a restart.
+ * admins update the license key, the changes are immediately reflected in the UI, config endpoints
+ * and the premium/enterprise endpoint gates without requiring a restart.
  *
- * <p>Note: Some components (EnterpriseEndpointAspect, PremiumEndpointAspect, filters) still inject
- * cached beans at startup for performance. These will require a restart to reflect license changes.
- * This is acceptable because: 1. Most deployments add licenses during initial setup 2. License
- * changes in production typically warrant a restart anyway 3. UI reflects changes immediately
- * (banner disappears, license status updates)
+ * <p>Note: components that build boot-time structures from the license (datasource selection in
+ * DatabaseConfig, the security filter chain in SecurityConfiguration) still read the cached startup
+ * beans, and a license change reaches those only on restart.
  */
 @Service
 @RequiredArgsConstructor
