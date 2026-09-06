@@ -143,16 +143,16 @@ describe("Users page (SaaS flavor, end-to-end via SaasTeamController mocks)", ()
     expect(screen.getByText("marcus@acme.com")).toBeInTheDocument();
   });
 
-  it("cancels a pending invitation through the confirm dialog", async () => {
+  it("revokes a pending invitation through the confirm dialog", async () => {
     renderUsers();
     await screen.findByText("sam.lee@acme.com");
     const panel = screen
       .getByText("Pending invitations")
       .closest("table") as HTMLElement;
-    fireEvent.click(within(panel).getByRole("button", { name: "Cancel" }));
+    fireEvent.click(within(panel).getByRole("button", { name: "Revoke" }));
     // Confirm dialog -> DELETE /invitations/{id} -> refetch drops the invite.
     fireEvent.click(
-      await screen.findByRole("button", { name: "Cancel invitation" }),
+      await screen.findByRole("button", { name: "Revoke invitation" }),
     );
     await waitFor(() =>
       expect(screen.queryByText("sam.lee@acme.com")).not.toBeInTheDocument(),

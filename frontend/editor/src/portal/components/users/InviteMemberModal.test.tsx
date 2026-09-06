@@ -26,6 +26,7 @@ vi.mock("@app/portal/usersBackend", () => ({
   usersBackend: { inviteMember: vi.fn() },
 }));
 vi.mock("@portal/api/access", () => ({ createGrant: vi.fn() }));
+vi.mock("@portal/api/inviteLinks", () => ({ generateInviteLink: vi.fn() }));
 
 import { InviteMemberModal } from "@portal/components/users/InviteMemberModal";
 import type { Team } from "@portal/api/teams";
@@ -61,6 +62,30 @@ describe("InviteMemberModal — add-user method gating", () => {
     expect(screen.queryByText("How to add them")).not.toBeInTheDocument();
     expect(screen.getByText("Username")).toBeInTheDocument();
     expect(screen.queryByText("Email address")).not.toBeInTheDocument();
+  });
+
+  it("offers the link option only where the backend can issue one", () => {
+    renderModal({
+      canDirectCreate: true,
+      canEmailInvite: true,
+      canInviteLink: true,
+      initialMode: "link",
+    });
+    expect(screen.getByText("How to add them")).toBeInTheDocument();
+    expect(screen.getByText("Email address (optional)")).toBeInTheDocument();
+    expect(screen.getByText("Expires in (hours)")).toBeInTheDocument();
+  });
+
+  it("hides link mode when invite links are turned off", () => {
+    renderModal({
+      canDirectCreate: true,
+      canEmailInvite: true,
+      canInviteLink: false,
+      initialMode: "link",
+    });
+    // Falls back to the preferred mode rather than showing a dead option.
+    expect(screen.getByText("Username")).toBeInTheDocument();
+    expect(screen.queryByText("Expires in (hours)")).not.toBeInTheDocument();
   });
 
   it("clamps initialMode=email to create-account when email is unavailable", () => {

@@ -40,10 +40,20 @@ describe("PendingInvitations", () => {
     expect(screen.getByText("Pending invitations")).toBeInTheDocument();
   });
 
-  it("cancelling an invite calls back with that invitation", () => {
+  it("revoking an invite calls back with that invitation", () => {
     const onCancel = renderPanel();
-    const buttons = screen.getAllByText("Cancel");
+    const buttons = screen.getAllByText("Revoke");
     fireEvent.click(buttons[0]);
     expect(onCancel).toHaveBeenCalledWith(INVITES[0]);
+  });
+
+  it("names a link with no bound address instead of showing a blank row", () => {
+    const general: PendingInvitation[] = [{ id: 103, email: "" }];
+    render(
+      <MantineProvider>
+        <PendingInvitations invitations={general} onCancel={vi.fn()} />
+      </MantineProvider>,
+    );
+    expect(screen.getByText("Anyone with the link")).toBeInTheDocument();
   });
 });

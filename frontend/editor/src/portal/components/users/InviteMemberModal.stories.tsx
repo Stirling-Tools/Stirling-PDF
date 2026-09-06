@@ -64,6 +64,17 @@ export const CreateAccountForm: Story = {
   },
 };
 
+/** Self-hosted invite link: an optional bound address, an expiry, and (with SMTP)
+ * the option to mail the link as well as copy it. */
+export const InviteLink: Story = {
+  args: {
+    canDirectCreate: true,
+    canEmailInvite: true,
+    canInviteLink: true,
+    initialMode: "link",
+  },
+};
+
 /** SaaS: no "admin" (Org Owner) option and no Processor grant (both admin-only). */
 export const NoAdminRole: Story = {
   args: { adminRole: false, manageGrants: false },

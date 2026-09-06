@@ -403,6 +403,7 @@ public class ProprietaryUIDataController {
         data.setEmailInvitesEnabled(
                 applicationProperties.getMail().isEnableInvites()
                         && applicationProperties.getMail().isEnabled());
+        data.setInviteLinksEnabled(applicationProperties.getMail().isEnableInvites());
         data.setUserSettings(userSettings);
         data.setLockedUsers(loginAttemptService.getAllBlockedUsers());
 
@@ -691,6 +692,12 @@ public class ProprietaryUIDataController {
         private boolean premiumEnabled;
         private boolean mailEnabled;
         private boolean emailInvitesEnabled;
+
+        /**
+         * Whether invite links can be issued. Unlike an emailed invite this needs only the invites
+         * toggle: a link is copied out of the UI, so an instance with no SMTP can still use one.
+         */
+        private boolean inviteLinksEnabled;
         private Map<String, Map<String, String>> userSettings;
         private List<String> lockedUsers;
     }
