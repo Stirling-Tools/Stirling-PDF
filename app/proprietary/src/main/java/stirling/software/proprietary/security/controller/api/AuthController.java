@@ -30,6 +30,7 @@ import stirling.software.common.constants.JwtConstants;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.access.service.ResourceAccessService;
 import stirling.software.proprietary.access.service.TeamLeadLookup;
+import stirling.software.proprietary.audit.AuditContext;
 import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.audit.AuditLevel;
 import stirling.software.proprietary.audit.Audited;
@@ -111,6 +112,7 @@ public class AuthController {
             }
 
             String username = request.getUsername().trim();
+            AuditContext.setSubject(httpRequest, username);
             String ip = httpRequest.getRemoteAddr();
 
             // Check if account is blocked due to too many failed attempts

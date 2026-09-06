@@ -112,8 +112,13 @@ public class AuditAspect {
             // Execute the method
             result = joinPoint.proceed();
 
-            // Add success status
-            auditData.put("status", "success");
+            Integer responseStatus = auditService.responseStatus(result);
+            if (responseStatus != null && responseStatus >= 400) {
+                auditData.put("status", "failure");
+                auditData.put("statusCode", responseStatus);
+            } else {
+                auditData.put("status", "success");
+            }
 
             // Add result only if requested in annotation AND operation result capture is enabled
             boolean includeResult =
@@ -145,6 +150,9 @@ public class AuditAspect {
             // Merge controller-set policy context + the internal-automation marker onto the event.
             auditService.addAutomationContext(auditData, req);
 
+            String subject = AuditContext.subject(req);
+            String actor = subject != null ? subject : capturedPrincipal;
+
             // Resolve the event type based on annotation and context
             String httpMethod = null;
             String path = null;
@@ -166,7 +174,7 @@ public class AuditAspect {
             if (eventType == AuditEventType.HTTP_REQUEST && StringUtils.isNotEmpty(typeString)) {
                 // Use the string type with early-captured values
                 auditService.audit(
-                        capturedPrincipal,
+                        actor,
                         capturedOrigin,
                         capturedIp,
                         typeString,
@@ -175,7 +183,7 @@ public class AuditAspect {
             } else {
                 // Use the enum type with early-captured values
                 auditService.audit(
-                        capturedPrincipal,
+                        actor,
                         capturedOrigin,
                         capturedIp,
                         eventType,

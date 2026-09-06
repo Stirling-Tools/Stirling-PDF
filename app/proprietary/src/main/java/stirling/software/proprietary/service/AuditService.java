@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.actuate.audit.AuditEvent;
 import org.springframework.boot.actuate.audit.AuditEventRepository;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -663,6 +664,12 @@ public class AuditService {
         return runningEE
                 || AuditEventType.PDF_PROCESS.name().equals(type)
                 || AuditEventType.FILE_OPERATION.name().equals(type);
+    }
+
+    public Integer responseStatus(Object result) {
+        return result instanceof ResponseEntity<?> response
+                ? response.getStatusCode().value()
+                : null;
     }
 
     /**

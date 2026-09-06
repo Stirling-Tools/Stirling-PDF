@@ -30,8 +30,13 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.MDC;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.config.AuditConfigurationProperties;
@@ -128,6 +133,74 @@ class ControllerAuditAspectTest {
                             dataCaptor.capture(),
                             any(AuditLevel.class));
             assertThat(dataCaptor.getValue()).containsEntry("outcome", "success");
+        }
+
+        @Test
+        @DisplayName("records failure when the handler returns an error response")
+        void recordsFailureOnErrorResponse() throws Throwable {
+            ProceedingJoinPoint jp = joinPointFor("postEndpoint");
+            when(auditService.shouldAudit(any(), any(Method.class), eq(auditConfig)))
+                    .thenReturn(true);
+            when(auditService.captureCurrentPrincipal()).thenReturn("alice");
+            when(auditService.captureCurrentOrigin()).thenReturn("WEB");
+            when(auditService.createBaseAuditData(eq(jp), any(AuditLevel.class)))
+                    .thenReturn(new HashMap<>());
+            when(auditService.resolveEventType(
+                            any(Method.class), any(Class.class), any(), eq("POST"), isNull()))
+                    .thenReturn(AuditEventType.PDF_PROCESS);
+            ResponseEntity<String> rejected =
+                    ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("nope");
+            when(jp.proceed()).thenReturn(rejected);
+            when(auditService.responseStatus(rejected)).thenReturn(401);
+
+            aspect.auditPostMethod(jp);
+
+            ArgumentCaptor<Map<String, Object>> dataCaptor = mapCaptor();
+            verify(auditService)
+                    .audit(
+                            eq("alice"),
+                            eq("WEB"),
+                            any(),
+                            eq(AuditEventType.PDF_PROCESS),
+                            dataCaptor.capture(),
+                            any(AuditLevel.class));
+            assertThat(dataCaptor.getValue())
+                    .containsEntry("outcome", "failure")
+                    .containsEntry("statusCode", 401);
+        }
+
+        @Test
+        @DisplayName("prefers the subject the handler recorded over the security principal")
+        void prefersRecordedSubject() throws Throwable {
+            MockHttpServletRequest request = new MockHttpServletRequest("POST", "/api/v1/sample");
+            AuditContext.setSubject(request, "qa-member-delta");
+            RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+            try {
+                ProceedingJoinPoint jp = joinPointFor("postEndpoint");
+                when(auditService.shouldAudit(any(), any(Method.class), eq(auditConfig)))
+                        .thenReturn(true);
+                when(auditService.captureCurrentPrincipal()).thenReturn("anonymousUser");
+                when(auditService.captureCurrentOrigin()).thenReturn("WEB");
+                when(auditService.createBaseAuditData(eq(jp), any(AuditLevel.class)))
+                        .thenReturn(new HashMap<>());
+                when(auditService.resolveEventType(
+                                any(Method.class), any(Class.class), any(), eq("POST"), isNull()))
+                        .thenReturn(AuditEventType.USER_LOGIN);
+                when(jp.proceed()).thenReturn("done");
+
+                aspect.auditPostMethod(jp);
+
+                verify(auditService)
+                        .audit(
+                                eq("qa-member-delta"),
+                                eq("WEB"),
+                                any(),
+                                eq(AuditEventType.USER_LOGIN),
+                                anyMap(),
+                                any(AuditLevel.class));
+            } finally {
+                RequestContextHolder.resetRequestAttributes();
+            }
         }
 
         @Test

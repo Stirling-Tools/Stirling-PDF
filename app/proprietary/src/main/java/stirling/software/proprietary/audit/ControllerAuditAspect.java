@@ -197,7 +197,13 @@ public class ControllerAuditAspect {
             Object result = null;
             try {
                 result = joinPoint.proceed();
-                data.put("outcome", "success");
+                Integer responseStatus = auditService.responseStatus(result);
+                if (responseStatus != null && responseStatus >= 400) {
+                    data.put("outcome", "failure");
+                    data.put("statusCode", responseStatus);
+                } else {
+                    data.put("outcome", "success");
+                }
             } catch (Throwable ex) {
                 data.put("outcome", "failure");
                 data.put("errorType", ex.getClass().getSimpleName());
@@ -217,6 +223,9 @@ public class ControllerAuditAspect {
                 // the body ran, so it must happen here rather than with the pre-proceed HTTP data).
                 auditService.addAutomationContext(data, req);
 
+                String subject = AuditContext.subject(req);
+                String actor = subject != null ? subject : capturedPrincipal;
+
                 // Add result only if operation result capture is explicitly enabled
                 // Skip result for UI_DATA events to avoid storing large response bodies
                 if (auditService.shouldCaptureOperationResults()
@@ -232,26 +241,15 @@ public class ControllerAuditAspect {
                     if (eventType == AuditEventType.HTTP_REQUEST
                             && StringUtils.isNotEmpty(typeString)) {
                         auditService.audit(
-                                capturedPrincipal,
-                                capturedOrigin,
-                                capturedIp,
-                                typeString,
-                                data,
-                                level);
+                                actor, capturedOrigin, capturedIp, typeString, data, level);
                     } else {
                         // Use the enum type with early-captured values
                         auditService.audit(
-                                capturedPrincipal,
-                                capturedOrigin,
-                                capturedIp,
-                                eventType,
-                                data,
-                                level);
+                                actor, capturedOrigin, capturedIp, eventType, data, level);
                     }
                 } else {
                     // Use the enum type with early-captured values
-                    auditService.audit(
-                            capturedPrincipal, capturedOrigin, capturedIp, eventType, data, level);
+                    auditService.audit(actor, capturedOrigin, capturedIp, eventType, data, level);
                 }
             }
 
