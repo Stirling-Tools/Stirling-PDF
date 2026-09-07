@@ -1,0 +1,58 @@
+/* Custom Windows window controls (see WindowTitleBar.tsx): a fixed cluster in
+   the top-right corner, overlaying the app chrome — which reserves the corner
+   via --wincontrols-w. Kept above app overlays so the controls stay usable. */
+.titleBar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 1500;
+  display: flex;
+  height: 2rem;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.controls {
+  display: flex;
+  align-items: stretch;
+  height: 100%;
+}
+
+.button {
+  width: 46px;
+  height: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--c-text-muted);
+  font-size: 15px; /* drives the inherit-sized MUI icons */
+  line-height: 1;
+  cursor: default;
+  transition:
+    background-color 0.12s ease,
+    color 0.12s ease;
+}
+
+/* Clicks (and Tauri's drag-region hit test) should always resolve to the
+   button, never its SVG glyph. */
+.button svg {
+  pointer-events: none;
+}
+
+.button:hover {
+  background: var(--c-hover);
+  color: var(--c-text);
+}
+
+.close:hover {
+  background: var(--c-danger);
+  color: #fff;
+}
+
+.restoreIcon {
+  /* The overlapping-squares glyph reads large next to the others. */
+  font-size: 13px;
+}

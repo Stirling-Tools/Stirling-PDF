@@ -1,28 +1,31 @@
 import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Button, Tabs, type TabItem } from "@app/ui";
-import { useView } from "@portal/contexts/ViewContext";
+import { Tabs, type TabItem } from "@app/ui";
 import { useEnterpriseEnabled } from "@portal/hooks/useEnterpriseEnabled";
 import { ApiKeysTab } from "@portal/components/infrastructure/ApiKeysTab";
 import { AuditTab } from "@portal/components/infrastructure/AuditTab";
+import { EncryptionPanel } from "@portal/components/infrastructure/EncryptionPanel";
 import "@portal/views/Infrastructure.css";
 
-type InfraTab = "api-keys" | "audit";
+type InfraTab = "api-keys" | "audit" | "storage";
 
 /** Shown but inert: no backend behind these screens yet. */
-type DisabledInfraTab = "deployments" | "security" | "models" | "storage";
+type DisabledInfraTab = "deployments" | "security" | "models";
 
 export function Infrastructure() {
   const { t } = useTranslation();
   const [tab, setTab] = useState<InfraTab>("api-keys");
-  const { setActiveView } = useView();
   const [searchParams, setSearchParams] = useSearchParams();
   // Audit is Enterprise-only; disabled (greyed, inert) on non-enterprise instances.
-  const auditEnabled = useEnterpriseEnabled().enabled;
+  const enterprise = useEnterpriseEnabled();
+  const auditEnabled = enterprise.enabled;
 
   const canOpenTab = useCallback(
-    (key: string) => key === "api-keys" || (key === "audit" && auditEnabled),
+    (key: string) =>
+      key === "api-keys" ||
+      key === "storage" ||
+      (key === "audit" && auditEnabled),
     [auditEnabled],
   );
 
@@ -61,11 +64,9 @@ export function Infrastructure() {
       label: t("portal.infrastructure.tabs.models"),
       disabled: true,
     },
-    {
-      key: "storage",
-      label: t("portal.infrastructure.tabs.storage"),
-      disabled: true,
-    },
+    // Enabled again: unlike the mock-backed tabs removed in #7497, this one
+    // reads the real /api/v1/admin/storage-encryption surface.
+    { key: "storage", label: t("portal.infrastructure.tabs.storage") },
   ];
 
   return (
@@ -79,9 +80,6 @@ export function Infrastructure() {
             {t("portal.infrastructure.subtitle")}
           </p>
         </div>
-        <Button fat onClick={() => setActiveView("editor")}>
-          {t("portal.infrastructure.manageEditorDeployment")}
-        </Button>
       </header>
 
       <Tabs<InfraTab | DisabledInfraTab>
@@ -97,6 +95,14 @@ export function Infrastructure() {
       <div className="portal-infra__panel">
         {tab === "api-keys" && <ApiKeysTab />}
         {tab === "audit" && <AuditTab />}
+        {tab === "storage" && (
+          // Treat "still resolving" as available: flashing "your licence records
+          // no audit trail" at an Enterprise operator is worse than the notice
+          // arriving a beat late.
+          <EncryptionPanel
+            auditAvailable={enterprise.loading || enterprise.enabled}
+          />
+        )}
       </div>
     </div>
   );

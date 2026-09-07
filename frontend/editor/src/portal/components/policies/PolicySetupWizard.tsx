@@ -1,23 +1,10 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import CheckIcon from "@mui/icons-material/Check";
-import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
-import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
-import CloudOutlinedIcon from "@mui/icons-material/CloudOutlined";
-import StorageOutlinedIcon from "@mui/icons-material/StorageOutlined";
-import {
-  Banner,
-  Button,
-  Card,
-  FormField,
-  Input,
-  Modal,
-  Select,
-  Tabs,
-  ToggleSwitch,
-} from "@app/ui";
+import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
+import { Banner, Button, Card, Modal, ToggleSwitch } from "@app/ui";
 import { SettingsRow } from "@app/ui/SettingsRow";
+import { EnforceAsPolicyControl } from "@portal/components/pipelines/EnforceAsPolicyControl";
 import {
   humanizeEndpoint,
   type CatalogueEntry,
@@ -33,37 +20,20 @@ import {
   type PolicyToolStep,
 } from "@app/policies/operations";
 import { resolveRunOn } from "@app/policies/runOn";
-import { useSources } from "@portal/queries/sources";
-import { availableOutputModes } from "@portal/components/pipelines/outputModes";
-import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
-import type { WireRoutingRule, WireTriggerConfig } from "@app/policies/types";
 import { fetchIntegrations } from "@portal/api/integrations";
 import { errorMessage } from "@portal/api/http";
 import { useAsync } from "@portal/hooks/useAsync";
-import { PolicyFieldRow } from "@portal/components/policies/PolicyFieldRow";
 import { PolicyCategoryBadge } from "@portal/components/policies/PolicyCategoryIcon";
 import { PolicyRedactConfig } from "@app/components/policies/PolicyRedactConfig";
 import { PolicyWatermarkConfig } from "@app/components/policies/PolicyWatermarkConfig";
 import { PolicyPurviewConfig } from "@portal/components/policies/PolicyPurviewConfig";
-import { PolicyExternalApiConfig } from "@portal/components/policies/PolicyExternalApiConfig";
-import { RoutingRules } from "@portal/components/policies/RoutingRules";
 import { ClassificationLabelsSection } from "@portal/components/policies/ClassificationLabelsSection";
+import { RoutingRules } from "@portal/components/policies/RoutingRules";
+import { useSources } from "@portal/queries/sources";
+import { availableOutputModes } from "@portal/components/pipelines/outputModes";
+import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
+import type { WireRoutingRule } from "@app/policies/types";
 import "@portal/views/Policies.css";
-
-/** Outline icon for a source tile, keyed by the backend source `type`. */
-function sourceIcon(type: string): ReactNode {
-  const sx = { fontSize: "1.1rem" } as const;
-  switch (type) {
-    case "editor":
-      return <EditOutlinedIcon sx={sx} />;
-    case "folder":
-      return <FolderOutlinedIcon sx={sx} />;
-    case "s3":
-      return <CloudOutlinedIcon sx={sx} />;
-    default:
-      return <StorageOutlinedIcon sx={sx} />;
-  }
-}
 
 interface PolicySetupWizardProps {
   /** The category being configured, or null when closed. */
@@ -74,9 +44,13 @@ interface PolicySetupWizardProps {
    * async; if it rejects the wizard re-enables submit and surfaces the failure.
    */
   onSubmit: (entry: CatalogueEntry, result: PolicySetupResult) => Promise<void>;
+  /**
+   * Fires when the user asks to Customise: hands the current (unsaved) settings to the full pipeline
+   * builder, which takes over editing. The builder can express anything the simple wizard can't, so
+   * this is a one-way step unless the pipeline stays simple-representable.
+   */
+  onCustomise: (entry: CatalogueEntry, result: PolicySetupResult) => void;
 }
-
-type Step = "workflow" | "settings";
 
 /** A policy step plus whether it runs. */
 type ToolState = PolicyToolStep & { enabled: boolean };
@@ -201,18 +175,6 @@ const CAPABILITY_META: Record<
   },
 };
 
-// Trigger from the bound source's type: folders are watched, webhooks fire on
-// push, the rest sweep hourly; editor-only stays null (the frontend runs those).
-function deriveTrigger(sourceType?: string): WireTriggerConfig | null {
-  if (!sourceType || sourceType === "editor") return null;
-  if (sourceType === "folder") return { type: "folder-watch", options: {} };
-  if (sourceType === "webhook") return { type: "webhook", options: {} };
-  return {
-    type: "schedule",
-    options: { schedule: { type: "every", count: 1, unit: "HOURS" } },
-  };
-}
-
 function seedTools(entry: CatalogueEntry): ToolState[] {
   const savedSteps = entry.policy?.steps ?? [];
   const savedByTool = new Map<PolicyToolId, PolicyToolStep>();
@@ -245,6 +207,7 @@ export function PolicySetupWizard({
   entry,
   onClose,
   onSubmit,
+  onCustomise,
 }: PolicySetupWizardProps) {
   // Re-key the wizard on the opened category so all state resets cleanly when a
   // different category is opened (avoids stale field values bleeding across).
@@ -254,6 +217,7 @@ export function PolicySetupWizard({
       entry={entry}
       onClose={onClose}
       onSubmit={onSubmit}
+      onCustomise={onCustomise}
     />
   ) : null;
 }
@@ -262,16 +226,20 @@ function PolicySetupWizardBody({
   entry,
   onClose,
   onSubmit,
+  onCustomise,
 }: {
   entry: CatalogueEntry;
   onClose: () => void;
   onSubmit: (entry: CatalogueEntry, result: PolicySetupResult) => Promise<void>;
+  onCustomise: (entry: CatalogueEntry, result: PolicySetupResult) => void;
 }) {
   const { t } = useTranslation();
 
   const { category, config, policy } = entry;
   const isEdit = policy != null;
   const isClassification = category.id === "classification";
+  // Routing is the one category that delivers per document, so it is the only one
+  // that shows the rules editor and a fallback destination.
   const isRouting = category.id === "routing";
 
   const [tools, setTools] = useState<ToolState[]>(() => {
@@ -283,23 +251,27 @@ function PolicySetupWizardBody({
       ? seeded.map((t) => ({ ...t, enabled: true }))
       : seeded;
   });
-  // Open on the tab that matters: when no action starts enabled (routing's
-  // source-to-destination flow), the Settings tab IS the setup.
-  const [step, setStep] = useState<Step>(() =>
-    isClassification || tools.some((tl) => tl.enabled)
-      ? "workflow"
-      : "settings",
+  // No UI for any of these: each carries the stored value through on edit, and a sensible default for
+  // a new policy - runOn per category (security enforces on export), the rest run-once/new-version.
+  const [fieldValues] = useState(() => resolveFieldValues(entry));
+  const [scopeTypes] = useState<string[]>(policy?.state.scopeTypes ?? []);
+  const [reviewerEmail] = useState(policy?.state.reviewerEmail ?? "");
+  const [outputMode] = useState<"new_file" | "new_version">(
+    policy?.state.outputMode ?? "new_version",
   );
-  const [fieldValues, setFieldValues] = useState(() =>
-    resolveFieldValues(entry),
+  const [outputName] = useState(policy?.state.outputName ?? "");
+  const [outputNamePosition] = useState<"prefix" | "suffix" | "auto-number">(
+    policy?.state.outputNamePosition ?? "suffix",
   );
-  // Real sources only (editor participation is its own flag), capped to the one
-  // input the backend binds - trimming a wider legacy record on edit so it can't
-  // re-save a body the backend rejects.
-  const [sources, setSources] = useState<string[]>(() =>
-    (policy?.state.sources ?? []).filter((s) => s !== "editor").slice(0, 1),
+  const [runOn] = useState<"upload" | "export">(() =>
+    resolveRunOn(policy?.state.runOn, category.id),
   );
-  // One destination too: the backend caps outputs at one (PolicyValidator).
+  const [maxRetries] = useState(policy?.state.maxRetries ?? 0);
+  const [retryDelayMinutes] = useState(policy?.state.retryDelayMinutes ?? 0);
+  // A suggested policy is something the org requires by nature, so new ones default to required;
+  // editing preserves whatever was saved.
+  const [required, setRequired] = useState(policy?.state.required ?? true);
+  // One destination: the backend caps outputs at one (PolicyValidator).
   const [outputIds, setOutputIds] = useState<string[]>(() =>
     (policy?.state.outputIds ?? []).slice(0, 1),
   );
@@ -307,73 +279,6 @@ function PolicySetupWizardBody({
   const [routingRules, setRoutingRules] = useState<WireRoutingRule[]>(
     () => policy?.state.routingRules ?? [],
   );
-  const navigate = useNavigate();
-  // Whether the policy runs in the editor. Defaults on for a new policy (the common case);
-  // on edit it comes straight from the stored flag, never re-derived from the sources list.
-  const [runsOnEditor, setRunsOnEditor] = useState<boolean>(
-    policy?.state.runsOnEditor ?? true,
-  );
-
-  const sourcesAsync = useSources();
-  const availableSources = useMemo(() => {
-    const backendSources = (sourcesAsync.data?.sources ?? []).filter(
-      (s) => s.status !== "disabled",
-    );
-    // The editor is always an available source. The backend now returns it as a
-    // virtual source too, so take that when present (avoids a duplicate tile) and
-    // otherwise fall back to a synthetic one; keep it first, selected by default.
-    const editorSource = backendSources.find((s) => s.id === "editor") ?? {
-      id: "editor",
-      name: t("portal.sources.types.editor.label"),
-      type: "editor",
-      status: "active" as const,
-      referenceCount: 0,
-      referencingPolicies: [],
-      config: [],
-      docsTotal: null,
-    };
-    return [editorSource, ...backendSources.filter((s) => s.id !== "editor")];
-  }, [sourcesAsync.data, t]);
-  // Real (non-editor) sources drive the empty-state prompt and trigger choice.
-  const backendSources = useMemo(
-    () => availableSources.filter((s) => s.type !== "editor"),
-    [availableSources],
-  );
-  // Destinations are sources used as write targets: only writable types.
-  const writableSources = useMemo(
-    () =>
-      backendSources.filter((s) =>
-        (availableOutputModes() as string[]).includes(s.type),
-      ),
-    [backendSources],
-  );
-  // The one bound source, if any: it decides the trigger the policy is saved with.
-  const selectedBackendSource = useMemo(
-    () => backendSources.find((s) => sources.includes(s.id)),
-    [backendSources, sources],
-  );
-  const sourcesPath = `${toPortalPath(VIEW_PATHS.sources)}/new`;
-  // Document-type scoping has no UI; preserve any saved scope on edit and
-  // default new policies to all document types.
-  const [scopeTypes] = useState<string[]>(policy?.state.scopeTypes ?? []);
-  // TODO: replace with user-picker backed by GET /api/v1/user/users (UserSummary[]).
-  // Store username (which is the email in Spring Security) as reviewerEmail.
-  // See UserSelector.tsx in the editor for the grouping/display pattern.
-  const [reviewerEmail] = useState(policy?.state.reviewerEmail ?? "");
-  const [outputMode, setOutputMode] = useState<"new_file" | "new_version">(
-    policy?.state.outputMode ?? "new_version",
-  );
-  const [outputName, setOutputName] = useState(policy?.state.outputName ?? "");
-  const [outputNamePosition, setOutputNamePosition] = useState<
-    "prefix" | "suffix" | "auto-number"
-  >(policy?.state.outputNamePosition ?? "suffix");
-  const [runOn, setRunOn] = useState<"upload" | "export">(() =>
-    resolveRunOn(policy?.state.runOn, category.id),
-  );
-  // Policies run once; retry config has no UI. Preserve any saved values on
-  // edit and default new policies to no retries (run once).
-  const [maxRetries] = useState(policy?.state.maxRetries ?? 0);
-  const [retryDelayMinutes] = useState(policy?.state.retryDelayMinutes ?? 0);
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -421,68 +326,54 @@ function PolicySetupWizardBody({
     );
   }
 
-  function toggleSource(id: string) {
-    // The editor is not a real source: its tile toggles the runsOnEditor flag instead of
-    // adding "editor" to the sources list.
-    if (id === "editor") {
-      setRunsOnEditor((on) => !on);
-      return;
-    }
-    // The backend binds at most one real source, so picking one replaces
-    // whichever was picked before (single-select).
-    setSources((prev) => (prev.includes(id) ? [] : [id]));
+  /** The wizard's current state as a submit result: shared by Save and Customise. */
+  function collectResult(): PolicySetupResult {
+    const steps: PipelineStep[] = enabledTools.map((tl) =>
+      policyStepToWire(tl),
+    );
+    return {
+      required,
+      // Preserve any stored options this wizard has no UI for (a customised policy's sources, an
+      // editor-authored automation blob) rather than wiping them on save; the builder is where
+      // those are actually edited.
+      extraOptions: policy?.state.extraOptions,
+      runsOnEditor: true,
+      fieldValues,
+      sources: policy?.state.sources ?? [],
+      scopeTypes,
+      reviewerEmail,
+      outputMode,
+      outputName: outputName.trim(),
+      outputNamePosition,
+      runOn,
+      maxRetries,
+      retryDelayMinutes,
+      steps,
+      outputIds,
+      // The wizard binds no source, so nothing pulls this policy on a schedule; the editor
+      // fires it on upload/export via /run.
+      trigger: null,
+      // Rules only mean anything for routing; other categories deliver to every destination.
+      routingRules: isRouting ? routingRules : [],
+    };
   }
 
-  // One destination too: the backend caps outputs at one (PolicyValidator).
-  function toggleDestination(id: string) {
-    setOutputIds((prev) => (prev.includes(id) ? [] : [id]));
+  // Hand the current settings to the full builder. No "needs at least one tool" guard here: the
+  // builder has its own, and the point of customising is to keep shaping the chain.
+  function customise() {
+    onCustomise(entry, collectResult());
   }
 
   async function submit() {
     if (submitting) return;
-    // A policy must do SOMETHING: run at least one action, or route documents
-    // to at least one destination (a zero-step policy is a pure move).
-    if (enabledTools.length === 0 && outputIds.length === 0) {
+    if (enabledTools.length === 0) {
       setError(t("portal.policies.wizard.errors.noTools"));
-      setStep("workflow");
-      return;
-    }
-    // The backend rejects a delivery step with no account anyway; catching it
-    // here points at the workflow step instead of a save-time error banner.
-    const unconfiguredDelivery = enabledTools.some(
-      (tl) =>
-        tl.toolId === "externalApiCall" &&
-        (tl.params.operationId === "" || tl.params.connectionId === ""),
-    );
-    if (unconfiguredDelivery) {
-      setError(t("portal.policies.wizard.errors.deliveryUnconfigured"));
-      setStep("workflow");
       return;
     }
     setError(null);
     setSubmitting(true);
-    const steps: PipelineStep[] = enabledTools.map((tl) =>
-      policyStepToWire(tl),
-    );
     try {
-      await onSubmit(entry, {
-        fieldValues,
-        sources,
-        runsOnEditor,
-        scopeTypes,
-        reviewerEmail,
-        outputMode,
-        outputName: outputName.trim(),
-        outputNamePosition,
-        runOn,
-        maxRetries,
-        retryDelayMinutes,
-        steps,
-        trigger: deriveTrigger(selectedBackendSource?.type),
-        outputIds,
-        // Only the routing category authors rules; other categories deliver to all.
-        routingRules: isRouting ? routingRules : [],
-      });
+      await onSubmit(entry, collectResult());
     } catch (e) {
       setSubmitting(false);
       // Surface the backend's actual reason (e.g. a step missing its account) rather than a
@@ -516,45 +407,27 @@ function PolicySetupWizardBody({
           <Button variant="tertiary" size="sm" onClick={onClose}>
             {t("portal.policies.wizard.actions.cancel")}
           </Button>
-          {step === "workflow" ? (
-            <Button
-              size="sm"
-              style={{ marginLeft: "auto" }}
-              onClick={() => setStep("settings")}
-            >
-              {t("portal.policies.wizard.actions.continue")}
-            </Button>
-          ) : (
-            <>
-              <Button
-                variant="secondary"
-                size="sm"
-                style={{ marginLeft: "auto" }}
-                onClick={() => setStep("workflow")}
-              >
-                {t("portal.policies.wizard.actions.back")}
-              </Button>
-              <Button size="sm" onClick={submit} loading={submitting}>
-                {isEdit
-                  ? t("portal.policies.wizard.actions.saveChanges")
-                  : t("portal.policies.wizard.actions.enablePolicy")}
-              </Button>
-            </>
-          )}
+          <Button
+            variant="tertiary"
+            size="sm"
+            onClick={customise}
+            leftSection={<TuneRoundedIcon style={{ fontSize: "1.05rem" }} />}
+          >
+            {t("portal.policies.wizard.actions.customise")}
+          </Button>
+          <Button
+            size="sm"
+            style={{ marginLeft: "auto" }}
+            onClick={submit}
+            loading={submitting}
+          >
+            {isEdit
+              ? t("portal.policies.wizard.actions.saveChanges")
+              : t("portal.policies.wizard.actions.enablePolicy")}
+          </Button>
         </div>
       }
     >
-      <Tabs
-        variant="underline"
-        ariaLabel={t("portal.policies.wizard.tabs.ariaLabel")}
-        activeKey={step}
-        onChange={(k) => setStep(k)}
-        items={[
-          { key: "workflow", label: t("portal.policies.wizard.tabs.workflow") },
-          { key: "settings", label: t("portal.policies.wizard.tabs.settings") },
-        ]}
-      />
-
       {error && (
         <Banner
           tone="danger"
@@ -563,7 +436,7 @@ function PolicySetupWizardBody({
         />
       )}
 
-      {step === "workflow" && isClassification && (
+      {isClassification && (
         <div className="portal-policies__wizard-section">
           <p className="portal-policies__wizard-desc">
             {t(
@@ -581,7 +454,7 @@ function PolicySetupWizardBody({
         </div>
       )}
 
-      {step === "workflow" && !isClassification && (
+      {!isClassification && (
         <div className="portal-policies__wizard-section">
           <p className="portal-policies__wizard-desc">
             {t(
@@ -645,14 +518,6 @@ function PolicySetupWizardBody({
                             }
                           />
                         )}
-                        {tl.toolId === "externalApiCall" && (
-                          <PolicyExternalApiConfig
-                            parameters={tl.params}
-                            onChange={(params) =>
-                              setToolParams("externalApiCall", params)
-                            }
-                          />
-                        )}
                       </div>
                     )}
                   </div>
@@ -663,320 +528,127 @@ function PolicySetupWizardBody({
         </div>
       )}
 
-      {step === "settings" && (
-        <div className="portal-policies__wizard-section">
-          {config.fields.length > 0 && (
-            <>
-              <h3 className="portal-policies__wizard-heading">
-                {t("portal.policies.wizard.settings.heading")}
-              </h3>
-              <div className="portal-policies__fields">
-                {config.fields.map((field) => (
-                  <PolicyFieldRow
-                    key={field.key}
-                    field={field}
-                    value={fieldValues[field.key]}
-                    onChange={(v) =>
-                      setFieldValues((prev) => ({ ...prev, [field.key]: v }))
-                    }
-                  />
-                ))}
-              </div>
-            </>
-          )}
+      {isRouting && (
+        <RoutingSection
+          rules={routingRules}
+          onRulesChange={setRoutingRules}
+          outputIds={outputIds}
+          onOutputIdsChange={setOutputIds}
+          onClose={onClose}
+        />
+      )}
 
-          <h3 className="portal-policies__wizard-heading">
-            {t("portal.policies.wizard.sources.heading")}
-          </h3>
-          {sourcesAsync.loading && !sourcesAsync.data ? (
-            <p className="portal-policies__sources-loading">
-              {t("portal.policies.wizard.sources.loading")}
-            </p>
-          ) : (
-            // The backend always returns the editor as a virtual source, so the
-            // loaded list is never empty - no "no sources" state exists.
-            <div className="portal-policies__sources">
-              {availableSources.map((src) => {
-                const on =
-                  src.id === "editor" ? runsOnEditor : sources.includes(src.id);
-                return (
-                  <Button
-                    key={src.id}
-                    variant={on ? "secondary" : "quiet"}
-                    justify="between"
-                    fullWidth
-                    className={
-                      "portal-policies__source" +
-                      (on ? " portal-policies__source--on" : "")
-                    }
-                    // The check keeps its slot when unselected (hidden) so the
-                    // icon + name stay put whether or not the tile is selected.
-                    rightSection={
-                      <CheckIcon
-                        sx={{
-                          fontSize: "1.1rem",
-                          visibility: on ? "visible" : "hidden",
-                        }}
-                      />
-                    }
-                    onClick={() => toggleSource(src.id)}
-                    aria-pressed={on}
-                  >
-                    <span className="portal-policies__source-label">
-                      {sourceIcon(src.type)}
-                      {src.name}
-                    </span>
-                  </Button>
-                );
-              })}
-            </div>
-          )}
-          {!sourcesAsync.loading && backendSources.length === 0 && (
-            <Banner
-              tone="info"
-              description={t(
-                "portal.policies.wizard.sources.emptyPrompt",
-                "No sources connected yet - the policy still covers editor uploads. Connect a folder, S3, SFTP or webhook source to process documents from other systems.",
-              )}
-              action={
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => {
-                    onClose();
-                    navigate(sourcesPath);
-                  }}
-                >
-                  {t(
-                    "portal.policies.wizard.sources.connect",
-                    "Connect a source",
-                  )}
-                </Button>
-              }
-            />
-          )}
-          {selectedBackendSource && (
-            <p className="portal-policies__wizard-desc">
-              {t(
-                "portal.policies.wizard.sources.triggerNote",
-                "Folder and webhook sources run this policy automatically; other sources are checked hourly.",
-              )}
-            </p>
-          )}
+      <div className="portal-policies__wizard-enforce">
+        <EnforceAsPolicyControl
+          required={required}
+          onRequiredChange={setRequired}
+        />
+      </div>
+    </Modal>
+  );
+}
 
-          {runsOnEditor && (
-            <h3 className="portal-policies__wizard-heading">
-              {t("portal.policies.wizard.output.heading")}
-            </h3>
-          )}
-          <div className="portal-policies__fields">
-            {runsOnEditor && (
-              <>
-                <FormField
-                  label={t("portal.policies.wizard.output.runOn.label")}
-                  helperText={t("portal.policies.wizard.output.runOn.helper")}
-                >
-                  <Select
-                    inputSize="sm"
-                    value={runOn}
-                    onChange={(value) =>
-                      setRunOn(resolveRunOn(value, category.id))
-                    }
-                    options={[
-                      {
-                        value: "upload",
-                        label: t("portal.policies.wizard.output.runOn.upload"),
-                      },
-                      {
-                        value: "export",
-                        label: t("portal.policies.wizard.output.runOn.export"),
-                      },
-                    ]}
-                  />
-                </FormField>
-                <FormField
-                  label={t("portal.policies.wizard.output.outputAs.label")}
-                >
-                  <Select
-                    inputSize="sm"
-                    value={outputMode}
-                    onChange={(value) => {
-                      const mode = (value ?? "new_file") as
-                        | "new_file"
-                        | "new_version";
-                      setOutputMode(mode);
-                      // Auto-number only applies to separate new files.
-                      if (
-                        mode === "new_version" &&
-                        outputNamePosition === "auto-number"
-                      ) {
-                        setOutputNamePosition("suffix");
-                      }
-                    }}
-                    options={[
-                      {
-                        value: "new_version",
-                        label: t(
-                          "portal.policies.wizard.output.outputAs.newVersion",
-                        ),
-                      },
-                      {
-                        value: "new_file",
-                        label: t(
-                          "portal.policies.wizard.output.outputAs.newFile",
-                        ),
-                      },
-                    ]}
-                  />
-                </FormField>
-                <FormField
-                  label={t("portal.policies.wizard.output.filenameRule.label")}
-                >
-                  <div className="portal-policies__name-row">
-                    <Select
-                      inputSize="sm"
-                      value={outputNamePosition}
-                      onChange={(value) =>
-                        setOutputNamePosition(
-                          (value ?? "suffix") as
-                            | "prefix"
-                            | "suffix"
-                            | "auto-number",
-                        )
-                      }
-                      options={[
-                        {
-                          value: "prefix",
-                          label: t(
-                            "portal.policies.wizard.output.filenameRule.prefix",
-                          ),
-                        },
-                        {
-                          value: "suffix",
-                          label: t(
-                            "portal.policies.wizard.output.filenameRule.suffix",
-                          ),
-                        },
-                        ...(outputMode === "new_file"
-                          ? [
-                              {
-                                value: "auto-number",
-                                label: t(
-                                  "portal.policies.wizard.output.filenameRule.autoNumber",
-                                ),
-                              },
-                            ]
-                          : []),
-                      ]}
-                    />
-                    {outputNamePosition !== "auto-number" && (
-                      <Input
-                        inputSize="sm"
-                        value={outputName}
-                        placeholder={t(
-                          "portal.policies.wizard.output.filenameRule.placeholder",
-                        )}
-                        onChange={(e) => setOutputName(e.target.value)}
-                      />
-                    )}
-                  </div>
-                </FormField>
-              </>
-            )}
-            {/* TODO: reviewer user-picker goes here */}
-          </div>
+/**
+ * Routing's own settings: the per-document rules and the fallback destination. Split out because
+ * it is the only part of the wizard that needs the router, and the wizard mounts without one.
+ */
+function RoutingSection({
+  rules,
+  onRulesChange,
+  outputIds,
+  onOutputIdsChange,
+  onClose,
+}: {
+  rules: WireRoutingRule[];
+  onRulesChange: (rules: WireRoutingRule[]) => void;
+  outputIds: string[];
+  onOutputIdsChange: (ids: string[]) => void;
+  onClose: () => void;
+}) {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const sourcesPath = `${toPortalPath(VIEW_PATHS.sources)}/new`;
+  const sourcesAsync = useSources();
+  // Destinations are sources used as write targets: only writable types.
+  const writableSources = useMemo(
+    () =>
+      (sourcesAsync.data?.sources ?? []).filter(
+        (src) =>
+          src.status !== "disabled" &&
+          src.type !== "editor" &&
+          (availableOutputModes() as string[]).includes(src.type),
+      ),
+    [sourcesAsync.data],
+  );
 
-          {isRouting && (
-            <RoutingRules
-              rules={routingRules}
-              onChange={setRoutingRules}
-              destinations={writableSources.map((s) => ({
-                id: s.id,
-                name: s.name,
-              }))}
-              onCreateDestination={() => {
-                onClose();
-                navigate(sourcesPath);
-              }}
-            />
-          )}
+  function connectSource() {
+    onClose();
+    navigate(sourcesPath);
+  }
 
-          <h3 className="portal-policies__wizard-heading">
-            {isRouting
-              ? t(
-                  "portal.policies.wizard.destinations.fallbackHeading",
-                  "Default destination",
-                )
-              : t(
-                  "portal.policies.wizard.destinations.heading",
-                  "Deliver output to",
-                )}
-          </h3>
-          <p className="portal-policies__wizard-desc">
-            {t(
-              "portal.policies.wizard.destinations.description",
-              "Results always stay in Stirling. Pick one destination to also receive a copy of every processed document.",
-            )}
-          </p>
-          {writableSources.length === 0 ? (
-            <Banner
-              tone="info"
-              description={t(
-                "portal.policies.wizard.destinations.emptyPrompt",
-                "No writable destinations yet. Connect a folder or S3 source to deliver processed documents outside Stirling.",
-              )}
-              action={
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => {
-                    onClose();
-                    navigate(sourcesPath);
-                  }}
-                >
-                  {t(
-                    "portal.policies.wizard.sources.connect",
-                    "Connect a source",
-                  )}
-                </Button>
-              }
-            />
-          ) : (
-            <div className="portal-policies__sources">
-              {writableSources.map((dest) => {
-                const on = outputIds.includes(dest.id);
-                return (
-                  <Button
-                    key={dest.id}
-                    variant={on ? "secondary" : "quiet"}
-                    justify="between"
-                    fullWidth
-                    className={
-                      "portal-policies__source" +
-                      (on ? " portal-policies__source--on" : "")
-                    }
-                    rightSection={
-                      <CheckIcon
-                        sx={{
-                          fontSize: "1.1rem",
-                          visibility: on ? "visible" : "hidden",
-                        }}
-                      />
-                    }
-                    onClick={() => toggleDestination(dest.id)}
-                    aria-pressed={on}
-                  >
-                    <span className="portal-policies__source-label">
-                      {sourceIcon(dest.type)}
-                      {dest.name}
-                    </span>
-                  </Button>
-                );
-              })}
-            </div>
+  return (
+    <div className="portal-policies__wizard-section">
+      <RoutingRules
+        rules={rules}
+        onChange={onRulesChange}
+        destinations={writableSources.map((src) => ({
+          id: src.id,
+          name: src.name,
+        }))}
+        onCreateDestination={connectSource}
+      />
+
+      <h3 className="portal-policies__wizard-heading">
+        {t(
+          "portal.policies.wizard.destinations.fallbackHeading",
+          "Default destination",
+        )}
+      </h3>
+      <p className="portal-policies__wizard-desc">
+        {t(
+          "portal.policies.wizard.destinations.description",
+          "Results always stay in Stirling. Pick one destination to also receive a copy of every processed document.",
+        )}
+      </p>
+      {writableSources.length === 0 ? (
+        <Banner
+          tone="info"
+          description={t(
+            "portal.policies.wizard.destinations.emptyPrompt",
+            "No writable destinations yet. Connect a folder or S3 source to deliver processed documents outside Stirling.",
           )}
+          action={
+            <Button variant="secondary" size="sm" onClick={connectSource}>
+              {t("portal.policies.wizard.sources.connect", "Connect a source")}
+            </Button>
+          }
+        />
+      ) : (
+        <div className="portal-policies__sources">
+          {writableSources.map((dest) => {
+            const on = outputIds.includes(dest.id);
+            return (
+              <Button
+                key={dest.id}
+                variant={on ? "secondary" : "quiet"}
+                justify="between"
+                fullWidth
+                className={
+                  "portal-policies__source" +
+                  (on ? " portal-policies__source--on" : "")
+                }
+                // One destination at most: picking one replaces whichever was picked before.
+                onClick={() => onOutputIdsChange(on ? [] : [dest.id])}
+                aria-pressed={on}
+              >
+                <span className="portal-policies__source-label">
+                  {dest.name}
+                </span>
+              </Button>
+            );
+          })}
         </div>
       )}
-    </Modal>
+    </div>
   );
 }

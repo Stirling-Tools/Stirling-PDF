@@ -24,6 +24,11 @@ export interface WireOutputOptions {
   position: "prefix" | "suffix" | "auto-number";
   maxRetries?: number;
   retryDelayMinutes?: number;
+  /**
+   * Frozen as `categoryId`: the backend reads this key by name (the classification
+   * seeder, JpaPolicyStore's editor-config lift, PolicyOverviewService), and every
+   * stored policy already carries it. In memory it is `policyKey`; the codecs translate.
+   */
   categoryId: string;
   sources: string[];
   scopeTypes: string[];
@@ -85,6 +90,8 @@ export interface WirePolicy {
   name: string;
   owner?: string;
   enabled: boolean;
+  /** Org-mandated policy; first-class on the record (see the pipeline `Policy.required`). */
+  required?: boolean;
   /** Sources pulled from (never the virtual editor); the backend allows at most one. */
   inputs: WirePipelineInput[];
   steps: WirePipelineStep[];
@@ -107,6 +114,12 @@ export type PolicyRunStatus =
   | "FAILED"
   | "CANCELLED";
 
+/** One file a run produced, downloadable via /api/v1/general/files/{fileId}. */
+export interface RunOutputFile {
+  fileId: string;
+  fileName: string | null;
+}
+
 export interface PolicyRunView {
   runId: string;
   policyId: string | null;
@@ -116,7 +129,7 @@ export interface PolicyRunView {
   error: string | null;
   errorCode?: string | null;
   errorSubscribed?: boolean | null;
-  outputs: { fileId: string; fileName: string }[];
+  outputs?: RunOutputFile[] | null;
   /** Creation timestamp in epoch milliseconds. */
   createdAt: number;
 }
@@ -128,7 +141,9 @@ export interface PolicyDecodedState {
   id: string;
   name: string;
   enabled: boolean;
-  categoryId: string;
+  /** Org-mandated policy; first-class on the record, not part of the options bag. */
+  required: boolean;
+  policyKey: string;
   /** Display selection, editor included; may exceed what the backend binds. */
   sources: string[];
   /** The bound inputs exactly as stored; only a wizard save rebinds these. */
@@ -148,6 +163,11 @@ export interface PolicyDecodedState {
   outputNamePosition: "prefix" | "suffix" | "auto-number";
   maxRetries: number;
   retryDelayMinutes: number;
+  /**
+   * `output.options` keys the codec does not model (e.g. the editor's automation blob), kept verbatim
+   * so re-encoding preserves them instead of silently dropping a key the frontend can't read.
+   */
+  extraOptions?: Record<string, unknown>;
   steps: WirePipelineStep[];
   /** Read view of the bound input's trigger; encoding takes it from `inputs`. */
   trigger: WireTriggerConfig | null;

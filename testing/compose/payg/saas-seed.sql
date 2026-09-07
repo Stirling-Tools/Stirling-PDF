@@ -13,14 +13,16 @@
 --    no row has is_default = TRUE. Explicit timestamps because Hibernate's
 --    @CreationTimestamp is application-side; direct INSERTs bypass it.
 -- ---------------------------------------------------------------------------
--- NOTE: free_tier_units_per_cycle is supplied explicitly because the cucumber
--- harness disables Flyway (see docker-compose-saas.yml). Hibernate's DDL
--- emits NOT NULL without a SQL DEFAULT (the JPA field default `= 0L` is
--- JVM-side only), so the column would otherwise reject this INSERT.
--- 500 matches the launch free-tier (PAYG_DESIGN §3.10 revised).
+-- NOTE: free_tier_units is supplied explicitly because the cucumber harness
+-- disables Flyway (see docker-compose-saas.yml). Hibernate's DDL emits NOT
+-- NULL without a SQL DEFAULT (the JPA field default `= 0L` is JVM-side only),
+-- so the column would otherwise reject this INSERT. 500 matches the launch
+-- free tier, now granted per billing period rather than once per team.
+-- (Named free_tier_units_per_cycle here until the rename in V19; the harness
+-- builds its schema from Hibernate, so the old name made the INSERT fail.)
 INSERT INTO stirling_pdf.pricing_policy (
     version, effective_from, doc_pages_per_unit, doc_bytes_per_unit,
-    min_charge_units, file_unit_cap, free_tier_units_per_cycle, is_default,
+    min_charge_units, file_unit_cap, free_tier_units, is_default,
     notes, created_by, created_at
 )
 SELECT

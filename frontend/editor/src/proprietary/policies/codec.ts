@@ -45,6 +45,22 @@ export function policyInputs(
     .map((sourceId) => ({ sourceId, trigger }));
 }
 
+// The options-bag keys this codec models. Anything else in a stored bag is unknown to the frontend
+// and preserved via PolicyDecodedState.extraOptions. Keep in sync with WireOutputOptions.
+const MODELLED_OPTION_KEYS: ReadonlySet<string> = new Set([
+  "runOn",
+  "mode",
+  "name",
+  "position",
+  "maxRetries",
+  "retryDelayMinutes",
+  "categoryId",
+  "sources",
+  "scopeTypes",
+  "reviewerEmail",
+  "fieldValues",
+]);
+
 export function toWirePolicy(state: PolicyDecodedState): WirePolicy {
   const options: WireOutputOptions = {
     runOn: state.runOn,
@@ -53,7 +69,7 @@ export function toWirePolicy(state: PolicyDecodedState): WirePolicy {
     position: state.outputNamePosition,
     maxRetries: state.maxRetries,
     retryDelayMinutes: state.retryDelayMinutes,
-    categoryId: state.categoryId,
+    categoryId: state.policyKey,
     sources: state.sources,
     scopeTypes: state.scopeTypes,
     reviewerEmail: state.reviewerEmail,
@@ -64,9 +80,12 @@ export function toWirePolicy(state: PolicyDecodedState): WirePolicy {
     name: state.name,
     owner: "",
     enabled: state.enabled,
+    required: state.required,
     inputs: state.inputs,
     steps: state.steps,
-    output: { type: "inline", options },
+    // Unmodelled keys go under the typed ones, which always win, so preserving them can't corrupt a
+    // known field.
+    output: { type: "inline", options: { ...state.extraOptions, ...options } },
     outputIds: state.outputIds,
     routingRules: state.routingRules,
     // Omitting this makes the backend stamp EditorConfig.disabled(), so a pause or a
@@ -87,7 +106,7 @@ export function fromWirePolicy(policy: WirePolicy): PolicyDecodedState {
       : raw.position === "auto-number"
         ? "auto-number"
         : "prefix";
-  const categoryId = str(raw.categoryId);
+  const policyKey = str(raw.categoryId);
   // Selection = display metadata ∪ bound inputs, so policies saved before
   // inputs were emitted (sources only in options) still round-trip complete.
   const optionSources = Array.isArray(raw.sources)
@@ -101,7 +120,8 @@ export function fromWirePolicy(policy: WirePolicy): PolicyDecodedState {
     id: policy.id,
     name: policy.name,
     enabled: policy.enabled,
-    categoryId,
+    required: policy.required ?? false,
+    policyKey,
     sources,
     inputs,
     runsOnEditor: policy.editor?.allowed === true,
@@ -113,13 +133,18 @@ export function fromWirePolicy(policy: WirePolicy): PolicyDecodedState {
     // to the legacy options bag otherwise so the wizard still shows what was chosen.
     runOn: resolveRunOn(
       policy.editor?.allowed ? policy.editor.runOn : raw.runOn,
-      categoryId,
+      policyKey,
     ),
     outputMode: raw.mode === "new_file" ? "new_file" : "new_version",
     outputName: str(raw.name),
     outputNamePosition: position,
     maxRetries: num(raw.maxRetries, DEFAULTS.maxRetries),
     retryDelayMinutes: num(raw.retryDelayMinutes, DEFAULTS.retryDelayMinutes),
+    extraOptions: Object.fromEntries(
+      Object.entries(raw as Record<string, unknown>).filter(
+        ([key]) => !MODELLED_OPTION_KEYS.has(key),
+      ),
+    ),
     steps: Array.isArray(policy.steps) ? policy.steps : [],
     trigger: inputs.find((i) => i.trigger)?.trigger ?? null,
     outputIds: policy.outputIds ?? [],

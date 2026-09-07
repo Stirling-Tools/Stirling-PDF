@@ -11,7 +11,8 @@ const FULL_STATE: PolicyDecodedState = {
   id: "pol_123",
   name: "Security Policy",
   enabled: true,
-  categoryId: "security",
+  required: true,
+  policyKey: "security",
   sources: ["editor", "gdrive"],
   inputs: [{ sourceId: "gdrive", trigger: null }],
   runsOnEditor: true,
@@ -44,6 +45,14 @@ describe("toWirePolicy", () => {
 
   it("sets output.type to inline", () => {
     expect(toWirePolicy(FULL_STATE).output.type).toBe("inline");
+  });
+
+  it("keeps required first-class (not in the options bag)", () => {
+    const wire = toWirePolicy(FULL_STATE);
+    expect(wire.required).toBe(true);
+    expect(
+      (wire.output.options as Record<string, unknown>).required,
+    ).toBeUndefined();
   });
 
   it("packs metadata into output.options", () => {
@@ -87,7 +96,8 @@ describe("fromWirePolicy → round-trip", () => {
     const wire = toWirePolicy(FULL_STATE);
     const decoded = fromWirePolicy(wire);
     expect(decoded.id).toBe(FULL_STATE.id);
-    expect(decoded.categoryId).toBe(FULL_STATE.categoryId);
+    expect(decoded.required).toBe(FULL_STATE.required);
+    expect(decoded.policyKey).toBe(FULL_STATE.policyKey);
     expect(decoded.sources).toEqual(FULL_STATE.sources);
     expect(decoded.scopeTypes).toEqual(FULL_STATE.scopeTypes);
     expect(decoded.reviewerEmail).toBe(FULL_STATE.reviewerEmail);
@@ -134,7 +144,7 @@ describe("fromWirePolicy → round-trip", () => {
   it("defaults a missing runOn to upload for other categories", () => {
     const wire = withNoStoredRunOn({
       ...FULL_STATE,
-      categoryId: "classification",
+      policyKey: "classification",
     });
     expect(fromWirePolicy(wire).runOn).toBe("upload");
   });
@@ -198,7 +208,7 @@ describe("fromWirePolicy → round-trip", () => {
       steps: [],
       output: { type: "inline", options: {} },
     });
-    expect(decoded.categoryId).toBe("");
+    expect(decoded.policyKey).toBe("");
     expect(decoded.sources).toEqual([]);
     expect(decoded.inputs).toEqual([]);
     expect(decoded.outputIds).toEqual([]);
@@ -209,10 +219,43 @@ describe("fromWirePolicy → round-trip", () => {
     expect(decoded.outputMode).toBe("new_version");
   });
 
+  it("decodes a policy stored before the in-memory rename", () => {
+    // The wire key is frozen as categoryId and every stored policy already carries it, so a
+    // decode that looked for policyKey would read every existing policy as unconfigured.
+    const decoded = fromWirePolicy({
+      id: "legacy",
+      name: "Security Policy",
+      enabled: true,
+      inputs: [],
+      steps: [],
+      output: { type: "inline", options: { categoryId: "security" } },
+    });
+    expect(decoded.policyKey).toBe("security");
+  });
+
+  it("writes the key back under the name the backend reads", () => {
+    expect(toWirePolicy(FULL_STATE).output.options).toMatchObject({
+      categoryId: "security",
+    });
+  });
+
   it("defaults fieldValues to empty object when missing", () => {
     const wire = toWirePolicy(FULL_STATE);
     delete (wire.output.options as Record<string, unknown>).fieldValues;
     expect(fromWirePolicy(wire).fieldValues).toEqual({});
+  });
+
+  it("preserves options keys the codec does not model", () => {
+    const wire = toWirePolicy(FULL_STATE);
+    // An editor-authored blob the portal codec has no field for.
+    (wire.output.options as Record<string, unknown>).automation = { name: "x" };
+    const decoded = fromWirePolicy(wire);
+    expect(decoded.extraOptions).toEqual({ automation: { name: "x" } });
+    // Round-trips back onto the bag rather than being dropped on the next save.
+    expect(
+      (toWirePolicy(decoded).output.options as Record<string, unknown>)
+        .automation,
+    ).toEqual({ name: "x" });
   });
 });
 

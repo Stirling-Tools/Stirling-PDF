@@ -1,5 +1,6 @@
 package stirling.software.proprietary.security.controller.api;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -302,6 +303,25 @@ class InviteLinkControllerMoreTest {
 
             verify(userService).saveUserCore(any());
             verify(inviteTokenRepository).save(invite);
+        }
+
+        @Test
+        @DisplayName("refuses redemption once the licence limit is reached")
+        void refusesAtLicenceLimit() throws Exception {
+            InviteToken invite = validInvite("atcap");
+            invite.setEmail("late@ex.com");
+            when(inviteTokenRepository.findByToken("atcap")).thenReturn(Optional.of(invite));
+            when(userService.usernameExistsIgnoreCase("late@ex.com")).thenReturn(false);
+            // The link was minted while slots were free; the workspace has filled up since.
+            when(userLicenseSettingsService.wouldExceedLimit(1)).thenReturn(true);
+            when(userLicenseSettingsService.calculateMaxAllowedUsers()).thenReturn(100);
+
+            mockMvc.perform(post("/api/v1/invite/accept/atcap").param("password", "secret123"))
+                    .andExpect(status().isConflict())
+                    .andExpect(jsonPath("$.error").value(containsString("limit of 100 users")));
+
+            verify(userService, never()).saveUserCore(any());
+            verify(inviteTokenRepository, never()).save(invite);
         }
     }
 }

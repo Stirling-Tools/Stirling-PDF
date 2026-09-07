@@ -26,6 +26,8 @@ public record Policy(
         String name,
         String owner,
         boolean enabled,
+        boolean required,
+        String icon,
         List<PipelineInput> inputs,
         List<PipelineStep> steps,
         OutputSpec output,
@@ -35,6 +37,7 @@ public record Policy(
         List<RoutingRule> routingRules) {
 
     public Policy {
+        icon = icon == null ? "" : icon;
         inputs = inputs == null ? List.of() : List.copyOf(inputs);
         steps = steps == null ? List.of() : steps;
         output = output == null ? OutputSpec.inline() : output;
@@ -49,16 +52,67 @@ public record Policy(
             String name,
             String owner,
             boolean enabled,
+            boolean required,
+            String icon,
             List<PipelineInput> inputs,
             List<PipelineStep> steps,
             OutputSpec output,
             List<String> outputIds,
             Long teamId,
             EditorConfig editor) {
-        this(id, name, owner, enabled, inputs, steps, output, outputIds, teamId, editor, List.of());
+        this(
+                id,
+                name,
+                owner,
+                enabled,
+                required,
+                icon,
+                inputs,
+                steps,
+                output,
+                outputIds,
+                teamId,
+                editor,
+                List.of());
     }
 
-    /** Without editor participation: a swept or on-demand policy. */
+    /**
+     * Without the {@code required} flag or {@code icon} but with routing rules: the shape this
+     * branch's callers and tests were written against, before those two fields landed on main.
+     */
+    public Policy(
+            String id,
+            String name,
+            String owner,
+            boolean enabled,
+            List<PipelineInput> inputs,
+            List<PipelineStep> steps,
+            OutputSpec output,
+            List<String> outputIds,
+            Long teamId,
+            EditorConfig editor,
+            List<RoutingRule> routingRules) {
+        this(
+                id,
+                name,
+                owner,
+                enabled,
+                false,
+                "",
+                inputs,
+                steps,
+                output,
+                outputIds,
+                teamId,
+                editor,
+                routingRules);
+    }
+
+    /**
+     * Without the {@code required} flag, {@code icon}, or editor participation: defaults to not
+     * org-required, no icon, and a swept/on-demand policy. Kept for the many callers and tests
+     * written before those fields; the frontend and stores that care use the full constructor.
+     */
     public Policy(
             String id,
             String name,
@@ -69,7 +123,52 @@ public record Policy(
             OutputSpec output,
             List<String> outputIds,
             Long teamId) {
-        this(id, name, owner, enabled, inputs, steps, output, outputIds, teamId, null);
+        this(
+                id,
+                name,
+                owner,
+                enabled,
+                false,
+                "",
+                inputs,
+                steps,
+                output,
+                outputIds,
+                teamId,
+                null,
+                List.of());
+    }
+
+    /**
+     * Without the {@code required} flag or {@code icon} but with explicit editor participation: the
+     * seeded Classification policy runs on the editor, so it must set {@link EditorConfig} even
+     * though it predates the org-required and icon fields.
+     */
+    public Policy(
+            String id,
+            String name,
+            String owner,
+            boolean enabled,
+            List<PipelineInput> inputs,
+            List<PipelineStep> steps,
+            OutputSpec output,
+            List<String> outputIds,
+            Long teamId,
+            EditorConfig editor) {
+        this(
+                id,
+                name,
+                owner,
+                enabled,
+                false,
+                "",
+                inputs,
+                steps,
+                output,
+                outputIds,
+                teamId,
+                editor,
+                List.of());
     }
 
     /**
@@ -134,6 +233,8 @@ public record Policy(
                 name,
                 owner,
                 enabled,
+                required,
+                icon,
                 inputs,
                 steps,
                 resolved,
@@ -150,6 +251,8 @@ public record Policy(
                 name,
                 newOwner,
                 enabled,
+                required,
+                icon,
                 inputs,
                 steps,
                 output,
@@ -166,6 +269,8 @@ public record Policy(
                 name,
                 owner,
                 enabled,
+                required,
+                icon,
                 inputs,
                 steps,
                 output,
@@ -182,6 +287,8 @@ public record Policy(
                 name,
                 owner,
                 enabled,
+                required,
+                icon,
                 inputs,
                 newSteps,
                 output,

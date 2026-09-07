@@ -60,8 +60,8 @@ const StampPositionFormattingSettings = ({
                   onClick={() => {
                     onParameterChange("position", idx);
                     // Ensure we're using grid positioning, not custom overrides
-                    onParameterChange("overrideX", -1 as any);
-                    onParameterChange("overrideY", -1 as any);
+                    onParameterChange("overrideX", -1);
+                    onParameterChange("overrideY", -1);
                   }}
                   disabled={disabled}
                   style={{
@@ -257,7 +257,10 @@ const StampPositionFormattingSettings = ({
           label={t("AddStampRequest.margin", "Margin")}
           value={parameters.customMargin}
           onChange={(v) =>
-            onParameterChange("customMargin", (v as any) || "medium")
+            onParameterChange(
+              "customMargin",
+              (v as AddStampParameters["customMargin"]) || "medium",
+            )
           }
           data={[
             { value: "small", label: t("margin.small", "Small") },
