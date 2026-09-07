@@ -423,4 +423,18 @@ class FolderInputSourceTest {
                 List.of("doc3.pdf", "doc2.pdf"),
                 work.stream().map(unit -> unit.inputs().primary().get(0).getFilename()).toList());
     }
+
+    @Test
+    void aUnitsIdentityIsTheDocumentsPathSoRunsCanNameIt() throws IOException {
+        Path inputDir = Files.createDirectories(tempDir.resolve("in"));
+        Files.writeString(inputDir.resolve("doc.pdf"), "data");
+        InputSpec spec =
+                new InputSpec("folder", Map.of("directory", inputDir.toString(), "mode", "track"));
+
+        List<ResolvedInput> work = source.resolve(spec, ctx);
+
+        // Name-shaped end to end: the run's display name and the ledger's claim release
+        // both resolve this identity as the source produced it.
+        assertTrue(work.get(0).fileIdentity().endsWith("doc.pdf"));
+    }
 }

@@ -33,7 +33,6 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.policy.input.InputSource;
 import stirling.software.proprietary.policy.input.ResolveContext;
 import stirling.software.proprietary.policy.input.ResolvedInput;
-import stirling.software.proprietary.policy.ledger.IdentityHasher;
 import stirling.software.proprietary.policy.ledger.InProcessProcessedLedger;
 import stirling.software.proprietary.policy.ledger.ProcessedLedger;
 import stirling.software.proprietary.policy.model.InputSpec;
@@ -322,9 +321,9 @@ class PolicyRunnerTest {
     }
 
     @Test
-    void anUnattendedRunStillCarriesItsSourcesHashedIdentity() throws Exception {
-        // The other id space, unchanged: a folder identity is a path, and a path is a filename, so
-        // what reaches the run is the one-way hash and never the client-minted kind of reference.
+    void anUnattendedRunCarriesItsSourcesIdentityByName() throws Exception {
+        // The identity reaches the run as the source produced it - name-shaped, so the run can
+        // be displayed by the file it processes and a released claim resolves in the ledger.
         InputSpec spec = InputSpec.folder("/in");
         Policy policy = policy(List.of(spec));
         String sourceId = policy.inputs().getFirst().sourceId();
@@ -340,13 +339,7 @@ class PolicyRunnerTest {
         runner.run(policy);
 
         verify(policyEngine)
-                .runPolicy(
-                        eq(policy),
-                        any(),
-                        any(),
-                        eq(sourceId),
-                        eq(IdentityHasher.identityHash("/in/doc.pdf")),
-                        any());
+                .runPolicy(eq(policy), any(), any(), eq(sourceId), eq("/in/doc.pdf"), any());
     }
 
     @Test
