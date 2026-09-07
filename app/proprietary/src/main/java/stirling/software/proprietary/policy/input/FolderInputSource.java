@@ -101,10 +101,10 @@ public class FolderInputSource implements InputSource {
                                                             .toLowerCase(Locale.ROOT)
                                                             .endsWith(ext)));
         }
-        // Smallest first: a sweep's first results should appear within seconds of it starting,
-        // not after the largest document in the folder. Unsizeable entries (vanished mid-listing)
-        // sort last and resolve their own fate at claim time.
-        present.sort(Comparator.comparingLong(FolderInputSource::sizeForOrdering));
+        // Newest first: a capped sweep spends its budget on what the user most recently
+        // added — on a Downloads-sized folder the cap must not go to whichever old files
+        // happen to sort first. Unreadable mtimes sort oldest and are taken last.
+        present.sort(Comparator.comparingLong(FolderInputSource::mtimeForOrdering).reversed());
 
         if (config.snapshot()) {
             List<ResolvedInput> work = new ArrayList<>();
@@ -178,6 +178,9 @@ public class FolderInputSource implements InputSource {
                                         ctx, identity, file, claimedGate, contentHash, success);
                             }));
         }
+        // Within the batch, smallest first: the sweep's first results should appear within
+        // seconds of it starting, not after its largest document.
+        work.sort(Comparator.comparingLong(FolderInputSource::workSize));
         return work;
     }
 
@@ -271,10 +274,21 @@ public class FolderInputSource implements InputSource {
     }
 
     /** Every non-hidden regular file in the source, readable or not. */
-    /** The file's size for sweep ordering; unreadable reads as largest, sorting it last. */
-    private static long sizeForOrdering(Path file) {
+    /** The file's mtime for selection ordering; unreadable sorts oldest, taken last. */
+    private static long mtimeForOrdering(Path file) {
         try {
-            return Files.size(file);
+            return Files.getLastModifiedTime(file).toMillis();
+        } catch (IOException e) {
+            return Long.MIN_VALUE;
+        }
+    }
+
+    /** A claimed unit's primary size, for run ordering; unknown sorts last. */
+    private static long workSize(ResolvedInput unit) {
+        try {
+            return unit.inputs().primary().isEmpty()
+                    ? Long.MAX_VALUE
+                    : unit.inputs().primary().get(0).contentLength();
         } catch (IOException e) {
             return Long.MAX_VALUE;
         }

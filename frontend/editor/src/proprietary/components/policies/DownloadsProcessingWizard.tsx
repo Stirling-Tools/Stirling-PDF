@@ -172,9 +172,13 @@ export function DownloadsProcessingWizard({
     if (!suggestion) return;
     setPhase("working");
     try {
+      // Born paused: the offer's promise is one sweep over what is already there.
+      // Creation sweeps regardless of the flag (enabled only gates the watch), so
+      // the trick still runs - but nothing keeps opening files as downloads land,
+      // and the folder the user is left with reads as paused from the start.
       const folder = await saveProcessingFolder({
         directory: suggestion.directory,
-        enabled: true,
+        enabled: false,
         steps: [{ operation: CLASSIFY_OPERATION, parameters: {}, assets: {} }],
       });
       // Mount the directory as a local folder too, so Downloads exists in the
@@ -203,18 +207,6 @@ export function DownloadsProcessingWizard({
       if (folder.startedRuns > 0) {
         await trackRuns(folder.id, folder.startedRuns);
       }
-      // One sweep, not a standing watch: the offer's promise is "sort out what is already in
-      // Downloads", so the folder is stood down once it has. Leaving it enabled would keep
-      // opening files into the workbench every time anything landed in Downloads.
-      await saveProcessingFolder({
-        id: folder.id,
-        directory: suggestion.directory,
-        enabled: false,
-        steps: [{ operation: CLASSIFY_OPERATION, parameters: {}, assets: {} }],
-      }).catch(() => {
-        // The results are already in; a folder left running is a nuisance, not a failure.
-      });
-      void refreshProcessingFolders();
       setPhase("done");
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));

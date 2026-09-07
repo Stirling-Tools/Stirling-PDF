@@ -400,4 +400,27 @@ class FolderInputSourceTest {
             present.addAll(identities);
         }
     }
+
+    @Test
+    void aCappedSweepTakesTheNewestFiles() throws IOException {
+        Path inputDir = Files.createDirectories(tempDir.resolve("in"));
+        Instant base = Instant.now().minusSeconds(600);
+        for (int i = 0; i < 4; i++) {
+            Path file = inputDir.resolve("doc" + i + ".pdf");
+            Files.writeString(file, "data-" + i);
+            Files.setLastModifiedTime(file, FileTime.from(base.plusSeconds(i * 60L)));
+        }
+        InputSpec spec =
+                new InputSpec(
+                        "folder",
+                        Map.of("directory", inputDir.toString(), "mode", "track", "limit", 2));
+
+        List<ResolvedInput> work = source.resolve(spec, ctx);
+
+        // The cap goes to the most recently added files, not whichever listed first.
+        assertEquals(2, work.size());
+        assertEquals(
+                List.of("doc3.pdf", "doc2.pdf"),
+                work.stream().map(unit -> unit.inputs().primary().get(0).getFilename()).toList());
+    }
 }
