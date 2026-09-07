@@ -22,7 +22,10 @@ import {
 } from "@app/hooks/useProcessingFolders";
 import { policyStepFromWire } from "@app/policies/operations";
 import type { WirePipelineStep } from "@app/policies/types";
-import { deliverSweepResults } from "@app/services/processingRunDelivery";
+import {
+  currentRunIds,
+  deliverSweepResults,
+} from "@app/services/processingRunDelivery";
 import { useFileHandler } from "@app/hooks/useFileHandler";
 import { useAiEngineEnabled } from "@app/hooks/useAiEngineEnabled";
 import type { FolderProcessingSetupProps } from "@core/components/policies/FolderProcessingSetup";
@@ -31,11 +34,9 @@ import "@app/components/policies/FolderProcessingSetup.css";
 export type { FolderProcessingSetupProps };
 
 /**
- * The setup flow behind "Process files in this folder": the pipeline templates
- * gallery into the same guided wizard Processor uses, verbatim. The only
- * difference is that the source (this folder) and the output placement (beside
- * the originals for a mount, new versions in place for a storage folder) are
- * already decided, so neither is asked for.
+ * The setup flow behind "Process files in this folder": the same guided wizard Processor
+ * uses, with the source (this folder) and the output placement already decided, so neither
+ * is asked for.
  */
 export function FolderProcessingSetup({
   folder,
@@ -117,6 +118,10 @@ export function FolderProcessingSetup({
       parameters: step.parameters ?? {},
     }));
     const onDisk = folderKind(folder) === "local";
+    // Captured before the save so the delivery ignores runs from earlier sweeps.
+    const baseline = existing
+      ? await currentRunIds(existing.id)
+      : new Set<string>();
     // Editing keeps the record's identity and its paused/active state; only
     // the steps change. A fresh setup starts enabled.
     const saved = await saveProcessingFolder(
@@ -138,16 +143,17 @@ export function FolderProcessingSetup({
     void refreshProcessingFolders();
     // A mount's results land on disk where nothing shows them; pull them into
     // the workbench as they settle. Storage results replace in place.
-    if (onDisk && saved.startedRuns > 0) {
-      void deliverSweepResults(saved.id, saved.startedRuns, addFiles);
+    if (onDisk) {
+      void deliverSweepResults(saved.id, null, addFiles, {
+        excludeRunIds: baseline,
+      });
     }
     close();
   };
 
   if (wizardEntry) {
-    // The wizard supplies the middle — the pipeline controls — and this dialog
-    // stays the frame, so setting up a folder feels like the folder's own
-    // flow rather than a visit to the portal.
+    // The wizard supplies the middle; this dialog stays the frame, so setup feels like
+    // the folder's own flow.
     return (
       <PolicySetupWizard
         entry={wizardEntry}

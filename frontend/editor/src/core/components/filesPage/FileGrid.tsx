@@ -2154,9 +2154,9 @@ const DiskFileCard = React.memo(function DiskFileCard({
   hasOriginal?: boolean;
   actions: FileGridActions;
 }) {
-  // Not-yet-processed files are inert: nothing can be done with one until
-  // its result exists, so it neither opens nor offers actions.
-  const locked = state !== undefined && state !== "done";
+  // A file mid-processing is locked: its bytes are about to be replaced, so opening
+  // it would show a result that is not there yet.
+  const locked = state === "processing";
   const onOpen = () => {
     if (!locked) actions.openDiskFile(entry);
   };
@@ -2178,8 +2178,8 @@ const DiskFileCard = React.memo(function DiskFileCard({
       title={
         locked
           ? t(
-              "filesPage.diskState.waitingHint",
-              "Queued - available once its result exists",
+              "filesPage.diskState.processingHint",
+              "Processing - available when it finishes",
             )
           : entry.path
       }
@@ -2274,9 +2274,9 @@ const DiskFileRow = React.memo(function DiskFileRow({
   hasOriginal?: boolean;
   actions: FileGridActions;
 }) {
-  // Not-yet-processed files are inert: nothing can be done with one until
-  // its result exists, so it neither opens nor offers actions.
-  const locked = state !== undefined && state !== "done";
+  // A file mid-processing is locked: its bytes are about to be replaced, so opening
+  // it would show a result that is not there yet.
+  const locked = state === "processing";
   const onOpen = () => {
     if (!locked) actions.openDiskFile(entry);
   };

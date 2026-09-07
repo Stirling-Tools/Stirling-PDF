@@ -4089,10 +4089,10 @@ done = "Ready"
 doneHint = "Processed — opens the result"
 failed = "Failed"
 processing = "Processing"
+processingHint = "Processing — available when it finishes"
 retry = "Retry"
 retryHint = "Run this file again"
 waiting = "Queued"
-waitingHint = "Queued — available once its result exists"
 
 [filesPage.empty]
 hint = "Drop PDFs anywhere on this page to upload, or use the New folder button to organise your files."

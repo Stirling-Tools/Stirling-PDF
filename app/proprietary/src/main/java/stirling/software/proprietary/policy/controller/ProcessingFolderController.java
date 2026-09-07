@@ -15,6 +15,7 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Stream;
 
+import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -36,6 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.policy.config.FolderAccessGuard;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
+import stirling.software.proprietary.policy.engine.PolicyEngine;
 import stirling.software.proprietary.policy.engine.PolicyRunner;
 import stirling.software.proprietary.policy.engine.PolicyValidator;
 import stirling.software.proprietary.policy.engine.SweepKind;
@@ -64,15 +66,10 @@ import stirling.software.proprietary.storage.repository.StoredFileRepository;
 import stirling.software.proprietary.storage.service.FileStorageService;
 
 /**
- * Processing folders: a storage folder with a pipeline attached, so any file that lands in it is
- * processed. One processing folder is a pair of records — a {@code storage-folder} source and a
- * policy — composed and torn down together here so neither can exist half-configured. The pair is
- * marked with {@link #SURFACE} and served only by this route: the portal's policies and pipelines
- * surfaces filter it out, and this route serves nothing else.
- *
- * <p>Unlike org policies this is a personal, per-user feature: any authenticated user may create
- * processing folders on folders they own; there is no team-leader gate. Records are still stamped
- * with the caller's team so the engine's scoping holds.
+ * Processing folders: a folder with a pipeline attached, so files that land in it are processed.
+ * Each is a source + policy pair composed and torn down together here, marked with {@link #SURFACE}
+ * and served only by this route. Personal, per-user records — no team-leader gate — still
+ * team-stamped so engine scoping holds.
  */
 @Slf4j
 @RestController
@@ -92,14 +89,15 @@ public class ProcessingFolderController {
     /** A processing folder over a directory on the server's disk (desktop / self-hosted). */
     static final String DISK_SOURCE_TYPE = FolderAccessGuard.FOLDER_TYPE;
 
+    /** The only extensions the disk pipeline claims; everything else is out of scope. */
+    private static final List<String> DISK_EXTENSIONS = List.of(".pdf");
+
     /**
-     * How many files one sweep of a disk-backed folder takes on. A Downloads directory can hold
-     * thousands; the cap keeps a first run bounded and predictable, and everything beyond it keeps
-     * its place in the ledger and is picked up by later sweeps rather than dropped.
+     * Cap on files one sweep of a disk-backed folder takes; the rest keep their ledger place for
+     * later sweeps.
      */
     static final int DISK_SWEEP_LIMIT = 100;
 
-    /** The trigger that watches a directory for arrivals. */
     static final String WATCH_TRIGGER = "folder-watch";
 
     private final PolicyStore policyStore;
@@ -123,21 +121,11 @@ public class ProcessingFolderController {
             String name,
             boolean enabled,
             List<PipelineStep> steps,
-            Map<String, Object> output,
-            /** Runs the creating sweep started; 0 means there was nothing new to process. */
-            int startedRuns,
-            /** Files the sweep skipped because this folder had already processed them. */
-            int alreadyProcessed,
-            /** Files skipped because an earlier run failed on them and they stayed parked. */
-            int parked,
-            /** Files the sweep took on again after an earlier failure. */
-            int retried) {}
+            Map<String, Object> output) {}
 
     /**
-     * Create/update payload. A null id creates; a present id updates the caller's own record.
-     * Exactly one of {@code folderId} (a folder in app storage) or {@code directory} (a directory
-     * on the server's disk — on a desktop or self-hosted install, the user's own machine) says
-     * where the folder watches.
+     * Create/update payload: null id creates, present id updates. Exactly one of {@code folderId}
+     * (app storage) or {@code directory} (server-disk path) says where the folder watches.
      */
     public record SaveProcessingFolderRequest(
             String id,
@@ -148,8 +136,8 @@ public class ProcessingFolderController {
             Map<String, Object> output) {}
 
     /**
-     * What the Downloads offer should say. The browser cannot see the machine's paths, so the
-     * server names its own Downloads directory and counts what is waiting there.
+     * The Downloads offer: the browser cannot see machine paths, so the server names its own
+     * Downloads directory and counts what waits there.
      */
     public record DownloadsSuggestion(
             String directory, boolean available, int pdfCount, int limit) {}
@@ -218,13 +206,16 @@ public class ProcessingFolderController {
         }
         Folder folder = onDisk ? null : requireOwnedFolder(request.folderId(), user);
         boolean requestedCreate = request.id() == null || request.id().isBlank();
-        // A place carries at most one processing folder per user: a create against a place that
-        // already has one adopts it — same policy, same ledger — instead of composing a duplicate
-        // pair whose empty ledger would re-process everything the original already did. The
-        // adopted create still runs the backlog sweep below; the kept ledger makes it pick up
-        // only what is genuinely new.
         Policy existing =
                 requestedCreate ? existingForPlace(request, user) : requireOwn(request.id(), user);
+        if (requestedCreate && existing != null) {
+            // A create against a place that already has a processing folder adopts it as-is —
+            // same policy, same steps, same ledger — and just sweeps the backlog. Reconfiguring
+            // is an explicit update by id, so an offer flow can never overwrite a folder the
+            // user already shaped.
+            sweepBehindTheResponse(existing);
+            return ResponseEntity.accepted().body(toView(existing));
+        }
         String name = onDisk ? diskFolderName(request.directory()) : folder.getName();
 
         // Held for rollback: the source is written before the policy validates, and a rejected
@@ -242,10 +233,9 @@ public class ProcessingFolderController {
                                 onDisk
                                         ? diskSourceOptions(request.directory())
                                         : Map.of("folderId", folder.getId().toString()),
-                                // Always enabled: the source is the pair's address, not its
-                                // on/off switch — that lives on the policy. Sweeps skip disabled
-                                // sources entirely, and a paused folder must still sweep on
-                                // demand: the create backlog, resume, retries, revert.
+                                // Always enabled: pause lives on the policy. Sweeps skip
+                                // disabled sources, and a paused folder must still sweep on
+                                // demand (create backlog, resume, retry, revert).
                                 true,
                                 policyAccessGuard.ownerForNewPolicy(),
                                 policyAccessGuard.teamForNewPolicy()));
@@ -255,14 +245,9 @@ public class ProcessingFolderController {
                                 "Processing folder: " + name,
                                 policyAccessGuard.ownerForNewPolicy(),
                                 request.enabled() == null || request.enabled(),
-                                // A disk directory is watched, so the folder reacts to arrivals on
-                                // its own.
-                                // A null trigger would make the input manual-only: the create-time
-                                // backlog
-                                // sweep would run and nothing would ever process again.
-                                // Storage-backed
-                                // folders stay manual until the storage arrival trigger exists —
-                                // folder-watch only supports directory sources.
+                                // Disk directories get the watch trigger so arrivals process on
+                                // their own; storage-backed folders stay manual until a storage
+                                // arrival trigger exists.
                                 List.of(
                                         new PipelineInput(
                                                 source.id(),
@@ -295,19 +280,26 @@ public class ProcessingFolderController {
             }
             return ResponseEntity.ok(toView(saved));
         }
-        // Process the backlog: everything already in the folder runs once, starting behind
-        // this response. Holding the POST until every stat, claim, and submission finished
-        // kept the client on a dead spinner — and, under a run flood, starved the response
-        // outright. A client that wants progress reads the runs feed, which is also where
-        // the sweep's cards come from.
+        // The backlog sweep runs behind the response: holding the POST until every stat,
+        // claim, and submission finished left the client on a dead spinner. Progress is the
+        // runs feed.
         sweepBehindTheResponse(saved);
         return ResponseEntity.accepted().body(toView(saved));
     }
 
-    /** Run the backlog sweep on its own thread; its progress lives in the runs feed. */
+    /**
+     * Run the backlog sweep on its own thread; its progress lives in the runs feed. The fresh
+     * thread has no security context, so run ids would mint unscoped and the caller's own runs feed
+     * would filter them out — the caller's name rides the MDC fallback the ownership check reads.
+     */
     private void sweepBehindTheResponse(Policy policy) {
+        User user = currentUserOrNull();
+        String principal = user == null ? null : user.getUsername();
         Thread.startVirtualThread(
                 () -> {
+                    if (principal != null) {
+                        MDC.put(PolicyEngine.AUDIT_PRINCIPAL_MDC_KEY, principal);
+                    }
                     try {
                         SweepOutcome outcome = policyRunner.run(policy, SweepKind.USER);
                         log.debug(
@@ -352,9 +344,11 @@ public class ProcessingFolderController {
             List<Path> files =
                     entries.filter(Files::isRegularFile)
                             .filter(path -> !path.getFileName().toString().startsWith("."))
+                            // Only files the pipeline can claim: anything else in the directory
+                            // is an ordinary file, not "queued", and gets no state at all.
+                            .filter(ProcessingFolderController::pipelineEligible)
                             .toList();
-            // The ledger is the per-file truth: processed in place leaves nothing else to
-            // read a file's state from.
+            // The ledger is the per-file truth for in-place processing.
             Path canonicalDir = FolderIdentities.canonicalDir(permitted);
             Map<String, ClaimState> states =
                     processedLedger.statesFor(
@@ -394,6 +388,12 @@ public class ProcessingFolderController {
         }
     }
 
+    /** Whether the disk pipeline would ever claim this file (see {@link #DISK_EXTENSIONS}). */
+    private static boolean pipelineEligible(Path path) {
+        String name = path.getFileName().toString().toLowerCase(Locale.ROOT);
+        return DISK_EXTENSIONS.stream().anyMatch(name::endsWith);
+    }
+
     /** The client-facing name of a ledger state; no row means the file is still waiting. */
     private static String stateLabel(ClaimState state) {
         if (state == null) {
@@ -407,9 +407,8 @@ public class ProcessingFolderController {
     }
 
     /**
-     * A storage-backed folder's files, joined to the ledger the same way the disk listing is. The
-     * stored files themselves are what the client already lists; this adds where each one stands in
-     * the folder's pipeline, keyed by the identity the storage source claims by.
+     * A storage-backed folder's files joined to the ledger, keyed by the identity the storage
+     * source claims by.
      */
     private List<MountedFileView> storageFiles(Policy policy) {
         UUID folderId = storageFolderId(policy);
@@ -531,9 +530,8 @@ public class ProcessingFolderController {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT, "'" + name + "' has no failure to retry");
         }
-        // LIGHT, not USER: the forgotten row makes this one file claimable as new work, and a
-        // light sweep leaves every other parked failure parked — retrying all of them is
-        // the user-invoked sweep's job, not this file's.
+        // LIGHT, not USER: only this file's parked failure is forgotten; every other parked
+        // failure stays parked.
         return ResponseEntity.accepted().body(policyRunner.run(policy, SweepKind.LIGHT));
     }
 
@@ -576,6 +574,13 @@ public class ProcessingFolderController {
                         HttpStatus.CONFLICT, "'" + name + "' has no original to restore");
             }
             policy = pauseForRevert(policy);
+            // The per-row check below cannot see a run mid-delivery, so restore only once the
+            // machine is fully quiet.
+            if (!policyRunner.quiesced(policy.id())) {
+                throw new ResponseStatusException(
+                        HttpStatus.CONFLICT,
+                        "the folder is processing right now - try again shortly");
+            }
             if (!restoreOriginal(policy, permitted, canonicalDir, name)) {
                 throw new ResponseStatusException(
                         HttpStatus.CONFLICT, "'" + name + "' is being processed right now");
@@ -614,15 +619,11 @@ public class ProcessingFolderController {
         try {
             Path canonicalDir = FolderIdentities.canonicalDir(permitted);
             policy = pauseForRevert(policy);
-            // Stop the machine before moving files: pending runs die here, and one already
-            // inside a tool call finishes that call — which is why a still-processing
-            // file is skipped by the restore below rather than raced.
+            // Stop the machine before moving files: pending runs die, and one mid-tool-call
+            // finishes that call — its file is skipped below rather than raced.
             policyRunner.cancelRuns(policy.id());
-            // Wait for the machine to actually stop: each run's claim settles at
-            // completion, and clearing the ledger before that lets a late settle re-add a
-            // row — one file reading done or failed after a reset. A run stuck inside a
-            // long tool call can outrun this wait; its file is skipped below and left for
-            // a later revert.
+            // Wait for claims to settle: clearing the ledger before that lets a late settle
+            // re-add a row. A run that outruns this wait leaves its file skipped below.
             policyRunner.awaitQuiesce(policy.id(), Duration.ofSeconds(10));
             List<String> names = List.of();
             Path originals = FolderOutputSink.originalsDir(canonicalDir);
@@ -643,10 +644,8 @@ public class ProcessingFolderController {
                     skipped++;
                 }
             }
-            // The whole processed history goes — done and failed rows alike — so the
-            // folder reads as untouched work. Settles from cancelled runs landed during the
-            // quiesce above and are wiped here with everything else; only a run that outran
-            // the wait can re-add a row.
+            // Done and failed rows alike go, so the folder reads as untouched work; only a
+            // run that outran the quiesce can re-add a row.
             processedLedger.clearPolicy(policy.id());
             return new RevertAllOutcome(restored, skipped);
         } catch (IOException e) {
@@ -656,9 +655,8 @@ public class ProcessingFolderController {
     }
 
     /**
-     * Pause the folder ahead of a restore: the watch trigger or a concurrent sweep would otherwise
-     * claim a restored original as new work the moment it lands. Resuming is the user's explicit
-     * act — that is when the restored files process again.
+     * Pause ahead of a restore, or the watch/sweep would claim a restored original as new work.
+     * Resuming is the user's explicit act.
      */
     private Policy pauseForRevert(Policy policy) {
         if (!policy.enabled()) {
@@ -670,10 +668,8 @@ public class ProcessingFolderController {
     }
 
     /**
-     * Move one archived original back over its processed file and forget its ledger row, so the
-     * file reads as unprocessed. The folder is paused before any restore, so nothing claims the
-     * file until the user resumes. False when the file is mid-run — the run's output would
-     * immediately stamp the restore — or when the name resolves outside the watched directory.
+     * Move one archived original back and forget its ledger row so the file reads unprocessed.
+     * False when the file is mid-run or the name resolves outside the watched directory.
      */
     private boolean restoreOriginal(Policy policy, Path permitted, Path canonicalDir, String name)
             throws IOException {
@@ -742,9 +738,8 @@ public class ProcessingFolderController {
     }
 
     /**
-     * The caller's processing folder already watching the requested place, if any. Paths compare
-     * normalized (and by the platform's own case rules), so the same directory spelled two ways is
-     * still one place.
+     * The caller's processing folder already watching the requested place, if any; paths compare
+     * normalized, by the platform's own case rules.
      */
     private Policy existingForPlace(SaveProcessingFolderRequest request, User user) {
         boolean onDisk = request.directory() != null && !request.directory().isBlank();
@@ -810,9 +805,8 @@ public class ProcessingFolderController {
     }
 
     /**
-     * Per-user ownership on top of the guard's team scoping: processing folders are personal, so a
-     * teammate's records are invisible here even though the engine treats them as team records.
-     * Login disabled (null owner) matches everything.
+     * Per-user scoping on top of the guard's team scoping: processing folders are personal. Login
+     * disabled (null owner) matches everything.
      */
     private static boolean ownedBy(Policy policy, User user) {
         if (user == null) {
@@ -823,10 +817,8 @@ public class ProcessingFolderController {
     }
 
     /**
-     * The caller, or null on an install with no accounts (desktop, single-user self-host), where
-     * there is no principal to demand and the local operator is the only user. Mirrors {@link
-     * PolicyAccessGuard#ownerForNewPolicy()}, which stamps a null owner in the same case —
-     * requiring a principal here would make the whole surface 401 on those installs.
+     * The caller, or null on an install with no accounts, where the local operator is the only user
+     * — requiring a principal would 401 the whole surface there.
      */
     private User currentUserOrNull() {
         if (!applicationProperties.getSecurity().isEnableLogin()) {
@@ -846,10 +838,9 @@ public class ProcessingFolderController {
     }
 
     /**
-     * A processing folder never consumes its input directory. The user owns that folder — their
-     * Downloads, a scanner drop — so the source is pinned to {@code track}: claim each file once
-     * per version through the ledger and leave it exactly where they put it. The disk source's
-     * default mode deletes processed files, which must never be what a processing folder does.
+     * Pinned to {@code track}: claim each file once per version and leave it where the user put it
+     * — the disk source's default mode deletes processed files, which a processing folder must
+     * never do.
      */
     private static Map<String, Object> diskSourceOptions(String directory) {
         return Map.of(
@@ -857,17 +848,16 @@ public class ProcessingFolderController {
                 directory.trim(),
                 "mode",
                 "track",
-                // Stat identity, not hash: the first sweep would otherwise content-hash every
-                // file in the directory before a single run starts, and the user is watching.
-                // A re-touched file reprocessing is the right trade for a folder someone owns.
+                // Stat identity, not hash: hashing would touch every file before the first run
+                // starts. A re-touched file reprocessing is the right trade.
                 "identity",
                 "stat",
                 "recursive",
                 false,
-                // Only documents the pipeline can accept: a Downloads folder is full of zips and
-                // installers, and each one would otherwise burn sweep budget on a doomed run.
+                // Only documents the pipeline accepts: zips and installers would burn sweep
+                // budget on doomed runs.
                 "extensions",
-                List.of(".pdf"),
+                DISK_EXTENSIONS,
                 "limit",
                 DISK_SWEEP_LIMIT);
     }
@@ -880,15 +870,10 @@ public class ProcessingFolderController {
     }
 
     /**
-     * Where results go. Both kinds process in place: a storage-backed folder writes new versions
-     * over its stored files, and a disk-backed one replaces the watched file with its result — the
-     * folder's contents simply become their processed selves. The sink records each replacement in
-     * the ledger at the result's version, and the input source settles its claim the same way, so a
-     * sweep never mistakes the folder's own output for new work.
-     *
-     * <p>Writing to disk rather than app storage is what makes this work on an install with no
-     * accounts and no file storage — a desktop app, where the server is the user's own machine and
-     * there is nothing to store a file against.
+     * Both kinds process in place — the folder's contents become their processed selves. The sink
+     * records each replacement in the ledger at the result's version and the input settles its
+     * claim the same way, so a sweep never mistakes the folder's own output for new work. Disk
+     * output is what works on an install with no accounts and no file storage.
      */
     private OutputSpec outputSpecFor(SaveProcessingFolderRequest request, Folder folder) {
         Map<String, Object> options =
@@ -902,18 +887,11 @@ public class ProcessingFolderController {
         return new OutputSpec("folder", options);
     }
 
-    private ProcessingFolderView toView(Policy policy) {
-        return toView(policy, 0, 0, 0, 0);
-    }
-
     /**
-     * What the folder watches comes from its source, never from its output. Reading it off the
-     * output made a disk-backed folder advertise the subdirectory its results go into as its own
-     * address, and a client that groups by folderId pick up the output folder instead of the
-     * watched one.
+     * What the folder watches comes from its source, never its output — the output may name a
+     * results subdirectory, which is not the folder's address.
      */
-    private ProcessingFolderView toView(
-            Policy policy, int startedRuns, int alreadyProcessed, int parked, int retried) {
+    private ProcessingFolderView toView(Policy policy) {
         Map<String, Object> output = new HashMap<>(policy.output().options());
         output.remove(SURFACE_OPTION);
         String sourceId = soleSourceId(policy);
@@ -927,10 +905,6 @@ public class ProcessingFolderController {
                 policy.name(),
                 policy.enabled(),
                 policy.steps(),
-                output,
-                startedRuns,
-                alreadyProcessed,
-                parked,
-                retried);
+                output);
     }
 }

@@ -41,7 +41,6 @@ import stirling.software.proprietary.policy.model.PipelineDefinition;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.PolicyInputs;
 import stirling.software.proprietary.policy.model.PolicyRun;
-import stirling.software.proprietary.policy.model.PolicyRunStatus;
 import stirling.software.proprietary.policy.model.WaitState;
 import stirling.software.proprietary.policy.output.OutputDelivery;
 import stirling.software.proprietary.policy.output.PolicyOutputResolver;
@@ -167,11 +166,8 @@ public class PolicyEngine {
     }
 
     /**
-     * As above, additionally pacing execution through {@code admission}: the run is registered and
-     * visible immediately (pending), but its work only proceeds while holding a permit. A sweep
-     * passes one gate for all its runs so a folderful of files executes a few at a time — the
-     * pipeline's slowest tool serializes them anyway, and paced runs finish steadily instead of all
-     * sitting in-flight until the end. Null means ungated.
+     * As above, pacing execution through {@code admission}: runs register immediately (pending) but
+     * execute only while holding a permit. Null means ungated.
      */
     public PolicyRunHandle runPolicy(
             Policy policy,
@@ -314,8 +310,7 @@ public class PolicyEngine {
 
     /**
      * Cancel every non-terminal run of one policy; returns how many transitioned. Pending runs die
-     * before they start; a run already inside a tool call finishes that call (cancellation does not
-     * interrupt it) and then settles as cancelled.
+     * before starting; one inside a tool call finishes that call, then settles as cancelled.
      */
     public int cancelAllFor(String policyId) {
         int cancelled = 0;
@@ -357,7 +352,7 @@ public class PolicyEngine {
                 }
                 PolicyExecutionResult result =
                         stepExecutor.execute(run.getDefinition(), inputs, listener);
-                if (run.getStatus() == PolicyRunStatus.CANCELLED) {
+                if (!run.beginDelivery()) {
                     // Cancelled while the steps ran: discard the produced files —
                     // delivering would stamp results over files being restored right now.
                     taskManager.addNote(runId, "Cancelled before delivery; results discarded");
@@ -550,7 +545,7 @@ public class PolicyEngine {
      * controller audit aspect on request threads). We reuse it to carry the billing identity onto
      * the policy worker thread.
      */
-    private static final String AUDIT_PRINCIPAL_MDC_KEY = "auditPrincipal";
+    public static final String AUDIT_PRINCIPAL_MDC_KEY = "auditPrincipal";
 
     /**
      * The username to bill an ad-hoc run to, captured on the submitting (request) thread. Prefers

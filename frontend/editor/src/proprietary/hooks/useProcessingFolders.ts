@@ -14,7 +14,10 @@ import {
   type ProcessingFolder,
 } from "@app/services/processingFolderApi";
 import { useFileHandler } from "@app/hooks/useFileHandler";
-import { deliverSweepResults } from "@app/services/processingRunDelivery";
+import {
+  currentRunIds,
+  deliverSweepResults,
+} from "@app/services/processingRunDelivery";
 import { folderKind, type FolderRecord } from "@app/types/folder";
 // The core stub declares the contract this shadows; import it from @core
 // explicitly, since @app/hooks/useProcessingFolders resolves back to this file.
@@ -26,8 +29,7 @@ import type {
   ProcessingRunInfo,
 } from "@core/hooks/useProcessingFolders";
 
-// Consumers import the contract's types from @app, which resolves here in
-// builds that carry this shadow — so it must re-export what the stub declares.
+// Consumers import the contract's types from @app, which resolves here — re-export them.
 export type {
   MountedFileState,
   ProcessingRecordSummary,
@@ -36,11 +38,8 @@ export type {
   ProcessingRunInfo,
 } from "@core/hooks/useProcessingFolders";
 
-/**
- * One shared list for every consumer. The files page calls this hook once per folder row, on top of
- * the wizard, so per-instance state would mean one request per row and a mutation in one row
- * leaving the others stale until they remounted.
- */
+/** One shared list for every consumer: the files page calls this once per folder row, so
+ *  per-instance state would mean a request per row and stale siblings after a mutation. */
 let folders: ProcessingFolder[] = [];
 let inFlight: Promise<void> | null = null;
 const listeners = new Set<() => void>();
@@ -55,10 +54,8 @@ function getSnapshot(): ProcessingFolder[] {
   return folders;
 }
 
-/**
- * Load the list, sharing one request across concurrent callers. `force` bypasses an existing
- * in-flight read so a mutation always observes its own effect.
- */
+/** Load the list, sharing one request across concurrent callers; `force` bypasses an
+ *  in-flight read so a mutation observes its own effect. */
 function load(force = false): Promise<void> {
   if (inFlight && !force) return inFlight;
   const request = fetchProcessingFolders()
@@ -66,8 +63,7 @@ function load(force = false): Promise<void> {
       folders = next;
     })
     .catch(() => {
-      // Storage or login disabled, or not authenticated: nothing to show, and the files page
-      // still works without processing folders.
+      // Storage or login off, or unauthenticated: the files page works without these.
       folders = [];
     })
     .finally(() => {
@@ -78,25 +74,16 @@ function load(force = false): Promise<void> {
   return request;
 }
 
-/**
- * A directory as a comparison key. A mount and its processing record are
- * created from the same picker string, but one side may carry a trailing
- * separator the other lost to trimming.
- */
+/** A directory as a comparison key: one side may carry a trailing separator the other
+ *  lost to trimming. */
 function directoryKey(directory: string): string {
   return directory.trim().replace(/[/\\]+$/, "");
 }
 
 /**
- * Processing folders for the files page: which folders run a pipeline, and the actions to attach,
- * detach, or re-run one. The record's identity is kind-shaped — a server folder is matched by its
- * storage folderId, a mounted folder by the directory it mirrors — so the same folder row finds its
- * processing state whichever side of that split it lives on. Browser-owned virtual folders have no
- * server record and are never processing folders. Backed by `/api/v1/processing-folders`, which
- * composes the source + policy pair.
- *
- * Every mutation reloads rather than patching locally, so the list always reflects what the server
- * actually composed — and because the list is shared, every consumer sees it at once.
+ * Processing folders for the files page. Record identity is kind-shaped — a server folder
+ * matches by storage folderId, a mount by the directory it mirrors. Every mutation reloads
+ * rather than patching locally, so the shared list reflects what the server composed.
  */
 export function useProcessingFolders(): ProcessingFoldersApi {
   const current = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
@@ -180,6 +167,8 @@ export function useProcessingFolders(): ProcessingFoldersApi {
       // only a folder with no pair composes a fresh classification default.
       const paused = recordFor(folder);
       if (paused && !paused.enabled) {
+        // Captured before the resume so its delivery ignores the feed's older runs.
+        const baseline = await currentRunIds(paused.id);
         await saveProcessingFolder({
           id: paused.id,
           folderId: paused.folderId ?? undefined,
@@ -188,10 +177,12 @@ export function useProcessingFolders(): ProcessingFoldersApi {
           steps: paused.steps,
           output: paused.output,
         });
-        // Resume sweeps behind the response; a mount's results land on disk
-        // where nothing shows them, so pull them into the workbench.
+        // Resume sweeps behind the response; pull a mount's on-disk results into the
+        // workbench.
         if (folderKind(folder) === "local") {
-          void deliverSweepResults(paused.id, null, addFiles);
+          void deliverSweepResults(paused.id, null, addFiles, {
+            excludeRunIds: baseline,
+          });
         }
         await load(true);
         return;
@@ -205,10 +196,8 @@ export function useProcessingFolders(): ProcessingFoldersApi {
               { operation: CLASSIFY_OPERATION, parameters: {}, assets: {} },
             ],
           });
-          // The backlog sweep runs behind the create response, so there is no
-          // run count to wait on; the delivery stops on its own once the runs
-          // settle (or none appear). Results land on disk where nothing shows
-          // them, so pull them into the workbench as they settle.
+          // The sweep runs behind the create response — no run count to wait on; pull
+          // the on-disk results into the workbench as they settle.
           void deliverSweepResults(saved.id, null, addFiles);
           break;
         }
@@ -222,8 +211,7 @@ export function useProcessingFolders(): ProcessingFoldersApi {
     [recordFor, addFiles],
   );
 
-  // Pause, never delete: the pair keeps its processed-history, so resuming
-  // picks up only what is genuinely new instead of re-running everything.
+  // Pause, never delete: the kept history means resuming picks up only what is new.
   const disable = useCallback(
     async (folder: FolderRecord) => {
       const existing = recordFor(folder);
@@ -305,11 +293,12 @@ export function useProcessingFolders(): ProcessingFoldersApi {
       const existing = recordFor(folder);
       if (!existing) return;
       const outcome = await sweepProcessingFolder(existing.id);
-      // A mount's results land on disk where nothing shows them; open them
-      // into the workbench as they settle. A storage folder's results replace
-      // its files in place, already visible where the user is looking.
+      // A mount's results land on disk where nothing shows them; a storage folder's
+      // replace in place, already visible.
       if (folderKind(folder) === "local" && outcome.runIds.length > 0) {
-        void deliverSweepResults(existing.id, outcome.runIds.length, addFiles);
+        void deliverSweepResults(existing.id, outcome.runIds.length, addFiles, {
+          includeRunIds: new Set(outcome.runIds),
+        });
       }
     },
     [recordFor, addFiles],

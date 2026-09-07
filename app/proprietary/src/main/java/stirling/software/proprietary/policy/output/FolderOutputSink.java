@@ -84,11 +84,9 @@ public class FolderOutputSink implements PolicyOutputSink {
         sweepStaleTmp(tmpDir);
 
         boolean replace = Boolean.parseBoolean(String.valueOf(spec.options().get(REPLACE_OPTION)));
-        // Processing in place means the file becomes its processed self, name included: a
-        // step that renames its output (a redact, a watermark) must not drop the result
-        // beside the watched file it was meant to replace. The input's own name wins
-        // whenever the run maps one input to one output; a splitting pipeline has no single
-        // place to stand and lands its outputs alongside instead.
+        // In place means name included: a renaming step must not drop its result beside the
+        // watched file. The input's name wins for one-in-one-out; a splitting pipeline lands
+        // its outputs alongside instead.
         String inputName =
                 delivery.inputs().primary().size() == 1
                         ? delivery.inputs().primary().get(0).getFilename()
@@ -167,18 +165,20 @@ public class FolderOutputSink implements PolicyOutputSink {
             throws IOException {
         if (replace) {
             Path target = dir.resolve(name);
-            if (delivery.policyId() != null) {
-                processedLedger.recordOutput(
-                        delivery.policyId(), target.toString(), gate, contentHash);
-            }
+            // Archive before the ledger row flips DONE: a restore that reads DONE must find
+            // the original already safe in the archive, never mid-move.
             Path archived = archiveOriginal(dir, target);
             try {
+                if (delivery.policyId() != null) {
+                    processedLedger.recordOutput(
+                            delivery.policyId(), target.toString(), gate, contentHash);
+                }
                 Files.move(
                         staged,
                         target,
                         StandardCopyOption.ATOMIC_MOVE,
                         StandardCopyOption.REPLACE_EXISTING);
-            } catch (IOException failed) {
+            } catch (IOException | RuntimeException failed) {
                 if (archived != null) {
                     try {
                         Files.move(archived, target, StandardCopyOption.ATOMIC_MOVE);
@@ -220,10 +220,9 @@ public class FolderOutputSink implements PolicyOutputSink {
     }
 
     /**
-     * The folder's workspace root, created hidden: the dot prefix hides it on POSIX filesystems and
-     * in the app's own listings, and the DOS attribute hides it from Windows Explorer, where a dot
-     * name alone is visible. Best-effort {@code -} a filesystem without DOS attributes just keeps
-     * the dot.
+     * The folder's workspace root, created hidden: a dot prefix for POSIX and the app's own
+     * listings, the DOS attribute for Explorer. Best-effort — a filesystem without DOS attributes
+     * keeps just the dot.
      */
     private static Path stirlingDir(Path dir) throws IOException {
         Path root = dir.resolve(".stirling");
@@ -238,10 +237,8 @@ public class FolderOutputSink implements PolicyOutputSink {
 
     /**
      * Keep the true original before a replace stamps over it: the watched file moves into {@code
-     * .stirling/originals} under its own name, once — a re-run of an already- processed file never
-     * overwrites the archived first version, so a revert always returns exactly what the user put
-     * in. No file at the target (a brand-new name) or a failed rename is not fatal: the replacement
-     * still lands, there is just nothing to revert to.
+     * .stirling/originals} once — a re-run never overwrites the archived first version. No file at
+     * the target or a failed rename is not fatal; there is just nothing to revert to.
      */
     private static Path archiveOriginal(Path dir, Path target) {
         if (!Files.exists(target)) {

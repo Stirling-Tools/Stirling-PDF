@@ -605,8 +605,8 @@ export default function FileManagerView() {
   );
 
   // A working folder lists its real contents; each file wears its pipeline
-  // state (ready / processing / waiting), a state filter narrows the listing,
-  // and a not-yet-processed file is inert until its result exists.
+  // state (ready / processing / waiting) and a state filter narrows the listing.
+  // Files the pipeline never claims carry no state at all.
   const processingApi = useProcessingFolders();
   const currentProcessing = currentFolder
     ? processingApi.stateFor(currentFolder)
@@ -670,7 +670,7 @@ export default function FileManagerView() {
     "all",
   );
   const diskStateFor = useCallback(
-    (name: string): DiskFileState => fileStates.get(name) ?? "waiting",
+    (name: string): DiskFileState | undefined => fileStates.get(name),
     [fileStates],
   );
   // Counts for the filter chips, from the same states the badges wear.

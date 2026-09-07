@@ -9,11 +9,15 @@ import {
   CLASSIFY_OPERATION,
   cancelProcessingRuns,
   fetchDownloadsSuggestion,
+  fetchProcessingFolders,
   fetchMountedFiles,
   saveProcessingFolder,
   type DownloadsSuggestion,
 } from "@app/services/processingFolderApi";
-import { deliverSweepResults } from "@app/services/processingRunDelivery";
+import {
+  currentRunIds,
+  deliverSweepResults,
+} from "@app/services/processingRunDelivery";
 import {
   mergeRunsIntoCards,
   SweepRunWall,
@@ -35,17 +39,10 @@ interface DownloadsProcessingWizardProps {
 }
 
 /**
- * Offers to process the PDFs already in the user's Downloads folder, then shows what it is doing.
- *
- * <p>Renders as a button; the offer opens on click. The server names its own Downloads directory
- * (the browser cannot see the machine's paths) and counts what is waiting; approving composes a
- * processing folder over it. The first sweep is capped server-side, and anything beyond the cap is
- * picked up by later sweeps rather than dropped.
- *
- * <p>While the sweep runs, the dialog is a wall of the actual documents — one card per file the
- * sweep took on, built from the runs feed itself so it never promises a file the sweep skipped.
- * Each card lights up as its run starts and flips to the document type the classifier discovered,
- * read from the delivered result's own metadata.
+ * Offers to process the PDFs already in the user's Downloads folder, then shows what it is
+ * doing: the server names its own Downloads directory and counts what waits; approving
+ * composes a processing folder over it. While the sweep runs the dialog is a wall of cards
+ * built from the runs feed itself, so it never promises a file the sweep skipped.
  */
 export function DownloadsProcessingWizard({
   active = true,
@@ -74,14 +71,10 @@ export function DownloadsProcessingWizard({
   const { addFiles } = useFileHandler();
   const { mountLocalFolder } = useFolders();
 
-  // Only offer where it can actually work: Downloads must exist, be a permitted folder root, and
-  // have something in it worth processing.
-  //
-  // Asked repeatedly rather than once, because the window can open before the backend is
-  // reachable — on a desktop install the app and its bundled server start together, and the UI
-  // always wins that race. A single attempt would fail on every cold start and the offer would
-  // simply never appear. Gives up after a bounded wait so an install where the answer is a
-  // genuine "no" stops asking.
+  // Only offer where it can work: Downloads must exist, be permitted, and hold something.
+  // Asked repeatedly because the window can open before the bundled backend is reachable —
+  // a single attempt would fail on every desktop cold start. Gives up after a bounded wait
+  // so a genuine "no" stops asking.
   useEffect(() => {
     if (!active) return;
     let cancelled = false;
@@ -94,17 +87,16 @@ export function DownloadsProcessingWizard({
           if (cancelled) return;
           if (next.available && next.pdfCount > 0) {
             setSuggestion(next);
-            // Warm the AI engine while the user reads the offer, so the first
-            // classify pays no cold start. Best-effort; the run would warm it
-            // anyway, just visibly slower.
+            // Warm the AI engine while the user reads the offer, so the first classify
+            // pays no cold start. Best-effort.
             void apiClient.get("/api/v1/ai/health").catch(() => {});
             return;
           }
           // A definite answer: Downloads is missing, not permitted, or empty. Nothing to wait for.
         })
         .catch(() => {
-          // Backend not up yet, storage/folder access off, or not authenticated. Only the first of
-          // those resolves itself, so retry a while before concluding there is no offer.
+          // Backend not up yet, access off, or unauthenticated; only the first resolves
+          // itself, so retry a while.
           if (cancelled || (attempts += 1) >= 20) return;
           timer = setTimeout(ask, 1500);
         });
@@ -149,8 +141,9 @@ export function DownloadsProcessingWizard({
    * the shared delivery's progress onto the card wall and the counts line.
    */
   const trackRuns = useCallback(
-    async (policyId: string) => {
+    async (policyId: string, excludeRunIds: ReadonlySet<string>) => {
       await deliverSweepResults(policyId, null, addFiles, {
+        excludeRunIds,
         isCancelled: () => cancelRequested.current,
         onProgress: (progress) => {
           setProcessed(progress.processed);
@@ -158,14 +151,11 @@ export function DownloadsProcessingWizard({
           setOpened(progress.opened);
           if (progress.stalled) setStalled(true);
         },
-        // The wall is built from the runs feed itself: one card per run the
-        // sweep actually started, appearing on the first poll and switching
-        // state as its run moves. Nothing here invents a file.
+        // One card per run the sweep actually started, switching state as its run moves.
         onRuns: (runs) => {
           setCards((prev) => mergeRunsIntoCards(prev, runs));
         },
-        // The reveal: read the discovered document type off the delivered
-        // result's own metadata and flip it onto the card.
+        // Read the discovered document type off the delivered result's metadata.
         onSettled: (settlement) => {
           const name = settlement.fileName?.trim();
           if (!name || settlement.failed || settlement.files.length === 0) {
@@ -192,10 +182,16 @@ export function DownloadsProcessingWizard({
     cancelRequested.current = false;
     setPhase("working");
     try {
+      // A folder may already exist over Downloads (the create then adopts it as-is);
+      // capture its current runs so the delivery below ignores that history.
+      const priorFolder = (await fetchProcessingFolders().catch(() => [])).find(
+        (candidate) => candidate.directory === suggestion.directory,
+      );
+      const baseline = priorFolder
+        ? await currentRunIds(priorFolder.id)
+        : new Set<string>();
       // Born paused: the offer's promise is one sweep over what is already there.
-      // Creation sweeps regardless of the flag (enabled only gates the watch), so
-      // the trick still runs - but nothing keeps opening files as downloads land,
-      // and the folder the user is left with reads as paused from the start.
+      // Creation sweeps regardless of the flag; enabled only gates the watch.
       const folder = await saveProcessingFolder({
         directory: suggestion.directory,
         enabled: false,
@@ -203,19 +199,14 @@ export function DownloadsProcessingWizard({
       });
       setActiveFolderId(folder.id);
       if (cancelRequested.current) {
-        // Cancelled while the sweep was still being composed - a large folder's
-        // scan takes a while, and the runs only exist now. Stop them here, or a
-        // cancel clicked during the scan would be silently outlived.
+        // Cancelled during the scan: the runs only exist now, so stop them here or the
+        // cancel would be silently outlived.
         await cancelProcessingRuns(folder.id).catch(() => {});
         return;
       }
-      // Mount the directory as a local folder too, so Downloads exists in the
-      // file manager as a real folder — the processing record attaches to it
-      // there — rather than results appearing from nowhere. Only where this
-      // build can actually read the directory (the desktop app, where the
-      // server's Downloads IS this machine's): a plain browser mounting the
-      // server's path would show a folder that is forever empty. Idempotent,
-      // and best-effort: the sweep's results matter more than the bookmark.
+      // Mount the directory so Downloads exists in the file manager — only where this
+      // build can read it (desktop); a plain browser would show a forever-empty folder.
+      // Idempotent and best-effort.
       if (canListDirectory) {
         const segments = suggestion.directory.split(/[/\\]/).filter(Boolean);
         await mountLocalFolder(
@@ -223,14 +214,11 @@ export function DownloadsProcessingWizard({
           segments[segments.length - 1] ?? suggestion.directory,
         ).catch(() => {});
       }
-      // The new folder was created outside the hook's own actions; refresh the shared list so the
-      // files page and any other consumer pick it up without a reload.
+      // Created outside the hook's own actions; refresh the shared list.
       void refreshProcessingFolders();
-      // The sweep runs behind the create response; the wall builds itself from the
-      // runs feed and the delivery stops when the runs settle (or none appear).
-      await trackRuns(folder.id);
-      // Close out from the folder's own per-file states - the one place that knows
-      // how much was already done versus parked when nothing new ran.
+      // The sweep runs behind the create response; delivery stops once the runs settle.
+      await trackRuns(folder.id, baseline);
+      // Close out from the folder's own per-file states.
       const states = await fetchMountedFiles(folder.id).catch(() => []);
       setSummary({
         done: states.filter((f) => f.state === "done").length,
@@ -282,8 +270,7 @@ export function DownloadsProcessingWizard({
   return (
     <Modal
       open
-      // Working stays dismissible: closing hides the modal while the sweep
-      // carries on (the folder's own view tracks it); reopening shows progress.
+      // Closing hides the modal while the sweep carries on; reopening shows progress.
       onClose={phase === "working" ? () => setOpen(false) : close}
       width={phase === "asking" ? "sm" : "lg"}
       title={

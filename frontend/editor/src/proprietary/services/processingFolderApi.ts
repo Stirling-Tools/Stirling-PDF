@@ -1,8 +1,6 @@
 /**
- * Client for processing folders (`/api/v1/processing-folders`) — a storage
- * folder with a pipeline attached, so any file added to it is processed. The
- * backend composes the source + policy pair behind this route; nothing here
- * deals in policies or sources directly.
+ * Client for `/api/v1/processing-folders`: a folder with a pipeline attached.
+ * The backend composes the source + policy pair behind the route.
  */
 
 import apiClient from "@app/services/apiClient";
@@ -27,20 +25,10 @@ export interface ProcessingFolder {
   enabled: boolean;
   steps: ProcessingFolderStep[];
   output: Record<string, unknown>;
-  /** Runs the creating sweep started; 0 means there was nothing new to process. */
-  startedRuns: number;
-  /** Files the creating sweep skipped because this folder had already processed them. */
-  alreadyProcessed: number;
-  /** Files skipped because an earlier run failed on them and they stayed parked. */
-  parked: number;
-  /** Files the sweep took on again after an earlier failure. */
-  retried: number;
 }
 
-/**
- * Exactly one of `folderId` (a folder in app storage) or `directory` (a directory on the server's
- * disk — on a desktop or self-hosted install, the user's own machine) says where a folder watches.
- */
+/** Exactly one of `folderId` (app storage) or `directory` (server-disk path) says where a
+ *  folder watches. */
 export interface SaveProcessingFolderRequest {
   id?: string | null;
   folderId?: string;
@@ -58,10 +46,7 @@ export async function fetchProcessingFolders(): Promise<ProcessingFolder[]> {
   return res.data ?? [];
 }
 
-/**
- * Create or update one. Creating immediately processes what is already in the
- * folder; the backend's ledger keeps already-processed files from re-running.
- */
+/** Create or update one; creating sweeps the existing backlog behind the response. */
 export async function saveProcessingFolder(
   request: SaveProcessingFolderRequest,
 ): Promise<ProcessingFolder> {
@@ -101,11 +86,7 @@ export async function deleteProcessingFolder(id: string): Promise<void> {
   await apiClient.delete(`/api/v1/processing-folders/${id}`);
 }
 
-/**
- * The default pipeline a folder gets when it is turned into a processing
- * folder: classification, matching the Classification policy. Outputs replace
- * the file in place as a new version so the folder does not fill with copies.
- */
+/** The default pipeline: classification. Outputs replace the file in place. */
 export function classificationDefaults(
   folderId: string,
 ): SaveProcessingFolderRequest {
@@ -125,10 +106,7 @@ export interface DownloadsSuggestion {
   limit: number;
 }
 
-/**
- * Where the server's own Downloads directory is and how many PDFs sit in it.
- * The browser cannot see the machine's paths, so the offer is built from this.
- */
+/** The server's Downloads path and PDF count — the browser cannot see machine paths. */
 export async function fetchDownloadsSuggestion(): Promise<DownloadsSuggestion> {
   const res = await apiClient.get<DownloadsSuggestion>(
     "/api/v1/processing-folders/downloads-suggestion",
@@ -157,9 +135,8 @@ export interface ProcessingFolderRun {
 export async function fetchProcessingFolderRuns(
   policyId: string,
 ): Promise<ProcessingFolderRun[]> {
-  // Filtered server-side: delivery polls this every second, and the
-  // unfiltered list carries every policy's runs. The client-side filter stays
-  // as a guard against a backend that ignores the parameter.
+  // Filtered server-side (this polls every second); the client-side filter guards
+  // against a backend that ignores the parameter.
   const res = await apiClient.get<
     (ProcessingFolderRun & { policyId?: string })[]
   >("/api/v1/policies/runs", { params: { policyId } });
@@ -172,15 +149,10 @@ function isAbsolutePath(value: string): boolean {
 }
 
 /**
- * Fetch a run output's bytes as a File, ready to hand to the workbench.
- *
- * A storage-backed run puts the stored file's own id in `fileId`, so it downloads from the storage
- * endpoint. The job endpoint (`/api/v1/general/files/{id}`) keys off job-file UUIDs and rejects a
- * stored-file id outright — the two share a field name but not an id space.
- *
- * A disk-backed run delivers to the filesystem instead: its `fileId` is synthetic (nothing serves
- * it) and `fileName` is the output's absolute path. Only a build that can see the filesystem — the
- * desktop app, where the server is this machine — can pick those up, by reading the path directly.
+ * Fetch a run output's bytes as a File. A storage-backed run's `fileId` is a stored-file id
+ * (the job-files endpoint rejects it — same field name, different id space). A disk-backed
+ * run's `fileId` is synthetic and `fileName` is an absolute output path, readable only where
+ * the build can see the filesystem (desktop).
  */
 export async function fetchRunOutputFile(
   output: ProcessingRunOutput,
@@ -219,11 +191,7 @@ export interface MountedFile {
   hasOriginal?: boolean;
 }
 
-/**
- * A processing folder's files with their per-file pipeline state. A disk-backed
- * folder reads the directory itself — mounted, not mirrored — and a
- * storage-backed one lists its stored files.
- */
+/** A processing folder's files with their per-file pipeline state. */
 export async function fetchMountedFiles(id: string): Promise<MountedFile[]> {
   const res = await apiClient.get<MountedFile[]>(
     `/api/v1/processing-folders/${id}/files`,
@@ -231,10 +199,7 @@ export async function fetchMountedFiles(id: string): Promise<MountedFile[]> {
   return res.data ?? [];
 }
 
-/**
- * Retry one failed file: its parked failure is forgotten and a light sweep
- * runs it again now, leaving every other parked failure parked.
- */
+/** Retry one failed file now; every other parked failure stays parked. */
 export async function retryMountedFile(
   id: string,
   name: string,
@@ -244,10 +209,7 @@ export async function retryMountedFile(
   });
 }
 
-/**
- * Restore a file's archived pre-processing original, discarding its processed
- * version. The restored file settles as done, so the folder holds it as-is.
- */
+/** Restore a file's archived original, discarding its processed version. */
 export async function revertMountedFile(
   id: string,
   name: string,
@@ -263,10 +225,7 @@ export interface RevertAllOutcome {
   skipped: number;
 }
 
-/**
- * Restore every archived original in the folder at once. Files mid-run are
- * skipped rather than raced; only the watched directory's own files move.
- */
+/** Restore every archived original at once; files mid-run are skipped, not raced. */
 export async function revertAllMountedFiles(
   id: string,
 ): Promise<RevertAllOutcome> {

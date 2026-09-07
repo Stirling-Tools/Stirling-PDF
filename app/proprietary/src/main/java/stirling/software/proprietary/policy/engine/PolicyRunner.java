@@ -48,10 +48,8 @@ public class PolicyRunner {
     private final ApplicationProperties applicationProperties;
 
     /**
-     * One admission gate per sweep: every run still starts (and is visible) immediately, but only
-     * this many execute at once. A sweep fans out one run per file, and a folderful dispatched all
-     * at once just queues at the pipeline's slowest tool — same total time, nothing visibly done
-     * until the end. Paced, completions arrive steadily from the first file onward.
+     * One admission gate per sweep: every run is visible immediately, but only this many execute at
+     * once, so completions arrive steadily from the first file onward.
      */
     private Semaphore sweepAdmission() {
         int concurrency = applicationProperties.getPolicies().getSweepConcurrency();
@@ -164,16 +162,20 @@ public class PolicyRunner {
         return policyEngine.submit(definition, inputs, listener);
     }
 
+    /** Whether nothing of the policy is running or mid-settle — safe to move its files. */
+    public boolean quiesced(String policyId) {
+        return !policyEngine.hasActiveRuns(policyId) && !processedLedger.anyInFlight(policyId);
+    }
+
     /** Cancel every non-terminal run of the policy (see {@link PolicyEngine#cancelAllFor}). */
     public int cancelRuns(String policyId) {
         return policyEngine.cancelAllFor(policyId);
     }
 
     /**
-     * Wait until every run of the policy has settled its claim: no run outside a terminal state,
-     * and no ledger row still in flight (a cancelled run flips terminal at once but settles only
-     * when its task ends). False when the wait timed out — a run inside a long tool call can
-     * outlive any reasonable request budget.
+     * Wait until every run of the policy has settled its claim: none outside a terminal state, no
+     * ledger row in flight. False on timeout — a run inside a long tool call can outlive any
+     * reasonable request budget.
      */
     public boolean awaitQuiesce(String policyId, Duration timeout) {
         long deadline = System.currentTimeMillis() + timeout.toMillis();
@@ -270,12 +272,9 @@ public class PolicyRunner {
                                                     run.getErrorCode());
                             if (cancelled || neverAdmitted) {
                                 // Neither is a verdict on the file: cancellation is the
-                                // user's intent, and a queue-full rejection means nothing was
-                                // ever attempted. Settle the claim, then drop the row, so the
-                                // file reads as queued rather than parked-failed — the next
-                                // sweep or reconcile pass simply takes it again. This also
-                                // heals a revert's reset when a run outlives the quiesce
-                                // wait: the late settle lands and is immediately forgotten.
+                                // user's intent, and queue-full means nothing was attempted.
+                                // Settle, then drop the row, so the file reads as queued and
+                                // the next sweep takes it again.
                                 onComplete.accept(false);
                                 if (fileIdentity != null) {
                                     processedLedger.forget(policy.id(), fileIdentity);

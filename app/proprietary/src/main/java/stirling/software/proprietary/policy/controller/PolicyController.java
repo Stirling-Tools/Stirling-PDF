@@ -392,7 +392,8 @@ public class PolicyController {
      * Assign owner + owning team server-side. Create stamps the current user and their team; update
      * preserves the existing owner and team after verifying the policy belongs to the caller's team
      * — so the client can neither forge ownership/team on create nor reach across teams on update
-     * (a policy in another team reads as not-found).
+     * (a policy in another team reads as not-found). The surface is stamped the same way: this
+     * route writes only policy-surface rows.
      */
     private Policy resolveOwnership(Policy incoming) {
         String id = incoming.id();
@@ -402,16 +403,19 @@ public class PolicyController {
                 if (!accessiblePolicySurface(existing)) {
                     throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No policy: " + id);
                 }
-                return withOwnerAndTeam(incoming, existing.owner(), existing.teamId());
+                return withOwnerAndTeam(
+                        incoming, existing.owner(), existing.teamId(), existing.surface());
             }
         }
         return withOwnerAndTeam(
                 incoming,
                 policyAccessGuard.ownerForNewPolicy(),
-                policyAccessGuard.teamForNewPolicy());
+                policyAccessGuard.teamForNewPolicy(),
+                Policy.SURFACE_POLICY);
     }
 
-    private static Policy withOwnerAndTeam(Policy policy, String owner, Long teamId) {
+    private static Policy withOwnerAndTeam(
+            Policy policy, String owner, Long teamId, String surface) {
         return new Policy(
                 policy.id(),
                 policy.name(),
@@ -425,7 +429,7 @@ public class PolicyController {
                 policy.outputIds(),
                 teamId,
                 policy.editor(),
-                policy.surface());
+                surface);
     }
 
     /** Output secrets never leave the server: reads return the redaction sentinel instead. */

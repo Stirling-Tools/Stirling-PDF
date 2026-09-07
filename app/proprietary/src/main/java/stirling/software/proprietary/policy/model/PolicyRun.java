@@ -47,6 +47,9 @@ public class PolicyRun {
 
     private volatile PolicyRunStatus status = PolicyRunStatus.PENDING;
 
+    /** Set once delivery starts; a delivering run can no longer be cancelled. */
+    private boolean delivering;
+
     /** 1-based index of the step currently running (0 before the run starts). */
     private volatile int currentStep = 0;
 
@@ -148,9 +151,22 @@ public class PolicyRun {
         touch();
     }
 
-    /** Cancels unless already terminal; returns whether it transitioned. */
+    /**
+     * Claim the delivery phase: false when already cancelled, so the results must be discarded.
+     * Once claimed, {@link #cancel()} refuses — a run writing its outputs finishes them, and a
+     * revert's quiesce waits for it instead of racing the writes.
+     */
+    public synchronized boolean beginDelivery() {
+        if (status == PolicyRunStatus.CANCELLED) {
+            return false;
+        }
+        this.delivering = true;
+        return true;
+    }
+
+    /** Cancels unless already terminal or delivering; returns whether it transitioned. */
     public synchronized boolean cancel() {
-        if (status.isTerminal()) {
+        if (status.isTerminal() || delivering) {
             return false;
         }
         this.status = PolicyRunStatus.CANCELLED;

@@ -1,13 +1,7 @@
 /**
- * Delivery of a processing-folder sweep's results into the workbench.
- *
- * A sweep runs server-side, so without this the user is left with a finished
- * job and an unchanged screen — the results exist (on disk or in storage) but
- * nothing shows them. This polls the folder's runs until the sweep's own runs
- * have settled, opening each run's results as soon as that run finishes
- * rather than at the end: a single slow or stuck file would otherwise hold
- * back everything that already succeeded, and a timeout would throw all of it
- * away.
+ * Delivers a sweep's results into the workbench: polls the folder's runs and opens each
+ * run's results as soon as it settles — waiting for the whole sweep would hold everything
+ * behind the slowest file.
  */
 
 import {
@@ -18,12 +12,8 @@ import {
 } from "@app/services/processingFolderApi";
 
 const TERMINAL = ["COMPLETED", "FAILED", "CANCELLED"];
-/**
- * Poll cadence: fast at first — the sweep takes smallest files first, so the
- * earliest finishes land within seconds and the user is watching hardest right
- * after clicking — then a steady 1s. The budget allows ~15 minutes overall, as
- * sweeps are per-file jobs.
- */
+/** Fast polls first — the earliest finishes land within seconds — then a steady 1s,
+ *  budgeted to ~15 minutes overall. */
 const FAST_POLL_MS = 400;
 const FAST_POLLS = 25;
 const POLL_MS = 1000;
@@ -63,6 +53,20 @@ export interface SweepDeliveryCallbacks {
   onSettled?: (settlement: RunSettlement) => void;
   /** Polled each cycle; true stops the loop quietly (the caller cancelled). */
   isCancelled?: () => boolean;
+  /** Runs to ignore entirely — a baseline captured before the sweep was triggered. */
+  excludeRunIds?: ReadonlySet<string>;
+  /** When set, only these runs count; everything else in the feed is ignored. */
+  includeRunIds?: ReadonlySet<string>;
+}
+
+/** The folder's current run ids — captured before a sweep so its delivery can ignore them. */
+export async function currentRunIds(
+  policyId: string,
+): Promise<ReadonlySet<string>> {
+  const runs = await fetchProcessingFolderRuns(policyId).catch(() => []);
+  return new Set(
+    runs.map((run) => run.runId).filter((id): id is string => id != null),
+  );
 }
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -83,9 +87,8 @@ async function mapBounded<T, R>(
         try {
           results[index] = await fn(items[index]);
         } catch (e) {
-          // Logged rather than swallowed: a fetch that fails for every file is
-          // indistinguishable from the pipeline producing nothing, and looks
-          // like the feature simply not working.
+          // Logged rather than swallowed: a fetch failing for every file looks like
+          // the feature simply not working.
           console.warn("[processing folders] could not open a result", e);
         }
       }
@@ -113,7 +116,14 @@ export async function deliverSweepResults(
     | SweepDeliveryCallbacks
     | ((progress: SweepDeliveryProgress) => void),
 ): Promise<SweepDeliveryProgress> {
-  const { onProgress, onRuns, onSettled, isCancelled } =
+  const {
+    onProgress,
+    onRuns,
+    onSettled,
+    isCancelled,
+    excludeRunIds,
+    includeRunIds,
+  } =
     typeof callbacks === "function"
       ? { onProgress: callbacks }
       : (callbacks ?? {});
@@ -137,7 +147,15 @@ export async function deliverSweepResults(
     if (isCancelled?.()) {
       return progress;
     }
-    const runs = await fetchProcessingFolderRuns(policyId).catch(() => []);
+    const fetched = await fetchProcessingFolderRuns(policyId).catch(() => []);
+    // The registry retains finished runs for a while, so the feed can carry earlier
+    // sweeps' history; unscoped, an old run would re-deliver its results and the stop
+    // conditions would fire against work this call never started.
+    const runs = fetched.filter((run) =>
+      includeRunIds
+        ? run.runId != null && includeRunIds.has(run.runId)
+        : !(run.runId != null && excludeRunIds?.has(run.runId)),
+    );
     onRuns?.(runs);
     const settled = runs.filter((run) => TERMINAL.includes(run.status));
     const done = settled.filter((run) => run.status === "COMPLETED");
@@ -171,9 +189,8 @@ export async function deliverSweepResults(
       return progress;
     }
     if (opened.length > 0) {
-      // One addFiles per poll batch, and never selecting what is delivered: a
-      // selection isn't meaningful across a folderful of results, and both
-      // choices avoid re-rendering the whole growing file list per result.
+      // One addFiles per poll batch, never selecting: a selection isn't meaningful
+      // across a folderful of results.
       await addFiles(opened);
       progress.opened += opened.length;
     }

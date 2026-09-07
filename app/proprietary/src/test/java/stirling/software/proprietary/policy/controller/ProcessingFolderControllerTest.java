@@ -133,6 +133,8 @@ class ProcessingFolderControllerTest {
         lenient()
                 .when(policyRunner.run(any(), any()))
                 .thenReturn(new SweepOutcome(List.of("run-1"), 1, 0, 0, 0, 0));
+        // Nothing runs in these tests, so per-file revert's quiet check passes.
+        lenient().when(policyRunner.quiesced(any())).thenReturn(true);
 
         PolicyAccessGuard accessGuard =
                 new PolicyAccessGuard(userService, properties, policyManagementAuthority);
@@ -197,6 +199,32 @@ class ProcessingFolderControllerTest {
         assertThat(source.type()).isEqualTo("storage-folder");
         assertThat(source.options()).containsEntry("folderId", FOLDER_ID.toString());
         verify(policyRunner, timeout(2000)).run(stored, SweepKind.USER);
+    }
+
+    @Test
+    void aCreateOverAnExistingPlaceAdoptsItWithoutReconfiguring() {
+        var first = controller.save(request(null, "new_version")).getBody();
+        Policy before = policyStore.get(first.id()).orElseThrow();
+
+        var second =
+                controller
+                        .save(
+                                new ProcessingFolderController.SaveProcessingFolderRequest(
+                                        null,
+                                        FOLDER_ID.toString(),
+                                        null,
+                                        false,
+                                        List.of(),
+                                        Map.of()))
+                        .getBody();
+
+        // Same record, untouched configuration: an offer flow can never overwrite a folder
+        // the user already shaped.
+        assertThat(second.id()).isEqualTo(first.id());
+        Policy after = policyStore.get(first.id()).orElseThrow();
+        assertThat(after.steps()).isEqualTo(before.steps());
+        assertThat(after.enabled()).isEqualTo(before.enabled());
+        verify(policyRunner, timeout(2000).times(2)).run(any(), any());
     }
 
     @Test

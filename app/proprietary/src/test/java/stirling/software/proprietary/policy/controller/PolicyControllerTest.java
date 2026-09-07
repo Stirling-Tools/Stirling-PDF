@@ -433,6 +433,23 @@ class PolicyControllerTest {
         }
 
         @Test
+        @DisplayName("a client-supplied surface is overwritten server-side")
+        void surfaceIsServerStamped() {
+            applicationProperties.getSecurity().setEnableLogin(true);
+            when(policyManagementAuthority.canEditPolicies()).thenReturn(true);
+            when(policyAccessGuard.ownerForNewPolicy()).thenReturn("alice");
+            when(policyAccessGuard.teamForNewPolicy()).thenReturn(7L);
+            when(policyStore.save(any())).thenAnswer(i -> i.getArgument(0));
+
+            Policy incoming = policy(null, null).withSurface("processing-folder");
+            ResponseEntity<Policy> response = controller.savePolicy(incoming);
+
+            // A forged folder-surface row would be operable through the folders API yet
+            // invisible to team management.
+            assertThat(response.getBody().surface()).isEqualTo(Policy.SURFACE_POLICY);
+        }
+
+        @Test
         @DisplayName("saving the sentinel back keeps the stored output secret")
         void saveRestoresOutputSecrets() {
             applicationProperties.getSecurity().setEnableLogin(false);
