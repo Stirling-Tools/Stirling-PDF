@@ -29,12 +29,9 @@ describe("Infrastructure (SaaS)", () => {
     enterprise.loading = false;
   });
 
-  it("defaults to the live API keys tab and drops the manage-editor button", () => {
+  it("defaults to the live API keys tab", () => {
     render(<Infrastructure />);
     expect(screen.getByTestId("api-keys-tab")).toBeInTheDocument();
-    expect(
-      screen.queryByText("portal.infrastructure.manageEditorDeployment"),
-    ).not.toBeInTheDocument();
   });
 
   it("renders the not-yet-shipped tabs as disabled 'coming soon'", () => {

@@ -1,5 +1,5 @@
 import { usePolicyAutoRun } from "@app/components/policies/usePolicyAutoRun";
-import { useClientSideClassification } from "@app/components/policies/useClientSideClassification";
+import { usePolicyLocalPasses } from "@app/components/policies/usePolicyLocalPasses";
 
 /**
  * Headless controller that drives policy auto-run (enforce every enabled policy
@@ -7,8 +7,9 @@ import { useClientSideClassification } from "@app/components/policies/useClientS
  * regardless of whether the policy panel is visible. Renders nothing.
  */
 export function PolicyAutoRunController() {
+  // Server-dispatched, file-producing policies and their chain.
   usePolicyAutoRun();
-  // Non-AI systems classify uploads in the browser; inert when the AI engine is on.
-  useClientSideClassification();
+  // Policies with a browser-side fast path (e.g. classification's heuristic), run generically.
+  usePolicyLocalPasses();
   return null;
 }

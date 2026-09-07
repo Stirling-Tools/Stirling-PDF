@@ -2,16 +2,24 @@
  * Standardized error handling utilities for tool operations
  */
 
+import axios from "axios";
 import { normalizeAxiosErrorData } from "@app/services/errorUtils";
 
 /**
- * Default error extractor that follows the standard pattern
+ * Default error extractor that follows the standard pattern.
+ *
+ * The desktop Tauri HTTP client tags its errors with `isAxiosError`, so
+ * {@link axios.isAxiosError} recognises both real and Tauri-shaped errors.
  */
-export const extractErrorMessage = (error: any): string => {
-  if (error.response?.data && typeof error.response.data === "string") {
+export const extractErrorMessage = (error: unknown): string => {
+  if (
+    axios.isAxiosError(error) &&
+    typeof error.response?.data === "string" &&
+    error.response.data.length > 0
+  ) {
     return error.response.data;
   }
-  if (error.message) {
+  if (error instanceof Error && error.message) {
     return error.message;
   }
   return "There was an error processing your request.";
@@ -23,11 +31,15 @@ export const extractErrorMessage = (error: any): string => {
  * @returns Error handler function that follows the standard pattern
  */
 export const createStandardErrorHandler = (fallbackMessage: string) => {
-  return (error: any): string => {
-    if (error.response?.data && typeof error.response.data === "string") {
+  return (error: unknown): string => {
+    if (
+      axios.isAxiosError(error) &&
+      typeof error.response?.data === "string" &&
+      error.response.data.length > 0
+    ) {
       return error.response.data;
     }
-    if (error.message) {
+    if (error instanceof Error && error.message) {
       return error.message;
     }
     return fallbackMessage;
@@ -39,13 +51,14 @@ export const createStandardErrorHandler = (fallbackMessage: string) => {
  * and marks them in the UI. Returns true if IDs were found and handled, false otherwise.
  */
 export const handle422Error = async (
-  error: any,
+  error: unknown,
   markFileError: (fileId: string) => void,
 ): Promise<boolean> => {
-  const status = error?.response?.status;
-  if (typeof status !== "number" || status !== 422) return false;
+  if (!axios.isAxiosError(error) || error.response?.status !== 422) {
+    return false;
+  }
 
-  const payload = error?.response?.data;
+  const payload = error.response?.data;
   let parsed: unknown = payload;
 
   if (typeof payload === "string") {
@@ -98,11 +111,12 @@ export const handle422Error = async (
  * @returns Error message string
  */
 export const handlePasswordError = async (
-  error: any,
+  error: unknown,
   incorrectPasswordMessage: string,
   fallbackMessage: string,
 ): Promise<string> => {
-  const status = error?.response?.status;
+  const axiosError = axios.isAxiosError(error) ? error : undefined;
+  const status = axiosError?.response?.status;
 
   // Handle specific error cases with user-friendly messages
   // Backend returns 400 with PdfPasswordException for incorrect/missing PDF passwords
@@ -110,7 +124,7 @@ export const handlePasswordError = async (
     return incorrectPasswordMessage;
   }
   if (status === 400) {
-    const data = error?.response?.data;
+    const data = axiosError?.response?.data;
     // ProblemDetail JSON has type "/errors/pdf-password", blob needs parsing
     const isPasswordError = await (async () => {
       if (data instanceof Blob) {
@@ -121,7 +135,7 @@ export const handlePasswordError = async (
           return false;
         }
       }
-      const type = data?.type ?? "";
+      const type = (data as { type?: string })?.type ?? "";
       return type.includes("pdf-password");
     })();
     if (isPasswordError) {
@@ -129,14 +143,13 @@ export const handlePasswordError = async (
     }
   }
 
-  // For other errors, try to extract the message
-  const normalizedData = await normalizeAxiosErrorData(error?.response?.data);
-  const errorWithNormalizedData = {
-    ...error,
-    response: {
-      ...error?.response,
-      data: normalizedData,
-    },
-  };
-  return extractErrorMessage(errorWithNormalizedData) || fallbackMessage;
+  // For other errors, prefer the normalized response body (a blob is parsed to
+  // text/JSON), else fall back to the error's own message.
+  const normalizedData = await normalizeAxiosErrorData(
+    axiosError?.response?.data,
+  );
+  if (typeof normalizedData === "string" && normalizedData.length > 0) {
+    return normalizedData;
+  }
+  return extractErrorMessage(error) || fallbackMessage;
 };

@@ -70,6 +70,10 @@ class ProprietaryUIDataControllerMoreTest {
     @Mock private ResourceAccessService resourceAccessService;
     @Mock private ProfilePictureService profilePictureService;
 
+    @Mock
+    private stirling.software.proprietary.security.repository.InviteTokenRepository
+            inviteTokenRepository;
+
     private ApplicationProperties applicationProperties;
     private AuditConfigurationProperties auditConfig;
     private ObjectMapper objectMapper;
@@ -103,7 +107,8 @@ class ProprietaryUIDataControllerMoreTest {
                         mfaService,
                         loginAttemptService,
                         resourceAccessService,
-                        profilePictureService);
+                        profilePictureService,
+                        inviteTokenRepository);
     }
 
     private static User normalUser(Long id, String username) {
