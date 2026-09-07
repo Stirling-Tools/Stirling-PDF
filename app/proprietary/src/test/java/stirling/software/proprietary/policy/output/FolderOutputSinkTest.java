@@ -26,6 +26,7 @@ import stirling.software.proprietary.policy.config.FolderAccessGuard;
 import stirling.software.proprietary.policy.ledger.FolderIdentities;
 import stirling.software.proprietary.policy.ledger.InProcessProcessedLedger;
 import stirling.software.proprietary.policy.model.OutputSpec;
+import stirling.software.proprietary.policy.model.PolicyInputs;
 import stirling.software.proprietary.policy.source.InProcessSourceStore;
 
 /**
@@ -198,8 +199,8 @@ class FolderOutputSinkTest {
         OutputSpec replace =
                 new OutputSpec("folder", Map.of("directory", out.toString(), "replace", true));
 
-        sink.deliver(POLICY_RUN, List.of(named("a.pdf", "v1")), replace);
-        sink.deliver(POLICY_RUN, List.of(named("a.pdf", "v2")), replace);
+        sink.deliver(inPlaceRun("a.pdf"), List.of(named("a.pdf", "v1")), replace);
+        sink.deliver(inPlaceRun("a.pdf"), List.of(named("a.pdf", "v2")), replace);
 
         assertEquals("v2", Files.readString(out.resolve("a.pdf")));
         // The archive holds what the user put in, not any intermediate result.
@@ -213,9 +214,54 @@ class FolderOutputSinkTest {
         OutputSpec replace =
                 new OutputSpec("folder", Map.of("directory", out.toString(), "replace", true));
 
-        sink.deliver(POLICY_RUN, List.of(named("a.pdf", "v1")), replace);
+        sink.deliver(inPlaceRun("a.pdf"), List.of(named("a.pdf", "v1")), replace);
 
         assertFalse(Files.exists(out.resolve(".stirling").resolve("originals").resolve("a.pdf")));
+    }
+
+    @Test
+    void replaceDeliversUnderTheInputsNameWhenAStepRenames() throws IOException {
+        Path out = tempDir.resolve("out");
+        Files.createDirectories(out);
+        Files.writeString(out.resolve("doc.pdf"), "original");
+        OutputSpec replace =
+                new OutputSpec("folder", Map.of("directory", out.toString(), "replace", true));
+
+        sink.deliver(
+                inPlaceRun("doc.pdf"),
+                List.of(named("doc_redacted_watermarked.pdf", "v1")),
+                replace);
+
+        // The watched file became its processed self; nothing landed beside it.
+        assertEquals("v1", Files.readString(out.resolve("doc.pdf")));
+        assertFalse(Files.exists(out.resolve("doc_redacted_watermarked.pdf")));
+        assertEquals(
+                "original",
+                Files.readString(out.resolve(".stirling").resolve("originals").resolve("doc.pdf")));
+    }
+
+    @Test
+    void aSplittingRunDoesNotReplaceItsInput() throws IOException {
+        Path out = tempDir.resolve("out");
+        Files.createDirectories(out);
+        Files.writeString(out.resolve("doc.pdf"), "original");
+        OutputSpec replace =
+                new OutputSpec("folder", Map.of("directory", out.toString(), "replace", true));
+
+        sink.deliver(
+                inPlaceRun("doc.pdf"),
+                List.of(named("part1.pdf", "a"), named("part2.pdf", "b")),
+                replace);
+
+        assertEquals("original", Files.readString(out.resolve("doc.pdf")));
+        assertTrue(Files.exists(out.resolve("part1.pdf")));
+        assertTrue(Files.exists(out.resolve("part2.pdf")));
+    }
+
+    /** A recorded run carrying its input, the shape the engine always delivers with. */
+    private static OutputDelivery inPlaceRun(String inputName) {
+        return new OutputDelivery(
+                "run-1", "p1", PolicyInputs.of(List.of(named(inputName, "input"))));
     }
 
     private static ByteArrayResource named(String filename, String content) {

@@ -84,17 +84,35 @@ public class FolderOutputSink implements PolicyOutputSink {
         sweepStaleTmp(tmpDir);
 
         boolean replace = Boolean.parseBoolean(String.valueOf(spec.options().get(REPLACE_OPTION)));
+        // Processing in place means the file becomes its processed self, name included: a
+        // step that renames its output (a redact, a watermark) must not drop the result
+        // beside the watched file it was meant to replace. The input's own name wins
+        // whenever the run maps one input to one output; a splitting pipeline has no single
+        // place to stand and lands its outputs alongside instead.
+        String inputName =
+                delivery.inputs().primary().size() == 1
+                        ? delivery.inputs().primary().get(0).getFilename()
+                        : null;
+        boolean replaceInPlace = replace && outputs.size() == 1 && inputName != null;
         List<ResultFile> results = new ArrayList<>();
         for (int i = 0; i < outputs.size(); i++) {
             Resource resource = outputs.get(i);
-            String name = OutputNames.safeName(resource.getFilename(), i);
+            String name =
+                    OutputNames.safeName(replaceInPlace ? inputName : resource.getFilename(), i);
             Path staged = tmpDir.resolve(UUID.randomUUID().toString());
             String contentHash = stage(resource, staged, delivery.policyId() != null);
             long size = Files.size(staged);
             // Size and mtime survive the rename.
             String gate = FolderIdentities.statGate(staged);
             Path target =
-                    moveIntoPlace(delivery, canonicalDir, name, staged, gate, contentHash, replace);
+                    moveIntoPlace(
+                            delivery,
+                            canonicalDir,
+                            name,
+                            staged,
+                            gate,
+                            contentHash,
+                            replaceInPlace);
             String contentType =
                     MediaTypeFactory.getMediaType(name)
                             .orElse(MediaType.APPLICATION_OCTET_STREAM)
