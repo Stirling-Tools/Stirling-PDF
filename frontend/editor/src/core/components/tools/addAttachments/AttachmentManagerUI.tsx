@@ -1,13 +1,5 @@
 import { memo, useState } from "react";
-import {
-  Stack,
-  Text,
-  Group,
-  ScrollArea,
-  Checkbox,
-  Skeleton,
-  TextInput,
-} from "@mantine/core";
+import { Stack, Text, Group, ScrollArea, Checkbox, Skeleton, TextInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { Tooltip } from "@app/components/shared/Tooltip";
@@ -23,7 +15,6 @@ export interface AttachmentManagerUIProps {
   pendingChangesCount: number;
   isLoading: boolean;
   isSaving: boolean;
-  isDownloading?: boolean;
   activeAction: string | null;
   convertToPdfA3b: boolean;
   disabled?: boolean;
@@ -44,7 +35,6 @@ export const AttachmentManagerUI = memo(function AttachmentManagerUI({
   pendingChangesCount,
   isLoading,
   isSaving,
-  isDownloading: _isDownloading = false,
   activeAction,
   convertToPdfA3b,
   disabled = false,
@@ -61,33 +51,20 @@ export const AttachmentManagerUI = memo(function AttachmentManagerUI({
   const { t } = useTranslation();
   const [filterQuery, setFilterQuery] = useState("");
 
-  const filteredRows = rows.filter((r) =>
-    r.name.toLowerCase().includes(filterQuery.trim().toLowerCase()),
-  );
+  const filteredRows = rows.filter((r) => r.name.toLowerCase().includes(filterQuery.trim().toLowerCase()));
 
   return (
     <Stack gap="md" w="100%">
-      {/* FILTER SEARCH INPUT (SHOWN WHEN >3 ATTACHMENTS EXIST) */}
       {rows.length > 3 && (
         <TextInput
-          placeholder={t(
-            "attachments.filterPlaceholder",
-            "Filter attachments...",
-          )}
+          placeholder={t("attachments.filterPlaceholder", "Filter attachments...")}
           value={filterQuery}
           onChange={(e) => setFilterQuery(e.currentTarget.value)}
           size="xs"
-          leftSection={
-            <LocalIcon icon="search-rounded" width={14} height={14} />
-          }
+          leftSection={<LocalIcon icon="search-rounded" width={14} height={14} />}
           rightSection={
             filterQuery ? (
-              <ActionIcon
-                size="sm"
-                variant="tertiary"
-                onClick={() => setFilterQuery("")}
-                aria-label={t("cancel", "Cancel")}
-              >
+              <ActionIcon size="sm" variant="tertiary" onClick={() => setFilterQuery("")} aria-label={t("cancel", "Cancel")}>
                 <LocalIcon icon="close-rounded" width={12} height={12} />
               </ActionIcon>
             ) : null
@@ -95,7 +72,6 @@ export const AttachmentManagerUI = memo(function AttachmentManagerUI({
         />
       )}
 
-      {/* ATTACHMENT ROWS LIST */}
       {isLoading ? (
         <Stack gap={6} w="100%">
           <Skeleton h={38} radius="sm" />
@@ -103,10 +79,7 @@ export const AttachmentManagerUI = memo(function AttachmentManagerUI({
         </Stack>
       ) : rows.length === 0 ? (
         <Text size="sm" c="dimmed" ta="center" py="md">
-          {t(
-            "attachments.noAttachments",
-            "No embedded attachments in this document.",
-          )}
+          {t("attachments.noAttachments", "No embedded attachments in this document.")}
         </Text>
       ) : (
         <ScrollArea.Autosize
@@ -147,15 +120,12 @@ export const AttachmentManagerUI = memo(function AttachmentManagerUI({
         </ScrollArea.Autosize>
       )}
 
-      {/* EXTRACT ALL — full width below the list */}
       {rows.length > 0 && (
         <DSButton
           size="sm"
           variant="tertiary"
           fullWidth
-          leftSection={
-            <LocalIcon icon="download-rounded" width={13} height={13} />
-          }
+          leftSection={<LocalIcon icon="download-rounded" width={13} height={13} />}
           onClick={onExtractAllZip}
           disabled={disabled || isSaving}
           loading={activeAction === "extractAll"}
@@ -164,7 +134,6 @@ export const AttachmentManagerUI = memo(function AttachmentManagerUI({
         </DSButton>
       )}
 
-      {/* ADD ATTACHMENTS BUTTON (USING STANDARD SHARED FILEPICKER) */}
       <FilePicker
         variant="secondary"
         multiple={true}
@@ -181,7 +150,6 @@ export const AttachmentManagerUI = memo(function AttachmentManagerUI({
         {t("attachments.addAttachments", "Add attachments...")}
       </FilePicker>
 
-      {/* ADVANCED OPTION — 1 QUIET SINGLE LINE WITH TOOLTIP */}
       <Checkbox
         size="sm"
         label={
@@ -191,17 +159,11 @@ export const AttachmentManagerUI = memo(function AttachmentManagerUI({
             </Text>
             <Tooltip
               header={{
-                title: t(
-                  "attachments.convertToPdfA3bTooltipHeader",
-                  "About PDF/A-3b Conversion",
-                ),
+                title: t("attachments.convertToPdfA3bTooltipHeader", "About PDF/A-3b Conversion"),
               }}
               tips={[
                 {
-                  title: t(
-                    "attachments.convertToPdfA3bTooltipTitle",
-                    "What it does",
-                  ),
+                  title: t("attachments.convertToPdfA3bTooltipTitle", "What it does"),
                   description: t(
                     "attachments.convertToPdfA3bTooltip",
                     "PDF/A-3b is an archival format ensuring long-term preservation. It allows embedding arbitrary file formats as attachments. Conversion requires Ghostscript and may take longer for large files.",
@@ -221,30 +183,16 @@ export const AttachmentManagerUI = memo(function AttachmentManagerUI({
           </Group>
         }
         checked={convertToPdfA3b}
-        onChange={(event) =>
-          onConvertToPdfA3bChange(event.currentTarget.checked)
-        }
+        onChange={(event) => onConvertToPdfA3bChange(event.currentTarget.checked)}
         disabled={disabled || isSaving}
       />
 
-      {/* SINGLE SAVE FOOTER */}
       {hasChanges && (
         <Group justify="space-between" align="center" mt="xs">
-          <DSButton
-            size="sm"
-            variant="tertiary"
-            onClick={onDiscardDraft}
-            disabled={disabled || isSaving}
-          >
+          <DSButton size="sm" variant="tertiary" onClick={onDiscardDraft} disabled={disabled || isSaving}>
             {t("attachments.discardChanges", "Discard")}
           </DSButton>
-          <DSButton
-            size="sm"
-            variant="primary"
-            onClick={onSaveDraft}
-            disabled={disabled || isSaving}
-            loading={isSaving}
-          >
+          <DSButton size="sm" variant="primary" onClick={onSaveDraft} disabled={disabled || isSaving} loading={isSaving}>
             {t("attachments.saveChanges", "Save Changes ({{count}})", {
               count: pendingChangesCount,
             })}
