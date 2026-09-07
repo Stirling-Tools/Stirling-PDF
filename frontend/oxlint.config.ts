@@ -74,18 +74,18 @@ const modernGlobals: OxlintGlobals = {
 
 // Folders not yet conformant to the stricter no-explicit-any rule
 const noExplicitAnyExcludes = [
-  "editor/src/core/components/shared/*.{js,mjs,jsx,ts,tsx}",
-  "editor/src/core/components/shared/config/configSections/*.{js,mjs,jsx,ts,tsx}",
-  "editor/src/core/components/tools/addStamp/*.{js,mjs,jsx,ts,tsx}",
-  "editor/src/core/components/tools/automate/*.{js,mjs,jsx,ts,tsx}",
-  "editor/src/core/components/viewer/*.{js,mjs,jsx,ts,tsx}",
-  "editor/src/core/contexts/*.{js,mjs,jsx,ts,tsx}",
-  "editor/src/core/contexts/viewer/*.{js,mjs,jsx,ts,tsx}",
-  "editor/src/core/hooks/*.{js,mjs,jsx,ts,tsx}",
-  "editor/src/core/services/*.{js,mjs,jsx,ts,tsx}",
+  "editor/src/core/components/shared/config/configSections/ProviderCard.tsx",
+  "editor/src/core/components/viewer/layerUtils.ts",
+  "editor/src/core/components/viewer/SignatureAPIBridge.tsx",
+  "editor/src/core/components/viewer/HistoryAPIBridge.tsx",
+  "editor/src/core/components/viewer/TextSelectionHandler.tsx",
+  "editor/src/core/components/viewer/RulerOverlay.tsx",
+  "editor/src/core/components/viewer/viewerTypes.ts",
+  "editor/src/core/components/viewer/EmbedPdfViewer.tsx",
+  "editor/src/core/components/viewer/RedactionSelectionMenu.tsx",
   "editor/src/core/tools/annotate/useAnnotationSelection.ts",
-  "editor/src/core/types/*.{js,mjs,jsx,ts,tsx}",
-  "editor/src/core/utils/*.{js,mjs,jsx,ts,tsx}",
+  "editor/src/core/types/fileContext.ts",
+  "editor/src/core/types/automation.ts",
 ];
 
 export default defineConfig({

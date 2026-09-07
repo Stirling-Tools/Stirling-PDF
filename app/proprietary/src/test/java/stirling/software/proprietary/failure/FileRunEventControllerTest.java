@@ -51,9 +51,7 @@ class FileRunEventControllerTest {
                         List.of(new AcknowledgeAction(store), new DismissAction(store)));
         controller =
                 new FileRunEventController(
-                        new FileRunEventService(store, registry, authority, userService, props),
-                        authority,
-                        props);
+                        new FileRunEventService(store, registry, authority, userService, props));
 
         lenient().when(authority.canEditPolicies()).thenReturn(true);
         lenient().when(authority.currentUserTeamId()).thenReturn(TEAM);
@@ -61,17 +59,44 @@ class FileRunEventControllerTest {
     }
 
     private FileRunEvent given(FailureKind kind, Long teamId, String fileId) {
+        return recorded("author@example.com", kind, teamId, fileId, "run-1");
+    }
+
+    /**
+     * As {@link #given} but naming who hit it, in its own run. A RUN-scoped kind keys on the run,
+     * so two rows sharing one run id are one incident, however they differ otherwise.
+     */
+    private FileRunEvent givenHitBy(String actor, FailureKind kind, Long teamId, String fileId) {
+        return recorded(actor, kind, teamId, fileId, "run-" + fileId);
+    }
+
+    private FileRunEvent recorded(
+            String actor, FailureKind kind, Long teamId, String fileId, String runId) {
         return store.record(
                 new RecordFailure(
                         kind,
                         FailureOrigin.POLICY,
                         teamId,
-                        "author@example.com",
+                        actor,
                         "policy-1",
-                        "run-1",
+                        runId,
                         null,
                         fileId,
                         "the raw failure message"));
+    }
+
+    private static List<String> fileIds(int count) {
+        return java.util.stream.IntStream.range(0, count).mapToObj(i -> "f-" + i).toList();
+    }
+
+    /** The status a refused call came back with. Fails the test if the call was allowed. */
+    private HttpStatus statusOf(Runnable call) {
+        try {
+            call.run();
+        } catch (ResponseStatusException e) {
+            return HttpStatus.valueOf(e.getStatusCode().value());
+        }
+        throw new AssertionError("expected the call to be refused");
     }
 
     @Nested
@@ -103,7 +128,9 @@ class FileRunEventControllerTest {
         }
 
         @Test
-        void carriesActionsAlreadyResolvedForTheRow() {
+        void carriesActionsAlreadyResolvedForTheRowAndItsReader() {
+            // A leader reading a colleague's password failure: the unlock is not theirs to do,
+            // so it is not in the list at all.
             given(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f1");
 
             List<FileRunEventView.ActionView> actions =
@@ -111,12 +138,37 @@ class FileRunEventControllerTest {
 
             assertThat(actions)
                     .extracting(FileRunEventView.ActionView::id)
-                    .containsExactlyInAnyOrder("ACKNOWLEDGE", "DISMISS");
+                    .containsExactly("VIEW_IN_PROCESSOR", "DISMISS");
             assertThat(actions).allMatch(FileRunEventView.ActionView::enabled);
         }
 
         @Test
+        void carriesEnoughForAClientToRenderAndRouteAnActionItDoesNotKnow() {
+            // The English fallback, which side runs it, and where the kind wants it: everything a
+            // build with no copy for a newly shipped action still needs.
+            given(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f1");
+
+            assertThat(controller.list(null, null, null).events().getFirst().actions())
+                    .allSatisfy(
+                            action -> {
+                                assertThat(action.defaultLabel()).isNotBlank();
+                                assertThat(action.execution()).isNotNull();
+                                assertThat(action.slot()).isNotNull();
+                            })
+                    .filteredOn(action -> "VIEW_IN_PROCESSOR".equals(action.id()))
+                    .singleElement()
+                    .satisfies(
+                            action -> {
+                                assertThat(action.execution())
+                                        .isEqualTo(FailureActionId.Execution.CLIENT);
+                                assertThat(action.slot()).isEqualTo(FailureActionSlot.OVERFLOW);
+                                assertThat(action.defaultLabel()).isEqualTo("View in processor");
+                            });
+        }
+
+        @Test
         void showsAClosedRowsActionsDisabledWithAReasonRatherThanHidingThem() {
+            // Only visible by asking for the closed status: the default queue drops it.
             FileRunEvent event = given(FailureKind.UNKNOWN, TEAM, "f1");
             controller.act(event.id(), "DISMISS", null);
 
@@ -134,15 +186,20 @@ class FileRunEventControllerTest {
 
         @Test
         void filtersByStatusAndByKind() {
-            FileRunEvent open = given(FailureKind.UNKNOWN, TEAM, "open");
-            given(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "locked");
-            controller.act(open.id(), "ACKNOWLEDGE", null);
+            FileRunEvent locked = given(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "locked");
+            given(FailureKind.UNKNOWN, TEAM, "open");
+            controller.act(locked.id(), "DISMISS", null);
 
-            assertThat(controller.list(FileRunEventStatus.ACKNOWLEDGED, null, null).events())
-                    .hasSize(1);
-            assertThat(controller.list(null, "INPUT_PASSWORD_PROTECTED", null).events())
+            assertThat(controller.list(FileRunEventStatus.DISMISSED, null, null).events())
                     .extracting(FileRunEventView::fileId)
                     .containsExactly("locked");
+            // A dismissed row is decided, so the default queue holds only the other one.
+            assertThat(controller.list(null, null, null).events())
+                    .extracting(FileRunEventView::fileId)
+                    .containsExactly("open");
+            assertThat(controller.list(null, "INPUT_PASSWORD_PROTECTED", null).events())
+                    .extracting(FileRunEventView::fileId)
+                    .isEmpty();
             assertThat(controller.list(null, "NO_SUCH_KIND", null).events()).isEmpty();
         }
 
@@ -182,12 +239,31 @@ class FileRunEventControllerTest {
 
         @Test
         void appliesADeclaredActionAndReturnsTheUpdatedRow() {
+            FileRunEvent event = given(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f1");
+
+            FileRunEventView updated = controller.act(event.id(), "DISMISS", null);
+
+            assertThat(updated.status()).isEqualTo(FileRunEventStatus.DISMISSED);
+            assertThat(updated.statusActor()).isEqualTo("reviewer@example.com");
+        }
+
+        @Test
+        void anActionTheClientRunsIsABadRequest() {
+            // Offered, and still not the server's to perform: the document is in the browser.
             FileRunEvent event = given(FailureKind.UNKNOWN, TEAM, "f1");
 
-            FileRunEventView updated = controller.act(event.id(), "ACKNOWLEDGE", null);
+            assertThat(statusOf(() -> controller.act(event.id(), "VIEW_FILE", null)))
+                    .isEqualTo(HttpStatus.BAD_REQUEST);
+        }
 
-            assertThat(updated.status()).isEqualTo(FileRunEventStatus.ACKNOWLEDGED);
-            assertThat(updated.statusActor()).isEqualTo("reviewer@example.com");
+        @Test
+        void anActionNoKindOffersAnyMoreIsABadRequest() {
+            // ACKNOWLEDGE is still in the vocabulary for the rows that carry it, and still not
+            // something any kind offers, so posting it is refused rather than applied.
+            FileRunEvent event = given(FailureKind.UNKNOWN, TEAM, "f1");
+
+            assertThat(statusOf(() -> controller.act(event.id(), "ACKNOWLEDGE", null)))
+                    .isEqualTo(HttpStatus.BAD_REQUEST);
         }
 
         @Test
@@ -211,27 +287,18 @@ class FileRunEventControllerTest {
             // 404 rather than 403, so the response does not confirm the row exists.
             FileRunEvent theirs = given(FailureKind.UNKNOWN, 99L, "f1");
 
-            assertThat(statusOf(() -> controller.act(theirs.id(), "ACKNOWLEDGE", null)))
+            assertThat(statusOf(() -> controller.act(theirs.id(), "DISMISS", null)))
                     .isEqualTo(HttpStatus.NOT_FOUND);
         }
 
         @Test
         void anAlreadyClosedRowIsAConflict() {
             // The request was well formed and would have been valid a moment earlier.
-            FileRunEvent event = given(FailureKind.UNKNOWN, TEAM, "f1");
+            FileRunEvent event = given(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f1");
             controller.act(event.id(), "DISMISS", null);
 
-            assertThat(statusOf(() -> controller.act(event.id(), "ACKNOWLEDGE", null)))
+            assertThat(statusOf(() -> controller.act(event.id(), "DISMISS", null)))
                     .isEqualTo(HttpStatus.CONFLICT);
-        }
-
-        private HttpStatus statusOf(Runnable call) {
-            try {
-                call.run();
-            } catch (ResponseStatusException e) {
-                return HttpStatus.valueOf(e.getStatusCode().value());
-            }
-            throw new AssertionError("expected the call to be refused");
         }
     }
 
@@ -258,7 +325,7 @@ class FileRunEventControllerTest {
 
             assertThat(locked.actions())
                     .extracting(FailureKindView.ActionDeclaration::labelKey)
-                    .contains("portal.failures.action.dismissSkipFile");
+                    .contains("portal.failures.action.viewFile", "portal.failures.action.dismiss");
         }
 
         @Test
@@ -274,48 +341,68 @@ class FileRunEventControllerTest {
     }
 
     @Nested
-    @DisplayName("only a team leader may review failures")
+    @DisplayName("a leader reviews the team's failures, everyone else their own")
     class Authorization {
 
         @Test
-        void aMemberCannotListThem() {
+        void aMemberSeesTheirOwnFailuresAndNobodyElses() {
+            // A member can report a failure, so they get to see it back. It must not widen to a
+            // colleague's.
+            givenHitBy("reviewer@example.com", FailureKind.UNKNOWN, TEAM, "mine");
+            givenHitBy("colleague@example.com", FailureKind.UNKNOWN, TEAM, "theirs");
             when(authority.canEditPolicies()).thenReturn(false);
 
-            assertThatThrownBy(() -> controller.list(null, null, null))
-                    .isInstanceOf(ResponseStatusException.class)
-                    .satisfies(
-                            e ->
-                                    assertThat(((ResponseStatusException) e).getStatusCode())
-                                            .isEqualTo(HttpStatus.FORBIDDEN));
+            assertThat(controller.list(null, null, null).events())
+                    .extracting(FileRunEventView::fileId)
+                    .containsExactly("mine");
         }
 
         @Test
-        void aMemberCannotDispatchAnAction() {
-            // The read being refused is not enough on its own: an id learned any other way must
-            // not let a member close another user's failure.
-            FileRunEvent event = given(FailureKind.UNKNOWN, TEAM, "f-1");
-            when(authority.canEditPolicies()).thenReturn(false);
+        void aLeaderSeesTheWholeTeams() {
+            givenHitBy("reviewer@example.com", FailureKind.UNKNOWN, TEAM, "mine");
+            givenHitBy("colleague@example.com", FailureKind.UNKNOWN, TEAM, "theirs");
+            when(authority.canEditPolicies()).thenReturn(true);
 
-            assertThatThrownBy(() -> controller.act(event.id(), "DISMISS", null))
-                    .isInstanceOf(ResponseStatusException.class)
-                    .satisfies(
-                            e ->
-                                    assertThat(((ResponseStatusException) e).getStatusCode())
-                                            .isEqualTo(HttpStatus.FORBIDDEN));
+            assertThat(controller.list(null, null, null).events())
+                    .extracting(FileRunEventView::fileId)
+                    .containsExactlyInAnyOrder("mine", "theirs");
         }
 
         @Test
-        void theRegistryIsAlsoLeaderOnly() {
+        void aMemberMayCloseTheirOwn() {
+            // Someone who fixes their own problem should not have to ask a leader to clear the row.
+            FileRunEvent mine =
+                    givenHitBy("reviewer@example.com", FailureKind.UNKNOWN, TEAM, "mine");
             when(authority.canEditPolicies()).thenReturn(false);
 
-            assertThatThrownBy(() -> controller.kinds())
-                    .isInstanceOf(ResponseStatusException.class);
+            assertThat(controller.act(mine.id(), "DISMISS", null).status())
+                    .isEqualTo(FileRunEventStatus.DISMISSED);
+        }
+
+        @Test
+        void aMemberCannotCloseAColleaguesEvenKnowingTheId() {
+            // Refusing the read is not enough on its own: an id learned any other way must not work
+            // either. Answered as not-found rather than forbidden, so trying does not confirm the
+            // row exists.
+            FileRunEvent theirs =
+                    givenHitBy("colleague@example.com", FailureKind.UNKNOWN, TEAM, "theirs");
+            when(authority.canEditPolicies()).thenReturn(false);
+
+            assertThat(statusOf(() -> controller.act(theirs.id(), "DISMISS", null)))
+                    .isEqualTo(HttpStatus.NOT_FOUND);
+        }
+
+        @Test
+        void theRegistryIsOpenBecauseItIsCopyNotData() {
+            // A member renders the failures they can see, so they need the labels for them. No role
+            // stub: the point is that kinds() never asks.
+            assertThat(controller.kinds()).isNotEmpty();
         }
 
         @Test
         void loginDisabledTrustsTheLocalOperator() {
-            // A single-user deployment has no roles to distinguish, so the role gate must not lock
-            // the only user out of their own failures.
+            // A single-user deployment has no roles to distinguish, so the narrowing must not leave
+            // the only user reading nothing.
             ApplicationProperties unsecured = new ApplicationProperties();
             unsecured.getSecurity().setEnableLogin(false);
             FileRunEventController noLogin =
@@ -328,9 +415,7 @@ class FileRunEventControllerTest {
                                                     new DismissAction(store))),
                                     authority,
                                     userService,
-                                    unsecured),
-                            authority,
-                            unsecured);
+                                    unsecured));
 
             assertThatCode(() -> noLogin.list(null, null, null)).doesNotThrowAnyException();
             // Not merely permitted: the role is never consulted at all, which is what makes the
@@ -375,15 +460,116 @@ class FileRunEventControllerTest {
                                                     new DismissAction(store))),
                                     authority,
                                     userService,
-                                    unsecured),
-                            authority,
-                            unsecured);
+                                    unsecured));
             given(FailureKind.UNKNOWN, null, "unteamed");
             given(FailureKind.UNKNOWN, TEAM, "teamed");
 
             assertThat(noLogin.list(null, null, null).events())
                     .extracting(FileRunEventView::fileId)
                     .containsExactly("unteamed");
+        }
+    }
+
+    @Nested
+    @DisplayName("reporting from the editor")
+    class Reporting {
+
+        @Test
+        void aMemberMayReportAndThenSeeTheirOwnReport() {
+            // Reporting was always open to a member; reading their own back is the round trip that
+            // makes the report worth anything to them.
+            when(authority.canEditPolicies()).thenReturn(false);
+
+            assertThatCode(
+                            () ->
+                                    controller.report(
+                                            new EditorFailureReport(
+                                                    "compress", "E004", List.of("f-1"), "boom")))
+                    .doesNotThrowAnyException();
+            assertThat(controller.list(null, null, null).events())
+                    .extracting(FileRunEventView::fileId)
+                    .containsExactly("f-1");
+        }
+
+        @Test
+        void answersWithNoContentSoTheEditorNeverWaitsOnABody() {
+            EditorFailureReport report =
+                    new EditorFailureReport("compress", "E004", List.of("f-1"), "boom");
+
+            assertThat(controller.report(report).getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+        }
+
+        @Test
+        void rejectsAReportWithNoOperation() {
+            assertThat(
+                            statusOf(
+                                    () ->
+                                            controller.report(
+                                                    new EditorFailureReport(
+                                                            " ", "E004", List.of("f-1"), "boom"))))
+                    .isEqualTo(HttpStatus.BAD_REQUEST);
+        }
+
+        @Test
+        void acceptsAReportAtTheFileLimitAndRecordsEveryRow() {
+            List<String> atLimit = fileIds(EditorFailureReport.MAX_FILE_IDS);
+
+            EditorFailureReport report =
+                    new EditorFailureReport("compress", "E004", atLimit, "boom");
+
+            assertThat(controller.report(report).getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+            assertThat(store.list(TEAM, null, null, null, EditorFailureReport.MAX_FILE_IDS + 10))
+                    .hasSize(EditorFailureReport.MAX_FILE_IDS);
+        }
+
+        @Test
+        void refusesAReportOverTheFileLimitAndRecordsNothing() {
+            // One call used to be able to mint an unbounded number of permanent incidents, since
+            // each named file gets its own row and TOOL dedup keys never fold across ids. Refused
+            // rather than trimmed so nothing is lost silently, and refused before the first write
+            // so a rejected report cannot leave a partial set behind either.
+            List<String> overLimit = fileIds(EditorFailureReport.MAX_FILE_IDS + 1);
+
+            assertThat(
+                            statusOf(
+                                    () ->
+                                            controller.report(
+                                                    new EditorFailureReport(
+                                                            "compress",
+                                                            "E004",
+                                                            overLimit,
+                                                            "boom"))))
+                    .isEqualTo(HttpStatus.BAD_REQUEST);
+            assertThat(store.list(TEAM, null, null, null, EditorFailureReport.MAX_FILE_IDS + 10))
+                    .isEmpty();
+        }
+
+        @Test
+        void saysWhatTheLimitIsSoAClientAuthorCanSeeWhatHappened() {
+            // The editor reports in the background, so the message is the only place this surfaces.
+            assertThatThrownBy(
+                            () ->
+                                    controller.report(
+                                            new EditorFailureReport(
+                                                    "compress",
+                                                    "E004",
+                                                    fileIds(EditorFailureReport.MAX_FILE_IDS + 1),
+                                                    "boom")))
+                    .isInstanceOf(ResponseStatusException.class)
+                    .hasMessageContaining(String.valueOf(EditorFailureReport.MAX_FILE_IDS));
+        }
+
+        @Test
+        void theReportHasNoTeamOrFileNameToSupply() {
+            // Stated as a test because the absence of those fields is the property. Adding either
+            // to
+            // EditorFailureReport breaks this at compile time.
+            List<String> components =
+                    java.util.Arrays.stream(EditorFailureReport.class.getRecordComponents())
+                            .map(java.lang.reflect.RecordComponent::getName)
+                            .toList();
+
+            assertThat(components).containsExactly("operation", "errorCode", "fileIds", "detail");
         }
     }
 

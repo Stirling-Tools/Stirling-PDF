@@ -3,15 +3,18 @@ package stirling.software.proprietary.failure;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * Disposition of one recorded failure. {@code RESOLVED} is declared but not set yet (it becomes
- * system-set later); the rollup already defines what a repeat means for it, which is to reopen.
- */
+/** Disposition of one recorded failure. {@code RESOLVED} is system-set; a repeat reopens it. */
 public enum FileRunEventStatus {
     NEW(false),
     ACKNOWLEDGED(false),
     DISMISSED(true),
-    RESOLVED(true);
+    RESOLVED(true),
+
+    /**
+     * The document was deleted, so there is nothing left to act on. A recurrence reopens it like
+     * {@code RESOLVED}: a fresh failure is proof the document is back.
+     */
+    FILE_REMOVED(true);
 
     /** The statuses a review queue shows by default: everything still needing a decision. */
     private static final List<FileRunEventStatus> OPEN =

@@ -51,10 +51,9 @@ export const shouldProcessFilesSeparately = (
       // PDF to image conversions (each PDF should generate its own image file)
       (parameters.fromExtension === "pdf" &&
         isImageFormat(parameters.toExtension)) ||
-      // PDF to PDF/A and PDF/X conversions (each PDF should be processed separately)
+      // PDF to PDF/A, PDF/X and PDF/UA conversions (each PDF should be processed separately)
       (parameters.fromExtension === "pdf" &&
-        (parameters.toExtension === "pdfa" ||
-          parameters.toExtension === "pdfx")) ||
+        ["pdfa", "pdfx", "pdfua"].includes(parameters.toExtension)) ||
       // PDF to text-like/spreadsheet formats should be one output per input
       (parameters.fromExtension === "pdf" &&
         ["txt", "rtf", "csv", "xlsx"].includes(parameters.toExtension)) ||
@@ -99,6 +98,7 @@ export const buildConvertFormData = (
     htmlOptions,
     emailOptions,
     pdfaOptions,
+    pdfUaOptions,
     pdfxOptions,
     cbrOptions,
     pdfToCbrOptions,
@@ -160,6 +160,18 @@ export const buildConvertFormData = (
   } else if (fromExtension === "pdf" && toExtension === "pdfa") {
     formData.append("outputFormat", pdfaOptions.outputFormat);
     formData.append("strict", String(!!pdfaOptions.strict));
+  } else if (fromExtension === "pdf" && toExtension === "pdfua") {
+    formData.append("profile", pdfUaOptions.profile);
+    formData.append("language", pdfUaOptions.language);
+    formData.append("overrideLanguage", String(pdfUaOptions.overrideLanguage));
+    formData.append("embedFonts", String(pdfUaOptions.embedFonts));
+    // Sent only when set, so the backend can fall back to the first heading then the filename.
+    if (pdfUaOptions.title.trim()) {
+      formData.append("title", pdfUaOptions.title.trim());
+    }
+    if (pdfUaOptions.altText.trim()) {
+      formData.append("altText", pdfUaOptions.altText.trim());
+    }
   } else if (fromExtension === "pdf" && toExtension === "pdfx") {
     // Use PDF/A endpoint with PDF/X format parameter
     formData.append("outputFormat", pdfxOptions?.outputFormat || "pdfx");
@@ -228,8 +240,8 @@ export const createFileFromResponse = (
 ): File => {
   const originalName = originalFileName.split(".")[0];
 
-  // Map both pdfa and pdfx to pdf since they both result in PDF files
-  if (targetExtension == "pdfa" || targetExtension == "pdfx") {
+  // Map pdfa, pdfx and pdfua to pdf since they all result in PDF files
+  if (["pdfa", "pdfx", "pdfua"].includes(targetExtension)) {
     targetExtension = "pdf";
   }
 
@@ -238,11 +250,28 @@ export const createFileFromResponse = (
   return createFileFromApiResponse(responseData, headers, fallbackFilename);
 };
 
-// Static processor that can be used by both the hook and automation executor
-export const convertProcessor = async (
+/**
+ * PDF/UA alt text is keyed by an image's position in one document, so reusing it across files would
+ * describe the wrong image - worse than no description, since the checker still passes. Dropped
+ * rather than misapplied; the UI offers descriptions for a single file, this guards every caller.
+ */
+const withoutCrossFileAltText = (
   parameters: ConvertParameters,
   selectedFiles: File[],
+): ConvertParameters =>
+  selectedFiles.length > 1 && parameters.pdfUaOptions.altText
+    ? {
+        ...parameters,
+        pdfUaOptions: { ...parameters.pdfUaOptions, altText: "" },
+      }
+    : parameters;
+
+// Static processor that can be used by both the hook and automation executor
+export const convertProcessor = async (
+  rawParameters: ConvertParameters,
+  selectedFiles: File[],
 ): Promise<CustomProcessorResult> => {
+  const parameters = withoutCrossFileAltText(rawParameters, selectedFiles);
   const processedFiles: File[] = [];
 
   // Map PDF/X to use PDF/A endpoint
@@ -354,7 +383,7 @@ export const convertToApiParams = (
   formData.forEach((value, key) => {
     if (typeof value === "string") body[key] = value;
   });
-  return body as unknown as ToolApiParams[ToolEndpoint];
+  return body;
 };
 
 /**
@@ -376,12 +405,6 @@ type ConvertOptionReaders = {
     toExtension: string,
   ) => Partial<ConvertParameters>;
 };
-
-/** The reader shape collapsed for the runtime dispatch, where the endpoint is only a string. */
-type ConvertOptionReader = (
-  body: Record<string, string | undefined>,
-  toExtension: string,
-) => Partial<ConvertParameters>;
 
 // The stored values are strings; these read one back into the typed shape ConvertParameters expects,
 // validating an enum against its allowed set (asEnum) rather than blind-casting an arbitrary string.
@@ -486,6 +509,18 @@ const CONVERT_OPTION_READERS: ConvertOptionReaders = {
             strict: asFlag(body.strict),
           },
         },
+  "/api/v1/convert/pdf/ua": (body) => ({
+    pdfUaOptions: {
+      profile: body.profile ?? defaultParameters.pdfUaOptions.profile,
+      language: body.language ?? defaultParameters.pdfUaOptions.language,
+      overrideLanguage: asFlag(body.overrideLanguage),
+      title: body.title ?? defaultParameters.pdfUaOptions.title,
+      // Absent means the step predates the field, and embedding is the conforming default.
+      embedFonts:
+        body.embedFonts !== undefined ? asFlag(body.embedFonts) : true,
+      altText: body.altText ?? defaultParameters.pdfUaOptions.altText,
+    },
+  }),
   "/api/v1/convert/cbr/pdf": (body) => ({
     cbrOptions: { optimizeForEbook: asFlag(body.optimizeForEbook) },
   }),
@@ -542,12 +577,9 @@ export const convertFromApiParams = (
   const fromExtension = body.fromExtension ?? "";
   const toExtension = body.toExtension ?? "";
   const endpoint = convertEndpointFor(fromExtension, toExtension);
-  // Each reader reads only its own endpoint's fields; the runtime endpoint is just a string, so the
-  // precise per-endpoint type is recovered with one widening cast here (every reader accepts a
-  // superset string record).
-  const readOptions = endpoint
-    ? (CONVERT_OPTION_READERS[endpoint] as ConvertOptionReader | undefined)
-    : undefined;
+  // Each reader reads only its own endpoint's fields; the runtime endpoint is just a string, so
+  // readOptions is looked up per-endpoint (undefined when the pair has no reader).
+  const readOptions = endpoint ? CONVERT_OPTION_READERS[endpoint] : undefined;
   return {
     fromExtension,
     toExtension,

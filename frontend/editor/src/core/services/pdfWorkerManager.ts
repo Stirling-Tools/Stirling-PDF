@@ -54,11 +54,8 @@ class PDFWorkerManager {
         "pdfjs-dist/legacy/build/pdf.worker.min.mjs",
         import.meta.url,
       ).toString();
-      (
-        pdfjs.GlobalWorkerOptions as typeof pdfjs.GlobalWorkerOptions & {
-          docBaseUrl?: string;
-        }
-      ).docBaseUrl = undefined;
+      (pdfjs.GlobalWorkerOptions as { docBaseUrl?: string }).docBaseUrl =
+        undefined;
       this.isInitialized = true;
     }
     return pdfjs;
@@ -85,12 +82,16 @@ class PDFWorkerManager {
     const pdfjs = await this.initializeWorker();
 
     // Normalize input data to PDF.js format
-    const pdfData:
-      | string
-      | { data: ArrayBuffer | Uint8Array<ArrayBufferLike> } =
-      data instanceof ArrayBuffer || data instanceof Uint8Array
-        ? { data }
-        : data;
+    let pdfData: string | { data: ArrayBuffer | Uint8Array<ArrayBufferLike> };
+    if (data instanceof ArrayBuffer || data instanceof Uint8Array) {
+      pdfData = { data };
+    } else if (typeof data === "string") {
+      pdfData = data; // URL string
+    } else if (data && typeof data === "object" && "data" in data) {
+      pdfData = data; // Already in {data: ArrayBuffer} format
+    } else {
+      pdfData = data; // Pass through as-is
+    }
 
     const commonOptions = {
       disableAutoFetch: options.disableAutoFetch ?? true,

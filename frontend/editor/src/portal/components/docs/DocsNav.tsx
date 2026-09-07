@@ -8,7 +8,8 @@ import type { DocsNavSection } from "@portal/api/docs";
  * path ("functionality/security" is a child of "functionality"), so sub-sections
  * nest under their parent. The root "Overview" section is static (always open, no
  * toggle); every other section collapses, and only the branch leading to the
- * active doc opens by default. (Search lives in DocsSearch above this.)
+ * active doc opens by default. (Full-text docs search lives in the global
+ * super search.)
  */
 
 // Matches the generator's ROOT_SECTION_ID: the intro section is never collapsible.

@@ -60,7 +60,7 @@ export const useConfigNavSections = (
           items: [
             ...section.items.map((item) =>
               item.key === "general"
-                ? { ...item, component: <GeneralWithLoginLanding /> }
+                ? { ...item, component: <GeneralWithLoginLanding hideTitle /> }
                 : item,
             ),
             ...(loginEnabled
