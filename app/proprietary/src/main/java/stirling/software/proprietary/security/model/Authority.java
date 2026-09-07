@@ -1,5 +1,6 @@
 package stirling.software.proprietary.security.model;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 import org.hibernate.annotations.Cache;
@@ -33,7 +34,7 @@ import lombok.Setter;
 @Setter
 public class Authority implements GrantedAuthority, Serializable {
 
-    private static final long serialVersionUID = 1L;
+    @Serial private static final long serialVersionUID = 1L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

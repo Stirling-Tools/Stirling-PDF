@@ -1,7 +1,6 @@
 alphabet = "Alfabet"
 apply = "Bruk"
 applyAndContinue = "Lagre og forlat"
-areYouSure = "Er du sikker på at du vil forlate?"
 back = "Tilbake"
 black = "Svart"
 blue = "Blå"
@@ -42,7 +41,7 @@ false = "Usann"
 fileNotSavedToDisk = "Ikke lagret til disk"
 fileSavedToDisk = "Fil lagret til disk"
 fileSelected = "Valgt: {{filename}}"
-filesSelected = "filer valgt"
+filesSelected = "{{count}} filer"
 font = "Skrifttype"
 fontSizeTooltip = "Størrelse på sidetalltekst i punkter. Større tall gir større tekst."
 fontTypeTooltip = "Skrifttype for sidetall. Velg basert på dokumentstilen din."
@@ -106,6 +105,7 @@ undoSuccess = "Operasjon angret"
 unknown = "Ukjent"
 unpin = "Løsne fil (erstatt etter verktøykjøring)"
 unsavedChanges = "Du har ulagrede endringer i PDF-en."
+unsavedChangesBody = "You have unsaved changes to your PDF. Are you sure you want to leave?"
 unsavedChangesTitle = "Ulagrede endringer"
 unsupported = "Ikke støttet"
 username = "Brukernavn"
@@ -1879,6 +1879,9 @@ width = "Bredde"
 [app]
 description = "Det gratis alternativet til Adobe Acrobat (10M+ nedlastinger)"
 
+[appBanner]
+dismiss = "Dismiss"
+
 [attachments]
 convertToPdfA3b = "Konverter til PDF/A-3b"
 convertToPdfA3bDescription = "Oppretter en arkiv-PDF med innebygde vedlegg"
@@ -2933,12 +2936,16 @@ text = "For å gjøre disse tillatelsene uforanderlige, bruk verktøyet Legg til
 [chat.actions]
 copy = "Kopier melding"
 
+[chat.emptyState]
+text = "Ask a question about your documents or get help with PDF tools."
+
 [chat.fab]
 close = "Close chat"
 open = "Open Stirling AI assistant"
 
 [chat.header]
 agentMenu = "Stirling-agentalternativer"
+assistant = "AI Assistant"
 clearChat = "Tøm chat"
 
 [chat.input]
@@ -3001,28 +3008,35 @@ tooltip = "Denne operasjonen vil bruke skykreditter"
 tooltip = "Velg farge fra skjermen"
 
 [colorPicker]
+hue = "Hue"
+saturation = "Saturation and brightness"
 title = "Velg farge"
 
 [common]
+actions = "Actions"
 back = "Tilbake"
 cancel = "Avbryt"
 close = "Lukk"
+codeSample = "Code sample"
 collapse = "Slå sammen"
 confirm = "Bekreft"
 continue = "Fortsett"
 copied = "Kopiert!"
 copy = "Kopier"
 done = "Ferdig"
+enterValue = "Enter value"
 error = "Feil"
 expand = "Utvid"
 loading = "Laster..."
 next = "Neste"
+open = "Open"
 preview = "Forhåndsvis"
 previous = "Forrige"
 refresh = "Oppdater"
 remaining = "Gjenstår"
 retry = "Prøv igjen"
 save = "Lagre"
+stepOf = "Step {{current}} of {{total}}"
 
 [compare]
 clearSelected = "Tøm valgte"
@@ -3185,6 +3199,7 @@ title = "Komprimeringsmetode"
 [compress.settings]
 desiredSize = "Ønsket filstørrelse"
 desiredSizePlaceholder = "Angi størrelse"
+desiredSizeUnit = "Size unit"
 
 [compress.tooltip.description]
 text = "Komprimering er en enkel måte å redusere filstørrelsen på. Velg Filstørrelse for å angi en målstørrelse og la oss justere kvaliteten for deg. Velg Kvalitet for å sette komprimeringsstyrke manuelt."
@@ -3387,6 +3402,24 @@ pdfOptions = "PDF-alternativer"
 pdfToCbr = "PDF → CBR"
 pdfToCbz = "PDF → CBZ"
 pdfToEpub = "PDF → EPUB"
+pdfUaAltTextNotice = "Images need a written description before a document can be certified. Descriptions are never generated automatically, because an invented one passes the checker while telling a screen-reader user nothing. Any image left without one is reported, and the file comes back tagged but not certified."
+pdfUaAltTextScanFailed = "The images could not be listed. Convert anyway and the response reports what is missing."
+pdfUaAltTextSingleFileOnly = "Descriptions belong to one document: an image is identified by its position, which is a different image in every file. Convert these {{fileCount}} files to tag them, then convert one at a time to describe its images."
+pdfUaEmbedFonts = "Embed missing fonts"
+pdfUaEmbedFontsHelp = "PDF/UA requires every font to be embedded. Turning this off is faster but usually prevents conformance."
+pdfUaFigureLabel = "Page {{page}} {{kind}}"
+pdfUaFigurePlaceholder = "What this image tells the reader"
+pdfUaFindImages = "Find images needing a description"
+pdfUaLanguage = "Document language"
+pdfUaLanguageHelp = "A BCP-47 tag such as en-GB. Used only when the document does not already declare its own language."
+pdfUaNoImagesNeedingText = "No image is missing a description."
+pdfUaOptions = "PDF/UA Options"
+pdfUaOverrideLanguage = "Replace the document's own language"
+pdfUaOverrideLanguageHelp = "Only tick this if the language above is right and the document's own is wrong. Relabelling a document into a language it is not written in makes a screen reader unintelligible."
+pdfUaProfile = "Conformance level"
+pdfUaSignatureWarning = "This PDF is digitally signed. Tagging rewrites the page content the signature covers, so the signature will stop verifying. Convert first, then re-sign."
+pdfUaTitle = "Document title"
+pdfUaTitleHelp = "Shown by a reader instead of the filename. Left blank, the first heading is used."
 selectSourceFormatFirst = "Velg et kildeformat først"
 settings = "Innstillinger"
 single = "Enkel"
@@ -3493,7 +3526,6 @@ label = "Y-posisjon"
 
 [crop.error]
 failed = "Kunne ikke beskjære PDF"
-invalidArea = "Beskjæringsområdet går utenfor PDF-grensene"
 
 [crop.preview]
 title = "Valg av beskjæringsområde"
@@ -3565,7 +3597,11 @@ tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [dropdownList]
+noItems = "No items available"
+noResults = "No results found"
 searchPlaceholder = "Søk..."
+selectLanguages = "Select languages"
+selectOption = "Select an option"
 
 [editableSecretField]
 edit = "Rediger"
@@ -3824,11 +3860,13 @@ shareSelected = "Del valgte"
 sharing = "Deling"
 showAll = "Vis alle"
 showHistory = "Vis historikk"
+sortBy = "Sort files"
 sortByDate = "Sorter etter dato"
 sortByName = "Sorter etter navn"
 sortBySize = "Sorter etter størrelse"
 storage = "Lagring"
 storageState = "Lagring"
+storageUsed = "Storage used"
 synced = "Synkronisert"
 title = "Last opp PDF-filer"
 toolChain = "Brukte verktøy"
@@ -3874,8 +3912,12 @@ addFiles = "Legg til filer"
 addingFiles = "Legger til filer…"
 collapse = "Skjul sidepanel"
 customizeGroups = "Tilpass grupper"
+dataLostBody = "This browser lost this file's contents. Upload it again to keep working with it."
+dataLostTitle = "File data is unavailable"
+downloadFailed = "Download failed"
 dropHint = "Åpne filer for å komme i gang"
 dropToAdd = "Drop files to add"
+duplicateFailed = "Could not duplicate file"
 expand = "Utvid sidepanel"
 googleDrive = "Google Drive"
 googleDriveDisabled = "Google Drive er ikke konfigurert"
@@ -3888,15 +3930,17 @@ openFromComputer = "Åpne fra datamaskin"
 openSettings = "Åpne innstillinger"
 other = "Annet"
 recent = "Nylig"
-search = "Søk"
-searchPlaceholder = "Søk i filer..."
 viewAll = "Vis alle {{count}} filer"
 
 [fileSidebar.fileItem]
 closeViewer = "Lukk fremviser"
+dataLost = "Data lost"
+dataLostTooltip = "This browser lost this file's contents. Upload it again to keep working with it."
 delete = "Delete"
+duplicate = "Duplicate"
 moreActions = "More actions"
 openInViewer = "Åpne i fremviser"
+rename = "Rename"
 savedToServer = "Saved to server"
 updateOnServer = "Update on server"
 uploadToServer = "Upload to server"
@@ -3908,6 +3952,14 @@ reset = "Tilbakestill til standarder"
 subtitle = "Grupper filene dine i overordnede kategorier. Legg til eksisterende eller nye etiketter i en kategori, gi den nytt navn, eller opprett din egen. Filer som ikke er i noen av kategoriene dine, vises under «Annet»."
 title = "Sidefeltkategorier"
 
+[fileSidebar.rename]
+cancel = "Cancel"
+error = "Could not rename the file."
+illegalCharacters = "A file name can't contain \\ / : * ? \" < > |"
+label = "File name"
+save = "Rename"
+title = "Rename file"
+
 [filesPage]
 addToWorkspace = "Legg til i arbeidsområde"
 addToWorkspaceCount = "Legg {{count}} til i arbeidsområde"
@@ -3916,9 +3968,9 @@ back = "Tilbake"
 backToFolder = "Tilbake til {{folder}}"
 backToMyFiles = "Tilbake til Mine filer"
 breadcrumbs = "Mappesti"
+bulkActions = "Handlinger"
 cancel = "Avbryt"
 classification = "Klassifisering"
-clearSearch = "Tøm søk"
 clearSelection = "Tøm utvalg"
 closeDetails = "Lukk detaljer"
 create = "Opprett"
@@ -3950,6 +4002,7 @@ downloadAll = "Last ned alle"
 downloadVersion = "Last ned denne versjonen"
 dropOverlay = "Slipp filer for å laste opp"
 dropOverlaySub = "Filer starter i Lokal. Bruk 'Flytt til' eller 'Lagre til skyen' for å organisere dem i en mappe."
+duplicate = "Duplicate"
 file = "Fil"
 fileInfo = "File info"
 fileMenu = "Filhandlinger"
@@ -3983,8 +4036,6 @@ resizeFolderTree = "Endre størrelse på mappetre (piltaster, Shift for større 
 save = "Lagre"
 saveToServer = "Lagre til server"
 saveToServerDisabledHint = "Lagring til serveren er ikke aktivert på denne serveren. Be administratoren om å aktivere det."
-search = "Søk"
-searchPlaceholder = "Søk i denne mappen og undermapper"
 selectAll = "Velg alt"
 selectAllHint = "Klikk for å velge alt. Tips: hold Ctrl (eller Cmd) for å legge til filer én om gangen, Shift for å velge et område."
 selectedCount = "{{count}} valgt"
@@ -4044,6 +4095,10 @@ title = "Ingen skyfiler ennå"
 hint = "Filer lagret uten opplasting blir værende her. Slipp en fil for å legge til en."
 title = "Ingen kun-lokale filer"
 
+[filesPage.empty.noResults]
+hint = "No files in this folder match your filter. Try a different term or clear the filter."
+title = "No matching files"
+
 [filesPage.empty.recent]
 hint = "Filer du åpner eller redigerer, vises her."
 title = "Ingenting endret ennå"
@@ -4063,6 +4118,8 @@ cloudDeleteFailed_one = "Couldn't delete 1 file from the cloud."
 cloudDeleteFailed_other = "Couldn't delete {{count}} files from the cloud."
 deleteFolderFailed = "Kunne ikke slette mappe."
 deleteFolderFailedDetail = "Kunne ikke slette mappe: {{message}}"
+downloadFailed = "Could not download the file."
+duplicateFailed = "Could not duplicate the file."
 folderAppearanceFailed = "Kunne ikke oppdatere mappeutseende."
 folderAppearanceFailedDetail = "Kunne ikke oppdatere mappeutseende: {{message}}"
 moveFilesFailed = "Kunne ikke flytte filer."
@@ -4084,6 +4141,11 @@ size = "Størrelse"
 totalSize = "Total størrelse"
 type = "Type"
 versionHistory = "Versjonsforløp"
+
+[filesPage.filters]
+activeCount = "{{count}} filtre aktive"
+clearAll = "Fjern filtre"
+label = "Filtre"
 
 [filesPage.folderName]
 cancel = "Avbryt"
@@ -4113,7 +4175,13 @@ localHint = "Kun lagret i denne nettleseren"
 shared = "Delt"
 sharedHint = "Delt med deg via lenke"
 
+[filesPage.search]
+clear = "Clear filter"
+label = "Filter files by name"
+placeholder = "Filter files…"
+
 [filesPage.sort]
+label = "Sorter filer"
 modifiedAsc = "Eldste først"
 modifiedDesc = "Nyeste først"
 nameAsc = "Navn A→Å"
@@ -4168,6 +4236,7 @@ noFilesInStorageOpen = "Ingen filer tilgjengelig i lagringen. Åpne noen filer f
 open = "Åpne"
 openFile = "Åpne fil"
 openFiles = "Åpne filer"
+selectFile = "Select {{name}}"
 selectFromStorage = "Velg fra lagring"
 upload = "Last opp"
 uploadFile = "Last opp fil"
@@ -4241,16 +4310,99 @@ issues = "GitHub"
 
 [formFill]
 allSaved = "Alt lagret"
+analyzingFields = "Analysing form fields..."
+applyFailed = "Kunne ikke bruke endringene"
 extractCsvError = "Kunne ikke trekke ut CSV"
 extractXlsxError = "Kunne ikke trekke ut XLSX"
+filled = "filled"
 flattenAfterFilling = "Flate ut etter utfylling"
+goToPage = "Gå til denne siden"
+noFields = "No fillable form fields found in this PDF."
+page = "Side"
+placeholderEnter = "Enter"
+placeholderSelect = "Select"
 requiredAbbreviation = "obl"
 requiredFieldsError = "Fyll ut alle obligatoriske felt"
 rescanFields = "Skann felter på nytt"
 rescanFormFields = "Skann skjemafelter på nytt"
 save = "Lagre"
 saveShortcut = "Ctrl+S for å lagre"
+skippedEdits_one = "1 endring kunne ikke brukes:"
+skippedEdits_other = "{{count}} endringer kunne ikke brukes:"
+skippedEditsTruncated = "{{count}} flere ikke oppført."
 unsavedChanges = "Ulagrede endringer"
+
+[formFill.create]
+commit = "Legg til {{count}} felt i PDF"
+empty = "Ingen felt tegnet ennå."
+failed = "Kunne ikke legge til felt"
+goToField = "Gå til dette feltet"
+hint = "Velg en felttype, og tegn den deretter på siden."
+placing = "Tegn et {{type}}-felt på siden. Trykk Esc for å stoppe."
+preview = "Hold inne for forhåndsvisning"
+previewHelp = "Hold inne for å se feltene slik de vil se ut når de er lagt til, uten redigeringsomrissene."
+removeField = "Fjern felt"
+
+[formFill.editor]
+action = "Knappehandling"
+actionHelp = "Hva knappen gjør når den klikkes."
+actionNone = "Ingen"
+actionPrint = "Skriv ut"
+actionReset = "Tilbakestill skjema"
+actionSubmit = "Send til URL"
+actionUri = "Åpne URL"
+actionUrl = "URL"
+actionUrlHelp = "Adressen knappen åpner eller sender til."
+addOption = "Legg til alternativ"
+caption = "Knappetekst"
+captionHelp = "Teksten som vises på knappen."
+defaultValue = "Standardverdi"
+defaultValueHelp = "Hva feltet inneholder før noen fyller det ut. La stå tomt for et tomt felt."
+fontSize = "Skriftstørrelse"
+fontSizeHelp = "Tekststørrelse inne i feltet. La stå tomt for å la leseren tilpasse størrelsen."
+label = "Etikett"
+labelHelp = "Teksten som vises til den som fyller ut skjemaet. La den stå tom for å bruke feltnavnet som reserve."
+maxLength = "Maks lengde (comb)"
+maxLengthHelp = "Begrenser hvor mange tegn som får plass, tegnet som jevnt fordelte bokser."
+multiline = "Flere linjer"
+multilineHelp = "Tillater mer enn én tekstlinje og bryter ved feltets kant."
+multiSelect = "Tillat flere valg"
+multiSelectHelp = "Lar mer enn ett alternativ velges samtidig."
+name = "Feltnavn"
+nameHelp = "Feltets interne navn. Brukes ved eksport av data eller utfylling av skjemaet fra et annet system, så hold det unikt og uten mellomrom."
+optionGap = "Avstand mellom alternativer"
+optionGapHelp = "Avstand mellom knapper, i punkter. La stå tomt for å fordele dem jevnt nedover boksen."
+optionPlaceholder = "Alternativ {{n}}"
+options = "Alternativer"
+optionsEmpty = "Legg til minst ett alternativ."
+optionsHelp = "Valgene som tilbys i listen. Hvert lagres slik det skrives, så hold dem korte og tydelige."
+optionSize = "Alternativstørrelse"
+optionSizeHelp = "Bredde og høyde for hver knapp, i punkter. La stå tomt for å tilpasse dem til boksen du tegnet."
+readOnly = "Skrivebeskyttet"
+readOnlyHelp = "Viser en verdi, men hindrer redigering."
+removeOption = "Fjern alternativ"
+required = "Obligatorisk"
+requiredHelp = "Skjemaet kan ikke sendes inn før dette feltet er fylt ut."
+signatureNote = "Kun plassholder – du signerer ikke her. Den markerer hvor en signatur hører hjemme, slik at en PDF-signerer (Adobe Acrobat, en signeringstjeneste osv.) plasserer signaturen på dette stedet når dokumentet signeres."
+tooltip = "Verktøytips"
+tooltipHelp = "Hintet som vises når noen holder pekeren over feltet i en PDF-leser."
+type = "Type"
+typeHelp = "Hvilken type felt dette er. Hvis du endrer det, bygges feltet på nytt, så den gjeldende verdien beholdes ikke."
+
+[formFill.mode]
+create = "Opprett"
+fill = "Fyll ut"
+label = "Skjemaredigeringsmodus"
+modify = "Endre"
+
+[formFill.modify]
+commit = "Lagre {{count}} endring(er)"
+delete = "Slett"
+empty = "Denne PDF har ingen skjemafelt ennå."
+failed = "Kunne ikke lagre endringer"
+groupSizeHint = "Bruk alternativstørrelse"
+hint = "Velg et felt for å redigere egenskapene, dra det på siden eller slett det."
+restore = "Gjenopprett"
 
 [formFill.sidebar]
 close = "Lukk sidepanel"
@@ -4516,6 +4668,10 @@ title = "Endre Metadata"
 desc = "Endre dokumentbegrensninger og tillatelser"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Endre tillatelser"
+
+[home.classify]
+desc = "Identifiser hvilken type dokument dette er, og merk det."
+title = "Klassifiser"
 
 [home.compare]
 desc = "Sammenligner og viser forskjellene mellom to PDF-dokumenter"
@@ -4795,9 +4951,6 @@ title = "Bilde til PDF"
 [imageToPdf]
 tags = "konvertering,bilde,jpg,foto"
 
-[infoBanner]
-dismiss = "Lukk"
-
 [invite]
 acceptError = "Kunne ikke opprette konto"
 accountFor = "Oppretter konto for"
@@ -4979,6 +5132,34 @@ uploadSuccess = "Opplasting vellykket!"
 uploadSuccessMessage = "Bildene dine er overført."
 validating = "Validerer økt..."
 
+[mobileSign]
+clear = "Clear"
+invalidSession = "Session expired"
+invalidSessionMessage = "This QR code is no longer valid. Open the Sign tool on your computer and scan the new code."
+penSizeLabel = "Pen size"
+send = "Send to computer"
+sendAnother = "Send another signature"
+sendError = "Could not send the signature. Check the connection and try again."
+sentMessage = "Signature sent to your computer. You can send another or close this page."
+tabsLabel = "Signature source"
+undo = "Undo"
+validating = "Checking session…"
+
+[mobileSign.photo]
+fromGallery = "From gallery"
+hint = "Photograph a signature on white paper, or choose an existing image."
+invalidType = "Please choose an image file."
+takePhoto = "Take a photo"
+
+[mobileSign.tab]
+draw = "Draw"
+photo = "Photo"
+type = "Type"
+
+[mobileSign.type]
+placeholder = "Your name"
+previewPlaceholder = "Signature preview"
+
 [mobileUpload]
 description = "Skann for å laste opp bilder. Bilder konverteres automatisk til PDF."
 descriptionNoConvert = "Skann for å laste opp bilder fra mobilenheten din."
@@ -4997,8 +5178,37 @@ title = "Last opp fra mobil"
 tags = "Multi Verktøy,Multi operasjon,UI,klikk dra,frontend,klientside,interaktiv,bevegelig"
 title = "PDF-multiverktøy"
 
-[navbar]
-search = "Søk"
+[navFooter]
+openEditor = "Open PDF Editor"
+openProcessor = "Open PDF Processor"
+
+[navFooter.credits]
+count = "{{remaining}} of {{total}}"
+label = "Free credits"
+
+[notifications]
+empty = "Ingenting å rapportere."
+handoffUnavailable = "Denne nettleseren lar ikke behandleren overføre dokumentet til redigeringsprogrammet. Åpne det fra redigeringsprogrammet i stedet."
+noDocumentLinked = "Denne feilen er ikke knyttet til et bestemt dokument, så det er ingenting å åpne her."
+notOnThisDevice = "Dette dokumentet er ikke på denne enheten, så det kan ikke åpnes her."
+occurrences = "{{count}} ganger"
+open = "Varsler"
+title = "Varsler"
+unread = "Ulest"
+
+[notifications.action]
+failed = "Det fungerte ikke. Prøv igjen om et øyeblikk."
+unavailable = "Ikke tilgjengelig for dette varselet."
+
+[notifications.detail]
+copied = "Kopiert"
+copy = "Kopier feil"
+less = "Vis mindre"
+more = "Vis hele meldingen"
+
+[notifications.section]
+earlier = "Tidligere"
+new = "Nye"
 
 [oauth.error]
 message = "Autentiseringen var ikke vellykket. Du kan lukke dette vinduet og prøve igjen."
@@ -5127,6 +5337,7 @@ activeFiles = "Visningen <strong>Aktive filer</strong> viser alle PDF-ene du har
 allTools = "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools."
 close = "Lukk"
 cropSettings = "Nå som vi har valgt filen vi vil beskjære, kan vi konfigurere Beskjær-verktøyet til å velge området vi vil beskjære PDF-en til."
+dialogLabel = "Onboarding"
 fileCheckbox = "Å klikke på en av filene velger den for behandling. Du kan velge flere filer for batchoperasjoner."
 fileReplacement = "Den endrede filen vil erstatte originalfilen i Arbeidsbenken automatisk, slik at du enkelt kan kjøre den gjennom flere verktøy."
 filesButton = "Knappen <strong>Filer</strong> på hurtigtilgangslinjen lar deg laste opp PDF-er til bruk i verktøyene."
@@ -5563,6 +5774,7 @@ freeBody = "View, edit, merge, split, sign, watermark, compress, convert and man
 freeTitle = "Unlimited PDF editing"
 
 [payg.free.hero]
+barAria = "Free PDFs remaining"
 capSuffix = "/ {{limit}} free PDFs"
 metaCategories = "Automation · AI · API requests"
 
@@ -5642,6 +5854,7 @@ automation = "automations"
 default = "this feature"
 
 [payg.spendCapMeter]
+barAria = "Spend against cap"
 capSuffix = "/ {{amount}} cap"
 metaCategories = "Automation · AI · API spend"
 resets = "Resets each billing period"
@@ -5970,6 +6183,11 @@ header = "PDF til PDF/A"
 tags = "arkiv,langtidslagring,standard,konvertering,lagring,bevaring"
 title = "PDF til PDF/A"
 
+[pdfToPDFUA]
+header = "PDF To PDF/UA"
+tags = "accessibility,accessible,tagged,screen reader,wcag,eaa,section 508,conversion"
+title = "PDF To PDF/UA"
+
 [pdfToPDFX]
 tags = "utskrift,standard,konvertering,produksjon,trykklargjøring,arkiv"
 title = "PDF til PDF/X"
@@ -6045,6 +6263,7 @@ small = "500 kreditter"
 xsmall = "100 kreditter"
 
 [plan.availablePlans]
+currency = "Billing currency"
 subtitle = "Velg planen som passer dine behov"
 title = "Tilgjengelige planer"
 
@@ -6624,11 +6843,12 @@ reachedTitle = "Månedlig forbruksgrense nådd"
 title = "Kunne ikke åpne Stripe-portalen"
 
 [portal.billing.walletMeter]
+barAria = "Free PDFs remaining"
 capSuffix_one = "av {{allowance}} gratis PDF-er brukt"
 capSuffix_other = "av {{allowance}} gratis PDF-er brukt"
 eyebrow = "Processor-prøveperiode"
-statusLabel_one = "{{remaining}} igjen"
-statusLabel_other = "{{remaining}} igjen"
+statusLabel_one = "{{used}} brukt"
+statusLabel_other = "{{used}} brukt"
 sub = "Bruk PDF Editor gratis. Betal for å behandle PDF-er automatisk."
 title_one = "Behandle {{allowance}} PDF-er gratis"
 title_other = "Behandle {{allowance}} PDF-er gratis"
@@ -6873,6 +7093,32 @@ label = "Jira"
 description = "Send et dokument eller et varsel på e-post når en policy kjører."
 label = "Mailgun"
 
+[portal.connections.types.n8n]
+baseUrlPlaceholder = "https://your-n8n/webhook/9f2c-..."
+description = "Hand documents to an n8n workflow, and take back whatever it produces."
+label = "n8n"
+
+[portal.connections.types.n8n.fields.authType]
+helperText = "Match the Authentication set on the n8n Webhook node."
+label = "Webhook authentication"
+
+[portal.connections.types.n8n.fields.authType.options.basic]
+label = "Basic auth"
+
+[portal.connections.types.n8n.fields.authType.options.header]
+label = "Header auth"
+
+[portal.connections.types.n8n.fields.authType.options.none]
+label = "None"
+
+[portal.connections.types.n8n.fields.headerName]
+helperText = "The header name from the n8n credential, not its value."
+label = "Header name"
+placeholder = "X-N8N-Key"
+
+[portal.connections.types.n8n.fields.token]
+label = "Header value"
+
 [portal.connections.types.nextcloud]
 baseUrlPlaceholder = "https://your-server/remote.php/dav"
 description = "Arkiver behandlede dokumenter i Nextcloud."
@@ -7077,11 +7323,6 @@ title = "Offisielle SDK-er"
 beta = "Beta"
 deprecated = "Utdatert"
 
-[portal.docs.search]
-empty = "Ingen samsvarende dokumentasjon"
-placeholder = "Søk i dokumentasjon"
-results = "{{count}} resultater"
-
 [portal.docs.skills]
 eyebrow = "FERDIGHETER"
 lead = "Samlede, navngitte kapabiliteter agenten din påkaller som ett enkelt verktøy. Hver ferdighet er en deterministisk operasjonskjede med evalueringer vedlagt."
@@ -7180,11 +7421,11 @@ editorAction = "Redigerer"
 empty = "Ingen dokumenter samsvarer med dette filteret."
 rowActions = "Radhandlinger"
 sensitiveLabel = "Sensitivt"
-sensitiveTitle = "Sensitivt — tilgang kreves"
 
 [portal.documents.table.columns]
 action = "Pipeline / handling"
 document = "Dokument"
+labels = "Labels"
 product = "Produkt"
 status = "Status"
 time = "Tid"
@@ -7200,6 +7441,7 @@ host = "Host"
 lastSeen = "Sist sett"
 region = "Region"
 status = "Status"
+target = "Target"
 version = "Versjon"
 
 [portal.editorAdmin.health.empty]
@@ -7273,6 +7515,60 @@ running = "Kjører"
 description = "Denne visningen traff en uventet feil. Prøv igjen, eller velg en annen seksjon fra sidefeltet."
 retry = "Prøv igjen"
 title = "Noe gikk galt på denne siden"
+
+[portal.failures]
+fromSource = "From source {{source}}"
+occurrences = "{{count}} occurrences"
+reportedBy = "Hit by {{actor}}"
+runReference = "Run {{runId}}"
+subtitle = "Failures recorded from your policy runs and your team's editors, with the actions you can take."
+title = "Failures"
+
+[portal.failures.action]
+acknowledge = "Acknowledge"
+confirm = "Are you sure?"
+dismiss = "Dismiss"
+dismissSkipFile = "Skip this file"
+viewFile = "Vis fil"
+viewInProcessor = "Vis i behandler"
+
+[portal.failures.debug]
+copyJson = "Copy JSON"
+dismissAll = "Dismiss all ({{total}})"
+dismissing = "Dismissing..."
+hideJson = "Hide raw JSON ({{total}})"
+refresh = "Refresh failures"
+showJson = "Show raw JSON ({{total}})"
+
+[portal.failures.disabled]
+closed = "This failure is already closed."
+noDocument = "Denne feilen ble ikke registrert mot et bestemt dokument, så det er ingenting å åpne her."
+unattended = "Denne filen ble matet inn av en mappe, bucket eller webhook, så ingen nettleser holder den for åpning."
+unavailable = "Not available for this failure."
+
+[portal.failures.empty]
+description = "Policy runs that fail will appear here with the actions you can take."
+title = "No failures recorded"
+
+[portal.failures.kind.inputPasswordProtected]
+description = "The pipeline could not open the document because it is password-protected. Unlock it and run it again, or skip this file."
+title = "Password-protected document"
+
+[portal.failures.kind.unknown]
+description = "This run failed for a reason Stirling does not yet recognise. The raw message is shown below."
+title = "Unrecognised failure"
+
+[portal.failures.origin]
+pipeline = "Pipeline"
+policy = "Policy"
+tool = "Tool run"
+
+[portal.failures.stage]
+blocked = "Blocked"
+input = "Input"
+internal = "Internal"
+never_ran = "Never ran"
+output = "Output"
 
 [portal.home.download]
 back = "Tilbake"
@@ -7380,11 +7676,6 @@ cancel = "Avbryt"
 confirm = "Tilbakekall nøkkel"
 title = "Tilbakekall API-nøkkel"
 
-[portal.infrastructure.attestationLabel]
-attested = "Attestert"
-inScope = "Innenfor omfang"
-notApplicable = "N/A"
-
 [portal.infrastructure.audit]
 filterAriaLabel = "Filtrer revisjonshendelser etter kategori"
 heading = "Revisjonslogger"
@@ -7456,11 +7747,6 @@ info = "Info"
 success = "Vellykket"
 warning = "Advarsel"
 
-[portal.infrastructure.certLabel]
-certified = "Sertifisert"
-inProgress = "Pågår"
-notStarted = "Ikke startet"
-
 [portal.infrastructure.createKey]
 cancel = "Avbryt"
 createKey = "Opprett nøkkel"
@@ -7474,237 +7760,9 @@ subtitleCreated = "Kopier denne hemmeligheten nå — den vises ikke igjen."
 title = "Opprett API-nøkkel"
 titleCreated = "Nøkkel opprettet"
 
-[portal.infrastructure.deployLabel]
-live = "Live"
-queued = "I kø"
-rolledBack = "Rullet tilbake"
-rolling = "Ruller ut"
-
-[portal.infrastructure.deployments]
-msValue = "{{value}} ms"
-throughputValue = "{{value}}/min"
-
-[portal.infrastructure.deployments.deployColumns]
-deployedBy = "Distribuert av"
-environment = "Miljø"
-product = "Produkt"
-status = "Status"
-version = "Versjon"
-when = "Når"
-
-[portal.infrastructure.deployments.recent]
-heading = "Nylige distribusjoner"
-subheading = "De nyeste utrullingene på tvers av produkter og miljøer."
-
-[portal.infrastructure.deployments.regionColumns]
-instances = "Instanser"
-latency = "Latens"
-load = "Belastning"
-p99 = "P99"
-region = "Region"
-status = "Status"
-throughput = "Gjennomstrømning"
-uptime = "Oppetid"
-version = "Versjon"
-
-[portal.infrastructure.deployments.regions]
-heading = "Regioner"
-subheading = "Sanntidshelse for hver distribuerte Stirling-region — latens, belastning og utrullingsversjon."
-
-[portal.infrastructure.deployments.regions.empty]
-description = "Distribuerte regioner vises her når arbeidsområdet ditt er klargjort."
-title = "Ingen regioner distribuert"
-
 [portal.infrastructure.keyLabel]
 active = "Aktiv"
 revoked = "Tilbakekalt"
-
-[portal.infrastructure.modelLabel]
-active = "Aktiv"
-degraded = "Redusert"
-disabled = "Deaktivert"
-
-[portal.infrastructure.models]
-heading = "Modeller"
-msValue = "{{value}} ms"
-subheading = "Modellkatalogen og rutingen som driver dokumentbehandling på tvers av arbeidsområdet ditt."
-
-[portal.infrastructure.models.byom]
-description = "Registrer en lokal eller selvhostet modell og fest den til en region for behandling bundet til datalokalitet."
-title = "Ta med din egen modell"
-
-[portal.infrastructure.models.catalogue]
-heading = "Katalog"
-sub = "Administrerte modeller tilgjengelige for arbeidsområdet ditt, med sanntidslatens og kostnad."
-subEnterprise = "Administrerte, egne og lokale modeller — med festing per region tilgjengelig."
-
-[portal.infrastructure.models.catalogue.empty]
-description = "Modeller i katalogen til arbeidsområdet ditt vises her."
-title = "Ingen modeller tilgjengelige"
-
-[portal.infrastructure.models.columns]
-cost = "Kostnad"
-latency = "Latens"
-load = "Belastning"
-model = "Modell"
-status = "Status"
-type = "Type"
-version = "Versjon"
-
-[portal.infrastructure.models.cost]
-perCall = "{{price}}/kall"
-perThousand = "{{price}}/1k"
-
-[portal.infrastructure.models.metrics]
-activeModels = "Aktive modeller"
-avgLatency = "Gj.sn. latens"
-included = "Inkludert"
-monthlySpend = "Månedlige modellkostnader"
-
-[portal.infrastructure.models.routing]
-empty = "Ingen rutingsregler konfigurert."
-heading = "Rutingsregler"
-sub = "Hvilken modell som håndterer hver operasjon. Standarden brukes når ingen smalere regel samsvarer."
-subLocked = "Rut operasjoner til spesifikke modeller — tilgjengelig med betalte planer."
-
-[portal.infrastructure.models.routing.lockedBanner]
-description = "Oppgrader til Pro for å kontrollere hvilken modell som håndterer hver operasjon og dokumenttype."
-title = "Modellruting er en betalt funksjon"
-
-[portal.infrastructure.models.routingColumns]
-default = "Standard"
-docType = "Dokumenttype"
-modelForAria = "Modell for {{operation}}"
-operation = "Operasjon"
-routedTo = "Rutet til"
-
-[portal.infrastructure.modelTypeLabel]
-classification = "Klassifisering"
-extraction = "Ekstraksjon"
-llm = "LLM"
-ocr = "OCR"
-
-[portal.infrastructure.regionLabel]
-degraded = "Redusert"
-down = "Nede"
-healthy = "Frisk"
-
-[portal.infrastructure.security.access.byok]
-description = "Oppgi en nøkkel fra din egen KMS. Stirling krypterer med den, men kan fortsatt lese."
-label = "Ta med din egen nøkkel (BYOK)"
-
-[portal.infrastructure.security.access.hyok]
-description = "Nøkler forlater aldri din KMS. Stirling holder bare chiffertekst."
-label = "Hold din egen nøkkel (HYOK)"
-
-[portal.infrastructure.security.access.stirling]
-description = "Stirling administrerer krypteringsnøkler. Enklest — null nøkkeldrift på din side."
-label = "Nøkler holdt av Stirling"
-
-[portal.infrastructure.security.accessPolicy]
-heading = "Policy for dokumenttilgang"
-subheading = "Kontrollerer hvem som kan dekryptere behandlede dokumenter i ro."
-
-[portal.infrastructure.security.attestations]
-heading = "Samsvarsattestasjoner"
-noReport = "Ingen rapport tilgjengelig"
-subheading = "Revisjonsstilling rammeverk for rammeverk, med rapporter tilgjengelige for attesterte kontroller."
-viewReport = "Vis rapport →"
-
-[portal.infrastructure.security.compliance]
-heading = "Samsvar"
-subheading = "Attestasjoner og sertifiseringer som dekker Stirling-plattformen."
-
-[portal.infrastructure.security.empty]
-description = "Sikkerhetskonfigurasjonen for arbeidsområdet ditt vises her."
-title = "Sikkerhetsstilling utilgjengelig"
-
-[portal.infrastructure.security.hyokBanner]
-description = "Med HYOK forlater krypteringsnøkler aldri din KMS. Stirling lagrer og behandler bare chiffertekst som du kan tilbakekalle når som helst."
-title = "Stirling kan ikke dekryptere dokumentene dine"
-
-[portal.infrastructure.security.ipAllowlist]
-empty = "Ingen IP-områder konfigurert — alle IP-er tillatt."
-heading = "IP-tillatelsesliste"
-sub = "API-tilgang er begrenset til disse CIDR-områdene."
-subLocked = "Begrens API-tilgang til kjente IP-områder — tilgjengelig med betalte planer."
-
-[portal.infrastructure.security.ipAllowlist.lockedBanner]
-description = "Oppgrader til Pro for å begrense API-tilgang til spesifikke nettverk."
-title = "IP-tillatelseslisting er en betalt funksjon"
-
-[portal.infrastructure.security.ipColumns]
-added = "Lagt til"
-addedBy = "Lagt til av"
-cidr = "CIDR"
-label = "Etikett"
-
-[portal.infrastructure.security.keyManagement]
-algorithm = "Algoritme"
-heading = "Administrasjon av krypteringsnøkler"
-keyId = "Nøkkelidentifikator"
-lastRotated = "Sist rotert"
-rotateKey = "Roter nøkkel"
-rotationPolicy = "Rotasjonspolicy"
-subheading = "Forvaring av nøklene som krypterer dokumenter i ro — hvem som kan dekryptere, og hvordan nøkler roteres."
-
-[portal.infrastructure.security.managedBanner]
-description = "Forvaring med ta-med-din-egen-nøkkel (BYOK) og hold-din-egen-nøkkel (HYOK) er tilgjengelig på Enterprise. Oppgrader for å oppgi nøkler fra din egen KMS."
-title = "Nøkler administreres av Stirling på planen din"
-
-[portal.infrastructure.security.residency.apac]
-description = "ap-southeast-1"
-label = "Asia-Stillehavet"
-
-[portal.infrastructure.security.residency.eu]
-description = "eu-west-1 · GDPR-datagrense"
-label = "Den europeiske union"
-
-[portal.infrastructure.security.residency.us]
-description = "us-east-1 · us-west-2"
-label = "USA"
-
-[portal.infrastructure.security.residencyHeader]
-heading = "Datalokalitet"
-subheading = "Hvor dokumenter lagres og behandles."
-
-[portal.infrastructure.storage]
-gbValue = "{{value}} GB"
-percentUsed = "{{value}} brukt"
-
-[portal.infrastructure.storage.empty]
-description = "Tilkoblet lagring og bruk vises her."
-title = "Ingen lagring konfigurert"
-
-[portal.infrastructure.storage.lifecycle]
-active = "Aktiv"
-activeRange = "0–{{value}}d"
-archived = "Arkivert"
-coldStorage = "kaldlagring"
-deleted = "Slettet"
-never = "aldri"
-purged = "slettet permanent"
-
-[portal.infrastructure.storage.providers]
-connect = "Koble til"
-connected = "Tilkoblet"
-heading = "Tilkoblede leverandører"
-subheading = "Hvor behandlede artefakter skrives."
-
-[portal.infrastructure.storage.retention]
-heading = "Oppbevaring"
-subheading = "Hvor lenge artefakter beholdes før livssyklussletting."
-windowLabel = "Standard oppbevaringsvindu"
-
-[portal.infrastructure.storage.retentionOption]
-days_one = "{{count}} dag"
-days_other = "{{count}} dager"
-never = "Slett aldri"
-
-[portal.infrastructure.storage.totalUsage]
-heading = "Total bruk"
-progressLabel = "Lagring brukt"
-subheading = "Lagring brukt på tvers av alle tilkoblede leverandører."
 
 [portal.infrastructure.tabs]
 apiKeys = "API-nøkler"
@@ -7715,11 +7773,9 @@ security = "Sikkerhet"
 storage = "Lagring"
 
 [portal.integrations]
-addAnother = "Legg til en til"
 availableHeading = "Tilgjengelig"
 comingSoonHeading = "Kommer snart"
 connect = "Koble til"
-connectedHeading = "Tilkoblet"
 connectionCount_one = "{{count}} tilkobling"
 connectionCount_other = "{{count}} tilkoblinger"
 customApi = "Tilpasset API"
@@ -7736,6 +7792,10 @@ notify = "Varsle"
 security = "Sikkerhet"
 signing = "Signering"
 storage = "Lagring"
+
+[portal.integrations.noResults]
+description = "No integrations match your filters. Try a different category or search."
+title = "No matches"
 
 [portal.integrations.status]
 connected = "Tilkoblet"
@@ -7767,7 +7827,6 @@ integrations = "Integrasjoner"
 pipelines = "Pipelines"
 policies = "Policyer"
 procurement = "Innkjøp"
-settings = "Innstillinger"
 sources = "Kilder"
 usage = "Bruk og fakturering"
 users = "Brukere"
@@ -7784,7 +7843,7 @@ title = "Pipelines"
 newPipeline = "Ny pipeline"
 
 [portal.pipelines.builder]
-addStep = "Legg til verktøy"
+activate = "Activate"
 back = "Tilbake til pipelines"
 cannotFollow = "Kan ikke ta {{produced}}"
 chooseAccount = "Velg en konto"
@@ -7792,28 +7851,38 @@ chooseDestination = "Velg en destinasjon"
 chooseOperation = "Velg hva dette trinnet gjør"
 chooseSource = "Velg en kilde"
 discard = "Forkast endringer"
-enabled = "Aktivert"
 inputs = "Inndata"
 inputSource = "Inndatakilde"
 inputTrigger = "Utløser"
 keepEditing = "Fortsett å redigere"
+moreActions = "More actions"
 needsConfiguring = "Må settes opp"
-needsUpload = "Trenger en opplastet fil"
-noSources = "Ingen kilder er tilkoblet ennå. Opprett en for å bruke den som inndata."
+needsDestination = "No destination chosen"
+needsSource = "No source chosen"
 noToolMatches = "Ingen verktøy samsvarer med søket ditt."
-pipelineSettings = "Pipeline-innstillinger"
+pause = "Pause"
+rename = "Rename pipeline"
 searchTools = "Søk i verktøy"
-selectToolBody = "Legg til et verktøy for å bygge pipelinen din."
-selectToolTitle = "Ingen verktøy ennå"
 sendToSystem = "Send til et annet system"
 stepsIncompatible = "Disse trinnene kan ikke kjøres på det forrige trinnet produserer: {{tools}}."
 stepsNeedSetup = "Disse trinnene må fortsatt settes opp før lagring: {{tools}}."
-toolSettings = "Verktøyinnstillinger"
+supportingFiles = "Supporting files"
+testRun = "Test with a file"
 unknownStep = "Ukjent operasjon, beholdt som den er."
 unsavedBody = "Du har ulagrede endringer. Lagre dem før du forlater, eller forkast dem?"
 unsavedTitle = "Ulagrede endringer"
-uploadUnsupported = "Opplastede filer støttes ikke i pipelines ennå, så disse trinnene kan ikke lagres: {{tools}}."
 usesDefaults = "Kjører med standardinnstillinger"
+viewDefinition = "View definition"
+
+[portal.pipelines.builder.blocker]
+destination = "Choose a destination"
+heading = "To create this pipeline:"
+incompatible = "Fix steps that can't run in order: {{tools}}"
+name = "Give the pipeline a name"
+saveHeading = "To save your changes:"
+schedule = "Set how often it runs"
+setup = "Finish setting up: {{tools}}"
+source = "Choose an input source"
 
 [portal.pipelines.builder.diagnostic]
 fan-in = "Kombinerer hver fil fra forrige trinn"
@@ -7825,30 +7894,35 @@ undeclared-operation = "Kan ikke sjekke hva dette trinnet godtar"
 
 [portal.pipelines.composer]
 addTool = "Legg til verktøy"
-cancel = "Avbryt"
-chainEmpty = "Legg til et verktøy for å begynne å bygge pipelinen din."
 create = "Opprett pipeline"
+createPaused = "Create paused"
 editingUnsupported = "Visning av disse verktøyparametrene for redigering støttes ikke ennå."
-moveDown = "Flytt ned"
-moveUp = "Flytt opp"
+editSource = "Edit source"
 name = "Navn"
 namePlaceholder = "f.eks. Redigeringsgjennomgang"
 noToolSettings = "Dette verktøyet har ingen konfigurerbare innstillinger."
-operations_one = "Operasjon ({{count}})"
-operations_other = "Operasjoner ({{count}})"
 output = "Utdata"
-removeStep = "Fjern operasjon"
 save = "Lagre endringer"
 scheduleEvery = "Kjør hver"
-sources = "Kilder"
-sourcesLoading = "Laster kilder..."
 trigger = "Utløser"
 triggerManual = "Kun manuelt"
+
+[portal.pipelines.composer.runsEvery]
+days_one = "Runs every day"
+days_other = "Runs every {{count}} days"
+hours_one = "Runs every hour"
+hours_other = "Runs every {{count}} hours"
+minutes_one = "Runs every minute"
+minutes_other = "Runs every {{count}} minutes"
 
 [portal.pipelines.composer.unit]
 days = "dager"
 hours = "timer"
 minutes = "minutter"
+
+[portal.pipelines.definition]
+subtitle = "The pipeline as it would be saved."
+title = "Definition"
 
 [portal.pipelines.delete]
 body = "Slette \"{{name}}\"? Dette kan ikke angres."
@@ -7867,6 +7941,37 @@ connectSource = "Koble til en kilde"
 description = "Opprett din første pipeline: velg kildene den kjører over, kjed operasjonene, og velg hvor utdata skal gå."
 title = "Ingen pipelines ennå"
 
+[portal.pipelines.graph]
+addFirstTool = "Add a tool"
+dragHint = "Drop on a line to move it"
+insertHere = "Add a tool here"
+removeNode = "Remove {{name}}"
+showError = "Show why {{name}} failed"
+
+[portal.pipelines.graph.add]
+input = "Add a source"
+output = "Add a destination"
+
+[portal.pipelines.graph.run]
+done = "Done"
+failed = "Failed"
+running = "Running"
+
+[portal.pipelines.inspector]
+multipleBody = "Drag any of them onto a line to move them together, or press Delete to remove them."
+multipleSelected_one = "{{count}} step selected"
+multipleSelected_other = "{{count}} steps selected"
+noSelectionBody = "Pick a node in the graph to change what it does."
+noSelectionTitle = "Nothing selected"
+
+[portal.pipelines.inspector.status]
+completed_one = "Finished the only step"
+completed_other = "Finished all {{count}} steps"
+failed_one = "Failed on the only step"
+failed_other = "Failed after {{done}} of {{count}} steps"
+running_one = "Running the only step"
+running_other = "Running step {{done}} of {{count}}"
+
 [portal.pipelines.kpi]
 active = "Aktive"
 paused = "Satt på pause"
@@ -7879,7 +7984,6 @@ completed_one = "Kjøring fullført."
 completed_other = "Alle {{count}} kjøringer fullført."
 empty = "Ingenting å kjøre: kildene hadde ingen dokumenter å behandle."
 failed = "Kjøring mislyktes: {{error}}"
-historyCleared = "Historikk tømt. Neste kjøring behandler alt som for øyeblikket er i kildene, på nytt."
 inFlight = "Ingenting nytt å kjøre: dokumenter behandles fortsatt fra en tidligere kjøring."
 parked_one = "Ingenting å kjøre: {{count}} dokument feilet tidligere og er parkert. Rett årsaken, og tøm deretter historikken for å prøve på nytt."
 parked_other = "Ingenting å kjøre: {{count}} dokumenter feilet tidligere og er parkert. Rett årsaken, og tøm deretter historikken for å prøve dem på nytt."
@@ -7895,6 +7999,7 @@ name = "Pipeline"
 sources = "Kilder"
 status = "Status"
 steps = "Trinn"
+trigger = "Trigger"
 
 [portal.pipelines.trigger]
 folder-watch = "Mappeovervåking"
@@ -8208,6 +8313,24 @@ label = "Legg ved i en Jira-sak"
 [portal.policies.operations.mailgunEmail]
 description = "Sender det behandlede dokumentet som et vedlegg."
 label = "Send dokumentet på e-post (Mailgun)"
+
+[portal.policies.operations.n8nGate]
+description = "Your workflow decides whether the run carries on."
+label = "Ask an n8n workflow to approve"
+note = "The workflow must reply with {\"approved\": true}. Anything else — including a timeout — stops the run and parks the document."
+
+[portal.policies.operations.n8nNotify]
+description = "Sends the run's details, not the document."
+label = "Tell an n8n workflow"
+
+[portal.policies.operations.n8nSend]
+description = "Sends the document and the run's details to your workflow."
+label = "Send the document to n8n"
+
+[portal.policies.operations.n8nTransform]
+description = "Your workflow processes the document and the file it returns replaces it."
+label = "Process the document in n8n"
+note = "Set the Webhook node to respond \"Using Respond to Webhook Node\", and return a file. On the default \"Immediately\" setting n8n replies with an acknowledgement, and that would replace the document."
 
 [portal.policies.operations.nextcloudUpload]
 description = "Skriver det behandlede dokumentet til en mappe."
@@ -8683,16 +8806,6 @@ maxed = "Maksimert"
 subtitle = "Den gratis prøveperioden din varer til {{date}}. Ingen kort kreves."
 title = "Enterprise-prøveperiode"
 
-[portal.search]
-ariaLabel = "Søk"
-placeholder = "Søk i Stirling — endpoints, pipelines, docs…"
-
-[portal.search.empty]
-noActionsDescription = "Hurtighandlinger vises her når de er tilgjengelige."
-noActionsTitle = "Ingen hurtighandlinger"
-noMatches = "Ingen treff for \"{{query}}\""
-noMatchesDescription = "Prøv et annet søkeord eller bla gjennom katalogen."
-
 [portal.settings.groups]
 admin = "Administrator"
 
@@ -8719,7 +8832,9 @@ title = "Kilder"
 connectSource = "Koble til kilde"
 
 [portal.sources.builder]
+advanced = "Avansert"
 back = "Tilbake til kilder"
+backToSource = "Tilbake til kildeoppsett"
 backToTypes = "Alle kildetyper"
 cancel = "Avbryt"
 chooseHint = "Velg hvor dokumenter kommer fra. Nedtonede tilkoblinger er på vei."
@@ -8729,7 +8844,6 @@ create = "Opprett kilde"
 createTitle = "Koble til en kilde"
 delete = "Slett"
 editTitle = "Rediger kilde"
-enabled = "Aktivert"
 save = "Lagre endringer"
 
 [portal.sources.builder.folderAccess]
@@ -8742,10 +8856,6 @@ body = "Slette \"{{name}}\"? Dette kan ikke angres. Policyer som refererer til d
 cancel = "Avbryt"
 confirm = "Slett"
 title = "Slette kilde?"
-
-[portal.sources.empty]
-description = "Koble til en mappe (og snart skylagring) slik at policyene dine har et sted å hente dokumenter fra."
-title = "Ingen kilder koblet til ennå"
 
 [portal.sources.kpi]
 inUse = "I bruk"
@@ -8770,6 +8880,7 @@ consume = "Consume: behandle hver fil én gang"
 snapshot = "Snapshot: les mappen på nytt ved hver kjøring"
 
 [portal.sources.networkFields.recursive]
+helperText = "Inkluder undermapper hvis filene dine er organisert i nestede mapper, eller overvåk bare toppnivået."
 label = "Mappedybde"
 
 [portal.sources.networkFields.recursive.options]
@@ -8785,6 +8896,7 @@ unused = "Ubrukt"
 documents = "Dokumenter"
 source = "Kilde"
 status = "Status"
+type = "Type"
 usedBy = "Policyer"
 
 [portal.sources.types.box]
@@ -8822,6 +8934,7 @@ hash = "Størrelse, dato og innholdskontroll"
 stat = "Størrelse og endringsdato"
 
 [portal.sources.types.folder.fields.mode]
+helperText = "Om den opprinnelige filen skal bli liggende etter at den er behandlet. Hvis den opprinnelige filen blir liggende, behandles den på nytt neste gang pipeline skanner kilden."
 label = "Lesemodus"
 
 [portal.sources.types.folder.fields.mode.options]
@@ -8829,6 +8942,7 @@ consume = "Konsumer: behandle hver fil én gang"
 snapshot = "Snapshot: les mappen på nytt ved hver kjøring"
 
 [portal.sources.types.folder.fields.recursive]
+helperText = "Inkluder undermapper hvis filene dine er organisert i nestede mapper, eller overvåk bare toppnivået."
 label = "Mappedybde"
 
 [portal.sources.types.folder.fields.recursive.options]
@@ -9702,7 +9816,9 @@ toolNotAvailableLocally = "Stirling-PDF-serveren din er frakoblet og \"{{endpoin
 expired = "Økten din har utløpt. Vennligst oppdater siden og prøv igjen."
 
 [settings]
+backToSections = "Alle innstillinger"
 close = "Lukk"
+title = "Innstillinger"
 
 [settings.ai]
 documents = "Dokumenter og RAG"
@@ -9980,9 +10096,6 @@ title = "Retningslinjer og personvern"
 [settings.preferences]
 title = "Preferanser"
 
-[settings.search]
-placeholder = "Søk i innstillingssider..."
-
 [settings.security]
 description = "Oppdater passordet ditt for å holde kontoen sikker."
 title = "Sikkerhet"
@@ -10128,6 +10241,7 @@ last = "Siste side"
 maintainRatio = "Bytt behold sideforhold"
 next = "Neste side"
 noSavedSigs = "Ingen lagrede signaturer funnet"
+penSizePlaceholder = "Type or select pen size (1-200)"
 personalSigs = "Personlige signaturer"
 previous = "Forrige side"
 redo = "Gjør om"
@@ -10166,6 +10280,7 @@ backgroundRemovalFailedTitle = "Fjerning av bakgrunn mislyktes"
 hint = "Last opp et PNG- eller JPG-bilde av signaturen din"
 label = "Last opp signaturbilde"
 placeholder = "Velg bildefil"
+previewAlt = "Current image signature"
 processing = "Behandler bilde..."
 removeBackground = "Fjern hvit bakgrunn (gjør gjennomsiktig)"
 
@@ -10178,6 +10293,17 @@ resumeHint = "Gjenoppta plassering for å klikke og legge til signaturen."
 saved = "Velg en lagret signatur ovenfor, og klikk hvor som helst på PDF-en for å plassere den."
 text = "Når du har skrevet inn navnet ditt over, klikk hvor som helst i PDF-en for å plassere signaturen."
 title = "Slik legger du til signatur"
+
+[sign.mobile]
+createFromPhone = "Mobile upload"
+description = "Scan this QR code with your phone or tablet, draw your signature, and it will appear here automatically."
+error = "Connection Error"
+expiryWarning = "QR Code Expiring Soon"
+expiryWarningMessage = "This QR code will expire in {{seconds}} seconds. A new code will be generated automatically."
+instructions = "Open the camera app on your phone and scan this code. Keep this window open while you draw."
+pollingError = "Error checking for the signature"
+sessionCreateError = "Failed to create session"
+title = "Draw on your phone"
 
 [sign.mode]
 move = "Flytt signatur"
@@ -10625,6 +10751,24 @@ title = "Last opp til server"
 updateButton = "Oppdater på server"
 uploadButton = "Last opp til server"
 
+[superSearch]
+all = "All"
+ariaLabel = "Super search"
+filtersAriaLabel = "Search filters"
+hint = "Type to search"
+placeholder = "Search Stirling"
+placeholderShort = "Søk"
+showLess = "Show less"
+showMore = "Show {{count}} more"
+
+[superSearch.group]
+docs = "Docs"
+files = "Files"
+pages = "Pages"
+processor = "Processor"
+settings = "Settings"
+tools = "Tools"
+
 [survey]
 title = "Stirling-PDF Survey"
 
@@ -10774,7 +10918,6 @@ goBack = "Gå tilbake"
 pdfTools = "PDF-verktøy"
 placeholder = "Velg et verktøy for å komme i gang"
 premiumFeature = "Premium-funksjon:"
-searchTools = "Søk etter verktøy"
 toolsHeader = "Verktøy"
 viewAllTools = "Vis alle verktøy"
 
@@ -10811,6 +10954,7 @@ searchPlaceholder = "Søk i verktøy..."
 
 [toolPicker.subcategories]
 advancedFormatting = "Avansert formatering"
+ai = "AI"
 automation = "Automatisering"
 developerTools = "Utviklerverktøy"
 documentReview = "Dokumentgjennomgang"
@@ -10821,6 +10965,9 @@ pageFormatting = "Sideformatering"
 removal = "Fjerning"
 signing = "Signering"
 verification = "Verifisering"
+
+[toolRenderer]
+notFound = "Tool not found: {{tool}}"
 
 [tools]
 noSearchResults = "Ingen verktøy funnet"
@@ -10979,6 +11126,13 @@ approver = "Godkjenner policy"
 editor = "Editor"
 processor = "Processor"
 
+[users.columns]
+capabilities = "Capabilities"
+email = "Email"
+person = "Person"
+role = "Role"
+status = "Status"
+
 [users.confirm]
 cancelInviteBody = "Avbryt invitasjonen til {{email}}? De vil ikke kunne bli med med den nåværende lenken."
 cancelInviteTitle = "Avbryt invitasjon"
@@ -10998,10 +11152,8 @@ title = "Ingen medlemmer ennå"
 addToTeam = "Legg til i team"
 guestCount = "{{count}} gjest"
 guests = "Gjester"
-guestsDesc = "Eksterne samarbeidspartnere, begrenset til det du delte. Kun Editor."
 ledBy = "ledet av {{owner}}"
 org = "Organisasjon"
-orgDesc = "Eiere med myndighet på tvers av organisasjonen og policygodkjenning"
 owners = "{{count}} eier"
 team = "{{name}}-team"
 teamMeta = "{{count}} personer"
@@ -11041,12 +11193,14 @@ usernamePlaceholder = "jsmith"
 [users.invites]
 by = "Invitert av {{who}}"
 cancel = "Avbryt"
-count = "{{count}} ventende"
-desc = "Inviterte personer som ikke har blitt med ennå. De opptar en plass til de godtar."
 expiresInDays_one = "Utløper om {{count}} dag"
 expiresInDays_other = "Utløper om {{count}} dager"
 expiresToday = "Utløper i dag"
 title = "Ventende invitasjoner"
+
+[users.invites.columns]
+expires = "Expires"
+invitee = "Invitee"
 
 [users.loadError]
 description = "Noe gikk galt ved kontakt med backend, eller du har ikke tilgang. Prøv igjen."
@@ -11237,12 +11391,15 @@ searchPlaceholder = "Søk i vedlegg"
 title = "Vedlegg"
 
 [viewer.bookmarks]
+addBookmark = "Add bookmark"
 bookmarkTitle = "Bokmerketittel"
 bookmarkTitleRequired = "Bokmerketittel er påkrevd"
 closeSidebar = "Lukk sidepanelet for bokmerker"
 collapseAll = "Skjul alle bokmerker"
+empty = "No bookmarks in this document"
 expandAll = "Utvid alle bokmerker"
 searchPlaceholder = "Søk i bokmerker"
+title = "Bookmarks"
 
 [viewer.comments]
 addComment = "Legg til kommentar"
@@ -11264,10 +11421,12 @@ locateAnnotation = "Finn i dokument"
 moreActions = "Flere handlinger"
 nComments_one = "{{count}} comment"
 nComments_other = "{{count}} comments"
+noMatch = "No comments match your search"
 pageLabel = "Side {{page}}"
 placingHint = "Klikk på en side for å plassere… (avbryt)"
 removeCommentOnly = "Fjern bare kommentaren"
 saveReply = "Lagre svar"
+searchPlaceholder = "Search comments"
 title = "Kommentarer"
 typeComment = "Kommentar"
 typeInsertText = "Sett inn tekst"
@@ -11290,6 +11449,7 @@ unsavedDesc = "Du har ulagrede endringer"
 closeSidebar = "Lukk sidepanelet for lag"
 hideAll = "Skjul alle lag"
 showAll = "Vis alle lag"
+title = "Layers"
 
 [viewer.link]
 delete = "Slett lenke"
@@ -11299,8 +11459,11 @@ columnDefault = "Kolonne {{index}}"
 convertToPdf = "Konverter til PDF"
 csvStats = "{{rows}} rader · {{columns}} kolonner · {{size}}"
 emptyFile = "Tom fil"
+htmlHidePreview = "Skjul forhåndsvisning"
 htmlPreview = "HTML-forhåndsvisning"
+htmlPreviewMobileHidden = "HTML-sider er utformet for skrivebordsbredder, så forhåndsvisningen er av som standard her."
 htmlPreviewWarning = "HTML-forhåndsvisning — eksterne ressurser kan hende ikke lastes · {{size}}"
+htmlShowPreview = "Vis forhåndsvisning likevel"
 invalidJson = "Ugyldig JSON — viser rått innhold"
 lineNumbers = "Linjenumre"
 loading = "Laster ..."
@@ -11646,6 +11809,8 @@ exitRedaction = "Avslutt sladdemodus"
 exportAll = "Eksporter PDF"
 exportSelected = "Eksporter valgte sider"
 formFill = "Fyll ut skjema"
+hideToolbar = "Hide toolbar"
+moreActions = "Flere handlinger"
 multiTool = "Multiverktøy"
 panMode = "Panoreringsmodus"
 print = "Skriv ut PDF"
@@ -11666,6 +11831,9 @@ selectAll = "Velg alle"
 selectByNumber = "Velg etter sidenummer"
 selectLanguage = "Velg språk"
 share = "Del"
+showAllTools = "Vis alle verktøy"
+showFewerTools = "Skjul verktøylinje"
+showToolbar = "Show toolbar"
 toggleAnnotations = "Veksle synlighet for annoteringer"
 toggleAttachments = "Veksle vedlegg"
 toggleBookmarks = "Veksle bokmerker"

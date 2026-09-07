@@ -108,14 +108,14 @@ export default function RightSidebar() {
 
   const activeTool: ToolRegistryEntry | null =
     inToolView && selectedToolKey
-      ? (toolRegistry[selectedToolKey as ToolId] ?? null)
+      ? (toolRegistry[selectedToolKey] ?? null)
       : null;
 
   const expandedWidth = "18.5rem";
 
   const computedWidth = () => {
     if (isMobile) return "100%";
-    if (!isPanelVisible) return "3.5rem";
+    if (!isPanelVisible) return "var(--nav-rail-w)";
     return expandedWidth;
   };
 
@@ -131,7 +131,7 @@ export default function RightSidebar() {
     const items: Array<{ id: ToolId; tool: ToolRegistryEntry }> = [];
     collapsedQuickSection.subcategories.forEach((sc: SubcategoryGroup) =>
       sc.tools.forEach((entry) =>
-        items.push({ id: entry.id as ToolId, tool: entry.tool }),
+        items.push({ id: entry.id, tool: entry.tool }),
       ),
     );
     return items;
@@ -181,7 +181,8 @@ export default function RightSidebar() {
                 content={tool.name}
                 position="left"
                 arrow
-                delay={300}
+                // No delay: collapsed to icons, the tooltip is the only label.
+                delay={0}
               >
                 <ActionIcon
                   aria-label={tool.name}
@@ -206,7 +207,7 @@ export default function RightSidebar() {
           /* Fixed width matches the expanded panel width so the inner content is
              laid out at its final size from the moment it mounts. The outer
              .tool-panel clips it (overflow-hidden) while it animates from the
-             collapsed 3.5rem width — text/icons stay put and just come into view
+             collapsed rail width — text/icons stay put and just come into view
              instead of jiggling as space becomes available. */
           style={{
             opacity: 1,
@@ -237,7 +238,10 @@ export default function RightSidebar() {
                     : t("toolPanel.goBack", "Go back")
                 }
               />
-            ) : (
+            ) : showCloseButton || !isMobile ? (
+              /* Without a back button this header is just the collapse control,
+                 which has no meaning on mobile - the slider switches panes. Drop
+                 it there so the tool list starts under the tabs. */
               <div className="tool-panel__compact-header">
                 <span className="tool-panel__compact-title">
                   {t("toolPanel.pdfTools", "PDF Tools")}
@@ -272,13 +276,16 @@ export default function RightSidebar() {
                   )}
                 </div>
               </div>
-            )}
+            ) : null}
 
             <ToolPanel
               allToolsView={allToolsView}
               onShowAllTools={handleShowAllTools}
               onToolSelect={handleToolSelectWithTransition}
               compact={false}
+              /* Mobile keeps the workbench bar - and with it the super search -
+                 on the other slide, so the list needs its own filter. */
+              showSearch={isMobile}
             />
           </>
         </div>

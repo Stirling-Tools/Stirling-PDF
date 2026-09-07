@@ -101,6 +101,7 @@ class PolicyRunRegistryTest {
                         null,
                         new PipelineDefinition(runId, List.of(), List.of()),
                         null,
+                        null,
                         null);
         registry.register(run);
         return run;

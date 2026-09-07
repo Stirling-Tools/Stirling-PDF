@@ -1,9 +1,8 @@
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
-import { Avatar, Button } from "@app/ui";
+import { Avatar, column, DataTable, type DataTableColumn } from "@app/ui";
 import type { PendingInvitation } from "@portal/api/users";
-import "@portal/theme/surface.css";
-import "@portal/views/Users.css";
 
 interface PendingInvitationsProps {
   invitations: PendingInvitation[];
@@ -25,60 +24,54 @@ function expiryLabel(iso: string | undefined, t: TFunction): string {
 }
 
 /**
- * Pending team invitations (SaaS): the parity gap vs the editor. Each row shows
- * the invitee and lets a team leader cancel the invite. Rendered only when the
- * flavor supports it (manageInvitations) and there are pending invites.
+ * Pending team invitations (SaaS): the parity gap vs the editor. A single flat
+ * list (not a section - there's only ever one) captioned with its title; each
+ * row shows the invitee and lets a team leader cancel the invite.
  */
 export function PendingInvitations({
   invitations,
   onCancel,
 }: PendingInvitationsProps) {
   const { t } = useTranslation();
+
+  const columns = useMemo<DataTableColumn<PendingInvitation>[]>(
+    () => [
+      column.entity({
+        key: "invitee",
+        header: t("users.invites.columns.invitee", "Invitee"),
+        icon: (inv) => <Avatar name={inv.email} size="sm" tone="neutral" />,
+        primary: (inv) => inv.email,
+        note: (inv) =>
+          inv.invitedBy
+            ? t("users.invites.by", "Invited by {{who}}", {
+                who: inv.invitedBy,
+              })
+            : undefined,
+      }),
+      column.muted({
+        key: "expires",
+        header: t("users.invites.columns.expires", "Expires"),
+        get: (inv) => expiryLabel(inv.expiresAt, t),
+      }),
+      column.actions({
+        key: "actions",
+        get: (inv) => [
+          {
+            label: t("users.invites.cancel", "Cancel"),
+            onClick: () => onCancel(inv),
+          },
+        ],
+      }),
+    ],
+    [t, onCancel],
+  );
+
   return (
-    <section className="portal-surface portal-users__group">
-      <header className="portal-users__group-head">
-        <div className="portal-users__group-title">
-          <strong>{t("users.invites.title", "Pending invitations")}</strong>
-          <span className="portal-users__group-desc">
-            {t(
-              "users.invites.desc",
-              "Invited people who haven't joined yet. They hold a seat until they accept.",
-            )}
-          </span>
-        </div>
-        <span className="portal-users__group-count">
-          {t("users.invites.count", "{{count}} pending", {
-            count: invitations.length,
-          })}
-        </span>
-      </header>
-      {invitations.map((inv) => {
-        const expires = expiryLabel(inv.expiresAt, t);
-        return (
-          <div className="portal-users__row" key={inv.id}>
-            <div className="portal-users__row-main">
-              <Avatar name={inv.email} size="sm" tone="neutral" />
-              <div className="portal-users__row-id">
-                <span className="portal-users__row-name">{inv.email}</span>
-                {inv.invitedBy && (
-                  <span className="portal-users__row-email">
-                    {t("users.invites.by", "Invited by {{who}}", {
-                      who: inv.invitedBy,
-                    })}
-                  </span>
-                )}
-              </div>
-            </div>
-            <span className="portal-users__inv-spacer" />
-            {expires && (
-              <span className="portal-users__row-active">{expires}</span>
-            )}
-            <Button variant="secondary" size="sm" onClick={() => onCancel(inv)}>
-              {t("users.invites.cancel", "Cancel")}
-            </Button>
-          </div>
-        );
-      })}
-    </section>
+    <DataTable<PendingInvitation>
+      columns={columns}
+      rows={invitations}
+      rowKey={(inv) => String(inv.id)}
+      caption={t("users.invites.title", "Pending invitations")}
+    />
   );
 }

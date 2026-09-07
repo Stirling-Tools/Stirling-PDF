@@ -5,7 +5,7 @@ import {
 } from "@app/components/onboarding/onboardingSlideTypes";
 
 export interface SaasFlowInputs {
-  /** Free-tier wallet with one-time allowance remaining — show the usage meter. */
+  /** Free-tier wallet with allowance remaining this period — show the usage meter. */
   showUsageSlide: boolean;
   /** Team leaders only — invited members and anonymous guests skip the team slide. */
   showTeamSlide: boolean;

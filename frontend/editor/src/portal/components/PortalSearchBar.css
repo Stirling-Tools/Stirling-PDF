@@ -1,10 +1,10 @@
-/* Slim strip at the top of the main column hosting the shared search bar.
-   Deliberately unpainted: only the input itself shows, on the page ground. */
+/* Unpainted strip at the top of the main column, matching the sidebar header's height. */
 .portal-searchbar {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.22rem 1rem;
+  min-height: 3.1875rem;
+  padding: 0 1rem;
   flex-shrink: 0;
 }
 

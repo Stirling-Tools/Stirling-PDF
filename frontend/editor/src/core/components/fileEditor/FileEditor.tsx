@@ -336,7 +336,7 @@ const FileEditor = ({
     (fileId: FileId) => {
       const index = stubsRef.current.findIndex((r) => r.id === fileId);
       if (index !== -1) {
-        setActiveFileId(fileId as string);
+        setActiveFileId(fileId);
         setActiveFileIndex(index);
         navActions.setWorkbench("viewer");
       }
@@ -410,10 +410,7 @@ const FileEditor = ({
                     onUnzipFile={handleUnzipFile}
                     toolMode={toolMode}
                     isSupported={isFileSupported(record.name)}
-                    policies={
-                      policyFileBadges.get(record.id as string) ??
-                      EMPTY_POLICIES
-                    }
+                    policies={policyFileBadges.get(record.id) ?? EMPTY_POLICIES}
                   />
                 );
               })}

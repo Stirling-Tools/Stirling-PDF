@@ -1,5 +1,6 @@
 package stirling.software.proprietary.model;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 import org.hibernate.annotations.Cache;
@@ -24,7 +25,7 @@ import lombok.*;
 @ToString
 public class UserLicenseSettings implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+    @Serial private static final long serialVersionUID = 1L;
 
     public static final Long SINGLETON_ID = 1L;
 

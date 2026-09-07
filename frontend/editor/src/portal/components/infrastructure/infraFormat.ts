@@ -39,12 +39,3 @@ export const AUDIT_CAT_LABEL: Record<AuditCategory, string> = {
   processing: "portal.infrastructure.auditCatLabel.processing",
   security: "portal.infrastructure.auditCatLabel.security",
 };
-
-export const AUDIT_CAT_TONE: Record<AuditCategory, StatusTone> = {
-  auth: "info",
-  config: "neutral",
-  elevation: "purple",
-  policy: "purple",
-  processing: "success",
-  security: "warning",
-};

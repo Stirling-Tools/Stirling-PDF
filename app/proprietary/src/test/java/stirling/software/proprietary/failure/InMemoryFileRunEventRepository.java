@@ -54,9 +54,18 @@ class InMemoryFileRunEventRepository implements FileRunEventRepository {
         return kindId == null || kindId.equals(entity.getKindId());
     }
 
+    /** Null means the whole team, matching the JPQL's {@code :actor is null} branch. */
+    private static boolean sameActor(FileRunEventEntity entity, String actor) {
+        return actor == null || actor.equals(entity.getActor());
+    }
+
     @Override
     public List<FileRunEventEntity> findByTeamAndStatus(
-            Long teamId, FileRunEventStatus status, String kindId, Pageable pageable) {
+            Long teamId,
+            FileRunEventStatus status,
+            String kindId,
+            String actor,
+            Pageable pageable) {
         return page(
                 newestFirst(
                         rows.values().stream()
@@ -64,7 +73,8 @@ class InMemoryFileRunEventRepository implements FileRunEventRepository {
                                         e ->
                                                 sameTeam(e, teamId)
                                                         && e.getStatus() == status
-                                                        && sameKind(e, kindId))
+                                                        && sameKind(e, kindId)
+                                                        && sameActor(e, actor))
                                 .toList()),
                 pageable);
     }
@@ -86,7 +96,9 @@ class InMemoryFileRunEventRepository implements FileRunEventRepository {
     @Override
     public int reopenIfResolved(String id) {
         FileRunEventEntity entity = rows.get(id);
-        if (entity == null || entity.getStatus() != FileRunEventStatus.RESOLVED) {
+        if (entity == null
+                || (entity.getStatus() != FileRunEventStatus.RESOLVED
+                        && entity.getStatus() != FileRunEventStatus.FILE_REMOVED)) {
             return 0;
         }
         entity.setStatus(FileRunEventStatus.NEW);
@@ -124,7 +136,8 @@ class InMemoryFileRunEventRepository implements FileRunEventRepository {
             Collection<FileRunEventStatus> allowedFrom) {
         int closed = 0;
         for (FileRunEventEntity entity : rows.values()) {
-            if (entity.getOrigin() != FailureOrigin.TOOL
+            // Mirrors the real query: scoped by the absence of a source, not by origin.
+            if (entity.getSourceId() != null
                     || !sameTeam(entity, teamId)
                     || !Objects.equals(entity.getActor(), actor)
                     || entity.getFileId() == null
@@ -142,7 +155,11 @@ class InMemoryFileRunEventRepository implements FileRunEventRepository {
 
     @Override
     public List<FileRunEventEntity> findByTeamAndStatusIn(
-            Long teamId, List<FileRunEventStatus> statuses, String kindId, Pageable pageable) {
+            Long teamId,
+            List<FileRunEventStatus> statuses,
+            String kindId,
+            String actor,
+            Pageable pageable) {
         return page(
                 newestFirst(
                         rows.values().stream()
@@ -150,7 +167,8 @@ class InMemoryFileRunEventRepository implements FileRunEventRepository {
                                         e ->
                                                 sameTeam(e, teamId)
                                                         && statuses.contains(e.getStatus())
-                                                        && sameKind(e, kindId))
+                                                        && sameKind(e, kindId)
+                                                        && sameActor(e, actor))
                                 .toList()),
                 pageable);
     }

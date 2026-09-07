@@ -122,7 +122,7 @@ export const useFileManager = () => {
             {
               suppressErrorToast: true,
               skipAuthRedirect: true,
-            } as any,
+            },
           );
           const serverFiles = Array.isArray(response.data) ? response.data : [];
           const serverStubs: StirlingFileStub[] = [];
@@ -252,7 +252,7 @@ export const useFileManager = () => {
             >("/api/v1/storage/share-links/accessed", {
               suppressErrorToast: true,
               skipAuthRedirect: true,
-            } as any);
+            });
             const sharedLinks = Array.isArray(sharedResponse.data)
               ? sharedResponse.data
               : [];

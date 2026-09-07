@@ -35,10 +35,7 @@ function stateWith(...stubs: StirlingFileStub[]): FileContextState {
   return {
     files: {
       ids: stubs.map((s) => s.id),
-      byId: Object.fromEntries(stubs.map((s) => [s.id, s])) as Record<
-        FileId,
-        StirlingFileStub
-      >,
+      byId: Object.fromEntries(stubs.map((s) => [s.id, s])),
     },
     pinnedFiles: new Set<FileId>(),
     ui: {
@@ -153,7 +150,7 @@ describe("classification landing vs a manually-run tool", () => {
         versionNumber: 7,
         thumbnailUrl: "blob:thumb",
         isPinned: true,
-      } as Partial<StirlingFileStub>),
+      }),
     );
 
     s = fileContextReducer(s, classify("out"));
