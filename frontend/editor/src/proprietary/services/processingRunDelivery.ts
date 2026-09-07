@@ -129,6 +129,7 @@ export async function deliverSweepResults(
       : (callbacks ?? {});
   const alreadySettled = new Set<string>();
   let quietPolls = 0;
+  let seenAnyRun = false;
   const progress: SweepDeliveryProgress = {
     processed: 0,
     failed: 0,
@@ -156,6 +157,9 @@ export async function deliverSweepResults(
         ? run.runId != null && includeRunIds.has(run.runId)
         : !(run.runId != null && excludeRunIds?.has(run.runId)),
     );
+    if (runs.length > 0) {
+      seenAnyRun = true;
+    }
     onRuns?.(runs);
     const settled = runs.filter((run) => TERMINAL.includes(run.status));
     const done = settled.filter((run) => run.status === "COMPLETED");
@@ -181,6 +185,7 @@ export async function deliverSweepResults(
     }
     if (
       expected == null &&
+      !seenAnyRun &&
       runs.length === 0 &&
       attempt >= NO_RUN_GRACE_POLLS
     ) {
