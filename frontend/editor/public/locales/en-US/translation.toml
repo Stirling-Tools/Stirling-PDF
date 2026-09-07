@@ -9691,6 +9691,7 @@ unlimited = "{{used}} · Unlimited"
 
 [processingFolders.downloads]
 approve = "Process my Downloads"
+cancelSweep = "Cancel"
 capped = "You have {{found}} PDFs; the first {{limit}} are processed now and the rest follow."
 close = "Done"
 explain_one = "Stirling can classify the {{count}} PDF already in your Downloads folder and open the results here."

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Loader } from "@mantine/core";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -7,6 +7,7 @@ import { Button } from "@app/ui/Button";
 import { Modal } from "@app/ui/Modal";
 import {
   CLASSIFY_OPERATION,
+  cancelProcessingRuns,
   fetchDownloadsSuggestion,
   saveProcessingFolder,
   type DownloadsSuggestion,
@@ -64,6 +65,9 @@ export function DownloadsProcessingWizard({
   const [stalled, setStalled] = useState(false);
   const [opened, setOpened] = useState(0);
   const [cards, setCards] = useState<SweepWallCard[]>([]);
+  const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
+  // Set when the user cancels; the delivery loop polls it and stands down.
+  const cancelRequested = useRef(false);
   const { addFiles } = useFileHandler();
   const { mountLocalFolder } = useFolders();
 
@@ -124,6 +128,20 @@ export function DownloadsProcessingWizard({
     setStalled(false);
     setOpened(0);
     setCards([]);
+    setActiveFolderId(null);
+    cancelRequested.current = false;
+  };
+
+  /** Stop the sweep: stand the delivery loop down, cancel the runs, reset. */
+  const cancelSweep = async () => {
+    cancelRequested.current = true;
+    if (activeFolderId) {
+      await cancelProcessingRuns(activeFolderId).catch(() => {
+        // The loop is already standing down; a failed cancel just lets the
+        // remaining runs finish into a folder that is paused anyway.
+      });
+    }
+    close();
   };
 
   /**
@@ -133,6 +151,7 @@ export function DownloadsProcessingWizard({
   const trackRuns = useCallback(
     async (policyId: string, expected: number) => {
       await deliverSweepResults(policyId, expected, addFiles, {
+        isCancelled: () => cancelRequested.current,
         onProgress: (progress) => {
           setProcessed(progress.processed);
           setFailed(progress.failed);
@@ -170,6 +189,7 @@ export function DownloadsProcessingWizard({
 
   const approve = async () => {
     if (!suggestion) return;
+    cancelRequested.current = false;
     setPhase("working");
     try {
       // Born paused: the offer's promise is one sweep over what is already there.
@@ -181,6 +201,14 @@ export function DownloadsProcessingWizard({
         enabled: false,
         steps: [{ operation: CLASSIFY_OPERATION, parameters: {}, assets: {} }],
       });
+      setActiveFolderId(folder.id);
+      if (cancelRequested.current) {
+        // Cancelled while the sweep was still being composed - a large folder's
+        // scan takes a while, and the runs only exist now. Stop them here, or a
+        // cancel clicked during the scan would be silently outlived.
+        await cancelProcessingRuns(folder.id).catch(() => {});
+        return;
+      }
       // Mount the directory as a local folder too, so Downloads exists in the
       // file manager as a real folder — the processing record attaches to it
       // there — rather than results appearing from nowhere. Only where this
@@ -253,7 +281,9 @@ export function DownloadsProcessingWizard({
   return (
     <Modal
       open
-      onClose={phase === "working" ? () => {} : close}
+      // Working stays dismissible: closing hides the modal while the sweep
+      // carries on (the folder's own view tracks it); reopening shows progress.
+      onClose={phase === "working" ? () => setOpen(false) : close}
       width={phase === "asking" ? "sm" : "lg"}
       title={
         <span className="downloads-wizard__title">
@@ -277,9 +307,18 @@ export function DownloadsProcessingWizard({
             </>
           )}
           {phase === "working" && (
-            <Button size="sm" disabled loading>
-              {t("processingFolders.downloads.working", "Processing…")}
-            </Button>
+            <>
+              <Button
+                variant="tertiary"
+                size="sm"
+                onClick={() => void cancelSweep()}
+              >
+                {t("processingFolders.downloads.cancelSweep", "Cancel")}
+              </Button>
+              <Button size="sm" disabled loading>
+                {t("processingFolders.downloads.working", "Processing…")}
+              </Button>
+            </>
           )}
           {(phase === "done" || phase === "failed") && (
             <Button size="sm" onClick={close}>

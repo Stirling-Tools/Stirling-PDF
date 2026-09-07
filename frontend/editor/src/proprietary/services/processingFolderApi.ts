@@ -91,6 +91,11 @@ export async function sweepProcessingFolder(id: string): Promise<SweepOutcome> {
   return res.data;
 }
 
+/** Cancel the folder's in-flight runs; cancelled files return to queued. */
+export async function cancelProcessingRuns(id: string): Promise<void> {
+  await apiClient.post(`/api/v1/processing-folders/${id}/runs/cancel`);
+}
+
 /** Remove the processing behaviour. The folder and its files are untouched. */
 export async function deleteProcessingFolder(id: string): Promise<void> {
   await apiClient.delete(`/api/v1/processing-folders/${id}`);

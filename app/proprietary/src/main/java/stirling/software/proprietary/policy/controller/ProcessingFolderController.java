@@ -492,6 +492,22 @@ public class ProcessingFolderController {
         return ResponseEntity.accepted().body(policyRunner.run(policy, SweepKind.USER));
     }
 
+    /** How many in-flight runs a cancel stopped. */
+    public record CancelRunsOutcome(int cancelled) {}
+
+    @PostMapping("/{id}/runs/cancel")
+    @Operation(
+            summary = "Cancel the folder's in-flight runs",
+            description =
+                    "Pending runs die immediately; a run already inside a tool call finishes"
+                            + " that call and is discarded without delivering. Cancelled"
+                            + " files release their claim and read as queued again.")
+    public CancelRunsOutcome cancelRuns(@PathVariable String id) {
+        User user = currentUserOrNull();
+        Policy policy = requireOwn(id, user);
+        return new CancelRunsOutcome(policyRunner.cancelRuns(policy.id()));
+    }
+
     /** Per-file retry: the name of the failed file within the folder. */
     public record RetryFileRequest(String name) {}
 

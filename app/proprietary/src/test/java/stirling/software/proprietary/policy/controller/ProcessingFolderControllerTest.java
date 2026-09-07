@@ -536,6 +536,14 @@ class ProcessingFolderControllerTest {
                 Map.of());
     }
 
+    @Test
+    void cancelStopsTheFoldersRuns() {
+        var view = controller.save(request(null, "new_version")).getBody();
+        when(policyRunner.cancelRuns(view.id())).thenReturn(3);
+
+        assertThat(controller.cancelRuns(view.id()).cancelled()).isEqualTo(3);
+    }
+
     /** A stored file double with just what the listing reads. */
     private static StoredFile storedFile(long id, String name) {
         StoredFile file = mock(StoredFile.class);

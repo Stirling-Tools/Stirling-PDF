@@ -59,6 +59,8 @@ export interface SweepDeliveryCallbacks {
   onRuns?: (runs: ProcessingFolderRun[]) => void;
   /** Called once per run as it settles, with the files opened for it. */
   onSettled?: (settlement: RunSettlement) => void;
+  /** Polled each cycle; true stops the loop quietly (the caller cancelled). */
+  isCancelled?: () => boolean;
 }
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -109,7 +111,7 @@ export async function deliverSweepResults(
     | SweepDeliveryCallbacks
     | ((progress: SweepDeliveryProgress) => void),
 ): Promise<SweepDeliveryProgress> {
-  const { onProgress, onRuns, onSettled } =
+  const { onProgress, onRuns, onSettled, isCancelled } =
     typeof callbacks === "function"
       ? { onProgress: callbacks }
       : (callbacks ?? {});
@@ -129,6 +131,9 @@ export async function deliverSweepResults(
     );
 
   for (let attempt = 0; attempt < MAX_POLLS; attempt++) {
+    if (isCancelled?.()) {
+      return progress;
+    }
     const runs = await fetchProcessingFolderRuns(policyId).catch(() => []);
     onRuns?.(runs);
     const settled = runs.filter((run) => TERMINAL.includes(run.status));
