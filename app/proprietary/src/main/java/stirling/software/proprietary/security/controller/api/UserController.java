@@ -53,8 +53,8 @@ import stirling.software.proprietary.security.service.SaveUserRequest;
 import stirling.software.proprietary.security.service.TeamMembershipService;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
-import stirling.software.proprietary.security.util.PasswordPolicy;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
+import stirling.software.proprietary.security.util.PasswordPolicy;
 import stirling.software.proprietary.service.UserLicenseSettingsService;
 
 @UserApi

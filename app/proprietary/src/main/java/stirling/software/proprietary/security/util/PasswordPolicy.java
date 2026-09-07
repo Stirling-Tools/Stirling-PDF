@@ -15,7 +15,9 @@ public final class PasswordPolicy {
 
     private PasswordPolicy() {}
 
-    /** Whether {@code password} may be stored. Whitespace counts, but an all-space secret does not. */
+    /**
+     * Whether {@code password} may be stored. Whitespace counts, but an all-space secret does not.
+     */
     public static boolean isAcceptable(String password) {
         return password != null && !password.isBlank() && password.length() >= MIN_LENGTH;
     }
