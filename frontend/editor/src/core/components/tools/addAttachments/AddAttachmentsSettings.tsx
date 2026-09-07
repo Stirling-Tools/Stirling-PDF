@@ -2,7 +2,6 @@ import { useCallback } from "react";
 import { AddAttachmentsParameters } from "@app/hooks/tools/addAttachments/useAddAttachmentsParameters";
 import { useAttachmentManager } from "@app/hooks/tools/addAttachments/useAttachmentManager";
 import { AttachmentManagerUI } from "@app/components/tools/addAttachments/AttachmentManagerUI";
-import { useFileContext } from "@app/contexts/FileContext";
 
 interface AddAttachmentsSettingsProps {
   parameters: AddAttachmentsParameters;
@@ -24,16 +23,11 @@ const AddAttachmentsSettings = ({
   onFileUpdated,
   onError,
 }: AddAttachmentsSettingsProps) => {
-  const { addFiles } = useFileContext();
-
   const handleFileUpdated = useCallback(
-    async (updatedFile: File) => {
-      await addFiles([updatedFile], {
-        selectFiles: true,
-      });
+    (updatedFile: File) => {
       onFileUpdated?.(updatedFile);
     },
-    [addFiles, onFileUpdated],
+    [onFileUpdated],
   );
 
   const manager = useAttachmentManager({
