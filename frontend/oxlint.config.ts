@@ -74,7 +74,6 @@ const modernGlobals: OxlintGlobals = {
 
 // Folders not yet conformant to the stricter no-explicit-any rule
 const noExplicitAnyExcludes = [
-  "editor/src/core/components/viewer/layerUtils.ts",
 ];
 
 export default defineConfig({
