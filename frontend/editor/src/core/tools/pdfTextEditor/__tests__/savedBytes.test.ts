@@ -10,7 +10,6 @@ function ascii(text: string): Uint8Array {
   return out;
 }
 
-/** A byte string long enough to clear the minimum-length check. */
 function pdf(body = "x".repeat(400), tail = "\n%%EOF\n"): Uint8Array {
   return ascii(`%PDF-1.7\n${body}${tail}`);
 }
@@ -43,7 +42,6 @@ describe("assertSavedPdf", () => {
   });
 
   it("rejects an EOF marker buried far from the end", () => {
-    // %%EOF followed by 8k of padding: the real terminator is missing.
     expect(() => assertSavedPdf(pdf("%%EOF" + "\0".repeat(8192), ""))).toThrow(
       /end-of-file/i,
     );

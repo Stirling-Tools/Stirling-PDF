@@ -23,30 +23,19 @@ import { useElementWidth } from "@app/tools/pdfTextEditor/hooks/useElementWidth"
 import { modShortcut } from "@app/utils/hotkeys";
 import "@app/tools/pdfTextEditor/components/EditorTopBar.css";
 
-// Below this, insert/find/help collapse into one menu so the contextual
-// formatting group still has room.
 const COMPACT_BELOW_PX = 900;
-
 
 interface EditorTopBarProps {
   controller: Controller;
-  /** True while the next page click drops a new text box. */
   addTextArmed: boolean;
   onToggleAddText: () => void;
-  /** True while the find bar is showing, so the button can read as pressed. */
   findOpen: boolean;
   onToggleFind: () => void;
   onShowHelp: () => void;
-  /** False before a document is open: only the identity block makes sense. */
   hasDocument: boolean;
-  /** Unsaved-changes marker for the file chip. */
   dirty: boolean;
 }
 
-/**
- * File identity, undo/redo, insert, find and the selection's formatting.
- * Save is not here - it sits in EditorPanelActions like every other tool's.
- */
 export function EditorTopBar({
   controller,
   addTextArmed,
@@ -62,8 +51,6 @@ export function EditorTopBar({
   const hasSelection = controller.selectionCount > 0;
   const barRef = useRef<HTMLDivElement | null>(null);
   const barWidth = useElementWidth(barRef);
-  // null until the first measurement: start roomy so the bar does not flash
-  // through its compact form on mount.
   const compact = barWidth !== null && barWidth < COMPACT_BELOW_PX;
 
   const addTextLabel = addTextArmed
@@ -137,8 +124,6 @@ export function EditorTopBar({
           <ToolbarSeparator />
 
           {compact ? (
-            /* One menu instead of three buttons. The formatting group that
-               appears with a selection is what actually needs the room. */
             <Menu shadow="md" position="bottom-start" withinPortal>
               <Menu.Target>
                 <Button
@@ -186,8 +171,6 @@ export function EditorTopBar({
             </Menu>
           ) : (
             <>
-              {/* Add text keeps its label: it is the tool's whole point, and an
-              unlabelled "T" is a guess. Add image rides beside it as an icon. */}
               <Tooltip
                 label={t(
                   "pdfTextEditor.toolbar.addTextTooltip",
@@ -231,8 +214,6 @@ export function EditorTopBar({
                 })}
               >
                 <Button
-                  // Pressed while the bar is showing, so it reads as the toggle it
-                  // is - clicking it again puts the find bar away.
                   variant={findOpen ? "primary" : "tertiary"}
                   accent={findOpen ? "default" : "neutral"}
                   size="sm"
@@ -254,11 +235,6 @@ export function EditorTopBar({
             <>
               <ToolbarSeparator />
               {compact ? (
-                /* Font family, size, colour, outline, italic and case are the
-                   widest thing on the bar by far, and they only appear once
-                   something is selected - which is exactly when a narrow bar
-                   ran out of room and started dropping controls off the end.
-                   Behind one button they cost 40px instead of 500. */
                 <Popover position="bottom-start" withinPortal shadow="md">
                   <Popover.Target>
                     <Button
@@ -284,7 +260,6 @@ export function EditorTopBar({
                 <FormatGroup controller={controller} />
               )}
               <ToolbarSeparator />
-              {/* ObjectGroup stays inline either way: two icons and a menu. */}
               <ObjectGroup controller={controller} />
             </>
           )}

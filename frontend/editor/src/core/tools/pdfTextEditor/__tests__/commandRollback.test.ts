@@ -12,7 +12,6 @@ import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocume
 
 const doc = {} as EditorDocument;
 
-/** A command that appends to `log` so the exact call order is assertable. */
 function tracked(
   name: string,
   log: string[],
@@ -41,7 +40,6 @@ describe("CompositeCommand rollback", () => {
       tracked("d", log),
     ]);
     expect(() => composite.apply(doc)).toThrow(RolledBackError);
-    // b and a reverted in reverse order; d never ran.
     expect(log).toEqual(["+a", "+b", "-b", "-a"]);
   });
 
@@ -52,7 +50,6 @@ describe("CompositeCommand rollback", () => {
       tracked("b", log, { revert: true }),
       tracked("c", log),
     ]);
-    // revert() runs c then b; b throws, so c is put back.
     expect(() => composite.revert(doc)).toThrow(RolledBackError);
     expect(log).toEqual(["-c", "+c"]);
   });
@@ -60,7 +57,6 @@ describe("CompositeCommand rollback", () => {
   it("reports an unrecoverable failure when the rollback itself throws", () => {
     const log: string[] = [];
     const composite = new CompositeCommand([
-      // Applies fine, but cannot be undone - so the group is genuinely stuck.
       tracked("a", log, { revert: true }),
       tracked("b", log, { apply: true }),
     ]);
@@ -102,7 +98,6 @@ describe("HistoryStack forward-apply failures", () => {
     } catch {
       /* expected */
     }
-    // Recording it would make the next undo revert changes never made.
     expect(h.size()).toEqual({ undo: 0, redo: 0 });
     expect(h.canUndo).toBe(false);
   });
@@ -136,7 +131,6 @@ describe("HistoryStack forward-apply failures", () => {
     }
     expect(thrown).toBeInstanceOf(HistoryStepError);
     expect((thrown as HistoryStepError).documentIntact).toBe(true);
-    // The cause is unwrapped, so the UI shows what actually failed.
     expect((thrown as HistoryStepError).cause).toBeInstanceOf(Error);
     expect(String((thrown as HistoryStepError).cause)).toMatch(/b apply/);
   });
@@ -168,7 +162,6 @@ describe("HistoryStack forward-apply failures", () => {
       /* expected */
     }
     h.execute(keyed("c"), doc);
-    // Two separate undo steps: the failure ended the burst.
     expect(h.size()).toEqual({ undo: 2, redo: 0 });
   });
 });

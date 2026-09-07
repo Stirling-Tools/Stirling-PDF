@@ -3,9 +3,6 @@ import type { Page } from "@playwright/test";
 import path from "path";
 import { uploadFiles } from "@app/tests/helpers/ui-helpers";
 
-// Opening a second document disposes the first and its undo history, so every
-// route in has to ask before discarding unsaved edits.
-
 const SAMPLE_PDF = path.join(
   import.meta.dirname,
   "../test-fixtures/sample.pdf",
@@ -26,7 +23,6 @@ async function openEditorWithTwoFiles(page: Page): Promise<void> {
   });
 }
 
-/** Type into the first run overlay, the way a user would. */
 async function makeAnEdit(page: Page): Promise<void> {
   await page.evaluate(() => {
     const el = document.querySelector<HTMLElement>(
@@ -70,12 +66,10 @@ test.describe("PDF text editor - unsaved-changes guard", () => {
 
     const other = await pickOtherFile(page, opened);
 
-    // The modal root stays mounted, so assert on what the user actually sees.
     await expect(
       page.getByTestId("pdf-editor-discard-confirm"),
       "switching files must not discard edits without asking",
     ).toBeVisible({ timeout: 10_000 });
-    // The prompt names the file it would open, so the answer is informed.
     await expect(
       page
         .getByTestId("pdf-editor-discard-modal")
@@ -99,7 +93,6 @@ test.describe("PDF text editor - unsaved-changes guard", () => {
     await expect(page.getByTestId("pdf-editor-discard-confirm")).toBeHidden();
     await expect(page.getByTestId("pdf-editor-filename")).toContainText(opened);
     await expect(page.getByTestId("pdf-editor-dirty-dot")).toBeVisible();
-    // The edit itself is still in the model, not just the dirty flag.
     const stillThere = await page.evaluate(() =>
       (
         window as unknown as {
@@ -158,7 +151,6 @@ test.describe("PDF text editor - unsaved-changes guard", () => {
     await openEditorWithTwoFiles(page);
     await makeAnEdit(page);
 
-    // The same input the drag-and-drop handler feeds.
     await page
       .locator('[data-testid="pdf-editor-file-input"]')
       .setInputFiles(PARAGRAPH_PDF);

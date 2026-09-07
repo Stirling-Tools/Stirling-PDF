@@ -13,7 +13,6 @@ function makeCmd(overrides: Partial<Command> = {}): Command {
   } as unknown as Command;
 }
 
-/** Minimal document stub: no pages, so repopulate is a no-op. */
 function makeDoc(): EditorDocument {
   return {
     pageCount: 0,
@@ -65,8 +64,6 @@ describe("EditorStore recovery from a failed apply", () => {
         },
       }),
     );
-    // A bare command cannot say what it did, so nothing already on the stack
-    // can be trusted to describe the page any more.
     expect(store.history.canUndo).toBe(false);
     expect(store.getState().dirty).toBe(true);
   });
@@ -85,7 +82,6 @@ describe("EditorStore recovery from a failed apply", () => {
         }),
       ]),
     );
-    // The group put the document back, so the earlier edit is still undoable.
     expect(store.history.peekUndo()).toBe(before);
     expect(store.getState().error).toBe("second child failed");
   });

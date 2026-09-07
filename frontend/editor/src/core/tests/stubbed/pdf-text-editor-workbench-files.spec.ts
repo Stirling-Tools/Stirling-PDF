@@ -61,8 +61,6 @@ test.describe("PDF text editor - workbench file selection", () => {
   }) => {
     test.setTimeout(180_000);
     await openEditorWithTwoFiles(page);
-    // The document's own text identifies it, and unlike the toolbar's filename
-    // chip it survives the editor's workbench view being replaced.
     const textOf = () =>
       page.evaluate(() =>
         (
@@ -89,8 +87,6 @@ test.describe("PDF text editor - workbench file selection", () => {
     // Mounting Active Files trims the selection to its last entry to honour the
     // tool's one-file limit; the editor must not follow that onto another file.
     await activeFilesTab(page).click();
-    // The canvas unmounting starts the store's dispose grace, after which the
-    // panel re-opens the same file - so poll rather than sample one frame.
     await expect
       .poll(async () => await textOf(), { timeout: 30_000 })
       .not.toBe("");
@@ -119,7 +115,6 @@ test.describe("PDF text editor - workbench file selection", () => {
     const other =
       opened === "sample.pdf" ? "paragraph-sample.pdf" : "sample.pdf";
 
-    // The switcher is the toolbar's file-title menu: open it, then pick.
     await page.getByTestId("pdf-editor-file-switcher").click();
     await page
       .getByTestId("pdf-editor-file-switch")

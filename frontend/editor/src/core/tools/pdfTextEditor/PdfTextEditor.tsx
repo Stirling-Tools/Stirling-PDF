@@ -485,13 +485,9 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       .find((r) => r.id === selection.runIds[0]);
     return !!run && (run.paragraphLineCount ?? 0) > 1;
   })();
-  // Opening any document disposes the one in memory - edits, undo history and
-  // all - so both routes in go through `requestOpen` first.
   const openDocument = useCallback(
     (file: File, fromDisk: boolean) => {
       if (!fromDisk) {
-        // Deferred until the open is agreed, or a cancelled open would leave
-        // the app pointing at a file the editor is not editing.
         const fileId = (file as File & { fileId?: FileId }).fileId;
         if (fileId != null) setSelectedFiles([fileId]);
         openWorkbenchFile(file);
@@ -507,7 +503,6 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     [adoptFile, load, openWorkbenchFile, setSelectedFiles, setSourceFile],
   );
 
-  // A document waiting on the user's answer to "discard your changes?".
   const [pendingOpen, setPendingOpen] = useState<{
     file: File;
     fromDisk: boolean;
@@ -515,8 +510,6 @@ export default function PdfTextEditor(_props: BaseToolProps) {
 
   const requestOpen = useCallback(
     (file: File, fromDisk: boolean) => {
-      // Read the store, not the render's copy: a keystroke that dirtied the
-      // document in the same tick must still be caught.
       if (store.getState().dirty) {
         setPendingOpen({ file, fromDisk });
         return;
@@ -546,8 +539,6 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       ?.click();
   }, []);
 
-  // Publish what the canvas top bar cannot reach on its own, and retract it on
-  // unmount so a stale Save cannot fire against a panel that is gone.
   useEffect(() => {
     setEditorSession({
       fileName: openedFileName,
@@ -593,9 +584,6 @@ export default function PdfTextEditor(_props: BaseToolProps) {
         </Alert>
       )}
       <EditorFileInputs onPickPdf={onPickPdf} onPickImage={handleInsertImage} />
-      {/* Declared here, not on the canvas: the canvas unmounts whenever the
-          workbench shows something else, and a modal that only exists while
-          the page stack is on screen cannot be opened from the panel. */}
       <HelpOverlay
         opened={state.helpOpen}
         onClose={() => store.setHelpOpen(false)}
@@ -628,8 +616,6 @@ export default function PdfTextEditor(_props: BaseToolProps) {
         onSetWidthMode={(m) => store.setWidthMode(m)}
         onSetShowRulers={(show) => store.setShowRulers(show)}
       />
-      {/* Every tool pins its primary action to the bottom of this panel, so
-          the editor's Save lives there too, at every width. */}
       {state.hasDocument && (
         <EditorPanelActions
           compact={isMobile}
@@ -639,8 +625,6 @@ export default function PdfTextEditor(_props: BaseToolProps) {
           onPickFile={onPickWorkbenchFile}
           onSave={handleSave}
           onDownload={handleDownload}
-          // The find bar lives beside the pages, so bring them back first -
-          // on a phone the user still has to leave the panel to see it.
           onOpenFind={() => {
             if (store.getState().findOpen) {
               store.setFindOpen(false);

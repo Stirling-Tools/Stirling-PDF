@@ -2810,8 +2810,6 @@ test.describe("PDF text editor - multi-page", () => {
       timeout: 30_000,
     });
 
-    // Page 2's runs are read lazily once it scrolls into view, so wait for
-    // them. Skipping on an empty count made this silently stop testing.
     const runs = page.locator('[data-testid^="pdf-editor-run-p2-"]');
     await expect(runs.first()).toBeAttached({ timeout: 30_000 });
 
@@ -3735,8 +3733,6 @@ test.describe("PDF text editor - dirty state", () => {
     await gotoEditor(page);
     await loadSamplePdf(page);
 
-    // Save state is a dot beside the top-bar filename - a word would squeeze
-    // the name it sits next to. Clean on load.
     const filename = page.getByTestId("pdf-editor-filename");
     await expect(filename).toBeVisible();
     await expect(page.getByTestId("pdf-editor-dirty-dot")).toHaveCount(0);

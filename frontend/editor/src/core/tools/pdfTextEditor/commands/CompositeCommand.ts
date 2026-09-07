@@ -32,8 +32,6 @@ export class CompositeCommand implements Command {
     this.run(doc, reversed, "revert");
   }
 
-  // Run every child, undoing the ones that ran if one throws. A group is ONE
-  // undo step, so half of it landing would leave the model describing nothing.
   private run(
     doc: EditorDocument,
     order: Command[],
@@ -50,8 +48,6 @@ export class CompositeCommand implements Command {
             if (phase === "apply") done[i].revert(doc);
             else done[i].apply(doc);
           } catch {
-            // Rollback failed too, so the document really is half-changed:
-            // report unwrapped so the caller rebuilds.
             throw err;
           }
         }

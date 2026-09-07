@@ -3,9 +3,6 @@ import type { Page } from "@playwright/test";
 import fs from "fs";
 import path from "path";
 
-// A signed save must APPEND a revision, never rewrite. Compares the bytes the
-// editor hands back with what went in.
-
 const SIGNED = path.join(
   import.meta.dirname,
   "../test-fixtures/signed-sample.pdf",
@@ -24,7 +21,6 @@ async function openSigned(page: Page): Promise<void> {
   });
 }
 
-/** Type into the first run overlay so the save is a real, edited save. */
 async function makeAnEdit(page: Page): Promise<void> {
   await page.evaluate(() => {
     const el = document.querySelector<HTMLElement>(
@@ -56,7 +52,6 @@ test.describe("PDF text editor - signed save stays signed", () => {
 
     const downloadPromise = page.waitForEvent("download");
     await page.getByTestId("pdf-editor-download").click();
-    // Signed documents warn before saving; confirm to get the file.
     await page.getByTestId("pdf-editor-save-risk-confirm").click();
     const download = await downloadPromise;
     const saved = await download.path();
@@ -65,9 +60,6 @@ test.describe("PDF text editor - signed save stays signed", () => {
     const before = fs.readFileSync(SIGNED);
     const after = fs.readFileSync(saved!);
 
-    // An incremental save may only ADD. If the editor had rewritten the file,
-    // every byte the signature covers would have moved and it would no longer
-    // verify for the revision it signed.
     expect(
       after.length,
       "the saved file is shorter than the revision it must preserve",
@@ -76,7 +68,6 @@ test.describe("PDF text editor - signed save stays signed", () => {
       after.subarray(0, before.length).equals(before),
       "the original signed revision was rewritten, not appended to",
     ).toBe(true);
-    // And it really is an edited save, not a byte-identical passthrough.
     expect(after.length).toBeGreaterThan(before.length);
   });
 

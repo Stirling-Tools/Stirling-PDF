@@ -22,7 +22,6 @@ import {
   type Controller,
 } from "@app/tools/pdfTextEditor/components/toolbar/toolbarShared";
 
-/** Verbs that apply to any object: lock, delete, and Arrange. */
 export function ObjectGroup({ controller }: { controller: Controller }) {
   const { t } = useTranslation();
   const {
@@ -35,8 +34,6 @@ export function ObjectGroup({ controller }: { controller: Controller }) {
     selectionCount,
     canAlignLines,
   } = controller;
-  // Vertical aligns + distribute need 2+ objects. Horizontal aligns also
-  // accept a single multi-line paragraph (aligns its lines to each other).
   const alignDisabled = selectionCount < 2;
   const hAlignDisabled = selectionCount < 2 && !canAlignLines;
   const distributeDisabled = selectionCount < 3;

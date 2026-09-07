@@ -33,8 +33,6 @@ export async function exportToBlob(
       const repaired = await preserveShadings(bytes, doc.openedBytes, {
         pages: regenerated,
       });
-      // The repair appends its own revision, so it may only ever grow the file
-      // - a shorter result would mean it rewrote what it was handed.
       if (repaired && (!incremental || repaired.length >= bytes.length)) {
         bytes = repaired;
       }
@@ -43,7 +41,6 @@ export async function exportToBlob(
     }
   }
 
-  // Checked LAST, on the bytes that will actually be written.
   if (incremental) assertIncrementalAppend(bytes, doc.openedBytes);
 
   return { blob: pdfBlob(bytes), filename: exportName(sourceName) };

@@ -2,9 +2,6 @@ import { test, expect } from "@app/tests/helpers/stub-test-base";
 import type { Page } from "@playwright/test";
 import path from "path";
 
-// Find bar layout. The toggles sit inside the input, where Mantine makes
-// sections inert by default - so a real button there silently stops working.
-
 const SAMPLE_PDF = path.join(
   import.meta.dirname,
   "../test-fixtures/sample.pdf",
@@ -32,7 +29,6 @@ test.describe("PDF text editor - find bar", () => {
     test.setTimeout(120_000);
     await openFind(page);
     const search = page.getByTestId("pdf-editor-open-find");
-    // It is a toggle, and says so while the bar is up.
     await expect(search).toHaveAttribute("aria-pressed", "true");
 
     await search.click();
@@ -57,7 +53,6 @@ test.describe("PDF text editor - find bar", () => {
     expect(close).not.toBeNull();
     expect(next).not.toBeNull();
     expect(bar).not.toBeNull();
-    // Well clear of the match arrows, and hard against the bar's own edge.
     expect(close!.x).toBeGreaterThan(next!.x + next!.width + 40);
     expect(bar!.x + bar!.width - (close!.x + close!.width)).toBeLessThan(24);
   });
@@ -91,7 +86,6 @@ test.describe("PDF text editor - find bar", () => {
     await page.getByTestId("pdf-editor-find-input").fill("AS");
 
     const count = page.getByTestId("pdf-editor-find-count");
-    // The fixture's cells are lowercase "as", so a case-blind search finds them.
     await expect(count).toContainText(/of/);
     await page.getByTestId("pdf-editor-find-match-case").click();
     await expect(count).toContainText(/no matches/i);
@@ -111,7 +105,6 @@ test.describe("PDF text editor - find bar", () => {
     expect(field).not.toBeNull();
     expect(count).not.toBeNull();
     expect(next).not.toBeNull();
-    // Count within the field's box; navigation entirely to its right.
     expect(count!.x).toBeGreaterThan(field!.x);
     expect(count!.x + count!.width).toBeLessThanOrEqual(
       field!.x + field!.width + 1,
@@ -128,7 +121,6 @@ test.describe("PDF text editor - find bar", () => {
       .boundingBox();
     expect(find).not.toBeNull();
     expect(replace).not.toBeNull();
-    // Both fields end at the same x, so the two rows do not step.
     expect(
       Math.abs(find!.x + find!.width - (replace!.x + replace!.width)),
     ).toBeLessThanOrEqual(2);

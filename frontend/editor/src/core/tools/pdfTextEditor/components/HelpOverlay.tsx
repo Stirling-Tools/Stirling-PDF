@@ -11,7 +11,6 @@ interface HelpOverlayProps {
 }
 
 interface Shortcut {
-  /** Rendered as alternatives, joined by "/". */
   bindings: HotkeyBinding[];
   description: string;
 }
@@ -21,8 +20,6 @@ interface Section {
   items: Shortcut[];
 }
 
-// The editor binds ctrlKey || metaKey, so the label follows the platform:
-// Cmd on a Mac, Ctrl everywhere else.
 const mod = (
   code: string,
   extra: Partial<HotkeyBinding> = {},
@@ -32,7 +29,6 @@ const mod = (
   ...extra,
 });
 
-/** Keyboard shortcuts for the PDF text/image editor. */
 export function HelpOverlay({ opened, onClose }: HelpOverlayProps) {
   const { t } = useTranslation();
   const SHORTCUTS: Section[] = [

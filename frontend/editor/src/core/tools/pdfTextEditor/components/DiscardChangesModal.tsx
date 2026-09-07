@@ -3,14 +3,11 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";
 
 interface Props {
-  /** Name of the document that would be opened, or null when closed. */
   incomingFileName: string | null;
   onConfirm: () => void;
   onCancel: () => void;
 }
 
-// Last stop before unsaved edits are thrown away. Opening a document disposes
-// the one in memory, so the switcher and a canvas drop both come through here.
 export function DiscardChangesModal({
   incomingFileName,
   onConfirm,

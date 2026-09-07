@@ -17,8 +17,6 @@ export interface Command {
   coalesceIgnoresTimeWindow?(previous: Command | null): boolean;
 }
 
-// A command failed but the document was put back as it was. Only
-// CompositeCommand can promise this; the store uses it to skip the rebuild.
 export class RolledBackError extends Error {
   readonly cause: unknown;
 

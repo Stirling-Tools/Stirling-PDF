@@ -2,9 +2,6 @@ import { test, expect } from "@app/tests/helpers/stub-test-base";
 import type { Page } from "@playwright/test";
 import path from "path";
 
-// The page verbs live in the canvas top bar; Save lives in the panel footer
-// like every other tool's primary action.
-
 const SAMPLE_PDF = path.join(
   import.meta.dirname,
   "../test-fixtures/sample.pdf",
@@ -58,7 +55,6 @@ test.describe("PDF text editor - top bar", () => {
     );
     expect(await page.getByTestId("pdf-editor-dirty-dot").count()).toBe(0);
 
-    // A real keystroke through the contenteditable overlay, not a store poke.
     await page.evaluate(() => {
       const el = document.querySelector<HTMLElement>(
         '[data-testid^="pdf-editor-run-"]',
@@ -84,8 +80,6 @@ test.describe("PDF text editor - top bar", () => {
     test.setTimeout(120_000);
     await openEditor(page);
 
-    // The page verbs live in the toolbar, Save lives in the panel footer, and
-    // neither is repeated in the other.
     for (const id of [
       "pdf-editor-add-text",
       "pdf-editor-open-find",
@@ -114,8 +108,6 @@ test.describe("PDF text editor - top bar", () => {
     await expect(
       footer.locator('[data-testid="pdf-editor-download"]'),
     ).toBeVisible();
-    // ...and nowhere else. A primary action in two places is a primary action
-    // the user has to choose between.
     expect(
       await page
         .getByTestId("pdf-editor-toolbar")
@@ -131,8 +123,6 @@ test.describe("PDF text editor - top bar", () => {
     await page.setViewportSize({ width: 480, height: 900 });
     await openEditor(page);
 
-    // Here the panel covers the canvas outright, so the toolbar's own find and
-    // shortcuts buttons are not merely elsewhere - they are off screen.
     await expect(page.getByTestId("pdf-editor-panel-actions")).toBeVisible({
       timeout: 15_000,
     });
@@ -145,18 +135,14 @@ test.describe("PDF text editor - top bar", () => {
     page,
   }) => {
     test.setTimeout(120_000);
-    // Wide enough that the canvas still shows, narrow enough that the toolbar
-    // cannot hold the contextual formatting group AND four standalone buttons.
     await page.setViewportSize({ width: 1150, height: 900 });
     await openEditor(page);
 
     const bar = page.getByTestId("pdf-editor-toolbar");
     await expect(bar).toHaveAttribute("data-compact", "true");
-    // The individual buttons are gone; nothing is merely scrolled off-screen.
     expect(await page.getByTestId("pdf-editor-add-text").count()).toBe(0);
     expect(await page.getByTestId("pdf-editor-open-find").count()).toBe(0);
 
-    // Undo/redo never folds away, and Save is not on the bar to fold.
     await expect(bar.locator('[data-testid="pdf-editor-undo"]')).toBeVisible();
     await expect(page.getByTestId("pdf-editor-panel-actions")).toBeVisible();
 
@@ -191,7 +177,6 @@ test.describe("PDF text editor - top bar", () => {
     await page.getByTestId("pdf-editor-open-find").click();
     const findBar = page.getByTestId("pdf-editor-find-bar");
     await expect(findBar).toBeVisible();
-    // Docked under the toolbar, above the page stack.
     const bar = await findBar.boundingBox();
     const stage = await page.getByTestId("pdf-editor-stage").boundingBox();
     expect(bar).not.toBeNull();

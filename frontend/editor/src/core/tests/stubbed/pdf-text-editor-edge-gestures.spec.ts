@@ -159,8 +159,6 @@ test.describe("PDF text editor - edge gestures", () => {
     page,
   }) => {
     await open(page);
-    // Insert is a verb aimed at the page, so it sits above the page - the
-    // panel is for the properties of whatever is already selected.
     const toolbar = page.getByTestId("pdf-editor-toolbar");
     await expect(toolbar.getByTestId("pdf-editor-add-text")).toBeVisible();
     await expect(toolbar.getByTestId("pdf-editor-add-image")).toBeVisible();

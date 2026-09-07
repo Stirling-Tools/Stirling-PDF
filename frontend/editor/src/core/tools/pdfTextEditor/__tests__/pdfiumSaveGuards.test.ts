@@ -5,20 +5,11 @@ import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocume
 const MIN_PDF = `%PDF-1.7\n${"x".repeat(400)}\n%%EOF\n`;
 
 interface FakeOptions {
-  /** What PDFiumExt_SaveAsCopy returns (PDFium's FPDF_BOOL). */
   saveResult?: number;
-  /** What FPDF_SaveAsCopy returns; omit the key to drop the entry point. */
   flaggedResult?: boolean | null;
-  /** Bytes the writer hands back. */
   output?: string;
 }
 
-/**
- * A PDFium module stub that writes `output` into a fake wasm heap.
- *
- * Big enough to be honest about the save path - the malloc/heap dance is where
- * a size of 0 would otherwise slip through as "saved fine".
- */
 function fakeDoc(opts: FakeOptions = {}) {
   const text = opts.output ?? MIN_PDF;
   const bytes = new Uint8Array(text.length);
@@ -66,8 +57,6 @@ describe("PdfiumSave failure detection", () => {
 
   it("throws when PDFium's save returns false", () => {
     const { doc } = fakeDoc({ saveResult: 0 });
-    // Ignoring this return code is what let a failed save overwrite the user's
-    // file with whatever the writer happened to hold.
     expect(() => PdfiumSave.serialize(doc)).toThrow(/could not serialize/i);
   });
 
@@ -100,7 +89,6 @@ describe("PdfiumSave failure detection", () => {
     expect(() => PdfiumSave.serialize(doc, { incremental: true })).toThrow(
       /FPDF_SaveAsCopy/,
     );
-    // The whole point: no rewrite of the signed revision happened.
     expect(saveAsCopy).not.toHaveBeenCalled();
   });
 

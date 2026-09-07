@@ -15,8 +15,6 @@ const COALESCE_WINDOW_MS = 600;
 export class HistoryStepError extends Error {
   readonly phase: "apply" | "revert";
   readonly cause: unknown;
-  // True when the failing command put the document back as it was, so the run
-  // model still describes the page and only THIS step is lost.
   readonly documentIntact: boolean;
 
   constructor(phase: "apply" | "revert", cause: unknown) {
@@ -69,8 +67,6 @@ export class HistoryStack {
     try {
       cmd.apply(doc);
     } catch (err) {
-      // Not recorded: a history entry whose apply half-ran cannot be reverted,
-      // so the next undo would revert changes that were never made.
       this.lastCoalesceKey = null;
       throw new HistoryStepError("apply", err);
     }

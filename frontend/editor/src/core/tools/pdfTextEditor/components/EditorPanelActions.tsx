@@ -9,13 +9,10 @@ import type { FileId } from "@app/types/file";
 import { modShortcut } from "@app/utils/hotkeys";
 
 interface Props {
-  /** Phones also lose the toolbar behind this panel, so it carries its extras. */
   compact: boolean;
   openedFileName: string | null;
   dirty: boolean;
-  /** Workbench file currently open, so the switcher can mark it. */
   currentFileId: FileId | null;
-  /** Open a different workbench file. */
   onPickFile: (file: File) => void;
   onSave: () => void;
   onDownload: () => void;
@@ -23,8 +20,6 @@ interface Props {
   onShowHelp: () => void;
 }
 
-// The one Save, pinned to the panel foot like every other tool's primary
-// action (createToolFlow's executeFooter). Extras ride along on phones only.
 export function EditorPanelActions({
   compact,
   openedFileName,
@@ -41,8 +36,6 @@ export function EditorPanelActions({
     <Box
       px="md"
       py="sm"
-      // Sticky, not flex-pinned: inside ToolPanel's ScrollArea height:100%
-      // resolves to content height.
       style={{
         position: "sticky",
         bottom: 0,

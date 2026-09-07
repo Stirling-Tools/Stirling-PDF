@@ -1,13 +1,5 @@
-/**
- * Checks on the bytes a save produced, before they overwrite anything.
- * PDFium reports failure by return code and still hands back a buffer.
- */
-
 const PDF_HEADER = "%PDF-";
-// A PDF cannot be meaningfully smaller than this; the smallest valid file is
-// a few hundred bytes. Anything under it is a truncated or empty write.
 const MIN_PDF_BYTES = 256;
-// The spec puts %%EOF in the last 1024 bytes; allow slack for trailing padding.
 const EOF_SCAN_BYTES = 4096;
 
 function startsWith(bytes: Uint8Array, ascii: string): boolean {
@@ -18,7 +10,6 @@ function startsWith(bytes: Uint8Array, ascii: string): boolean {
   return true;
 }
 
-/** True when `%%EOF` appears within the last `EOF_SCAN_BYTES` bytes. */
 function hasTrailingEof(bytes: Uint8Array): boolean {
   const marker = "%%EOF";
   const from = Math.max(0, bytes.length - EOF_SCAN_BYTES);
@@ -35,7 +26,6 @@ function hasTrailingEof(bytes: Uint8Array): boolean {
   return false;
 }
 
-/** Throw unless `bytes` look like a whole PDF: header, length, EOF marker. */
 export function assertSavedPdf(bytes: Uint8Array): void {
   if (bytes.length < MIN_PDF_BYTES) {
     throw new Error(
@@ -57,8 +47,6 @@ export function assertSavedPdf(bytes: Uint8Array): void {
   }
 }
 
-// Throw unless `saved` is `original` plus an appended revision: an incremental
-// save may only ADD, or the bytes a signature covers have moved.
 export function assertIncrementalAppend(
   saved: Uint8Array,
   original: Uint8Array,

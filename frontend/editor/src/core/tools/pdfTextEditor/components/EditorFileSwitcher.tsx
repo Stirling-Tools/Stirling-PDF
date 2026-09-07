@@ -10,19 +10,11 @@ import type { FileId } from "@app/types/file";
 interface Props {
   /** Workbench file the editor currently holds, when it came from one. */
   currentFileId: FileId | null;
-  /** Name shown on the chip - the open document, workbench file or not. */
   currentFileName: string;
-  /** Unsaved-changes marker, shown as a dot beside the name. */
   dirty: boolean;
-  // The editor may refuse - a dirty document is confirmed first - so the
-  // workbench selection is synced by the editor, not here.
   onPick: (file: File) => void;
 }
 
-/**
- * Which document you are editing, and how to switch. Collapses to a plain name
- * when the workbench holds fewer than two PDFs.
- */
 export function EditorFileSwitcher({
   currentFileId,
   currentFileName,

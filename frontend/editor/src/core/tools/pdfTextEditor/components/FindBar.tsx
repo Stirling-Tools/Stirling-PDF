@@ -207,8 +207,6 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
           total: matches.length,
         });
 
-  // "Aa" and "ab" would read as the same two letters at 11px, so whole-word
-  // borrows the underline every code editor draws under its own version.
   const toggles: Array<{
     on: boolean;
     set: () => void;
@@ -252,11 +250,7 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
           aria-label={t("pdfTextEditor.find.findPlaceholder", "Find")}
           data-testid="pdf-editor-find-input"
           size="xs"
-          // The count and the toggles live INSIDE the field, the way every code
-          // editor puts them - the row stays one line however many are added.
           rightSectionWidth={132}
-          // Mantine makes a section inert by default so clicks reach the input.
-          // These are real buttons, so they have to take their own clicks.
           rightSectionPointerEvents="all"
           rightSection={
             <span className="pdf-editor-findbar__inline">
@@ -389,8 +383,6 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
         </div>
       </div>
 
-      {/* Dismiss sits at the far corner of the bar, not beside the match
-          arrows: next to them it read as a third way to navigate. */}
       <Tooltip label={t("pdfTextEditor.find.close", "Close find bar")}>
         <Button
           variant="tertiary"

@@ -290,8 +290,6 @@ describe("FolderContext stale-folder 404 cleanup", () => {
 
   function ApiProbe(props: { onReady: (api: ProbeApi) => void }) {
     const f = useFolders();
-    // Layout, not passive: waitFor resolves off the committed DOM, which a
-    // passive effect can trail by a macrotask, handing tests a stale api.
     React.useLayoutEffect(() => {
       props.onReady({
         error: f.error,
@@ -331,7 +329,6 @@ describe("FolderContext stale-folder 404 cleanup", () => {
       ),
     );
     if (!apiRef.current) throw new Error("ApiProbe never reported ready");
-    // Guard the ref against trailing the render waitFor just observed.
     expect(apiRef.current.folderCount).toBe(initial.length);
     return apiRef as { current: ProbeApi };
   }

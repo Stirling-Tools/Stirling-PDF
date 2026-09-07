@@ -33,10 +33,6 @@ interface SidebarProps {
 
 type TabId = "selected" | "document";
 
-/**
- * A properties inspector, and nothing else: "Selected" acts on the selection,
- * "Document" holds the file's facts. The verbs live in the canvas top bar.
- */
 export function EditorSidebar({
   store,
   state,

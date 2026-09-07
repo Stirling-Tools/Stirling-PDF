@@ -81,8 +81,6 @@ export interface EditorViewState {
   widthMode: WidthMode;
   /** Show per-page rulers and alignment guides. */
   showRulers: boolean;
-  // Opened from the canvas top bar but rendered elsewhere, so the flags live on
-  // the store both surfaces share.
   findOpen: boolean;
   helpOpen: boolean;
 }
@@ -323,8 +321,6 @@ export class EditorStore {
     try {
       this.history.execute(cmd, this.doc);
     } catch (err) {
-      // A forward edit can break the document exactly like an undo can, so it
-      // gets the same recovery rather than throwing out of the click handler.
       this.recoverFromBrokenStep(err);
       return;
     }
@@ -438,12 +434,9 @@ export class EditorStore {
   }
 
   // A half-applied command leaves the run model describing objects that no
-  // longer match the page, so rebuild rather than guess.
   private recoverFromBrokenStep(err?: unknown): void {
     const doc = this.doc;
     if (!doc) return;
-    // The wrapper says which phase broke; the cause says what actually failed,
-    // and that is the half worth putting in front of the user.
     const reason = err instanceof HistoryStepError ? err.cause : err;
     const message = reason instanceof Error ? reason.message : null;
     if (err instanceof HistoryStepError && err.documentIntact) {

@@ -206,8 +206,6 @@ test.describe("PDF text editor - inspector layout", () => {
     page,
   }) => {
     await open(page, 0);
-    // Save finishes the job, so it sits at the foot of the side panel - the
-    // same place every other tool puts its primary action.
     const footer = page.getByTestId("pdf-editor-panel-actions");
     await expect(footer.getByTestId("pdf-editor-save")).toBeVisible();
     await expect(footer.getByTestId("pdf-editor-download")).toBeVisible();
@@ -227,7 +225,6 @@ test.describe("PDF text editor - inspector layout", () => {
   }) => {
     await open(page);
     // Find and the shortcuts sheet are everyday controls, not settings: they
-    // sit in the toolbar, one click from anywhere.
     await expect(page.getByTestId("pdf-editor-open-find")).toBeVisible();
     await expect(page.getByTestId("pdf-editor-help")).toBeVisible();
 

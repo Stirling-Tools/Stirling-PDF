@@ -2,10 +2,6 @@ import { test, expect } from "@app/tests/helpers/stub-test-base";
 import type { Page } from "@playwright/test";
 import path from "path";
 
-// Emptying a text box must empty it in the PDF, not just the model.
-// FPDFText_SetText traps on an empty string, so the deleted text used to
-// survive in the object and reappear on save.
-
 const SAMPLE_PDF = path.join(
   import.meta.dirname,
   "../test-fixtures/sample.pdf",
@@ -25,7 +21,6 @@ async function openEditor(page: Page): Promise<void> {
   });
 }
 
-/** Drop a new text box on page 0 and return its run id. */
 async function addTextBox(page: Page): Promise<string> {
   await page.getByTestId("pdf-editor-add-text").click();
   await page
@@ -44,7 +39,6 @@ async function addTextBox(page: Page): Promise<string> {
   });
 }
 
-/** Select everything in a run overlay, delete it, and optionally retype. */
 async function clearRun(
   page: Page,
   runId: string,
@@ -93,7 +87,6 @@ async function typeInto(page: Page, runId: string, text: string) {
   await page.waitForTimeout(500);
 }
 
-/** Every run's text on page 0, as the model currently has it. */
 async function pageText(page: Page): Promise<string> {
   return page.evaluate(() =>
     (
@@ -112,7 +105,6 @@ async function pageText(page: Page): Promise<string> {
   );
 }
 
-/** Download the edited PDF and re-open it in the editor. */
 async function saveAndReopen(page: Page): Promise<void> {
   const downloadPromise = page.waitForEvent("download");
   await page.getByTestId("pdf-editor-download").click();
@@ -147,8 +139,6 @@ test.describe("PDF text editor - emptying a text box", () => {
       "the model must show the box as empty",
     ).not.toContain(SECRET);
 
-    // The real check: the PDF, not the model. A trap inside the in-place write
-    // left the object untouched, so the "deleted" text came back on save.
     await saveAndReopen(page);
     expect(
       await pageText(page),
@@ -178,13 +168,9 @@ test.describe("PDF text editor - emptying a text box", () => {
     await openEditor(page);
     const runId = await addTextBox(page);
     await typeInto(page, runId, SECRET);
-    // Past the 600ms coalescing window, so the clear is its own undo step
-    // rather than merging into the typing that preceded it.
     await page.waitForTimeout(900);
 
     await clearRun(page, runId);
-    // A trap used to reach the store's recovery path, which rebuilds every
-    // page and throws the whole undo history away.
     expect(await page.getByTestId("pdf-editor-error").count()).toBe(0);
 
     await page.getByTestId("pdf-editor-undo").click();

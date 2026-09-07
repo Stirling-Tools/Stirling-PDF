@@ -70,7 +70,6 @@ export function PageStage() {
   // inspector derives from the same controller, so both surfaces read one
   // source of truth.
   const controller = useToolbarController(store, state, selection);
-  // One element, rendered in both the empty and loaded branches.
   const topBar = (
     <EditorTopBar
       controller={controller}
@@ -166,8 +165,6 @@ export function PageStage() {
             (f) => f.type === "application/pdf" || /\.pdf$/i.test(f.name),
           );
           if (!pdf) return;
-          // The panel owns the discard confirmation for every route in, so the
-          // drop just hands the file over.
           const input = document.querySelector<HTMLInputElement>(
             '[data-testid="pdf-editor-file-input"]',
           );
