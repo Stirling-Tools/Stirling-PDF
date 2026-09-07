@@ -39,7 +39,7 @@ export function useVariableGroups(stepPosition?: number): VariableGroup[] {
               try {
                 return (
                   wire.enabled &&
-                  fromWirePolicy(wire).categoryId === "classification"
+                  fromWirePolicy(wire).policyKey === "classification"
                 );
               } catch {
                 // One malformed stored policy must not decide the menu.

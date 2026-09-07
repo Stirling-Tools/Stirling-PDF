@@ -24,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
  * {@code stirling_pdf} (money lives in Stripe).
  *
  * <p>PAYG prices are plain {@code per_unit} metered prices, so {@code stripe.prices.unit_amount}
- * carries the rate directly. The free grant is deliberately NOT in Stripe - it's the one-time
+ * carries the rate directly. The free grant is deliberately NOT in Stripe - it's the per-period
  * {@code pricing_policy.free_tier_units} pool, applied app-side (free units are never metered),
  * because un-subscribed teams get the same grant and have no Stripe Price at all.
  *

@@ -3,13 +3,17 @@ import { oauthIconUrl } from "@app/auth/ui/oauthIcons";
 
 export type ProviderType = "oauth2" | "saml2" | "telegram" | "googledrive";
 
+/** Value of a provider field, keyed by its `type`: text/password/textarea -> string,
+ *  number -> number, switch -> boolean, tags -> string[]. */
+export type FieldValue = string | number | boolean | string[];
+
 export interface ProviderField {
   key: string;
   type: "text" | "password" | "switch" | "textarea" | "number" | "tags";
   label: string;
   description: string;
   placeholder?: string;
-  defaultValue?: any;
+  defaultValue?: FieldValue;
 }
 
 export interface Provider {

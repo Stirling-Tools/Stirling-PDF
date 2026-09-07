@@ -47,7 +47,18 @@ public class TextFinder extends PDFTextStripper {
     @Override
     protected void writeString(String text, List<TextPosition> textPositions) {
         pageTextBuilder.append(text);
-        pageTextPositions.addAll(textPositions);
+        // Matches are located by indexing pageTextPositions with offsets into
+        // pageTextBuilder, so the two must stay aligned character-for-character. A
+        // TextPosition can decode to more than one character (ligatures such as "ﬁ",
+        // or any glyph with a multi-character ToUnicode mapping), so repeat it once
+        // per character it contributes instead of adding it a single time.
+        for (TextPosition position : textPositions) {
+            String unicode = position != null ? position.getUnicode() : null;
+            int charCount = unicode != null ? Math.max(1, unicode.length()) : 1;
+            for (int i = 0; i < charCount; i++) {
+                pageTextPositions.add(position);
+            }
+        }
     }
 
     @Override

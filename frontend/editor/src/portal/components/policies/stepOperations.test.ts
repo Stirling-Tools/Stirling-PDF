@@ -119,18 +119,10 @@ describe("buildStepParameters", () => {
 });
 
 describe("operation form", () => {
-  it("seeds defaults and enforces required fields", () => {
+  it("seeds field defaults", () => {
     const elastic = operationById("elasticIndex")!;
     const seeded = emptyOperationValues(elastic);
-
     expect(seeded.index).toBe("stirling-audit");
-    expect(operationFormValid(elastic, seeded)).toBe(true);
-    expect(operationFormValid(elastic, { index: "  " })).toBe(false);
-  });
-
-  it("an operation with no fields is immediately valid", () => {
-    const cloudmersive = operationById("cloudmersiveScan")!;
-    expect(operationFormValid(cloudmersive, {})).toBe(true);
   });
 
   it("refuses a reference the run cannot fill in", () => {

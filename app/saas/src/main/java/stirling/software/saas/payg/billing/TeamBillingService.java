@@ -30,17 +30,8 @@ import stirling.software.saas.payg.wallet.WalletPolicy;
  * entitlement hot path and the wallet endpoint read from here, so what the customer sees is what
  * the guard enforces.
  *
- * <p>Two independent meters (design 2026-06-11 — the free allowance is a one-time lifetime grant):
- *
- * <ul>
- *   <li><b>Free grant</b> — one-time, per team. Size from {@code pricing_policy.free_tier_units};
- *       live balance from the {@code payg_team_extensions.free_units_remaining} counter (maintained
- *       by the charge pipeline). Never resets, survives subscribing. Gates un-subscribed teams and
- *       drives the free-vs-paid split.
- *   <li><b>Monthly window + cap</b> — the Stripe subscription period (calendar month otherwise) and
- *       the optional money cap. Govern the subscribed invoice + spending cap only. The per-document
- *       rate is the synced {@code stripe.prices.unit_amount} (PAYG prices are plain per-unit).
- * </ul>
+ * <p>The free grant and the spending cap are separate pools measured over one window: the Stripe
+ * subscription period when subscribed, the calendar month otherwise.
  *
  * <p>Cached per team for {@value #CACHE_TTL_SECONDS}s. {@code EntitlementService.invalidate}
  * cascades into {@link #invalidate(Long)} so both caches drop together on cap edits / webhooks.
@@ -133,12 +124,6 @@ public class TeamBillingService {
         // bug this guards against.
         boolean subscribed = subscriptionId != null;
 
-        long freeGrant = resolveGrant(teamId);
-        long freeRemaining =
-                extOpt.map(PaygTeamExtensions::getFreeUnitsRemaining)
-                        .map(Long::longValue)
-                        .orElse(0L);
-
         Optional<SubscriptionBilling> billing =
                 subscriptionId != null
                         ? subscriptionDao.findBilling(subscriptionId)
@@ -147,6 +132,19 @@ public class TeamBillingService {
         LocalDateTime[] window =
                 billing.map(b -> new LocalDateTime[] {b.periodStart(), b.periodEnd()})
                         .orElseGet(TeamBillingService::calendarMonthWindow);
+
+        long freeGrant = resolveGrant(teamId);
+        // The reset is persisted lazily by the charge pipeline, so the raw counter still reads as
+        // last period's for a team that has run nothing since the boundary.
+        long freeRemaining =
+                extOpt.map(
+                                ext ->
+                                        remainingForPeriod(
+                                                ext.getFreeUnitsPeriodStart(),
+                                                ext.getFreeUnitsRemaining(),
+                                                freeGrant,
+                                                window[0]))
+                        .orElse(0L);
 
         BigDecimal perDocMinor = billing.map(SubscriptionBilling::perDocMinor).orElse(null);
         String currency = billing.map(SubscriptionBilling::currency).orElse(null);
@@ -184,7 +182,6 @@ public class TeamBillingService {
                 monthlyCapDocUnits);
     }
 
-    /** The policy grant size — the "N" denominator for display; the counter is the live balance. */
     private long resolveGrant(Long teamId) {
         try {
             PricingPolicy policy = pricingPolicyService.getEffectivePolicy(teamId);
@@ -198,8 +195,8 @@ public class TeamBillingService {
 
     /**
      * The subscribed monthly paid-document ceiling; {@code null} = uncapped or not subscribed. The
-     * one-time free grant is NOT added here — it's a separate lifetime pool consumed at charge
-     * time. The cap purely limits how many paid documents the team will fund per billing period.
+     * free grant is NOT added here — it's a separate per-period pool consumed at charge time, ahead
+     * of the meter. The cap purely limits how many paid documents the team will fund per period.
      *
      * <ul>
      *   <li>not subscribed → null (the free grant, not a money cap, is what bounds them);
@@ -250,7 +247,7 @@ public class TeamBillingService {
     /**
      * Documents a hypothetical monthly money cap would buy: {@code floor(capMinor / rate)}. Used by
      * the cap editor's live preview and the {@code PATCH /cap} derived write. The free grant is NOT
-     * added — it's a separate one-time pool. Empty when the rate is unknown.
+     * added — it's a separate per-period pool. Empty when the rate is unknown.
      */
     public Optional<Long> docCapForMoney(TeamBillingContext ctx, long capMinor) {
         if (ctx.perDocMinor() == null || ctx.perDocMinor().signum() <= 0) {
@@ -277,6 +274,28 @@ public class TeamBillingService {
                         BUNDLE_LOOKUP_KEY, currency != null ? currency : DISPLAY_CURRENCY)
                 .map(StripeSubscriptionDao.PriceRate::perDocMinor)
                 .orElse(null);
+    }
+
+    /**
+     * The team's free balance for the period starting at {@code currentPeriodStart}: a full grant
+     * when the counter is stale, the counter otherwise. Shared with the decrement in {@code
+     * JobChargeService} so displayed and enforced balances cannot diverge.
+     */
+    public static long remainingForPeriod(
+            LocalDateTime stampedPeriodStart,
+            Long storedRemaining,
+            long grant,
+            LocalDateTime currentPeriodStart) {
+        if (isStale(stampedPeriodStart, currentPeriodStart)) {
+            return Math.max(0L, grant);
+        }
+        return storedRemaining == null ? 0L : Math.max(0L, storedRemaining);
+    }
+
+    public static boolean isStale(
+            LocalDateTime stampedPeriodStart, LocalDateTime currentPeriodStart) {
+        return currentPeriodStart != null
+                && (stampedPeriodStart == null || stampedPeriodStart.isBefore(currentPeriodStart));
     }
 
     /**
