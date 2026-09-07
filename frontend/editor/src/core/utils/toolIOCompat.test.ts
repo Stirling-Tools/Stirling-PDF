@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
   validateToolChain,
+  toolAcceptsFile,
   type ToolChainStep,
   type ToolDiagnostic,
 } from "@app/utils/toolIOCompat";
@@ -74,4 +75,47 @@ describe("tool chain conformance", () => {
       );
     });
   }
+});
+
+describe("tool file inputs", () => {
+  it.each([
+    ["/api/v1/misc/compress-pdf", "document.PDF", true],
+    ["/api/v1/misc/compress-pdf", "photo.png", false],
+    ["/api/v1/convert/svg/pdf", "drawing.svg", true],
+    ["/api/v1/convert/svg/pdf", "photo.png", false],
+    ["/api/v1/convert/html/pdf", "site.zip", true],
+    ["/api/v1/convert/html/pdf", "site.rar", false],
+    ["/api/v1/convert/markdown/pdf", "readme.txt", false],
+    ["/api/v1/convert/markdown/pdf", "site.zip", true],
+    ["/api/v1/convert/img/pdf", "photo.jpeg", true],
+    ["/api/v1/convert/img/pdf", "photo.wbmp", true],
+    ["/api/v1/convert/img/pdf", "drawing.eps", false],
+    ["/api/v1/convert/cbz/pdf", "book.zip", true],
+    ["/api/v1/convert/cbr/pdf", "book.rar", true],
+    ["/api/v1/convert/ebook/pdf", "document.docx", true],
+    ["/api/v1/misc/compress-pdf", "unknown", false],
+  ])("checks %s against %s", (endpoint, name, accepted) => {
+    expect(toolAcceptsFile(endpoint, { name, type: "" })).toBe(accepted);
+  });
+
+  it("uses detected protection and the endpoint's encrypted input declaration", () => {
+    const file = {
+      name: "document.pdf",
+      type: "",
+      processedFile: { pages: [], isEncrypted: true },
+    };
+    expect(toolAcceptsFile("/api/v1/misc/compress-pdf", file)).toBe(false);
+    expect(toolAcceptsFile("/api/v1/security/remove-password", file)).toBe(
+      true,
+    );
+    for (const endpoint of [
+      undefined,
+      "/unknown",
+      "/api/v1/convert/file/pdf",
+    ]) {
+      expect(toolAcceptsFile(endpoint, file)).toBe(true);
+    }
+    file.processedFile.isEncrypted = false;
+    expect(toolAcceptsFile("/api/v1/misc/compress-pdf", file)).toBe(true);
+  });
 });

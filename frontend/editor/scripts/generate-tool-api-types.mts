@@ -256,6 +256,9 @@ export type ToolFormat = ${union(formats)};
 /** Every format, for iteration. */
 export const TOOL_FORMATS = ${JSON.stringify(formats)} as const satisfies readonly ToolFormat[];
 
+/** Filename extensions from the backend ToolFormat declarations. */
+export const TOOL_FORMAT_EXTENSIONS: Record<ToolFormat, readonly string[]> = ${JSON.stringify(vocabulary.extensions)};
+
 /** How many files go in and come out. A multi-output tool returns its results zipped, and the caller unpacks them. */
 export type ToolArity = ${union(vocabulary.arities as string[])};
 
@@ -277,6 +280,8 @@ export interface ToolIOCase {
 /** What one endpoint accepts and produces. */
 export interface ToolIOSpec {
   accepts: ToolFormat[];
+  /** Overrides the broad format categories for filename-based input checks. */
+  inputExtensions?: string[];
   produces: ToolFormat;
   arity: ToolArity;
   cases?: ToolIOCase[];

@@ -21,8 +21,16 @@ import {
 } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { useConvertOperation } from "@app/hooks/tools/convert/useConvertOperation";
-import { ConvertParameters } from "@app/hooks/tools/convert/useConvertParameters";
-import { FileContextProvider } from "@app/contexts/FileContext";
+import {
+  ConvertParameters,
+  defaultParameters,
+} from "@app/hooks/tools/convert/useConvertParameters";
+import { useRemovePasswordOperation } from "@app/hooks/tools/removePassword/useRemovePasswordOperation";
+import {
+  FileContextProvider,
+  useFileActions,
+  useFileState,
+} from "@app/contexts/FileContext";
 import { NavigationProvider } from "@app/contexts/NavigationContext";
 import { ToolRegistryProvider } from "@app/contexts/ToolRegistryProvider";
 import { PreferencesProvider } from "@app/contexts/PreferencesContext";
@@ -31,7 +39,10 @@ import i18n from "@app/i18n/config";
 import { createTestStirlingFile } from "@app/tests/utils/testFileHelpers";
 import { expectConsole } from "@app/tests/failOnConsole";
 import { fileStorage } from "@app/services/fileStorage";
-import { StirlingFile } from "@app/types/fileContext";
+import {
+  StirlingFile,
+  createNewStirlingFileStub,
+} from "@app/types/fileContext";
 import { MantineProvider } from "@mantine/core";
 
 // Mock axios (for static methods like CancelToken, isCancel)
@@ -122,6 +133,123 @@ const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
 );
 
 describe("Convert Tool Integration Tests", () => {
+  test("filters mixed inputs using current params and protection without consuming skipped files", async () => {
+    mockedApiClient.post.mockResolvedValue({
+      data: new Blob(["output"]),
+      headers: {},
+    });
+    const { result } = renderHook(
+      () => ({
+        convert: useConvertOperation(),
+        unlock: useRemovePasswordOperation(),
+        context: useFileActions(),
+        ...useFileState(),
+      }),
+      { wrapper: TestWrapper },
+    );
+    const pdf = createPDFFile();
+    const svg = createTestStirlingFile(
+      "drawing.svg",
+      "<svg/>",
+      "image/svg+xml",
+    );
+    const image = createTestStirlingFile("photo.png", "image", "image/png");
+    const locked = createTestStirlingFile(
+      "locked.pdf",
+      "encrypted",
+      "application/pdf",
+    );
+    const files = [image, locked, pdf, svg];
+    await act(async () => {
+      result.current.context.dispatch({
+        type: "ADD_FILES",
+        payload: {
+          stirlingFileStubs: files.map((file) => ({
+            ...createNewStirlingFileStub(file, file.fileId),
+            versionNumber: 2,
+            processedFile:
+              file === locked ? { pages: [], isEncrypted: true } : undefined,
+          })),
+        },
+      });
+    });
+
+    await act(async () => {
+      await result.current.convert.executeOperation(
+        { ...defaultParameters, fromExtension: "pdf", toExtension: "png" },
+        files,
+      );
+    });
+    expect(mockedApiClient.post).toHaveBeenCalledTimes(1);
+    expect(mockedApiClient.post.mock.calls[0][0]).toBe(
+      "/api/v1/convert/pdf/img",
+    );
+    expect(
+      (mockedApiClient.post.mock.calls[0][1] as FormData).getAll("fileInput"),
+    ).toEqual([pdf]);
+    expect(fileStorage.persistVersionedOutputs).toHaveBeenLastCalledWith(
+      [pdf.fileId],
+      expect.any(Array),
+      expect.any(Array),
+    );
+    for (const file of [image, svg, locked]) {
+      expect(result.current.state.files.byId[file.fileId].isLeaf).toBe(true);
+      expect(result.current.state.ui.errorFileIds).not.toContain(file.fileId);
+    }
+
+    await act(async () => {
+      await result.current.convert.executeOperation(
+        { ...defaultParameters, fromExtension: "svg", toExtension: "pdf" },
+        files,
+      );
+    });
+    expect(mockedApiClient.post).toHaveBeenCalledTimes(2);
+    expect(mockedApiClient.post.mock.calls[1][0]).toBe(
+      "/api/v1/convert/svg/pdf",
+    );
+    expect(
+      (mockedApiClient.post.mock.calls[1][1] as FormData).getAll("fileInput"),
+    ).toEqual([svg]);
+    expect(fileStorage.persistVersionedOutputs).toHaveBeenLastCalledWith(
+      [svg.fileId],
+      expect.any(Array),
+      expect.any(Array),
+    );
+
+    await act(async () => {
+      await result.current.convert.executeOperation(
+        { ...defaultParameters, fromExtension: "pdf", toExtension: "png" },
+        [image, locked],
+      );
+    });
+    expect(mockedApiClient.post).toHaveBeenCalledTimes(2);
+    expect(fileStorage.persistVersionedOutputs).toHaveBeenCalledTimes(2);
+    expect(result.current.convert.errorMessage).toBe("noValidFiles");
+
+    await act(async () => {
+      await result.current.unlock.executeOperation({ password: "secret" }, [
+        image,
+        locked,
+      ]);
+    });
+    expect(mockedApiClient.post).toHaveBeenCalledTimes(3);
+    expect(mockedApiClient.post.mock.calls[2][0]).toBe(
+      "/api/v1/security/remove-password",
+    );
+    expect(
+      (mockedApiClient.post.mock.calls[2][1] as FormData).get("password"),
+    ).toBe("secret");
+    expect(
+      (mockedApiClient.post.mock.calls[2][1] as FormData).getAll("fileInput"),
+    ).toEqual([locked]);
+    expect(result.current.unlock.errorMessage).toBe(null);
+    expect(fileStorage.persistVersionedOutputs).toHaveBeenLastCalledWith(
+      [locked.fileId],
+      expect.any(Array),
+      expect.any(Array),
+    );
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     // Setup default apiClient mock
@@ -244,9 +372,9 @@ describe("Convert Tool Integration Tests", () => {
       });
 
       const testFile = createTestStirlingFile(
-        "invalid.txt",
+        "invalid.pdf",
         "not a pdf",
-        "text/plain",
+        "application/pdf",
       );
       const parameters: ConvertParameters = {
         fromExtension: "pdf",
