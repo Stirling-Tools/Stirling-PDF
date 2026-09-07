@@ -284,6 +284,18 @@ public class ProcessingFolderController {
         Policy saved = policyStore.save(policy);
         policyTriggerManager.notifyPoliciesChanged();
         if (!requestedCreate) {
+            // Resuming is a request to catch up: a re-enabled folder sweeps immediately, the way
+            // creation does, instead of idling until the next reconcile tick or a new arrival.
+            if (saved.enabled() && existing != null && !existing.enabled()) {
+                SweepOutcome resumed = policyRunner.run(saved, SweepKind.USER);
+                return ResponseEntity.ok(
+                        toView(
+                                saved,
+                                resumed.runIds().size(),
+                                resumed.alreadyProcessed(),
+                                resumed.parked(),
+                                resumed.retried()));
+            }
             return ResponseEntity.ok(toView(saved));
         }
         // Process the backlog: everything already in the folder runs once, now. The counts go back

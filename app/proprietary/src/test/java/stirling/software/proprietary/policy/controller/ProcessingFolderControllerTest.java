@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -472,6 +473,25 @@ class ProcessingFolderControllerTest {
         verify(policyRunner).cancelRuns(view.id());
         verify(policyRunner).awaitQuiesce(eq(view.id()), any());
         verify(processedLedger).clearPolicy(view.id());
+    }
+
+    @Test
+    void resumingAPausedFolderSweepsImmediately() {
+        var view = controller.save(request(null, "new_version")).getBody();
+        // Pause: no sweep. Resume: sweeps like creation, so waiting files catch up now
+        // rather than at the next reconcile tick.
+        controller.save(pausedCopy(view, false));
+        var resumed = controller.save(pausedCopy(view, true)).getBody();
+
+        assertThat(resumed.startedRuns()).isEqualTo(1);
+        verify(policyRunner, times(2)).run(any(Policy.class), eq(SweepKind.USER));
+    }
+
+    /** The stored record re-saved with only its enabled flag changed. */
+    private ProcessingFolderController.SaveProcessingFolderRequest pausedCopy(
+            ProcessingFolderController.ProcessingFolderView view, boolean enabled) {
+        return new ProcessingFolderController.SaveProcessingFolderRequest(
+                view.id(), view.folderId(), null, enabled, view.steps(), view.output());
     }
 
     /** A disk-backed folder over the test's own temp directory. */
