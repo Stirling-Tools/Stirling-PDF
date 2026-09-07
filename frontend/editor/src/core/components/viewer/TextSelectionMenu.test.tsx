@@ -89,7 +89,7 @@ vi.mock("@app/contexts/NavigationContext", () => ({
 
 const mockAlert = vi.fn();
 vi.mock("@app/components/toast", () => ({
-  alert: (options: any) => mockAlert(options),
+  alert: (options: unknown) => mockAlert(options),
 }));
 
 const TestWrapper = ({ children }: { children: React.ReactNode }) => (
