@@ -153,8 +153,8 @@ public class EmailService {
      * @param temporaryPassword The temporary password
      * @param loginUrl The URL to the login page
      * @throws MessagingException If there is an issue with creating or sending the email.
-     *     <p>Deliberately synchronous: the caller reports the outcome to an administrator, and an
-     *     @Async void send would complete before the SMTP failure it hides.
+     *     <p>Deliberately synchronous: the caller reports the outcome to an administrator, and
+     *     an @Async void send would complete before the SMTP failure it hides.
      */
     public void sendInviteEmail(
             String to, String username, String temporaryPassword, String loginUrl)

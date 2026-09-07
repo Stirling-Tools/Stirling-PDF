@@ -12,8 +12,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.util.Optional;
 
-import jakarta.mail.MessagingException;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -25,6 +23,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
+import jakarta.mail.MessagingException;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.model.Team;
@@ -519,8 +519,7 @@ class UserControllerMoreTest {
         @Test
         @DisplayName("returns 404 for an unknown user")
         void userNotFound() throws Exception {
-            when(userService.findByUsernameIgnoreCase("ghost@ex.com"))
-                    .thenReturn(Optional.empty());
+            when(userService.findByUsernameIgnoreCase("ghost@ex.com")).thenReturn(Optional.empty());
 
             mockMvc.perform(
                             post("/api/v1/user/admin/resendInvite")

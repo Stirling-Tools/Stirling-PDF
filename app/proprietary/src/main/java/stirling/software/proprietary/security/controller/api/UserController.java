@@ -661,7 +661,8 @@ public class UserController {
                             temporaryPassword,
                             buildLoginUrl(request));
         } catch (Exception e) {
-            log.error("Failed to resend invite email to {}: {}", user.getUsername(), e.getMessage());
+            log.error(
+                    "Failed to resend invite email to {}: {}", user.getUsername(), e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
                     .body(
                             Map.of(
@@ -1026,8 +1027,7 @@ public class UserController {
         private final boolean emailDelivered;
         private final String errorMessage;
 
-        private InviteResult(
-                boolean accountCreated, boolean emailDelivered, String errorMessage) {
+        private InviteResult(boolean accountCreated, boolean emailDelivered, String errorMessage) {
             this.accountCreated = accountCreated;
             this.emailDelivered = emailDelivered;
             this.errorMessage = errorMessage;
