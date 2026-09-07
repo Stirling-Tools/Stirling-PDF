@@ -3,7 +3,10 @@ import { useTranslation } from "react-i18next";
 import DividerWithText from "@app/components/shared/DividerWithText";
 import { useNotifications } from "@app/hooks/useNotifications";
 import type { ClientActionRegistry } from "@app/components/notifications/notificationActions";
-import { NotificationItem } from "@app/components/notifications/NotificationItem";
+import {
+  NotificationItem,
+  type PasswordPrompt,
+} from "@app/components/notifications/NotificationItem";
 import "@app/components/notifications/NotificationBell.css";
 
 /** Named so a trigger in another tree can point at it with aria-controls. */
@@ -16,6 +19,8 @@ export interface NotificationPanelProps {
   registry: ClientActionRegistry;
   style?: React.CSSProperties;
   className?: string;
+  /** Hand a password-collecting action up to the host, which outlives this panel. */
+  onRequestPassword: (prompt: PasswordPrompt) => void;
 }
 
 /** Mounted only while open, since mounting is what marks everything read. */
@@ -25,6 +30,7 @@ export function NotificationPanel({
   id,
   style,
   className,
+  onRequestPassword,
 }: NotificationPanelProps) {
   const { t } = useTranslation();
   const { notifications, unreadCount, documentStateFor, markAllSeen } =
@@ -129,6 +135,7 @@ export function NotificationPanel({
                 documentState={documentStateFor(notification)}
                 registry={registry}
                 onDismissPanel={onClose}
+                onRequestPassword={onRequestPassword}
               />
             </Fragment>
           ))}

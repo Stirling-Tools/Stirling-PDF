@@ -12,30 +12,25 @@
 import type { TFunction } from "i18next";
 import { apiClient } from "@portal/api/http";
 import { fromWirePolicy, toWirePolicy } from "@app/policies/codec";
-import { resolveRunOn } from "@app/policies/runOn";
 import { runsToActivity, runsToStats } from "@app/policies/runs";
 import {
   policyStep,
+  policyStepFromWire,
+  type PolicyToolId,
   type PolicyToolStep,
   type UntypedPolicyEndpoint,
 } from "@app/policies/operations";
 import type { ToolEndpoint } from "@app/types/toolApiTypes";
+import type { Policy } from "@portal/api/pipelines";
 import type {
   PolicyDecodedState,
   PolicyRunView,
+  WireOutputOptions,
   WirePipelineStep,
   WirePolicy,
 } from "@app/policies/types";
 
-export type {
-  PolicyActivityItem,
-  PolicyDecodedState,
-  PolicyRunView,
-  PolicyStats,
-  WireOutputOptions,
-  WireOutputSpec,
-  WirePolicy,
-} from "@app/policies/types";
+export type { PolicyRunView, WirePolicy } from "@app/policies/types";
 
 // Re-export the wire step type under the legacy name components depend on.
 export type { WirePipelineStep as PipelineStep } from "@app/policies/types";
@@ -44,9 +39,7 @@ export type { WirePipelineStep as PipelineStep } from "@app/policies/types";
 /*  Catalogue model — portal-specific                                        */
 /* ──────────────────────────────────────────────────────────────────────── */
 
-export type PolicyStatus = "active" | "paused";
-
-export type PolicyRowStatus = "active" | "paused" | "setup";
+type PolicyStatus = "active" | "paused";
 
 export type PolicyFieldType = "toggle" | "select" | "chips" | "text";
 
@@ -79,6 +72,12 @@ export interface PolicyConfigDef {
 export interface PolicyState {
   configured: boolean;
   status: PolicyStatus;
+  /** Org-mandated policy (see the pipeline `Policy.required`). */
+  required: boolean;
+  name?: string;
+  icon?: string;
+  /** Options the wizard doesn't model, preserved so a wizard save round-trips them (see codec). */
+  extraOptions?: Record<string, unknown>;
   sources: string[];
   /** Whether the editor runs this policy per file; stored, not derived from `sources`. */
   runsOnEditor?: boolean;
@@ -96,6 +95,9 @@ export interface PolicyState {
 }
 
 export interface PolicySetupResult {
+  required: boolean;
+  /** Stored options the wizard doesn't model, carried through so a save preserves them (see codec). */
+  extraOptions?: Record<string, unknown>;
   fieldValues: Record<string, boolean | string | string[]>;
   sources: string[];
   runsOnEditor: boolean;
@@ -119,15 +121,7 @@ export interface DecoratedPolicy {
   activity: import("@app/policies/types").PolicyActivityItem[];
 }
 
-export interface PoliciesSummary {
-  active: number;
-  paused: number;
-  categories: number;
-  docsEnforced: number;
-}
-
 export interface PoliciesResponse {
-  summary: PoliciesSummary;
   catalogue: CatalogueEntry[];
 }
 
@@ -146,7 +140,7 @@ export interface CatalogueEntry {
  * {@link ToolEndpoint}s, plus the AI classify and policy gate endpoints, which are `@Hidden` and so
  * aren't part of the generated union.
  */
-export const ENDPOINT_LABELS: Partial<
+const ENDPOINT_LABELS: Partial<
   Record<ToolEndpoint | UntypedPolicyEndpoint, string>
 > = {
   "/api/v1/security/auto-redact": "portal.policies.endpoints.autoRedact",
@@ -392,17 +386,6 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
   },
 };
 
-export const POLICY_DOC_TYPES: string[] = [
-  "contracts",
-  "invoices",
-  "taxDocuments",
-  "hrRecords",
-  "insurance",
-  "medicalPhi",
-  "legalFilings",
-  "financialReports",
-];
-
 // ── Client-side catalogue assembly ───────────────────────────────────────────
 
 function decoratePolicy(
@@ -410,8 +393,8 @@ function decoratePolicy(
   runs: PolicyRunView[],
   isDefault: boolean,
 ): DecoratedPolicy | null {
-  const category = POLICY_CATEGORIES.find((c) => c.id === decoded.categoryId);
-  const config = POLICY_CONFIG[decoded.categoryId];
+  const category = POLICY_CATEGORIES.find((c) => c.id === decoded.policyKey);
+  const config = POLICY_CONFIG[decoded.policyKey];
   if (!category || !config) return null;
 
   const policyRuns = runs.filter((r) => r.policyId === decoded.id);
@@ -419,6 +402,8 @@ function decoratePolicy(
   const state: PolicyState = {
     configured: true,
     status,
+    required: decoded.required,
+    extraOptions: decoded.extraOptions,
     sources: decoded.sources,
     runsOnEditor: decoded.runsOnEditor,
     scopeTypes: decoded.scopeTypes,
@@ -471,8 +456,8 @@ export function assemblePolicies(
   >();
   for (const wire of wirePolicies) {
     const decoded = fromWirePolicy(wire);
-    if (decoded.categoryId) {
-      decodedByCategory.set(decoded.categoryId, { decoded, isDefault: false });
+    if (decoded.policyKey) {
+      decodedByCategory.set(decoded.policyKey, { decoded, isDefault: false });
     }
   }
 
@@ -484,32 +469,82 @@ export function assemblePolicies(
     return { category, config: POLICY_CONFIG[category.id], policy };
   });
 
-  const active = wirePolicies.filter((p) => p.enabled).length;
-  const paused = wirePolicies.filter((p) => !p.enabled).length;
-  const enabledPolicyIds = new Set(
-    wirePolicies.filter((p) => p.enabled).map((p) => p.id),
-  );
-  const docsEnforced = runs.filter(
-    (r) =>
-      r.status === "COMPLETED" &&
-      r.policyId != null &&
-      enabledPolicyIds.has(r.policyId),
-  ).length;
-  const summary: PoliciesSummary = {
-    active,
-    paused,
-    categories: POLICY_CATEGORIES.length,
-    docsEnforced,
-  };
-
-  return { summary, catalogue };
+  return { catalogue };
 }
 
-/** GET /api/v1/policies/{id} — one stored policy's raw record. */
-export async function fetchPolicy(id: string): Promise<WirePolicy> {
-  return apiClient.local.json<WirePolicy>(
-    `/api/v1/policies/${encodeURIComponent(id)}`,
-  );
+/**
+ * Whether `inner` appears in `outer` in order (no reordering), each used once. The wizard renders
+ * a category's capabilities in a fixed order, so a policy whose enabled tools are a subsequence of
+ * the template's canonical chain round-trips; any other order cannot be shown simply.
+ */
+function isOrderedSubset<T>(inner: T[], outer: T[]): boolean {
+  let cursor = 0;
+  for (const item of inner) {
+    const at = outer.indexOf(item, cursor);
+    if (at === -1) return false;
+    cursor = at + 1;
+  }
+  return true;
+}
+
+/**
+ * The CatalogueEntry that seeds the simple wizard for a policy, or null if the wizard can't express
+ * it losslessly - the single authority for routing an edit to the wizard vs the full builder. Null on
+ * anything the wizard can't show: no template origin, a server input/destination, an unknown or extra
+ * tool, or a reordered chain.
+ */
+export function parseSimplePolicy(
+  policy: Policy,
+  runs: PolicyRunView[] = [],
+): CatalogueEntry | null {
+  const rawCategory = policy.output?.options?.categoryId;
+  const categoryId = typeof rawCategory === "string" ? rawCategory : "";
+  if (!categoryId) return null;
+  const category = POLICY_CATEGORIES.find((c) => c.id === categoryId);
+  const config = POLICY_CONFIG[categoryId];
+  if (!category || !config) return null;
+
+  // The wizard only runs on the editor (sources + runOn live in the options bag, not as server
+  // inputs/destinations). A policy carrying either cannot be shown simply.
+  if ((policy.inputs?.length ?? 0) > 0) return null;
+  if ((policy.outputIds?.length ?? 0) > 0) return null;
+
+  // Every step must be one of this template's capabilities, and they must stay in canonical order.
+  const canonical = config.defaultOperations.map((op) => op.toolId);
+  const toolIds: PolicyToolId[] = [];
+  for (const step of policy.steps) {
+    const parsed = policyStepFromWire(step as WirePipelineStep);
+    if (!parsed || !canonical.includes(parsed.toolId)) return null;
+    toolIds.push(parsed.toolId);
+  }
+  if (!isOrderedSubset(toolIds, canonical)) return null;
+
+  const wire: WirePolicy = {
+    id: policy.id ?? "",
+    name: policy.name,
+    enabled: policy.enabled,
+    required: policy.required,
+    trigger: null,
+    steps: policy.steps as WirePipelineStep[],
+    // The options bag is untyped on the pipeline record; the codec reads it defensively.
+    output: {
+      type: "inline",
+      options: (policy.output?.options ?? {}) as Partial<WireOutputOptions>,
+    },
+    editor: policy.editor,
+  };
+  const decorated = decoratePolicy(fromWirePolicy(wire), runs, false);
+  if (!decorated) return null;
+  // The wire codec models neither the icon nor the (custom) name; carry them from the raw record so
+  // the Customise hand-off preserves them instead of resetting to the category default.
+  return {
+    category,
+    config,
+    policy: {
+      ...decorated,
+      state: { ...decorated.state, name: policy.name, icon: policy.icon },
+    },
+  };
 }
 
 /**
@@ -548,9 +583,6 @@ export async function clearProcessedHistory(id: string): Promise<void> {
 
 // ── Wire-build helpers (so Policies.tsx doesn't need codec knowledge) ────────
 
-const DEFAULT_RETRIES = 3;
-const DEFAULT_RETRY_DELAY = 5;
-
 // Catalogue policy bodies carry categoryId at the top level so the pipelines
 // mock handler can discriminate them from raw pipeline saves on the shared
 // POST /api/v1/policies endpoint. The real backend ignores unknown fields.
@@ -581,7 +613,9 @@ export function buildWireFromSetup(
       id: entry.policy?.state.backendId ?? "",
       name: policyDisplayName(entry, t),
       enabled,
-      categoryId: entry.category.id,
+      required: result.required,
+      extraOptions: result.extraOptions,
+      policyKey: entry.category.id,
       sources: result.sources,
       runsOnEditor: result.runsOnEditor,
       scopeTypes: result.scopeTypes,
@@ -594,38 +628,6 @@ export function buildWireFromSetup(
       maxRetries: result.maxRetries,
       retryDelayMinutes: result.retryDelayMinutes,
       steps: result.steps,
-    }),
-  };
-}
-
-/** Build a wire policy from an existing decorated policy (e.g. for pause/resume). */
-export function buildWireFromState(
-  entry: CatalogueEntry,
-  policy: DecoratedPolicy,
-  enabled: boolean,
-  t: TFunction,
-): CatalogueWireBody {
-  const s = policy.state;
-  return {
-    categoryId: entry.category.id,
-    ...toWirePolicy({
-      id: s.backendId ?? "",
-      name: policyDisplayName(entry, t),
-      enabled,
-      categoryId: entry.category.id,
-      sources: s.sources,
-      // Carry the stored value through: pause/resume must not re-derive it.
-      runsOnEditor: s.runsOnEditor === true,
-      scopeTypes: s.scopeTypes,
-      reviewerEmail: s.reviewerEmail,
-      fieldValues: s.fieldValues,
-      runOn: resolveRunOn(s.runOn, entry.category.id),
-      outputMode: s.outputMode ?? "new_version",
-      outputName: s.outputName ?? "",
-      outputNamePosition: s.outputNamePosition ?? "suffix",
-      maxRetries: s.maxRetries ?? DEFAULT_RETRIES,
-      retryDelayMinutes: s.retryDelayMinutes ?? DEFAULT_RETRY_DELAY,
-      steps: policy.steps,
     }),
   };
 }

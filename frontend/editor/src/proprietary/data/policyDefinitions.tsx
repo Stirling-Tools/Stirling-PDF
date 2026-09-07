@@ -1,22 +1,11 @@
 /**
- * Static preset definitions for Policies — the categories, their editable
- * settings fields, scope labels, and the default tool pipeline each category
- * seeds a new policy with. Runtime activity + stats are derived live from the
- * user's real files, not defined here.
+ * Static preset definitions for Policies - the catalogue categories and the PII
+ * presets a Security policy's redact step seeds from. Runtime activity + stats
+ * are derived live from the user's real files, not defined here.
  */
 
-import DescriptionIcon from "@mui/icons-material/Description";
-import ComputerIcon from "@mui/icons-material/Computer";
-import PublicIcon from "@mui/icons-material/Public";
-import CloudIcon from "@mui/icons-material/Cloud";
-import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
-import FolderOpenIcon from "@mui/icons-material/FolderOpen";
 import { policyCategoryIcon } from "@app/components/policies/policyCategoryIcon";
-import type {
-  PolicyCategory,
-  PolicyConfigDef,
-  PolicySource,
-} from "@app/types/policies";
+import type { PolicyCategory } from "@app/types/policies";
 
 const ICON_SX = { fontSize: "1rem" } as const;
 
@@ -48,7 +37,8 @@ export const POLICY_CATEGORIES: PolicyCategory[] = [
     id: "compliance",
     label: "Compliance",
     icon: policyCategoryIcon("compliance", ICON_SX),
-    desc: "Strip hidden data, convert to PDF/A for archiving, and validate every document against the standard before it is delivered.",
+    desc: "Enforce HIPAA, GDPR, SOC 2, or FedRAMP requirements on every document.",
+    comingSoon: true,
   },
   {
     id: "routing",
@@ -136,210 +126,4 @@ export const PII_PRESETS: { value: string; label: string; pattern: string }[] =
 export const DEFAULT_PII_PATTERNS: string[] = [
   PII_PRESETS[0].pattern, // SSN
   PII_PRESETS[1].pattern, // cards
-];
-
-/** Per-category narrative + editable fields. */
-export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
-  ingestion: {
-    summary:
-      "Classifies documents, extracts structured data, enforces naming, and normalizes pages.",
-    rules: ["Classify", "Extract", "Name", "Normalize"],
-    defaultOperations: [
-      { operation: "ocr", parameters: {} },
-      { operation: "flatten", parameters: {} },
-    ],
-    scopeLabel: "All PDFs on this device",
-    // Policy-level controls only — the per-tool params (OCR level, extract
-    // tables, naming, normalize, rotate...) live in the Workflow step.
-    fields: [
-      {
-        label: "Min confidence",
-        key: "minConfidence",
-        type: "select",
-        value: "p80",
-        options: ["p60", "p70", "p80", "p90", "p95"],
-      },
-      {
-        label: "Below threshold",
-        key: "belowThreshold",
-        type: "select",
-        value: "flagForReview",
-        options: ["flagForReview", "routeToBucket", "hold"],
-      },
-    ],
-  },
-  security: {
-    summary:
-      "Detects PII, encrypts, verifies authenticity, controls access, and certifies documents.",
-    rules: ["Redact PII", "Remove JavaScript"],
-    // Default chain: redact PII + remove JavaScript (via sanitize) on; watermark
-    // is offered in the config page but off by default (not seeded here). Redact
-    // ships with the high-risk PII regexes so it works out of the box.
-    defaultOperations: [
-      {
-        operation: "redact",
-        parameters: {
-          mode: "automatic",
-          useRegex: true,
-          // Flatten to image so redacted text is truly removed, not just hidden
-          // behind a box (heavier, but real redaction).
-          convertPDFToImage: true,
-          wordsToRedact: DEFAULT_PII_PATTERNS,
-        },
-      },
-      {
-        // Sanitize is fixed to JavaScript removal only (no per-policy config).
-        operation: "sanitize",
-        parameters: {
-          removeJavaScript: true,
-          removeEmbeddedFiles: false,
-          removeMetadata: false,
-          removeLinks: false,
-          removeFonts: false,
-          removeXMPMetadata: false,
-        },
-      },
-    ],
-    scopeLabel: "All PDFs on this device",
-    // No policy-level setting fields: tool config lives in the Workflow step;
-    // output naming + retries are set in the wizard.
-    fields: [],
-  },
-  classification: {
-    summary:
-      "Classifies every uploaded document and writes the result to its metadata.",
-    rules: ["Classify", "Tag metadata"],
-    // Single backend step: classify the document via the AI engine and store the
-    // result in the document's StirlingPDFClassification metadata field.
-    defaultOperations: [{ operation: "classify", parameters: {} }],
-    scopeLabel: "All PDFs on this device",
-    fields: [],
-  },
-  compliance: {
-    summary:
-      "Strips hidden data, converts to the PDF/A archival format, and validates the result against the standard.",
-    rules: ["Strip hidden data", "Convert to PDF/A", "Validate compliance"],
-    // Ordered so the gate judges the document that actually ships. Fonts are left alone: PDF/A
-    // requires them embedded. No flatten step: it rasterises whole pages, losing the text layer.
-    defaultOperations: [
-      {
-        operation: "sanitize",
-        parameters: { removeMetadata: true, removeXMPMetadata: true },
-      },
-      { operation: "pdfa", parameters: { outputFormat: "pdfa-2b" } },
-      {
-        operation: "complianceCheck",
-        parameters: { standard: "pdfa", onViolation: "fail" },
-      },
-    ],
-    scopeLabel: "All PDFs on this device",
-    // No policy-level settings: what this policy does is the step chain, and nothing on the
-    // backend reads fieldValues, so a framework picker here could only ever be decoration.
-    fields: [],
-  },
-  routing: {
-    summary:
-      "Routes documents to the right destination based on type and classification.",
-    rules: ["Auto-classify", "Route to folder", "Webhook notify"],
-    defaultOperations: [{ operation: "compress", parameters: {} }],
-    scopeLabel: "All PDFs on this device",
-    fields: [
-      {
-        label: "Destination",
-        key: "destination",
-        type: "select",
-        value: "documents",
-        options: ["documents", "s3Bucket", "sharePoint", "webhook"],
-      },
-      { label: "Webhook URL", key: "webhookUrl", type: "text", value: "" },
-      { label: "Notify on route", key: "notify", type: "toggle", value: false },
-    ],
-  },
-  retention: {
-    summary:
-      "Enforces how long documents are kept, when to archive, and when to delete.",
-    rules: ["Retention hold", "Auto-archive", "Deletion block"],
-    defaultOperations: [{ operation: "compress", parameters: {} }],
-    scopeLabel: "All PDFs on this device",
-    fields: [
-      {
-        label: "Keep for",
-        key: "keepFor",
-        type: "select",
-        value: "sevenYears",
-        options: [
-          "thirtyDays",
-          "oneYear",
-          "threeYears",
-          "sevenYears",
-          "indefinite",
-        ],
-      },
-      {
-        label: "Archive after",
-        key: "archiveAfter",
-        type: "select",
-        value: "never",
-        options: ["thirtyDays", "ninetyDays", "oneYear", "never"],
-      },
-      {
-        label: "Immutable hold",
-        key: "immutableHold",
-        type: "toggle",
-        value: false,
-      },
-    ],
-  },
-};
-
-/** Sources a policy can run over (wizard step 2). */
-export const POLICY_SOURCES: PolicySource[] = [
-  {
-    id: "editor",
-    label: "Editor",
-    desc: "Documents you save or export in Stirling",
-    icon: <DescriptionIcon sx={ICON_SX} />,
-  },
-  {
-    id: "device",
-    label: "Entire device",
-    desc: "All PDFs on this machine, retroactively",
-    icon: <ComputerIcon sx={ICON_SX} />,
-  },
-  {
-    id: "sharepoint",
-    label: "SharePoint",
-    desc: "Connected SharePoint libraries",
-    icon: <PublicIcon sx={ICON_SX} />,
-  },
-  {
-    id: "dropbox",
-    label: "Dropbox",
-    desc: "Connected Dropbox folders",
-    icon: <CloudIcon sx={ICON_SX} />,
-  },
-  {
-    id: "gmail",
-    label: "Gmail",
-    desc: "PDF attachments in email",
-    icon: <EmailOutlinedIcon sx={ICON_SX} />,
-  },
-  {
-    id: "gdrive",
-    label: "Google Drive",
-    desc: "Connected Drive folders",
-    icon: <FolderOpenIcon sx={ICON_SX} />,
-  },
-];
-
-/** Document types selectable when narrowing scope (gated behind classification). */
-export const POLICY_DOC_TYPES: string[] = [
-  "contracts",
-  "invoices",
-  "taxDocuments",
-  "hrRecords",
-  "insurance",
-  "medicalPhi",
-  "legalFilings",
-  "financialReports",
 ];

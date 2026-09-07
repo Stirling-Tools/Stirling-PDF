@@ -5,6 +5,7 @@ import {
   type FilesPageEntry,
 } from "@app/components/filesPage/FileGrid";
 import { FileContextProvider } from "@app/contexts/FileContext";
+import { NewFolderButton } from "@app/components/filesPage/NewFolderButton";
 import type { StirlingFileStub } from "@app/types/fileContext";
 import type { FileId } from "@app/types/file";
 
@@ -109,6 +110,17 @@ export const Empty: Story = {
     loading: false,
     currentTab: "all",
     onEmptyUpload: () => {},
-    onEmptyCreateFolder: () => {},
+    // The page owns this control, so the story stands one up to keep both CTAs on
+    // screen here.
+    emptyNewFolderControl: (
+      <NewFolderButton
+        label="New folder"
+        size="md"
+        currentFolderId={null}
+        canAddLocalFolder={false}
+        onAddLocalFolder={() => {}}
+        onOpenDialog={() => {}}
+      />
+    ),
   },
 };
