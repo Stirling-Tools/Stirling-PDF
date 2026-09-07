@@ -32,9 +32,9 @@ export function StoreCard({ listing, preview = false }: StoreCardProps) {
         <span className="portal-store__card-icon" aria-hidden>
           {pipelineIcon(listing.icon, "1.125rem")}
         </span>
-        <h3 className="portal-store__card-name" title={listing.name}>
+        <h2 className="portal-store__card-name" title={listing.name}>
           {listing.name}
-        </h3>
+        </h2>
         <StoreStarButton
           storeId={listing.storeId}
           starred={listing.starred}

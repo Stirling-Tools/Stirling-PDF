@@ -36,6 +36,6 @@
   padding: 0 0.5rem;
   font-size: 0.6875rem;
   font-weight: 600;
-  background: var(--c-neutral-fill);
+  background: var(--c-surface-sunken);
   color: var(--c-text-subtle);
 }

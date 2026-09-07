@@ -36,7 +36,10 @@ public class StoreTextAuditor {
 
     private static final Pattern CONTROL_OR_FORMAT = Pattern.compile("[\\p{Cc}\\p{Cf}&&[^\\n\\t]]");
     private static final Pattern WHITESPACE = Pattern.compile("\\s+");
-    private static final Pattern MARKUP = Pattern.compile("<\\s*/?\\s*[A-Za-z!?]|&#\\d+;|&[a-z]+;");
+    // Bounded and unambiguous (the optional slash owns its own whitespace) so it stays linear on
+    // user text; see the note on the sanitiser's patterns.
+    private static final Pattern MARKUP =
+            Pattern.compile("<\\s{0,16}(?:/\\s{0,16})?[A-Za-z!?]|&#\\d{1,7};|&[a-z]{1,16};");
     private static final Pattern WORD = Pattern.compile("[\\p{L}\\p{N}]+");
 
     private final BlockedWordList blockedWords;

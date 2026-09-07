@@ -80,15 +80,19 @@ public class StoreManifestSanitizer {
     private static final String INTEGRATION_PREFIX = "/api/v1/integration/";
     private static final Pattern KEY_TOKENS =
             Pattern.compile("(?<=[a-z0-9])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|[_\\-.\\s]+");
-    static final Pattern EMAIL = Pattern.compile("[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}");
+    // Every repetition below has a constant upper bound, and each repeated label ends in a
+    // delimiter its own character class excludes. Both keep the matchers linear on the user text
+    // they run over (CodeQL java/polynomial-redos); the bounds are generous for anything real.
+    static final Pattern EMAIL =
+            Pattern.compile("[A-Za-z0-9._%+-]{1,64}@(?:[A-Za-z0-9-]{1,63}\\.){1,8}[A-Za-z]{2,24}");
     static final Pattern IPV4 = Pattern.compile("\\b(?:\\d{1,3}\\.){3}\\d{1,3}\\b");
     static final Pattern IPV6 = Pattern.compile("(?i)\\b(?:[0-9a-f]{1,4}:){2,7}[0-9a-f]{1,4}\\b");
     static final Pattern PRIVATE_HOST =
             Pattern.compile(
-                    "(?i)(?<![A-Za-z0-9-])(localhost|[a-z0-9-]+(?:\\.[a-z0-9-]+)*\\.(?:local|internal|lan|corp|home|intranet|localdomain))(?![A-Za-z0-9-])");
+                    "(?i)(?<![A-Za-z0-9-])(localhost|(?:[a-z0-9-]{1,63}\\.){1,8}(?:local|internal|lan|corp|home|intranet|localdomain))(?![A-Za-z0-9-])");
     static final Pattern URL_WITH_CREDENTIALS =
-            Pattern.compile("(?i)[a-z][a-z0-9+.-]*://[^/\\s:@]+:[^/\\s@]+@");
-    static final Pattern URL = Pattern.compile("(?i)\\bhttps?://[^\\s\"'<>]+");
+            Pattern.compile("(?i)[a-z][a-z0-9+.-]{0,20}://[^/\\s:@]{1,128}:[^/\\s@]{1,128}@");
+    static final Pattern URL = Pattern.compile("(?i)\\bhttps?://[^\\s\"'<>]{1,2048}");
     static final Pattern FILESYSTEM_PATH =
             Pattern.compile(
                     "(?i)^(?:[a-z]:\\\\|\\\\\\\\|/(?:home|srv|var|etc|mnt|opt|tmp|usr|root|data|users|volumes|media)(?:/|$))");

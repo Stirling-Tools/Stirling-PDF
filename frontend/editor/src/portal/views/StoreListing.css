@@ -233,6 +233,6 @@
   font-size: 0.75rem;
   padding: 0.25rem 0.5rem;
   border-radius: var(--radius-sm);
-  background: var(--c-neutral-fill);
+  background: var(--c-surface-sunken);
   color: var(--c-text);
 }
