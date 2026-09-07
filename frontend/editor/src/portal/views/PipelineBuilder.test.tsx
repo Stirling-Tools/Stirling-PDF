@@ -34,6 +34,8 @@ const savePipeline = vi.fn();
 const deletePipeline = vi.fn();
 const triggerPipeline = vi.fn();
 const fetchRun = vi.fn();
+const runPipelineTest = vi.fn();
+const fetchRunOutput = vi.fn();
 vi.mock("@portal/api/pipelines", () => ({
   fetchPipeline: (id: string) => fetchPipeline(id),
   fetchTriggers: () => fetchTriggers(),
@@ -41,6 +43,8 @@ vi.mock("@portal/api/pipelines", () => ({
   deletePipeline: (id: string) => deletePipeline(id),
   triggerPipeline: (id: string) => triggerPipeline(id),
   fetchRun: (runId: string) => fetchRun(runId),
+  runPipelineTest: (...args: unknown[]) => runPipelineTest(...args),
+  fetchRunOutput: (...args: unknown[]) => fetchRunOutput(...args),
 }));
 
 const uploadPipelineAsset = vi.fn();
@@ -331,6 +335,8 @@ describe("PipelineBuilder", () => {
     deletePipeline.mockReset();
     triggerPipeline.mockReset();
     fetchRun.mockReset();
+    runPipelineTest.mockReset();
+    runPipelineTest.mockResolvedValue({ runId: "run-test-1" });
     fetchSources.mockReset();
     fetchPipeline.mockResolvedValue(POLICY);
     fetchTriggers.mockResolvedValue([]);
@@ -887,6 +893,76 @@ describe("PipelineBuilder", () => {
     expect(
       await screen.findByText("portal.pipelines.run.completed"),
     ).toBeInTheDocument();
+  });
+
+  function twoStepPolicy(): Policy {
+    return {
+      ...POLICY,
+      steps: [
+        { operation: "/api/v1/misc/compress-pdf", parameters: {} },
+        { operation: "/api/v1/misc/extract-images", parameters: {} },
+      ] as unknown as Policy["steps"],
+    };
+  }
+
+  async function runTestWith(view: Record<string, unknown>) {
+    fetchRun.mockResolvedValue({
+      runId: "run-test-1",
+      stepCount: 2,
+      outputs: [],
+      error: null,
+      ...view,
+    });
+    renderBuilder("/processor/pipelines/plc-1");
+    await screen.findByText("portal.pipelines.builder.testRun");
+    const picker = document.querySelector<HTMLInputElement>(
+      'input[type="file"][accept="application/pdf"]',
+    );
+    if (!picker) throw new Error("test-run file input not rendered");
+    fireEvent.change(picker, {
+      target: {
+        files: [new File(["x"], "in.pdf", { type: "application/pdf" })],
+      },
+    });
+    await waitFor(() => expect(runPipelineTest).toHaveBeenCalledTimes(1));
+  }
+
+  it("blames the step that actually failed, not the one after it", async () => {
+    fetchPipeline.mockResolvedValue(twoStepPolicy());
+
+    await runTestWith({ status: "FAILED", currentStep: 1, error: "boom" });
+
+    await screen.findByLabelText("portal.pipelines.graph.showError");
+    expect(screen.queryByText("portal.pipelines.graph.run.done")).toBeNull();
+  });
+
+  it("marks only the steps that finished before the one still running", async () => {
+    fetchPipeline.mockResolvedValue(twoStepPolicy());
+
+    await runTestWith({ status: "RUNNING", currentStep: 2 });
+
+    await waitFor(() =>
+      expect(
+        screen.getAllByText("portal.pipelines.graph.run.done"),
+      ).toHaveLength(1),
+    );
+  });
+
+  it("retires a test result once the chain it ran against changes", async () => {
+    fetchPipeline.mockResolvedValue(twoStepPolicy());
+
+    await runTestWith({ status: "COMPLETED", currentStep: 2 });
+    await waitFor(() =>
+      expect(
+        screen.getAllByText("portal.pipelines.graph.run.done"),
+      ).toHaveLength(2),
+    );
+
+    await addTool("OCR");
+
+    await waitFor(() =>
+      expect(screen.queryByText("portal.pipelines.graph.run.done")).toBeNull(),
+    );
   });
 
   it("uploads a step's supporting file and saves it as an asset binding", async () => {
