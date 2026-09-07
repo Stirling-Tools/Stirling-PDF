@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react";
+import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import {
@@ -23,7 +23,7 @@ import EditableSecretField from "@app/components/shared/EditableSecretField";
 import apiClient from "@app/services/apiClient";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
 
-interface MailSettingsData {
+type MailSettingsData = {
   enabled?: boolean;
   enableInvites?: boolean;
   inviteLinkExpiryHours?: number;
@@ -32,7 +32,7 @@ interface MailSettingsData {
   username?: string;
   password?: string;
   from?: string;
-}
+};
 
 interface ApiResponseWithPending<T> {
   _pending?: Partial<T>;
@@ -57,7 +57,6 @@ export default function AdminMailSection() {
     setSettings,
     loading,
     saving,
-    fetchSettings,
     saveSettings,
     isFieldPending,
   } = useAdminSettings<MailSettingsData>({
@@ -77,10 +76,6 @@ export default function AdminMailSection() {
       };
     },
   });
-
-  useEffect(() => {
-    fetchSettings();
-  }, []);
 
   const { isDirty, resetToSnapshot, markSaved } = useSettingsDirty(
     settings,

@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react";
+import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { Switch, Stack, Paper, Text, Loader, Group } from "@mantine/core";
 import { alert } from "@app/components/toast";
@@ -34,11 +34,11 @@ export default function AdminPrivacySection() {
     setSettings,
     loading,
     saving,
-    fetchSettings,
     saveSettings,
     isFieldPending,
   } = useAdminSettings<PrivacySettingsData>({
     sectionName: "privacy",
+    enabled: loginEnabled,
     fetchTransformer: async (): Promise<
       PrivacySettingsData & { _pending?: Record<string, unknown> }
     > => {
@@ -89,12 +89,6 @@ export default function AdminPrivacySection() {
       };
     },
   });
-
-  useEffect(() => {
-    if (loginEnabled) {
-      fetchSettings();
-    }
-  }, [loginEnabled, fetchSettings]);
 
   const { isDirty, resetToSnapshot, markSaved } = useSettingsDirty(
     settings,
