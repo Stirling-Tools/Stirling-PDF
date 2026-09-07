@@ -11,6 +11,7 @@ import { EmbedPDF } from "@embedpdf/core/react";
 import { usePdfiumEngine } from "@embedpdf/engines/react";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { localPdfiumFontFallback } from "@app/services/localPdfiumFontFallback";
 
 // Import the essential plugins
 import {
@@ -381,6 +382,7 @@ export function LocalEmbedPDF({
   // Initialize the engine with the React hook - use local WASM for offline support
   const { engine, isLoading, error } = usePdfiumEngine({
     wasmUrl: pdfiumWasmUrl,
+    fontFallback: localPdfiumFontFallback,
   });
 
   // Early return if no file or URL provided

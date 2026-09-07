@@ -254,6 +254,12 @@ export default defineConfig(async ({ mode }) => {
             dest: "pdfium",
           },
           {
+            // PDFium/WASM cannot access system fonts. Bundle Noto Sans fallback
+            // variants so non-embedded Latin and Cyrillic text works offline.
+            src: "../node_modules/@embedpdf/fonts-latin/fonts/*",
+            dest: "pdfium/fonts",
+          },
+          {
             // Copy jscanify vendor files to dist
             src: "public/vendor/jscanify/*",
             dest: "vendor/jscanify",
