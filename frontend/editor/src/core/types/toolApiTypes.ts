@@ -252,7 +252,7 @@ export interface AutoSplitPdfRequest {
   duplexMode?: boolean;
 }
 export interface BatchAttachmentRequest {
-  attachments?: string[];
+  attachments?: File[];
   convertToPdfA3b?: boolean;
   opsJson?: string;
 }
@@ -1832,6 +1832,7 @@ export const TOOL_FILE_FIELDS = {
   "/api/v1/misc/add-attachments": ["attachments"],
   "/api/v1/misc/add-image": ["imageFile"],
   "/api/v1/misc/add-stamp": ["stampImage"],
+  "/api/v1/misc/batch-process-attachments": ["attachments"],
   "/api/v1/security/add-watermark": ["watermarkImage"],
   "/api/v1/security/cert-sign": [
     "privateKeyFile",

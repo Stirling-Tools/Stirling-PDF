@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import {
   listAttachments,
   applyBatchAttachmentOps,
@@ -33,15 +34,18 @@ function createUpdatedFile(blob: Blob, originalFile: File): File {
   });
 }
 
-export function useAttachmentManager({
-  activeFile,
-  onFileUpdated,
-  onError,
-}: UseAttachmentManagerOptions) {
+// A staged row's File carries its original name; rename before upload so the
+// embedded attachment keeps the name the user chose.
+function rebuildStagedFile(file: File | undefined, newName: string): File | undefined {
+  if (!file) return file;
+  return new File([file], newName, { type: file.type, lastModified: file.lastModified });
+}
+
+export function useAttachmentManager({ activeFile, onFileUpdated, onError }: UseAttachmentManagerOptions) {
+  const { t } = useTranslation();
   const [rows, setRows] = useState<DraftAttachmentRow[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
-  const [isDownloading, setIsDownloading] = useState<boolean>(false);
   const [activeAction, setActiveAction] = useState<string | null>(null);
 
   // Generation counter to prevent race conditions on fast file switches
@@ -55,9 +59,7 @@ export function useAttachmentManager({
   const prevActiveFileKeyRef = useRef<string | null>(null);
 
   // Stable string identifier for activeFile
-  const activeFileKey = activeFile
-    ? `${activeFile.name}-${activeFile.size}-${activeFile.lastModified}`
-    : "";
+  const activeFileKey = activeFile ? `${activeFile.name}-${activeFile.size}-${activeFile.lastModified}` : "";
 
   const fetchAttachmentsForFile = useCallback(async (file: File | null) => {
     if (!file) {
@@ -103,21 +105,20 @@ export function useAttachmentManager({
     }
   }, [activeFileKey, fetchAttachmentsForFile]);
 
-  // Stage new files for addition
   const stageFiles = useCallback(
     (newFiles: File[]) => {
       setRows((prev) => {
-        const existingNames = new Set(
-          prev
-            .filter((r) => r.kind !== "deleted")
-            .map((r) => r.name.toLowerCase()),
-        );
+        const existingNames = new Set(prev.filter((r) => r.kind !== "deleted").map((r) => r.name.toLowerCase()));
 
         const validNewRows: DraftAttachmentRow[] = [];
         for (let idx = 0; idx < newFiles.length; idx++) {
           const file = newFiles[idx];
           if (existingNames.has(file.name.toLowerCase())) {
-            onError?.(`Attachment with name '${file.name}' already exists.`);
+            onError?.(
+              t("attachments.duplicateName", "Attachment with name '{{name}}' already exists.", {
+                name: file.name,
+              }),
+            );
             continue;
           }
           existingNames.add(file.name.toLowerCase());
@@ -134,10 +135,9 @@ export function useAttachmentManager({
         return [...prev, ...validNewRows];
       });
     },
-    [onError],
+    [onError, t],
   );
 
-  // Remove a staged file or toggle deletion on an existing file
   const toggleDeleteRow = useCallback((id: string) => {
     setRows((prev) =>
       prev
@@ -145,8 +145,7 @@ export function useAttachmentManager({
         .map((row) => {
           if (row.id !== id) return row;
           if (row.kind === "deleted") {
-            const restoredKind =
-              row.name !== row.originalName ? "renamed" : "existing";
+            const restoredKind = row.name !== row.originalName ? "renamed" : "existing";
             return { ...row, kind: restoredKind };
           }
           return { ...row, kind: "deleted" };
@@ -154,19 +153,16 @@ export function useAttachmentManager({
     );
   }, []);
 
-  // Restore a deleted row
   const restoreRow = useCallback((id: string) => {
     setRows((prev) =>
       prev.map((row) => {
         if (row.id !== id) return row;
-        const restoredKind =
-          row.name !== row.originalName ? "renamed" : "existing";
+        const restoredKind = row.name !== row.originalName ? "renamed" : "existing";
         return { ...row, kind: restoredKind };
       }),
     );
   }, []);
 
-  // Rename a row in draft state
   const renameRow = useCallback(
     (id: string, newName: string) => {
       const trimmed = newName.trim();
@@ -174,33 +170,32 @@ export function useAttachmentManager({
 
       setRows((prev) => {
         const isDuplicate = prev.some(
-          (r) =>
-            r.id !== id &&
-            r.kind !== "deleted" &&
-            r.name.toLowerCase() === trimmed.toLowerCase(),
+          (r) => r.id !== id && r.kind !== "deleted" && r.name.toLowerCase() === trimmed.toLowerCase(),
         );
         if (isDuplicate) {
-          onError?.(`An attachment named '${trimmed}' already exists.`);
+          onError?.(
+            t("attachments.duplicateName", "An attachment named '{{name}}' already exists.", {
+              name: trimmed,
+            }),
+          );
           return prev;
         }
 
         return prev.map((row) => {
           if (row.id !== id) return row;
           if (row.kind === "staged") {
-            return { ...row, name: trimmed };
+            return { ...row, name: trimmed, file: rebuildStagedFile(row.file, trimmed) };
           }
           const newKind = trimmed === row.originalName ? "existing" : "renamed";
           return { ...row, name: trimmed, kind: newKind };
         });
       });
     },
-    [onError],
+    [onError, t],
   );
 
-  // Extract all attachments into a ZIP
   const extractAllZip = useCallback(async () => {
     if (!activeFile) return;
-    setIsDownloading(true);
     setActiveAction("extractAll");
     try {
       const zipBlob = await apiExtractAttachments(activeFile);
@@ -211,16 +206,13 @@ export function useAttachmentManager({
       const msg = await parseBlobError(err, "Failed to extract attachments.");
       onError?.(msg);
     } finally {
-      setIsDownloading(false);
       setActiveAction(null);
     }
   }, [activeFile, onError]);
 
-  // Extract single attachment
   const extractSingle = useCallback(
     async (filename: string) => {
       if (!activeFile || !filename) return;
-      setIsDownloading(true);
       setActiveAction(`extract-${filename}`);
       try {
         const fileBlob = await apiExtractSingleAttachment(activeFile, filename);
@@ -229,21 +221,18 @@ export function useAttachmentManager({
         const msg = await parseBlobError(err, "Failed to download attachment.");
         onError?.(msg);
       } finally {
-        setIsDownloading(false);
         setActiveAction(null);
       }
     },
     [activeFile, onError],
   );
 
-  // Computed draft stats
   const pendingChangesCount = useMemo(() => {
     return rows.filter((r) => r.kind !== "existing").length;
   }, [rows]);
 
   const hasChanges = pendingChangesCount > 0;
 
-  // Save all draft changes in one single pass
   const saveDraft = useCallback(
     async (convertToPdfA3b?: boolean): Promise<boolean> => {
       if (!activeFile) return false;
@@ -252,17 +241,11 @@ export function useAttachmentManager({
       setActiveAction("save");
 
       try {
-        const renames = rows
-          .filter((r) => r.kind === "renamed")
-          .map((r) => ({ oldName: r.originalName, newName: r.name }));
+        const renames = rows.filter((r) => r.kind === "renamed").map((r) => ({ oldName: r.originalName, newName: r.name }));
 
-        const deletions = rows
-          .filter((r) => r.kind === "deleted")
-          .map((r) => r.originalName);
+        const deletions = rows.filter((r) => r.kind === "deleted").map((r) => r.originalName);
 
-        const additions = rows
-          .filter((r) => r.kind === "staged" && r.file)
-          .map((r) => r.file as File);
+        const additions = rows.filter((r) => r.kind === "staged" && r.file).map((r) => r.file as File);
 
         const updatedBlob = await applyBatchAttachmentOps(activeFile, {
           renames,
@@ -296,10 +279,7 @@ export function useAttachmentManager({
       } catch (err) {
         if (saveGen !== genRef.current) return false;
         skipNextFetchRef.current = false;
-        const msg = await parseBlobError(
-          err,
-          "Failed to save attachment changes.",
-        );
+        const msg = await parseBlobError(err, "Failed to save attachment changes.");
         onError?.(msg);
         return false;
       } finally {
@@ -312,7 +292,6 @@ export function useAttachmentManager({
     [activeFile, rows, onFileUpdated, onError],
   );
 
-  // Discard local draft changes and revert to original server list
   const discardDraft = useCallback(() => {
     fetchAttachmentsForFile(activeFileRef.current);
   }, [fetchAttachmentsForFile]);
@@ -323,7 +302,6 @@ export function useAttachmentManager({
     pendingChangesCount,
     isLoading,
     isSaving,
-    isDownloading,
     activeAction,
     stageFiles,
     toggleDeleteRow,
