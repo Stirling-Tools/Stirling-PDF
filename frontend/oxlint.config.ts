@@ -76,7 +76,6 @@ const modernGlobals: OxlintGlobals = {
 const noExplicitAnyExcludes = [
   "editor/src/core/components/shared/config/configSections/ProviderCard.tsx",
   "editor/src/core/components/viewer/layerUtils.ts",
-  "editor/src/core/components/viewer/HistoryAPIBridge.tsx",
 ];
 
 export default defineConfig({
