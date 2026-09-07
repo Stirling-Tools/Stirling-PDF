@@ -1,5 +1,13 @@
 import { useEffect, useState } from "react";
 
+interface UserAgentData {
+  getHighEntropyValues(hints: string[]): Promise<{
+    platform?: string;
+    architecture?: string;
+    bitness?: string;
+  }>;
+}
+
 export type OS =
   | "windows"
   | "mac"
@@ -39,7 +47,9 @@ export function useOs(): OS {
       let detected: OS = parseUA(navigator.userAgent);
 
       // Try Client Hints for better platform + architecture
-      const uaData = (navigator as any).userAgentData;
+      const uaData = (
+        navigator as Navigator & { userAgentData?: UserAgentData }
+      ).userAgentData;
       if (uaData?.getHighEntropyValues) {
         try {
           const { platform, architecture, bitness } =

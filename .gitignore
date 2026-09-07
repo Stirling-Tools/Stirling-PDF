@@ -272,6 +272,8 @@ id_ed25519.pub
 
 # node_modules
 node_modules/
+# A symlink named node_modules is a file, which the slash form does not match.
+node_modules
 
 # weasyPrint
 **/LOCAL_APPDATA_FONTCONFIG_CACHE/**
@@ -315,3 +317,4 @@ frontend/editor/screenshots/
 
 # Compiled by `task desktop:assets-car` from icons/macos/app.icon
 frontend/editor/src-tauri/icons/macos/Assets.car
+frontend/editor/src-tauri/libs/.variant
