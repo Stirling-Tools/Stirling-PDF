@@ -349,7 +349,10 @@ class PaygChargeInterceptorTest {
     @Test
     void afterCompletion_4xx_joined_decrementsRatherThanReleasingTheWholeProcess()
             throws Exception {
-        // A later chained step failing does not undo the units the OPENED step already drew.
+        // A joined step drew no units of its own, so there is nothing to release: the process's
+        // unit belongs to the step that opened it, which delivered. Only the step slot comes back.
+        // A step inside an automation run is a different case entirely — its run settles every
+        // process under the run id, so nothing here stands when the run fails.
         authenticateWithApiKey(makeUser(7L, 42L));
         UUID jobId = UUID.randomUUID();
         when(chargeService.openProcess(any(), anyList()))
