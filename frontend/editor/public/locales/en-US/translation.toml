@@ -3942,13 +3942,13 @@ title = "File no longer exists"
 body = "{{label}} no longer exists on disk. It is still open here - saving will ask you for a new location."
 title = "File deleted on disk"
 
-[desktopFileLink.tooLarge]
-body = "\"{{name}}\" changed on disk. It is large enough that reloading it will take a while, so the version here has been left alone."
-title = "File changed on disk"
-
 [desktopFileLink.reloaded]
 body = "\"{{name}}\" changed on disk and has been reloaded."
 title = "Updated from disk"
+
+[desktopFileLink.tooLarge]
+body = "\"{{name}}\" changed on disk. It is large enough that reloading it will take a while, so the version here has been left alone."
+title = "File changed on disk"
 
 [desktopUpdate]
 downloading = "Downloading update..."
