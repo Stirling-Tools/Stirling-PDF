@@ -34,6 +34,8 @@ const savePipeline = vi.fn();
 const deletePipeline = vi.fn();
 const triggerPipeline = vi.fn();
 const fetchRun = vi.fn();
+const runPipelineTest = vi.fn();
+const fetchRunOutput = vi.fn();
 vi.mock("@portal/api/pipelines", () => ({
   fetchPipeline: (id: string) => fetchPipeline(id),
   fetchTriggers: () => fetchTriggers(),
@@ -41,6 +43,8 @@ vi.mock("@portal/api/pipelines", () => ({
   deletePipeline: (id: string) => deletePipeline(id),
   triggerPipeline: (id: string) => triggerPipeline(id),
   fetchRun: (runId: string) => fetchRun(runId),
+  runPipelineTest: (...args: unknown[]) => runPipelineTest(...args),
+  fetchRunOutput: (...args: unknown[]) => fetchRunOutput(...args),
 }));
 
 const uploadPipelineAsset = vi.fn();
@@ -270,6 +274,20 @@ const POLICY: Policy = {
   outputIds: [],
 };
 
+/** The built-in editor source, offered as an input so a pipeline can run in the browser. */
+const EDITOR_SOURCE: SourceView = {
+  id: "src-editor",
+  name: "Editor",
+  type: "editor",
+  status: "active",
+  referenceCount: 0,
+  referencingPolicies: [],
+  config: [],
+  docsTotal: 0,
+  docs24h: 0,
+  docs30d: 0,
+};
+
 const SOURCE: SourceView = {
   id: "src-in",
   name: "Claims intake",
@@ -317,6 +335,8 @@ describe("PipelineBuilder", () => {
     deletePipeline.mockReset();
     triggerPipeline.mockReset();
     fetchRun.mockReset();
+    runPipelineTest.mockReset();
+    runPipelineTest.mockResolvedValue({ runId: "run-test-1" });
     fetchSources.mockReset();
     fetchPipeline.mockResolvedValue(POLICY);
     fetchTriggers.mockResolvedValue([]);
@@ -799,6 +819,31 @@ describe("PipelineBuilder", () => {
     expect(screen.getByText("source-modal:src-1")).toBeInTheDocument();
   });
 
+  it("saves an editor pipeline as its own flag, not as a wire input", async () => {
+    fetchSources.mockResolvedValue({
+      kpis: [],
+      sources: [SOURCE, EDITOR_SOURCE],
+    });
+    renderBuilder("/processor/pipelines/new");
+    fireEvent.change(
+      await screen.findByLabelText("portal.pipelines.composer.name"),
+      { target: { value: "Label on upload" } },
+    );
+    await addTool("Compress");
+    await pickInputSource("Editor");
+
+    fireEvent.click(screen.getByText("portal.pipelines.composer.create"));
+
+    await waitFor(() => expect(savePipeline).toHaveBeenCalledTimes(1));
+    const body = savePipeline.mock.calls[0][0];
+    // The editor is virtual: nothing sweeps it server-side, so it is recorded as the policy's own
+    // editor flag rather than as an input the backend would try to pull from.
+    expect(body.inputs).toEqual([]);
+    expect(body.editor).toEqual({ allowed: true, runOn: "upload" });
+    // And it needs no destination - results land back in the workspace the file came from.
+    expect(body.outputIds).toEqual([]);
+  });
+
   it("runs an existing pipeline and reports success", async () => {
     renderBuilder("/processor/pipelines/plc-1");
 
@@ -848,6 +893,76 @@ describe("PipelineBuilder", () => {
     expect(
       await screen.findByText("portal.pipelines.run.completed"),
     ).toBeInTheDocument();
+  });
+
+  function twoStepPolicy(): Policy {
+    return {
+      ...POLICY,
+      steps: [
+        { operation: "/api/v1/misc/compress-pdf", parameters: {} },
+        { operation: "/api/v1/misc/extract-images", parameters: {} },
+      ] as unknown as Policy["steps"],
+    };
+  }
+
+  async function runTestWith(view: Record<string, unknown>) {
+    fetchRun.mockResolvedValue({
+      runId: "run-test-1",
+      stepCount: 2,
+      outputs: [],
+      error: null,
+      ...view,
+    });
+    renderBuilder("/processor/pipelines/plc-1");
+    await screen.findByText("portal.pipelines.builder.testRun");
+    const picker = document.querySelector<HTMLInputElement>(
+      'input[type="file"][accept="application/pdf"]',
+    );
+    if (!picker) throw new Error("test-run file input not rendered");
+    fireEvent.change(picker, {
+      target: {
+        files: [new File(["x"], "in.pdf", { type: "application/pdf" })],
+      },
+    });
+    await waitFor(() => expect(runPipelineTest).toHaveBeenCalledTimes(1));
+  }
+
+  it("blames the step that actually failed, not the one after it", async () => {
+    fetchPipeline.mockResolvedValue(twoStepPolicy());
+
+    await runTestWith({ status: "FAILED", currentStep: 1, error: "boom" });
+
+    await screen.findByLabelText("portal.pipelines.graph.showError");
+    expect(screen.queryByText("portal.pipelines.graph.run.done")).toBeNull();
+  });
+
+  it("marks only the steps that finished before the one still running", async () => {
+    fetchPipeline.mockResolvedValue(twoStepPolicy());
+
+    await runTestWith({ status: "RUNNING", currentStep: 2 });
+
+    await waitFor(() =>
+      expect(
+        screen.getAllByText("portal.pipelines.graph.run.done"),
+      ).toHaveLength(1),
+    );
+  });
+
+  it("retires a test result once the chain it ran against changes", async () => {
+    fetchPipeline.mockResolvedValue(twoStepPolicy());
+
+    await runTestWith({ status: "COMPLETED", currentStep: 2 });
+    await waitFor(() =>
+      expect(
+        screen.getAllByText("portal.pipelines.graph.run.done"),
+      ).toHaveLength(2),
+    );
+
+    await addTool("OCR");
+
+    await waitFor(() =>
+      expect(screen.queryByText("portal.pipelines.graph.run.done")).toBeNull(),
+    );
   });
 
   it("uploads a step's supporting file and saves it as an asset binding", async () => {

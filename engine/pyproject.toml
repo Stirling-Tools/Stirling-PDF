@@ -20,7 +20,7 @@ engine = [
     # No `voyageai` extra either; stirling.documents.voyage speaks its API directly.
     "pydantic-ai-slim[anthropic,openai]>=1.107.2,<2.0.0",
     "pydantic-settings>=2.15.0",
-    "python-dotenv>=1.2.2",
+    "python-dotenv>=1.2.3",
     "sqlite-vec>=0.1.9",
     "uvicorn>=0.52.3",
 ]
@@ -42,7 +42,7 @@ cucumber = [
     "pillow>=12.3.0",
     "pypdf[crypto]>=6.15.0",
     "qrcode[pil]>=8.2",
-    "reportlab>=5.0.0",
+    "reportlab>=5.0.1",
     "requests>=2.34.2",
 ]
 # Shared Python utilities used by repository scripts and CI workflows.
@@ -51,7 +51,7 @@ tools = [
     "defusedxml>=0.7.1",
     "fonttools>=4.63.0",
     "fpdf2>=2.8.8",
-    "openai>=2.53.0",
+    "openai>=3.3.1",
     "requests>=2.34.2",
     "tomli-w>=1.2.0",
     "tomlkit>=0.15.1",
