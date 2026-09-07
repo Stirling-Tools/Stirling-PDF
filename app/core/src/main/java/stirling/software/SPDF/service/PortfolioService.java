@@ -10,6 +10,7 @@ import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.pdfbox.cos.COSDictionary;
@@ -79,7 +80,7 @@ public class PortfolioService implements PortfolioServiceInterface {
 
         String firstFileName = null;
         for (MultipartFile file : files) {
-            String filename = resolveFilename(file, names.size());
+            String filename = uniqueName(resolveFilename(file, names.size()), names.keySet());
             PDEmbeddedFile embeddedFile = new PDEmbeddedFile(document, file.getInputStream());
             embeddedFile.setSize((int) file.getSize());
             embeddedFile.setCreationDate(now);
@@ -181,6 +182,22 @@ public class PortfolioService implements PortfolioServiceInterface {
         field.setInt(KEY_O, order);
         field.setBoolean(COSName.getPDFName("V"), true);
         return field;
+    }
+
+    private String uniqueName(String candidate, Set<String> taken) {
+        if (!taken.contains(candidate)) {
+            return candidate;
+        }
+        int dot = candidate.lastIndexOf('.');
+        String base = dot > 0 ? candidate.substring(0, dot) : candidate;
+        String extension = dot > 0 ? candidate.substring(dot) : "";
+        for (int suffix = 2; suffix <= taken.size() + 2; suffix++) {
+            String next = base + " (" + suffix + ")" + extension;
+            if (!taken.contains(next)) {
+                return next;
+            }
+        }
+        return base + " (" + (taken.size() + 3) + ")" + extension;
     }
 
     private String resolveFilename(MultipartFile file, int index) {
