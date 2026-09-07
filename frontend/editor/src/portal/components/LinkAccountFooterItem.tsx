@@ -2,8 +2,7 @@ import { useTranslation } from "react-i18next";
 import { NavItem } from "@app/ui";
 import { useUI } from "@portal/contexts/UIContext";
 import { useLink } from "@portal/contexts/LinkContext";
-import { LinkIcon } from "@portal/components/icons";
-
+import { Icon } from "@app/ui/Icon";
 /**
  * Sidebar-footer link-account CTA. Only visible when the org is unlinked — once
  * linked, the linked-instances row + plan badge already communicate the state,
@@ -20,7 +19,7 @@ export function LinkAccountFooterItem() {
     <NavItem
       id="account-link"
       label={t("portal.shell.sidebar.linkAccount", "Link Stirling account")}
-      icon={<LinkIcon />}
+      icon={<Icon name="link" />}
       onClick={() => openLinkModal()}
     />
   );

@@ -13,12 +13,12 @@ import {
 } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import {
   BookmarkNode,
   createBookmarkNode,
 } from "@app/utils/editTableOfContents";
 
+import { Icon } from "@app/ui/Icon";
 interface BookmarkEditorProps {
   bookmarks: BookmarkNode[];
   onChange: (bookmarks: BookmarkNode[]) => void;
@@ -208,9 +208,7 @@ export default function BookmarkEditor({
 
   const renderBookmark = (bookmark: BookmarkNode, level = 0) => {
     const hasChildren = bookmark.children.length > 0;
-    const chevronIcon = bookmark.expanded
-      ? "expand-more-rounded"
-      : "chevron-right-rounded";
+    const chevronIcon = bookmark.expanded ? "chevron-down" : "chevron-right";
 
     return (
       <Paper
@@ -240,7 +238,7 @@ export default function BookmarkEditor({
                 )}
                 style={{ marginTop: 4 }}
               >
-                <LocalIcon icon={chevronIcon} />
+                <Icon name={chevronIcon} size="1em" />
               </ActionIcon>
               <Stack gap={2}>
                 <Group gap="xs" align="center">
@@ -284,7 +282,7 @@ export default function BookmarkEditor({
                     "Add child bookmark",
                   )}
                 >
-                  <LocalIcon icon="subdirectory-arrow-right-rounded" />
+                  <Icon name="corner-down-right" size="1em" />
                 </ActionIcon>
               </Tooltip>
               <Tooltip
@@ -305,7 +303,7 @@ export default function BookmarkEditor({
                     "Add sibling bookmark",
                   )}
                 >
-                  <LocalIcon icon="add-rounded" />
+                  <Icon name="plus" size="1em" />
                 </ActionIcon>
               </Tooltip>
               <Tooltip
@@ -327,7 +325,7 @@ export default function BookmarkEditor({
                     "Remove bookmark",
                   )}
                 >
-                  <LocalIcon icon="delete-rounded" />
+                  <Icon name="trash" size="1em" />
                 </ActionIcon>
               </Tooltip>
             </Group>
@@ -411,7 +409,7 @@ export default function BookmarkEditor({
         </div>
         <Button
           variant="secondary"
-          leftSection={<LocalIcon icon="bookmark-add-rounded" />}
+          leftSection={<Icon name="bookmark-plus" size="1em" />}
           onMouseDown={(e) => {
             e.preventDefault();
             handleAddTopLevel();
@@ -428,10 +426,7 @@ export default function BookmarkEditor({
       {bookmarks.length === 0 ? (
         <Paper withBorder radius="md" ta="center" py="xl">
           <Stack gap="xs" align="center" px="lg">
-            <LocalIcon
-              icon="bookmark-add-rounded"
-              style={{ fontSize: "2.25rem" }}
-            />
+            <Icon name="bookmark-plus" size="1em" />
             <Text fw={600}>
               {t("editTableOfContents.editor.empty.title", "No bookmarks yet")}
             </Text>
@@ -443,7 +438,7 @@ export default function BookmarkEditor({
             </Text>
             <Button
               variant="tertiary"
-              leftSection={<LocalIcon icon="add-rounded" />}
+              leftSection={<Icon name="plus" size="1em" />}
               onMouseDown={(e) => {
                 e.preventDefault();
                 handleAddTopLevel();

@@ -1,21 +1,17 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
-import CategoryOutlinedIcon from "@mui/icons-material/CategoryOutlined";
-import GavelOutlinedIcon from "@mui/icons-material/GavelOutlined";
-import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
-import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
+import { Icon } from "@app/ui/Icon";
 import { OptionCard } from "@app/ui/OptionCard";
 
 const setUp = (
   <>
     Set up
-    <ArrowForwardRoundedIcon style={{ fontSize: "1rem" }} />
+    <Icon name="arrow-right" size={"1rem"} />
   </>
 );
 
 const comingSoon = (
   <>
-    <LockOutlinedIcon style={{ fontSize: "0.95rem" }} />
+    <Icon name="lock" size={"0.95rem"} />
     Coming soon
   </>
 );
@@ -26,7 +22,7 @@ const meta: Meta<typeof OptionCard> = {
   tags: ["autodocs"],
   parameters: { layout: "padded" },
   args: {
-    icon: <ShieldOutlinedIcon />,
+    icon: <Icon name="shield" />,
     title: "Security",
     description:
       "Redact sensitive information, strip active content, and watermark every document.",
@@ -73,7 +69,7 @@ export const Gallery: Story = {
     <div style={{ display: "flex", gap: "0.75rem", height: "12rem" }}>
       <div style={{ flex: "0 0 16rem" }}>
         <OptionCard
-          icon={<ShieldOutlinedIcon />}
+          icon={<Icon name="shield" />}
           title="Security"
           description="Redact sensitive information, strip active content, and watermark every document."
           cta={setUp}
@@ -82,7 +78,7 @@ export const Gallery: Story = {
       </div>
       <div style={{ flex: "0 0 16rem" }}>
         <OptionCard
-          icon={<CategoryOutlinedIcon />}
+          icon={<Icon name="shapes" />}
           title="Classification"
           description="Identify each document's type against your team's labels and tag it automatically."
           cta={setUp}
@@ -91,7 +87,7 @@ export const Gallery: Story = {
       </div>
       <div style={{ flex: "0 0 16rem" }}>
         <OptionCard
-          icon={<GavelOutlinedIcon />}
+          icon={<Icon name="gavel" />}
           title="Compliance"
           description="Enforce your regulatory frameworks and keep an audit trail of every change."
           disabled

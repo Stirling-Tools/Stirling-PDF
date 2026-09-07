@@ -9,11 +9,7 @@ import { CheckboxIndicator } from "@mantine/core";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
-import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
-import PushPinIcon from "@mui/icons-material/PushPin";
-import PushPinOutlinedIcon from "@mui/icons-material/PushPinOutlined";
-import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
+import { Icon } from "@app/ui/Icon";
 import {
   draggable,
   dropTargetForElements,
@@ -70,7 +66,6 @@ const FileThumbnail = ({
   const { t } = useTranslation();
   const terminology = useFileActionTerminology();
   const icons = useFileActionIcons();
-  const DownloadOutlinedIcon = icons.download;
   const { pinFile, unpinFile, isFilePinned, activeFiles } = useFileContext();
 
   // ---- Drag state ----
@@ -268,7 +263,7 @@ const FileThumbnail = ({
             setShowActions((v) => !v);
           }}
         >
-          <MoreVertIcon fontSize="small" />
+          <Icon name="ellipsis-vertical" size={20} />
         </ActionIcon>
       </div>
 
@@ -284,13 +279,7 @@ const FileThumbnail = ({
             justify="start"
             fullWidth
             className={styles.actionRow}
-            leftSection={
-              isPinned ? (
-                <PushPinIcon fontSize="small" />
-              ) : (
-                <PushPinOutlinedIcon fontSize="small" />
-              )
-            }
+            leftSection={<Icon name="pin" size={20} filled={isPinned} />}
             onClick={() => {
               if (actualFile) {
                 if (isPinned) {
@@ -311,7 +300,7 @@ const FileThumbnail = ({
             justify="start"
             fullWidth
             className={styles.actionRow}
-            leftSection={<DownloadOutlinedIcon fontSize="small" />}
+            leftSection={<Icon name={icons.download} size={20} />}
             onClick={() => {
               downloadSelectedFile();
               setShowActions(false);
@@ -325,7 +314,7 @@ const FileThumbnail = ({
             justify="start"
             fullWidth
             className={`${styles.actionRow} ${styles.actionDanger}`}
-            leftSection={<DeleteOutlineIcon fontSize="small" />}
+            leftSection={<Icon name="trash" size={20} />}
             onClick={() => {
               onDeleteFile(file.id);
               onSetStatus(`Deleted ${file.name}`);
@@ -386,13 +375,13 @@ const FileThumbnail = ({
         {/* Pin indicator (bottom-left) */}
         {isPinned && (
           <span className={styles.pinIndicator} aria-hidden>
-            <PushPinIcon fontSize="small" />
+            <Icon name="pin" size={20} filled />
           </span>
         )}
 
         {/* Drag handle (span wrapper so we can attach a ref reliably) */}
         <span ref={handleRef} className={styles.dragHandle} aria-hidden>
-          <DragIndicatorIcon fontSize="small" />
+          <Icon name="grip-vertical" size={20} />
         </span>
       </div>
     </div>

@@ -11,6 +11,7 @@ type Story = StoryObj<typeof meta>;
 const SAMPLE_THUMBNAIL =
   "data:image/svg+xml;utf8," +
   encodeURIComponent(
+    // icon-lint-disable -- data-uri stand-in for a rendered page, not an icon
     '<svg xmlns="http://www.w3.org/2000/svg" width="120" height="160"><rect width="120" height="160" fill="#f0f0f0"/></svg>',
   );
 

@@ -3,10 +3,7 @@ import { Box, Text, Group, Loader } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import PauseCircleOutlineIcon from "@mui/icons-material/PauseCircleOutlined";
+import { Icon } from "@app/ui/Icon";
 import { WatchedFolder } from "@app/types/watchedFolders";
 import { FolderRunStatus } from "@app/hooks/useFolderRunStatuses";
 import { iconMap } from "@app/components/tools/automate/iconMap";
@@ -33,8 +30,7 @@ export function WatchedFolderCard({
   const { t } = useTranslation();
   const [isHovered, setIsHovered] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
-  const IconComponent =
-    iconMap[folder.icon as keyof typeof iconMap] || iconMap.FolderIcon;
+  const folderIcon = iconMap[folder.icon ?? ""] ?? iconMap.FolderIcon;
 
   const handleDragOver = (e: React.DragEvent) => {
     const types = e.dataTransfer.types;
@@ -110,8 +106,10 @@ export function WatchedFolderCard({
               flexShrink: 0,
             }}
           >
-            <IconComponent
-              style={{ fontSize: 11, color: folder.accentColor }}
+            <Icon
+              name={folderIcon}
+              size={11}
+              style={{ color: folder.accentColor }}
             />
           </Box>
         }
@@ -125,7 +123,7 @@ export function WatchedFolderCard({
                 onClick={onEdit}
                 aria-label={t("watchedFolders.card.edit", "Edit folder")}
               >
-                <EditIcon style={{ fontSize: 11 }} />
+                <Icon name="pencil" size={11} />
               </ActionIcon>
               {!folder.isDefault && (
                 <ActionIcon
@@ -136,19 +134,23 @@ export function WatchedFolderCard({
                   onClick={onDelete}
                   aria-label={t("watchedFolders.card.delete", "Delete folder")}
                 >
-                  <DeleteIcon style={{ fontSize: 11 }} />
+                  <Icon name="trash" size={11} />
                 </ActionIcon>
               )}
             </Group>
           ) : folder.isPaused ? (
-            <PauseCircleOutlineIcon
-              style={{ fontSize: 12, color: "var(--mantine-color-dimmed)" }}
+            <Icon
+              name="circle-pause"
+              size={12}
+              style={{ color: "var(--mantine-color-dimmed)" }}
             />
           ) : status === "processing" ? (
             <Loader size={10} color={folder.accentColor} />
           ) : status === "done" ? (
-            <CheckCircleIcon
-              style={{ fontSize: 12, color: "var(--color-green-500)" }}
+            <Icon
+              name="circle-check"
+              size={12}
+              style={{ color: "var(--color-green-500)" }}
             />
           ) : null
         }

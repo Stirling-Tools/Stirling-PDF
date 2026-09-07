@@ -1,17 +1,6 @@
 import { type ReactNode } from "react";
 import { type ViewId } from "@portal/contexts/ViewContext";
-import {
-  HomeIcon,
-  UsersIcon,
-  SourcesIcon,
-  IntegrationsIcon,
-  PipelinesIcon,
-  DocumentsIcon,
-  InfrastructureIcon,
-  UsageIcon,
-  DocsIcon,
-} from "@portal/components/icons";
-
+import { Icon } from "@app/ui/Icon";
 export interface NavEntry {
   id: ViewId;
   icon: ReactNode;
@@ -33,17 +22,17 @@ export interface NavGroup {
 // The processor's own workflow: home plus the pipeline it feeds. Policies were folded into
 // Pipelines (a policy is a pipeline the org requires), so there's no separate Policies tab.
 export const GROUP_PROCESSOR: NavEntry[] = [
-  { id: "home", icon: <HomeIcon /> },
-  { id: "sources", icon: <SourcesIcon /> },
-  { id: "pipelines", icon: <PipelinesIcon /> },
-  { id: "documents", icon: <DocumentsIcon /> },
+  { id: "home", icon: <Icon name="house" /> },
+  { id: "sources", icon: <Icon name="plug" /> },
+  { id: "pipelines", icon: <Icon name="workflow" /> },
+  { id: "documents", icon: <Icon name="file-text" /> },
 ];
 
 // The wider platform around the processor: people, connections, infra, billing, docs.
 export const GROUP_PLATFORM: NavEntry[] = [
-  { id: "users", icon: <UsersIcon /> },
-  { id: "integrations", icon: <IntegrationsIcon /> },
-  { id: "infrastructure", icon: <InfrastructureIcon /> },
-  { id: "usage", icon: <UsageIcon />, requiresLink: true },
-  { id: "docs", icon: <DocsIcon /> },
+  { id: "users", icon: <Icon name="users" /> },
+  { id: "integrations", icon: <Icon name="plug-zap" /> },
+  { id: "infrastructure", icon: <Icon name="server" /> },
+  { id: "usage", icon: <Icon name="chart-column" />, requiresLink: true },
+  { id: "docs", icon: <Icon name="book-open" /> },
 ];

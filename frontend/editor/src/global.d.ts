@@ -6,17 +6,6 @@
 declare module "*.js";
 declare module "*.module.css";
 
-// Auto-generated icon set JSON import
-declare module "assets/material-symbols-icons.json" {
-  const value: {
-    prefix: string;
-    icons: Record<string, unknown>;
-    width?: number;
-    height?: number;
-  };
-  export default value;
-}
-
 declare global {
   interface Window {
     __STIRLING_PDF_BASE_URL__?: string;

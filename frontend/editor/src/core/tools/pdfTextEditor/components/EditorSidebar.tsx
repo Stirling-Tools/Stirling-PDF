@@ -1,11 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Box, Center, Group, Stack, Tabs, Text, Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import HighlightAltIcon from "@mui/icons-material/HighlightAltOutlined";
-import TextFieldsIcon from "@mui/icons-material/TextFieldsOutlined";
-import ImageIcon from "@mui/icons-material/ImageOutlined";
-import SearchIcon from "@mui/icons-material/SearchOutlined";
-import HelpIcon from "@mui/icons-material/HelpOutlineOutlined";
+import { Icon } from "@app/ui/Icon";
 import { Button } from "@app/ui/Button";
 import { useToolbarController } from "@app/tools/pdfTextEditor/hooks/useToolbarController";
 import { useSelectionGeometry } from "@app/tools/pdfTextEditor/hooks/useSelectionGeometry";
@@ -129,7 +125,7 @@ export function EditorSidebar({
             onClick={onOpenFind}
             aria-label={t("pdfTextEditor.settings.find", "Find in document")}
             data-testid="pdf-editor-open-find"
-            leftSection={<SearchIcon fontSize="small" />}
+            leftSection={<Icon name="search" size={20} />}
           />
         </Tooltip>
         <Tooltip
@@ -142,7 +138,7 @@ export function EditorSidebar({
             onClick={onShowHelp}
             aria-label={t("pdfTextEditor.help.ariaLabel", "Keyboard shortcuts")}
             data-testid="pdf-editor-help"
-            leftSection={<HelpIcon fontSize="small" />}
+            leftSection={<Icon name="circle-question-mark" size={20} />}
           />
         </Tooltip>
       </Group>
@@ -167,7 +163,7 @@ export function EditorSidebar({
           size="sm"
           variant={addTextArmed ? "primary" : "secondary"}
           accent={addTextArmed ? "default" : "neutral"}
-          leftSection={<TextFieldsIcon fontSize="small" />}
+          leftSection={<Icon name="type" size={20} />}
           onClick={onToggleAddText}
           data-testid="pdf-editor-add-text"
         >
@@ -179,7 +175,7 @@ export function EditorSidebar({
           size="sm"
           variant="secondary"
           accent="neutral"
-          leftSection={<ImageIcon fontSize="small" />}
+          leftSection={<Icon name="image" size={20} />}
           onClick={onPickImage}
           data-testid="pdf-editor-add-image"
         >
@@ -226,12 +222,10 @@ function NothingSelected() {
   return (
     <Center p="xl" data-testid="pdf-editor-nothing-selected">
       <Stack align="center" gap={6}>
-        <HighlightAltIcon
-          style={{
-            fontSize: 34,
-            color: "var(--mantine-color-dimmed)",
-            opacity: 0.5,
-          }}
+        <Icon
+          name="square-dashed"
+          size={34}
+          style={{ color: "var(--mantine-color-dimmed)", opacity: 0.5 }}
         />
         <Text size="sm" fw={500} c="dimmed">
           {t("pdfTextEditor.inspector.nothingSelected", "Nothing selected")}

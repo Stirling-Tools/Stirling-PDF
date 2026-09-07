@@ -13,7 +13,7 @@ import {
   Code,
 } from "@mantine/core";
 import { alert } from "@app/components/toast";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import RestartConfirmationModal from "@app/components/shared/config/RestartConfirmationModal";
 import { useRestartServer } from "@app/components/shared/config/useRestartServer";
 import { useAdminSettings } from "@app/hooks/useAdminSettings";
@@ -431,7 +431,7 @@ export default function AdminAiGeneralSection() {
             "admin.settings.ai.general.note.title",
             "About the AI engine",
           )}
-          icon={<LocalIcon icon="info-rounded" width="1rem" height="1rem" />}
+          icon={<Icon name="info" size="1rem" />}
         >
           <Text size="xs">
             {t(

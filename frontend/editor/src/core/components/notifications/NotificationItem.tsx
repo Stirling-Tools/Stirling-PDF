@@ -3,7 +3,7 @@ import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import { Menu, Tooltip } from "@mantine/core";
 import { ActionIcon, Button } from "@app/ui";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import { isResolvableHere } from "@app/hooks/useNotifications";
 import type { NotificationDocumentState } from "@app/hooks/useNotifications";
 import type {
@@ -210,7 +210,7 @@ export function NotificationItem({
                     className="notification-bell__more"
                     aria-label={`${t("notifications.action.more", "More options")}: ${title}`}
                   >
-                    <LocalIcon icon="more-horiz" width={14} height={14} />
+                    <Icon name="ellipsis" size={14} />
                   </ActionIcon>
                 </Tooltip>
               </Menu.Target>

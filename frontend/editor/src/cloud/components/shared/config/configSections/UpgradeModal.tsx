@@ -20,10 +20,7 @@ import React, { Suspense, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import CloseIcon from "@mui/icons-material/CloseRounded";
-import ArrowBackIcon from "@mui/icons-material/ArrowBackRounded";
-import ShieldIcon from "@mui/icons-material/ShieldOutlined";
-import CheckCircleIcon from "@mui/icons-material/CheckCircleRounded";
+import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
 // oxlint-disable-next-line no-restricted-imports
 import "./UpgradeModal.css";
@@ -159,7 +156,7 @@ export default function UpgradeModal({
                   onClick={goBackToCap}
                   style={{ marginLeft: -6 }}
                 >
-                  <ArrowBackIcon fontSize="small" />
+                  <Icon name="arrow-left" size={20} />
                 </ActionIcon>
               )}
               <h2 className="upm-header__title">
@@ -176,7 +173,7 @@ export default function UpgradeModal({
               aria-label={t("payg.upgrade.closeAria", "Close")}
               onClick={closeAndReset}
             >
-              <CloseIcon fontSize="small" />
+              <Icon name="x" size={20} />
             </ActionIcon>
           </header>
 
@@ -316,7 +313,7 @@ function CapStep({
   return (
     <>
       <div className="upm-promise">
-        <ShieldIcon className="upm-promise__icon" fontSize="small" />
+        <Icon name="shield" size={20} className="upm-promise__icon" />
         <div>
           <span className="upm-promise__highlight">
             {t(
@@ -470,7 +467,7 @@ function ConfirmationStep({
   const sym = currencySymbol(currency);
   return (
     <div className="upm-confirm">
-      <CheckCircleIcon className="upm-confirm__icon" />
+      <Icon name="circle-check" size={64} className="upm-confirm__icon" />
       <h3 className="upm-confirm__title">
         {t("payg.confirm.title", "Welcome to the Processor plan")}
       </h3>

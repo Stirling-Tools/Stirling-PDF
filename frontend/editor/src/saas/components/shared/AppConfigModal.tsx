@@ -7,7 +7,7 @@ import { useLocation } from "react-router-dom";
 import { useAuth } from "@app/auth/UseSession";
 import { isUserAnonymous } from "@app/auth/supabase";
 import { useTranslation } from "react-i18next";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import { SettingsMobileBackButton } from "@app/components/shared/config/SettingsMobileBackButton";
 import { SettingsMobileNavHeader } from "@app/components/shared/config/SettingsMobileNavHeader";
 import { SettingsNavChevron } from "@app/components/shared/config/SettingsNavChevron";
@@ -275,10 +275,9 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({
                               : "transparent",
                           }}
                         >
-                          <LocalIcon
-                            icon={item.icon}
-                            width={iconSize}
-                            height={iconSize}
+                          <Icon
+                            name={item.icon}
+                            size={iconSize}
                             style={{ color, flexShrink: 0 }}
                           />
                           <Text
@@ -342,7 +341,7 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({
                   onClick={onClose}
                   aria-label={t("common.close", "Close")}
                 >
-                  <LocalIcon icon="close-rounded" width={18} height={18} />
+                  <Icon name="x" size={18} />
                 </ActionIcon>
               </div>
               <div className="modal-body">{activeComponent}</div>

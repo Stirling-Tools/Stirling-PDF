@@ -3,12 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Badge, Group, Menu, Text } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import DeleteIcon from "@mui/icons-material/Delete";
-import DownloadIcon from "@mui/icons-material/Download";
-import HistoryIcon from "@mui/icons-material/History";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
-
+import { Icon } from "@app/ui/Icon";
 import { FileId, ToolOperation } from "@app/types/file";
 import { toolOperationLabel } from "@app/utils/toolOperationLabel";
 import { StirlingFileStub } from "@app/types/fileContext";
@@ -136,7 +131,7 @@ export function VersionTimeline({
     <div className="files-page-details-version-timeline">
       {!hideHeader && (
         <div className="files-page-details-version-timeline-label">
-          <HistoryIcon fontSize="small" />
+          <Icon name="rotate-ccw-clock" size={20} />
           <span>{t("filesPage.field.versionHistory", "Version journey")}</span>
           <span className="files-page-details-version-timeline-count">
             {t("filesPage.versionsCount", "{{count}} versions", {
@@ -261,12 +256,12 @@ export function VersionTimeline({
                           )}
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <MoreVertIcon fontSize="small" />
+                          <Icon name="ellipsis-vertical" size={20} />
                         </ActionIcon>
                       </Menu.Target>
                       <Menu.Dropdown>
                         <Menu.Item
-                          leftSection={<OpenInNewIcon fontSize="small" />}
+                          leftSection={<Icon name="external-link" size={20} />}
                           onClick={() => onAddToWorkspace([v.id])}
                         >
                           {t(
@@ -275,7 +270,7 @@ export function VersionTimeline({
                           )}
                         </Menu.Item>
                         <Menu.Item
-                          leftSection={<DownloadIcon fontSize="small" />}
+                          leftSection={<Icon name="download" size={20} />}
                           onClick={() => {
                             void downloadFileFromStorage(v);
                           }}
@@ -288,7 +283,7 @@ export function VersionTimeline({
                         <Menu.Divider />
                         <Menu.Item
                           color="red"
-                          leftSection={<DeleteIcon fontSize="small" />}
+                          leftSection={<Icon name="trash" size={20} />}
                           onClick={() => onRemove([v.id])}
                         >
                           {t("filesPage.removeVersion", "Remove this version")}

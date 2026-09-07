@@ -2,7 +2,7 @@ import React from "react";
 import { Group } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import { Icon } from "@app/ui/Icon";
 import { TFunction } from "i18next";
 import {
   ButtonDefinition,
@@ -58,7 +58,7 @@ export function renderButtons({
           aria-label={t("onboarding.buttons.back", "Back")}
         >
           {button.icon === "chevron-left" ? (
-            <ChevronLeftIcon fontSize="small" />
+            <Icon name="chevron-left" size={20} />
           ) : null}
         </ActionIcon>
       );

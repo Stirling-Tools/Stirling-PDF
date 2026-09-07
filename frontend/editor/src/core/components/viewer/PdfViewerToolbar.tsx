@@ -6,19 +6,7 @@ import { useIsPhone } from "@app/hooks/useIsMobile";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import "@app/components/viewer/PdfViewerToolbar.css";
-import FirstPageIcon from "@mui/icons-material/FirstPage";
-import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
-import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
-import LastPageIcon from "@mui/icons-material/LastPage";
-import DescriptionIcon from "@mui/icons-material/Description";
-import ViewWeekIcon from "@mui/icons-material/ViewWeek";
-import DarkModeIcon from "@mui/icons-material/DarkMode";
-import WbSunnyIcon from "@mui/icons-material/WbSunny";
-import WbTwilightIcon from "@mui/icons-material/WbTwilight";
-import ZoomInIcon from "@mui/icons-material/ZoomIn";
-import ZoomOutIcon from "@mui/icons-material/ZoomOut";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
-
+import { Icon } from "@app/ui/Icon";
 // Sizing constants for the page number input
 const MIN_PAGE_DIGITS = 2;
 const MIN_INPUT_WIDTH_PX = 48;
@@ -173,7 +161,7 @@ export function PdfViewerToolbar({
           title={t("viewer.firstPage", "First Page")}
           aria-label={t("viewer.firstPage", "First Page")}
         >
-          <FirstPageIcon fontSize="small" />
+          <Icon name="chevron-first" size={20} />
         </ActionIcon>
       )}
 
@@ -187,7 +175,7 @@ export function PdfViewerToolbar({
         title={t("viewer.previousPage", "Previous Page")}
         aria-label={t("viewer.previousPage", "Previous Page")}
       >
-        <ArrowBackIosIcon fontSize="small" />
+        <Icon name="chevron-left" size={20} />
       </ActionIcon>
 
       {/* Page Input */}
@@ -230,7 +218,7 @@ export function PdfViewerToolbar({
         title={t("viewer.nextPage", "Next Page")}
         aria-label={t("viewer.nextPage", "Next Page")}
       >
-        <ArrowForwardIosIcon fontSize="small" />
+        <Icon name="chevron-right" size={20} />
       </ActionIcon>
 
       {/* Last Page Button */}
@@ -244,7 +232,7 @@ export function PdfViewerToolbar({
           title={t("viewer.lastPage", "Last Page")}
           aria-label={t("viewer.lastPage", "Last Page")}
         >
-          <LastPageIcon fontSize="small" />
+          <Icon name="chevron-last" size={20} />
         </ActionIcon>
       )}
 
@@ -272,9 +260,9 @@ export function PdfViewerToolbar({
             }
           >
             {isDualPageActive ? (
-              <DescriptionIcon fontSize="small" />
+              <Icon name="file-text" size={20} />
             ) : (
-              <ViewWeekIcon fontSize="small" />
+              <Icon name="columns-3" size={20} />
             )}
           </ActionIcon>
         </Tooltip>
@@ -306,9 +294,11 @@ export function PdfViewerToolbar({
                   : t("viewer.disableColorFilter", "Disable Color Filter")
             }
           >
-            {pdfRenderMode === "normal" && <DarkModeIcon fontSize="small" />}
-            {pdfRenderMode === "dark" && <WbTwilightIcon fontSize="small" />}
-            {pdfRenderMode === "sepia" && <WbSunnyIcon fontSize="small" />}
+            {/* One glyph per state: the three must stay distinct, or the cycle
+                button stops telling you which filter is active. */}
+            {pdfRenderMode === "normal" && <Icon name="moon" size={20} />}
+            {pdfRenderMode === "dark" && <Icon name="sunset" size={20} />}
+            {pdfRenderMode === "sepia" && <Icon name="sun" size={20} />}
           </ActionIcon>
         </Tooltip>
       )}
@@ -326,7 +316,7 @@ export function PdfViewerToolbar({
             onClick={handleZoomOut}
             aria-label={t("viewer.zoomOut", "Zoom out")}
           >
-            <ZoomOutIcon fontSize="small" />
+            <Icon name="zoom-out" size={20} />
           </ActionIcon>
           <Slider
             value={Math.min(Math.max(displayZoomPercent, 20), 500)}
@@ -347,7 +337,7 @@ export function PdfViewerToolbar({
             onClick={handleZoomIn}
             aria-label={t("viewer.zoomIn", "Zoom in")}
           >
-            <ZoomInIcon fontSize="small" />
+            <Icon name="zoom-in" size={20} />
           </ActionIcon>
           <span
             style={{
@@ -376,7 +366,7 @@ export function PdfViewerToolbar({
               aria-label={t("viewer.moreOptions", "More")}
               style={{ marginLeft: 4 }}
             >
-              <MoreVertIcon fontSize="small" />
+              <Icon name="ellipsis-vertical" size={20} />
             </ActionIcon>
           </Menu.Target>
           <Menu.Dropdown>
@@ -384,14 +374,14 @@ export function PdfViewerToolbar({
               {t("viewer.pageNavigation", "Page navigation")}
             </Menu.Label>
             <Menu.Item
-              leftSection={<FirstPageIcon fontSize="small" />}
+              leftSection={<Icon name="chevron-first" size={20} />}
               disabled={scrollState.currentPage === 1}
               onClick={handleFirstPage}
             >
               {t("viewer.firstPage", "First page")}
             </Menu.Item>
             <Menu.Item
-              leftSection={<LastPageIcon fontSize="small" />}
+              leftSection={<Icon name="chevron-last" size={20} />}
               disabled={scrollState.currentPage === scrollState.totalPages}
               onClick={handleLastPage}
             >
@@ -401,13 +391,13 @@ export function PdfViewerToolbar({
             <Menu.Divider />
             <Menu.Label>{t("viewer.zoom", "Zoom")}</Menu.Label>
             <Menu.Item
-              leftSection={<ZoomOutIcon fontSize="small" />}
+              leftSection={<Icon name="zoom-out" size={20} />}
               onClick={handleZoomOut}
             >
               {t("viewer.zoomOut", "Zoom out")}
             </Menu.Item>
             <Menu.Item
-              leftSection={<ZoomInIcon fontSize="small" />}
+              leftSection={<Icon name="zoom-in" size={20} />}
               onClick={handleZoomIn}
             >
               {t("viewer.zoomIn", "Zoom in")} ({displayZoomPercent}%)
@@ -418,9 +408,9 @@ export function PdfViewerToolbar({
             <Menu.Item
               leftSection={
                 isDualPageActive ? (
-                  <DescriptionIcon fontSize="small" />
+                  <Icon name="file-text" size={20} />
                 ) : (
-                  <ViewWeekIcon fontSize="small" />
+                  <Icon name="columns-3" size={20} />
                 )
               }
               disabled={scrollState.totalPages <= 1}
@@ -433,11 +423,11 @@ export function PdfViewerToolbar({
             <Menu.Item
               leftSection={
                 pdfRenderMode === "normal" ? (
-                  <DarkModeIcon fontSize="small" />
+                  <Icon name="moon" size={20} />
                 ) : pdfRenderMode === "dark" ? (
-                  <WbTwilightIcon fontSize="small" />
+                  <Icon name="sunset" size={20} />
                 ) : (
-                  <WbSunnyIcon fontSize="small" />
+                  <Icon name="sun" size={20} />
                 )
               }
               onClick={cyclePdfRenderMode}

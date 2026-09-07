@@ -1,3 +1,4 @@
+import type { IconName } from "@app/ui/Icon";
 import type React from "react";
 
 // Single source of truth for all valid nav keys
@@ -56,7 +57,7 @@ export type NavKey = (typeof VALID_NAV_KEYS)[number];
 export interface ConfigNavItem {
   key: NavKey;
   label: string;
-  icon: string;
+  icon: IconName;
   component: React.ReactNode;
   disabled?: boolean;
   disabledTooltip?: string;

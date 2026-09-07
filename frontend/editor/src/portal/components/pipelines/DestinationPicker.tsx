@@ -1,6 +1,5 @@
 import { useTranslation } from "react-i18next";
-import AddRoundedIcon from "@mui/icons-material/AddRounded";
-import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import { Icon } from "@app/ui/Icon";
 import { ActionIcon, Button, FormField, Select } from "@app/ui";
 
 /**
@@ -66,7 +65,7 @@ export function DestinationPicker({
               disabled={chosen === ""}
               onClick={() => onEdit(chosen)}
             >
-              <EditOutlinedIcon style={{ fontSize: "1rem" }} />
+              <Icon name="pencil" size={"1rem"} />
             </ActionIcon>
           </div>
         </FormField>
@@ -75,7 +74,7 @@ export function DestinationPicker({
         variant="tertiary"
         size="sm"
         onClick={onCreateNew}
-        leftSection={<AddRoundedIcon style={{ fontSize: "1.125rem" }} />}
+        leftSection={<Icon name="plus" size={"1.125rem"} />}
       >
         {t("portal.sources.actions.connectSource")}
       </Button>

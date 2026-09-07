@@ -1,10 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
-import AddRoundedIcon from "@mui/icons-material/AddRounded";
-import MoveToInboxRoundedIcon from "@mui/icons-material/MoveToInboxRounded";
-import SendRoundedIcon from "@mui/icons-material/SendRounded";
+import { Icon } from "@app/ui/Icon";
 import {
   ActionIcon,
   Banner,
@@ -1260,7 +1257,7 @@ export function PipelineBuilder() {
                       setSourceModal({ open: true, sourceId: input.sourceId })
                     }
                   >
-                    <EditOutlinedIcon style={{ fontSize: "1rem" }} />
+                    <Icon name="pencil" size={"1rem"} />
                   </ActionIcon>
                 </div>
               </FormField>
@@ -1280,7 +1277,7 @@ export function PipelineBuilder() {
             variant="tertiary"
             size="sm"
             onClick={() => createSourceFor("input")}
-            leftSection={<AddRoundedIcon style={{ fontSize: "1.125rem" }} />}
+            leftSection={<Icon name="plus" size={"1.125rem"} />}
           >
             {t("portal.sources.actions.connectSource")}
           </Button>
@@ -1463,9 +1460,9 @@ export function PipelineBuilder() {
           }
           icon={
             selected === "input" ? (
-              <MoveToInboxRoundedIcon style={{ fontSize: "1.125rem" }} />
+              <Icon name="import" size={"1.125rem"} />
             ) : selected === "output" ? (
-              <SendRoundedIcon style={{ fontSize: "1.125rem" }} />
+              <Icon name="send" size={"1.125rem"} />
             ) : selectedStep ? (
               stepIcon(selectedStep)
             ) : undefined

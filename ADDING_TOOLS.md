@@ -134,12 +134,13 @@ Update these files to register your new tool:
 import [ToolName] from "../tools/[ToolName]";
 import { [toolName]OperationConfig } from "../hooks/tools/[toolName]/use[ToolName]Operation";
 import [ToolName]Settings from "../components/tools/[toolName]/[ToolName]Settings";
+import { Icon } from "@app/icons";
 ```
 
 2. Add tool entry in the `allTools` object:
 ```typescript
 [toolName]: {
-  icon: <LocalIcon icon="your-icon-name" width="1.5rem" height="1.5rem" />,
+  icon: <Icon name="your-icon-name" size="1.5rem" />,
   name: t("home.[toolName].title", "Tool Name"),
   component: [ToolName],
   description: t("home.[toolName].desc", "Tool description"),

@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { useTranslation } from "react-i18next";
-import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
+import { Icon } from "@app/ui/Icon";
 import { Banner, Chip } from "@app/ui";
 import { PreferencesProvider } from "@app/contexts/PreferencesContext";
 import { SidebarProvider } from "@app/contexts/SidebarContext";
@@ -153,11 +153,7 @@ export function PipelineStepSettings({
             {chips.map((chip) => (
               <Chip
                 key={chip.field}
-                leadingIcon={
-                  <InsertDriveFileOutlinedIcon
-                    style={{ fontSize: "0.875rem" }}
-                  />
-                }
+                leadingIcon={<Icon name="file" size={"0.875rem"} />}
                 onRemove={() => onClearBinding(chip.field)}
               >
                 {chip.label}

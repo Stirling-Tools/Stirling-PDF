@@ -30,26 +30,18 @@ import {
   useIndexedDB,
   useIndexedDBRevision,
 } from "@app/contexts/IndexedDBContext";
-import { GoogleDriveIcon } from "@app/components/shared/CloudStorageIcons";
 import { SidebarHeader } from "@app/components/shared/SidebarHeader";
 import type { StirlingFileStub } from "@app/types/fileContext";
-import FolderOpenIcon from "@mui/icons-material/FolderOpen";
-import FolderSpecialIcon from "@mui/icons-material/FolderSpecial";
-import UploadFileIcon from "@mui/icons-material/UploadFile";
-import AddIcon from "@mui/icons-material/Add";
-import OpenInFullIcon from "@mui/icons-material/OpenInFull";
+import { Icon } from "@app/ui/Icon";
 import type { FileId } from "@app/types/file";
 import type { WatchedFolderViewData } from "@app/types/watchedFolders";
 import { FileItem } from "@app/components/shared/FileSidebarFileItem";
 import { useLabelName } from "@app/data/labelDisplay";
 import { useClassificationEnabled } from "@app/hooks/useClassificationEnabled";
-import { LocalIcon } from "@app/components/shared/LocalIcon";
 import {
   FileSidebarGroupControls,
   useFileSidebarGroups,
 } from "@app/components/shared/fileSidebarGrouping";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import BulkUploadToServerModal from "@app/components/shared/BulkUploadToServerModal";
 import { getFileOrigin } from "@app/components/filesPage/fileOrigin";
 import { VersionHistoryModal } from "@app/components/filesPage/VersionHistoryModal";
@@ -941,7 +933,11 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       >
         {isFileDragOver && (
           <div className="file-sidebar-drop-overlay" aria-hidden="true">
-            <UploadFileIcon className="file-sidebar-drop-overlay-icon" />
+            <Icon
+              name="file-up"
+              size={28}
+              className="file-sidebar-drop-overlay-icon"
+            />
             {!collapsed && (
               <span className="file-sidebar-drop-overlay-text">
                 {t("fileSidebar.dropToAdd", "Drop files to add")}
@@ -1013,7 +1009,11 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                   }
                 }}
               >
-                <UploadFileIcon className="file-sidebar-action-icon" />
+                <Icon
+                  name="file-up"
+                  size={18}
+                  className="file-sidebar-action-icon"
+                />
                 {!collapsed && (
                   <span className="file-sidebar-action-label sidebar-content-fade">
                     {t("fileSidebar.openFromComputer", "Open from computer")}
@@ -1096,7 +1096,11 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                   }
                 }}
               >
-                <FolderOpenIcon className="file-sidebar-action-icon" />
+                <Icon
+                  name="folder-open"
+                  size={18}
+                  className="file-sidebar-action-icon"
+                />
                 {!collapsed && (
                   <span className="file-sidebar-action-label sidebar-content-fade">
                     {t("fileSidebar.myFiles", "File library")}
@@ -1134,14 +1138,19 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                       : t("fileSidebar.googleDrive", "Open from Google Drive")
                   }
                 >
+                  {/* Neutral at rest, brand colour crossfading in on hover.
+                      Both layers are needed: FileSidebar.css fades between them. */}
                   <div className="file-sidebar-cloud-icon-wrapper">
-                    <GoogleDriveIcon
+                    <Icon
+                      name="googledrive"
+                      colorless
+                      size={18}
                       className="file-sidebar-cloud-icon-gray"
-                      style={{ color: "var(--c-text-muted)" }}
                     />
                     {isGoogleDriveEnabled && (
-                      <GoogleDriveIcon
-                        colored
+                      <Icon
+                        name="googledrive"
+                        size={18}
                         className="file-sidebar-cloud-icon-color"
                       />
                     )}
@@ -1172,7 +1181,11 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                     : undefined
                 }
               >
-                <FolderSpecialIcon className="file-sidebar-action-icon" />
+                <Icon
+                  name="folder-bookmark"
+                  size={18}
+                  className="file-sidebar-action-icon"
+                />
                 {!collapsed && (
                   <span className="file-sidebar-action-label sidebar-content-fade">
                     {t("watchedFolders.sidebarTitle", "Watched Folders")}
@@ -1207,7 +1220,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                       )}
                       data-testid="open-files-page"
                     >
-                      <OpenInFullIcon sx={{ fontSize: "1rem" }} />
+                      <Icon name="maximize-2" size={"1rem"} />
                     </ActionIcon>
                     <ActionIcon
                       variant="quiet"
@@ -1216,7 +1229,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                       title={t("fileSidebar.addFiles", "Add files")}
                       aria-label={t("fileSidebar.addFiles", "Add files")}
                     >
-                      <AddIcon sx={{ fontSize: "1rem" }} />
+                      <Icon name="plus" size={"1rem"} />
                     </ActionIcon>
                   </div>
 
@@ -1250,18 +1263,20 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                                   leftSection={
                                     <>
                                       {isOpen ? (
-                                        <KeyboardArrowDownIcon
-                                          sx={{ fontSize: "1.1rem" }}
+                                        <Icon
+                                          name="chevron-down"
+                                          size={"1.1rem"}
                                         />
                                       ) : (
-                                        <KeyboardArrowRightIcon
-                                          sx={{ fontSize: "1.1rem" }}
+                                        <Icon
+                                          name="chevron-right"
+                                          size={"1.1rem"}
                                         />
                                       )}
                                       {group.icon && (
-                                        <LocalIcon
-                                          icon={group.icon}
-                                          width="1.05rem"
+                                        <Icon
+                                          name={group.icon}
+                                          size="1.05rem"
                                           className="file-sidebar-group-icon"
                                           style={
                                             group.color
@@ -1295,9 +1310,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                             className="file-sidebar-view-all"
                             onClick={() => navigate("/files")}
                             rightSection={
-                              <KeyboardArrowRightIcon
-                                sx={{ fontSize: "1rem" }}
-                              />
+                              <Icon name="chevron-right" size={"1rem"} />
                             }
                           >
                             {t(

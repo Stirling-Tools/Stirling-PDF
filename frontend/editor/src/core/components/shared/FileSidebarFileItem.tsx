@@ -3,18 +3,7 @@ import { createPortal } from "react-dom";
 import { Group, Loader, Menu, Stack, Text, Tooltip } from "@mantine/core";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
-import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
-import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined";
-import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
-import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined";
-import CloudDoneIcon from "@mui/icons-material/CloudDone";
-import ErrorOutlineIcon from "@mui/icons-material/ErrorOutlineOutlined";
-import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
-import HistoryIcon from "@mui/icons-material/History";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import DriveFileRenameOutlineIcon from "@mui/icons-material/DriveFileRenameOutline";
-import ContentCopyOutlinedIcon from "@mui/icons-material/ContentCopyOutlined";
+import { Icon } from "@app/ui/Icon";
 import type { FileId } from "@app/types/file";
 import { FileDocIcon } from "@app/components/shared/FileDocIcon";
 import {
@@ -257,7 +246,7 @@ export const FileItem = React.memo(function FileItem({
 }: FileItemProps) {
   const { t } = useTranslation();
   const terminology = useFileActionTerminology();
-  const DownloadIcon = useFileActionIcons().download;
+  const downloadIcon = useFileActionIcons().download;
   const ext = getFileExtension(name);
   const dateLabel = lastModified ? formatFileDate(lastModified) : "";
   const typeLabel = ext ? ext.toUpperCase() : "File";
@@ -269,7 +258,7 @@ export const FileItem = React.memo(function FileItem({
   const enforcingTooltip = (action: string): React.ReactNode => (
     <Stack gap={6} py={2} w={200}>
       <Group gap={6} wrap="nowrap">
-        <ShieldOutlinedIcon style={{ fontSize: 13 }} />
+        <Icon name="shield" size={13} />
         <Text size="xs" fw={600}>
           {t(
             "policy.blockingAction",
@@ -392,7 +381,7 @@ export const FileItem = React.memo(function FileItem({
                 position="top"
               >
                 <span className="file-sidebar-datalost-badge" data-no-select>
-                  <ErrorOutlineIcon sx={{ fontSize: "0.85rem" }} />
+                  <Icon name="circle-alert" size={"0.85rem"} />
                   {t("fileSidebar.fileItem.dataLost", "Data lost")}
                 </span>
               </Tooltip>
@@ -407,7 +396,7 @@ export const FileItem = React.memo(function FileItem({
                 position="top"
               >
                 <span className="file-sidebar-cloud-badge" data-no-select>
-                  <CloudDoneIcon sx={{ fontSize: "0.85rem" }} />
+                  <Icon name="cloud-check" size={"0.85rem"} />
                 </span>
               </Tooltip>
             )}
@@ -474,13 +463,15 @@ export const FileItem = React.memo(function FileItem({
             tabIndex={-1}
             aria-label={viewerLabel}
           >
-            <VisibilityOutlinedIcon
+            <Icon
+              name="eye"
+              size={"1.1rem"}
               className="file-sidebar-eye-open"
-              sx={{ fontSize: "1.1rem" }}
             />
-            <VisibilityOffOutlinedIcon
+            <Icon
+              name="eye-off"
+              size={"1.1rem"}
               className="file-sidebar-eye-closed"
-              sx={{ fontSize: "1.1rem" }}
             />
           </ActionIcon>
           <Menu
@@ -502,7 +493,7 @@ export const FileItem = React.memo(function FileItem({
                   "More actions",
                 )}
               >
-                <MoreVertIcon sx={{ fontSize: "1.1rem" }} />
+                <Icon name="ellipsis-vertical" size={"1.1rem"} />
               </ActionIcon>
             </Menu.Target>
             <Menu.Dropdown onClick={(e) => e.stopPropagation()}>
@@ -519,9 +510,9 @@ export const FileItem = React.memo(function FileItem({
                 disabledReason={blockedReason(viewerLabel)}
                 icon={
                   isViewedInViewer ? (
-                    <VisibilityOffOutlinedIcon sx={{ fontSize: 16 }} />
+                    <Icon name="eye-off" size={16} />
                   ) : (
-                    <VisibilityOutlinedIcon sx={{ fontSize: 16 }} />
+                    <Icon name="eye" size={16} />
                   )
                 }
                 onClick={(e) => onEyeClick(fileId, e)}
@@ -534,7 +525,7 @@ export const FileItem = React.memo(function FileItem({
                   disabledReason={blockedReason(
                     t("openInNewWindow", "Open in new window"),
                   )}
-                  icon={<OpenInNewIcon sx={{ fontSize: 16 }} />}
+                  icon={<Icon name="external-link" size={16} />}
                   onClick={() => onOpenInNewWindow(fileId)}
                 >
                   {t("openInNewWindow", "Open in new window")}
@@ -546,7 +537,7 @@ export const FileItem = React.memo(function FileItem({
               {onDownload && (
                 <FileMenuItem
                   disabledReason={blockedReason(terminology.download)}
-                  icon={<DownloadIcon sx={{ fontSize: 16 }} />}
+                  icon={<Icon name={downloadIcon} size={20} />}
                   onClick={() => onDownload(fileId)}
                 >
                   {terminology.download}
@@ -559,7 +550,7 @@ export const FileItem = React.memo(function FileItem({
                     t("fileSidebar.fileItem.rename", "Rename"),
                     false,
                   )}
-                  icon={<DriveFileRenameOutlineIcon sx={{ fontSize: 16 }} />}
+                  icon={<Icon name="file-pen" size={16} />}
                   onClick={() => onRename(fileId)}
                 >
                   {t("fileSidebar.fileItem.rename", "Rename")}
@@ -571,7 +562,7 @@ export const FileItem = React.memo(function FileItem({
                   disabledReason={blockedReason(
                     t("fileSidebar.fileItem.duplicate", "Duplicate"),
                   )}
-                  icon={<ContentCopyOutlinedIcon sx={{ fontSize: 16 }} />}
+                  icon={<Icon name="copy" size={16} />}
                   onClick={() => onDuplicate(fileId)}
                 >
                   {t("fileSidebar.fileItem.duplicate", "Duplicate")}
@@ -596,7 +587,7 @@ export const FileItem = React.memo(function FileItem({
                   return (
                     <FileMenuItem
                       disabledReason={blockedReason(uploadLabel)}
-                      icon={<CloudUploadOutlinedIcon sx={{ fontSize: 16 }} />}
+                      icon={<Icon name="cloud-upload" size={16} />}
                       onClick={() => onSaveToCloud(fileId)}
                     >
                       {uploadLabel}
@@ -610,7 +601,7 @@ export const FileItem = React.memo(function FileItem({
                     t("fileSidebar.fileItem.versionHistory", "Version history"),
                     false,
                   )}
-                  icon={<HistoryIcon sx={{ fontSize: 16 }} />}
+                  icon={<Icon name="rotate-ccw-clock" size={16} />}
                   onClick={() => onVersionHistory(fileId)}
                 >
                   {t("fileSidebar.fileItem.versionHistory", "Version history")}
@@ -626,7 +617,7 @@ export const FileItem = React.memo(function FileItem({
                       false,
                     )}
                     color="red"
-                    icon={<DeleteOutlineIcon sx={{ fontSize: 16 }} />}
+                    icon={<Icon name="trash" size={16} />}
                     onClick={() => onDelete(fileId)}
                   >
                     {t("fileSidebar.fileItem.delete", "Delete")}

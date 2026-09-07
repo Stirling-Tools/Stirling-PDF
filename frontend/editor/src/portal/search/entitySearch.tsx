@@ -22,13 +22,7 @@ import type { Member } from "@portal/api/users";
 // endpoints, SaaS the invitation-based team endpoints (the admin ones 403
 // there for the always-ROLE_USER sessions).
 import { usersBackend } from "@app/portal/usersBackend";
-import {
-  DocsIcon,
-  PipelinesIcon,
-  PoliciesIcon,
-  SourcesIcon,
-  UsersIcon,
-} from "@portal/components/icons";
+import { Icon } from "@app/ui/Icon";
 import type { Tier } from "@portal/contexts/TierContext";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
 import { allDocs, loadDocsNav } from "@portal/docs/manifest/registry";
@@ -122,7 +116,7 @@ export function rankDocsResults(
         .map((seg) => seg.text)
         .join("")
         .trim() || result.sectionLabel,
-    icon: <DocsIcon />,
+    icon: <Icon name="book-open" />,
     score: result.score,
     onSelect: () => navigate(`${toPortalPath(VIEW_PATHS.docs)}#${result.id}`),
   }));
@@ -226,7 +220,7 @@ export function rankPortalPolicyResults(
       group: "portal-policies",
       title: policyResultTitle(item, t),
       subtitle: t(item.category.desc),
-      icon: <PoliciesIcon />,
+      icon: <Icon name="shield-check" />,
       score,
       onSelect: () => openPolicy(item.category.id),
     }));
@@ -250,7 +244,7 @@ export function rankPortalPipelineResults(
       group: "portal-pipelines",
       title: item.name,
       subtitle: item.trigger,
-      icon: <PipelinesIcon />,
+      icon: <Icon name="workflow" />,
       score,
       onSelect: () => openPipeline(item.id),
     }));
@@ -291,7 +285,7 @@ export function buildProcessorEntityGroups(
           group: "portal-users",
           title: item.name,
           subtitle: item.email,
-          icon: <UsersIcon />,
+          icon: <Icon name="users" />,
           score,
           onSelect: () =>
             navigate(
@@ -363,7 +357,7 @@ export function buildProcessorEntityGroups(
           group: "portal-sources",
           title: item.name,
           subtitle: item.type,
-          icon: <SourcesIcon />,
+          icon: <Icon name="plug" />,
           score,
           onSelect: () =>
             navigate(`${toPortalPath(VIEW_PATHS.sources)}/${item.id}`),

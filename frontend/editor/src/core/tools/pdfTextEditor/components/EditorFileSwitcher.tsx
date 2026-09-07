@@ -1,6 +1,6 @@
 import { Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import DescriptionIcon from "@mui/icons-material/DescriptionOutlined";
+import { Icon } from "@app/ui/Icon";
 import { Button } from "@app/ui/Button";
 import { useAllFiles, useFileSelection } from "@app/contexts/FileContext";
 import type { FileId } from "@app/types/file";
@@ -46,7 +46,7 @@ export function EditorFileSwitcher({ currentFileId, onPick }: Props) {
             overflow="hidden"
             variant={current ? "primary" : "secondary"}
             accent={current ? "default" : "neutral"}
-            leftSection={<DescriptionIcon fontSize="small" />}
+            leftSection={<Icon name="file-text" size={20} />}
             title={file.name}
             data-testid="pdf-editor-file-switch"
             data-current={current ? "true" : "false"}

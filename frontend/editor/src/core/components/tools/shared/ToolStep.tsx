@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useMemo } from "react";
 import { Text, Stack, Flex, Divider } from "@mantine/core";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { TooltipTip } from "@app/types/tips";
 import {
@@ -60,10 +60,9 @@ const renderTooltipTitle = (
           <Text fw={400} size="sm">
             {title}
           </Text>
-          <LocalIcon
-            icon="info-outline-rounded"
-            width="1.25rem"
-            height="1.25rem"
+          <Icon
+            name="info"
+            size="1.25rem"
             style={{ color: "var(--icon-files-color)" }}
           />
         </Flex>
@@ -133,20 +132,18 @@ const ToolStep = ({
           </Flex>
 
           {isCollapsed ? (
-            <LocalIcon
-              icon="chevron-right-rounded"
-              width="1.2rem"
-              height="1.2rem"
+            <Icon
+              name="chevron-right"
+              size="1.2rem"
               style={{
                 color: "var(--mantine-color-dimmed)",
                 opacity: onCollapsedClick ? 1 : 0.5,
               }}
             />
           ) : (
-            <LocalIcon
-              icon="expand-more-rounded"
-              width="1.2rem"
-              height="1.2rem"
+            <Icon
+              name="chevron-down"
+              size="1.2rem"
               style={{
                 color: "var(--mantine-color-dimmed)",
                 opacity: onCollapsedClick ? 1 : 0.5,

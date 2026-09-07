@@ -96,7 +96,7 @@ export const PIPELINE_OPS: Record<OpKind, PipelineOp[]> = {
     {
       id: "ocr",
       label: "OCR",
-      icon: "visibility",
+      icon: "eye",
       kind: "ingest",
       desc: "Text-recognize scanned or image-based pages",
     },
@@ -168,7 +168,7 @@ export const PIPELINE_OPS: Record<OpKind, PipelineOp[]> = {
     {
       id: "confidence-check",
       label: "Confidence bounds",
-      icon: "analytics",
+      icon: "chart-column",
       kind: "validate",
       desc: "Gate downstream ops on extraction-confidence thresholds",
     },
@@ -221,7 +221,7 @@ export const PIPELINE_OPS: Record<OpKind, PipelineOp[]> = {
     {
       id: "redact",
       label: "Redact PII",
-      icon: "visibility",
+      icon: "eye",
       kind: "secure",
       defaultOn: true,
       desc: "Remove or mask PII before the document is stored or released downstream",
@@ -521,7 +521,7 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "confidence-check",
     label: "Confidence bounds",
-    icon: "analytics",
+    icon: "chart-column",
     kind: "validate",
     category: "Validation",
     desc: "Gate downstream ops on extraction-confidence thresholds",
@@ -715,7 +715,7 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "remove-images",
     label: "Remove images",
-    icon: "visibility",
+    icon: "eye",
     kind: "modify",
     category: "Removal",
     desc: "Strip images to reduce file size",
@@ -931,7 +931,7 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "ocr",
     label: "OCR",
-    icon: "visibility",
+    icon: "eye",
     kind: "modify",
     category: "Extraction",
     desc: "Optical character recognition on scanned pages",
@@ -965,7 +965,7 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "redact",
     label: "Redact PII",
-    icon: "visibility",
+    icon: "eye",
     kind: "secure",
     category: "Document Security",
     desc: "Remove or mask PII before the document is stored or released",
@@ -981,7 +981,7 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "auto-redact",
     label: "Auto-redact",
-    icon: "visibility",
+    icon: "eye",
     kind: "secure",
     category: "Document Security",
     desc: "Automatically redact sensitive content based on policy",
@@ -1184,7 +1184,7 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "smart-redact",
     label: "Field-aware redact",
-    icon: "visibility",
+    icon: "eye",
     kind: "secure",
     category: "Document Security",
     desc: "Schema-aware PII redaction — targets fields the schema declares as PII, not regex fishing",
@@ -1192,7 +1192,7 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "field-confidence",
     label: "Field confidence",
-    icon: "analytics",
+    icon: "chart-column",
     kind: "validate",
     category: "Validation",
     desc: "Per-field confidence scoring backed by the typed schema",
@@ -1255,7 +1255,7 @@ export const SOURCE_OPTIONS: readonly SourceOption[] = [
   {
     id: "scheduled",
     label: "Scheduled import",
-    icon: "schedule",
+    icon: "clock",
     desc: "Fetch from SFTP/URL on a schedule",
   },
 ];

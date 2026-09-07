@@ -237,7 +237,6 @@
 .workbench-bar-action-icon svg,
 .workbench-bar-action-icon img {
   color: inherit !important;
-  fill: currentColor;
 }
 
 .workbench-bar-action-icon:hover {

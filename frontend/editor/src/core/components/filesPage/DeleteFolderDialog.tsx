@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Alert, Checkbox, Group, Modal, Stack, Text } from "@mantine/core";
-import ErrorOutlineIcon from "@mui/icons-material/ErrorOutlined";
-
+import { Icon } from "@app/ui/Icon";
 import { Button } from "@app/ui/Button";
 import { FolderRecord } from "@app/types/folder";
 
@@ -80,7 +79,7 @@ export function DeleteFolderDialog({
         {error && (
           <Alert
             color="red"
-            icon={<ErrorOutlineIcon fontSize="small" />}
+            icon={<Icon name="circle-alert" size={20} />}
             variant="light"
             role="alert"
           >

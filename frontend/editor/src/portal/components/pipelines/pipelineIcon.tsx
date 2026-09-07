@@ -5,49 +5,32 @@
 
 import type { ReactNode } from "react";
 import type { IconPickerOption } from "@app/ui";
-import type { SxProps, Theme } from "@mui/material";
-import { PIPELINE_ROUTE_GLYPH } from "@portal/components/icons";
-import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
-import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
-import LabelOutlinedIcon from "@mui/icons-material/LabelOutlined";
-import LayersOutlinedIcon from "@mui/icons-material/LayersOutlined";
-import CheckCircleOutlinedIcon from "@mui/icons-material/CheckCircleOutlined";
-import AltRouteOutlinedIcon from "@mui/icons-material/AltRouteOutlined";
-import ScheduleOutlinedIcon from "@mui/icons-material/ScheduleOutlined";
-import BrandingWatermarkOutlinedIcon from "@mui/icons-material/BrandingWatermarkOutlined";
-import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
-import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
-import DocumentScannerOutlinedIcon from "@mui/icons-material/DocumentScannerOutlined";
-import BoltOutlinedIcon from "@mui/icons-material/BoltOutlined";
-import AutoAwesomeOutlinedIcon from "@mui/icons-material/AutoAwesomeOutlined";
+import { Icon, type IconName } from "@app/ui/Icon";
 
-type MuiIcon = React.ComponentType<{ sx?: SxProps<Theme>; className?: string }>;
-
-// "route" is the default, drawn bespoke (see pipelineIcon) to match the sidebar glyph, so it is not
-// in this MUI map. Every other key resolves to an outline Material glyph.
-const ICONS: Record<string, MuiIcon> = {
+// Every key resolves to a registry icon; "route" is the default.
+const ICONS: Record<string, IconName> = {
   // Pickable vocabulary.
-  shield: ShieldOutlinedIcon,
-  lock: LockOutlinedIcon,
-  label: LabelOutlinedIcon,
-  layers: LayersOutlinedIcon,
-  check: CheckCircleOutlinedIcon,
-  route: AltRouteOutlinedIcon,
-  schedule: ScheduleOutlinedIcon,
-  watermark: BrandingWatermarkOutlinedIcon,
-  doc: DescriptionOutlinedIcon,
-  folder: FolderOutlinedIcon,
-  scan: DocumentScannerOutlinedIcon,
-  bolt: BoltOutlinedIcon,
-  sparkle: AutoAwesomeOutlinedIcon,
+  shield: "shield",
+  lock: "lock",
+  label: "tag",
+  layers: "layers",
+  check: "circle-check",
+  route: "route",
+  schedule: "clock",
+  watermark: "watermark",
+  doc: "file-text",
+  folder: "folder",
+  scan: "scan-line",
+  bolt: "zap",
+  sparkle: "sparkles",
   // Category-id aliases (same glyphs as policyCategoryIcon), so a template-derived pipeline that
   // stores only its categoryId still resolves without an explicit pick.
-  ingestion: LayersOutlinedIcon,
-  security: ShieldOutlinedIcon,
-  classification: LabelOutlinedIcon,
-  compliance: CheckCircleOutlinedIcon,
-  routing: AltRouteOutlinedIcon,
-  retention: ScheduleOutlinedIcon,
+  ingestion: "layers",
+  security: "shield",
+  classification: "tag",
+  compliance: "circle-check",
+  routing: "route",
+  retention: "clock",
 };
 
 // A category id doubles as an icon value (see the ICONS aliases), but the picker only offers the
@@ -94,30 +77,8 @@ export function pipelineIcon(
   fontSize: string = "inherit",
   className?: string,
 ): ReactNode {
-  const resolved = key && (key === "route" || ICONS[key]) ? key : "route";
-  if (resolved === "route") {
-    // The default/route glyph is bespoke (matches the sidebar), em-sized like the Material icons.
-    return (
-      <svg
-        viewBox="0 0 24 24"
-        width="1em"
-        height="1em"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={1.75}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        style={{ fontSize }}
-        className={className}
-        aria-hidden
-      >
-        {PIPELINE_ROUTE_GLYPH}
-      </svg>
-    );
-  }
-  const Icon = ICONS[resolved];
-  const sx: SxProps<Theme> = { fontSize };
-  return <Icon sx={sx} className={className} />;
+  const resolved = key && ICONS[key] ? key : DEFAULT_PIPELINE_ICON;
+  return <Icon name={ICONS[resolved]} size={fontSize} className={className} />;
 }
 
 /** The pipeline's icon vocabulary as options for the shared SUI `IconPicker`. */

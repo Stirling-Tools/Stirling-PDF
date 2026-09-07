@@ -1,13 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
-import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
-import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
-import PauseRoundedIcon from "@mui/icons-material/PauseRounded";
-import PowerSettingsNewRoundedIcon from "@mui/icons-material/PowerSettingsNewRounded";
-import ReplayRoundedIcon from "@mui/icons-material/ReplayRounded";
-import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
-import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
+import { Icon } from "@app/ui/Icon";
 import { ActionIcon, Button, Dropdown, IconPicker, Input } from "@app/ui";
 import { PipelineBlockerTooltip } from "@portal/components/pipelines/PipelineBlockerTooltip";
 import { PIPELINE_ICON_OPTIONS } from "@portal/components/pipelines/pipelineIcon";
@@ -125,7 +118,7 @@ export function PipelineEditHeader({
           onClick={onBack}
           aria-label={t("portal.pipelines.builder.back")}
         >
-          <ArrowBackRoundedIcon style={{ fontSize: "1.25rem" }} />
+          <Icon name="arrow-left" size={"1.25rem"} />
         </ActionIcon>
 
         <IconPicker
@@ -157,7 +150,7 @@ export function PipelineEditHeader({
               onClick={startRename}
               aria-label={t("portal.pipelines.builder.rename")}
             >
-              <EditOutlinedIcon style={{ fontSize: "1rem" }} />
+              <Icon name="pencil" size={"1rem"} />
             </ActionIcon>
           </>
         )}
@@ -179,9 +172,9 @@ export function PipelineEditHeader({
           onClick={onTogglePause}
           leftSection={
             enabled ? (
-              <PauseRoundedIcon style={{ fontSize: "1.125rem" }} />
+              <Icon name="pause" size={"1.125rem"} />
             ) : (
-              <PowerSettingsNewRoundedIcon style={{ fontSize: "1.125rem" }} />
+              <Icon name="power" size={"1.125rem"} />
             )
           }
         >
@@ -198,9 +191,7 @@ export function PipelineEditHeader({
           loading={running}
           disabled={reprocessing}
           onClick={onRun}
-          leftSection={
-            <PlayArrowRoundedIcon style={{ fontSize: "1.125rem" }} />
-          }
+          leftSection={<Icon name="play" size={"1.125rem"} />}
         >
           {t("portal.pipelines.detail.run")}
         </Button>
@@ -213,14 +204,14 @@ export function PipelineEditHeader({
               size="sm"
               aria-label={t("portal.pipelines.builder.moreActions")}
             >
-              <MoreHorizRoundedIcon style={{ fontSize: "1.125rem" }} />
+              <Icon name="ellipsis" size={"1.125rem"} />
             </ActionIcon>
           </Dropdown.Trigger>
           <Dropdown.Menu>
             <Dropdown.Item
               onSelect={onReprocess}
               disabled={reprocessing || running}
-              leading={<ReplayRoundedIcon style={{ fontSize: "1.125rem" }} />}
+              leading={<Icon name="rotate-ccw" size={"1.125rem"} />}
             >
               {t("portal.pipelines.detail.clearHistory")}
             </Dropdown.Item>
@@ -228,9 +219,7 @@ export function PipelineEditHeader({
             <Dropdown.Item
               onSelect={onDelete}
               className="portal-pipeline-edit-header__delete-item"
-              leading={
-                <DeleteOutlineRoundedIcon style={{ fontSize: "1.125rem" }} />
-              }
+              leading={<Icon name="trash" size={"1.125rem"} />}
             >
               {t("portal.pipelines.detail.delete")}
             </Dropdown.Item>

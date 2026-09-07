@@ -15,7 +15,7 @@ import { Tooltip as AppTooltip } from "@app/components/shared/Tooltip";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { withViewTransition } from "@app/utils/viewTransition";
 import { SidebarToggleIcon } from "@app/components/shared/SidebarToggleIcon";
-import CloseIcon from "@mui/icons-material/Close";
+import { Icon } from "@app/ui/Icon";
 import { ToolId } from "@app/types/toolId";
 import type { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
 import {
@@ -260,7 +260,7 @@ export default function RightSidebar() {
                       }
                       className="tool-panel__expand-btn"
                     >
-                      <CloseIcon sx={{ fontSize: "1.1rem" }} />
+                      <Icon name="x" size={"1.1rem"} />
                     </ActionIcon>
                   ) : (
                     <ActionIcon

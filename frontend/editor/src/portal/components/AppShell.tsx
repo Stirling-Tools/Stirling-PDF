@@ -5,7 +5,7 @@ import { ActionIcon } from "@app/ui";
 import { Sidebar } from "@portal/components/Sidebar";
 import { PortalSearchBar } from "@portal/components/PortalSearchBar";
 import { useUI } from "@portal/contexts/UIContext";
-import { MenuIcon, SearchIcon } from "@portal/components/icons";
+import { Icon } from "@app/ui/Icon";
 import { Logo } from "@app/ui/Logo";
 import "@app/components/layout/WorkspaceFrame.css";
 import { QuickNavHostBridge } from "@app/components/shared/quickNav/QuickNavHostBridge";
@@ -30,7 +30,7 @@ function MobileTopbar() {
         aria-expanded={mobileNavOpen}
         onClick={toggleMobileNav}
       >
-        <MenuIcon size={20} />
+        <Icon name="menu" size={20} />
       </ActionIcon>
       <Logo
         variant="iconAndText"
@@ -47,7 +47,7 @@ function MobileTopbar() {
           document.getElementById("portal-search-input")?.focus();
         }}
       >
-        <SearchIcon size={19} />
+        <Icon name="search" size={19} />
       </ActionIcon>
     </header>
   );

@@ -1,20 +1,16 @@
 import { useMemo } from "react";
+import type { IconName } from "@app/ui/Icon";
 import { useNavigationState } from "@app/contexts/NavigationContext";
 import { useToolNavigation } from "@app/hooks/useToolNavigation";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { ToolId } from "@app/types/toolId";
 
 // Material UI Icons
-import CompressIcon from "@mui/icons-material/Compress";
-import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
-import CleaningServicesIcon from "@mui/icons-material/CleaningServices";
-import CropIcon from "@mui/icons-material/Crop";
-import TextFieldsIcon from "@mui/icons-material/TextFields";
 
 export interface SuggestedTool {
   id: ToolId;
   title: string;
-  icon: React.ComponentType;
+  icon: IconName;
   href: string;
   onClick: (e: React.MouseEvent) => void;
 }
@@ -23,27 +19,27 @@ const ALL_SUGGESTED_TOOLS: Omit<SuggestedTool, "href" | "onClick">[] = [
   {
     id: "compress",
     title: "Compress",
-    icon: CompressIcon,
+    icon: "shrink",
   },
   {
     id: "convert",
     title: "Convert",
-    icon: SwapHorizIcon,
+    icon: "arrow-left-right",
   },
   {
     id: "sanitize",
     title: "Sanitize",
-    icon: CleaningServicesIcon,
+    icon: "brush-cleaning",
   },
   {
     id: "split",
     title: "Split",
-    icon: CropIcon,
+    icon: "crop",
   },
   {
     id: "ocr",
     title: "OCR",
-    icon: TextFieldsIcon,
+    icon: "type",
   },
 ];
 

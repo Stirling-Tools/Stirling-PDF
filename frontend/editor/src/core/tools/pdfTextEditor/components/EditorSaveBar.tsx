@@ -1,7 +1,7 @@
 import { Box, Group, Text, Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";
-import DownloadIcon from "@mui/icons-material/FileDownloadOutlined";
+import { Icon } from "@app/ui/Icon";
 import { EditorFileSwitcher } from "@app/tools/pdfTextEditor/components/EditorFileSwitcher";
 import type { FileId } from "@app/types/file";
 
@@ -104,7 +104,7 @@ export function EditorSaveBar({
             onClick={onDownload}
             data-testid="pdf-editor-download"
             aria-label={t("pdfTextEditor.download", "Download")}
-            leftSection={<DownloadIcon fontSize="small" />}
+            leftSection={<Icon name="download" size={20} />}
           />
         </Tooltip>
       </Group>

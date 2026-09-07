@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
+import { Icon } from "@app/ui/Icon";
 import { Banner, Button, Card, Modal, ToggleSwitch } from "@app/ui";
 import { SettingsRow } from "@app/ui/SettingsRow";
 import { EnforceAsPolicyControl } from "@portal/components/pipelines/EnforceAsPolicyControl";
@@ -388,7 +388,7 @@ function PolicySetupWizardBody({
             variant="tertiary"
             size="sm"
             onClick={customise}
-            leftSection={<TuneRoundedIcon style={{ fontSize: "1.05rem" }} />}
+            leftSection={<Icon name="sliders-horizontal" size={"1.05rem"} />}
           >
             {t("portal.policies.wizard.actions.customise")}
           </Button>

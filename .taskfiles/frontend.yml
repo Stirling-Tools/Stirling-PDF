@@ -46,7 +46,7 @@ tasks:
     run: once
     deps: [install]
     cmds:
-      - node editor/scripts/generate-icons.js
+      - node editor/scripts/generate-icon-registry.mjs
 
   prepare:og:
     internal: true
@@ -342,7 +342,20 @@ tasks:
     cmds:
       - task: lint:oxlint
       - task: lint:colors
+      - task: lint:icons
       - task: lint:css
+
+  lint:icons:
+    desc: "Enforce one icon system - no inline svg, no retired icon libraries"
+    deps: [install]
+    cmds:
+      - node editor/scripts/lint/icon-lint.mjs
+
+  lint:unused-icons:
+    desc: "Report registry icons nothing references"
+    deps: [install]
+    cmds:
+      - node editor/scripts/lint/icon-lint.mjs unused
 
   lint:css:
     desc: "Lint stylesheets for duplicate selectors"

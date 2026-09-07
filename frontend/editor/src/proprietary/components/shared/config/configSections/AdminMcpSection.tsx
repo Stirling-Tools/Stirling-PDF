@@ -15,7 +15,7 @@ import {
   List,
 } from "@mantine/core";
 import { alert } from "@app/components/toast";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import RestartConfirmationModal from "@app/components/shared/config/RestartConfirmationModal";
 import { useRestartServer } from "@app/components/shared/config/useRestartServer";
 import { useAdminSettings } from "@app/hooks/useAdminSettings";
@@ -468,7 +468,7 @@ export default function AdminMcpSection() {
           variant="light"
           color="blue"
           title={t("admin.settings.mcp.guide.title", "Connect an MCP client")}
-          icon={<LocalIcon icon="info-rounded" width="1rem" height="1rem" />}
+          icon={<Icon name="info" size="1rem" />}
         >
           <Stack gap={6}>
             <List size="xs" type="ordered" spacing={4}>
