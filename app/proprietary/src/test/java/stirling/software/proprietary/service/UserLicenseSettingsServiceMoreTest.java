@@ -85,9 +85,10 @@ class UserLicenseSettingsServiceMoreTest {
     }
 
     /**
-     * A linked instance takes its user capacity from SaaS, because that is where the Team plan is
-     * sold. The licence stays as the fallback, so capacity only moves when SaaS states a number --
-     * these pin that it cannot silently lower an existing limit.
+     * A valid licence answers first; SaaS answers when there is none. Team is moving to being sold
+     * with no licence at all, so in the end state only Enterprise holds one and it should outrank
+     * SaaS -- it is contracted and must work offline. These pin that order and the fallbacks
+     * beneath it.
      */
     @Nested
     class LinkedTeamAllowance {
@@ -104,17 +105,33 @@ class UserLicenseSettingsServiceMoreTest {
         }
 
         @Test
-        @DisplayName("SaaS states an allowance, so the licence is not consulted")
-        void saasAllowanceWins() {
+        @DisplayName("no licence: SaaS states the allowance")
+        void saasAnswersWithoutALicence() {
             lockedSettings(7);
             cacheReturns(withAllowance(300));
 
             assertThat(service.calculateMaxAllowedUsers()).isEqualTo(300);
         }
 
+        /**
+         * The precedence decision. A legacy unlimited Server licence keeps what it granted rather
+         * than being silently reduced to the subscription's number; a customer worse off under it
+         * removes the licence.
+         */
         @Test
-        @DisplayName("not linked: the licence still answers")
-        void unlinkedFallsBackToLicence() {
+        @DisplayName("a valid licence outranks the SaaS allowance")
+        void licenceOutranksSaas() {
+            lockedSettings(7);
+            when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.SERVER);
+            cacheReturns(withAllowance(100));
+
+            // A SERVER licence with licenseMaxUsers = 0 is unlimited; it is not lowered to 100.
+            assertThat(service.calculateMaxAllowedUsers()).isEqualTo(Integer.MAX_VALUE);
+        }
+
+        @Test
+        @DisplayName("not linked: the grandfathered limit answers")
+        void unlinkedFallsBackToGrandfathered() {
             lockedSettings(7);
             when(entitlementCacheProvider.getIfAvailable()).thenReturn(null);
 
@@ -122,8 +139,8 @@ class UserLicenseSettingsServiceMoreTest {
         }
 
         @Test
-        @DisplayName("linked but SaaS has never answered: the licence still answers")
-        void neverFetchedFallsBackToLicence() {
+        @DisplayName("linked but SaaS has never answered: the grandfathered limit answers")
+        void neverFetchedFallsBackToGrandfathered() {
             lockedSettings(7);
             cacheReturns(null);
 
@@ -135,8 +152,8 @@ class UserLicenseSettingsServiceMoreTest {
          * are indistinguishable — so it must fall through rather than cap the instance.
          */
         @Test
-        @DisplayName("SaaS states no limit: the licence still answers")
-        void noLimitFallsBackToLicence() {
+        @DisplayName("SaaS states no limit: the grandfathered limit answers")
+        void noLimitFallsBackToGrandfathered() {
             lockedSettings(7);
             cacheReturns(withAllowance(null));
 
