@@ -1908,7 +1908,7 @@ export default function FileManagerView() {
                     <Tooltip
                       label={t(
                         "filesPage.removeLocalFolder",
-                        "Remove (files stay on disk)",
+                        "Unmount from Stirling",
                       )}
                       withinPortal
                     >
@@ -1918,7 +1918,7 @@ export default function FileManagerView() {
                         onClick={() => promptDeleteFolder(currentFolder)}
                         aria-label={t(
                           "filesPage.removeLocalFolder",
-                          "Remove (files stay on disk)",
+                          "Unmount from Stirling",
                         )}
                       >
                         <DeleteIcon fontSize="small" />

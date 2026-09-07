@@ -790,10 +790,7 @@ function FolderCard({
                 leftSection={<DeleteIcon fontSize="small" />}
                 onClick={onDelete}
               >
-                {t(
-                  "filesPage.removeLocalFolder",
-                  "Remove (files stay on disk)",
-                )}
+                {t("filesPage.removeLocalFolder", "Unmount from Stirling")}
               </Menu.Item>
             )}
             {!editsHidden && (
@@ -1860,10 +1857,7 @@ function FolderRow({
                 leftSection={<DeleteIcon fontSize="small" />}
                 onClick={onDelete}
               >
-                {t(
-                  "filesPage.removeLocalFolder",
-                  "Remove (files stay on disk)",
-                )}
+                {t("filesPage.removeLocalFolder", "Unmount from Stirling")}
               </Menu.Item>
             )}
             {!editsHidden && (
