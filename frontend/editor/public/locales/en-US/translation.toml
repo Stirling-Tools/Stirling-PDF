@@ -4410,7 +4410,7 @@ everywhereHint = "Deletes the file from this device and the cloud."
 
 [filesPage.empty]
 hint = "Drop PDFs anywhere on this page to upload, or use the New folder button to organize your files."
-newFolderCta = "Create folder"
+newFolderCta = "New folder"
 title = "This folder is empty"
 uploadCta = "Upload files"
 
@@ -4557,7 +4557,7 @@ revertConfirmTitle = "Restore originals?"
 section = "Processing"
 paused = "Processing paused"
 start = "Process files in this folder…"
-stop = "Stop processing this folder"
+stop = "Pause processing"
 sweep = "Process files now"
 
 [filesPage.processingSetup]
@@ -12182,7 +12182,7 @@ changeFolder = "Change"
 chooseFolder = "Choose"
 clearFolder = "Clear"
 color = "Accent color"
-createFolder = "Create Folder"
+createFolder = "New folder"
 createTitle = "New Watched Folder"
 editTitle = "Edit Watched Folder"
 inputFolder = "Input folder"

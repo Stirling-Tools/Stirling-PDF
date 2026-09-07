@@ -437,7 +437,7 @@ function EmptyState({
                     disabled
                     style={{ pointerEvents: "auto" }}
                   >
-                    {t("filesPage.empty.newFolderCta", "Create folder")}
+                    {t("filesPage.empty.newFolderCta", "New folder")}
                   </Button>
                 </span>
               </Tooltip>
@@ -448,7 +448,7 @@ function EmptyState({
                 leftSection={<CreateNewFolderIcon fontSize="small" />}
                 onClick={onCreateFolder}
               >
-                {t("filesPage.empty.newFolderCta", "Create folder")}
+                {t("filesPage.empty.newFolderCta", "New folder")}
               </Button>
             ))}
         </div>
@@ -916,7 +916,7 @@ function ProcessingFolderStats({
  * marks a folder whose engine processes arrivals on its own, where an explicit
  * "process now" would have nothing to do.
  */
-function ProcessingMenuItems({
+export function ProcessingMenuItems({
   processing,
   continuous = false,
   disabled,

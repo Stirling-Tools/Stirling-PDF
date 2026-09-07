@@ -78,6 +78,15 @@ import {
   FilesPageEntry,
   type DiskFileState,
 } from "@app/components/filesPage/FileGrid";
+import AutoModeIcon from "@mui/icons-material/AutoMode";
+import PlayArrowIcon from "@mui/icons-material/PlayArrow";
+import PauseIcon from "@mui/icons-material/Pause";
+import ReplayIcon from "@mui/icons-material/Replay";
+import TuneIcon from "@mui/icons-material/Tune";
+import HistoryIcon from "@mui/icons-material/History";
+import PaletteIcon from "@mui/icons-material/Palette";
+import DriveFileRenameOutlineIcon from "@mui/icons-material/DriveFileRenameOutline";
+import { FolderAppearancePicker } from "@app/components/filesPage/FolderAppearancePicker";
 import { useProcessingFolders } from "@app/hooks/useProcessingFolders";
 import { FolderProcessingSetup } from "@app/components/policies/FolderProcessingSetup";
 import { FolderSweepWall } from "@app/components/policies/SweepRunWall";
@@ -473,6 +482,11 @@ export default function FileManagerView() {
     currentFolder && folderKind(currentFolder) === "local"
       ? currentFolder.directory
       : undefined;
+  const headerEditsDisabled = Boolean(
+    currentFolder &&
+    folderKind(currentFolder) === "server" &&
+    !folders.serverReachable,
+  );
   const { setError: setFolderError, registerDiskSubfolders } = folders;
   const [diskEntries, setDiskEntries] = useState<DiskFileEntry[]>([]);
   const [diskLoading, setDiskLoading] = useState(false);
@@ -741,6 +755,28 @@ export default function FileManagerView() {
         );
     },
     [processingApi, folders, t],
+  );
+  // The open folder's own actions: everything its card kebab offers from the
+  // listing outside must be reachable from inside the folder too.
+  const runFolderAction = useCallback(
+    (action: (folder: FolderRecord) => Promise<void>, label: string) => {
+      if (!currentFolder) return;
+      void action(currentFolder).catch((err) =>
+        folders.setError(
+          err instanceof Error
+            ? t("filesPage.error.actionFailedDetail", {
+                action: label,
+                message: err.message,
+                defaultValue: `Could not ${label}: ${err.message}`,
+              })
+            : t("filesPage.error.actionFailed", {
+                action: label,
+                defaultValue: `Could not ${label}.`,
+              }),
+        ),
+      );
+    },
+    [currentFolder, folders, t],
   );
 
   const entries = useMemo<FilesPageEntry[]>(() => {
@@ -1689,6 +1725,278 @@ export default function FileManagerView() {
               selectedCount={selectedFiles.length}
               selectionOnly={mobileSelection}
             />
+            {currentFolder && !mobileSelection && (
+              <div className="files-page-folder-actions">
+                {!currentProcessing ? (
+                  <Tooltip
+                    label={t(
+                      "filesPage.processing.start",
+                      "Process files in this folder…",
+                    )}
+                    withinPortal
+                  >
+                    <ActionIcon
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => setProcessingSetupFolder(currentFolder)}
+                      aria-label={t(
+                        "filesPage.processing.start",
+                        "Process files in this folder…",
+                      )}
+                    >
+                      <AutoModeIcon fontSize="small" />
+                    </ActionIcon>
+                  </Tooltip>
+                ) : (
+                  <>
+                    {currentProcessing.enabled ? (
+                      <>
+                        {folderKind(currentFolder) !== "virtual" && (
+                          <Tooltip
+                            label={t(
+                              "filesPage.processing.sweep",
+                              "Process files now",
+                            )}
+                            withinPortal
+                          >
+                            <ActionIcon
+                              size="sm"
+                              variant="secondary"
+                              onClick={() =>
+                                runFolderAction(
+                                  processingApi.sweep,
+                                  "process folder now",
+                                )
+                              }
+                              aria-label={t(
+                                "filesPage.processing.sweep",
+                                "Process files now",
+                              )}
+                            >
+                              <ReplayIcon fontSize="small" />
+                            </ActionIcon>
+                          </Tooltip>
+                        )}
+                        <Tooltip
+                          label={t(
+                            "filesPage.processing.stop",
+                            "Pause processing",
+                          )}
+                          withinPortal
+                        >
+                          <ActionIcon
+                            size="sm"
+                            variant="secondary"
+                            onClick={() =>
+                              runFolderAction(
+                                processingApi.disable,
+                                "pause processing folder",
+                              )
+                            }
+                            aria-label={t(
+                              "filesPage.processing.stop",
+                              "Pause processing",
+                            )}
+                          >
+                            <PauseIcon fontSize="small" />
+                          </ActionIcon>
+                        </Tooltip>
+                      </>
+                    ) : (
+                      <Tooltip
+                        label={t(
+                          "filesPage.processing.resume",
+                          "Resume processing",
+                        )}
+                        withinPortal
+                      >
+                        <ActionIcon
+                          size="sm"
+                          variant="secondary"
+                          onClick={() =>
+                            runFolderAction(
+                              processingApi.enable,
+                              "resume processing",
+                            )
+                          }
+                          aria-label={t(
+                            "filesPage.processing.resume",
+                            "Resume processing",
+                          )}
+                        >
+                          <PlayArrowIcon fontSize="small" />
+                        </ActionIcon>
+                      </Tooltip>
+                    )}
+                    <Tooltip
+                      label={t("filesPage.processing.edit", "Edit processing…")}
+                      withinPortal
+                    >
+                      <ActionIcon
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => setProcessingSetupFolder(currentFolder)}
+                        aria-label={t(
+                          "filesPage.processing.edit",
+                          "Edit processing…",
+                        )}
+                      >
+                        <TuneIcon fontSize="small" />
+                      </ActionIcon>
+                    </Tooltip>
+                    {folderKind(currentFolder) === "local" && (
+                      <Tooltip
+                        label={t(
+                          "filesPage.processing.restoreAll",
+                          "Restore all originals",
+                        )}
+                        withinPortal
+                      >
+                        <ActionIcon
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => setRevertAllTarget(currentFolder)}
+                          aria-label={t(
+                            "filesPage.processing.restoreAll",
+                            "Restore all originals",
+                          )}
+                        >
+                          <HistoryIcon fontSize="small" />
+                        </ActionIcon>
+                      </Tooltip>
+                    )}
+                    <Tooltip
+                      label={t(
+                        "filesPage.processing.remove",
+                        "Remove processing",
+                      )}
+                      withinPortal
+                    >
+                      <ActionIcon
+                        size="sm"
+                        variant="secondary"
+                        onClick={() =>
+                          runFolderAction(
+                            processingApi.remove,
+                            "remove processing folder",
+                          )
+                        }
+                        aria-label={t(
+                          "filesPage.processing.remove",
+                          "Remove processing",
+                        )}
+                      >
+                        <AutoModeIcon fontSize="small" />
+                      </ActionIcon>
+                    </Tooltip>
+                  </>
+                )}
+                {folderKind(currentFolder) === "local" ? (
+                  currentFolder.parentFolderId === null && (
+                    <Tooltip
+                      label={t(
+                        "filesPage.removeLocalFolder",
+                        "Remove (files stay on disk)",
+                      )}
+                      withinPortal
+                    >
+                      <ActionIcon
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => promptDeleteFolder(currentFolder)}
+                        aria-label={t(
+                          "filesPage.removeLocalFolder",
+                          "Remove (files stay on disk)",
+                        )}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </ActionIcon>
+                    </Tooltip>
+                  )
+                ) : (
+                  <>
+                    <Tooltip
+                      label={t("filesPage.rename", "Rename")}
+                      withinPortal
+                    >
+                      <ActionIcon
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => openRenameFolderDialog(currentFolder)}
+                        disabled={headerEditsDisabled}
+                        aria-label={t("filesPage.rename", "Rename")}
+                      >
+                        <DriveFileRenameOutlineIcon fontSize="small" />
+                      </ActionIcon>
+                    </Tooltip>
+                    <Menu shadow="md" position="bottom-start" withinPortal>
+                      <Menu.Target>
+                        <Tooltip
+                          label={t("filesPage.appearance.title", "Appearance")}
+                          withinPortal
+                        >
+                          <ActionIcon
+                            size="sm"
+                            variant="secondary"
+                            disabled={headerEditsDisabled}
+                            aria-label={t(
+                              "filesPage.appearance.title",
+                              "Appearance",
+                            )}
+                          >
+                            <PaletteIcon fontSize="small" />
+                          </ActionIcon>
+                        </Tooltip>
+                      </Menu.Target>
+                      <Menu.Dropdown>
+                        <FolderAppearancePicker
+                          folder={currentFolder}
+                          onChange={(appearance) => {
+                            setFolderAppearance(
+                              currentFolder.id,
+                              appearance,
+                            ).catch((err) =>
+                              folders.setError(
+                                err instanceof Error
+                                  ? t(
+                                      "filesPage.error.folderAppearanceFailedDetail",
+                                      {
+                                        message: err.message,
+                                        defaultValue: `Could not update folder appearance: ${err.message}`,
+                                      },
+                                    )
+                                  : t(
+                                      "filesPage.error.folderAppearanceFailed",
+                                      "Could not update folder appearance.",
+                                    ),
+                              ),
+                            );
+                          }}
+                          disabled={headerEditsDisabled}
+                        />
+                      </Menu.Dropdown>
+                    </Menu>
+                    <Tooltip
+                      label={t("filesPage.deleteFolder", "Delete folder")}
+                      withinPortal
+                    >
+                      <ActionIcon
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => promptDeleteFolder(currentFolder)}
+                        disabled={headerEditsDisabled}
+                        aria-label={t(
+                          "filesPage.deleteFolder",
+                          "Delete folder",
+                        )}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </ActionIcon>
+                    </Tooltip>
+                  </>
+                )}
+              </div>
+            )}
             {(() => {
               // Select all / Clear toggle over visible files.
               if (visibleFiles.length === 0) return null;

@@ -577,6 +577,16 @@
   display: none;
 }
 
+/* The open folder's own actions, inline beside the items count. */
+.files-page-folder-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-left: 0.6rem;
+  padding-left: 0.6rem;
+  border-left: 1px solid var(--c-border-subtle);
+}
+
 /* State filter chips above a working folder's listing. */
 .files-page-state-filters {
   display: flex;
