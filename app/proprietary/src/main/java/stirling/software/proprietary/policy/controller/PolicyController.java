@@ -275,13 +275,6 @@ public class PolicyController {
                             + " assigned; returns the stored policy with its id.")
     public ResponseEntity<Policy> savePolicy(@RequestBody Policy policy) {
         Policy owned = withStoredOutputSecrets(resolveOwnership(policy));
-        requireAccessibleSources(owned);
-        requireAccessibleOutput(owned);
-        try {
-            policyValidator.validate(owned);
-        } catch (IllegalArgumentException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
-        }
         // Snapshot the previous version before saving so supporting files this edit dropped can
         // be cleaned up once nothing references them.
         Policy previous =
@@ -293,6 +286,13 @@ public class PolicyController {
         // gated too.
         if (owned.required() || (previous != null && previous.required())) {
             requirePolicyEditingAllowed();
+        }
+        requireAccessibleSources(owned);
+        requireAccessibleOutput(owned);
+        try {
+            policyValidator.validate(owned);
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
         Policy saved = policyStore.save(owned);
         assetCleaner.cleanupAfterSave(previous, saved);

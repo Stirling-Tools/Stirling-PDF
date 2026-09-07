@@ -51,6 +51,7 @@ import stirling.software.proprietary.policy.engine.SweepOutcome;
 import stirling.software.proprietary.policy.ledger.ProcessedLedger;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineDefinition;
+import stirling.software.proprietary.policy.model.PipelineInput;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.PipelineValidation;
 import stirling.software.proprietary.policy.model.Policy;
@@ -510,6 +511,40 @@ class PolicyControllerTest {
                                             .isEqualTo(HttpStatus.FORBIDDEN));
             verify(policyStore, never()).save(any());
             verify(policyTriggerManager, never()).notifyPoliciesChanged();
+        }
+
+        @Test
+        @DisplayName(
+                "the manager gate runs before validation, so a forbidden save never leaks a 400")
+        void gatePrecedesValidation() {
+            applicationProperties.getSecurity().setEnableLogin(true);
+            when(policyManagementAuthority.canEditPolicies()).thenReturn(false);
+            // A required policy that also references an unknown source: reaching the source and
+            // validation checks would surface a 400. The 403 must win, so a non-manager can't
+            // probe those errors on a save they're forbidden from performing.
+            Policy withUnknownSource =
+                    new Policy(
+                            null,
+                            "name",
+                            "owner",
+                            true,
+                            true,
+                            "",
+                            List.of(PipelineInput.manual("src-missing")),
+                            List.of(),
+                            null,
+                            List.of(),
+                            null,
+                            null);
+
+            assertThatThrownBy(() -> controller.savePolicy(withUnknownSource))
+                    .isInstanceOf(ResponseStatusException.class)
+                    .satisfies(
+                            e ->
+                                    assertThat(((ResponseStatusException) e).getStatusCode())
+                                            .isEqualTo(HttpStatus.FORBIDDEN));
+            verify(policyValidator, never()).validate(any());
+            verify(policyStore, never()).save(any());
         }
 
         @Test
