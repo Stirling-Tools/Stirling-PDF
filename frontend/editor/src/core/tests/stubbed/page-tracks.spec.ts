@@ -772,10 +772,8 @@ test.describe("Page Editor tracks", () => {
     });
     expect(await trackOrder(page)).toEqual(["rotated-pages.pdf", "sample.pdf"]);
 
-    // Split so page 3 starts a new track.
-    const third = rotated.locator("[data-page-id]").nth(2);
-    await third.hover();
-    await third.getByRole("button", { name: "Split here" }).click();
+    // Split so page 3 starts a new track, via the handle in the gap before it.
+    await rotated.locator('[data-split-before="3"]').click();
 
     // A new track appears at once, right after the one it came from.
     await expect
@@ -808,9 +806,7 @@ test.describe("Page Editor tracks", () => {
       timeout: 30_000,
     });
 
-    const third = rotated.locator("[data-page-id]").nth(2);
-    await third.hover();
-    await third.getByRole("button", { name: "Split here" }).click();
+    await rotated.locator('[data-split-before="3"]').click();
     const split = track(page, "rotated-pages_split.pdf");
     await expect(split.locator("[data-page-id]")).toHaveCount(2, {
       timeout: 30_000,
