@@ -165,6 +165,9 @@ public class PaygWalletController {
         EntitlementSnapshot snap = entitlementService.getSnapshot(teamId);
 
         String status = billing.subscribed() ? STATUS_SUBSCRIBED : STATUS_FREE;
+        WalletSnapshotResponse.CreditsHolding credits =
+                new WalletSnapshotResponse.CreditsHolding(billing.subscribed());
+        WalletSnapshotResponse.TeamHolding team = teamHolding(teamId);
 
         boolean noCap = billing.subscribed() && billing.capMoneyMinor() == null;
         Integer capMajor =
@@ -214,6 +217,8 @@ public class PaygWalletController {
                 new WalletSnapshotResponse(
                         teamId,
                         status,
+                        team,
+                        credits,
                         isLeader ? ROLE_LEADER : ROLE_MEMBER,
                         ISO_DATE.format(snap.periodStart().toLocalDate()),
                         ISO_DATE.format(snap.periodEnd().toLocalDate()),
@@ -241,6 +246,20 @@ public class PaygWalletController {
                         billingMode,
                         bundleRatePerCreditMinor);
         return ResponseEntity.ok(body);
+    }
+
+    /**
+     * The team's user-capacity holding.
+     *
+     * <p>{@code held} is false and {@code licensedUsers} null because cloud cannot sell Team yet:
+     * capacity is persisted on {@code license_keys} for self-hosted licences, and no cloud billing
+     * row records a Team holding. The member count is real, so the capacity meter has a numerator
+     * now and gains its denominator when cloud Team commerce lands — this method is the only place
+     * that has to change.
+     */
+    private WalletSnapshotResponse.TeamHolding teamHolding(Long teamId) {
+        int usersInUse = Math.toIntExact(memberRepo.countByTeamId(teamId));
+        return new WalletSnapshotResponse.TeamHolding(false, null, usersInUse);
     }
 
     /** Per-category size-scaled units + input-file counts for the same window. */
@@ -475,6 +494,8 @@ public class PaygWalletController {
         return new WalletSnapshotResponse(
                 null, // teamId — unknown when the caller has no team membership
                 STATUS_FREE,
+                new WalletSnapshotResponse.TeamHolding(false, null, 0),
+                new WalletSnapshotResponse.CreditsHolding(false),
                 ROLE_MEMBER,
                 ISO_DATE.format(window[0].toLocalDate()),
                 ISO_DATE.format(window[1].toLocalDate()),

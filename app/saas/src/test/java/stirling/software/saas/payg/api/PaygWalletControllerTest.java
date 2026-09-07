@@ -144,6 +144,60 @@ class PaygWalletControllerTest {
     // GET /wallet
     // -----------------------------------------------------------------------------------------
 
+    /**
+     * Team and Credits are independently purchasable, so the snapshot reports them as separate
+     * facts. A free team holds neither; the collapsed status string cannot express that difference.
+     */
+    @Test
+    void getWallet_freeTeam_holdsNeitherProduct() {
+        User user = userWithId(60L, UUID.randomUUID());
+        Team team = teamWithId(60L);
+        when(userRepository.findBySupabaseId(any())).thenReturn(Optional.of(user));
+        user.setTeam(team);
+        when(memberRepo.findByTeamIdAndUserId(team.getId(), 60L))
+                .thenReturn(Optional.of(membership(team, user, TeamRole.MEMBER)));
+        when(memberRepo.countByTeamId(60L)).thenReturn(3L);
+        when(billingService.forTeam(60L)).thenReturn(freeBilling(500L));
+        when(entitlementService.getSnapshot(60L)).thenReturn(snapshot(0L, 500L));
+        stubEmptyLedgerReads(60L);
+
+        WalletSnapshotResponse body = controller.getWallet(jwtAuth(user.getSupabaseId())).getBody();
+
+        assertThat(body).isNotNull();
+        assertThat(body.credits().active()).isFalse();
+        assertThat(body.team().held()).isFalse();
+        // The member count is real, so the capacity meter already has a numerator.
+        assertThat(body.team().usersInUse()).isEqualTo(3);
+        // Cloud has no user limit today, so there is no denominator to report.
+        assertThat(body.team().licensedUsers()).isNull();
+    }
+
+    /**
+     * A metered subscription switches Credits on and says nothing about Team: the two axes move
+     * independently, which is the whole point of reporting them separately.
+     */
+    @Test
+    void getWallet_subscribedTeam_holdsCreditsButNotTeam() {
+        User user = userWithId(61L, UUID.randomUUID());
+        Team team = teamWithId(61L);
+        when(userRepository.findBySupabaseId(any())).thenReturn(Optional.of(user));
+        user.setTeam(team);
+        when(memberRepo.findByTeamIdAndUserId(team.getId(), 61L))
+                .thenReturn(Optional.of(membership(team, user, TeamRole.MEMBER)));
+        when(memberRepo.countByTeamId(61L)).thenReturn(8L);
+        when(billingService.forTeam(61L))
+                .thenReturn(subscribedBilling("sub_decoupled", 2500L, 1250L));
+        when(entitlementService.getSnapshot(61L)).thenReturn(snapshot(100L, 1250L));
+        stubEmptyLedgerReads(61L);
+
+        WalletSnapshotResponse body = controller.getWallet(jwtAuth(user.getSupabaseId())).getBody();
+
+        assertThat(body).isNotNull();
+        assertThat(body.credits().active()).isTrue();
+        assertThat(body.team().held()).isFalse();
+        assertThat(body.team().usersInUse()).isEqualTo(8);
+    }
+
     @Test
     void getWallet_freeTier_returnsFreeShape() {
         User user = userWithId(7L, UUID.randomUUID());

@@ -32,10 +32,41 @@ export interface WalletActivityRow {
   docUnits: number;
 }
 
+/**
+ * The Team holding: paid user capacity. Independent of {@link CreditsHolding} — a team may hold
+ * either product, both, or neither, which `status` alone cannot express.
+ */
+export interface TeamHolding {
+  /**
+   * The team pays for user capacity. Always false on cloud for now: Team is sold as a self-hosted
+   * licence and no cloud billing row records a holding, so read this as "offer Team", not
+   * "capacity unknown".
+   */
+  held: boolean;
+  /** Users the holding covers; null when the team has no limit, which is every cloud team today. */
+  licensedUsers: number | null;
+  /** Members occupying capacity right now — the capacity meter's numerator. */
+  usersInUse: number;
+}
+
+/** The Credits holding: metered processing beyond the free grant. */
+export interface CreditsHolding {
+  /** The team has a live metered subscription. The fact `status: "subscribed"` actually carried. */
+  active: boolean;
+}
+
 export interface Wallet {
   /** Caller's primary team_id; null on the synthetic empty snapshot for team-less callers. */
   teamId: number | null;
+  /**
+   * The old single billing axis. Superseded by `team` and `credits`, which say which products the
+   * team holds independently; kept until every consumer stops branching on it.
+   */
   status: WalletStatus;
+  /** Paid user capacity, reported independently of Credits. */
+  team: TeamHolding;
+  /** Metered processing, reported independently of Team. */
+  credits: CreditsHolding;
   role: WalletRole;
   /** ISO yyyy-mm-dd. Stripe period when subscribed; calendar month when free. */
   billingPeriodStart: string;
