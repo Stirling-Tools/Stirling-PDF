@@ -54,6 +54,7 @@ export function useTrackWorkspace(): TrackWorkspaceHook {
 
       resolved.push({
         fileId,
+        name: stub?.name ?? fileId,
         pageCount: pages.length,
         rotations: pages.map((page) => page.rotation ?? 0),
       });

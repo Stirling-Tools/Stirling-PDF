@@ -559,15 +559,13 @@ test.describe("Page Editor tracks", () => {
         { timeout: 60_000 },
       );
 
-      // One file, so the editor opens wrapped: no horizontal overflow.
+      // One file, so the editor opens wrapped: the lane doesn't scroll
+      // horizontally (overflow-x visible), it grows downward instead.
       await expect
-        .poll(
-          () => lane.evaluate((el) => el.scrollWidth <= el.clientWidth + 1),
-          {
-            timeout: 30_000,
-          },
-        )
-        .toBe(true);
+        .poll(() => lane.evaluate((el) => getComputedStyle(el).overflowX), {
+          timeout: 30_000,
+        })
+        .toBe("visible");
 
       // The pages occupy more than one row (distinct vertical offsets).
       await expect
@@ -590,8 +588,14 @@ test.describe("Page Editor tracks", () => {
       expect(mounted).toBeGreaterThan(0);
       expect(mounted).toBeLessThan(200);
 
-      // Toggling off drops back to a single scrolling row.
+      // Toggling off drops back to a single scrolling row (overflow-x auto),
+      // wider than the lane.
       await page.getByRole("button", { name: "Wrap pages" }).click();
+      await expect
+        .poll(() => lane.evaluate((el) => getComputedStyle(el).overflowX), {
+          timeout: 30_000,
+        })
+        .toBe("auto");
       await expect
         .poll(
           () => lane.evaluate((el) => el.scrollWidth > el.clientWidth + 1),
@@ -758,6 +762,78 @@ test.describe("Page Editor tracks", () => {
     await expect(anySelected).toHaveCount(0);
   });
 
+  test("splitting a track immediately makes a second track, pending until save", async ({
+    page,
+  }) => {
+    await openPageEditor(page);
+    const rotated = track(page, "rotated-pages.pdf");
+    await expect(rotated.locator("[data-page-id]")).toHaveCount(4, {
+      timeout: 30_000,
+    });
+    expect(await trackOrder(page)).toEqual(["rotated-pages.pdf", "sample.pdf"]);
+
+    // Split so page 3 starts a new track.
+    const third = rotated.locator("[data-page-id]").nth(2);
+    await third.hover();
+    await third.getByRole("button", { name: "Split here" }).click();
+
+    // A new track appears at once, right after the one it came from.
+    await expect
+      .poll(() => trackOrder(page), { timeout: 30_000 })
+      .toEqual(["rotated-pages.pdf", "rotated-pages_split.pdf", "sample.pdf"]);
+
+    // The original keeps pages 1-2; the split holds 3-4.
+    await expect(rotated.locator("[data-page-id]")).toHaveCount(2);
+    const split = track(page, "rotated-pages_split.pdf");
+    await expect(split.locator("[data-page-id]")).toHaveCount(2);
+
+    // Both halves are pending edits, not yet written.
+    await expect(rotated).toContainText("edited");
+    await expect(split).toContainText("edited");
+
+    // Undo restores the single track.
+    await page.getByRole("button", { name: "Undo" }).click();
+    await expect
+      .poll(() => trackOrder(page), { timeout: 30_000 })
+      .toEqual(["rotated-pages.pdf", "sample.pdf"]);
+    await expect(rotated.locator("[data-page-id]")).toHaveCount(4);
+  });
+
+  test("saving a split writes the new half to its own file", async ({
+    page,
+  }) => {
+    await openPageEditor(page);
+    const rotated = track(page, "rotated-pages.pdf");
+    await expect(rotated.locator("[data-page-id]")).toHaveCount(4, {
+      timeout: 30_000,
+    });
+
+    const third = rotated.locator("[data-page-id]").nth(2);
+    await third.hover();
+    await third.getByRole("button", { name: "Split here" }).click();
+    const split = track(page, "rotated-pages_split.pdf");
+    await expect(split.locator("[data-page-id]")).toHaveCount(2, {
+      timeout: 30_000,
+    });
+
+    const saveButton = page.getByRole("button", {
+      name: "Save changes to all files",
+    });
+    await expect(saveButton).toBeEnabled();
+    await saveButton.click();
+
+    // The split becomes a real, separate active file that stays as its own
+    // track (it must not vanish on save), and nothing is left pending.
+    await expect(split).toBeVisible({ timeout: 60_000 });
+    await expect(split.locator("[data-page-id]")).toHaveCount(2);
+    await expect(saveButton).toBeDisabled({ timeout: 60_000 });
+    await expect(page.getByTestId("page-tracks")).not.toContainText("edited");
+    // It is a real workbench file now, listed in the sidebar.
+    await expect(
+      page.getByText("rotated-pages_split.pdf", { exact: true }).first(),
+    ).toBeVisible();
+  });
+
   test("the eye opens that track's file in the viewer", async ({ page }) => {
     await openPageEditor(page);
     const sample = track(page, "sample.pdf");
@@ -857,9 +933,20 @@ test.describe("Page Editor tracks", () => {
     await expect(moved.locator("[data-page-id]")).toHaveCount(3);
     await expect(moved).toContainText("edited");
 
-    // And it is still undoable.
-    await page.getByRole("button", { name: "Undo" }).click();
-    await expect(moved.locator("[data-page-id]")).toHaveCount(4);
+    // And it is still undoable. The toolbar re-renders on the reorder, so a
+    // single click can be dropped mid-render; retry until it lands (undoing
+    // past the baseline is a no-op, so an extra click is harmless).
+    const undo = page.getByRole("button", { name: "Undo" });
+    await expect
+      .poll(
+        async () => {
+          if ((await moved.locator("[data-page-id]").count()) === 4) return 4;
+          await undo.click();
+          return moved.locator("[data-page-id]").count();
+        },
+        { timeout: 30_000 },
+      )
+      .toBe(4);
     await expect(moved).not.toContainText("edited");
   });
 });

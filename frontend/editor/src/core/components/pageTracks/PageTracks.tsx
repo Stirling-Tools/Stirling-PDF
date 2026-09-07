@@ -14,7 +14,7 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import { useFileActions, useFileState } from "@app/contexts/FileContext";
+import { useFileState } from "@app/contexts/FileContext";
 import {
   useNavigationActions,
   useNavigationGuard,
@@ -140,6 +140,8 @@ export default function PageTracks() {
 
   const { saving, progress, save } = useTrackSave(workspace, changedFileIds, {
     onVersioned: handleVersioned,
+    onMaterialized: (splitTrackIds) =>
+      dispatch({ type: "dropTracks", fileIds: splitTrackIds }),
   });
 
   /**
@@ -264,38 +266,27 @@ export default function PageTracks() {
 
   const clearSelection = selection.clear;
 
-  const { actions: fileActions } = useFileActions();
-
   /**
-   * Moves one track before `beforeFileId` (or to the end when null). Track
-   * order IS the workbench file order, and REORDER_FILES replaces the whole id
-   * list, so non-PDFs (which have no track) must be written back in place or
-   * they would drop out of the workbench entirely.
+   * Moves one track before `beforeFileId` (or to the end when null). The
+   * workspace order is authoritative (a split adds a track with no file), so
+   * this reorders the workspace rather than the workbench file list.
    */
   const reorderTracks = useCallback(
     (sourceFileId: FileId, beforeFileId: FileId | null) => {
       if (sourceFileId === beforeFileId) return;
-      const trackOrder = workspace.order.filter((id) => id !== sourceFileId);
-      const at =
-        beforeFileId == null
-          ? trackOrder.length
-          : trackOrder.indexOf(beforeFileId);
-      const insertAt = at === -1 ? trackOrder.length : at;
-      const nextTrackOrder = [
-        ...trackOrder.slice(0, insertAt),
-        sourceFileId,
-        ...trackOrder.slice(insertAt),
-      ];
-      if (nextTrackOrder.every((id, i) => workspace.order[i] === id)) return;
-
-      const isTrack = new Set(workspace.order);
-      let next = 0;
-      const merged = fileState.files.ids.map((id) =>
-        isTrack.has(id) ? nextTrackOrder[next++] : id,
-      );
-      fileActions.reorderFiles(merged);
+      dispatch({
+        type: "reorderTrack",
+        sourceId: sourceFileId,
+        beforeId: beforeFileId,
+      });
     },
-    [fileActions, fileState.files.ids, workspace.order],
+    [dispatch],
+  );
+
+  const splitTrack = useCallback(
+    (fileId: FileId, startPageId: string) =>
+      dispatch({ type: "split", fileId, startPageId }),
+    [dispatch],
   );
 
   // ── Drag and drop ────────────────────────────────────────────────────────
@@ -599,7 +590,8 @@ export default function PageTracks() {
                 <TrackRow
                   key={fileId}
                   track={track}
-                  name={stub?.name ?? fileId}
+                  name={track.name}
+                  isNew={track.isNew}
                   versionNumber={stub?.versionNumber}
                   selectedIds={selection.selectedIds}
                   draggingIds={draggingIds}
@@ -623,6 +615,7 @@ export default function PageTracks() {
                   onSelectTrack={selection.selectTrack}
                   onOpenInViewer={openInViewer}
                   onClearSelection={clearSelection}
+                  onSplit={splitTrack}
                   onRotate={rotatePages}
                   onDelete={deletePages}
                 />

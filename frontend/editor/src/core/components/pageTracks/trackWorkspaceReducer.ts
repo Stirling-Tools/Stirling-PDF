@@ -1,4 +1,5 @@
 import { FileId } from "@app/types/file";
+import { createFileId } from "@app/types/fileContext";
 import {
   Track,
   TrackPage,
@@ -33,6 +34,20 @@ export type TrackEditorAction =
       /** Insert before this page, or append when null. */
       beforePageId: string | null;
     }
+  | {
+      type: "split";
+      /** The track to split. */
+      fileId: FileId;
+      /** The page that becomes the first page of the new track. */
+      startPageId: string;
+    }
+  | {
+      type: "reorderTrack";
+      sourceId: FileId;
+      /** Move before this track, or to the end when null. */
+      beforeId: FileId | null;
+    }
+  | { type: "dropTracks"; fileIds: FileId[] }
   | { type: "undo" }
   | { type: "redo" }
   | { type: "reset" };
@@ -60,7 +75,26 @@ function buildTrack(source: TrackSource, seq: number): [Track, number] {
       rotation: normalizeRotation(source.rotations[i] ?? 0),
     });
   }
-  return [{ fileId: source.fileId, pages }, next];
+  return [
+    { fileId: source.fileId, name: source.name, isNew: false, pages },
+    next,
+  ];
+}
+
+/**
+ * A unique display name for a split, from the parent's with a `_split` suffix;
+ * a counter breaks ties when a document is split more than once.
+ */
+function splitName(base: string, taken: Set<string>): string {
+  const dot = base.lastIndexOf(".");
+  const stem = dot > 0 ? base.slice(0, dot) : base;
+  const ext = dot > 0 ? base.slice(dot) : "";
+  const primary = `${stem}_split${ext}`;
+  if (!taken.has(primary)) return primary;
+  let n = 2;
+  let candidate = `${stem}_split (${n})${ext}`;
+  while (taken.has(candidate)) candidate = `${stem}_split (${++n})${ext}`;
+  return candidate;
 }
 
 export const normalizeRotation = (degrees: number): number =>
@@ -100,6 +134,13 @@ function withEdit(
   };
 }
 
+/**
+ * Reconciles the open files into the workspace. The workspace order is
+ * authoritative (splits and reorders live only here, not in the file list), so
+ * this preserves it: file-backed tracks are kept or rebuilt in place, split
+ * tracks are kept (their pages pruned if a source file closed), closed files
+ * drop out, and newly opened files are appended.
+ */
 function syncSources(
   state: TrackEditorState,
   sources: TrackSource[],
@@ -108,72 +149,100 @@ function syncSources(
   sources.forEach((source) => {
     signatures[source.fileId] = sourceSignature(source);
   });
-
-  const order = sources.map((s) => s.fileId);
-  const orderUnchanged =
-    order.length === state.present.order.length &&
-    order.every((id, i) => state.present.order[i] === id);
-  const signaturesUnchanged = order.every(
-    (id) => state.sourceSignatures[id] === signatures[id],
-  );
-  if (orderUnchanged && signaturesUnchanged) return state;
-
-  // A pure permutation (dragging tracks around) touches no page, so the undo
-  // history stays valid: only a changed FILE SET can leave an entry pointing at
-  // pages that no longer exist.
-  const sameFileSet =
-    order.length === state.present.order.length &&
-    order.every((id) => state.present.tracks[id] != null);
-  if (sameFileSet && signaturesUnchanged) {
-    return {
-      ...state,
-      present: { order, tracks: state.present.tracks },
-      baseline: { order, tracks: state.baseline.tracks },
-      sourceSignatures: signatures,
-    };
-  }
-
-  const liveIds = new Set(order);
-  let seq = state.seq;
-  const tracks: Record<FileId, Track> = {};
-  const baselineTracks: Record<FileId, Track> = {};
-
-  for (const source of sources) {
-    const existing = state.present.tracks[source.fileId];
-    const rebuild =
-      !existing ||
-      state.sourceSignatures[source.fileId] !== signatures[source.fileId];
-    if (rebuild) {
-      // A file that just opened, or whose bytes changed underneath us, starts
-      // from its own pages again, so any pending edit to it is void.
-      const [track, nextSeq] = buildTrack(source, seq);
-      seq = nextSeq;
-      tracks[source.fileId] = track;
-      baselineTracks[source.fileId] = track;
-    } else {
-      tracks[source.fileId] = existing;
-      // Keep the old baseline so opening another file doesn't silently mark
-      // pending edits as saved.
-      baselineTracks[source.fileId] =
-        state.baseline.tracks[source.fileId] ?? existing;
-    }
-  }
+  const liveIds = new Set(sources.map((s) => s.fileId));
+  const sourceById = new Map(sources.map((s) => [s.fileId, s]));
 
   // A closed file's bytes are gone, so pages it sourced can't be saved anywhere.
-  const dropDeadSources = (pages: TrackPage[]) => {
+  const pruneDead = (pages: TrackPage[]): TrackPage[] => {
     const kept = pages.filter((p) => liveIds.has(p.sourceFileId));
     return kept.length === pages.length ? pages : kept;
   };
-  const present = mapTracks({ order, tracks }, dropDeadSources);
+
+  let seq = state.seq;
+  // A file opening/closing, or its bytes changing, can leave undo entries
+  // referencing pages that no longer exist — drop history then, but keep it
+  // through a pure re-sync that changes nothing.
+  let historyValid = true;
+  const tracks: Record<FileId, Track> = {};
+  const baselineTracks: Record<FileId, Track> = {};
+  const order: FileId[] = [];
+
+  for (const id of state.present.order) {
+    const track = state.present.tracks[id];
+    if (!track) continue;
+
+    if (track.isNew) {
+      const pages = pruneDead(track.pages);
+      if (pages.length === 0) {
+        historyValid = false;
+        continue;
+      }
+      if (pages !== track.pages) historyValid = false;
+      tracks[id] = pages === track.pages ? track : { ...track, pages };
+      const prevBaseline = state.baseline.tracks[id];
+      if (prevBaseline) baselineTracks[id] = prevBaseline;
+      order.push(id);
+      continue;
+    }
+
+    const source = sourceById.get(track.fileId);
+    if (!source) {
+      // File-backed track whose file has closed.
+      historyValid = false;
+      continue;
+    }
+    const changed =
+      state.sourceSignatures[track.fileId] !== signatures[track.fileId];
+    if (changed) {
+      // The bytes changed underneath us, so pending edits to this file are void.
+      const [rebuilt, nextSeq] = buildTrack(source, seq);
+      seq = nextSeq;
+      tracks[id] = rebuilt;
+      baselineTracks[id] = rebuilt;
+      historyValid = false;
+    } else {
+      const pages = pruneDead(track.pages);
+      if (pages !== track.pages) historyValid = false;
+      const next =
+        pages === track.pages && track.name === source.name
+          ? track
+          : { ...track, pages, name: source.name };
+      tracks[id] = next;
+      baselineTracks[id] = state.baseline.tracks[id] ?? next;
+    }
+    order.push(id);
+  }
+
+  // Newly opened files, not yet represented, join at the end.
+  for (const source of sources) {
+    if (tracks[source.fileId]) continue;
+    const [track, nextSeq] = buildTrack(source, seq);
+    seq = nextSeq;
+    tracks[source.fileId] = track;
+    baselineTracks[source.fileId] = track;
+    order.push(source.fileId);
+    historyValid = false;
+  }
+
+  const orderUnchanged =
+    order.length === state.present.order.length &&
+    order.every((id, i) => state.present.order[i] === id);
+  const tracksUnchanged =
+    orderUnchanged &&
+    order.every((id) => tracks[id] === state.present.tracks[id]);
+  const signaturesUnchanged =
+    liveIds.size === Object.keys(state.sourceSignatures).length &&
+    sources.every(
+      (s) => state.sourceSignatures[s.fileId] === signatures[s.fileId],
+    );
+  if (tracksUnchanged && signaturesUnchanged) return state;
 
   return {
-    present,
+    present: { order, tracks },
     baseline: { order, tracks: baselineTracks },
     sourceSignatures: signatures,
-    // Undo entries can reference pages from files that are no longer open, and
-    // restoring one would leave a page that cannot be saved. Drop the history.
-    past: [],
-    future: [],
+    past: historyValid ? state.past : [],
+    future: historyValid ? state.future : [],
     seq,
   };
 }
@@ -262,6 +331,89 @@ export function trackEditorReducer(
 
       if (trackSignaturesMatch(state.present, next)) return state;
       return withEdit(state, next);
+    }
+
+    case "split": {
+      const { fileId, startPageId } = action;
+      const track = state.present.tracks[fileId];
+      if (!track) return state;
+      const idx = track.pages.findIndex((p) => p.id === startPageId);
+      // A split before the first page (or a missing page) is a no-op.
+      if (idx <= 0) return state;
+
+      const newId = createFileId();
+      const taken = new Set(
+        state.present.order
+          .map((id) => state.present.tracks[id]?.name)
+          .filter((name): name is string => name != null),
+      );
+      const newTrack: Track = {
+        fileId: newId,
+        name: splitName(track.name, taken),
+        isNew: true,
+        pages: track.pages.slice(idx),
+      };
+
+      const orderIdx = state.present.order.indexOf(fileId);
+      const nextOrder = [
+        ...state.present.order.slice(0, orderIdx + 1),
+        newId,
+        ...state.present.order.slice(orderIdx + 1),
+      ];
+      const next: TrackWorkspace = {
+        order: nextOrder,
+        tracks: {
+          ...state.present.tracks,
+          [fileId]: { ...track, pages: track.pages.slice(0, idx) },
+          [newId]: newTrack,
+        },
+      };
+      return withEdit(state, next);
+    }
+
+    case "reorderTrack": {
+      const { sourceId, beforeId } = action;
+      const current = state.present.order;
+      if (!current.includes(sourceId)) return state;
+      const without = current.filter((id) => id !== sourceId);
+      const at = beforeId == null ? without.length : without.indexOf(beforeId);
+      const insertAt = at === -1 ? without.length : at;
+      const nextOrder = [
+        ...without.slice(0, insertAt),
+        sourceId,
+        ...without.slice(insertAt),
+      ];
+      if (nextOrder.every((id, i) => current[i] === id)) return state;
+      // Reorder is not a page edit, so it stays out of the undo history and
+      // does not touch the baseline (pending edits remain pending).
+      return {
+        ...state,
+        present: { order: nextOrder, tracks: state.present.tracks },
+        baseline: { order: nextOrder, tracks: state.baseline.tracks },
+      };
+    }
+
+    case "dropTracks": {
+      const drop = new Set(action.fileIds);
+      if (!state.present.order.some((id) => drop.has(id))) return state;
+      const order = state.present.order.filter((id) => !drop.has(id));
+      const tracks: Record<FileId, Track> = {};
+      const baselineTracks: Record<FileId, Track> = {};
+      for (const id of order) {
+        const track = state.present.tracks[id];
+        if (track) tracks[id] = track;
+        const baseline = state.baseline.tracks[id];
+        if (baseline) baselineTracks[id] = baseline;
+      }
+      // Removing a track is structural, like a sync: its pages must not linger
+      // in the undo history.
+      return {
+        ...state,
+        present: { order, tracks },
+        baseline: { order, tracks: baselineTracks },
+        past: [],
+        future: [],
+      };
     }
 
     case "undo": {

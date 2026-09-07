@@ -13,9 +13,18 @@ export interface TrackPage {
   rotation: number;
 }
 
-/** One open PDF, expanded into the pages that will be written back to it. */
+/**
+ * One track of pages. `fileId` is the map key and order entry: a real active
+ * file's id for a file-backed track, or a minted id for a split that has no
+ * file yet. `isNew` tells them apart — a split is written to a brand-new file
+ * on save, a file-backed track versions its own file.
+ */
 export interface Track {
   fileId: FileId;
+  /** Display name: the file's name, or a derived one for a split. */
+  name: string;
+  /** True for a split not yet backed by a saved file. */
+  isNew: boolean;
   pages: TrackPage[];
 }
 
@@ -27,6 +36,7 @@ export interface TrackWorkspace {
 /** Page counts + rotation baselines for the files a sync should cover. */
 export interface TrackSource {
   fileId: FileId;
+  name: string;
   pageCount: number;
   rotations: number[];
 }

@@ -18,6 +18,7 @@ const source = (
   rotations: number[] = [],
 ): TrackSource => ({
   fileId,
+  name: `${fileId}.pdf`,
   pageCount,
   rotations: Array.from({ length: pageCount }, (_, i) => rotations[i] ?? 0),
 });
@@ -166,6 +167,74 @@ describe("trackEditorReducer operations", () => {
   });
 });
 
+describe("trackEditorReducer split", () => {
+  it("splits a track in two, the new one sourced from the original", () => {
+    let state = twoTracks();
+    const a2 = pagesOf(state, A)[1];
+    state = trackEditorReducer(state, {
+      type: "split",
+      fileId: A,
+      startPageId: a2.id,
+    });
+
+    // The new track is inserted right after the one it came from.
+    const newId = state.present.order[1];
+    expect(state.present.order).toEqual([A, newId, B]);
+    expect(pagesOf(state, A)).toHaveLength(1);
+    expect(ids(state, newId)).toEqual([`${A}:2`, `${A}:3`]);
+    expect(state.present.tracks[newId]?.isNew).toBe(true);
+    // Both the shortened original and the new split are pending.
+    expect(changedTrackIds(state)).toContain(A);
+    expect(changedTrackIds(state)).toContain(newId);
+  });
+
+  it("ignores a split before the first page", () => {
+    const state = twoTracks();
+    const a1 = pagesOf(state, A)[0];
+    const next = trackEditorReducer(state, {
+      type: "split",
+      fileId: A,
+      startPageId: a1.id,
+    });
+    expect(next).toBe(state);
+  });
+
+  it("is undoable", () => {
+    let state = twoTracks();
+    const a2 = pagesOf(state, A)[1];
+    state = trackEditorReducer(state, {
+      type: "split",
+      fileId: A,
+      startPageId: a2.id,
+    });
+    expect(state.present.order).toHaveLength(3);
+
+    state = trackEditorReducer(state, { type: "undo" });
+    expect(state.present.order).toEqual([A, B]);
+    expect(pagesOf(state, A)).toHaveLength(3);
+  });
+
+  it("keeps the split through a sync, and drops it on request", () => {
+    let state = twoTracks();
+    const a2 = pagesOf(state, A)[1];
+    state = trackEditorReducer(state, {
+      type: "split",
+      fileId: A,
+      startPageId: a2.id,
+    });
+    const newId = state.present.order[1];
+
+    const C = "file-c" as FileId;
+    state = sync(state, [source(A, 3, [0, 90, 0]), source(B, 2), source(C, 1)]);
+    // The split is not derived from a file, so a sync leaves it in place.
+    expect(state.present.order).toContain(newId);
+    expect(ids(state, newId)).toEqual([`${A}:2`, `${A}:3`]);
+
+    state = trackEditorReducer(state, { type: "dropTracks", fileIds: [newId] });
+    expect(state.present.order).not.toContain(newId);
+  });
+});
+
 describe("trackEditorReducer history", () => {
   it("undoes and redoes an edit, restoring dirty state each way", () => {
     let state = twoTracks();
@@ -192,7 +261,11 @@ describe("trackEditorReducer history", () => {
     });
     expect(state.past).toHaveLength(1);
 
-    state = sync(state, [source(B, 2), source(A, 3, [0, 90, 0])]);
+    state = trackEditorReducer(state, {
+      type: "reorderTrack",
+      sourceId: B,
+      beforeId: A,
+    });
 
     expect(state.present.order).toEqual([B, A]);
     expect(state.past).toHaveLength(1);
