@@ -76,6 +76,13 @@ public interface ProcessedLedger {
      */
     boolean forget(String policyId, String identity);
 
+    /**
+     * Whether any of the policy's rows is still {@link ProcessedFileStatus#PROCESSING}. A revert
+     * quiesces on this: a run's status flips terminal the moment it is cancelled, but its claim
+     * settles only when the task actually ends.
+     */
+    boolean anyInFlight(String policyId);
+
     /** Record a claimed file's outcome at its final version ({@code finalContentHash} nullable). */
     void settle(
             String policyId,

@@ -133,6 +133,12 @@ public class InProcessProcessedLedger implements ProcessedLedger {
     }
 
     @Override
+    public synchronized boolean anyInFlight(String policyId) {
+        return rowsByPolicy.getOrDefault(policyId, Map.of()).values().stream()
+                .anyMatch(row -> row.status == ProcessedFileStatus.PROCESSING);
+    }
+
+    @Override
     public synchronized void settle(
             String policyId,
             String identity,

@@ -170,13 +170,14 @@ public class PolicyRunner {
     }
 
     /**
-     * Wait for every run of the policy to reach a terminal state, so their claim settles land
-     * before the caller acts on the ledger. False when the wait timed out — a run inside a long
-     * tool call can outlive any reasonable request budget.
+     * Wait until every run of the policy has settled its claim: no run outside a terminal state,
+     * and no ledger row still in flight (a cancelled run flips terminal at once but settles only
+     * when its task ends). False when the wait timed out — a run inside a long tool call can
+     * outlive any reasonable request budget.
      */
     public boolean awaitQuiesce(String policyId, Duration timeout) {
         long deadline = System.currentTimeMillis() + timeout.toMillis();
-        while (policyEngine.hasActiveRuns(policyId)) {
+        while (policyEngine.hasActiveRuns(policyId) || processedLedger.anyInFlight(policyId)) {
             if (System.currentTimeMillis() >= deadline) {
                 return false;
             }
@@ -259,7 +260,22 @@ public class PolicyRunner {
                         fileIdentity,
                         admission);
         handle.completion()
-                .whenComplete((run, throwable) -> onComplete.accept(succeeded(run, throwable)));
+                .whenComplete(
+                        (run, throwable) -> {
+                            if (run != null && run.getStatus() == PolicyRunStatus.CANCELLED) {
+                                // A cancelled run is not a failure: settle the claim, then drop
+                                // the row entirely, so the file reads as unprocessed rather than
+                                // parked-failed. This also heals a revert's reset when a run
+                                // outlives the quiesce wait — its late settle lands and is
+                                // immediately forgotten.
+                                onComplete.accept(false);
+                                if (fileIdentity != null) {
+                                    processedLedger.forget(policy.id(), fileIdentity);
+                                }
+                                return;
+                            }
+                            onComplete.accept(succeeded(run, throwable));
+                        });
         return handle.runId();
     }
 

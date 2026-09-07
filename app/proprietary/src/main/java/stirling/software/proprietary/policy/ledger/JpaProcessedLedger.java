@@ -136,6 +136,11 @@ public class JpaProcessedLedger implements ProcessedLedger {
     }
 
     @Override
+    public boolean anyInFlight(String policyId) {
+        return repository.existsByPolicyIdAndStatus(policyId, ProcessedFileStatus.PROCESSING);
+    }
+
+    @Override
     public void settle(
             String policyId,
             String identity,
