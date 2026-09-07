@@ -586,15 +586,20 @@ public class UserService implements UserServiceInterface {
         if (settings == null) {
             return;
         }
-        // Serialise admission before counting. The lock is held until saveUserCore's transaction
-        // commits, by which point our own insert is part of the count everyone else sees, so two
-        // concurrent creations at the last free seat cannot both be admitted.
+        // Resolve the cap before taking the lock. Only the count and the insert need serialising,
+        // and once a linked instance takes its capacity from SaaS this call can refresh that over
+        // the network -- a row lock must not be held across a round trip that may time out.
+        int max = settings.calculateMaxAllowedUsers();
+
+        // Serialise admission. The lock is held until saveUserCore's transaction commits, by which
+        // point our own insert is part of the count everyone else sees, so two concurrent creations
+        // at the last free seat cannot both be admitted.
         settings.lockForUserAdmission();
-        if (!settings.wouldExceedLimit(1)) {
+
+        long current = getTotalUsersCount();
+        if (current + 1 <= max) {
             return;
         }
-        long current = getTotalUsersCount();
-        int max = settings.calculateMaxAllowedUsers();
         log.warn(
                 "Refusing to create user {}: would exceed the licence limit of {} ({} in use). If"
                         + " this is a legitimate path it should check wouldExceedLimit() first and"

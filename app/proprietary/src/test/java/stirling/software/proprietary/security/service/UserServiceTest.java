@@ -170,7 +170,6 @@ class UserServiceTest {
         stirling.software.proprietary.service.UserLicenseSettingsService settings =
                 mock(stirling.software.proprietary.service.UserLicenseSettingsService.class);
         when(licenseSettingsService.getIfAvailable()).thenReturn(settings);
-        when(settings.wouldExceedLimit(1)).thenReturn(true);
         when(settings.calculateMaxAllowedUsers()).thenReturn(100);
         when(userRepository.count()).thenReturn(100L);
         when(userRepository.findByUsernameIgnoreCase(Role.INTERNAL_API_USER.getRoleId()))
