@@ -7,12 +7,7 @@ import { policyStep, type PolicyToolStep } from "@app/policies/operations";
 import type { ToolEndpoint } from "@app/types/toolApiTypes";
 import type { WirePipelineStep } from "@app/policies/types";
 
-// The wire step type under the name the wizard and its callers use.
 export type { WirePipelineStep as PipelineStep } from "@app/policies/types";
-
-/* ──────────────────────────────────────────────────────────────────────── */
-/*  Catalogue model — portal-specific                                        */
-/* ──────────────────────────────────────────────────────────────────────── */
 
 export type PolicyStatus = "active" | "paused";
 
@@ -106,11 +101,6 @@ export interface CatalogueEntry {
   policy: DecoratedPolicy | null;
 }
 
-/* ──────────────────────────────────────────────────────────────────────── */
-/*  Endpoint display labels                                                   */
-/* ──────────────────────────────────────────────────────────────────────── */
-
-/** i18n label keys by endpoint: {@link ToolEndpoint}s plus the AI classify endpoint. */
 const ENDPOINT_LABELS: Partial<
   Record<ToolEndpoint | "/api/v1/ai/tools/classify-and-label", string>
 > = {
@@ -137,17 +127,11 @@ export function humanizeEndpoint(
     .trim();
 }
 
-/* ──────────────────────────────────────────────────────────────────────── */
-/*  Catalogue definitions                                                     */
-
-/* ──────────────────────────────────────────────────────────────────────── */
-
 const DEFAULT_PII_PATTERNS: string[] = [
   "\\b(?!000|666|9\\d{2})\\d{3}([- ])(?!00)\\d{2}\\1(?!0000)\\d{4}\\b",
   "\\b(?:4\\d{12}(?:\\d{3})?|5[1-5]\\d{14}|3[47]\\d{13}|6(?:011|5\\d{2})\\d{12})\\b",
 ];
 
-/** `label`/`desc` values are i18n keys — render with t(). */
 export const POLICY_CATEGORIES: PolicyCategory[] = [
   {
     id: "ingestion",
@@ -193,9 +177,6 @@ export const POLICY_CATEGORIES: PolicyCategory[] = [
   },
 ];
 
-/** `summary`/`rules`/`scopeLabel`/`label` values are i18n keys — render with t(). Field
- *  `value`/`options` strings are persisted policy state; translating them would corrupt
- *  saved configs. */
 export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
   ingestion: {
     summary: "portal.policies.config.ingestion.summary",
@@ -264,8 +245,6 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
       "portal.policies.config.compliance.rules.2",
     ],
     scopeLabel: "portal.policies.config.scopeAll",
-    // Labels the finished document after sanitise/flatten. Offered only once a Purview
-    // tenant is connected — it needs a tenant and a label GUID no default can guess.
     defaultOperations: [
       policyStep("sanitize"),
       policyStep("flatten"),
