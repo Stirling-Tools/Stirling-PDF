@@ -725,6 +725,18 @@ export function PipelineBuilder() {
   }, [seeded, snapshot]);
   const dirty = baseline.current !== null && baseline.current !== snapshot;
 
+  const stepsSignature = JSON.stringify(stepSnapshot);
+  const testedStepsSignature = useRef<string | null>(null);
+  useEffect(() => {
+    if (
+      testedStepsSignature.current !== null &&
+      testedStepsSignature.current !== stepsSignature
+    ) {
+      testedStepsSignature.current = null;
+      setTestRun(null);
+    }
+  }, [stepsSignature]);
+
   // Each validity condition is defined exactly once here, then consumed both by the graph (which
   // flags each end) and by the blocker list below.
   const sourceChosen = input.sourceId !== "";
@@ -956,6 +968,7 @@ export function PipelineBuilder() {
     if (testing) return;
     setTesting(true);
     setTestRun(null);
+    testedStepsSignature.current = stepsSignature;
     setRunResult(null);
     try {
       const { steps: testSteps, assets } = buildTestSteps();
@@ -1167,8 +1180,9 @@ export function PipelineBuilder() {
   // the cursor itself is whatever the run currently is.
   function stepRunState(index: number): GraphStepContent["runState"] {
     if (!testRun) return undefined;
-    if (index < testRun.currentStep) return "done";
-    if (index > testRun.currentStep) return undefined;
+    const activeIndex = testRun.currentStep - 1;
+    if (index < activeIndex) return "done";
+    if (index > activeIndex) return undefined;
     if (testRun.status === "FAILED") return "failed";
     if (testRun.status === "COMPLETED") return "done";
     return "running";
@@ -1205,7 +1219,10 @@ export function PipelineBuilder() {
               : testRun.status === "COMPLETED"
                 ? ("completed" as const)
                 : ("running" as const),
-          completedSteps: testRun.currentStep,
+          completedSteps:
+            testRun.status === "FAILED"
+              ? Math.max(0, testRun.currentStep - 1)
+              : testRun.currentStep,
           stepCount: testRun.stepCount,
           error: testRun.error,
           outputs: testRun.outputs ?? [],
