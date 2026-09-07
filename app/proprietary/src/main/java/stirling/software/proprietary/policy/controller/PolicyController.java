@@ -738,12 +738,13 @@ public class PolicyController {
      * inaccessible policy leaves the run-supplied inputs untouched.
      */
     private PolicyInputs resolveStoredAssets(String policyId, PolicyInputs inputs) {
-        if (policyId == null || policyId.isBlank() || !policyEditingAllowed()) {
+        if (policyId == null || policyId.isBlank()) {
             return inputs;
         }
         return policyStore
                 .get(policyId)
                 .filter(policyAccessGuard::canAccess)
+                .filter(policy -> !policy.required() || policyEditingAllowed())
                 .map(policy -> assetResolver.resolve(policy, inputs))
                 .orElse(inputs);
     }

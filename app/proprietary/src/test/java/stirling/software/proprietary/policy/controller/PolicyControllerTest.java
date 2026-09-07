@@ -318,19 +318,41 @@ class PolicyControllerTest {
         }
 
         @Test
-        @DisplayName("does not resolve a policy's stored assets for a caller who cannot edit it")
-        void skipsStoredAssetsForNonEditor() throws Exception {
-            // Gating asset resolution to editors keeps a member from rebinding a policy's stored
-            // asset into an ad-hoc step to read it back.
+        @DisplayName("does not resolve a required policy's stored assets for a non-manager")
+        void skipsStoredAssetsForRequiredPolicyNonManager() throws Exception {
+            // The exfiltration guard: a member must not rebind a required policy's stored asset
+            // into
+            // an ad-hoc step to read it back. Ordinary pipelines they may edit are open (below).
             applicationProperties.getSecurity().setEnableLogin(true);
             when(policyManagementAuthority.canEditPolicies()).thenReturn(false);
+            Policy p = requiredPolicy("pol-1", 1L);
+            when(policyStore.get("pol-1")).thenReturn(Optional.of(p));
+            when(policyAccessGuard.canAccess(p)).thenReturn(true);
             when(policyRunner.runAdHoc(any(), any(), eq(PolicyProgressListener.NOOP)))
                     .thenReturn(handle("run-1"));
 
             controller.run(definitionWithStep(), "pol-1", new PolicyRunFiles());
 
             verify(assetResolver, never()).resolve(any(), any());
-            verify(policyStore, never()).get(any());
+        }
+
+        @Test
+        @DisplayName("resolves a non-required pipeline's stored assets for an ordinary member")
+        void resolvesStoredAssetsForNonManagerPipeline() throws Exception {
+            // A member can edit an ordinary pipeline, so its stored bindings resolve on a test run;
+            // the manager gate is not consulted for a non-required pipeline.
+            applicationProperties.getSecurity().setEnableLogin(true);
+            Policy p = policy("pol-1", 1L);
+            when(policyStore.get("pol-1")).thenReturn(Optional.of(p));
+            when(policyAccessGuard.canAccess(p)).thenReturn(true);
+            when(assetResolver.resolve(eq(p), any())).thenAnswer(inv -> inv.getArgument(1));
+            when(policyRunner.runAdHoc(any(), any(), eq(PolicyProgressListener.NOOP)))
+                    .thenReturn(handle("run-1"));
+
+            controller.run(definitionWithStep(), "pol-1", new PolicyRunFiles());
+
+            verify(assetResolver).resolve(eq(p), any());
+            verify(policyManagementAuthority, never()).canEditPolicies();
         }
     }
 
