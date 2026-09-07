@@ -46,24 +46,6 @@ public interface TeamMembershipRepository extends JpaRepository<TeamMembership, 
     List<TeamMembership> findByUserId(@Param("userId") Long userId);
 
     /**
-     * Resolve the single membership a user belongs to. In the PAYG design every user is owned by
-     * exactly one team — personal-team-for-new-signups, then optionally migrated when they accept
-     * an invite (the old personal team is deleted on accept). For diagnostic safety this picks the
-     * earliest-created row if multiple exist, but in steady state there is exactly one.
-     *
-     * <p>Returns both the team and its role so the PAYG wallet endpoint can answer "what does this
-     * user see?" in a single query rather than a list-then-filter dance.
-     *
-     * @param userId the user ID
-     * @return the user's primary membership, if any
-     */
-    @Query(
-            "SELECT tm FROM TeamMembership tm JOIN FETCH tm.team"
-                    + " WHERE tm.user.id = :userId"
-                    + " ORDER BY tm.createdAt ASC")
-    List<TeamMembership> findPrimaryMembership(@Param("userId") Long userId);
-
-    /**
      * (userId, teamId) pairs for the given users; backs the teammate check on avatar visibility.
      */
     @Query("SELECT tm.user.id, tm.team.id FROM TeamMembership tm WHERE tm.user.id IN :userIds")
