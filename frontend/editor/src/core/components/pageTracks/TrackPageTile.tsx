@@ -5,6 +5,8 @@ import RotateLeftIcon from "@mui/icons-material/RotateLeft";
 import RotateRightIcon from "@mui/icons-material/RotateRight";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlineRounded";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
+import ContentCutIcon from "@mui/icons-material/ContentCut";
+import { Tooltip } from "@app/components/shared/Tooltip";
 import { Checkbox } from "@app/ui/Checkbox";
 import HoverActionMenu, {
   HoverAction,
@@ -45,6 +47,8 @@ export interface TrackPageTileProps {
   ) => void;
   /** Opens the track's page-view modal starting at this page. */
   onViewPage: (pageId: string) => void;
+  /** Splits the track so this page starts a new one (only when position > 1). */
+  onSplit: (startPageId: string) => void;
   onRotate: (pageIds: string[], delta: number) => void;
   onDelete: (pageIds: string[]) => void;
 }
@@ -62,6 +66,7 @@ function TrackPageTileImpl({
   thumbnails,
   onSelect,
   onViewPage,
+  onSplit,
   onRotate,
   onDelete,
 }: TrackPageTileProps) {
@@ -219,6 +224,25 @@ function TrackPageTileImpl({
       <div className={styles.pageNumber} data-page-index={position}>
         {position}
       </div>
+
+      {position > 1 && (
+        // Sits on the leading edge, over the gap before this page: clicking it
+        // splits the track so this page starts a new one.
+        <Tooltip content={t("pageTracks.splitHere", "Split here")}>
+          <button
+            type="button"
+            className={styles.splitHandle}
+            aria-label={t("pageTracks.splitHere", "Split here")}
+            onPointerDown={stop}
+            onClick={(event) => {
+              event.stopPropagation();
+              onSplit(page.id);
+            }}
+          >
+            <ContentCutIcon sx={{ fontSize: "0.9rem" }} />
+          </button>
+        </Tooltip>
+      )}
     </div>
   );
 }

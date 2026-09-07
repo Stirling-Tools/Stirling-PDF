@@ -46,6 +46,8 @@ export interface DropHint {
 export interface TrackRowProps {
   track: Track;
   name: string;
+  /** True for a split track not yet backed by a saved file. */
+  isNew: boolean;
   versionNumber: number | undefined;
   selectedIds: Set<string>;
   draggingIds: Set<string>;
@@ -76,6 +78,8 @@ export interface TrackRowProps {
   onOpenInViewer: (fileId: FileId) => void;
   /** Called when the click landed on empty lane surface, not on a page. */
   onClearSelection: () => void;
+  /** Split this track so `startPageId` begins a new track. */
+  onSplit: (fileId: FileId, startPageId: string) => void;
   onRotate: (pageIds: string[], delta: number) => void;
   onDelete: (pageIds: string[]) => void;
 }
@@ -91,6 +95,7 @@ function TrackRowImpl({
   zoom,
   scrollerRef,
   layoutVersion,
+  isNew,
   trackDropBefore,
   trackDropAfterLast,
   trackDragging,
@@ -100,6 +105,7 @@ function TrackRowImpl({
   onSelectTrack,
   onOpenInViewer,
   onClearSelection,
+  onSplit,
   onRotate,
   onDelete,
 }: TrackRowProps) {
@@ -281,6 +287,11 @@ function TrackRowImpl({
     [onSelectTrack, track.fileId],
   );
 
+  const handleSplitPage = useCallback(
+    (startPageId: string) => onSplit(track.fileId, startPageId),
+    [onSplit, track.fileId],
+  );
+
   const hintActive = dropHint?.fileId === track.fileId;
   const collapseLabel = collapsed
     ? t("pageTracks.track.expand", "Expand")
@@ -354,8 +365,9 @@ function TrackRowImpl({
             variant="quiet"
             size="sm"
             aria-label={t("openInViewer", "Open in Viewer")}
-            // An emptied track has nothing to show: saving closes the file.
-            disabled={track.pages.length === 0}
+            // An emptied track has nothing to show; a split has no file until
+            // it is saved.
+            disabled={track.pages.length === 0 || isNew}
             onClick={() => onOpenInViewer(track.fileId)}
           >
             <VisibilityOutlinedIcon sx={{ fontSize: "1rem" }} />
@@ -478,6 +490,7 @@ function TrackRowImpl({
                       thumbnails={thumbnails}
                       onSelect={onSelectPage}
                       onViewPage={handleViewPage}
+                      onSplit={handleSplitPage}
                       onRotate={onRotate}
                       onDelete={onDelete}
                     />
@@ -511,6 +524,7 @@ function TrackRowImpl({
                       thumbnails={thumbnails}
                       onSelect={onSelectPage}
                       onViewPage={handleViewPage}
+                      onSplit={handleSplitPage}
                       onRotate={onRotate}
                       onDelete={onDelete}
                     />

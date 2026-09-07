@@ -239,6 +239,43 @@
   opacity: 1;
 }
 
+/* Split affordance on the leading edge, straddling the gap before the page.
+   Revealed on hover; scales with the tiles (--pt-zoom). */
+.splitHandle {
+  position: absolute;
+  left: 0;
+  top: calc(var(--pt-tile-h) / 2);
+  z-index: 4;
+  transform: translate(-50%, -50%) scale(var(--pt-zoom, 1));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: 1px solid var(--c-border);
+  border-radius: 999px;
+  background: var(--c-surface);
+  color: var(--c-text-muted);
+  box-shadow: var(--shadow-md);
+  cursor: pointer;
+  opacity: 0;
+  transition:
+    opacity 0.12s ease,
+    color 0.12s ease,
+    border-color 0.12s ease;
+}
+
+.tile:hover .splitHandle,
+.tile:focus-within .splitHandle {
+  opacity: 1;
+}
+
+.splitHandle:hover {
+  color: var(--c-primary);
+  border-color: var(--c-primary);
+}
+
 /*
  * Compacted from the shared pill's defaults: the same component carries up to
  * six actions on a 20rem file card, and three at that scale would overflow a

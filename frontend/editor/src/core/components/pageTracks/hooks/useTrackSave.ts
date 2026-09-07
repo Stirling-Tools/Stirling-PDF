@@ -28,6 +28,12 @@ export interface TrackSaveOptions {
    * viewer's active file, for instance) has to be re-pointed.
    */
   onVersioned?: (previousId: FileId, nextId: FileId) => void;
+  /**
+   * Called with the split tracks that were just written to their own new files.
+   * Those synthetic tracks must be dropped: the newly added files re-enter the
+   * workspace as ordinary file-backed tracks.
+   */
+  onMaterialized?: (splitTrackIds: FileId[]) => void;
 }
 
 export interface TrackSaveHook {
@@ -38,7 +44,10 @@ export interface TrackSaveHook {
 }
 
 interface BuiltTrack {
-  fileId: FileId;
+  /** The workspace track id (synthetic for a split). */
+  trackId: FileId;
+  /** The file to version, or null for a split that becomes a brand-new file. */
+  inputFileId: FileId | null;
   parentStub: StirlingFileStub;
   file: File;
 }
@@ -77,17 +86,21 @@ export function useTrackSave(
   const { actions } = useFileActions();
   const onVersionedRef = useRef(options.onVersioned);
   onVersionedRef.current = options.onVersioned;
+  const onMaterializedRef = useRef(options.onMaterialized);
+  onMaterializedRef.current = options.onMaterialized;
   const [saving, setSaving] = useState(false);
   const [progress, setProgress] = useState<TrackSaveProgress | null>(null);
 
   const save = useCallback(async () => {
     if (saving || changedFileIds.length === 0) return false;
 
-    const emptied = changedFileIds.filter(
-      (fileId) => (workspace.tracks[fileId]?.pages.length ?? 0) === 0,
-    );
+    // A file-backed track emptied of every page has nothing to version.
+    const emptied = changedFileIds.filter((id) => {
+      const track = workspace.tracks[id];
+      return track != null && !track.isNew && track.pages.length === 0;
+    });
     const rebuilt = changedFileIds.filter(
-      (fileId) => !emptied.includes(fileId),
+      (id) => (workspace.tracks[id]?.pages.length ?? 0) > 0,
     );
 
     setSaving(true);
@@ -98,11 +111,19 @@ export function useTrackSave(
       // track's file, and committing as we go would swap those bytes out from
       // under a later build.
       const built: BuiltTrack[] = [];
-      for (const fileId of rebuilt) {
-        const pages = workspace.tracks[fileId]?.pages ?? [];
-        const parentStub = selectors.getStirlingFileStub(fileId);
-        const ownFile = selectors.getFile(fileId);
+      for (const id of rebuilt) {
+        const track = workspace.tracks[id];
+        if (!track) continue;
+        const pages = track.pages;
+
+        // A split has no file of its own: it is written to a new file, parented
+        // to (and named after) the document its pages came from.
+        const anchorFileId = track.isNew ? pages[0]?.sourceFileId : id;
+        if (!anchorFileId) continue;
+        const parentStub = selectors.getStirlingFileStub(anchorFileId);
+        const ownFile = selectors.getFile(anchorFileId);
         if (!parentStub || !ownFile) continue;
+        const name = track.isNew ? track.name : parentStub.name;
 
         const sourceFiles = new Map<string, File>();
         for (const page of pages) {
@@ -112,25 +133,26 @@ export function useTrackSave(
         }
 
         const { blob } = await pdfExportService.exportPDFMultiFile(
-          toExportDocument(parentStub.name, ownFile, pages),
+          toExportDocument(name, ownFile, pages),
           sourceFiles,
           [],
-          { filename: parentStub.name },
+          { filename: name },
         );
 
         built.push({
-          fileId,
+          trackId: id,
+          inputFileId: track.isNew ? null : id,
           parentStub,
-          file: new File([blob], parentStub.name, {
-            type: "application/pdf",
-          }),
+          file: new File([blob], name, { type: "application/pdf" }),
         });
         setProgress({ done: built.length, total: rebuilt.length });
       }
 
-      // Commit one file at a time so each new version lands in its own track's
-      // slot instead of the whole batch clumping at the top of the file list.
+      // Version each file-backed track in place (a new version of its own
+      // file). One at a time so each lands in its own slot rather than clumping
+      // at the top of the file list.
       for (const entry of built) {
+        if (entry.inputFileId == null) continue;
         const processedFile = await generateProcessedFileMetadata(entry.file);
         const outputStub = createChildStub(
           entry.parentStub,
@@ -140,12 +162,25 @@ export function useTrackSave(
           processedFile,
         );
         await actions.consumeFiles(
-          [entry.fileId],
+          [entry.inputFileId],
           [createStirlingFile(entry.file, outputStub.id)],
           [outputStub],
           { silent: true },
         );
-        onVersionedRef.current?.(entry.fileId, outputStub.id);
+        onVersionedRef.current?.(entry.inputFileId, outputStub.id);
+      }
+
+      // A split becomes a brand-new active file, exactly like the Multi-Tool's
+      // apply: add the fresh files so they enter the workbench (and the
+      // workspace, via sync) as their own tracks.
+      const splitFiles = built
+        .filter((entry) => entry.inputFileId == null)
+        .map((entry) => entry.file);
+      if (splitFiles.length > 0) {
+        await actions.addFiles(splitFiles, {
+          selectFiles: false,
+          skipUploadTracking: true,
+        });
       }
 
       if (emptied.length > 0) {
@@ -153,6 +188,13 @@ export function useTrackSave(
         // file from the workbench but keep it in storage at its last version.
         await actions.removeFiles(emptied, false);
       }
+
+      // The split tracks now live in their own files; drop the synthetic tracks
+      // so the added files take their place as ordinary file-backed tracks.
+      const materialized = built
+        .filter((entry) => entry.inputFileId == null)
+        .map((entry) => entry.trackId);
+      if (materialized.length > 0) onMaterializedRef.current?.(materialized);
 
       return true;
     } catch (error) {
