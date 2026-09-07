@@ -501,11 +501,18 @@ export default function FileManagerView() {
       return;
     }
     let cancelled = false;
-    setDiskLoading(true);
-    listDirectory(currentLocalDirectory)
-      .then((listed) => {
+    // The directory is the disk's, and anything can write to it - Explorer, a
+    // sync client, a pipeline replacing files in place. Poll it while open so
+    // outside changes appear on their own; only a changed listing re-renders.
+    const load = async (background: boolean) => {
+      if (!background) setDiskLoading(true);
+      try {
+        const listed = await listDirectory(currentLocalDirectory);
         if (cancelled) return;
-        setDiskEntries(listed?.files ?? []);
+        const files = listed?.files ?? [];
+        setDiskEntries((prev) =>
+          listingSignature(prev) === listingSignature(files) ? prev : files,
+        );
         if (currentFolderId !== null) {
           registerDiskSubfolders(
             currentFolderId,
@@ -521,10 +528,11 @@ export default function FileManagerView() {
             })),
           );
         }
-      })
-      .catch((err) => {
+      } catch (err) {
         console.warn("[FileManagerView] disk listing failed", err);
-        if (!cancelled) {
+        // Background ticks stay quiet: a transient lock (a sync client holding
+        // the directory) would otherwise pop an error banner every few seconds.
+        if (!cancelled && !background) {
           setDiskEntries([]);
           setFolderError(
             err instanceof Error
@@ -538,12 +546,15 @@ export default function FileManagerView() {
                 ),
           );
         }
-      })
-      .finally(() => {
-        if (!cancelled) setDiskLoading(false);
-      });
+      } finally {
+        if (!cancelled && !background) setDiskLoading(false);
+      }
+    };
+    void load(false);
+    const timer = setInterval(() => void load(true), 4000);
     return () => {
       cancelled = true;
+      clearInterval(timer);
     };
     // The stable setter, not the context: its identity changes on every folder
     // mutation, including the setError above, so a failing listing would re-trigger.
@@ -2719,6 +2730,18 @@ export default function FileManagerView() {
       />
     </div>
   );
+}
+
+/**
+ * A cheap identity for a directory listing, so a background re-read only
+ * re-renders the grid when something actually changed on disk.
+ */
+function listingSignature(
+  files: { path: string; sizeBytes: number; lastModified: number }[],
+): string {
+  return files
+    .map((file) => `${file.path}|${file.sizeBytes}|${file.lastModified}`)
+    .join("\n");
 }
 
 function Breadcrumbs() {
