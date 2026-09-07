@@ -82,7 +82,7 @@ export function SweepRunWall({ cards }: { cards: SweepWallCard[] }) {
               <span className="sweep-wall__spin" aria-hidden />
             )}
             {card.state === "pending" &&
-              t("processingFolders.wall.waiting", "Waiting…")}
+              t("processingFolders.wall.waiting", "Queued…")}
             {card.state === "failed" &&
               t("processingFolders.wall.failed", "Failed")}
             {card.state === "done" &&

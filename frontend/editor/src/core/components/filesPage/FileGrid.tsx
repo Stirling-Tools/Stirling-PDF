@@ -895,7 +895,7 @@ function ProcessingFolderStats({
       ["done", t("filesPage.diskState.done", "Ready")],
       ["processing", t("filesPage.diskState.processing", "Processing")],
       ["failed", t("filesPage.diskState.failed", "Failed")],
-      ["waiting", t("filesPage.diskState.waiting", "Waiting")],
+      ["waiting", t("filesPage.diskState.waiting", "Queued")],
     ] as const
   ).filter(([state]) => (counts[state] ?? 0) > 0);
   if (parts.length === 0) return null;
@@ -1016,7 +1016,7 @@ export function ProcessingMenuItems({
           leftSection={<ReplayIcon fontSize="small" />}
           onClick={onRun}
         >
-          {t("filesPage.processing.sweep", "Process files now")}
+          {t("filesPage.processing.sweep", "Retry failed files")}
         </Menu.Item>
       )}
       <Menu.Item leftSection={<PauseIcon fontSize="small" />} onClick={onStop}>
@@ -2156,7 +2156,7 @@ function FileStateBadge({
   }
   return (
     <span className="files-page-state-badge">
-      {t("filesPage.diskState.waiting", "Waiting")}
+      {t("filesPage.diskState.waiting", "Queued")}
     </span>
   );
 }
@@ -2203,7 +2203,7 @@ function DiskFileCard({
         locked
           ? t(
               "filesPage.diskState.waitingHint",
-              "Not processed yet - available once its result exists",
+              "Queued - available once its result exists",
             )
           : entry.path
       }

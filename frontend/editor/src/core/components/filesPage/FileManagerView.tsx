@@ -1751,32 +1751,33 @@ export default function FileManagerView() {
                   <>
                     {currentProcessing.enabled ? (
                       <>
-                        {folderKind(currentFolder) !== "virtual" && (
-                          <Tooltip
-                            label={t(
-                              "filesPage.processing.sweep",
-                              "Process files now",
-                            )}
-                            withinPortal
-                          >
-                            <ActionIcon
-                              size="sm"
-                              variant="secondary"
-                              onClick={() =>
-                                runFolderAction(
-                                  processingApi.sweep,
-                                  "process folder now",
-                                )
-                              }
-                              aria-label={t(
+                        {folderKind(currentFolder) !== "virtual" &&
+                          stateCounts.failed > 0 && (
+                            <Tooltip
+                              label={t(
                                 "filesPage.processing.sweep",
-                                "Process files now",
+                                "Retry failed files",
                               )}
+                              withinPortal
                             >
-                              <ReplayIcon fontSize="small" />
-                            </ActionIcon>
-                          </Tooltip>
-                        )}
+                              <ActionIcon
+                                size="sm"
+                                variant="secondary"
+                                onClick={() =>
+                                  runFolderAction(
+                                    processingApi.sweep,
+                                    "process folder now",
+                                  )
+                                }
+                                aria-label={t(
+                                  "filesPage.processing.sweep",
+                                  "Retry failed files",
+                                )}
+                              >
+                                <ReplayIcon fontSize="small" />
+                              </ActionIcon>
+                            </Tooltip>
+                          )}
                         <Tooltip
                           label={t(
                             "filesPage.processing.stop",

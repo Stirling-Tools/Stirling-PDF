@@ -41,11 +41,11 @@ export function RestoreOriginalsDialog({
             ? t("filesPage.processing.revertConfirmFile", {
                 name: fileName,
                 defaultValue:
-                  'Restore "{{name}}" to its original? Processing for this folder will be paused, and the file shows as waiting until you resume.',
+                  'Restore "{{name}}" to its original? Processing for this folder will be paused, and the file shows as queued until you resume.',
               })
             : t(
                 "filesPage.processing.revertConfirmAll",
-                "Restore every original in this folder? Processing will be paused, and restored files show as waiting until you resume.",
+                "Restore every original in this folder? Processing will be paused, and restored files show as queued until you resume.",
               )}
         </Text>
         <Group justify="flex-end" gap="sm">

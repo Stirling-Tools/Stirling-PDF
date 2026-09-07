@@ -4448,8 +4448,8 @@ doneHint = "Processed — opens the result"
 processing = "Processing"
 retry = "Retry"
 retryHint = "Run this file again"
-waiting = "Waiting"
-waitingHint = "Not processed yet — available once its result exists"
+waiting = "Queued"
+waitingHint = "Queued — available once its result exists"
 
 [filesPage.error]
 actionFailed = "Could not {{action}}."
@@ -4551,14 +4551,14 @@ nothingToRestore = "No originals to restore — these files are already their or
 restoreAll = "Restore all originals"
 revertCancel = "Cancel"
 revertConfirm = "Restore and pause"
-revertConfirmAll = "Restore every original in this folder? Processing will be paused, and restored files show as waiting until you resume."
-revertConfirmFile = 'Restore "{{name}}" to its original? Processing for this folder will be paused, and the file shows as waiting until you resume.'
+revertConfirmAll = "Restore every original in this folder? Processing will be paused, and restored files show as queued until you resume."
+revertConfirmFile = 'Restore "{{name}}" to its original? Processing for this folder will be paused, and the file shows as queued until you resume.'
 revertConfirmTitle = "Restore originals?"
 section = "Processing"
 paused = "Processing paused"
 start = "Process files in this folder…"
 stop = "Pause processing"
-sweep = "Process files now"
+sweep = "Retry failed files"
 
 [filesPage.processingSetup]
 back = "Back"
@@ -9714,7 +9714,7 @@ working = "Processing …"
 done = "Done"
 failed = "Failed"
 title = "Processing this folder"
-waiting = "Waiting …"
+waiting = "Queued …"
 
 [printFile]
 title = "Print File"
