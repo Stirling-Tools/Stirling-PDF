@@ -1,8 +1,12 @@
 package stirling.software.proprietary.failure;
 
+import static stirling.software.proprietary.failure.FailureActionId.DECRYPT;
 import static stirling.software.proprietary.failure.FailureActionId.DISMISS;
+import static stirling.software.proprietary.failure.FailureActionId.OPEN_IN_TOOL;
 import static stirling.software.proprietary.failure.FailureActionId.VIEW_FILE;
 import static stirling.software.proprietary.failure.FailureActionId.VIEW_IN_PROCESSOR;
+import static stirling.software.proprietary.failure.FailureActionSlot.OVERFLOW;
+import static stirling.software.proprietary.failure.FailureActionSlot.SECONDARY;
 import static stirling.software.proprietary.failure.FailureAudience.ANYONE_WHO_SEES;
 import static stirling.software.proprietary.failure.FailureAudience.OWNER;
 import static stirling.software.proprietary.failure.FailureAudience.TEAM_REVIEWER;
@@ -21,11 +25,8 @@ import lombok.AccessLevel;
 import lombok.Getter;
 
 /**
- * The registry of failure kinds, described as data: a stable id, i18n keys and an English fallback
- * like {@code ExceptionUtils.ErrorCode}, plus the facets a review surface needs.
- *
- * <p>A new kind ships as a registry entry plus copy. Each offer also says who it is for, since one
- * incident is read both by whoever hit it and by whoever reviews after them.
+ * The registry of failure kinds as data: id, i18n keys, English fallback, plus the facets a review
+ * surface needs. A new kind ships as an entry plus copy; each offer says who it is for and where.
  */
 @Getter
 public enum FailureKind {
@@ -36,9 +37,12 @@ public enum FailureKind {
             FailureScope.FILE,
             errorCodes("E004"),
             fallback("This document is password-protected, so the pipeline could not read it."),
-            offer(VIEW_FILE, OWNER),
-            offer(VIEW_IN_PROCESSOR, TEAM_REVIEWER),
-            offer(DISMISS, ANYONE_WHO_SEES)),
+            // The password is the fix; the owner's own document is the runner-up.
+            resolution(DECRYPT, OWNER),
+            global(VIEW_FILE, OWNER, SECONDARY),
+            global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, OVERFLOW),
+            global(OPEN_IN_TOOL, OWNER, OVERFLOW),
+            global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
 
     UNKNOWN(
             FailureStage.INTERNAL,
@@ -47,11 +51,11 @@ public enum FailureKind {
             FailureScope.RUN,
             noErrorCodes(),
             fallback("This run failed for a reason Stirling does not yet recognise."),
-            // Same order as every other kind: declaration order is display order, so the document
-            // leads wherever it is offered rather than moving between failures.
-            offer(VIEW_FILE, OWNER),
-            offer(VIEW_IN_PROCESSOR, TEAM_REVIEWER),
-            offer(DISMISS, ANYONE_WHO_SEES));
+            // No known fix to declare, so a plain retry leads: these are often one-offs.
+            global(OPEN_IN_TOOL, OWNER, SECONDARY),
+            global(VIEW_FILE, OWNER, SECONDARY),
+            global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, OVERFLOW),
+            global(DISMISS, ANYONE_WHO_SEES, OVERFLOW));
 
     private static final String KEY_PREFIX = "portal.failures.kind.";
     private static final String ACTION_KEY_PREFIX = "portal.failures.action.";
@@ -98,27 +102,37 @@ public enum FailureKind {
         this.offers = List.of(offers);
     }
 
-    /**
-     * One ordered list rather than ids plus parallel maps of audiences and labels, which could
-     * disagree with each other.
-     *
-     * @param labelKeySuffix key under {@code portal.failures.action.}, or null for the generic
-     *     label
-     */
-    private record Offer(FailureActionId id, FailureAudience audience, String labelKeySuffix) {}
+    /** One ordered list, not parallel maps of audiences, slots and labels that could disagree. */
+    private record Offer(
+            FailureActionId id,
+            FailureAudience audience,
+            FailureActionSlot slot,
+            String labelKeySuffix) {}
 
-    /** Declaration order is display order. */
-    private static Offer offer(FailureActionId id, FailureAudience audience) {
-        return new Offer(id, audience, null);
+    /** The action that fixes this kind. One per kind: needing two would make it two kinds. */
+    private static Offer resolution(FailureActionId id, FailureAudience audience) {
+        return new Offer(id, audience, FailureActionSlot.RESOLUTION, null);
     }
 
-    /**
-     * As {@link #offer(FailureActionId, FailureAudience)}, but labelled by this kind's own wording
-     * where the shared one reads badly.
-     */
-    private static Offer offer(
+    /** As {@link #resolution(FailureActionId, FailureAudience)}, with this kind's own wording. */
+    private static Offer resolution(
             FailureActionId id, FailureAudience audience, String labelKeySuffix) {
-        return new Offer(id, audience, labelKeySuffix);
+        return new Offer(id, audience, FailureActionSlot.RESOLUTION, labelKeySuffix);
+    }
+
+    /** Not this kind's fix: an offer any kind can make, with the shared wording. */
+    private static Offer global(
+            FailureActionId id, FailureAudience audience, FailureActionSlot slot) {
+        return new Offer(id, audience, slot, null);
+    }
+
+    /** As above, with this kind's own wording where the shared one reads badly. */
+    private static Offer global(
+            FailureActionId id,
+            FailureAudience audience,
+            FailureActionSlot slot,
+            String labelKeySuffix) {
+        return new Offer(id, audience, slot, labelKeySuffix);
     }
 
     /**
@@ -157,21 +171,25 @@ public enum FailureKind {
         return offers.stream().map(Offer::id).toList();
     }
 
-    /**
-     * What this kind offers, in declaration order, each with its label resolved. What a review
-     * surface reads, so it never has to ask two separate questions about one offer.
-     */
+    /** What this kind offers, in declaration order, each with label and placement resolved. */
     public List<OfferedAction> getOfferedActions() {
         return offers.stream()
                 .map(
                         offer ->
                                 new OfferedAction(
-                                        offer.id(), labelKeyFor(offer.id()), offer.audience()))
+                                        offer.id(),
+                                        labelKeyFor(offer.id()),
+                                        offer.audience(),
+                                        offer.slot()))
                 .toList();
     }
 
-    /** One action as a kind declares it: what to call it and who it is for. */
-    public record OfferedAction(FailureActionId id, String labelKey, FailureAudience audience) {}
+    /** One action as a kind declares it: what to call it, who it is for, where it wants to sit. */
+    public record OfferedAction(
+            FailureActionId id,
+            String labelKey,
+            FailureAudience audience,
+            FailureActionSlot slot) {}
 
     /** Whether this kind offers {@code action}. The dispatch guard: see {@code FailureActionId}. */
     public boolean declares(FailureActionId action) {

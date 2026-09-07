@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react";
+import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import {
@@ -157,6 +157,7 @@ export default function AdminConnectionsSection() {
 
   const adminSettings = useAdminSettings<ConnectionsSettingsData>({
     sectionName: "connections",
+    enabled: loginEnabled,
     fetchTransformer: async (): Promise<
       ConnectionsSettingsData & { _pending?: Record<string, unknown> }
     > => {
@@ -397,14 +398,7 @@ export default function AdminConnectionsSection() {
     },
   });
 
-  const { settings, setSettings, loading, fetchSettings, isFieldPending } =
-    adminSettings;
-
-  useEffect(() => {
-    if (loginEnabled) {
-      fetchSettings();
-    }
-  }, [loginEnabled, fetchSettings]);
+  const { settings, setSettings, loading, isFieldPending } = adminSettings;
 
   const { isDirty, resetToSnapshot, markSaved } = useSettingsDirty(
     settings,

@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react";
+import { useCallback } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import {
   TextInput,
@@ -43,18 +43,12 @@ export default function AdminPremiumSection() {
     setSettings,
     loading,
     saving,
-    fetchSettings,
     saveSettings,
     isFieldPending,
   } = useAdminSettings<PremiumSettingsData>({
     sectionName: "premium",
+    enabled: loginEnabled,
   });
-
-  useEffect(() => {
-    if (loginEnabled) {
-      fetchSettings();
-    }
-  }, [loginEnabled]);
 
   const { isDirty, resetToSnapshot, markSaved } = useSettingsDirty(
     settings,

@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react";
+import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Anchor,
@@ -57,11 +57,11 @@ export default function AdminStorageSharingSection() {
     setSettings,
     loading,
     saving,
-    fetchSettings,
     saveSettings,
     isFieldPending,
   } = useAdminSettings<StorageSharingSettingsData>({
     sectionName: "storage",
+    enabled: loginEnabled,
     fetchTransformer: async () => {
       const [storageResponse, systemResponse, mailResponse] = await Promise.all(
         [
@@ -95,12 +95,6 @@ export default function AdminStorageSharingSection() {
       },
     }),
   });
-
-  useEffect(() => {
-    if (loginEnabled) {
-      fetchSettings();
-    }
-  }, [loginEnabled]);
 
   const storageEnabled = settings.enabled ?? false;
   const sharingEnabled = storageEnabled && (settings.sharing?.enabled ?? false);

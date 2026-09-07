@@ -85,11 +85,11 @@ export default function AdminDatabaseSection() {
     setSettings,
     loading,
     saving,
-    fetchSettings,
     saveSettings,
     isFieldPending,
   } = useAdminSettings<DatabaseSettingsData>({
     sectionName: "database",
+    enabled: loginEnabled,
     fetchTransformer: async (): Promise<
       DatabaseSettingsData & { _pending?: Record<string, unknown> }
     > => {
@@ -139,12 +139,6 @@ export default function AdminDatabaseSection() {
       };
     },
   });
-
-  useEffect(() => {
-    if (loginEnabled) {
-      fetchSettings();
-    }
-  }, [loginEnabled, fetchSettings]);
 
   const datasourceType = (settings?.type || "").toLowerCase();
   const isCustomDatabase = settings?.enableCustomDatabase === true;
