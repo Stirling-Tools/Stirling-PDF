@@ -242,7 +242,11 @@ public class ProcessingFolderController {
                                 onDisk
                                         ? diskSourceOptions(request.directory())
                                         : Map.of("folderId", folder.getId().toString()),
-                                request.enabled() == null || request.enabled(),
+                                // Always enabled: the source is the pair's address, not its
+                                // on/off switch — that lives on the policy. Sweeps skip disabled
+                                // sources entirely, and a paused folder must still sweep on
+                                // demand: the create backlog, resume, retries, revert.
+                                true,
                                 policyAccessGuard.ownerForNewPolicy(),
                                 policyAccessGuard.teamForNewPolicy()));
         Policy policy =

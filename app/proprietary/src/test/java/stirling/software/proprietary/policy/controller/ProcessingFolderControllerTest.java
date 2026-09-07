@@ -494,6 +494,33 @@ class ProcessingFolderControllerTest {
                 view.id(), view.folderId(), null, enabled, view.steps(), view.output());
     }
 
+    @Test
+    void aPausedCreateStillSweepsItsBacklog() {
+        var view =
+                controller
+                        .save(
+                                new ProcessingFolderController.SaveProcessingFolderRequest(
+                                        null,
+                                        null,
+                                        "/tmp/Downloads",
+                                        false,
+                                        List.of(
+                                                new PipelineStep(
+                                                        "/api/v1/misc/flatten",
+                                                        Map.of("flattenOnlyForms", false),
+                                                        Map.of())),
+                                        Map.of()))
+                        .getBody();
+
+        Policy stored = policyStore.get(view.id()).orElseThrow();
+        assertThat(stored.enabled()).isFalse();
+        // The pause lives on the policy alone: a disabled source is skipped by every sweep,
+        // which would silently no-op the born-paused Downloads trick's own backlog sweep.
+        var source = sourceStore.get(stored.inputs().get(0).sourceId()).orElseThrow();
+        assertThat(source.enabled()).isTrue();
+        verify(policyRunner).run(stored, SweepKind.USER);
+    }
+
     /** A disk-backed folder over the test's own temp directory. */
     private ProcessingFolderController.SaveProcessingFolderRequest diskRequest() {
         return new ProcessingFolderController.SaveProcessingFolderRequest(
