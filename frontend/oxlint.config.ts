@@ -79,7 +79,6 @@ const noExplicitAnyExcludes = [
   "editor/src/core/components/viewer/SignatureAPIBridge.tsx",
   "editor/src/core/components/viewer/HistoryAPIBridge.tsx",
   "editor/src/core/components/viewer/TextSelectionHandler.tsx",
-  "editor/src/core/components/viewer/RulerOverlay.tsx",
   "editor/src/core/components/viewer/viewerTypes.ts",
   "editor/src/core/components/viewer/EmbedPdfViewer.tsx",
   "editor/src/core/components/viewer/RedactionSelectionMenu.tsx",
