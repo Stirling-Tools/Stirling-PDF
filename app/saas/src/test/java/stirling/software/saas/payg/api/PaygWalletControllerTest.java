@@ -35,6 +35,7 @@ import stirling.software.proprietary.model.TeamMembership;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.TeamMembershipRepository;
+import stirling.software.saas.model.SaasTeamExtensions;
 import stirling.software.saas.payg.api.PaygWalletController.UpdateCapRequest;
 import stirling.software.saas.payg.api.WalletSnapshotResponse.MemberRow;
 import stirling.software.saas.payg.billing.TeamBillingContext;
@@ -52,6 +53,7 @@ import stirling.software.saas.payg.repository.PaygTeamExtensionsRepository;
 import stirling.software.saas.payg.repository.WalletLedgerRepository;
 import stirling.software.saas.payg.repository.WalletPolicyRepository;
 import stirling.software.saas.payg.wallet.WalletPolicy;
+import stirling.software.saas.repository.SaasTeamExtensionsRepository;
 import stirling.software.saas.security.EnhancedJwtAuthenticationToken;
 import stirling.software.saas.security.UserTeamResolver;
 
@@ -72,6 +74,7 @@ class PaygWalletControllerTest {
     @Mock private PaygShadowChargeRepository shadowRepo;
     @Mock private UserRepository userRepository;
     @Mock private PrepaidBundleService prepaidBundleService;
+    @Mock private SaasTeamExtensionsRepository teamExtensionsRepository;
 
     private PaygWalletController controller;
 
@@ -88,7 +91,8 @@ class PaygWalletControllerTest {
                         shadowRepo,
                         userRepository,
                         prepaidBundleService,
-                        new UserTeamResolver(memberRepo));
+                        new UserTeamResolver(memberRepo),
+                        teamExtensionsRepository);
     }
 
     /**
@@ -164,12 +168,39 @@ class PaygWalletControllerTest {
         WalletSnapshotResponse body = controller.getWallet(jwtAuth(user.getSupabaseId())).getBody();
 
         assertThat(body).isNotNull();
-        assertThat(body.credits().active()).isFalse();
+        assertThat(body.processor().active()).isFalse();
         assertThat(body.team().held()).isFalse();
         // The member count is real, so the capacity meter already has a numerator.
         assertThat(body.team().usersInUse()).isEqualTo(3);
         // Cloud has no user limit today, so there is no denominator to report.
         assertThat(body.team().licensedUsers()).isNull();
+    }
+
+    /** A team carrying a real cap holds Team, and reports it as the meter's denominator. */
+    @Test
+    void getWallet_teamPlan_reportsTheLicensedUsers() {
+        User user = userWithId(62L, UUID.randomUUID());
+        Team team = teamWithId(62L);
+        when(userRepository.findBySupabaseId(any())).thenReturn(Optional.of(user));
+        user.setTeam(team);
+        when(memberRepo.findByTeamIdAndUserId(team.getId(), 62L))
+                .thenReturn(Optional.of(membership(team, user, TeamRole.MEMBER)));
+        when(memberRepo.countByTeamId(62L)).thenReturn(40L);
+        SaasTeamExtensions ext = new SaasTeamExtensions();
+        ext.setMaxSeats(100);
+        when(teamExtensionsRepository.findByTeamId(62L)).thenReturn(Optional.of(ext));
+        when(billingService.forTeam(62L)).thenReturn(freeBilling(500L));
+        when(entitlementService.getSnapshot(62L)).thenReturn(snapshot(0L, 500L));
+        stubEmptyLedgerReads(62L);
+
+        WalletSnapshotResponse body = controller.getWallet(jwtAuth(user.getSupabaseId())).getBody();
+
+        assertThat(body).isNotNull();
+        assertThat(body.team().held()).isTrue();
+        assertThat(body.team().licensedUsers()).isEqualTo(100);
+        assertThat(body.team().usersInUse()).isEqualTo(40);
+        // Team and Processor stay independent: a Team plan says nothing about the meter.
+        assertThat(body.processor().active()).isFalse();
     }
 
     /**
@@ -193,7 +224,7 @@ class PaygWalletControllerTest {
         WalletSnapshotResponse body = controller.getWallet(jwtAuth(user.getSupabaseId())).getBody();
 
         assertThat(body).isNotNull();
-        assertThat(body.credits().active()).isTrue();
+        assertThat(body.processor().active()).isTrue();
         assertThat(body.team().held()).isFalse();
         assertThat(body.team().usersInUse()).isEqualTo(8);
     }

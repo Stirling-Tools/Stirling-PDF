@@ -13,7 +13,7 @@ const wallet: Wallet = {
   teamId: 1,
   status: "free",
   team: { held: false, licensedUsers: null, usersInUse: 1 },
-  credits: { active: false },
+  processor: { active: false },
   role: "leader",
   billingPeriodStart: "2026-06-01",
   billingPeriodEnd: "2026-06-30",
