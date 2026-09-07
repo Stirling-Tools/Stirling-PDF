@@ -41,7 +41,7 @@ false = "Falsch"
 fileNotSavedToDisk = "Not saved to disk"
 fileSavedToDisk = "File saved to disk"
 fileSelected = "Ausgewählt: {{filename}}"
-filesSelected = "Dateien ausgewählt"
+filesSelected = "{{count}} Dateien"
 font = "Schriftart"
 fontSizeTooltip = "Größe des Seitenzahl-Texts in Punkten. Größere Werte erzeugen größeren Text."
 fontTypeTooltip = "Schriftfamilie für die Seitenzahlen. Wählen Sie passend zum Dokumentstil."
@@ -3526,7 +3526,6 @@ label = "Y-Position"
 
 [crop.error]
 failed = "PDF zuschneiden fehlgeschlagen"
-invalidArea = "Zuschneidebereich überschreitet die PDF-Grenzen"
 
 [crop.preview]
 title = "Zuschneidebereich-Auswahl"
@@ -3969,6 +3968,7 @@ back = "Zurück"
 backToFolder = "Zurück zu {{folder}}"
 backToMyFiles = "Zurück zu Meine Dateien"
 breadcrumbs = "Ordnerpfad"
+bulkActions = "Aktionen"
 cancel = "Abbrechen"
 classification = "Klassifizierung"
 clearSelection = "Auswahl aufheben"
@@ -4142,6 +4142,11 @@ totalSize = "Gesamtgröße"
 type = "Typ"
 versionHistory = "Versionsverlauf"
 
+[filesPage.filters]
+activeCount = "{{count}} Filter aktiv"
+clearAll = "Filter löschen"
+label = "Filter"
+
 [filesPage.folderName]
 cancel = "Abbrechen"
 error = "Ordner konnte nicht gespeichert werden. Versuchen Sie es erneut."
@@ -4176,6 +4181,7 @@ label = "Filter files by name"
 placeholder = "Filter files…"
 
 [filesPage.sort]
+label = "Dateien sortieren"
 modifiedAsc = "Älteste zuerst"
 modifiedDesc = "Neueste zuerst"
 nameAsc = "Name A→Z"
@@ -4305,11 +4311,14 @@ issues = "GitHub"
 [formFill]
 allSaved = "Alles gespeichert"
 analyzingFields = "Analysiere Formularfelder..."
+applyFailed = "Die Änderungen konnten nicht angewendet werden"
 extractCsvError = "CSV konnte nicht extrahiert werden"
 extractXlsxError = "XLSX konnte nicht extrahiert werden"
 filled = "ausgefüllt"
 flattenAfterFilling = "Nach dem Ausfüllen ebnen"
+goToPage = "Zu dieser Seite wechseln"
 noFields = "Keine ausfüllbaren Formularfelder gefunden."
+page = "Seite"
 placeholderEnter = "Eingabe:"
 placeholderSelect = "Auswahl:"
 requiredAbbreviation = "erf"
@@ -4318,7 +4327,82 @@ rescanFields = "Felder erneut scannen"
 rescanFormFields = "Formularfelder erneut scannen"
 save = "Speichern"
 saveShortcut = "Strg+S zum Speichern"
+skippedEdits_one = "1 Änderung konnte nicht angewendet werden:"
+skippedEdits_other = "{{count}} Änderungen konnten nicht angewendet werden:"
+skippedEditsTruncated = "{{count}} weitere nicht aufgeführt."
 unsavedChanges = "Nicht gespeicherte Änderungen"
+
+[formFill.create]
+commit = "{{count}} Feld(er) zu PDF hinzufügen"
+empty = "Noch keine Felder gezeichnet."
+failed = "Felder konnten nicht hinzugefügt werden"
+goToField = "Zu diesem Feld wechseln"
+hint = "Wählen Sie einen Feldtyp aus und zeichnen Sie ihn dann auf die Seite."
+placing = "Zeichnen Sie ein {{type}}-Feld auf die Seite. Drücken Sie Esc, um zu stoppen."
+preview = "Gedrückt halten für Vorschau"
+previewHelp = "Gedrückt halten, um die Felder so zu sehen, wie sie nach dem Hinzufügen aussehen, ohne Bearbeitungsumrisse."
+removeField = "Feld entfernen"
+
+[formFill.editor]
+action = "Button-Aktion"
+actionHelp = "Was der Button beim Anklicken ausführt."
+actionNone = "Keine"
+actionPrint = "Drucken"
+actionReset = "Formular zurücksetzen"
+actionSubmit = "An URL übermitteln"
+actionUri = "URL öffnen"
+actionUrl = "URL"
+actionUrlHelp = "Die Adresse, die der Button öffnet oder an die er übermittelt."
+addOption = "Option hinzufügen"
+caption = "Button-Beschriftung"
+captionHelp = "Der Text, der auf dem Button angezeigt wird."
+defaultValue = "Standardwert"
+defaultValueHelp = "Was das Feld enthält, bevor es von jemandem ausgefüllt wird. Für ein leeres Feld leer lassen."
+fontSize = "Schriftgröße"
+fontSizeHelp = "Textgröße innerhalb des Felds. Leer lassen, damit der Reader die Größe passend anpasst."
+label = "Beschriftung"
+labelHelp = "Der Text, der der Person angezeigt wird, die das Formular ausfüllt. Leer lassen, um auf den Feldnamen zurückzugreifen."
+maxLength = "Max. Länge (Comb)"
+maxLengthHelp = "Begrenzt, wie viele Zeichen hineinpassen, dargestellt als gleichmäßig verteilte Kästchen."
+multiline = "Mehrzeilig"
+multilineHelp = "Erlaubt mehr als eine Textzeile und bricht am Feldrand um."
+multiSelect = "Mehrfachauswahl erlauben"
+multiSelectHelp = "Erlaubt, mehr als eine Option gleichzeitig auszuwählen."
+name = "Feldname"
+nameHelp = "Der interne Name des Felds. Wird beim Exportieren von Daten oder beim Ausfüllen des Formulars aus einem anderen System verwendet; halten Sie ihn daher eindeutig und frei von Leerzeichen."
+optionGap = "Optionsabstand"
+optionGapHelp = "Abstand zwischen Buttons in Punkten. Leer lassen, um sie gleichmäßig im Feld zu verteilen."
+optionPlaceholder = "Option {{n}}"
+options = "Optionen"
+optionsEmpty = "Fügen Sie mindestens eine Option hinzu."
+optionsHelp = "Die in der Liste angebotenen Auswahlmöglichkeiten. Jede wird genau wie eingegeben gespeichert; halten Sie sie daher kurz und eindeutig."
+optionSize = "Optionsgröße"
+optionSizeHelp = "Breite und Höhe jedes Buttons in Punkten. Leer lassen, um sie an das gezeichnete Feld anzupassen."
+readOnly = "Schreibgeschützt"
+readOnlyHelp = "Zeigt einen Wert an, verhindert aber, dass ihn jemand bearbeitet."
+removeOption = "Option entfernen"
+required = "Erforderlich"
+requiredHelp = "Das Formular kann erst übermittelt werden, wenn dieses Feld ausgefüllt ist."
+signatureNote = "Nur Platzhalter – Sie signieren hier nicht. Er markiert, wo eine Signatur hingehört, damit ein PDF-Signierer (Adobe Acrobat, ein Signaturdienst usw.) die Signatur an dieser Stelle platziert, wenn das Dokument signiert wird."
+tooltip = "Tooltip"
+tooltipHelp = "Der Hinweis, der angezeigt wird, wenn jemand in einem PDF-Reader mit der Maus über das Feld fährt."
+type = "Typ"
+typeHelp = "Welche Art von Feld dies ist. Eine Änderung erstellt das Feld neu, daher wird sein aktueller Wert nicht übernommen."
+
+[formFill.mode]
+create = "Erstellen"
+fill = "Ausfüllen"
+label = "Formulareditor-Modus"
+modify = "Ändern"
+
+[formFill.modify]
+commit = "{{count}} Änderung(en) speichern"
+delete = "Löschen"
+empty = "Dieses PDF hat noch keine Formularfelder."
+failed = "Änderungen konnten nicht gespeichert werden"
+groupSizeHint = "Optionsgröße verwenden"
+hint = "Wählen Sie ein Feld aus, um seine Eigenschaften zu bearbeiten, ziehen Sie es auf der Seite oder löschen Sie es."
+restore = "Wiederherstellen"
 
 [formFill.sidebar]
 close = "Seitenleiste schließen"
@@ -4584,6 +4668,10 @@ title = "Metadaten ändern"
 desc = "Dokumentbeschränkungen und -berechtigungen ändern"
 tags = "berechtigungen,einschränkungen,rechte,zugriffskontrolle,erlauben,verweigern,drucken,kopieren,bearbeiten,berechtigungen ändern,sicherheitseinstellungen,benutzerrechte"
 title = "Berechtigungen ändern"
+
+[home.classify]
+desc = "Ermitteln, um welche Art von Dokument es sich handelt, und es mit Tags versehen."
+title = "Klassifizieren"
 
 [home.compare]
 desc = "Vergleicht und zeigt die Unterschiede zwischen zwei PDF-Dokumenten an"
@@ -5097,6 +5185,30 @@ openProcessor = "Open PDF Processor"
 [navFooter.credits]
 count = "{{remaining}} of {{total}}"
 label = "Free credits"
+
+[notifications]
+empty = "Nichts zu berichten."
+handoffUnavailable = "Dieser Browser erlaubt nicht, dass der Prozessor das Dokument an den Editor übergibt. Öffnen Sie es stattdessen über den Editor."
+noDocumentLinked = "Dieser Fehler ist keinem bestimmten Dokument zugeordnet, daher gibt es hier nichts zu öffnen."
+notOnThisDevice = "Dieses Dokument befindet sich nicht auf diesem Gerät, daher kann es hier nicht geöffnet werden."
+occurrences = "{{count}} Mal"
+open = "Benachrichtigungen"
+title = "Benachrichtigungen"
+unread = "Ungelesen"
+
+[notifications.action]
+failed = "Das hat nicht funktioniert. Versuchen Sie es in einem Moment erneut."
+unavailable = "Für diese Benachrichtigung nicht verfügbar."
+
+[notifications.detail]
+copied = "Kopiert"
+copy = "Fehler kopieren"
+less = "Weniger anzeigen"
+more = "Vollständige Nachricht anzeigen"
+
+[notifications.section]
+earlier = "Früher"
+new = "Neu"
 
 [oauth.error]
 message = "Die Authentifizierung war nicht erfolgreich. Sie können dieses Fenster schließen und es erneut versuchen."
@@ -6735,8 +6847,8 @@ barAria = "Free PDFs remaining"
 capSuffix_one = "von {{allowance}} kostenlosen PDFs genutzt"
 capSuffix_other = "von {{allowance}} kostenlosen PDFs genutzt"
 eyebrow = "Processor-Testversion"
-statusLabel_one = "{{remaining}} übrig"
-statusLabel_other = "{{remaining}} übrig"
+statusLabel_one = "{{used}} verbraucht"
+statusLabel_other = "{{used}} verbraucht"
 sub = "Nutzen Sie den PDF Editor kostenlos. Zahlen Sie für die automatische Verarbeitung von PDFs."
 title_one = "{{allowance}} PDFs kostenlos verarbeiten"
 title_other = "{{allowance}} PDFs kostenlos verarbeiten"
@@ -7417,6 +7529,8 @@ acknowledge = "Acknowledge"
 confirm = "Are you sure?"
 dismiss = "Dismiss"
 dismissSkipFile = "Skip this file"
+viewFile = "Datei anzeigen"
+viewInProcessor = "Im Prozessor anzeigen"
 
 [portal.failures.debug]
 copyJson = "Copy JSON"
@@ -7428,6 +7542,8 @@ showJson = "Show raw JSON ({{total}})"
 
 [portal.failures.disabled]
 closed = "This failure is already closed."
+noDocument = "Dieser Fehler wurde keinem bestimmten Dokument zugeordnet, daher gibt es hier nichts zu öffnen."
+unattended = "Diese Datei wurde von einem Ordner, Bucket oder Webhook eingespeist, daher hält kein Browser sie zum Öffnen bereit."
 unavailable = "Not available for this failure."
 
 [portal.failures.empty]
@@ -8716,7 +8832,9 @@ title = "Quellen"
 connectSource = "Quelle verbinden"
 
 [portal.sources.builder]
+advanced = "Erweitert"
 back = "Zurück zu Quellen"
+backToSource = "Zur Quelleneinrichtung zurück"
 backToTypes = "Alle Quellentypen"
 cancel = "Abbrechen"
 chooseHint = "Wählen Sie aus, woher Dokumente kommen. Ausgegraute Connectors sind in Vorbereitung."
@@ -8726,7 +8844,6 @@ create = "Quelle erstellen"
 createTitle = "Quelle verbinden"
 delete = "Löschen"
 editTitle = "Quelle bearbeiten"
-enabled = "Aktiviert"
 save = "Änderungen speichern"
 
 [portal.sources.builder.folderAccess]
@@ -8763,6 +8880,7 @@ consume = "Verbrauchen: Jede Datei einmal verarbeiten"
 snapshot = "Snapshot: Ordner bei jedem Lauf erneut lesen"
 
 [portal.sources.networkFields.recursive]
+helperText = "Unterordner einschließen, wenn Ihre Dateien in verschachtelten Ordnern organisiert sind, oder nur die oberste Ebene überwachen."
 label = "Ordnertiefe"
 
 [portal.sources.networkFields.recursive.options]
@@ -8816,6 +8934,7 @@ hash = "Größe, Datum und Inhaltsprüfung"
 stat = "Größe und Änderungsdatum"
 
 [portal.sources.types.folder.fields.mode]
+helperText = "Ob die Originaldatei nach der Verarbeitung an ihrem Ort bleiben soll. Wenn die Originaldatei an ihrem Ort bleibt, wird sie beim nächsten Scan der Quelle durch die Pipeline erneut verarbeitet."
 label = "Lesemodus"
 
 [portal.sources.types.folder.fields.mode.options]
@@ -8823,6 +8942,7 @@ consume = "Verbrauchen: Jede Datei einmal verarbeiten"
 snapshot = "Snapshot: Ordner bei jedem Lauf erneut lesen"
 
 [portal.sources.types.folder.fields.recursive]
+helperText = "Unterordner einschließen, wenn Ihre Dateien in verschachtelten Ordnern organisiert sind, oder nur die oberste Ebene überwachen."
 label = "Ordnertiefe"
 
 [portal.sources.types.folder.fields.recursive.options]
@@ -9696,7 +9816,9 @@ toolNotAvailableLocally = "Ihr Stirling-PDF-Server ist offline und „{{endpoint
 expired = "Ihre Sitzung ist abgelaufen. Bitte laden Sie die Seite neu und versuchen Sie es erneut."
 
 [settings]
+backToSections = "Alle Einstellungen"
 close = "Schließen"
+title = "Einstellungen"
 
 [settings.ai]
 documents = "Dokumente & RAG"
@@ -10635,6 +10757,7 @@ ariaLabel = "Super search"
 filtersAriaLabel = "Search filters"
 hint = "Type to search"
 placeholder = "Search Stirling"
+placeholderShort = "Suchen"
 showLess = "Show less"
 showMore = "Show {{count}} more"
 
@@ -10831,6 +10954,7 @@ searchPlaceholder = "Werkzeuge suchen..."
 
 [toolPicker.subcategories]
 advancedFormatting = "Erweiterte Formatierung"
+ai = "AI"
 automation = "Automatisierung"
 developerTools = "Entwicklerwerkzeuge"
 documentReview = "Dokumentenprüfung"
@@ -11335,8 +11459,11 @@ columnDefault = "Spalte {{index}}"
 convertToPdf = "In PDF konvertieren"
 csvStats = "{{rows}} Zeilen · {{columns}} Spalten · {{size}}"
 emptyFile = "Leere Datei"
+htmlHidePreview = "Vorschau ausblenden"
 htmlPreview = "HTML-Vorschau"
+htmlPreviewMobileHidden = "HTML-Seiten sind für Desktop-Breiten ausgelegt, daher ist die Vorschau hier standardmäßig deaktiviert."
 htmlPreviewWarning = "HTML-Vorschau — externe Ressourcen werden möglicherweise nicht geladen · {{size}}"
+htmlShowPreview = "Vorschau trotzdem anzeigen"
 invalidJson = "Ungültiges JSON — Rohinhalt wird angezeigt"
 lineNumbers = "Zeilennummern"
 loading = "Laden..."
@@ -11683,6 +11810,7 @@ exportAll = "PDF exportieren"
 exportSelected = "Ausgewählte Seiten exportieren"
 formFill = "Formular ausfüllen"
 hideToolbar = "Hide toolbar"
+moreActions = "Weitere Aktionen"
 multiTool = "Multitool"
 panMode = "Verschiebemodus"
 print = "PDF drucken"
@@ -11703,6 +11831,8 @@ selectAll = "Alle auswählen"
 selectByNumber = "Nach Seitenzahlen auswählen"
 selectLanguage = "Sprache auswählen"
 share = "Teilen"
+showAllTools = "Alle Tools anzeigen"
+showFewerTools = "Symbolleiste einklappen"
 showToolbar = "Show toolbar"
 toggleAnnotations = "Anmerkungen ein-/ausblenden"
 toggleAttachments = "Anhänge ein-/ausblenden"

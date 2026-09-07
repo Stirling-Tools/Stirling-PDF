@@ -336,6 +336,15 @@ public class PolicyController {
      * nothing to check.
      */
     private void requireAccessibleOutput(Policy policy) {
+        // An editor policy hands its results back to the workspace the file came from. A stored
+        // destination would send the run to a folder or bucket instead, leaving the editor's copy
+        // untouched - and the editor's import would then have nothing to collect.
+        if (policy.editor().allowed() && !policy.outputIds().isEmpty()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "An editor policy delivers back to the editor and can't also have a"
+                            + " destination");
+        }
         for (String outputId : policy.outputIds()) {
             Source destination =
                     sourceStore
@@ -389,11 +398,14 @@ public class PolicyController {
                 policy.name(),
                 owner,
                 policy.enabled(),
+                policy.required(),
+                policy.icon(),
                 policy.inputs(),
                 policy.steps(),
                 policy.output(),
                 policy.outputIds(),
-                teamId);
+                teamId,
+                policy.editor());
     }
 
     /** Output secrets never leave the server: reads return the redaction sentinel instead. */
@@ -576,7 +588,9 @@ public class PolicyController {
                             + " under 'fileInput', supporting files under 'assets[i].key' /"
                             + " 'assets[i].file' - only for bindings the policy does not already"
                             + " store). Runs regardless of the policy's enabled flag, which only"
-                            + " gates automatic triggering. Returns a run id.")
+                            + " gates automatic triggering. A single-document run may also send its"
+                            + " own opaque 'fileId', which is recorded against any failure so the"
+                            + " caller can resolve it back to that document. Returns a run id.")
     public ResponseEntity<JobResponse<Void>> runStoredPolicy(
             @PathVariable String policyId, @Valid @ModelAttribute PolicyRunFiles files)
             throws IOException {
@@ -590,7 +604,14 @@ public class PolicyController {
                                                 HttpStatus.NOT_FOUND, "No policy: " + policyId));
         stampPolicyAudit(policy.toDefinition());
         PolicyInputs inputs = toInputs(files);
-        String runId = policyRunner.runWith(policy, inputs, PolicyProgressListener.NOOP).runId();
+        String runId =
+                policyRunner
+                        .runWith(
+                                policy,
+                                inputs,
+                                PolicyProgressListener.NOOP,
+                                documentReferenceFor(files, inputs))
+                        .runId();
         return ResponseEntity.accepted().body(new JobResponse<>(true, runId, null));
     }
 
@@ -720,6 +741,19 @@ public class PolicyController {
             }
         }
         return new PolicyInputs(primary, supportingFiles);
+    }
+
+    /**
+     * Only for a single-document run: an incident holds one file reference, so naming one of
+     * several would attribute the failure to whichever bound first. Counted off resolved inputs,
+     * not parts.
+     */
+    private static String documentReferenceFor(PolicyRunFiles files, PolicyInputs inputs) {
+        String fileId = files.getFileId();
+        if (fileId == null || fileId.isBlank() || inputs.primary().size() != 1) {
+            return null;
+        }
+        return fileId;
     }
 
     private PolicyProgressListener streamListener(SseEmitter emitter) {

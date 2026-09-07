@@ -35,7 +35,7 @@
   cursor: pointer;
   border: 1px solid var(--c-border);
   border-radius: var(--radius-md);
-  background: var(--c-surface);
+  background: var(--c-surface-raised);
   font: inherit;
   color: inherit;
   transition:
@@ -107,24 +107,24 @@ button.portal-source-modal__card:focus-visible {
   gap: 0.875rem;
 }
 
+/* The Advanced disclosure's revealed fields stack like the rest of the form. */
+.portal-source-modal__advanced-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
 .portal-source-modal__loading {
   display: flex;
   justify-content: center;
   padding: 2rem 0;
 }
 
-.portal-source-modal__back {
-  align-self: flex-start;
-}
-
-.portal-source-modal__type-summary {
-  display: flex;
+/* Type identity in the modal header: brand icon beside the connector name. */
+.portal-source-modal__title {
+  display: inline-flex;
   align-items: center;
-  gap: 0.625rem;
-  padding: 0.625rem 0.75rem;
-  background: var(--c-surface-sunken);
-  border: 1px solid var(--c-border-subtle);
-  border-radius: var(--radius-md);
+  gap: 0.5rem;
 }
 
 .portal-source-modal__muted {
@@ -142,14 +142,6 @@ button.portal-source-modal__card:focus-visible {
 .portal-source-modal__copy-row > :first-child {
   flex: 1 1 auto;
   min-width: 0;
-}
-
-.portal-source-modal__footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  width: 100%;
 }
 
 .portal-source-modal__footer-actions {

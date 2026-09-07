@@ -42,6 +42,7 @@ import { RedactionProvider } from "@app/contexts/RedactionContext";
 import { FormFillProvider } from "@app/tools/formFill/FormFillContext";
 import { FolderFileContextProvider } from "@app/contexts/FolderFileContext";
 import { FolderProvider } from "@app/contexts/FolderContext";
+import { WorkbenchSessionPersistence } from "@app/components/session/WorkbenchSessionPersistence";
 
 // Component to initialize scarf tracking (must be inside AppConfigProvider)
 function ScarfTrackingInitializer() {
@@ -183,6 +184,7 @@ export function AppProviders({
                                                   <TourOrchestrationProvider>
                                                     <AdminTourOrchestrationProvider>
                                                       <FolderFileContextProvider>
+                                                        <WorkbenchSessionPersistence />
                                                         {children}
                                                       </FolderFileContextProvider>
                                                     </AdminTourOrchestrationProvider>

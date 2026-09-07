@@ -1,5 +1,4 @@
-import { useState, useEffect } from "react";
-import { isAxiosError } from "axios";
+import { useMemo, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import {
   Stack,
@@ -20,14 +19,12 @@ import {
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import LocalIcon from "@app/components/shared/LocalIcon";
-import { alert } from "@app/components/toast";
 import {
   userManagementService,
   User,
 } from "@app/services/userManagementService";
-import { teamService, Team } from "@app/services/teamService";
+import { type Team } from "@app/services/teamService";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
 import InviteMembersModal from "@app/components/shared/InviteMembersModal";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
 import LoginRequiredBanner from "@app/components/shared/config/LoginRequiredBanner";
@@ -36,17 +33,109 @@ import UpdateSeatsButton from "@app/components/shared/UpdateSeatsButton";
 import { useLicense } from "@app/contexts/LicenseContext";
 import ChangeUserPasswordModal from "@app/components/shared/ChangeUserPasswordModal";
 import { useAuth } from "@app/auth/UseSession";
+import {
+  useAdminUsers,
+  useTeams,
+  useAdminMutation,
+  useInvalidateAdminDirectory,
+} from "@app/hooks/useAdminDirectory";
+
+const EXAMPLE_USERS: User[] = [
+  {
+    id: 1,
+    username: "admin",
+    email: "admin@example.com",
+    enabled: true,
+    roleName: "ROLE_ADMIN",
+    rolesAsString: "ROLE_ADMIN",
+    authenticationType: "password",
+    isActive: true,
+    lastRequest: Date.now(),
+    team: { id: 1, name: "Engineering" },
+  },
+  {
+    id: 2,
+    username: "john.doe",
+    email: "john.doe@example.com",
+    enabled: true,
+    roleName: "ROLE_USER",
+    rolesAsString: "ROLE_USER",
+    authenticationType: "password",
+    isActive: false,
+    lastRequest: Date.now() - 86400000,
+    team: { id: 1, name: "Engineering" },
+  },
+  {
+    id: 3,
+    username: "jane.smith",
+    email: "jane.smith@example.com",
+    enabled: true,
+    roleName: "ROLE_USER",
+    rolesAsString: "ROLE_USER",
+    authenticationType: "oauth",
+    isActive: true,
+    lastRequest: Date.now(),
+    team: { id: 2, name: "Marketing" },
+  },
+  {
+    id: 4,
+    username: "bob.wilson",
+    email: "bob.wilson@example.com",
+    enabled: false,
+    roleName: "ROLE_USER",
+    rolesAsString: "ROLE_USER",
+    authenticationType: "password",
+    isActive: false,
+    lastRequest: Date.now() - 604800000,
+    team: undefined,
+  },
+];
+
+const EXAMPLE_TEAMS: Team[] = [
+  { id: 1, name: "Engineering", userCount: 3 },
+  { id: 2, name: "Marketing", userCount: 2 },
+];
+
+const EXAMPLE_LICENSE = {
+  maxAllowedUsers: 10,
+  availableSlots: 6,
+  grandfatheredUserCount: 0,
+  licenseMaxUsers: 5,
+  premiumEnabled: true,
+  totalUsers: 4,
+};
 
 export default function PeopleSection() {
   const { t } = useTranslation();
-  const { config } = useAppConfig();
   const { loginEnabled } = useLoginRequired();
   const { user: currentUser } = useAuth();
   const navigate = useNavigate();
   const { licenseInfo: globalLicenseInfo } = useLicense();
-  const [users, setUsers] = useState<User[]>([]);
-  const [teams, setTeams] = useState<Team[]>([]);
-  const [loading, setLoading] = useState(true);
+  const admin = useAdminUsers(loginEnabled);
+  const { data: fetchedTeams } = useTeams(loginEnabled);
+  const refreshDirectory = useInvalidateAdminDirectory();
+
+  // Session and MFA state arrive alongside the roster, keyed by username.
+  const fetchedUsers = useMemo<User[]>(() => {
+    if (!admin.data) return [];
+    return admin.data.users.map((user) => ({
+      ...user,
+      isActive: admin.data.userSessions[user.username] || false,
+      lastRequest: admin.data.userLastRequest[user.username] || undefined,
+      mfaEnabled:
+        (
+          admin.data.userSettings?.[user.username] as
+            | Record<string, unknown>
+            | undefined
+        )?.mfaEnabled === "true",
+    }));
+  }, [admin.data]);
+
+  // Login off means the endpoints are not callable, so the table shows a
+  // worked example instead of an empty state.
+  const users = loginEnabled ? fetchedUsers : EXAMPLE_USERS;
+  const teams = loginEnabled ? (fetchedTeams ?? []) : EXAMPLE_TEAMS;
+  const loading = loginEnabled && admin.isPending;
   const [searchQuery, setSearchQuery] = useState("");
   const [inviteModalOpened, setInviteModalOpened] = useState(false);
   const [editUserModalOpened, setEditUserModalOpened] = useState(false);
@@ -54,19 +143,20 @@ export default function PeopleSection() {
     useState(false);
   const [passwordUser, setPasswordUser] = useState<User | null>(null);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [processing, setProcessing] = useState(false);
-  const [mailEnabled, setMailEnabled] = useState(false);
-  const [lockedUsers, setLockedUsers] = useState<string[]>([]);
-
-  // License information
-  const [licenseInfo, setLicenseInfo] = useState<{
-    maxAllowedUsers: number;
-    availableSlots: number;
-    grandfatheredUserCount: number;
-    licenseMaxUsers: number;
-    premiumEnabled: boolean;
-    totalUsers: number;
-  } | null>(null);
+  const mailEnabled = loginEnabled ? (admin.data?.mailEnabled ?? false) : false;
+  const lockedUsers = loginEnabled ? (admin.data?.lockedUsers ?? []) : [];
+  const licenseInfo = loginEnabled
+    ? admin.data
+      ? {
+          maxAllowedUsers: admin.data.maxAllowedUsers,
+          availableSlots: admin.data.availableSlots,
+          grandfatheredUserCount: admin.data.grandfatheredUserCount,
+          licenseMaxUsers: admin.data.licenseMaxUsers,
+          premiumEnabled: admin.data.premiumEnabled,
+          totalUsers: admin.data.totalUsers,
+        }
+      : null
+    : EXAMPLE_LICENSE;
   const hasNoSlots = licenseInfo ? licenseInfo.availableSlots === 0 : false;
   const handleAddMembersClick = () => {
     if (!loginEnabled) {
@@ -115,253 +205,103 @@ export default function PeopleSection() {
     teamId: undefined as number | undefined,
   });
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  const updateUserRole = useAdminMutation({
+    write: (payload: { username: string; role: string; teamId?: number }) =>
+      userManagementService.updateUserRole(payload),
+    // A role edit can also move the user, which changes both teams' counts.
+    invalidates: ["users", "teams"],
+    success: t("workspace.people.editMember.success"),
+    errorFallback: t("workspace.people.editMember.error"),
+    onDone: () => closeEditModal(),
+  });
 
-  useEffect(() => {
-    if (config) {
-      console.log(
-        "[PeopleSection] Email invites enabled:",
-        config.enableEmailInvites,
-      );
-    }
-  }, [config]);
+  const toggleEnabled = useAdminMutation({
+    write: (user: User) =>
+      userManagementService.toggleUserEnabled(user.username, !user.enabled),
+    invalidates: ["users"],
+    success: t("workspace.people.toggleEnabled.success"),
+    errorFallback: t("workspace.people.toggleEnabled.error"),
+  });
 
-  const fetchData = async () => {
-    try {
-      setLoading(true);
+  const deleteUser = useAdminMutation({
+    write: (username: string) => userManagementService.deleteUser(username),
+    invalidates: ["users", "teams"],
+    success: t(
+      "workspace.people.deleteUserSuccess",
+      "User deleted successfully",
+    ),
+    errorFallback: t(
+      "workspace.people.deleteUserError",
+      "Failed to delete user",
+    ),
+  });
 
-      if (loginEnabled) {
-        const [adminData, teamsData] = await Promise.all([
-          userManagementService.getUsers(),
-          teamService.getTeams(),
-        ]);
+  const unlockUser = useAdminMutation({
+    write: (username: string) => userManagementService.unlockUser(username),
+    invalidates: ["users"],
+    success: t(
+      "workspace.people.unlockUserSuccess",
+      "User account unlocked successfully",
+    ),
+    errorFallback: t(
+      "workspace.people.unlockUserError",
+      "Failed to unlock user account",
+    ),
+  });
 
-        // Enrich users with session data
-        const enrichedUsers = adminData.users.map((user) => ({
-          ...user,
-          isActive: adminData.userSessions[user.username] || false,
-          lastRequest: adminData.userLastRequest[user.username] || undefined,
-          mfaEnabled:
-            (
-              adminData.userSettings?.[user.username] as
-                | Record<string, unknown>
-                | undefined
-            )?.mfaEnabled === "true",
-        }));
+  const disableMfa = useAdminMutation({
+    write: (username: string) =>
+      userManagementService.disableMfaByAdmin(username),
+    invalidates: ["users"],
+    success: t(
+      "workspace.people.mfa.adminDisableSuccess",
+      "MFA disabled successfully for user",
+    ),
+    errorFallback: t(
+      "workspace.people.mfa.adminDisableError",
+      "Failed to disable MFA for user",
+    ),
+  });
 
-        setUsers(enrichedUsers);
-        setTeams(teamsData);
-
-        // Store license information
-        setLicenseInfo({
-          maxAllowedUsers: adminData.maxAllowedUsers,
-          availableSlots: adminData.availableSlots,
-          grandfatheredUserCount: adminData.grandfatheredUserCount,
-          licenseMaxUsers: adminData.licenseMaxUsers,
-          premiumEnabled: adminData.premiumEnabled,
-          totalUsers: adminData.totalUsers,
-        });
-        setMailEnabled(adminData.mailEnabled);
-        setLockedUsers(adminData.lockedUsers || []);
-      } else {
-        // Provide example data when login is disabled
-        const exampleUsers: User[] = [
-          {
-            id: 1,
-            username: "admin",
-            email: "admin@example.com",
-            enabled: true,
-            roleName: "ROLE_ADMIN",
-            rolesAsString: "ROLE_ADMIN",
-            authenticationType: "password",
-            isActive: true,
-            lastRequest: Date.now(),
-            team: { id: 1, name: "Engineering" },
-          },
-          {
-            id: 2,
-            username: "john.doe",
-            email: "john.doe@example.com",
-            enabled: true,
-            roleName: "ROLE_USER",
-            rolesAsString: "ROLE_USER",
-            authenticationType: "password",
-            isActive: false,
-            lastRequest: Date.now() - 86400000,
-            team: { id: 1, name: "Engineering" },
-          },
-          {
-            id: 3,
-            username: "jane.smith",
-            email: "jane.smith@example.com",
-            enabled: true,
-            roleName: "ROLE_USER",
-            rolesAsString: "ROLE_USER",
-            authenticationType: "oauth",
-            isActive: true,
-            lastRequest: Date.now(),
-            team: { id: 2, name: "Marketing" },
-          },
-          {
-            id: 4,
-            username: "bob.wilson",
-            email: "bob.wilson@example.com",
-            enabled: false,
-            roleName: "ROLE_USER",
-            rolesAsString: "ROLE_USER",
-            authenticationType: "password",
-            isActive: false,
-            lastRequest: Date.now() - 604800000,
-            team: undefined,
-          },
-        ];
-
-        const exampleTeams: Team[] = [
-          { id: 1, name: "Engineering", userCount: 3 },
-          { id: 2, name: "Marketing", userCount: 2 },
-        ];
-
-        setUsers(exampleUsers);
-        setTeams(exampleTeams);
-        setMailEnabled(false);
-        setLockedUsers([]);
-
-        // Example license information
-        setLicenseInfo({
-          maxAllowedUsers: 10,
-          availableSlots: 6,
-          grandfatheredUserCount: 0,
-          licenseMaxUsers: 5,
-          premiumEnabled: true,
-          totalUsers: 4,
-        });
-      }
-    } catch (error) {
-      console.error("[PeopleSection] Failed to fetch people data:", error);
-      alert({ alertType: "error", title: "Failed to load people data" });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleUpdateUserRole = async () => {
+  const handleUpdateUserRole = () => {
     if (!selectedUser) return;
-
-    try {
-      setProcessing(true);
-      await userManagementService.updateUserRole({
-        username: selectedUser.username,
-        role: editForm.role,
-        teamId: editForm.teamId,
-      });
-      alert({
-        alertType: "success",
-        title: t("workspace.people.editMember.success"),
-      });
-      closeEditModal();
-      fetchData();
-    } catch (error: unknown) {
-      console.error("[PeopleSection] Failed to update user:", error);
-      const errorMessage = isAxiosError(error)
-        ? error.response?.data?.message ||
-          error.response?.data?.error ||
-          error.message
-        : (error instanceof Error ? error.message : undefined) ||
-          t("workspace.people.editMember.error");
-      alert({ alertType: "error", title: errorMessage });
-    } finally {
-      setProcessing(false);
-    }
+    updateUserRole.mutate({
+      username: selectedUser.username,
+      role: editForm.role,
+      teamId: editForm.teamId,
+    });
   };
 
-  const handleToggleEnabled = async (user: User) => {
-    try {
-      await userManagementService.toggleUserEnabled(
-        user.username,
-        !user.enabled,
-      );
-      alert({
-        alertType: "success",
-        title: t("workspace.people.toggleEnabled.success"),
-      });
-      fetchData();
-    } catch (error: unknown) {
-      console.error("[PeopleSection] Failed to toggle user status:", error);
-      const errorMessage = isAxiosError(error)
-        ? error.response?.data?.message ||
-          error.response?.data?.error ||
-          error.message
-        : (error instanceof Error ? error.message : undefined) ||
-          t("workspace.people.toggleEnabled.error");
-      alert({ alertType: "error", title: errorMessage });
-    }
+  const handleToggleEnabled = (user: User) => {
+    toggleEnabled.mutate(user);
   };
 
-  const handleDeleteUser = async (user: User) => {
+  const handleDeleteUser = (user: User) => {
     const confirmMessage = t(
       "workspace.people.confirmDelete",
       "Are you sure you want to delete this user? This action cannot be undone.",
     );
-    if (!window.confirm(`${confirmMessage}\n\nUser: ${user.username}`)) {
-      return;
-    }
+    if (
+      !window.confirm(`${confirmMessage}
 
-    try {
-      await userManagementService.deleteUser(user.username);
-      alert({
-        alertType: "success",
-        title: t(
-          "workspace.people.deleteUserSuccess",
-          "User deleted successfully",
-        ),
-      });
-      fetchData();
-    } catch (error: unknown) {
-      console.error("[PeopleSection] Failed to delete user:", error);
-      const errorMessage = isAxiosError(error)
-        ? error.response?.data?.message ||
-          error.response?.data?.error ||
-          error.message
-        : (error instanceof Error ? error.message : undefined) ||
-          t("workspace.people.deleteUserError", "Failed to delete user");
-      alert({ alertType: "error", title: errorMessage });
-    }
+User: ${user.username}`)
+    )
+      return;
+    deleteUser.mutate(user.username);
   };
 
-  const handleUnlockUser = async (user: User) => {
+  const handleUnlockUser = (user: User) => {
     const confirmMessage = t(
       "workspace.people.confirmUnlock",
       "Are you sure you want to unlock this user account?",
     );
-    if (!window.confirm(`${confirmMessage}\n\nUser: ${user.username}`)) {
-      return;
-    }
+    if (
+      !window.confirm(`${confirmMessage}
 
-    try {
-      await userManagementService.unlockUser(user.username);
-      alert({
-        alertType: "success",
-        title: t(
-          "workspace.people.unlockUserSuccess",
-          "User account unlocked successfully",
-        ),
-      });
-      fetchData();
-    } catch (error: unknown) {
-      console.error("[PeopleSection] Failed to unlock user:", error);
-      const errorMessage = isAxiosError(error)
-        ? error.response?.data?.message ||
-          error.response?.data?.error ||
-          error.message
-        : (error instanceof Error ? error.message : undefined) ||
-          t(
-            "workspace.people.unlockUserError",
-            "Failed to unlock user account",
-          );
-      alert({ alertType: "error", title: errorMessage });
-    }
+User: ${user.username}`)
+    )
+      return;
+    unlockUser.mutate(user.username);
   };
 
   const openEditModal = (user: User) => {
@@ -549,7 +489,7 @@ export default function PeopleSection() {
               <Text size="sm" c="dimmed" span>
                 •
               </Text>
-              <UpdateSeatsButton size="sm" onSuccess={fetchData} />
+              <UpdateSeatsButton size="sm" onSuccess={refreshDirectory} />
             </>
           )}
         </Group>
@@ -891,40 +831,7 @@ export default function PeopleSection() {
                                     height="1rem"
                                   />
                                 }
-                                onClick={async () => {
-                                  try {
-                                    await userManagementService.disableMfaByAdmin(
-                                      user.username,
-                                    );
-                                    alert({
-                                      alertType: "success",
-                                      title: t(
-                                        "workspace.people.mfa.adminDisableSuccess",
-                                        "MFA disabled successfully for user",
-                                      ),
-                                    });
-                                  } catch (error: unknown) {
-                                    console.error(
-                                      "[PeopleSection] Failed to disable MFA for user:",
-                                      error,
-                                    );
-                                    const errorMessage = isAxiosError(error)
-                                      ? error.response?.data?.message ||
-                                        error.response?.data?.error ||
-                                        error.message
-                                      : (error instanceof Error
-                                          ? error.message
-                                          : undefined) ||
-                                        t(
-                                          "workspace.people.mfa.adminDisableError",
-                                          "Failed to disable MFA for user",
-                                        );
-                                    alert({
-                                      alertType: "error",
-                                      title: errorMessage,
-                                    });
-                                  }
-                                }}
+                                onClick={() => disableMfa.mutate(user.username)}
                                 disabled={!loginEnabled}
                               >
                                 {t(
@@ -968,14 +875,14 @@ export default function PeopleSection() {
       <InviteMembersModal
         opened={inviteModalOpened}
         onClose={() => setInviteModalOpened(false)}
-        onSuccess={fetchData}
+        onSuccess={refreshDirectory}
       />
 
       <ChangeUserPasswordModal
         opened={changePasswordModalOpened}
         onClose={closeChangePasswordModal}
         user={passwordUser}
-        onSuccess={fetchData}
+        onSuccess={refreshDirectory}
         mailEnabled={mailEnabled}
       />
 
@@ -1075,7 +982,7 @@ export default function PeopleSection() {
             />
             <Button
               onClick={handleUpdateUserRole}
-              loading={processing}
+              loading={updateUserRole.isPending}
               fullWidth
               size="md"
               style={{ marginTop: "var(--mantine-spacing-md)" }}

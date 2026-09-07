@@ -57,8 +57,9 @@ import WorkbenchBarMobileActions from "@app/components/shared/workbenchBar/Workb
 import WorkbenchBarToolbarHandle from "@app/components/shared/workbenchBar/WorkbenchBarToolbarHandle";
 import { renderWithTooltip } from "@app/components/shared/workbenchBar/workbenchBarTooltip";
 import { WorkbenchBarActionsProps } from "@app/components/shared/workbenchBar/types";
-import { useIsMobile } from "@app/hooks/useIsMobile";
+import { useIsMobile, useIsPhone } from "@app/hooks/useIsMobile";
 import "@app/components/shared/WorkbenchBar.css";
+import { NotificationBell } from "@app/components/notifications/NotificationBell";
 
 const SECTION_ORDER: WorkbenchBarSection[] = ["top", "middle", "bottom"];
 
@@ -116,6 +117,8 @@ export default function WorkbenchBar({
   const { sharingEnabled } = useSharingEnabled();
   const viewerContext = React.useContext(ViewerContext);
   const isMobile = useIsMobile();
+  // Below this width the rail, and the bell it carries, is hidden.
+  const isPhone = useIsPhone();
   const [mobileToolsExpanded, setMobileToolsExpanded] = useState(false);
 
   const selectors = useFileSelectors();
@@ -399,14 +402,20 @@ export default function WorkbenchBar({
   );
 
   // View options
+  // Tools that own a custom workbench ship their own canvas.
+  const ownsCustomWorkbenchAsDefault = selectedTool === "pdfTextEditor";
   const viewOptions: ViewOption[] = [
+    ...(ownsCustomWorkbenchAsDefault
+      ? []
+      : [
+          {
+            value: "viewer" as WorkbenchType,
+            label: t("workbenchBar.viewer", "Viewer"),
+            icon: <InsertDriveFileOutlinedIcon fontSize="small" />,
+          },
+        ]),
     {
-      value: "viewer",
-      label: t("workbenchBar.viewer", "Viewer"),
-      icon: <InsertDriveFileOutlinedIcon fontSize="small" />,
-    },
-    {
-      value: "fileEditor",
+      value: "fileEditor" as WorkbenchType,
       label: t("workbenchBar.activeFiles", "Active Files"),
       icon: <FolderOutlinedIcon fontSize="small" />,
     },
@@ -486,7 +495,7 @@ export default function WorkbenchBar({
       data-wrapped="false"
       data-tour="workbench-bar"
     >
-      {/* Left: optional "Back to My Files" + view switcher */}
+      {/* Left: optional "Back to File library" + view switcher */}
       <div className="workbench-bar-views" data-tour="view-switcher">
         {returnRoute && hasFiles && (
           <>
@@ -500,7 +509,7 @@ export default function WorkbenchBar({
                   : "filesPage.backToMyFiles",
                 returnRoute.label
                   ? `Back to ${returnRoute.label}`
-                  : "Back to My Files",
+                  : "Back to File library",
                 { folder: returnRoute.label ?? "" },
               )}
               leftSection={<ArrowBackIcon style={{ fontSize: "1.1rem" }} />}
@@ -510,7 +519,7 @@ export default function WorkbenchBar({
                   ? t("filesPage.backToFolder", "Back to {{folder}}", {
                       folder: returnRoute.label,
                     })
-                  : t("filesPage.backToMyFiles", "Back to My Files")}
+                  : t("filesPage.backToMyFiles", "Back to File library")}
               </span>
             </Button>
             <div className="workbench-bar-divider" />
@@ -601,6 +610,13 @@ export default function WorkbenchBar({
             {...globalActionProps}
             enforcingProgress={enforcingProgress}
           />
+        )}
+        {isPhone && (
+          <>
+            {/* Last in the globals, so it is the rightmost control. */}
+            <div className="workbench-bar-divider workbench-bar-globals-sep" />
+            <NotificationBell />
+          </>
         )}
       </div>
     </div>

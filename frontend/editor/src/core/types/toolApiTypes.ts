@@ -207,6 +207,9 @@ export interface AddWatermarkRequest {
    */
   widthSpacer?: number;
 }
+export interface AiToolsClassifyAndLabelRequest {
+  reclassify?: boolean;
+}
 export interface AutoRotatePdfRequest {
   /**
    * Minimum Tesseract OSD orientation confidence required before a correction is applied. Matches OCRmyPDF's --rotate-pages-threshold scale
@@ -481,6 +484,14 @@ export interface EmlToPdfRequest {
    * Maximum attachment size in MB to include (default 10MB, range: 1-100)
    */
   maxAttachmentSizeMB?: number;
+}
+export interface EncodeCharcodesRequest {
+  fontName?: string;
+  fontSha256?: string;
+  locatorChar?: string;
+  pageIndex?: number;
+  pdfBase64?: string;
+  text?: string;
 }
 export type ExtractAttachmentsRequest = Record<string, never>;
 export interface ExtractHeaderRequest {
@@ -1020,6 +1031,10 @@ export interface ProcessPdfWithOcrRequest {
    */
   removeImagesAfter?: boolean;
   /**
+   * Auto-correct page orientation (90/180/270) using Tesseract OSD if set to true
+   */
+  rotatePages?: boolean;
+  /**
    * Include OCR text in a sidecar text file if set to true
    */
   sidecar?: boolean;
@@ -1485,6 +1500,7 @@ export interface UrlToPdfRequest {
 
 /** Endpoint path for a generated tool operation (the operation identity across languages). */
 export type ToolEndpoint =
+  | "/api/v1/ai/tools/classify-and-label"
   | "/api/v1/convert/cbr/pdf"
   | "/api/v1/convert/cbz/pdf"
   | "/api/v1/convert/ebook/pdf"
@@ -1528,6 +1544,7 @@ export type ToolEndpoint =
   | "/api/v1/general/merge-pdfs"
   | "/api/v1/general/multi-page-layout"
   | "/api/v1/general/overlay-pdfs"
+  | "/api/v1/general/pdf-text-editor/encode-charcodes"
   | "/api/v1/general/pdf-to-single-page"
   | "/api/v1/general/rearrange-pages"
   | "/api/v1/general/remove-image-pdf"
@@ -1587,6 +1604,7 @@ export type ToolEndpoint =
 
 /** Backend request-parameter model for each tool endpoint. */
 export interface ToolApiParams {
+  "/api/v1/ai/tools/classify-and-label": AiToolsClassifyAndLabelRequest;
   "/api/v1/convert/cbr/pdf": ConvertCbrToPdfRequest;
   "/api/v1/convert/cbz/pdf": ConvertCbzToPdfRequest;
   "/api/v1/convert/ebook/pdf": ConvertEbookToPdfRequest;
@@ -1630,6 +1648,7 @@ export interface ToolApiParams {
   "/api/v1/general/merge-pdfs": MergePdfsRequest;
   "/api/v1/general/multi-page-layout": MergeMultiplePagesRequest;
   "/api/v1/general/overlay-pdfs": OverlayPdfsRequest;
+  "/api/v1/general/pdf-text-editor/encode-charcodes": EncodeCharcodesRequest;
   "/api/v1/general/pdf-to-single-page": GeneralPdfToSinglePageRequest;
   "/api/v1/general/rearrange-pages": RearrangePagesRequest;
   "/api/v1/general/remove-image-pdf": GeneralRemoveImagePdfRequest;
@@ -1690,6 +1709,7 @@ export interface ToolApiParams {
 
 /** Every generated tool endpoint, for iteration. */
 export const TOOL_ENDPOINTS = [
+  "/api/v1/ai/tools/classify-and-label",
   "/api/v1/convert/cbr/pdf",
   "/api/v1/convert/cbz/pdf",
   "/api/v1/convert/ebook/pdf",
@@ -1733,6 +1753,7 @@ export const TOOL_ENDPOINTS = [
   "/api/v1/general/merge-pdfs",
   "/api/v1/general/multi-page-layout",
   "/api/v1/general/overlay-pdfs",
+  "/api/v1/general/pdf-text-editor/encode-charcodes",
   "/api/v1/general/pdf-to-single-page",
   "/api/v1/general/rearrange-pages",
   "/api/v1/general/remove-image-pdf",

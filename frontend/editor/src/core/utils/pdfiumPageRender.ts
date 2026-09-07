@@ -6,7 +6,10 @@
  * per-page thumbnail service (thumbnailGenerationService.ts) so the pixel-
  * copy + white-background logic lives in one place.
  */
-import { getPdfiumModule } from "@app/services/pdfiumService";
+import {
+  getPdfiumModule,
+  type ExtendedPdfiumRuntime,
+} from "@app/services/pdfiumService";
 
 /** FPDF_ANNOT (0x01) | FPDF_LCD_TEXT (0x10). */
 const PDFIUM_RENDER_FLAGS = 0x01 | 0x10;
@@ -70,7 +73,7 @@ export async function renderPdfiumPageDataUrl(
     const rawW = m.FPDF_GetPageWidthF(pagePtr);
     const rawH = m.FPDF_GetPageHeightF(pagePtr);
     // Returns 0–3 for 0°/90°/180°/270° CW.
-    const pageRotQuarters = (m as any).FPDFPage_GetRotation(pagePtr) | 0;
+    const pageRotQuarters = m.FPDFPage_GetRotation(pagePtr) | 0;
 
     const isQuarterTurn = pageRotQuarters === 1 || pageRotQuarters === 3;
 
@@ -99,18 +102,11 @@ export async function renderPdfiumPageDataUrl(
 
       const bufferPtr = m.FPDFBitmap_GetBuffer(bitmapPtr);
       const stride = m.FPDFBitmap_GetStride(bitmapPtr);
-      const heap = new Uint8Array((m.pdfium.wasmExports as any).memory.buffer);
+      const heap = (m.pdfium as typeof m.pdfium & ExtendedPdfiumRuntime).HEAPU8;
       let pixels: Uint8ClampedArray;
       if (stride === w * 4) {
-        // Zero-copy: view the WASM memory buffer directly. `ImageData` copies
-        // the bytes on construction, so no extra allocation/copy is needed.
-        pixels = new Uint8ClampedArray(
-          (m.pdfium.wasmExports as any).memory.buffer,
-          bufferPtr,
-          w * h * 4,
-        );
+        pixels = new Uint8ClampedArray(heap.buffer, bufferPtr, w * h * 4);
       } else {
-        // Fallback row-by-row copy if stride has padding
         pixels = new Uint8ClampedArray(w * h * 4);
         for (let y = 0; y < h; y++) {
           const srcRow = bufferPtr + y * stride;
@@ -170,7 +166,7 @@ export async function readPdfiumPageMetadata(
   try {
     const width = m.FPDF_GetPageWidthF(pagePtr);
     const height = m.FPDF_GetPageHeightF(pagePtr);
-    const rotation = (((m as any).FPDFPage_GetRotation(pagePtr) | 0) & 3) * 90;
+    const rotation = ((m.FPDFPage_GetRotation(pagePtr) | 0) & 3) * 90;
     return { width, height, rotation };
   } finally {
     m.FPDF_ClosePage(pagePtr);

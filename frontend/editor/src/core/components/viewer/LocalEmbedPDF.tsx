@@ -432,6 +432,9 @@ import { DocumentPermissionsAPIBridge } from "@app/components/viewer/DocumentPer
 import { DocumentReadyWrapper } from "@app/components/viewer/DocumentReadyWrapper";
 import { ActiveDocumentProvider } from "@app/components/viewer/ActiveDocumentContext";
 import { FormFieldOverlay } from "@app/tools/formFill/FormFieldOverlay";
+import { FormCreationInteractionLock } from "@app/tools/formFill/FormCreationInteractionLock";
+import { FormFieldCreationOverlay } from "@app/tools/formFill/FormFieldCreationOverlay";
+import { FormFieldEditOverlay } from "@app/tools/formFill/FormFieldEditOverlay";
 import { ButtonAppearanceOverlay } from "@app/tools/formFill/ButtonAppearanceOverlay";
 import SignatureFieldOverlay from "@app/components/viewer/SignatureFieldOverlay";
 import { CommentsSidebar } from "@app/components/viewer/CommentsSidebar";
@@ -445,6 +448,8 @@ interface LocalEmbedPDFProps {
   enableAnnotations?: boolean;
   enableRedaction?: boolean;
   enableFormFill?: boolean;
+  /** Structural create/modify overlays only mount while the Form tool owns the viewer. */
+  formEditingActive?: boolean;
   isManualRedactionMode?: boolean;
   showBakedAnnotations?: boolean;
   onSignatureAdded?: (annotation: PdfAnnotationObject) => void;
@@ -551,6 +556,7 @@ interface PageContentProps {
   height: number;
   pdfRenderMode: "normal" | "dark" | "sepia";
   enableFormFill: boolean;
+  formEditingActive?: boolean;
   enableAnnotations: boolean;
   enableRedaction: boolean;
   showBakedAnnotations: boolean;
@@ -580,6 +586,7 @@ const PageContent = React.memo(function PageContent({
   height,
   pdfRenderMode,
   enableFormFill,
+  formEditingActive = false,
   enableAnnotations,
   enableRedaction,
   showBakedAnnotations,
@@ -665,6 +672,28 @@ const PageContent = React.memo(function PageContent({
           {/* FormFieldOverlay for interactive form filling */}
           {enableFormFill && (
             <FormFieldOverlay
+              documentId={documentId}
+              pageIndex={pageIndex}
+              pageWidth={width}
+              pageHeight={height}
+              fileId={fileId}
+            />
+          )}
+
+          {/* Create-mode: drag to place new fields */}
+          {enableFormFill && formEditingActive && (
+            <FormFieldCreationOverlay
+              documentId={documentId}
+              pageIndex={pageIndex}
+              pageWidth={width}
+              pageHeight={height}
+              fileId={fileId}
+            />
+          )}
+
+          {/* Modify-mode: select / move / resize existing fields */}
+          {enableFormFill && formEditingActive && (
+            <FormFieldEditOverlay
               documentId={documentId}
               pageIndex={pageIndex}
               pageWidth={width}
@@ -799,6 +828,7 @@ export function LocalEmbedPDF({
   enableAnnotations = false,
   enableRedaction = false,
   enableFormFill = false,
+  formEditingActive = false,
   isManualRedactionMode = false,
   showBakedAnnotations = true,
   onSignatureAdded,
@@ -1061,6 +1091,7 @@ export function LocalEmbedPDF({
           height={height}
           pdfRenderMode={pdfRenderMode}
           enableFormFill={enableFormFill}
+          formEditingActive={formEditingActive}
           enableAnnotations={enableAnnotations}
           enableRedaction={enableRedaction}
           showBakedAnnotations={showBakedAnnotations}
@@ -1081,6 +1112,7 @@ export function LocalEmbedPDF({
       enableAnnotations,
       enableRedaction,
       enableFormFill,
+      formEditingActive,
       showBakedAnnotations,
       pdfRenderMode,
       file,
@@ -1268,6 +1300,7 @@ export function LocalEmbedPDF({
             <ZoomAPIBridge />
             <ScrollAPIBridge />
             <SelectionAPIBridge />
+            <FormCreationInteractionLock />
             <PanAPIBridge />
             <SpreadAPIBridge />
             <SearchAPIBridge />

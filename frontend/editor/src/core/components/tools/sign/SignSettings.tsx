@@ -537,7 +537,7 @@ const SignSettings = ({
       return;
     }
     const nextSource = allowedSignatureSources.includes(
-      parameters.signatureType as SignatureSource,
+      parameters.signatureType,
     )
       ? (parameters.signatureType as SignatureSource)
       : effectiveDefaultSource;
@@ -1300,9 +1300,7 @@ const SignSettings = ({
           <SegmentedControl
             value={signatureSource}
             fullWidth
-            onChange={(value) =>
-              handleSignatureSourceChange(value as SignatureSource)
-            }
+            onChange={(value) => handleSignatureSourceChange(value)}
             options={sourceOptions}
           />
         )}

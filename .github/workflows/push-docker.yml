@@ -18,6 +18,16 @@ on:
         required: false
         type: boolean
         default: false
+      build_engine:
+        description: "Build & push the standalone stirling-engine image."
+        required: false
+        type: boolean
+        default: true
+      force_engine_rebuild:
+        description: "Rebuild stirling-engine even if its source hash is unchanged."
+        required: false
+        type: boolean
+        default: false
   push:
     branches:
       - release
@@ -50,9 +60,10 @@ jobs:
     env:
       RUN_MAIN_APP: ${{ github.event_name != 'workflow_dispatch' || inputs.build_main_app }}
       RUN_UNOSERVER: ${{ github.event_name != 'workflow_dispatch' || inputs.build_unoserver }}
+      RUN_ENGINE: ${{ github.event_name != 'workflow_dispatch' || inputs.build_engine }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
+        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
         with:
           egress-policy: audit
 
@@ -74,10 +85,10 @@ jobs:
 
       - name: Set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
+        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
 
       - name: Install Task
-        uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
+        uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
       - name: Get version number
         id: versionNumber
         run: echo "versionNumber=$(./gradlew printVersion --quiet | tail -1)" >> $GITHUB_OUTPUT
@@ -386,4 +397,120 @@ jobs:
             done
           else
             echo "Warning: COSIGN_PRIVATE_KEY not set, skipping unoserver image signing"
+          fi
+
+      # Standalone AI engine image, same shape as the unoserver image above.
+      - name: Compute engine image source hash
+        id: engineHash
+        if: env.RUN_ENGINE == 'true'
+        run: |
+          set -eu
+          hash=$( { cat engine/Dockerfile engine/pyproject.toml engine/uv.lock engine/.env; \
+                    find engine/src -type f -print0 | sort -z | xargs -0 cat; } \
+                  | sha256sum | cut -d' ' -f1)
+          echo "hash=${hash}" >> "$GITHUB_OUTPUT"
+          echo "Engine source hash: ${hash}"
+
+      - name: Decide whether to publish engine image
+        id: engineDecision
+        if: env.RUN_ENGINE == 'true'
+        env:
+          ENGINE_VERSION: ${{ steps.versionNumber.outputs.versionNumber }}
+          ENGINE_HASH: ${{ steps.engineHash.outputs.hash }}
+          ENGINE_IMAGE: ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-engine
+          ENGINE_HASH_ANNOTATION: org.stirlingpdf.engine-source-hash
+          FORCE_REBUILD: ${{ inputs.force_engine_rebuild }}
+          GH_REF: ${{ github.ref }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          set -eu
+          mode="skip"
+          tags=""
+
+          read_published_hash() {
+            local ref="$1"
+            docker buildx imagetools inspect "$ref" --raw 2>/dev/null \
+              | jq -r --arg key "$ENGINE_HASH_ANNOTATION" \
+                  '.annotations[$key] // empty' \
+              2>/dev/null || true
+          }
+
+          # Manual dispatch from any branch routes to the :alpha publish path.
+          EFFECTIVE_REF="$GH_REF"
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            EFFECTIVE_REF="refs/heads/testMain"
+          fi
+
+          case "$EFFECTIVE_REF" in
+            refs/heads/release)
+              if [ "${FORCE_REBUILD}" = "true" ]; then
+                echo "force_engine_rebuild=true — building stable regardless"
+                mode="stable"
+                tags="${ENGINE_IMAGE}:${ENGINE_VERSION},${ENGINE_IMAGE}:latest"
+              elif docker manifest inspect "${ENGINE_IMAGE}:${ENGINE_VERSION}" >/dev/null 2>&1; then
+                echo "stirling-engine:${ENGINE_VERSION} already on GHCR — skipping"
+              else
+                echo "stirling-engine:${ENGINE_VERSION} is new — will publish"
+                mode="stable"
+                tags="${ENGINE_IMAGE}:${ENGINE_VERSION},${ENGINE_IMAGE}:latest"
+              fi
+              ;;
+            refs/heads/main|refs/heads/testMain)
+              published_hash=$(read_published_hash "${ENGINE_IMAGE}:alpha")
+              if [ "${FORCE_REBUILD}" = "true" ]; then
+                echo "force_engine_rebuild=true — rebuilding :alpha regardless"
+                mode="alpha"
+                tags="${ENGINE_IMAGE}:alpha"
+              elif [ -n "$published_hash" ] && [ "$published_hash" = "$ENGINE_HASH" ]; then
+                echo "Published :alpha source hash matches (${published_hash}) — skipping"
+              else
+                if [ -z "$published_hash" ]; then
+                  echo ":alpha has no source-hash annotation (first publish) — will publish"
+                else
+                  echo "Source hash changed (was ${published_hash}, now ${ENGINE_HASH}) — will publish"
+                fi
+                mode="alpha"
+                tags="${ENGINE_IMAGE}:alpha"
+              fi
+              ;;
+            *)
+              echo "Branch ${GH_REF} does not publish engine image"
+              ;;
+          esac
+          echo "mode=${mode}" >> "$GITHUB_OUTPUT"
+          echo "tags=${tags}" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push engine image
+        id: build-push-engine
+        if: env.RUN_ENGINE == 'true' && steps.engineDecision.outputs.mode != 'skip'
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          builder: ${{ steps.buildx.outputs.name }}
+          context: .
+          file: ./engine/Dockerfile
+          push: true
+          cache-from: type=gha,scope=stirling-engine
+          cache-to: type=gha,mode=max,scope=stirling-engine
+          tags: ${{ steps.engineDecision.outputs.tags }}
+          # Manifest annotation read by the decision step above to detect drift.
+          annotations: |
+            index:org.stirlingpdf.engine-source-hash=${{ steps.engineHash.outputs.hash }}
+          platforms: linux/amd64,linux/arm64/v8
+          provenance: true
+          sbom: true
+
+      - name: Sign engine image
+        if: env.RUN_ENGINE == 'true' && steps.engineDecision.outputs.mode == 'stable'
+        env:
+          DIGEST: ${{ steps.build-push-engine.outputs.digest }}
+          TAGS: ${{ steps.engineDecision.outputs.tags }}
+          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
+          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
+        run: |
+          if [ -n "$COSIGN_PRIVATE_KEY" ]; then
+            echo "$TAGS" | tr ',' '\n' | while read -r tag; do
+              cosign sign --key env://COSIGN_PRIVATE_KEY --yes "${tag}@${DIGEST}"
+            done
+          else
+            echo "Warning: COSIGN_PRIVATE_KEY not set, skipping engine image signing"
           fi
