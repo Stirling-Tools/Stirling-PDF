@@ -22,8 +22,8 @@ export interface Directory {
 /**
  * Group the flat roster into the directory shape the Users page renders:
  * admins are the Organization owners, web-only users are Guests, and everyone
- * else sits under their team. Empty teams are omitted from the roster (they're
- * still creatable / visible via team management).
+ * else sits under their team. A team with no members still gets a section, so
+ * a newly created one can be found and given its first member.
  */
 export function buildDirectory(members: Member[], teams: Team[]): Directory {
   const organization = members.filter((m) => m.role === "admin");
@@ -46,7 +46,6 @@ export function buildDirectory(members: Member[], teams: Team[]): Directory {
       members: byTeam.get(t.id) ?? [],
       isPersonal: t.isPersonal,
     }))
-    .filter((g) => g.members.length > 0)
     .sort((a, b) => a.name.localeCompare(b.name));
 
   return { organization, teams: teamGroups, guests };

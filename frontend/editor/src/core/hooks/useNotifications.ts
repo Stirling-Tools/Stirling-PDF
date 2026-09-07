@@ -3,7 +3,11 @@ import {
   fetchNotifications,
   type AppNotification,
 } from "@app/services/notifications";
-import { hasLocalFile } from "@app/services/localFilePresence";
+import {
+  hasLocalFile,
+  loadRetryPayload,
+  type RetryPayload,
+} from "@app/services/notificationRetry";
 
 /**
  * One polled store for however many bells are mounted. A module store rather than a context because
@@ -14,11 +18,7 @@ import { hasLocalFile } from "@app/services/localFilePresence";
 const POLL_INTERVAL_MS = 30_000;
 const SEEN_STORAGE_KEY_PREFIX = "stirling.notifications.readThroughAt";
 
-/**
- * Scoped to the viewer the server named, because a timestamp is legible to whoever reads it next: an
- * unscoped marker left by the previous user of a shared browser would silently pre-read the
- * incoming user's older failures. Null while the viewer is unknown, which reads as nothing marked.
- */
+/** Null while the viewer is unknown: an unscoped marker would pre-read the next user's rows. */
 function seenStorageKey(viewerKey: string | null): string | null {
   return viewerKey ? `${SEEN_STORAGE_KEY_PREFIX}.${viewerKey}` : null;
 }
@@ -42,7 +42,6 @@ function readReadThrough(viewerKey: string | null): number | null {
 
 function writeReadThrough(viewerKey: string | null, at: number): void {
   const key = seenStorageKey(viewerKey);
-  // Unscoped would be worse than unsaved: the next viewer here would inherit it.
   if (!key) return;
   try {
     window.localStorage.setItem(key, String(at));
@@ -51,11 +50,7 @@ function writeReadThrough(viewerKey: string | null, at: number): void {
   }
 }
 
-/**
- * Forget how far the departing reader got. The marker is scoped to its viewer, so this is belt to
- * that brace: it also covers a sign-out on a build where the server names no viewer, and it drops
- * the in-memory marker so the bell does not answer for them until the next read says who is here.
- */
+/** Forget how far the departing reader got, for a build where the server names no viewer. */
 export function clearNotificationReadState(): void {
   const key = seenStorageKey(snapshot.viewerKey);
   if (key) {
@@ -70,10 +65,12 @@ export function clearNotificationReadState(): void {
 
 export interface NotificationDocumentState {
   hasLocalFile: boolean;
+  retryPayload: RetryPayload | null;
 }
 
 const NO_DOCUMENT: NotificationDocumentState = {
   hasLocalFile: false,
+  retryPayload: null,
 };
 
 /**
@@ -90,7 +87,7 @@ interface NotificationsSnapshot {
   documents: Record<string, NotificationDocumentState>;
   /** Everything up to and including this time has been read. Epoch millis, never a row id. */
   readThroughAt: number | null;
-  /** Who the marker belongs to. Null until a read says, so nothing is marked on their behalf. */
+  /** Who the marker belongs to, once a read has said. */
   viewerKey: string | null;
 }
 
@@ -150,6 +147,7 @@ async function read(forCycle: number): Promise<void> {
           fileId,
           {
             hasLocalFile: await hasLocalFile(fileId),
+            retryPayload: await loadRetryPayload(fileId),
           },
         ] as const,
     ),
@@ -162,15 +160,13 @@ async function read(forCycle: number): Promise<void> {
   const visible = viewerReviewsTeam
     ? listed
     : listed.filter(
-        // Asked rather than left to the lookup missing: an unattended row's fileId comes from
-        // another id space, so a hit on one would be a collision and not the document.
+        // Asked, not left to the lookup missing: a hit on another id space would be a collision.
         (n) =>
           isResolvableHere(n) &&
           Boolean(n.fileId && documents[n.fileId]?.hasLocalFile),
       );
 
-  // Read per read, not once at startup: the marker belongs to whoever the server says is
-  // reading, and signing in or out changes who that is without remounting the bell.
+  // Per read, since signing in or out changes whose marker applies without remounting the bell.
   publish({
     ...snapshot,
     notifications: visible,
@@ -217,8 +213,7 @@ function loadFresh(): void {
 
 function startPolling(): void {
   cycle += 1;
-  // Nothing read until the first read names the viewer, since the marker is theirs and not this
-  // browser's. Everything counts as unread until then, which errs towards showing failures.
+  // Nothing counts as read until a read names the viewer, which errs towards showing failures.
   snapshot = NOTHING_LOADED;
   pollTimer = window.setInterval(() => void load(), POLL_INTERVAL_MS);
   void load();

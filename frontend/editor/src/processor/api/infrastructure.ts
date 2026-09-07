@@ -106,15 +106,13 @@ export async function revokeApiKey(id: string): Promise<void> {
   await apiClient.local.json<void>(path, { method: "DELETE" });
 }
 
-/** GET the audit log; SaaS or local, backend-scoped (admin → server, SaaS lead → team). */
+/** GET the audit log, backend-scoped (admin → server, SaaS lead → team). */
 export async function fetchAuditLog(tier: Tier): Promise<AuditLogResponse> {
   const path = `/api/v1/proprietary/ui-data/infrastructure/audit-log${q(tier)}`;
-  return apiClient.saas.isConfigured()
-    ? apiClient.saas.json<AuditLogResponse>(path)
-    : apiClient.local.json<AuditLogResponse>(path);
+  return apiClient.local.json<AuditLogResponse>(path);
 }
 
-/** Download the audit log as a CSV/JSON blob (admin-only, whole-server); SaaS or local. */
+/** Download the audit log as a CSV/JSON blob (admin-only, whole-server). */
 export async function exportAuditLog(
   format: "csv" | "json",
   fields: string,
@@ -122,7 +120,5 @@ export async function exportAuditLog(
   const path = `/api/v1/proprietary/ui-data/audit-export?format=${format}&fields=${encodeURIComponent(
     fields,
   )}`;
-  return apiClient.saas.isConfigured()
-    ? apiClient.saas.blob(path)
-    : apiClient.local.blob(path);
+  return apiClient.local.blob(path);
 }

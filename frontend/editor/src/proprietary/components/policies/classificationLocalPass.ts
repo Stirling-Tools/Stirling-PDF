@@ -18,7 +18,7 @@ import type { FileId } from "@app/types/file";
 import type { StirlingFile } from "@app/types/fileContext";
 import type { HeuristicConfidence } from "@app/services/heuristic/types";
 import {
-  CLASSIFICATION_CATEGORY_ID,
+  CLASSIFICATION_POLICY_KEY,
   localVerdictNeedsEscalation,
 } from "@app/data/classificationPolicy";
 import type { LocalPass } from "@app/components/policies/policyLocalPass";
@@ -86,11 +86,11 @@ async function classifyStub(
 
   // Read before recordRunStart, which takes the dispatch key itself and would otherwise always
   // answer "already dispatched", silently stopping metering.
-  const alreadyMetered = isDispatched(CLASSIFICATION_CATEGORY_ID, fileId);
-  const runId = `local-${CLASSIFICATION_CATEGORY_ID}-${fileId}-${Date.now()}`;
+  const alreadyMetered = isDispatched(CLASSIFICATION_POLICY_KEY, fileId);
+  const runId = `local-${CLASSIFICATION_POLICY_KEY}-${fileId}-${Date.now()}`;
   recordRunStart({
     runId,
-    categoryId: CLASSIFICATION_CATEGORY_ID,
+    policyKey: CLASSIFICATION_POLICY_KEY,
     fileId: fileId as string,
     fileName,
     fileSize,
@@ -126,7 +126,7 @@ async function classifyStub(
         labels,
       });
     }
-    markDispatched(CLASSIFICATION_CATEGORY_ID, fileId);
+    markDispatched(CLASSIFICATION_POLICY_KEY, fileId);
     // Labels, no output file - the same settle shape the server-run classification uses.
     updateRun(runId, {
       status: "COMPLETED",

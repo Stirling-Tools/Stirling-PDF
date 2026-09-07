@@ -42,8 +42,10 @@ export function useConnectGate(): ConnectGate {
   });
 
   const available = Boolean(query.data?.accountLinkAvailable) && link != null;
-  const loading = query.isPending;
-  const gated = available && !link?.isLinked && !devBypass;
+  // A status call that never succeeds leaves the gate open rather than blocking on an unknown.
+  const statusKnown = link?.statusKnown ?? false;
+  const loading = query.isPending || (link != null && !statusKnown);
+  const gated = available && statusKnown && !link?.isLinked && !devBypass;
 
   const connect = useCallback(() => openLinkModal(), [openLinkModal]);
 

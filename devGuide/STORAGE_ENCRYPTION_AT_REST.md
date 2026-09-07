@@ -74,6 +74,29 @@ Disabling only stops encrypting *new* writes. Existing encrypted files stay read
 key material is present — the decrypt path is always active and is never licence-gated, so a lapsed
 licence cannot lock you out of your own data.
 
+## Backing up the master key
+
+Every scope key in `file_encryption_keys` is wrapped by the master key, so the master key is the
+single thing standing between a backup and unreadable files. Losing it makes every encrypted stored
+file unrecoverable — there is no recovery path, by design.
+
+Back it up when you enable encryption, not later:
+
+- **Key set in config or environment.** Store the base64 value in whatever holds your other
+  secrets. The value in `stirling.security.fileEncryptionKey` or `STIRLING_FILE_ENCRYPTION_KEY`
+  *is* the backup.
+- **Auto-generated key.** The server wrote `configs/file-encryption.key` on first use and logged a
+  warning. Copy that file somewhere durable and off the machine. Nothing else in the install holds
+  a copy. `/status` reports `masterKeySource: "generated"` for this case, and the admin UI shows a
+  warning until the key is configured explicitly.
+
+To check a backup matches the running system, compare its fingerprint against the one in the
+startup log or in `/status` — see [Status and backup verification](#status-and-backup-verification).
+The fingerprint is a SHA-256 prefix, so it can be compared safely without exposing key material.
+
+Restoring is just putting the key back: set it in config or the environment, or restore the file to
+`configs/file-encryption.key`, and start the server. No re-encryption is involved.
+
 ## Encrypting files that already exist
 
 Enabling the flag does not touch the existing plaintext backlog. To convert it:
@@ -163,9 +186,14 @@ Two semantics worth knowing when reading the trail:
 curl http://localhost:8080/api/v1/admin/storage-encryption/status
 ```
 
-Reports whether writes are encrypted, the master-key fingerprint, encrypted vs plaintext file
-counts, and every key row with its status history. All endpoints under
-`/api/v1/admin/storage-encryption` require an admin account.
+Reports whether writes are encrypted, the master-key fingerprint, where the key came from
+(`masterKeySource`: `config`, `environment` or `generated`), the storage backend, encrypted vs
+plaintext file counts, the number of key rows still on an older master key, and every key row with
+its status history. All endpoints under `/api/v1/admin/storage-encryption` require an admin
+account.
+
+The same information is on the Storage tab under Infrastructure in the admin UI, which is the
+surface most operators should use.
 
 ## What this protects against
 

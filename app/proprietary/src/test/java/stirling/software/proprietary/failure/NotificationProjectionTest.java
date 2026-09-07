@@ -235,7 +235,6 @@ class NotificationProjectionTest {
 
         @Test
         void neverTheUsernameItself() {
-            // It lands in that browser's storage, and a client only needs to tell viewers apart.
             assertThat(controller.list(null).viewerKey()).doesNotContain(ACTOR);
         }
     }
