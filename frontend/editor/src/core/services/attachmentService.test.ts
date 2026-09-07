@@ -45,30 +45,45 @@ describe("attachmentService CRUD", () => {
     post.mockResolvedValue({ data: attachments });
     const result = await listAttachments(pdfFile());
     expect(result).toEqual(attachments);
-    expect(post).toHaveBeenCalledWith("/api/v1/misc/list-attachments", expect.any(FormData));
+    expect(post).toHaveBeenCalledWith(
+      "/api/v1/misc/list-attachments",
+      expect.any(FormData),
+    );
   });
 
   it("renames an attachment and returns a blob", async () => {
     post.mockResolvedValue(blobResponse());
     const result = await renameAttachment(pdfFile(), "old.txt", "new.txt");
     expect(result).toBeInstanceOf(Blob);
-    expect(post).toHaveBeenCalledWith("/api/v1/misc/rename-attachment", expect.any(FormData), { responseType: "blob" });
+    expect(post).toHaveBeenCalledWith(
+      "/api/v1/misc/rename-attachment",
+      expect.any(FormData),
+      { responseType: "blob" },
+    );
   });
 
   it("deletes an attachment and returns a blob", async () => {
     post.mockResolvedValue(blobResponse());
     const result = await deleteAttachment(pdfFile(), "old.txt");
     expect(result).toBeInstanceOf(Blob);
-    expect(post).toHaveBeenCalledWith("/api/v1/misc/delete-attachment", expect.any(FormData), { responseType: "blob" });
+    expect(post).toHaveBeenCalledWith(
+      "/api/v1/misc/delete-attachment",
+      expect.any(FormData),
+      { responseType: "blob" },
+    );
   });
 
   it("extracts a single attachment directly", async () => {
     post.mockResolvedValue(blobResponse());
     const result = await extractSingleAttachment(pdfFile(), "a.txt");
     expect(result).toBeInstanceOf(Blob);
-    expect(post).toHaveBeenCalledWith("/api/v1/misc/extract-single-attachment", expect.any(FormData), {
-      responseType: "blob",
-    });
+    expect(post).toHaveBeenCalledWith(
+      "/api/v1/misc/extract-single-attachment",
+      expect.any(FormData),
+      {
+        responseType: "blob",
+      },
+    );
   });
 
   it("adds attachments and returns a blob", async () => {
@@ -77,7 +92,11 @@ describe("attachmentService CRUD", () => {
     expect(result).toBeInstanceOf(Blob);
     const formData = post.mock.calls[0][1] as FormData;
     expect(formData.get("convertToPdfA3b")).toBe("true");
-    expect(post).toHaveBeenCalledWith("/api/v1/misc/add-attachments", expect.any(FormData), { responseType: "blob" });
+    expect(post).toHaveBeenCalledWith(
+      "/api/v1/misc/add-attachments",
+      expect.any(FormData),
+      { responseType: "blob" },
+    );
   });
 
   it("applies batch operations via the batch endpoint", async () => {
@@ -93,9 +112,13 @@ describe("attachmentService CRUD", () => {
       renames: [{ oldName: "a", newName: "b" }],
       deletions: ["c"],
     });
-    expect(post).toHaveBeenCalledWith("/api/v1/misc/batch-process-attachments", expect.any(FormData), {
-      responseType: "blob",
-    });
+    expect(post).toHaveBeenCalledWith(
+      "/api/v1/misc/batch-process-attachments",
+      expect.any(FormData),
+      {
+        responseType: "blob",
+      },
+    );
   });
 
   it("extracts a single attachment through the legacy ZIP fallback on 404", async () => {
@@ -103,7 +126,9 @@ describe("attachmentService CRUD", () => {
     const zip = new JSZip();
     zip.file("a.txt", "hello");
     const zipBlob = await zip.generateAsync({ type: "blob" });
-    post.mockRejectedValueOnce({ response: { status: 404 } }).mockResolvedValueOnce({ data: zipBlob });
+    post
+      .mockRejectedValueOnce({ response: { status: 404 } })
+      .mockResolvedValueOnce({ data: zipBlob });
 
     const result = await extractSingleAttachment(pdfFile(), "a.txt");
     expect(result).toBeInstanceOf(Blob);

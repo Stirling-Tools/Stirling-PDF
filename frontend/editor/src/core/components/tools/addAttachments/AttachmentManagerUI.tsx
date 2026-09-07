@@ -1,5 +1,13 @@
 import { memo, useState } from "react";
-import { Stack, Text, Group, ScrollArea, Checkbox, Skeleton, TextInput } from "@mantine/core";
+import {
+  Stack,
+  Text,
+  Group,
+  ScrollArea,
+  Checkbox,
+  Skeleton,
+  TextInput,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { Tooltip } from "@app/components/shared/Tooltip";
@@ -51,20 +59,32 @@ export const AttachmentManagerUI = memo(function AttachmentManagerUI({
   const { t } = useTranslation();
   const [filterQuery, setFilterQuery] = useState("");
 
-  const filteredRows = rows.filter((r) => r.name.toLowerCase().includes(filterQuery.trim().toLowerCase()));
+  const filteredRows = rows.filter((r) =>
+    r.name.toLowerCase().includes(filterQuery.trim().toLowerCase()),
+  );
 
   return (
     <Stack gap="md" w="100%">
       {rows.length > 3 && (
         <TextInput
-          placeholder={t("attachments.filterPlaceholder", "Filter attachments...")}
+          placeholder={t(
+            "attachments.filterPlaceholder",
+            "Filter attachments...",
+          )}
           value={filterQuery}
           onChange={(e) => setFilterQuery(e.currentTarget.value)}
           size="xs"
-          leftSection={<LocalIcon icon="search-rounded" width={14} height={14} />}
+          leftSection={
+            <LocalIcon icon="search-rounded" width={14} height={14} />
+          }
           rightSection={
             filterQuery ? (
-              <ActionIcon size="sm" variant="tertiary" onClick={() => setFilterQuery("")} aria-label={t("cancel", "Cancel")}>
+              <ActionIcon
+                size="sm"
+                variant="tertiary"
+                onClick={() => setFilterQuery("")}
+                aria-label={t("cancel", "Cancel")}
+              >
                 <LocalIcon icon="close-rounded" width={12} height={12} />
               </ActionIcon>
             ) : null
@@ -79,7 +99,10 @@ export const AttachmentManagerUI = memo(function AttachmentManagerUI({
         </Stack>
       ) : rows.length === 0 ? (
         <Text size="sm" c="dimmed" ta="center" py="md">
-          {t("attachments.noAttachments", "No embedded attachments in this document.")}
+          {t(
+            "attachments.noAttachments",
+            "No embedded attachments in this document.",
+          )}
         </Text>
       ) : (
         <ScrollArea.Autosize
@@ -125,7 +148,9 @@ export const AttachmentManagerUI = memo(function AttachmentManagerUI({
           size="sm"
           variant="tertiary"
           fullWidth
-          leftSection={<LocalIcon icon="download-rounded" width={13} height={13} />}
+          leftSection={
+            <LocalIcon icon="download-rounded" width={13} height={13} />
+          }
           onClick={onExtractAllZip}
           disabled={disabled || isSaving}
           loading={activeAction === "extractAll"}
@@ -159,11 +184,17 @@ export const AttachmentManagerUI = memo(function AttachmentManagerUI({
             </Text>
             <Tooltip
               header={{
-                title: t("attachments.convertToPdfA3bTooltipHeader", "About PDF/A-3b Conversion"),
+                title: t(
+                  "attachments.convertToPdfA3bTooltipHeader",
+                  "About PDF/A-3b Conversion",
+                ),
               }}
               tips={[
                 {
-                  title: t("attachments.convertToPdfA3bTooltipTitle", "What it does"),
+                  title: t(
+                    "attachments.convertToPdfA3bTooltipTitle",
+                    "What it does",
+                  ),
                   description: t(
                     "attachments.convertToPdfA3bTooltip",
                     "PDF/A-3b is an archival format ensuring long-term preservation. It allows embedding arbitrary file formats as attachments. Conversion requires Ghostscript and may take longer for large files.",
@@ -183,16 +214,29 @@ export const AttachmentManagerUI = memo(function AttachmentManagerUI({
           </Group>
         }
         checked={convertToPdfA3b}
-        onChange={(event) => onConvertToPdfA3bChange(event.currentTarget.checked)}
+        onChange={(event) =>
+          onConvertToPdfA3bChange(event.currentTarget.checked)
+        }
         disabled={disabled || isSaving}
       />
 
       {hasChanges && (
         <Group justify="space-between" align="center" mt="xs">
-          <DSButton size="sm" variant="tertiary" onClick={onDiscardDraft} disabled={disabled || isSaving}>
+          <DSButton
+            size="sm"
+            variant="tertiary"
+            onClick={onDiscardDraft}
+            disabled={disabled || isSaving}
+          >
             {t("attachments.discardChanges", "Discard")}
           </DSButton>
-          <DSButton size="sm" variant="primary" onClick={onSaveDraft} disabled={disabled || isSaving} loading={isSaving}>
+          <DSButton
+            size="sm"
+            variant="primary"
+            onClick={onSaveDraft}
+            disabled={disabled || isSaving}
+            loading={isSaving}
+          >
             {t("attachments.saveChanges", "Save Changes ({{count}})", {
               count: pendingChangesCount,
             })}

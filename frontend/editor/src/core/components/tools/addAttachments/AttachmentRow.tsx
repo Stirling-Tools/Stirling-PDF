@@ -1,5 +1,13 @@
 import { useState, memo } from "react";
-import { Group, Text, TextInput, Badge, Tooltip, Stack, Box } from "@mantine/core";
+import {
+  Group,
+  Text,
+  TextInput,
+  Badge,
+  Tooltip,
+  Stack,
+  Box,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { ActionIcon } from "@app/ui/ActionIcon";
@@ -61,7 +69,9 @@ export const AttachmentRow = memo(function AttachmentRow({
     setIsEditing(false);
   };
 
-  const tooltipLabel = isRenamed ? `${filename} (original: ${originalName})` : filename;
+  const tooltipLabel = isRenamed
+    ? `${filename} (original: ${originalName})`
+    : filename;
 
   return (
     <Group
@@ -73,7 +83,11 @@ export const AttachmentRow = memo(function AttachmentRow({
         border: "1px solid var(--c-border, var(--mantine-color-gray-3))",
         borderRadius: "var(--mantine-radius-sm)",
         opacity: isDeleted ? 0.65 : 1,
-        backgroundColor: isStaged ? "var(--c-surface-sunken)" : isDeleted ? "var(--c-surface-sunken)" : undefined,
+        backgroundColor: isStaged
+          ? "var(--c-surface-sunken)"
+          : isDeleted
+            ? "var(--c-surface-sunken)"
+            : undefined,
         borderStyle: isStaged ? "dashed" : "solid",
         width: "100%",
         minWidth: 0,
@@ -81,7 +95,12 @@ export const AttachmentRow = memo(function AttachmentRow({
         overflow: "hidden",
       }}
     >
-      <LocalIcon icon="attachment-rounded" width="16" height="16" style={{ flexShrink: 0 }} />
+      <LocalIcon
+        icon="attachment-rounded"
+        width="16"
+        height="16"
+        style={{ flexShrink: 0 }}
+      />
 
       {isEditing ? (
         <Group gap={4} style={{ flex: 1, minWidth: 0 }}>
@@ -99,16 +118,31 @@ export const AttachmentRow = memo(function AttachmentRow({
             data-autofocus
             style={{ flex: 1, minWidth: 0 }}
           />
-          <ActionIcon variant="tertiary" accent="brand" size="sm" aria-label={t("save", "Save")} onClick={handleCommitRename}>
+          <ActionIcon
+            variant="tertiary"
+            accent="brand"
+            size="sm"
+            aria-label={t("save", "Save")}
+            onClick={handleCommitRename}
+          >
             <LocalIcon icon="check" width="14" height="14" />
           </ActionIcon>
-          <ActionIcon variant="tertiary" size="sm" aria-label={t("cancel", "Cancel")} onClick={handleCancelRename}>
+          <ActionIcon
+            variant="tertiary"
+            size="sm"
+            aria-label={t("cancel", "Cancel")}
+            onClick={handleCancelRename}
+          >
             <LocalIcon icon="close-rounded" width="14" height="14" />
           </ActionIcon>
         </Group>
       ) : (
         <Stack gap={2} style={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
-          <Group gap={4} wrap="nowrap" style={{ minWidth: 0, width: "100%", overflow: "hidden" }}>
+          <Group
+            gap={4}
+            wrap="nowrap"
+            style={{ minWidth: 0, width: "100%", overflow: "hidden" }}
+          >
             <Box style={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
               <Tooltip label={tooltipLabel} openDelay={400}>
                 <Text
@@ -128,26 +162,45 @@ export const AttachmentRow = memo(function AttachmentRow({
             </Box>
 
             {isStaged && (
-              <Badge size="xs" color="teal" variant="light" style={{ flexShrink: 0 }}>
+              <Badge
+                size="xs"
+                color="teal"
+                variant="light"
+                style={{ flexShrink: 0 }}
+              >
                 {t("attachments.badges.staged", "NEW")}
               </Badge>
             )}
 
             {isRenamed && (
-              <Badge size="xs" color="orange" variant="light" style={{ flexShrink: 0 }}>
+              <Badge
+                size="xs"
+                color="orange"
+                variant="light"
+                style={{ flexShrink: 0 }}
+              >
                 {t("attachments.badges.renamed", "RENAMED")}
               </Badge>
             )}
 
             {isDeleted && (
-              <Badge size="xs" color="red" variant="light" style={{ flexShrink: 0 }}>
+              <Badge
+                size="xs"
+                color="red"
+                variant="light"
+                style={{ flexShrink: 0 }}
+              >
                 {t("attachments.badges.deleted", "DELETED")}
               </Badge>
             )}
           </Group>
 
           {size !== undefined && (
-            <Text size="xs" c="dimmed" style={{ fontVariantNumeric: "tabular-nums" }}>
+            <Text
+              size="xs"
+              c="dimmed"
+              style={{ fontVariantNumeric: "tabular-nums" }}
+            >
               {formatFileSize(size)}
             </Text>
           )}
@@ -171,11 +224,16 @@ export const AttachmentRow = memo(function AttachmentRow({
           ) : (
             <>
               {!isStaged && onExtractSingle && (
-                <Tooltip label={t("attachments.downloadSingle", "Download attachment")}>
+                <Tooltip
+                  label={t("attachments.downloadSingle", "Download attachment")}
+                >
                   <ActionIcon
                     variant="tertiary"
                     size="sm"
-                    aria-label={t("attachments.downloadSingle", "Download attachment")}
+                    aria-label={t(
+                      "attachments.downloadSingle",
+                      "Download attachment",
+                    )}
                     onClick={() => onExtractSingle(originalName)}
                     disabled={disabled || isSaving}
                     loading={isDownloading}
@@ -206,7 +264,11 @@ export const AttachmentRow = memo(function AttachmentRow({
                   onClick={() => onToggleDelete(id)}
                   disabled={disabled || isSaving}
                 >
-                  <LocalIcon icon={isStaged ? "close-rounded" : "delete-rounded"} width="15" height="15" />
+                  <LocalIcon
+                    icon={isStaged ? "close-rounded" : "delete-rounded"}
+                    width="15"
+                    height="15"
+                  />
                 </ActionIcon>
               </Tooltip>
             </>

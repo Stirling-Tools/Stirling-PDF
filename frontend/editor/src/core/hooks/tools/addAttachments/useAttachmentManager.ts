@@ -36,12 +36,22 @@ function createUpdatedFile(blob: Blob, originalFile: File): File {
 
 // A staged row's File carries its original name; rename before upload so the
 // embedded attachment keeps the name the user chose.
-function rebuildStagedFile(file: File | undefined, newName: string): File | undefined {
+function rebuildStagedFile(
+  file: File | undefined,
+  newName: string,
+): File | undefined {
   if (!file) return file;
-  return new File([file], newName, { type: file.type, lastModified: file.lastModified });
+  return new File([file], newName, {
+    type: file.type,
+    lastModified: file.lastModified,
+  });
 }
 
-export function useAttachmentManager({ activeFile, onFileUpdated, onError }: UseAttachmentManagerOptions) {
+export function useAttachmentManager({
+  activeFile,
+  onFileUpdated,
+  onError,
+}: UseAttachmentManagerOptions) {
   const { t } = useTranslation();
   const [rows, setRows] = useState<DraftAttachmentRow[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -59,7 +69,9 @@ export function useAttachmentManager({ activeFile, onFileUpdated, onError }: Use
   const prevActiveFileKeyRef = useRef<string | null>(null);
 
   // Stable string identifier for activeFile
-  const activeFileKey = activeFile ? `${activeFile.name}-${activeFile.size}-${activeFile.lastModified}` : "";
+  const activeFileKey = activeFile
+    ? `${activeFile.name}-${activeFile.size}-${activeFile.lastModified}`
+    : "";
 
   const fetchAttachmentsForFile = useCallback(async (file: File | null) => {
     if (!file) {
@@ -108,16 +120,24 @@ export function useAttachmentManager({ activeFile, onFileUpdated, onError }: Use
   const stageFiles = useCallback(
     (newFiles: File[]) => {
       setRows((prev) => {
-        const existingNames = new Set(prev.filter((r) => r.kind !== "deleted").map((r) => r.name.toLowerCase()));
+        const existingNames = new Set(
+          prev
+            .filter((r) => r.kind !== "deleted")
+            .map((r) => r.name.toLowerCase()),
+        );
 
         const validNewRows: DraftAttachmentRow[] = [];
         for (let idx = 0; idx < newFiles.length; idx++) {
           const file = newFiles[idx];
           if (existingNames.has(file.name.toLowerCase())) {
             onError?.(
-              t("attachments.duplicateName", "Attachment with name '{{name}}' already exists.", {
-                name: file.name,
-              }),
+              t(
+                "attachments.duplicateName",
+                "Attachment with name '{{name}}' already exists.",
+                {
+                  name: file.name,
+                },
+              ),
             );
             continue;
           }
@@ -145,7 +165,8 @@ export function useAttachmentManager({ activeFile, onFileUpdated, onError }: Use
         .map((row) => {
           if (row.id !== id) return row;
           if (row.kind === "deleted") {
-            const restoredKind = row.name !== row.originalName ? "renamed" : "existing";
+            const restoredKind =
+              row.name !== row.originalName ? "renamed" : "existing";
             return { ...row, kind: restoredKind };
           }
           return { ...row, kind: "deleted" };
@@ -157,7 +178,8 @@ export function useAttachmentManager({ activeFile, onFileUpdated, onError }: Use
     setRows((prev) =>
       prev.map((row) => {
         if (row.id !== id) return row;
-        const restoredKind = row.name !== row.originalName ? "renamed" : "existing";
+        const restoredKind =
+          row.name !== row.originalName ? "renamed" : "existing";
         return { ...row, kind: restoredKind };
       }),
     );
@@ -170,13 +192,20 @@ export function useAttachmentManager({ activeFile, onFileUpdated, onError }: Use
 
       setRows((prev) => {
         const isDuplicate = prev.some(
-          (r) => r.id !== id && r.kind !== "deleted" && r.name.toLowerCase() === trimmed.toLowerCase(),
+          (r) =>
+            r.id !== id &&
+            r.kind !== "deleted" &&
+            r.name.toLowerCase() === trimmed.toLowerCase(),
         );
         if (isDuplicate) {
           onError?.(
-            t("attachments.duplicateName", "An attachment named '{{name}}' already exists.", {
-              name: trimmed,
-            }),
+            t(
+              "attachments.duplicateName",
+              "An attachment named '{{name}}' already exists.",
+              {
+                name: trimmed,
+              },
+            ),
           );
           return prev;
         }
@@ -184,7 +213,11 @@ export function useAttachmentManager({ activeFile, onFileUpdated, onError }: Use
         return prev.map((row) => {
           if (row.id !== id) return row;
           if (row.kind === "staged") {
-            return { ...row, name: trimmed, file: rebuildStagedFile(row.file, trimmed) };
+            return {
+              ...row,
+              name: trimmed,
+              file: rebuildStagedFile(row.file, trimmed),
+            };
           }
           const newKind = trimmed === row.originalName ? "existing" : "renamed";
           return { ...row, name: trimmed, kind: newKind };
@@ -241,11 +274,17 @@ export function useAttachmentManager({ activeFile, onFileUpdated, onError }: Use
       setActiveAction("save");
 
       try {
-        const renames = rows.filter((r) => r.kind === "renamed").map((r) => ({ oldName: r.originalName, newName: r.name }));
+        const renames = rows
+          .filter((r) => r.kind === "renamed")
+          .map((r) => ({ oldName: r.originalName, newName: r.name }));
 
-        const deletions = rows.filter((r) => r.kind === "deleted").map((r) => r.originalName);
+        const deletions = rows
+          .filter((r) => r.kind === "deleted")
+          .map((r) => r.originalName);
 
-        const additions = rows.filter((r) => r.kind === "staged" && r.file).map((r) => r.file as File);
+        const additions = rows
+          .filter((r) => r.kind === "staged" && r.file)
+          .map((r) => r.file as File);
 
         const updatedBlob = await applyBatchAttachmentOps(activeFile, {
           renames,
@@ -279,7 +318,10 @@ export function useAttachmentManager({ activeFile, onFileUpdated, onError }: Use
       } catch (err) {
         if (saveGen !== genRef.current) return false;
         skipNextFetchRef.current = false;
-        const msg = await parseBlobError(err, "Failed to save attachment changes.");
+        const msg = await parseBlobError(
+          err,
+          "Failed to save attachment changes.",
+        );
         onError?.(msg);
         return false;
       } finally {

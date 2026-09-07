@@ -6,7 +6,10 @@ import { useFileContext } from "@app/contexts/FileContext";
 
 interface AddAttachmentsSettingsProps {
   parameters: AddAttachmentsParameters;
-  onParameterChange: <K extends keyof AddAttachmentsParameters>(key: K, value: AddAttachmentsParameters[K]) => void;
+  onParameterChange: <K extends keyof AddAttachmentsParameters>(
+    key: K,
+    value: AddAttachmentsParameters[K],
+  ) => void;
   disabled?: boolean;
   activeFile?: File | null;
   onFileUpdated?: (file: File) => void;
@@ -70,7 +73,9 @@ const AddAttachmentsSettings = ({
       onExtractAllZip={manager.extractAllZip}
       onSaveDraft={handleSaveDraft}
       onDiscardDraft={manager.discardDraft}
-      onConvertToPdfA3bChange={(val) => onParameterChange("convertToPdfA3b", val)}
+      onConvertToPdfA3bChange={(val) =>
+        onParameterChange("convertToPdfA3b", val)
+      }
     />
   );
 };

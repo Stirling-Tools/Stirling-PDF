@@ -14,7 +14,10 @@ export interface AttachmentInfo {
 /**
  * Parse Blob error response bodies from Axios error responses into readable message strings.
  */
-export async function parseBlobError(error: unknown, fallbackMessage: string): Promise<string> {
+export async function parseBlobError(
+  error: unknown,
+  fallbackMessage: string,
+): Promise<string> {
   if (axios.isAxiosError(error) && error.response?.data) {
     const data = error.response.data;
     if (data instanceof Blob) {
@@ -48,11 +51,16 @@ export async function parseBlobError(error: unknown, fallbackMessage: string): P
 /**
  * List all embedded attachments in a PDF file.
  */
-export async function listAttachments(fileInput: File): Promise<AttachmentInfo[]> {
+export async function listAttachments(
+  fileInput: File,
+): Promise<AttachmentInfo[]> {
   const formData = new FormData();
   formData.append("fileInput", fileInput);
 
-  const response = await apiClient.post<AttachmentInfo[]>("/api/v1/misc/list-attachments", formData);
+  const response = await apiClient.post<AttachmentInfo[]>(
+    "/api/v1/misc/list-attachments",
+    formData,
+  );
   return response.data || [];
 }
 
@@ -60,13 +68,21 @@ export async function listAttachments(fileInput: File): Promise<AttachmentInfo[]
  * Rename an embedded attachment in a PDF file.
  * Returns the modified PDF Blob.
  */
-export async function renameAttachment(fileInput: File, attachmentName: string, newName: string): Promise<Blob> {
+export async function renameAttachment(
+  fileInput: File,
+  attachmentName: string,
+  newName: string,
+): Promise<Blob> {
   const formData = new FormData();
   formData.append("fileInput", fileInput);
   formData.append("attachmentName", attachmentName);
   formData.append("newName", newName);
 
-  const response = await apiClient.post("/api/v1/misc/rename-attachment", formData, { responseType: "blob" });
+  const response = await apiClient.post(
+    "/api/v1/misc/rename-attachment",
+    formData,
+    { responseType: "blob" },
+  );
   return response.data as Blob;
 }
 
@@ -74,12 +90,19 @@ export async function renameAttachment(fileInput: File, attachmentName: string, 
  * Delete an embedded attachment from a PDF file.
  * Returns the modified PDF Blob.
  */
-export async function deleteAttachment(fileInput: File, attachmentName: string): Promise<Blob> {
+export async function deleteAttachment(
+  fileInput: File,
+  attachmentName: string,
+): Promise<Blob> {
   const formData = new FormData();
   formData.append("fileInput", fileInput);
   formData.append("attachmentName", attachmentName);
 
-  const response = await apiClient.post("/api/v1/misc/delete-attachment", formData, { responseType: "blob" });
+  const response = await apiClient.post(
+    "/api/v1/misc/delete-attachment",
+    formData,
+    { responseType: "blob" },
+  );
   return response.data as Blob;
 }
 
@@ -91,7 +114,11 @@ export async function extractAttachments(fileInput: File): Promise<Blob> {
   const formData = new FormData();
   formData.append("fileInput", fileInput);
 
-  const response = await apiClient.post("/api/v1/misc/extract-attachments", formData, { responseType: "blob" });
+  const response = await apiClient.post(
+    "/api/v1/misc/extract-attachments",
+    formData,
+    { responseType: "blob" },
+  );
   return response.data as Blob;
 }
 
@@ -99,13 +126,20 @@ export async function extractAttachments(fileInput: File): Promise<Blob> {
  * Extract a single embedded attachment from a PDF file directly from the server.
  * Returns the attachment Blob.
  */
-export async function extractSingleAttachment(fileInput: File, filename: string): Promise<Blob> {
+export async function extractSingleAttachment(
+  fileInput: File,
+  filename: string,
+): Promise<Blob> {
   const formData = new FormData();
   formData.append("fileInput", fileInput);
   formData.append("attachmentName", filename);
 
   try {
-    const response = await apiClient.post("/api/v1/misc/extract-single-attachment", formData, { responseType: "blob" });
+    const response = await apiClient.post(
+      "/api/v1/misc/extract-single-attachment",
+      formData,
+      { responseType: "blob" },
+    );
     return response.data as Blob;
   } catch (err) {
     const status = axios.isAxiosError(err) ? err.response?.status : undefined;
@@ -119,13 +153,18 @@ export async function extractSingleAttachment(fileInput: File, filename: string)
     const fileEntries = Object.keys(zip.files).filter((k) => !zip.files[k].dir);
     let matchedKey = fileEntries.find((k) => k === cleanFilename);
     if (!matchedKey) {
-      const norm = (s: string) => decodeURIComponent(s).toLowerCase().replace(/\\/g, "/");
+      const norm = (s: string) =>
+        decodeURIComponent(s).toLowerCase().replace(/\\/g, "/");
       const targetNorm = norm(cleanFilename);
       const targetBase = targetNorm.split("/").pop() || targetNorm;
       matchedKey = fileEntries.find((k) => {
         const kNorm = norm(k);
         const kBase = kNorm.split("/").pop() || kNorm;
-        return kNorm === targetNorm || kBase === targetBase || kNorm.endsWith("/" + targetBase);
+        return (
+          kNorm === targetNorm ||
+          kBase === targetBase ||
+          kNorm.endsWith("/" + targetBase)
+        );
       });
     }
     const zipEntry = matchedKey ? zip.file(matchedKey) : null;
@@ -142,7 +181,11 @@ export async function extractSingleAttachment(fileInput: File, filename: string)
  * Add attachments to a PDF file.
  * Returns the modified PDF Blob.
  */
-export async function addAttachments(fileInput: File, attachments: File[], convertToPdfA3b?: boolean): Promise<Blob> {
+export async function addAttachments(
+  fileInput: File,
+  attachments: File[],
+  convertToPdfA3b?: boolean,
+): Promise<Blob> {
   const formData = new FormData();
   formData.append("fileInput", fileInput);
   attachments.forEach((att) => {
@@ -152,7 +195,11 @@ export async function addAttachments(fileInput: File, attachments: File[], conve
     formData.append("convertToPdfA3b", "true");
   }
 
-  const response = await apiClient.post("/api/v1/misc/add-attachments", formData, { responseType: "blob" });
+  const response = await apiClient.post(
+    "/api/v1/misc/add-attachments",
+    formData,
+    { responseType: "blob" },
+  );
   return response.data as Blob;
 }
 
@@ -185,7 +232,11 @@ export async function applyBatchAttachmentOps(
   }
 
   try {
-    const response = await apiClient.post("/api/v1/misc/batch-process-attachments", formData, { responseType: "blob" });
+    const response = await apiClient.post(
+      "/api/v1/misc/batch-process-attachments",
+      formData,
+      { responseType: "blob" },
+    );
     return response.data as Blob;
   } catch (err) {
     const status = axios.isAxiosError(err) ? err.response?.status : undefined;
@@ -209,7 +260,11 @@ export async function applyBatchAttachmentOps(
       });
     }
     if (ops.additions.length > 0) {
-      return await addAttachments(currentFile, ops.additions, ops.convertToPdfA3b);
+      return await addAttachments(
+        currentFile,
+        ops.additions,
+        ops.convertToPdfA3b,
+      );
     }
     return currentFile;
   }
