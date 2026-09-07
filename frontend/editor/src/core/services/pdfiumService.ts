@@ -1447,7 +1447,7 @@ export async function extractPageTextItemsForReadAloud(
 
     for (let i = 0; i < charCount; i++) {
       const uc = m.FPDFText_GetUnicode(textPagePtr, i);
-      const char = String.fromCharCode(uc);
+      const char = String.fromCodePoint(uc);
 
       if (char === "\n" || char === "\r" || char === " " || char === "\t") {
         flushWord();

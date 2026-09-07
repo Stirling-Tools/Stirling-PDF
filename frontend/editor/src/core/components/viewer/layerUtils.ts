@@ -46,30 +46,28 @@ function decodePdfString(s: string): string {
   return trimmed.replace(/^\//, "");
 }
 
-async function decompressFlate(data: Uint8Array): Promise<Uint8Array> {
-  if (typeof DecompressionStream !== "undefined") {
-    const ds = new DecompressionStream("deflate");
-    const writer = ds.writable.getWriter();
-    writer.write(data as unknown as BufferSource);
-    writer.close();
-    const reader = ds.readable.getReader();
-    const chunks: Uint8Array[] = [];
-    let total = 0;
-    while (true) {
-      const { value, done } = await reader.read();
-      if (done) break;
-      chunks.push(value);
-      total += value.length;
-    }
-    const result = new Uint8Array(total);
-    let offset = 0;
-    for (const chunk of chunks) {
-      result.set(chunk, offset);
-      offset += chunk.length;
-    }
-    return result;
+async function decompressFlate(data: Uint8Array): Promise<Uint8Array | null> {
+  if (typeof DecompressionStream === "undefined") return null;
+  const ds = new DecompressionStream("deflate");
+  const writer = ds.writable.getWriter();
+  writer.write(data as unknown as BufferSource);
+  writer.close();
+  const reader = ds.readable.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+    total += value.length;
   }
-  return data;
+  const result = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    result.set(chunk, offset);
+    offset += chunk.length;
+  }
+  return result;
 }
 
 const MAX_ARRAY_DEPTH = 64;
@@ -125,7 +123,10 @@ function parseOrderTokens(
   return parseList(0);
 }
 
+const LAYER_SCAN_SIZE_LIMIT = 100 * 1024 * 1024;
+
 export async function readPdfLayers(file: Blob): Promise<LayerInfo[]> {
+  if (file.size >= LAYER_SCAN_SIZE_LIMIT) return [];
   const arrayBuffer = await file.arrayBuffer();
   const bytes = new Uint8Array(arrayBuffer);
   const text = new TextDecoder("latin1").decode(bytes);
@@ -155,6 +156,7 @@ export async function readPdfLayers(file: Blob): Promise<LayerInfo[]> {
     );
     try {
       const decompressedBytes = await decompressFlate(compressed);
+      if (!decompressedBytes) continue;
       const decompressed = new TextDecoder("latin1").decode(decompressedBytes);
       const header = decompressed.substring(0, first).trim().split(/\s+/);
       for (let i = 0; i < n * 2; i += 2) {
