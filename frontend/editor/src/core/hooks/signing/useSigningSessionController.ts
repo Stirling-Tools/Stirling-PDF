@@ -24,6 +24,22 @@ import type { SignatureSettings } from "@app/components/tools/certSign/Signature
 /** Which Shared Signing screen the sidebar tool is currently showing. */
 export type SigningView = "list" | "detail" | "request";
 
+/** The owner's appearance settings as session workflowMetadata; unset keys are omitted, not null. */
+export function buildWorkflowMetadata(
+  settings: SignatureSettings,
+): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries({
+      showSignature: settings.showSignature,
+      pageNumber: settings.pageNumber,
+      reason: settings.reason?.trim() || undefined,
+      location: settings.location?.trim() || undefined,
+      showLogo: settings.showLogo,
+      includeSummaryPage: settings.includeSummaryPage,
+    }).filter(([, value]) => value !== undefined && value !== null),
+  );
+}
+
 /** Data the session-detail sidebar panel needs to render and act. */
 export interface SigningDetailData {
   session: SessionDetail;
@@ -432,11 +448,9 @@ export function useSigningSessionController(enabled: boolean) {
       });
       if (dueDate) formData.append("dueDate", dueDate);
       formData.append("notifyOnCreate", "true");
-      if (signatureSettings.includeSummaryPage) {
-        formData.append(
-          "workflowMetadata",
-          JSON.stringify({ includeSummaryPage: true }),
-        );
+      const workflowMetadata = buildWorkflowMetadata(signatureSettings);
+      if (Object.keys(workflowMetadata).length > 0) {
+        formData.append("workflowMetadata", JSON.stringify(workflowMetadata));
       }
 
       await apiClient.post("/api/v1/security/cert-sign/sessions", formData);

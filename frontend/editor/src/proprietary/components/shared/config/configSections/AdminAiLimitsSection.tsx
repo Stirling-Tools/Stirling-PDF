@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react";
+import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { NumberInput, Stack, Paper, Text, Loader, Group } from "@mantine/core";
 import { alert } from "@app/components/toast";
@@ -25,7 +25,6 @@ export default function AdminAiLimitsSection() {
     setSettings,
     loading,
     saving,
-    fetchSettings,
     saveSettings,
     isFieldPending,
   } = useAdminSettings<AiEngineSettingsData>({
@@ -52,10 +51,6 @@ export default function AdminAiLimitsSection() {
       },
     }),
   });
-
-  useEffect(() => {
-    fetchSettings();
-  }, []);
 
   const { isDirty, resetToSnapshot, markSaved } = useSettingsDirty(
     settings,

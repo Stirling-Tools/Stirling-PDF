@@ -146,6 +146,17 @@ pub fn run() {
     .setup(|app| {
       add_log("🚀 Tauri app setup started".to_string());
 
+      // Windows: drop the native title bar so the in-app custom title bar
+      // (window controls + drag region) takes over. Runtime toggle because the
+      // main window is defined in tauri.conf.json; spawned windows set it at
+      // build time in window.rs. macOS/Linux keep their native decorations.
+      #[cfg(target_os = "windows")]
+      {
+        if let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) {
+          let _ = window.set_decorations(false);
+        }
+      }
+
       // Files passed on the command line at first launch load into the main
       // window once the frontend mounts.
       let args: Vec<String> = std::env::args().collect();

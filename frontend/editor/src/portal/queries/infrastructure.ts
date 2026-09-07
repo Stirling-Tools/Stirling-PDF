@@ -33,9 +33,9 @@ export function useAuditLog(tier: Tier): AsyncState<AuditLogResponse> {
   );
 }
 
-/** Base query: editor deployment health (tier-scoped). Shared by Home's hero /
- *  status card, EditorAdmin, and onboarding. Best-effort — callers tolerate a
- *  404 on a bare backend, so no retry. */
+/** Base query: editor deployment health (tier-scoped). Read by Home's hero
+ *  status card. Best-effort — callers tolerate a 404 on a bare backend, so no
+ *  retry. */
 export function useEditorDeployment(
   tier: Tier,
 ): AsyncState<EditorDeploymentResponse> {

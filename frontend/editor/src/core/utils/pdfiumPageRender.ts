@@ -6,7 +6,10 @@
  * per-page thumbnail service (thumbnailGenerationService.ts) so the pixel-
  * copy + white-background logic lives in one place.
  */
-import { getPdfiumModule } from "@app/services/pdfiumService";
+import {
+  getPdfiumModule,
+  type ExtendedPdfiumRuntime,
+} from "@app/services/pdfiumService";
 
 /** FPDF_ANNOT (0x01) | FPDF_LCD_TEXT (0x10). */
 const PDFIUM_RENDER_FLAGS = 0x01 | 0x10;
@@ -43,7 +46,7 @@ export async function renderPdfiumPageDataUrl(
     const rawW = m.FPDF_GetPageWidthF(pagePtr);
     const rawH = m.FPDF_GetPageHeightF(pagePtr);
     // Returns 0–3 for 0°/90°/180°/270° CW.
-    const pageRotQuarters = (m as any).FPDFPage_GetRotation(pagePtr) | 0;
+    const pageRotQuarters = m.FPDFPage_GetRotation(pagePtr) | 0;
 
     const isQuarterTurn = pageRotQuarters === 1 || pageRotQuarters === 3;
 
@@ -72,7 +75,7 @@ export async function renderPdfiumPageDataUrl(
 
       const bufferPtr = m.FPDFBitmap_GetBuffer(bitmapPtr);
       const stride = m.FPDFBitmap_GetStride(bitmapPtr);
-      const heap = new Uint8Array((m.pdfium.wasmExports as any).memory.buffer);
+      const heap = (m.pdfium as typeof m.pdfium & ExtendedPdfiumRuntime).HEAPU8;
       const pixels = new Uint8ClampedArray(w * h * 4);
 
       // @embedpdf/pdfium WASM stores pixels in RGBA byte order (not BGRA),
@@ -112,7 +115,7 @@ export async function readPdfiumPageMetadata(
   try {
     const width = m.FPDF_GetPageWidthF(pagePtr);
     const height = m.FPDF_GetPageHeightF(pagePtr);
-    const rotation = (((m as any).FPDFPage_GetRotation(pagePtr) | 0) & 3) * 90;
+    const rotation = ((m.FPDFPage_GetRotation(pagePtr) | 0) & 3) * 90;
     return { width, height, rotation };
   } finally {
     m.FPDF_ClosePage(pagePtr);

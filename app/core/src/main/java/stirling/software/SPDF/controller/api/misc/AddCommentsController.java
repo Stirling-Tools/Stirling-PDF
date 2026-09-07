@@ -96,7 +96,9 @@ public class AddCommentsController {
 
         List<CommentSpecDto> dtos;
         try {
-            dtos = objectMapper.readValue(commentsJson, new TypeReference<>() {});
+            dtos =
+                    objectMapper.readValue(
+                            commentsJson, new TypeReference<List<CommentSpecDto>>() {});
         } catch (JacksonException e) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST, "comments must be a JSON array of CommentSpec objects");
