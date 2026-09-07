@@ -20,7 +20,6 @@ import {
 } from "@app/services/fileSidebarCategories";
 import { buildLabelGroups } from "@app/components/shared/fileSidebarGroupingLogic";
 import { scheduleIdle } from "@app/utils/scheduleIdle";
-import type { FileId } from "@app/types/file";
 import type { StirlingFileStub } from "@app/types/fileContext";
 import type { FileSidebarGroup } from "@core/components/shared/fileSidebarGrouping";
 
@@ -81,7 +80,7 @@ export function useFileSidebarGroups(
           if (cancelled) return;
           attempted.current.add(attemptKey(stub));
           if (labels) {
-            const ok = await fileStorage.updateFileMetadata(stub.id as FileId, {
+            const ok = await fileStorage.updateFileMetadata(stub.id, {
               classificationLabels: labels,
             });
             if (ok) wrote = true;

@@ -28,6 +28,7 @@ import LoginRequiredBanner from "@app/components/shared/config/LoginRequiredBann
 import { usePreferences } from "@app/contexts/PreferencesContext";
 import { useUnsavedChanges } from "@app/contexts/UnsavedChangesContext";
 import {
+  normalizeLanguageCode,
   supportedLanguages,
   toUnderscoreFormat,
   toUnderscoreLanguages,
@@ -112,11 +113,11 @@ export default function AdminGeneralSection() {
     setSettings,
     loading,
     saving,
-    fetchSettings,
     saveSettings,
     isFieldPending,
   } = useAdminSettings<GeneralSettingsData>({
     sectionName: "general",
+    enabled: loginEnabled,
     fetchTransformer: async (): Promise<
       GeneralSettingsData & { _pending?: Record<string, unknown> }
     > => {
@@ -254,6 +255,17 @@ export default function AdminGeneralSection() {
     () => toUnderscoreLanguages(settings.ui?.languages || []),
     [settings.ui?.languages],
   );
+  // SYSTEM_DEFAULTLOCALE accepts en-GB as well as en_GB, but every option below
+  // is keyed on the underscore form, so match the stored value to it before
+  // handing it to the Select. Normalising only what is displayed keeps the
+  // configured value untouched when the field is left alone.
+  const defaultLocaleValue = useMemo(
+    () =>
+      toUnderscoreFormat(
+        normalizeLanguageCode(settings.system?.defaultLocale || ""),
+      ),
+    [settings.system?.defaultLocale],
+  );
   const watchedFoldersInput = useMemo(
     () => (settings.customPaths?.pipeline?.watchedFoldersDirs || []).join("\n"),
     [settings.customPaths?.pipeline?.watchedFoldersDirs],
@@ -330,13 +342,6 @@ export default function AdminGeneralSection() {
       selectedLanguages.includes(option.value),
     );
   }, [selectedLanguages, languageOptions]);
-
-  useEffect(() => {
-    // Only fetch real settings if login is enabled
-    if (loginEnabled) {
-      fetchSettings();
-    }
-  }, [loginEnabled, fetchSettings]);
 
   // Sync local preference with server setting on initial load
   useEffect(() => {
@@ -618,7 +623,7 @@ export default function AdminGeneralSection() {
                   "admin.settings.general.defaultLocale.description",
                   "The default language for new users (e.g., en_US, es_ES)",
                 )}
-                value={settings.system?.defaultLocale || ""}
+                value={defaultLocaleValue}
                 onChange={(value) =>
                   setSettings({
                     ...settings,

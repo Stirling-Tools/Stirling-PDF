@@ -360,11 +360,9 @@ const TeamSection: React.FC = () => {
           verticalSpacing="sm"
           withRowBorders
           highlightOnHover
-          style={
-            {
-              "--table-border-color": "var(--mantine-color-gray-3)",
-            } as React.CSSProperties
-          }
+          style={{
+            "--table-border-color": "var(--mantine-color-gray-3)",
+          }}
         >
           <Table.Thead>
             <Table.Tr

@@ -1,13 +1,24 @@
-import { useState, useCallback } from "react";
-import apiClient from "@app/services/apiClient";
+import { useCallback, useMemo, useRef, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  fetchAdminSection,
+  putAdminSection,
+  putAdminSettings,
+} from "@app/api/adminSettings";
+import { qk } from "@app/query/keys";
 import {
   mergePendingSettings,
   isFieldPending,
   hasPendingChanges,
+  type SettingsWithPending,
 } from "@app/utils/settingsPendingHelper";
+
+/** A settings block, which is an object of unknown-shaped fields. */
+type SettingsBlock = Record<string, unknown>;
 
 interface UseAdminSettingsOptions<T> {
   sectionName: string;
+  enabled?: boolean;
   /**
    * Optional transformer to combine data from multiple endpoints.
    * If not provided, uses the section response directly.
@@ -18,201 +29,121 @@ interface UseAdminSettingsOptions<T> {
    * Returns an object with sectionData and optionally deltaSettings.
    */
   saveTransformer?: (settings: T) => {
-    sectionData: any;
-    deltaSettings?: Record<string, any>;
+    sectionData: SettingsBlock;
+    deltaSettings?: SettingsBlock;
   };
 }
 
 interface UseAdminSettingsReturn<T> {
   settings: T;
-  rawSettings: any;
+  rawSettings: (T & SettingsWithPending<T>) | null;
   loading: boolean;
   saving: boolean;
   setSettings: (settings: T) => void;
-  fetchSettings: () => Promise<void>;
   saveSettings: () => Promise<void>;
   isFieldPending: (fieldPath: string) => boolean;
   hasPendingChanges: () => boolean;
 }
 
 /**
- * Hook for managing admin settings with automatic pending changes support.
- * Includes delta detection to only send changed fields.
- *
- * @example
- * const { settings, setSettings, saveSettings, isFieldPending } = useAdminSettings({
- *   sectionName: 'legal'
- * });
+ * One config section: the server value, an editable draft over it, and a save
+ * that sends only what changed. Sections sharing a sectionName share the fetch.
  */
-export function useAdminSettings<T = any>(
+export function useAdminSettings<T>(
   options: UseAdminSettingsOptions<T>,
 ): UseAdminSettingsReturn<T> {
-  const { sectionName, fetchTransformer, saveTransformer } = options;
+  const {
+    sectionName,
+    enabled = true,
+    fetchTransformer,
+    saveTransformer,
+  } = options;
 
-  const [settings, setSettings] = useState<T>({} as T);
-  const [rawSettings, setRawSettings] = useState<any>(null);
-  const [originalSettings, setOriginalSettings] = useState<T>({} as T); // Track original active values
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const queryClient = useQueryClient();
+  const queryKey = qk.adminSection(sectionName);
 
-  const fetchSettings = useCallback(async () => {
-    try {
-      setLoading(true);
+  // Inline closures at the call sites, so their identity changes every render.
+  const fetchTransformerRef = useRef(fetchTransformer);
+  fetchTransformerRef.current = fetchTransformer;
+  const saveTransformerRef = useRef(saveTransformer);
+  saveTransformerRef.current = saveTransformer;
 
-      let rawData: any;
+  const {
+    data: rawSettings,
+    isPending,
+    isFetching,
+  } = useQuery({
+    queryKey,
+    queryFn: (): Promise<T & SettingsWithPending<T>> =>
+      fetchTransformerRef.current
+        ? (fetchTransformerRef.current() as Promise<T & SettingsWithPending<T>>)
+        : fetchAdminSection<T & SettingsWithPending<T>>(sectionName),
+    enabled,
+    // Inherits the client's 30s window. Not CONFIG_STALE_TIME: these are
+    // editable, and a save invalidates. Override it for live server state.
+  });
 
-      if (fetchTransformer) {
-        // Use custom fetch logic for complex sections
-        rawData = await fetchTransformer();
-      } else {
-        // Simple single-endpoint fetch
-        const response = await apiClient.get(
-          `/api/v1/admin/settings/section/${sectionName}`,
-        );
-        rawData = response.data || {};
-      }
+  // Pending changes folded in: what the form shows, and the delta baseline.
+  const baseline = useMemo(
+    () => (rawSettings ? (mergePendingSettings(rawSettings) as T) : ({} as T)),
+    [rawSettings],
+  );
 
-      console.log(
-        `[useAdminSettings:${sectionName}] Raw response:`,
-        JSON.stringify(rawData, null, 2),
-      );
+  // Adjusted during render, not in an effect: React re-runs the component
+  // before committing, so reseeding costs no extra render.
+  const [draft, setDraft] = useState<T>(baseline);
+  const seededFrom = useRef(rawSettings);
+  if (rawSettings !== undefined && seededFrom.current !== rawSettings) {
+    seededFrom.current = rawSettings;
+    setDraft(baseline);
+  }
 
-      // Store raw settings (includes _pending if present)
-      setRawSettings(rawData);
+  const save = useMutation({
+    mutationFn: async () => {
+      const delta = computeDelta(baseline, draft);
+      if (Object.keys(delta).length === 0) return;
 
-      // Merge pending changes into settings for display
-      const mergedSettings = mergePendingSettings(rawData);
-      console.log(
-        `[useAdminSettings:${sectionName}] Merged settings:`,
-        JSON.stringify(mergedSettings, null, 2),
-      );
-
-      // Store merged settings as original for delta comparison
-      // This ensures we compare against what the user SAW (with pending), not raw active values
-      setOriginalSettings(mergedSettings as T);
-      console.log(
-        `[useAdminSettings:${sectionName}] Original settings (for comparison):`,
-        JSON.stringify(mergedSettings, null, 2),
-      );
-
-      setSettings(mergedSettings as T);
-    } catch (error) {
-      console.error(
-        `[useAdminSettings:${sectionName}] Failed to fetch:`,
-        error,
-      );
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  }, [sectionName]);
-
-  const saveSettings = async () => {
-    try {
-      setSaving(true);
-
-      // Compute delta: only include fields that changed from original
-      const delta = computeDelta(originalSettings, settings);
-      console.log(
-        `[useAdminSettings:${sectionName}] Delta (changed fields):`,
-        JSON.stringify(delta, null, 2),
-      );
-
-      if (Object.keys(delta).length === 0) {
-        console.log(
-          `[useAdminSettings:${sectionName}] No changes detected, skipping save`,
-        );
+      const transform = saveTransformerRef.current;
+      if (!transform) {
+        await putAdminSection(sectionName, delta);
         return;
       }
 
-      if (saveTransformer) {
-        // Use custom save logic for complex sections
-        const { sectionData, deltaSettings } = saveTransformer(settings);
+      const { sectionData, deltaSettings } = transform(draft);
+      const { sectionData: originalSectionData, deltaSettings: originalDelta } =
+        transform(baseline);
 
-        // Get original sectionData using same transformer for fair comparison
-        const { sectionData: originalSectionData } =
-          saveTransformer(originalSettings);
-
-        // Save section data (with delta applied) - compare transformed vs transformed
-        const sectionDelta = computeDelta(originalSectionData, sectionData);
-        if (Object.keys(sectionDelta).length > 0) {
-          await apiClient.put(
-            `/api/v1/admin/settings/section/${sectionName}`,
-            sectionDelta,
-          );
-        }
-
-        // Save delta settings if provided (filter to only changed values)
-        if (deltaSettings && Object.keys(deltaSettings).length > 0) {
-          // Build deltaSettings from original using same transformer to get correct structure
-          const { deltaSettings: originalDeltaSettings } =
-            saveTransformer(originalSettings);
-
-          console.log(
-            `[useAdminSettings:${sectionName}] Comparing deltaSettings:`,
-            {
-              original: originalDeltaSettings,
-              current: deltaSettings,
-            },
-          );
-
-          // Compare current vs original deltaSettings (both have same backend paths)
-          const changedDeltaSettings: Record<string, any> = {};
-          for (const [key, value] of Object.entries(deltaSettings)) {
-            const originalValue = originalDeltaSettings?.[key];
-
-            // Only include if value actually changed
-            if (JSON.stringify(value) !== JSON.stringify(originalValue)) {
-              changedDeltaSettings[key] = value;
-              console.log(
-                `[useAdminSettings:${sectionName}] Delta field changed: ${key}`,
-                {
-                  original: originalValue,
-                  new: value,
-                },
-              );
-            }
-          }
-
-          if (Object.keys(changedDeltaSettings).length > 0) {
-            console.log(
-              `[useAdminSettings:${sectionName}] Sending delta settings:`,
-              changedDeltaSettings,
-            );
-            await apiClient.put("/api/v1/admin/settings", {
-              settings: changedDeltaSettings,
-            });
-          } else {
-            console.log(
-              `[useAdminSettings:${sectionName}] No delta settings changed, skipping`,
-            );
-          }
-        }
-      } else {
-        // Simple single-endpoint save with delta
-        await apiClient.put(
-          `/api/v1/admin/settings/section/${sectionName}`,
-          delta,
-        );
+      const sectionDelta = computeDelta(originalSectionData, sectionData);
+      if (Object.keys(sectionDelta).length > 0) {
+        await putAdminSection(sectionName, sectionDelta);
       }
 
-      // Refetch to get updated _pending block
-      await fetchSettings();
-    } catch (error) {
-      console.error(`[useAdminSettings:${sectionName}] Failed to save:`, error);
-      throw error;
-    } finally {
-      setSaving(false);
-    }
-  };
+      if (deltaSettings && Object.keys(deltaSettings).length > 0) {
+        const changed: SettingsBlock = {};
+        for (const [key, value] of Object.entries(deltaSettings)) {
+          if (JSON.stringify(value) !== JSON.stringify(originalDelta?.[key])) {
+            changed[key] = value;
+          }
+        }
+        if (Object.keys(changed).length > 0) await putAdminSettings(changed);
+      }
+    },
+    // Refetch rather than trust the draft: the response carries the _pending
+    // block the badges render from.
+    onSuccess: () => queryClient.invalidateQueries({ queryKey }),
+  });
+
+  const saveSettings = useCallback(async () => {
+    await save.mutateAsync();
+  }, [save]);
 
   return {
-    settings,
-    rawSettings,
-    loading,
-    saving,
-    setSettings,
-    fetchSettings,
+    settings: draft,
+    rawSettings: rawSettings ?? null,
+    // True while disabled too: nothing has loaded.
+    loading: isPending || isFetching,
+    saving: save.isPending,
+    setSettings: setDraft,
     saveSettings,
     isFieldPending: (fieldPath: string) =>
       isFieldPending(rawSettings, fieldPath),
@@ -224,30 +155,25 @@ export function useAdminSettings<T = any>(
  * Compute delta between original and current settings.
  * Returns only fields that have changed.
  */
-function computeDelta(original: any, current: any): any {
-  const delta: any = {};
+function computeDelta(original: unknown, current: unknown): SettingsBlock {
+  const delta: SettingsBlock = {};
+  if (!isPlainObject(current)) return delta;
+  const before: SettingsBlock = isPlainObject(original) ? original : {};
 
-  for (const key in current) {
-    if (!Object.prototype.hasOwnProperty.call(current, key)) continue;
-
-    const originalValue = original[key];
+  for (const key of Object.keys(current)) {
+    const originalValue = before[key];
     const currentValue = current[key];
 
-    // Handle nested objects
     if (isPlainObject(currentValue) && isPlainObject(originalValue)) {
       const nestedDelta = computeDelta(originalValue, currentValue);
       if (Object.keys(nestedDelta).length > 0) {
         delta[key] = nestedDelta;
       }
-    }
-    // Handle arrays
-    else if (Array.isArray(currentValue) && Array.isArray(originalValue)) {
+    } else if (Array.isArray(currentValue) && Array.isArray(originalValue)) {
       if (JSON.stringify(currentValue) !== JSON.stringify(originalValue)) {
         delta[key] = currentValue;
       }
-    }
-    // Handle primitives
-    else if (currentValue !== originalValue) {
+    } else if (currentValue !== originalValue) {
       delta[key] = currentValue;
     }
   }
@@ -258,7 +184,7 @@ function computeDelta(original: any, current: any): any {
 /**
  * Check if value is a plain object (not array, not null, not Date, etc.)
  */
-function isPlainObject(value: any): boolean {
+function isPlainObject(value: unknown): value is SettingsBlock {
   return (
     value !== null && typeof value === "object" && value.constructor === Object
   );

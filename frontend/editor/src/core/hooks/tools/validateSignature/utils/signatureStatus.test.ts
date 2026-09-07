@@ -95,10 +95,7 @@ describe("computeSignatureStatus - trust surfacing", () => {
   });
 
   test("backend error message -> Invalid", () => {
-    const status = computeSignatureStatus(
-      sig({ errorMessage: "boom" } as Partial<SignatureValidationSignature>),
-      t,
-    );
+    const status = computeSignatureStatus(sig({ errorMessage: "boom" }), t);
     expect(status.kind).toBe("invalid");
     expect(status.details).toContain("boom");
   });
