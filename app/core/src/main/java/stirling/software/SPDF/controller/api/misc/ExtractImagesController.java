@@ -6,8 +6,15 @@ import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
+import java.util.HexFormat;
+import java.util.List;
 import java.util.Set;
 import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
@@ -15,7 +22,13 @@ import java.util.zip.ZipOutputStream;
 
 import javax.imageio.ImageIO;
 
+import org.apache.pdfbox.cos.COSArray;
+import org.apache.pdfbox.cos.COSBase;
+import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.cos.COSObject;
+import org.apache.pdfbox.cos.COSStream;
+import org.apache.pdfbox.cos.COSString;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
@@ -39,7 +52,6 @@ import stirling.software.common.model.tool.ToolArity;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
-import stirling.software.common.util.ChecksumUtils;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.TempFile;
@@ -50,6 +62,8 @@ import stirling.software.common.util.WebResponseUtils;
 @Slf4j
 @RequiredArgsConstructor
 public class ExtractImagesController {
+
+    private static final int MAX_KEY_DEPTH = 32;
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
@@ -157,24 +171,92 @@ public class ExtractImagesController {
 
     /**
      * Content fingerprint identifying one embedded image, used to extract a repeated image only
-     * once. Hashes the encoded stream rather than the decoded pixels, so it costs a read of the
-     * already-compressed bytes.
+     * once. Folds in the encoded stream and every dictionary entry that decoding depends on -
+     * filters, colour space, decode array and masks - with indirect references resolved, so two
+     * copies of the same image match while two images that merely share encoded bytes do not.
      *
-     * @return null when the image cannot be hashed, meaning it must be extracted rather than
+     * @return null when the image cannot be fingerprinted, meaning it must be extracted rather than
      *     treated as a duplicate
      */
     private static String imageContentKey(PDImageXObject image) {
-        try (InputStream raw = image.getCOSObject().createRawInputStream()) {
-            return ChecksumUtils.checksum(raw, "SHA-256")
-                    + '_'
-                    + image.getWidth()
-                    + 'x'
-                    + image.getHeight()
-                    + '_'
-                    + image.getBitsPerComponent();
-        } catch (IOException e) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            digestValue(digest, image.getCOSObject(), new HashSet<>(), 0);
+            if (!image.isStencil()) {
+                digestValue(digest, image.getColorSpace().getCOSObject(), new HashSet<>(), 0);
+            }
+            return HexFormat.of().formatHex(digest.digest());
+        } catch (IOException | NoSuchAlgorithmException | RuntimeException e) {
             log.warn("Could not fingerprint embedded image, extracting it without dedup", e);
             return null;
+        }
+    }
+
+    private static void digestValue(MessageDigest digest, COSBase value, Set<Long> path, int depth)
+            throws IOException {
+        if (value == null || depth > MAX_KEY_DEPTH) {
+            digest.update((byte) 'x');
+            return;
+        }
+        switch (value) {
+            case COSObject reference -> {
+                long number = reference.getObjectNumber();
+                if (!path.add(number)) {
+                    digest.update((byte) 'c');
+                    return;
+                }
+                try {
+                    digestValue(digest, reference.getObject(), path, depth + 1);
+                } finally {
+                    path.remove(number);
+                }
+            }
+            case COSStream stream -> {
+                digest.update((byte) 's');
+                try (InputStream raw = stream.createRawInputStream()) {
+                    byte[] buffer = new byte[8192];
+                    for (int read; (read = raw.read(buffer)) != -1; ) {
+                        digest.update(buffer, 0, read);
+                    }
+                }
+                digestDictionary(digest, stream, path, depth);
+            }
+            case COSDictionary dictionary -> {
+                digest.update((byte) 'd');
+                digestDictionary(digest, dictionary, path, depth);
+            }
+            case COSArray array -> {
+                digest.update((byte) 'a');
+                for (int i = 0; i < array.size(); i++) {
+                    digestValue(digest, array.get(i), path, depth + 1);
+                }
+            }
+            case COSString text -> {
+                digest.update((byte) 't');
+                digest.update(text.getBytes());
+            }
+            case COSName name -> {
+                digest.update((byte) 'n');
+                digest.update(name.getName().getBytes(StandardCharsets.UTF_8));
+            }
+            default -> {
+                digest.update((byte) 'v');
+                digest.update(value.toString().getBytes(StandardCharsets.UTF_8));
+            }
+        }
+    }
+
+    private static void digestDictionary(
+            MessageDigest digest, COSDictionary dictionary, Set<Long> path, int depth)
+            throws IOException {
+        List<COSName> keys = new ArrayList<>(dictionary.keySet());
+        keys.sort(Comparator.comparing(COSName::getName));
+        for (COSName key : keys) {
+            if (COSName.LENGTH.equals(key)) {
+                continue;
+            }
+            digest.update(key.getName().getBytes(StandardCharsets.UTF_8));
+            digestValue(digest, dictionary.getItem(key), path, depth + 1);
         }
     }
 
