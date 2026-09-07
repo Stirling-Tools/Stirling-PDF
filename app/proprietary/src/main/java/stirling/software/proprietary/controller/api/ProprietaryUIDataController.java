@@ -698,6 +698,7 @@ public class ProprietaryUIDataController {
          * toggle: a link is copied out of the UI, so an instance with no SMTP can still use one.
          */
         private boolean inviteLinksEnabled;
+
         private Map<String, Map<String, String>> userSettings;
         private List<String> lockedUsers;
     }
