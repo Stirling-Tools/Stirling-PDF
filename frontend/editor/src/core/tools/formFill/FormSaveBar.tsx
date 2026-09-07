@@ -117,8 +117,10 @@ export function FormSaveBar({
             withBorder
             style={{
               pointerEvents: "auto",
-              minWidth: "320px",
-              maxWidth: "420px",
+              // Fill the viewport on small screens instead of overflowing the
+              // left edge with a fixed 320px+ minimum width.
+              width: "min(420px, calc(100vw - 2rem))",
+              maxWidth: "100%",
               overflow: "hidden",
             }}
           >
@@ -168,7 +170,7 @@ export function FormSaveBar({
               </Group>
 
               {isDirty && (
-                <Group gap="xs" mt="xs">
+                <Group gap="xs" mt="xs" wrap="wrap">
                   <Button
                     size="sm"
                     variant="secondary"
@@ -176,7 +178,7 @@ export function FormSaveBar({
                     loading={applying}
                     disabled={saving}
                     onClick={handleApply}
-                    style={{ flex: 1 }}
+                    style={{ flex: "1 1 10rem", minWidth: 0 }}
                   >
                     {t("viewer.formBar.apply", "Apply Changes")}
                   </Button>
@@ -186,7 +188,7 @@ export function FormSaveBar({
                     loading={saving}
                     disabled={applying || policyEnforcing}
                     onClick={handleDownload}
-                    style={{ flex: 1 }}
+                    style={{ flex: "1 1 10rem", minWidth: 0 }}
                   >
                     {t("viewer.formBar.download", "Download PDF")}
                   </Button>

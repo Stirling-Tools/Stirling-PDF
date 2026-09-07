@@ -55,10 +55,14 @@ describe("workbench session record", () => {
 });
 
 describe("editor return path", () => {
-  it("is consumed by the first take", () => {
-    saveEditorReturnPath("/compress?x=1");
+  it("captures the live address bar and is consumed by the first take", () => {
+    // The editor writes its tool route via raw history.pushState, so the save
+    // must read window.location, not a lagging router location.
+    window.history.pushState({}, "", "/compress?x=1");
+    saveEditorReturnPath();
     expect(takeEditorReturnPath()).toBe("/compress?x=1");
     expect(takeEditorReturnPath()).toBeNull();
+    window.history.pushState({}, "", "/");
   });
 });
 

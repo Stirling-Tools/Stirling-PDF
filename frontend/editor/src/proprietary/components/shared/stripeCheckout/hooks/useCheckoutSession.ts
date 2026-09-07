@@ -19,6 +19,7 @@ export const useCheckoutSession = (
   setCurrentLicenseKey: React.Dispatch<React.SetStateAction<string | null>>,
   setPollingStatus: React.Dispatch<React.SetStateAction<PollingStatus>>,
   minimumSeats: number,
+  serverQuantity: number,
   pollForLicenseKey: (installId: string) => Promise<void>,
   onSuccess?: (sessionId: string) => void,
   onError?: (error: string) => void,
@@ -76,6 +77,7 @@ export const useCheckoutSession = (
         current_license_key: existingLicenseKey,
         requires_seats: selectedPlan.requiresSeats,
         seat_count: Math.max(1, Math.min(minimumSeats || 1, 10000)),
+        server_quantity: Math.max(1, serverQuantity || 1),
         email: state.email, // Pass collected email from Stage 1
       });
 
@@ -111,6 +113,7 @@ export const useCheckoutSession = (
     state.email,
     installationId,
     minimumSeats,
+    serverQuantity,
     setState,
     setInstallationId,
     setCurrentLicenseKey,

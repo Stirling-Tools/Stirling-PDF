@@ -72,14 +72,21 @@ public class PaygTeamExtensions implements Serializable {
     private String paygSubscriptionId;
 
     /**
-     * Remaining one-time free documents for this team (the lifetime grant). Seeded from the
-     * effective pricing policy's {@code free_tier_units} when this row is created (V14 trigger,
-     * updated in V19); decremented by the charge pipeline when a billable charge is written and
-     * restored on a first-step refund. Never replenishes; survives subscribing. This counter — not
-     * the wallet ledger — is the source of truth for the grant, so old ledger rows can be pruned.
+     * Free documents left in the team's current billing period, reset to the policy's {@code
+     * free_tier_units} at each boundary (see {@link #freeUnitsPeriodStart}). This counter, not the
+     * wallet ledger, is the source of truth for the grant.
      */
     @Column(name = "free_units_remaining", nullable = false)
     private Long freeUnitsRemaining = 0L;
+
+    /**
+     * The billing period {@link #freeUnitsRemaining} was last reset for, always a {@code
+     * TeamBillingContext.periodStart}. {@code null} or older than the current period start means
+     * the counter is stale and reads as a full grant. Written only by the app, which owns the
+     * period rule.
+     */
+    @Column(name = "free_units_period_start")
+    private LocalDateTime freeUnitsPeriodStart;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

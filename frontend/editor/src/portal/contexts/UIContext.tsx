@@ -5,6 +5,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import type { ConnectOutcome } from "@portal/components/account-link/ConnectCallbackView";
 
 interface UIContextValue {
   /** Off-canvas sidebar drawer on small screens (no-op chrome on desktop). */
@@ -46,6 +47,13 @@ interface UIContextValue {
   linkModalMode: "link" | "reauth";
   openLinkModal: (mode?: "link" | "reauth") => void;
   closeLinkModal: () => void;
+  /**
+   * A one-shot signal like {@link UIContextValue.trialSetupRequested}: the callback route and the
+   * dialog mount separately, and there must only ever be one link dialog.
+   */
+  connectOutcome: ConnectOutcome | null;
+  publishConnectOutcome: (outcome: ConnectOutcome) => void;
+  clearConnectOutcome: () => void;
   /**
    * A request to begin the enterprise trial, raised from wherever the buyer said yes (the billing
    * upsell, a sales link). The deal controller lives on Home, so this is a one-shot signal rather
@@ -91,6 +99,9 @@ export function UIProvider({ children }: { children: ReactNode }) {
   const [linkModalOpen, setLinkModalOpen] = useState(false);
   const [trialSetupRequested, setTrialSetupRequested] = useState(false);
   const [linkModalMode, setLinkModalMode] = useState<"link" | "reauth">("link");
+  const [connectOutcome, setConnectOutcome] = useState<ConnectOutcome | null>(
+    null,
+  );
   // When the link modal is opened from inside Settings, remember the section to
   // restore so closing the modal returns the admin to where they were.
   const [reopenSettingsAfterLink, setReopenSettingsAfterLink] = useState<
@@ -155,9 +166,19 @@ export function UIProvider({ children }: { children: ReactNode }) {
         setTrialSetupRequested(true);
       },
       clearTrialSetupRequest: () => setTrialSetupRequested(false),
+      connectOutcome,
+      publishConnectOutcome: (outcome: ConnectOutcome) => {
+        setMobileNavOpen(false);
+        setConnectOutcome(outcome);
+        setLinkModalMode("link");
+        setLinkModalOpen(true);
+      },
+      clearConnectOutcome: () => setConnectOutcome(null),
       closeLinkModal: () => {
         setLinkModalOpen(false);
         setLinkModalMode("link");
+        // A reopen from a CTA is a fresh flow, not a handshake already dismissed.
+        setConnectOutcome(null);
         if (reopenSettingsAfterLink) {
           setSettingsInitialSection(reopenSettingsAfterLink);
           setSettingsInitialFocus(null);
@@ -177,6 +198,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
       linkModalMode,
       reopenSettingsAfterLink,
       trialSetupRequested,
+      connectOutcome,
     ],
   );
 

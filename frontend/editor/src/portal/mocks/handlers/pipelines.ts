@@ -1,11 +1,11 @@
 import { http, HttpResponse, delay } from "msw";
 import type {
   PipelineKpi,
-  PipelineStatus,
   PipelineView,
   PipelinesOverviewResponse,
   Policy,
 } from "@portal/api/pipelines";
+import { getCataloguePolicies } from "@portal/mocks/handlers/policies";
 
 /**
  * Stateful mock for the Pipelines surface so the portal works fully offline with
@@ -131,50 +131,51 @@ function nextAssetId(): string {
   return `ast_${Date.now().toString(36)}_${assetCounter}`;
 }
 
-function deriveStatus(policy: StoredPolicy): PipelineStatus {
-  return policy.enabled ? "active" : "paused";
-}
+// A pipeline-store record has inputs/outputIds; a catalogue record (WirePolicy) does not, so both
+// are read defensively here.
+type OverviewPolicy = Partial<Policy> & {
+  id: string;
+  name: string;
+  enabled: boolean;
+};
 
-// Distinct trigger types across a policy's inputs, or "manual" when none is triggered.
-function triggerSummary(policy: StoredPolicy): string {
-  const types = [
+function toView(policy: OverviewPolicy): PipelineView {
+  const inputs = policy.inputs ?? [];
+  const outputIds = policy.outputIds ?? [];
+  const triggers = [
     ...new Set(
-      policy.inputs
+      inputs
         .map((input) => input.trigger?.type)
         .filter((type): type is string => type != null),
     ),
   ];
-  return types.length === 0 ? "manual" : types.join(", ");
-}
-
-function toView(policy: StoredPolicy): PipelineView {
+  // Mirror the backend: the first-class icon wins, else the template's categoryId marker, else none.
+  const options = policy.output?.options ?? {};
+  const icon =
+    policy.icon ||
+    (typeof options.categoryId === "string" ? options.categoryId : "");
   return {
     id: policy.id,
     name: policy.name,
     enabled: policy.enabled,
-    status: deriveStatus(policy),
-    trigger: triggerSummary(policy),
-    sources: policy.inputs.map((input) => ({
+    required: policy.required ?? false,
+    icon,
+    status: policy.enabled ? "active" : "paused",
+    trigger: triggers.length === 0 ? "manual" : triggers.join(", "),
+    sources: inputs.map((input) => ({
       id: input.sourceId,
       name: SOURCE_NAMES[input.sourceId] ?? input.sourceId,
     })),
-    steps: policy.steps.map((s) => s.operation),
+    steps: policy.steps?.map((s) => s.operation) ?? [],
     output:
-      policy.outputIds && policy.outputIds.length > 0
-        ? policy.outputIds.map((id) => SOURCE_NAMES[id] ?? id).join(", ")
+      outputIds.length > 0
+        ? outputIds.map((id) => SOURCE_NAMES[id] ?? id).join(", ")
         : (policy.output?.type ?? "inline"),
     owner: policy.owner ?? "you@acme.com",
   };
 }
 
-// Mirrors the backend PolicyOverviewService: hide frontend/catalogue policies (a categoryId in
-// output options). A folder-watch trigger is still a normal pipeline and stays.
-function isPipeline(policy: StoredPolicy): boolean {
-  const categoryId = policy.output?.options?.categoryId;
-  return !(typeof categoryId === "string" && categoryId.length > 0);
-}
-
-function buildKpis(policies: StoredPolicy[]): PipelineKpi[] {
+function buildKpis(policies: OverviewPolicy[]): PipelineKpi[] {
   const total = policies.length;
   const active = policies.filter((p) => p.enabled).length;
   return [
@@ -184,12 +185,18 @@ function buildKpis(policies: StoredPolicy[]): PipelineKpi[] {
   ];
 }
 
+// The unified overview lists EVERY policy (pipelines + catalogue), mirroring the real backend now
+// that the catalogue filter is gone. The two mock stores are joined here, deduped by id.
 function buildOverview(): PipelinesOverviewResponse {
-  const visible = store.filter(isPipeline);
-  const pipelines = visible
+  const byId = new Map<string, OverviewPolicy>();
+  for (const p of store) byId.set(p.id, p);
+  for (const p of getCataloguePolicies())
+    if (!byId.has(p.id)) byId.set(p.id, p as OverviewPolicy);
+  const all = [...byId.values()];
+  const pipelines = all
     .map(toView)
     .sort((a, b) => a.name.localeCompare(b.name));
-  return { kpis: buildKpis(visible), pipelines };
+  return { kpis: buildKpis(all), pipelines };
 }
 
 export const pipelinesHandlers = [

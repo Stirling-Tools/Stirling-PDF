@@ -266,6 +266,20 @@ tasks:
     cmds:
       - task: frontend:lint
       - task: engine:lint
+      - task: comment-lint
+
+  comment-lint:
+    desc: "Check comment quality on the lines this branch adds"
+    aliases: [comments]
+    cmds:
+      - task: pre-commit:comment-lint
+        vars: { CLI_ARGS: '{{.CLI_ARGS}}' }
+
+  comment-lint:branch:
+    desc: "Check comment quality on everything this branch adds over its base"
+    cmds:
+      - task: pre-commit:comment-lint:branch
+        vars: { BASE: '{{.BASE}}' }
 
   fix:
     desc: "Auto-fix all components"
