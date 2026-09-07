@@ -148,6 +148,24 @@ describe("PipelineEditHeader", () => {
     ).toBeDisabled();
   });
 
+  it("is read-only for a required policy a non-manager can't manage", () => {
+    renderHeader({ required: true, canManagePolicies: false });
+    // No rename affordance and the icon picker is locked (edits would never persist)...
+    expect(
+      screen.queryByLabelText("portal.pipelines.builder.rename"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByLabelText("portal.pipelines.builder.icon.label"),
+    ).toBeDisabled();
+    // ...and the mutating actions are disabled.
+    expect(
+      screen.getByText("portal.pipelines.composer.save").closest("button"),
+    ).toBeDisabled();
+    expect(
+      screen.getByText("portal.pipelines.builder.pause").closest("button"),
+    ).toBeDisabled();
+  });
+
   it("explains, on hover, why Save is disabled", async () => {
     renderHeader({ canSave: false, blockers: ["Choose a destination"] });
     const save = document.querySelector(

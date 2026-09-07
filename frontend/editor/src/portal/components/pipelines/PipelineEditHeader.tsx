@@ -143,6 +143,7 @@ export function PipelineEditHeader({
           onChange={onIconChange}
           options={PIPELINE_ICON_OPTIONS}
           ariaLabel={t("portal.pipelines.builder.icon.label")}
+          disabled={readOnly}
         />
 
         {renaming ? (
@@ -161,14 +162,16 @@ export function PipelineEditHeader({
         ) : (
           <>
             <h1 className="portal-pipeline-edit-header__title">{name}</h1>
-            <ActionIcon
-              variant="quiet"
-              size="sm"
-              onClick={startRename}
-              aria-label={t("portal.pipelines.builder.rename")}
-            >
-              <EditOutlinedIcon style={{ fontSize: "1rem" }} />
-            </ActionIcon>
+            {!readOnly && (
+              <ActionIcon
+                variant="quiet"
+                size="sm"
+                onClick={startRename}
+                aria-label={t("portal.pipelines.builder.rename")}
+              >
+                <EditOutlinedIcon style={{ fontSize: "1rem" }} />
+              </ActionIcon>
+            )}
           </>
         )}
       </div>
