@@ -41,8 +41,8 @@ export function ActiveDocumentProvider({
 
     // Subscribe to document changes (only if not already subscribed)
     if (!unsubscribeRef.current && docManagerApi.onDocumentOpened) {
-      unsubscribeRef.current = docManagerApi.onDocumentOpened((event: any) => {
-        const docId = event?.documentId || event?.id || event?.document?.id;
+      unsubscribeRef.current = docManagerApi.onDocumentOpened((event) => {
+        const docId = event.id;
         if (docId && docId !== documentIdRef.current) {
           documentIdRef.current = docId;
           setDocumentId(docId);

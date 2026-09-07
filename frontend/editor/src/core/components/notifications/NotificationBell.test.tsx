@@ -9,26 +9,31 @@ import { MantineProvider } from "@mantine/core";
 import type {
   AppNotification,
   NotificationActionOffer,
+  NotificationActionSlot,
 } from "@app/services/notifications";
 
 // @app/ui Button is a Mantine wrapper, so it needs the provider in the tree.
 const render = (ui: Parameters<typeof baseRender>[0]) =>
   baseRender(ui, { wrapper: MantineProvider });
 
-/**
- * Two things are the bell's own and worth pinning: which notifications the user has already looked
- * at, and how a row behaves around an action.
- */
+// The bell's own two jobs: what counts as read, and how a row behaves around an action.
 
 const fetchNotifications = vi.fn();
 
+// A bare array is wrapped as a reviewer's response; member filtering is the hook's own test.
 vi.mock("@app/services/notifications", () => ({
-  fetchNotifications: (...args: unknown[]) => fetchNotifications(...args),
+  fetchNotifications: async (...args: unknown[]) => {
+    const value = await fetchNotifications(...args);
+    return Array.isArray(value)
+      ? { notifications: value, viewerReviewsTeam: true, viewerKey: "viewer-a" }
+      : value;
+  },
 }));
 
 // IndexedDB, which jsdom has none of. Answered here so availability is a fact of the test.
 const h = vi.hoisted(() => ({
   hasLocalFile: true,
+  retryPayload: { operation: "removePassword" } as unknown,
   // This build has the notifications API, except in the one test about the build that does not.
   notificationsAvailable: true,
   specs: {} as Record<
@@ -36,13 +41,15 @@ const h = vi.hoisted(() => ({
     {
       available: (context: unknown) => boolean;
       run: (context: unknown, password?: string) => unknown;
+      needsPassword?: boolean;
       closesPanel?: boolean;
     }
   >,
 }));
 
-vi.mock("@app/services/localFilePresence", () => ({
+vi.mock("@app/services/notificationRetry", () => ({
   hasLocalFile: () => Promise.resolve(h.hasLocalFile),
+  loadRetryPayload: () => Promise.resolve(h.retryPayload),
 }));
 
 vi.mock("@app/components/notifications/useNotificationsAvailable", () => ({
@@ -58,6 +65,8 @@ vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     // A string fallback, or an options object with defaultValue plus what it interpolates.
     t: (key: string, fallback?: unknown) => {
+      // The kinds' sentences live in the locale files, so one stands in here.
+      if (key.endsWith(".description")) return "Kind description";
       if (typeof fallback === "string") return fallback;
       if (fallback && typeof fallback === "object") {
         const options = fallback as Record<string, unknown>;
@@ -77,16 +86,31 @@ const { NotificationBell } =
 
 function offer(
   id: string,
+  slot: NotificationActionSlot = "SECONDARY",
   overrides: Partial<NotificationActionOffer> = {},
 ): NotificationActionOffer {
   return {
     id,
     labelKey: `portal.failures.action.${id.toLowerCase()}`,
     defaultLabel: id,
+    slot,
     enabled: true,
     disabledReasonKey: null,
     ...overrides,
   };
+}
+
+// Read state watermarks the ordering time, so rows need distinct ones. "a" is the newest.
+const AT: Record<string, string> = {
+  a: "2026-08-05T02:00:00Z",
+  b: "2026-08-05T01:00:00Z",
+};
+
+/** Scoped to the viewer the mocked response names, as the store writes it. */
+const READ_THROUGH_KEY = "stirling.notifications.readThroughAt.viewer-a";
+
+function markReadThrough(iso: string): void {
+  window.localStorage.setItem(READ_THROUGH_KEY, String(Date.parse(iso)));
 }
 
 function notification(
@@ -109,8 +133,8 @@ function notification(
     sourceId: null,
     policyId: null,
     occurrences: 1,
-    createdAt: "2026-08-05T00:00:00Z",
-    lastSeenAt: "2026-08-05T00:00:00Z",
+    createdAt: AT[id] ?? "2026-08-05T00:00:00Z",
+    lastSeenAt: AT[id] ?? "2026-08-05T00:00:00Z",
     actions: [],
     ...overrides,
   };
@@ -125,6 +149,7 @@ describe("NotificationBell", () => {
     window.localStorage.clear();
     fetchNotifications.mockReset().mockResolvedValue([]);
     h.hasLocalFile = true;
+    h.retryPayload = { operation: "removePassword" };
     h.notificationsAvailable = true;
     h.specs = {};
   });
@@ -172,7 +197,7 @@ describe("NotificationBell", () => {
 
   it("divides what is new from what the user has already seen", async () => {
     // "b" was the newest last time, so "a" is the only new one.
-    window.localStorage.setItem("stirling.notifications.lastSeenId", "b");
+    markReadThrough(AT.b);
     fetchNotifications.mockResolvedValue([
       notification("a"),
       notification("b"),
@@ -186,7 +211,7 @@ describe("NotificationBell", () => {
 
   it("keeps the division on screen after opening marks them read", async () => {
     // Frozen on open: read live it would collapse the moment the badge cleared.
-    window.localStorage.setItem("stirling.notifications.lastSeenId", "b");
+    markReadThrough(AT.b);
     fetchNotifications.mockResolvedValue([
       notification("a"),
       notification("b"),
@@ -200,7 +225,7 @@ describe("NotificationBell", () => {
   });
 
   it("does not divide a list with nothing new in it", async () => {
-    window.localStorage.setItem("stirling.notifications.lastSeenId", "a");
+    markReadThrough(AT.a);
     fetchNotifications.mockResolvedValue([notification("a")]);
     render(<NotificationBell />);
     await openPanel();
@@ -231,29 +256,26 @@ describe("NotificationBell", () => {
     first.unmount();
 
     // A newer one arrives above the one already seen.
-    fetchNotifications.mockResolvedValue([
-      notification("b"),
-      notification("a"),
-    ]);
+    const arrived = notification("c", "Unrecognised failure", {
+      lastSeenAt: "2026-08-05T03:00:00Z",
+    });
+    fetchNotifications.mockResolvedValue([arrived, notification("a")]);
     render(<NotificationBell />);
 
     expect(await screen.findByText("1")).toBeTruthy();
   });
 
-  it("treats everything as unread when the last seen one is gone", async () => {
-    // We cannot tell how far the user got, so show them rather than marking the lot read.
-    window.localStorage.setItem(
-      "stirling.notifications.lastSeenId",
-      "vanished",
-    );
-    fetchNotifications.mockResolvedValue([
-      notification("a"),
-      notification("b"),
-    ]);
+  it("leaves the rest read when the row that was newest has gone", async () => {
+    // The newest row leaves; marking read by id would then relight the badge for the older one.
+    markReadThrough(AT.a);
+    fetchNotifications.mockResolvedValue([notification("b")]);
 
     render(<NotificationBell />);
+    await openPanel();
 
-    expect(await screen.findByText("2")).toBeTruthy();
+    // Nothing is new, so nothing is labelled new: by id, this row would have counted as unread.
+    expect(await screen.findByText("Unrecognised failure")).toBeTruthy();
+    expect(screen.queryByText("New")).toBeNull();
   });
 
   it("renders the server's title and repeat count without knowing the source", async () => {
@@ -289,6 +311,49 @@ describe("NotificationBell", () => {
       expect(
         screen.getByRole("button", { name: `${id}: Unrecognised failure` }),
       ).toBeTruthy();
+  });
+
+  it("tucks overflow actions into a menu, not a row of buttons", async () => {
+    h.specs = {
+      DECRYPT: { available: () => true, run: vi.fn() },
+      VIEW_FILE: { available: () => true, run: vi.fn() },
+      VIEW_IN_PROCESSOR: { available: () => true, run: vi.fn() },
+    };
+    fetchNotifications.mockResolvedValue([
+      notification("a", "Unrecognised failure", {
+        actions: [
+          offer("DECRYPT", "RESOLUTION"),
+          offer("VIEW_FILE", "SECONDARY"),
+          offer("VIEW_IN_PROCESSOR", "OVERFLOW"),
+        ],
+      }),
+    ]);
+    render(<NotificationBell />);
+    await openPanel();
+
+    // Two real buttons; the overflow one is off screen until the menu is opened.
+    expect(
+      screen.getByRole("button", {
+        name: "DECRYPT: Unrecognised failure",
+      }),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole("button", { name: "VIEW_FILE: Unrecognised failure" }),
+    ).toBeTruthy();
+    expect(
+      screen.queryByRole("button", {
+        name: "VIEW_IN_PROCESSOR: Unrecognised failure",
+      }),
+    ).toBeNull();
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "More options: Unrecognised failure",
+      }),
+    );
+    expect(
+      await screen.findByRole("menuitem", { name: "VIEW_IN_PROCESSOR" }),
+    ).toBeTruthy();
   });
 
   it("runs whichever of the row's actions is pressed", async () => {
@@ -370,7 +435,7 @@ describe("NotificationBell", () => {
     await waitFor(() =>
       expect(
         screen.getByText(
-          "This document is not on this device, so it cannot be opened here.",
+          "This document is not on this device, so it cannot be opened or retried here.",
         ),
       ).toBeTruthy(),
     );
@@ -387,7 +452,7 @@ describe("NotificationBell", () => {
 
     expect(
       await screen.findByText(
-        "This failure is not linked to a specific document, so there is nothing to open here.",
+        "This failure is not linked to a specific document, so it cannot be opened or retried here.",
       ),
     ).toBeTruthy();
   });
@@ -422,7 +487,7 @@ describe("NotificationBell", () => {
       notification("a", "Unrecognised failure", {
         ownership: "UNOWNED",
         actions: [
-          offer("VIEW_FILE", {
+          offer("VIEW_FILE", "SECONDARY", {
             enabled: false,
             disabledReasonKey: "portal.failures.disabled.unattended",
           }),
@@ -452,11 +517,11 @@ describe("NotificationBell", () => {
     fetchNotifications.mockResolvedValue([
       notification("a", "Unrecognised failure", {
         actions: [
-          offer("VIEW_IN_PROCESSOR", {
+          offer("VIEW_IN_PROCESSOR", "SECONDARY", {
             enabled: false,
             disabledReasonKey: "portal.failures.disabled.closed",
           }),
-          offer("VIEW_FILE", {
+          offer("VIEW_FILE", "SECONDARY", {
             enabled: false,
             disabledReasonKey: "portal.failures.disabled.closed",
           }),
@@ -474,19 +539,65 @@ describe("NotificationBell", () => {
     expect(
       screen.queryByRole("button", { name: /VIEW_IN_PROCESSOR|VIEW_FILE/ }),
     ).toBeNull();
-    expect(document.querySelector(".notification-bell__actions")).toBeNull();
+    // The error log stays reachable: a row with nothing left to do still owns its detail.
+    expect(
+      screen.getByRole("button", {
+        name: "More options: Unrecognised failure",
+      }),
+    ).toBeTruthy();
   });
 
-  it("shows a failed action in the row instead of leaving the user guessing", async () => {
+  it("asks for the password in the unlock modal before it retries", async () => {
+    const run = vi.fn().mockResolvedValue({ ok: true });
     h.specs = {
-      VIEW_FILE: {
+      DECRYPT: {
         available: () => true,
-        run: () => Promise.resolve({ ok: false, message: "Could not open" }),
+        run,
+        needsPassword: true,
+        closesPanel: true,
       },
     };
     fetchNotifications.mockResolvedValue([
       notification("a", "Password-protected document", {
-        actions: [offer("VIEW_FILE")],
+        actions: [offer("DECRYPT", "RESOLUTION")],
+      }),
+    ]);
+    render(<NotificationBell />);
+    await openPanel();
+
+    // The click opens the app's unlock modal rather than running anything.
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "DECRYPT: Password-protected document",
+      }),
+    );
+    expect(run).not.toHaveBeenCalled();
+
+    const field = await screen.findByLabelText("PDF password");
+    fireEvent.change(field, { target: { value: "hunter2" } });
+    // The modal's confirm carries the action's own wording, not a generic "unlock".
+    fireEvent.click(screen.getByRole("button", { name: "DECRYPT" }));
+
+    await waitFor(() => expect(run).toHaveBeenCalledTimes(1));
+    expect(run.mock.calls[0][1]).toBe("hunter2");
+    // Resolved server-side, so the list is re-read and the panel gets out of the way.
+    await waitFor(() => expect(fetchNotifications).toHaveBeenCalledTimes(2));
+    await waitFor(() =>
+      expect(screen.queryByText("Password-protected document")).toBeNull(),
+    );
+  });
+
+  it("shows a failed unlock in the modal instead of leaving the user guessing", async () => {
+    h.specs = {
+      DECRYPT: {
+        available: () => true,
+        run: () => Promise.resolve({ ok: false, message: "Wrong password" }),
+        needsPassword: true,
+      },
+    };
+    fetchNotifications.mockResolvedValue([
+      notification("a", "Password-protected document", {
+        actions: [offer("DECRYPT", "RESOLUTION")],
       }),
     ]);
     render(<NotificationBell />);
@@ -494,37 +605,58 @@ describe("NotificationBell", () => {
 
     fireEvent.click(
       screen.getByRole("button", {
-        name: "VIEW_FILE: Password-protected document",
+        name: "DECRYPT: Password-protected document",
       }),
     );
+    const field = await screen.findByLabelText("PDF password");
+    fireEvent.change(field, { target: { value: "nope" } });
+    fireEvent.click(screen.getByRole("button", { name: "DECRYPT" }));
 
     expect(await screen.findByRole("alert")).toHaveProperty(
       "textContent",
-      "Could not open",
+      "Wrong password",
     );
-    // Still on screen, so the row remains actionable.
-    expect(screen.getByText("Password-protected document")).toBeTruthy();
+    // The prompt stays up, so the next attempt is one keystroke rather than a re-open.
+    expect(screen.getByLabelText("PDF password")).toBeTruthy();
   });
 
-  it("expands the message without touching the row's actions", async () => {
+  it("reads the kind's own words rather than the raw failure", async () => {
+    // A bell is not a log: the row gets a sentence, the message goes in the menu.
+    const stack = "org.apache.pdfbox.InvalidPasswordException";
     fetchNotifications.mockResolvedValue([
-      notification("a", "Unrecognised failure", {
-        detail: "org.apache.pdfbox.InvalidPasswordException",
+      notification("a", "Password-protected document", {
+        titleKey: "portal.failures.kind.inputPasswordProtected.title",
+        detail: stack,
       }),
     ]);
     render(<NotificationBell />);
     await openPanel();
 
-    const expand = screen.getByRole("button", {
-      name: "Show full message: Unrecognised failure",
-    });
-    fireEvent.click(expand);
+    expect(await screen.findByText("Kind description")).toBeTruthy();
+    expect(screen.queryByText(stack)).toBeNull();
+  });
 
-    expect(
-      screen.getByRole("button", { name: "Show less: Unrecognised failure" }),
-    ).toBeTruthy();
-    expect(
-      screen.getByRole("button", { name: "Copy error: Unrecognised failure" }),
-    ).toBeTruthy();
+  it("keeps the log one click away, for a row whose only extra is the log", async () => {
+    h.specs = { VIEW_FILE: { available: () => true, run: vi.fn() } };
+    const stack = "org.apache.pdfbox.InvalidPasswordException";
+    const clipboard = vi.fn().mockResolvedValue(undefined);
+    Object.assign(navigator, { clipboard: { writeText: clipboard } });
+    fetchNotifications.mockResolvedValue([
+      notification("a", "Unrecognised failure", {
+        detail: stack,
+        actions: [offer("VIEW_FILE", "SECONDARY")],
+      }),
+    ]);
+    render(<NotificationBell />);
+    await openPanel();
+
+    fireEvent.click(
+      await screen.findByRole("button", {
+        name: "More options: Unrecognised failure",
+      }),
+    );
+    fireEvent.click(await screen.findByRole("menuitem", { name: "Copy log" }));
+
+    await waitFor(() => expect(clipboard).toHaveBeenCalledWith(stack));
   });
 });

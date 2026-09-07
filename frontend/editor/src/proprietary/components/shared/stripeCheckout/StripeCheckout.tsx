@@ -18,6 +18,8 @@ import { useLicensePolling } from "@app/components/shared/stripeCheckout/hooks/u
 import { useCheckoutSession } from "@app/components/shared/stripeCheckout/hooks/useCheckoutSession";
 import { EmailStage } from "@app/components/shared/stripeCheckout/stages/EmailStage";
 import { PlanSelectionStage } from "@app/components/shared/stripeCheckout/stages/PlanSelectionStage";
+import { CapacityStage } from "@app/components/shared/stripeCheckout/stages/CapacityStage";
+import { blocksForUsers } from "@app/components/shared/stripeCheckout/utils/capacity";
 import { PaymentStage } from "@app/components/shared/stripeCheckout/stages/PaymentStage";
 import { SuccessStage } from "@app/components/shared/stripeCheckout/stages/SuccessStage";
 import { ErrorStage } from "@app/components/shared/stripeCheckout/stages/ErrorStage";
@@ -83,6 +85,7 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
     checkoutState.setCurrentLicenseKey,
     checkoutState.setPollingStatus,
     minimumSeats,
+    checkoutState.serverQuantity,
     polling.pollForLicenseKey,
     onSuccess,
     onError,
@@ -106,9 +109,19 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
     }
   };
 
+  // Only the Team tier is sold by capacity. Enterprise is priced per seat and free has nothing to
+  // size, so both go straight to payment.
+  const sellsCapacity = planGroup.tier === "server";
+
   // Plan selection handler
   const handlePlanSelect = (period: "monthly" | "yearly") => {
     checkoutState.setSelectedPeriod(period);
+    if (sellsCapacity) {
+      // Arrive on the capacity an installation already needs rather than on a blocked minimum.
+      checkoutState.setServerQuantity(blocksForUsers(minimumSeats));
+      navigation.goToStage("capacity");
+      return;
+    }
     navigation.goToStage("payment");
   };
 
@@ -231,6 +244,17 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
             minimumSeats={minimumSeats}
             savings={savings}
             onSelectPlan={handlePlanSelect}
+          />
+        );
+
+      case "capacity":
+        return (
+          <CapacityStage
+            selectedPlan={checkoutState.selectedPlan}
+            serverQuantity={checkoutState.serverQuantity}
+            setServerQuantity={checkoutState.setServerQuantity}
+            currentUsers={minimumSeats}
+            onContinue={() => navigation.goToStage("payment")}
           />
         );
 
