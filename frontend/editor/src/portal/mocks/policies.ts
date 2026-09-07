@@ -39,12 +39,13 @@ export function seedPolicies(): WirePolicy[] {
       name: "Security Policy",
       owner: "security@acme.com",
       enabled: true,
+      required: true,
       trigger: null,
       steps: SECURITY_STEPS,
       output: {
         type: "inline",
         options: {
-          runOn: "upload",
+          runOn: "export",
           mode: "new_version",
           name: "",
           position: "suffix",

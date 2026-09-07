@@ -26,23 +26,21 @@ import lombok.extern.slf4j.Slf4j;
 public class ImageProcessingUtils {
 
     static BufferedImage convertColorType(BufferedImage sourceImage, String colorType) {
-        BufferedImage convertedImage;
-        switch (colorType) {
-            case "greyscale":
-                convertedImage = new BufferedImage(
+        return switch (colorType) {
+            case "greyscale" -> {
+                BufferedImage convertedImage = new BufferedImage(
                         sourceImage.getWidth(), sourceImage.getHeight(), BufferedImage.TYPE_BYTE_GRAY);
                 convertedImage.getGraphics().drawImage(sourceImage, 0, 0, null);
-                break;
-            case "blackwhite":
-                convertedImage = new BufferedImage(
+                yield convertedImage;
+            }
+            case "blackwhite" -> {
+                BufferedImage convertedImage = new BufferedImage(
                         sourceImage.getWidth(), sourceImage.getHeight(), BufferedImage.TYPE_BYTE_BINARY);
                 convertedImage.getGraphics().drawImage(sourceImage, 0, 0, null);
-                break;
-            default: // full color
-                convertedImage = sourceImage;
-                break;
-        }
-        return convertedImage;
+                yield convertedImage;
+            }
+            default -> sourceImage;
+        };
     }
 
     public static byte[] getImageData(BufferedImage image) {

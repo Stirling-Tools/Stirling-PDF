@@ -8,31 +8,33 @@ const Overview: React.FC = () => {
   const { t } = useTranslation();
   const { config, loading, error } = useAppConfig();
 
-  const renderConfigSection = (title: string, data: any) => {
+  const renderConfigSection = (title: string, data: unknown) => {
     if (!data || typeof data !== "object") return null;
 
     return (
       <Stack gap="xs" mb="md">
-        <Text fw={600} size="md" c="blue">
+        <Text fw={600} size="md" c="var(--c-accent-text)">
           {title}
         </Text>
         <Stack gap="xs" pl="md">
-          {Object.entries(data).map(([key, value]) => (
-            <Group key={key} wrap="nowrap" align="flex-start">
-              <Text size="sm" w={150} style={{ flexShrink: 0 }} c="dimmed">
-                {key}:
-              </Text>
-              {typeof value === "boolean" ? (
-                <Badge color={value ? "green" : "red"} size="sm">
-                  {value ? "true" : "false"}
-                </Badge>
-              ) : typeof value === "object" ? (
-                <Code block>{JSON.stringify(value, null, 2)}</Code>
-              ) : (
-                String(value) || "null"
-              )}
-            </Group>
-          ))}
+          {Object.entries(data as Record<string, unknown>).map(
+            ([key, value]) => (
+              <Group key={key} wrap="nowrap" align="flex-start">
+                <Text size="sm" w={150} style={{ flexShrink: 0 }} c="dimmed">
+                  {key}:
+                </Text>
+                {typeof value === "boolean" ? (
+                  <Badge color={value ? "green" : "red"} size="sm">
+                    {value ? "true" : "false"}
+                  </Badge>
+                ) : typeof value === "object" ? (
+                  <Code block>{JSON.stringify(value, null, 2)}</Code>
+                ) : (
+                  String(value) || "null"
+                )}
+              </Group>
+            ),
+          )}
         </Stack>
       </Stack>
     );

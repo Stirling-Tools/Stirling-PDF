@@ -288,7 +288,7 @@ public class PortalInfraAuditService {
     @SuppressWarnings("unchecked")
     private static String firstFileName(Map<String, Object> data) {
         Object files = data.get("files");
-        if (files instanceof List<?> list && !list.isEmpty() && list.get(0) instanceof Map<?, ?> f) {
+        if (files instanceof List<?> list && !list.isEmpty() && list.getFirst() instanceof Map<?, ?> f) {
             Object name = ((Map<String, Object>) f).get("name");
             return name != null ? String.valueOf(name) : null;
         }

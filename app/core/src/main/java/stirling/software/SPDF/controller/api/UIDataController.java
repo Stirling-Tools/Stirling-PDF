@@ -93,7 +93,8 @@ public class UIDataController {
         Resource resource = new ClassPathResource("static/3rdPartyLicenses.json");
 
         try (InputStream is = resource.getInputStream()) {
-            Map<String, List<Dependency>> licenseData = objectMapper.readValue(is, new TypeReference<>() {});
+            Map<String, List<Dependency>> licenseData =
+                    objectMapper.readValue(is, new TypeReference<Map<String, List<Dependency>>>() {});
             data.setDependencies(licenseData.get("dependencies"));
         } catch (IOException e) {
             log.error("Failed to load licenses data", e);
@@ -121,15 +122,13 @@ public class UIDataController {
                     pipelineConfigs.add(content);
                 }
 
-                for (String config : pipelineConfigs) {
+                for (int i = 0; i < jsonFiles.size(); i++) {
+                    String config = pipelineConfigs.get(i);
                     Map<String, Object> jsonContent =
                             objectMapper.readValue(config, new TypeReference<Map<String, Object>>() {});
                     String name = (String) jsonContent.get("name");
                     if (name == null || name.isEmpty()) {
-                        String filename = jsonFiles
-                                .get(pipelineConfigs.indexOf(config))
-                                .getFileName()
-                                .toString();
+                        String filename = jsonFiles.get(i).getFileName().toString();
                         name = filename.substring(0, filename.lastIndexOf('.'));
                     }
                     Map<String, String> configWithName = new HashMap<>();
@@ -286,20 +285,14 @@ public class UIDataController {
         }
 
         private static String getFormatFromExtension(String extension) {
-            switch (extension) {
-                case "ttf":
-                    return "truetype";
-                case "woff":
-                    return "woff";
-                case "woff2":
-                    return "woff2";
-                case "eot":
-                    return "embedded-opentype";
-                case "svg":
-                    return "svg";
-                default:
-                    return "";
-            }
+            return switch (extension) {
+                case "ttf" -> "truetype";
+                case "woff" -> "woff";
+                case "woff2" -> "woff2";
+                case "eot" -> "embedded-opentype";
+                case "svg" -> "svg";
+                default -> "";
+            };
         }
     }
 }

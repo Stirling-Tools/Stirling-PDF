@@ -57,6 +57,7 @@ import {
 } from "@app/hooks/useFolderAutomation";
 import { useLocalFolderPoller } from "@app/hooks/useLocalFolderPoller";
 import { AutomationConfig } from "@app/types/automation";
+import type { WatchedFolderViewData } from "@app/types/watchedFolders";
 import { iconMap } from "@app/components/tools/automate/iconMap";
 import { fileStorage } from "@app/services/fileStorage";
 import { FileId, StirlingFile } from "@app/types/fileContext";
@@ -166,11 +167,7 @@ function FilterSortBar({
 }
 
 interface WatchedFolderWorkbenchViewProps {
-  data: {
-    folderId: string | null;
-    pendingFileId?: string;
-    pendingFileIds?: string[];
-  };
+  data: WatchedFolderViewData;
 }
 
 function RetryCountdown({
@@ -1038,7 +1035,7 @@ export function WatchedFolderWorkbenchView({
                   <FolderOpenIcon
                     style={{
                       fontSize: "1.125rem",
-                      color: "var(--mantine-color-blue-filled)",
+                      color: "var(--c-accent-text)",
                     }}
                   />
                 }
@@ -1176,7 +1173,7 @@ export function WatchedFolderWorkbenchView({
                       <Text
                         style={{
                           fontSize: "0.625rem",
-                          color: "var(--mantine-color-blue-filled)",
+                          color: "var(--c-accent-text)",
                         }}
                       >
                         {t("watchedFolders.workbench.countProcessing", {
@@ -1350,7 +1347,7 @@ export function WatchedFolderWorkbenchView({
                   <Text
                     size="xs"
                     fw={600}
-                    style={{ color: "var(--mantine-color-blue-filled)" }}
+                    style={{ color: "var(--c-accent-text)" }}
                   >
                     {t("watchedFolders.workbench.countSelected", {
                       count: selectedActivityIds.size,
@@ -1866,7 +1863,7 @@ export function WatchedFolderWorkbenchView({
                                 {meta?.errorMessage && (
                                   <Text
                                     size="xs"
-                                    c="red"
+                                    c="var(--color-red-dark)"
                                     style={{
                                       flex: 1,
                                       minWidth: 0,
@@ -2005,7 +2002,7 @@ export function WatchedFolderWorkbenchView({
                 >
                   {t("watchedFolders.workbench.failed", "Failed")}
                 </Text>
-                <Text size="xl" fw={800} c="red">
+                <Text size="xl" fw={800} c="var(--color-red-dark)">
                   {dashboardStats.failed}
                 </Text>
               </Box>

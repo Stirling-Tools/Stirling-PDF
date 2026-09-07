@@ -17,15 +17,15 @@ import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.cluster.JobStore;
 import stirling.software.common.cluster.JobStoreEntry;
+
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Valkey-backed {@link JobStore}. Each job is one hash; a reverse index maps fileId to jobId.
@@ -44,8 +44,8 @@ public class ValkeyJobStore implements JobStore {
     private static final String FILE_INDEX_PREFIX = "stirling:file2job:";
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
-    private static final TypeReference<List<String>> LIST_STRING = new TypeReference<>() {};
-    private static final TypeReference<Map<String, String>> MAP_STRING = new TypeReference<>() {};
+    private static final TypeReference<List<String>> LIST_STRING = new TypeReference<List<String>>() {};
+    private static final TypeReference<Map<String, String>> MAP_STRING = new TypeReference<Map<String, String>>() {};
 
     private final StringRedisTemplate template;
 
@@ -226,7 +226,7 @@ public class ValkeyJobStore implements JobStore {
         }
         try {
             return MAPPER.readValue(v.toString(), MAP_STRING);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             log.warn("JobStore {} field 'resultMeta' is not valid JSON '{}' - treating as empty", key, v);
             return new HashMap<>();
         }
@@ -235,7 +235,7 @@ public class ValkeyJobStore implements JobStore {
     private static String writeJson(Object value) {
         try {
             return MAPPER.writeValueAsString(value);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new IllegalStateException("Failed to JSON-serialize JobStore field", e);
         }
     }
@@ -244,7 +244,7 @@ public class ValkeyJobStore implements JobStore {
         try {
             List<String> parsed = MAPPER.readValue(json, LIST_STRING);
             return parsed == null ? new ArrayList<>() : parsed;
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             log.warn("JobStore {} field 'fileIds' is not valid JSON '{}' - treating as empty", key, json);
             return new ArrayList<>();
         }

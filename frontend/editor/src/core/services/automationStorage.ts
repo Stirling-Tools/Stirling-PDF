@@ -8,7 +8,7 @@ export interface AutomationConfig {
   description?: string;
   operations: Array<{
     operation: string;
-    parameters: any;
+    parameters: Record<string, unknown>;
   }>;
   createdAt: string;
   updatedAt: string;

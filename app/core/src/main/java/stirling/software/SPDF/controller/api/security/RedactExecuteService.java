@@ -569,7 +569,7 @@ class RedactExecuteService {
         extractor.getText(document);
         PageColumnLayout layout = PageColumnLayout.fromLineBoxes(extractor.getLineBoxes(), pageWidth);
         if (layout.columnCount() > 1) {
-            float[] g = layout.gutters().get(0);
+            float[] g = layout.gutters().getFirst();
             log.info("[redact/execute] page {} layout: 2 cols, gutter x=[{}, {}]", pageIdx + 1, g[0], g[1]);
         } else {
             log.info("[redact/execute] page {} layout: 1 col (single-column mode)", pageIdx + 1);

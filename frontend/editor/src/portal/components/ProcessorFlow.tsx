@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Card, SegmentedControl, Skeleton, StatusBadge } from "@app/ui";
+import "@app/ui/Surface.css";
 import {
   useView,
   VIEW_PATHS,
@@ -41,10 +42,10 @@ export function ProcessorFlow({ dataOverride }: ProcessorFlowProps = {}) {
   const [lens, setLens] = useState<Lens>("flow");
   const isLoading = loading && data === null;
 
-  /** Deep-link to the Policies page and auto-open that policy's setup wizard. */
+  /** Deep-link to the Pipelines page and auto-open that suggested policy's setup wizard. */
   const openPolicySetup = (key: string) =>
     navigate(
-      `${toPortalPath(VIEW_PATHS.policies)}?setup=${encodeURIComponent(key)}`,
+      `${toPortalPath(VIEW_PATHS.pipelines)}?setup=${encodeURIComponent(key)}`,
     );
 
   /** Deep-link to Infrastructure with the audit-log tab open. */
@@ -102,7 +103,9 @@ export function ProcessorFlow({ dataOverride }: ProcessorFlowProps = {}) {
 
   return (
     <Card padding="loose" className="portal-pf">
-      <header className="portal-pf__head">
+      {/* A div, not <header>: the card sits in page content, and a <header> here
+          would register a second banner landmark alongside the page's own. */}
+      <div className="portal-pf__head">
         <div className="portal-pf__head-text">
           <span
             className={
@@ -130,7 +133,7 @@ export function ProcessorFlow({ dataOverride }: ProcessorFlowProps = {}) {
             ]}
           />
         </div>
-      </header>
+      </div>
 
       {isLoading ? (
         <div className="portal-pf__loading" aria-hidden>

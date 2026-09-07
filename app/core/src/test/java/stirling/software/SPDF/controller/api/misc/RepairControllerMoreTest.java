@@ -99,11 +99,8 @@ class RepairControllerMoreTest {
         }
     }
 
-    /**
-     * Writes a valid PDF to the path at the given command index, mimicking a successful tool run.
-     */
-    private static void writeValidPdfTo(List<String> command, int outputPathIndex) throws Exception {
-        Path out = Path.of(command.get(outputPathIndex));
+    /** Writes a valid PDF to the given output path, mimicking a successful tool run. */
+    private static void writeValidPdfTo(Path out) throws Exception {
         byte[] pdf = buildPdfBytes(1);
         Files.write(out, pdf);
     }
@@ -131,7 +128,7 @@ class RepairControllerMoreTest {
                 // gs command output path is element index 2 ("gs", "-o", <outputPath>, ...)
                 when(gsExecutor.runCommandWithOutputHandling(any())).thenAnswer(inv -> {
                     List<String> cmd = inv.getArgument(0);
-                    writeValidPdfTo(cmd, 2);
+                    writeValidPdfTo(Path.of(cmd.get(2)));
                     return okResult;
                 });
 
@@ -167,7 +164,7 @@ class RepairControllerMoreTest {
                 // qpdf command output path is the last element.
                 when(qpdfExecutor.runCommandWithOutputHandling(any())).thenAnswer(inv -> {
                     List<String> cmd = inv.getArgument(0);
-                    writeValidPdfTo(cmd, cmd.size() - 1);
+                    writeValidPdfTo(Path.of(cmd.getLast()));
                     return okResult;
                 });
 
@@ -200,7 +197,7 @@ class RepairControllerMoreTest {
                 ProcessExecutorResult okResult = resultWithRc(0);
                 when(qpdfExecutor.runCommandWithOutputHandling(any())).thenAnswer(inv -> {
                     List<String> cmd = inv.getArgument(0);
-                    writeValidPdfTo(cmd, cmd.size() - 1);
+                    writeValidPdfTo(Path.of(cmd.getLast()));
                     return okResult;
                 });
 
@@ -234,7 +231,7 @@ class RepairControllerMoreTest {
                 ProcessExecutorResult okResult = resultWithRc(0);
                 when(qpdfExecutor.runCommandWithOutputHandling(any())).thenAnswer(inv -> {
                     List<String> cmd = inv.getArgument(0);
-                    writeValidPdfTo(cmd, cmd.size() - 1);
+                    writeValidPdfTo(Path.of(cmd.getLast()));
                     return okResult;
                 });
 

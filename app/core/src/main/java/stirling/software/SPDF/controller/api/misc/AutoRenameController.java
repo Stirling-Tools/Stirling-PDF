@@ -110,7 +110,7 @@ public class AutoRenameController {
                     // Sort lines by font size in descending order and get the first one
                     mergedLineInfos.sort(
                             Comparator.comparing((LineInfo li) -> li.fontSize).reversed());
-                    String title = mergedLineInfos.isEmpty() ? null : mergedLineInfos.get(0).text;
+                    String title = mergedLineInfos.isEmpty() ? null : mergedLineInfos.getFirst().text;
 
                     return title != null
                             ? title

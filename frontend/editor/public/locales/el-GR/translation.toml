@@ -1,7 +1,6 @@
 alphabet = "Αλφάβητο"
 apply = "Εφαρμογή"
 applyAndContinue = "Αποθήκευση & Έξοδος"
-areYouSure = "Είστε βέβαιοι ότι θέλετε να αποχωρήσετε;"
 back = "Πίσω"
 black = "Μαύρο"
 blue = "Μπλε"
@@ -42,14 +41,12 @@ false = "Ψευδές"
 fileNotSavedToDisk = "Δεν αποθηκεύτηκε στον δίσκο"
 fileSavedToDisk = "Το αρχείο αποθηκεύτηκε στον δίσκο"
 fileSelected = "Επιλέχθηκε: {{filename}}"
-filesSelected = "αρχεία επιλεγμένα"
+filesSelected = "{{count}} αρχεία"
 font = "Γραμματοσειρά"
 fontSizeTooltip = "Μέγεθος του κειμένου του αριθμού σελίδας σε σημεία. Μεγαλύτεροι αριθμοί δημιουργούν μεγαλύτερο κείμενο."
 fontTypeTooltip = "Οικογένεια γραμματοσειράς για τους αριθμούς σελίδων. Επιλέξτε σύμφωνα με το στυλ του εγγράφου σας."
-genericSubmit = "Υποβολή"
 green = "Πράσινο"
 help = "Βοήθεια"
-imgPrompt = "Επιλέξτε εικόνα(ες)"
 incorrectPasswordMessage = "Ο τρέχων κωδικός είναι λανθασμένος."
 info = "Πληροφορίες"
 invalidUndoData = "Αδύνατη η αναίρεση: μη έγκυρα δεδομένα ενέργειας"
@@ -62,7 +59,6 @@ loginAgreementTitle = "Συμφωνία σύνδεσης"
 logOut = "Αποσύνδεση"
 marginTooltip = "Απόσταση μεταξύ του αριθμού σελίδας και του άκρου της σελίδας."
 moreOptions = "Περισσότερες επιλογές"
-multiPdfPrompt = "Επιλέξτε PDFs (2+)"
 never = "Ποτέ"
 no = "Όχι"
 noFileSelected = "Δεν επιλέχθηκε αρχείο. Παρακαλώ ανεβάστε ένα."
@@ -80,7 +76,6 @@ pageOrderPrompt = "Προσαρμοσμένη σειρά σελίδων (Εισ�
 pages = "Σελίδες"
 pageSelectionPrompt = "Προσαρμοσμένη επιλογή σελίδων (Εισάγετε μια λίστα αριθμών σελίδων χωρισμένη με κόμματα 1,5,6 ή συναρτήσεις όπως 2n+1):"
 password = "Κωδικός"
-pdfPrompt = "Επιλέξτε PDF(s)"
 pin = "Καρφίτσωμα αρχείου (παραμένει ενεργό μετά την εκτέλεση εργαλείου)"
 pro = "Pro"
 processingComplete = "Το αρχείο σας είναι έτοιμο."
@@ -110,6 +105,7 @@ undoSuccess = "Η ενέργεια αναιρέθηκε με επιτυχία"
 unknown = "Άγνωστο"
 unpin = "Ξεκαρφίτσωμα αρχείου (αντικατάσταση μετά την εκτέλεση εργαλείου)"
 unsavedChanges = "Έχετε μη αποθηκευμένες αλλαγές στο PDF σας."
+unsavedChangesBody = "You have unsaved changes to your PDF. Are you sure you want to leave?"
 unsavedChangesTitle = "Μη αποθηκευμένες αλλαγές"
 unsupported = "Μη υποστηριζόμενο"
 username = "Όνομα χρήστη"
@@ -356,6 +352,7 @@ text = "Αυτά τα δικαιώματα ελέγχουν τι μπορούν 
 title = "Αλλαγή δικαιωμάτων"
 
 [addStamp]
+preview = "Προεπισκόπηση σφραγίδας"
 tags = "stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
 
 [AddStampRequest]
@@ -691,6 +688,165 @@ manualLinks = "Χειροκίνητες λήψεις: κάντε κλικ στο
 noLanguages = "Δεν βρέθηκαν γλώσσες tessdata στον ρυθμισμένο κατάλογο."
 permissionNotice = "Η διαδρομή tessdata δεν είναι εγγράψιμη. Οι λήψεις θα ανοίγουν στο πρόγραμμα περιήγησης. Αποθηκεύστε χειροκίνητα τα αρχεία .traineddata στον φάκελο tessdata."
 
+[admin.settings.ai.documents]
+description = "Ρυθμίστε το μοντέλο embedding και τις ρυθμίσεις ανάκτησης που χρησιμοποιούνται για απαντήσεις σε ερωτήσεις πάνω σε έγγραφα. Εφαρμόζεται στη μηχανή AI όταν αποθηκευτεί."
+title = "Έγγραφα & RAG"
+
+[admin.settings.ai.documents.embeddingApiKey]
+description = "Αφήστε το κενό για να χρησιμοποιηθεί το διαπιστευτήριο περιβάλλοντος της ίδιας της μηχανής. Ισχύει για αυτοφιλοξενούμενες αναπτύξεις μίας μηχανής."
+generic = "Embedding API key"
+openai = "OpenAI API key"
+setPlaceholder = "Αποθηκεύτηκε - αφήστε κενό για να διατηρήσετε το τρέχον key"
+voyageai = "VoyageAI API key"
+
+[admin.settings.ai.documents.embeddingBaseUrl]
+description = "Βασικό URL του endpoint embeddings συμβατού με OpenAI / Ollama, π.χ. http://ollama:11434/v1. Πρέπει να δείχνει σε αξιόπιστο εσωτερικό endpoint (ευαίσθητο σε SSRF)."
+label = "Βασικό URL embedding"
+
+[admin.settings.ai.documents.embeddingModel]
+description = "Όνομα μοντέλου embedding. Ελεύθερο κείμενο· οι προτάσεις είναι μόνο υποδείξεις."
+label = "Μοντέλο embedding"
+
+[admin.settings.ai.documents.embeddingProvider]
+description = "Πάροχος που χρησιμοποιείται για τη μετατροπή κειμένου εγγράφων σε vector embeddings."
+label = "Πάροχος embedding"
+
+[admin.settings.ai.documents.maxSearches]
+description = "Μέγιστος αριθμός αναζητήσεων ανάκτησης που μπορεί να εκτελέσει ο agent ανά αίτημα."
+label = "Μέγιστες αναζητήσεις"
+
+[admin.settings.ai.documents.reindexNote]
+body = "Η αλλαγή του μοντέλου embedding τίθεται σε ισχύ αμέσως, αλλά τα έγγραφα που έχουν ευρετηριαστεί με το προηγούμενο μοντέλο πρέπει να ευρετηριαστούν ξανά ώστε η αναζήτηση να επιστρέφει σωστά αποτελέσματα."
+title = "Απαιτείται επανευρετηρίαση"
+
+[admin.settings.ai.documents.saved]
+reindexNote = "Αν αλλάξατε το μοντέλο embedding, επανευρετηριάστε τα υπάρχοντα έγγραφα ώστε η αναζήτηση να χρησιμοποιεί το νέο μοντέλο."
+
+[admin.settings.ai.documents.topK]
+description = "Αριθμός των πιο σχετικών τμημάτων που ανακτώνται ανά αναζήτηση."
+label = "Top K"
+
+[admin.settings.ai.general]
+description = "Συνδέστε το Stirling με τη μηχανή Python AI και επιλέξτε ποιες δυνατότητες AI είναι διαθέσιμες. Οι αλλαγές εφαρμόζονται με επανεκκίνηση."
+title = "Μηχανή AI"
+
+[admin.settings.ai.general.capabilities]
+description = "Ενεργοποιήστε ή απενεργοποιήστε μεμονωμένες λειτουργίες AI. Οι απενεργοποιημένες λειτουργίες αποκρύπτονται στην εφαρμογή."
+title = "Δυνατότητες"
+
+[admin.settings.ai.general.enabled]
+description = "Κεντρικός διακόπτης. Όταν είναι απενεργοποιημένος, δεν είναι διαθέσιμα εργαλεία AI, agents ή κλήσεις μηχανής."
+label = "Ενεργοποίηση AI"
+
+[admin.settings.ai.general.features.chat]
+description = "Βοηθός συνομιλίας για εργασία με PDFs."
+label = "Βοηθός συνομιλίας"
+
+[admin.settings.ai.general.features.classify]
+description = "Αυτόματη κατηγοριοποίηση εγγράφων κατά τύπο ή περιεχόμενο."
+label = "Ταξινόμηση εγγράφων"
+
+[admin.settings.ai.general.features.createPdf]
+description = "Δημιουργία νέου PDF (π.χ. από HTML) μέσω AI agent."
+label = "Δημιουργία PDF από prompt"
+
+[admin.settings.ai.general.features.documentQuestions]
+description = "Κάντε ερωτήσεις και λάβετε απαντήσεις βασισμένες σε ένα μεταφορτωμένο έγγραφο."
+label = "Ερωτήσεις εγγράφου"
+
+[admin.settings.ai.general.features.mathAuditor]
+description = "Έλεγχος εγγράφων για μαθηματικά και αριθμητικά σφάλματα."
+label = "Ελεγκτής μαθηματικών"
+
+[admin.settings.ai.general.features.pdfComment]
+description = "Προσθήκη σχολίων αξιολόγησης και επισημάνσεων γραμμένων από AI σε ένα PDF."
+label = "PDF comment agent"
+
+[admin.settings.ai.general.longRunningTimeoutSeconds]
+description = "Χρονικό όριο για πιο βαριές λειτουργίες agent, όπως η δημιουργία εγγράφων."
+label = "Χρονικό όριο μακράς διάρκειας (δευτερόλεπτα)"
+
+[admin.settings.ai.general.note]
+body = "Η μηχανή AI εκτελείται ως ξεχωριστή υπηρεσία. Το κοινό μυστικό της"
+body2 = "ορίζεται μέσω μεταβλητής περιβάλλοντος container. Τα Provider API keys μπορούν να εισαχθούν σε αυτές τις σελίδες ή να δοθούν ως μεταβλητές περιβάλλοντος της μηχανής· τα keys που εισάγονται εδώ προωθούνται στη μηχανή όταν αποθηκευτούν."
+title = "Σχετικά με τη μηχανή AI"
+
+[admin.settings.ai.general.streamTimeoutSeconds]
+description = "Χρονικό όριο για streaming απαντήσεις συνομιλίας (token προς token)."
+label = "Χρονικό όριο stream (δευτερόλεπτα)"
+
+[admin.settings.ai.general.test]
+button = "Δοκιμή σύνδεσης"
+failBody = "Η μηχανή AI δεν ανταποκρίθηκε. Ελέγξτε το URL, ότι το container της μηχανής εκτελείται και ότι το AI είναι ενεργοποιημένο (απαιτείται επανεκκίνηση μετά την ενεργοποίηση)."
+failTitle = "Η μηχανή AI δεν είναι προσβάσιμη"
+okBody = "Η μηχανή AI ανταποκρίθηκε σε έλεγχο υγείας."
+okTitle = "Η μηχανή AI είναι προσβάσιμη"
+
+[admin.settings.ai.general.timeoutSeconds]
+description = "Χρονικό όριο για τυπικά αιτήματα AI προς τη μηχανή."
+label = "Χρονικό όριο αιτήματος (δευτερόλεπτα)"
+
+[admin.settings.ai.general.url]
+description = "Εσωτερικό URL της μηχανής Python AI, π.χ. http://stirling-pdf-engine:5001."
+label = "URL μηχανής AI"
+
+[admin.settings.ai.limits]
+description = "Προστατευτικά όρια για το πόση εργασία μπορούν να κάνουν τα αιτήματα AI και πόσα εκτελούνται ταυτόχρονα. Εφαρμόζονται στη μηχανή AI όταν αποθηκευτούν."
+title = "Όρια & Απόδοση"
+
+[admin.settings.ai.limits.maxCharacters]
+description = "Προστατευτικό όριο: απόρριψη αιτημάτων AI των οποίων το εξαγόμενο κείμενο υπερβαίνει αυτό το μήκος."
+label = "Μέγιστοι χαρακτήρες ανά αίτημα"
+
+[admin.settings.ai.limits.maxPages]
+description = "Προστατευτικό όριο: απόρριψη αιτημάτων AI πάνω από τόσες σελίδες PDF."
+label = "Μέγιστες σελίδες ανά αίτημα"
+
+[admin.settings.ai.limits.modelMaxConcurrency]
+description = "Μέγιστες ταυτόχρονες εκκρεμείς κλήσεις μοντέλου σε όλη τη μηχανή."
+label = "Μέγιστη ταυτόχρονη εκτέλεση μοντέλου"
+
+[admin.settings.ai.models]
+description = "Επιλέξτε τον πάροχο LLM και τα smart/fast μοντέλα που χρησιμοποιεί η μηχανή AI. Εφαρμόζεται στη μηχανή AI όταν αποθηκευτεί."
+title = "Μοντέλα & Πάροχοι"
+
+[admin.settings.ai.models.apiKey]
+anthropic = "Anthropic API key"
+description = "Αφήστε το κενό για να χρησιμοποιηθεί το διαπιστευτήριο περιβάλλοντος της ίδιας της μηχανής. Ισχύει για αυτοφιλοξενούμενες αναπτύξεις μίας μηχανής."
+generic = "API key"
+openai = "OpenAI API key"
+setPlaceholder = "Αποθηκεύτηκε - αφήστε κενό για να διατηρήσετε το τρέχον key"
+
+[admin.settings.ai.models.baseUrl]
+description = "Βασικό URL του endpoint συμβατού με OpenAI / Ollama, π.χ. http://ollama:11434/v1."
+label = "Βασικό URL παρόχου"
+warning = "Το βασικό URL πρέπει να δείχνει σε αξιόπιστο εσωτερικό endpoint. Η μηχανή θα κάνει server-side αιτήματα προς αυτό, επομένως μια μη αξιόπιστη τιμή είναι ευαίσθητη σε SSRF."
+
+[admin.settings.ai.models.fastMaxTokens]
+description = "Μέγιστος αριθμός output tokens για το fast μοντέλο."
+label = "Μέγιστα tokens fast μοντέλου"
+
+[admin.settings.ai.models.fastModel]
+description = "Φθηνότερο, ταχύτερο μοντέλο για ελαφριές εργασίες. Ελεύθερο κείμενο· οι προτάσεις είναι μόνο υποδείξεις."
+label = "Fast μοντέλο"
+
+[admin.settings.ai.models.provider]
+description = "Με ποιον πάροχο LLM επικοινωνεί η μηχανή."
+label = "Πάροχος"
+
+[admin.settings.ai.models.smartMaxTokens]
+description = "Μέγιστος αριθμός output tokens για το smart μοντέλο."
+label = "Μέγιστα tokens smart μοντέλου"
+
+[admin.settings.ai.models.smartModel]
+description = "Μοντέλο υψηλών δυνατοτήτων για σύνθετη συλλογιστική. Ελεύθερο κείμενο· οι προτάσεις είναι μόνο υποδείξεις."
+label = "Smart μοντέλο"
+
+[admin.settings.ai.saved]
+body = "Οι αλλαγές προωθούνται αυτόματα στη μηχανή AI."
+bodyNoPush = "Οι ρυθμίσεις αποθηκεύτηκαν. Θα εφαρμοστούν την επόμενη φορά που η μηχανή AI θα λάβει τη διαμόρφωσή της."
+title = "Οι ρυθμίσεις AI αποθηκεύτηκαν"
+
 [admin.settings.badge]
 clickToUpgrade = "Κάντε κλικ για προβολή λεπτομερειών πλάνου"
 
@@ -937,6 +1093,25 @@ label = "Επαναδημιουργία κατά την εκκίνηση"
 [admin.settings.features.serverCertificate.validity]
 description = "Αριθμός ημερών που θα ισχύει το πιστοποιητικό"
 label = "Ισχύς πιστοποιητικού (ημέρες)"
+
+[admin.settings.folderAccess]
+description = "Κατάλογοι από τους οποίους οι πηγές φακέλων και οι έξοδοι φακέλων επιτρέπεται να διαβάζουν και στους οποίους επιτρέπεται να γράφουν. Αυτό είναι όριο ασφαλείας: οι αυτοματισμοί δεν μπορούν ποτέ να δείχνουν σε διαδρομή server εκτός αυτής της λίστας."
+securityNote = "Αφήστε το κενό για να απενεργοποιήσετε πλήρως τις πηγές φακέλων και τις εξόδους. Ο κατάλογος διαμόρφωσης του Stirling είναι πάντα εκτός ορίων."
+title = "Πρόσβαση σε φακέλους"
+
+[admin.settings.folderAccess.implied]
+description = "Αυτοί οι κατάλογοι που διαχειρίζεται το Stirling επιτρέπονται πάντα και δεν μπορούν να αλλάξουν εδώ."
+serverStorage = "Αποθήκευση αρχείων server"
+title = "Πάντα επιτρεπόμενα"
+watchedFolder = "Παρακολουθούμενος φάκελος pipeline"
+
+[admin.settings.folderAccess.roots]
+add = "Προσθήκη"
+empty = "Δεν επιτρέπονται φάκελοι. Οι πηγές φακέλων και οι έξοδοι είναι προς το παρόν απενεργοποιημένες."
+hint = "Εισαγάγετε απόλυτες διαδρομές, για παράδειγμα /data/inbox."
+label = "Επιτρεπόμενες ρίζες φακέλων"
+placeholder = "/data/inbox"
+remove = "Αφαίρεση ρίζας φακέλου"
 
 [admin.settings.general]
 description = "Ρυθμίστε καθολικές ρυθμίσεις εφαρμογής, όπως επωνυμία και προεπιλεγμένη συμπεριφορά."
@@ -1704,6 +1879,9 @@ width = "Πλάτος"
 [app]
 description = "Η δωρεάν εναλλακτική του Adobe Acrobat (10M+ λήψεις)"
 
+[appBanner]
+dismiss = "Dismiss"
+
 [attachments]
 convertToPdfA3b = "Μετατροπή σε PDF/A-3b"
 convertToPdfA3bDescription = "Δημιουργεί αρχειακό PDF με ενσωματωμένα συνημμένα"
@@ -1841,6 +2019,15 @@ export = "Εξαγωγή"
 [auth]
 accessDenied = "Απαγορεύεται η πρόσβαση"
 insufficientPermissions = "Δεν έχετε άδεια για αυτή την ενέργεια."
+
+[auth.callback]
+completing = "Ολοκλήρωση ελέγχου ταυτότητας"
+invalidToken = "Η σύνδεση OAuth απέτυχε - μη έγκυρο token."
+missingToken = "Η σύνδεση OAuth απέτυχε - δεν λήφθηκε token."
+oauthFailed = "Η σύνδεση OAuth απέτυχε. Δοκιμάστε ξανά."
+pleaseWait = "Περιμένετε όσο ολοκληρώνουμε τη σύνδεσή σας."
+signedOut = "Έχετε αποσυνδεθεί. Συνδεθείτε ξανά."
+windowMayClose = "Μπορείτε να κλείσετε αυτό το παράθυρο μόλις ολοκληρωθεί."
 
 [auth.displayName]
 guest = "Επισκέπτης"
@@ -1986,6 +2173,73 @@ secureWorkflowDesc = "Ασφαλίζει έγγραφα PDF αφαιρώντας
 [autoRename]
 description = "Αυτό το εργαλείο θα μετονομάζει αυτόματα αρχεία PDF με βάση το περιεχόμενό τους. Αναλύει το έγγραφο για να βρει τον καταλληλότερο τίτλο από το κείμενο."
 tags = "auto-detect,header-based,organize,relabel,auto rename,automatic rename,smart rename,rename by content,filename,file naming,detect title"
+
+[autoRotate]
+submit = "Αυτόματη περιστροφή"
+tags = "αυτόματη περιστροφή,διόρθωση προσανατολισμού,ανάποδα,πλάγια,ίσιωμα,προσανατολισμός,ανίχνευση προσανατολισμού,διόρθωση περιστροφής,αυτόματος προσανατολισμός,σαρωμένο,OSD"
+
+[autoRotate.confidenceThreshold]
+title = "Όριο εμπιστοσύνης"
+
+[autoRotate.detectionMode]
+auto = "Αυτόματα"
+osd = "Μόνο OCR"
+text = "Μόνο κείμενο"
+title = "Μέθοδος ανίχνευσης"
+
+[autoRotate.error]
+failed = "Παρουσιάστηκε σφάλμα κατά την αυτόματη περιστροφή του PDF."
+
+[autoRotate.inferUndetected]
+title = "Περιστροφή σελίδων χαμηλής εμπιστοσύνης ώστε να ταιριάζουν"
+
+[autoRotate.report]
+applied = "{{degrees}}° δεξιόστροφα"
+confidenceValue = "Εμπιστοσύνη {{value}}"
+noChange = "Καμία αλλαγή"
+pageLabel = "Σελίδα {{number}}"
+summary = "Περιστράφηκαν {{rotated}} από {{total}} σελίδες, {{unchanged}} έμειναν ως έχουν"
+title = "Αναφορά ανίχνευσης"
+
+[autoRotate.report.method]
+inferred = "Αντιστοιχίστηκε"
+none = "Παραλείφθηκε"
+osd = "OCR"
+text = "Κείμενο"
+
+[autoRotate.report.note]
+belowThreshold = "Κάτω από το όριο"
+blankPage = "Η σελίδα είναι κενή"
+inferredFromDocument = "Ίδια με τις άλλες σελίδες"
+noDominantDirection = "Μικτές κατευθύνσεις κειμένου"
+osdFailed = "Δεν βρέθηκε αναγνώσιμο κείμενο"
+osdNoVerdict = "Δεν ήταν δυνατό να προσδιοριστεί ο σωστός προσανατολισμός"
+tesseractUnavailable = "Το OCR δεν είναι εγκατεστημένο"
+tooFewGlyphs = "Πολύ λίγο κείμενο"
+
+[autoRotate.results]
+title = "Αποτελέσματα αυτόματης περιστροφής"
+
+[autoRotate.settings]
+title = "Ρυθμίσεις"
+
+[autoRotate.tooltip.confidenceThreshold]
+text = "Πόσο βέβαιος πρέπει να είναι ο έλεγχος πριν περιστραφεί μια σελίδα. Μειώστε το για να περιστρέφονται περισσότερες σελίδες, αυξήστε το για να μένουν περισσότερες σελίδες ανέπαφες."
+title = "Όριο εμπιστοσύνης"
+
+[autoRotate.tooltip.description]
+text = "Υπολογίζει ποιος πρέπει να είναι ο σωστός προσανατολισμός κάθε σελίδας και τη γυρίζει σωστά. Οι σελίδες που είναι ήδη όρθιες μένουν ως έχουν."
+
+[autoRotate.tooltip.detectionMode]
+text = "Το Αυτόματα διαβάζει πρώτα το κείμενο στη σελίδα και μετά εξετάζει τη σελίδα ως εικόνα αν αυτό δεν είναι αρκετό. Το Μόνο κείμενο παραλείπει τον έλεγχο εικόνας, που είναι ταχύτερο για έγγραφα που δεν σαρώθηκαν ποτέ. Το Μόνο OCR αντιμετωπίζει κάθε σελίδα ως εικόνα."
+title = "Μέθοδος ανίχνευσης"
+
+[autoRotate.tooltip.header]
+title = "Αυτόματη περιστροφή"
+
+[autoRotate.tooltip.inferUndetected]
+text = "Οι κενές ή σχεδόν κενές σελίδες δεν μπορούν να ελεγχθούν από μόνες τους. Όταν κάθε σελίδα που μπορούσε να διαβαστεί χρειάζεται την ίδια περιστροφή, αυτές οι σελίδες περιστρέφονται ώστε να ταιριάζουν."
+title = "Περιστροφή σελίδων χαμηλής εμπιστοσύνης ώστε να ταιριάζουν"
 
 [autoSizeSplitPDF]
 tags = "pdf,διαχωρισμός,έγγραφο,οργάνωση"
@@ -2188,33 +2442,6 @@ title = "Βασικά σύνταξης"
 keywords = "Λέξεις-κλειδιά: odd, even"
 numbers = "Αριθμοί/εύρη: 5, 10-20"
 progressions = "Πρόοδοι: 3n, 4n+1"
-
-[certificateChoice.tooltip]
-header = "Τύποι πιστοποιητικών"
-
-[certificateChoice.tooltip.organization]
-bullet1 = "Διαχειρίζεται από διαχειριστές συστήματος"
-bullet2 = "Κοινόχρηστο μεταξύ εξουσιοδοτημένων χρηστών"
-bullet3 = "Αντιπροσωπεύει την ταυτότητα της εταιρείας, όχι του ατόμου"
-bullet4 = "Κατάλληλο για: Επίσημα έγγραφα, ομαδικές υπογραφές"
-description = "Ένα κοινόχρηστο πιστοποιητικό που παρέχεται από τον οργανισμό σας. Χρησιμοποιείται για εταιρική εξουσιοδότηση υπογραφών."
-title = "Πιστοποιητικό οργανισμού"
-
-[certificateChoice.tooltip.personal]
-bullet1 = "Δημιουργείται αυτόματα κατά την πρώτη χρήση"
-bullet2 = "Συνδέεται με τον λογαριασμό χρήστη σας"
-bullet3 = "Δεν μπορεί να κοινοποιηθεί σε άλλους χρήστες"
-bullet4 = "Κατάλληλο για: Προσωπικά έγγραφα, ατομική υπευθυνότητα"
-description = "Ένα αυτόματα δημιουργημένο πιστοποιητικό, μοναδικό για τον λογαριασμό χρήστη σας. Κατάλληλο για ατομικές υπογραφές."
-title = "Προσωπικό πιστοποιητικό"
-
-[certificateChoice.tooltip.upload]
-bullet1 = "Απαιτεί αρχείο P12/PFX και κωδικό πρόσβασης"
-bullet2 = "Μπορεί να εκδοθεί από εξωτερικές Αρχές Πιστοποίησης"
-bullet3 = "Υψηλότερο επίπεδο εμπιστοσύνης για νομικά έγγραφα"
-bullet4 = "Κατάλληλο για: Νομικά δεσμευτικά συμβόλαια, εξωτερική επικύρωση"
-description = "Χρησιμοποιήστε το δικό σας αρχείο πιστοποιητικού PKCS#12. Παρέχει πλήρη έλεγχο στις ιδιότητες του πιστοποιητικού."
-title = "Μεταφόρτωση προσαρμοσμένου P12"
 
 [certSign]
 awaitingSignatures = "Αναμονή υπογραφών"
@@ -2542,34 +2769,6 @@ server = "Διακομιστής"
 stepTitle = "Πηγή πιστοποιητικού"
 upload = "Μεταφόρτωση"
 
-[certSign.tooltip.header]
-title = "Σχετικά με τη διαχείριση υπογραφών"
-
-[certSign.tooltip.overview]
-bullet1 = "Ελέγξτε υπάρχουσες υπογραφές και την εγκυρότητά τους"
-bullet2 = "Προβάλετε λεπτομερείς πληροφορίες για υπογράφοντες και πιστοποιητικά"
-bullet3 = "Προσθέστε νέες ψηφιακές υπογραφές για να ασφαλίσετε τα έγγραφά σας"
-bullet4 = "Υποστήριξη πολλών αρχείων με εύκολη πλοήγηση"
-text = "Αυτό το εργαλείο σάς επιτρέπει να ελέγξετε αν τα PDF σας είναι ψηφιακά υπογεγραμμένα και να προσθέσετε νέες ψηφιακές υπογραφές. Οι ψηφιακές υπογραφές αποδεικνύουν ποιος δημιούργησε ή ενέκρινε ένα έγγραφο και αν έχει αλλάξει από την υπογραφή."
-title = "Τι μπορεί να κάνει αυτό το εργαλείο;"
-
-[certSign.tooltip.signing]
-bullet1 = "Υποστηρίζει μορφές PEM, PKCS12, JKS και πιστοποιητικό διακομιστή"
-bullet2 = "Επιλογή εμφάνισης ή απόκρυψης της υπογραφής στο PDF"
-bullet3 = "Προσθέστε λόγο, τοποθεσία και όνομα υπογράφοντος"
-bullet4 = "Επιλέξτε σε ποια σελίδα θα τοποθετηθούν οι ορατές υπογραφές"
-bullet5 = "Χρήση πιστοποιητικού διακομιστή για την απλή επιλογή 'Sign with Stirling-PDF'"
-text = "Για να υπογράψετε ένα PDF, χρειάζεστε ένα ψηφιακό πιστοποιητικό (όπως PEM, PKCS12 ή JKS). Μπορείτε να επιλέξετε να κάνετε την υπογραφή ορατή στο έγγραφο ή να την κρατήσετε αόρατη μόνο για λόγους ασφάλειας."
-title = "Προσθήκη υπογραφών"
-
-[certSign.tooltip.validation]
-bullet1 = "Εμφανίζει αν οι υπογραφές είναι έγκυρες ή άκυρες"
-bullet2 = "Προβάλλει πληροφορίες υπογράφοντος και ημερομηνία υπογραφής"
-bullet3 = "Ελέγχει αν το έγγραφο τροποποιήθηκε μετά την υπογραφή"
-bullet4 = "Μπορεί να χρησιμοποιήσει προσαρμοσμένα πιστοποιητικά για επαλήθευση"
-text = "Όταν ελέγχετε υπογραφές, το εργαλείο σας λέει αν είναι έγκυρες, ποιος υπέγραψε το έγγραφο, πότε υπογράφηκε και αν το έγγραφο έχει αλλάξει από τότε που υπογράφηκε."
-title = "Έλεγχος υπογραφών"
-
 [changeCreds]
 changeUsername = "Ενημερώστε το όνομα χρήστη σας. Θα αποσυνδεθείτε μετά την ενημέρωση."
 credsUpdated = "Ο λογαριασμός ενημερώθηκε"
@@ -2737,12 +2936,16 @@ text = "Για να καταστούν αυτά τα δικαιώματα μη �
 [chat.actions]
 copy = "Αντιγραφή μηνύματος"
 
+[chat.emptyState]
+text = "Ask a question about your documents or get help with PDF tools."
+
 [chat.fab]
 close = "Close chat"
 open = "Open Stirling AI assistant"
 
 [chat.header]
 agentMenu = "Επιλογές πράκτορα Stirling"
+assistant = "AI Assistant"
 clearChat = "Καθαρισμός συνομιλίας"
 
 [chat.input]
@@ -2805,27 +3008,35 @@ tooltip = "Αυτή η λειτουργία θα χρησιμοποιήσει τ
 tooltip = "Επιλογή χρώματος από την οθόνη"
 
 [colorPicker]
+hue = "Hue"
+saturation = "Saturation and brightness"
 title = "Επιλέξτε χρώμα"
 
 [common]
+actions = "Actions"
 back = "Πίσω"
 cancel = "Άκυρο"
 close = "Κλείσιμο"
+codeSample = "Code sample"
 collapse = "Σύμπτυξη"
 confirm = "Επιβεβαίωση"
 continue = "Συνέχεια"
 copied = "Αντιγράφηκε!"
 copy = "Αντιγραφή"
 done = "Τέλος"
+enterValue = "Enter value"
 error = "Σφάλμα"
 expand = "Ανάπτυξη"
 loading = "Φόρτωση..."
 next = "Επόμενο"
+open = "Open"
 preview = "Προεπισκόπηση"
 previous = "Προηγούμενο"
 refresh = "Ανανέωση"
+remaining = "Απομένουν"
 retry = "Επανάληψη"
 save = "Αποθήκευση"
+stepOf = "Step {{current}} of {{total}}"
 
 [compare]
 clearSelected = "Καθαρισμός επιλεγμένων"
@@ -2988,6 +3199,7 @@ title = "Μέθοδος συμπίεσης"
 [compress.settings]
 desiredSize = "Επιθυμητό μέγεθος αρχείου"
 desiredSizePlaceholder = "Εισαγάγετε μέγεθος"
+desiredSizeUnit = "Size unit"
 
 [compress.tooltip.description]
 text = "Η συμπίεση είναι ένας εύκολος τρόπος να μειώσετε το μέγεθος του αρχείου σας. Επιλέξτε Μέγεθος αρχείου για να εισαγάγετε έναν στόχο και να προσαρμόσουμε την ποιότητα για εσάς. Επιλέξτε Ποιότητα για να ρυθμίσετε χειροκίνητα την ισχύ συμπίεσης."
@@ -3190,6 +3402,24 @@ pdfOptions = "Επιλογές PDF"
 pdfToCbr = "PDF → CBR"
 pdfToCbz = "PDF → CBZ"
 pdfToEpub = "PDF → EPUB"
+pdfUaAltTextNotice = "Images need a written description before a document can be certified. Descriptions are never generated automatically, because an invented one passes the checker while telling a screen-reader user nothing. Any image left without one is reported, and the file comes back tagged but not certified."
+pdfUaAltTextScanFailed = "The images could not be listed. Convert anyway and the response reports what is missing."
+pdfUaAltTextSingleFileOnly = "Descriptions belong to one document: an image is identified by its position, which is a different image in every file. Convert these {{fileCount}} files to tag them, then convert one at a time to describe its images."
+pdfUaEmbedFonts = "Embed missing fonts"
+pdfUaEmbedFontsHelp = "PDF/UA requires every font to be embedded. Turning this off is faster but usually prevents conformance."
+pdfUaFigureLabel = "Page {{page}} {{kind}}"
+pdfUaFigurePlaceholder = "What this image tells the reader"
+pdfUaFindImages = "Find images needing a description"
+pdfUaLanguage = "Document language"
+pdfUaLanguageHelp = "A BCP-47 tag such as en-GB. Used only when the document does not already declare its own language."
+pdfUaNoImagesNeedingText = "No image is missing a description."
+pdfUaOptions = "PDF/UA Options"
+pdfUaOverrideLanguage = "Replace the document's own language"
+pdfUaOverrideLanguageHelp = "Only tick this if the language above is right and the document's own is wrong. Relabelling a document into a language it is not written in makes a screen reader unintelligible."
+pdfUaProfile = "Conformance level"
+pdfUaSignatureWarning = "This PDF is digitally signed. Tagging rewrites the page content the signature covers, so the signature will stop verifying. Convert first, then re-sign."
+pdfUaTitle = "Document title"
+pdfUaTitleHelp = "Shown by a reader instead of the filename. Left blank, the first heading is used."
 selectSourceFormatFirst = "Επιλέξτε πρώτα μορφή προέλευσης"
 settings = "Ρυθμίσεις"
 single = "Μονό"
@@ -3264,24 +3494,6 @@ description = "These cookies are essential for the website to function properly.
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
-[credits.modal]
-advancedMonitoring = "Προηγμένη παρακολούθηση"
-allInOneWorkspace = "Ενιαίος χώρος εργασίας PDF (προβολέας, εργαλεία & agent)"
-apiSandbox = "API sandbox"
-dedicatedSupportSlas = "Αφοσιωμένη υποστήριξη & SLA"
-fasterThroughput = "10x ταχύτερος ρυθμός επεξεργασίας"
-fullyPrivateFiles = "Πλήρως ιδιωτικά αρχεία"
-largeFileProcessing = "Επεξεργασία μεγάλων αρχείων"
-orgWideAccess = "Έλεγχοι πρόσβασης σε όλο τον οργανισμό"
-premiumAiModels = "Premium μοντέλα AI"
-prioritySupport = "Υποστήριξη προτεραιότητας"
-privateDocCloud = "Ιδιωτικό Document Cloud"
-ragFineTuning = "RAG + fine-tuning"
-secureApiAccess = "Ασφαλής πρόσβαση API"
-standardThroughput = "Τυπικός ρυθμός επεξεργασίας"
-unlimitedApiAccess = "Απεριόριστη πρόσβαση API"
-unlimitedSeats = "Απεριόριστες θέσεις"
-
 [crop]
 autoCrop = "Αυτόματη περικοπή κενού"
 noFileSelected = "Επιλέξτε ένα αρχείο PDF για να ξεκινήσετε την περικοπή"
@@ -3314,7 +3526,6 @@ label = "Θέση Y"
 
 [crop.error]
 failed = "Αποτυχία περικοπής του PDF"
-invalidArea = "Η περιοχή περικοπής εκτείνεται πέρα από τα όρια του PDF"
 
 [crop.preview]
 title = "Επιλογή περιοχής περικοπής"
@@ -3346,6 +3557,7 @@ message = "Αποτυχία ορισμού προεπιλεγμένου χειρ
 title = "Σφάλμα"
 
 [defaultApp.prompt]
+dontRemind = "Να μην μου το υπενθυμίσεις ξανά"
 message = "Κάντε το Stirling PDF την προεπιλεγμένη εφαρμογή για άνοιγμα αρχείων PDF."
 
 [defaultApp.settingsOpened]
@@ -3385,7 +3597,11 @@ tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [dropdownList]
+noItems = "No items available"
+noResults = "No results found"
 searchPlaceholder = "Αναζήτηση..."
+selectLanguages = "Select languages"
+selectOption = "Select an option"
 
 [editableSecretField]
 edit = "Επεξεργασία"
@@ -3644,11 +3860,13 @@ shareSelected = "Κοινή χρήση επιλεγμένων"
 sharing = "Κοινή χρήση"
 showAll = "Προβολή όλων"
 showHistory = "Εμφάνιση ιστορικού"
+sortBy = "Sort files"
 sortByDate = "Ταξινόμηση κατά ημερομηνία"
 sortByName = "Ταξινόμηση κατά όνομα"
 sortBySize = "Ταξινόμηση κατά μέγεθος"
 storage = "Αποθήκευση"
 storageState = "Αποθήκευση"
+storageUsed = "Storage used"
 synced = "Συγχρονισμένο"
 title = "Μεταφόρτωση αρχείων PDF"
 toolChain = "Εργαλεία που εφαρμόστηκαν"
@@ -3694,13 +3912,17 @@ addFiles = "Προσθήκη αρχείων"
 addingFiles = "Προσθήκη αρχείων…"
 collapse = "Σύμπτυξη πλευρικής στήλης"
 customizeGroups = "Προσαρμογή ομάδων"
+dataLostBody = "This browser lost this file's contents. Upload it again to keep working with it."
+dataLostTitle = "File data is unavailable"
+downloadFailed = "Download failed"
 dropHint = "Ανοίξτε αρχεία για να ξεκινήσετε"
 dropToAdd = "Drop files to add"
+duplicateFailed = "Could not duplicate file"
 expand = "Ανάπτυξη πλευρικής στήλης"
-files = "Αρχεία"
 googleDrive = "Google Drive"
 googleDriveDisabled = "Το Google Drive δεν έχει ρυθμιστεί"
 leaveMyFiles = "Έξοδος από Τα αρχεία μου"
+library = "Βιβλιοθήκη PDF"
 myFiles = "Τα αρχεία μου"
 noFiles = "Ακόμη δεν υπάρχουν αρχεία"
 openFileManager = "Άνοιγμα διαχείρισης αρχείων"
@@ -3708,36 +3930,35 @@ openFromComputer = "Άνοιγμα από υπολογιστή"
 openSettings = "Άνοιγμα ρυθμίσεων"
 other = "Άλλα"
 recent = "Πρόσφατα"
-search = "Αναζήτηση"
-searchPlaceholder = "Αναζήτηση αρχείων..."
 viewAll = "Προβολή όλων των {{count}} αρχείων"
 
 [fileSidebar.fileItem]
 closeViewer = "Κλείσιμο προβολέα"
+dataLost = "Data lost"
+dataLostTooltip = "This browser lost this file's contents. Upload it again to keep working with it."
 delete = "Delete"
+duplicate = "Duplicate"
 moreActions = "More actions"
 openInViewer = "Άνοιγμα στον προβολέα"
+rename = "Rename"
 savedToServer = "Saved to server"
 updateOnServer = "Update on server"
 uploadToServer = "Upload to server"
 versionHistory = "Version history"
 
 [fileSidebar.groupsModal]
-add = "Προσθήκη"
-addLabel = "Προσθήκη ετικέτας…"
-categoryIconAria = "Επιλέξτε εικονίδιο για {{name}}"
-createCategory = "Δημιουργία κατηγορίας"
-delete = "Διαγραφή κατηγορίας"
 done = "Τέλος"
-hide = "Απόκρυψη κατηγορίας"
-newCategory = "Νέο όνομα κατηγορίας…"
-removeLabel = "Αφαίρεση {{name}}"
-rename = "Μετονομασία"
 reset = "Επαναφορά προεπιλογών"
-search = "Αναζήτηση ετικετών…"
-show = "Εμφάνιση κατηγορίας"
 subtitle = "Ομαδοποιήστε τα αρχεία σας σε γονικές κατηγορίες. Προσθέστε υπάρχουσες ή νέες ετικέτες σε μια κατηγορία, μετονομάστε την ή δημιουργήστε τη δική σας. Τα αρχεία που δεν ανήκουν σε καμία από τις κατηγορίες σας εμφανίζονται στην ενότητα «Άλλα»."
 title = "Κατηγορίες πλαϊνής γραμμής"
+
+[fileSidebar.rename]
+cancel = "Cancel"
+error = "Could not rename the file."
+illegalCharacters = "A file name can't contain \\ / : * ? \" < > |"
+label = "File name"
+save = "Rename"
+title = "Rename file"
 
 [filesPage]
 addToWorkspace = "Προσθήκη σε χώρο εργασίας"
@@ -3747,9 +3968,9 @@ back = "Πίσω"
 backToFolder = "Πίσω στον φάκελο {{folder}}"
 backToMyFiles = "Πίσω στα Αρχεία μου"
 breadcrumbs = "Διαδρομή φακέλου"
+bulkActions = "Ενέργειες"
 cancel = "Άκυρο"
 classification = "Ταξινόμηση"
-clearSearch = "Καθαρισμός αναζήτησης"
 clearSelection = "Εκκαθάριση επιλογής"
 closeDetails = "Κλείσιμο λεπτομερειών"
 create = "Δημιουργία"
@@ -3781,6 +4002,7 @@ downloadAll = "Λήψη όλων"
 downloadVersion = "Λήψη αυτής της έκδοσης"
 dropOverlay = "Αποθέστε αρχεία για μεταφόρτωση"
 dropOverlaySub = "Τα αρχεία ξεκινούν στο Local. Χρησιμοποιήστε 'Μετακίνηση σε' ή 'Αποθήκευση στο cloud' για να τα οργανώσετε σε φάκελο."
+duplicate = "Duplicate"
 file = "Αρχείο"
 fileInfo = "File info"
 fileMenu = "Ενέργειες αρχείου"
@@ -3808,13 +4030,12 @@ refresh = "Ανανέωση από τον διακομιστή"
 remove = "Διαγραφή"
 removeVersion = "Αφαίρεση αυτής της έκδοσης"
 rename = "Μετονομασία"
+renamed = "Μετονομάστηκε"
 renameFolder = "Μετονομασία φακέλου"
 resizeFolderTree = "Αλλαγή μεγέθους δέντρου φακέλων (πλήκτρα βελών, Shift για μεγαλύτερα βήματα· διπλό κλικ για αυτόματη προσαρμογή)"
 save = "Αποθήκευση"
 saveToServer = "Αποθήκευση στον διακομιστή"
 saveToServerDisabledHint = "Η αποθήκευση στον διακομιστή δεν είναι ενεργοποιημένη σε αυτόν τον διακομιστή. Ζητήστε από τον διαχειριστή σας να την ενεργοποιήσει."
-search = "Αναζήτηση"
-searchPlaceholder = "Αναζήτηση σε αυτόν τον φάκελο & υποφακέλους"
 selectAll = "Επιλογή όλων"
 selectAllHint = "Κάντε κλικ για επιλογή όλων. Συμβουλή: κρατήστε πατημένο το Ctrl (ή Cmd) για να προσθέτετε αρχεία ένα-ένα, Shift για επιλογή εύρους."
 selectedCount = "{{count}} επιλεγμένα"
@@ -3874,6 +4095,10 @@ title = "Δεν υπάρχουν ακόμη αρχεία cloud"
 hint = "Αρχεία που αποθηκεύτηκαν χωρίς μεταφόρτωση μένουν εδώ. Αποθέστε ένα αρχείο για προσθήκη."
 title = "Δεν υπάρχουν μόνο-τοπικά αρχεία"
 
+[filesPage.empty.noResults]
+hint = "No files in this folder match your filter. Try a different term or clear the filter."
+title = "No matching files"
+
 [filesPage.empty.recent]
 hint = "Αρχεία που ανοίγετε ή επεξεργάζεστε θα εμφανιστούν εδώ."
 title = "Δεν έχει τροποποιηθεί ακόμα τίποτα"
@@ -3893,6 +4118,8 @@ cloudDeleteFailed_one = "Couldn't delete 1 file from the cloud."
 cloudDeleteFailed_other = "Couldn't delete {{count}} files from the cloud."
 deleteFolderFailed = "Δεν ήταν δυνατή η διαγραφή φακέλου."
 deleteFolderFailedDetail = "Δεν ήταν δυνατή η διαγραφή φακέλου: {{message}}"
+downloadFailed = "Could not download the file."
+duplicateFailed = "Could not duplicate the file."
 folderAppearanceFailed = "Δεν ήταν δυνατή η ενημέρωση εμφάνισης φακέλου."
 folderAppearanceFailedDetail = "Δεν ήταν δυνατή η ενημέρωση εμφάνισης φακέλου: {{message}}"
 moveFilesFailed = "Δεν ήταν δυνατή η μετακίνηση αρχείων."
@@ -3910,12 +4137,15 @@ count = "Αρχεία"
 folder = "Φάκελος"
 labels = "Ετικέτες"
 modified = "Τροποποιήθηκε"
-name = "Όνομα"
 size = "Μέγεθος"
-toolHistoryAtVersion = "Σωρευτική αλυσίδα εργαλείων"
 totalSize = "Συνολικό μέγεθος"
 type = "Τύπος"
 versionHistory = "Πορεία εκδόσεων"
+
+[filesPage.filters]
+activeCount = "{{count}} ενεργά φίλτρα"
+clearAll = "Εκκαθάριση φίλτρων"
+label = "Φίλτρα"
 
 [filesPage.folderName]
 cancel = "Άκυρο"
@@ -3945,7 +4175,13 @@ localHint = "Αποθηκευμένο μόνο σε αυτό το πρόγραμ
 shared = "Κοινοποιημένο"
 sharedHint = "Κοινοποιήθηκε σε εσάς μέσω συνδέσμου"
 
+[filesPage.search]
+clear = "Clear filter"
+label = "Filter files by name"
+placeholder = "Filter files…"
+
 [filesPage.sort]
+label = "Ταξινόμηση αρχείων"
 modifiedAsc = "Παλαιότερα πρώτα"
 modifiedDesc = "Πιο πρόσφατα πρώτα"
 nameAsc = "Όνομα A→Z"
@@ -4000,6 +4236,7 @@ noFilesInStorageOpen = "Δεν υπάρχουν αρχεία στην αποθή
 open = "Άνοιγμα"
 openFile = "Άνοιγμα αρχείου"
 openFiles = "Άνοιγμα αρχείων"
+selectFile = "Select {{name}}"
 selectFromStorage = "Επιλογή από αποθήκευση"
 upload = "Μεταφόρτωση"
 uploadFile = "Μεταφόρτωση αρχείου"
@@ -4072,10 +4309,100 @@ discord = "Discord"
 issues = "GitHub"
 
 [formFill]
+allSaved = "Όλα αποθηκεύτηκαν"
+analyzingFields = "Analysing form fields..."
+applyFailed = "Δεν ήταν δυνατή η εφαρμογή των αλλαγών"
+extractCsvError = "Απέτυχε η εξαγωγή CSV"
+extractXlsxError = "Απέτυχε η εξαγωγή XLSX"
+filled = "filled"
 flattenAfterFilling = "Επιπεδοποίηση μετά τη συμπλήρωση"
+goToPage = "Μετάβαση σε αυτήν τη σελίδα"
+noFields = "No fillable form fields found in this PDF."
+page = "Σελίδα"
+placeholderEnter = "Enter"
+placeholderSelect = "Select"
+requiredAbbreviation = "απαιτ."
+requiredFieldsError = "Συμπληρώστε όλα τα απαιτούμενα πεδία"
 rescanFields = "Επανασάρωση πεδίων"
 rescanFormFields = "Επανασάρωση πεδίων φόρμας"
 save = "Αποθήκευση"
+saveShortcut = "Ctrl+S για αποθήκευση"
+skippedEdits_one = "Δεν ήταν δυνατή η εφαρμογή 1 αλλαγής:"
+skippedEdits_other = "Δεν ήταν δυνατή η εφαρμογή {{count}} αλλαγών:"
+skippedEditsTruncated = "{{count}} ακόμη δεν εμφανίζονται."
+unsavedChanges = "Μη αποθηκευμένες αλλαγές"
+
+[formFill.create]
+commit = "Προσθήκη {{count}} πεδίου/πεδίων στο PDF"
+empty = "Δεν έχουν σχεδιαστεί πεδία ακόμη."
+failed = "Απέτυχε η προσθήκη πεδίων"
+goToField = "Μετάβαση σε αυτό το πεδίο"
+hint = "Επιλέξτε έναν τύπο πεδίου και, στη συνέχεια, σχεδιάστε τον στη σελίδα."
+placing = "Σχεδιάστε ένα πεδίο {{type}} στη σελίδα. Πατήστε Esc για διακοπή."
+preview = "Κρατήστε πατημένο για προεπισκόπηση"
+previewHelp = "Κρατήστε πατημένο για να δείτε τα πεδία όπως θα φαίνονται όταν προστεθούν, χωρίς τα περιγράμματα επεξεργασίας."
+removeField = "Αφαίρεση πεδίου"
+
+[formFill.editor]
+action = "Ενέργεια κουμπιού"
+actionHelp = "Τι κάνει το κουμπί όταν πατηθεί."
+actionNone = "Καμία"
+actionPrint = "Εκτύπωση"
+actionReset = "Επαναφορά φόρμας"
+actionSubmit = "Υποβολή σε URL"
+actionUri = "Άνοιγμα URL"
+actionUrl = "URL"
+actionUrlHelp = "Η διεύθυνση που ανοίγει ή στην οποία υποβάλλει το κουμπί."
+addOption = "Προσθήκη επιλογής"
+caption = "Λεζάντα κουμπιού"
+captionHelp = "Το κείμενο που εκτυπώνεται στην επιφάνεια του κουμπιού."
+defaultValue = "Προεπιλεγμένη τιμή"
+defaultValueHelp = "Τι περιέχει το πεδίο πριν το συμπληρώσει κάποιος. Αφήστε κενό για κενό πεδίο."
+fontSize = "Μέγεθος γραμματοσειράς"
+fontSizeHelp = "Μέγεθος κειμένου μέσα στο πεδίο. Αφήστε κενό για να προσαρμόσει ο αναγνώστης το μέγεθος ώστε να χωράει."
+label = "Ετικέτα"
+labelHelp = "Το κείμενο που εμφανίζεται σε όποιον συμπληρώνει τη φόρμα. Αφήστε το κενό για να χρησιμοποιηθεί το όνομα του πεδίου."
+maxLength = "Μέγιστο μήκος (comb)"
+maxLengthHelp = "Περιορίζει πόσοι χαρακτήρες χωρούν, σχεδιασμένοι ως ομοιόμορφα διατεταγμένα κουτιά."
+multiline = "Πολλαπλών γραμμών"
+multilineHelp = "Επιτρέπει περισσότερες από μία γραμμές κειμένου και αναδίπλωση στην άκρη του πεδίου."
+multiSelect = "Να επιτρέπεται πολλαπλή επιλογή"
+multiSelectHelp = "Επιτρέπει την επιλογή περισσότερων από μία επιλογών ταυτόχρονα."
+name = "Όνομα πεδίου"
+nameHelp = "Το εσωτερικό όνομα του πεδίου. Χρησιμοποιείται κατά την εξαγωγή δεδομένων ή τη συμπλήρωση της φόρμας από άλλο σύστημα, οπότε κρατήστε το μοναδικό και χωρίς κενά."
+optionGap = "Απόσταση επιλογών"
+optionGapHelp = "Κενό μεταξύ κουμπιών, σε στιγμές. Αφήστε κενό για να κατανεμηθούν ομοιόμορφα στο κουτί."
+optionPlaceholder = "Επιλογή {{n}}"
+options = "Επιλογές"
+optionsEmpty = "Προσθέστε τουλάχιστον μία επιλογή."
+optionsHelp = "Οι επιλογές που προσφέρονται στη λίστα. Κάθε μία αποθηκεύεται όπως πληκτρολογείται, οπότε κρατήστε τις σύντομες και διακριτές."
+optionSize = "Μέγεθος επιλογής"
+optionSizeHelp = "Πλάτος και ύψος κάθε κουμπιού, σε στιγμές. Αφήστε κενό για να προσαρμοστούν στο κουτί που σχεδιάσατε."
+readOnly = "Μόνο για ανάγνωση"
+readOnlyHelp = "Εμφανίζει μια τιμή αλλά εμποδίζει την επεξεργασία της."
+removeOption = "Αφαίρεση επιλογής"
+required = "Υποχρεωτικό"
+requiredHelp = "Η φόρμα δεν μπορεί να υποβληθεί μέχρι να συμπληρωθεί αυτό το πεδίο."
+signatureNote = "Μόνο σύμβολο κράτησης θέσης - δεν υπογράφετε εδώ. Επισημαίνει πού ανήκει μια υπογραφή, ώστε ένας υπογράφων PDF (Adobe Acrobat, υπηρεσία υπογραφής κ.λπ.) να τοποθετήσει την υπογραφή σε αυτό το σημείο όταν υπογραφεί το έγγραφο."
+tooltip = "Tooltip"
+tooltipHelp = "Η υπόδειξη που εμφανίζεται όταν κάποιος περνά τον δείκτη πάνω από το πεδίο σε έναν αναγνώστη PDF."
+type = "Τύπος"
+typeHelp = "Τι είδους πεδίο είναι αυτό. Η αλλαγή του αναδημιουργεί το πεδίο, οπότε η τρέχουσα τιμή του δεν μεταφέρεται."
+
+[formFill.mode]
+create = "Δημιουργία"
+fill = "Συμπλήρωση"
+label = "Λειτουργία επεξεργαστή φόρμας"
+modify = "Τροποποίηση"
+
+[formFill.modify]
+commit = "Αποθήκευση {{count}} αλλαγής/αλλαγών"
+delete = "Διαγραφή"
+empty = "Αυτό το PDF δεν έχει ακόμη πεδία φόρμας."
+failed = "Απέτυχε η αποθήκευση αλλαγών"
+groupSizeHint = "Χρήση μεγέθους επιλογής"
+hint = "Επιλέξτε ένα πεδίο για να επεξεργαστείτε τις ιδιότητές του, σύρετέ το στη σελίδα ή διαγράψτε το."
+restore = "Επαναφορά"
 
 [formFill.sidebar]
 close = "Κλείσιμο πλευρικής γραμμής"
@@ -4309,6 +4636,11 @@ desc = "Μετονομάζει αυτόματα ένα αρχείο PDF βάσε
 tags = "αυτόματος εντοπισμός,βασισμένο σε κεφαλίδα,οργάνωση,επαναονομασία"
 title = "Αυτόματη μετονομασία PDF"
 
+[home.autoRotate]
+desc = "Ανίχνευση του προσανατολισμού κάθε σελίδας και αυτόματη περιστροφή της σε όρθια θέση."
+tags = "αυτόματη περιστροφή,διόρθωση προσανατολισμού,ανάποδα,πλάγια,ίσιωμα,προσανατολισμός,ανίχνευση προσανατολισμού,διόρθωση περιστροφής,αυτόματος προσανατολισμός,σαρωμένο,OSD"
+title = "Αυτόματη περιστροφή"
+
 [home.autoSizeSplitPDF]
 tags = "αυτόματο,διάσπαση,μέγεθος"
 title = "Αυτόματο σπάσιμο με μέγεθος/σελ."
@@ -4336,6 +4668,10 @@ title = "Αλλαγή μεταδεδομένων"
 desc = "Αλλαγή περιορισμών και δικαιωμάτων εγγράφου"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Αλλαγή δικαιωμάτων"
+
+[home.classify]
+desc = "Προσδιορίστε τι είδους έγγραφο είναι αυτό και προσθέστε του ετικέτα."
+title = "Ταξινόμηση"
 
 [home.compare]
 desc = "Σύγκριση και εμφάνιση διαφορών μεταξύ 2 εγγράφων PDF"
@@ -4608,15 +4944,12 @@ hint = "Μεταφορτώστε ένα PNG, JPG, SVG ή άλλο αρχείο �
 label = "Μεταφόρτωση εικόνας"
 placeholder = "Επιλέξτε αρχείο εικόνας"
 
-[imageToPdf]
-tags = "μετατροπή,εικόνα,jpg,φωτογραφία"
-
 [imageToPDF]
 header = "Εικόνα σε PDF"
 title = "Εικόνα σε PDF"
 
-[infoBanner]
-dismiss = "Απόρριψη"
+[imageToPdf]
+tags = "μετατροπή,εικόνα,jpg,φωτογραφία"
 
 [invite]
 acceptError = "Αποτυχία δημιουργίας λογαριασμού"
@@ -4647,11 +4980,9 @@ welcomeTitle = "Έχετε προσκληθεί!"
 
 [landing]
 addFiles = "Προσθήκη αρχείων"
-heroSubtitle = "Σύρετε εδώ ή προσθέστε ένα υπάρχον PDF για να ξεκινήσετε."
 mobileUpload = "Μεταφόρτωση από κινητό"
 openFromComputer = "Άνοιγμα από τον υπολογιστή"
 uploadFromComputer = "Μεταφόρτωση από υπολογιστή"
-workbenchEmptyStateHero = "Αφήστε ένα PDF οπουδήποτε"
 
 [language]
 direction = "ltr"
@@ -4691,7 +5022,6 @@ enterUsername = "Εισαγάγετε όνομα χρήστη"
 failedToSignIn = "Αποτυχία σύνδεσης με {{provider}}: {{message}}"
 forgotPassword = "Ξεχάσατε τον κωδικό σας;"
 loggingIn = "Γίνεται σύνδεση..."
-logIn = "Σύνδεση"
 login = "Σύνδεση"
 magicLinkSent = "Στάλθηκε μαγικός σύνδεσμος στο {{email}}! Ελέγξτε το email σας και κάντε κλικ στον σύνδεσμο για να συνδεθείτε."
 mfaCode = "Κωδικός ελέγχου ταυτότητας"
@@ -4715,25 +5045,9 @@ signInWith = "Σύνδεση με"
 title = "Σύνδεση"
 unexpectedError = "Απρόσμενο σφάλμα: {{message}}"
 updatePassword = "Ενημέρωση κωδικού πρόσβασης"
-useEmailInstead = "Σύνδεση με email"
 useMagicLink = "Χρησιμοποιήστε μαγικό σύνδεσμο"
 username = "Όνομα χρήστη"
 youAreLoggedIn = "Έχετε συνδεθεί!"
-
-[login.slides.edit]
-alt = "Επεξεργασία PDF"
-subtitle = "Με πάνω από δώδεκα εργαλεία για απόκρυψη, υπογραφή, ανάγνωση και χειρισμό PDF, θα βρείτε σίγουρα αυτό που ψάχνετε."
-title = "Επεξεργαστείτε PDF για να προβάλετε/προστατεύσετε τις πληροφορίες που θέλετε"
-
-[login.slides.overview]
-alt = "Επισκόπηση του Stirling PDF"
-subtitle = "Σουίτα cloud με προτεραιότητα το απόρρητο για PDF που σας επιτρέπει να μετατρέπετε, να υπογράφετε, να αποκρύπτετε και να διαχειρίζεστε έγγραφα, μαζί με 50+ ακόμη ισχυρά εργαλεία."
-title = "Ό,τι χρειάζεστε για τα PDF σε ένα σημείο."
-
-[login.slides.secure]
-alt = "Ασφάλεια PDF"
-subtitle = "Προσθέστε κωδικούς, αποκρύψτε περιεχόμενο και διαχειριστείτε πιστοποιητικά με ευκολία."
-title = "Προστατέψτε ευαίσθητες πληροφορίες στα PDF σας"
 
 [margin]
 large = "Μεγάλο"
@@ -4818,6 +5132,34 @@ uploadSuccess = "Η μεταφόρτωση ολοκληρώθηκε!"
 uploadSuccessMessage = "Οι εικόνες σας μεταφέρθηκαν."
 validating = "Γίνεται επικύρωση συνεδρίας..."
 
+[mobileSign]
+clear = "Clear"
+invalidSession = "Session expired"
+invalidSessionMessage = "This QR code is no longer valid. Open the Sign tool on your computer and scan the new code."
+penSizeLabel = "Pen size"
+send = "Send to computer"
+sendAnother = "Send another signature"
+sendError = "Could not send the signature. Check the connection and try again."
+sentMessage = "Signature sent to your computer. You can send another or close this page."
+tabsLabel = "Signature source"
+undo = "Undo"
+validating = "Checking session…"
+
+[mobileSign.photo]
+fromGallery = "From gallery"
+hint = "Photograph a signature on white paper, or choose an existing image."
+invalidType = "Please choose an image file."
+takePhoto = "Take a photo"
+
+[mobileSign.tab]
+draw = "Draw"
+photo = "Photo"
+type = "Type"
+
+[mobileSign.type]
+placeholder = "Your name"
+previewPlaceholder = "Signature preview"
+
 [mobileUpload]
 description = "Σαρώστε για μεταφόρτωση φωτογραφιών. Οι εικόνες μετατρέπονται αυτόματα σε PDF."
 descriptionNoConvert = "Σαρώστε για μεταφόρτωση φωτογραφιών από την κινητή συσκευή σας."
@@ -4836,8 +5178,37 @@ title = "Μεταφόρτωση από κινητό"
 tags = "Πολυεργαλείο,Πολλαπλές λειτουργίες,UI,κλικ και σύρσιμο,frontend,πλευρά πελάτη,διαδραστικό,διαχειρίσιμο,μετακίνηση,διαγραφή,μετανάστευση,διαίρεση"
 title = "Πολυεργαλείο PDF"
 
-[navbar]
-search = "Αναζήτηση"
+[navFooter]
+openEditor = "Open PDF Editor"
+openProcessor = "Open PDF Processor"
+
+[navFooter.credits]
+count = "{{remaining}} of {{total}}"
+label = "Free credits"
+
+[notifications]
+empty = "Δεν υπάρχει τίποτα προς αναφορά."
+handoffUnavailable = "Αυτό το πρόγραμμα περιήγησης δεν θα επιτρέψει στον επεξεργαστή να περάσει το έγγραφο στον επεξεργαστή φόρμας. Ανοίξτε το από τον επεξεργαστή φόρμας αντ' αυτού."
+noDocumentLinked = "Αυτή η αποτυχία δεν συνδέεται με συγκεκριμένο έγγραφο, επομένως δεν υπάρχει κάτι να ανοίξετε εδώ."
+notOnThisDevice = "Αυτό το έγγραφο δεν βρίσκεται σε αυτήν τη συσκευή, επομένως δεν μπορεί να ανοιχτεί εδώ."
+occurrences = "{{count}} φορές"
+open = "Ειδοποιήσεις"
+title = "Ειδοποιήσεις"
+unread = "Μη αναγνωσμένα"
+
+[notifications.action]
+failed = "Αυτό δεν λειτούργησε. Δοκιμάστε ξανά σε λίγο."
+unavailable = "Δεν είναι διαθέσιμο για αυτήν την ειδοποίηση."
+
+[notifications.detail]
+copied = "Αντιγράφηκε"
+copy = "Αντιγραφή σφάλματος"
+less = "Εμφάνιση λιγότερων"
+more = "Εμφάνιση πλήρους μηνύματος"
+
+[notifications.section]
+earlier = "Παλαιότερα"
+new = "Νέα"
 
 [oauth.error]
 message = "Η ταυτοποίηση δεν ήταν επιτυχής. Μπορείτε να κλείσετε αυτό το παράθυρο και να δοκιμάσετε ξανά."
@@ -4966,6 +5337,7 @@ activeFiles = "Η προβολή <strong>Ενεργά αρχεία</strong> εμ
 allTools = "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools."
 close = "Κλείσιμο"
 cropSettings = "Τώρα που επιλέξαμε το αρχείο που θέλουμε να περικόψουμε, μπορούμε να ρυθμίσουμε το εργαλείο Περικοπή για να ορίσουμε την περιοχή στην οποία θέλουμε να περικοπεί το PDF."
+dialogLabel = "Onboarding"
 fileCheckbox = "Κάνοντας κλικ σε ένα από τα αρχεία το επιλέγετε για επεξεργασία. Μπορείτε να επιλέξετε πολλαπλά αρχεία για ομαδικές ενέργειες."
 fileReplacement = "Το τροποποιημένο αρχείο θα αντικαταστήσει αυτόματα το πρωτότυπο στην Επιφάνεια εργασίας, ώστε να μπορείτε εύκολα να το περάσετε από περισσότερα εργαλεία."
 filesButton = "Το κουμπί <strong>Αρχεία</strong> στη Γραμμή Γρήγορης Πρόσβασης σάς επιτρέπει να ανεβάσετε PDF για χρήση με τα εργαλεία."
@@ -4976,6 +5348,7 @@ pinButton = "Μπορείτε να χρησιμοποιήσετε το κουμ�
 results = "Αφού ολοκληρωθεί η εκτέλεση του εργαλείου, το βήμα <strong>Ανασκόπηση</strong> θα εμφανίσει προεπισκόπηση των αποτελεσμάτων σε αυτό το πάνελ και θα σας επιτρέψει να αναιρέσετε την ενέργεια ή να κατεβάσετε το αρχείο."
 runButton = "Αφού ρυθμιστεί το εργαλείο, αυτό το κουμπί σάς επιτρέπει να το εκτελέσετε σε όλα τα επιλεγμένα PDF."
 selectCropTool = "Ας επιλέξουμε το εργαλείο <strong>Περικοπή</strong> για να δείξουμε πώς να χρησιμοποιείτε ένα από τα εργαλεία."
+stepOf = "Βήμα {{current}} από {{total}}"
 toolInterface = "Αυτή είναι η διεπαφή του εργαλείου <strong>Περικοπή</strong>. Όπως βλέπετε, δεν υπάρχει ακόμη πολλά, επειδή δεν έχουμε προσθέσει αρχεία PDF για εργασία."
 workbench = "Αυτή είναι η <strong>Επιφάνεια εργασίας</strong> - ο κεντρικός χώρος όπου βλέπετε και επεξεργάζεστε τα PDF σας."
 wrapUp = "Είστε έτοιμοι! Μάθατε για τις κύριες περιοχές της εφαρμογής και πώς να τις χρησιμοποιείτε. Κάντε κλικ στο κουμπί <strong>Βοήθεια</strong> οποτεδήποτε για να δείτε ξανά αυτή την περιήγηση."
@@ -4988,6 +5361,26 @@ showMeAround = "Ξεναγήστε με"
 skipForNow = "Παράλειψη προς το παρόν"
 skipTheTour = "Παράλειψη ξενάγησης"
 
+[onboarding.checklist]
+dismiss = "Παράβλεψη"
+title = "Ρύθμιση του Stirling PDF"
+
+[onboarding.checklist.downloadDesktop]
+description = "Εκτελέστε το Stirling εγγενώς στον υπολογιστή σας"
+title = "Λήψη του Stirling για Desktop"
+
+[onboarding.checklist.inviteTeam]
+description = "Συνεργαστείτε με την ομάδα σας"
+title = "Προσκαλέστε μέλη ομάδας"
+
+[onboarding.checklist.shareAnalytics]
+description = "Βοηθήστε στη βελτίωση του Stirling"
+title = "Κοινή χρήση ανώνυμων δεδομένων χρήσης"
+
+[onboarding.checklist.takeTour]
+description = "Δείτε πώς λειτουργεί το Stirling σε μια γρήγορη περιήγηση"
+title = "Κάντε την περιήγηση"
+
 [onboarding.desktopInstall]
 body = "Το Stirling λειτουργεί καλύτερα ως εφαρμογή για υπολογιστή. Μπορείτε να το χρησιμοποιείτε offline, να έχετε ταχύτερη πρόσβαση στα έγγραφα και να κάνετε επεξεργασίες τοπικά στον υπολογιστή σας."
 selectOs = "Επιλέξτε λειτουργικό σύστημα"
@@ -4996,7 +5389,21 @@ titleWithOs = "Λήψη για {{osLabel}}"
 
 [onboarding.mfa]
 authenticationCode = "Κωδικός ελέγχου ταυτότητας"
+description = "Ασφαλίστε τον λογαριασμό σας συνδέοντας μια εφαρμογή ελέγχου ταυτότητας. Σαρώστε τον QR code ή εισαγάγετε το setup key και μετά επιβεβαιώστε τον 6ψήφιο κωδικό για να ολοκληρώσετε."
+enable = "Ενεργοποίηση MFA"
+enableError = "Δεν είναι δυνατή η ενεργοποίηση του ελέγχου ταυτότητας δύο παραγόντων. Ελέγξτε τον κωδικό και δοκιμάστε ξανά."
+enterCode = "Εισαγάγετε τον 6ψήφιο κωδικό από την εφαρμογή σας."
+enterCodeError = "Εισαγάγετε τον κωδικό ελέγχου ταυτότητας για να συνεχίσετε."
+logout = "Αποσύνδεση"
+openAuthenticator = "Ανοίξτε το Google Authenticator, Authy ή 1Password."
 qrCodeLoading = "Δημιουργία του QR κωδικού σας…"
+regenerateQrCode = "Αναδημιουργία QR code"
+scanQrCode = "Σαρώστε τον QR code ή εισαγάγετε το setup key παρακάτω."
+setupError = "Δεν είναι δυνατή η έναρξη ρύθμισης δύο παραγόντων. Δοκιμάστε ξανά."
+setupKey = "Setup key (χειροκίνητη εισαγωγή)"
+stepByStep = "Βήμα προς βήμα"
+success = "Το MFA έχει ενεργοποιηθεί. Μπορείτε τώρα να συνεχίσετε."
+title = "Ρύθμιση ελέγχου ταυτότητας πολλαπλών παραγόντων"
 
 [onboarding.planOverview]
 adminBodyLoginDisabled = "Μόλις ενεργοποιήσετε τη λειτουργία σύνδεσης, μπορείτε να διαχειρίζεστε χρήστες, να ρυθμίζετε επιλογές και να παρακολουθείτε την υγεία του διακομιστή. Τα πρώτα <strong>{{freeTierLimit}}</strong> άτομα στον διακομιστή σας χρησιμοποιούν το Stirling δωρεάν."
@@ -5004,6 +5411,11 @@ adminBodyLoginEnabled = "Ως διαχειριστής, μπορείτε να δ
 adminTitle = "Επισκόπηση διαχειριστή"
 userBody = "Προσκαλέστε συνεργάτες, αναθέστε ρόλους και κρατήστε τα έγγραφα οργανωμένα σε έναν ασφαλή χώρο εργασίας. Ενεργοποιήστε τη λειτουργία σύνδεσης όταν είστε έτοιμοι να ξεπεράσετε τη μονοπρόσωπη χρήση."
 userTitle = "Επισκόπηση πλάνου"
+
+[onboarding.processorIntro]
+body = "Το Stirling εκτελεί πλέον <strong>Πολιτικές</strong> — αυτοματοποιημένους κανόνες που ταξινομούν, ασφαλίζουν και επεξεργάζονται κάθε έγγραφο όταν φτάνει. Ρυθμίστε τις και παρακολουθήστε τις εκτελέσεις στον <strong>Processor</strong>."
+cta = "Δείτε τον Processor"
+title = "Δείτε τον Stirling Processor"
 
 [onboarding.saas.freeEditor]
 freeLine = "The editor is now <free>completely free</free>."
@@ -5362,6 +5774,7 @@ freeBody = "View, edit, merge, split, sign, watermark, compress, convert and man
 freeTitle = "Unlimited PDF editing"
 
 [payg.free.hero]
+barAria = "Free PDFs remaining"
 capSuffix = "/ {{limit}} free PDFs"
 metaCategories = "Automation · AI · API requests"
 
@@ -5401,6 +5814,28 @@ docs = "PDFs"
 subtitle = "Billable PDFs each teammate has processed this period."
 title = "Team member usage"
 
+[payg.prepaid]
+chip = "Προπληρωμένο έτος"
+
+[payg.prepaid.banner]
+exhausted = "Η προπληρωμένη χωρητικότητά σας εξαντλήθηκε· η χρέωση βάσει χρήσης συνεχίστηκε. Συμπληρώστε για να διατηρήσετε την έκπτωση."
+expiring_one = "Το προπληρωμένο έτος σας λήγει σε {{count}} ημέρα. Η αχρησιμοποίητη χωρητικότητα λήγει — συμπληρώστε για να ξεκινήσετε ένα νέο έτος."
+expiring_other = "Το προπληρωμένο έτος σας λήγει σε {{count}} ημέρες. Η αχρησιμοποίητη χωρητικότητα λήγει — συμπληρώστε για να ξεκινήσετε ένα νέο έτος."
+low = "Έχετε πέσει στο {{pct}}% της προπληρωμένης χωρητικότητάς σας. Συμπληρώστε οποιαδήποτε στιγμή για να διατηρήσετε την επεξεργασία χωρίς διακοπές."
+
+[payg.prepaid.card]
+subtitle = "Χρησιμοποιείται πριν από τη χρέωση βάσει χρήσης και εκτός του ορίου δαπανών σας."
+title = "Προπληρωμένη χωρητικότητα"
+
+[payg.prepaid.meter]
+capSuffix = "από {{total}} προπληρωμένες πιστώσεις"
+expires = "Λήγει στις {{date}}"
+
+[payg.prepaid.state]
+exhausted = "Εξαντλήθηκε"
+healthy = "Απομένουν πολλά"
+low = "Εξαντλείται"
+
 [payg.role]
 leader = "Team owner"
 member = "Member"
@@ -5419,6 +5854,7 @@ automation = "automations"
 default = "this feature"
 
 [payg.spendCapMeter]
+barAria = "Spend against cap"
 capSuffix = "/ {{amount}} cap"
 metaCategories = "Automation · AI · API spend"
 resets = "Resets each billing period"
@@ -5747,6 +6183,11 @@ header = "PDF σε PDF/A"
 tags = "αρχείο,μακροχρόνιο,πρότυπο,μετατροπή,αποθήκευση,διατήρηση"
 title = "PDF σε PDF/A"
 
+[pdfToPDFUA]
+header = "PDF To PDF/UA"
+tags = "accessibility,accessible,tagged,screen reader,wcag,eaa,section 508,conversion"
+title = "PDF To PDF/UA"
+
 [pdfToPDFX]
 tags = "εκτύπωση,πρότυπο,μετατροπή,παραγωγή,προεκτύπωση,αρχειοθέτηση"
 title = "PDF σε PDF/X"
@@ -5822,6 +6263,7 @@ small = "500 μονάδες"
 xsmall = "100 μονάδες"
 
 [plan.availablePlans]
+currency = "Billing currency"
 subtitle = "Επιλέξτε το πλάνο που ταιριάζει στις ανάγκες σας"
 title = "Διαθέσιμα πλάνα"
 
@@ -5937,48 +6379,11 @@ keyDescription = "Επικολλήστε το κλειδί άδειας από �
 success = "Η άδεια ενεργοποιήθηκε!"
 successMessage = "Η άδειά σας ενεργοποιήθηκε με επιτυχία. Μπορείτε τώρα να κλείσετε αυτό το παράθυρο."
 
-[policies]
-deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
-deleteConfirmTitle = "Delete {{label}} policy?"
-
 [policies.activity]
-enforced = "επιβλήθηκε"
-enforcing = "Γίνεται επιβολή..."
-failed = "Η επιβολή απέτυχε"
 outputsUnavailable = "Τα αποτελέσματα πολιτικής δεν είναι πλέον διαθέσιμα για λήψη."
 partialOutputsUnavailable = "Ορισμένα αποτελέσματα πολιτικής δεν είναι πλέον διαθέσιμα για λήψη."
-retrying = "Απασχολημένο, επαναπροσπάθεια..."
 runNotFound = "Δεν ήταν πλέον δυνατή η εύρεση της εκτέλεσης επιβολής."
-step = "βήμα {{current}}/{{total}}"
 timedOut = "Η επιβολή έληξε λόγω χρονικού ορίου πριν ολοκληρωθεί η εκτέλεση."
-
-[policies.catalog]
-compliance = "Compliance"
-ingestion = "Ingestion"
-retention = "Retention"
-routing = "Routing"
-security = "Security"
-
-[policies.detail]
-close = "Κλείσιμο"
-editSettings = "Edit Settings"
-enforces = "Enforces"
-managedByOrg = "Managed by your organisation. Contact a team leader to change this policy."
-noActivityDescription = "Documents will appear here once this policy runs."
-noActivityTitle = "No activity yet"
-onEveryUpload = "On every upload"
-originalsNote = "Originals stay untouched • Enforced version saved alongside"
-pause = "Pause"
-recentActivity = "Recent Activity"
-resume = "Resume"
-retry = "Retry"
-showLess = "Show less"
-showMore = "Show more"
-statActive = "Active"
-statDataProcessed = "Data processed"
-statDocsEnforced = "Docs enforced"
-statusActive = "Active"
-statusPaused = "Paused"
 
 [policies.enforcement]
 applying = "Εφαρμογή {{names}}"
@@ -5989,61 +6394,16 @@ failureBody = "{{failures}} από {{total}} αρχείο(α) δεν ήταν δ
 failureTitle = "Εξαγωγή χωρίς πλήρη επιβολή"
 printPolicyAppliedBody = "Αυτό το PDF ενημερώθηκε για να συμμορφωθεί με μια πολιτική. Ελέγξτε τις αλλαγές και εκτυπώστε ξανά."
 printPolicyAppliedTitle = "Εφαρμόστηκε πολιτική πριν από την εκτύπωση"
-queued = "+{{count}} στην ουρά"
 successTitle = "{{names}} εφαρμόστηκαν"
 summaryMore = "{{first}}, {{second}} και {{more}} ακόμη"
 summaryTwo = "{{first}} και {{second}}"
 
-[policies.enforcement.triggerVerb]
-convert = "Επιβολή πριν από τη μετατροπή"
-default = "Επιβολή"
-export = "Επιβολή πριν από την εξαγωγή"
-input = "Επιβολή κατά την εισαγωγή"
-print = "Επιβολή πριν από την εκτύπωση"
-
-[policies.field]
-accessLog = "Αρχείο καταγραφής πρόσβασης"
-archiveAfter = "Αρχειοθέτηση μετά από"
-auditTrail = "Ίχνος ελέγχου"
-belowThreshold = "Κάτω από το όριο"
-destination = "Προορισμός"
-frameworks = "Πλαίσια"
-immutableHold = "Αμετάβλητη διατήρηση"
-keepFor = "Διατήρηση για"
-minConfidence = "Ελάχιστη εμπιστοσύνη"
-notify = "Ειδοποίηση κατά τη δρομολόγηση"
-onViolation = "Όταν δεν συμμορφώνεται"
-webhookUrl = "Webhook URL"
-
-[policies.fields]
-selectedCount = "{{count}} selected"
-
 [policies.labels]
-add = "Προσθήκη"
-addPlaceholder = "Προσθήκη ετικέτας…"
-customNote = "Προσαρμοσμένο για την ομάδα σας."
-defaultNote = "Χρήση της ενσωματωμένης προεπιλογής, κοινόχρηστης με την ομάδα σας."
-duplicate = "\"{{name}}\" υπάρχει ήδη."
-edit = "Επεξεργασία ετικετών"
-empty = "Δεν υπάρχουν ακόμα ετικέτες."
-export = "Εξαγωγή JSON"
-iconAria = "Επιλέξτε εικονίδιο για {{name}}"
-import = "Εισαγωγή JSON"
-importError = "Δεν ήταν δυνατή η εισαγωγή αυτού του αρχείου."
-managedNote = "Οι ετικέτες ομάδας διαχειρίζονται από τον επικεφαλής της ομάδας σας."
-modalSubtitle = "Κοινόχρηστο με ολόκληρη την ομάδα σας. Ο ταξινομητής επιλέγει τις ετικέτες που ταιριάζουν σε κάθε έγγραφο."
-modalTitle = "Ετικέτες ταξινόμησης"
-pickIcon = "Χρήση εικονιδίου {{label}}"
-removeAria = "Αφαίρεση {{name}}"
-resetToDefault = "Επαναφορά στην προεπιλογή"
-saveForTeam = "Αποθήκευση για την ομάδα"
-saving = "Αποθήκευση…"
-sectionLabel = "Ετικέτες ταξινόμησης"
-startFromScratch = "Έναρξη από την αρχή"
-teamCount = "ετικέτες ομάδας"
-tooLong = "Οι ετικέτες μπορούν να έχουν το πολύ {{max}} χαρακτήρες."
-ungrouped = "Μη ομαδοποιημένα"
-view = "Προβολή ετικετών"
+categoryCount = "κατηγορίες"
+hideCategory = "Απόκρυψη κατηγορίας"
+labelCount = "ετικέτες"
+sharedNote = "Αυτές οι ετικέτες είναι ενσωματωμένες και κοινές σε όλη την ομάδα σας."
+showCategory = "Εμφάνιση κατηγορίας"
 
 [policies.pii]
 account = "Αριθμοί λογαριασμών (με ετικέτα)"
@@ -6056,93 +6416,10 @@ placeholder = "Select PII types"
 routing = "Αριθμοί δρομολόγησης ΗΠΑ (ABA)"
 ssn = "Αριθμοί κοινωνικής ασφάλισης"
 
-[policies.settings]
-noneExport = "Καμία πολιτική δεν εκτελείται επί του παρόντος κατά την εξαγωγή."
-noneUpload = "Καμία πολιτική δεν εκτελείται επί του παρόντος κατά τη μεταφόρτωση."
-onExport = "Κατά την εξαγωγή"
-onUpload = "Κατά τη μεταφόρτωση"
-reorderHandle = "Σύρετε για αναδιάταξη"
-runOrderDesc = "Όταν περισσότερες από μία πολιτικές εκτελούνται στο ίδιο έναυσμα, εκτελούνται με αυτήν τη σειρά — καθεμία στο αποτέλεσμα της προηγούμενης πολιτικής. Σύρετε για αναδιάταξη."
-title = "Ρυθμίσεις πολιτικής"
-
-[policies.sidebar]
-activeCount = "{{count}} active"
-infoTooltip = "A policy is a fixed set of tools that runs automatically whenever it's triggered — for example when a new document arrives — enforcing rules like redacting PII with no manual steps."
-loading = "Loading…"
-optionsAriaLabel = "Επιλογές πολιτικής"
-policySettings = "Ρυθμίσεις πολιτικής"
-railAriaLabel = "{{label}} policy — {{status}}"
-railSuffixActive = " (Active)"
-railSuffixPaused = " (Paused)"
-retryFailed = "Επανάληψη αποτυχημένων πολιτικών ({{count}})"
-rowProgress = "{{completed}} από {{total}} αρχεία επεξεργάστηκαν"
-setUp = "Set up"
-title = "Policies"
-upgradeToEnterprise = "Upgrade to enterprise"
-whatIsPolicy = "Τι είναι μια πολιτική;"
-
-[policies.status]
-active = "Active"
-paused = "Paused"
-setup = "Set up"
-
-[policies.toolConfig]
-enableAriaLabel = "Enable {{tool}}"
-infoAriaLabel = "What does {{tool}} do?"
-
-[policies.toolConfig.info]
-redact = "Εντοπίζει αυτόματα και μαυρίζει ευαίσθητα στοιχεία — όπως αριθμούς κοινωνικής ασφάλισης και καρτών — ώστε να μην μπορούν να διαβαστούν στο έγγραφο."
-sanitize = "Αφαιρεί κρυφό JavaScript από το αρχείο, ώστε να μην εκτελείται αυτόματα τίποτα όταν κάποιος το ανοίγει."
-watermark = "Τοποθετεί ορατή σήμανση (π.χ. \"Εμπιστευτικό\") σε κάθε σελίδα."
-
-[policies.wizard]
-allDocTypesDescription = "Enable the Classification policy to filter by document type."
-allDocTypesTitle = "All document types"
-back = "Back"
-builderDesc = "Build the sequence of tools this policy runs on each document."
-clear = "Clear"
-close = "Κλείσιμο"
-continue = "Continue"
-docTypesLabel = "Document types"
-edit = "Edit"
-editTitle = "Edit {{label}} Policy"
-enablePolicy = "Enable Policy"
-filenameAutoNumber = "Auto-number"
-filenamePositionAria = "Filename position"
-filenamePrefix = "Prefix"
-filenameSuffix = "Suffix"
-filenameTextAria = "Filename text"
-filenameTextPlaceholder = "Text to add (optional)"
-lockedDescription = "Contact a team leader to change this policy."
-lockedTitle = "Managed by your organisation"
-maxRetriesLabel = "Max retries"
-noToolsError = "Add at least one configured tool to the workflow first."
-outputAsLabel = "Output as"
-outputFilenameSubhead = "Output filename"
-outputModeAria = "Output mode"
-outputNewFile = "New file"
-outputNewVersion = "New version"
-outputRetriesLabel = "Output & retries"
-outputSubhead = "Output"
-retryDelayAria = "Retry delay minutes"
-retryDelayLabel = "Retry delay (min)"
-runOnExport = "Export"
-runOnLabel = "Run on"
-runOnSubhead = "Run on"
-runOnUpload = "Upload"
-saveChanges = "Save Changes"
-saveError = "Couldn't save the policy. Please try again."
-setupClassification = "Set up Classification"
-setupTitle = "Set up {{label}} Policy"
-sourcesDesc = "Choose where this policy runs and which document types it applies to."
-sourcesLabel = "Sources"
-stepOf = "Step {{step}} of {{total}}"
-toolChainDesc = "Configure the tools this policy runs on each document."
-typesSelected = "{{count}} types selected"
-
 [policy]
 badgeEnforcing = "{{name}} σε επιβολή..."
 badgeRan = "Η πολιτική {{name}} εκτελέστηκε σε αυτό το αρχείο"
+badgeRunning = "{{name}} εκτελείται..."
 blockingAction = "Η ενέργεια {{action}} αποκλείστηκε κατά την επιβολή πολιτικής, περιμένετε..."
 dismiss = "Απόρριψη επικάλυψης"
 enforcingTitle = "Επιβολή πολιτικής..."
@@ -6151,6 +6428,7 @@ viewAnyway = "Προβολή αρχείου (η πολιτική εξακολο�
 [policyOption]
 autoRedactPhi = "Αυτόματη απόκρυψη PHI"
 blockExport = "Αποκλεισμός εξαγωγής"
+ccpa = "CCPA"
 contracts = "Συμβάσεις"
 documents = "Έγγραφα"
 fedramp = "FedRAMP"
@@ -6269,86 +6547,6 @@ free = "Πλάνο Editor"
 subscribed = "Πλάνο Processor"
 unlinked = "Μη συνδεδεμένο"
 
-[portal.agentBuilder]
-bootstrapFromDocument = "Bootstrap από έγγραφο"
-sectionsAriaLabel = "Ενότητες δημιουργού πρακτόρων"
-selectorAriaLabel = "Πράκτορες"
-subtitle = "Σχεδιάστε, δοκιμάστε και διαθέστε τους πράκτορες AI που ταξινομούν, εξάγουν από και δρομολογούν τα έγγραφά σας. Ορίστε σενάρια, περιορίστε την πρόσβαση σε εργαλεία, εκτελέστε ένα golden set και δημοσιεύστε μια έκδοση."
-title = "Δημιουργός πρακτόρων"
-
-[portal.agentBuilder.bootstrap]
-cancel = "Ακύρωση"
-dropzoneText = "Επιλέξτε ένα δείγμα εγγράφου (PDF ή εικόνα)"
-lead = "Αφήστε ένα δείγμα εγγράφου και θα προτείνουμε σενάρια και ένα σχήμα εξαγωγής που μπορείτε να βελτιώσετε. Τίποτα δεν δημοσιεύεται μέχρι να το ελέγξετε."
-submit = "Bootstrap πράκτορα"
-subtitle = "Ξεκινήστε έναν νέο πράκτορα από ένα αντιπροσωπευτικό αρχείο"
-title = "Bootstrap από έγγραφο"
-
-[portal.agentBuilder.empty]
-description = "Κάντε bootstrap ενός πράκτορα από ένα δείγμα εγγράφου για να ξεκινήσετε τα σενάρια και το σχήμα εξαγωγής του και, στη συνέχεια, βελτιώστε και δημοσιεύστε."
-title = "Δεν υπάρχουν ακόμα πράκτορες"
-
-[portal.agentBuilder.evals]
-casesPassing = "Περιπτώσεις που περνούν"
-columnCase = "Περίπτωση eval"
-columnLatency = "Καθυστέρηση"
-columnResult = "Αποτέλεσμα"
-fail = "αποτυχία"
-goldenSetPassRate = "Ποσοστό επιτυχίας golden-set"
-latencyMs = "{{ms}} ms"
-notRun = "δεν εκτελέστηκε"
-pass = "επιτυχία"
-passRate = "Ποσοστό επιτυχίας"
-runEvals = "Εκτέλεση evals"
-
-[portal.agentBuilder.evals.empty]
-description = "Τα evals μετατρέπουν τα σενάριά σας σε ένα επαναλήψιμο golden set. Αναβαθμίστε για να καταγράφετε το ποσοστό επιτυχίας με την πάροδο του χρόνου και να ελέγχετε τις δημοσιεύσεις βάσει αυτού."
-title = "Δεν υπάρχει ακόμα golden set"
-
-[portal.agentBuilder.kpi]
-acrossGoldenSets = "σε όλα τα golden sets"
-activeAgents = "Ενεργοί πράκτορες"
-avgPassRate = "Μέσο ποσοστό επιτυχίας eval"
-fleetWide = "σε όλο τον στόλο"
-latestPublished = "Τελευταία δημοσιευμένη"
-scenarios = "Σενάρια"
-testCases = "περιπτώσεις δοκιμών"
-totalDescription_one = "{{count}} συνολικά"
-totalDescription_other = "{{count}} συνολικά"
-
-[portal.agentBuilder.scenarios]
-add = "Προσθήκη"
-addScenario = "Προσθήκη σεναρίου"
-enable = "Ενεργοποίηση"
-expectationLabel = "Αναμενόμενη συμπεριφορά"
-expectationPlaceholder = "Τι πρέπει να κάνει ο πράκτορας"
-inEval = "σε eval"
-mute = "Σίγαση"
-muted = "σε σίγαση"
-nameLabel = "Όνομα"
-namePlaceholder = "π.χ. Κλιμάκωση συμμόρφωσης"
-
-[portal.agentBuilder.tabs]
-evals = "Evals"
-scenarios = "Σενάρια"
-tools = "Εργαλεία"
-versions = "Εκδόσεις"
-
-[portal.agentBuilder.tools]
-broadAccess = "Ευρεία πρόσβαση"
-deniedHint = "Τα επιλεγμένα εργαλεία είναι αποκλεισμένα. Όλα τα υπόλοιπα παραμένουν διαθέσιμα για κλήση."
-deniedTools = "Αποκλεισμένα εργαλεία"
-governanceGate = "Η διακυβέρνηση εργαλείων είναι διαθέσιμη στο πλάνο Enterprise."
-restricted = "Περιορισμένο"
-restrictedAccess = "Περιορισμένη πρόσβαση σε εργαλεία"
-restrictedDescription = "Επιτρέψτε κάθε εργαλείο εκτός από αυτά που απορρίπτετε παρακάτω."
-
-[portal.agentBuilder.versions]
-current = "τρέχουσα"
-historyGate = "Το πλήρες ιστορικό εκδόσεων και η επαναφορά είναι διαθέσιμα στο πλάνο Enterprise."
-publish = "Δημοσίευση"
-rollBack = "Επαναφορά"
-
 [portal.assistant]
 close = "Κλείσιμο βοηθού"
 error = "Δεν ήταν δυνατή η επικοινωνία με τον βοηθό."
@@ -6365,15 +6563,43 @@ typing = "Πληκτρολογεί"
 loading = "Φόρτωση"
 redirectingToEditor = "Ανακατεύθυνση στον editor..."
 
+[portal.billing.activation]
+maybeLater = "Ίσως αργότερα"
+title = "Ενεργοποίηση του Processor"
+
+[portal.billing.activation.payg]
+sub = "Ορίστε μηνιαίο όριο. Πληρώνετε για ό,τι εκτελείτε."
+title = "Πληρωμή ανά χρήση"
+
+[portal.billing.activation.prepay]
+badge = "2 μήνες δωρεάν"
+sub = "Ένα τιμολόγιο, κάρτα ή τραπεζικό έμβασμα."
+title = "Προπληρώστε ένα έτος"
+
 [portal.billing.checkout]
 noClientSecret = "Η edge function δεν επέστρεψε client_secret."
-subtitle = "Προσθέστε μια κάρτα για να συνεχίσετε πέρα από τη δωρεάν παροχή του πλάνου Editor. Το Stripe αναλαμβάνει τα υπόλοιπα."
 title = "Ενεργοποίηση του πλάνου Processor"
 
 [portal.billing.checkout.activationSlow]
 body = "Η πληρωμή σας πέτυχε, αλλά η ενεργοποίηση διαρκεί λίγο περισσότερο από το συνηθισμένο. Θα ενεργοποιηθεί αυτόματα - κλείστε αυτό και θα εμφανιστεί εδώ σύντομα."
 close = "Κλείσιμο"
 title = "Σχεδόν έτοιμο"
+
+[portal.billing.checkout.cap]
+amountAria = "Μηνιαίο όριο δαπανών"
+back = "Πίσω"
+continue = "Συνέχεια στην πληρωμή"
+error = "Δεν ήταν δυνατό να οριστεί το όριο δαπανών σας"
+finePrint = "Τα τιμολόγια εκδίδονται μηνιαία. Ακύρωση οποιαδήποτε στιγμή."
+noLimit = "Χωρίς όριο"
+note = "Δεν χρεώνεστε ποτέ πέρα από το όριό σας. Η επεξεργασία απλώς παύει."
+perMonth = "/ μήνα"
+title = "Ορίστε το όριο δαπανών σας"
+
+[portal.billing.checkout.card]
+fields = "Αριθμός κάρτας · MM / YY · CVC · ZIP"
+label = "Στοιχεία κάρτας"
+note = "Τα στοιχεία κάρτας συλλέγονται από το Stripe. Το Stirling δεν αποθηκεύει ποτέ PAN ή CVC."
 
 [portal.billing.checkout.error]
 title = "Δεν ήταν δυνατή η έναρξη του checkout"
@@ -6383,10 +6609,9 @@ body = "Η πληρωμή σας ολοκληρώθηκε. Ενεργοποιο�
 hint = "Κρατήστε αυτό το παράθυρο ανοιχτό."
 title = "Ενεργοποίηση του πλάνου Processor..."
 
-[portal.billing.checkout.notConfigured]
-bodyAfter = "στο portal env για να ενεργοποιήσετε το checkout εντός εφαρμογής."
-bodyBefore = "Ορίστε"
-title = "Το Stripe δεν έχει διαμορφωθεί"
+[portal.billing.checkout.pay]
+limit = "Μηνιαίο όριο δαπανών {{amount}}/μήνα. Η επεξεργασία παύει στο όριο."
+limitNoCap = "Χωρίς όριο δαπανών. Η επεξεργασία δεν θα παύει. Τα τιμολόγια εκδίδονται μηνιαία."
 
 [portal.billing.enterpriseUpsell]
 cta = "Δημιουργήστε την προσφορά σας για Enterprise"
@@ -6409,10 +6634,12 @@ currentPlan = "Τρέχον πλάνο"
 freeForever = "Δωρεάν για πάντα"
 noTeamResolved = "Δεν έχει επιλυθεί ακόμα ομάδα στο πορτοφόλι σας — ανανεώστε και δοκιμάστε ξανά."
 ownerOnly = "Μόνο ο κάτοχος της ομάδας μπορεί να ενεργοποιήσει το πλάνο Processor."
+payInvoice = "Πληρώστε το τιμολόγιο για ολοκλήρωση"
 planName = "Editor"
 ssoIncluded = "SSO περιλαμβάνεται"
 switchOnProcessor = "Ενεργοποίηση Processor →"
 unlimitedUsers = "Απεριόριστοι χρήστες"
+viewQuote = "Προβολή προσφοράς"
 
 [portal.billing.invoices]
 columnAmount = "Ποσό"
@@ -6465,7 +6692,111 @@ segmentApiDesc = "Άμεσα API αιτήματα"
 segmentApiLabel = "API"
 segmentAutomationDesc = "Αυτοματισμοί και pipelines"
 segmentAutomationLabel = "Αυτοματισμός"
+sizeMultiplier = "{{formatted}} PDFs χρησιμοποίησαν πολλαπλασιαστή μεγέθους"
+summary = "{{unique}} μοναδικά · {{units}} μονάδες μέτρησης · {{avg}} μέσος όρος ανά PDF"
+summaryNoRate = "{{unique}} μοναδικά · {{units}} μονάδες μέτρησης"
 unit = "μετρημένα PDFs"
+unitsPending_one = "{{units}} μονάδα μέτρησης εκκρεμεί για συγχρονισμό από συνδεδεμένες παρουσίες"
+unitsPending_other = "{{units}} μονάδες μέτρησης εκκρεμούν για συγχρονισμό από συνδεδεμένες παρουσίες"
+
+[portal.billing.prepaid]
+capSuffix = "από {{total}} προπληρωμένες πιστώσεις"
+expires = "Λήγει στις {{date}}"
+eyebrow = "Προπληρωμένη χωρητικότητα"
+note = "Χρησιμοποιείται πριν από τη χρέωση βάσει χρήσης και εκτός του ορίου δαπανών σας."
+topUp = "Συμπλήρωση"
+
+[portal.billing.prepaid.buy]
+back = "Πίσω"
+calcTitle = "Υπολογίστε την ετήσια πληρωμή σας"
+cancel = "Ακύρωση"
+cancelPurchase = "Ακύρωση αγοράς"
+close = "Κλείσιμο"
+continueToPayment = "Συνέχεια στην πληρωμή"
+finalise = "Οριστικοποίηση"
+invoiceErrorTitle = "Δεν ήταν δυνατή η δημιουργία του τιμολογίου"
+loadingTitle = "Φόρτωση της προσφοράς σας"
+payTitle = "Πληρώστε για το έτος σας"
+step = "Βήμα {{current}} από {{total}}"
+
+[portal.billing.prepaid.calc]
+change = "Αλλαγή"
+deployRow = "Ανάπτυξη"
+done = "Τέλος"
+enterpriseHint = "Αυτό είναι επίπεδο enterprise. Σε αυτόν τον όγκο, οι enterprise τιμές ξεπερνούν οποιαδήποτε έκπτωση self-serve. Κλείδωμα τιμής, όροι και προσφορά σε λίγα λεπτά."
+governanceRow = "Διακυβέρνηση"
+governanceValue = "{{label}} · {{count}} πολιτικές"
+handlesLabel = "Ο Processor σας"
+handlesValue = "διαχειρίζεται {{volume}} πιστώσεις / μήνα"
+pipelinesLabel = "Pipelines"
+policiesMeta = "{{count}} πολιτικές"
+poolCaption = "Μία δεξαμενή {{credits}} πιστώσεων για το έτος. Οι βαριοί μήνες δανείζονται από τους ελαφριούς."
+priceLabel = "Το έτος σας · 12 μήνες στην τιμή των 10"
+rateUnknown = "Θα εμφανίσουμε την ακριβή τιμή στο checkout."
+savings = "Εξοικονομείτε {{amount}} · 2 μήνες δωρεάν."
+sizingRow = "Μέγεθος"
+sizingValue = "{{label}} · {{desc}}"
+usersLabel = "Σύνολο χρηστών"
+
+[portal.billing.prepaid.consent]
+label = "Κατανοώ ότι όταν η προπληρωμένη χωρητικότητά μου εξαντληθεί ή λήξει μετά από 12 μήνες, η επεξεργασία συνεχίζεται αυτόματα με την τυπική μετρημένη τιμή πληρωμής ανά χρήση (έως το όριο δαπανών μου) εκτός αν ακυρώσω, και ότι μπορώ να ακυρώσω οποιαδήποτε στιγμή από την πύλη χρεώσεων."
+
+[portal.billing.prepaid.deploy]
+cloud = "Stirling Cloud"
+cloudDesc = "Διαχειρίζεται από το Stirling. Ζωντανό σε λίγα λεπτά."
+cloudValue = "Stirling Cloud · Διαχειριζόμενο"
+selfhost = "Self-hosted"
+selfhostDesc = "Εκτελείται σε ιδιωτική υποδομή. Ίδια τιμή."
+selfhostValue = "Self-hosted · Ιδιωτική υποδομή"
+
+[portal.billing.prepaid.offer]
+cta = "Έλεγχος προσφοράς"
+subtitle = "Προπληρώστε ένα έτος επεξεργασίας PDF και λάβετε δύο μήνες δωρεάν, που χρησιμοποιούνται πριν από τη χρέωση βάσει χρήσης, εκτός του ορίου δαπανών σας."
+title = "Πάρτε 12 μήνες στην τιμή των 10"
+
+[portal.billing.prepaid.pay]
+accountName = "Όνομα κατόχου λογαριασμού"
+accountNamePlaceholder = "π.χ. Jane Smith"
+companyName = "Όνομα εταιρείας (προαιρετικό)"
+companyNamePlaceholder = "π.χ. Acme Inc."
+downloadInvoice = "Λήψη τιμολογίου"
+payOnline = "Πληρωμή online"
+poNumber = "Αριθμός PO (προαιρετικό)"
+poNumberPlaceholder = "π.χ. PO-2026-0142"
+
+[portal.billing.prepaid.pipelines]
+advanced = "Προχωρημένο"
+advancedDesc = "Τα pipelines οδηγούν το μεγαλύτερο μέρος της επεξεργασίας σας."
+none = "Κανένα"
+noneDesc = "Δεν εκτελείτε pipelines ακόμη. Ενεργοποιήστε τα οποιαδήποτε στιγμή."
+standard = "Τυπικό"
+standardDesc = "Μερικά pipelines επανεπεξεργάζονται τα εισερχόμενα PDFs."
+
+[portal.billing.prepaid.posture]
+essentials = "Βασικά"
+essentialsDesc = "Ταξινόμηση, η προεπιλογή, συν Κοινή χρήση"
+governed = "Με διακυβέρνηση"
+governedDesc = "Προσθέτει Ασφάλεια και Δρομολόγηση"
+regulated = "Ρυθμιζόμενο"
+regulatedDesc = "Κάθε κατηγορία, συμπ. Συμμόρφωση, Διατήρηση, Ingestion"
+
+[portal.billing.prepaid.review]
+download = "Λήψη προσφοράς (PDF)"
+downloading = "Προετοιμασία…"
+share = "κοινή χρήση για έγκριση"
+
+[portal.billing.prepaid.size]
+compact = "Συμπαγές"
+compactDesc = "Αρχεία κάτω από 25 MB, χωρίς χρεώσεις δεδομένων"
+heavy = "Βαρύ"
+heavyDesc = "Σαρωμένα ή με πολλές εικόνες, συνήθως 50 MB+"
+standard = "Τυπικό"
+standardDesc = "Κυρίως μικρά, μερικές σαρώσεις πάνω από 25 MB"
+
+[portal.billing.prepaid.state]
+exhausted = "Εξαντλήθηκε"
+healthy = "Απομένουν πολλά"
+low = "Εξαντλείται"
 
 [portal.billing.spendLimit]
 adjustLimit = "Προσαρμογή ορίου"
@@ -6494,6 +6825,8 @@ label = "Προβλέπεται υπέρβαση."
 
 [portal.billing.spendThisMonth]
 eyebrow = "Δαπάνη αυτόν τον μήνα"
+freeRemaining_one = "Απομένει {{formatted}} δωρεάν PDF"
+freeRemaining_other = "Απομένουν {{formatted}} δωρεάν PDFs"
 processed_one = "{{formattedCount}} PDF επεξεργάστηκε."
 processed_other = "{{formattedCount}} PDFs επεξεργάστηκαν."
 processedWithRate_one = "{{formattedCount}} PDF επεξεργάστηκε, με {{rate}} το καθένα."
@@ -6510,11 +6843,12 @@ reachedTitle = "Το μηνιαίο όριο δαπανών επιτεύχθηκ
 title = "Δεν ήταν δυνατό το άνοιγμα του portal του Stripe"
 
 [portal.billing.walletMeter]
+barAria = "Free PDFs remaining"
 capSuffix_one = "από {{allowance}} δωρεάν PDFs χρησιμοποιήθηκε"
 capSuffix_other = "από {{allowance}} δωρεάν PDFs χρησιμοποιήθηκαν"
 eyebrow = "Δοκιμή Processor"
-statusLabel_one = "{{remaining}} απομένει"
-statusLabel_other = "{{remaining}} απομένουν"
+statusLabel_one = "{{used}} χρησιμοποιήθηκε"
+statusLabel_other = "{{used}} χρησιμοποιήθηκαν"
 sub = "Χρησιμοποιήστε τον PDF Editor δωρεάν. Πληρώστε για αυτόματη επεξεργασία PDFs."
 title_one = "Επεξεργαστείτε {{allowance}} PDFs δωρεάν"
 title_other = "Επεξεργαστείτε {{allowance}} PDFs δωρεάν"
@@ -6533,6 +6867,376 @@ signature = "υπογραφή"
 [portal.components.maturity]
 beta = "Beta"
 ga = "GA"
+
+[portal.connections]
+createTitle = "Νέα σύνδεση"
+createTitleFor = "Σύνδεση {{name}}"
+delete = "Διαγραφή"
+edit = "Επεξεργασία"
+editTitle = "Επεξεργασία σύνδεσης"
+unsupportedType = "Αυτός ο τύπος σύνδεσης δεν μπορεί να επεξεργαστεί εδώ."
+
+[portal.connections.categories.advanced]
+description = "Για μια υπηρεσία που δεν υποστηρίζουμε ακόμη."
+label = "Προχωρημένα"
+
+[portal.connections.categories.audit]
+description = "Καταγράψτε τι συνέβη σε ένα έγγραφο, εκεί όπου ήδη κοιτούν οι ελεγκτές σας."
+label = "Καταγραφή ελέγχου & συμμόρφωσης"
+
+[portal.connections.categories.notify]
+description = "Ενημερώστε ένα άλλο σύστημα ότι κάτι συνέβη."
+label = "Ειδοποίηση & ροή εργασίας"
+
+[portal.connections.categories.security]
+description = "Σαρώστε ή επισημάνετε ένα έγγραφο πριν προχωρήσει."
+label = "Ασφάλεια & ταξινόμηση"
+
+[portal.connections.categories.signing]
+description = "Στείλτε ένα έγγραφο για υπογραφή ή συμβολαιογραφική επικύρωση."
+label = "Ηλεκτρονική υπογραφή & συμβολαιογραφική επικύρωση"
+
+[portal.connections.categories.storage]
+description = "Πού καταλήγουν τα επεξεργασμένα έγγραφα - ένα bucket, ένα drive, ένα ticket ή μια σελίδα."
+label = "Αρχείο & επισύναψη"
+
+[portal.connections.commonFields.accessToken]
+helperText = "Το Stirling το αποθηκεύει κρυπτογραφημένο και δεν το εμφανίζει ποτέ ξανά."
+label = "Access token"
+
+[portal.connections.commonFields.apiKey]
+label = "API key"
+
+[portal.connections.commonFields.apiToken]
+label = "API token"
+
+[portal.connections.commonFields.baseUrl]
+helperText = "Τα βήματα που χρησιμοποιούν αυτή τη σύνδεση μπορούν να καλούν μόνο διαδρομές κάτω από αυτό το URL, ποτέ άλλο host."
+label = "Server URL"
+
+[portal.connections.commonFields.email]
+label = "Email"
+
+[portal.connections.commonFields.host]
+label = "Host"
+
+[portal.connections.commonFields.password]
+label = "Κωδικός πρόσβασης"
+
+[portal.connections.commonFields.port]
+label = "Port"
+
+[portal.connections.commonFields.username]
+label = "Όνομα χρήστη"
+
+[portal.connections.commonFields.webhookUrl]
+helperText = "Επικολλήστε το URL που σας έδωσε η υπηρεσία. Μόνο διαδρομές κάτω από αυτό μπορούν να καλούνται."
+label = "Webhook URL"
+
+[portal.connections.fields]
+name = "Όνομα σύνδεσης"
+namePlaceholder = "π.χ. Παραγωγή"
+
+[portal.connections.picker]
+cancel = "Ακύρωση"
+createNew = "Νέα σύνδεση..."
+placeholder = "Επιλέξτε σύνδεση"
+save = "Αποθήκευση σύνδεσης"
+
+[portal.connections.picker2]
+back = "Αλλαγή ενσωμάτωσης"
+heading = "Τι θέλετε να συνδέσετε;"
+noResultsBody = "Δεν το υποστηρίζουμε ακόμη - πείτε μας γι' αυτό και θα εξετάσουμε την προσθήκη του."
+noResultsTitle = "Δεν ταιριάζει τίποτα με \"{{query}}\""
+searchPlaceholder = "Αναζήτηση ενσωματώσεων - δοκιμάστε \"sign\", \"ocr\" ή ένα όνομα προϊόντος"
+
+[portal.connections.types.api]
+description = "Καλέστε οποιοδήποτε HTTP API από μια πολιτική. Επιλέγετε το URL, τον έλεγχο ταυτότητας και το payload."
+label = "Προσαρμοσμένο API"
+
+[portal.connections.types.api.fields.authType]
+label = "Έλεγχος ταυτότητας"
+
+[portal.connections.types.api.fields.authType.options.basic]
+label = "Όνομα χρήστη και κωδικός πρόσβασης"
+
+[portal.connections.types.api.fields.authType.options.bearer]
+label = "Bearer token"
+
+[portal.connections.types.api.fields.authType.options.header]
+label = "Token σε προσαρμοσμένο header"
+
+[portal.connections.types.api.fields.authType.options.none]
+label = "Κανένα"
+
+[portal.connections.types.api.fields.authType.options.tokenLogin]
+label = "Σύνδεση για token"
+
+[portal.connections.types.api.fields.baseUrl]
+helperText = "Τα βήματα που χρησιμοποιούν αυτή τη σύνδεση μπορούν να καλούν μόνο διαδρομές κάτω από αυτό το URL, ποτέ άλλο host."
+label = "Βασικό URL"
+placeholder = "https://api.example.com/v1"
+
+[portal.connections.types.api.fields.headerName]
+label = "Όνομα header"
+placeholder = "X-API-Key"
+
+[portal.connections.types.api.fields.loginPath]
+label = "Διαδρομή σύνδεσης"
+placeholder = "/auth/login"
+
+[portal.connections.types.api.fields.password]
+label = "Κωδικός πρόσβασης"
+
+[portal.connections.types.api.fields.resultUrlHosts]
+helperText = "Αν το API απαντήσει με σύνδεσμο λήψης, μόνο αυτοί οι hosts μπορούν να ανακτηθούν. Διαχωρίστε με κόμματα. Αφήστε κενό για να επιτρέπεται μόνο ο ίδιος host του βασικού URL."
+label = "Επιτρεπόμενοι hosts αποτελεσμάτων"
+
+[portal.connections.types.api.fields.token]
+label = "Token"
+
+[portal.connections.types.api.fields.tokenHeaderName]
+label = "Στείλτε το token ως αυτό το header"
+
+[portal.connections.types.api.fields.tokenResponseHeader]
+helperText = "Το response header στο οποίο η κλήση σύνδεσης επιστρέφει το token, π.χ. X-Auth-Token."
+label = "Token response header"
+
+[portal.connections.types.api.fields.username]
+label = "Όνομα χρήστη"
+
+[portal.connections.types.clamav]
+baseUrlPlaceholder = "http://clamav-rest:9000"
+description = "Σάρωση εγγράφων για malware σε server που εκτελείτε - τίποτα δεν φεύγει από το δίκτυό σας."
+label = "ClamAV (self-hosted)"
+
+[portal.connections.types.cloudmersive]
+description = "Σάρωση ιών και περιεχομένου για έγγραφα σε μια πολιτική."
+label = "Cloudmersive"
+
+[portal.connections.types.cloudmersiveadvanced]
+description = "Αποκλεισμός εγγράφων που περιέχουν macros, εκτελέσιμα, scripts ή ενσωματωμένα αντικείμενα - όχι μόνο γνωστό malware."
+label = "Cloudmersive Advanced Scan"
+
+[portal.connections.types.confluence]
+baseUrlPlaceholder = "https://your-site.atlassian.net/wiki/api/v2"
+description = "Επισύναψη επεξεργασμένων εγγράφων σε σελίδα Confluence."
+label = "Confluence"
+
+[portal.connections.types.consigno]
+description = "Στείλτε έγγραφα στο ConsignO Cloud (Notarius) για ηλεκτρονική υπογραφή και συμβολαιογραφική επικύρωση."
+label = "ConsignO Cloud"
+
+[portal.connections.types.consigno.fields.baseUrl]
+helperText = "Το περιβάλλον ConsignO Cloud σας, συμπεριλαμβανομένου του /api/v1."
+label = "Server URL"
+placeholder = "https://your-org.consignocloud.com/api/v1"
+
+[portal.connections.types.consigno.fields.clientId]
+label = "API key"
+
+[portal.connections.types.consigno.fields.clientSecret]
+label = "API secret"
+
+[portal.connections.types.consigno.fields.password]
+label = "Κωδικός πρόσβασης"
+
+[portal.connections.types.consigno.fields.tenantId]
+helperText = "Απαιτείται μόνο αν ο οργανισμός σας χρησιμοποιεί tenants."
+label = "Tenant"
+
+[portal.connections.types.consigno.fields.username]
+label = "Όνομα χρήστη"
+
+[portal.connections.types.discord]
+baseUrlPlaceholder = "https://discord.com/api/webhooks/..."
+description = "Δημοσίευση μηνύματος στο Discord όταν μια πολιτική επεξεργάζεται ένα έγγραφο."
+label = "Discord"
+
+[portal.connections.types.elastic]
+baseUrlPlaceholder = "https://your-cluster:9200"
+description = "Ευρετηρίαση audit event στο Elasticsearch κάθε φορά που μια πολιτική χειρίζεται ένα έγγραφο."
+label = "Elasticsearch"
+
+[portal.connections.types.ftp]
+description = "Έλεγχος ενός FTP ή FTPS server για νέα έγγραφα."
+hostPlaceholder = "ftp.example.com"
+label = "FTP / FTPS"
+
+[portal.connections.types.ftp.fields.passive]
+label = "Λειτουργία σύνδεσης"
+
+[portal.connections.types.ftp.fields.passive.options]
+active = "Ενεργή"
+passive = "Παθητική (συνιστάται)"
+
+[portal.connections.types.ftp.fields.security]
+helperText = "Το απλό FTP στέλνει διαπιστευτήρια και αρχεία χωρίς κρυπτογράφηση· επιλέξτε FTPS αν το υποστηρίζει ο server."
+label = "Κρυπτογράφηση"
+
+[portal.connections.types.ftp.fields.security.options]
+explicit = "FTPS (explicit / AUTH TLS)"
+implicit = "FTPS (implicit)"
+none = "Κανένα (απλό FTP)"
+
+[portal.connections.types.googlechat]
+baseUrlPlaceholder = "https://chat.googleapis.com/v1/spaces/..."
+description = "Δημοσίευση μηνύματος σε χώρο Google Chat όταν εκτελείται μια πολιτική."
+label = "Google Chat"
+
+[portal.connections.types.jira]
+baseUrlPlaceholder = "https://your-site.atlassian.net"
+description = "Επισύναψη επεξεργασμένων εγγράφων σε ζήτημα Jira."
+label = "Jira"
+
+[portal.connections.types.mailgun]
+description = "Αποστολή email με έγγραφο ή ειδοποίηση όταν εκτελείται μια πολιτική."
+label = "Mailgun"
+
+[portal.connections.types.n8n]
+baseUrlPlaceholder = "https://your-n8n/webhook/9f2c-..."
+description = "Hand documents to an n8n workflow, and take back whatever it produces."
+label = "n8n"
+
+[portal.connections.types.n8n.fields.authType]
+helperText = "Match the Authentication set on the n8n Webhook node."
+label = "Webhook authentication"
+
+[portal.connections.types.n8n.fields.authType.options.basic]
+label = "Basic auth"
+
+[portal.connections.types.n8n.fields.authType.options.header]
+label = "Header auth"
+
+[portal.connections.types.n8n.fields.authType.options.none]
+label = "None"
+
+[portal.connections.types.n8n.fields.headerName]
+helperText = "The header name from the n8n credential, not its value."
+label = "Header name"
+placeholder = "X-N8N-Key"
+
+[portal.connections.types.n8n.fields.token]
+label = "Header value"
+
+[portal.connections.types.nextcloud]
+baseUrlPlaceholder = "https://your-server/remote.php/dav"
+description = "Αρχειοθέτηση επεξεργασμένων εγγράφων στο Nextcloud."
+label = "Nextcloud"
+
+[portal.connections.types.nextcloud.fields.appPassword]
+label = "Κωδικός πρόσβασης εφαρμογής"
+
+[portal.connections.types.presidio]
+baseUrlPlaceholder = "http://presidio-analyzer:3000"
+description = "Ανίχνευση προσωπικών δεδομένων σε κείμενο εγγράφου χρησιμοποιώντας έναν Presidio server που εκτελείτε."
+label = "Presidio (self-hosted)"
+
+[portal.connections.types.purview]
+description = "Ανάγνωση και εφαρμογή ετικετών ευαισθησίας Microsoft Purview σε PDFs."
+label = "Microsoft Purview"
+
+[portal.connections.types.purview.fields.clientId]
+helperText = "Προαιρετικό. Απαιτείται μόνο για επιλογή ετικετών με βάση το όνομα· η επισήμανση λειτουργεί χωρίς αυτό."
+label = "Application (client) ID"
+
+[portal.connections.types.purview.fields.clientSecret]
+label = "Client secret"
+
+[portal.connections.types.purview.fields.tenantId]
+helperText = "Σφραγίζεται σε κάθε ετικέτα ως SiteId, ώστε τα εργαλεία που γνωρίζουν το Purview να ξέρουν ποιος οργανισμός την εφάρμοσε."
+label = "Directory (tenant) ID"
+placeholder = "cb46c030-1825-4e81-a295-151c039dbf02"
+
+[portal.connections.types.s3]
+description = "Ένα S3 bucket από το οποίο οι πηγές μπορούν να διαβάζουν και στο οποίο οι έξοδοι pipeline μπορούν να γράφουν."
+label = "Αποθήκευση S3"
+
+[portal.connections.types.s3.fields.accessKeyId]
+label = "Access key ID"
+
+[portal.connections.types.s3.fields.bucket]
+label = "Bucket"
+
+[portal.connections.types.s3.fields.endpoint]
+helperText = "Αφήστε κενό για AWS. Ορίστε το για MinIO ή άλλο αποθηκευτικό χώρο συμβατό με S3."
+label = "Endpoint"
+
+[portal.connections.types.s3.fields.region]
+label = "Region"
+
+[portal.connections.types.s3.fields.secretAccessKey]
+label = "Secret access key"
+
+[portal.connections.types.sendgrid]
+description = "Αποστολή email με έγγραφο ή ειδοποίηση όταν εκτελείται μια πολιτική."
+label = "SendGrid"
+
+[portal.connections.types.sftp]
+description = "Έλεγχος ενός SFTP (SSH) server για νέα έγγραφα."
+hostPlaceholder = "sftp.example.com"
+label = "SFTP"
+
+[portal.connections.types.sftp.fields.hostKeyFingerprint]
+helperText = "Προαιρετικό. Το SHA-256 host key fingerprint του server (από `ssh-keyscan host | ssh-keygen -lf -`). Όταν οριστεί, γίνεται αποδεκτός μόνο server που παρουσιάζει αυτό το key· όταν είναι κενό, το key που εμφανίζεται στην πρώτη σύνδεση καρφιτσώνεται και μεταγενέστερες αλλαγές απορρίπτονται."
+label = "Host key fingerprint"
+placeholder = "SHA256:..."
+
+[portal.connections.types.sftp.fields.passphrase]
+label = "Key passphrase"
+
+[portal.connections.types.sftp.fields.password]
+helperText = "Αφήστε κενό αν κάνετε έλεγχο ταυτότητας με private key αντί για κωδικό πρόσβασης."
+
+[portal.connections.types.sftp.fields.privateKey]
+helperText = "Προαιρετικό. Επικολλήστε ένα OpenSSH private key για έλεγχο ταυτότητας με key αντί για κωδικό πρόσβασης."
+label = "Private key"
+
+[portal.connections.types.slack]
+description = "Δημοσίευση μηνύματος στο Slack όταν μια πολιτική επεξεργάζεται ένα έγγραφο."
+label = "Slack"
+
+[portal.connections.types.smb]
+description = "Παρακολούθηση ενός SMB / CIFS network share (Windows ή Samba)."
+hostPlaceholder = "fileserver.example.com"
+label = "SMB / Network share"
+
+[portal.connections.types.smb.fields.domain]
+helperText = "Προαιρετικό. Το Windows domain ή workgroup, αν ο server σας χρησιμοποιεί κάποιο."
+label = "Domain"
+
+[portal.connections.types.smb.fields.share]
+label = "Share"
+placeholder = "documents"
+
+[portal.connections.types.splunk]
+baseUrlPlaceholder = "https://your-splunk:8088"
+description = "Αποστολή audit event στο Splunk κάθε φορά που μια πολιτική χειρίζεται ένα έγγραφο."
+label = "Splunk"
+
+[portal.connections.types.sumologic]
+baseUrlPlaceholder = "https://endpoint.collection.sumologic.com/receiver/v1/http/..."
+description = "Αποστολή audit event σε Sumo Logic HTTP collector."
+label = "Sumo Logic"
+
+[portal.connections.types.teams]
+baseUrlPlaceholder = "https://your-org.webhook.office.com/webhookb2/..."
+description = "Δημοσίευση μηνύματος σε κανάλι Teams όταν εκτελείται μια πολιτική."
+label = "Microsoft Teams"
+
+[portal.connections.types.webhook]
+baseUrlPlaceholder = "https://example.com/hooks/documents"
+description = "Δημοσίευση κάθε εγγράφου, ή μόνο των λεπτομερειών, σε URL που επιλέγετε."
+label = "Webhook"
+
+[portal.connections.types.zapier]
+baseUrlPlaceholder = "https://hooks.zapier.com/hooks/catch/..."
+description = "Ενεργοποίηση Zap ή Make scenario από μια πολιτική."
+label = "Zapier & Make"
+
+[portal.docs]
+browse = "Περιήγηση στα docs"
+viewSource = "Προβολή πηγαίου κώδικα στο GitHub"
 
 [portal.docs.authentication]
 codeCaption = "κάθε αίτημα"
@@ -6624,6 +7328,9 @@ eyebrow = "SKILLS"
 lead = "Συσκευασμένες, ονομασμένες δυνατότητες που ο πράκτοράς σας καλεί ως ένα ενιαίο εργαλείο. Κάθε skill είναι μια ντετερμινιστική αλυσίδα λειτουργιών με συνδεδεμένα evals."
 title = "Agent skills"
 
+[portal.docs.toc]
+title = "Σε αυτήν τη σελίδα"
+
 [portal.docs.webhooks]
 codeCaption = "document.processed"
 eyebrow = "API REFERENCE"
@@ -6697,6 +7404,8 @@ type = "Τύπος"
 user = "Χρήστης"
 
 [portal.documents.queue.empty]
+connectSource = "Σύνδεση πηγής"
+createPipeline = "Δημιουργία pipeline"
 description = "Καθώς οι πηγές τροφοδοτούν έγγραφα στις ροές εργασίας σας, θα εμφανίζονται εδώ για έλεγχο."
 title = "Δεν υπάρχουν έγγραφα στην ουρά"
 
@@ -6712,11 +7421,11 @@ editorAction = "Editor"
 empty = "Κανένα έγγραφο δεν αντιστοιχεί σε αυτό το φίλτρο."
 rowActions = "Ενέργειες γραμμής"
 sensitiveLabel = "Ευαίσθητο"
-sensitiveTitle = "Ευαίσθητο — απαιτείται πρόσβαση"
 
 [portal.documents.table.columns]
 action = "Ροή εργασίας / Ενέργεια"
 document = "Έγγραφο"
+labels = "Labels"
 product = "Προϊόν"
 status = "Κατάσταση"
 time = "Ώρα"
@@ -6732,6 +7441,7 @@ host = "Host"
 lastSeen = "Τελευταία εμφάνιση"
 region = "Περιοχή"
 status = "Κατάσταση"
+target = "Target"
 version = "Έκδοση"
 
 [portal.editorAdmin.health.empty]
@@ -6806,12 +7516,124 @@ description = "Αυτή η προβολή αντιμετώπισε ένα απρ
 retry = "Δοκιμάστε ξανά"
 title = "Κάτι πήγε στραβά σε αυτήν τη σελίδα"
 
+[portal.failures]
+fromSource = "From source {{source}}"
+occurrences = "{{count}} occurrences"
+reportedBy = "Hit by {{actor}}"
+runReference = "Run {{runId}}"
+subtitle = "Failures recorded from your policy runs and your team's editors, with the actions you can take."
+title = "Failures"
+
+[portal.failures.action]
+acknowledge = "Acknowledge"
+confirm = "Are you sure?"
+dismiss = "Dismiss"
+dismissSkipFile = "Skip this file"
+viewFile = "Προβολή αρχείου"
+viewInProcessor = "Προβολή στον επεξεργαστή"
+
+[portal.failures.debug]
+copyJson = "Copy JSON"
+dismissAll = "Dismiss all ({{total}})"
+dismissing = "Dismissing..."
+hideJson = "Hide raw JSON ({{total}})"
+refresh = "Refresh failures"
+showJson = "Show raw JSON ({{total}})"
+
+[portal.failures.disabled]
+closed = "This failure is already closed."
+noDocument = "Αυτή η αποτυχία δεν καταγράφηκε για συγκεκριμένο έγγραφο, επομένως δεν υπάρχει κάτι να ανοίξετε εδώ."
+unattended = "Αυτό το αρχείο τροφοδοτήθηκε από φάκελο, bucket ή webhook, επομένως κανένα πρόγραμμα περιήγησης δεν το έχει για άνοιγμα."
+unavailable = "Not available for this failure."
+
+[portal.failures.empty]
+description = "Policy runs that fail will appear here with the actions you can take."
+title = "No failures recorded"
+
+[portal.failures.kind.inputPasswordProtected]
+description = "The pipeline could not open the document because it is password-protected. Unlock it and run it again, or skip this file."
+title = "Password-protected document"
+
+[portal.failures.kind.unknown]
+description = "This run failed for a reason Stirling does not yet recognise. The raw message is shown below."
+title = "Unrecognised failure"
+
+[portal.failures.origin]
+pipeline = "Pipeline"
+policy = "Policy"
+tool = "Tool run"
+
+[portal.failures.stage]
+blocked = "Blocked"
+input = "Input"
+internal = "Internal"
+never_ran = "Never ran"
+output = "Output"
+
+[portal.home.download]
+back = "Πίσω"
+body = "Κατεβάστε την εφαρμογή desktop ή φιλοξενήστε μόνοι σας τον server."
+done = "Τέλος"
+guide = "Άνοιγμα του οδηγού {{name}}"
+openInBrowser = "Άνοιγμα στο browser αντί γι' αυτό"
+sectionDesktop = "Εφαρμογή desktop"
+sectionSelfHosted = "Self-hosted"
+title = "Εγκατάσταση του Stirling PDF Editor"
+
+[portal.home.download.docker]
+detailBody = "Εκτελέστε την επίσημη image στον server σας."
+note = "Ανοίγει στο :8080. Προεπιλεγμένη σύνδεση: admin / stirling."
+tagline = "Εκτελέστε τον server σε container"
+title = "Docker"
+variantFat = "Fat"
+variantLite = "Ultra-Lite"
+variantStandard = "Standard"
+
+[portal.home.download.kubernetes]
+detailBody = "Εγκαταστήστε το επίσημο Helm chart."
+note = "Προσθέστε ένα PVC για το /configs ώστε να διατηρούνται οι ρυθμίσεις."
+tagline = "Αναπτύξτε σε cluster με Helm"
+title = "Kubernetes"
+
+[portal.home.download.linux]
+detailBody = "Native builds για τη διανομή σας."
+guideBtn = "Προβολή επιλογών εγκατάστασης Linux"
+note = "Διατίθενται AppImage, .deb και .rpm builds για κοινές διανομές."
+tagline = "Native εφαρμογή desktop για τη διανομή σας"
+title = "Linux"
+
+[portal.home.download.mac]
+altLabel = "Ή μέσω Homebrew"
+detailBody = "Εκτελέστε το πρόγραμμα εγκατάστασης ή χρησιμοποιήστε Homebrew."
+downloadBtn = "Λήψη για macOS"
+tagline = "Native εφαρμογή για Apple silicon και Intel"
+title = "macOS"
+
+[portal.home.download.manual]
+detailBody = "Εκτελέστε το .jar σε bare metal server."
+downloadBtn = "Λήψη του .jar"
+note = "Απαιτεί Java 21+. Ανοίγει στο :8080· προεπιλεγμένη σύνδεση admin / stirling."
+runLabel = "Έπειτα εκτελέστε το"
+tagline = "Εκτελέστε το .jar σε bare metal server"
+title = "Χειροκίνητη ρύθμιση server"
+
+[portal.home.download.windows]
+altLabel = "Ή μέσω winget"
+detailBody = "Εκτελέστε το πρόγραμμα εγκατάστασης ή χρησιμοποιήστε package manager."
+downloadBtn = "Λήψη προγράμματος εγκατάστασης"
+tagline = "Native εφαρμογή για Microsoft Windows"
+title = "Windows"
+
 [portal.home.editor]
-activeUsers = "{{n}} ενεργοί"
-invite = "Προσκαλέστε συνεργάτες"
+activeOfDeployed = "{{active}} από {{total}} ενεργά αυτόν τον μήνα"
 name = "Stirling PDF Editor"
 open = "Άνοιγμα σε browser"
 updated = "ενημερώθηκε {{time}}"
+
+[portal.home.editor.deploy]
+finish = "Ολοκλήρωση ανάπτυξης"
+options = "Προβολή επιλογών ανάπτυξης"
+start = "Ανάπτυξη του Editor"
 
 [portal.home.editor.target]
 cloud = "Managed Cloud"
@@ -6822,49 +7644,6 @@ kubernetes = "Self-hosted · Kubernetes"
 afternoon = "Καλό απόγευμα"
 evening = "Καλό βράδυ"
 morning = "Καλημέρα"
-
-[portal.home.onboarding]
-dismiss = "Παράβλεψη ρύθμισης"
-notStarted = "Δεν ξεκίνησε"
-progress = "{{done}} από {{total}} ολοκληρώθηκαν"
-title = "Ολοκληρώστε τη ρύθμιση"
-
-[portal.home.onboarding.enterprise]
-body = "SSO + SCIM + RBAC σε επίπεδο οργανισμού, δεσμευμένη τιμολόγηση όγκου και air-gapped ανάπτυξη."
-cta = "Έναρξη δοκιμής"
-ctaQuote = "Λήψη προσφοράς"
-lead = "Για 250+ εργαζομένους."
-tag = "Enterprise"
-
-[portal.home.onboarding.steps.editor]
-blurb = "Αναπτύξτε την εφαρμογή desktop, δωρεάν για πάντα."
-title = "Λήψη του PDF Editor"
-
-[portal.home.onboarding.steps.policies]
-blurb = "{{active}} ενεργές · {{recommended}} προτεινόμενες"
-chip = "{{active}} ενεργές"
-title = "Ενεργοποίηση πολιτικών"
-
-[portal.home.onboarding.steps.sources]
-blurb = "{{connected}} συνδεδεμένες · κάθε PDF ελεγχόμενο όπου κι αν καταλήγει"
-chip = "{{connected}} συνδεδεμένες"
-title = "Συνδέστε τις πηγές σας"
-
-[portal.home.quickActions]
-subtitle = "Κορυφαίες εργασίες για σήμερα"
-title = "Γρήγορες ενέργειες"
-
-[portal.home.quickActions.buildPipeline]
-blurb = "Συνθέτης 3 βημάτων πάνω στη βιβλιοθήκη typed op"
-title = "Δημιουργία ροής εργασίας"
-
-[portal.home.quickActions.connectSource]
-blurb = "S3, agents, webhooks, παρακολουθούμενοι φάκελοι"
-title = "Σύνδεση πηγής"
-
-[portal.home.quickActions.issueApiKey]
-blurb = "Scoped key με όρια ρυθμού και IP allowlist"
-title = "Έκδοση API key"
 
 [portal.infrastructure]
 manageEditorDeployment = "Διαχείριση ανάπτυξης Editor"
@@ -6878,19 +7657,24 @@ heading = "API keys"
 subheading = "Scoped διαπιστευτήρια με όρια ρυθμού ανά key, δικαιώματα και IP allowlists."
 
 [portal.infrastructure.apiKeys.card]
-allowedIps = "Επιτρεπόμενες IPs"
-anyIp = "Οποιαδήποτε IP (χωρίς allowlist)"
 created = "Δημιουργήθηκε"
 lastUsed = "Τελευταία χρήση"
-permissions = "Δικαιώματα"
-rateLimit = "Όριο ρυθμού"
-rateLimitValue = "{{value}} αιτ./λεπτό"
+revoke = "Ανάκληση κλειδιού"
 usageMonth = "Χρήση αυτόν τον μήνα"
 usageToday = "Χρήση σήμερα"
 
 [portal.infrastructure.apiKeys.empty]
 description = "Δημιουργήστε ένα scoped key για να αρχίσετε να καλείτε το Stirling API."
 title = "Δεν υπάρχουν API keys ακόμα"
+
+[portal.infrastructure.apiKeys.error]
+load = "Δεν ήταν δυνατή η φόρτωση των API κλειδιών σας. Δοκιμάστε ξανά."
+
+[portal.infrastructure.apiKeys.revoke]
+body = "Να ανακληθεί το \"{{name}}\"; Οποιαδήποτε ενσωμάτωση εξακολουθεί να χρησιμοποιεί αυτό το κλειδί θα αρχίσει αμέσως να λαμβάνει σφάλματα 401. Αυτό δεν μπορεί να αναιρεθεί."
+cancel = "Ακύρωση"
+confirm = "Ανάκληση κλειδιού"
+title = "Ανάκληση API κλειδιού"
 
 [portal.infrastructure.audit]
 filterAriaLabel = "Φιλτράρισμα συμβάντων ελέγχου κατά κατηγορία"
@@ -6935,6 +7719,7 @@ all = "Όλα"
 auth = "Auth"
 config = "Config"
 elevation = "Αναβάθμιση πρόσβασης"
+policy = "Πολιτική"
 processing = "Επεξεργασία"
 security = "Ασφάλεια"
 
@@ -6944,19 +7729,30 @@ title = "Δεν έχετε πρόσβαση"
 
 [portal.infrastructure.audit.metrics]
 config = "Config"
-elevation = "Αναβάθμιση πρόσβασης"
+policy = "Πολιτική"
 processing = "Επεξεργασία"
 totalEvents = "Συνολικά συμβάντα · 24h"
+
+[portal.infrastructure.auditCatLabel]
+auth = "Έλεγχος ταυτότητας"
+config = "Ρύθμιση"
+elevation = "Αναβάθμιση δικαιωμάτων"
+policy = "Πολιτική"
+processing = "Επεξεργασία"
+security = "Ασφάλεια"
+
+[portal.infrastructure.auditStatusLabel]
+danger = "Σφάλμα"
+info = "Πληροφορίες"
+success = "Επιτυχία"
+warning = "Προειδοποίηση"
 
 [portal.infrastructure.createKey]
 cancel = "Ακύρωση"
 createKey = "Δημιουργία key"
 done = "Τέλος"
-ipAllowlistHelper = "CIDR ranges χωρισμένα με κόμματα. Αφήστε κενό για να επιτρέψετε οποιαδήποτε IP."
-ipAllowlistLabel = "IP allowlist"
 keyNameLabel = "Όνομα key"
 keyNamePlaceholder = "π.χ. Production · ingest"
-permissionsLabel = "Δικαιώματα"
 secretKeyCaption = "Secret key"
 secretWarning = "Αποθηκεύστε το σε secrets manager. Το Stirling αποθηκεύει πάντα μόνο hash — δεν υπάρχει τρόπος ανάκτησής του αργότερα."
 subtitle = "Περιορίστε το key στο ελάχιστο που χρειάζεται. Μπορείτε να το περιστρέψετε ή να το ανακαλέσετε ανά πάσα στιγμή."
@@ -6964,207 +7760,9 @@ subtitleCreated = "Αντιγράψτε αυτό το secret τώρα — δεν
 title = "Δημιουργία API key"
 titleCreated = "Το key δημιουργήθηκε"
 
-[portal.infrastructure.deployments]
-msValue = "{{value}} ms"
-throughputValue = "{{value}}/λεπτό"
-
-[portal.infrastructure.deployments.deployColumns]
-deployedBy = "Αναπτύχθηκε από"
-environment = "Περιβάλλον"
-product = "Προϊόν"
-status = "Κατάσταση"
-version = "Έκδοση"
-when = "Πότε"
-
-[portal.infrastructure.deployments.recent]
-heading = "Πρόσφατες αναπτύξεις"
-subheading = "Τα πιο πρόσφατα rollouts σε προϊόντα και περιβάλλοντα."
-
-[portal.infrastructure.deployments.regionColumns]
-instances = "Παρουσίες"
-latency = "Καθυστέρηση"
-load = "Φόρτος"
-p99 = "P99"
-region = "Περιοχή"
-status = "Κατάσταση"
-throughput = "Throughput"
-uptime = "Uptime"
-version = "Έκδοση"
-
-[portal.infrastructure.deployments.regions]
-heading = "Περιοχές"
-subheading = "Ζωντανή υγεία για κάθε αναπτυγμένη περιοχή Stirling — καθυστέρηση, φόρτος και έκδοση rollout."
-
-[portal.infrastructure.deployments.regions.empty]
-description = "Οι αναπτυγμένες περιοχές εμφανίζονται εδώ μόλις γίνει provision ο χώρος εργασίας σας."
-title = "Δεν έχουν αναπτυχθεί περιοχές"
-
-[portal.infrastructure.models]
-heading = "Μοντέλα"
-msValue = "{{value}} ms"
-subheading = "Ο κατάλογος μοντέλων και η δρομολόγηση που τροφοδοτούν την επεξεργασία εγγράφων σε όλο τον χώρο εργασίας σας."
-
-[portal.infrastructure.models.byom]
-description = "Καταχωρίστε ένα on-prem ή self-hosted μοντέλο και καρφιτσώστε το σε μια περιοχή για επεξεργασία με δέσμευση παραμονής δεδομένων."
-title = "Φέρτε το δικό σας μοντέλο"
-
-[portal.infrastructure.models.catalogue]
-heading = "Κατάλογος"
-sub = "Managed μοντέλα διαθέσιμα στον χώρο εργασίας σας, με ζωντανή καθυστέρηση και κόστος."
-subEnterprise = "Managed, bring-your-own και on-prem μοντέλα — με διαθέσιμο καρφίτσωμα ανά περιοχή."
-
-[portal.infrastructure.models.catalogue.empty]
-description = "Τα μοντέλα στον κατάλογο του χώρου εργασίας σας εμφανίζονται εδώ."
-title = "Δεν υπάρχουν διαθέσιμα μοντέλα"
-
-[portal.infrastructure.models.columns]
-cost = "Κόστος"
-latency = "Καθυστέρηση"
-load = "Φόρτος"
-model = "Μοντέλο"
-status = "Κατάσταση"
-type = "Τύπος"
-version = "Έκδοση"
-
-[portal.infrastructure.models.metrics]
-activeModels = "Ενεργά μοντέλα"
-avgLatency = "Μέση καθυστέρηση"
-included = "Περιλαμβάνεται"
-monthlySpend = "Μηνιαία δαπάνη μοντέλων"
-
-[portal.infrastructure.models.routing]
-empty = "Δεν έχουν διαμορφωθεί κανόνες δρομολόγησης."
-heading = "Κανόνες δρομολόγησης"
-sub = "Ποιο μοντέλο χειρίζεται κάθε λειτουργία. Η προεπιλογή εφαρμόζεται όταν δεν ταιριάζει πιο συγκεκριμένος κανόνας."
-subLocked = "Δρομολογήστε λειτουργίες σε συγκεκριμένα μοντέλα — διαθέσιμο σε πληρωμένα πλάνα."
-
-[portal.infrastructure.models.routing.lockedBanner]
-description = "Αναβαθμίστε σε Pro για να ελέγχετε ποιο μοντέλο χειρίζεται κάθε λειτουργία και τύπο εγγράφου."
-title = "Η δρομολόγηση μοντέλων είναι πληρωμένη λειτουργία"
-
-[portal.infrastructure.models.routingColumns]
-default = "Προεπιλογή"
-docType = "Τύπος εγγράφου"
-modelForAria = "Μοντέλο για {{operation}}"
-operation = "Λειτουργία"
-routedTo = "Δρομολογείται σε"
-
-[portal.infrastructure.security.access.byok]
-description = "Παρέχετε ένα key από το δικό σας KMS. Το Stirling κρυπτογραφεί με αυτό αλλά μπορεί ακόμα να διαβάζει."
-label = "Bring your own key (BYOK)"
-
-[portal.infrastructure.security.access.hyok]
-description = "Τα keys δεν φεύγουν ποτέ από το KMS σας. Το Stirling κρατά μόνο ciphertext."
-label = "Hold your own key (HYOK)"
-
-[portal.infrastructure.security.access.stirling]
-description = "Το Stirling διαχειρίζεται τα encryption keys. Το απλούστερο — μηδενικές εργασίες key από την πλευρά σας."
-label = "Keys που κρατούνται από το Stirling"
-
-[portal.infrastructure.security.accessPolicy]
-heading = "Πολιτική πρόσβασης εγγράφων"
-subheading = "Ελέγχει ποιος μπορεί να αποκρυπτογραφήσει επεξεργασμένα έγγραφα σε κατάσταση αδράνειας."
-
-[portal.infrastructure.security.attestations]
-heading = "Βεβαιώσεις συμμόρφωσης"
-noReport = "Δεν υπάρχει διαθέσιμη αναφορά"
-subheading = "Στάση ελέγχου ανά πλαίσιο, με διαθέσιμες αναφορές για βεβαιωμένους ελέγχους."
-viewReport = "Προβολή αναφοράς →"
-
-[portal.infrastructure.security.compliance]
-heading = "Συμμόρφωση"
-subheading = "Βεβαιώσεις και πιστοποιήσεις που καλύπτουν την πλατφόρμα Stirling."
-
-[portal.infrastructure.security.empty]
-description = "Η διαμόρφωση ασφαλείας του χώρου εργασίας σας θα εμφανίζεται εδώ."
-title = "Η στάση ασφαλείας δεν είναι διαθέσιμη"
-
-[portal.infrastructure.security.hyokBanner]
-description = "Με HYOK, τα encryption keys δεν φεύγουν ποτέ από το KMS σας. Το Stirling αποθηκεύει και επεξεργάζεται μόνο ciphertext που μπορείτε να ανακαλέσετε ανά πάσα στιγμή."
-title = "Το Stirling δεν μπορεί να αποκρυπτογραφήσει τα έγγραφά σας"
-
-[portal.infrastructure.security.ipAllowlist]
-empty = "Δεν έχουν διαμορφωθεί IP ranges — επιτρέπονται όλες οι IPs."
-heading = "IP allowlist"
-sub = "Η πρόσβαση API περιορίζεται σε αυτά τα CIDR ranges."
-subLocked = "Περιορίστε την πρόσβαση API σε γνωστά IP ranges — διαθέσιμο σε πληρωμένα πλάνα."
-
-[portal.infrastructure.security.ipAllowlist.lockedBanner]
-description = "Αναβαθμίστε σε Pro για να περιορίσετε την πρόσβαση API σε συγκεκριμένα δίκτυα."
-title = "Το IP allowlisting είναι πληρωμένη λειτουργία"
-
-[portal.infrastructure.security.ipColumns]
-added = "Προστέθηκε"
-addedBy = "Προστέθηκε από"
-cidr = "CIDR"
-label = "Ετικέτα"
-
-[portal.infrastructure.security.keyManagement]
-algorithm = "Αλγόριθμος"
-heading = "Διαχείριση encryption keys"
-keyId = "Αναγνωριστικό key"
-lastRotated = "Τελευταία περιστροφή"
-rotateKey = "Περιστροφή key"
-rotationPolicy = "Πολιτική περιστροφής"
-subheading = "Φύλαξη των keys που κρυπτογραφούν έγγραφα σε κατάσταση αδράνειας — ποιος μπορεί να αποκρυπτογραφήσει και πώς περιστρέφονται τα keys."
-
-[portal.infrastructure.security.managedBanner]
-description = "Η φύλαξη bring-your-own-key (BYOK) και hold-your-own-key (HYOK) είναι διαθέσιμη στο Enterprise. Αναβαθμίστε για να παρέχετε keys από το δικό σας KMS."
-title = "Τα keys διαχειρίζονται από το Stirling στο πλάνο σας"
-
-[portal.infrastructure.security.residency.apac]
-description = "ap-southeast-1"
-label = "Ασία-Ειρηνικός"
-
-[portal.infrastructure.security.residency.eu]
-description = "eu-west-1 · GDPR data boundary"
-label = "Ευρωπαϊκή Ένωση"
-
-[portal.infrastructure.security.residency.us]
-description = "us-east-1 · us-west-2"
-label = "Ηνωμένες Πολιτείες"
-
-[portal.infrastructure.security.residencyHeader]
-heading = "Παραμονή δεδομένων"
-subheading = "Πού αποθηκεύονται και επεξεργάζονται τα έγγραφα."
-
-[portal.infrastructure.storage]
-gbValue = "{{value}} GB"
-percentUsed = "{{value}} χρησιμοποιήθηκε"
-
-[portal.infrastructure.storage.empty]
-description = "Η συνδεδεμένη αποθήκευση και η χρήση εμφανίζονται εδώ."
-title = "Δεν έχει διαμορφωθεί αποθήκευση"
-
-[portal.infrastructure.storage.lifecycle]
+[portal.infrastructure.keyLabel]
 active = "Ενεργό"
-activeRange = "0–{{value}}d"
-archived = "Αρχειοθετημένο"
-coldStorage = "cold storage"
-deleted = "Διαγραμμένο"
-never = "ποτέ"
-purged = "εκκαθαρίστηκε"
-
-[portal.infrastructure.storage.providers]
-connect = "Σύνδεση"
-connected = "Συνδεδεμένο"
-heading = "Συνδεδεμένοι πάροχοι"
-subheading = "Πού γράφονται τα επεξεργασμένα artifacts."
-
-[portal.infrastructure.storage.retention]
-heading = "Διατήρηση"
-subheading = "Πόσο καιρό διατηρούνται τα artifacts πριν από τη διαγραφή κύκλου ζωής."
-windowLabel = "Προεπιλεγμένο παράθυρο διατήρησης"
-
-[portal.infrastructure.storage.retentionOption]
-days_one = "{{count}} ημέρα"
-days_other = "{{count}} ημέρες"
-never = "Να μην διαγράφεται ποτέ"
-
-[portal.infrastructure.storage.totalUsage]
-heading = "Συνολική χρήση"
-progressLabel = "Χρησιμοποιημένη αποθήκευση"
-subheading = "Αποθήκευση που καταναλώνεται σε όλους τους συνδεδεμένους παρόχους."
+revoked = "Ανακλημένο"
 
 [portal.infrastructure.tabs]
 apiKeys = "API Keys"
@@ -7174,6 +7772,49 @@ models = "Μοντέλα"
 security = "Ασφάλεια"
 storage = "Αποθήκευση"
 
+[portal.integrations]
+availableHeading = "Διαθέσιμες"
+comingSoonHeading = "Προσεχώς"
+connect = "Σύνδεση"
+connectionCount_one = "{{count}} σύνδεση"
+connectionCount_other = "{{count}} συνδέσεις"
+customApi = "Προσαρμοσμένο API"
+searchPlaceholder = "Αναζήτηση ενσωματώσεων"
+subtitle = "Όλα με τα οποία μπορεί να επικοινωνήσει το Stirling. Τα διαπιστευτήρια δημιουργούνται μία φορά εδώ και στη συνέχεια αναφέρονται από πηγές, πολιτικές και pipelines."
+title = "Ενσωματώσεις"
+typedName = "Όνομα {{tool}}"
+
+[portal.integrations.filters]
+all = "Όλα"
+audit = "Έλεγχος"
+connected = "Συνδεδεμένες"
+notify = "Ειδοποίηση"
+security = "Ασφάλεια"
+signing = "Υπογραφή"
+storage = "Αποθήκευση"
+
+[portal.integrations.noResults]
+description = "No integrations match your filters. Try a different category or search."
+title = "No matches"
+
+[portal.integrations.status]
+connected = "Συνδεδεμένο"
+
+[portal.integrations.table]
+integration = "Ενσωμάτωση"
+worksWith = "Λειτουργεί με"
+
+[portal.integrations.worksWith]
+pipelines = "Pipelines"
+policies = "Πολιτικές"
+sources = "Πηγές"
+
+[portal.legal]
+draft = "{{label}} · πρόχειρο"
+loadError = "Δεν ήταν δυνατή η φόρτωση αυτού του εγγράφου. Δοκιμάστε ξανά."
+loading = "Φόρτωση…"
+title = "Νομικό έγγραφο"
+
 [portal.nav]
 agent-builder = "Agent Builder"
 components = "Components"
@@ -7182,33 +7823,17 @@ documents = "Έγγραφα"
 editor = "Editor"
 home = "Αρχική"
 infrastructure = "Υποδομή"
+integrations = "Ενσωματώσεις"
 pipelines = "Ροές εργασίας"
 policies = "Πολιτικές"
 procurement = "Προμήθειες"
-settings = "Ρυθμίσεις"
 sources = "Πηγές"
 usage = "Χρήση & Χρέωση"
 users = "Χρήστες"
 
-[portal.notifications]
-markAllRead = "Σήμανση όλων ως αναγνωσμένων"
-title = "Ειδοποιήσεις"
-viewAll = "Προβολή όλων"
-
-[portal.notifications.ariaLabel]
-none = "Ειδοποιήσεις, καμία μη αναγνωσμένη"
-unread_one = "Ειδοποιήσεις, {{count}} μη αναγνωσμένη"
-unread_other = "Ειδοποιήσεις, {{count}} μη αναγνωσμένες"
-
-[portal.notifications.count]
-allRead = "όλες αναγνωσμένες"
-loading = "φόρτωση"
-new_one = "{{count}} νέα"
-new_other = "{{count}} νέες"
-
-[portal.notifications.empty]
-description = "Δεν υπάρχουν νέες ειδοποιήσεις."
-title = "Είστε ενήμεροι"
+[portal.nav.section]
+platform = "PDF Platform"
+processor = "PDF Processor"
 
 [portal.pipelines]
 subtitle = "Κάθε αυτοματοποιημένη ροή εργασίας εγγράφων στο backend: μια διατεταγμένη αλυσίδα λειτουργιών πάνω σε ένα σύνολο πηγών, που εκτελείται με trigger. Κάντε κλικ σε μια γραμμή για τα βήματα και τις πηγές της."
@@ -7218,53 +7843,86 @@ title = "Ροές εργασίας"
 newPipeline = "Νέα ροή εργασίας"
 
 [portal.pipelines.builder]
-addStep = "Προσθήκη εργαλείου"
+activate = "Activate"
 back = "Πίσω στις ροές εργασίας"
+cannotFollow = "Δεν μπορεί να δεχτεί {{produced}}"
+chooseAccount = "Επιλέξτε λογαριασμό"
+chooseDestination = "Επιλέξτε προορισμό"
+chooseOperation = "Επιλέξτε τι κάνει αυτό το βήμα"
+chooseSource = "Επιλέξτε πηγή"
 discard = "Απόρριψη αλλαγών"
-enabled = "Ενεργό"
+inputs = "Είσοδος"
+inputSource = "Πηγή εισόδου"
+inputTrigger = "Trigger"
 keepEditing = "Συνέχιση επεξεργασίας"
-needsUpload = "Χρειάζεται μεταφορτωμένο αρχείο"
+moreActions = "More actions"
+needsConfiguring = "Χρειάζεται ρύθμιση"
+needsDestination = "No destination chosen"
+needsSource = "No source chosen"
 noToolMatches = "Κανένα εργαλείο δεν ταιριάζει στην αναζήτησή σας."
-pipelineSettings = "Ρυθμίσεις ροής εργασίας"
+pause = "Pause"
+rename = "Rename pipeline"
 searchTools = "Αναζήτηση εργαλείων"
-selectToolBody = "Προσθέστε ένα εργαλείο για να δημιουργήσετε τη ροή εργασίας σας."
-selectToolTitle = "Δεν υπάρχουν εργαλεία ακόμα"
-toolSettings = "Ρυθμίσεις εργαλείου"
+sendToSystem = "Αποστολή σε άλλο σύστημα"
+stepsIncompatible = "Αυτά τα βήματα δεν μπορούν να εκτελεστούν σε αυτό που παράγει το προηγούμενο βήμα τους: {{tools}}."
+stepsNeedSetup = "Αυτά τα βήματα χρειάζονται ακόμα ρύθμιση πριν από την αποθήκευση: {{tools}}."
+supportingFiles = "Supporting files"
+testRun = "Test with a file"
 unknownStep = "Μη αναγνωρισμένη λειτουργία, διατηρήθηκε ως έχει."
 unsavedBody = "Έχετε μη αποθηκευμένες αλλαγές. Αποθηκεύστε τις πριν φύγετε ή απορρίψτε τις;"
 unsavedTitle = "Μη αποθηκευμένες αλλαγές"
-uploadUnsupported = "Τα μεταφορτωμένα αρχεία δεν υποστηρίζονται ακόμα στις ροές εργασίας, επομένως αυτά τα βήματα δεν μπορούν να αποθηκευτούν: {{tools}}."
 usesDefaults = "Εκτελείται με προεπιλεγμένες ρυθμίσεις"
+viewDefinition = "View definition"
+
+[portal.pipelines.builder.blocker]
+destination = "Choose a destination"
+heading = "To create this pipeline:"
+incompatible = "Fix steps that can't run in order: {{tools}}"
+name = "Give the pipeline a name"
+saveHeading = "To save your changes:"
+schedule = "Set how often it runs"
+setup = "Finish setting up: {{tools}}"
+source = "Choose an input source"
+
+[portal.pipelines.builder.diagnostic]
+fan-in = "Συνδυάζει κάθε αρχείο από το προηγούμενο βήμα"
+fan-out = "Εκτελείται μία φορά ανά αρχείο από το προηγούμενο βήμα"
+format-mismatch = "Χρειάζεται {{accepts}}, αλλά το προηγούμενο βήμα παράγει {{produced}}"
+output-uncertain = "Ενδέχεται να μην εκτελεστεί: η έξοδος του προηγούμενου βήματος εξαρτάται από τον τρόπο ρύθμισής του"
+source-mismatch = "Χρειάζεται {{accepts}}, αλλά η είσοδος αυτού του pipeline είναι {{produced}}"
+undeclared-operation = "Δεν μπορεί να ελεγχθεί τι δέχεται αυτό το βήμα"
 
 [portal.pipelines.composer]
 addTool = "Προσθήκη εργαλείου"
-cancel = "Ακύρωση"
-chainEmpty = "Προσθέστε ένα εργαλείο για να αρχίσετε να δημιουργείτε τη ροή εργασίας σας."
 create = "Δημιουργία ροής εργασίας"
-directory = "Φάκελος εξόδου"
-directoryHelp = "Απόλυτη διαδρομή στον server. Πρέπει να βρίσκεται μέσα στους διαμορφωμένους επιτρεπόμενους φακέλους."
+createPaused = "Create paused"
 editingUnsupported = "Η εμφάνιση αυτών των παραμέτρων εργαλείου για επεξεργασία δεν υποστηρίζεται ακόμα."
-moveDown = "Μετακίνηση κάτω"
-moveUp = "Μετακίνηση πάνω"
+editSource = "Edit source"
 name = "Όνομα"
 namePlaceholder = "π.χ. Redaction sweep"
-noSources = "Δεν έχουν συνδεθεί πηγές ακόμα. Η ροή εργασίας μπορεί ακόμα να εκτελείται σε αρχεία που παρέχονται απευθείας σε αυτήν."
 noToolSettings = "Αυτό το εργαλείο δεν έχει διαμορφώσιμες ρυθμίσεις."
-operations_one = "Λειτουργία ({{count}})"
-operations_other = "Λειτουργίες ({{count}})"
 output = "Έξοδος"
-removeStep = "Αφαίρεση λειτουργίας"
 save = "Αποθήκευση αλλαγών"
 scheduleEvery = "Εκτέλεση κάθε"
-sources = "Πηγές"
-sourcesLoading = "Φόρτωση πηγών..."
 trigger = "Trigger"
 triggerManual = "Μόνο χειροκίνητα"
+
+[portal.pipelines.composer.runsEvery]
+days_one = "Runs every day"
+days_other = "Runs every {{count}} days"
+hours_one = "Runs every hour"
+hours_other = "Runs every {{count}} hours"
+minutes_one = "Runs every minute"
+minutes_other = "Runs every {{count}} minutes"
 
 [portal.pipelines.composer.unit]
 days = "ημέρες"
 hours = "ώρες"
 minutes = "λεπτά"
+
+[portal.pipelines.definition]
+subtitle = "The pipeline as it would be saved."
+title = "Definition"
 
 [portal.pipelines.delete]
 body = "Διαγραφή του \"{{name}}\"; Αυτό δεν μπορεί να αναιρεθεί."
@@ -7273,28 +7931,62 @@ confirm = "Διαγραφή"
 title = "Διαγραφή ροής εργασίας;"
 
 [portal.pipelines.detail]
+clearHistory = "Εκκαθάριση ιστορικού"
 delete = "Διαγραφή ροής εργασίας"
 run = "Εκτέλεση τώρα"
 
 [portal.pipelines.empty]
 action = "Δημιουργία ροής εργασίας"
+connectSource = "Σύνδεση πηγής"
 description = "Δημιουργήστε την πρώτη σας ροή εργασίας: επιλέξτε τις πηγές πάνω στις οποίες εκτελείται, συνδέστε τις λειτουργίες σε αλυσίδα και επιλέξτε πού πηγαίνει η έξοδος."
 title = "Δεν υπάρχουν ροές εργασίας ακόμα"
+
+[portal.pipelines.graph]
+addFirstTool = "Add a tool"
+dragHint = "Drop on a line to move it"
+insertHere = "Add a tool here"
+removeNode = "Remove {{name}}"
+showError = "Show why {{name}} failed"
+
+[portal.pipelines.graph.add]
+input = "Add a source"
+output = "Add a destination"
+
+[portal.pipelines.graph.run]
+done = "Done"
+failed = "Failed"
+running = "Running"
+
+[portal.pipelines.inspector]
+multipleBody = "Drag any of them onto a line to move them together, or press Delete to remove them."
+multipleSelected_one = "{{count}} step selected"
+multipleSelected_other = "{{count}} steps selected"
+noSelectionBody = "Pick a node in the graph to change what it does."
+noSelectionTitle = "Nothing selected"
+
+[portal.pipelines.inspector.status]
+completed_one = "Finished the only step"
+completed_other = "Finished all {{count}} steps"
+failed_one = "Failed on the only step"
+failed_other = "Failed after {{done}} of {{count}} steps"
+running_one = "Running the only step"
+running_other = "Running step {{done}} of {{count}}"
 
 [portal.pipelines.kpi]
 active = "Ενεργές"
 paused = "Σε παύση"
 total = "Ροές εργασίας"
 
-[portal.pipelines.output]
-folder = "Εγγραφή σε φάκελο"
-inline = "Επιστροφή αρχείων"
-
 [portal.pipelines.run]
+allProcessed_one = "Δεν υπάρχει τίποτα για εκτέλεση: το {{count}} έγγραφο της πηγής έχει ήδη υποβληθεί σε επεξεργασία."
+allProcessed_other = "Δεν υπάρχει τίποτα για εκτέλεση: όλα τα {{count}} έγγραφα στις πηγές έχουν ήδη υποβληθεί σε επεξεργασία."
 completed_one = "Η εκτέλεση ολοκληρώθηκε."
 completed_other = "Και οι {{count}} εκτελέσεις ολοκληρώθηκαν."
 empty = "Δεν υπάρχει τίποτα για εκτέλεση: οι πηγές δεν είχαν έγγραφα για επεξεργασία."
 failed = "Η εκτέλεση απέτυχε: {{error}}"
+inFlight = "Δεν υπάρχει κάτι νέο για εκτέλεση: τα έγγραφα εξακολουθούν να επεξεργάζονται από προηγούμενη εκτέλεση."
+parked_one = "Δεν υπάρχει τίποτα για εκτέλεση: {{count}} έγγραφο απέτυχε προηγουμένως και έχει τεθεί σε αναμονή. Διορθώστε την αιτία και έπειτα εκκαθαρίστε το ιστορικό για να το δοκιμάσετε ξανά."
+parked_other = "Δεν υπάρχει τίποτα για εκτέλεση: {{count}} έγγραφα απέτυχαν προηγουμένως και έχουν τεθεί σε αναμονή. Διορθώστε την αιτία και έπειτα εκκαθαρίστε το ιστορικό για να τα δοκιμάσετε ξανά."
 running = "Η εκτέλεση ξεκίνησε· βρίσκεται ακόμα σε εξέλιξη."
 timeout = "Η εκτέλεση διαρκεί περισσότερο από το αναμενόμενο· μπορεί ακόμα να ολοκληρωθεί στο παρασκήνιο."
 
@@ -7307,6 +7999,7 @@ name = "Ροή εργασίας"
 sources = "Πηγές"
 status = "Κατάσταση"
 steps = "Βήματα"
+trigger = "Trigger"
 
 [portal.pipelines.trigger]
 folder-watch = "Παρακολούθηση φακέλου"
@@ -7314,12 +8007,18 @@ manual = "Χειροκίνητο"
 schedule = "Προγραμματισμένο"
 
 [portal.policies]
+defaultName = "Πολιτική {{category}}"
 subtitle = "Μόνιμοι αυτοματισμοί που επιβάλλουν μια ροή εργασίας εργαλείων σε κάθε έγγραφο. Κάθε πολιτική ενεργοποιείται κατά τη μεταφόρτωση ή την εξαγωγή, εκτελεί την αλυσίδα εργαλείων της και αποθηκεύει την επιβεβλημένη έκδοση μαζί με το πρωτότυπο."
 title = "Πολιτικές"
 
 [portal.policies.card]
 comingSoon = "Αναβάθμιση σε Enterprise"
 notSetUp = "Δεν έχει ρυθμιστεί"
+requiresAiEngine = "Απαιτεί AI engine"
+
+[portal.policies.categories.classification]
+desc = "Αναγνωρίστε τον τύπο κάθε εγγράφου κατά τη μεταφόρτωση και προσθέστε ετικέτες στα μεταδεδομένα του για αρχειοθέτηση και αναζήτηση."
+label = "Ταξινόμηση"
 
 [portal.policies.categories.compliance]
 desc = "Επιβάλλετε απαιτήσεις HIPAA, GDPR, SOC 2 ή FedRAMP σε κάθε έγγραφο."
@@ -7343,6 +8042,13 @@ label = "Ασφάλεια"
 
 [portal.policies.config]
 scopeAll = "Όλα τα έγγραφα"
+
+[portal.policies.config.classification]
+summary = "Ταξινομεί κάθε μεταφορτωμένο έγγραφο με βάση τις ετικέτες της ομάδας σας και προσθέτει ετικέτες στα μεταδεδομένα του."
+
+[portal.policies.config.classification.rules]
+0 = "Ταξινόμηση"
+1 = "Προσθήκη ετικέτας στα μεταδεδομένα"
 
 [portal.policies.config.compliance]
 summary = "Επικυρώνει έγγραφα έναντι κανονιστικών πλαισίων πριν φύγουν από το σύστημα."
@@ -7370,6 +8076,29 @@ minConfidence = "Ελάχιστη βεβαιότητα"
 1 = "Εξαγωγή"
 2 = "Ονομασία"
 3 = "Κανονικοποίηση"
+
+[portal.policies.config.purview]
+label = "Εφαρμογή ετικέτας ευαισθησίας Microsoft Purview"
+
+[portal.policies.config.purview.fields]
+connection = "Purview tenant"
+labelId = "Label ID"
+labelIdHelp = "Το GUID της ετικέτας, από το portal Purview. Η εφαρμογή ετικέτας γράφει τα μεταδεδομένα της στο PDF· δεν μπορεί να κρυπτογραφήσει, κάτι που απαιτεί τον Microsoft client."
+labelName = "Όνομα ετικέτας (προαιρετικό)"
+labelNameHelp = "Καταγράφεται μαζί με το ID ώστε οι χρήστες και τα εργαλεία να μπορούν να αναγνωρίζουν την ετικέτα."
+
+[portal.policies.config.purview.fields.method]
+help = "Το Purview διακρίνει μια ετικέτα που εφαρμόστηκε από πολιτική από μία που επέλεξε κάποιος χρήστης."
+label = "Πώς καταγράφεται η ετικέτα"
+privileged = "Ως επιλεγμένη από χρήστη"
+standard = "Ως εφαρμοσμένη αυτόματα"
+
+[portal.policies.config.purviewRead]
+label = "Ανάγνωση ετικέτας Microsoft Purview"
+
+[portal.policies.config.purviewRead.fields]
+connection = "Purview tenant"
+connectionHelp = "Διαβάζει την ετικέτα που φέρει ήδη το έγγραφο, ώστε τα επόμενα βήματα να μπορούν να ενεργήσουν βάσει αυτής."
 
 [portal.policies.config.retention]
 summary = "Επιβάλλει πόσο καιρό διατηρούνται τα έγγραφα, πότε αρχειοθετούνται και πότε διαγράφονται."
@@ -7438,6 +8167,7 @@ title = "Δεν υπάρχει ακόμη δραστηριότητα"
 [portal.policies.endpoints]
 addWatermark = "Υδατογράφημα"
 autoRedact = "Απόκρυψη PII"
+classifyAndLabel = "Ταξινόμηση"
 compressPdf = "Συμπίεση"
 flatten = "Επιπεδοποίηση"
 ocrPdf = "OCR"
@@ -7447,6 +8177,201 @@ sanitizePdf = "Αφαίρεση JavaScript"
 description = "Οι πολιτικές σας αποθηκεύτηκαν και θα εμφανιστούν μόλις αποκατασταθεί η σύνδεση."
 retry = "Επανάληψη"
 title = "Το Backend δεν είναι διαθέσιμο"
+
+[portal.policies.operations]
+change = "Αλλαγή του τι κάνει αυτό το βήμα"
+noResults = "Κανένα βήμα δεν ταιριάζει με αυτό. Δοκιμάστε ένα όνομα προϊόντος ή \"scan\", \"notify\", \"attach\"."
+searchPlaceholder = "Αναζήτηση βημάτων - δοκιμάστε \"scan\", \"attach\" ή ένα όνομα προϊόντος"
+
+[portal.policies.operations.bodyMode]
+binary = "Ακατέργαστα bytes αρχείου"
+json = "Μέσα σε JSON payload"
+multipart = "Ως μεταφόρτωση αρχείου (multipart)"
+
+[portal.policies.operations.clamavScan]
+description = "Ο δικός σας ClamAV server ελέγχει το έγγραφο· τίποτα δεν φεύγει από το δίκτυό σας."
+label = "Σάρωση για ιούς (self-hosted)"
+
+[portal.policies.operations.cloudmersiveAdvancedScan]
+description = "Απορρίπτει έγγραφα που περιέχουν macros, εκτελέσιμα, scripts ή ενσωματωμένα αντικείμενα."
+label = "Αποκλεισμός ενεργού περιεχομένου"
+
+[portal.policies.operations.cloudmersiveScan]
+description = "Το Cloudmersive ελέγχει το έγγραφο και η εκτέλεση σταματά αν δεν είναι καθαρό."
+label = "Σάρωση για ιούς"
+
+[portal.policies.operations.confluenceAttach]
+description = "Αρχειοθετεί το επεξεργασμένο έγγραφο σε μια σελίδα."
+label = "Επισύναψη σε σελίδα Confluence"
+
+[portal.policies.operations.consignoSubmit]
+description = "Υποβάλλει το έγγραφο στο ConsignO Cloud για υπογραφή."
+label = "Αποστολή για υπογραφή (ConsignO)"
+note = "Υποβάλλει το έγγραφο. Η ανάκτηση του υπογεγραμμένου αντιγράφου δεν υποστηρίζεται ακόμα, επειδή ένα βήμα δεν μπορεί να περάσει αποτέλεσμα σε επόμενο βήμα."
+
+[portal.policies.operations.customApiCall]
+description = "Συντάξτε την κλήση μόνοι σας: path, method, body και διαχείριση απόκρισης."
+label = "Κλήση προσαρμοσμένου API"
+
+[portal.policies.operations.discordNotify]
+description = "Ενημερώνει ένα κανάλι ότι η πολιτική χειρίστηκε ένα έγγραφο."
+label = "Δημοσίευση μηνύματος στο Discord"
+
+[portal.policies.operations.elasticIndex]
+description = "Καταγράφει αυτό που έκανε η πολιτική ως έγγραφο με δυνατότητα αναζήτησης."
+label = "Ευρετηρίαση συμβάντος ελέγχου στο Elasticsearch"
+
+[portal.policies.operations.fields.bodyMode]
+helperText = "Το multipart ταιριάζει σε upload APIs· το JSON ταιριάζει σε APIs που θέλουν το αρχείο μέσα σε payload· το binary στέλνει τα ακατέργαστα bytes."
+label = "Πώς να σταλεί το έγγραφο"
+
+[portal.policies.operations.fields.bodyTemplate]
+helperText = "Ένα JSON body που αποστέλλεται ως έχει. Το {{document.base64}} μεταφέρει το αρχείο· τα {{document.*}} και {{run.*}} συμπληρώνονται ανά έγγραφο."
+label = "JSON body"
+
+[portal.policies.operations.fields.connection]
+label = "Λογαριασμός"
+
+[portal.policies.operations.fields.domain]
+label = "Mailgun domain"
+placeholder = "mg.acme.com"
+
+[portal.policies.operations.fields.fileFieldName]
+helperText = "Το πεδίο φόρμας κάτω από το οποίο το API αναμένει το έγγραφο."
+label = "Όνομα πεδίου αρχείου"
+placeholder = "file"
+
+[portal.policies.operations.fields.from]
+label = "Από"
+placeholder = "processor@acme.com"
+
+[portal.policies.operations.fields.headers]
+helperText = "Ένα JSON object με ζεύγη ονόματος/τιμής header. Το διαπιστευτήριο της σύνδεσης προστίθεται για εσάς."
+label = "Headers"
+
+[portal.policies.operations.fields.index]
+label = "Index"
+placeholder = "stirling-audit"
+
+[portal.policies.operations.fields.issueKey]
+label = "Κλειδί ζητήματος"
+placeholder = "OPS-42"
+
+[portal.policies.operations.fields.message]
+helperText = "Αποστέλλεται ως σώμα μηνύματος. Τα {{document.*}} και {{run.*}} συμπληρώνονται ανά έγγραφο."
+label = "Μήνυμα"
+
+[portal.policies.operations.fields.method]
+label = "Method"
+
+[portal.policies.operations.fields.pageId]
+label = "Page ID"
+placeholder = "66186"
+
+[portal.policies.operations.fields.path]
+helperText = "Προστίθεται στο base URL της σύνδεσης. Δεν μπορεί ποτέ να φτάσει σε άλλον host."
+label = "Path"
+placeholder = "/v1/scan"
+
+[portal.policies.operations.fields.remotePath]
+helperText = "Πού στο drive να γραφτεί. Το {{document.filename}} συμπληρώνεται ανά έγγραφο."
+label = "Διαδρομή προορισμού"
+placeholder = "Processed/{{document.filename}}"
+
+[portal.policies.operations.fields.responseMode]
+helperText = "Η αναφορά αφήνει το έγγραφο ανέπαφο. Η αντικατάσταση το ανταλλάσσει με ό,τι επιστρέφεται."
+label = "Τι να γίνει με την απάντηση"
+
+[portal.policies.operations.fields.signerEmail]
+label = "Email υπογράφοντος"
+placeholder = "signer@acme.com"
+
+[portal.policies.operations.fields.subject]
+label = "Θέμα"
+placeholder = "Processed: {{document.filename}}"
+
+[portal.policies.operations.fields.text]
+helperText = "Το Presidio αναλύει αυτό το κείμενο. Χρησιμοποιήστε {{document.title}} ή επικολλήστε το κείμενο που θέλετε να ελεγχθεί."
+label = "Κείμενο προς έλεγχο"
+
+[portal.policies.operations.fields.to]
+label = "Προς"
+placeholder = "records@acme.com"
+
+[portal.policies.operations.fields.username]
+label = "Όνομα χρήστη Nextcloud"
+placeholder = "svc-stirling"
+
+[portal.policies.operations.googlechatNotify]
+description = "Ενημερώνει έναν χώρο ότι η πολιτική χειρίστηκε ένα έγγραφο."
+label = "Δημοσίευση μηνύματος στο Google Chat"
+
+[portal.policies.operations.jiraAttach]
+description = "Αρχειοθετεί το επεξεργασμένο έγγραφο σε ένα ζήτημα."
+label = "Επισύναψη σε ζήτημα Jira"
+
+[portal.policies.operations.mailgunEmail]
+description = "Στέλνει το επεξεργασμένο έγγραφο ως συνημμένο."
+label = "Αποστολή του εγγράφου με email (Mailgun)"
+
+[portal.policies.operations.n8nGate]
+description = "Your workflow decides whether the run carries on."
+label = "Ask an n8n workflow to approve"
+note = "The workflow must reply with {\"approved\": true}. Anything else — including a timeout — stops the run and parks the document."
+
+[portal.policies.operations.n8nNotify]
+description = "Sends the run's details, not the document."
+label = "Tell an n8n workflow"
+
+[portal.policies.operations.n8nSend]
+description = "Sends the document and the run's details to your workflow."
+label = "Send the document to n8n"
+
+[portal.policies.operations.n8nTransform]
+description = "Your workflow processes the document and the file it returns replaces it."
+label = "Process the document in n8n"
+note = "Set the Webhook node to respond \"Using Respond to Webhook Node\", and return a file. On the default \"Immediately\" setting n8n replies with an acknowledgement, and that would replace the document."
+
+[portal.policies.operations.nextcloudUpload]
+description = "Γράφει το επεξεργασμένο έγγραφο σε έναν φάκελο."
+label = "Μεταφόρτωση στο Nextcloud"
+
+[portal.policies.operations.presidioAnalyze]
+description = "Ο δικός σας Presidio server αναφέρει τα προσωπικά δεδομένα που βρίσκει."
+label = "Εντοπισμός προσωπικών δεδομένων"
+note = "Το Presidio διαβάζει κείμενο, όχι αρχεία. Δώστε του το κείμενο που θέλετε να ελεγχθεί — το ίδιο το έγγραφο δεν μεταφορτώνεται."
+
+[portal.policies.operations.responseMode]
+replace = "Αντικατάσταση του εγγράφου με την απάντηση"
+report = "Διατήρηση του εγγράφου, καταγραφή της απάντησης"
+
+[portal.policies.operations.sendgridEmail]
+description = "Στέλνει το επεξεργασμένο έγγραφο ως συνημμένο."
+label = "Αποστολή του εγγράφου με email (SendGrid)"
+
+[portal.policies.operations.slackNotify]
+description = "Ενημερώνει ένα κανάλι ότι η πολιτική χειρίστηκε ένα έγγραφο."
+label = "Δημοσίευση μηνύματος στο Slack"
+
+[portal.policies.operations.splunkEvent]
+description = "Καταγράφει αυτό που έκανε η πολιτική, εκεί όπου ήδη αναζητούν οι ελεγκτές σας."
+label = "Αποστολή συμβάντος ελέγχου στο Splunk"
+
+[portal.policies.operations.sumologicEvent]
+description = "Καταγράφει αυτό που έκανε η πολιτική σε έναν HTTP collector."
+label = "Αποστολή συμβάντος ελέγχου στο Sumo Logic"
+
+[portal.policies.operations.teamsNotify]
+description = "Ενημερώνει ένα κανάλι ότι η πολιτική χειρίστηκε ένα έγγραφο."
+label = "Δημοσίευση μηνύματος στο Teams"
+
+[portal.policies.operations.webhookPost]
+description = "Στέλνει το ίδιο το έγγραφο σε ένα URL που επιλέγετε."
+label = "Δημοσίευση του εγγράφου σε webhook"
+
+[portal.policies.operations.zapierNotify]
+description = "Παραδίδει τις λεπτομέρειες της εκτέλεσης στον αυτοματισμό σας."
+label = "Trigger ενός Zap ή Make scenario"
 
 [portal.policies.stats]
 activeFor = "Ενεργό"
@@ -7473,12 +8398,23 @@ label = "Έγγραφα που επιβλήθηκαν"
 description = "Διαμορφωμένες αλλά δεν ενεργοποιούνται"
 label = "Σε παύση"
 
+[portal.policies.table]
+appliesTo = "Ισχύει για"
+docs = "Έγγραφα επιβληθέντα"
+enforces = "Επιβάλλει"
+policy = "Πολιτική"
+status = "Κατάσταση"
+
 [portal.policies.wizard.actions]
 back = "Πίσω"
 cancel = "Ακύρωση"
 continue = "Συνέχεια"
 enablePolicy = "Ενεργοποίηση πολιτικής"
 saveChanges = "Αποθήκευση αλλαγών"
+
+[portal.policies.wizard.capability.classify]
+desc = "Αναγνωρίζει τον τύπο του εγγράφου από τις ετικέτες της ομάδας σας και το επισημαίνει, ώστε να αρχειοθετείται και να αναζητείται ανά κατηγορία."
+label = "Ταξινόμηση του εγγράφου"
 
 [portal.policies.wizard.capability.compress]
 desc = "Συμπιέζει το έγγραφο σε μικρότερο μέγεθος αρχείου."
@@ -7500,9 +8436,17 @@ label = "Απόκρυψη ευαίσθητων πληροφοριών"
 desc = "Αφαιρεί κρυφό JavaScript ώστε τίποτα να μην μπορεί να εκτελεστεί αυτόματα όταν ανοίγει το έγγραφο."
 label = "Αφαίρεση ενεργού περιεχομένου"
 
+[portal.policies.wizard.capability.timestampPdf]
+desc = "Αποδεικνύει ότι το έγγραφο υπήρχε σε αυτήν ακριβώς τη μορφή σε μια συγκεκριμένη χρονική στιγμή, χρησιμοποιώντας ανεξάρτητη αρχή χρονοσήμανσης. Αποστέλλεται μόνο ένα hash - το έγγραφο δεν φεύγει ποτέ από τον server σας."
+label = "Προσθήκη αξιόπιστης χρονοσήμανσης"
+
 [portal.policies.wizard.capability.watermark]
 desc = "Τοποθετεί ένα ορατό σημάδι (π.χ. «Εμπιστευτικό») σε κάθε σελίδα."
 label = "Εφαρμογή υδατογραφήματος"
+
+[portal.policies.wizard.classification]
+description = "Κάθε μεταφορτωμένο έγγραφο ταξινομείται με βάση τις ενσωματωμένες ετικέτες και επισημαίνεται με τους τύπους που ταιριάζουν. Το σύνολο ετικετών είναι κοινό για όλη την ομάδα σας."
+labelsHeading = "Ετικέτες ταξινόμησης"
 
 [portal.policies.wizard.errors]
 noTools = "Ενεργοποιήστε πρώτα τουλάχιστον ένα εργαλείο στη ροή εργασίας."
@@ -7548,73 +8492,118 @@ setUp = "Ρύθμιση πολιτικής {{category}}"
 [portal.policies.wizard.workflow]
 description = "Επιλέξτε τι κάνει αυτή η πολιτική σε κάθε έγγραφο που επεξεργάζεται."
 
-[portal.policySummary]
-activeSummary = "{{active}} / {{total}} ενεργές"
-noRule = "Δεν έχει επιβληθεί ακόμη κανόνας"
-subtitle = "Μόνιμοι αυτοματισμοί από τους οποίους περνά κάθε έγγραφο, ανεξάρτητα από το ποιο pipeline το χειρίζεται."
-title = "Τι εκτελείται στα PDF σας"
-
 [portal.policySummary.action]
-comingSoon = "Αναβάθμιση σε Enterprise"
-configure = "Διαμόρφωση"
 setUp = "Ρύθμιση"
 
-[portal.policySummary.column]
-activeRule = "Ενεργός κανόνας"
-policy = "Πολιτική"
-status = "Κατάσταση"
+[portal.processorFlow]
+footnote = "Οι μετρήσεις αφορούν τις τελευταίες 24 ώρες. Η ταχύτητα ροής είναι ενδεικτική."
+liveBadge = "Live"
+stats = "{{connected}} συνδεδεμένα · {{processed}} PDF επεξεργασμένα"
+title = "PDF Processor"
 
-[portal.policySummary.empty]
-description = "Μόλις διαμορφωθούν οι πολιτικές, οι κατηγορίες θα εμφανιστούν εδώ."
-title = "Δεν υπάρχουν ακόμη πολιτικές"
+[portal.processorFlow.lens]
+ariaLabel = "Λειτουργία προβολής"
+flow = "Ροή"
+sankey = "Sankey"
 
-[portal.policySummary.state]
-active = "Ενεργό"
-off = "Ανενεργό"
+[portal.processorFlow.outcomes]
+count = "{{n}} · 24h"
+failed = "Απέτυχαν"
+heading = "Αποτελέσματα"
+success = "Παραδόθηκαν"
+
+[portal.processorFlow.policies]
+activeCount = "{{n}} ενεργές"
+count = "{{n}} · 24h"
+heading = "Πολιτικές"
+setUp = "Ρύθμιση"
 soon = "Σύντομα"
 
-[portal.processingStatus]
-managePlan = "Διαχείριση πλάνου"
-volumeSuffix = "PDF που επεξεργάστηκαν · τελευταίες 30 ημέρες"
+[portal.processorFlow.sankey]
+waist = "Πολιτικές · {{n}} ενεργές"
+
+[portal.processorFlow.sankey.empty]
+description = "Συνδέστε μια πηγή και ενεργοποιήστε μια πολιτική για να παρακολουθήσετε τα έγγραφα να ρέουν μέσω του processor."
+title = "Δεν υπάρχει ροή ακόμα"
+
+[portal.processorFlow.sources]
+comingSoonTag = "Σύνδεση"
+editor = "Stirling PDF Editor"
+heading = "Πηγές"
+perDay = "{{n}} / 24h"
+
+[portal.processorFlow.sources.comingSoon]
+apiMcp = "API · MCP"
+cloud = "Drive · Box · S3"
+email = "Λήψη email"
 
 [portal.procurement]
-reset = "Επαναφορά προμηθειών (demo)"
 subtitle = "Αξιολογήστε, συμβασιοποιήστε και εντάξτε την ομάδα σας. Κάθε έγγραφο σε ένα μέρος."
 title = "Προμήθειες"
 
-[portal.procurement.action]
-download = "Λήψη"
-pay = "Πληρωμή τώρα"
-request = "Αίτημα"
-sign = "Έλεγχος & υπογραφή"
-upload = "Μεταφόρτωση"
-
 [portal.procurement.agreement]
 agreeCta = "Συμφωνία & συνδρομή"
+confidential = "Εμπιστευτικό"
 confirm = "Έχω διαβάσει και συμφωνώ με τη Stirling Enterprise Agreement."
-eyebrow = "Σύμβαση"
-intro = "Μία συνδυασμένη σύμβαση καλύπτει τη συμφωνία σας: Master Service Agreement, Order Form, EULA και Data Processing Agreement. Ελέγξτε τη και μετά συμφωνήστε για να αποδεχτείτε την προσφορά σε δεσμευτική συνδρομή."
-title = "Ελέγξτε την εταιρική σας σύμβαση"
+docName = "Stirling Enterprise Agreement"
+docSub = "MSA, Order Form, EULA και DPA, συνδυασμένα σε μία υπογραφή."
+download = "Λήψη"
+downloadDraftError = "Δεν ήταν δυνατή η δημιουργία του PDF συμφωνίας - ο renderer εγγράφων δεν είναι διαθέσιμος. Δοκιμάστε ξανά σύντομα ή επικοινωνήστε με την υποστήριξη."
+downloadError = "Δεν ήταν δυνατή η λήψη της υπογεγραμμένης συμφωνίας. Δοκιμάστε ξανά."
+legalName = "Όνομα νομικής οντότητας"
+legalNamePlaceholder = "Η νομική οντότητα που θα υπογράψει"
+loadError = "Δεν ήταν δυνατή η φόρτωση της συμφωνίας. Δοκιμάστε ξανά."
+loading = "Φόρτωση της συμφωνίας..."
+ref = "Ref {{ref}} · {{version}}"
+requestChanges = "Αίτημα αλλαγών"
+scrollHint = "Κάντε κύλιση για έλεγχο"
+signatory = "Όνομα υπογράφοντος"
+signatoryPlaceholder = "Πλήρες όνομα"
+signatoryTitle = "Τίτλος υπογράφοντος"
+signatoryTitlePlaceholder = "π.χ. General Counsel"
+signError = "Δεν ήταν δυνατή η καταγραφή της υπογραφής σας. Δοκιμάστε ξανά."
 
 [portal.procurement.builder]
 addons = "Πρόσθετα"
+addressLine1 = "Γραμμή διεύθυνσης 1"
+addressLine1Placeholder = "500 Howard St"
+addressLine2 = "Γραμμή διεύθυνσης 2"
+addressLine2Placeholder = "Σουίτα, όροφος, κτίριο"
 back = "Πίσω"
 businessName = "Επωνυμία επιχείρησης"
 businessNamePlaceholder = "Η εταιρεία σας"
+city = "Πόλη"
+cityPlaceholder = "San Francisco"
+completeRequired = "Συμπληρώστε τα απαιτούμενα πεδία (σημειωμένα με *) με έγκυρο email πριν δημιουργήσετε την προσφορά."
+contactEmail = "Email επικοινωνίας"
+contactEmailPlaceholder = "jane@acme.com"
+contactName = "Όνομα επικοινωνίας"
+contactNamePlaceholder = "Jane Doe"
 continue = "Συνέχεια"
-country = "Χώρα"
-countryEuro = "Ευρωζώνη (EUR €)"
-countryUK = "Ηνωμένο Βασίλειο (GBP £)"
-countryUS = "Ηνωμένες Πολιτείες (USD $)"
+done = "Τέλος"
 eula = "Έχω διαβάσει και συμφωνώ με το Stirling Enterprise EULA. Διέπει τη σύμβαση που δημιουργείται από αυτήν την προσφορά."
 generate = "Δημιουργία προσφοράς"
-included = "Περιλαμβάνεται"
 indemnification = "Αποζημίωση IP"
 indemnificationSub = "Υπερασπιζόμαστε επιλέξιμες αξιώσεις IP, σύμφωνα με το EULA"
-offlineLicense = "Offline / air-gapped άδεια"
-offlineLicenseSub = "Ένα αρχείο άδειας με δυνατότητα λήψης για μια air-gapped self-hosted παρουσία"
+paperEyebrow = "Enterprise προσφορά"
+paperFor = "Προετοιμάστηκε για"
+pdfSize = "Μέγεθος PDF"
+poNumber = "Αριθμός PO"
+poNumberPlaceholder = "Προαιρετικό"
+postalCode = "Ταχυδρομικός κώδικας"
+postalCodePlaceholder = "94105"
+posture = "Διακυβέρνηση"
+posture_count = "~{{count}} πολιτικές"
+posture_essentials = "Βασικά"
+posture_essentialsSub = "Ταξινόμηση + Κοινή χρήση — οι προεπιλογές"
+posture_governed = "Με διακυβέρνηση"
+posture_governedSub = "Προσθέτει Ασφάλεια και Δρομολόγηση"
+posture_regulated = "Ρυθμιζόμενο"
+posture_regulatedSub = "Κάθε κατηγορία — Συμμόρφωση, Διατήρηση, Ingestion"
 qbr = "Τριμηνιαίες επιχειρηματικές ανασκοπήσεις"
 qbrSub = "Ο SE σας ανασκοπεί τη χρήση και τον οδικό χάρτη κάθε τρίμηνο"
+region = "Πολιτεία / περιοχή"
+regionPlaceholder = "California"
 running = "{{annual}} / έτος · {{years}} έτη {{tcv}}"
 s1Sub = "Η ομάδα σας και τα PDF που αναμένετε να εκτελείτε κάθε χρόνο."
 s1Title = "Πόσο θα επεξεργάζεστε;"
@@ -7623,6 +8612,12 @@ s2Title = "Δέσμευση και υπηρεσία"
 s3Sub = "Για την προσφορά και τη σύμβαση που δημιουργεί."
 s3Title = "Τα στοιχεία σας"
 serviceLevel = "Επίπεδο υπηρεσίας"
+size_compact = "Συμπαγές"
+size_compactSub = "Κυρίως κείμενο, κάτω από 1 MB"
+size_heavy = "Βαρύ"
+size_heavySub = "Σαρωμένο ή με πολλές εικόνες, 5 MB+"
+size_standard = "Standard"
+size_standardSub = "Μικτό κείμενο και εικόνες, 1 έως 5 MB"
 slDedicated = "Αποκλειστικό"
 slDedicatedSub = "4 εργάσιμες ώρες · αποκλειστικός διαχειριστής λογαριασμού · +30%"
 slPriority = "Προτεραιότητα"
@@ -7630,6 +8625,8 @@ slPrioritySub = "Ίδια εργάσιμη ημέρα · ονομαστικός 
 slStandard = "Τυπικό"
 slStandardSub = "Επόμενη εργάσιμη ημέρα · κοινόχρηστος CSM · περιλαμβάνεται"
 stepOf = "Βήμα {{n}} από {{total}}"
+taxId = "VAT / Tax ID"
+taxIdPlaceholder = "Προαιρετικό"
 term = "Διάρκεια"
 termDiscount = "Εφαρμόστηκε έκπτωση {{pct}}% για πολυετή δέσμευση"
 title = "Δημιουργήστε την προσφορά σας"
@@ -7637,6 +8634,7 @@ training = "Onboarding & εκπαίδευση"
 trainingSub = "Ζωντανές συνεδρίες για να ξεκινήσει η ομάδα σας"
 users = "Σύνολο χρηστών"
 usersPlaceholder = "π.χ. 250"
+viewEula = "Διαβάστε το"
 volEstimated = "Εκτιμήθηκε από {{count}} χρήστες (~2.000 PDF ο καθένας, συμπεριλαμβανομένου του αυτοματισμού). Επεξεργαστείτε το αν γνωρίζετε καλύτερα."
 volManual = "Χρήση του αριθμού σας. Επανεκτιμήστε από το μέγεθος της ομάδας σας οποιαδήποτε στιγμή."
 volNoUsers = "Δεν είστε σίγουροι; Εισαγάγετε το μέγεθος της ομάδας σας και θα το εκτιμήσουμε."
@@ -7645,55 +8643,55 @@ volumePlaceholder = "π.χ. 1.000.000"
 years_one = "{{count}} έτος"
 years_other = "{{count}} έτη"
 
-[portal.procurement.docs]
-count_one = "{{count}} έγγραφο"
-count_other = "{{count}} έγγραφα"
-done = "Ολοκληρώθηκε"
-here = "Είστε εδώ"
-hide = "Απόκρυψη"
-optional = "Προαιρετικό"
-paidAddon = "Πληρωμένο πρόσθετο"
-show = "Εμφάνιση"
-subtitle = "Όλα όσα χρειάζεστε σε κάθε βήμα της διαδρομής, εμφανίζονται καθώς η συμφωνία προχωρά."
-supportingSubtitle = "SOC 2, έλεγχοι ασφαλείας, φορολογικά έντυπα και άλλα, έτοιμα όταν τα ζητήσει η ομάδα ασφάλειας ή προμηθειών σας. Ορισμένα έχουν εφάπαξ χρέωση."
-supportingTitle = "Υποστήριξη της αξιολόγησής σας"
+[portal.procurement.documents]
+agreement = "Enterprise Agreement"
+agreementSub = "MSA, Order Form και DPA σε μία υπογραφή."
+download = "Λήψη"
+eula = "EULA & Εμπορικοί Όροι"
+eulaSub = "Οι εμπορικοί όροι λογισμικού και self-serve."
+invoice = "Τιμολόγιο"
+invoiceSub = "Το πρώτο τιμολόγιο συνδρομής σας."
+laterInvoice = "Διαθέσιμο αφού αποδεχτείτε"
+laterQuote = "Διαθέσιμο μόλις εκδοθεί η προσφορά σας"
+quote = "Προσφορά"
+quoteSub = "Η αναλυτική enterprise προσφορά σας."
+sla = "SLA Exhibit"
+slaSub = "Επίπεδα υποστήριξης και στόχοι απόκρισης."
+subprocessors = "Subprocessors"
+subprocessorsSub = "Τρίτα μέρη που επεξεργάζονται δεδομένα για λογαριασμό σας."
+subtitle = "Τα έγγραφα της συμφωνίας σας, διαθέσιμα ανά πάσα στιγμή."
 title = "Έγγραφα"
-upcoming = "Προσεχώς"
+view = "Προβολή"
 
 [portal.procurement.error]
 title = "Κάτι πήγε στραβά"
 
 [portal.procurement.hero]
-company = "Η εταιρική σας συμφωνία"
+barAria = "Στάδιο {{current}} από {{total}}"
 ctaAgreement = "Έλεγχος & υπογραφή σύμβασης"
-ctaLive = "Είστε live"
-ctaPayment = "Προσθήκη πληρωμής"
+ctaExploring = "Ρύθμιση της δοκιμής σας"
 ctaQuote = "Ελέγξτε την προσφορά σας"
+ctaReviewQuote = "Έλεγχος προσφοράς"
 ctaTrial = "Δημιουργήστε την προσφορά σας"
+documents = "Έγγραφα"
 eyebrow = "Enterprise προμήθειες"
+eyebrowCompany = "{{company}} Enterprise"
 inviteTeammates = "Πρόσκληση συμπαικτών"
-keyDocs = "Βασικά έγγραφα"
-nextStep = "Επόμενο βήμα: {{action}}"
-notStarted = "Δεν ξεκίνησε"
+licenseKey = "Κλειδί άδειας"
+liveSub = "Ο οργανισμός σας έχει provisioned και η άδειά σας είναι ενεργή."
+liveTitle = "Είστε live στο Stirling Enterprise"
+next = "Επόμενο: {{stage}}"
 open = "Άνοιγμα προμηθειών"
 scheduleCall = "Προγραμματισμός κλήσης"
-setup1Sub = "Προσκαλέστε τους συμπαίκτες σας"
-setup1Title = "Αναπτύξτε το PDF Editor"
-setup2Sub = "Ενεργοποιήστε την επεξεργασία σε editors και άλλες πηγές"
-setup2Title = "Συνδέστε το PDF Processor"
-setup3Sub = "Ενεργοποιήστε Security, Compliance, Routing ή Retention όταν τα χρειαστείτε"
-setup3Title = "Προσθήκη προτεινόμενων πολιτικών"
+sentenceAgreement = "ελέγξτε και υπογράψτε τη συμφωνία"
+sentenceLive = "provisioning και rollout"
+sentencePayment = "purchase order και πληρωμή"
+sentenceQuote = "ελέγξτε και αποδεχτείτε την προσφορά σας"
+sentenceTrial = "ρυθμίστε τον δοκιμαστικό χώρο εργασίας σας"
 
 [portal.procurement.journey]
 daysLeft_one = "Απομένει {{count}} ημέρα"
 daysLeft_other = "Απομένουν {{count}} ημέρες"
-engineerLabel = "Ο μηχανικός λύσεών σας"
-eyebrow = "Η διάθεσή σας"
-live = "Είστε live στο Stirling Enterprise"
-nextStep = "Επόμενο βήμα: {{action}}"
-subtitle = "Ο μηχανικός λύσεών σας είναι σε κάθε βήμα. Μία επόμενη ενέργεια τη φορά· η πλήρης λίστα ελέγχου είναι παρακάτω."
-title = "Από τη δοκιμή στο live, μία καθοδηγούμενη διαδρομή"
-trialTitle = "Enterprise δοκιμή"
 
 [portal.procurement.journeySteps.agreement]
 blurb = "Μία υπογραφή καλύπτει MSA, φόρμα παραγγελίας, EULA και DPA."
@@ -7727,6 +8725,9 @@ downloadError = "Δεν ήταν δυνατή η δημιουργία του off
 downloadOffline = "Λήψη offline άδειας (.lic)"
 hint = "Επικολλήστε αυτό το κλειδί σε μια self-hosted παρουσία για να την ενεργοποιήσετε ή κρατήστε το για τα αρχεία σας. Φυλάξτε το με ασφάλεια."
 label = "Το κλειδί άδειάς σας"
+subtitle = "Ενεργοποιήστε μια self-hosted εγκατάσταση με αυτό το κλειδί ή κρατήστε το για τα αρχεία σας."
+title = "Το κλειδί άδειάς σας"
+trialFileHint = "Αυτό είναι το αρχείο δοκιμαστικής άδειάς σας. Μόλις τεθεί σε ισχύ η συμφωνία σας, επιστρέψτε και κατεβάστε το ξανά — σε αντίθεση με το online κλειδί άδειας, το αρχείο .lic δεν θα ενημερωθεί μόνο του."
 
 [portal.procurement.link]
 cta = "Σύνδεση λογαριασμού"
@@ -7739,65 +8740,62 @@ description = "Η συνδρομή σας είναι ενεργή και η άδ
 eyebrow = "Live"
 title = "Είστε live στο Stirling Enterprise"
 
-[portal.procurement.locked]
-description = "Τα δοκιμαστικά κλειδιά, οι προσφορές δεσμευμένου όγκου, η σύμβαση μίας υπογραφής, η πληρωμή και το καθολικό εγγράφων σας βρίσκονται όλα εδώ μόλις ξεκινήσετε μια Enterprise αξιολόγηση."
-eyebrow = "Μόνο Enterprise"
-talkToSales = "Μιλήστε με τις πωλήσεις"
-title = "Η διαδρομή προμηθειών ανοίγει με το Enterprise"
-
 [portal.procurement.milestone]
-accept = "Αποδοχή & συνέχεια"
-description = "Κατεβάστε το PDF για να το μοιραστείτε με την ομάδα σας, επιστρέψτε για αποδοχή όταν είστε έτοιμοι ή κάντε αλλαγές."
-download = "Λήψη PDF"
 downloadError = "Δεν ήταν δυνατή η λήψη του PDF προσφοράς ακόμη — δοκιμάστε ξανά σε λίγο."
-edit = "Επεξεργασία προσφοράς"
-eyebrow = "Προσφορά {{number}}"
-perYear = " / έτος"
-preparedFor = "Ετοιμάστηκε για {{company}}"
-tcv = "{{value}} συνολική αξία σύμβασης"
-title = "Η προσφορά σας είναι έτοιμη"
-
-[portal.procurement.modal]
-cancel = "Ακύρωση"
-chooseFile = "Επιλογή αρχείου"
-close = "Κλείσιμο"
-downloadBody = "Η λήψη σας θα ξεκινήσει σύντομα."
-downloadCta = "Λήψη"
-downloadTitle = "Λήψη"
-noFile = "Δεν επιλέχθηκε αρχείο"
-payBody = "Πληρώστε τη δεσμευμένη σύμβασή σας με κάρτα ή τραπεζική μεταφορά μέσω Stripe. Ο χώρος εργασίας σας παρέχεται μόλις εκκαθαριστεί η πληρωμή."
-payCta = "Συνέχεια στο Stripe"
-payTitle = "Επιβεβαίωση πληρωμής"
-requestBodyFree = "Το δημιουργούμε κατόπιν αιτήματος. Επιβεβαιώστε και ο μηχανικός λύσεών σας θα σας το στείλει σύντομα."
-requestBodyPaid = "Αυτό είναι πληρωμένο πρόσθετο. Επιβεβαιώστε και ο μηχανικός λύσεών σας θα το οριοθετήσει και θα στείλει τα έγγραφα."
-requestCta = "Αίτημα"
-requestTitle = "Αίτημα για αυτό το έγγραφο"
-signBody = "Ανοίγει τη Stirling Enterprise Agreement για ηλεκτρονική υπογραφή: μία υπογραφή καλύπτει το MSA, τη φόρμα παραγγελίας, το EULA και το DPA. Συνυπογράφουμε αυτόματα και προχωράτε στην πληρωμή."
-signCta = "Άνοιγμα για υπογραφή"
-signTitle = "Ελέγξτε και υπογράψτε τη σύμβασή σας"
-uploadBody = "Στείλτε μας το PO σας και θα εκδώσουμε τιμολόγιο βάσει αυτού με τους όρους σας. Σύρετε το PDF ή επιλέξτε ένα αρχείο παρακάτω."
-uploadCta = "Μεταφόρτωση εντολής αγοράς"
-uploadTitle = "Μεταφόρτωση της εντολής αγοράς σας"
 
 [portal.procurement.payment]
 description = "Η προσφορά σας έγινε αποδεκτή και η άδειά σας είναι ήδη ενεργή — η ομάδα σας μπορεί να ξεκινήσει αμέσως. Πληρώστε το πρώτο τιμολόγιο όταν είστε έτοιμοι· μπορείτε να το πληρώσετε ή να το κατεβάσετε εδώ, χωρίς να χρειάζεται email."
+downloadAgreement = "Λήψη υπογεγραμμένης συμφωνίας"
 downloadInvoice = "Λήψη τιμολογίου"
-simulate = "Προσομοίωση λήψης πληρωμής (demo)"
+eyebrow = "Πληρωμή"
 title = "Η συνδρομή δημιουργήθηκε"
 viewInvoice = "Προβολή & πληρωμή τιμολογίου"
+
+[portal.procurement.review]
+acceptCta = "Αποδοχή προσφοράς"
+annual = "Ετήσια χρέωση (έτος 1)"
+downloadCta = "Λήψη προσφοράς"
+poNumber = "Purchase order: {{po}}"
+renewal = "Ανανεώνεται στα {{amount}}/έτος μετά τη διάρκεια (+{{pct}}% CPI)"
+tcv = "Διάρκεια {{years}} ετών, πλήρως προπληρωμένη: {{tcv}}"
+validUntil = "Ισχύει έως {{date}}"
 
 [portal.procurement.schedule]
 fallback = "Δεν ήταν δυνατή η φόρτωση του scheduler."
 fallbackLink = "Άνοιγμα προγραμματισμού σε νέα καρτέλα"
+loading = "Φόρτωση scheduler..."
 subtitle = "Ο μηχανικός λύσεών σας θα καθοδηγήσει την ομάδα σας στη διάθεση. Επιλέξτε μια ώρα που σας βολεύει."
 title = "Προγραμματισμός κλήσης"
 
-[portal.procurement.status]
-action = "Απαιτείται ενέργεια"
-available = "Διαθέσιμο"
-complete = "Ολοκληρωμένο"
-pending = "Σε εκκρεμότητα"
-request = "Κατόπιν αιτήματος"
+[portal.procurement.setup]
+airgap = "Air-gapped"
+airgapSub = "Σφραγισμένο, χωρίς outbound"
+back = "Πίσω"
+businessName = "Επωνυμία επιχείρησης"
+businessNamePlaceholder = "Acme Corp"
+cloud = "Stirling Cloud"
+cloudSub = "Managed, ταχύτερη εκκίνηση"
+continue = "Συνέχεια"
+deployment = "Πού πρέπει να αναπτυχθεί;"
+eula = "Συμφωνώ με το Stirling EULA & Commercial Terms."
+fullName = "Πλήρες όνομα"
+fullNamePlaceholder = "Το όνομά σας"
+invites = "Προσκαλέστε teammates · προαιρετικό"
+invitesPlaceholder = "sam@acme.com, lee@acme.com"
+scheduleCall = "Προγραμματισμός κλήσης"
+seats = "Άτομα που δοκιμάζουν"
+seatsPlaceholder = "π.χ. 15"
+selfhost = "Self-hosted"
+selfhostSub = "Docker ή Kubernetes"
+start = "Έναρξη δοκιμής"
+stepOf = "Βήμα {{n}} από {{total}}"
+subtitle = "Δωρεάν για 14 ημέρες, χωρίς κάρτα."
+subtitleDetails = "Μερικά στοιχεία για την προσφορά και τη συμφωνία σας."
+talkFirst = "Προτιμάτε να μιλήσουμε πρώτα;"
+title = "Ρύθμιση της δοκιμής σας"
+viewEula = "Διαβάστε το"
+workEmail = "Επαγγελματικό email"
+workEmailPlaceholder = "you@company.com"
 
 [portal.procurement.trial]
 body = "Η επέκταση προσθέτει 7 ημέρες και ειδοποιεί τον μηχανικό λύσεών σας."
@@ -7808,66 +8806,50 @@ maxed = "Εξαντλήθηκε"
 subtitle = "Η δωρεάν δοκιμή σας διαρκεί έως {{date}}. Δεν απαιτείται κάρτα."
 title = "Enterprise δοκιμή"
 
-[portal.procurement.upsell]
-homeBadge = "Enterprise"
-homeBody = "Τιμολόγηση δεσμευμένου όγκου, SSO + SCIM + RBAC σε όλο τον οργανισμό, αμετάβλητος έλεγχος 90 ημερών και αποκλειστικός SE."
-homeCta = "Έναρξη δοκιμής →"
-homeHeadline = "Επεξεργαστείτε εκατομμύρια PDF."
-
-[portal.recentActivity]
-title = "Πρόσφατη δραστηριότητα"
-viewAll = "Προβολή όλων"
-
-[portal.recentActivity.empty]
-description = "Εκτελέσεις pipeline, αναπτύξεις και συμβάντα agent θα εμφανιστούν εδώ."
-title = "Δεν υπάρχει ακόμη τίποτα εδώ"
-
-[portal.search]
-ariaLabel = "Αναζήτηση"
-placeholder = "Αναζήτηση στο Stirling — endpoints, pipelines, έγγραφα…"
-
-[portal.search.empty]
-noActionsDescription = "Οι γρήγορες ενέργειες θα εμφανιστούν εδώ μόλις γίνουν διαθέσιμες."
-noActionsTitle = "Δεν υπάρχουν γρήγορες ενέργειες"
-noMatches = "Δεν υπάρχουν αντιστοιχίες για \"{{query}}\""
-noMatchesDescription = "Δοκιμάστε διαφορετική λέξη-κλειδί ή περιηγηθείτε στον κατάλογο."
-
 [portal.settings.groups]
 admin = "Διαχειριστής"
 
 [portal.settings.sections]
 account-link = "Σύνδεση λογαριασμού"
 
-[portal.shell.header]
-accountFallback = "Λογαριασμός"
-accountMenu = "Μενού λογαριασμού"
-darkMode = "Σκοτεινή λειτουργία"
-lightMode = "Φωτεινή λειτουργία"
-search = "Αναζήτηση"
-searchPlaceholder = "Αναζήτηση…"
-signOut = "Αποσύνδεση"
-switchToDark = "Μετάβαση σε σκοτεινό θέμα"
-switchToLight = "Μετάβαση σε φωτεινό θέμα"
-
 [portal.shell.sidebar]
 appEditor = "Editor"
 appProcessor = "Processor"
-brandSuffix = "Stirling Processor"
-docsCount = "{{docs}} έγγραφα"
 linkAccount = "Σύνδεση λογαριασμού Stirling"
-planEditor = "Πλάνο Editor"
-planEnterprise = "Πλάνο Enterprise"
-planProcessor = "Πλάνο Processor"
 primaryNav = "Κύρια πλοήγηση"
 switchApp = "Αλλαγή εφαρμογής"
+
+[portal.shell.topbar]
+closeNav = "Κλείσιμο πλοήγησης"
+openNav = "Άνοιγμα πλοήγησης"
+search = "Αναζήτηση"
 
 [portal.sources]
 subtitle = "Επαναχρησιμοποιήσιμες συνδέσεις εισόδου που τροφοδοτούν έγγραφα στο Stirling. Διαμορφώστε μια σύνδεση μία φορά και μετά αναφέρετέ τη από οποιονδήποτε αριθμό πολιτικών. Κάντε κλικ σε μια γραμμή για τη διαμόρφωσή της και για το ποιες πολιτικές τη χρησιμοποιούν."
 title = "Πηγές"
 
 [portal.sources.actions]
-agentBuilder = "Agent Builder"
 connectSource = "Σύνδεση πηγής"
+
+[portal.sources.builder]
+advanced = "Σύνθετα"
+back = "Πίσω στις πηγές"
+backToSource = "Επιστροφή στη ρύθμιση προέλευσης"
+backToTypes = "Όλοι οι τύποι πηγών"
+cancel = "Ακύρωση"
+chooseHint = "Επιλέξτε από πού προέρχονται τα έγγραφα. Οι γκριζαρισμένοι connectors έρχονται σύντομα."
+comingSoon = "Προσεχώς"
+comingSoonHeading = "Προσεχώς"
+create = "Δημιουργία πηγής"
+createTitle = "Σύνδεση πηγής"
+delete = "Διαγραφή"
+editTitle = "Επεξεργασία πηγής"
+save = "Αποθήκευση αλλαγών"
+
+[portal.sources.builder.folderAccess]
+description = "Οι αυτοματισμοί φακέλων μπορούν να χρησιμοποιούν μόνο φακέλους που έχει επιτρέψει ένας διαχειριστής. Προσθέστε τον στις ρυθμίσεις Folder Access και δοκιμάστε ξανά."
+openSettings = "Ρυθμίσεις Folder Access"
+title = "Αυτός ο φάκελος δεν επιτρέπεται"
 
 [portal.sources.delete]
 body = "Διαγραφή του \"{{name}}\"; Αυτό δεν μπορεί να αναιρεθεί. Οι πολιτικές που το αναφέρουν θα πρέπει να ενημερωθούν."
@@ -7875,29 +8857,35 @@ cancel = "Ακύρωση"
 confirm = "Διαγραφή"
 title = "Διαγραφή πηγής;"
 
-[portal.sources.detail]
-closeAriaLabel = "Κλείσιμο λεπτομερειών"
-delete = "Διαγραφή πηγής"
-docs24h = "Τελευταίες 24 ώρες"
-docs30d = "Τελευταίες 30 ημέρες"
-docsTotal = "Σύνολο που εντοπίστηκαν"
-docsTrend = "Έγγραφα τις τελευταίες 30 ημέρες"
-documents = "Έγγραφα"
-edit = "Επεξεργασία"
-notReferenced = "Δεν αναφέρεται από καμία πολιτική, οπότε είναι ασφαλές να διαγραφεί."
-pause = "Παύση"
-resume = "Συνέχιση"
-subtitle = "{{type}} · {{status}}"
-usedBy = "Χρησιμοποιείται από"
-
-[portal.sources.empty]
-description = "Συνδέστε έναν φάκελο (και, σύντομα, cloud storage) ώστε οι πολιτικές σας να έχουν από πού να αντλούν έγγραφα."
-title = "Δεν έχουν συνδεθεί ακόμη πηγές"
-
 [portal.sources.kpi]
 inUse = "Σε χρήση"
 total = "Συνδέσεις"
 unused = "Αχρησιμοποίητες"
+
+[portal.sources.networkFields.connection]
+helperText = "Η αποθηκευμένη σύνδεση με τη διεύθυνση server και τα διαπιστευτήρια. Επαναχρησιμοποιείται από κάθε πηγή που την αναφέρει."
+label = "Σύνδεση"
+
+[portal.sources.networkFields.directory]
+helperText = "Φάκελος στον server για polling, σχετικός με το αρχικό home σύνδεσης ή τη ρίζα του share. Αφήστε κενό για τη ρίζα."
+label = "Φάκελος"
+placeholder = "incoming/"
+
+[portal.sources.networkFields.mode]
+helperText = "Η κατανάλωση αφαιρεί κάθε αρχείο από τον server μόλις κάθε πολιτική το έχει επεξεργαστεί."
+label = "Λειτουργία ανάγνωσης"
+
+[portal.sources.networkFields.mode.options]
+consume = "Κατανάλωση: επεξεργασία κάθε αρχείου μία φορά"
+snapshot = "Snapshot: επανάγνωση του φακέλου σε κάθε εκτέλεση"
+
+[portal.sources.networkFields.recursive]
+helperText = "Συμπεριλάβετε υποφακέλους αν τα αρχεία σας είναι οργανωμένα σε ένθετους φακέλους ή παρακολουθήστε μόνο το ανώτερο επίπεδο."
+label = "Βάθος φακέλου"
+
+[portal.sources.networkFields.recursive.options]
+all = "Συμπερίληψη υποφακέλων"
+top = "Μόνο ανώτερο επίπεδο"
 
 [portal.sources.status]
 active = "Ενεργό"
@@ -7905,12 +8893,28 @@ disabled = "Απενεργοποιημένο"
 unused = "Αχρησιμοποίητο"
 
 [portal.sources.table]
+documents = "Έγγραφα"
 source = "Πηγή"
 status = "Κατάσταση"
+type = "Type"
 usedBy = "Πολιτικές"
 
+[portal.sources.types.box]
+description = "Τραβήξτε έγγραφα από φακέλους Box που ήδη μοιράζεται η ομάδα σας."
+label = "Box"
+
+[portal.sources.types.dropbox]
+description = "Τραβήξτε έγγραφα από κοινόχρηστο φάκελο Dropbox."
+label = "Dropbox"
+
 [portal.sources.types.editor]
+description = "Έγγραφα που έχει επεξεργαστεί η ομάδα σας στον editor, σε εκτελέσεις πολιτικών και AI."
 label = "Editor"
+noPolicies = "Δεν έχουν εκτελεστεί ακόμα πολιτικές από τον editor."
+
+[portal.sources.types.email]
+description = "Μετατρέψτε συνημμένα που αποστέλλονται σε dedicated mailbox σε έγγραφα."
+label = "Email inbox"
 
 [portal.sources.types.folder]
 description = "Παρακολουθήστε έναν κατάλογο στον server για νέα έγγραφα."
@@ -7930,6 +8934,7 @@ hash = "Έλεγχος μεγέθους, ημερομηνίας και περι�
 stat = "Μέγεθος και ημερομηνία τροποποίησης"
 
 [portal.sources.types.folder.fields.mode]
+helperText = "Αν θα παραμείνει το αρχικό αρχείο στη θέση του μετά την επεξεργασία του. Αν το αρχικό αρχείο παραμείνει στη θέση του, θα επανεπεξεργαστεί την επόμενη φορά που η διοχέτευση θα σαρώσει την προέλευση."
 label = "Λειτουργία ανάγνωσης"
 
 [portal.sources.types.folder.fields.mode.options]
@@ -7937,31 +8942,87 @@ consume = "Κατανάλωση: επεξεργασία κάθε αρχείου 
 snapshot = "Στιγμιότυπο: επανανάγνωση του φακέλου σε κάθε εκτέλεση"
 
 [portal.sources.types.folder.fields.recursive]
+helperText = "Συμπεριλάβετε υποφακέλους αν τα αρχεία σας είναι οργανωμένα σε ένθετους φακέλους ή παρακολουθήστε μόνο το ανώτερο επίπεδο."
 label = "Βάθος φακέλου"
 
 [portal.sources.types.folder.fields.recursive.options]
 all = "Συμπερίληψη υποφακέλων"
 top = "Μόνο ανώτατο επίπεδο"
 
+[portal.sources.types.ftp]
+description = "Κάντε polling σε φάκελο FTP ή FTPS server για νέα έγγραφα."
+label = "FTP"
+
+[portal.sources.types.googledrive]
+description = "Τραβήξτε έγγραφα από κοινόχρηστους φακέλους Google Drive."
+label = "Google Drive"
+
+[portal.sources.types.network]
+description = "Παρακολουθήστε ένα SMB network share για νέα έγγραφα."
+label = "Network drive"
+
+[portal.sources.types.onedrive]
+description = "Παρακολουθήστε φακέλους OneDrive για νέα έγγραφα."
+label = "OneDrive"
+
+[portal.sources.types.s3]
+description = "Τραβήξτε έγγραφα από Amazon S3 ή S3-compatible bucket."
+label = "Amazon S3"
+
+[portal.sources.types.s3.fields.connection]
+helperText = "Η αποθηκευμένη σύνδεση που περιέχει το bucket και τα διαπιστευτήρια. Επαναχρησιμοποιείται από κάθε πηγή και έξοδο pipeline που την αναφέρει."
+label = "Σύνδεση"
+
+[portal.sources.types.s3.fields.mode]
+helperText = "Η κατανάλωση αφαιρεί κάθε object από το bucket μόλις κάθε πολιτική το έχει επεξεργαστεί."
+label = "Λειτουργία ανάγνωσης"
+
+[portal.sources.types.s3.fields.mode.options]
+consume = "Κατανάλωση: επεξεργασία κάθε object μία φορά"
+snapshot = "Snapshot: επανάγνωση του bucket σε κάθε εκτέλεση"
+
+[portal.sources.types.s3.fields.prefix]
+helperText = "Επεξεργάζονται μόνο objects των οποίων τα keys ξεκινούν με αυτό το prefix."
+label = "Key prefix"
+placeholder = "incoming/"
+
+[portal.sources.types.sftp]
+description = "Κάντε polling σε SFTP drop folder για νέα έγγραφα."
+label = "SFTP"
+
+[portal.sources.types.sharepoint]
+description = "Τραβήξτε έγγραφα από βιβλιοθήκες εγγράφων SharePoint."
+label = "SharePoint"
+
 [portal.sources.types.unknown]
 label = "Πηγή"
 
+[portal.sources.types.webhook]
+createNote = "Ένα delivery URL και signing secret δημιουργούνται όταν δημιουργείτε αυτό το webhook. Οι αποστολείς κάνουν POST έγγραφα σε αυτό το URL και οι πολιτικές που το αναφέρουν εκτελούνται κατά την άφιξη."
+description = "Λάβετε έγγραφα μέσω υπογεγραμμένου HTTP POST από οποιοδήποτε εξωτερικό σύστημα."
+label = "Webhook"
+
+[portal.sources.types.webhook.detail]
+deliveryUrl = "Delivery URL"
+secretNote = "Το signing secret εμφανίζεται μία φορά, όταν δημιουργείται το webhook. Δημιουργήστε ξανά την πηγή για να το αλλάξετε."
+
+[portal.sources.types.webhook.reveal]
+copy = "Αντιγραφή"
+done = "Τέλος"
+secret = "Signing secret"
+secretHelp = "Υπογράψτε το raw body κάθε παράδοσης με αυτό το κλειδί (HMAC-SHA256) και στείλτε το ως X-Stirling-Signature header."
+secretWarning = "Αντιγράψτε τώρα το signing secret. Για την ασφάλειά σας εμφανίζεται μόνο μία φορά και δεν μπορεί να ανακτηθεί αργότερα."
+title = "Το webhook δημιουργήθηκε"
+url = "Delivery URL"
+usage = "Κάντε POST κάθε έγγραφο ως raw request body στο delivery URL με binary content type (application/pdf ή application/octet-stream). Οι πολιτικές που το αναφέρουν εκτελούνται αυτόματα κατά την άφιξη."
+
 [portal.sources.wizard]
-back = "Πίσω"
-cancel = "Ακύρωση"
-continue = "Συνέχεια"
-editTitle = "Επεξεργασία πηγής"
 name = "Όνομα"
 namePlaceholder = "π.χ. Εισαγωγή αιτήσεων"
-save = "Αποθήκευση αλλαγών"
-subtitle = "Βήμα {{current}} από {{total}} · {{label}}"
-title = "Σύνδεση πηγής"
 type = "Τύπος"
 
-[portal.sources.wizard.steps]
-chooseType = "Επιλογή τύπου"
-configure = "Διαμόρφωση"
-review = "Έλεγχος & σύνδεση"
+[portal.stepModal]
+close = "Κλείσιμο"
 
 [portal.usage]
 managePayment = "Διαχείριση πληρωμής"
@@ -8021,16 +9082,9 @@ summary = "Κατέχει μια ομάδα — διαχειρίζεται το�
 2 = "Πρόσβαση στο portal μέσω της προεπιλεγμένης πολιτικής"
 3 = "Όλα όσα μπορεί να κάνει το Μέλος"
 
-[portal.welcome]
-ariaLabel = "Καλώς ήρθατε στο Stirling PDF"
-badge = "Ανοικτού κώδικα"
-installEditor = "Εγκατάσταση του Editor"
-inviteTeammates = "Πρόσκληση συμπαικτών"
-openInBrowser = "Άνοιγμα στο πρόγραμμα περιήγησης"
-perks = "Δωρεάν για πάντα · Self-hostable"
-subtitle = "Ο πιο ασφαλής PDF Editor στον κόσμο είναι δωρεάν για ομάδες κάθε μεγέθους. Περιλαμβάνει 60+ λειτουργίες PDF και SSO."
-title = "Καλώς ήρθατε στο"
-titleAccent = "Stirling PDF"
+[portal.users.seats]
+limited = "{{used}} / {{limit}}"
+unlimited = "{{used}} · Απεριόριστα"
 
 [printFile]
 title = "Εκτύπωση αρχείου"
@@ -8613,6 +9667,14 @@ text = "Περιστρέψτε τις σελίδες του PDF σας δεξι�
 [rotate.tooltip.header]
 title = "Επισκόπηση ρυθμίσεων περιστροφής"
 
+[ruler]
+clearAll = "Εκκαθάριση όλων"
+hideAllLabels = "Απόκρυψη όλων των ετικετών"
+hideSmallLabels = "Απόκρυψη μικρών ετικετών"
+physicalValues = "Φυσικές"
+scaled = "Σε κλίμακα"
+showAllLabels = "Εμφάνιση όλων των ετικετών"
+
 [sanitize]
 desc = "Αφαιρέστε πιθανά επιβλαβή στοιχεία από αρχεία PDF."
 sanitizationResults = "Αποτελέσματα καθαρισμού"
@@ -8654,30 +9716,44 @@ label = "Αφαίρεση μεταδεδομένων XMP"
 [sanitize.steps]
 settings = "Ρυθμίσεις"
 
-[sanitizePdf]
-tags = "καθαρισμός,ασφάλεια,ασφαλές,αφαίρεση-απειλών"
-
 [sanitizePDF]
 title = "Εξυγίανση PDF"
+
+[sanitizePdf]
+tags = "καθαρισμός,ασφάλεια,ασφαλές,αφαίρεση-απειλών"
 
 [scalePages]
 tags = "resize,adjust,scale,page size,resize page,scale page,change size,adjust size,enlarge,shrink page,fit to page,A4,letter size"
 title = "Προσαρμογή κλίμακας σελίδας"
 
+[scaleSettings]
+activeScale = "Ενεργή κλίμακα"
+apply = "Εφαρμογή κλίμακας"
+applyCalibration = "Εφαρμογή βαθμονόμησης"
+calculatedScale = "Υπολογισμένη κλίμακα"
+calibrate = "Βαθμονόμηση"
+calibrating = "Γίνεται βαθμονόμηση"
+calibrationDistanceRequired = "Εισαγάγετε μια πραγματική απόσταση μεγαλύτερη από το μηδέν"
+calibrationInvalid = "Δεν είναι δυνατός ο υπολογισμός της κλίμακας από αυτή τη μέτρηση"
+calibrationPaperDistance = "Μετρημένη απόσταση σελίδας: {{distance}}"
+calibrationTitle = "Βαθμονόμηση κλίμακας"
+calibrationTooltip = "Μετρήστε μια γνωστή απόσταση για να υπολογιστεί αυτόματα η κλίμακα"
+customScale = "Προσαρμοσμένη κλίμακα"
+noneSet = "Δεν έχει οριστεί προσαρμοσμένη κλίμακα"
+presets = "Προκαθορισμένες κλίμακες"
+ratio = "Αναλογία κλίμακας"
+ratioHelp = "Αναλογία: 1 μονάδα σελίδας = X πραγματικές μονάδες"
+ratioPlaceholder = "π.χ., 100"
+ratioPositive = "Η αναλογία πρέπει να είναι μεγαλύτερη από το μηδέν"
+ratioRequired = "Η αναλογία απαιτείται"
+realDistance = "Πραγματική απόσταση"
+realDistancePlaceholder = "π.χ., 5"
+reset = "Επαναφορά στις προεπιλογές"
+unit = "Μονάδα"
+unitInvalid = "Μη έγκυρη μονάδα: {{scaleUnit}}"
+
 [scannerEffect]
 tags = "scan,simulate,create,fake scan,look scanned,scanner effect,make look scanned,photocopy effect,simulate scanner,realistic scan"
-
-[ScannerImageSplit.selectText]
-1 = "Όριο γωνίας:"
-10 = "Ορίζει το μέγεθος του περιγράμματος που προστίθεται και αφαιρείται για την αποφυγή λευκών περιγραμμάτων στο αποτέλεσμα (προεπιλογή: 1)."
-2 = "Ορίζει την ελάχιστη απόλυτη γωνία που απαιτείται για την περιστροφή της εικόνας (προεπιλογή: 10)."
-3 = "Ανοχή:"
-4 = "Καθορίζει το εύρος της χρωματικής διακύμανσης γύρω από το εκτιμώμενο χρώμα φόντου (προεπιλογή: 30)."
-5 = "Ελάχιστη περιοχή:"
-6 = "Ορίζει το ελάχιστο όριο περιοχής για μια φωτογραφία (προεπιλογή: 10000)."
-7 = "Ελάχιστη περιοχή περιγράμματος:"
-8 = "Ορίζει το ελάχιστο όριο περιοχής περιγράμματος για μια φωτογραφία"
-9 = "Μέγεθος περιγράμματος:"
 
 [scannerImageSplit]
 submit = "Εξαγωγή σαρώσεων εικόνων"
@@ -8710,6 +9786,18 @@ whatThisDoes = "Τι κάνει αυτό"
 whatThisDoesDesc = "Εντοπίζει και εξάγει αυτόματα κάθε φωτογραφία από μια σαρωμένη σελίδα ή σύνθετη εικόνα—χωρίς χειροκίνητο κόψιμο."
 whenToUse = "Πότε να το χρησιμοποιείτε"
 
+[ScannerImageSplit.selectText]
+1 = "Όριο γωνίας:"
+10 = "Ορίζει το μέγεθος του περιγράμματος που προστίθεται και αφαιρείται για την αποφυγή λευκών περιγραμμάτων στο αποτέλεσμα (προεπιλογή: 1)."
+2 = "Ορίζει την ελάχιστη απόλυτη γωνία που απαιτείται για την περιστροφή της εικόνας (προεπιλογή: 10)."
+3 = "Ανοχή:"
+4 = "Καθορίζει το εύρος της χρωματικής διακύμανσης γύρω από το εκτιμώμενο χρώμα φόντου (προεπιλογή: 30)."
+5 = "Ελάχιστη περιοχή:"
+6 = "Ορίζει το ελάχιστο όριο περιοχής για μια φωτογραφία (προεπιλογή: 10000)."
+7 = "Ελάχιστη περιοχή περιγράμματος:"
+8 = "Ορίζει το ελάχιστο όριο περιοχής περιγράμματος για μια φωτογραφία"
+9 = "Μέγεθος περιγράμματος:"
+
 [search]
 noResults = "Δεν βρέθηκαν αποτελέσματα"
 placeholder = "Εισαγάγετε όρο αναζήτησης..."
@@ -8727,46 +9815,24 @@ toolNotAvailableLocally = "Ο διακομιστής σας Stirling-PDF είν�
 [session]
 expired = "Η συνεδρία σας έληξε. Παρακαλώ ανανεώστε τη σελίδα και προσπαθήστε ξανά."
 
-[sessionManagement.tooltip]
-header = "Διαχείριση συνεδριών υπογραφής"
-
-[sessionManagement.tooltip.addParticipants]
-bullet1 = "Νέοι συμμετέχοντες προστίθενται στο τέλος της σειράς υπογραφών"
-bullet2 = "Δεν μπορούν να προστεθούν συμμετέχοντες μετά την οριστικοποίηση της συνεδρίας"
-bullet3 = "Κάθε συμμετέχων λαμβάνει ειδοποίηση όταν είναι η σειρά του"
-description = "Μπορείτε να προσθέσετε περισσότερους συμμετέχοντες σε μια ενεργή συνεδρία οποτεδήποτε πριν από την οριστικοποίηση."
-title = "Προσθήκη συμμετεχόντων"
-
-[sessionManagement.tooltip.finalization]
-bullet1 = "<b>Πλήρης οριστικοποίηση</b>: Όλοι οι συμμετέχοντες έχουν υπογράψει"
-bullet2 = "<b>Μερική οριστικοποίηση</b>: Ορισμένοι συμμετέχοντες δεν έχουν υπογράψει ακόμα"
-bullet3 = "Οι μη υπογεγραμμένοι συμμετέχοντες θα εξαιρεθούν από το τελικό έγγραφο"
-bullet4 = "Μόλις οριστικοποιηθεί, μπορείτε να φορτώσετε το υπογεγραμμένο PDF στα ενεργά αρχεία"
-description = "Η οριστικοποίηση συνδυάζει όλες τις υπογραφές σε ένα ενιαίο υπογεγραμμένο PDF. Αυτή η ενέργεια δεν μπορεί να αναιρεθεί."
-title = "Οριστικοποίηση συνεδρίας"
-
-[sessionManagement.tooltip.participantRemoval]
-bullet1 = "Δεν μπορούν να αφαιρεθούν συμμετέχοντες που έχουν ήδη υπογράψει"
-bullet2 = "Οι αφαιρεθέντες συμμετέχοντες δεν λαμβάνουν πλέον ειδοποιήσεις"
-bullet3 = "Η σειρά υπογραφών προσαρμόζεται αυτόματα"
-description = "Οι συμμετέχοντες μπορούν να αφαιρεθούν από τις συνεδρίες πριν υπογράψουν."
-title = "Αφαίρεση συμμετεχόντων"
-
-[sessionManagement.tooltip.signatureOrder]
-bullet1 = "Κάθε υπογραφή εφαρμόζεται διαδοχικά στο PDF"
-bullet2 = "Οι μεταγενέστεροι υπογράφοντες μπορούν να δουν προηγούμενες υπογραφές"
-bullet3 = "Κρίσιμο για ροές έγκρισης και νομικές αλυσίδες φύλαξης"
-description = "Η σειρά που ορίζετε κατά τη δημιουργία της συνεδρίας καθορίζει ποιος υπογράφει πρώτος."
-title = "Σειρά υπογραφών"
-
 [settings]
+backToSections = "Όλες οι ρυθμίσεις"
 close = "Κλείσιμο"
+title = "Ρυθμίσεις"
+
+[settings.ai]
+documents = "Έγγραφα & RAG"
+general = "Γενικά"
+limits = "Όρια & Απόδοση"
+models = "Μοντέλα & Πάροχοι"
+title = "AI"
 
 [settings.configuration]
 advanced = "Προχωρημένα"
 database = "Βάση δεδομένων"
 endpoints = "Endpoints"
 features = "Δυνατότητες"
+folderAccess = "Πρόσβαση σε φακέλους"
 mcp = "MCP Server"
 storageSharing = "Αποθήκευση Αρχείων & Κοινή Χρήση"
 systemSettings = "Ρυθμίσεις συστήματος"
@@ -8800,6 +9866,8 @@ defaultPdfEditor = "Προεπιλεγμένος επεξεργαστής PDF"
 defaultPdfEditorActive = "Το Stirling PDF είναι ο προεπιλεγμένος επεξεργαστής PDF"
 defaultPdfEditorChecking = "Έλεγχος..."
 defaultPdfEditorInactive = "Έχει οριστεί άλλη εφαρμογή ως προεπιλογή"
+defaultPdfEditorRemind = "Υπενθύμιση να ορίσω ως προεπιλογή"
+defaultPdfEditorRemindDescription = "Εμφάνιση banner όταν το Stirling PDF δεν είναι η προεπιλεγμένη εφαρμογή PDF σας."
 defaultPdfEditorSet = "Ήδη προεπιλογή"
 defaultStartupView = "Προεπιλεγμένη προβολή κατά την εκκίνηση"
 defaultStartupViewDescription = "Επιλέξτε ποια καρτέλα θα είναι ενεργή στην αριστερή στήλη κατά την εκκίνηση της εφαρμογής"
@@ -8817,9 +9885,18 @@ languageDescription = "Επιλέξτε τη γλώσσα εμφάνισης"
 logout = "Αποσύνδεση"
 setAsDefault = "Ορισμός ως προεπιλογή"
 theme = "Θέμα"
+themeAccent = "Χρώμα έμφασης"
+themeAccentCustom = "Προσαρμοσμένο χρώμα"
+themeAccentCustomHint = "Προσαρμοσμένο (συνιστώνται οι προεπιλογές)"
+themeAccentDark = "Χρώμα έμφασης σκοτεινής λειτουργίας"
+themeAccentDefault = "Προεπιλογή"
+themeAccentDefaultHint = "Προεπιλεγμένο θέμα (συνιστάται)"
+themeAccentDescription = "Τα κουμπιά, οι σύνδεσμοι και οι επισημάνσεις το ακολουθούν, και χρωματίζει διακριτικά την εφαρμογή. Η φωτεινή και η σκοτεινή λειτουργία έχουν η καθεμία το δικό της. Το σύστημα χρησιμοποιεί όποιο είναι ενεργό."
+themeAccentLight = "Χρώμα έμφασης φωτεινής λειτουργίας"
 themeDark = "Σκούρο"
 themeDescription = "Εναλλαγή μεταξύ φωτεινής και σκοτεινής λειτουργίας"
 themeLight = "Φωτεινό"
+themeReset = "Επαναφορά θέματος στην προεπιλογή"
 themeSystem = "System"
 title = "Γενικά"
 user = "Χρήστης"
@@ -8832,6 +9909,12 @@ dismiss = "Απόρριψη"
 intro = "Ενεργοποιήστε τον έλεγχο ταυτότητας χρηστών, τη διαχείριση ομάδων και λειτουργίες χώρου εργασίας για τον οργανισμό σας."
 learnMore = "Μάθετε περισσότερα στην τεκμηρίωση"
 title = "Για διαχειριστές συστήματος"
+
+[settings.general.loginLanding]
+description = "Επιλέξτε ποια εφαρμογή ανοίγει όταν συνδέεστε στο Stirling Cloud."
+editor = "Πρόγραμμα επεξεργασίας"
+processor = "Επεξεργαστής"
+title = "Μετά τη σύνδεση"
 
 [settings.general.mode]
 fullscreen = "Πλήρης οθόνη"
@@ -9013,9 +10096,6 @@ title = "Πολιτικές & Απόρρητο"
 [settings.preferences]
 title = "Προτιμήσεις"
 
-[settings.search]
-placeholder = "Αναζήτηση στις σελίδες ρυθμίσεων..."
-
 [settings.security]
 description = "Ενημερώστε τον κωδικό σας για να διατηρήσετε τον λογαριασμό σας ασφαλή."
 title = "Ασφάλεια"
@@ -9040,6 +10120,11 @@ connections = "Συνδέσεις"
 security = "Ασφάλεια"
 telegram = "Telegram"
 title = "Ασφάλεια & Αυθεντικοποίηση"
+
+[settings.signOut]
+confirm = "Είστε βέβαιοι ότι θέλετε να αποσυνδεθείτε;"
+submit = "Αποσύνδεση"
+title = "Αποσύνδεση"
 
 [settings.team]
 title = "Ομάδα"
@@ -9156,6 +10241,7 @@ last = "Τελευταία σελίδα"
 maintainRatio = "Εναλλαγή διατήρησης αναλογίας διαστάσεων"
 next = "Επόμενη σελίδα"
 noSavedSigs = "Δεν βρέθηκαν αποθηκευμένες υπογραφές"
+penSizePlaceholder = "Type or select pen size (1-200)"
 personalSigs = "Προσωπικές υπογραφές"
 previous = "Προηγούμενη σελίδα"
 redo = "Επανάληψη"
@@ -9194,6 +10280,7 @@ backgroundRemovalFailedTitle = "Αποτυχία αφαίρεσης φόντου
 hint = "Μεταφορτώστε εικόνα PNG ή JPG της υπογραφής σας"
 label = "Μεταφορτώστε εικόνα υπογραφής"
 placeholder = "Επιλέξτε αρχείο εικόνας"
+previewAlt = "Current image signature"
 processing = "Επεξεργασία εικόνας..."
 removeBackground = "Αφαίρεση λευκού φόντου (διαφάνεια)"
 
@@ -9206,6 +10293,17 @@ resumeHint = "Συνεχίστε την τοποθέτηση για να κάν�
 saved = "Επιλέξτε μια αποθηκευμένη υπογραφή παραπάνω και μετά κάντε κλικ οπουδήποτε στο PDF για να την τοποθετήσετε."
 text = "Αφού εισαγάγετε το όνομά σας παραπάνω, κάντε κλικ οπουδήποτε στο PDF για να τοποθετήσετε την υπογραφή σας."
 title = "Πώς να προσθέσετε υπογραφή"
+
+[sign.mobile]
+createFromPhone = "Mobile upload"
+description = "Scan this QR code with your phone or tablet, draw your signature, and it will appear here automatically."
+error = "Connection Error"
+expiryWarning = "QR Code Expiring Soon"
+expiryWarningMessage = "This QR code will expire in {{seconds}} seconds. A new code will be generated automatically."
+instructions = "Open the camera app on your phone and scan this code. Keep this window open while you draw."
+pollingError = "Error checking for the signature"
+sessionCreateError = "Failed to create session"
+title = "Draw on your phone"
 
 [sign.mode]
 move = "Μετακίνηση υπογραφής"
@@ -9653,10 +10751,31 @@ title = "Μεταφόρτωση στον διακομιστή"
 updateButton = "Ενημέρωση στον διακομιστή"
 uploadButton = "Μεταφόρτωση στον διακομιστή"
 
+[superSearch]
+all = "All"
+ariaLabel = "Super search"
+filtersAriaLabel = "Search filters"
+hint = "Type to search"
+placeholder = "Search Stirling"
+placeholderShort = "Αναζήτηση"
+showLess = "Show less"
+showMore = "Show {{count}} more"
+
+[superSearch.group]
+docs = "Docs"
+files = "Files"
+pages = "Pages"
+processor = "Processor"
+settings = "Settings"
+tools = "Tools"
+
 [survey]
 title = "Stirling-PDF Survey"
 
 [swagger]
+clickHere = "κάντε κλικ εδώ"
+fallback = "Αν δεν άνοιξε αυτόματα,"
+opening = "Άνοιγμα του Swagger UI σε νέα καρτέλα..."
 tags = "api,documentation,swagger,endpoints,development"
 title = "Τεκμηρίωση API"
 
@@ -9764,12 +10883,39 @@ selectFilesHint = "Επιλέξτε αρχεία στα Ενεργά Αρχεί�
 singleFileScope = "Εφαρμογή μόνο σε: {{fileName}}"
 viewerMode = "Μεταβείτε στον επεξεργαστή αρχείων για να επιλέξετε πολλά αρχεία."
 
+[toolFormat]
+ANY = "οποιοδήποτε αρχείο"
+CBR = "ένα αρχείο κόμικ (CBR)"
+CBZ = "ένα αρχείο κόμικ (CBZ)"
+CSV = "ένα αρχείο CSV"
+EBOOK = "ένα ηλεκτρονικό βιβλίο"
+EMAIL = "ένα email"
+EXCEL = "ένα υπολογιστικό φύλλο"
+HTML = "μια ιστοσελίδα"
+IMAGE = "εικόνες"
+JAVASCRIPT = "ένα αρχείο JavaScript"
+JSON = "ένα αρχείο JSON"
+MARKDOWN = "ένα αρχείο Markdown"
+NONE = "κανένα αρχείο"
+PCL = "ένα αρχείο εκτύπωσης PCL"
+PDF = "ένα PDF"
+PDF_ENCRYPTED = "ένα PDF προστατευμένο με κωδικό πρόσβασης"
+POSTSCRIPT = "ένα αρχείο PostScript"
+PPT = "μια παρουσίαση"
+TEXT = "ένα αρχείο κειμένου"
+VIDEO = "ένα βίντεο"
+WORD = "ένα έγγραφο Word"
+XML = "ένα αρχείο XML"
+XPS = "ένα έγγραφο XPS"
+ZIP = "ένα αρχείο ZIP"
+
 [toolPanel]
 alpha = "Άλφα"
 backToAllTools = "Πίσω σε όλα τα εργαλεία"
 collapse = "Σύμπτυξη πάνελ"
 expand = "Ανάπτυξη πάνελ"
 goBack = "Επιστροφή"
+pdfTools = "Εργαλεία PDF"
 placeholder = "Επιλέξτε ένα εργαλείο για να ξεκινήσετε"
 premiumFeature = "Premium λειτουργία:"
 toolsHeader = "Εργαλεία"
@@ -9806,13 +10952,9 @@ noToolsFound = "Δεν βρέθηκαν εργαλεία"
 quickAccess = "ΓΡΗΓΟΡΗ ΠΡΟΣΒΑΣΗ"
 searchPlaceholder = "Αναζήτηση εργαλείων..."
 
-[toolPicker.categories]
-advancedTools = "Προχωρημένα εργαλεία"
-recommendedTools = "Προτεινόμενα εργαλεία"
-standardTools = "Τυπικά εργαλεία"
-
 [toolPicker.subcategories]
 advancedFormatting = "Προχωρημένη μορφοποίηση"
+ai = "AI"
 automation = "Αυτοματοποίηση"
 developerTools = "Εργαλεία προγραμματιστή"
 documentReview = "Έλεγχος εγγράφου"
@@ -9823,6 +10965,9 @@ pageFormatting = "Μορφοποίηση σελίδας"
 removal = "Αφαίρεση"
 signing = "Υπογραφή"
 verification = "Επαλήθευση"
+
+[toolRenderer]
+notFound = "Tool not found: {{tool}}"
 
 [tools]
 noSearchResults = "Δεν βρέθηκαν εργαλεία"
@@ -9950,15 +11095,30 @@ title = "Χρήστες"
 you = "(εσείς)"
 
 [users.action]
+cancelInvite = "Ακύρωση πρόσκλησης"
 deleteTeam = "Διαγραφή ομάδας"
 disableMfa = "Επαναφορά MFA"
 move = "Μετακίνηση σε ομάδα"
 reinstate = "Επαναφορά"
 remove = "Αφαίρεση από τον οργανισμό"
+removeTeam = "Αφαίρεση από την ομάδα"
 rename = "Μετονομασία ομάδας"
 resetPw = "Επαναφορά κωδικού πρόσβασης"
 suspend = "Αναστολή"
 unlock = "Ξεκλείδωμα λογαριασμού"
+
+[users.activity]
+daysAgo = "{{count}}ημ. πριν"
+hoursAgo = "{{count}}ώ. πριν"
+justNow = "Μόλις τώρα"
+minutesAgo = "{{count}}λ. πριν"
+monthsAgo_one = "πριν από {{count}} μήνα"
+monthsAgo_other = "πριν από {{count}} μήνες"
+never = "Ποτέ"
+weeksAgo_one = "πριν από {{count}} εβδομάδα"
+weeksAgo_other = "πριν από {{count}} εβδομάδες"
+yearsAgo_one = "πριν από {{count}} έτος"
+yearsAgo_other = "πριν από {{count}} έτη"
 
 [users.cap]
 addProcessor = "+ Processor"
@@ -9966,12 +11126,22 @@ approver = "Εγκρίνει πολιτική"
 editor = "Editor"
 processor = "Processor"
 
+[users.columns]
+capabilities = "Capabilities"
+email = "Email"
+person = "Person"
+role = "Role"
+status = "Status"
+
 [users.confirm]
+cancelInviteBody = "Να ακυρωθεί η πρόσκληση προς {{email}}; Δεν θα μπορούν να συμμετάσχουν με τον τρέχοντα σύνδεσμο."
+cancelInviteTitle = "Ακύρωση πρόσκλησης"
 deleteTeamBody = "Διαγραφή της ομάδας {{name}}; Η ομάδα πρέπει πρώτα να είναι άδεια - μετακινήστε τα μέλη της σε άλλη ομάδα και δεν μπορεί ακόμη να κατέχει διαμορφώσεις integration."
 deleteTeamTitle = "Διαγραφή ομάδας"
 disableMfaBody = "Αφαίρεση της εγγραφής MFA του {{name}}; Θα τη ρυθμίσουν ξανά στην επόμενη σύνδεση, αν απαιτείται."
 disableMfaTitle = "Επαναφορά MFA"
 removeBody = "Οριστική αφαίρεση του {{name}} από τον οργανισμό; Αυτό δεν μπορεί να αναιρεθεί."
+removeTeamBody = "Να αφαιρεθεί ο/η {{name}} από την ομάδα; Θα διατηρήσει τον λογαριασμό του/της, αλλά θα χάσει την πρόσβαση στους πόρους αυτής της ομάδας."
 removeTitle = "Αφαίρεση μέλους"
 
 [users.empty]
@@ -9982,10 +11152,8 @@ title = "Δεν υπάρχουν ακόμη μέλη"
 addToTeam = "Προσθήκη σε ομάδα"
 guestCount = "{{count}} επισκέπτης"
 guests = "Επισκέπτες"
-guestsDesc = "Εξωτερικοί συνεργάτες, περιορισμένοι σε όσα μοιραστήκατε. Μόνο Editor."
 ledBy = "με επικεφαλής {{owner}}"
 org = "Οργανισμός"
-orgDesc = "Κάτοχοι με εξουσία σε όλο τον οργανισμό και έγκριση πολιτικών"
 owners = "{{count}} κάτοχος"
 team = "Ομάδα {{name}}"
 teamMeta = "{{count}} άτομα"
@@ -10021,6 +11189,18 @@ title = "Πρόσκληση ατόμων"
 username = "Όνομα χρήστη"
 usernameError = "Το όνομα χρήστη πρέπει να έχει τουλάχιστον 3 χαρακτήρες"
 usernamePlaceholder = "jsmith"
+
+[users.invites]
+by = "Προσκλήθηκε από {{who}}"
+cancel = "Ακύρωση"
+expiresInDays_one = "Λήγει σε {{count}} ημέρα"
+expiresInDays_other = "Λήγει σε {{count}} ημέρες"
+expiresToday = "Λήγει σήμερα"
+title = "Εκκρεμείς προσκλήσεις"
+
+[users.invites.columns]
+expires = "Expires"
+invitee = "Invitee"
 
 [users.loadError]
 description = "Κάτι πήγε στραβά κατά την επικοινωνία με το backend ή δεν έχετε πρόσβαση. Δοκιμάστε ξανά."
@@ -10211,10 +11391,15 @@ searchPlaceholder = "Αναζήτηση συνημμένων"
 title = "Συνημμένα"
 
 [viewer.bookmarks]
+addBookmark = "Add bookmark"
 bookmarkTitle = "Τίτλος σελιδοδείκτη"
+bookmarkTitleRequired = "Απαιτείται τίτλος σελιδοδείκτη"
 closeSidebar = "Κλείσιμο πλαϊνής γραμμής σελιδοδεικτών"
 collapseAll = "Σύμπτυξη όλων των σελιδοδεικτών"
+empty = "No bookmarks in this document"
 expandAll = "Ανάπτυξη όλων των σελιδοδεικτών"
+searchPlaceholder = "Αναζήτηση σελιδοδεικτών"
+title = "Bookmarks"
 
 [viewer.comments]
 addComment = "Προσθήκη σχολίου"
@@ -10236,10 +11421,12 @@ locateAnnotation = "Εντοπισμός στο έγγραφο"
 moreActions = "Περισσότερες ενέργειες"
 nComments_one = "{{count}} comment"
 nComments_other = "{{count}} comments"
+noMatch = "No comments match your search"
 pageLabel = "Σελίδα {{page}}"
 placingHint = "Κάντε κλικ σε μια σελίδα για τοποθέτηση… (ακύρωση)"
 removeCommentOnly = "Κατάργηση μόνο του σχολίου"
 saveReply = "Αποθήκευση απάντησης"
+searchPlaceholder = "Search comments"
 title = "Σχόλια"
 typeComment = "Σχόλιο"
 typeInsertText = "Εισαγωγή κειμένου"
@@ -10262,6 +11449,7 @@ unsavedDesc = "Έχετε μη αποθηκευμένες αλλαγές"
 closeSidebar = "Κλείσιμο πλαϊνής γραμμής επιπέδων"
 hideAll = "Απόκρυψη όλων των επιπέδων"
 showAll = "Εμφάνιση όλων των επιπέδων"
+title = "Layers"
 
 [viewer.link]
 delete = "Διαγραφή συνδέσμου"
@@ -10271,8 +11459,11 @@ columnDefault = "Στήλη {{index}}"
 convertToPdf = "Μετατροπή σε PDF"
 csvStats = "{{rows}} γραμμές · {{columns}} στήλες · {{size}}"
 emptyFile = "Κενό αρχείο"
+htmlHidePreview = "Απόκρυψη προεπισκόπησης"
 htmlPreview = "Προεπισκόπηση HTML"
+htmlPreviewMobileHidden = "Οι σελίδες HTML είναι διαμορφωμένες για πλάτη επιφάνειας εργασίας, οπότε η προεπισκόπηση είναι απενεργοποιημένη από προεπιλογή εδώ."
 htmlPreviewWarning = "Προεπισκόπηση HTML — ενδέχεται να μη φορτωθούν εξωτερικοί πόροι · {{size}}"
+htmlShowPreview = "Εμφάνιση προεπισκόπησης ούτως ή άλλως"
 invalidJson = "Μη έγκυρο JSON — εμφάνιση ακατέργαστου περιεχομένου"
 lineNumbers = "Αριθμοί γραμμών"
 loading = "Φόρτωση..."
@@ -10605,30 +11796,6 @@ title = "Κείμενο υδατογραφήματος"
 image = "Εικόνα"
 text = "Κείμενο"
 
-[wetSignature.tooltip]
-header = "Μέθοδοι δημιουργίας υπογραφής"
-
-[wetSignature.tooltip.draw]
-bullet1 = "Προσαρμόστε το χρώμα και το πάχος της πένας"
-bullet2 = "Καθαρίστε και ξανασχεδιάστε μέχρι να είστε ικανοποιημένοι"
-bullet3 = "Λειτουργεί σε συσκευές αφής (tablet, τηλέφωνα)"
-description = "Δημιουργήστε χειρόγραφη υπογραφή με το ποντίκι ή την οθόνη αφής. Ιδανική για προσωπικές, αυθεντικές υπογραφές."
-title = "Σχεδίαση υπογραφής"
-
-[wetSignature.tooltip.type]
-bullet1 = "Επιλέξτε ανάμεσα σε πολλές γραμματοσειρές"
-bullet2 = "Προσαρμόστε μέγεθος και χρώμα κειμένου"
-bullet3 = "Ιδανικό για τυποποιημένες υπογραφές"
-description = "Δημιουργήστε υπογραφή από πληκτρολογημένο κείμενο. Γρήγορη και συνεπής, κατάλληλη για επαγγελματικά έγγραφα."
-title = "Πληκτρολόγηση υπογραφής"
-
-[wetSignature.tooltip.upload]
-bullet1 = "Υποστηρίζει PNG, JPG και άλλες μορφές εικόνας"
-bullet2 = "Συνιστώνται διαφανή φόντα για καλύτερα αποτελέσματα"
-bullet3 = "Η εικόνα θα αλλάξει μέγεθος ώστε να ταιριάζει στην περιοχή υπογραφής"
-description = "Μεταφορτώστε μια προδημιουργημένη εικόνα υπογραφής. Ιδανική αν έχετε σαρωμένη υπογραφή ή εταιρικό λογότυπο."
-title = "Μεταφόρτωση εικόνας υπογραφής"
-
 [workbenchBar]
 activeFiles = "Ενεργά αρχεία"
 annotations = "Σχολιασμοί"
@@ -10642,6 +11809,8 @@ exitRedaction = "Έξοδος από λειτουργία απόκρυψης"
 exportAll = "Εξαγωγή PDF"
 exportSelected = "Εξαγωγή επιλεγμένων σελίδων"
 formFill = "Συμπλήρωση φόρμας"
+hideToolbar = "Hide toolbar"
+moreActions = "Περισσότερες ενέργειες"
 multiTool = "Πολυεργαλείο"
 panMode = "Λειτουργία μετακίνησης"
 print = "Εκτύπωση PDF"
@@ -10652,6 +11821,7 @@ redact = "Απόκρυψη"
 rotateLeft = "Περιστροφή αριστερά"
 rotateRight = "Περιστροφή δεξιά"
 ruler = "Χάρακας / Μέτρηση"
+rulerSettings = "Ρυθμίσεις κλίμακας"
 save = "Αποθήκευση"
 saveAll = "Αποθήκευση όλων"
 saveAs = "Αποθήκευση ως"
@@ -10661,6 +11831,9 @@ selectAll = "Επιλογή όλων"
 selectByNumber = "Επιλογή βάσει αριθμών σελίδων"
 selectLanguage = "Επιλέξτε γλώσσα"
 share = "Κοινή χρήση"
+showAllTools = "Εμφάνιση όλων των εργαλείων"
+showFewerTools = "Σύμπτυξη γραμμής εργαλείων"
+showToolbar = "Show toolbar"
 toggleAnnotations = "Εναλλαγή ορατότητας σχολιασμών"
 toggleAttachments = "Εναλλαγή συνημμένων"
 toggleBookmarks = "Εναλλαγή σελιδοδεικτών"

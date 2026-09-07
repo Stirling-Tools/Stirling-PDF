@@ -9,7 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
-/** Persistence for the per-period/per-category usage counters (combined-billing "Mode A"). */
+/** Persistence for the per-period/per-category usage counters (combined billing). */
 public interface UsageCounterRepository extends JpaRepository<UsageCounter, Long> {
 
     /**

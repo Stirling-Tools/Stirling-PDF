@@ -96,8 +96,9 @@ public class NetworkInputSource implements InputSource {
             if (!ctx.claim(identity, gate, null)) {
                 continue;
             }
-            work.add(new ResolvedInput(
+            work.add(ResolvedInput.forFile(
                     PolicyInputs.of(List.of(resource(config, file))),
+                    identity,
                     success -> completeConsumed(ctx, config, file, identity, gate, success)));
         }
         return work;

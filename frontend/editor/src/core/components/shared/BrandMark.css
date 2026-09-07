@@ -48,9 +48,55 @@
   transform: matrix(0.483871, -0.017568, 0, 0.338028, 23.887097, 26.886428);
 }
 
+/* One-shot "thinking" drift — the two parallelograms swap past each other and
+   settle back. Same motion the chat FAB loops while the agent works, but this
+   pair starts and ends at rest (translate 0, full opacity) so a single
+   iteration can end without snapping. Callers apply it for one beat; see
+   NavFooter.css for the hover use. */
+@keyframes sui-brandmark-drift-a {
+  0%,
+  100% {
+    transform: translate(0, 0);
+    opacity: 1;
+  }
+  25% {
+    transform: translate(-1px, -5px);
+    opacity: 0.55;
+  }
+  50% {
+    transform: translate(-6px, 0);
+    opacity: 0.9;
+  }
+  75% {
+    transform: translate(-1px, 5px);
+    opacity: 0.6;
+  }
+}
+
+@keyframes sui-brandmark-drift-b {
+  0%,
+  100% {
+    transform: translate(0, 0);
+    opacity: 1;
+  }
+  25% {
+    transform: translate(1px, 5px);
+    opacity: 0.85;
+  }
+  50% {
+    transform: translate(6px, 0);
+    opacity: 0.5;
+  }
+  75% {
+    transform: translate(1px, -5px);
+    opacity: 0.85;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .sui-brandmark__a,
   .sui-brandmark__b {
     transition: none;
+    animation: none;
   }
 }

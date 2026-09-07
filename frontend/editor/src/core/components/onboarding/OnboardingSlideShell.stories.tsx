@@ -1,8 +1,4 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-// The shared preview only loads the portal tokens; the shell reads the editor
-// theme tokens (--bg-surface, --onboarding-title, …), so load them here or the
-// card renders transparent over the dark overlay.
-import "@app/styles/theme.css";
 import OnboardingSlideShell, {
   ShellHero,
   type ShellButton,

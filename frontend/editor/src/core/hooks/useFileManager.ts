@@ -122,7 +122,7 @@ export const useFileManager = () => {
             {
               suppressErrorToast: true,
               skipAuthRedirect: true,
-            } as any,
+            },
           );
           const serverFiles = Array.isArray(response.data) ? response.data : [];
           const serverStubs: StirlingFileStub[] = [];
@@ -252,7 +252,7 @@ export const useFileManager = () => {
             >("/api/v1/storage/share-links/accessed", {
               suppressErrorToast: true,
               skipAuthRedirect: true,
-            } as any);
+            });
             const sharedLinks = Array.isArray(sharedResponse.data)
               ? sharedResponse.data
               : [];
@@ -389,6 +389,18 @@ export const useFileManager = () => {
       // Optimistic update — remove from UI immediately, delete IDB in background
       setFiles(files.filter((_, i) => i !== index));
       onRemovedFromWorkbench?.(file.id);
+      // Superseded versions go with it (see orphanedAncestorIds); best-effort,
+      // because failing to tidy history must not fail the delete itself.
+      void fileStorage
+        .orphanedAncestorIds([file.id])
+        .then((orphans) =>
+          orphans.length > 0
+            ? fileStorage.deleteMultipleStirlingFiles(orphans)
+            : undefined,
+        )
+        .catch((error) =>
+          console.warn("Failed to remove superseded versions:", error),
+        );
       indexedDB.deleteFile(file.id).catch((error) => {
         console.error("Failed to remove file from IndexedDB:", error);
         // Restore consistency — file is still in IDB so refresh brings it back

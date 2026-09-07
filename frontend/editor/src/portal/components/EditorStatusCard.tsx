@@ -10,30 +10,9 @@ import {
 } from "@portal/queries/infrastructure";
 import { type EditorInstance } from "@portal/api/editorDeploy";
 import { DownloadEditorModal } from "@portal/components/DownloadEditorModal";
+import "@portal/theme/surface.css";
+import { BrandTile } from "@app/components/shared/BrandTile";
 import "@portal/components/EditorStatusCard.css";
-
-/** The Stirling brand mark, drawn at the hero size. Decorative. */
-function StirlingMark() {
-  return (
-    <svg
-      className="portal-editor-hero__mark"
-      viewBox="0 0 256 256"
-      fill="none"
-      aria-hidden
-    >
-      <rect width="256" height="256" rx="58" fill="var(--c-brand-mark)" />
-      <path
-        d="M39.2638 127.834L155.374 32L155.375 121.499L39.2638 217.333L39.2638 127.834Z"
-        fill="white"
-      />
-      <path
-        d="M159 124.5L159 88.5L216.728 38.4472L216.728 128.052L100.479 224L100.479 172L159 124.5Z"
-        fill="white"
-        fillOpacity="0.6"
-      />
-    </svg>
-  );
-}
 
 /** The instance to headline: the busiest healthy one, else the first. */
 function primaryInstance(instances: EditorInstance[]): EditorInstance | null {
@@ -120,12 +99,12 @@ export function EditorStatusCard({ footer }: EditorStatusCardProps) {
 
   return (
     <section
-      className="portal-editor-hero"
+      className="portal-surface portal-editor-hero"
       aria-label={t("portal.home.editor.name")}
     >
       <div className="portal-editor-hero__row">
         <div className="portal-editor-hero__logo">
-          <StirlingMark />
+          <BrandTile className="portal-editor-hero__mark" />
         </div>
 
         <div className="portal-editor-hero__info">

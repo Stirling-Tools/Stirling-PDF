@@ -40,7 +40,10 @@ test.describe("PageEditor (multitool) rotation save", () => {
   test("rotating a page persists the correct absolute rotation on export", async ({
     page,
   }) => {
-    await page.goto("/", { waitUntil: "domcontentloaded", timeout: 120_000 });
+    await page.goto("/editor", {
+      waitUntil: "domcontentloaded",
+      timeout: 120_000,
+    });
     await uploadFiles(page, ROTATED_PDF);
     // Enter the multitool via in-app navigation, NOT page.goto: a full reload
     // wipes the in-memory workbench before PageEditorContext's "entering page

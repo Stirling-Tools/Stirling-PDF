@@ -34,7 +34,7 @@
 .portal-notif__count {
   font-size: 0.6875rem;
   font-weight: 500;
-  color: var(--c-primary);
+  color: var(--c-accent-text);
   padding: 0.125rem 0.375rem;
   background: var(--c-primary-tint);
   border-radius: var(--radius-pill);
@@ -110,7 +110,7 @@
 .portal-notif__action {
   font-size: 0.75rem;
   font-weight: 500;
-  color: var(--c-primary);
+  color: var(--c-accent-text);
   padding: 0.25rem 0.5rem;
   border-radius: var(--radius-sm);
   transition: background var(--motion-fast);

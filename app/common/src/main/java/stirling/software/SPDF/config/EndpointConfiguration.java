@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +14,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.service.PdfaLevelAServiceInterface;
 
 @Service
 @Slf4j
@@ -49,16 +51,21 @@ public class EndpointConfiguration {
     private Map<String, Boolean> endpointStatuses = new ConcurrentHashMap<>();
 
     private Map<String, Set<String>> endpointGroups = new ConcurrentHashMap<>();
-    private Set<String> disabledGroups = new HashSet<>();
+    private Set<String> disabledGroups = ConcurrentHashMap.newKeySet();
     private Map<String, DisableReason> endpointDisableReasons = new ConcurrentHashMap<>();
     private Map<String, DisableReason> groupDisableReasons = new ConcurrentHashMap<>();
     private Map<String, Set<String>> endpointAlternatives = new ConcurrentHashMap<>();
     private final boolean runningProOrHigher;
+    private final boolean pdfUaAvailable;
 
     public EndpointConfiguration(
-            ApplicationProperties applicationProperties, @Qualifier("runningProOrHigher") boolean runningProOrHigher) {
+            ApplicationProperties applicationProperties,
+            @Qualifier("runningProOrHigher") boolean runningProOrHigher,
+            @Autowired(required = false) PdfaLevelAServiceInterface pdfaLevelAService) {
         this.applicationProperties = applicationProperties;
         this.runningProOrHigher = runningProOrHigher;
+        // The PDF/UA tagger ships in the proprietary module, and so do its endpoints.
+        this.pdfUaAvailable = pdfaLevelAService != null;
         init();
         processEnvironmentConfigs();
     }
@@ -344,6 +351,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Convert", "pdf-to-img");
         addEndpointToGroup("Convert", "img-to-pdf");
         addEndpointToGroup("Convert", "pdf-to-pdfa");
+        addEndpointToGroup("Convert", "pdf-to-ua");
         addEndpointToGroup("Convert", "file-to-pdf");
         addEndpointToGroup("Convert", "pdf-to-word");
         addEndpointToGroup("Convert", "pdf-to-presentation");
@@ -383,6 +391,7 @@ public class EndpointConfiguration {
         // Backend-only endpoints (not in frontend tool registry endpoints)
         addEndpointToGroup("Security", "redact");
         addEndpointToGroup("Security", "verify-pdf");
+        addEndpointToGroup("Security", "accessibility-report");
         addEndpointToGroup("Security", "sign");
 
         // Adding endpoints to "Other" group
@@ -517,6 +526,8 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "json-to-pdf");
         addEndpointToGroup("Java", "pdf-to-video");
         addEndpointToGroup("Java", "verify-pdf");
+        addEndpointToGroup("Java", "pdf-to-ua");
+        addEndpointToGroup("Java", "accessibility-report");
         addEndpointToGroup("Java", "flatten");
         addEndpointToGroup("Java", "unlock-pdf-forms");
         addEndpointToGroup("Java", "validate-signature");
@@ -588,6 +599,8 @@ public class EndpointConfiguration {
 
         // veraPDF dependent endpoints
         addEndpointToGroup("veraPDF", "verify-pdf");
+        addEndpointToGroup("veraPDF", "pdf-to-ua");
+        addEndpointToGroup("veraPDF", "accessibility-report");
 
         // Pdftohtml dependent endpoints
         addEndpointToGroup("Pdftohtml", "pdf-to-html");
@@ -617,6 +630,11 @@ public class EndpointConfiguration {
         }
         if (!runningProOrHigher) {
             disableGroup("enterprise");
+        }
+
+        if (!pdfUaAvailable) {
+            disableEndpoint("pdf-to-ua");
+            disableEndpoint("accessibility-report");
         }
 
         if (!applicationProperties.getSystem().isEnableUrlToPDF()) {

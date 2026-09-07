@@ -256,7 +256,7 @@ class ConvertPdfToVideoControllerTest {
             assertTrue(command.contains("+faststart"));
             assertFalse(command.contains("libvpx-vp9"));
             // Output path is always the last argument.
-            assertEquals(backing.getAbsolutePath(), command.get(command.size() - 1));
+            assertEquals(backing.getAbsolutePath(), command.getLast());
         }
 
         @Test
@@ -272,7 +272,7 @@ class ConvertPdfToVideoControllerTest {
             assertTrue(command.contains("30"));
             assertFalse(command.contains("libx264"));
             assertFalse(command.contains("+faststart"));
-            assertEquals(backing.getAbsolutePath(), command.get(command.size() - 1));
+            assertEquals(backing.getAbsolutePath(), command.getLast());
         }
 
         @Test

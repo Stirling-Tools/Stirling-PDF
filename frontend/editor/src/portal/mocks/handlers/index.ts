@@ -1,7 +1,6 @@
 import { assistantHandlers } from "@portal/mocks/handlers/assistant";
 import { authHandlers } from "@portal/mocks/handlers/auth";
 import { notificationsHandlers } from "@portal/mocks/handlers/notifications";
-import { searchHandlers } from "@portal/mocks/handlers/search";
 import { pipelinesHandlers } from "@portal/mocks/handlers/pipelines";
 import { sourcesHandlers } from "@portal/mocks/handlers/sources";
 import { infrastructureHandlers } from "@portal/mocks/handlers/infrastructure";
@@ -15,12 +14,12 @@ import { documentsHandlers } from "@portal/mocks/handlers/documents";
 import { editorDeployHandlers } from "@portal/mocks/handlers/editorDeploy";
 import { linkHandlers } from "@portal/mocks/handlers/link";
 import { integrationsHandlers } from "@portal/mocks/handlers/integrations";
+import { fileRunEventsHandlers } from "@portal/mocks/handlers/fileRunEvents";
 
 export const handlers = [
   ...authHandlers,
   ...notificationsHandlers,
   ...assistantHandlers,
-  ...searchHandlers,
   ...pipelinesHandlers,
   ...sourcesHandlers,
   ...infrastructureHandlers,
@@ -34,6 +33,7 @@ export const handlers = [
   ...editorDeployHandlers,
   ...linkHandlers,
   ...integrationsHandlers,
+  ...fileRunEventsHandlers,
 ];
 
 export { resetNotificationsStore } from "@portal/mocks/handlers/notifications";

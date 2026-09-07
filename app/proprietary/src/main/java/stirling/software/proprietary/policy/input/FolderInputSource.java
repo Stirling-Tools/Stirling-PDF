@@ -114,8 +114,9 @@ public class FolderInputSource implements InputSource {
             if (!claimed) {
                 continue;
             }
-            work.add(new ResolvedInput(
+            work.add(ResolvedInput.forFile(
                     PolicyInputs.of(List.of(fileResource(file))),
+                    identity,
                     success -> completeConsumed(ctx, identity, file, gate, contentHash, success)));
         }
         return work;

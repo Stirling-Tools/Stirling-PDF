@@ -50,6 +50,7 @@ export const CORE_REGULAR_TOOL_IDS = [
   "removeCertSign",
   "unlockPDFForms",
   "compress",
+  "classify",
   "extractPages",
   "reorganizePages",
   "extractImages",

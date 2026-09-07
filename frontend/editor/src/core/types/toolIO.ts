@@ -72,6 +72,8 @@ export type ToolArity = "SISO" | "SIMO" | "MISO" | "MIMO";
 export interface ToolIOWhen {
   param: string;
   matches: string[];
+  /** The value the endpoint uses when this parameter is absent; omitted when it has none. */
+  default?: string;
 }
 
 /** An output that applies when every condition in `when` holds. */
@@ -97,6 +99,11 @@ export interface ToolIOSpec {
 export type ToolIOTable = Partial<Record<ToolEndpoint, ToolIOSpec>>;
 
 export const TOOL_IO: ToolIOTable = {
+  "/api/v1/ai/tools/classify-and-label": {
+    accepts: ["PDF"],
+    produces: "PDF",
+    arity: "SISO",
+  },
   "/api/v1/convert/cbr/pdf": {
     accepts: ["CBR"],
     produces: "PDF",
@@ -168,7 +175,13 @@ export const TOOL_IO: ToolIOTable = {
     arity: "SIMO",
     cases: [
       {
-        when: [{ param: "singleOrMultiple", matches: ["single"] }],
+        when: [
+          {
+            param: "singleOrMultiple",
+            matches: ["single"],
+            default: "multiple",
+          },
+        ],
         produces: "IMAGE",
         arity: "SISO",
       },
@@ -201,23 +214,28 @@ export const TOOL_IO: ToolIOTable = {
       },
     ],
   },
+  "/api/v1/convert/pdf/ua": {
+    accepts: ["PDF"],
+    produces: "PDF",
+    arity: "SISO",
+  },
   "/api/v1/convert/pdf/vector": {
     accepts: ["PDF"],
     produces: "IMAGE",
     arity: "SISO",
     cases: [
       {
-        when: [{ param: "outputFormat", matches: ["ps"] }],
+        when: [{ param: "outputFormat", matches: ["ps"], default: "eps" }],
         produces: "POSTSCRIPT",
         arity: "SISO",
       },
       {
-        when: [{ param: "outputFormat", matches: ["pcl"] }],
+        when: [{ param: "outputFormat", matches: ["pcl"], default: "eps" }],
         produces: "PCL",
         arity: "SISO",
       },
       {
-        when: [{ param: "outputFormat", matches: ["xps"] }],
+        when: [{ param: "outputFormat", matches: ["xps"], default: "eps" }],
         produces: "XPS",
         arity: "SISO",
       },
@@ -244,7 +262,13 @@ export const TOOL_IO: ToolIOTable = {
     arity: "MIMO",
     cases: [
       {
-        when: [{ param: "combineIntoSinglePdf", matches: ["true"] }],
+        when: [
+          {
+            param: "combineIntoSinglePdf",
+            matches: ["true"],
+            default: "false",
+          },
+        ],
         produces: "PDF",
         arity: "MISO",
       },
@@ -432,7 +456,7 @@ export const TOOL_IO: ToolIOTable = {
     arity: "SISO",
     cases: [
       {
-        when: [{ param: "dryRun", matches: ["true"] }],
+        when: [{ param: "dryRun", matches: ["true"], default: "false" }],
         produces: "JSON",
         arity: "SISO",
       },
@@ -485,7 +509,7 @@ export const TOOL_IO: ToolIOTable = {
     arity: "SISO",
     cases: [
       {
-        when: [{ param: "sidecar", matches: ["true"] }],
+        when: [{ param: "sidecar", matches: ["true"], default: "false" }],
         produces: "ZIP",
         arity: "SISO",
       },
@@ -527,6 +551,11 @@ export const TOOL_IO: ToolIOTable = {
     produces: "PDF",
     arity: "SISO",
   },
+  "/api/v1/security/accessibility-report": {
+    accepts: ["PDF"],
+    produces: "JSON",
+    arity: "SISO",
+  },
   "/api/v1/security/add-password": {
     accepts: ["PDF"],
     produces: "PDF_ENCRYPTED",
@@ -534,8 +563,8 @@ export const TOOL_IO: ToolIOTable = {
     cases: [
       {
         when: [
-          { param: "password", matches: [""] },
-          { param: "ownerPassword", matches: [""] },
+          { param: "password", matches: [""], default: "" },
+          { param: "ownerPassword", matches: [""], default: "" },
         ],
         produces: "PDF",
         arity: "SISO",

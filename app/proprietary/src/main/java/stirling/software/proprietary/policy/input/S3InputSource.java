@@ -107,8 +107,9 @@ public class S3InputSource implements InputSource {
             if (!ctx.claim(identity, gate, null)) {
                 continue;
             }
-            work.add(new ResolvedInput(
+            work.add(ResolvedInput.forFile(
                     PolicyInputs.of(List.of(objectResource(client, config, object))),
+                    identity,
                     success -> completeConsumed(ctx, client, config, object.key(), identity, gate, success)));
         }
         return work;

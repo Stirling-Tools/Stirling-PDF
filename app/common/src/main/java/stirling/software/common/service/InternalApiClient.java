@@ -154,7 +154,7 @@ public class InternalApiClient {
         // expects. File-bearing calls get the right multipart content-type from RestTemplate.
         boolean isAiTool = endpointPath.startsWith("/api/v1/ai/tools/");
         boolean hasFilePart =
-                body.values().stream().flatMap(java.util.List::stream).anyMatch(v -> v instanceof Resource);
+                body.values().stream().flatMap(java.util.List::stream).anyMatch(Resource.class::isInstance);
         if (isAiTool && !hasFilePart) {
             headers.setContentType(MediaType.MULTIPART_FORM_DATA);
         }

@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import "@app/ui/Surface.css";
 import "@app/ui/MetricCard.css";
 
 export type DeltaDirection = "up" | "down" | "flat";
@@ -52,6 +53,7 @@ export function MetricCard({
   const interactive = !!onClick;
 
   const classes = [
+    "sui-surface",
     "sui-metric",
     `sui-metric--${size}`,
     emphasis === "primary" ? "sui-metric--primary" : "",

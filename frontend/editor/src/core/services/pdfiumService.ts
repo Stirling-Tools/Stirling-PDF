@@ -24,7 +24,7 @@ import {
 } from "@app/services/wasmPrecompiler";
 import type { FormField, WidgetCoordinates } from "@app/tools/formFill/types";
 
-interface ExtendedPdfiumRuntime {
+export interface ExtendedPdfiumRuntime {
   HEAPU8: Uint8Array;
   HEAPF32: Float32Array;
 }
@@ -80,17 +80,24 @@ function wasmUrl(): string {
  * This is the low-level PDFium WASM interface with all C functions wrapped.
  * Prefer `withDocument()` for document-scoped work.
  */
-export async function getPdfiumModule(): Promise<WrappedPdfiumModule> {
-  if (_module) return _module;
-  if (!_initPromise) {
-    // Ensure eager compilation has started if PDF service is requested before idle timeout
-    startEagerWasmCompilation();
+/** Reuses the WASM pre-compiled at boot. Every failure must reach this promise:
+ *  `instantiateWasm` reports success by callback, so a rejection inside it leaves
+ *  `init()` pending forever - and with it every thumbnail, parse and form read. */
+async function initPdfiumModule(): Promise<WrappedPdfiumModule> {
+  // Ensure eager compilation has started if PDF service is requested before idle timeout
+  startEagerWasmCompilation();
 
-    const overrides: PdfiumModuleOverrides = {
-      locateFile: () => wasmUrl(),
-    };
+  const overrides: PdfiumModuleOverrides = { locateFile: () => wasmUrl() };
+  const precompiled = await pdfiumWasmModulePromise;
 
-    // Eagerly reuse pre-compiled WASM module from app boot if available
+  let reportFailure: (error: unknown) => void = () => {};
+  const instantiateFailed = new Promise<never>((_, reject) => {
+    reportFailure = reject;
+  });
+
+  // No pre-compiled module: leave instantiateWasm alone so emscripten fetches the
+  // WASM itself and rejects init() on failure, instead of a fallback that can't.
+  if (precompiled) {
     overrides.instantiateWasm = (
       imports: WebAssembly.Imports,
       successCallback: (
@@ -98,40 +105,34 @@ export async function getPdfiumModule(): Promise<WrappedPdfiumModule> {
         module: WebAssembly.Module,
       ) => void,
     ) => {
-      pdfiumWasmModulePromise
-        .then((wasmModule) => {
-          if (wasmModule) {
-            return WebAssembly.instantiate(wasmModule, imports).then(
-              (instance) => {
-                successCallback(instance, wasmModule);
-              },
-            );
-          } else {
-            throw new Error("No pre-compiled WASM module found");
-          }
-        })
-        .catch((err: unknown) => {
-          console.warn(
-            "Eager WebAssembly instantiation failed, falling back to streaming compilation:",
-            err,
-          );
-          WebAssembly.instantiateStreaming(fetch(wasmUrl()), imports).then(
-            (result) => {
-              successCallback(result.instance, result.module);
-            },
-          );
-        });
+      WebAssembly.instantiate(precompiled, imports)
+        .then((instance) => successCallback(instance, precompiled))
+        .catch(reportFailure);
     };
+  }
 
-    _initPromise = init(overrides as Partial<PdfiumModule>).then((m) => {
-      // Call PDFiumExt_Init to ensure extensions (form fill etc.) are set up
-      try {
-        m.PDFiumExt_Init();
-      } catch {
-        /* already initialized */
-      }
-      _module = m;
-      return m;
+  const m = await Promise.race([
+    init(overrides as Partial<PdfiumModule>),
+    instantiateFailed,
+  ]);
+  // Call PDFiumExt_Init to ensure extensions (form fill etc.) are set up
+  try {
+    m.PDFiumExt_Init();
+  } catch {
+    /* already initialized */
+  }
+  _module = m;
+  return m;
+}
+
+export async function getPdfiumModule(): Promise<WrappedPdfiumModule> {
+  if (_module) return _module;
+  if (!_initPromise) {
+    _initPromise = initPdfiumModule().catch((error: unknown) => {
+      // Don't cache the failure: every PDF feature in the app goes through here,
+      // so a transient WASM fetch would take them all down for the session.
+      _initPromise = null;
+      throw error;
     });
   }
   return _initPromise;
@@ -289,6 +290,40 @@ function copyToWasmHeap(
   (m.pdfium as typeof m.pdfium & ExtendedPdfiumRuntime).HEAPU8.set(bytes, ptr);
 }
 
+/** Human-readable message for an FPDF_GetLastError() code. */
+function pdfiumOpenErrorMessage(err: number): string {
+  switch (err) {
+    case 1:
+      return "Could not open the PDF (unknown error).";
+    case 2:
+      return "This file is not a valid PDF or is corrupted.";
+    case 3:
+      return "The PDF file is corrupted and could not be read.";
+    case 4:
+      return "This PDF is password-protected.";
+    case 5:
+      return "This PDF uses an unsupported security scheme.";
+    case 6:
+      return "A page in this PDF could not be loaded.";
+    default:
+      return `Could not open the PDF (error ${err}).`;
+  }
+}
+
+/** FPDF_GetLastError() code for a missing/incorrect document password. */
+export const FPDF_ERR_PASSWORD = 4;
+
+// Open failure carrying the raw FPDF_GetLastError() code so callers can tell a
+// password prompt (code 4) apart from a corrupt file.
+export class PdfiumOpenError extends Error {
+  readonly code: number;
+  constructor(code: number) {
+    super(pdfiumOpenErrorMessage(code));
+    this.name = "PdfiumOpenError";
+    this.code = code;
+  }
+}
+
 /**
  * Load a PDF into PDFium memory and return the document pointer.
  * Caller MUST call `closeRawDocument(docPtr)` when finished.
@@ -306,8 +341,7 @@ export async function openRawDocument(
   const docPtr = m.FPDF_LoadMemDocument(ptr, len, password ?? "");
   if (!docPtr) {
     m.pdfium.wasmExports.free(ptr);
-    const err = m.FPDF_GetLastError();
-    throw new Error(`PDFium: failed to open document (error ${err})`);
+    throw new PdfiumOpenError(m.FPDF_GetLastError());
   }
   // Keep the buffer alive — freed in closeRawDocument()
   _docDataPtrs.set(docPtr, ptr);
