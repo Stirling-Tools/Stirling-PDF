@@ -75,7 +75,7 @@ vi.mock("../../services/apiClient", () => ({
 
 // Import the mocked apiClient
 import apiClient from "@app/services/apiClient";
-const mockedApiClient = vi.mocked(apiClient);
+const mockedApiClient = vi.mocked(apiClient, { deep: true });
 
 // Mock only essential services that are actually called by the tests
 vi.mock("../../services/fileStorage", () => ({
