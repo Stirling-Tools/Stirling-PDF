@@ -72,10 +72,6 @@ const modernGlobals: OxlintGlobals = {
   SuppressedError: "readonly",
 };
 
-// Folders not yet conformant to the stricter no-explicit-any rule
-const noExplicitAnyExcludes = [
-];
-
 export default defineConfig({
   plugins: ["typescript", "import"],
   categories: {
@@ -185,6 +181,7 @@ export default defineConfig({
         allowInterfaces: "with-single-extends",
       },
     ],
+    "typescript/no-explicit-any": "error",
     "typescript/no-extra-non-null-assertion": "error",
     "typescript/no-misused-new": "error",
     "typescript/no-namespace": "error",
@@ -380,15 +377,6 @@ export default defineConfig({
             patterns: [aliasOverRelative, aliasOverSrc],
           },
         ],
-      },
-    },
-    {
-      // Stricter no-explicit-any, enabled everywhere in the editor app EXCEPT
-      // the folders that are not yet conformant (migrated incrementally).
-      files: [APP_SOURCE],
-      excludeFiles: noExplicitAnyExcludes,
-      rules: {
-        "typescript/no-explicit-any": "error",
       },
     },
     {
