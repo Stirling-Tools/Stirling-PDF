@@ -265,7 +265,10 @@ const StampSetupSettings = ({
               const template = STAMP_TEMPLATES.find((t) => t.id === value);
               if (template) {
                 onParameterChange("stampText", template.text);
-                onParameterChange("position", template.position as any);
+                onParameterChange(
+                  "position",
+                  template.position as AddStampParameters["position"],
+                );
               }
             }}
             clearable
@@ -640,7 +643,8 @@ const StampSetupSettings = ({
             label={t("AddStampRequest.alphabet", "Alphabet")}
             value={parameters.alphabet}
             onChange={(v) => {
-              const nextAlphabet = (v as any) || "roman";
+              const nextAlphabet =
+                (v as AddStampParameters["alphabet"]) || "roman";
               onParameterChange("alphabet", nextAlphabet);
               const nextDefault = getDefaultFontSizeForAlphabet(nextAlphabet);
               onParameterChange("fontSize", nextDefault);

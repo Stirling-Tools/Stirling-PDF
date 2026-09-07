@@ -370,6 +370,23 @@ export default function AdminAiModelsSection() {
                 </Text>
               </Alert>
             )}
+
+            {showBaseUrl && (
+              <Alert
+                variant="light"
+                color="blue"
+                icon={
+                  <LocalIcon icon="info-rounded" width="1rem" height="1rem" />
+                }
+              >
+                <Text size="xs">
+                  {t(
+                    "admin.settings.ai.models.baseUrl.contextWindow",
+                    "Use a context window of at least 16,384 tokens. Smaller windows silently drop part of the prompt. Ollama defaults to 4,096 - raise OLLAMA_CONTEXT_LENGTH.",
+                  )}
+                </Text>
+              </Alert>
+            )}
           </Stack>
         </Paper>
       </Stack>

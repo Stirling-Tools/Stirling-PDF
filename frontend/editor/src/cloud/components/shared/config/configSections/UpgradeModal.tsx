@@ -69,10 +69,9 @@ interface UpgradeModalProps {
   /** ISO 4217 currency code for the cap input. Default USD. */
   currency?: "USD" | "EUR" | "GBP";
   /**
-   * The team's one-time free grant in documents — the real {@code
+   * The team's free grant in documents per billing period — the real {@code
    * wallet.freeAllowance}, threaded from the free-leader view so the step copy
-   * quotes the backend's number instead of a hardcoded one. A lifetime grant,
-   * not a monthly one.
+   * quotes the backend's number instead of a hardcoded one.
    */
   freeLimit: number;
   /**

@@ -12,7 +12,7 @@ vi.mock("@app/services/policyApi", () => ({
 /** A stored policy in the shape the backend returns. */
 const policy = (
   id: string,
-  categoryId?: string,
+  policyKey?: string,
   editor?: { allowed: boolean; runOn?: "upload" | "export" },
 ) => ({
   id,
@@ -22,7 +22,7 @@ const policy = (
   steps: [{ operation: "/api/v1/misc/compress-pdf", parameters: {} }],
   output: {
     type: "inline",
-    options: { ...(categoryId ? { categoryId } : {}) },
+    options: { ...(policyKey ? { categoryId: policyKey } : {}) },
   },
   outputIds: [],
   editor: {
