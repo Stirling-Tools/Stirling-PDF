@@ -6,6 +6,7 @@ import SearchIcon from "@mui/icons-material/SearchOutlined";
 import HelpIcon from "@mui/icons-material/HelpOutlineOutlined";
 import { EditorFileSwitcher } from "@app/tools/pdfTextEditor/components/EditorFileSwitcher";
 import type { FileId } from "@app/types/file";
+import { modShortcut } from "@app/utils/hotkeys";
 
 interface Props {
   /** Phones also lose the toolbar behind this panel, so it carries its extras. */
@@ -63,10 +64,11 @@ export function EditorPanelActions({
       )}
       <Group gap="xs" wrap="nowrap">
         <Tooltip
-          label={t(
-            "pdfTextEditor.saveTooltip",
-            "Apply changes to the file in your workspace (Ctrl+S)",
-          )}
+          label={t("pdfTextEditor.saveTooltip", {
+            defaultValue:
+              "Apply changes to the file in your workspace ({{shortcut}})",
+            shortcut: modShortcut("S"),
+          })}
         >
           <Button
             size="sm"

@@ -20,11 +20,13 @@ import {
 } from "@app/tools/pdfTextEditor/components/toolbar/toolbarShared";
 import { useEditorSession } from "@app/tools/pdfTextEditor/store/EditorSession";
 import { useElementWidth } from "@app/tools/pdfTextEditor/hooks/useElementWidth";
+import { modShortcut } from "@app/utils/hotkeys";
 import "@app/tools/pdfTextEditor/components/EditorTopBar.css";
 
 // Below this, insert/find/help collapse into one menu so the contextual
 // formatting group still has room.
 const COMPACT_BELOW_PX = 900;
+
 
 interface EditorTopBarProps {
   controller: Controller;
@@ -96,7 +98,10 @@ export function EditorTopBar({
       {hasDocument && (
         <div className="pdf-editor-topbar__band">
           <Tooltip
-            label={t("pdfTextEditor.toolbar.undoTooltip", "Undo (Ctrl+Z)")}
+            label={t("pdfTextEditor.toolbar.undoTooltip", {
+              defaultValue: "Undo ({{shortcut}})",
+              shortcut: modShortcut("Z"),
+            })}
           >
             <Button
               variant="tertiary"
@@ -111,7 +116,10 @@ export function EditorTopBar({
             />
           </Tooltip>
           <Tooltip
-            label={t("pdfTextEditor.toolbar.redoTooltip", "Redo (Ctrl+Y)")}
+            label={t("pdfTextEditor.toolbar.redoTooltip", {
+              defaultValue: "Redo ({{shortcut}})",
+              shortcut: modShortcut("Y"),
+            })}
           >
             <Button
               variant="tertiary"
@@ -217,7 +225,10 @@ export function EditorTopBar({
                 />
               </Tooltip>
               <Tooltip
-                label={t("pdfTextEditor.settings.findTooltip", "Find (Ctrl+F)")}
+                label={t("pdfTextEditor.settings.findTooltip", {
+                  defaultValue: "Find ({{shortcut}})",
+                  shortcut: modShortcut("F"),
+                })}
               >
                 <Button
                   // Pressed while the bar is showing, so it reads as the toggle it
