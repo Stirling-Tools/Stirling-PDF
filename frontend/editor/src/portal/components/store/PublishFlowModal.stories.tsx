@@ -49,10 +49,10 @@ const meta: Meta<typeof PublishFlowModal> = {
 export default meta;
 type Story = StoryObj<typeof PublishFlowModal>;
 
-/** Step 1: name, category and description beside a live preview of the store card. */
+/** The Details form beside a live preview of the store card. */
 export const Details: Story = {};
 
-/** Step 2 with blockers: the mock preflight blocks any pipeline whose name contains "secret". */
+/** Checks with blockers: the mock preflight blocks any pipeline whose name contains "secret". */
 export const Blocked: Story = {
   args: { policy: { ...policy, name: "Redaction sweep (secret keys)" } },
   play: async () => {
@@ -63,7 +63,7 @@ export const Blocked: Story = {
   },
 };
 
-/** Step 2 with only warnings and removals: Continue is enabled. */
+/** Checks with only warnings and removals, so Continue is enabled. */
 export const Ready: Story = {
   play: async () => {
     await continueToChecks();

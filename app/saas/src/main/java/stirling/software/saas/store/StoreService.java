@@ -89,8 +89,6 @@ public class StoreService {
     private final StoreTextAuditor textAuditor;
     private final ObjectMapper objectMapper;
 
-    // ------------------------------------------------------------------ publishing
-
     public PreflightReport preflight(PublishRequest request) {
         Policy policy = ownedPolicy(request);
         return prepare(policy, request, existingListingFor(policy).orElse(null)).report();
@@ -220,8 +218,6 @@ public class StoreService {
         }
     }
 
-    // ------------------------------------------------------------------ stars and installs
-
     @Transactional
     public StoreDtos.StarResponse setStar(String storeId, boolean starred) {
         Long userId = requireUserId();
@@ -256,8 +252,6 @@ public class StoreService {
         listings.save(listing);
         return new StoreDtos.InstallResponse(count);
     }
-
-    // ------------------------------------------------------------------ reads
 
     public StoreDtos.ListPage list(
             String q,
@@ -365,8 +359,6 @@ public class StoreService {
                 .map(row -> toSummary(row, viewer, all))
                 .toList();
     }
-
-    // ------------------------------------------------------------------ helpers
 
     private Policy ownedPolicy(PublishRequest request) {
         if (request.policyId() == null || request.policyId().isBlank()) {
