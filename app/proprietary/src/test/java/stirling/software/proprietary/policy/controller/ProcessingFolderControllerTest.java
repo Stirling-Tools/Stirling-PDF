@@ -7,7 +7,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -196,7 +196,7 @@ class ProcessingFolderControllerTest {
         var source = sourceStore.get(stored.inputs().get(0).sourceId()).orElseThrow();
         assertThat(source.type()).isEqualTo("storage-folder");
         assertThat(source.options()).containsEntry("folderId", FOLDER_ID.toString());
-        verify(policyRunner).run(stored, SweepKind.USER);
+        verify(policyRunner, timeout(2000)).run(stored, SweepKind.USER);
     }
 
     @Test
@@ -481,10 +481,10 @@ class ProcessingFolderControllerTest {
         // Pause: no sweep. Resume: sweeps like creation, so waiting files catch up now
         // rather than at the next reconcile tick.
         controller.save(pausedCopy(view, false));
-        var resumed = controller.save(pausedCopy(view, true)).getBody();
+        controller.save(pausedCopy(view, true));
 
-        assertThat(resumed.startedRuns()).isEqualTo(1);
-        verify(policyRunner, times(2)).run(any(Policy.class), eq(SweepKind.USER));
+        // Both sweeps run behind their responses; the runs feed carries the progress.
+        verify(policyRunner, timeout(2000).times(2)).run(any(Policy.class), eq(SweepKind.USER));
     }
 
     /** The stored record re-saved with only its enabled flag changed. */
@@ -518,7 +518,7 @@ class ProcessingFolderControllerTest {
         // which would silently no-op the born-paused Downloads trick's own backlog sweep.
         var source = sourceStore.get(stored.inputs().get(0).sourceId()).orElseThrow();
         assertThat(source.enabled()).isTrue();
-        verify(policyRunner).run(stored, SweepKind.USER);
+        verify(policyRunner, timeout(2000)).run(stored, SweepKind.USER);
     }
 
     /** A disk-backed folder over the test's own temp directory. */

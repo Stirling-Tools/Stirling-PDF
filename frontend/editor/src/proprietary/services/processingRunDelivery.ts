@@ -31,6 +31,8 @@ const MAX_POLLS = 925;
 /** Result downloads run a few at a time: parallel enough to keep up with a burst
  *  of finishes, bounded so a hundred results don't open a hundred requests. */
 const FETCH_CONCURRENCY = 4;
+/** With no expected count, polls with zero runs before concluding nothing started. */
+const NO_RUN_GRACE_POLLS = 20;
 
 export interface SweepDeliveryProgress {
   /** Runs that completed successfully so far. */
@@ -94,15 +96,15 @@ async function mapBounded<T, R>(
 }
 
 /**
- * Poll `policyId`'s runs until `expected` of them have settled, opening each
- * completed run's outputs into the workbench via `addFiles`. `expected` is
- * what the server reported starting, so this never waits on runs that were
- * never going to appear. Progress is reported after every poll; the final
- * state is also returned.
+ * Poll `policyId`'s runs until they have settled, opening each completed
+ * run's outputs into the workbench via `addFiles`. With a known `expected`
+ * count it stops exactly there; with null (the sweep runs behind the create
+ * response, so no count exists up front) it stops once every observed run is
+ * terminal and stable, or once a grace period passes with no runs at all.
  */
 export async function deliverSweepResults(
   policyId: string,
-  expected: number,
+  expected: number | null,
   addFiles: (
     files: File[],
     options?: { selectFiles?: boolean },
@@ -116,6 +118,7 @@ export async function deliverSweepResults(
       ? { onProgress: callbacks }
       : (callbacks ?? {});
   const alreadySettled = new Set<string>();
+  let quietPolls = 0;
   const progress: SweepDeliveryProgress = {
     processed: 0,
     failed: 0,
@@ -158,6 +161,15 @@ export async function deliverSweepResults(
         files,
       });
     }
+    if (
+      expected == null &&
+      runs.length === 0 &&
+      attempt >= NO_RUN_GRACE_POLLS
+    ) {
+      // Nothing ever started: the sweep found no claimable files.
+      onProgress?.({ ...progress });
+      return progress;
+    }
     if (opened.length > 0) {
       // One addFiles per poll batch, and never selecting what is delivered: a
       // selection isn't meaningful across a folderful of results, and both
@@ -167,7 +179,16 @@ export async function deliverSweepResults(
     }
     onProgress?.({ ...progress });
 
-    if (settled.length >= expected) return progress;
+    if (expected != null) {
+      if (settled.length >= expected) return progress;
+    } else if (runs.length > 0 && settled.length === runs.length) {
+      quietPolls += 1;
+      // Two stable all-terminal polls: a sweep still claiming would have shown
+      // a new run by now.
+      if (quietPolls >= 2) return progress;
+    } else {
+      quietPolls = 0;
+    }
     await delay(attempt < FAST_POLLS ? FAST_POLL_MS : POLL_MS);
   }
   progress.stalled = true;

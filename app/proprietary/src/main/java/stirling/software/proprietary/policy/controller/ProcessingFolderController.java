@@ -288,38 +288,37 @@ public class ProcessingFolderController {
         Policy saved = policyStore.save(policy);
         policyTriggerManager.notifyPoliciesChanged();
         if (!requestedCreate) {
-            // Resuming is a request to catch up: a re-enabled folder sweeps immediately, the way
-            // creation does, instead of idling until the next reconcile tick or a new arrival.
+            // Resuming is a request to catch up: a re-enabled folder sweeps immediately, the
+            // way creation does, instead of idling until the next reconcile tick.
             if (saved.enabled() && existing != null && !existing.enabled()) {
-                SweepOutcome resumed = policyRunner.run(saved, SweepKind.USER);
-                return ResponseEntity.ok(
-                        toView(
-                                saved,
-                                resumed.runIds().size(),
-                                resumed.alreadyProcessed(),
-                                resumed.parked(),
-                                resumed.retried()));
+                sweepBehindTheResponse(saved);
             }
             return ResponseEntity.ok(toView(saved));
         }
-        // Process the backlog: everything already in the folder runs once, now. The counts go back
-        // to the caller so a client can report real progress — and can tell "nothing new to do"
-        // apart from "work started", instead of waiting for runs that were never going to appear.
-        SweepOutcome outcome = policyRunner.run(saved, SweepKind.USER);
-        log.debug(
-                "Processing folder {} created; backlog sweep started {} runs ({} already processed,"
-                        + " {} listed)",
-                saved.id(),
-                outcome.runIds().size(),
-                outcome.alreadyProcessed(),
-                outcome.filesListed());
-        return ResponseEntity.ok(
-                toView(
-                        saved,
-                        outcome.runIds().size(),
-                        outcome.alreadyProcessed(),
-                        outcome.parked(),
-                        outcome.retried()));
+        // Process the backlog: everything already in the folder runs once, starting behind
+        // this response. Holding the POST until every stat, claim, and submission finished
+        // kept the client on a dead spinner — and, under a run flood, starved the response
+        // outright. A client that wants progress reads the runs feed, which is also where
+        // the sweep's cards come from.
+        sweepBehindTheResponse(saved);
+        return ResponseEntity.accepted().body(toView(saved));
+    }
+
+    /** Run the backlog sweep on its own thread; its progress lives in the runs feed. */
+    private void sweepBehindTheResponse(Policy policy) {
+        Thread.startVirtualThread(
+                () -> {
+                    try {
+                        SweepOutcome outcome = policyRunner.run(policy, SweepKind.USER);
+                        log.debug(
+                                "Backlog sweep for {} started {} runs ({} already processed)",
+                                policy.id(),
+                                outcome.runIds().size(),
+                                outcome.alreadyProcessed());
+                    } catch (RuntimeException e) {
+                        log.warn("Backlog sweep for {} failed: {}", policy.id(), e.getMessage());
+                    }
+                });
     }
 
     /** One file in a mounted directory, as the file manager needs to list it. */

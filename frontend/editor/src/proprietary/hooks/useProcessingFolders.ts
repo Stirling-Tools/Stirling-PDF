@@ -188,6 +188,11 @@ export function useProcessingFolders(): ProcessingFoldersApi {
           steps: paused.steps,
           output: paused.output,
         });
+        // Resume sweeps behind the response; a mount's results land on disk
+        // where nothing shows them, so pull them into the workbench.
+        if (folderKind(folder) === "local") {
+          void deliverSweepResults(paused.id, null, addFiles);
+        }
         await load(true);
         return;
       }
@@ -200,12 +205,11 @@ export function useProcessingFolders(): ProcessingFoldersApi {
               { operation: CLASSIFY_OPERATION, parameters: {}, assets: {} },
             ],
           });
-          // The create-time backlog sweep runs server-side; its results land
-          // on disk, so pull them into the workbench as they settle — a
-          // sweep whose results appear nowhere reads as nothing happening.
-          if (saved.startedRuns > 0) {
-            void deliverSweepResults(saved.id, saved.startedRuns, addFiles);
-          }
+          // The backlog sweep runs behind the create response, so there is no
+          // run count to wait on; the delivery stops on its own once the runs
+          // settle (or none appear). Results land on disk where nothing shows
+          // them, so pull them into the workbench as they settle.
+          void deliverSweepResults(saved.id, null, addFiles);
           break;
         }
         case "virtual":

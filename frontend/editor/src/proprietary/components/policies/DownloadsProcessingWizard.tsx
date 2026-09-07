@@ -9,6 +9,7 @@ import {
   CLASSIFY_OPERATION,
   cancelProcessingRuns,
   fetchDownloadsSuggestion,
+  fetchMountedFiles,
   saveProcessingFolder,
   type DownloadsSuggestion,
 } from "@app/services/processingFolderApi";
@@ -58,10 +59,12 @@ export function DownloadsProcessingWizard({
   const [processed, setProcessed] = useState(0);
   const [failed, setFailed] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const [started, setStarted] = useState(0);
-  const [skipped, setSkipped] = useState(0);
-  const [retried, setRetried] = useState(0);
-  const [parkedCount, setParkedCount] = useState(0);
+  // Read once when the sweep settles: the sweep runs behind the create response,
+  // so there are no upfront counts to show - the folder's own states close it out.
+  const [summary, setSummary] = useState<{
+    done: number;
+    failed: number;
+  } | null>(null);
   const [stalled, setStalled] = useState(false);
   const [opened, setOpened] = useState(0);
   const [cards, setCards] = useState<SweepWallCard[]>([]);
@@ -121,10 +124,7 @@ export function DownloadsProcessingWizard({
     setProcessed(0);
     setFailed(0);
     setError(null);
-    setStarted(0);
-    setSkipped(0);
-    setRetried(0);
-    setParkedCount(0);
+    setSummary(null);
     setStalled(false);
     setOpened(0);
     setCards([]);
@@ -149,8 +149,8 @@ export function DownloadsProcessingWizard({
    * the shared delivery's progress onto the card wall and the counts line.
    */
   const trackRuns = useCallback(
-    async (policyId: string, expected: number) => {
-      await deliverSweepResults(policyId, expected, addFiles, {
+    async (policyId: string) => {
+      await deliverSweepResults(policyId, null, addFiles, {
         isCancelled: () => cancelRequested.current,
         onProgress: (progress) => {
           setProcessed(progress.processed);
@@ -223,18 +223,19 @@ export function DownloadsProcessingWizard({
           segments[segments.length - 1] ?? suggestion.directory,
         ).catch(() => {});
       }
-      // The server reports what it actually started; 0 means everything there was already
-      // processed, which is a finished state, not something to wait for.
-      setStarted(folder.startedRuns);
-      setSkipped(folder.alreadyProcessed);
-      setRetried(folder.retried);
-      setParkedCount(folder.parked);
       // The new folder was created outside the hook's own actions; refresh the shared list so the
       // files page and any other consumer pick it up without a reload.
       void refreshProcessingFolders();
-      if (folder.startedRuns > 0) {
-        await trackRuns(folder.id, folder.startedRuns);
-      }
+      // The sweep runs behind the create response; the wall builds itself from the
+      // runs feed and the delivery stops when the runs settle (or none appear).
+      await trackRuns(folder.id);
+      // Close out from the folder's own per-file states - the one place that knows
+      // how much was already done versus parked when nothing new ran.
+      const states = await fetchMountedFiles(folder.id).catch(() => []);
+      setSummary({
+        done: states.filter((f) => f.state === "done").length,
+        failed: states.filter((f) => f.state === "failed").length,
+      });
       setPhase("done");
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -255,7 +256,7 @@ export function DownloadsProcessingWizard({
 
   const capped = suggestion.pdfCount > suggestion.limit;
   const total = Math.min(suggestion.pdfCount, suggestion.limit);
-  const sweepTotal = started || total;
+  const sweepTotal = cards.length || total;
   const settled = processed + failed;
 
   if (!open) {
@@ -376,15 +377,6 @@ export function DownloadsProcessingWizard({
                 })}
               </>
             )}
-            {retried > 0 && (
-              <>
-                {" · "}
-                {t("processingFolders.downloads.retrying", {
-                  count: retried,
-                  defaultValue: "retrying {{count}} that failed last time",
-                })}
-              </>
-            )}
           </p>
           <div className="downloads-wizard__bar" role="progressbar">
             <span
@@ -408,15 +400,15 @@ export function DownloadsProcessingWizard({
               className="downloads-wizard__tick"
               fontSize="inherit"
             />{" "}
-            {started === 0
-              ? parkedCount > 0
+            {processed + failed === 0
+              ? (summary?.failed ?? 0) > 0
                 ? t("processingFolders.downloads.stillParked", {
-                    count: parkedCount,
+                    count: summary?.failed ?? 0,
                     defaultValue:
                       "{{count}} files failed earlier and were not retried — fix the cause, then run again.",
                   })
                 : t("processingFolders.downloads.nothingNew", {
-                    count: skipped,
+                    count: summary?.done ?? 0,
                     defaultValue:
                       "Nothing new to process — these {{count}} files have already been through.",
                   })
