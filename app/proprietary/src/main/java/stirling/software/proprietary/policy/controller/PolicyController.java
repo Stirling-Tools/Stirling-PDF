@@ -379,6 +379,16 @@ public class PolicyController {
     }
 
     /**
+     * The policies surface serves only its own records: a processing-folder pair reads as not-found
+     * here even for a caller who could reach it through its own route, so this API can never see,
+     * rewrite, or half-tear-down a pair.
+     */
+    private boolean accessiblePolicySurface(Policy policy) {
+        return Policy.SURFACE_POLICY.equals(policy.surface())
+                && policyAccessGuard.canAccess(policy);
+    }
+
+    /**
      * Assign owner + owning team server-side. Create stamps the current user and their team; update
      * preserves the existing owner and team after verifying the policy belongs to the caller's team
      * — so the client can neither forge ownership/team on create nor reach across teams on update
@@ -389,7 +399,7 @@ public class PolicyController {
         if (id != null && !id.isBlank()) {
             Policy existing = policyStore.get(id).orElse(null);
             if (existing != null) {
-                if (!policyAccessGuard.canAccess(existing)) {
+                if (!accessiblePolicySurface(existing)) {
                     throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No policy: " + id);
                 }
                 return withOwnerAndTeam(incoming, existing.owner(), existing.teamId());
@@ -414,7 +424,8 @@ public class PolicyController {
                 policy.output(),
                 policy.outputIds(),
                 teamId,
-                policy.editor());
+                policy.editor(),
+                policy.surface());
     }
 
     /** Output secrets never leave the server: reads return the redaction sentinel instead. */
@@ -508,9 +519,6 @@ public class PolicyController {
                             + " values.")
     public List<Policy> listPolicies() {
         return policyAccessGuard.visibleFrom(policyStore).stream()
-                // Processing folders share the engine but are the editor's own surface,
-                // served exclusively by ProcessingFolderController.
-                .filter(policy -> !ProcessingFolderController.isProcessingFolder(policy))
                 .map(PolicyController::withMaskedOutputSecrets)
                 .toList();
     }
@@ -550,7 +558,7 @@ public class PolicyController {
     public ResponseEntity<Policy> getPolicy(@PathVariable String policyId) {
         return policyStore
                 .get(policyId)
-                .filter(policyAccessGuard::canAccess)
+                .filter(this::accessiblePolicySurface)
                 .map(PolicyController::withMaskedOutputSecrets)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
@@ -561,7 +569,8 @@ public class PolicyController {
     public ResponseEntity<Void> deletePolicy(@PathVariable String policyId) {
         requirePolicyEditingAllowed();
         // Scope to the caller's team: a policy in another team reads as not-found.
-        Policy policy = policyStore.get(policyId).filter(policyAccessGuard::canAccess).orElse(null);
+        Policy policy =
+                policyStore.get(policyId).filter(this::accessiblePolicySurface).orElse(null);
         if (policy != null && policyStore.delete(policyId)) {
             processedLedger.clearPolicy(policyId);
             assetCleaner.cleanupAfterDelete(policy);
@@ -584,7 +593,7 @@ public class PolicyController {
         requirePolicyEditingAllowed();
         // Scope to the caller's team: a policy in another team reads as not-found.
         boolean accessible =
-                policyStore.get(policyId).filter(policyAccessGuard::canAccess).isPresent();
+                policyStore.get(policyId).filter(this::accessiblePolicySurface).isPresent();
         if (!accessible) {
             return ResponseEntity.notFound().build();
         }
@@ -609,7 +618,7 @@ public class PolicyController {
         Policy policy =
                 policyStore
                         .get(policyId)
-                        .filter(policyAccessGuard::canAccess)
+                        .filter(this::accessiblePolicySurface)
                         .orElseThrow(
                                 () ->
                                         new ResponseStatusException(
@@ -643,7 +652,7 @@ public class PolicyController {
         Policy policy =
                 policyStore
                         .get(policyId)
-                        .filter(policyAccessGuard::canAccess)
+                        .filter(this::accessiblePolicySurface)
                         .orElseThrow(
                                 () ->
                                         new ResponseStatusException(
@@ -731,7 +740,7 @@ public class PolicyController {
         }
         return policyStore
                 .get(policyId)
-                .filter(policyAccessGuard::canAccess)
+                .filter(this::accessiblePolicySurface)
                 .map(policy -> assetResolver.resolve(policy, inputs))
                 .orElse(inputs);
     }

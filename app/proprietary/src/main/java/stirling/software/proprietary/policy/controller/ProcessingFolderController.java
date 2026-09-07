@@ -80,10 +80,10 @@ import stirling.software.proprietary.storage.service.FileStorageService;
 @Tag(name = "Processing Folders", description = "Folders that process any file added to them.")
 public class ProcessingFolderController {
 
-    /** Marker in the policy's output options separating this surface from policies/pipelines. */
+    /** Legacy marker in output options; pre-surface-field rows carry it, and reads strip it. */
     public static final String SURFACE_OPTION = "surface";
 
-    public static final String SURFACE = "processing-folder";
+    public static final String SURFACE = Policy.SURFACE_PROCESSING_FOLDER;
 
     /** The paired source's type; the policies/pipelines surfaces hide sources of this type too. */
     public static final String SOURCE_TYPE = "storage-folder";
@@ -193,10 +193,8 @@ public class ProcessingFolderController {
     @GetMapping
     @Operation(summary = "List the caller's processing folders")
     public List<ProcessingFolderView> list() {
-        User user = currentUserOrNull();
-        return policyAccessGuard.visibleFrom(policyStore).stream()
-                .filter(ProcessingFolderController::isProcessingFolder)
-                .filter(policy -> ownedBy(policy, user))
+        currentUserOrNull();
+        return policyAccessGuard.visibleProcessingFolders(policyStore).stream()
                 .map(this::toView)
                 .toList();
     }
@@ -248,26 +246,30 @@ public class ProcessingFolderController {
                                 policyAccessGuard.teamForNewPolicy()));
         Policy policy =
                 new Policy(
-                        existing == null ? null : existing.id(),
-                        "Processing folder: " + name,
-                        policyAccessGuard.ownerForNewPolicy(),
-                        request.enabled() == null || request.enabled(),
-                        // A disk directory is watched, so the folder reacts to arrivals on its own.
-                        // A null trigger would make the input manual-only: the create-time backlog
-                        // sweep would run and nothing would ever process again. Storage-backed
-                        // folders stay manual until the storage arrival trigger exists —
-                        // folder-watch only supports directory sources.
-                        List.of(
-                                new PipelineInput(
-                                        source.id(),
-                                        onDisk
-                                                ? new TriggerConfig(WATCH_TRIGGER, Map.of())
-                                                : null)),
-                        request.steps() == null ? List.of() : request.steps(),
-                        outputSpecFor(request, folder),
-                        List.of(),
-                        policyAccessGuard.teamForNewPolicy(),
-                        null);
+                                existing == null ? null : existing.id(),
+                                "Processing folder: " + name,
+                                policyAccessGuard.ownerForNewPolicy(),
+                                request.enabled() == null || request.enabled(),
+                                // A disk directory is watched, so the folder reacts to arrivals on
+                                // its own.
+                                // A null trigger would make the input manual-only: the create-time
+                                // backlog
+                                // sweep would run and nothing would ever process again.
+                                // Storage-backed
+                                // folders stay manual until the storage arrival trigger exists —
+                                // folder-watch only supports directory sources.
+                                List.of(
+                                        new PipelineInput(
+                                                source.id(),
+                                                onDisk
+                                                        ? new TriggerConfig(WATCH_TRIGGER, Map.of())
+                                                        : null)),
+                                request.steps() == null ? List.of() : request.steps(),
+                                outputSpecFor(request, folder),
+                                List.of(),
+                                policyAccessGuard.teamForNewPolicy(),
+                                null)
+                        .withSurface(SURFACE);
         try {
             policyValidator.validate(policy);
         } catch (IllegalArgumentException e) {
@@ -617,9 +619,7 @@ public class ProcessingFolderController {
     private Policy existingForPlace(SaveProcessingFolderRequest request, User user) {
         boolean onDisk = request.directory() != null && !request.directory().isBlank();
         Path directory = onDisk ? Path.of(request.directory().trim()).normalize() : null;
-        return policyAccessGuard.visibleFrom(policyStore).stream()
-                .filter(ProcessingFolderController::isProcessingFolder)
-                .filter(policy -> ownedBy(policy, user))
+        return policyAccessGuard.visibleProcessingFolders(policyStore).stream()
                 .filter(
                         policy -> {
                             String sourceId = soleSourceId(policy);
@@ -712,8 +712,7 @@ public class ProcessingFolderController {
 
     /** Whether a policy record belongs to this surface (and so is hidden from the others). */
     public static boolean isProcessingFolder(Policy policy) {
-        return policy.output() != null
-                && SURFACE.equals(policy.output().options().get(SURFACE_OPTION));
+        return SURFACE.equals(policy.surface());
     }
 
     /**
@@ -764,7 +763,6 @@ public class ProcessingFolderController {
     private OutputSpec outputSpecFor(SaveProcessingFolderRequest request, Folder folder) {
         Map<String, Object> options =
                 new HashMap<>(request.output() == null ? Map.of() : request.output());
-        options.put(SURFACE_OPTION, SURFACE);
         if (folder != null) {
             options.putIfAbsent("folderId", folder.getId().toString());
             return new OutputSpec("storage", options);

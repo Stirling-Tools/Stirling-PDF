@@ -44,10 +44,7 @@ public class SourceOverviewService {
                                         !ProcessingFolderController.SOURCE_TYPE.equals(
                                                 source.type()))
                         .toList();
-        List<Policy> policies =
-                policyAccessGuard.visibleFrom(policyStore).stream()
-                        .filter(policy -> !ProcessingFolderController.isProcessingFolder(policy))
-                        .toList();
+        List<Policy> policies = policyAccessGuard.visibleFrom(policyStore);
 
         Map<String, List<Policy>> referencesBySource = referencesBySource(policies);
         Map<String, DocStats> docStats =

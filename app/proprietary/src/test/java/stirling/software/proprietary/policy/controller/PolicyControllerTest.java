@@ -555,6 +555,16 @@ class PolicyControllerTest {
         }
 
         @Test
+        @DisplayName("a processing-folder row is invisible to the policies surface")
+        void getRefusesAProcessingFolderRow() {
+            Policy pair = policy("f", 1L).withSurface(Policy.SURFACE_PROCESSING_FOLDER);
+            when(policyStore.get("f")).thenReturn(Optional.of(pair));
+
+            // Even its owner cannot reach it here; only the folder route serves it.
+            assertThat(controller.getPolicy("f").getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        }
+
+        @Test
         @DisplayName("getPolicy returns the policy when accessible")
         void getAccessible() {
             Policy p = policy("a", 1L);

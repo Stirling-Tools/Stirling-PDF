@@ -40,12 +40,25 @@ public class PolicyAccessGuard {
         return enforced() ? policyManagementAuthority.currentUserTeamId() : null;
     }
 
-    /** Whether the policy belongs to the current user's team (so they may view/run/edit it). */
+    /**
+     * Whether the caller may view/run/edit this record: team membership for a policy. A
+     * processing-folder pair is personal, not team governance, so only its owner reaches it {@code
+     * -} teammates and team leaders alike do not.
+     */
     public boolean canAccess(Policy policy) {
         if (!enforced()) {
             return true;
         }
+        if (Policy.SURFACE_PROCESSING_FOLDER.equals(policy.surface())) {
+            return ownedByCurrentUser(policy);
+        }
         return Objects.equals(policy.teamId(), policyManagementAuthority.currentUserTeamId());
+    }
+
+    /** Owner match for personal records; a legacy row with no stamped owner is anyone's. */
+    private boolean ownedByCurrentUser(Policy policy) {
+        return policy.owner() == null
+                || Objects.equals(policy.owner(), userService.getCurrentUsername());
     }
 
     /**
@@ -54,6 +67,26 @@ public class PolicyAccessGuard {
      * disabled (single-user) returns everything.
      */
     public List<Policy> visibleFrom(PolicyStore store) {
+        // Processing-folder pairs share the store but belong to their own surface; nothing
+        // that lists policies may see them, so the exclusion lives here, not at each caller.
+        return scopedRows(store).stream()
+                .filter(policy -> Policy.SURFACE_POLICY.equals(policy.surface()))
+                .toList();
+    }
+
+    /**
+     * The processing folders visible to the caller. Unlike policies these are personal records:
+     * within the team's rows, only the ones the caller owns. Login disabled returns them all {@code
+     * -} the local operator owns everything.
+     */
+    public List<Policy> visibleProcessingFolders(PolicyStore store) {
+        return scopedRows(store).stream()
+                .filter(policy -> Policy.SURFACE_PROCESSING_FOLDER.equals(policy.surface()))
+                .filter(policy -> !enforced() || ownedByCurrentUser(policy))
+                .toList();
+    }
+
+    private List<Policy> scopedRows(PolicyStore store) {
         if (!enforced()) {
             return store.all();
         }

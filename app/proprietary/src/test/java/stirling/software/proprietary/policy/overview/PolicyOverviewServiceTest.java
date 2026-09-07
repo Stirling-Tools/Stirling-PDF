@@ -158,7 +158,8 @@ class PolicyOverviewServiceTest {
                         OutputSpec.inline(),
                         List.of(),
                         null,
-                        EditorConfig.disabled()));
+                        EditorConfig.disabled(),
+                        null));
 
         PolicyView view = find(service.overview(), "Mandatory redaction");
         assertTrue(view.required());
@@ -180,7 +181,8 @@ class PolicyOverviewServiceTest {
                         OutputSpec.inline(),
                         List.of(),
                         null,
-                        EditorConfig.disabled()));
+                        EditorConfig.disabled(),
+                        null));
         // No explicit icon: a template-derived policy falls back to its categoryId marker.
         policyStore.save(
                 new Policy(
@@ -195,7 +197,8 @@ class PolicyOverviewServiceTest {
                         new OutputSpec("inline", Map.of("categoryId", "security")),
                         List.of(),
                         null,
-                        EditorConfig.disabled()));
+                        EditorConfig.disabled(),
+                        null));
 
         assertEquals("shield", find(service.overview(), "Custom with icon").icon());
         assertEquals("security", find(service.overview(), "Template derived").icon());
