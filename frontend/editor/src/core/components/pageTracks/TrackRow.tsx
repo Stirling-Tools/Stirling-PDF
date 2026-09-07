@@ -16,6 +16,7 @@ import SelectAllIcon from "@mui/icons-material/SelectAll";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import ContentCutIcon from "@mui/icons-material/ContentCut";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
@@ -41,6 +42,46 @@ export interface DropHint {
   fileId: FileId;
   /** Insert before this page, or append to the track when null. */
   beforePageId: string | null;
+}
+
+/**
+ * The split control that lives in the gap before a page (a lane-level element,
+ * not attached to a tile): a full-height line centred on the gap, revealed on
+ * hover, that splits the track so that page starts a new one.
+ */
+function SplitHandle({
+  label,
+  left,
+  top,
+  onSplit,
+  beforePosition,
+}: {
+  label: string;
+  /** laneInner x of the gap centre. */
+  left: number;
+  /** laneInner y of the page's top. */
+  top: number;
+  onSplit: () => void;
+  beforePosition: number;
+}) {
+  return (
+    <Tooltip content={label}>
+      <button
+        type="button"
+        className={styles.splitHandle}
+        style={{ left, top, height: "var(--pt-tile-h)" }}
+        aria-label={label}
+        data-split-before={beforePosition}
+        onPointerDown={(event) => event.stopPropagation()}
+        onClick={(event) => {
+          event.stopPropagation();
+          onSplit();
+        }}
+      >
+        <ContentCutIcon sx={{ fontSize: "0.9rem" }} />
+      </button>
+    </Tooltip>
+  );
 }
 
 export interface TrackRowProps {
@@ -470,64 +511,85 @@ function TrackRowImpl({
                   const page = track.pages[item.index];
                   if (!page) return null;
                   return (
-                    <TrackPageTile
-                      key={page.id}
-                      page={page}
-                      trackFileId={track.fileId}
-                      position={item.index + 1}
-                      offsetX={item.start}
-                      offsetY={0}
-                      selected={selectedIds.has(page.id)}
-                      dragging={draggingIds.has(page.id)}
-                      dropBefore={
-                        hintActive && dropHint?.beforePageId === page.id
-                      }
-                      dropAfterLast={
-                        hintActive &&
-                        dropHint?.beforePageId == null &&
-                        item.index === pageCount - 1
-                      }
-                      thumbnails={thumbnails}
-                      onSelect={onSelectPage}
-                      onViewPage={handleViewPage}
-                      onSplit={handleSplitPage}
-                      onRotate={onRotate}
-                      onDelete={onDelete}
-                    />
+                    <React.Fragment key={page.id}>
+                      <TrackPageTile
+                        page={page}
+                        trackFileId={track.fileId}
+                        position={item.index + 1}
+                        offsetX={item.start}
+                        offsetY={0}
+                        selected={selectedIds.has(page.id)}
+                        dragging={draggingIds.has(page.id)}
+                        dropBefore={
+                          hintActive && dropHint?.beforePageId === page.id
+                        }
+                        dropAfterLast={
+                          hintActive &&
+                          dropHint?.beforePageId == null &&
+                          item.index === pageCount - 1
+                        }
+                        thumbnails={thumbnails}
+                        onSelect={onSelectPage}
+                        onViewPage={handleViewPage}
+                        onRotate={onRotate}
+                        onDelete={onDelete}
+                      />
+                      {item.index > 0 && (
+                        <SplitHandle
+                          label={t("pageTracks.splitHere", "Split here")}
+                          left={item.start - geometry.gapPx / 2}
+                          top={0}
+                          beforePosition={item.index + 1}
+                          onSplit={() => handleSplitPage(page.id)}
+                        />
+                      )}
+                    </React.Fragment>
                   );
                 }
                 // Wrap: each virtual item is a row of up to `columns` pages.
                 const rowTop = item.start - scrollMargin;
                 const rowStartIndex = item.index * columns;
+                const gapBefore = wrapColStride - geometry.tileWidthPx;
                 return Array.from({ length: columns }, (_unused, col) => {
                   const pageIndex = rowStartIndex + col;
                   const page = track.pages[pageIndex];
                   if (!page) return null;
                   return (
-                    <TrackPageTile
-                      key={page.id}
-                      page={page}
-                      trackFileId={track.fileId}
-                      position={pageIndex + 1}
-                      offsetX={col * wrapColStride}
-                      offsetY={rowTop}
-                      selected={selectedIds.has(page.id)}
-                      dragging={draggingIds.has(page.id)}
-                      dropBefore={
-                        hintActive && dropHint?.beforePageId === page.id
-                      }
-                      dropAfterLast={
-                        hintActive &&
-                        dropHint?.beforePageId == null &&
-                        pageIndex === pageCount - 1
-                      }
-                      thumbnails={thumbnails}
-                      onSelect={onSelectPage}
-                      onViewPage={handleViewPage}
-                      onSplit={handleSplitPage}
-                      onRotate={onRotate}
-                      onDelete={onDelete}
-                    />
+                    <React.Fragment key={page.id}>
+                      <TrackPageTile
+                        page={page}
+                        trackFileId={track.fileId}
+                        position={pageIndex + 1}
+                        offsetX={col * wrapColStride}
+                        offsetY={rowTop}
+                        selected={selectedIds.has(page.id)}
+                        dragging={draggingIds.has(page.id)}
+                        dropBefore={
+                          hintActive && dropHint?.beforePageId === page.id
+                        }
+                        dropAfterLast={
+                          hintActive &&
+                          dropHint?.beforePageId == null &&
+                          pageIndex === pageCount - 1
+                        }
+                        thumbnails={thumbnails}
+                        onSelect={onSelectPage}
+                        onViewPage={handleViewPage}
+                        onRotate={onRotate}
+                        onDelete={onDelete}
+                      />
+                      {pageIndex > 0 && (
+                        <SplitHandle
+                          label={t("pageTracks.splitHere", "Split here")}
+                          left={
+                            col > 0 ? col * wrapColStride - gapBefore / 2 : 0
+                          }
+                          top={rowTop}
+                          beforePosition={pageIndex + 1}
+                          onSplit={() => handleSplitPage(page.id)}
+                        />
+                      )}
+                    </React.Fragment>
                   );
                 });
               })}

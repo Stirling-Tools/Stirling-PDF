@@ -239,41 +239,54 @@
   opacity: 1;
 }
 
-/* Split affordance on the leading edge, straddling the gap before the page.
-   Revealed on hover; scales with the tiles (--pt-zoom). */
+/* Split affordance. A lane-level element (not attached to a tile), placed by
+   inline left/top/height so it sits in the GAP before a page — the same line
+   the drag insertion marker uses. A full-height line centred in the gap with a
+   small scissors chip on it; revealed by hovering the gap. */
 .splitHandle {
   position: absolute;
-  left: 0;
-  top: calc(var(--pt-tile-h) / 2);
-  z-index: 4;
-  transform: translate(-50%, -50%) scale(var(--pt-zoom, 1));
+  width: 0.875rem;
+  z-index: 5;
+  transform: translateX(-50%);
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 1.5rem;
-  height: 1.5rem;
   padding: 0;
-  border: 1px solid var(--c-border);
-  border-radius: 999px;
-  background: var(--c-surface);
-  color: var(--c-text-muted);
-  box-shadow: var(--shadow-md);
+  border: none;
+  background: none;
+  color: var(--c-primary);
   cursor: pointer;
   opacity: 0;
-  transition:
-    opacity 0.12s ease,
-    color 0.12s ease,
-    border-color 0.12s ease;
+  transition: opacity 0.12s ease;
 }
 
-.tile:hover .splitHandle,
-.tile:focus-within .splitHandle {
-  opacity: 1;
+/* The insertion line itself, centred in the strip, matching the drop marker. */
+.splitHandle::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  border-radius: 999px;
+  background: var(--c-primary);
 }
 
+/* The scissors chip riding on the line. */
+.splitHandle svg {
+  position: relative;
+  z-index: 1;
+  padding: 0.1875rem;
+  border-radius: 999px;
+  background: var(--c-surface);
+  border: 1px solid var(--c-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Hovering the gap strip reveals the split control. */
 .splitHandle:hover {
-  color: var(--c-primary);
-  border-color: var(--c-primary);
+  opacity: 1;
 }
 
 /*
