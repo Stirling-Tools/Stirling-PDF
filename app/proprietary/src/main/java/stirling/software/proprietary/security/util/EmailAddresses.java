@@ -10,8 +10,7 @@ import java.util.regex.Pattern;
 public final class EmailAddresses {
 
     /** Requires a domain with a 2-character-or-longer TLD; rejects "a@" and "a@b". */
-    private static final Pattern PATTERN =
-            Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$");
+    private static final Pattern PATTERN = Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$");
 
     private EmailAddresses() {}
 
