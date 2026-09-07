@@ -270,4 +270,40 @@ describe("PolicySetupWizard", () => {
     const result = onSubmit.mock.calls[0][1] as PolicySetupResult;
     expect(result.required).toBe(false);
   });
+
+  it("adopts the required default when the permission check resolves after opening", async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    const entry: CatalogueEntry = {
+      category: security,
+      config: securityConfig,
+      policy: null,
+    };
+
+    // Opens before the permission GET resolves, so the manager reads as a non-manager for now.
+    const { rerender } = render(
+      <PolicySetupWizard
+        entry={entry}
+        canManagePolicies={false}
+        onClose={vi.fn()}
+        onSubmit={onSubmit}
+        onCustomise={vi.fn()}
+      />,
+    );
+    // The check lands: they are a manager after all.
+    rerender(
+      <PolicySetupWizard
+        entry={entry}
+        canManagePolicies={true}
+        onClose={vi.fn()}
+        onSubmit={onSubmit}
+        onCustomise={vi.fn()}
+      />,
+    );
+    await submitWizard(ENABLE);
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    const result = onSubmit.mock.calls[0][1] as PolicySetupResult;
+    // The late-resolving permission promotes the new policy to required, not a silent pipeline.
+    expect(result.required).toBe(true);
+  });
 });

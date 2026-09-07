@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
 import { Banner, Button, Card, Modal, ToggleSwitch } from "@app/ui";
@@ -271,6 +271,19 @@ function PolicySetupWizardBody({
   const [required, setRequired] = useState(
     policy?.state.required ?? canManagePolicies,
   );
+  // The permission check can resolve after the wizard opens (e.g. an onboarding deep-link), so keep
+  // a new policy's enforce default tracking it until the user picks - otherwise a manager whose
+  // permissions land late saves a silently-downgraded pipeline instead of the required policy.
+  const requiredTouched = useRef(false);
+  useEffect(() => {
+    if (!isEdit && !requiredTouched.current) {
+      setRequired(canManagePolicies);
+    }
+  }, [isEdit, canManagePolicies]);
+  const changeRequired = (value: boolean) => {
+    requiredTouched.current = true;
+    setRequired(value);
+  };
   // A required policy is manager-only to save; a non-manager can't toggle enforce or submit one.
   const readOnly = required && !canManagePolicies;
 
@@ -520,7 +533,7 @@ function PolicySetupWizardBody({
       <div className="portal-policies__wizard-enforce">
         <EnforceAsPolicyControl
           required={required}
-          onRequiredChange={setRequired}
+          onRequiredChange={changeRequired}
           disabled={!canManagePolicies}
         />
       </div>
