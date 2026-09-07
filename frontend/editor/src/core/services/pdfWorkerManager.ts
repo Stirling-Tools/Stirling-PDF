@@ -30,7 +30,7 @@ class PDFWorkerManager {
   }
 
   /**
-   * Initialize PDF.js worker once globally
+   * Initialize PDF.js worker configuration once globally
    */
   private initializeWorker(): void {
     if (!this.isInitialized) {
@@ -40,6 +40,31 @@ class PDFWorkerManager {
       ).toString();
       (GlobalWorkerOptions as { docBaseUrl?: string }).docBaseUrl = undefined;
       this.isInitialized = true;
+    }
+  }
+
+  /**
+   * Lazily ensure a shared Worker instance exists on workerPort when a document is opened.
+   */
+  private ensureSharedWorkerPort(): void {
+    if (
+      typeof window !== "undefined" &&
+      "Worker" in window &&
+      !GlobalWorkerOptions.workerPort
+    ) {
+      try {
+        const workerUrl =
+          GlobalWorkerOptions.workerSrc ||
+          new URL(
+            "pdfjs-dist/legacy/build/pdf.worker.min.mjs",
+            import.meta.url,
+          ).toString();
+        GlobalWorkerOptions.workerPort = new Worker(workerUrl, {
+          type: "module",
+        });
+      } catch {
+        // Fall back to workerSrc if new Worker fails (e.g. mock or restricted environment)
+      }
     }
   }
 
@@ -56,6 +81,7 @@ class PDFWorkerManager {
       verbosity?: number;
     } = {},
   ): Promise<PDFDocumentProxy> {
+    this.ensureSharedWorkerPort();
     // Wait if we've hit the worker limit
     if (this.activeDocuments.size >= this.maxWorkers) {
       await this.waitForAvailableWorker();

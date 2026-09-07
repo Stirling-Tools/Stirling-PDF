@@ -3,33 +3,14 @@ import { computeReadAloudHighlightRect } from "@app/components/viewer/readAloudH
 import { useFileSelectors } from "@app/contexts/FileContext";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useStopReadAloudOnNavigation } from "@app/components/viewer/useStopReadAloudOnNavigation";
-import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
 import { StirlingFile } from "@app/types/fileContext";
 import { ZINDEX } from "@app/constants/zIndex";
+import {
+  extractPageTextItemsForReadAloud,
+  ReadAloudTextItem,
+} from "@app/services/pdfiumService";
 
-interface TextItemWithGeometry {
-  str: string;
-  transform: number[];
-  width: number;
-  height: number;
-  viewportTransform: number[];
-}
-
-function isTextItem(value: unknown): value is {
-  str: string;
-  transform: number[];
-  width: number;
-  height: number;
-} {
-  if (!value || typeof value !== "object") return false;
-  const item = value as Record<string, unknown>;
-  return (
-    typeof item.str === "string" &&
-    Array.isArray(item.transform) &&
-    typeof item.width === "number" &&
-    typeof item.height === "number"
-  );
-}
+type TextItemWithGeometry = ReadAloudTextItem;
 
 function createHighlightElement(
   item: TextItemWithGeometry,
@@ -87,13 +68,9 @@ export function useViewerReadAloud(defaultLanguage?: string) {
   const pageAdvanceTimeoutRef = useRef<number | null>(null);
   const currentFileRef = useRef<StirlingFile | null>(null);
   const totalPagesRef = useRef(0);
-  const speechRateRef = useRef(1); // Keep track of current rate without recreating dependent functions
+  const speechRateRef = useRef(1);
   const speechLanguageRef = useRef(defaultLanguage || "en-US");
 
-  // Cache parsed PDF document and page text items to avoid reparsing on every zoom/scroll
-  const cachedPdfDocRef = useRef<Awaited<
-    ReturnType<typeof pdfWorkerManager.createDocument>
-  > | null>(null);
   const cachedPageNumberRef = useRef<number | null>(null);
   const cachedTextItemsRef = useRef<TextItemWithGeometry[] | null>(null);
 
@@ -200,13 +177,8 @@ export function useViewerReadAloud(defaultLanguage?: string) {
   }, []);
 
   const cleanupReadingSession = useCallback(() => {
-    // Destroy the cached PDF document to free memory
-    if (cachedPdfDocRef.current) {
-      pdfWorkerManager.destroyDocument(cachedPdfDocRef.current);
-      cachedPdfDocRef.current = null;
-      cachedPageNumberRef.current = null;
-      cachedTextItemsRef.current = null;
-    }
+    cachedPageNumberRef.current = null;
+    cachedTextItemsRef.current = null;
   }, []);
 
   const stopReadingAloud = useCallback(() => {
@@ -278,134 +250,46 @@ export function useViewerReadAloud(defaultLanguage?: string) {
         highlightWordIndex?: number;
       },
     ) => {
-      let pdfDoc: Awaited<
-        ReturnType<typeof pdfWorkerManager.createDocument>
-      > | null = null;
+      const zoom = (viewer.getZoomState().zoomPercent || 100) / 100;
+      const arrayBuffer = await currentFile.arrayBuffer();
+      const mergedItems = await extractPageTextItemsForReadAloud(
+        arrayBuffer,
+        pageNumber - 1,
+        zoom,
+      );
 
-      try {
-        const zoom = (viewer.getZoomState().zoomPercent || 100) / 100;
+      textItemsRef.current = mergedItems;
+      cachedTextItemsRef.current = mergedItems;
+      cachedPageNumberRef.current = pageNumber;
 
-        // If we have a cached document for the same file, reuse it instead of recreating
-        if (cachedPdfDocRef.current) {
-          pdfDoc = cachedPdfDocRef.current;
-        } else {
-          pdfDoc = await pdfWorkerManager.createDocument(
-            await currentFile.arrayBuffer(),
-          );
-          cachedPdfDocRef.current = pdfDoc;
-        }
+      const spokenText = mergedItems
+        .map((item) => item.str)
+        .join(" ")
+        .replace(/\s+/g, " ")
+        .trim();
 
-        const page = await pdfDoc.getPage(pageNumber);
-        const textContent = await page.getTextContent();
-        // The highlight is rendered inside the page element, so we keep geometry in
-        // page-local coordinates and let the viewer's own rotation transform it.
-        const viewportTransform = page.getViewport({ scale: zoom }).transform;
-
-        const textItems: TextItemWithGeometry[] = [];
-        for (const item of textContent.items) {
-          if (!isTextItem(item)) continue;
-          textItems.push({
-            ...item,
-            viewportTransform,
-          });
-        }
-
-        // Sort text items by visual position (top-to-bottom, then left-to-right)
-        // to preserve reading order instead of PDF internal order
-        const sortedItems = [...textItems].sort((a, b) => {
-          // transform array is [a, b, c, d, e, f] where e=x, f=y (translation components)
-          const yA = a.transform[5] ?? 0; // y position
-          const yB = b.transform[5] ?? 0;
-          const xA = a.transform[4] ?? 0; // x position
-          const xB = b.transform[4] ?? 0;
-
-          // Sort top-to-bottom (higher y first in PDF coordinates), then left-to-right
-          // 5px threshold for "same line" to group text on same horizontal line
-          if (Math.abs(yA - yB) > 5) {
-            return yB - yA; // Top to bottom
-          }
-          return xA - xB; // Left to right
-        });
-
-        // Merge adjacent text items on same line, using PDF spaces as word boundaries
-        // This fixes PDFs where characters/syllables are individual text items
-        const mergedItems: TextItemWithGeometry[] = [];
-        const CHAR_MERGE_THRESHOLD = 5; // px - merge adjacent chars/syllables closer than this
-
-        for (const item of sortedItems) {
-          const itemText = item.str;
-          const isSpace = itemText.trim() === "";
-
-          // Spaces mark word boundaries - always push them separately
-          if (isSpace) {
-            mergedItems.push(item);
-            continue;
-          }
-
-          const lastItem = mergedItems[mergedItems.length - 1];
-
-          // Only merge if last item exists, is not a space, and items are on same line
-          if (lastItem && lastItem.str.trim()) {
-            const yDiff = Math.abs(
-              (lastItem.transform[5] ?? 0) - (item.transform[5] ?? 0),
-            );
-            const xGap =
-              (item.transform[4] ?? 0) -
-              ((lastItem.transform[4] ?? 0) + (lastItem.width ?? 0));
-
-            // Same line and very close horizontally?
-            if (yDiff < 5 && xGap < CHAR_MERGE_THRESHOLD) {
-              lastItem.str += itemText;
-              // Update width: add the new item's width plus any gap between them
-              lastItem.width =
-                (lastItem.width ?? 0) + Math.max(0, xGap) + (item.width ?? 0);
-              continue;
-            }
-          }
-          mergedItems.push({ ...item, str: itemText });
-        }
-
-        // Use merged items for both highlighting and caching
-        // This ensures word counting in highlightWord matches the spoken text order
-        textItemsRef.current = mergedItems;
-        cachedTextItemsRef.current = mergedItems;
-        cachedPageNumberRef.current = pageNumber;
-
-        const spokenText = mergedItems
-          .map((item) => item.str)
-          .join(" ")
-          .replace(/\s+/g, " ")
-          .trim();
-
-        if (!spokenText) {
-          return null;
-        }
-
-        const words = spokenText.split(/\s+/).filter(Boolean);
-
-        if (!options?.preserveSpeechState) {
-          speechTextRef.current = spokenText;
-          speechWordsRef.current = words;
-          speechCharIndexRef.current = 0;
-          currentWordIndexRef.current = 0;
-        }
-
-        const highlightIndex = Math.max(
-          0,
-          Math.min(
-            options?.highlightWordIndex ?? 0,
-            Math.max(words.length - 1, 0),
-          ),
-        );
-        highlightWord(highlightIndex, words, pageNumber);
-        return { spokenText, words };
-      } catch (error) {
-        // Clear cache on error to avoid stale state
-        if (pdfDoc && pdfDoc === cachedPdfDocRef.current) {
-          cachedPdfDocRef.current = null;
-        }
-        throw error;
+      if (!spokenText) {
+        return null;
       }
+
+      const words = spokenText.split(/\s+/).filter(Boolean);
+
+      if (!options?.preserveSpeechState) {
+        speechTextRef.current = spokenText;
+        speechWordsRef.current = words;
+        speechCharIndexRef.current = 0;
+        currentWordIndexRef.current = 0;
+      }
+
+      const highlightIndex = Math.max(
+        0,
+        Math.min(
+          options?.highlightWordIndex ?? 0,
+          Math.max(words.length - 1, 0),
+        ),
+      );
+      highlightWord(highlightIndex, words, pageNumber);
+      return { spokenText, words };
     },
     [highlightWord, viewer],
   );
@@ -597,29 +481,25 @@ export function useViewerReadAloud(defaultLanguage?: string) {
       totalPagesRef.current = viewer.getScrollState().totalPages || 0;
 
       setIsReadingAloud(true);
-      try {
-        const currentPage = viewer.getScrollState().currentPage || 1;
-        currentPageNumberRef.current = currentPage;
-        const pageData = await readPage(currentFile, currentPage);
-        if (!pageData) {
-          currentFileRef.current = null;
-          setIsReadingAloud(false);
-          cleanupReadingSession();
-          return;
-        }
-
-        window.speechSynthesis.cancel();
-        speakFromCharIndex(
-          pageData.spokenText,
-          pageData.words,
-          0,
-          currentPage,
-          speechRateRef.current,
-          speechLanguageRef.current,
-        );
-      } finally {
-        // readPage handles pdf worker cleanup
+      const currentPage = viewer.getScrollState().currentPage || 1;
+      currentPageNumberRef.current = currentPage;
+      const pageData = await readPage(currentFile, currentPage);
+      if (!pageData) {
+        currentFileRef.current = null;
+        setIsReadingAloud(false);
+        cleanupReadingSession();
+        return;
       }
+
+      window.speechSynthesis.cancel();
+      speakFromCharIndex(
+        pageData.spokenText,
+        pageData.words,
+        0,
+        currentPage,
+        speechRateRef.current,
+        speechLanguageRef.current,
+      );
     } catch (error) {
       console.error("Read aloud failed", error);
       currentFileRef.current = null;
