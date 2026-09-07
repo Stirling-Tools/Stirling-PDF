@@ -256,7 +256,6 @@ export default defineConfig(async ({ mode, command }) => {
           "/login/saml2": backendProxy,
           "/swagger-ui": backendProxy,
           "/v1/api-docs": backendProxy,
-          "/fonts": backendProxy,
         };
 
   return {
