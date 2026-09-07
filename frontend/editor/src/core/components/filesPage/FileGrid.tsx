@@ -603,6 +603,7 @@ function FolderCard({
     disable: disableProcessing,
     remove: removeProcessingFolder,
     sweep: sweepProcessing,
+    revertAll: revertAllProcessingFolder,
     listFiles: listProcessingFiles,
   } = useProcessingFolders();
   const processing = processingStateFor(folder);
@@ -618,6 +619,10 @@ function FolderCard({
     );
   const runProcessing = (label: string) =>
     Promise.resolve(sweepProcessing(folder)).catch((err) =>
+      surfaceDrop(err, label),
+    );
+  const revertAllProcessing = (label: string) =>
+    Promise.resolve(revertAllProcessingFolder(folder)).catch((err) =>
       surfaceDrop(err, label),
     );
   const removeProcessing = (label: string) =>
@@ -760,6 +765,11 @@ function FolderCard({
                     : void startProcessing("process folder")
                 }
                 onResume={() => void startProcessing("resume processing")}
+                onRevertAll={
+                  kind === "local"
+                    ? () => void revertAllProcessing("restore originals")
+                    : undefined
+                }
                 onEdit={
                   onStartProcessing
                     ? () => onStartProcessing(folder)
@@ -915,6 +925,7 @@ function ProcessingMenuItems({
   onResume,
   onRemove,
   onEdit,
+  onRevertAll,
 }: {
   processing: ProcessingFolderState | undefined;
   continuous?: boolean;
@@ -927,6 +938,8 @@ function ProcessingMenuItems({
   onRemove: () => void;
   /** Open the setup dialog seeded from the existing record; absent hides Edit. */
   onEdit?: () => void;
+  /** Restore every archived original in the folder; absent hides the entry. */
+  onRevertAll?: () => void;
 }) {
   const { t } = useTranslation();
   const heading = (
@@ -971,6 +984,16 @@ function ProcessingMenuItems({
             {t("filesPage.processing.edit", "Edit processing…")}
           </Menu.Item>
         )}
+        {onRevertAll && (
+          <Menu.Item
+            leftSection={<HistoryIcon fontSize="small" />}
+            onClick={onRevertAll}
+            disabled={disabled}
+            title={disabled ? disabledHint : undefined}
+          >
+            {t("filesPage.processing.restoreAll", "Restore all originals")}
+          </Menu.Item>
+        )}
         <Menu.Item
           color="red"
           leftSection={<AutoModeIcon fontSize="small" />}
@@ -1000,6 +1023,14 @@ function ProcessingMenuItems({
       {onEdit && (
         <Menu.Item leftSection={<TuneIcon fontSize="small" />} onClick={onEdit}>
           {t("filesPage.processing.edit", "Edit processing…")}
+        </Menu.Item>
+      )}
+      {onRevertAll && (
+        <Menu.Item
+          leftSection={<HistoryIcon fontSize="small" />}
+          onClick={onRevertAll}
+        >
+          {t("filesPage.processing.restoreAll", "Restore all originals")}
         </Menu.Item>
       )}
     </>
@@ -1642,6 +1673,7 @@ function FolderRow({
     disable: disableProcessing,
     remove: removeProcessingFolder,
     sweep: sweepProcessing,
+    revertAll: revertAllProcessingFolder,
   } = useProcessingFolders();
   const processing = processingStateFor(folder);
   // Each action surfaces its own failure the way a failed drop does; the
@@ -1656,6 +1688,10 @@ function FolderRow({
     );
   const runProcessing = (label: string) =>
     Promise.resolve(sweepProcessing(folder)).catch((err) =>
+      surfaceDrop(err, label),
+    );
+  const revertAllProcessing = (label: string) =>
+    Promise.resolve(revertAllProcessingFolder(folder)).catch((err) =>
       surfaceDrop(err, label),
     );
   const removeProcessing = (label: string) =>
@@ -1799,6 +1835,11 @@ function FolderRow({
                     : void startProcessing("process folder")
                 }
                 onResume={() => void startProcessing("resume processing")}
+                onRevertAll={
+                  kind === "local"
+                    ? () => void revertAllProcessing("restore originals")
+                    : undefined
+                }
                 onEdit={
                   onStartProcessing
                     ? () => onStartProcessing(folder)

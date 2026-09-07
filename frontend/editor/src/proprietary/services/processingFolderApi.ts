@@ -251,3 +251,22 @@ export async function revertMountedFile(
     name,
   });
 }
+
+/** Outcome of a folder-wide restore: originals brought back, files left as-is. */
+export interface RevertAllOutcome {
+  restored: number;
+  skipped: number;
+}
+
+/**
+ * Restore every archived original in the folder at once. Files mid-run are
+ * skipped rather than raced; only the watched directory's own files move.
+ */
+export async function revertAllMountedFiles(
+  id: string,
+): Promise<RevertAllOutcome> {
+  const res = await apiClient.post<RevertAllOutcome>(
+    `/api/v1/processing-folders/${id}/files/revert-all`,
+  );
+  return res.data;
+}

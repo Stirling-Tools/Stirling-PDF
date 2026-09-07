@@ -542,28 +542,93 @@ public class ProcessingFolderController {
                 throw new ResponseStatusException(
                         HttpStatus.CONFLICT, "'" + name + "' has no original to restore");
             }
-            String identity = FolderIdentities.identity(canonicalDir, permitted, target);
-            ClaimState state =
-                    processedLedger.statesFor(policy.id(), List.of(identity)).get(identity);
-            if (state != null && state.status() == ProcessedFileStatus.PROCESSING) {
+            if (!restoreOriginal(policy, permitted, canonicalDir, name)) {
                 throw new ResponseStatusException(
                         HttpStatus.CONFLICT, "'" + name + "' is being processed right now");
             }
-            Files.move(
-                    archived,
-                    target,
-                    StandardCopyOption.ATOMIC_MOVE,
-                    StandardCopyOption.REPLACE_EXISTING);
-            // The restored original must not read as new work: settle its row done at the
-            // restored version, so the folder holds it until processing is asked for again.
-            processedLedger.settle(
-                    policy.id(), identity, FolderIdentities.statGate(target), null, true);
             return toMountedFile(
                     target, new ClaimState(ProcessedFileStatus.DONE, null, null), false);
         } catch (IOException e) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_GATEWAY, "Could not restore " + name + ": " + e.getMessage());
         }
+    }
+
+    /** Outcome of a folder-wide restore: originals brought back, and files left as-is. */
+    public record RevertAllOutcome(int restored, int skipped) {}
+
+    @PostMapping("/{id}/files/revert-all")
+    @Operation(
+            summary = "Restore every archived original in the folder",
+            description =
+                    "Moves each original kept under .stirling/originals back over its"
+                            + " processed file. Only files of the watched directory itself"
+                            + " are touched — the archive never holds anything else — and a"
+                            + " file mid-run is skipped rather than raced.")
+    public RevertAllOutcome revertAllFiles(@PathVariable String id) {
+        User user = currentUserOrNull();
+        Policy policy = requireOwn(id, user);
+        Path directory = watchedDirectory(policy);
+        if (directory == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT, "only a disk-backed folder keeps originals");
+        }
+        Path permitted = folderAccessGuard.requirePermitted(directory);
+        try {
+            Path canonicalDir = FolderIdentities.canonicalDir(permitted);
+            Path originals = FolderOutputSink.originalsDir(canonicalDir);
+            if (!Files.isDirectory(originals)) {
+                return new RevertAllOutcome(0, 0);
+            }
+            List<String> names;
+            try (Stream<Path> entries = Files.list(originals)) {
+                names =
+                        entries.filter(Files::isRegularFile)
+                                .map(entry -> entry.getFileName().toString())
+                                .toList();
+            }
+            int restored = 0;
+            int skipped = 0;
+            for (String name : names) {
+                if (restoreOriginal(policy, permitted, canonicalDir, name)) {
+                    restored++;
+                } else {
+                    skipped++;
+                }
+            }
+            return new RevertAllOutcome(restored, skipped);
+        } catch (IOException e) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_GATEWAY, "Could not restore originals: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Move one archived original back over its processed file and settle the ledger at the restored
+     * version, so the folder holds the original instead of re-processing it. False when the file is
+     * mid-run — the run's output would immediately stamp the restore — or when the name resolves
+     * outside the watched directory.
+     */
+    private boolean restoreOriginal(Policy policy, Path permitted, Path canonicalDir, String name)
+            throws IOException {
+        Path target = permitted.resolve(name).normalize();
+        if (!permitted.equals(target.getParent())) {
+            return false;
+        }
+        Path archived = FolderOutputSink.originalsDir(canonicalDir).resolve(name);
+        String identity = FolderIdentities.identity(canonicalDir, permitted, target);
+        ClaimState state = processedLedger.statesFor(policy.id(), List.of(identity)).get(identity);
+        if (state != null && state.status() == ProcessedFileStatus.PROCESSING) {
+            return false;
+        }
+        Files.move(
+                archived,
+                target,
+                StandardCopyOption.ATOMIC_MOVE,
+                StandardCopyOption.REPLACE_EXISTING);
+        processedLedger.settle(
+                policy.id(), identity, FolderIdentities.statGate(target), null, true);
+        return true;
     }
 
     /** The ledger identity of a named file in this folder; null when no such file is listed. */

@@ -79,7 +79,7 @@ public class FolderOutputSink implements PolicyOutputSink {
         Path targetDir = accessGuard.requirePermitted(directoryOf(spec));
         Files.createDirectories(targetDir);
         Path canonicalDir = FolderIdentities.canonicalDir(targetDir);
-        Path tmpDir = canonicalDir.resolve(".stirling").resolve("tmp");
+        Path tmpDir = stirlingDir(canonicalDir).resolve("tmp");
         Files.createDirectories(tmpDir);
         sweepStaleTmp(tmpDir);
 
@@ -220,6 +220,23 @@ public class FolderOutputSink implements PolicyOutputSink {
     }
 
     /**
+     * The folder's workspace root, created hidden: the dot prefix hides it on POSIX filesystems and
+     * in the app's own listings, and the DOS attribute hides it from Windows Explorer, where a dot
+     * name alone is visible. Best-effort {@code -} a filesystem without DOS attributes just keeps
+     * the dot.
+     */
+    private static Path stirlingDir(Path dir) throws IOException {
+        Path root = dir.resolve(".stirling");
+        Files.createDirectories(root);
+        try {
+            Files.setAttribute(root, "dos:hidden", true);
+        } catch (UnsupportedOperationException | IOException e) {
+            // Not a DOS filesystem; the dot prefix already hides it there.
+        }
+        return root;
+    }
+
+    /**
      * Keep the true original before a replace stamps over it: the watched file moves into {@code
      * .stirling/originals} under its own name, once — a re-run of an already- processed file never
      * overwrites the archived first version, so a revert always returns exactly what the user put
@@ -231,6 +248,7 @@ public class FolderOutputSink implements PolicyOutputSink {
             return null;
         }
         try {
+            stirlingDir(dir);
             Path originals = originalsDir(dir);
             Files.createDirectories(originals);
             Path archived = originals.resolve(target.getFileName().toString());

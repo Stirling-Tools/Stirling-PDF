@@ -4545,6 +4545,7 @@ sharedHint = "Shared with you via link"
 [filesPage.processing]
 active = "Processing folder"
 restore = "Restore original"
+restoreAll = "Restore all originals"
 section = "Processing"
 paused = "Processing paused"
 start = "Process files in this folder…"

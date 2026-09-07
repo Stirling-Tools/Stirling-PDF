@@ -429,6 +429,41 @@ class ProcessingFolderControllerTest {
                 .hasMessageContaining("no original");
     }
 
+    @Test
+    void revertAllRestoresEveryArchivedOriginal() throws Exception {
+        lenient()
+                .when(folderAccessGuard.requirePermitted(any(Path.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+        var view = controller.save(diskRequest()).getBody();
+        Path originals = tempDir.resolve(".stirling").resolve("originals");
+        Files.createDirectories(originals);
+        for (String name : List.of("doc1.pdf", "doc2.pdf")) {
+            Files.writeString(tempDir.resolve(name), "processed");
+            Files.writeString(originals.resolve(name), "original");
+        }
+
+        var outcome = controller.revertAllFiles(view.id());
+
+        assertThat(outcome.restored()).isEqualTo(2);
+        assertThat(outcome.skipped()).isZero();
+        assertThat(Files.readString(tempDir.resolve("doc1.pdf"))).isEqualTo("original");
+        assertThat(Files.readString(tempDir.resolve("doc2.pdf"))).isEqualTo("original");
+        assertThat(Files.exists(originals.resolve("doc1.pdf"))).isFalse();
+    }
+
+    @Test
+    void revertAllWithNothingArchivedIsANoOp() throws Exception {
+        lenient()
+                .when(folderAccessGuard.requirePermitted(any(Path.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+        var view = controller.save(diskRequest()).getBody();
+
+        var outcome = controller.revertAllFiles(view.id());
+
+        assertThat(outcome.restored()).isZero();
+        assertThat(outcome.skipped()).isZero();
+    }
+
     /** A disk-backed folder over the test's own temp directory. */
     private ProcessingFolderController.SaveProcessingFolderRequest diskRequest() {
         return new ProcessingFolderController.SaveProcessingFolderRequest(

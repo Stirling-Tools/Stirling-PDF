@@ -54,6 +54,8 @@ export interface ProcessingFoldersApi {
   retryFile: (recordId: string, name: string) => Promise<void>;
   /** Restore a file's archived original; the folder then holds the original. */
   revertFile: (recordId: string, name: string) => Promise<void>;
+  /** Restore every archived original in the folder; mid-run files are skipped. */
+  revertAll: (folder: FolderRecord) => Promise<void>;
   /** Attach the default (classification) pipeline, or resume a paused one. */
   enable: (folder: FolderRecord) => Promise<void>;
   /** Pause processing; the pair and its processed-history stay, so resuming
@@ -83,6 +85,7 @@ export function useProcessingFolders(): ProcessingFoldersApi {
     listFiles: async () => [],
     retryFile: async () => {},
     revertFile: async () => {},
+    revertAll: async () => {},
     enable: async () => {},
     disable: async () => {},
     remove: async () => {},
