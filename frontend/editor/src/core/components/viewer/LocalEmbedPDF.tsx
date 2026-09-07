@@ -1208,7 +1208,9 @@ export function LocalEmbedPDF({
           plugins={plugins}
           onInitialized={async (registry: PluginRegistry) => {
             if (typeof window !== "undefined") {
-              (window as any).__embedPdfRegistry = registry;
+              (
+                window as unknown as { __embedPdfRegistry?: PluginRegistry }
+              ).__embedPdfRegistry = registry;
             }
             // v2.0: Use registry.getPlugin() to access plugin APIs
             const annotationPlugin = registry.getPlugin("annotation");

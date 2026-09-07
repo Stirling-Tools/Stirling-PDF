@@ -1002,7 +1002,7 @@ export async function renderPageToBitmap(
     // Read pixel data, bulk row-copy avoids per-pixel getValue() FFI overhead.
     const bufferPtr = m.FPDFBitmap_GetBuffer(bitmapPtr);
     const stride = m.FPDFBitmap_GetStride(bitmapPtr);
-    const heap = new Uint8Array((m.pdfium.wasmExports as any).memory.buffer);
+    const heap = (m.pdfium as typeof m.pdfium & ExtendedPdfiumRuntime).HEAPU8;
     const pixelData = new Uint8ClampedArray(w * h * 4);
 
     for (let y = 0; y < h; y++) {
