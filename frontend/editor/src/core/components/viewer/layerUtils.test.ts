@@ -78,10 +78,13 @@ describe("layerUtils", () => {
     it("applies visibility changes and reads back updated state", async () => {
       const bytes = await createPdfWithLayers();
 
-      const modifiedBytes = await applyOCGVisibilityToPdf(bytes.buffer, {
-        "Background Layer": false,
-        "Watermark Layer": true,
-      });
+      const modifiedBytes = await applyOCGVisibilityToPdf(
+        bytes.buffer as ArrayBuffer,
+        {
+          "Background Layer": false,
+          "Watermark Layer": true,
+        },
+      );
 
       const blob = toBlob(modifiedBytes);
       const updatedLayers = await readPdfLayers(blob);

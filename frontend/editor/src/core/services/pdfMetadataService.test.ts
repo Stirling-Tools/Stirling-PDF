@@ -46,15 +46,19 @@ describe("pdfMetadataService", () => {
     doc.setCreationDate(d);
     doc.setModificationDate(d);
 
-    const infoDict = doc.getInfoDict();
+    const infoDict = (
+      doc as unknown as { getInfoDict(): import("@cantoo/pdf-lib").PDFDict }
+    ).getInfoDict();
     infoDict.set(
       PDFName.of("StirlingPDFClassification"),
       PDFString.of(JSON.stringify({ labels: ["Invoice", "Finance"] })),
     );
     infoDict.set(PDFName.of("Trapped"), PDFName.of("True"));
 
-    const bytes = await doc.save({ updateMetadata: false });
-    const file = new File([bytes], "sample.pdf", { type: "application/pdf" });
+    const bytes = await doc.save();
+    const file = new File([bytes as unknown as BlobPart], "sample.pdf", {
+      type: "application/pdf",
+    });
 
     const result = await extractPDFMetadata(file);
     expect(result.success).toBe(true);
