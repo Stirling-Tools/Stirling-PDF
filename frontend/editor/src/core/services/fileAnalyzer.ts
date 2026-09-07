@@ -132,6 +132,14 @@ export class FileAnalyzer {
     isEncrypted: boolean;
     isCorrupted: boolean;
   }> {
+    if (file.size >= LARGE_PDF_PARSE_LIMIT) {
+      return {
+        pageCount: 0,
+        isEncrypted: await hasEncryptMarker(file),
+        isCorrupted: false,
+      };
+    }
+
     const m = await getPdfiumModule();
     let docPtr: number | null = null;
     try {

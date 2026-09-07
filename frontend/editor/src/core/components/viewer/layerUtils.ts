@@ -72,6 +72,8 @@ async function decompressFlate(data: Uint8Array): Promise<Uint8Array> {
   return data;
 }
 
+const MAX_ARRAY_DEPTH = 64;
+
 function parseOrderTokens(
   str: string,
   ocgMap: Map<string, LayerInfo>,
@@ -80,13 +82,22 @@ function parseOrderTokens(
   const tokens = str.match(tokenRegex) || [];
   let i = 0;
 
-  function parseList(): LayerInfo[] {
+  function parseList(depth: number): LayerInfo[] {
+    if (depth > MAX_ARRAY_DEPTH) {
+      let nesting = 1;
+      while (i < tokens.length && nesting > 0) {
+        const t = tokens[i++];
+        if (t === "[") nesting++;
+        else if (t === "]") nesting--;
+      }
+      return [];
+    }
     const items: LayerInfo[] = [];
     while (i < tokens.length) {
       const token = tokens[i++];
       if (token === "]") break;
       if (token === "[") {
-        const sub = parseList();
+        const sub = parseList(depth + 1);
         if (sub.length > 0) items.push(...sub);
       } else if (token.endsWith("R")) {
         const objNum = token.split(/\s+/)[0];
@@ -96,7 +107,7 @@ function parseOrderTokens(
         const groupName = decodePdfString(token);
         if (i < tokens.length && tokens[i] === "[") {
           i++;
-          const children = parseList();
+          const children = parseList(depth + 1);
           if (children.length > 0) {
             items.push({
               id: `group-${groupName}`,
@@ -111,7 +122,7 @@ function parseOrderTokens(
     return items;
   }
 
-  return parseList();
+  return parseList(0);
 }
 
 export async function readPdfLayers(file: Blob): Promise<LayerInfo[]> {

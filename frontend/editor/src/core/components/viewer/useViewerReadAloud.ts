@@ -73,6 +73,8 @@ export function useViewerReadAloud(defaultLanguage?: string) {
 
   const cachedPageNumberRef = useRef<number | null>(null);
   const cachedTextItemsRef = useRef<TextItemWithGeometry[] | null>(null);
+  const cachedArrayBufferRef = useRef<ArrayBuffer | null>(null);
+  const cachedFileRef = useRef<StirlingFile | File | null>(null);
 
   // Helper to find best voice for language
   const findVoiceForLanguage = useCallback(
@@ -179,6 +181,8 @@ export function useViewerReadAloud(defaultLanguage?: string) {
   const cleanupReadingSession = useCallback(() => {
     cachedPageNumberRef.current = null;
     cachedTextItemsRef.current = null;
+    cachedArrayBufferRef.current = null;
+    cachedFileRef.current = null;
   }, []);
 
   const stopReadingAloud = useCallback(() => {
@@ -251,7 +255,19 @@ export function useViewerReadAloud(defaultLanguage?: string) {
       },
     ) => {
       const zoom = (viewer.getZoomState().zoomPercent || 100) / 100;
-      const arrayBuffer = await currentFile.arrayBuffer();
+
+      let arrayBuffer: ArrayBuffer;
+      if (
+        cachedFileRef.current === currentFile &&
+        cachedArrayBufferRef.current
+      ) {
+        arrayBuffer = cachedArrayBufferRef.current;
+      } else {
+        arrayBuffer = await currentFile.arrayBuffer();
+        cachedArrayBufferRef.current = arrayBuffer;
+        cachedFileRef.current = currentFile;
+      }
+
       const mergedItems = await extractPageTextItemsForReadAloud(
         arrayBuffer,
         pageNumber - 1,
