@@ -293,6 +293,25 @@ describe("Pipelines view", () => {
     ).toBeDisabled();
   });
 
+  it("warns with a retry when the permission check fails, instead of locking silently", async () => {
+    fetchPolicyPermissions.mockReset();
+    fetchPolicyPermissions.mockRejectedValueOnce(new Error("boom"));
+    fetchPolicyPermissions.mockResolvedValue({ canManagePolicies: true });
+
+    renderView();
+    expect(
+      await screen.findByText("portal.pipelines.permissionsUnavailable"),
+    ).toBeInTheDocument();
+
+    // Retry refetches; on success the warning clears.
+    fireEvent.click(screen.getByText("portal.pipelines.permissionsRetry"));
+    await waitFor(() =>
+      expect(
+        screen.queryByText("portal.pipelines.permissionsUnavailable"),
+      ).not.toBeInTheDocument(),
+    );
+  });
+
   it("shows create + connect-source CTAs when empty", async () => {
     fetchPipelines.mockResolvedValue({
       kpis: [

@@ -57,7 +57,11 @@ export function Pipelines() {
 
   const { enabled: aiEngineEnabled, loading: aiEngineLoading } =
     useAiEngineEnabled();
-  const canManagePolicies = useCanManagePolicies();
+  const {
+    canManage: canManagePolicies,
+    isError: permissionsError,
+    refetch: retryPermissions,
+  } = useCanManagePolicies();
 
   const [detail, setDetail] = useState<CatalogueEntry | null>(null);
   const [wizard, setWizard] = useState<CatalogueEntry | null>(null);
@@ -259,6 +263,18 @@ export function Pipelines() {
       </header>
 
       {pageError && <Banner tone="danger" description={pageError} />}
+
+      {permissionsError && (
+        <Banner
+          tone="warning"
+          description={t("portal.pipelines.permissionsUnavailable")}
+          action={
+            <Button size="sm" variant="secondary" onClick={retryPermissions}>
+              {t("portal.pipelines.permissionsRetry")}
+            </Button>
+          }
+        />
+      )}
 
       <section className="portal-pipelines__all">
         <h2 className="portal-pipelines__section-title">

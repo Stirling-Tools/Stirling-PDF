@@ -228,7 +228,7 @@ export function PipelineBuilder() {
     [id],
   );
   const sourcesState = useSources();
-  const canManagePolicies = useCanManagePolicies();
+  const { canManage: canManagePolicies } = useCanManagePolicies();
   const triggersState = useAsync<TriggerInfo[]>(
     async () => await fetchTriggers(),
     [],
