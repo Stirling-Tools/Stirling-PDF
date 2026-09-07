@@ -450,10 +450,13 @@ class ProcessingFolderControllerTest {
         assertThat(Files.readString(tempDir.resolve("doc2.pdf"))).isEqualTo("original");
         assertThat(Files.exists(originals.resolve("doc1.pdf"))).isFalse();
         assertThat(policyStore.get(view.id()).orElseThrow().enabled()).isFalse();
+        verify(policyRunner).cancelRuns(view.id());
+        // Failed rows go too: the reset leaves every file reading as waiting.
+        verify(processedLedger).clearPolicy(view.id());
     }
 
     @Test
-    void revertAllWithNothingArchivedIsANoOp() throws Exception {
+    void revertAllWithNothingArchivedStillResetsTheFolder() throws Exception {
         lenient()
                 .when(folderAccessGuard.requirePermitted(any(Path.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
@@ -463,8 +466,10 @@ class ProcessingFolderControllerTest {
 
         assertThat(outcome.restored()).isZero();
         assertThat(outcome.skipped()).isZero();
-        // Nothing moved, so processing stays on.
-        assertThat(policyStore.get(view.id()).orElseThrow().enabled()).isTrue();
+        // No files moved, but the reset still lands: paused, cancelled, history gone.
+        assertThat(policyStore.get(view.id()).orElseThrow().enabled()).isFalse();
+        verify(policyRunner).cancelRuns(view.id());
+        verify(processedLedger).clearPolicy(view.id());
     }
 
     /** A disk-backed folder over the test's own temp directory. */

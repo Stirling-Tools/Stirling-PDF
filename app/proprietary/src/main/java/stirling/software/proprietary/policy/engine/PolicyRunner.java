@@ -163,6 +163,11 @@ public class PolicyRunner {
         return policyEngine.submit(definition, inputs, listener);
     }
 
+    /** Cancel every non-terminal run of the policy (see {@link PolicyEngine#cancelAllFor}). */
+    public int cancelRuns(String policyId) {
+        return policyEngine.cancelAllFor(policyId);
+    }
+
     /**
      * Resolves the source and starts a run per unit; records how many documents the source fed and
      * returns the ids of the runs started. Any source that could not be listed completely vetoes

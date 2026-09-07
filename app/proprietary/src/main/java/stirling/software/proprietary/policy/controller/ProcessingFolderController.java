@@ -562,12 +562,13 @@ public class ProcessingFolderController {
     @Operation(
             summary = "Restore every archived original in the folder",
             description =
-                    "Moves each original kept under .stirling/originals back over its"
-                            + " processed file. Only files of the watched directory itself"
-                            + " are touched — the archive never holds anything else — and a"
-                            + " file mid-run is skipped rather than raced. The folder is"
-                            + " paused first, and restored files read as waiting until it"
-                            + " resumes.")
+                    "Resets the folder: pauses it, cancels its in-flight runs, moves each"
+                            + " original kept under .stirling/originals back over its"
+                            + " processed file, and forgets the whole processed history —"
+                            + " failed files included — so everything reads as waiting"
+                            + " until it resumes. Only files of the watched directory itself"
+                            + " are touched, and a file mid-run is skipped rather than"
+                            + " raced.")
     public RevertAllOutcome revertAllFiles(@PathVariable String id) {
         User user = currentUserOrNull();
         Policy policy = requireOwn(id, user);
@@ -579,19 +580,20 @@ public class ProcessingFolderController {
         Path permitted = folderAccessGuard.requirePermitted(directory);
         try {
             Path canonicalDir = FolderIdentities.canonicalDir(permitted);
+            policy = pauseForRevert(policy);
+            // Stop the machine before moving files: pending runs die here, and one already
+            // inside a tool call finishes that call — which is why a still-processing
+            // file is skipped by the restore below rather than raced.
+            policyRunner.cancelRuns(policy.id());
+            List<String> names = List.of();
             Path originals = FolderOutputSink.originalsDir(canonicalDir);
-            if (!Files.isDirectory(originals)) {
-                return new RevertAllOutcome(0, 0);
-            }
-            List<String> names;
-            try (Stream<Path> entries = Files.list(originals)) {
-                names =
-                        entries.filter(Files::isRegularFile)
-                                .map(entry -> entry.getFileName().toString())
-                                .toList();
-            }
-            if (!names.isEmpty()) {
-                policy = pauseForRevert(policy);
+            if (Files.isDirectory(originals)) {
+                try (Stream<Path> entries = Files.list(originals)) {
+                    names =
+                            entries.filter(Files::isRegularFile)
+                                    .map(entry -> entry.getFileName().toString())
+                                    .toList();
+                }
             }
             int restored = 0;
             int skipped = 0;
@@ -602,6 +604,10 @@ public class ProcessingFolderController {
                     skipped++;
                 }
             }
+            // The whole processed history goes — done and failed rows alike — so the
+            // folder reads as untouched work. A cancelled run that was mid-call settles after
+            // this and may re-add one row; the next revert or removal clears it.
+            processedLedger.clearPolicy(policy.id());
             return new RevertAllOutcome(restored, skipped);
         } catch (IOException e) {
             throw new ResponseStatusException(

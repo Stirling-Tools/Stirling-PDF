@@ -311,6 +311,22 @@ public class PolicyEngine {
         return cancelled;
     }
 
+    /**
+     * Cancel every non-terminal run of one policy; returns how many transitioned. Pending runs die
+     * before they start; a run already inside a tool call finishes that call (cancellation does not
+     * interrupt it) and then settles as cancelled.
+     */
+    public int cancelAllFor(String policyId) {
+        int cancelled = 0;
+        for (PolicyRun run : registry.all()) {
+            if (policyId.equals(run.getPolicyId()) && run.cancel()) {
+                taskManager.addNote(run.getRunId(), "Run cancelled by revert");
+                cancelled++;
+            }
+        }
+        return cancelled;
+    }
+
     /** Resume a run paused in {@code WAITING_FOR_INPUT}. Not yet implemented. */
     public String resume(String runId, List<Resource> additionalInputs) {
         throw new UnsupportedOperationException("Pause/resume is not yet implemented");
