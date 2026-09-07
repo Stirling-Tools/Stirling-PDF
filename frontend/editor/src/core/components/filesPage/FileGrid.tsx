@@ -1816,11 +1816,19 @@ const FolderRow = React.memo(function FolderRow({
         />
       </span>
       <span role="gridcell">
-        {kind === "virtual"
-          ? t("filesPage.folderKind.virtual", "Browser folder")
-          : kind === "local"
-            ? t("filesPage.folderKind.local", "Local folder")
-            : t("filesPage.folder", "Folder")}
+        {processing ? (
+          <span className="files-page-processing-tag">
+            {processing.enabled
+              ? t("filesPage.processing.active", "Processing folder")
+              : t("filesPage.processing.paused", "Processing paused")}
+          </span>
+        ) : kind === "virtual" ? (
+          t("filesPage.folderKind.virtual", "Browser folder")
+        ) : kind === "local" ? (
+          t("filesPage.folderKind.local", "Local folder")
+        ) : (
+          t("filesPage.folder", "Folder")
+        )}
       </span>
       <span role="gridcell">
         {fileCount === 0
