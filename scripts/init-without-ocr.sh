@@ -707,7 +707,7 @@ compute_dynamic_memory() {
 
   log "Detected container memory: ${mem_mb}MB"
 
-  # NOTE: MaxRamPercentage governs HEAP only. Total JVM footprint also includes:
+  # NOTE: MaxRAMPercentage governs HEAP only. Total JVM footprint also includes:
   # - Metaspace (MaxMetaspaceSize)
   # - Code cache (~100-200MB)
   # - Thread stacks (~1MB each × virtual threads)
