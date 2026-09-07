@@ -27,6 +27,8 @@ const KEY_SIZE = PDFName.of("Size");
 const KEY_CREATION_DATE = PDFName.of("CreationDate");
 const KEY_COLLECTION = PDFName.of("Collection");
 
+const MAX_NAME_TREE_DEPTH = 64;
+
 type LoadedPortfolio = {
   doc: PDFDocument;
   specs: Map<string, PDFDict>;
@@ -53,8 +55,11 @@ const decodeText = (value: unknown): string | null => {
 const collectSpecs = (
   node: PDFDict | undefined,
   into: Map<string, PDFDict>,
+  seen: Set<PDFDict> = new Set(),
+  depth = 0,
 ) => {
-  if (!node) return;
+  if (!node || depth > MAX_NAME_TREE_DEPTH || seen.has(node)) return;
+  seen.add(node);
 
   const names = node.lookupMaybe(KEY_NAMES, PDFArray);
   if (names) {
@@ -70,7 +75,7 @@ const collectSpecs = (
   const kids = node.lookupMaybe(KEY_KIDS, PDFArray);
   if (kids) {
     for (let i = 0; i < kids.size(); i += 1) {
-      collectSpecs(kids.lookupMaybe(i, PDFDict), into);
+      collectSpecs(kids.lookupMaybe(i, PDFDict), into, seen, depth + 1);
     }
   }
 };
