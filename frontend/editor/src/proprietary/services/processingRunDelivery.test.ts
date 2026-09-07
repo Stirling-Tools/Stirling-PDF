@@ -1,8 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  deliverSweepResults,
-  currentRunIds,
-} from "@app/services/processingRunDelivery";
+import { deliverSweepResults, currentRunIds } from "@app/services/processingRunDelivery";
 import {
   fetchProcessingFolderRuns,
   fetchRunOutputFile,
@@ -46,9 +43,7 @@ describe("deliverSweepResults", () => {
     expect(progress.processed).toBe(1);
     expect(addFiles).toHaveBeenCalledTimes(1);
     expect(outputFile).toHaveBeenCalledTimes(1);
-    expect(outputFile).toHaveBeenCalledWith(
-      expect.objectContaining({ fileId: "f1" }),
-    );
+    expect(outputFile).toHaveBeenCalledWith(expect.objectContaining({ fileId: "f1" }));
   });
 
   it("ignores a baseline run instead of re-delivering it or stopping early", async () => {
@@ -70,9 +65,7 @@ describe("deliverSweepResults", () => {
 
     expect(progress.processed).toBe(1);
     expect(outputFile).toHaveBeenCalledTimes(1);
-    expect(outputFile).toHaveBeenCalledWith(
-      expect.objectContaining({ fileId: "f1" }),
-    );
+    expect(outputFile).toHaveBeenCalledWith(expect.objectContaining({ fileId: "f1" }));
   }, 15000);
 });
 
