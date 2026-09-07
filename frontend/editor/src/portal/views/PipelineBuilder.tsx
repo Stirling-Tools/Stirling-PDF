@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
@@ -76,6 +76,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { qk } from "@portal/queries/keys";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
 import { humanizeOperation } from "@portal/components/pipelines/pipelineOperations";
+import { canonicalPipelineIconKey } from "@portal/components/pipelines/pipelineIcon";
 import { PipelineCreateHeader } from "@portal/components/pipelines/PipelineCreateHeader";
 import { PipelineEditHeader } from "@portal/components/pipelines/PipelineEditHeader";
 import { PipelineGraphToolbar } from "@portal/components/pipelines/PipelineGraphToolbar";
@@ -198,6 +199,12 @@ export function PipelineBuilder() {
     ]);
   const { id } = useParams();
   const isEdit = Boolean(id);
+  const location = useLocation();
+  // A Customise hand-off from the simple policy wizard: the in-progress settings as a full pipeline
+  // record, seeded here instead of fetched. When editing an existing policy the id-based fetch still
+  // runs in the background so run/pause/delete act on the last-saved version.
+  const handoff = location.state as { draft?: Policy } | null;
+  const seedDraft = handoff?.draft ?? null;
   const { allTools } = useToolRegistry();
   const executableTools = useMemo(
     () => getExecutableTools(allTools),
@@ -267,6 +274,19 @@ export function PipelineBuilder() {
   const [testRun, setTestRun] = useState<PolicyRunView | null>(null);
   const [testing, setTesting] = useState(false);
   const [outputIds, setOutputIds] = useState<string[]>([]);
+  // Org-mandated policy (see Policy.required). Admin sets it; members can't pause/delete a required
+  // pipeline, and it enforces on their documents when it runs on the editor.
+  const [required, setRequired] = useState(false);
+  // First-class row icon (see Policy.icon), chosen from the picker in the header. Empty falls back to
+  // the template category glyph in the list; a custom pipeline defaults to none until picked.
+  const [icon, setIcon] = useState("");
+  // The policy metadata bag carried on output.options (runOn, sources, output naming, scope,
+  // reviewer, fieldValues...). Seeded on load and written back untouched, so a customised policy
+  // never loses its simple-only settings even though the builder has no UI for them.
+  const [outputOptions, setOutputOptions] = useState<Record<string, unknown>>(
+    {},
+  );
+  const [outputType, setOutputType] = useState("inline");
   /**
    * Whether the user has asked for each end of the chain yet, distinguishing "not offered" from
    * "offered and still owed a choice" - the two states an empty sourceId cannot tell apart. Only a
@@ -335,11 +355,13 @@ export function PipelineBuilder() {
     };
   }, []);
 
-  // Seed the form once: immediately for a new pipeline, or after the policy loads for an edit.
+  // Seed the form once: immediately for a new pipeline or a Customise hand-off, or after the policy
+  // loads for an edit. A hand-off draft wins over the fetched record (it carries the unsaved wizard
+  // edits), so an edit reached via Customise need not wait for the fetch.
   useEffect(() => {
     if (seeded) return;
-    if (isEdit && !policyState.data) return;
-    const policy = policyState.data ?? undefined;
+    if (isEdit && !seedDraft && !policyState.data) return;
+    const policy = seedDraft ?? policyState.data ?? undefined;
     // An editor pipeline is recognised by the editor source id, which arrives with the sources
     // fetch. If the policy loads first, seeding now would latch a blank input and re-save the
     // pipeline off the editor (editor.allowed:false), so wait for that fetch to settle.
@@ -348,6 +370,19 @@ export function PipelineBuilder() {
     }
     setName(policy?.name ?? "");
     setEnabled(policy?.enabled ?? true);
+    setRequired(policy?.required ?? false);
+    // Seed the icon from the first-class field; a template hand-off has none yet, so fall back to its
+    // category id. Normalise either to a canonical pickable key - the picker matches its own
+    // vocabulary, not the category-id aliases, so an unnormalised categoryId shows as the default.
+    const seedCategoryId = policy?.output?.options?.categoryId;
+    setIcon(
+      canonicalPipelineIconKey(
+        policy?.icon ??
+          (typeof seedCategoryId === "string" ? seedCategoryId : ""),
+      ),
+    );
+    setOutputOptions(policy?.output?.options ?? {});
+    setOutputType(policy?.output?.type ?? "inline");
     // The one input row is always present: blank for a new pipeline (or a legacy policy saved
     // without inputs), the stored input for an edit. A legacy multi-input policy shows only its
     // first input; saving persists just that one (the backend rejects more anyway).
@@ -378,6 +413,7 @@ export function PipelineBuilder() {
     setSeeded(true);
   }, [
     isEdit,
+    seedDraft,
     policyState.data,
     allTools,
     seeded,
@@ -675,8 +711,12 @@ export function PipelineBuilder() {
   );
   const snapshot = JSON.stringify({
     name: name.trim(),
+    icon,
+    required,
     input,
     steps: stepSnapshot,
+    outputType,
+    outputOptions,
     outputIds: [...outputIds].sort(),
   });
   const baseline = useRef<string | null>(null);
@@ -702,6 +742,8 @@ export function PipelineBuilder() {
   const blockers: string[] = [];
   if (name.trim() === "")
     blockers.push(t("portal.pipelines.builder.blocker.name"));
+  // An editor pipeline has the editor as its chosen source and needs no destination, so sourceChosen
+  // is already true and outputValid already passes for it - these checks simply never fire.
   if (!sourceChosen)
     blockers.push(t("portal.pipelines.builder.blocker.source"));
   else if (!scheduleValid)
@@ -803,18 +845,20 @@ export function PipelineBuilder() {
     setError(null);
     try {
       const policy: Policy = {
-        id: policyState.data?.id ?? undefined,
+        id: policyState.data?.id ?? seedDraft?.id ?? undefined,
         name: name.trim(),
         enabled: enabledOverride ?? enabled,
+        required,
+        icon,
         // The editor is virtual - there is no stored Source to pull from, and nothing server-side
         // sweeps it - so it is never a wire input; its participation is recorded on `editor` below.
         inputs: isEditorInput
           ? []
           : [{ sourceId: input.sourceId, trigger: buildTriggerFor(input) }],
         steps: await serializeStepsForSave(),
-        // Destinations are the referenced saved sources; the inline output is preserved as-is
-        // or defaults to inline.
-        output: policyState.data?.output ?? { type: "inline", options: {} },
+        // The output carries the policy metadata bag (categoryId, scope, naming...), edited in the
+        // dev section and preserved verbatim otherwise, so a customised policy never loses it.
+        output: { type: outputType, options: outputOptions },
         editor: { allowed: isEditorInput, runOn },
         // An editor pipeline delivers back into the workspace. A stored destination would send the
         // run to a folder or bucket instead, leaving the editor's copy untouched.
@@ -1271,6 +1315,10 @@ export function PipelineBuilder() {
         <PipelineEditHeader
           name={name}
           onNameChange={setName}
+          icon={icon}
+          onIconChange={setIcon}
+          required={required}
+          onRequiredChange={setRequired}
           enabled={enabled}
           onTogglePause={handleTogglePause}
           togglingEnabled={togglingEnabled}
@@ -1289,6 +1337,10 @@ export function PipelineBuilder() {
         <PipelineCreateHeader
           name={name}
           onNameChange={setName}
+          icon={icon}
+          onIconChange={setIcon}
+          required={required}
+          onRequiredChange={setRequired}
           canSave={canSave}
           blockers={blockers}
           saving={submitting}

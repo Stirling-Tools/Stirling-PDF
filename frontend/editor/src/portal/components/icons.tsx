@@ -59,16 +59,20 @@ export function SourcesIcon(props: IconProps) {
   );
 }
 
+/**
+ * A pipeline as a route: two waypoints joined by a winding path. Shared so the sidebar nav and the
+ * pipelines table's default row icon render the exact same glyph (see pipelineIcon).
+ */
+export const PIPELINE_ROUTE_GLYPH = (
+  <>
+    <circle cx="5" cy="19" r="2" />
+    <circle cx="19" cy="5" r="2" />
+    <path d="M11 19h5.5a3.5 3.5 0 0 0 0 -7h-8a3.5 3.5 0 0 1 0 -7h4.5" />
+  </>
+);
+
 export function PipelinesIcon(props: IconProps) {
-  return (
-    <Svg {...props}>
-      <rect x="3" y="3" width="6" height="6" rx="1" />
-      <rect x="15" y="3" width="6" height="6" rx="1" />
-      <rect x="9" y="15" width="6" height="6" rx="1" />
-      <path d="M6 9v3a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V9" />
-      <path d="M12 14v1" />
-    </Svg>
-  );
+  return <Svg {...props}>{PIPELINE_ROUTE_GLYPH}</Svg>;
 }
 
 export function DocumentsIcon(props: IconProps) {
