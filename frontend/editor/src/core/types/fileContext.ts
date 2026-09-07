@@ -5,6 +5,7 @@
 import { PageOperation } from "@app/types/pageEditor";
 import { FileId, BaseFileMetadata } from "@app/types/file";
 import { generateId } from "@app/utils/generateId";
+import type { DiskUnavailableReason } from "@app/services/desktopFileLink";
 
 // Re-export FileId for convenience
 export type { FileId };
@@ -63,6 +64,7 @@ export interface StirlingFileStub extends BaseFileMetadata {
   // Epoch ms of the last pickup of an external edit, so the user can tell whose
   // version is on screen instead of having to catch a toast.
   diskReloadedAt?: number;
+  diskUnavailableReason?: DiskUnavailableReason;
   processedFile?: ProcessedFileMetadata; // PDF page data and processing results
   insertAfterPageId?: string; // Page ID after which this file should be inserted
   isPinned?: boolean; // Protected from tool consumption (replace/remove)
@@ -385,8 +387,7 @@ export interface FileContextActions {
     id: FileId,
     updates: Partial<StirlingFileStub>,
   ) => void;
-  /** Re-check open files against their disk originals (desktop file watcher); no-op without a disk link. */
-  resyncFilesFromDisk: (fileIds: FileId[]) => Promise<void>;
+  resyncDiskPaths: (paths: string[]) => Promise<void>;
   reorderFiles: (orderedFileIds: FileId[]) => void;
   clearAllFiles: () => Promise<void>;
   clearAllData: () => Promise<void>;

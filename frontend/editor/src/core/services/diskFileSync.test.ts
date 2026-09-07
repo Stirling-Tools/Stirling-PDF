@@ -4,18 +4,30 @@ import type { FileId } from "@app/types/file";
 
 // The seam is a module-level const, so each behaviour is exercised by re-importing
 // the module under a fresh mock rather than by mutating a flag.
-const diskState = vi.hoisted(() => ({
-  supported: true,
-  state: { exists: true, size: 100, modifiedMs: 5000 },
-  bytes: new Uint8Array([1, 2, 3]).buffer as ArrayBuffer | null,
-}));
+const diskState = vi.hoisted(
+  () =>
+    ({
+      supported: true,
+      state: { availability: "present", size: 100, modifiedMs: 5000 },
+      bytes: new Uint8Array([1, 2, 3]).buffer as ArrayBuffer | null,
+    }) as {
+      supported: boolean;
+      state:
+        | { availability: "present"; size: number; modifiedMs: number }
+        | { availability: "gone" }
+        | {
+            availability: "unavailable";
+            reason: "permission" | "offline" | "unknown";
+          };
+      bytes: ArrayBuffer | null;
+    },
+);
 
 vi.mock("@app/services/desktopFileLink", () => ({
   get desktopFileLinkingSupported() {
     return diskState.supported;
   },
   getDiskFileState: vi.fn(async () => diskState.state),
-  pathExistsOnDisk: vi.fn(async () => diskState.state.exists),
   readFileFromDisk: vi.fn(async () => diskState.bytes),
 }));
 
@@ -54,7 +66,6 @@ import {
   refreshDiskBaselineAfterSave,
   saveOrphanAsCopy,
   notifyFileVanished,
-  notifyDiskConflict,
   notifyDiskReloaded,
   notifyOpenFileDeleted,
   beginSelfWrite,
@@ -81,7 +92,7 @@ function stub(overrides: Partial<StirlingFileStub> = {}): StirlingFileStub {
 
 beforeEach(() => {
   diskState.supported = true;
-  diskState.state = { exists: true, size: 100, modifiedMs: 5000 };
+  diskState.state = { availability: "present", size: 100, modifiedMs: 5000 };
   diskState.bytes = new Uint8Array([1, 2, 3]).buffer;
   __resetSelfWrites();
   vi.clearAllMocks();
@@ -100,7 +111,7 @@ describe("hasDiskChanged", () => {
     expect(
       hasDiskChanged(
         { diskSyncedSize: undefined, diskSyncedModifiedMs: undefined },
-        { exists: true, size: 100, modifiedMs: 5000 },
+        { availability: "present", size: 100, modifiedMs: 5000 },
       ),
     ).toBe(true);
   });
@@ -109,7 +120,7 @@ describe("hasDiskChanged", () => {
     expect(
       hasDiskChanged(
         { diskSyncedSize: 100, diskSyncedModifiedMs: 5000 },
-        { exists: true, size: 100, modifiedMs: 5000 },
+        { availability: "present", size: 100, modifiedMs: 5000 },
       ),
     ).toBe(false);
   });
@@ -118,7 +129,7 @@ describe("hasDiskChanged", () => {
     expect(
       hasDiskChanged(
         { diskSyncedSize: 100, diskSyncedModifiedMs: 5000 },
-        { exists: true, size: 240, modifiedMs: 5000 },
+        { availability: "present", size: 240, modifiedMs: 5000 },
       ),
     ).toBe(true);
   });
@@ -127,7 +138,7 @@ describe("hasDiskChanged", () => {
     expect(
       hasDiskChanged(
         { diskSyncedSize: 100, diskSyncedModifiedMs: 5000 },
-        { exists: true, size: 100, modifiedMs: 9999 },
+        { availability: "present", size: 100, modifiedMs: 9999 },
       ),
     ).toBe(true);
   });
@@ -136,7 +147,7 @@ describe("hasDiskChanged", () => {
     expect(
       hasDiskChanged(
         { diskSyncedSize: 100, diskSyncedModifiedMs: 5000 },
-        { exists: true, size: 100, modifiedMs: 0 },
+        { availability: "present", size: 100, modifiedMs: 0 },
       ),
     ).toBe(false);
   });
@@ -157,9 +168,26 @@ describe("syncLinkedFileFromDisk", () => {
   });
 
   it("reports a deleted file as missing", async () => {
-    diskState.state = { exists: false, size: 0, modifiedMs: 0 };
+    diskState.state = { availability: "gone" };
     const result = await syncLinkedFileFromDisk(stub());
     expect(result.status).toBe("missing");
+  });
+
+  it("reports a disk it could not look at as unavailable, not missing", async () => {
+    diskState.state = { availability: "unavailable", reason: "permission" };
+    const result = await syncLinkedFileFromDisk(stub());
+    expect(result.status).toBe("unavailable");
+    if (result.status !== "unavailable")
+      throw new Error("expected unavailable");
+    expect(result.reason).toBe("permission");
+  });
+
+  it("does not mistake an unreadable stat for a truncation", async () => {
+    diskState.state = { availability: "unavailable", reason: "offline" };
+    const result = await syncLinkedFileFromDisk(
+      stub({ diskSyncedSize: 100, diskSyncedModifiedMs: 5000 }),
+    );
+    expect(result.status).not.toBe("updated");
   });
 
   it("leaves an untouched file alone", async () => {
@@ -168,7 +196,7 @@ describe("syncLinkedFileFromDisk", () => {
   });
 
   it("reads the live bytes when the file was edited outside the app", async () => {
-    diskState.state = { exists: true, size: 3, modifiedMs: 9000 };
+    diskState.state = { availability: "present", size: 3, modifiedMs: 9000 };
     const result = await syncLinkedFileFromDisk(stub());
     expect(result.status).toBe("updated");
     if (result.status !== "updated") throw new Error("expected updated");
@@ -180,20 +208,20 @@ describe("syncLinkedFileFromDisk", () => {
   });
 
   it("keeps unsaved in-app edits instead of overwriting them from disk", async () => {
-    diskState.state = { exists: true, size: 3, modifiedMs: 9000 };
+    diskState.state = { availability: "present", size: 3, modifiedMs: 9000 };
     const result = await syncLinkedFileFromDisk(stub({ isDirty: true }));
     expect(result.status).toBe("conflict");
   });
 
   it("keeps the stored copy when the disk file cannot be read", async () => {
-    diskState.state = { exists: true, size: 3, modifiedMs: 9000 };
+    diskState.state = { availability: "present", size: 3, modifiedMs: 9000 };
     diskState.bytes = null;
     const result = await syncLinkedFileFromDisk(stub());
     expect(result.status).toBe("unchanged");
   });
 
   it("re-reads a legacy record that has no baseline", async () => {
-    diskState.state = { exists: true, size: 3, modifiedMs: 5000 };
+    diskState.state = { availability: "present", size: 3, modifiedMs: 5000 };
     const result = await syncLinkedFileFromDisk(
       stub({ diskSyncedSize: undefined, diskSyncedModifiedMs: undefined }),
     );
@@ -204,16 +232,32 @@ describe("syncLinkedFileFromDisk", () => {
     // Another process was mid-write: committing this read would install a
     // truncated PDF and then persist it over the cached copy.
     const stat = vi.mocked(getDiskFileState);
-    stat.mockResolvedValueOnce({ exists: true, size: 200, modifiedMs: 9000 });
-    stat.mockResolvedValueOnce({ exists: true, size: 400, modifiedMs: 9500 });
+    stat.mockResolvedValueOnce({
+      availability: "present",
+      size: 200,
+      modifiedMs: 9000,
+    });
+    stat.mockResolvedValueOnce({
+      availability: "present",
+      size: 400,
+      modifiedMs: 9500,
+    });
     const result = await syncLinkedFileFromDisk(stub());
     expect(result.status).toBe("unchanged");
   });
 
   it("refuses a read shorter than the file it was stat'd against", async () => {
     const stat = vi.mocked(getDiskFileState);
-    stat.mockResolvedValueOnce({ exists: true, size: 400, modifiedMs: 9000 });
-    stat.mockResolvedValueOnce({ exists: true, size: 400, modifiedMs: 9000 });
+    stat.mockResolvedValueOnce({
+      availability: "present",
+      size: 400,
+      modifiedMs: 9000,
+    });
+    stat.mockResolvedValueOnce({
+      availability: "present",
+      size: 400,
+      modifiedMs: 9000,
+    });
     const result = await syncLinkedFileFromDisk(stub());
     expect(result.status).toBe("unchanged");
   });
@@ -224,7 +268,7 @@ describe("self-write muting", () => {
   const moved = () => stub({ diskSyncedSize: 1, diskSyncedModifiedMs: 1 });
 
   it("does not report our own save as an external change", async () => {
-    diskState.state = { exists: true, size: 3, modifiedMs: 9000 };
+    diskState.state = { availability: "present", size: 3, modifiedMs: 9000 };
     beginSelfWrite(path);
     const result = await syncLinkedFileFromDisk(moved());
     expect(result.status).toBe("unchanged");
@@ -233,7 +277,7 @@ describe("self-write muting", () => {
   });
 
   it("picks the file up again once the write is accounted for", async () => {
-    diskState.state = { exists: true, size: 3, modifiedMs: 9000 };
+    diskState.state = { availability: "present", size: 3, modifiedMs: 9000 };
     beginSelfWrite(path);
     endSelfWrite(path);
     const result = await syncLinkedFileFromDisk(moved());
@@ -243,7 +287,7 @@ describe("self-write muting", () => {
   it("releases itself if the save never re-baselines", async () => {
     vi.useFakeTimers();
     try {
-      diskState.state = { exists: true, size: 3, modifiedMs: 9000 };
+      diskState.state = { availability: "present", size: 3, modifiedMs: 9000 };
       beginSelfWrite(path);
       vi.advanceTimersByTime(11_000);
       const result = await syncLinkedFileFromDisk(moved());
@@ -257,6 +301,25 @@ describe("self-write muting", () => {
 describe("diskLinkState", () => {
   it("is 'none' for a file that never came from disk", () => {
     expect(diskLinkState({})).toBe("none");
+  });
+
+  it("is 'unavailable' while the original cannot be reached", () => {
+    expect(
+      diskLinkState({
+        localFilePath: "/Volumes/Backup/report.pdf",
+        diskUnavailableReason: "offline",
+      }),
+    ).toBe("unavailable");
+  });
+
+  it("still reports a conflict when disk has also gone quiet", () => {
+    expect(
+      diskLinkState({
+        localFilePath: "/Volumes/Backup/report.pdf",
+        diskConflictAt: 1,
+        diskUnavailableReason: "offline",
+      }),
+    ).toBe("conflict");
   });
 
   it("is 'linked' while the original is present and agrees", () => {
@@ -297,14 +360,14 @@ describe("detachedFields", () => {
 
 describe("loadDiskVersion", () => {
   it("reads the disk copy so a conflict can be resolved towards it", async () => {
-    diskState.state = { exists: true, size: 3, modifiedMs: 9000 };
+    diskState.state = { availability: "present", size: 3, modifiedMs: 9000 };
     const loaded = await loadDiskVersion(stub({ isDirty: true }));
     expect(loaded?.file.name).toBe("report.pdf");
     expect(loaded?.state.modifiedMs).toBe(9000);
   });
 
   it("gives nothing when the disk file has since gone too", async () => {
-    diskState.state = { exists: false, size: 0, modifiedMs: 0 };
+    diskState.state = { availability: "gone" };
     expect(await loadDiskVersion(stub())).toBeNull();
   });
 });
@@ -318,7 +381,7 @@ describe("persistDiskUpdate", () => {
     await persistDiskUpdate(
       "file-1" as FileId,
       file,
-      { exists: true, size: 3, modifiedMs: 9000 },
+      { availability: "present", size: 3, modifiedMs: 9000 },
       12345,
     );
 
@@ -345,7 +408,7 @@ describe("persistDiskUpdate", () => {
 
 describe("saveOrphanAsCopy", () => {
   it("prompts for a location and re-links the file there", async () => {
-    diskState.state = { exists: true, size: 42, modifiedMs: 8000 };
+    diskState.state = { availability: "present", size: 42, modifiedMs: 8000 };
     const saved = await saveOrphanAsCopy(
       stub({ localFilePath: undefined, orphanedFilePath: "C:/docs/gone.pdf" }),
     );
@@ -377,7 +440,7 @@ describe("saveOrphanAsCopy", () => {
 
 describe("refreshDiskBaselineAfterSave", () => {
   it("re-baselines against the file just written and clears the conflict", async () => {
-    diskState.state = { exists: true, size: 512, modifiedMs: 7777 };
+    diskState.state = { availability: "present", size: 512, modifiedMs: 7777 };
     const baseline = await refreshDiskBaselineAfterSave(
       "file-1" as FileId,
       "C:/docs/report.pdf",
@@ -392,7 +455,7 @@ describe("refreshDiskBaselineAfterSave", () => {
   });
 
   it("stamps nothing when the save did not land on disk", async () => {
-    diskState.state = { exists: false, size: 0, modifiedMs: 0 };
+    diskState.state = { availability: "gone" };
     const baseline = await refreshDiskBaselineAfterSave(
       "file-1" as FileId,
       "C:/docs/report.pdf",
@@ -409,13 +472,13 @@ describe("refreshDiskBaselineAfterSave", () => {
   });
 
   it("releases the self-write mute, even when it stamps nothing", async () => {
-    diskState.state = { exists: false, size: 0, modifiedMs: 0 };
+    diskState.state = { availability: "gone" };
     beginSelfWrite("C:/docs/report.pdf");
     await refreshDiskBaselineAfterSave(
       "file-1" as FileId,
       "C:/docs/report.pdf",
     );
-    diskState.state = { exists: true, size: 3, modifiedMs: 9000 };
+    diskState.state = { availability: "present", size: 3, modifiedMs: 9000 };
     const result = await syncLinkedFileFromDisk(
       stub({ diskSyncedSize: 1, diskSyncedModifiedMs: 1 }),
     );
@@ -436,29 +499,6 @@ describe("user-facing notifications", () => {
         body: expect.stringContaining("report.pdf"),
       }),
     );
-  });
-
-  it("explains that the local version is being kept on a conflict", async () => {
-    notifyDiskConflict("report.pdf");
-    await flush();
-    expect(alertMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        alertType: "warning",
-        body: expect.stringContaining("unsaved changes"),
-      }),
-    );
-  });
-
-  it("offers a way out of the conflict instead of only announcing it", async () => {
-    const onUseDisk = vi.fn();
-    notifyDiskConflict("report.pdf", onUseDisk);
-    await flush();
-    const toast = alertMock.mock.calls[0][0];
-    // An unresolved fork is a decision, so it must not time out on its own.
-    expect(toast.isPersistentPopup).toBe(true);
-    expect(toast.buttonText).toBeTruthy();
-    toast.buttonCallback();
-    expect(onUseDisk).toHaveBeenCalled();
   });
 
   it("tells the user an open file lost its original but is still here", async () => {

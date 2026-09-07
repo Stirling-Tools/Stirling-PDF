@@ -5,20 +5,21 @@ import type { ToolId } from "@app/types/toolId";
 
 const disk = vi.hoisted(() => ({
   supported: true,
-  // Paths present on disk; anything else is treated as deleted.
   present: new Set<string>(),
+  unreachable: new Set<string>(),
 }));
 
 vi.mock("@app/services/desktopFileLink", () => ({
   get desktopFileLinkingSupported() {
     return disk.supported;
   },
-  pathExistsOnDisk: vi.fn(async (path: string) => disk.present.has(path)),
-  getDiskFileState: vi.fn(async (path: string) => ({
-    exists: disk.present.has(path),
-    size: 0,
-    modifiedMs: 0,
-  })),
+  getDiskFileState: vi.fn(async (path: string) =>
+    disk.present.has(path)
+      ? { availability: "present" as const, size: 0, modifiedMs: 0 }
+      : disk.unreachable.has(path)
+        ? { availability: "unavailable" as const, reason: "offline" as const }
+        : { availability: "gone" as const },
+  ),
   readFileFromDisk: vi.fn(async () => null),
 }));
 
@@ -248,6 +249,71 @@ describe("pruneMissingRecentFiles", () => {
         { id: "a", name: "a.pdf", path: "C:/docs/a.pdf" },
         { id: "b", name: "b.pdf", path: "C:/docs/b.pdf" },
       ]);
+    });
+  });
+
+  describe("a location we could not look at", () => {
+    it("keeps a pristine record whose volume is unreachable", async () => {
+      disk.unreachable.add("/Volumes/Backup/report.pdf");
+
+      const kept = await pruneMissingRecentFiles([
+        stub({
+          id: "a" as FileId,
+          name: "report.pdf",
+          localFilePath: "/Volumes/Backup/report.pdf",
+        }),
+      ]);
+
+      expect(deleteMultipleStirlingFiles).not.toHaveBeenCalled();
+      expect(updateFileMetadata).not.toHaveBeenCalled();
+      expect(kept[0].localFilePath).toBe("/Volumes/Backup/report.pdf");
+    });
+
+    it("marks the record so the list can say why disk looks quiet", async () => {
+      disk.unreachable.add("/Volumes/Backup/report.pdf");
+
+      const [marked] = await pruneMissingRecentFiles([
+        stub({
+          id: "a" as FileId,
+          name: "report.pdf",
+          localFilePath: "/Volumes/Backup/report.pdf",
+        }),
+      ]);
+
+      expect(marked.diskUnavailableReason).toBe("offline");
+    });
+
+    it("clears the mark once the location comes back", async () => {
+      disk.present.add("/Volumes/Backup/report.pdf");
+
+      const [healed] = await pruneMissingRecentFiles([
+        stub({
+          id: "a" as FileId,
+          name: "report.pdf",
+          localFilePath: "/Volumes/Backup/report.pdf",
+          diskUnavailableReason: "offline",
+        }),
+      ]);
+
+      expect(healed.diskUnavailableReason).toBeUndefined();
+    });
+
+    it("does not detach an open file just because disk went quiet", async () => {
+      disk.unreachable.add("/Volumes/Backup/report.pdf");
+      const onOpenFilesDetached = vi.fn();
+
+      await pruneMissingRecentFiles(
+        [
+          stub({
+            id: "a" as FileId,
+            name: "report.pdf",
+            localFilePath: "/Volumes/Backup/report.pdf",
+          }),
+        ],
+        { openFileIds: new Set(["a" as FileId]), onOpenFilesDetached },
+      );
+
+      expect(onOpenFilesDetached).not.toHaveBeenCalled();
     });
   });
 });

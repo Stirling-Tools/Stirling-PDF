@@ -34,6 +34,7 @@ import {
   loadDiskVersion,
   notifyFileVanished,
   notifyDiskReloaded,
+  notifyDiskTooLarge,
   notifyOpenFileDeleted,
   saveOrphanAsCopy,
 } from "@app/services/diskFileSync";
@@ -514,7 +515,7 @@ export async function addFiles(
           // Baseline what disk held at read time; without it the next open has
           // nothing to compare against and re-reads the file needlessly.
           const state = await getDiskFileState(localFilePath);
-          if (state.exists) {
+          if (state.availability === "present") {
             fileStub.diskSyncedSize = state.size;
             fileStub.diskSyncedModifiedMs = state.modifiedMs;
           }
@@ -864,93 +865,142 @@ async function useDiskVersion(
 
 /** Re-check open files against disk when the watcher sees their folder change:
  *  the on-screen case that list-build and open-time checks cannot cover. */
-export async function resyncFilesFromDisk(
-  fileIds: FileId[],
+async function resyncRecordFromDisk(
+  stub: StirlingFileStub,
+  stateRef: React.MutableRefObject<FileContextState>,
+  filesRef: React.MutableRefObject<Map<FileId, File>>,
+  lifecycleManager: FileLifecycleManager,
+): Promise<StirlingFileStub | null> {
+  const fileId = stub.id;
+  const outcome = await syncLinkedFileFromDisk(stub);
+
+  if (outcome.status === "missing") {
+    // Never delete what is on screen: cutting the link leaves the document
+    // intact and makes the next save ask for somewhere to put it.
+    lifecycleManager.updateStirlingFileStub(
+      fileId,
+      detachedFields(stub.localFilePath),
+      stateRef,
+    );
+    return stub;
+  }
+
+  if (outcome.status === "unavailable") {
+    lifecycleManager.updateStirlingFileStub(
+      fileId,
+      { diskUnavailableReason: outcome.reason },
+      stateRef,
+    );
+    return null;
+  }
+
+  if (stub.diskUnavailableReason) {
+    lifecycleManager.updateStirlingFileStub(
+      fileId,
+      { diskUnavailableReason: undefined },
+      stateRef,
+    );
+  }
+
+  if (outcome.status === "too-large") {
+    notifyDiskTooLarge(
+      stub.name,
+      () => void useDiskVersion(stub, stateRef, filesRef, lifecycleManager),
+    );
+    return null;
+  }
+
+  if (outcome.status === "conflict") {
+    // Already flagged; re-toasting on every write the other app makes would
+    // be unusable.
+    if (stub.diskConflictAt) return null;
+    lifecycleManager.updateStirlingFileStub(
+      fileId,
+      { diskConflictAt: Date.now() },
+      stateRef,
+    );
+    requestDiskConflictChoice({
+      fileId,
+      name: stub.name,
+      onUseDisk: () =>
+        void useDiskVersion(stub, stateRef, filesRef, lifecycleManager),
+    });
+    return null;
+  }
+
+  if (outcome.status === "updated") {
+    // The stat, the read and this commit are all awaited, so the decision was
+    // made against a snapshot. Re-check before overwriting the user's bytes.
+    const latest = stateRef.current.files.byId[fileId];
+    if (
+      !latest ||
+      latest.isDirty ||
+      latest.localFilePath !== stub.localFilePath
+    ) {
+      return null;
+    }
+    const { file, state } = outcome;
+    const reloadedAt = Date.now();
+    filesRef.current.set(fileId, createStirlingFile(file, fileId));
+    await persistDiskUpdate(fileId, file, state, reloadedAt);
+    lifecycleManager.updateStirlingFileStub(
+      fileId,
+      {
+        size: file.size,
+        lastModified: file.lastModified,
+        processedFile: undefined,
+        thumbnailUrl: undefined,
+        isDirty: false,
+        diskConflictAt: undefined,
+        diskReloadedAt: reloadedAt,
+        ...diskBaseline(state),
+      },
+      stateRef,
+    );
+    notifyDiskReloaded(stub.name);
+  }
+
+  return null;
+}
+
+export async function resyncDiskPaths(
+  paths: string[],
   stateRef: React.MutableRefObject<FileContextState>,
   filesRef: React.MutableRefObject<Map<FileId, File>>,
   lifecycleManager: FileLifecycleManager,
 ): Promise<void> {
-  const detached: { name: string; stub: StirlingFileStub }[] = [];
+  const wanted = new Set(paths);
+  const byPath = new Map<string, StirlingFileStub[]>();
+  for (const stub of Object.values(stateRef.current.files.byId)) {
+    if (!stub.localFilePath || !wanted.has(stub.localFilePath)) continue;
+    const held = byPath.get(stub.localFilePath);
+    if (held) held.push(stub);
+    else byPath.set(stub.localFilePath, [stub]);
+  }
 
-  for (const fileId of fileIds) {
-    const stub = stateRef.current.files.byId[fileId];
-    if (!stub?.localFilePath) continue;
-
-    const outcome = await syncLinkedFileFromDisk(stub);
-
-    if (outcome.status === "missing") {
-      // Never delete what is on screen: cutting the link leaves the document
-      // intact and makes the next save ask for somewhere to put it.
-      lifecycleManager.updateStirlingFileStub(
-        fileId,
-        detachedFields(stub.localFilePath),
+  const detached: StirlingFileStub[] = [];
+  for (const stubs of byPath.values()) {
+    for (const stub of stubs) {
+      const lost = await resyncRecordFromDisk(
+        stub,
         stateRef,
+        filesRef,
+        lifecycleManager,
       );
-      detached.push({ name: stub.name, stub });
-      continue;
-    }
-
-    if (outcome.status === "conflict") {
-      // Already flagged; re-toasting on every write the other app makes would
-      // be unusable.
-      if (stub.diskConflictAt) continue;
-      lifecycleManager.updateStirlingFileStub(
-        fileId,
-        { diskConflictAt: Date.now() },
-        stateRef,
-      );
-      requestDiskConflictChoice({
-        fileId,
-        name: stub.name,
-        onUseDisk: () =>
-          void useDiskVersion(stub, stateRef, filesRef, lifecycleManager),
-      });
-      continue;
-    }
-
-    if (outcome.status === "updated") {
-      // The stat, the read and this commit are all awaited, so the decision was
-      // made against a snapshot. Re-check before overwriting the user's bytes.
-      const latest = stateRef.current.files.byId[fileId];
-      if (
-        !latest ||
-        latest.isDirty ||
-        latest.localFilePath !== stub.localFilePath
-      ) {
-        continue;
-      }
-      const { file, state } = outcome;
-      const reloadedAt = Date.now();
-      filesRef.current.set(fileId, createStirlingFile(file, fileId));
-      await persistDiskUpdate(fileId, file, state, reloadedAt);
-      lifecycleManager.updateStirlingFileStub(
-        fileId,
-        {
-          size: file.size,
-          lastModified: file.lastModified,
-          processedFile: undefined,
-          thumbnailUrl: undefined,
-          isDirty: false,
-          diskConflictAt: undefined,
-          diskReloadedAt: reloadedAt,
-          ...diskBaseline(state),
-        },
-        stateRef,
-      );
-      notifyDiskReloaded(stub.name);
+      if (lost) detached.push(lost);
     }
   }
 
   if (detached.length > 0) {
     const single = detached.length === 1 ? detached[0] : undefined;
     notifyOpenFileDeleted(
-      detached.map((d) => d.name),
+      detached.map((stub) => stub.name),
       single
         ? () => {
-            void saveOrphanAsCopy(single.stub).then((saved) => {
+            void saveOrphanAsCopy(single).then((saved) => {
               if (saved) {
                 lifecycleManager.updateStirlingFileStub(
-                  single.stub.id,
+                  single.id,
                   saved.updates,
                   stateRef,
                 );
@@ -1162,11 +1212,14 @@ export async function addStirlingFileStubs(
           // with no trace leaves them unable to tell whose version they have.
           notifyDiskReloaded(stub.name);
         } else {
-          // Safe to stamp the conflict now: the file is in filesRef, so this
           // update is no longer dropped and reaches storage as well as the UI.
           lifecycleManager.updateStirlingFileStub(
             fileId,
-            conflictAt ? { diskConflictAt: conflictAt } : {},
+            {
+              ...(conflictAt ? { diskConflictAt: conflictAt } : {}),
+              diskUnavailableReason:
+                diskSync.status === "unavailable" ? diskSync.reason : undefined,
+            },
             stateRef,
           );
         }

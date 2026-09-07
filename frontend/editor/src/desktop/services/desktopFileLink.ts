@@ -1,43 +1,32 @@
 import { invoke, isTauri } from "@tauri-apps/api/core";
-import type { DiskFileState } from "@core/services/desktopFileLink";
+import type {
+  DiskFileState,
+  DiskUnavailableReason,
+  PresentDiskFileState,
+} from "@core/services/desktopFileLink";
 
 // Desktop side of the file-link seam; overrides the core no-op via @app alias
 // order so disk-opened files stay 1:1 instead of drifting from IndexedDB.
 
-export type { DiskFileState };
+export type { DiskFileState, DiskUnavailableReason, PresentDiskFileState };
 
 export const desktopFileLinkingSupported = true;
 
-// Treat a file as present/unchanged when we can't tell, so a transient failure
-// never prunes a valid recent or discards a good stored copy.
-const ASSUME_PRESENT: DiskFileState = {
-  exists: true,
-  size: 0,
-  modifiedMs: 0,
+const COULD_NOT_LOOK: DiskFileState = {
+  availability: "unavailable",
+  reason: "unknown",
 };
 
 export async function getDiskFileState(path: string): Promise<DiskFileState> {
-  if (!isTauri()) return ASSUME_PRESENT;
+  if (!isTauri()) return COULD_NOT_LOOK;
   try {
     return await invoke<DiskFileState>("file_disk_state", { path });
   } catch (error) {
     console.error("[desktopFileLink] file_disk_state failed:", error);
-    return ASSUME_PRESENT;
+    return COULD_NOT_LOOK;
   }
 }
 
-export async function pathExistsOnDisk(path: string): Promise<boolean> {
-  if (!isTauri()) return true;
-  try {
-    return await invoke<boolean>("path_exists", { path });
-  } catch (error) {
-    console.error("[desktopFileLink] path_exists failed:", error);
-    return true;
-  }
-}
-
-/** Replaces the watch set; empty list stops watching. Failure is non-fatal -
- * list-build and open-time checks still catch changes. */
 export async function watchDiskPaths(paths: string[]): Promise<void> {
   if (!isTauri()) return;
   try {

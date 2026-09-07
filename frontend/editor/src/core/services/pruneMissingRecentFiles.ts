@@ -1,10 +1,14 @@
 import { StirlingFileStub, FileId } from "@app/types/fileContext";
 import { fileStorage } from "@app/services/fileStorage";
 import {
+  DiskUnavailableReason,
   desktopFileLinkingSupported,
-  pathExistsOnDisk,
+  getDiskFileState,
 } from "@app/services/desktopFileLink";
-import { detachedFields } from "@app/services/diskFileSync";
+import {
+  detachedFields,
+  diskAvailabilityFields,
+} from "@app/services/diskFileSync";
 
 /** Reconciles the file list against disk so a file deleted outside the app never shows as available;
  *  the open path re-checks for the delete-after-draw race. No-op off desktop. */
@@ -56,8 +60,15 @@ export async function pruneMissingRecentFiles(
   );
   if (linked.length === 0) return stubs;
 
-  const present = await Promise.all(
-    linked.map((stub) => pathExistsOnDisk(stub.localFilePath!)),
+  const states = await Promise.all(
+    linked.map((stub) => getDiskFileState(stub.localFilePath!)),
+  );
+
+  const marks = new Map<FileId, DiskUnavailableReason | undefined>(
+    linked.map((stub, i) => [
+      stub.id,
+      diskAvailabilityFields(states[i]).diskUnavailableReason,
+    ]),
   );
 
   const openIds = options.openFileIds;
@@ -65,7 +76,7 @@ export async function pruneMissingRecentFiles(
   const toDetach: StirlingFileStub[] = [];
   const detachedOpen: DetachedOpenFile[] = [];
   linked.forEach((stub, i) => {
-    if (present[i]) return;
+    if (states[i].availability !== "gone") return;
     if (openIds?.has(stub.id)) {
       toDetach.push(stub);
       detachedOpen.push({
@@ -84,7 +95,10 @@ export async function pruneMissingRecentFiles(
     options.onOpenFilesDetached?.(detachedOpen);
   }
 
-  if (toDelete.length === 0 && toDetach.length === 0) return stubs;
+  const remarked = linked.some(
+    (stub) => marks.get(stub.id) !== stub.diskUnavailableReason,
+  );
+  if (toDelete.length === 0 && toDetach.length === 0 && !remarked) return stubs;
 
   if (toDelete.length > 0) {
     try {
@@ -111,9 +125,13 @@ export async function pruneMissingRecentFiles(
   );
   return stubs
     .filter((stub) => !deleteSet.has(stub.id))
-    .map((stub) =>
-      detachSet.has(stub.id)
-        ? { ...stub, ...detachedFields(detachSet.get(stub.id)) }
-        : stub,
-    );
+    .map((stub) => {
+      if (detachSet.has(stub.id)) {
+        return { ...stub, ...detachedFields(detachSet.get(stub.id)) };
+      }
+      if (!marks.has(stub.id)) return stub;
+      const mark = marks.get(stub.id);
+      if (mark === stub.diskUnavailableReason) return stub;
+      return { ...stub, diskUnavailableReason: mark };
+    });
 }

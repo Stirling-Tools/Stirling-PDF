@@ -1,6 +1,8 @@
 import { FileId, StirlingFileStub } from "@app/types/fileContext";
 import {
   DiskFileState,
+  DiskUnavailableReason,
+  PresentDiskFileState,
   desktopFileLinkingSupported,
   getDiskFileState,
   readFileFromDisk,
@@ -14,14 +16,15 @@ import { fileStorage } from "@app/services/fileStorage";
 export type DiskSyncOutcome =
   /** Not a desktop-linked file: the stored copy is the only truth. */
   | { status: "not-linked" }
-  /** The disk file is gone. */
   | { status: "missing" }
+  | { status: "unavailable"; reason: DiskUnavailableReason }
   /** Disk matches what we last read; the stored copy is current. */
   | { status: "unchanged" }
   /** Disk moved on, but we hold unsaved in-app edits, so we keep ours. */
   | { status: "conflict" }
+  | { status: "too-large"; size: number }
   /** Disk moved on and we had nothing unsaved, so these are the live bytes. */
-  | { status: "updated"; file: File; state: DiskFileState };
+  | { status: "updated"; file: File; state: PresentDiskFileState };
 
 /** How a file stands relative to its disk original. Derived rather than stored
  *  so every surface gets the same answer instead of re-deriving it. */
@@ -32,17 +35,22 @@ export type DiskLinkState =
   | "linked"
   /** Came from disk, but the original is gone. Saving needs a new location. */
   | "orphaned"
+  | "unavailable"
   /** Disk moved on while we held unsaved edits; two real versions exist. */
   | "conflict";
 
 export function diskLinkState(
   stub: Pick<
     StirlingFileStub,
-    "localFilePath" | "orphanedFilePath" | "diskConflictAt"
+    | "localFilePath"
+    | "orphanedFilePath"
+    | "diskConflictAt"
+    | "diskUnavailableReason"
   >,
 ): DiskLinkState {
   if (stub.localFilePath) {
-    return stub.diskConflictAt ? "conflict" : "linked";
+    if (stub.diskConflictAt) return "conflict";
+    return stub.diskUnavailableReason ? "unavailable" : "linked";
   }
   return stub.orphanedFilePath ? "orphaned" : "none";
 }
@@ -51,7 +59,7 @@ export function diskLinkState(
  *  copy is current, so re-read once; size settles it when mtime is missing. */
 export function hasDiskChanged(
   stub: Pick<StirlingFileStub, "diskSyncedSize" | "diskSyncedModifiedMs">,
-  state: DiskFileState,
+  state: PresentDiskFileState,
 ): boolean {
   if (stub.diskSyncedSize == null || stub.diskSyncedModifiedMs == null) {
     return true;
@@ -61,9 +69,18 @@ export function hasDiskChanged(
   return state.modifiedMs !== stub.diskSyncedModifiedMs;
 }
 
+export function diskAvailabilityFields(
+  state: DiskFileState,
+): Pick<StirlingFileStub, "diskUnavailableReason"> {
+  return {
+    diskUnavailableReason:
+      state.availability === "unavailable" ? state.reason : undefined,
+  };
+}
+
 /** The fields a fresh disk read stamps onto the stub and the stored record. */
 export function diskBaseline(
-  state: DiskFileState,
+  state: PresentDiskFileState,
 ): Pick<StirlingFileStub, "diskSyncedSize" | "diskSyncedModifiedMs"> {
   return {
     diskSyncedSize: state.size,
@@ -81,6 +98,7 @@ export function detachedFields(
   | "diskSyncedSize"
   | "diskSyncedModifiedMs"
   | "diskConflictAt"
+  | "diskUnavailableReason"
   | "orphanedFilePath"
 > {
   return {
@@ -88,9 +106,12 @@ export function detachedFields(
     diskSyncedSize: undefined,
     diskSyncedModifiedMs: undefined,
     diskConflictAt: undefined,
+    diskUnavailableReason: undefined,
     orphanedFilePath: path,
   };
 }
+
+const AUTO_RELOAD_MAX_BYTES = 512 * 1024 * 1024; // 512 MB
 
 // A save writes onto the watched path, so the watcher reports our own write as
 // an external change. Paths are muted until the post-save re-baseline lands.
@@ -123,8 +144,6 @@ export function __resetSelfWrites(): void {
   selfWrites.clear();
 }
 
-/** Compare a linked stub against disk and read live bytes when it moved on.
- *  Unsaved edits win (conflict); an unreadable file reports unchanged. */
 export async function syncLinkedFileFromDisk(
   stub: StirlingFileStub,
 ): Promise<DiskSyncOutcome> {
@@ -137,9 +156,15 @@ export async function syncLinkedFileFromDisk(
   if (isSelfWrite(stub.localFilePath)) return { status: "unchanged" };
 
   const state = await getDiskFileState(stub.localFilePath);
-  if (!state.exists) return { status: "missing" };
+  if (state.availability === "gone") return { status: "missing" };
+  if (state.availability === "unavailable") {
+    return { status: "unavailable", reason: state.reason };
+  }
   if (!hasDiskChanged(stub, state)) return { status: "unchanged" };
   if (stub.isDirty) return { status: "conflict" };
+  if (state.size > AUTO_RELOAD_MAX_BYTES) {
+    return { status: "too-large", size: state.size };
+  }
 
   const bytes = await readFileFromDisk(stub.localFilePath);
   if (!bytes) return { status: "unchanged" };
@@ -148,7 +173,7 @@ export async function syncLinkedFileFromDisk(
   // bytes whose size and mtime held still across the read.
   const after = await getDiskFileState(stub.localFilePath);
   if (
-    !after.exists ||
+    after.availability !== "present" ||
     after.size !== state.size ||
     after.modifiedMs !== state.modifiedMs ||
     bytes.byteLength !== state.size
@@ -169,10 +194,10 @@ export async function syncLinkedFileFromDisk(
  *  settle check here: declining silently would make the button look dead. */
 export async function loadDiskVersion(
   stub: StirlingFileStub,
-): Promise<{ file: File; state: DiskFileState } | null> {
+): Promise<{ file: File; state: PresentDiskFileState } | null> {
   if (!desktopFileLinkingSupported || !stub.localFilePath) return null;
   const state = await getDiskFileState(stub.localFilePath);
-  if (!state.exists) return null;
+  if (state.availability !== "present") return null;
   const bytes = await readFileFromDisk(stub.localFilePath);
   if (!bytes) return null;
   const file = new File([bytes], stub.name, {
@@ -187,7 +212,7 @@ export async function loadDiskVersion(
 export async function persistDiskUpdate(
   fileId: FileId,
   file: File,
-  state: DiskFileState,
+  state: PresentDiskFileState,
   reloadedAt: number,
 ): Promise<void> {
   await fileStorage.updateFileMetadata(fileId, {
@@ -218,7 +243,7 @@ export async function refreshDiskBaselineAfterSave(
   try {
     if (!desktopFileLinkingSupported) return null;
     const state = await getDiskFileState(path);
-    if (!state.exists) return null;
+    if (state.availability !== "present") return null;
     // Writing our version out is one way of resolving a divergence, so the
     // conflict marker goes with it.
     const baseline = { ...diskBaseline(state), diskConflictAt: undefined };
@@ -265,8 +290,9 @@ export async function saveOrphanAsCopy(
       localFilePath: result.savedPath,
       orphanedFilePath: undefined,
       diskConflictAt: undefined,
+      diskUnavailableReason: undefined,
       isDirty: false,
-      ...(state.exists ? diskBaseline(state) : {}),
+      ...(state.availability === "present" ? diskBaseline(state) : {}),
     };
     await fileStorage.updateFileMetadata(stub.id, updates);
     return { path: result.savedPath, updates };
@@ -367,24 +393,22 @@ export function notifyOpenFileDeleted(
   });
 }
 
-/** Unsaved edits are shadowing a newer disk file. Keeping theirs already
- *  happened, so the action offered is the reversal, not a fork with no exit. */
-export function notifyDiskConflict(name: string, onUseDisk?: () => void): void {
+export function notifyDiskTooLarge(name: string, onReload?: () => void): void {
   toast({
-    title: translate("desktopFileLink.conflict.title", "File changed on disk"),
+    title: translate("desktopFileLink.tooLarge.title", "File changed on disk"),
     body: translate(
-      "desktopFileLink.conflict.body",
-      `"${name}" changed on disk, but you have unsaved changes here. Your version is being kept - saving will overwrite the file on disk.`,
+      "desktopFileLink.tooLarge.body",
+      `"${name}" changed on disk. It is large enough that reloading it will take a while, so the version here has been left alone.`,
       { name },
     ),
     isPersistentPopup: true,
-    ...(onUseDisk
+    ...(onReload
       ? {
           buttonText: translate(
             "desktopFileLink.useDiskVersion",
             "Use disk version",
           ),
-          buttonCallback: onUseDisk,
+          buttonCallback: onReload,
         }
       : {}),
   });

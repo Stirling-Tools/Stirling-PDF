@@ -9,12 +9,11 @@ import type { FileId } from "@app/types/file";
 // the conflict before the bytes are published loses the badge with no visible failure.
 
 const diskState = vi.hoisted(() => ({
-  state: { exists: true, size: 999, modifiedMs: 9_000 },
+  state: { availability: "present", size: 999, modifiedMs: 9_000 },
 }));
 vi.mock("@app/services/desktopFileLink", () => ({
   desktopFileLinkingSupported: true,
   getDiskFileState: vi.fn(async () => diskState.state),
-  pathExistsOnDisk: vi.fn(async () => true),
   readFileFromDisk: vi.fn(async () => new Uint8Array([1, 2, 3]).buffer),
 }));
 

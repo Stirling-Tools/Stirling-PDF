@@ -39,6 +39,7 @@ encryptedFilesBlocked_other = "{{count}} files are password-protected. Unlock th
 exportAndContinue = "Export & Continue"
 false = "False"
 fileChangedOnDisk = "Changed on disk since you edited it"
+fileDiskUnavailable = "Cannot reach the file on disk"
 fileNotSavedToDisk = "Not saved to disk"
 fileOriginalDeleted = "Original deleted - save to keep a copy"
 fileSavedToDisk = "File saved to disk"
@@ -3926,7 +3927,6 @@ saveAs = "Save as…"
 useDiskVersion = "Use disk version"
 
 [desktopFileLink.conflict]
-body = "\"{{name}}\" changed on disk, but you have unsaved changes here. Your version is being kept - saving will overwrite the file on disk."
 hint = "Keeping your changes overwrites the file on disk when you next save."
 keepMine = "Keep my changes"
 prompt = "This file changed on disk while you had unsaved changes here. Only one version can be kept."
@@ -3941,6 +3941,10 @@ title = "File no longer exists"
 [desktopFileLink.openDeleted]
 body = "{{label}} no longer exists on disk. It is still open here - saving will ask you for a new location."
 title = "File deleted on disk"
+
+[desktopFileLink.tooLarge]
+body = "\"{{name}}\" changed on disk. It is large enough that reloading it will take a while, so the version here has been left alone."
+title = "File changed on disk"
 
 [desktopFileLink.reloaded]
 body = "\"{{name}}\" changed on disk and has been reloaded."
@@ -4470,6 +4474,10 @@ conflict = "Disk changed"
 conflictHint = "The file on disk changed while you had unsaved edits. Your version is shown - saving will overwrite the one on disk."
 orphaned = "Not on disk"
 orphanedHint = "The original at {{path}} is gone. This copy is only here - saving it will ask for a new location."
+unavailable = "Unavailable"
+unavailableHintOffline = "The drive or share this file lives on is not connected. Reconnect it to pick up changes again."
+unavailableHintPermission = "Stirling is not allowed to read this location. Grant access in System Settings to pick up changes again."
+unavailableHintUnknown = "This file cannot be reached right now. The copy here is unchanged."
 
 [filesPage.empty]
 hint = "Drop PDFs anywhere on this page to upload, or use the New folder button to organize your files."

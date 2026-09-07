@@ -11,12 +11,7 @@ import type { FileId, ToolOperation } from "@app/types/file";
 
 vi.mock("@app/services/desktopFileLink", () => ({
   desktopFileLinkingSupported: true,
-  getDiskFileState: vi.fn(async () => ({
-    exists: false,
-    size: 0,
-    modifiedMs: 0,
-  })),
-  pathExistsOnDisk: vi.fn(async () => false),
+  getDiskFileState: vi.fn(async () => ({ availability: "gone" as const })),
   readFileFromDisk: vi.fn(async () => null),
 }));
 

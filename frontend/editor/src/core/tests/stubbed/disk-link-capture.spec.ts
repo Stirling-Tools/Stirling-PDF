@@ -55,8 +55,12 @@ async function installTauri(page: Page) {
     const stat = (p: string) => {
       const e = w.__disk[p];
       return e
-        ? { exists: true, size: e.bytes.length, modifiedMs: e.modifiedMs }
-        : { exists: false, size: 0, modifiedMs: 0 };
+        ? {
+            availability: "present",
+            size: e.bytes.length,
+            modifiedMs: e.modifiedMs,
+          }
+        : { availability: "gone" };
     };
 
     // Desktop API calls go through tauri-plugin-http, not window.fetch, so
@@ -81,8 +85,6 @@ async function installTauri(page: Page) {
         switch (cmd) {
           case "file_disk_state":
             return stat(args.path);
-          case "path_exists":
-            return stat(args.path).exists;
           case "plugin:fs|read_file": {
             const e = w.__disk[args.path];
             if (!e) throw new Error(`ENOENT ${args.path}`);
@@ -216,11 +218,22 @@ async function emitWatch(page: Page, paths: string[]) {
 /** Write file records straight into IndexedDB, as an earlier session would. */
 async function seedFiles(page: Page, files: SeedFile[]) {
   await page.evaluate(async (seed: SeedFile[]) => {
-    const db: IDBDatabase = await new Promise((resolve, reject) => {
-      const req = indexedDB.open("stirling-pdf-files", 9);
-      req.onsuccess = () => resolve(req.result);
-      req.onerror = () => reject(req.error);
-    });
+    const open = () =>
+      new Promise<IDBDatabase>((resolve, reject) => {
+        const req = indexedDB.open("stirling-pdf-files");
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () =>
+          reject(req.error ?? new Error("indexedDB.open failed"));
+      });
+    let db: IDBDatabase = await open();
+    for (let i = 0; i < 100 && !db.objectStoreNames.contains("files"); i++) {
+      db.close();
+      await new Promise((r) => setTimeout(r, 100));
+      db = await open();
+    }
+    if (!db.objectStoreNames.contains("files")) {
+      throw new Error("the app never created the files store");
+    }
     const tx = db.transaction(["files"], "readwrite");
     const store = tx.objectStore("files");
     store.clear();
@@ -238,7 +251,7 @@ async function seedFiles(page: Page, files: SeedFile[]) {
         size: bytes.length,
         lastModified: baseline.modifiedMs,
         createdAt: Date.now(),
-        data: new Blob([bytes], { type: "application/pdf" }),
+        data: bytes.buffer,
         quickKey: `${f.name}|${bytes.length}|${baseline.modifiedMs}`,
         isLeaf: true,
         versionNumber: 1,
@@ -252,7 +265,14 @@ async function seedFiles(page: Page, files: SeedFile[]) {
     }
     await new Promise((resolve, reject) => {
       tx.oncomplete = () => resolve(null);
-      tx.onerror = () => reject(tx.error);
+      const fail = (what: string) => () =>
+        reject(
+          new Error(
+            `${what}: ${tx.error?.name ?? "no error"} ${tx.error?.message ?? ""}`,
+          ),
+        );
+      tx.onerror = fail("transaction failed");
+      tx.onabort = fail("transaction aborted");
     });
     db.close();
   }, files);

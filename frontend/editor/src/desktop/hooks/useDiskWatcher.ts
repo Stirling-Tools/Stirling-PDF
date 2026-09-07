@@ -1,6 +1,5 @@
 import { useEffect, useRef } from "react";
 import { useAllFiles, useFileActions } from "@app/contexts/FileContext";
-import { FileId } from "@app/types/fileContext";
 import {
   onDiskFilesChanged,
   watchDiskPaths,
@@ -17,18 +16,17 @@ export function useDiskWatcher(): void {
   const { actions } = useFileActions();
   const { fileStubs } = useAllFiles();
 
-  const linked = fileStubs
-    .filter((stub) => stub.localFilePath)
-    .map((stub) => ({ id: stub.id, path: stub.localFilePath! }));
-  const paths = linked.map((entry) => entry.path).sort();
+  const paths = [
+    ...new Set(
+      fileStubs
+        .map((stub) => stub.localFilePath)
+        .filter((path): path is string => Boolean(path)),
+    ),
+  ].sort();
   // Re-registered whenever the linked set changes. JSON rather than a joined
   // string: no separator character is safe inside Windows paths.
   const watchKey = JSON.stringify(paths);
 
-  // The handler and the watch effect read through refs, so neither is torn down
-  // and rebuilt every time an unrelated stub field changes.
-  const pathToIdRef = useRef(new Map<string, FileId>());
-  pathToIdRef.current = new Map(linked.map((entry) => [entry.path, entry.id]));
   const pathsRef = useRef(paths);
   pathsRef.current = paths;
 
@@ -39,22 +37,18 @@ export function useDiskWatcher(): void {
   useEffect(() => {
     let unlisten: (() => void) | undefined;
     let disposed = false;
-    // Ids seen since the last flush, deduped: one burst per file, one re-check.
-    const pending = new Set<FileId>();
+    const pending = new Set<string>();
     let timer: ReturnType<typeof setTimeout> | undefined;
 
     const flush = () => {
       timer = undefined;
-      const ids = [...pending];
+      const changed = [...pending];
       pending.clear();
-      if (ids.length > 0) void actions.resyncFilesFromDisk(ids);
+      if (changed.length > 0) void actions.resyncDiskPaths(changed);
     };
 
     void onDiskFilesChanged((changed) => {
-      for (const path of changed) {
-        const id = pathToIdRef.current.get(path);
-        if (id) pending.add(id);
-      }
+      for (const path of changed) pending.add(path);
       if (pending.size === 0) return;
       if (timer) clearTimeout(timer);
       timer = setTimeout(flush, SETTLE_MS);
@@ -71,7 +65,25 @@ export function useDiskWatcher(): void {
     };
   }, [actions]);
 
-  // Stop watching when the window goes away, so the watcher thread does not
+  const unavailableRef = useRef<string[]>([]);
+  unavailableRef.current = [
+    ...new Set(
+      fileStubs
+        .filter((stub) => stub.diskUnavailableReason && stub.localFilePath)
+        .map((stub) => stub.localFilePath!),
+    ),
+  ];
+
+  useEffect(() => {
+    const recheck = () => {
+      if (unavailableRef.current.length > 0) {
+        void actions.resyncDiskPaths(unavailableRef.current);
+      }
+    };
+    window.addEventListener("focus", recheck);
+    return () => window.removeEventListener("focus", recheck);
+  }, [actions]);
+
   // outlive the files it was watching for.
   useEffect(() => () => void watchDiskPaths([]), []);
 }

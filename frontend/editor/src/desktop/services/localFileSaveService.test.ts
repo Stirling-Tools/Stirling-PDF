@@ -10,12 +10,15 @@ const writeFile = vi.hoisted(() => vi.fn(async () => undefined));
 vi.mock("@tauri-apps/plugin-fs", () => ({ writeFile }));
 
 const getDiskFileState = vi.hoisted(() =>
-  vi.fn(async () => ({ exists: true, size: 3, modifiedMs: 9000 })),
+  vi.fn(async () => ({
+    availability: "present" as const,
+    size: 3,
+    modifiedMs: 9000,
+  })),
 );
 vi.mock("@app/services/desktopFileLink", () => ({
   desktopFileLinkingSupported: true,
   getDiskFileState,
-  pathExistsOnDisk: vi.fn(async () => true),
   readFileFromDisk: vi.fn(async () => new Uint8Array([1, 2, 3]).buffer),
 }));
 vi.mock("@app/services/fileStorage", () => ({

@@ -90,7 +90,7 @@ export function useAppInitialization(): void {
               const state = await getDiskFileState(localFilePath);
               updateStirlingFileStub(file.fileId, {
                 localFilePath,
-                ...(state.exists
+                ...(state.availability === "present"
                   ? {
                       diskSyncedSize: state.size,
                       diskSyncedModifiedMs: state.modifiedMs,

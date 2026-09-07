@@ -28,6 +28,11 @@ export function FileEditorStatusDot({ file }: FileEditorStatusDotProps) {
           label: t("fileChangedOnDisk", "Changed on disk since you edited it"),
           color: "var(--mantine-color-orange-6)",
         };
+      case "unavailable":
+        return {
+          label: t("fileDiskUnavailable", "Cannot reach the file on disk"),
+          color: "var(--mantine-color-gray-5)",
+        };
       case "none":
         return {
           label: t("fileNotSavedToDisk", "Not saved to disk"),

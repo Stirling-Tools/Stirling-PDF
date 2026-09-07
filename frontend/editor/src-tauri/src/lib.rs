@@ -20,9 +20,9 @@ use commands::{
     get_opened_files,
     open_files_in_new_window,
     open_in_new_window,
-    path_exists,
     pop_opened_files,
     pop_window_file_ids,
+    release_window_watches,
     unwatch_disk_paths,
     watch_disk_paths,
     get_refresh_token,
@@ -216,7 +216,6 @@ pub fn run() {
       get_opened_files,
       pop_opened_files,
       clear_opened_files,
-      path_exists,
       file_disk_state,
       watch_disk_paths,
       unwatch_disk_paths,
@@ -276,6 +275,9 @@ pub fn run() {
               let _ = window.destroy();
             }
           }
+        }
+        RunEvent::WindowEvent { event: WindowEvent::Destroyed, label, .. } => {
+          release_window_watches(app_handle, &label);
         }
         RunEvent::WindowEvent { event: WindowEvent::DragDrop(drag_drop_event), label, .. } => {
           use tauri::DragDropEvent;

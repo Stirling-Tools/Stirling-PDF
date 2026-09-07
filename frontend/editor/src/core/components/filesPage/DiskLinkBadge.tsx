@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { Tooltip } from "@mantine/core";
 import LinkOffIcon from "@mui/icons-material/LinkOff";
 import SyncProblemIcon from "@mui/icons-material/SyncProblem";
+import CloudOffIcon from "@mui/icons-material/CloudOff";
 
 import { StirlingFileStub } from "@app/types/fileContext";
 import { diskLinkState } from "@app/services/diskFileSync";
@@ -13,6 +14,21 @@ interface DiskLinkBadgeProps {
   /** Icon-only, for dense rows. */
   compact?: boolean;
 }
+
+const unavailableHint = {
+  permission: [
+    "filesPage.diskLink.unavailableHintPermission",
+    "Stirling is not allowed to read this location. Grant access in System Settings to pick up changes again.",
+  ],
+  offline: [
+    "filesPage.diskLink.unavailableHintOffline",
+    "The drive or share this file lives on is not connected. Reconnect it to pick up changes again.",
+  ],
+  unknown: [
+    "filesPage.diskLink.unavailableHintUnknown",
+    "This file cannot be reached right now. The copy here is unchanged.",
+  ],
+} as const;
 
 const badgeStyle = {
   display: "inline-flex",
@@ -37,31 +53,43 @@ export function DiskLinkBadge({ file, compact = false }: DiskLinkBadgeProps) {
   if (state === "none" || state === "linked") return null;
 
   const config =
-    state === "orphaned"
+    state === "unavailable"
       ? {
-          label: t("filesPage.diskLink.orphaned", "Not on disk"),
-          icon: <LinkOffIcon style={{ fontSize: "0.85rem" }} />,
+          label: t("filesPage.diskLink.unavailable", "Unavailable"),
+          icon: <CloudOffIcon style={{ fontSize: "0.85rem" }} />,
           tooltip: t(
-            "filesPage.diskLink.orphanedHint",
-            "The original at {{path}} is gone. This copy is only here - saving it will ask for a new location.",
-            { path: file.orphanedFilePath ?? "" },
+            ...unavailableHint[file.diskUnavailableReason ?? "unknown"],
           ),
+          tone: {
+            background: "var(--c-hover)",
+            color: "var(--c-text-muted)",
+          },
         }
-      : {
-          label: t("filesPage.diskLink.conflict", "Disk changed"),
-          icon: <SyncProblemIcon style={{ fontSize: "0.85rem" }} />,
-          tooltip: t(
-            "filesPage.diskLink.conflictHint",
-            "The file on disk changed while you had unsaved edits. Your version is shown - saving will overwrite the one on disk.",
-          ),
-        };
+      : state === "orphaned"
+        ? {
+            label: t("filesPage.diskLink.orphaned", "Not on disk"),
+            icon: <LinkOffIcon style={{ fontSize: "0.85rem" }} />,
+            tooltip: t(
+              "filesPage.diskLink.orphanedHint",
+              "The original at {{path}} is gone. This copy is only here - saving it will ask for a new location.",
+              { path: file.orphanedFilePath ?? "" },
+            ),
+          }
+        : {
+            label: t("filesPage.diskLink.conflict", "Disk changed"),
+            icon: <SyncProblemIcon style={{ fontSize: "0.85rem" }} />,
+            tooltip: t(
+              "filesPage.diskLink.conflictHint",
+              "The file on disk changed while you had unsaved edits. Your version is shown - saving will overwrite the one on disk.",
+            ),
+          };
 
   return (
     <Tooltip label={config.tooltip} withinPortal multiline maw={300}>
       {/* Icon-only needs its own name, but aria-label is prohibited on a bare
           span, hence role="img". With the label visible it would shadow the text. */}
       <span
-        style={badgeStyle}
+        style={{ ...badgeStyle, ...("tone" in config ? config.tone : {}) }}
         {...(compact ? { role: "img", "aria-label": config.label } : {})}
       >
         {config.icon}
