@@ -168,13 +168,22 @@ export function parseAcrobatSequenceXml(xmlText: string): AcrobatSequence {
   };
 }
 
-/** True when the text looks like an Acrobat Action file. */
+const WORKFLOW_ROOT_TAG = /<Workflow(?=[\s/>])([^>]*)>/;
+const DEFAULT_XMLNS = /\sxmlns\s*=\s*(?:"([^"]*)"|'([^']*)')/;
+
+/**
+ * True when the text looks like an Acrobat Action file.
+ *
+ * The namespace is compared against the whole `xmlns` value of the `<Workflow>`
+ * tag: searching the text for the namespace URL would accept any file that
+ * merely mentions it, in a comment or inside an unrelated URL.
+ */
 export function looksLikeAcrobatSequence(text: string): boolean {
-  const head = text.slice(0, 2048);
-  return (
-    head.includes(ACROBAT_WORKFLOW_NS) ||
-    (/<Workflow[\s>]/.test(head) && /<Group[\s>]/.test(text))
-  );
+  const rootTag = WORKFLOW_ROOT_TAG.exec(text.slice(0, 2048));
+  if (!rootTag) return false;
+  const xmlns = DEFAULT_XMLNS.exec(rootTag[1]);
+  const namespace = xmlns?.[1] ?? xmlns?.[2];
+  return namespace === ACROBAT_WORKFLOW_NS || /<Group[\s>]/.test(text);
 }
 
 // ---------------------------------------------------------------------------

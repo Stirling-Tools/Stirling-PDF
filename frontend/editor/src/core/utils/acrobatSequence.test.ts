@@ -223,6 +223,37 @@ describe("acrobatSequence", () => {
         false,
       );
     });
+
+    test("rejects a file that only mentions the workflow namespace", () => {
+      expect(
+        looksLikeAcrobatSequence(
+          '{"note":"exported from http://ns.adobe.com/acrobat/workflow/2012"}',
+        ),
+      ).toBe(false);
+      expect(
+        looksLikeAcrobatSequence(
+          '<?xml version="1.0"?><Notes href="https://example.invalid/http://ns.adobe.com/acrobat/workflow/2012"/>',
+        ),
+      ).toBe(false);
+    });
+
+    test("rejects a namespace the URL is only a prefix or suffix of", () => {
+      const withSuffix = DELETE_COMMENTS.replace(
+        "workflow/2012",
+        "workflow/2012.evil.invalid",
+      );
+      expect(looksLikeAcrobatSequence(withSuffix.split("<Group")[0])).toBe(
+        false,
+      );
+    });
+
+    test("accepts a namespaced Action with no groups", () => {
+      expect(
+        looksLikeAcrobatSequence(
+          '<?xml version="1.0"?><Workflow xmlns="http://ns.adobe.com/acrobat/workflow/2012" title="Empty"/>',
+        ),
+      ).toBe(true);
+    });
   });
 
   describe("mapAcrobatCommand", () => {
