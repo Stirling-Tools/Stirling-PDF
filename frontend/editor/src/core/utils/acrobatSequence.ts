@@ -28,10 +28,6 @@ import { AutomationOperation } from "@app/types/automation";
 import { ToolRegistry } from "@app/data/toolsTaxonomy";
 import { ToolId } from "@app/types/toolId";
 
-// ---------------------------------------------------------------------------
-// Raw XML model
-// ---------------------------------------------------------------------------
-
 /** A parsed `<Item>` tree. Nested `<Items name="…">` become nested records. */
 export type AcrobatItems = {
   [key: string]: string | number | boolean | null | AcrobatItems;
@@ -185,10 +181,6 @@ export function looksLikeAcrobatSequence(text: string): boolean {
   const namespace = xmlns?.[1] ?? xmlns?.[2];
   return namespace === ACROBAT_WORKFLOW_NS || /<Group[\s>]/.test(text);
 }
-
-// ---------------------------------------------------------------------------
-// Command mapping
-// ---------------------------------------------------------------------------
 
 /**
  * How a command was matched:
@@ -672,10 +664,6 @@ export function mapAcrobatCommand(
     note: index === 0 ? joinNotes(result.note) : undefined,
   }));
 }
-
-// ---------------------------------------------------------------------------
-// Import
-// ---------------------------------------------------------------------------
 
 export interface AcrobatSequenceImport {
   name: string;

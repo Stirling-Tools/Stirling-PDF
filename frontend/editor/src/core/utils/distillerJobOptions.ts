@@ -107,10 +107,6 @@ export function readDistillerSettings(dict: PsDict): DistillerSettings {
   return settings;
 }
 
-// ---------------------------------------------------------------------------
-// Mapping to Automate steps
-// ---------------------------------------------------------------------------
-
 /**
  * Pick a Stirling compression level from the profile's image resolutions.
  *
