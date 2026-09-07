@@ -3,6 +3,7 @@
   "name": "Routing Policy",
   "owner": "",
   "enabled": true,
+  "required": false,
   "inputs": [
     {
       "sourceId": "src-dropbox",

@@ -61,19 +61,8 @@ public record Policy(
             Long teamId,
             EditorConfig editor) {
         this(
-                id,
-                name,
-                owner,
-                enabled,
-                required,
-                icon,
-                inputs,
-                steps,
-                output,
-                outputIds,
-                teamId,
-                editor,
-                List.of());
+                id, name, owner, enabled, required, icon, inputs, steps, output, outputIds, teamId,
+                editor, List.of());
     }
 
     /**
@@ -124,18 +113,7 @@ public record Policy(
             List<String> outputIds,
             Long teamId) {
         this(
-                id,
-                name,
-                owner,
-                enabled,
-                false,
-                "",
-                inputs,
-                steps,
-                output,
-                outputIds,
-                teamId,
-                null,
+                id, name, owner, enabled, false, "", inputs, steps, output, outputIds, teamId, null,
                 List.of());
     }
 
@@ -156,19 +134,8 @@ public record Policy(
             Long teamId,
             EditorConfig editor) {
         this(
-                id,
-                name,
-                owner,
-                enabled,
-                false,
-                "",
-                inputs,
-                steps,
-                output,
-                outputIds,
-                teamId,
-                editor,
-                List.of());
+                id, name, owner, enabled, false, "", inputs, steps, output, outputIds, teamId,
+                editor, List.of());
     }
 
     /**

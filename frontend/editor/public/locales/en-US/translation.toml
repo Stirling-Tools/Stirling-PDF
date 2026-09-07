@@ -9159,10 +9159,8 @@ labelsHeading = "Classification labels"
 description = "Results always stay in Stirling. Pick one destination to also receive a copy of every processed document."
 emptyPrompt = "No writable destinations yet. Connect a folder or S3 source to deliver processed documents outside Stirling."
 fallbackHeading = "Default destination"
-heading = "Deliver output to"
 
 [portal.policies.wizard.errors]
-deliveryUnconfigured = "Pick an account and operation for the delivery step, or turn it off."
 noTools = "Enable at least one action, or pick a destination to route documents to."
 saveFailed = "Couldn't save the pipeline. Please try again."
 
@@ -9179,8 +9177,6 @@ remove = "Remove rule"
 
 [portal.policies.wizard.sources]
 connect = "Connect a source"
-emptyPrompt = "No sources connected yet - the policy still covers editor uploads. Connect a folder, S3, SFTP or webhook source to process documents from other systems."
-triggerNote = "Folder and webhook sources run this policy automatically; other sources are checked hourly."
 
 [portal.policies.wizard.title]
 edit = "Edit {{category}} pipeline"
