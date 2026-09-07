@@ -42,6 +42,7 @@ Please make sure your Pull Request adheres to the following guidelines:
 - Keep commits atomic. One commit should contain one change. If you want to make multiple changes, submit multiple Pull Requests.
 - Commits should be clear, concise, and easy to understand.
 - References to the Issue number in the Pull Request and/or Commit message.
+- Every comment in the diff should say something the code does not. See [Code comments](devGuide/CODE_COMMENTS.md); `task comment-lint` checks the mechanical part.
 
 ## Translations
 

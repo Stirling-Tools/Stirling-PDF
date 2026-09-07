@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   TextInput,
@@ -45,7 +45,6 @@ export default function AdminAiModelsSection() {
     setSettings,
     loading,
     saving,
-    fetchSettings,
     saveSettings,
     isFieldPending,
   } = useAdminSettings<AiEngineSettingsData>({
@@ -83,10 +82,6 @@ export default function AdminAiModelsSection() {
       return { sectionData: {}, deltaSettings };
     },
   });
-
-  useEffect(() => {
-    fetchSettings();
-  }, []);
 
   const { isDirty, resetToSnapshot, markSaved } = useSettingsDirty(
     settings,
@@ -371,6 +366,23 @@ export default function AdminAiModelsSection() {
                   {t(
                     "admin.settings.ai.models.baseUrl.warning",
                     "The base URL must point at a trusted internal endpoint. The engine will make server-side requests to it, so an untrusted value is SSRF-sensitive.",
+                  )}
+                </Text>
+              </Alert>
+            )}
+
+            {showBaseUrl && (
+              <Alert
+                variant="light"
+                color="blue"
+                icon={
+                  <LocalIcon icon="info-rounded" width="1rem" height="1rem" />
+                }
+              >
+                <Text size="xs">
+                  {t(
+                    "admin.settings.ai.models.baseUrl.contextWindow",
+                    "Use a context window of at least 16,384 tokens. Smaller windows silently drop part of the prompt. Ollama defaults to 4,096 - raise OLLAMA_CONTEXT_LENGTH.",
                   )}
                 </Text>
               </Alert>

@@ -1,0 +1,92 @@
+/* Connect-approval page. The origin is the thing the approver has to actually
+   read, so it gets the visual weight and everything else stays quiet. */
+
+.saas-connect {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  text-align: left;
+}
+
+.saas-connect__waiting {
+  display: flex;
+  justify-content: center;
+  padding: 1.5rem 0;
+}
+
+.saas-connect__lead {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--c-text-muted);
+}
+
+/* Sits inside the facts panel rather than beside the email: at this width a
+   right-aligned action wraps onto its own line and reads as a third field. */
+.saas-connect__switch {
+  display: block;
+  margin-top: 0.125rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 0.8125rem;
+  color: var(--c-accent-text);
+  cursor: pointer;
+}
+
+.saas-connect__switch:hover:not(:disabled) {
+  text-decoration: underline;
+}
+
+.saas-connect__switch:disabled {
+  color: var(--c-text-muted);
+  cursor: default;
+}
+
+.saas-connect__facts {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.375rem 1rem;
+  margin: 0;
+  padding: 0.875rem;
+  background: var(--c-surface-sunken);
+  border: 1px solid var(--c-border);
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+}
+
+.saas-connect__facts dt {
+  margin: 0;
+  color: var(--c-text-muted);
+}
+
+.saas-connect__facts dd {
+  margin: 0;
+  color: var(--c-text);
+  overflow-wrap: anywhere;
+}
+
+/* Monospaced so a lookalike hostname is harder to skim past. */
+.saas-connect__origin {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-weight: 600;
+}
+
+.saas-connect__origin-label {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.saas-connect__insecure {
+  display: inline-flex;
+  flex: none;
+  color: var(--c-warning);
+  cursor: help;
+}
+
+.saas-connect__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}

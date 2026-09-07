@@ -8,7 +8,6 @@
 import apiClient from "@app/services/apiClient";
 import { getPolicyOutputBaseUrl } from "@app/services/policyOutputBaseUrl";
 import type {
-  BackendPipelineDefinition,
   BackendPolicy,
   PolicyExecutionTarget,
   PolicyRunView,
@@ -20,44 +19,12 @@ interface JobResponse {
   result: unknown;
 }
 
-// --- Policy config persistence (server-side store, JPA-backed) ---
-
-/** Create or update a policy; the backend assigns a blank id and returns it. */
-export async function savePolicy(
-  policy: BackendPolicy,
-): Promise<BackendPolicy> {
-  const res = await apiClient.post<BackendPolicy>("/api/v1/policies", policy);
-  return res.data;
-}
-
 /** List all stored policies. */
 export async function listPolicies(): Promise<BackendPolicy[]> {
   const res = await apiClient.get<BackendPolicy[]>("/api/v1/policies", {
     suppressErrorToast: true,
   });
   return res.data;
-}
-
-/** Fetch a stored policy by id. */
-export async function getPolicy(id: string): Promise<BackendPolicy> {
-  const res = await apiClient.get<BackendPolicy>(
-    `/api/v1/policies/${encodeURIComponent(id)}`,
-  );
-  return res.data;
-}
-
-/** Delete a stored policy by id. */
-export async function deletePolicy(id: string): Promise<void> {
-  await apiClient.delete(`/api/v1/policies/${encodeURIComponent(id)}`);
-}
-
-/**
- * Persist the team's run order (server-side, shared by the whole team). Sends the
- * ordered backend policy ids; the backend maps position → order and ignores any
- * id outside the caller's team. Team-leader/admin only (403 otherwise).
- */
-export async function reorderPolicies(orderedIds: string[]): Promise<void> {
-  await apiClient.put("/api/v1/policies/order", orderedIds);
 }
 
 /**
@@ -80,28 +47,6 @@ export async function runStoredPolicy(
     form,
     { suppressErrorToast: true },
   );
-  return res.data.jobId;
-}
-
-// --- Ad-hoc pipeline runs (no stored policy) ---
-
-/**
- * Run an ad-hoc pipeline on the backend over the given documents. Returns the
- * run id; poll {@link getPolicyRun} for status + output file ids.
- */
-export async function runPolicyPipeline(
-  definition: BackendPipelineDefinition,
-  files: File[],
-): Promise<string> {
-  const form = new FormData();
-  for (const file of files) form.append("fileInput", file);
-  // The backend binds this as a typed @RequestPart, so it must be an application/json part.
-  form.append(
-    "json",
-    new Blob([JSON.stringify(definition)], { type: "application/json" }),
-  );
-  // No Content-Type: let the client set multipart/form-data with its boundary.
-  const res = await apiClient.post<JobResponse>("/api/v1/policies/run", form);
   return res.data.jobId;
 }
 

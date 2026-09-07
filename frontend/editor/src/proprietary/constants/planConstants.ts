@@ -50,7 +50,10 @@ export const usePlanFeatures = (): PlanFeaturesMap => {
       "up to 5 users",
     );
     const upToFiveUsers = t("plan.features.upToFiveUsers", "Up to 5 users");
-    const unlimitedUsers = t("plan.features.unlimitedUsers", "Unlimited users");
+    const usersIncluded = t(
+      "plan.features.usersIncluded",
+      "100 users included",
+    );
     const googleDriveIntegration = t(
       "plan.features.googleDriveIntegration",
       "Google drive integration",
@@ -88,7 +91,7 @@ export const usePlanFeatures = (): PlanFeaturesMap => {
         { name: communitySupport, included: true },
         { name: regularUpdates, included: true },
         { name: upToFiveUsersLowercase, included: true },
-        { name: unlimitedUsers, included: false },
+        { name: usersIncluded, included: false },
         { name: googleDriveIntegration, included: false },
         { name: externalDatabase, included: false },
         { name: editingTextInPdfs, included: false },
@@ -107,7 +110,7 @@ export const usePlanFeatures = (): PlanFeaturesMap => {
         { name: communitySupport, included: true },
         { name: regularUpdates, included: true },
         { name: upToFiveUsers, included: false },
-        { name: unlimitedUsers, included: true },
+        { name: usersIncluded, included: true },
         { name: googleDriveIntegration, included: true },
         { name: externalDatabase, included: true },
         { name: editingTextInPdfs, included: true },
@@ -126,7 +129,7 @@ export const usePlanFeatures = (): PlanFeaturesMap => {
         { name: communitySupport, included: true },
         { name: regularUpdates, included: true },
         { name: upToFiveUsersLowercase, included: false },
-        { name: unlimitedUsers, included: false },
+        { name: usersIncluded, included: false },
         { name: googleDriveIntegration, included: true },
         { name: externalDatabase, included: true },
         { name: editingTextInPdfs, included: true },
@@ -150,9 +153,9 @@ export const usePlanHighlights = (): PlanHighlightsMap => {
       "plan.highlights.selfHostedOnInfrastructure",
       "Self-hosted on your infrastructure",
     );
-    const unlimitedUsers = t(
-      "plan.highlights.unlimitedUsers",
-      "Unlimited users",
+    const usersIncluded = t(
+      "plan.highlights.usersIncluded",
+      "100 users included",
     );
     const advancedIntegrations = t(
       "plan.highlights.advancedIntegrations",
@@ -188,7 +191,7 @@ export const usePlanHighlights = (): PlanHighlightsMap => {
       ],
       SERVER_MONTHLY: [
         selfHostedOnInfrastructure,
-        unlimitedUsers,
+        usersIncluded,
         advancedIntegrations,
         ssoOAuth,
         editingTextInPdfsCaps,
@@ -196,7 +199,7 @@ export const usePlanHighlights = (): PlanHighlightsMap => {
       ],
       SERVER_YEARLY: [
         selfHostedOnInfrastructure,
-        unlimitedUsers,
+        usersIncluded,
         advancedIntegrations,
         ssoOAuth,
         editingTextInPdfsCaps,
