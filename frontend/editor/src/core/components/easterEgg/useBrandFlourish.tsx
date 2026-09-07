@@ -2,12 +2,13 @@ import {
   Suspense,
   lazy,
   useCallback,
+  useContext,
   useRef,
   useState,
   type ReactNode,
 } from "react";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { useAllFiles } from "@app/contexts/file/fileHooks";
+import { FileStoreContext } from "@app/contexts/file/contexts";
 import { thumbnailGenerationService } from "@app/services/thumbnailGenerationService";
 import {
   type ThumbnailRequest,
@@ -114,30 +115,44 @@ async function renderPlan(
 export function useBrandFlourish(): BrandFlourish {
   const { config } = useAppConfig();
   const enabled = config?.enableEasterEggs === true;
-  const { files, fileStubs } = useAllFiles();
+  /**
+   * The store is read straight off its context, not through `useAllFiles`.
+   * This hook runs from QuickNavHostBridge, which BOTH apps render, and only
+   * the editor mounts a FileContextProvider - the file hooks throw without
+   * one, which took the processor page down with it. Reading the context
+   * yields undefined there instead.
+   *
+   * Not subscribing is also the right call on its own: the files are wanted
+   * once, when somebody triggers the game, so there is no reason to re-render
+   * the bridge every time the workbench changes.
+   */
+  const fileStore = useContext(FileStoreContext);
   const [origin, setOrigin] = useState<DOMRect | null>(null);
   const [open, setOpen] = useState(false);
   const [images, setImages] = useState<readonly HTMLImageElement[]>([]);
-  // Read at trigger time, so the render pass never restarts on a re-render.
-  const filesRef = useRef(files);
-  const stubsRef = useRef(fileStubs);
-  filesRef.current = files;
-  stubsRef.current = fileStubs;
   const runRef = useRef(0);
 
-  const trigger = useCallback((originRect: DOMRect | null) => {
-    setOrigin(originRect);
-    setImages([]);
-    setOpen(true);
-    // Opening does not wait on the pages: the game starts with blank ones and
-    // they arrive while the fly-in is still running.
-    const run = ++runRef.current;
-    const plan = planThumbnails(stubsRef.current);
-    void renderPlan(plan, filesRef.current, (loaded) => {
-      // A game closed and reopened mid-render must not be fed the old pages.
-      if (runRef.current === run) setImages(loaded);
-    });
-  }, []);
+  const trigger = useCallback(
+    (originRect: DOMRect | null) => {
+      setOrigin(originRect);
+      setImages([]);
+      setOpen(true);
+      if (!fileStore) return;
+
+      // Opening does not wait on the pages: the game starts with blank ones
+      // and they arrive while the fly-in is still running.
+      const run = ++runRef.current;
+      const ids = fileStore.getState().files.ids;
+      const plan = planThumbnails(
+        fileStore.selectors.getStirlingFileStubs(ids),
+      );
+      void renderPlan(plan, fileStore.selectors.getFiles(ids), (loaded) => {
+        // A game closed and reopened mid-render must not be fed the old pages.
+        if (runRef.current === run) setImages(loaded);
+      });
+    },
+    [fileStore],
+  );
 
   const close = useCallback(() => setOpen(false), []);
 
