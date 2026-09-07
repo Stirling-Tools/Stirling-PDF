@@ -41,6 +41,7 @@ import stirling.software.proprietary.policy.model.PipelineDefinition;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.PolicyInputs;
 import stirling.software.proprietary.policy.model.PolicyRun;
+import stirling.software.proprietary.policy.model.PolicyRunStatus;
 import stirling.software.proprietary.policy.model.WaitState;
 import stirling.software.proprietary.policy.output.OutputDelivery;
 import stirling.software.proprietary.policy.output.PolicyOutputResolver;
@@ -327,6 +328,13 @@ public class PolicyEngine {
         return cancelled;
     }
 
+    /** Whether any run of this policy has not yet reached a terminal state. */
+    public boolean hasActiveRuns(String policyId) {
+        return registry.all().stream()
+                .anyMatch(
+                        run -> policyId.equals(run.getPolicyId()) && !run.getStatus().isTerminal());
+    }
+
     /** Resume a run paused in {@code WAITING_FOR_INPUT}. Not yet implemented. */
     public String resume(String runId, List<Resource> additionalInputs) {
         throw new UnsupportedOperationException("Pause/resume is not yet implemented");
@@ -343,9 +351,18 @@ public class PolicyEngine {
         // a single charge, and two separate policy runs on the same document stay distinct charges.
         try (AutomationRunContext.Scope runScope = AutomationRunContext.open(runId)) {
             try {
-                run.markRunning();
+                if (!run.markRunning()) {
+                    // Cancelled before it started: nothing runs, nothing delivers.
+                    return;
+                }
                 PolicyExecutionResult result =
                         stepExecutor.execute(run.getDefinition(), inputs, listener);
+                if (run.getStatus() == PolicyRunStatus.CANCELLED) {
+                    // Cancelled while the steps ran: discard the produced files —
+                    // delivering would stamp results over files being restored right now.
+                    taskManager.addNote(runId, "Cancelled before delivery; results discarded");
+                    return;
+                }
                 // Deliver the run's files to every destination; no destinations means inline
                 // delivery (results stored/returned to the caller), preserving ad-hoc/AI behaviour.
                 List<OutputSpec> destinations = run.getDefinition().outputs();

@@ -1,6 +1,7 @@
 package stirling.software.proprietary.policy.engine;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Semaphore;
@@ -166,6 +167,27 @@ public class PolicyRunner {
     /** Cancel every non-terminal run of the policy (see {@link PolicyEngine#cancelAllFor}). */
     public int cancelRuns(String policyId) {
         return policyEngine.cancelAllFor(policyId);
+    }
+
+    /**
+     * Wait for every run of the policy to reach a terminal state, so their claim settles land
+     * before the caller acts on the ledger. False when the wait timed out — a run inside a long
+     * tool call can outlive any reasonable request budget.
+     */
+    public boolean awaitQuiesce(String policyId, Duration timeout) {
+        long deadline = System.currentTimeMillis() + timeout.toMillis();
+        while (policyEngine.hasActiveRuns(policyId)) {
+            if (System.currentTimeMillis() >= deadline) {
+                return false;
+            }
+            try {
+                Thread.sleep(150);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return false;
+            }
+        }
+        return true;
     }
 
     /**

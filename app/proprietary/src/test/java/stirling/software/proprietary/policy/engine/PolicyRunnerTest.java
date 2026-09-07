@@ -401,4 +401,18 @@ class PolicyRunnerTest {
     private static Source disabledSourceFrom(InputSpec spec) {
         return new Source(null, "src", spec.type(), spec.options(), false, "owner", null);
     }
+
+    @Test
+    void awaitQuiesceReturnsOnceRunsSettle() {
+        when(policyEngine.hasActiveRuns("p1")).thenReturn(true, false);
+
+        assertTrue(runner.awaitQuiesce("p1", java.time.Duration.ofSeconds(2)));
+    }
+
+    @Test
+    void awaitQuiesceTimesOutOnARunThatNeverSettles() {
+        when(policyEngine.hasActiveRuns("p1")).thenReturn(true);
+
+        assertFalse(runner.awaitQuiesce("p1", java.time.Duration.ofMillis(50)));
+    }
 }

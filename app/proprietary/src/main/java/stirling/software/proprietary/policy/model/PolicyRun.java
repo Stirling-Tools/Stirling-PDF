@@ -95,9 +95,14 @@ public class PolicyRun {
         return definition.steps().size();
     }
 
-    public synchronized void markRunning() {
+    /** Marks the run running; false when already cancelled, so the task must not start. */
+    public synchronized boolean markRunning() {
+        if (status.isTerminal()) {
+            return false;
+        }
         this.status = PolicyRunStatus.RUNNING;
         touch();
+        return true;
     }
 
     public synchronized void enterStep(int oneBasedStepIndex) {
@@ -106,12 +111,18 @@ public class PolicyRun {
     }
 
     public synchronized void complete(List<ResultFile> resultFiles) {
+        if (status == PolicyRunStatus.CANCELLED) {
+            return; // cancellation is sticky: a cancelled run never reports success
+        }
         this.outputs = resultFiles == null ? List.of() : List.copyOf(resultFiles);
         this.status = PolicyRunStatus.COMPLETED;
         touch();
     }
 
     public synchronized void fail(String message) {
+        if (status == PolicyRunStatus.CANCELLED) {
+            return; // sticky through a late failure too
+        }
         this.error = message;
         this.status = PolicyRunStatus.FAILED;
         touch();
@@ -129,6 +140,9 @@ public class PolicyRun {
     }
 
     public synchronized void waitForInput(WaitState wait) {
+        if (status == PolicyRunStatus.CANCELLED) {
+            return; // a cancelled run does not park waiting for anyone
+        }
         this.waitState = wait;
         this.status = PolicyRunStatus.WAITING_FOR_INPUT;
         touch();

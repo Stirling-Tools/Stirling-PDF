@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.HashMap;
@@ -562,8 +563,9 @@ public class ProcessingFolderController {
     @Operation(
             summary = "Restore every archived original in the folder",
             description =
-                    "Resets the folder: pauses it, cancels its in-flight runs, moves each"
-                            + " original kept under .stirling/originals back over its"
+                    "Resets the folder: pauses it, cancels its in-flight runs and waits for"
+                            + " them to stop, moves each original kept under"
+                            + " .stirling/originals back over its"
                             + " processed file, and forgets the whole processed history —"
                             + " failed files included — so everything reads as waiting"
                             + " until it resumes. Only files of the watched directory itself"
@@ -585,6 +587,12 @@ public class ProcessingFolderController {
             // inside a tool call finishes that call — which is why a still-processing
             // file is skipped by the restore below rather than raced.
             policyRunner.cancelRuns(policy.id());
+            // Wait for the machine to actually stop: each run's claim settles at
+            // completion, and clearing the ledger before that lets a late settle re-add a
+            // row — one file reading done or failed after a reset. A run stuck inside a
+            // long tool call can outrun this wait; its file is skipped below and left for
+            // a later revert.
+            policyRunner.awaitQuiesce(policy.id(), Duration.ofSeconds(10));
             List<String> names = List.of();
             Path originals = FolderOutputSink.originalsDir(canonicalDir);
             if (Files.isDirectory(originals)) {
@@ -605,8 +613,9 @@ public class ProcessingFolderController {
                 }
             }
             // The whole processed history goes — done and failed rows alike — so the
-            // folder reads as untouched work. A cancelled run that was mid-call settles after
-            // this and may re-add one row; the next revert or removal clears it.
+            // folder reads as untouched work. Settles from cancelled runs landed during the
+            // quiesce above and are wiped here with everything else; only a run that outran
+            // the wait can re-add a row.
             processedLedger.clearPolicy(policy.id());
             return new RevertAllOutcome(restored, skipped);
         } catch (IOException e) {

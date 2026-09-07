@@ -451,6 +451,7 @@ class ProcessingFolderControllerTest {
         assertThat(Files.exists(originals.resolve("doc1.pdf"))).isFalse();
         assertThat(policyStore.get(view.id()).orElseThrow().enabled()).isFalse();
         verify(policyRunner).cancelRuns(view.id());
+        verify(policyRunner).awaitQuiesce(eq(view.id()), any());
         // Failed rows go too: the reset leaves every file reading as waiting.
         verify(processedLedger).clearPolicy(view.id());
     }
@@ -469,6 +470,7 @@ class ProcessingFolderControllerTest {
         // No files moved, but the reset still lands: paused, cancelled, history gone.
         assertThat(policyStore.get(view.id()).orElseThrow().enabled()).isFalse();
         verify(policyRunner).cancelRuns(view.id());
+        verify(policyRunner).awaitQuiesce(eq(view.id()), any());
         verify(processedLedger).clearPolicy(view.id());
     }
 
