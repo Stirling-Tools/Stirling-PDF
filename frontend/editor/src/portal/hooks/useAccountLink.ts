@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { isSaasSupabaseConfigured } from "@portal/auth/saasSupabase";
 import { fetchStatus, unlinkInstance, type LinkStatus } from "@portal/api/link";
-import { useApplyLinkFacts } from "@portal/contexts/LinkContext";
+import { useApplyLinkFacts, useLink } from "@portal/contexts/LinkContext";
 
 /** Reads and clears THIS instance's link status. */
 
@@ -22,6 +22,7 @@ export interface UseAccountLink {
 
 export function useAccountLink(): UseAccountLink {
   const applyLinkFacts = useApplyLinkFacts();
+  const { markStatusKnown } = useLink();
   const [status, setStatus] = useState<LinkStatus | null>(null);
   const [phase, setPhase] = useState<LinkPhase>("idle");
   const [error, setError] = useState<string | null>(null);
@@ -32,10 +33,12 @@ export function useAccountLink(): UseAccountLink {
       setStatus(s);
       // A linked instance is at least linked-free; subscription comes from the wallet.
       if (s.linked) applyLinkFacts(true, false);
+      // Success only: marking this in the catch would read "could not ask" as "not linked".
+      markStatusKnown();
     } catch {
       setStatus({ linked: false, name: null });
     }
-  }, [applyLinkFacts]);
+  }, [applyLinkFacts, markStatusKnown]);
 
   useEffect(() => {
     void refresh();

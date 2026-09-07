@@ -582,7 +582,7 @@ const FileEditorThumbnail = ({
                 zIndex={2}
                 onDismiss={() => setEnforcingDismissed(true)}
                 accentVar={enforcingPolicy?.accentColor}
-                categoryId={enforcingPolicy?.id}
+                policyKey={enforcingPolicy?.id}
               />
 
               {/* Thumbnail image or loading state */}
@@ -630,7 +630,10 @@ const FileEditorThumbnail = ({
 
               {/* Badges — top-left: version, pin, ownership, encrypted */}
               <div className={styles.thumbBadges}>
-                <span className={styles.versionBadgeThumb}>
+                <span
+                  className={styles.versionBadgeThumb}
+                  data-testid="file-version-badge"
+                >
                   v{file.versionNumber}
                 </span>
                 {isPinned && (
