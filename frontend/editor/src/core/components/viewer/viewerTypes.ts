@@ -160,6 +160,8 @@ export interface AnnotationObject {
   backgroundColor?: string;
   textColor?: string;
   opacity?: number;
+  strokeOpacity?: number;
+  fillOpacity?: number;
   strokeWidth?: number;
   borderWidth?: number;
   lineWidth?: number;
