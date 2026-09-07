@@ -24,7 +24,7 @@ import {
 } from "@app/services/wasmPrecompiler";
 import type { FormField, WidgetCoordinates } from "@app/tools/formFill/types";
 
-interface ExtendedPdfiumRuntime {
+export interface ExtendedPdfiumRuntime {
   HEAPU8: Uint8Array;
   HEAPF32: Float32Array;
 }

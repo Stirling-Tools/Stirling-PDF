@@ -109,15 +109,14 @@ export const I18N_PROJECTS: TranslationProject[] = [
       // "portal.policies.operations" - the shape heuristic treats that interpolation as one
       // segment, so this whole catalogue-driven family is matched here instead.
       /^portal\.policies\.operations\./,
-      // Policy field labels + option display copy are looked up with keys
-      // derived from catalogue data (t(`policies.field.${key}`),
-      // t(`policyOption.${id}`)) in the PolicyFieldRows and setup wizards —
-      // invisible to the static scan. The raw catalogue value is the fallback.
-      /^policies\.field\./,
-      /^policyOption\./,
       // A failure's disabled reason arrives from the server as a key and is rendered with
       // t(thatKey), so nothing in source names it, but the copy still has to exist.
       /^portal\.failures\.disabled\./,
+      // Encryption panel copy keyed by backend enum values: key status, write
+      // state, migration state, and the reason a status read was refused. Each
+      // is t(`...${value}`) where the value comes from the API response.
+      /^portal\.infrastructure\.encryption\.(status|writeState|unavailable)\./,
+      /^portal\.infrastructure\.encryption\.migration\.state\./,
     ],
     minUsedKeys: 100,
     minLocaleKeys: 100,

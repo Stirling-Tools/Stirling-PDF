@@ -7,8 +7,8 @@ import logging
 import math
 import re
 from collections import Counter
+from typing import Protocol
 
-from stirling.documents import EmbeddingService
 from stirling.models import OPERATIONS, ToolEndpoint
 
 logger = logging.getLogger(__name__)
@@ -19,6 +19,14 @@ _STOPWORDS = frozenset({"pdf", "the", "this", "a", "an", "of", "to", "and", "for
 _BM25_K1 = 1.5
 _BM25_B = 0.75
 _RRF_K = 60
+
+
+class TextEmbedder(Protocol):
+    """The slice of an embedding service the shortlist needs; ``EmbeddingService`` satisfies it."""
+
+    async def embed_documents(self, texts: list[str]) -> list[list[float]]: ...
+
+    async def embed_query(self, text: str) -> list[float]: ...
 
 
 def retrieval_text(operation: ToolEndpoint) -> str:
@@ -71,7 +79,7 @@ def rank_fusion(*rankings: list[ToolEndpoint]) -> list[ToolEndpoint]:
 
 
 class OperationShortlist:
-    def __init__(self, embedder: EmbeddingService) -> None:
+    def __init__(self, embedder: TextEmbedder) -> None:
         self._embedder = embedder
         self._vectors: dict[ToolEndpoint, list[float]] | None = None
         self._tokens: dict[ToolEndpoint, list[str]] = {}

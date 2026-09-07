@@ -28,7 +28,7 @@ from stirling.contracts import (
 )
 from stirling.logging import Pretty
 from stirling.models import OPERATIONS, ApiModel, ParamToolModel, ToolEndpoint
-from stirling.services import AppRuntime, ToolChainStep, blocking, validate_tool_chain
+from stirling.services import AppRuntime, ToolChainStep, blocking, language_directive, validate_tool_chain
 
 logger = logging.getLogger(__name__)
 
@@ -291,9 +291,7 @@ class PdfEditAgent:
             unavailable_operations,
             allow_need_content=can_request_content,
         )
-        return await agent.select(
-            self._build_selection_prompt(request, candidates, unavailable_operations, repair_note)
-        )
+        return await agent.select(self._build_selection_prompt(request, candidates, repair_note))
 
     def _build_selection_agent(
         self,
@@ -339,7 +337,6 @@ class PdfEditAgent:
         self,
         request: PdfEditRequest,
         supported_operations: Iterable[ToolEndpoint],
-        unavailable_operations: Iterable[ToolEndpoint],
         repair_note: str = "",
     ) -> str:
         repair_line = (
@@ -352,20 +349,14 @@ class PdfEditAgent:
             if repair_note
             else ""
         )
-        unavailable_line = (
-            "Unavailable operations (exist but not currently usable): "
-            f"{self._get_operations_prompt(unavailable_operations)}\n"
-            if unavailable_operations
-            else ""
-        )
         return (
-            f"Conversation history:\n{format_conversation_history(request.conversation_history)}\n"
-            f"User request: {request.user_message}\n"
-            f"Files: {format_file_names(request.files)}\n"
             f"Supported operations:\n{self._get_supported_operations_prompt(supported_operations)}\n"
-            f"{unavailable_line}"
             f"{repair_line}"
-            f"Extracted page text:\n{format_page_text(request.page_text)}"
+            f"Conversation history:\n{format_conversation_history(request.conversation_history)}\n"
+            f"Files: {format_file_names(request.files)}\n"
+            f"Extracted page text:\n{format_page_text(request.page_text)}\n"
+            f"{language_directive()}\n"
+            f"User request: {request.user_message}"
         )
 
     # Hidden from the AI planner only; still live for the manual UI, direct API and pipelines.

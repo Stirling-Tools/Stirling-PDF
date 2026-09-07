@@ -17,6 +17,7 @@ import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.PolicyBinding;
 import stirling.software.proprietary.policy.source.EditorSource;
 
+import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ArrayNode;
@@ -47,6 +48,8 @@ public class JpaPolicyStore implements PolicyStore {
                         policy.name(),
                         policy.owner(),
                         policy.enabled(),
+                        policy.required(),
+                        policy.icon(),
                         policy.inputs(),
                         policy.steps(),
                         policy.output(),
@@ -155,7 +158,14 @@ public class JpaPolicyStore implements PolicyStore {
             JsonNode node =
                     liftEditorConfig(
                             upgradeLegacyShape(objectMapper.readTree(entity.getPolicyJson())));
-            return Optional.of(objectMapper.treeToValue(node, Policy.class));
+            // A blob written by an older version won't carry fields added since (e.g. required,
+            // icon). Default absent primitives rather than rejecting the whole policy, so upgrades
+            // don't drop existing pipelines.
+            return Optional.of(
+                    objectMapper
+                            .readerFor(Policy.class)
+                            .without(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)
+                            .readValue(node));
         } catch (Exception e) {
             log.error(
                     "Skipping unreadable policy id={} name={}: stored JSON could not be parsed"
