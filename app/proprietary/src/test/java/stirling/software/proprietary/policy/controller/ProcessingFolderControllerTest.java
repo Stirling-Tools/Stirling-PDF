@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -390,7 +389,7 @@ class ProcessingFolderControllerTest {
     }
 
     @Test
-    void revertRestoresTheArchivedOriginalAndSettlesTheLedger() throws Exception {
+    void revertRestoresPausesAndForgetsSoTheFileReadsUnprocessed() throws Exception {
         lenient()
                 .when(folderAccessGuard.requirePermitted(any(Path.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
@@ -406,9 +405,10 @@ class ProcessingFolderControllerTest {
 
         assertThat(Files.readString(tempDir.resolve("doc.pdf"))).isEqualTo("original");
         assertThat(Files.exists(originals.resolve("doc.pdf"))).isFalse();
-        assertThat(restored.state()).isEqualTo("done");
-        // Settled done at the restored version, so the folder holds the original.
-        verify(processedLedger).settle(eq(view.id()), anyString(), anyString(), isNull(), eq(true));
+        assertThat(restored.state()).isEqualTo("waiting");
+        // Forgotten, not settled: the file reads as unprocessed until the folder resumes.
+        verify(processedLedger).forget(eq(view.id()), anyString());
+        assertThat(policyStore.get(view.id()).orElseThrow().enabled()).isFalse();
     }
 
     @Test
@@ -449,6 +449,7 @@ class ProcessingFolderControllerTest {
         assertThat(Files.readString(tempDir.resolve("doc1.pdf"))).isEqualTo("original");
         assertThat(Files.readString(tempDir.resolve("doc2.pdf"))).isEqualTo("original");
         assertThat(Files.exists(originals.resolve("doc1.pdf"))).isFalse();
+        assertThat(policyStore.get(view.id()).orElseThrow().enabled()).isFalse();
     }
 
     @Test
@@ -462,6 +463,8 @@ class ProcessingFolderControllerTest {
 
         assertThat(outcome.restored()).isZero();
         assertThat(outcome.skipped()).isZero();
+        // Nothing moved, so processing stays on.
+        assertThat(policyStore.get(view.id()).orElseThrow().enabled()).isTrue();
     }
 
     /** A disk-backed folder over the test's own temp directory. */

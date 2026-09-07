@@ -131,6 +131,11 @@ public class JpaProcessedLedger implements ProcessedLedger {
     }
 
     @Override
+    public boolean forget(String policyId, String identity) {
+        return repository.deleteSettled(policyId, IdentityHasher.identityHash(identity)) > 0;
+    }
+
+    @Override
     public void settle(
             String policyId,
             String identity,

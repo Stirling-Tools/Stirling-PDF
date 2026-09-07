@@ -81,6 +81,7 @@ import {
 import { useProcessingFolders } from "@app/hooks/useProcessingFolders";
 import { FolderProcessingSetup } from "@app/components/policies/FolderProcessingSetup";
 import { FolderSweepWall } from "@app/components/policies/SweepRunWall";
+import { RestoreOriginalsDialog } from "@app/components/filesPage/RestoreOriginalsDialog";
 import SuperSearch from "@app/components/shared/superSearch/SuperSearch";
 import { useEditorSearchScopes } from "@app/hooks/useSuperSearch";
 import { FileDetailsPanel } from "@app/components/filesPage/FileDetailsPanel";
@@ -622,6 +623,13 @@ export default function FileManagerView() {
 
   const [processingSetupFolder, setProcessingSetupFolder] =
     useState<FolderRecord | null>(null);
+  // Restores wait on a confirmation, since they also pause the folder.
+  const [revertConfirmName, setRevertConfirmName] = useState<string | null>(
+    null,
+  );
+  const [revertAllTarget, setRevertAllTarget] = useState<FolderRecord | null>(
+    null,
+  );
 
   const [diskStateFilter, setDiskStateFilter] = useState<DiskFileState | "all">(
     "all",
@@ -678,7 +686,7 @@ export default function FileManagerView() {
           // Reflect the restore ahead of the next poll.
           setFileStates((prev) => {
             const next = new Map(prev);
-            next.set(name, "done");
+            next.set(name, "waiting");
             return next;
           });
           setRevertables((prev) => {
@@ -703,6 +711,24 @@ export default function FileManagerView() {
         );
     },
     [processingRecordId, revertFile, folders, t],
+  );
+  const revertAllInFolder = useCallback(
+    (folder: FolderRecord) => {
+      void processingApi.revertAll(folder).catch((err) =>
+        folders.setError(
+          err instanceof Error
+            ? t("filesPage.error.revertAllFailedDetail", {
+                message: err.message,
+                defaultValue: `Could not restore originals: ${err.message}`,
+              })
+            : t(
+                "filesPage.error.revertAllFailed",
+                "Could not restore originals.",
+              ),
+        ),
+      );
+    },
+    [processingApi, folders, t],
   );
 
   const entries = useMemo<FilesPageEntry[]>(() => {
@@ -2115,7 +2141,8 @@ export default function FileManagerView() {
               onStartProcessing={setProcessingSetupFolder}
               onOpenDiskFile={(entry) => void openDiskFile(entry)}
               onRetryFile={retryDiskFile}
-              onRevertFile={revertFolderFile}
+              onRevertFile={setRevertConfirmName}
+              onRequestRevertAll={setRevertAllTarget}
               onOpenFile={handleOpenFile}
               onMoveFiles={moveFilesTo}
               onMoveFolder={moveFolderTo}
@@ -2202,6 +2229,18 @@ export default function FileManagerView() {
         )}
       </div>
 
+      <RestoreOriginalsDialog
+        opened={revertConfirmName !== null || revertAllTarget !== null}
+        fileName={revertConfirmName ?? undefined}
+        onClose={() => {
+          setRevertConfirmName(null);
+          setRevertAllTarget(null);
+        }}
+        onConfirm={() => {
+          if (revertConfirmName) revertFolderFile(revertConfirmName);
+          if (revertAllTarget) revertAllInFolder(revertAllTarget);
+        }}
+      />
       <FolderProcessingSetup
         folder={processingSetupFolder}
         onClose={() => setProcessingSetupFolder(null)}

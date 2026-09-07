@@ -513,10 +513,11 @@ public class ProcessingFolderController {
             summary = "Restore a file's archived original",
             description =
                     "Moves the pre-processing original kept under .stirling/originals back"
-                            + " over the processed file, and settles the ledger at the"
-                            + " restored version so the folder holds the original instead of"
-                            + " immediately re-processing it. Disk-backed folders only:"
-                            + " storage-backed replacement keeps no original.")
+                            + " over the processed file. The folder is paused first so"
+                            + " nothing claims the restored file, and its ledger row is"
+                            + " forgotten — it reads as waiting until processing resumes."
+                            + " Disk-backed folders only: storage-backed replacement keeps no"
+                            + " original.")
     public MountedFileView revertFile(
             @PathVariable String id, @RequestBody RevertFileRequest request) {
         User user = currentUserOrNull();
@@ -542,12 +543,12 @@ public class ProcessingFolderController {
                 throw new ResponseStatusException(
                         HttpStatus.CONFLICT, "'" + name + "' has no original to restore");
             }
+            policy = pauseForRevert(policy);
             if (!restoreOriginal(policy, permitted, canonicalDir, name)) {
                 throw new ResponseStatusException(
                         HttpStatus.CONFLICT, "'" + name + "' is being processed right now");
             }
-            return toMountedFile(
-                    target, new ClaimState(ProcessedFileStatus.DONE, null, null), false);
+            return toMountedFile(target, null, false);
         } catch (IOException e) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_GATEWAY, "Could not restore " + name + ": " + e.getMessage());
@@ -564,7 +565,9 @@ public class ProcessingFolderController {
                     "Moves each original kept under .stirling/originals back over its"
                             + " processed file. Only files of the watched directory itself"
                             + " are touched — the archive never holds anything else — and a"
-                            + " file mid-run is skipped rather than raced.")
+                            + " file mid-run is skipped rather than raced. The folder is"
+                            + " paused first, and restored files read as waiting until it"
+                            + " resumes.")
     public RevertAllOutcome revertAllFiles(@PathVariable String id) {
         User user = currentUserOrNull();
         Policy policy = requireOwn(id, user);
@@ -587,6 +590,9 @@ public class ProcessingFolderController {
                                 .map(entry -> entry.getFileName().toString())
                                 .toList();
             }
+            if (!names.isEmpty()) {
+                policy = pauseForRevert(policy);
+            }
             int restored = 0;
             int skipped = 0;
             for (String name : names) {
@@ -604,10 +610,24 @@ public class ProcessingFolderController {
     }
 
     /**
-     * Move one archived original back over its processed file and settle the ledger at the restored
-     * version, so the folder holds the original instead of re-processing it. False when the file is
-     * mid-run — the run's output would immediately stamp the restore — or when the name resolves
-     * outside the watched directory.
+     * Pause the folder ahead of a restore: the watch trigger or a concurrent sweep would otherwise
+     * claim a restored original as new work the moment it lands. Resuming is the user's explicit
+     * act — that is when the restored files process again.
+     */
+    private Policy pauseForRevert(Policy policy) {
+        if (!policy.enabled()) {
+            return policy;
+        }
+        Policy paused = policyStore.save(policy.withEnabled(false));
+        policyTriggerManager.notifyPoliciesChanged();
+        return paused;
+    }
+
+    /**
+     * Move one archived original back over its processed file and forget its ledger row, so the
+     * file reads as unprocessed. The folder is paused before any restore, so nothing claims the
+     * file until the user resumes. False when the file is mid-run — the run's output would
+     * immediately stamp the restore — or when the name resolves outside the watched directory.
      */
     private boolean restoreOriginal(Policy policy, Path permitted, Path canonicalDir, String name)
             throws IOException {
@@ -626,8 +646,7 @@ public class ProcessingFolderController {
                 target,
                 StandardCopyOption.ATOMIC_MOVE,
                 StandardCopyOption.REPLACE_EXISTING);
-        processedLedger.settle(
-                policy.id(), identity, FolderIdentities.statGate(target), null, true);
+        processedLedger.forget(policy.id(), identity);
         return true;
     }
 

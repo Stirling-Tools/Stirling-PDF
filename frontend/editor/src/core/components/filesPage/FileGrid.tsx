@@ -139,6 +139,8 @@ interface FileGridProps {
   onOpenFolder: (id: FolderId) => void;
   /** Open the processing setup dialog for a folder (recipes + steps). */
   onStartProcessing?: (folder: FolderRecord) => void;
+  /** Ask to restore every original in the folder (confirmed upstream). */
+  onRequestRevertAll?: (folder: FolderRecord) => void;
   /** "Add to workspace". */
   onOpenFile: (file: StirlingFileStub) => void;
   onOpenDiskFile?: (entry: DiskFileEntry) => void;
@@ -467,6 +469,7 @@ function GridView(props: FileGridProps) {
     onOpenDiskFile,
     onRetryFile,
     onRevertFile,
+    onRequestRevertAll,
     onMoveFiles,
     onMoveFolder,
     onRenameFolder,
@@ -482,6 +485,7 @@ function GridView(props: FileGridProps) {
             <FolderCard
               key={`folder-${entry.folder.id}`}
               onStartProcessing={onStartProcessing}
+              onRequestRevertAll={onRequestRevertAll}
               folder={entry.folder}
               fileCount={entry.folderFileCount ?? 0}
               parentPath={entry.parentPath}
@@ -549,6 +553,8 @@ function GridView(props: FileGridProps) {
 
 interface FolderCardProps {
   onStartProcessing?: (folder: FolderRecord) => void;
+  /** Ask to restore every original in the folder (confirmed upstream). */
+  onRequestRevertAll?: (folder: FolderRecord) => void;
   folder: FolderRecord;
   fileCount: number;
   /** Subtitle for search results outside current folder. */
@@ -567,6 +573,7 @@ interface FolderCardProps {
 
 function FolderCard({
   onStartProcessing,
+  onRequestRevertAll,
   folder,
   fileCount,
   parentPath,
@@ -603,7 +610,6 @@ function FolderCard({
     disable: disableProcessing,
     remove: removeProcessingFolder,
     sweep: sweepProcessing,
-    revertAll: revertAllProcessingFolder,
     listFiles: listProcessingFiles,
   } = useProcessingFolders();
   const processing = processingStateFor(folder);
@@ -619,10 +625,6 @@ function FolderCard({
     );
   const runProcessing = (label: string) =>
     Promise.resolve(sweepProcessing(folder)).catch((err) =>
-      surfaceDrop(err, label),
-    );
-  const revertAllProcessing = (label: string) =>
-    Promise.resolve(revertAllProcessingFolder(folder)).catch((err) =>
       surfaceDrop(err, label),
     );
   const removeProcessing = (label: string) =>
@@ -766,8 +768,8 @@ function FolderCard({
                 }
                 onResume={() => void startProcessing("resume processing")}
                 onRevertAll={
-                  kind === "local"
-                    ? () => void revertAllProcessing("restore originals")
+                  kind === "local" && onRequestRevertAll
+                    ? () => onRequestRevertAll(folder)
                     : undefined
                 }
                 onEdit={
@@ -1446,6 +1448,7 @@ function ListView(
     onOpenDiskFile,
     onRetryFile,
     onRevertFile,
+    onRequestRevertAll,
     onMoveFiles,
     onMoveFolder,
     onRenameFolder,
@@ -1549,6 +1552,7 @@ function ListView(
             <FolderRow
               key={`folder-${entry.folder.id}`}
               onStartProcessing={onStartProcessing}
+              onRequestRevertAll={onRequestRevertAll}
               folder={entry.folder}
               fileCount={entry.folderFileCount ?? 0}
               parentPath={entry.parentPath}
@@ -1615,6 +1619,8 @@ function ListView(
 
 interface FolderRowProps {
   onStartProcessing?: (folder: FolderRecord) => void;
+  /** Ask to restore every original in the folder (confirmed upstream). */
+  onRequestRevertAll?: (folder: FolderRecord) => void;
   folder: FolderRecord;
   fileCount: number;
   parentPath?: string;
@@ -1631,6 +1637,7 @@ interface FolderRowProps {
 
 function FolderRow({
   onStartProcessing,
+  onRequestRevertAll,
   folder,
   fileCount,
   parentPath,
@@ -1673,7 +1680,6 @@ function FolderRow({
     disable: disableProcessing,
     remove: removeProcessingFolder,
     sweep: sweepProcessing,
-    revertAll: revertAllProcessingFolder,
   } = useProcessingFolders();
   const processing = processingStateFor(folder);
   // Each action surfaces its own failure the way a failed drop does; the
@@ -1688,10 +1694,6 @@ function FolderRow({
     );
   const runProcessing = (label: string) =>
     Promise.resolve(sweepProcessing(folder)).catch((err) =>
-      surfaceDrop(err, label),
-    );
-  const revertAllProcessing = (label: string) =>
-    Promise.resolve(revertAllProcessingFolder(folder)).catch((err) =>
       surfaceDrop(err, label),
     );
   const removeProcessing = (label: string) =>
@@ -1836,8 +1838,8 @@ function FolderRow({
                 }
                 onResume={() => void startProcessing("resume processing")}
                 onRevertAll={
-                  kind === "local"
-                    ? () => void revertAllProcessing("restore originals")
+                  kind === "local" && onRequestRevertAll
+                    ? () => onRequestRevertAll(folder)
                     : undefined
                 }
                 onEdit={

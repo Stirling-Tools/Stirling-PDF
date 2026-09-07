@@ -52,9 +52,9 @@ export interface ProcessingFoldersApi {
   listFiles: (recordId: string) => Promise<MountedFileState[]>;
   /** Retry one failed file now; other parked failures stay parked. */
   retryFile: (recordId: string, name: string) => Promise<void>;
-  /** Restore a file's archived original; the folder then holds the original. */
+  /** Restore a file's original: pauses the folder; the file reads as waiting. */
   revertFile: (recordId: string, name: string) => Promise<void>;
-  /** Restore every archived original in the folder; mid-run files are skipped. */
+  /** Restore every archived original: pauses the folder; mid-run files skip. */
   revertAll: (folder: FolderRecord) => Promise<void>;
   /** Attach the default (classification) pipeline, or resume a paused one. */
   enable: (folder: FolderRecord) => Promise<void>;

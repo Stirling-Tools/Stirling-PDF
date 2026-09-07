@@ -185,6 +185,16 @@ public interface ProcessedFileRepository
     int deleteFailure(
             @Param("policyId") String policyId, @Param("identityHash") String identityHash);
 
+    /** Forget a settled row entirely; in-flight rows stay. */
+    @Modifying
+    @Transactional
+    @Query(
+            "delete from ProcessedFileEntity e where e.policyId = :policyId"
+                    + " and e.identityHash = :identityHash and e.status <>"
+                    + " stirling.software.proprietary.policy.ledger.ProcessedFileStatus.PROCESSING")
+    int deleteSettled(
+            @Param("policyId") String policyId, @Param("identityHash") String identityHash);
+
     /** Stamp presence for the given identities; chunked by the caller for very large folders. */
     @Modifying
     @Transactional

@@ -198,6 +198,24 @@ public record Policy(
                 surface);
     }
 
+    /** A copy with processing toggled (e.g. pausing a folder before a restore). */
+    public Policy withEnabled(boolean newEnabled) {
+        return new Policy(
+                id,
+                name,
+                owner,
+                newEnabled,
+                required,
+                icon,
+                inputs,
+                steps,
+                output,
+                outputIds,
+                teamId,
+                editor,
+                surface);
+    }
+
     /** A copy on a different owning surface (composing a processing-folder pair). */
     public Policy withSurface(String newSurface) {
         return new Policy(

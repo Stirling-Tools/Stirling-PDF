@@ -68,6 +68,14 @@ public interface ProcessedLedger {
      */
     boolean forgetFailure(String policyId, String identity);
 
+    /**
+     * Forget a settled row entirely, so the file reads as never processed and any sweep claims it
+     * fresh. Backs revert: a restored original goes back to unprocessed rather than done. An
+     * in-flight row stays — its run's settle would recreate it anyway. False when nothing was
+     * forgotten.
+     */
+    boolean forget(String policyId, String identity);
+
     /** Record a claimed file's outcome at its final version ({@code finalContentHash} nullable). */
     void settle(
             String policyId,

@@ -60,6 +60,21 @@ abstract class ProcessedLedgerContractTest {
     }
 
     @Test
+    void aForgottenRowReadsAsNeverProcessed() {
+        assertTrue(ledger.claim(POLICY, FILE, GATE, null));
+        ledger.settle(POLICY, FILE, GATE, null, true);
+        assertTrue(ledger.forget(POLICY, FILE));
+        assertTrue(ledger.claim(POLICY, FILE, GATE, null)); // same gate: no row parks it
+    }
+
+    @Test
+    void anInFlightRowCannotBeForgotten() {
+        assertTrue(ledger.claim(POLICY, FILE, GATE, null));
+        assertFalse(ledger.forget(POLICY, FILE));
+        assertFalse(ledger.forget(POLICY, "missing"));
+    }
+
+    @Test
     void aSettledFileIsSkippedAtTheSameGate() {
         ledger.claim(POLICY, FILE, GATE, null);
         ledger.settle(POLICY, FILE, GATE, null, true);
