@@ -4195,6 +4195,7 @@ sharedHint = "Shared with you via link"
 [filesPage.processing]
 active = "Processing folder"
 restore = "Restore original"
+nothingToRestore = "No originals to restore — these files are already their originals."
 restoreAll = "Restore all originals"
 revertCancel = "Cancel"
 revertConfirm = "Restore and pause"

@@ -287,10 +287,11 @@ export function useProcessingFolders(): ProcessingFoldersApi {
   const revertAll = useCallback(
     async (folder: FolderRecord) => {
       const existing = recordFor(folder);
-      if (!existing) return;
-      await revertAllMountedFiles(existing.id);
+      if (!existing) return undefined;
+      const outcome = await revertAllMountedFiles(existing.id);
       // Revert pauses the folder server-side; reload so the pause shows at once.
       await load(true);
+      return outcome;
     },
     [recordFor],
   );

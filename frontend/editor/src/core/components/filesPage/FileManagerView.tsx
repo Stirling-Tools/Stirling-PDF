@@ -714,19 +714,31 @@ export default function FileManagerView() {
   );
   const revertAllInFolder = useCallback(
     (folder: FolderRecord) => {
-      void processingApi.revertAll(folder).catch((err) =>
-        folders.setError(
-          err instanceof Error
-            ? t("filesPage.error.revertAllFailedDetail", {
-                message: err.message,
-                defaultValue: `Could not restore originals: ${err.message}`,
-              })
-            : t(
-                "filesPage.error.revertAllFailed",
-                "Could not restore originals.",
+      void processingApi
+        .revertAll(folder)
+        .then((outcome) => {
+          if (outcome && outcome.restored === 0 && outcome.skipped === 0) {
+            folders.setError(
+              t(
+                "filesPage.processing.nothingToRestore",
+                "No originals to restore — these files are already their originals.",
               ),
-        ),
-      );
+            );
+          }
+        })
+        .catch((err) =>
+          folders.setError(
+            err instanceof Error
+              ? t("filesPage.error.revertAllFailedDetail", {
+                  message: err.message,
+                  defaultValue: `Could not restore originals: ${err.message}`,
+                })
+              : t(
+                  "filesPage.error.revertAllFailed",
+                  "Could not restore originals.",
+                ),
+          ),
+        );
     },
     [processingApi, folders, t],
   );

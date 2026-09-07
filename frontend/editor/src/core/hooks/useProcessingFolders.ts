@@ -54,8 +54,11 @@ export interface ProcessingFoldersApi {
   retryFile: (recordId: string, name: string) => Promise<void>;
   /** Restore a file's original: pauses the folder; the file reads as waiting. */
   revertFile: (recordId: string, name: string) => Promise<void>;
-  /** Restore every archived original: pauses the folder; mid-run files skip. */
-  revertAll: (folder: FolderRecord) => Promise<void>;
+  /** Restore every archived original: pauses the folder; mid-run files skip.
+   *  Reports counts so a no-op (nothing archived) can say so. */
+  revertAll: (
+    folder: FolderRecord,
+  ) => Promise<{ restored: number; skipped: number } | undefined>;
   /** Attach the default (classification) pipeline, or resume a paused one. */
   enable: (folder: FolderRecord) => Promise<void>;
   /** Pause processing; the pair and its processed-history stay, so resuming
@@ -85,7 +88,7 @@ export function useProcessingFolders(): ProcessingFoldersApi {
     listFiles: async () => [],
     retryFile: async () => {},
     revertFile: async () => {},
-    revertAll: async () => {},
+    revertAll: async () => undefined,
     enable: async () => {},
     disable: async () => {},
     remove: async () => {},
