@@ -1,14 +1,19 @@
 import { useCallback, useRef } from "react";
 
 /** Clicks needed, and the window they must all land inside. */
-const CLICKS_REQUIRED = 7;
-const WINDOW_MS = 3000;
+export const CLICKS_REQUIRED = 12;
+/**
+ * Widened along with the count: twelve clicks in three seconds is a test of how
+ * fast someone can click, which is not the point. Four seconds keeps it a
+ * deliberate burst that anyone can manage.
+ */
+export const WINDOW_MS = 4000;
 
 /**
  * Counts rapid repeat clicks on a control without changing what that control
  * does — every click still runs the host's own handler, and only the last one
- * of a fast burst also unlocks. Deliberate impatience is the signal: seven
- * clicks in three seconds is not something a normal user produces by accident.
+ * of a fast burst also unlocks. Deliberate impatience is the signal: a dozen
+ * clicks in four seconds is not something a normal user produces by accident.
  *
  * The payload from the unlocking click is handed on, so a caller can pass
  * through something only the event knows (such as the trigger's own rect).

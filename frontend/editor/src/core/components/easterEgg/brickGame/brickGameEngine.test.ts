@@ -173,22 +173,25 @@ describe("BrickGame", () => {
     vi.stubGlobal("cancelAnimationFrame", () => {
       pending = null;
     });
-    let latest: GameStatus | null = null;
+    // Collected rather than kept in a `let`: read directly after a callback-only
+    // assignment, TypeScript still narrows the variable to its initial null.
+    const reported: GameStatus[] = [];
+    const phase = () => reported.at(-1)?.phase;
     const game = new BrickGame({
       ctx: stubContext().ctx,
       palette: PALETTE,
       origin: { x: -80, y: -120, w: 30, h: 33 },
       skipIntro: false,
       onStatus: (next) => {
-        latest = next;
+        reported.push(next);
       },
     });
     game.start();
-    expect(latest?.phase).toBe("intro");
+    expect(phase()).toBe("intro");
 
     // A serve during the fly-in is ignored rather than queued.
     game.act();
-    expect(latest?.phase).toBe("intro");
+    expect(phase()).toBe("intro");
 
     const step = () => {
       const frame = pending;
@@ -201,10 +204,10 @@ describe("BrickGame", () => {
 
     // The intro is 2s, so one second in it must still be running.
     for (let i = 0; i < 60; i++) step();
-    expect(latest?.phase).toBe("intro");
+    expect(phase()).toBe("intro");
 
     for (let i = 0; i < 90; i++) step();
-    expect(latest?.phase).toBe("ready");
+    expect(phase()).toBe("ready");
   });
 
   it("skips the fly-in with no origin to fly in from", () => {

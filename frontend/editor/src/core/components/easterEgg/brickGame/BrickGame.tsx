@@ -6,8 +6,10 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import { createPortal } from "react-dom";
+import { useTranslation } from "react-i18next";
 import {
   BrickGame as BrickGameEngine,
+  type DropKind,
   FIELD_H,
   FIELD_W,
   type GameStatus,
@@ -90,28 +92,25 @@ function toFieldBox(
   };
 }
 
-const BANNERS: Record<
-  GameStatus["phase"],
-  { headline: string; detail: string } | null
-> = {
-  intro: null,
-  ready: { headline: "Ready", detail: "Click or press Space to serve" },
-  playing: null,
-  won: {
-    headline: "All clear",
-    detail: "Click or press Space to play again",
-  },
-  lost: {
-    headline: "Out of balls",
-    detail: "Click or press Space to try again",
-  },
-};
+/** Phases that get a banner, and the key prefix carrying its copy. */
+const BANNER_PHASES = {
+  ready: "brickGame.ready",
+  won: "brickGame.won",
+  lost: "brickGame.lost",
+} as const;
+
+type BannerPhase = keyof typeof BANNER_PHASES;
+
+function isBannerPhase(phase: GameStatus["phase"]): phase is BannerPhase {
+  return phase in BANNER_PHASES;
+}
 
 export default function BrickGame({
   originRect,
   images,
   onClose,
 }: BrickGameProps) {
+  const { t } = useTranslation();
   const cabinetRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const gameRef = useRef<BrickGameEngine | null>(null);
@@ -280,7 +279,51 @@ export default function BrickGame({
     window.getSelection()?.removeAllRanges();
   }, []);
 
-  const banner = BANNERS[status.phase];
+  // Literal keys throughout, so the translation audit can see every one.
+  const effectLabel = (kind: DropKind): string => {
+    switch (kind) {
+      case "wide":
+        return t("brickGame.effect.wide", "Wide");
+      case "shrink":
+        return t("brickGame.effect.narrow", "Narrow");
+      case "slow":
+        return t("brickGame.effect.slow", "Slow");
+      case "fast":
+        return t("brickGame.effect.fast", "Fast");
+      case "reverse":
+        return t("brickGame.effect.reversed", "Reversed");
+      default:
+        return "";
+    }
+  };
+
+  const bannerCopy = (phase: BannerPhase) => {
+    switch (phase) {
+      case "won":
+        return {
+          headline: t("brickGame.won.headline", "All clear"),
+          detail: t(
+            "brickGame.won.detail",
+            "Click or press Space to play again",
+          ),
+        };
+      case "lost":
+        return {
+          headline: t("brickGame.lost.headline", "Out of balls"),
+          detail: t(
+            "brickGame.lost.detail",
+            "Click or press Space to try again",
+          ),
+        };
+      case "ready":
+        return {
+          headline: t("brickGame.ready.headline", "Ready"),
+          detail: t("brickGame.ready.detail", "Click or press Space to serve"),
+        };
+    }
+  };
+
+  const banner = isBannerPhase(status.phase) ? bannerCopy(status.phase) : null;
 
   return createPortal(
     <div className="brick-game-scrim">
@@ -289,7 +332,7 @@ export default function BrickGame({
         className="brick-game-cabinet"
         role="dialog"
         aria-modal="true"
-        aria-label="Hidden game"
+        aria-label={t("brickGame.title", "Hidden game")}
         tabIndex={-1}
       >
         <div className="brick-game-hud">
@@ -301,24 +344,28 @@ export default function BrickGame({
                   effect.bad ? "bad" : "good"
                 }`}
               >
-                {effect.label} {effect.seconds}s
+                {t("brickGame.effectTimer", "{{label}} {{seconds}}s", {
+                  label: effectLabel(effect.kind),
+                  seconds: effect.seconds,
+                })}
               </span>
             ))}
           </div>
           <span className="brick-game-hud__stat brick-game-hud__stat--first">
-            Score <b>{status.score}</b>
+            {t("brickGame.score", "Score")} <b>{status.score}</b>
           </span>
           <span className="brick-game-hud__stat brick-game-hud__stat--best">
-            Best <b>{Math.max(status.best, status.score)}</b>
+            {t("brickGame.best", "Best")}{" "}
+            <b>{Math.max(status.best, status.score)}</b>
           </span>
           <span className="brick-game-hud__stat">
-            Balls <b>{status.lives}</b>
+            {t("brickGame.balls", "Balls")} <b>{status.lives}</b>
           </span>
           <button
             type="button"
             className="brick-game-close"
             onClick={onClose}
-            aria-label="Close game"
+            aria-label={t("brickGame.close", "Close game")}
           >
             &times;
           </button>
@@ -349,8 +396,14 @@ export default function BrickGame({
 
         <p className="brick-game-hint">
           {locked
-            ? "Pointer captured. Esc releases it, then Esc again to get back to work."
-            : "Move with the pointer or the arrow keys. Click to capture the pointer, Esc to get back to work."}
+            ? t(
+                "brickGame.hintPointerLocked",
+                "Pointer captured. Esc releases it, then Esc again to get back to work.",
+              )
+            : t(
+                "brickGame.hint",
+                "Move with the pointer or the arrow keys. Click to capture the pointer, Esc to get back to work.",
+              )}
         </p>
       </div>
     </div>,

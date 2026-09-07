@@ -93,7 +93,6 @@ export type DropKind = BoonKind | BaneKind;
 
 export interface ActiveEffect {
   kind: DropKind;
-  label: string;
   seconds: number;
   bad: boolean;
 }
@@ -362,32 +361,24 @@ export class BrickGame {
     return this.ballEffect?.factor ?? 1;
   }
 
+  /** Kinds only, never labels: the copy is the component's business. */
   private get activeEffects(): ActiveEffect[] {
     const effects: ActiveEffect[] = [];
-    const push = (kind: DropKind, label: string, remaining: number) => {
+    const push = (kind: DropKind, remaining: number) => {
       effects.push({
         kind,
-        label,
         seconds: Math.max(1, Math.ceil(remaining)),
         bad: isBane(kind),
       });
     };
     if (this.paddleEffect) {
-      push(
-        this.paddleEffect.kind,
-        this.paddleEffect.kind === "wide" ? "Wide" : "Narrow",
-        this.paddleEffect.remaining,
-      );
+      push(this.paddleEffect.kind, this.paddleEffect.remaining);
     }
     if (this.ballEffect) {
-      push(
-        this.ballEffect.kind,
-        this.ballEffect.kind === "slow" ? "Slow" : "Fast",
-        this.ballEffect.remaining,
-      );
+      push(this.ballEffect.kind, this.ballEffect.remaining);
     }
     if (this.reverseRemaining > 0) {
-      push("reverse", "Reversed", this.reverseRemaining);
+      push("reverse", this.reverseRemaining);
     }
     return effects;
   }
