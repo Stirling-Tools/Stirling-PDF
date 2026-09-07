@@ -15,7 +15,9 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
+import stirling.software.proprietary.policy.model.EditorConfig;
 import stirling.software.proprietary.policy.model.OutputSpec;
+import stirling.software.proprietary.policy.model.PipelineInput;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.store.InProcessPolicyStore;
@@ -216,15 +218,12 @@ class SourceOverviewServiceTest {
                         name,
                         "owner",
                         true,
-                        null,
-                        List.of(sourceIds),
+                        List.of(sourceIds).stream().map(PipelineInput::manual).toList(),
                         List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
                         OutputSpec.inline()));
     }
 
-    /**
-     * A policy that targets the editor: membership rides in its output metadata, not a sourceId.
-     */
+    /** A policy that targets the editor: membership on its {@link EditorConfig}, not a sourceId. */
     private void editorPolicy(String name) {
         policyStore.save(
                 new Policy(
@@ -232,10 +231,12 @@ class SourceOverviewServiceTest {
                         name,
                         "owner",
                         true,
-                        null,
                         List.of(),
                         List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
-                        new OutputSpec("inline", Map.of("sources", List.of("editor")))));
+                        OutputSpec.inline(),
+                        List.of(),
+                        null,
+                        EditorConfig.onUpload()));
     }
 
     private void teamPolicy(String name, Long teamId, String... sourceIds) {
@@ -245,8 +246,7 @@ class SourceOverviewServiceTest {
                         name,
                         "owner",
                         true,
-                        null,
-                        List.of(sourceIds),
+                        List.of(sourceIds).stream().map(PipelineInput::manual).toList(),
                         List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
                         OutputSpec.inline(),
                         teamId));

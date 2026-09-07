@@ -17,6 +17,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.saas.payg.billing.TeamBillingContext;
+import stirling.software.saas.payg.billing.TeamBillingService;
+import stirling.software.saas.payg.bundle.PrepaidBundleService;
 import stirling.software.saas.payg.docs.DocumentClassifier;
 import stirling.software.saas.payg.docs.DocumentMetrics;
 import stirling.software.saas.payg.job.JobContext;
@@ -68,6 +71,8 @@ public class JobChargeService {
     private final PaygTeamExtensionsRepository teamExtensionsRepository;
     private final PaygMeterReportingService meterReportingService;
     private final WalletLedgerRepository ledgerRepository;
+    private final PrepaidBundleService prepaidBundleService;
+    private final TeamBillingService teamBillingService;
 
     public JobChargeService(
             JobService jobService,
@@ -77,7 +82,9 @@ public class JobChargeService {
             ProcessingJobRepository jobRepository,
             PaygTeamExtensionsRepository teamExtensionsRepository,
             PaygMeterReportingService meterReportingService,
-            WalletLedgerRepository ledgerRepository) {
+            WalletLedgerRepository ledgerRepository,
+            PrepaidBundleService prepaidBundleService,
+            TeamBillingService teamBillingService) {
         this.jobService = Objects.requireNonNull(jobService, "jobService");
         this.policyService = Objects.requireNonNull(policyService, "policyService");
         this.classifier = Objects.requireNonNull(classifier, "classifier");
@@ -88,6 +95,9 @@ public class JobChargeService {
         this.meterReportingService =
                 Objects.requireNonNull(meterReportingService, "meterReportingService");
         this.ledgerRepository = Objects.requireNonNull(ledgerRepository, "ledgerRepository");
+        this.prepaidBundleService =
+                Objects.requireNonNull(prepaidBundleService, "prepaidBundleService");
+        this.teamBillingService = Objects.requireNonNull(teamBillingService, "teamBillingService");
     }
 
     /**
@@ -128,14 +138,20 @@ public class JobChargeService {
         job.setDocUnits(units);
 
         int freeUsed = consumeFreeGrant(ctx, units);
-        recordShadowRow(ctx, job.getId(), policy.getId(), units, freeUsed);
+        // Prepaid bundle is the tier between the free grant and the meter (free → prepaid →
+        // metered); draw only what the free grant didn't cover.
+        int bundleUsed = drawBundle(ctx, units - freeUsed);
+        recordShadowRow(ctx, job.getId(), policy.getId(), units, freeUsed, bundleUsed);
         // doc_count + fingerprint were set on the fresh job by JobService.openFresh; carry them
-        // onto the ledger DEBIT so usage analytics query one table.
+        // onto the ledger DEBIT so usage analytics query one table. Bundle-drawn units are netted
+        // out of the ledger amount so they never count against the spend cap (they're prepaid, not
+        // metered CYCLE spend).
         recordLedgerDebit(
                 ctx,
                 job.getId(),
                 policy.getId(),
                 units,
+                bundleUsed,
                 job.getDocCount(),
                 job.getDocumentFingerprint());
 
@@ -179,12 +195,14 @@ public class JobChargeService {
         ProcessingJob job = jobService.open(jobCtx, chargeUnits);
 
         int freeUsed = consumeFreeGrant(ctx, chargeUnits);
-        recordShadowRow(ctx, job.getId(), policy.getId(), chargeUnits, freeUsed);
+        int bundleUsed = drawBundle(ctx, chargeUnits - freeUsed);
+        recordShadowRow(ctx, job.getId(), policy.getId(), chargeUnits, freeUsed, bundleUsed);
         recordLedgerDebit(
                 ctx,
                 job.getId(),
                 policy.getId(),
                 chargeUnits,
+                bundleUsed,
                 job.getDocCount(),
                 job.getDocumentFingerprint());
 
@@ -195,13 +213,13 @@ public class JobChargeService {
     }
 
     /**
-     * Draw this job's free portion from the team's one-time lifetime grant, atomically, and return
-     * the units taken (0..{@code units}); the remainder is the paid portion that will be metered to
-     * Stripe. Runs inside {@code openProcess}'s transaction with a pessimistic row lock so
-     * concurrent same-team charges split the grant exactly — no two jobs can both claim the last
-     * free unit. The grant is a soft floor: it never goes below 0, and the single job that crosses
-     * the boundary takes whatever's left (its remaining units bill). Skipped for non-billable /
-     * team-less calls (BYPASSED never reaches openProcess; guarded defensively).
+     * Units of {@code units} drawn from the team's grant for the current period; the remainder is
+     * metered to Stripe. The grant is a soft floor, so the job crossing the boundary takes what is
+     * left and bills the rest.
+     *
+     * <p>Also the only writer of the period reset. Both happen under {@code openProcess}'s row
+     * lock, against the balance on the locked row rather than the cached context, so concurrent
+     * same-team charges cannot both claim the last free unit.
      */
     private int consumeFreeGrant(ChargeContext ctx, int units) {
         BillingCategory category = ctx.billingCategory();
@@ -214,13 +232,67 @@ public class JobChargeService {
             return 0;
         }
         PaygTeamExtensions ext = extOpt.get();
-        long remaining = ext.getFreeUnitsRemaining() == null ? 0L : ext.getFreeUnitsRemaining();
+        TeamBillingContext billing = teamBillingService.forTeam(ctx.ownerTeamId());
+        LocalDateTime periodStart = billing.periodStart();
+        boolean periodRolled =
+                TeamBillingService.isStale(ext.getFreeUnitsPeriodStart(), periodStart);
+        long remaining =
+                TeamBillingService.remainingForPeriod(
+                        ext.getFreeUnitsPeriodStart(),
+                        ext.getFreeUnitsRemaining(),
+                        billing.freeGrantUnits(),
+                        periodStart);
         int freeUsed = (int) Math.min(units, Math.max(0L, remaining));
-        if (freeUsed > 0) {
+        if (periodRolled || freeUsed > 0) {
+            // A roll-over writes even when nothing is drawn, so the stamp stops reading as stale.
             ext.setFreeUnitsRemaining(remaining - freeUsed);
+            ext.setFreeUnitsPeriodStart(periodStart);
             teamExtensionsRepository.save(ext);
         }
         return freeUsed;
+    }
+
+    /**
+     * Return {@code units} to the team's free grant, capped at one period's grant. The cap only
+     * bites when a refund lands after its charge's period ended, where the balance has already
+     * reset and adding the old units would over-credit the team. Locks rather than incrementing
+     * blindly because the cap applies against the balance as it stands.
+     */
+    private void restoreFreeGrant(Long teamId, int units) {
+        Optional<PaygTeamExtensions> extOpt = teamExtensionsRepository.findByIdForUpdate(teamId);
+        if (extOpt.isEmpty()) {
+            return;
+        }
+        PaygTeamExtensions ext = extOpt.get();
+        TeamBillingContext billing = teamBillingService.forTeam(teamId);
+        long grant = billing.freeGrantUnits();
+        long remaining =
+                TeamBillingService.remainingForPeriod(
+                        ext.getFreeUnitsPeriodStart(),
+                        ext.getFreeUnitsRemaining(),
+                        grant,
+                        billing.periodStart());
+        ext.setFreeUnitsRemaining(Math.min(grant, remaining + Math.max(0, units)));
+        ext.setFreeUnitsPeriodStart(billing.periodStart());
+        teamExtensionsRepository.save(ext);
+    }
+
+    /**
+     * Draw this job's prepaid portion from the team's bundles — the tier after the free grant and
+     * before the meter — returning the units taken (0..{@code units}). Same guard as {@link
+     * #consumeFreeGrant}; {@link PrepaidBundleService#draw} holds a pessimistic pool lock inside
+     * this {@code openProcess} transaction so concurrent same-team charges split the pools exactly.
+     * Any remainder is the metered paid portion.
+     */
+    private int drawBundle(ChargeContext ctx, int units) {
+        BillingCategory category = ctx.billingCategory();
+        if (category == null || category == BillingCategory.BYPASSED || ctx.ownerTeamId() == null) {
+            return 0;
+        }
+        if (units <= 0) {
+            return 0;
+        }
+        return prepaidBundleService.draw(ctx.ownerTeamId(), units);
     }
 
     /**
@@ -237,18 +309,27 @@ public class JobChargeService {
             java.util.UUID jobId,
             Long policyId,
             int units,
+            int bundleUnitsConsumed,
             int docCount,
             String documentFingerprint) {
         BillingCategory category = ctx.billingCategory();
         if (category == null || category == BillingCategory.BYPASSED) {
             return;
         }
+        // Prepaid (bundle) units are netted out of the metered CYCLE spend, so the cap + the Stripe
+        // meter don't charge again for capacity already bought up front. (Free-grant units are NOT
+        // netted here — they still count toward CYCLE/cap; only the bundle split is removed.)
+        // doc_count stays the full count so the PDF is still counted once by usage analytics (which
+        // sum doc_count over DEBIT rows, bucket-agnostic). A fully-prepaid charge therefore writes
+        // a
+        // 0-unit DEBIT that still counts toward "PDFs processed".
+        int meteredUnits = units - bundleUnitsConsumed;
         WalletLedgerEntry entry = new WalletLedgerEntry();
         entry.setTeamId(ctx.ownerTeamId());
         entry.setActorUserId(ctx.ownerUserId());
         entry.setEntryType(LedgerEntryType.DEBIT);
         entry.setBucket(LedgerBucket.CYCLE);
-        entry.setAmountUnits(-units);
+        entry.setAmountUnits(-meteredUnits);
         entry.setReferenceType(ReferenceType.JOB);
         entry.setReferenceId(jobId.toString());
         entry.setPolicyId(policyId);
@@ -284,7 +365,7 @@ public class JobChargeService {
         List<Path> paths = inputs.stream().map(JobInput::path).toList();
         DocumentMetrics metrics =
                 multiparts.size() == 1
-                        ? classifier.classify(multiparts.get(0), paths.get(0), policy)
+                        ? classifier.classify(multiparts.getFirst(), paths.getFirst(), policy)
                         : classifier.classify(multiparts, paths, policy);
         // Apply the policy-level minChargeUnits floor per design § 3.4. The classifier returns
         // raw docUnits with a "non-empty input → ≥1" floor; the charge formula's
@@ -297,15 +378,17 @@ public class JobChargeService {
             java.util.UUID jobId,
             Long policyId,
             int units,
-            int freeUnitsConsumed) {
+            int freeUnitsConsumed,
+            int bundleUnitsConsumed) {
         PaygShadowCharge row = new PaygShadowCharge();
         row.setTeamId(ctx.ownerTeamId());
         row.setJobId(jobId);
         row.setPolicyId(policyId);
         row.setPaygUnits(units);
-        // Free-vs-paid split fixed at charge time: paid (metered) = paygUnits - freeUnitsConsumed,
-        // and a refund restores freeUnitsConsumed to the team's grant.
+        // Free/prepaid/paid split fixed at charge time: metered = paygUnits - freeUnitsConsumed -
+        // bundleUnitsConsumed. A refund restores each portion to its source (grant / pools).
         row.setFreeUnitsConsumed(freeUnitsConsumed);
+        row.setBundleUnitsConsumed(bundleUnitsConsumed);
         // No legacy comparison: the legacy credit engine has been removed, so diff stays at 0.
         row.setLegacyCreditsCharged(0);
         row.setDiffPct(0);
@@ -349,23 +432,30 @@ public class JobChargeService {
                 // on the CHARGED→REFUNDED transition) prevents double-credits on re-invocation.
                 BillingCategory category = row.getBillingCategory();
                 if (category != null && category != BillingCategory.BYPASSED) {
+                    int bundleConsumed =
+                            row.getBundleUnitsConsumed() == null ? 0 : row.getBundleUnitsConsumed();
                     WalletLedgerEntry refund = new WalletLedgerEntry();
                     refund.setTeamId(row.getTeamId());
                     refund.setEntryType(LedgerEntryType.REFUND);
                     refund.setBucket(LedgerBucket.CYCLE);
-                    refund.setAmountUnits(row.getPaygUnits());
+                    // Mirror the reduced DEBIT: prepaid units never entered the CYCLE spend, so the
+                    // compensating credit is the metered portion only (paygUnits − bundle).
+                    refund.setAmountUnits(row.getPaygUnits() - bundleConsumed);
                     refund.setReferenceType(ReferenceType.JOB);
                     refund.setReferenceId(jobId.toString());
                     refund.setPolicyId(row.getPolicyId());
                     refund.setBillingCategory(category);
                     ledgerRepository.save(refund);
-                    // Hand back the free units this job consumed (first-step failures are
-                    // pre-meter, so nothing was billed to Stripe — only the grant moved). Exactly
-                    // what was taken at charge time, so the counter can't drift above the grant.
+                    // First-step failures are pre-meter: nothing was billed, only the grant moved.
                     int freeConsumed =
                             row.getFreeUnitsConsumed() == null ? 0 : row.getFreeUnitsConsumed();
                     if (freeConsumed > 0 && row.getTeamId() != null) {
-                        teamExtensionsRepository.restoreFreeUnits(row.getTeamId(), freeConsumed);
+                        restoreFreeGrant(row.getTeamId(), freeConsumed);
+                    }
+                    // Return the prepaid units this job drew to the team's pools (best-effort — see
+                    // PrepaidBundleService.restore).
+                    if (bundleConsumed > 0 && row.getTeamId() != null) {
+                        prepaidBundleService.restore(row.getTeamId(), bundleConsumed);
                     }
                 }
             }
@@ -502,14 +592,16 @@ public class JobChargeService {
             return;
         }
 
-        // Paid portion = units beyond the team's one-time free grant, fixed at charge time. The
-        // free grant is app-side only (Stripe's Prices are plain per-unit, no free tier), so the
-        // free units were already withheld when this row's free_units_consumed was set.
+        // Free units are withheld app-side at charge time; Stripe's Prices carry no free tier.
         int freeConsumed = row.getFreeUnitsConsumed() == null ? 0 : row.getFreeUnitsConsumed();
-        int paidUnits = units - freeConsumed;
+        int bundleConsumed =
+                row.getBundleUnitsConsumed() == null ? 0 : row.getBundleUnitsConsumed();
+        // Metered = units beyond BOTH the free grant and the prepaid bundle; only this hits Stripe.
+        int paidUnits = units - freeConsumed - bundleConsumed;
         if (paidUnits <= 0) {
             log.debug(
-                    "close({}): all {} units came from the free grant → no meter event",
+                    "close({}): all {} units covered by free grant + prepaid bundle → no meter"
+                            + " event",
                     jobId,
                     units);
             return;

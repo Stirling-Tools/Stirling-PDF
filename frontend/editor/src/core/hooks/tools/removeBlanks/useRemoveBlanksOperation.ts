@@ -11,6 +11,7 @@ import {
 } from "@app/hooks/tools/shared/toolApiMapping";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
 import {
+  validateRemoveBlanksParameters,
   RemoveBlanksParameters,
   defaultParameters,
 } from "@app/hooks/tools/removeBlanks/useRemoveBlanksParameters";
@@ -41,6 +42,7 @@ export const buildRemoveBlanksFormData = (
   objectToFormData(removeBlanksToApiParams(parameters), { fileInput: file });
 
 export const removeBlanksOperationConfig = defineSingleFileTool({
+  validateParams: validateRemoveBlanksParameters,
   buildFormData: buildRemoveBlanksFormData,
   toApiParams: removeBlanksToApiParams,
   fromApiParams: removeBlanksFromApiParams,

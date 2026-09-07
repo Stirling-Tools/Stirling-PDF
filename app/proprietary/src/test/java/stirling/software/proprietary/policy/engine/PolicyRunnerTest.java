@@ -32,10 +32,12 @@ import org.springframework.core.io.ByteArrayResource;
 import stirling.software.proprietary.policy.input.InputSource;
 import stirling.software.proprietary.policy.input.ResolveContext;
 import stirling.software.proprietary.policy.input.ResolvedInput;
+import stirling.software.proprietary.policy.ledger.IdentityHasher;
 import stirling.software.proprietary.policy.ledger.InProcessProcessedLedger;
 import stirling.software.proprietary.policy.ledger.ProcessedLedger;
 import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.model.OutputSpec;
+import stirling.software.proprietary.policy.model.PipelineInput;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.PolicyInputs;
@@ -77,13 +79,13 @@ class PolicyRunnerTest {
     @Test
     void runsOnceWithNoFilesWhenThePolicyHasNoSources() {
         Policy policy = policy(List.of());
-        when(policyEngine.runPolicy(eq(policy), any(), any()))
+        when(policyEngine.runPolicy(eq(policy), any(), any(), any(), any()))
                 .thenReturn(new PolicyRunHandle("r", new CompletableFuture<>()));
 
         runner.run(policy);
 
         ArgumentCaptor<PolicyInputs> inputs = ArgumentCaptor.forClass(PolicyInputs.class);
-        verify(policyEngine).runPolicy(eq(policy), inputs.capture(), any());
+        verify(policyEngine).runPolicy(eq(policy), inputs.capture(), any(), any(), any());
         assertTrue(inputs.getValue().primary().isEmpty());
         // Ledger hygiene still runs: rows recorded for a generator policy's folder outputs
         // are pruned by its own sweeps rather than accumulating until the policy is deleted.
@@ -136,12 +138,12 @@ class PolicyRunnerTest {
                         List.of(
                                 ResolvedInput.of(PolicyInputs.of(List.of())),
                                 ResolvedInput.of(PolicyInputs.of(List.of()))));
-        when(policyEngine.runPolicy(any(), any(), any()))
+        when(policyEngine.runPolicy(any(), any(), any(), any(), any()))
                 .thenReturn(new PolicyRunHandle("r", new CompletableFuture<>()));
 
         runner.run(policy);
 
-        verify(policyEngine, times(2)).runPolicy(eq(policy), any(), any());
+        verify(policyEngine, times(2)).runPolicy(eq(policy), any(), any(), any(), any());
     }
 
     @Test
@@ -149,11 +151,11 @@ class PolicyRunnerTest {
         InputSpec spec = InputSpec.folder("/in");
         Policy policy = policy(List.of(spec));
         AtomicBoolean outcome = new AtomicBoolean(false);
-        ResolvedInput unit = new ResolvedInput(PolicyInputs.of(List.of()), outcome::set);
+        ResolvedInput unit = new ResolvedInput(PolicyInputs.of(List.of()), null, outcome::set);
         when(folderSource.supports(spec)).thenReturn(true);
         when(folderSource.resolve(eq(spec), any())).thenReturn(List.of(unit));
         CompletableFuture<PolicyRun> completion = new CompletableFuture<>();
-        when(policyEngine.runPolicy(any(), any(), any()))
+        when(policyEngine.runPolicy(any(), any(), any(), any(), any()))
                 .thenReturn(new PolicyRunHandle("r", completion));
 
         runner.run(policy);
@@ -170,11 +172,11 @@ class PolicyRunnerTest {
         InputSpec spec = InputSpec.folder("/in");
         Policy policy = policy(List.of(spec));
         AtomicBoolean outcome = new AtomicBoolean(true);
-        ResolvedInput unit = new ResolvedInput(PolicyInputs.of(List.of()), outcome::set);
+        ResolvedInput unit = new ResolvedInput(PolicyInputs.of(List.of()), null, outcome::set);
         when(folderSource.supports(spec)).thenReturn(true);
         when(folderSource.resolve(eq(spec), any())).thenReturn(List.of(unit));
         CompletableFuture<PolicyRun> completion = new CompletableFuture<>();
-        when(policyEngine.runPolicy(any(), any(), any()))
+        when(policyEngine.runPolicy(any(), any(), any(), any(), any()))
                 .thenReturn(new PolicyRunHandle("r", completion));
 
         runner.run(policy);
@@ -223,12 +225,12 @@ class PolicyRunnerTest {
         when(folderSource.supports(spec)).thenReturn(true);
         when(folderSource.resolve(eq(spec), any()))
                 .thenReturn(List.of(ResolvedInput.of(PolicyInputs.of(List.of()))));
-        when(policyEngine.runPolicy(any(), any(), any()))
+        when(policyEngine.runPolicy(any(), any(), any(), any(), any()))
                 .thenReturn(new PolicyRunHandle("r", new CompletableFuture<>()));
 
         runner.run(policy, SweepKind.LIGHT);
 
-        verify(policyEngine).runPolicy(eq(policy), any(), any());
+        verify(policyEngine).runPolicy(eq(policy), any(), any(), any(), any());
         verify(processedLedger, never()).markSeen(any(), any());
         verify(processedLedger, never()).deleteUnseen(any(), anyLong());
     }
@@ -243,12 +245,13 @@ class PolicyRunnerTest {
         when(folderSource.resolve(eq(broken), any())).thenThrow(new IOException("mount gone"));
         when(folderSource.resolve(eq(healthy), any()))
                 .thenReturn(List.of(ResolvedInput.of(PolicyInputs.of(List.of()))));
-        when(policyEngine.runPolicy(any(), any(), any()))
+        when(policyEngine.runPolicy(any(), any(), any(), any(), any()))
                 .thenReturn(new PolicyRunHandle("r", new CompletableFuture<>()));
 
         runner.run(policy);
 
-        verify(policyEngine).runPolicy(eq(policy), any(), any()); // healthy source still ran
+        verify(policyEngine)
+                .runPolicy(eq(policy), any(), any(), any(), any()); // healthy source still ran
         verify(processedLedger, never()).deleteUnseen(any(), anyLong()); // history preserved
     }
 
@@ -291,11 +294,54 @@ class PolicyRunnerTest {
         Policy policy = policy(List.of(InputSpec.folder("/in")));
         PolicyInputs inputs = PolicyInputs.of(List.of());
         PolicyRunHandle handle = new PolicyRunHandle("r", new CompletableFuture<>());
-        when(policyEngine.runPolicy(policy, inputs, PolicyProgressListener.NOOP))
+        when(policyEngine.runPolicy(policy, inputs, PolicyProgressListener.NOOP, null, null))
                 .thenReturn(handle);
 
-        assertSame(handle, runner.runWith(policy, inputs, PolicyProgressListener.NOOP));
+        assertSame(handle, runner.runWith(policy, inputs, PolicyProgressListener.NOOP, null));
         verifyNoInteractions(folderSource);
+    }
+
+    @Test
+    void anAttendedRunCarriesTheClientsOwnDocumentReferenceAndNoSource() {
+        // A failure of this run can then name the document the user is still holding, and the null
+        // sourceId is what marks the reference as the client's own rather than a source's hash.
+        Policy policy = policy(List.of());
+        PolicyInputs inputs = PolicyInputs.of(List.of(new ByteArrayResource("a".getBytes())));
+        when(policyEngine.runPolicy(
+                        policy, inputs, PolicyProgressListener.NOOP, null, "editor-file-1"))
+                .thenReturn(new PolicyRunHandle("r", new CompletableFuture<>()));
+
+        runner.runWith(policy, inputs, PolicyProgressListener.NOOP, "editor-file-1");
+
+        verify(policyEngine)
+                .runPolicy(policy, inputs, PolicyProgressListener.NOOP, null, "editor-file-1");
+    }
+
+    @Test
+    void anUnattendedRunStillCarriesItsSourcesHashedIdentity() throws Exception {
+        // The other id space, unchanged: a folder identity is a path, and a path is a filename, so
+        // what reaches the run is the one-way hash and never the client-minted kind of reference.
+        InputSpec spec = InputSpec.folder("/in");
+        Policy policy = policy(List.of(spec));
+        String sourceId = policy.inputs().getFirst().sourceId();
+        when(folderSource.supports(spec)).thenReturn(true);
+        when(folderSource.resolve(eq(spec), any()))
+                .thenReturn(
+                        List.of(
+                                ResolvedInput.forFile(
+                                        PolicyInputs.of(List.of()), "/in/doc.pdf", success -> {})));
+        when(policyEngine.runPolicy(any(), any(), any(), any(), any()))
+                .thenReturn(new PolicyRunHandle("r", new CompletableFuture<>()));
+
+        runner.run(policy);
+
+        verify(policyEngine)
+                .runPolicy(
+                        eq(policy),
+                        any(),
+                        any(),
+                        eq(sourceId),
+                        eq(IdentityHasher.identityHash("/in/doc.pdf")));
     }
 
     @Test
@@ -306,7 +352,6 @@ class PolicyRunnerTest {
                         "p",
                         "owner",
                         true,
-                        null,
                         List.of(),
                         List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
                         OutputSpec.inline(),
@@ -316,10 +361,11 @@ class PolicyRunnerTest {
                         List.of(
                                 new ByteArrayResource("a".getBytes()),
                                 new ByteArrayResource("b".getBytes())));
-        when(policyEngine.runPolicy(policy, inputs, PolicyProgressListener.NOOP))
+        when(policyEngine.runPolicy(
+                        policy, inputs, PolicyProgressListener.NOOP, null, "editor-file-1"))
                 .thenReturn(new PolicyRunHandle("r", new CompletableFuture<>()));
 
-        runner.runWith(policy, inputs, PolicyProgressListener.NOOP);
+        runner.runWith(policy, inputs, PolicyProgressListener.NOOP, "editor-file-1");
 
         String key = EditorSource.counterKey(7L);
         assertEquals(2, docCounter.statsFor(List.of(key)).get(key).total());
@@ -338,8 +384,7 @@ class PolicyRunnerTest {
                 "p",
                 "owner",
                 true,
-                null,
-                sourceIds,
+                sourceIds.stream().map(PipelineInput::manual).toList(),
                 List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
                 OutputSpec.inline());
     }

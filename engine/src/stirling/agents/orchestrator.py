@@ -2,12 +2,15 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import assert_never
+from typing import Literal, assert_never
 
+from pydantic import ConfigDict, Field
 from pydantic_ai import Agent
-from pydantic_ai.output import ToolOutput
+from pydantic_ai.output import NativeOutput, ToolOutput
+from pydantic_ai.settings import ModelSettings
 from pydantic_ai.tools import RunContext
 
+from stirling.agents.output_mode import output_retries, uses_tool_output
 from stirling.agents.pdf_create import PdfCreateAgent
 from stirling.agents.pdf_edit import PdfEditAgent
 from stirling.agents.pdf_questions import PdfQuestionAgent
@@ -27,7 +30,8 @@ from stirling.contracts import (
     format_file_names,
 )
 from stirling.contracts.pdf_create import PdfCreateOrchestrateResponse
-from stirling.services import AppRuntime
+from stirling.models import ApiModel
+from stirling.services import AppRuntime, language_directive, set_reply_locale
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +40,47 @@ logger = logging.getLogger(__name__)
 class OrchestratorDeps:
     runtime: AppRuntime
     request: OrchestratorRequest
+
+
+# Enum routing for Ollama/custom local models: they pass the user message as args to the
+# zero-arg tool delegates below, which reject it, so pick a capability by name and dispatch in Python.
+_RouteCapability = Literal["pdf_edit", "pdf_question", "user_spec", "pdf_review", "pdf_create", "unsupported"]
+
+
+class _RouteDecision(ApiModel):
+    # Local models add stray tool args and send null for optional fields; tolerate both.
+    model_config = ConfigDict(extra="ignore")
+    capability: _RouteCapability
+    message: str | None = Field(
+        default=None,
+        description="Only for capability='unsupported': a short, helpful message to show the user.",
+    )
+
+
+_ROUTER_SYSTEM_PROMPT = (
+    "You are the top-level router. Choose exactly one capability that best handles the request:\n"
+    "- pdf_edit: modify or convert one or more attached PDFs.\n"
+    "- pdf_question: answer questions about the contents of the attached PDFs.\n"
+    "- user_spec: create or define an agent spec.\n"
+    "- pdf_review: return the PDF with review comments/annotations attached.\n"
+    "- pdf_create: generate a NEW document from scratch (invoice, report, letter) - no input file.\n"
+    "- unsupported: none of the above fit, or the user asks about the assistant itself; put a "
+    "helpful message in 'message'.\n"
+    "Respond with the capability and (only for unsupported) a message.\n"
+    "\n"
+    "Decide by what the user wants BACK. Information read out of the document is pdf_question; "
+    "a changed file handed back is pdf_edit. Mentioning a document is not asking to change it.\n"
+    '  "Is there a table of contents?" -> pdf_question\n'
+    '  "Add a table of contents" -> pdf_edit\n'
+    '  "Put a note on every paragraph that needs work" -> pdf_review\n'
+    '  "Build me a purchase order from scratch" -> pdf_create\n'
+    '  "Make a rule that stamps every upload" -> user_spec\n'
+    '  "Which version of the app is this?" -> unsupported'
+)
+
+
+def _router_model_settings(runtime: AppRuntime) -> ModelSettings:
+    return {**runtime.fast_model_settings, "temperature": 0.0}
 
 
 class OrchestratorAgent:
@@ -86,6 +131,8 @@ class OrchestratorAgent:
                     description="Return this when none of the delegate outputs fit the request.",
                 ),
             ],
+            # Local models pick a delegate less reliably; extra retries. No-op for real providers.
+            retries=output_retries(runtime.settings.chat_provider),
             deps_type=OrchestratorDeps,
             system_prompt=(
                 "You are the top-level orchestrator. "
@@ -103,8 +150,25 @@ class OrchestratorAgent:
             ),
             model_settings=runtime.fast_model_settings,
         )
+        # Local models can't drive the zero-arg tool delegates; route by name instead (#6163: unify these paths).
+        self._route_via_enum = uses_tool_output(runtime.settings.chat_provider)
+        # The router has no tools, so NativeOutput works on Ollama here; a lone output tool
+        # would tempt a local model to answer in plain text and never call it.
+        self._router = (
+            Agent(
+                model=runtime.fast_model,
+                output_type=NativeOutput([_RouteDecision]),
+                retries=output_retries(runtime.settings.chat_provider),
+                system_prompt=_ROUTER_SYSTEM_PROMPT,
+                model_settings=_router_model_settings(runtime),
+            )
+            if self._route_via_enum
+            else None
+        )
 
     async def handle(self, request: OrchestratorRequest) -> OrchestratorResponse:
+        # Bound once; delegates and worker tasks inherit it.
+        set_reply_locale(request.locale)
         logger.info(
             "[orchestrator] handle: files=%s resume_with=%s artifacts=%s msg=%r",
             [file.name for file in request.files],
@@ -114,12 +178,39 @@ class OrchestratorAgent:
         )
         if request.resume_with is not None:
             return await self._resume(request, request.resume_with)
+        if self._router is not None:
+            return await self._route_and_dispatch(request)
         result = await self.agent.run(
             self._build_prompt(request),
             deps=OrchestratorDeps(runtime=self.runtime, request=request),
         )
         logger.info("[orchestrator] routed -> %s", type(result.output).__name__)
         return result.output
+
+    async def _route_and_dispatch(self, request: OrchestratorRequest) -> OrchestratorResponse:
+        """Local-model routing: pick a capability by name, then dispatch in Python."""
+        assert self._router is not None
+        result = await self._router.run(self._build_prompt(request))
+        decision = result.output
+        logger.info("[orchestrator] enum-routed -> %s", decision.capability)
+        match decision.capability:
+            case "pdf_edit":
+                return await self._run_pdf_edit(request)
+            case "pdf_question":
+                return await self._run_pdf_question(request)
+            case "user_spec":
+                return await self._run_agent_draft(request)
+            case "pdf_review":
+                return await self._run_pdf_review(request)
+            case "pdf_create":
+                return await self._run_pdf_create(request)
+            case "unsupported":
+                return UnsupportedCapabilityResponse(
+                    capability="orchestrate",
+                    message=decision.message or "I can't help with that request.",
+                )
+            case _ as unreachable:
+                assert_never(unreachable)
 
     async def _resume(self, request: OrchestratorRequest, capability: SupportedCapability) -> OrchestratorResponse:
         """Fast-path to get back to the correct endpoint without having to call AI.
@@ -195,6 +286,7 @@ class OrchestratorAgent:
             f"User message: {request.user_message}\n"
             f"Files: {format_file_names(request.files)}\n"
             f"Available artifacts:\n{artifact_summary}"
+            f"\n{language_directive()}"
         )
 
     def _describe_artifacts(self, request: OrchestratorRequest) -> str:

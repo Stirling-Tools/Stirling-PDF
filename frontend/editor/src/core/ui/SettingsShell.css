@@ -14,7 +14,7 @@
   flex-direction: column;
   gap: 1.25rem;
   background: var(--color-bg-subtle);
-  border-right: 1px solid var(--color-border-light);
+  border-right: 1px solid var(--c-border-subtle);
 }
 
 .sui-settings-shell__group {
@@ -30,7 +30,7 @@
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
 }
 
 .sui-settings-shell__item {
@@ -45,20 +45,20 @@
   text-align: left;
   font-size: 0.8125rem;
   font-weight: 500;
-  color: var(--color-text-2);
+  color: var(--c-text-muted);
   cursor: pointer;
   transition:
     background var(--motion-fast),
     color var(--motion-fast);
 }
 .sui-settings-shell__item:hover:not(:disabled) {
-  background: var(--color-bg-hover);
-  color: var(--color-text-1);
+  background: var(--c-hover);
+  color: var(--c-text);
 }
 .sui-settings-shell__item.is-active {
-  background: var(--color-bg-hover);
-  color: var(--color-text-1);
-  box-shadow: inset 2px 0 0 var(--color-blue);
+  background: var(--c-hover);
+  color: var(--c-text);
+  box-shadow: inset 2px 0 0 var(--c-primary);
 }
 .sui-settings-shell__item:disabled {
   opacity: 0.5;
@@ -87,7 +87,7 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  background: var(--color-surface);
+  background: var(--c-surface);
 }
 
 .sui-settings-shell__header {
@@ -97,12 +97,12 @@
   justify-content: space-between;
   gap: 0.75rem;
   padding: 0.875rem 1.25rem;
-  border-bottom: 1px solid var(--color-border-light);
+  border-bottom: 1px solid var(--c-border-subtle);
 }
 .sui-settings-shell__title {
   font-size: 1rem;
   font-weight: 650;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 .sui-settings-shell__header-actions {
   display: flex;
@@ -128,7 +128,7 @@
   justify-content: flex-end;
   gap: 0.75rem;
   padding: 0.75rem 1.25rem;
-  border-top: 1px solid var(--color-border-light);
+  border-top: 1px solid var(--c-border-subtle);
 }
 
 /* On a phone the rail collapses to a horizontal strip above the content. */
@@ -143,7 +143,7 @@
     flex-wrap: wrap;
     gap: 0.25rem;
     border-right: none;
-    border-bottom: 1px solid var(--color-border-light);
+    border-bottom: 1px solid var(--c-border-subtle);
   }
   .sui-settings-shell__group {
     flex-direction: row;

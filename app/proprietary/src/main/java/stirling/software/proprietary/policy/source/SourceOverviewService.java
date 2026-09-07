@@ -3,8 +3,10 @@ package stirling.software.proprietary.policy.source;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.springframework.stereotype.Service;
 
@@ -100,25 +102,30 @@ public class SourceOverviewService {
                 List.of(),
                 docs.total(),
                 docs.last24h(),
-                docs.last30d());
+                docs.last30d(),
+                null);
     }
 
     /**
-     * Whether a policy runs from the editor. Editor membership is carried in the policy's output
-     * metadata ({@code output.options.sources}) - a client-side list the editor writes when a
-     * policy targets it - rather than as a persisted {@code sourceId}, because the editor is
-     * virtual and has no stored source to reference.
+     * Whether a policy runs from the editor. Read from the policy's first-class {@link
+     * stirling.software.proprietary.policy.model.EditorConfig}, never inferred from a sources list
+     * (the editor is not a real source).
      */
     private static boolean runsFromEditor(Policy policy) {
-        Object sources = policy.output().options().get("sources");
-        return sources instanceof List<?> list && list.contains(EditorSource.ID);
+        return policy.editor().allowed();
     }
 
-    /** Policies referencing each source id, across the caller's visible policies. */
+    /**
+     * Policies referencing each source id, across the caller's visible policies. A source counts
+     * whether a policy reads from it ({@code sourceIds}) or writes to it ({@code outputId}); a
+     * policy that does both counts once.
+     */
     private static Map<String, List<Policy>> referencesBySource(List<Policy> policies) {
         Map<String, List<Policy>> bySource = new HashMap<>();
         for (Policy policy : policies) {
-            for (String sourceId : policy.sourceIds()) {
+            Set<String> referenced = new LinkedHashSet<>(policy.sourceIds());
+            referenced.addAll(policy.outputIds());
+            for (String sourceId : referenced) {
                 bySource.computeIfAbsent(sourceId, key -> new ArrayList<>()).add(policy);
             }
         }
@@ -141,7 +148,16 @@ public class SourceOverviewService {
                 configRows(source),
                 docs.total(),
                 docs.last24h(),
-                docs.last30d());
+                docs.last30d(),
+                webhookPath(source));
+    }
+
+    private static String webhookPath(Source source) {
+        if (!"webhook".equals(source.type())) {
+            return null;
+        }
+        Object webhookId = source.options().get("webhookId");
+        return webhookId == null ? null : "/api/v1/webhooks/" + webhookId;
     }
 
     /** A disabled (paused) source reads as "disabled"; an unreferenced one reads as "unused". */

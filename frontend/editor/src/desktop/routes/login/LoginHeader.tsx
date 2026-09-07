@@ -63,7 +63,7 @@ export default function LoginHeader({
             aria-label={t("common.close", "Close")}
             style={{
               flexShrink: 0,
-              color: "var(--text-secondary)",
+              color: "var(--c-text-muted)",
               outline: "none",
             }}
           >

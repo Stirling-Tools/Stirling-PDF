@@ -1,40 +1,30 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  Banner,
-  Button,
-  Checkbox,
-  CodeBlock,
-  FormField,
-  Input,
-  Modal,
-} from "@app/ui";
-import type { ApiKeyPermission } from "@portal/api/infrastructure";
-
-const PERMISSION_OPTS: ApiKeyPermission[] = ["Read", "Write", "Admin"];
-
-// Shown once after a key is created. TODO(backend): use the one-time secret
-// returned by POST /v1/infrastructure/api-keys — it is never persisted server-side.
-const DEMO_NEW_KEY_SECRET = "sk_live_demo_key_rotate_in_prod";
+import { Banner, Button, CodeBlock, FormField, Input, Modal } from "@app/ui";
+import { createApiKey, type CreatedApiKey } from "@portal/api/infrastructure";
+import { errorMessage } from "@portal/api/http";
 
 export function CreateKeyModal({
   open,
   onClose,
+  onCreated,
 }: {
   open: boolean;
   onClose: () => void;
+  /** Called after a successful create so the tab can refresh its list. */
+  onCreated: () => void;
 }) {
   const { t } = useTranslation();
   const [name, setName] = useState("");
-  const [perms, setPerms] = useState<ApiKeyPermission[]>(["Read"]);
-  const [ips, setIps] = useState("");
-  const [created, setCreated] = useState(false);
+  const [created, setCreated] = useState<CreatedApiKey | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   function reset() {
     setName("");
-    setPerms(["Read"]);
-    setIps("");
-    setCreated(false);
+    setCreated(null);
+    setSubmitting(false);
+    setError(null);
   }
 
   function close() {
@@ -43,16 +33,18 @@ export function CreateKeyModal({
     setTimeout(reset, 200);
   }
 
-  function togglePerm(p: ApiKeyPermission) {
-    setPerms((prev) =>
-      prev.includes(p) ? prev.filter((x) => x !== p) : [...prev, p],
-    );
-  }
-
-  function createKey() {
-    // TODO(backend): POST /v1/infrastructure/api-keys { name, perms, ips }
-    // and render the one-time secret from the response instead of the fixture.
-    setCreated(true);
+  async function createKey() {
+    setSubmitting(true);
+    setError(null);
+    try {
+      const result = await createApiKey({ name: name.trim() });
+      setCreated(result);
+      onCreated();
+    } catch (e) {
+      setError(errorMessage(e));
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -72,7 +64,7 @@ export function CreateKeyModal({
       }
       footer={
         created ? (
-          <Button variant="primary" accent="premium" onClick={close}>
+          <Button variant="primary" onClick={close}>
             {t("portal.infrastructure.createKey.done")}
           </Button>
         ) : (
@@ -82,8 +74,7 @@ export function CreateKeyModal({
             </Button>
             <Button
               variant="primary"
-              accent="premium"
-              disabled={name.trim() === "" || perms.length === 0}
+              disabled={name.trim() === "" || submitting}
               onClick={createKey}
             >
               {t("portal.infrastructure.createKey.createKey")}
@@ -95,7 +86,7 @@ export function CreateKeyModal({
       {created ? (
         <div className="portal-infra__stack">
           <CodeBlock
-            code={DEMO_NEW_KEY_SECRET}
+            code={created.secret}
             lang="bash"
             caption={t("portal.infrastructure.createKey.secretKeyCaption")}
           />
@@ -106,6 +97,8 @@ export function CreateKeyModal({
         </div>
       ) : (
         <div className="portal-infra__form">
+          {error && <Banner tone="danger" description={error} />}
+
           <FormField
             label={t("portal.infrastructure.createKey.keyNameLabel")}
             required
@@ -116,35 +109,6 @@ export function CreateKeyModal({
               placeholder={t(
                 "portal.infrastructure.createKey.keyNamePlaceholder",
               )}
-            />
-          </FormField>
-
-          <FormField
-            label={t("portal.infrastructure.createKey.permissionsLabel")}
-          >
-            <div className="portal-infra__perm-row">
-              {PERMISSION_OPTS.map((p) => (
-                <Checkbox
-                  key={p}
-                  label={t(
-                    `portal.infrastructure.apiKeyPermission.${p.toLowerCase()}`,
-                    p,
-                  )}
-                  checked={perms.includes(p)}
-                  onChange={() => togglePerm(p)}
-                />
-              ))}
-            </div>
-          </FormField>
-
-          <FormField
-            label={t("portal.infrastructure.createKey.ipAllowlistLabel")}
-            helperText={t("portal.infrastructure.createKey.ipAllowlistHelper")}
-          >
-            <Input
-              value={ips}
-              onChange={(e) => setIps(e.target.value)}
-              placeholder="52.14.0.0/16, 203.0.113.7/32"
             />
           </FormField>
         </div>

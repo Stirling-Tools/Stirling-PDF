@@ -58,7 +58,7 @@ function SectionLabel({ children }: { children: string }) {
       tt="uppercase"
       style={{
         letterSpacing: "0.06em",
-        color: "var(--tool-subcategory-text-color)",
+        color: "var(--c-text-subtle)",
         marginBottom: "0.5rem",
       }}
     >
@@ -330,7 +330,7 @@ export function WatchedFolderManagementModal({
           style={{
             width: "28rem",
             flexShrink: 0,
-            borderRight: "0.0625rem solid var(--border-subtle)",
+            borderRight: "0.0625rem solid var(--c-border-subtle)",
             display: "flex",
             flexDirection: "column",
             overflow: "hidden",
@@ -439,7 +439,7 @@ export function WatchedFolderManagementModal({
                       style={{
                         marginLeft: "0.75rem",
                         paddingLeft: "0.75rem",
-                        borderLeft: "2px solid var(--border-subtle)",
+                        borderLeft: "2px solid var(--c-border-subtle)",
                       }}
                     >
                       <Box
@@ -482,13 +482,11 @@ export function WatchedFolderManagementModal({
                             variant="tertiary"
                             onClick={async () => {
                               try {
-                                const handle = await (
-                                  window as unknown as {
-                                    showDirectoryPicker: (options?: {
-                                      mode?: "read" | "readwrite";
-                                    }) => Promise<FileSystemDirectoryHandle>;
-                                  }
-                                ).showDirectoryPicker({ mode: "read" });
+                                const handle =
+                                  await window.showDirectoryPicker?.({
+                                    mode: "read",
+                                  });
+                                if (!handle) return;
                                 pendingInputDirHandle.current = handle;
                                 setInputDirName(handle.name);
                               } catch {
@@ -532,7 +530,7 @@ export function WatchedFolderManagementModal({
                     style={{
                       padding: "0.5rem 0.75rem",
                       borderRadius: "var(--mantine-radius-sm)",
-                      border: `0.0625rem solid ${outputDirName ? "var(--mantine-color-green-filled)" : "var(--border-subtle)"}`,
+                      border: `0.0625rem solid ${outputDirName ? "var(--mantine-color-green-filled)" : "var(--c-border-subtle)"}`,
                       backgroundColor: outputDirName
                         ? "var(--mantine-color-green-light)"
                         : "transparent",
@@ -580,13 +578,12 @@ export function WatchedFolderManagementModal({
                           disabled={!canWriteLocalFolder}
                           onClick={async () => {
                             try {
-                              const handle = await (
-                                window as unknown as {
-                                  showDirectoryPicker: (options?: {
-                                    mode?: "read" | "readwrite";
-                                  }) => Promise<FileSystemDirectoryHandle>;
-                                }
-                              ).showDirectoryPicker({ mode: "readwrite" });
+                              const handle = await window.showDirectoryPicker?.(
+                                {
+                                  mode: "readwrite",
+                                },
+                              );
+                              if (!handle) return;
                               pendingDirHandle.current = handle;
                               setOutputDirName(handle.name);
                             } catch {
@@ -628,7 +625,7 @@ export function WatchedFolderManagementModal({
                     gap: "0.35rem",
                     padding: "0.25rem 0",
                     width: "100%",
-                    color: "var(--tool-subcategory-text-color)",
+                    color: "var(--c-text-subtle)",
                     fontSize: "0.7rem",
                     fontWeight: 600,
                     letterSpacing: "0.06em",
@@ -810,7 +807,7 @@ export function WatchedFolderManagementModal({
           <div
             style={{
               padding: "1rem 1.5rem",
-              borderTop: "0.0625rem solid var(--border-subtle)",
+              borderTop: "0.0625rem solid var(--c-border-subtle)",
               flexShrink: 0,
             }}
           >
@@ -859,7 +856,7 @@ export function WatchedFolderManagementModal({
               {t("watchedFolders.modal.sectionSteps", "Steps")}
             </SectionLabel>
             {automationError && (
-              <Text size="xs" c="red" mt={4}>
+              <Text size="xs" c="var(--color-red-dark)" mt={4}>
                 {automationError}
               </Text>
             )}

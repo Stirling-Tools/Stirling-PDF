@@ -17,10 +17,14 @@ describe("POLICY_OPERATIONS", () => {
     expect(ALL_TOOL_IDS.sort()).toEqual([
       "classify",
       "compress",
+      "externalApiCall",
       "flatten",
       "ocr",
+      "purviewApplyLabel",
+      "purviewReadLabel",
       "redact",
       "sanitize",
+      "timestampPdf",
       "watermark",
     ]);
     for (const id of ALL_TOOL_IDS) {

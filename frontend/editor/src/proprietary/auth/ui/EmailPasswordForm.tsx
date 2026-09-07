@@ -136,9 +136,7 @@ export default function EmailPasswordForm({
         fontSize="sm"
         loading={isSubmitting}
         className="auth-submit"
-        // Stirling-red brand CTA; the brand accent sets the colour inline so the
-        // host app's Mantine primaryColor can't win (editor vs portal differ).
-        accent="brand"
+        accent="default"
       >
         {submitButtonText}
       </Button>

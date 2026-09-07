@@ -6,7 +6,11 @@ const meta: Meta<typeof CreateKeyModal> = {
   title: "Portal/Infrastructure/CreateKeyModal",
   component: CreateKeyModal,
   parameters: { layout: "fullscreen" },
-  args: { open: true, onClose: () => console.log("close") },
+  args: {
+    open: true,
+    onClose: () => console.log("close"),
+    onCreated: () => console.log("created"),
+  },
 };
 export default meta;
 type Story = StoryObj<typeof CreateKeyModal>;

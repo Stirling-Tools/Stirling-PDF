@@ -10,6 +10,7 @@ import {
 } from "@app/hooks/tools/shared/toolApiMapping";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
 import {
+  validateSanitizeParameters,
   SanitizeParameters,
   defaultParameters,
 } from "@app/hooks/tools/sanitize/useSanitizeParameters";
@@ -56,6 +57,7 @@ export const buildSanitizeFormData = (
 
 // Static configuration object
 export const sanitizeOperationConfig = defineSingleFileTool({
+  validateParams: validateSanitizeParameters,
   buildFormData: buildSanitizeFormData,
   toApiParams: sanitizeToApiParams,
   fromApiParams: sanitizeFromApiParams,

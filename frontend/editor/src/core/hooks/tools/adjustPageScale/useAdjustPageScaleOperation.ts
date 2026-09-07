@@ -5,6 +5,7 @@ import {
 } from "@app/hooks/tools/shared/useToolOperation";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
 import {
+  validateAdjustPageScaleParameters,
   AdjustPageScaleParameters,
   defaultParameters,
 } from "@app/hooks/tools/adjustPageScale/useAdjustPageScaleParameters";
@@ -22,6 +23,7 @@ export {
 };
 
 export const adjustPageScaleOperationConfig = defineSingleFileTool({
+  validateParams: validateAdjustPageScaleParameters,
   buildFormData: buildAdjustPageScaleFormData,
   toApiParams: adjustPageScaleToApiParams,
   fromApiParams: adjustPageScaleFromApiParams,

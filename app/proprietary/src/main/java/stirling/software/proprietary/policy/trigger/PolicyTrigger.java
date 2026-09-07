@@ -2,11 +2,13 @@ package stirling.software.proprietary.policy.trigger;
 
 import java.util.Set;
 
+import stirling.software.proprietary.policy.model.PipelineInput;
 import stirling.software.proprietary.policy.model.Policy;
 
 /**
- * Decides <em>when</em> a policy runs. On firing it hands the policy to {@code PolicyRunner}; it
- * never resolves sources itself. New trigger kinds are just new beans of this type.
+ * Decides <em>when</em> a policy input runs. On firing it hands the binding to {@code
+ * PolicyRunner}, which pulls only that input's source; it never resolves sources itself. New
+ * trigger kinds are just new beans of this type.
  */
 public interface PolicyTrigger {
 
@@ -32,10 +34,11 @@ public interface PolicyTrigger {
     }
 
     /**
-     * Validate at save time so misconfiguration fails fast, not at fire time. Receives the whole
-     * {@link Policy} so triggers that depend on the policy's sources (folder-watch) can check that.
+     * Validate one input's use of this trigger at save time so misconfiguration fails fast, not at
+     * fire time. Receives the owning {@link Policy} and the specific {@link PipelineInput} so a
+     * trigger that depends on the input's source (folder-watch) can check it.
      */
-    default void validate(Policy policy) {}
+    default void validate(Policy policy, PipelineInput input) {}
 
     default void start() {}
 

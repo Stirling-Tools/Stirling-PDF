@@ -17,7 +17,7 @@ const OperatorsSection = ({
 
   return (
     <div>
-      <Text size="xs" c="var(--text-muted)" fw={500} mb="xs">
+      <Text size="xs" c="var(--c-text-subtle)" fw={500} mb="xs">
         {t("bulkSelection.keywords.title", "Keywords")}:
       </Text>
       <Group gap="sm" wrap="nowrap">

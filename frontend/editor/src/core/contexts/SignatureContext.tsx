@@ -211,12 +211,3 @@ export const useSignature = (): SignatureContextValue => {
   }
   return context;
 };
-
-// Hook for components that need to check if signature mode is active
-export const useSignatureMode = () => {
-  const context = useContext(SignatureContext);
-  return {
-    isSignatureModeActive: context?.isPlacementMode || false,
-    hasSignatureConfig: context?.signatureConfig !== null,
-  };
-};

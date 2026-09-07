@@ -12,11 +12,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import stirling.software.proprietary.policy.model.OutputSpec;
+import stirling.software.proprietary.policy.model.PipelineInput;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
+import stirling.software.proprietary.policy.model.PolicyBinding;
 import stirling.software.proprietary.policy.model.TriggerConfig;
 
-/** Tests for {@link InProcessPolicyStore}: id assignment, upsert, trigger-type lookup, delete. */
+/** Tests for {@link InProcessPolicyStore}: id assignment, upsert, binding lookup, delete. */
 class InProcessPolicyStoreTest {
 
     private PolicyStore store;
@@ -45,7 +47,7 @@ class InProcessPolicyStoreTest {
                         "after",
                         "owner",
                         true,
-                        null,
+                        List.of(),
                         List.of(),
                         OutputSpec.inline()));
 
@@ -54,16 +56,16 @@ class InProcessPolicyStoreTest {
     }
 
     @Test
-    void findByTriggerTypeReturnsOnlyEnabledMatches() {
+    void findBindingsByTriggerTypeReturnsOnlyEnabledMatches() {
         store.save(policy(null, "nightly", "schedule", true));
         store.save(policy(null, "nightly-disabled", "schedule", false));
         store.save(policy(null, "hooked", "webhook", true));
         store.save(policy(null, "on-demand", null, true)); // manual-only: no trigger
 
-        List<Policy> scheduled = store.findByTriggerType("schedule");
+        List<PolicyBinding> scheduled = store.findBindingsByTriggerType("schedule");
 
         assertEquals(1, scheduled.size());
-        assertEquals("nightly", scheduled.get(0).name());
+        assertEquals("nightly", scheduled.get(0).policy().name());
     }
 
     @Test
@@ -76,14 +78,16 @@ class InProcessPolicyStoreTest {
     }
 
     private static Policy policy(String id, String name, String triggerType, boolean enabled) {
-        TriggerConfig trigger =
-                triggerType == null ? null : new TriggerConfig(triggerType, Map.of());
+        PipelineInput input =
+                triggerType == null
+                        ? PipelineInput.manual("src")
+                        : new PipelineInput("src", new TriggerConfig(triggerType, Map.of()));
         return new Policy(
                 id,
                 name,
                 "owner",
                 enabled,
-                trigger,
+                List.of(input),
                 List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
                 OutputSpec.inline());
     }

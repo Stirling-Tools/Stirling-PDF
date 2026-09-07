@@ -11,7 +11,7 @@ const meta: Meta<typeof Sidebar> = {
         style={{
           display: "flex",
           height: "100vh",
-          background: "var(--color-bg)",
+          background: "var(--c-bg)",
         }}
       >
         <S />

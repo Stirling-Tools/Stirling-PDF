@@ -54,7 +54,8 @@ test.describe("13. Language / Localization", () => {
         // Step 5: Wait for page reload (language change triggers window.location.reload())
         await page.waitForLoadState("domcontentloaded");
 
-        // Step 6: Verify the UI text is in English
+        // Step 6: Verify the UI text is in English via the always-mounted
+        // super search bar's placeholder.
         await expect(page.getByPlaceholder(/search/i).first()).toBeVisible({
           timeout: 10000,
         });

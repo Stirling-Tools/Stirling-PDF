@@ -30,9 +30,9 @@ export function StatCard({
       style={{
         padding: "0.5rem 0.75rem 2rem",
         borderRadius: "var(--mantine-radius-sm)",
-        border: `0.0625rem solid ${isActive && hoverColor ? hoverColor : "var(--border-subtle)"}`,
+        border: `0.0625rem solid ${isActive && hoverColor ? hoverColor : "var(--c-border-subtle)"}`,
         backgroundColor:
-          isActive && hoverColor ? `${hoverColor}10` : "var(--bg-toolbar)",
+          isActive && hoverColor ? `${hoverColor}10` : "var(--c-bg-raised)",
         textAlign: "center",
         cursor: isClickable ? "pointer" : "default",
         transition: "border-color 0.15s ease, background-color 0.15s ease",
@@ -43,7 +43,7 @@ export function StatCard({
       }}
       onMouseLeave={(e) => {
         if (isClickable && !isActive)
-          e.currentTarget.style.borderColor = "var(--border-subtle)";
+          e.currentTarget.style.borderColor = "var(--c-border-subtle)";
       }}
     >
       <div style={{ display: "block", marginBottom: "0.375rem" }}>{icon}</div>

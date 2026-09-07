@@ -1,6 +1,6 @@
 .chart-tooltip {
-  background: var(--bg-surface);
-  color: var(--text-primary);
+  background: var(--c-surface);
+  color: var(--c-text);
   border: 1px solid transparent;
   box-shadow: var(--shadow-md);
   padding: 8px 10px;
@@ -9,6 +9,6 @@
   border-radius: 8px;
 }
 [data-mantine-color-scheme="dark"] .chart-tooltip {
-  border-color: var(--border-subtle);
+  border-color: var(--c-border-subtle);
   box-shadow: none;
 }

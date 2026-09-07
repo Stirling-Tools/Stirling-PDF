@@ -13,11 +13,11 @@
 .sui-settingsrow__label {
   font-size: 0.8125rem;
   font-weight: 500;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 .sui-settingsrow__desc {
   font-size: 0.75rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
   margin-top: 0.125rem;
 }
 .sui-settingsrow__control {

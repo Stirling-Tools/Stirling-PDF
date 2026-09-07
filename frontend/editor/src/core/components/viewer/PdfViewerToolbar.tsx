@@ -5,6 +5,7 @@ import { useViewer } from "@app/contexts/ViewerContext";
 import { useIsPhone } from "@app/hooks/useIsMobile";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { ActionIcon } from "@app/ui/ActionIcon";
+import "@app/components/viewer/PdfViewerToolbar.css";
 import FirstPageIcon from "@mui/icons-material/FirstPage";
 import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
@@ -17,6 +18,12 @@ import WbTwilightIcon from "@mui/icons-material/WbTwilight";
 import ZoomInIcon from "@mui/icons-material/ZoomIn";
 import ZoomOutIcon from "@mui/icons-material/ZoomOut";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
+
+// Sizing constants for the page number input
+const MIN_PAGE_DIGITS = 2;
+const MIN_INPUT_WIDTH_PX = 48;
+const BASE_INPUT_WIDTH_PX = 32;
+const PX_PER_DIGIT = 8;
 
 interface PdfViewerToolbarProps {
   // Page navigation props (placeholders for now)
@@ -131,10 +138,18 @@ export function PdfViewerToolbar({
     scrollActions.scrollToLastPage();
   };
 
+  const totalPagesDigits = Math.max(
+    MIN_PAGE_DIGITS,
+    (scrollState.totalPages || 1).toString().length,
+  );
+  const inputWidth = Math.max(
+    MIN_INPUT_WIDTH_PX,
+    BASE_INPUT_WIDTH_PX + totalPagesDigits * PX_PER_DIGIT,
+  );
+
   return (
     <Paper
-      radius="xl xl 0 0"
-      shadow="sm"
+      className="pdf-viewer-toolbar"
       p={12}
       pb={12}
       style={{
@@ -144,11 +159,6 @@ export function PdfViewerToolbar({
         rowGap: 8,
         gap: 10,
         justifyContent: "center",
-        borderTopLeftRadius: 16,
-        borderTopRightRadius: 16,
-        borderBottomLeftRadius: 0,
-        borderBottomRightRadius: 0,
-        boxShadow: "0 -2px 8px rgba(0,0,0,0.04)",
         pointerEvents: "auto",
       }}
     >
@@ -195,10 +205,13 @@ export function PdfViewerToolbar({
         hideControls
         styles={{
           input: {
-            width: 48,
+            width: inputWidth,
             textAlign: "center",
             fontWeight: 500,
             fontSize: 16,
+            paddingLeft: 4,
+            paddingRight: 4,
+            boxSizing: "border-box",
           },
         }}
       />
@@ -341,7 +354,7 @@ export function PdfViewerToolbar({
               minWidth: "2.5rem",
               textAlign: "center",
               fontSize: 12,
-              color: "var(--text-muted)",
+              color: "var(--c-text-subtle)",
             }}
           >
             {displayZoomPercent}%

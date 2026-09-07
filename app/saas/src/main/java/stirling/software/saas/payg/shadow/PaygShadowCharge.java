@@ -59,13 +59,27 @@ public class PaygShadowCharge implements Serializable {
     private Integer paygUnits;
 
     /**
-     * How many of {@link #paygUnits} were drawn from the team's one-time free grant at charge time.
-     * The paid (Stripe-metered) portion is {@code paygUnits - freeUnitsConsumed}; a refund restores
-     * this many units to {@code payg_team_extensions.free_units_remaining}. {@code 0} for pre-V19
-     * rows and for jobs that consumed no free units (team's grant already exhausted).
+     * How many of {@link #paygUnits} were drawn from the team's free grant at charge time. The paid
+     * (Stripe-metered) portion is {@code paygUnits - freeUnitsConsumed}; a refund restores this
+     * many units to {@code payg_team_extensions.free_units_remaining}. {@code 0} for pre-V19 rows
+     * and for jobs that drew no free units.
      */
     @Column(name = "free_units_consumed", nullable = false)
     private Integer freeUnitsConsumed = 0;
+
+    /**
+     * How many of {@link #paygUnits} were drawn from prepaid bundles (the {@code BOUGHT} bucket) at
+     * charge time — the tier between the free grant and the meter. The paid (Stripe-metered)
+     * portion is {@code paygUnits - freeUnitsConsumed - bundleUnitsConsumed}; a refund restores
+     * this many units to the pool(s) they came from. {@code 0} for pre-bundle rows and jobs that
+     * drew none. The {@code columnDefinition} default keeps the ddl-auto ADD COLUMN safe on the
+     * populated table.
+     */
+    @Column(
+            name = "bundle_units_consumed",
+            nullable = false,
+            columnDefinition = "integer not null default 0")
+    private Integer bundleUnitsConsumed = 0;
 
     @Column(name = "legacy_credits_charged", nullable = false)
     private Integer legacyCreditsCharged;

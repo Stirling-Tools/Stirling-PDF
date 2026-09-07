@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -288,6 +289,27 @@ class ValidateSignatureControllerMoreTest {
             assertThat(result.getChainValidationError()).isNull();
             // Self-signed anchor == signer, so the path has zero intermediate certificates.
             assertThat(result.getCertPathLength()).isGreaterThanOrEqualTo(0);
+        }
+    }
+
+    @Nested
+    @DisplayName("Padded signature contents")
+    class PaddedContentsTests {
+
+        @Test
+        @DisplayName("Zero-padded /Contents still parses as CMS")
+        void zeroPaddedContentsParsesAsCms() throws Exception {
+            byte[] contents;
+            try (PDDocument doc = Loader.loadPDF(signedPdfBytes)) {
+                PDSignature sig = doc.getSignatureDictionaries().get(0);
+                contents = sig.getContents(new ByteArrayInputStream(signedPdfBytes));
+            }
+
+            // /Contents is zero-filled up to its reserved length. Since BC 1.85 the byte[]
+            // constructors reject that tail ("Extra data detected in stream"), streams do not.
+            assertThat(contents[contents.length - 1]).isZero();
+            CMSSignedData parsed = new CMSSignedData(new ByteArrayInputStream(contents));
+            assertThat(parsed.getSignerInfos().size()).isEqualTo(1);
         }
     }
 

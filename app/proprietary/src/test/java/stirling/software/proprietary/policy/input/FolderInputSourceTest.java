@@ -27,6 +27,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.env.StandardEnvironment;
 
+import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.FileReadinessChecker;
 import stirling.software.proprietary.policy.config.FolderAccessGuard;
@@ -57,7 +58,10 @@ class FolderInputSourceTest {
         properties.getPolicies().setAllowedFolderRoots(List.of(tempDir.toString()));
         FolderAccessGuard guard =
                 new FolderAccessGuard(
-                        properties, new StandardEnvironment(), new InProcessSourceStore());
+                        properties,
+                        new RuntimePathConfig(properties),
+                        new StandardEnvironment(),
+                        new InProcessSourceStore());
         source = new FolderInputSource(readinessChecker, guard);
         ledger = new InProcessProcessedLedger();
         ctx = new RecordingContext();

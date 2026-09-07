@@ -1,22 +1,9 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import CheckIcon from "@mui/icons-material/Check";
-import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
-import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
-import CloudOutlinedIcon from "@mui/icons-material/CloudOutlined";
-import StorageOutlinedIcon from "@mui/icons-material/StorageOutlined";
-import {
-  Banner,
-  Button,
-  Card,
-  FormField,
-  Input,
-  Modal,
-  Select,
-  Tabs,
-  ToggleSwitch,
-} from "@app/ui";
+import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
+import { Banner, Button, Card, Modal, ToggleSwitch } from "@app/ui";
 import { SettingsRow } from "@app/ui/SettingsRow";
+import { EnforceAsPolicyControl } from "@portal/components/pipelines/EnforceAsPolicyControl";
 import {
   humanizeEndpoint,
   type CatalogueEntry,
@@ -31,29 +18,16 @@ import {
   type PolicyToolId,
   type PolicyToolStep,
 } from "@app/policies/operations";
-import { fetchSources } from "@portal/api/sources";
+import { resolveRunOn } from "@app/policies/runOn";
+import { fetchIntegrations } from "@portal/api/integrations";
+import { errorMessage } from "@portal/api/http";
 import { useAsync } from "@portal/hooks/useAsync";
-import { PolicyFieldRow } from "@portal/components/policies/PolicyFieldRow";
 import { PolicyCategoryBadge } from "@portal/components/policies/PolicyCategoryIcon";
 import { PolicyRedactConfig } from "@app/components/policies/PolicyRedactConfig";
 import { PolicyWatermarkConfig } from "@app/components/policies/PolicyWatermarkConfig";
+import { PolicyPurviewConfig } from "@portal/components/policies/PolicyPurviewConfig";
 import { ClassificationLabelsSection } from "@portal/components/policies/ClassificationLabelsSection";
 import "@portal/views/Policies.css";
-
-/** Outline icon for a source tile, keyed by the backend source `type`. */
-function sourceIcon(type: string): ReactNode {
-  const sx = { fontSize: "1.1rem" } as const;
-  switch (type) {
-    case "editor":
-      return <EditOutlinedIcon sx={sx} />;
-    case "folder":
-      return <FolderOutlinedIcon sx={sx} />;
-    case "s3":
-      return <CloudOutlinedIcon sx={sx} />;
-    default:
-      return <StorageOutlinedIcon sx={sx} />;
-  }
-}
 
 interface PolicySetupWizardProps {
   /** The category being configured, or null when closed. */
@@ -64,9 +38,13 @@ interface PolicySetupWizardProps {
    * async; if it rejects the wizard re-enables submit and surfaces the failure.
    */
   onSubmit: (entry: CatalogueEntry, result: PolicySetupResult) => Promise<void>;
+  /**
+   * Fires when the user asks to Customise: hands the current (unsaved) settings to the full pipeline
+   * builder, which takes over editing. The builder can express anything the simple wizard can't, so
+   * this is a one-way step unless the pipeline stays simple-representable.
+   */
+  onCustomise: (entry: CatalogueEntry, result: PolicySetupResult) => void;
 }
-
-type Step = "workflow" | "settings";
 
 /** A policy step plus whether it runs. */
 type ToolState = PolicyToolStep & { enabled: boolean };
@@ -87,7 +65,21 @@ function resolveFieldValues(
  * starts enabled — the user toggles tools off in the workflow.
  */
 // Temporary until the catalogue carries a defaultEnabled flag.
-const DISABLED_BY_DEFAULT = new Set<PolicyToolId>(["watermark"]);
+// Steps that cannot work until someone configures them, so they start off rather than failing
+// every run of a freshly created policy. Purview needs a tenant connection and a label GUID.
+const DISABLED_BY_DEFAULT = new Set<PolicyToolId>([
+  "watermark",
+  "purviewApplyLabel",
+  "purviewReadLabel",
+  "externalApiCall",
+]);
+
+// Steps that cannot work without a Purview tenant connection, so they are hidden entirely until one
+// is configured rather than offered as an option that can only fail.
+const PURVIEW_TOOLS = new Set<PolicyToolId>([
+  "purviewApplyLabel",
+  "purviewReadLabel",
+]);
 
 /**
  * Policy-facing framing for each capability a policy can include. Labels and
@@ -113,6 +105,14 @@ const CAPABILITY_META: Record<
     descKey: "portal.policies.wizard.capability.sanitize.desc",
     descEn:
       "Removes hidden JavaScript so nothing can run automatically when the document is opened.",
+  },
+
+  timestampPdf: {
+    labelKey: "portal.policies.wizard.capability.timestampPdf.label",
+    labelEn: "Add a trusted timestamp",
+    descKey: "portal.policies.wizard.capability.timestampPdf.desc",
+    descEn:
+      "Proves the document existed in this exact form at a point in time, using an independent timestamp authority. Only a hash is sent - the document never leaves your server.",
   },
   watermark: {
     labelKey: "portal.policies.wizard.capability.watermark.label",
@@ -145,6 +145,27 @@ const CAPABILITY_META: Record<
     descKey: "portal.policies.wizard.capability.classify.desc",
     descEn:
       "Identifies the document's type from your team's labels and tags it, so it files and searches by category.",
+  },
+  purviewApplyLabel: {
+    labelKey: "portal.policies.wizard.capability.purviewApplyLabel.label",
+    labelEn: "Apply a Microsoft Purview sensitivity label",
+    descKey: "portal.policies.wizard.capability.purviewApplyLabel.desc",
+    descEn:
+      "Marks the document with one of your organisation's Purview labels, so Purview-aware tools recognise how sensitive it is.",
+  },
+  purviewReadLabel: {
+    labelKey: "portal.policies.wizard.capability.purviewReadLabel.label",
+    labelEn: "Read the document's Purview label",
+    descKey: "portal.policies.wizard.capability.purviewReadLabel.desc",
+    descEn:
+      "Reports the Purview label a document already carries, so the rest of the policy can act on how sensitive it is.",
+  },
+  externalApiCall: {
+    labelKey: "portal.policies.wizard.capability.externalApiCall.label",
+    labelEn: "Send the document to another system",
+    descKey: "portal.policies.wizard.capability.externalApiCall.desc",
+    descEn:
+      "Hands the document to a system you have connected, and records what it answered.",
   },
 };
 
@@ -180,6 +201,7 @@ export function PolicySetupWizard({
   entry,
   onClose,
   onSubmit,
+  onCustomise,
 }: PolicySetupWizardProps) {
   // Re-key the wizard on the opened category so all state resets cleanly when a
   // different category is opened (avoids stale field values bleeding across).
@@ -189,6 +211,7 @@ export function PolicySetupWizard({
       entry={entry}
       onClose={onClose}
       onSubmit={onSubmit}
+      onCustomise={onCustomise}
     />
   ) : null;
 }
@@ -197,10 +220,12 @@ function PolicySetupWizardBody({
   entry,
   onClose,
   onSubmit,
+  onCustomise,
 }: {
   entry: CatalogueEntry;
   onClose: () => void;
   onSubmit: (entry: CatalogueEntry, result: PolicySetupResult) => Promise<void>;
+  onCustomise: (entry: CatalogueEntry, result: PolicySetupResult) => void;
 }) {
   const { t } = useTranslation();
 
@@ -208,7 +233,6 @@ function PolicySetupWizardBody({
   const isEdit = policy != null;
   const isClassification = category.id === "classification";
 
-  const [step, setStep] = useState<Step>("workflow");
   const [tools, setTools] = useState<ToolState[]>(() => {
     const seeded = seedTools(entry);
     // Classification's single tool has no toggle in the workflow step, so keep it
@@ -218,59 +242,55 @@ function PolicySetupWizardBody({
       ? seeded.map((t) => ({ ...t, enabled: true }))
       : seeded;
   });
-  const [fieldValues, setFieldValues] = useState(() =>
-    resolveFieldValues(entry),
-  );
-  const [sources, setSources] = useState<string[]>(
-    policy?.state.sources ?? ["editor"],
-  );
-
-  const sourcesAsync = useAsync(() => fetchSources(), []);
-  const availableSources = useMemo(() => {
-    const backendSources = (sourcesAsync.data?.sources ?? []).filter(
-      (s) => s.status !== "disabled",
-    );
-    // The editor is always an available source. The backend now returns it as a
-    // virtual source too, so take that when present (avoids a duplicate tile) and
-    // otherwise fall back to a synthetic one; keep it first, selected by default.
-    const editorSource = backendSources.find((s) => s.id === "editor") ?? {
-      id: "editor",
-      name: t("portal.sources.types.editor.label"),
-      type: "editor",
-      status: "active" as const,
-      referenceCount: 0,
-      referencingPolicies: [],
-      config: [],
-      docsTotal: null,
-    };
-    return [editorSource, ...backendSources.filter((s) => s.id !== "editor")];
-  }, [sourcesAsync.data, t]);
-  // Document-type scoping has no UI; preserve any saved scope on edit and
-  // default new policies to all document types.
+  // No UI for any of these: each carries the stored value through on edit, and a sensible default for
+  // a new policy - runOn per category (security enforces on export), the rest run-once/new-version.
+  const [fieldValues] = useState(() => resolveFieldValues(entry));
   const [scopeTypes] = useState<string[]>(policy?.state.scopeTypes ?? []);
-  // TODO: replace with user-picker backed by GET /api/v1/user/users (UserSummary[]).
-  // Store username (which is the email in Spring Security) as reviewerEmail.
-  // See UserSelector.tsx in the editor for the grouping/display pattern.
   const [reviewerEmail] = useState(policy?.state.reviewerEmail ?? "");
-  const [outputMode, setOutputMode] = useState<"new_file" | "new_version">(
+  const [outputMode] = useState<"new_file" | "new_version">(
     policy?.state.outputMode ?? "new_version",
   );
-  const [outputName, setOutputName] = useState(policy?.state.outputName ?? "");
-  const [outputNamePosition, setOutputNamePosition] = useState<
-    "prefix" | "suffix" | "auto-number"
-  >(policy?.state.outputNamePosition ?? "suffix");
-  const [runOn, setRunOn] = useState<"upload" | "export">(
-    policy?.state.runOn ?? "upload",
+  const [outputName] = useState(policy?.state.outputName ?? "");
+  const [outputNamePosition] = useState<"prefix" | "suffix" | "auto-number">(
+    policy?.state.outputNamePosition ?? "suffix",
   );
-  // Policies run once; retry config has no UI. Preserve any saved values on
-  // edit and default new policies to no retries (run once).
+  const [runOn] = useState<"upload" | "export">(() =>
+    resolveRunOn(policy?.state.runOn, category.id),
+  );
   const [maxRetries] = useState(policy?.state.maxRetries ?? 0);
   const [retryDelayMinutes] = useState(policy?.state.retryDelayMinutes ?? 0);
+  // A suggested policy is something the org requires by nature, so new ones default to required;
+  // editing preserves whatever was saved.
+  const [required, setRequired] = useState(policy?.state.required ?? true);
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const enabledTools = useMemo(() => tools.filter((tl) => tl.enabled), [tools]);
+  const integrationsAsync = useAsync(() => fetchIntegrations(), []);
+  const hasPurviewConnection = useMemo(
+    () =>
+      (integrationsAsync.data ?? []).some(
+        (c) => c.integrationType === "PURVIEW",
+      ),
+    [integrationsAsync.data],
+  );
+
+  // Purview steps only appear once a tenant is connected. An already-enabled one (a saved policy,
+  // or a tenant connected earlier) stays visible so editing a policy never silently drops it.
+  const visibleTools = useMemo(
+    () =>
+      tools.filter(
+        (tl) =>
+          !PURVIEW_TOOLS.has(tl.toolId) || hasPurviewConnection || tl.enabled,
+      ),
+    [tools, hasPurviewConnection],
+  );
+
+  // Derive from the visible list: a hidden step is never submitted (hidden implies disabled).
+  const enabledTools = useMemo(
+    () => visibleTools.filter((tl) => tl.enabled),
+    [visibleTools],
+  );
 
   function setToolEnabled(toolId: PolicyToolId, enabled: boolean) {
     setTools((prev) =>
@@ -289,41 +309,55 @@ function PolicySetupWizardBody({
     );
   }
 
-  function toggleSource(id: string) {
-    setSources((prev) =>
-      prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id],
+  /** The wizard's current state as a submit result: shared by Save and Customise. */
+  function collectResult(): PolicySetupResult {
+    const steps: PipelineStep[] = enabledTools.map((tl) =>
+      policyStepToWire(tl),
     );
+    return {
+      required,
+      // Preserve any stored options this wizard has no UI for (a customised policy's sources, an
+      // editor-authored automation blob) rather than wiping them on save; the builder is where
+      // those are actually edited.
+      extraOptions: policy?.state.extraOptions,
+      runsOnEditor: true,
+      fieldValues,
+      sources: policy?.state.sources ?? [],
+      scopeTypes,
+      reviewerEmail,
+      outputMode,
+      outputName: outputName.trim(),
+      outputNamePosition,
+      runOn,
+      maxRetries,
+      retryDelayMinutes,
+      steps,
+    };
+  }
+
+  // Hand the current settings to the full builder. No "needs at least one tool" guard here: the
+  // builder has its own, and the point of customising is to keep shaping the chain.
+  function customise() {
+    onCustomise(entry, collectResult());
   }
 
   async function submit() {
     if (submitting) return;
     if (enabledTools.length === 0) {
       setError(t("portal.policies.wizard.errors.noTools"));
-      setStep("workflow");
       return;
     }
     setError(null);
     setSubmitting(true);
-    const steps: PipelineStep[] = enabledTools.map((tl) =>
-      policyStepToWire(tl),
-    );
     try {
-      await onSubmit(entry, {
-        fieldValues,
-        sources,
-        scopeTypes,
-        reviewerEmail,
-        outputMode,
-        outputName: outputName.trim(),
-        outputNamePosition,
-        runOn,
-        maxRetries,
-        retryDelayMinutes,
-        steps,
-      });
-    } catch {
+      await onSubmit(entry, collectResult());
+    } catch (e) {
       setSubmitting(false);
-      setError(t("portal.policies.wizard.errors.saveFailed"));
+      // Surface the backend's actual reason (e.g. a step missing its account) rather than a
+      // generic failure the operator cannot act on.
+      setError(
+        errorMessage(e) || t("portal.policies.wizard.errors.saveFailed"),
+      );
     }
   }
 
@@ -350,45 +384,27 @@ function PolicySetupWizardBody({
           <Button variant="tertiary" size="sm" onClick={onClose}>
             {t("portal.policies.wizard.actions.cancel")}
           </Button>
-          {step === "workflow" ? (
-            <Button
-              size="sm"
-              style={{ marginLeft: "auto" }}
-              onClick={() => setStep("settings")}
-            >
-              {t("portal.policies.wizard.actions.continue")}
-            </Button>
-          ) : (
-            <>
-              <Button
-                variant="secondary"
-                size="sm"
-                style={{ marginLeft: "auto" }}
-                onClick={() => setStep("workflow")}
-              >
-                {t("portal.policies.wizard.actions.back")}
-              </Button>
-              <Button size="sm" onClick={submit} loading={submitting}>
-                {isEdit
-                  ? t("portal.policies.wizard.actions.saveChanges")
-                  : t("portal.policies.wizard.actions.enablePolicy")}
-              </Button>
-            </>
-          )}
+          <Button
+            variant="tertiary"
+            size="sm"
+            onClick={customise}
+            leftSection={<TuneRoundedIcon style={{ fontSize: "1.05rem" }} />}
+          >
+            {t("portal.policies.wizard.actions.customise")}
+          </Button>
+          <Button
+            size="sm"
+            style={{ marginLeft: "auto" }}
+            onClick={submit}
+            loading={submitting}
+          >
+            {isEdit
+              ? t("portal.policies.wizard.actions.saveChanges")
+              : t("portal.policies.wizard.actions.enablePolicy")}
+          </Button>
         </div>
       }
     >
-      <Tabs
-        variant="underline"
-        ariaLabel={t("portal.policies.wizard.tabs.ariaLabel")}
-        activeKey={step}
-        onChange={(k) => setStep(k as Step)}
-        items={[
-          { key: "workflow", label: t("portal.policies.wizard.tabs.workflow") },
-          { key: "settings", label: t("portal.policies.wizard.tabs.settings") },
-        ]}
-      />
-
       {error && (
         <Banner
           tone="danger"
@@ -397,7 +413,7 @@ function PolicySetupWizardBody({
         />
       )}
 
-      {step === "workflow" && isClassification && (
+      {isClassification && (
         <div className="portal-policies__wizard-section">
           <p className="portal-policies__wizard-desc">
             {t(
@@ -415,7 +431,7 @@ function PolicySetupWizardBody({
         </div>
       )}
 
-      {step === "workflow" && !isClassification && (
+      {!isClassification && (
         <div className="portal-policies__wizard-section">
           <p className="portal-policies__wizard-desc">
             {t(
@@ -425,7 +441,7 @@ function PolicySetupWizardBody({
           </p>
           <Card padding="none">
             <div className="portal-policies__capabilities">
-              {tools.map((tl) => {
+              {visibleTools.map((tl) => {
                 const meta = CAPABILITY_META[tl.toolId];
                 const label = meta
                   ? t(meta.labelKey, meta.labelEn)
@@ -471,6 +487,14 @@ function PolicySetupWizardBody({
                             }
                           />
                         )}
+                        {tl.toolId === "purviewApplyLabel" && (
+                          <PolicyPurviewConfig
+                            parameters={tl.params}
+                            onChange={(params) =>
+                              setToolParams("purviewApplyLabel", params)
+                            }
+                          />
+                        )}
                       </div>
                     )}
                   </div>
@@ -481,195 +505,12 @@ function PolicySetupWizardBody({
         </div>
       )}
 
-      {step === "settings" && (
-        <div className="portal-policies__wizard-section">
-          {config.fields.length > 0 && (
-            <>
-              <h3 className="portal-policies__wizard-heading">
-                {t("portal.policies.wizard.settings.heading")}
-              </h3>
-              <div className="portal-policies__fields">
-                {config.fields.map((field) => (
-                  <PolicyFieldRow
-                    key={field.key}
-                    field={field}
-                    value={fieldValues[field.key]}
-                    onChange={(v) =>
-                      setFieldValues((prev) => ({ ...prev, [field.key]: v }))
-                    }
-                  />
-                ))}
-              </div>
-            </>
-          )}
-
-          <h3 className="portal-policies__wizard-heading">
-            {t("portal.policies.wizard.sources.heading")}
-          </h3>
-          {sourcesAsync.loading && !sourcesAsync.data ? (
-            <p className="portal-policies__sources-loading">
-              {t("portal.policies.wizard.sources.loading")}
-            </p>
-          ) : (
-            // The backend always returns the editor as a virtual source, so the
-            // loaded list is never empty - no "no sources" state exists.
-            <div className="portal-policies__sources">
-              {availableSources.map((src) => {
-                const on = sources.includes(src.id);
-                return (
-                  <Button
-                    key={src.id}
-                    variant={on ? "secondary" : "quiet"}
-                    justify="between"
-                    fullWidth
-                    className={
-                      "portal-policies__source" +
-                      (on ? " portal-policies__source--on" : "")
-                    }
-                    // The check keeps its slot when unselected (hidden) so the
-                    // icon + name stay put whether or not the tile is selected.
-                    rightSection={
-                      <CheckIcon
-                        sx={{
-                          fontSize: "1.1rem",
-                          visibility: on ? "visible" : "hidden",
-                        }}
-                      />
-                    }
-                    onClick={() => toggleSource(src.id)}
-                    aria-pressed={on}
-                  >
-                    <span className="portal-policies__source-label">
-                      {sourceIcon(src.type)}
-                      {src.name}
-                    </span>
-                  </Button>
-                );
-              })}
-            </div>
-          )}
-
-          <h3 className="portal-policies__wizard-heading">
-            {t("portal.policies.wizard.output.heading")}
-          </h3>
-          <div className="portal-policies__fields">
-            {sources.includes("editor") && (
-              <>
-                <FormField
-                  label={t("portal.policies.wizard.output.runOn.label")}
-                  helperText={t("portal.policies.wizard.output.runOn.helper")}
-                >
-                  <Select
-                    inputSize="sm"
-                    value={runOn}
-                    onChange={(value) =>
-                      setRunOn((value ?? "upload") as "upload" | "export")
-                    }
-                    options={[
-                      {
-                        value: "upload",
-                        label: t("portal.policies.wizard.output.runOn.upload"),
-                      },
-                      {
-                        value: "export",
-                        label: t("portal.policies.wizard.output.runOn.export"),
-                      },
-                    ]}
-                  />
-                </FormField>
-                <FormField
-                  label={t("portal.policies.wizard.output.outputAs.label")}
-                >
-                  <Select
-                    inputSize="sm"
-                    value={outputMode}
-                    onChange={(value) => {
-                      const mode = (value ?? "new_file") as
-                        | "new_file"
-                        | "new_version";
-                      setOutputMode(mode);
-                      // Auto-number only applies to separate new files.
-                      if (
-                        mode === "new_version" &&
-                        outputNamePosition === "auto-number"
-                      ) {
-                        setOutputNamePosition("suffix");
-                      }
-                    }}
-                    options={[
-                      {
-                        value: "new_version",
-                        label: t(
-                          "portal.policies.wizard.output.outputAs.newVersion",
-                        ),
-                      },
-                      {
-                        value: "new_file",
-                        label: t(
-                          "portal.policies.wizard.output.outputAs.newFile",
-                        ),
-                      },
-                    ]}
-                  />
-                </FormField>
-                <FormField
-                  label={t("portal.policies.wizard.output.filenameRule.label")}
-                >
-                  <div className="portal-policies__name-row">
-                    <Select
-                      inputSize="sm"
-                      value={outputNamePosition}
-                      onChange={(value) =>
-                        setOutputNamePosition(
-                          (value ?? "suffix") as
-                            | "prefix"
-                            | "suffix"
-                            | "auto-number",
-                        )
-                      }
-                      options={[
-                        {
-                          value: "prefix",
-                          label: t(
-                            "portal.policies.wizard.output.filenameRule.prefix",
-                          ),
-                        },
-                        {
-                          value: "suffix",
-                          label: t(
-                            "portal.policies.wizard.output.filenameRule.suffix",
-                          ),
-                        },
-                        ...(outputMode === "new_file"
-                          ? [
-                              {
-                                value: "auto-number",
-                                label: t(
-                                  "portal.policies.wizard.output.filenameRule.autoNumber",
-                                ),
-                              },
-                            ]
-                          : []),
-                      ]}
-                    />
-                    {outputNamePosition !== "auto-number" && (
-                      <Input
-                        inputSize="sm"
-                        value={outputName}
-                        placeholder={t(
-                          "portal.policies.wizard.output.filenameRule.placeholder",
-                        )}
-                        onChange={(e) => setOutputName(e.target.value)}
-                      />
-                    )}
-                  </div>
-                </FormField>
-              </>
-            )}
-            {/* TODO: reviewer user-picker goes here */}
-          </div>
-        </div>
-      )}
+      <div className="portal-policies__wizard-enforce">
+        <EnforceAsPolicyControl
+          required={required}
+          onRequiredChange={setRequired}
+        />
+      </div>
     </Modal>
   );
 }

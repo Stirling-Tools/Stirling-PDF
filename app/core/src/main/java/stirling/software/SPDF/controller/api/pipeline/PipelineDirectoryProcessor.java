@@ -35,6 +35,7 @@ import stirling.software.SPDF.model.PipelineResult;
 import stirling.software.SPDF.service.ApiDocService;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.service.PostHogService;
+import stirling.software.common.service.ToolMetadataService;
 import stirling.software.common.util.FileReadinessChecker;
 
 import tools.jackson.databind.ObjectMapper;
@@ -48,6 +49,7 @@ public class PipelineDirectoryProcessor {
 
     private final ObjectMapper objectMapper;
     private final ApiDocService apiDocService;
+    private final ToolMetadataService toolMetadataService;
     private final PipelineProcessor processor;
     private final PostHogService postHogService;
     private final FileReadinessChecker fileReadinessChecker;
@@ -61,12 +63,14 @@ public class PipelineDirectoryProcessor {
     public PipelineDirectoryProcessor(
             ObjectMapper objectMapper,
             ApiDocService apiDocService,
+            ToolMetadataService toolMetadataService,
             PipelineProcessor processor,
             PostHogService postHogService,
             FileReadinessChecker fileReadinessChecker,
             RuntimePathConfig runtimePathConfig) {
         this.objectMapper = objectMapper;
         this.apiDocService = apiDocService;
+        this.toolMetadataService = toolMetadataService;
         this.processor = processor;
         this.postHogService = postHogService;
         this.fileReadinessChecker = fileReadinessChecker;
@@ -229,7 +233,7 @@ public class PipelineDirectoryProcessor {
             throws IOException {
 
         List<String> inputExtensions =
-                apiDocService.getExtensionTypes(false, operation.getOperation());
+                toolMetadataService.getExtensionTypes(false, operation.getOperation());
         log.info(
                 "Allowed extensions for operation {}: {}",
                 operation.getOperation(),

@@ -34,13 +34,19 @@ export const defaultParameters: AdjustPageScaleParameters = {
 export type AdjustPageScaleParametersHook =
   BaseParametersHook<AdjustPageScaleParameters>;
 
+/** Whether these parameters are complete enough to run. Shared by the tool's settings
+ * hook and its operationConfig, so the editor and the pipeline builder agree. */
+export function validateAdjustPageScaleParameters(
+  params: AdjustPageScaleParameters,
+): boolean {
+  return params.scaleFactor > 0;
+}
+
 export const useAdjustPageScaleParameters =
   (): AdjustPageScaleParametersHook => {
     return useBaseParameters({
       defaultParameters,
       endpointName: "scale-pages",
-      validateFn: (params) => {
-        return params.scaleFactor > 0;
-      },
+      validateFn: validateAdjustPageScaleParameters,
     });
   };

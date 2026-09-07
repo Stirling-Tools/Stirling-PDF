@@ -46,8 +46,8 @@ public class PrintFileController {
     // @Operation(
     //        summary = "Prints PDF/Image file to a set printer",
     //        description =
-    //                "Input of PDF or Image along with a printer name/URL/IP to match against to
-    // send it to (Fire and forget) Input:Any Output:N/A Type:SISO")
+    //                "Input of PDF or Image along with a printer name/URL/IP to match against
+    // to send it to (Fire and forget)")
     public ResponseEntity<String> printFile(@ModelAttribute PrintFileRequest request)
             throws IOException {
         MultipartFile file = request.getFileInput();

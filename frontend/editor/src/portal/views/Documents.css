@@ -25,14 +25,14 @@
   margin: 0;
   font-size: 1.375rem;
   font-weight: 650;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 
 .portal-documents__sub {
   margin: 0;
   font-size: 0.8125rem;
   line-height: 1.5;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
   max-width: 46rem;
 }
 
@@ -81,12 +81,12 @@
 
 .portal-documents__name {
   font-weight: 600;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 
 .portal-documents__note {
   font-size: 0.8125rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
 }
 
 .portal-documents__lock {
@@ -97,18 +97,18 @@
 
 .portal-documents__muted {
   font-size: 0.8125rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
 }
 
 .portal-documents__action {
   font-size: 0.8125rem;
-  color: var(--color-text-2);
+  color: var(--c-text-muted);
 }
 
 .portal-documents__editor-action {
   font-size: 0.8125rem;
   font-style: italic;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
 }
 
 /* Drawer body */
@@ -137,7 +137,7 @@
 
 .portal-documents__field {
   font-weight: 500;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 
 /* Masked / sensitive placeholder */
@@ -149,7 +149,7 @@
   padding: 2rem 1rem;
   text-align: center;
   background: var(--color-bg-subtle);
-  border: 1px dashed var(--color-border);
+  border: 1px dashed var(--c-border);
   border-radius: var(--radius-lg);
 }
 
@@ -160,7 +160,7 @@
 .portal-documents__masked-text {
   margin: 0;
   font-size: 0.8125rem;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
   max-width: 22rem;
 }
 
@@ -192,7 +192,7 @@
   height: 0.5rem;
   margin-top: 0.375rem;
   border-radius: 50%;
-  background: var(--color-blue);
+  background: var(--c-primary);
 }
 
 /* Connecting line between successive timeline dots. */
@@ -205,7 +205,7 @@
   transform: translateX(-50%);
   width: 1px;
   height: calc(100% + 1rem);
-  background: var(--color-border);
+  background: var(--c-border);
 }
 
 .portal-documents__timeline-body {
@@ -223,18 +223,18 @@
 
 .portal-documents__timeline-time {
   font-size: 0.6875rem;
-  color: var(--color-text-5);
+  color: var(--c-text-subtle);
 }
 
 .portal-documents__timeline-detail {
   margin: 0;
   font-size: 0.8125rem;
-  color: var(--color-text-2);
+  color: var(--c-text-muted);
   line-height: 1.45;
 }
 
 .portal-documents__timeline-actor {
   font-family: var(--font-mono);
   font-size: 0.6875rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
 }

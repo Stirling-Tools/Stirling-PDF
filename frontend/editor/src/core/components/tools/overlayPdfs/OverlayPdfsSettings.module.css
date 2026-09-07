@@ -29,11 +29,7 @@
   white-space: normal;
   word-break: break-word;
 }
-
-.fileSize {
-  flex-shrink: 0;
-}
-
+.fileSize,
 .removeButton {
   flex-shrink: 0;
 }

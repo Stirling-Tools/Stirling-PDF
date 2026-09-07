@@ -19,7 +19,7 @@ interface AutomationEntryProps {
   /** Optional description for tooltip */
   description?: string;
   /** MUI Icon component for the badge */
-  badgeIcon?: React.ComponentType<any>;
+  badgeIcon?: React.ComponentType;
   /** Array of tool operation names in the workflow */
   operations: string[];
   /** Click handler */
@@ -191,11 +191,9 @@ export default function AutomationEntry({
         className="tool-button"
         style={{
           borderRadius: 0,
-          color: "var(--tools-text-and-icon-color)",
+          color: "var(--c-text)",
           overflow: "visible",
-          backgroundColor: shouldShowMenu
-            ? "var(--automation-entry-hover-bg)"
-            : undefined,
+          backgroundColor: shouldShowMenu ? "var(--c-hover)" : undefined,
         }}
       >
         {buttonContent}

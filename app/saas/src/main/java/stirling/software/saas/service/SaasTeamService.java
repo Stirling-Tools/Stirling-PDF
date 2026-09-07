@@ -53,6 +53,18 @@ public class SaasTeamService {
     public static final String DEFAULT_TEAM_NAME = "Default";
     public static final String INTERNAL_TEAM_NAME = "Internal";
 
+    /**
+     * Persist a user and their personal team atomically: an account with no team has no portal
+     * access and no way to acquire one, so a teamless user must never be committed. Constraint
+     * violations (the concurrent-signup race) propagate for the caller to resolve.
+     */
+    @Transactional
+    public User saveUserWithPersonalTeam(User user) {
+        User saved = userService.saveUser(user);
+        saved.setTeam(ensurePersonalTeam(saved));
+        return saved;
+    }
+
     /** Returns the user's personal team, creating one if they have none. Idempotent. */
     @Transactional
     public Team ensurePersonalTeam(User user) {
@@ -60,7 +72,35 @@ public class SaasTeamService {
         if (existing != null && saasTeamExtensionService.isPersonal(existing)) {
             return existing;
         }
+        // An empty users.team_id does not prove there is no personal team; adopt one the user
+        // already owns rather than minting a second.
+        Team owned = existingPersonalTeam(user);
+        if (owned != null) {
+            user.setTeam(owned);
+            userService.saveUser(user);
+            return owned;
+        }
         return createPersonalTeam(user);
+    }
+
+    /**
+     * The personal team the user already owns — their recorded home, else a solo team they lead.
+     */
+    private Team existingPersonalTeam(User user) {
+        Long homeId = saasUserExtensionService.getHomeTeamId(user);
+        if (homeId != null) {
+            Team home = teamRepository.findById(homeId).orElse(null);
+            if (home != null) {
+                return home;
+            }
+        }
+        for (TeamMembership membership : membershipRepository.findByUserId(user.getId())) {
+            Team team = membership.getTeam();
+            if (membership.isLeader() && membershipRepository.countByTeamId(team.getId()) == 1) {
+                return team;
+            }
+        }
+        return null;
     }
 
     /**
@@ -479,8 +519,8 @@ public class SaasTeamService {
      * membership and its wallet) rather than deleting it, so a plain team is never orphaned. The
      * only real hazard is a team the user is the <em>last</em> leader of that still carries live
      * billing: an active paid/PAYG subscription, or a non-revoked linked self-hosted instance
-     * ("Mode A"). Those block the join until the plan is cancelled / leadership transferred /
-     * instances revoked. An unpaid, unlinked team (personal or shared) no longer blocks.
+     * (combined billing). Those block the join until the plan is cancelled / leadership transferred
+     * / instances revoked. An unpaid, unlinked team (personal or shared) no longer blocks.
      *
      * <p>The home team and the team being joined are excluded: neither is left by the join (home is
      * parked, the joined team is kept), so their live billing cannot be stranded.

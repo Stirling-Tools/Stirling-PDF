@@ -59,16 +59,20 @@ export function SourcesIcon(props: IconProps) {
   );
 }
 
+/**
+ * A pipeline as a route: two waypoints joined by a winding path. Shared so the sidebar nav and the
+ * pipelines table's default row icon render the exact same glyph (see pipelineIcon).
+ */
+export const PIPELINE_ROUTE_GLYPH = (
+  <>
+    <circle cx="5" cy="19" r="2" />
+    <circle cx="19" cy="5" r="2" />
+    <path d="M11 19h5.5a3.5 3.5 0 0 0 0 -7h-8a3.5 3.5 0 0 1 0 -7h4.5" />
+  </>
+);
+
 export function PipelinesIcon(props: IconProps) {
-  return (
-    <Svg {...props}>
-      <rect x="3" y="3" width="6" height="6" rx="1" />
-      <rect x="15" y="3" width="6" height="6" rx="1" />
-      <rect x="9" y="15" width="6" height="6" rx="1" />
-      <path d="M6 9v3a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V9" />
-      <path d="M12 14v1" />
-    </Svg>
-  );
+  return <Svg {...props}>{PIPELINE_ROUTE_GLYPH}</Svg>;
 }
 
 export function DocumentsIcon(props: IconProps) {
@@ -128,6 +132,16 @@ export function SearchIcon(props: IconProps) {
     <Svg {...props}>
       <circle cx="11" cy="11" r="7" />
       <line x1="21" y1="21" x2="16.65" y2="16.65" />
+    </Svg>
+  );
+}
+
+export function MenuIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <line x1="4" y1="7" x2="20" y2="7" />
+      <line x1="4" y1="12" x2="20" y2="12" />
+      <line x1="4" y1="17" x2="20" y2="17" />
     </Svg>
   );
 }
@@ -276,6 +290,46 @@ export function ExternalLinkIcon(props: IconProps) {
       <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
       <polyline points="15 3 21 3 21 9" />
       <line x1="10" y1="14" x2="21" y2="3" />
+    </Svg>
+  );
+}
+
+export function IntegrationsIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M9 7V2.5" />
+      <path d="M15 7V2.5" />
+      <path d="M6.5 7h11v3.5a5.5 5.5 0 0 1-11 0z" />
+      <path d="M12 16v2a3 3 0 0 1-3 3H7" />
+    </Svg>
+  );
+}
+
+export function CalendarIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <rect x="3" y="5" width="18" height="16" rx="2" />
+      <line x1="8" y1="3" x2="8" y2="7" />
+      <line x1="16" y1="3" x2="16" y2="7" />
+      <line x1="3" y1="10" x2="21" y2="10" />
+    </Svg>
+  );
+}
+
+export function KeyIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <circle cx="8" cy="16" r="5" />
+      <line x1="11.6" y1="12.4" x2="21" y2="3" />
+      <line x1="17" y1="7" x2="20" y2="10" />
+    </Svg>
+  );
+}
+
+export function CheckIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <polyline points="4,12.5 9.5,18 20,6.5" />
     </Svg>
   );
 }

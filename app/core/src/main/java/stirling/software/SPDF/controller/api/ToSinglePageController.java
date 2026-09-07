@@ -22,6 +22,8 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.api.PDFFile;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.TempFileManager;
@@ -39,13 +41,13 @@ public class ToSinglePageController {
             value = "/pdf-to-single-page",
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @StandardPdfResponse
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Convert a multi-page PDF into a single long page PDF",
             description =
                     "This endpoint converts a multi-page PDF document into a single paged PDF"
-                            + " document. The width of the single page will be same as the input's"
-                            + " width, but the height will be the sum of all the pages' heights."
-                            + " Input:PDF Output:PDF Type:SISO")
+                            + " document. The width of the single page will be same as the input's width, but"
+                            + " the height will be the sum of all the pages' heights.")
     public ResponseEntity<Resource> pdfToSinglePage(@ModelAttribute PDFFile request)
             throws IOException {
 

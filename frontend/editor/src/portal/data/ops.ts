@@ -404,9 +404,6 @@ export const PIPELINE_AGENTS: readonly PipelineAgent[] = [
   },
 ];
 
-export const lookupAgent = (id: string): PipelineAgent | null =>
-  PIPELINE_AGENTS.find((a) => a.id === id) ?? null;
-
 /* ──────────────────────────────────────────────────────────────────────── */
 /*  OP_CATEGORIES — picker section metadata                                 */
 /* ──────────────────────────────────────────────────────────────────────── */
@@ -425,7 +422,7 @@ export const OP_CATEGORIES: readonly OpCategoryMeta[] = [
   },
   {
     name: "Validation",
-    color: "var(--color-blue)",
+    color: "var(--c-primary)",
     blurb: "Schema checks, trust gates, filters",
   },
   {
@@ -470,7 +467,7 @@ export const OP_CATEGORIES: readonly OpCategoryMeta[] = [
   },
   {
     name: "Developer Tools",
-    color: "var(--color-text-5)",
+    color: "var(--c-text-subtle)",
     blurb: "Repair, compress, metadata",
   },
 ];
@@ -1301,8 +1298,3 @@ export const DESTINATION_OPTIONS: readonly DestinationOption[] = [
     desc: "Drop output files on an SFTP server",
   },
 ];
-
-export const lookupSource = (id: string) =>
-  SOURCE_OPTIONS.find((s) => s.id === id) ?? null;
-export const lookupDestination = (id: string) =>
-  DESTINATION_OPTIONS.find((d) => d.id === id) ?? null;

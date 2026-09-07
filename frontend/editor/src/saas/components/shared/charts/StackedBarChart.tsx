@@ -108,7 +108,7 @@ export default function StackedBarChart({
         .attr("rx", radius)
         .attr("ry", radius)
         .attr("fill", "var(--usage-inactive)")
-        .attr("stroke", "var(--api-keys-card-border)");
+        .attr("stroke", "var(--c-border)");
 
       // Define a clipPath that will reveal the used portion from left to right
       const defs = svg.append("defs");
@@ -211,11 +211,9 @@ export default function StackedBarChart({
           setTooltipContent(html);
           const tooltip = tooltipRef.current;
           if (tooltip) tooltip.style.opacity = "1";
-          positionTooltip(event as unknown as MouseEvent);
+          positionTooltip(event);
         })
-        .on("mousemove", (event: MouseEvent) =>
-          positionTooltip(event as unknown as MouseEvent),
-        )
+        .on("mousemove", (event: MouseEvent) => positionTooltip(event))
         .on("mouseleave", hideTooltip);
 
       // Animate reveal of used segments (only on first load, not on re-renders)
@@ -308,7 +306,7 @@ export default function StackedBarChart({
                 background: "var(--usage-inactive)",
                 display: "inline-block",
                 borderRadius: 2,
-                outline: "1px solid var(--api-keys-card-border)",
+                outline: "1px solid var(--c-border)",
               }}
             />
             <Text size="sm">{t("common.remaining", "Remaining")}</Text>

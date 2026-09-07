@@ -10,7 +10,6 @@ describe("sidebarGroups (SaaS)", () => {
     expect(GROUP_PROCESSOR.map((e) => e.id)).toEqual([
       "home",
       "sources",
-      "policies",
       "pipelines",
       "documents",
     ]);
@@ -19,6 +18,7 @@ describe("sidebarGroups (SaaS)", () => {
   it("inherits the platform group unchanged from base", () => {
     expect(GROUP_PLATFORM.map((e) => e.id)).toEqual([
       "users",
+      "integrations",
       "infrastructure",
       "usage",
       "docs",

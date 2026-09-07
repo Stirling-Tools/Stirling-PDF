@@ -1,5 +1,7 @@
 import type { UsersBackend } from "@portal/api/usersBackend";
 import { apiClient } from "@portal/api/http";
+import { tryGetPortalQueryClient } from "@portal/queryClient";
+import { qk } from "@portal/queries/keys";
 import {
   ROLES,
   type AdminAuthConfig,
@@ -76,7 +78,18 @@ function isExpired(iso: string | undefined): boolean {
  * no teams at all.
  */
 async function resolveTeam(): Promise<TeamDetailsDTO | null> {
-  const teams = await apiClient.local.json<TeamDetailsDTO[]>("/api/v1/team/my");
+  const fetchMy = () =>
+    apiClient.local.json<TeamDetailsDTO[]>("/api/v1/team/my");
+  // fetchUsers and fetchTeams both resolve the team; share one /team/my via the
+  // query cache. fetchQuery (not ensureQueryData) so the shared entry honours
+  // both staleTime — two callers in one mount dedupe to a single request — AND
+  // invalidation: refresh() invalidates qk.teamMy(), so the next resolve after a
+  // rename/remove refetches instead of returning the stale team. Falls back to a
+  // direct fetch when no portal client is mounted (e.g. a unit test).
+  const client = tryGetPortalQueryClient();
+  const teams = client
+    ? await client.fetchQuery({ queryKey: qk.teamMy(), queryFn: fetchMy })
+    : await fetchMy();
   if (!teams || teams.length === 0) return null;
   return (
     teams.find((t) => t.isLeader && !t.isPersonal) ??

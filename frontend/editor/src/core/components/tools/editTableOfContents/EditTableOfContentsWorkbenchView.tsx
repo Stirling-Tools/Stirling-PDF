@@ -100,7 +100,7 @@ const EditTableOfContentsWorkbenchView = ({
         width: "100%",
         height: "100%",
         overflowY: "auto",
-        background: "var(--bg-raised)",
+        background: "var(--c-surface-raised)",
       }}
     >
       <Stack gap="xl" maw={1200} mx="auto">
@@ -121,8 +121,8 @@ const EditTableOfContentsWorkbenchView = ({
           radius="md"
           p="xl"
           style={{
-            backgroundColor: "var(--bg-surface)",
-            borderColor: "var(--border-default)",
+            backgroundColor: "var(--c-surface)",
+            borderColor: "var(--c-border)",
             boxShadow: "var(--shadow-md)",
           }}
         >
@@ -167,8 +167,8 @@ const EditTableOfContentsWorkbenchView = ({
             radius="md"
             p="xl"
             style={{
-              backgroundColor: "var(--bg-surface)",
-              borderColor: "var(--border-default)",
+              backgroundColor: "var(--c-surface)",
+              borderColor: "var(--c-border)",
               boxShadow: "var(--shadow-md)",
             }}
           >

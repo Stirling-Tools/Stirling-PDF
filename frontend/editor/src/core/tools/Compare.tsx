@@ -175,8 +175,8 @@ const Compare = (props: BaseToolProps) => {
   );
 
   useEffect(() => {
-    const baseFileId = params.baseFileId as FileId | null;
-    const comparisonFileId = params.comparisonFileId as FileId | null;
+    const baseFileId = params.baseFileId;
+    const comparisonFileId = params.comparisonFileId;
 
     if (!baseFileId || !comparisonFileId) {
       lastProcessedAtRef.current = null;
@@ -357,10 +357,10 @@ const Compare = (props: BaseToolProps) => {
             data-slot-state="filled"
             data-slot-filename={stub?.name}
             style={{
-              border: "1px solid var(--border-default)",
+              border: "1px solid var(--c-border)",
               borderRadius: "var(--radius-md)",
               padding: "0.75rem 1rem",
-              background: "var(--bg-surface)",
+              background: "var(--c-surface)",
               width: "100%",
               minHeight: "9rem",
               position: "relative",
@@ -437,9 +437,7 @@ const Compare = (props: BaseToolProps) => {
                       : "Select the edited PDF",
                   )
             }
-            excludeIds={
-              otherSlot ? [otherSlot.stirlingFile.fileId as string] : []
-            }
+            excludeIds={otherSlot ? [otherSlot.stirlingFile.fileId] : []}
             disabled={isDisabled}
             onSelect={(result: FileSelectorResult) => {
               if (role === "base") setBaseSlot(result);

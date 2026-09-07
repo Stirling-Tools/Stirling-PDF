@@ -1,30 +1,96 @@
 package stirling.software.proprietary.policy.model;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
- * A stored automation: ordered tool steps, input sources, and an output destination.
+ * A stored automation: ordered tool steps, input bindings, and output destinations.
  *
- * <p>Always runnable on demand. An optional {@link TriggerConfig} fires it automatically; a {@code
- * null} trigger means manual-only. Trigger decides when; {@code sourceIds} reference the persisted
- * {@code Source} connections (resolved live at run time) that decide where files come from; a run
- * pulls from every referenced source.
+ * <p>Always runnable on demand. Each {@link PipelineInput} references a persisted {@code Source}
+ * connection (resolved live at run time) and carries its own optional {@link TriggerConfig}: the
+ * trigger decides when that source is pulled, so one input can be watched while another polls, and
+ * a {@code null} trigger makes that input manual-only. An input with no trigger, or a policy with
+ * no triggered inputs, still runs when the policy is run on demand; a manual run pulls every input.
+ *
+ * <p>{@code outputIds} reference the {@code Source} locations (resolved live) a run's files are
+ * delivered to - a run is delivered to every one; when empty the inline {@link #output} is used
+ * (results returned to the caller), the case for editor and one-off policies.
  */
 public record Policy(
         String id,
         String name,
         String owner,
         boolean enabled,
-        TriggerConfig trigger,
-        List<String> sourceIds,
+        boolean required,
+        String icon,
+        List<PipelineInput> inputs,
         List<PipelineStep> steps,
         OutputSpec output,
-        Long teamId) {
+        List<String> outputIds,
+        Long teamId,
+        EditorConfig editor) {
 
     public Policy {
-        sourceIds = sourceIds == null ? List.of() : List.copyOf(sourceIds);
+        icon = icon == null ? "" : icon;
+        inputs = inputs == null ? List.of() : List.copyOf(inputs);
         steps = steps == null ? List.of() : steps;
         output = output == null ? OutputSpec.inline() : output;
+        outputIds = outputIds == null ? List.of() : List.copyOf(outputIds);
+        editor = editor == null ? EditorConfig.disabled() : editor;
+    }
+
+    /**
+     * Without the {@code required} flag, {@code icon}, or editor participation: defaults to not
+     * org-required, no icon, and a swept/on-demand policy. Kept for the many callers and tests
+     * written before those fields; the frontend and stores that care use the full constructor.
+     */
+    public Policy(
+            String id,
+            String name,
+            String owner,
+            boolean enabled,
+            List<PipelineInput> inputs,
+            List<PipelineStep> steps,
+            OutputSpec output,
+            List<String> outputIds,
+            Long teamId) {
+        this(id, name, owner, enabled, false, "", inputs, steps, output, outputIds, teamId, null);
+    }
+
+    /**
+     * Without the {@code required} flag or {@code icon} but with explicit editor participation: the
+     * seeded Classification policy runs on the editor, so it must set {@link EditorConfig} even
+     * though it predates the org-required and icon fields.
+     */
+    public Policy(
+            String id,
+            String name,
+            String owner,
+            boolean enabled,
+            List<PipelineInput> inputs,
+            List<PipelineStep> steps,
+            OutputSpec output,
+            List<String> outputIds,
+            Long teamId,
+            EditorConfig editor) {
+        this(id, name, owner, enabled, false, "", inputs, steps, output, outputIds, teamId, editor);
+    }
+
+    /**
+     * Without output references: the inline output is used as-is. Kept for the engine, migrations,
+     * and tests, and for editor/one-off policies that return results to the caller rather than a
+     * stored destination.
+     */
+    public Policy(
+            String id,
+            String name,
+            String owner,
+            boolean enabled,
+            List<PipelineInput> inputs,
+            List<PipelineStep> steps,
+            OutputSpec output,
+            Long teamId) {
+        this(id, name, owner, enabled, inputs, steps, output, List.of(), teamId);
     }
 
     /**
@@ -36,26 +102,70 @@ public record Policy(
             String name,
             String owner,
             boolean enabled,
-            TriggerConfig trigger,
-            List<String> sourceIds,
+            List<PipelineInput> inputs,
             List<PipelineStep> steps,
             OutputSpec output) {
-        this(id, name, owner, enabled, trigger, sourceIds, steps, output, null);
+        this(id, name, owner, enabled, inputs, steps, output, List.of(), null);
     }
 
-    /** A policy with no configured sources (a generator, or files supplied directly to a run). */
-    public Policy(
-            String id,
-            String name,
-            String owner,
-            boolean enabled,
-            TriggerConfig trigger,
-            List<PipelineStep> steps,
-            OutputSpec output) {
-        this(id, name, owner, enabled, trigger, List.of(), steps, output, null);
+    /** The source ids this policy pulls from, in input order; a derived view for reads. */
+    public List<String> sourceIds() {
+        return inputs.stream().map(PipelineInput::sourceId).toList();
     }
 
-    /** This policy's pipeline as the engine sees it. */
+    /**
+     * The moment this policy fires in the editor ("upload" / "export"), or empty when the editor
+     * does not run it. Legacy blobs are lifted onto {@link EditorConfig} when they are read.
+     */
+    public Optional<String> editorRunOn() {
+        return editor.allowed() ? Optional.of(editor.runOn()) : Optional.empty();
+    }
+
+    /** The distinct trigger types configured across this policy's inputs (manual inputs aside). */
+    public List<String> triggerTypes() {
+        return inputs.stream()
+                .map(PipelineInput::trigger)
+                .filter(trigger -> trigger != null)
+                .map(TriggerConfig::type)
+                .distinct()
+                .toList();
+    }
+
+    /** A copy with the inline output replaced (e.g. resolved for the engine, or migrated). */
+    public Policy withOutput(OutputSpec resolved) {
+        return new Policy(
+                id, name, owner, enabled, required, icon, inputs, steps, resolved, outputIds,
+                teamId, editor);
+    }
+
+    /** A copy under a different owner (e.g. moving a seed off a placeholder name). */
+    public Policy withOwner(String newOwner) {
+        return new Policy(
+                id, name, newOwner, enabled, required, icon, inputs, steps, output, outputIds,
+                teamId, editor);
+    }
+
+    /** A copy referencing the given saved output destinations. */
+    public Policy withOutputIds(List<String> newOutputIds) {
+        return new Policy(
+                id,
+                name,
+                owner,
+                enabled,
+                required,
+                icon,
+                inputs,
+                steps,
+                output,
+                newOutputIds,
+                teamId,
+                editor);
+    }
+
+    /**
+     * This policy's pipeline as the engine sees it (inline output; destinations resolved
+     * elsewhere).
+     */
     public PipelineDefinition toDefinition() {
         return new PipelineDefinition(name, steps, output);
     }

@@ -34,6 +34,7 @@ import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 import stirling.software.proprietary.model.api.ai.create.AiDocument;
 import stirling.software.proprietary.service.AiDocumentHtmlRenderer;
+import stirling.software.proprietary.service.AiFeatureGate;
 
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
@@ -59,6 +60,7 @@ public class CreatePdfAgentController {
     private final ApplicationProperties applicationProperties;
     private final ObjectMapper objectMapper;
     private final AiDocumentHtmlRenderer htmlRenderer;
+    private final AiFeatureGate aiFeatureGate;
 
     /**
      * Returns true only when WeasyPrint is definitively unavailable — either the binary could not
@@ -93,10 +95,10 @@ public class CreatePdfAgentController {
     public ResponseEntity<Resource> createPdf(
             @RequestParam("document") String document, @RequestParam("filename") String filename)
             throws Exception {
-
         if (!applicationProperties.getAiEngine().isEnabled()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
+        aiFeatureGate.requireCreatePdf();
 
         AiDocument model;
         try {

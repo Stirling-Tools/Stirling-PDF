@@ -68,6 +68,10 @@ class ProprietaryUIDataControllerMoreTest {
     @Mock private LoginAttemptService loginAttemptService;
     @Mock private ResourceAccessService resourceAccessService;
 
+    @Mock
+    private stirling.software.proprietary.security.repository.InviteTokenRepository
+            inviteTokenRepository;
+
     private ApplicationProperties applicationProperties;
     private AuditConfigurationProperties auditConfig;
     private ObjectMapper objectMapper;
@@ -100,7 +104,8 @@ class ProprietaryUIDataControllerMoreTest {
                         auditRepository,
                         mfaService,
                         loginAttemptService,
-                        resourceAccessService);
+                        resourceAccessService,
+                        inviteTokenRepository);
     }
 
     private static User normalUser(Long id, String username) {
@@ -235,7 +240,7 @@ class ProprietaryUIDataControllerMoreTest {
 
             CustomSaml2AuthenticatedPrincipal principal =
                     new CustomSaml2AuthenticatedPrincipal(
-                            "samluser", Map.of(), "nameId", List.of());
+                            "samluser", Map.of(), "nameId", List.of(), "response");
             Authentication auth =
                     new UsernamePasswordAuthenticationToken(principal, null, List.of());
 

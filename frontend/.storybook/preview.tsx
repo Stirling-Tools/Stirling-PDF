@@ -13,11 +13,17 @@ import { withThemeByDataAttribute } from "@storybook/addon-themes";
 // classic runtime needs it present even though it's not named in the JSX.
 void React;
 
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TierProvider, type Tier } from "@portal/contexts/TierContext";
 import { LinkProvider, type LinkState } from "@portal/contexts/LinkContext";
 import { ThemeProvider, useTheme } from "@portal/contexts/ThemeContext";
 import { UIProvider } from "@portal/contexts/UIContext";
 import { SuiProvider } from "@portal/theme/SuiProvider";
+import { MantineProvider } from "@mantine/core";
+import {
+  mantineTheme as editorMantineTheme,
+  editorCssVariablesResolver,
+} from "@core/theme/mantineTheme";
 import { handlers } from "@portal/mocks/handlers";
 import { configureSupabase } from "@proprietary/auth/supabase/supabaseClient";
 import i18next from "i18next";
@@ -28,7 +34,16 @@ import { rtlLanguages, supportedLanguages } from "@core/i18n/languages";
 import "@mantine/core/styles.css";
 import "@core/tokens/tokens.css";
 import "@core/theme/index.css";
+// The editor's semantic token layer (--bg-surface, --onboarding-title, …).
+// The app reaches it through its style entry; without it here, components
+// styled on those variables render unthemed (e.g. transparent modal surfaces)
+// and axe measures contrast against colours the app never shows.
+import "@core/styles/theme.css";
 import "@core/tokens/base.css";
+// Portal element reset + typography. Scoped to .portal-scope in the app so it
+// can't leak into the editor; the decorator below adds that class around
+// portal stories only, mirroring how PortalApp mounts.
+import "@portal/theme/base.css";
 
 // Storybook-only: bundle every shipped locale's TOML at build time via a ?raw
 // glob, so the toolbar language switcher can flip between all languages with no
@@ -56,9 +71,9 @@ for (const [path, raw] of Object.entries(localeModules)) {
 }
 
 if (!i18next.isInitialized) {
-  // initImmediate: false → initialise synchronously from the inline resources
-  // (there's no async backend here), so i18next is ready before the first story
-  // renders. Without it the first render can beat init and stick on raw keys.
+  // initAsync: false → initialise synchronously from the inline resources.
+  // There is no asynchronous backend here, so i18next is ready before stories
+  // render.
   void i18next.use(initReactI18next).init({
     lng: "en-US",
     fallbackLng: "en-US",
@@ -66,7 +81,7 @@ if (!i18next.isInitialized) {
     resources,
     interpolation: { escapeValue: false },
     react: { useSuspense: false },
-    initImmediate: false,
+    initAsync: false,
   });
 } else {
   // Something initialised i18next first (e.g. the app's async TOML backend):
@@ -85,6 +100,14 @@ if (!i18next.isInitialized) {
 
 // Start MSW once. Storybook runs in a browser so this uses the service worker.
 initialize({ onUnhandledRequest: "bypass" }, handlers);
+
+// PortalApp wraps the app in a QueryClientProvider, so any component reaching a
+// shared query hook throws "No QueryClient set" without one here. `retry: false`
+// matches the portal test providers: a story showing an error state should show
+// it immediately rather than sitting through backoff retries.
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { retry: false } },
+});
 
 // Storybook-only: stub a SaaS session so apiClient.saas reads (invoices, payment
 // method, wallet) clear the session check and reach the MSW handlers instead of
@@ -181,6 +204,37 @@ const withLocale: Decorator = (Story, context) => {
   return <Story />;
 };
 
+/**
+ * Applies the Mantine theme the story's component actually runs under in the
+ * app: PortalApp wraps the Processor in SuiProvider, while the editor wraps
+ * everything else in its own ThemeProvider. Getting this wrong is not just
+ * cosmetic — the two themes carry different neutral ramps, so rendering an
+ * editor component under the Processor's theme drops it onto Mantine's stock
+ * greys and reports contrast failures the app doesn't have.
+ */
+function StoryTheme({
+  isPortalStory,
+  colorScheme,
+  children,
+}: {
+  isPortalStory: boolean;
+  colorScheme: "light" | "dark";
+  children: React.ReactNode;
+}) {
+  if (isPortalStory) {
+    return <SuiProvider colorScheme={colorScheme}>{children}</SuiProvider>;
+  }
+  return (
+    <MantineProvider
+      theme={editorMantineTheme}
+      cssVariablesResolver={editorCssVariablesResolver}
+      forceColorScheme={colorScheme}
+    >
+      {children}
+    </MantineProvider>
+  );
+}
+
 const withProviders: Decorator = (Story, context) => {
   const tier = (context.globals.tier as Tier) ?? "pro";
   const linkState =
@@ -192,32 +246,58 @@ const withProviders: Decorator = (Story, context) => {
   // anything that isn't "dark" as light — matching the addon's own
   // `selected || defaultTheme` fallback where defaultTheme is light.
   const colorScheme = context.globals.theme === "dark" ? "dark" : "light";
+  // PortalApp mounts its views inside a .portal-scope wrapper, which is what
+  // the portal's base.css keys its reset/typography on. Give portal stories
+  // the same wrapper (and only them — the scoping exists precisely so portal
+  // styles never apply to editor components).
+  // `fileName` is only injected by the dev/build pipeline — under the Vitest
+  // runner it is absent, so path alone would silently drop every portal story
+  // onto the editor theme (where portal-only palette entries like `amber`
+  // resolve to nothing and render unstyled). The title prefix is the fallback
+  // that survives both environments.
+  const isPortalStory =
+    (context.parameters.fileName ?? "").includes("/portal/") ||
+    context.title.startsWith("Portal/");
   return (
     <MemoryRouter initialEntries={["/"]}>
-      <ThemeProvider>
-        <SchemeSetup scheme={colorScheme} />
-        <ThemeBridge theme={colorScheme}>
-          <SuiProvider colorScheme={colorScheme}>
-            {/* LinkProvider must wrap TierProvider: TierContext derives its tier
-                from useLink() (matches App.tsx's nesting). */}
-            <LinkProvider key={linkState} initialState={linkState}>
-              <TierKey tier={tier}>
-                <UIProvider>
-                  <Suspense fallback={null}>
-                    <Story />
-                  </Suspense>
-                </UIProvider>
-              </TierKey>
-            </LinkProvider>
-          </SuiProvider>
-        </ThemeBridge>
-      </ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider>
+          <SchemeSetup scheme={colorScheme} />
+          <ThemeBridge theme={colorScheme}>
+            <StoryTheme isPortalStory={isPortalStory} colorScheme={colorScheme}>
+              {/* LinkProvider must wrap TierProvider: TierContext derives its tier
+                  from useLink() (matches App.tsx's nesting). */}
+              <LinkProvider key={linkState} initialState={linkState}>
+                <TierKey tier={tier}>
+                  <UIProvider>
+                    <Suspense fallback={null}>
+                      {isPortalStory ? (
+                        <div className="portal-scope">
+                          <Story />
+                        </div>
+                      ) : (
+                        <Story />
+                      )}
+                    </Suspense>
+                  </UIProvider>
+                </TierKey>
+              </LinkProvider>
+            </StoryTheme>
+          </ThemeBridge>
+        </ThemeProvider>
+      </QueryClientProvider>
     </MemoryRouter>
   );
 };
 
 const preview: Preview = {
   loaders: [mswLoader],
+  // The scan runs once per theme (SCAN_THEME=light|dark, forwarded by
+  // .storybook/vitest.config.ts); pinning the global here themes every story in
+  // the run. Unset — the Storybook UI — falls back to the toolbar default.
+  initialGlobals: {
+    theme: import.meta.env.VITE_SCAN_THEME === "dark" ? "dark" : "light",
+  },
   parameters: {
     layout: "padded",
     controls: {
@@ -226,17 +306,23 @@ const preview: Preview = {
     backgrounds: {
       default: "app",
       values: [
-        { name: "app", value: "var(--color-bg)" },
-        { name: "surface", value: "var(--color-surface)" },
+        { name: "app", value: "var(--c-bg)" },
+        { name: "surface", value: "var(--c-surface)" },
       ],
     },
     a11y: {
-      // Run axe automatically against the story root; violations show in the
-      // Accessibility panel. `context` replaced `element` in addon-a11y 9.x.
-      context: "#storybook-root",
-      config: {},
-      options: {},
-      test: "todo",
+      // Run axe against the rendered story; `test: "error"` fails the scan on
+      // any violation. Context is left at the addon default (the document root)
+      // so it resolves under both the Storybook UI and the Vitest browser mount.
+      test: "error",
+      context: {
+        // Nodes carrying this attribute render a facsimile of the user's own
+        // document — their stamp text, their watermark, in the colour and
+        // opacity they chose. WCAG contrast governs the interface, not the
+        // content authored through it, and the controls that set those values
+        // are checked normally.
+        exclude: ["[data-user-content-preview]"],
+      },
     },
   },
   globalTypes: {

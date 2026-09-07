@@ -17,14 +17,18 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.policy.engine.PolicyRunner;
+import stirling.software.proprietary.policy.engine.SweepKind;
+import stirling.software.proprietary.policy.model.PipelineInput;
 import stirling.software.proprietary.policy.model.Policy;
+import stirling.software.proprietary.policy.model.PolicyBinding;
 import stirling.software.proprietary.policy.model.Schedule;
 import stirling.software.proprietary.policy.store.PolicyStore;
 
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Fires policies on a {@link Schedule}: a fixed-interval sweep runs each due "schedule" policy.
+ * Fires policy inputs on a {@link Schedule}: a fixed-interval sweep pulls each due "schedule"
+ * input, independently of the policy's other inputs.
  *
  * <p>Last-fire times are in memory, so this assumes a single node and resets on restart.
  */
@@ -40,8 +44,11 @@ public class ScheduleTrigger implements PolicyTrigger {
     private final ObjectMapper objectMapper;
     private final ApplicationProperties applicationProperties;
 
-    private final Map<String, Instant> lastFiredByPolicy = new ConcurrentHashMap<>();
+    private final Map<BindingKey, Instant> lastFiredByBinding = new ConcurrentHashMap<>();
     private volatile ScheduledExecutorService scheduler;
+
+    /** Identifies a schedule binding: one input (by source) of one policy. */
+    private record BindingKey(String policyId, String sourceId) {}
 
     @Override
     public String type() {
@@ -49,8 +56,8 @@ public class ScheduleTrigger implements PolicyTrigger {
     }
 
     @Override
-    public void validate(Policy policy) {
-        ScheduleConfig.from(objectMapper, policy.trigger().options());
+    public void validate(Policy policy, PipelineInput input) {
+        ScheduleConfig.from(objectMapper, input.trigger().options());
     }
 
     @Override
@@ -83,19 +90,26 @@ public class ScheduleTrigger implements PolicyTrigger {
         }
     }
 
-    /** Fire every scheduled policy that is due as of {@code now}. Package-visible for testing. */
+    /** Fire every scheduled input that is due as of {@code now}. Package-visible for testing. */
     void sweep(Instant now) {
-        for (Policy policy : policyStore.findByTriggerType(TYPE)) {
+        for (PolicyBinding binding : policyStore.findBindingsByTriggerType(TYPE)) {
+            Policy policy = binding.policy();
+            PipelineInput input = binding.input();
             ScheduleConfig config;
             try {
-                config = ScheduleConfig.from(objectMapper, policy.trigger().options());
+                config = ScheduleConfig.from(objectMapper, input.trigger().options());
             } catch (IllegalArgumentException e) {
-                log.warn("Scheduled policy {} is misconfigured: {}", policy.id(), e.getMessage());
+                log.warn(
+                        "Scheduled input {}/{} is misconfigured: {}",
+                        policy.id(),
+                        input.sourceId(),
+                        e.getMessage());
                 continue;
             }
 
-            // Baseline a newly-seen policy to now so it does not fire immediately.
-            Instant last = lastFiredByPolicy.computeIfAbsent(policy.id(), id -> now);
+            // Baseline a newly-seen binding to now so it does not fire immediately.
+            BindingKey key = new BindingKey(policy.id(), input.sourceId());
+            Instant last = lastFiredByBinding.computeIfAbsent(key, id -> now);
             ZonedDateTime next = config.schedule().nextAfter(last.atZone(config.zone()));
             if (next.toInstant().isAfter(now)) {
                 continue;
@@ -105,9 +119,13 @@ public class ScheduleTrigger implements PolicyTrigger {
                 next = later;
                 later = config.schedule().nextAfter(later);
             }
-            lastFiredByPolicy.put(policy.id(), next.toInstant());
-            log.info("Scheduled policy {} ({}) is due", policy.id(), policy.name());
-            policyRunner.run(policy);
+            lastFiredByBinding.put(key, next.toInstant());
+            log.info(
+                    "Scheduled input {}/{} ({}) is due",
+                    policy.id(),
+                    input.sourceId(),
+                    policy.name());
+            policyRunner.runInput(policy, input, SweepKind.FULL);
         }
     }
 

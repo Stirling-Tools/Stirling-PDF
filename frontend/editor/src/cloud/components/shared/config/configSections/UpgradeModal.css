@@ -5,22 +5,21 @@
    user feels like they're filling out one form, not navigating pages. */
 
 .upm {
-  --upm-accent: #0a8bff;
-  --upm-accent-2: #6c5ce7;
-  --upm-accent-soft: rgba(10, 139, 255, 0.08);
-  --upm-success: #10b981;
+  --upm-accent: var(--c-primary);
+  --upm-accent-2: var(--c-hue-purple);
+  --upm-accent-soft: color-mix(in srgb, var(--c-primary) 8%, transparent);
+  --upm-success: var(--c-success);
   --upm-radius: 18px;
-  --upm-card-bg: var(--bg-surface);
-  --upm-border: var(--border-default);
-  --upm-divider: var(--border-subtle);
-  --upm-text: var(--text-primary);
-  --upm-muted: var(--text-muted);
+  --upm-card-bg: var(--c-surface);
+  --upm-border: var(--c-border);
+  --upm-divider: var(--c-border-subtle);
+  --upm-text: var(--c-text);
+  --upm-muted: var(--c-text-subtle);
 }
 [data-mantine-color-scheme="dark"] .upm {
-  --upm-card-bg: #1c2340;
-  --upm-border: #2d3560;
-  --upm-divider: #2d3560;
-  --upm-accent-soft: rgba(79, 142, 245, 0.14);
+  /* Card/border/divider track the neutral --c-* tokens (base rule); only the
+     brand-azure accent tint is tuned for dark. */
+  --upm-accent-soft: color-mix(in srgb, var(--c-primary) 14%, transparent);
 }
 
 /* Backdrop locks the page and centres the modal. z-index matches
@@ -150,7 +149,7 @@
 .upm-step[data-state="active"] .upm-step__dot {
   background: linear-gradient(135deg, var(--upm-accent), var(--upm-accent-2));
   border-color: transparent;
-  color: white;
+  color: var(--c-text-on-primary);
 }
 .upm-step[data-state="done"] {
   color: var(--upm-success);
@@ -158,7 +157,7 @@
 .upm-step[data-state="done"] .upm-step__dot {
   background: var(--upm-success);
   border-color: transparent;
-  color: white;
+  color: var(--c-text-on-primary);
 }
 .upm-step__connector {
   flex: 1 1 auto;
@@ -209,6 +208,13 @@
   margin: 0 0 14px;
   line-height: 1.45;
 }
+/* Field caption above a segmented control in the bundle calculator. */
+.upm-field-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--upm-text);
+  margin-bottom: 6px;
+}
 
 /* Cap selection (presets + custom + no-cap + estimate) now lives in the shared
    SpendCapControl (SpendCapControl.css). The old upm-cap-* / upm-no-cap-toggle
@@ -254,7 +260,7 @@
   border-radius: 6px;
 }
 .upm-step__edit:hover {
-  background: rgba(10, 139, 255, 0.12);
+  background: color-mix(in srgb, var(--c-primary) 12%, transparent);
 }
 
 /* Placeholder card for the loading / error / mock states — a dashed, centered
@@ -327,8 +333,10 @@
 }
 .upm-confirm__icon {
   font-size: 64px !important;
-  color: #10b981;
-  filter: drop-shadow(0 6px 18px rgba(16, 185, 129, 0.35));
+  color: var(--upm-success);
+  filter: drop-shadow(
+    0 6px 18px color-mix(in srgb, var(--c-success) 35%, transparent)
+  );
 }
 .upm-confirm__title {
   margin: 6px 0 0;

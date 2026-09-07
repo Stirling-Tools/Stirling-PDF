@@ -13,7 +13,8 @@ vi.mock("@app/hooks/usePolicies", () => ({
     policies: {
       security: {
         configured: true,
-        status: "active",
+        runsOnEditor: true,
+        enabled: true,
         backendId: "backend-1",
         runOn: "upload",
       },
@@ -69,14 +70,23 @@ afterEach(() => vi.useRealTimers());
 
 describe("auto-run queue-rejection retry", () => {
   it("relabels a queue-rejected run as retrying, then re-dispatches it in place", async () => {
-    // The polled run comes back queue-rejected; the retry resolves the file + fires a fresh run.
-    getRunApi.mockResolvedValue(queueFullView);
+    // The polled run comes back queue-rejected once; the retry resolves the file
+    // and fires a fresh run, whose own polls then see it genuinely running.
+    getRunApi.mockResolvedValueOnce(queueFullView).mockResolvedValue({
+      runId: "run-2",
+      status: "RUNNING",
+      currentStep: 1,
+      stepCount: 2,
+      error: null,
+      errorCode: null,
+      outputs: [],
+    } as never);
     getFile.mockResolvedValue({ size: 1234 } as never);
     runStored.mockResolvedValue("run-2");
 
     recordRunStart({
       runId: "run-1",
-      categoryId: "security",
+      policyKey: "security",
       fileId: "file-1",
       fileName: "doc.pdf",
       fileSize: 1234,
@@ -92,19 +102,26 @@ describe("auto-run queue-rejection retry", () => {
       return usePolicyRuns();
     });
 
-    // First poll (2s cadence) sees the rejection → relabel as a soft "retrying" row.
+    // First poll sees the rejection → relabel as a soft "retrying" row.
     await act(async () => {
       await vi.advanceTimersByTimeAsync(2000);
     });
     expect(getRun("run-1")?.retrying).toBe(true);
     expect(runStored).not.toHaveBeenCalled();
 
-    // After the first backoff window (BASE 4s) the rejected record is dropped and a fresh run fires.
+    // After the first backoff window (BASE 4s) the rejected record is dropped and
+    // a fresh run fires; its own first poll shows it genuinely running.
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(4000);
+      await vi.advanceTimersByTimeAsync(6000);
     });
-    expect(runStored).toHaveBeenCalledWith("backend-1", [{ size: 1234 }]);
+    // The workspace id travels with the retry too, so a failure of it can still name the
+    // document this browser is holding.
+    expect(runStored).toHaveBeenCalledWith(
+      "backend-1",
+      [{ size: 1234 }],
+      "file-1",
+    );
     expect(getRun("run-1")).toBeUndefined();
-    expect(getRun("run-2")?.status).toBe("PENDING");
+    expect(getRun("run-2")?.status).toBe("RUNNING");
   });
 });

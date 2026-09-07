@@ -1,25 +1,15 @@
 {
-  "compilerOptions": {
-    "target": "es2022",
-    "jsx": "react-jsx",
-    "module": "esnext",
-    "moduleResolution": "bundler",
-    "paths": {
-      "@app/*": [
-        "../editor/src/desktop/*",
-        "../editor/src/proprietary/*",
-        "../editor/src/core/*"
-      ],
-      "@core/*": ["../editor/src/core/*"],
-      "@proprietary/*": ["../editor/src/proprietary/*"],
-      "@portal/*": ["../editor/src/portal/*"],
-      "@public/*": ["../editor/public/*"]
-    },
-    "resolveJsonModule": true,
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "strict": true,
-    "skipLibCheck": true
-  },
-  "include": ["./**/*"]
+  // Extends the same tsconfig main.ts feeds to vite-tsconfig-paths, so the
+  // alias map can't drift from the one Storybook actually bundles with, and
+  // stories are checked under that resolution (@app/* = proprietary -> core).
+  // The per-layer typecheck projects also cover story files, but each resolves
+  // @app/* its own way - not the way the single Storybook build renders them.
+  "extends": "../editor/tsconfig.proprietary.vite.json",
+  "exclude": [],
+  "include": [
+    "./**/*",
+    "../editor/src/global.d.ts",
+    "../editor/src/**/*.stories.ts",
+    "../editor/src/**/*.stories.tsx"
+  ]
 }

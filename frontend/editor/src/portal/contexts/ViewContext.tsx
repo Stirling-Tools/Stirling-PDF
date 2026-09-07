@@ -4,45 +4,28 @@ import { PORTAL_BASENAME } from "@app/routes/portalBasename";
 
 export type ViewId =
   | "home"
-  | "editor"
   | "users"
   | "sources"
+  | "integrations"
   | "policies"
   | "pipelines"
   | "documents"
   | "infrastructure"
   | "usage"
   | "docs"
-  | "procurement"
   | "settings";
-
-export const VIEW_LABELS: Record<ViewId, string> = {
-  home: "Home",
-  editor: "Editor",
-  users: "Users",
-  sources: "Sources",
-  policies: "Policies",
-  pipelines: "Pipelines",
-  documents: "Documents",
-  infrastructure: "Infrastructure",
-  usage: "Usage & Billing",
-  docs: "Documentation",
-  procurement: "Procurement",
-  settings: "Settings",
-};
 
 export const VIEW_PATHS: Record<ViewId, string> = {
   home: "/",
-  editor: "/editor",
   users: "/users",
   sources: "/sources",
+  integrations: "/integrations",
   policies: "/policies",
   pipelines: "/pipelines",
   documents: "/documents",
   infrastructure: "/infrastructure",
   usage: "/usage",
   docs: "/docs",
-  procurement: "/procurement",
   settings: "/settings",
 };
 

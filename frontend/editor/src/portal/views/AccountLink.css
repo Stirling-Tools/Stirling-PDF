@@ -19,13 +19,13 @@
   margin: 0;
   font-size: 1.375rem;
   font-weight: 600;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 
 .portal-link__page-sub {
   margin: 0.25rem 0 0;
   font-size: 0.8125rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
   max-width: 44rem;
 }
 
@@ -49,14 +49,14 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--color-text-5);
+  color: var(--c-text-subtle);
 }
 
 .portal-link__title {
   margin: 0.125rem 0 0;
   font-size: 1.125rem;
   font-weight: 600;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 
 .portal-link__form,
@@ -85,13 +85,13 @@
   margin: 0;
   font-size: 0.9375rem;
   font-weight: 600;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 
 .portal-link__section-sub {
   margin: 0.25rem 0 0;
   font-size: 0.75rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
   max-width: 44rem;
 }
 
@@ -110,16 +110,16 @@
 
 .portal-link__cell-strong {
   font-weight: 600;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 
 .portal-link__device-id {
   font-size: 0.6875rem;
-  color: var(--color-text-5);
+  color: var(--c-text-subtle);
   font-variant-numeric: tabular-nums;
 }
 
 .portal-link__muted {
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
   font-size: 0.8125rem;
 }

@@ -23,14 +23,20 @@ export const defaultParameters: ScannerImageSplitParameters = {
 export type ScannerImageSplitParametersHook =
   BaseParametersHook<ScannerImageSplitParameters>;
 
+/** Whether these parameters are complete enough to run. Shared by the tool's settings
+ * hook and its operationConfig, so the editor and the pipeline builder agree. */
+export function validateScannerImageSplitParameters(
+  _params: ScannerImageSplitParameters,
+): boolean {
+  // All parameters are numeric with defaults, validation handled by form
+  return true;
+}
+
 export const useScannerImageSplitParameters =
   (): ScannerImageSplitParametersHook => {
     return useBaseParameters({
       defaultParameters,
       endpointName: "extract-image-scans",
-      validateFn: () => {
-        // All parameters are numeric with defaults, validation handled by form
-        return true;
-      },
+      validateFn: validateScannerImageSplitParameters,
     });
   };

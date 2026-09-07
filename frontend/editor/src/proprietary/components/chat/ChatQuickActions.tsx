@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Box, Group, Stack, Text } from "@mantine/core";
+import { Box, Stack, Text } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import CloseIcon from "@mui/icons-material/Close";
@@ -32,30 +32,37 @@ function QuickActionCard({ action }: { action: QuickAction }) {
       type="button"
       variant="tertiary"
       hover={false}
+      fullWidth
+      py="sm"
+      justify="start"
       className="chat-quick-action"
       onClick={action.onClick}
       aria-label={action.title}
-    >
-      <Group gap="sm" wrap="nowrap" align="center">
-        <Box className="chat-quick-action__icon">{action.icon}</Box>
-        <Box style={{ minWidth: 0, flex: 1 }}>
-          <Text size="sm" fw={500}>
-            {action.title}
-          </Text>
-          {action.subtitle && (
-            <Text size="xs" c="dimmed" truncate>
-              {action.subtitle}
-            </Text>
-          )}
+      leftSection={
+        <Box className="chat-quick-action__icon" style={{ marginRight: "5px" }}>
+          {action.icon}
         </Box>
+      }
+      rightSection={
         <KeyboardArrowDownIcon
           sx={{
             fontSize: 18,
             transform: "rotate(-90deg)",
-            color: "var(--text-muted)",
+            color: "var(--c-text-subtle)",
           }}
         />
-      </Group>
+      }
+    >
+      <Box style={{ minWidth: 0 }}>
+        <Text size="sm" fw={500}>
+          {action.title}
+        </Text>
+        {action.subtitle && (
+          <Text size="xs" c="dimmed" truncate>
+            {action.subtitle}
+          </Text>
+        )}
+      </Box>
     </Button>
   );
 }

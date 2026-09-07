@@ -34,6 +34,9 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.PdfMetadata;
+import stirling.software.common.model.tool.ToolArity;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.PdfMetadataService;
 import stirling.software.common.util.ExceptionUtils;
@@ -93,11 +96,10 @@ public class SplitPdfByChaptersController {
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @MultiFileResponse
+    @ToolIO(produces = ToolFormat.PDF, arity = ToolArity.SIMO)
     @Operation(
             summary = "Split PDFs by Chapters",
-            description =
-                    "Splits a PDF into chapters and returns a ZIP file. Input:PDF Output:ZIP-PDF"
-                            + " Type:SISO")
+            description = "Splits a PDF into chapters and returns a ZIP file.")
     public ResponseEntity<Resource> splitPdf(@ModelAttribute SplitPdfByChaptersRequest request)
             throws Exception {
         MultipartFile file = request.getFileInput();

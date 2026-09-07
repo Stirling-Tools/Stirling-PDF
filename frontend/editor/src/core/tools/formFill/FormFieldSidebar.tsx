@@ -82,9 +82,9 @@ export function FormFieldSidebar({ visible, onToggle }: FormFieldSidebarProps) {
         zIndex: 999,
         display: "flex",
         flexDirection: "column",
-        background: "var(--bg-toolbar, var(--mantine-color-body))",
+        background: "var(--c-bg-raised, var(--mantine-color-body))",
         borderLeft:
-          "1px solid var(--border-subtle, var(--mantine-color-default-border))",
+          "1px solid var(--c-border-subtle, var(--mantine-color-default-border))",
         boxShadow: "-4px 0 16px rgba(0,0,0,0.08)",
       }}
     >
@@ -96,7 +96,7 @@ export function FormFieldSidebar({ visible, onToggle }: FormFieldSidebarProps) {
           justifyContent: "space-between",
           padding: "0.625rem 0.75rem",
           borderBottom:
-            "1px solid var(--border-subtle, var(--mantine-color-default-border))",
+            "1px solid var(--c-border-subtle, var(--mantine-color-default-border))",
           flexShrink: 0,
         }}
       >

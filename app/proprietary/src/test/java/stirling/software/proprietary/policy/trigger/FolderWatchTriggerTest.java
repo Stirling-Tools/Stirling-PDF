@@ -14,6 +14,7 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.WatchService;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -31,8 +32,10 @@ import stirling.software.proprietary.policy.engine.SweepKind;
 import stirling.software.proprietary.policy.input.InputSource;
 import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.model.OutputSpec;
+import stirling.software.proprietary.policy.model.PipelineInput;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
+import stirling.software.proprietary.policy.model.PolicyBinding;
 import stirling.software.proprietary.policy.model.TriggerConfig;
 import stirling.software.proprietary.policy.source.InProcessSourceStore;
 import stirling.software.proprietary.policy.source.Source;
@@ -41,10 +44,10 @@ import stirling.software.proprietary.policy.store.PolicyStore;
 
 /**
  * Tests for {@link FolderWatchTrigger}'s dispatch logic via the package-visible {@code
- * runForChangedDirs}/{@code runAll}, plus its cross-facet validation. The OS watch loop and
- * scheduled reconcile are thin glue around these and are not exercised here (a real {@code
- * WatchService} is timing-dependent), mirroring how {@link ScheduleTriggerTest} drives {@code
- * sweep} directly. The folder source is stubbed to mirror {@code FolderInputSource.watchTargets}.
+ * runForChangedDirs}/{@code runAll}, plus its per-input validation. The OS watch loop and scheduled
+ * reconcile are thin glue around these and are not exercised here (a real {@code WatchService} is
+ * timing-dependent), mirroring how {@link ScheduleTriggerTest} drives {@code sweep} directly. The
+ * folder source is stubbed to mirror {@code FolderInputSource.watchTargets}.
  */
 @ExtendWith(MockitoExtension.class)
 class FolderWatchTriggerTest {
@@ -83,39 +86,43 @@ class FolderWatchTriggerTest {
     }
 
     @Test
-    void validateRejectsPolicyWithNoWatchableSource() {
+    void validateRejectsInputWithNoWatchableSource() {
+        PolicyBinding binding =
+                bindings(folderWatch("p1", List.of(new InputSpec("folder", Map.of())))).get(0);
         assertThrows(
                 IllegalArgumentException.class,
-                () -> trigger.validate(folderWatch("p1", List.of())));
+                () -> trigger.validate(binding.policy(), binding.input()));
     }
 
     @Test
-    void validateAcceptsPolicyWithAFolderSource() {
-        trigger.validate(folderWatch("p1", List.of(InputSpec.folder("/in"))));
+    void validateAcceptsAFolderSource() {
+        PolicyBinding binding =
+                bindings(folderWatch("p1", List.of(InputSpec.folder("/in")))).get(0);
+        trigger.validate(binding.policy(), binding.input());
     }
 
     @Test
-    void runsOnlyPoliciesDrawingFromTheChangedDirectory() {
+    void runsOnlyInputsDrawingFromTheChangedDirectory() {
         Policy a = folderWatch("a", List.of(InputSpec.folder("/in/a")));
         Policy b = folderWatch("b", List.of(InputSpec.folder("/in/b")));
-        when(policyStore.findByTriggerType("folder-watch")).thenReturn(List.of(a, b));
+        when(policyStore.findBindingsByTriggerType("folder-watch")).thenReturn(bindings(a, b));
 
         trigger.runForChangedDirs(Set.of(normalized("/in/a")));
 
-        verify(policyRunner).run(a, SweepKind.LIGHT);
-        verify(policyRunner, never()).run(eq(b), any());
+        verify(policyRunner).runInput(a, a.inputs().get(0), SweepKind.LIGHT);
+        verify(policyRunner, never()).runInput(eq(b), any(), any());
     }
 
     @Test
-    void skipsAMisconfiguredPolicyButStillRunsTheOthers() {
+    void skipsAMisconfiguredInputButStillRunsTheOthers() {
         Policy bad = folderWatch("bad", List.of(new InputSpec("folder", Map.of())));
         Policy good = folderWatch("good", List.of(InputSpec.folder("/in/a")));
-        when(policyStore.findByTriggerType("folder-watch")).thenReturn(List.of(bad, good));
+        when(policyStore.findBindingsByTriggerType("folder-watch")).thenReturn(bindings(bad, good));
 
         trigger.runForChangedDirs(Set.of(normalized("/in/a")));
 
-        verify(policyRunner).run(good, SweepKind.LIGHT);
-        verify(policyRunner, never()).run(eq(bad), any());
+        verify(policyRunner).runInput(good, good.inputs().get(0), SweepKind.LIGHT);
+        verify(policyRunner, never()).runInput(eq(bad), any(), any());
     }
 
     @Test
@@ -126,15 +133,15 @@ class FolderWatchTriggerTest {
     }
 
     @Test
-    void reconcileRunsEveryFolderWatchPolicyAsASafetyNet() {
+    void reconcileRunsEveryFolderWatchInputAsASafetyNet() {
         Policy a = folderWatch("a", List.of(InputSpec.folder("/in/a")));
         Policy b = folderWatch("b", List.of(InputSpec.folder("/in/b")));
-        when(policyStore.findByTriggerType("folder-watch")).thenReturn(List.of(a, b));
+        when(policyStore.findBindingsByTriggerType("folder-watch")).thenReturn(bindings(a, b));
 
         trigger.runAll();
 
-        verify(policyRunner).run(a);
-        verify(policyRunner).run(b);
+        verify(policyRunner).runInput(a, a.inputs().get(0), SweepKind.FULL);
+        verify(policyRunner).runInput(b, b.inputs().get(0), SweepKind.FULL);
     }
 
     @Test
@@ -151,15 +158,16 @@ class FolderWatchTriggerTest {
         try {
             trigger.watchService = service;
 
-            when(policyStore.findByTriggerType("folder-watch")).thenReturn(List.of(a, b, m));
+            when(policyStore.findBindingsByTriggerType("folder-watch"))
+                    .thenReturn(bindings(a, b, m));
             trigger.syncRegistrations();
             // Existing dirs are watched; the non-existent one is skipped.
             assertEquals(
                     Set.of(normalized(dirA.toString()), normalized(dirB.toString())),
                     trigger.watchedDirs());
 
-            // b's policy is removed: its registration is cancelled, a remains.
-            when(policyStore.findByTriggerType("folder-watch")).thenReturn(List.of(a));
+            // b's input is removed: its registration is cancelled, a remains.
+            when(policyStore.findBindingsByTriggerType("folder-watch")).thenReturn(bindings(a));
             trigger.syncRegistrations();
             assertEquals(Set.of(normalized(dirA.toString())), trigger.watchedDirs());
         } finally {
@@ -175,15 +183,15 @@ class FolderWatchTriggerTest {
         WatchService service = FileSystems.getDefault().newWatchService();
         try {
             trigger.watchService = service;
-            when(policyStore.findByTriggerType("folder-watch")).thenReturn(List.of(p));
+            when(policyStore.findBindingsByTriggerType("folder-watch")).thenReturn(bindings(p));
 
-            // The mutation hook registers the new policy's directory without waiting for a
+            // The mutation hook registers the new input's directory without waiting for a
             // reconcile.
             trigger.onPoliciesChanged();
             assertEquals(Set.of(normalized(dir.toString())), trigger.watchedDirs());
 
-            // Once the policy is gone, the same hook cancels its registration.
-            when(policyStore.findByTriggerType("folder-watch")).thenReturn(List.of());
+            // Once the input is gone, the same hook cancels its registration.
+            when(policyStore.findBindingsByTriggerType("folder-watch")).thenReturn(List.of());
             trigger.onPoliciesChanged();
             assertEquals(Set.of(), trigger.watchedDirs());
         } finally {
@@ -195,31 +203,40 @@ class FolderWatchTriggerTest {
         return Path.of(dir).toAbsolutePath().normalize();
     }
 
+    /** Every (policy, input) binding across the given policies, as the store would return them. */
+    private static List<PolicyBinding> bindings(Policy... policies) {
+        return Arrays.stream(policies)
+                .flatMap(
+                        policy -> policy.inputs().stream().map(in -> new PolicyBinding(policy, in)))
+                .toList();
+    }
+
     /** Persists each spec as a source and returns a folder-watch policy referencing them by id. */
     private Policy folderWatch(String id, List<InputSpec> sources) {
-        List<String> sourceIds =
+        List<PipelineInput> inputs =
                 sources.stream()
                         .map(
                                 spec ->
-                                        sourceStore
-                                                .save(
-                                                        new Source(
-                                                                null,
-                                                                "src",
-                                                                spec.type(),
-                                                                spec.options(),
-                                                                true,
-                                                                "owner",
-                                                                null))
-                                                .id())
+                                        new PipelineInput(
+                                                sourceStore
+                                                        .save(
+                                                                new Source(
+                                                                        null,
+                                                                        "src",
+                                                                        spec.type(),
+                                                                        spec.options(),
+                                                                        true,
+                                                                        "owner",
+                                                                        null))
+                                                        .id(),
+                                                new TriggerConfig("folder-watch", Map.of())))
                         .toList();
         return new Policy(
                 id,
                 "watcher",
                 "owner",
                 true,
-                new TriggerConfig("folder-watch", Map.of()),
-                sourceIds,
+                inputs,
                 List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
                 OutputSpec.inline());
     }

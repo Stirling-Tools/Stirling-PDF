@@ -27,24 +27,25 @@ export const defaultParameters: OverlayPdfsParameters = {
 export type OverlayPdfsParametersHook =
   BaseParametersHook<OverlayPdfsParameters>;
 
+/** Whether these parameters are complete enough to run. Shared by the tool's settings
+ * hook and its operationConfig, so the editor and the pipeline builder agree. */
+export function validateOverlayPdfsParameters(
+  params: OverlayPdfsParameters,
+): boolean {
+  if (!params.overlayFiles || params.overlayFiles.length === 0) return false;
+  if (params.overlayMode === "FixedRepeatOverlay") {
+    if (!params.counts || params.counts.length !== params.overlayFiles.length)
+      return false;
+    if (params.counts.some((c) => !Number.isFinite(c) || c <= 0)) return false;
+  }
+  return true;
+}
+
 export const useOverlayPdfsParameters = (): OverlayPdfsParametersHook => {
   const base = useBaseParameters<OverlayPdfsParameters>({
     defaultParameters,
     endpointName: "overlay-pdfs",
-    validateFn: (params) => {
-      if (!params.overlayFiles || params.overlayFiles.length === 0)
-        return false;
-      if (params.overlayMode === "FixedRepeatOverlay") {
-        if (
-          !params.counts ||
-          params.counts.length !== params.overlayFiles.length
-        )
-          return false;
-        if (params.counts.some((c) => !Number.isFinite(c) || c <= 0))
-          return false;
-      }
-      return true;
-    },
+    validateFn: validateOverlayPdfsParameters,
   });
 
   // Overlay files are chosen independently of the base file selection, so they

@@ -7,9 +7,18 @@ export const useDefaultApp = () => {
   const { t } = useTranslation();
   const [isDefault, setIsDefault] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [promptDismissed, setPromptDismissed] = useState(() =>
+    defaultAppService.hasUserDismissedPrompt(),
+  );
 
   useEffect(() => {
     checkDefaultStatus();
+  }, []);
+
+  useEffect(() => {
+    return defaultAppService.subscribePromptDismissed(() => {
+      setPromptDismissed(defaultAppService.hasUserDismissedPrompt());
+    });
   }, []);
 
   const checkDefaultStatus = async () => {
@@ -19,6 +28,18 @@ export const useDefaultApp = () => {
     } catch (error) {
       console.error("Failed to check default status:", error);
     }
+  };
+
+  /** Permanently stop showing the banner (same as turning off the settings toggle). */
+  const dontRemindAgain = () => {
+    defaultAppService.setPromptDismissed(true);
+    setPromptDismissed(true);
+  };
+
+  /** Settings toggle: remind is on by default until the user opts out. */
+  const setRemindWhenNotDefault = (remind: boolean) => {
+    defaultAppService.setPromptDismissed(!remind);
+    setPromptDismissed(!remind);
   };
 
   const handleSetDefault = async () => {
@@ -64,7 +85,10 @@ export const useDefaultApp = () => {
   return {
     isDefault,
     isLoading,
+    promptDismissed,
     checkDefaultStatus,
+    dontRemindAgain,
+    setRemindWhenNotDefault,
     handleSetDefault,
   };
 };

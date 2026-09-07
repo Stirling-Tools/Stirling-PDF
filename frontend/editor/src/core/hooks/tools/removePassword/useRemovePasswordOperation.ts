@@ -5,6 +5,7 @@ import {
 } from "@app/hooks/tools/shared/useToolOperation";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
 import {
+  validateRemovePasswordParameters,
   RemovePasswordParameters,
   defaultParameters,
 } from "@app/hooks/tools/removePassword/useRemovePasswordParameters";
@@ -20,6 +21,7 @@ export { buildRemovePasswordFormData };
 
 // Static configuration object
 export const removePasswordOperationConfig = defineSingleFileTool({
+  validateParams: validateRemovePasswordParameters,
   buildFormData: buildRemovePasswordFormData,
   toApiParams: removePasswordToApiParams,
   fromApiParams: removePasswordFromApiParams,

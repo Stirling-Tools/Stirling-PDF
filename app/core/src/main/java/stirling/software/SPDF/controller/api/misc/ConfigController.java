@@ -195,6 +195,9 @@ public class ConfigController {
                     "enableMobileScanner",
                     applicationProperties.getSystem().isEnableMobileScanner());
             configData.put(
+                    "enableMobileSignature",
+                    applicationProperties.getSystem().isEnableMobileSignature());
+            configData.put(
                     "mobileScannerConvertToPdf",
                     applicationProperties.getSystem().getMobileScannerSettings().isConvertToPdf());
             configData.put(
@@ -331,12 +334,39 @@ public class ConfigController {
             configData.put(
                     "enableDesktopInstallSlide",
                     applicationProperties.getSystem().getEnableDesktopInstallSlide());
+            configData.put(
+                    "enableEasterEggs", applicationProperties.getSystem().isEnableEasterEggs());
 
             // Premium/Enterprise settings
             configData.put("premiumEnabled", applicationProperties.getPremium().isEnabled());
 
+            // Whether this instance can link a Stirling (SaaS) account at all. The account-link
+            // beans live in :proprietary and are @ConditionalOnProperty on this same key, so when
+            // it is off they are absent and /api/v1/account-link/* returns 404. The frontend cannot
+            // tell that 404 apart from "not linked yet", so it needs this told to it explicitly
+            // before it can prompt anyone to link. Read from the environment rather than
+            // AccountLinkProperties because :core must not depend on :proprietary.
+            configData.put(
+                    "accountLinkAvailable",
+                    applicationContext
+                            .getEnvironment()
+                            .getProperty(
+                                    "stirling.billing.account-link.enabled", Boolean.class, false));
+
             // AI Engine settings
-            configData.put("aiEngineEnabled", applicationProperties.getAiEngine().isEnabled());
+            ApplicationProperties.AiEngine aiEngineConfig = applicationProperties.getAiEngine();
+            configData.put("aiEngineEnabled", aiEngineConfig.isEnabled());
+            // Per-capability flags let the UI hide individual AI tools an admin has turned off.
+            ApplicationProperties.AiEngine.Features aiFeatures = aiEngineConfig.getFeatures();
+            configData.put(
+                    "aiFeatures",
+                    Map.ofEntries(
+                            Map.entry("chat", aiFeatures.isChat()),
+                            Map.entry("documentQuestions", aiFeatures.isDocumentQuestions()),
+                            Map.entry("createPdf", aiFeatures.isCreatePdf()),
+                            Map.entry("mathAuditor", aiFeatures.isMathAuditor()),
+                            Map.entry("pdfComment", aiFeatures.isPdfComment()),
+                            Map.entry("classify", aiFeatures.isClassify())));
 
             // Timestamp TSA settings — single source of truth for presets + admin URLs
             ApplicationProperties.Security.Timestamp tsConfig =

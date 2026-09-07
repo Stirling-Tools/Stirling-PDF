@@ -1,5 +1,6 @@
 package stirling.software.proprietary.storage.model;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -45,7 +46,7 @@ import stirling.software.proprietary.workflow.model.WorkflowSession;
 @Setter
 public class StoredFile implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+    @Serial private static final long serialVersionUID = 1L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -101,6 +102,14 @@ public class StoredFile implements Serializable {
     @Column(name = "file_purpose")
     @Enumerated(EnumType.STRING)
     private FilePurpose purpose;
+
+    /**
+     * file_encryption_keys id under which this file's blobs (main/history/audit) were encrypted;
+     * null = stored plaintext. The per-blob truth is each blob's own header — this column exists
+     * for reporting and the encrypt-existing migration. Nullable so ddl-auto upgrades cleanly.
+     */
+    @Column(name = "encryption_key_id", length = 36)
+    private String encryptionKeyId;
 
     @OneToMany(
             mappedBy = "file",

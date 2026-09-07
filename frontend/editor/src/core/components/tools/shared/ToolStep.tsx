@@ -109,9 +109,8 @@ const ToolStep = ({
       <div
         style={{
           padding: "0.5rem",
-          opacity: isCollapsed ? 0.8 : 1,
           color: isCollapsed ? "var(--mantine-color-dimmed)" : "inherit",
-          transition: "opacity 0.2s ease, color 0.2s ease",
+          transition: "color 0.2s ease",
         }}
       >
         {/* Chevron icon to collapse/expand the step */}
@@ -168,7 +167,11 @@ const ToolStep = ({
         )}
       </div>
       <Divider
-        style={{ color: "#E2E8F0", marginLeft: "1rem", marginRight: "-0.5rem" }}
+        style={{
+          color: "var(--c-border)",
+          marginLeft: "1rem",
+          marginRight: "-0.5rem",
+        }}
       />
     </div>
   );

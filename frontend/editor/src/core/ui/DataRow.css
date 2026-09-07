@@ -12,12 +12,12 @@
   flex-shrink: 0;
   font-size: 0.75rem;
   font-weight: 500;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
 }
 .sui-datarow__value {
   flex: 1;
   min-width: 0;
   font-size: 0.75rem;
-  color: var(--color-text-1);
+  color: var(--c-text);
   overflow-wrap: anywhere;
 }

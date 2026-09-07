@@ -9,7 +9,7 @@ import java.util.List;
  * breakdowns, recent activity) used by the PAYG Plan page.
  *
  * <p>Every number is real: the billing window is the Stripe subscription's current period (via Sync
- * Engine) for subscribed teams, the one-time free grant size comes from {@code
+ * Engine) for subscribed teams, the per-period free grant size comes from {@code
  * pricing_policy.free_tier_units} (live balance from {@code
  * payg_team_extensions.free_units_remaining}), and the per-document rate comes from the
  * subscription's Stripe Price. Fields that can't be resolved are {@code null} and the FE renders
@@ -26,15 +26,15 @@ import java.util.List;
  *     subscription period when subscribed, the calendar month otherwise.
  * @param billingPeriodEnd exclusive ISO date (yyyy-MM-dd) for the current cycle.
  * @param billableUsed alias of {@code spendUnitsThisPeriod} kept for clarity in the FE. For a free
- *     team this is the lifetime free documents used so far ({@code freeAllowance − freeRemaining});
- *     for a subscribed team it's this month's net billable documents.
- * @param billableLimit the team's document ceiling for the matching window: the one-time free grant
- *     ({@code freeAllowance}) for free teams; {@code floor(cap / perDocRate)} paid docs/month for
- *     capped subscribed teams; {@code null} when subscribed with no cap (uncapped).
- * @param freeAllowance the team's one-time free document grant size (the "N" in "X of N free").
- *     Never resets; survives subscribing. Applies to billable categories only.
- * @param freeRemaining one-time free documents still available to the team ({@code
- *     payg_team_extensions.free_units_remaining}). 0 = grant exhausted.
+ *     team this is the free documents used so far this period ({@code freeAllowance −
+ *     freeRemaining}); for a subscribed team it's this period's net billable documents.
+ * @param billableLimit the team's document ceiling for the matching window: this period's free
+ *     grant ({@code freeAllowance}) for free teams; {@code floor(cap / perDocRate)} paid docs/month
+ *     for capped subscribed teams; {@code null} when subscribed with no cap (uncapped).
+ * @param freeAllowance the team's free document grant size per period (the "N" in "X of N free").
+ *     Resets each period. Applies to billable categories only.
+ * @param freeRemaining free documents still available to the team this period ({@code
+ *     payg_team_extensions.free_units_remaining}). 0 = this period's grant is exhausted.
  * @param pricePerDocMinor paid per-document rate in minor units of {@code currency} (may be
  *     fractional — Stripe supports sub-cent rates); {@code null} when the rate can't be resolved.
  * @param currency lower-case ISO 4217 currency of the subscription's Stripe Price; {@code null}
@@ -55,6 +55,11 @@ import java.util.List;
  * @param members leader-only roster of team members + their per-member sub-caps. Empty for member
  *     callers.
  * @param recent latest wallet-ledger entries (newest first) for the activity feed.
+ * @param bundleRatePerCreditMinor per-credit rate of the prepaid-bundle Stripe Price (lookup key
+ *     {@code bundle:processor}) in minor units of {@code currency} (may be fractional); {@code
+ *     null} when unresolved. The in-app bundle calculator multiplies its pool by this so its
+ *     estimate matches the checkout edge fn's charge. Distinct from {@code pricePerDocMinor} (the
+ *     metered per-document rate) — the two must not be conflated.
  */
 public record WalletSnapshotResponse(
         Long teamId,
@@ -79,7 +84,21 @@ public record WalletSnapshotResponse(
         CategoryBreakdown categoryDocs,
         int docsProcessedThisPeriod,
         int uniquePdfsThisPeriod,
-        int sizeMultiplierPdfsThisPeriod) {
+        int sizeMultiplierPdfsThisPeriod,
+        long prepaidUnitsRemaining,
+        long prepaidUnitsTotal,
+        String prepaidExpiresAt,
+        String billingMode,
+        BigDecimal bundleRatePerCreditMinor) {
+
+    // Prepaid usage bundles, aggregated across the team's in-term pools (drawn ahead of the meter,
+    // outside the spend cap):
+    //   prepaidUnitsRemaining — Σ units left across active pools (0 when exhausted / none)
+    //   prepaidUnitsTotal     — Σ capacity of in-term pools (the "X of Y used" denominator; 0 = no
+    //                           bundle this term, so the FE hides the prepaid card)
+    //   prepaidExpiresAt      — soonest term end (ISO date) for the countdown; null when no bundle
+    //   billingMode           — "prepaid" while prepaid units remain, else "payg" (the meter is
+    // live)
 
     // The count dimension, kept distinct from units (which now scale with file size):
     //   categoryDocs                — per-category INPUT-file counts (parallel to

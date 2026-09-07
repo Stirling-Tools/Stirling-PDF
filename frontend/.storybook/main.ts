@@ -10,12 +10,28 @@ import tsconfigPaths from "vite-tsconfig-paths";
  * the portal layer at editor/src/portal/). MDX docs pages live in
  * editor/src/portal/docs/.
  */
+/**
+ * Editor stories import via `@app/*` (proprietary→core fallback), `@core/*` and
+ * `@proprietary/*`. Resolve them exactly the way the editor's own build does -
+ * through vite-tsconfig-paths against the proprietary vite tsconfig - so the
+ * shared Storybook can host editor components without duplicating the alias map
+ * here. Built per pass: the main bundle and the worker bundle each need their own.
+ */
+const editorPathAliases = () =>
+  tsconfigPaths({
+    projects: [resolve(__dirname, "../editor/tsconfig.proprietary.vite.json")],
+  });
+
 const config: StorybookConfig = {
   stories: [
     "../editor/src/portal/**/*.mdx",
     "../editor/src/**/*.stories.@(ts|tsx)",
   ],
-  addons: ["@storybook/addon-themes", "@storybook/addon-a11y"],
+  addons: [
+    "@storybook/addon-themes",
+    "@storybook/addon-a11y",
+    "@storybook/addon-vitest",
+  ],
   framework: {
     name: "@storybook/react-vite",
     options: {},
@@ -43,19 +59,15 @@ const config: StorybookConfig = {
       // than a relative path.
       "@public": resolve(__dirname, "../editor/public"),
     };
-    // Editor stories import via @app/* (proprietary→core fallback), @core/* and
-    // @proprietary/*. Resolve them exactly the way the editor's own build does —
-    // through vite-tsconfig-paths against the proprietary vite tsconfig — so the
-    // shared Storybook can host editor components without duplicating the alias
-    // map here.
     config.plugins = config.plugins ?? [];
-    config.plugins.push(
-      tsconfigPaths({
-        projects: [
-          resolve(__dirname, "../editor/tsconfig.proprietary.vite.json"),
-        ],
-      }),
-    );
+    config.plugins.push(editorPathAliases());
+    // Worker bundles are a separate Rollup pass and do NOT inherit `plugins`, so
+    // without this a worker importing @app/* fails to resolve while the same
+    // import works everywhere else. Mirrors editor/vite.config.ts.
+    config.worker = {
+      ...(config.worker ?? {}),
+      plugins: () => [editorPathAliases()],
+    };
     // Point apiClient.saas at a mock origin so the SaaS-backed billing stories
     // (SubscribedPlanView, PaymentMethodCard, InvoicesList) resolve a base URL and
     // their MSW handlers (which match "*/api/v1/payg/...") can intercept. The host

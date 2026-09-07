@@ -1,8 +1,10 @@
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useEndpointEnabled } from "@app/hooks/useEndpointConfig";
-import { useFileState } from "@app/contexts/FileContext";
+import { useAllFiles, useFileSelection } from "@app/contexts/FileContext";
 import { useViewScopedFiles } from "@app/hooks/tools/shared/useViewScopedFiles";
+import { detectFileExtension } from "@app/utils/fileUtils";
+import { isImageFormat } from "@app/utils/convertUtils";
 
 import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
 
@@ -14,10 +16,26 @@ import { BaseToolProps, ToolComponent } from "@app/types/tool";
 
 const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
-  const { selectors } = useFileState();
-  const activeFiles = selectors.getFiles();
+  const { files: activeFiles } = useAllFiles();
+  const { setSelectedFiles } = useFileSelection();
   const selectedFiles = useViewScopedFiles();
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Selecting a source format narrows the working selection to the loaded files that match it. This
+  // is an editor convenience; ConvertSettings itself is FileContext-free so it can also render in
+  // the automation and pipeline surfaces, which have no loaded files.
+  const handleSourceFormatSelected = (fromExtension: string) => {
+    if (activeFiles.length === 0) {
+      setSelectedFiles([]);
+      return;
+    }
+    const matching = activeFiles.filter((file) => {
+      const ext = detectFileExtension(file.name);
+      if (fromExtension === "any") return true;
+      if (fromExtension === "image") return isImageFormat(ext);
+      return ext === fromExtension;
+    });
+    setSelectedFiles(matching.map((file) => file.fileId));
+  };
 
   const convertParams = useConvertParameters();
   const convertOperation = useConvertOperation(convertParams.parameters);
@@ -29,16 +47,6 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const skipNextSelectionResetRef = useRef(false);
   const previousSelectionRef = useRef<string>("");
 
-  const scrollToBottom = () => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollTo({
-        top: scrollContainerRef.current.scrollHeight,
-        behavior: "smooth",
-      });
-    }
-  };
-
-  const hasFiles = selectedFiles.length > 0;
   const hasResults =
     convertOperation.files.length > 0 ||
     convertOperation.downloadUrl !== null ||
@@ -96,18 +104,6 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     convertParams.parameters.toExtension,
   ]);
 
-  useEffect(() => {
-    if (hasFiles) {
-      setTimeout(scrollToBottom, 100);
-    }
-  }, [hasFiles]);
-
-  useEffect(() => {
-    if (hasResults) {
-      setTimeout(scrollToBottom, 100);
-    }
-  }, [hasResults]);
-
   const handleConvert = async () => {
     try {
       await convertOperation.executeOperation(
@@ -158,6 +154,7 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
             onParameterChange={convertParams.updateParameter}
             getAvailableToExtensions={convertParams.getAvailableToExtensions}
             selectedFiles={selectedFiles}
+            onSourceFormatSelected={handleSourceFormatSelected}
             disabled={endpointLoading}
           />
         ),

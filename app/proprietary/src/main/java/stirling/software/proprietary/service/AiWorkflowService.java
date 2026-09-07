@@ -185,6 +185,7 @@ public class AiWorkflowService {
             initialRequest.setConversationHistory(
                     new ArrayList<>(request.getConversationHistory()));
             initialRequest.setEnabledEndpoints(endpointResolver.getEnabledEndpointUrls());
+            initialRequest.setLocale(request.getLocale());
             listener.onProgress(AiWorkflowProgressEvent.of(AiWorkflowPhase.ANALYZING));
 
             WorkflowState state = new WorkflowState.Pending(initialRequest);
@@ -287,6 +288,7 @@ public class AiWorkflowService {
             nextRequest.setArtifacts(pdfContentExtractor.buildArtifacts(contentResults));
             nextRequest.setResumeWith(response.getResumeWith());
             nextRequest.setEnabledEndpoints(request.getEnabledEndpoints());
+            nextRequest.setLocale(request.getLocale());
             return new WorkflowState.Pending(nextRequest);
         } finally {
             for (LoadedFile lf : loadedFiles) {
@@ -338,6 +340,7 @@ public class AiWorkflowService {
         nextRequest.setFiles(request.getFiles());
         nextRequest.setConversationHistory(request.getConversationHistory());
         nextRequest.setResumeWith(response.getResumeWith());
+        nextRequest.setLocale(request.getLocale());
         return new WorkflowState.Pending(nextRequest);
     }
 
@@ -530,6 +533,7 @@ public class AiWorkflowService {
                                 new PdfContentExtractor.ToolReportArtifact(
                                         result.reportTool(), result.report()));
                 resumeRequest.setResumeWith(resumeWith);
+                resumeRequest.setLocale(previousRequest.getLocale());
                 return new WorkflowState.Pending(resumeRequest);
             }
 
@@ -774,7 +778,7 @@ public class AiWorkflowService {
             String[] errorHolder) {
         try {
             JsonNode node = objectMapper.readTree(line);
-            String event = node.path("event").asText();
+            String event = node.path("event").asString();
             switch (event) {
                 case "progress" -> {
                     AiEngineProgressDetail detail =
@@ -785,7 +789,7 @@ public class AiWorkflowService {
                     JsonNode response = node.path("response");
                     resultHolder[0] = objectMapper.treeToValue(response, AiWorkflowResponse.class);
                 }
-                case "error" -> errorHolder[0] = node.path("message").asText("unknown error");
+                case "error" -> errorHolder[0] = node.path("message").asString("unknown error");
                 case "heartbeat" -> listener.onHeartbeat();
                 default -> log.warn("Ignoring unknown engine stream event: {}", event);
             }
@@ -802,5 +806,6 @@ public class AiWorkflowService {
         private List<WorkflowArtifact> artifacts = new ArrayList<>();
         private String resumeWith;
         private List<String> enabledEndpoints = new ArrayList<>();
+        private String locale;
     }
 }

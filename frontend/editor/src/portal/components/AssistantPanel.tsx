@@ -84,7 +84,9 @@ export function AssistantPanel() {
   if (!assistantOpen) return null;
 
   return (
-    <aside
+    // A plain div, not <aside>: ARIA in HTML does not permit role="dialog" on a
+    // complementary landmark.
+    <div
       className="portal-assistant"
       role="dialog"
       aria-label={t("portal.assistant.title")}
@@ -177,6 +179,6 @@ export function AssistantPanel() {
           <SendIcon size={14} />
         </ActionIcon>
       </form>
-    </aside>
+    </div>
   );
 }

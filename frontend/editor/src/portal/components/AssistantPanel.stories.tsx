@@ -18,7 +18,7 @@ const meta: Meta<typeof AssistantPanel> = {
   parameters: { layout: "fullscreen" },
   decorators: [
     (S) => (
-      <div style={{ minHeight: "100vh", background: "var(--color-bg)" }}>
+      <div style={{ minHeight: "100vh", background: "var(--c-bg)" }}>
         <ForceOpen />
         <S />
       </div>

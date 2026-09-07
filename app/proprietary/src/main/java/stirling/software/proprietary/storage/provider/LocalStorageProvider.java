@@ -4,9 +4,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
@@ -19,6 +21,7 @@ import stirling.software.proprietary.security.model.User;
 @RequiredArgsConstructor
 public class LocalStorageProvider implements StorageProvider {
 
+    private static final Pattern CONTROL_CHARACTER_PATTERN = Pattern.compile("\\p{Cntrl}");
     private final Path basePath;
 
     @Override
@@ -79,7 +82,10 @@ public class LocalStorageProvider implements StorageProvider {
         if (filename == null || filename.isBlank()) {
             return "file";
         }
-        String stripped = Path.of(filename).getFileName().toString().replaceAll("\\p{Cntrl}", "");
+        String stripped =
+                CONTROL_CHARACTER_PATTERN
+                        .matcher(Paths.get(filename).getFileName().toString())
+                        .replaceAll("");
         return stripped.isBlank() ? "file" : stripped;
     }
 }

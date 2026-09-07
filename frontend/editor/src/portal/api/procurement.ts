@@ -1,12 +1,12 @@
 import { apiClient } from "@portal/api/http";
+import { resolveDemoResponse } from "@portal/api/demoData";
+import { saasApiBase } from "@portal/api/saasApiBase";
 import { getSupabaseClient } from "@app/auth/supabase/supabaseClient";
-import type { Tier } from "@portal/contexts/TierContext";
 
 /*
- * Procurement models the enterprise commercial journey, trial → quote →
- * agreement → payment → implementation, plus the paperwork ledger that rides
- * alongside it. The journey is enterprise-only; free/pro tiers receive a
- * minimal locked payload the view renders as an upgrade prompt.
+ * Procurement models the enterprise commercial journey: trial → quote → agreement → payment →
+ * implementation. It is surfaced by the deal-status hero on Home and the takeover flow beside it;
+ * there is no separate procurement route.
  */
 
 /* ──────────────────────────────────────────────────────────────────────── */
@@ -19,11 +19,8 @@ import type { Tier } from "@portal/contexts/TierContext";
  * Payment read more plainly than the internal `security` / `procurement`).
  */
 export type DealStage =
-  | "trial"
-  | "quote"
-  | "security"
-  | "procurement"
-  | "active";
+  /** Asked about enterprise, nothing committed yet. Precedes the journey rather than joining it. */
+  "exploring" | "trial" | "quote" | "security" | "procurement" | "active";
 
 export interface JourneyStep {
   stage: DealStage;
@@ -38,9 +35,14 @@ export interface JourneyStep {
   gatingAction: string;
 }
 
-/** Ordered journey definition, the stepper renders this verbatim. */
-/** `label`/`blurb`/`gatingAction` values are i18n keys — render with t(). */
-export const JOURNEY: JourneyStep[] = [
+/**
+ * The commercial flow's stages, rendered verbatim as the hero's progress band. Quote and Agreement
+ * are distinct: the buyer accepts the quote first (no Stripe), then signs the agreement, which is
+ * what accepts into a committed subscription.
+ *
+ * <p>`label`/`blurb`/`gatingAction` are i18n keys — render with t().
+ */
+export const FLOW_JOURNEY: JourneyStep[] = [
   {
     stage: "trial",
     label: "portal.procurement.journeySteps.trial.label",
@@ -73,204 +75,9 @@ export const JOURNEY: JourneyStep[] = [
   },
 ];
 
-/**
- * The commercial flow's stepper stages. The real backend collapses quote + agreement into one
- * accept step (accepting the issued quote is accepting the agreement), so the flow shows one fewer
- * step than the mock ledger's {@link JOURNEY} — the separate "Agreement" step is dropped. Reuses
- * JOURNEY's i18n keys.
- */
-export const FLOW_JOURNEY: JourneyStep[] = JOURNEY.filter(
-  (s) => s.stage !== "security",
-);
-
-/* ──────────────────────────────────────────────────────────────────────── */
-/*  Deal header                                                              */
-/* ──────────────────────────────────────────────────────────────────────── */
-
-export interface SolutionsEngineer {
-  name: string;
-  title: string;
-  email: string;
-}
-
-export interface TrialInfo {
-  /** License key seeded for the evaluation. */
-  key: string;
-  /** ISO date the trial began. */
-  startedOn: string;
-  /** ISO date the trial expires. */
-  endsOn: string;
-  /** Whole days remaining (derived in the fixture for a stable demo number). */
-  daysLeft: number;
-  extensionsUsed: number;
-  maxExtensions: number;
-}
-
-export interface QuoteInfo {
-  number: string;
-  /** Annual contract value, in USD. */
-  amount: number;
-  /** Contract term, e.g. "12 months". */
-  term: string;
-  /** ISO date the quote expires. */
-  validUntil: string;
-}
-
-export interface Deal {
-  company: string;
-  currentStage: DealStage;
-  engineer: SolutionsEngineer;
-  trial: TrialInfo;
-  quote: QuoteInfo;
-}
-
-/* ──────────────────────────────────────────────────────────────────────── */
-/*  Document ledger + supporting pool                                        */
-/* ──────────────────────────────────────────────────────────────────────── */
-
-/**
- * Lifecycle of a single document.
- *   available: ready to grab now (download/sign/pay/upload as the action says)
- *   action:   waiting on the buyer to act (the gating paperwork of a stage)
- *   pending:  issued, awaiting the other side / a system step
- *   request:  not generated yet; the buyer asks for it (some carry a fee)
- *   complete: done, kept for the record
- */
-export type DocStatus =
-  | "available"
-  | "action"
-  | "pending"
-  | "request"
-  | "complete";
-
-/** What pressing the document's button does. */
-export type DocAction = "download" | "sign" | "pay" | "upload" | "request";
-
-export interface LedgerDoc {
-  id: string;
-  name: string;
-  /** Sub-line describing what the document is / what it covers. */
-  sub: string;
-  status: DocStatus;
-  action: DocAction;
-  /** Buyer-skippable paperwork (e.g. paid onboarding). */
-  optional?: boolean;
-  /** One-off fee in USD when the document/service is a paid add-on. */
-  fee?: number;
-}
-
-/** Document ledger grouped by the journey stage the paperwork belongs to. */
-export interface LedgerGroup {
-  stage: DealStage;
-  /** Buyer-facing stage name (matches JourneyStep.label). */
-  label: string;
-  docs: LedgerDoc[];
-}
-
-/** Categories the stage-agnostic supporting pool is grouped under. */
-export type SupportingCategory =
-  | "security"
-  | "legal"
-  | "corporate"
-  | "procurement";
-
-export interface SupportingGroup {
-  category: SupportingCategory;
-  label: string;
-  docs: LedgerDoc[];
-}
-
-/* ──────────────────────────────────────────────────────────────────────── */
-/*  Full procurement payload                                                 */
-/* ──────────────────────────────────────────────────────────────────────── */
-
-export interface ProcurementResponse {
-  tier: Tier;
-  /** True only for enterprise, gates the whole journey + ledger. */
-  unlocked: boolean;
-  /** Present only when unlocked. */
-  deal: Deal | null;
-  journey: JourneyStep[];
-  ledger: LedgerGroup[];
-  supporting: SupportingGroup[];
-}
-
-/** GET /v1/procurement?tier=…, the deal, journey, ledger and supporting pool. */
-export async function fetchProcurement(
-  tier: Tier,
-): Promise<ProcurementResponse> {
-  return apiClient.local.json<ProcurementResponse>(
-    `/v1/procurement?tier=${encodeURIComponent(tier)}`,
-  );
-}
-
-/*
- * Commercial actions. Each mutates the deal server-side and returns the updated
- * ProcurementResponse, the new canonical state, which the view applies so the
- * journey progresses. The MSW layer answers these today; a real backend honours
- * the same contracts unchanged.
- */
-
-/** Advance the deal to the next stage (the journey's primary CTA). */
-export async function advanceStage(
-  fromStage: DealStage,
-): Promise<ProcurementResponse> {
-  return apiClient.local.json<ProcurementResponse>("/v1/procurement/advance", {
-    method: "POST",
-    body: { fromStage },
-  });
-}
-
-/** Sign the Stirling Enterprise Agreement (MSA + order form + EULA + DPA). */
-export async function signAgreement(
-  docId: string,
-): Promise<ProcurementResponse> {
-  // A real backend opens an e-signature envelope and completes on callback;
-  // here it completes immediately and advances the deal.
-  return apiClient.local.json<ProcurementResponse>("/v1/procurement/sign", {
-    method: "POST",
-    body: { docId },
-  });
-}
-
-/** Pay the contract online (card / bank transfer via Stripe). */
-export async function payOnline(): Promise<ProcurementResponse> {
-  return apiClient.local.json<ProcurementResponse>("/v1/procurement/pay", {
-    method: "POST",
-  });
-}
-
-/** Upload a purchase order to invoice against (an alternate payment path). */
-export async function uploadPurchaseOrder(
-  file: File,
-): Promise<ProcurementResponse> {
-  // A real backend takes the PO as multipart; the mock only needs the name.
-  return apiClient.local.json<ProcurementResponse>(
-    "/v1/procurement/purchase-order",
-    {
-      method: "POST",
-      body: { fileName: file.name },
-    },
-  );
-}
-
-/** Request a document that is generated on demand (some carry a one-off fee). */
-export async function requestDocument(
-  docId: string,
-  action: DocAction,
-): Promise<ProcurementResponse> {
-  return apiClient.local.json<ProcurementResponse>(
-    `/v1/procurement/documents/${encodeURIComponent(docId)}/request`,
-    { method: "POST", body: { action } },
-  );
-}
-
 // ============================================================================
-// Enterprise procurement — real SaaS backend (/api/v1/procurement).
-//
-// The journey/ledger visuals above still ride the MSW mock; the commercial spine
-// below (trial, server-priced quote, accept -> Stripe checkout) is the real thing,
-// served by the saas Java backend and gated on a linked account.
+// Enterprise procurement — the real SaaS backend (/api/v1/procurement): trial,
+// server-priced quote, agreement, accept -> Stripe. Gated on a linked account.
 // ============================================================================
 
 export type QuoteLineItemKind =
@@ -288,7 +95,11 @@ export interface QuoteLineItem {
 
 export interface QuoteResult {
   quoteId: number;
-  quoteNumber: string;
+  /**
+   * Stripe's quote number — the deal's one reference, shown on the quote, the agreement and the
+   * invoice. Null while the quote is a local draft: Stripe assigns it only at finalisation.
+   */
+  quoteNumber: string | null;
   /** draft (priced, editable) | sent (issued Stripe quote — PDF + shareable) | accepted | expired. */
   status: string;
   currency: string;
@@ -332,6 +143,12 @@ export interface ProcurementSnapshot {
   licensed: boolean;
   /** The team's Keygen licence key (present once licensed); shown in the portal to copy/install. */
   licenseKey: string | null;
+  /** Version label of the signed agreement PDF available to download (e.g. "SEA v0.9.1"), else null. */
+  agreementSignedVersion: string | null;
+  /** Buying entity captured at trial setup; null on deals started before that step existed. */
+  businessName: string | null;
+  contactName: string | null;
+  contactEmail: string | null;
   latestQuote: QuoteResult | null;
 }
 
@@ -385,13 +202,37 @@ export function fetchLicenseFile(): Promise<string> {
  * Start the trial with the buyer's chosen deployment target and seat count (captured in the setup
  * step). These seed the quote builder; both remain editable when the quote is built.
  */
+/** Details collected by trial setup's second step; every field optional server-side. */
+export interface TrialSetupDetails {
+  businessName?: string;
+  contactName?: string;
+  contactEmail?: string;
+  /**
+   * Raw comma/space/semicolon separated addresses. Recorded on the deal AND sent through the
+   * team-invite path once the trial starts; a rejected address is skipped, never fatal.
+   */
+  inviteEmails?: string;
+}
+
 export function startTrial(
   deployment: string,
   seats: number,
+  details?: TrialSetupDetails,
 ): Promise<ProcurementSnapshot> {
   return apiClient.saas.json<ProcurementSnapshot>(
     "/api/v1/procurement/trial/start",
-    { method: "POST", body: { deployment, users: seats } },
+    { method: "POST", body: { deployment, users: seats, ...details } },
+  );
+}
+
+/**
+ * Record that this account is looking at enterprise. Idempotent, and never disturbs an existing
+ * deal — so it is safe to call on every entry into the flow.
+ */
+export function recordInterest(): Promise<ProcurementSnapshot> {
+  return apiClient.saas.json<ProcurementSnapshot>(
+    "/api/v1/procurement/interest",
+    { method: "POST" },
   );
 }
 
@@ -418,12 +259,114 @@ export function buildQuote(cfg: QuoteConfigInput): Promise<QuoteResult> {
   });
 }
 
+/** The filled enterprise agreement (MSA + Order Form + DPA) for the current quote, as markdown. */
+export interface AgreementDocument {
+  docId: string;
+  version: string;
+  /** e.g. "SEA v0.9.1" — the exact document version a signature will be pinned to. */
+  versionLabel: string;
+  displayName: string;
+  effectiveDate: string;
+  /** "draft" until counsel clears it — the UI badges drafts. */
+  status: string;
+  markdown: string;
+}
+
+/** Buyer-supplied signing inputs captured on the agreement stage. */
+export interface SignAgreementInput {
+  customerLegalName: string;
+  signatoryName: string;
+  signatoryTitle: string;
+  authorityConfirmed: boolean;
+}
+
+export interface SignAgreementResult {
+  signatureId: number;
+  versionLabel: string;
+  /** Whether the signed PDF was rendered + stored (false when the render runtime was unavailable). */
+  pdfStored: boolean;
+}
+
+/** Fetch the filled agreement to review before signing. */
+export function fetchAgreementDocument(): Promise<AgreementDocument> {
+  return apiClient.saas.json<AgreementDocument>(
+    "/api/v1/procurement/agreement/document",
+  );
+}
+
+/** Record the signed agreement (pins version + hash + variable snapshot + signatory + PDF). */
+export function recordAgreementSignature(
+  input: SignAgreementInput,
+): Promise<SignAgreementResult> {
+  return apiClient.saas.json<SignAgreementResult>(
+    "/api/v1/procurement/agreement/sign",
+    { method: "POST", body: input },
+  );
+}
+
+/** Fetch a static legal document (eula, sla, subprocessors) by id for in-product viewing. */
+export function fetchLegalDocument(docId: string): Promise<AgreementDocument> {
+  return apiClient.saas.json<AgreementDocument>(`/api/v1/legal/${docId}`);
+}
+
+/** Download the stored, signed enterprise-agreement PDF for the team (post-signing). */
+export function fetchSignedAgreementPdf(): Promise<Blob> {
+  return apiClient.saas.blob("/api/v1/procurement/agreement/signature/pdf");
+}
+
+/** Download the current (unsigned) enterprise-agreement PDF — the document shown at the sign step. */
+export function fetchAgreementPdf(): Promise<Blob> {
+  return apiClient.saas.blob("/api/v1/procurement/agreement/document/pdf");
+}
+
+/**
+ * Record a clickwrap consent to a legal document (e.g. the EULA at trial start / quote generation).
+ * Best-effort — never block the flow it accompanies on a consent-logging failure.
+ */
+export function recordLegalConsent(
+  documentId: string,
+  context: string,
+): Promise<void> {
+  return apiClient.saas
+    .json<void>("/api/v1/legal/consent", {
+      method: "POST",
+      body: { documentId, context },
+    })
+    .catch(() => undefined);
+}
+
 // ---- Stripe Quote operations (Supabase edge functions) ---------------------
 // Java has no Stripe SDK, so issuing/accepting the quote and fetching its PDF run in edge functions
 // that own Stripe; they persist results back through SECURITY DEFINER RPCs. The portal invokes them
 // directly (same pattern the PAYG checkout uses).
 
+/**
+ * Fixture response for an edge function while demo data is on.
+ *
+ * These calls go out through the Supabase client rather than {@code apiClient}, which is where demo
+ * data is normally intercepted — so until this existed they were never mocked. The portal has no
+ * service worker: the MSW handlers are matched by URL inside {@link resolveDemoResponse}, so the URL
+ * has to be reconstructed here to match what mocks/handlers/procurementSaas.ts registers.
+ *
+ * This mattered rather more than a missing fixture: issue and accept create a real Stripe Quote and a
+ * real committed subscription. With a live session — the normal state when developing against the
+ * shared project — pressing "Generate quote" in dev billed nothing but left real objects behind.
+ */
+async function demoEdgeResponse(
+  fn: string,
+  quoteId: number,
+): Promise<Response | undefined> {
+  const base = saasApiBase();
+  if (!base) return undefined;
+  return resolveDemoResponse(new URL(`${base}/functions/v1/${fn}`), {
+    method: "POST",
+    body: { quote_id: quoteId },
+  });
+}
+
 async function invokeEdge<T>(fn: string, quoteId: number): Promise<T> {
+  const demo = await demoEdgeResponse(fn, quoteId);
+  if (demo) return (await demo.json()) as T;
   const supabase = getSupabaseClient();
   if (!supabase) throw new Error("No SaaS session");
   const { data, error } = await supabase.functions.invoke<T>(fn, {
@@ -446,6 +389,8 @@ export function acceptQuote(quoteId: number): Promise<AcceptResult> {
 
 /** Fetch the Stripe-generated quote PDF as a blob (for download / share). */
 export async function fetchQuotePdf(quoteId: number): Promise<Blob> {
+  const demo = await demoEdgeResponse("get-procurement-quote-pdf", quoteId);
+  if (demo) return await demo.blob();
   const supabase = getSupabaseClient();
   if (!supabase) throw new Error("No SaaS session");
   const { data, error } = await supabase.functions.invoke<Blob>(

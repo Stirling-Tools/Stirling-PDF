@@ -1,7 +1,12 @@
 import os
 import subprocess
+import sys
 
 import requests
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "steps"))
+import job_support  # noqa: E402
+import parallel_support  # noqa: E402
 
 _BASE_URL = "http://localhost:8080"
 _CONTAINER_NAME = os.environ.get("TEST_CONTAINER_NAME", "")
@@ -18,6 +23,9 @@ _JWT_DEPENDENT_TAGS = frozenset({
     # proprietary/enterprise feature tags (all scenarios in these features need JWT)
     "jwt", "user_mgmt", "admin_settings", "audit", "signature", "team",
 })
+
+# Tags for scenarios that require the policies feature (policies.enabled=true).
+_POLICIES_DEPENDENT_TAGS = frozenset({"policies", "webhook"})
 
 
 def _check_jwt_available():
@@ -85,6 +93,38 @@ def _capture_docker_logs_window(start_line, scenario_name):
         pass
 
 
+def _check_policies_available():
+    """Probe whether webhook sources can be created (proprietary policy feature).
+
+    Creates a throwaway webhook source: a 200 with a minted webhookId means the
+    webhook beans are present (a proprietary build). The probe source is
+    best-effort deleted afterwards.
+    """
+    try:
+        resp = requests.post(
+            f"{_BASE_URL}/api/v1/sources",
+            headers={"X-API-KEY": "123456789", "Content-Type": "application/json"},
+            json={"name": "policies-probe", "type": "webhook", "options": {}, "enabled": True},
+            timeout=10,
+        )
+        if resp.status_code != 200:
+            return False
+        source_id = resp.json().get("id")
+        has_webhook = bool(resp.json().get("options", {}).get("webhookId"))
+        if source_id:
+            try:
+                requests.delete(
+                    f"{_BASE_URL}/api/v1/sources/{source_id}",
+                    headers={"X-API-KEY": "123456789"},
+                    timeout=10,
+                )
+            except Exception:
+                pass
+        return has_webhook
+    except Exception:
+        return False
+
+
 def before_all(context):
     context.endpoint = None
     context.request_data = None
@@ -97,16 +137,38 @@ def before_all(context):
             "(server likely running with V2=false). "
             "Scenarios tagged with JWT-dependent tags will be skipped."
         )
+    context.policies_available = _check_policies_available()
+    if not context.policies_available:
+        print(
+            "\n[POLICIES] Webhook sources are not available in this environment "
+            "(e.g. a core-only build). Scenarios tagged @policies/@webhook will be skipped."
+        )
 
 
 def before_scenario(context, scenario):
     """Reset all per-scenario state before each scenario runs."""
-    # Skip scenarios that require JWT Bearer auth when it is not functional.
     scenario_tags = set(scenario.effective_tags)
+
+    # Concurrency is opted into by a step in the feature, never by configuration.
+    context.parallel_repeat = 1
+    context.parallel_decoy = False
+    context.parallel_validated = False
+    context.parallel_ran_at = 0
+    context.parallel_request = None
+    context.parallel_get = None
+
+    # Skip scenarios that require JWT Bearer auth when it is not functional.
     if _JWT_DEPENDENT_TAGS & scenario_tags and not context.jwt_available:
         scenario.skip(
             "JWT Bearer authentication not available in this environment (V2 disabled). "
             "Run against a server with V2=true to execute these scenarios."
+        )
+        return
+
+    if _POLICIES_DEPENDENT_TAGS & scenario_tags and not context.policies_available:
+        scenario.skip(
+            "Webhook sources not available in this environment (e.g. a core-only build). "
+            "Run against a proprietary build to execute these scenarios."
         )
         return
 
@@ -169,3 +231,48 @@ def after_scenario(context, scenario):
     context.jwt_token = None
     context.original_jwt_token = None
     context._status_ok = False
+    context.parallel_request = None
+    context.parallel_get = None
+
+
+def _cleanup_async_job_files():
+    """Release every async job result the run left on the server.
+
+    An async submit persists a copy of the upload plus its results, and both are held
+    for the job retention window (30 minutes by default) - far longer than a test run.
+    The regression check that diffs the container filesystem before and after this suite
+    would otherwise flag them as leaked temp files. Sweeping them here keeps that check
+    strict: anything it still reports afterwards is a genuine leak.
+    """
+    try:
+        response = job_support.trigger_cleanup()
+    except Exception as exc:
+        print(f"\n[CLEANUP] Async job cleanup request failed: {exc}")
+        return
+    if response.status_code == 404:
+        print(
+            "\n[CLEANUP] Async job cleanup endpoint not available on this build; "
+            "async job files will age out on their own."
+        )
+        return
+    if response.status_code != 200:
+        print(
+            f"\n[CLEANUP] Async job cleanup returned {response.status_code}: "
+            f"{response.text[:200]}"
+        )
+        return
+    try:
+        summary = response.json()
+    except ValueError:
+        print("\n[CLEANUP] Async job cleanup returned a non-JSON body")
+        return
+    print(
+        f"\n[CLEANUP] Released {summary.get('jobsRemoved', '?')} async job(s) and "
+        f"{summary.get('filesDeleted', '?')} stored file(s); "
+        f"{summary.get('jobsRetained', '?')} retained."
+    )
+
+
+def after_all(context):
+    _cleanup_async_job_files()
+    parallel_support.print_summary()

@@ -16,7 +16,7 @@ import { automationStorage } from "@app/services/automationStorage";
 import {
   WATCHED_FOLDER_VIEW_ID,
   WATCHED_FOLDER_WORKBENCH_ID,
-} from "@app/components/watchedFolders/WatchedFoldersRegistration";
+} from "@app/components/watchedFolders/watchedFolderShared";
 
 export function WatchedFolderSection() {
   const { t } = useTranslation();
@@ -78,8 +78,8 @@ export function WatchedFolderSection() {
   return (
     <Box
       style={{
-        borderTop: "1px solid var(--border-subtle)",
-        backgroundColor: "var(--bg-toolbar)",
+        borderTop: "1px solid var(--c-border-subtle)",
+        backgroundColor: "var(--c-bg-raised)",
         display: "flex",
         flexDirection: "column",
         height: "100%",

@@ -1,0 +1,38 @@
+{
+  "subprocessorUrl": "https://www.stirlingpdf.com/legal/subprocessors",
+  "eulaUrl": "https://www.stirlingpdf.com/legal/eula",
+  "documents": {
+    "enterprise-agreement": {
+      "label": "SEA",
+      "displayName": "Stirling Enterprise Agreement",
+      "version": "0.9.1",
+      "effectiveDate": "2026-07-10",
+      "status": "draft",
+      "parts": ["msa.md", "@order-form", "dpa.md"]
+    },
+    "eula": {
+      "label": "EULA",
+      "displayName": "Stirling EULA & Commercial Terms",
+      "version": "1.0.0",
+      "effectiveDate": "2026-07-10",
+      "status": "draft",
+      "parts": ["eula.md"]
+    },
+    "sla": {
+      "label": "SLA",
+      "displayName": "Stirling SLA Exhibit",
+      "version": "1.0.0",
+      "effectiveDate": "2026-07-10",
+      "status": "draft",
+      "parts": ["sla.md"]
+    },
+    "subprocessors": {
+      "label": "SUBP",
+      "displayName": "Stirling Subprocessors",
+      "version": "1.0.0",
+      "effectiveDate": "2026-07-10",
+      "status": "draft",
+      "parts": ["subprocessors.md"]
+    }
+  }
+}

@@ -12,12 +12,12 @@
 }
 
 .tool-picker-scrollable::-webkit-scrollbar-thumb {
-  background-color: var(--mantine-color-gray-4);
+  background-color: var(--c-border);
   border-radius: 0.1875rem;
 }
 
 .tool-picker-scrollable::-webkit-scrollbar-thumb:hover {
-  background-color: var(--mantine-color-gray-5);
+  background-color: var(--c-border-strong);
 }
 
 .search-input {
@@ -28,7 +28,7 @@
   text-transform: uppercase;
   padding-bottom: 0.5rem;
   font-size: 0.75rem;
-  color: var(--tool-subcategory-text-color);
+  color: var(--c-text-subtle);
   /* Align the text with tool labels to account for icon gutter */
   padding-left: 1rem;
 }
@@ -44,24 +44,20 @@
   text-transform: uppercase;
   font-weight: 600;
   font-size: 0.75rem;
-  color: var(--tool-subcategory-text-color);
+  color: var(--c-text-subtle);
   white-space: nowrap;
   overflow: visible;
 }
 
 .tool-subcategory-row-rule {
   height: 1px;
-  background-color: var(--tool-subcategory-rule-color);
+  background-color: var(--c-border-subtle);
   flex: 1 1 auto;
 }
 
-/* Selected tool highlight — theme-aware via CSS variable */
+/* Selected tool highlight — theme-aware via the adaptive --c-active token */
 :root {
-  --tool-button-selected-bg: var(--mantine-color-gray-2);
-}
-
-[data-mantine-color-scheme="dark"] {
-  --tool-button-selected-bg: var(--mantine-color-dark-4);
+  --tool-button-selected-bg: var(--c-active);
 }
 
 /* Compact tool buttons (padding via the Button `p`/`py` props).

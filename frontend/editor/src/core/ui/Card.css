@@ -1,11 +1,6 @@
 .sui-card {
   position: relative;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
   transition:
-    box-shadow var(--motion-fast),
     border-color var(--motion-fast),
     transform var(--motion-fast);
 }
@@ -27,8 +22,7 @@
   cursor: pointer;
 }
 .sui-card--interactive:hover {
-  border-color: var(--color-border-hover);
-  box-shadow: var(--shadow-lg);
+  border-color: var(--c-border-strong);
   transform: translateY(-0.0625rem);
 }
 
@@ -43,10 +37,10 @@
   left: 0;
   bottom: 0;
   width: 0.25rem;
-  border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+  border-radius: var(--radius-nav) 0 0 var(--radius-nav);
 }
 .sui-card--accent-default::before {
-  background: var(--color-blue);
+  background: var(--c-primary);
 }
 .sui-card--accent-premium::before {
   background: var(--color-purple);

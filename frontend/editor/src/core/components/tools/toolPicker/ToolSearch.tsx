@@ -148,15 +148,13 @@ const ToolSearch = ({
                   setDropdownOpen(false);
                 }}
                 leftSection={
-                  <div style={{ color: "var(--tools-text-and-icon-color)" }}>
-                    {tool.icon}
-                  </div>
+                  <div style={{ color: "var(--c-text)" }}>{tool.icon}</div>
                 }
                 fullWidth
                 justify="start"
                 style={{
                   borderRadius: "6px",
-                  color: "var(--tools-text-and-icon-color)",
+                  color: "var(--c-text)",
                   padding: "8px 12px",
                 }}
               >

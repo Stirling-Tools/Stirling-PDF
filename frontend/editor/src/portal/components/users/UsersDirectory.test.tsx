@@ -19,7 +19,7 @@ import type { Team } from "@portal/api/teams";
 // Prove the gating against the real flavor capability files. The portal vitest
 // project resolves @app to proprietary and has no @saas alias, so the SaaS set is
 // reached by path; the self-hosted set uses the @proprietary alias.
-// eslint-disable-next-line no-restricted-imports
+// oxlint-disable-next-line no-restricted-imports
 import { usersCapabilities as saasCaps } from "../../../saas/portal/usersCapabilities";
 import { usersCapabilities as selfHostedCaps } from "@proprietary/portal/usersCapabilities";
 
@@ -92,6 +92,16 @@ describe("UsersDirectory — remove action gating", () => {
       screen.queryByRole("button", { name: "Team actions" }),
     ).not.toBeInTheDocument();
     expect(screen.queryByText("Rename team")).not.toBeInTheDocument();
+  });
+
+  it("lists a team with no members yet, so its first member can be added", () => {
+    renderDirectory(selfHostedCaps, [
+      ...TEAMS,
+      { id: 2, name: "Brand new", userCount: 0, owners: [] },
+    ]);
+
+    expect(screen.getByText("Brand new team")).toBeInTheDocument();
+    expect(screen.getAllByText("Add to team")).toHaveLength(2);
   });
 });
 

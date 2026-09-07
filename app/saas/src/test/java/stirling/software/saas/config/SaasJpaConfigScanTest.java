@@ -25,7 +25,10 @@ class SaasJpaConfigScanTest {
                     "stirling.software.saas.repository",
                     "stirling.software.saas.billing.repository",
                     "stirling.software.saas.ai.repository",
-                    "stirling.software.saas.payg.repository");
+                    "stirling.software.saas.payg.repository",
+                    // PrepaidBundleRepository lives in payg.bundle, not payg.repository — the repo
+                    // scan is leaf-level, not recursive.
+                    "stirling.software.saas.payg.bundle");
 
     private static final List<String> EXPECTED_ENTITY_PACKAGES =
             List.of(

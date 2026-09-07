@@ -130,21 +130,35 @@
   opacity: 0 !important; /* Keep invisible but functional */
 }
 
+/* Track: flat fill in both themes, no outline ring or border */
 #cc-main .toggle__icon {
   display: flex !important;
   align-items: center !important;
   justify-content: flex-start !important;
+  background: var(--cc-toggle-off-bg) !important;
+  border: none !important;
+  box-shadow: none !important;
+  transition: background-color 150ms ease !important;
 }
 
+/* Thumb: small plain circle, vertically centred, no drop shadow */
 #cc-main .toggle__icon-circle {
   display: block !important;
   position: absolute !important;
-  transition: transform 0.25s ease !important;
+  width: 14px !important;
+  height: 14px !important;
+  top: 3px !important;
+  left: 2.5px !important;
+  box-shadow: none !important;
+  transition:
+    transform 150ms ease,
+    background-color 150ms ease !important;
 }
 
+/* Mantine switches have no check/cross glyph inside the thumb */
 #cc-main .toggle__icon-on,
 #cc-main .toggle__icon-off {
-  display: flex !important;
+  display: none !important;
   align-items: center !important;
   justify-content: center !important;
   position: absolute !important;
@@ -152,15 +166,11 @@
   height: 100% !important;
 }
 
-/* Ensure toggles are visible in both themes */
-#cc-main .toggle__icon {
-  background: var(--cc-toggle-off-bg) !important;
-  border: 1px solid var(--cc-toggle-off-bg) !important;
-}
-
+/* Checked track visible in both themes, same flat Mantine look */
 #cc-main .section__toggle:checked ~ .toggle__icon {
   background: var(--cc-toggle-on-bg) !important;
-  border: 1px solid var(--cc-toggle-on-bg) !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 /* Ensure toggle text is visible */
@@ -226,18 +236,6 @@
   border-radius: 1000px !important;
 }
 
-/* Track: flat fill, no outline ring or border */
-#cc-main .toggle__icon {
-  border: none !important;
-  box-shadow: none !important;
-  transition: background-color 150ms ease !important;
-}
-
-#cc-main .section__toggle:checked ~ .toggle__icon {
-  border: none !important;
-  box-shadow: none !important;
-}
-
 /* Always-enabled categories = Mantine disabled switch (must out-prioritise
    the !important checked-track rule above) */
 #cc-main .section__toggle:checked:disabled ~ .toggle__icon {
@@ -250,25 +248,7 @@
   cursor: not-allowed !important;
 }
 
-/* Thumb: small plain circle, vertically centred, no drop shadow */
-#cc-main .toggle__icon-circle {
-  width: 14px !important;
-  height: 14px !important;
-  top: 3px !important;
-  left: 2.5px !important;
-  box-shadow: none !important;
-  transition:
-    transform 150ms ease,
-    background-color 150ms ease !important;
-}
-
 /* Checked thumb travel: 38 − 14 − 2.5 = 21.5px end position */
 #cc-main .section__toggle:checked ~ .toggle__icon .toggle__icon-circle {
   transform: translateX(19px) !important;
-}
-
-/* Mantine switches have no check/cross glyph inside the thumb */
-#cc-main .toggle__icon-on,
-#cc-main .toggle__icon-off {
-  display: none !important;
 }

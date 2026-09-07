@@ -9,7 +9,7 @@ import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import ShareManagementModal from "@app/components/shared/ShareManagementModal";
 import { useViewer } from "@app/contexts/ViewerContext";
-import { useFileState, useFileActions } from "@app/contexts/FileContext";
+import { useAllFiles, useFileActions } from "@app/contexts/FileContext";
 import { uploadHistoryChain } from "@app/services/serverStorageUpload";
 import { fileStorage } from "@app/services/fileStorage";
 import { alert } from "@app/components/toast";
@@ -39,7 +39,7 @@ export default function ViewerShareButton({
 }: ViewerShareButtonProps) {
   const { t } = useTranslation();
   const { activeFileId } = useViewer();
-  const { selectors } = useFileState();
+  const { fileStubs } = useAllFiles();
   const { actions } = useFileActions();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -49,7 +49,7 @@ export default function ViewerShareButton({
   // Resolve strictly to the file shown in the viewer. Never fall back to an
   // arbitrary file — sharing the wrong document would be worse than not
   // sharing. If there's no active file, the button is disabled (see isDisabled).
-  const stubs = selectors.getStirlingFileStubs();
+  const stubs = fileStubs;
   const stub = activeFileId
     ? stubs.find((s) => s.id === activeFileId)
     : undefined;

@@ -39,7 +39,6 @@ class PolicyS3ConnectionUsageCheckTest {
                         "Rotate",
                         "alice",
                         true,
-                        null,
                         List.of(),
                         List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
                         new OutputSpec("s3", Map.of("connectionId", "5")),

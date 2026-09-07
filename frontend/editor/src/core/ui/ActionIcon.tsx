@@ -100,18 +100,25 @@ export const ActionIcon = forwardRef<HTMLButtonElement, ActionIconProps>(
               "--ai-bg": "transparent",
               "--ai-hover": "transparent",
               "--ai-color": "var(--_text)",
-              "--ai-hover-color": "var(--color-text-1)",
+              "--ai-hover-color": "var(--c-text)",
               "--ai-bd": "1px solid transparent",
             }
-          : {
-              "--ai-bg": "transparent",
-              "--ai-hover": "var(--_tint)",
-              "--ai-color": "var(--_text)",
-              "--ai-bd":
-                variant === "secondary"
-                  ? "1px solid var(--_bd)"
-                  : "1px solid transparent",
-            };
+          : variant === "secondary"
+            ? {
+                // Filled when the accent defines --_solid-2 (default = inverse
+                // ink/snow); otherwise falls back to the outlined look.
+                "--ai-bg": "var(--_solid-2, transparent)",
+                "--ai-hover": "var(--_solid-2-hover, var(--_tint))",
+                "--ai-color": "var(--_on-2, var(--_text))",
+                "--ai-bd": "1px solid var(--_bd-2, var(--_bd))",
+              }
+            : {
+                // tertiary (ghost) — neutral text + hover for the default accent.
+                "--ai-bg": "transparent",
+                "--ai-hover": "var(--_tert-tint, var(--_tint))",
+                "--ai-color": "var(--_tert-text, var(--_text))",
+                "--ai-bd": "1px solid transparent",
+              };
 
     // Loosely-typed alias so the polymorphic `component={as}` doesn't fight Mantine's typing.
     const Comp = MantineActionIcon as ElementType;

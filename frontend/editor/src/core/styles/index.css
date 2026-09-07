@@ -62,7 +62,7 @@ code {
 }
 
 .stirling-link {
-  color: var(--mantine-color-blue-6);
+  color: var(--c-accent-text);
   text-decoration: none;
   font-weight: 500;
   transition: color 0.2s ease;
@@ -79,5 +79,9 @@ code {
 }
 
 .viewer-file-tab[data-active] {
-  background-color: rgba(147, 197, 253, 0.5);
+  background-color: color-mix(
+    in srgb,
+    var(--c-tab-active-tint) 50%,
+    transparent
+  );
 }

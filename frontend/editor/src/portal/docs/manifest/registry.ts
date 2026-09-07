@@ -14,9 +14,6 @@ import type {
 
 const manifest = JSON.parse(manifestRaw) as DocsManifest;
 
-/** Provenance of the current manifest (repo + ref it was generated from). */
-export const docsSource = manifest.source;
-
 /** The auto-sorted nav tree (sections → items). */
 export function loadDocsNav(): DocsNavSection[] {
   return manifest.nav;

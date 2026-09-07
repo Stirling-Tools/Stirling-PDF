@@ -40,8 +40,8 @@ export function ToolPickerFooterExtensions() {
       px="sm"
       py={10}
       style={{
-        borderTop: "1px solid var(--border-default)",
-        background: "var(--bg-toolbar)",
+        borderTop: "1px solid var(--c-border)",
+        background: "var(--c-bg-raised)",
         flexShrink: 0,
       }}
     >

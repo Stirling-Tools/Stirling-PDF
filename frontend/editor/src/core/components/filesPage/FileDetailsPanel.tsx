@@ -140,7 +140,7 @@ export function FileDetailsPanel({
     return null;
   }
 
-  const single = files.length === 1 ? files[0]! : null;
+  const single = files.length === 1 ? files[0] : null;
   const totalSize = files.reduce((sum, f) => sum + f.size, 0);
   const ext = single ? (single.name.split(".").pop() ?? "").toUpperCase() : "";
   // Files still needing a server upload; drives Save-to-server visibility.
@@ -201,7 +201,7 @@ export function FileDetailsPanel({
                 <img src={single.thumbnailUrl} alt="" />
               ) : (
                 <PictureAsPdfIcon
-                  style={{ fontSize: "3rem", color: "var(--text-muted)" }}
+                  style={{ fontSize: "3rem", color: "var(--c-text-subtle)" }}
                 />
               )}
             </div>

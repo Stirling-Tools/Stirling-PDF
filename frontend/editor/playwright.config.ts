@@ -17,10 +17,17 @@ import { defineConfig, devices } from "@playwright/test";
  *
  * @see https://playwright.dev/docs/test-configuration
  */
+/** Shared by every stubbed project so a spec sees one layout on all engines. */
+const STUBBED_VIEWPORT = { width: 1920, height: 1080 };
+
 const chromiumViewport = {
   ...devices["Desktop Chrome"],
-  viewport: { width: 1920, height: 1080 },
+  viewport: STUBBED_VIEWPORT,
 };
+
+// Dedicated dev-server port via V2_PORT so local runs don't collide with a
+// vite already on 5173 from other parallel work. Defaults to 5173.
+const DEV_PORT = process.env.V2_PORT ?? "5173";
 
 export default defineConfig({
   testDir: "./src/core/tests",
@@ -46,7 +53,7 @@ export default defineConfig({
   expect: { timeout: 10_000 },
 
   use: {
-    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:5173",
+    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? `http://localhost:${DEV_PORT}`,
     trace: "on-first-retry",
     screenshot: "only-on-failure",
     video: "on-first-retry",
@@ -55,7 +62,8 @@ export default defineConfig({
   },
 
   projects: [
-    // Stubbed - no backend required, chromium-only for CI speed
+    // Stubbed - no backend required. The chromium arm of the cross-browser
+    // set below; CI fans all three out, one job per engine.
     {
       name: "stubbed",
       testDir: "./src/core/tests/stubbed",
@@ -93,16 +101,24 @@ export default defineConfig({
       },
     },
 
-    // Cross-browser coverage for the stubbed suite (opt-in locally)
+    // Cross-browser coverage for the stubbed suite. Same viewport as `stubbed`,
+    // or a layout difference here reads as an engine outage.
     {
       name: "stubbed-firefox",
       testDir: "./src/core/tests/stubbed",
-      use: { ...devices["Desktop Firefox"] },
+      use: { ...devices["Desktop Firefox"], viewport: STUBBED_VIEWPORT },
     },
     {
       name: "stubbed-webkit",
       testDir: "./src/core/tests/stubbed",
-      use: { ...devices["Desktop Safari"] },
+      // Desktop Safari ships deviceScaleFactor 2; the editor now renders
+      // bitmaps at dpr x zoom, so leaving it would 4x every page raster in
+      // this suite. The HiDPI spec opts into 2x deliberately where it matters.
+      use: {
+        ...devices["Desktop Safari"],
+        viewport: STUBBED_VIEWPORT,
+        deviceScaleFactor: 1,
+      },
     },
   ],
 
@@ -112,9 +128,9 @@ export default defineConfig({
     // blew the 30s navigationTimeout under --workers=3 - see
     // all-tool-pages-load.spec.ts). Locally, keep `vite` dev for HMR.
     command: process.env.CI
-      ? "npx vite preview --port 5173 --strictPort"
-      : "npx vite",
-    url: "http://localhost:5173",
+      ? `npx vite preview --port ${DEV_PORT} --strictPort`
+      : `npx vite --port ${DEV_PORT} --strictPort`,
+    url: `http://localhost:${DEV_PORT}`,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
   },
