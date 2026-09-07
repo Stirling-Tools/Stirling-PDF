@@ -240,4 +240,34 @@ describe("PolicySetupWizard", () => {
     const result = onSubmit.mock.calls[0][1] as PolicySetupResult;
     expect(result.runOn).toBe("export");
   });
+
+  it("defaults a non-manager's new template to a pipeline, not a policy", async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    const entry: CatalogueEntry = {
+      category: security,
+      config: securityConfig,
+      policy: null,
+    };
+
+    render(
+      <PolicySetupWizard
+        entry={entry}
+        canManagePolicies={false}
+        onClose={vi.fn()}
+        onSubmit={onSubmit}
+        onCustomise={vi.fn()}
+      />,
+    );
+    // The enforce toggle is locked, and save is not blocked (it's an ordinary pipeline now).
+    expect(
+      screen.getByRole("switch", {
+        name: "portal.pipelines.enforce.label",
+      }),
+    ).toBeDisabled();
+    await submitWizard(ENABLE);
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    const result = onSubmit.mock.calls[0][1] as PolicySetupResult;
+    expect(result.required).toBe(false);
+  });
 });

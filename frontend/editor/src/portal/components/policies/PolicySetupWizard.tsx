@@ -265,9 +265,12 @@ function PolicySetupWizardBody({
   );
   const [maxRetries] = useState(policy?.state.maxRetries ?? 0);
   const [retryDelayMinutes] = useState(policy?.state.retryDelayMinutes ?? 0);
-  // A suggested policy is something the org requires by nature, so new ones default to required;
-  // editing preserves whatever was saved.
-  const [required, setRequired] = useState(policy?.state.required ?? true);
+  // A suggested policy is org-required by nature, so a manager's new one defaults to required; a
+  // non-manager can't create a policy, so theirs defaults to an ordinary pipeline with the enforce
+  // toggle locked. Editing preserves whatever was saved.
+  const [required, setRequired] = useState(
+    policy?.state.required ?? canManagePolicies,
+  );
   // A required policy is manager-only to save; a non-manager can't toggle enforce or submit one.
   const readOnly = required && !canManagePolicies;
 
