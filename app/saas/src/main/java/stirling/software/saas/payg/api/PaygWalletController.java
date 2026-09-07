@@ -32,7 +32,6 @@ import jakarta.validation.constraints.Min;
 
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.common.model.enumeration.TeamRole;
 import stirling.software.proprietary.model.TeamMembership;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
@@ -54,6 +53,7 @@ import stirling.software.saas.payg.repository.WalletLedgerRepository;
 import stirling.software.saas.payg.repository.WalletPolicyRepository;
 import stirling.software.saas.payg.wallet.WalletLedgerEntry;
 import stirling.software.saas.payg.wallet.WalletPolicy;
+import stirling.software.saas.security.UserTeamResolver;
 import stirling.software.saas.util.AuthenticationUtils;
 
 /**
@@ -109,6 +109,7 @@ public class PaygWalletController {
     private final PaygShadowChargeRepository shadowRepo;
     private final UserRepository userRepository;
     private final PrepaidBundleService prepaidBundleService;
+    private final UserTeamResolver userTeamResolver;
 
     public PaygWalletController(
             EntitlementService entitlementService,
@@ -119,7 +120,8 @@ public class PaygWalletController {
             WalletLedgerRepository ledgerRepo,
             PaygShadowChargeRepository shadowRepo,
             UserRepository userRepository,
-            PrepaidBundleService prepaidBundleService) {
+            PrepaidBundleService prepaidBundleService,
+            UserTeamResolver userTeamResolver) {
         this.entitlementService = Objects.requireNonNull(entitlementService, "entitlementService");
         this.billingService = Objects.requireNonNull(billingService, "billingService");
         this.memberRepo = Objects.requireNonNull(memberRepo, "memberRepo");
@@ -130,6 +132,7 @@ public class PaygWalletController {
         this.userRepository = Objects.requireNonNull(userRepository, "userRepository");
         this.prepaidBundleService =
                 Objects.requireNonNull(prepaidBundleService, "prepaidBundleService");
+        this.userTeamResolver = Objects.requireNonNull(userTeamResolver, "userTeamResolver");
     }
 
     /** The single wallet fetch the frontend makes; every figure on the Plan page comes from it. */
@@ -145,17 +148,15 @@ public class PaygWalletController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        Optional<TeamMembership> primary = primaryMembership(user.getId());
-        if (primary.isEmpty()) {
+        Optional<Long> resolvedTeam = userTeamResolver.teamId(user);
+        if (resolvedTeam.isEmpty()) {
             // Authenticated user without a team — shouldn't happen post-migration, but we don't
             // want to 500. Return a free-tier-shaped empty snapshot so the FE renders the gated UI
             // rather than blowing up on a null body.
             return ResponseEntity.ok(emptySnapshot());
         }
-
-        TeamMembership membership = primary.get();
-        Long teamId = membership.getTeam().getId();
-        boolean isLeader = membership.getRole() == TeamRole.LEADER;
+        Long teamId = resolvedTeam.get();
+        boolean isLeader = userTeamResolver.isLeader(user);
 
         // Billing facts (window, free allowance, per-doc rate, doc cap) and the entitlement
         // snapshot (period spend over that window) share the same composition service, so what
@@ -336,16 +337,15 @@ public class PaygWalletController {
         } catch (SecurityException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        Optional<TeamMembership> primary = primaryMembership(user.getId());
-        if (primary.isEmpty()) {
-            // No team → can't have a wallet to cap.
+        Optional<Long> resolvedTeam = userTeamResolver.teamId(user);
+        if (resolvedTeam.isEmpty()) {
+            // No team, so no wallet to cap.
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        TeamMembership membership = primary.get();
-        if (membership.getRole() != TeamRole.LEADER) {
+        if (!userTeamResolver.isLeader(user)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        Long teamId = membership.getTeam().getId();
+        Long teamId = resolvedTeam.get();
 
         WalletPolicy policy =
                 policyRepo
@@ -405,14 +405,8 @@ public class PaygWalletController {
         } catch (SecurityException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        primaryMembership(user.getId())
-                .ifPresent(m -> entitlementService.invalidate(m.getTeam().getId()));
+        userTeamResolver.teamId(user).ifPresent(entitlementService::invalidate);
         return ResponseEntity.noContent().build();
-    }
-
-    private Optional<TeamMembership> primaryMembership(Long userId) {
-        List<TeamMembership> rows = memberRepo.findPrimaryMembership(userId);
-        return rows.isEmpty() ? Optional.empty() : Optional.of(rows.getFirst());
     }
 
     private List<MemberRow> buildMemberRows(
