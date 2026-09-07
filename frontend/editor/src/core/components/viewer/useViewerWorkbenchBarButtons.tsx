@@ -573,7 +573,7 @@ export function useViewerWorkbenchBarButtons(
                 if (isFormFillActive) {
                   handleBackToTools();
                 } else {
-                  handleToolSelect("formFill" as any);
+                  handleToolSelect("formFill");
                 }
               }}
               disabled={disabled}

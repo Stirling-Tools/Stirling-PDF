@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import type { PoliciesByCategory, PolicyState } from "@app/types/policies";
+import type { PoliciesByKey, PolicyState } from "@app/types/policies";
 
 // Which policies export-time enforcement picks up: the policy's own editor flag, not its scope.
 
-const loadPolicies = vi.fn<() => PoliciesByCategory>();
+const loadPolicies = vi.fn<() => PoliciesByKey>();
 vi.mock("@app/services/policyStorage", () => ({
   loadPolicies: () => loadPolicies(),
 }));
@@ -69,7 +69,7 @@ describe("export-time policy selection", () => {
         runsOnEditor: true,
         backendId: "backend-editor",
       }),
-    } as unknown as PoliciesByCategory);
+    } as unknown as PoliciesByKey);
 
     await enforceExportPolicies([pdf()], ["file-1"]);
 
@@ -83,7 +83,7 @@ describe("export-time policy selection", () => {
         runsOnEditor: false,
         backendId: "backend-swept",
       }),
-    } as unknown as PoliciesByCategory);
+    } as unknown as PoliciesByKey);
 
     await enforceExportPolicies([pdf()], ["file-1"]);
 
@@ -98,7 +98,7 @@ describe("export-time policy selection", () => {
         runsOnEditor: true,
         backendId: "backend-security",
       }),
-    } as unknown as PoliciesByCategory);
+    } as unknown as PoliciesByKey);
 
     await enforceExportPolicies([pdf()], ["file-1"]);
 
@@ -117,7 +117,7 @@ describe("export-time policy selection", () => {
         backendId: "backend-first",
         order: 0,
       }),
-    } as unknown as PoliciesByCategory);
+    } as unknown as PoliciesByKey);
 
     await enforceExportPolicies([pdf()], ["file-1"]);
 

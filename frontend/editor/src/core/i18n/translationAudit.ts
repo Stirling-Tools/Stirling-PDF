@@ -98,7 +98,6 @@ export const I18N_PROJECTS: TranslationProject[] = [
       // (label maps, role/policy/journey catalogues) and rendered via
       // t(constant), invisible to the static scan.
       /^portal\.documents\.(status|audit)\./,
-      /^portal\.editorAdmin\.status\./,
       /^portal\.components\.(maturity|billingUnit)\./,
       /^portal\.home\.(pipelineTemplates|pipelineStages)\./,
       /^portal\.procurement\.journeySteps\./,
@@ -112,6 +111,11 @@ export const I18N_PROJECTS: TranslationProject[] = [
       // A failure's disabled reason arrives from the server as a key and is rendered with
       // t(thatKey), so nothing in source names it, but the copy still has to exist.
       /^portal\.failures\.disabled\./,
+      // Encryption panel copy keyed by backend enum values: key status, write
+      // state, migration state, and the reason a status read was refused. Each
+      // is t(`...${value}`) where the value comes from the API response.
+      /^portal\.infrastructure\.encryption\.(status|writeState|unavailable)\./,
+      /^portal\.infrastructure\.encryption\.migration\.state\./,
     ],
     minUsedKeys: 100,
     minLocaleKeys: 100,

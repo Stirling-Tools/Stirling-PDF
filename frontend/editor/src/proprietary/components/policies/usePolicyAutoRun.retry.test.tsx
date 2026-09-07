@@ -86,7 +86,7 @@ describe("auto-run queue-rejection retry", () => {
 
     recordRunStart({
       runId: "run-1",
-      categoryId: "security",
+      policyKey: "security",
       fileId: "file-1",
       fileName: "doc.pdf",
       fileSize: 1234,

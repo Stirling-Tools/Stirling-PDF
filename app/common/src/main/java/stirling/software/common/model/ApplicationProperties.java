@@ -1039,6 +1039,7 @@ public class ApplicationProperties {
         private Boolean enablePosthog;
         private Boolean enableScarf;
         private Boolean enableDesktopInstallSlide = true;
+        private boolean enableEasterEggs = true;
         private Datasource datasource;
         private boolean disableSanitize;
         private int maxDPI = 500;
