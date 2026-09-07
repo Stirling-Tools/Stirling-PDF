@@ -15,7 +15,7 @@ import {
  *
  *   - `unlinked`          — no SaaS account linked. Billable features render a
  *                           "link to unlock" affordance.
- *   - `linked-free`       — linked, running on the one-time free grant (500 PDFs).
+ *   - `linked-free`       — linked, running on the per-period free grant.
  *   - `linked-subscribed` — linked with a live PAYG subscription.
  *
  * The portal admin establishes the link by signing in to the SaaS Supabase
@@ -59,6 +59,9 @@ interface LinkContextValue {
   isLinked: boolean;
   /** Convenience for `LINK_INFO[linkState].unlocked` — billable features usable. */
   featuresUnlocked: boolean;
+  /** `linkState` has no "unknown", so without this "not asked yet" reads as "not linked". */
+  statusKnown: boolean;
+  markStatusKnown: () => void;
 }
 
 const LinkContext = createContext<LinkContextValue | null>(null);
@@ -66,11 +69,16 @@ const LinkContext = createContext<LinkContextValue | null>(null);
 export function LinkProvider({
   children,
   initialState = "unlinked",
+  statusKnown: initialStatusKnown = true,
 }: {
   children: ReactNode;
   initialState?: LinkState;
+  /** Whether `initialState` is authoritative. Only the app passes false; it has to go and ask. */
+  statusKnown?: boolean;
 }) {
   const [linkState, setLinkState] = useState<LinkState>(initialState);
+  const [statusKnown, setStatusKnown] = useState(initialStatusKnown);
+  const markStatusKnown = useCallback(() => setStatusKnown(true), []);
   const value = useMemo<LinkContextValue>(() => {
     const unlocked = LINK_INFO[linkState].unlocked;
     return {
@@ -78,8 +86,10 @@ export function LinkProvider({
       setLinkState,
       isLinked: linkState !== "unlinked",
       featuresUnlocked: unlocked,
+      statusKnown,
+      markStatusKnown,
     };
-  }, [linkState]);
+  }, [linkState, statusKnown, markStatusKnown]);
   return <LinkContext.Provider value={value}>{children}</LinkContext.Provider>;
 }
 
@@ -87,6 +97,14 @@ export function useLink(): LinkContextValue {
   const v = useContext(LinkContext);
   if (!v) throw new Error("useLink must be used inside <LinkProvider>");
   return v;
+}
+
+/**
+ * Null rather than throwing where there is no provider. The SaaS portal mounts none on purpose, so
+ * absent means "linking does not apply here" — a real answer, not a mistake.
+ */
+export function useLinkOptional(): LinkContextValue | null {
+  return useContext(LinkContext);
 }
 
 /**

@@ -18,6 +18,12 @@ public enum FailureActionId {
 
     DISMISS(Execution.SERVER, "Dismiss"),
 
+    /** Opens the failed tool with its document, rather than running it again unattended. */
+    OPEN_IN_TOOL(Execution.CLIENT, "Retry"),
+
+    /** Unlocks the document with a password the owner supplies. */
+    DECRYPT(Execution.CLIENT, "Decrypt and retry"),
+
     /** Open the document behind the incident, in whichever client can resolve its id. */
     VIEW_FILE(Execution.CLIENT, "View file"),
 

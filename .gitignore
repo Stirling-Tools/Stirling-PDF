@@ -272,6 +272,8 @@ id_ed25519.pub
 
 # node_modules
 node_modules/
+# A symlink named node_modules is a file, which the slash form does not match.
+node_modules
 
 # weasyPrint
 **/LOCAL_APPDATA_FONTCONFIG_CACHE/**
@@ -312,3 +314,4 @@ docs/type3/signatures/
 
 # Local screenshot artifacts from *-screenshots.spec.ts
 frontend/editor/screenshots/
+frontend/editor/src-tauri/libs/.variant
