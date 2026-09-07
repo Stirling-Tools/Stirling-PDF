@@ -2,14 +2,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   deliverSweepResults,
   currentRunIds,
-} from "./processingRunDelivery";
+} from "@app/services/processingRunDelivery";
 import {
   fetchProcessingFolderRuns,
   fetchRunOutputFile,
   type ProcessingFolderRun,
-} from "./processingFolderApi";
+} from "@app/services/processingFolderApi";
 
-vi.mock("./processingFolderApi", () => ({
+vi.mock("@app/services/processingFolderApi", () => ({
   fetchProcessingFolderRuns: vi.fn(),
   fetchRunOutputFile: vi.fn(),
 }));
