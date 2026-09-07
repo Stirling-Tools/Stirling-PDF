@@ -29,6 +29,11 @@ export interface PipelineEditHeaderProps {
    * unaffected.
    */
   canManagePolicies?: boolean;
+  /**
+   * The permission check has not resolved yet. Config actions stay locked (fail-closed), but the
+   * manager-only reason is withheld so a still-loading manager isn't told they lack permission.
+   */
+  permissionsLoading?: boolean;
 
   /** The pipeline's live state. Toggling it takes effect immediately, not on save. */
   enabled: boolean;
@@ -68,6 +73,7 @@ export function PipelineEditHeader({
   required,
   onRequiredChange,
   canManagePolicies = true,
+  permissionsLoading = false,
   enabled,
   onTogglePause,
   togglingEnabled,
@@ -181,6 +187,7 @@ export function PipelineEditHeader({
           required={required}
           onRequiredChange={onRequiredChange}
           disabled={!canManagePolicies}
+          permissionsLoading={permissionsLoading}
         />
 
         {/* Pause and Save both write the whole policy, so they are mutually exclusive: neither can
@@ -256,7 +263,7 @@ export function PipelineEditHeader({
         <PipelineBlockerTooltip
           heading={t("portal.pipelines.builder.blocker.saveHeading")}
           blockers={
-            readOnly
+            readOnly && !permissionsLoading
               ? [t("portal.pipelines.builder.blocker.managerOnly")]
               : blockers
           }

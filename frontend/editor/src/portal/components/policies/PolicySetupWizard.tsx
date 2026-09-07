@@ -34,6 +34,11 @@ interface PolicySetupWizardProps {
   entry: CatalogueEntry | null;
   /** Whether the user may manage required policies; gates the enforce toggle and a policy's save. */
   canManagePolicies?: boolean;
+  /**
+   * The permission check is still loading. The enforce toggle stays locked, but the manager-only
+   * tooltip is withheld so a still-loading manager isn't told they lack permission.
+   */
+  permissionsLoading?: boolean;
   onClose: () => void;
   /**
    * Fires on submit with the collected settings + built pipeline steps. May be
@@ -202,6 +207,7 @@ function seedTools(entry: CatalogueEntry): ToolState[] {
 export function PolicySetupWizard({
   entry,
   canManagePolicies = true,
+  permissionsLoading = false,
   onClose,
   onSubmit,
   onCustomise,
@@ -213,6 +219,7 @@ export function PolicySetupWizard({
       key={entry.category.id}
       entry={entry}
       canManagePolicies={canManagePolicies}
+      permissionsLoading={permissionsLoading}
       onClose={onClose}
       onSubmit={onSubmit}
       onCustomise={onCustomise}
@@ -223,12 +230,14 @@ export function PolicySetupWizard({
 function PolicySetupWizardBody({
   entry,
   canManagePolicies,
+  permissionsLoading,
   onClose,
   onSubmit,
   onCustomise,
 }: {
   entry: CatalogueEntry;
   canManagePolicies: boolean;
+  permissionsLoading: boolean;
   onClose: () => void;
   onSubmit: (entry: CatalogueEntry, result: PolicySetupResult) => Promise<void>;
   onCustomise: (entry: CatalogueEntry, result: PolicySetupResult) => void;
@@ -535,6 +544,7 @@ function PolicySetupWizardBody({
           required={required}
           onRequiredChange={changeRequired}
           disabled={!canManagePolicies}
+          permissionsLoading={permissionsLoading}
         />
       </div>
     </Modal>

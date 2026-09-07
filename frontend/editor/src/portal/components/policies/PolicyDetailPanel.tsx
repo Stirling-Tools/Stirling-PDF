@@ -20,6 +20,11 @@ interface PolicyDetailPanelProps {
   busy?: boolean;
   /** Whether the user may manage required policies; a required policy is read-only when false. */
   canManagePolicies?: boolean;
+  /**
+   * The permission check has not resolved yet. Controls stay locked (fail-closed), but the
+   * manager-only note is withheld so a still-loading manager isn't told they lack permission.
+   */
+  permissionsLoading?: boolean;
   onClose: () => void;
   onEdit: () => void;
   onRun?: () => void;
@@ -105,6 +110,7 @@ export function PolicyDetailPanel({
   policy,
   busy = false,
   canManagePolicies = true,
+  permissionsLoading = false,
   onClose,
   onEdit,
   onRun,
@@ -148,7 +154,7 @@ export function PolicyDetailPanel({
         title={t(category.label)}
         footer={
           <div className="portal-policies__detail-foot">
-            {readOnly && (
+            {readOnly && !permissionsLoading && (
               <span className="portal-policies__detail-readonly">
                 {t("portal.policies.detail.managerOnly")}
               </span>

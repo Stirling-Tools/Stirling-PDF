@@ -17,6 +17,11 @@ export interface PipelineCreateHeaderProps {
   onRequiredChange: (required: boolean) => void;
   /** Whether the user may create a required policy; when false the enforce toggle is locked. */
   canManagePolicies?: boolean;
+  /**
+   * The permission check is still loading. The enforce toggle stays locked, but the manager-only
+   * tooltip is withheld so a still-loading manager isn't told they lack permission.
+   */
+  permissionsLoading?: boolean;
 
   canSave: boolean;
   /** Everything still owed before the pipeline can be created, shown on the disabled create button. */
@@ -43,6 +48,7 @@ export function PipelineCreateHeader({
   required,
   onRequiredChange,
   canManagePolicies = true,
+  permissionsLoading = false,
   canSave,
   blockers,
   saving,
@@ -84,6 +90,7 @@ export function PipelineCreateHeader({
           required={required}
           onRequiredChange={onRequiredChange}
           disabled={!canManagePolicies}
+          permissionsLoading={permissionsLoading}
         />
 
         {/* The pair share one tooltip target because a disabled button swallows its own hover - the

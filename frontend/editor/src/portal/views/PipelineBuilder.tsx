@@ -228,7 +228,8 @@ export function PipelineBuilder() {
     [id],
   );
   const sourcesState = useSources();
-  const { canManage: canManagePolicies } = useCanManagePolicies();
+  const { canManage: canManagePolicies, isLoading: permissionsLoading } =
+    useCanManagePolicies();
   const triggersState = useAsync<TriggerInfo[]>(
     async () => await fetchTriggers(),
     [],
@@ -1322,6 +1323,7 @@ export function PipelineBuilder() {
           required={required}
           onRequiredChange={setRequired}
           canManagePolicies={canManagePolicies}
+          permissionsLoading={permissionsLoading}
           enabled={enabled}
           onTogglePause={handleTogglePause}
           togglingEnabled={togglingEnabled}
@@ -1345,6 +1347,7 @@ export function PipelineBuilder() {
           required={required}
           onRequiredChange={setRequired}
           canManagePolicies={canManagePolicies}
+          permissionsLoading={permissionsLoading}
           canSave={canSave}
           blockers={blockers}
           saving={submitting}

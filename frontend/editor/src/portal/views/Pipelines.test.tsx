@@ -293,6 +293,37 @@ describe("Pipelines view", () => {
     ).toBeDisabled();
   });
 
+  it("withholds the manager-only note while the permission check is still loading", async () => {
+    // A check that never settles: canManage stays fail-closed false, isLoading stays true.
+    fetchPolicyPermissions.mockReset();
+    fetchPolicyPermissions.mockReturnValue(new Promise(() => {}));
+    fetchPipeline.mockResolvedValue({
+      id: "plc-redaction",
+      name: "Redaction sweep",
+      enabled: true,
+      required: true,
+      icon: "shield",
+      inputs: [],
+      steps: [{ operation: "/api/v1/security/auto-redact", parameters: {} }],
+      output: { type: "inline", options: { categoryId: "security" } },
+      outputIds: [],
+      editor: { allowed: true, runOn: "upload" },
+    });
+
+    renderView();
+    fireEvent.click(await screen.findByText("Redaction sweep")); // detail panel
+
+    // Controls stay locked (fail-closed), but a still-loading manager isn't told they're not allowed.
+    expect(
+      await screen.findByRole("button", {
+        name: "portal.policies.detail.actions.editSettings",
+      }),
+    ).toBeDisabled();
+    expect(
+      screen.queryByText("portal.policies.detail.managerOnly"),
+    ).not.toBeInTheDocument();
+  });
+
   it("warns with a retry when the permission check fails, instead of locking silently", async () => {
     fetchPolicyPermissions.mockReset();
     fetchPolicyPermissions.mockRejectedValueOnce(new Error("boom"));

@@ -59,6 +59,7 @@ export function Pipelines() {
     useAiEngineEnabled();
   const {
     canManage: canManagePolicies,
+    isLoading: permissionsLoading,
     isError: permissionsError,
     refetch: retryPermissions,
   } = useCanManagePolicies();
@@ -340,6 +341,7 @@ export function Pipelines() {
         policy={detail?.policy ?? null}
         busy={busy}
         canManagePolicies={canManagePolicies}
+        permissionsLoading={permissionsLoading}
         onClose={() => setDetail(null)}
         onEdit={handleEdit}
         onTogglePause={handleTogglePause}
@@ -350,6 +352,7 @@ export function Pipelines() {
       <PolicySetupWizard
         entry={wizard}
         canManagePolicies={canManagePolicies}
+        permissionsLoading={permissionsLoading}
         onClose={() => setWizard(null)}
         onSubmit={handleSubmit}
         onCustomise={handleCustomise}

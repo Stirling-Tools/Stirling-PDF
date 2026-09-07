@@ -4,6 +4,7 @@ import { fetchPolicyPermissions } from "@portal/api/pipelines";
 
 export interface PolicyPermissionsState {
   canManage: boolean;
+  isLoading: boolean;
   isError: boolean;
   refetch: () => void;
 }
@@ -17,6 +18,7 @@ export function useCanManagePolicies(): PolicyPermissionsState {
   });
   return {
     canManage: query.data?.canManagePolicies ?? false,
+    isLoading: query.isPending,
     isError: query.isError,
     refetch: () => void query.refetch(),
   };

@@ -8,6 +8,11 @@ export interface EnforceAsPolicyControlProps {
   onRequiredChange: (required: boolean) => void;
   /** Lock the toggle when the user can't manage required policies (a non-admin/-team-leader). */
   disabled?: boolean;
+  /**
+   * The permission check is still loading. The toggle stays locked, but the manager-only tooltip is
+   * withheld so a still-loading manager isn't told they lack permission.
+   */
+  permissionsLoading?: boolean;
 }
 
 /**
@@ -19,6 +24,7 @@ export function EnforceAsPolicyControl({
   required,
   onRequiredChange,
   disabled = false,
+  permissionsLoading = false,
 }: EnforceAsPolicyControlProps) {
   const { t } = useTranslation();
   return (
@@ -32,7 +38,7 @@ export function EnforceAsPolicyControl({
       />
       <InfoTooltip
         label={
-          disabled
+          disabled && !permissionsLoading
             ? t("portal.pipelines.enforce.managerOnly")
             : t("portal.pipelines.enforce.desc")
         }
