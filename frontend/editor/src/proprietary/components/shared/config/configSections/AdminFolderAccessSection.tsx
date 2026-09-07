@@ -48,19 +48,15 @@ export default function AdminFolderAccessSection() {
     setSettings,
     loading,
     saving,
-    fetchSettings,
     saveSettings,
     isFieldPending,
-  } = useAdminSettings<FolderAccessSettingsData>({ sectionName: "policies" });
+  } = useAdminSettings<FolderAccessSettingsData>({
+    sectionName: "policies",
+    enabled: loginEnabled,
+  });
 
   const [newRoot, setNewRoot] = useState("");
   const [impliedRoots, setImpliedRoots] = useState<ImpliedFolderRoot[]>([]);
-
-  useEffect(() => {
-    if (loginEnabled) {
-      fetchSettings();
-    }
-  }, [loginEnabled]);
 
   useEffect(() => {
     if (!loginEnabled) return;

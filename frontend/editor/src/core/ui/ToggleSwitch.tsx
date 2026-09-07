@@ -13,6 +13,8 @@ export interface ToggleSwitchProps {
   disabled?: boolean;
   size?: "sm" | "md";
   id?: string;
+  /** Placed on the <label>, which is what a click has to land on to toggle. */
+  "data-testid"?: string;
 }
 
 /**
@@ -30,6 +32,7 @@ export function ToggleSwitch({
   disabled,
   size = "md",
   id,
+  "data-testid": testId,
 }: ToggleSwitchProps) {
   const autoId = useId();
   const controlId = id ?? autoId;
@@ -37,6 +40,7 @@ export function ToggleSwitch({
     <label
       className={`sui-toggle sui-toggle--${size}${disabled ? " is-disabled" : ""}`}
       htmlFor={controlId}
+      data-testid={testId}
     >
       <input
         id={controlId}
