@@ -72,7 +72,7 @@ public class PolicyEngine {
 
     // errorCode marking a run that was never admitted (job queue full under load). Transient: the
     // client treats it as "busy" and retries, rather than as a terminal processing failure.
-    private static final String QUEUE_FULL_CODE = "POLICY_QUEUE_FULL";
+    static final String QUEUE_FULL_CODE = "POLICY_QUEUE_FULL";
 
     private final PolicyExecutor stepExecutor;
     private final TaskManager taskManager;

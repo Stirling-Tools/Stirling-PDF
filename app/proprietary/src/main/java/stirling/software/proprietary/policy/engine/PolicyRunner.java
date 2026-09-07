@@ -262,12 +262,20 @@ public class PolicyRunner {
         handle.completion()
                 .whenComplete(
                         (run, throwable) -> {
-                            if (run != null && run.getStatus() == PolicyRunStatus.CANCELLED) {
-                                // A cancelled run is not a failure: settle the claim, then drop
-                                // the row entirely, so the file reads as unprocessed rather than
-                                // parked-failed. This also heals a revert's reset when a run
-                                // outlives the quiesce wait — its late settle lands and is
-                                // immediately forgotten.
+                            boolean cancelled =
+                                    run != null && run.getStatus() == PolicyRunStatus.CANCELLED;
+                            boolean neverAdmitted =
+                                    run != null
+                                            && PolicyEngine.QUEUE_FULL_CODE.equals(
+                                                    run.getErrorCode());
+                            if (cancelled || neverAdmitted) {
+                                // Neither is a verdict on the file: cancellation is the
+                                // user's intent, and a queue-full rejection means nothing was
+                                // ever attempted. Settle the claim, then drop the row, so the
+                                // file reads as queued rather than parked-failed — the next
+                                // sweep or reconcile pass simply takes it again. This also
+                                // heals a revert's reset when a run outlives the quiesce
+                                // wait: the late settle lands and is immediately forgotten.
                                 onComplete.accept(false);
                                 if (fileIdentity != null) {
                                     processedLedger.forget(policy.id(), fileIdentity);

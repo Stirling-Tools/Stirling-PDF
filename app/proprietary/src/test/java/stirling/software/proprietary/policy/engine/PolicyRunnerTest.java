@@ -415,4 +415,29 @@ class PolicyRunnerTest {
 
         assertFalse(runner.awaitQuiesce("p1", java.time.Duration.ofMillis(50)));
     }
+
+    @Test
+    void aQueueFullRejectionReleasesTheClaimForTheNextSweep() throws Exception {
+        InputSpec spec = InputSpec.folder("/in");
+        Policy policy = policy(List.of(spec));
+        java.util.concurrent.atomic.AtomicBoolean outcome =
+                new java.util.concurrent.atomic.AtomicBoolean(true);
+        ResolvedInput unit =
+                new ResolvedInput(PolicyInputs.of(List.of()), "/in/doc.pdf", outcome::set);
+        when(folderSource.supports(spec)).thenReturn(true);
+        when(folderSource.resolve(eq(spec), any())).thenReturn(List.of(unit));
+        CompletableFuture<PolicyRun> completion = new CompletableFuture<>();
+        when(policyEngine.runPolicy(any(), any(), any(), any(), any(), any()))
+                .thenReturn(new PolicyRunHandle("r", completion));
+        runner.run(policy);
+
+        PolicyRun run = mock(PolicyRun.class);
+        when(run.getStatus()).thenReturn(PolicyRunStatus.FAILED);
+        when(run.getErrorCode()).thenReturn("POLICY_QUEUE_FULL");
+        completion.complete(run);
+
+        // Nothing was attempted on the file: the claim is dropped, not parked failed.
+        assertFalse(outcome.get());
+        verify(processedLedger).forget("p1", "/in/doc.pdf");
+    }
 }
