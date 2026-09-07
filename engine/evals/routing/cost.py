@@ -18,6 +18,7 @@ import json
 import sys
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 _EVALS_ROOT = Path(__file__).resolve().parents[1]
 if str(_EVALS_ROOT) not in sys.path:
@@ -91,11 +92,11 @@ def dollars(input_tokens: float, output_tokens: float) -> float:
     return input_tokens / 1e6 * HAIKU_INPUT_PER_MTOK + output_tokens / 1e6 * HAIKU_OUTPUT_PER_MTOK
 
 
-def build_cost_table(summary_path: Path) -> dict:
+def build_cost_table(summary_path: Path) -> dict[str, Any]:
     payload = json.loads(summary_path.read_text(encoding="utf-8"))
     summary = payload["summary"]
 
-    rows = []
+    rows: list[dict[str, Any]] = []
     for name, stats in summary.items():
         per_conv_in = stats["avg_input_tokens"]
         per_conv_out = stats["avg_output_tokens"]

@@ -15,6 +15,7 @@ from routing.client import Budget, CallResult, OllamaRouter, enum_schema
 from routing.dataset import CAPABILITIES, RoutingCase
 from stirling.agents.orchestrator import _ROUTER_SYSTEM_PROMPT
 from stirling.contracts import AiFile, ConversationMessage, format_conversation_history, format_file_names
+from stirling.models import FileId
 
 # Production ceiling for the router's tier (engine/.env STIRLING_FAST_MODEL_MAX_TOKENS).
 PROD_MAX_TOKENS = 2048
@@ -40,7 +41,7 @@ class Strategy(Protocol):
 def build_user_prompt(case: RoutingCase) -> str:
     """The orchestrator's own prompt shape (OrchestratorAgent._build_prompt)."""
     history = format_conversation_history([ConversationMessage(role=r, content=c) for r, c in case.history])
-    files = format_file_names([AiFile(id=f"id-{name}", name=name) for name in case.files])
+    files = format_file_names([AiFile(id=FileId(f"id-{name}"), name=name) for name in case.files])
     return (
         f"Conversation history:\n{history}\nUser message: {case.message}\nFiles: {files}\nAvailable artifacts:\n- none"
     )
