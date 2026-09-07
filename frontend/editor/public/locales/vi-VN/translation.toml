@@ -3526,7 +3526,6 @@ label = "Vị trí Y"
 
 [crop.error]
 failed = "Không cắt được PDF"
-invalidArea = "Vùng cắt vượt quá ranh giới PDF"
 
 [crop.preview]
 title = "Chọn vùng cắt"

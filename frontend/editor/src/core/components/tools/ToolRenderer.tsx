@@ -19,9 +19,7 @@ const ToolRenderer = ({
   // Get the tool from context (instead of direct hook call)
   const { toolRegistry } = useToolWorkflow();
   const selectedTool =
-    selectedToolKey in toolRegistry
-      ? toolRegistry[selectedToolKey as ToolId]
-      : undefined;
+    selectedToolKey in toolRegistry ? toolRegistry[selectedToolKey] : undefined;
 
   // Handle tools that only work in workbenches (read, multiTool)
   if (selectedTool && !selectedTool.component && selectedTool.workbench) {

@@ -1,11 +1,16 @@
+/* The inset is symmetric so the panel sits in the optical centre of the viewport rather than
+   riding the top edge. It is published as a var because .sui-modal's max-height has to be the
+   viewport minus both halves of it — if the two drift apart a tall modal overflows the backdrop
+   and, because the panel is centre-aligned, loses its header off the top of the screen. */
 .sui-modal__backdrop {
+  --modal-inset-block: 2.5rem;
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.55);
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
-  padding: 5rem 1.5rem 1.5rem;
+  padding: var(--modal-inset-block) 1.5rem;
   z-index: 100;
   animation: fadeIn 0.18s ease both;
   overscroll-behavior: contain;
@@ -24,20 +29,19 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-height: calc(100vh - 6.5rem);
-  max-height: calc(100dvh - 6.5rem); /* mobile browser chrome shrinks 100vh */
+  max-height: calc(100vh - var(--modal-inset-block) * 2);
+  /* mobile browser chrome shrinks 100vh */
+  max-height: calc(100dvh - var(--modal-inset-block) * 2);
   overflow: hidden;
   animation: scaleIn 0.2s cubic-bezier(0.4, 0, 0.2, 1) both;
 }
 
-/* Phones: drop the tall top inset so the modal gets the vertical space */
+/* Phones: tighten the inset so the modal gets the vertical space. Only the variable moves —
+   the max-height above follows it, so the pair cannot fall out of step. */
 @media (max-width: 30rem) {
   .sui-modal__backdrop {
-    padding: 1rem 0.75rem;
-    align-items: center;
-  }
-  .sui-modal {
-    max-height: calc(100dvh - 2rem);
+    --modal-inset-block: 1rem;
+    padding-inline: 0.75rem;
   }
 }
 

@@ -1,3 +1,6 @@
+import { clearNotificationReadState } from "@app/hooks/useNotifications";
+import { suspendWorkbenchSession } from "@app/services/workbenchSession";
+
 type SignOutFn = () => Promise<void>;
 
 interface AccountLogoutDeps {
@@ -21,6 +24,12 @@ export function useAccountLogout() {
           "1",
         );
       }
+      // The tab outlives the session; the next person to sign in here must not
+      // inherit this workbench. Suspends writing too - signing out unmounts the
+      // editor, and its flush would otherwise write the record straight back.
+      suspendWorkbenchSession();
+      // Same reason: the next person's own failures must not arrive pre-read.
+      clearNotificationReadState();
       await signOut();
     } finally {
       redirectToLogin();
