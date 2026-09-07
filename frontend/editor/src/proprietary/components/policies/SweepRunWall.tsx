@@ -25,11 +25,7 @@ export interface SweepWallCard {
   labels: string[];
 }
 
-/**
- * Fold one poll of the runs feed into the wall's cards: a card per run the
- * sweep actually started, appearing on its first poll and moving state as the
- * run moves. Nothing here invents a file, and a done card never regresses.
- */
+/** Fold one poll of the runs feed into the wall's cards; a done card never regresses. */
 export function mergeRunsIntoCards(
   prev: SweepWallCard[],
   runs: ProcessingFolderRun[],
@@ -59,12 +55,8 @@ export function mergeRunsIntoCards(
   return next;
 }
 
-/**
- * The wall itself: every document a sweep took on, lighting up as its run
- * settles. Pure render over the caller's cards, so it works from any feed —
- * the Downloads wizard's delivery callbacks or {@link FolderSweepWall}'s own
- * polling.
- */
+/** The wall itself: every document a sweep took on, lighting up as its run settles.
+ *  Pure render over the caller's cards, so it works from any feed. */
 export function SweepRunWall({ cards }: { cards: SweepWallCard[] }) {
   const { t } = useTranslation();
   const labelName = useLabelName();
@@ -108,12 +100,9 @@ export interface FolderSweepWallProps {
 }
 
 /**
- * A working folder's live sweep, wherever the sweep came from — the kebab's
- * "process now", a resume, a watched arrival. Polls the folder's runs feed and
- * raises a one-line strip only while runs are actually executing, standing
- * down a few polls after the last one settles. Just the count: the grid below
- * already wears each file's own state badge, so the full wall here would say
- * everything twice.
+ * A working folder's live sweep, wherever it came from. Polls the runs feed and raises a
+ * one-line strip only while runs are executing — the grid below already wears each file's
+ * state badge, so a full wall would say everything twice.
  */
 export function FolderSweepWall({ policyId }: FolderSweepWallProps) {
   const { t } = useTranslation();

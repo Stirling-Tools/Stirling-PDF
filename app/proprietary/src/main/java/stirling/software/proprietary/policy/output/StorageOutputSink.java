@@ -30,22 +30,14 @@ import stirling.software.proprietary.storage.repository.StoredFileRepository;
 import stirling.software.proprietary.storage.service.FileStorageService;
 
 /**
- * Writes a run's outputs back into app storage — the output side of a processing folder. Two modes,
- * chosen per policy via {@code mode}:
+ * Writes a run's outputs back into app storage — the output side of a processing folder. {@code
+ * mode} picks: {@code new_version} (default) replaces the input file's content in place under its
+ * own name, settling the ledger at the bumped version; {@code new_file} stores each output as a new
+ * file in {@code folderId} (default: the input's folder), recorded in the ledger before it becomes
+ * visible so a sweep never claims the policy's own output.
  *
- * <ul>
- *   <li>{@code new_version} (default): the single output replaces the input file's content in
- *       place, under the input's own name. The producing source settles the ledger at the bumped
- *       version, so the folder does not re-ingest the run's own output.
- *   <li>{@code new_file}: each output is stored as a new file and placed in the folder given by
- *       {@code folderId} (default: the input file's folder). The file is stored unplaced first and
- *       recorded in the processed-file ledger before it becomes visible in the folder, so a sweep
- *       can never claim the producing policy's own output.
- * </ul>
- *
- * <p>Ownership follows the input: outputs are stored as the input file's owner, within their quota.
- * A run fed from outside storage — a directory on disk — has no such anchor, so it is stored as the
- * owner of the {@code folderId} its outputs are placed in, and must name one.
+ * <p>Ownership follows the input; a run fed from disk has no anchor, so it is stored as the owner
+ * of the {@code folderId} it writes into, and must name one.
  */
 @Slf4j
 @Service
@@ -132,9 +124,8 @@ public class StorageOutputSink implements PolicyOutputSink {
     }
 
     /**
-     * Store first (unplaced — invisible to any folder sweep), record the ledger row, then place
-     * into the folder. The row therefore exists before the file is discoverable, mirroring the disk
-     * folder sink's stage-record-rename order.
+     * Store first (unplaced — invisible to sweeps), record the ledger row, then place into the
+     * folder: the row exists before the file is discoverable.
      */
     private StoredFile storeIntoFolder(
             OutputDelivery delivery,
@@ -169,10 +160,7 @@ public class StorageOutputSink implements PolicyOutputSink {
         return storedFileRepository.save(stored);
     }
 
-    /**
-     * The stored file the run's primary input came from, or null when the input came from outside
-     * storage (a directory on disk). Storage outputs anchor to it whenever it exists.
-     */
+    /** The stored file the run's primary input came from; null when the input came from disk. */
     private StoredFile originOf(OutputDelivery delivery) {
         return delivery.inputs().primary().stream()
                 .filter(StoredFileBacked.class::isInstance)
@@ -183,9 +171,8 @@ public class StorageOutputSink implements PolicyOutputSink {
     }
 
     /**
-     * Who the outputs are stored as, and therefore whose quota they count against. A storage-backed
-     * run follows its input's owner. A run fed from disk has nobody to follow, so it takes the
-     * owner of the folder it is writing into — which is why such a policy must name one.
+     * Who the outputs are stored as, and whose quota they count against: the input's owner, or for
+     * a disk-fed run the owner of the folder being written into.
      */
     private User ownerFor(StoredFile origin, UUID folderId) {
         if (origin != null) {

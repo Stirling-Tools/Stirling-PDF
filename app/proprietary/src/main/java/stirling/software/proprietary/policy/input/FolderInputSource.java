@@ -159,14 +159,10 @@ public class FolderInputSource implements InputSource {
                             identity,
                             success -> {
                                 if (config.track()) {
-                                    // Track mode never removes the input: the directory belongs to
-                                    // the user (their Downloads, a scan drop). A successful run
-                                    // settles at the file's CURRENT version, because an in-place
-                                    // pipeline legitimately replaces the input with its result —
-                                    // settling at the claimed version would leave the result
-                                    // claimable and the folder re-processing its own output
-                                    // forever. The trade: an external edit landing mid-run is
-                                    // recorded as processed without another pass.
+                                    // Track mode never removes the input. A success settles at
+                                    // the file's CURRENT version: an in-place pipeline replaces
+                                    // the input with its result, and the claimed version would
+                                    // leave the folder re-processing its own output forever.
                                     ctx.settle(
                                             identity,
                                             success ? currentGate(file, claimedGate) : claimedGate,

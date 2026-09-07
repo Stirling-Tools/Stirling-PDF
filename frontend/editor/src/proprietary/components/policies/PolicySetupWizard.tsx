@@ -39,17 +39,11 @@ interface PolicySetupWizardProps {
   /** The category being configured, or null when closed. */
   entry: CatalogueEntry | null;
   onClose: () => void;
-  /**
-   * Fires on submit with the collected settings + built pipeline steps. May be
-   * async; if it rejects the wizard re-enables submit and surfaces the failure.
-   */
+  /** Fires on submit with settings + built steps; a rejection re-enables submit and
+   *  surfaces the failure. */
   onSubmit: (entry: CatalogueEntry, result: PolicySetupResult) => Promise<void>;
-  /**
-   * Fires when the user asks to Customise: hands the current (unsaved) settings to the full pipeline
-   * builder, which takes over editing. The builder can express anything the simple wizard can't, so
-   * this is a one-way step unless the pipeline stays simple-representable. Surfaces without a
-   * builder (the editor's folder setup) omit it, and the button hides.
-   */
+  /** Fires when the user asks to Customise: hands the unsaved settings to the full builder.
+   *  Surfaces without a builder omit it and the button hides. */
   onCustomise?: (entry: CatalogueEntry, result: PolicySetupResult) => void;
   /** Whether a Purview tenant is connected; gates the Purview-backed steps. */
   hasPurviewConnection?: boolean;
@@ -62,11 +56,8 @@ interface PolicySetupWizardProps {
   formatError?: (e: unknown) => string;
   /** Whether the org-enforcement choice applies on this surface (it doesn't for folders). */
   enforceControl?: boolean;
-  /**
-   * Frame the form yourself: receives the middle content (the pipeline controls) and the
-   * submit state, and returns the surrounding chrome. Without it the portal's own modal
-   * renders — title, Customise, enforce footer and all.
-   */
+  /** Frame the form yourself: receives the middle content and submit state, returns the
+   *  chrome. Without it the portal's own modal renders. */
   children?: (frame: PolicySetupFrame) => ReactNode;
 }
 
@@ -83,14 +74,10 @@ function resolveFieldValues(
   return out;
 }
 
-/**
- * Seed the workflow's tools. A configured policy's saved steps win (so editing
- * round-trips); otherwise the category preset's default chain. Each preset step
- * starts enabled — the user toggles tools off in the workflow.
- */
-// Temporary until the catalogue carries a defaultEnabled flag.
-// Steps that cannot work until someone configures them, so they start off rather than failing
-// every run of a freshly created policy. Purview needs a tenant connection and a label GUID.
+/** Seed the workflow's tools: a configured policy's saved steps win (editing round-trips),
+ *  else the category preset's default chain. */
+// Temporary until the catalogue carries a defaultEnabled flag: steps that cannot work
+// unconfigured start off. Purview needs a tenant connection and a label GUID.
 const DISABLED_BY_DEFAULT = new Set<PolicyToolId>([
   "watermark",
   "purviewApplyLabel",
@@ -98,19 +85,15 @@ const DISABLED_BY_DEFAULT = new Set<PolicyToolId>([
   "externalApiCall",
 ]);
 
-// Steps that cannot work without a Purview tenant connection, so they are hidden entirely until one
-// is configured rather than offered as an option that can only fail.
+// Hidden without a Purview tenant connection; offered, they could only fail.
 const PURVIEW_TOOLS = new Set<PolicyToolId>([
   "purviewApplyLabel",
   "purviewReadLabel",
 ]);
 
 /**
- * Policy-facing framing for each capability a policy can include. Labels and
- * descriptions describe what the policy DOES to a document — deliberately not
- * naming the underlying tool — so the setup reads as the policy's own settings
- * rather than an assembled chain of tools. Endpoints with no entry fall back to
- * the humanised endpoint name with no description.
+ * Policy-facing framing per capability: labels describe what the policy DOES to a document,
+ * not the underlying tool. Endpoints with no entry fall back to the humanised endpoint name.
  */
 const CAPABILITY_META: Record<
   PolicyToolId,
@@ -216,10 +199,8 @@ function seedTools(entry: CatalogueEntry): ToolState[] {
 }
 
 /**
- * The real "set up a policy" flow, mirroring the editor wizard: a Workflow step
- * (the tool chain — toggle which tools run) and a Settings step (policy fields,
- * sources, scope, reviewer, output/run). Submitting builds the pipeline steps
- * (each `operation` an endpoint path) and persists via the real POST.
+ * The "set up a policy" flow: a Workflow step (toggle which tools run) and a Settings step.
+ * Submitting builds the pipeline steps and persists via the real POST.
  */
 export function PolicySetupWizard({
   entry,
@@ -232,8 +213,7 @@ export function PolicySetupWizard({
   enforceControl,
   children,
 }: PolicySetupWizardProps) {
-  // Re-key the wizard on the opened category so all state resets cleanly when a
-  // different category is opened (avoids stale field values bleeding across).
+  // Re-key on the opened category so state resets cleanly between categories.
   return entry ? (
     <PolicySetupWizardBody
       key={entry.category.id}
@@ -283,15 +263,14 @@ function PolicySetupWizardBody({
 
   const [tools, setTools] = useState<ToolState[]>(() => {
     const seeded = seedTools(entry);
-    // Classification's single tool has no toggle in the workflow step, so keep it
-    // enabled unconditionally — otherwise editing a policy whose saved steps
-    // somehow lack it would strand submit with no way to re-enable it.
+    // Classification's single tool has no toggle, so keep it enabled — editing a policy
+    // whose saved steps lack it would otherwise strand submit.
     return isClassification
       ? seeded.map((t) => ({ ...t, enabled: true }))
       : seeded;
   });
-  // No UI for any of these: each carries the stored value through on edit, and a sensible default for
-  // a new policy - runOn per category (security enforces on export), the rest run-once/new-version.
+  // No UI for these: stored values carry through on edit; new policies get runOn per
+  // category and run-once/new-version for the rest.
   const [fieldValues] = useState(() => resolveFieldValues(entry));
   const [scopeTypes] = useState<string[]>(policy?.state.scopeTypes ?? []);
   const [reviewerEmail] = useState(policy?.state.reviewerEmail ?? "");
@@ -307,15 +286,14 @@ function PolicySetupWizardBody({
   );
   const [maxRetries] = useState(policy?.state.maxRetries ?? 0);
   const [retryDelayMinutes] = useState(policy?.state.retryDelayMinutes ?? 0);
-  // A suggested policy is something the org requires by nature, so new ones default to required;
-  // editing preserves whatever was saved.
+  // A suggested policy is org-required by nature; editing preserves what was saved.
   const [required, setRequired] = useState(policy?.state.required ?? true);
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Purview steps only appear once a tenant is connected. An already-enabled one (a saved policy,
-  // or a tenant connected earlier) stays visible so editing a policy never silently drops it.
+  // Purview steps appear once a tenant is connected; an already-enabled one stays visible
+  // so editing never silently drops it.
   const visibleTools = useMemo(
     () =>
       tools.filter(
@@ -355,9 +333,8 @@ function PolicySetupWizardBody({
     );
     return {
       required,
-      // Preserve any stored options this wizard has no UI for (a customised policy's sources, an
-      // editor-authored automation blob) rather than wiping them on save; the builder is where
-      // those are actually edited.
+      // Preserve stored options this wizard has no UI for rather than wiping them on save;
+      // the builder is where those are edited.
       extraOptions: policy?.state.extraOptions,
       runsOnEditor: true,
       fieldValues,
@@ -374,8 +351,7 @@ function PolicySetupWizardBody({
     };
   }
 
-  // Hand the current settings to the full builder. No "needs at least one tool" guard here: the
-  // builder has its own, and the point of customising is to keep shaping the chain.
+  // No "needs at least one tool" guard here: the builder has its own.
   function customise() {
     onCustomise?.(entry, collectResult());
   }
@@ -392,8 +368,7 @@ function PolicySetupWizardBody({
       await onSubmit(entry, collectResult());
     } catch (e) {
       setSubmitting(false);
-      // Surface the backend's actual reason (e.g. a step missing its account) rather than a
-      // generic failure the operator cannot act on.
+      // Surface the backend's actual reason rather than a generic failure.
       const message = formatError?.(e) ?? (e instanceof Error ? e.message : "");
       setError(message || t("portal.policies.wizard.errors.saveFailed"));
     }

@@ -1,8 +1,6 @@
 /**
- * The policy/pipeline catalogue: the template categories, their guided-setup
- * definitions, and the wizard's submit shape. One catalogue, two lenses - the
- * portal's Pipelines gallery and the editor's folder-processing setup both
- * read this, so a template added here appears in both.
+ * The policy/pipeline catalogue. One catalogue, two lenses: the portal's Pipelines gallery
+ * and the editor's folder-processing setup both read it.
  */
 
 import { policyStep, type PolicyToolStep } from "@app/policies/operations";
@@ -112,10 +110,7 @@ export interface CatalogueEntry {
 /*  Endpoint display labels                                                   */
 /* ──────────────────────────────────────────────────────────────────────── */
 
-/**
- * i18n keys keyed by endpoint; labels stored steps in the detail view. Mostly
- * {@link ToolEndpoint}s, plus the AI classify endpoint, which isn't part of the generated union.
- */
+/** i18n label keys by endpoint: {@link ToolEndpoint}s plus the AI classify endpoint. */
 const ENDPOINT_LABELS: Partial<
   Record<ToolEndpoint | "/api/v1/ai/tools/classify-and-label", string>
 > = {
@@ -198,11 +193,9 @@ export const POLICY_CATEGORIES: PolicyCategory[] = [
   },
 ];
 
-/**
- * `summary`/`rules`/`scopeLabel`/field `label` values are i18n keys — render
- * with t(). Field `value`/`options` strings are persisted policy state and
- * stay as stable values (translating them would corrupt saved configs).
- */
+/** `summary`/`rules`/`scopeLabel`/`label` values are i18n keys — render with t(). Field
+ *  `value`/`options` strings are persisted policy state; translating them would corrupt
+ *  saved configs. */
 export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
   ingestion: {
     summary: "portal.policies.config.ingestion.summary",
@@ -271,9 +264,8 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
       "portal.policies.config.compliance.rules.2",
     ],
     scopeLabel: "portal.policies.config.scopeAll",
-    // Apply writes our sensitivity label into the document after it is sanitised and flattened.
-    // Offered only once a Purview tenant is connected (it needs a tenant connection and a label
-    // GUID, which no default can guess), and hidden entirely until then.
+    // Labels the finished document after sanitise/flatten. Offered only once a Purview
+    // tenant is connected — it needs a tenant and a label GUID no default can guess.
     defaultOperations: [
       policyStep("sanitize"),
       policyStep("flatten"),

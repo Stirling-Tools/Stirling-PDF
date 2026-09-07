@@ -23,14 +23,11 @@ import stirling.software.proprietary.storage.repository.FolderRepository;
 import stirling.software.proprietary.storage.repository.StoredFileRepository;
 
 /**
- * Reads input files from a folder in the app's file storage — the input side of a processing
- * folder. Each stored file is one unit of work, claimed through the ledger at its current content
- * version ({@code updatedAt} + size), so an unchanged file never reruns while a re-uploaded or
- * edited one is picked up again. Files are tracked in place and never deleted.
- *
- * <p>A run whose output replaces the file's content in place bumps that version; the completion
- * hook settles the ledger at the file's post-run version so the next sweep does not re-ingest the
- * run's own output. Purpose-specific files (signing artifacts etc.) are never picked up.
+ * Reads input files from a folder in app storage — the input side of a processing folder. Each
+ * stored file is claimed through the ledger at its current content version ({@code updatedAt} +
+ * size): unchanged files never rerun, re-uploaded or edited ones run again, nothing is deleted. An
+ * in-place output bumps that version, and the completion hook settles the ledger at the post-run
+ * version so the next sweep does not re-ingest the run's own output.
  *
  * <p>Options: {@code folderId} — the storage folder's UUID.
  */
@@ -103,10 +100,9 @@ public class StorageFolderInputSource implements InputSource {
     }
 
     /**
-     * Settle at whatever version the file carries after the run, not the one that was claimed: an
-     * in-place output bumped {@code updatedAt}, and settling at the old gate would make the next
-     * sweep read the run's own output as a fresh edit. A file deleted mid-run settles at the
-     * claimed gate; presence cleanup prunes its row.
+     * Settle at the file's post-run version, not the claimed one — an in-place output bumped {@code
+     * updatedAt}, and the old gate would read it as a fresh edit. A file deleted mid-run settles at
+     * the claimed gate; presence cleanup prunes its row.
      */
     private void settleAtCurrentVersion(
             ResolveContext ctx, Long fileId, String identity, String claimedGate, boolean success) {
@@ -149,9 +145,8 @@ public class StorageFolderInputSource implements InputSource {
     }
 
     /**
-     * Streams the stored blob on demand through the storage provider, presenting the user-visible
-     * filename (the storage key is opaque). Content is not version-pinned: a concurrent in-place
-     * replace is read as-is and reconciled by the gate on the next sweep.
+     * Streams the stored blob on demand, presenting the user-visible filename. Content is not
+     * version-pinned: a concurrent replace is reconciled by the gate on the next sweep.
      */
     private static final class StoredFileResource extends AbstractResource
             implements StoredFileBacked {

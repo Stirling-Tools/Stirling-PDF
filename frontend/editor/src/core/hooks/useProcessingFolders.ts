@@ -54,15 +54,13 @@ export interface ProcessingFoldersApi {
   retryFile: (recordId: string, name: string) => Promise<void>;
   /** Restore a file's original: pauses the folder; the file reads as waiting. */
   revertFile: (recordId: string, name: string) => Promise<void>;
-  /** Restore every archived original: pauses the folder; mid-run files skip.
-   *  Reports counts so a no-op (nothing archived) can say so. */
+  /** Restore every archived original: pauses the folder; mid-run files are skipped. */
   revertAll: (
     folder: FolderRecord,
   ) => Promise<{ restored: number; skipped: number } | undefined>;
   /** Attach the default (classification) pipeline, or resume a paused one. */
   enable: (folder: FolderRecord) => Promise<void>;
-  /** Pause processing; the pair and its processed-history stay, so resuming
-   *  never re-runs what was already done. */
+  /** Pause processing; history stays, so resuming never re-runs finished work. */
   disable: (folder: FolderRecord) => Promise<void>;
   /** Remove the processing behaviour and its history; the folder and files stay. */
   remove: (folder: FolderRecord) => Promise<void>;
@@ -73,10 +71,8 @@ export interface ProcessingFoldersApi {
 const EMPTY_IDS: ReadonlySet<string> = new Set();
 
 /**
- * Processing folders — folders that run a pipeline over anything added to
- * them, whatever kind of folder they are. Inert in core; the proprietary
- * build shadows this with an implementation backed by
- * `/api/v1/processing-folders`.
+ * Processing folders, whatever kind of folder they watch. Inert in core; the proprietary
+ * build shadows this with an implementation backed by `/api/v1/processing-folders`.
  */
 export function useProcessingFolders(): ProcessingFoldersApi {
   return {

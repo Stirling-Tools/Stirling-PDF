@@ -54,32 +54,27 @@ public interface ProcessedLedger {
 
     /**
      * Take a parked failure back into PROCESSING at the same gate. Only a user-invoked sweep calls
-     * this — the unattended watcher never retries a failing file until it changes — and it is
-     * unbounded because a person clicking again is the rate limiter. False when the row is no
-     * longer a same-gate failure (raced by another sweep, or the file changed).
+     * this; the unattended watcher never retries a failing file until it changes. False when the
+     * row is no longer a same-gate failure.
      */
     boolean reclaimFailed(String policyId, String identity, String gate);
 
     /**
-     * Forget a parked failure so the file reads as never processed and the next sweep claims it
-     * fresh, whatever its version. Per-file retry is built on this: unlike {@link #reclaimFailed}
-     * it does not put the row in flight, so any sweep — not just a user-invoked one — picks the
-     * file up. False when the row is not currently a failure.
+     * Forget a parked failure so the next sweep claims the file fresh. Unlike {@link
+     * #reclaimFailed} the row is not put in flight, so any sweep picks it up. False when the row is
+     * not currently a failure.
      */
     boolean forgetFailure(String policyId, String identity);
 
     /**
-     * Forget a settled row entirely, so the file reads as never processed and any sweep claims it
-     * fresh. Backs revert: a restored original goes back to unprocessed rather than done. An
-     * in-flight row stays — its run's settle would recreate it anyway. False when nothing was
-     * forgotten.
+     * Forget a settled row so the file reads as never processed — backs revert. An in-flight row
+     * stays; its run's settle would recreate it anyway. False when nothing was forgotten.
      */
     boolean forget(String policyId, String identity);
 
     /**
-     * Whether any of the policy's rows is still {@link ProcessedFileStatus#PROCESSING}. A revert
-     * quiesces on this: a run's status flips terminal the moment it is cancelled, but its claim
-     * settles only when the task actually ends.
+     * Whether any row is still {@link ProcessedFileStatus#PROCESSING}. A revert quiesces on this: a
+     * cancelled run flips terminal at once but settles only when its task ends.
      */
     boolean anyInFlight(String policyId);
 
