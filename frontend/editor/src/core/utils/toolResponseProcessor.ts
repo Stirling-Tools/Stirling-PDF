@@ -18,7 +18,7 @@ export async function processResponse(
   originalFiles: File[],
   filePrefix?: string,
   responseHandler?: ResponseHandler,
-  responseHeaders?: Record<string, any>,
+  responseHeaders?: Record<string, unknown>,
 ): Promise<File[]> {
   if (responseHandler) {
     const out = await responseHandler(blob, originalFiles);
@@ -28,12 +28,14 @@ export async function processResponse(
   // Check if we should use the backend-provided filename from headers
   // Only when responseHeaders are explicitly provided (indicating the operation requested this)
   if (responseHeaders) {
-    const contentDisposition = responseHeaders["content-disposition"];
+    const contentDisposition = responseHeaders["content-disposition"] as
+      | string
+      | undefined;
     const backendFilename = getFilenameFromHeaders(contentDisposition);
     if (backendFilename) {
       const type =
         blob.type ||
-        responseHeaders["content-type"] ||
+        (responseHeaders["content-type"] as string | undefined) ||
         "application/octet-stream";
       return [new File([blob], backendFilename, { type })];
     }

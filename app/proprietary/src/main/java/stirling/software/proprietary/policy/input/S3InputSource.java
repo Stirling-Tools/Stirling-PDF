@@ -119,8 +119,9 @@ public class S3InputSource implements InputSource {
                 continue;
             }
             work.add(
-                    new ResolvedInput(
+                    ResolvedInput.forFile(
                             PolicyInputs.of(List.of(objectResource(client, config, object))),
+                            identity,
                             success ->
                                     completeConsumed(
                                             ctx,

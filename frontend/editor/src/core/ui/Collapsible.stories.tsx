@@ -19,20 +19,17 @@ export const Default: Story = {
         <Collapsible
           open={open}
           onToggle={() => setOpen((o) => !o)}
-          header={<strong>Section title</strong>}
-          aside={<span style={{ fontSize: "0.75rem" }}>3 items</span>}
+          header="Advanced"
         >
-          <div style={{ padding: "0.875rem", borderTop: "1px solid #eee" }}>
-            Body content revealed when the section is open.
-          </div>
+          Body content revealed when the section is open.
         </Collapsible>
       </div>
     );
   },
 };
 
-// Stacked instances form an accordion; each section toggles independently.
-export const Accordion: Story = {
+// Several independent disclosures stacked in a form-like column.
+export const Stacked: Story = {
   render: () => {
     const [open, setOpen] = useState<number | null>(0);
     const sections = ["Trial", "Quote", "Agreement"];
@@ -42,7 +39,7 @@ export const Accordion: Story = {
           maxWidth: "40rem",
           display: "flex",
           flexDirection: "column",
-          gap: "0.75rem",
+          gap: "0.875rem",
         }}
       >
         {sections.map((label, i) => (
@@ -50,11 +47,9 @@ export const Accordion: Story = {
             key={label}
             open={open === i}
             onToggle={() => setOpen(open === i ? null : i)}
-            header={<strong>{label}</strong>}
+            header={label}
           >
-            <div style={{ padding: "0.875rem", borderTop: "1px solid #eee" }}>
-              {label} details.
-            </div>
+            {label} details.
           </Collapsible>
         ))}
       </div>

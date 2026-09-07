@@ -3,6 +3,7 @@ package stirling.software.SPDF.controller.api.security;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +12,8 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.font.PDFont;
+import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.junit.jupiter.api.DisplayName;
@@ -219,12 +222,22 @@ class RedactExecuteServiceTest {
      * anchor) 1: line one 2: line two 3: line three 4: STOP-HERE (end anchor) 5: line five (must
      * NOT be redacted)
      */
+    private PDFont helvetica(PDDocument doc) throws IOException {
+        try (InputStream is =
+                getClass().getResourceAsStream("/type3/library/fonts/dejavu/DejaVuSans.ttf")) {
+            if (is != null) {
+                return PDType0Font.load(doc, is);
+            }
+        }
+        return new PDType1Font(Standard14Fonts.FontName.HELVETICA);
+    }
+
     private PDDocument buildSingleColumnDoc() throws IOException {
         PDDocument doc = new PDDocument();
         PDPage page = new PDPage(PDRectangle.LETTER);
         doc.addPage(page);
         try (PDPageContentStream cs = new PDPageContentStream(doc, page)) {
-            cs.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), FONT_SIZE);
+            cs.setFont(helvetica(doc), FONT_SIZE);
             String[] lines = {
                 "START-HERE", "line one", "line two", "line three", "STOP-HERE", "line five"
             };
@@ -247,7 +260,7 @@ class RedactExecuteServiceTest {
         PDPage page = new PDPage(PDRectangle.LETTER);
         doc.addPage(page);
         try (PDPageContentStream cs = new PDPageContentStream(doc, page)) {
-            cs.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), FONT_SIZE);
+            cs.setFont(helvetica(doc), FONT_SIZE);
             // Body lines are padded to make each column genuinely wide enough that column
             // detection (which ignores narrow lines) treats both sides as real columns.
             String fill = " " + "x".repeat(26);
@@ -294,7 +307,7 @@ class RedactExecuteServiceTest {
         PDPage page = new PDPage(PDRectangle.LETTER);
         doc.addPage(page);
         try (PDPageContentStream cs = new PDPageContentStream(doc, page)) {
-            cs.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), FONT_SIZE);
+            cs.setFont(helvetica(doc), FONT_SIZE);
             String[] lines = {
                 "#1 Auto layout",
                 "Body about auto layout.",
@@ -331,7 +344,7 @@ class RedactExecuteServiceTest {
         PDPage page = new PDPage(PDRectangle.LETTER);
         doc.addPage(page);
         try (PDPageContentStream cs = new PDPageContentStream(doc, page)) {
-            cs.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), FONT_SIZE);
+            cs.setFont(helvetica(doc), FONT_SIZE);
             // Header — full width, lines 0..1.
             for (int i = 0; i < 2; i++) {
                 cs.beginText();
@@ -383,7 +396,7 @@ class RedactExecuteServiceTest {
         PDPage page = new PDPage(PDRectangle.LETTER);
         doc.addPage(page);
         try (PDPageContentStream cs = new PDPageContentStream(doc, page)) {
-            cs.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), FONT_SIZE);
+            cs.setFont(helvetica(doc), FONT_SIZE);
 
             float dateX = PAGE_WIDTH - 144f; // right-aligned dates near the right margin
 

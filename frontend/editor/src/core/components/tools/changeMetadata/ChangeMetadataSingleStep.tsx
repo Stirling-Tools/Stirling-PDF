@@ -1,5 +1,7 @@
+import { useContext, useEffect, useState } from "react";
 import { Stack, Divider, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
+import { ViewerContext } from "@app/contexts/ViewerContext";
 import {
   ChangeMetadataParameters,
   createCustomMetadataFunctions,
@@ -19,6 +21,31 @@ interface ChangeMetadataSingleStepProps {
   disabled?: boolean;
 }
 
+/**
+ * Pre-fills the form from the currently open document's existing metadata.
+ * Isolated in its own component so it only mounts where a ViewerProvider exists
+ * (the editor and the in-editor Automate modal). The pipeline builder has no
+ * viewer and no single "current document", so it is skipped there rather than
+ * crashing on useViewer.
+ */
+const MetadataPrefill = ({
+  onParameterChange,
+  onExtractingChange,
+}: {
+  onParameterChange: ChangeMetadataSingleStepProps["onParameterChange"];
+  onExtractingChange: (extracting: boolean) => void;
+}) => {
+  const { isExtractingMetadata } = useMetadataExtraction({
+    updateParameter: onParameterChange,
+  });
+
+  useEffect(() => {
+    onExtractingChange(isExtractingMetadata);
+  }, [isExtractingMetadata, onExtractingChange]);
+
+  return null;
+};
+
 const ChangeMetadataSingleStep = ({
   parameters,
   onParameterChange,
@@ -26,77 +53,85 @@ const ChangeMetadataSingleStep = ({
 }: ChangeMetadataSingleStepProps) => {
   const { t } = useTranslation();
 
+  // Auto-prefill reads the viewer/file contexts, which only exist in the editor.
+  // Gate on the viewer so the pipeline builder renders the fields without it.
+  const hasViewerContext = useContext(ViewerContext) !== null;
+  const [isExtractingMetadata, setIsExtractingMetadata] = useState(false);
+
   // Get custom metadata functions using the utility
   const { addCustomMetadata, removeCustomMetadata, updateCustomMetadata } =
     createCustomMetadataFunctions(parameters, onParameterChange);
-
-  // Extract metadata from uploaded files
-  const { isExtractingMetadata } = useMetadataExtraction({
-    updateParameter: onParameterChange,
-  });
 
   const isDeleteAllEnabled = parameters.deleteAll;
   const fieldsDisabled = disabled || isDeleteAllEnabled || isExtractingMetadata;
 
   return (
-    <Stack gap="md">
-      {/* Delete All */}
-      <Stack gap="md">
-        <Text size="sm" fw={500}>
-          {t("changeMetadata.deleteAll.label", "Delete All Metadata")}
-        </Text>
-        <DeleteAllStep
-          parameters={parameters}
+    <>
+      {hasViewerContext && (
+        <MetadataPrefill
           onParameterChange={onParameterChange}
-          disabled={disabled}
+          onExtractingChange={setIsExtractingMetadata}
         />
-      </Stack>
-
-      <Divider />
-
-      {/* Standard Metadata Fields */}
+      )}
       <Stack gap="md">
-        <Text size="sm" fw={500}>
-          {t("changeMetadata.standardFields.title", "Standard Metadata")}
-        </Text>
-        <StandardMetadataStep
-          parameters={parameters}
-          onParameterChange={onParameterChange}
-          disabled={fieldsDisabled}
-        />
+        {/* Delete All */}
+        <Stack gap="md">
+          <Text size="sm" fw={500}>
+            {t("changeMetadata.deleteAll.label", "Delete All Metadata")}
+          </Text>
+          <DeleteAllStep
+            parameters={parameters}
+            onParameterChange={onParameterChange}
+            disabled={disabled}
+          />
+        </Stack>
+
+        <Divider />
+
+        {/* Standard Metadata Fields */}
+        <Stack gap="md">
+          <Text size="sm" fw={500}>
+            {t("changeMetadata.standardFields.title", "Standard Metadata")}
+          </Text>
+          <StandardMetadataStep
+            parameters={parameters}
+            onParameterChange={onParameterChange}
+            disabled={fieldsDisabled}
+          />
+        </Stack>
+
+        <Divider />
+
+        {/* Document Dates */}
+        <Stack gap="md">
+          <Text size="sm" fw={500}>
+            {t("changeMetadata.dates.title", "Document Dates")}
+          </Text>
+          <DocumentDatesStep
+            parameters={parameters}
+            onParameterChange={onParameterChange}
+            disabled={fieldsDisabled}
+          />
+        </Stack>
+
+        <Divider />
+
+        {/* Advanced Options */}
+        <Stack gap="md">
+          <Text size="sm" fw={500}>
+            {t("changeMetadata.advanced.title", "Advanced Options")}
+          </Text>
+          <AdvancedOptionsStep
+            parameters={parameters}
+            onParameterChange={onParameterChange}
+            disabled={fieldsDisabled}
+            addCustomMetadata={addCustomMetadata}
+            removeCustomMetadata={removeCustomMetadata}
+            updateCustomMetadata={updateCustomMetadata}
+          />
+        </Stack>
       </Stack>
-
-      <Divider />
-
-      {/* Document Dates */}
-      <Stack gap="md">
-        <Text size="sm" fw={500}>
-          {t("changeMetadata.dates.title", "Document Dates")}
-        </Text>
-        <DocumentDatesStep
-          parameters={parameters}
-          onParameterChange={onParameterChange}
-          disabled={fieldsDisabled}
-        />
-      </Stack>
-
-      <Divider />
-
-      {/* Advanced Options */}
-      <Stack gap="md">
-        <Text size="sm" fw={500}>
-          {t("changeMetadata.advanced.title", "Advanced Options")}
-        </Text>
-        <AdvancedOptionsStep
-          parameters={parameters}
-          onParameterChange={onParameterChange}
-          disabled={fieldsDisabled}
-          addCustomMetadata={addCustomMetadata}
-          removeCustomMetadata={removeCustomMetadata}
-          updateCustomMetadata={updateCustomMetadata}
-        />
-      </Stack>
-    </Stack>
+    </>
   );
 };
 

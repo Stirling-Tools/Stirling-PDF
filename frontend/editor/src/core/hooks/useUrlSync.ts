@@ -2,7 +2,7 @@
  * URL synchronization hooks for tool routing with registry support
  */
 
-import { useEffect, useCallback, useRef } from "react";
+import { useEffect, useCallback, useRef, type MutableRefObject } from "react";
 import { ToolId } from "@app/types/toolId";
 import {
   parseToolRoute,
@@ -12,6 +12,7 @@ import {
 import { ToolRegistry } from "@app/data/toolsTaxonomy";
 import { firePixel } from "@app/utils/scarfTracking";
 import { withBasePath } from "@app/constants/app";
+import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 
 /**
@@ -23,6 +24,11 @@ export function useNavigationUrlSync(
   clearToolSelection: () => void,
   registry: ToolRegistry,
   enableSync: boolean = true,
+  /**
+   * Tool the default-startup-view preference selected, if any. That selection
+   * sets the view, not the address, so it must not be written to the URL.
+   */
+  startupSelectedToolRef?: MutableRefObject<ToolId | null>,
 ) {
   const { config } = useAppConfig();
   const premiumEnabled = config?.premiumEnabled;
@@ -35,7 +41,7 @@ export function useNavigationUrlSync(
       const tool = registry[toolId];
       if (tool?.requiresPremium === true && premiumEnabled !== true) {
         // Premium tool accessed without premium - redirect to home
-        const homePath = withBasePath("/");
+        const homePath = withBasePath(EDITOR_BASENAME);
         if (window.location.pathname !== homePath) {
           clearToolRoute(true); // Use replaceState to avoid adding to history
           window.location.href = homePath;
@@ -76,19 +82,38 @@ export function useNavigationUrlSync(
   useEffect(() => {
     if (!enableSync) return;
 
+    const startupTool = startupSelectedToolRef?.current ?? null;
+
     if (selectedTool) {
-      updateToolRoute(selectedTool, registry, false); // Use pushState for user navigation
+      // A startup-view selection is a view preference, not a navigation: writing
+      // it here rewrote /editor to /read on every load. The effect re-runs
+      // whenever the registry identity changes, so the marker has to survive
+      // until the selection actually moves off it (cleared below).
+      if (startupTool !== selectedTool) {
+        updateToolRoute(selectedTool, registry, false); // Use pushState for user navigation
+      }
     } else if (prevSelectedTool.current !== null) {
       // Only clear URL if we had a tool before (user navigated away)
       // Don't clear on initial load when both current and previous are null
-      const homePath = withBasePath("/");
+      const homePath = withBasePath(EDITOR_BASENAME);
       if (window.location.pathname !== homePath) {
         clearToolRoute(false); // Use pushState for user navigation
       }
     }
 
+    // Spent once the user leaves the startup-applied tool, so re-picking it
+    // later is a real navigation and does update the URL.
+    if (
+      startupSelectedToolRef &&
+      startupTool !== null &&
+      prevSelectedTool.current === startupTool &&
+      selectedTool !== startupTool
+    ) {
+      startupSelectedToolRef.current = null;
+    }
+
     prevSelectedTool.current = selectedTool;
-  }, [selectedTool, registry, enableSync]);
+  }, [selectedTool, registry, enableSync, startupSelectedToolRef]);
 
   // Handle browser back/forward navigation
   useEffect(() => {

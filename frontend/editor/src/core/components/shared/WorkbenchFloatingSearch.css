@@ -1,0 +1,31 @@
+/* Unpainted floating search for the empty workbench. Height + top margin match
+   the WorkbenchBar's band so opening a file swaps it in without a shift. */
+.workbench-floating-search {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  margin-top: var(--nav-gutter);
+  padding: 0 1rem;
+  flex-shrink: 0;
+}
+
+.workbench-floating-search .super-search {
+  flex: 0 1 24rem;
+  width: min(100%, 24rem);
+  max-width: 24rem;
+}
+
+.workbench-floating-search .super-search input {
+  background-color: transparent;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  font-size: 12.5px;
+}
+
+[data-mantine-color-scheme="dark"]
+  .workbench-floating-search
+  .super-search
+  input {
+  background-color: transparent;
+}

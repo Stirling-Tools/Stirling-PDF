@@ -15,6 +15,15 @@ tasks:
     cmds:
       - npx playwright test --project=stubbed {{.CLI_ARGS}}
 
+  stubbed-project:
+    desc: "Run the stubbed E2E suite for a single Playwright project"
+    dir: frontend/editor
+    deps: [ ':frontend:prepare' ]
+    vars:
+      PROJECT: '{{.PROJECT | default "stubbed"}}'
+    cmds:
+      - npx playwright test --project={{.PROJECT}} {{.CLI_ARGS}}
+
   live:
     desc: "Run live E2E tests"
     summary: |

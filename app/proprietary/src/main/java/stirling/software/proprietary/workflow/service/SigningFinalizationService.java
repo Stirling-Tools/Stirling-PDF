@@ -217,16 +217,13 @@ public class SigningFinalizationService {
                 wetSignatures.size(),
                 session.getSessionId());
 
-        PDDocument document = pdfDocumentFactory.load(new ByteArrayInputStream(pdfBytes));
-        try {
+        try (PDDocument document = pdfDocumentFactory.load(new ByteArrayInputStream(pdfBytes))) {
             for (WetSignatureMetadata wetSig : wetSignatures) {
                 applyWetSignatureToPage(document, wetSig);
             }
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             document.save(baos);
             return baos.toByteArray();
-        } finally {
-            document.close();
         }
     }
 
@@ -242,11 +239,10 @@ public class SigningFinalizationService {
         }
 
         PDPage page = document.getPage(pageIndex);
-        PDPageContentStream contentStream =
-                new PDPageContentStream(
-                        document, page, PDPageContentStream.AppendMode.APPEND, true, true);
 
-        try {
+        try (PDPageContentStream contentStream =
+                new PDPageContentStream(
+                        document, page, PDPageContentStream.AppendMode.APPEND, true, true)) {
             // Use WetSignatureMetadata.extractBase64Data() to strip data URL prefix
             String base64Data = wetSig.extractBase64Data();
             if (base64Data == null || base64Data.isBlank()) {
@@ -279,8 +275,6 @@ public class SigningFinalizationService {
                     pdfY,
                     width,
                     height);
-        } finally {
-            contentStream.close();
         }
     }
 

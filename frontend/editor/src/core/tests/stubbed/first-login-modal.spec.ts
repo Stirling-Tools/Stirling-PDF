@@ -60,7 +60,7 @@ async function setUpFirstLoginPage(page: Page) {
 test.describe("First-login forced password change modal", () => {
   test("modal renders with FirstLoginSlide content", async ({ page }) => {
     await setUpFirstLoginPage(page);
-    await page.goto("/");
+    await page.goto("/editor");
 
     await expect(
       page.getByText(/must change your password|set your password/i).first(),
@@ -74,7 +74,7 @@ test.describe("First-login forced password change modal", () => {
     page,
   }) => {
     await setUpFirstLoginPage(page);
-    await page.goto("/");
+    await page.goto("/editor");
     await expect(
       page.getByText(/must change your password|set your password/i).first(),
     ).toBeVisible({ timeout: 15_000 });
@@ -100,7 +100,7 @@ test.describe("First-login forced password change modal", () => {
       },
     );
 
-    await page.goto("/");
+    await page.goto("/editor");
     await expect(
       page.getByText(/must change your password|set your password/i).first(),
     ).toBeVisible({ timeout: 15_000 });

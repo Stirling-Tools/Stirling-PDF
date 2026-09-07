@@ -183,7 +183,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
                             "X-Page-Number",
                             "X-Page-Size",
                             "Content-Disposition",
-                            "Content-Type")
+                            "Content-Type",
+                            "X-Stirling-Skipped-Field-Edits",
+                            "X-Stirling-Skipped-Field-Edits-Total")
                     .allowCredentials(true)
                     .maxAge(3600);
         } else if (hasConfiguredOrigins) {
@@ -229,7 +231,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
                             "X-Page-Number",
                             "X-Page-Size",
                             "Content-Disposition",
-                            "Content-Type")
+                            "Content-Type",
+                            "X-Stirling-Skipped-Field-Edits",
+                            "X-Stirling-Skipped-Field-Edits-Total")
                     .allowCredentials(true)
                     .maxAge(3600);
         } else {
@@ -256,7 +260,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
                             "X-Page-Number",
                             "X-Page-Size",
                             "Content-Disposition",
-                            "Content-Type")
+                            "Content-Type",
+                            "X-Stirling-Skipped-Field-Edits",
+                            "X-Stirling-Skipped-Field-Edits-Total")
                     .allowCredentials(true)
                     .maxAge(3600);
         }

@@ -36,18 +36,18 @@ test.describe("Navigation", () => {
       .getByRole("button", { name: /Back to all tools/i })
       .first()
       .click();
-    await expect(page).toHaveURL("/");
+    await expect(page).toHaveURL("/editor");
 
     await page.locator('a[href="/split"]').first().click();
     await expect(page).toHaveURL(/\/split/);
 
     await page.goBack();
-    await expect(page).toHaveURL("/");
+    await expect(page).toHaveURL("/editor");
 
     await page.goBack();
     await expect(page).toHaveURL(/\/merge/);
 
     await page.goForward();
-    await expect(page).toHaveURL("/");
+    await expect(page).toHaveURL("/editor");
   });
 });

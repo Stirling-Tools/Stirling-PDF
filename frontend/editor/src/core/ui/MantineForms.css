@@ -13,7 +13,7 @@
  * here act as a typed reference and as a fallback for any slot Mantine reads
  * before the inline vars are applied. */
 .sui-mantine-wrapper {
-  --input-bg: var(--c-surface);
+  --input-bg: var(--c-input-bg);
   --input-bd: var(--c-border);
   --input-bd-focus: var(--c-primary);
   --input-radius: var(--radius-md);
@@ -25,6 +25,10 @@
 }
 
 .sui-mantine-wrapper .mantine-Input-input {
+  font-size: 0.875rem;
+}
+
+.sui-mantine-dropdown [role="option"] {
   font-size: 0.875rem;
 }
 
@@ -55,7 +59,7 @@
 /* Pills match SUI's Chip component: small rounded tags. */
 .sui-mantine-pill {
   background: var(--c-primary-tint) !important;
-  color: var(--c-primary-hover) !important;
+  color: var(--c-accent-text) !important;
   border: 1px solid var(--c-primary-border) !important;
   border-radius: var(--radius-sm) !important;
   font-size: 0.75rem !important;
@@ -112,7 +116,7 @@
  * SuiProvider syncs forceColorScheme to SUI theme, so
  * [data-mantine-color-scheme="dark"] === [data-theme="dark"] in practice. ---- */
 [data-mantine-color-scheme="dark"] .sui-mantine-wrapper {
-  --input-bg: var(--c-surface);
+  --input-bg: var(--c-input-bg);
   --input-bd: var(--c-border);
   --input-color: var(--c-text);
 }

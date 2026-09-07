@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { TOOL_FORMATS, type ToolFormat } from "@app/types/toolIO";
 import {
@@ -9,7 +10,9 @@ import {
 
 /** The en-US `[toolFormat]` block, read straight from the locale file. */
 function toolFormatLabels(): Record<string, string> {
-  let current = dirname(new URL(import.meta.url).pathname);
+  // fileURLToPath, not URL.pathname: on Windows the latter yields "/C:/..." and
+  // resolving against it produces a "C:\C:\..." path that never matches.
+  let current = dirname(fileURLToPath(import.meta.url));
   for (let i = 0; i < 12; i++) {
     try {
       const toml = readFileSync(

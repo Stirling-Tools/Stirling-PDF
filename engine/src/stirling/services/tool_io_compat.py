@@ -89,11 +89,16 @@ def resolve_output(spec: ToolIOSpec, parameters: dict[str, object] | None) -> Re
     for rule in spec.cases:
         all_hold = True
         for condition in rule.when:
-            if parameters is None or condition.param not in parameters:
+            if parameters is not None and condition.param in parameters:
+                raw: object = parameters[condition.param]
+            elif condition.default is not None:
+                # The caller omitted it, so it takes the endpoint's default.
+                raw = condition.default
+            else:
                 saw_unknown_param = True
                 all_hold = False
                 continue
-            normalised = _normalise(parameters[condition.param])
+            normalised = _normalise(raw)
             all_hold = all_hold and any(_normalise(m) == normalised for m in condition.matches)
         if all_hold:
             return ResolvedOutput(format=rule.produces, arity=rule.arity, certain=True)

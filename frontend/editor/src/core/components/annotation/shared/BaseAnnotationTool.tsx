@@ -14,9 +14,17 @@ export interface AnnotationToolConfig {
   placeButtonText?: string;
 }
 
+interface InjectedAnnotationToolProps {
+  selectedColor: string;
+  signatureData: string | null;
+  onSignatureDataChange: (data: string | null) => void;
+  onColorSwatchClick: () => void;
+  disabled: boolean;
+}
+
 interface BaseAnnotationToolProps {
   config: AnnotationToolConfig;
-  children: React.ReactNode;
+  children: React.ReactElement<Partial<InjectedAnnotationToolProps>>;
   onSignatureDataChange?: (data: string | null) => void;
   disabled?: boolean;
 }
@@ -90,7 +98,7 @@ export const BaseAnnotationTool: React.FC<BaseAnnotationToolProps> = ({
       />
 
       {/* Tool Content */}
-      {React.cloneElement(children as React.ReactElement<any>, {
+      {React.cloneElement(children, {
         selectedColor,
         signatureData,
         onSignatureDataChange: handleSignatureDataChange,

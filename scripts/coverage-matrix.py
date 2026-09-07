@@ -46,14 +46,14 @@ import json
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
+
+from defusedxml.ElementTree import ParseError as _XMLParseError
 
 # defusedxml hardens the parser against XXE / billion-laughs / entity-
 # expansion attacks. JaCoCo XML on a CI runner is trusted input today,
 # but using the hardened parser is a one-line change and silences
 # scanners that pattern-match on `xml.etree.ElementTree.parse`.
 from defusedxml.ElementTree import parse as _xml_parse
-from defusedxml.ElementTree import ParseError as _XMLParseError
 
 AREAS = ("core", "proprietary", "saas", "desktop")
 
@@ -69,7 +69,7 @@ class Bucket:
     def pct(self) -> float:
         return 100.0 * self.covered / self.total if self.total else 0.0
 
-    def add(self, other: "Bucket") -> None:
+    def add(self, other: Bucket) -> None:
         self.covered += other.covered
         self.total += other.total
 
@@ -78,9 +78,7 @@ class Bucket:
 class RowBuckets:
     """Per-area buckets for one row of the matrix."""
 
-    by_area: dict[str, Bucket] = field(
-        default_factory=lambda: {a: Bucket() for a in AREAS}
-    )
+    by_area: dict[str, Bucket] = field(default_factory=lambda: {a: Bucket() for a in AREAS})
     # Some inputs (Playwright V8) don't have source-path info, so they
     # only contribute to ALL without an area attribution. Track those
     # separately so per-area cells stay honest.
@@ -94,7 +92,7 @@ class RowBuckets:
         agg.add(self.unattributed)
         return agg
 
-    def merge(self, other: "RowBuckets") -> None:
+    def merge(self, other: RowBuckets) -> None:
         for area in AREAS:
             self.by_area[area].add(other.by_area[area])
         self.unattributed.add(other.unattributed)
@@ -103,7 +101,7 @@ class RowBuckets:
 # --------------------------------------------------------------------- jacoco
 
 
-def _classify_backend(package_name: str) -> Optional[str]:
+def _classify_backend(package_name: str) -> str | None:
     """Map a JaCoCo package name to an area, or None to skip."""
     if not package_name:
         return None
@@ -152,7 +150,7 @@ def parse_jacoco_methods(path: Path) -> RowBuckets:
 # --------------------------------------------------------------- vitest (frontend)
 
 
-def _classify_frontend(file_path: str) -> Optional[str]:
+def _classify_frontend(file_path: str) -> str | None:
     """Map a vitest per-file path (anything containing src/<area>/) to an area."""
     if not file_path:
         return None
@@ -170,9 +168,7 @@ def parse_vitest_per_file(path: Path) -> RowBuckets:
     try:
         data = json.loads(path.read_text())
     except (OSError, json.JSONDecodeError) as exc:
-        print(
-            f"::warning::Failed to parse vitest summary {path}: {exc}", file=sys.stderr
-        )
+        print(f"::warning::Failed to parse vitest summary {path}: {exc}", file=sys.stderr)
         return row
     for file_path, metrics in data.items():
         if file_path == "total":
@@ -267,11 +263,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     # Build each row from its source(s).
-    fe_e2e = (
-        parse_playwright_frontend_total(args.playwright_frontend)
-        if args.playwright_frontend
-        else RowBuckets()
-    )
+    fe_e2e = parse_playwright_frontend_total(args.playwright_frontend) if args.playwright_frontend else RowBuckets()
     fe_unit = parse_vitest_per_file(args.vitest) if args.vitest else RowBuckets()
     fe_all = RowBuckets()
     fe_all.merge(fe_unit)

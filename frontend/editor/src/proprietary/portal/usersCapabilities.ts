@@ -22,4 +22,5 @@ export const usersCapabilities: UsersCapabilities = {
   seats: false,
   manageGrants: true,
   removeScope: "org",
+  listingRequiresAdmin: true,
 };

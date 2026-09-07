@@ -80,6 +80,8 @@ public class ReactRoutingController {
     private boolean saasLandingExists = false;
     private String cachedMobileUploadHtml;
     private boolean mobileUploadHtmlExists = false;
+    private String cachedMobileSignHtml;
+    private boolean mobileSignHtmlExists = false;
 
     @PostConstruct
     public void init() {
@@ -103,10 +105,12 @@ public class ReactRoutingController {
         }
 
         // Desktop (Tauri) serves the SPA from its bundled webview, so a phone scanning the QR can't
-        // load the React /mobile-scanner route from the local backend. Cache the self-contained
-        // static upload page to serve at that route in desktop mode instead.
+        // load the React /mobile-scanner or /mobile-sign routes from the local backend. Cache the
+        // self-contained static pages to serve at those routes in desktop mode instead.
         this.cachedMobileUploadHtml = readStaticHtml("mobile-upload.html");
         this.mobileUploadHtmlExists = this.cachedMobileUploadHtml != null;
+        this.cachedMobileSignHtml = readStaticHtml("mobile-sign.html");
+        this.mobileSignHtmlExists = this.cachedMobileSignHtml != null;
 
         // Check for external index.html first (customFiles/static/)
         Path externalIndexPath = Path.of(InstallationPathConfig.getStaticPath(), "index.html");
@@ -264,6 +268,17 @@ public class ReactRoutingController {
                     .cacheControl(CacheControl.noCache().mustRevalidate())
                     .contentType(MediaType.TEXT_HTML)
                     .body(cachedMobileUploadHtml);
+        }
+        return serveIndexHtml(request);
+    }
+
+    @GetMapping(value = "/mobile-sign", produces = MediaType.TEXT_HTML_VALUE)
+    public ResponseEntity<String> serveMobileSign(HttpServletRequest request) {
+        if (isDesktopMode() && mobileSignHtmlExists) {
+            return ResponseEntity.ok()
+                    .cacheControl(CacheControl.noCache().mustRevalidate())
+                    .contentType(MediaType.TEXT_HTML)
+                    .body(cachedMobileSignHtml);
         }
         return serveIndexHtml(request);
     }

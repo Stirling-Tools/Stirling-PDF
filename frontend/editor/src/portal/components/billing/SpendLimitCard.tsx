@@ -237,6 +237,7 @@ export function SpendLimitCard({
         <MeterBar
           state={capActive ? state : "FULL"}
           pct={pct}
+          barLabel={t("portal.billing.spendLimit.eyebrow", "Spend limit")}
           figure={
             capActive ? formatMoneyMajor(cap, wallet.currency) : spentLabel
           }

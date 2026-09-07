@@ -14,7 +14,7 @@ const labels = new Map([
 function run(overrides: Partial<PolicyRunRecord>): PolicyRunRecord {
   return {
     runId: "r",
-    categoryId: "security",
+    policyKey: "security",
     fileId: "in",
     fileName: "in.pdf",
     fileSize: 1,
@@ -73,8 +73,8 @@ describe("buildPolicyBadgeMap — badge follows the document onto derived files"
   it("MERGE output inherits every input's badge", () => {
     const map = buildPolicyBadgeMap(
       [
-        run({ runId: "r1", categoryId: "security", outputFileIds: ["a"] }),
-        run({ runId: "r2", categoryId: "watermark", outputFileIds: ["b"] }),
+        run({ runId: "r1", policyKey: "security", outputFileIds: ["a"] }),
+        run({ runId: "r2", policyKey: "watermark", outputFileIds: ["b"] }),
       ],
       [{ id: "merged", sourceFileIds: ["a", "b"] }],
       labels,
@@ -100,7 +100,7 @@ describe("buildPolicyBadgeMap — badge follows the document onto derived files"
     const map = buildPolicyBadgeMap(
       [
         run({
-          categoryId: "classification",
+          policyKey: "classification",
           fileId: "in",
           outputFileIds: ["in"],
           imported: true,
@@ -184,7 +184,7 @@ describe("buildPolicyBadgeMap — in-flight indicators", () => {
     const map = buildPolicyBadgeMap(
       [
         run({
-          categoryId: "classification",
+          policyKey: "classification",
           status: "RUNNING",
           outputFileIds: [],
         }),

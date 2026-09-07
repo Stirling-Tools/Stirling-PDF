@@ -24,6 +24,8 @@ export const oauthProviderConfig: Record<
 };
 
 // Icon URLs + GENERIC_PROVIDER_ICON come from the shared oauthIcons resolver.
+// Every provider icon is decorative (alt=""): the button it sits in already
+// names the provider, so alt text would only repeat that name.
 
 interface OAuthButtonsProps {
   onProviderClick: (provider: OAuthProvider) => void;
@@ -116,7 +118,7 @@ export default function OAuthButtons({
             >
               <img
                 src={oauthIconUrl(p.file)}
-                alt={p.label}
+                alt=""
                 className="oauth-icon-small"
               />
             </DSButton>
@@ -142,7 +144,7 @@ export default function OAuthButtons({
             >
               <img
                 src={oauthIconUrl(p.file)}
-                alt={p.label}
+                alt=""
                 className="oauth-icon-medium"
               />
             </DSButton>
@@ -169,7 +171,7 @@ export default function OAuthButtons({
             <span className="oauth-btn-group">
               <img
                 src={oauthIconUrl(p.file)}
-                alt={p.label}
+                alt=""
                 className={`oauth-icon-medium oauth-icon--${p.providerId}`}
                 style={{ marginRight: "0.5rem", flexShrink: 0 }}
               />
@@ -210,7 +212,7 @@ export default function OAuthButtons({
               <span className="oauth-icon-wrapper">
                 <img
                   src={oauthIconUrl(p.file)}
-                  alt={p.label}
+                  alt=""
                   className="oauth-icon-tiny"
                 />
               </span>

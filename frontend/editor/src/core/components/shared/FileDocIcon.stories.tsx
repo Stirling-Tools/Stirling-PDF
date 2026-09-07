@@ -31,5 +31,5 @@ export const AllVariants: Story = {
 
 /** Explicit `color` overrides the variant's default accent. */
 export const CustomColor: Story = {
-  args: { variant: "pdf", color: "#e64980" },
+  args: { variant: "pdf", color: "#e64980" }, // theme-allow-color demoes the colour override
 };
