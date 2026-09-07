@@ -71,7 +71,12 @@ public class FileReadinessChecker {
             return false;
         }
 
-        if (!hasSizeStabilized(path, config.getSizeCheckDelayMillis())) {
+        // The size-stability wait exists to catch an active copy whose writer pauses
+        // between chunks. A file untouched for twice the settle window has provably
+        // stopped changing, and the wait sleeps per file - paying it for old files
+        // turns a backlog scan over a folder-sized directory into minutes of dead time.
+        if (isWithinCopyWindow(path, config.getSettleTimeMillis())
+                && !hasSizeStabilized(path, config.getSizeCheckDelayMillis())) {
             return false;
         }
 
@@ -121,6 +126,16 @@ public class FileReadinessChecker {
                     allowedExtensions);
         }
         return allowed;
+    }
+
+    /** Whether the file changed recently enough that a paused mid-copy is still plausible. */
+    private boolean isWithinCopyWindow(Path path, long settleTimeMillis) {
+        try {
+            long age = System.currentTimeMillis() - Files.getLastModifiedTime(path).toMillis();
+            return age < settleTimeMillis * 2;
+        } catch (IOException e) {
+            return true; // unreadable: stay cautious and pay the stability check
+        }
     }
 
     /**
