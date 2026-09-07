@@ -21,6 +21,9 @@ import org.mockito.quality.Strictness;
 import org.springframework.beans.factory.ObjectProvider;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.proprietary.accountlink.EntitlementCache;
+import stirling.software.proprietary.accountlink.EntitlementState;
+import stirling.software.proprietary.accountlink.InstanceEntitlement;
 import stirling.software.proprietary.model.UserLicenseSettings;
 import stirling.software.proprietary.security.configuration.ee.KeygenLicenseVerifier.License;
 import stirling.software.proprietary.security.configuration.ee.LicenseKeyChecker;
@@ -40,6 +43,7 @@ class UserLicenseSettingsServiceMoreTest {
     @Mock private UserService userService;
     @Mock private LicenseKeyChecker licenseKeyChecker;
     @Mock private ObjectProvider<LicenseKeyChecker> licenseKeyCheckerProvider;
+    @Mock private ObjectProvider<EntitlementCache> entitlementCacheProvider;
 
     private ApplicationProperties applicationProperties;
     private UserLicenseSettingsService service;
@@ -60,7 +64,8 @@ class UserLicenseSettingsServiceMoreTest {
                         settingsRepository,
                         userService,
                         applicationProperties,
-                        licenseKeyCheckerProvider);
+                        licenseKeyCheckerProvider,
+                        entitlementCacheProvider);
     }
 
     // Saves a freshly initialized + locked settings row with a valid signature.
@@ -77,6 +82,66 @@ class UserLicenseSettingsServiceMoreTest {
         when(userService.getTotalUsersCount()).thenReturn((long) count);
         service.validateSettingsIntegrity();
         return s;
+    }
+
+    /**
+     * A linked instance takes its user capacity from SaaS, because that is where the Team plan is
+     * sold. The licence stays as the fallback, so capacity only moves when SaaS states a number --
+     * these pin that it cannot silently lower an existing limit.
+     */
+    @Nested
+    class LinkedTeamAllowance {
+
+        private void cacheReturns(InstanceEntitlement entitlement) {
+            EntitlementCache cache = org.mockito.Mockito.mock(EntitlementCache.class);
+            when(cache.current()).thenReturn(Optional.ofNullable(entitlement));
+            when(entitlementCacheProvider.getIfAvailable()).thenReturn(cache);
+        }
+
+        private InstanceEntitlement withAllowance(Integer licensedUsers) {
+            return new InstanceEntitlement(
+                    true, 0, 0, null, EntitlementState.OK, null, null, null, licensedUsers);
+        }
+
+        @Test
+        @DisplayName("SaaS states an allowance, so the licence is not consulted")
+        void saasAllowanceWins() {
+            lockedSettings(7);
+            cacheReturns(withAllowance(300));
+
+            assertThat(service.calculateMaxAllowedUsers()).isEqualTo(300);
+        }
+
+        @Test
+        @DisplayName("not linked: the licence still answers")
+        void unlinkedFallsBackToLicence() {
+            lockedSettings(7);
+            when(entitlementCacheProvider.getIfAvailable()).thenReturn(null);
+
+            assertThat(service.calculateMaxAllowedUsers()).isEqualTo(7);
+        }
+
+        @Test
+        @DisplayName("linked but SaaS has never answered: the licence still answers")
+        void neverFetchedFallsBackToLicence() {
+            lockedSettings(7);
+            cacheReturns(null);
+
+            assertThat(service.calculateMaxAllowedUsers()).isEqualTo(7);
+        }
+
+        /**
+         * Null is also what an older SaaS sends and what "no user limit" looks like, and the two
+         * are indistinguishable — so it must fall through rather than cap the instance.
+         */
+        @Test
+        @DisplayName("SaaS states no limit: the licence still answers")
+        void noLimitFallsBackToLicence() {
+            lockedSettings(7);
+            cacheReturns(withAllowance(null));
+
+            assertThat(service.calculateMaxAllowedUsers()).isEqualTo(7);
+        }
     }
 
     @Nested

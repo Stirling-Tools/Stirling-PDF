@@ -18,6 +18,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.proprietary.accountlink.EntitlementCache;
+import stirling.software.proprietary.accountlink.InstanceEntitlement;
 import stirling.software.proprietary.model.UserLicenseSettings;
 import stirling.software.proprietary.security.configuration.ee.KeygenLicenseVerifier.License;
 import stirling.software.proprietary.security.configuration.ee.LicenseKeyChecker;
@@ -50,6 +52,9 @@ public class UserLicenseSettingsService {
     private final UserService userService;
     private final ApplicationProperties applicationProperties;
     private final ObjectProvider<LicenseKeyChecker> licenseKeyChecker;
+
+    /** Absent unless this instance is linked to SaaS (account-link disabled by default). */
+    private final ObjectProvider<EntitlementCache> entitlementCache;
 
     /**
      * Gets the current user license settings, creating them if they don't exist.
@@ -309,6 +314,16 @@ public class UserLicenseSettingsService {
         validateSettingsIntegrity();
         UserLicenseSettings settings = getOrCreateSettings();
 
+        // A linked instance takes its capacity from SaaS, because that is where the Team plan is
+        // sold and the subscription is the authority. The licence below is the fallback, and it
+        // drains: it only still answers for instances that are unlinked, or whose SaaS states no
+        // number, so this cannot lower anyone's limit.
+        Integer fromSaas = linkedTeamAllowance();
+        if (fromSaas != null) {
+            log.debug("Linked team allowance: {} users (licence not consulted)", fromSaas);
+            return fromSaas;
+        }
+
         int grandfatheredLimit = settings.getGrandfatheredUserCount();
         if (grandfatheredLimit == 0) {
             // Fallback if not initialized yet - should not happen with validation
@@ -336,6 +351,26 @@ public class UserLicenseSettingsService {
                 licenseMaxUsers,
                 grandfatheredLimit);
         return licenseMaxUsers;
+    }
+
+    /**
+     * Users this instance's linked team is entitled to, or null when SaaS is not the authority
+     * here.
+     *
+     * <p>Null covers three cases that all correctly fall through to the licence: the instance is
+     * not linked, SaaS has never answered, or it answered with no user limit — which is also what
+     * an older SaaS sends, and is indistinguishable from it. Deliberately conservative: capacity
+     * only moves when SaaS states a number.
+     *
+     * <p>When SaaS is merely unreachable, {@link EntitlementCache} keeps serving the freshest
+     * snapshot it has, so a linked instance holds its last known allowance rather than losing it.
+     */
+    private Integer linkedTeamAllowance() {
+        EntitlementCache cache = entitlementCache.getIfAvailable();
+        if (cache == null) {
+            return null;
+        }
+        return cache.current().map(InstanceEntitlement::licensedUsers).orElse(null);
     }
 
     /**
