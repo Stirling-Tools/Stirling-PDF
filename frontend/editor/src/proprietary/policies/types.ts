@@ -24,6 +24,11 @@ export interface WireOutputOptions {
   position: "prefix" | "suffix" | "auto-number";
   maxRetries?: number;
   retryDelayMinutes?: number;
+  /**
+   * Frozen as `categoryId`: the backend reads this key by name (the classification
+   * seeder, JpaPolicyStore's editor-config lift, PolicyOverviewService), and every
+   * stored policy already carries it. In memory it is `policyKey`; the codecs translate.
+   */
   categoryId: string;
   sources: string[];
   scopeTypes: string[];
@@ -99,7 +104,7 @@ export interface PolicyDecodedState {
   enabled: boolean;
   /** Org-mandated policy; first-class on the record, not part of the options bag. */
   required: boolean;
-  categoryId: string;
+  policyKey: string;
   sources: string[];
   /**
    * Whether the editor runs this policy per file. Its own field, not derived from

@@ -98,7 +98,6 @@ export const I18N_PROJECTS: TranslationProject[] = [
       // (label maps, role/policy/journey catalogues) and rendered via
       // t(constant), invisible to the static scan.
       /^portal\.documents\.(status|audit)\./,
-      /^portal\.editorAdmin\.status\./,
       /^portal\.components\.(maturity|billingUnit)\./,
       /^portal\.home\.(pipelineTemplates|pipelineStages)\./,
       /^portal\.procurement\.journeySteps\./,

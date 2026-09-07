@@ -7,7 +7,6 @@ import {
 
 export type ViewId =
   | "home"
-  | "editor"
   | "users"
   | "sources"
   | "integrations"
@@ -22,7 +21,6 @@ export type ViewId =
 
 export const VIEW_PATHS: Record<ViewId, string> = {
   home: "/",
-  editor: "/editor",
   users: "/users",
   sources: "/sources",
   integrations: "/integrations",

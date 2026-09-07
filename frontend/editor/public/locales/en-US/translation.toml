@@ -2371,6 +2371,35 @@ bullet4 = "For short-edge printers: Enable 'Flip on short edge' option"
 text = "Follow these steps for perfect booklets:"
 title = "How to Print & Assemble"
 
+[brickGame]
+balls = "Balls"
+best = "Best"
+close = "Close game"
+effectTimer = "{{label}} {{seconds}}s"
+hint = "Move with the pointer or the arrow keys. Click to capture the pointer, Esc to get back to work."
+hintPointerLocked = "Pointer captured. Esc releases it, then Esc again to get back to work."
+score = "Score"
+title = "Hidden game"
+
+[brickGame.effect]
+fast = "Fast"
+narrow = "Narrow"
+reversed = "Reversed"
+slow = "Slow"
+wide = "Wide"
+
+[brickGame.lost]
+detail = "Click or press Space to try again"
+headline = "Out of balls"
+
+[brickGame.ready]
+detail = "Click or press Space to serve"
+headline = "Ready"
+
+[brickGame.won]
+detail = "Click or press Space to play again"
+headline = "All clear"
+
 [bulkSelection]
 syntaxError = "There is a syntax issue. See Page Selection tips for help."
 
@@ -4292,6 +4321,7 @@ back = "Back"
 backToFolder = "Back to {{folder}}"
 backToMyFiles = "Back to File library"
 breadcrumbs = "Folder path"
+breadcrumbsOverflow = "Show parent folders"
 bulkActions = "Actions"
 cancel = "Cancel"
 classification = "Classification"
@@ -4413,7 +4443,6 @@ everywhereHint = "Deletes the file from this device and the cloud."
 
 [filesPage.empty]
 hint = "Drop PDFs anywhere on this page to upload, or use the New folder button to organize your files."
-newFolderCta = "Create folder"
 title = "This folder is empty"
 uploadCta = "Upload files"
 
@@ -4422,10 +4451,6 @@ hint = "Upload a file to start, or create a folder to organize."
 offlineHint = "Reconnect to load your cloud library."
 offlineTitle = "No cached cloud files"
 title = "No cloud files yet"
-
-[filesPage.empty.local]
-hint = "Files saved without uploading stay here. Drop a file to add one."
-title = "No local-only files"
 
 [filesPage.empty.noResults]
 hint = "No files in this folder match your filter. Try a different term or clear the filter."
@@ -8039,86 +8064,6 @@ status = "Status"
 time = "Time"
 user = "User"
 
-[portal.editorAdmin]
-subtitle = "Deploy the Stirling PDF Editor, pair self-hosted instances to your org, and operate the running fleet — targets, health, credentials, and offline activation in one place."
-title = "Editor deployment"
-
-[portal.editorAdmin.health.columns]
-activeUsers = "Active users"
-host = "Host"
-lastSeen = "Last seen"
-region = "Region"
-status = "Status"
-target = "Target"
-version = "Version"
-
-[portal.editorAdmin.health.empty]
-description = "Deploy a target and pair it to see live instance health here."
-title = "No instances reporting"
-
-[portal.editorAdmin.offlineActivation]
-enterpriseTag = "Enterprise"
-generateButton = "Generate offline bundle"
-lockCopy = "Offline and on-prem activation is part of Enterprise."
-subtitle = "Generate a signed activation bundle for an offline or on-prem install with no outbound network path. Transfer it to the instance and apply it during first-run setup."
-talkToSales = "Talk to sales"
-title = "Air-gapped activation"
-
-[portal.editorAdmin.offlineActivation.readyBanner]
-description = "{{file}} is signed and ready to transfer. It activates one instance and expires in 14 days."
-title = "Bundle ready"
-
-[portal.editorAdmin.pairing]
-generated = "Generated ✓"
-generateNewCode = "Generate new code"
-lockCopy = "IaC provisioning is part of Enterprise."
-rotate = "Rotate"
-talkToSales = "Talk to sales"
-
-[portal.editorAdmin.sections.health]
-sub = "Every Editor instance reporting in — version, region, status, last seen, and active users."
-title = "Instance health"
-
-[portal.editorAdmin.sections.pairing]
-sub = "Connect a self-hosted editor to this org. Generate a token, hand off a short code, or wire it through IaC."
-title = "Pairing"
-
-[portal.editorAdmin.sections.targets]
-sub = "Where the Editor runs. Copy a snippet to stand up a self-hosted instance, or use Managed Cloud with no ops."
-title = "Deployment targets"
-
-[portal.editorAdmin.serviceToken]
-currentToken = "Current token"
-lastRotated = "Last rotated"
-rotateButton = "Rotate service token"
-subtitle = "Instances authenticate to the org with this credential. Rotate it on a schedule or immediately after a suspected leak."
-title = "Service token"
-
-[portal.editorAdmin.serviceToken.rotatedBanner]
-description = "A new token was issued. Update each self-hosted instance's STIRLING_SERVICE_TOKEN within the 24h grace window or they'll drop offline."
-title = "Rotate running instances"
-
-[portal.editorAdmin.status]
-degraded = "Degraded"
-healthy = "Healthy"
-offline = "Offline"
-pairing = "Pairing"
-
-[portal.editorAdmin.targets]
-instanceCount_one = "{{count}} instance"
-instanceCount_other = "{{count}} instances"
-talkToSales = "Talk to sales"
-upgradePlan = "Upgrade plan"
-
-[portal.editorAdmin.targets.lock]
-enterprise = "On-prem and Kubernetes self-hosting are part of Enterprise."
-paid = "Self-hosting with Docker and Kubernetes unlocks on a paid plan."
-
-[portal.editorAdmin.targets.state]
-available = "Available"
-locked = "Locked"
-running = "Running"
-
 [portal.errorBoundary]
 description = "This view hit an unexpected error. Try again, or pick another section from the sidebar."
 retry = "Try again"
@@ -8278,7 +8223,6 @@ evening = "Good evening"
 morning = "Good morning"
 
 [portal.infrastructure]
-manageEditorDeployment = "Manage Editor deployment"
 sectionsAriaLabel = "Infrastructure sections"
 subtitle = "API credentials and the audit trail for your Stirling workspace."
 title = "Infrastructure"

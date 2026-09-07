@@ -105,8 +105,8 @@ export interface PolicyRunView {
 /** The decoded policy read back from the backend. */
 export interface DecodedPolicy {
   id: string;
-  /** The catalog category this policy maps to (from trigger.options.categoryId). */
-  categoryId: string;
+  /** The policy this record belongs to, read from `output.options.categoryId`. */
+  policyKey: string;
   name: string;
   enabled: boolean;
   /** Null if the stored policy carried no automation blob. */
@@ -143,10 +143,10 @@ export function fromBackendPolicy(policy: BackendPolicy): DecodedPolicy {
     typeof v === "string" ? v : fallback;
   const num = (v: unknown, fallback: number) =>
     typeof v === "number" ? v : fallback;
-  const categoryId = str(meta.categoryId);
+  const policyKey = str(meta.categoryId);
   return {
     id: policy.id,
-    categoryId,
+    policyKey,
     name: policy.name,
     enabled: policy.enabled,
     automation: (output.automation as AutomationConfig | undefined) ?? null,
@@ -159,7 +159,7 @@ export function fromBackendPolicy(policy: BackendPolicy): DecodedPolicy {
       (meta.fieldValues as DecodedPolicy["fieldValues"] | undefined) ?? {},
     runsOnEditor: editor?.allowed === true,
     folder: {
-      runOn: resolveRunOn(editor?.runOn, categoryId),
+      runOn: resolveRunOn(editor?.runOn, policyKey),
       // Legacy/missing output.mode defaults to new_version, not new_file.
       outputMode: output.mode === "new_file" ? "new_file" : "new_version",
       outputName: str(output.name),
