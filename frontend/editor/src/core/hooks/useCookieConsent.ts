@@ -13,12 +13,12 @@ import { getCookieConsentOverrides } from "@app/extensions/cookieConsentConfig";
 declare global {
   interface Window {
     CookieConsent?: {
-      run: (config: any) => void;
+      run: (config: Record<string, unknown>) => void;
       show: (show?: boolean) => void;
       hide: () => void;
       showPreferences: () => void;
       hidePreferences: () => void;
-      getCookie: (name?: string) => any;
+      getCookie: (name?: string) => unknown;
       acceptedCategory: (category: string) => boolean;
       acceptedService: (serviceName: string, category: string) => boolean;
     };

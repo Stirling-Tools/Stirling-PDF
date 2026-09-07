@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import type { AddStampParameters } from "@app/components/tools/addStamp/useAddStampParameters";
 
 export type ContainerSize = { width: number; height: number };
@@ -54,7 +55,10 @@ export const getFirstSelectedPage = (input: string): number => {
   return 1;
 };
 
-export type StampPreviewStyle = { container: any; item: any };
+export type StampPreviewStyle = {
+  container: CSSProperties;
+  item: CSSProperties;
+};
 
 // Unified per-alphabet preview adjustments
 export type Alphabet =
@@ -117,10 +121,10 @@ export const ALPHABET_PREVIEW_TWEAKS: Record<Alphabet, AlphabetTweaks> = {
   },
 };
 export const getAlphabetPreviewScale = (alphabet: string): number =>
-  (ALPHABET_PREVIEW_TWEAKS as any)[alphabet]?.scale ?? 1.0;
+  ALPHABET_PREVIEW_TWEAKS[alphabet as Alphabet]?.scale ?? 1.0;
 
 export const getDefaultFontSizeForAlphabet = (alphabet: string): number => {
-  return (ALPHABET_PREVIEW_TWEAKS as any)[alphabet]?.defaultFontSize ?? 80;
+  return ALPHABET_PREVIEW_TWEAKS[alphabet as Alphabet]?.defaultFontSize ?? 80;
 };
 
 export function computeStampPreviewStyle(
@@ -138,8 +142,7 @@ export function computeStampPreviewStyle(
   const heightPts = pageSize?.heightPts ?? 841.89; // A4 height at 72 DPI
   const scaleX = pageWidthPx / widthPts;
   const scaleY = pageHeightPx / heightPts;
-  if (pageWidthPx <= 0 || pageHeightPx <= 0)
-    return { item: {}, container: {} } as any;
+  if (pageWidthPx <= 0 || pageHeightPx <= 0) return { item: {}, container: {} };
 
   const marginPts =
     ((widthPts + heightPts) / 2) *
@@ -215,8 +218,7 @@ export function computeStampPreviewStyle(
     const heightForY =
       parameters.stampType === "text"
         ? heightPtsContent *
-          ((ALPHABET_PREVIEW_TWEAKS as any)[parameters.alphabet]
-            ?.capHeightRatio ?? 0.7)
+          (ALPHABET_PREVIEW_TWEAKS[parameters.alphabet]?.capHeightRatio ?? 0.7)
         : heightPtsContent;
     switch (Math.floor((position - 1) / 3)) {
       case 0: // Top
@@ -241,7 +243,7 @@ export function computeStampPreviewStyle(
           getComputedStyle(document.documentElement).fontSize || "16",
         ) || 16;
       const rowIndex = Math.floor((position - 1) / 3); // 0 top, 1 middle, 2 bottom
-      const offsets = (ALPHABET_PREVIEW_TWEAKS as any)[parameters.alphabet]
+      const offsets = ALPHABET_PREVIEW_TWEAKS[parameters.alphabet]
         ?.rowOffsetRem ?? [0, 0, 0];
       const offsetRem = offsets[rowIndex] ?? 0;
       yPx += offsetRem * rootFontSizePx;
@@ -297,8 +299,7 @@ export function computeStampPreviewStyle(
       display: "flex",
       flexDirection: "column",
       justifyContent: "flex-start",
-      lineHeight:
-        (ALPHABET_PREVIEW_TWEAKS as any)[parameters.alphabet]?.lineHeight ?? 1,
+      lineHeight: ALPHABET_PREVIEW_TWEAKS[parameters.alphabet]?.lineHeight ?? 1,
       alignItems,
       cursor: showQuickGrid ? "default" : "move",
       pointerEvents: showQuickGrid ? "none" : "auto",

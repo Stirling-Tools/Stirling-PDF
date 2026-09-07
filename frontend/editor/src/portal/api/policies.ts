@@ -412,8 +412,8 @@ function decoratePolicy(
   runs: PolicyRunView[],
   isDefault: boolean,
 ): DecoratedPolicy | null {
-  const category = POLICY_CATEGORIES.find((c) => c.id === decoded.categoryId);
-  const config = POLICY_CONFIG[decoded.categoryId];
+  const category = POLICY_CATEGORIES.find((c) => c.id === decoded.policyKey);
+  const config = POLICY_CONFIG[decoded.policyKey];
   if (!category || !config) return null;
 
   const policyRuns = runs.filter((r) => r.policyId === decoded.id);
@@ -475,8 +475,8 @@ export function assemblePolicies(
   >();
   for (const wire of wirePolicies) {
     const decoded = fromWirePolicy(wire);
-    if (decoded.categoryId) {
-      decodedByCategory.set(decoded.categoryId, { decoded, isDefault: false });
+    if (decoded.policyKey) {
+      decodedByCategory.set(decoded.policyKey, { decoded, isDefault: false });
     }
   }
 
@@ -634,7 +634,7 @@ export function buildWireFromSetup(
       enabled,
       required: result.required,
       extraOptions: result.extraOptions,
-      categoryId: entry.category.id,
+      policyKey: entry.category.id,
       sources: result.sources,
       runsOnEditor: result.runsOnEditor,
       scopeTypes: result.scopeTypes,

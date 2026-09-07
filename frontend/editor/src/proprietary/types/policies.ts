@@ -93,7 +93,7 @@ export interface PolicyState {
   isDefault?: boolean;
 }
 
-export type PoliciesByCategory = Record<string, PolicyState>;
+export type PoliciesByKey = Record<string, PolicyState>;
 
 /**
  * Output + retry settings applied by the Watch Folders engine to a policy's

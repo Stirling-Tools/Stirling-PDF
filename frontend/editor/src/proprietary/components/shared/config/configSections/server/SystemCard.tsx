@@ -15,6 +15,7 @@ import { SegmentedControl } from "@app/ui/SegmentedControl";
 import PendingBadge from "@app/components/shared/config/PendingBadge";
 import { usePreferences } from "@app/contexts/PreferencesContext";
 import {
+  normalizeLanguageCode,
   supportedLanguages,
   toUnderscoreFormat,
   toUnderscoreLanguages,
@@ -46,6 +47,18 @@ export function SystemCard({
   const selectedLanguages = useMemo(
     () => toUnderscoreLanguages(settings.ui?.languages || []),
     [settings.ui?.languages],
+  );
+
+  // SYSTEM_DEFAULTLOCALE accepts en-GB as well as en_GB, but every option below
+  // is keyed on the underscore form, so match the stored value to it before
+  // handing it to the Select. Normalising only what is displayed keeps the
+  // configured value untouched when the field is left alone.
+  const defaultLocaleValue = useMemo(
+    () =>
+      toUnderscoreFormat(
+        normalizeLanguageCode(settings.system?.defaultLocale || ""),
+      ),
+    [settings.system?.defaultLocale],
   );
 
   // Filter default locale options based on available languages setting
@@ -252,7 +265,7 @@ export function SystemCard({
                 />
               </Group>
             }
-            value={settings.system?.defaultLocale || ""}
+            value={defaultLocaleValue}
             onChange={(value) =>
               setSettings({
                 ...settings,
