@@ -3595,7 +3595,7 @@ public class FormUtils {
 
         if (definition.tooltip() != null && !definition.tooltip().isBlank()) {
             widget.getCOSObject().setString(COSName.TU, definition.tooltip());
-        } else {
+        } else if (!reuseFieldDict) {
             try {
                 widget.getCOSObject().removeItem(COSName.TU);
             } catch (Exception e) {

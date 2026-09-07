@@ -42,10 +42,10 @@ export function ProcessorFlow({ dataOverride }: ProcessorFlowProps = {}) {
   const [lens, setLens] = useState<Lens>("flow");
   const isLoading = loading && data === null;
 
-  /** Deep-link to the Policies page and auto-open that policy's setup wizard. */
+  /** Deep-link to the Pipelines page and auto-open that suggested policy's setup wizard. */
   const openPolicySetup = (key: string) =>
     navigate(
-      `${toPortalPath(VIEW_PATHS.policies)}?setup=${encodeURIComponent(key)}`,
+      `${toPortalPath(VIEW_PATHS.pipelines)}?setup=${encodeURIComponent(key)}`,
     );
 
   /** Deep-link to Infrastructure with the audit-log tab open. */
