@@ -15,6 +15,10 @@ import {
   withBasePath,
 } from "@app/constants/app";
 import { isSafePostLoginRedirect } from "@app/services/postLoginRedirect";
+import {
+  rememberPendingDestination,
+  takePendingDestination,
+} from "@app/services/pendingDestination";
 import LinkRoundedIcon from "@mui/icons-material/LinkRounded";
 
 // Import login components
@@ -68,9 +72,15 @@ export default function Login() {
     }
   }, [session, loading, nextPath, navigate]);
 
+  // Stash it as well as holding it in the URL: a visitor who leaves this page to
+  // create an account loses the query string, and a sign-up confirmation link
+  // cannot carry a `next` of its own. The auth callback reads it back.
+  useEffect(() => {
+    if (nextPath) rememberPendingDestination(nextPath);
+  }, [nextPath]);
+
   const baseUrl = getBaseUrl();
 
-  // Set document meta
   useDocumentMeta({
     title: `${t("login.title", "Sign in")} - Stirling PDF`,
     description: t(
@@ -166,10 +176,16 @@ export default function Login() {
         setError(error.message);
       } else if (data.user) {
         console.log("[Login] Email sign in successful");
-        // No explicit destination: land team leads on the processor and everyone
-        // else on the editor. Resolved here rather than by bouncing through "/"
-        // so the app isn't torn down and remounted on the way.
-        if (!nextPath) navigate(await resolveLandingPath(), { replace: true });
+        // No destination in the URL: honour one remembered from before an auth
+        // detour, else land team leads on the processor and everyone else on the
+        // editor. Resolved here rather than by bouncing through "/" so the app
+        // isn't torn down and remounted on the way.
+        if (!nextPath) {
+          const remembered = takePendingDestination();
+          navigate(remembered ?? (await resolveLandingPath()), {
+            replace: true,
+          });
+        }
       }
     } catch (err) {
       console.error("[Login] Unexpected error]:", err);

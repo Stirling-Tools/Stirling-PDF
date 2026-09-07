@@ -1,5 +1,11 @@
-import { lazy, Suspense } from "react";
-import { Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { lazy, Suspense, useEffect } from "react";
+import {
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
 import { Home } from "@portal/views/Home";
 import { Users } from "@portal/views/Users";
 import { Documents } from "@portal/views/Documents";
@@ -11,6 +17,7 @@ import { Infrastructure } from "@portal/views/Infrastructure";
 import { PortalBillingGate } from "@portal/components/billing/PortalBillingGate";
 import { ConnectGuardedRoute } from "@portal/components/account-link/ConnectGuardedRoute";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
+import { useUI } from "@portal/contexts/UIContext";
 
 // Lazy so the generated docs manifest (bundled JSON) lands in its own chunk.
 const DeveloperDocs = lazy(() =>
@@ -24,6 +31,24 @@ const DeveloperDocs = lazy(() =>
 // logical VIEW_PATHS, and home is the index route. Redirects use toPortalPath
 // so they resolve to the portal, not the editor root.
 const rel = (viewPath: string) => viewPath.replace(/^\//, "");
+
+/**
+ * The enterprise entry point, and the one sales hands out. Procurement is not a
+ * surface of its own: the deal lives on Home, so this raises the trial-setup step
+ * and bounces there, which is where every other way into enterprise ends up too.
+ *
+ * Raised imperatively rather than by rendering <Navigate>, so the signal is set
+ * before the navigation rather than racing it.
+ */
+function ProcurementRedirect() {
+  const { requestTrialSetup } = useUI();
+  const navigate = useNavigate();
+  useEffect(() => {
+    requestTrialSetup();
+    navigate(toPortalPath(VIEW_PATHS.home), { replace: true });
+  }, [requestTrialSetup, navigate]);
+  return null;
+}
 
 /** Redirect the retired Policies path to the unified Pipelines page, carrying any query string. */
 function PoliciesRedirect() {
@@ -91,6 +116,9 @@ export function ViewRouter() {
           </Suspense>
         }
       />
+      {/* Not a view, so it carries a bare path rather than a VIEW_PATHS entry:
+          nothing should list it in the sidebar or the view switcher. */}
+      <Route path="procurement" element={<ProcurementRedirect />} />
       {/* Account-link is now a Settings panel; redirect legacy bookmarks home. */}
       <Route
         path="account-link"
