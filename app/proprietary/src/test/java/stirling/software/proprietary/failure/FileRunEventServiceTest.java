@@ -158,6 +158,103 @@ class FileRunEventServiceTest {
     }
 
     @Nested
+    @DisplayName("resolve")
+    class Resolve {
+
+        @Test
+        void marksTheRowResolvedWhenAClientReportsItsRetryWorked() {
+            FileRunEvent event = given(FailureKind.UNKNOWN, TEAM, "f1");
+
+            FileRunEvent resolved = service.resolve(event.id());
+
+            assertThat(resolved.status()).isEqualTo(FileRunEventStatus.RESOLVED);
+            assertThat(resolved.statusActor()).isEqualTo(ACTOR);
+            assertThat(service.list(null, null, 10)).as("resolved work is not open work").isEmpty();
+        }
+
+        @Test
+        void isNotAnActionAnyoneCanPress() {
+            // System-set on a client-side retry, so there is no id to dispatch and no button.
+            assertThat(Arrays.stream(FailureActionId.values()).map(Enum::name))
+                    .doesNotContain("RESOLVE", "RESOLVED");
+        }
+
+        @Test
+        void reportingTheSameSuccessTwiceIsNotARefusal() {
+            // A client that retries, succeeds and reports twice is telling the truth twice.
+            FileRunEvent event = given(FailureKind.UNKNOWN, TEAM, "f1");
+            Instant first = service.resolve(event.id()).statusAt();
+
+            assertThat(service.resolve(event.id()).statusAt()).isEqualTo(first);
+        }
+
+        @Test
+        void aDismissedRowCannotBeResolvedBehindTheReviewersBack() {
+            FileRunEvent event = given(FailureKind.UNKNOWN, TEAM, "f1");
+            service.dispatch(event.id(), "DISMISS", Map.of());
+
+            assertThatThrownBy(() -> service.resolve(event.id()))
+                    .isInstanceOf(FailureActionException.class)
+                    .extracting(e -> ((FailureActionException) e).getReason())
+                    .isEqualTo(FailureActionException.Reason.ALREADY_CLOSED);
+        }
+
+        @Test
+        void anotherTeamsRowIsNotFound() {
+            FileRunEvent theirs = given(FailureKind.UNKNOWN, 99L, "f1");
+
+            assertThatThrownBy(() -> service.resolve(theirs.id()))
+                    .isInstanceOf(FailureActionException.class)
+                    .extracting(e -> ((FailureActionException) e).getReason())
+                    .isEqualTo(FailureActionException.Reason.EVENT_NOT_FOUND);
+        }
+
+        @Test
+        void aRecurrenceReopensIt() {
+            // RESOLVED claims one attempt worked, not that the problem is gone for good.
+            service.report(new EditorFailureReport("compress", "E004", List.of("f-1"), "boom"));
+            FileRunEvent event = service.list(null, null, 10).getFirst();
+            service.resolve(event.id());
+
+            service.report(new EditorFailureReport("compress", "E004", List.of("f-1"), "boom"));
+
+            assertThat(service.list(null, null, 10))
+                    .singleElement()
+                    .extracting(FileRunEvent::status)
+                    .isEqualTo(FileRunEventStatus.NEW);
+        }
+
+        @Test
+        void aRecurrenceReopensAnIncidentClosedBecauseTheFileWasRemoved() {
+            // A library file comes back under the same id, so without this every repeat folds
+            // into the closed row and the queue never shows the failure again.
+            service.report(new EditorFailureReport("compress", "E001", List.of("f-1"), "boom"));
+            service.forgetFiles(List.of("f-1"));
+            assertThat(service.list(null, null, 10)).isEmpty();
+
+            service.report(new EditorFailureReport("compress", "E001", List.of("f-1"), "boom"));
+
+            assertThat(service.list(null, null, 10))
+                    .singleElement()
+                    .extracting(FileRunEvent::status)
+                    .isEqualTo(FileRunEventStatus.NEW);
+        }
+
+        @Test
+        void aRecurrenceLeavesAReviewersDismissalAlone() {
+            // Dismiss is a decision about the incident, not a claim about the document, so it
+            // outlasts a repeat where FILE_REMOVED and RESOLVED do not.
+            service.report(new EditorFailureReport("compress", "E001", List.of("f-1"), "boom"));
+            FileRunEvent event = service.list(null, null, 10).getFirst();
+            service.dispatch(event.id(), "DISMISS", Map.of());
+
+            service.report(new EditorFailureReport("compress", "E001", List.of("f-1"), "boom"));
+
+            assertThat(service.list(null, null, 10)).isEmpty();
+        }
+    }
+
+    @Nested
     @DisplayName("triage never touches the document")
     class NeverTouchesTheDocument {
 
@@ -352,13 +449,17 @@ class FileRunEventServiceTest {
         }
 
         @Test
-        void theOwnerIsOfferedTheirDocumentAndNotTheReviewersView() {
-            // The document is theirs to open; the processor view is for whoever reviews the team.
+        void theOwnerIsOfferedTheFixAndNotTheReviewersView() {
+            // The unlock is the owner's to do; the processor view is for whoever reviews.
             when(authority.canEditPolicies()).thenReturn(false);
             FileRunEvent mine = givenHitBy(ACTOR, FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f1");
 
             assertThat(offeredFor(mine))
-                    .containsExactly(FailureActionId.VIEW_FILE, FailureActionId.DISMISS);
+                    .containsExactly(
+                            FailureActionId.DECRYPT,
+                            FailureActionId.VIEW_FILE,
+                            FailureActionId.OPEN_IN_TOOL,
+                            FailureActionId.DISMISS);
             assertThat(service.availableActions(mine))
                     .allMatch(FileRunEventService.AvailableAction::enabled);
         }
@@ -385,8 +486,10 @@ class FileRunEventServiceTest {
 
             assertThat(offeredFor(unattended))
                     .containsExactly(
+                            FailureActionId.DECRYPT,
                             FailureActionId.VIEW_FILE,
                             FailureActionId.VIEW_IN_PROCESSOR,
+                            FailureActionId.OPEN_IN_TOOL,
                             FailureActionId.DISMISS);
         }
 
@@ -497,6 +600,17 @@ class FileRunEventServiceTest {
                             action ->
                                     "portal.failures.disabled.closed"
                                             .equals(action.disabledReasonKey()));
+        }
+
+        @Test
+        void carriesTheKindsPlacementIntentForEachOffer() {
+            FileRunEvent mine = givenHitBy(ACTOR, FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f1");
+
+            assertThat(service.availableActions(mine))
+                    .filteredOn(action -> action.id() == FailureActionId.DECRYPT)
+                    .singleElement()
+                    .extracting(FileRunEventService.AvailableAction::slot)
+                    .isEqualTo(FailureActionSlot.RESOLUTION);
         }
 
         @Test
