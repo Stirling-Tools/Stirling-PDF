@@ -1,80 +1,106 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Button } from "@app/ui";
 import { BillingScreen } from "@app/billing/BillingScreen";
+import { KvRow } from "@app/billing/KvRow";
 import { freeWallet, subscribedWallet } from "@app/billing/walletFixtures";
-// The class vocabulary this screen emits is host-supplied, the same arrangement MeterBar uses.
-// The portal is the first host, so its stylesheets are what these stories render against.
-import "@portal/views/Usage.css";
-import "@portal/components/billing/billing.css";
 
 const meta: Meta<typeof BillingScreen> = {
   title: "Billing/BillingScreen",
   component: BillingScreen,
   parameters: { layout: "fullscreen" },
-  args: {
-    wallet: subscribedWallet,
-  },
+  args: { wallet: subscribedWallet },
 };
 export default meta;
 type Story = StoryObj<typeof BillingScreen>;
 
-const managePayment = (
-  <Button variant="secondary" fat>
-    Manage Payment
-  </Button>
+/**
+ * Stand-ins for the host's own sections, in the grammar the card expects. They exist so the chip
+ * row and the section rhythm can be reviewed; the real contents are the host's.
+ */
+const payment = (
+  <>
+    <KvRow
+      label="Payment method"
+      value="Visa ending 4242 · expires 08 / 2027"
+    />
+    <KvRow label="Next invoice" note="from this cycle's pace" value="Oct 1" />
+  </>
+);
+const invoices = (
+  <>
+    <KvRow label="Sep 1, 2026" value="$99.00" />
+    <KvRow label="Aug 1, 2026" value="$99.00" />
+  </>
 );
 
-/**
- * Cloud, nothing bought yet. Both products offer themselves; the free grant is the Processor's
- * whole story until it is switched on.
- */
-export const CloudFree: Story = {
+/** Nothing bought. Both rows sell, and the free grant is the Processor's whole story. */
+export const Free: Story = {
   args: {
     wallet: {
       ...freeWallet,
-      team: { held: false, licensedUsers: null, usersInUse: 3 },
+      team: { held: false, licensedUsers: null, usersInUse: 1 },
       processor: { active: false },
     },
-    onBuyTeam: () => {},
+    onAddCapacity: () => {},
     onActivateProcessor: () => {},
+    onEnterpriseQuote: () => {},
   },
 };
 
-/** Cloud, both products held. The case a single free/subscribed axis could never describe. */
-export const CloudBothProducts: Story = {
+/** Team bought, the Processor not. The identity carries no price, so the Users row does. */
+export const TeamOnly: Story = {
   args: {
     wallet: {
-      ...subscribedWallet,
-      team: { held: true, licensedUsers: 100, usersInUse: 34 },
-      processor: { active: true },
+      ...freeWallet,
+      team: { held: true, licensedUsers: 100, usersInUse: 6 },
+      processor: { active: false },
     },
-    headerAction: managePayment,
-    onBuyTeam: () => {},
+    onAddCapacity: () => {},
+    onActivateProcessor: () => {},
+    onEnterpriseQuote: () => {},
+    paymentSection: payment,
+    invoicesSection: invoices,
   },
 };
 
 /**
- * Self-hosted, linked. Team is bought, the Processor is not, and the instance is carrying units
- * the cloud has not billed yet, which is a fact only this edition has.
+ * Both products. The identity carries the base, so the Users row says "included" instead of
+ * re-pricing it, and the Processor row governs rather than sells.
  */
-export const SelfHostedTeamOnly: Story = {
+export const TeamAndProcessor: Story = {
   args: {
+    wallet: {
+      ...subscribedWallet,
+      team: { held: true, licensedUsers: 100, usersInUse: 7 },
+      processor: { active: true },
+      estimatedBillMinor: 491_132,
+      capUsd: 12_000,
+      noCap: false,
+    },
+    onAddCapacity: () => {},
+    onGovernSpend: () => {},
+    onEnterpriseQuote: () => {},
+    paymentSection: payment,
+    invoicesSection: invoices,
+  },
+};
+
+/** Self-hosted and linked, carrying units the cloud has not billed yet. */
+export const SelfHostedPendingSync: Story = {
+  args: {
+    selfHosted: true,
     wallet: {
       ...freeWallet,
       team: { held: true, licensedUsers: 100, usersInUse: 62 },
       processor: { active: false },
     },
     pendingUnits: 148,
-    headerAction: managePayment,
-    onBuyTeam: () => {},
+    onAddCapacity: () => {},
     onActivateProcessor: () => {},
+    onEnterpriseQuote: () => {},
   },
 };
 
-/**
- * Over capacity: more members than the plan covers, reachable by a downgrade, a cancellation or a
- * lapsed card. The roster is never cut retroactively, so this is a state the screen has to hold.
- */
+/** Over capacity, reachable by a downgrade, a cancellation or a lapsed card. */
 export const OverCapacity: Story = {
   args: {
     wallet: {
@@ -82,24 +108,26 @@ export const OverCapacity: Story = {
       team: { held: true, licensedUsers: 100, usersInUse: 137 },
       processor: { active: true },
     },
-    headerAction: managePayment,
-    onBuyTeam: () => {},
+    onAddCapacity: () => {},
+    onGovernSpend: () => {},
+    onEnterpriseQuote: () => {},
+    paymentSection: payment,
   },
 };
 
-/** A member rather than a leader: same figures, no action callbacks, so nothing is offered. */
+/** A member: identical facts, no doors, because no action callbacks are passed. */
 export const MemberReadOnly: Story = {
   args: {
     wallet: {
       ...subscribedWallet,
       role: "member",
-      team: { held: true, licensedUsers: 100, usersInUse: 34 },
+      team: { held: true, licensedUsers: 100, usersInUse: 7 },
       processor: { active: true },
     },
   },
 };
 
-/** Unlimited Team with no spend limit on the Processor: two figures, neither with a denominator. */
+/** Unlimited Team and no spend limit: two facts, neither with a denominator, so neither draws. */
 export const NoLimits: Story = {
   args: {
     wallet: {
@@ -109,7 +137,8 @@ export const NoLimits: Story = {
       noCap: true,
       capUsd: null,
     },
-    headerAction: managePayment,
+    onAddCapacity: () => {},
+    onEnterpriseQuote: () => {},
   },
 };
 

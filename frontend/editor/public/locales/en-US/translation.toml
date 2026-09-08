@@ -7250,6 +7250,28 @@ title = "Activating your Processor plan..."
 limit = "Monthly spend limit {{amount}}/mo. Processing pauses at the limit."
 limitNoCap = "No spend limit. Processing won't pause. Invoices post monthly."
 
+[portal.billing.chip]
+invoices = "Invoices"
+nav = "Sections"
+payment = "Payment"
+plan = "Plan"
+usage = "Usage"
+
+[portal.billing.cycle]
+credits = "Credits"
+creditsNote = "{{units}} · {{rate}} each"
+day = "Day {{day}} of {{of}}"
+estimated = "estimated · the meter settles at close"
+largeFiles = "Large files"
+largeFilesValue = "{{pdfs}} PDFs past the size threshold"
+pdfs = "PDFs processed"
+users = "Users"
+
+[portal.billing.enterprise]
+cta = "Get an enterprise quote"
+sub = "Air-gapped deployment, SCIM, data residency, uptime SLAs, and an agreement to match."
+title = "Running Stirling in a regulated environment?"
+
 [portal.billing.enterpriseUpsell]
 cta = "Explore Enterprise"
 description = "Committed volume discounts, air-gapped deployment, custom MSA and security reviews, and 3rd-party distributor partnerships."
@@ -7277,6 +7299,27 @@ payInvoice = "Pay invoice to complete"
 planName = "Editor"
 switchOnProcessor = "Switch on the Processor →"
 viewQuote = "View quote"
+
+[portal.billing.identity.free]
+chipAnywhere = "Web, desktop & self-hosted"
+chipCredits = "{{allowance}} free credits monthly"
+chipTools = "Every PDF tool"
+name = "Free"
+sub = "The full PDF Editor."
+
+[portal.billing.identity.processor]
+chipMetered = "Metered processing"
+chipPipelines = "Pipelines & API"
+name = "Processor"
+sub = "Team base plus {{rate}} per credit"
+subNoRate = "Team base plus metered processing"
+
+[portal.billing.identity.team]
+chipFleet = "Fleet control"
+chipSso = "SSO"
+name = "Team"
+sub = "Up to {{users}} users"
+subNoLimit = "No user limit"
 
 [portal.billing.invoices]
 columnAmount = "Amount"
@@ -7431,22 +7474,23 @@ healthy = "Plenty left"
 low = "Running low"
 
 [portal.billing.processor]
-activate = "Switch on"
-capSuffix = "of a {{cap}} limit"
-eyebrow = "Processor"
-freeBarLabel = "Free credits remaining"
-freeCapSuffix = "of {{allowance}} free credits this period"
-noCapSuffix = "this period, no limit"
-offer = "The Processor bills automation, API and agent work by what it processes, after the free credits run out. Manual edits in the editor stay free."
-pending = "{{units}} meter units are still pending sync from linked instances."
-periodSummary = "{{docs}} PDFs processed this period."
-spendBarLabel = "Spend limit"
-unknownSpend = "Unknown"
+activate = "Switch on the Processor"
+capTooltip = "Pauses PDF processing at your spend limit."
+factCapped = "{{pct}}% of {{cap}}"
+factFree = "{{used}} of {{allowance}} used"
+factNoCap = "no limit"
+midFree = "{{rate}} per credit · {{allowance}} free every month"
+midFreeNoRate = "{{allowance}} free every month"
+midMetered = "{{spend}} metered this cycle"
+midMeteredUnknown = "Metered this cycle"
+raiseLimit = "Raise limit"
+rowName = "Processor"
 
-[portal.billing.processor.state]
-active = "Active"
-exhausted = "Used up"
-free = "Free tier"
+[portal.billing.section]
+cycle = "This cycle"
+invoices = "Invoices"
+payment = "Payment"
+plan = "Your plan"
 
 [portal.billing.spendLimit]
 adjustLimit = "Adjust limit"
@@ -7484,24 +7528,14 @@ reachedTitle = "Monthly spend limit reached"
 title = "Couldn't open Stripe portal"
 
 [portal.billing.team]
-barLabel = "User capacity"
-buy = "Add Team"
-capSuffix = "of {{licensed}} users"
-change = "Change capacity"
-eyebrow = "Team plan"
-noLimit = "users, no limit"
-note = "Counts every member of this team, and applies to any server you link to this account."
-notHeld = "No Team plan"
-offer = "Team covers your people rather than your processing, in blocks of 100 users, and applies to this account and any server you link to it."
-overNote = "You have more members than this plan covers. Existing members keep working; adding another needs more capacity."
-unit = "users"
-
-[portal.billing.team.state]
-full = "Full"
-healthy = "Room to grow"
-nearlyFull = "Nearly full"
-over = "Over capacity"
-unlimited = "Unlimited"
+addCapacity = "Add capacity"
+fact = "{{users}} of {{licensed}} users"
+factNoLimit = "{{users}} users"
+midFree = "The Team plan covers 100 users"
+midFreeSelfHosted = "The free tier covers your first users"
+midIncluded = "Included with your Team base"
+midPrice = "$99/mo per 100 users"
+rowName = "Users"
 
 [portal.components.billingUnit]
 approval = "approval"
@@ -9741,8 +9775,9 @@ close = "Close"
 
 [portal.usage]
 managePayment = "Manage Payment"
-subtitle = "Consumption, invoices, and plan management for every PDF Stirling has billed, in one console."
-title = "Usage & billing"
+paymentMethod = "Payment method"
+subtitle = "Your plan, your usage, and every invoice."
+title = "Usage & Billing"
 
 [portal.usage.error]
 loadWallet = "Couldn't load wallet"

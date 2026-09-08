@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Banner, Button } from "@app/ui";
-import { BillingScreen } from "@app/billing";
+import { BillingScreen, KvRow } from "@app/billing";
 import {
   fetchWallet,
   refreshWalletCache,
@@ -175,18 +175,6 @@ export function Usage({ onWalletLoaded, onReauth }: UsageProps = {}) {
       wallet={wallet}
       loading={loading}
       pendingUnits={localUsage?.totalUnsyncedUnits ?? 0}
-      headerAction={
-        paying ? (
-          <Button
-            variant="secondary"
-            fat
-            loading={portal.opening}
-            onClick={portal.open}
-          >
-            {t("portal.usage.managePayment", "Manage Payment")}
-          </Button>
-        ) : undefined
-      }
       notices={
         <>
           {sessionExpired && (
@@ -229,6 +217,23 @@ export function Usage({ onWalletLoaded, onReauth }: UsageProps = {}) {
             </Banner>
           )}
         </>
+      }
+      paymentSection={
+        paying ? (
+          <KvRow
+            label={t("portal.usage.paymentMethod", "Payment method")}
+            value={
+              <Button
+                variant="secondary"
+                size="sm"
+                loading={portal.opening}
+                onClick={portal.open}
+              >
+                {t("portal.usage.managePayment", "Manage Payment")}
+              </Button>
+            }
+          />
+        ) : undefined
       }
       extras={
         <>

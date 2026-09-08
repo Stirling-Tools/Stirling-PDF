@@ -51,7 +51,7 @@ describe("Usage — link-free wallet renderer", () => {
     renderUsage(<Usage onWalletLoaded={onWalletLoaded} />);
 
     // Renders immediately (no link prompt / login) and loads unconditionally.
-    expect(screen.getByText("Usage & billing")).toBeInTheDocument();
+    expect(screen.getByText("Usage & Billing")).toBeInTheDocument();
     await waitFor(() =>
       expect(onWalletLoaded).toHaveBeenCalledWith({ status: "free" }),
     );
