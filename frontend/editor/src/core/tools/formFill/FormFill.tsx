@@ -99,17 +99,21 @@ const FormFill = (_props: BaseToolProps) => {
       {
         id: "fill",
         label: t("formFill.mode.fill", "Fill"),
-        icon: <Icon name="file-pen" className={styles.modeTabIcon} />,
+        icon: (
+          <Icon name="file-pen" size="1rem" className={styles.modeTabIcon} />
+        ),
       },
       {
         id: "create",
         label: t("formFill.mode.create", "Create"),
-        icon: <Icon name="file-plus" className={styles.modeTabIcon} />,
+        icon: (
+          <Icon name="file-plus" size="1rem" className={styles.modeTabIcon} />
+        ),
       },
       {
         id: "modify",
         label: t("formFill.mode.modify", "Modify"),
-        icon: <Icon name="wrench" className={styles.modeTabIcon} />,
+        icon: <Icon name="wrench" size="1rem" className={styles.modeTabIcon} />,
       },
     ],
     [t],
@@ -677,7 +681,11 @@ const FormFill = (_props: BaseToolProps) => {
               formState.fields.length === 0 &&
               !formState.error && (
                 <div className={styles.emptyState}>
-                  <Icon name="file-text" className={styles.emptyStateIcon} />
+                  <Icon
+                    name="file-text"
+                    size="2.5rem"
+                    className={styles.emptyStateIcon}
+                  />
                   <span className={styles.emptyStateText}>
                     {t(
                       "formFill.noFields",

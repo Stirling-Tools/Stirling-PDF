@@ -8,6 +8,9 @@ import { WatchedFolder } from "@app/types/watchedFolders";
 import { FolderRunStatus } from "@app/hooks/useFolderRunStatuses";
 import { iconMap } from "@app/components/tools/automate/iconMap";
 
+// The 12px status glyphs scale the app stroke to under 1px; this keeps them legible.
+const STATUS_DOT_STROKE = 2.5;
+
 interface WatchedFolderCardProps {
   folder: WatchedFolder;
   isActive: boolean;
@@ -142,6 +145,7 @@ export function WatchedFolderCard({
             <Icon
               name="circle-pause"
               size={12}
+              strokeWidth={STATUS_DOT_STROKE}
               style={{ color: "var(--mantine-color-dimmed)" }}
             />
           ) : status === "processing" ? (
@@ -150,6 +154,7 @@ export function WatchedFolderCard({
             <Icon
               name="circle-check"
               size={12}
+              strokeWidth={STATUS_DOT_STROKE}
               style={{ color: "var(--color-green-500)" }}
             />
           ) : null

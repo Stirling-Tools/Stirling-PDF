@@ -183,9 +183,17 @@ export function OnboardingChecklist() {
               {doneCount} / {total}
             </span>
             {expanded ? (
-              <Icon name="chevron-up" className={styles.chevron} />
+              <Icon
+                name="chevron-up"
+                size="0.95rem"
+                className={styles.chevron}
+              />
             ) : (
-              <Icon name="chevron-down" className={styles.chevron} />
+              <Icon
+                name="chevron-down"
+                size="0.95rem"
+                className={styles.chevron}
+              />
             )}
             <span
               className={styles.closeButton}
@@ -205,9 +213,13 @@ export function OnboardingChecklist() {
               }}
             >
               {allDone ? (
-                <Icon name="circle-check" className={styles.completeIcon} />
+                <Icon
+                  name="circle-check"
+                  size="1.05rem"
+                  className={styles.completeIcon}
+                />
               ) : (
-                <Icon name="x" className={styles.closeIcon} />
+                <Icon name="x" size="0.95rem" />
               )}
             </span>
           </span>
@@ -240,9 +252,17 @@ export function OnboardingChecklist() {
                 >
                   <span className={styles.itemIcon}>
                     {isDone ? (
-                      <Icon name="circle-check" className={styles.checkDone} />
+                      <Icon
+                        name="circle-check"
+                        size="1.05rem"
+                        className={styles.checkDone}
+                      />
                     ) : (
-                      <Icon name="circle" className={styles.checkTodo} />
+                      <Icon
+                        name="circle"
+                        size="1.05rem"
+                        className={styles.checkTodo}
+                      />
                     )}
                   </span>
                   <span className={styles.itemText}>
