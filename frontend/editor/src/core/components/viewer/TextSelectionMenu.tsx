@@ -389,7 +389,7 @@ function TextSelectionMenuInner({
       for (const sel of selections) {
         annotationProvides?.createAnnotation(sel.pageIndex, {
           type: PdfAnnotationSubtype.LINK,
-          id: `link-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+          id: uuidV4(),
           pageIndex: sel.pageIndex,
           rect: sel.rect,
           target: { type: "action", action: { type: PdfActionType.URI, uri } },
