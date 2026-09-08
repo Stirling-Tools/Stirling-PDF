@@ -1,0 +1,16 @@
+/* ========== WORKSPACE FRAME ========== */
+/* Rail and sidebar side by side, full height. Shared by both apps. */
+.workspace-frame {
+  display: flex;
+  height: 100%;
+  flex-shrink: 0;
+  background-color: var(--c-bg);
+}
+
+/* On mobile the sidebar is a fixed drawer, so the frame stops laying out. */
+@media (max-width: 48rem) {
+  .workspace-frame {
+    display: block;
+    height: auto;
+  }
+}

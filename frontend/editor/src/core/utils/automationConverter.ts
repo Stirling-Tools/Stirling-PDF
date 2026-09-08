@@ -30,7 +30,7 @@ interface FolderScanningPipeline {
   icon?: string;
   pipeline: Array<{
     operation: string;
-    parameters: Record<string, any>;
+    parameters: Record<string, unknown>;
   }>;
   _examples: {
     outputDir: string;
@@ -191,7 +191,7 @@ function buildEndpointToToolIdMap(
  */
 function findDynamicEndpointMatch(
   targetEndpoint: string,
-  parameters: Record<string, any>,
+  parameters: Record<string, unknown>,
   toolRegistry: Partial<ToolRegistry>,
 ): ToolId | undefined {
   for (const [toolId, entry] of Object.entries(toolRegistry)) {
@@ -253,7 +253,8 @@ export function parseFolderScanningConfig(
           `Invalid folder scanning config: pipeline[${index}].operation must be a non-empty string`,
         );
       }
-      const rawParameters = (stepObj.parameters as Record<string, any>) || {};
+      const rawParameters =
+        (stepObj.parameters as Record<string, unknown>) || {};
       // Strip the export-time marker so the imported automation runs cleanly.
       const { fileInput: _fileInput, ...parameters } = rawParameters;
 
@@ -337,7 +338,7 @@ export function parseAutomationConfigJson(
           `Invalid automation config: operations[${index}].operation must be a non-empty string`,
         );
       }
-      const parameters = (opObj.parameters as Record<string, any>) || {};
+      const parameters = (opObj.parameters as Record<string, unknown>) || {};
       if (!isToolIdInRegistry(operation, toolRegistry)) {
         unresolved.push(operation);
       }

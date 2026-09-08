@@ -3526,7 +3526,6 @@ label = "Posição Y"
 
 [crop.error]
 failed = "Falha ao recortar o PDF"
-invalidArea = "A área de recorte excede os limites do PDF"
 
 [crop.preview]
 title = "Seleção da área de recorte"
