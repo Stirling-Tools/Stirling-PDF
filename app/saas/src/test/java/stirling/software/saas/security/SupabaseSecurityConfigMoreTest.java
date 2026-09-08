@@ -371,8 +371,20 @@ class SupabaseSecurityConfigMoreTest {
             return cfg.corsConfigurationSource();
         }
 
-        /** An allow-listed origin: the SaaS frontend in dev, which is cross-origin to :8080. */
-        private static final String FIRST_PARTY = "http://localhost:5173";
+        /**
+         * An allow-listed origin, deliberately not a localhost one: which port anybody runs the dev
+         * server on is their business, and pinning one here would assert the wrong thing.
+         */
+        private static final String FIRST_PARTY = "https://app.stirling.com";
+
+        /** Outside production the allow-list covers loopback on any port, so exercise that too. */
+        private CorsConfigurationSource devProfileSource() {
+            MockEnvironment dev = new MockEnvironment();
+            dev.setActiveProfiles("saas", "staging");
+            SupabaseSecurityConfig cfg = config(new ApplicationProperties(), dev);
+            ReflectionTestUtils.setField(cfg, "accountLinkEnabled", true);
+            return cfg.corsConfigurationSource();
+        }
 
         private CorsConfiguration resolve(
                 CorsConfigurationSource source, String path, String origin) {
@@ -456,6 +468,21 @@ class SupabaseSecurityConfigMoreTest {
         }
 
         @ParameterizedTest
+        @ValueSource(ints = {5173, 5174, 3000, 4321, 61234})
+        @DisplayName("outside production a local dev server keeps credentials on any port")
+        void anyLoopbackPortKeepsCredentials(int port) {
+            // The dev frontend is cross-origin to the backend whichever port it lands on, so the
+            // split has to key off "loopback in a non-production profile", never a fixed port.
+            String origin = "http://localhost:" + port;
+
+            CorsConfiguration cfg = resolve(devProfileSource(), "/api/v1/payg/wallet", origin);
+
+            assertThat(cfg.getAllowCredentials()).isTrue();
+            assertThat(cfg.checkOrigin(origin)).isEqualTo(origin);
+            assertThat(cfg.getAllowedHeaders()).contains("X-Browser-Id");
+        }
+
+        @ParameterizedTest
         @ValueSource(
                 strings = {
                     "tauri://localhost",
@@ -478,9 +505,9 @@ class SupabaseSecurityConfigMoreTest {
         @ValueSource(strings = {SELF_HOSTED, FIRST_PARTY, "tauri://localhost"})
         @DisplayName("the portal's own request is satisfied whichever branch an origin takes")
         void portalRequestWorksOnEitherBranch(String origin) {
-            // A self-hosted instance can sit on an allow-listed origin (localhost:5173 ships in
-            // the defaults), so it takes the credentialed branch rather than the wildcard. That is
-            // fine only if both branches accept what apiClient.saas actually sends.
+            // A self-hosted instance can sit on an allow-listed origin, so it takes the
+            // credentialed branch rather than the wildcard. That is fine only if both branches
+            // accept what apiClient.saas actually sends.
             CorsConfiguration cfg = resolve(source(true), "/api/v1/payg/wallet", origin);
 
             assertThat(cfg.checkOrigin(origin)).isNotNull();
