@@ -25,6 +25,7 @@
  */
 
 import { AutomationOperation } from "@app/types/automation";
+import type { PdfToPdfARequest } from "@app/types/toolApiTypes";
 import { ToolRegistry } from "@app/data/toolsTaxonomy";
 import { ToolId } from "@app/types/toolId";
 
@@ -299,7 +300,11 @@ const handleSaveFiles: CommandHandler = (command) => {
           parameters: {
             fromExtension: "pdf",
             toExtension: "pdfa",
-            pdfaOptions: { outputFormat: "pdfa-2b", strict: false },
+            pdfaOptions: {
+              outputFormat:
+                "pdfa-2b" satisfies PdfToPdfARequest["outputFormat"],
+              strict: false,
+            },
           },
         },
       ],
@@ -436,7 +441,11 @@ const handlePreflight: CommandHandler = (command) => {
           parameters: {
             fromExtension: "pdf",
             toExtension: "pdfa",
-            pdfaOptions: { outputFormat: "pdfa-2b", strict: false },
+            pdfaOptions: {
+              outputFormat:
+                "pdfa-2b" satisfies PdfToPdfARequest["outputFormat"],
+              strict: false,
+            },
           },
         },
       ],

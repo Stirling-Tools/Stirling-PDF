@@ -23,6 +23,7 @@
  */
 
 import { AutomationOperation } from "@app/types/automation";
+import type { PdfToPdfARequest } from "@app/types/toolApiTypes";
 import {
   collectTopLevelDicts,
   psBoolean,
@@ -211,7 +212,10 @@ export function jobOptionsToOperations(settings: DistillerSettings): {
       parameters: {
         fromExtension: "pdf",
         toExtension: "pdfa",
-        pdfaOptions: { outputFormat: "pdfa-1b", strict: false },
+        pdfaOptions: {
+          outputFormat: "pdfa-1" satisfies PdfToPdfARequest["outputFormat"],
+          strict: false,
+        },
       },
     });
   } else if (settings.pdfxCheck) {

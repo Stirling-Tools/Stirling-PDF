@@ -280,7 +280,7 @@ describe("distillerJobOptions", () => {
         parameters: {
           fromExtension: "pdf",
           toExtension: "pdfa",
-          pdfaOptions: { outputFormat: "pdfa-1b", strict: false },
+          pdfaOptions: { outputFormat: "pdfa-1", strict: false },
         },
       });
     });
