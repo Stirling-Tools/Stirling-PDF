@@ -200,12 +200,20 @@
   margin-left: auto;
   display: flex;
   align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
   gap: 0.5rem;
   /* Allow this container to shrink below its intrinsic content width so
      the bulk-action group + filter selects + view toggle can compete for
      space without bursting out of the toolbar (which previously bled
      under the right-hand details panel at wider viewports). */
   min-width: 0;
+}
+
+.files-page-toolbar-actions > .mantine-Select-root,
+.files-page-toolbar-actions > .mantine-MultiSelect-root,
+.files-page-toolbar-actions > .mantine-TextInput-root {
+  flex-shrink: 0;
 }
 
 /* Bulk-action buttons (Add to workspace, Quick view, Move to, Remove)
