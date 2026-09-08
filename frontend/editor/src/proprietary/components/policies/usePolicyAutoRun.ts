@@ -129,7 +129,9 @@ function isTerminal(status: PolicyRunStatus): boolean {
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-export function usePolicyAutoRun(): void {
+export function usePolicyAutoRun({
+  paused = false,
+}: { paused?: boolean } = {}): void {
   const { fileStubs } = useAllFiles();
   const { addFiles, updateStirlingFileStub } = useFileManagement();
   const { consumeFiles } = useFileContext();
@@ -237,6 +239,9 @@ export function usePolicyAutoRun(): void {
   // Fire only the FIRST upload policy per file; the chaining effect below runs the rest
   // on each previous output, so policies apply cumulatively in order.
   useEffect(() => {
+    // Paused during a guided tour: its throwaway sample must not auto-dispatch a billable,
+    // entitlement-gated server run (see PolicyAutoRunController / useTourActive).
+    if (paused) return;
     const firstPolicyKey = orderedUploadPolicyKeys[0];
     if (!firstPolicyKey) return;
     const backendId = policies[firstPolicyKey]?.backendId;
@@ -264,7 +269,7 @@ export function usePolicyAutoRun(): void {
         })
         .finally(() => dispatching.current.delete(key));
     }
-  }, [fileStubs, policies, orderedUploadPolicyKeys, unlocksVersion]);
+  }, [paused, fileStubs, policies, orderedUploadPolicyKeys, unlocksVersion]);
 
   // Once a run's output lands, fire the next upload policy on it - success only, once per
   // run. isDispatched guards re-dispatch across reloads.

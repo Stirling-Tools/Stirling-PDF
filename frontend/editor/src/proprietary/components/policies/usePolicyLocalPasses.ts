@@ -32,7 +32,9 @@ interface ActivePass {
   requiresAiEngine: boolean;
 }
 
-export function usePolicyLocalPasses(): void {
+export function usePolicyLocalPasses({
+  paused = false,
+}: { paused?: boolean } = {}): void {
   const { fileStubs } = useAllFiles();
   const { updateStirlingFileStub } = useFileManagement();
   const { bumpRevision } = useIndexedDB();
@@ -71,7 +73,9 @@ export function usePolicyLocalPasses(): void {
   }, [policies]);
 
   useEffect(() => {
-    if (configLoading || passes.length === 0) return;
+    // Paused during a guided tour: its throwaway sample must not be classified/metered or have a
+    // server run escalated against the account (see PolicyAutoRunController / useTourActive).
+    if (paused || configLoading || passes.length === 0) return;
     const claimKey = (policyKey: string, s: StirlingFileStub) =>
       `${policyKey}:${s.id as string}:${s.lastModified ?? 0}`;
     // Collect one idle batch of pending (pass, file) work across all passes.
@@ -133,6 +137,7 @@ export function usePolicyLocalPasses(): void {
       cancelIdle();
     };
   }, [
+    paused,
     fileStubs,
     passes,
     aiEnabled,
