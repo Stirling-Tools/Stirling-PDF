@@ -293,8 +293,7 @@ function PolicySetupWizardBody({
     requiredTouched.current = true;
     setRequired(value);
   };
-  // A required policy is manager-only to save; a non-manager can't toggle enforce or submit one.
-  const readOnly = required && !canManagePolicies;
+  const readOnly = !canManagePolicies;
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);

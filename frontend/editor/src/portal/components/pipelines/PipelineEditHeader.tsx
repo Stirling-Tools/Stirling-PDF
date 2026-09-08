@@ -89,9 +89,7 @@ export function PipelineEditHeader({
   onDelete,
 }: PipelineEditHeaderProps) {
   const { t } = useTranslation();
-  // A required policy may only be modified by a manager; lock its config actions for everyone else.
-  // Ordinary pipelines (not required) are always editable.
-  const readOnly = required && !canManagePolicies;
+  const readOnly = !canManagePolicies;
   const [renaming, setRenaming] = useState(false);
   const [draft, setDraft] = useState(name);
   const inputRef = useRef<HTMLInputElement>(null);

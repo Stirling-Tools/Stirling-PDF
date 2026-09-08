@@ -50,7 +50,6 @@ import stirling.software.common.service.JobOwnershipService;
 import stirling.software.common.service.ToolChainValidator;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
-import stirling.software.proprietary.access.security.ResourceAccessSecurity;
 import stirling.software.proprietary.audit.AuditContext;
 import stirling.software.proprietary.policy.asset.PolicyAssetCleaner;
 import stirling.software.proprietary.policy.asset.PolicyAssetResolver;
@@ -118,7 +117,6 @@ public class PolicyController {
     private final JobOwnershipService jobOwnershipService;
     // Shared job store: lets the run endpoints see runs that executed on other nodes.
     private final JobStore jobStore;
-    private final ResourceAccessSecurity resourceAccess;
 
     @PostMapping(value = "/run", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
@@ -276,7 +274,7 @@ public class PolicyController {
                     "Stores a policy (trigger config + steps + output + metadata). A blank id is"
                             + " assigned; returns the stored policy with its id.")
     public ResponseEntity<Policy> savePolicy(@RequestBody Policy policy) {
-        requirePortalAccessAllowed();
+        requirePolicyEditingAllowed();
         Policy owned = withStoredOutputSecrets(resolveOwnership(policy));
         // Snapshot the previous version before saving so supporting files this edit dropped can
         // be cleaned up once nothing references them.
@@ -284,12 +282,6 @@ public class PolicyController {
                 owned.id() == null || owned.id().isBlank()
                         ? null
                         : policyStore.get(owned.id()).orElse(null);
-        // Only an org-mandated (required) policy is manager-only; an ordinary pipeline is open to
-        // any team member. Gate on the incoming and the stored flag so promoting or demoting is
-        // gated too.
-        if (owned.required() || (previous != null && previous.required())) {
-            requirePolicyEditingAllowed();
-        }
         requireAccessibleSources(owned);
         requireAccessibleOutput(owned);
         try {
@@ -453,31 +445,17 @@ public class PolicyController {
     }
 
     /**
-     * Managing an org-mandated ({@code required}) policy - creating one, editing/pausing/deleting
-     * an existing one, or promoting/demoting the {@code required} flag - needs the manager role for
-     * the caller's team: an admin self-hosted, a team leader on SaaS (see {@link
-     * PolicyManagementAuthority}). Ordinary pipelines (not required) are open to any team member,
-     * so the mutation endpoints ({@link #savePolicy}, {@link #deletePolicy}, {@link
-     * #clearProcessedHistory}) call this only when the record is or becomes required. Team scoping
-     * (which team's policies) is enforced separately by {@link PolicyAccessGuard}; single-user
-     * deployments (login disabled) have no role, so they trust the local operator.
+     * Creating, editing, pausing, or deleting any pipeline or policy needs the manager role for the
+     * caller's team: an admin self-hosted, a team leader on SaaS (see {@link
+     * PolicyManagementAuthority}). A team member without that role may view and run the team's
+     * pipelines but not change them, so every mutation endpoint ({@link #savePolicy}, {@link
+     * #deletePolicy}, {@link #clearProcessedHistory}) calls this.
      */
     private void requirePolicyEditingAllowed() {
         if (!policyEditingAllowed()) {
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN,
                     "Policies may only be created or modified by a team leader");
-        }
-    }
-
-    private void requirePortalAccessAllowed() {
-        if (!applicationProperties.getSecurity().isEnableLogin()) {
-            return;
-        }
-        if (!resourceAccess.canUsePortal()) {
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN,
-                    "Policies may only be managed by users with portal access");
         }
     }
 
@@ -577,16 +555,11 @@ public class PolicyController {
     @DeleteMapping("/{policyId}")
     @Operation(summary = "Delete a policy by id")
     public ResponseEntity<Void> deletePolicy(@PathVariable String policyId) {
-        requirePortalAccessAllowed();
+        requirePolicyEditingAllowed();
         // Scope to the caller's team: a policy in another team reads as not-found.
         Policy policy = policyStore.get(policyId).filter(policyAccessGuard::canAccess).orElse(null);
         if (policy == null) {
             return ResponseEntity.notFound().build();
-        }
-        // Deleting an org-mandated (required) policy is manager-only; a pipeline is open to the
-        // team.
-        if (policy.required()) {
-            requirePolicyEditingAllowed();
         }
         if (policyStore.delete(policyId)) {
             processedLedger.clearPolicy(policyId);
@@ -607,15 +580,11 @@ public class PolicyController {
                             + " sweep reprocesses everything currently in its sources. Does not"
                             + " touch the files themselves.")
     public ResponseEntity<Void> clearProcessedHistory(@PathVariable String policyId) {
-        requirePortalAccessAllowed();
+        requirePolicyEditingAllowed();
         // Scope to the caller's team: a policy in another team reads as not-found.
         Policy policy = policyStore.get(policyId).filter(policyAccessGuard::canAccess).orElse(null);
         if (policy == null) {
             return ResponseEntity.notFound().build();
-        }
-        // Clearing history for an org-mandated (required) policy is manager-only.
-        if (policy.required()) {
-            requirePolicyEditingAllowed();
         }
         processedLedger.clearPolicy(policyId);
         return ResponseEntity.noContent().build();
@@ -754,13 +723,12 @@ public class PolicyController {
      * inaccessible policy leaves the run-supplied inputs untouched.
      */
     private PolicyInputs resolveStoredAssets(String policyId, PolicyInputs inputs) {
-        if (policyId == null || policyId.isBlank()) {
+        if (policyId == null || policyId.isBlank() || !policyEditingAllowed()) {
             return inputs;
         }
         return policyStore
                 .get(policyId)
                 .filter(policyAccessGuard::canAccess)
-                .filter(policy -> !policy.required() || policyEditingAllowed())
                 .map(policy -> assetResolver.resolve(policy, inputs))
                 .orElse(inputs);
     }

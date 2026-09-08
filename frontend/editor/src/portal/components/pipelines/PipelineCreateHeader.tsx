@@ -15,7 +15,7 @@ export interface PipelineCreateHeaderProps {
   /** "Enforce as policy" toggle, shown in the actions row. */
   required: boolean;
   onRequiredChange: (required: boolean) => void;
-  /** Whether the user may create a required policy; when false the enforce toggle is locked. */
+  /**Whether the user may create pipelines and policies. */
   canManagePolicies?: boolean;
   /**
    * The permission check is still loading. The enforce toggle stays locked, but the manager-only
@@ -58,6 +58,8 @@ export function PipelineCreateHeader({
   onBack,
 }: PipelineCreateHeaderProps) {
   const { t } = useTranslation();
+  // Only a manager may create a pipeline or policy; block create for others.
+  const readOnly = !canManagePolicies;
 
   return (
     <section className="portal-pipeline-create-header">
@@ -97,14 +99,18 @@ export function PipelineCreateHeader({
             wrapper is what the pointer lands on. */}
         <PipelineBlockerTooltip
           heading={t("portal.pipelines.builder.blocker.heading")}
-          blockers={blockers}
+          blockers={
+            readOnly && !permissionsLoading
+              ? [t("portal.pipelines.builder.blocker.managerOnly")]
+              : blockers
+          }
         >
           <div className="portal-pipeline-create-header__create">
             <Button
               variant="secondary"
               size="sm"
               loading={saving && pendingCreateEnabled === false}
-              disabled={!canSave}
+              disabled={!canSave || readOnly}
               onClick={onCreatePaused}
             >
               {t("portal.pipelines.composer.createPaused")}
@@ -112,7 +118,7 @@ export function PipelineCreateHeader({
             <Button
               size="sm"
               loading={saving && pendingCreateEnabled === true}
-              disabled={!canSave}
+              disabled={!canSave || readOnly}
               onClick={onCreate}
             >
               {t("portal.pipelines.composer.create")}

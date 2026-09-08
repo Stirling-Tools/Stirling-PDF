@@ -124,8 +124,7 @@ export function PolicyDetailPanel({
   if (!policy) return null;
   const { category, config, state, steps, stats, activity } = policy;
   const isPaused = state.status === "paused";
-  // An org-mandated (required) policy may only be modified by a manager; others see it read-only.
-  const readOnly = state.required && !canManagePolicies;
+  const readOnly = !canManagePolicies;
   const canDelete = state.isDefault !== true && !readOnly;
   // Editor participation is its own flag (runsOnEditor), not a source. A legacy policy still carries
   // "editor" in its stored sources until re-saved, so drop it here to count only real watched sources.
