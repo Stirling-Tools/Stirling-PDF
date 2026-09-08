@@ -3,6 +3,7 @@ version: '3'
 vars:
   COMPOSE_DIR: docker/compose
   EMBEDDED_DIR: docker/embedded
+  ENGINE_DIR: docker/engine
 
 tasks:
   build:
@@ -32,9 +33,13 @@ tasks:
 
   build:engine:
     desc: "Build engine Docker image"
-    dir: engine
     cmds:
-      - docker build -t stirling-pdf-engine .
+      - docker build -t stirling-pdf-engine -f {{.ENGINE_DIR}}/Dockerfile .
+
+  build:engine:dev:
+    desc: "Build engine development Docker image"
+    cmds:
+      - docker build -t stirling-pdf-engine-dev -f {{.ENGINE_DIR}}/Dockerfile.dev .
 
   up:
     desc: "Start standard docker compose stack"
