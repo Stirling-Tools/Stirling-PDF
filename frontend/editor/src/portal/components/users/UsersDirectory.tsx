@@ -46,6 +46,8 @@ interface UsersDirectoryProps {
   onUnlock: (member: Member) => void;
   onDisableMfa: (member: Member) => void;
   onResendInvite: (member: Member) => void;
+  /** Server-side state of the mail + invites config; without it a resend cannot be sent. */
+  emailInvitesEnabled?: boolean;
   onRemove: (member: Member) => void;
   // Team actions (the team-header kebab).
   onRenameTeam: (team: TeamGroup) => void;
@@ -79,6 +81,7 @@ export function UsersDirectory({
   onUnlock,
   onDisableMfa,
   onResendInvite,
+  emailInvitesEnabled = false,
   onRemove,
   onRenameTeam,
   onDeleteTeam,
@@ -155,9 +158,10 @@ export function UsersDirectory({
           onClick: () => onUnlock(m),
         });
       }
-      if (capabilities.resendInvite && m.firstLogin && m.email.includes("@")) {
+      if (capabilities.resendInvite && emailInvitesEnabled && m.invitePending) {
         items.push({
           label: t("users.action.resendInvite", "Resend invite"),
+          disabled: m.isSelf,
           onClick: () => onResendInvite(m),
         });
       }
@@ -213,7 +217,7 @@ export function UsersDirectory({
           if (m.locked) {
             out.push({ label: t("users.locked", "Locked"), accent: "warning" });
           }
-          if (m.status !== "suspended" && m.firstLogin) {
+          if (m.status !== "suspended" && m.invitePending) {
             out.push({
               label: t("users.pendingInvite", "Invited"),
               accent: "warning",
@@ -301,6 +305,7 @@ export function UsersDirectory({
     onUnlock,
     onDisableMfa,
     onResendInvite,
+    emailInvitesEnabled,
     onRemove,
   ]);
 

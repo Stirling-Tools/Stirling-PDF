@@ -383,6 +383,7 @@ export function Users() {
             onUnlock={unlock}
             onDisableMfa={disableMfa}
             onResendInvite={resendInviteAction}
+            emailInvitesEnabled={canEmailInvite}
             onRemove={removeUser}
             onRenameTeam={(team) =>
               setRenameTarget({ id: team.id, name: team.name })

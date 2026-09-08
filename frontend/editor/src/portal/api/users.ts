@@ -53,8 +53,8 @@ export interface Member {
   authType?: string;
   /** Raw stored authority (e.g. ROLE_USER, ROLE_WEB_ONLY_USER); preserved on team moves. */
   authority?: string;
-  /** Account created by an invite and never signed into; its invitation can be resent. */
-  firstLogin?: boolean;
+  /** Account created by an email invite and never signed into; its invitation can be resent. */
+  invitePending?: boolean;
 }
 
 export interface Role {
@@ -228,8 +228,8 @@ interface AdminUserSummaryDto {
   authenticationType?: string;
   /** Authoritative server-side portal access (honors the configured default policy). */
   portalAccess?: boolean;
-  /** Account created by an invite and never signed into. */
-  isFirstLogin?: boolean;
+  /** Account created by an email invite whose temporary password has never been used. */
+  invitePending?: boolean;
 }
 
 interface AdminSettingsDto {
@@ -306,7 +306,7 @@ export async function fetchUsers(tier: Tier): Promise<UsersResponse> {
     mfaEnabled: data.userSettings?.[u.username]?.mfaEnabled === "true",
     authType: u.authenticationType,
     authority: u.rolesAsString,
-    firstLogin: u.isFirstLogin === true,
+    invitePending: u.invitePending === true,
   }));
   const seatLimit = normalizeSeatLimit(data.maxAllowedUsers);
   const seatsUsed = data.totalUsers ?? members.length;

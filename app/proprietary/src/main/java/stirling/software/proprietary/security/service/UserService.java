@@ -73,6 +73,17 @@ import stirling.software.proprietary.workflow.service.UserServerCertificateServi
 @RequiredArgsConstructor
 public class UserService implements UserServiceInterface {
 
+    /**
+     * Present and {@code "true"} only on an account created by the email-invite path whose
+     * temporary password nobody has used yet, which is the sole state in which re-issuing (and so
+     * rotating) that password is safe. Removed once the owner sets their own password.
+     *
+     * <p>Deliberately a {@code user_settings} row rather than a {@code users} column: SaaS declares
+     * {@code users} migration-owned, so {@code MigrationOwnedSchemaFilter} keeps Hibernate out of
+     * it and a new column would never exist there.
+     */
+    public static final String INVITE_PENDING_KEY = "invitePending";
+
     private final UserRepository userRepository;
     private final TeamRepository teamRepository;
     private final AuthorityRepository authorityRepository;
@@ -428,6 +439,27 @@ public class UserService implements UserServiceInterface {
         databaseService.exportDatabase();
     }
 
+    /**
+     * Retires the invite marker once its owner has set a password of their own, so the invitation
+     * can no longer be re-issued against a live credential. Deletes the row directly rather than
+     * mutating {@code user.settings}: callers hold a user loaded without its settings, whose
+     * collection cannot be touched outside the session that loaded it. Call it after any {@code
+     * save} of the same user, or that save will write the stale collection back.
+     */
+    @Transactional
+    public void clearInvitePending(User user) throws SQLException, UnsupportedProviderException {
+        if (user == null || user.getId() == null) {
+            return;
+        }
+        userRepository.deleteSettingsByUserIdAndKeys(user.getId(), List.of(INVITE_PENDING_KEY));
+        databaseService.exportDatabase();
+    }
+
+    /** Whether one user's {@code user_settings} rows carry a live invite marker. */
+    public static boolean isInvitePending(Map<String, String> settings) {
+        return settings != null && "true".equals(settings.get(INVITE_PENDING_KEY));
+    }
+
     public void changeRole(User user, String newRole)
             throws SQLException, UnsupportedProviderException {
         Authority userAuthority = this.findRole(user);
@@ -533,8 +565,12 @@ public class UserService implements UserServiceInterface {
         // Set first login flag
         user.setFirstLogin(request.isFirstLogin());
 
-        // Set MFA requirement
         Map<String, String> settings = user.getSettings();
+        if (request.isInvitePending()) {
+            settings.put(INVITE_PENDING_KEY, "true");
+        }
+
+        // Set MFA requirement
         settings.put(MFA_REQUIRED_KEY, String.valueOf(request.isRequireMfa()));
         settings.put(MFA_ENABLED_KEY, String.valueOf(request.isMfaEnabled()));
         if (request.getMfaSecret() != null && !request.getMfaSecret().isEmpty()) {

@@ -1,8 +1,10 @@
 package stirling.software.proprietary.security.controller.api;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -17,6 +19,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -33,6 +37,7 @@ import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.service.EmailService;
 import stirling.software.proprietary.security.service.LoginAttemptService;
+import stirling.software.proprietary.security.service.SaveUserRequest;
 import stirling.software.proprietary.security.service.TeamMembershipService;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
@@ -82,6 +87,10 @@ class UserControllerMoreTest {
         User u = new User();
         u.setUsername(username);
         return u;
+    }
+
+    private static void markInvitePending(User u) {
+        u.getSettings().put(UserService.INVITE_PENDING_KEY, "true");
     }
 
     @Nested
@@ -192,6 +201,29 @@ class UserControllerMoreTest {
 
             verify(userService).changePassword(u, "new");
             verify(userService).changeFirstUse(u, false);
+        }
+
+        @Test
+        @DisplayName("retires the invite marker, so the invitation can no longer be re-issued")
+        void clearsInvitePending() throws Exception {
+            User u = user("me");
+            markInvitePending(u);
+            when(userService.findByUsernameIgnoreCase("me")).thenReturn(Optional.of(u));
+            when(userService.isPasswordCorrect(u, "old")).thenReturn(true);
+
+            mockMvc.perform(
+                            post("/api/v1/user/change-password-on-login")
+                                    .principal(auth("me"))
+                                    .param("currentPassword", "old")
+                                    .param("newPassword", "new")
+                                    .param("confirmPassword", "new"))
+                    .andExpect(status().isOk());
+
+            InOrder order = inOrder(userService);
+            order.verify(userService).changePassword(u, "new");
+            // After the saves: clearInvitePending deletes the row behind Hibernate's back, so a
+            // later save of the same user would write the stale collection straight back.
+            order.verify(userService).clearInvitePending(u);
         }
     }
 
@@ -477,7 +509,9 @@ class UserControllerMoreTest {
                     .andExpect(jsonPath("$.undelivered").isEmpty())
                     .andExpect(jsonPath("$.warning").doesNotExist());
 
-            verify(userService).saveUserCore(any());
+            ArgumentCaptor<SaveUserRequest> saved = ArgumentCaptor.forClass(SaveUserRequest.class);
+            verify(userService).saveUserCore(saved.capture());
+            assertTrue(saved.getValue().isInvitePending());
         }
 
         @Test
@@ -519,7 +553,8 @@ class UserControllerMoreTest {
         @Test
         @DisplayName("returns 404 for an unknown user")
         void userNotFound() throws Exception {
-            when(userService.findByUsernameIgnoreCase("ghost@ex.com")).thenReturn(Optional.empty());
+            when(userService.findByUsernameIgnoreCaseWithSettings("ghost@ex.com"))
+                    .thenReturn(Optional.empty());
 
             mockMvc.perform(
                             post("/api/v1/user/admin/resendInvite")
@@ -532,8 +567,7 @@ class UserControllerMoreTest {
         @DisplayName("refuses an account that has already been signed into")
         void refusesUsedAccount() throws Exception {
             User target = user("bob@ex.com");
-            target.setFirstLogin(false);
-            when(userService.findByUsernameIgnoreCase("bob@ex.com"))
+            when(userService.findByUsernameIgnoreCaseWithSettings("bob@ex.com"))
                     .thenReturn(Optional.of(target));
 
             mockMvc.perform(
@@ -546,11 +580,58 @@ class UserControllerMoreTest {
         }
 
         @Test
+        @DisplayName("refuses a directly-created account that merely must change its password")
+        void refusesForcedPasswordChangeAccount() throws Exception {
+            User target = user("bob@ex.com");
+            target.setFirstLogin(true);
+            when(userService.findByUsernameIgnoreCaseWithSettings("bob@ex.com"))
+                    .thenReturn(Optional.of(target));
+
+            mockMvc.perform(
+                            post("/api/v1/user/admin/resendInvite")
+                                    .principal(auth("admin"))
+                                    .param("username", "bob@ex.com"))
+                    .andExpect(status().isBadRequest());
+
+            verify(userService, never()).changePassword(any(), any());
+        }
+
+        @Test
+        @DisplayName("refuses a suspended account")
+        void refusesSuspendedAccount() throws Exception {
+            User target = user("bob@ex.com");
+            markInvitePending(target);
+            target.setEnabled(false);
+            when(userService.findByUsernameIgnoreCaseWithSettings("bob@ex.com"))
+                    .thenReturn(Optional.of(target));
+
+            mockMvc.perform(
+                            post("/api/v1/user/admin/resendInvite")
+                                    .principal(auth("admin"))
+                                    .param("username", "bob@ex.com"))
+                    .andExpect(status().isBadRequest());
+
+            verify(userService, never()).changePassword(any(), any());
+        }
+
+        @Test
+        @DisplayName("refuses to resend the caller's own invitation")
+        void refusesSelfTarget() throws Exception {
+            mockMvc.perform(
+                            post("/api/v1/user/admin/resendInvite")
+                                    .principal(auth("admin"))
+                                    .param("username", "admin"))
+                    .andExpect(status().isBadRequest());
+
+            verify(userService, never()).changePassword(any(), any());
+        }
+
+        @Test
         @DisplayName("rotates the temporary password and mails a fresh invitation")
         void resends() throws Exception {
             User target = user("bob@ex.com");
-            target.setFirstLogin(true);
-            when(userService.findByUsernameIgnoreCase("bob@ex.com"))
+            markInvitePending(target);
+            when(userService.findByUsernameIgnoreCaseWithSettings("bob@ex.com"))
                     .thenReturn(Optional.of(target));
 
             mockMvc.perform(
@@ -568,8 +649,8 @@ class UserControllerMoreTest {
         @DisplayName("reports a delivery failure instead of a silent success")
         void reportsDeliveryFailure() throws Exception {
             User target = user("bob@ex.com");
-            target.setFirstLogin(true);
-            when(userService.findByUsernameIgnoreCase("bob@ex.com"))
+            markInvitePending(target);
+            when(userService.findByUsernameIgnoreCaseWithSettings("bob@ex.com"))
                     .thenReturn(Optional.of(target));
             doThrow(new MessagingException("connection refused"))
                     .when(emailService)

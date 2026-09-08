@@ -289,6 +289,7 @@ public class UserController {
         user.setForcePasswordChange(false);
         userService.changePassword(user, newPassword);
         userService.changeFirstUse(user, false);
+        userService.clearInvitePending(user);
         // Logout using Spring's utility
         new SecurityContextLogoutHandler().logout(request, response, null);
         return ResponseEntity.ok(
@@ -607,15 +608,21 @@ public class UserController {
     /**
      * Re-issue the invitation for an account that has not been used yet: the temporary password
      * from the original invite is unrecoverable, so a new one is generated and mailed. Restricted
-     * to accounts still on their first login, so this cannot be used to reset a working account.
+     * to accounts still flagged {@code invitePending}, i.e. ones whose only credential is an invite
+     * nobody has consumed. Any other account's password reached its owner out of band, and rotating
+     * it here would lock them out.
      */
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/admin/resendInvite")
+    @Audited(type = AuditEventType.USER_PROFILE_UPDATE, level = AuditLevel.BASIC)
     public ResponseEntity<?> resendInvite(
-            @RequestParam(name = "username") String username, HttpServletRequest request)
+            @RequestParam(name = "username") String username,
+            HttpServletRequest request,
+            Authentication authentication)
             throws SQLException, UnsupportedProviderException {
 
-        if (!applicationProperties.getMail().isEnableInvites()) {
+        if (!applicationProperties.getMail().isEnabled()
+                || !applicationProperties.getMail().isEnableInvites()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("error", "Email invites are not enabled"));
         }
@@ -628,20 +635,33 @@ public class UserController {
                                             + " settings."));
         }
 
-        Optional<User> userOpt = userService.findByUsernameIgnoreCase(username);
+        if (authentication != null && authentication.getName().equalsIgnoreCase(username)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "Cannot resend your own invitation."));
+        }
+
+        Optional<User> userOpt = userService.findByUsernameIgnoreCaseWithSettings(username);
         if (userOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("error", "User not found."));
         }
         User user = userOpt.get();
 
-        if (!user.isFirstLogin()) {
+        if (!UserService.isInvitePending(user.getSettings())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(
                             Map.of(
                                     "error",
-                                    "This account has already been used. Reset the password"
-                                            + " instead."));
+                                    "This account was not created by an invitation. Reset the"
+                                            + " password instead."));
+        }
+        if (!user.isEnabled()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(
+                            Map.of(
+                                    "error",
+                                    "This account is suspended. Reinstate it before resending the"
+                                            + " invitation."));
         }
         if (user.getUsername() == null || !user.getUsername().contains("@")) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -997,7 +1017,8 @@ public class UserController {
                             .password(temporaryPassword)
                             .teamId(teamId)
                             .role(role)
-                            .firstLogin(true);
+                            .firstLogin(true)
+                            .invitePending(true);
             userService.saveUserCore(builder.build());
 
             // Send invite email

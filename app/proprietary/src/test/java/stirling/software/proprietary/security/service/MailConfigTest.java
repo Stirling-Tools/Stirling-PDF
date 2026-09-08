@@ -56,7 +56,12 @@ class MailConfigTest {
                 () -> assertEquals("true", props.getProperty("mail.smtp.starttls.enable")),
                 () -> assertEquals(null, props.getProperty("mail.smtp.starttls.required")),
                 () -> assertEquals(null, props.getProperty("mail.smtp.ssl.enable")),
-                () -> assertEquals("*", props.getProperty("mail.smtp.ssl.trust")));
+                () -> assertEquals("*", props.getProperty("mail.smtp.ssl.trust")),
+                // Infinite is the JavaMail default, and the invite endpoints send on the request
+                // thread: without these a black-holed host hangs the admin's request forever.
+                () -> assertEquals("10000", props.getProperty("mail.smtp.connectiontimeout")),
+                () -> assertEquals("30000", props.getProperty("mail.smtp.timeout")),
+                () -> assertEquals("30000", props.getProperty("mail.smtp.writetimeout")));
     }
 
     @Test

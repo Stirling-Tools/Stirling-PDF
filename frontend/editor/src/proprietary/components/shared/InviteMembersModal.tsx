@@ -280,13 +280,31 @@ export default function InviteMembersModal({
       actionTakenRef.current = true;
       setGeneratedInviteLink(response.inviteUrl);
       if (inviteLinkForm.sendEmail && inviteLinkForm.email) {
-        alert({
-          alertType: "success",
-          title: t(
-            "workspace.people.inviteLink.emailSent",
-            "Invite link generated and sent via email",
-          ),
-        });
+        if (response.emailSent) {
+          alert({
+            alertType: "success",
+            title: t(
+              "workspace.people.inviteLink.emailSent",
+              "Invite link generated and sent via email",
+            ),
+          });
+        } else {
+          alert({
+            alertType: "error",
+            title: t(
+              "workspace.people.inviteLink.emailNotSent",
+              "Invite link generated, but the email could not be sent",
+            ),
+            body: t(
+              "workspace.people.inviteLink.emailNotSentBody",
+              "The link is shown below - send it to {{email}} yourself. {{reason}}",
+              {
+                email: inviteLinkForm.email,
+                reason: response.emailError ?? "",
+              },
+            ),
+          });
+        }
       }
     } catch (error: unknown) {
       console.error("Failed to generate invite link:", error);

@@ -40,6 +40,7 @@ function renderDirectory(
   caps: typeof saasCaps,
   teams: Team[] = TEAMS,
   members: Member[] = [MEMBER],
+  emailInvitesEnabled = true,
 ) {
   const onRemove = vi.fn();
   render(
@@ -61,6 +62,7 @@ function renderDirectory(
         onUnlock={vi.fn()}
         onDisableMfa={vi.fn()}
         onResendInvite={vi.fn()}
+        emailInvitesEnabled={emailInvitesEnabled}
         onRemove={onRemove}
         onRenameTeam={vi.fn()}
         onDeleteTeam={vi.fn()}
@@ -101,7 +103,7 @@ describe("UsersDirectory — remove action gating", () => {
 });
 
 describe("UsersDirectory — never-used invites", () => {
-  const INVITED: Member = { ...MEMBER, firstLogin: true };
+  const INVITED: Member = { ...MEMBER, invitePending: true };
 
   it("self-hosted marks an unused invite and offers Resend invite", async () => {
     renderDirectory(selfHostedCaps, TEAMS, [INVITED]);
@@ -110,9 +112,17 @@ describe("UsersDirectory — never-used invites", () => {
     expect(await screen.findByText("Resend invite")).toBeInTheDocument();
   });
 
-  it("offers no resend once the account has been signed into", async () => {
+  it("leaves a directly-created account alone: forcing a password change is not an invite", async () => {
     renderDirectory(selfHostedCaps);
     expect(screen.queryByText("Invited")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Actions for Priya" }));
+    await screen.findByText("Remove from org");
+    expect(screen.queryByText("Resend invite")).not.toBeInTheDocument();
+  });
+
+  it("hides the resend when the server has no working invite mail config", async () => {
+    renderDirectory(selfHostedCaps, TEAMS, [INVITED], false);
+    expect(screen.getByText("Invited")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Actions for Priya" }));
     await screen.findByText("Remove from org");
     expect(screen.queryByText("Resend invite")).not.toBeInTheDocument();

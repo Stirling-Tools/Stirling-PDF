@@ -24,6 +24,12 @@ import stirling.software.common.model.ApplicationProperties;
 @ConditionalOnProperty(value = "mail.enabled", havingValue = "true", matchIfMissing = false)
 public class MailConfig {
 
+    // JavaMail defaults every SMTP timeout to infinite, and the invite endpoints send on the
+    // request thread, so a black-holed mail host would hang an admin request forever.
+    private static final String CONNECTION_TIMEOUT_MS = "10000";
+    private static final String READ_TIMEOUT_MS = "30000";
+    private static final String WRITE_TIMEOUT_MS = "30000";
+
     private final ApplicationProperties applicationProperties;
 
     @Bean
@@ -61,6 +67,10 @@ public class MailConfig {
 
         // Retrieves the JavaMail properties to configure additional SMTP parameters
         Properties props = mailSender.getJavaMailProperties();
+
+        props.put("mail.smtp.connectiontimeout", CONNECTION_TIMEOUT_MS);
+        props.put("mail.smtp.timeout", READ_TIMEOUT_MS);
+        props.put("mail.smtp.writetimeout", WRITE_TIMEOUT_MS);
 
         // Only enable SMTP authentication if credentials are provided
         if (hasCredentials) {
