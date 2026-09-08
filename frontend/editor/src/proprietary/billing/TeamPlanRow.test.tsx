@@ -130,9 +130,11 @@ describe("TeamPlanRow", () => {
       <TeamPlanRow
         wallet={w(
           { held: false, licensedUsers: null, usersInUse: 2 },
-          freeWallet,
+          {
+            ...freeWallet,
+            freeUserAllowance: 5,
+          },
         )}
-        freeAllowance={5}
       />,
     );
 
@@ -144,8 +146,12 @@ describe("TeamPlanRow", () => {
   it("lets the plan's own limit win once one is held", () => {
     render(
       <TeamPlanRow
-        wallet={w({ held: true, licensedUsers: 100, usersInUse: 6 })}
-        freeAllowance={5}
+        wallet={w(
+          { held: true, licensedUsers: 100, usersInUse: 6 },
+          {
+            freeUserAllowance: 5,
+          },
+        )}
       />,
     );
 

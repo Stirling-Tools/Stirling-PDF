@@ -37,6 +37,8 @@ import java.util.List;
  *     for capped subscribed teams; {@code null} when subscribed with no cap (uncapped).
  * @param freeAllowance the team's free document grant size per period (the "N" in "X of N free").
  *     Resets each period. Applies to billable categories only.
+ * @param freeUserAllowance users the team may have with no Team plan; the denominator the capacity
+ *     row shows until one is bought.
  * @param freeRemaining free documents still available to the team this period ({@code
  *     payg_team_extensions.free_units_remaining}). 0 = this period's grant is exhausted.
  * @param pricePerDocMinor paid per-document rate in minor units of {@code currency} (may be
@@ -77,6 +79,11 @@ public record WalletSnapshotResponse(
         Integer billableLimit,
         int freeAllowance,
         int freeRemaining,
+        // Users a team may have before it needs a Team plan, alongside the credits grant above.
+        // Sent so no surface has to restate a number the server enforces, and so both editions read
+        // the same one: self-hosted was reading it from an admin-only endpoint a team lead cannot
+        // call, which is why cloud showed no user limit at all.
+        int freeUserAllowance,
         BigDecimal pricePerDocMinor,
         String currency,
         Long estimatedBillMinor,

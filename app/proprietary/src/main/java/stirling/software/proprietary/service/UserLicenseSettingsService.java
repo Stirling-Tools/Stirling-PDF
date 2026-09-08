@@ -45,7 +45,12 @@ import stirling.software.proprietary.security.service.UserService;
 @RequiredArgsConstructor
 public class UserLicenseSettingsService {
 
-    private static final int DEFAULT_USER_LIMIT = 5;
+    /**
+     * Users a team may have with no Team plan and no Enterprise licence. The same number on both
+     * editions, so it is declared once here and read by the cloud wallet rather than restated.
+     */
+    public static final int DEFAULT_USER_LIMIT = 5;
+
     private static final String SIGNATURE_SEPARATOR = ":";
     private static final String DEFAULT_INTEGRITY_SECRET = "stirling-pdf-user-license-guard";
 

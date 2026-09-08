@@ -577,30 +577,21 @@ export async function inviteMember(
 }
 
 /**
- * The user cap this backend will admit, and how many are in use.
+ * The signed-in admin's own email, so a purchase flow never asks for an address we already hold.
  *
- * <p>The same {@code maxAllowedUsers} the Users page already reads, exposed on its own for the
- * billing screen's Users row. Without a Team plan or an Enterprise licence this is the free
- * allowance the backend enforces, so the row states the number the server will actually honour
- * rather than a constant duplicated in the frontend.
+ * <p>Deliberately narrow. This reads an ADMIN-only endpoint, which a cloud team lead cannot call,
+ * so nothing that both editions need may depend on it. The user cap used to be read here too and
+ * is now on the wallet, where both editions can see it.
  *
- * <p>Null limit means no cap, via the same sentinel normalisation the Users page applies.
+ * <p>Temporary: once the capacity checkout runs through the SaaS lane, the edge function resolves
+ * the team leader's email server-side and this call goes away entirely.
  */
-export async function fetchUserSeats(): Promise<{
-  seatLimit: number | null;
-  seatsUsed: number | null;
-  adminEmail: string | null;
-}> {
+export async function fetchAdminEmail(): Promise<string | null> {
   const data = await apiClient.local.json<AdminSettingsDto>(
     "/api/v1/proprietary/ui-data/admin-settings",
   );
-  // The signed-in admin's own email, so a purchase flow never has to ask for an address we hold.
   const me = (data.users ?? []).find(
     (u) => data.currentUsername && u.username === data.currentUsername,
   );
-  return {
-    seatLimit: normalizeSeatLimit(data.maxAllowedUsers),
-    seatsUsed: data.totalUsers ?? null,
-    adminEmail: me?.email ?? null,
-  };
+  return me?.email ?? null;
 }

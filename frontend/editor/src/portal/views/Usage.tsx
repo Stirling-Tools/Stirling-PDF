@@ -17,7 +17,7 @@ import { FreePlanView } from "@portal/components/billing/FreePlanView";
 import { PaymentSection } from "@portal/components/billing/PaymentSection";
 import { InvoicesSection } from "@portal/components/billing/InvoicesSection";
 import { fetchFleetStats } from "@portal/api/fleetStats";
-import { fetchUserSeats } from "@portal/api/users";
+import { fetchAdminEmail } from "@portal/api/users";
 import { useCheckoutOptional } from "@app/contexts/CheckoutContext";
 import { SubscribedPlanView } from "@portal/components/billing/SubscribedPlanView";
 import {
@@ -82,12 +82,8 @@ export function Usage({ onWalletLoaded, onReauth }: UsageProps = {}) {
   // Stripe returns no invoices for a team that has never been billed. The section and its chip
   // drop out in that case rather than rendering an empty heading.
   const [hasInvoices, setHasInvoices] = useState(true);
-  // The cap this backend admits without a Team plan, and the admin's own email. Both are read
-  // rather than restated: the server enforces the cap, and the account link already holds the
-  // address, so the purchase flow never asks for either.
-  const [freeUserAllowance, setFreeUserAllowance] = useState<number | null>(
-    null,
-  );
+  // Only the buyer's email is read here. The user allowance is on the wallet, where both editions
+  // can see it; this endpoint is admin-only and a cloud team lead cannot call it.
   const [adminEmail, setAdminEmail] = useState<string | null>(null);
   // Stripe customer portal — the subscribed header's "Manage Payment" action.
   const portal = useStripePortal(wallet);
@@ -107,16 +103,12 @@ export function Usage({ onWalletLoaded, onReauth }: UsageProps = {}) {
     setSessionExpired(false);
     // Independent of the wallet load — a local-usage failure must not break the
     // page; it just means no unsynced delta is shown.
-    fetchUserSeats()
-      .then((u) => {
-        if (cancelled) return;
-        setFreeUserAllowance(u.seatLimit);
-        setAdminEmail(u.adminEmail);
+    fetchAdminEmail()
+      .then((e) => {
+        if (!cancelled) setAdminEmail(e);
       })
       .catch(() => {
-        if (cancelled) return;
-        setFreeUserAllowance(null);
-        setAdminEmail(null);
+        if (!cancelled) setAdminEmail(null);
       });
     fetchFleetStats()
       .then((f) => {
@@ -271,7 +263,6 @@ export function Usage({ onWalletLoaded, onReauth }: UsageProps = {}) {
           )}
         </>
       }
-      freeUserAllowance={freeUserAllowance}
       editorsDeployed={editorsDeployed}
       onAddCapacity={
         checkout && wallet?.role === "leader" ? addCapacity : undefined

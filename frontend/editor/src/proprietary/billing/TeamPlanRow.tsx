@@ -20,17 +20,11 @@ import type { Wallet } from "@app/billing/types";
 export function TeamPlanRow({
   wallet,
   selfHosted = false,
-  freeAllowance,
   onAddCapacity,
 }: {
   wallet: Wallet;
   /** Self-hosted phrases its free tier differently, because that allowance is its own. */
   selfHosted?: boolean;
-  /**
-   * Users allowed without a Team plan, as the backend computes it. Used only while no plan is
-   * held: once one is, {@code licensedUsers} is the number that governs.
-   */
-  freeAllowance?: number | null;
   /** Leader-only: the door that sells Team capacity. Omit for members. */
   onAddCapacity?: () => void;
 }) {
@@ -56,7 +50,11 @@ export function TeamPlanRow({
 
   // Without a Team plan the cap is the backend's free allowance, which it is already enforcing.
   // Preferring the wallet once a plan is held keeps one number in charge at a time.
-  const limit = held ? licensedUsers : (licensedUsers ?? freeAllowance ?? null);
+  // Without a Team plan the cap is the free allowance the server enforces, which the wallet
+  // carries. Preferring the plan's own limit once one is held keeps one number in charge at a time.
+  const limit = held
+    ? licensedUsers
+    : (licensedUsers ?? wallet.freeUserAllowance ?? null);
 
   if (limit == null) {
     return (
