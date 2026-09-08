@@ -8,10 +8,7 @@ import React, {
 import { Box, Group, Stack, Text, ScrollArea, TextInput } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
-import ArrowUpwardRoundedIcon from "@mui/icons-material/ArrowUpwardRounded";
-import ArrowDownwardRoundedIcon from "@mui/icons-material/ArrowDownwardRounded";
-import DownloadRoundedIcon from "@mui/icons-material/DownloadRounded";
+import { Icon } from "@app/ui/Icon";
 import "@app/components/tools/showJS/ShowJSView.css";
 import { useTranslation } from "react-i18next";
 import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
@@ -168,7 +165,7 @@ const ShowJSView: React.FC<ShowJSViewProps> = ({ data }) => {
               }}
               aria-label={t("common.previous", "Previous")}
             >
-              <ArrowUpwardRoundedIcon fontSize="small" />
+              <Icon name="arrow-up" size={20} />
             </ActionIcon>
             <ActionIcon
               size="sm"
@@ -178,7 +175,7 @@ const ShowJSView: React.FC<ShowJSViewProps> = ({ data }) => {
               }}
               aria-label={t("common.next", "Next")}
             >
-              <ArrowDownwardRoundedIcon fontSize="small" />
+              <Icon name="arrow-down" size={20} />
             </ActionIcon>
           </Group>
           <Group gap="xs" align="center" className="showjs-toolbar-controls">
@@ -188,7 +185,7 @@ const ShowJSView: React.FC<ShowJSViewProps> = ({ data }) => {
               className="showjs-outline-button"
               onClick={handleDownload}
               disabled={!downloadUrl}
-              leftSection={<DownloadRoundedIcon fontSize="small" />}
+              leftSection={<Icon name="download" size={20} />}
             >
               {terminology.download}
             </Button>
@@ -197,7 +194,7 @@ const ShowJSView: React.FC<ShowJSViewProps> = ({ data }) => {
               size="sm"
               className="showjs-outline-button"
               onClick={handleCopy}
-              leftSection={<ContentCopyRoundedIcon fontSize="small" />}
+              leftSection={<Icon name="copy" size={20} />}
             >
               {copied
                 ? t("common.copied", "Copied!")

@@ -2,9 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { Stack, Text, Divider } from "@mantine/core";
 import { Button } from "@app/ui/Button";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import CancelIcon from "@mui/icons-material/Cancel";
-import FolderOpenIcon from "@mui/icons-material/FolderOpen";
+import { Icon } from "@app/ui/Icon";
 import { alert } from "@app/components/toast";
 import type {
   SignatureOverlayAPI,
@@ -272,7 +270,7 @@ const SignRequestPanel = ({ data }: SignRequestPanelProps) => {
   return (
     <Stack gap="md" p="md">
       <Button
-        leftSection={<ArrowBackIcon fontSize="small" />}
+        leftSection={<Icon name="arrow-left" size={20} />}
         variant="tertiary"
         size="sm"
         onClick={onBack}
@@ -313,7 +311,7 @@ const SignRequestPanel = ({ data }: SignRequestPanelProps) => {
 
       <Button
         variant="tertiary"
-        leftSection={<FolderOpenIcon fontSize="small" />}
+        leftSection={<Icon name="folder-open" size={20} />}
         onClick={handleAddToActiveFiles}
         fullWidth
         style={{
@@ -330,7 +328,7 @@ const SignRequestPanel = ({ data }: SignRequestPanelProps) => {
           <Button
             variant="tertiary"
             accent="danger"
-            leftSection={<CancelIcon fontSize="small" />}
+            leftSection={<Icon name="circle-x" size={20} />}
             onClick={handleDecline}
             loading={declining}
             fullWidth

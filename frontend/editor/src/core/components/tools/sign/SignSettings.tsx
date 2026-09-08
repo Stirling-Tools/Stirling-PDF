@@ -25,7 +25,6 @@ import { DrawingControls } from "@app/components/annotation/shared/DrawingContro
 import { ImageUploader } from "@app/components/annotation/shared/ImageUploader";
 import { TextInputWithFont } from "@app/components/annotation/shared/TextInputWithFont";
 import { ColorPicker } from "@app/components/annotation/shared/ColorPicker";
-import { LocalIcon } from "@app/components/shared/LocalIcon";
 import {
   useSavedSignatures,
   SavedSignature,
@@ -41,6 +40,7 @@ import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import { buildSignaturePreview } from "@app/utils/signaturePreview";
 
+import { Icon, type IconName } from "@app/ui/Icon";
 type SignatureDrafts = {
   canvas?: string;
   image?: string;
@@ -407,7 +407,7 @@ const SignSettings = ({
     isReady: boolean,
     onClick: (scope: "personal" | "shared") => void,
     scope: "personal" | "shared",
-    icon: string,
+    icon: IconName,
     label: string,
   ) => {
     if (!canUseSavedLibrary) {
@@ -454,7 +454,7 @@ const SignSettings = ({
         disabled={
           !isReady || disabled || isSavedSignatureLimitReached || !hasChanges
         }
-        leftSection={<LocalIcon icon={icon} width={16} height={16} />}
+        leftSection={<Icon name={icon} size={16} />}
       >
         {label}
       </Button>
@@ -485,7 +485,7 @@ const SignSettings = ({
       isReady,
       onClick,
       "personal",
-      "person-rounded",
+      "user",
       translate("saved.savePersonal", "Save Personal"),
     );
 
@@ -494,7 +494,7 @@ const SignSettings = ({
       isReady,
       onClick,
       "shared",
-      "groups-rounded",
+      "users",
       translate("saved.saveShared", "Save Shared"),
     );
 
@@ -1225,9 +1225,7 @@ const SignSettings = ({
             aria-label={translate("mode.pause", "Pause placement")}
             onClick={handlePausePlacement}
             disabled={disabled || !onDeactivateSignature}
-            leftSection={
-              <LocalIcon icon="pause-circle-rounded" width={20} height={20} />
-            }
+            leftSection={<Icon name="circle-pause" size={20} />}
           >
             {translate("mode.pause", "Pause placement")}
           </Button>
@@ -1241,9 +1239,7 @@ const SignSettings = ({
             disabled={
               disabled || !isCurrentTypeReady || !onActivateSignaturePlacement
             }
-            leftSection={
-              <LocalIcon icon="play-arrow-rounded" width={20} height={20} />
-            }
+            leftSection={<Icon name="play" size={20} />}
           >
             {translate("mode.resume", "Resume placement")}
           </Button>
@@ -1266,7 +1262,7 @@ const SignSettings = ({
               variant="secondary"
               fullWidth
               disabled={disabled}
-              leftSection={<LocalIcon icon="qr-code-rounded" width="1rem" />}
+              leftSection={<Icon name="qr-code" size="1rem" />}
               onClick={() => setIsMobileSignModalOpen(true)}
             >
               {t("sign.mobile.createFromPhone", "Mobile upload")}
