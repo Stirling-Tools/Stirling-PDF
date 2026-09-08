@@ -111,9 +111,9 @@ export const I18N_PROJECTS: TranslationProject[] = [
       // Failure-kind copy is keyed off the server's FailureKind enum and arrives as data, so no
       // frontend source names it. FailureKindTest asserts every kind has copy here.
       /^portal\.failures\.kind\./,
-      // A failure's disabled reason arrives from the server as a key and is rendered with
-      // t(thatKey), so nothing in source names it, but the copy still has to exist.
+      // Server-sent keys rendered with t(thatKey), so nothing in source names them.
       /^portal\.failures\.disabled\./,
+      /^portal\.failures\.action\./,
       // Encryption panel copy keyed by backend enum values: key status, write
       // state, migration state, and the reason a status read was refused. Each
       // is t(`...${value}`) where the value comes from the API response.
