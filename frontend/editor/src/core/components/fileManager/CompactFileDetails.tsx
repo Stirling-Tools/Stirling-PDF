@@ -2,9 +2,7 @@ import React from "react";
 import { Stack, Box, Text, Center } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
 import { getFileSize } from "@app/utils/fileUtils";
 import { toolOperationLabel } from "@app/utils/toolOperationLabel";
@@ -88,8 +86,10 @@ const CompactFileDetails: React.FC<CompactFileDetailsProps> = ({
                 borderRadius: 4,
               }}
             >
-              <PictureAsPdfIcon
-                style={{ fontSize: 20, color: "var(--mantine-color-gray-6)" }}
+              <Icon
+                name="file-pdf"
+                size={20}
+                style={{ color: "var(--mantine-color-gray-6)" }}
               />
             </Center>
           ) : null}
@@ -137,7 +137,7 @@ const CompactFileDetails: React.FC<CompactFileDetailsProps> = ({
               disabled={isAnimating}
               aria-label={t("fileManager.previousFile", "Previous file")}
             >
-              <ChevronLeftIcon style={{ fontSize: 16 }} />
+              <Icon name="chevron-left" size={16} />
             </ActionIcon>
             <ActionIcon
               variant="tertiary"
@@ -146,7 +146,7 @@ const CompactFileDetails: React.FC<CompactFileDetailsProps> = ({
               disabled={isAnimating}
               aria-label={t("fileManager.nextFile", "Next file")}
             >
-              <ChevronRightIcon style={{ fontSize: 16 }} />
+              <Icon name="chevron-right" size={16} />
             </ActionIcon>
           </Box>
         )}

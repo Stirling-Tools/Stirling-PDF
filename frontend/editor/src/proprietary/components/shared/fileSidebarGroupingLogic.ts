@@ -78,7 +78,7 @@ export function buildLabelGroups(
     {
       id: "recent",
       label: t("fileSidebar.recent", "Recent"),
-      icon: "history",
+      icon: "rotate-ccw-clock",
       stubs: recent,
       defaultExpanded: true,
     },

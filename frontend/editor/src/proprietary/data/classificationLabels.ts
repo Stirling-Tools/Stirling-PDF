@@ -1,3 +1,4 @@
+import type { IconName } from "@app/ui/Icon";
 // Classification labels. The SOURCE OF TRUTH is the co-located static JSON
 // (`classificationLabels.json`), imported here and shaped into typed objects —
 // edit THAT file, not this one. It's a fixed, built-in vocabulary shared by
@@ -24,8 +25,8 @@ export interface ClassificationLabel {
   id: string;
   /** Human display name; the en-US default for `classification.labels.<id>`. */
   name: string;
-  /** Material Symbols icon key (see `labelIcons.ts`). */
-  icon?: string;
+  /** Registry icon name (see `labelIcons.ts`). */
+  icon?: IconName;
 }
 
 export interface LabelFamily {
@@ -33,8 +34,8 @@ export interface LabelFamily {
   id: string;
   /** Group header text shown in the sidebar and the group picker. */
   name: string;
-  /** Material Symbols icon key (see `labelIcons.ts`). */
-  icon: string;
+  /** Registry icon name (see `labelIcons.ts`). */
+  icon: IconName;
   /** The built-in labels this family rolls up in the sidebar. */
   labels: ClassificationLabel[];
 }
@@ -43,7 +44,7 @@ export interface LabelFamily {
  *  presentational family grouping (which references labels by id). */
 interface LabelsFile {
   labels: ClassificationLabel[];
-  families: { id: string; name: string; icon: string; labelIds: string[] }[];
+  families: { id: string; name: string; icon: IconName; labelIds: string[] }[];
 }
 
 const data = labelsData as LabelsFile;

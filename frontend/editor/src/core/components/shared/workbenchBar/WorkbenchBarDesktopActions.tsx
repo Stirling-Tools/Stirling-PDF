@@ -1,9 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import CloseIcon from "@mui/icons-material/Close";
-import PrintIcon from "@mui/icons-material/Print";
+import { Icon } from "@app/ui/Icon";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import {
   PolicyEnforcingTooltip,
   renderWithTooltip,
@@ -59,7 +57,7 @@ export default function WorkbenchBarDesktopActions({
             disabled={exportDisabled}
             aria-label={t("workbenchBar.print", "Print PDF")}
           >
-            <PrintIcon sx={{ fontSize: "1rem" }} />
+            <Icon name="printer" size={"1rem"} />
           </ActionIcon>,
           tooltipFor(t("workbenchBar.print", "Print PDF")),
         )}
@@ -75,7 +73,7 @@ export default function WorkbenchBarDesktopActions({
             disabled={exportDisabled}
             aria-label={downloadLabel}
           >
-            <LocalIcon icon={downloadIconName} width="1rem" height="1rem" />
+            <Icon name={downloadIconName} size="1rem" />
           </ActionIcon>,
           tooltipFor(downloadLabel),
         )}
@@ -91,7 +89,7 @@ export default function WorkbenchBarDesktopActions({
             disabled={exportDisabled}
             aria-label={t("workbenchBar.saveAs", "Save As")}
           >
-            <LocalIcon icon={saveAsIconName} width="1rem" height="1rem" />
+            <Icon name={saveAsIconName} size="1rem" />
           </ActionIcon>,
           tooltipFor(t("workbenchBar.saveAs", "Save As")),
         )}
@@ -112,7 +110,7 @@ export default function WorkbenchBarDesktopActions({
             disabled={actionsDisabled}
             aria-label={closeLabel}
           >
-            <CloseIcon sx={{ fontSize: "1rem" }} />
+            <Icon name="x" size={"1rem"} />
           </ActionIcon>,
           closeLabel,
         )}
