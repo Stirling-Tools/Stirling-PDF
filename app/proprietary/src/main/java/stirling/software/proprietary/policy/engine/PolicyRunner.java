@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.input.InputSource;
 import stirling.software.proprietary.policy.input.ResolvedInput;
 import stirling.software.proprietary.policy.ledger.ProcessedLedger;
@@ -85,6 +86,16 @@ public class PolicyRunner {
      * or why nothing ran.
      */
     public SweepOutcome run(Policy policy, List<PipelineInput> inputs, SweepKind sweep) {
+        if (PolicyAccessGuard.isOrphaned(
+                policy, applicationProperties.getSecurity().isEnableLogin())) {
+            // Reachable by nobody, so nobody could stop it: running would replace files in place
+            // in a folder no user can list, pause, revert, or delete.
+            log.warn(
+                    "Processing folder {} has no owner and is unreachable under login; not"
+                            + " sweeping it",
+                    policy.id());
+            return new SweepOutcome(List.of(), 0, 0, 0, 0, 0);
+        }
         long sweepStart = System.currentTimeMillis();
         PolicySweep context = new PolicySweep(policy.id(), sweep, processedLedger);
         Semaphore admission = sweepAdmission();

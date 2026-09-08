@@ -65,6 +65,39 @@ describe("deliverSweepResults - one live delivery per folder", () => {
     expect(withCallbacks).not.toBe(bare);
     await Promise.all([bare, withCallbacks]);
     expect(onProgress).toHaveBeenCalled();
+    // Its own loop, but not its own copy of the results.
+    expect(addFiles).toHaveBeenCalledTimes(1);
+  });
+
+  it("opens a run once when a resume's delivery and a sweep's overlap", async () => {
+    const opened: string[] = [];
+    const addFiles = vi.fn().mockImplementation(async (files: File[]) => {
+      files.forEach((file) => opened.push(file.name));
+    });
+
+    // useProcessingFolders: enable() runs callback-less, sweep() always passes
+    // includeRunIds - so the sweep runs its own loop over the same settled run.
+    const fromEnable = deliverSweepResults("policy-1", null, addFiles);
+    const fromSweep = deliverSweepResults("policy-1", 1, addFiles, {
+      includeRunIds: new Set(["r1"]),
+    });
+    await Promise.all([fromEnable, fromSweep]);
+
+    expect(opened).toEqual(["r1.pdf"]);
+  });
+
+  it("still reports a run to every loop's onSettled, opened by it or not", async () => {
+    const addFiles = vi.fn().mockResolvedValue(undefined);
+    const onSettled = vi.fn();
+
+    const bare = deliverSweepResults("policy-1", 1, addFiles);
+    const watcher = deliverSweepResults("policy-1", 1, addFiles, { onSettled });
+    await Promise.all([bare, watcher]);
+
+    // The wizard reads the result's classification labels off these files, so a
+    // joined-away run must still arrive with its outputs attached.
+    expect(onSettled).toHaveBeenCalledTimes(1);
+    expect(onSettled.mock.calls[0][0].files).toHaveLength(1);
   });
 
   it("delivers distinct folders in parallel - the guard is keyed per folder", async () => {

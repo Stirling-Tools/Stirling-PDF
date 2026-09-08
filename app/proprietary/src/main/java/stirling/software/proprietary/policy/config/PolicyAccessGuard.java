@@ -58,11 +58,27 @@ public class PolicyAccessGuard {
     /**
      * Owner match for a personal record, fail-closed: a row with no stamped owner belongs to nobody
      * under login. Treating a null owner as anyone's would expose a legacy or mis-stamped folder to
-     * every authenticated user, since this surface is owner-scoped, not team-scoped.
+     * every authenticated user, since this surface is owner-scoped, not team-scoped. The rows this
+     * rejects are {@link #isOrphaned orphaned}, and the engine must refuse to run them.
      */
     private boolean ownedByCurrentUser(Policy policy) {
         return policy.owner() != null
                 && Objects.equals(policy.owner(), userService.getCurrentUsername());
+    }
+
+    /**
+     * Whether owner scoping leaves this record reachable by nobody: a processing folder stamped
+     * with no owner, once login is on. Folders created while login was disabled are stamped null,
+     * so enabling login later strands them - invisible to every user, yet still watched.
+     *
+     * <p>The engine consults this so a stranded folder goes dormant instead of replacing files in
+     * place that no one can list, pause, revert, or delete. Static and login-flag-parameterised
+     * because the engine has no user context to resolve.
+     */
+    public static boolean isOrphaned(Policy policy, boolean loginEnabled) {
+        return loginEnabled
+                && Policy.SURFACE_PROCESSING_FOLDER.equals(policy.surface())
+                && policy.owner() == null;
     }
 
     /**

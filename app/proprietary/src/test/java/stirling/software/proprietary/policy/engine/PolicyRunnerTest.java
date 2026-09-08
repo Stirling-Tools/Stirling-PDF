@@ -370,6 +370,30 @@ class PolicyRunnerTest {
     }
 
     /** Persists each spec as a source and returns a policy referencing them by id. */
+    @Test
+    void anOwnerlessProcessingFolderIsNotSweptUnderLogin() {
+        // Created while login was disabled, so stamped with no owner; enabling login strands it
+        // where no user can list, pause, revert, or delete it. Sweeping it anyway would keep
+        // replacing files in place in a folder nobody can reach.
+        ApplicationProperties loginOn = new ApplicationProperties();
+        loginOn.getSecurity().setEnableLogin(true);
+        PolicyRunner enforced =
+                new PolicyRunner(
+                        policyEngine,
+                        List.of(folderSource),
+                        sourceStore,
+                        docCounter,
+                        processedLedger,
+                        loginOn);
+        Policy stranded =
+                policy(List.of()).withOwner(null).withSurface(Policy.SURFACE_PROCESSING_FOLDER);
+
+        SweepOutcome outcome = enforced.run(stranded);
+
+        assertTrue(outcome.runIds().isEmpty());
+        verifyNoInteractions(policyEngine);
+    }
+
     private Policy policy(List<InputSpec> sources) {
         List<String> sourceIds =
                 sources.stream().map(spec -> sourceStore.save(sourceFrom(spec)).id()).toList();

@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -509,6 +510,33 @@ class ProcessingFolderControllerTest {
         verify(policyRunner).awaitQuiesce(eq(view.id()), any());
         // Failed rows go too: the reset leaves every file reading as waiting.
         verify(processedLedger).clearPolicy(view.id());
+    }
+
+    @Test
+    void revertAllRestoresOnlyTheOriginalsAndInventsNoFiles() throws Exception {
+        lenient()
+                .when(folderAccessGuard.requirePermitted(any(Path.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+        var view = controller.save(diskRequest()).getBody();
+        Path originals = tempDir.resolve(".stirling").resolve("originals");
+        // A same-name re-drop archives its superseded original one level down. Restoring that
+        // as a sibling would leave the user a "doc (1).pdf" their folder never held.
+        Path superseded = originals.resolve("superseded");
+        Files.createDirectories(superseded);
+        Files.writeString(tempDir.resolve("doc.pdf"), "processed");
+        Files.writeString(originals.resolve("doc.pdf"), "first-original");
+        Files.writeString(superseded.resolve("doc.pdf"), "second-original");
+
+        var outcome = controller.revertAllFiles(view.id());
+
+        assertThat(outcome.restored()).isEqualTo(1);
+        assertThat(Files.readString(tempDir.resolve("doc.pdf"))).isEqualTo("first-original");
+        try (Stream<Path> entries = Files.list(tempDir)) {
+            assertThat(entries.filter(Files::isRegularFile).map(f -> f.getFileName().toString()))
+                    .containsExactly("doc.pdf");
+        }
+        // Still preserved, just not restored over anything.
+        assertThat(Files.readString(superseded.resolve("doc.pdf"))).isEqualTo("second-original");
     }
 
     @Test

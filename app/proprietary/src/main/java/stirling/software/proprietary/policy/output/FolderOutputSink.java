@@ -220,6 +220,16 @@ public class FolderOutputSink implements PolicyOutputSink {
     }
 
     /**
+     * Where an original goes when the canonical archive slot is already taken - a same-name file
+     * re-dropped after the first was archived. A subdirectory, not a numbered sibling: a restore
+     * brings back every regular file directly under {@link #originalsDir}, so a numbered sibling
+     * there would be restored as a file the watched folder never held.
+     */
+    private static Path supersededDir(Path dir) {
+        return originalsDir(dir).resolve("superseded");
+    }
+
+    /**
      * The folder's workspace root, created hidden: a dot prefix for POSIX and the app's own
      * listings, the DOS attribute for Explorer. Best-effort — a filesystem without DOS attributes
      * keeps just the dot.
@@ -239,7 +249,7 @@ public class FolderOutputSink implements PolicyOutputSink {
      * Move the target into {@code .stirling/originals} before a replace overwrites it, returning
      * the archived path, or null when nothing is at the target. Throws if an existing target cannot
      * be archived, so the caller aborts before overwriting and never destroys an unpreserved
-     * original. A same-name re-drop is kept under a numbered name; revert restores the canonical
+     * original. A same-name re-drop goes to {@link #supersededDir}; revert restores the canonical
      * first original. Plain move, not {@code ATOMIC_MOVE}: the archive is hidden under {@code
      * .stirling} and needs no atomic visibility, and a plain move survives a cross-device archive
      * dir where {@code ATOMIC_MOVE} would throw.
@@ -254,8 +264,10 @@ public class FolderOutputSink implements PolicyOutputSink {
         String name = target.getFileName().toString();
         Path archived = originals.resolve(name);
         if (Files.exists(archived)) {
-            // Numbered, so the overwrite cannot destroy this content either.
-            archived = uniqueTarget(originals, name);
+            // Kept aside, so the overwrite cannot destroy this content either.
+            Path superseded = supersededDir(dir);
+            Files.createDirectories(superseded);
+            archived = uniqueTarget(superseded, name);
         }
         Files.move(target, archived);
         return archived;

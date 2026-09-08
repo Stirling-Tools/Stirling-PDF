@@ -242,20 +242,50 @@ class FolderOutputSinkTest {
         assertEquals("processed2", Files.readString(out.resolve("a.pdf")));
         Path originals = out.resolve(".stirling").resolve("originals");
         assertEquals("first-original", Files.readString(originals.resolve("a.pdf")));
-        // The second original was preserved (under a numbered name), not overwritten away.
+        // The second original was preserved, not overwritten away.
         boolean secondKept;
-        try (Stream<Path> archived = Files.list(originals)) {
+        try (Stream<Path> archived = Files.walk(originals)) {
             secondKept =
-                    archived.anyMatch(
-                            p -> {
-                                try {
-                                    return "second-original".equals(Files.readString(p));
-                                } catch (IOException e) {
-                                    return false;
-                                }
-                            });
+                    archived.filter(Files::isRegularFile)
+                            .anyMatch(
+                                    p -> {
+                                        try {
+                                            return "second-original".equals(Files.readString(p));
+                                        } catch (IOException e) {
+                                            return false;
+                                        }
+                                    });
         }
         assertTrue(secondKept, "the re-dropped original must be preserved, never silently lost");
+    }
+
+    @Test
+    void aSupersededOriginalIsKeptOutOfTheRestoreNamespace() throws IOException {
+        Path out = tempDir.resolve("out");
+        Files.createDirectories(out);
+        Files.writeString(out.resolve("a.pdf"), "first-original");
+        OutputSpec replace =
+                new OutputSpec("folder", Map.of("directory", out.toString(), "replace", true));
+
+        sink.deliver(inPlaceRun("a.pdf"), List.of(named("a.pdf", "processed1")), replace);
+        Files.writeString(out.resolve("a.pdf"), "second-original");
+        sink.deliver(inPlaceRun("a.pdf"), List.of(named("a.pdf", "processed2")), replace);
+
+        // A restore brings back every regular file directly under originals/, so only the
+        // canonical original may sit there; a sibling would be restored as a file the folder
+        // never held. The superseded one is kept, one level down.
+        Path originals = out.resolve(".stirling").resolve("originals");
+        List<String> restorable;
+        try (Stream<Path> entries = Files.list(originals)) {
+            restorable =
+                    entries.filter(Files::isRegularFile)
+                            .map(entry -> entry.getFileName().toString())
+                            .toList();
+        }
+        assertEquals(List.of("a.pdf"), restorable);
+        assertEquals(
+                "second-original",
+                Files.readString(originals.resolve("superseded").resolve("a.pdf")));
     }
 
     @Test
