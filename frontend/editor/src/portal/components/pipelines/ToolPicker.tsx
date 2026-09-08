@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
+import { Icon } from "@app/ui/Icon";
 import { Button, Input } from "@app/ui";
 import {
   getSubcategoryLabel,
@@ -100,7 +100,7 @@ export function ToolPicker({
           value={query}
           aria-label={t("portal.pipelines.builder.searchTools")}
           placeholder={t("portal.pipelines.builder.searchTools")}
-          leadingIcon={<SearchRoundedIcon style={{ fontSize: "1.125rem" }} />}
+          leadingIcon={<Icon name="search" size={"1.125rem"} />}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Escape") onClose();
@@ -183,7 +183,7 @@ export function ToolPicker({
                   >
                     <BrandMark
                       id={op.custom ? "api" : op.connectionTypeId}
-                      size={17}
+                      size={18}
                     />
                   </span>
                 }

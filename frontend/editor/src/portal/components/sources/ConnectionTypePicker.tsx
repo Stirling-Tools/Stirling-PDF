@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
+import { Icon } from "@app/ui/Icon";
 import {
   CONNECTION_CATEGORIES,
   searchConnectionTypes,
@@ -58,7 +58,11 @@ export function ConnectionTypePicker({
   return (
     <div className="portal-conn-picker">
       <div className="portal-conn-picker__search">
-        <SearchRoundedIcon className="portal-conn-picker__search-icon" />
+        <Icon
+          name="search"
+          size={18}
+          className="portal-conn-picker__search-icon"
+        />
         <input
           type="search"
           autoFocus
