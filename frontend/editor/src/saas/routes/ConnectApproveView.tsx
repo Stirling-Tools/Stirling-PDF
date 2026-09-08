@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { useTranslation } from "@app/hooks/useTranslation";
 import { Banner, Button, Checkbox, Spinner } from "@app/ui";
-import { LocalIcon } from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { StepModalHeader } from "@portal/components/shared/StepModalHeader";
 
@@ -197,7 +197,7 @@ export function ConnectApproveView({
                   "Not an encrypted address",
                 )}
               >
-                <LocalIcon icon="warning-rounded" width="1rem" />
+                <Icon name="triangle-alert" size="1rem" />
               </span>
             </Tooltip>
           ) : null}

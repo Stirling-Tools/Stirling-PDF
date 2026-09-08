@@ -31,7 +31,7 @@ export function createCloudTeamNavItem(t: Translate): ConfigNavItem {
   return {
     key: "teams",
     label: t("config.team", "Team"),
-    icon: "groups-rounded",
+    icon: "users",
     component: <TeamSection />,
   };
 }

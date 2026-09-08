@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import DescriptionIcon from "@mui/icons-material/DescriptionOutlined";
+import { Icon } from "@app/ui/Icon";
 import { Button } from "@app/ui";
 import {
   DEFAULT_CAP_PRESETS,
@@ -183,10 +183,7 @@ export function SpendCapControl({
 
       {previewDocs != null && (
         <div className="scc-estimate">
-          <DescriptionIcon
-            className="scc-estimate__icon"
-            sx={{ fontSize: 22 }}
-          />
+          <Icon name="file-text" size={22} className="scc-estimate__icon" />
           <div>
             <div className="scc-estimate__main">
               {L.docsEstimate(previewDocs.toLocaleString())}

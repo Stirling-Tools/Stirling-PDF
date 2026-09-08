@@ -17,7 +17,6 @@ import {
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { SegmentedControl } from "@app/ui/SegmentedControl";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import { alert } from "@app/components/toast";
 import { userManagementService } from "@app/services/userManagementService";
 import { teamService, Team } from "@app/services/teamService";
@@ -25,6 +24,7 @@ import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useNavigate } from "react-router-dom";
 
+import { Icon } from "@app/ui/Icon";
 interface InviteMembersModalProps {
   opened: boolean;
   onClose: () => void;
@@ -374,15 +374,14 @@ export default function InviteMembersModal({
             zIndex: 1,
           }}
         >
-          <LocalIcon icon="close-rounded" />
+          <Icon name="x" size="1em" />
         </ActionIcon>
         <Stack gap="lg" pt="md">
           {/* Header with Icon */}
           <Stack gap="md" align="center">
-            <LocalIcon
-              icon="person-add"
-              width="3rem"
-              height="3rem"
+            <Icon
+              name="user-plus"
+              size="3rem"
               style={{ color: "var(--mantine-color-gray-6)" }}
             />
             <Text size="xl" fw={600} ta="center">
@@ -412,10 +411,13 @@ export default function InviteMembersModal({
               <Stack gap="xs">
                 <Group justify="space-between" align="center" wrap="nowrap">
                   <Group gap="xs" wrap="nowrap">
-                    <LocalIcon
-                      icon={licenseInfo.availableSlots > 0 ? "info" : "warning"}
-                      width="1rem"
-                      height="1rem"
+                    <Icon
+                      name={
+                        licenseInfo.availableSlots > 0
+                          ? "info"
+                          : "triangle-alert"
+                      }
+                      size="1rem"
                     />
                     <Text size="sm" fw={500}>
                       {t("workspace.people.license.slotsAvailable", {
@@ -628,11 +630,7 @@ export default function InviteMembersModal({
                           }
                         }}
                       >
-                        <LocalIcon
-                          icon="content-copy"
-                          width="1rem"
-                          height="1rem"
-                        />
+                        <Icon name="copy" size="1rem" />
                       </Button>
                     </Group>
                   </Stack>

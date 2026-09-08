@@ -11,7 +11,7 @@ import {
   TextInput,
 } from "@mantine/core";
 import { Button } from "@app/ui/Button";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import { alert } from "@app/components/toast";
 import RestartConfirmationModal from "@app/components/shared/config/RestartConfirmationModal";
 import { useRestartServer } from "@app/components/shared/config/useRestartServer";
@@ -218,13 +218,7 @@ export default function AdminFolderAccessSection() {
                           "admin.settings.folderAccess.roots.remove",
                           "Remove folder root",
                         )}
-                        leftSection={
-                          <LocalIcon
-                            icon="close-rounded"
-                            width="1.1rem"
-                            height="1.1rem"
-                          />
-                        }
+                        leftSection={<Icon name="x" size="1.1rem" />}
                         onClick={() => removeRoot(root)}
                         disabled={!loginEnabled}
                         style={{ flexShrink: 0 }}
@@ -296,7 +290,7 @@ export default function AdminFolderAccessSection() {
                         <Text size="xs" c="dimmed">
                           {reasonLabel(root.reason)}
                         </Text>
-                        <LocalIcon icon="lock" width="1rem" height="1rem" />
+                        <Icon name="lock" size="1rem" />
                       </Group>
                     </Group>
                   ))}

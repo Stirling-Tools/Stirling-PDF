@@ -14,7 +14,7 @@ import {
   Alert,
 } from "@mantine/core";
 import { alert } from "@app/components/toast";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import { useAdminSettings } from "@app/hooks/useAdminSettings";
 import { useSettingsDirty } from "@app/hooks/useSettingsDirty";
 import PendingBadge from "@app/components/shared/config/PendingBadge";
@@ -355,7 +355,7 @@ export default function AdminAiDocumentsSection() {
             "admin.settings.ai.documents.reindexNote.title",
             "Re-index required",
           )}
-          icon={<LocalIcon icon="warning-rounded" width="1rem" height="1rem" />}
+          icon={<Icon name="triangle-alert" size="1rem" />}
         >
           <Text size="xs">
             {t(
