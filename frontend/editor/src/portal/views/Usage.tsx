@@ -42,6 +42,12 @@ export interface UsageProps {
    * is owned by the app, so this path never triggers).
    */
   onReauth?: () => void;
+  /**
+   * Opens the enterprise conversation. A prop rather than a hook for the same reason as
+   * {@link onReauth}: navigation belongs to the host, and reaching for its router here would make
+   * this view unrenderable anywhere one is absent.
+   */
+  onEnterpriseQuote?: () => void;
 }
 
 /**
@@ -65,7 +71,11 @@ export interface UsageProps {
  * still key off it. Team and the Processor no longer do: they render from their own reported
  * holdings, which is what a single free/subscribed axis could never express.
  */
-export function Usage({ onWalletLoaded, onReauth }: UsageProps = {}) {
+export function Usage({
+  onWalletLoaded,
+  onReauth,
+  onEnterpriseQuote,
+}: UsageProps = {}) {
   const { t } = useTranslation();
   const [wallet, setWallet] = useState<Wallet | null>(null);
   // Locally-accrued usage SaaS hasn't billed yet; added to the synced figure so
@@ -85,6 +95,12 @@ export function Usage({ onWalletLoaded, onReauth }: UsageProps = {}) {
   // Only the buyer's email is read here. The user allowance is on the wallet, where both editions
   // can see it; this endpoint is admin-only and a cloud team lead cannot call it.
   const [adminEmail, setAdminEmail] = useState<string | null>(null);
+  // The detail views below own these flows; the host holds their open state so the product rows'
+  // own doors can start them, which is where the design puts the action.
+  const [activationStep, setActivationStep] = useState<
+    "choose" | "payg" | "prepay" | null
+  >(null);
+  const [adjustingLimit, setAdjustingLimit] = useState(false);
   // Stripe customer portal — the subscribed header's "Manage Payment" action.
   const portal = useStripePortal(wallet);
   // Guards the post-checkout poll loop from setState after unmount.
@@ -267,6 +283,17 @@ export function Usage({ onWalletLoaded, onReauth }: UsageProps = {}) {
       onAddCapacity={
         checkout && wallet?.role === "leader" ? addCapacity : undefined
       }
+      onActivateProcessor={
+        wallet?.role === "leader" && !wallet?.processor?.active
+          ? () => setActivationStep("choose")
+          : undefined
+      }
+      onGovernSpend={
+        wallet?.role === "leader" && wallet?.processor?.active
+          ? () => setAdjustingLimit(true)
+          : undefined
+      }
+      onEnterpriseQuote={onEnterpriseQuote}
       paymentSection={
         paying && wallet ? (
           <PaymentSection
@@ -284,7 +311,12 @@ export function Usage({ onWalletLoaded, onReauth }: UsageProps = {}) {
       extras={
         <>
           {wallet && wallet.status === "free" && (
-            <FreePlanView wallet={wallet} onSubscribed={confirmSubscription} />
+            <FreePlanView
+              wallet={wallet}
+              step={activationStep}
+              onStepChange={setActivationStep}
+              onSubscribed={confirmSubscription}
+            />
           )}
 
           {wallet && wallet.status === "subscribed" && (
@@ -292,6 +324,8 @@ export function Usage({ onWalletLoaded, onReauth }: UsageProps = {}) {
               wallet={wallet}
               unsynced={localUsage}
               onWalletChange={refresh}
+              adjusting={adjustingLimit}
+              onAdjustingChange={setAdjustingLimit}
             />
           )}
         </>

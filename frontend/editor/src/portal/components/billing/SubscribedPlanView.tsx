@@ -18,6 +18,12 @@ interface Props {
   /** Instance-local usage not yet synced to SaaS; folded into the PDFs-processed card. */
   unsynced?: LocalUsage | null;
   onWalletChange?: () => void;
+  /**
+   * Whether the spend-limit editor is open, when the host drives it. Lets the Processor row's
+   * "Raise limit" door reach the control that already exists here.
+   */
+  adjusting?: boolean;
+  onAdjustingChange?: (adjusting: boolean) => void;
 }
 
 /**
@@ -38,9 +44,15 @@ export function SubscribedPlanView({
   wallet,
   unsynced,
   onWalletChange,
+  adjusting: controlledAdjusting,
+  onAdjustingChange,
 }: Props) {
   const { t } = useTranslation();
-  const [adjusting, setAdjusting] = useState(false);
+  const [ownAdjusting, setOwnAdjusting] = useState(false);
+  const adjusting = onAdjustingChange
+    ? (controlledAdjusting ?? false)
+    : ownAdjusting;
+  const setAdjusting = onAdjustingChange ?? setOwnAdjusting;
   const [bundleOpen, setBundleOpen] = useState(false);
   const portal = useStripePortal(wallet);
 

@@ -14,6 +14,13 @@ import { useBundleFlowState } from "@portal/hooks/useBundleFlowState";
 interface Props {
   wallet: Wallet;
   /**
+   * Which activation modal is open, when the host wants to drive it. Supplied so the Processor
+   * row's own door can start this flow: the flow itself, its bundle state and its modals all stay
+   * here, and only the step is lifted.
+   */
+  step?: "choose" | "payg" | "prepay" | null;
+  onStepChange?: (step: "choose" | "payg" | "prepay" | null) => void;
+  /**
    * Runs the post-checkout activation poll and resolves true once the wallet
    * reads subscribed (false if it's lagging past the poll window). The checkout
    * modal awaits this to stay open through activation.
@@ -30,11 +37,20 @@ function isSaasCurrency(c: string | null): c is SaasCurrency {
  * editor fleet, the Processor trial meter (with the inline "Switch on the
  * Processor" CTA → embedded Stripe Checkout), and the Enterprise upsell.
  */
-export function FreePlanView({ wallet, onSubscribed }: Props) {
+export function FreePlanView({
+  wallet,
+  step: controlledStep,
+  onStepChange,
+  onSubscribed,
+}: Props) {
   const { t } = useTranslation();
   // Activation fork (demo D97): choose → the metered checkout (payg) or the
   // discounted bundle (prepay). Exactly one is open at a time.
-  const [step, setStep] = useState<"choose" | "payg" | "prepay" | null>(null);
+  const [ownStep, setOwnStep] = useState<"choose" | "payg" | "prepay" | null>(
+    null,
+  );
+  const step = onStepChange ? (controlledStep ?? null) : ownStep;
+  const setStep = onStepChange ?? setOwnStep;
   const [missingTeam, setMissingTeam] = useState<string | null>(null);
 
   const isLeader = wallet.role === "leader";
