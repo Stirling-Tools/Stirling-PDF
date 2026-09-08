@@ -39,6 +39,20 @@ public class ToolUsageStat implements Serializable {
 
     public static final String NO_PREVIOUS_TOOL = "";
 
+    /**
+     * Marks a principal the caller declared rather than one the server authenticated. A username
+     * can never contain {@code :}, so the prefix cannot collide with a real one.
+     *
+     * <p>Anything carrying it is client-chosen and therefore unbounded - one caller can mint as
+     * many as it likes - so install-wide aggregates must exclude these rows or an unauthenticated
+     * caller decides what every user is recommended. Scoped queries still read them, which is what
+     * makes recommendations work with login disabled.
+     */
+    public static final String ANONYMOUS_PREFIX = "anon:";
+
+    /** The bucket for an anonymous caller that declared no browser id of its own. */
+    public static final String SHARED_ANONYMOUS_PRINCIPAL = ANONYMOUS_PREFIX + "shared";
+
     @Id
     @Column(name = "principal", length = 255)
     private String principal;

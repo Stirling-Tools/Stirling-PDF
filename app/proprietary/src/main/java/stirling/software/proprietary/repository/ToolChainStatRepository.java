@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import stirling.software.proprietary.model.ToolChainStat;
 import stirling.software.proprietary.model.ToolChainStatId;
+import stirling.software.proprietary.model.ToolUsageStat;
 
 /**
  * Aggregates return rows of [chainKey, chainLength, totalCount] ordered by count, so the caller can
@@ -25,6 +26,11 @@ public interface ToolChainStatRepository extends JpaRepository<ToolChainStat, To
             "SELECT c.chainKey, MAX(c.chainLength), SUM(c.count) FROM ToolChainStat c WHERE ";
 
     String GROUP_ORDER = " GROUP BY c.chainKey ORDER BY SUM(c.count) DESC, c.chainKey ASC";
+
+    /**
+     * Same rule as {@link ToolUsageStatRepository#NAMED_ONLY}: install-wide counts named callers.
+     */
+    String NAMED_ONLY = "c.principal NOT LIKE '" + ToolUsageStat.ANONYMOUS_PREFIX + "%' AND ";
 
     @Query(
             SELECT_TOP
@@ -48,7 +54,11 @@ public interface ToolChainStatRepository extends JpaRepository<ToolChainStat, To
             @Param("minLength") int minLength,
             Pageable pageable);
 
-    @Query(SELECT_TOP + "c.epochDay >= :cutoff AND c.chainLength >= :minLength" + GROUP_ORDER)
+    @Query(
+            SELECT_TOP
+                    + NAMED_ONLY
+                    + "c.epochDay >= :cutoff AND c.chainLength >= :minLength"
+                    + GROUP_ORDER)
     List<Object[]> topGlobal(
             @Param("cutoff") long cutoff, @Param("minLength") int minLength, Pageable pageable);
 

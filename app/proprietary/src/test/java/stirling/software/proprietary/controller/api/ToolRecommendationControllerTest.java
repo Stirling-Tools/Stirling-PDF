@@ -8,6 +8,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -22,6 +23,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
@@ -31,6 +33,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.proprietary.controller.api.ToolRecommendationController.RecommendationsResponse;
 import stirling.software.proprietary.controller.api.ToolRecommendationController.UsageRequest;
+import stirling.software.proprietary.model.ToolUsageStat;
 import stirling.software.proprietary.service.ToolRecommendationService;
 import stirling.software.proprietary.service.ToolRecommendationService.ToolRecommendation;
 import stirling.software.proprietary.service.ToolUsageTrackingService;
@@ -187,7 +190,8 @@ class ToolRecommendationControllerTest {
 
             verify(recommendationService).getRecommendations("bob", null, 6);
             verify(recommendationService, never())
-                    .getRecommendations(eq("anon:" + BROWSER_ID), any(), anyInt());
+                    .getRecommendations(
+                            eq(ToolUsageStat.ANONYMOUS_PREFIX + BROWSER_ID), any(), anyInt());
         }
     }
 
@@ -202,7 +206,8 @@ class ToolRecommendationControllerTest {
 
             controller.recordUsage(new UsageRequest("ocr", null), BROWSER_ID);
 
-            verify(trackingService).recordUsage("anon:" + BROWSER_ID, "ocr", null);
+            verify(trackingService)
+                    .recordUsage(ToolUsageStat.ANONYMOUS_PREFIX + BROWSER_ID, "ocr", null);
         }
 
         @Test
@@ -212,7 +217,26 @@ class ToolRecommendationControllerTest {
 
             controller.recordUsage(new UsageRequest("ocr", null), "<script>alert(1)</script>");
 
-            verify(trackingService).recordUsage("anonymous", "ocr", null);
+            verify(trackingService)
+                    .recordUsage(ToolUsageStat.SHARED_ANONYMOUS_PRINCIPAL, "ocr", null);
+        }
+
+        @Test
+        @DisplayName("an anonymous principal is namespaced out of the install-wide aggregates")
+        void anonymousPrincipalsCarryThePrefix() {
+            when(userService.getCurrentUsername()).thenReturn(null);
+
+            controller.recordUsage(new UsageRequest("ocr", null), BROWSER_ID);
+            controller.recordUsage(new UsageRequest("ocr", null), null);
+
+            ArgumentCaptor<String> principals = ArgumentCaptor.forClass(String.class);
+            verify(trackingService, times(2))
+                    .recordUsage(principals.capture(), eq("ocr"), isNull());
+            assertThat(principals.getAllValues())
+                    .allSatisfy(
+                            principal ->
+                                    assertThat(principal)
+                                            .startsWith(ToolUsageStat.ANONYMOUS_PREFIX));
         }
 
         @Test
@@ -222,7 +246,8 @@ class ToolRecommendationControllerTest {
 
             controller.recordUsage(new UsageRequest("ocr", null), BROWSER_ID);
 
-            verify(trackingService).recordUsage("anon:" + BROWSER_ID, "ocr", null);
+            verify(trackingService)
+                    .recordUsage(ToolUsageStat.ANONYMOUS_PREFIX + BROWSER_ID, "ocr", null);
         }
     }
 }

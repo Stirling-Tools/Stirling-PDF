@@ -417,8 +417,15 @@ public class UserService implements UserServiceInterface {
         if (!isUsernameValid(newUsername)) {
             throw new IllegalArgumentException(getInvalidUsernameMessage());
         }
+        String previousUsername = user.getUsername();
         user.setUsername(newUsername);
         userRepository.save(user);
+        if (previousUsername != null && !previousUsername.equals(newUsername)) {
+            // Tool usage keys on the username, so the old name's rows would be inherited by
+            // whoever is given that name next.
+            toolUsageStatRepository.deleteByPrincipal(previousUsername);
+            toolChainStatRepository.deleteByPrincipal(previousUsername);
+        }
         databaseService.exportDatabase();
     }
 

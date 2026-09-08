@@ -28,6 +28,13 @@ public interface ToolUsageStatRepository extends JpaRepository<ToolUsageStat, To
 
     String GROUP = " GROUP BY s.toolKey";
 
+    /**
+     * Install-wide aggregates count authenticated principals only. See {@link
+     * ToolUsageStat#ANONYMOUS_PREFIX}: the anonymous ones are client-chosen, so counting them lets
+     * an unauthenticated caller mint identities until it owns the ranking.
+     */
+    String NAMED_ONLY = "s.principal NOT LIKE '" + ToolUsageStat.ANONYMOUS_PREFIX + "%' AND ";
+
     @Query(SELECT_TOTALS + "s.principal = :principal AND s.epochDay >= :cutoff" + GROUP)
     List<Object[]> sumByPrincipal(
             @Param("principal") String principal,
@@ -40,7 +47,7 @@ public interface ToolUsageStatRepository extends JpaRepository<ToolUsageStat, To
             @Param("cutoff") long cutoff,
             @Param("recentCutoff") long recentCutoff);
 
-    @Query(SELECT_TOTALS + "s.epochDay >= :cutoff" + GROUP)
+    @Query(SELECT_TOTALS + NAMED_ONLY + "s.epochDay >= :cutoff" + GROUP)
     List<Object[]> sumGlobal(
             @Param("cutoff") long cutoff, @Param("recentCutoff") long recentCutoff);
 
@@ -66,7 +73,7 @@ public interface ToolUsageStatRepository extends JpaRepository<ToolUsageStat, To
             @Param("cutoff") long cutoff,
             @Param("recentCutoff") long recentCutoff);
 
-    @Query(SELECT_TOTALS + "s.fromTool = :fromTool AND s.epochDay >= :cutoff" + GROUP)
+    @Query(SELECT_TOTALS + NAMED_ONLY + "s.fromTool = :fromTool AND s.epochDay >= :cutoff" + GROUP)
     List<Object[]> sumByFrom(
             @Param("fromTool") String fromTool,
             @Param("cutoff") long cutoff,

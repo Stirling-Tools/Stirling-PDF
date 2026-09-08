@@ -317,6 +317,24 @@ class ToolUsageTrackingServiceTest {
         }
 
         @Test
+        @DisplayName("duplicate chains cannot make one request scan an unbounded list")
+        void boundsChainsScannedPerEvent() {
+            when(chainRepository.incrementCount(anyString(), anyString(), anyLong(), anyLong()))
+                    .thenReturn(1);
+            List<List<String>> many =
+                    new ArrayList<>(
+                            Collections.nCopies(
+                                    ToolUsageTrackingService.MAX_CHAINS_SCANNED,
+                                    List.of("compress")));
+            many.add(List.of("split"));
+
+            service.recordUsage(PRINCIPAL, "merge", many);
+
+            verify(chainRepository).incrementCount(PRINCIPAL, "compress>merge", TODAY, 1);
+            verify(chainRepository, never()).incrementCount(PRINCIPAL, "split>merge", TODAY, 1);
+        }
+
+        @Test
         @DisplayName("a long-running document is recorded as its trailing window")
         void keepsTrailingWindowOfLongChains() {
             when(chainRepository.incrementCount(anyString(), anyString(), anyLong(), anyLong()))

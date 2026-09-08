@@ -362,6 +362,36 @@ class UserServiceTest {
     }
 
     @Test
+    void changeUsername_erasesToolUsageHeldUnderTheOldName()
+            throws SQLException, UnsupportedProviderException {
+        User user = new User();
+        user.setId(5L);
+        user.setUsername("oldname");
+
+        userService.changeUsername(user, "newname");
+
+        assertEquals("newname", user.getUsername());
+        verify(userRepository).save(user);
+        verify(toolUsageStatRepository).deleteByPrincipal("oldname");
+        verify(toolChainStatRepository).deleteByPrincipal("oldname");
+        verify(toolUsageStatRepository, never()).deleteByPrincipal("newname");
+        verify(toolChainStatRepository, never()).deleteByPrincipal("newname");
+    }
+
+    @Test
+    void changeUsername_toTheSameName_keepsToolUsage()
+            throws SQLException, UnsupportedProviderException {
+        User user = new User();
+        user.setId(6L);
+        user.setUsername("samename");
+
+        userService.changeUsername(user, "samename");
+
+        verify(toolUsageStatRepository, never()).deleteByPrincipal(any());
+        verify(toolChainStatRepository, never()).deleteByPrincipal(any());
+    }
+
+    @Test
     void deleteUser_withNoRelatedData_deletesUserSuccessfully() {
         User user = new User();
         user.setId(2L);

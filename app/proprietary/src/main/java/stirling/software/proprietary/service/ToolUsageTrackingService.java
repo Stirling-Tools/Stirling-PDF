@@ -42,6 +42,13 @@ public class ToolUsageTrackingService {
     /** Bounds the work one completion can trigger when many documents go in at once. */
     static final int MAX_CHAINS_PER_EVENT = 5;
 
+    /**
+     * How many of the submitted chains are looked at. De-duplication alone is no bound: identical
+     * chains never reach {@link #MAX_CHAINS_PER_EVENT} distinct ones, so a caller could otherwise
+     * make one request scan an arbitrarily long list.
+     */
+    static final int MAX_CHAINS_SCANNED = 100;
+
     private final ToolUsageStatRepository usageRepository;
     private final ToolChainStatRepository chainRepository;
     private final ApplicationProperties applicationProperties;
@@ -97,9 +104,10 @@ public class ToolUsageTrackingService {
             return List.of(List.of());
         }
         Set<List<String>> distinct = new LinkedHashSet<>();
+        int scanned = 0;
         for (List<String> chain : priorChains) {
             distinct.add(sanitiseChain(chain, toolKey));
-            if (distinct.size() >= MAX_CHAINS_PER_EVENT) {
+            if (distinct.size() >= MAX_CHAINS_PER_EVENT || ++scanned >= MAX_CHAINS_SCANNED) {
                 break;
             }
         }

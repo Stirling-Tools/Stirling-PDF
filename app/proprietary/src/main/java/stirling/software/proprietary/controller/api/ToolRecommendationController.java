@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.annotations.api.ProprietaryUiDataApi;
 import stirling.software.common.service.UserServiceInterface;
+import stirling.software.proprietary.model.ToolUsageStat;
 import stirling.software.proprietary.service.ToolRecommendationService;
 import stirling.software.proprietary.service.ToolRecommendationService.ToolRecommendation;
 import stirling.software.proprietary.service.ToolUsageTrackingService;
@@ -103,7 +104,7 @@ public class ToolRecommendationController {
             return username;
         }
         return browserId != null && BROWSER_ID_PATTERN.matcher(browserId).matches()
-                ? "anon:" + browserId
-                : "anonymous";
+                ? ToolUsageStat.ANONYMOUS_PREFIX + browserId
+                : ToolUsageStat.SHARED_ANONYMOUS_PRINCIPAL;
     }
 }

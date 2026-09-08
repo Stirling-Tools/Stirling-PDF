@@ -86,6 +86,42 @@ class ToolRecommendationRepositoriesTest {
     }
 
     @Test
+    @DisplayName("install-wide sums ignore anonymous principals but scoped sums still see them")
+    void globalSumsExcludeAnonymousPrincipals() {
+        String anon = ToolUsageStat.ANONYMOUS_PREFIX + "browser-1";
+        usageRepository.save(new ToolUsageStat("alice", NONE, "ocr", DAY, 1));
+        usageRepository.save(new ToolUsageStat("alice", "compare", "ocr", DAY, 1));
+        usageRepository.save(new ToolUsageStat(anon, NONE, "ocr", DAY, 900));
+        usageRepository.save(new ToolUsageStat(anon, "compare", "ocr", DAY, 900));
+        usageRepository.save(
+                new ToolUsageStat(ToolUsageStat.SHARED_ANONYMOUS_PRINCIPAL, NONE, "ocr", DAY, 900));
+
+        Map<String, long[]> global = byTool(usageRepository.sumGlobal(DAY - 30, DAY - 7));
+        Map<String, long[]> globalFrom =
+                byTool(usageRepository.sumByFrom("compare", DAY - 30, DAY - 7));
+        Map<String, long[]> theirOwn =
+                byTool(usageRepository.sumByPrincipal(anon, DAY - 30, DAY - 7));
+
+        assertThat(global.get("ocr")[1]).isEqualTo(2);
+        assertThat(globalFrom.get("ocr")[1]).isEqualTo(1);
+        assertThat(theirOwn.get("ocr")[1]).isEqualTo(1800);
+    }
+
+    @Test
+    @DisplayName("install-wide chains ignore anonymous principals")
+    void globalChainsExcludeAnonymousPrincipals() {
+        String anon = ToolUsageStat.ANONYMOUS_PREFIX + "browser-1";
+        chainRepository.save(new ToolChainStat("alice", "compress>ocr", DAY, 2, 1));
+        chainRepository.save(new ToolChainStat(anon, "compress>ocr", DAY, 2, 900));
+
+        List<Object[]> global = chainRepository.topGlobal(DAY - 30, 2, PageRequest.of(0, 10));
+
+        assertThat(((Number) global.get(0)[2]).longValue()).isEqualTo(1);
+        assertThat(chainRepository.topByPrincipal(anon, DAY - 30, 2, PageRequest.of(0, 10)))
+                .hasSize(1);
+    }
+
+    @Test
     @DisplayName("transitions filter by the tool the user came from")
     void transitionSumsFilterByFromTool() {
         usageRepository.save(new ToolUsageStat("alice", "compare", "ocr", DAY, 2));
