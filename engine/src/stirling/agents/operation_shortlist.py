@@ -13,7 +13,7 @@ from stirling.models import OPERATIONS, ToolEndpoint
 
 logger = logging.getLogger(__name__)
 
-_WORD = re.compile(r"[a-z0-9]+")
+_WORD = re.compile(r"\w+", re.UNICODE)
 _STOPWORDS = frozenset({"pdf", "the", "this", "a", "an", "of", "to", "and", "for", "it", "into", "out"})
 
 _BM25_K1 = 1.5
@@ -37,6 +37,13 @@ def retrieval_text(operation: ToolEndpoint) -> str:
 
 
 def tokenize(text: str) -> list[str]:
+    """The lexical terms of ``text``: lowercased, split on non-word characters, stopwords dropped.
+
+    The same normalisation must be applied to a query and to the corpus it is scored against,
+    so ``bm25_scores`` expects a corpus tokenized by this function and nothing else. Scripts
+    that are not word-segmented by whitespace (CJK) yield one token per run of characters, and
+    a text with no word characters at all yields ``[]``.
+    """
     return [word for word in _WORD.findall(text.lower().replace("_", " ")) if word not in _STOPWORDS]
 
 
@@ -48,6 +55,12 @@ def _cosine(left: list[float], right: list[float]) -> float:
 
 
 def bm25_scores(query: str, corpus: list[list[str]]) -> list[float]:
+    """BM25 relevance of a raw ``query`` against a corpus already tokenized by ``tokenize``.
+
+    Scores are positionally aligned with ``corpus``. A score of 0.0 means no query term
+    occurs in that document, not that the document ranks last, so a caller ordering by score
+    must drop the zeros rather than treat their arbitrary order as a ranking.
+    """
     lengths = [len(document) for document in corpus]
     average_length = sum(lengths) / len(lengths) if lengths else 0.0
     document_frequency: Counter[str] = Counter()
@@ -119,5 +132,6 @@ class OperationShortlist:
         corpus = [self._tokens.get(operation, []) for operation in operations]
         lexical_scores = bm25_scores(message, corpus)
         by_score = dict(zip(operations, lexical_scores, strict=True))
-        lexical = sorted(operations, key=lambda operation: -by_score[operation])
+        matched = [operation for operation in operations if by_score[operation] > 0.0]
+        lexical = sorted(matched, key=lambda operation: -by_score[operation])
         return rank_fusion(semantic, lexical)[:limit]

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import math
+
 import pytest
 
 from stirling.agents.operation_shortlist import (
@@ -33,6 +35,24 @@ class StubEmbedder:
         if self.fail:
             raise RuntimeError("embedding provider unreachable")
         return self._vector(text)
+
+
+class ReversedCatalogueEmbedder:
+    """Ranks the catalogue in exact reverse order, so a vector-only result is distinguishable
+    from the catalogue's own enumeration order."""
+
+    def __init__(self, total: int) -> None:
+        self.total = total
+
+    def _vector(self, index: int) -> list[float]:
+        angle = math.pi / 2 * index / self.total
+        return [math.cos(angle), math.sin(angle)]
+
+    async def embed_documents(self, texts: list[str]) -> list[list[float]]:
+        return [self._vector(index) for index in range(len(texts))]
+
+    async def embed_query(self, text: str) -> list[float]:
+        return self._vector(self.total - 1)
 
 
 @pytest.mark.anyio
@@ -94,6 +114,30 @@ def test_lexical_scoring_ranks_the_operation_named_in_the_request() -> None:
 
 def test_tokenize_splits_endpoint_names_and_drops_stopwords() -> None:
     assert tokenize("ADD_WATERMARK to the PDF") == ["add", "watermark"]
+
+
+def test_tokenize_keeps_non_ascii_words_whole() -> None:
+    assert tokenize("Wasserzeichen hinzufügen") == ["wasserzeichen", "hinzufügen"]
+    assert tokenize("añadir marca de agua") == ["añadir", "marca", "de", "agua"]
+    assert tokenize("добавить водяной знак") == ["добавить", "водяной", "знак"]
+
+
+def test_lexical_scoring_is_zero_when_no_term_matches() -> None:
+    corpus = [tokenize(retrieval_text(operation)) for operation in OPERATIONS]
+
+    assert bm25_scores("给文档加水印", corpus) == [0.0] * len(corpus)
+    assert bm25_scores("", corpus) == [0.0] * len(corpus)
+
+
+@pytest.mark.anyio
+async def test_a_query_matching_no_operation_text_keeps_the_vector_ranking() -> None:
+    operations = list(OPERATIONS)
+    shortlist = OperationShortlist(ReversedCatalogueEmbedder(len(operations)))
+
+    for message in ("给文档加水印", "добавить водяной знак", ""):
+        selected = await shortlist.select(message, operations, 20)
+
+        assert selected == list(reversed(operations))[:20]
 
 
 def test_rank_fusion_promotes_what_both_rankings_rate_highly() -> None:
