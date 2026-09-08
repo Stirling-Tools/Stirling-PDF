@@ -182,6 +182,28 @@ export const useToolOperation = <TParams>(
     [config.operationType, config.toolType, notificationsAvailable],
   );
 
+  const getCompatibleFiles = useCallback(
+    (params: TParams, selectedFiles: StirlingFile[]) => {
+      const endpoint =
+        typeof config.endpoint === "function"
+          ? config.endpoint(params)
+          : config.endpoint;
+      return selectedFiles.filter((file) =>
+        toolAcceptsFile(
+          endpoint ?? undefined,
+          selectors.getStirlingFileStub(file.fileId) ?? file,
+        ),
+      );
+    },
+    [config.endpoint, selectors],
+  );
+
+  const getEligibleFiles = useCallback(
+    (params: TParams, selectedFiles: StirlingFile[]) =>
+      getCompatibleFiles(params, selectedFiles).filter((file) => file.size > 0),
+    [getCompatibleFiles],
+  );
+
   const executeOperation = useCallback(
     async (params: TParams, selectedFiles: StirlingFile[]): Promise<void> => {
       // Validation
@@ -196,12 +218,7 @@ export const useToolOperation = <TParams>(
           : config.endpoint
         : undefined;
 
-      const compatibleFiles = selectedFiles.filter((file) =>
-        toolAcceptsFile(
-          runtimeEndpoint,
-          selectors.getStirlingFileStub(file.fileId) ?? file,
-        ),
-      );
+      const compatibleFiles = getCompatibleFiles(params, selectedFiles);
 
       // Handle zero-byte inputs explicitly: mark as error and continue with others
       const zeroByteFiles = compatibleFiles.filter((file) => file.size === 0);
@@ -709,6 +726,7 @@ export const useToolOperation = <TParams>(
       continueResolutions,
       notificationsAvailable,
       reportFailure,
+      getCompatibleFiles,
     ],
   );
 
@@ -816,6 +834,7 @@ export const useToolOperation = <TParams>(
     willUseCloud,
 
     // Actions
+    getEligibleFiles,
     executeOperation,
     resetResults,
     clearError: actions.clearError,

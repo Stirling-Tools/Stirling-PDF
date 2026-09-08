@@ -140,7 +140,11 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
 
   return createToolFlow({
     files: {
-      selectedFiles,
+      selectedFiles:
+        convertOperation.getEligibleFiles?.(
+          convertParams.parameters,
+          selectedFiles,
+        ) ?? selectedFiles,
       isCollapsed: hasResults,
     },
     steps: [

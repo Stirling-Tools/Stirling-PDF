@@ -189,7 +189,9 @@ export function useBaseTool<
 
   return {
     // File management
-    selectedFiles: effectiveFiles,
+    selectedFiles:
+      operation.getEligibleFiles?.(params.parameters, effectiveFiles) ??
+      effectiveFiles,
 
     // Tool-specific hooks
     params,
