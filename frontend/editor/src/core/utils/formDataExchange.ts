@@ -353,33 +353,49 @@ function fdfValueToString(
   return undefined;
 }
 
-// PDF field hierarchies are a few levels deep. The resolver's cycle guard
-// is per-call, so a /Kids cycle needs its own bound.
+// PDF field hierarchies are a few levels deep. Depth alone does not bound the
+// walk: /Kids that names the same object twice doubles the work per level, so
+// a sub-1KB file can expand exponentially and hang the tab. Each object number
+// is therefore expanded once per file, and inline dictionaries - which have no
+// object number to remember - are bounded by a total node budget.
 const MAX_FIELD_DEPTH = 64;
+const MAX_FIELD_NODES = 100_000;
+
+interface FdfWalk {
+  values: Record<string, string>;
+  resolve: Resolver;
+  expanded: Set<number>;
+  remaining: number;
+}
 
 function walkFdfFields(
+  walk: FdfWalk,
   fields: PsValue[],
   path: string[],
-  values: Record<string, string>,
-  resolve: Resolver,
   depth = 0,
 ): void {
   if (depth >= MAX_FIELD_DEPTH) return;
   for (const entry of fields) {
-    const field = psDict(resolve(entry));
+    if (walk.remaining <= 0) return;
+    walk.remaining--;
+    if (entry instanceof PsRef) {
+      if (walk.expanded.has(entry.objectNumber)) continue;
+      walk.expanded.add(entry.objectNumber);
+    }
+    const field = psDict(walk.resolve(entry));
     if (!field) continue;
-    const title = resolve(field.T);
+    const title = walk.resolve(field.T);
     const name =
       typeof title === "string" ? decodePdfString(title) : psName(title);
     if (!name) continue;
     const nextPath = [...path, name];
 
     if (field.V !== undefined) {
-      const value = fdfValueToString(field.V, resolve);
-      if (value !== undefined) values[qualify(nextPath)] = value;
+      const value = fdfValueToString(field.V, walk.resolve);
+      if (value !== undefined) walk.values[qualify(nextPath)] = value;
     }
-    const kids = psArray(resolve(field.Kids));
-    if (kids) walkFdfFields(kids, nextPath, values, resolve, depth + 1);
+    const kids = psArray(walk.resolve(field.Kids));
+    if (kids) walkFdfFields(walk, kids, nextPath, depth + 1);
   }
 }
 
@@ -433,7 +449,11 @@ export function parseFdf(
   }
 
   const values: Record<string, string> = {};
-  walkFdfFields(fields, [], values, resolve);
+  walkFdfFields(
+    { values, resolve, expanded: new Set(), remaining: MAX_FIELD_NODES },
+    fields,
+    [],
+  );
 
   const href = resolve(fdf.F);
   return {
@@ -451,14 +471,34 @@ export function looksLikeFdf(text: string): boolean {
 }
 
 /**
+ * Ceiling on an imported form-data file. Real XFDF/FDF exports are kilobytes;
+ * the whole file is read into one latin1 string and tokenized synchronously on
+ * the main thread, so a mis-picked large file would freeze the tab.
+ */
+export const MAX_FORM_DATA_BYTES = 16 * 1024 * 1024; // 16 MiB
+
+/** Thrown by {@link parseFormDataFile} when the pick exceeds {@link MAX_FORM_DATA_BYTES}. */
+export class FormDataTooLargeError extends Error {
+  constructor(public readonly size: number) {
+    super(
+      `Form data file is too large: ${size} bytes exceeds the ${MAX_FORM_DATA_BYTES} byte limit.`,
+    );
+    this.name = "FormDataTooLargeError";
+  }
+}
+
+/**
  * Read an exported form-data file, detecting XFDF vs FDF from its contents
  * rather than its extension.
  *
- * @throws with a user-readable message when the file is neither.
+ * @throws {FormDataTooLargeError} when the file exceeds {@link MAX_FORM_DATA_BYTES}.
+ * @throws with a user-readable message when the file is neither format.
  */
 export async function parseFormDataFile(
   file: File | Blob,
 ): Promise<FormDataImport> {
+  if (file.size > MAX_FORM_DATA_BYTES)
+    throw new FormDataTooLargeError(file.size);
   const buffer = await file.arrayBuffer();
   const latin1 = decodeLatin1(buffer);
 

@@ -56,6 +56,8 @@ import {
 } from "@app/tools/formFill/formApi";
 import {
   buildXfdf,
+  FormDataTooLargeError,
+  MAX_FORM_DATA_BYTES,
   parseFormDataFile,
   reconcileImportedValues,
 } from "@app/utils/formDataExchange";
@@ -316,6 +318,16 @@ const FormFill = (_props: BaseToolProps) => {
         setImportSummary([imported, skipped].filter(Boolean).join(". "));
       } catch (err) {
         console.error("[FormFill] Form data import failed:", err);
+        if (err instanceof FormDataTooLargeError) {
+          setSaveError(
+            t(
+              "formFill.importTooLarge",
+              "That file is too large to import. Form data files must be under {{limit}} MB.",
+              { limit: Math.round(MAX_FORM_DATA_BYTES / (1024 * 1024)) },
+            ),
+          );
+          return;
+        }
         setSaveError(
           err instanceof Error
             ? err.message

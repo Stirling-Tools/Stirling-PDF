@@ -2,10 +2,12 @@
  * Unit tests for XFDF / FDF form-data exchange.
  */
 
-import { describe, test, expect } from "vitest";
+import { describe, test, expect, vi } from "vitest";
 import {
   buildXfdf,
   decodeLatin1,
+  FormDataTooLargeError,
+  MAX_FORM_DATA_BYTES,
   looksLikeFdf,
   looksLikeXfdf,
   parseFdf,
@@ -358,6 +360,74 @@ trailer<</Root 1 0 R>>
         "2 0 obj<</FDF <</Fields [1 0 R]>>>>endobj\n";
       expect(() => parseFdf(cyclic)).not.toThrow();
     });
+
+    test("a branching /Kids cycle terminates instead of expanding forever", () => {
+      // Each object lists the other twice, so a depth-only bound walks 2^64
+      // nodes: under a second here, a dead tab without a visited set.
+      const branching =
+        "%FDF-1.2\n" +
+        "1 0 obj<</FDF <</Fields [2 0 R]>>>>endobj\n" +
+        "2 0 obj<</T (a)/Kids [3 0 R 3 0 R]>>endobj\n" +
+        "3 0 obj<</T (b)/Kids [2 0 R 2 0 R]>>endobj\n";
+      const started = Date.now();
+      expect(parseFdf(branching).values).toEqual({});
+      expect(Date.now() - started).toBeLessThan(2000);
+    });
+
+    test("an acyclic doubling /Kids ladder does not expand exponentially", () => {
+      const LEVELS = 40;
+      let fdf = "%FDF-1.2\n1 0 obj<</FDF <</Fields [2 0 R]>>>>endobj\n";
+      for (let level = 0; level < LEVELS; level++) {
+        const self = level + 2;
+        const kid = self + 1;
+        fdf += `${self} 0 obj<</T (f${level})/Kids [${kid} 0 R ${kid} 0 R]>>endobj\n`;
+      }
+      fdf += `${LEVELS + 2} 0 obj<</T (leaf)/V (x)>>endobj\n`;
+
+      const started = Date.now();
+      const { values } = parseFdf(fdf);
+      expect(Date.now() - started).toBeLessThan(2000);
+      const leaf = Object.keys(values);
+      expect(leaf).toHaveLength(1);
+      expect(values[leaf[0]]).toBe("x");
+    });
+
+    test("a branching /Kids cycle costs a few nodes, not the whole budget", () => {
+      // The node budget alone would let the cycle burn every node it is
+      // allowed before the walk gives up, dropping the field that follows it.
+      // Only expanding each object number once keeps that field reachable.
+      const bombThenField =
+        "%FDF-1.2\n" +
+        "1 0 obj<</FDF <</Fields [2 0 R 4 0 R]>>>>endobj\n" +
+        "2 0 obj<</T (a)/Kids [3 0 R 3 0 R]>>endobj\n" +
+        "3 0 obj<</T (b)/Kids [2 0 R 2 0 R]>>endobj\n" +
+        "4 0 obj<</T (After)/V (kept)>>endobj\n";
+      expect(parseFdf(bombThenField).values).toEqual({ After: "kept" });
+    });
+
+    test("an acyclic doubling ladder leaves later fields reachable", () => {
+      // Same guarantee without a cycle: 24 doubling levels is 16M expansions
+      // if references are re-expanded, far past any budget a walk can hold.
+      const LEVELS = 24;
+      let fdf = "%FDF-1.2\n1 0 obj<</FDF <</Fields [2 0 R 900 0 R]>>>>endobj\n";
+      for (let level = 0; level < LEVELS; level++) {
+        const self = level + 2;
+        const kid = self + 1;
+        fdf += `${self} 0 obj<</T (g${level})/Kids [${kid} 0 R ${kid} 0 R]>>endobj\n`;
+      }
+      fdf += `${LEVELS + 2} 0 obj<</T (deep)>>endobj\n`;
+      fdf += "900 0 obj<</T (After)/V (kept)>>endobj\n";
+      expect(parseFdf(fdf).values).toEqual({ After: "kept" });
+    });
+
+    test("a repeated /Kids reference still yields the field once", () => {
+      const shared =
+        "%FDF-1.2\n" +
+        "1 0 obj<</FDF <</Fields [2 0 R]>>>>endobj\n" +
+        "2 0 obj<</T (Group)/Kids [3 0 R 3 0 R]>>endobj\n" +
+        "3 0 obj<</T (Name)/V (Ada)>>endobj\n";
+      expect(parseFdf(shared).values).toEqual({ "Group.Name": "Ada" });
+    });
   });
 
   describe("format detection", () => {
@@ -466,6 +536,24 @@ trailer<</Root 1 0 R>>
       await expect(parseFormDataFile(file)).rejects.toThrow(
         /Unrecognised form data file/,
       );
+    });
+
+    test("rejects an oversized pick without reading it", async () => {
+      const read = vi.fn(() => Promise.resolve(new ArrayBuffer(0)));
+      const huge = {
+        size: MAX_FORM_DATA_BYTES + 1,
+        arrayBuffer: read,
+      } as unknown as Blob;
+      await expect(parseFormDataFile(huge)).rejects.toBeInstanceOf(
+        FormDataTooLargeError,
+      );
+      expect(read).not.toHaveBeenCalled();
+    });
+
+    test("accepts a file exactly on the limit", async () => {
+      const file = fileWithBytes(FDF, "data.fdf");
+      Object.defineProperty(file, "size", { value: MAX_FORM_DATA_BYTES });
+      expect((await parseFormDataFile(file)).format).toBe("fdf");
     });
   });
 
