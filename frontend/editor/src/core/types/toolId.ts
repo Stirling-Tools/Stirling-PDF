@@ -51,6 +51,7 @@ export const CORE_REGULAR_TOOL_IDS = [
   "unlockPDFForms",
   "compress",
   "classify",
+  "urlToPdf",
   "extractPages",
   "reorganizePages",
   "extractImages",

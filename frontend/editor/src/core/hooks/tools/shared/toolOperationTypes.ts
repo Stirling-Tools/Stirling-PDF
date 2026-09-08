@@ -159,6 +159,8 @@ interface BaseToolOperationConfig<TParams, TEndpoint extends ToolEndpoint> {
    * and exact input-output mapping is difficult.
    */
   consumesAllInputs?: boolean;
+
+  runsWithoutInputFiles?: boolean;
 }
 
 interface SingleFileToolBody<

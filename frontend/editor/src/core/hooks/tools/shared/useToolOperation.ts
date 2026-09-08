@@ -184,7 +184,8 @@ export const useToolOperation = <TParams>(
   const executeOperation = useCallback(
     async (params: TParams, selectedFiles: StirlingFile[]): Promise<void> => {
       // Validation
-      if (selectedFiles.length === 0) {
+      const requiresInputFiles = !config.runsWithoutInputFiles;
+      if (requiresInputFiles && selectedFiles.length === 0) {
         actions.setError(t("noFileSelected", "No file loaded"));
         return;
       }
@@ -203,7 +204,7 @@ export const useToolOperation = <TParams>(
       const validFiles: StirlingFile[] = selectedFiles.filter(
         (file) => file.size > 0,
       );
-      if (validFiles.length === 0) {
+      if (requiresInputFiles && validFiles.length === 0) {
         actions.setError(t("noValidFiles", "No valid files to process"));
         return;
       }

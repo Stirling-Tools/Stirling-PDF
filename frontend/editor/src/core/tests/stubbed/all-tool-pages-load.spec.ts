@@ -72,6 +72,7 @@ const TOOL_IDS = [
   "bookletImposition",
   "pdfTextEditor",
   "formFill",
+  "urlToPdf",
   // Super tools
   "multiTool",
   "read",

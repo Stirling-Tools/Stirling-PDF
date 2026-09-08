@@ -33,6 +33,7 @@ export const URL_TO_TOOL_MAP: Record<string, ToolId> = {
   "/pdf-to-cbr": "convert",
   "/cbz-to-pdf": "convert",
   "/pdf-to-cbz": "convert",
+  "/url-to-pdf": "urlToPdf",
 
   // Security tools
   "/add-password": "addPassword",

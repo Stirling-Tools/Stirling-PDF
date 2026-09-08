@@ -1101,6 +1101,28 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         ),
         synonyms: getSynonyms(t, "adjustContrast"),
       },
+      urlToPdf: {
+        icon: (
+          <LocalIcon
+            icon="captive-portal-rounded"
+            width="1.5rem"
+            height="1.5rem"
+          />
+        ),
+        name: t("home.urlToPdf.title", "URL to PDF"),
+        component: lazy(() => import("@app/tools/UrlToPdf")),
+        description: t(
+          "home.urlToPdf.desc",
+          "Fetch a web page on the server and save it as a PDF",
+        ),
+        categoryId: ToolCategoryId.ADVANCED_TOOLS,
+        subcategoryId: SubcategoryId.GENERAL,
+        maxFiles: 0,
+        endpoints: ["url-to-pdf"],
+        synonyms: getSynonyms(t, "urlToPdf"),
+        supportsAutomate: false,
+        automationSettings: null,
+      },
       repair: {
         icon: (
           <LocalIcon

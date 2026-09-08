@@ -200,6 +200,11 @@
       "title": "Classify - Stirling PDF",
       "description": "Identify what kind of document this is and tag it."
     },
+    "urlToPdf": {
+      "image": "/og_images/home.png",
+      "title": "URL to PDF - Stirling PDF",
+      "description": "Fetch a web page on the server and save it as a PDF"
+    },
     "extractPages": {
       "image": "/og_images/extract-pages.png",
       "title": "Extract Pages - Stirling PDF",
@@ -581,6 +586,7 @@
     "/unlock-p-d-f-forms": "unlockPDFForms",
     "/compress": "compress",
     "/classify": "classify",
+    "/url-to-pdf": "urlToPdf",
     "/extract-pages": "extractPages",
     "/reorganize-pages": "reorganizePages",
     "/extract-images": "extractImages",

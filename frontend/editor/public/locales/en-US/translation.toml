@@ -5301,6 +5301,11 @@ desc = "Remove read-only property of form fields in a PDF document."
 tags = "unlock,enable,edit,unlock forms,enable forms,editable forms,remove read only,make editable,unlock fields,enable editing,form fields,fillable,unprotect forms"
 title = "Unlock PDF Forms"
 
+[home.urlToPdf]
+desc = "Fetch a web page on the server and save it as a PDF"
+tags = "url,web,website,web page,link,html,url to pdf,web to pdf,webpage to pdf,save page,web capture,archive page,download page"
+title = "URL to PDF"
+
 [home.validateSignature]
 desc = "Verify digital signatures and certificates in PDF documents"
 tags = "validate,verify,certificate,validate signature,verify signature,check signature,digital signature,certificate verification,signature validation,authentic,trust,signed,verify certificate"
@@ -11739,6 +11744,27 @@ upgradeButton = "Upgrade Now"
 [URLToPDF]
 tags = "web-capture,save-page,web-to-doc,archive"
 title = "URL To PDF"
+
+[urlToPdf]
+note = "Pages needing a sign-in, or that build themselves with JavaScript, will not come through as you see them in a browser."
+results = "URL to PDF Results"
+submit = "Convert to PDF"
+
+[urlToPdf.error]
+disallowedUrlContent = "That page references content this server will not fetch."
+endpointDisabled = "URL to PDF is disabled on this server."
+failed = "An error occurred while converting the URL."
+invalidUrlFormat = "That does not look like a valid web address."
+notAPdf = "The server did not return a PDF for that address."
+urlNotReachable = "The server could not reach that address."
+
+[urlToPdf.steps]
+address = "Web address"
+
+[urlToPdf.url]
+desc = "The page is fetched by the server, not by your browser"
+error = "Enter a full http:// or https:// address"
+label = "Web address"
 
 [usage]
 aboutUsageAnalytics = "About Usage Analytics"

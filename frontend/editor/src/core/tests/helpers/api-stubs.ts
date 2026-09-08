@@ -50,6 +50,7 @@ const ALL_BACKEND_ENDPOINTS = [
   "pdf-to-cbr",
   "pdf-to-epub",
   "html-to-pdf",
+  "url-to-pdf",
   "svg-to-pdf",
   "markdown-to-pdf",
   "eml-to-pdf",
