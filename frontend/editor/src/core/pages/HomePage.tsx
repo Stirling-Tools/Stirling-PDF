@@ -515,7 +515,9 @@ export default function HomePage() {
   // Note: File selection limits are now handled directly by individual tools
 
   return (
-    <div className="h-screen overflow-hidden">
+    // data-app-shell: the switch transition holds the outgoing app on its last
+    // frame until this appears - see waitForShell in AppSwitchProvider.
+    <div className="h-screen overflow-hidden" data-app-shell="editor">
       <HomePageExtensions />
       <QuickNavHostBridge
         portalAccess={Boolean(otherApp)}

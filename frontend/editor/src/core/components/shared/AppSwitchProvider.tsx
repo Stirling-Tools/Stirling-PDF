@@ -8,7 +8,12 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import {
+  NavigationType,
+  useLocation,
+  useNavigate,
+  useNavigationType,
+} from "react-router-dom";
 import { PORTAL_BASENAME } from "@app/routes/portalBasename";
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 import { preloadAdminRoutes } from "@app/routes/adminRouteExtensions";
@@ -45,6 +50,17 @@ const MAX_HOLD_MS = 1200;
 /** The rail and the brand lockup each app draws at its top-left. */
 const RAIL_SELECTOR = ".file-sidebar, .portal-sidebar";
 const BRAND_SELECTOR = ".quick-nav-brand";
+
+/**
+ * Attribute each app's shell stamps with its own {@link AppZone} once it is up
+ * rather than booting. A shell that stops setting it is revealed at the end of
+ * the hold budget instead of on time.
+ */
+const SHELL_ATTRIBUTE = "data-app-shell";
+
+function shellSelector(zone: AppZone): string {
+  return `[${SHELL_ATTRIBUTE}="${zone}"]`;
+}
 
 type Phase = "idle" | "exit" | "enter";
 type Direction = "forward" | "back";
@@ -146,23 +162,23 @@ function snapshotBrand(): BrandSnapshot | null {
 }
 
 /**
- * Calls `done` once the app being entered has painted its own rail - a shell is
+ * Calls `done` once the app being entered has painted its shell - a shell is
  * up, not a spinner - or once the hold budget runs out, whichever is first.
  *
- * Watching the rail rather than a readiness callback keeps this app-agnostic:
- * both shells draw one, and neither draws it while booting. Compared against
- * the outgoing element because a navigation is committed asynchronously, so the
- * app being left can still be on screen for a frame or two afterwards.
+ * Keyed on the arriving zone's own marker rather than on chrome that happens to
+ * differ from the outgoing app's: the editor draws no sidebar below its desktop
+ * breakpoint, so any signal read off a rail leaves narrow windows held on the
+ * exit's last frame for the whole budget.
  */
 function waitForShell(
-  outgoingRail: Element | null,
+  zone: AppZone,
   deadline: number,
   done: () => void,
 ): () => void {
+  const selector = shellSelector(zone);
   let frame = 0;
   const check = () => {
-    const rail = document.querySelector(RAIL_SELECTOR);
-    if ((rail && rail !== outgoingRail) || Date.now() >= deadline) {
+    if (document.querySelector(selector) || Date.now() >= deadline) {
       done();
       return;
     }
@@ -218,6 +234,7 @@ function BrandStandIn({ snapshot }: { snapshot: BrandSnapshot }) {
 export function AppSwitchProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const navigationType = useNavigationType();
   const zone = zoneForPath(location.pathname);
 
   const [phase, setPhase] = useState<Phase>("idle");
@@ -300,10 +317,6 @@ export function AppSwitchProvider({ children }: { children: ReactNode }) {
 
       const arrive = () => {
         if (!switching.current) return;
-        // The rail on screen right now belongs to the app being left; the new
-        // one is a different element, which is how we tell the swap has painted
-        // rather than merely been asked for.
-        const outgoingRail = document.querySelector(RAIL_SELECTOR);
         navigate(destination);
         lastZone.current = target;
         // The incoming app mounts inside a zone still held on the exit's last
@@ -311,7 +324,7 @@ export function AppSwitchProvider({ children }: { children: ReactNode }) {
         // shell is up - otherwise the arrival animates a loading screen and
         // then hard-cuts to the real thing. Worst under `wipe`, where the
         // curtain would draw back to show a spinner.
-        cancelShellWait.current = waitForShell(outgoingRail, deadline, reveal);
+        cancelShellWait.current = waitForShell(target, deadline, reveal);
       };
 
       // Arrive once the exit has played AND the incoming app is loadable, so an
@@ -335,10 +348,20 @@ export function AppSwitchProvider({ children }: { children: ReactNode }) {
   // Back/forward and in-app deep links cross the boundary without the switcher.
   // There is no outgoing app left to animate by the time this runs, but playing
   // the arrival still keeps the crossing from being a hard cut.
+  //
+  // A REPLACE is excluded because it is the app correcting its own URL, not a
+  // move the user made: "/" resolves to whichever app the visitor belongs in
+  // (see RootGate), and animating that would open every cold load and every
+  // post-login redirect on a zone held `pointer-events: none`.
   useEffect(() => {
     const previous = lastZone.current;
     lastZone.current = zone;
-    if (previous === zone || switching.current || prefersReducedMotion())
+    if (
+      previous === zone ||
+      switching.current ||
+      navigationType === NavigationType.Replace ||
+      prefersReducedMotion()
+    )
       return;
 
     const direction: Direction =
@@ -350,7 +373,7 @@ export function AppSwitchProvider({ children }: { children: ReactNode }) {
     switching.current = true;
     setPhase("enter");
     after(halvesFor(direction)[1], finish);
-  }, [after, finish, zone]);
+  }, [after, finish, navigationType, zone]);
 
   const value = useMemo<AppSwitchValue>(
     () => ({ switchToApp, preloadApp }),
