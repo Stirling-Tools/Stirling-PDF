@@ -455,6 +455,25 @@ class SupabaseSecurityConfigMoreTest {
             assertThat(cfg.getAllowedHeaders()).contains("X-Browser-Id");
         }
 
+        @ParameterizedTest
+        @ValueSource(
+                strings = {
+                    "tauri://localhost",
+                    "http://tauri.localhost",
+                    "https://tauri.localhost"
+                })
+        @DisplayName("the desktop app's webview origins keep credentials too")
+        void desktopKeepsCredentials(String origin) {
+            // cloud/ compiles into the desktop build, so the Tauri webview reaches
+            // /api/v1/payg/wallet through the same credentialed axios client. These origins are
+            // added to the allow-list unconditionally, so they must take the allow-list branch.
+            CorsConfiguration cfg = resolve(source(true), "/api/v1/payg/wallet", origin);
+
+            assertThat(cfg.getAllowCredentials()).isTrue();
+            assertThat(cfg.checkOrigin(origin)).isEqualTo(origin);
+            assertThat(cfg.getAllowedHeaders()).contains("X-Browser-Id");
+        }
+
         @Test
         @DisplayName("no wildcard at all when account linking is off")
         void flagOffKeepsAllowList() {
