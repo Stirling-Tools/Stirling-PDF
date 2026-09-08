@@ -474,6 +474,23 @@ class SupabaseSecurityConfigMoreTest {
             assertThat(cfg.getAllowedHeaders()).contains("X-Browser-Id");
         }
 
+        @ParameterizedTest
+        @ValueSource(strings = {SELF_HOSTED, FIRST_PARTY, "tauri://localhost"})
+        @DisplayName("the portal's own request is satisfied whichever branch an origin takes")
+        void portalRequestWorksOnEitherBranch(String origin) {
+            // A self-hosted instance can sit on an allow-listed origin (localhost:5173 ships in
+            // the defaults), so it takes the credentialed branch rather than the wildcard. That is
+            // fine only if both branches accept what apiClient.saas actually sends.
+            CorsConfiguration cfg = resolve(source(true), "/api/v1/payg/wallet", origin);
+
+            assertThat(cfg.checkOrigin(origin)).isNotNull();
+            assertThat(cfg.checkHeaders(List.of("authorization", "content-type", "accept")))
+                    .isNotNull();
+            assertThat(cfg.checkHttpMethod(HttpMethod.GET)).isNotNull();
+            assertThat(cfg.checkHttpMethod(HttpMethod.POST)).isNotNull();
+            assertThat(cfg.checkHttpMethod(HttpMethod.PATCH)).isNotNull();
+        }
+
         @Test
         @DisplayName("no wildcard at all when account linking is off")
         void flagOffKeepsAllowList() {
