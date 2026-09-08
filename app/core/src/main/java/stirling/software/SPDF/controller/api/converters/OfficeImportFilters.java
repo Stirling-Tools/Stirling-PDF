@@ -80,9 +80,9 @@ final class OfficeImportFilters {
     private static final Declaration WORD_95 =
             file -> wIdentIs(file, 0xA5DC) || wIdentIs(file, 0xA5DB);
 
-    private static final Declaration WORD_2003_XML = msoProgId("Word.Document");
+    private static final Declaration WORD_2003_XML = msoDocument("Word.Document", "wordDocument");
 
-    private static final Declaration EXCEL_2003_XML = msoProgId("Excel.Sheet");
+    private static final Declaration EXCEL_2003_XML = msoDocument("Excel.Sheet", "Workbook");
 
     private static final Declaration EXCEL_BINARY =
             file ->
@@ -95,19 +95,33 @@ final class OfficeImportFilters {
 
     private static final Declaration ZIP_PACKAGE = OfficeFormatDeclaration::zipContainer;
 
+    /**
+     * The flavours of each flat-ODF media type, template and master and web included: one filter
+     * reads them all, verified against LibreOffice for every value listed here, and a flavour left
+     * out is a document the endpoint refuses that LibreOffice would have converted.
+     */
     private static final Declaration FLAT_ODF_TEXT =
             odfMimeType(
                     "application/vnd.oasis.opendocument.text",
-                    "application/vnd.oasis.opendocument.text-master");
+                    "application/vnd.oasis.opendocument.text-template",
+                    "application/vnd.oasis.opendocument.text-master",
+                    "application/vnd.oasis.opendocument.text-master-template",
+                    "application/vnd.oasis.opendocument.text-web");
 
     private static final Declaration FLAT_ODF_SPREADSHEET =
-            odfMimeType("application/vnd.oasis.opendocument.spreadsheet");
+            odfMimeType(
+                    "application/vnd.oasis.opendocument.spreadsheet",
+                    "application/vnd.oasis.opendocument.spreadsheet-template");
 
     private static final Declaration FLAT_ODF_PRESENTATION =
-            odfMimeType("application/vnd.oasis.opendocument.presentation");
+            odfMimeType(
+                    "application/vnd.oasis.opendocument.presentation",
+                    "application/vnd.oasis.opendocument.presentation-template");
 
     private static final Declaration FLAT_ODF_GRAPHICS =
-            odfMimeType("application/vnd.oasis.opendocument.graphics");
+            odfMimeType(
+                    "application/vnd.oasis.opendocument.graphics",
+                    "application/vnd.oasis.opendocument.graphics-template");
 
     private static final Map<String, List<Candidate>> CANDIDATES = candidates();
 
@@ -146,8 +160,14 @@ final class OfficeImportFilters {
         return wIdent != null && wIdent == expected;
     }
 
-    private static Declaration msoProgId(String progId) {
-        return file -> progId.equals(file.msoProgId());
+    /**
+     * The {@code <?mso-application?>} declaration together with the root element it belongs to. The
+     * processing instruction alone is not enough to choose between candidates: it sits in the
+     * prolog, where a document declaring a different root can carry it as well, and the two
+     * candidates would then be separated only by the order they happen to be listed in.
+     */
+    private static Declaration msoDocument(String progId, String rootElement) {
+        return file -> progId.equals(file.msoProgId()) && rootElement.equals(file.xmlRootElement());
     }
 
     private static Declaration odfMimeType(String... mimeTypes) {

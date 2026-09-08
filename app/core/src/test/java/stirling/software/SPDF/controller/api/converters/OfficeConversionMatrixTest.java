@@ -5,24 +5,33 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.net.InetSocketAddress;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Base64;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 import java.util.zip.CRC32;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+
+import javax.imageio.ImageIO;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.pdfbox.Loader;
@@ -30,6 +39,9 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.graphics.PDXObject;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.apache.pdfbox.pdmodel.interactive.action.PDActionURI;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationLink;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.poi.poifs.filesystem.DirectoryNode;
 import org.apache.poi.poifs.filesystem.DocumentInputStream;
@@ -41,6 +53,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.mock.web.MockMultipartFile;
+
+import com.sun.net.httpserver.HttpServer;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.common.configuration.RuntimePathConfig;
@@ -546,8 +560,10 @@ class OfficeConversionMatrixTest {
 
     /**
      * A file whose extension is allowlisted but whose bytes declare none of that extension's
-     * candidates. LibreOffice refuses every one of these under every candidate filter, so the only
-     * question is whether the endpoint says so before spawning a converter or after it fails.
+     * candidates. Refusing these before a converter is spawned is the only place they can be
+     * refused: LibreOffice exits 1 on most of them, but a Calc filter forced on eight bytes shaped
+     * like a workbook header exits 0 and writes a blank page, so its exit code is no backstop for a
+     * declaration read wrongly.
      */
     private record NoMatchCase(String extension, String source) {
         @Override
@@ -562,6 +578,7 @@ class OfficeConversionMatrixTest {
                 new NoMatchCase("doc", "plaintext"),
                 new NoMatchCase("dot", "html"),
                 new NoMatchCase("xls", "html"),
+                new NoMatchCase("xls", "biffPrefixedHtml"),
                 new NoMatchCase("xls", "plaintext"),
                 new NoMatchCase("xlt", "html"),
                 new NoMatchCase("ppt", "html"),
@@ -654,6 +671,44 @@ class OfficeConversionMatrixTest {
 
     @Test
     @EnabledIf("sofficeAvailable")
+    @DisplayName("a sanitized markdown upload fetches nothing when LibreOffice imports it")
+    void markdownReferencesAreNotFetchedAfterSanitization() throws Exception {
+        try (Listener listener = Listener.start()) {
+            String markdown =
+                    """
+                    # KEEPHEADING
+
+                    ![inline](%1$s/A-INLINE)
+                    ![full][r1]
+                    ![collapsed][]
+                    ![shortcut]
+                    <img src="%1$s/D-RAW-HTML">
+
+                    <table><tr><td background="%1$s/E-BGATTR">x</td></tr></table>
+
+                    [r1]: %1$s/G-REFDEF
+                    [collapsed]: %1$s/H-COLLAPSED
+                    [shortcut]: %1$s/I-SHORTCUT
+
+                    KEEPTAIL
+                    """
+                            .formatted(listener.url(""));
+
+            convertAndAssert(
+                    "md-ssrf",
+                    "md",
+                    markdown.getBytes(StandardCharsets.UTF_8),
+                    Expect.TEXT,
+                    "KEEPHEADING");
+
+            assertThat(listener.requests())
+                    .as("LibreOffice fetched a reference the sanitizer left reachable")
+                    .isEmpty();
+        }
+    }
+
+    @Test
+    @EnabledIf("sofficeAvailable")
     @DisplayName("a Word binary of an unrecognised generation is refused, not guessed at")
     void wordBinaryOfAnUnknownGenerationIsRefused() throws Exception {
         Path staging = Files.createTempDirectory("badwident_");
@@ -668,30 +723,536 @@ class OfficeConversionMatrixTest {
         }
     }
 
-    @Test
+    /**
+     * One way the linked-image field LibreOffice's WW8 importer dereferences can be written.
+     * LibreOffice exports it as {@code 0x13} {@code U+0020} {@code INCLUDEPICTURE}, and its reader
+     * requires neither that separator nor that keyword: the field type lives in the field tables,
+     * not in the instruction text, so every variant here is fetched by the importer, and a
+     * sanitizer that keys on the keyword blanks only the first.
+     */
+    private record WordFieldCase(String extension, String variant) {
+        @Override
+        public String toString() {
+            return extension + " with " + variant;
+        }
+    }
+
+    private static List<WordFieldCase> wordFieldCases() {
+        List<WordFieldCase> cases = new ArrayList<>();
+        for (String variant : List.of("space", "tab", "nbsp", "period", "renamed keyword")) {
+            cases.add(new WordFieldCase("doc", variant));
+        }
+        cases.add(new WordFieldCase("dot", "tab"));
+        return cases;
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("wordFieldCases")
     @EnabledIf("sofficeAvailable")
-    @DisplayName("a word binary's INCLUDEPICTURE is blanked and the document still converts")
-    void wordBinaryFieldReferencesAreBlanked() throws Exception {
+    @DisplayName("a word binary's linked-image field is blanked however the instruction is written")
+    void wordBinaryFieldReferencesAreBlanked(WordFieldCase testCase) throws Exception {
         Path staging = Files.createTempDirectory("wordfield_");
-        try {
-            byte[] linked =
-                    export(writeTemp(".fodt", WRITER_LINKED_SOURCE), "doc", "MS Word 97", staging);
-            assertThat(new String(linked, StandardCharsets.ISO_8859_1))
-                    .as("the export must carry the field this test is about")
-                    .contains(utf16("INCLUDEPICTURE"));
+        try (Listener listener = Listener.start()) {
+            String filter =
+                    OfficeImportFilters.forExtension(testCase.extension())
+                            .getFirst()
+                            .importFilter();
+            byte[] exported =
+                    export(
+                            writeTemp(".fodt", writerLinkedSource(listener.url("/LINKED"))),
+                            testCase.extension(),
+                            filter,
+                            staging);
+            byte[] fixture = withFieldWrittenAs(exported, testCase.variant());
+            assertThat(new String(fixture, StandardCharsets.ISO_8859_1))
+                    .as("the export must carry the reference this test is about")
+                    .contains(utf16(listener.host()));
 
-            Path staged = staging.resolve("field.doc");
-            Files.write(staged, linked);
+            Path staged = staging.resolve("field." + testCase.extension());
+            Files.write(staged, fixture);
             WordBinarySanitizer.sanitizeInPlace(staged);
+            assertThat(new String(Files.readAllBytes(staged), StandardCharsets.ISO_8859_1))
+                    .doesNotContain(utf16(listener.host()));
 
-            String sanitized = new String(Files.readAllBytes(staged), StandardCharsets.ISO_8859_1);
-            assertThat(sanitized).doesNotContain(utf16("INCLUDEPICTURE"));
-            assertThat(sanitized).doesNotContain(utf16("127.0.0.1"));
-
-            convertAndAssert("field", "doc", Files.readAllBytes(staged), Expect.TEXT, SENTINEL);
+            listener.forget();
+            convertAndAssert("field", testCase.extension(), fixture, Expect.TEXT, SENTINEL);
+            assertThat(listener.requests())
+                    .as("LibreOffice dereferenced the field this sanitizer is here to remove")
+                    .isEmpty();
         } finally {
             FileUtils.deleteDirectory(staging.toFile());
         }
+    }
+
+    @Test
+    @EnabledIf("sofficeAvailable")
+    @DisplayName("a word binary carrying no field converts to the same text sanitized or not")
+    void wordBinarySanitizationLeavesAnOrdinaryDocumentAlone() throws Exception {
+        Path staging = Files.createTempDirectory("wordrich_");
+        try {
+            byte[] fixture =
+                    export(writeTemp(".fodt", writerRichSource()), "doc", "MS Word 97", staging);
+
+            Path staged = staging.resolve("rich.doc");
+            Files.write(staged, fixture);
+            WordBinarySanitizer.sanitizeInPlace(staged);
+            assertThat(Files.readAllBytes(staged))
+                    .as("a document with no field instruction must come back untouched")
+                    .isEqualTo(fixture);
+
+            String unsanitized = textOf(convertDirectly(fixture, "doc", "MS Word 97", staging));
+            File produced = newController().convertToPdf(upload("doc", fixture));
+            try (PDDocument document = Loader.loadPDF(Files.readAllBytes(produced.toPath()))) {
+                assertThat(new PDFTextStripper().getText(document).replaceAll("\\s+", " ").trim())
+                        .as("the field scan rewrote something that was not a field instruction")
+                        .isEqualTo(unsanitized);
+                assertThat(hasImage(document)).isTrue();
+            } finally {
+                FileUtils.deleteDirectory(produced.getParentFile());
+            }
+        } finally {
+            FileUtils.deleteDirectory(staging.toFile());
+        }
+    }
+
+    private static String textOf(byte[] pdf) throws IOException {
+        try (PDDocument document = Loader.loadPDF(pdf)) {
+            return new PDFTextStripper().getText(document).replaceAll("\\s+", " ").trim();
+        }
+    }
+
+    /** Converts without the endpoint in the way, so a fixture can be read sanitized and not. */
+    private byte[] convertDirectly(byte[] fixture, String extension, String filter, Path staging)
+            throws Exception {
+        Path work = Files.createTempDirectory(staging, "direct");
+        Path input = work.resolve("fixture." + extension);
+        Files.write(input, fixture);
+        Path profile = work.resolve("profile");
+        Files.createDirectories(profile);
+        Process process =
+                new ProcessBuilder(
+                                soffice(),
+                                "-env:UserInstallation=" + profile.toUri(),
+                                "--headless",
+                                "--nologo",
+                                "--infilter=" + filter,
+                                "--convert-to",
+                                "pdf",
+                                "--outdir",
+                                work.toString(),
+                                input.toString())
+                        .redirectErrorStream(true)
+                        .start();
+        process.getInputStream().readAllBytes();
+        if (!process.waitFor(3, TimeUnit.MINUTES)) {
+            process.destroyForcibly();
+            throw new IllegalStateException("timed out converting a ." + extension);
+        }
+        try (Stream<Path> written = Files.list(work)) {
+            return Files.readAllBytes(
+                    written.filter(p -> p.getFileName().toString().endsWith(".pdf"))
+                            .findFirst()
+                            .orElseThrow(() -> new IllegalStateException("no pdf produced")));
+        }
+    }
+
+    @Test
+    @EnabledIf("sofficeAvailable")
+    @DisplayName("a word binary's hyperlink keeps its text, and loses the target with it")
+    void wordBinaryHyperlinksKeepTheirTextButNotTheirTarget() throws Exception {
+        Path staging = Files.createTempDirectory("wordlink_");
+        try {
+            byte[] fixture =
+                    export(
+                            writeTemp(".fodt", WRITER_HYPERLINK_SOURCE),
+                            "doc",
+                            "MS Word 97",
+                            staging);
+
+            File produced = newController().convertToPdf(upload("doc", fixture));
+            try (PDDocument document = Loader.loadPDF(Files.readAllBytes(produced.toPath()))) {
+                assertThat(new PDFTextStripper().getText(document).replaceAll("\\s+", " "))
+                        .as("blanking an instruction must leave the result the field displays")
+                        .contains(SENTINEL, "the documentation");
+                assertThat(linkUris(document))
+                        .as(
+                                "the price of this sanitizer: what decides whether LibreOffice"
+                                        + " fetches is the field type in the WW8 tables, which an"
+                                        + " attacker sets independently of the keyword, so a field"
+                                        + " carrying a URL is blanked whatever it calls itself")
+                        .isEmpty();
+            } finally {
+                FileUtils.deleteDirectory(produced.getParentFile());
+            }
+        } finally {
+            FileUtils.deleteDirectory(staging.toFile());
+        }
+    }
+
+    private static List<String> linkUris(PDDocument document) throws IOException {
+        List<String> uris = new ArrayList<>();
+        for (PDPage page : document.getPages()) {
+            for (PDAnnotation annotation : page.getAnnotations()) {
+                if (annotation instanceof PDAnnotationLink link
+                        && link.getAction() instanceof PDActionURI uri) {
+                    uris.add(uri.getURI());
+                }
+            }
+        }
+        return uris;
+    }
+
+    /**
+     * Rewrites the exported field so it still names the same URL, in a form LibreOffice reads and a
+     * keyword scan does not: a separator other than the single space the exporter writes, or a
+     * keyword no list of fetching field names holds.
+     */
+    private static byte[] withFieldWrittenAs(byte[] document, String variant) throws IOException {
+        byte[] keyword = utf16Bytes("INCLUDEPICTURE");
+        return patchWordDocumentStream(
+                document,
+                stream -> {
+                    int at = indexOf(stream, keyword);
+                    assertThat(at)
+                            .as("the export carries no INCLUDEPICTURE field")
+                            .isGreaterThan(1);
+                    assertThat(stream[at - 2]).isEqualTo((byte) ' ');
+                    switch (variant) {
+                        case "space" -> {}
+                        case "tab" -> stream[at - 2] = 0x09;
+                        case "nbsp" -> stream[at - 2] = (byte) 0xA0;
+                        case "period" -> stream[at - 2] = '.';
+                        case "renamed keyword" ->
+                                System.arraycopy(
+                                        utf16Bytes("MERGEFIELDABCD"),
+                                        0,
+                                        stream,
+                                        at,
+                                        keyword.length);
+                        default -> throw new IllegalArgumentException("no variant " + variant);
+                    }
+                });
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @ValueSource(strings = {"xml", "doc"})
+    @EnabledIf("sofficeAvailable")
+    @DisplayName("a Word 2003 XML document keeps the pictures it carries itself")
+    void wordMlPicturesSurviveSanitization(String extension) throws Exception {
+        Path staging = Files.createTempDirectory("wordml_");
+        try {
+            byte[] fixture =
+                    export(
+                            writeTemp(".fodt", writerPictureSource()),
+                            "xml",
+                            "MS Word 2003 XML",
+                            staging);
+            assertThat(new String(fixture, StandardCharsets.UTF_8))
+                    .as("the export must address its picture the way this test is about")
+                    .contains("wordml://");
+
+            convertAndAssert("wordml", extension, fixture, Expect.IMAGE, null);
+        } finally {
+            FileUtils.deleteDirectory(staging.toFile());
+        }
+    }
+
+    /** A markup upload in an encoding that is not UTF-8, which is most of the legacy web. */
+    private record EncodedMarkup(String extension, String charset) {
+        @Override
+        public String toString() {
+            return extension + " in " + charset;
+        }
+    }
+
+    private static List<EncodedMarkup> encodedMarkup() {
+        List<EncodedMarkup> cases = new ArrayList<>();
+        for (String extension : List.of("html", "htm", "md")) {
+            for (String charset :
+                    List.of("windows-1252", "ISO-8859-1", "UTF-8 with BOM", "UTF-16LE with BOM")) {
+                cases.add(new EncodedMarkup(extension, charset));
+            }
+        }
+        return cases;
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("encodedMarkup")
+    @EnabledIf("sofficeAvailable")
+    @DisplayName("markup that is not UTF-8 converts rather than failing to decode")
+    void markupIsDecodedInWhateverEncodingItArrives(EncodedMarkup testCase) throws Exception {
+        String content =
+                "md".equals(testCase.extension())
+                        ? "# caf\u00e9" + SENTINEL + "\n\nr\u00e9sum\u00e9 text\n"
+                        : "<html><body><h1>caf\u00e9"
+                                + SENTINEL
+                                + "</h1><p>r\u00e9sum\u00e9</p></body></html>";
+
+        convertAndAssert(
+                "encoded",
+                testCase.extension(),
+                encode(content, testCase.charset()),
+                Expect.TEXT,
+                "caf\u00e9" + SENTINEL);
+    }
+
+    private static byte[] encode(String content, String charset) throws IOException {
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        switch (charset) {
+            case "UTF-8 with BOM" -> {
+                bytes.write(new byte[] {(byte) 0xEF, (byte) 0xBB, (byte) 0xBF});
+                bytes.write(content.getBytes(StandardCharsets.UTF_8));
+            }
+            case "UTF-16LE with BOM" -> {
+                bytes.write(new byte[] {(byte) 0xFF, (byte) 0xFE});
+                bytes.write(content.getBytes(StandardCharsets.UTF_16LE));
+            }
+            default -> bytes.write(content.getBytes(Charset.forName(charset)));
+        }
+        return bytes.toByteArray();
+    }
+
+    /** One media type a flat ODF document may declare, and the filter that reads it. */
+    private record FlatOdfFlavour(String mediaType, String importFilter, String source) {
+        @Override
+        public String toString() {
+            return mediaType.substring(mediaType.lastIndexOf('.') + 1);
+        }
+    }
+
+    private static List<FlatOdfFlavour> flatOdfFlavours() {
+        List<FlatOdfFlavour> flavours = new ArrayList<>();
+        String text = "OpenDocument Text Flat XML";
+        for (String flavour :
+                List.of(
+                        "text",
+                        "text-template",
+                        "text-master",
+                        "text-master-template",
+                        "text-web")) {
+            flavours.add(new FlatOdfFlavour(odf(flavour), text, WRITER_SOURCE));
+        }
+        for (String flavour : List.of("spreadsheet", "spreadsheet-template")) {
+            flavours.add(
+                    new FlatOdfFlavour(
+                            odf(flavour), "OpenDocument Spreadsheet Flat XML", CALC_SOURCE));
+        }
+        for (String flavour : List.of("presentation", "presentation-template")) {
+            flavours.add(
+                    new FlatOdfFlavour(
+                            odf(flavour), "OpenDocument Presentation Flat XML", IMPRESS_SOURCE));
+        }
+        for (String flavour : List.of("graphics", "graphics-template")) {
+            flavours.add(
+                    new FlatOdfFlavour(odf(flavour), "OpenDocument Drawing Flat XML", DRAW_SOURCE));
+        }
+        return flavours;
+    }
+
+    private static String odf(String flavour) {
+        return "application/vnd.oasis.opendocument." + flavour;
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("flatOdfFlavours")
+    @EnabledIf("sofficeAvailable")
+    @DisplayName("every flat ODF media type LibreOffice reads is one this endpoint accepts")
+    void everyFlatOdfFlavourIsAccepted(FlatOdfFlavour flavour) throws Exception {
+        byte[] fixture = declaring(flavour.source(), flavour.mediaType());
+
+        assertThat(forcedFilter("xml", fixture)).isEqualTo(flavour.importFilter());
+
+        convertAndAssert("flatodf", "xml", fixture, Expect.TEXT, SENTINEL);
+    }
+
+    @Test
+    @EnabledIf("sofficeAvailable")
+    @DisplayName("a document whose root element sits behind a long prolog is still read")
+    void aLongPrologDoesNotHideTheDeclaration() throws Exception {
+        byte[] fixture = withProlog(WRITER_SOURCE, "<!--" + "x".repeat(70_000) + "-->");
+
+        assertThat(forcedFilter("xml", fixture)).isEqualTo("OpenDocument Text Flat XML");
+
+        convertAndAssert("prolog", "xml", fixture, Expect.TEXT, SENTINEL);
+    }
+
+    @Test
+    @DisplayName("an mso-application prolog does not outrank the root element behind it")
+    void aProcessingInstructionDoesNotOutrankTheRootElement() throws Exception {
+        byte[] fixture = withProlog(WRITER_SOURCE, "<?mso-application progid=\"Excel.Sheet\"?>");
+
+        assertThat(forcedFilter("xml", fixture)).isEqualTo("OpenDocument Text Flat XML");
+    }
+
+    @Test
+    @DisplayName("markdown carrying no reference reaches LibreOffice exactly as it arrived")
+    void markdownWithNothingToStripIsNotRewritten() {
+        String markdown =
+                """
+                # Release checklist
+
+                - [x] Tag the release
+                - [ ] Update the changelog
+
+                | Step | Owner |
+                | ---- | ----- |
+                | Tag  | me    |
+
+                Costs 100% of the budget & then some, see [the docs](https://example.com/docs).
+                """;
+
+        assertThat(sanitizeMarkdown(markdown)).isEqualTo(markdown);
+    }
+
+    @Test
+    @DisplayName("stripping one reference leaves the rest of the markdown as it was written")
+    void markdownKeepsItsTaskListsWhenAReferenceIsStripped() {
+        String markdown =
+                """
+                # Release checklist
+
+                ![badge](http://127.0.0.1:1/BADGE)
+
+                - [x] Tag the release
+                - [ ] Update the changelog
+                """;
+
+        String sanitized = sanitizeMarkdown(markdown);
+
+        assertThat(sanitized).doesNotContain("BADGE");
+        assertThat(sanitized).contains("![badge]()");
+        assertThat(sanitized)
+                .as("commonmark's renderer escapes a task list marker it does not model")
+                .contains("- [x] Tag the release", "- [ ] Update the changelog");
+    }
+
+    private static String sanitizeMarkdown(String markdown) {
+        ApplicationProperties applicationProperties = new ApplicationProperties();
+        return MarkdownSanitizer.sanitize(
+                markdown,
+                new CustomHtmlSanitizer(
+                        new SsrfProtectionService(applicationProperties), applicationProperties));
+    }
+
+    private static byte[] declaring(String source, String mediaType) {
+        return source.replaceFirst(
+                        "office:mimetype=\"[^\"]*\"", "office:mimetype=\"" + mediaType + "\"")
+                .getBytes(StandardCharsets.UTF_8);
+    }
+
+    private static byte[] withProlog(String source, String prolog) {
+        int afterDeclaration = source.indexOf("?>") + 2;
+        return (source.substring(0, afterDeclaration) + prolog + source.substring(afterDeclaration))
+                .getBytes(StandardCharsets.UTF_8);
+    }
+
+    /**
+     * A listener on loopback, so a test can assert what LibreOffice fetched rather than what a
+     * sanitizer left behind. It answers every request with a picture, which is what a document
+     * carrying a linked image would be served.
+     */
+    private static final class Listener implements AutoCloseable {
+
+        private final HttpServer server;
+        private final List<String> requests = Collections.synchronizedList(new ArrayList<>());
+
+        private Listener(HttpServer server) {
+            this.server = server;
+        }
+
+        static Listener start() throws IOException {
+            HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+            Listener listener = new Listener(server);
+            byte[] image = png();
+            server.createContext(
+                    "/",
+                    exchange -> {
+                        listener.requests.add(
+                                exchange.getRequestMethod()
+                                        + " "
+                                        + exchange.getRequestURI().getPath());
+                        exchange.sendResponseHeaders(200, image.length);
+                        try (OutputStream body = exchange.getResponseBody()) {
+                            body.write(image);
+                        }
+                    });
+            server.start();
+            return listener;
+        }
+
+        String host() {
+            return "127.0.0.1:" + server.getAddress().getPort();
+        }
+
+        String url(String path) {
+            return "http://" + host() + path;
+        }
+
+        void forget() {
+            requests.clear();
+        }
+
+        List<String> requests() {
+            return List.copyOf(requests);
+        }
+
+        @Override
+        public void close() {
+            server.stop(0);
+        }
+    }
+
+    private static byte[] png() throws IOException {
+        BufferedImage image = new BufferedImage(16, 16, BufferedImage.TYPE_INT_RGB);
+        for (int x = 0; x < 16; x++) {
+            for (int y = 0; y < 16; y++) {
+                image.setRGB(x, y, 0xC81E1E);
+            }
+        }
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        ImageIO.write(image, "png", bytes);
+        return bytes.toByteArray();
+    }
+
+    /** Rewrites the {@code WordDocument} stream of a compound file, leaving its length alone. */
+    private static byte[] patchWordDocumentStream(byte[] document, Consumer<byte[]> patch)
+            throws IOException {
+        Path file = Files.createTempFile("wordfield_", ".doc");
+        try {
+            Files.write(file, document);
+            try (POIFSFileSystem fileSystem = new POIFSFileSystem(file.toFile(), false)) {
+                DirectoryNode root = fileSystem.getRoot();
+                byte[] stream;
+                try (DocumentInputStream in =
+                        fileSystem.createDocumentInputStream("WordDocument")) {
+                    stream = in.readAllBytes();
+                }
+                patch.accept(stream);
+                root.getEntry("WordDocument").delete();
+                root.createDocument("WordDocument", new ByteArrayInputStream(stream));
+                fileSystem.writeFilesystem();
+            }
+            return Files.readAllBytes(file);
+        } finally {
+            Files.deleteIfExists(file);
+        }
+    }
+
+    private static int indexOf(byte[] haystack, byte[] needle) {
+        outer:
+        for (int at = 0; at + needle.length <= haystack.length; at++) {
+            for (int i = 0; i < needle.length; i++) {
+                if (haystack[at + i] != needle[i]) {
+                    continue outer;
+                }
+            }
+            return at;
+        }
+        return -1;
+    }
+
+    private static byte[] utf16Bytes(String text) {
+        return text.getBytes(StandardCharsets.UTF_16LE);
     }
 
     /** The UTF-16LE form a WW8 text run stores, read back as latin-1 so it can be searched for. */
@@ -757,6 +1318,14 @@ class OfficeConversionMatrixTest {
             case "plaintext" ->
                     "Just some prose, with no declaration of any kind."
                             .getBytes(StandardCharsets.UTF_8);
+            case "biffPrefixedHtml" -> {
+                // A BIFF8 BOF in front of arbitrary content: eight bytes anyone can write, which
+                // named a workbook until the record that must follow the BOF was checked too.
+                ByteArrayOutputStream fixture = new ByteArrayOutputStream();
+                fixture.writeBytes(new byte[] {0x09, 0x08, 0x10, 0x00, 0x00, 0x06, 0x05, 0x00});
+                fixture.writeBytes(noMatchFixture("html"));
+                yield fixture.toByteArray();
+            }
             case "undeclaredXml" ->
                     "<?xml version=\"1.0\"?><root><child>x</child></root>"
                             .getBytes(StandardCharsets.UTF_8);
@@ -1318,7 +1887,39 @@ class OfficeConversionMatrixTest {
                     + "<text:p>ZULUMARKER</text:p>"
                     + "</office:text></office:body></office:document>";
 
-    private static final String WRITER_LINKED_SOURCE =
+    /** A writer document whose picture is linked, which is what an import fetches. */
+    private static String writerLinkedSource(String href) {
+        return writerImageSource(
+                "<draw:image xlink:href=\""
+                        + href
+                        + "\""
+                        + " xlink:type=\"simple\" xlink:show=\"embed\"/>");
+    }
+
+    /** A writer document whose picture is carried in the file, which nothing needs to fetch. */
+    private static String writerPictureSource() throws IOException {
+        return writerImageSource(
+                "<draw:image><office:binary-data>"
+                        + Base64.getEncoder().encodeToString(png())
+                        + "</office:binary-data></draw:image>");
+    }
+
+    private static String writerImageSource(String image) {
+        return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<office:document "
+                + ODF_NAMESPACES
+                + " xmlns:xlink=\"http://www.w3.org/1999/xlink\""
+                + " office:version=\"1.3\""
+                + " office:mimetype=\"application/vnd.oasis.opendocument.text\">"
+                + "<office:body><office:text><text:p>"
+                + SENTINEL
+                + "</text:p>"
+                + "<text:p><draw:frame svg:width=\"3cm\" svg:height=\"3cm\">"
+                + image
+                + "</draw:frame></text:p>"
+                + "</office:text></office:body></office:document>";
+    }
+
+    private static final String WRITER_HYPERLINK_SOURCE =
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<office:document "
                     + ODF_NAMESPACES
                     + " xmlns:xlink=\"http://www.w3.org/1999/xlink\""
@@ -1326,11 +1927,43 @@ class OfficeConversionMatrixTest {
                     + " office:mimetype=\"application/vnd.oasis.opendocument.text\">"
                     + "<office:body><office:text><text:p>"
                     + SENTINEL
-                    + "</text:p>"
-                    + "<text:p><draw:frame svg:width=\"3cm\" svg:height=\"3cm\">"
-                    + "<draw:image xlink:href=\"http://127.0.0.1:1/LINKED\""
-                    + " xlink:type=\"simple\" xlink:show=\"embed\"/></draw:frame></text:p>"
-                    + "</office:text></office:body></office:document>";
+                    + "</text:p><text:p>Visit <text:a"
+                    + " xlink:href=\"https://example.com/docs\">the documentation</text:a>"
+                    + " today.</text:p></office:text></office:body></office:document>";
+
+    /**
+     * A document with the shapes a field scan can trip over: a table, an embedded picture, and
+     * prose that names both a URL and every field keyword, none of it inside a field.
+     */
+    private static String writerRichSource() throws IOException {
+        StringBuilder body = new StringBuilder("<text:p>" + SENTINEL + "</text:p>");
+        body.append("<text:p>Prose naming INCLUDEPICTURE, INCLUDETEXT, LINK, DDE and IMPORT,")
+                .append(" alongside http://example.com/in-body-text and C:\\reports\\q4.doc,")
+                .append(" none of it a field.</text:p>");
+        for (int paragraph = 0; paragraph < 40; paragraph++) {
+            body.append("<text:p>Paragraph ")
+                    .append(paragraph)
+                    .append(" of a document long enough that its text runs past the header")
+                    .append(" tables the field scan walks.</text:p>");
+        }
+        body.append("<table:table table:name=\"Table1\">")
+                .append("<table:table-column/><table:table-column/>")
+                .append("<table:table-row><table:table-cell><text:p>ZULUMARKER</text:p>")
+                .append("</table:table-cell><table:table-cell><text:p>42</text:p>")
+                .append("</table:table-cell></table:table-row></table:table>");
+        body.append("<text:p><draw:frame svg:width=\"3cm\" svg:height=\"3cm\">")
+                .append("<draw:image><office:binary-data>")
+                .append(Base64.getEncoder().encodeToString(png()))
+                .append("</office:binary-data></draw:image></draw:frame></text:p>");
+        return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<office:document "
+                + ODF_NAMESPACES
+                + " xmlns:xlink=\"http://www.w3.org/1999/xlink\""
+                + " office:version=\"1.3\""
+                + " office:mimetype=\"application/vnd.oasis.opendocument.text\">"
+                + "<office:body><office:text>"
+                + body
+                + "</office:text></office:body></office:document>";
+    }
 
     private static final String CALC_SOURCE =
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<office:document "

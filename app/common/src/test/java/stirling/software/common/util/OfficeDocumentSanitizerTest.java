@@ -482,6 +482,54 @@ class OfficeDocumentSanitizerTest {
     }
 
     @Test
+    void sanitize_flatXmlKeepsAWordmlReferenceToItsOwnPicture() throws IOException {
+        // MS Word 2003 XML carries its pictures in <w:binData> and addresses them by a wordml:
+        // name. There is no protocol handler behind that name, so it reaches nothing outside the
+        // file, and stripping it cost every WordML upload every picture it had.
+        String doc =
+                "<w:pict xmlns:w=\"urn:x\" xmlns:v=\"urn:v\">"
+                        + "<w:binData w:name=\"wordml://Image1\">iVBORw0K</w:binData>"
+                        + "<v:shape><v:imagedata src=\"wordml://Image1\"/></v:shape></w:pict>";
+
+        byte[] sanitized = sanitizer.sanitize(doc.getBytes(StandardCharsets.UTF_8));
+
+        assertTrue(
+                new String(sanitized, StandardCharsets.UTF_8).contains("src=\"wordml://Image1\""),
+                "an in-document picture reference must survive");
+    }
+
+    @Test
+    void sanitize_zipWithARepeatedEntryNameIsRejectedWithoutNamingIt() throws IOException {
+        // Readers disagree about which copy of a repeated name wins, so a package carrying one is
+        // refused rather than rewritten — and refused under the fixed message, because the name is
+        // attacker-chosen text that the ZipOutputStream complaint would otherwise put in the
+        // response body.
+        byte[] duplicated = withARepeatedEntryName(ODF_CONTENT_EXTERNAL);
+
+        IOException refused = assertThrows(IOException.class, () -> sanitizer.sanitize(duplicated));
+
+        assertFalse(refused.getMessage().contains(REPEATED_ENTRY_NAME));
+    }
+
+    private static final String REPEATED_ENTRY_NAME = "duplicate7680-x.xml";
+
+    /**
+     * A package declaring the same entry name twice. Written under two names of that same length
+     * and renamed afterwards, because {@link ZipOutputStream} refuses to write the archive this
+     * describes — which is the whole point of the test.
+     */
+    private static byte[] withARepeatedEntryName(String content) throws IOException {
+        Map<String, byte[]> entries = new LinkedHashMap<>();
+        entries.put("duplicate7680-a.xml", content.getBytes(StandardCharsets.UTF_8));
+        entries.put("duplicate7680-b.xml", content.getBytes(StandardCharsets.UTF_8));
+
+        return new String(zip(entries), StandardCharsets.ISO_8859_1)
+                .replace("duplicate7680-a.xml", REPEATED_ENTRY_NAME)
+                .replace("duplicate7680-b.xml", REPEATED_ENTRY_NAME)
+                .getBytes(StandardCharsets.ISO_8859_1);
+    }
+
+    @Test
     void sanitize_wellFormedXmlBeyondParserLimitsIsRejected() {
         // Fail closed: well-formed XML the hardened parser refuses must never reach LibreOffice
         // unsanitized, or nesting past the limit would bypass sanitization.

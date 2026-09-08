@@ -1,6 +1,5 @@
 package stirling.software.SPDF.controller.api.converters;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -18,6 +17,7 @@ import javax.xml.stream.events.ProcessingInstruction;
 import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
 
+import org.apache.commons.io.input.BoundedInputStream;
 import org.apache.poi.poifs.filesystem.DirectoryNode;
 import org.apache.poi.poifs.filesystem.DocumentInputStream;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
@@ -44,13 +44,19 @@ class OfficeFormatDeclaration {
     private static final String OFFICE_NS = "urn:oasis:names:tc:opendocument:xmlns:office:1.0";
 
     /**
-     * How much of an XML document is read to find its declaration. The root start tag of flat ODF
-     * carries every namespace LibreOffice writes and runs to ~2.4KB, so a small prefix is not
-     * enough; the whole file is far more than is needed.
+     * How much of an XML document may be read looking for its root element. The reader stops at
+     * that element, so this bounds only what a document can put in front of it — comments,
+     * whitespace, processing instructions — which is nothing in a real one and unbounded in a
+     * hostile one.
      */
-    private static final int XML_PROLOG_LIMIT = 64 * 1024;
+    private static final int XML_PROLOG_LIMIT = 4 * 1024 * 1024;
 
     private static final int FLAT_BIFF_HEADER_LENGTH = 8;
+
+    // The BOF and its longest accepted payload, plus the header of the record that follows it.
+    private static final int FLAT_BIFF_HEAD_LENGTH = 24;
+
+    private static final int MAX_BIFF_RECORD_ID = 0x08FF;
 
     // BIFF BOF record ids by generation, each paired with the version the record must carry.
     private static final int[][] FLAT_BIFF_BOF = {
@@ -72,6 +78,7 @@ class OfficeFormatDeclaration {
     private boolean xmlPrologRead;
     private String msoProgId;
     private String odfMimeType;
+    private String xmlRootElement;
 
     OfficeFormatDeclaration(Path path) {
         this.path = path;
@@ -117,6 +124,12 @@ class OfficeFormatDeclaration {
         return msoProgId;
     }
 
+    /** The local name of the document's root element, or null when it has no readable one. */
+    String xmlRootElement() {
+        readXmlProlog();
+        return xmlRootElement;
+    }
+
     /** The {@code office:mimetype} of a flat ODF root element, or null. */
     String odfMimeType() {
         readXmlProlog();
@@ -154,7 +167,7 @@ class OfficeFormatDeclaration {
     }
 
     private boolean readFlatBiff() {
-        byte[] head = head(FLAT_BIFF_HEADER_LENGTH);
+        byte[] head = head(FLAT_BIFF_HEAD_LENGTH);
         if (head.length < FLAT_BIFF_HEADER_LENGTH) {
             return false;
         }
@@ -170,8 +183,19 @@ class OfficeFormatDeclaration {
                 || !FLAT_BIFF_SUBSTREAMS.contains(substream)) {
             return false;
         }
+        // The record that must follow the BOF, so eight chosen bytes in front of arbitrary content
+        // cannot claim to be a workbook: a substream always carries at least its EOF record, and
+        // every id BIFF defines is below 0x0900, which no text or markup byte pair reaches.
+        int next = 4 + length;
+        if (next + 4 > head.length) {
+            return false;
+        }
+        int nextRecord = unsignedShort(head, next);
+        if (nextRecord == 0 || nextRecord > MAX_BIFF_RECORD_ID) {
+            return false;
+        }
         try {
-            return 4L + length <= Files.size(path);
+            return next + 4L + unsignedShort(head, next + 2) <= Files.size(path);
         } catch (IOException e) {
             return false;
         }
@@ -182,23 +206,26 @@ class OfficeFormatDeclaration {
      * reachable through an entity is unreadable rather than read one way here and another by
      * LibreOffice. That also keeps XXE and expansion attacks out of a reader that runs on every
      * upload of a declaring type.
+     *
+     * <p>Streamed rather than read into a buffer first, so what the reader touches is what it needs
+     * to reach the root element and not a fixed prefix: a document whose root element sat past the
+     * end of that prefix was a parse error, and so a rejected upload, however small the file was.
      */
     private void readXmlProlog() {
         if (xmlPrologRead) {
             return;
         }
         xmlPrologRead = true;
-        byte[] prolog = head(XML_PROLOG_LIMIT);
-        if (prolog.length == 0) {
-            return;
-        }
+        BoundedInputStream.Builder bounded = BoundedInputStream.builder();
         XMLEventReader reader = null;
-        try {
+        try (InputStream in = Files.newInputStream(path)) {
+            bounded.setInputStream(in);
+            bounded.setMaxCount(XML_PROLOG_LIMIT);
             XMLInputFactory factory = XMLInputFactory.newInstance();
             factory.setProperty(XMLInputFactory.SUPPORT_DTD, false);
             factory.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, false);
             factory.setProperty(XMLInputFactory.IS_COALESCING, false);
-            reader = factory.createXMLEventReader(new ByteArrayInputStream(prolog));
+            reader = factory.createXMLEventReader(bounded.get());
             while (reader.hasNext()) {
                 XMLEvent event = reader.nextEvent();
                 if (event.isProcessingInstruction()) {
@@ -207,7 +234,9 @@ class OfficeFormatDeclaration {
                         msoProgId = progId(instruction.getData());
                     }
                 } else if (event.isStartElement()) {
-                    odfMimeType = odfMimeType(event.asStartElement());
+                    StartElement root = event.asStartElement();
+                    xmlRootElement = root.getName().getLocalPart();
+                    odfMimeType = odfMimeType(root);
                     return;
                 }
             }

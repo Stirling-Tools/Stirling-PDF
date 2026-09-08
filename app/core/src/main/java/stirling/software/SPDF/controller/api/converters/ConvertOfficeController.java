@@ -2,11 +2,16 @@ package stirling.software.SPDF.controller.api.converters;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.charset.CharacterCodingException;
+import java.nio.charset.Charset;
+import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
@@ -48,6 +53,20 @@ import stirling.software.common.util.WebResponseUtils;
 @RequiredArgsConstructor
 @Slf4j
 public class ConvertOfficeController {
+
+    private static final Charset WINDOWS_1252 = Charset.forName("windows-1252");
+
+    private record ByteOrderMark(byte[] mark, Charset charset) {}
+
+    private static final List<ByteOrderMark> BYTE_ORDER_MARKS =
+            List.of(
+                    new ByteOrderMark(
+                            new byte[] {(byte) 0xFF, (byte) 0xFE}, StandardCharsets.UTF_16LE),
+                    new ByteOrderMark(
+                            new byte[] {(byte) 0xFE, (byte) 0xFF}, StandardCharsets.UTF_16BE),
+                    new ByteOrderMark(
+                            new byte[] {(byte) 0xEF, (byte) 0xBB, (byte) 0xBF},
+                            StandardCharsets.UTF_8));
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final RuntimePathConfig runtimePathConfig;
@@ -242,17 +261,53 @@ public class ConvertOfficeController {
     }
 
     private void sanitizeHtmlInPlace(Path inputPath) throws IOException {
-        String htmlContent = Files.readString(inputPath, StandardCharsets.UTF_8);
+        String htmlContent = readMarkup(inputPath);
         Files.writeString(
                 inputPath, customHtmlSanitizer.sanitize(htmlContent), StandardCharsets.UTF_8);
     }
 
     private void sanitizeMarkdownInPlace(Path inputPath) throws IOException {
-        String markdown = Files.readString(inputPath, StandardCharsets.UTF_8);
+        String markdown = readMarkup(inputPath);
         Files.writeString(
                 inputPath,
                 MarkdownSanitizer.sanitize(markdown, customHtmlSanitizer),
                 StandardCharsets.UTF_8);
+    }
+
+    /**
+     * Reads a markup upload as text without ever refusing its bytes. A legacy-encoded page is one
+     * of the commonest things this endpoint is handed, and {@code Files.readString} reports
+     * malformed input rather than substituting, so it turns a Windows-1252 apostrophe into a 500.
+     * The fallback is Windows-1252 because that is what a browser and LibreOffice both assume for
+     * markup that declares nothing, and it decodes every byte, so this cannot throw.
+     */
+    private static String readMarkup(Path inputPath) throws IOException {
+        byte[] bytes = Files.readAllBytes(inputPath);
+        for (ByteOrderMark bom : BYTE_ORDER_MARKS) {
+            if (startsWith(bytes, bom.mark())) {
+                int length = bom.mark().length;
+                return new String(bytes, length, bytes.length - length, bom.charset());
+            }
+        }
+        return new String(bytes, isUtf8(bytes) ? StandardCharsets.UTF_8 : WINDOWS_1252);
+    }
+
+    private static boolean startsWith(byte[] bytes, byte[] prefix) {
+        return bytes.length >= prefix.length
+                && Arrays.equals(bytes, 0, prefix.length, prefix, 0, prefix.length);
+    }
+
+    private static boolean isUtf8(byte[] bytes) {
+        try {
+            StandardCharsets.UTF_8
+                    .newDecoder()
+                    .onMalformedInput(CodingErrorAction.REPORT)
+                    .onUnmappableCharacter(CodingErrorAction.REPORT)
+                    .decode(ByteBuffer.wrap(bytes));
+            return true;
+        } catch (CharacterCodingException e) {
+            return false;
+        }
     }
 
     private static IllegalArgumentException invalidContent() {

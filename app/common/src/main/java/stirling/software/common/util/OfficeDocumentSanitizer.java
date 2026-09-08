@@ -153,6 +153,15 @@ public class OfficeDocumentSanitizer {
                 }
                 zipOut.closeEntry();
             }
+        } catch (UnsanitizableDocumentException e) {
+            throw e;
+        } catch (IOException e) {
+            // Whatever the ZIP machinery objects to is a property of an attacker-chosen archive,
+            // and its complaint names the entry: a repeated name, which readers disagree about,
+            // arrives here as ZipException("duplicate entry: …"). Refuse it under the fixed
+            // message rather than reflecting the name into the response.
+            log.warn("ZIP package could not be rewritten: {}", e.getMessage());
+            throw new UnsanitizableDocumentException();
         }
         // A container whose entries we cannot walk from offset 0 (bytes prepended ahead of the
         // first local header) would leave every part unsanitized, so reject rather than emit it.
@@ -614,7 +623,13 @@ public class OfficeDocumentSanitizer {
                 || lower.endsWith(":background");
     }
 
-    // Flat XML: anything but a #fragment or data: URI points outside the document and is stripped.
+    /**
+     * Flat XML: anything but a #fragment, a data: URI or a {@code wordml:} name points outside the
+     * document and is stripped. {@code wordml://Image1} is how MS Word 2003 XML addresses a picture
+     * it carries itself, in the {@code <w:binData w:name>} beside it, and it can resolve to nothing
+     * else — there is no {@code wordml} protocol handler to reach the network with. Stripping it
+     * cost every picture in every WordML upload.
+     */
     private static boolean isOutsideDocumentRef(String url) {
         if (url == null) {
             return false;
@@ -624,7 +639,7 @@ public class OfficeDocumentSanitizer {
             return false;
         }
         String lower = trimmed.toLowerCase(Locale.ROOT);
-        return !(lower.startsWith("#") || lower.startsWith("data:"));
+        return !(lower.startsWith("#") || lower.startsWith("data:") || lower.startsWith("wordml:"));
     }
 
     private boolean isExternalUrl(String url) {

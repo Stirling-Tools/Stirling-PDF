@@ -3,6 +3,7 @@ package stirling.software.SPDF.controller.api.converters;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
@@ -23,6 +24,13 @@ import stirling.software.common.util.OfficeDocumentSanitizer;
  * it unhandled. So a Word binary cannot be treated as an opaque pass-through the way {@code .rtf}
  * can.
  *
+ * <p>What is fetched is decided by the field type in the WW8 field tables, which the instruction
+ * text does not have to agree with: an instruction reading {@code MERGEFIELD} or {@code HYPERLINK}
+ * is fetched all the same when the table says {@code INCLUDEPICTURE}. So the reference, not the
+ * keyword, is what this blanks — an instruction carrying an external reference goes whatever it
+ * calls itself, which costs a genuine {@code HYPERLINK} its target while leaving the display text
+ * the field result holds.
+ *
  * <p>The instruction is overwritten with spaces rather than removed, so every byte offset the FIB
  * records into this stream still lands where it did, and the field becomes one whose type the
  * importer does not recognise.
@@ -38,9 +46,9 @@ final class WordBinarySanitizer {
     private static final int FIELD_END = 0x15;
 
     /**
-     * The field instructions whose argument the importer resolves. {@code HYPERLINK} is absent
-     * deliberately: it becomes a link in the output rather than a fetch, exactly as an {@code <a
-     * href>} does on the HTML path.
+     * Field instructions blanked on the keyword alone, so an argument naming no scheme — a bare
+     * relative path, which the importer resolves against the directory the upload is staged in —
+     * goes with them.
      */
     private static final Set<String> RESOLVING_FIELDS =
             Set.of(
@@ -54,6 +62,21 @@ final class WordBinarySanitizer {
                     "HTMLCONTROL",
                     "SUBSCRIBER");
 
+    /** Schemes the importer resolves, matched anywhere in an instruction whatever it is named. */
+    private static final List<String> EXTERNAL_SCHEMES =
+            List.of(
+                    "http://",
+                    "https://",
+                    "ftp://",
+                    "ftps://",
+                    "file:",
+                    "smb:",
+                    "webdav:",
+                    "davs:",
+                    "dav:",
+                    "vnd.sun.star.",
+                    "\\\\");
+
     private static final int MAX_KEYWORD_LENGTH = 32;
 
     // No genuine field instruction runs anything like this long; the cap bounds the rewrite a
@@ -62,6 +85,9 @@ final class WordBinarySanitizer {
 
     // WW8 stores a text run either compressed to one byte per character or as UTF-16LE.
     private static final int[] CHARACTER_WIDTHS = {1, 2};
+
+    // Stands in for a UTF-16 character no keyword or reference can be written with.
+    private static final char NON_ASCII = '\uFFFF';
 
     private WordBinarySanitizer() {}
 
@@ -105,21 +131,12 @@ final class WordBinarySanitizer {
             if (!isCharacter(stream, i, characterWidth, FIELD_BEGIN)) {
                 continue;
             }
-            int keywordStart = i + characterWidth;
-            while (isCharacter(stream, keywordStart, characterWidth, ' ')) {
-                keywordStart += characterWidth;
-            }
-            if (!RESOLVING_FIELDS.contains(keyword(stream, keywordStart, characterWidth))) {
+            int start = i + characterWidth;
+            int end = instructionEnd(stream, i, characterWidth);
+            if (end < 0 || !isResolving(instruction(stream, start, end, characterWidth))) {
                 continue;
             }
-            int end = keywordStart;
-            int limit = Math.min(stream.length, i + MAX_INSTRUCTION_CHARS * characterWidth);
-            while (end + characterWidth <= limit
-                    && !isCharacter(stream, end, characterWidth, FIELD_SEPARATOR)
-                    && !isCharacter(stream, end, characterWidth, FIELD_END)) {
-                end += characterWidth;
-            }
-            for (int at = i + characterWidth; at < end; at += characterWidth) {
+            for (int at = start; at < end; at += characterWidth) {
                 stream[at] = ' ';
                 if (characterWidth == 2) {
                     stream[at + 1] = 0;
@@ -131,21 +148,87 @@ final class WordBinarySanitizer {
         return blanked;
     }
 
-    private static String keyword(byte[] stream, int offset, int characterWidth) {
-        StringBuilder keyword = new StringBuilder();
-        for (int at = offset;
-                keyword.length() < MAX_KEYWORD_LENGTH && at + characterWidth <= stream.length;
-                at += characterWidth) {
-            if (characterWidth == 2 && stream[at + 1] != 0) {
-                break;
+    /**
+     * Where the instruction that begins at {@code fieldBegin} ends, or -1 when no field character
+     * closes it within {@link #MAX_INSTRUCTION_CHARS}. Unterminated means this is not a field: a
+     * stream holds the begin, separator and end characters at the positions its field tables
+     * record, and requiring all three keeps the rewrite off the binary that surrounds the text.
+     */
+    private static int instructionEnd(byte[] stream, int fieldBegin, int characterWidth) {
+        int limit = Math.min(stream.length, fieldBegin + MAX_INSTRUCTION_CHARS * characterWidth);
+        for (int end = fieldBegin + characterWidth; end + characterWidth <= limit; ) {
+            if (isCharacter(stream, end, characterWidth, FIELD_SEPARATOR)
+                    || isCharacter(stream, end, characterWidth, FIELD_END)) {
+                return end;
             }
-            char character = (char) (stream[at] & 0xFF);
-            if (character < 'A' || character > 'z' || (character > 'Z' && character < 'a')) {
-                break;
-            }
-            keyword.append(character);
+            end += characterWidth;
         }
-        return keyword.toString().toUpperCase(Locale.ROOT);
+        return -1;
+    }
+
+    private static String instruction(byte[] stream, int start, int end, int characterWidth) {
+        StringBuilder instruction = new StringBuilder((end - start) / characterWidth);
+        for (int at = start; at + characterWidth <= end; at += characterWidth) {
+            boolean ascii = characterWidth == 1 || stream[at + 1] == 0;
+            instruction.append(ascii ? (char) (stream[at] & 0xFF) : NON_ASCII);
+        }
+        return instruction.toString();
+    }
+
+    private static boolean isResolving(String instruction) {
+        return RESOLVING_FIELDS.contains(keyword(instruction))
+                || namesAnExternalReference(instruction);
+    }
+
+    /** The instruction's leading name, wherever it starts: WW8 does not require a single space. */
+    private static String keyword(String instruction) {
+        int start = 0;
+        while (start < instruction.length() && !isAsciiLetter(instruction.charAt(start))) {
+            start++;
+        }
+        int end = start;
+        while (end < instruction.length()
+                && end - start < MAX_KEYWORD_LENGTH
+                && isAsciiLetter(instruction.charAt(end))) {
+            end++;
+        }
+        return instruction.substring(start, end).toUpperCase(Locale.ROOT);
+    }
+
+    private static boolean namesAnExternalReference(String instruction) {
+        String lower = instruction.toLowerCase(Locale.ROOT);
+        for (String scheme : EXTERNAL_SCHEMES) {
+            if (lower.contains(scheme)) {
+                return true;
+            }
+        }
+        // A path carries no scheme and is resolved against the directory the upload is staged in,
+        // so traversal out of that directory is a reference like any other.
+        return lower.contains("../") || lower.contains("..\\") || namesAPath(lower);
+    }
+
+    private static boolean namesAPath(String lower) {
+        for (int at = 0; at + 2 < lower.length(); at++) {
+            char character = lower.charAt(at);
+            if (character == '/' && (at == 0 || isTokenBreak(lower.charAt(at - 1)))) {
+                return true;
+            }
+            char separator = lower.charAt(at + 2);
+            if (isAsciiLetter(character)
+                    && lower.charAt(at + 1) == ':'
+                    && (separator == '\\' || separator == '/')) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean isTokenBreak(char character) {
+        return character == ' ' || character == '"' || character == '\t' || character == '\'';
+    }
+
+    private static boolean isAsciiLetter(char character) {
+        return (character >= 'A' && character <= 'Z') || (character >= 'a' && character <= 'z');
     }
 
     private static boolean isCharacter(byte[] stream, int offset, int characterWidth, int value) {

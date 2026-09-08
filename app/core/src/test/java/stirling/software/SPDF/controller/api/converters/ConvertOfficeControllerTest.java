@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -28,6 +29,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -664,6 +666,45 @@ class ConvertOfficeControllerTest {
             assertThat(staged).contains("KEEPME");
             assertThat(staged).doesNotContain("127.0.0.1");
             Mockito.verify(officeDocumentSanitizer, Mockito.never()).sanitize(any(byte[].class));
+        }
+
+        @ParameterizedTest(name = "{0} in {1}")
+        @CsvSource({
+            "notes.md,windows-1252",
+            "notes.md,ISO-8859-1",
+            "page.html,windows-1252",
+            "page.htm,ISO-8859-1"
+        })
+        @DisplayName("markup in a legacy encoding is decoded, not refused")
+        void legacyEncodedMarkupIsDecoded(String filename, String charset) throws Exception {
+            when(officeDocumentSanitizer.isSanitizationEnabled()).thenReturn(true);
+            when(customHtmlSanitizer.sanitize(anyString())).thenAnswer(inv -> inv.getArgument(0));
+            byte[] markup = "caf\u00e9 r\u00e9sum\u00e9\n".getBytes(Charset.forName(charset));
+
+            byte[] staged = stagedInput(upload(filename, markup));
+
+            assertThat(new String(staged, StandardCharsets.UTF_8))
+                    .contains("caf\u00e9 r\u00e9sum\u00e9");
+        }
+
+        @ParameterizedTest(name = "{0}")
+        @ValueSource(strings = {"UTF-16LE", "UTF-16BE", "UTF-8"})
+        @DisplayName("a byte order mark says which encoding the markup is in")
+        void markupWithAByteOrderMarkIsDecoded(String charset) throws Exception {
+            when(officeDocumentSanitizer.isSanitizationEnabled()).thenReturn(true);
+            byte[] mark =
+                    switch (charset) {
+                        case "UTF-16LE" -> new byte[] {(byte) 0xFF, (byte) 0xFE};
+                        case "UTF-16BE" -> new byte[] {(byte) 0xFE, (byte) 0xFF};
+                        default -> new byte[] {(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
+                    };
+            byte[] markup =
+                    concat(mark, "caf\u00e9 r\u00e9sum\u00e9\n".getBytes(Charset.forName(charset)));
+
+            byte[] staged = stagedInput(upload("notes.md", markup));
+
+            assertThat(new String(staged, StandardCharsets.UTF_8))
+                    .contains("caf\u00e9 r\u00e9sum\u00e9");
         }
 
         @Test
