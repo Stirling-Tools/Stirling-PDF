@@ -24,6 +24,7 @@ export interface Provider {
   /** Which settings page lists it; defaults to "signin" when unset. */
   category?: ProviderCategory;
   name: string;
+  /** A registry icon name, or a URL to an image (ProviderCard branches on it). */
   icon: string;
   type: ProviderType;
   scope: string; // Summary of what this provider does
@@ -153,7 +154,7 @@ const useKeycloakProvider = (): Provider => {
   return {
     id: "keycloak",
     name: "Keycloak",
-    icon: "key-rounded",
+    icon: "key",
     type: "oauth2",
     scope: t("provider.oauth2.keycloak.scope", "SSO"),
     businessTier: false,
@@ -224,7 +225,7 @@ const useGenericOAuth2Provider = (): Provider => {
   return {
     id: "oauth2-generic",
     name: t("provider.oauth2.generic.name", "Generic OAuth2"),
-    icon: "link-rounded",
+    icon: "link",
     type: "oauth2",
     scope: t("provider.oauth2.generic.scope", "SSO"),
     businessTier: false,
@@ -342,7 +343,7 @@ const useSMTPProvider = (): Provider => {
     id: "smtp",
     category: "integration",
     name: t("provider.smtp.name", "SMTP Mail"),
-    icon: "mail-rounded",
+    icon: "mail",
     type: "oauth2",
     scope: t("provider.smtp.scope", "Email Notifications"),
     documentationUrl:
@@ -417,7 +418,7 @@ const useTelegramProvider = (): Provider => {
     id: "telegram",
     category: "integration",
     name: t("admin.settings.telegram.title", "Telegram Bot"),
-    icon: "send-rounded",
+    icon: "send",
     type: "telegram",
     scope: t(
       "admin.settings.telegram.description",
@@ -670,7 +671,7 @@ const useSAML2Provider = (): Provider => {
   return {
     id: "saml2",
     name: t("provider.saml2.name", "SAML2"),
-    icon: "verified-user-rounded",
+    icon: "shield-check",
     type: "saml2",
     scope: t("provider.saml2.scope", "SSO (SAML)"),
     businessTier: true,

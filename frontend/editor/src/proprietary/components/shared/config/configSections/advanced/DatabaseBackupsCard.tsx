@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Icon } from "@app/ui/Icon";
 import { isAxiosError } from "axios";
 import { useTranslation } from "react-i18next";
 import {
@@ -20,7 +21,6 @@ import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { alert } from "@app/components/toast";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import databaseManagementService, {
   DatabaseBackupFile,
 } from "@app/services/databaseManagementService";
@@ -315,7 +315,7 @@ export function DatabaseBackupsCard({
       <Stack gap="md">
         {!isEmbeddedH2 && (
           <Alert
-            icon={<LocalIcon icon="info" width="1.2rem" height="1.2rem" />}
+            icon={<Icon name="info" size="1.2rem" />}
             color="yellow"
             radius="md"
           >
@@ -338,7 +338,7 @@ export function DatabaseBackupsCard({
             <Stack gap="md">
               <Group justify="space-between" align="center">
                 <Group gap="xs">
-                  <LocalIcon icon="backup" width="1.4rem" height="1.4rem" />
+                  <Icon name="cloud-upload" size="1.4rem" />
                   <Text fw={600}>
                     {t(
                       "admin.settings.database.manageBackups",
@@ -358,18 +358,14 @@ export function DatabaseBackupsCard({
                 <Group gap="xs">
                   <Button
                     variant="secondary"
-                    leftSection={
-                      <LocalIcon icon="refresh" width="1rem" height="1rem" />
-                    }
+                    leftSection={<Icon name="refresh-cw" size="1rem" />}
                     onClick={loadBackupData}
                     disabled={!loginEnabled || !isEmbeddedH2}
                   >
                     {t("admin.settings.database.refresh", "Refresh")}
                   </Button>
                   <Button
-                    leftSection={
-                      <LocalIcon icon="upload" width="1rem" height="1rem" />
-                    }
+                    leftSection={<Icon name="upload" size="1rem" />}
                     onClick={handleCreateBackup}
                     loading={creatingBackup}
                     disabled={!loginEnabled || !isEmbeddedH2}
@@ -400,13 +396,7 @@ export function DatabaseBackupsCard({
                     onClick={handleUploadImport}
                     loading={importingUpload}
                     disabled={!loginEnabled || !isEmbeddedH2}
-                    leftSection={
-                      <LocalIcon
-                        icon="play-circle"
-                        width="1rem"
-                        height="1rem"
-                      />
-                    }
+                    leftSection={<Icon name="circle-play" size="1rem" />}
                   >
                     {t(
                       "admin.settings.database.importFromUpload",
@@ -481,11 +471,7 @@ export function DatabaseBackupsCard({
                                 {downloadingFile === backup.fileName ? (
                                   <Loader size="xs" />
                                 ) : (
-                                  <LocalIcon
-                                    icon="download"
-                                    width="1rem"
-                                    height="1rem"
-                                  />
+                                  <Icon name="download" size="1rem" />
                                 )}
                               </ActionIcon>
                             </Tooltip>
@@ -510,11 +496,7 @@ export function DatabaseBackupsCard({
                                 {importingBackupFile === backup.fileName ? (
                                   <Loader size="xs" />
                                 ) : (
-                                  <LocalIcon
-                                    icon="backup"
-                                    width="1rem"
-                                    height="1rem"
-                                  />
+                                  <Icon name="cloud-upload" size="1rem" />
                                 )}
                               </ActionIcon>
                             </Tooltip>
@@ -540,11 +522,7 @@ export function DatabaseBackupsCard({
                                 {deletingFile === backup.fileName ? (
                                   <Loader size="xs" />
                                 ) : (
-                                  <LocalIcon
-                                    icon="delete"
-                                    width="1rem"
-                                    height="1rem"
-                                  />
+                                  <Icon name="trash" size="1rem" />
                                 )}
                               </ActionIcon>
                             </Tooltip>
@@ -575,7 +553,7 @@ export function DatabaseBackupsCard({
           <Alert
             color="red"
             variant="light"
-            icon={<LocalIcon icon="warning" width="1.2rem" height="1.2rem" />}
+            icon={<Icon name="triangle-alert" size="1.2rem" />}
           >
             <Text fw={600}>
               {t(
@@ -644,7 +622,7 @@ export function DatabaseBackupsCard({
           <Alert
             color="red"
             variant="light"
-            icon={<LocalIcon icon="warning" width="1.2rem" height="1.2rem" />}
+            icon={<Icon name="triangle-alert" size="1.2rem" />}
           >
             <Text fw={600}>
               {t(
