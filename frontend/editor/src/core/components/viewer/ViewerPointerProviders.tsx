@@ -5,7 +5,10 @@ import {
   useInteractionManagerCapability,
 } from "@embedpdf/plugin-interaction-manager/react";
 
-const POINTER_MODE = "pointerMode";
+// Must stay equal to the interaction manager's own default mode id: when it matches,
+// data-viewer-touch-scroll is "on" and the touch-action rule in core/styles/theme.css
+// lets a one-finger drag scroll the document. Pinned by viewerPanConfig.test.ts.
+export const POINTER_MODE = "pointerMode";
 
 function useActiveInteractionMode(documentId: string): string | null {
   const { provides: interactionManager } = useInteractionManagerCapability();

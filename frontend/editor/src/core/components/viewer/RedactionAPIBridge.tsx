@@ -5,6 +5,7 @@ import { useRedaction } from "@app/contexts/RedactionContext";
 import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
 import { useAnnotationCapability } from "@embedpdf/plugin-annotation/react";
 import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
+import { leaveRedactionMode } from "@app/components/viewer/leaveRedactionMode";
 
 /**
  * Bridges between the EmbedPDF redaction plugin and the Stirling-PDF RedactionContext.
@@ -47,11 +48,7 @@ function RedactionAPIBridgeInner({ documentId }: { documentId: string }) {
   // selection for the next document.
   useEffect(() => {
     return () => {
-      try {
-        redactionProvides?.endRedact();
-      } catch {
-        /* document already torn down */
-      }
+      leaveRedactionMode(redactionProvides);
     };
   }, [redactionProvides]);
 
