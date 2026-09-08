@@ -33,6 +33,7 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import stirling.software.SPDF.pdf.redaction.RedactionVerificationFailedException;
 import stirling.software.common.util.ExceptionUtils.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -297,6 +298,26 @@ class GlobalExceptionHandlerTest {
         RuntimeException ex = new RuntimeException("wrapped", cause);
         ResponseEntity<ProblemDetail> resp = handler.handleRuntimeException(ex, request);
         assertEquals(HttpStatus.BAD_REQUEST, resp.getStatusCode());
+    }
+
+    @Test
+    void handleRedactionVerificationFailed_returns_422_without_echoing_the_target() {
+        RedactionVerificationFailedException ex =
+                new RedactionVerificationFailedException(
+                        "Redacted text still extractable (target #2)");
+        ResponseEntity<ProblemDetail> resp = handler.handleRedactionVerificationFailed(ex, request);
+        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, resp.getStatusCode());
+        assertEquals("/errors/redaction-unverifiable", String.valueOf(resp.getBody().getType()));
+        assertEquals("Redacted text still extractable (target #2)", resp.getBody().getDetail());
+    }
+
+    @Test
+    void handleRuntimeException_wrapping_RedactionVerificationFailed_returns_422() {
+        RedactionVerificationFailedException cause =
+                new RedactionVerificationFailedException("target #1 survived");
+        RuntimeException ex = new RuntimeException("wrapped", cause);
+        ResponseEntity<ProblemDetail> resp = handler.handleRuntimeException(ex, request);
+        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, resp.getStatusCode());
     }
 
     @Test

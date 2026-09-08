@@ -157,10 +157,9 @@ class RedactExecuteService {
                 try {
                     RedactionAssurance.scrubAndVerify(
                             out.getFile().toPath(),
-                            RedactionAssurance.targetsFor(textValues, false, false));
-                    RedactionAssurance.scrubAndVerify(
-                            out.getFile().toPath(),
-                            RedactionAssurance.targetsFor(regexPatterns, true, false));
+                            RedactionAssurance.merge(
+                                    RedactionAssurance.targetsFor(textValues, false, false),
+                                    RedactionAssurance.targetsFor(regexPatterns, true, false)));
                 } catch (Exception e) {
                     out.close();
                     throw e;

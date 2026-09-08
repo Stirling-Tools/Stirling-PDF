@@ -1,6 +1,8 @@
 package stirling.software.SPDF.pdf.redaction;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -94,35 +96,77 @@ public final class RedactionVerifier {
      * Throws {@link RedactionVerificationFailedException} (mapped to HTTP 422) on any survivor.
      */
     public static void verify(byte[] bytes, Set<String> literalTargets, List<Pattern> patterns) {
-        if ((literalTargets == null || literalTargets.isEmpty())
-                && (patterns == null || patterns.isEmpty())) {
+        if (noTargets(literalTargets, patterns)) {
             return;
         }
         try (DeadlineCharSequence.BudgetScope scope = DeadlineCharSequence.armSharedBudget()) {
-            // PDFBox pass, blind to /ActualText so a benign override can't mask real glyphs.
             boolean needNativePass;
             try (PDDocument reopened = Loader.loadPDF(bytes)) {
-                assertNoTarget(extractText(reopened), literalTargets, patterns);
-                needNativePass = documentHasUnreliableFont(reopened);
+                needNativePass = pdfBoxPass(reopened, literalTargets, patterns);
             } catch (IOException e) {
                 throw new RedactionVerificationFailedException(
                         "Failed to reopen redacted PDF for verification", e);
             }
-            // Additive producer-independent pass: native PDFium sees glyphs PDFBox may miss
-            // (fonts with no ToUnicode).
             if (needNativePass) {
-                String nativeText = extractTextJPDFium(bytes);
-                if (nativeText == null) {
-                    // Required independent pass could not run (native unavailable, unreadable
-                    // page, or doc over the size guard); fail closed.
-                    throw new RedactionVerificationFailedException(
-                            "Independent native verification could not run for a document whose "
-                                    + "fonts PDFBox cannot reliably extract; cannot confirm "
-                                    + "removal");
-                }
-                assertNoTarget(nativeText, literalTargets, patterns);
+                nativePass(extractTextJPDFium(bytes, bytes.length), literalTargets, patterns);
             }
         }
+    }
+
+    /**
+     * Fail-closed check against an already-open document, so the caller never has to hold the whole
+     * PDF in heap. {@code document} MUST be the document parsed from {@code pdf}: the native pass
+     * reads the file independently, and a mismatch would verify the wrong bytes. The caller keeps
+     * ownership of {@code document}.
+     */
+    public static void verify(
+            Path pdf, PDDocument document, Set<String> literalTargets, List<Pattern> patterns)
+            throws IOException {
+        if (noTargets(literalTargets, patterns)) {
+            return;
+        }
+        try (DeadlineCharSequence.BudgetScope scope = DeadlineCharSequence.armSharedBudget()) {
+            if (pdfBoxPass(document, literalTargets, patterns)) {
+                nativePass(extractTextJPDFium(pdf, Files.size(pdf)), literalTargets, patterns);
+            }
+        }
+    }
+
+    private static boolean noTargets(Set<String> literalTargets, List<Pattern> patterns) {
+        return (literalTargets == null || literalTargets.isEmpty())
+                && (patterns == null || patterns.isEmpty());
+    }
+
+    /**
+     * PDFBox pass, blind to /ActualText so a benign override can't mask real glyphs. Returns true
+     * when the additive native pass is still needed to prove removal.
+     */
+    private static boolean pdfBoxPass(
+            PDDocument document, Set<String> literalTargets, List<Pattern> patterns) {
+        String extracted;
+        try {
+            extracted = extractText(document);
+        } catch (IOException e) {
+            throw new RedactionVerificationFailedException(
+                    "Failed to read redacted PDF for verification", e);
+        }
+        assertNoTarget(extracted, literalTargets, patterns);
+        return documentHasUnreliableFont(document);
+    }
+
+    /**
+     * Additive producer-independent pass: native PDFium sees glyphs PDFBox may miss (fonts with no
+     * ToUnicode). A null {@code nativeText} means the pass could not run (native unavailable,
+     * unreadable page, or doc over the size guard), which fails closed.
+     */
+    private static void nativePass(
+            String nativeText, Set<String> literalTargets, List<Pattern> patterns) {
+        if (nativeText == null) {
+            throw new RedactionVerificationFailedException(
+                    "Independent native verification could not run for a document whose fonts "
+                            + "PDFBox cannot reliably extract; cannot confirm removal");
+        }
+        assertNoTarget(nativeText, literalTargets, patterns);
     }
 
     /**
@@ -264,25 +308,42 @@ public final class RedactionVerifier {
     /**
      * Independent native (PDFium) extraction; null if the binding is unavailable (additive only).
      */
-    private static String extractTextJPDFium(byte[] bytes) {
-        if (!jpdfiumAvailable || bytes.length > MAX_JPDFIUM_VERIFY_BYTES) {
+    private static String extractTextJPDFium(byte[] bytes, long size) {
+        if (!jpdfiumAvailable || size > MAX_JPDFIUM_VERIFY_BYTES) {
             return null;
         }
         try (PdfDocument doc = PdfDocument.open(bytes)) {
-            StringBuilder sb = new StringBuilder();
-            int n = doc.pageCount();
-            for (int i = 0; i < n; i++) {
-                String pageText = jpdfiumPlainText(doc, i);
-                if (pageText == null) {
-                    return null; // one unreadable page = the whole pass proves nothing
-                }
-                sb.append(pageText).append('\n');
-            }
-            return sb.toString();
+            return jpdfiumPlainText(doc);
         } catch (RuntimeException | Error e) {
             onJpdfiumFailure(e);
             return null;
         }
+    }
+
+    /** File-backed variant, so a caller holding only a path never materialises the document. */
+    private static String extractTextJPDFium(Path pdf, long size) {
+        if (!jpdfiumAvailable || size > MAX_JPDFIUM_VERIFY_BYTES) {
+            return null;
+        }
+        try (PdfDocument doc = PdfDocument.open(pdf)) {
+            return jpdfiumPlainText(doc);
+        } catch (RuntimeException | Error e) {
+            onJpdfiumFailure(e);
+            return null;
+        }
+    }
+
+    private static String jpdfiumPlainText(PdfDocument doc) {
+        StringBuilder sb = new StringBuilder();
+        int n = doc.pageCount();
+        for (int i = 0; i < n; i++) {
+            String pageText = jpdfiumPlainText(doc, i);
+            if (pageText == null) {
+                return null; // one unreadable page = the whole pass proves nothing
+            }
+            sb.append(pageText).append('\n');
+        }
+        return sb.toString();
     }
 
     /** Plain text of one page; null (NOT empty) when the page can't be read, to fail closed. */

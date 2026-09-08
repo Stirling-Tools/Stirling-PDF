@@ -1,11 +1,10 @@
 package stirling.software.SPDF.pdf.redaction;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -13,6 +12,8 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.io.IOUtils;
+import org.apache.pdfbox.io.RandomAccessReadBufferedFile;
 import org.apache.pdfbox.pdmodel.PDDocument;
 
 import lombok.extern.slf4j.Slf4j;
@@ -62,6 +63,19 @@ public final class RedactionAssurance {
         return new Targets(new LinkedHashSet<>(cleaned), List.of());
     }
 
+    /**
+     * Union of two target sets, for a request that carries literal terms and regex patterns
+     * separately. Each term keeps the kind it was built with, so one scrub-and-verify round trip
+     * covers both instead of one per kind.
+     */
+    public static Targets merge(Targets first, Targets second) {
+        Set<String> literals = new LinkedHashSet<>(first.literals());
+        literals.addAll(second.literals());
+        List<Pattern> patterns = new ArrayList<>(first.patterns());
+        patterns.addAll(second.patterns());
+        return new Targets(literals, patterns);
+    }
+
     /** Build case-insensitive patterns from user input; an invalid regex fails the request. */
     public static List<Pattern> buildPatterns(
             List<String> rawEntries, boolean useRegex, boolean wholeWordSearch) {
@@ -69,7 +83,9 @@ public final class RedactionAssurance {
         if (rawEntries == null) {
             return patterns;
         }
+        int index = 0;
         for (String raw : rawEntries) {
+            index++;
             if (raw == null || raw.trim().isEmpty()) {
                 continue;
             }
@@ -83,48 +99,63 @@ public final class RedactionAssurance {
                 patterns.add(RegexPatternUtils.getInstance().createSearchPattern(core, true));
             } catch (PatternSyntaxException e) {
                 // Fail closed: silently dropping the pattern would return an unverified 200.
+                // Identify it by ordinal - echoing the term would put the secret in the response.
                 throw ExceptionUtils.createIllegalArgumentException(
-                        "error.redaction.invalid.regex", "Invalid regex pattern");
+                        "error.redaction.invalid.regex", "Invalid regex pattern #" + index);
             }
         }
         return patterns;
     }
 
-    /** Scrub carriers and verify the file in place; throws when removal cannot be proven. */
+    /**
+     * Scrub carriers and verify the file in place; throws when removal cannot be proven.
+     *
+     * <p>Stays file-to-file throughout: every parse streams off disk with a temp-file stream cache,
+     * and the scrubbed document is written to a sibling temp file that replaces {@code pdf} only
+     * once verification passes, so a failed verification leaves the input untouched. Buffering the
+     * document instead would cost several times the upload size in heap on every redaction, and
+     * {@link stirling.software.common.service.CustomPDFDocumentFactory} is deliberately not used
+     * here: it slurps files under its small-file threshold into a byte array and re-applies default
+     * metadata over the scrub.
+     */
     public static void scrubAndVerify(Path pdf, Targets targets) throws IOException {
         if (targets == null || targets.isEmpty()) {
             return;
         }
-        byte[] scrubbed = scrubAndVerify(Files.readAllBytes(pdf), targets);
-        Files.write(pdf, scrubbed);
+        Path scrubbed =
+                Files.createTempFile(
+                        pdf.toAbsolutePath().getParent(), "redaction-assurance", ".pdf");
+        try {
+            try (PDDocument document = loadFileBacked(pdf)) {
+                CatalogScrubber.scrub(document, targets.literals(), targets.patterns());
+                RedactionVerifier.warnAboutEmbeddedFontGlyphs(document);
+                document.save(scrubbed.toFile());
+            } catch (IOException e) {
+                // Cannot reopen our own output, so removal cannot be proven.
+                throw new RedactionVerificationFailedException(
+                        "Could not reopen the redacted PDF to verify removal", e);
+            }
+            // Re-parsed independently of the scrub, so the check sees the bytes the caller ships.
+            try (PDDocument reopened = loadFileBacked(scrubbed)) {
+                RedactionVerifier.verify(
+                        scrubbed, reopened, targets.literals(), targets.patterns());
+            } catch (IOException e) {
+                throw new RedactionVerificationFailedException(
+                        "Could not reopen the redacted PDF to verify removal", e);
+            }
+            Files.move(scrubbed, pdf, StandardCopyOption.REPLACE_EXISTING);
+        } finally {
+            Files.deleteIfExists(scrubbed);
+        }
     }
 
-    /** Scrub carriers and verify; returns the scrubbed bytes, or throws if a target survives. */
-    public static byte[] scrubAndVerify(byte[] pdfBytes, Targets targets) throws IOException {
-        if (targets == null || targets.isEmpty()) {
-            return pdfBytes;
+    private static PDDocument loadFileBacked(Path pdf) throws IOException {
+        RandomAccessReadBufferedFile source = new RandomAccessReadBufferedFile(pdf.toFile());
+        try {
+            return Loader.loadPDF(source, "", IOUtils.createTempFileOnlyStreamCache());
+        } catch (IOException | RuntimeException e) {
+            source.close();
+            throw e;
         }
-        byte[] scrubbed;
-        try (PDDocument document = Loader.loadPDF(pdfBytes)) {
-            CatalogScrubber.scrub(document, targets.literals(), targets.patterns());
-            RedactionVerifier.warnAboutEmbeddedFontGlyphs(document);
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            document.save(out);
-            scrubbed = out.toByteArray();
-        } catch (IOException e) {
-            // Cannot reopen our own output, so removal cannot be proven.
-            throw new RedactionVerificationFailedException(
-                    "Could not reopen the redacted PDF to verify removal", e);
-        }
-        RedactionVerifier.verify(scrubbed, targets.literals(), targets.patterns());
-        return scrubbed;
-    }
-
-    /** Convenience for callers that only have raw request terms. */
-    public static void scrubAndVerify(
-            Path pdf, List<String> terms, boolean useRegex, boolean wholeWord) throws IOException {
-        scrubAndVerify(
-                pdf,
-                targetsFor(terms == null ? Collections.emptyList() : terms, useRegex, wholeWord));
     }
 }
