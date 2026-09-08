@@ -88,6 +88,8 @@ class MetadataControllerTest {
         try {
             metadataController.metadata(request);
         } catch (Exception _) {
+            // WebResponseUtils.pdfDocToWebResponse fails without a servlet response;
+            // the verifies below cover the delete-all logic.
         }
 
         verify(mockInfo).getMetadataKeys();
@@ -115,6 +117,8 @@ class MetadataControllerTest {
         try {
             metadataController.metadata(request);
         } catch (Exception _) {
+            // WebResponseUtils.pdfDocToWebResponse fails without a servlet response;
+            // the verifies below cover the field-setting logic.
         }
 
         verify(mockInfo).setAuthor("TestAuthor");
