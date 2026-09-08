@@ -3,7 +3,11 @@ package stirling.software.proprietary.security.config;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -16,8 +20,14 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.web.server.ResponseStatusException;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.LicenseServiceInterface;
+import stirling.software.proprietary.security.configuration.ee.DynamicLicenseService;
+import stirling.software.proprietary.security.configuration.ee.KeygenLicenseVerifier;
+import stirling.software.proprietary.security.configuration.ee.KeygenLicenseVerifier.License;
+import stirling.software.proprietary.security.configuration.ee.LicenseKeyChecker;
 import stirling.software.proprietary.security.filter.EnterpriseEndpointFilter;
+import stirling.software.proprietary.service.UserLicenseSettingsService;
 
 /**
  * The licence gates read the live licence rather than the boolean captured at startup, so
@@ -150,6 +160,17 @@ class LicenceEndpointGateTest {
         }
 
         @Test
+        @DisplayName("a request outside actuator never reaches the licence service")
+        void nonActuatorRequestsSkipTheLicenceLookup() throws Exception {
+            LicenseServiceInterface service = mock(LicenseServiceInterface.class);
+
+            assertEquals(
+                    HttpStatus.OK.value(),
+                    filter(false, service, "/api/v1/general/merge-pdfs").getStatus());
+            verify(service, never()).isRunningProOrHigher();
+        }
+
+        @Test
         @DisplayName("health checks stay reachable while unlicensed")
         void healthChecksAlwaysPass() {
             assertDoesNotThrow(
@@ -158,6 +179,64 @@ class LicenceEndpointGateTest {
                                     HttpStatus.OK.value(),
                                     filter(false, licence(false, false), "/actuator/health")
                                             .getStatus()));
+        }
+    }
+
+    /**
+     * The live check is a read of the tier {@link LicenseKeyChecker} stored the last time the key
+     * changed. Keygen is contacted on that refresh, never on the request path, so no gate pays for
+     * a verification per request.
+     */
+    @Nested
+    class LiveLookup {
+
+        private static LicenseKeyChecker checkerFor(KeygenLicenseVerifier verifier) {
+            ApplicationProperties properties = new ApplicationProperties();
+            properties.getPremium().setEnabled(true);
+            properties.getPremium().setKey("a-key");
+            LicenseKeyChecker checker =
+                    new LicenseKeyChecker(
+                            verifier, properties, mock(UserLicenseSettingsService.class));
+            checker.init();
+            return checker;
+        }
+
+        @Test
+        @DisplayName("no gate re-verifies the key while serving a request")
+        void gatesReadTheStoredTier() throws Throwable {
+            KeygenLicenseVerifier verifier = mock(KeygenLicenseVerifier.class);
+            when(verifier.verifyLicense(anyString())).thenReturn(License.ENTERPRISE);
+            DynamicLicenseService service = new DynamicLicenseService(checkerFor(verifier));
+            MockHttpServletRequest request =
+                    new MockHttpServletRequest("GET", "/actuator/prometheus");
+            request.setRequestURI("/actuator/prometheus");
+            clearInvocations(verifier);
+
+            new EnterpriseEndpointFilter(false, service)
+                    .doFilter(request, new MockHttpServletResponse(), new MockFilterChain());
+            new PremiumEndpointAspect(false, service).checkPremiumAccess(proceedingJoinPoint());
+            new EnterpriseEndpointAspect(false, service)
+                    .checkEnterpriseAccess(proceedingJoinPoint());
+
+            verify(verifier, never()).verifyLicense(anyString());
+        }
+
+        @Test
+        @DisplayName("the stored tier is what a post-startup activation refreshes")
+        void resyncOpensTheGate() throws Throwable {
+            KeygenLicenseVerifier verifier = mock(KeygenLicenseVerifier.class);
+            when(verifier.verifyLicense(anyString())).thenReturn(License.NORMAL);
+            LicenseKeyChecker checker = checkerFor(verifier);
+            PremiumEndpointAspect aspect =
+                    new PremiumEndpointAspect(false, new DynamicLicenseService(checker));
+            ProceedingJoinPoint blocked = proceedingJoinPoint();
+
+            assertThrows(ResponseStatusException.class, () -> aspect.checkPremiumAccess(blocked));
+
+            when(verifier.verifyLicense(anyString())).thenReturn(License.SERVER);
+            checker.resyncLicense();
+
+            assertEquals("proceeded", aspect.checkPremiumAccess(proceedingJoinPoint()));
         }
     }
 }

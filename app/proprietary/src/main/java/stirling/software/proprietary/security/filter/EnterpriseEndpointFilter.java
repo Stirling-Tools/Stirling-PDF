@@ -38,7 +38,7 @@ public class EnterpriseEndpointFilter extends OncePerRequestFilter {
             HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        if (!isProOrHigher() && isPrometheusEndpointRequest(request)) {
+        if (isPrometheusEndpointRequest(request) && !isProOrHigher()) {
             // Allow only health checks to pass through for non-pro users
             String uri = request.getRequestURI();
 
