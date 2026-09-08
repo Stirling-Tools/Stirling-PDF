@@ -12,7 +12,7 @@ import {
 } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import { alert as showToast } from "@app/components/toast";
 import { useAuth } from "@app/auth/UseSession";
 import { accountService } from "@app/services/accountService";
@@ -368,7 +368,7 @@ const AccountSection: React.FC = () => {
           <Stack gap="xs">
             {isSsoUser && (
               <Alert
-                icon={<LocalIcon icon="info" width="1rem" height="1rem" />}
+                icon={<Icon name="info" size="1rem" />}
                 color="blue"
                 variant="light"
               >
@@ -382,7 +382,7 @@ const AccountSection: React.FC = () => {
             <Group gap="sm" wrap="wrap">
               {!isSsoUser && (
                 <Button
-                  leftSection={<LocalIcon icon="key-rounded" />}
+                  leftSection={<Icon name="key" size="1em" />}
                   onClick={() => setPasswordModalOpen(true)}
                 >
                   {t("settings.security.password.update", "Update password")}
@@ -392,7 +392,7 @@ const AccountSection: React.FC = () => {
               {!isSsoUser && (
                 <Button
                   variant="secondary"
-                  leftSection={<LocalIcon icon="edit-rounded" />}
+                  leftSection={<Icon name="pencil" size="1em" />}
                   onClick={() => setUsernameModalOpen(true)}
                 >
                   {t("account.changeUsername", "Change username")}
@@ -402,7 +402,7 @@ const AccountSection: React.FC = () => {
               <Button
                 variant="secondary"
                 accent="danger"
-                leftSection={<LocalIcon icon="logout-rounded" />}
+                leftSection={<Icon name="log-out" size="1em" />}
                 onClick={handleLogout}
               >
                 {t("settings.general.logout", "Log out")}
@@ -425,7 +425,7 @@ const AccountSection: React.FC = () => {
           </Text>
           {isSsoUser ? (
             <Alert
-              icon={<LocalIcon icon="info" width="1rem" height="1rem" />}
+              icon={<Icon name="info" size="1rem" />}
               color="blue"
               variant="light"
             >
@@ -438,9 +438,7 @@ const AccountSection: React.FC = () => {
             <Group gap="sm" wrap="wrap">
               {!mfaEnabled ? (
                 <Button
-                  leftSection={
-                    <LocalIcon icon="check-circle-outline-rounded" />
-                  }
+                  leftSection={<Icon name="circle-check" size="1em" />}
                   onClick={handleStartMfaSetup}
                   loading={mfaLoading}
                   disabled={changeButtonDisabled}
@@ -454,7 +452,7 @@ const AccountSection: React.FC = () => {
                 <Button
                   variant="secondary"
                   accent="danger"
-                  leftSection={<LocalIcon icon="close-rounded" />}
+                  leftSection={<Icon name="x" size="1em" />}
                   onClick={() => {
                     setMfaError("");
                     setMfaDisableCode("");
@@ -491,9 +489,7 @@ const AccountSection: React.FC = () => {
 
             {passwordError && (
               <Alert
-                icon={
-                  <LocalIcon icon="error-rounded" width="1rem" height="1rem" />
-                }
+                icon={<Icon name="circle-alert" size="1rem" />}
                 color="red"
                 variant="light"
               >
@@ -554,7 +550,7 @@ const AccountSection: React.FC = () => {
               <Button
                 type="submit"
                 loading={passwordSubmitting}
-                leftSection={<LocalIcon icon="save-rounded" />}
+                leftSection={<Icon name="save" size="1em" />}
               >
                 {t("settings.security.password.update", "Update password")}
               </Button>
@@ -614,9 +610,7 @@ const AccountSection: React.FC = () => {
             )}
             {mfaError && (
               <Alert
-                icon={
-                  <LocalIcon icon="error-rounded" width="1rem" height="1rem" />
-                }
+                icon={<Icon name="circle-alert" size="1rem" />}
                 color="red"
                 variant="light"
               >
@@ -672,9 +666,7 @@ const AccountSection: React.FC = () => {
             </Text>
             {mfaError && (
               <Alert
-                icon={
-                  <LocalIcon icon="error-rounded" width="1rem" height="1rem" />
-                }
+                icon={<Icon name="circle-alert" size="1rem" />}
                 color="red"
                 variant="light"
               >
@@ -728,9 +720,7 @@ const AccountSection: React.FC = () => {
 
             {usernameError && (
               <Alert
-                icon={
-                  <LocalIcon icon="error-rounded" width="1rem" height="1rem" />
-                }
+                icon={<Icon name="circle-alert" size="1rem" />}
                 color="red"
                 variant="light"
               >
@@ -768,7 +758,7 @@ const AccountSection: React.FC = () => {
               <Button
                 type="submit"
                 loading={usernameSubmitting}
-                leftSection={<LocalIcon icon="save-rounded" />}
+                leftSection={<Icon name="save" size="1em" />}
               >
                 {t("common.save", "Save")}
               </Button>

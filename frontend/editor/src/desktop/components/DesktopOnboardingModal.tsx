@@ -3,8 +3,7 @@ import { Modal, Stack, Group } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
-import CloseIcon from "@mui/icons-material/Close";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import AnimatedSlideBackground from "@app/components/onboarding/slides/AnimatedSlideBackground";
 import OnboardingStepper from "@app/components/onboarding/OnboardingStepper";
 import { SetupWizard } from "@app/components/SetupWizard";
@@ -123,24 +122,14 @@ export function DesktopOnboardingModal() {
               zIndex: 10,
             }}
           >
-            <CloseIcon fontSize="small" />
+            <Icon name="x" size={20} />
           </ActionIcon>
           <div className={styles.heroLogo} key={`logo-${step}`}>
             <div className={styles.heroLogoCircle}>
               {step === 0 ? (
-                <LocalIcon
-                  icon="rocket-launch"
-                  width={64}
-                  height={64}
-                  className={styles.heroIcon}
-                />
+                <Icon name="rocket" size={64} className={styles.heroIcon} />
               ) : (
-                <LocalIcon
-                  icon="login"
-                  width={64}
-                  height={64}
-                  className={styles.heroIcon}
-                />
+                <Icon name="log-in" size={64} className={styles.heroIcon} />
               )}
             </div>
           </div>

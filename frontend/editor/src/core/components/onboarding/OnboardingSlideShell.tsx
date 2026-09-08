@@ -3,8 +3,7 @@ import { Modal } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Button, type ButtonAccent } from "@app/ui/Button";
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from "@app/styles/zIndex";
 import stirlingMark from "@app/assets/brand/modern-logo/logo512.png";
 import styles from "@app/components/onboarding/InitialOnboardingModal/InitialOnboardingModal.module.css";
@@ -157,11 +156,7 @@ export default function OnboardingSlideShell({
                     size="md"
                     aria-label={t("common.close", "Close")}
                   >
-                    <LocalIcon
-                      icon="close-rounded"
-                      width="1.1rem"
-                      height="1.1rem"
-                    />
+                    <Icon name="x" size="1.1rem" />
                   </ActionIcon>
                 )}
               </div>
@@ -227,7 +222,7 @@ export default function OnboardingSlideShell({
                           disabled={button.disabled}
                           aria-label={t("onboarding.buttons.back", "Back")}
                         >
-                          <ChevronLeftIcon fontSize="small" />
+                          <Icon name="chevron-left" size={20} />
                         </ActionIcon>
                       ))}
                     </div>

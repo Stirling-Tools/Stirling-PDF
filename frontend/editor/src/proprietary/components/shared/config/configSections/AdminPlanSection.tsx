@@ -201,7 +201,7 @@ const AdminPlanSection: React.FC = () => {
 
       {shouldShowLicenseWarning && (
         <AppBanner
-          icon="warning-rounded"
+          icon="triangle-alert"
           tone="warning"
           title={t(
             "plan.licenseWarning.title",
@@ -212,7 +212,7 @@ const AdminPlanSection: React.FC = () => {
             limit: licenseAlert.freeTierLimit,
           })}
           buttonText={t("plan.licenseWarning.cta", "See plans")}
-          buttonIcon="upgrade-rounded"
+          buttonIcon="circle-arrow-up"
           onButtonClick={scrollToPlans}
           dismissible={false}
         />

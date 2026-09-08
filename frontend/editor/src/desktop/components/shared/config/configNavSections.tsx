@@ -63,7 +63,7 @@ export const useConfigNavSections = (
       {
         key: "connectionMode",
         label: t("settings.connection.title", "Connection Mode"),
-        icon: "desktop-cloud-rounded",
+        icon: "monitor-cloud",
         component: <ConnectionSettings />,
       },
     ],

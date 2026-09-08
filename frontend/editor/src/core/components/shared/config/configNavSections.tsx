@@ -43,13 +43,13 @@ export const useConfigNavSections = (
         {
           key: "general",
           label: t("settings.general.title", "General"),
-          icon: "settings-rounded",
+          icon: "settings",
           component: <GeneralSection hideTitle />,
         },
         {
           key: "hotkeys",
           label: t("settings.hotkeys.title", "Keyboard Shortcuts"),
-          icon: "keyboard-rounded",
+          icon: "keyboard",
           component: <HotkeysSection />,
         },
       ],
@@ -60,7 +60,7 @@ export const useConfigNavSections = (
         {
           key: "help",
           label: t("settings.help.label", "Tours"),
-          icon: "help-rounded",
+          icon: "circle-question-mark",
           component: (
             <HelpSection isAdmin={_isAdmin} onRequestClose={onRequestClose} />
           ),
@@ -73,19 +73,19 @@ export const useConfigNavSections = (
         {
           key: "legal",
           label: t("settings.legal.label", "Legal"),
-          icon: "gavel-rounded",
+          icon: "gavel",
           component: <LegalSection />,
         },
         {
           key: "backendThirdPartyLicenses",
           label: t("settings.licenses.backendLabel", "Backend Licenses"),
-          icon: "article-rounded",
+          icon: "file-text",
           component: <BackendThirdPartyLicensesSection />,
         },
         {
           key: "frontendThirdPartyLicenses",
           label: t("settings.licenses.frontendLabel", "Frontend Licenses"),
-          icon: "code-rounded",
+          icon: "code",
           component: <FrontendThirdPartyLicensesSection />,
         },
       ],
@@ -111,13 +111,13 @@ export const createConfigNavSections = (
         {
           key: "general",
           label: "General",
-          icon: "settings-rounded",
+          icon: "settings",
           component: <GeneralSection hideTitle />,
         },
         {
           key: "hotkeys",
           label: "Keyboard Shortcuts",
-          icon: "keyboard-rounded",
+          icon: "keyboard",
           component: <HotkeysSection />,
         },
       ],

@@ -14,13 +14,13 @@ import {
 } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import EditableSecretField from "@app/components/shared/EditableSecretField";
 import {
   Provider,
   ProviderField,
 } from "@app/components/shared/config/configSections/providerDefinitions";
 
+import { Icon, isIconName } from "@app/ui/Icon";
 interface ProviderCardProps {
   provider: Provider;
   isConfigured: boolean;
@@ -200,8 +200,8 @@ export default function ProviderCard({
   };
 
   const renderProviderIcon = () => {
-    // Image source: an absolute/relative path, a data: URI (small bundled SVGs
-    // are inlined), or a full URL. Iconify names ("key-rounded") use LocalIcon.
+    // Image source: an absolute/relative path, a data: URI, or a full URL.
+    // Anything else is treated as a registry icon name.
     if (/^(\/|\.\.?\/|data:|blob:|https?:)/.test(provider.icon)) {
       return (
         <img
@@ -211,8 +211,10 @@ export default function ProviderCard({
         />
       );
     }
-    // Otherwise use LocalIcon for iconify icons
-    return <LocalIcon icon={provider.icon} width="1.5rem" height="1.5rem" />;
+    // Otherwise it names a registry icon.
+    return isIconName(provider.icon) ? (
+      <Icon name={provider.icon} size="1.5rem" />
+    ) : null;
   };
 
   return (
@@ -243,13 +245,9 @@ export default function ProviderCard({
               }
               rightSection={
                 expanded ? (
-                  <LocalIcon icon="close-rounded" width="1rem" height="1rem" />
+                  <Icon name="x" size="1rem" />
                 ) : isConfigured ? (
-                  <LocalIcon
-                    icon="expand-more-rounded"
-                    width="1rem"
-                    height="1rem"
-                  />
+                  <Icon name="chevron-down" size="1rem" />
                 ) : undefined
               }
             >
