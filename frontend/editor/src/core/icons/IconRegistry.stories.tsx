@@ -58,7 +58,7 @@ export const AllIcons: StoryObj = {
         </p>
         <input
           className="icon-registry__search"
-          placeholder="Filter by name…"
+          placeholder="Filter by name..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />

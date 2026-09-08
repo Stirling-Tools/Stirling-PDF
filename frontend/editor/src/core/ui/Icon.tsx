@@ -130,7 +130,7 @@ function neutralise(nodes: readonly IconNode[]): readonly IconNode[] {
 /** Narrows "a name or your own node" props: ReactNode already includes string,
  * so `typeof x === "string"` yields string rather than IconName. */
 export function isIconName(value: unknown): value is IconName {
-  return typeof value === "string" && value in ICONS;
+  return typeof value === "string" && Object.hasOwn(ICONS, value);
 }
 
 /** The only way to render an icon. Add one by dropping an svg into
@@ -145,7 +145,9 @@ export function Icon({
   style,
   title,
 }: IconProps) {
-  const entry = ICONS[name];
+  // Own-property lookup: a data-driven name like "constructor" must take
+  // the missing-icon path, not resolve to Object.prototype.
+  const entry = isIconName(name) ? ICONS[name] : undefined;
 
   if (!entry) {
     // Names can still arrive widened from config or an API: loud in dev,

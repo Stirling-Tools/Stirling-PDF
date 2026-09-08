@@ -5,8 +5,6 @@ import { useToolNavigation } from "@app/hooks/useToolNavigation";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { ToolId } from "@app/types/toolId";
 
-// Material UI Icons
-
 export interface SuggestedTool {
   id: ToolId;
   title: string;

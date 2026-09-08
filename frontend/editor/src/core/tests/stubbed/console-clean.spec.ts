@@ -80,7 +80,7 @@ async function expectCleanConsole(entries: ConsoleEntry[]) {
 const ROUTES: { name: string; path: string }[] = [
   { name: "landing", path: "/" },
   { name: "files", path: "/files" },
-  { name: "shrink", path: "/compress" },
+  { name: "compress", path: "/compress" },
   { name: "split", path: "/split" },
   { name: "merge", path: "/merge" },
   { name: "convert", path: "/convert" },

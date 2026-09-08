@@ -25,7 +25,7 @@ export interface ClassificationLabel {
   id: string;
   /** Human display name; the en-US default for `classification.labels.<id>`. */
   name: string;
-  /** Material Symbols icon key (see `labelIcons.ts`). */
+  /** Registry icon name (see `labelIcons.ts`). */
   icon?: IconName;
 }
 
@@ -34,7 +34,7 @@ export interface LabelFamily {
   id: string;
   /** Group header text shown in the sidebar and the group picker. */
   name: string;
-  /** Material Symbols icon key (see `labelIcons.ts`). */
+  /** Registry icon name (see `labelIcons.ts`). */
   icon: IconName;
   /** The built-in labels this family rolls up in the sidebar. */
   labels: ClassificationLabel[];

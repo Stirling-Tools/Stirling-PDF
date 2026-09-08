@@ -71,14 +71,14 @@ export const PIPELINE_ICON_KEYS: readonly string[] = [
   "sparkle",
 ];
 
-// Defaults to inheriting the surrounding font-size so a wrapping box controls size.
+// Defaults to the surrounding font-size so a wrapping box controls size.
 export function pipelineIcon(
   key?: string,
-  fontSize: string = "inherit",
+  size: string = "1em",
   className?: string,
 ): ReactNode {
   const resolved = key && ICONS[key] ? key : DEFAULT_PIPELINE_ICON;
-  return <Icon name={ICONS[resolved]} size={fontSize} className={className} />;
+  return <Icon name={ICONS[resolved]} size={size} className={className} />;
 }
 
 /** The pipeline's icon vocabulary as options for the shared SUI `IconPicker`. */

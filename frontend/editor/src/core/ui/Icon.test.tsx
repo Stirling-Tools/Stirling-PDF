@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { render } from "@testing-library/react";
 
-import { Icon } from "@app/ui/Icon";
+import { Icon, isIconName } from "@app/ui/Icon";
 import {
   ICONS,
   STROKE_WIDTH,
@@ -129,6 +129,23 @@ describe("colorless brand marks", () => {
       renderIcon("googledrive").querySelector("[fill^='#']"),
     ).not.toBeNull();
   });
+});
+
+describe("isIconName", () => {
+  it("accepts registry names and rejects everything else", () => {
+    expect(isIconName(names[0])).toBe(true);
+    expect(isIconName("not-an-icon")).toBe(false);
+    expect(isIconName(42)).toBe(false);
+  });
+
+  // Data-driven names reach the guard unfiltered; Object.prototype keys must
+  // not pass it and then blow up inside the renderer.
+  it.each(["constructor", "toString", "hasOwnProperty", "__proto__"])(
+    "rejects inherited key %s",
+    (key) => {
+      expect(isIconName(key)).toBe(false);
+    },
+  );
 });
 
 describe("id collisions", () => {

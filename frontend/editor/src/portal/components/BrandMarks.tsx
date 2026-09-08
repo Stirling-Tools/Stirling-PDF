@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import { Icon, ICONS, type IconName } from "@app/ui/Icon";
+import { Icon, isIconName, type IconName } from "@app/ui/Icon";
 
 /** Ids whose registry name differs from the id itself. */
 const ID_ALIASES: Record<string, IconName> = {
@@ -11,7 +11,7 @@ const FALLBACK: IconName = "plug";
 
 function markName(id: string): IconName {
   if (id in ID_ALIASES) return ID_ALIASES[id];
-  return id in ICONS ? (id as IconName) : FALLBACK;
+  return isIconName(id) ? id : FALLBACK;
 }
 
 interface BrandMarkProps {

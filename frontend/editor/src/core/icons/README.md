@@ -4,7 +4,7 @@ Read this before adding, changing or styling any icon.
 
 ## TL;DR rules
 
-1. **Render every icon with `<Icon name="…" />`** from `@app/icons`. There is one icon component and one icon set.
+1. **Render every icon with `<Icon name="…" />`** from `@app/ui/Icon`. There is one icon component and one icon set.
 2. **Never write an `<svg>` in a `.ts`/`.tsx` file.** Icons are `.svg` files under `svg/stirling/` or `svg/third-party/`. Geometry computed at runtime (charts, overlays, previews) is the only exception and needs a `// icon-lint-disable -- <reason>` comment.
 3. **Size with the `size` prop, never `fontSize`.** The old icons were font glyphs; `<Icon>` sizes via `width`/`height`, so `style={{ fontSize }}` does nothing at all.
 4. **Add an icon by dropping a `.svg` into one of the two dirs** and running `task frontend:prepare:icons`. Never hand-edit a `*.generated.ts`.
@@ -32,7 +32,7 @@ The component lives with the other shared primitives, in `core/ui/Icon.tsx` — 
 | File | Role |
 |---|---|
 | `core/ui/Icon.tsx` | The only icon component, plus `isIconName()`. Re-exports `IconName`, so `@app/ui/Icon` is the single import. |
-| `icons.config.mjs` | Stroke weight, default size, `EXTRA_NAMES`, brand-colour overrides. |
+| `icons.config.mjs` | Stroke weight, default size, `EXTRA_NAMES`. |
 | `svg/stirling/*.svg` | Our own drawings, for glyphs lucide has no equivalent for. |
 | `svg/third-party/*.svg` | Brand marks (S3, Slack, Jira…), which keep their own colours. |
 | `registry.generated.ts` | Generated: the bundled icon set + the `IconName` union. |

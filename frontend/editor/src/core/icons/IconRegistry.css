@@ -24,9 +24,6 @@
   text-align: center;
 }
 
-/* The rejected pick is shown for comparison only, so mute it. */
-/* Legacy Material glyphs are filled shapes, not strokes. */
-/* The hand-drawn processor glyphs were strokes. */
 .icon-registry__grid {
   display: grid;
   gap: 0.5rem;

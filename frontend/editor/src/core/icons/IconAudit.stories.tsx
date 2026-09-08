@@ -95,7 +95,7 @@ export const BeforeAfter: StoryObj = {
       Object.keys(iconMap.labelIcons).length;
     return (
       <div className="icon-audit">
-        <h1 className="icon-audit__h1">Icon consolidation — before / after</h1>
+        <h1 className="icon-audit__h1">Icon consolidation: before / after</h1>
         <p className="icon-audit__note">
           Left glyph is what the app used before. Right glyph is its
           replacement, drawn from Lucide at stroke {STROKE_WIDTH}. {total}{" "}

@@ -134,7 +134,7 @@ Update these files to register your new tool:
 import [ToolName] from "../tools/[ToolName]";
 import { [toolName]OperationConfig } from "../hooks/tools/[toolName]/use[ToolName]Operation";
 import [ToolName]Settings from "../components/tools/[toolName]/[ToolName]Settings";
-import { Icon } from "@app/icons";
+import { Icon } from "@app/ui/Icon";
 ```
 
 2. Add tool entry in the `allTools` object:

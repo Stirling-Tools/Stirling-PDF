@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /** Bundles the lucide icons the app references, plus every svg in both icon
- * dirs, into the *.generated.ts registry. */
+ * dirs, into the *.generated.ts registry. `--check` fails instead of writing
+ * when the committed output is stale. */
 import fs from "node:fs";
 import path from "node:path";
 // oxlint-disable-next-line no-restricted-imports -- build script; no alias covers scripts/
@@ -19,6 +20,7 @@ const LUCIDE = path.join(
 );
 
 const verbose = process.argv.includes("--verbose");
+const check = process.argv.includes("--check");
 const log = (m) => console.log(m);
 const debug = (m) => verbose && console.log(m);
 
@@ -48,13 +50,22 @@ const ATTR_CASE = {
 
 const DROP_ATTRS = new Set(["xmlns", "xmlns:xlink", "class", "version"]);
 
+const camelAttrs = (attrs) =>
+  Object.fromEntries(
+    Object.entries(attrs)
+      .filter(([k]) => !DROP_ATTRS.has(k))
+      .map(([k, v]) => [ATTR_CASE[k] || k, v]),
+  );
+
 function parseAttrs(src) {
+  // Only double-quoted values are read; a single-quoted one would otherwise
+  // vanish silently and leave a blank (and mis-detected mono) icon.
+  if (/=\s*'/.test(src))
+    throw new Error(`single-quoted svg attribute in: ${src.trim()}`);
   const out = {};
-  for (const m of src.matchAll(/([:a-zA-Z_][-:.\w]*)\s*=\s*"([^"]*)"/g)) {
-    if (DROP_ATTRS.has(m[1])) continue;
-    out[ATTR_CASE[m[1]] || m[1]] = m[2];
-  }
-  return out;
+  for (const m of src.matchAll(/([:a-zA-Z_][-:.\w]*)\s*=\s*"([^"]*)"/g))
+    out[m[1]] = m[2];
+  return camelAttrs(out);
 }
 
 /** Parse an svg fragment into nested [tag, attrs, children?] tuples. */
@@ -134,6 +145,10 @@ function readSvgFile(file, name) {
   const raw = fs.readFileSync(file, "utf8");
   const open = raw.match(/<svg\b([^>]*)>/);
   if (!open) throw new Error(`${file}: no <svg> root`);
+  if (/<style\b/.test(raw))
+    throw new Error(
+      `${file}: <style> is not bundled; use presentation attributes`,
+    );
   const rootAttrs = parseAttrs(open[1]);
   const inner = raw.slice(
     open.index + open[0].length,
@@ -312,6 +327,19 @@ const HEADER = (from) =>
 
 const fmt = (v) => JSON.stringify(v);
 
+// Same content, no write: a fresh mtime would make the dev server reload every
+// consumer of the registry. Under --check a difference is the failure.
+const stale = [];
+function emit(file, content) {
+  const target = path.join(ICONS_DIR, file);
+  const current = fs.existsSync(target)
+    ? fs.readFileSync(target, "utf8")
+    : null;
+  if (current === content) return;
+  if (check) stale.push(file);
+  else fs.writeFileSync(target, content);
+}
+
 function emitEntries(entries) {
   return Object.entries(entries)
     .map(
@@ -335,16 +363,16 @@ const licenseBlock = notices.size
     `\n */\n\n`
   : "";
 
-fs.writeFileSync(
-  path.join(ICONS_DIR, "stirlingIcons.generated.ts"),
+emit(
+  "stirlingIcons.generated.ts",
   HEADER("src/core/icons/svg/stirling/*.svg") +
     licenseBlock +
     `import type { IconEntry } from "@app/icons/types";\n\n` +
     `export const STIRLING_ICONS = {\n${emitEntries(stirling)}\n} as const satisfies Record<string, IconEntry>;\n`,
 );
 
-fs.writeFileSync(
-  path.join(ICONS_DIR, "thirdPartyIcons.generated.ts"),
+emit(
+  "thirdPartyIcons.generated.ts",
   HEADER("src/core/icons/svg/third-party/*.svg") +
     `import type { IconEntry } from "@app/icons/types";\n\n` +
     `export const THIRD_PARTY_ICONS = {\n${emitEntries(thirdParty)}\n} as const satisfies Record<string, IconEntry>;\n`,
@@ -355,19 +383,12 @@ for (const name of [...lucideTargets].sort()) {
   lucideEntries[name] = {
     viewBox: "0 0 24 24",
     mono: true,
-    nodes: lucideNodes[name].map(([tag, attrs]) => [
-      tag,
-      parseAttrs(
-        Object.entries(attrs)
-          .map(([k, v]) => `${k}="${v}"`)
-          .join(" "),
-      ),
-    ]),
+    nodes: lucideNodes[name].map(([tag, attrs]) => [tag, camelAttrs(attrs)]),
   };
 }
 
-fs.writeFileSync(
-  path.join(ICONS_DIR, "registry.generated.ts"),
+emit(
+  "registry.generated.ts",
   HEADER(`lucide-static ${lucideVersion()} + both svg dirs`) +
     `import type { IconEntry } from "@app/icons/types";\n` +
     `import { STIRLING_ICONS } from "@app/icons/stirlingIcons.generated";\n` +
@@ -382,6 +403,13 @@ fs.writeFileSync(
     `} as const;\n\n` +
     `export type IconName = keyof typeof ICONS;\n`,
 );
+
+if (stale.length) {
+  console.error(
+    `\n✖ committed icon registry is stale (${stale.join(", ")}). Run: task frontend:prepare:icons\n`,
+  );
+  process.exit(1);
+}
 
 const bytes = fs.statSync(path.join(ICONS_DIR, "registry.generated.ts")).size;
 log(

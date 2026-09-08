@@ -344,7 +344,7 @@ User: ${user.username}`)
         "workspace.people.roleDescriptions.admin",
         "Can manage settings and invite members, with full administrative access.",
       ),
-      icon: "admin-panel-settings",
+      icon: "shield-user",
     },
     {
       value: "ROLE_USER",
