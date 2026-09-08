@@ -152,6 +152,26 @@ class PortalInfraAuditServiceTest {
     }
 
     @Test
+    void failureOutcomeIsNotRenderedAsSuccess() {
+        InfraAuditEventDto e =
+                onlyEvent(
+                        "{\"path\":\"/api/v1/misc/compress-pdf\",\"outcome\":\"failure\","
+                                + "\"errorType\":\"IOException\"}");
+
+        assertThat(e.getStatus()).isEqualTo("danger");
+    }
+
+    @Test
+    void clientErrorStatusCodeIsRenderedAsAWarning() {
+        InfraAuditEventDto e =
+                onlyEvent(
+                        "{\"path\":\"/api/v1/misc/compress-pdf\",\"outcome\":\"failure\","
+                                + "\"statusCode\":401}");
+
+        assertThat(e.getStatus()).isEqualTo("warning");
+    }
+
+    @Test
     void summaryCountsTheLastDayNotJustTheReturnedPage() {
         String data = "{\"path\":\"/api/v1/misc/compress-pdf\",\"statusCode\":200}";
         List<PortalAuditEventRow> rows = new ArrayList<>();
