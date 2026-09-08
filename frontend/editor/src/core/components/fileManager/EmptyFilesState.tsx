@@ -1,10 +1,9 @@
 import React, { useState } from "react";
 import { Group, Text, Stack } from "@mantine/core";
 import { Button } from "@app/ui/Button";
-import HistoryIcon from "@mui/icons-material/History";
+import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
 import { useFileManagerContext } from "@app/contexts/FileManagerContext";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import { Wordmark } from "@app/components/shared/Wordmark";
 import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
 import { useFileActionIcons } from "@app/hooks/useFileActionIcons";
@@ -48,8 +47,10 @@ const EmptyFilesState: React.FC = () => {
       >
         {/* No Recent Files Message */}
         <Stack align="center" gap="sm">
-          <HistoryIcon
-            style={{ fontSize: "3rem", color: "var(--mantine-color-gray-5)" }}
+          <Icon
+            name="rotate-ccw-clock"
+            size={"3rem"}
+            style={{ color: "var(--mantine-color-gray-5)" }}
           />
           <Text c="dimmed" ta="center" size="lg">
             {t("fileManager.noRecentFiles", "No recent files")}
@@ -99,10 +100,9 @@ const EmptyFilesState: React.FC = () => {
             onClick={handleUploadClick}
             onMouseEnter={() => setIsUploadHover(true)}
           >
-            <LocalIcon
-              icon={icons.uploadIconName}
-              width="1.25rem"
-              height="1.25rem"
+            <Icon
+              name={icons.upload}
+              size="1.5rem"
               style={{ color: "var(--c-accent-text)" }}
             />
             {isUploadHover && (

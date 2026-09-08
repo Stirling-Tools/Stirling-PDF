@@ -1,6 +1,5 @@
 import { useTranslation } from "react-i18next";
-import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
-import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
+import { Icon } from "@app/ui/Icon";
 import { OptionCard } from "@app/ui";
 import type { CatalogueEntry } from "@app/policies/catalog";
 import { policyCategoryIcon } from "@app/components/policies/policyCategoryIcon";
@@ -40,12 +39,12 @@ export function PipelineTemplateCard({
       cta={
         <>
           {t("portal.pipelines.templates.setUp")}
-          <ArrowForwardRoundedIcon style={{ fontSize: "1rem" }} />
+          <Icon name="arrow-right" size={"1rem"} />
         </>
       }
       note={
         <>
-          <LockOutlinedIcon style={{ fontSize: "0.95rem" }} />
+          <Icon name="lock" size={"0.95rem"} />
           {comingSoon
             ? t("portal.policies.card.comingSoon")
             : (lockedLabel ?? t("portal.policies.card.requiresAiEngine"))}

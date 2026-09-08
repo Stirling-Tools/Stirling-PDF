@@ -1,3 +1,4 @@
+import type { IconName } from "@app/ui/Icon";
 import { WorkbenchType } from "@app/types/workbench";
 
 /** Shared shape for the workbench bar's file-level global actions (print,
@@ -12,8 +13,8 @@ export interface WorkbenchBarActionsProps {
   policyEnforcing: boolean;
   /** Context-aware label for the download/export action. */
   downloadLabel: string;
-  downloadIconName: string;
-  saveAsIconName?: string;
+  downloadIconName: IconName;
+  saveAsIconName?: IconName;
   onPrint: () => void;
   onExport: (forceNewFile?: boolean) => void;
   onClose: () => void;

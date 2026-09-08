@@ -3,13 +3,13 @@ import { Group } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import { Wordmark } from "@app/components/shared/Wordmark";
 import styles from "@app/components/fileEditor/FileEditor.module.css";
 import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
 import { useFileActionIcons } from "@app/hooks/useFileActionIcons";
 import { openFilesFromDisk } from "@app/services/openFilesFromDisk";
 
+import { Icon } from "@app/ui/Icon";
 interface AddFileCardProps {
   onFileSelect: (files: File[]) => void;
   accept?: string;
@@ -125,10 +125,9 @@ const AddFileCard = ({
                 onClick={handleOpenFilesModal}
                 onMouseEnter={() => setIsUploadHover(false)}
               >
-                <LocalIcon
-                  icon="add"
-                  width="1.5rem"
-                  height="1.5rem"
+                <Icon
+                  name="plus"
+                  size="1.5rem"
                   className="text-[var(--c-primary)]"
                 />
                 <span>{t("landing.addFiles", "Add Files")}</span>
@@ -157,10 +156,9 @@ const AddFileCard = ({
               onClick={handleNativeUploadClick}
               onMouseEnter={() => setIsUploadHover(true)}
             >
-              <LocalIcon
-                icon={icons.uploadIconName}
-                width="1.25rem"
-                height="1.25rem"
+              <Icon
+                name={icons.upload}
+                size="1.25rem"
                 style={{ color: "var(--c-accent-text)", flexShrink: 0 }}
               />
               {isUploadHover && (

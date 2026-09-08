@@ -11,7 +11,7 @@ import { ActionIcon } from "@app/ui/ActionIcon";
 import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { Icon } from "@app/ui/Icon";
 import {
   clearFilesPageReturnRoute,
   getFilesPageReturnRoute,
@@ -31,7 +31,6 @@ import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useNavigationState } from "@app/contexts/NavigationContext";
 import { ViewerContext, useViewer } from "@app/contexts/ViewerContext";
 import { WorkbenchType, isBaseWorkbench } from "@app/types/workbench";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import SuperSearch from "@app/components/shared/superSearch/SuperSearch";
 import { useEditorSearchScopes } from "@app/hooks/useSuperSearch";
 import ViewerShareButton from "@app/components/viewer/ViewerShareButton";
@@ -50,8 +49,6 @@ import {
   WorkbenchBarRenderContext,
   WorkbenchBarSection,
 } from "@app/types/workbenchBar";
-import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
-import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
 import WorkbenchBarDesktopActions from "@app/components/shared/workbenchBar/WorkbenchBarDesktopActions";
 import WorkbenchBarMobileActions from "@app/components/shared/workbenchBar/WorkbenchBarMobileActions";
 import WorkbenchBarToolbarHandle from "@app/components/shared/workbenchBar/WorkbenchBarToolbarHandle";
@@ -338,8 +335,8 @@ export default function WorkbenchBar({
     actionsDisabled,
     policyEnforcing,
     downloadLabel: downloadTooltip,
-    downloadIconName: icons.downloadIconName,
-    saveAsIconName: icons.saveAsIconName,
+    downloadIconName: icons.download,
+    saveAsIconName: icons.saveAs,
     onPrint: handlePrint,
     onExport: handleExportAll,
     onClose: handleClose,
@@ -411,26 +408,20 @@ export default function WorkbenchBar({
           {
             value: "viewer" as WorkbenchType,
             label: t("workbenchBar.viewer", "Viewer"),
-            icon: <InsertDriveFileOutlinedIcon fontSize="small" />,
+            icon: <Icon name="file" size={20} />,
           },
         ]),
     {
       value: "fileEditor" as WorkbenchType,
       label: t("workbenchBar.activeFiles", "Active Files"),
-      icon: <FolderOutlinedIcon fontSize="small" />,
+      icon: <Icon name="folder" size={20} />,
     },
     ...(selectedTool === "multiTool"
       ? [
           {
             value: "pageEditor" as WorkbenchType,
             label: t("workbenchBar.multiTool", "Multi-Tool"),
-            icon: (
-              <LocalIcon
-                icon="dashboard-customize-outline-rounded"
-                width="1rem"
-                height="1rem"
-              />
-            ),
+            icon: <Icon name="layout-dashboard" size="1rem" />,
           },
         ]
       : []),
@@ -439,7 +430,7 @@ export default function WorkbenchBar({
       .map((v) => ({
         value: v.workbenchId,
         label: v.label,
-        icon: v.icon ?? <InsertDriveFileOutlinedIcon fontSize="small" />,
+        icon: v.icon ?? <Icon name="file" size={20} />,
       })),
   ];
 
@@ -512,7 +503,7 @@ export default function WorkbenchBar({
                   : "Back to File library",
                 { folder: returnRoute.label ?? "" },
               )}
-              leftSection={<ArrowBackIcon style={{ fontSize: "1.1rem" }} />}
+              leftSection={<Icon name="arrow-left" size={"1.1rem"} />}
             >
               <span className="workbench-bar-view-label">
                 {returnRoute.label

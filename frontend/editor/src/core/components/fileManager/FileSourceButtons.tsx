@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 import { Stack, Text, Group } from "@mantine/core";
 import { Button } from "@app/ui/Button";
-import HistoryIcon from "@mui/icons-material/History";
-import PhonelinkIcon from "@mui/icons-material/Phonelink";
+import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
 import { useFileManagerContext } from "@app/contexts/FileManagerContext";
 import { useGoogleDrivePicker } from "@app/hooks/useGoogleDrivePicker";
@@ -11,7 +10,6 @@ import { useFileActionIcons } from "@app/hooks/useFileActionIcons";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import MobileUploadModal from "@app/components/shared/MobileUploadModal";
-import { GoogleDriveIcon } from "@app/components/shared/CloudStorageIcons";
 
 interface FileSourceButtonsProps {
   horizontal?: boolean;
@@ -32,7 +30,6 @@ const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({
     useGoogleDrivePicker();
   const terminology = useFileActionTerminology();
   const icons = useFileActionIcons();
-  const UploadIcon = icons.upload;
   const [mobileUploadModalOpen, setMobileUploadModalOpen] = useState(false);
   const { config } = useAppConfig();
   const isMobile = useIsMobile();
@@ -74,7 +71,7 @@ const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({
       <Button
         variant={activeSource === "recent" ? "primary" : "tertiary"}
         accent="neutral"
-        leftSection={<HistoryIcon />}
+        leftSection={<Icon name="rotate-ccw-clock" />}
         justify={buttonJustify}
         onClick={() => onSourceChange("recent")}
         fullWidth={!horizontal}
@@ -86,7 +83,7 @@ const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({
       <Button
         variant="tertiary"
         accent="neutral"
-        leftSection={<UploadIcon />}
+        leftSection={<Icon name={icons.upload} />}
         justify={buttonJustify}
         onClick={onLocalFileClick}
         fullWidth={!horizontal}
@@ -99,7 +96,13 @@ const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({
         <Button
           variant="tertiary"
           accent="neutral"
-          leftSection={<GoogleDriveIcon colored={isGoogleDriveEnabled} />}
+          leftSection={
+            <Icon
+              name="googledrive"
+              size={18}
+              colorless={!isGoogleDriveEnabled}
+            />
+          }
           justify={buttonJustify}
           onClick={handleGoogleDriveClick}
           fullWidth={!horizontal}
@@ -124,7 +127,7 @@ const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({
         <Button
           variant="tertiary"
           accent="neutral"
-          leftSection={<PhonelinkIcon />}
+          leftSection={<Icon name="monitor-smartphone" />}
           justify={buttonJustify}
           onClick={handleMobileUploadClick}
           fullWidth={!horizontal}
