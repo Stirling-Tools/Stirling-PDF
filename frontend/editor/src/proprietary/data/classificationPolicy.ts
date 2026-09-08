@@ -1,52 +1,68 @@
 /**
- * Everything specific to the built-in Classification policy, in one module. The generic policy
- * runner asks the capability questions below instead of naming classification itself, so a second
- * annotating policy needs a change here rather than in the runner.
+ * Everything specific to the built-in Classification policy, in one module. The generic policy runner
+ * dispatches and chains only file-producing policies (see {@link orderedRewritingPolicies}), and the
+ * generic local-pass engine runs whatever browser-side fast path a policy declares. Classification's
+ * fast path (its heuristic) lives in classificationLocalPass; the capability answers below let the
+ * generic engines treat it without naming it. A second annotating policy is a change here, not there.
  *
- * These are still keyed on the category id rather than a property each policy declares. That is
+ * These are still keyed on the policy key rather than a property each policy declares. That is
  * deliberate for now: policies are becoming pipelines with labels behind a separate enforcement
- * layer, which removes the category concept these would be declared against. Classification also
+ * layer, which removes the keyed-policy concept these would be declared against. Classification also
  * stays genuinely privileged - it is the only policy with a browser-side implementation, so it can
  * answer without the server. Ordering and output shape belong in that rework (an in-place output
  * mode, and a run result that can carry findings as well as files), not in a flag added here first.
  */
 
-import type {
-  ClassificationConfidence,
-  StirlingFileStub,
-} from "@app/types/fileContext";
+import type { ClassificationConfidence } from "@app/types/fileContext";
+import type { PoliciesByKey } from "@app/types/policies";
 
-/** Catalogue category id of the built-in Classification policy. */
-export const CLASSIFICATION_CATEGORY_ID = "classification";
+/** Key of the built-in Classification policy. */
+export const CLASSIFICATION_POLICY_KEY = "classification";
 
-export function isClassificationCategory(categoryId: string): boolean {
-  return categoryId === CLASSIFICATION_CATEGORY_ID;
+export function isClassificationPolicy(policyKey: string): boolean {
+  return policyKey === CLASSIFICATION_POLICY_KEY;
 }
 
 /**
  * Whether the policy rewrites the document rather than only annotating it. Annotating policies are
  * ordered last: a rewriting one after them would fork from the pre-annotation version.
  */
-export function policyRewritesDocument(categoryId: string): boolean {
-  return !isClassificationCategory(categoryId);
+export function policyRewritesDocument(policyKey: string): boolean {
+  return !isClassificationPolicy(policyKey);
 }
 
 /** Whether a completed run is expected to deliver output files (annotators deliver labels). */
-export function policyDeliversOutputFiles(categoryId: string): boolean {
-  return policyRewritesDocument(categoryId);
+export function policyDeliversOutputFiles(policyKey: string): boolean {
+  return policyRewritesDocument(policyKey);
 }
 
-/** Whether the policy's server-side run exists only to escalate to the AI engine. */
-export function policyRequiresAiEngine(categoryId: string): boolean {
-  return isClassificationCategory(categoryId);
+/**
+ * Whether the policy's server run needs the AI engine. The local-pass engine skips dispatching such
+ * a run when the engine is off - there is nothing to escalate to, and the local verdict stands.
+ */
+export function policyRequiresAiEngine(policyKey: string): boolean {
+  return isClassificationPolicy(policyKey);
 }
 
-/** Order annotating policies last; everything else keeps the order it was given. */
-export function orderRewritesFirst(categoryIds: string[]): string[] {
-  return [
-    ...categoryIds.filter(policyRewritesDocument),
-    ...categoryIds.filter((id) => !policyRewritesDocument(id)),
-  ];
+/**
+ * The active editor upload policies the generic runner dispatches and chains, in run order. Only
+ * file-producing policies: an annotating policy (classification) has no output to chain onto and
+ * runs itself, so it is intentionally absent here. Both the runner and the classification policy
+ * read this - the runner to sequence the chain, classification to know when that chain is done.
+ */
+export function orderedRewritingPolicies(policies: PoliciesByKey): string[] {
+  return Object.entries(policies)
+    .filter(
+      ([id, s]) =>
+        s.configured &&
+        s.enabled &&
+        Boolean(s.backendId) &&
+        s.runsOnEditor &&
+        (s.runOn ?? "upload") === "upload" &&
+        policyDeliversOutputFiles(id),
+    )
+    .sort(([, a], [, b]) => (a.order ?? 0) - (b.order ?? 0))
+    .map(([id]) => id);
 }
 
 /**
@@ -56,18 +72,12 @@ export function orderRewritesFirst(categoryIds: string[]): string[] {
 const TRUSTED_CONFIDENCE: ClassificationConfidence = "high";
 
 /**
- * Whether the AI classifier should be asked about this file. For an upload, only once the
- * heuristic has reported: dispatching before then races the first pass and bills for an answer it
- * was about to produce. A tool-derived file gets no local pass (useClientSideClassification skips
- * it) and only ever carries an inherited verdict, so an absent verdict there is permanent -
- * escalate rather than wait for a report that will never come.
+ * Whether a local classification verdict must be escalated to the AI engine. A confident verdict
+ * stands on its own; anything less is escalated and overwritten. Owned here, alongside the local
+ * pass that produces the verdict - the runner is not involved.
  */
-export function shouldDispatchToAi(
-  categoryId: string,
-  stub: StirlingFileStub,
+export function localVerdictNeedsEscalation(
+  confidence: ClassificationConfidence | undefined,
 ): boolean {
-  if (!isClassificationCategory(categoryId)) return true;
-  const confidence = stub.classificationConfidence;
-  if (confidence == null) return Boolean(stub.derivedFromTool);
-  return confidence !== TRUSTED_CONFIDENCE;
+  return confidence != null && confidence !== TRUSTED_CONFIDENCE;
 }

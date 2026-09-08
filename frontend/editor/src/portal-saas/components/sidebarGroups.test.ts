@@ -10,9 +10,9 @@ describe("sidebarGroups (SaaS)", () => {
     expect(GROUP_PROCESSOR.map((e) => e.id)).toEqual([
       "home",
       "sources",
-      "policies",
       "pipelines",
       "documents",
+      "review",
     ]);
   });
 

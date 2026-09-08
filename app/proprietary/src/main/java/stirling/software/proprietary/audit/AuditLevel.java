@@ -59,7 +59,7 @@ public enum AuditLevel {
      */
     public static AuditLevel fromInt(int level) {
         // Ensure level is within valid bounds
-        int boundedLevel = Math.min(Math.max(level, 0), 3);
+        int boundedLevel = Math.clamp(level, 0, 3);
 
         for (AuditLevel auditLevel : values()) {
             if (auditLevel.level == boundedLevel) {

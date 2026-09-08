@@ -115,10 +115,10 @@ const AdminPlanSection: React.FC = () => {
       if (currentTier === "free" && planGroup.tier === "enterprise") {
         alert({
           alertType: "warning",
-          title: t("plan.enterprise.requiresServer", "Server Plan Required"),
+          title: t("plan.enterprise.requiresServer", "Requires Team plan"),
           body: t(
             "plan.enterprise.requiresServerMessage",
-            "Please upgrade to the Server plan first before upgrading to Enterprise.",
+            "Please upgrade to the Team plan first before upgrading to Enterprise.",
           ),
         });
         return;

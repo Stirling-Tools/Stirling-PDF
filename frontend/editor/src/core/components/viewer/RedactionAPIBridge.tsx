@@ -55,7 +55,12 @@ function RedactionAPIBridgeInner({ documentId }: { documentId: string }) {
   // Synchronize manual redaction color with EmbedPDF
   // Manual redaction uses the 'redact' annotation tool internally
   useEffect(() => {
-    const annotationApi = annotationProvides as any;
+    const annotationApi = annotationProvides as {
+      setToolDefaults?: (
+        toolId: string,
+        patch: Record<string, unknown>,
+      ) => void;
+    } | null;
     if (annotationApi?.setToolDefaults) {
       annotationApi.setToolDefaults("redact", {
         type: PdfAnnotationSubtype.REDACT,
