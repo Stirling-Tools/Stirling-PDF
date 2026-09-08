@@ -15,10 +15,12 @@ import { TeamPlanRow } from "@app/billing/TeamPlanRow";
 import { freeWallet, subscribedWallet } from "@app/billing/walletFixtures";
 import type { TeamHolding, Wallet } from "@app/billing/types";
 
+// The base wallet is spread FIRST so the explicit holding wins: passing freeWallet as the base
+// would otherwise bring its own team along and silently override the one under test.
 const w = (team: TeamHolding, over: Partial<Wallet> = {}): Wallet => ({
   ...subscribedWallet,
-  team,
   ...over,
+  team,
 });
 
 describe("TeamPlanRow", () => {
@@ -121,6 +123,35 @@ describe("TeamPlanRow", () => {
     expect(
       screen.getByText("The free tier covers your first users"),
     ).toBeInTheDocument();
+  });
+
+  it("meters against the backend's free allowance while no plan is held", () => {
+    const { container } = render(
+      <TeamPlanRow
+        wallet={w(
+          { held: false, licensedUsers: null, usersInUse: 2 },
+          freeWallet,
+        )}
+        freeAllowance={5}
+      />,
+    );
+
+    // The server already enforces this number, so the row states it rather than a constant.
+    expect(screen.getByText("2 of 5 users")).toBeInTheDocument();
+    expect(container.querySelector(".billing-meter__fill")).not.toBeNull();
+  });
+
+  it("lets the plan's own limit win once one is held", () => {
+    render(
+      <TeamPlanRow
+        wallet={w({ held: true, licensedUsers: 100, usersInUse: 6 })}
+        freeAllowance={5}
+      />,
+    );
+
+    // One number governs at a time: a stale free allowance must not shrink a bought plan.
+    expect(screen.getByText("6 of 100 users")).toBeInTheDocument();
+    expect(screen.queryByText("6 of 5 users")).not.toBeInTheDocument();
   });
 
   it("drops the track when there is no limit to meter against", () => {

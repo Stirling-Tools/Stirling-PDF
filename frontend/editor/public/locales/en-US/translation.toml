@@ -7357,7 +7357,12 @@ viewLink = "View ↗"
 [portal.billing.payment]
 card = "{{brand}} ending {{last4}}"
 cardWithExpiry = "{{brand}} ending {{last4}} · expires {{month}} / {{year}}"
+billedTo = "Billed to"
+invoicesTo = "Invoices go to"
 method = "Payment method"
+nextInvoice = "Next invoice"
+nextInvoiceNote = "from this cycle's pace"
+nextInvoiceValue = "{{date}} · {{amount}}"
 noCard = "No card on file"
 update = "Update"
 

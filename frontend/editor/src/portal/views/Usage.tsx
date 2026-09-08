@@ -237,8 +237,12 @@ export function Usage({ onWalletLoaded, onReauth }: UsageProps = {}) {
       }
       editorsDeployed={editorsDeployed}
       paymentSection={
-        paying ? (
-          <PaymentSection onManage={portal.open} managing={portal.opening} />
+        paying && wallet ? (
+          <PaymentSection
+            wallet={wallet}
+            onManage={portal.open}
+            managing={portal.opening}
+          />
         ) : undefined
       }
       invoicesSection={

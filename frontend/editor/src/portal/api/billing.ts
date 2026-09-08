@@ -91,3 +91,22 @@ export interface PaymentMethod {
 export async function fetchPaymentMethod(): Promise<PaymentMethod> {
   return apiClient.saas.json<PaymentMethod>("/api/v1/payg/payment-method");
 }
+
+// ────────────────────────────────────────────────────────────────────────────
+// Billing details — GET /api/v1/payg/billing-details. Who the team is billed
+// to and where invoices go, read off the Stripe mirror. `present: false` when
+// the mirror carries no customer (free / pre-checkout / not synced).
+//
+// Read-only by design: the mirror is one-way, so these are edited in Stripe's
+// hosted portal and arrive back on the next customer event.
+// ────────────────────────────────────────────────────────────────────────────
+
+export interface BillingDetails {
+  present: boolean;
+  companyName: string | null;
+  invoiceEmail: string | null;
+}
+
+export async function fetchBillingDetails(): Promise<BillingDetails> {
+  return apiClient.saas.json<BillingDetails>("/api/v1/payg/billing-details");
+}

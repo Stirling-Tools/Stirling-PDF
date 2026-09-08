@@ -575,3 +575,26 @@ export async function inviteMember(
     params,
   );
 }
+
+/**
+ * The user cap this backend will admit, and how many are in use.
+ *
+ * <p>The same {@code maxAllowedUsers} the Users page already reads, exposed on its own for the
+ * billing screen's Users row. Without a Team plan or an Enterprise licence this is the free
+ * allowance the backend enforces, so the row states the number the server will actually honour
+ * rather than a constant duplicated in the frontend.
+ *
+ * <p>Null limit means no cap, via the same sentinel normalisation the Users page applies.
+ */
+export async function fetchUserSeats(): Promise<{
+  seatLimit: number | null;
+  seatsUsed: number | null;
+}> {
+  const data = await apiClient.local.json<AdminSettingsDto>(
+    "/api/v1/proprietary/ui-data/admin-settings",
+  );
+  return {
+    seatLimit: normalizeSeatLimit(data.maxAllowedUsers),
+    seatsUsed: data.totalUsers ?? null,
+  };
+}

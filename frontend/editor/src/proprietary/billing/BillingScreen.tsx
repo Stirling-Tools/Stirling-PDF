@@ -38,6 +38,12 @@ export interface BillingScreenProps {
   /** The Invoices section's contents. Omit where there are no invoices, for the same reason. */
   invoicesSection?: ReactNode;
   /**
+   * Users this backend will admit without a Team plan. The server already computes and enforces
+   * this, so it is read rather than restated here; null when the host cannot supply it, and the
+   * Users row then has no denominator.
+   */
+  freeUserAllowance?: number | null;
+  /**
    * Editors this team has deployed, from the fleet-stats endpoint. Null when the backend cannot
    * compute it (auditing off), in which case the row is omitted rather than showing a false zero.
    */
@@ -96,6 +102,7 @@ export function BillingScreen({
   onGovernSpend,
   governLabel,
   notices,
+  freeUserAllowance,
   editorsDeployed,
   paymentSection,
   invoicesSection,
@@ -253,6 +260,7 @@ export function BillingScreen({
                   <TeamPlanRow
                     wallet={wallet}
                     selfHosted={selfHosted}
+                    freeAllowance={freeUserAllowance}
                     onAddCapacity={onAddCapacity}
                   />
                 )}

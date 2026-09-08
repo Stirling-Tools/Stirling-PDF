@@ -1,7 +1,13 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { KvRow } from "@app/billing";
-import { fetchPaymentMethod, type PaymentMethod } from "@portal/api/billing";
+import { KvRow, formatMinor, formatPeriodDate } from "@app/billing";
+import {
+  fetchBillingDetails,
+  fetchPaymentMethod,
+  type BillingDetails,
+  type PaymentMethod,
+  type Wallet,
+} from "@portal/api/billing";
 
 /**
  * The Payment section's contents for the portal host.
@@ -13,15 +19,19 @@ import { fetchPaymentMethod, type PaymentMethod } from "@portal/api/billing";
  * <p>Card edits happen in Stripe's own portal, so the door opens that rather than a form here.
  */
 export function PaymentSection({
+  wallet,
   onManage,
   managing = false,
 }: {
-  /** Opens the Stripe customer portal. */
+  /** Supplies the next-invoice date and estimate, which are already on the wallet. */
+  wallet: Wallet;
+  /** Opens the Stripe customer portal, which is where all of these are edited. */
   onManage?: () => void;
   managing?: boolean;
 }) {
   const { t } = useTranslation();
   const [pm, setPm] = useState<PaymentMethod | null>(null);
+  const [details, setDetails] = useState<BillingDetails | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -33,6 +43,13 @@ export function PaymentSection({
       })
       .catch(() => {
         if (!cancelled) setPm(null);
+      });
+    fetchBillingDetails()
+      .then((d) => {
+        if (!cancelled) setDetails(d);
+      })
+      .catch(() => {
+        if (!cancelled) setDetails(null);
       });
     return () => {
       cancelled = true;
@@ -58,17 +75,63 @@ export function PaymentSection({
           })
       : t("portal.billing.payment.noCard", "No card on file");
 
+  // Every one of these is Stripe's to edit, so they share one door into its hosted portal rather
+  // than each growing a form against a mirror that cannot be written.
+  const update = onManage ? (
+    <button type="button" onClick={onManage} disabled={managing}>
+      {t("portal.billing.payment.update", "Update")}
+    </button>
+  ) : undefined;
+
   return (
-    <KvRow
-      label={t("portal.billing.payment.method", "Payment method")}
-      value={card}
-      door={
-        onManage ? (
-          <button type="button" onClick={onManage} disabled={managing}>
-            {t("portal.billing.payment.update", "Update")}
-          </button>
-        ) : undefined
-      }
-    />
+    <>
+      <KvRow
+        label={t("portal.billing.payment.method", "Payment method")}
+        value={card}
+        door={update}
+      />
+      <KvRow
+        label={t("portal.billing.payment.nextInvoice", "Next invoice")}
+        note={
+          wallet.processor.active
+            ? t(
+                "portal.billing.payment.nextInvoiceNote",
+                "from this cycle's pace",
+              )
+            : undefined
+        }
+        value={
+          wallet.estimatedBillMinor != null
+            ? t(
+                "portal.billing.payment.nextInvoiceValue",
+                "{{date}} · {{amount}}",
+                {
+                  date: formatPeriodDate(wallet.billingPeriodEnd, {
+                    year: true,
+                  }),
+                  amount: formatMinor(
+                    wallet.estimatedBillMinor,
+                    wallet.currency,
+                  ),
+                },
+              )
+            : formatPeriodDate(wallet.billingPeriodEnd, { year: true })
+        }
+      />
+      {details?.companyName && (
+        <KvRow
+          label={t("portal.billing.payment.billedTo", "Billed to")}
+          value={details.companyName}
+          door={update}
+        />
+      )}
+      {details?.invoiceEmail && (
+        <KvRow
+          label={t("portal.billing.payment.invoicesTo", "Invoices go to")}
+          value={details.invoiceEmail}
+          door={update}
+        />
+      )}
+    </>
   );
 }

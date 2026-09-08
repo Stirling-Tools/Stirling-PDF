@@ -20,11 +20,17 @@ import type { Wallet } from "@app/billing/types";
 export function TeamPlanRow({
   wallet,
   selfHosted = false,
+  freeAllowance,
   onAddCapacity,
 }: {
   wallet: Wallet;
   /** Self-hosted phrases its free tier differently, because that allowance is its own. */
   selfHosted?: boolean;
+  /**
+   * Users allowed without a Team plan, as the backend computes it. Used only while no plan is
+   * held: once one is, {@code licensedUsers} is the number that governs.
+   */
+  freeAllowance?: number | null;
   /** Leader-only: the door that sells Team capacity. Omit for members. */
   onAddCapacity?: () => void;
 }) {
@@ -48,7 +54,11 @@ export function TeamPlanRow({
     : undefined;
   const name = t("portal.billing.team.rowName", "Users");
 
-  if (licensedUsers == null) {
+  // Without a Team plan the cap is the backend's free allowance, which it is already enforcing.
+  // Preferring the wallet once a plan is held keeps one number in charge at a time.
+  const limit = held ? licensedUsers : (licensedUsers ?? freeAllowance ?? null);
+
+  if (limit == null) {
     return (
       <MeterRow
         name={name}
@@ -64,7 +74,7 @@ export function TeamPlanRow({
     );
   }
 
-  const pct = (usersInUse / licensedUsers) * 100;
+  const pct = (usersInUse / limit) * 100;
   // Amber is for capacity that is actually paid for. A free tier filling up is the product working
   // as intended, not a warning.
   const tone = held ? (pct >= 90 ? "warn" : "paid") : "free";
@@ -77,7 +87,7 @@ export function TeamPlanRow({
       tone={tone}
       fact={t("portal.billing.team.fact", "{{users}} of {{licensed}} users", {
         users: usersInUse.toLocaleString(),
-        licensed: licensedUsers.toLocaleString(),
+        licensed: limit.toLocaleString(),
       })}
       door={door}
       onDoor={onAddCapacity}
