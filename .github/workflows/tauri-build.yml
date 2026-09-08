@@ -169,12 +169,21 @@ jobs:
             case "$major" in ''|*[!0-9]*) continue ;; esac
             if [ "$major" -ge 26 ]; then xcode="$candidate"; break; fi
           done
-          if [ -z "$xcode" ]; then
-            echo "::error::No Xcode >= 26 on this runner - Tauri would silently skip the macOS 26 icon"
-            exit 1
+          if [ -n "$xcode" ]; then
+            sudo xcode-select -s "$xcode"
+            echo "Selected $xcode"
+          else
+            # An image carrying only /Applications/Xcode.app has nothing for the glob
+            # above to match, so fall back to whatever is already selected.
+            # || true: with no xcodebuild at all the pipeline fails and pipefail would
+            # kill the step before it can report why.
+            selected=$(xcodebuild -version 2>/dev/null | sed -n '1s/^Xcode \([0-9][0-9]*\).*/\1/p' || true)
+            if [ -z "$selected" ] || [ "$selected" -lt 26 ]; then
+              echo "::error::No Xcode >= 26 on this runner - Tauri would silently skip the macOS 26 icon"
+              exit 1
+            fi
+            echo "Keeping the selected Xcode $selected"
           fi
-          sudo xcode-select -s "$xcode"
-          echo "Selected $xcode"
           xcodebuild -version
           command -v actool
 
@@ -559,7 +568,9 @@ jobs:
             echo "::error::Assets.car missing - actool did not compile icons/macos/app.icon"
             exit 1
           fi
-          NAME=$(plutil -extract CFBundleIconName raw "$APP/Contents/Info.plist")
+          # plutil exits non-zero when the key is absent, which is the case this step
+          # exists to report - swallow it so the check below names it instead.
+          NAME=$(plutil -extract CFBundleIconName raw "$APP/Contents/Info.plist" 2>/dev/null || true)
           if [ "$NAME" != "Icon" ]; then
             echo "::error::CFBundleIconName is '$NAME', expected 'Icon' - it comes from the Icon.icon copy in .taskfiles/desktop.yml"
             exit 1

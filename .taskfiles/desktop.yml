@@ -95,7 +95,17 @@ tasks:
     deps: [prepare]
     dir: editor
     cmds:
-      - npx tauri build
+      - cmd: npx tauri build
+        platforms: [linux, windows]
+      # tauri.macos.conf.json names icons/macos/Assets.car, which `assets-car` only
+      # writes when it finds Xcode 26+. The bundler aborts on a bundle.icon path that
+      # does not exist, so the override drops it and the build falls back to app.icns.
+      - cmd: |
+          set -eu
+          ICON_CONFIG=$(node scripts/macos-icon-config.mjs)
+          [ -z "$ICON_CONFIG" ] || set -- --config "$ICON_CONFIG"
+          npx tauri build "$@"
+        platforms: [darwin]
 
   build:dev:
     desc: "Build Tauri desktop app (dev, no bundling)"
@@ -109,7 +119,11 @@ tasks:
     deps: [prepare]
     dir: editor
     cmds:
-      - npx tauri build --bundles app --config '{"bundle":{"createUpdaterArtifacts":false}}'
+      - cmd: |
+          set -eu
+          ICON_CONFIG=$(node scripts/macos-icon-config.mjs)
+          [ -z "$ICON_CONFIG" ] || set -- --config "$ICON_CONFIG"
+          npx tauri build --bundles app --config '{"bundle":{"createUpdaterArtifacts":false}}' "$@"
 
   build:dev:windows:
     desc: "Build Tauri desktop NSIS installer (Windows)"

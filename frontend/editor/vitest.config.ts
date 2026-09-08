@@ -136,6 +136,15 @@ export default defineConfig({
       },
       {
         test: {
+          name: "scripts",
+          ...TIMEOUTS,
+          include: ["scripts/**/*.test.mjs"],
+          environment: "node",
+          globals: true,
+        },
+      },
+      {
+        test: {
           name: "prototypes",
           ...TIMEOUTS,
           include: ["src/prototypes/**/*.test.{ts,tsx}"],

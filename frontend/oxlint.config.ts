@@ -412,5 +412,14 @@ export default defineConfig({
         "import/no-cycle": "error",
       },
     },
+    {
+      // Build scripts run under node, not vite, so no workspace alias resolves for
+      // them and a relative import is the only way they can reach each other. Last
+      // in the list because a later override wins over an earlier one.
+      files: ["editor/scripts/**/*.mjs"],
+      rules: {
+        "no-restricted-imports": "off",
+      },
+    },
   ],
 });
