@@ -922,7 +922,7 @@ describe("PipelineBuilder", () => {
       ...view,
     });
     renderBuilder("/processor/pipelines/plc-1");
-    await screen.findByText("portal.pipelines.builder.testRun");
+    await screen.findByText("processor.pipelines.builder.testRun");
     const picker = document.querySelector<HTMLInputElement>(
       'input[type="file"][accept="application/pdf"]',
     );
@@ -940,8 +940,8 @@ describe("PipelineBuilder", () => {
 
     await runTestWith({ status: "FAILED", currentStep: 1, error: "boom" });
 
-    await screen.findByLabelText("portal.pipelines.graph.showError");
-    expect(screen.queryByText("portal.pipelines.graph.run.done")).toBeNull();
+    await screen.findByLabelText("processor.pipelines.graph.showError");
+    expect(screen.queryByText("processor.pipelines.graph.run.done")).toBeNull();
   });
 
   it("marks only the steps that finished before the one still running", async () => {
@@ -951,7 +951,7 @@ describe("PipelineBuilder", () => {
 
     await waitFor(() =>
       expect(
-        screen.getAllByText("portal.pipelines.graph.run.done"),
+        screen.getAllByText("processor.pipelines.graph.run.done"),
       ).toHaveLength(1),
     );
   });
@@ -962,14 +962,14 @@ describe("PipelineBuilder", () => {
     await runTestWith({ status: "COMPLETED", currentStep: 2 });
     await waitFor(() =>
       expect(
-        screen.getAllByText("portal.pipelines.graph.run.done"),
+        screen.getAllByText("processor.pipelines.graph.run.done"),
       ).toHaveLength(2),
     );
 
     await addTool("OCR");
 
     await waitFor(() =>
-      expect(screen.queryByText("portal.pipelines.graph.run.done")).toBeNull(),
+      expect(screen.queryByText("processor.pipelines.graph.run.done")).toBeNull(),
     );
   });
 
