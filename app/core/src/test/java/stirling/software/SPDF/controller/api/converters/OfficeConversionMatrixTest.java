@@ -1388,7 +1388,7 @@ class OfficeConversionMatrixTest {
         return soffice() != null;
     }
 
-    private static String soffice() {
+    static String soffice() {
         String configured = System.getenv("STIRLING_TEST_SOFFICE");
         List<String> candidates =
                 new ArrayList<>(
