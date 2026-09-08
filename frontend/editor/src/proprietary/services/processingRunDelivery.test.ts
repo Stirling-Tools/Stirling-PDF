@@ -22,7 +22,7 @@ const completedRun = (runId: string) => ({
 // File/Blob dependency on the test environment.
 const fileFor = (name: string) => ({ name }) as unknown as File;
 
-describe("deliverSweepResults — one live delivery per folder", () => {
+describe("deliverSweepResults - one live delivery per folder", () => {
   beforeEach(() => {
     fetchRuns.mockReset();
     fetchOutput.mockReset();
@@ -36,8 +36,7 @@ describe("deliverSweepResults — one live delivery per folder", () => {
     const first = deliverSweepResults("policy-1", 1, addFiles);
     const second = deliverSweepResults("policy-1", 1, addFiles);
 
-    // The second caller rides the first loop (same promise), so a disk run whose
-    // output File has no stable dedup key is opened once, not once per caller.
+    // Both callers ride one loop, so the run's outputs open once, not once per caller.
     expect(second).toBe(first);
     await Promise.all([first, second]);
     expect(addFiles).toHaveBeenCalledTimes(1);
@@ -70,7 +69,7 @@ describe("deliverSweepResults — one live delivery per folder", () => {
     expect(onProgress).toHaveBeenCalled();
   });
 
-  it("delivers distinct folders in parallel — the guard is keyed per folder", async () => {
+  it("delivers distinct folders in parallel - the guard is keyed per folder", async () => {
     fetchRuns.mockImplementation((policyId: string) =>
       Promise.resolve([completedRun(policyId)]),
     );

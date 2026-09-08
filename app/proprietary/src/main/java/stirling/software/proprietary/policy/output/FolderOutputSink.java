@@ -165,10 +165,8 @@ public class FolderOutputSink implements PolicyOutputSink {
             throws IOException {
         if (replace) {
             Path target = dir.resolve(name);
-            // Archive before the ledger row flips DONE: a restore that reads DONE must find
-            // the original already safe in the archive, never mid-move. Throws if the target
-            // exists but could not be archived, so the overwrite below never runs against an
-            // unpreserved original.
+            // Archive before the ledger row flips DONE, so a restore that reads DONE finds the
+            // original safe, never mid-move. Throws if it cannot, aborting before the overwrite.
             Path archived = archiveOriginal(dir, target);
             try {
                 if (delivery.policyId() != null) {
@@ -238,16 +236,13 @@ public class FolderOutputSink implements PolicyOutputSink {
     }
 
     /**
-     * Move the watched file into {@code .stirling/originals} before a replace stamps over it, so it
-     * stays restorable. The first processing of a name keeps it under the canonical name; a later
-     * re-dropped file of the same name (different content the ledger re-claimed) is preserved under
-     * a numbered name rather than being lost to the overwrite. A missing target has nothing to
-     * archive and returns null. A failure to archive an existing target THROWS: the caller must
-     * abort before overwriting, so the original is never destroyed just because the archive could
-     * not be written (unwritable {@code .stirling/originals}, a lock, a full disk). A plain move is
-     * used, not {@code ATOMIC_MOVE}: the archive lives hidden under {@code .stirling} so it never
-     * needs same-instant visibility, and a plain move keeps the original intact until the copy
-     * completes even across devices - where {@code ATOMIC_MOVE} would throw and strand the file.
+     * Move the target into {@code .stirling/originals} before a replace overwrites it, returning
+     * the archived path, or null when nothing is at the target. Throws if an existing target cannot
+     * be archived, so the caller aborts before overwriting and never destroys an unpreserved
+     * original. A same-name re-drop is kept under a numbered name; revert restores the canonical
+     * first original. Plain move, not {@code ATOMIC_MOVE}: the archive is hidden under {@code
+     * .stirling} and needs no atomic visibility, and a plain move survives a cross-device archive
+     * dir where {@code ATOMIC_MOVE} would throw.
      */
     private static Path archiveOriginal(Path dir, Path target) throws IOException {
         if (!Files.exists(target)) {
@@ -259,9 +254,8 @@ public class FolderOutputSink implements PolicyOutputSink {
         String name = target.getFileName().toString();
         Path archived = originals.resolve(name);
         if (Files.exists(archived)) {
-            // The canonical (first) original is already kept; preserve this pre-processing
-            // content too under a numbered name so the overwrite below cannot destroy it.
-            // Revert restores the canonical original; the numbered copies stay recoverable on disk.
+            // First original already kept; preserve this content under a numbered name so the
+            // overwrite cannot destroy it. Revert restores the canonical (first) original.
             archived = uniqueTarget(originals, name);
         }
         Files.move(target, archived);

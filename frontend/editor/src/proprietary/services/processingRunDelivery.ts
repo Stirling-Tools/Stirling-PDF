@@ -99,34 +99,24 @@ async function mapBounded<T, R>(
 }
 
 /**
- * One live delivery per folder. The enable, sweep, and setup flows each fire a
- * delivery for the same policy, and a second poller running alongside the first
- * would open the same completed run's outputs twice (each loop keeps its own
- * `alreadySettled` set). The workbench's soft-dedup does not absorb that here: a
- * disk run's output File is built with no explicit lastModified, so each fetch
- * lands a different `name|size|lastModified` key and both copies show. Keyed by
- * policy id so distinct folders still deliver in parallel.
+ * In-flight delivery per policy id. A second trigger for a folder joins the
+ * running loop rather than opening every settled run's outputs again, which the
+ * workbench cannot dedup away: a disk output File has no stable lastModified, so
+ * its `name|size|lastModified` key differs on each fetch. Distinct folders run
+ * in parallel.
  */
 const deliveriesInFlight = new Map<string, Promise<SweepDeliveryProgress>>();
 
 /**
- * Poll `policyId`'s runs until they have settled, opening each completed
- * run's outputs into the workbench via `addFiles`. With a known `expected`
- * count it stops exactly there; with null (the sweep runs behind the create
- * response, so no count exists up front) it stops once every observed run is
- * terminal and stable, or once a grace period passes with no runs at all.
+ * Poll `policyId`'s runs until they settle, opening each completed run's outputs
+ * into the workbench via `addFiles`. A numeric `expected` stops there; `null`
+ * stops once every observed run is terminal and stable, or after a grace period
+ * with no runs.
  *
- * Deduped per folder so two loops never open the same run's outputs twice (see
- * {@link deliveriesInFlight}). Only the fire-and-forget callers (enable, sweep,
- * setup) can pile several loops onto one folder, and they pass no callbacks: a
- * callback-less call joins a delivery already running for the folder instead of
- * starting a second, and the running loop is the broader of the two in every
- * overlapping path (an unscoped or exclude-baseline enable still polling when a
- * later include-scoped sweep fires), so its feed already carries the joiner's
- * runs and nothing is missed. A caller that passes callbacks (the Downloads
- * wizard, always on a folder it just created, so it never collides) runs its
- * own delivery and keeps its onProgress/onRuns/onSettled rather than being
- * joined to a loop that could not deliver them.
+ * A callback-less caller joins a delivery already running for the folder (see
+ * {@link deliveriesInFlight}) rather than starting a second. A caller that
+ * passes callbacks runs its own delivery, so its onProgress/onRuns/onSettled
+ * always fire.
  */
 export function deliverSweepResults(
   policyId: string,

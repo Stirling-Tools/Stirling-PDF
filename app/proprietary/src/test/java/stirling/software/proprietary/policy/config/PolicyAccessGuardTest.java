@@ -124,9 +124,8 @@ class PolicyAccessGuardTest {
 
     @Test
     void aNullOwnerProcessingFolderIsNotReachableUnderLogin() {
-        // A legacy or mis-stamped processing folder with no stamped owner must be reachable by
-        // nobody under enforcement, not by every authenticated user across accounts. The null-owner
-        // short-circuit returns false without even reading the current username.
+        // A folder with no stamped owner must be reachable by nobody under login, not by every
+        // authenticated user. The null-owner short-circuit returns false without reading the user.
         assertFalse(guard(true).canAccess(folderPair(1L, null)));
     }
 

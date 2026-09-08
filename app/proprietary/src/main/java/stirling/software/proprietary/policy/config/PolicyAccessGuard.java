@@ -56,10 +56,9 @@ public class PolicyAccessGuard {
     }
 
     /**
-     * Owner match for personal records. A row with no stamped owner is nobody's under enforcement
-     * (fail closed): the previous "null owner is anyone's" made a legacy or mis-stamped processing
-     * folder reachable by any authenticated user, cross-account, since this surface is not
-     * team-scoped. Real processing folders always carry an owner (stamped at creation).
+     * Owner match for a personal record, fail-closed: a row with no stamped owner belongs to nobody
+     * under login. Treating a null owner as anyone's would expose a legacy or mis-stamped folder to
+     * every authenticated user, since this surface is owner-scoped, not team-scoped.
      */
     private boolean ownedByCurrentUser(Policy policy) {
         return policy.owner() != null

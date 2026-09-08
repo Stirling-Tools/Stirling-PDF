@@ -203,9 +203,8 @@ class ProcessingFolderControllerTest {
 
     @Test
     void aForeignOutputFolderIdIsOverriddenWithTheOwnedSourceFolder() {
-        // A caller owns FOLDER_ID (their source) but tries to redirect output into someone else's
-        // folder via the request body. The storage sink only checks a supplied folderId exists,
-        // not that the caller owns it, so the output folderId must be forced to the owned source.
+        // The caller owns FOLDER_ID but points output at someone else's folder. The storage sink
+        // only checks a folderId exists, not that the caller owns it, so it must be forced.
         String foreign = "00000000-0000-0000-0000-0000000000ff";
         var view =
                 controller

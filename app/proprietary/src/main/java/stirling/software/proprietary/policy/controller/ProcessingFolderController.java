@@ -152,9 +152,8 @@ public class ProcessingFolderController {
     public DownloadsSuggestion downloadsSuggestion() {
         currentUserOrNull();
         Path downloads = Path.of(System.getProperty("user.home", ""), "Downloads");
-        // Withhold the path unless the offer is actually available: returning it on the
-        // unavailable branches disclosed the server's home directory (hence OS username) to any
-        // authenticated caller, including under SaaS and on a locked-down multi-user server.
+        // Only return the path when the offer is available: it is the server's home directory
+        // (hence the OS username) and must not leak to a caller who cannot use the folder.
         if (!Files.isDirectory(downloads)) {
             return new DownloadsSuggestion("", false, 0, DISK_SWEEP_LIMIT);
         }
@@ -882,11 +881,9 @@ public class ProcessingFolderController {
         Map<String, Object> options =
                 new HashMap<>(request.output() == null ? Map.of() : request.output());
         if (folder != null) {
-            // Force the output folder to the caller-owned source folder, overriding any folderId in
-            // the request body. requireOwnedFolder authorized THIS folder; the storage sink only
-            // checks a supplied folderId exists, not that the caller owns it, so an unforced value
-            // would let a caller write their processed output into another user's (or team's)
-            // folder. Processing folders process in place, so the source folder is the destination.
+            // Force the output to the caller-owned source folder: the storage sink only checks a
+            // folderId exists, not that the caller owns it, so honouring a request-supplied one
+            // would write output into another tenant's folder. Processing is in place anyway.
             options.put("folderId", folder.getId().toString());
             return new OutputSpec("storage", options);
         }
