@@ -209,6 +209,59 @@ class FolderOutputSinkTest {
     }
 
     @Test
+    void archiveFailureAbortsTheReplaceInsteadOfDestroyingTheOriginal() throws IOException {
+        Path out = tempDir.resolve("out");
+        Files.createDirectories(out.resolve(".stirling"));
+        Files.writeString(out.resolve("a.pdf"), "original");
+        // Block the originals dir by occupying its path with a regular file, so archiving throws
+        // exactly as an unwritable/locked/full originals dir would in the field.
+        Files.writeString(out.resolve(".stirling").resolve("originals"), "blocker");
+        OutputSpec replace =
+                new OutputSpec("folder", Map.of("directory", out.toString(), "replace", true));
+
+        assertThrows(
+                IOException.class,
+                () -> sink.deliver(inPlaceRun("a.pdf"), List.of(named("a.pdf", "v1")), replace));
+
+        // The overwrite must not run when the original could not be archived: the file the user
+        // dropped is still intact, not replaced by an unrecoverable processed version.
+        assertEquals("original", Files.readString(out.resolve("a.pdf")));
+    }
+
+    @Test
+    void aReDroppedSameNameFileKeepsItsOwnOriginalRatherThanLosingIt() throws IOException {
+        Path out = tempDir.resolve("out");
+        Files.createDirectories(out);
+        Files.writeString(out.resolve("a.pdf"), "first-original");
+        OutputSpec replace =
+                new OutputSpec("folder", Map.of("directory", out.toString(), "replace", true));
+
+        sink.deliver(inPlaceRun("a.pdf"), List.of(named("a.pdf", "processed1")), replace);
+        // The user drops a genuinely different document under the same name; it is reprocessed.
+        Files.writeString(out.resolve("a.pdf"), "second-original");
+        sink.deliver(inPlaceRun("a.pdf"), List.of(named("a.pdf", "processed2")), replace);
+
+        assertEquals("processed2", Files.readString(out.resolve("a.pdf")));
+        Path originals = out.resolve(".stirling").resolve("originals");
+        // The first original still restores under the canonical name.
+        assertEquals("first-original", Files.readString(originals.resolve("a.pdf")));
+        // The second original was preserved (under a numbered name), not overwritten away.
+        boolean secondKept;
+        try (Stream<Path> archived = Files.list(originals)) {
+            secondKept =
+                    archived.anyMatch(
+                            p -> {
+                                try {
+                                    return "second-original".equals(Files.readString(p));
+                                } catch (IOException e) {
+                                    return false;
+                                }
+                            });
+        }
+        assertTrue(secondKept, "the re-dropped original must be preserved, never silently lost");
+    }
+
+    @Test
     void aBrandNewNameArchivesNothing() throws IOException {
         Path out = tempDir.resolve("out");
         OutputSpec replace =
