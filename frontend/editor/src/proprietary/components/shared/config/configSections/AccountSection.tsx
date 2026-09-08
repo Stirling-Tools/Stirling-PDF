@@ -21,6 +21,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { useAccountLogout } from "@app/extensions/accountLogout";
 import { BASE_PATH, withBasePath } from "@app/constants/app";
 import { MfaSetupResponse } from "@app/responses/Mfa/MfaResponse";
+import { MIN_PASSWORD_LENGTH } from "@app/constants/passwordPolicy";
 
 const AccountSection: React.FC = () => {
   const { t } = useTranslation();
@@ -103,6 +104,17 @@ const AccountSection: React.FC = () => {
     if (!currentPassword || !newPassword || !confirmPassword) {
       setPasswordError(
         t("settings.security.password.required", "All fields are required."),
+      );
+      return;
+    }
+
+    if (newPassword.length < MIN_PASSWORD_LENGTH) {
+      setPasswordError(
+        t(
+          "settings.security.password.tooShort",
+          "Password must be at least 8 characters",
+          { count: MIN_PASSWORD_LENGTH },
+        ),
       );
       return;
     }
@@ -522,6 +534,11 @@ const AccountSection: React.FC = () => {
               placeholder={t(
                 "settings.security.password.newPlaceholder",
                 "Enter a new password",
+              )}
+              description={t(
+                "settings.security.password.hint",
+                "At least 8 characters",
+                { count: MIN_PASSWORD_LENGTH },
               )}
               value={newPassword}
               onChange={(event) => setNewPassword(event.currentTarget.value)}

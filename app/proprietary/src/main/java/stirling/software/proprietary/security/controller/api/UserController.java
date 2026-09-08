@@ -99,6 +99,11 @@ public class UserController {
                         .body(Map.of("error", "Password is required"));
             }
 
+            if (!PasswordPolicy.isAcceptable(password)) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(PasswordPolicy.violationBody());
+            }
+
             if (licenseSettingsService.wouldExceedLimit(1)) {
                 long availableSlots = licenseSettingsService.getAvailableUserSlots();
                 int maxAllowed = licenseSettingsService.calculateMaxAllowedUsers();
@@ -282,12 +287,7 @@ public class UserController {
 
         if (!PasswordPolicy.isAcceptable(newPassword)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(
-                            Map.of(
-                                    "error",
-                                    "passwordTooShort",
-                                    "message",
-                                    PasswordPolicy.VIOLATION_MESSAGE));
+                    .body(PasswordPolicy.violationBody());
         }
 
         User user = userOpt.get();
@@ -335,12 +335,7 @@ public class UserController {
         }
         if (!PasswordPolicy.isAcceptable(newPassword)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(
-                            Map.of(
-                                    "error",
-                                    "passwordTooShort",
-                                    "message",
-                                    PasswordPolicy.VIOLATION_MESSAGE));
+                    .body(PasswordPolicy.violationBody());
         }
         userService.changePassword(user, newPassword);
         // Logout using Spring's utility
@@ -482,7 +477,7 @@ public class UserController {
             }
             if (!PasswordPolicy.isAcceptable(password)) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(Map.of("error", PasswordPolicy.VIOLATION_MESSAGE));
+                        .body(PasswordPolicy.violationBody());
             }
             builder.password(password).firstLogin(forceChange).requireMfa(forceMFA);
         }
@@ -713,7 +708,7 @@ public class UserController {
 
         if (!PasswordPolicy.isAcceptable(finalPassword)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", PasswordPolicy.VIOLATION_MESSAGE));
+                    .body(PasswordPolicy.violationBody());
         }
 
         // Set force password change flag before changing password so both are saved together

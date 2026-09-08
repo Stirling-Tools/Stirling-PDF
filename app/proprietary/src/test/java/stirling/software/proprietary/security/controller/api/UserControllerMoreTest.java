@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.test.web.servlet.MockMvc;
@@ -27,6 +28,7 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.security.model.api.user.UsernameAndPass;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.service.EmailService;
 import stirling.software.proprietary.security.service.LoginAttemptService;
@@ -36,9 +38,14 @@ import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
 import stirling.software.proprietary.service.UserLicenseSettingsService;
 
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
+
 @ExtendWith(MockitoExtension.class)
 @DisplayName("UserController - additional coverage")
 class UserControllerMoreTest {
+
+    private final ObjectMapper objectMapper = JsonMapper.builder().build();
 
     @Mock private UserService userService;
     @Mock private SessionPersistentRegistry sessionRegistry;
@@ -319,8 +326,9 @@ class UserControllerMoreTest {
                                     .param("role", "ROLE_USER")
                                     .param("authType", "web"))
                     .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.error").value("passwordTooShort"))
                     .andExpect(
-                            jsonPath("$.error").value("Password must be at least 8 characters."));
+                            jsonPath("$.message").value("Password must be at least 8 characters."));
 
             verify(userService, never()).saveUserCore(any());
         }
@@ -439,8 +447,9 @@ class UserControllerMoreTest {
                                     .param("username", "bob")
                                     .param("newPassword", "newpass"))
                     .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.error").value("passwordTooShort"))
                     .andExpect(
-                            jsonPath("$.error").value("Password must be at least 8 characters."));
+                            jsonPath("$.message").value("Password must be at least 8 characters."));
 
             verify(userService, never()).changePassword(any(), any());
         }
@@ -546,6 +555,32 @@ class UserControllerMoreTest {
                     .andExpect(jsonPath("$.successCount").value(1));
 
             verify(userService).saveUserCore(any());
+        }
+    }
+
+    @Nested
+    @DisplayName("register")
+    class Register {
+
+        @Test
+        @DisplayName("rejects a password below the shared minimum length")
+        void passwordTooShort() throws Exception {
+            UsernameAndPass payload = new UsernameAndPass();
+            payload.setUsername("new@ex.com");
+            payload.setPassword("secret1");
+            when(userService.usernameExistsIgnoreCase("new@ex.com")).thenReturn(false);
+            when(userService.isUsernameValid("new@ex.com")).thenReturn(true);
+
+            mockMvc.perform(
+                            post("/api/v1/user/register")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(payload)))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.error").value("passwordTooShort"))
+                    .andExpect(
+                            jsonPath("$.message").value("Password must be at least 8 characters."));
+
+            verify(userService, never()).saveUserCore(any());
         }
     }
 }

@@ -413,7 +413,7 @@ public class InviteLinkController {
             }
             if (!PasswordPolicy.isAcceptable(password)) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(Map.of("error", PasswordPolicy.VIOLATION_MESSAGE));
+                        .body(PasswordPolicy.violationBody());
             }
 
             Optional<InviteToken> inviteOpt = inviteTokenRepository.findByToken(token);

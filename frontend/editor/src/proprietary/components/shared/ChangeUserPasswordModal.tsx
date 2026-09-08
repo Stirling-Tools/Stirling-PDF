@@ -20,6 +20,7 @@ import {
   userManagementService,
 } from "@app/services/userManagementService";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
+import { MIN_PASSWORD_LENGTH } from "@app/constants/passwordPolicy";
 
 interface ChangeUserPasswordModalProps {
   opened: boolean;
@@ -134,6 +135,18 @@ export default function ChangeUserPasswordModal({
         title: t(
           "workspace.people.changePassword.passwordRequired",
           "Please enter a new password",
+        ),
+      });
+      return;
+    }
+
+    if (!form.generateRandom && form.newPassword.length < MIN_PASSWORD_LENGTH) {
+      alert({
+        alertType: "error",
+        title: t(
+          "workspace.people.changePassword.passwordTooShort",
+          "Password must be at least 8 characters",
+          { count: MIN_PASSWORD_LENGTH },
         ),
       });
       return;
@@ -281,6 +294,11 @@ export default function ChangeUserPasswordModal({
                   placeholder={t(
                     "workspace.people.changePassword.placeholder",
                     "Enter a new password",
+                  )}
+                  description={t(
+                    "workspace.people.changePassword.passwordHint",
+                    "At least 8 characters",
+                    { count: MIN_PASSWORD_LENGTH },
                   )}
                   value={form.newPassword}
                   onChange={(event) =>

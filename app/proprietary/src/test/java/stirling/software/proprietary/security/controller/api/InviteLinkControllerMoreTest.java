@@ -269,8 +269,9 @@ class InviteLinkControllerMoreTest {
         void passwordTooShort() throws Exception {
             mockMvc.perform(post("/api/v1/invite/accept/tok").param("password", "x"))
                     .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.error").value("passwordTooShort"))
                     .andExpect(
-                            jsonPath("$.error").value("Password must be at least 8 characters."));
+                            jsonPath("$.message").value("Password must be at least 8 characters."));
 
             verify(inviteTokenRepository, never()).findByToken(any());
         }

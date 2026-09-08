@@ -1,5 +1,7 @@
 package stirling.software.proprietary.security.util;
 
+import java.util.Map;
+
 /**
  * The one password rule every path that sets a password enforces: account creation, invite
  * redemption, self-service change and administrator reset. Public endpoints such as invite
@@ -9,6 +11,9 @@ public final class PasswordPolicy {
 
     /** NIST SP 800-63B's floor for a user-chosen secret. */
     public static final int MIN_LENGTH = 8;
+
+    /** Stable identifier clients translate; the English text is only a fallback. */
+    public static final String VIOLATION_CODE = "passwordTooShort";
 
     public static final String VIOLATION_MESSAGE =
             "Password must be at least " + MIN_LENGTH + " characters.";
@@ -20,5 +25,13 @@ public final class PasswordPolicy {
      */
     public static boolean isAcceptable(String password) {
         return password != null && !password.isBlank() && password.length() >= MIN_LENGTH;
+    }
+
+    /**
+     * The 400 body every guard returns, so a client can key off one code rather than parse five
+     * different English sentences.
+     */
+    public static Map<String, String> violationBody() {
+        return Map.of("error", VIOLATION_CODE, "message", VIOLATION_MESSAGE);
     }
 }
