@@ -166,7 +166,7 @@ public class FolderOutputSink implements PolicyOutputSink {
         if (replace) {
             Path target = dir.resolve(name);
             // Archive before the ledger row flips DONE, so a restore that reads DONE finds the
-            // original safe, never mid-move. Throws if it cannot, aborting before the overwrite.
+            // original safe, never mid-move.
             Path archived = archiveOriginal(dir, target);
             try {
                 if (delivery.policyId() != null) {
@@ -254,8 +254,7 @@ public class FolderOutputSink implements PolicyOutputSink {
         String name = target.getFileName().toString();
         Path archived = originals.resolve(name);
         if (Files.exists(archived)) {
-            // First original already kept; preserve this content under a numbered name so the
-            // overwrite cannot destroy it. Revert restores the canonical (first) original.
+            // Numbered, so the overwrite cannot destroy this content either.
             archived = uniqueTarget(originals, name);
         }
         Files.move(target, archived);

@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-// Control the runs feed and the per-output fetch the delivery loop drives.
 const fetchRuns = vi.fn();
 const fetchOutput = vi.fn();
 vi.mock("@app/services/processingFolderApi", () => ({
@@ -56,10 +55,9 @@ describe("deliverSweepResults - one live delivery per folder", () => {
     const addFiles = vi.fn().mockResolvedValue(undefined);
     const onProgress = vi.fn();
 
-    // A callback-less delivery is already running for this folder...
+    // A caller that needs progress (the wizard) must run its own loop rather than
+    // join the callback-less one already running, which cannot fire its callbacks.
     const bare = deliverSweepResults("policy-1", 1, addFiles);
-    // ...and a caller that needs progress (the wizard) must run its own loop,
-    // not be joined to one that cannot deliver its callbacks.
     const withCallbacks = deliverSweepResults("policy-1", 1, addFiles, {
       onProgress,
     });

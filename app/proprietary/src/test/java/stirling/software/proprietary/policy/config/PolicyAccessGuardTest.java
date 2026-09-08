@@ -124,8 +124,8 @@ class PolicyAccessGuardTest {
 
     @Test
     void aNullOwnerProcessingFolderIsNotReachableUnderLogin() {
-        // A folder with no stamped owner must be reachable by nobody under login, not by every
-        // authenticated user. The null-owner short-circuit returns false without reading the user.
+        // Nobody, not every authenticated user. The null-owner short-circuit returns false
+        // without reading the current user, so there is no username to stub.
         assertFalse(guard(true).canAccess(folderPair(1L, null)));
     }
 

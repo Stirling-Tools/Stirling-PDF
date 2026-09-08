@@ -223,8 +223,6 @@ class FolderOutputSinkTest {
                 IOException.class,
                 () -> sink.deliver(inPlaceRun("a.pdf"), List.of(named("a.pdf", "v1")), replace));
 
-        // The overwrite must not run when the original could not be archived: the file the user
-        // dropped is still intact, not replaced by an unrecoverable processed version.
         assertEquals("original", Files.readString(out.resolve("a.pdf")));
     }
 
@@ -243,7 +241,6 @@ class FolderOutputSinkTest {
 
         assertEquals("processed2", Files.readString(out.resolve("a.pdf")));
         Path originals = out.resolve(".stirling").resolve("originals");
-        // The first original still restores under the canonical name.
         assertEquals("first-original", Files.readString(originals.resolve("a.pdf")));
         // The second original was preserved (under a numbered name), not overwritten away.
         boolean secondKept;

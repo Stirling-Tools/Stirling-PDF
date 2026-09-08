@@ -109,9 +109,10 @@ const deliveriesInFlight = new Map<string, Promise<SweepDeliveryProgress>>();
 
 /**
  * Poll `policyId`'s runs until they settle, opening each completed run's outputs
- * into the workbench via `addFiles`. A numeric `expected` stops there; `null`
- * stops once every observed run is terminal and stable, or after a grace period
- * with no runs.
+ * into the workbench via `addFiles`. A numeric `expected` stops there; `null` is
+ * for callers with no count yet, the sweep running behind the create response,
+ * and stops once every observed run is terminal and stable, or after a grace
+ * period with no runs.
  *
  * A callback-less caller joins a delivery already running for the folder (see
  * {@link deliveriesInFlight}) rather than starting a second. A caller that
