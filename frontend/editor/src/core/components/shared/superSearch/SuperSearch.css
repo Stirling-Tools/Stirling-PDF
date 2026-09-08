@@ -271,3 +271,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+[data-mantine-color-scheme="dark"] .super-search-dropdown {
+  border-color: var(--c-border-strong);
+}
