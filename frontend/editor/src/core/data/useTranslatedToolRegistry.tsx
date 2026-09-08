@@ -1,6 +1,5 @@
 import { lazy, useMemo } from "react";
-import LocalIcon from "@app/components/shared/LocalIcon";
-import GroupAddOutlinedIcon from "@mui/icons-material/GroupAddOutlined";
+import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
 import { devApiLink } from "@app/constants/links";
 import { reorganizePagesOperationConfig } from "@app/hooks/tools/reorganizePages/useReorganizePagesOperation";
@@ -91,13 +90,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       ...prototypeTools,
       // Recommended Tools in order
       pdfTextEditor: {
-        icon: (
-          <LocalIcon
-            icon="edit-square-outline-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
+        icon: <Icon name="square-pen" size="1.5rem" />,
         name: t("home.pdfTextEditor.title", "PDF Text Editor"),
         component: lazy(() => import("@app/tools/pdfTextEditor/PdfTextEditor")),
         description: t(
@@ -113,13 +106,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         automationSettings: null,
       },
       multiTool: {
-        icon: (
-          <LocalIcon
-            icon="dashboard-customize-outline-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
+        icon: <Icon name="layout-dashboard" size="1.5rem" />,
         name: t("home.multiTool.title", "Multi-Tool"),
         component: null,
         workbench: "pageEditor",
@@ -136,13 +123,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         automationSettings: null,
       },
       merge: {
-        icon: (
-          <LocalIcon
-            icon="library-add-outline-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
+        icon: <Icon name="copy-plus" size="1.5rem" />,
         name: t("home.merge.title", "Merge"),
         component: lazy(() => import("@app/tools/Merge")),
         description: t(
@@ -161,13 +142,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       },
       // Signing
       certSign: {
-        icon: (
-          <LocalIcon
-            icon="workspace-premium-outline-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
+        icon: <Icon name="award" size="1.5rem" />,
         name: t("home.certSign.title", "Certificate Sign"),
         component: lazy(() => import("@app/tools/CertSign")),
         description: t(
@@ -186,13 +161,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         ),
       },
       timestampPdf: {
-        icon: (
-          <LocalIcon
-            icon="schedule-outline-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
+        icon: <Icon name="clock" size="1.5rem" />,
         name: t("home.timestampPdf.title", "Timestamp PDF"),
         component: lazy(() => import("@app/tools/TimestampPdf")),
         description: t(
@@ -208,9 +177,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         synonyms: getSynonyms(t, "timestampPdf"),
       },
       sign: {
-        icon: (
-          <LocalIcon icon="signature-rounded" width="1.5rem" height="1.5rem" />
-        ),
+        icon: <Icon name="signature" size="1.5rem" />,
         name: t("home.sign.title", "Sign"),
         component: lazy(() => import("@app/tools/Sign")),
         description: t(
@@ -228,7 +195,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         supportsAutomate: false, //TODO make support Sign
       },
       sharedSign: {
-        icon: <GroupAddOutlinedIcon sx={{ fontSize: "1.5rem" }} />,
+        icon: <Icon name="users-plus" size={"1.5rem"} />,
         name: t("home.sharedSign.title", "Shared Signing"),
         component: lazy(() => import("@app/tools/SharedSign")),
         description: t(
@@ -242,13 +209,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         synonyms: getSynonyms(t, "sharedSign"),
       },
       addText: {
-        icon: (
-          <LocalIcon
-            icon="text-fields-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
+        icon: <Icon name="type" size="1.5rem" />,
         name: t("home.addText.title", "Add Text"),
         component: lazy(() => import("@app/tools/AddText")),
         description: t(
@@ -264,13 +225,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         supportsAutomate: false,
       },
       addImage: {
-        icon: (
-          <LocalIcon
-            icon="image-outline-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
+        icon: <Icon name="image" size="1.5rem" />,
         name: t("home.addImage.title", "Add Image"),
         component: lazy(() => import("@app/tools/AddImage")),
         description: t("home.addImage.desc", "Add images anywhere in your PDF"),
@@ -283,13 +238,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         supportsAutomate: false,
       },
       annotate: {
-        icon: (
-          <LocalIcon
-            icon="edit-outline-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
+        icon: <Icon name="pencil" size="1.5rem" />,
         name: t("home.annotate.title", "Annotate"),
         component: lazy(() => import("@app/tools/Annotate")),
         description: t(
@@ -309,9 +258,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       // Document Security
 
       addPassword: {
-        icon: (
-          <LocalIcon icon="password-rounded" width="1.5rem" height="1.5rem" />
-        ),
+        icon: <Icon name="file-lock" size="1.5rem" />,
         name: t("home.addPassword.title", "Add Password"),
         component: lazy(() => import("@app/tools/AddPassword")),
         description: t(
@@ -329,13 +276,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         synonyms: getSynonyms(t, "addPassword"),
       },
       watermark: {
-        icon: (
-          <LocalIcon
-            icon="branding-watermark-outline-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
+        icon: <Icon name="watermark" size="1.5rem" />,
         name: t("home.watermark.title", "Add Watermark"),
         component: lazy(() => import("@app/tools/AddWatermark")),
         maxFiles: -1,
@@ -354,13 +295,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         synonyms: getSynonyms(t, "watermark"),
       },
       addStamp: {
-        icon: (
-          <LocalIcon
-            icon="approval-outline-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
+        icon: <Icon name="badge-check" size="1.5rem" />,
         name: t("home.addStamp.title", "Add Stamp to PDF"),
         component: lazy(() => import("@app/tools/AddStamp")),
         description: t(
@@ -379,13 +314,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         ),
       },
       sanitize: {
-        icon: (
-          <LocalIcon
-            icon="cleaning-services-outline-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
+        icon: <Icon name="brush-cleaning" size="1.5rem" />,
         name: t("home.sanitize.title", "Sanitize"),
         component: lazy(() => import("@app/tools/Sanitize")),
         maxFiles: -1,
@@ -403,13 +332,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         synonyms: getSynonyms(t, "sanitize"),
       },
       flatten: {
-        icon: (
-          <LocalIcon
-            icon="layers-clear-outline-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
+        icon: <Icon name="layers-minus" size="1.5rem" />,
         name: t("home.flatten.title", "Flatten"),
         component: lazy(() => import("@app/tools/Flatten")),
         description: t(
@@ -427,13 +350,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         synonyms: getSynonyms(t, "flatten"),
       },
       unlockPDFForms: {
-        icon: (
-          <LocalIcon
-            icon="preview-off-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
+        icon: <Icon name="lock-open" size="1.5rem" />,
         name: t("home.unlockPDFForms.title", "Unlock PDF Forms"),
         component: lazy(() => import("@app/tools/UnlockPdfForms")),
         description: t(
@@ -449,13 +366,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         automationSettings: null,
       },
       formFill: {
-        icon: (
-          <LocalIcon
-            icon="text-fields-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
+        icon: <Icon name="type" size="1.5rem" />,
         name: t("home.formFill.title", "Form Editor"),
         component: lazy(() => import("@app/tools/formFill/FormFill")),
         description: t(
@@ -483,13 +394,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         ],
       },
       autoFormDetection: {
-        icon: (
-          <LocalIcon
-            icon="document-scanner-outline-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
+        icon: <Icon name="file-search" size="1.5rem" />,
         name: t("home.autoFormDetection.title", "Auto Form Detection"),
         component: lazy(
           () => import("@app/tools/autoFormDetection/AutoFormDetection"),
@@ -523,7 +428,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         supportsAutomate: true,
       },
       changePermissions: {
-        icon: <LocalIcon icon="lock-outline" width="1.5rem" height="1.5rem" />,
+        icon: <Icon name="lock" size="1.5rem" />,
         name: t("home.changePermissions.title", "Change Permissions"),
         component: lazy(() => import("@app/tools/ChangePermissions")),
         description: t(
@@ -542,13 +447,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         synonyms: getSynonyms(t, "changePermissions"),
       },
       getPdfInfo: {
-        icon: (
-          <LocalIcon
-            icon="fact-check-outline-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
+        icon: <Icon name="clipboard-check" size="1.5rem" />,
         name: t("home.getPdfInfo.title", "Get ALL Info on PDF"),
         component: lazy(() => import("@app/tools/GetPdfInfo")),
         description: t(
@@ -564,13 +463,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         maxFiles: 1,
       },
       validateSignature: {
-        icon: (
-          <LocalIcon
-            icon="verified-outline-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
+        icon: <Icon name="badge-check" size="1.5rem" />,
         name: t("home.validateSignature.title", "Validate PDF Signature"),
         component: lazy(() => import("@app/tools/ValidateSignature")),
         description: t(
@@ -591,13 +484,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       // Document Review
 
       read: {
-        icon: (
-          <LocalIcon
-            icon="article-outline-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
+        icon: <Icon name="file-text" size="1.5rem" />,
         name: t("home.read.title", "Read"),
         component: null,
         workbench: "viewer",
@@ -613,13 +500,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         automationSettings: null,
       },
       changeMetadata: {
-        icon: (
-          <LocalIcon
-            icon="assignment-outline-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
+        icon: <Icon name="clipboard-list" size="1.5rem" />,
         name: t("home.changeMetadata.title", "Change Metadata"),
         component: lazy(() => import("@app/tools/ChangeMetadata")),
         description: t(
@@ -638,7 +519,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         synonyms: getSynonyms(t, "changeMetadata"),
       },
       editTableOfContents: {
-        icon: <LocalIcon icon="toc-rounded" width="1.5rem" height="1.5rem" />,
+        icon: <Icon name="table-of-contents" size="1.5rem" />,
         name: t("home.editTableOfContents.title", "Edit Table of Contents"),
         component: lazy(() => import("@app/tools/EditTableOfContents")),
         description: t(
@@ -657,7 +538,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       // Page Formatting
 
       crop: {
-        icon: <LocalIcon icon="crop-rounded" width="1.5rem" height="1.5rem" />,
+        icon: <Icon name="crop" size="1.5rem" />,
         name: t("home.crop.title", "Crop PDF"),
         component: lazy(() => import("@app/tools/Crop")),
         description: t(
@@ -674,13 +555,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         ),
       },
       rotate: {
-        icon: (
-          <LocalIcon
-            icon="rotate-right-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
+        icon: <Icon name="rotate-cw" size="1.5rem" />,
         name: t("home.rotate.title", "Rotate"),
         component: lazy(() => import("@app/tools/Rotate")),
         description: t("home.rotate.desc", "Easily rotate your PDFs."),
@@ -695,13 +570,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         synonyms: getSynonyms(t, "rotate"),
       },
       autoRotate: {
-        icon: (
-          <LocalIcon
-            icon="screen-rotation-alt-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
+        icon: <Icon name="rotate-cw-square" size="1.5rem" />,
         name: t("home.autoRotate.title", "Auto Rotate"),
         component: lazy(() => import("@app/tools/AutoRotate")),
         description: t(
@@ -720,13 +589,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         synonyms: getSynonyms(t, "autoRotate"),
       },
       split: {
-        icon: (
-          <LocalIcon
-            icon="content-cut-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
+        icon: <Icon name="scissors" size="1.5rem" />,
         name: t("home.split.title", "Split"),
         component: lazy(() => import("@app/tools/Split")),
         description: t("home.split.desc", "Split PDFs into multiple documents"),
@@ -740,9 +603,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         synonyms: getSynonyms(t, "split"),
       },
       reorganizePages: {
-        icon: (
-          <LocalIcon icon="move-down-rounded" width="1.5rem" height="1.5rem" />
-        ),
+        icon: <Icon name="move-item-down" size="1.5rem" />,
         name: t("home.reorganizePages.title", "Reorganize Pages"),
         component: lazy(() => import("@app/tools/ReorganizePages")),
         description: t(
@@ -760,9 +621,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         ),
       },
       scalePages: {
-        icon: (
-          <LocalIcon icon="crop-free-rounded" width="1.5rem" height="1.5rem" />
-        ),
+        icon: <Icon name="scan" size="1.5rem" />,
         name: t("home.scalePages.title", "Adjust page size/scale"),
         component: lazy(() => import("@app/tools/AdjustPageScale")),
         description: t(
@@ -781,7 +640,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         synonyms: getSynonyms(t, "scalePages"),
       },
       addPageNumbers: {
-        icon: <LocalIcon icon="123-rounded" width="1.5rem" height="1.5rem" />,
+        icon: <Icon name="file-digit" size="1.5rem" />,
         name: t("home.addPageNumbers.title", "Add Page Numbers"),
         component: lazy(() => import("@app/tools/AddPageNumbers")),
         description: t(
@@ -800,13 +659,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         synonyms: getSynonyms(t, "addPageNumbers"),
       },
       pageLayout: {
-        icon: (
-          <LocalIcon
-            icon="dashboard-outline-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
+        icon: <Icon name="layout-dashboard" size="1.5rem" />,
         name: t("home.pageLayout.title", "Multi-Page Layout"),
         component: lazy(() => import("@app/tools/PageLayout")),
         description: t(
@@ -824,13 +677,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         synonyms: getSynonyms(t, "pageLayout"),
       },
       bookletImposition: {
-        icon: (
-          <LocalIcon
-            icon="menu-book-outline-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
+        icon: <Icon name="book-open" size="1.5rem" />,
         name: t("home.bookletImposition.title", "Booklet Imposition"),
         component: lazy(() => import("@app/tools/BookletImposition")),
         operationConfig: asRegistryConfig(bookletImpositionOperationConfig),
@@ -847,13 +694,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         endpoints: ["booklet-imposition"],
       },
       pdfToSinglePage: {
-        icon: (
-          <LocalIcon
-            icon="looks-one-outline-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
+        icon: <Icon name="single-page" size="1.5rem" />,
         name: t("home.pdfToSinglePage.title", "PDF to Single Large Page"),
         component: lazy(() => import("@app/tools/SingleLargePage")),
 
@@ -870,9 +711,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         automationSettings: null,
       },
       addAttachments: {
-        icon: (
-          <LocalIcon icon="attachment-rounded" width="1.5rem" height="1.5rem" />
-        ),
+        icon: <Icon name="paperclip" size="1.5rem" />,
         name: t("home.addAttachments.title", "Add Attachments"),
         component: lazy(() => import("@app/tools/AddAttachments")),
         description: t(
@@ -891,13 +730,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         ),
       },
       createPortfolio: {
-        icon: (
-          <LocalIcon
-            icon="library-add-outline-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
+        icon: <Icon name="library" size="1.5rem" />,
         name: t("home.createPortfolio.title", "Create Portfolio"),
         component: lazy(() => import("@app/tools/CreatePortfolio")),
         description: t(
@@ -919,9 +752,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       // Extraction
 
       extractPages: {
-        icon: (
-          <LocalIcon icon="upload-rounded" width="1.5rem" height="1.5rem" />
-        ),
+        icon: <Icon name="upload" size="1.5rem" />,
         name: t("home.extractPages.title", "Extract Pages"),
         component: lazy(() => import("@app/tools/ExtractPages")),
         description: t(
@@ -939,13 +770,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         endpoints: ["rearrange-pages"],
       },
       extractImages: {
-        icon: (
-          <LocalIcon
-            icon="photo-library-outline-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
+        icon: <Icon name="images" size="1.5rem" />,
         name: t("home.extractImages.title", "Extract Images"),
         component: lazy(() => import("@app/tools/ExtractImages")),
         description: t(
@@ -967,13 +792,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       // Removal
 
       removePages: {
-        icon: (
-          <LocalIcon
-            icon="delete-outline-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
+        icon: <Icon name="trash" size="1.5rem" />,
         name: t("home.removePages.title", "Remove Pages"),
         component: lazy(() => import("@app/tools/RemovePages")),
         description: t(
@@ -991,13 +810,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         ),
       },
       removeBlanks: {
-        icon: (
-          <LocalIcon
-            icon="scan-delete-outline-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
+        icon: <Icon name="file-x" size="1.5rem" />,
         name: t("home.removeBlanks.title", "Remove Blank Pages"),
         component: lazy(() => import("@app/tools/RemoveBlanks")),
         description: t(
@@ -1016,13 +829,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         ),
       },
       removeAnnotations: {
-        icon: (
-          <LocalIcon
-            icon="thread-unread-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
+        icon: <Icon name="annotation-off" size="1.5rem" />,
         name: t("home.removeAnnotations.title", "Remove Annotations"),
         component: lazy(() => import("@app/tools/RemoveAnnotations")),
         description: t(
@@ -1038,13 +845,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         synonyms: getSynonyms(t, "removeAnnotations"),
       },
       removeImage: {
-        icon: (
-          <LocalIcon
-            icon="remove-selection-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
+        icon: <Icon name="remove-selection" size="1.5rem" />,
         name: t("home.removeImage.title", "Remove Images"),
         component: lazy(() => import("@app/tools/RemoveImage")),
         description: t(
@@ -1060,13 +861,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         automationSettings: null,
       },
       removePassword: {
-        icon: (
-          <LocalIcon
-            icon="lock-open-right-outline-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
+        icon: <Icon name="lock-open" size="1.5rem" />,
         name: t("home.removePassword.title", "Remove Password"),
         component: lazy(() => import("@app/tools/RemovePassword")),
         description: t(
@@ -1085,13 +880,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         synonyms: getSynonyms(t, "removePassword"),
       },
       removeCertSign: {
-        icon: (
-          <LocalIcon
-            icon="remove-moderator-outline-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
+        icon: <Icon name="shield-off" size="1.5rem" />,
         name: t("home.removeCertSign.title", "Remove Certificate Sign"),
         component: lazy(() => import("@app/tools/RemoveCertificateSign")),
         description: t(
@@ -1110,9 +899,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       // Automation
 
       automate: {
-        icon: (
-          <LocalIcon icon="automation-outline" width="1.5rem" height="1.5rem" />
-        ),
+        icon: <Icon name="workflow" size="1.5rem" />,
         name: t("home.automate.title", "Automate"),
         component: lazy(() => import("@app/tools/Automate")),
         description: t(
@@ -1128,9 +915,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         automationSettings: null,
       },
       autoRename: {
-        icon: (
-          <LocalIcon icon="match-word-rounded" width="1.5rem" height="1.5rem" />
-        ),
+        icon: <Icon name="whole-word" size="1.5rem" />,
         name: t("home.autoRename.title", "Auto Rename PDF File"),
         component: lazy(() => import("@app/tools/AutoRename")),
         maxFiles: -1,
@@ -1148,9 +933,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       // Advanced Formatting
 
       adjustContrast: {
-        icon: (
-          <LocalIcon icon="palette-outline" width="1.5rem" height="1.5rem" />
-        ),
+        icon: <Icon name="palette" size="1.5rem" />,
         name: t("home.adjustContrast.title", "Adjust Colors/Contrast"),
         component: lazy(() => import("@app/tools/AdjustContrast")),
         description: t(
@@ -1169,13 +952,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         synonyms: getSynonyms(t, "adjustContrast"),
       },
       repair: {
-        icon: (
-          <LocalIcon
-            icon="build-outline-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
+        icon: <Icon name="wrench" size="1.5rem" />,
         name: t("home.repair.title", "Repair"),
         component: lazy(() => import("@app/tools/Repair")),
         description: t(
@@ -1191,13 +968,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         automationSettings: null,
       },
       scannerImageSplit: {
-        icon: (
-          <LocalIcon
-            icon="scanner-outline-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
+        icon: <Icon name="scan-line" size="1.5rem" />,
         name: t(
           "home.scannerImageSplit.title",
           "Detect & Split Scanned Photos",
@@ -1219,13 +990,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         synonyms: getSynonyms(t, "scannerImageSplit"),
       },
       overlayPdfs: {
-        icon: (
-          <LocalIcon
-            icon="layers-outline-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
+        icon: <Icon name="layers" size="1.5rem" />,
         name: t("home.overlay-pdfs.title", "Overlay PDFs"),
         component: lazy(() => import("@app/tools/OverlayPdfs")),
         description: t(
@@ -1242,13 +1007,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         ),
       },
       replaceColor: {
-        icon: (
-          <LocalIcon
-            icon="format-color-fill-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
+        icon: <Icon name="paint-bucket" size="1.5rem" />,
         name: t("home.replaceColor.title", "Replace & Invert Color"),
         component: lazy(() => import("@app/tools/ReplaceColor")),
         description: t(
@@ -1267,13 +1026,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         synonyms: getSynonyms(t, "replaceColor"),
       },
       scannerEffect: {
-        icon: (
-          <LocalIcon
-            icon="scanner-outline-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
+        icon: <Icon name="scan-line" size="1.5rem" />,
         name: t("home.scannerEffect.title", "Scanner Effect"),
         component: null,
         description: t(
@@ -1293,9 +1046,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       // Developer Tools
 
       showJS: {
-        icon: (
-          <LocalIcon icon="javascript-rounded" width="1.5rem" height="1.5rem" />
-        ),
+        icon: <Icon name="braces" size="1.5rem" />,
         name: t("home.showJS.title", "Show JavaScript"),
         component: lazy(() => import("@app/tools/ShowJS")),
         description: t(
@@ -1312,10 +1063,9 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       },
       devApi: {
         icon: (
-          <LocalIcon
-            icon="open-in-new-rounded"
-            width="1.5rem"
-            height="1.5rem"
+          <Icon
+            name="external-link"
+            size="1.5rem"
             style={{ color: "var(--c-accent-fg, var(--c-primary))" }}
           />
         ),
@@ -1332,10 +1082,9 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       },
       devFolderScanning: {
         icon: (
-          <LocalIcon
-            icon="open-in-new-rounded"
-            width="1.5rem"
-            height="1.5rem"
+          <Icon
+            name="external-link"
+            size="1.5rem"
             style={{ color: "var(--c-accent-fg, var(--c-primary))" }}
           />
         ),
@@ -1355,10 +1104,9 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       },
       devSsoGuide: {
         icon: (
-          <LocalIcon
-            icon="open-in-new-rounded"
-            width="1.5rem"
-            height="1.5rem"
+          <Icon
+            name="external-link"
+            size="1.5rem"
             style={{ color: "var(--c-accent-fg, var(--c-primary))" }}
           />
         ),
@@ -1375,10 +1123,9 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       },
       devAirgapped: {
         icon: (
-          <LocalIcon
-            icon="open-in-new-rounded"
-            width="1.5rem"
-            height="1.5rem"
+          <Icon
+            name="external-link"
+            size="1.5rem"
             style={{ color: "var(--c-accent-fg, var(--c-primary))" }}
           />
         ),
@@ -1399,9 +1146,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
 
       // Recommended Tools
       compare: {
-        icon: (
-          <LocalIcon icon="compare-rounded" width="1.5rem" height="1.5rem" />
-        ),
+        icon: <Icon name="columns-2" size="1.5rem" />,
         name: t("home.compare.title", "Compare"),
         component: lazy(() => import("@app/tools/Compare")),
         description: t(
@@ -1418,13 +1163,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         supportsAutomate: false,
       },
       classify: {
-        icon: (
-          <LocalIcon
-            icon="label-outline-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
+        icon: <Icon name="tag" size="1.5rem" />,
         name: t("home.classify.title", "Classify"),
         // No interactive UI: this is a pipeline step, registered so a pipeline can name it.
         component: null,
@@ -1442,13 +1181,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         hiddenFromToolList: true,
       },
       compress: {
-        icon: (
-          <LocalIcon
-            icon="zoom-in-map-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
+        icon: <Icon name="shrink" size="1.5rem" />,
         name: t("home.compress.title", "Compress"),
         component: lazy(() => import("@app/tools/Compress")),
         description: t(
@@ -1466,9 +1199,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         synonyms: getSynonyms(t, "compress"),
       },
       convert: {
-        icon: (
-          <LocalIcon icon="sync-alt-rounded" width="1.5rem" height="1.5rem" />
-        ),
+        icon: <Icon name="refresh-cw" size="1.5rem" />,
         name: t("home.convert.title", "Convert"),
         component: lazy(() => import("@app/tools/Convert")),
         description: t(
@@ -1506,13 +1237,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       },
 
       ocr: {
-        icon: (
-          <LocalIcon
-            icon="quick-reference-all-outline-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
+        icon: <Icon name="file-search" size="1.5rem" />,
         name: t("home.ocr.title", "OCR"),
         component: lazy(() => import("@app/tools/OCR")),
         description: t(
@@ -1530,13 +1255,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         synonyms: getSynonyms(t, "ocr"),
       },
       redact: {
-        icon: (
-          <LocalIcon
-            icon="visibility-off-outline-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
+        icon: <Icon name="eye-off" size="1.5rem" />,
         name: t("home.redact.title", "Redact"),
         component: lazy(() => import("@app/tools/Redact")),
         description: t(
