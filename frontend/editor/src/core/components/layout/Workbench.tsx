@@ -302,9 +302,6 @@ export default function Workbench() {
       )}
       {showFloatingSearch && <WorkbenchFloatingSearch />}
 
-      {/* Dismiss All Errors Button */}
-      <DismissAllErrorsButton />
-
       {/* Floating AI chat button + panel */}
       <ChatFAB />
 
@@ -321,6 +318,7 @@ export default function Workbench() {
           ...(currentView === "pageEditor" && { height: 0 }),
         }}
       >
+        <DismissAllErrorsButton />
         <Suspense
           fallback={
             <Center style={{ height: "100%" }}>
