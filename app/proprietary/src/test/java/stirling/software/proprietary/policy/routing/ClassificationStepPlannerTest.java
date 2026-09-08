@@ -49,9 +49,9 @@ class ClassificationStepPlannerTest {
         assertThat(planned.steps()).hasSize(2);
         assertThat(planned.steps().get(0).operation())
                 .isEqualTo(ClassificationStepPlanner.CLASSIFY_ENDPOINT);
-        // No "skip if already classified" flag: an inbound verdict is attacker-writable metadata,
-        // so the step always produces a fresh server-side one.
-        assertThat(planned.steps().get(0).parameters()).isEmpty();
+        // The classify tool passes a document through when it already carries a verdict, and that
+        // verdict is attacker-writable metadata, so routing only gets a server-side one with this.
+        assertThat(planned.steps().get(0).parameters()).containsEntry("reclassify", true);
         assertThat(planned.steps().get(1).operation()).isEqualTo(COMPRESS);
     }
 
@@ -82,6 +82,39 @@ class ClassificationStepPlannerTest {
                                 new PipelineStep(COMPRESS, Map.of()),
                                 new PipelineStep(
                                         ClassificationStepPlanner.CLASSIFY_ENDPOINT, Map.of())),
+                        classificationRule());
+
+        Policy planned = ClassificationStepPlanner.ensureClassificationFirst(alreadyClassifies);
+
+        assertThat(planned.steps().stream().map(PipelineStep::operation))
+                .containsExactly(COMPRESS, ClassificationStepPlanner.CLASSIFY_ENDPOINT);
+    }
+
+    @Test
+    void forcesReclassificationOnAClassifyStepTheUserPlaced() {
+        Policy alreadyClassifies =
+                policyWith(
+                        List.of(
+                                new PipelineStep(
+                                        ClassificationStepPlanner.CLASSIFY_ENDPOINT,
+                                        Map.of("reclassify", false)),
+                                new PipelineStep(COMPRESS, Map.of())),
+                        classificationRule());
+
+        Policy planned = ClassificationStepPlanner.ensureClassificationFirst(alreadyClassifies);
+
+        assertThat(planned.steps()).hasSize(2);
+        assertThat(planned.steps().get(0).parameters()).containsEntry("reclassify", true);
+    }
+
+    @Test
+    void leavesAClassifyStepThatAlreadyReclassifiesAlone() {
+        Policy alreadyClassifies =
+                policyWith(
+                        List.of(
+                                new PipelineStep(
+                                        ClassificationStepPlanner.CLASSIFY_ENDPOINT,
+                                        Map.of("reclassify", true))),
                         classificationRule());
 
         assertThat(ClassificationStepPlanner.ensureClassificationFirst(alreadyClassifies))

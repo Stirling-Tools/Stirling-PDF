@@ -29,10 +29,12 @@ import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 import stirling.software.proprietary.policy.input.InputSource;
 import stirling.software.proprietary.policy.input.WebhookInputSource;
+import stirling.software.proprietary.policy.model.MatchOperator;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineInput;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
+import stirling.software.proprietary.policy.model.RoutingRule;
 import stirling.software.proprietary.policy.store.InProcessPolicyStore;
 import stirling.software.proprietary.policy.store.PolicyStore;
 import stirling.software.proprietary.policy.trigger.PolicyTriggerManager;
@@ -137,6 +139,21 @@ class SourceControllerTest {
 
         assertEquals(409, ex.getStatusCode().value());
         assertTrue(sourceStore.get(source.id()).isPresent());
+    }
+
+    @Test
+    void deletingARoutingDestinationConflicts() {
+        Source destination = sourceStore.save(folderSource());
+        policyStore.save(policyRoutingTo("Route confidential", destination.id()));
+
+        ResponseStatusException ex =
+                assertThrows(
+                        ResponseStatusException.class, () -> controller.delete(destination.id()));
+
+        // Without the guard the rule would go unresolved at run time and its documents would be
+        // delivered to the policy's ordinary fallback destination instead.
+        assertEquals(409, ex.getStatusCode().value());
+        assertTrue(sourceStore.get(destination.id()).isPresent());
     }
 
     @Test
@@ -267,6 +284,26 @@ class SourceControllerTest {
     private static Source folderSource() {
         return new Source(
                 null, "Claims intake", "folder", Map.of("directory", "/in"), true, "owner", null);
+    }
+
+    private static Policy policyRoutingTo(String name, String destinationId) {
+        return new Policy(
+                null,
+                name,
+                "owner",
+                true,
+                List.of(),
+                List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
+                OutputSpec.inline(),
+                List.of(),
+                null,
+                null,
+                List.of(
+                        new RoutingRule(
+                                "classification.labels",
+                                MatchOperator.MATCHES_ANY,
+                                List.of("confidential"),
+                                destinationId)));
     }
 
     private static Policy policyReferencing(String name, String sourceId) {

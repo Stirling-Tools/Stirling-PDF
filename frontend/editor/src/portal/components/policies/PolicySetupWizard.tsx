@@ -364,9 +364,16 @@ function PolicySetupWizardBody({
     onCustomise(entry, collectResult());
   }
 
+  // A policy with no tools still does something when it delivers: routing rules send each document
+  // to the destination it matches, and a fallback destination takes the rest. The backend accepts a
+  // step-less pipeline for exactly that (PolicyExecutor passes the inputs through), so the wizard
+  // only blocks a policy that would neither process nor deliver anything.
+  const deliversWithoutTools =
+    (isRouting && routingRules.length > 0) || outputIds.length > 0;
+
   async function submit() {
     if (submitting) return;
-    if (enabledTools.length === 0) {
+    if (enabledTools.length === 0 && !deliversWithoutTools) {
       setError(t("portal.policies.wizard.errors.noTools"));
       return;
     }
