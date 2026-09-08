@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { Icon } from "@app/ui/Icon";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import OnboardingSlideShell, {
   type ShellButton,
 } from "@app/components/onboarding/OnboardingSlideShell";
@@ -292,7 +292,7 @@ function CloseCorner({ onClick }: { onClick?: () => void }) {
       onClick={onClick}
       aria-label="Close"
     >
-      <CloseRoundedIcon fontSize="small" />
+      <Icon name="x" size={20} />
     </ActionIcon>
   );
 }
