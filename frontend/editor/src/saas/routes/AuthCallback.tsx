@@ -147,11 +147,15 @@ export default function AuthCallback() {
         const explicitNext =
           url.searchParams.get("next") ?? url.searchParams.get("from");
         const pendingConnect = readPendingConnect();
+        // Claimed up front, not inside the branch that uses it: reaching this point
+        // means the detour is over, so the intent is spent either way. Left unclaimed
+        // it would outlive its own sign-in and redirect the next one.
+        const remembered = takePendingDestination();
         const destination = isSafePostLoginRedirect(explicitNext)
           ? explicitNext
           : pendingConnect
             ? `/link?request=${encodeURIComponent(pendingConnect)}`
-            : (takePendingDestination() ?? (await resolveLandingPath()));
+            : (remembered ?? (await resolveLandingPath()));
         console.log("[Auth Callback Debug] Redirecting to:", destination);
 
         setTimeout(() => navigate(destination, { replace: true }), 1500);

@@ -176,12 +176,14 @@ export default function Login() {
         setError(error.message);
       } else if (data.user) {
         console.log("[Login] Email sign in successful");
-        // No destination in the URL: honour one remembered from before an auth
-        // detour, else land team leads on the processor and everyone else on the
-        // editor. Resolved here rather than by bouncing through "/" so the app
-        // isn't torn down and remounted on the way.
+        // Claimed on every successful sign-in, even when the URL names a
+        // destination that wins over it: the detour is over, so the intent is spent.
+        // Left unclaimed it would redirect the next sign-in instead.
+        const remembered = takePendingDestination();
+        // No destination in the URL: honour the remembered one, else land team leads
+        // on the processor and everyone else on the editor. Resolved here rather than
+        // by bouncing through "/" so the app isn't torn down and remounted on the way.
         if (!nextPath) {
-          const remembered = takePendingDestination();
           navigate(remembered ?? (await resolveLandingPath()), {
             replace: true,
           });

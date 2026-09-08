@@ -6,7 +6,10 @@ import {
   rememberPendingDestination,
   resetPendingDestinationForTests,
 } from "@app/services/pendingDestination";
-import { rememberPendingConnect } from "@app/routes/pendingConnect";
+import {
+  clearPendingConnect,
+  rememberPendingConnect,
+} from "@app/routes/pendingConnect";
 
 /*
  * Where a completed sign-in lands. The order matters and is easy to break by
@@ -86,6 +89,32 @@ describe("AuthCallback destination", () => {
 
   it("refuses an off-origin next and falls back", async () => {
     await arriveAtCallback("?next=%2F%2Fevil.example.com");
+    expect(landedOn()).toBe("/processor");
+  });
+
+  // A destination is spent by the sign-in it was stored for, even when it loses to a
+  // higher-priority source. Left behind it would redirect an unrelated later sign-in.
+  it("claims the remembered destination even when an explicit next wins", async () => {
+    rememberPendingDestination("/processor/procurement");
+    await arriveAtCallback("?next=%2Fprocessor%2Fusers");
+    expect(landedOn()).toBe("/processor/users");
+
+    resetPendingDestinationForTests();
+    mockNavigate.mockClear();
+    await arriveAtCallback();
+    expect(landedOn()).toBe("/processor");
+  });
+
+  it("claims it even when a pending connect request wins", async () => {
+    rememberPendingConnect("req-1");
+    rememberPendingDestination("/processor/procurement");
+    await arriveAtCallback();
+    expect(landedOn()).toBe("/link?request=req-1");
+
+    clearPendingConnect();
+    resetPendingDestinationForTests();
+    mockNavigate.mockClear();
+    await arriveAtCallback();
     expect(landedOn()).toBe("/processor");
   });
 });
