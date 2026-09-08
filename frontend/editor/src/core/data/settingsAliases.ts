@@ -24,6 +24,6 @@ export const BASE_SECTION_ALIASES: Partial<Record<string, NavKey>> = {
   adminStorageSharing: "adminGeneral",
   adminFolderAccess: "adminGeneral",
   adminEndpoints: "adminGeneral",
-  adminMcp: "adminGeneral",
+  adminMcp: "adminConnections",
   adminPrivacy: "adminLegal",
 };

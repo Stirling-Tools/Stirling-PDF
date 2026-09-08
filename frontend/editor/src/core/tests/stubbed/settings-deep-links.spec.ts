@@ -23,6 +23,11 @@ const TARGETS = [
   // The link the mail card and the mobile-upload card point at.
   ["/settings/adminGeneral#frontendUrl", "frontendUrl"],
   ["/settings/adminConnections#adminMcp", "adminMcp"],
+  // The row the super search builds for "shortcut" / "keybinding".
+  ["/settings/general#setting-hotkeys-search", "setting-hotkeys-search"],
+  // A bookmark of a section that has since folded: the alias moves the page,
+  // and the control it named has to survive the move.
+  ["/settings/adminMcp#adminMcp", "adminMcp"],
 ] as const;
 
 for (const [url, anchor] of TARGETS) {
@@ -38,6 +43,26 @@ for (const [url, anchor] of TARGETS) {
     expect(state).toBe("reached");
   });
 }
+
+test("a deep link leaves the page scrollable once it has landed", async ({
+  page,
+}) => {
+  // The jump must fire once. Re-arming it on every render pins the reader to
+  // the anchor: the scroll spy re-renders on each wheel tick, and the reader is
+  // dragged back before the next one lands. Server settings, because it is long
+  // enough that being dragged back is a different number from being scrolled.
+  await openSettings(page, "/settings/adminGeneral#frontendUrl");
+  const scroller = page.locator(".modal-content-scroll");
+  const landed = await scroller.evaluate((el) => el.scrollTop);
+  for (let i = 0; i < 8; i++) {
+    await page.mouse.move(700, 400);
+    await page.mouse.wheel(0, 300);
+    await page.waitForTimeout(150);
+  }
+  await page.waitForTimeout(800);
+  const scrollTop = await scroller.evaluate((el) => el.scrollTop);
+  expect(scrollTop).toBeGreaterThan(landed + 500);
+});
 
 test("a deep link into a collapsed card opens it", async ({ page }) => {
   // Keyboard Shortcuts ships collapsed - it renders a row per registered tool.

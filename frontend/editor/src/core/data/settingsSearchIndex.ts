@@ -96,7 +96,7 @@ export const SETTINGS_SEARCH_INDEX: SettingsSearchEntry[] = [
   },
   // --- Keyboard Shortcuts ---
   {
-    section: "hotkeys",
+    section: "general",
     anchor: "setting-hotkeys-search",
     labelKey: "settings.hotkeys.title",
     labelFallback: "Keyboard Shortcuts",

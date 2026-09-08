@@ -35,6 +35,9 @@ import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 import "@app/components/shared/config/settingsSections.css";
 import "@app/pages/SettingsPage.css";
 
+const ANCHOR_POLL_MS = 150;
+const ANCHOR_WAIT_MS = 5000;
+
 /** `/settings/people` -> "people". Null for `/settings` itself. */
 function sectionFromPath(pathname: string): string | null {
   const match = stripBasePath(pathname).match(/\/settings\/([^/?#]+)/);
@@ -88,8 +91,20 @@ const SettingsPageInner: React.FC = () => {
       (urlSection && aliases?.[urlSection]) ??
       items.find((i) => !i.disabled)?.key ??
       items[0].key;
-    navigate(`/settings/${target}${location.search}`, { replace: true });
-  }, [items, activeItem, urlSection, aliases, location.search, navigate]);
+    // The hash rides along: an aliased bookmark addresses a control, and the
+    // control it names is still there under whatever absorbed its section.
+    navigate(`/settings/${target}${location.search}${location.hash}`, {
+      replace: true,
+    });
+  }, [
+    items,
+    activeItem,
+    urlSection,
+    aliases,
+    location.search,
+    location.hash,
+    navigate,
+  ]);
 
   // Replace, not push: Back should leave settings, not walk the tabs you opened.
   const switchSection = useCallback(
@@ -143,20 +158,34 @@ const SettingsPageInner: React.FC = () => {
     headings,
   );
 
+  const anchor = decodeURIComponent(location.hash.replace(/^#/, ""));
+  const activeKey = activeItem?.key;
+
   // Deep link: /settings/{section}#{slug} scrolls to and briefly highlights one
   // control. The slug is the only address; the super search builds the same URL.
+  //
+  // Keyed on the section key, never on the item object: the nav builders return
+  // fresh arrays each render, so depending on the item would re-arm the jump on
+  // every scroll-spy re-render and pin the reader to the anchor. Sections mount
+  // lazily, so it polls for the target instead of firing once and missing it.
   useEffect(() => {
-    const anchor = decodeURIComponent(location.hash.replace(/^#/, ""));
-    if (!anchor) return;
+    if (!anchor || !activeKey) return;
     let raf = 0;
-    const timer = window.setTimeout(() => {
-      raf = window.requestAnimationFrame(() => focusHeading(anchor));
-    }, 150);
+    let timer = 0;
+    const giveUpAt = Date.now() + ANCHOR_WAIT_MS;
+    const attempt = () => {
+      if (document.getElementById(anchor)) {
+        raf = window.requestAnimationFrame(() => focusHeading(anchor));
+      } else if (Date.now() < giveUpAt) {
+        timer = window.setTimeout(attempt, ANCHOR_POLL_MS);
+      }
+    };
+    timer = window.setTimeout(attempt, ANCHOR_POLL_MS);
     return () => {
       window.clearTimeout(timer);
       if (raf) window.cancelAnimationFrame(raf);
     };
-  }, [activeItem, location.hash, focusHeading]);
+  }, [activeKey, anchor, focusHeading]);
 
   // Sections that bring their own page header get the whole pane; on mobile the
   // bar stays anyway, because it carries the only way back to the list.

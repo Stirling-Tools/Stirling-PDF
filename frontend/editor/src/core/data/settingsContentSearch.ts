@@ -31,7 +31,6 @@ const SECTION_TRANSLATION_PREFIXES: Partial<Record<string, string[]>> = {
     "admin.settings.endpoints",
     "admin.settings.storageSharing",
     "admin.settings.folderAccess",
-    "admin.settings.mcp",
   ],
   adminAdvanced: ["admin.settings.advanced"],
   adminDatabase: ["admin.settings.database"],
@@ -43,6 +42,7 @@ const SECTION_TRANSLATION_PREFIXES: Partial<Record<string, string[]>> = {
     "admin.settings.connections",
     "admin.settings.mail",
     "admin.settings.telegram",
+    "admin.settings.mcp",
   ],
   adminLegal: ["admin.settings.legal", "admin.settings.privacy"],
   adminPlan: [
