@@ -29,7 +29,6 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.security.service.TeamService;
@@ -181,9 +180,14 @@ class SupabaseSecurityConfigMoreTest {
     @DisplayName("corsConfigurationSource")
     class Cors {
 
+        /**
+         * Through the interface: the bean's concrete type depends on whether account linking is on,
+         * so a downcast here breaks the moment a test in this class turns it on. A path outside
+         * LINKED_INSTANCE_PATHS always resolves to the "/**" config either way.
+         */
         private CorsConfiguration cors(CorsConfigurationSource source) {
-            UrlBasedCorsConfigurationSource ub = (UrlBasedCorsConfigurationSource) source;
-            return ub.getCorsConfigurations().get("/**");
+            return source.getCorsConfiguration(
+                    new MockHttpServletRequest("GET", "/api/v1/config/ui"));
         }
 
         @Test
@@ -460,8 +464,8 @@ class SupabaseSecurityConfigMoreTest {
         void firstPartyKeepsCredentials(String path) {
             CorsConfiguration cfg = resolve(source(true), path, FIRST_PARTY);
 
-            // The editor's axios client sends cookies and X-Browser-Id here. Handing it the
-            // credential-free wildcard is what broke `task staging:saas`.
+            // Our own frontends send X-Browser-Id here, which the linked-instance policy does
+            // not allow; handing them that policy breaks the preflight.
             assertThat(cfg.getAllowCredentials()).isTrue();
             assertThat(cfg.checkOrigin(FIRST_PARTY)).isEqualTo(FIRST_PARTY);
             assertThat(cfg.getAllowedHeaders()).contains("X-Browser-Id");
@@ -469,10 +473,11 @@ class SupabaseSecurityConfigMoreTest {
 
         @ParameterizedTest
         @ValueSource(ints = {5173, 5174, 3000, 4321, 61234})
-        @DisplayName("outside production a local dev server keeps credentials on any port")
+        @DisplayName("with no operator origin list, a dev server keeps credentials on any port")
         void anyLoopbackPortKeepsCredentials(int port) {
-            // The dev frontend is cross-origin to the backend whichever port it lands on, so the
-            // split has to key off "loopback in a non-production profile", never a fixed port.
+            // Holds only while system.corsAllowedOrigins is empty, since an operator list replaces
+            // LOOPBACK_ANY_PORT rather than adding to it. The dev frontend is cross-origin to the
+            // backend whichever port it lands on, so nothing here may key off a fixed port.
             String origin = "http://localhost:" + port;
 
             CorsConfiguration cfg = resolve(devProfileSource(), "/api/v1/payg/wallet", origin);
@@ -491,9 +496,9 @@ class SupabaseSecurityConfigMoreTest {
                 })
         @DisplayName("the desktop app's webview origins keep credentials too")
         void desktopKeepsCredentials(String origin) {
-            // cloud/ compiles into the desktop build, so the Tauri webview reaches
-            // /api/v1/payg/wallet through the same credentialed axios client. These origins are
-            // added to the allow-list unconditionally, so they must take the allow-list branch.
+            // The desktop app reaches this backend from a webview origin over browser fetch -
+            // ChatContext streams from it with credentials: "include" - which is why these origins
+            // are allow-listed unconditionally. They must keep taking the allow-list branch.
             CorsConfiguration cfg = resolve(source(true), "/api/v1/payg/wallet", origin);
 
             assertThat(cfg.getAllowCredentials()).isTrue();
@@ -516,6 +521,19 @@ class SupabaseSecurityConfigMoreTest {
             assertThat(cfg.checkHttpMethod(HttpMethod.GET)).isNotNull();
             assertThat(cfg.checkHttpMethod(HttpMethod.POST)).isNotNull();
             assertThat(cfg.checkHttpMethod(HttpMethod.PATCH)).isNotNull();
+        }
+
+        @Test
+        @DisplayName("a request carrying no Origin gets the allow-list, not the wildcard")
+        void noOriginHeaderKeepsAllowList() {
+            // A live branch: the source is consulted before anything decides whether this is even
+            // a CORS request, so a same-origin call arrives with no Origin to match.
+            CorsConfiguration cfg =
+                    source(true)
+                            .getCorsConfiguration(
+                                    new MockHttpServletRequest("GET", "/api/v1/payg/wallet"));
+
+            assertThat(cfg.getAllowCredentials()).isTrue();
         }
 
         @Test

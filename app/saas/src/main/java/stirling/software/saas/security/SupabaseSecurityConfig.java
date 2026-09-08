@@ -411,14 +411,14 @@ public class SupabaseSecurityConfig {
         for (String path : LINKED_INSTANCE_PATHS) {
             linked.registerCorsConfiguration(path, linkedCfg);
         }
-        // Split by origin, not by path: first-party calls these same paths too, from the editor's
-        // axios client, which sends cookies and X-Browser-Id. Handing an allow-listed origin the
-        // credential-free wildcard breaks it, so only an origin the allow-list would have rejected
-        // falls through to the linked-instance config.
+        // Split by origin, not by path: our own frontends call these same paths and need the
+        // allow-list policy, which is wider on headers, methods and credentials. Only an origin it
+        // would have rejected falls through to the linked-instance config.
         return request -> {
-            CorsConfiguration known = allowListed.getCorsConfiguration(request);
             String origin = request.getHeader(HttpHeaders.ORIGIN);
-            if (known != null && origin != null && known.checkOrigin(origin) != null) {
+            // "/**" is registered above unconditionally, so this always resolves.
+            CorsConfiguration known = allowListed.getCorsConfiguration(request);
+            if (origin == null || known.checkOrigin(origin) != null) {
                 return known;
             }
             CorsConfiguration fallback = linked.getCorsConfiguration(request);
