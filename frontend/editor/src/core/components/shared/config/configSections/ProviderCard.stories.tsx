@@ -5,7 +5,7 @@ import type { Provider } from "@app/components/shared/config/configSections/prov
 const mockProvider: Provider = {
   id: "google",
   name: "Google",
-  icon: "key-rounded",
+  icon: "key",
   type: "oauth2",
   scope: "Sign-in authentication",
   documentationUrl: "https://docs.stirlingpdf.com/Configuration/OAuth",

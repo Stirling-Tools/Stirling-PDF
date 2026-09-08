@@ -18,7 +18,7 @@ import {
 } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon, type IconName } from "@app/ui/Icon";
 import {
   userManagementService,
   User,
@@ -343,7 +343,7 @@ User: ${user.username}`)
         "workspace.people.roleDescriptions.admin",
         "Can manage settings and invite members, with full administrative access.",
       ),
-      icon: "admin-panel-settings",
+      icon: "shield-user",
     },
     {
       value: "ROLE_USER",
@@ -352,20 +352,19 @@ User: ${user.username}`)
         "workspace.people.roleDescriptions.user",
         "Can view and edit shared files, but cannot manage workspace settings or members.",
       ),
-      icon: "person",
+      icon: "user",
     },
   ];
 
   const renderRoleOption = ({
     option,
   }: {
-    option: ComboboxItem & { icon?: string; description?: string };
+    option: ComboboxItem & { icon?: IconName; description?: string };
   }) => (
     <Group gap="sm" wrap="nowrap">
-      <LocalIcon
-        icon={option.icon ?? ""}
-        width="1.25rem"
-        height="1.25rem"
+      <Icon
+        name={option.icon ?? "user"}
+        size="1.25rem"
         style={{ flexShrink: 0 }}
       />
       <Box style={{ flex: 1 }}>
@@ -488,7 +487,7 @@ User: ${user.username}`)
       <Group justify="space-between">
         <TextInput
           placeholder={t("workspace.people.searchMembers")}
-          leftSection={<LocalIcon icon="search" width="1rem" height="1rem" />}
+          leftSection={<Icon name="search" size="1rem" />}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.currentTarget.value)}
           style={{ maxWidth: 300 }}
@@ -502,9 +501,7 @@ User: ${user.username}`)
           withArrow
         >
           <Button
-            leftSection={
-              <LocalIcon icon="person-add" width="1rem" height="1rem" />
-            }
+            leftSection={<Icon name="user-plus" size="1rem" />}
             onClick={handleAddMembersClick}
             disabled={
               !loginEnabled ||
@@ -703,7 +700,7 @@ User: ${user.username}`)
                         size="sm"
                         aria-label={t("workspace.people.userInfo", "User info")}
                       >
-                        <LocalIcon icon="info" width="1rem" height="1rem" />
+                        <Icon name="info" size="1rem" />
                       </ActionIcon>
                     </Tooltip>
 
@@ -719,11 +716,7 @@ User: ${user.username}`)
                               "Member actions",
                             )}
                           >
-                            <LocalIcon
-                              icon="more-vert"
-                              width="1rem"
-                              height="1rem"
-                            />
+                            <Icon name="ellipsis-vertical" size="1rem" />
                           </ActionIcon>
                         </Menu.Target>
                         <Menu.Dropdown
@@ -731,13 +724,7 @@ User: ${user.username}`)
                         >
                           {!isCurrentUser(user) && (
                             <Menu.Item
-                              leftSection={
-                                <LocalIcon
-                                  icon="edit"
-                                  width="1rem"
-                                  height="1rem"
-                                />
-                              }
+                              leftSection={<Icon name="pencil" size="1rem" />}
                               onClick={() => openEditModal(user)}
                               disabled={!loginEnabled}
                             >
@@ -749,13 +736,7 @@ User: ${user.username}`)
                           )}
                           {!isCurrentUser(user) && (
                             <Menu.Item
-                              leftSection={
-                                <LocalIcon
-                                  icon="lock"
-                                  width="1rem"
-                                  height="1rem"
-                                />
-                              }
+                              leftSection={<Icon name="lock" size="1rem" />}
                               onClick={() => openChangePasswordModal(user)}
                               disabled={!loginEnabled}
                             >
@@ -769,17 +750,9 @@ User: ${user.username}`)
                             <Menu.Item
                               leftSection={
                                 user.enabled ? (
-                                  <LocalIcon
-                                    icon="person-off"
-                                    width="1rem"
-                                    height="1rem"
-                                  />
+                                  <Icon name="user-x" size="1rem" />
                                 ) : (
-                                  <LocalIcon
-                                    icon="person-check"
-                                    width="1rem"
-                                    height="1rem"
-                                  />
+                                  <Icon name="user-check" size="1rem" />
                                 )
                               }
                               onClick={() => handleToggleEnabled(user)}
@@ -793,11 +766,7 @@ User: ${user.username}`)
                           {!isCurrentUser(user) && isLockedUser(user) && (
                             <Menu.Item
                               leftSection={
-                                <LocalIcon
-                                  icon="lock-open"
-                                  width="1rem"
-                                  height="1rem"
-                                />
+                                <Icon name="lock-open" size="1rem" />
                               }
                               onClick={() => handleUnlockUser(user)}
                               disabled={!loginEnabled}
@@ -813,13 +782,7 @@ User: ${user.username}`)
                               <Menu.Divider />
                               <Menu.Item
                                 color="red"
-                                leftSection={
-                                  <LocalIcon
-                                    icon="key"
-                                    width="1rem"
-                                    height="1rem"
-                                  />
-                                }
+                                leftSection={<Icon name="key" size="1rem" />}
                                 onClick={() => disableMfa.mutate(user.username)}
                                 disabled={!loginEnabled}
                               >
@@ -835,13 +798,7 @@ User: ${user.username}`)
                               <Menu.Divider />
                               <Menu.Item
                                 color="red"
-                                leftSection={
-                                  <LocalIcon
-                                    icon="delete"
-                                    width="1rem"
-                                    height="1rem"
-                                  />
-                                }
+                                leftSection={<Icon name="trash" size="1rem" />}
                                 onClick={() => handleDeleteUser(user)}
                                 disabled={!loginEnabled}
                               >
@@ -898,15 +855,14 @@ User: ${user.username}`)
               zIndex: 1,
             }}
           >
-            <LocalIcon icon="close" width="1.25rem" height="1.25rem" />
+            <Icon name="x" size="1.25rem" />
           </ActionIcon>
           <Stack gap="lg" pt="md">
             {/* Header with Icon */}
             <Stack gap="md" align="center">
-              <LocalIcon
-                icon="edit"
-                width="3rem"
-                height="3rem"
+              <Icon
+                name="pencil"
+                size="3rem"
                 style={{ color: "var(--mantine-color-gray-6)" }}
               />
               <Text size="xl" fw={600} ta="center">
@@ -937,7 +893,7 @@ User: ${user.username}`)
                           "workspace.people.roleDescriptions.currentRole",
                           "Current assigned role.",
                         ),
-                        icon: "person",
+                        icon: "user",
                       },
                     ]
                   : roleOptions
