@@ -47,7 +47,6 @@ export type OpCategory =
 export interface PipelineOp {
   id: string;
   label: string;
-  icon: string;
   desc: string;
   kind: OpKind;
   /** Ship in the default chip row when this op's stage is on. */
@@ -67,7 +66,6 @@ export interface LibraryOp extends Omit<
 export interface PipelineAgent {
   id: string;
   label: string;
-  icon: string;
   desc: string;
   /** Op IDs from PIPELINE_OPS that this agent expands into. */
   ops: string[];
@@ -76,14 +74,12 @@ export interface PipelineAgent {
 export interface SourceOption {
   id: "upload" | "webhook" | "s3" | "email" | "scheduled";
   label: string;
-  icon: string;
   desc: string;
 }
 
 export interface DestinationOption {
   id: "vault" | "s3" | "webhook" | "pipeline" | "database" | "sftp";
   label: string;
-  icon: string;
   desc: string;
 }
 
@@ -96,35 +92,30 @@ export const PIPELINE_OPS: Record<OpKind, PipelineOp[]> = {
     {
       id: "ocr",
       label: "OCR",
-      icon: "visibility",
       kind: "ingest",
       desc: "Text-recognize scanned or image-based pages",
     },
     {
       id: "parse",
       label: "Parse",
-      icon: "dashboard",
       kind: "ingest",
       desc: "Reconstruct reading order and layout structure",
     },
     {
       id: "classify",
       label: "Classify",
-      icon: "layers",
       kind: "ingest",
       desc: "Identify the document type and return a confidence score",
     },
     {
       id: "bundle-split",
       label: "Bundle split",
-      icon: "grid-view",
       kind: "ingest",
       desc: "Split a multi-document upload into component documents",
     },
     {
       id: "extract",
       label: "Extract",
-      icon: "auto-awesome",
       kind: "ingest",
       desc: "Pull structured fields from the document into a typed schema",
     },
@@ -133,42 +124,36 @@ export const PIPELINE_OPS: Record<OpKind, PipelineOp[]> = {
     {
       id: "validate",
       label: "Schema validate",
-      icon: "shield",
       kind: "validate",
       desc: "Check required fields, business rules, and coverage gaps against the typed schema",
     },
     {
       id: "authenticity",
       label: "Authenticity",
-      icon: "check",
       kind: "validate",
       desc: "Verify the document is genuine (signature, issuer, watermark checks)",
     },
     {
       id: "tamper-check",
       label: "Tamper check",
-      icon: "alertTriangle",
       kind: "validate",
       desc: "Detect modifications since signing or last-known-good state",
     },
     {
       id: "source-auth",
       label: "Source auth",
-      icon: "lock",
       kind: "validate",
       desc: "Confirm the document came from an authenticated source",
     },
     {
       id: "counterparty-match",
       label: "Counterparty match",
-      icon: "userPlus",
       kind: "validate",
       desc: "Match the document counterparty against expected identity",
     },
     {
       id: "confidence-check",
       label: "Confidence bounds",
-      icon: "analytics",
       kind: "validate",
       desc: "Gate downstream ops on extraction-confidence thresholds",
     },
@@ -177,42 +162,36 @@ export const PIPELINE_OPS: Record<OpKind, PipelineOp[]> = {
     {
       id: "merge",
       label: "Merge",
-      icon: "layers",
       kind: "modify",
       desc: "Combine multiple PDFs into a single document",
     },
     {
       id: "split",
       label: "Split",
-      icon: "grid-view",
       kind: "modify",
       desc: "Split a PDF into pages, sections, or by document boundary",
     },
     {
       id: "convert",
       label: "Convert",
-      icon: "fileText",
       kind: "modify",
       desc: "Convert between PDF, Word, Excel, image, HTML, Markdown",
     },
     {
       id: "compress",
       label: "Compress",
-      icon: "package",
       kind: "modify",
       desc: "Reduce file size while preserving fidelity",
     },
     {
       id: "rotate",
       label: "Rotate",
-      icon: "arrowRight",
       kind: "modify",
       desc: "Rotate pages or correct page orientation",
     },
     {
       id: "crop",
       label: "Crop",
-      icon: "dashboard",
       kind: "modify",
       desc: "Crop pages to a region or trim margins",
     },
@@ -221,7 +200,6 @@ export const PIPELINE_OPS: Record<OpKind, PipelineOp[]> = {
     {
       id: "redact",
       label: "Redact PII",
-      icon: "visibility",
       kind: "secure",
       defaultOn: true,
       desc: "Remove or mask PII before the document is stored or released downstream",
@@ -229,42 +207,36 @@ export const PIPELINE_OPS: Record<OpKind, PipelineOp[]> = {
     {
       id: "pii-enforce",
       label: "PII/PHI enforcement",
-      icon: "shield",
       kind: "secure",
       desc: "Policy check that outputs do not leak protected data beyond declared scope",
     },
     {
       id: "watermark",
       label: "Confidentiality mark",
-      icon: "penTool",
       kind: "secure",
       desc: "Stamp a visible confidentiality / classification watermark onto pages",
     },
     {
       id: "attribution-watermark",
       label: "Attribution watermark",
-      icon: "penTool",
       kind: "secure",
       desc: "Invisible per-recipient watermarking for leak tracing",
     },
     {
       id: "flatten",
       label: "Flatten + lock",
-      icon: "dashboard",
       kind: "secure",
       desc: "Flatten forms and annotations to harden the document against tampering",
     },
     {
       id: "sign-output",
       label: "Signed outputs",
-      icon: "penTool",
       kind: "secure",
       desc: "Tamper-evident signatures covering the artifact and run metadata",
     },
     {
       id: "encrypt-rest",
       label: "Encryption at rest",
-      icon: "lock",
       kind: "secure",
       defaultOn: true,
       desc: "AES-256 on stored artifacts. Stirling-managed, customer KMS, or BYOK",
@@ -272,7 +244,6 @@ export const PIPELINE_OPS: Record<OpKind, PipelineOp[]> = {
     {
       id: "retention",
       label: "Retention policy",
-      icon: "fileText",
       kind: "secure",
       defaultOn: true,
       pipelineOnly: true,
@@ -281,7 +252,6 @@ export const PIPELINE_OPS: Record<OpKind, PipelineOp[]> = {
     {
       id: "residency",
       label: "Regional residency",
-      icon: "globe",
       kind: "secure",
       pipelineOnly: true,
       desc: "Where the artifact is stored and processed. Region-pin or air-gap",
@@ -289,7 +259,6 @@ export const PIPELINE_OPS: Record<OpKind, PipelineOp[]> = {
     {
       id: "access-policy",
       label: "Access policy",
-      icon: "key",
       kind: "secure",
       defaultOn: true,
       pipelineOnly: true,
@@ -300,7 +269,6 @@ export const PIPELINE_OPS: Record<OpKind, PipelineOp[]> = {
     {
       id: "store-primary",
       label: "Primary store",
-      icon: "fileText",
       kind: "store",
       defaultOn: true,
       pipelineOnly: true,
@@ -309,7 +277,6 @@ export const PIPELINE_OPS: Record<OpKind, PipelineOp[]> = {
     {
       id: "mirror-bucket",
       label: "Mirror to bucket",
-      icon: "globe",
       kind: "store",
       pipelineOnly: true,
       desc: "Copy the secured artifact to the customer’s S3 / GCS / Azure Blob for compliance archival",
@@ -317,7 +284,6 @@ export const PIPELINE_OPS: Record<OpKind, PipelineOp[]> = {
     {
       id: "mirror-archive",
       label: "Compliance archive",
-      icon: "lock",
       kind: "store",
       pipelineOnly: true,
       desc: "Mirror to SharePoint / M365 Records / WORM-locked archive for regulated retention",
@@ -325,7 +291,6 @@ export const PIPELINE_OPS: Record<OpKind, PipelineOp[]> = {
     {
       id: "emit-manifest",
       label: "Processing manifest",
-      icon: "penTool",
       kind: "store",
       defaultOn: true,
       pipelineOnly: true,
@@ -336,21 +301,18 @@ export const PIPELINE_OPS: Record<OpKind, PipelineOp[]> = {
     {
       id: "review",
       label: "Human review",
-      icon: "userPlus",
       kind: "alert",
       desc: "Route the document to the review queue when rules fail",
     },
     {
       id: "flag",
       label: "Flag",
-      icon: "alertTriangle",
       kind: "alert",
       desc: "Raise an in-app flag on low-confidence or out-of-policy docs",
     },
     {
       id: "notify",
       label: "Notify",
-      icon: "notifications",
       kind: "alert",
       desc: "Fire a webhook or email when the pipeline finishes or trips a rule",
     },
@@ -377,28 +339,24 @@ export const PIPELINE_AGENTS: readonly PipelineAgent[] = [
   {
     id: "agent-pii-sweep",
     label: "PII Sweep",
-    icon: "shield",
     desc: "Redact PII categories + encrypt the sealed artifact",
     ops: ["redact", "encrypt-rest"],
   },
   {
     id: "agent-trust-verify",
     label: "Trust & Verify",
-    icon: "check",
     desc: "Authenticity, tamper, and confidence checks before downstream",
     ops: ["authenticity", "tamper-check", "confidence-check"],
   },
   {
     id: "agent-compliance-pack",
     label: "Compliance Pack",
-    icon: "lock",
     desc: "Redact + watermark + sign + retention policy",
     ops: ["redact", "watermark", "sign-output", "retention"],
   },
   {
     id: "agent-format-prep",
     label: "Format Prep",
-    icon: "package",
     desc: "Compress and flatten before downstream consumption",
     ops: ["compress", "flatten"],
   },
@@ -481,7 +439,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "validate",
     label: "Schema validate",
-    icon: "shield",
     kind: "validate",
     category: "Validation",
     desc: "Check required fields, business rules, and coverage gaps against the typed schema",
@@ -489,7 +446,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "authenticity",
     label: "Authenticity",
-    icon: "check",
     kind: "validate",
     category: "Validation",
     desc: "Verify the document is genuine (signature, issuer, watermark checks)",
@@ -497,7 +453,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "tamper-check",
     label: "Tamper check",
-    icon: "alertTriangle",
     kind: "validate",
     category: "Validation",
     desc: "Detect modifications since signing or last-known-good state",
@@ -505,7 +460,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "source-auth",
     label: "Source auth",
-    icon: "lock",
     kind: "validate",
     category: "Validation",
     desc: "Confirm the document came from an authenticated source",
@@ -513,7 +467,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "counterparty-match",
     label: "Counterparty match",
-    icon: "userPlus",
     kind: "validate",
     category: "Validation",
     desc: "Match the document counterparty against expected identity",
@@ -521,7 +474,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "confidence-check",
     label: "Confidence bounds",
-    icon: "analytics",
     kind: "validate",
     category: "Validation",
     desc: "Gate downstream ops on extraction-confidence thresholds",
@@ -529,7 +481,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "inspect-basic",
     label: "Basic info",
-    icon: "fileText",
     kind: "validate",
     category: "Document Review",
     desc: "Get document metadata (title, author, page count, dates)",
@@ -537,7 +488,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "inspect-pages",
     label: "Page count",
-    icon: "fileText",
     kind: "validate",
     category: "Document Review",
     desc: "Return the page count of the document",
@@ -545,7 +495,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "inspect-fonts",
     label: "Font info",
-    icon: "fileText",
     kind: "validate",
     category: "Document Review",
     desc: "List fonts embedded in the document",
@@ -553,7 +502,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "inspect-security",
     label: "Security info",
-    icon: "lock",
     kind: "validate",
     category: "Document Review",
     desc: "Read security configuration (encryption, signatures, permissions)",
@@ -561,7 +509,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "inspect-form",
     label: "Form fields",
-    icon: "fileText",
     kind: "validate",
     category: "Document Review",
     desc: "Enumerate form fields and their values",
@@ -569,7 +516,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "filter-text",
     label: "Filter by text",
-    icon: "shield",
     kind: "validate",
     category: "Validation",
     desc: "Pass only docs containing specific text",
@@ -577,7 +523,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "filter-image",
     label: "Filter by image",
-    icon: "shield",
     kind: "validate",
     category: "Validation",
     desc: "Pass only docs containing images",
@@ -585,7 +530,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "filter-page-count",
     label: "Filter by page count",
-    icon: "shield",
     kind: "validate",
     category: "Validation",
     desc: "Pass only docs within a page-count range",
@@ -593,7 +537,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "filter-page-size",
     label: "Filter by page size",
-    icon: "shield",
     kind: "validate",
     category: "Validation",
     desc: "Pass only docs matching a page-dimension constraint",
@@ -601,7 +544,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "filter-file-size",
     label: "Filter by file size",
-    icon: "shield",
     kind: "validate",
     category: "Validation",
     desc: "Pass only docs within a file-size range",
@@ -611,7 +553,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "merge",
     label: "Merge",
-    icon: "layers",
     kind: "modify",
     category: "Page Formatting",
     desc: "Combine multiple PDFs into a single document",
@@ -619,7 +560,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "split",
     label: "Split",
-    icon: "grid-view",
     kind: "modify",
     category: "Removal",
     desc: "Split a PDF into pages, sections, or by document boundary",
@@ -627,7 +567,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "split-chapters",
     label: "Split by chapters",
-    icon: "grid-view",
     kind: "modify",
     category: "Removal",
     desc: "Split a PDF along bookmark or chapter boundaries",
@@ -635,7 +574,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "split-size",
     label: "Split by size",
-    icon: "grid-view",
     kind: "modify",
     category: "Removal",
     desc: "Split a PDF when it exceeds a size or page-count threshold",
@@ -643,7 +581,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "auto-split",
     label: "Auto split",
-    icon: "grid-view",
     kind: "modify",
     category: "Classification",
     desc: "Detect document boundaries and split automatically",
@@ -651,7 +588,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "remove-pages",
     label: "Remove pages",
-    icon: "grid-view",
     kind: "modify",
     category: "Removal",
     desc: "Drop specified pages from the document",
@@ -659,7 +595,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "remove-blanks",
     label: "Remove blank pages",
-    icon: "grid-view",
     kind: "modify",
     category: "Removal",
     desc: "Detect and drop blank pages",
@@ -667,7 +602,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "rearrange-pages",
     label: "Rearrange pages",
-    icon: "grid-view",
     kind: "modify",
     category: "Page Formatting",
     desc: "Reorder pages by a specified sequence",
@@ -675,7 +609,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "rotate",
     label: "Rotate",
-    icon: "arrowRight",
     kind: "modify",
     category: "Page Formatting",
     desc: "Rotate pages or correct page orientation",
@@ -683,7 +616,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "crop",
     label: "Crop",
-    icon: "dashboard",
     kind: "modify",
     category: "Page Formatting",
     desc: "Crop pages to a region or trim margins",
@@ -691,7 +623,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "compress",
     label: "Compress",
-    icon: "package",
     kind: "modify",
     category: "Developer Tools",
     desc: "Reduce file size while preserving fidelity",
@@ -699,7 +630,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "flatten",
     label: "Flatten",
-    icon: "dashboard",
     kind: "modify",
     category: "Page Formatting",
     desc: "Flatten forms and annotations into the page content",
@@ -707,7 +637,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "repair",
     label: "Repair",
-    icon: "package",
     kind: "modify",
     category: "Developer Tools",
     desc: "Repair a corrupted or malformed PDF",
@@ -715,7 +644,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "remove-images",
     label: "Remove images",
-    icon: "visibility",
     kind: "modify",
     category: "Removal",
     desc: "Strip images to reduce file size",
@@ -723,7 +651,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "update-metadata",
     label: "Update metadata",
-    icon: "fileText",
     kind: "modify",
     category: "Developer Tools",
     desc: "Edit PDF metadata fields (title, author, keywords)",
@@ -731,7 +658,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "auto-rename",
     label: "Auto rename",
-    icon: "fileText",
     kind: "modify",
     category: "Classification",
     desc: "Rename based on extracted document content",
@@ -739,7 +665,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "add-image",
     label: "Add image",
-    icon: "penTool",
     kind: "modify",
     category: "Page Formatting",
     desc: "Insert an image onto pages",
@@ -747,7 +672,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "add-stamp",
     label: "Add stamp",
-    icon: "penTool",
     kind: "modify",
     category: "Page Formatting",
     desc: "Apply a stamp to pages",
@@ -755,7 +679,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "add-page-numbers",
     label: "Page numbers",
-    icon: "penTool",
     kind: "modify",
     category: "Page Formatting",
     desc: "Add page numbers to the document",
@@ -763,7 +686,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "add-attachments",
     label: "Add attachments",
-    icon: "penTool",
     kind: "modify",
     category: "Advanced Formatting",
     desc: "Embed file attachments in the PDF",
@@ -771,7 +693,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "overlay",
     label: "Overlay PDFs",
-    icon: "layers",
     kind: "modify",
     category: "Advanced Formatting",
     desc: "Overlay one PDF on top of another",
@@ -779,7 +700,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "multi-page-layout",
     label: "Multi-page layout",
-    icon: "grid-view",
     kind: "modify",
     category: "Advanced Formatting",
     desc: "Combine multiple pages into a single page (n-up)",
@@ -787,7 +707,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "scale-pages",
     label: "Scale pages",
-    icon: "dashboard",
     kind: "modify",
     category: "Page Formatting",
     desc: "Resize pages to a target dimension",
@@ -795,7 +714,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "edit-toc",
     label: "Edit TOC",
-    icon: "fileText",
     kind: "modify",
     category: "Advanced Formatting",
     desc: "Edit the table of contents / bookmarks",
@@ -803,7 +721,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "scanner-effect",
     label: "Scanner effect",
-    icon: "penTool",
     kind: "modify",
     category: "Page Formatting",
     desc: "Apply a scanned-document visual effect",
@@ -811,7 +728,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "invert-colors",
     label: "Invert colors",
-    icon: "penTool",
     kind: "modify",
     category: "Page Formatting",
     desc: "Invert page colors or replace specific colors",
@@ -819,7 +735,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "convert-image",
     label: "PDF → image",
-    icon: "fileText",
     kind: "modify",
     category: "Extraction",
     desc: "Convert PDF pages to image files",
@@ -827,7 +742,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "image-to-pdf",
     label: "Image → PDF",
-    icon: "fileText",
     kind: "modify",
     category: "Advanced Formatting",
     desc: "Convert images into a PDF",
@@ -835,7 +749,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "convert-word",
     label: "PDF → Word",
-    icon: "fileText",
     kind: "modify",
     category: "Extraction",
     desc: "Convert PDF to a DOCX document",
@@ -843,7 +756,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "convert-pptx",
     label: "PDF → presentation",
-    icon: "fileText",
     kind: "modify",
     category: "Extraction",
     desc: "Convert PDF to a PPTX deck",
@@ -851,7 +763,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "convert-text",
     label: "PDF → text",
-    icon: "fileText",
     kind: "modify",
     category: "Extraction",
     desc: "Extract plain text from the PDF",
@@ -859,7 +770,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "convert-html",
     label: "PDF → HTML",
-    icon: "fileText",
     kind: "modify",
     category: "Extraction",
     desc: "Convert PDF to HTML",
@@ -867,7 +777,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "convert-xml",
     label: "PDF → XML",
-    icon: "fileText",
     kind: "modify",
     category: "Extraction",
     desc: "Convert PDF to structured XML",
@@ -875,7 +784,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "convert-csv",
     label: "PDF → CSV",
-    icon: "fileText",
     kind: "modify",
     category: "Extraction",
     desc: "Extract tables from the PDF as CSV",
@@ -883,7 +791,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "convert-markdown",
     label: "PDF → Markdown",
-    icon: "fileText",
     kind: "modify",
     category: "Extraction",
     desc: "Convert PDF to Markdown",
@@ -891,7 +798,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "convert-pdfa",
     label: "PDF → PDF/A",
-    icon: "fileText",
     kind: "modify",
     category: "Advanced Formatting",
     desc: "Convert to the PDF/A archival format",
@@ -899,7 +805,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "html-to-pdf",
     label: "HTML → PDF",
-    icon: "fileText",
     kind: "modify",
     category: "Advanced Formatting",
     desc: "Render HTML as a PDF",
@@ -907,7 +812,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "markdown-to-pdf",
     label: "Markdown → PDF",
-    icon: "fileText",
     kind: "modify",
     category: "Advanced Formatting",
     desc: "Render Markdown as a PDF",
@@ -915,7 +819,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "url-to-pdf",
     label: "URL → PDF",
-    icon: "fileText",
     kind: "modify",
     category: "Advanced Formatting",
     desc: "Render a web page as a PDF",
@@ -923,7 +826,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "eml-to-pdf",
     label: "Email → PDF",
-    icon: "fileText",
     kind: "modify",
     category: "Advanced Formatting",
     desc: "Convert an email file (.eml) to a PDF",
@@ -931,7 +833,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "ocr",
     label: "OCR",
-    icon: "visibility",
     kind: "modify",
     category: "Extraction",
     desc: "Optical character recognition on scanned pages",
@@ -939,7 +840,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "extract-images",
     label: "Extract images",
-    icon: "auto-awesome",
     kind: "modify",
     category: "Extraction",
     desc: "Extract embedded images from the PDF",
@@ -947,7 +847,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "extract-bookmarks",
     label: "Extract bookmarks",
-    icon: "auto-awesome",
     kind: "modify",
     category: "Extraction",
     desc: "Extract the bookmark / outline tree",
@@ -955,7 +854,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "extract-scans",
     label: "Extract scans",
-    icon: "auto-awesome",
     kind: "modify",
     category: "Extraction",
     desc: "Detect and extract scanned image regions",
@@ -965,7 +863,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "redact",
     label: "Redact PII",
-    icon: "visibility",
     kind: "secure",
     category: "Document Security",
     desc: "Remove or mask PII before the document is stored or released",
@@ -973,7 +870,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "pii-enforce",
     label: "PII / PHI enforcement",
-    icon: "shield",
     kind: "secure",
     category: "Document Security",
     desc: "Policy check that outputs do not leak protected data beyond declared scope",
@@ -981,7 +877,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "auto-redact",
     label: "Auto-redact",
-    icon: "visibility",
     kind: "secure",
     category: "Document Security",
     desc: "Automatically redact sensitive content based on policy",
@@ -989,7 +884,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "watermark",
     label: "Confidentiality mark",
-    icon: "penTool",
     kind: "secure",
     category: "Document Security",
     desc: "Apply a visible confidentiality watermark to pages",
@@ -997,7 +891,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "attribution-watermark",
     label: "Attribution watermark",
-    icon: "penTool",
     kind: "secure",
     category: "Document Security",
     desc: "Embed a per-recipient invisible watermark for leak tracing",
@@ -1005,7 +898,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "sanitize",
     label: "Sanitize",
-    icon: "shield",
     kind: "secure",
     category: "Document Security",
     desc: "Strip hidden data, JavaScript, and metadata from the PDF",
@@ -1013,7 +905,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "sign-output",
     label: "Sign outputs",
-    icon: "penTool",
     kind: "secure",
     category: "Signing",
     desc: "Apply a tamper-evident signature covering the artifact and run metadata",
@@ -1021,7 +912,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "cert-sign",
     label: "Certificate sign",
-    icon: "penTool",
     kind: "secure",
     category: "Signing",
     desc: "Sign with a digital certificate",
@@ -1029,7 +919,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "add-password",
     label: "Add password",
-    icon: "lock",
     kind: "secure",
     category: "Document Security",
     desc: "Password-protect the output PDF",
@@ -1037,7 +926,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "encrypt-rest",
     label: "Encryption at rest",
-    icon: "lock",
     kind: "secure",
     category: "Document Security",
     desc: "AES-256 encryption on stored artifacts (Stirling-managed, BYOK, or HYOK)",
@@ -1045,7 +933,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "flatten-secure",
     label: "Flatten + lock",
-    icon: "dashboard",
     kind: "secure",
     category: "Document Security",
     desc: "Flatten forms and lock the document against tampering",
@@ -1053,7 +940,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "retention",
     label: "Retention policy",
-    icon: "fileText",
     kind: "secure",
     category: "Document Security",
     desc: "How long Stirling retains the artifact, run record, and audit trail",
@@ -1061,7 +947,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "residency",
     label: "Regional residency",
-    icon: "globe",
     kind: "secure",
     category: "Document Security",
     desc: "Where the artifact is stored and processed (region-pin or air-gap)",
@@ -1069,7 +954,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "access-policy",
     label: "Access policy",
-    icon: "key",
     kind: "secure",
     category: "Document Security",
     desc: "Who can fetch the sealed artifact (signed URL, IdP-gated, public)",
@@ -1077,7 +961,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "remove-cert-sign",
     label: "Remove signature",
-    icon: "penTool",
     kind: "secure",
     category: "Signing",
     desc: "Strip a digital signature from the document",
@@ -1087,7 +970,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "summarize",
     label: "Document summarizer",
-    icon: "fileText",
     kind: "modify",
     category: "Document Review",
     provider: "claude",
@@ -1096,7 +978,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "translate",
     label: "Document translator",
-    icon: "globe",
     kind: "modify",
     category: "Automation",
     provider: "claude",
@@ -1105,7 +986,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "contract-analyze",
     label: "Contract analyzer",
-    icon: "shield",
     kind: "validate",
     category: "Document Review",
     provider: "claude",
@@ -1114,7 +994,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "compliance-audit",
     label: "Compliance auditor",
-    icon: "check",
     kind: "validate",
     category: "Document Review",
     provider: "stirling",
@@ -1123,7 +1002,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "generate",
     label: "Document generation",
-    icon: "penTool",
     kind: "modify",
     category: "Automation",
     provider: "claude",
@@ -1132,7 +1010,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "certify",
     label: "Document certification",
-    icon: "check",
     kind: "validate",
     category: "Document Review",
     provider: "claude",
@@ -1141,7 +1018,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "intelligent-forms",
     label: "Intelligent forms",
-    icon: "fileText",
     kind: "modify",
     category: "Automation",
     provider: "stirling",
@@ -1152,7 +1028,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "schema-extract",
     label: "Schema-aware extract",
-    icon: "auto-awesome",
     kind: "modify",
     category: "Classification",
     desc: "Extract the typed fields the inferred schema declares — not heuristic regexes. Confidence scored per field",
@@ -1160,7 +1035,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "schema-validate",
     label: "Schema validate",
-    icon: "shield",
     kind: "validate",
     category: "Validation",
     desc: "Validate the document against its inferred schema. Required-field coverage, type-correctness, business rules",
@@ -1168,7 +1042,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "schema-route",
     label: "Conditional routing",
-    icon: "arrowRight",
     kind: "validate",
     category: "Classification",
     desc: "Fork to a downstream pipeline based on the inferred schema (Invoice → AP, Loan Closing → Compliance, etc.)",
@@ -1176,7 +1049,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "drift-check",
     label: "Schema drift check",
-    icon: "alertTriangle",
     kind: "validate",
     category: "Validation",
     desc: "Flag when a doc claims to be a known type but its field shape diverges from prior examples",
@@ -1184,7 +1056,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "smart-redact",
     label: "Field-aware redact",
-    icon: "visibility",
     kind: "secure",
     category: "Document Security",
     desc: "Schema-aware PII redaction — targets fields the schema declares as PII, not regex fishing",
@@ -1192,7 +1063,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "field-confidence",
     label: "Field confidence",
-    icon: "analytics",
     kind: "validate",
     category: "Validation",
     desc: "Per-field confidence scoring backed by the typed schema",
@@ -1200,7 +1070,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "schema-split",
     label: "Schema-aware split",
-    icon: "grid-view",
     kind: "modify",
     category: "Classification",
     desc: "Split a multi-doc bundle along schema boundaries",
@@ -1208,7 +1077,6 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "smart-watermark",
     label: "Smart watermark",
-    icon: "penTool",
     kind: "secure",
     category: "Document Security",
     desc: "Watermark text incorporates extracted schema fields",
@@ -1231,31 +1099,26 @@ export const SOURCE_OPTIONS: readonly SourceOption[] = [
   {
     id: "upload",
     label: "Upload API",
-    icon: "upload",
     desc: "POST documents to a Stirling endpoint",
   },
   {
     id: "webhook",
     label: "Inbound webhook",
-    icon: "webhook",
     desc: "Receive documents from another system via webhook",
   },
   {
     id: "s3",
     label: "S3 bucket watch",
-    icon: "storage",
     desc: "Poll an S3 bucket for new files",
   },
   {
     id: "email",
     label: "Email intake",
-    icon: "fileText",
     desc: "Route an inbox to this pipeline",
   },
   {
     id: "scheduled",
     label: "Scheduled import",
-    icon: "schedule",
     desc: "Fetch from SFTP/URL on a schedule",
   },
 ];
@@ -1264,37 +1127,31 @@ export const DESTINATION_OPTIONS: readonly DestinationOption[] = [
   {
     id: "vault",
     label: "Stirling vault",
-    icon: "shield",
     desc: "Store the processed document and extracted data in Stirling",
   },
   {
     id: "s3",
     label: "S3 bucket",
-    icon: "storage",
     desc: "Write results to an S3 bucket",
   },
   {
     id: "webhook",
     label: "Outbound webhook",
-    icon: "externalLink",
     desc: "POST results to a URL you control",
   },
   {
     id: "pipeline",
     label: "Another pipeline",
-    icon: "arrowRight",
     desc: "Chain to a second pipeline",
   },
   {
     id: "database",
     label: "Database",
-    icon: "database",
     desc: "Insert extracted fields into Postgres/Snowflake/BigQuery",
   },
   {
     id: "sftp",
     label: "SFTP",
-    icon: "fileText",
     desc: "Drop output files on an SFTP server",
   },
 ];

@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
+import { Icon } from "@app/ui/Icon";
 import { ActionIcon, Button, IconPicker, Input } from "@app/ui";
 import { PipelineBlockerTooltip } from "@portal/components/pipelines/PipelineBlockerTooltip";
 import { PIPELINE_ICON_OPTIONS } from "@portal/components/pipelines/pipelineIcon";
@@ -72,7 +72,7 @@ export function PipelineCreateHeader({
         onClick={onBack}
         aria-label={t("portal.pipelines.builder.back")}
       >
-        <ArrowBackRoundedIcon style={{ fontSize: "1.25rem" }} />
+        <Icon name="arrow-left" size={"1.25rem"} />
       </ActionIcon>
 
       <IconPicker
