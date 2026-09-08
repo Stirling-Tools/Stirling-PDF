@@ -830,11 +830,10 @@ def step_response_matches_regex(context, pattern):
 
 @then("the response PDF should contain {count:d} embedded images")
 def step_response_pdf_embedded_image_count(context, count):
-    reader = PdfReader(io.BytesIO(context.response.content))
-    total = 0
-    for page in reader.pages:
-        try:
-            total += len(page.images)
-        except Exception:
-            pass
+    body = context.response.content
+    assert body.startswith(b"%PDF"), f"Response body is not a PDF: {body[:200]!r}"
+    reader = PdfReader(io.BytesIO(body))
+    # Any per-page extraction failure must surface: swallowing it reads as "0 images",
+    # which is exactly the result a sanitization assertion is looking for.
+    total = sum(len(page.images) for page in reader.pages)
     assert total == count, f"Expected {count} embedded images in response PDF, found {total}"

@@ -40,7 +40,6 @@ import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.OfficeDocumentSanitizer;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
-import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
@@ -63,19 +62,19 @@ public class ConvertOfficeController {
     }
 
     public File convertToPdf(MultipartFile inputFile) throws IOException, InterruptedException {
-        // Check for valid file extension and sanitize filename
         String originalFilename = Filenames.toSimpleFileName(inputFile.getOriginalFilename());
         if (originalFilename == null || originalFilename.isBlank()) {
             throw ExceptionUtils.createFileNoNameException();
         }
 
-        // Check for valid file extension
         String extension = FilenameUtils.getExtension(originalFilename);
-        if (extension == null || !isValidFileExtension(extension)) {
+        String extensionLower = extension == null ? "" : extension.toLowerCase(Locale.ROOT).strip();
+        if (OfficeImportFilters.forExtension(extensionLower).isEmpty()) {
+            // Deliberately says nothing about the rejected name: it is attacker-chosen text that
+            // would otherwise be reflected into the response.
             throw ExceptionUtils.createIllegalArgumentException(
-                    "error.invalid.extension", "Invalid file extension: " + extension);
+                    "error.invalid.extension", "Unsupported file type for conversion to PDF");
         }
-        String extensionLower = extension.toLowerCase(Locale.ROOT);
 
         String baseName = FilenameUtils.getBaseName(originalFilename);
         if (baseName == null || baseName.isBlank()) {
@@ -87,18 +86,21 @@ public class ConvertOfficeController {
         Path inputPath = workDir.resolve(baseName + "." + extensionLower);
         Path outputPath = workDir.resolve(baseName + ".pdf");
 
-        // Sanitize by CONTENT not extension (a flat-ODF renamed .xml must still be sanitized).
-        byte[] inputBytes = inputFile.getBytes();
-        if (isHtmlContent(inputBytes, extensionLower)) {
-            String htmlContent = new String(inputBytes, StandardCharsets.UTF_8);
-            String sanitizedHtml = customHtmlSanitizer.sanitize(htmlContent);
-            Files.writeString(inputPath, sanitizedHtml, StandardCharsets.UTF_8);
-        } else if (inputBytes.length == 0) {
-            // Nothing to sanitize; let the converter report the empty input as it always has.
-            Files.write(inputPath, inputBytes);
-        } else {
-            byte[] sanitized = officeDocumentSanitizer.sanitize(inputBytes, extensionLower);
-            Files.write(inputPath, sanitized);
+        String importFilter;
+        try {
+            Files.copy(inputFile.getInputStream(), inputPath, StandardCopyOption.REPLACE_EXISTING);
+            // The staged name and the forced filter come from the same lowercased extension, so
+            // the type LibreOffice is told to read and the one it sees on disk cannot diverge.
+            OfficeImportFilters.Candidate candidate =
+                    OfficeImportFilters.resolve(extensionLower, inputPath);
+            if (candidate == null) {
+                throw invalidContent();
+            }
+            sanitizeInPlace(inputPath, candidate);
+            importFilter = candidate.importFilter();
+        } catch (RuntimeException | IOException e) {
+            FileUtils.deleteQuietly(workDir.toFile());
+            throw e;
         }
 
         Path libreOfficeProfile = null;
@@ -113,6 +115,8 @@ public class ConvertOfficeController {
                     command.add(runtimePathConfig.getUnoConvertPath());
                     command.add("--convert-to");
                     command.add("pdf");
+                    command.add("--input-filter");
+                    command.add(importFilter);
                     command.add(inputPath.toString());
                     command.add(outputPath.toString());
 
@@ -135,6 +139,7 @@ public class ConvertOfficeController {
                 command.add("-env:UserInstallation=" + libreOfficeProfile.toUri().toString());
                 command.add("--headless");
                 command.add("--nologo");
+                command.add("--infilter=" + importFilter);
                 command.add("--convert-to");
                 command.add("pdf");
                 command.add("--outdir");
@@ -201,28 +206,59 @@ public class ConvertOfficeController {
         }
     }
 
-    private boolean isValidFileExtension(String fileExtension) {
-        return RegexPatternUtils.getInstance()
-                .getFileExtensionValidationPattern()
-                .matcher(fileExtension)
-                .matches();
+    /**
+     * Rewrites the staged upload in place with the sanitizer the chosen candidate declares. Routing
+     * is by the candidate, never by a scan of the bytes deciding what they look like: the import
+     * filter is forced from the same candidate, so the type sanitized here is the type LibreOffice
+     * reads, and every defeat of this endpoint so far came from a scan reaching a different
+     * conclusion than LibreOffice did. A candidate with nothing to strip leaves the file as it was
+     * streamed, so a large binary upload is never held in the heap.
+     */
+    private void sanitizeInPlace(Path inputPath, OfficeImportFilters.Candidate candidate)
+            throws IOException {
+        if (Files.size(inputPath) == 0L) {
+            // Nothing to sanitize; let the converter report the empty input as it always has.
+            return;
+        }
+        if (candidate.sanitizer() != OfficeImportFilters.SanitizerKind.HTML
+                && !officeDocumentSanitizer.isSanitizationEnabled()) {
+            return;
+        }
+        try {
+            switch (candidate.sanitizer()) {
+                case NONE -> {}
+                case HTML -> sanitizeHtmlInPlace(inputPath);
+                case MARKDOWN -> sanitizeMarkdownInPlace(inputPath);
+                case OFFICE_XML -> sanitizeOfficeDocumentInPlace(inputPath);
+                case WORD_BINARY -> WordBinarySanitizer.sanitizeInPlace(inputPath);
+            }
+        } catch (OfficeDocumentSanitizer.UnsanitizableDocumentException e) {
+            throw invalidContent();
+        }
     }
 
-    // HTML needs CustomHtmlSanitizer; detect by content so HTML renamed .fodt/.xml is caught.
-    private static boolean isHtmlContent(byte[] content, String extensionLower) {
-        if ("html".equals(extensionLower) || "htm".equals(extensionLower)) {
-            return true;
-        }
-        if (content == null || content.length == 0) {
-            return false;
-        }
-        int limit = Math.min(content.length, 1024);
-        String head = new String(content, 0, limit, StandardCharsets.UTF_8);
-        if (!head.isEmpty() && head.charAt(0) == '\uFEFF') {
-            head = head.substring(1);
-        }
-        head = head.stripLeading().toLowerCase(Locale.ROOT);
-        return head.startsWith("<!doctype html") || head.startsWith("<html");
+    private void sanitizeOfficeDocumentInPlace(Path inputPath) throws IOException {
+        Files.write(inputPath, officeDocumentSanitizer.sanitize(Files.readAllBytes(inputPath)));
+    }
+
+    private void sanitizeHtmlInPlace(Path inputPath) throws IOException {
+        String htmlContent = Files.readString(inputPath, StandardCharsets.UTF_8);
+        Files.writeString(
+                inputPath, customHtmlSanitizer.sanitize(htmlContent), StandardCharsets.UTF_8);
+    }
+
+    private void sanitizeMarkdownInPlace(Path inputPath) throws IOException {
+        String markdown = Files.readString(inputPath, StandardCharsets.UTF_8);
+        Files.writeString(
+                inputPath,
+                MarkdownSanitizer.sanitize(markdown, customHtmlSanitizer),
+                StandardCharsets.UTF_8);
+    }
+
+    private static IllegalArgumentException invalidContent() {
+        return ExceptionUtils.createIllegalArgumentException(
+                "error.invalid.content",
+                "File content does not match its type and cannot be converted");
     }
 
     @AutoJobPostMapping(
