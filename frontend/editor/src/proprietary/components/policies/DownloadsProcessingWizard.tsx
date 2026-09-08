@@ -71,12 +71,15 @@ export function DownloadsProcessingWizard({
   const { addFiles } = useFileHandler();
   const { mountLocalFolder } = useFolders();
 
-  // Only offer where it can work: Downloads must exist, be permitted, and hold something.
+  // Only offer where it can work: this build must be able to read a file that lives on disk,
+  // and Downloads must exist, be permitted, and hold something. Without canListDirectory the
+  // results are unreadable here (fetchRunOutputFile throws), so the offer would rewrite the
+  // server's own Downloads in place and never show the user a single result.
   // Asked repeatedly because the window can open before the bundled backend is reachable —
   // a single attempt would fail on every desktop cold start. Gives up after a bounded wait
   // so a genuine "no" stops asking.
   useEffect(() => {
-    if (!active) return;
+    if (!active || !canListDirectory) return;
     let cancelled = false;
     let attempts = 0;
     let timer: ReturnType<typeof setTimeout> | undefined;

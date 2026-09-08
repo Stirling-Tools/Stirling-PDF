@@ -67,18 +67,21 @@ public class PolicyAccessGuard {
     }
 
     /**
-     * Whether owner scoping leaves this record reachable by nobody: a processing folder stamped
-     * with no owner, once login is on. Folders created while login was disabled are stamped null,
-     * so enabling login later strands them - invisible to every user, yet still watched.
+     * Whether owner scoping leaves this processing folder reachable by nobody, so the engine can
+     * refuse to run it rather than replace files in place in a folder no one can list, pause,
+     * revert or delete.
      *
-     * <p>The engine consults this so a stranded folder goes dormant instead of replacing files in
-     * place that no one can list, pause, revert, or delete. Static and login-flag-parameterised
-     * because the engine has no user context to resolve.
+     * <p>Two ways in, and the rule has to cover both: a folder created while login was disabled is
+     * stamped with no owner, and enabling login later strands it; a folder whose owner was renamed
+     * or deleted is stamped with a name that no longer resolves. Owner match is by exact name, so
+     * existence is read the same way - a name that would not satisfy {@link #ownedByCurrentUser}
+     * for anyone is not reachable, whatever the users table holds under a different case.
      */
-    public static boolean isOrphaned(Policy policy, boolean loginEnabled) {
-        return loginEnabled
-                && Policy.SURFACE_PROCESSING_FOLDER.equals(policy.surface())
-                && policy.owner() == null;
+    public boolean isOrphaned(Policy policy) {
+        if (!enforced() || !Policy.SURFACE_PROCESSING_FOLDER.equals(policy.surface())) {
+            return false;
+        }
+        return policy.owner() == null || !userService.usernameExists(policy.owner());
     }
 
     /**

@@ -634,8 +634,11 @@ export default function FileManagerView() {
   const { listFiles, retryFile, revertFile } = processingApi;
   useEffect(() => {
     if (!processingView || !processingRecordId) {
-      setFileStates(new Map());
-      setRevertables(new Set());
+      // Keep the empty value when it is already empty: a fresh Map/Set is never Object.is
+      // equal, so setting one unconditionally re-renders, and this effect runs on every
+      // render of a folder that has no processing.
+      setFileStates((prev) => (prev.size === 0 ? prev : new Map()));
+      setRevertables((prev) => (prev.size === 0 ? prev : new Set()));
       return;
     }
     let cancelled = false;

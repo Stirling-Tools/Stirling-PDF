@@ -24,6 +24,10 @@ final class PolicySweep implements ResolveContext {
     private final String policyId;
     private final SweepKind kind;
     private final ProcessedLedger ledger;
+
+    /** When set, the only identity this sweep may claim; null sweeps the whole policy. */
+    private final String target;
+
     private final Set<String> present = new HashSet<>();
     // Claim states loaded in bulk at reportPresent; a claim outside the prefetch falls back to a
     // single lookup. A stale entry cannot double-claim (the ledger re-checks every transition),
@@ -33,14 +37,21 @@ final class PolicySweep implements ResolveContext {
     private boolean cleanupVetoed;
     private int retried;
 
-    PolicySweep(String policyId, SweepKind kind, ProcessedLedger ledger) {
+    PolicySweep(String policyId, SweepKind kind, ProcessedLedger ledger, String target) {
         this.policyId = policyId;
         this.kind = kind;
         this.ledger = ledger;
+        this.target = target;
     }
 
     @Override
     public synchronized boolean claim(String identity, String gate, Supplier<String> contentHash) {
+        // Refused here rather than after resolve: the sources still list normally, but a capped
+        // listing would otherwise spend its whole budget claiming other files and never reach the
+        // one file that was asked for.
+        if (target != null && !target.equals(identity)) {
+            return false;
+        }
         ClaimState observed =
                 prefetchedIdentities.contains(identity)
                         ? prefetched.get(identity)

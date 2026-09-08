@@ -220,10 +220,15 @@ public class FolderOutputSink implements PolicyOutputSink {
     }
 
     /**
-     * Where an original goes when the canonical archive slot is already taken - a same-name file
-     * re-dropped after the first was archived. A subdirectory, not a numbered sibling: a restore
-     * brings back every regular file directly under {@link #originalsDir}, so a numbered sibling
-     * there would be restored as a file the watched folder never held.
+     * Where a same-name re-drop's original is kept once the canonical slot is taken. A
+     * subdirectory, not a numbered sibling: a restore brings back every regular file directly under
+     * {@link #originalsDir}, so a numbered sibling there would be restored as a file the watched
+     * folder never held.
+     *
+     * <p>Canonical stays with the first original, which is right when a file is reprocessed and
+     * wrong when the user replaced it with a different document of the same name - restoring then
+     * returns the earlier document. Telling those apart needs the previous output's content hash,
+     * which the next claim clears from the ledger row, so it is not decidable here today.
      */
     private static Path supersededDir(Path dir) {
         return originalsDir(dir).resolve("superseded");
@@ -249,10 +254,16 @@ public class FolderOutputSink implements PolicyOutputSink {
      * Move the target into {@code .stirling/originals} before a replace overwrites it, returning
      * the archived path, or null when nothing is at the target. Throws if an existing target cannot
      * be archived, so the caller aborts before overwriting and never destroys an unpreserved
-     * original. A same-name re-drop goes to {@link #supersededDir}; revert restores the canonical
-     * first original. Plain move, not {@code ATOMIC_MOVE}: the archive is hidden under {@code
-     * .stirling} and needs no atomic visibility, and a plain move survives a cross-device archive
-     * dir where {@code ATOMIC_MOVE} would throw.
+     * original.
+     *
+     * <p>With the slot already taken the kept original stays canonical and this content goes to
+     * {@link #supersededDir}, not to a numbered sibling that a restore would bring back as a file
+     * the folder never held. Which of the two a restore ought to return is an open question; see
+     * the note on {@link #supersededDir}.
+     *
+     * <p>Plain move, not {@code ATOMIC_MOVE}: the archive is hidden under {@code .stirling} and
+     * needs no atomic visibility, and a plain move survives a cross-device archive dir where {@code
+     * ATOMIC_MOVE} would throw.
      */
     private static Path archiveOriginal(Path dir, Path target) throws IOException {
         if (!Files.exists(target)) {

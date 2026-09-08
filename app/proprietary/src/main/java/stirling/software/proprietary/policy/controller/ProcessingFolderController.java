@@ -532,9 +532,9 @@ public class ProcessingFolderController {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT, "'" + name + "' has no failure to retry");
         }
-        // LIGHT, not USER: only this file's parked failure is forgotten; every other parked
-        // failure stays parked.
-        return ResponseEntity.accepted().body(policyRunner.run(policy, SweepKind.LIGHT));
+        // Scoped to this identity: only this file's parked failure was forgotten, and claiming
+        // any other file would process work nobody asked to retry.
+        return ResponseEntity.accepted().body(policyRunner.runFile(policy, identity));
     }
 
     /** Restore request: the file's name within the folder. */

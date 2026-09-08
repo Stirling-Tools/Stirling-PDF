@@ -243,9 +243,9 @@ class FolderOutputSinkTest {
         Path originals = out.resolve(".stirling").resolve("originals");
         assertEquals("first-original", Files.readString(originals.resolve("a.pdf")));
         // The second original was preserved, not overwritten away.
-        boolean secondKept;
+        boolean kept;
         try (Stream<Path> archived = Files.walk(originals)) {
-            secondKept =
+            kept =
                     archived.filter(Files::isRegularFile)
                             .anyMatch(
                                     p -> {
@@ -256,7 +256,7 @@ class FolderOutputSinkTest {
                                         }
                                     });
         }
-        assertTrue(secondKept, "the re-dropped original must be preserved, never silently lost");
+        assertTrue(kept, "the re-dropped original must be preserved, never silently lost");
     }
 
     @Test

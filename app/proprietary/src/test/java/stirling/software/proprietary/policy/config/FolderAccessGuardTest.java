@@ -29,6 +29,8 @@ import stirling.software.proprietary.policy.source.SourceStore;
  */
 class FolderAccessGuardTest {
 
+    private static final String TAURI_MODE_PROPERTY = "STIRLING_PDF_TAURI_MODE";
+
     @TempDir Path tempDir;
 
     private final SourceStore sourceStore = new InProcessSourceStore();
@@ -101,15 +103,46 @@ class FolderAccessGuardTest {
     }
 
     @Test
-    void permitsAnyDirectoryForTheLocalOperatorWhenLoginIsOff() {
+    void deniesAnUnlistedDirectoryOnAServerWithLoginOff() {
+        // Login off does not mean "desktop": a self-hosted server runs this way by default, and
+        // there every caller is unauthenticated, so the allowlist is all that stands between them
+        // and the filesystem.
+        assertThrows(
+                FolderAccessDeniedException.class,
+                () -> guardWithLoginOff().requirePermitted(tempDir));
+    }
+
+    @Test
+    void permitsAnyDirectoryInTheDesktopBundle() {
+        withDesktopBundle(
+                () ->
+                        assertEquals(
+                                tempDir.toAbsolutePath().normalize(),
+                                guardWithLoginOff().requirePermitted(tempDir)));
+    }
+
+    private FolderAccessGuard guardWithLoginOff() {
         ApplicationProperties properties = new ApplicationProperties();
-        FolderAccessGuard localGuard =
-                new FolderAccessGuard(
-                        properties,
-                        new RuntimePathConfig(properties),
-                        new StandardEnvironment(),
-                        sourceStore);
-        assertEquals(tempDir.toAbsolutePath().normalize(), localGuard.requirePermitted(tempDir));
+        return new FolderAccessGuard(
+                properties,
+                new RuntimePathConfig(properties),
+                new StandardEnvironment(),
+                sourceStore);
+    }
+
+    /** Runs the body with the flag the desktop sidecar sets, restoring whatever was there. */
+    private static void withDesktopBundle(Runnable body) {
+        String previous = System.getProperty(TAURI_MODE_PROPERTY);
+        System.setProperty(TAURI_MODE_PROPERTY, "true");
+        try {
+            body.run();
+        } finally {
+            if (previous == null) {
+                System.clearProperty(TAURI_MODE_PROPERTY);
+            } else {
+                System.setProperty(TAURI_MODE_PROPERTY, previous);
+            }
+        }
     }
 
     @Test

@@ -339,6 +339,7 @@ public class UserService implements UserServiceInterface {
         }
     }
 
+    @Override
     public boolean usernameExists(String username) {
         return findByUsername(username).isPresent();
     }

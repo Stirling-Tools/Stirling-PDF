@@ -414,7 +414,7 @@ class ProcessingFolderControllerTest {
     }
 
     @Test
-    void retryForgetsOneFailureAndRunsALightSweep() {
+    void retryRunsOnlyTheNamedFile() {
         var view = controller.save(request(null, "new_version")).getBody();
         StoredFile doc = storedFile(11L, "doc.pdf");
         when(storedFileRepository.findAllByFolderId(FOLDER_ID)).thenReturn(List.of(doc));
@@ -423,9 +423,9 @@ class ProcessingFolderControllerTest {
         controller.retryFile(view.id(), new ProcessingFolderController.RetryFileRequest("doc.pdf"));
 
         Policy stored = policyStore.get(view.id()).orElseThrow();
-        // Light, not user-invoked: only the forgotten file may run again; other parked
-        // failures stay parked.
-        verify(policyRunner).run(stored, SweepKind.LIGHT);
+        // Scoped to the one file: a whole-folder sweep would also claim every file with no
+        // ledger row, including an original a restore just brought back.
+        verify(policyRunner).runFile(stored, "storage:11");
     }
 
     @Test
@@ -513,30 +513,33 @@ class ProcessingFolderControllerTest {
     }
 
     @Test
-    void revertAllRestoresOnlyTheOriginalsAndInventsNoFiles() throws Exception {
+    void revertAllIgnoresNestedArchivesSoItRestoresOnlyTheFolderSOwnFiles() throws Exception {
         lenient()
                 .when(folderAccessGuard.requirePermitted(any(Path.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
         var view = controller.save(diskRequest()).getBody();
         Path originals = tempDir.resolve(".stirling").resolve("originals");
-        // A same-name re-drop archives its superseded original one level down. Restoring that
-        // as a sibling would leave the user a "doc (1).pdf" their folder never held.
+        // The consumer half of the superseded layout: a same-name re-drop displaces the original
+        // it replaces one level down, and revert-all must leave it there. Restoring it as a
+        // sibling would leave the user a second "doc.pdf" their folder never held. The write half
+        // - that only the canonical name ever lands in this namespace - is pinned by
+        // FolderOutputSinkTest.aSupersededOriginalIsKeptOutOfTheRestoreNamespace.
         Path superseded = originals.resolve("superseded");
         Files.createDirectories(superseded);
         Files.writeString(tempDir.resolve("doc.pdf"), "processed");
-        Files.writeString(originals.resolve("doc.pdf"), "first-original");
-        Files.writeString(superseded.resolve("doc.pdf"), "second-original");
+        Files.writeString(originals.resolve("doc.pdf"), "the-original");
+        Files.writeString(superseded.resolve("doc.pdf"), "displaced-original");
 
         var outcome = controller.revertAllFiles(view.id());
 
         assertThat(outcome.restored()).isEqualTo(1);
-        assertThat(Files.readString(tempDir.resolve("doc.pdf"))).isEqualTo("first-original");
+        assertThat(Files.readString(tempDir.resolve("doc.pdf"))).isEqualTo("the-original");
         try (Stream<Path> entries = Files.list(tempDir)) {
             assertThat(entries.filter(Files::isRegularFile).map(f -> f.getFileName().toString()))
                     .containsExactly("doc.pdf");
         }
         // Still preserved, just not restored over anything.
-        assertThat(Files.readString(superseded.resolve("doc.pdf"))).isEqualTo("second-original");
+        assertThat(Files.readString(superseded.resolve("doc.pdf"))).isEqualTo("displaced-original");
     }
 
     @Test

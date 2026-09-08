@@ -71,25 +71,32 @@ export interface ProcessingFoldersApi {
 const EMPTY_IDS: ReadonlySet<string> = new Set();
 
 /**
+ * One shared instance, so every caller sees a stable identity. Returning a fresh literal
+ * per render makes the members unstable deps: an effect keyed on one of them re-runs every
+ * render, and any state it sets re-renders, which is an unbounded loop.
+ */
+const INERT: ProcessingFoldersApi = {
+  stateFor: () => undefined,
+  recordFor: () => undefined,
+  enabledFolderIds: EMPTY_IDS,
+  anyEnabled: false,
+  listActiveRuns: async () => [],
+  listFiles: async () => [],
+  retryFile: async () => {},
+  revertFile: async () => {},
+  revertAll: async () => undefined,
+  enable: async () => {},
+  disable: async () => {},
+  remove: async () => {},
+  sweep: async () => {},
+};
+
+/**
  * Processing folders, whatever kind of folder they watch. Inert in core; the proprietary
  * build shadows this with an implementation backed by `/api/v1/processing-folders`.
  */
 export function useProcessingFolders(): ProcessingFoldersApi {
-  return {
-    stateFor: () => undefined,
-    recordFor: () => undefined,
-    enabledFolderIds: EMPTY_IDS,
-    anyEnabled: false,
-    listActiveRuns: async () => [],
-    listFiles: async () => [],
-    retryFile: async () => {},
-    revertFile: async () => {},
-    revertAll: async () => undefined,
-    enable: async () => {},
-    disable: async () => {},
-    remove: async () => {},
-    sweep: async () => {},
-  };
+  return INERT;
 }
 
 /** Reload the shared list. No-op in core, which has no processing folders. */
