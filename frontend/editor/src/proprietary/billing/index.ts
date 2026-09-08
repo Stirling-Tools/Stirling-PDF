@@ -47,6 +47,7 @@ export {
   type MeterRowTone,
 } from "@app/billing/MeterRow";
 export { KvRow } from "@app/billing/KvRow";
+export { InvoiceRow, type InvoiceRowState } from "@app/billing/InvoiceRow";
 export {
   SpendCapControl,
   type SpendCapControlProps,

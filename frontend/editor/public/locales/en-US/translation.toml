@@ -7261,6 +7261,7 @@ usage = "Usage"
 credits = "Credits"
 creditsNote = "{{units}} · {{rate}} each"
 day = "Day {{day}} of {{of}}"
+editors = "Editors deployed"
 estimated = "estimated · the meter settles at close"
 largeFiles = "Large files"
 largeFilesValue = "{{pdfs}} PDFs past the size threshold"
@@ -7321,6 +7322,14 @@ name = "Team"
 sub = "Up to {{users}} users"
 subNoLimit = "No user limit"
 
+[portal.billing.invoiceRow]
+current = "Current"
+failed = "Unpaid"
+paid = "Paid"
+undated = "Undated"
+unknownAmount = "Unknown"
+view = "View"
+
 [portal.billing.invoices]
 columnAmount = "Amount"
 columnDate = "Date"
@@ -7344,6 +7353,13 @@ showMostRecent_other = "Show {{count}} most recent"
 title = "Invoice history"
 viewAriaLabel = "View invoice {{number}} in Stripe"
 viewLink = "View ↗"
+
+[portal.billing.payment]
+card = "{{brand}} ending {{last4}}"
+cardWithExpiry = "{{brand}} ending {{last4}} · expires {{month}} / {{year}}"
+method = "Payment method"
+noCard = "No card on file"
+update = "Update"
 
 [portal.billing.paymentMethod]
 billedMonthly = "Billed monthly"
@@ -9774,8 +9790,6 @@ type = "Type"
 close = "Close"
 
 [portal.usage]
-managePayment = "Manage Payment"
-paymentMethod = "Payment method"
 subtitle = "Your plan, your usage, and every invoice."
 title = "Usage & Billing"
 

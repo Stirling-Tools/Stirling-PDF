@@ -37,6 +37,11 @@ export interface BillingScreenProps {
   paymentSection?: ReactNode;
   /** The Invoices section's contents. Omit where there are no invoices, for the same reason. */
   invoicesSection?: ReactNode;
+  /**
+   * Editors this team has deployed, from the fleet-stats endpoint. Null when the backend cannot
+   * compute it (auditing off), in which case the row is omitted rather than showing a false zero.
+   */
+  editorsDeployed?: number | null;
   /** The enterprise door. Omitted for a team already on an agreement. */
   onEnterpriseQuote?: () => void;
   /** Host-owned surfaces that are not sections of this card: modals, upsells, detail cards. */
@@ -91,6 +96,7 @@ export function BillingScreen({
   onGovernSpend,
   governLabel,
   notices,
+  editorsDeployed,
   paymentSection,
   invoicesSection,
   onEnterpriseQuote,
@@ -301,6 +307,12 @@ export function BillingScreen({
                 label={t("portal.billing.cycle.users", "Users")}
                 value={wallet.team.usersInUse.toLocaleString()}
               />
+              {editorsDeployed != null && (
+                <KvRow
+                  label={t("portal.billing.cycle.editors", "Editors deployed")}
+                  value={editorsDeployed.toLocaleString()}
+                />
+              )}
               {paying && (
                 <KvRow
                   label={t("portal.billing.cycle.credits", "Credits")}

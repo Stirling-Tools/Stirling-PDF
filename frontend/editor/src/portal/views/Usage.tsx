@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Banner, Button } from "@app/ui";
-import { BillingScreen, KvRow } from "@app/billing";
+import { BillingScreen } from "@app/billing";
 import {
   fetchWallet,
   refreshWalletCache,
@@ -14,6 +14,9 @@ import {
 } from "@portal/api/link";
 import { useStripePortal } from "@portal/hooks/useStripePortal";
 import { FreePlanView } from "@portal/components/billing/FreePlanView";
+import { PaymentSection } from "@portal/components/billing/PaymentSection";
+import { InvoicesSection } from "@portal/components/billing/InvoicesSection";
+import { fetchFleetStats } from "@portal/api/fleetStats";
 import { SubscribedPlanView } from "@portal/components/billing/SubscribedPlanView";
 import {
   HttpError,
@@ -71,6 +74,12 @@ export function Usage({ onWalletLoaded, onReauth }: UsageProps = {}) {
   // The SaaS session has lapsed and needs a re-sign-in (self-hosted only).
   const [sessionExpired, setSessionExpired] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  // Editors deployed comes from the fleet-stats endpoint, not the wallet. Null when the backend
+  // cannot compute it, in which case the screen omits the row rather than showing a false zero.
+  const [editorsDeployed, setEditorsDeployed] = useState<number | null>(null);
+  // Stripe returns no invoices for a team that has never been billed. The section and its chip
+  // drop out in that case rather than rendering an empty heading.
+  const [hasInvoices, setHasInvoices] = useState(true);
   // Stripe customer portal — the subscribed header's "Manage Payment" action.
   const portal = useStripePortal(wallet);
   // Guards the post-checkout poll loop from setState after unmount.
@@ -89,6 +98,13 @@ export function Usage({ onWalletLoaded, onReauth }: UsageProps = {}) {
     setSessionExpired(false);
     // Independent of the wallet load — a local-usage failure must not break the
     // page; it just means no unsynced delta is shown.
+    fetchFleetStats()
+      .then((f) => {
+        if (!cancelled) setEditorsDeployed(f.editorsDeployed);
+      })
+      .catch(() => {
+        if (!cancelled) setEditorsDeployed(null);
+      });
     fetchLocalUsage()
       .then((u) => {
         if (!cancelled) setLocalUsage(u);
@@ -133,6 +149,7 @@ export function Usage({ onWalletLoaded, onReauth }: UsageProps = {}) {
   }, [refreshKey, onWalletLoaded, t]);
 
   const refresh = useCallback(() => setRefreshKey((k) => k + 1), []);
+  const onInvoicesEmpty = useCallback(() => setHasInvoices(false), []);
 
   const confirmSubscription = useCallback(async (): Promise<boolean> => {
     // Stripe's onComplete fires before the subscription webhook lands, so poll the
@@ -218,21 +235,15 @@ export function Usage({ onWalletLoaded, onReauth }: UsageProps = {}) {
           )}
         </>
       }
+      editorsDeployed={editorsDeployed}
       paymentSection={
         paying ? (
-          <KvRow
-            label={t("portal.usage.paymentMethod", "Payment method")}
-            value={
-              <Button
-                variant="secondary"
-                size="sm"
-                loading={portal.opening}
-                onClick={portal.open}
-              >
-                {t("portal.usage.managePayment", "Manage Payment")}
-              </Button>
-            }
-          />
+          <PaymentSection onManage={portal.open} managing={portal.opening} />
+        ) : undefined
+      }
+      invoicesSection={
+        paying && hasInvoices ? (
+          <InvoicesSection onEmpty={onInvoicesEmpty} />
         ) : undefined
       }
       extras={

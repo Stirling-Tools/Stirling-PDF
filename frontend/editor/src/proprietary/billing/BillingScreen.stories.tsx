@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { BillingScreen } from "@app/billing/BillingScreen";
 import { KvRow } from "@app/billing/KvRow";
+import { InvoiceRow } from "@app/billing/InvoiceRow";
 import { freeWallet, subscribedWallet } from "@app/billing/walletFixtures";
 
 const meta: Meta<typeof BillingScreen> = {
@@ -21,14 +22,54 @@ const payment = (
     <KvRow
       label="Payment method"
       value="Visa ending 4242 · expires 08 / 2027"
+      door={<button type="button">Update</button>}
     />
-    <KvRow label="Next invoice" note="from this cycle's pace" value="Oct 1" />
+    <KvRow
+      label="Next invoice"
+      note="from this cycle's pace"
+      value="Oct 1 · $4,911.32"
+    />
+    <KvRow
+      label="Billed to"
+      value="Halcyon Legal"
+      door={<button type="button">Update</button>}
+    />
+    <KvRow
+      label="Invoices go to"
+      value="matt@stirlingpdf.com"
+      door={<button type="button">Update</button>}
+    />
   </>
 );
 const invoices = (
   <>
-    <KvRow label="Sep 1, 2026" value="$99.00" />
-    <KvRow label="Aug 1, 2026" value="$99.00" />
+    <InvoiceRow
+      date="Sep 1, 2026"
+      description="Team · 100 users"
+      amount="$99.00"
+      state="current"
+      stateLabel="Current"
+      href="https://example.invalid/i/1"
+      viewLabel="View"
+    />
+    <InvoiceRow
+      date="Aug 1, 2026"
+      description="Team · 100 users"
+      amount="$99.00"
+      state="paid"
+      stateLabel="Paid"
+      href="https://example.invalid/i/2"
+      viewLabel="View"
+    />
+    <InvoiceRow
+      date="Jul 1, 2026"
+      description="Team · 100 users"
+      amount="$99.00"
+      state="paid"
+      stateLabel="Paid"
+      href="https://example.invalid/i/3"
+      viewLabel="View"
+    />
   </>
 );
 
@@ -57,6 +98,7 @@ export const TeamOnly: Story = {
     onAddCapacity: () => {},
     onActivateProcessor: () => {},
     onEnterpriseQuote: () => {},
+    editorsDeployed: 6,
     paymentSection: payment,
     invoicesSection: invoices,
   },
@@ -79,6 +121,7 @@ export const TeamAndProcessor: Story = {
     onAddCapacity: () => {},
     onGovernSpend: () => {},
     onEnterpriseQuote: () => {},
+    editorsDeployed: 6,
     paymentSection: payment,
     invoicesSection: invoices,
   },

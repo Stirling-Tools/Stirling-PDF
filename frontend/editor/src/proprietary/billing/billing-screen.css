@@ -391,3 +391,80 @@
 .billing-ent__cta:hover {
   background: var(--c-hover);
 }
+
+/* ── the paper trail: one row per invoice ────────────────────────────────── */
+
+.billing-inv {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5625rem 0;
+  border-top: 1px solid var(--c-border-subtle);
+}
+
+.billing-inv:first-of-type {
+  border-top: none;
+}
+
+.billing-inv__date {
+  flex-shrink: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--c-text);
+}
+
+.billing-inv__desc {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 0.75rem;
+  color: var(--c-text-subtle);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.billing-inv__amount {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--c-text);
+  text-align: right;
+}
+
+.billing-inv__door {
+  flex-shrink: 0;
+  min-width: 2.5rem;
+  font-size: 0.78125rem;
+  font-weight: 600;
+  color: var(--c-accent-text);
+  text-align: right;
+  text-decoration: none;
+  text-underline-offset: 2px;
+}
+
+.billing-inv__door:hover,
+.billing-inv__door:focus-visible {
+  text-decoration: underline;
+}
+
+.billing-kv__door {
+  margin-left: 0.75rem;
+  font-weight: 600;
+  color: var(--c-accent-text);
+}
+
+.billing-kv__door button {
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  color: var(--c-accent-text);
+  cursor: pointer;
+  background: none;
+  border: none;
+  text-underline-offset: 2px;
+}
+
+.billing-kv__door button:hover,
+.billing-kv__door button:focus-visible {
+  text-decoration: underline;
+}

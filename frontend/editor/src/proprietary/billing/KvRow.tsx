@@ -13,11 +13,14 @@ export function KvRow({
   label,
   value,
   note,
+  door,
 }: {
   label: string;
   value: ReactNode;
   /** A muted qualifier before the value: "392,906 · 1c each", "flat · no meter running". */
   note?: string;
+  /** A door at the row's right, e.g. "Update". Rendered after the value. */
+  door?: ReactNode;
 }) {
   return (
     <div className="billing-kv">
@@ -25,6 +28,7 @@ export function KvRow({
       <span className="billing-kv__value">
         {note ? <span className="billing-kv__note">{note} </span> : null}
         {value}
+        {door ? <span className="billing-kv__door">{door}</span> : null}
       </span>
     </div>
   );
