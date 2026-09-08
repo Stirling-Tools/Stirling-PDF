@@ -6,6 +6,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -174,8 +176,18 @@ public class RedactController {
         boolean useRegex = Boolean.TRUE.equals(request.getUseRegex());
         boolean wholeWordSearchBool = Boolean.TRUE.equals(request.getWholeWordSearch());
 
-        // targetsFor compiles every term, so it is the single place an invalid regex is
-        // rejected; a separate validating compile here would only duplicate that.
+        if (useRegex) {
+            for (int i = 0; i < terms.size(); i++) {
+                try {
+                    Pattern.compile(terms.get(i));
+                } catch (PatternSyntaxException e) {
+                    // Echoing the term back would put the secret in the error body.
+                    throw ExceptionUtils.createIllegalArgumentException(
+                            "error.redaction.no.patterns", "Invalid regex pattern #" + (i + 1));
+                }
+            }
+        }
+
         RedactionAssurance.Targets assuranceTargets =
                 RedactionAssurance.targetsFor(terms, useRegex, wholeWordSearchBool);
 
