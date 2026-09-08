@@ -73,6 +73,7 @@ vi.mock("@app/contexts/RedactionContext", () => ({
     activateRedact: mockActivateRedact,
     setRedactionConfig: mockSetRedactionConfig,
     redactionApiRef: { current: null },
+    isBridgeReady: true,
   }),
 }));
 
@@ -344,5 +345,6 @@ describe("TextSelectionMenu", () => {
     expect(mockSetSidebarsVisible).toHaveBeenCalledWith(true);
     expect(mockSetLeftPanelView).toHaveBeenCalledWith("toolContent");
     expect(mockSetRedactionMode).toHaveBeenCalledWith(true);
+    expect(mockActivateRedact).toHaveBeenCalledTimes(1);
   });
 });

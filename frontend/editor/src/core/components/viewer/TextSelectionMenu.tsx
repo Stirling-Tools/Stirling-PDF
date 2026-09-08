@@ -235,6 +235,7 @@ function TextSelectionMenuInner({
     activateRedact,
     setRedactionConfig,
     redactionApiRef,
+    isBridgeReady,
   } = useRedaction();
   const { actions: navActions } = useNavigationActions();
 
@@ -246,6 +247,18 @@ function TextSelectionMenuInner({
 
   const [linkPopoverOpen, setLinkPopoverOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
+  const [pendingRedactActivation, setPendingRedactActivation] = useState(false);
+
+  // The redact tool bridge mounts after its panel opens, so activation waits
+  // for bridge readiness instead of guessing a timeout.
+  useEffect(() => {
+    if (!pendingRedactActivation || !isBridgeReady) return;
+    setPendingRedactActivation(false);
+    const currentType = redactionApiRef?.current?.getActiveType?.();
+    if (currentType !== RedactionMode.Redact) {
+      activateRedact?.();
+    }
+  }, [pendingRedactActivation, isBridgeReady, redactionApiRef, activateRedact]);
 
   const setRef = useCallback(
     (node: HTMLDivElement | null) => {
@@ -425,12 +438,7 @@ function TextSelectionMenuInner({
     navActions?.setToolAndWorkbench("redact", "viewer");
     setSidebarsVisible?.(true);
     setLeftPanelView?.("toolContent");
-    setTimeout(() => {
-      const currentType = redactionApiRef?.current?.getActiveType?.();
-      if (currentType !== RedactionMode.Redact) {
-        activateRedact?.();
-      }
-    }, 200);
+    setPendingRedactActivation(true);
   }, [
     documentId,
     selection,
@@ -440,8 +448,6 @@ function TextSelectionMenuInner({
     navActions,
     setSidebarsVisible,
     setLeftPanelView,
-    redactionApiRef,
-    activateRedact,
   ]);
 
   const portalContent =
