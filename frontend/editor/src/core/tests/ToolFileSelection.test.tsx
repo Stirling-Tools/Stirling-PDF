@@ -1,4 +1,4 @@
-import { createContext } from "react";
+import { createContext, type ReactNode } from "react";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -15,6 +15,11 @@ import {
   type StirlingFileStub,
 } from "@app/types/fileContext";
 import { createTestStirlingFile } from "@app/tests/utils/testFileHelpers";
+import {
+  ToolFileEligibilityProvider,
+  useToolEligibleFileIds,
+} from "@app/contexts/ToolFileEligibilityContext";
+import { FileItem } from "@app/components/shared/FileSidebarFileItem";
 
 const workspace = {
   files: [] as StirlingFile[],
@@ -27,6 +32,30 @@ const selectors = {
     workspace.fileStubs.find((stub) => stub.id === id),
 };
 const loadRecentFiles = vi.fn().mockResolvedValue([]);
+const onFileClick = vi.fn();
+
+function FilePreviews() {
+  const eligibleFileIds = useToolEligibleFileIds();
+  return workspace.files.map((file) => (
+    <FileItem
+      key={file.fileId}
+      fileId={file.fileId}
+      name={file.name}
+      isSelected
+      isActive={false}
+      isViewedInViewer={false}
+      isToolSkipped={
+        eligibleFileIds !== null && !eligibleFileIds.has(file.fileId)
+      }
+      onClick={onFileClick}
+      onEyeClick={vi.fn()}
+    />
+  ));
+}
+
+vi.mock("@app/hooks/useLazyThumbnail", () => ({
+  useLazyThumbnail: () => undefined,
+}));
 
 vi.mock("@app/contexts/FileContext", () => ({
   useAllFiles: () => ({
@@ -137,6 +166,46 @@ beforeEach(() => {
 });
 
 describe("tool file selection", () => {
+  test("previews dim with the current tool settings and recover when the tool closes", async () => {
+    const renderTool = (tool: ReactNode) => (
+      <MantineProvider>
+        <ToolFileEligibilityProvider>
+          <FilePreviews />
+          {tool}
+        </ToolFileEligibilityProvider>
+      </MantineProvider>
+    );
+    const view = render(renderTool(<Compress />));
+    const pdf = screen.getByRole("button", { name: /report.pdf/ });
+    const png = screen.getByRole("button", { name: /photo.png/ });
+    expect(pdf).toHaveAttribute("data-tool-skipped", "false");
+    expect(png).toHaveAttribute("data-tool-skipped", "true");
+    expect(png).toHaveAccessibleDescription("Not included in this tool run");
+    await userEvent.click(png);
+    expect(onFileClick).toHaveBeenCalledWith(workspace.files[1].fileId);
+
+    workspace.fileStubs[0].processedFile = { pages: [], isEncrypted: true };
+    view.rerender(renderTool(<Compress />));
+    expect(pdf).toHaveAttribute("data-tool-skipped", "true");
+    workspace.fileStubs[0].processedFile.isEncrypted = false;
+    view.rerender(renderTool(<Compress />));
+    expect(pdf).toHaveAttribute("data-tool-skipped", "false");
+
+    view.rerender(renderTool(<Convert />));
+    await userEvent.click(screen.getByRole("button", { name: "image to pdf" }));
+    expect(pdf).toHaveAttribute("data-tool-skipped", "true");
+    expect(png).toHaveAttribute("data-tool-skipped", "false");
+
+    await userEvent.click(screen.getByRole("button", { name: "svg to pdf" }));
+    expect(pdf).toHaveAttribute("data-tool-skipped", "true");
+    expect(png).toHaveAttribute("data-tool-skipped", "true");
+
+    view.rerender(renderTool(null));
+    expect(pdf).toHaveAttribute("data-tool-skipped", "false");
+    expect(png).toHaveAttribute("data-tool-skipped", "false");
+    expect(png).not.toHaveAttribute("aria-description");
+  });
+
   test("Extract Image Scans selects an image and enables Run with no PDFs open", async () => {
     workspace.files = workspace.files.slice(1);
     workspace.fileStubs = workspace.fileStubs.slice(1);

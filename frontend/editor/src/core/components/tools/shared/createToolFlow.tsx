@@ -14,6 +14,7 @@ import { StirlingFile } from "@app/types/fileContext";
 import type { TooltipTip } from "@app/types/tips";
 import type { ExecuteDisabledReason } from "@app/hooks/tools/shared/toolOperationTypes";
 import classes from "@app/components/tools/shared/createToolFlow.module.css";
+import { ToolFileEligibility } from "@app/contexts/ToolFileEligibilityContext";
 
 export interface FilesStepConfig {
   selectedFiles: StirlingFile[];
@@ -103,6 +104,9 @@ export function createToolFlow<TParams = unknown>(
 
   return (
     <Stack gap="sm" p="sm">
+      <ToolFileEligibility
+        files={config.review.isVisible ? null : config.files.selectedFiles}
+      />
       {/* <Stack gap="sm" p="sm" h="100%" w="100%" style={{ overflow: 'auto' }}> */}
       <ToolStepProvider forceStepNumbers={config.forceStepNumbers}>
         {config.title && <ToolWorkflowTitle {...config.title} />}

@@ -41,6 +41,7 @@ import {
 import type { ToolPanelMode } from "@app/constants/toolPanel";
 import { usePreferences } from "@app/contexts/PreferencesContext";
 import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
+import { ToolFileEligibilityProvider } from "@app/contexts/ToolFileEligibilityContext";
 
 // State interface
 // Types and reducer/state moved to './toolWorkflow/state'
@@ -808,7 +809,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     <ToolWorkflowActionsContext.Provider value={actionsValue}>
       <ToolWorkflowDataContext.Provider value={dataValue}>
         <ToolWorkflowContext.Provider value={contextValue}>
-          {children}
+          <ToolFileEligibilityProvider>{children}</ToolFileEligibilityProvider>
         </ToolWorkflowContext.Provider>
       </ToolWorkflowDataContext.Provider>
     </ToolWorkflowActionsContext.Provider>
