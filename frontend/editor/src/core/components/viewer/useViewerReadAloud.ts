@@ -71,7 +71,6 @@ export function useViewerReadAloud(defaultLanguage?: string) {
   const speechRateRef = useRef(1);
   const speechLanguageRef = useRef(defaultLanguage || "en-US");
 
-  const cachedPageNumberRef = useRef<number | null>(null);
   const cachedTextItemsRef = useRef<TextItemWithGeometry[] | null>(null);
   const cachedArrayBufferRef = useRef<ArrayBuffer | null>(null);
   const cachedFileRef = useRef<StirlingFile | File | null>(null);
@@ -179,7 +178,6 @@ export function useViewerReadAloud(defaultLanguage?: string) {
   }, []);
 
   const cleanupReadingSession = useCallback(() => {
-    cachedPageNumberRef.current = null;
     cachedTextItemsRef.current = null;
     cachedArrayBufferRef.current = null;
     cachedFileRef.current = null;
@@ -276,7 +274,6 @@ export function useViewerReadAloud(defaultLanguage?: string) {
 
       textItemsRef.current = mergedItems;
       cachedTextItemsRef.current = mergedItems;
-      cachedPageNumberRef.current = pageNumber;
 
       const spokenText = mergedItems
         .map((item) => item.str)
