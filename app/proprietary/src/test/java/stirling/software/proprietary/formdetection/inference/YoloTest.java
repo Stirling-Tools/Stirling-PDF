@@ -1,12 +1,21 @@
 package stirling.software.proprietary.formdetection.inference;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
+import org.slf4j.LoggerFactory;
 
 import stirling.software.proprietary.formdetection.model.ModelCatalogEntry;
+
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 
 class YoloTest {
 
@@ -94,5 +103,51 @@ class YoloTest {
         Yolo.RawOutput out = new Yolo.RawOutput(data, 6, 3);
         // threshold above every score -> nothing survives
         assertEquals(0, Yolo.decode(out, spec, pre, 0.95f).size());
+    }
+
+    @Test
+    void nmsBoundsHowManyBoxesItWillCompare() {
+        // Non-overlapping, so suppression itself removes nothing and only the cap can.
+        int count = Yolo.MAX_NMS_CANDIDATES + 500;
+        List<Yolo.Detection> dets = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            dets.add(new Yolo.Detection(0, (i + 1) / (float) count, i * 4f, 0f, 2f, 2f));
+        }
+
+        List<Yolo.Detection> kept = Yolo.nms(dets, "perClass", 0.5f);
+
+        assertEquals(Yolo.MAX_NMS_CANDIDATES, kept.size());
+        float worstKept = 1f;
+        for (Yolo.Detection d : kept) {
+            worstKept = Math.min(worstKept, d.score());
+        }
+        assertTrue(worstKept > 500 / (float) count, "the cap must drop the lowest-scoring boxes");
+    }
+
+    @Test
+    void nmsCapDoesNotLogPerPage() {
+        Logger yoloLogger = (Logger) LoggerFactory.getLogger(Yolo.class);
+        Level original = yoloLogger.getLevel();
+        ListAppender<ILoggingEvent> appender = new ListAppender<>();
+        appender.start();
+        yoloLogger.setLevel(Level.TRACE);
+        yoloLogger.addAppender(appender);
+        try {
+            List<Yolo.Detection> dets = new ArrayList<>();
+            for (int i = 0; i < Yolo.MAX_NMS_CANDIDATES + 1; i++) {
+                dets.add(new Yolo.Detection(0, 0.5f, i * 4f, 0f, 2f, 2f));
+            }
+
+            for (int page = 0; page < 20; page++) {
+                Yolo.nms(dets, "perClass", 0.5f);
+            }
+
+            assertThat(appender.list)
+                    .as("a per-page cap must not shout once per page")
+                    .noneMatch(e -> e.getLevel().isGreaterOrEqual(Level.INFO));
+        } finally {
+            yoloLogger.detachAppender(appender);
+            yoloLogger.setLevel(original);
+        }
     }
 }

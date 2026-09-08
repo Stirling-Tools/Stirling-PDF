@@ -35,6 +35,13 @@ public class FormDetectionService {
     /** Cap on total fields; past this an output PDF is unusable and NMS cost is O(n^2). */
     public static final int MAX_FIELDS = 2000;
 
+    /**
+     * Floor for a caller-supplied threshold. At 0 no anchor is below it, so every one of the tens
+     * of thousands a page produces reaches the O(n^2) suppression and is retained until the
+     * MAX_FIELDS trim.
+     */
+    public static final float MIN_SCORE_THRESHOLD = 0.01f;
+
     private final FormDetectionModelManager manager;
     private final OnnxFormDetector detector;
     private final PageRasterizer rasterizer;
@@ -49,7 +56,8 @@ public class FormDetectionService {
     /**
      * Detect fields across every page, in PDF points.
      *
-     * @param confThreshold overrides the model's own score threshold; null uses the spec's
+     * @param confThreshold overrides the model's own score threshold, clamped to {@link
+     *     #MIN_SCORE_THRESHOLD}..1; null uses the spec's
      * @throws ModelUnavailableException no model is installed or active
      * @throws PageRasterizer.PageLimitExceededException the document exceeds {@link #MAX_PAGES}
      * @throws PageRasterizer.UnreadablePdfException the PDF is empty, corrupt or password-protected
@@ -69,7 +77,7 @@ public class FormDetectionService {
         // An out-of-range or NaN threshold would keep essentially every anchor.
         float score =
                 confThreshold != null && !confThreshold.isNaN()
-                        ? Math.clamp(confThreshold, 0f, 1f)
+                        ? Math.clamp(confThreshold, MIN_SCORE_THRESHOLD, 1f)
                         : spec.getScoreThreshold();
 
         // Pages are consumed as they are rendered, so only one page of RGBA is ever live.

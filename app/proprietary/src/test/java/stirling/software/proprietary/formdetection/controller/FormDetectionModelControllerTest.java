@@ -1,16 +1,21 @@
 package stirling.software.proprietary.formdetection.controller;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -91,5 +96,17 @@ class FormDetectionModelControllerTest {
                 .perform(delete("/api/v1/form/form-detection-model"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("not_installed"));
+    }
+
+    @Test
+    void everyModelLifecycleEndpointIsAdminOnly() {
+        for (Method m : FormDetectionModelController.class.getDeclaredMethods()) {
+            if (!Modifier.isPublic(m.getModifiers()) || m.isSynthetic()) {
+                continue;
+            }
+            PreAuthorize preAuthorize = m.getAnnotation(PreAuthorize.class);
+            assertNotNull(preAuthorize, m.getName() + "() must be admin-gated");
+            assertEquals("hasRole('ADMIN')", preAuthorize.value(), m.getName() + "()");
+        }
     }
 }

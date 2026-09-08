@@ -36,6 +36,7 @@ public class FormDetectionModelController {
     private final FormDetectionModelManager manager;
 
     @GetMapping("/status")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Auto Form Detection model status, progress and catalog")
     public ResponseEntity<ModelStatusResponse> status() {
         return ResponseEntity.ok(manager.status());

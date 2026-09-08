@@ -390,4 +390,37 @@ class FormDetectionModelManagerTest {
         awaitState(m2, "ready", 5000);
         assertFalse(Files.exists(modelDir.resolve("test-model.onnx.removed")));
     }
+
+    @Test
+    void gatesTheToolWhileASwitchIsDownloading(@TempDir Path dir) throws Exception {
+        CountDownLatch gate = new CountDownLatch(1);
+        server.createContext(
+                "/switch.onnx",
+                ex -> {
+                    try {
+                        gate.await(5, TimeUnit.SECONDS);
+                    } catch (InterruptedException ignored) {
+                        Thread.currentThread().interrupt();
+                    }
+                    ex.sendResponseHeaders(200, modelBytes.length);
+                    ex.getResponseBody().write(modelBytes);
+                    ex.close();
+                });
+        Files.write(dir.resolve("test-model.onnx"), modelBytes);
+        ApplicationProperties props = new ApplicationProperties();
+        props.getFormDetection().setActiveModelId("test-model");
+        EndpointConfiguration ep = Mockito.mock(EndpointConfiguration.class);
+        FormDetectionModelManager m =
+                manager(dir, entry(ALLOWED_URL + "/switch.onnx", modelSha), ep, props);
+        m.init();
+        Mockito.verify(ep).enableEndpoint("form-detection");
+
+        m.startInstall("test-model");
+
+        assertFalse(m.isReady(), "a download is not something the tool can serve from");
+        Mockito.verify(ep).disableEndpoint("form-detection", DisableReason.DEPENDENCY);
+
+        gate.countDown();
+        awaitState(m, "ready", 5000);
+    }
 }

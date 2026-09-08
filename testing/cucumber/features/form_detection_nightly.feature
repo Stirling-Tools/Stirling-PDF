@@ -6,7 +6,8 @@ Feature: Auto Form Detection API Validation
 
     @model-status @positive
     Scenario: Model status reports a ready model and an available engine
-        When I send a GET request to "/api/v1/form/form-detection-model/status"
+        Given I am logged in as admin
+        When I send a GET request to "/api/v1/form/form-detection-model/status" with JWT authentication
         Then the response status code should be 200
         And the response content type should be "application/json"
         And the JSON value of "status" should be "ready"

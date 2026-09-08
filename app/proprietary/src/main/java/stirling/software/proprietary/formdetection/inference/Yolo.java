@@ -18,6 +18,13 @@ import stirling.software.proprietary.formdetection.model.ModelCatalogEntry;
 @Slf4j
 public final class Yolo {
 
+    /**
+     * Hard bound on the boxes one page may feed into suppression, which is O(n^2). A model whose
+     * scores all clear the threshold would otherwise put every anchor through it - at input size
+     * 1216 that is over 30,000.
+     */
+    static final int MAX_NMS_CANDIDATES = 5000;
+
     private Yolo() {}
 
     /** Normalised model input plus the transform needed to invert it. */
@@ -173,11 +180,12 @@ public final class Yolo {
 
     /** Shared with {@link RfDetr}: identical suppression whatever head produced the boxes. */
     static List<Detection> nms(List<Detection> dets, String mode, float iouThreshold) {
-        if (dets.size() < 2 || "none".equalsIgnoreCase(mode)) {
-            return dets;
+        List<Detection> candidates = highestScoring(dets, MAX_NMS_CANDIDATES);
+        if (candidates.size() < 2 || "none".equalsIgnoreCase(mode)) {
+            return candidates;
         }
         boolean classAgnostic = mode != null && mode.toLowerCase().contains("agnostic");
-        List<Detection> sorted = new ArrayList<>(dets);
+        List<Detection> sorted = new ArrayList<>(candidates);
         sorted.sort((x, y) -> Float.compare(y.score(), x.score()));
         boolean[] removed = new boolean[sorted.size()];
         List<Detection> keep = new ArrayList<>();
@@ -201,6 +209,20 @@ public final class Yolo {
             }
         }
         return keep;
+    }
+
+    private static List<Detection> highestScoring(List<Detection> dets, int limit) {
+        if (dets.size() <= limit) {
+            return dets;
+        }
+        // Debug, not warn: this runs per page, so a capped document would log once per page.
+        log.debug(
+                "Page produced {} candidate boxes; keeping the {} best-scoring",
+                dets.size(),
+                limit);
+        List<Detection> trimmed = new ArrayList<>(dets);
+        trimmed.sort((x, y) -> Float.compare(y.score(), x.score()));
+        return new ArrayList<>(trimmed.subList(0, limit));
     }
 
     private static float iou(Detection a, Detection b) {

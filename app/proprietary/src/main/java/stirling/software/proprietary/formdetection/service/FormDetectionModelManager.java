@@ -197,6 +197,9 @@ public class FormDetectionModelManager {
         progress = 0;
         error = null;
         downloadingModelId = modelId;
+        // isReady() is already false here, so without re-gating the tool tile stays clickable for
+        // the whole download and every request behind it answers 503.
+        applyEndpointState();
         final String fUrl = url;
         final String fSha = sha;
         Thread.ofVirtual()
@@ -214,6 +217,7 @@ public class FormDetectionModelManager {
                                         getActiveModelFile().isPresent()
                                                 ? FormDetectionStatus.READY
                                                 : FormDetectionStatus.FAILED;
+                                applyEndpointState();
                             } finally {
                                 downloadingModelId = null;
                                 installing.set(false);
