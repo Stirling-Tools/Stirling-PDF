@@ -8,8 +8,7 @@ import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import { createPortal } from "react-dom";
 import { useEffect, useState, useRef, useCallback } from "react";
-import DeleteIcon from "@mui/icons-material/Delete";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import { Icon } from "@app/ui/Icon";
 import { useRedaction } from "@app/contexts/RedactionContext";
 import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
 
@@ -140,7 +139,7 @@ function RedactionSelectionMenuInner({
             size="md"
             onClick={handleRemove}
           >
-            <DeleteIcon style={{ fontSize: 18 }} />
+            <Icon name="trash" size={18} />
           </ActionIcon>
         </Tooltip>
 
@@ -156,7 +155,7 @@ function RedactionSelectionMenuInner({
             accent="danger"
             size="sm"
             onClick={handleApply}
-            leftSection={<CheckCircleIcon style={{ fontSize: 16 }} />}
+            leftSection={<Icon name="circle-check" size={16} />}
             style={{ flexShrink: 0, whiteSpace: "nowrap" }}
           >
             Apply (permanent)
