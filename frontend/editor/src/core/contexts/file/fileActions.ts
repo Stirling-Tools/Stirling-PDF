@@ -1224,6 +1224,17 @@ export async function addStirlingFileStubs(
           );
         }
 
+        if (diskSync.status === "too-large") {
+          // The copy served above is knowingly stale: too big to re-read
+          // unasked. The baseline is left un-stamped so every reopen asks
+          // again, which only works if the ask is visible.
+          notifyDiskTooLarge(
+            stub.name,
+            () =>
+              void useDiskVersion(stub, stateRef, filesRef, lifecycleManager),
+          );
+        }
+
         const needsProcessing =
           // Bytes just changed underneath us, so whatever was cached is stale.
           diskSync.status === "updated" ||
