@@ -18,7 +18,7 @@ import json
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, get_args
 
 _EVALS_ROOT = Path(__file__).resolve().parents[1]
 if str(_EVALS_ROOT) not in sys.path:
@@ -47,12 +47,13 @@ def measure_pipeline_stages() -> list[StageProfile]:
     """Token profile of a single-operation pdf_edit request, measured not guessed."""
     import tiktoken
 
-    from stirling.agents.orchestrator import _ROUTER_SYSTEM_PROMPT
+    from stirling.agents.orchestrator import _ROUTER_SYSTEM_PROMPT, _RouteCapability
     from stirling.agents.pdf_edit import PdfEditAgent
     from stirling.models import OPERATIONS
 
     encoding = tiktoken.get_encoding("cl100k_base")
     operations = list(OPERATIONS.keys())
+    capabilities = get_args(_RouteCapability)
 
     def count(text: str) -> int:
         return len(encoding.encode(text))
@@ -76,8 +77,10 @@ def measure_pipeline_stages() -> list[StageProfile]:
     ]
 
     return [
-        StageProfile("router", router_in, 8, "6-way enum decision"),
-        StageProfile("edit planner", planner_in, 60, f"73-operation menu ({count(menu)} tok) + flat list"),
+        StageProfile("router", router_in, 8, f"{len(capabilities)}-way enum decision"),
+        StageProfile(
+            "edit planner", planner_in, 60, f"{len(operations)}-operation menu ({count(menu)} tok) + flat list"
+        ),
         StageProfile("parameter call", median_schema + turn_overhead + 100, 60, "one per planned operation"),
         StageProfile(
             "parameter call (worst schema)",

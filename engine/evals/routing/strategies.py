@@ -58,6 +58,8 @@ def _parse_capability(result: CallResult, allowed: list[str]) -> str:
         parsed = json.loads(result.content)
     except ValueError:
         return "__unparsable__"
+    if not isinstance(parsed, dict):
+        return "__unparsable__"
     value = parsed.get("capability")
     return value if value in allowed else "__offmenu__"
 

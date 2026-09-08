@@ -42,7 +42,7 @@ _CONVERSIONS = [
     _p("to-accessible", "Make this compliant for screen reader users", "PDF_TO_UA"),
 ]
 
-# Page-level structure - indexes 26-42, the middle of the catalogue.
+# Page-level structure - indexes 26-43, the middle of the catalogue.
 _STRUCTURE = [
     _p("merge", "Join these two files into one", "MERGE_PDFS"),
     _p("split-pages", "Break this into one file per page", "SPLIT_PAGES"),
@@ -58,7 +58,7 @@ _STRUCTURE = [
     _p("scale", "Resize every page to A4", "SCALE_PAGES"),
 ]
 
-# Content operations - indexes 43-62.
+# Content operations - indexes 44-63.
 _CONTENT = [
     _p("compress", "Shrink this down, it is too big to email", "COMPRESS_PDF"),
     _p("ocr", "Make this scan searchable", "OCR_PDF"),
@@ -74,7 +74,7 @@ _CONTENT = [
     _p("scanner", "Make this look like it came off a scanner", "SCANNER_EFFECT"),
 ]
 
-# Security and reporting - indexes 63-72, the tail that always survives truncation.
+# Security and reporting - indexes 64-73, the tail that always survives truncation.
 _SECURITY = [
     _p("password", "Lock this with the password hunter2", "ADD_PASSWORD"),
     _p("remove-password", "Take the password off this file", "REMOVE_PASSWORD"),
@@ -93,9 +93,9 @@ CASES: list[PlannerCase] = [*_CONVERSIONS, *_STRUCTURE, *_CONTENT, *_SECURITY]
 # the enum shows up as a failing assertion instead of silently changing what is measured.
 BANDS: dict[str, range] = {
     "front (0-25, conversions)": range(0, 26),
-    "middle (26-42, structure)": range(26, 43),
-    "back (43-62, content)": range(43, 63),
-    "tail (63-72, security)": range(63, 73),
+    "middle (26-43, structure)": range(26, 44),
+    "back (44-63, content)": range(44, 64),
+    "tail (64-73, security)": range(64, 74),
 }
 
 

@@ -129,10 +129,11 @@ class OllamaRouter:
             payload = response.json()
         except ValueError:
             return CallResult("", elapsed, 0, 0, 0, "bad-json", f"HTTP {response.status_code}: non-JSON body")
-        if "choices" not in payload:
+        choices = payload.get("choices") if isinstance(payload, dict) else None
+        choice = choices[0] if isinstance(choices, list) and choices else None
+        if not isinstance(choice, dict):
             return CallResult("", elapsed, 0, 0, 0, "no-choices", f"HTTP {response.status_code}: {payload}"[:400])
 
-        choice = payload["choices"][0]
         message = choice.get("message") or {}
         usage = payload.get("usage") or {}
         reasoning = message.get("reasoning") or message.get("reasoning_content") or ""

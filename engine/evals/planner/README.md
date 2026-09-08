@@ -1,7 +1,7 @@
 # Planner eval
 
 Measures the second decision in an edit request: once the orchestrator has routed to
-`pdf_edit`, which of the 73 operations gets chosen.
+`pdf_edit`, which of the 74 operations gets chosen.
 
 It exists to quantify one specific thing. The production planner prompt is roughly 6,800
 tokens; a default Ollama accepts about 2,050 and silently drops the head. This eval
@@ -26,11 +26,11 @@ there is visible before the accuracy numbers are read.
 
 `dataset.py` records each expected operation's index in `OPERATIONS`, and the menu is
 rendered in that order. Conversions occupy 0-25 and lose their descriptions first;
-security operations at 63-72 always survive. Accuracy is therefore broken out by catalogue
+security operations at 64-73 always survive. Accuracy is therefore broken out by catalogue
 band, and `mean_picked_index` shows whether a strategy's answers are being dragged toward
 the end of the list.
 
-The response schema enumerates all 73 endpoints regardless of what the prompt contains -
+The response schema enumerates all 74 endpoints regardless of what the prompt contains -
 exactly as production does, since `ToolEndpoint` is a `StrEnum`. A truncated prompt does
 not stop the model naming an operation; it only stops it reading what that operation does.
 

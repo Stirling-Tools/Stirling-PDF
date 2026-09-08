@@ -3,7 +3,7 @@
     uv run --group engine python evals/planner/runner.py
 
 Strategies share one decision - pick the operation that answers the request - and differ
-only in how the 73-operation catalogue is presented. The production prompt overruns what
+only in how the 74-operation catalogue is presented. The production prompt overruns what
 Ollama will accept, so this quantifies the damage rather than assuming it.
 """
 
@@ -17,6 +17,7 @@ import re
 import sys
 import time
 from collections import Counter, defaultdict
+from collections.abc import Iterable
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
@@ -65,6 +66,51 @@ class PlannerObservation:
     # this read low. Use the controlled probes, not this, to measure truncation.
     prompt_tokens_reported: int
     latency_s: float
+
+
+_CASE_ORDER: dict[str, int] = {case.id: i for i, case in enumerate(CASES)}
+
+
+def in_case_order(rows: Iterable[PlannerObservation]) -> list[PlannerObservation]:
+    """Rows in dataset order.
+
+    Results arrive in completion order, so every positional read - the headline token count,
+    the truncated ``wrong`` list, tie order inside a ``Counter`` - has to be taken from this
+    rather than from the raw list, or the summary changes run to run.
+    """
+    return sorted(rows, key=lambda r: (_CASE_ORDER.get(r.case_id, len(_CASE_ORDER)), r.case_id))
+
+
+def summarise(observations: Iterable[PlannerObservation]) -> dict[str, Any]:
+    grouped: dict[str, list[PlannerObservation]] = defaultdict(list)
+    for obs in observations:
+        grouped[obs.strategy].append(obs)
+
+    summary: dict[str, Any] = {}
+    for name, unordered in grouped.items():
+        rows = in_case_order(unordered)
+        bands = {}
+        for band in {r.band for r in rows}:
+            band_rows = [r for r in rows if r.band == band]
+            bands[band] = {
+                "n": len(band_rows),
+                "accuracy": round(sum(r.correct for r in band_rows) / len(band_rows), 4),
+            }
+        picked = [r.predicted_index for r in rows if r.predicted_index >= 0]
+        summary[name] = {
+            "accuracy": round(sum(r.correct for r in rows) / len(rows), 4),
+            "prompt_tokens_sent": rows[0].prompt_tokens_sent,
+            "prompt_tokens_reported_avg": round(sum(r.prompt_tokens_reported for r in rows) / len(rows), 1),
+            "avg_latency_s": round(sum(r.latency_s for r in rows) / len(rows), 2),
+            # Where in the catalogue its answers come from: truncation should drag this late.
+            "mean_picked_index": round(sum(picked) / len(picked), 1) if picked else None,
+            "by_band": dict(sorted(bands.items())),
+            "wrong": [
+                {"case": r.case_id, "expected": r.expected, "picked": r.predicted} for r in rows if not r.correct
+            ][:15],
+            "top_wrong_picks": Counter(r.predicted for r in rows if not r.correct).most_common(5),
+        }
+    return summary
 
 
 _WORD = re.compile(r"[a-z0-9]+")
@@ -215,6 +261,8 @@ async def main() -> None:
     encoding = tiktoken.get_encoding("cl100k_base")
     semaphore = asyncio.Semaphore(args.concurrency)
     observations: list[PlannerObservation] = []
+    out_dir = Path(args.out)
+    out_dir.mkdir(parents=True, exist_ok=True)
 
     async with httpx.AsyncClient() as http:
         router = OllamaRouter(http, model=args.model)
@@ -261,9 +309,13 @@ async def main() -> None:
             predicted = "__failed__"
             if not result.error and result.finish_reason != "length":
                 try:
-                    value = json.loads(result.content).get("operation")
-                    predicted = BY_VALUE[value].name if value in BY_VALUE else "__offmenu__"
+                    parsed = json.loads(result.content)
                 except ValueError:
+                    parsed = None
+                if isinstance(parsed, dict):
+                    value = parsed.get("operation")
+                    predicted = BY_VALUE[value].name if value in BY_VALUE else "__offmenu__"
+                else:
                     predicted = "__unparsable__"
             correct = predicted == case.expected or predicted in case.also_ok
             return PlannerObservation(
@@ -280,53 +332,29 @@ async def main() -> None:
                 latency_s=round(result.latency_s, 3),
             )
 
-        for strategy in [s.strip() for s in args.strategies.split(",")]:
-            started = time.monotonic()
-            rows = await asyncio.gather(*[run(strategy, case) for case in CASES])
-            observations.extend(rows)
-            print(
-                f"{strategy:14s} acc={sum(r.correct for r in rows) / len(rows):6.1%} "
-                f"sent={rows[0].prompt_tokens_sent:5d} "
-                f"wall={time.monotonic() - started:6.1f}s",
-                flush=True,
-            )
+        with (out_dir / "observations.jsonl").open("w", encoding="utf-8") as handle:
+            for strategy in [s.strip() for s in args.strategies.split(",")]:
+                started = time.monotonic()
+                rows: list[PlannerObservation] = []
+                for task in asyncio.as_completed([run(strategy, case) for case in CASES]):
+                    observation = await task
+                    rows.append(observation)
+                    handle.write(json.dumps(asdict(observation)) + "\n")
+                    handle.flush()
+                rows = in_case_order(rows)
+                observations.extend(rows)
+                print(
+                    f"{strategy:14s} acc={sum(r.correct for r in rows) / len(rows):6.1%} "
+                    f"sent={rows[0].prompt_tokens_sent:5d} "
+                    f"wall={time.monotonic() - started:6.1f}s",
+                    flush=True,
+                )
 
-    summary: dict[str, Any] = {}
-    grouped: dict[str, list[PlannerObservation]] = defaultdict(list)
-    for obs in observations:
-        grouped[obs.strategy].append(obs)
-    for name, rows in grouped.items():
-        bands = {}
-        for band in {r.band for r in rows}:
-            band_rows = [r for r in rows if r.band == band]
-            bands[band] = {
-                "n": len(band_rows),
-                "accuracy": round(sum(r.correct for r in band_rows) / len(band_rows), 4),
-            }
-        picked = [r.predicted_index for r in rows if r.predicted_index >= 0]
-        summary[name] = {
-            "accuracy": round(sum(r.correct for r in rows) / len(rows), 4),
-            "prompt_tokens_sent": rows[0].prompt_tokens_sent,
-            "prompt_tokens_reported_avg": round(sum(r.prompt_tokens_reported for r in rows) / len(rows), 1),
-            "avg_latency_s": round(sum(r.latency_s for r in rows) / len(rows), 2),
-            # Where in the catalogue its answers come from: truncation should drag this late.
-            "mean_picked_index": round(sum(picked) / len(picked), 1) if picked else None,
-            "by_band": dict(sorted(bands.items())),
-            "wrong": [
-                {"case": r.case_id, "expected": r.expected, "picked": r.predicted} for r in rows if not r.correct
-            ][:15],
-            "top_wrong_picks": Counter(r.predicted for r in rows if not r.correct).most_common(5),
-        }
-
-    out_dir = Path(args.out)
-    out_dir.mkdir(parents=True, exist_ok=True)
+    summary = summarise(observations)
     (out_dir / "summary.json").write_text(
         json.dumps({"model": args.model, "case_count": len(CASES), "summary": summary}, indent=2),
         encoding="utf-8",
     )
-    with (out_dir / "observations.jsonl").open("w", encoding="utf-8") as handle:
-        for obs in observations:
-            handle.write(json.dumps(asdict(obs)) + "\n")
     expected_mean = sum(INDEX_OF[c.expected] for c in CASES) / len(CASES)
     print(f"\nMean catalogue index of the chosen operation (expected mean {expected_mean:.1f}):")
     for name, stats in summary.items():

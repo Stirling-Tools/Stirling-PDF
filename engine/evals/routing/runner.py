@@ -14,6 +14,7 @@ import json
 import sys
 import time
 from collections import Counter, defaultdict
+from collections.abc import Iterable
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
@@ -91,13 +92,27 @@ async def run_one(
     )
 
 
-def summarise(observations: list[Observation]) -> dict[str, Any]:
+_CASE_ORDER: dict[str, int] = {case.id: i for i, case in enumerate(CASES)}
+
+
+def in_case_order(rows: Iterable[Observation]) -> list[Observation]:
+    """Rows in dataset order, repeats grouped by case.
+
+    Results arrive in completion order, so anything read positionally or broken by insertion
+    order - a truncated list, tie order inside a ``Counter`` - has to be taken from this
+    rather than from the raw list, or the summary changes run to run.
+    """
+    return sorted(rows, key=lambda r: (_CASE_ORDER.get(r.case_id, len(_CASE_ORDER)), r.case_id, r.repeat))
+
+
+def summarise(observations: Iterable[Observation]) -> dict[str, Any]:
     by_strategy: dict[str, list[Observation]] = defaultdict(list)
     for obs in observations:
         by_strategy[obs.strategy].append(obs)
 
     summary: dict[str, Any] = {}
-    for name, rows in by_strategy.items():
+    for name, unordered in by_strategy.items():
+        rows = in_case_order(unordered)
         total = len(rows)
         bands: dict[str, dict[str, float]] = {}
         for band in Band:
@@ -162,23 +177,32 @@ async def main() -> None:
     started = time.monotonic()
     observations: list[Observation] = []
 
-    async with httpx.AsyncClient() as http:
-        router = OllamaRouter(http, model=args.model, base_url=args.base_url)
-        for strategy in strategies:
-            strategy_started = time.monotonic()
-            tasks = [
-                run_one(router, strategy, case, repeat, semaphore) for repeat in range(args.repeats) for case in cases
-            ]
-            results = await asyncio.gather(*tasks)
-            observations.extend(results)
-            accuracy = sum(r.correct for r in results) / len(results)
-            print(
-                f"{strategy.name:20s} acc={accuracy:6.1%} "
-                f"destructive={sum(r.destructive for r in results):3d} "
-                f"fail={sum(r.failed for r in results):3d} "
-                f"wall={time.monotonic() - strategy_started:6.1f}s",
-                flush=True,
-            )
+    with (out_dir / "observations.jsonl").open("w", encoding="utf-8") as handle:
+        async with httpx.AsyncClient() as http:
+            router = OllamaRouter(http, model=args.model, base_url=args.base_url)
+            for strategy in strategies:
+                strategy_started = time.monotonic()
+                tasks = [
+                    run_one(router, strategy, case, repeat, semaphore)
+                    for repeat in range(args.repeats)
+                    for case in cases
+                ]
+                results: list[Observation] = []
+                for task in asyncio.as_completed(tasks):
+                    observation = await task
+                    results.append(observation)
+                    handle.write(json.dumps(asdict(observation)) + "\n")
+                    handle.flush()
+                results = in_case_order(results)
+                observations.extend(results)
+                accuracy = sum(r.correct for r in results) / len(results)
+                print(
+                    f"{strategy.name:20s} acc={accuracy:6.1%} "
+                    f"destructive={sum(r.destructive for r in results):3d} "
+                    f"fail={sum(r.failed for r in results):3d} "
+                    f"wall={time.monotonic() - strategy_started:6.1f}s",
+                    flush=True,
+                )
 
     payload = {
         "model": args.model,
@@ -190,9 +214,6 @@ async def main() -> None:
         "summary": summarise(observations),
     }
     (out_dir / "summary.json").write_text(json.dumps(payload, indent=2), encoding="utf-8")
-    with (out_dir / "observations.jsonl").open("w", encoding="utf-8") as handle:
-        for obs in observations:
-            handle.write(json.dumps(asdict(obs)) + "\n")
     print(f"\nWrote {out_dir / 'summary.json'} and observations.jsonl ({len(observations)} rows)")
 
 
