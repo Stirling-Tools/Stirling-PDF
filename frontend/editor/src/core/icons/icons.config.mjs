@@ -9,6 +9,7 @@ export const STROKE_WIDTH = 1.75;
 // what @mui/icons-material rendered at its default `fontSize="medium"`.
 export const DEFAULT_SIZE = 24;
 
-// Bundled even though no mapping targets them: names built at runtime, or
-// needed before their call site exists. Exempt from the unused report.
-export const EXTRA_NAMES = [];
+// Bundled even though no source literal names them: BrandMark resolves
+// connection-type ids the API returns straight to registry names, and lucide
+// happens to have a glyph for these ids. Exempt from the unused report.
+export const EXTRA_NAMES = ["webhook"];

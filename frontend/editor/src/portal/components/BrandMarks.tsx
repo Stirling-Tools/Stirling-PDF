@@ -4,13 +4,14 @@ import { Icon, isIconName, type IconName } from "@app/ui/Icon";
 /** Ids whose registry name differs from the id itself. */
 const ID_ALIASES: Record<string, IconName> = {
   email: "mail",
+  smb: "hard-drive",
 };
 
 /** Unknown connector types get a neutral plug rather than nothing. */
 const FALLBACK: IconName = "plug";
 
-function markName(id: string): IconName {
-  if (id in ID_ALIASES) return ID_ALIASES[id];
+export function markName(id: string): IconName {
+  if (Object.hasOwn(ID_ALIASES, id)) return ID_ALIASES[id];
   return isIconName(id) ? id : FALLBACK;
 }
 
