@@ -245,12 +245,29 @@ describe("acrobatSequence", () => {
       expect(looksLikeAcrobatSequence(withSuffix.split("<Group")[0])).toBe(
         false,
       );
+      const withPrefix = DELETE_COMMENTS.replace(
+        "http://ns.adobe.com/acrobat/workflow/2012",
+        "https://evil.invalid/http://ns.adobe.com/acrobat/workflow/2012",
+      );
+      expect(looksLikeAcrobatSequence(withPrefix.split("<Group")[0])).toBe(
+        false,
+      );
     });
 
     test("accepts a namespaced Action with no groups", () => {
       expect(
         looksLikeAcrobatSequence(
           '<?xml version="1.0"?><Workflow xmlns="http://ns.adobe.com/acrobat/workflow/2012" title="Empty"/>',
+        ),
+      ).toBe(true);
+    });
+
+    test("accepts an Action whose root tag is longer than the sniffed prefix", () => {
+      const description = "a".repeat(3000);
+      expect(
+        looksLikeAcrobatSequence(
+          '<?xml version="1.0"?><Workflow xmlns="http://ns.adobe.com/acrobat/workflow/2012"' +
+            ` description="${description}"><Group name="Steps"/></Workflow>`,
         ),
       ).toBe(true);
     });

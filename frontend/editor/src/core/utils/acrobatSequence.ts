@@ -173,13 +173,19 @@ const DEFAULT_XMLNS = /\sxmlns\s*=\s*(?:"([^"]*)"|'([^']*)')/;
  * The namespace is compared against the whole `xmlns` value of the `<Workflow>`
  * tag: searching the text for the namespace URL would accept any file that
  * merely mentions it, in a comment or inside an unrelated URL.
+ *
+ * A root tag too long to fit the sniffed prefix - Acrobat writes the action's
+ * whole description into an attribute - falls back to the structural shape, so
+ * a real Action is still recognised without ever matching the URL loosely.
  */
 export function looksLikeAcrobatSequence(text: string): boolean {
-  const rootTag = WORKFLOW_ROOT_TAG.exec(text.slice(0, 2048));
-  if (!rootTag) return false;
+  const head = text.slice(0, 2048);
+  const hasGroup = /<Group[\s>]/.test(text);
+  const rootTag = WORKFLOW_ROOT_TAG.exec(head);
+  if (!rootTag) return /<Workflow[\s/>]/.test(head) && hasGroup;
   const xmlns = DEFAULT_XMLNS.exec(rootTag[1]);
   const namespace = xmlns?.[1] ?? xmlns?.[2];
-  return namespace === ACROBAT_WORKFLOW_NS || /<Group[\s>]/.test(text);
+  return namespace === ACROBAT_WORKFLOW_NS || hasGroup;
 }
 
 /**
