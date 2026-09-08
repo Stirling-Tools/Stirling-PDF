@@ -173,6 +173,10 @@ public class PolicyEngine {
         // than the owner's problem. Three identities, deliberately not interchangeable.
         String triggeringUser = currentActingPrincipal();
         String fileOwner = triggeringUser != null ? triggeringUser : policy.owner();
+        // Unowned policies (the seeded Classification policy) have no owner to bill; fall back to
+        // the triggering user, or the run goes out principal-less and its tool sub-steps bill the
+        // team-less INTERNAL_API_USER, which PAYG refuses with a usage-limit 402.
+        String billingPrincipal = policy.owner() != null ? policy.owner() : triggeringUser;
         // Stored supporting files (certificates, watermark images, ...) load here, before the
         // async hop: worker threads have no principal, so assets bind by the policy's own team.
         PolicyInputs resolved = assetResolver.resolve(policy, inputs);
@@ -183,7 +187,7 @@ public class PolicyEngine {
                 new PipelineDefinition(
                         policy.name(), policy.steps(), outputResolver.resolve(policy));
         return submitForPrincipal(
-                policy.owner(),
+                billingPrincipal,
                 fileOwner,
                 triggeringUser,
                 policy.id(),
