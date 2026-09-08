@@ -35,6 +35,7 @@ export const SizeRow: Story = {
 
 const LOGO_INK = "#111827"; // theme-allow-color a user's uploaded file, which no token reaches
 
+// icon-lint-disable -- a stand-in for a user's uploaded logo, not an app icon
 const TRANSPARENT_LOGO =
   "data:image/svg+xml;utf8," +
   encodeURIComponent(
