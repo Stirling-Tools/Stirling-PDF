@@ -91,7 +91,8 @@ public class OfficeDocumentSanitizer {
                                 new ByteArrayInputStream(documentBytes));
                 ZipOutputStream zipOut = new ZipOutputStream(out)) {
 
-            ZipBombGuard.Budget budget = new ZipBombGuard.Budget();
+            ZipBombGuard.Budget budget =
+                    new ZipBombGuard.Budget(applicationProperties.getSystem().getArchiveLimits());
             ZipEntry entry;
             while ((entry = zipIn.getNextEntry()) != null) {
                 String name = entry.getName();

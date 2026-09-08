@@ -1,7 +1,7 @@
 package stirling.software.SPDF.controller.api.misc;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
@@ -36,6 +36,9 @@ import stirling.software.common.util.WebResponseUtils;
 @MiscApi
 @Slf4j
 public class UnlockPDFFormsController {
+
+    private static final int MAX_XFA_BYTES = 32 * 1024 * 1024;
+
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
 
@@ -79,10 +82,7 @@ public class UnlockPDFFormsController {
                         var accessReadOnlyPattern =
                                 RegexPatternUtils.getInstance().getAccessReadOnlyPattern();
                         if (xfaBase instanceof COSStream xfaStream) {
-                            InputStream is = xfaStream.createInputStream();
-                            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                            is.transferTo(baos);
-                            String xml = baos.toString(StandardCharsets.UTF_8);
+                            String xml = readXfaXml(xfaStream, MAX_XFA_BYTES);
 
                             xml = accessReadOnlyPattern.matcher(xml).replaceAll("access=\"open\"");
 
@@ -98,10 +98,7 @@ public class UnlockPDFFormsController {
                                 COSBase streamPart = xfaArray.getObject(i + 1);
                                 if (namePart instanceof COSString
                                         && streamPart instanceof COSStream stream) {
-                                    InputStream is = stream.createInputStream();
-                                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                                    is.transferTo(baos);
-                                    String xml = baos.toString(StandardCharsets.UTF_8);
+                                    String xml = readXfaXml(stream, MAX_XFA_BYTES);
 
                                     xml =
                                             accessReadOnlyPattern
@@ -131,5 +128,23 @@ public class UnlockPDFFormsController {
             log.error(e.getMessage(), e);
         }
         return null;
+    }
+
+    /**
+     * XFA form XML, decoded from a PDF stream whose expansion is attacker-controlled: an object
+     * stream of a few KB can inflate to gigabytes, so the read stops at {@code maxBytes} instead of
+     * sizing the buffer from the compressed input.
+     */
+    static String readXfaXml(COSStream stream, int maxBytes) throws IOException {
+        try (InputStream is = stream.createInputStream()) {
+            byte[] bytes = is.readNBytes(maxBytes + 1);
+            if (bytes.length > maxBytes) {
+                throw new IOException(
+                        "XFA form data exceeds the maximum supported size of "
+                                + maxBytes
+                                + " bytes");
+            }
+            return new String(bytes, StandardCharsets.UTF_8);
+        }
     }
 }

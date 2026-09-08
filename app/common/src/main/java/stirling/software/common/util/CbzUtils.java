@@ -78,6 +78,20 @@ public class CbzUtils {
                     ZipEntry entry = zipFile.getEntry(imageName);
                     try (InputStream is = zipFile.getInputStream(entry)) {
                         byte[] imageBytes = budget.readEntry(is);
+                        if (ImageProcessingUtils.exceedsPixelLimit(
+                                imageBytes, ImageProcessingUtils.MAX_DECODED_IMAGE_PIXELS)) {
+                            log.warn(
+                                    "Image {} declares more than {} pixels; refusing to decode it",
+                                    imageName,
+                                    ImageProcessingUtils.MAX_DECODED_IMAGE_PIXELS);
+                            throw ExceptionUtils.createCbzInvalidFormatException(
+                                    new IOException(
+                                            "Image "
+                                                    + imageName
+                                                    + " exceeds the maximum decoded size of "
+                                                    + ImageProcessingUtils.MAX_DECODED_IMAGE_PIXELS
+                                                    + " pixels"));
+                        }
                         try {
                             PDImageXObject pdImage =
                                     PDImageXObject.createFromByteArray(

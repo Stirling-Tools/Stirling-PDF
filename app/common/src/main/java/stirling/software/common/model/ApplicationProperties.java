@@ -1032,6 +1032,7 @@ public class ApplicationProperties {
         private Datasource datasource;
         private boolean disableSanitize;
         private int maxDPI = 500;
+        private ArchiveLimits archiveLimits = new ArchiveLimits();
         private boolean enableUrlToPDF;
         private Html html = new Html();
         private CustomPaths customPaths = new CustomPaths();
@@ -1050,6 +1051,18 @@ public class ApplicationProperties {
                 true; // Enable drawing signatures on a phone via QR code
         private MobileScannerSettings mobileScannerSettings = new MobileScannerSettings();
         private ServerCertificate serverCertificate = new ServerCertificate();
+
+        /**
+         * Decompression bounds applied to every untrusted archive Stirling reads (CBZ/CBR comics,
+         * HTML bundles, Office documents). A limit of {@code 0} or less disables that individual
+         * check.
+         */
+        @Data
+        public static class ArchiveLimits {
+            private long maxEntryBytes = 100L * 1024 * 1024;
+            private long maxTotalBytes = 500L * 1024 * 1024;
+            private int maxEntries = 10_000;
+        }
 
         @Data
         public static class MobileScannerSettings {

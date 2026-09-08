@@ -2,6 +2,7 @@ package stirling.software.common.util;
 
 import java.awt.geom.AffineTransform;
 import java.awt.image.*;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -24,6 +25,9 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ImageProcessingUtils {
+
+    /** ~10000x10000, which decodes to roughly 400 MB as an ARGB raster. */
+    public static final long MAX_DECODED_IMAGE_PIXELS = 100_000_000L;
 
     static BufferedImage convertColorType(BufferedImage sourceImage, String colorType) {
         return switch (colorType) {
@@ -148,5 +152,40 @@ public class ImageProcessingUtils {
 
         double orientation = extractImageOrientation(file.getInputStream());
         return applyOrientation(image, orientation);
+    }
+
+    /**
+     * Whether an encoded image declares more pixels than {@code maxPixels}. Only the format header
+     * is parsed, so a decompression bomb is rejected before any decoder allocates its raster: a
+     * 40000x40000 greyscale PNG is under 2 KB compressed and 1.6 GB decoded.
+     *
+     * <p>Returns false when no installed reader recognises the bytes — the caller's decoder is then
+     * the one that rejects the input.
+     */
+    public static boolean exceedsPixelLimit(byte[] imageBytes, long maxPixels) {
+        if (maxPixels <= 0 || imageBytes == null || imageBytes.length == 0) {
+            return false;
+        }
+        try (ImageInputStream iis =
+                ImageIO.createImageInputStream(new ByteArrayInputStream(imageBytes))) {
+            if (iis == null) {
+                return false;
+            }
+            Iterator<ImageReader> readers = ImageIO.getImageReaders(iis);
+            if (!readers.hasNext()) {
+                return false;
+            }
+            ImageReader reader = readers.next();
+            try {
+                reader.setInput(iis);
+                long pixels = (long) reader.getWidth(0) * reader.getHeight(0);
+                return pixels > maxPixels;
+            } finally {
+                reader.dispose();
+            }
+        } catch (IOException | RuntimeException e) {
+            log.warn("Unable to read image dimensions: {}", e.getMessage());
+            return false;
+        }
     }
 }

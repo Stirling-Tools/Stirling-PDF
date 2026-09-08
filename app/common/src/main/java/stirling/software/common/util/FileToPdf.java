@@ -47,7 +47,10 @@ public class FileToPdf {
                 } else if (fileName.toLowerCase(Locale.ROOT).endsWith(".zip")) {
                     Files.write(tempInputFile.getPath(), fileBytes);
                     sanitizeHtmlFilesInZip(
-                            tempInputFile.getPath(), tempFileManager, customHtmlSanitizer);
+                            tempInputFile.getPath(),
+                            tempFileManager,
+                            customHtmlSanitizer,
+                            new ZipBombGuard.Budget());
                 } else {
                     throw ExceptionUtils.createHtmlFileRequiredException();
                 }
@@ -75,15 +78,15 @@ public class FileToPdf {
         return customHtmlSanitizer.sanitize(htmlContent);
     }
 
-    private static void sanitizeHtmlFilesInZip(
+    static void sanitizeHtmlFilesInZip(
             Path zipFilePath,
             TempFileManager tempFileManager,
-            CustomHtmlSanitizer customHtmlSanitizer)
+            CustomHtmlSanitizer customHtmlSanitizer,
+            ZipBombGuard.Budget budget)
             throws IOException {
         try (TempDirectory tempUnzippedDir = new TempDirectory(tempFileManager)) {
             try (ZipInputStream zipIn =
                     ZipSecurity.createHardenedInputStream(Files.newInputStream(zipFilePath))) {
-                ZipBombGuard.Budget budget = new ZipBombGuard.Budget();
                 ZipEntry entry = zipIn.getNextEntry();
                 while (entry != null) {
                     Path filePath =
