@@ -5,7 +5,6 @@ import {
   getToolFreshness,
   isRecentRelease,
   isToolFreshnessAcknowledged,
-  latestTaggedVersion,
   resetToolFreshnessCache,
 } from "@app/utils/toolFreshness";
 
@@ -53,34 +52,6 @@ describe("isRecentRelease", () => {
   });
 });
 
-describe("latestTaggedVersion", () => {
-  test("picks the higher of new and updated", () => {
-    expect(
-      latestTaggedVersion({
-        newInVersion: "2.14.0",
-        updatedInVersion: "2.15.0",
-      }),
-    ).toBe("2.15.0");
-    expect(
-      latestTaggedVersion({
-        newInVersion: "2.15.0",
-        updatedInVersion: "2.14.0",
-      }),
-    ).toBe("2.15.0");
-    expect(latestTaggedVersion({ newInVersion: "2.14.0" })).toBe("2.14.0");
-    expect(latestTaggedVersion({})).toBeNull();
-  });
-
-  test("a v prefix does not skew the comparison", () => {
-    expect(
-      latestTaggedVersion({
-        newInVersion: "v2.15.0",
-        updatedInVersion: "2.14.0",
-      }),
-    ).toBe("v2.15.0");
-  });
-});
-
 describe("getToolFreshness", () => {
   test("recent newInVersion shows New", () => {
     expect(getToolFreshness({ newInVersion: "2.15.0" }, "2.15.1")).toEqual({
@@ -98,13 +69,13 @@ describe("getToolFreshness", () => {
     ).toEqual({ badge: "updated", version: "2.15.0" });
   });
 
-  test("New outranks Updated and advertises the latest version", () => {
+  test("New outranks Updated and advertises its own version", () => {
     expect(
       getToolFreshness(
         { newInVersion: "2.14.0", updatedInVersion: "2.15.0" },
         "2.15.1",
       ),
-    ).toEqual({ badge: "new", version: "2.15.0" });
+    ).toEqual({ badge: "new", version: "2.14.0" });
   });
 
   test("stale or missing versions produce no badge", () => {
@@ -115,7 +86,11 @@ describe("getToolFreshness", () => {
 
 describe("acknowledgements", () => {
   test("acknowledging hides that version but not a later one", () => {
-    acknowledgeToolFreshness("autoRotate", { newInVersion: "2.15.0" });
+    acknowledgeToolFreshness(
+      "autoRotate",
+      { newInVersion: "2.15.0" },
+      "2.15.1",
+    );
     let acknowledged = getAcknowledgedToolVersions();
     expect(
       isToolFreshnessAcknowledged(acknowledged, "autoRotate", "2.15.0"),
@@ -125,14 +100,50 @@ describe("acknowledgements", () => {
     ).toBe(false);
 
     // A later update re-surfaces the badge until acknowledged again.
-    acknowledgeToolFreshness("autoRotate", {
-      newInVersion: "2.15.0",
-      updatedInVersion: "2.16.0",
-    });
+    acknowledgeToolFreshness(
+      "autoRotate",
+      { newInVersion: "2.15.0", updatedInVersion: "2.17.0" },
+      "2.17.1",
+    );
     acknowledged = getAcknowledgedToolVersions();
     expect(
-      isToolFreshnessAcknowledged(acknowledged, "autoRotate", "2.16.0"),
+      isToolFreshnessAcknowledged(acknowledged, "autoRotate", "2.17.0"),
     ).toBe(true);
+  });
+
+  test("acknowledging New leaves a later Updated badge to come", () => {
+    const tool = { newInVersion: "2.15.0", updatedInVersion: "2.17.0" };
+    // Both tags read as recent at 2.15.1 (2.17.0 is ahead of the build), so the
+    // rendered badge is New and only its own version may be recorded.
+    expect(getToolFreshness(tool, "2.15.1")).toEqual({
+      badge: "new",
+      version: "2.15.0",
+    });
+    acknowledgeToolFreshness("autoRotate", tool, "2.15.1");
+    expect(getAcknowledgedToolVersions()).toEqual({ autoRotate: "2.15.0" });
+
+    expect(getToolFreshness(tool, "2.17.0")).toEqual({
+      badge: "updated",
+      version: "2.17.0",
+    });
+    expect(
+      isToolFreshnessAcknowledged(
+        getAcknowledgedToolVersions(),
+        "autoRotate",
+        "2.17.0",
+      ),
+    ).toBe(false);
+  });
+
+  test("a tool showing no badge is never recorded", () => {
+    acknowledgeToolFreshness(
+      "autoRotate",
+      { newInVersion: "2.10.0" },
+      "2.15.1",
+    );
+    acknowledgeToolFreshness("sharedSign", { newInVersion: "2.15.0" }, null);
+    expect(getAcknowledgedToolVersions()).toEqual({});
+    expect(window.localStorage.getItem(STORAGE_KEY)).toBeNull();
   });
 
   test("a v prefix does not hide a newer badge", () => {
@@ -146,7 +157,11 @@ describe("acknowledgements", () => {
   });
 
   test("persists to localStorage and survives a cache reset", () => {
-    acknowledgeToolFreshness("sharedSign", { newInVersion: "2.14.0" });
+    acknowledgeToolFreshness(
+      "sharedSign",
+      { newInVersion: "2.14.0" },
+      "2.15.1",
+    );
     resetToolFreshnessCache();
     expect(
       isToolFreshnessAcknowledged(
@@ -158,7 +173,7 @@ describe("acknowledgements", () => {
   });
 
   test("untagged tools are never recorded", () => {
-    acknowledgeToolFreshness("merge", {});
+    acknowledgeToolFreshness("merge", {}, "2.15.1");
     expect(getAcknowledgedToolVersions()).toEqual({});
     expect(window.localStorage.getItem(STORAGE_KEY)).toBeNull();
   });

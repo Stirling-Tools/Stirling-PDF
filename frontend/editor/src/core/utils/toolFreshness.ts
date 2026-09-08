@@ -49,28 +49,17 @@ export function isRecentRelease(
   return current.minor - tagged.minor <= RECENT_MINOR_WINDOW;
 }
 
-// Highest version the tool's registry entry is tagged with, if any.
-export function latestTaggedVersion(tool: FreshnessFields): string | null {
-  const { newInVersion, updatedInVersion } = tool;
-  if (newInVersion && updatedInVersion) {
-    return updateService.compareVersions(
-      normalizeVersion(updatedInVersion),
-      normalizeVersion(newInVersion),
-    ) >= 0
-      ? updatedInVersion
-      : newInVersion;
-  }
-  return updatedInVersion ?? newInVersion ?? null;
-}
-
 // "New" outranks "Updated": a tool still inside its launch window is just new.
+// Each badge advertises its own tag, never the other's: a New badge that claimed
+// a later updatedInVersion would be acknowledged over the Updated badge that tag
+// is still due to produce.
 export function getToolFreshness(
   tool: FreshnessFields,
   appVersion: string | null | undefined,
 ): ToolFreshnessInfo | null {
   const { newInVersion, updatedInVersion } = tool;
   if (newInVersion && isRecentRelease(newInVersion, appVersion)) {
-    return { badge: "new", version: latestTaggedVersion(tool) ?? newInVersion };
+    return { badge: "new", version: newInVersion };
   }
   if (updatedInVersion && isRecentRelease(updatedInVersion, appVersion)) {
     return { badge: "updated", version: updatedInVersion };
@@ -130,12 +119,15 @@ export function isToolFreshnessAcknowledged(
   );
 }
 
-// Records that the user has opened the tool at its currently tagged version.
+// Records the badge the tool is currently showing as seen. No-ops when nothing is
+// on screen — including while appVersion is unknown — so an unseen badge is never
+// consumed.
 export function acknowledgeToolFreshness(
   toolId: string,
   tool: FreshnessFields,
+  appVersion: string | null | undefined,
 ): void {
-  const version = latestTaggedVersion(tool);
+  const version = getToolFreshness(tool, appVersion)?.version;
   if (!version) return;
   const current = getAcknowledgedToolVersions();
   if (isToolFreshnessAcknowledged(current, toolId, version)) return;

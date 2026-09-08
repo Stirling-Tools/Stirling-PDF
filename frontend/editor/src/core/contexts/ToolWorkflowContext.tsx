@@ -33,6 +33,7 @@ import { stripBasePath } from "@app/constants/app";
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 import { filterToolRegistryByQuery } from "@app/utils/toolSearch";
 import { acknowledgeToolFreshness } from "@app/utils/toolFreshness";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useToolHistory } from "@app/hooks/tools/useUserToolActivity";
 import {
   ToolWorkflowState,
@@ -210,6 +211,8 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
 
   // Tool history hook
   const { favoriteTools, toggleFavorite, isFavorite } = useToolHistory();
+
+  const appVersion = useAppConfig().config?.appVersion;
 
   // Get selected tool from navigation context
   const selectedTool = getSelectedTool(navigationState.selectedTool);
@@ -453,8 +456,8 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     const toolId = navigationState.selectedTool;
     if (!toolId) return;
     const tool = allTools[toolId];
-    if (tool) acknowledgeToolFreshness(toolId, tool);
-  }, [navigationState.selectedTool, allTools]);
+    if (tool) acknowledgeToolFreshness(toolId, tool, appVersion);
+  }, [navigationState.selectedTool, allTools, appVersion]);
 
   // Tool reset methods
   const registerToolReset = useCallback(
