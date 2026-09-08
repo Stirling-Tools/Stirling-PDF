@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { PdfAnnotationSubtype } from "@embedpdf/models";
 import {
+  createPlacementDecisionGate,
   shouldAutoExitPlacement,
   shouldRearmPlacement,
   type AutoExitPlacementParams,
@@ -33,7 +34,7 @@ describe("shouldAutoExitPlacement", () => {
     );
   });
 
-  it("returns false for programmatic creates (paste, undo/redo restore)", () => {
+  it("returns false for programmatic creates (paste, restored delete)", () => {
     expect(shouldAutoExitPlacement(params({ userPlaced: false }))).toBe(false);
   });
 
@@ -102,7 +103,7 @@ describe("shouldRearmPlacement", () => {
     ).toBe(false);
   });
 
-  it("returns false for programmatic creates (paste, undo/redo restore)", () => {
+  it("returns false for programmatic creates (paste, restored delete)", () => {
     expect(
       shouldRearmPlacement(params({ placeMultiple: true, userPlaced: false })),
     ).toBe(false);
@@ -162,5 +163,36 @@ describe("shouldRearmPlacement", () => {
         shouldAutoExitPlacement(input) && shouldRearmPlacement(input),
       ).toBe(false);
     }
+  });
+});
+
+describe("createPlacementDecisionGate", () => {
+  it("accepts the first event for an annotation id", () => {
+    const gate = createPlacementDecisionGate();
+    expect(gate("stamp-1")).toBe(true);
+  });
+
+  it("rejects the committed repeat of the same placement", () => {
+    const gate = createPlacementDecisionGate();
+    gate("stamp-1");
+    expect(gate("stamp-1")).toBe(false);
+  });
+
+  it("rejects a redo, which replays the original id", () => {
+    const gate = createPlacementDecisionGate();
+    gate("stamp-1");
+    gate("stamp-1");
+    expect(gate("stamp-1")).toBe(false);
+  });
+
+  it("accepts each new placement", () => {
+    const gate = createPlacementDecisionGate();
+    expect(["a", "b", "c"].map((id) => gate(id))).toEqual([true, true, true]);
+  });
+
+  it("keeps separate gates independent", () => {
+    const gate = createPlacementDecisionGate();
+    gate("stamp-1");
+    expect(createPlacementDecisionGate()("stamp-1")).toBe(true);
   });
 });

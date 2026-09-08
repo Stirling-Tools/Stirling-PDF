@@ -17,6 +17,7 @@ import type { SignParameters } from "@app/hooks/tools/sign/useSignParameters";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
 import {
+  createPlacementDecisionGate,
   shouldAutoExitPlacement,
   shouldRearmPlacement,
 } from "@app/components/viewer/signaturePlacement";
@@ -204,6 +205,11 @@ export const SignatureAPIBridge = forwardRef<
   useEffect(() => {
     autoExitRef.current = autoExitAfterStampPlacement;
   }, [autoExitAfterStampPlacement]);
+  const isPlacementModeRef = useRef(isPlacementMode);
+  useEffect(() => {
+    isPlacementModeRef.current = isPlacementMode;
+  }, [isPlacementMode]);
+  const placementDecisionGateRef = useRef(createPlacementDecisionGate());
   const { getZoomState, registerImmediateZoomUpdate } = useViewer();
   const documentReady = useDocumentReady();
   const [currentZoom, setCurrentZoom] = useState(
@@ -581,11 +587,14 @@ export const SignatureAPIBridge = forwardRef<
       if (event.type === "create") {
         setSignaturesApplied(false);
 
-        // Only pointer placements carry a create context; paste and undo/redo
-        // restores go through createAnnotation without one.
+        // Only pointer placements carry a create context; paste and the restore
+        // half of an undo go through createAnnotation without one.
         const userPlaced = Boolean(event.ctx);
+        const isNewPlacement =
+          placementDecisionGateRef.current(annotationId) && userPlaced;
 
         if (
+          isNewPlacement &&
           shouldAutoExitPlacement({
             annotation,
             placeMultiple: placeMultipleRef.current,
@@ -596,6 +605,7 @@ export const SignatureAPIBridge = forwardRef<
           annotationApi.setActiveTool(null);
           setPlacementMode(false);
         } else if (
+          isNewPlacement &&
           shouldRearmPlacement({
             annotation,
             placeMultiple: placeMultipleRef.current,
@@ -604,9 +614,13 @@ export const SignatureAPIBridge = forwardRef<
           })
         ) {
           // The plugin calls setActiveTool(null) right after this event fires,
-          // so re-arm on the next task rather than inline.
+          // so re-arm on the next task rather than inline. The user can pause or
+          // leave placement in that window, so the decision is taken again here.
           const timer = window.setTimeout(() => {
             rearmTimersRef.current.delete(timer);
+            if (!isPlacementModeRef.current || !placeMultipleRef.current) {
+              return;
+            }
             configureStampDefaultsRef.current().catch((error) => {
               console.error("Error re-arming signature placement:", error);
             });
