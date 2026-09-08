@@ -22,7 +22,14 @@ public enum FailureActionId {
     OPEN_IN_TOOL(Execution.CLIENT, "Retry"),
 
     /** Unlocks the document with a password the owner supplies. */
-    DECRYPT(Execution.CLIENT, "Decrypt and retry"),
+    DECRYPT(Execution.CLIENT, "Unlock"),
+
+    /**
+     * Rewrites the document through the repair tool in the owner's client, then re-runs.
+     * Best-effort: Ghostscript and qpdf read some files PDFBox refuses, but neither recovers
+     * damaged bytes.
+     */
+    REPAIR(Execution.CLIENT, "Repair"),
 
     /** Open the document behind the incident, in whichever client can resolve its id. */
     VIEW_FILE(Execution.CLIENT, "View file"),

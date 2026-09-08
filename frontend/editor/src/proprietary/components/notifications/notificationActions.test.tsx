@@ -12,11 +12,16 @@ import type { NotificationActionContext } from "@core/components/notifications/n
 
 const retryWithPassword = vi.fn();
 const unlockLocalDocument = vi.fn();
+const repairDocuments = vi.fn();
+const retryWithFiles = vi.fn();
 vi.mock("@app/services/notificationRetry", async (importOriginal) => ({
-  // The real stashMatchesKind: it is pure, and its guard is part of what these tests exercise.
+  // The real stashMatchesKind and retryInputIds: both are pure, and their guards are part of
+  // what these tests exercise.
   ...(await importOriginal<typeof import("@app/services/notificationRetry")>()),
   retryWithPassword: (...args: unknown[]) => retryWithPassword(...args),
   unlockLocalDocument: (...args: unknown[]) => unlockLocalDocument(...args),
+  repairDocuments: (...args: unknown[]) => repairDocuments(...args),
+  retryWithFiles: (...args: unknown[]) => retryWithFiles(...args),
 }));
 
 const rerunPolicy = vi.fn();
@@ -167,6 +172,43 @@ function policyContext(
   };
 }
 
+/** A tool failure the server classified as a damaged document. */
+function corruptedContext(
+  overrides: Partial<NotificationActionContext> = {},
+): NotificationActionContext {
+  return {
+    notification: notification({ kindId: "INPUT_CORRUPTED" }),
+    hasLocalFile: true,
+    retryPayload: {
+      operation: "compress",
+      endpoint: "/api/v1/misc/compress-pdf",
+      params: { level: "5" },
+      fileIds: ["f-1"],
+      multiFile: false,
+      errorCode: "E001",
+      recordedAt: 0,
+    },
+    ...overrides,
+  };
+}
+
+/** The same, reported by an attended policy run rather than a tool. */
+function corruptedPolicyContext(
+  overrides: Partial<NotificationActionContext> = {},
+): NotificationActionContext {
+  return {
+    notification: notification({
+      kindId: "INPUT_CORRUPTED",
+      origin: "POLICY",
+      policyId: "pol-1",
+      sourceId: null,
+    }),
+    hasLocalFile: true,
+    retryPayload: null,
+    ...overrides,
+  };
+}
+
 /** The editor shell: the workbench's providers all sit above the bell. */
 const inEditor = ({ children }: { children: ReactNode }) => (
   <MemoryRouter>
@@ -248,6 +290,20 @@ beforeEach(() => {
       },
     ],
   });
+  // The repair succeeds by default: most cases below are about what happens afterwards.
+  repairDocuments.mockReset().mockResolvedValue({
+    ok: true,
+    repaired: [
+      {
+        fileId: "f-1",
+        file: {
+          blob: new Blob(["repaired"], { type: "application/pdf" }),
+          filename: "invoice_repaired.pdf",
+        },
+      },
+    ],
+  });
+  retryWithFiles.mockReset().mockResolvedValue({ ok: true, files: [] });
   // Tracked by default: something is polling the run, so its output will arrive.
   rerunPolicy.mockReset().mockResolvedValue({ ok: true, tracked: true });
   rechainPolicyOnDocument.mockReset().mockResolvedValue({
@@ -931,5 +987,160 @@ describe("retrying an attended policy run", () => {
       unknown,
     ];
     expect(await bytesOf(document)).not.toContain("hunter2");
+  });
+});
+
+/** Repair is decrypt's shape without the password: fix the input, then re-run what failed. */
+describe("REPAIR", () => {
+  it("repairs the document, then re-runs the policy that failed on it", async () => {
+    const outcome = await registry().REPAIR?.run(corruptedPolicyContext());
+
+    expect(repairDocuments).toHaveBeenCalledWith(["f-1"]);
+    // Repairing alone resolves nothing: the run that failed has to be the thing that passes.
+    expect(rechainPolicyOnDocument).toHaveBeenCalled();
+    expect(outcome).toEqual({ ok: true });
+    expect(reportNotificationResolved).toHaveBeenCalledWith("failure:evt-1");
+  });
+
+  it("re-runs the stashed operation over the repaired bytes, not the original", async () => {
+    const outcome = await registry().REPAIR?.run(corruptedContext());
+
+    expect(repairDocuments).toHaveBeenCalledWith(["f-1"]);
+    const [payload, files] = retryWithFiles.mock.calls[0] as [
+      { endpoint: string },
+      File[],
+    ];
+    expect(payload.endpoint).toBe("/api/v1/misc/compress-pdf");
+    expect(await bytesOf(files[0])).toBe("repaired");
+    expect(outcome).toEqual({ ok: true });
+    expect(reportNotificationResolved).toHaveBeenCalledWith("failure:evt-1");
+  });
+
+  it("repairs every input a merge would re-send, not just the one the row names", async () => {
+    // E002 is the multi-file corruption: re-running with one sibling still broken fails again.
+    repairDocuments.mockResolvedValue({
+      ok: true,
+      repaired: ["f-1", "f-2"].map((fileId) => ({
+        fileId,
+        file: { blob: new Blob(["repaired"]), filename: `${fileId}.pdf` },
+      })),
+    });
+
+    await registry().REPAIR?.run(
+      corruptedContext({
+        retryPayload: {
+          operation: "merge",
+          endpoint: "/api/v1/general/merge-pdfs",
+          params: {},
+          fileIds: ["f-1", "f-2"],
+          multiFile: true,
+          errorCode: "E002",
+          recordedAt: 0,
+        },
+      }),
+    );
+
+    expect(repairDocuments).toHaveBeenCalledWith(["f-1", "f-2"]);
+    // One re-run carrying both, which is the call that failed in the first place.
+    expect(retryWithFiles).toHaveBeenCalledTimes(1);
+    expect((retryWithFiles.mock.calls[0] as [unknown, File[]])[1]).toHaveLength(
+      2,
+    );
+  });
+
+  it("versions each repaired document under the original it came from", async () => {
+    openFilesById = { "f-1": { id: "f-1", name: "invoice.pdf" } };
+
+    await registry().REPAIR?.run(corruptedPolicyContext());
+
+    // consumeFiles, not addFiles: the repaired copy replaces the original in the workbench.
+    expect(consumeFiles).toHaveBeenCalledWith(
+      ["f-1"],
+      expect.anything(),
+      expect.anything(),
+    );
+    expect(addFiles).not.toHaveBeenCalled();
+  });
+
+  it("stops at a failed repair, leaving the row open with the server's words", async () => {
+    repairDocuments.mockResolvedValue({
+      ok: false,
+      reason: "serverMessage",
+      message: "Repair failed with available tools.",
+    });
+
+    const outcome = await registry().REPAIR?.run(corruptedPolicyContext());
+
+    expect(outcome).toEqual({
+      ok: false,
+      message: "Repair failed with available tools.",
+    });
+    expect(rechainPolicyOnDocument).not.toHaveBeenCalled();
+    expect(reportNotificationResolved).not.toHaveBeenCalled();
+  });
+
+  it("leaves the row open when the repair worked but the re-run failed again", async () => {
+    // The honest outcome for a repair that produced a file the tool still cannot read.
+    retryWithFiles.mockResolvedValue({
+      ok: false,
+      reason: "serverMessage",
+      message: "PDF file appears to be corrupted or damaged.",
+    });
+
+    const outcome = await registry().REPAIR?.run(corruptedContext());
+
+    expect(outcome).toEqual({
+      ok: false,
+      message: "PDF file appears to be corrupted or damaged.",
+    });
+    expect(reportNotificationResolved).not.toHaveBeenCalled();
+  });
+
+  it("leaves the row open when the policy re-run cannot be tracked", async () => {
+    // Nothing here will collect what an untracked run produces, so the failure is not resolved.
+    rechainPolicyOnDocument.mockResolvedValue({ ok: true, tracked: false });
+
+    const outcome = await registry().REPAIR?.run(corruptedPolicyContext());
+
+    expect(outcome?.ok).toBe(false);
+    expect(outcome?.message).toContain("repaired");
+    expect(reportNotificationResolved).not.toHaveBeenCalled();
+  });
+
+  it("is offered only where the repaired document has somewhere to land", async () => {
+    expect(registry().REPAIR?.available(corruptedPolicyContext())).toBe(true);
+    // The processor shell has no workbench contexts, so the row promotes something else.
+    expect(
+      registry(inProcessor).REPAIR?.available(corruptedPolicyContext()),
+    ).toBe(false);
+  });
+
+  it("is not offered once the document has left this browser", async () => {
+    expect(
+      registry().REPAIR?.available(corruptedContext({ hasLocalFile: false })),
+    ).toBe(false);
+  });
+
+  it("is not offered for a stash belonging to a different failure on the same file", async () => {
+    // One stash per file but one incident per kind per file: E004 is not this row's to repair.
+    expect(
+      registry().REPAIR?.available(
+        corruptedContext({
+          retryPayload: {
+            operation: "removePassword",
+            endpoint: "/api/v1/security/remove-password",
+            params: {},
+            fileIds: ["f-1"],
+            multiFile: false,
+            errorCode: "E004",
+            recordedAt: 0,
+          },
+        }),
+      ),
+    ).toBe(false);
+  });
+
+  it("never asks for a password, having nothing to do with one", async () => {
+    expect(registry().REPAIR?.needsPassword).toBeFalsy();
   });
 });

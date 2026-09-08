@@ -5580,6 +5580,10 @@ noDocumentLinked = "This failure is not linked to a specific document, so it can
 notOnThisDevice = "This document is not on this device, so it cannot be opened or retried here."
 occurrences = "{{count}} times"
 open = "Notifications"
+repairAdoptFailed = "The document was repaired but could not be opened here. Try the Repair tool directly."
+repairedNotRerun = "The document was repaired and opened here, but the policy could not be run on it again."
+repairedRerunNotAdopted = "The repaired document went through, but its result could not be opened here."
+repairedRerunUndelivered = "The document was repaired and the policy re-run started, but its result cannot be delivered here, so this failure stays open."
 rerunRejected = "The policy could not be run again just now. Try again in a moment."
 rerunUndelivered = "The policy re-run started, but its result cannot be delivered here, so this failure stays open."
 retryUnavailable = "This document can no longer be retried from this browser."
@@ -8077,9 +8081,10 @@ searchPlaceholder = "Search issues, users and errors"
 
 [portal.failures.action]
 acknowledge = "Acknowledge"
-decrypt = "Decrypt and retry"
+decrypt = "Unlock"
 dismiss = "Dismiss"
 openInTool = "Retry"
+repair = "Repair"
 viewFile = "View file"
 viewInProcessor = "View in processor"
 
@@ -8111,6 +8116,14 @@ origin = "Raised in"
 source = "Source"
 type = "Type"
 user = "User"
+
+[portal.failures.kind.inputCorrupted]
+description = "Your file is damaged, so the run could not read it. Repairing it rewrites the file and often fixes the damage."
+title = "Damaged document"
+
+[portal.failures.kind.inputEncryptionBroken]
+description = "Your file's encryption could not be read, even though the password was accepted. Repairing it sometimes works, but a file whose contents are damaged cannot be recovered."
+title = "Unreadable encryption"
 
 [portal.failures.kind.inputPasswordProtected]
 description = "Your file is password protected, so the run could not read it."

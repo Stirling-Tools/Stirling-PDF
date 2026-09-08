@@ -68,10 +68,20 @@ class FailureClassifierTest {
         }
 
         @Test
-        void withAnUnclaimedErrorCodeFallsBackToUnknown() {
-            // E001 (corrupted PDF) is a real code that no kind has adopted yet. It must land in
-            // UNKNOWN rather than being force-fitted to the nearest kind.
+        void separatesADamagedFileFromEncryptionItCannotRead() {
+            // Both are repairable and neither is a password problem, but only E003's document
+            // opens elsewhere, so the two carry different copy.
             assertThat(classifier.classify(problemDetail(HttpStatus.BAD_REQUEST, "E001")))
+                    .isEqualTo(FailureKind.INPUT_CORRUPTED);
+            assertThat(classifier.classify(problemDetail(HttpStatus.BAD_REQUEST, "E003")))
+                    .isEqualTo(FailureKind.INPUT_ENCRYPTION_BROKEN);
+        }
+
+        @Test
+        void withAnUnclaimedErrorCodeFallsBackToUnknown() {
+            // E005 (no pages) is a real code that no kind has adopted yet. It must land in
+            // UNKNOWN rather than being force-fitted to the nearest kind.
+            assertThat(classifier.classify(problemDetail(HttpStatus.BAD_REQUEST, "E005")))
                     .isEqualTo(FailureKind.UNKNOWN);
         }
 

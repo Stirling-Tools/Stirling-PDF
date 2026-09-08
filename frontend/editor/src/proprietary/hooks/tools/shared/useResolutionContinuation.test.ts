@@ -135,6 +135,71 @@ beforeEach(() => {
 });
 
 describe("useResolutionContinuation", () => {
+  it("carries a manual repair through a damaged document's policy and closes the row", async () => {
+    // The Repair tool run by hand asks the same of the document as the row's own button would.
+    fetchNotifications.mockResolvedValue({
+      notifications: [
+        policyRow({
+          kindId: "INPUT_CORRUPTED",
+          fileId: "f-damaged",
+          actions: [offer("REPAIR", "RESOLUTION"), offer("OPEN_IN_TOOL", "OVERFLOW")],
+        }),
+      ],
+      viewerReviewsTeam: false,
+    });
+
+    continuation()(
+      unlockRun({
+        operation: "repair",
+        inputFileIds: ["f-damaged"],
+        outputs: [
+          {
+            file: new File(["pdf"], "repaired.pdf", {
+              type: "application/pdf",
+            }),
+            fileId: "f-repaired",
+            sourceFileId: "f-damaged",
+          },
+        ],
+      }),
+    );
+
+    await waitFor(() =>
+      expect(reportNotificationResolved).toHaveBeenCalledWith("failure:evt-1"),
+    );
+    expect(rechainPolicyOnDocument).toHaveBeenCalledWith(
+      { policyId: "pol-1", fileId: "f-damaged" },
+      expect.any(File),
+      "f-repaired",
+    );
+  });
+
+  it("does not let a manual repair close a password failure on the same document", async () => {
+    // Both kinds can sit on one file, and repair is no answer to a missing password.
+    fetchNotifications.mockResolvedValue({
+      notifications: [policyRow({ fileId: "f-damaged" })],
+      viewerReviewsTeam: false,
+    });
+
+    continuation()(
+      unlockRun({
+        operation: "repair",
+        inputFileIds: ["f-damaged"],
+        outputs: [
+          {
+            file: new File(["pdf"], "repaired.pdf"),
+            fileId: "f-repaired",
+            sourceFileId: "f-damaged",
+          },
+        ],
+      }),
+    );
+
+    await waitFor(() => expect(fetchNotifications).toHaveBeenCalled());
+    expect(reportNotificationResolved).not.toHaveBeenCalled();
+    expect(rechainPolicyOnDocument).not.toHaveBeenCalled();
+  });
+
   it("carries a manual unlock through the failed policy and closes the row", async () => {
     fetchNotifications.mockResolvedValue({
       notifications: [policyRow()],

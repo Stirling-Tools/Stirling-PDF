@@ -18,11 +18,14 @@ import type {
 
 export type { SucceededToolRun, ToolRunOutput };
 
-// "Decrypt and retry" is just the remove-password tool, so reaching it directly asks the same.
+// "Unlock" is just the remove-password tool, and "Repair" the repair tool, so reaching either
+// directly asks the same of the document as pressing the button would have.
 
 /** Which tool's success counts as a kind's resolution. The server still decides WHO may fix it. */
 const RESOLUTION_TOOLS: Record<string, string> = {
   INPUT_PASSWORD_PROTECTED: "removePassword",
+  INPUT_CORRUPTED: "repair",
+  INPUT_ENCRYPTION_BROKEN: "repair",
 };
 
 export function useResolutionContinuation(): (run: SucceededToolRun) => void {

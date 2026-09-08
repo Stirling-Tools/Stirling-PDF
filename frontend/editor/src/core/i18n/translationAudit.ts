@@ -111,6 +111,9 @@ export const I18N_PROJECTS: TranslationProject[] = [
       // Server-sent keys rendered with t(thatKey), so nothing in source names them.
       /^portal\.failures\.disabled\./,
       /^portal\.failures\.action\./,
+      // A kind's title and description arrive the same way, derived server-side from the kind
+      // id, so adding a kind adds copy that no source file will ever name.
+      /^portal\.failures\.kind\./,
       // Encryption panel copy keyed by backend enum values: key status, write
       // state, migration state, and the reason a status read was refused. Each
       // is t(`...${value}`) where the value comes from the API response.

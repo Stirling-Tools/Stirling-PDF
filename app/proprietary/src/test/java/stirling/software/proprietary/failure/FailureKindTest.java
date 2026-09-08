@@ -272,6 +272,17 @@ class FailureKindTest {
         void byErrorCodeResolvesTheClaimingKind() {
             assertThat(FailureKind.byErrorCode("E004"))
                     .contains(FailureKind.INPUT_PASSWORD_PROTECTED);
+            assertThat(FailureKind.byErrorCode("E001")).contains(FailureKind.INPUT_CORRUPTED);
+            assertThat(FailureKind.byErrorCode("E002")).contains(FailureKind.INPUT_CORRUPTED);
+        }
+
+        @Test
+        void aBrokenEncryptionIsNotAMissingPassword() {
+            // E003 is reached only once the key was accepted, so no password would help.
+            assertThat(FailureKind.byErrorCode("E003"))
+                    .contains(FailureKind.INPUT_ENCRYPTION_BROKEN);
+            assertThat(FailureKind.INPUT_ENCRYPTION_BROKEN.declares(FailureActionId.DECRYPT))
+                    .isFalse();
         }
 
         @Test
@@ -281,13 +292,15 @@ class FailureKindTest {
             // retry match the wrong incident, so this fails until both move together.
             assertThat(FailureKind.INPUT_PASSWORD_PROTECTED.getErrorCodes())
                     .containsExactly("E004");
+            assertThat(FailureKind.INPUT_CORRUPTED.getErrorCodes()).containsExactly("E001", "E002");
+            assertThat(FailureKind.INPUT_ENCRYPTION_BROKEN.getErrorCodes()).containsExactly("E003");
             assertThat(FailureKind.UNKNOWN.getErrorCodes()).isEmpty();
         }
 
         @Test
         void byErrorCodeIsEmptyForACodeNoKindHasAdoptedYet() {
-            // E001 is PDF_CORRUPTED: a real error code, deliberately not yet a kind.
-            assertThat(FailureKind.byErrorCode("E001")).isEmpty();
+            // E005 is PDF_NO_PAGES: a real error code, deliberately not yet a kind.
+            assertThat(FailureKind.byErrorCode("E005")).isEmpty();
             assertThat(FailureKind.byErrorCode(null)).isEmpty();
         }
     }
@@ -316,6 +329,24 @@ class FailureKindTest {
                                     "viewInProcessor"),
                             offered(FailureActionId.OPEN_IN_TOOL, OWNER, OVERFLOW, "openInTool"),
                             offered(FailureActionId.DISMISS, ANYONE_WHO_SEES, OVERFLOW, "dismiss"));
+        }
+
+        @Test
+        void aRepairableKindNeverPromotesOpenInToolOverTheRepair() {
+            // Opening the tool stays declared for the truncated-upload case, but the same bytes
+            // fail the same way, so promoting it would offer a button that almost never works.
+            for (FailureKind kind :
+                    List.of(FailureKind.INPUT_CORRUPTED, FailureKind.INPUT_ENCRYPTION_BROKEN)) {
+                assertThat(kind.getOfferedActions())
+                        .as("%s", kind.getId())
+                        .contains(offered(FailureActionId.REPAIR, OWNER, RESOLUTION, "repair"))
+                        .contains(
+                                offered(
+                                        FailureActionId.OPEN_IN_TOOL,
+                                        OWNER,
+                                        OVERFLOW,
+                                        "openInTool"));
+            }
         }
 
         @Test

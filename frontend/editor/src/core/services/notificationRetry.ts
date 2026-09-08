@@ -21,15 +21,19 @@ export interface RetryPayload {
   recordedAt: number;
 }
 
-/** Mirrored from the server's `FailureKind` declarations. */
 /**
  * Mirrors the codes each {@code FailureKind} claims, server-side. Pinned there by
  * `FailureKindTest#everyCodeAKindClaimsIsPinned`, which fails if a kind's codes change without
  * this moving with them.
  */
-const KIND_ERROR_CODES: Record<string, string> = {
-  INPUT_PASSWORD_PROTECTED: "E004",
+const KIND_ERROR_CODES: Record<string, readonly string[]> = {
+  INPUT_PASSWORD_PROTECTED: ["E004"],
+  INPUT_CORRUPTED: ["E001", "E002"],
+  INPUT_ENCRYPTION_BROKEN: ["E003"],
 };
+
+/** Every code any kind claims, so an unclaimed one can be recognised as belonging to UNKNOWN. */
+const CLAIMED_CODES = new Set(Object.values(KIND_ERROR_CODES).flat());
 
 /** Whether the one stash a file carries is the failure this row describes. */
 export function stashMatchesKind(
@@ -37,11 +41,10 @@ export function stashMatchesKind(
   payload: RetryPayload,
 ): boolean {
   const claimed = KIND_ERROR_CODES[kindId];
-  if (claimed) return payload.errorCode === claimed;
-  return (
-    payload.errorCode === null ||
-    !Object.values(KIND_ERROR_CODES).includes(payload.errorCode)
-  );
+  if (claimed) {
+    return payload.errorCode !== null && claimed.includes(payload.errorCode);
+  }
+  return payload.errorCode === null || !CLAIMED_CODES.has(payload.errorCode);
 }
 
 /** Its own database: the files schema is at v9, and this hint is safe to lose. */
@@ -146,15 +149,12 @@ export interface RetryOutputFile {
 }
 
 /** Why a retry could not run; `serverMessage` means the message is the server's own words. */
-export type PasswordRetryFailure =
-  | "notRetryable"
-  | "fileMissing"
-  | "serverMessage";
+export type RetryFailure = "notRetryable" | "fileMissing" | "serverMessage";
 
-/** What a password-carrying call comes back with. `files` only ever on success. */
-export interface PasswordRetryOutcome {
+/** What a retry call comes back with. `files` only ever on success. */
+export interface RetryOutcome {
   ok: boolean;
-  reason?: PasswordRetryFailure;
+  reason?: RetryFailure;
   message?: string | null;
   files?: RetryOutputFile[];
 }
@@ -163,12 +163,30 @@ export interface PasswordRetryOutcome {
 const UNLOCK_ENDPOINT =
   "/api/v1/security/remove-password" satisfies ToolEndpoint;
 
+/** As above. Takes one document and answers with one, so a batch is one call per file. */
+const REPAIR_ENDPOINT = "/api/v1/misc/repair" satisfies ToolEndpoint;
+
 /** Unlock a held document for a failure with no stashed operation, e.g. a policy run. */
 export async function unlockLocalDocument(
   fileId: string,
   password: string,
-): Promise<PasswordRetryOutcome> {
-  return postWithPassword(UNLOCK_ENDPOINT, {}, [fileId], password);
+): Promise<RetryOutcome> {
+  return postDocuments(UNLOCK_ENDPOINT, {}, [fileId], password);
+}
+
+/** The inputs a retry of `payload` would send: the whole batch, or the one document named. */
+export function retryInputIds(
+  payload: RetryPayload,
+  forFileId: string | null = null,
+): string[] {
+  const ids = payload.multiFile
+    ? payload.fileIds
+    : [
+        forFileId && payload.fileIds.includes(forFileId)
+          ? forFileId
+          : payload.fileIds[0],
+      ];
+  return ids.filter(isUsableId);
 }
 
 /** Re-runs the stashed operation: `forFileId` alone, or the whole batch for a multi-file endpoint. */
@@ -176,29 +194,80 @@ export async function retryWithPassword(
   payload: RetryPayload,
   password: string,
   forFileId: string | null = null,
-): Promise<PasswordRetryOutcome> {
+): Promise<RetryOutcome> {
   if (!payload.endpoint) {
     return { ok: false, reason: "notRetryable", message: null };
   }
 
-  const fileIds = payload.multiFile
-    ? payload.fileIds
-    : [
-        forFileId && payload.fileIds.includes(forFileId)
-          ? forFileId
-          : payload.fileIds[0],
-      ];
-
-  return postWithPassword(payload.endpoint, payload.params, fileIds, password);
+  return postDocuments(
+    payload.endpoint,
+    payload.params,
+    retryInputIds(payload, forFileId),
+    password,
+  );
 }
 
-/** Shared by both callers above, so a password reaches the network from one place only. */
-async function postWithPassword(
+/** One document's repair, paired back to the id it was repaired from. */
+export interface RepairedDocument {
+  fileId: string;
+  file: RetryOutputFile;
+}
+
+/** As {@link RetryOutcome}, but the outputs stay paired to their inputs for versioning. */
+export interface RepairOutcome {
+  ok: boolean;
+  reason?: RetryFailure;
+  message?: string | null;
+  repaired?: RepairedDocument[];
+}
+
+/**
+ * Rewrites each held document through the repair tool. All or nothing: a re-run whose batch
+ * still holds one unrepaired input fails exactly as it did before, so a partial result is not
+ * worth adopting.
+ */
+export async function repairDocuments(
+  fileIds: readonly string[],
+): Promise<RepairOutcome> {
+  const usable = fileIds.filter(isUsableId);
+  if (usable.length === 0) {
+    return { ok: false, reason: "fileMissing", message: null };
+  }
+
+  const repaired: RepairedDocument[] = [];
+  for (const fileId of usable) {
+    const outcome = await postDocuments(REPAIR_ENDPOINT, {}, [fileId], null);
+    if (!outcome.ok) {
+      return { ok: false, reason: outcome.reason, message: outcome.message };
+    }
+    const file = outcome.files?.[0];
+    if (!file) return { ok: false, reason: "notRetryable", message: null };
+    repaired.push({ fileId, file });
+  }
+  return { ok: true, repaired };
+}
+
+/** Re-runs the stashed operation over documents this browser has just produced. */
+export async function retryWithFiles(
+  payload: RetryPayload,
+  files: File[],
+): Promise<RetryOutcome> {
+  if (!payload.endpoint) {
+    return { ok: false, reason: "notRetryable", message: null };
+  }
+  if (files.length === 0) {
+    return { ok: false, reason: "fileMissing", message: null };
+  }
+  return postFiles(payload.endpoint, payload.params, files, null);
+}
+
+/** Loads the documents this browser holds, then posts them. */
+async function postDocuments(
   endpoint: string,
   params: Record<string, unknown>,
   requestedFileIds: (string | null | undefined)[],
-  password: string,
-): Promise<PasswordRetryOutcome> {
+  password: string | null,
+): Promise<RetryOutcome> {
   const fileIds = requestedFileIds.filter(isUsableId);
   let files: File[] = [];
   try {
@@ -212,9 +281,19 @@ async function postWithPassword(
     return { ok: false, reason: "fileMissing", message: null };
   }
 
+  return postFiles(endpoint, params, files, password);
+}
+
+/** The one place any of this reaches the network, so a password has a single path out. */
+async function postFiles(
+  endpoint: string,
+  params: Record<string, unknown>,
+  files: File[],
+  password: string | null,
+): Promise<RetryOutcome> {
   try {
     const formData = toFormData(params, files);
-    formData.append("password", password);
+    if (password !== null) formData.append("password", password);
     const response = await apiClient.post<Blob>(endpoint, formData, {
       responseType: "blob",
     });

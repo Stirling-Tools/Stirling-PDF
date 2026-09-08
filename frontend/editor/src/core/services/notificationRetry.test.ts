@@ -24,7 +24,11 @@ const {
   clearRetryPayload,
   loadRetryPayload,
   hasLocalFile,
+  repairDocuments,
+  retryInputIds,
+  retryWithFiles,
   retryWithPassword,
+  stashMatchesKind,
   unlockLocalDocument,
 } = await import("@app/services/notificationRetry");
 
@@ -363,5 +367,196 @@ describe("unlockLocalDocument", () => {
     expect(result.ok).toBe(false);
     expect(result.message).toBe("The password is incorrect.");
     expect(result.message).not.toContain("wrong");
+  });
+});
+
+/** The stash is per file, but a file can carry only one; these say which row may claim it. */
+describe("stashMatchesKind", () => {
+  it("matches a kind against every code it claims, not just the first", async () => {
+    // E001 and E002 are both INPUT_CORRUPTED: a merge reports the second, a single load the first.
+    expect(
+      stashMatchesKind("INPUT_CORRUPTED", payload({ errorCode: "E001" })),
+    ).toBe(true);
+    expect(
+      stashMatchesKind("INPUT_CORRUPTED", payload({ errorCode: "E002" })),
+    ).toBe(true);
+    expect(
+      stashMatchesKind("INPUT_CORRUPTED", payload({ errorCode: "E003" })),
+    ).toBe(false);
+  });
+
+  it("keeps a broken encryption apart from a missing password", async () => {
+    // Adjacent to a reader, unrelated to the fix: no password helps E003, no repair helps E004.
+    expect(
+      stashMatchesKind(
+        "INPUT_ENCRYPTION_BROKEN",
+        payload({ errorCode: "E003" }),
+      ),
+    ).toBe(true);
+    expect(
+      stashMatchesKind(
+        "INPUT_ENCRYPTION_BROKEN",
+        payload({ errorCode: "E004" }),
+      ),
+    ).toBe(false);
+    expect(
+      stashMatchesKind(
+        "INPUT_PASSWORD_PROTECTED",
+        payload({ errorCode: "E003" }),
+      ),
+    ).toBe(false);
+  });
+
+  it("gives an unclaimed code to UNKNOWN, and a claimed one never", async () => {
+    expect(stashMatchesKind("UNKNOWN", payload({ errorCode: "E005" }))).toBe(
+      true,
+    );
+    expect(stashMatchesKind("UNKNOWN", payload({ errorCode: null }))).toBe(
+      true,
+    );
+    expect(stashMatchesKind("UNKNOWN", payload({ errorCode: "E001" }))).toBe(
+      false,
+    );
+  });
+
+  it("refuses a kind that claims codes when the stash recorded none", async () => {
+    expect(
+      stashMatchesKind("INPUT_CORRUPTED", payload({ errorCode: null })),
+    ).toBe(false);
+  });
+});
+
+describe("retryInputIds", () => {
+  it("sends the whole batch for a multi-file endpoint, since that is what failed", async () => {
+    expect(
+      retryInputIds(
+        payload({ fileIds: ["f-1", "f-2"], multiFile: true }),
+        "f-2",
+      ),
+    ).toEqual(["f-1", "f-2"]);
+  });
+
+  it("sends only the document named for a one-file-per-call endpoint", async () => {
+    expect(
+      retryInputIds(
+        payload({ fileIds: ["f-1", "f-2"], multiFile: false }),
+        "f-2",
+      ),
+    ).toEqual(["f-2"]);
+  });
+
+  it("falls back to the first input when the named one was not part of the run", async () => {
+    expect(
+      retryInputIds(payload({ fileIds: ["f-1", "f-2"] }), "f-other"),
+    ).toEqual(["f-1"]);
+  });
+});
+
+describe("repairDocuments", () => {
+  it("repairs one document per call, since the endpoint takes one at a time", async () => {
+    getStirlingFiles.mockImplementation(async (ids: string[]) =>
+      ids.map((id) => new File(["%PDF-1.7"], `${id}.pdf`)),
+    );
+    post.mockResolvedValue({ data: new Blob(["fixed"]), headers: {} });
+
+    const result = await repairDocuments(["f-1", "f-2"]);
+
+    expect(result.ok).toBe(true);
+    expect(post).toHaveBeenCalledTimes(2);
+    expect((post.mock.calls[0] as [string])[0]).toBe("/api/v1/misc/repair");
+    // Paired back to the input, so each output versions the document it came from.
+    expect(result.repaired?.map((doc) => doc.fileId)).toEqual(["f-1", "f-2"]);
+  });
+
+  it("never sends a password, having none to send", async () => {
+    getStirlingFiles.mockResolvedValue([new File(["%PDF-1.7"], "doc.pdf")]);
+    post.mockResolvedValue({ data: new Blob(["fixed"]), headers: {} });
+
+    await repairDocuments(["f-1"]);
+
+    expect(
+      (post.mock.calls[0] as [string, FormData])[1].get("password"),
+    ).toBeNull();
+  });
+
+  it("fails the whole batch when one document cannot be repaired", async () => {
+    // A re-run whose merge still holds one broken input fails exactly as it did before, so a
+    // partial repair would cost the user a second failure to read.
+    getStirlingFiles.mockImplementation(async (ids: string[]) =>
+      ids.map((id) => new File(["%PDF-1.7"], `${id}.pdf`)),
+    );
+    post
+      .mockResolvedValueOnce({ data: new Blob(["fixed"]), headers: {} })
+      .mockRejectedValueOnce({ response: { data: "Repair failed." } });
+
+    const result = await repairDocuments(["f-1", "f-2"]);
+
+    expect(result.ok).toBe(false);
+    expect(result.message).toBe("Repair failed.");
+    expect(result.repaired).toBeUndefined();
+  });
+
+  it("reports the file is gone rather than repairing nothing quietly", async () => {
+    getStirlingFiles.mockResolvedValue([]);
+
+    const result = await repairDocuments(["f-1"]);
+
+    expect(result.ok).toBe(false);
+    expect(result.reason).toBe("fileMissing");
+    expect(post).not.toHaveBeenCalled();
+  });
+
+  it("refuses an empty list instead of reporting a vacuous success", async () => {
+    const result = await repairDocuments([]);
+
+    expect(result.ok).toBe(false);
+    expect(result.reason).toBe("fileMissing");
+    expect(post).not.toHaveBeenCalled();
+  });
+});
+
+/** The second half of a repair: the operation that failed, re-run over what repair produced. */
+describe("retryWithFiles", () => {
+  it("re-runs the stashed operation over the documents handed to it", async () => {
+    post.mockResolvedValue({ data: new Blob(["out"]), headers: {} });
+    const repaired = new File(["%PDF-1.7"], "doc_repaired.pdf");
+
+    const result = await retryWithFiles(
+      payload({
+        endpoint: "/api/v1/misc/compress-pdf",
+        params: { level: "5" },
+      }),
+      [repaired],
+    );
+
+    expect(result.ok).toBe(true);
+    const [path, formData] = post.mock.calls[0] as [string, FormData];
+    expect(path).toBe("/api/v1/misc/compress-pdf");
+    expect(formData.get("level")).toBe("5");
+    // The repaired bytes, not a re-read of the original from storage.
+    expect(formData.get("fileInput")).toBe(repaired);
+    expect(getStirlingFiles).not.toHaveBeenCalled();
+  });
+
+  it("sends every document at once, which is what a multi-file endpoint failed on", async () => {
+    post.mockResolvedValue({ data: new Blob(["out"]), headers: {} });
+
+    await retryWithFiles(payload({ multiFile: true }), [
+      new File(["a"], "a.pdf"),
+      new File(["b"], "b.pdf"),
+    ]);
+
+    expect(post).toHaveBeenCalledTimes(1);
+    expect(
+      (post.mock.calls[0] as [string, FormData])[1].getAll("fileInput"),
+    ).toHaveLength(2);
+  });
+
+  it("refuses when repair produced nothing to re-run", async () => {
+    const result = await retryWithFiles(payload(), []);
+
+    expect(result.ok).toBe(false);
+    expect(result.reason).toBe("fileMissing");
+    expect(post).not.toHaveBeenCalled();
   });
 });
