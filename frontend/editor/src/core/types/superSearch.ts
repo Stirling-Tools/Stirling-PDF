@@ -1,4 +1,5 @@
 import type React from "react";
+import type { IconName } from "@app/ui/Icon";
 
 /**
  * The super search's shared contract: what a results provider returns and the
@@ -17,8 +18,8 @@ export interface SuperSearchResult {
   group: string;
   title: string;
   subtitle?: string;
-  /** LocalIcon name (files/settings); tools provide a React node via `icon`. */
-  iconName?: string;
+  /** Registry icon name (files/settings); tools provide a node via `icon`. */
+  iconName?: IconName;
   icon?: React.ReactNode;
   score: number;
   onSelect: () => void | Promise<void>;
