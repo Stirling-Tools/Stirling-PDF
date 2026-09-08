@@ -79,8 +79,8 @@ import ClipboardList from "lucide-static/icons/clipboard-list.svg?react";
 import ClipboardPlus from "lucide-static/icons/clipboard-plus.svg?react";
 import Clock from "lucide-static/icons/clock.svg?react";
 import Cloud from "lucide-static/icons/cloud.svg?react";
-import CloudCheck from "lucide-static/icons/cloud-check.svg?react";
 import CloudOff from "lucide-static/icons/cloud-off.svg?react";
+import CloudCheck from "lucide-static/icons/cloud-check.svg?react";
 import CloudUpload from "lucide-static/icons/cloud-upload.svg?react";
 import Code from "lucide-static/icons/code.svg?react";
 import Cog from "lucide-static/icons/cog.svg?react";
@@ -235,6 +235,7 @@ import ReceiptText from "lucide-static/icons/receipt-text.svg?react";
 import Recycle from "lucide-static/icons/recycle.svg?react";
 import Redo2 from "lucide-static/icons/redo-2.svg?react";
 import RefreshCw from "lucide-static/icons/refresh-cw.svg?react";
+import RefreshCwOff from "lucide-static/icons/refresh-cw-off.svg?react";
 import Replace from "lucide-static/icons/replace.svg?react";
 import Rocket from "lucide-static/icons/rocket.svg?react";
 import RotateCcw from "lucide-static/icons/rotate-ccw.svg?react";
@@ -484,8 +485,8 @@ export const ICONS = {
   "clipboard-plus": { Component: ClipboardPlus, kind: "lucide" },
   clock: { Component: Clock, kind: "lucide" },
   cloud: { Component: Cloud, kind: "lucide" },
-  "cloud-check": { Component: CloudCheck, kind: "lucide" },
   "cloud-off": { Component: CloudOff, kind: "lucide" },
+  "cloud-check": { Component: CloudCheck, kind: "lucide" },
   "cloud-upload": { Component: CloudUpload, kind: "lucide" },
   code: { Component: Code, kind: "lucide" },
   cog: { Component: Cog, kind: "lucide" },
@@ -640,6 +641,7 @@ export const ICONS = {
   recycle: { Component: Recycle, kind: "lucide" },
   "redo-2": { Component: Redo2, kind: "lucide" },
   "refresh-cw": { Component: RefreshCw, kind: "lucide" },
+  "refresh-cw-off": { Component: RefreshCwOff, kind: "lucide" },
   replace: { Component: Replace, kind: "lucide" },
   rocket: { Component: Rocket, kind: "lucide" },
   "rotate-ccw": { Component: RotateCcw, kind: "lucide" },
