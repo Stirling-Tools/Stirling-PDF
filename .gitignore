@@ -19,6 +19,9 @@ version.properties
 #### Stirling-PDF Files ###
 pipeline/
 !pipeline/.gitkeep
+# The rule above targets the app's runtime pipeline working dir, but it also
+# matches this backend test package dir; keep the source tracked.
+!app/core/src/test/java/**/controller/api/pipeline/
 customFiles/
 configs/
 watchedFolders/

@@ -25,8 +25,11 @@ public class ImportedPipeline implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    /** Bounded by the caller: a key longer than this cannot be stored as the primary key. */
+    public static final int MAX_KEY_LENGTH = 100;
+
     @Id
-    @Column(name = "import_key")
+    @Column(name = "import_key", length = MAX_KEY_LENGTH)
     private String importKey;
 
     @Column(name = "imported_at")

@@ -25,9 +25,15 @@ public class JpaImportedPipelines implements ImportedPipelines {
     public void markImported(String key) {
         try {
             repository.save(new ImportedPipeline(key, Instant.now()));
-        } catch (DataIntegrityViolationException alreadyRecorded) {
-            // A concurrent boot won the insert; the row exists either way.
-            log.debug("Import marker '{}' was already recorded concurrently", key);
+        } catch (DataIntegrityViolationException e) {
+            if (repository.existsById(key)) {
+                // A concurrent boot won the insert; the row exists either way.
+                log.debug("Import marker '{}' was already recorded concurrently", key);
+                return;
+            }
+            // Without the marker the folder is converted again on every boot and rescanned by the
+            // legacy scanner in between, so this can never be swallowed quietly.
+            log.error("Could not record import marker '{}'", key, e);
         }
     }
 }

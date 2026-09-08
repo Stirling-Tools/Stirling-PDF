@@ -289,6 +289,15 @@ public class ApplicationProperties {
         private boolean allowCustomApiIntegrations = true;
 
         private long webhookMaxBytes = 104857600L;
+
+        /**
+         * Whether a legacy watched folder whose pipeline batches every ready file into one call
+         * (merge, overlay, images-to-PDF) is converted into a policy too. Off by default because a
+         * policy runs such a folder once per file, which is not what the legacy config asked for;
+         * those folders keep running on the legacy scanner until batch runs exist. Enable to
+         * convert them anyway and accept per-file runs.
+         */
+        private boolean migrateBatchWatchedFolders = false;
     }
 
     @Data

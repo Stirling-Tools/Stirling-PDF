@@ -228,6 +228,24 @@ class FolderOutputSinkTest {
     }
 
     @Test
+    void keepsTheExtensionWhenTheBaseNameIsDotted() throws IOException {
+        Path out = tempDir.resolve("out");
+
+        sink.deliver(
+                AD_HOC,
+                List.of(named("invoice.2026.pdf", "x")),
+                new OutputSpec(
+                        "folder",
+                        Map.of(
+                                "directory",
+                                out.toString(),
+                                "filenamePattern",
+                                "archived_{filename}")));
+
+        assertTrue(Files.exists(out.resolve("archived_invoice.2026.pdf")));
+    }
+
+    @Test
     void patternCannotWriteOutsideTheTargetDirectory() throws IOException {
         Path out = tempDir.resolve("out");
 

@@ -26,11 +26,18 @@ final class OutputNames {
                 pattern.replace("{filename}", FilenameUtils.getBaseName(filename))
                         .replace("{date}", now.format(DATE))
                         .replace("{time}", now.format(TIME));
-        if (!extension.isEmpty() && FilenameUtils.getExtension(expanded).isEmpty()) {
+        // Read off the pattern, not the expanded name: a dotted base name such as
+        // "invoice.2026.pdf" otherwise looks like it already carries an extension.
+        if (!extension.isEmpty() && !patternSuppliesExtension(pattern)) {
             expanded = expanded + "." + extension;
         }
-        String safe = safeName(expanded, index);
-        return safe.isBlank() ? filename : safe;
+        return safeName(expanded, index);
+    }
+
+    private static boolean patternSuppliesExtension(String pattern) {
+        String literal =
+                pattern.replace("{filename}", "").replace("{date}", "").replace("{time}", "");
+        return !FilenameUtils.getExtension(literal).isEmpty();
     }
 
     /** Strip any directory component / "../" so a crafted output name cannot escape the target. */

@@ -1,6 +1,7 @@
 package stirling.software.proprietary.policy.legacy;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -8,8 +9,11 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.HexFormat;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,7 +29,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.configuration.RuntimePathConfig;
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.MigratedWatchedFolders;
+import stirling.software.common.service.ToolMetadataService;
 import stirling.software.proprietary.policy.config.FolderAccessGuard;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineInput;
@@ -69,6 +75,8 @@ public class WatchedFolderPipelineImport implements MigratedWatchedFolders {
     private final TeamRepository teamRepository;
     private final RuntimePathConfig runtimePathConfig;
     private final FolderAccessGuard folderAccessGuard;
+    private final ToolMetadataService toolMetadataService;
+    private final ApplicationProperties applicationProperties;
 
     @Override
     public boolean isMigrated(Path directory) {
@@ -136,6 +144,20 @@ public class WatchedFolderPipelineImport implements MigratedWatchedFolders {
             return false;
         }
 
+        List<String> batchOperations = batchOperations(steps);
+        if (!batchOperations.isEmpty() && !migrateBatchFolders()) {
+            // TODO(#7413): convert these too once a folder-watch policy can run one batch over
+            // every ready file instead of one run per file.
+            log.warn(
+                    "Watched folder {} feeds every ready file to {} in one call; a policy would run"
+                            + " it once per file instead, so the folder is left to the legacy"
+                            + " scanner. Set policies.migrateBatchWatchedFolders=true to convert it"
+                            + " anyway, accepting per-file runs.",
+                    directory,
+                    String.join(", ", batchOperations));
+            return false;
+        }
+
         // The sink checks this on every delivery; converting a folder it would refuse just swaps a
         // working legacy automation for a pipeline that fails every run.
         Path outputDirectory = converter.resolveOutputDirectory(config, directory);
@@ -153,31 +175,39 @@ public class WatchedFolderPipelineImport implements MigratedWatchedFolders {
 
         Source input = inputSourceFor(directory, teamId);
         Source destination = destinationSourceFor(config, directory, teamId);
-        Policy policy =
-                policyStore.save(
-                        new Policy(
-                                null,
-                                policyName(config, directory),
-                                // No acting principal: tool calls use the internal API user.
-                                // A fabricated name fails every run at API-key lookup.
-                                null,
-                                true,
-                                List.of(
-                                        new PipelineInput(
-                                                input.id(),
-                                                new TriggerConfig(FOLDER_WATCH_TRIGGER, Map.of()))),
-                                steps,
-                                OutputSpec.inline(),
-                                List.of(destination.id()),
-                                teamId,
-                                Policy.ORIGIN_MIGRATED));
 
-        // Must happen before the policy goes live, or the new input source hands the pipeline its
-        // own JSON as a document.
-        if (!archiveConfig(configFile.get())) {
-            policyStore.delete(policy.id());
+        // Archived before the policy exists, because a saved policy is live from the folder-watch
+        // reconcile's next sweep and the config left in place is a claimable input document.
+        Optional<Path> archived = archiveConfig(configFile.get());
+        if (archived.isEmpty()) {
             return false;
         }
+        Policy policy;
+        try {
+            policy =
+                    policyStore.save(
+                            new Policy(
+                                    null,
+                                    policyName(config, directory),
+                                    // No acting principal: tool calls use the internal API user.
+                                    // A fabricated name fails every run at API-key lookup.
+                                    null,
+                                    true,
+                                    List.of(
+                                            new PipelineInput(
+                                                    input.id(),
+                                                    new TriggerConfig(
+                                                            FOLDER_WATCH_TRIGGER, Map.of()))),
+                                    steps,
+                                    OutputSpec.inline(),
+                                    List.of(destination.id()),
+                                    teamId,
+                                    Policy.ORIGIN_MIGRATED));
+        } catch (RuntimeException e) {
+            restoreConfig(archived.get(), configFile.get());
+            throw e;
+        }
+
         importedPipelines.markImported(key);
         log.info(
                 "Converted watched folder {} into policy '{}' ({} step(s))",
@@ -246,29 +276,42 @@ public class WatchedFolderPipelineImport implements MigratedWatchedFolders {
     }
 
     /**
-     * Move the legacy config aside, keeping it for reference. Failure aborts the import: left in
-     * place the JSON would be fed to the pipeline as an input document.
+     * Move the legacy config aside, keeping it for reference, and return where it landed. Empty on
+     * failure, which aborts the import: left in place the JSON would be fed to the pipeline as an
+     * input document.
      */
-    private static boolean archiveConfig(Path configFile) {
+    private static Optional<Path> archiveConfig(Path configFile) {
         Path parent = configFile.getParent();
         if (parent == null) {
-            return false;
+            return Optional.empty();
         }
         try {
             Path archive = parent.resolve(ARCHIVE_DIR).resolve(ARCHIVE_SUBDIR);
             Files.createDirectories(archive);
-            Files.move(
-                    configFile,
-                    archive.resolve(configFile.getFileName()),
-                    StandardCopyOption.REPLACE_EXISTING);
-            return true;
+            Path archived = archive.resolve(configFile.getFileName());
+            Files.move(configFile, archived, StandardCopyOption.REPLACE_EXISTING);
+            return Optional.of(archived);
         } catch (IOException e) {
             log.warn(
                     "Could not archive legacy config {}; leaving the folder to the legacy scanner:"
                             + " {}",
                     configFile,
                     e.getMessage());
-            return false;
+            return Optional.empty();
+        }
+    }
+
+    /** Hand the folder back to the legacy scanner when the conversion did not complete. */
+    private static void restoreConfig(Path archived, Path configFile) {
+        try {
+            Files.move(archived, configFile, StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            log.error(
+                    "Could not restore legacy config {} from {}; the folder will no longer be"
+                            + " processed: {}",
+                    configFile,
+                    archived,
+                    e.getMessage());
         }
     }
 
@@ -321,9 +364,34 @@ public class WatchedFolderPipelineImport implements MigratedWatchedFolders {
         }
     }
 
-    /** Stable across boots, whatever the configured path looked like. */
+    /**
+     * Stable across boots, whatever the configured path looked like. Hashed because the path is
+     * unbounded and the marker is a primary key of {@link ImportedPipeline#MAX_KEY_LENGTH} chars;
+     * an overflowing key would fail the insert and leave the folder converted on every boot.
+     */
     private static String importKey(Path directory) {
-        return IMPORT_KEY_PREFIX + directory.toAbsolutePath().normalize();
+        String path = directory.toAbsolutePath().normalize().toString();
+        try {
+            byte[] digest =
+                    MessageDigest.getInstance("SHA-256")
+                            .digest(path.getBytes(StandardCharsets.UTF_8));
+            return IMPORT_KEY_PREFIX + HexFormat.of().formatHex(digest);
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 is required to track converted folders", e);
+        }
+    }
+
+    /** The operations that take every ready file in one call rather than one file per run. */
+    private List<String> batchOperations(List<PipelineStep> steps) {
+        return steps.stream()
+                .map(PipelineStep::operation)
+                .filter(toolMetadataService::isMultiInput)
+                .distinct()
+                .toList();
+    }
+
+    private boolean migrateBatchFolders() {
+        return applicationProperties.getPolicies().isMigrateBatchWatchedFolders();
     }
 
     private static String policyName(LegacyPipelineConfig config, Path directory) {
