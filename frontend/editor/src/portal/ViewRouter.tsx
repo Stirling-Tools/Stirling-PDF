@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { Home } from "@portal/views/Home";
 import { Documents } from "@portal/views/Documents";
+import { Review } from "@portal/views/Review";
 import { Pipelines } from "@portal/views/Pipelines";
 import { PipelineBuilder } from "@portal/views/PipelineBuilder";
 import { Sources } from "@portal/views/Sources";
@@ -73,6 +74,7 @@ export function ViewRouter() {
           path working, preserving its query (e.g. onboarding's ?setup=<category>). */}
       <Route path={rel(VIEW_PATHS.policies)} element={<PoliciesRedirect />} />
       <Route path={rel(VIEW_PATHS.documents)} element={<Documents />} />
+      <Route path={rel(VIEW_PATHS.review)} element={<Review />} />
       {/* Server administration and the docs browser are product-wide, so they
           left the processor. Their old URLs still resolve. */}
       <Route

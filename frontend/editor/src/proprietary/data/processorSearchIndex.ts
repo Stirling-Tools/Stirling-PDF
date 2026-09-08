@@ -1,4 +1,7 @@
-import { PORTAL_BASENAME } from "@app/routes/portalBasename";
+import {
+  PORTAL_BASENAME,
+  PORTAL_REVIEW_PATH,
+} from "@app/routes/portalBasename";
 import { DOCS_PATH } from "@app/routes/docsRoute";
 // A static leaf module (its portal import is type-only), so it doesn't pull
 // the lazy portal chunk into the main bundle the way @portal/* values would.
@@ -49,6 +52,13 @@ const VIEWS: ProcessorSearchEntry[] = [
     labelFallback: "Documents",
     path: `${PORTAL_BASENAME}/documents`,
     keywords: ["audit", "files"],
+  },
+  {
+    id: "review",
+    labelKey: "portal.nav.review",
+    labelFallback: "Review",
+    path: `${PORTAL_BASENAME}${PORTAL_REVIEW_PATH}`,
+    keywords: ["failures", "errors", "triage", "retry"],
   },
   {
     id: "integrations",

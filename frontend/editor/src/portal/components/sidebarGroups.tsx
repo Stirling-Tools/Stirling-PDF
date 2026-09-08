@@ -6,6 +6,7 @@ import {
   IntegrationsIcon,
   PipelinesIcon,
   DocumentsIcon,
+  ReviewIcon,
 } from "@portal/components/icons";
 
 export interface NavEntry {
@@ -34,6 +35,7 @@ export const GROUP_PROCESSOR: NavEntry[] = [
   { id: "sources", icon: <SourcesIcon /> },
   { id: "pipelines", icon: <PipelinesIcon /> },
   { id: "documents", icon: <DocumentsIcon /> },
+  { id: "review", icon: <ReviewIcon /> },
   { id: "integrations", icon: <IntegrationsIcon /> },
 ];
 
