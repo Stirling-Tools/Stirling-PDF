@@ -5,6 +5,7 @@ import userEvent from "@testing-library/user-event";
 import { MantineProvider } from "@mantine/core";
 import Compress from "@app/tools/Compress";
 import Convert from "@app/tools/Convert";
+import ScannerImageSplit from "@app/tools/ScannerImageSplit";
 import type { ConvertParameters } from "@app/hooks/tools/convert/useConvertParameters";
 import type { ToolAutomationSettingsProps } from "@app/hooks/tools/shared/toolOperationTypes";
 import {
@@ -71,6 +72,12 @@ vi.mock("react-i18next", () => ({
 vi.mock("@app/components/tools/compress/CompressSettings", () => ({
   default: () => null,
 }));
+vi.mock(
+  "@app/components/tools/scannerImageSplit/ScannerImageSplitSettings",
+  () => ({
+    default: () => null,
+  }),
+);
 vi.mock("@app/components/tools/convert/ConvertSettings", () => ({
   default: ({
     onParameterChange,
@@ -114,6 +121,20 @@ beforeEach(() => {
 });
 
 describe("tool file selection", () => {
+  test("Extract Image Scans selects an image and enables Run with no PDFs open", async () => {
+    workspace.files = workspace.files.slice(1);
+    workspace.fileStubs = workspace.fileStubs.slice(1);
+    render(
+      <MantineProvider>
+        <ScannerImageSplit />
+      </MantineProvider>,
+    );
+    expect(await screen.findByText("photo.png")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Extract Image Scans" }),
+    ).toBeEnabled();
+  });
+
   test("Compress shows only eligible files and follows protection and viewer changes", async () => {
     workspace.files.push(
       createTestStirlingFile("empty.pdf", "", "application/pdf"),

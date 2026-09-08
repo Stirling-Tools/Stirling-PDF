@@ -81,6 +81,14 @@ describe("tool file inputs", () => {
   it.each([
     ["/api/v1/misc/compress-pdf", "document.PDF", true],
     ["/api/v1/misc/compress-pdf", "photo.png", false],
+    ["/api/v1/misc/extract-image-scans", "document.PDF", true],
+    ["/api/v1/misc/extract-image-scans", "scan.png", true],
+    ["/api/v1/misc/extract-image-scans", "scan.JPEG", true],
+    ["/api/v1/misc/extract-image-scans", "scan.tiff", true],
+    ["/api/v1/misc/extract-image-scans", "scan.pgm", true],
+    ["/api/v1/misc/extract-image-scans", "drawing.svg", false],
+    ["/api/v1/misc/extract-image-scans", "drawing.psd", false],
+    ["/api/v1/misc/extract-image-scans", "document.docx", false],
     ["/api/v1/convert/svg/pdf", "drawing.svg", true],
     ["/api/v1/convert/svg/pdf", "photo.png", false],
     ["/api/v1/convert/html/pdf", "site.zip", true],
@@ -105,6 +113,9 @@ describe("tool file inputs", () => {
       processedFile: { pages: [], isEncrypted: true },
     };
     expect(toolAcceptsFile("/api/v1/misc/compress-pdf", file)).toBe(false);
+    expect(toolAcceptsFile("/api/v1/misc/extract-image-scans", file)).toBe(
+      false,
+    );
     expect(toolAcceptsFile("/api/v1/security/remove-password", file)).toBe(
       true,
     );
