@@ -1,5 +1,6 @@
 package stirling.software.proprietary.security.controller.api;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
@@ -24,12 +25,14 @@ import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.enumeration.Role;
 import stirling.software.proprietary.access.service.ResourceAccessService;
 import stirling.software.proprietary.access.service.TeamLeadLookup;
+import stirling.software.proprietary.audit.AuditContext;
 import stirling.software.proprietary.security.model.AuthenticationType;
 import stirling.software.proprietary.security.model.Authority;
 import stirling.software.proprietary.security.model.User;
@@ -180,6 +183,47 @@ class AuthControllerLoginTest {
                 .andExpect(jsonPath("$.user.username").value("user@example.com"));
 
         verify(loginAttemptService).loginSucceeded("user@example.com");
+    }
+
+    @Test
+    void failedLoginDoesNotClaimTheAttemptedUserAsTheAuditActor() throws Exception {
+        UsernameAndPassMfa payload = buildPayload(null);
+        User user = buildUser();
+        when(userDetailsService.loadUserByUsername("user@example.com")).thenReturn(user);
+        when(userService.isPasswordCorrect(user, "pw")).thenReturn(false);
+
+        MvcResult result =
+                mockMvc.perform(
+                                post("/api/v1/auth/login")
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(payload)))
+                        .andExpect(status().isUnauthorized())
+                        .andReturn();
+
+        assertThat(AuditContext.subject(result.getRequest())).isNull();
+        assertThat(AuditContext.attemptedSubject(result.getRequest()))
+                .isEqualTo("user@example.com");
+    }
+
+    @Test
+    void successfulLoginRecordsTheAuditActor() throws Exception {
+        UsernameAndPassMfa payload = buildPayload(null);
+        User user = buildUser();
+        when(userDetailsService.loadUserByUsername("user@example.com")).thenReturn(user);
+        when(userService.isPasswordCorrect(user, "pw")).thenReturn(true);
+        when(mfaService.isMfaEnabled(user)).thenReturn(false);
+        when(jwtService.generateToken(eq("user@example.com"), any(Map.class)))
+                .thenReturn("token-123");
+
+        MvcResult result =
+                mockMvc.perform(
+                                post("/api/v1/auth/login")
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(payload)))
+                        .andExpect(status().isOk())
+                        .andReturn();
+
+        assertThat(AuditContext.subject(result.getRequest())).isEqualTo("user@example.com");
     }
 
     @Test

@@ -290,18 +290,27 @@ public class PortalInfraAuditService {
         if (AuditEventType.USER_FAILED_LOGIN.name().equals(type)) {
             return "danger";
         }
-        String status = asString(data.get("status"));
         Integer code = asInteger(data.get("statusCode"));
-        if ("failure".equalsIgnoreCase(status) || (code != null && code >= 500)) {
+        if (code != null && code >= 500) {
             return "danger";
         }
         if (code != null && code >= 400) {
             return "warning";
         }
+        // "status" is what @Audited methods record, "outcome" what the generic controller aspect
+        // records; a row carrying either without a status code (a thrown exception) is still a
+        // failure.
+        if (isFailure(data.get("status")) || isFailure(data.get("outcome"))) {
+            return "danger";
+        }
         if ("config".equals(category)) {
             return "info";
         }
         return "success";
+    }
+
+    private static boolean isFailure(Object value) {
+        return value != null && "failure".equalsIgnoreCase(String.valueOf(value));
     }
 
     @SuppressWarnings("unchecked")

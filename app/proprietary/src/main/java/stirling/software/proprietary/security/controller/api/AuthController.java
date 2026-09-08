@@ -112,7 +112,7 @@ public class AuthController {
             }
 
             String username = request.getUsername().trim();
-            AuditContext.setSubject(httpRequest, username);
+            AuditContext.setAttemptedSubject(httpRequest, username);
             String ip = httpRequest.getRemoteAddr();
 
             // Check if account is blocked due to too many failed attempts
@@ -180,6 +180,8 @@ public class AuthController {
                                             "message", "Invalid two-factor code"));
                 }
             }
+
+            AuditContext.setSubject(httpRequest, username);
 
             Map<String, Object> claims = new HashMap<>();
             claims.put("authType", AuthenticationType.WEB.toString());
