@@ -23,6 +23,8 @@ export interface PipelineEditHeaderProps {
   /** "Enforce as policy" toggle, shown in the actions row. */
   required: boolean;
   onRequiredChange: (required: boolean) => void;
+  /** Whether this pipeline's source is the editor. */
+  runsOnEditor?: boolean;
   /**
    * Whether the user may edit pipelines and policies (a manager). When false everything here is
    * read-only - save, pause, delete, reprocess, rename and the enforce toggle.
@@ -71,6 +73,7 @@ export function PipelineEditHeader({
   onIconChange,
   required,
   onRequiredChange,
+  runsOnEditor = false,
   canManagePolicies = true,
   permissionsLoading = false,
   enabled,
@@ -180,12 +183,14 @@ export function PipelineEditHeader({
       </div>
 
       <div className="portal-pipeline-edit-header__actions">
-        <EnforceAsPolicyControl
-          required={required}
-          onRequiredChange={onRequiredChange}
-          disabled={!canManagePolicies}
-          permissionsLoading={permissionsLoading}
-        />
+        {runsOnEditor && (
+          <EnforceAsPolicyControl
+            required={required}
+            onRequiredChange={onRequiredChange}
+            disabled={!canManagePolicies}
+            permissionsLoading={permissionsLoading}
+          />
+        )}
 
         {/* Pause and Save both write the whole policy, so they are mutually exclusive: neither can
             start while the other is committing, or the two writes race and the loser's version wins. */}

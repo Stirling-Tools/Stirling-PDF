@@ -277,8 +277,8 @@ export function PipelineBuilder() {
   const [testRun, setTestRun] = useState<PolicyRunView | null>(null);
   const [testing, setTesting] = useState(false);
   const [outputIds, setOutputIds] = useState<string[]>([]);
-  // Org-mandated policy (see Policy.required). Admin sets it; members can't pause/delete a required
-  // pipeline, and it enforces on their documents when it runs on the editor.
+  // A policy (blocking on failure) vs an ordinary pipeline (see Policy.required). Only meaningful for
+  // an editor-sourced pipeline, so the toggle is shown only then and reset off otherwise (see save).
   const [required, setRequired] = useState(false);
   // First-class row icon (see Policy.icon), chosen from the picker in the header. Empty falls back to
   // the template category glyph in the list; a custom pipeline defaults to none until picked.
@@ -851,7 +851,9 @@ export function PipelineBuilder() {
         id: policyState.data?.id ?? seedDraft?.id ?? undefined,
         name: name.trim(),
         enabled: enabledOverride ?? enabled,
-        required,
+        // Blocking is only meaningful for an editor pipeline; a source-backed one is never a policy,
+        // so don't persist a stale flag if the source was switched away from the editor.
+        required: isEditorInput && required,
         icon,
         // The editor is virtual - there is no stored Source to pull from, and nothing server-side
         // sweeps it - so it is never a wire input; its participation is recorded on `editor` below.
@@ -1322,6 +1324,7 @@ export function PipelineBuilder() {
           onIconChange={setIcon}
           required={required}
           onRequiredChange={setRequired}
+          runsOnEditor={isEditorInput}
           canManagePolicies={canManagePolicies}
           permissionsLoading={permissionsLoading}
           enabled={enabled}
@@ -1346,6 +1349,7 @@ export function PipelineBuilder() {
           onIconChange={setIcon}
           required={required}
           onRequiredChange={setRequired}
+          runsOnEditor={isEditorInput}
           canManagePolicies={canManagePolicies}
           permissionsLoading={permissionsLoading}
           canSave={canSave}

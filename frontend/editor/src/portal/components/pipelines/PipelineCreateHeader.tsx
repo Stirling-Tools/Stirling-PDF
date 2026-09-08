@@ -15,7 +15,9 @@ export interface PipelineCreateHeaderProps {
   /** "Enforce as policy" toggle, shown in the actions row. */
   required: boolean;
   onRequiredChange: (required: boolean) => void;
-  /**Whether the user may create pipelines and policies. */
+  /** Whether this pipeline's source is the editor. */
+  runsOnEditor?: boolean;
+  /** Whether the user may create pipelines and policies. */
   canManagePolicies?: boolean;
   /**
    * The permission check is still loading. The enforce toggle stays locked, but the manager-only
@@ -47,6 +49,7 @@ export function PipelineCreateHeader({
   onIconChange,
   required,
   onRequiredChange,
+  runsOnEditor = false,
   canManagePolicies = true,
   permissionsLoading = false,
   canSave,
@@ -88,12 +91,14 @@ export function PipelineCreateHeader({
       />
 
       <div className="portal-pipeline-create-header__actions">
-        <EnforceAsPolicyControl
-          required={required}
-          onRequiredChange={onRequiredChange}
-          disabled={!canManagePolicies}
-          permissionsLoading={permissionsLoading}
-        />
+        {runsOnEditor && (
+          <EnforceAsPolicyControl
+            required={required}
+            onRequiredChange={onRequiredChange}
+            disabled={!canManagePolicies}
+            permissionsLoading={permissionsLoading}
+          />
+        )}
 
         {/* The pair share one tooltip target because a disabled button swallows its own hover - the
             wrapper is what the pointer lands on. */}
