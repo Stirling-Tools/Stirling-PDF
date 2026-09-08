@@ -202,6 +202,34 @@ class ProcessingFolderControllerTest {
     }
 
     @Test
+    void aForeignOutputFolderIdIsOverriddenWithTheOwnedSourceFolder() {
+        // A caller owns FOLDER_ID (their source) but tries to redirect output into someone else's
+        // folder via the request body. The storage sink only checks a supplied folderId exists,
+        // not that the caller owns it, so the output folderId must be forced to the owned source.
+        String foreign = "00000000-0000-0000-0000-0000000000ff";
+        var view =
+                controller
+                        .save(
+                                new ProcessingFolderController.SaveProcessingFolderRequest(
+                                        null,
+                                        FOLDER_ID.toString(),
+                                        null,
+                                        true,
+                                        List.of(
+                                                new PipelineStep(
+                                                        "/api/v1/misc/flatten",
+                                                        Map.of("flattenOnlyForms", false),
+                                                        Map.of())),
+                                        Map.of("mode", "new_file", "folderId", foreign)))
+                        .getBody();
+
+        Policy stored = policyStore.get(view.id()).orElseThrow();
+        assertThat(stored.output().options())
+                .containsEntry("folderId", FOLDER_ID.toString())
+                .doesNotContainValue(foreign);
+    }
+
+    @Test
     void aCreateOverAnExistingPlaceAdoptsItWithoutReconfiguring() {
         var first = controller.save(request(null, "new_version")).getBody();
         Policy before = policyStore.get(first.id()).orElseThrow();
