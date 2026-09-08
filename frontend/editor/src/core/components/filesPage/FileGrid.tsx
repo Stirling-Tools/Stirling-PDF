@@ -1002,7 +1002,7 @@ export function ProcessingMenuItems({
           disabled={disabled}
           title={disabled ? disabledHint : undefined}
         >
-          {t("filesPage.processing.start", "Process files in this folder…")}
+          {t("filesPage.processing.start", "Process files in this folder...")}
         </Menu.Item>
       </>
     );
@@ -1028,7 +1028,7 @@ export function ProcessingMenuItems({
             disabled={disabled}
             title={disabled ? disabledHint : undefined}
           >
-            {t("filesPage.processing.edit", "Edit processing…")}
+            {t("filesPage.processing.edit", "Edit processing...")}
           </Menu.Item>
         )}
         {onRevertAll && (
@@ -1069,7 +1069,7 @@ export function ProcessingMenuItems({
       </Menu.Item>
       {onEdit && (
         <Menu.Item leftSection={<TuneIcon fontSize="small" />} onClick={onEdit}>
-          {t("filesPage.processing.edit", "Edit processing…")}
+          {t("filesPage.processing.edit", "Edit processing...")}
         </Menu.Item>
       )}
       {onRevertAll && (
