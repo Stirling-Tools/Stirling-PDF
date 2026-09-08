@@ -31,7 +31,7 @@ final class TableFinder {
         List<TableBlock> ruled = RuledTables.find(lines, rules, page);
         List<TableBlock> word = fromWordGrid(lines, page);
         if (ruled.isEmpty()) {
-            return word;
+            return renderable(word);
         }
 
         // Where both detectors see the same table, keep the word-grid's rows (read from the text)
@@ -53,7 +53,7 @@ final class TableFinder {
                 // table is here. The word-grid's own reading of it stands, now rule-backed.
                 TableBlock evidence = null;
                 for (TableBlock r : ruled) {
-                    if (r.cols() == null && w.top() > r.bottom() && w.bottom() < r.top()) {
+                    if (r.cols() == null && covers(w, r)) {
                         evidence = r;
                         break;
                     }
@@ -98,14 +98,21 @@ final class TableFinder {
             if (usedRules.contains(r)) {
                 continue;
             }
-            boolean covered =
-                    all.stream().anyMatch(b -> b.top() > r.bottom() && b.bottom() < r.top());
+            boolean covered = all.stream().anyMatch(b -> covers(b, r));
             if (!covered) {
                 all.add(r);
             }
         }
         all.sort(Comparator.comparingDouble(TableBlock::top).reversed());
-        return all;
+        return renderable(all);
+    }
+
+    /**
+     * Drops blocks the grid guards reject. A block claims its lines out of the prose stream, so one
+     * that renders to nothing would delete them from the document rather than mis-format them.
+     */
+    static List<TableBlock> renderable(List<TableBlock> blocks) {
+        return blocks.stream().filter(b -> !b.cells().isEmpty()).toList();
     }
 
     /**
@@ -158,9 +165,16 @@ final class TableFinder {
             }
             float top = anchors.getFirst().y;
             float bottom = anchors.getLast().y;
+            float left = Float.MAX_VALUE;
+            float right = -Float.MAX_VALUE;
+            for (Line a : anchors) {
+                left = Math.min(left, a.left());
+                right = Math.max(right, a.right());
+            }
 
             // Each anchor seeds a row; absorb wrapped continuation lines (non-anchors within the
-            // run's vertical span, with a little slack below the last row) into the anchor above.
+            // run's vertical span, with a little slack below the last row, and inside its
+            // horizontal extent) into the anchor above.
             List<List<Line>> rows = new ArrayList<>();
             for (Line a : anchors) {
                 List<Line> row = new ArrayList<>();
@@ -169,6 +183,9 @@ final class TableFinder {
             }
             for (Line nc : nonCandidates) {
                 if (nc.y > top || nc.y < bottom - medianGap) {
+                    continue;
+                }
+                if (nc.left() < left - WRAP_SLACK || nc.right() > right + WRAP_SLACK) {
                     continue;
                 }
                 int owner = 0;
@@ -206,6 +223,13 @@ final class TableFinder {
         }
         return blocks;
     }
+
+    /**
+     * Points a wrapped cell line may sit outside the anchor rows' own horizontal extent. A
+     * continuation is written inside a cell, so anything reaching past this is another region of
+     * the page that merely shares the block's vertical band.
+     */
+    private static final float WRAP_SLACK = 12f;
 
     /** Vertical gaps, in median row gaps, within which a line above a block can be its header. */
     private static final float HEADER_GAP = 1.6f;
@@ -292,8 +316,39 @@ final class TableFinder {
         return false;
     }
 
-    /** True when two blocks overlap vertically, i.e. they describe the same table. */
+    /**
+     * True when two blocks overlap in both axes, i.e. they describe the same table. Vertical
+     * overlap alone would pair a table with one beside it, whose column geometry is foreign to it.
+     */
     static boolean covers(TableBlock a, TableBlock b) {
-        return Math.min(a.top(), b.top()) > Math.max(a.bottom(), b.bottom());
+        if (Math.min(a.top(), b.top()) <= Math.max(a.bottom(), b.bottom())) {
+            return false;
+        }
+        float[] ax = xExtent(a);
+        float[] bx = xExtent(b);
+        return Math.min(ax[1], bx[1]) > Math.max(ax[0], bx[0]);
+    }
+
+    /**
+     * A block's left and right edges: its drawn column bands where it has them, widened to the
+     * words it holds. A block with neither yields the whole line, so it never vetoes a pairing.
+     */
+    private static float[] xExtent(TableBlock b) {
+        float left = Float.MAX_VALUE;
+        float right = -Float.MAX_VALUE;
+        List<float[]> cols = b.cols();
+        if (cols != null && !cols.isEmpty()) {
+            left = cols.getFirst()[0];
+            right = cols.getLast()[1];
+        }
+        for (List<Line> row : b.rows()) {
+            for (Line l : row) {
+                left = Math.min(left, l.left());
+                right = Math.max(right, l.right());
+            }
+        }
+        return left <= right
+                ? new float[] {left, right}
+                : new float[] {-Float.MAX_VALUE, Float.MAX_VALUE};
     }
 }

@@ -216,6 +216,120 @@ class AdvancedPdfMarkdownConverterTest {
                 "a short isolated bold CJK line is still a heading");
     }
 
+    /** A word of {@code text} whose glyphs start at x, each {@code charWidth} wide. */
+    private static TextWord word(String text, float x, float y, float charWidth) {
+        List<TextChar> chars = new ArrayList<>(text.length());
+        for (int i = 0; i < text.length(); i++) {
+            chars.add(
+                    new TextChar(
+                            i,
+                            text.charAt(i),
+                            x + i * charWidth,
+                            y,
+                            charWidth,
+                            10f,
+                            "Helvetica",
+                            10f));
+        }
+        return new TextWord(chars, x, y, text.length() * charWidth, 10f);
+    }
+
+    private static Line line(float y, TextWord... words) {
+        float left = words[0].x();
+        float right = words[words.length - 1].x() + words[words.length - 1].width();
+        return new Line(new TextLine(List.of(words), left, y, right - left, 10f));
+    }
+
+    /** A whitespace-aligned two-column block on the left of the page, six rows deep. */
+    private static List<Line> leftWordGrid() {
+        List<Line> lines = new ArrayList<>();
+        for (int r = 0; r < 6; r++) {
+            float y = 700f - r * 14f;
+            lines.add(line(y, word("Alpha" + r, 50f, y, 6f), word("Beta" + r, 130f, y, 6f)));
+        }
+        return lines;
+    }
+
+    private static String renderAll(List<TableBlock> blocks) {
+        StringBuilder sb = new StringBuilder();
+        for (TableBlock b : blocks) {
+            sb.append(b.render());
+        }
+        return sb.toString();
+    }
+
+    /**
+     * A bordered table beside a whitespace-aligned one shares only its vertical band. Pairing them
+     * gave the word grid the border's column bands, which rejected it and deleted both.
+     */
+    @Test
+    void borderedTableBesideAWordGridDoesNotSwallowIt() {
+        List<Line> lines = leftWordGrid();
+        // Cells too close together to read as a word grid: the border is the only evidence here.
+        lines.add(line(700f, word("Foo", 360f, 700f, 6f), word("Baz", 392f, 700f, 6f)));
+        lines.add(line(670f, word("Qux", 360f, 670f, 6f), word("Zed", 392f, 670f, 6f)));
+
+        List<PageRules.Rule> horizontal =
+                List.of(
+                        new PageRules.Rule(712f, 350f, 424f),
+                        new PageRules.Rule(686f, 350f, 424f),
+                        new PageRules.Rule(660f, 350f, 424f));
+        List<PageRules.Rule> vertical =
+                List.of(
+                        new PageRules.Rule(350f, 660f, 712f),
+                        new PageRules.Rule(387f, 660f, 712f),
+                        new PageRules.Rule(424f, 660f, 712f));
+
+        List<TableBlock> blocks = TableFinder.find(lines, PageRules.of(horizontal, vertical), 1);
+        String rendered = renderAll(blocks);
+
+        assertTrue(rendered.contains("Alpha0"), "the word-grid table must survive: " + rendered);
+        assertTrue(rendered.contains("Foo"), "the bordered table must survive: " + rendered);
+        for (TableBlock b : blocks) {
+            assertFalse(b.render().isBlank(), "a block that renders to nothing keeps its lines");
+        }
+    }
+
+    /**
+     * A short line far to the right shares the table's vertical band and nothing else; absorbing it
+     * as a wrapped cell both corrupted the row and removed the line from the prose stream.
+     */
+    @Test
+    void distantLineIsNotAbsorbedAsAWrappedCell() {
+        List<Line> lines = leftWordGrid();
+        lines.add(line(680f, word("Foo", 360f, 680f, 6f)));
+        lines.add(line(650f, word("Bar", 460f, 650f, 6f)));
+
+        List<TableBlock> blocks = TableFinder.find(lines, PageRules.EMPTY, 1);
+        assertEquals(1, blocks.size(), "one word-grid table");
+        String rendered = blocks.get(0).render();
+        assertFalse(rendered.contains("Foo"), "a line 200pt away is not a cell: " + rendered);
+        assertFalse(rendered.contains("Bar"), "a line 300pt away is not a cell: " + rendered);
+        for (List<Line> row : blocks.get(0).rows()) {
+            assertEquals(1, row.size(), "each row is its own anchor line, with nothing absorbed");
+        }
+    }
+
+    /**
+     * The guards reject a grid whose columns leave only one band filled. Such a block must not be
+     * emitted at all: it claims its lines out of the prose stream and then renders nothing.
+     */
+    @Test
+    void blockRejectedByTheGridGuardsIsNotEmitted() {
+        List<List<Line>> rows = new ArrayList<>();
+        for (Line l : leftWordGrid()) {
+            rows.add(new ArrayList<>(List.of(l)));
+        }
+        // Both columns of words sit inside the second band, so only one band carries text.
+        List<float[]> cols = List.of(new float[] {0f, 10f}, new float[] {10f, 600f});
+        TableBlock blank = new TableBlock(rows, 700f, 630f, cols, true, RowSource.WORDS, 1);
+
+        assertTrue(blank.render().isBlank(), "the fixture must be a block that renders nothing");
+        assertTrue(
+                TableFinder.renderable(List.of(blank)).isEmpty(),
+                "a block that renders nothing must not claim its lines");
+    }
+
     /**
      * A crafted PDF can draw thousands of disjoint rules; partitioning used to cost O(N^2) retained
      * memory, so it must stay linear and bounded.

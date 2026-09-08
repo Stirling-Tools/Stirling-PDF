@@ -161,8 +161,9 @@ final class HeadingDetector {
         if (bold && isolated && hasWord(text)) {
             return "### ";
         }
-        // Some documents give a heading no size and no weight, only capitals. A short, isolated
-        // line set entirely in capitals is one of those.
+        // Some documents give a clause heading no size and no weight, only capitals. Capitals
+        // alone are not enough — a run of them is as often a banner, an address or a table label —
+        // so the section number carries the evidence the typography does not.
         if (isolated
                 && !endsLikeSentence(text)
                 && wordCount(text) >= 3

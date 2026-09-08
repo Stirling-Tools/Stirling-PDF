@@ -58,6 +58,18 @@ final class PageRules {
         return horizontal.isEmpty() && vertical.isEmpty();
     }
 
+    /**
+     * Rules given directly rather than read from a page, sorted as {@link #of(PdfPage)} leaves
+     * them: horizontals top-down, verticals left-to-right.
+     */
+    static PageRules of(List<Rule> horizontal, List<Rule> vertical) {
+        List<Rule> h = new ArrayList<>(horizontal);
+        List<Rule> v = new ArrayList<>(vertical);
+        h.sort(Comparator.comparingDouble(Rule::pos).reversed());
+        v.sort(Comparator.comparingDouble(Rule::pos));
+        return new PageRules(h, v);
+    }
+
     /** Reads the ruling lines of an already-open page. */
     static PageRules of(PdfPage page) throws IOException {
         List<Rule> h = new ArrayList<>();
