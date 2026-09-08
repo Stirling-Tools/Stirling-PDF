@@ -50,6 +50,7 @@ import stirling.software.common.service.JobOwnershipService;
 import stirling.software.common.service.ToolChainValidator;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
+import stirling.software.proprietary.access.security.ResourceAccessSecurity;
 import stirling.software.proprietary.audit.AuditContext;
 import stirling.software.proprietary.policy.asset.PolicyAssetCleaner;
 import stirling.software.proprietary.policy.asset.PolicyAssetResolver;
@@ -117,6 +118,7 @@ public class PolicyController {
     private final JobOwnershipService jobOwnershipService;
     // Shared job store: lets the run endpoints see runs that executed on other nodes.
     private final JobStore jobStore;
+    private final ResourceAccessSecurity resourceAccess;
 
     @PostMapping(value = "/run", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
@@ -274,6 +276,7 @@ public class PolicyController {
                     "Stores a policy (trigger config + steps + output + metadata). A blank id is"
                             + " assigned; returns the stored policy with its id.")
     public ResponseEntity<Policy> savePolicy(@RequestBody Policy policy) {
+        requirePortalAccessAllowed();
         Policy owned = withStoredOutputSecrets(resolveOwnership(policy));
         // Snapshot the previous version before saving so supporting files this edit dropped can
         // be cleaned up once nothing references them.
@@ -467,6 +470,17 @@ public class PolicyController {
         }
     }
 
+    private void requirePortalAccessAllowed() {
+        if (!applicationProperties.getSecurity().isEnableLogin()) {
+            return;
+        }
+        if (!resourceAccess.canUsePortal()) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Policies may only be managed by users with portal access");
+        }
+    }
+
     /**
      * Sweeping a policy's configured sources requires the same role as managing policies: the sweep
      * operates on the team's configured sources using the server's stored connection credentials,
@@ -563,6 +577,7 @@ public class PolicyController {
     @DeleteMapping("/{policyId}")
     @Operation(summary = "Delete a policy by id")
     public ResponseEntity<Void> deletePolicy(@PathVariable String policyId) {
+        requirePortalAccessAllowed();
         // Scope to the caller's team: a policy in another team reads as not-found.
         Policy policy = policyStore.get(policyId).filter(policyAccessGuard::canAccess).orElse(null);
         if (policy == null) {
@@ -592,6 +607,7 @@ public class PolicyController {
                             + " sweep reprocesses everything currently in its sources. Does not"
                             + " touch the files themselves.")
     public ResponseEntity<Void> clearProcessedHistory(@PathVariable String policyId) {
+        requirePortalAccessAllowed();
         // Scope to the caller's team: a policy in another team reads as not-found.
         Policy policy = policyStore.get(policyId).filter(policyAccessGuard::canAccess).orElse(null);
         if (policy == null) {

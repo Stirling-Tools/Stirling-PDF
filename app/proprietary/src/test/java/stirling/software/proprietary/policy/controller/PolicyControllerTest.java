@@ -41,6 +41,7 @@ import stirling.software.common.model.tool.ToolDiagnostic;
 import stirling.software.common.service.JobOwnershipService;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.TempFileRegistry;
+import stirling.software.proprietary.access.security.ResourceAccessSecurity;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 import stirling.software.proprietary.policy.engine.PolicyRunHandle;
@@ -95,6 +96,7 @@ class PolicyControllerTest {
             new TempFileManager(new TempFileRegistry(), new ApplicationProperties());
 
     @Mock private JobOwnershipService jobOwnershipService;
+    @Mock private ResourceAccessSecurity resourceAccess;
 
     private ApplicationProperties applicationProperties;
     private final JobStore jobStore = new InProcessJobStore();
@@ -129,7 +131,8 @@ class PolicyControllerTest {
                         applicationProperties,
                         tempFileManager,
                         jobOwnershipService,
-                        jobStore);
+                        jobStore,
+                        resourceAccess);
     }
 
     @Test
@@ -446,6 +449,7 @@ class PolicyControllerTest {
         @DisplayName("saves a new policy when editing is allowed")
         void savesNew() {
             applicationProperties.getSecurity().setEnableLogin(true);
+            when(resourceAccess.canUsePortal()).thenReturn(true);
             when(policyAccessGuard.ownerForNewPolicy()).thenReturn("alice");
             when(policyAccessGuard.teamForNewPolicy()).thenReturn(7L);
             Policy incoming = policy(null, null);
@@ -485,6 +489,7 @@ class PolicyControllerTest {
         @DisplayName("a non-manager may save an ordinary (non-required) pipeline")
         void allowsPipelineForNonManager() {
             applicationProperties.getSecurity().setEnableLogin(true);
+            when(resourceAccess.canUsePortal()).thenReturn(true);
             when(policyAccessGuard.ownerForNewPolicy()).thenReturn("bob");
             when(policyAccessGuard.teamForNewPolicy()).thenReturn(7L);
             when(policyStore.save(any())).thenAnswer(i -> i.getArgument(0));
@@ -498,9 +503,29 @@ class PolicyControllerTest {
         }
 
         @Test
+        @DisplayName("forbidden when a user without portal access saves any pipeline")
+        void forbidsSaveWithoutPortalAccess() {
+            applicationProperties.getSecurity().setEnableLogin(true);
+            when(resourceAccess.canUsePortal()).thenReturn(false);
+
+            // Even an ordinary (non-required) pipeline, which the manager gate would allow, is
+            // refused: authoring is a portal capability. The portal gate runs first, so the manager
+            // gate is never consulted.
+            assertThatThrownBy(() -> controller.savePolicy(policy(null, null)))
+                    .isInstanceOf(ResponseStatusException.class)
+                    .satisfies(
+                            e ->
+                                    assertThat(((ResponseStatusException) e).getStatusCode())
+                                            .isEqualTo(HttpStatus.FORBIDDEN));
+            verify(policyStore, never()).save(any());
+            verify(policyManagementAuthority, never()).canEditPolicies();
+        }
+
+        @Test
         @DisplayName("forbidden when a non-manager creates a required policy")
         void forbidsCreatingRequiredPolicy() {
             applicationProperties.getSecurity().setEnableLogin(true);
+            when(resourceAccess.canUsePortal()).thenReturn(true);
             when(policyManagementAuthority.canEditPolicies()).thenReturn(false);
 
             assertThatThrownBy(() -> controller.savePolicy(requiredPolicy(null, null)))
@@ -518,6 +543,7 @@ class PolicyControllerTest {
                 "the manager gate runs before validation, so a forbidden save never leaks a 400")
         void gatePrecedesValidation() {
             applicationProperties.getSecurity().setEnableLogin(true);
+            when(resourceAccess.canUsePortal()).thenReturn(true);
             when(policyManagementAuthority.canEditPolicies()).thenReturn(false);
             // A required policy that also references an unknown source: reaching the source and
             // validation checks would surface a 400. The 403 must win, so a non-manager can't
@@ -551,6 +577,7 @@ class PolicyControllerTest {
         @DisplayName("forbidden when a non-manager demotes an existing required policy")
         void forbidsModifyingExistingRequiredPolicy() {
             applicationProperties.getSecurity().setEnableLogin(true);
+            when(resourceAccess.canUsePortal()).thenReturn(true);
             when(policyManagementAuthority.canEditPolicies()).thenReturn(false);
             Policy existing = requiredPolicy("p1", 7L);
             when(policyStore.get("p1")).thenReturn(Optional.of(existing));
@@ -741,6 +768,7 @@ class PolicyControllerTest {
         @DisplayName("a non-manager may delete an ordinary (non-required) pipeline")
         void allowsDeletingPipelineForNonManager() {
             applicationProperties.getSecurity().setEnableLogin(true);
+            when(resourceAccess.canUsePortal()).thenReturn(true);
             Policy p = policy("a", 1L);
             when(policyStore.get("a")).thenReturn(Optional.of(p));
             when(policyAccessGuard.canAccess(p)).thenReturn(true);
@@ -757,6 +785,7 @@ class PolicyControllerTest {
         @DisplayName("forbidden when a non-manager deletes a required policy")
         void forbidsDeletingRequiredPolicy() {
             applicationProperties.getSecurity().setEnableLogin(true);
+            when(resourceAccess.canUsePortal()).thenReturn(true);
             when(policyManagementAuthority.canEditPolicies()).thenReturn(false);
             Policy p = requiredPolicy("a", 1L);
             when(policyStore.get("a")).thenReturn(Optional.of(p));
@@ -808,6 +837,7 @@ class PolicyControllerTest {
         @DisplayName("a non-manager may clear an ordinary (non-required) pipeline's history")
         void allowsClearingPipelineForNonManager() {
             applicationProperties.getSecurity().setEnableLogin(true);
+            when(resourceAccess.canUsePortal()).thenReturn(true);
             Policy p = policy("a", 1L);
             when(policyStore.get("a")).thenReturn(Optional.of(p));
             when(policyAccessGuard.canAccess(p)).thenReturn(true);
@@ -823,6 +853,7 @@ class PolicyControllerTest {
         @DisplayName("forbidden when a non-manager clears a required policy's history")
         void forbidsClearingRequiredPolicy() {
             applicationProperties.getSecurity().setEnableLogin(true);
+            when(resourceAccess.canUsePortal()).thenReturn(true);
             when(policyManagementAuthority.canEditPolicies()).thenReturn(false);
             Policy p = requiredPolicy("a", 1L);
             when(policyStore.get("a")).thenReturn(Optional.of(p));
