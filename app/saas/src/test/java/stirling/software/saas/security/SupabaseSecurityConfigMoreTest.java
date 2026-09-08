@@ -17,6 +17,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.env.Environment;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.mock.env.MockEnvironment;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -370,8 +371,14 @@ class SupabaseSecurityConfigMoreTest {
             return cfg.corsConfigurationSource();
         }
 
-        private CorsConfiguration resolve(CorsConfigurationSource source, String path) {
-            return source.getCorsConfiguration(new MockHttpServletRequest("GET", path));
+        /** An allow-listed origin: the SaaS frontend in dev, which is cross-origin to :8080. */
+        private static final String FIRST_PARTY = "http://localhost:5173";
+
+        private CorsConfiguration resolve(
+                CorsConfigurationSource source, String path, String origin) {
+            MockHttpServletRequest request = new MockHttpServletRequest("GET", path);
+            request.addHeader(HttpHeaders.ORIGIN, origin);
+            return source.getCorsConfiguration(request);
         }
 
         @ParameterizedTest
@@ -389,7 +396,7 @@ class SupabaseSecurityConfigMoreTest {
                 })
         @DisplayName("every apiClient.saas path is readable from any origin")
         void portalReadsAllowAnyOrigin(String path) {
-            CorsConfiguration cfg = resolve(source(true), path);
+            CorsConfiguration cfg = resolve(source(true), path, SELF_HOSTED);
 
             assertThat(cfg.checkOrigin(SELF_HOSTED)).isEqualTo("*");
             // The wildcard is only defensible without credentials. These must never both be set:
@@ -400,7 +407,7 @@ class SupabaseSecurityConfigMoreTest {
         @Test
         @DisplayName("PATCH is allowed; the cap endpoint needs it")
         void patchAllowed() {
-            CorsConfiguration cfg = resolve(source(true), "/api/v1/payg/cap");
+            CorsConfiguration cfg = resolve(source(true), "/api/v1/payg/cap", SELF_HOSTED);
 
             assertThat(cfg.checkHttpMethod(HttpMethod.PATCH)).isNotNull();
         }
@@ -423,16 +430,35 @@ class SupabaseSecurityConfigMoreTest {
                 })
         @DisplayName("every other path keeps the credentialed allow-list")
         void otherPathsUnchanged(String path) {
-            CorsConfiguration cfg = resolve(source(true), path);
+            CorsConfiguration cfg = resolve(source(true), path, SELF_HOSTED);
 
             assertThat(cfg.getAllowCredentials()).isTrue();
             assertThat(cfg.checkOrigin(SELF_HOSTED)).isNull();
         }
 
+        @ParameterizedTest
+        @ValueSource(
+                strings = {
+                    "/api/v1/payg/wallet",
+                    "/api/v1/payg/cap",
+                    "/api/v1/procurement/quote",
+                    "/api/v1/account-link/instances"
+                })
+        @DisplayName("an allow-listed origin keeps credentials on the very same paths")
+        void firstPartyKeepsCredentials(String path) {
+            CorsConfiguration cfg = resolve(source(true), path, FIRST_PARTY);
+
+            // The editor's axios client sends cookies and X-Browser-Id here. Handing it the
+            // credential-free wildcard is what broke `task staging:saas`.
+            assertThat(cfg.getAllowCredentials()).isTrue();
+            assertThat(cfg.checkOrigin(FIRST_PARTY)).isEqualTo(FIRST_PARTY);
+            assertThat(cfg.getAllowedHeaders()).contains("X-Browser-Id");
+        }
+
         @Test
         @DisplayName("no wildcard at all when account linking is off")
         void flagOffKeepsAllowList() {
-            CorsConfiguration cfg = resolve(source(false), "/api/v1/payg/wallet");
+            CorsConfiguration cfg = resolve(source(false), "/api/v1/payg/wallet", SELF_HOSTED);
 
             assertThat(cfg.getAllowCredentials()).isTrue();
             assertThat(cfg.checkOrigin(SELF_HOSTED)).isNull();
