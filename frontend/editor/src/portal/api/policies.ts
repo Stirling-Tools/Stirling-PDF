@@ -81,7 +81,7 @@ export interface PolicyConfigDef {
 export interface PolicyState {
   configured: boolean;
   status: PolicyStatus;
-  /** Org-mandated policy (see the pipeline `Policy.required`). */
+  /** A policy rather than an ordinary pipeline (see `Policy.required`). */
   required: boolean;
   name?: string;
   icon?: string;

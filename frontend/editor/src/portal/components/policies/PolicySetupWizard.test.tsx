@@ -268,7 +268,9 @@ describe("PolicySetupWizard", () => {
     expect(await screen.findByRole("button", { name: ENABLE })).toBeDisabled();
   });
 
-  it("adopts the required default when the permission check resolves after opening", async () => {
+  it("defaults a new template to a policy (blocking)", async () => {
+    // A template's failure should block the file, so a new one defaults to required, independent of
+    // who is creating it.
     const onSubmit = vi.fn().mockResolvedValue(undefined);
     const entry: CatalogueEntry = {
       category: security,
@@ -276,21 +278,9 @@ describe("PolicySetupWizard", () => {
       policy: null,
     };
 
-    // Opens before the permission GET resolves, so the manager reads as a non-manager for now.
-    const { rerender } = render(
+    render(
       <PolicySetupWizard
         entry={entry}
-        canManagePolicies={false}
-        onClose={vi.fn()}
-        onSubmit={onSubmit}
-        onCustomise={vi.fn()}
-      />,
-    );
-    // The check lands: they are a manager after all.
-    rerender(
-      <PolicySetupWizard
-        entry={entry}
-        canManagePolicies={true}
         onClose={vi.fn()}
         onSubmit={onSubmit}
         onCustomise={vi.fn()}
@@ -300,7 +290,6 @@ describe("PolicySetupWizard", () => {
 
     await waitFor(() => expect(onSubmit).toHaveBeenCalled());
     const result = onSubmit.mock.calls[0][1] as PolicySetupResult;
-    // The late-resolving permission promotes the new policy to required, not a silent pipeline.
     expect(result.required).toBe(true);
   });
 });

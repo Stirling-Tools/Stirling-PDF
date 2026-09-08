@@ -57,11 +57,7 @@ export interface Policy {
   name: string;
   owner?: string | null;
   enabled: boolean;
-  /**
-   * Org-mandated ("this is a policy your organisation requires"). First-class, independent of the
-   * trigger: a required pipeline can't be paused, disabled, or deleted by an ordinary member, and
-   * enforces on their documents when its trigger targets the editor. Admin-only to set.
-   */
+  /** Whether this is a policy (blocking) rather than an ordinary pipeline. */
   required?: boolean;
   /** Row icon key (see pipelineIcon); chosen in the builder. Empty falls back to the category glyph. */
   icon?: string;
@@ -97,7 +93,7 @@ export interface PipelineView {
   id: string;
   name: string;
   enabled: boolean;
-  /** Org-mandated policy (see {@link Policy.required}); surfaced as a "Required" badge in the list. */
+  /** Whether this is a policy - blocking on failure (see {@link Policy.required}); badged in the list. */
   required: boolean;
   /** Icon key for the list row (see pipelineIcon). Empty when none set; may be a category id. */
   icon: string;
@@ -202,14 +198,14 @@ export async function fetchTriggers(): Promise<TriggerInfo[]> {
 }
 
 /**
- * The caller's policy-management capability, mirroring the backend gate: whether they may create or
- * modify org-mandated (required) policies. Ordinary pipelines are editable by any team member.
+ * The caller's policy-management capability, mirroring the backend gate: whether they may create,
+ * edit, or delete pipelines and policies (a manager). Others view but can't change them.
  */
 export interface PolicyPermissions {
   canManagePolicies: boolean;
 }
 
-/** GET /api/v1/policies/permissions: whether the caller may manage required policies. */
+/** GET /api/v1/policies/permissions: whether the caller may create/edit/delete pipelines & policies. */
 export async function fetchPolicyPermissions(): Promise<PolicyPermissions> {
   return apiClient.local.json<PolicyPermissions>(
     "/api/v1/policies/permissions",

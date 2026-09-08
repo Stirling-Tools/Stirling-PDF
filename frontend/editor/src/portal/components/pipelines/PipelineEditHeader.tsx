@@ -24,9 +24,8 @@ export interface PipelineEditHeaderProps {
   required: boolean;
   onRequiredChange: (required: boolean) => void;
   /**
-   * Whether the user may manage required policies. When false, a required policy is read-only here
-   * (save/pause/delete/reprocess disabled) and the enforce toggle is locked; ordinary pipelines are
-   * unaffected.
+   * Whether the user may edit pipelines and policies (a manager). When false everything here is
+   * read-only - save, pause, delete, reprocess, rename and the enforce toggle.
    */
   canManagePolicies?: boolean;
   /**

@@ -6,7 +6,7 @@ export interface EnforceAsPolicyControlProps {
   /** Org-mandated policy (see Policy.required). */
   required: boolean;
   onRequiredChange: (required: boolean) => void;
-  /** Lock the toggle when the user can't manage required policies (a non-admin/-team-leader). */
+  /** Lock the toggle for a non-manager. */
   disabled?: boolean;
   /**
    * The permission check is still loading. The toggle stays locked, but the manager-only tooltip is

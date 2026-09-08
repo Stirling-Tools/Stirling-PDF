@@ -446,10 +446,9 @@ public class PolicyController {
 
     /**
      * Creating, editing, pausing, or deleting any pipeline or policy needs the manager role for the
-     * caller's team: an admin self-hosted, a team leader on SaaS (see {@link
-     * PolicyManagementAuthority}). A team member without that role may view and run the team's
-     * pipelines but not change them, so every mutation endpoint ({@link #savePolicy}, {@link
-     * #deletePolicy}, {@link #clearProcessedHistory}) calls this.
+     * caller's team (see {@link PolicyManagementAuthority}). A team member without it may view and
+     * run the team's pipelines but not change them, so every mutation endpoint ({@link
+     * #savePolicy}, {@link #deletePolicy}, {@link #clearProcessedHistory}) calls this.
      */
     private void requirePolicyEditingAllowed() {
         if (!policyEditingAllowed()) {
@@ -479,8 +478,7 @@ public class PolicyController {
     }
 
     /**
-     * Whether the caller may create/modify policies (a team leader, or any operator when login is
-     * off).
+     * Whether the caller may create/modify policies (a manager, or any operator when login off).
      */
     private boolean policyEditingAllowed() {
         return !applicationProperties.getSecurity().isEnableLogin()
@@ -529,9 +527,9 @@ public class PolicyController {
     @Operation(
             summary = "The caller's policy-management permissions",
             description =
-                    "Whether the caller may create or modify org-mandated (required) policies, so the"
-                            + " UI can gate the enforce-as-policy control and a required policy's"
-                            + " edit/pause/delete. Ordinary pipelines are open to any team member.")
+                    "Whether the caller may create, edit, or delete pipelines and policies, so the UI"
+                            + " can gate those controls; other team members may view but not change"
+                            + " them.")
     public PolicyPermissions permissions() {
         return new PolicyPermissions(policyEditingAllowed());
     }

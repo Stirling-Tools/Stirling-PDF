@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
 import { Banner, Button, Card, Modal, ToggleSwitch } from "@app/ui";
@@ -32,7 +32,7 @@ import "@portal/views/Policies.css";
 interface PolicySetupWizardProps {
   /** The category being configured, or null when closed. */
   entry: CatalogueEntry | null;
-  /** Whether the user may manage required policies; gates the enforce toggle and a policy's save. */
+  /** Whether the user may edit pipelines and policies (a manager); when false the wizard is read-only. */
   canManagePolicies?: boolean;
   /**
    * The permission check is still loading. The enforce toggle stays locked, but the manager-only
@@ -274,25 +274,9 @@ function PolicySetupWizardBody({
   );
   const [maxRetries] = useState(policy?.state.maxRetries ?? 0);
   const [retryDelayMinutes] = useState(policy?.state.retryDelayMinutes ?? 0);
-  // A suggested policy is org-required by nature, so a manager's new one defaults to required; a
-  // non-manager can't create a policy, so theirs defaults to an ordinary pipeline with the enforce
-  // toggle locked. Editing preserves whatever was saved.
-  const [required, setRequired] = useState(
-    policy?.state.required ?? canManagePolicies,
-  );
-  // The permission check can resolve after the wizard opens (e.g. an onboarding deep-link), so keep
-  // a new policy's enforce default tracking it until the user picks - otherwise a manager whose
-  // permissions land late saves a silently-downgraded pipeline instead of the required policy.
-  const requiredTouched = useRef(false);
-  useEffect(() => {
-    if (!isEdit && !requiredTouched.current) {
-      setRequired(canManagePolicies);
-    }
-  }, [isEdit, canManagePolicies]);
-  const changeRequired = (value: boolean) => {
-    requiredTouched.current = true;
-    setRequired(value);
-  };
+  // A template is a policy by nature - a failure should block the file, not wave it through - so a
+  // new one defaults to required (blocking). Editing preserves whatever was saved.
+  const [required, setRequired] = useState(policy?.state.required ?? true);
   const readOnly = !canManagePolicies;
 
   const [submitting, setSubmitting] = useState(false);
@@ -541,7 +525,7 @@ function PolicySetupWizardBody({
       <div className="portal-policies__wizard-enforce">
         <EnforceAsPolicyControl
           required={required}
-          onRequiredChange={changeRequired}
+          onRequiredChange={setRequired}
           disabled={!canManagePolicies}
           permissionsLoading={permissionsLoading}
         />

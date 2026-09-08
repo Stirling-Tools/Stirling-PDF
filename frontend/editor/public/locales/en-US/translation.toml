@@ -8580,7 +8580,7 @@ description = "Create your first pipeline: pick the sources it runs over, chain 
 title = "No pipelines yet"
 
 [portal.pipelines.enforce]
-desc = "Runs automatically; members can't turn it off"
+desc = "A policy blocks a file that fails it; an ordinary pipeline reports the error but lets the file through."
 info = "What enforcing as a policy means"
 label = "Enforce as policy"
 managerOnly = "Only an admin or team leader can enforce a pipeline as a policy"
