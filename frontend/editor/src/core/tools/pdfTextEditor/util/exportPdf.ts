@@ -1,7 +1,10 @@
 import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
 import { preserveShadings } from "@app/tools/pdfTextEditor/pdfdoc/passes/preserveShadings";
 import { PdfiumSave } from "@app/tools/pdfTextEditor/pdfium/PdfiumSave";
-import { assertIncrementalAppend } from "@app/tools/pdfTextEditor/util/savedBytes";
+import {
+  assertIncrementalAppend,
+  assertSavedPdf,
+} from "@app/tools/pdfTextEditor/util/savedBytes";
 
 /** Serialize the editor document to a Blob plus the download filename. */
 export async function exportToBlob(
@@ -41,6 +44,10 @@ export async function exportToBlob(
     }
   }
 
+  // Re-checked after the shading repair: `PdfiumSave.serialize` validated its
+  // own output, but `preserveShadings` may have swapped in a different buffer,
+  // and these are the bytes the workspace file is overwritten with.
+  assertSavedPdf(bytes);
   if (incremental) assertIncrementalAppend(bytes, doc.openedBytes);
 
   return { blob: pdfBlob(bytes), filename: exportName(sourceName) };

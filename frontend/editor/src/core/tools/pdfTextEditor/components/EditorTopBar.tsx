@@ -20,6 +20,7 @@ import {
 } from "@app/tools/pdfTextEditor/components/toolbar/toolbarShared";
 import { useEditorSession } from "@app/tools/pdfTextEditor/store/EditorSession";
 import { useElementWidth } from "@app/tools/pdfTextEditor/hooks/useElementWidth";
+import { useIsMobile } from "@app/hooks/useIsMobile";
 import { modShortcut } from "@app/utils/hotkeys";
 import "@app/tools/pdfTextEditor/components/EditorTopBar.css";
 
@@ -52,6 +53,11 @@ export function EditorTopBar({
   const barRef = useRef<HTMLDivElement | null>(null);
   const barWidth = useElementWidth(barRef);
   const compact = barWidth !== null && barWidth < COMPACT_BELOW_PX;
+  // Must stay in sync with EditorPanelActions' own switcher condition
+  // (`compact && openedFileName`, rendered only while a document is open):
+  // showing it in both places duplicates the filename and the dirty dot.
+  const switcherOwnedByPanel =
+    useIsMobile() && hasDocument && Boolean(session?.fileName);
 
   const addTextLabel = addTextArmed
     ? t("pdfTextEditor.sidebar.clickPageToAddText", "Click page to add text")
@@ -68,7 +74,7 @@ export function EditorTopBar({
       ref={barRef}
     >
       <div className="pdf-editor-topbar__lead">
-        {session?.fileName ? (
+        {switcherOwnedByPanel ? null : session?.fileName ? (
           <EditorFileSwitcher
             currentFileId={session.fileId}
             currentFileName={session.fileName}

@@ -101,3 +101,75 @@ describe("EditorStore recovery from a failed apply", () => {
     expect(store.getState().dirty).toBe(false);
   });
 });
+
+describe("EditorStore recovery from a failed undo/redo", () => {
+  function rollingBackComposite(): CompositeCommand {
+    return new CompositeCommand([
+      makeCmd(),
+      makeCmd({
+        revert: () => {
+          throw new Error("revert child failed");
+        },
+      }),
+    ]);
+  }
+
+  it("keeps the step undoable when its revert rolled itself back", async () => {
+    const store = await makeStore();
+    const cmd = rollingBackComposite();
+    store.dispatch(cmd);
+    store.undo();
+    expect(store.history.canUndo).toBe(true);
+    expect(store.history.peekUndo()).toBe(cmd);
+    expect(store.history.canRedo).toBe(false);
+  });
+
+  it("still reports the document dirty after a rolled-back undo", async () => {
+    const store = await makeStore();
+    store.dispatch(rollingBackComposite());
+    store.undo();
+    expect(store.getState().dirty).toBe(true);
+    expect(store.getState().error).toBe("revert child failed");
+  });
+
+  it("keeps the step redoable when its re-apply rolled itself back", async () => {
+    const store = await makeStore();
+    const first = makeCmd();
+    let applies = 0;
+    const cmd = new CompositeCommand([
+      first,
+      makeCmd({
+        apply: () => {
+          applies += 1;
+          if (applies > 1) throw new Error("re-apply child failed");
+        },
+      }),
+    ]);
+    store.dispatch(cmd);
+    store.undo();
+    expect(store.history.canRedo).toBe(true);
+
+    store.redo();
+
+    expect(store.history.size()).toEqual({ undo: 0, redo: 1 });
+    expect(store.history.canRedo).toBe(true);
+    expect(store.history.canUndo).toBe(false);
+    expect(store.getState().error).toBe("re-apply child failed");
+    expect(first.revert).toHaveBeenCalledTimes(2); // the undo, then the rollback
+  });
+
+  it("throws the history away when a failed undo did not roll back", async () => {
+    const store = await makeStore();
+    store.dispatch(
+      makeCmd({
+        revert: () => {
+          throw new Error("half reverted");
+        },
+      }),
+    );
+    store.undo();
+    expect(store.history.canUndo).toBe(false);
+    expect(store.history.canRedo).toBe(false);
+    expect(store.getState().dirty).toBe(true);
+  });
+});

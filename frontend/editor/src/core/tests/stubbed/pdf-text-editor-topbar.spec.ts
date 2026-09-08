@@ -131,6 +131,52 @@ test.describe("PDF text editor - top bar", () => {
     await expect(page.getByTestId("pdf-editor-help-panel")).toBeVisible();
   });
 
+  test("the panel owns the file switcher outright at phone width", async ({
+    page,
+  }) => {
+    test.setTimeout(120_000);
+    await page.setViewportSize({ width: 480, height: 900 });
+    await openEditor(page);
+
+    const panel = page.getByTestId("pdf-editor-panel-actions");
+    await expect(panel).toBeVisible({ timeout: 15_000 });
+    await expect(
+      panel.locator('[data-testid="pdf-editor-filename"]'),
+    ).toBeVisible();
+    for (const id of ["pdf-editor-filename", "pdf-editor-dirty-dot"]) {
+      expect(
+        await page
+          .getByTestId("pdf-editor-toolbar")
+          .locator(`[data-testid="${id}"]`)
+          .count(),
+        `${id} must not also be in the top bar`,
+      ).toBe(0);
+    }
+
+    await page.evaluate(() => {
+      const el = document.querySelector<HTMLElement>(
+        '[data-testid^="pdf-editor-run-"]',
+      );
+      if (!el) throw new Error("no run overlay in the DOM");
+      el.focus();
+      const selection = window.getSelection();
+      if (!selection) throw new Error("no Selection api");
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      range.collapse(false);
+      selection.removeAllRanges();
+      selection.addRange(range);
+      document.execCommand("insertText", false, "X");
+    });
+
+    // Strict mode: the unsaved-guard and signed-save specs both resolve this
+    // testid as a single element.
+    await expect(page.getByTestId("pdf-editor-dirty-dot")).toBeVisible({
+      timeout: 15_000,
+    });
+    expect(await page.getByTestId("pdf-editor-filename").count()).toBe(1);
+  });
+
   test("a narrow bar folds insert, find and help into one menu", async ({
     page,
   }) => {

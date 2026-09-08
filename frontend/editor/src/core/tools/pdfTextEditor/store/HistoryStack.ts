@@ -107,10 +107,15 @@ export class HistoryStack {
     try {
       cmd.revert(doc);
     } catch (err) {
-      // The command is already popped and the document is in an unknown
+      const failure = new HistoryStepError("revert", err);
+      // A rolled-back revert left the document exactly as it was, so the step
+      // is still applied and still the next thing to undo. Leaving it popped
+      // would strand a real edit outside history and report the document clean.
+      // A revert that did NOT roll back leaves the document in an unknown
       // state, so the caller has to rebuild rather than keep undoing.
+      if (failure.documentIntact) this.undoStack.push(cmd);
       this.lastCoalesceKey = null;
-      throw new HistoryStepError("revert", err);
+      throw failure;
     }
     this.redoStack.push(cmd);
     // End the coalescing burst - a later edit starts a fresh undo step.
@@ -124,8 +129,10 @@ export class HistoryStack {
     try {
       cmd.apply(doc);
     } catch (err) {
+      const failure = new HistoryStepError("apply", err);
+      if (failure.documentIntact) this.redoStack.push(cmd);
       this.lastCoalesceKey = null;
-      throw new HistoryStepError("apply", err);
+      throw failure;
     }
     this.undoStack.push(cmd);
     this.lastCoalesceKey = null;
