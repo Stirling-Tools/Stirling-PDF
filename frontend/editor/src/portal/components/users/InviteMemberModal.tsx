@@ -182,15 +182,17 @@ export function InviteMemberModal({
   const needsPassword = mode === "direct" && authType === "WEB";
   const passwordValid = !needsPassword || password.length >= 8;
 
+  const expiryError =
+    touched && mode === "link" && !expiryValid
+      ? t("users.invite.expiryError", "Expiry must be between 1 and 8760 hours")
+      : undefined;
+
   const error =
     (touched && mode === "email" && !emailValid
       ? t("users.invite.emailError", "Enter a valid email address")
       : undefined) ??
     (touched && mode === "link" && !linkEmailValid
       ? t("users.invite.emailError", "Enter a valid email address")
-      : undefined) ??
-    (touched && mode === "link" && !expiryValid
-      ? t("users.invite.expiryError", "Expiry must be between 1 and 8760 hours")
       : undefined) ??
     (touched && mode === "direct" && !usernameValid
       ? t(
@@ -282,7 +284,7 @@ export function InviteMemberModal({
         // The link is the deliverable: keep the modal open so it can be copied.
         onInvited?.();
         if (generated.emailSent === false) {
-          onNotice?.(
+          setSubmitError(
             t(
               "users.invite.linkEmailFailed",
               "The link was created but could not be emailed: {{reason}}. Copy it and send it yourself.",
@@ -493,12 +495,16 @@ export function InviteMemberModal({
                 onBlur={() => setTouched(true)}
               />
             </FormField>
-            <FormField label={t("users.invite.expiry", "Expires in (hours)")}>
+            <FormField
+              label={t("users.invite.expiry", "Expires in (hours)")}
+              error={expiryError}
+            >
               <Input
                 type="number"
                 min={1}
                 max={8760}
                 value={expiryHours}
+                invalid={!!expiryError}
                 onChange={(e) => setExpiryHours(e.target.value)}
                 onBlur={() => setTouched(true)}
               />
@@ -614,7 +620,7 @@ export function InviteMemberModal({
           </div>
         )}
 
-        {!link && (
+        {!link && mode !== "link" && (
           <div className="portal-users__invite-access">
             <span className="portal-users__invite-access-label">
               {t("users.invite.access", "Access")}
