@@ -55,10 +55,15 @@ public class PolicyAccessGuard {
         return Objects.equals(policy.teamId(), policyManagementAuthority.currentUserTeamId());
     }
 
-    /** Owner match for personal records; a legacy row with no stamped owner is anyone's. */
+    /**
+     * Owner match for personal records. A row with no stamped owner is nobody's under enforcement
+     * (fail closed): the previous "null owner is anyone's" made a legacy or mis-stamped processing
+     * folder reachable by any authenticated user, cross-account, since this surface is not
+     * team-scoped. Real processing folders always carry an owner (stamped at creation).
+     */
     private boolean ownedByCurrentUser(Policy policy) {
-        return policy.owner() == null
-                || Objects.equals(policy.owner(), userService.getCurrentUsername());
+        return policy.owner() != null
+                && Objects.equals(policy.owner(), userService.getCurrentUsername());
     }
 
     /**
