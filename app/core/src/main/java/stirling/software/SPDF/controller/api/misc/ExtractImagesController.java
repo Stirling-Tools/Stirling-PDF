@@ -14,7 +14,9 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.HexFormat;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
@@ -64,6 +66,22 @@ import stirling.software.common.util.WebResponseUtils;
 public class ExtractImagesController {
 
     private static final int MAX_KEY_DEPTH = 32;
+    private static final int MAX_KEY_NODES = 4096;
+
+    private static final Set<COSName> DECODE_RELEVANT_IMAGE_KEYS =
+            Set.of(
+                    COSName.BITS_PER_COMPONENT,
+                    COSName.COLORSPACE,
+                    COSName.DECODE,
+                    COSName.DECODE_PARMS,
+                    COSName.FILTER,
+                    COSName.HEIGHT,
+                    COSName.IMAGE_MASK,
+                    COSName.MASK,
+                    COSName.MATTE,
+                    COSName.SMASK,
+                    COSName.SMASK_IN_DATA,
+                    COSName.WIDTH);
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
@@ -85,7 +103,7 @@ public class ExtractImagesController {
         String imageFormat = request.getFormat();
 
         String baseFilename = GeneralUtils.removeExtension(file.getOriginalFilename());
-        Set<String> processedImageKeys = new HashSet<>();
+        ImageFingerprints fingerprints = new ImageFingerprints();
 
         TempFile zipFile = new TempFile(tempFileManager, ".zip");
         try (ZipOutputStream zipStream =
@@ -102,7 +120,7 @@ public class ExtractImagesController {
                         imageFormat,
                         baseFilename,
                         pageIndex + 1,
-                        processedImageKeys,
+                        fingerprints,
                         zipStream);
             }
         } catch (Exception e) {
@@ -119,7 +137,7 @@ public class ExtractImagesController {
             String imageFormat,
             String baseFilename,
             int pageNumber,
-            Set<String> seenImageKeys,
+            ImageFingerprints fingerprints,
             ZipOutputStream zipOutput)
             throws IOException {
         if (page.getResources() == null || page.getResources().getXObjectNames() == null) {
@@ -136,8 +154,7 @@ public class ExtractImagesController {
                 PDImageXObject imageObject =
                         (PDImageXObject) page.getResources().getXObject(resourceName);
 
-                String imageKey = imageContentKey(imageObject);
-                if (imageKey != null && !seenImageKeys.add(imageKey)) {
+                if (!fingerprints.isFirstOccurrence(imageObject)) {
                     continue;
                 }
 
@@ -170,46 +187,100 @@ public class ExtractImagesController {
     }
 
     /**
-     * Content fingerprint identifying one embedded image, used to extract a repeated image only
-     * once. Folds in the encoded stream and every dictionary entry that decoding depends on -
-     * filters, colour space, decode array and masks - with indirect references resolved, so two
-     * copies of the same image match while two images that merely share encoded bytes do not.
-     *
-     * @return null when the image cannot be fingerprinted, meaning it must be extracted rather than
-     *     treated as a duplicate
+     * Per-document dedup state. A fingerprint is memoised against the image's COS object, so an
+     * XObject drawn on every page is digested once for the document rather than once per page, and
+     * an image that cannot be fingerprinted falls back to a key unique to that COS object, so it
+     * deduplicates against itself without ever colliding with another image.
      */
-    private static String imageContentKey(PDImageXObject image) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            digestValue(digest, image.getCOSObject(), new HashSet<>(), 0);
-            if (!image.isStencil()) {
-                digestValue(digest, image.getColorSpace().getCOSObject(), new HashSet<>(), 0);
+    static final class ImageFingerprints {
+
+        private final Map<COSBase, String> keysByImage = new IdentityHashMap<>();
+        private final Set<String> extracted = new HashSet<>();
+        private int unfingerprintableImages;
+        private boolean failureLogged;
+
+        boolean isFirstOccurrence(PDImageXObject image) {
+            return extracted.add(keyFor(image));
+        }
+
+        String keyFor(PDImageXObject image) {
+            COSBase imageCos = image.getCOSObject();
+            String key = keysByImage.get(imageCos);
+            if (key == null) {
+                key = fingerprint(image);
+                keysByImage.put(imageCos, key);
             }
-            return HexFormat.of().formatHex(digest.digest());
-        } catch (IOException | NoSuchAlgorithmException | RuntimeException e) {
-            log.warn("Could not fingerprint embedded image, extracting it without dedup", e);
-            return null;
+            return key;
+        }
+
+        private String fingerprint(PDImageXObject image) {
+            try {
+                return imageContentKey(image);
+            } catch (IOException | NoSuchAlgorithmException | RuntimeException e) {
+                if (!failureLogged) {
+                    failureLogged = true;
+                    log.warn("Could not fingerprint embedded image, deduplicating by identity", e);
+                }
+                return "identity:" + unfingerprintableImages++;
+            }
         }
     }
 
-    private static void digestValue(MessageDigest digest, COSBase value, Set<Long> path, int depth)
+    /**
+     * Content fingerprint identifying one embedded image, used to extract a repeated image only
+     * once. Folds in the encoded stream and the image dictionary entries decoding depends on -
+     * filters, colour space, decode array and masks - with indirect references resolved, so two
+     * copies of the same image match while two images that merely share encoded bytes do not.
+     * Entries that leave the decoded pixels unchanged, such as metadata and optional content, are
+     * ignored so they cannot defeat the dedup.
+     *
+     * @throws IOException when a stream cannot be read, or the object graph exceeds the walk's node
+     *     budget; the caller must fall back rather than treat the image as unique
+     */
+    private static String imageContentKey(PDImageXObject image)
+            throws IOException, NoSuchAlgorithmException {
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        KeyWalk walk = new KeyWalk();
+        digestValue(digest, image.getCOSObject(), walk, 0);
+        if (!image.isStencil()) {
+            digestValue(digest, image.getColorSpace().getCOSObject(), walk, 0);
+        }
+        return HexFormat.of().formatHex(digest.digest());
+    }
+
+    /**
+     * Bounds one fingerprint walk. An indirect object is expanded at most once per walk and the
+     * whole walk is capped at {@code MAX_KEY_NODES} nodes, so a shared sub-graph cannot be
+     * re-walked once per incoming edge and a crafted graph cannot fan out exponentially within the
+     * depth cap.
+     */
+    private static final class KeyWalk {
+
+        private final Set<Long> expanded = new HashSet<>();
+        private int remainingNodes = MAX_KEY_NODES;
+
+        private void enterNode() throws IOException {
+            if (--remainingNodes < 0) {
+                throw new IOException(
+                        "image object graph exceeds " + MAX_KEY_NODES + " fingerprint nodes");
+            }
+        }
+    }
+
+    private static void digestValue(MessageDigest digest, COSBase value, KeyWalk walk, int depth)
             throws IOException {
         if (value == null || depth > MAX_KEY_DEPTH) {
             digest.update((byte) 'x');
             return;
         }
+        walk.enterNode();
         switch (value) {
             case COSObject reference -> {
-                long number = reference.getObjectNumber();
-                if (!path.add(number)) {
+                if (!walk.expanded.add(reference.getObjectNumber())) {
                     digest.update((byte) 'c');
                     return;
                 }
-                try {
-                    digestValue(digest, reference.getObject(), path, depth + 1);
-                } finally {
-                    path.remove(number);
-                }
+                digestValue(digest, reference.getObject(), walk, depth + 1);
             }
             case COSStream stream -> {
                 digest.update((byte) 's');
@@ -219,16 +290,16 @@ public class ExtractImagesController {
                         digest.update(buffer, 0, read);
                     }
                 }
-                digestDictionary(digest, stream, path, depth);
+                digestDictionary(digest, stream, walk, depth);
             }
             case COSDictionary dictionary -> {
                 digest.update((byte) 'd');
-                digestDictionary(digest, dictionary, path, depth);
+                digestDictionary(digest, dictionary, walk, depth);
             }
             case COSArray array -> {
                 digest.update((byte) 'a');
                 for (int i = 0; i < array.size(); i++) {
-                    digestValue(digest, array.get(i), path, depth + 1);
+                    digestValue(digest, array.get(i), walk, depth + 1);
                 }
             }
             case COSString text -> {
@@ -247,16 +318,20 @@ public class ExtractImagesController {
     }
 
     private static void digestDictionary(
-            MessageDigest digest, COSDictionary dictionary, Set<Long> path, int depth)
+            MessageDigest digest, COSDictionary dictionary, KeyWalk walk, int depth)
             throws IOException {
+        boolean imageDictionary = COSName.IMAGE.equals(dictionary.getCOSName(COSName.SUBTYPE));
         List<COSName> keys = new ArrayList<>(dictionary.keySet());
         keys.sort(Comparator.comparing(COSName::getName));
         for (COSName key : keys) {
             if (COSName.LENGTH.equals(key)) {
                 continue;
             }
+            if (imageDictionary && !DECODE_RELEVANT_IMAGE_KEYS.contains(key)) {
+                continue;
+            }
             digest.update(key.getName().getBytes(StandardCharsets.UTF_8));
-            digestValue(digest, dictionary.getItem(key), path, depth + 1);
+            digestValue(digest, dictionary.getItem(key), walk, depth + 1);
         }
     }
 
