@@ -38,12 +38,11 @@ export interface WalletActivityRow {
  */
 export interface TeamHolding {
   /**
-   * The team pays for user capacity. Always false on cloud for now: Team is sold as a self-hosted
-   * licence and no cloud billing row records a holding, so read this as "offer Team", not
-   * "capacity unknown".
+   * The team pays for user capacity. False means no Team plan, so a caller offers it, rather than
+   * meaning capacity is unknown.
    */
   held: boolean;
-  /** Users the holding covers; null when the team has no limit, which is every cloud team today. */
+  /** Users the holding covers; null when the team has no user limit. */
   licensedUsers: number | null;
   /** Members occupying capacity right now — the capacity meter's numerator. */
   usersInUse: number;
