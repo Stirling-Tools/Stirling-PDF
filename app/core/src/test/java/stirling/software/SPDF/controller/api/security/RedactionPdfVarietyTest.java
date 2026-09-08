@@ -258,21 +258,19 @@ class RedactionPdfVarietyTest {
     }
 
     @Test
-    @DisplayName("target inside a Form XObject: native engine misses it, request fails closed")
-    void formXObjectTextFailsClosed() throws IOException {
-        // The native engine does not descend into form XObjects, so the target survives the
-        // redaction; without verification this endpoint would return a 200 and a leak.
-        byte[] input = formXObjectPdf();
-        factoryReturns(input);
-        RedactPdfRequest request = baseRequest(input, "SECRET");
-        assertThatThrownBy(() -> controller.redactPdf(request))
-                .isInstanceOf(RedactionVerificationFailedException.class);
+    @DisplayName("target inside a Form XObject is removed, the rest of the form survives")
+    void formXObjectTextRedacted() throws IOException {
+        // The engine descends into form XObject streams, so the target goes and verification
+        // finds nothing left to fail on.
+        byte[] out = autoRedact(formXObjectPdf(), "SECRET");
+        assertGone(out, "SECRET");
+        assertThat(pdfText(out)).contains("xobj payload");
     }
 
     @Test
     @DisplayName("verification failure message carries an ordinal, never the target text")
     void verificationFailureDoesNotEchoTarget() throws IOException {
-        byte[] input = formXObjectPdf();
+        byte[] input = type0NoToUnicodePdf("alpha SECRET omega");
         factoryReturns(input);
         RedactPdfRequest request = baseRequest(input, "SECRET");
         assertThatThrownBy(() -> controller.redactPdf(request))

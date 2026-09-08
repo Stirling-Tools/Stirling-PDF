@@ -360,8 +360,6 @@ public final class CatalogScrubber {
         catalog.setMetadata(null);
     }
 
-    // Outline
-
     private static void scrubOutline(PDDocumentOutline outline, CompiledTargets ct) {
         if (outline == null) {
             return;
@@ -399,8 +397,6 @@ public final class CatalogScrubber {
             }
         }
     }
-
-    // AcroForm
 
     private static void scrubAcroForm(PDAcroForm form, CompiledTargets ct) {
         if (form == null) {
@@ -597,8 +593,6 @@ public final class CatalogScrubber {
         }
     }
 
-    // Annotations
-
     private static void scrubAnnotations(PDDocument document, CompiledTargets ct) {
         try {
             for (PDPage page : document.getPages()) {
@@ -651,8 +645,6 @@ public final class CatalogScrubber {
             log.debug("Failed to scrub annotation: {}", e.getMessage());
         }
     }
-
-    // Structure tree
 
     private static void scrubStructTree(PDStructureTreeRoot root, CompiledTargets ct) {
         if (root == null) {
@@ -762,8 +754,6 @@ public final class CatalogScrubber {
             }
         }
     }
-
-    // Helpers
 
     private static void scrubDictStrings(COSDictionary dict, COSName key, CompiledTargets ct) {
         if (dict == null || key == null) {

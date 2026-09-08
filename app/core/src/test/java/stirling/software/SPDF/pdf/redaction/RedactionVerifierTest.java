@@ -205,8 +205,6 @@ class RedactionVerifierTest {
         }
     }
 
-    // Helpers
-
     private static byte[] helveticaPdf(String line) throws Exception {
         try (PDDocument doc = new PDDocument()) {
             PDPage page = new PDPage(PDRectangle.A4);

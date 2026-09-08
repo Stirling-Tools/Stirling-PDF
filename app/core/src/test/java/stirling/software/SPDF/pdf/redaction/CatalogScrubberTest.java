@@ -324,8 +324,6 @@ class CatalogScrubberTest {
         }
     }
 
-    // Helpers
-
     private static byte[] withEmbeddedFile(String name, String content) throws Exception {
         return withEmbeddedFile(name, content, targets("Smith"));
     }
