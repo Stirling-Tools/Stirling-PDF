@@ -473,5 +473,24 @@ class UserControllerMoreTest {
 
             verify(userService).saveUserCore(any());
         }
+
+        @Test
+        @DisplayName("refuses an address the account writer would reject")
+        void rejectsAddressThatCannotBecomeAUsername() throws Exception {
+            applicationProperties.getMail().setEnableInvites(true);
+
+            mockMvc.perform(
+                            post("/api/v1/user/admin/inviteUsers")
+                                    .principal(auth("admin"))
+                                    .param("emails", "o'brien@example.com"))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.failureCount").value(1))
+                    .andExpect(jsonPath("$.successCount").value(0))
+                    .andExpect(
+                            jsonPath("$.errors")
+                                    .value("o'brien@example.com: Invalid email format; "));
+
+            verify(userService, never()).saveUserCore(any());
+        }
     }
 }

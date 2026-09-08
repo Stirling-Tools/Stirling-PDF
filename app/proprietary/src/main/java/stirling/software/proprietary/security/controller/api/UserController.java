@@ -889,7 +889,7 @@ public class UserController {
     private InviteResult processEmailInvite(
             String email, Long teamId, String role, String loginUrl) {
         try {
-            if (!EmailAddresses.isValid(email)) {
+            if (!EmailAddresses.isValidAccountAddress(email)) {
                 return InviteResult.failure(email + ": Invalid email format");
             }
 

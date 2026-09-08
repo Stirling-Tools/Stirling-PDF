@@ -6,7 +6,6 @@ import static stirling.software.proprietary.security.service.MfaService.MFA_REQU
 import static stirling.software.proprietary.security.service.MfaService.MFA_SECRET_KEY;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -39,7 +38,6 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.model.exception.UnsupportedProviderException;
 import stirling.software.common.service.UserServiceInterface;
-import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.proprietary.access.model.PrincipalType;
 import stirling.software.proprietary.access.model.ResourceType;
 import stirling.software.proprietary.access.repository.ResourceGrantRepository;
@@ -56,6 +54,7 @@ import stirling.software.proprietary.security.model.exception.UserLimitExceededE
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
+import stirling.software.proprietary.security.util.UsernameRules;
 import stirling.software.proprietary.service.UserLicenseSettingsService;
 import stirling.software.proprietary.storage.model.FileShare;
 import stirling.software.proprietary.storage.model.StorageCleanupEntry;
@@ -598,28 +597,7 @@ public class UserService implements UserServiceInterface {
     }
 
     public boolean isUsernameValid(String username) {
-        // Checks whether the simple username is formatted correctly
-        // Regular expression for user name: Min. 3 characters, max. 50 characters
-        boolean isValidSimpleUsername =
-                RegexPatternUtils.getInstance()
-                        .getUsernameValidationPattern()
-                        .matcher(username)
-                        .matches();
-
-        // Checks whether the email address is formatted correctly
-        // Regular expression for email addresses: Max. 320 characters, with RFC-like validation
-        boolean isValidEmail =
-                RegexPatternUtils.getInstance()
-                        .getEmailValidationPattern()
-                        .matcher(username)
-                        .matches();
-
-        List<String> notAllowedUserList = new ArrayList<>();
-        notAllowedUserList.add("ALL_USERS".toLowerCase(Locale.ROOT));
-        notAllowedUserList.add("anonymoususer");
-        String normalizedUsername = username.toLowerCase(Locale.ROOT);
-        boolean notAllowedUser = notAllowedUserList.contains(normalizedUsername);
-        return (isValidSimpleUsername || isValidEmail) && !notAllowedUser;
+        return UsernameRules.isValid(username);
     }
 
     private String getInvalidUsernameMessage() {

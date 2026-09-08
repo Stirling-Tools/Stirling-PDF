@@ -109,6 +109,19 @@ class InviteLinkControllerMoreTest {
         }
 
         @Test
+        @DisplayName("rejects an address that could not become an account")
+        void rejectsEmailThatCannotBecomeAUsername() throws Exception {
+            mockMvc.perform(
+                            post("/api/v1/invite/generate")
+                                    .principal(adminPrincipal)
+                                    .param("email", "o'brien@example.com"))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.error").value("Invalid email address"));
+
+            verify(inviteTokenRepository, never()).save(any());
+        }
+
+        @Test
         @DisplayName("rejects a team that does not exist")
         void rejectsUnknownTeam() throws Exception {
             when(userService.usernameExistsIgnoreCase("new@ex.com")).thenReturn(false);

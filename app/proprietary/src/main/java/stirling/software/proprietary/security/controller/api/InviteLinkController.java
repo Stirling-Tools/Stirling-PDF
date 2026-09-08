@@ -75,7 +75,7 @@ public class InviteLinkController {
             if (email != null && !email.trim().isEmpty()) {
                 // The address becomes the account's username at redemption, so it has to be
                 // usable now: a link minted for "a@" only fails when someone tries to redeem it.
-                if (!EmailAddresses.isValid(email)) {
+                if (!EmailAddresses.isValidAccountAddress(email)) {
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                             .body(Map.of("error", "Invalid email address"));
                 }
@@ -441,7 +441,7 @@ public class InviteLinkController {
                             .body(Map.of("error", "Email address is required"));
                 }
 
-                if (!EmailAddresses.isValid(email)) {
+                if (!EmailAddresses.isValidAccountAddress(email)) {
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                             .body(Map.of("error", "Invalid email address"));
                 }
