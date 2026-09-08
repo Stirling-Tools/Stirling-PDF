@@ -6334,6 +6334,7 @@ paymentCanceled = "Payment was canceled. No charges were made."
 perMonth = "/month"
 preparing = "Preparing your checkout..."
 redirecting = "Redirecting to secure checkout..."
+stepOf = "Step {{n}} of 2"
 success = "Payment Successful!"
 successMessage = "Your subscription has been activated successfully. You will receive a confirmation email shortly."
 syncError = "Payment successful but license sync failed. Your license will be updated shortly. Please contact support if issues persist."
@@ -6343,6 +6344,10 @@ upgradeCompleteMessage = "Your subscription has been upgraded successfully. Your
 upgradeSuccess = "Payment successful! Your subscription has been upgraded. The license has been updated on your server. You will receive a confirmation email shortly."
 upgradeTitle = "Upgrade to {{planName}}"
 yearly = "Yearly"
+
+[payment.addCapacity]
+currently = "Currently up to {{users}} users"
+title = "Add capacity"
 
 [payment.capacityStage]
 continue = "Continue to payment"
@@ -6358,8 +6363,10 @@ perMonth = "/mo"
 perYear = "/yr"
 renewalNote = "Renews at {{total}}{{period}}. Cancel any time in Usage & Billing."
 subheading = "Covers everyone you invite, in blocks of {{users}} users."
-usersLabel = "Users"
+subheadingAdd = "Your plan covers {{current}} users today. Choose the new total."
+userDelta = "+{{users}} users"
 userTotal = "{{users}} users"
+usersLabel = "Users"
 
 [payment.emailStage]
 continue = "Continue"
@@ -6378,6 +6385,10 @@ savePercent = "Save {{percent}}%"
 savingsAmount = "You save {{amount}}"
 selectMonthly = "Select Monthly"
 selectYearly = "Select Yearly"
+selectedMonthly = "Monthly"
+
+[payment.upgradeTeam]
+title = "Upgrade to Team"
 
 [pdfCommentAgent]
 submit = "Generate comments"

@@ -24,6 +24,12 @@ interface CapacityStageProps {
   setServerQuantity: (quantity: number) => void;
   /** Users already on this installation, so capacity cannot be set below what is in use. */
   currentUsers?: number;
+  /**
+   * Users the current plan already covers, when there is one. Its presence switches this from
+   * "upgrade to Team" to "add capacity": the buyer is choosing a new total, so the line item states
+   * what is being ADDED rather than what is covered, which is the number they are deciding about.
+   */
+  currentLimit?: number | null;
   onContinue: () => void;
   onContactSales?: () => void;
 }
@@ -40,6 +46,7 @@ export const CapacityStage: React.FC<CapacityStageProps> = ({
   serverQuantity,
   setServerQuantity,
   currentUsers = 0,
+  currentLimit = null,
   onContinue,
   onContactSales,
 }) => {
@@ -74,11 +81,17 @@ export const CapacityStage: React.FC<CapacityStageProps> = ({
   return (
     <Stack gap="lg" style={{ padding: "1.5rem 2rem" }}>
       <Text size="sm" c="dimmed">
-        {t(
-          "payment.capacityStage.subheading",
-          "Covers everyone you invite, in blocks of {{users}} users.",
-          { users: USERS_PER_BLOCK },
-        )}
+        {currentLimit != null
+          ? t(
+              "payment.capacityStage.subheadingAdd",
+              "Your plan covers {{current}} users today. Choose the new total.",
+              { current: currentLimit },
+            )
+          : t(
+              "payment.capacityStage.subheading",
+              "Covers everyone you invite, in blocks of {{users}} users.",
+              { users: USERS_PER_BLOCK },
+            )}
       </Text>
 
       <Group gap="sm" wrap="wrap" align="center">
@@ -152,9 +165,13 @@ export const CapacityStage: React.FC<CapacityStageProps> = ({
             )}
           </Text>
           <Text size="sm" fw={500}>
-            {t("payment.capacityStage.userTotal", "{{users}} users", {
-              users: covered,
-            })}
+            {currentLimit != null
+              ? t("payment.capacityStage.userDelta", "+{{users}} users", {
+                  users: Math.max(0, covered - currentLimit),
+                })
+              : t("payment.capacityStage.userTotal", "{{users}} users", {
+                  users: covered,
+                })}
           </Text>
         </Group>
         <Group justify="space-between" align="baseline">

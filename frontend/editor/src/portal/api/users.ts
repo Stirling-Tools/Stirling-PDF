@@ -589,12 +589,18 @@ export async function inviteMember(
 export async function fetchUserSeats(): Promise<{
   seatLimit: number | null;
   seatsUsed: number | null;
+  adminEmail: string | null;
 }> {
   const data = await apiClient.local.json<AdminSettingsDto>(
     "/api/v1/proprietary/ui-data/admin-settings",
   );
+  // The signed-in admin's own email, so a purchase flow never has to ask for an address we hold.
+  const me = (data.users ?? []).find(
+    (u) => data.currentUsername && u.username === data.currentUsername,
+  );
   return {
     seatLimit: normalizeSeatLimit(data.maxAllowedUsers),
     seatsUsed: data.totalUsers ?? null,
+    adminEmail: me?.email ?? null,
   };
 }

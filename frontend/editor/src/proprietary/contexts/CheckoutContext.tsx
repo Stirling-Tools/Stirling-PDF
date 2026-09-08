@@ -41,6 +41,17 @@ export interface CheckoutOptions {
   currency?: string; // Optional currency override (auto-detected from locale)
   onSuccess?: (sessionId: string) => void; // Callback after successful payment
   onError?: (error: string) => void; // Callback on error
+  /**
+   * The buyer's billing email, when the caller already knows it. A linked instance does, from the
+   * account link, so the email step is skipped rather than asking for something we hold.
+   */
+  email?: string;
+  /**
+   * Users the team's current plan covers, when it has one. Its presence is what makes this the
+   * "add capacity" purchase rather than a first "upgrade to Team": the capacity step then shows
+   * what is held today and what is being added to it.
+   */
+  currentLimit?: number | null;
 }
 
 interface CheckoutContextValue {
@@ -446,6 +457,8 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
             onClose={closeCheckout}
             planGroup={selectedPlanGroup}
             minimumSeats={minimumSeats}
+            initialEmail={currentOptions.email}
+            currentLimit={currentOptions.currentLimit ?? null}
             onSuccess={handlePaymentSuccess}
             onError={handlePaymentError}
             onLicenseActivated={handleLicenseActivated}
@@ -455,6 +468,17 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
       )}
     </CheckoutContext.Provider>
   );
+};
+
+/**
+ * The checkout, or null where no provider is mounted.
+ *
+ * <p>For surfaces that offer a purchase but must not depend on one being available: the portal is a
+ * route-set of its own and a build may not mount the provider at all, so a hard {@link useCheckout}
+ * turns "no checkout here" into a blank page. A caller that gets null simply renders no door.
+ */
+export const useCheckoutOptional = (): CheckoutContextValue | null => {
+  return useContext(CheckoutContext) ?? null;
 };
 
 export const useCheckout = (): CheckoutContextValue => {

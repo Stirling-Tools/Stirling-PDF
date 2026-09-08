@@ -6,6 +6,8 @@ import { AccountLinkProvider } from "@portal/contexts/AccountLinkContext";
 import { ConnectCallbackHost } from "@portal/components/account-link/ConnectCallbackHost";
 import { PortalChrome } from "@portal/components/PortalChrome";
 import { useConnectPrompt } from "@portal/hooks/useConnectPrompt";
+import { LicenseProvider } from "@app/contexts/LicenseContext";
+import { CheckoutProvider } from "@app/contexts/CheckoutContext";
 
 /** The one and only account-link modal, whichever step it is on. */
 function LinkModalHost() {
@@ -27,16 +29,28 @@ function LinkModalHost() {
   );
 }
 
-/** Self-hosted provider stack. */
+/**
+ * Self-hosted provider stack.
+ *
+ * <p>The checkout providers are mounted here rather than inherited: the portal is a route-set of
+ * its own, mounted before the editor's catch-all and so outside {@code AppProviders}, which is
+ * where the editor keeps its copy. Without these, any portal surface calling {@code useCheckout}
+ * throws. {@code LicenseProvider} comes with it because the checkout reads the licence to decide
+ * what it is selling.
+ */
 export function PortalProviders() {
   return (
     <LinkProvider initialState="unlinked" statusKnown={false}>
       <TierProvider>
         <UIProvider>
           <AccountLinkProvider>
-            <PortalChrome />
-            <LinkModalHost />
-            <ConnectCallbackHost />
+            <LicenseProvider>
+              <CheckoutProvider>
+                <PortalChrome />
+                <LinkModalHost />
+                <ConnectCallbackHost />
+              </CheckoutProvider>
+            </LicenseProvider>
           </AccountLinkProvider>
         </UIProvider>
       </TierProvider>

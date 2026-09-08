@@ -18,6 +18,11 @@ interface PlanSelectionStageProps {
   minimumSeats: number;
   savings: SavingsCalculation | null;
   onSelectPlan: (period: "monthly" | "yearly") => void;
+  /**
+   * The period currently chosen. Supplied when these cards share a page with another control, so
+   * picking one is a selection the buyer can see rather than a step that navigates away.
+   */
+  selectedPeriod?: "monthly" | "yearly";
 }
 
 export const PlanSelectionStage: React.FC<PlanSelectionStageProps> = ({
@@ -25,6 +30,7 @@ export const PlanSelectionStage: React.FC<PlanSelectionStageProps> = ({
   minimumSeats,
   savings,
   onSelectPlan,
+  selectedPeriod,
 }) => {
   const { t } = useTranslation();
   const isEnterprise = planGroup.tier === "enterprise";
@@ -40,7 +46,7 @@ export const PlanSelectionStage: React.FC<PlanSelectionStageProps> = ({
               withBorder
               p="xl"
               radius="md"
-              style={getClickablePaperStyle()}
+              style={getClickablePaperStyle(selectedPeriod === "monthly")}
               onClick={() => onSelectPlan("monthly")}
             >
               <Stack
@@ -80,8 +86,15 @@ export const PlanSelectionStage: React.FC<PlanSelectionStageProps> = ({
                 )}
 
                 <div style={{ marginTop: "auto", paddingTop: "1rem" }}>
-                  <Button variant="secondary" fullWidth>
-                    {t("payment.planStage.selectMonthly", "Select Monthly")}
+                  <Button
+                    variant={
+                      selectedPeriod === "monthly" ? "primary" : "secondary"
+                    }
+                    fullWidth
+                  >
+                    {selectedPeriod === "monthly"
+                      ? t("payment.planStage.selectedMonthly", "Monthly")
+                      : t("payment.planStage.selectMonthly", "Select Monthly")}
                   </Button>
                 </div>
               </Stack>
@@ -96,7 +109,9 @@ export const PlanSelectionStage: React.FC<PlanSelectionStageProps> = ({
               withBorder
               p="xl"
               radius="md"
-              style={getClickablePaperStyle(!!savings)}
+              style={getClickablePaperStyle(
+                selectedPeriod ? selectedPeriod === "yearly" : !!savings,
+              )}
               onClick={() => onSelectPlan("yearly")}
             >
               {savings && (

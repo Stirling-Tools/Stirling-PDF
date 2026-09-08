@@ -81,6 +81,7 @@ export const Free: Story = {
       team: { held: false, licensedUsers: null, usersInUse: 1 },
       processor: { active: false },
     },
+    freeUserAllowance: 5,
     onAddCapacity: () => {},
     onActivateProcessor: () => {},
     onEnterpriseQuote: () => {},

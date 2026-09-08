@@ -17,6 +17,8 @@ import { FreePlanView } from "@portal/components/billing/FreePlanView";
 import { PaymentSection } from "@portal/components/billing/PaymentSection";
 import { InvoicesSection } from "@portal/components/billing/InvoicesSection";
 import { fetchFleetStats } from "@portal/api/fleetStats";
+import { fetchUserSeats } from "@portal/api/users";
+import { useCheckoutOptional } from "@app/contexts/CheckoutContext";
 import { SubscribedPlanView } from "@portal/components/billing/SubscribedPlanView";
 import {
   HttpError,
@@ -80,6 +82,13 @@ export function Usage({ onWalletLoaded, onReauth }: UsageProps = {}) {
   // Stripe returns no invoices for a team that has never been billed. The section and its chip
   // drop out in that case rather than rendering an empty heading.
   const [hasInvoices, setHasInvoices] = useState(true);
+  // The cap this backend admits without a Team plan, and the admin's own email. Both are read
+  // rather than restated: the server enforces the cap, and the account link already holds the
+  // address, so the purchase flow never asks for either.
+  const [freeUserAllowance, setFreeUserAllowance] = useState<number | null>(
+    null,
+  );
+  const [adminEmail, setAdminEmail] = useState<string | null>(null);
   // Stripe customer portal — the subscribed header's "Manage Payment" action.
   const portal = useStripePortal(wallet);
   // Guards the post-checkout poll loop from setState after unmount.
@@ -98,6 +107,17 @@ export function Usage({ onWalletLoaded, onReauth }: UsageProps = {}) {
     setSessionExpired(false);
     // Independent of the wallet load — a local-usage failure must not break the
     // page; it just means no unsynced delta is shown.
+    fetchUserSeats()
+      .then((u) => {
+        if (cancelled) return;
+        setFreeUserAllowance(u.seatLimit);
+        setAdminEmail(u.adminEmail);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setFreeUserAllowance(null);
+        setAdminEmail(null);
+      });
     fetchFleetStats()
       .then((f) => {
         if (!cancelled) setEditorsDeployed(f.editorsDeployed);
@@ -150,6 +170,22 @@ export function Usage({ onWalletLoaded, onReauth }: UsageProps = {}) {
 
   const refresh = useCallback(() => setRefreshKey((k) => k + 1), []);
   const onInvoicesEmpty = useCallback(() => setHasInvoices(false), []);
+
+  // Team capacity is sold by the same flow the settings plan section uses, so there is one
+  // purchase implementation rather than a second to keep in step. Passing the held limit is what
+  // makes it the "add capacity" face instead of a first upgrade.
+  // Optional on purpose: a build that mounts no checkout provider must lose the door, not the page.
+  const checkout = useCheckoutOptional();
+  const heldLimit = wallet?.team?.held ? wallet.team.licensedUsers : null;
+  const usersInUse = wallet?.team?.usersInUse;
+  const addCapacity = useCallback(() => {
+    void checkout?.openCheckout("server", {
+      email: adminEmail ?? undefined,
+      currentLimit: heldLimit,
+      minimumSeats: usersInUse,
+      onSuccess: () => setRefreshKey((k) => k + 1),
+    });
+  }, [checkout, adminEmail, heldLimit, usersInUse]);
 
   const confirmSubscription = useCallback(async (): Promise<boolean> => {
     // Stripe's onComplete fires before the subscription webhook lands, so poll the
@@ -235,7 +271,11 @@ export function Usage({ onWalletLoaded, onReauth }: UsageProps = {}) {
           )}
         </>
       }
+      freeUserAllowance={freeUserAllowance}
       editorsDeployed={editorsDeployed}
+      onAddCapacity={
+        checkout && wallet?.role === "leader" ? addCapacity : undefined
+      }
       paymentSection={
         paying && wallet ? (
           <PaymentSection
