@@ -62,6 +62,15 @@ public class MailConfig {
         // Retrieves the JavaMail properties to configure additional SMTP parameters
         Properties props = mailSender.getJavaMailProperties();
 
+        // JavaMail defaults every one of these to infinite, so an SMTP server that accepts the
+        // connection and then stops responding parks the calling thread for good. Mail is sent
+        // synchronously from request threads (backup notifications, invites), so an unreachable or
+        // wedged relay is a thread leak rather than a failed send. Generous enough not to fail a
+        // slow relay, finite so a dead one cannot hold a thread.
+        props.put("mail.smtp.connectiontimeout", "10000");
+        props.put("mail.smtp.timeout", "30000");
+        props.put("mail.smtp.writetimeout", "30000");
+
         // Only enable SMTP authentication if credentials are provided
         if (hasCredentials) {
             props.put("mail.smtp.auth", "true");

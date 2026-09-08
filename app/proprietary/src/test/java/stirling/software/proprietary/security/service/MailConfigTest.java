@@ -53,6 +53,10 @@ class MailConfigTest {
                 () -> assertEquals("password", impl.getPassword()),
                 () -> assertEquals("UTF-8", impl.getDefaultEncoding()),
                 () -> assertEquals("true", props.getProperty("mail.smtp.auth")),
+                // Unset means infinite in JavaMail, which parks a request thread on a wedged relay
+                () -> assertEquals("10000", props.getProperty("mail.smtp.connectiontimeout")),
+                () -> assertEquals("30000", props.getProperty("mail.smtp.timeout")),
+                () -> assertEquals("30000", props.getProperty("mail.smtp.writetimeout")),
                 () -> assertEquals("true", props.getProperty("mail.smtp.starttls.enable")),
                 () -> assertEquals(null, props.getProperty("mail.smtp.starttls.required")),
                 () -> assertEquals(null, props.getProperty("mail.smtp.ssl.enable")),
