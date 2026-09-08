@@ -274,6 +274,10 @@ export async function mockAppApis(
     route.fulfill({ json: [] }),
   );
 
+  await page.route("**/api/v1/processing-folders", (route: Route) =>
+    route.fulfill({ json: [] }),
+  );
+
   await page.route(
     "**/api/v1/processing-folders/downloads-suggestion",
     (route: Route) =>
