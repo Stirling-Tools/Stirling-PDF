@@ -2,13 +2,7 @@ import { useMemo } from "react";
 import { Group, Stack, Text, Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";
-import ImageIcon from "@mui/icons-material/ImageOutlined";
-import CallMergeIcon from "@mui/icons-material/CallMergeOutlined";
-import CallSplitIcon from "@mui/icons-material/CallSplitOutlined";
-import RotateLeftIcon from "@mui/icons-material/RotateLeftOutlined";
-import RotateRightIcon from "@mui/icons-material/RotateRightOutlined";
-import FlipIcon from "@mui/icons-material/FlipOutlined";
-import OpenInNewIcon from "@mui/icons-material/OpenInNewOutlined";
+import { Icon } from "@app/ui/Icon";
 import {
   Field,
   PointsInput,
@@ -166,7 +160,7 @@ function ParagraphSection({
             size="sm"
             variant="secondary"
             accent="neutral"
-            leftSection={<CallMergeIcon fontSize="small" />}
+            leftSection={<Icon name="merge" size={20} />}
             onClick={onGroup}
             disabled={!canGroup}
             data-testid="pdf-editor-group"
@@ -191,7 +185,7 @@ function ParagraphSection({
             size="sm"
             variant="secondary"
             accent="neutral"
-            leftSection={<CallSplitIcon fontSize="small" />}
+            leftSection={<Icon name="split" size={20} />}
             onClick={onUngroup}
             disabled={!canUngroup}
             data-testid="pdf-editor-ungroup"
@@ -319,26 +313,30 @@ function ImageSection({ controller }: { controller: InspectorController }) {
         {
           mode: "rotate-ccw" as const,
           testId: "pdf-editor-imgop-rotate-ccw",
-          icon: <RotateLeftIcon fontSize="small" />,
+          icon: <Icon name="rotate-ccw" size={20} />,
           label: t("pdfTextEditor.toolbar.rotateLeft", "Rotate 90° left"),
         },
         {
           mode: "rotate-cw" as const,
           testId: "pdf-editor-imgop-rotate-cw",
-          icon: <RotateRightIcon fontSize="small" />,
+          icon: <Icon name="rotate-cw" size={20} />,
           label: t("pdfTextEditor.toolbar.rotateRight", "Rotate 90° right"),
         },
         {
           mode: "flip-h" as const,
           testId: "pdf-editor-imgop-flip-h",
-          icon: <FlipIcon fontSize="small" />,
+          icon: <Icon name="flip-horizontal-2" size={20} />,
           label: t("pdfTextEditor.toolbar.flipHorizontal", "Flip horizontal"),
         },
         {
           mode: "flip-v" as const,
           testId: "pdf-editor-imgop-flip-v",
           icon: (
-            <FlipIcon fontSize="small" style={{ transform: "rotate(90deg)" }} />
+            <Icon
+              name="flip-horizontal-2"
+              size={20}
+              style={{ transform: "rotate(90deg)" }}
+            />
           ),
           label: t("pdfTextEditor.toolbar.flipVertical", "Flip vertical"),
         },
@@ -371,7 +369,7 @@ function ImageSection({ controller }: { controller: InspectorController }) {
           accent="neutral"
           fullWidth
           justify="start"
-          leftSection={<ImageIcon fontSize="small" />}
+          leftSection={<Icon name="image" size={20} />}
           onClick={onReplaceImage}
           data-testid="pdf-editor-imgop-replace"
         >
@@ -386,7 +384,7 @@ function ImageSection({ controller }: { controller: InspectorController }) {
           accent="neutral"
           fullWidth
           justify="start"
-          leftSection={<OpenInNewIcon fontSize="small" />}
+          leftSection={<Icon name="external-link" size={20} />}
           onClick={onEditImageExternally}
           disabled={!externalEditSupported}
           data-testid="pdf-editor-imgop-edit-externally"
