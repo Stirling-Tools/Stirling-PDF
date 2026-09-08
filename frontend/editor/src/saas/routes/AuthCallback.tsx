@@ -135,21 +135,13 @@ export default function AuthCallback() {
           }
         }
 
-        // Redirect to the intended destination. Reject protocol-relative
-        // "//host" values (same guard as Login's `next`) so a crafted callback
-        // URL can't bounce the user off-origin after sign-in.
-        // Explicit `next` first, so a sign-in started for another reason is not
-        // hijacked by a remembered intent. Then the two remembered kinds: a connect
-        // request, then any destination stashed before the auth detour (this is the
-        // only thing that survives a sign-up, whose confirmation link cannot carry a
-        // `next` of its own). Nothing remembered: land team leads on the processor
-        // and everyone else on the editor.
+        // A deliberate `next` outranks a remembered intent so it cannot be hijacked;
+        // a remembered one is all a sign-up has, its confirmation link being unable
+        // to carry a `next`. Claimed up front because reaching here means the detour
+        // is over, so the intent is spent whichever wins.
         const explicitNext =
           url.searchParams.get("next") ?? url.searchParams.get("from");
         const pendingConnect = readPendingConnect();
-        // Claimed up front, not inside the branch that uses it: reaching this point
-        // means the detour is over, so the intent is spent either way. Left unclaimed
-        // it would outlive its own sign-in and redirect the next one.
         const remembered = takePendingDestination();
         const destination = isSafePostLoginRedirect(explicitNext)
           ? explicitNext

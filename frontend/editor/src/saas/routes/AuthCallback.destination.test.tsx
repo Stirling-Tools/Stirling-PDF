@@ -12,11 +12,8 @@ import {
 } from "@app/routes/pendingConnect";
 
 /*
- * Where a completed sign-in lands. The order matters and is easy to break by
- * inserting a branch: a remembered destination is the ONLY thing that survives a
- * sign-up, whose confirmation link is built by Supabase and cannot carry a `next`,
- * so a branch that swallows the no-param case silently strands every buyer who
- * arrived from a link and had to create an account.
+ * Where a completed sign-in lands. An inserted branch that swallows the no-param
+ * case strands every visitor who arrived from a link and had to sign up.
  */
 
 const mockNavigate = vi.fn();
@@ -32,10 +29,8 @@ vi.mock("@app/utils/loginLanding", () => ({
 async function arriveAtCallback(search = "") {
   window.history.replaceState({}, "", `/auth/callback${search}`);
   render(<AuthCallback />);
-  // Real timers and a wait, rather than driving fake ones: the redirect sits behind
-  // a 1.5s timeout that is itself only scheduled once the awaited session resolves,
-  // and whether a fake-timer sweep sees that timeout depends on how many microtask
-  // flushes it happens to perform first.
+  // Real timers: the redirect timeout is only scheduled once the awaited session
+  // resolves, which a fake-timer sweep races rather than observes.
   await waitFor(() => expect(mockNavigate).toHaveBeenCalled(), {
     timeout: 3000,
   });
@@ -75,7 +70,6 @@ describe("AuthCallback destination", () => {
     expect(landedOn()).toBe("/link?request=req-1");
   });
 
-  // The case a sign-up depends on: nothing in the URL, so storage is all there is.
   it("uses a remembered destination when the URL carries nothing", async () => {
     rememberPendingDestination("/processor/procurement");
     await arriveAtCallback();
@@ -92,8 +86,6 @@ describe("AuthCallback destination", () => {
     expect(landedOn()).toBe("/processor");
   });
 
-  // A destination is spent by the sign-in it was stored for, even when it loses to a
-  // higher-priority source. Left behind it would redirect an unrelated later sign-in.
   it("claims the remembered destination even when an explicit next wins", async () => {
     rememberPendingDestination("/processor/procurement");
     await arriveAtCallback("?next=%2Fprocessor%2Fusers");

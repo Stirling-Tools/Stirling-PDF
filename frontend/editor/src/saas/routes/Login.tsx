@@ -72,9 +72,8 @@ export default function Login() {
     }
   }, [session, loading, nextPath, navigate]);
 
-  // Stash it as well as holding it in the URL: a visitor who leaves this page to
-  // create an account loses the query string, and a sign-up confirmation link
-  // cannot carry a `next` of its own. The auth callback reads it back.
+  // Stashed as well as held in the URL: leaving to create an account loses the
+  // query string, and the confirmation link cannot carry a `next`.
   useEffect(() => {
     if (nextPath) rememberPendingDestination(nextPath);
   }, [nextPath]);
@@ -176,13 +175,10 @@ export default function Login() {
         setError(error.message);
       } else if (data.user) {
         console.log("[Login] Email sign in successful");
-        // Claimed on every successful sign-in, even when the URL names a
-        // destination that wins over it: the detour is over, so the intent is spent.
-        // Left unclaimed it would redirect the next sign-in instead.
+        // Claimed even when `nextPath` wins: the detour is over either way.
         const remembered = takePendingDestination();
-        // No destination in the URL: honour the remembered one, else land team leads
-        // on the processor and everyone else on the editor. Resolved here rather than
-        // by bouncing through "/" so the app isn't torn down and remounted on the way.
+        // Resolved here rather than by bouncing through "/", which would tear the app
+        // down and remount it on the way.
         if (!nextPath) {
           navigate(remembered ?? (await resolveLandingPath()), {
             replace: true,

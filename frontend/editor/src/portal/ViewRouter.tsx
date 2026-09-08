@@ -33,12 +33,9 @@ const DeveloperDocs = lazy(() =>
 const rel = (viewPath: string) => viewPath.replace(/^\//, "");
 
 /**
- * The enterprise entry point, and the one sales hands out. Procurement is not a
- * surface of its own: the deal lives on Home, so this raises the trial-setup step
- * and bounces there, which is where every other way into enterprise ends up too.
- *
- * Raised imperatively rather than by rendering <Navigate>, so the signal is set
- * before the navigation rather than racing it.
+ * Procurement is not a surface of its own: the deal lives on Home, so this raises
+ * the trial-setup step and bounces there. Raised imperatively rather than by
+ * rendering <Navigate>, so the signal is set before the navigation, not racing it.
  */
 function ProcurementRedirect() {
   const { requestTrialSetup } = useUI();
@@ -116,8 +113,7 @@ export function ViewRouter() {
           </Suspense>
         }
       />
-      {/* Not a view, so it carries a bare path rather than a VIEW_PATHS entry:
-          nothing should list it in the sidebar or the view switcher. */}
+      {/* A bare path, not a VIEW_PATHS entry: nothing should list it as a view. */}
       <Route path="procurement" element={<ProcurementRedirect />} />
       {/* Account-link is now a Settings panel; redirect legacy bookmarks home. */}
       <Route

@@ -55,10 +55,9 @@ function SaasPortalGate({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!redirectTo) return;
-    // This is a full page load, so the path being attempted cannot ride along in
-    // router state: stash it, and sign-in returns the visitor here rather than to
-    // their default landing page. Only on the sign-in bounce, since an account
-    // without portal access is not one sign-in away from this page.
+    // A full page load, so the attempted path cannot ride along in router state.
+    // Only on the sign-in bounce: an account without portal access is not one
+    // sign-in away from this page.
     if (bouncingToLogin) {
       rememberPendingDestination(
         `${stripBasePath(window.location.pathname)}${window.location.search}${window.location.hash}`,

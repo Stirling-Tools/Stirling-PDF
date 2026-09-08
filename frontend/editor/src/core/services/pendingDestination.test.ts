@@ -34,8 +34,6 @@ describe("pendingDestination", () => {
     expect(takePendingDestination()).toBeNull();
   });
 
-  // The whole point of localStorage over sessionStorage: the confirmation email
-  // opens a new tab, so a fresh page load has to see the intent.
   it("survives a new page load", () => {
     rememberPendingDestination("/processor/procurement");
     resetPendingDestinationForTests();
@@ -49,8 +47,6 @@ describe("pendingDestination", () => {
     expect(takePendingDestination()).toBeNull();
   });
 
-  // StrictMode mounts an effect twice; the redirect decision must not change
-  // between the two reads.
   it("gives the same answer twice within a page load", () => {
     rememberPendingDestination("/processor/procurement");
     expect(takePendingDestination()).toBe("/processor/procurement");
@@ -64,8 +60,6 @@ describe("pendingDestination", () => {
     expect(takePendingDestination()).toBeNull();
   });
 
-  // A stored value is data, not a promise: an older build may have written a path
-  // the guard now refuses.
   it("refuses to return an unsafe path written directly to storage", () => {
     window.localStorage.setItem(
       KEY,

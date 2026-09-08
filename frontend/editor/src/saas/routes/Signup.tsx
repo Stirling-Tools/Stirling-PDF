@@ -37,9 +37,8 @@ export default function Signup() {
   const [agree, setAgree] = useState(true);
   const [fieldErrors, setFieldErrors] = useState<SignupFieldErrors>({});
 
-  // A link straight to sign-up can name where it was aiming. Stashed rather than
-  // threaded onward: the confirmation email's link is built by Supabase and cannot
-  // carry it, so the auth callback reads it back from storage instead.
+  // Stashed rather than threaded onward: Supabase builds the confirmation link and
+  // it cannot carry a `next`.
   useEffect(() => {
     try {
       rememberPendingDestination(
