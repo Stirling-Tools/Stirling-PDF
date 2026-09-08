@@ -1,16 +1,16 @@
 import type { ReactNode } from "react";
 import { Box, ScrollArea, Text, TextInput } from "@mantine/core";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import "@app/components/viewer/SidebarBase.css";
 
+import { Icon, isIconName, type IconName } from "@app/ui/Icon";
 export const SIDEBAR_WIDTH = "15rem";
 
 export interface SidebarBaseProps {
   /** Sidebar title string or React element. */
   title: ReactNode;
-  /** Header icon (ReactNode or string icon name for LocalIcon). */
-  icon: ReactNode;
+  /** Header icon: a registry icon name, or your own node. */
+  icon: IconName | ReactNode;
   /** Right offset position string (e.g. "15rem" or "0rem"). */
   rightOffset?: string;
   /** Sidebar visibility flag. */
@@ -54,12 +54,11 @@ export function SidebarBase({
     return null;
   }
 
-  const renderIcon =
-    typeof icon === "string" ? (
-      <LocalIcon icon={icon} width="1.1rem" height="1.1rem" />
-    ) : (
-      icon
-    );
+  const renderIcon = isIconName(icon) ? (
+    <Icon name={icon} size="1.1rem" />
+  ) : (
+    icon
+  );
 
   return (
     <Box
@@ -91,7 +90,7 @@ export function SidebarBase({
               aria-label={closeLabel}
               title={closeLabel}
             >
-              <LocalIcon icon="close-rounded" width="1.1rem" height="1.1rem" />
+              <Icon name="x" size="1.1rem" />
             </ActionIcon>
           )}
         </Box>
@@ -103,9 +102,7 @@ export function SidebarBase({
             value={searchTerm ?? ""}
             placeholder={searchPlaceholder ?? "Search..."}
             onChange={(e) => onSearchChange(e.currentTarget.value)}
-            leftSection={
-              <LocalIcon icon="search" width="1.1rem" height="1.1rem" />
-            }
+            leftSection={<Icon name="search" size="1.1rem" />}
             size="xs"
           />
         </Box>

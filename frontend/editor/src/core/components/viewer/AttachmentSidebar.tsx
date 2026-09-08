@@ -1,13 +1,11 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { Text, Loader, Stack } from "@mantine/core";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { PdfAttachmentObject } from "@embedpdf/models";
-import AttachmentIcon from "@mui/icons-material/AttachmentRounded";
-import DownloadIcon from "@mui/icons-material/DownloadRounded";
 import { useTranslation } from "react-i18next";
 import { SidebarBase } from "@app/components/viewer/SidebarBase";
 import "@app/components/viewer/AttachmentSidebar.css";
@@ -317,7 +315,7 @@ export const AttachmentSidebar = ({
             aria-label={t("viewer.attachments.download", "Download attachment")}
             onClick={(event) => handleDownload(attachment, event)}
           >
-            <DownloadIcon sx={{ fontSize: "1.2rem" }} />
+            <Icon name="download" size={"1.2rem"} />
           </ActionIcon>
         </div>
       </div>
@@ -359,7 +357,7 @@ export const AttachmentSidebar = ({
     <SidebarBase
       className="attachment-sidebar"
       title={t("viewer.attachments.title", "Attachments")}
-      icon={<AttachmentIcon />}
+      icon={<Icon name="paperclip" />}
       rightOffset={`${(thumbnailVisible ? 15 : 0) + (bookmarkVisible ? 15 : 0)}rem`}
       visible={visible}
       onClose={toggleAttachmentSidebar}
@@ -406,7 +404,7 @@ export const AttachmentSidebar = ({
             aria-label={t("viewer.attachments.retry", "Retry")}
             onClick={requestReload}
           >
-            <LocalIcon icon="refresh" />
+            <Icon name="refresh-cw" size="1em" />
           </ActionIcon>
         </Stack>
       )}
@@ -428,10 +426,9 @@ export const AttachmentSidebar = ({
 
       {showEmptyState && (
         <Stack align="center" gap="sm" py="lg">
-          <LocalIcon
-            icon="attachment-rounded"
-            width="2rem"
-            height="2rem"
+          <Icon
+            name="paperclip"
+            size="2rem"
             style={{ color: "var(--mantine-color-dimmed)" }}
           />
           <Text size="sm" c="dimmed" ta="center">
@@ -441,7 +438,7 @@ export const AttachmentSidebar = ({
             variant="tertiary"
             size="sm"
             onClick={handleAddAttachment}
-            leftSection={<LocalIcon icon="add" width="1rem" height="1rem" />}
+            leftSection={<Icon name="plus" size="1rem" />}
           >
             {t("viewer.attachments.addAttachment", "Add attachment")}
           </Button>
@@ -456,9 +453,7 @@ export const AttachmentSidebar = ({
             fullWidth
             justify="start"
             onClick={handleAddAttachment}
-            leftSection={
-              <LocalIcon icon="add" width="0.9rem" height="0.9rem" />
-            }
+            leftSection={<Icon name="plus" size="0.9rem" />}
             style={{ marginBottom: "var(--space-xs)" }}
           >
             {t("viewer.attachments.addAttachment", "Add attachment")}

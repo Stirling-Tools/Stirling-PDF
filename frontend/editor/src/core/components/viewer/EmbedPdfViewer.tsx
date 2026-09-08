@@ -3,9 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Box, Center, Text, Stack } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import CloseIcon from "@mui/icons-material/Close";
-import LockIcon from "@mui/icons-material/Lock";
-
+import { Icon } from "@app/ui/Icon";
 import {
   useAllFiles,
   useFileSelector,
@@ -1170,7 +1168,7 @@ const EmbedPdfViewerContent = ({
           }}
           onClick={onClose}
         >
-          <CloseIcon />
+          <Icon name="x" />
         </ActionIcon>
       )}
 
@@ -1186,7 +1184,7 @@ const EmbedPdfViewerContent = ({
       ) : isCurrentFileEncrypted ? (
         <Center style={{ flex: 1 }}>
           <Stack align="center" gap="md">
-            <LockIcon style={{ fontSize: 48, opacity: 0.5 }} />
+            <Icon name="lock" size={48} style={{ opacity: 0.5 }} />
             <Text fw={500}>
               {t(
                 "encryptedPdfUnlock.viewerLocked",

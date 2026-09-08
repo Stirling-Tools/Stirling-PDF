@@ -15,7 +15,6 @@ import {
 } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import {
   ColorPicker,
   ColorSwatchButton,
@@ -33,6 +32,7 @@ import type { ViewerContextType } from "@app/contexts/ViewerContext";
 import type { SignParameters } from "@app/hooks/tools/sign/useSignParameters";
 import type { BuildToolOptionsExtras } from "@app/tools/annotate/useAnnotationStyleState";
 
+import { Icon, type IconName } from "@app/ui/Icon";
 interface StyleState {
   inkColor: string;
   inkWidth: number;
@@ -230,91 +230,99 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
   const textMarkupTools: {
     id: AnnotationToolId;
     label: string;
-    icon: string;
+    icon: IconName;
   }[] = [
     {
       id: "highlight",
       label: t("annotation.highlight", "Highlight"),
-      icon: "highlight",
+      icon: "highlighter",
     },
     {
       id: "underline",
       label: t("annotation.underline", "Underline"),
-      icon: "format-underlined",
+      icon: "underline",
     },
     {
       id: "strikeout",
       label: t("annotation.strikeout", "Strikeout"),
-      icon: "strikethrough-s",
+      icon: "strikethrough",
     },
     {
       id: "squiggly",
       label: t("annotation.squiggly", "Squiggly"),
-      icon: "show-chart",
+      icon: "pen-line",
     },
   ];
 
-  const drawingTools: { id: AnnotationToolId; label: string; icon: string }[] =
+  const drawingTools: {
+    id: AnnotationToolId;
+    label: string;
+    icon: IconName;
+  }[] = [
+    { id: "ink", label: t("annotation.pen", "Pen"), icon: "pencil" },
+    {
+      id: "inkHighlighter",
+      label: t("annotation.freehandHighlighter", "Freehand Highlighter"),
+      icon: "brush",
+    },
+  ];
+
+  const shapeTools: { id: AnnotationToolId; label: string; icon: IconName }[] =
     [
-      { id: "ink", label: t("annotation.pen", "Pen"), icon: "edit" },
       {
-        id: "inkHighlighter",
-        label: t("annotation.freehandHighlighter", "Freehand Highlighter"),
-        icon: "brush",
+        id: "square",
+        label: t("annotation.square", "Square"),
+        icon: "square",
+      },
+      {
+        id: "circle",
+        label: t("annotation.circle", "Circle"),
+        icon: "circle",
+      },
+      { id: "line", label: t("annotation.line", "Line"), icon: "pen-line" },
+      {
+        id: "polygon",
+        label: t("annotation.polygon", "Polygon"),
+        icon: "triangle",
       },
     ];
 
-  const shapeTools: { id: AnnotationToolId; label: string; icon: string }[] = [
+  const commentTools: {
+    id: AnnotationToolId;
+    label: string;
+    icon: IconName;
+  }[] = [
     {
-      id: "square",
-      label: t("annotation.square", "Square"),
-      icon: "crop-square-outline",
+      id: "textComment",
+      label: t("annotation.comment", "Comment"),
+      icon: "message-square",
     },
     {
-      id: "circle",
-      label: t("annotation.circle", "Circle"),
-      icon: "radio-button-unchecked",
+      id: "insertText",
+      label: t("annotation.insertText", "Insert Text"),
+      icon: "message-square-plus",
     },
-    { id: "line", label: t("annotation.line", "Line"), icon: "show-chart" },
     {
-      id: "polygon",
-      label: t("annotation.polygon", "Polygon"),
-      icon: "change-history",
+      id: "replaceText",
+      label: t("annotation.replaceText", "Replace Text"),
+      icon: "replace",
     },
   ];
 
-  const commentTools: { id: AnnotationToolId; label: string; icon: string }[] =
+  const otherTools: { id: AnnotationToolId; label: string; icon: IconName }[] =
     [
       {
-        id: "textComment",
-        label: t("annotation.comment", "Comment"),
-        icon: "comment",
+        id: "text",
+        label: t("annotation.text", "Text box"),
+        icon: "type",
       },
+      { id: "note", label: t("annotation.note", "Note"), icon: "sticky-note" },
       {
-        id: "insertText",
-        label: t("annotation.insertText", "Insert Text"),
-        icon: "add-comment",
-      },
-      {
-        id: "replaceText",
-        label: t("annotation.replaceText", "Replace Text"),
-        icon: "find-replace",
+        id: "stamp",
+        label: t("annotation.stamp", "Add Image"),
+        icon: "image-plus",
       },
     ];
-
-  const otherTools: { id: AnnotationToolId; label: string; icon: string }[] = [
-    {
-      id: "text",
-      label: t("annotation.text", "Text box"),
-      icon: "text-fields",
-    },
-    { id: "note", label: t("annotation.note", "Note"), icon: "sticky-note-2" },
-    {
-      id: "stamp",
-      label: t("annotation.stamp", "Add Image"),
-      icon: "add-photo-alternate",
-    },
-  ];
 
   const activeColor = useMemo(
     () =>
@@ -358,7 +366,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
   };
 
   const renderToolButtons = (
-    tools: { id: AnnotationToolId; label: string; icon: string }[],
+    tools: { id: AnnotationToolId; label: string; icon: IconName }[],
   ) => (
     <Group gap="xs">
       {tools.map((tool) => (
@@ -373,7 +381,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
             disabled={!annotationsVisible}
             aria-label={tool.label}
           >
-            <LocalIcon icon={tool.icon} width="1.25rem" height="1.25rem" />
+            <Icon name={tool.icon} size="1.25rem" />
           </ActionIcon>
         </MantineTooltip>
       ))}
@@ -646,11 +654,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                       size="md"
                       aria-label={t("annotation.alignLeft", "Align left")}
                     >
-                      <LocalIcon
-                        icon="format-align-left"
-                        width={18}
-                        height={18}
-                      />
+                      <Icon name="text-align-start" size={18} />
                     </ActionIcon>
                     <ActionIcon
                       variant={
@@ -660,11 +664,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                       size="md"
                       aria-label={t("annotation.alignCenter", "Align center")}
                     >
-                      <LocalIcon
-                        icon="format-align-center"
-                        width={18}
-                        height={18}
-                      />
+                      <Icon name="text-align-center" size={18} />
                     </ActionIcon>
                     <ActionIcon
                       variant={
@@ -674,11 +674,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                       size="md"
                       aria-label={t("annotation.alignRight", "Align right")}
                     >
-                      <LocalIcon
-                        icon="format-align-right"
-                        width={18}
-                        height={18}
-                      />
+                      <Icon name="text-align-end" size={18} />
                     </ActionIcon>
                   </Group>
                 </Box>
@@ -1194,9 +1190,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
             onClick={() => {
               activateAnnotationTool("select");
             }}
-            leftSection={
-              <LocalIcon icon="touch-app-rounded" width={20} height={20} />
-            }
+            leftSection={<Icon name="pointer" size={20} />}
           >
             {t("annotation.selectAndMove", "Select and Edit")}
           </Button>
@@ -1218,7 +1212,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                     disabled={isApplyingChanges}
                     aria-label={t("annotation.moreActions", "More actions")}
                   >
-                    <LocalIcon icon="more-horiz" width={20} height={20} />
+                    <Icon name="ellipsis" size={20} />
                   </ActionIcon>
                 </Tooltip>
               </Menu.Target>
@@ -1226,9 +1220,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                 <Menu.Item
                   color="red"
                   disabled={isClearingDocumentAnnotations || isApplyingChanges}
-                  leftSection={
-                    <LocalIcon icon="delete-rounded" width={18} height={18} />
-                  }
+                  leftSection={<Icon name="trash" size={18} />}
                   onClick={() => setIsClearDocumentModalOpen(true)}
                 >
                   {t(
@@ -1327,9 +1319,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
               accent="danger"
               loading={isClearingDocumentAnnotations}
               disabled={isApplyingChanges}
-              leftSection={
-                <LocalIcon icon="delete-rounded" width={18} height={18} />
-              }
+              leftSection={<Icon name="trash" size={18} />}
               onClick={() => void handleConfirmClearDocumentAnnotations()}
             >
               {t("annotation.clearDocumentAnnotationsConfirm", "Clear all")}
