@@ -5,9 +5,12 @@ import java.net.URI;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.core.NestedExceptionUtils;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -196,27 +199,56 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Connector-level signals that the response could not be written because the peer is gone,
+     * matched by simple name so no container has to be on the classpath: {@code AbortedException}
+     * (Reactor Netty), {@code ClientAbortException} (Tomcat), {@code EofException} (Jetty) and
+     * {@code AsyncRequestNotUsableException}, which Spring MVC raises from {@code
+     * StandardServletAsyncWebRequest} when a write on an async response fails - the shape a
+     * mid-write idle timeout arrives in.
+     *
+     * <p>This is {@code DisconnectedClientHelper.EXCEPTION_TYPE_NAMES} minus bare {@code
+     * EOFException}: Spring's set is tuned for log routing, but PDFBox and the JDK's own stream
+     * decoders throw {@code java.io.EOFException} for truncated user input, and treating those as a
+     * disconnect would drop a real server-side failure's body and stack trace. Jetty's {@code
+     * EofException} still matches by its own name even though it extends {@code EOFException}, so
+     * this must stay a name test rather than an {@code instanceof}.
+     */
+    private static final Set<String> CLIENT_DISCONNECT_TYPE_NAMES =
+            Set.of(
+                    "AbortedException",
+                    "ClientAbortException",
+                    "EofException",
+                    "AsyncRequestNotUsableException");
+
+    /**
      * Checks whether the given IOException indicates that the client disconnected before the
-     * response could be written (broken pipe, connection reset, etc.). When this happens there is
-     * no point in serialising a {@link ProblemDetail} body because the socket is already closed -
-     * and attempting to do so may trigger a secondary {@code HttpMessageNotWritableException} if
-     * the response Content-Type was already committed as a non-JSON type (e.g. image/png).
+     * response could be written: a broken pipe, a connection reset, or a mid-write idle timeout.
+     * When this happens there is no point in serialising a {@link ProblemDetail} body because the
+     * socket is already closed - and attempting to do so may trigger a secondary {@code
+     * HttpMessageNotWritableException} if the response Content-Type was already committed as a
+     * non-JSON type (e.g. image/png).
+     *
+     * <p>Everything else, including a read-side idle timeout on a slow upload, keeps its
+     * ProblemDetail body and its stack trace.
      */
     private static boolean isClientDisconnectException(IOException ex) {
         // Walk the causal chain - Jetty/Tomcat may wrap the low-level SocketException
         Throwable current = ex;
-        while (current != null) {
+        Throwable previous = null;
+        while (current != null && current != previous) {
+            if (CLIENT_DISCONNECT_TYPE_NAMES.contains(current.getClass().getSimpleName())) {
+                return true;
+            }
             String msg = current.getMessage();
             if (msg != null) {
-                String lower = msg.toLowerCase(java.util.Locale.ROOT);
+                String lower = msg.toLowerCase(Locale.ROOT);
                 if (lower.contains("broken pipe")
                         || lower.contains("connection reset")
-                        || lower.contains("an established connection was aborted")
-                        || lower.contains("idle timeout expired")
-                        || lower.contains("failed to write")) {
+                        || lower.contains("an established connection was aborted")) {
                     return true;
                 }
             }
+            previous = current;
             current = current.getCause();
         }
         return false;
@@ -1222,12 +1254,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ProblemDetail> handleIOException(
             IOException ex, HttpServletRequest request) {
 
-        // Broken pipe / connection reset means the client disconnected.
-        // Attempting to write a ProblemDetail response will fail because the
-        // response Content-Type may already be committed (e.g. image/png) and
-        // the client is gone anyway. Log at WARN and return an empty body.
+        // Attempting to write a ProblemDetail response to a disconnected client will fail because
+        // the response Content-Type may already be committed (e.g. image/png) and the client is
+        // gone anyway. Log at WARN and return an empty body.
         if (isClientDisconnectException(ex)) {
-            log.warn("Client disconnected at {}: {}", request.getRequestURI(), ex.getMessage());
+            log.warn(
+                    "Client disconnected at {}: {}",
+                    request.getRequestURI(),
+                    NestedExceptionUtils.getMostSpecificCause(ex).getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
 
