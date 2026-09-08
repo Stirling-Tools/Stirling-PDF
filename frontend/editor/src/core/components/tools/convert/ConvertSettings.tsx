@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { Stack, Text, Group, Divider, useMantineTheme } from "@mantine/core";
 import { Button } from "@app/ui/Button";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
 import { useMultipleEndpointsEnabled } from "@app/hooks/useEndpointConfig";
 import {
@@ -326,11 +326,10 @@ const ConvertSettings = ({
                   "Select a source format first",
                 )}
               </Text>
-              <KeyboardArrowDownIcon
-                style={{
-                  fontSize: "1rem",
-                  color: "var(--select-placeholder-text)",
-                }}
+              <Icon
+                name="chevron-down"
+                size={"1rem"}
+                style={{ color: "var(--select-placeholder-text)" }}
               />
             </Group>
           </Button>

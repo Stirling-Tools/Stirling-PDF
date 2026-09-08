@@ -1,11 +1,11 @@
 import { useMemo } from "react";
 import type React from "react";
 import { useTranslation } from "react-i18next";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import { alert } from "@app/components/toast";
 import type { WorkbenchBarButtonWithAction } from "@app/hooks/useWorkbenchBarButtons";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 
+import { Icon } from "@app/ui/Icon";
 type Pane = "base" | "comparison";
 
 export interface UseCompareWorkbenchBarButtonsOptions {
@@ -57,14 +57,9 @@ export const useCompareWorkbenchBarButtons = ({
       {
         id: "compare-toggle-layout",
         icon: (
-          <LocalIcon
-            icon={
-              layout === "side-by-side"
-                ? "vertical-split-rounded"
-                : "horizontal-split-rounded"
-            }
-            width="1.5rem"
-            height="1.5rem"
+          <Icon
+            name={layout === "side-by-side" ? "columns-2" : "rows-2"}
+            size="1.5rem"
           />
         ),
         tooltip:
@@ -81,7 +76,7 @@ export const useCompareWorkbenchBarButtons = ({
       },
       {
         id: "compare-zoom-out",
-        icon: <LocalIcon icon="zoom-out" width="1.5rem" height="1.5rem" />,
+        icon: <Icon name="zoom-out" size="1.5rem" />,
         tooltip: t("compare.actions.zoomOut", "Zoom out"),
         ariaLabel: t("compare.actions.zoomOut", "Zoom out"),
         section: "top",
@@ -101,7 +96,7 @@ export const useCompareWorkbenchBarButtons = ({
       },
       {
         id: "compare-zoom-in",
-        icon: <LocalIcon icon="zoom-in" width="1.5rem" height="1.5rem" />,
+        icon: <Icon name="zoom-in" size="1.5rem" />,
         tooltip: t("compare.actions.zoomIn", "Zoom in"),
         ariaLabel: t("compare.actions.zoomIn", "Zoom in"),
         section: "top",
@@ -121,9 +116,7 @@ export const useCompareWorkbenchBarButtons = ({
       },
       {
         id: "compare-reset-view",
-        icon: (
-          <LocalIcon icon="refresh-rounded" width="1.5rem" height="1.5rem" />
-        ),
+        icon: <Icon name="refresh-cw" size="1.5rem" />,
         tooltip: t("compare.actions.resetView", "Reset zoom and pan"),
         ariaLabel: t("compare.actions.resetView", "Reset zoom and pan"),
         section: "top",
@@ -146,13 +139,7 @@ export const useCompareWorkbenchBarButtons = ({
       },
       {
         id: "compare-toggle-scroll-link",
-        icon: (
-          <LocalIcon
-            icon={isScrollLinked ? "link-rounded" : "link-off-rounded"}
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
+        icon: <Icon name={isScrollLinked ? "link" : "unlink"} size="1.5rem" />,
         tooltip: isScrollLinked
           ? t("compare.actions.unlinkScroll", "Unlink scroll")
           : t("compare.actions.linkScroll", "Link scroll"),
