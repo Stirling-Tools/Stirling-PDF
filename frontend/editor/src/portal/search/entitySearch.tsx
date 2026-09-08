@@ -116,7 +116,7 @@ export function rankDocsResults(
         .map((seg) => seg.text)
         .join("")
         .trim() || result.sectionLabel,
-    icon: <Icon name="book-open" />,
+    icon: <Icon name="book-open" size={18} />,
     score: result.score,
     onSelect: () => navigate(`${toPortalPath(VIEW_PATHS.docs)}#${result.id}`),
   }));
@@ -220,7 +220,7 @@ export function rankPortalPolicyResults(
       group: "portal-policies",
       title: policyResultTitle(item, t),
       subtitle: t(item.category.desc),
-      icon: <Icon name="shield-check" />,
+      icon: <Icon name="shield-check" size={18} />,
       score,
       onSelect: () => openPolicy(item.category.id),
     }));
@@ -244,7 +244,7 @@ export function rankPortalPipelineResults(
       group: "portal-pipelines",
       title: item.name,
       subtitle: item.trigger,
-      icon: <Icon name="workflow" />,
+      icon: <Icon name="workflow" size={18} />,
       score,
       onSelect: () => openPipeline(item.id),
     }));
@@ -285,7 +285,7 @@ export function buildProcessorEntityGroups(
           group: "portal-users",
           title: item.name,
           subtitle: item.email,
-          icon: <Icon name="users" />,
+          icon: <Icon name="users" size={18} />,
           score,
           onSelect: () =>
             navigate(
@@ -357,7 +357,7 @@ export function buildProcessorEntityGroups(
           group: "portal-sources",
           title: item.name,
           subtitle: item.type,
-          icon: <Icon name="plug" />,
+          icon: <Icon name="plug" size={18} />,
           score,
           onSelect: () =>
             navigate(`${toPortalPath(VIEW_PATHS.sources)}/${item.id}`),

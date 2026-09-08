@@ -426,7 +426,7 @@ export default function BookmarkEditor({
       {bookmarks.length === 0 ? (
         <Paper withBorder radius="md" ta="center" py="xl">
           <Stack gap="xs" align="center" px="lg">
-            <Icon name="bookmark-plus" size="1em" />
+            <Icon name="bookmark-plus" size="2.25rem" />
             <Text fw={600}>
               {t("editTableOfContents.editor.empty.title", "No bookmarks yet")}
             </Text>

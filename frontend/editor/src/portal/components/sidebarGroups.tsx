@@ -22,17 +22,21 @@ export interface NavGroup {
 // The processor's own workflow: home plus the pipeline it feeds. Policies were folded into
 // Pipelines (a policy is a pipeline the org requires), so there's no separate Policies tab.
 export const GROUP_PROCESSOR: NavEntry[] = [
-  { id: "home", icon: <Icon name="house" /> },
-  { id: "sources", icon: <Icon name="plug" /> },
-  { id: "pipelines", icon: <Icon name="workflow" /> },
-  { id: "documents", icon: <Icon name="file-text" /> },
+  { id: "home", icon: <Icon name="house" size={18} /> },
+  { id: "sources", icon: <Icon name="plug" size={18} /> },
+  { id: "pipelines", icon: <Icon name="workflow" size={18} /> },
+  { id: "documents", icon: <Icon name="file-text" size={18} /> },
 ];
 
 // The wider platform around the processor: people, connections, infra, billing, docs.
 export const GROUP_PLATFORM: NavEntry[] = [
-  { id: "users", icon: <Icon name="users" /> },
-  { id: "integrations", icon: <Icon name="plug-zap" /> },
-  { id: "infrastructure", icon: <Icon name="server" /> },
-  { id: "usage", icon: <Icon name="chart-column" />, requiresLink: true },
-  { id: "docs", icon: <Icon name="book-open" /> },
+  { id: "users", icon: <Icon name="users" size={18} /> },
+  { id: "integrations", icon: <Icon name="plug-zap" size={18} /> },
+  { id: "infrastructure", icon: <Icon name="server" size={18} /> },
+  {
+    id: "usage",
+    icon: <Icon name="chart-column" size={18} />,
+    requiresLink: true,
+  },
+  { id: "docs", icon: <Icon name="book-open" size={18} /> },
 ];

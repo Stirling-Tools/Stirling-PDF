@@ -537,7 +537,7 @@ export const FileItem = React.memo(function FileItem({
               {onDownload && (
                 <FileMenuItem
                   disabledReason={blockedReason(terminology.download)}
-                  icon={<Icon name={downloadIcon} size={20} />}
+                  icon={<Icon name={downloadIcon} size={16} />}
                   onClick={() => onDownload(fileId)}
                 >
                   {terminology.download}

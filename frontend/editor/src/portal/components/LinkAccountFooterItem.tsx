@@ -19,7 +19,7 @@ export function LinkAccountFooterItem() {
     <NavItem
       id="account-link"
       label={t("portal.shell.sidebar.linkAccount", "Link Stirling account")}
-      icon={<Icon name="link" />}
+      icon={<Icon name="link" size={18} />}
       onClick={() => openLinkModal()}
     />
   );

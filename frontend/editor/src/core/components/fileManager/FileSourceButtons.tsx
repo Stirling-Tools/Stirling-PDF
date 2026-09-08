@@ -97,7 +97,11 @@ const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({
           variant="tertiary"
           accent="neutral"
           leftSection={
-            <Icon name="googledrive" colorless={!isGoogleDriveEnabled} />
+            <Icon
+              name="googledrive"
+              size={18}
+              colorless={!isGoogleDriveEnabled}
+            />
           }
           justify={buttonJustify}
           onClick={handleGoogleDriveClick}
