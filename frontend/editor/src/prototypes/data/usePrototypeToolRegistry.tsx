@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import {
   SubcategoryId,
   ToolCategoryId,
@@ -26,13 +26,7 @@ export function usePrototypeToolRegistry(): PrototypeToolRegistry {
     () =>
       ({
         pdfCommentAgent: {
-          icon: (
-            <LocalIcon
-              icon="add-comment-outline-rounded"
-              width="1.5rem"
-              height="1.5rem"
-            />
-          ),
+          icon: <Icon name="message-square-plus" size="1.5rem" />,
           name: t("home.pdfCommentAgent.title", "Add AI comments"),
           component: PdfCommentAgent,
           description: t(
