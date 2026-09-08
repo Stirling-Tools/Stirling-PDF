@@ -34,11 +34,14 @@ public class InProcessPolicyStore implements PolicyStore {
                         policy.name(),
                         policy.owner(),
                         policy.enabled(),
+                        policy.required(),
+                        policy.icon(),
                         policy.inputs(),
                         policy.steps(),
                         policy.output(),
                         policy.outputIds(),
-                        policy.teamId());
+                        policy.teamId(),
+                        policy.editor());
         policies.put(id, stored);
         // Existing policy keeps its position; a new one appends to the end of its team's queue.
         sortOrders.computeIfAbsent(id, key -> nextSortOrder(stored.teamId()));

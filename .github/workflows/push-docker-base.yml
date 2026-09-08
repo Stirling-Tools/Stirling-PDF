@@ -17,6 +17,9 @@ permissions:
 
 jobs:
   push-base:
+    # Own environment: docker-publish is branch-locked to release/main,
+    # which excludes the baseDockerImage/accessIssueFix branches this runs on.
+    environment: docker-base-publish
     if: ${{ vars.CI_PROFILE != 'lite' && github.actor == 'Frooodle' }}
     runs-on: ubuntu-24.04-8core
     permissions:
@@ -32,9 +35,11 @@ jobs:
 
       - name: Set version
         id: version
+        env:
+          INPUT_VERSION: ${{ github.event.inputs.version }}
         run: |
           if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            VERSION="${{ github.event.inputs.version }}"
+            VERSION="${INPUT_VERSION}"
           elif [ "${{ github.ref_name }}" == "accessIssueFix" ]; then
             VERSION="1.0.3"
           else
@@ -43,7 +48,7 @@ jobs:
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
 
       - name: Harden Runner
-        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
         with:
           egress-policy: audit
 
@@ -64,7 +69,7 @@ jobs:
 
       - name: Set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
+        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8 # v4.2.0

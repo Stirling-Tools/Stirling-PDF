@@ -41,7 +41,9 @@ interface FilesModalContextType {
   setOnModalClose: (callback: () => void) => void;
 }
 
-const FilesModalContext = createContext<FilesModalContextType | null>(null);
+export const FilesModalContext = createContext<FilesModalContextType | null>(
+  null,
+);
 
 export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -183,7 +185,7 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
         responseType: "blob",
         suppressErrorToast: true,
         skipAuthRedirect: true,
-      } as any,
+      },
     );
     const contentType = readResponseHeader(response.headers, "content-type");
     const disposition = readResponseHeader(
@@ -204,7 +206,7 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
         responseType: "blob",
         suppressErrorToast: true,
         skipAuthRedirect: true,
-      } as any,
+      },
     );
     const contentType = readResponseHeader(response.headers, "content-type");
     const disposition = readResponseHeader(

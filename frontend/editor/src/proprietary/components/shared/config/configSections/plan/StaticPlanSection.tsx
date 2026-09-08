@@ -48,10 +48,10 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({
     if (currentTier === "free" && plan === "enterprise") {
       alert({
         alertType: "warning",
-        title: t("plan.enterprise.requiresServer", "Server Plan Required"),
+        title: t("plan.enterprise.requiresServer", "Requires Team plan"),
         body: t(
           "plan.enterprise.requiresServerMessage",
-          "Please upgrade to the Server plan first before upgrading to Enterprise.",
+          "Please upgrade to the Team plan first before upgrading to Enterprise.",
         ),
       });
       return;
@@ -92,14 +92,14 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({
     },
     {
       id: "server",
-      name: "Server",
+      name: t("plan.team.name", "Team"),
       price: 0,
       currency: "",
       period: "",
       popular: false,
       highlights: planHighlights.SERVER_MONTHLY,
       features: planFeatures.SERVER,
-      maxUsers: "Unlimited users",
+      maxUsers: t("plan.team.maxUsers", "100 users"),
     },
     {
       id: "enterprise",
@@ -227,7 +227,7 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({
                     );
                   }
 
-                  // Server Plan
+                  // Team plan
                   if (plan.id === "server") {
                     if (currentTier === "free") {
                       return (
@@ -274,7 +274,7 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({
                         <Tooltip
                           label={t(
                             "plan.enterprise.requiresServer",
-                            "Requires Server plan",
+                            "Requires Team plan",
                           )}
                           position="top"
                           withArrow

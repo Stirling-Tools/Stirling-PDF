@@ -1,23 +1,20 @@
 import { useCallback } from "react";
-import { useApplyLinkFacts, useLink } from "@portal/contexts/LinkContext";
+import { useApplyLinkFacts } from "@portal/contexts/LinkContext";
 import { useUI } from "@portal/contexts/UIContext";
-import { LinkAccountPrompt } from "@portal/components/billing/LinkAccountPrompt";
+import { ConnectGuardedRoute } from "@portal/components/account-link/ConnectGuardedRoute";
+import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
 import { Usage } from "@portal/views/Usage";
 import type { Wallet } from "@portal/api/billing";
 
 /**
- * Billing access gate — the seam the SaaS build overrides.
+ * The seam the SaaS build shadows, and the backstop for a typed URL — the nav already refuses to
+ * come here unlinked (the sidebar's requiresLink).
  *
- * <p>Self-hosted (this base): billing only makes sense once the instance has
- * linked its SaaS account, so gate on link state — unlinked shows the link prompt;
- * linked renders the (flavor-agnostic) Usage page and maps its callbacks onto the
- * link/tier dimension: the wallet's subscription status refines the plan/tier
- * badge, and a lapsed SaaS session re-opens the account-link re-auth. This keeps
- * the "link" concept entirely out of the Usage page. The SaaS build shadows this
- * with a passthrough — there is no linking there.
+ * <p>Usage must not render while unlinked: {@link onWalletLoaded} reports linked as a fact, and the
+ * browser can hold a SaaS session with no link to this server, so rendering it flipped the portal
+ * to linked.
  */
 export function PortalBillingGate() {
-  const { isLinked } = useLink();
   const applyLinkFacts = useApplyLinkFacts();
   const { openLinkModal } = useUI();
 
@@ -27,6 +24,9 @@ export function PortalBillingGate() {
   );
   const onReauth = useCallback(() => openLinkModal("reauth"), [openLinkModal]);
 
-  if (!isLinked) return <LinkAccountPrompt />;
-  return <Usage onWalletLoaded={onWalletLoaded} onReauth={onReauth} />;
+  return (
+    <ConnectGuardedRoute fallback={toPortalPath(VIEW_PATHS.home)}>
+      <Usage onWalletLoaded={onWalletLoaded} onReauth={onReauth} />
+    </ConnectGuardedRoute>
+  );
 }

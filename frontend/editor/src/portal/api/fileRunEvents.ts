@@ -35,7 +35,15 @@ export type FileRunEventStatus =
   | "NEW"
   | "ACKNOWLEDGED"
   | "DISMISSED"
-  | "RESOLVED";
+  | "RESOLVED"
+  /** Its document was deleted from the owner's editor, so there is nothing left to act on. */
+  | "FILE_REMOVED";
+
+/** Intent, not layout: only the client knows what this device can actually run. */
+export type FailureActionSlot = "RESOLUTION" | "SECONDARY" | "OVERFLOW";
+
+/** Who performs the action: this client, or the server via the actions endpoint. */
+export type FailureActionExecution = "SERVER" | "CLIENT";
 
 /**
  * One button as offered for one row. `id` is a plain string rather than a union
@@ -44,6 +52,10 @@ export type FileRunEventStatus =
 export interface FailureActionOffer {
   id: string;
   labelKey: string;
+  /** English fallback, for a build with no copy for `labelKey`. */
+  defaultLabel: string;
+  execution: FailureActionExecution;
+  slot: FailureActionSlot;
   enabled: boolean;
   disabledReasonKey: string | null;
 }
@@ -64,6 +76,8 @@ export interface FileRunEvent {
   detail: string | null;
   policyId: string | null;
   runId: string | null;
+  /** Which folder, bucket or webhook fed the run. Null when a user supplied the file. */
+  sourceId: string | null;
   /**
    * Opaque reference, never a name. Only the owner's own client can resolve it to
    * something readable, from its local file store.
@@ -83,8 +97,24 @@ export interface FileRunEventsResponse {
   events: FileRunEvent[];
 }
 
+/** Which half of the queue a read asks for: still needing a decision, or already settled. */
+export type FileRunEventScope = "open" | "closed";
+
+/** Mirrors the server's terminal statuses: a closed row admits no further transition. */
+const CLOSED_STATUSES: ReadonlySet<FileRunEventStatus> = new Set([
+  "DISMISSED",
+  "RESOLVED",
+  "FILE_REMOVED",
+]);
+
+export function isClosedStatus(status: FileRunEventStatus): boolean {
+  return CLOSED_STATUSES.has(status);
+}
+
 export interface ListFileRunEventsParams {
   status?: FileRunEventStatus;
+  /** The settled rows rather than the open queue; an explicit status wins over it. */
+  closed?: boolean;
   kindId?: string;
   limit?: number;
 }
@@ -95,6 +125,7 @@ export async function fetchFileRunEvents(
 ): Promise<FileRunEvent[]> {
   const query = new URLSearchParams();
   if (params.status) query.set("status", params.status);
+  if (params.closed) query.set("closed", "true");
   if (params.kindId) query.set("kindId", params.kindId);
   if (params.limit != null) query.set("limit", String(params.limit));
   const suffix = query.toString() ? `?${query}` : "";

@@ -194,6 +194,18 @@
   color: var(--c-text-subtle);
 }
 
+/* A field label that carries an info icon explaining the choice. */
+.portal-builder__label-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  cursor: help;
+}
+
+.portal-builder__label-hint svg {
+  color: var(--c-text-subtle);
+}
+
 .portal-builder__input-row .portal-builder__source-edit:hover:not(:disabled) {
   color: var(--c-accent-fg, var(--c-primary));
 }
@@ -224,4 +236,44 @@
   justify-content: space-between;
   gap: 0.5rem;
   width: 100%;
+}
+
+/* The graph column IS the card: the test control is its header and the graph its body, so the test
+   control reads as the graph's toolbar and - crucially - the card's top lines up with the inspector
+   beside it (a toolbar sitting *above* the card pushed the graph down out of alignment). Caps at the
+   row height and clips its rounded corners; the body scrolls inside while the header stays put. */
+.portal-builder__canvas {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: 100%;
+  overflow: hidden;
+  border: 1px solid var(--c-border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--c-surface-sunken);
+}
+
+/* The test control as the card's header, ruled off from the graph below it. */
+.portal-builder__canvas > .portal-pipeline-toolbar {
+  flex: none;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--c-border-subtle);
+}
+
+/* The graph as the card's body: it drops its own frame (the canvas provides it now) and scrolls
+   inside while the header stays put. */
+.portal-builder__canvas > .portal-graph {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+}
+
+/* Stacked (short viewport): the page scrolls, so the column must not cap or nest its own scroll. */
+@media (max-width: 60rem) {
+  .portal-builder__canvas {
+    max-height: none;
+  }
 }

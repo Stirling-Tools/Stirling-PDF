@@ -86,11 +86,11 @@ export default function AdminAdvancedSection() {
     setSettings,
     loading,
     saving,
-    fetchSettings,
     saveSettings,
     isFieldPending,
   } = useAdminSettings<AdvancedSettingsData>({
     sectionName: "advanced",
+    enabled: loginEnabled,
     fetchTransformer: async (): Promise<
       AdvancedSettingsData & { _pending?: Record<string, unknown> }
     > => {
@@ -206,12 +206,6 @@ export default function AdminAdvancedSection() {
       };
     },
   });
-
-  useEffect(() => {
-    if (loginEnabled) {
-      fetchSettings();
-    }
-  }, [loginEnabled]);
 
   const [tessdataLanguages, setTessdataLanguages] = useState<string[]>([]);
   const [remoteTessdataLanguages, setRemoteTessdataLanguages] = useState<

@@ -30,4 +30,15 @@ describe("automatable tools", () => {
 
     expect(offeredWithoutConfig).toEqual([]);
   });
+
+  // Reorganize Pages has an automatable form (organization mode + page-order string) and a
+  // context-free settings component, but its registry entry once left automationSettings null,
+  // so both Automate and the pipeline builder showed "no configurable settings". Guard the wiring.
+  test("Reorganize Pages exposes automation settings so it is configurable, not no-settings", () => {
+    const { result } = renderHook(() => useTranslatedToolCatalog());
+
+    expect(
+      result.current.regularTools.reorganizePages?.automationSettings,
+    ).toBeTruthy();
+  });
 });

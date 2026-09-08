@@ -36,7 +36,6 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     });
     setSelectedFiles(matching.map((file) => file.fileId));
   };
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const convertParams = useConvertParameters();
   const convertOperation = useConvertOperation(convertParams.parameters);
@@ -48,16 +47,6 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const skipNextSelectionResetRef = useRef(false);
   const previousSelectionRef = useRef<string>("");
 
-  const scrollToBottom = () => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollTo({
-        top: scrollContainerRef.current.scrollHeight,
-        behavior: "smooth",
-      });
-    }
-  };
-
-  const hasFiles = selectedFiles.length > 0;
   const hasResults =
     convertOperation.files.length > 0 ||
     convertOperation.downloadUrl !== null ||
@@ -114,18 +103,6 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     convertParams.parameters.fromExtension,
     convertParams.parameters.toExtension,
   ]);
-
-  useEffect(() => {
-    if (hasFiles) {
-      setTimeout(scrollToBottom, 100);
-    }
-  }, [hasFiles]);
-
-  useEffect(() => {
-    if (hasResults) {
-      setTimeout(scrollToBottom, 100);
-    }
-  }, [hasResults]);
 
   const handleConvert = async () => {
     try {

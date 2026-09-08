@@ -11,6 +11,11 @@ import {
   type UpdateModeInfo,
 } from "@app/services/desktopUpdateService";
 
+interface GeneralSectionProps {
+  /** Forwarded to the core section; the settings modal header already names it. */
+  hideTitle?: boolean;
+}
+
 /**
  * Desktop extension of GeneralSection.
  *
@@ -20,7 +25,9 @@ import {
  * still rendered but disabled, with a "Managed by administrator" hint, so
  * managed-deployment users can see what policy is in effect.
  */
-const GeneralSection: React.FC = () => {
+const GeneralSection: React.FC<GeneralSectionProps> = ({
+  hideTitle = false,
+}) => {
   const { t } = useTranslation();
   const install = useDesktopInstall();
   // In SaaS connection mode the cloud owns app versioning — hide the update
@@ -96,6 +103,7 @@ const GeneralSection: React.FC = () => {
         </Alert>
       )}
       <CoreGeneralSection
+        hideTitle={hideTitle}
         hideUpdateSection={
           isSaaSMode ||
           (updateModeInfo.mode === "disabled" && updateModeInfo.locked)

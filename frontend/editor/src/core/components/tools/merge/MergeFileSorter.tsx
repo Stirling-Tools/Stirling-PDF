@@ -70,7 +70,7 @@ const MergeFileSorter: React.FC<MergeFileSorterProps> = ({
 
           <ActionIcon
             variant="secondary"
-            size="md"
+            size="sm"
             onClick={handleDirectionToggle}
             disabled={disabled}
             title={

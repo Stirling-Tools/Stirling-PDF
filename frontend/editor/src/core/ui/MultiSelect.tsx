@@ -8,7 +8,7 @@ import { useInputAria } from "@app/ui/ariaForwarding";
 import "@app/ui/MantineForms.css";
 
 const SUI_INPUT_VARS = {
-  "--input-bg": "var(--c-surface)",
+  "--input-bg": "var(--c-input-bg)",
   "--input-bd": "var(--c-border)",
   "--input-bd-focus": "var(--c-primary)",
   "--input-radius": "var(--radius-md)",
@@ -174,6 +174,7 @@ export function MultiSelect({
       ref={inputRef}
       classNames={{
         wrapper: "sui-mantine-wrapper",
+        dropdown: "sui-mantine-dropdown",
         pill: "sui-mantine-pill",
         pillsList: "sui-mantine-pills-list",
       }}
