@@ -183,7 +183,7 @@ export function ToolPicker({
                   >
                     <BrandMark
                       id={op.custom ? "api" : op.connectionTypeId}
-                      size={17}
+                      size={18}
                     />
                   </span>
                 }

@@ -596,9 +596,9 @@ export function PipelineBuilder() {
     const op = stepOperation(step);
     if (op)
       return (
-        <BrandMark id={op.custom ? "api" : op.connectionTypeId} size={17} />
+        <BrandMark id={op.custom ? "api" : op.connectionTypeId} size={18} />
       );
-    if (isIntegrationStep(step)) return <BrandMark id="api" size={17} />;
+    if (isIntegrationStep(step)) return <BrandMark id="api" size={18} />;
     return step.toolId ? allTools[step.toolId]?.icon : undefined;
   }
 
