@@ -10,6 +10,8 @@ import {
   STROKE_WIDTH,
   DEFAULT_SIZE,
 } from "../src/core/icons/icons.config.mjs";
+// oxlint-disable-next-line no-restricted-imports -- build script; no alias covers scripts/
+import { inkBounds } from "../src/core/icons/svgInkBounds.mjs";
 
 const EDITOR = path.join(import.meta.dirname, "..");
 const SRC = path.join(EDITOR, "src");
@@ -230,22 +232,23 @@ function lucideVersion() {
 const notices = new Map();
 
 // Brand art arrives on whatever grid its owner drew it on (googledrive is
-// 87.3x78, dropbox 16x16), and filling a square box makes it out-scale the
-// stroke icons beside it. Map each mark onto the 24 grid's 20-unit ink box.
+// 87.3x78, dropbox 16x16, our own drawings sit inset on a 24 grid), and
+// filling a square box makes it out-scale the stroke icons beside it. Each
+// mark is measured by what it paints and mapped onto the 24 grid's 20-unit ink
+// box, so the padding in the source file never reaches the app.
 const GRID = 24;
 const INK = 20;
 
-function normaliseToGrid(viewBox, nodes, label) {
-  const [minX, minY, w, h] = viewBox
-    .trim()
-    .split(/[\s,]+/)
-    .map(Number);
-  if (![minX, minY, w, h].every(Number.isFinite) || w <= 0 || h <= 0)
-    throw new Error(`${label}: cannot read viewBox "${viewBox}"`);
+function normaliseToGrid(nodes, label) {
+  const box = inkBounds(nodes);
+  if (!box) throw new Error(`${label}: draws nothing`);
+  const w = box.maxX - box.minX;
+  const h = box.maxY - box.minY;
+  if (w <= 0 && h <= 0) throw new Error(`${label}: ink has no extent`);
   const round = (n) => Number(n.toFixed(4));
   const scale = INK / Math.max(w, h);
-  const tx = round((GRID - w * scale) / 2 - minX * scale);
-  const ty = round((GRID - h * scale) / 2 - minY * scale);
+  const tx = round((GRID - w * scale) / 2 - box.minX * scale);
+  const ty = round((GRID - h * scale) / 2 - box.minY * scale);
   const transform = `translate(${tx} ${ty}) scale(${round(scale)})`;
   return {
     viewBox: `0 0 ${GRID} ${GRID}`,
@@ -267,7 +270,7 @@ function collectCustom(dir, { normalise = false } = {}) {
     if (notice) notices.set(name, notice);
     const read = readSvgFile(path.join(abs, file), name);
     const { viewBox, nodes } = normalise
-      ? normaliseToGrid(read.viewBox, read.nodes, `${dir}/${file}`)
+      ? normaliseToGrid(read.nodes, `${dir}/${file}`)
       : read;
     out[name] = {
       viewBox,
