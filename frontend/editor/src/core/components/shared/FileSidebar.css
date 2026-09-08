@@ -151,19 +151,7 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-
-.file-sidebar-scroll::-webkit-scrollbar {
-  width: 4px;
-}
-.file-sidebar-scroll::-webkit-scrollbar-track {
-  background: transparent;
-}
-.file-sidebar-scroll::-webkit-scrollbar-thumb {
-  background: rgb(var(--border));
-  border-radius: 2px;
+  overflow: hidden;
 }
 
 /* ---- Action rows (Open from Computer, etc.) ---- */
@@ -284,7 +272,10 @@
 .file-sidebar-file-list {
   flex: 1;
   min-height: 0;
-  overflow-y: scroll;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--c-text-subtle) transparent;
 }
 
 /* --- Grouped list (SaaS: Recent + per-category groups). Inert when the
@@ -410,17 +401,20 @@
 }
 
 .file-sidebar-file-list::-webkit-scrollbar {
-  width: 4px;
+  width: 6px;
 }
 .file-sidebar-file-list::-webkit-scrollbar-track {
   background: transparent;
 }
 .file-sidebar-file-list::-webkit-scrollbar-thumb {
-  background: rgb(var(--border));
-  border-radius: 2px;
+  background: var(--c-border-strong);
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background-clip: content-box;
 }
 .file-sidebar-file-list::-webkit-scrollbar-thumb:hover {
   background: var(--c-text-subtle);
+  background-clip: content-box;
 }
 
 .file-sidebar-section-divider {
