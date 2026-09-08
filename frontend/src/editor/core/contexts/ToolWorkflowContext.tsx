@@ -240,6 +240,8 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   // Tool history hook
   const { favoriteTools, toggleFavorite, isFavorite } = useToolHistory();
 
+  const appVersion = useAppConfig().config?.appVersion;
+
   // Get selected tool from navigation context
   const selectedTool = getSelectedTool(navigationState.selectedTool);
 
@@ -480,8 +482,8 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     const toolId = navigationState.selectedTool;
     if (!toolId) return;
     const tool = allTools[toolId];
-    if (tool) acknowledgeToolFreshness(toolId, tool);
-  }, [navigationState.selectedTool, allTools]);
+    if (tool) acknowledgeToolFreshness(toolId, tool, appVersion);
+  }, [navigationState.selectedTool, allTools, appVersion]);
 
   // Tool reset methods
   const registerToolReset = useCallback(
