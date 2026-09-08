@@ -1456,7 +1456,8 @@
     font-size: 0.85rem;
     flex-wrap: nowrap;
     overflow-x: auto;
-    min-width: 0;
+    min-width: 5rem;
+    max-width: 45%;
   }
   /* Icon-only actions: the labels are what pushed Upload past the edge. */
   .files-page-header-actions .mantine-Button-root {
