@@ -15,7 +15,7 @@ import {
 } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import { alert } from "@app/components/toast";
 import { teamService, Team } from "@app/services/teamService";
 import { type User } from "@app/services/userManagementService";
@@ -226,7 +226,7 @@ export default function TeamsSection() {
       {/* Header Actions */}
       <Group justify="flex-end">
         <Button
-          leftSection={<LocalIcon icon="add" width="1rem" height="1rem" />}
+          leftSection={<Icon name="plus" size="1rem" />}
           onClick={() => setCreateModalOpened(true)}
           disabled={!loginEnabled}
         >
@@ -325,42 +325,28 @@ export default function TeamsSection() {
                           "Team actions",
                         )}
                       >
-                        <LocalIcon
-                          icon="more-vert"
-                          width="1rem"
-                          height="1rem"
-                        />
+                        <Icon name="ellipsis-vertical" size="1rem" />
                       </ActionIcon>
                     </Menu.Target>
                     <Menu.Dropdown
                       style={{ zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
                     >
                       <Menu.Item
-                        leftSection={
-                          <LocalIcon
-                            icon="visibility"
-                            width="1rem"
-                            height="1rem"
-                          />
-                        }
+                        leftSection={<Icon name="eye" size="1rem" />}
                         onClick={() => setViewingTeamId(team.id)}
                         disabled={!loginEnabled}
                       >
                         {t("workspace.teams.viewTeam", "View Team")}
                       </Menu.Item>
                       <Menu.Item
-                        leftSection={
-                          <LocalIcon icon="group" width="1rem" height="1rem" />
-                        }
+                        leftSection={<Icon name="users" size="1rem" />}
                         onClick={() => openAddMemberModal(team)}
                         disabled={!loginEnabled}
                       >
                         {t("workspace.teams.addMember")}
                       </Menu.Item>
                       <Menu.Item
-                        leftSection={
-                          <LocalIcon icon="edit" width="1rem" height="1rem" />
-                        }
+                        leftSection={<Icon name="pencil" size="1rem" />}
                         onClick={() => openRenameModal(team)}
                         disabled={!loginEnabled}
                       >
@@ -369,9 +355,7 @@ export default function TeamsSection() {
                       <Menu.Divider />
                       <Menu.Item
                         color="red"
-                        leftSection={
-                          <LocalIcon icon="delete" width="1rem" height="1rem" />
-                        }
+                        leftSection={<Icon name="trash" size="1rem" />}
                         onClick={() => handleDeleteTeam(team)}
                         disabled={!loginEnabled || team.name === "Internal"}
                       >
@@ -409,15 +393,14 @@ export default function TeamsSection() {
               zIndex: 1,
             }}
           >
-            <LocalIcon icon="close" width="1.25rem" height="1.25rem" />
+            <Icon name="x" size="1.25rem" />
           </ActionIcon>
           <Stack gap="lg" pt="md">
             {/* Header with Icon */}
             <Stack gap="md" align="center">
-              <LocalIcon
-                icon="group-add"
-                width="3rem"
-                height="3rem"
+              <Icon
+                name="users-plus"
+                size="3rem"
                 style={{ color: "var(--mantine-color-gray-6)" }}
               />
               <Text size="xl" fw={600} ta="center">
@@ -469,15 +452,14 @@ export default function TeamsSection() {
               zIndex: 1,
             }}
           >
-            <LocalIcon icon="close" width="1.25rem" height="1.25rem" />
+            <Icon name="x" size="1.25rem" />
           </ActionIcon>
           <Stack gap="lg" pt="md">
             {/* Header with Icon */}
             <Stack gap="md" align="center">
-              <LocalIcon
-                icon="edit"
-                width="3rem"
-                height="3rem"
+              <Icon
+                name="pencil"
+                size="3rem"
                 style={{ color: "var(--mantine-color-gray-6)" }}
               />
               <Text size="xl" fw={600} ta="center">
@@ -535,15 +517,14 @@ export default function TeamsSection() {
               zIndex: 1,
             }}
           >
-            <LocalIcon icon="close" width="1.25rem" height="1.25rem" />
+            <Icon name="x" size="1.25rem" />
           </ActionIcon>
           <Stack gap="lg" pt="md">
             {/* Header with Icon */}
             <Stack gap="md" align="center">
-              <LocalIcon
-                icon="person-add"
-                width="3rem"
-                height="3rem"
+              <Icon
+                name="user-plus"
+                size="3rem"
                 style={{ color: "var(--mantine-color-gray-6)" }}
               />
               <Text size="xl" fw={600} ta="center">

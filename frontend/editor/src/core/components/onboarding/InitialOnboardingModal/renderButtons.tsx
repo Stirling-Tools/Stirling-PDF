@@ -2,7 +2,7 @@ import React from "react";
 import { Group } from "@mantine/core";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Button } from "@app/ui/Button";
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
 import {
   ButtonDefinition,
@@ -71,7 +71,7 @@ export function SlideButtons({
           aria-label={t("onboarding.buttons.back", "Back")}
         >
           {button.icon === "chevron-left" ? (
-            <ChevronLeftIcon fontSize="small" />
+            <Icon name="chevron-left" size={20} />
           ) : null}
         </ActionIcon>
       );

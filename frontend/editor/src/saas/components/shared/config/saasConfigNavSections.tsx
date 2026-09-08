@@ -1,4 +1,5 @@
 import React from "react";
+import type { ConfigNavItem } from "@app/components/shared/config/types";
 import { type TFunction } from "i18next";
 import {
   createConfigNavSections as createCoreConfigNavSections,
@@ -42,13 +43,13 @@ function ensurePreferencesSection(
           {
             key: "general",
             label: "General",
-            icon: "settings-rounded",
+            icon: "settings",
             component: <GeneralSection />,
           },
           {
             key: "hotkeys",
             label: "Keyboard Shortcuts",
-            icon: "keyboard-rounded",
+            icon: "keyboard",
             component: <HotkeysSection />,
           },
         ],
@@ -80,7 +81,7 @@ function appendDeveloperSection(
         {
           key: "api-keys",
           label: "API Keys",
-          icon: "key-rounded",
+          icon: "key",
           component: <ApiKeys />,
         },
       ],
@@ -119,10 +120,10 @@ function appendMcpSection(
     return sections;
   }
 
-  const mcpItem = {
-    key: "mcp" as const,
+  const mcpItem: ConfigNavItem = {
+    key: "mcp",
     label: t("config.mcp.navLabel", "MCP Server"),
-    icon: "smart-toy-rounded",
+    icon: "bot",
     component: <McpSection />,
   };
 
@@ -164,7 +165,7 @@ function appendHelpSection(
         {
           key: "help" as const,
           label: t("settings.help.label", "Tours"),
-          icon: "help-rounded",
+          icon: "circle-question-mark",
           component: (
             <HelpSection isAdmin={false} onRequestClose={onRequestClose} />
           ),
@@ -196,7 +197,7 @@ function appendLegalSection(
         {
           key: "legal" as const,
           label: t("settings.legal.label", "Legal"),
-          icon: "gavel-rounded",
+          icon: "gavel",
           component: <LegalSection />,
         },
       ],
@@ -223,7 +224,7 @@ export function createSaasConfigNavSections(
       {
         key: "overview",
         label: t("config.account.overview.label", "Overview"),
-        icon: "account-circle",
+        icon: "circle-user",
         component: <Overview onLogoutClick={onLogoutClick} />,
       },
       {
