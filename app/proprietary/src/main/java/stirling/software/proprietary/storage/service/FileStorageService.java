@@ -149,7 +149,11 @@ public class FileStorageService {
             applyHistoryMetadata(storedFile, historyObject);
             applyAuditMetadata(storedFile, auditObject);
             try {
-                return storedFileRepository.save(storedFile);
+                StoredFile saved = storedFileRepository.save(storedFile);
+                deleteAfterRollback(mainObject);
+                deleteAfterRollback(historyObject);
+                deleteAfterRollback(auditObject);
+                return saved;
             } catch (RuntimeException saveError) {
                 cleanupStoredObject(mainObject);
                 cleanupStoredObject(historyObject);
@@ -337,6 +341,9 @@ public class FileStorageService {
                 cleanupStoredObject(auditObject);
                 throw saveError;
             }
+            deleteAfterRollback(mainObject);
+            deleteAfterRollback(historyObject);
+            deleteAfterRollback(auditObject);
             deleteAfterCommit(oldStorageKey);
             if (historyObject != null) {
                 deleteAfterCommit(oldHistoryKey);
@@ -1227,6 +1234,28 @@ public class FileStorageService {
                     @Override
                     public void afterCommit() {
                         cleanupStoredKey(storageKey);
+                    }
+                });
+    }
+
+    // A freshly written blob is reachable only through the uncommitted row, so anything that throws
+    // later in the same transaction - recording the share access, building the response - would
+    // leave it on the provider with nothing pointing at it and no cleanup-queue row.
+    private void deleteAfterRollback(StoredObject storedObject) {
+        if (storedObject == null || !TransactionSynchronizationManager.isSynchronizationActive()) {
+            return;
+        }
+        String storageKey = storedObject.getStorageKey();
+        if (storageKey == null || storageKey.isBlank()) {
+            return;
+        }
+        TransactionSynchronizationManager.registerSynchronization(
+                new TransactionSynchronization() {
+                    @Override
+                    public void afterCompletion(int status) {
+                        if (status == STATUS_ROLLED_BACK) {
+                            cleanupStoredKey(storageKey);
+                        }
                     }
                 });
     }

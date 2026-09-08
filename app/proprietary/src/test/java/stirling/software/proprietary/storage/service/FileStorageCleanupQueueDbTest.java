@@ -1,6 +1,7 @@
 package stirling.software.proprietary.storage.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.doThrow;
@@ -19,11 +20,13 @@ import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.persistence.EntityManager;
 
@@ -33,6 +36,7 @@ import stirling.software.proprietary.security.database.repository.UserRepository
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.storage.model.StoredFile;
 import stirling.software.proprietary.storage.provider.StorageProvider;
+import stirling.software.proprietary.storage.provider.StoredObject;
 import stirling.software.proprietary.storage.repository.FileShareAccessRepository;
 import stirling.software.proprietary.storage.repository.FileShareRepository;
 import stirling.software.proprietary.storage.repository.StorageCleanupEntryRepository;
@@ -52,6 +56,7 @@ class FileStorageCleanupQueueDbTest {
     @Autowired private StoredFileRepository storedFileRepository;
     @Autowired private PlatformTransactionManager transactionManager;
     @Autowired private EntityManager entityManager;
+    @Autowired private StorageProvider storageProvider;
 
     @Test
     void failedBlobDeleteAfterCommitLeavesACleanupEntryBehind() {
@@ -86,6 +91,39 @@ class FileStorageCleanupQueueDbTest {
         assertThat(cleanupEntryRepository.findAll())
                 .extracting(entry -> entry.getStorageKey())
                 .contains(mainKey, historyKey, auditKey);
+    }
+
+    @Test
+    void aBlobWrittenInARolledBackTransactionIsQueuedForCleanup() throws IOException {
+        String storageKey = "orphan-" + UUID.randomUUID();
+        when(storageProvider.store(any(User.class), any(MultipartFile.class)))
+                .thenReturn(
+                        StoredObject.builder()
+                                .storageKey(storageKey)
+                                .originalFilename("doc.pdf")
+                                .contentType("application/pdf")
+                                .sizeBytes(3)
+                                .build());
+        User owner = inTransaction(() -> newFile("owner-only-" + UUID.randomUUID()).getOwner());
+
+        new TransactionTemplate(transactionManager)
+                .execute(
+                        status -> {
+                            fileStorageService.storeFile(
+                                    owner,
+                                    new MockMultipartFile(
+                                            "file",
+                                            "doc.pdf",
+                                            "application/pdf",
+                                            new byte[] {1, 2, 3}));
+                            status.setRollbackOnly();
+                            return null;
+                        });
+
+        assertThat(storedFileRepository.findAll()).isEmpty();
+        assertThat(cleanupEntryRepository.findAll())
+                .extracting(entry -> entry.getStorageKey())
+                .contains(storageKey);
     }
 
     @Test
