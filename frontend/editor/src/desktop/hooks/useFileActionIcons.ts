@@ -1,19 +1,20 @@
-import FolderOpenOutlinedIcon from "@mui/icons-material/FolderOpenOutlined";
-import SaveOutlinedIcon from "@mui/icons-material/SaveOutlined";
+import type { IconName } from "@app/ui/Icon";
 
 /**
  * File action icons for desktop builds.
- * Overrides the core implementation with desktop-appropriate icons.
- * The presence of `saveAsIconName` signals the WorkbenchBar to show the Save As button.
+ * Opens a local folder rather than uploading, and saves rather than
+ * downloading. A defined \`saveAs\` makes WorkbenchBar show the Save As button.
  */
-export function useFileActionIcons() {
+export function useFileActionIcons(): {
+  upload: IconName;
+  download: IconName;
+  saveAs: IconName | undefined;
+} {
   return {
-    upload: FolderOpenOutlinedIcon,
-    download: SaveOutlinedIcon,
-    uploadIconName: "folder-rounded" as const,
-    downloadIconName: "save-rounded" as const,
-    // Returning this icon name causes WorkbenchBar to render the Save As button.
-    // On desktop, downloadFile() without a localPath shows a native save dialog.
-    saveAsIconName: "save-as-rounded" as string | undefined,
+    upload: "folder-open",
+    download: "save",
+    // Returning this causes WorkbenchBar to render the Save As button. On
+    // desktop, downloadFile() without a localPath shows a native save dialog.
+    saveAs: "save-all",
   };
 }

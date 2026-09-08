@@ -7,14 +7,14 @@
 import { policyCategoryIcon } from "@app/components/policies/policyCategoryIcon";
 import type { PolicyCategory } from "@app/types/policies";
 
-const ICON_SX = { fontSize: "1rem" } as const;
+const ICON_SIZE = "1rem";
 
 /** The 5 policy categories, in display order. */
 export const POLICY_CATEGORIES: PolicyCategory[] = [
   {
     id: "ingestion",
     label: "Ingestion",
-    icon: policyCategoryIcon("ingestion", ICON_SX),
+    icon: policyCategoryIcon("ingestion", ICON_SIZE),
     desc: "Classify documents, extract structured data, enforce naming conventions, and normalize pages.",
     // The classifier the wizard's "Set up Classification" action routes to.
     providesClassification: true,
@@ -24,33 +24,33 @@ export const POLICY_CATEGORIES: PolicyCategory[] = [
   {
     id: "security",
     label: "Security",
-    icon: policyCategoryIcon("security", ICON_SX),
+    icon: policyCategoryIcon("security", ICON_SIZE),
     desc: "Detect PII, encrypt, verify authenticity, control access, and certify documents.",
   },
   {
     id: "classification",
     label: "Classification",
-    icon: policyCategoryIcon("classification", ICON_SX),
+    icon: policyCategoryIcon("classification", ICON_SIZE),
     desc: "Identify each document's type on upload and tag its metadata for filing and search.",
   },
   {
     id: "compliance",
     label: "Compliance",
-    icon: policyCategoryIcon("compliance", ICON_SX),
+    icon: policyCategoryIcon("compliance", ICON_SIZE),
     desc: "Enforce HIPAA, GDPR, SOC 2, or FedRAMP requirements on every document.",
     comingSoon: true,
   },
   {
     id: "routing",
     label: "Routing",
-    icon: policyCategoryIcon("routing", ICON_SX),
+    icon: policyCategoryIcon("routing", ICON_SIZE),
     desc: "Auto-route documents to the right team, folder, or system.",
     comingSoon: true,
   },
   {
     id: "retention",
     label: "Retention",
-    icon: policyCategoryIcon("retention", ICON_SX),
+    icon: policyCategoryIcon("retention", ICON_SIZE),
     desc: "Set how long documents are kept, when to archive, and when to delete.",
     comingSoon: true,
   },

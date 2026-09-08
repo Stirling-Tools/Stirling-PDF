@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Loader } from "@mantine/core";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import FolderSpecialIcon from "@mui/icons-material/FolderSpecial";
+import { Icon } from "@app/ui/Icon";
 import { Button } from "@app/ui/Button";
 import { Modal } from "@app/ui/Modal";
 import {
@@ -251,7 +250,7 @@ export function DownloadsProcessingWizard({
           variant="secondary"
           size="sm"
           onClick={() => setOpen(true)}
-          leftSection={<FolderSpecialIcon fontSize="small" />}
+          leftSection={<Icon name="folder-bookmark" size={20} />}
         >
           {t("processingFolders.downloads.trigger", {
             count: suggestion.pdfCount,
@@ -272,7 +271,7 @@ export function DownloadsProcessingWizard({
       width={phase === "asking" ? "sm" : "lg"}
       title={
         <span className="downloads-wizard__title">
-          <FolderSpecialIcon fontSize="small" />
+          <Icon name="folder-bookmark" size={20} />
           {t("processingFolders.downloads.title", "Organise your Downloads?")}
         </span>
       }
@@ -380,9 +379,10 @@ export function DownloadsProcessingWizard({
       {phase === "done" && (
         <div className="downloads-wizard__body">
           <p className="downloads-wizard__counts">
-            <CheckCircleIcon
+            <Icon
+              name="circle-check"
               className="downloads-wizard__tick"
-              fontSize="inherit"
+              size="1em"
             />{" "}
             {processed + failed === 0
               ? (summary?.failed ?? 0) > 0

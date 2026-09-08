@@ -9,12 +9,7 @@ import {
   TextInput,
   Tooltip,
 } from "@mantine/core";
-import HomeIcon from "@mui/icons-material/Home";
-import FolderIcon from "@mui/icons-material/Folder";
-import FolderOpenIcon from "@mui/icons-material/FolderOpen";
-import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
-import ErrorOutlineIcon from "@mui/icons-material/ErrorOutlined";
-
+import { Icon } from "@app/ui/Icon";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { FolderId, FolderRecord, ROOT_FOLDER_ID } from "@app/types/folder";
@@ -244,7 +239,7 @@ export function MoveToFolderDialog({
               <Button
                 variant="tertiary"
                 size="sm"
-                leftSection={<CreateNewFolderIcon fontSize="small" />}
+                leftSection={<Icon name="folder-plus" size={20} />}
                 onClick={() => {
                   setCreatingFolder(true);
                   setNewFolderName("");
@@ -262,7 +257,7 @@ export function MoveToFolderDialog({
         {error && (
           <Alert
             color="red"
-            icon={<ErrorOutlineIcon fontSize="small" />}
+            icon={<Icon name="circle-alert" size={20} />}
             variant="light"
             role="alert"
           >
@@ -331,11 +326,11 @@ function FolderPick({
       disabled={disabled}
       leftSection={
         isRoot ? (
-          <HomeIcon fontSize="small" />
+          <Icon name="house" size={20} />
         ) : isActive ? (
-          <FolderOpenIcon fontSize="small" style={{ color }} />
+          <Icon name="folder-open" size={20} style={{ color }} />
         ) : (
-          <FolderIcon fontSize="small" style={{ color }} />
+          <Icon name="folder" size={20} style={{ color }} />
         )
       }
       style={{

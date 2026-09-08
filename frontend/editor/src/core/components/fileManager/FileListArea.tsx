@@ -1,6 +1,6 @@
 import React from "react";
 import { Center, ScrollArea, Text, Stack } from "@mantine/core";
-import CloudIcon from "@mui/icons-material/Cloud";
+import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
 import FileListItem from "@app/components/fileManager/FileListItem";
 import FileHistoryGroup from "@app/components/fileManager/FileHistoryGroup";
@@ -94,8 +94,10 @@ const FileListArea: React.FC<FileListAreaProps> = ({
   return (
     <Center style={{ height: "12.5rem" }}>
       <Stack align="center" gap="sm">
-        <CloudIcon
-          style={{ fontSize: "3rem", color: "var(--mantine-color-gray-5)" }}
+        <Icon
+          name="cloud"
+          size={"3rem"}
+          style={{ color: "var(--mantine-color-gray-5)" }}
         />
         <Text c="dimmed" ta="center">
           {t(
