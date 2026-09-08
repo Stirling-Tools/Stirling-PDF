@@ -85,6 +85,9 @@ public class SupabaseSecurityConfig {
     @Value("${app.supabase.clock-skew-seconds:120}")
     private long clockSkewSeconds;
 
+    @Value("${stirling.billing.account-link.enabled:false}")
+    private boolean accountLinkEnabled;
+
     @Bean
     SecurityFilterChain saasSecurityFilterChain(
             HttpSecurity http,
@@ -289,6 +292,28 @@ public class SupabaseSecurityConfig {
             List.of("http://localhost:[*]", "http://127.0.0.1:[*]");
 
     /**
+     * The surface a linked self-hosted instance calls from its own browser with the signed-in
+     * admin's Supabase JWT, mirroring the frontend's {@code apiClient.saas}. Its origin is whatever
+     * the customer deployed on, so these cannot be served by an allow-list. See {@link
+     * #linkedInstanceCors()}.
+     *
+     * <p>Each hosts cloud-only endpoints, which is what makes a prefix safe here: billing,
+     * procurement, legal documents and the team's roster of linked instances have no self-hosted
+     * equivalent. Anything the instance also serves itself belongs on {@code apiClient.local}
+     * instead of here.
+     *
+     * <p>Only the {@code instances} half of account-link is listed. The {@code connect/*} handshake
+     * never reaches a browser on the customer's origin: the instance backend calls {@code request}
+     * and {@code claim} server-side, and the approval page is served by us.
+     */
+    private static final List<String> LINKED_INSTANCE_PATHS =
+            List.of(
+                    "/api/v1/payg/**",
+                    "/api/v1/procurement/**",
+                    "/api/v1/legal/**",
+                    "/api/v1/account-link/instances/**");
+
+    /**
      * Profiles that mean "a developer's machine or a preview environment", never the production
      * deployment. Production runs the bare {@code saas} profile.
      */
@@ -375,8 +400,35 @@ public class SupabaseSecurityConfig {
         cfg.setAllowCredentials(true);
         cfg.setMaxAge(3600L);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        // Registered ahead of "/**": the source returns the first pattern that matches, not the
+        // most specific one.
+        if (accountLinkEnabled) {
+            CorsConfiguration linked = linkedInstanceCors();
+            for (String path : LINKED_INSTANCE_PATHS) {
+                source.registerCorsConfiguration(path, linked);
+            }
+        }
         source.registerCorsConfiguration("/**", cfg);
         return source;
+    }
+
+    /**
+     * Any-origin CORS for the reads a linked self-hosted instance makes from its own browser, whose
+     * origin cannot be known in advance.
+     *
+     * <p>Safe only because it carries no credentials: this chain is bearer-token only and nothing
+     * in the SaaS module reads a cookie, so the browser attaches no ambient authority and a hostile
+     * page has nothing to ride on. The same reasoning already justifies disabling CSRF here.
+     * Authorisation is unchanged; this decides only who may read the response.
+     */
+    private static CorsConfiguration linkedInstanceCors() {
+        CorsConfiguration cfg = new CorsConfiguration();
+        cfg.setAllowedOrigins(List.of(CorsConfiguration.ALL));
+        cfg.setAllowedMethods(List.of("GET", "POST", "PATCH", "OPTIONS"));
+        cfg.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));
+        cfg.setAllowCredentials(false);
+        cfg.setMaxAge(3600L);
+        return cfg;
     }
 
     /**

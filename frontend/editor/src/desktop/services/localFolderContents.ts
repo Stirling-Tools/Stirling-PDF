@@ -36,10 +36,6 @@ async function isWithinMount(path: string): Promise<boolean> {
     );
 }
 
-/** Caps the listing; past the cap the freshest files win, which is what is wanted
- *  in a Downloads-like directory. */
-const LIST_CAP = 500;
-
 /**
  * Every stat is a webview-to-Rust round trip, so listing cost is IPC latency, not disk
  * speed.
@@ -100,7 +96,7 @@ export async function listDirectory(
     }
   }
   files.sort((a, b) => b.lastModified - a.lastModified);
-  return { files: files.slice(0, LIST_CAP), directories };
+  return { files, directories };
 }
 
 export async function makeDiskDirectory(

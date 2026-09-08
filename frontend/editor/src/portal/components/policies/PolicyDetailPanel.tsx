@@ -8,11 +8,7 @@ import {
   StatTile,
   StatusBadge,
 } from "@app/ui";
-import {
-  humanizeEndpoint,
-  type DecoratedPolicy,
-  type PolicyActivityItem,
-} from "@portal/api/policies";
+import { humanizeEndpoint, type DecoratedPolicy } from "@portal/api/policies";
 import "@portal/views/Policies.css";
 
 interface PolicyDetailPanelProps {
@@ -27,11 +23,9 @@ interface PolicyDetailPanelProps {
   permissionsLoading?: boolean;
   onClose: () => void;
   onEdit: () => void;
-  onRun?: () => void;
   onTogglePause: () => void;
   onDelete: () => void;
   onClearHistory?: () => void;
-  onRetry?: (item: PolicyActivityItem) => void;
 }
 
 function CheckIcon() {
@@ -113,11 +107,9 @@ export function PolicyDetailPanel({
   permissionsLoading = false,
   onClose,
   onEdit,
-  onRun,
   onTogglePause,
   onDelete,
   onClearHistory,
-  onRetry,
 }: PolicyDetailPanelProps) {
   const { t } = useTranslation();
   const [confirmingClear, setConfirmingClear] = useState(false);
@@ -168,17 +160,6 @@ export function PolicyDetailPanel({
                 style={{ marginRight: "auto" }}
               >
                 {t("portal.policies.detail.actions.delete")}
-              </Button>
-            )}
-            {onRun && (
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={onRun}
-                disabled={busy}
-                style={canDelete ? undefined : { marginRight: "auto" }}
-              >
-                {t("portal.policies.detail.actions.runNow")}
               </Button>
             )}
             {canClearHistory && (
@@ -310,16 +291,6 @@ export function PolicyDetailPanel({
                 <span className="portal-policies__activity-time">
                   {item.time}
                 </span>
-                {item.status === "flagged" && onRetry && (
-                  <Button
-                    type="button"
-                    variant="quiet"
-                    className="portal-policies__link portal-policies__activity-retry"
-                    onClick={() => onRetry(item)}
-                  >
-                    {t("portal.policies.detail.retry")}
-                  </Button>
-                )}
               </div>
             ))}
           </Card>
