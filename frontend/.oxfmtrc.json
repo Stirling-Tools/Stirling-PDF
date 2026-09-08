@@ -16,6 +16,7 @@
     "editor/public/og-metadata.saas.json",
     "editor/src/core/data/ogImageMap.json",
     "editor/src/portal/generated/docsManifest.json",
+    "editor/src/core/icons/*.generated.ts",
     "editor/public/pdfjs*/",
     "editor/public/js/thirdParty/",
     "editor/public/css/cookieconsent.css",

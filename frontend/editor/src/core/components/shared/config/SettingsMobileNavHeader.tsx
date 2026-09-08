@@ -1,8 +1,7 @@
 import { Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import LocalIcon from "@app/components/shared/LocalIcon";
-
+import { Icon } from "@app/ui/Icon";
 interface SettingsMobileNavHeaderProps {
   /** Mobile shows nav and content as separate panes, so the nav needs its own header. */
   show: boolean;
@@ -35,7 +34,7 @@ export function SettingsMobileNavHeader({
         onClick={onClose}
         aria-label={t("settings.close", "Close")}
       >
-        <LocalIcon icon="close-rounded" width={18} height={18} />
+        <Icon name="x" size={18} />
       </ActionIcon>
     </div>
   );

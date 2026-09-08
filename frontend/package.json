@@ -34,11 +34,12 @@
     "@embedpdf/plugin-zoom": "^2.15.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
+    "@iconify-json/material-symbols": "^1.2.90",
     "@mantine/core": "^8.3.1",
     "@mantine/dates": "^8.3.1",
     "@mantine/dropzone": "^8.3.1",
     "@mantine/hooks": "^8.3.1",
-    "@mui/icons-material": "^9.3.1",
+    "@mui/icons-material": "^9.4.0",
     "@mui/material": "^9.0.0",
     "@posthog/react": "^1.8.2",
     "@reactour/tour": "^3.8.0",
@@ -63,6 +64,7 @@
     "i18next-browser-languagedetector": "^8.2.1",
     "jszip": "^3.10.1",
     "license-report": "^6.8.5",
+    "lucide-static": "^1.41.0",
     "pdfjs-dist": "^5.4.149",
     "peerjs": "^1.5.5",
     "pixelmatch": "^7.1.0",
@@ -94,7 +96,7 @@
     "tauri:serve-dev-update": "bash scripts/dev-update-test/serve-update.sh",
     "tauri:test-update-e2e": "bash scripts/dev-update-test/test-update-e2e.sh",
     "tauri:test-update-e2e:install": "bash scripts/dev-update-test/test-update-e2e.sh --install",
-    "tauri:dev-with-update": "cd editor && npx tsx scripts/setup-env.mts --desktop && node scripts/generate-icons.js && npx tauri dev --config src-tauri/tauri.conf.dev-update.json"
+    "tauri:dev-with-update": "cd editor && npx tsx scripts/setup-env.mts --desktop && node scripts/generate-icon-registry.mjs && npx tauri dev --config src-tauri/tauri.conf.dev-update.json"
   },
   "browserslist": {
     "production": [
@@ -109,9 +111,6 @@
     ]
   },
   "devDependencies": {
-    "@iconify-json/material-symbols": "^1.2.89",
-    "@iconify/react": "^6.0.2",
-    "@iconify/utils": "^3.1.4",
     "@playwright/test": "^1.55.0",
     "@storybook/addon-a11y": "^9.1.20",
     "@storybook/addon-docs": "^9.1.20",

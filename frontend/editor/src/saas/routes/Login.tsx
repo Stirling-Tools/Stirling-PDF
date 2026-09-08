@@ -15,8 +15,7 @@ import {
   withBasePath,
 } from "@app/constants/app";
 import { isSafePostLoginRedirect } from "@app/services/postLoginRedirect";
-import LinkRoundedIcon from "@mui/icons-material/LinkRounded";
-
+import { Icon } from "@app/ui/Icon";
 // Import login components
 import ErrorMessage from "@app/auth/ui/ErrorMessage";
 import EmailPasswordForm from "@app/routes/login/EmailPasswordForm";
@@ -303,7 +302,8 @@ export default function Login() {
             className={`oauth-button-fullwidth auth-expandable-trigger ${showMagicLinkForm ? "auth-expandable-trigger--active" : ""}`}
           >
             <span className="oauth-btn-group">
-              <LinkRoundedIcon
+              <Icon
+                name="link"
                 style={{
                   width: "1.75rem",
                   height: "1.75rem",

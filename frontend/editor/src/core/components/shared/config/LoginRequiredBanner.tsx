@@ -1,7 +1,6 @@
 import { Alert, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import LocalIcon from "@app/components/shared/LocalIcon";
-
+import { Icon } from "@app/ui/Icon";
 interface LoginRequiredBannerProps {
   show: boolean;
 }
@@ -19,7 +18,7 @@ export default function LoginRequiredBanner({
 
   return (
     <Alert
-      icon={<LocalIcon icon="lock" width={20} height={20} />}
+      icon={<Icon name="lock" size={20} />}
       title={t("admin.settings.loginDisabled.title", "Login Mode Required")}
       color="blue"
       variant="light"

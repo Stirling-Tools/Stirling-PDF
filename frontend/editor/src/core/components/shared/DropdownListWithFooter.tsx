@@ -9,8 +9,7 @@ import {
   TextInput,
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import UnfoldMoreIcon from "@mui/icons-material/UnfoldMore";
-import SearchIcon from "@mui/icons-material/Search";
+import { Icon } from "@app/ui/Icon";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
 
 export interface DropdownItem {
@@ -161,9 +160,10 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
             <Text size="sm" style={{ flex: 1 }}>
               {getDisplayText()}
             </Text>
-            <UnfoldMoreIcon
+            <Icon
+              name="chevrons-up-down"
+              size={"1rem"}
               style={{
-                fontSize: "1rem",
                 color:
                   "light-dark(var(--mantine-color-gray-5), var(--mantine-color-dark-2))",
               }}
@@ -197,7 +197,7 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
                   placeholder={t("dropdownList.searchPlaceholder", "Search...")}
                   value={searchTerm}
                   onChange={handleSearchChange}
-                  leftSection={<SearchIcon style={{ fontSize: "1rem" }} />}
+                  leftSection={<Icon name="search" size={"1rem"} />}
                   size="sm"
                   style={{ width: "100%" }}
                 />

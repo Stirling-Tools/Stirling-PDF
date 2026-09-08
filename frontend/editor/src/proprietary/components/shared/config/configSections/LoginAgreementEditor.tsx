@@ -14,7 +14,7 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { Button } from "@app/ui/Button";
-import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import { Icon } from "@app/ui/Icon";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import apiClient from "@app/services/apiClient";
@@ -178,9 +178,10 @@ export default function LoginAgreementEditor({
                   "Each language has its own file. If a user's language has no file, the agreement falls back to the default locale's file, then to the fallback text.",
                 )}
               >
-                <InfoOutlinedIcon
+                <Icon
+                  name="info"
+                  size={15}
                   style={{
-                    fontSize: 15,
                     cursor: "help",
                     color: "var(--mantine-color-dimmed)",
                   }}

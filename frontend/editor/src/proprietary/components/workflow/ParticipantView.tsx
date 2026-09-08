@@ -14,11 +14,7 @@ import {
 } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { useParticipantSession } from "@app/hooks/workflow/useParticipantSession";
-import InfoIcon from "@mui/icons-material/Info";
-import DownloadIcon from "@mui/icons-material/Download";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import CancelIcon from "@mui/icons-material/Cancel";
-
+import { Icon } from "@app/ui/Icon";
 interface ParticipantViewProps {
   token: string;
 }
@@ -195,7 +191,7 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
   if (error) {
     return (
       <Alert
-        icon={<InfoIcon fontSize="small" />}
+        icon={<Icon name="info" size={20} />}
         color="red"
         title={t("workflow.participant.errorTitle", "Error")}
       >
@@ -206,7 +202,7 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
 
   if (!session || !participant) {
     return (
-      <Alert icon={<InfoIcon fontSize="small" />} color="orange">
+      <Alert icon={<Icon name="info" size={20} />} color="orange">
         {t(
           "workflow.participant.sessionNotFound",
           "Session not found or access denied.",
@@ -263,9 +259,9 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
         <Alert
           icon={
             notification.type === "success" ? (
-              <CheckCircleIcon fontSize="small" />
+              <Icon name="circle-check" size={20} />
             ) : (
-              <InfoIcon fontSize="small" />
+              <Icon name="info" size={20} />
             )
           }
           color={notification.type === "success" ? "green" : "red"}
@@ -293,7 +289,7 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
 
           {session.message && (
             <Alert
-              icon={<InfoIcon fontSize="small" />}
+              icon={<Icon name="info" size={20} />}
               color="blue"
               variant="light"
             >
@@ -312,7 +308,7 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
           <Group gap="xs" mt="sm">
             <Button
               size="sm"
-              leftSection={<DownloadIcon fontSize="small" />}
+              leftSection={<Icon name="download" size={20} />}
               onClick={() => downloadDocument(token)}
               variant="secondary"
             >
@@ -483,7 +479,7 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
 
             <Group gap="xs">
               <Button
-                leftSection={<CheckCircleIcon fontSize="small" />}
+                leftSection={<Icon name="circle-check" size={20} />}
                 onClick={handleSubmitSignature}
                 loading={isSubmitting}
                 disabled={
@@ -496,7 +492,7 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
               </Button>
 
               <Button
-                leftSection={<CancelIcon fontSize="small" />}
+                leftSection={<Icon name="circle-x" size={20} />}
                 onClick={handleDecline}
                 variant="secondary"
                 accent="danger"
@@ -510,7 +506,7 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
       )}
 
       {participant.hasCompleted && (
-        <Alert icon={<CheckCircleIcon fontSize="small" />} color="green">
+        <Alert icon={<Icon name="circle-check" size={20} />} color="green">
           {participant.status === "SIGNED"
             ? t(
                 "workflow.participant.completedSigned",
@@ -524,7 +520,7 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
       )}
 
       {participant.isExpired && (
-        <Alert icon={<InfoIcon fontSize="small" />} color="orange">
+        <Alert icon={<Icon name="info" size={20} />} color="orange">
           {t(
             "workflow.participant.accessExpired",
             "Your access to this document has expired.",

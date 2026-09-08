@@ -1,8 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button, Card, MetricCard, MetricStrip } from "@app/ui";
-import GroupsIcon from "@mui/icons-material/GroupsRounded";
-import PersonAddIcon from "@mui/icons-material/PersonAddAltRounded";
+import { Icon } from "@app/ui/Icon";
 import { useFleetStats } from "@portal/queries/infrastructure";
 
 /**
@@ -27,7 +26,7 @@ export function FreePdfEditorsCard() {
       <div className="portal-billing__fleet-row">
         <div className="portal-billing__editors-id">
           <span className="portal-billing__editors-icon" aria-hidden>
-            <GroupsIcon sx={{ fontSize: 26 }} />
+            <Icon name="users" size={26} />
           </span>
           <div>
             <h3 className="portal-billing__section-title">
@@ -69,7 +68,7 @@ export function FreePdfEditorsCard() {
         <Button
           variant="secondary"
           size="sm"
-          leftSection={<PersonAddIcon sx={{ fontSize: 16 }} />}
+          leftSection={<Icon name="user-plus" size={16} />}
           onClick={() => navigate("/users?invite=1")}
         >
           {t("portal.billing.freeEditors.inviteTeammates", "Invite teammates")}

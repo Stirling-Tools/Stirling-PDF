@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import { Icon } from "@app/ui/Icon";
 import { Banner, Button, CardRail, EmptyState, Skeleton } from "@app/ui";
 import { errorMessage } from "@portal/api/http";
 import { useSectionFlags } from "@portal/hooks/useAsync";
@@ -25,7 +25,6 @@ import {
 } from "@portal/api/policies";
 import { qk } from "@portal/queries/keys";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
-import { PipelinesIcon } from "@portal/components/icons";
 import { KpiStrip } from "@portal/components/pipelines/KpiStrip";
 import { PipelinesTable } from "@portal/components/pipelines/PipelinesTable";
 import { PipelineTemplateCard } from "@portal/components/pipelines/PipelineTemplateCard";
@@ -250,7 +249,7 @@ export function Pipelines() {
         <Button
           fat
           onClick={openCreate}
-          leftSection={<AddRoundedIcon style={{ fontSize: "1.125rem" }} />}
+          leftSection={<Icon name="plus" size={"1.125rem"} />}
         >
           {t("portal.pipelines.actions.newCustomPipeline")}
         </Button>
@@ -275,16 +274,14 @@ export function Pipelines() {
 
         {showEmpty && (
           <EmptyState
-            icon={<PipelinesIcon size={28} />}
+            icon={<Icon name="workflow" size={28} />}
             title={t("portal.pipelines.empty.title")}
             description={t("portal.pipelines.empty.description")}
             actions={
               <>
                 <Button
                   onClick={openCreate}
-                  leftSection={
-                    <AddRoundedIcon style={{ fontSize: "1.125rem" }} />
-                  }
+                  leftSection={<Icon name="plus" size={"1.125rem"} />}
                 >
                   {t("portal.pipelines.empty.action")}
                 </Button>

@@ -639,7 +639,7 @@ const CODE_EXEMPT_PATH = [
   /\/viewer\/|Annotation|useViewerReadAloud|CommentsSidebar|\/constants\/search\.ts$|SignaturePreview/,
   /ColorPicker|ColorControl|WatchedFolderManagementModal|watchedFolderPresets|fileColors|unifiedBackground|folder\.ts$|policyFolders/,
   /OAuthButtons|oauthCallbackHtml/,
-  /mantineTheme|\/theme\.ts$|toolsTaxonomy|LayoutPreview|PageNumberPreview|CloudStorageIcons|BrandMarks/,
+  /mantineTheme|\/theme\.ts$|toolsTaxonomy|LayoutPreview|PageNumberPreview|thirdPartyIcons\.generated/,
   /\/onboarding\//,
   /addStamp|addWatermark|\/tooltips\//,
   // Stories are checked like app code; colour-as-data lines opt out with

@@ -1,7 +1,6 @@
 import type { CSSProperties, ReactNode } from "react";
 import { ActionIcon, Menu } from "@mantine/core";
-import CloseIcon from "@mui/icons-material/Close";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import { Icon } from "@app/ui/Icon";
 import type { IconBadgeAccent } from "@app/ui/IconBadge";
 import "@app/ui/PanelHeader.css";
 
@@ -95,10 +94,7 @@ export function PanelHeader({
         <span className="sui-panelhdr__actions">{actions}</span>
       )}
       {hasMenu && (
-        <KeyboardArrowDownIcon
-          className="sui-panelhdr__chevron"
-          sx={{ fontSize: 18 }}
-        />
+        <Icon name="chevron-down" size={18} className="sui-panelhdr__chevron" />
       )}
     </>
   );
@@ -141,7 +137,7 @@ export function PanelHeader({
           onClick={onClose}
           aria-label={closeLabel}
         >
-          <CloseIcon sx={{ fontSize: 18 }} />
+          <Icon name="x" size={18} />
         </ActionIcon>
       )}
     </div>

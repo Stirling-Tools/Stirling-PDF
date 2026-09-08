@@ -3,7 +3,7 @@ import { Stack, PasswordInput, Alert, Text } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import { SlideConfig } from "@app/types/types";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import { UNIFIED_CIRCLE_CONFIG } from "@app/components/onboarding/slides/unifiedBackgroundConfig";
 import { accountService } from "@app/services/accountService";
 import { alert as showToast } from "@app/components/toast";
@@ -121,10 +121,9 @@ function FirstLoginForm({
         <form onSubmit={handleSubmit}>
           <Stack gap="md">
             <div className={styles.securityAlertRow}>
-              <LocalIcon
-                icon="info-rounded"
-                width={20}
-                height={20}
+              <Icon
+                name="info"
+                size={20}
                 style={{ color: "var(--c-accent-text)", flexShrink: 0 }}
               />
               <span>
@@ -142,9 +141,7 @@ function FirstLoginForm({
 
             {error && (
               <Alert
-                icon={
-                  <LocalIcon icon="error-rounded" width="1rem" height="1rem" />
-                }
+                icon={<Icon name="circle-alert" size="1rem" />}
                 color="red"
                 variant="light"
               >

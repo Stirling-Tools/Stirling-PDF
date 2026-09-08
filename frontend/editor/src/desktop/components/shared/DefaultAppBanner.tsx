@@ -16,13 +16,13 @@ export const DefaultAppBanner: React.FC = () => {
 
   return (
     <AppBanner
-      icon="picture-as-pdf-rounded"
+      icon="file-text"
       message={t(
         "defaultApp.prompt.message",
         "Make Stirling PDF your default application for opening PDF files.",
       )}
       buttonText={t("defaultApp.setDefault", "Set Default")}
-      buttonIcon="check-circle-rounded"
+      buttonIcon="circle-check"
       onButtonClick={handleSetDefault}
       secondaryButtonText={t(
         "defaultApp.prompt.dontRemind",

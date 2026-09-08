@@ -16,7 +16,7 @@ import {
 } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
 import {
   updateService,
@@ -26,18 +26,6 @@ import {
 } from "@app/services/updateService";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 import { handleExternalLinkClick } from "@app/platform/externalLinkClick";
-import WarningAmberIcon from "@mui/icons-material/WarningAmber";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import DownloadIcon from "@mui/icons-material/Download";
-import StarIcon from "@mui/icons-material/Star";
-import SystemUpdateAltIcon from "@mui/icons-material/SystemUpdateAlt";
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutlined";
-import ErrorOutlineIcon from "@mui/icons-material/ErrorOutlined";
-import RestartAltIcon from "@mui/icons-material/RestartAlt";
-import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import ExpandLessIcon from "@mui/icons-material/ExpandLess";
-
 export type DesktopInstallState =
   | "idle"
   | "downloading"
@@ -265,8 +253,10 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
                     flexShrink: 0,
                   }}
                 >
-                  <SystemUpdateAltIcon
-                    style={{ fontSize: 26, color: "white" }}
+                  <Icon
+                    name="square-arrow-down"
+                    size={26}
+                    style={{ color: "white" }}
                   />
                 </Box>
                 <Box>
@@ -288,7 +278,7 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
                   variant="tertiary"
                   aria-label={t("update.closeModal", "Close update modal")}
                 >
-                  <LocalIcon icon="close-rounded" width={20} height={20} />
+                  <Icon name="x" size={20} />
                 </ActionIcon>
               )}
             </Group>
@@ -317,9 +307,10 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
                       {currentVersion}
                     </Text>
                   </Stack>
-                  <ArrowForwardIcon
+                  <Icon
+                    name="arrow-right"
+                    size={28}
                     style={{
-                      fontSize: 28,
                       color: "var(--mantine-color-dimmed)",
                       flexShrink: 0,
                     }}
@@ -371,7 +362,7 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
                     variant="light"
                     size="lg"
                     radius="sm"
-                    leftSection={<WarningAmberIcon style={{ fontSize: 14 }} />}
+                    leftSection={<Icon name="triangle-alert" size={14} />}
                   >
                     {t("update.breaking", "Breaking")}
                   </Badge>
@@ -395,7 +386,7 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
                   variant="light"
                   color="orange"
                   radius="md"
-                  icon={<WarningAmberIcon style={{ fontSize: 18 }} />}
+                  icon={<Icon name="triangle-alert" size={18} />}
                   title={t(
                     "desktopUpdate.blocked.title",
                     "Administrator permissions required",
@@ -437,11 +428,11 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
               >
                 <Group justify="space-between" align="center">
                   <Group gap={8}>
-                    <StarIcon
-                      style={{
-                        fontSize: 18,
-                        color: "var(--c-accent-text)",
-                      }}
+                    <Icon
+                      name="star"
+                      size={18}
+                      filled
+                      style={{ color: "var(--c-accent-text)" }}
                     />
                     <Text fw={600} size="sm">
                       {t("update.whatsNewIn", "What's new in")}{" "}
@@ -466,7 +457,7 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
                       }}
                     >
                       {t("update.releaseNotes", "Release Notes")}{" "}
-                      <OpenInNewIcon style={{ fontSize: 14 }} />
+                      <Icon name="external-link" size={14} />
                     </Text>
                     <Text
                       size="sm"
@@ -485,7 +476,7 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
                       }}
                     >
                       {t("update.allReleases", "All Releases")}{" "}
-                      <OpenInNewIcon style={{ fontSize: 14 }} />
+                      <Icon name="external-link" size={14} />
                     </Text>
                   </Group>
                 </Group>
@@ -549,7 +540,7 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
                               variant="secondary"
                               size="sm"
                               rightSection={
-                                <OpenInNewIcon style={{ fontSize: 12 }} />
+                                <Icon name="external-link" size={12} />
                               }
                             >
                               {t("update.viewGuide", "View Guide")}
@@ -647,22 +638,24 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
                                   `https://github.com/Stirling-Tools/Stirling-PDF/releases/tag/v${version.version}`,
                                 )}
                                 rightSection={
-                                  <OpenInNewIcon style={{ fontSize: 11 }} />
+                                  <Icon name="external-link" size={11} />
                                 }
                               >
                                 {t("update.notes", "Notes")}
                               </Button>
                               {isExpanded ? (
-                                <ExpandLessIcon
+                                <Icon
+                                  name="chevron-up"
+                                  size={18}
                                   style={{
-                                    fontSize: 18,
                                     color: "var(--mantine-color-dimmed)",
                                   }}
                                 />
                               ) : (
-                                <ExpandMoreIcon
+                                <Icon
+                                  name="chevron-down"
+                                  size={18}
                                   style={{
-                                    fontSize: 18,
                                     color: "var(--mantine-color-dimmed)",
                                   }}
                                 />
@@ -694,9 +687,7 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
                                     color="orange"
                                     radius="sm"
                                     icon={
-                                      <WarningAmberIcon
-                                        style={{ fontSize: 16 }}
-                                      />
+                                      <Icon name="triangle-alert" size={16} />
                                     }
                                     title={t(
                                       "update.breakingChanges",
@@ -732,8 +723,9 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
                                             "var(--mantine-spacing-xs)",
                                         }}
                                         rightSection={
-                                          <OpenInNewIcon
-                                            style={{ fontSize: 14 }}
+                                          <Icon
+                                            name="external-link"
+                                            size={14}
                                           />
                                         }
                                       >
@@ -828,7 +820,7 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
                   )}
                   {desktopInstall.state === "ready-to-restart" && (
                     <Alert
-                      icon={<CheckCircleOutlineIcon />}
+                      icon={<Icon name="circle-check" />}
                       color="green"
                       variant="light"
                       radius="md"
@@ -842,7 +834,7 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
                   )}
                   {desktopInstall.state === "error" && (
                     <Alert
-                      icon={<ErrorOutlineIcon />}
+                      icon={<Icon name="circle-alert" />}
                       color="red"
                       variant="light"
                       radius="md"
@@ -882,7 +874,7 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
                 desktopInstall.state === "ready-to-restart" ? (
                   <Button
                     size="md"
-                    leftSection={<RestartAltIcon style={{ fontSize: 20 }} />}
+                    leftSection={<Icon name="rotate-ccw" size={20} />}
                     onClick={() => void desktopInstall.actions.restartApp()}
                   >
                     {t("desktopUpdate.restartNow", "Restart Now")}
@@ -903,16 +895,14 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
                           onClick={handleExternalLink(downloadUrl)}
                           variant="secondary"
                           size="md"
-                          leftSection={
-                            <DownloadIcon style={{ fontSize: 16 }} />
-                          }
+                          leftSection={<Icon name="download" size={16} />}
                         >
                           {t("update.downloadLatest", "Download Latest")}
                         </Button>
                       )}
                     <Button
                       size="md"
-                      leftSection={<DownloadIcon style={{ fontSize: 20 }} />}
+                      leftSection={<Icon name="download" size={20} />}
                       onClick={() => void desktopInstall.actions.startInstall()}
                       disabled={installBlocked}
                     >
@@ -938,7 +928,7 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
                     target="_blank"
                     onClick={handleExternalLink(downloadUrl)}
                     size="md"
-                    leftSection={<DownloadIcon style={{ fontSize: 20 }} />}
+                    leftSection={<Icon name="download" size={20} />}
                   >
                     {t("update.downloadLatest", "Download Latest")}
                   </Button>

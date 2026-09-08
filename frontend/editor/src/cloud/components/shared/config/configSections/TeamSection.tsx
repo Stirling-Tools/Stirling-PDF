@@ -14,7 +14,7 @@ import { ActionIcon } from "@app/ui/ActionIcon";
 import { StatusBadge } from "@app/ui/StatusBadge";
 import { useTranslation } from "react-i18next";
 import { useSaaSTeam } from "@app/contexts/SaaSTeamContext";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 import apiClient from "@app/services/apiClient";
 
@@ -239,7 +239,7 @@ const TeamSection: React.FC = () => {
                   disabled={!newTeamName.trim()}
                   aria-label={t("team.renameSubmit", "Save team name")}
                 >
-                  <LocalIcon icon="check" width="1rem" height="1rem" />
+                  <Icon name="check" size="1rem" />
                 </ActionIcon>
                 <ActionIcon
                   variant="tertiary"
@@ -247,7 +247,7 @@ const TeamSection: React.FC = () => {
                   disabled={renamingTeam}
                   aria-label={t("team.renameCancel", "Cancel rename")}
                 >
-                  <LocalIcon icon="close" width="1rem" height="1rem" />
+                  <Icon name="x" size="1rem" />
                 </ActionIcon>
               </Group>
             ) : (
@@ -262,7 +262,7 @@ const TeamSection: React.FC = () => {
                     onClick={handleStartRename}
                     aria-label={t("team.editName", "Edit team name")}
                   >
-                    <LocalIcon icon="edit" width="1rem" height="1rem" />
+                    <Icon name="pencil" size="1rem" />
                   </ActionIcon>
                 )}
                 {isTeamLeader && (
@@ -291,9 +291,7 @@ const TeamSection: React.FC = () => {
               variant="secondary"
               size="sm"
               onClick={handleLeaveTeam}
-              leftSection={
-                <LocalIcon icon="logout" width="1rem" height="1rem" />
-              }
+              leftSection={<Icon name="log-out" size="1rem" />}
             >
               {t("team.leaveButton", "Leave Team")}
             </Button>
@@ -456,22 +454,14 @@ const TeamSection: React.FC = () => {
                                   "Member actions",
                                 )}
                               >
-                                <LocalIcon
-                                  icon="more-vert"
-                                  width="1rem"
-                                  height="1rem"
-                                />
+                                <Icon name="ellipsis-vertical" size="1rem" />
                               </ActionIcon>
                             </Menu.Target>
                             <Menu.Dropdown>
                               <Menu.Item
                                 color="red"
                                 leftSection={
-                                  <LocalIcon
-                                    icon="person-remove"
-                                    width="1rem"
-                                    height="1rem"
-                                  />
+                                  <Icon name="user-minus" size="1rem" />
                                 }
                                 onClick={() =>
                                   handleRemove(member.id, member.email)
@@ -523,11 +513,7 @@ const TeamSection: React.FC = () => {
                               "Cancel invitation",
                             )}
                           >
-                            <LocalIcon
-                              icon="close"
-                              width="1rem"
-                              height="1rem"
-                            />
+                            <Icon name="x" size="1rem" />
                           </ActionIcon>
                         </Table.Td>
                       )}

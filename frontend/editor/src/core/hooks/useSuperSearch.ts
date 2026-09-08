@@ -345,12 +345,12 @@ export function rankSettingsResults(
       (e) => e.keywords?.join(" ") ?? "",
     ],
   );
-  const rows = rowMatches.map(({ item, score }) => ({
+  const rows: SuperSearchResult[] = rowMatches.map(({ item, score }) => ({
     key: `setting:${item.section}:${item.anchor}`,
     group: "settings",
     title: t(item.labelKey, item.labelFallback),
     subtitle: sectionLabelFor.get(item.section),
-    iconName: "settings-rounded",
+    iconName: "settings",
     score: score + 1, // nudge rows above bare section matches
     onSelect: () => openSettings(item.section, item.anchor),
   }));
@@ -366,15 +366,17 @@ export function rankSettingsResults(
     (s) => s.labelFallback,
     (s) => s.keywords?.join(" ") ?? "",
   ]);
-  const sections = sectionMatches.map(({ item, score }) => ({
-    key: `setting-section:${item.key}`,
-    group: "settings",
-    title: t(item.labelKey, item.labelFallback),
-    subtitle: groupTitle(item),
-    iconName: "settings-rounded",
-    score,
-    onSelect: () => openSettings(item.key),
-  }));
+  const sections: SuperSearchResult[] = sectionMatches.map(
+    ({ item, score }) => ({
+      key: `setting-section:${item.key}`,
+      group: "settings",
+      title: t(item.labelKey, item.labelFallback),
+      subtitle: groupTitle(item),
+      iconName: "settings",
+      score,
+      onSelect: () => openSettings(item.key),
+    }),
+  );
 
   // Content matches: sections whose rendered copy contains the query, so terms
   // with no curated keyword ("SMTP", a field label) still find their section.
@@ -385,7 +387,7 @@ export function rankSettingsResults(
     ...sectionMatches.map(({ item }) => item.key),
     ...rowMatches.map(({ item }) => item.section),
   ]);
-  const contentMatches =
+  const contentMatches: SuperSearchResult[] =
     trimmed.length < 3
       ? []
       : visibleSections
@@ -401,7 +403,7 @@ export function rankSettingsResults(
                 group: "settings",
                 title: t(s.labelKey, s.labelFallback),
                 subtitle: group ? `${group} · ${snippet}` : snippet,
-                iconName: "settings-rounded",
+                iconName: "settings",
                 // Always below the weakest possible label/keyword match.
                 score: FUZZY_MIN_SCORE - 10,
                 onSelect: () => openSettings(s.key),
@@ -434,9 +436,7 @@ export function rankProcessorResults(
       key: `processor:${item.id}`,
       group: "processor",
       title: t(item.labelKey, item.labelFallback),
-      // Must exist in the bundled Material Symbols set (LocalIcon falls back
-      // to a network fetch for unknown names — blank when self-hosted offline).
-      iconName: "grid-view",
+      iconName: "layout-grid",
       score,
       onSelect: () => selectEntry(item),
     }));

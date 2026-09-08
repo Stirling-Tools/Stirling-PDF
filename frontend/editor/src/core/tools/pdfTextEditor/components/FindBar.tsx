@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Group, Stack, Text, TextInput, Tooltip } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
-import CloseIcon from "@mui/icons-material/Close";
+import { Icon } from "@app/ui/Icon";
 import { EditTextCommand } from "@app/tools/pdfTextEditor/commands/EditTextCommand";
 import { CompositeCommand } from "@app/tools/pdfTextEditor/commands/CompositeCommand";
 import {
@@ -206,7 +206,7 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
           onClick={onClose}
           aria-label={t("pdfTextEditor.find.close", "Close find bar")}
           data-testid="pdf-editor-find-close"
-          leftSection={<CloseIcon fontSize="small" />}
+          leftSection={<Icon name="x" size={20} />}
         />
       </Group>
       <TextInput

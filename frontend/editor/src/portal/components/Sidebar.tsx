@@ -12,7 +12,7 @@ import { useView, type ViewId } from "@portal/contexts/ViewContext";
 import { useUI } from "@portal/contexts/UIContext";
 import { LinkAccountFooterItem } from "@portal/components/LinkAccountFooterItem";
 import { useConnectGate } from "@portal/hooks/useConnectGate";
-import { CloseIcon } from "@portal/components/icons";
+import { Icon } from "@app/ui/Icon";
 import {
   GROUP_PROCESSOR,
   GROUP_PLATFORM,
@@ -112,7 +112,7 @@ export function Sidebar() {
           aria-label={t("portal.shell.topbar.closeNav")}
           onClick={closeMobileNav}
         >
-          <CloseIcon size={18} />
+          <Icon name="x" size={18} />
         </ActionIcon>
       </div>
 

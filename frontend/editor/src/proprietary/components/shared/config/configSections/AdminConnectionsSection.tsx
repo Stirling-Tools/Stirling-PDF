@@ -15,7 +15,7 @@ import {
   Collapse,
 } from "@mantine/core";
 import { alert } from "@app/components/toast";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import RestartConfirmationModal from "@app/components/shared/config/RestartConfirmationModal";
 import { useRestartServer } from "@app/components/shared/config/useRestartServer";
 import { useAdminSettings } from "@app/hooks/useAdminSettings";
@@ -634,11 +634,7 @@ export default function AdminConnectionsSection() {
         <Paper withBorder p="md" radius="md">
           <Stack gap="md">
             <Group gap="xs" align="center">
-              <LocalIcon
-                icon="qr-code-rounded"
-                width="1.25rem"
-                height="1.25rem"
-              />
+              <Icon name="qr-code" size="1.25rem" />
               <Text fw={600} size="sm">
                 {t(
                   "admin.settings.connections.mobileScanner.label",

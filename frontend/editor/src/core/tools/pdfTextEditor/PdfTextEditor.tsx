@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Alert, Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import DescriptionIcon from "@mui/icons-material/DescriptionOutlined";
+import { Icon } from "@app/ui/Icon";
 import { downloadFile } from "@app/services/downloadService";
 import { useFileContext } from "@app/contexts/FileContext";
 import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
@@ -78,7 +78,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     workbenchId: WORKBENCH_ID,
     workbenchViewId: WORKBENCH_VIEW_ID,
     label: t("pdfTextEditor.workbenchLabel", "Editor"),
-    icon: <DescriptionIcon fontSize="small" />,
+    icon: <Icon name="file-text" size={20} />,
     component: PageStage,
   });
   // Uploading flips the workbench to Active Files, so landing a document has to

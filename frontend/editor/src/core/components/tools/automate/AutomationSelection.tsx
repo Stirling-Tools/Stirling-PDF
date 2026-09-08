@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Title, Stack, Divider } from "@mantine/core";
-import AddCircleOutline from "@mui/icons-material/AddCircleOutlined";
-import SettingsIcon from "@mui/icons-material/Settings";
 import AutomationEntry from "@app/components/tools/automate/AutomationEntry";
 import AutomationImportModal from "@app/components/tools/automate/AutomationImportModal";
 import { useSuggestedAutomations } from "@app/hooks/tools/automate/useSuggestedAutomations";
@@ -98,7 +96,7 @@ export default function AutomationSelection({
             "automate.selection.createNew.title",
             "Create New Automation",
           )}
-          badgeIcon={AddCircleOutline}
+          badgeIcon="circle-plus"
           operations={[]}
           onClick={onCreateNew}
           keepIconColor={true}
@@ -108,15 +106,15 @@ export default function AutomationSelection({
         />
         {/* Saved Automations */}
         {savedAutomations.map((automation) => {
-          const IconComponent = automation.icon
-            ? iconMap[automation.icon as keyof typeof iconMap]
-            : SettingsIcon;
+          const badge = automation.icon
+            ? iconMap[automation.icon]
+            : iconMap.SettingsIcon;
           return (
             <AutomationEntry
               key={automation.id}
               title={automation.name}
               description={automation.description}
-              badgeIcon={IconComponent || SettingsIcon}
+              badgeIcon={badge ?? iconMap.SettingsIcon}
               operations={automation.operations.map((op) =>
                 typeof op === "string" ? op : op.operation,
               )}

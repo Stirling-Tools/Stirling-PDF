@@ -4,10 +4,8 @@
 
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
+import { Icon } from "@app/ui/Icon";
 import { Button, Card, Chip } from "@app/ui";
-import { LocalIcon } from "@app/components/shared/LocalIcon";
 import {
   DEFAULT_CLASSIFICATION_LABELS,
   LABEL_FAMILIES,
@@ -55,11 +53,11 @@ export function ClassificationLabelsSection() {
                   leftSection={
                     <span className="classification-category-lead">
                       {open ? (
-                        <KeyboardArrowDownIcon sx={{ fontSize: "1.1rem" }} />
+                        <Icon name="chevron-down" size={"1.1rem"} />
                       ) : (
-                        <KeyboardArrowRightIcon sx={{ fontSize: "1.1rem" }} />
+                        <Icon name="chevron-right" size={"1.1rem"} />
                       )}
-                      <LocalIcon icon={family.icon} width="1.1rem" />
+                      <Icon name={family.icon} size="1.1rem" />
                       <span className="classification-category-name">
                         {t(`classification.families.${family.id}`, family.name)}
                       </span>

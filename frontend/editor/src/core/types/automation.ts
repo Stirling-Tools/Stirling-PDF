@@ -1,3 +1,5 @@
+import type { IconName } from "@app/ui/Icon";
+
 /**
  * Types for automation functionality
  */
@@ -65,5 +67,5 @@ export interface SuggestedAutomation {
   operations: AutomationOperation[];
   createdAt: string;
   updatedAt: string;
-  icon: any; // MUI Icon component
+  icon: IconName;
 }

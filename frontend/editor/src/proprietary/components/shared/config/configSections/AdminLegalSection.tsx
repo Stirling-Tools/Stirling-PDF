@@ -11,7 +11,7 @@ import {
   Switch,
   Divider,
 } from "@mantine/core";
-import WarningIcon from "@mui/icons-material/Warning";
+import { Icon } from "@app/ui/Icon";
 import { alert } from "@app/components/toast";
 import RestartConfirmationModal from "@app/components/shared/config/RestartConfirmationModal";
 import { useRestartServer } from "@app/components/shared/config/useRestartServer";
@@ -129,7 +129,7 @@ export default function AdminLegalSection() {
 
         {/* Legal Disclaimer */}
         <Alert
-          icon={<WarningIcon style={{ fontSize: 18 }} />}
+          icon={<Icon name="triangle-alert" size={18} />}
           title={t(
             "admin.settings.legal.disclaimer.title",
             "Legal Responsibility Warning",

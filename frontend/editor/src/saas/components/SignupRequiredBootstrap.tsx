@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { Modal, Stack, Text } from "@mantine/core";
 import { Button } from "@app/ui/Button";
-import PersonAddIcon from "@mui/icons-material/PersonAdd";
+import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
 import { withBasePath } from "@app/constants/app";
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from "@app/styles/zIndex";
@@ -113,7 +113,7 @@ export default function SignupRequiredBootstrap() {
             {t("payg.signupRequired.cancel", "Not now")}
           </Button>
           <Button
-            leftSection={<PersonAddIcon style={{ fontSize: 16 }} />}
+            leftSection={<Icon name="user-plus" size={16} />}
             onClick={handleSignUp}
           >
             {t("payg.signupRequired.cta", "Sign up free")}

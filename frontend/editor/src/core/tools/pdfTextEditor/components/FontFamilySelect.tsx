@@ -3,7 +3,7 @@ import { Group, Select, Text, Tooltip } from "@mantine/core";
 import type { ComboboxData, ComboboxItemGroup } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";
-import FontDownloadIcon from "@mui/icons-material/FontDownloadOutlined";
+import { Icon } from "@app/ui/Icon";
 import {
   groupByFamily,
   isLocalFontAccessSupported,
@@ -177,7 +177,7 @@ export function FontFamilySelect({
               "Use device fonts",
             )}
             data-testid="pdf-editor-use-device-fonts"
-            leftSection={<FontDownloadIcon fontSize="small" />}
+            leftSection={<Icon name="case-sensitive" size={20} />}
           />
         </Tooltip>
       )}

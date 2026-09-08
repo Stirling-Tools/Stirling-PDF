@@ -3,14 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Box, Stack, Text } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import CloseIcon from "@mui/icons-material/Close";
-import CompressIcon from "@mui/icons-material/Compress";
-import ContentCutIcon from "@mui/icons-material/ContentCut";
-import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFileOutlined";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import LayersIcon from "@mui/icons-material/Layers";
-import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
-import UploadFileIcon from "@mui/icons-material/UploadFile";
+import { Icon } from "@app/ui/Icon";
 import { useAllFiles, useFileActions } from "@app/contexts/FileContext";
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
 import { detectFileExtension, isPdfFile } from "@app/utils/fileUtils";
@@ -44,12 +37,10 @@ function QuickActionCard({ action }: { action: QuickAction }) {
         </Box>
       }
       rightSection={
-        <KeyboardArrowDownIcon
-          sx={{
-            fontSize: 18,
-            transform: "rotate(-90deg)",
-            color: "var(--c-text-subtle)",
-          }}
+        <Icon
+          name="chevron-down"
+          size={18}
+          style={{ transform: "rotate(-90deg)", color: "var(--c-text-subtle)" }}
         />
       }
     >
@@ -86,10 +77,7 @@ function WorkbenchFilePills({
     <div className="chat-file-pills">
       {visible.map((stub) => (
         <span key={stub.id} className="chat-file-pill">
-          <InsertDriveFileIcon
-            className="chat-file-pill__icon"
-            sx={{ fontSize: 14 }}
-          />
+          <Icon name="file" size={14} className="chat-file-pill__icon" />
           <span className="chat-file-pill__label" title={stub.name}>
             {stub.name}
           </span>
@@ -100,7 +88,7 @@ function WorkbenchFilePills({
             onClick={() => onRemove(stub.id)}
             aria-label={removeLabel(stub.name)}
           >
-            <CloseIcon sx={{ fontSize: 12 }} />
+            <Icon name="x" size={12} />
           </ActionIcon>
         </span>
       ))}
@@ -179,7 +167,7 @@ export function ChatQuickActions({ heading, onAction }: ChatQuickActionsProps) {
       return [
         {
           key: "open-from-computer",
-          icon: <UploadFileIcon sx={{ fontSize: 18 }} />,
+          icon: <Icon name="file-up" size={18} />,
           title: t("chat.quickActions.openFromComputer", "Open from computer"),
           subtitle: t("chat.quickActions.browseYourFiles", "Browse your files"),
           onClick: () => openFilesModal(),
@@ -197,7 +185,7 @@ export function ChatQuickActions({ heading, onAction }: ChatQuickActionsProps) {
         return [
           {
             key: "convert",
-            icon: <PictureAsPdfIcon sx={{ fontSize: 18 }} />,
+            icon: <Icon name="file-pdf" size={18} />,
             title: text,
             onClick: send(text),
           },
@@ -211,7 +199,7 @@ export function ChatQuickActions({ heading, onAction }: ChatQuickActionsProps) {
         const text = t("chat.quickActions.splitOne", "Split this document");
         result.push({
           key: "split",
-          icon: <ContentCutIcon sx={{ fontSize: 18 }} />,
+          icon: <Icon name="scissors" size={18} />,
           title: text,
           onClick: send(text),
         });
@@ -222,7 +210,7 @@ export function ChatQuickActions({ heading, onAction }: ChatQuickActionsProps) {
       );
       result.push({
         key: "compress",
-        icon: <CompressIcon sx={{ fontSize: 18 }} />,
+        icon: <Icon name="shrink" size={18} />,
         title: compressText,
         onClick: send(compressText),
       });
@@ -238,7 +226,7 @@ export function ChatQuickActions({ heading, onAction }: ChatQuickActionsProps) {
       );
       result.push({
         key: "convert",
-        icon: <PictureAsPdfIcon sx={{ fontSize: 18 }} />,
+        icon: <Icon name="file-pdf" size={18} />,
         title: text,
         onClick: send(text),
       });
@@ -253,13 +241,13 @@ export function ChatQuickActions({ heading, onAction }: ChatQuickActionsProps) {
     );
     result.push({
       key: "merge",
-      icon: <LayersIcon sx={{ fontSize: 18 }} />,
+      icon: <Icon name="layers" size={18} />,
       title: mergeText,
       onClick: send(mergeText),
     });
     result.push({
       key: "compress",
-      icon: <CompressIcon sx={{ fontSize: 18 }} />,
+      icon: <Icon name="shrink" size={18} />,
       title: compressText,
       onClick: send(compressText),
     });
