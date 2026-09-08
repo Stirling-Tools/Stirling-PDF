@@ -1,7 +1,8 @@
 import { useTranslation } from "react-i18next";
 import { Button, Card, StatusBadge } from "@app/ui";
-import { MeterBar, meterState } from "@app/billing";
-import type { Wallet } from "@portal/api/billing";
+import { meterState } from "@app/billing/format";
+import { MeterBar } from "@app/billing/MeterBar";
+import type { Wallet } from "@app/billing/types";
 
 /**
  * The Team holding: paid user capacity, reported independently of the Processor.

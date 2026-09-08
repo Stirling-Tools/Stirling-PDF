@@ -13,9 +13,9 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
-import { TeamPlanCard } from "@portal/components/billing/TeamPlanCard";
-import { subscribedWallet } from "@portal/components/billing/walletFixtures";
-import type { TeamHolding } from "@portal/api/billing";
+import { TeamPlanCard } from "@app/billing/TeamPlanCard";
+import { subscribedWallet } from "@app/billing/walletFixtures";
+import type { TeamHolding } from "@app/billing/types";
 
 const renderCard = (ui: ReactElement) =>
   render(<MantineProvider>{ui}</MantineProvider>);

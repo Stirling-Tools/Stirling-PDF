@@ -9,7 +9,6 @@ import { FreePdfEditorsCard } from "@portal/components/billing/FreePdfEditorsCar
 import { PdfsProcessedCard } from "@portal/components/billing/PdfsProcessedCard";
 import { PrepaidCapacityCard } from "@portal/components/billing/PrepaidCapacityCard";
 import { BundleCheckoutModal } from "@portal/components/billing/BundleCheckoutModal";
-import { SpendThisMonthCard } from "@portal/components/billing/SpendThisMonthCard";
 import { SpendLimitCard } from "@portal/components/billing/SpendLimitCard";
 import { PaymentMethodCard } from "@portal/components/billing/PaymentMethodCard";
 import { InvoicesList } from "@portal/components/billing/InvoicesList";
@@ -113,8 +112,9 @@ export function SubscribedPlanView({
 
       <PdfsProcessedCard wallet={wallet} unsynced={unsynced} />
 
+      {/* Spend for the period is BillingScreen's ProcessorPlanCard now; what stays here is the
+          limit control, which is interactive and has no equivalent on the shared card. */}
       <div className="portal-billing__spend-row">
-        <SpendThisMonthCard wallet={wallet} />
         <SpendLimitCard
           wallet={wallet}
           onWalletChange={onWalletChange}

@@ -7430,6 +7430,24 @@ exhausted = "Used up"
 healthy = "Plenty left"
 low = "Running low"
 
+[portal.billing.processor]
+activate = "Switch on"
+capSuffix = "of a {{cap}} limit"
+eyebrow = "Processor"
+freeBarLabel = "Free credits remaining"
+freeCapSuffix = "of {{allowance}} free credits this period"
+noCapSuffix = "this period, no limit"
+offer = "The Processor bills automation, API and agent work by what it processes, after the free credits run out. Manual edits in the editor stay free."
+pending = "{{units}} meter units are still pending sync from linked instances."
+periodSummary = "{{docs}} PDFs processed this period."
+spendBarLabel = "Spend limit"
+unknownSpend = "Unknown"
+
+[portal.billing.processor.state]
+active = "Active"
+exhausted = "Used up"
+free = "Free tier"
+
 [portal.billing.spendLimit]
 adjustLimit = "Adjust limit"
 cancel = "Cancel"
@@ -7454,15 +7472,6 @@ useSuggested = "Use suggested · {{amount}} / month"
 body_one = "At {{rate}}/day you reach the cap in ~{{count}} day (~{{monthEnd}} month-end). Suggested limit ~{{suggested}}."
 body_other = "At {{rate}}/day you reach the cap in ~{{count}} days (~{{monthEnd}} month-end). Suggested limit ~{{suggested}}."
 label = "Projected to exceed."
-
-[portal.billing.spendThisMonth]
-eyebrow = "Spend this month"
-freeRemaining_one = "{{formatted}} free credit remaining"
-freeRemaining_other = "{{formatted}} free credits remaining"
-processed_one = "{{formattedCount}} PDF processed."
-processed_other = "{{formattedCount}} PDFs processed."
-processedWithRate_one = "{{formattedCount}} PDF processed, at {{rate}} each."
-processedWithRate_other = "{{formattedCount}} PDFs processed, at {{rate}} each."
 
 [portal.billing.subscribedPlan.capWarn]
 approachingBody = "Raise it now so automated processing never pauses."
@@ -7493,19 +7502,6 @@ healthy = "Room to grow"
 nearlyFull = "Nearly full"
 over = "Over capacity"
 unlimited = "Unlimited"
-
-[portal.billing.walletMeter]
-barAria = "Free credits remaining"
-capSuffix_one = "of {{allowance}} free credit left this month"
-capSuffix_other = "of {{allowance}} free credits left this month"
-eyebrow = "Processor trial"
-statusLabel_one = "{{used}} used"
-statusLabel_other = "{{used}} used"
-sub = "Use the PDF Editor for free. Pay to process PDFs automatically."
-title_one = "{{allowance}} free credit every month"
-title_other = "{{allowance}} free credits every month"
-titleWithRate_one = "{{allowance}} free credit every month, then {{rate}} per PDF"
-titleWithRate_other = "{{allowance}} free credits every month, then {{rate}} per PDF"
 
 [portal.components.billingUnit]
 approval = "approval"

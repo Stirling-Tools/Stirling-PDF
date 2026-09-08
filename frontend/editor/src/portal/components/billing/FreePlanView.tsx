@@ -2,9 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Banner, Button, StatusBadge } from "@app/ui";
 import type { Wallet } from "@portal/api/billing";
-import type { LocalUsage } from "@portal/api/link";
 import type { SaasCurrency } from "@portal/billing/stripe";
-import { WalletMeter } from "@portal/components/billing/WalletMeter";
 import { FreePdfEditorsCard } from "@portal/components/billing/FreePdfEditorsCard";
 import { EnterpriseUpsell } from "@portal/components/billing/EnterpriseUpsell";
 import { StripeCheckoutModal } from "@portal/components/billing/StripeCheckoutModal";
@@ -15,8 +13,6 @@ import { useBundleFlowState } from "@portal/hooks/useBundleFlowState";
 
 interface Props {
   wallet: Wallet;
-  /** Instance-local usage not yet synced to SaaS; folded into the trial meter. */
-  unsynced?: LocalUsage | null;
   /**
    * Runs the post-checkout activation poll and resolves true once the wallet
    * reads subscribed (false if it's lagging past the poll window). The checkout
@@ -34,7 +30,7 @@ function isSaasCurrency(c: string | null): c is SaasCurrency {
  * editor fleet, the Processor trial meter (with the inline "Switch on the
  * Processor" CTA → embedded Stripe Checkout), and the Enterprise upsell.
  */
-export function FreePlanView({ wallet, unsynced, onSubscribed }: Props) {
+export function FreePlanView({ wallet, onSubscribed }: Props) {
   const { t } = useTranslation();
   // Activation fork (demo D97): choose → the metered checkout (payg) or the
   // discounted bundle (prepay). Exactly one is open at a time.
@@ -136,12 +132,11 @@ export function FreePlanView({ wallet, unsynced, onSubscribed }: Props) {
         />
       )}
 
-      {/* Processor trial — meter with the inline upgrade CTA */}
-      <WalletMeter
-        wallet={wallet}
-        unsynced={unsynced}
-        action={switchOnAction}
-      />
+      {/* The Processor meter itself is BillingScreen's ProcessorPlanCard now, so only the
+          activation action remains here, next to the flow state it depends on. */}
+      {switchOnAction && (
+        <div className="portal-billing__prepaid-foot">{switchOnAction}</div>
+      )}
 
       {missingTeam && (
         <Banner

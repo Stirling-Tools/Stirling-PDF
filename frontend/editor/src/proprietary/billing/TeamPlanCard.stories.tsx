@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { TeamPlanCard } from "@portal/components/billing/TeamPlanCard";
-import { subscribedWallet } from "@portal/components/billing/walletFixtures";
+import { TeamPlanCard } from "@app/billing/TeamPlanCard";
+import { subscribedWallet } from "@app/billing/walletFixtures";
 import "@portal/components/billing/billing.css";
 
 const meta: Meta<typeof TeamPlanCard> = {

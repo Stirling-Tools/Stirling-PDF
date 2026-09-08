@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Banner, Button, Skeleton } from "@app/ui";
+import { Banner, Button } from "@app/ui";
+import { BillingScreen } from "@app/billing";
 import {
   fetchWallet,
   refreshWalletCache,
@@ -14,7 +15,6 @@ import {
 import { useStripePortal } from "@portal/hooks/useStripePortal";
 import { FreePlanView } from "@portal/components/billing/FreePlanView";
 import { SubscribedPlanView } from "@portal/components/billing/SubscribedPlanView";
-import { TeamPlanCard } from "@portal/components/billing/TeamPlanCard";
 import {
   HttpError,
   SaasNotLinkedError,
@@ -51,11 +51,14 @@ export interface UsageProps {
  * Wallet comes from {@code GET /api/v1/payg/wallet} (apiClient.saas). After a
  * checkout / cancel, the refresh re-reads and the view re-dispatches on status.
  *
- * <p>Team is deliberately NOT part of that dispatch. The two products are orthogonal, so a team
- * may hold either, both or neither, and {@code status} is a single free/subscribed axis that can
- * only describe the Processor. Team therefore renders from its own reported holding, above the
- * Processor section, on both faces. As the rest of this page moves onto the holdings, the
- * {@code status} branch below shrinks to the Processor views it actually describes.
+ * <p>This is now a HOST for {@link BillingScreen} rather than a page in its own right: it owns
+ * the portal's data loading, session handling and Stripe portal action, and hands them to the one
+ * screen every edition renders. The two products come from the screen's own cards, so what remains
+ * in {@code extras} is only the portal's detail sections and modal flows.
+ *
+ * <p>The {@code status} branch survives inside that slot alone, and only because those sections
+ * still key off it. Team and the Processor no longer do: they render from their own reported
+ * holdings, which is what a single free/subscribed axis could never express.
  */
 export function Usage({ onWalletLoaded, onReauth }: UsageProps = {}) {
   const { t } = useTranslation();
@@ -165,104 +168,83 @@ export function Usage({ onWalletLoaded, onReauth }: UsageProps = {}) {
     return false;
   }, [onWalletLoaded]);
 
+  const paying = Boolean(wallet?.processor?.active || wallet?.team?.held);
+
   return (
-    <div className="portal-usage portal-billing">
-      <header className="portal-usage__header">
-        <div className="portal-usage__header-inner">
-          <div>
-            <h1 className="portal-usage__title">
-              {t("portal.usage.title", "Usage & billing")}
-            </h1>
-            <p className="portal-usage__subtitle">
-              {t(
-                "portal.usage.subtitle",
-                "Consumption, invoices, and plan management for every PDF Stirling has billed, in one console.",
-              )}
-            </p>
-          </div>
-          {wallet?.status === "subscribed" && (
-            <Button
-              variant="secondary"
-              fat
-              loading={portal.opening}
-              onClick={portal.open}
+    <BillingScreen
+      wallet={wallet}
+      loading={loading}
+      pendingUnits={localUsage?.totalUnsyncedUnits ?? 0}
+      headerAction={
+        paying ? (
+          <Button
+            variant="secondary"
+            fat
+            loading={portal.opening}
+            onClick={portal.open}
+          >
+            {t("portal.usage.managePayment", "Manage Payment")}
+          </Button>
+        ) : undefined
+      }
+      notices={
+        <>
+          {sessionExpired && (
+            <Banner
+              tone="warning"
+              title={t("portal.usage.sessionExpired.title", "Session expired")}
+              action={
+                onReauth ? (
+                  <Button size="sm" onClick={onReauth}>
+                    {t("portal.usage.sessionExpired.action", "Sign in again")}
+                  </Button>
+                ) : undefined
+              }
             >
-              {t("portal.usage.managePayment", "Manage Payment")}
-            </Button>
+              {t(
+                "portal.usage.sessionExpired.body",
+                "Your Stirling account session has expired. Sign in again to view billing — your instance stays linked.",
+              )}
+            </Banner>
           )}
-        </div>
-      </header>
 
-      <div className="portal-usage__body">
-        {loading && (
-          <div className="portal-billing__skeleton" aria-hidden>
-            <Skeleton height="10rem" />
-            <Skeleton height="14rem" />
-          </div>
-        )}
+          {error && (
+            <Banner
+              tone="danger"
+              title={t("portal.usage.error.loadWallet", "Couldn't load wallet")}
+            >
+              {error}
+            </Banner>
+          )}
 
-        {sessionExpired && (
-          <Banner
-            tone="warning"
-            title={t("portal.usage.sessionExpired.title", "Session expired")}
-            action={
-              onReauth ? (
-                <Button size="sm" onClick={onReauth}>
-                  {t("portal.usage.sessionExpired.action", "Sign in again")}
-                </Button>
-              ) : undefined
-            }
-          >
-            {t(
-              "portal.usage.sessionExpired.body",
-              "Your Stirling account session has expired. Sign in again to view billing — your instance stays linked.",
-            )}
-          </Banner>
-        )}
+          {portal.error && (
+            <Banner
+              tone="danger"
+              title={t(
+                "portal.usage.error.openStripePortal",
+                "Couldn't open Stripe portal",
+              )}
+            >
+              {portal.error}
+            </Banner>
+          )}
+        </>
+      }
+      extras={
+        <>
+          {wallet && wallet.status === "free" && (
+            <FreePlanView wallet={wallet} onSubscribed={confirmSubscription} />
+          )}
 
-        {error && (
-          <Banner
-            tone="danger"
-            title={t("portal.usage.error.loadWallet", "Couldn't load wallet")}
-          >
-            {error}
-          </Banner>
-        )}
-
-        {portal.error && (
-          <Banner
-            tone="danger"
-            title={t(
-              "portal.usage.error.openStripePortal",
-              "Couldn't open Stripe portal",
-            )}
-          >
-            {portal.error}
-          </Banner>
-        )}
-
-        {/* Version skew is real here: a linked self-hosted instance reads a cloud wallet, and the
-            two can be on different builds. The contract makes `team` required, so this guard only
-            fires against a backend older than the holdings, where a card is better skipped than
-            crashed on. */}
-        {wallet?.team && <TeamPlanCard wallet={wallet} />}
-
-        {wallet && wallet.status === "free" && (
-          <FreePlanView
-            wallet={wallet}
-            unsynced={localUsage}
-            onSubscribed={confirmSubscription}
-          />
-        )}
-
-        {wallet && wallet.status === "subscribed" && (
-          <SubscribedPlanView
-            wallet={wallet}
-            unsynced={localUsage}
-            onWalletChange={refresh}
-          />
-        )}
-      </div>
-    </div>
+          {wallet && wallet.status === "subscribed" && (
+            <SubscribedPlanView
+              wallet={wallet}
+              unsynced={localUsage}
+              onWalletChange={refresh}
+            />
+          )}
+        </>
+      }
+    />
   );
 }
