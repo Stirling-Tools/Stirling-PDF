@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useSearchParams } from "react-router-dom";
-import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import { Icon } from "@app/ui/Icon";
 import { Button, Skeleton } from "@app/ui";
 import { useSectionFlags } from "@portal/hooks/useAsync";
 import { useSources } from "@portal/queries/sources";
@@ -67,7 +67,7 @@ export function Sources() {
           <Button
             fat
             onClick={openCreate}
-            leftSection={<AddRoundedIcon style={{ fontSize: "1.125rem" }} />}
+            leftSection={<Icon name="plus" size={"1.125rem"} />}
           >
             {t("portal.sources.actions.connectSource")}
           </Button>

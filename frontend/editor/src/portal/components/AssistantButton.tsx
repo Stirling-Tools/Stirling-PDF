@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { useUI } from "@portal/contexts/UIContext";
-import { SparklesIcon } from "@portal/components/icons";
+import { Icon } from "@app/ui/Icon";
 import { Button } from "@app/ui/Button";
 import "@portal/components/AssistantButton.css";
 
@@ -34,7 +34,7 @@ export function AssistantButton() {
           <line x1="6" y1="6" x2="18" y2="18" />
         </svg>
       ) : (
-        <SparklesIcon size={22} />
+        <Icon name="sparkles" size={22} />
       )}
     </Button>
   );
