@@ -274,8 +274,12 @@
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
+  padding: 0 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
   scrollbar-width: thin;
-  scrollbar-color: var(--c-text-subtle) transparent;
+  scrollbar-color: var(--c-border-strong) transparent;
 }
 
 /* --- Grouped list (SaaS: Recent + per-category groups). Inert when the
