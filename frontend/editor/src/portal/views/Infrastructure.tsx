@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Button, Tabs, type TabItem } from "@app/ui";
-import { useView } from "@portal/contexts/ViewContext";
+import { Tabs, type TabItem } from "@app/ui";
 import { useEnterpriseEnabled } from "@portal/hooks/useEnterpriseEnabled";
 import { ApiKeysTab } from "@portal/components/infrastructure/ApiKeysTab";
 import { AuditTab } from "@portal/components/infrastructure/AuditTab";
@@ -17,7 +16,6 @@ type DisabledInfraTab = "deployments" | "security" | "models";
 export function Infrastructure() {
   const { t } = useTranslation();
   const [tab, setTab] = useState<InfraTab>("api-keys");
-  const { setActiveView } = useView();
   const [searchParams, setSearchParams] = useSearchParams();
   // Audit is Enterprise-only; disabled (greyed, inert) on non-enterprise instances.
   const enterprise = useEnterpriseEnabled();
@@ -82,9 +80,6 @@ export function Infrastructure() {
             {t("portal.infrastructure.subtitle")}
           </p>
         </div>
-        <Button fat onClick={() => setActiveView("editor")}>
-          {t("portal.infrastructure.manageEditorDeployment")}
-        </Button>
       </header>
 
       <Tabs<InfraTab | DisabledInfraTab>
