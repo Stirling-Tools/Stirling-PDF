@@ -320,7 +320,8 @@ public class ProfilePictureService {
     }
 
     /**
-     * Centre-crops to a square then scales to {@code size}, drawn on white so alpha never bleeds.
+     * Centre-crops to a square then scales to {@code size}. Transparency survives: avatars are
+     * shown in a circular frame, so a matte would print as a square behind the crop.
      */
     private static BufferedImage resizeSquare(BufferedImage source, int size) {
         int edge = Math.min(source.getWidth(), source.getHeight());

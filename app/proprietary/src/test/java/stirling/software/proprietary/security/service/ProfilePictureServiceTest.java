@@ -108,6 +108,37 @@ class ProfilePictureServiceTest {
     }
 
     @Test
+    void storeKeepsTheTransparentPartsOfAPngTransparent() throws IOException {
+        User owner = user(1L);
+        when(profilePictureRepository.findById(1L)).thenReturn(Optional.empty());
+        when(profilePictureRepository.save(any(UserProfilePicture.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        BufferedImage source = new BufferedImage(300, 300, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = source.createGraphics();
+        g.setColor(Color.RED);
+        g.fillRect(0, 0, 150, 300);
+        g.dispose();
+        ByteArrayOutputStream png = new ByteArrayOutputStream();
+        ImageIO.write(source, "png", png);
+        MockMultipartFile file =
+                new MockMultipartFile("file", "me.png", "image/png", png.toByteArray());
+
+        service.store(owner, file);
+
+        ArgumentCaptor<UserProfilePicture> saved =
+                ArgumentCaptor.forClass(UserProfilePicture.class);
+        org.mockito.Mockito.verify(profilePictureRepository).save(saved.capture());
+        BufferedImage avatar =
+                ImageIO.read(new ByteArrayInputStream(saved.getValue().getImageData()));
+
+        int opaque = avatar.getRGB(ProfilePictureService.AVATAR_SIZE / 8, 128);
+        int transparent = avatar.getRGB(ProfilePictureService.AVATAR_SIZE * 7 / 8, 128);
+        assertThat(opaque >>> 24).isEqualTo(255);
+        assertThat(transparent >>> 24).isZero();
+    }
+
+    @Test
     void storeRejectsAFileThatIsNotAnImage() {
         MockMultipartFile file =
                 new MockMultipartFile(
