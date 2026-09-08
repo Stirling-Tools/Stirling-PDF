@@ -203,7 +203,7 @@ export function createUserStepsConfig({
       selector: '[data-tour="settings-modal"]',
       content: t(
         "onboarding.wrapUp",
-        "You're all set! You can replay this tour anytime — just open <strong>Settings</strong> and find it here in the <strong>Tours</strong> section under Help.",
+        "You're all set! You can replay this tour anytime - just open <strong>Settings</strong> and find it here in the <strong>Tours</strong> section under Help.",
       ),
       position: "center",
       padding: 0,

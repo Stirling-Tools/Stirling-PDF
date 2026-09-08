@@ -13,7 +13,7 @@ export const useScannerImageSplitTips = (): TooltipContent => {
         title: t("scannerImageSplit.tooltip.whatThisDoes", "What this does"),
         description: t(
           "scannerImageSplit.tooltip.whatThisDoesDesc",
-          "Automatically finds and extracts each photo from a scanned page or composite image—no manual cropping.",
+          "Automatically finds and extracts each photo from a scanned page or composite image - no manual cropping.",
         ),
       },
       {
@@ -39,15 +39,15 @@ export const useScannerImageSplitTips = (): TooltipContent => {
         bullets: [
           t(
             "scannerImageSplit.tooltip.problem1",
-            "Photos not detected → increase Tolerance to 30–50",
+            "Photos not detected → increase Tolerance to 30-50",
           ),
           t(
             "scannerImageSplit.tooltip.problem2",
-            "Too many false detections → increase Minimum Area to 15,000–20,000",
+            "Too many false detections → increase Minimum Area to 15,000-20,000",
           ),
           t(
             "scannerImageSplit.tooltip.problem3",
-            "Crops are too tight → increase Border Size to 5–10",
+            "Crops are too tight → increase Border Size to 5-10",
           ),
           t(
             "scannerImageSplit.tooltip.problem4",
@@ -55,7 +55,7 @@ export const useScannerImageSplitTips = (): TooltipContent => {
           ),
           t(
             "scannerImageSplit.tooltip.problem5",
-            "Dust/noise boxes → increase Minimum Contour Area to 1000–2000",
+            "Dust/noise boxes → increase Minimum Contour Area to 1000-2000",
           ),
         ],
       },
@@ -67,7 +67,7 @@ export const useScannerImageSplitTips = (): TooltipContent => {
             "scannerImageSplit.tooltip.tip2",
             "Leave a small gap (≈1 cm) between photos",
           ),
-          t("scannerImageSplit.tooltip.tip3", "Scan at 300–600 DPI"),
+          t("scannerImageSplit.tooltip.tip3", "Scan at 300-600 DPI"),
           t("scannerImageSplit.tooltip.tip4", "Clean the scanner glass"),
         ],
       },
@@ -75,7 +75,7 @@ export const useScannerImageSplitTips = (): TooltipContent => {
         title: t("scannerImageSplit.tooltip.headsUp", "Heads-up"),
         description: t(
           "scannerImageSplit.tooltip.headsUpDesc",
-          "Overlapping photos or backgrounds very close in colour to the photos can reduce accuracy—try a lighter or darker background and leave more space.",
+          "Overlapping photos or backgrounds very close in colour to the photos can reduce accuracy - try a lighter or darker background and leave more space.",
         ),
       },
     ],

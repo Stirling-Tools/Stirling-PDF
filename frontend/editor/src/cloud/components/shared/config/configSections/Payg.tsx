@@ -699,7 +699,7 @@ function PrepaidBanner({
   const message = exhausted
     ? t(
         "payg.prepaid.banner.exhausted",
-        "Your prepaid capacity is used up — metered billing has resumed. Top up to keep the discount.",
+        "Your prepaid capacity is used up - metered billing has resumed. Top up to keep the discount.",
       )
     : low
       ? t(

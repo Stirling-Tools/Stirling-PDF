@@ -1255,7 +1255,7 @@ description = "URL or filename to impressum (required in some jurisdictions)"
 label = "Impressum"
 
 [admin.settings.legal.loginAgreement]
-defaultLocaleHint = "- used as the fallback when a language has no file."
+defaultLocaleHint = "(used as the fallback when a language has no file)."
 defaultLocaleLink = "Configure the default locale"
 description = "Show a disclaimer users must accept after logging in. The text follows each user's language."
 discardConfirm = "You have unsaved changes that will be lost. Switch language anyway?"
@@ -3813,7 +3813,7 @@ showPreferencesBtn = "Manage preferences"
 title = "How we use Cookies"
 
 [cookieBanner.popUp.description]
-1 = "We use cookies and other technologies to make Stirling PDF work better for you-helping us improve our tools and keep building features you'll love."
+1 = "We use cookies and other technologies to make Stirling PDF work better for you - helping us improve our tools and keep building features you'll love."
 2 = "If you'd rather not, clicking 'No Thanks' will only enable the essential cookies needed to keep things running smoothly."
 
 [cookieBanner.preferencesModal]
@@ -3826,16 +3826,16 @@ subtitle = "Cookie Usage"
 title = "Consent Preferences Center"
 
 [cookieBanner.preferencesModal.analytics]
-description = "These cookies help us understand how our tools are being used, so we can focus on building the features our community values most. Rest assured-Stirling PDF cannot and will never track the content of the documents you work with."
+description = "These cookies help us understand how our tools are being used, so we can focus on building the features our community values most. Rest assured - Stirling PDF cannot and will never track the content of the documents you work with."
 title = "Analytics"
 
 [cookieBanner.preferencesModal.description]
 1 = "Stirling PDF uses cookies and similar technologies to enhance your experience and understand how our tools are used. This helps us improve performance, develop the features you care about, and provide ongoing support to our users."
-2 = "Stirling PDF cannot-and will never-track or access the content of the documents you use."
+2 = "Stirling PDF cannot - and will never - track or access the content of the documents you use."
 3 = "Your privacy and trust are at the core of what we do."
 
 [cookieBanner.preferencesModal.necessary]
-description = "These cookies are essential for the website to function properly. They enable core features like setting your privacy preferences, logging in, and filling out forms-which is why they can't be turned off."
+description = "These cookies are essential for the website to function properly. They enable core features like setting your privacy preferences, logging in, and filling out forms - which is why they can't be turned off."
 
 [cookieBanner.preferencesModal.necessary.title]
 1 = "Strictly Necessary Cookies"
@@ -6754,7 +6754,7 @@ unlock = "Unlock selection"
 unlockTooltip = "Unlock selection - makes it editable again"
 
 [pdfTextEditor.tooltip.alpha]
-text = "This alpha viewer is still evolving-certain fonts, colors, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing."
+text = "This alpha viewer is still evolving - certain fonts, colors, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing."
 title = "Alpha Viewer"
 
 [pdfTextEditor.tooltip.header]
@@ -10450,7 +10450,7 @@ failed = "An error occurred while extracting image scans."
 
 [scannerImageSplit.tooltip]
 headsUp = "Heads-up"
-headsUpDesc = "Overlapping photos or backgrounds very close in color to the photos can reduce accuracy-try a lighter or darker background and leave more space."
+headsUpDesc = "Overlapping photos or backgrounds very close in color to the photos can reduce accuracy - try a lighter or darker background and leave more space."
 problem1 = "Photos not detected → increase Tolerance to 30-50"
 problem2 = "Too many false detections → increase Minimum Area to 15,000-20,000"
 problem3 = "Crops are too tight → increase Border Size to 5-10"
@@ -10468,7 +10468,7 @@ useCase2 = "Split flatbed batches into separate files"
 useCase3 = "Break collages into individual photos"
 useCase4 = "Pull photos from documents"
 whatThisDoes = "What this does"
-whatThisDoesDesc = "Automatically finds and extracts each photo from a scanned page or composite image-no manual cropping."
+whatThisDoesDesc = "Automatically finds and extracts each photo from a scanned page or composite image - no manual cropping."
 whenToUse = "When to use"
 
 [ScannerImageSplit.selectText]

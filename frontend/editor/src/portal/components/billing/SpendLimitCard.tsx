@@ -167,7 +167,7 @@ export function SpendLimitCard({
           </strong>{" "}
           {t(
             "portal.billing.spendLimit.guardrailBody",
-            "a hard ceiling — you're never billed past it. At the cap, metered processing pauses (unlimited PDF editing keeps working) until you raise it or the cycle resets. Nothing is lost.",
+            "a hard ceiling - you're never billed past it. At the cap, metered processing pauses (unlimited PDF editing keeps working) until you raise it or the cycle resets. Nothing is lost.",
           )}
         </div>
 

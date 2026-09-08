@@ -326,7 +326,7 @@ function CapStep({
           </span>{" "}
           {t(
             "payg.upgrade.promise.body",
-            "You only pay for automation pipelines, AI tools, and API calls — the work that goes beyond a single click. Edit, merge, split, sign, compress as much as you want, no charge.",
+            "You only pay for automation pipelines, AI tools, and API calls - the work that goes beyond a single click. Edit, merge, split, sign, compress as much as you want, no charge.",
           )}
         </div>
       </div>
@@ -358,7 +358,7 @@ function CapStep({
         currency={rateCurrency}
         note={t(
           "payg.upgrade.cap.usdNote",
-          "Estimated in USD. You can adjust your cap any time after subscribing — in your own currency.",
+          "Estimated in USD. You can adjust your cap any time after subscribing - in your own currency.",
         )}
       />
 
@@ -397,7 +397,7 @@ function CapStep({
         <div style={{ marginTop: 8, fontStyle: "italic" }}>
           {t(
             "payg.upgrade.help.footnote",
-            "Manual tools — viewing, editing, merging, splitting, signing, watermarking, compressing, manual OCR — are always free, even past 500. The distinction is the type of work, not where you click.",
+            "Manual tools - viewing, editing, merging, splitting, signing, watermarking, compressing, manual OCR - are always free, even past 500. The distinction is the type of work, not where you click.",
           )}
         </div>
       </div>
