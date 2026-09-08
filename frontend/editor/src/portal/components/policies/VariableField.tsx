@@ -36,8 +36,12 @@ import "@portal/components/policies/VariableField.css";
  * its content is built imperatively and read back with serialise().
  */
 
-/** A closed reference in the stored text. Spaces inside the braces are tolerated, as the backend does. */
-const TOKEN = /\{\{\s*([\w.]+)\s*\}\}/g;
+/**
+ * A closed reference in the stored text. Spaces inside the braces are tolerated, as the backend
+ * does. A fresh regex per call: a shared global one carries `lastIndex` between callers, so one
+ * `test()` silently makes the next `matchAll()` start mid-string.
+ */
+const token = () => /\{\{\s*([\w.]+)\s*\}\}/g;
 
 const TOKEN_CLASS = "portal-varfield__token";
 const REMOVE_CLASS = "portal-varfield__token-remove";
@@ -182,7 +186,7 @@ export function VariableField({
     (text: string): DocumentFragment => {
       const frag = document.createDocumentFragment();
       let last = 0;
-      for (const match of text.matchAll(TOKEN)) {
+      for (const match of text.matchAll(token())) {
         if (match.index > last) {
           frag.appendChild(
             document.createTextNode(text.slice(last, match.index)),
@@ -627,8 +631,7 @@ export function VariableField({
     // themselves ends up looking like every other variable.
     if ((editorRef.current?.textContent ?? "").includes("{{")) {
       const current = serialise();
-      TOKEN.lastIndex = 0;
-      if (TOKEN.test(current)) hydrate(current);
+      if (token().test(current)) hydrate(current);
     }
     window.setTimeout(
       () => setPicker((open) => (open?.kind === "trigger" ? null : open)),

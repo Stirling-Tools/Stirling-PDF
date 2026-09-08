@@ -1,3 +1,6 @@
+import { readFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -227,5 +230,63 @@ describe("unknownReferences", () => {
     expect(
       unknownReferences("{{classification.label}}", withoutConditionals),
     ).toEqual(["classification.label"]);
+  });
+});
+
+/**
+ * The catalogue is only honest if it agrees with the context the backend builds: an offered path
+ * the server cannot resolve fails every run, and a resolvable path the save-time check rejects
+ * blocks a pipeline that would have worked. Both files are read rather than restated, so adding a
+ * key on the Java side and forgetting the catalogue fails here instead of in production.
+ */
+describe("catalogue parity with the backend context", () => {
+  const repoRoot = resolve(
+    dirname(fileURLToPath(import.meta.url)),
+    "../../../../../..",
+  );
+  const backend = "app/proprietary/src/main/java/stirling/software/proprietary";
+  const sources = [
+    `${backend}/integration/api/DocumentContext.java`,
+    `${backend}/integration/api/ExternalApiCallController.java`,
+  ];
+
+  /**
+   * Every `{{path}}` the Java sources put into the context, found by following the local name a
+   * scope was bound to (`ObjectNode run = root.putObject("run")`) to the `put` calls on it.
+   */
+  function contextPaths(): string[] {
+    const paths = new Set<string>();
+    for (const source of sources) {
+      const java = readFileSync(resolve(repoRoot, source), "utf8");
+      const scopes = new Map<string, string>();
+      for (const m of java.matchAll(
+        /ObjectNode (\w+) =[^;]*?\.(?:putObject|get)\("(\w+)"\)/gs,
+      )) {
+        scopes.set(m[1], m[2]);
+      }
+      for (const m of java.matchAll(/(\w+)\.put\("(\w+)"/g)) {
+        const scope = scopes.get(m[1]);
+        if (scope) paths.add(`${scope}.${m[2]}`);
+      }
+      for (const m of java.matchAll(/root\.(?:set|put)\("(\w+)"/g)) {
+        paths.add(m[1]);
+      }
+    }
+    return [...paths];
+  }
+
+  it("finds the scopes it is meant to check", () => {
+    const found = contextPaths();
+    expect(found).toContain("document.filename");
+    expect(found).toContain("run.runId");
+    expect(found).toContain("sensitivityLabel.name");
+    expect(found).toContain("classification");
+  });
+
+  it("accepts every path the backend can put in the context", () => {
+    const rejected = contextPaths().filter(
+      (path) => unknownReferences(`{{${path}}}`).length > 0,
+    );
+    expect(rejected).toEqual([]);
   });
 });

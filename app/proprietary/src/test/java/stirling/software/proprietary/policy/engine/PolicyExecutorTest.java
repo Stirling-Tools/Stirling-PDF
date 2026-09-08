@@ -443,6 +443,31 @@ class PolicyExecutorTest {
     }
 
     @Test
+    void referencingAStepThatRanOverSeveralDocumentsFailsTheRun() {
+        String share = "/api/v1/integration/share";
+        String notify = "/api/v1/integration/notify";
+        // Step 1 answers once per document; only the first document's report is kept.
+        when(internalApiClient.post(eq(share), any()))
+                .thenReturn(reportResponse(pdf("a", "a.pdf"), "{\"body\":{\"url\":\"AAA\"}}"))
+                .thenReturn(reportResponse(pdf("b", "b.pdf"), "{\"body\":{\"url\":\"BBB\"}}"));
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        executor.execute(
+                                definition(
+                                        new PipelineStep(share, Map.of()),
+                                        new PipelineStep(
+                                                notify,
+                                                Map.of("message", "see {{steps.1.body.url}}"))),
+                                PolicyInputs.of(
+                                        List.of(pdf("in", "in.pdf"), pdf("in2", "in2.pdf"))),
+                                PolicyProgressListener.NOOP));
+        // Neither document is notified with the other document's answer.
+        verify(internalApiClient, never()).post(eq(notify), any());
+    }
+
+    @Test
     void emptyPipelineIsRejected() {
         assertThrows(
                 IllegalArgumentException.class,
@@ -467,10 +492,14 @@ class PolicyExecutorTest {
      * A file response carrying a {@link AiToolResponseHeaders#TOOL_REPORT} report, as report-mode.
      */
     private void stubEndpointWithReport(String endpoint, Resource body, String reportJson) {
+        when(internalApiClient.post(eq(endpoint), any()))
+                .thenReturn(reportResponse(body, reportJson));
+    }
+
+    private static ResponseEntity<Resource> reportResponse(Resource body, String reportJson) {
         HttpHeaders headers = new HttpHeaders();
         headers.add(AiToolResponseHeaders.TOOL_REPORT, reportJson);
-        when(internalApiClient.post(eq(endpoint), any()))
-                .thenReturn(new ResponseEntity<>(body, headers, HttpStatus.OK));
+        return new ResponseEntity<>(body, headers, HttpStatus.OK);
     }
 
     private static ByteArrayResource pdf(String content, String filename) {

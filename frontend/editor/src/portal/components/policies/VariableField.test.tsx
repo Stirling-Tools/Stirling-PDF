@@ -285,6 +285,18 @@ describe("VariableField", () => {
     await userEvent.click(screen.getByText("Message body"));
     expect(document.activeElement).toBe(field);
   });
+
+  it("turns hand-typed braces into a box on blur, and keeps doing it for later fields", () => {
+    const first = render(<Harness />);
+    typeInto("hi {{document.filename}}");
+    fireEvent.blur(editor());
+    expect(boxNames()).toEqual(["File name"]);
+    expect(stored()).toBe("hi {{document.filename}}");
+    first.unmount();
+
+    render(<Harness initial="Filed {{document.filename}}" />);
+    expect(boxNames()).toEqual(["File name"]);
+  });
 });
 
 describe("VariablesReference", () => {

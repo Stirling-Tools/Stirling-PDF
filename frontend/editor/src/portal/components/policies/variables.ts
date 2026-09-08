@@ -98,6 +98,8 @@ export const VARIABLE_GROUPS: VariableGroup[] = [
     variables: [
       v("sensitivityLabel.name"),
       v("sensitivityLabel.labelId"),
+      v("sensitivityLabel.siteId"),
+      v("sensitivityLabel.method"),
       v("sensitivityLabel.protected"),
     ],
   },
@@ -185,11 +187,25 @@ export function unknownReferences(
   return [...out];
 }
 
+/**
+ * Paths the backend resolves but the catalogue deliberately does not offer.
+ *
+ * ExternalApiCallController adds these two to a copy of the context made for a custom step's JSON
+ * body template only, so they resolve there and nowhere else. Listing them would teach a variable
+ * that fails in a header or a path; rejecting them at save time would block a pipeline the run
+ * would have honoured.
+ */
+const UNLISTED_RESOLVABLE = new Set([
+  "document.safeFilename",
+  "document.resolvedContentType",
+]);
+
 function referenceValid(
   path: string,
   groups: VariableGroup[],
   stepPosition?: number,
 ): boolean {
+  if (UNLISTED_RESOLVABLE.has(path)) return true;
   const step = /^steps\.(\d+)\.(?:body(?:\.\w+)*|status)$/.exec(path);
   if (step) {
     if (!groups.some((group) => group.id === "steps")) return false;

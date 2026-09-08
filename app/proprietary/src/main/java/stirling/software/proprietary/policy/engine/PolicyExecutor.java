@@ -67,7 +67,9 @@ public class PolicyExecutor {
     // A step's output files paired with each file's origin (the index into the original pipeline
     // inputs it traces back to, or null when it has no single source). Origins compose across steps
     // so the final result can be mapped back onto the files that entered the pipeline.
-    private record StepOutput(List<Resource> files, List<Integer> origins, JsonNode report) {}
+    // oneOfMany is set when the report is one document's answer out of several the step processed.
+    private record StepOutput(
+            List<Resource> files, List<Integer> origins, JsonNode report, boolean oneOfMany) {}
 
     /**
      * Run every step in order, feeding each step's output into the next. Supporting files in {@code
@@ -99,6 +101,7 @@ public class PolicyExecutor {
         // one's response via {{steps.N...}} - e.g. post the share link an upload step returned.
         ObjectNode runContext = objectMapper.createObjectNode();
         ObjectNode stepReports = runContext.putObject("steps");
+        boolean reportsAreOneOfMany = false;
 
         for (int i = 0; i < steps.size(); i++) {
             PipelineStep step = steps.get(i);
@@ -108,6 +111,7 @@ public class PolicyExecutor {
                         "Pipeline step " + (i + 1) + " has no operation");
             }
             listener.onStepStart(i + 1, steps.size(), operation);
+            requireOneAnswerPerReference(step, i + 1, reportsAreOneOfMany);
             // Fill in references to earlier steps' outputs before dispatch; document- and run-scope
             // placeholders are left for the tool to resolve per document.
             PipelineStep resolved = resolveStepReferences(step, runContext);
@@ -119,6 +123,7 @@ public class PolicyExecutor {
                 lastReport = stepResult.report();
                 lastReportTool = operation;
                 stepReports.set(String.valueOf(i + 1), stepResult.report());
+                reportsAreOneOfMany |= stepResult.oneOfMany();
             }
             listener.onStepComplete(i + 1, steps.size(), operation);
         }
@@ -173,8 +178,32 @@ public class PolicyExecutor {
                     report = r.report();
                 }
             }
+            if (report != null && inputFiles.size() > 1) {
+                return new StepOutput(files, origins, report, true);
+            }
         }
-        return new StepOutput(files, origins, report);
+        return new StepOutput(files, origins, report, false);
+    }
+
+    /**
+     * Fail a step that references an earlier step's output which was one document's answer out of
+     * several.
+     *
+     * <p>A per-file dispatch keeps only the first document's report, and a reference is resolved
+     * once for the whole step, so substituting it would send document 1's answer on every
+     * document's behalf. Only a raw {@code POST /policies/{id}/run} with repeated {@code fileInput}
+     * supplies more than one primary document; every first-party caller sends one.
+     */
+    private void requireOneAnswerPerReference(PipelineStep step, int position, boolean oneOfMany) {
+        if (!oneOfMany || step.parameters().values().stream().noneMatch(this::referencesStep)) {
+            return;
+        }
+        throw new IllegalArgumentException(
+                "Pipeline step "
+                        + position
+                        + " references an earlier step's output, but that step ran over more than"
+                        + " one document and kept only the first document's response. Run the"
+                        + " pipeline with one document at a time.");
     }
 
     /**
