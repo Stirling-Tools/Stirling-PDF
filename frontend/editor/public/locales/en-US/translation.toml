@@ -7474,6 +7474,26 @@ reachedTitle = "Monthly spend limit reached"
 [portal.billing.subscribedPlan.portalError]
 title = "Couldn't open Stripe portal"
 
+[portal.billing.team]
+barLabel = "User capacity"
+buy = "Add Team"
+capSuffix = "of {{licensed}} users"
+change = "Change capacity"
+eyebrow = "Team plan"
+noLimit = "users, no limit"
+note = "Counts every member of this team, and applies to any server you link to this account."
+notHeld = "No Team plan"
+offer = "Team covers your people rather than your processing, in blocks of 100 users, and applies to this account and any server you link to it."
+overNote = "You have more members than this plan covers. Existing members keep working; adding another needs more capacity."
+unit = "users"
+
+[portal.billing.team.state]
+full = "Full"
+healthy = "Room to grow"
+nearlyFull = "Nearly full"
+over = "Over capacity"
+unlimited = "Unlimited"
+
 [portal.billing.walletMeter]
 barAria = "Free credits remaining"
 capSuffix_one = "of {{allowance}} free credit left this month"

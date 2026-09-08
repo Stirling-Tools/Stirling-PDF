@@ -14,6 +14,7 @@ import {
 import { useStripePortal } from "@portal/hooks/useStripePortal";
 import { FreePlanView } from "@portal/components/billing/FreePlanView";
 import { SubscribedPlanView } from "@portal/components/billing/SubscribedPlanView";
+import { TeamPlanCard } from "@portal/components/billing/TeamPlanCard";
 import {
   HttpError,
   SaasNotLinkedError,
@@ -49,6 +50,12 @@ export interface UsageProps {
  *
  * Wallet comes from {@code GET /api/v1/payg/wallet} (apiClient.saas). After a
  * checkout / cancel, the refresh re-reads and the view re-dispatches on status.
+ *
+ * <p>Team is deliberately NOT part of that dispatch. The two products are orthogonal, so a team
+ * may hold either, both or neither, and {@code status} is a single free/subscribed axis that can
+ * only describe the Processor. Team therefore renders from its own reported holding, above the
+ * Processor section, on both faces. As the rest of this page moves onto the holdings, the
+ * {@code status} branch below shrinks to the Processor views it actually describes.
  */
 export function Usage({ onWalletLoaded, onReauth }: UsageProps = {}) {
   const { t } = useTranslation();
@@ -233,6 +240,12 @@ export function Usage({ onWalletLoaded, onReauth }: UsageProps = {}) {
             {portal.error}
           </Banner>
         )}
+
+        {/* Version skew is real here: a linked self-hosted instance reads a cloud wallet, and the
+            two can be on different builds. The contract makes `team` required, so this guard only
+            fires against a backend older than the holdings, where a card is better skipped than
+            crashed on. */}
+        {wallet?.team && <TeamPlanCard wallet={wallet} />}
 
         {wallet && wallet.status === "free" && (
           <FreePlanView

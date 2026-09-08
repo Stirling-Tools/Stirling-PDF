@@ -15,6 +15,8 @@ export type {
   WalletMember,
   WalletCategoryBreakdown,
   WalletActivityRow,
+  TeamHolding,
+  ProcessorHolding,
 } from "@app/billing";
 
 export async function fetchWallet(): Promise<Wallet> {
