@@ -1,10 +1,10 @@
 import { useEffect, useId, useState } from "react";
+import { Icon } from "@app/ui/Icon";
 import { InfoTooltip } from "@app/ui/InfoTooltip";
 import { Badge, Group, Paper, Select, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import UpdateModal from "@app/components/shared/UpdateModal";
 import { updateService, UpdateSummary } from "@app/services/updateService";
 import { useFrontendVersionInfo } from "@app/hooks/useFrontendVersionInfo";
@@ -164,13 +164,7 @@ export function SoftwareUpdatesCard({
                 onClick={checkForUpdate}
                 loading={checkingUpdate}
                 disabled={!currentVersion}
-                leftSection={
-                  <LocalIcon
-                    icon="refresh-rounded"
-                    width="1rem"
-                    height="1rem"
-                  />
-                }
+                leftSection={<Icon name="refresh-cw" size="1rem" />}
               >
                 {t(
                   "settings.general.updates.checkForUpdates",
@@ -186,13 +180,7 @@ export function SoftwareUpdatesCard({
                       : "default"
                   }
                   onClick={() => setUpdateModalOpened(true)}
-                  leftSection={
-                    <LocalIcon
-                      icon="system-update-alt-rounded"
-                      width="1rem"
-                      height="1rem"
-                    />
-                  }
+                  leftSection={<Icon name="square-arrow-down" size="1rem" />}
                 >
                   {t("settings.general.updates.viewDetails", "View Details")}
                 </Button>
