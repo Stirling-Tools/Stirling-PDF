@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { PdfAttachmentObject } from "@embedpdf/models";
 
 import { readPortfolioMembers } from "@app/utils/portfolioMembers";
+import { isPdfFile } from "@app/utils/fileUtils";
 
 // Keeps a portfolio pinned while its members are read, so the panel outlives
 // opening one. Members match by name; their file ids are assigned after the click.
@@ -36,6 +37,13 @@ export function usePortfolioSession(activeFile: File | null) {
         setActiveMemberName(member.name);
         return;
       }
+    }
+
+    // Only a PDF can carry a /Collection, and reading the members costs a full
+    // parse of the file's bytes, so never spend one on a member the viewer opened.
+    if (!isPdfFile(activeFile)) {
+      if (session) endSession();
+      return;
     }
 
     let cancelled = false;

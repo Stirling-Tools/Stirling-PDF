@@ -473,9 +473,9 @@ export const TOOL_IO: ToolIOTable = {
     arity: "SISO",
   },
   "/api/v1/misc/create-portfolio": {
-    accepts: ["PDF"],
+    accepts: ["ANY"],
     produces: "PDF",
-    arity: "SISO",
+    arity: "MISO",
   },
   "/api/v1/misc/decompress-pdf": {
     accepts: ["PDF"],

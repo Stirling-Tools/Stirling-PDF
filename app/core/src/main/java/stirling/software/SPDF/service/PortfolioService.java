@@ -68,6 +68,17 @@ public class PortfolioService implements PortfolioServiceInterface {
         }
 
         PDDocument document = new PDDocument();
+        try {
+            buildPortfolio(document, files, coverTitle);
+        } catch (Exception e) {
+            document.close();
+            throw e;
+        }
+        return document;
+    }
+
+    private void buildPortfolio(PDDocument document, List<MultipartFile> files, String coverTitle)
+            throws IOException {
         String title = StringUtils.isNotBlank(coverTitle) ? coverTitle : "PDF Portfolio";
         addCoverPage(document, title, files.size());
 
@@ -109,8 +120,6 @@ public class PortfolioService implements PortfolioServiceInterface {
         addCollectionDictionary(document, firstFileName);
         // Some viewers fall back to the attachments pane when they cannot render the collection UI.
         setCatalogViewerPreferences(document, PageMode.USE_ATTACHMENTS);
-
-        return document;
     }
 
     @Override
@@ -211,7 +220,8 @@ public class PortfolioService implements PortfolioServiceInterface {
     private String toWinAnsiSafe(String text) {
         StringBuilder sb = new StringBuilder(text.length());
         for (char c : text.toCharArray()) {
-            sb.append(c <= 0xFF ? c : '?');
+            boolean encodable = c >= 0x20 && (c < 0x7F || c > 0x9F) && c <= 0xFF;
+            sb.append(encodable ? c : '?');
         }
         return sb.toString();
     }

@@ -22,6 +22,7 @@ import stirling.software.SPDF.service.PortfolioServiceInterface;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.tool.ToolArity;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -46,7 +47,7 @@ public class PortfolioController {
             value = "/create-portfolio",
             resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @StandardPdfResponse
-    @ToolIO(produces = ToolFormat.PDF)
+    @ToolIO(accepts = ToolFormat.ANY, produces = ToolFormat.PDF, arity = ToolArity.MISO)
     @Operation(
             summary = "Create a PDF Portfolio",
             description =

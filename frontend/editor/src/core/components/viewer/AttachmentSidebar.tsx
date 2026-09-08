@@ -12,7 +12,7 @@ import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useAllFiles, useFileManagement } from "@app/contexts/FileContext";
-import { isStirlingFile } from "@app/types/fileContext";
+import { createQuickKey, isStirlingFile } from "@app/types/fileContext";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { PdfAttachmentObject } from "@embedpdf/models";
 import AttachmentIcon from "@mui/icons-material/AttachmentRounded";
@@ -23,6 +23,7 @@ import { useTranslation } from "react-i18next";
 import { SidebarBase } from "@app/components/viewer/SidebarBase";
 import { detectNonPdfFileType, isPdfFile } from "@app/utils/fileUtils";
 import { readPortfolioMemberBytes } from "@app/utils/portfolioMembers";
+import { downloadFile } from "@app/services/downloadService";
 import "@app/components/viewer/AttachmentSidebar.css";
 
 interface AttachmentSidebarProps {
@@ -221,6 +222,7 @@ export const AttachmentSidebar = ({
   } = useToolWorkflow();
   const [searchTerm, setSearchTerm] = useState("");
   const [openingMember, setOpeningMember] = useState<string | null>(null);
+  const [memberError, setMemberError] = useState<string | null>(null);
   const [attachmentSupport, setAttachmentSupport] = useState(() =>
     hasAttachmentSupport(),
   );
@@ -436,23 +438,27 @@ export const AttachmentSidebar = ({
   // document is open, which by then may be a member rather than the portfolio.
   const saveMember = useCallback(
     async (attachment: PdfAttachmentObject) => {
+      setMemberError(null);
       const bytes = portfolio
         ? await readPortfolioMemberBytes(portfolio.file, attachment.name)
         : null;
       if (!bytes) {
-        attachmentActions.downloadAttachment(attachment);
+        setMemberError(
+          t(
+            "viewer.portfolio.memberUnavailable",
+            "This file could not be read from the portfolio.",
+          ),
+        );
         return;
       }
-      const url = URL.createObjectURL(
-        new Blob([bytes as BlobPart], { type: memberMimeType(attachment) }),
-      );
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = attachment.name || "attachment";
-      link.click();
-      URL.revokeObjectURL(url);
+      await downloadFile({
+        data: new Blob([bytes as BlobPart], {
+          type: memberMimeType(attachment),
+        }),
+        filename: attachment.name || "attachment",
+      });
     },
-    [portfolio, attachmentActions],
+    [portfolio, t],
   );
 
   const memberFile = useCallback(
@@ -473,6 +479,19 @@ export const AttachmentSidebar = ({
       });
     },
     [portfolio],
+  );
+
+  /** The workbench file holding these exact bytes, by the same name|size|
+   * lastModified key addFiles deduplicates on. */
+  const workbenchIdFor = useCallback(
+    (file: File): string | null => {
+      const quickKey = createQuickKey(file);
+      const match = libraryFiles.find(
+        (f) => isStirlingFile(f) && f.quickKey === quickKey,
+      );
+      return match && isStirlingFile(match) ? match.fileId : null;
+    },
+    [libraryFiles],
   );
 
   /** The file this member was imported as, if it is still in the workbench. */
@@ -498,6 +517,7 @@ export const AttachmentSidebar = ({
         return;
       }
       try {
+        setMemberError(null);
         setOpeningMember(name);
         const file = await memberFile(attachment);
         if (!file) {
@@ -505,13 +525,23 @@ export const AttachmentSidebar = ({
           return;
         }
         const added = await addFiles([file], { selectFiles: true });
-        const first = added?.[0];
-        if (first) {
-          openedMembers.current.set(name, first.fileId);
-          registerPreviewImport(null);
-          setPreviewFile(null);
-          setActiveFileId(first.fileId);
+        // addFiles drops a file the workbench already holds, so a member on its
+        // second visit comes back as nothing; promote the copy it kept instead,
+        // or the tool that follows this import runs on the portfolio.
+        const fileId = added?.[0]?.fileId ?? workbenchIdFor(file);
+        if (!fileId) {
+          setMemberError(
+            t(
+              "viewer.portfolio.importFailed",
+              "This file could not be added to your workspace.",
+            ),
+          );
+          return;
         }
+        openedMembers.current.set(name, fileId);
+        registerPreviewImport(null);
+        setPreviewFile(null);
+        setActiveFileId(fileId);
       } catch {
         void saveMember(attachment);
       } finally {
@@ -523,9 +553,11 @@ export const AttachmentSidebar = ({
       memberFile,
       saveMember,
       addFiles,
+      workbenchIdFor,
       setActiveFileId,
       setPreviewFile,
       registerPreviewImport,
+      t,
     ],
   );
 
@@ -544,6 +576,7 @@ export const AttachmentSidebar = ({
         return;
       }
       try {
+        setMemberError(null);
         setOpeningMember(name);
         const file = await memberFile(attachment);
         if (!file) {
@@ -795,6 +828,14 @@ export const AttachmentSidebar = ({
               "viewer.attachments.noDocument",
               "Open a PDF to view its attachments.",
             )}
+          </Text>
+        </div>
+      )}
+
+      {isPortfolio && memberError && (
+        <div className="sidebar-base__error">
+          <Text size="sm" c="var(--color-red-dark)" ta="center">
+            {memberError}
           </Text>
         </div>
       )}

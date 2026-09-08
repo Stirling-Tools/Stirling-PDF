@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.pdfbox.Loader;
@@ -78,6 +79,21 @@ class PortfolioServiceTest {
             document.addPage(new org.apache.pdfbox.pdmodel.PDPage());
             assertFalse(portfolioService.isPortfolio(document));
         }
+    }
+
+    @Test
+    void createPortfolio_coverTitleWithUnencodableCharacters() throws IOException {
+        List<String> failures = new ArrayList<>();
+        for (int codePoint = 0; codePoint <= 0x2FF; codePoint++) {
+            String title = "Quarter " + (char) codePoint + " report";
+            try (PDDocument document = portfolioService.createPortfolio(sampleFiles(), title)) {
+                assertTrue(portfolioService.isPortfolio(document));
+                assertEquals(1, document.getNumberOfPages());
+            } catch (RuntimeException | IOException e) {
+                failures.add(String.format("U+%04X (%s)", codePoint, e));
+            }
+        }
+        assertEquals(List.of(), failures, "cover titles must never fail to render");
     }
 
     @Test

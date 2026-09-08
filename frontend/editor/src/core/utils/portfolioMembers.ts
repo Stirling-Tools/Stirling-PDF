@@ -45,7 +45,11 @@ let cache: { file: File; loaded: Promise<LoadedPortfolio | null> } | null =
 const answers = new WeakMap<File, PdfAttachmentObject[] | null>();
 
 const decodeText = (value: unknown): string | null => {
-  if (value instanceof PDFString || value instanceof PDFHexString) {
+  if (
+    value instanceof PDFString ||
+    value instanceof PDFHexString ||
+    value instanceof PDFName
+  ) {
     return value.decodeText();
   }
   return null;
@@ -146,6 +150,9 @@ export async function readPortfolioMembers(
 
   const loaded = await open(file);
   if (!loaded || !loaded.isPortfolio) {
+    // Nothing will ask for this document's bytes again, so drop them rather
+    // than pin them until the next file is opened.
+    if (cache?.file === file) cache = null;
     answers.set(file, null);
     return null;
   }
@@ -159,11 +166,7 @@ export async function readPortfolioMembers(
       index: index++,
       name,
       description: decodeText(spec.get(KEY_DESC)) ?? "",
-      // Written as a PDF name, so it arrives with a leading slash.
-      mimeType: (stream?.dict.get(KEY_SUBTYPE)?.toString() ?? "").replace(
-        /^\//,
-        "",
-      ),
+      mimeType: decodeText(stream?.dict.get(KEY_SUBTYPE)) ?? "",
       size: params?.lookupMaybe(KEY_SIZE, PDFNumber)?.asNumber(),
       creationDate: parsePdfDate(decodeText(params?.get(KEY_CREATION_DATE))),
       checksum: "",
