@@ -3,9 +3,7 @@ package stirling.software.proprietary.policy.model;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * A stored automation: ordered tool steps, input bindings, and output destinations.
- */
+/** A stored automation: ordered tool steps, input bindings, and output destinations. */
 public record Policy(
         String id,
         String name,
