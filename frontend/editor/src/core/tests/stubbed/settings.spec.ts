@@ -254,7 +254,7 @@ test.describe("Settings dialog", () => {
     // Nothing to restore on a cold deep link, so close falls back to the
     // editor root rather than pinning the URL in /settings.
     await page.goto("/settings/general", { waitUntil: "domcontentloaded" });
-    await expect(page.locator(".modal-container")).toBeVisible({
+    await expect(page.locator(".mantine-Modal-content").first()).toBeVisible({
       timeout: 5_000,
     });
     await closeSettings(page);
@@ -267,8 +267,8 @@ test.describe("Settings dialog", () => {
     page,
   }) => {
     // Super search pushes /settings/<section> itself, without going through
-    // the modal's own tab nav. Close still has to pop that entry rather than
-    // fall back to the editor home, or the user loses the page they were on.
+    // the modal's own tab nav. Close still has to land back on the page the
+    // user came from rather than fall back to the editor home.
     await page.goto("/compress", { waitUntil: "domcontentloaded" });
     const originPath = new URL(page.url()).pathname;
     const input = page.locator("#super-search-input");
@@ -279,7 +279,7 @@ test.describe("Settings dialog", () => {
       .getByRole("option", { name: /General/ })
       .first()
       .click();
-    await expect(page.locator(".modal-container")).toBeVisible({
+    await expect(page.locator(".mantine-Modal-content").first()).toBeVisible({
       timeout: 5_000,
     });
     await page.waitForURL(/\/settings\/general/, { timeout: 5_000 });
