@@ -59,12 +59,7 @@ export function QuickNavRailHost() {
     {
       id: "processor",
       label: t("quickNav.processor", "Processor"),
-      // Two literals, not a computed name: the offline icon bundle scans for `icon="..."`.
-      icon: inPortal ? (
-        <Icon name="cpu" size={SIZE} />
-      ) : (
-        <Icon name="cpu" size={SIZE} />
-      ),
+      icon: <Icon name="cpu" size={SIZE} filled={inPortal} />,
       current: inPortal,
       disabled: HAS_PORTAL && !inPortal && !host?.portalAccess,
       reason:
@@ -83,11 +78,7 @@ export function QuickNavRailHost() {
     {
       id: "editor",
       label: t("quickNav.editor", "Editor"),
-      icon: inPortal ? (
-        <Icon name="pencil" size={SIZE} />
-      ) : (
-        <Icon name="pencil" size={SIZE} />
-      ),
+      icon: <Icon name="pencil" size={SIZE} filled={!inPortal} />,
       current: !inPortal,
       onClick: () => {
         if (!inPortal) {
