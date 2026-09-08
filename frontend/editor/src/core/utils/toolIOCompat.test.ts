@@ -119,14 +119,22 @@ describe("tool file inputs", () => {
     expect(toolAcceptsFile("/api/v1/security/remove-password", file)).toBe(
       true,
     );
-    for (const endpoint of [
-      undefined,
-      "/unknown",
-      "/api/v1/convert/file/pdf",
-    ]) {
-      expect(toolAcceptsFile(endpoint, file)).toBe(true);
-    }
+    expect(toolAcceptsFile("/api/v1/convert/file/pdf", file)).toBe(true);
     file.processedFile.isEncrypted = false;
     expect(toolAcceptsFile("/api/v1/misc/compress-pdf", file)).toBe(true);
   });
+
+  it.each([undefined, "/unknown"])(
+    "skips encrypted PDFs without a declaration for %s",
+    (endpoint) => {
+      const file = {
+        name: "document.pdf",
+        type: "application/pdf",
+        processedFile: { pages: [], isEncrypted: true },
+      };
+      expect(toolAcceptsFile(endpoint, file)).toBe(false);
+      file.processedFile.isEncrypted = false;
+      expect(toolAcceptsFile(endpoint, file)).toBe(true);
+    },
+  );
 });

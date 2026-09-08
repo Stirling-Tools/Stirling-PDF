@@ -26,6 +26,9 @@ import {
   defaultParameters,
 } from "@app/hooks/tools/convert/useConvertParameters";
 import { useRemovePasswordOperation } from "@app/hooks/tools/removePassword/useRemovePasswordOperation";
+import { useToolOperation } from "@app/hooks/tools/shared/useToolOperation";
+import { adjustContrastOperationConfig } from "@app/hooks/tools/adjustContrast/useAdjustContrastOperation";
+import { defaultParameters as contrastParameters } from "@app/hooks/tools/adjustContrast/useAdjustContrastParameters";
 import {
   FileContextProvider,
   useFileActions,
@@ -39,6 +42,7 @@ import i18n from "@app/i18n/config";
 import { createTestStirlingFile } from "@app/tests/utils/testFileHelpers";
 import { expectConsole } from "@app/tests/failOnConsole";
 import { fileStorage } from "@app/services/fileStorage";
+import * as thumbnailUtils from "@app/utils/thumbnailUtils";
 import {
   StirlingFile,
   createNewStirlingFileStub,
@@ -133,6 +137,84 @@ const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
 );
 
 describe("Convert Tool Integration Tests", () => {
+  test("skips encrypted PDFs before invoking a custom processor without an endpoint", async () => {
+    const thumbnail = {
+      thumbnail: "data:image/png;base64,fake-thumbnail",
+      pageCount: 1,
+    };
+    vi.spyOn(thumbnailUtils, "generateThumbnailForFile").mockResolvedValue(
+      thumbnail.thumbnail,
+    );
+    vi.spyOn(
+      thumbnailUtils,
+      "generateThumbnailPairWithMetadata",
+    ).mockResolvedValue({
+      unrotated: thumbnail,
+      rotated: thumbnail,
+    });
+    const pdf = createPDFFile();
+    const locked = createTestStirlingFile(
+      "locked.pdf",
+      "encrypted",
+      "application/pdf",
+    );
+    const files = [locked, pdf];
+    const customProcessor = vi.fn().mockResolvedValue({ files: [pdf] });
+    const { result } = renderHook(
+      () => ({
+        operation: useToolOperation({
+          ...adjustContrastOperationConfig,
+          customProcessor,
+        }),
+        context: useFileActions(),
+        ...useFileState(),
+      }),
+      { wrapper: TestWrapper },
+    );
+    await act(async () => {
+      result.current.context.dispatch({
+        type: "ADD_FILES",
+        payload: {
+          stirlingFileStubs: files.map((file) => ({
+            ...createNewStirlingFileStub(file, file.fileId),
+            processedFile:
+              file === locked ? { pages: [], isEncrypted: true } : undefined,
+          })),
+        },
+      });
+    });
+    expect(
+      result.current.operation.getEligibleFiles?.(contrastParameters, files),
+    ).toEqual([pdf]);
+
+    await act(async () => {
+      await result.current.operation.executeOperation(
+        contrastParameters,
+        files,
+      );
+    });
+    expect(customProcessor).toHaveBeenCalledExactlyOnceWith(
+      contrastParameters,
+      [pdf],
+    );
+    expect(result.current.operation.errorMessage).toBe(null);
+    expect(result.current.state.files.byId[locked.fileId].isLeaf).toBe(true);
+    expect(result.current.state.ui.errorFileIds).not.toContain(locked.fileId);
+    expect(fileStorage.persistVersionedOutputs).toHaveBeenLastCalledWith(
+      [pdf.fileId],
+      expect.any(Array),
+      expect.any(Array),
+    );
+
+    await act(async () => {
+      await result.current.operation.executeOperation(contrastParameters, [
+        locked,
+      ]);
+    });
+    expect(customProcessor).toHaveBeenCalledTimes(1);
+    expect(result.current.operation.errorMessage).toBe("noValidFiles");
+  });
+
   test("filters mixed inputs using current params and protection without consuming skipped files", async () => {
     mockedApiClient.post.mockResolvedValue({
       data: new Blob(["output"]),
