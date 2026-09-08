@@ -92,9 +92,9 @@ export class FileAnalyzer {
    *
    * Looks for a /Encrypt entry in a bounded window at either end of the file
    * (where PDF trailers live). If absent, the file is definitely not encrypted
-   * and we can skip a full pdf.js parse. If present, falls back to pdf.js so we
-   * can distinguish user-password (blocks open) from owner-password-only (opens
-   * fine); only the former should prompt.
+   * and we can skip a full document parse. If present, falls back to a PDFium
+   * open so we can distinguish user-password (blocks open) from
+   * owner-password-only (opens fine); only the former should prompt.
    *
    * Runs inside the addFiles mutex, so it must always settle: an unbounded
    * parse here stalls every later upload as well as this one.
@@ -112,13 +112,8 @@ export class FileAnalyzer {
       const arrayBuffer = await file.arrayBuffer();
       docPtr = await openRawDocumentSafe(arrayBuffer, "");
       return false;
-    } catch (error) {
-      if (
-        error instanceof PdfiumOpenError &&
-        error.code === FPDF_ERR_PASSWORD
-      ) {
-        return true;
-      }
+    } catch {
+      // Any open failure prompts: a spurious prompt beats a card that never stops spinning.
       return true;
     } finally {
       if (docPtr != null) {
