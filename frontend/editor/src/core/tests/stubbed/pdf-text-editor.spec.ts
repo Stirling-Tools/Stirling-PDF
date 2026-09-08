@@ -4931,10 +4931,6 @@ test.describe("PDF text editor - stress: save+reopen multi-cycle", () => {
   test("save+reopen three times in a row (with one edit each) doesn't compound ghost objects", async ({
     page,
   }) => {
-    // Four document loads plus three PDFium serializes; on a CI runner that
-    // lands either side of the suite's 60s default, so the assertions below
-    // get cut off mid-loop rather than ever being read.
-    test.setTimeout(180_000);
     // Reach: a leak that adds one ghost text object per round-trip would grow
     // page 0's run count linearly with cycles.
     await loadFixture(page);
