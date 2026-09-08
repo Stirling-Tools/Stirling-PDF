@@ -332,7 +332,7 @@ const FileEditorThumbnail = ({
       },
       {
         id: "pin",
-        icon: <Icon name="pin" size={20} />,
+        icon: <Icon name="pin" size={20} filled={isPinned} />,
         label: isPinned
           ? t("unpin", "Unpin File (replace after tool run)")
           : t("pin", "Pin File (keep active after tool run)"),
@@ -599,7 +599,7 @@ const FileEditorThumbnail = ({
                 </span>
                 {isPinned && (
                   <span className={styles.pinnedBadge}>
-                    <Icon name="pin" size={12} />
+                    <Icon name="pin" size={12} filled />
                   </span>
                 )}
                 {isSharedFile && !isOwnedOrLocal && (
