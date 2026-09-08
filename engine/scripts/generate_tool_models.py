@@ -187,7 +187,7 @@ class ToolDiscovery:
             entry: dict[str, Any] = {
                 "type": "object",
                 "properties": clean_props,
-                "description": _operation_description(path_item, body_schema),
+                "description": _operation_description(path_item),
             }
             # Calculate which fields are actually required (many are marked as required,
             # but have a default set, so they're not really required)
@@ -295,11 +295,17 @@ def _rewrite_refs(obj: object) -> Iterable[str]:
             yield from _rewrite_refs(value)
 
 
-def _operation_description(path_item: dict[str, Any], body_schema: dict[str, Any]) -> str | None:
+def _operation_description(path_item: dict[str, Any]) -> str | None:
+    """The operation's own prose, from ``@Operation``, as one line.
+
+    The request body's schema description is deliberately not a fallback: it documents the DTO,
+    not the operation, and every endpoint taking a bare ``PDFFile`` would otherwise share the
+    same upload boilerplate and be indistinguishable in the planner catalogue.
+    """
     post = path_item.get("post") or {}
-    for candidate in (body_schema.get("description"), post.get("description"), post.get("summary")):
+    for candidate in (post.get("description"), post.get("summary")):
         if isinstance(candidate, str) and candidate.strip():
-            return candidate.strip()
+            return " ".join(candidate.split())
     return None
 
 

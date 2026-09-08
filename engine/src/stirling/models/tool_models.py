@@ -569,13 +569,7 @@ class EmlToPdfParams(ApiModel):
 
 class EncodeCharcodesParams(ApiModel):
     """
-    Frontend-only helper: takes the source PDF, a locator pointing at an existing
-    char rendered in the target font, and a Unicode string. Returns the byte
-    sequence the target font produces for that Unicode, packed as one unsigned
-    int per char. The frontend then calls FPDFText_SetCharcodes with the
-    returned ints to inject new text that reuses the embedded font's actual
-    glyphs. Chars the font can't encode are listed in `missing` so the caller
-    can fall back per-char.
+    Frontend-only helper: takes the source PDF, a locator pointing at an existing char rendered in the target font, and a Unicode string. Returns the byte sequence the target font produces for that Unicode, packed as one unsigned int per char. The frontend then calls FPDFText_SetCharcodes with the returned ints to inject new text that reuses the embedded font's actual glyphs. Chars the font can't encode are listed in `missing` so the caller can fall back per-char.
     """
 
     font_name: str | None = None
@@ -951,7 +945,7 @@ class PdfToEpubParams(ApiModel):
 
 class PdfToHtmlParams(ApiModel):
     """
-    Either upload a file or provide a server-side file ID
+    This endpoint converts a PDF file to HTML format. Input:PDF Output:ZIP Type:SISO
     """
 
 
@@ -997,7 +991,7 @@ class PdfToImgParams(ApiModel):
 
 class PdfToMarkdownParams(ApiModel):
     """
-    Either upload a file or provide a server-side file ID
+    This endpoint converts a PDF file to Markdown format. Input:PDF Output:MARKDOWN Type:SISO
     """
 
 
@@ -1053,7 +1047,7 @@ class PdfToPresentationParams(ApiModel):
 
 class PdfToSinglePageParams(ApiModel):
     """
-    Either upload a file or provide a server-side file ID
+    This endpoint converts a multi-page PDF document into a single paged PDF document. The width of the single page will be same as the input's width, but the height will be the sum of all the pages' heights. Input:PDF Output:PDF Type:SISO
     """
 
 
@@ -1197,7 +1191,7 @@ class PdfToXlsxParams(ApiModel):
 
 class PdfToXmlParams(ApiModel):
     """
-    Either upload a file or provide a server-side file ID
+    This endpoint converts a PDF file to an XML file. Input:PDF Output:XML Type:SISO
     """
 
 
@@ -1287,13 +1281,13 @@ class RemoveBlanksParams(ApiModel):
 
 class RemoveCertSignParams(ApiModel):
     """
-    Either upload a file or provide a server-side file ID
+    This endpoint accepts a PDF file and returns the PDF file without the digital signature. Input:PDF Output:PDF Type:SISO
     """
 
 
 class RemoveImagePdfParams(ApiModel):
     """
-    Either upload a file or provide a server-side file ID
+    This endpoint removes all embedded images from a PDF file and returns the modified document. Input:PDF Output:PDF Type:SISO
     """
 
 
@@ -1327,7 +1321,7 @@ class RenameAttachmentParams(ApiModel):
 
 class RepairParams(ApiModel):
     """
-    Either upload a file or provide a server-side file ID
+    This endpoint repairs a given PDF file by running Ghostscript (primary), qpdf (fallback), or PDFBox (if no external tools available). The PDF is first saved to a temporary location, repaired, read back, and then returned as a response. Input:PDF Output:PDF Type:SISO
     """
 
 
@@ -1513,8 +1507,7 @@ class ScannerEffectParams(ApiModel):
 
 class SplitBySizeOrCountParams(ApiModel):
     """
-    split PDF into multiple paged documents based on size/count, ie if 20 pages and split into 5, it does 5 documents each 4 pages
-     if 10MB and each page is 1MB and you enter 2MB then 5 docs each 2MB (rounded so that it accepts 1.9MB but not 2.1MB) Input:PDF Output:PDF Type:SIMO
+    split PDF into multiple paged documents based on size/count, ie if 20 pages and split into 5, it does 5 documents each 4 pages if 10MB and each page is 1MB and you enter 2MB then 5 docs each 2MB (rounded so that it accepts 1.9MB but not 2.1MB) Input:PDF Output:PDF Type:SIMO
     """
 
     split_type: int = Field(
@@ -1644,7 +1637,7 @@ class TimestampPdfParams(ApiModel):
 
 class UnlockPdfFormsParams(ApiModel):
     """
-    Either upload a file or provide a server-side file ID
+    Removing read-only property from form fields making them fillable Input:PDF Output:PDF Type:SISO
     """
 
 

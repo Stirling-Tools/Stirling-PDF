@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections import defaultdict
+
 import pytest
 
 from stirling.models import OPERATIONS, ToolEndpoint
@@ -27,4 +29,22 @@ def test_description_is_not_just_the_endpoint_name(endpoint: ToolEndpoint) -> No
     normalised = description.lower().replace("-", " ").replace("_", " ").strip(" .")
     assert normalised != endpoint.name.lower().replace("_", " "), (
         f"{endpoint.name} description restates its own name: {description!r}"
+    )
+
+
+@pytest.mark.parametrize("endpoint", list(OPERATIONS), ids=lambda e: e.name)
+def test_description_is_a_single_line(endpoint: ToolEndpoint) -> None:
+    description = _description(endpoint)
+    assert description == " ".join(description.split()), (
+        f"{endpoint.name} description carries raw line breaks from the Java text block: {description!r}"
+    )
+
+
+def test_descriptions_are_mutually_distinct() -> None:
+    by_description: dict[str, list[str]] = defaultdict(list)
+    for endpoint in OPERATIONS:
+        by_description[_description(endpoint)].append(endpoint.name)
+    shared = {text: names for text, names in by_description.items() if len(names) > 1}
+    assert not shared, "Operations sharing a description are indistinguishable to the planner: " + "; ".join(
+        f"{', '.join(names)} all say {text!r}" for text, names in shared.items()
     )
