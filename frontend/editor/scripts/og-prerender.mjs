@@ -22,21 +22,57 @@ export const escapeHtml = (value) =>
 
 const absolute = (urlPath, ogBase) => (ogBase ? ogBase + urlPath : urlPath);
 
+// Every injection point is matched against the built HTML shell, so a template
+// edit that renames one would otherwise ship a whole site of unmodified shells
+// while the build still reports success. Refuse the build instead.
+const replaceOrThrow = (html, pattern, replacement, what) => {
+  if (!pattern.test(html))
+    throw new Error(
+      `og-prerender: HTML shell has no ${what} to replace - the prerender ` +
+        "and editor/index.html have drifted apart",
+    );
+  return html.replace(pattern, replacement);
+};
+
+/**
+ * Resolve the two absolute deploy roots the prerender needs from the build
+ * environment. Both already include any sub-path that applies to them.
+ *
+ * `canonicalOrigin` (VITE_OG_BASE_URL) is the public origin the site is meant to
+ * be indexed under, and it serves the app at `baseHref` - so the sub-path
+ * belongs in its URLs. `deployOrigin` (CF_PAGES_URL) names one deployment and
+ * serves dist at its own root, so the sub-path must NOT be prepended there, and
+ * nothing derived from it may be published as an indexing signal: a preview
+ * deployment would otherwise canonicalise the entire site at a throwaway host.
+ * @param {{canonicalOrigin?:string, deployOrigin?:string, baseHref?:string}} env
+ * @returns {{ogBase:string, canonicalBase:string}}
+ */
+export function resolveDeployBases({
+  canonicalOrigin = "",
+  deployOrigin = "",
+  baseHref = "/",
+}) {
+  const trim = (url) => url.replace(/\/+$/, "");
+  const canonicalBase = canonicalOrigin
+    ? trim(canonicalOrigin) + trim(baseHref)
+    : "";
+  return { ogBase: canonicalBase || trim(deployOrigin), canonicalBase };
+}
+
 /**
  * Build the OG/Twitter <meta> block for one route. `ogTitle` lets the social
  * card show a punchier headline than the (SEO) <title>; falls back to `title`.
+ *
+ * `ogBase` is the absolute URL of the deploy root, so every root-relative path
+ * (`entry.image`, `pageUrlPath`) is appended to it verbatim. Callers must not
+ * fold a sub-path in twice.
  * @param {{image:string,title:string,description:string,ogTitle?:string}} entry
- * @param {{ogBase?:string, pageUrlPath?:string|null, pathPrefix?:string}} opts
+ * @param {{ogBase?:string, pageUrlPath?:string|null}} opts
  */
-export function buildOgTags(
-  entry,
-  { ogBase = "", pageUrlPath = null, pathPrefix = "" } = {},
-) {
+export function buildOgTags(entry, { ogBase = "", pageUrlPath = null } = {}) {
   const title = escapeHtml(entry.ogTitle ?? entry.title);
   const description = escapeHtml(entry.description);
-  // entry.image is root-relative (/og_images/x.png); the assets deploy under the
-  // sub-path too, so the absolute form must carry pathPrefix like canonical/logo.
-  const imageUrl = ogBase ? ogBase + pathPrefix + entry.image : entry.image;
+  const imageUrl = absolute(entry.image, ogBase);
   const image = escapeHtml(imageUrl);
   const pageUrl = pageUrlPath
     ? escapeHtml(absolute(pageUrlPath, ogBase))
@@ -142,50 +178,62 @@ export function buildJsonLd(entry, { siteRoot, pageUrl, isHome }) {
 
 /**
  * Inject route-specific SEO into an HTML shell: <title>, description, OG/Twitter
- * tags, a robots directive, and (when a canonical origin is known) a canonical
+ * tags, a robots directive, and (when a canonical base is known) a canonical
  * link plus JSON-LD structured data.
+ *
+ * `ogBase` is the deploy root this build is served from; `canonicalBase` is the
+ * deploy root on the public origin the site should be indexed under. They differ
+ * on a preview deployment, where only `ogBase` is known - and an indexing signal
+ * naming a preview host is worse than none, so canonical and JSON-LD are emitted
+ * only with `canonicalBase`. Both paths are root-relative to their base.
  * @param {object} entry
- * @param {{ogBase?:string, pageUrlPath?:string|null, canonicalPath?:string|null,
- *   noindex?:boolean, siteRoot?:string|null, isHome?:boolean, pathPrefix?:string}} opts
+ * @param {{ogBase?:string, canonicalBase?:string, pageUrlPath?:string|null,
+ *   canonicalPath?:string|null, noindex?:boolean, isHome?:boolean}} opts
  */
 export function injectOg(html, entry, opts = {}) {
   const {
     ogBase = "",
+    canonicalBase = "",
     pageUrlPath = null,
     canonicalPath = null,
     noindex = false,
-    siteRoot = null,
     isHome = false,
-    pathPrefix = "",
   } = opts;
-  const canonicalUrl = ogBase
-    ? absolute(canonicalPath ?? pageUrlPath ?? "/", ogBase)
+  const canonicalUrl = canonicalBase
+    ? canonicalBase + (canonicalPath ?? pageUrlPath ?? "/")
     : null;
-  const resolvedSiteRoot = siteRoot ?? (ogBase ? `${ogBase}/` : "/");
   const blocks = [
-    buildOgTags(entry, { ogBase, pageUrlPath, pathPrefix }),
+    buildOgTags(entry, { ogBase, pageUrlPath }),
     buildRobotsTag(noindex),
     buildCanonicalTag(canonicalUrl),
-    ogBase
+    canonicalBase
       ? buildJsonLd(entry, {
-          siteRoot: resolvedSiteRoot,
+          siteRoot: `${canonicalBase}/`,
           pageUrl: canonicalUrl,
           isHome,
         })
       : null,
   ].filter(Boolean);
   const head = blocks.join("\n    ") + "\n  ";
-  return html
-    .replace(
-      /<title>[\s\S]*?<\/title>/i,
-      () => `<title>${escapeHtml(entry.title)}</title>`,
-    )
-    .replace(
-      /<meta\s+name=["']description["'][\s\S]*?>/i,
-      () =>
-        `<meta name="description" content="${escapeHtml(entry.description)}" />`,
-    )
-    .replace("</head>", `  ${head}</head>`);
+  const withTitle = replaceOrThrow(
+    html,
+    /<title>[\s\S]*?<\/title>/i,
+    () => `<title>${escapeHtml(entry.title)}</title>`,
+    "<title>",
+  );
+  const withDescription = replaceOrThrow(
+    withTitle,
+    /<meta\s+name=["']description["'][\s\S]*?>/i,
+    () =>
+      `<meta name="description" content="${escapeHtml(entry.description)}" />`,
+    '<meta name="description">',
+  );
+  return replaceOrThrow(
+    withDescription,
+    /<\/head>/i,
+    () => `  ${head}</head>`,
+    "</head>",
+  );
 }
 
 // Scoped styling for the prerendered body content so the pre-hydration paint
@@ -241,7 +289,12 @@ const ROOT_RE = /<div id="root">\s*<\/div>/;
 
 /** Inject crawlable content into the (otherwise empty) React mount point. */
 export function injectBody(html, content) {
-  return html.replace(ROOT_RE, `<div id="root">${content}</div>`);
+  return replaceOrThrow(
+    html,
+    ROOT_RE,
+    () => `<div id="root">${content}</div>`,
+    'empty <div id="root">',
+  );
 }
 
 const BASE_HREF_RE = /<base\s+href="[^"]*"\s*\/?>/i;
@@ -264,25 +317,27 @@ function cleanSegments(routePath) {
  * `baseHref` is the absolute deploy base ("/" for a root deploy). Nested files
  * need it because a relative `<base href="./">` would resolve their assets
  * against the sub-path (e.g. /settings/) and 404; flat files and the root keep
- * the build's relative base. The path prefix derived from it is also woven into
- * canonical/OG/JSON-LD URLs so a sub-path deploy (RUN_SUBPATH) stays consistent.
+ * the build's relative base.
+ *
+ * `ogBase` and `canonicalBase` are absolute deploy roots (see injectOg) - any
+ * sub-path already folded in by the caller, because only the caller knows
+ * whether a given origin serves the app at the sub-path or at its own root.
  *
  * `injectLanding` bakes the crawlable landing body (see buildBodyContent). It is
  * only worth the pre-hydration flash on a crawlable public deploy, so callers
- * enable it only when a canonical origin is known.
+ * enable it only when a deploy origin is known.
  * @returns {Promise<number>}
  */
 export async function prerenderOg({
   distDir,
   manifest,
   ogBase = "",
+  canonicalBase = "",
   baseHref = "/",
   injectLanding = false,
 }) {
   const template = await fs.readFile(path.join(distDir, "index.html"), "utf8");
-  const pathPrefix = baseHref.replace(/\/+$/, ""); // "" or "/app"
-  const siteRoot = ogBase ? `${ogBase}${pathPrefix}/` : "/";
-  const homePath = `${pathPrefix}/`;
+  const homePath = "/";
   const canonicalByPath = manifest.canonicalByPath || {};
   const navLinks = manifest.navLinks;
   // The hub is the only crawlable path to the tools, so an empty one is a stale
@@ -295,11 +350,10 @@ export async function prerenderOg({
 
   let home = injectOg(template, manifest.default, {
     ogBase,
+    canonicalBase,
     pageUrlPath: ogBase ? homePath : null,
     canonicalPath: homePath,
-    siteRoot,
     isHome: true,
-    pathPrefix,
   });
   // Home <title> stays the brand ("Stirling PDF"); the H1 targets the keyword.
   if (injectLanding) {
@@ -318,17 +372,15 @@ export async function prerenderOg({
     const segments = cleanSegments(routePath);
     if (!segments) continue;
     const entry = manifest.byTool[id] ?? manifest.default;
-    const pageUrlPath = pathPrefix + routePath;
     // Aliases point at their primary URL so the duplicates are not indexed.
     const canonicalRoute = canonicalByPath[routePath] || routePath;
     let html = injectOg(template, entry, {
       ogBase,
-      pageUrlPath: ogBase ? pageUrlPath : null,
-      canonicalPath: pathPrefix + canonicalRoute,
+      canonicalBase,
+      pageUrlPath: ogBase ? routePath : null,
+      canonicalPath: canonicalRoute,
       noindex: !!entry.noindex,
-      siteRoot,
       isHome: false,
-      pathPrefix,
     });
     // App/auth pages (noindex) stay the bare shell - no crawlable landing copy.
     if (injectLanding && !entry.noindex)
@@ -345,31 +397,32 @@ export async function prerenderOg({
 }
 
 /**
- * Build an XML sitemap of every indexable route. Requires an absolute origin
- * (sitemaps must use absolute URLs), so returns null when none is known - e.g.
- * self-hosted builds with no canonical domain. Noindex routes and aliases that
- * canonicalise elsewhere are excluded.
+ * Build an XML sitemap of every indexable route. A sitemap is an instruction to
+ * index the URLs it lists, so it takes the canonical deploy root (absolute, any
+ * sub-path already folded in) and returns null when none is known - self-hosted
+ * builds and preview deployments emit nothing rather than a sitemap of a host
+ * that should never be indexed. Noindex routes and aliases that canonicalise
+ * elsewhere are excluded.
  * @param {object} manifest
- * @param {{ogBase:string, pathPrefix?:string}} opts
+ * @param {{canonicalBase:string}} opts
  * @returns {string|null}
  */
-export function buildSitemap(manifest, { ogBase, pathPrefix = "" }) {
-  if (!ogBase) return null;
-  const base = ogBase + pathPrefix;
+export function buildSitemap(manifest, { canonicalBase }) {
+  if (!canonicalBase) return null;
   const canonicalByPath = manifest.canonicalByPath || {};
-  const locs = new Set([`${base}/`]);
+  const locs = new Set([`${canonicalBase}/`]);
   for (const [routePath, id] of Object.entries(manifest.byPath || {})) {
     if (!cleanSegments(routePath)) continue;
     // An alias is a duplicate of its primary URL - only the primary is listed.
     if (canonicalByPath[routePath]) continue;
     const entry = manifest.byTool[id] ?? manifest.default;
     if (entry.noindex) continue;
-    locs.add(base + routePath);
+    locs.add(canonicalBase + routePath);
   }
   const body = [...locs]
     .sort()
     .map((loc) => {
-      const priority = loc === `${base}/` ? "1.0" : "0.8";
+      const priority = loc === `${canonicalBase}/` ? "1.0" : "0.8";
       return (
         `  <url>\n` +
         `    <loc>${escapeHtml(loc)}</loc>\n` +

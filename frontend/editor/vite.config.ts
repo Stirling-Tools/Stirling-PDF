@@ -83,11 +83,12 @@ function compressStaticCopyPlugin(): PluginOption {
 // server-side rendering. Cloudflare Pages serves `compress.html` at `/compress`
 // automatically (clean URLs), and the Spring backend serves the same file.
 //
-// Absolute URLs (best for Facebook/X) are used when a canonical base is known:
+// Absolute URLs (best for Facebook/X) are used when the deploy origin is known:
 // VITE_OG_BASE_URL (custom domain) or CF_PAGES_URL (set automatically by Cloudflare
 // Pages). Otherwise URLs stay root-relative, which still resolves against whatever
-// origin serves the page (correct for self-hosted Docker). Logic lives in
-// scripts/og-prerender.mjs so it can be unit-tested without a full build.
+// origin serves the page (correct for self-hosted Docker). Indexing signals
+// (canonical, JSON-LD, sitemap) need VITE_OG_BASE_URL specifically - see below.
+// Logic lives in scripts/og-prerender.mjs so it can be unit-tested without a full build.
 function prerenderOgPlugin(isSaas: boolean): PluginOption {
   // SaaS (stirling.com) prerenders the marketing cards from a dedicated
   // manifest; every other flavour uses the tool-registry manifest.
@@ -98,18 +99,27 @@ function prerenderOgPlugin(isSaas: boolean): PluginOption {
     name: "prerender-og",
     apply: "build" as const,
     async closeBundle() {
-      const { prerenderOg, buildSitemap } =
+      const { prerenderOg, buildSitemap, resolveDeployBases } =
         // oxlint-disable-next-line no-restricted-imports -- vite config runs before path aliases resolve, so a relative import is required here
         await import("./scripts/og-prerender.mjs");
-      const ogBase = (
-        process.env.VITE_OG_BASE_URL ||
-        process.env.CF_PAGES_URL ||
-        ""
-      ).replace(/\/+$/, "");
+      const canonicalOrigin = process.env.VITE_OG_BASE_URL || "";
+      const deployOrigin = process.env.CF_PAGES_URL || "";
       // Absolute deploy base for nested routes' <base href> (matches vite `base`).
       const subpath = (process.env.RUN_SUBPATH || "").replace(/^\/+|\/+$/g, "");
       const baseHref = subpath ? `/${subpath}/` : "/";
-      const pathPrefix = baseHref.replace(/\/+$/, ""); // "" or "/app"
+      const { ogBase, canonicalBase } = resolveDeployBases({
+        canonicalOrigin,
+        deployOrigin,
+        baseHref,
+      });
+      if (!canonicalBase && ogBase) {
+        console.warn(
+          "[prerender-og] VITE_OG_BASE_URL is unset: falling back to CF_PAGES_URL " +
+            `(${ogBase}) for social-card URLs only. No canonical links, JSON-LD ` +
+            "or sitemap will be emitted - set VITE_OG_BASE_URL to the public " +
+            "origin to enable them.",
+        );
+      }
       let manifest;
       try {
         manifest = JSON.parse(
@@ -130,6 +140,7 @@ function prerenderOgPlugin(isSaas: boolean): PluginOption {
         distDir,
         manifest,
         ogBase,
+        canonicalBase,
         baseHref,
         injectLanding,
       });
@@ -140,9 +151,9 @@ function prerenderOgPlugin(isSaas: boolean): PluginOption {
             : " (root-relative URLs, no landing body)"),
       );
 
-      // Sitemaps need absolute URLs, so only emit when a canonical origin is
-      // known (custom domain or Cloudflare Pages). Self-hosted builds skip it.
-      const sitemap = buildSitemap(manifest, { ogBase, pathPrefix });
+      // Sitemaps are an indexing instruction, so they need the canonical origin,
+      // not just any absolute one. Self-hosted and preview builds skip it.
+      const sitemap = buildSitemap(manifest, { canonicalBase });
       if (sitemap) {
         await fs.writeFile(path.join(distDir, "sitemap.xml"), sitemap);
         // Point robots.txt at the sitemap (best-effort; robots.txt may be absent).
@@ -152,13 +163,13 @@ function prerenderOgPlugin(isSaas: boolean): PluginOption {
           if (!/^\s*Sitemap:/im.test(robots)) {
             robots =
               robots.replace(/\s*$/, "\n") +
-              `Sitemap: ${ogBase}${pathPrefix}/sitemap.xml\n`;
+              `Sitemap: ${canonicalBase}/sitemap.xml\n`;
             await fs.writeFile(robotsPath, robots);
           }
         } catch {
           // no robots.txt in dist - nothing to link
         }
-        console.log(`[prerender-og] wrote sitemap.xml (base=${ogBase})`);
+        console.log(`[prerender-og] wrote sitemap.xml (base=${canonicalBase})`);
       }
     },
   };

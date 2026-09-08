@@ -12,13 +12,14 @@ export interface OgEntry {
 }
 
 export interface OgInjectOptions {
+  /** Absolute deploy root this build is served from ("" keeps URLs relative). */
   ogBase?: string;
+  /** Absolute deploy root on the public origin; "" suppresses canonical/JSON-LD. */
+  canonicalBase?: string;
   pageUrlPath?: string | null;
   canonicalPath?: string | null;
   noindex?: boolean;
-  siteRoot?: string | null;
   isHome?: boolean;
-  pathPrefix?: string;
 }
 
 export interface OgNavLink {
@@ -36,9 +37,14 @@ export interface OgManifest {
 }
 
 export function escapeHtml(value: string): string;
+export function resolveDeployBases(env: {
+  canonicalOrigin?: string;
+  deployOrigin?: string;
+  baseHref?: string;
+}): { ogBase: string; canonicalBase: string };
 export function buildOgTags(
   entry: OgEntry,
-  opts?: { ogBase?: string; pageUrlPath?: string | null; pathPrefix?: string },
+  opts?: { ogBase?: string; pageUrlPath?: string | null },
 ): string;
 export function buildRobotsTag(noindex: boolean): string;
 export function buildCanonicalTag(canonicalUrl: string | null): string | null;
@@ -60,11 +66,12 @@ export function prerenderOg(args: {
   distDir: string;
   manifest: OgManifest;
   ogBase?: string;
+  canonicalBase?: string;
   baseHref?: string;
   /** Bake the crawlable landing body; only useful on public web deploys. */
   injectLanding?: boolean;
 }): Promise<number>;
 export function buildSitemap(
   manifest: OgManifest,
-  opts: { ogBase: string; pathPrefix?: string },
+  opts: { canonicalBase: string },
 ): string | null;
