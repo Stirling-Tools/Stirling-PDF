@@ -164,21 +164,21 @@ const TOOL_ICON_MAP: Record<string, IconName> = {
 };
 
 // Type-based fallback icon when no toolId is present
-function getIconByType(type: number | undefined): string {
-  if (type === 1) return "comment";
-  if (type === 3) return "sticky-note-2";
-  if (type === 4 || type === 8) return "show-chart";
-  if (type === 5) return "crop-square-outline";
-  if (type === 6) return "radio-button-unchecked";
-  if (type === 7 || type === 8) return "change-history";
-  if (type === 9) return "highlight";
-  if (type === 10) return "format-underlined";
-  if (type === 11) return "show-chart";
-  if (type === 12) return "strikethrough-s";
-  if (type === 13) return "add-photo-alternate";
-  if (type === 14) return "add-comment";
-  if (type === 15) return "edit";
-  return "comment";
+function getIconByType(type: number | undefined): IconName {
+  if (type === 1) return "message-square";
+  if (type === 3) return "sticky-note";
+  if (type === 4 || type === 8) return "pen-line";
+  if (type === 5) return "square";
+  if (type === 6) return "circle";
+  if (type === 7 || type === 8) return "triangle";
+  if (type === 9) return "highlighter";
+  if (type === 10) return "underline";
+  if (type === 11) return "pen-line";
+  if (type === 12) return "strikethrough";
+  if (type === 13) return "image-plus";
+  if (type === 14) return "message-square-plus";
+  if (type === 15) return "pencil";
+  return "message-square";
 }
 function isCommentAnnotation(ann: PdfAnnotationObject): boolean {
   const customData = getStirlingAnnotationMetadata(ann).customData;

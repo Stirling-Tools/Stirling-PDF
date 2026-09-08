@@ -1,7 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { render } from "@testing-library/react";
 
-import { Icon, isIconName } from "@app/ui/Icon";
+import { Icon, isIconName, MISSING_ICON } from "@app/ui/Icon";
 import {
   ICONS,
   STROKE_WIDTH,
@@ -146,6 +146,30 @@ describe("isIconName", () => {
       expect(isIconName(key)).toBe(false);
     },
   );
+});
+
+describe("unknown names", () => {
+  it("draws the placeholder instead of throwing", () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const { container } = render(
+      <Icon name={"not-an-icon-at-all" as IconName} size={20} />,
+    );
+    const svg = container.querySelector("svg");
+    expect(svg).not.toBeNull();
+    expect(svg!.getAttribute("data-missing-icon")).toBe("not-an-icon-at-all");
+    expect(svg!.innerHTML).toBe(renderIcon(MISSING_ICON).innerHTML);
+    spy.mockRestore();
+  });
+
+  it("reports each unknown name once", () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    render(<Icon name={"no-such-glyph" as IconName} />);
+    render(<Icon name={"no-such-glyph" as IconName} />);
+    expect(
+      spy.mock.calls.filter((c) => String(c[0]).includes("no-such-glyph")),
+    ).toHaveLength(1);
+    spy.mockRestore();
+  });
 });
 
 describe("id collisions", () => {

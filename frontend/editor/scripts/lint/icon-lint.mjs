@@ -105,6 +105,39 @@ if (lucidePath.size) {
   }
 }
 
+// Every Material Symbols name, so a leftover from the old icon set is caught
+// wherever it sits (a `return "add-comment"` in a helper typed `string`, not
+// only `<Icon name>`). Read from the package while the migration audit keeps it
+// installed; icon-map.json is the fallback once it goes.
+function legacyIconNames() {
+  try {
+    const set = JSON.parse(
+      fs.readFileSync(
+        path.join(
+          EDITOR,
+          "../node_modules/@iconify-json/material-symbols/icons.json",
+        ),
+        "utf8",
+      ),
+    );
+    return new Set(Object.keys(set.icons));
+  } catch {
+    try {
+      const map = JSON.parse(
+        fs.readFileSync(path.join(ICONS_DIR, "icon-map.json"), "utf8"),
+      );
+      return new Set(Object.keys(map.materialSymbols ?? {}));
+    } catch {
+      return new Set();
+    }
+  }
+}
+const legacy = legacyIconNames();
+
+// Positions where a hyphenated literal is an identifier, not an icon name.
+const NOT_AN_ICON_POSITION =
+  /(?:\b(?:id|key|type|kind|variant|mode|status|action|value|label|className|class|href|path|to|for|role)|data-[\w-]*|aria-[\w-]*|testid)\s*[:=]\s*$/i;
+
 const registry = fs.readFileSync(
   path.join(ICONS_DIR, "registry.generated.ts"),
   "utf8",
@@ -174,19 +207,23 @@ for (const file of files) {
       }
     }
 
-    // A Material-style suffix is never a registry name. These reach <Icon>
-    // through props typed `IconName | ReactNode` (ReactNode admits any string)
-    // or plain `string` fields, so the compiler cannot see them and the icon
-    // silently renders nothing.
-    for (const m of line.matchAll(
-      /"([a-z0-9]+(?:-[a-z0-9]+)*-(?:rounded|outlined|sharp|twotone))"/g,
-    )) {
-      if (!OPT_OUT.test(line)) {
-        problems.push(
-          `${rel(file)}:${i + 1}: "${m[1]}" is a legacy icon name. Use the ` +
-            `lucide equivalent from the registry.`,
-        );
-      }
+    // A Material name the registry does not also know is a leftover from the
+    // old icon set. These reach <Icon> through props typed
+    // `IconName | ReactNode` (ReactNode admits any string), plain `string`
+    // fields, or a `map[key] ?? fallback` whose fallback the compiler never
+    // checks, so the type system cannot see them.
+    for (const m of line.matchAll(/"([a-z0-9]+(?:-[a-z0-9]+)+)"/g)) {
+      const name = m[1];
+      const isLegacy =
+        /-(?:rounded|outlined|sharp|twotone)$/.test(name) || legacy.has(name);
+      if (!isLegacy || known.has(name)) continue;
+      if (NOT_AN_ICON_POSITION.test(line.slice(0, m.index))) continue;
+      if (OPT_OUT.test(line)) continue;
+      problems.push(
+        `${rel(file)}:${i + 1}: "${name}" is a Material Symbols name, not a registry ` +
+          `icon; <Icon> would draw the placeholder. Use the lucide equivalent, or ` +
+          `add "// icon-lint-disable -- <reason>" if it is not an icon name.`,
+      );
     }
 
     // No retired icon library

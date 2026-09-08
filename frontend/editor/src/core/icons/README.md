@@ -65,6 +65,7 @@ For a prop that takes *either* a name or your own node, narrow with `isIconName(
 ## Gotchas
 
 - **A css `fill` breaks every icon in its scope.** Icons are strokes with `fill="none"`; a stylesheet fill overrides that presentation attribute and renders them solid. Colour them with `color`. icon-lint blocks this.
+- **An unknown name never throws.** `<Icon>` draws a dashed-circle placeholder (`MISSING_ICON`) and, in dev, logs the name once; the svg carries `data-missing-icon` so a screenshot or e2e run can spot it. `task frontend:lint:icons` catches Material Symbols names left in any position, and `isIconName` is the guard for names that arrive from data.
 - **`fontSize` is inert on `<Icon>`.** The most likely regression when porting old code: the icon silently renders at the default size. Use `size`.
 - **A filled/outline pair is one icon plus `filled`, not two.** MUI shipped `Star` and `StarBorder` as separate glyphs, so a component that rendered both collapsed to one name here. If a legacy diff shows a filled variant, check whether the difference encoded state before treating it as a duplicate.
 - **`iconMap.ts` keys are persisted.** A saved automation or watched folder stores `"SettingsIcon"`, so those keys must never be renamed — only their values.

@@ -6,7 +6,7 @@ import {
   STROKE_WIDTH,
   type IconName,
 } from "@app/icons/registry.generated";
-import type { IconNode } from "@app/icons/types";
+import type { IconEntry, IconNode } from "@app/icons/types";
 
 // The single entry point for icons: the component lives here beside the other
 // primitives, the generated registry and svg sources stay in core/icons.
@@ -133,6 +133,24 @@ export function isIconName(value: unknown): value is IconName {
   return typeof value === "string" && Object.hasOwn(ICONS, value);
 }
 
+/** Drawn in place of a name the registry cannot resolve, so a bad name from
+ * data, config or an API costs one odd glyph rather than the surrounding tree. */
+export const MISSING_ICON: IconName = "circle-dashed";
+
+const reported = new Set<string>();
+
+function resolve(name: string): IconEntry {
+  if (isIconName(name)) return ICONS[name];
+  // Once per name: the same bad value re-renders constantly in a list.
+  if (import.meta.env.DEV && !reported.has(name)) {
+    reported.add(name);
+    console.error(
+      `Icon: "${name}" is not in the registry, drawing the placeholder instead. Add an svg to src/core/icons/svg/, fix the name, or list it in EXTRA_NAMES.`,
+    );
+  }
+  return ICONS[MISSING_ICON];
+}
+
 /** The only way to render an icon. Add one by dropping an svg into
  * src/core/icons/svg/stirling or svg/third-party. */
 export function Icon({
@@ -145,25 +163,13 @@ export function Icon({
   style,
   title,
 }: IconProps) {
-  // Own-property lookup: a data-driven name like "constructor" must take
-  // the missing-icon path, not resolve to Object.prototype.
-  const entry = isIconName(name) ? ICONS[name] : undefined;
-
-  if (!entry) {
-    // Names can still arrive widened from config or an API: loud in dev,
-    // silent in prod rather than breaking the surrounding layout.
-    if (import.meta.env.DEV) {
-      throw new Error(
-        `Icon: "${name}" is not in the registry. Add an svg to src/core/icons/svg/, or list it in EXTRA_NAMES.`,
-      );
-    }
-    return null;
-  }
+  const entry = resolve(name);
 
   return createElement(
     "svg",
     {
       xmlns: "http://www.w3.org/2000/svg",
+      "data-missing-icon": isIconName(name) ? undefined : name,
       width: size,
       height: size,
       viewBox: entry.viewBox,
