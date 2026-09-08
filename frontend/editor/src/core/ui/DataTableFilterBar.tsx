@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";
 import { Chip } from "@app/ui/Chip";
 import { Dropdown } from "@app/ui/Dropdown";
+import { Icon } from "@app/ui/Icon";
 import { Input } from "@app/ui/Input";
 import "@app/ui/DataTableFilterBar.css";
 
@@ -141,45 +142,15 @@ export function useDataTableFilters<T>({
 }
 
 function SearchGlyph() {
-  return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
-      <path
-        d="m20 20-3.5-3.5"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
+  return <Icon name="search" size={15} strokeWidth={2} />;
 }
 
 function CaretGlyph() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path
-        d="m6 9 6 6 6-6"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
+  return <Icon name="chevron-down" size={12} strokeWidth={2} />;
 }
 
 function CheckGlyph() {
-  return (
-    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path
-        d="m4.5 12.5 5 5 10-11"
-        stroke="currentColor"
-        strokeWidth="3"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
+  return <Icon name="check" size={11} strokeWidth={3} />;
 }
 
 /** The bar itself. State and derivation come from {@link useDataTableFilters}. */
