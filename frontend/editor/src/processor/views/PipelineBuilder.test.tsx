@@ -969,7 +969,9 @@ describe("PipelineBuilder", () => {
     await addTool("OCR");
 
     await waitFor(() =>
-      expect(screen.queryByText("processor.pipelines.graph.run.done")).toBeNull(),
+      expect(
+        screen.queryByText("processor.pipelines.graph.run.done"),
+      ).toBeNull(),
     );
   });
 
