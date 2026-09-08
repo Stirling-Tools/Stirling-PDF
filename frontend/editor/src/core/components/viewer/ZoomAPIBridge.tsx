@@ -53,6 +53,12 @@ function ZoomAPIBridgeInner({ documentId }: { documentId: string }) {
     spreadRef.current = spread;
   }, [spread]);
 
+  // Keep zoom ref updated; the capability identity can change and
+  // requestFitWidth plus bridge registration read through this ref.
+  useEffect(() => {
+    zoomRef.current = zoom;
+  }, [zoom]);
+
   const [spreadReadyTick, setSpreadReadyTick] = useState(0);
 
   const checkSpreadReady = useCallback(() => {
