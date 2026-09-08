@@ -31,6 +31,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -501,7 +503,7 @@ public class UserService implements UserServiceInterface {
      * @throws SQLException If a database error occurs
      * @throws UnsupportedProviderException If an unsupported provider is specified
      */
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public User saveUserCore(SaveUserRequest request)
             throws IllegalArgumentException, SQLException, UnsupportedProviderException {
 
@@ -567,10 +569,51 @@ public class UserService implements UserServiceInterface {
         userRepository.save(user);
         teamMembershipService.syncMembership(user);
 
-        // Export database
-        databaseService.exportDatabase();
+        exportAfterCommit();
 
         return user;
+    }
+
+    /**
+     * Exports the database once this transaction commits, rather than inside it.
+     *
+     * <p>Two reasons it cannot run inline. The export opens its own connection, so our insert is
+     * still invisible to it and the backup it writes would omit the user we just created. And on EE
+     * it ends in a synchronous notification mail with no configured timeout, which would hold the
+     * admission lock taken in {@link #enforceUserLimit} for as long as the mail server takes to
+     * answer -- long enough for concurrent signups to give up on the lock rather than queue behind
+     * it.
+     *
+     * <p>Registered as a synchronization rather than moved below the call site because {@link
+     * #processSSOPostLogin} calls this method from inside its own transaction, where returning from
+     * {@code saveUserCore} does not commit anything.
+     */
+    private void exportAfterCommit() throws SQLException, UnsupportedProviderException {
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            // No surrounding transaction to defer to, so nothing is uncommitted and no lock is
+            // held: lockForUserAdmission is MANDATORY and would have refused. Export inline, as
+            // callers that expect a backup on return always have.
+            databaseService.exportDatabase();
+            return;
+        }
+        TransactionSynchronizationManager.registerSynchronization(
+                new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        try {
+                            databaseService.exportDatabase();
+                        } catch (SQLException | UnsupportedProviderException | RuntimeException e) {
+                            // The user is committed, so a failed backup must not surface as a
+                            // failed signup. afterCommit cannot propagate the checked exceptions
+                            // exportDatabase declares, and an exception thrown here would escape
+                            // the synchronization boundary into the caller regardless.
+                            log.error(
+                                    "Database export after user creation failed: {}",
+                                    e.getMessage(),
+                                    e);
+                        }
+                    }
+                });
     }
 
     /**
