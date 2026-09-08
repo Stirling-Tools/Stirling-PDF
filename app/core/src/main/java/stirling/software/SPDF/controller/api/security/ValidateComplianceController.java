@@ -6,8 +6,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
 
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -29,6 +27,7 @@ import stirling.software.common.annotations.api.SecurityApi;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.WebResponseUtils;
 
 /**
  * Pipeline-shaped sibling of /verify-pdf, whose JSON answer the policy executor reads as "no files"
@@ -42,7 +41,6 @@ public class ValidateComplianceController {
 
     private static final String STANDARD_AUTO = "auto";
     private static final String STANDARD_PDFA = "pdfa";
-    private static final String STANDARD_PDFUA = "pdfua";
     private static final String ON_VIOLATION_WARN = "warn";
 
     // veraPDF marks a document without PDF/A identification metadata with this standard id.
@@ -57,7 +55,7 @@ public class ValidateComplianceController {
 
     @PostMapping(value = "/validate-compliance", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ToolIO(produces = ToolFormat.PDF)
-    public ResponseEntity<ByteArrayResource> validateCompliance(
+    public ResponseEntity<byte[]> validateCompliance(
             @ModelAttribute ValidateComplianceRequest request) throws IOException {
 
         MultipartFile file = request.getFileInput();
@@ -123,49 +121,41 @@ public class ValidateComplianceController {
                     standard);
         }
 
-        return ResponseEntity.ok()
-                .contentType(MediaType.APPLICATION_PDF)
-                .header(
-                        HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=\"" + filename + "\"")
-                .body(new ByteArrayResource(bytes));
+        return WebResponseUtils.bytesToWebResponse(bytes, filename);
     }
 
     private static String normalise(String value) {
         return value == null ? "" : value.trim().toLowerCase(Locale.ROOT);
     }
 
-    private String resolveStandard(String requested) {
+    // Fail closed on an unrecognised standard: falling back to auto is the most permissive mode,
+    // so a typo in a policy step would quietly turn the gate off.
+    // TODO(#7220): accept "pdfua" once the product can tag structure for accessibility; nothing in
+    // a chain can produce a conforming document today, so the gate would fail every such run.
+    private static String resolveStandard(String requested) {
         String standard = normalise(requested);
         if (standard.isEmpty()) {
             return STANDARD_AUTO;
         }
-        if (STANDARD_AUTO.equals(standard)
-                || STANDARD_PDFA.equals(standard)
-                || STANDARD_PDFUA.equals(standard)) {
+        if (STANDARD_AUTO.equals(standard) || STANDARD_PDFA.equals(standard)) {
             return standard;
         }
-        log.warn(
-                "Unknown compliance standard '{}', falling back to '{}'", requested, STANDARD_AUTO);
-        return STANDARD_AUTO;
+        throw ExceptionUtils.createInvalidArgumentException("standard", requested);
     }
 
-    // The pipeline names the next step's input from this filename, so it must keep a .pdf
-    // extension.
+    // The pipeline names the next step's input from this filename, and matches the next step's
+    // accepted types against its extension, so it must keep a .pdf one.
     private static String resolveFilename(String originalFilename) {
         if (originalFilename == null || originalFilename.isBlank()) {
             return DEFAULT_FILENAME;
         }
         String filename = originalFilename.trim();
-        return filename.contains(".") ? filename : filename + ".pdf";
+        return filename.toLowerCase(Locale.ROOT).endsWith(".pdf") ? filename : filename + ".pdf";
     }
 
     private static boolean matchesStandard(PDFVerificationResult result, String standard) {
         if (STANDARD_PDFA.equals(standard)) {
             return isPdfa(result);
-        }
-        if (STANDARD_PDFUA.equals(standard)) {
-            return isPdfUa(result);
         }
         // auto: judge only what the document declares, so one declaring nothing passes.
         return !isUndeclared(result);
@@ -246,13 +236,7 @@ public class ValidateComplianceController {
     }
 
     private static String standardLabel(String standard) {
-        if (STANDARD_PDFA.equals(standard)) {
-            return "PDF/A";
-        }
-        if (STANDARD_PDFUA.equals(standard)) {
-            return "PDF/UA";
-        }
-        return "PDF standards";
+        return STANDARD_PDFA.equals(standard) ? "PDF/A" : "PDF standards";
     }
 
     private static List<PDFVerificationResult.ValidationIssue> failuresOf(

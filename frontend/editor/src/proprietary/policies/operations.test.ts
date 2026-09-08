@@ -21,7 +21,6 @@ describe("POLICY_OPERATIONS", () => {
       "externalApiCall",
       "flatten",
       "ocr",
-      "pdfUa",
       "pdfa",
       "purviewApplyLabel",
       "purviewReadLabel",
@@ -164,11 +163,22 @@ describe("compliance steps", () => {
   test("the compliance gate keeps values it does recognise", () => {
     const back = policyStepFromWire({
       operation: "/api/v1/security/validate-compliance",
-      parameters: { standard: "pdfua", onViolation: "warn" },
+      parameters: { standard: "auto", onViolation: "warn" },
     });
     expect(back?.toolId).toBe("complianceCheck");
     if (back?.toolId === "complianceCheck") {
-      expect(back.params).toEqual({ standard: "pdfua", onViolation: "warn" });
+      expect(back.params).toEqual({ standard: "auto", onViolation: "warn" });
+    }
+  });
+
+  test("the gate clamps a stored PDF/UA step: accessibility is not offered yet", () => {
+    const back = policyStepFromWire({
+      operation: "/api/v1/security/validate-compliance",
+      parameters: { standard: "pdfua", onViolation: "fail" },
+    });
+    expect(back?.toolId).toBe("complianceCheck");
+    if (back?.toolId === "complianceCheck") {
+      expect(back.params.standard).toBe("pdfa");
     }
   });
 });

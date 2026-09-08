@@ -25,9 +25,9 @@ export const Default: Story = {
   render: () => <Controlled parameters={complianceCheckDefaultParameters} />,
 };
 
-/** Accessibility instead of archiving, recording misses rather than blocking them. */
-export const AccessibilityWarnOnly: Story = {
+/** Judging whatever the document declares, and recording misses rather than blocking them. */
+export const DeclaredStandardWarnOnly: Story = {
   render: () => (
-    <Controlled parameters={{ standard: "pdfua", onViolation: "warn" }} />
+    <Controlled parameters={{ standard: "auto", onViolation: "warn" }} />
   ),
 };

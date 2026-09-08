@@ -306,8 +306,6 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
         removeXMPMetadata: true,
       }),
       policyStep("pdfa"),
-      // Accessibility target, off by default: a policy converts to PDF/A or PDF/UA, not both.
-      policyStep("pdfUa"),
       policyStep("purviewApplyLabel"),
       policyStep("complianceCheck"),
     ],

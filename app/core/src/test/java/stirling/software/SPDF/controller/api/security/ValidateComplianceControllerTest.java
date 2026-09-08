@@ -21,8 +21,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -136,17 +134,15 @@ class ValidateComplianceControllerTest {
             when(veraPDFService.validatePDF(any(InputStream.class)))
                     .thenReturn(List.of(pdfaResult(true)));
 
-            ResponseEntity<ByteArrayResource> response =
+            ResponseEntity<byte[]> response =
                     validateComplianceController.validateCompliance(
                             request("report.pdf", "pdfa", "fail"));
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
-            assertArrayEquals(simplePdfBytes, response.getBody().getByteArray());
+            assertArrayEquals(simplePdfBytes, response.getBody());
             assertEquals(MediaType.APPLICATION_PDF, response.getHeaders().getContentType());
-            assertEquals(
-                    "attachment; filename=\"report.pdf\"",
-                    response.getHeaders().getFirst(HttpHeaders.CONTENT_DISPOSITION));
+            assertEquals("report.pdf", response.getHeaders().getContentDisposition().getFilename());
         }
 
         @Test
@@ -157,12 +153,12 @@ class ValidateComplianceControllerTest {
             when(veraPDFService.validatePDF(any(InputStream.class)))
                     .thenReturn(List.of(noPdfaDeclarationResult()));
 
-            ResponseEntity<ByteArrayResource> response =
+            ResponseEntity<byte[]> response =
                     validateComplianceController.validateCompliance(
                             request("plain.pdf", null, null));
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertArrayEquals(simplePdfBytes, response.getBody().getByteArray());
+            assertArrayEquals(simplePdfBytes, response.getBody());
         }
 
         @Test
@@ -171,12 +167,12 @@ class ValidateComplianceControllerTest {
             when(veraPDFService.validatePDF(any(InputStream.class)))
                     .thenReturn(List.of(noPdfaDeclarationResult(), pdfUaResult(true)));
 
-            ResponseEntity<ByteArrayResource> response =
+            ResponseEntity<byte[]> response =
                     validateComplianceController.validateCompliance(
                             request("tagged.pdf", "auto", "fail"));
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertArrayEquals(simplePdfBytes, response.getBody().getByteArray());
+            assertArrayEquals(simplePdfBytes, response.getBody());
         }
 
         @Test
@@ -185,26 +181,39 @@ class ValidateComplianceControllerTest {
             when(veraPDFService.validatePDF(any(InputStream.class)))
                     .thenReturn(List.of(pdfaResult(true)));
 
-            ResponseEntity<ByteArrayResource> response =
+            ResponseEntity<byte[]> response =
                     validateComplianceController.validateCompliance(request("", "auto", "fail"));
 
             assertEquals(
-                    "attachment; filename=\"document.pdf\"",
-                    response.getHeaders().getFirst(HttpHeaders.CONTENT_DISPOSITION));
+                    "document.pdf", response.getHeaders().getContentDisposition().getFilename());
         }
 
         @Test
-        @DisplayName("Should ignore other standards when only PDF/UA is requested")
+        @DisplayName("Should ignore other standards when only PDF/A is requested")
         void testRequestedStandardFiltersOutOtherResults() throws Exception {
             when(veraPDFService.validatePDF(any(InputStream.class)))
-                    .thenReturn(List.of(pdfaResult(false), pdfUaResult(true)));
+                    .thenReturn(List.of(pdfaResult(true), pdfUaResult(false)));
 
-            ResponseEntity<ByteArrayResource> response =
+            ResponseEntity<byte[]> response =
                     validateComplianceController.validateCompliance(
-                            request("tagged.pdf", "pdfua", "fail"));
+                            request("tagged.pdf", "pdfa", "fail"));
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertArrayEquals(simplePdfBytes, response.getBody().getByteArray());
+            assertArrayEquals(simplePdfBytes, response.getBody());
+        }
+
+        @Test
+        @DisplayName("Should give a non-pdf filename a .pdf extension")
+        void testNonPdfExtensionGetsPdfAppended() throws Exception {
+            when(veraPDFService.validatePDF(any(InputStream.class)))
+                    .thenReturn(List.of(pdfaResult(true)));
+
+            ResponseEntity<byte[]> response =
+                    validateComplianceController.validateCompliance(
+                            request("report.txt", "pdfa", "fail"));
+
+            assertEquals(
+                    "report.txt.pdf", response.getHeaders().getContentDisposition().getFilename());
         }
     }
 
@@ -238,17 +247,17 @@ class ValidateComplianceControllerTest {
         @DisplayName("Should default to failing when onViolation is not supplied")
         void testNonCompliantFailsByDefault() throws Exception {
             when(veraPDFService.validatePDF(any(InputStream.class)))
-                    .thenReturn(List.of(pdfUaResult(false)));
+                    .thenReturn(List.of(pdfaResult(false)));
 
-            ValidateComplianceRequest request = request("report.pdf", "pdfua", null);
+            ValidateComplianceRequest request = request("report.pdf", "pdfa", null);
 
             IOException exception =
                     assertThrows(
                             IOException.class,
                             () -> validateComplianceController.validateCompliance(request));
 
-            assertTrue(exception.getMessage().contains("PDF/UA"), exception.getMessage());
-            assertTrue(exception.getMessage().contains("7.1-1"), exception.getMessage());
+            assertTrue(exception.getMessage().contains("PDF/A"), exception.getMessage());
+            assertTrue(exception.getMessage().contains("6.2.11.7.2"), exception.getMessage());
         }
 
         @Test
@@ -257,31 +266,29 @@ class ValidateComplianceControllerTest {
             when(veraPDFService.validatePDF(any(InputStream.class)))
                     .thenReturn(List.of(pdfaResult(false)));
 
-            ResponseEntity<ByteArrayResource> response =
+            ResponseEntity<byte[]> response =
                     validateComplianceController.validateCompliance(
                             request("report.pdf", "pdfa", "warn"));
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertArrayEquals(simplePdfBytes, response.getBody().getByteArray());
-            assertEquals(
-                    "attachment; filename=\"report.pdf\"",
-                    response.getHeaders().getFirst(HttpHeaders.CONTENT_DISPOSITION));
+            assertArrayEquals(simplePdfBytes, response.getBody());
+            assertEquals("report.pdf", response.getHeaders().getContentDisposition().getFilename());
         }
 
         @Test
         @DisplayName("Should fail closed when the requested standard is not declared")
         void testRequestedStandardNotDeclaredFailsClosed() throws Exception {
             when(veraPDFService.validatePDF(any(InputStream.class)))
-                    .thenReturn(List.of(pdfaResult(true)));
+                    .thenReturn(List.of(pdfUaResult(true)));
 
-            ValidateComplianceRequest request = request("report.pdf", "pdfua", "fail");
+            ValidateComplianceRequest request = request("report.pdf", "pdfa", "fail");
 
             IOException exception =
                     assertThrows(
                             IOException.class,
                             () -> validateComplianceController.validateCompliance(request));
 
-            assertTrue(exception.getMessage().contains("PDF/UA"), exception.getMessage());
+            assertTrue(exception.getMessage().contains("PDF/A"), exception.getMessage());
             assertTrue(exception.getMessage().contains("does not declare"), exception.getMessage());
         }
 
@@ -348,6 +355,34 @@ class ValidateComplianceControllerTest {
             assertThrows(
                     RuntimeException.class,
                     () -> validateComplianceController.validateCompliance(request));
+        }
+
+        @Test
+        @DisplayName("Should reject an unrecognised standard instead of falling back to auto")
+        void testUnknownStandardIsRejected() {
+            ValidateComplianceRequest request = request("report.pdf", "pdf/a", "fail");
+
+            IllegalArgumentException exception =
+                    assertThrows(
+                            IllegalArgumentException.class,
+                            () -> validateComplianceController.validateCompliance(request));
+
+            assertTrue(exception.getMessage().contains("standard"), exception.getMessage());
+        }
+
+        @Test
+        @DisplayName("Should still accept the standards the gate offers")
+        void testKnownStandardsAreAccepted() throws Exception {
+            when(veraPDFService.validatePDF(any(InputStream.class)))
+                    .thenReturn(List.of(pdfaResult(true)));
+
+            for (String standard : List.of("auto", "pdfa", " PDFA ")) {
+                assertEquals(
+                        HttpStatus.OK,
+                        validateComplianceController
+                                .validateCompliance(request("report.pdf", standard, "fail"))
+                                .getStatusCode());
+            }
         }
 
         @Test

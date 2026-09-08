@@ -257,6 +257,12 @@ describe("PolicySetupWizard", () => {
         onCustomise={vi.fn()}
       />,
     );
+    expect(
+      await screen.findByText("Convert to PDF/A for archiving"),
+    ).toBeInTheDocument();
+    // PDF/UA is not offered: conforming needs per-figure alt text nothing in the product can
+    // supply, so a gate pointed at it would fail every run.
+    expect(screen.queryByText(/PDF\/UA/)).toBeNull();
     await submitWizard(ENABLE);
 
     await waitFor(() => expect(onSubmit).toHaveBeenCalled());

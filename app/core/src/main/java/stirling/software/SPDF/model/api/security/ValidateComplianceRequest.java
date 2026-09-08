@@ -13,9 +13,9 @@ public class ValidateComplianceRequest extends PDFFile {
 
     @Schema(
             description =
-                    "Standard to validate against: auto (whatever the document declares), pdfa or"
-                            + " pdfua",
-            allowableValues = {"auto", "pdfa", "pdfua"},
+                    "Standard to validate against: auto (whatever the document declares) or pdfa."
+                            + " Anything else is rejected.",
+            allowableValues = {"auto", "pdfa"},
             defaultValue = "auto")
     private String standard;
 
