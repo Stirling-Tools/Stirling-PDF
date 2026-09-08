@@ -87,7 +87,7 @@ export function DeveloperDocs() {
       {/* Layout column, not a landmark: the <nav> inside already carries its
           own named landmark, and an unlabelled complementary region would be
           indistinguishable to assistive tech. */}
-      <div className={"portal-docs__sidebar" + (navOpen ? " is-open" : "")}>
+      <div className={"processor-docs__sidebar" + (navOpen ? " is-open" : "")}>
         <DocsNav sections={nav} active={activeId ?? ""} onSelect={onSelect} />
       </div>
 

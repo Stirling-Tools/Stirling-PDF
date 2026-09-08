@@ -32,21 +32,21 @@
 }
 
 /* Sections: the template gallery and the full pipelines list. */
-.portal-pipelines__templates,
-.portal-pipelines__all {
+.processor-pipelines__templates,
+.processor-pipelines__all {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
 }
 
-.portal-pipelines__section-title {
+.processor-pipelines__section-title {
   margin: 0;
   font-size: 1rem;
   font-weight: 640;
   color: var(--c-text);
 }
 
-.portal-pipelines__section-sub {
+.processor-pipelines__section-sub {
   margin: -0.375rem 0 0;
   font-size: 0.8125rem;
   line-height: 1.5;
