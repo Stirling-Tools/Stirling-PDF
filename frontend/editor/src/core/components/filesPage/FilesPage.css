@@ -348,7 +348,9 @@
 
 .files-page-list-row {
   display: grid;
-  grid-template-columns: 2.25rem minmax(0, 3fr) 1fr 1fr 1fr 2.5rem;
+  grid-template-columns:
+    2.25rem minmax(0, 3fr) minmax(3.5rem, 1fr) minmax(4.5rem, 1fr)
+    minmax(max-content, 1.5fr) 2.5rem;
   gap: 0.5rem;
   align-items: center;
   /* Same offscreen skip as .files-page-card. */
@@ -1491,7 +1493,10 @@
     grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr));
     gap: 0.5rem;
   }
-  /* List view at tiny widths becomes cramped - drop the size + type + modified
+}
+
+@media (max-width: 560px) {
+  /* List view at narrow widths becomes cramped - drop the size + type + modified
      columns and let name + actions take the room. */
   .files-page-list-row {
     grid-template-columns: 1.75rem minmax(0, 1fr) 2rem;
