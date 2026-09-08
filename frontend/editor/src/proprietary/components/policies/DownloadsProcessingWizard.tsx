@@ -121,7 +121,6 @@ export function DownloadsProcessingWizard({
     setOpened(0);
     setCards([]);
     setActiveFolderId(null);
-    cancelRequested.current = false;
   };
 
   /** Stop the sweep: stand the delivery loop down, cancel the runs, reset. */
