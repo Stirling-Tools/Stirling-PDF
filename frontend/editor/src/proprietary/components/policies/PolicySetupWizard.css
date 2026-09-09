@@ -1,0 +1,71 @@
+/* The setup wizard's own chrome. The portal's Policies view carries sibling
+   rules for its detail panel; these are the wizard's, colocated with the shared
+   component so every surface that renders it gets them. */
+
+.portal-policies__wizard-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.portal-policies__wizard-foot {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.portal-policies__wizard-banner {
+  margin-top: 0.75rem;
+}
+
+.portal-policies__wizard-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  margin-top: 1rem;
+}
+
+.portal-policies__wizard-desc {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--c-text-subtle);
+}
+
+.portal-policies__wizard-heading {
+  margin: 0.75rem 0 0;
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--c-text-subtle);
+  font-weight: 600;
+}
+
+/* "Enforce as policy" - the last choice in the simple wizard, set off from the settings above. */
+.portal-policies__wizard-enforce {
+  margin-top: 0.75rem;
+  padding-top: 0.875rem;
+  border-top: 1px solid var(--c-border-subtle);
+}
+
+/* The tool list reads as one surface with dividers - a set of capabilities,
+   not a chain of distinct tools. Config reveals inline beneath an enabled row. */
+.portal-policies__capabilities {
+  display: flex;
+  flex-direction: column;
+}
+
+.portal-policies__capability {
+  padding: 0.75rem 0.875rem;
+}
+
+.portal-policies__capability + .portal-policies__capability {
+  border-top: 1px solid var(--c-border);
+}
+
+.portal-policies__capability[data-on] .portal-policies__capability-config {
+  border-top: 1px dashed var(--c-border);
+  padding-top: 0.75rem;
+  margin-top: 0.75rem;
+}
