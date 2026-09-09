@@ -373,7 +373,10 @@ describe("FileRunEventList", () => {
     // waiting on it leaves the assertions below racing the response into state.
     expect(await screen.findByRole("button", { name: "Dismiss" })).toBeTruthy();
     expect(screen.getByText("Password-protected document")).toBeTruthy();
-    expect(applyFileRunEventAction).toHaveBeenCalledWith("fre-1", "ACKNOWLEDGE");
+    expect(applyFileRunEventAction).toHaveBeenCalledWith(
+      "fre-1",
+      "ACKNOWLEDGE",
+    );
     // Updated from the response rather than by refetching, so the list does not
     // reload and jump under the reviewer.
     expect(fetchFileRunEvents).toHaveBeenCalledTimes(1);
