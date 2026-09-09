@@ -7,16 +7,15 @@ import com.fasterxml.jackson.annotation.JsonValue;
  * How a {@link RoutingRule} compares a document fact against its values.
  *
  * <p>A fact is either a scalar or an array (the classifier writes {@code classification.labels} as
- * an array), so the matching operators read "any of the fact's values is any of the rule's" - which
+ * an array), so the operator reads "any of the fact's values is any of the rule's" - which
  * collapses to plain equality for a scalar.
+ *
+ * <p>One operator, because one is what a rule can be built with. The enum is the seam for adding
+ * more: the wire already carries the discriminator, so a negation or a presence test costs a
+ * constant and a branch in {@code RoutingRuleMatcher} rather than a format change.
  */
 public enum MatchOperator {
-    MATCHES_ANY("matches-any"),
-    MATCHES_NONE("matches-none"),
-    /** The fact is present and non-empty; the rule's values are ignored. */
-    EXISTS("exists"),
-    /** The fact is missing or empty; the rule's values are ignored. */
-    ABSENT("absent");
+    MATCHES_ANY("matches-any");
 
     private final String value;
 
@@ -37,10 +36,5 @@ public enum MatchOperator {
             }
         }
         throw new IllegalArgumentException("Unknown match operator: " + value);
-    }
-
-    /** Whether this operator reads the rule's values at all. */
-    public boolean usesValues() {
-        return this == MATCHES_ANY || this == MATCHES_NONE;
     }
 }

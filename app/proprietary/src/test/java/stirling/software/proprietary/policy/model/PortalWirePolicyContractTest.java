@@ -53,14 +53,6 @@ class PortalWirePolicyContractTest {
     }
 
     @Test
-    void staysWithinTheOneInputOneOutputCap() {
-        Policy policy = objectMapper.readValue(fixture(), Policy.class);
-
-        assertThat(policy.inputs()).hasSize(1);
-        assertThat(policy.outputIds()).hasSize(1);
-    }
-
-    @Test
     void serialisesBackToTheSameShapeTheFrontendDecodes() {
         Policy policy = objectMapper.readValue(fixture(), Policy.class);
 

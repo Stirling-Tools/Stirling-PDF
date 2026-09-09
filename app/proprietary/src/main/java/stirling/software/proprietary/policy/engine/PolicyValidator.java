@@ -37,7 +37,6 @@ import stirling.software.proprietary.policy.trigger.PolicyTrigger;
 @RequiredArgsConstructor
 public class PolicyValidator {
 
-    /** Upper bound on a policy's routing rules; see {@link #validateRoutingRules}. */
     private static final int MAX_ROUTING_RULES = 100;
 
     private final List<PolicyTrigger> triggers;
@@ -86,9 +85,9 @@ public class PolicyValidator {
 
     /**
      * A routing rule must name a field, an operator, a destination that resolves to a writable
-     * source, and - for the operators that compare - something to compare against. A rule failing
-     * any of these would never fire, silently sending its documents to the fallback instead, so it
-     * is rejected at save time rather than left to look like it works.
+     * source, and something to compare against. A rule failing any of these would never fire,
+     * silently sending its documents to the fallback instead, so it is rejected at save time rather
+     * than left to look like it works.
      */
     private void validateRoutingRules(Policy policy) {
         // A cap, like the one on inputs: rules are evaluated per document per run, so an
@@ -106,10 +105,8 @@ public class PolicyValidator {
                         "routing rule on '" + rule.field() + "' has no operator");
             }
             // Blank values are rejected rather than ignored: a blank can never equal a real fact,
-            // so it makes a matches-any rule dead and - worse - a matches-none rule claim
-            // everything the fact is set on.
-            if (rule.operator().usesValues()
-                    && rule.values().stream().allMatch(value -> value == null || value.isBlank())) {
+            // so the rule would be dead on arrival.
+            if (rule.values().stream().allMatch(value -> value == null || value.isBlank())) {
                 throw new IllegalArgumentException(
                         "routing rule on '"
                                 + rule.field()

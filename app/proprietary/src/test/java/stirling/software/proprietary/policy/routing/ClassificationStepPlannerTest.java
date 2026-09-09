@@ -24,6 +24,8 @@ class ClassificationStepPlannerTest {
                 "p",
                 "owner",
                 true,
+                false,
+                "",
                 List.of(),
                 steps,
                 OutputSpec.inline(),

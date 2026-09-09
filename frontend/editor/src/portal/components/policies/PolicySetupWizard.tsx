@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
 import { Banner, Button, Card, Modal, ToggleSwitch } from "@app/ui";
@@ -28,11 +27,6 @@ import { PolicyRedactConfig } from "@app/components/policies/PolicyRedactConfig"
 import { PolicyWatermarkConfig } from "@app/components/policies/PolicyWatermarkConfig";
 import { PolicyPurviewConfig } from "@portal/components/policies/PolicyPurviewConfig";
 import { ClassificationLabelsSection } from "@portal/components/policies/ClassificationLabelsSection";
-import { RoutingRules } from "@portal/components/policies/RoutingRules";
-import { useSources } from "@portal/queries/sources";
-import { availableOutputModes } from "@portal/components/pipelines/outputModes";
-import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
-import type { WireRoutingRule } from "@app/policies/types";
 import "@portal/views/Policies.css";
 
 interface PolicySetupWizardProps {
@@ -238,9 +232,6 @@ function PolicySetupWizardBody({
   const { category, config, policy } = entry;
   const isEdit = policy != null;
   const isClassification = category.id === "classification";
-  // Routing is the one category that delivers per document, so it is the only one
-  // that shows the rules editor and a fallback destination.
-  const isRouting = category.id === "routing";
 
   const [tools, setTools] = useState<ToolState[]>(() => {
     const seeded = seedTools(entry);
@@ -271,14 +262,6 @@ function PolicySetupWizardBody({
   // A suggested policy is something the org requires by nature, so new ones default to required;
   // editing preserves whatever was saved.
   const [required, setRequired] = useState(policy?.state.required ?? true);
-  // One destination: the backend caps outputs at one (PolicyValidator).
-  const [outputIds, setOutputIds] = useState<string[]>(() =>
-    (policy?.state.outputIds ?? []).slice(0, 1),
-  );
-  // Per-document routing rules (routing category only): label(s) -> destination, first match wins.
-  const [routingRules, setRoutingRules] = useState<WireRoutingRule[]>(
-    () => policy?.state.routingRules ?? [],
-  );
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -349,12 +332,11 @@ function PolicySetupWizardBody({
       maxRetries,
       retryDelayMinutes,
       steps,
-      outputIds,
-      // The wizard binds no source, so nothing pulls this policy on a schedule; the editor
-      // fires it on upload/export via /run.
+      // Destinations, sources and routing belong to the pipeline builder, which binds them
+      // together; the wizard preserves what was saved rather than editing it.
+      outputIds: policy?.state.outputIds ?? [],
       trigger: null,
-      // Rules only mean anything for routing; other categories deliver to every destination.
-      routingRules: isRouting ? routingRules : [],
+      routingRules: policy?.state.routingRules ?? [],
     };
   }
 
@@ -364,16 +346,9 @@ function PolicySetupWizardBody({
     onCustomise(entry, collectResult());
   }
 
-  // A policy with no tools still does something when it delivers: routing rules send each document
-  // to the destination it matches, and a fallback destination takes the rest. The backend accepts a
-  // step-less pipeline for exactly that (PolicyExecutor passes the inputs through), so the wizard
-  // only blocks a policy that would neither process nor deliver anything.
-  const deliversWithoutTools =
-    (isRouting && routingRules.length > 0) || outputIds.length > 0;
-
   async function submit() {
     if (submitting) return;
-    if (enabledTools.length === 0 && !deliversWithoutTools) {
+    if (enabledTools.length === 0) {
       setError(t("portal.policies.wizard.errors.noTools"));
       return;
     }
@@ -535,16 +510,6 @@ function PolicySetupWizardBody({
         </div>
       )}
 
-      {isRouting && (
-        <RoutingSection
-          rules={routingRules}
-          onRulesChange={setRoutingRules}
-          outputIds={outputIds}
-          onOutputIdsChange={setOutputIds}
-          onClose={onClose}
-        />
-      )}
-
       <div className="portal-policies__wizard-enforce">
         <EnforceAsPolicyControl
           required={required}
@@ -552,110 +517,5 @@ function PolicySetupWizardBody({
         />
       </div>
     </Modal>
-  );
-}
-
-/**
- * Routing's own settings: the per-document rules and the fallback destination. Split out because
- * it is the only part of the wizard that needs the router, and the wizard mounts without one.
- */
-function RoutingSection({
-  rules,
-  onRulesChange,
-  outputIds,
-  onOutputIdsChange,
-  onClose,
-}: {
-  rules: WireRoutingRule[];
-  onRulesChange: (rules: WireRoutingRule[]) => void;
-  outputIds: string[];
-  onOutputIdsChange: (ids: string[]) => void;
-  onClose: () => void;
-}) {
-  const { t } = useTranslation();
-  const navigate = useNavigate();
-  const sourcesPath = `${toPortalPath(VIEW_PATHS.sources)}/new`;
-  const sourcesAsync = useSources();
-  // Destinations are sources used as write targets: only writable types.
-  const writableSources = useMemo(
-    () =>
-      (sourcesAsync.data?.sources ?? []).filter(
-        (src) =>
-          src.status !== "disabled" &&
-          src.type !== "editor" &&
-          (availableOutputModes() as string[]).includes(src.type),
-      ),
-    [sourcesAsync.data],
-  );
-
-  function connectSource() {
-    onClose();
-    navigate(sourcesPath);
-  }
-
-  return (
-    <div className="portal-policies__wizard-section">
-      <RoutingRules
-        rules={rules}
-        onChange={onRulesChange}
-        destinations={writableSources.map((src) => ({
-          id: src.id,
-          name: src.name,
-        }))}
-        onCreateDestination={connectSource}
-      />
-
-      <h3 className="portal-policies__wizard-heading">
-        {t(
-          "portal.policies.wizard.destinations.fallbackHeading",
-          "Default destination",
-        )}
-      </h3>
-      <p className="portal-policies__wizard-desc">
-        {t(
-          "portal.policies.wizard.destinations.description",
-          "Results always stay in Stirling. Pick one destination to also receive a copy of every processed document.",
-        )}
-      </p>
-      {writableSources.length === 0 ? (
-        <Banner
-          tone="info"
-          description={t(
-            "portal.policies.wizard.destinations.emptyPrompt",
-            "No writable destinations yet. Connect a folder or S3 source to deliver processed documents outside Stirling.",
-          )}
-          action={
-            <Button variant="secondary" size="sm" onClick={connectSource}>
-              {t("portal.policies.wizard.sources.connect", "Connect a source")}
-            </Button>
-          }
-        />
-      ) : (
-        <div className="portal-policies__sources">
-          {writableSources.map((dest) => {
-            const on = outputIds.includes(dest.id);
-            return (
-              <Button
-                key={dest.id}
-                variant={on ? "secondary" : "quiet"}
-                justify="between"
-                fullWidth
-                className={
-                  "portal-policies__source" +
-                  (on ? " portal-policies__source--on" : "")
-                }
-                // One destination at most: picking one replaces whichever was picked before.
-                onClick={() => onOutputIdsChange(on ? [] : [dest.id])}
-                aria-pressed={on}
-              >
-                <span className="portal-policies__source-label">
-                  {dest.name}
-                </span>
-              </Button>
-            );
-          })}
-        </div>
-      )}
-    </div>
   );
 }

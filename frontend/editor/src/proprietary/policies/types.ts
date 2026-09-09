@@ -57,11 +57,7 @@ export interface WirePipelineInput {
 }
 
 /** How a routing rule compares a document fact against its values. Mirrors `MatchOperator.java`. */
-export type WireMatchOperator =
-  | "matches-any"
-  | "matches-none"
-  | "exists"
-  | "absent";
+export type WireMatchOperator = "matches-any";
 
 /**
  * One routing rule: when `field` satisfies `operator` against `values`, the document is delivered

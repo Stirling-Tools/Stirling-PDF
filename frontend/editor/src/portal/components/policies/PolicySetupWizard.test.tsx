@@ -37,21 +37,12 @@ vi.mock("@portal/api/integrations", () => ({
   fetchIntegrations: () => fetchIntegrations(),
 }));
 
-const fetchSources = vi.fn();
-vi.mock("@portal/api/sources", () => ({
-  fetchSources: () => fetchSources(),
-}));
-
-// The routing section links out to the Sources view; the wizard is rendered without a router.
-vi.mock("react-router-dom", () => ({ useNavigate: () => vi.fn() }));
-
 const SAVE_CHANGES = "portal.policies.wizard.actions.saveChanges";
 const ENABLE = "portal.policies.wizard.actions.enablePolicy";
 
 const security = POLICY_CATEGORIES.find((c) => c.id === "security")!;
 const routing = POLICY_CATEGORIES.find((c) => c.id === "routing")!;
 const routingConfig = POLICY_CONFIG.routing;
-const ARCHIVE = "Secure archive";
 const securityConfig = POLICY_CONFIG.security;
 const compliance = POLICY_CATEGORIES.find((c) => c.id === "compliance")!;
 const complianceConfig = POLICY_CONFIG.compliance;
@@ -97,24 +88,9 @@ const routingEntry: CatalogueEntry = {
   policy: null,
 };
 
-/** One writable destination for the routing section to offer. */
-const archiveSource = {
-  id: "src-archive",
-  name: ARCHIVE,
-  type: "s3",
-  status: "active",
-  referenceCount: 0,
-  referencingPolicies: [],
-  config: [],
-  docsTotal: 0,
-  docs24h: 0,
-  docs30d: 0,
-};
-
 describe("PolicySetupWizard", () => {
   beforeEach(() => {
     fetchIntegrations.mockResolvedValue([]);
-    fetchSources.mockResolvedValue({ kpis: [], sources: [archiveSource] });
   });
 
   it("round-trips a saved step's backend params on edit", async () => {
@@ -250,7 +226,7 @@ describe("PolicySetupWizard", () => {
     expect(redact.listOfText).toBeTruthy();
   });
 
-  it("saves a routing policy that only delivers, with no tools enabled", async () => {
+  it("blocks a routing policy with no tools enabled", async () => {
     const onSubmit = vi.fn().mockResolvedValue(undefined);
 
     render(
@@ -261,28 +237,6 @@ describe("PolicySetupWizard", () => {
         onCustomise={vi.fn()}
       />,
     );
-    // Routing's only preset tool starts off, so the policy's whole job is the destination.
-    fireEvent.click(await screen.findByRole("button", { name: ARCHIVE }));
-    await submitWizard(ENABLE);
-
-    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
-    const result = onSubmit.mock.calls[0][1] as PolicySetupResult;
-    expect(result.steps).toEqual([]);
-    expect(result.outputIds).toEqual(["src-archive"]);
-  });
-
-  it("blocks a routing policy that neither processes nor delivers", async () => {
-    const onSubmit = vi.fn().mockResolvedValue(undefined);
-
-    render(
-      <PolicySetupWizard
-        entry={routingEntry}
-        onClose={vi.fn()}
-        onSubmit={onSubmit}
-        onCustomise={vi.fn()}
-      />,
-    );
-    await screen.findByRole("button", { name: ARCHIVE });
     await submitWizard(ENABLE);
 
     expect(

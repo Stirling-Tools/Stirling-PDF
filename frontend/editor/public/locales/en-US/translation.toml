@@ -8606,6 +8606,8 @@ destination = "Choose a destination"
 heading = "To create this pipeline:"
 incompatible = "Fix steps that can't run in order: {{tools}}"
 name = "Give the pipeline a name"
+routing = "Give every route document types and a destination"
+routingNeedsClassify = "Add a Classify step, or turn off routing by document type"
 saveHeading = "To save your changes:"
 schedule = "Set how often it runs"
 setup = "Finish setting up: {{tools}}"
@@ -8621,6 +8623,17 @@ undeclared-operation = "Can't check what this step accepts"
 
 [portal.pipelines.builder.icon]
 label = "Change icon"
+
+[portal.pipelines.builder.routing]
+addRule = "Add a route"
+fallback = "Everything else goes to"
+heading = "Routes"
+needsClassify = "Add a Classify step to the pipeline first - routes read the document type it works out."
+nodeSummary_one = "1 route, then a fallback"
+nodeSummary_other = "{{count}} routes, then a fallback"
+toggle = "Send document types to different places"
+toggleOff = "Every document goes to the destination below."
+toggleOn = "Documents are routed by the type the Classify step works out."
 
 [portal.pipelines.composer]
 addTool = "Add a tool"
@@ -9155,21 +9168,13 @@ label = "Apply a watermark"
 description = "Every uploaded document is classified against the built-in labels and tagged with the types that fit. The label set is shared across your whole team."
 labelsHeading = "Classification labels"
 
-[portal.policies.wizard.destinations]
-description = "Results always stay in Stirling. Pick one destination to also receive a copy of every processed document."
-emptyPrompt = "No writable destinations yet. Connect a folder or S3 source to deliver processed documents outside Stirling."
-fallbackHeading = "Default destination"
-
 [portal.policies.wizard.errors]
-noTools = "Enable at least one action, or pick a destination to route documents to."
+noTools = "Enable at least one action."
 saveFailed = "Couldn't save the pipeline. Please try again."
 
 [portal.policies.wizard.routing]
-addRule = "Add a rule"
 chooseDestination = "Choose a destination"
-description = "Each document is classified first, then delivered to the first rule it matches. Anything matching none goes to the destination below."
 destinationAria = "Destination"
-heading = "Routing rules"
 labelAria = "Document types"
 labelPlaceholder = "Choose document types"
 needsDestination = "Add a destination below first - a rule needs somewhere to send documents to."

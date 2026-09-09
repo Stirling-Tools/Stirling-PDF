@@ -1,10 +1,13 @@
-/* Own styles rather than the Policies stylesheet's: this component is shared with the pipeline
-   builder, which does not import Policies.css, and a component that only lays out correctly when
-   another feature's stylesheet happens to be loaded is not shareable. Values match the wizard's
-   equivalents so the two surfaces still look the same. */
+/* Own styles rather than the Policies stylesheet's: this component lives in the pipeline builder's
+   inspector, which does not import Policies.css, and a component that only lays out correctly when
+   another feature's stylesheet happens to be loaded is not shareable. */
+
+.portal-routing__optin {
+  padding: 0.75rem 0 0.25rem;
+}
 
 .portal-routing__heading {
-  margin: 0.75rem 0 0;
+  margin: 0.75rem 0 0.5rem;
   font-size: 0.6875rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -12,37 +15,36 @@
   font-weight: 600;
 }
 
-.portal-routing__desc {
-  margin: 0;
-  font-size: 0.8125rem;
-  line-height: 1.5;
-  color: var(--c-text-subtle);
-}
-
 .portal-routing__rules {
   display: flex;
   flex-direction: column;
+  gap: 0.75rem;
 }
 
+/* One rule stacks: the type multi-select over the destination, because the inspector column is too
+   narrow to carry both plus the remove button on one line without truncating every source name. */
 .portal-routing__rule {
-  padding: 0.75rem 0.875rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  padding-bottom: 0.75rem;
 }
 
 .portal-routing__rule + .portal-routing__rule {
   border-top: 1px solid var(--c-border);
+  padding-top: 0.75rem;
 }
 
-/* One rule on one line: types, destination, remove. */
 .portal-routing__row {
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
-/* The two pickers share the row; the Mantine multi-select wrapper is not .sui-input, so both are
-   named here rather than relying on one selector. */
-.portal-routing__row .sui-input,
-.portal-routing__row .mantine-MultiSelect-root,
+/* The pickers fill their line; the Mantine wrappers are not .sui-input, so each is named here
+   rather than relying on one selector. */
+.portal-routing__rule .sui-input,
+.portal-routing__rule .mantine-MultiSelect-root,
 .portal-routing__row .mantine-Select-root {
   flex: 1;
   min-width: 0;

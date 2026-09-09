@@ -3,10 +3,8 @@ package stirling.software.proprietary.policy.routing;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Optional;
 import java.util.regex.Pattern;
 
-import stirling.software.proprietary.policy.model.MatchOperator;
 import stirling.software.proprietary.policy.model.RoutingRule;
 
 import tools.jackson.databind.JsonNode;
@@ -23,30 +21,15 @@ import tools.jackson.databind.JsonNode;
  */
 public final class RoutingRuleMatcher {
 
-    private static final String DOT = Pattern.quote(".");
-
     private RoutingRuleMatcher() {}
-
-    /** The first rule the facts satisfy, or empty when none do. */
-    public static Optional<RoutingRule> firstMatch(List<RoutingRule> rules, JsonNode facts) {
-        return rules.stream().filter(rule -> matches(rule, facts)).findFirst();
-    }
 
     public static boolean matches(RoutingRule rule, JsonNode facts) {
         if (rule == null || rule.operator() == null) {
             return false;
         }
-        List<String> actual = valuesAt(facts, rule.field());
-        return switch (rule.operator()) {
-            case EXISTS -> !actual.isEmpty();
-            case ABSENT -> actual.isEmpty();
-            case MATCHES_ANY -> intersects(actual, rule.values());
-            // Requires the fact to be PRESENT and not one of the values. A document that was
-            // never examined - no verdict written, an unreadable PDF, a non-PDF - has no fact
-            // to disagree with, and must not be claimed by "not confidential"; ABSENT is the
-            // operator for that, and a document matching no rule falls back deliberately.
-            case MATCHES_NONE -> !actual.isEmpty() && !intersects(actual, rule.values());
-        };
+        // A document nobody examined - no verdict written, an unreadable PDF, a non-PDF - has no
+        // values, so it satisfies no rule and falls back deliberately rather than being claimed.
+        return intersects(valuesAt(facts, rule.field()), rule.values());
     }
 
     private static boolean intersects(List<String> actual, List<String> wanted) {
@@ -55,8 +38,7 @@ public final class RoutingRuleMatcher {
 
     /**
      * The values of the fact at a dotted path, normalised for comparison. A missing, null, or blank
-     * fact has no values, which is what makes {@link MatchOperator#ABSENT} true for an unclassified
-     * document.
+     * fact has no values, so no rule claims it.
      */
     private static List<String> valuesAt(JsonNode facts, String field) {
         JsonNode node = nodeAt(facts, field);
@@ -79,7 +61,7 @@ public final class RoutingRuleMatcher {
     }
 
     /** Rule values are normalised the same way, so the two sides are comparable. */
-    public static String normalise(String value) {
+    private static String normalise(String value) {
         return value == null ? "" : value.trim().toLowerCase(Locale.ROOT);
     }
 
@@ -88,7 +70,7 @@ public final class RoutingRuleMatcher {
             return null;
         }
         JsonNode current = facts;
-        for (String segment : field.split(DOT)) {
+        for (String segment : field.split(Pattern.quote("."))) {
             if (current == null || !current.isObject()) {
                 return null;
             }

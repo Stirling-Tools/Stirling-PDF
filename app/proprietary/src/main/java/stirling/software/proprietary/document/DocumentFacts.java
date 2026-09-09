@@ -31,10 +31,11 @@ import tools.jackson.databind.node.ObjectNode;
  * sensitivityLabel.labelId | .name | .siteId | .method | .protected
  * </pre>
  *
- * <p>Two callers share this shape, which is why it lives apart from either. The external-API step
- * wraps it as the namespace its placeholders resolve against (adding the transfer-only facts a
- * call-out needs - content type, hash, the bytes themselves - and the run it belongs to). Routing
- * rules match against it, so {@code classification.labels} decides where a document is delivered.
+ * <p>Two callers share this shape, which is why it lives apart from either. {@code DocumentContext}
+ * wraps it as the namespace the external-API step's placeholders resolve against, adding the
+ * transfer-only facts a call-out needs - content type, hash, the bytes themselves - and the run it
+ * belongs to. Routing rules match against it, so {@code classification.labels} decides where a
+ * document is delivered.
  *
  * <p>Every field is best-effort: a non-PDF or an unparseable PDF simply omits what cannot be known.
  * Building the facts must never be the reason a step or a delivery fails.
@@ -159,7 +160,7 @@ public final class DocumentFacts {
     }
 
     /** Cheap check so a non-PDF never pays for a parse attempt. */
-    public static boolean looksLikePdf(byte[] content) {
+    private static boolean looksLikePdf(byte[] content) {
         return content != null
                 && content.length > 4
                 && content[0] == '%'

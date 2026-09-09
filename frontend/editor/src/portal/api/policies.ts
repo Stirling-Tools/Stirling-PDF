@@ -29,7 +29,6 @@ import type {
   PolicyDecodedState,
   PolicyRunView,
   WireOutputOptions,
-  WirePipelineInput,
   WirePipelineStep,
   WirePolicy,
   WireRoutingRule,
@@ -65,6 +64,12 @@ export interface PolicyCategory {
   providesClassification?: boolean;
   comingSoon?: boolean;
   requiresAiEngine?: boolean;
+  /**
+   * Opens the pipeline builder rather than the setup wizard. For a category whose whole subject is
+   * the source-to-destination wiring, the wizard's tool toggles are the wrong question: the builder
+   * is where a source, a trigger and a destination are bound together.
+   */
+  opensBuilder?: boolean;
 }
 
 export interface PolicyConfigDef {
@@ -85,8 +90,6 @@ export interface PolicyState {
   /** Options the wizard doesn't model, preserved so a wizard save round-trips them (see codec). */
   extraOptions?: Record<string, unknown>;
   sources: string[];
-  /** The stored input bindings, carried so a lifecycle save can replay them. */
-  inputs?: WirePipelineInput[];
   /** Whether the editor runs this policy per file; stored, not derived from `sources`. */
   runsOnEditor?: boolean;
   scopeTypes: string[];
@@ -100,7 +103,6 @@ export interface PolicyState {
   retryDelayMinutes?: number;
   backendId?: string;
   isDefault?: boolean;
-  trigger?: WireTriggerConfig | null;
   outputIds?: string[];
   routingRules?: WireRoutingRule[];
 }
@@ -223,6 +225,7 @@ export const POLICY_CATEGORIES: PolicyCategory[] = [
     label: "portal.policies.categories.routing.label",
     tone: "green",
     desc: "portal.policies.categories.routing.desc",
+    opensBuilder: true,
   },
   {
     id: "retention",
@@ -356,9 +359,9 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
       "portal.policies.config.routing.rules.2",
     ],
     scopeLabel: "portal.policies.config.scopeAll",
-    // Routing is source->destination; the app-delivery step is an optional
-    // extra (starts off) configured from the operations catalogue.
-    defaultOperations: [policyStep("externalApiCall")],
+    // Kept for the catalogue card's summary; routing itself is built in the pipeline builder
+    // (see PolicyCategory.opensBuilder), which is where its source and destinations are bound.
+    defaultOperations: [],
     fields: [],
   },
   retention: {
@@ -420,7 +423,6 @@ function decoratePolicy(
     required: decoded.required,
     extraOptions: decoded.extraOptions,
     sources: decoded.sources,
-    inputs: decoded.inputs,
     runsOnEditor: decoded.runsOnEditor,
     scopeTypes: decoded.scopeTypes,
     reviewerEmail: decoded.reviewerEmail,
@@ -433,7 +435,6 @@ function decoratePolicy(
     retryDelayMinutes: decoded.retryDelayMinutes,
     backendId: decoded.id,
     isDefault,
-    trigger: decoded.trigger,
     outputIds: decoded.outputIds,
     routingRules: decoded.routingRules,
   };

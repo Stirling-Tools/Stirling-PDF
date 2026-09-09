@@ -395,6 +395,8 @@ class PolicyValidatorTest {
                 "p",
                 "owner",
                 true,
+                false,
+                "",
                 List.of(),
                 List.of(),
                 OutputSpec.inline(),

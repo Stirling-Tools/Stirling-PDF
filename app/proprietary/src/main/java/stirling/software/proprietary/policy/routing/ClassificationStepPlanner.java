@@ -31,7 +31,6 @@ import stirling.software.proprietary.policy.model.RoutingRule;
  */
 public final class ClassificationStepPlanner {
 
-    /** The classify tool, as a policy step. */
     public static final String CLASSIFY_ENDPOINT = "/api/v1/ai/tools/classify-and-label";
 
     /**

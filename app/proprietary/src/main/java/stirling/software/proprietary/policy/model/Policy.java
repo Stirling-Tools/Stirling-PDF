@@ -2,6 +2,7 @@ package stirling.software.proprietary.policy.model;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 /**
  * A stored automation: ordered tool steps, input bindings, and output destinations.
@@ -44,57 +45,6 @@ public record Policy(
         outputIds = outputIds == null ? List.of() : List.copyOf(outputIds);
         editor = editor == null ? EditorConfig.disabled() : editor;
         routingRules = routingRules == null ? List.of() : List.copyOf(routingRules);
-    }
-
-    /** Without routing rules: every file is delivered to every {@code outputId}. */
-    public Policy(
-            String id,
-            String name,
-            String owner,
-            boolean enabled,
-            boolean required,
-            String icon,
-            List<PipelineInput> inputs,
-            List<PipelineStep> steps,
-            OutputSpec output,
-            List<String> outputIds,
-            Long teamId,
-            EditorConfig editor) {
-        this(
-                id, name, owner, enabled, required, icon, inputs, steps, output, outputIds, teamId,
-                editor, List.of());
-    }
-
-    /**
-     * Without the {@code required} flag or {@code icon} but with routing rules: the shape this
-     * branch's callers and tests were written against, before those two fields landed on main.
-     */
-    public Policy(
-            String id,
-            String name,
-            String owner,
-            boolean enabled,
-            List<PipelineInput> inputs,
-            List<PipelineStep> steps,
-            OutputSpec output,
-            List<String> outputIds,
-            Long teamId,
-            EditorConfig editor,
-            List<RoutingRule> routingRules) {
-        this(
-                id,
-                name,
-                owner,
-                enabled,
-                false,
-                "",
-                inputs,
-                steps,
-                output,
-                outputIds,
-                teamId,
-                editor,
-                routingRules);
     }
 
     /**
@@ -270,8 +220,7 @@ public record Policy(
      * routing rule's destination. Used to resolve them all up front and to validate references.
      */
     public List<String> allOutputIds() {
-        return java.util.stream.Stream.concat(
-                        outputIds.stream(), routingRules.stream().map(RoutingRule::outputId))
+        return Stream.concat(outputIds.stream(), routingRules.stream().map(RoutingRule::outputId))
                 .filter(id -> id != null && !id.isBlank())
                 .distinct()
                 .toList();

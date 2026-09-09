@@ -1,4 +1,5 @@
 import { apiClient } from "@portal/api/http";
+import type { WireRoutingRule } from "@app/policies/types";
 import {
   type SupportingFileBindings,
   type ToolApiStep,
@@ -83,6 +84,13 @@ export interface Policy {
    * output} is used.
    */
   outputIds: string[];
+  /**
+   * Per-document delivery: each rule sends the document types it names to its own destination,
+   * tried in order, first match wins. Empty (the default) means every document goes to {@link
+   * outputIds}. A rule reading the classification verdict makes the backend prepend a classify
+   * step, so the verdict exists to route on.
+   */
+  routingRules?: WireRoutingRule[];
   /** Whether the editor runs this policy per file, and on which moment. */
   editor?: { allowed: boolean; runOn: "upload" | "export" };
   teamId?: number | null;

@@ -260,6 +260,18 @@ vi.mock("@app/contexts/ToolRegistryContext", () => {
   return { useToolRegistry: () => catalog };
 });
 
+const routingRule = (values: string[]) => ({
+  field: "classification.labels",
+  operator: "matches-any" as const,
+  values,
+  outputId: "src-1",
+});
+
+const CLASSIFY_STEP = {
+  operation: "/api/v1/ai/tools/classify-and-label",
+  parameters: {},
+};
+
 const POLICY: Policy = {
   id: "plc-1",
   name: "Existing pipeline",
@@ -836,6 +848,80 @@ describe("PipelineBuilder", () => {
     expect(body.editor).toEqual({ allowed: true, runOn: "upload" });
     // And it needs no destination - results land back in the workspace the file came from.
     expect(body.outputIds).toEqual([]);
+  });
+
+  it("carries a saved pipeline's routes through an unrelated edit", async () => {
+    const routed = routingRule(["invoice"]);
+    fetchPipeline.mockResolvedValue({
+      ...POLICY,
+      inputs: [{ sourceId: "src-in", trigger: null }],
+      // Routing reads the verdict this step writes, so a routing pipeline carries one.
+      steps: [CLASSIFY_STEP],
+      outputIds: ["src-1"],
+      routingRules: [routed],
+    });
+    renderBuilder("/processor/pipelines/plc-1");
+
+    // The name is a heading until the rename affordance is used.
+    fireEvent.click(
+      await screen.findByLabelText("portal.pipelines.builder.rename"),
+    );
+    fireEvent.change(
+      await screen.findByLabelText("portal.pipelines.composer.name"),
+      { target: { value: "Renamed" } },
+    );
+    fireEvent.click(screen.getByText("portal.pipelines.composer.save"));
+
+    await waitFor(() => expect(savePipeline).toHaveBeenCalledTimes(1));
+    // Routing is edited on the destination node; renaming the pipeline must not drop it.
+    expect(savePipeline.mock.calls[0][0].routingRules).toEqual([routed]);
+  });
+
+  it("refuses to save a route with no document types on it", async () => {
+    fetchPipeline.mockResolvedValue({
+      ...POLICY,
+      inputs: [{ sourceId: "src-in", trigger: null }],
+      steps: [CLASSIFY_STEP],
+      outputIds: ["src-1"],
+      // What the toggle seeds: a rule the user has not filled in yet.
+      routingRules: [routingRule([])],
+    });
+    renderBuilder("/processor/pipelines/plc-1");
+
+    fireEvent.click(
+      await screen.findByLabelText("portal.pipelines.builder.rename"),
+    );
+    fireEvent.change(
+      await screen.findByLabelText("portal.pipelines.composer.name"),
+      { target: { value: "Renamed" } },
+    );
+    fireEvent.click(screen.getByText("portal.pipelines.composer.save"));
+
+    // The backend's PolicyValidator would reject this; the builder says so first.
+    await waitFor(() => expect(savePipeline).not.toHaveBeenCalled());
+  });
+
+  it("refuses to save routes whose classify step has been removed", async () => {
+    fetchPipeline.mockResolvedValue({
+      ...POLICY,
+      inputs: [{ sourceId: "src-in", trigger: null }],
+      // Rules outliving the step that feeds them: every document would fall to the fallback.
+      steps: [],
+      outputIds: ["src-1"],
+      routingRules: [routingRule(["invoice"])],
+    });
+    renderBuilder("/processor/pipelines/plc-1");
+
+    fireEvent.click(
+      await screen.findByLabelText("portal.pipelines.builder.rename"),
+    );
+    fireEvent.change(
+      await screen.findByLabelText("portal.pipelines.composer.name"),
+      { target: { value: "Renamed" } },
+    );
+    fireEvent.click(screen.getByText("portal.pipelines.composer.save"));
+
+    await waitFor(() => expect(savePipeline).not.toHaveBeenCalled());
   });
 
   it("runs an existing pipeline and reports success", async () => {

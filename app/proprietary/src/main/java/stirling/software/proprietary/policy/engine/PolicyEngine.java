@@ -484,7 +484,6 @@ public class PolicyEngine {
         return deliverGrouped(delivery, byDestination);
     }
 
-    /** The destination(s) a document goes to: the first matching rule's, or the fallback. */
     private static List<OutputSpec> destinationsFor(
             List<RoutedDestination> routing, List<OutputSpec> fallback, JsonNode facts) {
         for (RoutedDestination routed : routing) {
