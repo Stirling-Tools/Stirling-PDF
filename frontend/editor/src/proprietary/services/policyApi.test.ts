@@ -18,6 +18,15 @@ function sentForm(): FormData {
   return post.mock.calls.at(-1)?.[1] as FormData;
 }
 
+/** jsdom's Blob has no text(); FileReader is the one byte read it implements. */
+const textOf = (file: File) =>
+  new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsText(file);
+  });
+
 const document = () =>
   new File(["%PDF-1.7"], "quarterly-report.pdf", { type: "application/pdf" });
 
@@ -44,5 +53,16 @@ describe("runStoredPolicy", () => {
     await runStoredPolicy("policy-1", [document()], "editor-file-1");
 
     expect(sentForm().get("fileId")).not.toContain("quarterly-report");
+  });
+
+  it("uploads a fresh File over the caller's bytes, never the caller's File object", async () => {
+    // A File restored from IndexedDB serialises as an empty body in WebKit; a wrapper does not.
+    const source = document();
+    await runStoredPolicy("policy-1", [source], "editor-file-1");
+
+    const sent = sentForm().get("fileInput") as File;
+    expect(sent).not.toBe(source);
+    expect(sent.name).toBe(source.name);
+    expect(await textOf(sent)).toBe(await textOf(source));
   });
 });
