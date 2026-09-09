@@ -15,7 +15,9 @@ import org.springframework.stereotype.Service;
  * <ol>
  *   <li>Flag off → always allow (feature inert).
  *   <li>Manual tool → always allow (manual tools are free, never metered).
- *   <li>Billable + not linked → block with {@code NOT_LINKED} ("link to activate").
+ *   <li>Billable + not linked → spend the instance's own monthly grant: allow with {@code
+ *       FREE_TIER} while units remain, else block with {@code FREE_TIER_EXHAUSTED}. Linking buys a
+ *       further grant; it is not what activates the feature.
  *   <li>Billable + linked + entitlement unknown (unreachable) → <b>fail open</b>, allow — unless
  *       metering is on and SaaS has been unreachable past the grace window, then block with {@code
  *       GRACE_EXPIRED} so the fail-open can't grant unbounded free/unbilled work forever.
@@ -24,13 +26,20 @@ import org.springframework.stereotype.Service;
  *   <li>Billable + linked + over limit → block with {@code OVER_LIMIT}.
  * </ol>
  *
+ * <p>The two ledgers never mix: the local grant is consulted only when unlinked, and a linked
+ * instance's cloud wallet is authoritative even though its pre-link local counters are still
+ * sitting there — they are what it resumes on if it ever unlinks.
+ *
  * <p>The decision logic is the pure static {@link #decide}; the Spring wrapper supplies the live
- * flag / linked-state / entitlement and computes whether the grace window has expired. This is the
- * unit-tested core.
+ * flag / linked-state / entitlement / balances and computes whether the grace window has expired.
+ * This is the unit-tested core.
  */
 @Service
 @Profile("!saas")
-@ConditionalOnProperty(name = "stirling.billing.account-link.enabled", havingValue = "true")
+@ConditionalOnProperty(
+        name = "stirling.billing.account-link.enabled",
+        havingValue = "true",
+        matchIfMissing = true)
 public class InstanceEntitlementGate {
 
     private final AccountLinkProperties properties;
@@ -38,18 +47,21 @@ public class InstanceEntitlementGate {
     private final EntitlementCache entitlementCache;
     private final AccountLinkSyncStateRepository syncStateRepository;
     private final LocalUsageService localUsageService;
+    private final FreeTierUsageService freeTierUsageService;
 
     public InstanceEntitlementGate(
             AccountLinkProperties properties,
             DeviceCredentialStore credentialStore,
             EntitlementCache entitlementCache,
             AccountLinkSyncStateRepository syncStateRepository,
-            LocalUsageService localUsageService) {
+            LocalUsageService localUsageService,
+            FreeTierUsageService freeTierUsageService) {
         this.properties = properties;
         this.credentialStore = credentialStore;
         this.entitlementCache = entitlementCache;
         this.syncStateRepository = syncStateRepository;
         this.localUsageService = localUsageService;
+        this.freeTierUsageService = freeTierUsageService;
     }
 
     /** Evaluates the gate for a request, resolving live state from the store + cache. */
@@ -61,6 +73,9 @@ public class InstanceEntitlementGate {
             return GateDecision.allow(GateDecision.Reason.MANUAL_FREE);
         }
         boolean linked = credentialStore.isLinked();
+        // Only the unlinked path reads the local grant, which keeps "the cloud wallet is
+        // authoritative while linked" structural instead of a rule to remember.
+        long freeTierRemaining = linked ? 0L : freeTierUsageService.balance().remainingUnits();
         Optional<InstanceEntitlement> entitlement =
                 linked ? entitlementCache.current() : Optional.empty();
         boolean graceExpired = linked && entitlement.isEmpty() && isGraceExpired();
@@ -71,7 +86,8 @@ public class InstanceEntitlementGate {
                 entitlement.map(InstanceEntitlementGate::depletesCeiling).orElse(false)
                         ? localUsageService.currentPeriodUnsynced().totalUnsyncedUnits()
                         : 0L;
-        return decide(true, true, linked, entitlement, graceExpired, pendingUnsynced);
+        return decide(
+                true, true, linked, entitlement, graceExpired, pendingUnsynced, freeTierRemaining);
     }
 
     /** Whether local unsynced usage pushes against a real ceiling (free grant or a spend cap). */
@@ -88,6 +104,10 @@ public class InstanceEntitlementGate {
      *     free grant (unsubscribed) or the spend cap (capped subscription) in real time so the gate
      *     stops without waiting for the next sync (0 for uncapped-subscribed / unknown-entitlement
      *     cases, where it has no effect).
+     * @param freeTierRemainingUnits units left in the instance's own monthly grant; consulted only
+     *     when unlinked, where it is the sole ceiling. 0 blocks, so a caller unable to read the
+     *     local ledger must throw rather than pass 0 — the interceptor turns a throw into a
+     *     fail-open, whereas 0 reads as a deliberately empty grant.
      */
     public static GateDecision decide(
             boolean flagEnabled,
@@ -95,7 +115,8 @@ public class InstanceEntitlementGate {
             boolean linked,
             Optional<InstanceEntitlement> entitlement,
             boolean graceExpired,
-            long pendingUnsyncedUnits) {
+            long pendingUnsyncedUnits,
+            long freeTierRemainingUnits) {
         if (!flagEnabled) {
             return GateDecision.allow(GateDecision.Reason.FLAG_OFF);
         }
@@ -103,7 +124,9 @@ public class InstanceEntitlementGate {
             return GateDecision.allow(GateDecision.Reason.MANUAL_FREE);
         }
         if (!linked) {
-            return GateDecision.block(GateDecision.Reason.NOT_LINKED);
+            return freeTierRemainingUnits > 0
+                    ? GateDecision.allow(GateDecision.Reason.FREE_TIER)
+                    : GateDecision.block(GateDecision.Reason.FREE_TIER_EXHAUSTED);
         }
         if (entitlement.isEmpty()) {
             // Linked but entitlement unreachable: fail open, unless the grace window has expired

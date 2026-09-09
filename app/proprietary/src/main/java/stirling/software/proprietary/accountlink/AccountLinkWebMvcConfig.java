@@ -16,7 +16,10 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  */
 @Configuration
 @Profile("!saas")
-@ConditionalOnProperty(name = "stirling.billing.account-link.enabled", havingValue = "true")
+@ConditionalOnProperty(
+        name = "stirling.billing.account-link.enabled",
+        havingValue = "true",
+        matchIfMissing = true)
 public class AccountLinkWebMvcConfig implements WebMvcConfigurer {
 
     private final InstanceEntitlementInterceptor gateInterceptor;

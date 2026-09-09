@@ -3,6 +3,8 @@ package stirling.software.proprietary.accountlink;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
@@ -16,10 +18,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import stirling.software.proprietary.accountlink.GateDecision.Reason;
 
 /**
- * Covers the gate decision matrix: flag-off, manual-free, unlinked, fail-open, grace-expired,
- * linked-free, and over-limit. The pure {@link InstanceEntitlementGate#decide} cases need no
- * Spring; the grace-window reference computation is exercised through {@link
- * InstanceEntitlementGate#evaluate} with mocked collaborators.
+ * Covers the gate decision matrix: flag-off, manual-free, the unlinked free tier, fail-open,
+ * grace-expired, linked-free, and over-limit. The pure {@link InstanceEntitlementGate#decide} cases
+ * need no Spring; the grace-window reference computation and the ledger the gate reads per link
+ * state are exercised through {@link InstanceEntitlementGate#evaluate} with mocked collaborators.
  */
 @ExtendWith(MockitoExtension.class)
 class InstanceEntitlementGateTest {
@@ -28,6 +30,14 @@ class InstanceEntitlementGateTest {
     @Mock private EntitlementCache entitlementCache;
     @Mock private AccountLinkSyncStateRepository syncStateRepository;
     @Mock private LocalUsageService localUsageService;
+    @Mock private FreeTierUsageService freeTierUsageService;
+
+    /** Local grant with {@code remaining} units left of 500, in an arbitrary current period. */
+    private static FreeTierUsageService.FreeTierBalance grant(long remaining) {
+        LocalDateTime start = LocalDateTime.of(2026, 9, 1, 0, 0);
+        return new FreeTierUsageService.FreeTierBalance(
+                500, 500 - remaining, remaining, start, start.plusMonths(1));
+    }
 
     private static InstanceEntitlement free() {
         return new InstanceEntitlement(false, 100, 0, null, EntitlementState.OK);
@@ -48,7 +58,7 @@ class InstanceEntitlementGateTest {
     @Test
     void flagOff_allowsEverything_evenBillableUnlinked() {
         GateDecision d =
-                InstanceEntitlementGate.decide(false, true, false, Optional.empty(), false, 0L);
+                InstanceEntitlementGate.decide(false, true, false, Optional.empty(), false, 0L, 0L);
         assertTrue(d.allowed());
         assertEquals(Reason.FLAG_OFF, d.reason());
     }
@@ -56,23 +66,61 @@ class InstanceEntitlementGateTest {
     @Test
     void manualTool_alwaysFree_evenUnlinked() {
         GateDecision d =
-                InstanceEntitlementGate.decide(true, false, false, Optional.empty(), false, 0L);
+                InstanceEntitlementGate.decide(true, false, false, Optional.empty(), false, 0L, 0L);
         assertTrue(d.allowed());
         assertEquals(Reason.MANUAL_FREE, d.reason());
     }
 
     @Test
-    void billable_notLinked_blocksWithLinkSignal() {
+    void billable_notLinked_underGrant_allowsOnTheFreeTier() {
         GateDecision d =
-                InstanceEntitlementGate.decide(true, true, false, Optional.empty(), false, 0L);
+                InstanceEntitlementGate.decide(
+                        true, true, false, Optional.empty(), false, 0L, 500L);
+        assertTrue(d.allowed());
+        assertEquals(Reason.FREE_TIER, d.reason());
+    }
+
+    @Test
+    void billable_notLinked_lastUnitOfGrant_stillAllows() {
+        GateDecision d =
+                InstanceEntitlementGate.decide(true, true, false, Optional.empty(), false, 0L, 1L);
+        assertTrue(d.allowed());
+        assertEquals(Reason.FREE_TIER, d.reason());
+    }
+
+    @Test
+    void billable_notLinked_grantSpent_blocksWithoutAskingForAnAccount() {
+        // The terminal reason has to be distinguishable from an over-limit linked team: linking
+        // buys more allowance here, it is not what switches the feature on.
+        GateDecision d =
+                InstanceEntitlementGate.decide(true, true, false, Optional.empty(), false, 0L, 0L);
         assertFalse(d.allowed());
-        assertEquals(Reason.NOT_LINKED, d.reason());
+        assertEquals(Reason.FREE_TIER_EXHAUSTED, d.reason());
+    }
+
+    @Test
+    void billable_notLinked_grantOverspent_blocks() {
+        // A single op may overshoot (the gate checks before the meter charges), so a negative
+        // balance must read as exhausted rather than wrapping back into "units remain".
+        GateDecision d =
+                InstanceEntitlementGate.decide(
+                        true, true, false, Optional.empty(), false, 0L, -20L);
+        assertFalse(d.allowed());
+        assertEquals(Reason.FREE_TIER_EXHAUSTED, d.reason());
+    }
+
+    @Test
+    void manualTool_neverCountsAgainstTheGrant_evenWhenSpent() {
+        GateDecision d =
+                InstanceEntitlementGate.decide(true, false, false, Optional.empty(), false, 0L, 0L);
+        assertTrue(d.allowed());
+        assertEquals(Reason.MANUAL_FREE, d.reason());
     }
 
     @Test
     void billable_linked_entitlementUnreachable_withinGrace_failsOpen() {
         GateDecision d =
-                InstanceEntitlementGate.decide(true, true, true, Optional.empty(), false, 0L);
+                InstanceEntitlementGate.decide(true, true, true, Optional.empty(), false, 0L, 0L);
         assertTrue(d.allowed());
         assertEquals(Reason.FAIL_OPEN, d.reason());
     }
@@ -80,7 +128,7 @@ class InstanceEntitlementGateTest {
     @Test
     void billable_linked_entitlementUnreachable_graceExpired_blocks() {
         GateDecision d =
-                InstanceEntitlementGate.decide(true, true, true, Optional.empty(), true, 0L);
+                InstanceEntitlementGate.decide(true, true, true, Optional.empty(), true, 0L, 0L);
         assertFalse(d.allowed());
         assertEquals(Reason.GRACE_EXPIRED, d.reason());
     }
@@ -88,7 +136,8 @@ class InstanceEntitlementGateTest {
     @Test
     void billable_linked_freePoolAvailable_allows() {
         GateDecision d =
-                InstanceEntitlementGate.decide(true, true, true, Optional.of(free()), false, 0L);
+                InstanceEntitlementGate.decide(
+                        true, true, true, Optional.of(free()), false, 0L, 0L);
         assertTrue(d.allowed());
         assertEquals(Reason.ENTITLED, d.reason());
     }
@@ -98,7 +147,8 @@ class InstanceEntitlementGateTest {
         // free() has 100 free units left per the last sync; 100 accrued locally since would exhaust
         // it once charged, so the gate stops here in real time rather than waiting for the sync.
         GateDecision d =
-                InstanceEntitlementGate.decide(true, true, true, Optional.of(free()), false, 100L);
+                InstanceEntitlementGate.decide(
+                        true, true, true, Optional.of(free()), false, 100L, 0L);
         assertFalse(d.allowed());
         assertEquals(Reason.OVER_LIMIT, d.reason());
     }
@@ -107,7 +157,8 @@ class InstanceEntitlementGateTest {
     void billable_linked_unsubscribed_pendingLocalUsageLeavesRoom_allows() {
         // 99 pending against 100 remaining → one unit of grant still projected free → allow.
         GateDecision d =
-                InstanceEntitlementGate.decide(true, true, true, Optional.of(free()), false, 99L);
+                InstanceEntitlementGate.decide(
+                        true, true, true, Optional.of(free()), false, 99L, 0L);
         assertTrue(d.allowed());
         assertEquals(Reason.ENTITLED, d.reason());
     }
@@ -116,7 +167,7 @@ class InstanceEntitlementGateTest {
     void billable_linked_unsubscribedAndExhausted_blocksOverLimit() {
         GateDecision d =
                 InstanceEntitlementGate.decide(
-                        true, true, true, Optional.of(exhaustedUnsubscribed()), false, 0L);
+                        true, true, true, Optional.of(exhaustedUnsubscribed()), false, 0L, 0L);
         assertFalse(d.allowed());
         assertEquals(Reason.OVER_LIMIT, d.reason());
     }
@@ -125,7 +176,7 @@ class InstanceEntitlementGateTest {
     void billable_linked_subscribedWithinCap_allows() {
         GateDecision d =
                 InstanceEntitlementGate.decide(
-                        true, true, true, Optional.of(subscribedWithinCap()), false, 0L);
+                        true, true, true, Optional.of(subscribedWithinCap()), false, 0L, 0L);
         assertTrue(d.allowed());
         assertEquals(Reason.ENTITLED, d.reason());
     }
@@ -134,7 +185,7 @@ class InstanceEntitlementGateTest {
     void billable_linked_subscribedOverCap_blocks() {
         GateDecision d =
                 InstanceEntitlementGate.decide(
-                        true, true, true, Optional.of(subscribedOverCap()), false, 0L);
+                        true, true, true, Optional.of(subscribedOverCap()), false, 0L, 0L);
         assertFalse(d.allowed());
         assertEquals(Reason.OVER_LIMIT, d.reason());
     }
@@ -146,7 +197,7 @@ class InstanceEntitlementGateTest {
         // projected spend to 105 → the gate stops now, not after the next sync reconciles.
         GateDecision d =
                 InstanceEntitlementGate.decide(
-                        true, true, true, Optional.of(subscribedWithinCap()), false, 95L);
+                        true, true, true, Optional.of(subscribedWithinCap()), false, 95L, 0L);
         assertFalse(d.allowed());
         assertEquals(Reason.OVER_LIMIT, d.reason());
     }
@@ -156,7 +207,7 @@ class InstanceEntitlementGateTest {
         // 10 synced + 80 pending = 90 < 100 cap → still room.
         GateDecision d =
                 InstanceEntitlementGate.decide(
-                        true, true, true, Optional.of(subscribedWithinCap()), false, 80L);
+                        true, true, true, Optional.of(subscribedWithinCap()), false, 80L, 0L);
         assertTrue(d.allowed());
         assertEquals(Reason.ENTITLED, d.reason());
     }
@@ -169,7 +220,7 @@ class InstanceEntitlementGateTest {
                 new InstanceEntitlement(true, 50, 0, 100L, EntitlementState.OK);
         GateDecision d =
                 InstanceEntitlementGate.decide(
-                        true, true, true, Optional.of(subscribedWithGrant), false, 40L);
+                        true, true, true, Optional.of(subscribedWithGrant), false, 40L, 0L);
         assertTrue(d.allowed());
         assertEquals(Reason.ENTITLED, d.reason());
     }
@@ -181,7 +232,7 @@ class InstanceEntitlementGateTest {
                 new InstanceEntitlement(true, 0, 999, null, EntitlementState.OK);
         GateDecision d =
                 InstanceEntitlementGate.decide(
-                        true, true, true, Optional.of(uncapped), false, 500L);
+                        true, true, true, Optional.of(uncapped), false, 500L, 0L);
         assertTrue(d.allowed());
         assertEquals(Reason.ENTITLED, d.reason());
     }
@@ -193,7 +244,8 @@ class InstanceEntitlementGateTest {
         InstanceEntitlement revoked =
                 new InstanceEntitlement(false, 0, 0, null, EntitlementState.REVOKED);
         GateDecision d =
-                InstanceEntitlementGate.decide(true, true, true, Optional.of(revoked), false, 0L);
+                InstanceEntitlementGate.decide(
+                        true, true, true, Optional.of(revoked), false, 0L, 0L);
         assertFalse(d.allowed());
         assertEquals(Reason.REVOKED, d.reason());
     }
@@ -205,7 +257,7 @@ class InstanceEntitlementGateTest {
                 new InstanceEntitlement(false, 5, 0, null, EntitlementState.OVER_LIMIT);
         GateDecision d =
                 InstanceEntitlementGate.decide(
-                        true, true, true, Optional.of(conflicting), false, 0L);
+                        true, true, true, Optional.of(conflicting), false, 0L, 0L);
         assertFalse(d.allowed());
         assertEquals(Reason.OVER_LIMIT, d.reason());
     }
@@ -214,7 +266,12 @@ class InstanceEntitlementGateTest {
 
     private InstanceEntitlementGate gate(AccountLinkProperties props) {
         return new InstanceEntitlementGate(
-                props, credentialStore, entitlementCache, syncStateRepository, localUsageService);
+                props,
+                credentialStore,
+                entitlementCache,
+                syncStateRepository,
+                localUsageService,
+                freeTierUsageService);
     }
 
     private static AccountLinkProperties props(boolean meteringEnabled, int graceDays) {
@@ -281,6 +338,46 @@ class InstanceEntitlementGateTest {
 
         assertFalse(d.allowed());
         assertEquals(Reason.OVER_LIMIT, d.reason());
+    }
+
+    @Test
+    void evaluate_unlinked_readsTheLocalGrantAndNotTheCloudWallet() {
+        when(credentialStore.isLinked()).thenReturn(false);
+        when(freeTierUsageService.balance()).thenReturn(grant(120));
+
+        GateDecision d = gate(props(true, 3)).evaluate(true);
+
+        assertTrue(d.allowed());
+        assertEquals(Reason.FREE_TIER, d.reason());
+        verify(entitlementCache, never()).current();
+        verify(localUsageService, never()).currentPeriodUnsynced();
+    }
+
+    @Test
+    void evaluate_unlinked_grantSpent_blocks() {
+        when(credentialStore.isLinked()).thenReturn(false);
+        when(freeTierUsageService.balance()).thenReturn(grant(0));
+
+        GateDecision d = gate(props(true, 3)).evaluate(true);
+
+        assertFalse(d.allowed());
+        assertEquals(Reason.FREE_TIER_EXHAUSTED, d.reason());
+    }
+
+    @Test
+    void evaluate_linked_ignoresTheLocalGrantEntirely() {
+        // A pre-link grant that is fully spent must not block a linked team, and a linked team's
+        // limits must not be relieved by a grant that still has units: the ledgers are separate.
+        when(credentialStore.isLinked()).thenReturn(true);
+        when(entitlementCache.current()).thenReturn(Optional.of(free()));
+        when(localUsageService.currentPeriodUnsynced())
+                .thenReturn(new LocalUsageService.LocalUsage(LocalDateTime.now(), 0, 0, 0, 0));
+
+        GateDecision d = gate(props(true, 3)).evaluate(true);
+
+        assertTrue(d.allowed());
+        assertEquals(Reason.ENTITLED, d.reason());
+        verify(freeTierUsageService, never()).balance();
     }
 
     @Test

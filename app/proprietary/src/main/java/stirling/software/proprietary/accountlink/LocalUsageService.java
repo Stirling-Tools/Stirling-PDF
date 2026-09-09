@@ -19,7 +19,10 @@ import stirling.software.proprietary.billing.BillingCategory;
  */
 @Service
 @Profile("!saas")
-@ConditionalOnProperty(name = "stirling.billing.account-link.enabled", havingValue = "true")
+@ConditionalOnProperty(
+        name = "stirling.billing.account-link.enabled",
+        havingValue = "true",
+        matchIfMissing = true)
 public class LocalUsageService {
 
     private final UsageCounterRepository counters;

@@ -20,19 +20,29 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.extern.slf4j.Slf4j;
 
-/** Same-origin account-link surface on the self-hosted instance (combined billing). */
+/**
+ * Same-origin account-link surface on the self-hosted instance (combined billing).
+ *
+ * <p>Admin-only, class-wide: everything here is server-scoped rather than per-user, and that
+ * includes the free-tier meter, which reports the whole instance's allowance. A non-admin who runs
+ * into the wall learns it from the {@code reason} on the 402, not from here.
+ */
 @Slf4j
 @Hidden
 @RestController
 @RequestMapping("/api/v1/account-link")
 @Profile("!saas")
 @PreAuthorize("hasRole('ADMIN')")
-@ConditionalOnProperty(name = "stirling.billing.account-link.enabled", havingValue = "true")
+@ConditionalOnProperty(
+        name = "stirling.billing.account-link.enabled",
+        havingValue = "true",
+        matchIfMissing = true)
 public class AccountLinkController {
 
     private final AccountLinkService service;
     private final ConnectService connectService;
     private final LocalUsageService localUsageService;
+    private final FreeTierUsageService freeTierUsageService;
     // Present only when metering is on (its own flag); absent → /sync-now reports 409.
     private final ObjectProvider<UsageSyncService> syncServiceProvider;
 
@@ -40,10 +50,12 @@ public class AccountLinkController {
             AccountLinkService service,
             ConnectService connectService,
             LocalUsageService localUsageService,
+            FreeTierUsageService freeTierUsageService,
             ObjectProvider<UsageSyncService> syncServiceProvider) {
         this.service = service;
         this.connectService = connectService;
         this.localUsageService = localUsageService;
+        this.freeTierUsageService = freeTierUsageService;
         this.syncServiceProvider = syncServiceProvider;
     }
 
@@ -153,6 +165,17 @@ public class AccountLinkController {
     @GetMapping("/usage")
     public ResponseEntity<LocalUsageService.LocalUsage> usage() {
         return ResponseEntity.ok(localUsageService.currentPeriodUnsynced());
+    }
+
+    /**
+     * The instance's own monthly free grant: units spent, the grant, and when the period rolls.
+     * Reported whether or not the instance is linked — while linked the cloud wallet is
+     * authoritative and these figures are dormant, but they are exactly what unlinking would resume
+     * on, so the portal can show both without a second shape.
+     */
+    @GetMapping("/free-tier")
+    public ResponseEntity<FreeTierUsageService.FreeTierBalance> freeTier() {
+        return ResponseEntity.ok(freeTierUsageService.balance());
     }
 
     /** Forces an immediate usage sync to SaaS — the same work the daily scheduler does. */
