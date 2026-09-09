@@ -124,20 +124,40 @@ function obstructionOf(element) {
       .filter(Boolean)
       .map((name) => `.${name}`)
       .join("");
-    return `<${hit.tagName.toLowerCase()}${id}${classes}>`;
+    // The text is what identifies which toast or panel it was, and that is the
+    // part a CI failure needs.
+    const text = (hit.textContent || "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 80);
+    return `<${hit.tagName.toLowerCase()}${id}${classes}>${text ? ` "${text}"` : ""}`;
   }, element);
+}
+
+/**
+ * Closes every toast on screen.
+ *
+ * The toast container is fixed over the right-hand tool list, so a toast that
+ * does not auto-dismiss sits on top of the tool buttons for the rest of the
+ * run and WebKitWebDriver refuses to click through it. The dismiss control is
+ * the last button in each toast's controls row.
+ */
+async function dismissToasts() {
+  for (const button of await $$(".toast-controls .toast-button:last-child")) {
+    await button.click().catch(() => {});
+  }
 }
 
 /**
  * Clicks the first match the webview will actually accept a click on.
  *
- * Two things defeat a plain `$(selector).click()` in the packaged app. The same
- * `data-tour` id is rendered by three different tool-list components, so the
- * first match in DOM order is not necessarily the one on screen. And the app
- * keeps producing late overlays - the sign-in modal lands once its network call
- * settles, well after the first-run modals were dismissed - which makes
- * WebKitWebDriver reject the click outright. So: try every visible match,
- * clear overlays between rounds, and name what swallowed the click if the
+ * Three things defeat a plain `$(selector).click()` in the packaged app: the
+ * same `data-tour` id is rendered by three different tool-list components, so
+ * the first match in DOM order need not be the one on screen; a toast sits over
+ * the tool list until something dismisses it; and a modal can arrive late, the
+ * sign-in one landing once its network call settles. Each of them makes
+ * WebKitWebDriver refuse the click outright. So: try every visible match, clear
+ * whatever is on top between rounds, and name what swallowed the click if the
  * element never takes one.
  */
 export async function clickFirstClickable(
@@ -175,6 +195,7 @@ export async function clickFirstClickable(
     // Only when a modal is actually up: closeTopModal falls back to Escape, and
     // a stray Escape with no modal open would close the tool panel instead.
     if ((await countOverlays()) > 0) await closeTopModal();
+    await dismissToasts();
     return false;
   };
 
