@@ -54,7 +54,7 @@ public class UsageCounter {
 
     /**
      * {@link #cumulativeUnits} as of the last sync SaaS accepted; the difference is the unreported
-     * usage the portal shows on top of SaaS-synced spend. The {@code columnDefinition} default
+     * usage the processor shows on top of SaaS-synced spend. The {@code columnDefinition} default
      * keeps the {@code ddl-auto=update} ADD COLUMN safe against a table an earlier build already
      * populated (NOT NULL with no default would fail the ALTER).
      */

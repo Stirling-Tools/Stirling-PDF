@@ -57,8 +57,8 @@ public enum FailureKind {
             global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, OVERFLOW),
             global(DISMISS, ANYONE_WHO_SEES, OVERFLOW));
 
-    private static final String KEY_PREFIX = "portal.failures.kind.";
-    private static final String ACTION_KEY_PREFIX = "portal.failures.action.";
+    private static final String KEY_PREFIX = "processor.failures.kind.";
+    private static final String ACTION_KEY_PREFIX = "processor.failures.action.";
 
     /**
      * Every claimed {@code ErrorCode}, to the kind claiming it. Indexed once rather than scanned

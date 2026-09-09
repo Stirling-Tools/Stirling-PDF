@@ -60,7 +60,7 @@ export function ShellHero({
 /**
  * Shared onboarding slide chrome: branded header + step progress, an inset
  * hero panel, left-aligned title/body, and a right-aligned action footer.
- * Generic over button actions so every flow (editor, SaaS, portal) renders
+ * Generic over button actions so every flow (editor, SaaS, processor) renders
  * the same card.
  */
 export default function OnboardingSlideShell({

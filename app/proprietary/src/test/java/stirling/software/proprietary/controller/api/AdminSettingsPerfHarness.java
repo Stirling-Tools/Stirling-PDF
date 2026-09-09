@@ -194,7 +194,7 @@ class AdminSettingsPerfHarness {
                         new DefaultPrincipalResolver());
         ReflectionTestUtils.setField(
                 resourceAccessService,
-                "portalDefaultPolicy",
+                "processorDefaultPolicy",
                 DefaultAccessPolicy.ADMINS_AND_TEAM_LEADS);
 
         UserLicenseSettingsService licenseSettingsService = mock(UserLicenseSettingsService.class);

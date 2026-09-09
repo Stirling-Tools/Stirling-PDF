@@ -22,7 +22,7 @@ export interface QuickNavHostData {
   appMounted: boolean;
   identity: QuickNavIdentity | null;
   signingBadge: number;
-  portalAccess: boolean;
+  processorAccess: boolean;
   readerMode: boolean;
   activeTool: ToolId | null;
   /** The app owns the panel; the rail's bell only reports its state. */
@@ -66,7 +66,7 @@ const EMPTY_DATA: QuickNavHostData = {
   toolReasons: EMPTY_REASONS,
   identity: null,
   signingBadge: 0,
-  portalAccess: false,
+  processorAccess: false,
   readerMode: false,
   activeTool: null,
   notificationsOpen: false,
@@ -96,7 +96,7 @@ export function QuickNavHostProvider({ children }: { children: ReactNode }) {
       const unchanged =
         merged.appMounted === prev.appMounted &&
         merged.signingBadge === prev.signingBadge &&
-        merged.portalAccess === prev.portalAccess &&
+        merged.processorAccess === prev.processorAccess &&
         merged.readerMode === prev.readerMode &&
         merged.activeTool === prev.activeTool &&
         merged.notificationsOpen === prev.notificationsOpen &&
@@ -150,7 +150,7 @@ export function useRegisterQuickNavHost(
   const {
     identity,
     signingBadge,
-    portalAccess,
+    processorAccess,
     readerMode,
     activeTool,
     notificationsOpen,
@@ -163,7 +163,7 @@ export function useRegisterQuickNavHost(
       appMounted: true,
       identity: identity ?? null,
       signingBadge: signingBadge ?? 0,
-      portalAccess: portalAccess ?? false,
+      processorAccess: processorAccess ?? false,
       readerMode: readerMode ?? false,
       // Cleared, not omitted as toolReasons is: a stale tool marks an entry.
       activeTool: activeTool ?? null,
@@ -178,7 +178,7 @@ export function useRegisterQuickNavHost(
     identity?.displayName,
     identity?.profilePictureUrl,
     signingBadge,
-    portalAccess,
+    processorAccess,
     readerMode,
     activeTool,
     notificationsOpen,

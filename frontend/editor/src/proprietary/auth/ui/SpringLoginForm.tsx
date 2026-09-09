@@ -19,7 +19,7 @@ interface SpringLoginFormProps {
   oauthUseNewStyle?: boolean;
   /**
    * Whether to render the email/password form. Defaults to
-   * state.isUserPassAllowed (the portal always shows it); the editor toggles it
+   * state.isUserPassAllowed (the processor always shows it); the editor toggles it
    * when SSO providers are present.
    */
   showEmailForm?: boolean;
@@ -35,7 +35,7 @@ interface SpringLoginFormProps {
 
 /**
  * The shared Spring login form body: logo, error, OAuth buttons, divider, and
- * the email/password form. Rendered by both the editor and the portal inside
+ * the email/password form. Rendered by both the editor and the processor inside
  * their own auth shells; state and handlers come from useSpringLogin.
  */
 export default function SpringLoginForm({

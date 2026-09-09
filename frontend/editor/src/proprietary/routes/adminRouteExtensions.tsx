@@ -1,34 +1,34 @@
 import { lazy } from "react";
 import type { ReactElement } from "react";
 import { Route } from "react-router-dom";
-import { PORTAL_BASENAME } from "@app/routes/portalBasename";
-import { HAS_PORTAL } from "@app/routes/hasPortal";
+import { PROCESSOR_BASENAME } from "@app/routes/processorBasename";
+import { HAS_PROCESSOR } from "@app/routes/hasProcessor";
 
-const PortalApp = HAS_PORTAL
+const ProcessorApp = HAS_PROCESSOR
   ? lazy(async () => {
-      const m = await import("@portal/PortalApp");
-      return { default: m.PortalApp };
+      const m = await import("@processor/ProcessorApp");
+      return { default: m.ProcessorApp };
     })
   : null;
 
 /**
  * Return leg of the account-link handshake, which Stirling redirects to with the admin's session in the URL fragment.
  */
-const ConnectCallback = HAS_PORTAL
+const ConnectCallback = HAS_PROCESSOR
   ? lazy(async () => {
-      const m = await import("@portal/views/ConnectCallback");
+      const m = await import("@processor/views/ConnectCallback");
       return { default: m.default };
     })
   : null;
 
-/** The portal mounts as an admin-only route-set at PORTAL_BASENAME (/processor/*). */
+/** The processor mounts as an admin-only route-set at PROCESSOR_BASENAME (/processor/*). */
 export function getAdminRouteExtensions(): ReactElement[] {
-  if (!PortalApp || !ConnectCallback) return [];
+  if (!ProcessorApp || !ConnectCallback) return [];
   return [
     <Route
-      key="portal"
-      path={`${PORTAL_BASENAME}/*`}
-      element={<PortalApp />}
+      key="processor"
+      path={`${PROCESSOR_BASENAME}/*`}
+      element={<ProcessorApp />}
     />,
     <Route
       key="account-link-callback"

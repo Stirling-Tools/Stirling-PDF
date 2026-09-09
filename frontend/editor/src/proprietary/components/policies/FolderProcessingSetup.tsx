@@ -223,7 +223,7 @@ export function FolderProcessingSetup({
               entry.category.requiresAiEngine === true && !aiEngineEnabled
             }
             lockedLabel={t(
-              "portal.policies.card.requiresAiEngine",
+              "processor.policies.card.requiresAiEngine",
               "Requires AI engine",
             )}
           />

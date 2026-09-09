@@ -1,0 +1,437 @@
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { Button, EmptyState, Skeleton } from "@app/ui";
+import {
+  changeMemberRole,
+  disableMemberMfa,
+  setMemberSuspended,
+  unlockMember,
+  type Member,
+  type PendingInvitation,
+  type ProcessorAccessState,
+  type RoleId,
+} from "@processor/api/users";
+import { usersBackend } from "@app/processor/usersBackend";
+import {
+  createGrant,
+  revokeGrant,
+  type ResourceGrant,
+} from "@processor/api/access";
+import { deleteTeam as apiDeleteTeam } from "@processor/api/teams";
+import { errorMessage } from "@processor/api/http";
+import { usersCapabilities as caps } from "@app/processor/usersCapabilities";
+import { useConnectGate } from "@processor/hooks/useConnectGate";
+import { UsersDirectory } from "@processor/components/users/UsersDirectory";
+import { PendingInvitations } from "@processor/components/users/PendingInvitations";
+import { InviteMemberModal } from "@processor/components/users/InviteMemberModal";
+import { NewTeamModal } from "@processor/components/users/NewTeamModal";
+import { ResetPasswordModal } from "@processor/components/users/ResetPasswordModal";
+import { MoveToTeamModal } from "@processor/components/users/MoveToTeamModal";
+import { RenameTeamModal } from "@processor/components/users/RenameTeamModal";
+import { ConfirmModal } from "@processor/components/users/ConfirmModal";
+import type { TeamGroup } from "@processor/components/users/directory";
+import { useUsersData } from "@processor/views/usersData";
+
+interface Confirm {
+  title: string;
+  body: string;
+  confirmLabel: string;
+  danger?: boolean;
+  action: () => Promise<unknown>;
+}
+
+/**
+ * Users page: the org roster, teams, and processor-access management. Mutation
+ * handlers call `refresh` to invalidate the shared caches (see useUsersData).
+ */
+export function Users() {
+  const { t } = useTranslation();
+  const { guard, gated, connect } = useConnectGate();
+  const { usersState, grantsState, teamsState, authState, refresh } =
+    useUsersData();
+
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteTeamId, setInviteTeamId] = useState<number | null>(null);
+  const [newTeamOpen, setNewTeamOpen] = useState(false);
+  const [resetPwMember, setResetPwMember] = useState<Member | null>(null);
+  const [moveMember, setMoveMember] = useState<Member | null>(null);
+  const [renameTarget, setRenameTarget] = useState<{
+    id: number;
+    name: string;
+  } | null>(null);
+  const [confirm, setConfirm] = useState<Confirm | null>(null);
+
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Ref so the effect does not loop: it writes the param back, which would re-run it.
+  const connectRef = useRef(connect);
+  connectRef.current = connect;
+
+  // Sets the modal directly, so it needs the gate in its own right.
+  useEffect(() => {
+    if (searchParams.get("invite") === null) return;
+    if (gated) connectRef.current();
+    else setInviteOpen(true);
+    const next = new URLSearchParams(searchParams);
+    next.delete("invite");
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams, gated]);
+
+  // Scroll to and flash the row for ?member=<id> (deep link from the super
+  // search), once the roster has rendered; then strip the param. Scoped to the
+  // roster so a pending-invitation row sharing the id can't match first.
+  const rosterRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const memberId = searchParams.get("member");
+    if (memberId === null || usersState.loading) return;
+    const row = rosterRef.current?.querySelector(
+      `[data-row-key="${CSS.escape(memberId)}"]`,
+    );
+    if (row) {
+      row.scrollIntoView({ block: "center" });
+      row.classList.add("processor-users__row--flash");
+      window.setTimeout(
+        () => row.classList.remove("processor-users__row--flash"),
+        1600,
+      );
+    }
+    const next = new URLSearchParams(searchParams);
+    next.delete("member");
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams, usersState.loading]);
+
+  // PORTAL grants held by a whole team (principalId = teamId); members inherit these.
+  const grantByTeam = useMemo(() => {
+    const m = new Map<number, ResourceGrant>();
+    for (const g of grantsState.data ?? []) {
+      if (g.principalType === "TEAM") m.set(g.principalId, g);
+    }
+    return m;
+  }, [grantsState.data]);
+
+  const members = useMemo<Member[]>(() => {
+    const grantByUser = new Map<string, ResourceGrant>();
+    for (const g of grantsState.data ?? []) {
+      if (g.principalType === "USER") grantByUser.set(String(g.principalId), g);
+    }
+    return (usersState.data?.members ?? []).map((raw) => {
+      // Enforce the no-ROLE_ADMIN-on-SaaS rule: clamp any stray admin to member.
+      const m: Member =
+        !caps.adminRole && raw.role === "admin"
+          ? { ...raw, role: "member" }
+          : raw;
+      // Presence is the server's authoritative decision (roster DTO's processorAccess, the same
+      // canAccessProcessor /me uses), so a stricter/looser default policy can't drift. The grant
+      // maps only pick the display sub-state: which source, and whether the chip is removable.
+      let processorAccess: ProcessorAccessState;
+      let processorGrantId: number | undefined;
+      if (!m.canAccessProcessor) processorAccess = "none";
+      else if (m.role === "admin") processorAccess = "admin";
+      else if (grantByUser.has(m.id)) {
+        processorAccess = "granted"; // a per-user grant is the removable source
+        processorGrantId = grantByUser.get(m.id)!.id;
+      } else if (m.teamId != null && grantByTeam.has(m.teamId))
+        processorAccess = "team";
+      else processorAccess = "role"; // access via the default policy (e.g. team lead)
+      return { ...m, processorAccess, processorGrantId };
+    });
+  }, [usersState.data?.members, grantsState.data, grantByTeam]);
+
+  const processorTeamIds = useMemo(
+    () => new Set(grantByTeam.keys()),
+    [grantByTeam],
+  );
+
+  const teams = teamsState.data ?? [];
+  // Pending invites ride along with the roster fetch (SaaS); empty on self-hosted.
+  const invitations = usersState.data?.invitations ?? [];
+  const mailEnabled = usersState.data?.mailEnabled ?? false;
+  // Email invites need SMTP + mail.enableInvites on self-hosted; SaaS (no directCreate path)
+  // always has email via Supabase, so it isn't gated on a self-hosted mail config.
+  const canEmailInvite =
+    caps.emailInvite &&
+    (caps.directCreate
+      ? (usersState.data?.emailInvitesEnabled ?? false)
+      : true);
+  const loading = usersState.loading && usersState.data === null;
+  const loadError = !usersState.loading && usersState.error !== null;
+  const isEmpty = !usersState.loading && !loadError && members.length === 0;
+
+  function run(action: () => Promise<unknown>) {
+    setActionError(null);
+    action()
+      .catch((error) => setActionError(errorMessage(error)))
+      // Refetch on success AND failure: a multi-step mutation (e.g. changeMemberRole)
+      // has no rollback, so a mid-sequence failure must resync the roster to real state.
+      .finally(() => refresh());
+  }
+
+  function changeRole(member: Member, role: RoleId) {
+    run(() => changeMemberRole(member, role));
+  }
+  function grantProcessor(member: Member) {
+    run(() =>
+      createGrant({
+        resourceType: "PORTAL",
+        resourceId: "",
+        principalType: "USER",
+        principalId: Number(member.id),
+        permission: "USE",
+      }),
+    );
+  }
+  function revokeProcessor(member: Member) {
+    if (!member.processorGrantId) return;
+    run(() => revokeGrant(member.processorGrantId!));
+  }
+  // Grant/revoke Processor for a whole team (a TEAM-principal PORTAL grant).
+  function grantTeamProcessor(team: TeamGroup) {
+    run(() =>
+      createGrant({
+        resourceType: "PORTAL",
+        resourceId: "",
+        principalType: "TEAM",
+        principalId: team.id,
+        permission: "USE",
+      }),
+    );
+  }
+  function revokeTeamProcessor(team: TeamGroup) {
+    const grant = grantByTeam.get(team.id);
+    if (!grant) return;
+    run(() => revokeGrant(grant.id));
+  }
+  // Teams need a linked account, so inviting or creating one asks for the connection first.
+  const openInvite = guard((teamId: number | null) => {
+    setInviteTeamId(teamId);
+    setInviteOpen(true);
+  });
+  const openNewTeam = guard(() => setNewTeamOpen(true));
+
+  // Kebab actions
+  function toggleEnabled(member: Member) {
+    run(() => setMemberSuspended(member, member.status !== "suspended"));
+  }
+  function unlock(member: Member) {
+    run(() => unlockMember(member));
+  }
+  function disableMfa(member: Member) {
+    setConfirm({
+      title: t("users.confirm.disableMfaTitle", "Reset MFA"),
+      body: t(
+        "users.confirm.disableMfaBody",
+        "Remove {{name}}'s MFA enrolment? They'll set it up again on next login if required.",
+        { name: member.name },
+      ),
+      confirmLabel: t("users.action.disableMfa", "Reset MFA"),
+      action: () => disableMemberMfa(member),
+    });
+  }
+  function removeUser(member: Member) {
+    // SaaS removes from the team (the account survives); self-hosted deletes the account.
+    const teamScope = caps.removeScope === "team";
+    setConfirm({
+      title: t("users.confirm.removeTitle", "Remove member"),
+      body: teamScope
+        ? t(
+            "users.confirm.removeTeamBody",
+            "Remove {{name}} from the team? They keep their account but lose access to this team's resources.",
+            { name: member.name },
+          )
+        : t(
+            "users.confirm.removeBody",
+            "Permanently remove {{name}} from the organization? This cannot be undone.",
+            { name: member.name },
+          ),
+      confirmLabel: teamScope
+        ? t("users.action.removeTeam", "Remove from team")
+        : t("users.action.remove", "Remove from org"),
+      danger: true,
+      action: () => usersBackend.removeMember(member),
+    });
+  }
+  function cancelInvite(invitation: PendingInvitation) {
+    setConfirm({
+      title: t("users.confirm.cancelInviteTitle", "Cancel invitation"),
+      body: t(
+        "users.confirm.cancelInviteBody",
+        "Cancel the invitation to {{email}}? They won't be able to join with the current link.",
+        { email: invitation.email },
+      ),
+      confirmLabel: t("users.action.cancelInvite", "Cancel invitation"),
+      danger: true,
+      action: () => usersBackend.cancelInvitation(invitation.id),
+    });
+  }
+  function deleteTeamAction(team: TeamGroup) {
+    setConfirm({
+      title: t("users.confirm.deleteTeamTitle", "Delete team"),
+      body: t(
+        "users.confirm.deleteTeamBody",
+        "Delete the {{name}} team? The team must be empty first - move its members to another team, and it can't still own any integration configs.",
+        { name: team.name },
+      ),
+      confirmLabel: t("users.action.deleteTeam", "Delete team"),
+      danger: true,
+      action: () => apiDeleteTeam(team.id),
+    });
+  }
+
+  return (
+    <div className="processor-users">
+      <header className="processor-users__head">
+        <div>
+          <h1 className="processor-users__title">
+            {t("users.title", "Users")}
+          </h1>
+          <p className="processor-users__sub">
+            {t("users.subtitle2", "Your people, teams, and access levels.")}{" "}
+            <a className="processor-users__link" href="/docs">
+              {t("users.learnMore", "Learn more about roles and access.")}
+            </a>
+          </p>
+        </div>
+        <div className="processor-users__head-actions">
+          {caps.createTeam && (
+            <Button fat variant="secondary" onClick={openNewTeam}>
+              {t("users.newTeam.action", "+ New team")}
+            </Button>
+          )}
+          <Button fat onClick={() => openInvite(null)}>
+            {t("users.invite.action", "Invite people")}
+          </Button>
+        </div>
+      </header>
+
+      {actionError && (
+        <p className="processor-users__error" role="alert">
+          {actionError}
+        </p>
+      )}
+
+      {loading && (
+        <div className="processor-users__table-skeleton" aria-hidden>
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton key={i} height="3.25rem" />
+          ))}
+        </div>
+      )}
+
+      {loadError && (
+        <EmptyState
+          title={t("users.loadError.title", "Couldn't load members")}
+          description={t(
+            "users.loadError.description",
+            "Something went wrong reaching the backend, or you don't have access. Try again.",
+          )}
+          actions={
+            <Button variant="secondary" onClick={refresh}>
+              {t("common.retry", "Retry")}
+            </Button>
+          }
+        />
+      )}
+
+      {isEmpty && (
+        <EmptyState
+          title={t("users.empty.title", "No members yet")}
+          description={t(
+            "users.empty.description",
+            "Invite your team to start collaborating.",
+          )}
+          actions={
+            <Button onClick={() => openInvite(null)}>
+              {t("users.invite.action", "Invite people")}
+            </Button>
+          }
+        />
+      )}
+
+      {caps.manageInvitations && !loading && invitations.length > 0 && (
+        <PendingInvitations invitations={invitations} onCancel={cancelInvite} />
+      )}
+
+      {!loading && members.length > 0 && (
+        <div ref={rosterRef}>
+          <UsersDirectory
+            members={members}
+            teams={teams}
+            capabilities={caps}
+            onChangeRole={changeRole}
+            onGrantProcessor={grantProcessor}
+            onRevokeProcessor={revokeProcessor}
+            processorTeamIds={processorTeamIds}
+            onGrantTeamProcessor={grantTeamProcessor}
+            onRevokeTeamProcessor={revokeTeamProcessor}
+            onAddToTeam={(team) => openInvite(team.id)}
+            onResetPassword={setResetPwMember}
+            onMoveToTeam={setMoveMember}
+            onToggleEnabled={toggleEnabled}
+            onUnlock={unlock}
+            onDisableMfa={disableMfa}
+            onRemove={removeUser}
+            onRenameTeam={(team) =>
+              setRenameTarget({ id: team.id, name: team.name })
+            }
+            onDeleteTeam={deleteTeamAction}
+          />
+        </div>
+      )}
+
+      <InviteMemberModal
+        open={inviteOpen}
+        onClose={() => setInviteOpen(false)}
+        onInvited={refresh}
+        teams={teams}
+        defaultTeamId={inviteTeamId}
+        canDirectCreate={caps.directCreate && authState.data?.canDirectCreate}
+        canEmailInvite={canEmailInvite}
+        hasOauth={authState.data?.hasOauth}
+        hasSaml={authState.data?.hasSaml}
+        adminRole={caps.adminRole}
+        manageGrants={caps.manageGrants}
+        onNotice={setActionError}
+      />
+      <NewTeamModal
+        open={newTeamOpen}
+        onClose={() => setNewTeamOpen(false)}
+        onCreated={refresh}
+      />
+      <ResetPasswordModal
+        open={resetPwMember !== null}
+        member={resetPwMember}
+        mailEnabled={mailEnabled}
+        onClose={() => setResetPwMember(null)}
+        onDone={refresh}
+      />
+      <MoveToTeamModal
+        open={moveMember !== null}
+        member={moveMember}
+        teams={teams}
+        onClose={() => setMoveMember(null)}
+        onDone={refresh}
+      />
+      <RenameTeamModal
+        open={renameTarget !== null}
+        teamId={renameTarget?.id ?? null}
+        currentName={renameTarget?.name ?? ""}
+        onClose={() => setRenameTarget(null)}
+        onDone={refresh}
+      />
+      <ConfirmModal
+        open={confirm !== null}
+        title={confirm?.title ?? ""}
+        body={confirm?.body ?? ""}
+        confirmLabel={confirm?.confirmLabel ?? t("common.confirm", "Confirm")}
+        danger={confirm?.danger}
+        onConfirm={() => {
+          if (confirm) run(confirm.action);
+          setConfirm(null);
+        }}
+        onCancel={() => setConfirm(null)}
+      />
+    </div>
+  );
+}

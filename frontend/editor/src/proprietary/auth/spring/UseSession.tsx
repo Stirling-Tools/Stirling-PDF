@@ -44,7 +44,7 @@ export interface SpringAuthProviderProps {
   children: ReactNode;
   /**
    * Optional translate function for user-facing copy. The editor passes one
-   * backed by i18next; the portal omits it and gets English fallbacks.
+   * backed by i18next; the processor omits it and gets English fallbacks.
    */
   translate?: AuthTranslate;
 }
@@ -201,7 +201,7 @@ export function SpringAuthProvider({
     displayName: deriveDisplayName(user, translate),
     isAnonymous: user?.is_anonymous === true,
     isAdmin: isAdminRole(user?.role),
-    portalAccess: user?.portalAccess ?? isAdminRole(user?.role),
+    processorAccess: user?.processorAccess ?? isAdminRole(user?.role),
     role: user?.role ?? null,
     loading,
     error,

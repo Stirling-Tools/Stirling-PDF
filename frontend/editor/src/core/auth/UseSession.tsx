@@ -33,7 +33,7 @@ export interface AuthContextType {
    * and fall back to app-config gates.
    */
   isAdmin?: boolean;
-  portalAccess?: boolean;
+  processorAccess?: boolean;
 }
 
 /**

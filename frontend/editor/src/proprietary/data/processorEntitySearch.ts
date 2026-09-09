@@ -5,10 +5,10 @@ import type { SuperSearchGroup } from "@app/types/superSearch";
 import type {
   PortalEntityItems,
   PortalEntityScopeId,
-} from "@portal/search/entitySearch";
-import { HAS_PORTAL } from "@app/routes/hasPortal";
+} from "@processor/search/entitySearch";
+import { HAS_PROCESSOR } from "@app/routes/hasProcessor";
 
-type EntitySearchModule = typeof import("@portal/search/entitySearch");
+type EntitySearchModule = typeof import("@processor/search/entitySearch");
 
 const NO_GROUPS: SuperSearchGroup[] = [];
 const NO_SCOPES: readonly PortalEntityScopeId[] = [];
@@ -36,14 +36,14 @@ export function useProcessorEntityGroups(
 ): SuperSearchGroup[] {
   const [mod, setMod] = useState<EntitySearchModule | null>(null);
   const modRef = useRef<EntitySearchModule | null>(null);
-  // Without the portal these entities have nowhere to open, so don't fetch them.
-  const active = enabled && HAS_PORTAL;
+  // Without the processor these entities have nowhere to open, so don't fetch them.
+  const active = enabled && HAS_PROCESSOR;
   const hasQuery = trimmed.length > 0;
 
   useEffect(() => {
     if (!active || modRef.current) return;
     let cancelled = false;
-    void import("@portal/search/entitySearch").then((loaded) => {
+    void import("@processor/search/entitySearch").then((loaded) => {
       if (cancelled) return;
       modRef.current = loaded;
       setMod(loaded);
@@ -65,7 +65,7 @@ export function useProcessorEntityGroups(
   const fetchScope = useCallback(
     async (scopeId: PortalEntityScopeId): Promise<PortalEntityItems> => {
       const loaded =
-        modRef.current ?? (await import("@portal/search/entitySearch"));
+        modRef.current ?? (await import("@processor/search/entitySearch"));
       return loaded.fetchPortalEntityScope(scopeId, "free");
     },
     [],

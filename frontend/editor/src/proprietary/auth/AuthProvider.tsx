@@ -7,7 +7,7 @@ import { lazy, Suspense, type ReactNode } from "react";
 import { SpringAuthProvider } from "@app/auth/spring/UseSession";
 import { type AuthMode, type AuthTranslate } from "@app/auth/types";
 
-// Lazy so Spring-mode hosts (e.g. the portal) don't bundle @supabase/supabase-js
+// Lazy so Spring-mode hosts (e.g. the processor) don't bundle @supabase/supabase-js
 // they never use; only loaded when mode="supabase".
 const SupabaseAuthProvider = lazy(() =>
   import("@app/auth/supabase/UseSession").then((m) => ({

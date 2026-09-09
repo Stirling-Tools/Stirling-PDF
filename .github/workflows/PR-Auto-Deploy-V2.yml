@@ -115,9 +115,9 @@ jobs:
       packages: write
       pull-requests: write
     env:
-      # Single source of truth for whether this preview embeds the admin portal:
+      # Single source of truth for whether this preview embeds the admin processor:
       # drives the image build-arg and the deployment comment.
-      BUILD_PORTAL: "true"
+      BUILD_PROCESSOR: "true"
 
     steps:
       - name: Harden Runner
@@ -231,7 +231,7 @@ jobs:
           PROJECT_REF: ${{ secrets.SAAS_DB_PROJECT_REF }}
           API_BASE_OVERRIDE: ${{ vars.SAAS_API_BASE_URL }}
         run: |
-          # Set, this is the one value both halves use: the browser's portal reads and the backend's
+          # Set, this is the one value both halves use: the browser's processor reads and the backend's
           # register/entitlement calls have to land on the same SaaS, and nothing checks that they
           # do. Unset, only the backend gets a base, from its own compiled-in default.
           API_BASE="${API_BASE_OVERRIDE:-https://stirling.com/app}"
@@ -251,7 +251,7 @@ jobs:
             echo "supabase_url=https://${PROJECT_REF}.supabase.co" >> "$GITHUB_OUTPUT"
             # Deliberately the override and not API_BASE: the backend's default is a subpath URL
             # nobody has confirmed answers /api/v1, and prod CORS does not list preview hostnames,
-            # so portal reads stay off until someone sets a base they have checked. Empty leaves the
+            # so processor reads stay off until someone sets a base they have checked. Empty leaves the
             # committed .env default alone, which is the clean "not configured" state.
             echo "frontend_base=${API_BASE_OVERRIDE}" >> "$GITHUB_OUTPUT"
           fi
@@ -281,7 +281,7 @@ jobs:
           tags: ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-test:v2-${{ steps.commit-hash.outputs.app_short }}
           build-args: |
             VERSION_TAG=v2-alpha
-            BUILD_PORTAL=${{ env.BUILD_PORTAL }}
+            BUILD_PROCESSOR=${{ env.BUILD_PROCESSOR }}
             VITE_SUPABASE_URL=${{ steps.saas.outputs.supabase_url }}
             VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY=${{ secrets.SAAS_SUPABASE_PUBLISHABLE_KEY }}
             VITE_SAAS_API_URL=${{ steps.saas.outputs.frontend_base }}
@@ -464,11 +464,11 @@ jobs:
 
             const deploymentUrl = `http://${process.env.NEW_VPS_HOST}:${v2Port}`;
 
-            // Only mention the portal when this image actually embeds it.
+            // Only mention the processor when this image actually embeds it.
             // Use the direct IP URL - the SSL hostname isn't supported yet.
-            const withPortal = "${{ env.BUILD_PORTAL }}" === "true";
-            const portalNote = withPortal
-              ? `🧩 **Admin portal** included - try it at [${deploymentUrl}/portal](${deploymentUrl}/portal).\n\n`
+            const withProcessor = "${{ env.BUILD_PROCESSOR }}" === "true";
+            const processorNote = withProcessor
+              ? `🧩 **Admin processor** included - try it at [${deploymentUrl}/processor](${deploymentUrl}/processor).\n\n`
               : ``;
 
             // Storybook preview: only present when this PR changed stories/config.
@@ -495,7 +495,7 @@ jobs:
 
             const commentBody = `## 🚀 V2 Auto-Deployment Complete!\n\n` +
                               `🔗 **Direct Test URL (non-SSL)** [${deploymentUrl}](${deploymentUrl})\n\n` +
-                              portalNote +
+                              processorNote +
                               storybookNote +
                               `_This deployment will be automatically cleaned up when the PR is closed._\n\n` +
                               `🔄 **Auto-deployed** for approved V2 contributors.`;

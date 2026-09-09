@@ -1,6 +1,6 @@
 /**
  * Pure money/meter helpers shared by the editor cloud surface and the admin
- * portal. These carry backend-coupled invariants (the cap→PDF estimate mirrors
+ * processor. These carry backend-coupled invariants (the cap→PDF estimate mirrors
  * the server's {@code docCapForMoney}; the meter bands mirror the BE warn/degrade
  * thresholds), so keeping one copy is what stops the FE estimate silently
  * diverging from the backend when a rate encoding changes.

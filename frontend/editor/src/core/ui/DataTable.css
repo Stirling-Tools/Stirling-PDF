@@ -191,7 +191,7 @@
 
 /*
  * Cell kinds (sui-dtc__*): the locked cell vocabulary. These absorb the
- * per-namespace portal-*__ cell styles (mono / muted / cell-stack / name-cell /
+ * per-namespace processor-*__ cell styles (mono / muted / cell-stack / name-cell /
  * caret …) that every table used to re-implement.
  */
 .sui-dtc__text {

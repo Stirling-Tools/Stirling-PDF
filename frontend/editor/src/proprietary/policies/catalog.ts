@@ -104,14 +104,14 @@ export interface CatalogueEntry {
 const ENDPOINT_LABELS: Partial<
   Record<ToolEndpoint | "/api/v1/ai/tools/classify-and-label", string>
 > = {
-  "/api/v1/security/auto-redact": "portal.policies.endpoints.autoRedact",
-  "/api/v1/security/sanitize-pdf": "portal.policies.endpoints.sanitizePdf",
-  "/api/v1/security/add-watermark": "portal.policies.endpoints.addWatermark",
-  "/api/v1/misc/ocr-pdf": "portal.policies.endpoints.ocrPdf",
-  "/api/v1/misc/flatten": "portal.policies.endpoints.flatten",
-  "/api/v1/misc/compress-pdf": "portal.policies.endpoints.compressPdf",
+  "/api/v1/security/auto-redact": "processor.policies.endpoints.autoRedact",
+  "/api/v1/security/sanitize-pdf": "processor.policies.endpoints.sanitizePdf",
+  "/api/v1/security/add-watermark": "processor.policies.endpoints.addWatermark",
+  "/api/v1/misc/ocr-pdf": "processor.policies.endpoints.ocrPdf",
+  "/api/v1/misc/flatten": "processor.policies.endpoints.flatten",
+  "/api/v1/misc/compress-pdf": "processor.policies.endpoints.compressPdf",
   "/api/v1/ai/tools/classify-and-label":
-    "portal.policies.endpoints.classifyAndLabel",
+    "processor.policies.endpoints.classifyAndLabel",
 };
 
 export function humanizeEndpoint(
@@ -135,69 +135,69 @@ const DEFAULT_PII_PATTERNS: string[] = [
 export const POLICY_CATEGORIES: PolicyCategory[] = [
   {
     id: "ingestion",
-    label: "portal.policies.categories.ingestion.label",
+    label: "processor.policies.categories.ingestion.label",
     tone: "blue",
-    desc: "portal.policies.categories.ingestion.desc",
+    desc: "processor.policies.categories.ingestion.desc",
     providesClassification: true,
     comingSoon: true,
   },
   {
     id: "security",
-    label: "portal.policies.categories.security.label",
+    label: "processor.policies.categories.security.label",
     tone: "purple",
-    desc: "portal.policies.categories.security.desc",
+    desc: "processor.policies.categories.security.desc",
   },
   {
     id: "classification",
-    label: "portal.policies.categories.classification.label",
+    label: "processor.policies.categories.classification.label",
     tone: "blue",
-    desc: "portal.policies.categories.classification.desc",
+    desc: "processor.policies.categories.classification.desc",
     providesClassification: true,
   },
   {
     id: "compliance",
-    label: "portal.policies.categories.compliance.label",
+    label: "processor.policies.categories.compliance.label",
     tone: "amber",
-    desc: "portal.policies.categories.compliance.desc",
+    desc: "processor.policies.categories.compliance.desc",
     comingSoon: true,
   },
   {
     id: "routing",
-    label: "portal.policies.categories.routing.label",
+    label: "processor.policies.categories.routing.label",
     tone: "green",
-    desc: "portal.policies.categories.routing.desc",
+    desc: "processor.policies.categories.routing.desc",
     comingSoon: true,
   },
   {
     id: "retention",
-    label: "portal.policies.categories.retention.label",
+    label: "processor.policies.categories.retention.label",
     tone: "neutral",
-    desc: "portal.policies.categories.retention.desc",
+    desc: "processor.policies.categories.retention.desc",
     comingSoon: true,
   },
 ];
 
 export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
   ingestion: {
-    summary: "portal.policies.config.ingestion.summary",
+    summary: "processor.policies.config.ingestion.summary",
     rules: [
-      "portal.policies.config.ingestion.rules.0",
-      "portal.policies.config.ingestion.rules.1",
-      "portal.policies.config.ingestion.rules.2",
-      "portal.policies.config.ingestion.rules.3",
+      "processor.policies.config.ingestion.rules.0",
+      "processor.policies.config.ingestion.rules.1",
+      "processor.policies.config.ingestion.rules.2",
+      "processor.policies.config.ingestion.rules.3",
     ],
-    scopeLabel: "portal.policies.config.scopeAll",
+    scopeLabel: "processor.policies.config.scopeAll",
     defaultOperations: [policyStep("ocr"), policyStep("flatten")],
     fields: [
       {
-        label: "portal.policies.config.ingestion.fields.minConfidence",
+        label: "processor.policies.config.ingestion.fields.minConfidence",
         key: "minConfidence",
         type: "select",
         value: "p80",
         options: ["p60", "p70", "p80", "p90", "p95"],
       },
       {
-        label: "portal.policies.config.ingestion.fields.belowThreshold",
+        label: "processor.policies.config.ingestion.fields.belowThreshold",
         key: "belowThreshold",
         type: "select",
         value: "flagForReview",
@@ -206,13 +206,13 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
     ],
   },
   security: {
-    summary: "portal.policies.config.security.summary",
+    summary: "processor.policies.config.security.summary",
     rules: [
-      "portal.policies.config.security.rules.0",
-      "portal.policies.config.security.rules.1",
-      "portal.policies.config.security.rules.2",
+      "processor.policies.config.security.rules.0",
+      "processor.policies.config.security.rules.1",
+      "processor.policies.config.security.rules.2",
     ],
-    scopeLabel: "portal.policies.config.scopeAll",
+    scopeLabel: "processor.policies.config.scopeAll",
     defaultOperations: [
       // Flatten to image so redactions can't be lifted off.
       policyStep("redact", {
@@ -228,23 +228,23 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
     fields: [],
   },
   classification: {
-    summary: "portal.policies.config.classification.summary",
+    summary: "processor.policies.config.classification.summary",
     rules: [
-      "portal.policies.config.classification.rules.0",
-      "portal.policies.config.classification.rules.1",
+      "processor.policies.config.classification.rules.0",
+      "processor.policies.config.classification.rules.1",
     ],
-    scopeLabel: "portal.policies.config.scopeAll",
+    scopeLabel: "processor.policies.config.scopeAll",
     defaultOperations: [policyStep("classify")],
     fields: [],
   },
   compliance: {
-    summary: "portal.policies.config.compliance.summary",
+    summary: "processor.policies.config.compliance.summary",
     rules: [
-      "portal.policies.config.compliance.rules.0",
-      "portal.policies.config.compliance.rules.1",
-      "portal.policies.config.compliance.rules.2",
+      "processor.policies.config.compliance.rules.0",
+      "processor.policies.config.compliance.rules.1",
+      "processor.policies.config.compliance.rules.2",
     ],
-    scopeLabel: "portal.policies.config.scopeAll",
+    scopeLabel: "processor.policies.config.scopeAll",
     defaultOperations: [
       policyStep("sanitize"),
       policyStep("flatten"),
@@ -252,14 +252,14 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
     ],
     fields: [
       {
-        label: "portal.policies.config.compliance.fields.frameworks",
+        label: "processor.policies.config.compliance.fields.frameworks",
         key: "frameworks",
         type: "chips",
         value: ["hipaa"],
         options: ["hipaa", "gdpr", "soc2", "fedramp", "pciDss", "iso27001"],
       },
       {
-        label: "portal.policies.config.compliance.fields.onViolation",
+        label: "processor.policies.config.compliance.fields.onViolation",
         key: "onViolation",
         type: "select",
         value: "flagForReview",
@@ -271,13 +271,13 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
         ],
       },
       {
-        label: "portal.policies.config.compliance.fields.auditTrail",
+        label: "processor.policies.config.compliance.fields.auditTrail",
         key: "auditTrail",
         type: "toggle",
         value: true,
       },
       {
-        label: "portal.policies.config.compliance.fields.accessLog",
+        label: "processor.policies.config.compliance.fields.accessLog",
         key: "accessLog",
         type: "toggle",
         value: true,
@@ -285,30 +285,30 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
     ],
   },
   routing: {
-    summary: "portal.policies.config.routing.summary",
+    summary: "processor.policies.config.routing.summary",
     rules: [
-      "portal.policies.config.routing.rules.0",
-      "portal.policies.config.routing.rules.1",
-      "portal.policies.config.routing.rules.2",
+      "processor.policies.config.routing.rules.0",
+      "processor.policies.config.routing.rules.1",
+      "processor.policies.config.routing.rules.2",
     ],
-    scopeLabel: "portal.policies.config.scopeAll",
+    scopeLabel: "processor.policies.config.scopeAll",
     defaultOperations: [policyStep("compress")],
     fields: [
       {
-        label: "portal.policies.config.routing.fields.destination",
+        label: "processor.policies.config.routing.fields.destination",
         key: "destination",
         type: "select",
         value: "documents",
         options: ["documents", "s3Bucket", "sharePoint", "webhook"],
       },
       {
-        label: "portal.policies.config.routing.fields.webhookUrl",
+        label: "processor.policies.config.routing.fields.webhookUrl",
         key: "webhookUrl",
         type: "text",
         value: "",
       },
       {
-        label: "portal.policies.config.routing.fields.notify",
+        label: "processor.policies.config.routing.fields.notify",
         key: "notify",
         type: "toggle",
         value: false,
@@ -316,17 +316,17 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
     ],
   },
   retention: {
-    summary: "portal.policies.config.retention.summary",
+    summary: "processor.policies.config.retention.summary",
     rules: [
-      "portal.policies.config.retention.rules.0",
-      "portal.policies.config.retention.rules.1",
-      "portal.policies.config.retention.rules.2",
+      "processor.policies.config.retention.rules.0",
+      "processor.policies.config.retention.rules.1",
+      "processor.policies.config.retention.rules.2",
     ],
-    scopeLabel: "portal.policies.config.scopeAll",
+    scopeLabel: "processor.policies.config.scopeAll",
     defaultOperations: [policyStep("compress")],
     fields: [
       {
-        label: "portal.policies.config.retention.fields.keepFor",
+        label: "processor.policies.config.retention.fields.keepFor",
         key: "keepFor",
         type: "select",
         value: "sevenYears",
@@ -339,14 +339,14 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
         ],
       },
       {
-        label: "portal.policies.config.retention.fields.archiveAfter",
+        label: "processor.policies.config.retention.fields.archiveAfter",
         key: "archiveAfter",
         type: "select",
         value: "never",
         options: ["thirtyDays", "ninetyDays", "oneYear", "never"],
       },
       {
-        label: "portal.policies.config.retention.fields.immutableHold",
+        label: "processor.policies.config.retention.fields.immutableHold",
         key: "immutableHold",
         type: "toggle",
         value: false,

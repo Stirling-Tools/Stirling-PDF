@@ -31,7 +31,7 @@ function renderInProcessorShape() {
           initialConfig={{ enableEasterEggs: true }}
         >
           <QuickNavHostProvider>
-            <QuickNavHostBridge portalAccess onOpenSettings={() => {}} />
+            <QuickNavHostBridge processorAccess onOpenSettings={() => {}} />
           </QuickNavHostProvider>
         </AppConfigProvider>
       </QueryClientProvider>

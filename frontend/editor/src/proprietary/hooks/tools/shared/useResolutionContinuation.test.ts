@@ -48,11 +48,11 @@ function offer(
 ): NotificationActionOffer {
   return {
     id,
-    labelKey: `portal.failures.action.${id.toLowerCase()}`,
+    labelKey: `processor.failures.action.${id.toLowerCase()}`,
     defaultLabel: id,
     slot,
     enabled,
-    disabledReasonKey: enabled ? null : "portal.failures.disabled.closed",
+    disabledReasonKey: enabled ? null : "processor.failures.disabled.closed",
   };
 }
 
@@ -66,7 +66,7 @@ function policyRow(overrides: Partial<AppNotification> = {}): AppNotification {
     ownership: "MINE",
     severity: "ERROR",
     status: "NEW",
-    titleKey: "portal.failures.kind.inputPasswordProtected.title",
+    titleKey: "processor.failures.kind.inputPasswordProtected.title",
     defaultTitle: "Password-protected document",
     detail: "The PDF Document is passworded",
     fileId: "f-locked",

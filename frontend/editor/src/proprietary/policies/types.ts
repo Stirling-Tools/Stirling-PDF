@@ -2,10 +2,10 @@
  * Wire types for the Stirling policy API (`/api/v1/policies`), the decoded
  * frontend shape, and the display types used to render stats and activity.
  *
- * The backend stores all portal-level metadata (categoryId, sources, scope,
+ * The backend stores all processor-level metadata (categoryId, sources, scope,
  * reviewer, fieldValues, runOn, output settings) inside `output.options` — the
  * same "options bag" the editor uses. `trigger` is always null for
- * portal/editor-authored policies; the editor fires runs on upload/export via
+ * processor/editor-authored policies; the editor fires runs on upload/export via
  * `/run`, so there is no server-side trigger.
  */
 

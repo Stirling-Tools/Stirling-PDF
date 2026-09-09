@@ -68,7 +68,7 @@ public class ConnectService {
         UNAVAILABLE
     }
 
-    /** What the portal renders. */
+    /** What the processor renders. */
     public record ConnectStatus(
             Phase phase, String authorizeUrl, Long secondsRemaining, Long teamId) {
         static ConnectStatus of(Phase phase) {

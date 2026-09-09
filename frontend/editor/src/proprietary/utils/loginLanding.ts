@@ -1,11 +1,13 @@
 import apiClient from "@app/services/apiClient";
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
-import { PORTAL_BASENAME } from "@app/routes/portalBasename";
+import { PROCESSOR_BASENAME } from "@app/routes/processorBasename";
 
 export type LoginLandingMode = "editor" | "dynamic";
 
-export function isPortalAvailable(): boolean {
-  return import.meta.env.VITE_INCLUDE_PORTAL === "true" || import.meta.env.DEV;
+export function isProcessorAvailable(): boolean {
+  return (
+    import.meta.env.VITE_INCLUDE_PROCESSOR === "true" || import.meta.env.DEV
+  );
 }
 
 export function loginLandingMode(): LoginLandingMode {
@@ -15,21 +17,21 @@ export function loginLandingMode(): LoginLandingMode {
 }
 
 interface MeUser {
-  portalAccess?: boolean;
+  processorAccess?: boolean;
   loginLandingView?: string;
 }
 
 export type RootDestination = "processor" | "editor" | "signedOut";
 
 function editorRegardless(): boolean {
-  return loginLandingMode() !== "dynamic" || !isPortalAvailable();
+  return loginLandingMode() !== "dynamic" || !isProcessorAvailable();
 }
 
 export async function resolveRootTarget(): Promise<string | null> {
   if (editorRegardless()) return EDITOR_BASENAME;
   const destination = await fetchRootDestination();
   if (destination === "signedOut") return null;
-  return destination === "processor" ? PORTAL_BASENAME : EDITOR_BASENAME;
+  return destination === "processor" ? PROCESSOR_BASENAME : EDITOR_BASENAME;
 }
 
 export async function resolveLandingPath(): Promise<string> {
@@ -48,7 +50,7 @@ export async function fetchRootDestination(): Promise<RootDestination> {
   }
   if (!user) return "signedOut";
 
-  return user.loginLandingView === "processor" && user.portalAccess === true
+  return user.loginLandingView === "processor" && user.processorAccess === true
     ? "processor"
     : "editor";
 }

@@ -1,5 +1,5 @@
 /**
- * Bidirectional codec between the portal's frontend `PolicyDecodedState` and
+ * Bidirectional codec between the processor's frontend `PolicyDecodedState` and
  * the backend `WirePolicy`. All policy-level metadata rides in
  * `output.options`; `trigger` is always null (the editor fires runs on
  * upload/export via `/run`). Mirrors the editor's `buildBackendPolicy` /

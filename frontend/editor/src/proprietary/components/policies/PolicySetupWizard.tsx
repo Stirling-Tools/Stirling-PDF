@@ -103,77 +103,77 @@ const CAPABILITY_META: Record<
   { labelKey: string; labelEn: string; descKey: string; descEn: string }
 > = {
   redact: {
-    labelKey: "portal.policies.wizard.capability.redact.label",
+    labelKey: "processor.policies.wizard.capability.redact.label",
     labelEn: "Redact sensitive information",
-    descKey: "portal.policies.wizard.capability.redact.desc",
+    descKey: "processor.policies.wizard.capability.redact.desc",
     descEn:
       "Finds and blacks out sensitive details — like Social Security and card numbers — so they can't be read.",
   },
   sanitize: {
-    labelKey: "portal.policies.wizard.capability.sanitize.label",
+    labelKey: "processor.policies.wizard.capability.sanitize.label",
     labelEn: "Strip active content",
-    descKey: "portal.policies.wizard.capability.sanitize.desc",
+    descKey: "processor.policies.wizard.capability.sanitize.desc",
     descEn:
       "Removes hidden JavaScript so nothing can run automatically when the document is opened.",
   },
 
   timestampPdf: {
-    labelKey: "portal.policies.wizard.capability.timestampPdf.label",
+    labelKey: "processor.policies.wizard.capability.timestampPdf.label",
     labelEn: "Add a trusted timestamp",
-    descKey: "portal.policies.wizard.capability.timestampPdf.desc",
+    descKey: "processor.policies.wizard.capability.timestampPdf.desc",
     descEn:
       "Proves the document existed in this exact form at a point in time, using an independent timestamp authority. Only a hash is sent - the document never leaves your server.",
   },
   watermark: {
-    labelKey: "portal.policies.wizard.capability.watermark.label",
+    labelKey: "processor.policies.wizard.capability.watermark.label",
     labelEn: "Apply a watermark",
-    descKey: "portal.policies.wizard.capability.watermark.desc",
+    descKey: "processor.policies.wizard.capability.watermark.desc",
     descEn: "Stamps a visible mark (e.g. “Confidential”) across every page.",
   },
   ocr: {
-    labelKey: "portal.policies.wizard.capability.ocr.label",
+    labelKey: "processor.policies.wizard.capability.ocr.label",
     labelEn: "Make text searchable",
-    descKey: "portal.policies.wizard.capability.ocr.desc",
+    descKey: "processor.policies.wizard.capability.ocr.desc",
     descEn: "Runs OCR so scanned pages become selectable, searchable text.",
   },
   flatten: {
-    labelKey: "portal.policies.wizard.capability.flatten.label",
+    labelKey: "processor.policies.wizard.capability.flatten.label",
     labelEn: "Flatten the document",
-    descKey: "portal.policies.wizard.capability.flatten.desc",
+    descKey: "processor.policies.wizard.capability.flatten.desc",
     descEn:
       "Merges form fields and annotations into the page so they can't be edited.",
   },
   compress: {
-    labelKey: "portal.policies.wizard.capability.compress.label",
+    labelKey: "processor.policies.wizard.capability.compress.label",
     labelEn: "Reduce file size",
-    descKey: "portal.policies.wizard.capability.compress.desc",
+    descKey: "processor.policies.wizard.capability.compress.desc",
     descEn: "Compresses the document to a smaller file size.",
   },
   classify: {
-    labelKey: "portal.policies.wizard.capability.classify.label",
+    labelKey: "processor.policies.wizard.capability.classify.label",
     labelEn: "Classify the document",
-    descKey: "portal.policies.wizard.capability.classify.desc",
+    descKey: "processor.policies.wizard.capability.classify.desc",
     descEn:
       "Identifies the document's type from your team's labels and tags it, so it files and searches by category.",
   },
   purviewApplyLabel: {
-    labelKey: "portal.policies.wizard.capability.purviewApplyLabel.label",
+    labelKey: "processor.policies.wizard.capability.purviewApplyLabel.label",
     labelEn: "Apply a Microsoft Purview sensitivity label",
-    descKey: "portal.policies.wizard.capability.purviewApplyLabel.desc",
+    descKey: "processor.policies.wizard.capability.purviewApplyLabel.desc",
     descEn:
       "Marks the document with one of your organisation's Purview labels, so Purview-aware tools recognise how sensitive it is.",
   },
   purviewReadLabel: {
-    labelKey: "portal.policies.wizard.capability.purviewReadLabel.label",
+    labelKey: "processor.policies.wizard.capability.purviewReadLabel.label",
     labelEn: "Read the document's Purview label",
-    descKey: "portal.policies.wizard.capability.purviewReadLabel.desc",
+    descKey: "processor.policies.wizard.capability.purviewReadLabel.desc",
     descEn:
       "Reports the Purview label a document already carries, so the rest of the policy can act on how sensitive it is.",
   },
   externalApiCall: {
-    labelKey: "portal.policies.wizard.capability.externalApiCall.label",
+    labelKey: "processor.policies.wizard.capability.externalApiCall.label",
     labelEn: "Send the document to another system",
-    descKey: "portal.policies.wizard.capability.externalApiCall.desc",
+    descKey: "processor.policies.wizard.capability.externalApiCall.desc",
     descEn:
       "Hands the document to a system you have connected, and records what it answered.",
   },
@@ -372,7 +372,7 @@ function PolicySetupWizardBody({
   async function submit() {
     if (submitting) return;
     if (enabledTools.length === 0) {
-      setError(t("portal.policies.wizard.errors.noTools"));
+      setError(t("processor.policies.wizard.errors.noTools"));
       return;
     }
     setError(null);
@@ -383,7 +383,7 @@ function PolicySetupWizardBody({
       setSubmitting(false);
       // Surface the backend's actual reason rather than a generic failure.
       const message = formatError?.(e) ?? (e instanceof Error ? e.message : "");
-      setError(message || t("portal.policies.wizard.errors.saveFailed"));
+      setError(message || t("processor.policies.wizard.errors.saveFailed"));
     }
   }
 
@@ -402,13 +402,13 @@ function PolicySetupWizardBody({
         <div className="portal-policies__wizard-section">
           <p className="portal-policies__wizard-desc">
             {t(
-              "portal.policies.wizard.classification.description",
+              "processor.policies.wizard.classification.description",
               "Every uploaded document is classified against the built-in labels and tagged with the types that fit. The label set is shared across your whole team.",
             )}
           </p>
           <h3 className="portal-policies__wizard-heading">
             {t(
-              "portal.policies.wizard.classification.labelsHeading",
+              "processor.policies.wizard.classification.labelsHeading",
               "Classification labels",
             )}
           </h3>
@@ -420,7 +420,7 @@ function PolicySetupWizardBody({
         <div className="portal-policies__wizard-section">
           <p className="portal-policies__wizard-desc">
             {t(
-              "portal.policies.wizard.workflow.description",
+              "processor.policies.wizard.workflow.description",
               "Choose what this policy does to every document it processes.",
             )}
           </p>
@@ -512,10 +512,10 @@ function PolicySetupWizardBody({
         <span className="portal-policies__wizard-title">
           <PolicyCategoryBadge category={category} />
           {isEdit
-            ? t("portal.policies.wizard.title.edit", {
+            ? t("processor.policies.wizard.title.edit", {
                 category: t(category.label),
               })
-            : t("portal.policies.wizard.title.setUp", {
+            : t("processor.policies.wizard.title.setUp", {
                 category: t(category.label),
               })}
         </span>
@@ -524,7 +524,7 @@ function PolicySetupWizardBody({
       footer={
         <div className="portal-policies__wizard-foot">
           <Button variant="tertiary" size="sm" onClick={onClose}>
-            {t("portal.policies.wizard.actions.cancel")}
+            {t("processor.policies.wizard.actions.cancel")}
           </Button>
           <Button
             variant="tertiary"
@@ -535,13 +535,13 @@ function PolicySetupWizardBody({
               onCustomise
                 ? undefined
                 : t(
-                    "portal.policies.wizard.actions.customiseUnavailable",
+                    "processor.policies.wizard.actions.customiseUnavailable",
                     "The full builder lives on Processor",
                   )
             }
             leftSection={<TuneRoundedIcon style={{ fontSize: "1.05rem" }} />}
           >
-            {t("portal.policies.wizard.actions.customise")}
+            {t("processor.policies.wizard.actions.customise")}
           </Button>
           <Button
             size="sm"
@@ -551,8 +551,8 @@ function PolicySetupWizardBody({
             disabled={readOnly}
           >
             {isEdit
-              ? t("portal.policies.wizard.actions.saveChanges")
-              : t("portal.policies.wizard.actions.enablePolicy")}
+              ? t("processor.policies.wizard.actions.saveChanges")
+              : t("processor.policies.wizard.actions.enablePolicy")}
           </Button>
         </div>
       }

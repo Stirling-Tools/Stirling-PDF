@@ -432,7 +432,7 @@ class SupabaseSecurityConfigMoreTest {
         @ValueSource(
                 strings = {
                     "/api/v1/instance/sync",
-                    // The instance serves its own audit trail and Documents feed, so the portal
+                    // The instance serves its own audit trail and Documents feed, so the processor
                     // reads these from apiClient.local. They must never need cross-origin access.
                     "/api/v1/proprietary/ui-data/documents",
                     "/api/v1/proprietary/ui-data/audit-export",

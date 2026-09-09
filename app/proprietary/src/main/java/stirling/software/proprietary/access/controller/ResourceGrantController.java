@@ -29,12 +29,16 @@ import stirling.software.proprietary.security.database.repository.UserRepository
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.TeamRepository;
 
-/** Admin endpoints to grant/revoke access to gated resources (the portal, integration configs). */
+/**
+ * Admin endpoints to grant/revoke access to gated resources (the processor, integration configs).
+ */
 @RestController
 @RequestMapping("/api/v1/admin/access")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ADMIN')")
-@Tag(name = "Access Control", description = "Manage resource access grants (portal, integrations)")
+@Tag(
+        name = "Access Control",
+        description = "Manage resource access grants (processor, integrations)")
 public class ResourceGrantController {
 
     private final ResourceAccessService accessService;
@@ -70,8 +74,8 @@ public class ResourceGrantController {
                                     "resourceType, principalType and principalId are required"));
         }
         // PORTAL is a singleton (empty resourceId); every other type must name a resource.
-        boolean portal = request.resourceType() == ResourceType.PORTAL;
-        if (!portal && (request.resourceId() == null || request.resourceId().isBlank())) {
+        boolean processor = request.resourceType() == ResourceType.PORTAL;
+        if (!processor && (request.resourceId() == null || request.resourceId().isBlank())) {
             return ResponseEntity.badRequest()
                     .body(Map.of("error", "resourceId is required for " + request.resourceType()));
         }
@@ -82,7 +86,7 @@ public class ResourceGrantController {
         }
         AccessPermission permission =
                 request.permission() == null ? AccessPermission.USE : request.permission();
-        String resourceId = portal ? "" : request.resourceId();
+        String resourceId = processor ? "" : request.resourceId();
         ResourceGrant grant =
                 accessService.grant(
                         request.resourceType(),

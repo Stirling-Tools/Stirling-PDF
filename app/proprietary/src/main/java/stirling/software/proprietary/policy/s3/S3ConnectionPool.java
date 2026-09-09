@@ -27,7 +27,7 @@ import software.amazon.awssdk.services.s3.S3Configuration;
  * (the URL-connection HTTP client holds no pooled sockets or threads). Clients sign exclusively
  * with the spec's own credentials - there is deliberately no fallback to the server's AWS
  * credential chain, so user-supplied config can never borrow the host's identity. Endpoints are
- * guarded against private addresses before a client is ever built, since they come from portal
+ * guarded against private addresses before a client is ever built, since they come from processor
  * users rather than the operator.
  */
 @Service

@@ -68,7 +68,7 @@ import type {
 } from "@app/billing";
 
 // ─── Public types ───────────────────────────────────────────────────────
-// The wallet contract lives in @app/billing (shared with the admin portal).
+// The wallet contract lives in @app/billing (shared with the admin processor).
 // Re-exported so existing `@app/hooks/useWallet` importers keep their imports.
 export type {
   Wallet,

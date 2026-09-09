@@ -39,7 +39,7 @@ export function PipelineTemplateCard({
       onSelect={() => onOpen(entry)}
       cta={
         <>
-          {t("portal.pipelines.templates.setUp")}
+          {t("processor.pipelines.templates.setUp")}
           <ArrowForwardRoundedIcon style={{ fontSize: "1rem" }} />
         </>
       }
@@ -47,8 +47,8 @@ export function PipelineTemplateCard({
         <>
           <LockOutlinedIcon style={{ fontSize: "0.95rem" }} />
           {comingSoon
-            ? t("portal.policies.card.comingSoon")
-            : (lockedLabel ?? t("portal.policies.card.requiresAiEngine"))}
+            ? t("processor.policies.card.comingSoon")
+            : (lockedLabel ?? t("processor.policies.card.requiresAiEngine"))}
         </>
       }
     />

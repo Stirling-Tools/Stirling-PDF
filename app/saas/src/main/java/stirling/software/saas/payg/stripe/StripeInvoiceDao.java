@@ -30,11 +30,11 @@ import lombok.extern.slf4j.Slf4j;
 public class StripeInvoiceDao {
 
     /**
-     * One invoice row as the portal needs it. Money is in minor units of {@code currency} (e.g.
+     * One invoice row as the processor needs it. Money is in minor units of {@code currency} (e.g.
      * cents for USD). {@code hostedInvoiceUrl} and {@code invoicePdf} are Stripe-hosted links that
      * are stable for the lifetime of the invoice; safe to use as deep links from the UI.
      *
-     * <p>{@code description} is the product name from the subscription chain — the portal renders
+     * <p>{@code description} is the product name from the subscription chain — the processor renders
      * this as the row label (matching Stripe's customer-portal row layout). Falls back to the
      * invoice's own {@code description} field, then to null when neither is set.
      */
@@ -62,7 +62,7 @@ public class StripeInvoiceDao {
     // The LATERAL join walks the same subscription → subscription_items → prices
     // → products chain {@link StripeSubscriptionDao} uses to get the per-doc
     // rate; here we use it to get the product NAME (e.g. "Stirling Processor
-    // Plan") so the portal can render Stripe's row label rather than the
+    // Plan") so the processor can render Stripe's row label rather than the
     // monospace invoice id. Falls back to {@code i.description}, then null.
     private static final String QUERY =
             "SELECT i.id, i.number, i.status::text AS status,"

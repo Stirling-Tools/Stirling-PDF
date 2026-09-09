@@ -1,7 +1,7 @@
 /**
  * Shared translation-coverage engine for the frontend i18n suites.
  *
- * The editor and the portal both keep UI strings in a US-English source locale
+ * The editor and the processor both keep UI strings in a US-English source locale
  * (`public/locales/en-US/translation.toml`) and look them up with
  * react-i18next's `t()`. These helpers walk a project's source via the
  * TypeScript AST (finding static `t("...")` keys, `i18nKey` props, and dynamic
@@ -64,14 +64,14 @@ const front = (rel: string): string => path.join(FRONTEND_ROOT, rel);
 
 /**
  * The projects the i18n suites guard. Each carries its own ignore lists: the
- * editor exempts a few runtime-assembled key families; the portal starts clean.
+ * editor exempts a few runtime-assembled key families; the processor starts clean.
  */
 export const I18N_PROJECTS: TranslationProject[] = [
   {
     name: "editor",
-    // One project over the whole editor tree, including the portal layer. Portal
-    // strings live under portal.* in the shared locale and are referenced with
-    // that prefix in source (t("portal.users.title")), so they validate here
+    // One project over the whole editor tree, including the processor layer. Processor
+    // strings live under processor.* in the shared locale and are referenced with
+    // that prefix in source (t("processor.users.title")), so they validate here
     // like any other key.
     srcRoot: front("editor/src"),
     localeFile: front("editor/public/locales/en-US/translation.toml"),
@@ -86,36 +86,36 @@ export const I18N_PROJECTS: TranslationProject[] = [
       /^account\./,
       // [language] direction is read by the i18n layer, never as a UI string.
       /^language\.direction$/,
-      // Portal source-type copy is referenced via metadata keys in
+      // Processor source-type copy is referenced via metadata keys in
       // components/sources/sourceTypes.ts (t(field.labelKey)), invisible to the
       // static scan.
-      /^portal\.sources\.types\./,
+      /^processor\.sources\.types\./,
       // The connection catalogue (connectionTypes.ts) mirrors source types: every key is
       // t(`${PREFIX}.${id}.label`) / t(`${COMMON}.${field}.label`) with multi-segment const
       // prefixes, so the whole family is matched here rather than by the shape heuristic.
-      /^portal\.connections\.(types|commonFields)\./,
-      // Portal catalogue copy stored as i18n keys in api/<surface>.ts constants
+      /^processor\.connections\.(types|commonFields)\./,
+      // Processor catalogue copy stored as i18n keys in api/<surface>.ts constants
       // (label maps, role/policy/journey catalogues) and rendered via
       // t(constant), invisible to the static scan.
-      /^portal\.documents\.(status|audit)\./,
-      /^portal\.components\.(maturity|billingUnit)\./,
-      /^portal\.home\.(pipelineTemplates|pipelineStages)\./,
-      /^portal\.procurement\.journeySteps\./,
-      /^portal\.users\.roles\./,
-      /^portal\.policies\.(categories|config|endpoints)\./,
+      /^processor\.documents\.(status|audit)\./,
+      /^processor\.components\.(maturity|billingUnit)\./,
+      /^processor\.home\.(pipelineTemplates|pipelineStages)\./,
+      /^processor\.procurement\.journeySteps\./,
+      /^processor\.users\.roles\./,
+      /^processor\.policies\.(categories|config|endpoints)\./,
       // The integration operations catalogue (stepOperations.ts) assembles every key as
       // t(`${PREFIX}.${id}.label`) where PREFIX is the multi-segment const
-      // "portal.policies.operations" - the shape heuristic treats that interpolation as one
+      // "processor.policies.operations" - the shape heuristic treats that interpolation as one
       // segment, so this whole catalogue-driven family is matched here instead.
-      /^portal\.policies\.operations\./,
+      /^processor\.policies\.operations\./,
       // Server-sent keys rendered with t(thatKey), so nothing in source names them.
-      /^portal\.failures\.disabled\./,
-      /^portal\.failures\.action\./,
+      /^processor\.failures\.disabled\./,
+      /^processor\.failures\.action\./,
       // Encryption panel copy keyed by backend enum values: key status, write
       // state, migration state, and the reason a status read was refused. Each
       // is t(`...${value}`) where the value comes from the API response.
-      /^portal\.infrastructure\.encryption\.(status|writeState|unavailable)\./,
-      /^portal\.infrastructure\.encryption\.migration\.state\./,
+      /^processor\.infrastructure\.encryption\.(status|writeState|unavailable)\./,
+      /^processor\.infrastructure\.encryption\.migration\.state\./,
     ],
     minUsedKeys: 100,
     minLocaleKeys: 100,

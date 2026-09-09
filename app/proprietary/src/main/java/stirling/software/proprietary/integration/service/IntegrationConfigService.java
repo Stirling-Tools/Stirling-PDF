@@ -77,7 +77,7 @@ public class IntegrationConfigService {
                         : request.defaultAccess());
 
         // TEAM scope may omit the team id: default to the caller's own team so clients (the
-        // portal) need not know it. assignOwnership still enforces admin-or-leader of that team.
+        // processor) need not know it. assignOwnership still enforces admin-or-leader of that team.
         Long ownerTeamId = request.ownerTeamId();
         if (ownerTeamId == null && scope == OwnerScope.TEAM && currentUser.getTeam() != null) {
             ownerTeamId = currentUser.getTeam().getId();

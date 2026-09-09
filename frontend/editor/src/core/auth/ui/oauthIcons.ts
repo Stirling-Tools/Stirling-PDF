@@ -4,7 +4,7 @@
  * Importing them as modules (rather than referencing /Login/*.svg under a
  * build-time BASE_PATH) lets every consumer (the shared OAuthButtons, the
  * editor's saas/desktop login buttons, and the config provider list) share one
- * copy that works in both the editor and the portal bundles.
+ * copy that works in both the editor and the processor bundles.
  */
 import googleIcon from "@app/assets/login/google.svg";
 import githubIcon from "@app/assets/login/github.svg";

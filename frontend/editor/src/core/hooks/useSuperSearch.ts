@@ -89,7 +89,7 @@ const GROUP_ORDER: SuperSearchGroupId[] = [
 export function isProcessorGateOpen(gates: SuperSearchGates | null): boolean {
   return (
     !!gates &&
-    (gates.portalAccessible === true || gates.isAdmin || !gates.loginEnabled)
+    (gates.processorAccessible === true || gates.isAdmin || !gates.loginEnabled)
   );
 }
 
@@ -103,12 +103,17 @@ export function useSuperSearchGates(): SuperSearchGates | null {
         ? {
             isAdmin: authState.isAdmin ?? config.isAdmin ?? false,
             loginEnabled: config.enableLogin ?? false,
-            portalAccessible: authState.portalAccess ?? false,
+            processorAccessible: authState.processorAccess ?? false,
             isAnonymous: authState.isAnonymous,
             showSettingsWhenNoLogin: config.showSettingsWhenNoLogin ?? true,
           }
         : null,
-    [authState.isAdmin, authState.isAnonymous, authState.portalAccess, config],
+    [
+      authState.isAdmin,
+      authState.isAnonymous,
+      authState.processorAccess,
+      config,
+    ],
   );
 }
 
@@ -627,7 +632,7 @@ export function useSuperSearch(
       if (groupId === "processor") return processorSection;
       if (groupId === "settings")
         return t("superSearch.group.settings", "Settings");
-      return t("portal.nav.editor", "Editor");
+      return t("processor.nav.editor", "Editor");
     };
     return [
       ...assembledGroups.map((group) => ({

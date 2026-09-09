@@ -7,7 +7,7 @@ import {
   findMissingKeys,
 } from "@app/i18n/translationAudit";
 
-// One suite per frontend app (editor + portal). The scan logic lives in
+// One suite per frontend app (editor + processor). The scan logic lives in
 // @app/i18n/translationAudit so both apps share one implementation.
 describe.each(I18N_PROJECTS)(
   "Missing translation coverage — $name",

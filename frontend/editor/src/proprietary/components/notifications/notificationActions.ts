@@ -10,9 +10,9 @@ import { NavigationActionsContext } from "@app/contexts/NavigationContext";
 import { ViewerContext } from "@app/contexts/ViewerContext";
 import { getToolUrlPath } from "@app/data/toolsTaxonomy";
 import {
-  PORTAL_BASENAME,
-  PORTAL_REVIEW_PATH,
-} from "@app/routes/portalBasename";
+  PROCESSOR_BASENAME,
+  PROCESSOR_REVIEW_PATH,
+} from "@app/routes/processorBasename";
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 import { fileStorage } from "@app/services/fileStorage";
 import {
@@ -56,11 +56,11 @@ export {
   type NotificationActionContext,
 };
 
-// The portal mounts as a sibling of AppProviders, so no workbench contexts sit above this hook.
+// The processor mounts as a sibling of AppProviders, so no workbench contexts sit above this hook.
 
 const HANDOFF_KEY = "stirling.notifications.pendingSelection";
 
-const REVIEW_DESTINATION = `${PORTAL_BASENAME}${PORTAL_REVIEW_PATH}`;
+const REVIEW_DESTINATION = `${PROCESSOR_BASENAME}${PROCESSOR_REVIEW_PATH}`;
 
 /** The document to open on arrival, and the tool to open it into. */
 interface Handoff {

@@ -45,8 +45,8 @@ RUN --mount=type=cache,id=stirling-pdf-gradle-cache,target=/home/gradle/.gradle,
 
 COPY . .
 
-# Embed the admin portal app at /portal when the deploy workflow flags it.
-ARG BUILD_PORTAL=false
+# Embed the admin processor app at /processor when the deploy workflow flags it.
+ARG BUILD_PROCESSOR=false
 # Bundle only the JPDFium native for this image's target arch.
 ARG TARGETARCH
 RUN --mount=type=cache,id=stirling-pdf-npm-cache,target=/root/.npm,sharing=locked \
@@ -55,7 +55,7 @@ RUN --mount=type=cache,id=stirling-pdf-npm-cache,target=/root/.npm,sharing=locke
     DISABLE_ADDITIONAL_FEATURES=false \
     gradle clean build \
       -PbuildWithFrontend=true \
-      -PbuildWithPortal=${BUILD_PORTAL} \
+      -PbuildWithProcessor=${BUILD_PROCESSOR} \
       -PjpdfiumPlatforms="$JPDFIUM_PLATFORM" \
       -x spotlessApply -x spotlessCheck -x test -x sonarqube \
       --no-daemon

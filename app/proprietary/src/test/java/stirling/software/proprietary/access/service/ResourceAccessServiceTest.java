@@ -45,7 +45,7 @@ class ResourceAccessServiceTest {
     private ResourceAccessService newService(PrincipalResolver resolver) throws Exception {
         ResourceAccessService s =
                 new ResourceAccessService(grantRepository, teamLeadLookup, resolver);
-        Field f = ResourceAccessService.class.getDeclaredField("portalDefaultPolicy");
+        Field f = ResourceAccessService.class.getDeclaredField("processorDefaultPolicy");
         f.setAccessible(true);
         f.set(s, DefaultAccessPolicy.ADMINS_AND_TEAM_LEADS);
         return s;
@@ -277,39 +277,40 @@ class ResourceAccessServiceTest {
                 .isFalse();
     }
 
-    // ---- portal convenience (default policy ADMINS_AND_TEAM_LEADS) ----
+    // comment-lint-allow: CMT002
+    // ---- processor convenience (default policy ADMINS_AND_TEAM_LEADS) ----
 
     @Test
-    void portalAccessibleByAdmin() {
-        assertThat(service.canAccessPortal(admin(1))).isTrue();
+    void processorAccessibleByAdmin() {
+        assertThat(service.canAccessProcessor(admin(1))).isTrue();
     }
 
     @Test
-    void portalDeniedToRegularUser() {
+    void processorDeniedToRegularUser() {
         when(grantRepository.findByResourceTypeAndResourceId(ResourceType.PORTAL, ""))
                 .thenReturn(List.of());
-        assertThat(service.canAccessPortal(user(5))).isFalse();
+        assertThat(service.canAccessProcessor(user(5))).isFalse();
     }
 
     @Test
-    void portalAllowedToLeaderOfActiveTeam() {
+    void processorAllowedToLeaderOfActiveTeam() {
         when(grantRepository.findByResourceTypeAndResourceId(ResourceType.PORTAL, ""))
                 .thenReturn(List.of());
         User leader = userInTeam(10, 21L);
         when(teamLeadLookup.isLeaderOfTeam(leader, 21L)).thenReturn(true);
-        assertThat(service.canAccessPortal(leader)).isTrue();
+        assertThat(service.canAccessProcessor(leader)).isTrue();
     }
 
     @Test
-    void portalDeniedToMemberWhoseActiveTeamTheyDoNotLead() {
+    void processorDeniedToMemberWhoseActiveTeamTheyDoNotLead() {
         // Durable home teams: a user still leads their dormant home team, but their ACTIVE
-        // team is one they only belong to -> no portal access (this is the bug-3 guard that
+        // team is one they only belong to -> no processor access (this is the bug-3 guard that
         // active-team leadership preserves once home teams stop being deleted on join).
         when(grantRepository.findByResourceTypeAndResourceId(ResourceType.PORTAL, ""))
                 .thenReturn(List.of());
         User member = userInTeam(11, 22L);
         // isLeaderOfTeam(member, 22L) left unstubbed -> false: member of active team.
-        assertThat(service.canAccessPortal(member)).isFalse();
+        assertThat(service.canAccessProcessor(member)).isFalse();
     }
 
     // ---- helpers ----

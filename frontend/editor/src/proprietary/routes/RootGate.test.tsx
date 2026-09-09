@@ -14,7 +14,7 @@ function httpError(status: number) {
 }
 
 function backend(opts: {
-  portalAccess: boolean;
+  processorAccess: boolean;
   loginLandingView?: "processor" | "editor";
 }) {
   h.get.mockImplementation((url: string) =>
@@ -22,7 +22,7 @@ function backend(opts: {
       ? Promise.resolve({
           data: {
             user: {
-              portalAccess: opts.portalAccess,
+              processorAccess: opts.processorAccess,
               loginLandingView: opts.loginLandingView,
             },
           },
@@ -71,14 +71,14 @@ const appMounted = () => screen.queryByTestId("app") !== null;
 describe("RootGate", () => {
   beforeEach(() => {
     h.get.mockReset();
-    // The portal only exists in some builds; the decision is a no-op without it.
-    vi.stubEnv("VITE_INCLUDE_PORTAL", "true");
+    // The processor only exists in some builds; the decision is a no-op without it.
+    vi.stubEnv("VITE_INCLUDE_PROCESSOR", "true");
     vi.stubEnv("VITE_LOGIN_LANDING_MODE", "dynamic");
   });
   afterEach(() => vi.unstubAllEnvs());
 
   it("renders the app untouched on every path but /", async () => {
-    backend({ portalAccess: true, loginLandingView: "processor" });
+    backend({ processorAccess: true, loginLandingView: "processor" });
     renderAt("/compress");
     expect(appMounted()).toBe(true);
     expect(at()).toBe("/compress");
@@ -86,19 +86,19 @@ describe("RootGate", () => {
   });
 
   it("sends an opted-in user to the processor", async () => {
-    backend({ portalAccess: true, loginLandingView: "processor" });
+    backend({ processorAccess: true, loginLandingView: "processor" });
     renderAt("/");
     await waitFor(() => expect(at()).toBe("/processor"));
   });
 
   it("sends everyone without the opt-in to the editor", async () => {
-    backend({ portalAccess: true });
+    backend({ processorAccess: true });
     renderAt("/");
     await waitFor(() => expect(at()).toBe("/editor"));
   });
 
   it("never boots the app on the way to the processor", async () => {
-    backend({ portalAccess: true, loginLandingView: "processor" });
+    backend({ processorAccess: true, loginLandingView: "processor" });
     renderAt("/");
     expect(appMounted()).toBe(false); // deciding
     await waitFor(() => expect(at()).toBe("/processor"));
@@ -114,23 +114,23 @@ describe("RootGate", () => {
   });
 
   it("survives StrictMode's double-invoke", async () => {
-    backend({ portalAccess: true, loginLandingView: "processor" });
+    backend({ processorAccess: true, loginLandingView: "processor" });
     renderAt("/", true);
     await waitFor(() => expect(at()).toBe("/processor"));
   });
 
   it("routes everyone to the editor when the kill switch is on", async () => {
     vi.stubEnv("VITE_LOGIN_LANDING_MODE", "editor");
-    backend({ portalAccess: true, loginLandingView: "processor" });
+    backend({ processorAccess: true, loginLandingView: "processor" });
     renderAt("/");
     await waitFor(() => expect(at()).toBe("/editor"));
     expect(h.get).not.toHaveBeenCalled();
   });
 
   it("routes to the editor when this build ships no processor", async () => {
-    vi.stubEnv("VITE_INCLUDE_PORTAL", "false");
+    vi.stubEnv("VITE_INCLUDE_PROCESSOR", "false");
     vi.stubEnv("DEV", false);
-    backend({ portalAccess: true, loginLandingView: "processor" });
+    backend({ processorAccess: true, loginLandingView: "processor" });
     renderAt("/");
     await waitFor(() => expect(at()).toBe("/editor"));
     expect(h.get).not.toHaveBeenCalled();

@@ -184,7 +184,8 @@ public interface PersistentAuditEventRepository extends JpaRepository<Persistent
     Page<PersistentAuditEvent> findByPrincipalIn(
             @Param("principals") List<String> principals, Pageable pageable);
 
-    // Noise-excluding scans for the portal: keep the page window full of meaningful events so the
+    // Noise-excluding scans for the processor: keep the page window full of meaningful events so
+    // the
     // list doesn't shrink as read/polling noise (UI_DATA/HTTP_REQUEST) grows in the recent window.
     @Query("SELECT e FROM PersistentAuditEvent e WHERE e.type NOT IN :excludedTypes")
     Page<PersistentAuditEvent> findByTypeNotIn(

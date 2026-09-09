@@ -18,8 +18,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.proprietary.model.api.apikey.CreateApiKeyRequest;
 import stirling.software.proprietary.model.api.apikey.CreatedApiKeyDto;
-import stirling.software.proprietary.model.api.apikey.PortalApiKeyDto;
-import stirling.software.proprietary.model.api.apikey.PortalApiKeysResponse;
+import stirling.software.proprietary.model.api.apikey.ProcessorApiKeyDto;
+import stirling.software.proprietary.model.api.apikey.ProcessorApiKeysResponse;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.ApiKey;
 import stirling.software.proprietary.security.model.User;
@@ -27,7 +27,7 @@ import stirling.software.proprietary.security.repository.ApiKeyDailyUsageReposit
 import stirling.software.proprietary.security.repository.ApiKeyRepository;
 
 /**
- * Portal-facing CRUD for named, personal API keys: lists, creates, and revokes the caller's own
+ * Processor-facing CRUD for named, personal API keys: lists, creates, and revokes the caller's own
  * keys. Every key belongs to exactly one user and authenticates as that user; there is no sharing.
  *
  * <p>Every pre-existing single {@code users.apiKey} is lazily represented as a key owned by that
@@ -58,7 +58,7 @@ public class ApiKeyManagementService {
 
     /** All keys the caller owns. */
     @Transactional
-    public PortalApiKeysResponse listVisibleKeys() {
+    public ProcessorApiKeysResponse listVisibleKeys() {
         User caller = requireCaller();
         migrateLegacyKey(caller);
 
@@ -83,7 +83,7 @@ public class ApiKeyManagementService {
                     .forEach(r -> totalById.put(r.getApiKeyId(), r.getTotal()));
         }
 
-        List<PortalApiKeyDto> keys =
+        List<ProcessorApiKeyDto> keys =
                 visible.stream()
                         .map(
                                 k ->
@@ -93,7 +93,7 @@ public class ApiKeyManagementService {
                                                 zeroIfNull(monthById.get(k.getId())),
                                                 zeroIfNull(totalById.get(k.getId()))))
                         .toList();
-        return PortalApiKeysResponse.builder().keys(keys).build();
+        return ProcessorApiKeysResponse.builder().keys(keys).build();
     }
 
     private static long zeroIfNull(Long value) {
@@ -204,8 +204,9 @@ public class ApiKeyManagementService {
                         });
     }
 
-    private PortalApiKeyDto toDto(ApiKey key, long usageToday, long usageMonth, long usageTotal) {
-        return PortalApiKeyDto.builder()
+    private ProcessorApiKeyDto toDto(
+            ApiKey key, long usageToday, long usageMonth, long usageTotal) {
+        return ProcessorApiKeyDto.builder()
                 .id(String.valueOf(key.getId()))
                 .name(key.getName())
                 .prefix(key.getPrefix())

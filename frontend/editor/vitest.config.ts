@@ -52,19 +52,19 @@ export default defineConfig({
       },
       {
         test: {
-          name: "portal",
+          name: "processor",
           ...TIMEOUTS,
-          include: ["src/portal/**/*.test.{ts,tsx}"],
+          include: ["src/processor/**/*.test.{ts,tsx}"],
           environment: "jsdom",
           globals: true,
-          setupFiles: ["./src/portal/setupTests.ts"],
+          setupFiles: ["./src/processor/setupTests.ts"],
         },
         plugins: [
           react(),
           tsconfigPaths({
-            // Broad project so @app/@portal resolve in every editor file the
-            // portal tests pull in (core/ui, core, ...).
-            projects: ["./tsconfig.portal.vite.json"],
+            // Broad project so @app/@processor resolve in every editor file the
+            // processor tests pull in (core/ui, core, ...).
+            projects: ["./tsconfig.processor.vite.json"],
           }),
         ],
         esbuild: {
@@ -113,12 +113,12 @@ export default defineConfig({
         test: {
           name: "saas",
           ...TIMEOUTS,
-          // src/saas = editor-saas layer; src/portal-saas = the portal's saas
-          // overrides (sibling to src/portal). Both build under the saas flavor,
-          // so both resolve @portal via the saas cascade (tsconfig.saas.vite.json).
+          // src/saas = editor-saas layer; src/processor-saas = the processor's saas
+          // overrides (sibling to src/processor). Both build under the saas flavor,
+          // so both resolve @processor via the saas cascade (tsconfig.saas.vite.json).
           include: [
             "src/saas/**/*.test.{ts,tsx}",
-            "src/portal-saas/**/*.test.{ts,tsx}",
+            "src/processor-saas/**/*.test.{ts,tsx}",
           ],
           environment: "jsdom",
           globals: true,

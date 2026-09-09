@@ -466,7 +466,7 @@ public class AuditService {
      * after the controller body has run. A policy run stamps its name and step endpoints as request
      * attributes ({@link AuditContext}); the internal loopback dispatch that executes each pipeline
      * step carries the automation marker header ({@link InternalApiClient#AUTOMATION_HEADER}).
-     * Surfacing these lets the portal label a run as its policy instead of the raw {@code /run}
+     * Surfacing these lets the processor label a run as its policy instead of the raw {@code /run}
      * endpoint, and flag its sub-steps as automation rather than direct user actions.
      *
      * @param data The existing audit data map
@@ -497,7 +497,7 @@ public class AuditService {
         Object steps = req.getAttribute(AuditContext.REQ_ATTR_POLICY_STEPS);
         if (steps instanceof List<?> list && !list.isEmpty()) {
             // Caller-supplied and unbounded; cap count and each entry so a crafted run can't
-            // bloat the audit JSON the portal cache loads and parses in bulk.
+            // bloat the audit JSON the processor cache loads and parses in bulk.
             List<String> safeSteps =
                     list.stream()
                             .limit(MAX_POLICY_STEPS)
@@ -516,10 +516,12 @@ public class AuditService {
     /** Max characters kept for a persisted policy label; mirrors the InternalApiClient send cap. */
     private static final int MAX_LABEL_LEN = 200;
 
-    /** Max step endpoints kept on a run's audit event; the portal only shows the first few. */
+    /** Max step endpoints kept on a run's audit event; the processor only shows the first few. */
     private static final int MAX_POLICY_STEPS = 50;
 
-    /** Single-line, length-capped label safe to persist to audit JSON and render in the portal. */
+    /**
+     * Single-line, length-capped label safe to persist to audit JSON and render in the processor.
+     */
     private static String capLabel(String value) {
         if (value == null) {
             return "";

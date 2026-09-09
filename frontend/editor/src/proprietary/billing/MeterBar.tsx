@@ -29,8 +29,8 @@ interface MeterBarProps {
 
 /**
  * The usage-meter bar (the {@code paygf-meter} block) shared by the editor cloud
- * surface and the admin portal. Callers own the copy — the editor passes i18n
- * strings, the portal passes literals — so this carries no i18n dependency.
+ * surface and the admin processor. Callers own the copy — the editor passes i18n
+ * strings, the processor passes literals — so this carries no i18n dependency.
  * Styling comes from each app's own {@code paygf-meter}/{@code payg-bar}/{@code
  * payg-status} CSS.
  */

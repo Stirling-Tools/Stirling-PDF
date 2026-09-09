@@ -31,7 +31,7 @@ export type {
 /**
  * Deep-link the SaaS billing backend uses as Stripe's success/cancel/return
  * URL on desktop. The OS routes it back to the running app, which the deep-link
- * handler picks up to refresh the wallet after checkout/portal.
+ * handler picks up to refresh the wallet after checkout/processor.
  */
 const DESKTOP_BILLING_RETURN_URL = "stirlingpdf://billing/return";
 

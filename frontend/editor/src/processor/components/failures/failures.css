@@ -1,0 +1,21 @@
+/* Failures chrome only: rows, cells and the filter bar belong to the DataTable. */
+
+.processor-failures {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* One row's raw log inside the View-log modal. */
+.processor-failures__log {
+  margin: 0;
+  padding: 0.5rem;
+  overflow: auto;
+  background: var(--c-surface-sunken);
+  border-radius: 4px;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.76rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  user-select: all;
+}

@@ -6,7 +6,7 @@ import { AppConfigProvider } from "@app/contexts/AppConfigContext";
 
 // Reads theme/tool-panel preferences via usePreferences()/useTheme() and server
 // config via useAppConfig() — none of which the Storybook preview's own provider
-// tree supplies (those are the portal contexts), so wrap here. AppConfigProvider
+// tree supplies (those are the processor contexts), so wrap here. AppConfigProvider
 // uses autoFetch off so stories render a fixed config instead of hitting the API.
 const meta = {
   title: "Shared/Config/ConfigSections/GeneralSection",

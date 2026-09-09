@@ -18,7 +18,7 @@
 
 .sui-modal {
   /* Set our own font: the modal portals to <body>, so it can't inherit the
-     app's font through the DOM (the portal's .portal-scope isn't an ancestor). */
+     app's font through the DOM (the processor's .processor-scope isn't an ancestor). */
   font-family: var(--font-sans);
   background: var(--c-modal-surface);
   border: 1px solid var(--c-border);

@@ -1,0 +1,114 @@
+/* ──────────────────────────────────────────────────────────────────────── */
+/*  Install-the-editor modal                                                 */
+/* ──────────────────────────────────────────────────────────────────────── */
+
+.processor-install__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.processor-install__section {
+  margin: 0.75rem 0 0.125rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--c-text-subtle);
+}
+.processor-install__section:first-child {
+  margin-top: 0;
+}
+
+.processor-install__option {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.875rem;
+  width: 100%;
+  padding: 0.75rem 0.875rem;
+  border: 1px solid var(--c-border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--c-surface);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color var(--motion-fast),
+    background var(--motion-fast);
+}
+.processor-install__option:hover {
+  border-color: var(--c-border);
+  background: var(--c-hover);
+}
+
+.processor-install__option-icon {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
+  border-radius: 0.625rem;
+  color: var(--c-accent-text);
+  background: var(--c-primary-tint);
+}
+
+.processor-install__option-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.processor-install__option-text strong {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--c-text);
+}
+.processor-install__option-text span {
+  font-size: 0.8125rem;
+  color: var(--c-text-subtle);
+}
+.processor-install__option-chevron {
+  color: var(--c-text-subtle);
+  flex-shrink: 0;
+}
+
+/* ── Detail pane ── */
+.processor-install__detail {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.875rem;
+}
+.processor-install__detail .sui-btn {
+  width: 100%;
+}
+
+.processor-install__eyebrow {
+  margin: 0;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--c-text-subtle);
+}
+.processor-install__note {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--c-text-subtle);
+}
+.processor-install__guide {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--c-accent-text);
+  cursor: pointer;
+}
+.processor-install__guide:hover {
+  text-decoration: underline;
+}

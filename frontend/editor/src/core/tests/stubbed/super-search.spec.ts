@@ -181,7 +181,7 @@ test.describe("Super search — user without Processor access", () => {
         username: "bob",
         email: "bob@example.com",
         role: "ROLE_USER",
-        portalAccess: false,
+        processorAccess: false,
       },
     },
     seedJwt: true,
@@ -257,7 +257,7 @@ test.describe("Super search — portal access without admin", () => {
         username: "owner",
         email: "owner@example.com",
         role: "ROLE_USER",
-        portalAccess: true,
+        processorAccess: true,
       },
     },
     seedJwt: true,
@@ -316,7 +316,7 @@ test.describe("Super search — admin with Processor access", () => {
         username: "admin",
         email: "admin@example.com",
         role: "ROLE_ADMIN",
-        portalAccess: true,
+        processorAccess: true,
       },
     },
     seedJwt: true,
@@ -344,7 +344,7 @@ test.describe("Super search — admin with Processor access", () => {
     await openSearch(page);
 
     // The Processor lanes only exist in builds that ship the portal (dev,
-    // VITE_INCLUDE_PORTAL) — the CI preview build has none to show.
+    // VITE_INCLUDE_PROCESSOR) — the CI preview build has none to show.
     const portalShips =
       (await page.getByRole("button", { name: "Pages", exact: true }).count()) >
       0;
@@ -379,7 +379,7 @@ test.describe("Portal bar — tool results hop into the editor", () => {
         username: "admin",
         email: "admin@example.com",
         role: "ROLE_ADMIN",
-        portalAccess: true,
+        processorAccess: true,
       },
     },
     seedJwt: true,
@@ -400,8 +400,8 @@ test.describe("Portal bar — tool results hop into the editor", () => {
     }
 
     await page.goto("/processor");
-    const input = page.locator("#portal-search-input");
-    // The portal only ships in dev / VITE_INCLUDE_PORTAL builds — on the CI
+    const input = page.locator("#processor-search-input");
+    // The portal only ships in dev / VITE_INCLUDE_PROCESSOR builds — on the CI
     // preview build /processor falls through to the editor and there is no
     // portal bar to hop from.
     const portalShips = await input

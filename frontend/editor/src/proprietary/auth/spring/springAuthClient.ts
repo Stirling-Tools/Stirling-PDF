@@ -9,7 +9,7 @@
  * This is the platform-agnostic engine. The HTTP transport, base path and
  * platform-specific behaviour are injected via `@app/auth/config` so the
  * same code backs the editor (which injects its apiClient + desktop bridge)
- * and the portal (web defaults).
+ * and the processor (web defaults).
  */
 
 import { AxiosError, type AxiosRequestConfig } from "axios";
@@ -27,7 +27,7 @@ import type {
 
 export type { User, Session, AuthError, AuthResponse, AuthChangeEvent };
 
-/** Axios config plus the editor's custom request flags (ignored by the portal). */
+/** Axios config plus the editor's custom request flags (ignored by the processor). */
 type AuthRequestConfig = AxiosRequestConfig & {
   suppressErrorToast?: boolean;
   skipAuthRedirect?: boolean;

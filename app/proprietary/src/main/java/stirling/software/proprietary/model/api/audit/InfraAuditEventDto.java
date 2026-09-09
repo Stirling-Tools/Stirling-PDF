@@ -8,8 +8,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * A single infrastructure audit-log row, shaped for the portal Infrastructure → Audit tab. Derived
- * from a {@code audit_events} row: the real {@link
+ * A single infrastructure audit-log row, shaped for the processor Infrastructure → Audit tab.
+ * Derived from a {@code audit_events} row: the real {@link
  * stirling.software.proprietary.audit.AuditEventType} is mapped to a display category/action.
  */
 @Data
