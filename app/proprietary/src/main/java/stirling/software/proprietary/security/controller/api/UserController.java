@@ -43,12 +43,15 @@ import stirling.software.proprietary.audit.Audited;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.AuthenticationType;
+import stirling.software.proprietary.security.model.LoginLandingView;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.security.model.api.user.UpdateLoginLandingView;
 import stirling.software.proprietary.security.model.api.user.UsernameAndPass;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
 import stirling.software.proprietary.security.service.EmailService;
 import stirling.software.proprietary.security.service.LoginAttemptService;
+import stirling.software.proprietary.security.service.LoginLandingService;
 import stirling.software.proprietary.security.service.SaveUserRequest;
 import stirling.software.proprietary.security.service.TeamMembershipService;
 import stirling.software.proprietary.security.service.TeamService;
@@ -71,6 +74,7 @@ public class UserController {
     private final UserLicenseSettingsService licenseSettingsService;
     private final LoginAttemptService loginAttemptService;
     private final TeamMembershipService teamMembershipService;
+    private final LoginLandingService loginLandingService;
 
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/register")
@@ -360,6 +364,24 @@ public class UserController {
         // Assuming you have a method in userService to update the settings for a user
         userService.updateUserSettings(principal.getName(), updates);
         return ResponseEntity.ok(Map.of("message", "Settings updated successfully"));
+    }
+
+    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
+    @PostMapping("/login-landing-view")
+    public ResponseEntity<?> updateLoginLandingView(
+            @RequestBody UpdateLoginLandingView request, Principal principal)
+            throws SQLException, UnsupportedProviderException {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "Not authenticated"));
+        }
+        Optional<LoginLandingView> view = LoginLandingView.parse(request.getLoginLandingView());
+        if (view.isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "loginLandingView must be one of: editor, processor"));
+        }
+        loginLandingService.setLandingView(principal.getName(), view.get());
+        return ResponseEntity.ok(Map.of("loginLandingView", view.get().value()));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
