@@ -41,6 +41,7 @@ import stirling.software.proprietary.security.model.exception.AuthenticationFail
 import stirling.software.proprietary.security.service.CustomUserDetailsService;
 import stirling.software.proprietary.security.service.JwtServiceInterface;
 import stirling.software.proprietary.security.service.LoginAttemptService;
+import stirling.software.proprietary.security.service.LoginLandingService;
 import stirling.software.proprietary.security.service.MfaService;
 import stirling.software.proprietary.security.service.RefreshRateLimitService;
 import stirling.software.proprietary.security.service.TotpService;
@@ -68,6 +69,7 @@ public class AuthController {
     private final AiUserDataService aiUserDataService;
     private final ResourceAccessService resourceAccessService;
     private final TeamLeadLookup teamLeadLookup;
+    private final LoginLandingService loginLandingService;
 
     /**
      * Login endpoint - replaces Supabase signInWithPassword
@@ -637,6 +639,7 @@ public class AuthController {
         userMap.put("enabled", user.isEnabled());
         userMap.put("portalAccess", resourceAccessService.canAccessPortal(user));
         userMap.put("teamLead", teamLeadLookup.isAnyTeamLeader(user));
+        userMap.put("loginLandingView", loginLandingService.getLandingView(user).value());
         // Expose the caller's team so non-admin team owners can scope their own team's resources.
         if (user.getTeam() != null) {
             userMap.put(

@@ -18,8 +18,12 @@ import java.util.List;
  * @param teamId the caller's primary team_id. Needed by the frontend so it can pass it to the
  *     Supabase edge functions that create Stripe Checkout / portal sessions — those run outside
  *     Spring Security and have no other way to resolve the caller's team.
- * @param status {@code "free"} when the team has no Stripe subscription; {@code "subscribed"} once
- *     a card is on file and the engine bills meter events.
+ * @param status the old single billing axis. Superseded by {@code team} and {@code processor},
+ *     which say which products the team holds independently; kept until the frontend stops reading
+ *     it. {@code "free"} when the team has no Stripe subscription; {@code "subscribed"} once a card
+ *     is on file and the engine bills meter events.
+ * @param team the Team (user capacity) holding — see {@link TeamHolding}.
+ * @param processor the Processor (metered automation) holding — see {@link ProcessorHolding}.
  * @param role the current caller's role within their team — {@code "leader"} or {@code "member"}.
  *     Controls which UI variant the frontend renders.
  * @param billingPeriodStart inclusive ISO date (yyyy-MM-dd) for the current cycle — the Stripe
@@ -64,6 +68,8 @@ import java.util.List;
 public record WalletSnapshotResponse(
         Long teamId,
         String status,
+        TeamHolding team,
+        ProcessorHolding processor,
         String role,
         String billingPeriodStart,
         String billingPeriodEnd,
@@ -130,4 +136,28 @@ public record WalletSnapshotResponse(
      * @param docUnits absolute document count of the entry
      */
     public record ActivityRow(long id, String kind, String label, String ts, int docUnits) {}
+
+    /**
+     * The Team holding: paid user capacity.
+     *
+     * <p>Reported separately from {@link ProcessorHolding} because the two products are orthogonal
+     * — a team may hold either, both, or neither — and a single {@code free | subscribed} axis
+     * cannot say which. A caller decides what to offer from {@code held}, not from {@code status}.
+     *
+     * @param held the team pays for user capacity. False means no Team plan, so a caller offers it,
+     *     rather than meaning capacity is unknown.
+     * @param licensedUsers how many users the holding covers; {@code null} when the team has no
+     *     user limit.
+     * @param usersInUse team members occupying capacity right now.
+     */
+    public record TeamHolding(boolean held, Integer licensedUsers, int usersInUse) {}
+
+    /**
+     * The Processor holding: metered document automation beyond the free grant.
+     *
+     * @param active the team has a live metered subscription. This is the fact the old {@code
+     *     status == "subscribed"} actually carried; the rate, spend, cap and grant figures for it
+     *     stay on the enclosing record.
+     */
+    public record ProcessorHolding(boolean active) {}
 }

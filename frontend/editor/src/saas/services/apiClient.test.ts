@@ -220,7 +220,7 @@ describe("apiClient", () => {
     const { default: apiClient } = await import("@app/services/apiClient");
 
     // On /editor when the session dies: the return path must ride along so the
-    // login screen sends the user back here, not to the role-based landing.
+    // login screen sends the user back here, not to the default landing.
     Object.defineProperty(window, "location", {
       writable: true,
       value: { href: "", pathname: "/editor", search: "" },

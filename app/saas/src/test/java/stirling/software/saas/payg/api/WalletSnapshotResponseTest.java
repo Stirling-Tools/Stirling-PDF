@@ -19,6 +19,8 @@ class WalletSnapshotResponseTest {
         return new WalletSnapshotResponse(
                 7L,
                 "subscribed",
+                new WalletSnapshotResponse.TeamHolding(true, 100, 12),
+                new WalletSnapshotResponse.ProcessorHolding(true),
                 "leader",
                 "2026-06-01",
                 "2026-07-01",
@@ -100,6 +102,8 @@ class WalletSnapshotResponseTest {
                 new WalletSnapshotResponse(
                         7L,
                         "free",
+                        new WalletSnapshotResponse.TeamHolding(false, null, 1),
+                        new WalletSnapshotResponse.ProcessorHolding(false),
                         "member",
                         "2026-06-01",
                         "2026-07-01",
