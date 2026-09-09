@@ -36,26 +36,71 @@ function countOverlays() {
  * is closer to the thing we want to know still works.
  */
 export async function dismissStartupModals(maxModals = 6) {
-  for (let attempt = 0; attempt < maxModals; attempt += 1) {
-    if ((await countOverlays()) === 0) return;
-    await closeTopModal();
+  let blocked = null;
+  let overlays = await countOverlays();
+
+  for (let attempt = 0; attempt < maxModals && overlays > 0; attempt += 1) {
+    blocked = await closeTopModal();
     await browser.pause(1_000);
+
+    const remaining = await countOverlays();
+    // Clicking achieved nothing, so stop pressing the same button: Escape is
+    // the only other way out of a Mantine modal.
+    if (remaining >= overlays) await browser.keys(["Escape"]);
+    overlays = remaining;
   }
 
-  await browser.waitUntil(async () => (await countOverlays()) === 0, {
-    timeout: 15_000,
-    interval: 500,
-    timeoutMsg: `A modal overlay is still blocking the UI after ${maxModals} dismissals.`,
-  });
+  if (overlays === 0) return;
+
+  try {
+    await browser.waitUntil(async () => (await countOverlays()) === 0, {
+      timeout: 15_000,
+      interval: 500,
+    });
+  } catch {
+    throw new Error(
+      `A modal overlay is still blocking the UI after ${maxModals} dismissals` +
+        `${blocked ? ` - its close button is covered by ${blocked}` : ""}.`,
+    );
+  }
 }
 
+/**
+ * Dismisses the frontmost modal. Returns what stopped its close button being
+ * clicked, or null when nothing did.
+ *
+ * A close button is only clicked when it is on screen and nothing sits over it.
+ * Existence is not enough: a buried modal's button still matches the selector,
+ * and clicking it raises "element click intercepted", closes nothing, and hides
+ * the Escape path that both desktop startup modals actually rely on - they
+ * render `withCloseButton={false}` and close on Escape.
+ */
 async function closeTopModal() {
-  const close = await $('.mantine-Modal-content [aria-label="Close"]');
-  if (await close.isExisting()) {
-    await close.click().catch(() => {});
-    return;
+  let blocked = null;
+  const closers = await $$('.mantine-Modal-content [aria-label="Close"]');
+
+  // Stacked modals portal in render order, so the last button belongs to the
+  // modal in front; the ones before it are under its full-viewport wrapper.
+  for (let i = closers.length - 1; i >= 0; i -= 1) {
+    const close = closers[i];
+    try {
+      if (!(await close.isDisplayed())) continue;
+
+      const obstruction = await obstructionOf(close);
+      if (obstruction) {
+        blocked ??= obstruction;
+        continue;
+      }
+      await close.click();
+      return null;
+    } catch (error) {
+      if (!/intercepted|stale element/i.test(String(error))) throw error;
+      blocked ??= "an element that moved or was replaced mid-click";
+    }
   }
+
   await browser.keys(["Escape"]);
+  return blocked;
 }
 
 /**
@@ -127,7 +172,9 @@ export async function clickFirstClickable(
         blocker ??= "an element that moved or was replaced mid-click";
       }
     }
-    await closeTopModal();
+    // Only when a modal is actually up: closeTopModal falls back to Escape, and
+    // a stray Escape with no modal open would close the tool panel instead.
+    if ((await countOverlays()) > 0) await closeTopModal();
     return false;
   };
 
