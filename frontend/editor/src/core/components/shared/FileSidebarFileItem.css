@@ -68,6 +68,17 @@
   background-color: color-mix(in srgb, var(--c-primary) 6%, transparent);
 }
 
+.file-sidebar-file-item[data-tool-skipped="true"] {
+  background-color: var(--c-surface-sunken);
+}
+
+.file-sidebar-file-item[data-tool-skipped="true"]
+  .file-sidebar-file-icon-wrapper,
+.file-sidebar-file-item[data-tool-skipped="true"] .file-sidebar-file-info {
+  opacity: 0.5;
+  filter: grayscale(1);
+}
+
 /* Icon wrapper */
 .file-sidebar-file-icon-wrapper {
   position: relative;
