@@ -343,6 +343,8 @@ public class AccountLinkClient {
         Long periodCap =
                 root.hasNonNull("periodCapUnits") ? root.get("periodCapUnits").asLong() : null;
         EntitlementState state = mapState(root.path("state").asText(null));
+        Integer licensedUsers =
+                root.hasNonNull("licensedUsers") ? root.get("licensedUsers").asInt() : null;
         return new InstanceEntitlement(
                 subscribed,
                 freeRemaining,
@@ -351,7 +353,8 @@ public class AccountLinkClient {
                 state,
                 parseUnitCalcPolicy(root),
                 parseDateTime(root, "periodStart"),
-                parseDateTime(root, "periodEnd"));
+                parseDateTime(root, "periodEnd"),
+                licensedUsers);
     }
 
     /** Parses the nested unit-calc policy; null if absent or any knob is invalid (e.g. zero). */

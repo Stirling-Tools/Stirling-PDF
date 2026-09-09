@@ -234,7 +234,7 @@ export function useNotificationActions(): ClientActionRegistry {
     ): Promise<ClientActionOutcome | void> => {
       if (!fileId) return;
 
-      // In place: "/" is the role-based router, which lands the user wherever their role says.
+      // In place: "/" is the landing router, which redirects wherever the account belongs.
       if (canOpenHere) {
         return (await openInWorkbench(fileId)) ? undefined : { ok: false };
       }
