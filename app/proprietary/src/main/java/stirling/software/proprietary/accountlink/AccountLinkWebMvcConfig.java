@@ -31,6 +31,10 @@ public class AccountLinkWebMvcConfig implements WebMvcConfigurer {
         // calls be gated too, while the interceptor lets genuine manual tools through.
         registry.addInterceptor(gateInterceptor)
                 .addPathPatterns("/api/v1/**")
-                .excludePathPatterns("/api/v1/account-link/**");
+                .excludePathPatterns(
+                        "/api/v1/account-link/**",
+                        "/api/v1/config/**",
+                        "/api/v1/info/**",
+                        "/api/v1/admin/**");
     }
 }

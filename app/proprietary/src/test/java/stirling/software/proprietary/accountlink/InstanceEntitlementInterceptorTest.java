@@ -5,21 +5,26 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.ArgumentMatchers.notNull;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayOutputStream;
+import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
@@ -31,11 +36,17 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.mock.web.MockMultipartHttpServletRequest;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.method.HandlerMethod;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.proprietary.billing.BillingCategory;
 import stirling.software.proprietary.billing.UnitCalcPolicy;
+import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
+import stirling.software.proprietary.security.model.User;
 
 @ExtendWith(MockitoExtension.class)
 class InstanceEntitlementInterceptorTest {
@@ -50,10 +61,17 @@ class InstanceEntitlementInterceptorTest {
                 gate, entitlementCache, meterProvider, tempFileManager);
     }
 
+    @AfterEach
+    void clearAuth() {
+        SecurityContextHolder.clearContext();
+    }
+
     private boolean preHandle(MockHttpServletResponse response) throws Exception {
         return interceptor()
                 .preHandle(
-                        new MockHttpServletRequest("GET", "/api/v1/ai/x"), response, new Object());
+                        new MockHttpServletRequest("GET", "/api/v1/ai/tools/x"),
+                        response,
+                        new Object());
     }
 
     @Test
@@ -101,7 +119,7 @@ class InstanceEntitlementInterceptorTest {
         when(entitlementCache.current()).thenReturn(Optional.of(entitled(policy, period)));
 
         InstanceEntitlementInterceptor interceptor = interceptor();
-        MockHttpServletRequest req = new MockHttpServletRequest("POST", "/api/v1/ai/x");
+        MockHttpServletRequest req = new MockHttpServletRequest("POST", "/api/v1/ai/tools/x");
         MockHttpServletResponse resp = new MockHttpServletResponse();
         interceptor.preHandle(req, resp, new Object()); // stashes AI category
         interceptor.afterCompletion(req, resp, new Object(), null);
@@ -129,7 +147,7 @@ class InstanceEntitlementInterceptorTest {
 
         InstanceEntitlementInterceptor interceptor = interceptor();
         MockMultipartHttpServletRequest req = new MockMultipartHttpServletRequest();
-        req.setRequestURI("/api/v1/ai/x");
+        req.setRequestURI("/api/v1/ai/tools/x");
         req.addFile(new MockMultipartFile("file", "doc.pdf", "application/pdf", fivePagePdf()));
         MockHttpServletResponse resp = new MockHttpServletResponse();
         interceptor.preHandle(req, resp, new Object());
@@ -146,7 +164,7 @@ class InstanceEntitlementInterceptorTest {
         when(meterProvider.getIfAvailable()).thenReturn(null); // metering.enabled = false
 
         InstanceEntitlementInterceptor interceptor = interceptor();
-        MockHttpServletRequest req = new MockHttpServletRequest("POST", "/api/v1/ai/x");
+        MockHttpServletRequest req = new MockHttpServletRequest("POST", "/api/v1/ai/tools/x");
         MockHttpServletResponse resp = new MockHttpServletResponse();
         interceptor.preHandle(req, resp, new Object());
         interceptor.afterCompletion(req, resp, new Object(), null);
@@ -190,6 +208,79 @@ class InstanceEntitlementInterceptorTest {
         interceptor.afterCompletion(req, resp, new Object(), null);
 
         verifyNoInteractions(meter);
+    }
+
+    @Test
+    void billsApiKeyToolCallAsApi() throws Exception {
+        when(gate.evaluate(anyBoolean()))
+                .thenReturn(GateDecision.allow(GateDecision.Reason.ENTITLED));
+        UsageMeterService meter = mock(UsageMeterService.class);
+        when(meterProvider.getIfAvailable()).thenReturn(meter);
+        UnitCalcPolicy policy = new UnitCalcPolicy(1, 1_048_576L, 1, 1000);
+        LocalDateTime period = LocalDateTime.of(2026, 6, 1, 0, 0);
+        when(entitlementCache.current()).thenReturn(Optional.of(entitled(policy, period)));
+        authenticateWithApiKey();
+
+        InstanceEntitlementInterceptor interceptor = interceptor();
+        MockHttpServletRequest req = new MockHttpServletRequest("POST", "/api/v1/general/merge");
+        MockHttpServletResponse resp = new MockHttpServletResponse();
+        interceptor.preHandle(req, resp, toolHandler());
+        interceptor.afterCompletion(req, resp, toolHandler(), null);
+
+        verify(meter).accrue(eq(period), eq(BillingCategory.API), eq(1L), isNull());
+    }
+
+    @Test
+    void doesNotBillApiKeyCallToNonToolEndpoint() throws Exception {
+        // Matches SaaS: an API-key call to a non-tool endpoint (no @AutoJobPostMapping) is not
+        // billed. Only tool operations count as API usage.
+        when(gate.evaluate(anyBoolean()))
+                .thenReturn(GateDecision.allow(GateDecision.Reason.ENTITLED));
+        UsageMeterService meter = mock(UsageMeterService.class);
+        when(meterProvider.getIfAvailable()).thenReturn(meter);
+        authenticateWithApiKey();
+
+        InstanceEntitlementInterceptor interceptor = interceptor();
+        MockHttpServletRequest req =
+                new MockHttpServletRequest("GET", "/api/v1/general/files/some-id");
+        MockHttpServletResponse resp = new MockHttpServletResponse();
+        interceptor.preHandle(req, resp, plainHandler());
+        interceptor.afterCompletion(req, resp, plainHandler(), null);
+
+        verify(meter, never()).accrue(any(), any(), anyLong(), any());
+    }
+
+    private static void authenticateWithApiKey() {
+        ApiKeyAuthenticationToken token =
+                new ApiKeyAuthenticationToken(
+                        new User(),
+                        "test-api-key",
+                        List.of(new SimpleGrantedAuthority("ROLE_API")));
+        SecurityContextHolder.getContext().setAuthentication(token);
+    }
+
+    private static HandlerMethod toolHandler() {
+        return handlerMethod("tool");
+    }
+
+    private static HandlerMethod plainHandler() {
+        return handlerMethod("plain");
+    }
+
+    private static HandlerMethod handlerMethod(String name) {
+        try {
+            Method m = Fixture.class.getDeclaredMethod(name);
+            return new HandlerMethod(new Fixture(), m);
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    static class Fixture {
+        @AutoJobPostMapping(value = "/tool", resourceWeight = 1)
+        public void tool() {}
+
+        public void plain() {}
     }
 
     private static InstanceEntitlement entitled(UnitCalcPolicy policy, LocalDateTime period) {

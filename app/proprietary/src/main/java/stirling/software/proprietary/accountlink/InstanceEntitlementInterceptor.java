@@ -14,9 +14,11 @@ import java.util.List;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -27,6 +29,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.jpdfium.PdfDocument;
@@ -84,6 +87,11 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
                     SecurityContextHolder.getContext().getAuthentication()
                             instanceof ApiKeyAuthenticationToken;
             BillingCategory category = BillableOperationClassifier.categorize(request, apiKey);
+            // API bills only for actual tool endpoints (@AutoJobPostMapping), matching the SaaS
+            // scope gate; a non-tool API-key call (info / config / download) is not billed.
+            if (category == BillingCategory.API && !isToolEndpoint(handler)) {
+                category = BillingCategory.BYPASSED;
+            }
             request.setAttribute(ATTR_CATEGORY, category);
             // A policy run kicks off billable automation, so block it up front when unentitled
             // rather than after its first tool. It carries no automation header itself (category
@@ -111,6 +119,19 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
                                 + decision.reason().name()
                                 + "\"}");
         return false;
+    }
+
+    /**
+     * True when the handler is a tool endpoint - carries {@link AutoJobPostMapping} on the method
+     * or its controller. Mirrors the SaaS scope gate so API-key calls bill only on tool endpoints.
+     */
+    private static boolean isToolEndpoint(Object handler) {
+        if (!(handler instanceof HandlerMethod hm)) {
+            return false;
+        }
+        return AnnotationUtils.findAnnotation(hm.getMethod(), AutoJobPostMapping.class) != null
+                || AnnotationUtils.findAnnotation(hm.getBeanType(), AutoJobPostMapping.class)
+                        != null;
     }
 
     @Override
