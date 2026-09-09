@@ -1,16 +1,3 @@
-import type { PolicyCategory } from "@portal/api/policies";
-import { policyCategoryIcon } from "@app/components/policies/policyCategoryIcon";
-import "@portal/components/policies/PolicyCategoryIcon.css";
-
-/** A neutral gray rounded badge holding the category's shared outline icon. */
-export function PolicyCategoryBadge({
-  category,
-}: {
-  category: PolicyCategory;
-}) {
-  return (
-    <span className="pcat-badge" aria-hidden>
-      {policyCategoryIcon(category.id)}
-    </span>
-  );
-}
+/* Shared as PolicyCategoryBadge: the name sidesteps a case-insensitive clash with
+   policyCategoryIcon.tsx, which is why this path's export is named differently. */
+export * from "@app/components/policies/PolicyCategoryBadge";
