@@ -934,7 +934,9 @@ export default function AdminConnectionsSection() {
                     key={provider.id}
                     provider={provider}
                     isConfigured={true}
-                    settings={getProviderSettings(provider)}
+                    settings={
+                      getProviderSettings(provider) as Record<string, unknown>
+                    }
                     onChange={(updatedSettings) =>
                       updateProviderSettings(provider, updatedSettings)
                     }
@@ -964,7 +966,9 @@ export default function AdminConnectionsSection() {
                   key={provider.id}
                   provider={provider}
                   isConfigured={false}
-                  settings={getProviderSettings(provider)}
+                  settings={
+                    getProviderSettings(provider) as Record<string, unknown>
+                  }
                   onChange={(updatedSettings) =>
                     updateProviderSettings(provider, updatedSettings)
                   }
