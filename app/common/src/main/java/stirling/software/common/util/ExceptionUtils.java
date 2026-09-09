@@ -713,6 +713,11 @@ public class ExceptionUtils {
     }
 
     /** Create system requirement exceptions. */
+    public static GhostscriptRequiredException createGhostscriptRequiredException() {
+        String message = getMessage(ErrorCode.GHOSTSCRIPT_REQUIRED);
+        return new GhostscriptRequiredException(message, ErrorCode.GHOSTSCRIPT_REQUIRED.getCode());
+    }
+
     public static FfmpegRequiredException createFfmpegRequiredException() {
         String message = getMessage(ErrorCode.FFMPEG_REQUIRED);
         return new FfmpegRequiredException(message, ErrorCode.FFMPEG_REQUIRED.getCode());
@@ -1217,6 +1222,10 @@ public class ExceptionUtils {
                 "E063",
                 "error.ffmpegRequired",
                 "FFmpeg must be installed to convert PDFs to video. Install FFmpeg and ensure it is available on the system PATH."),
+        GHOSTSCRIPT_REQUIRED(
+                "E064",
+                "error.ghostscriptRequired",
+                "Ghostscript must be installed to convert PDFs to PDF/A. Install Ghostscript and ensure it is available on the system PATH."),
 
         // Validation errors
         INVALID_ARGUMENT("E070", "error.invalidArgument", "Invalid argument ''{0}'': {1}"),
@@ -1300,6 +1309,13 @@ public class ExceptionUtils {
     }
 
     /** Exception thrown when FFmpeg is not available on the host system. */
+    /** Thrown when PDF/A conversion is asked for on a host without Ghostscript. */
+    public static class GhostscriptRequiredException extends BaseAppException {
+        public GhostscriptRequiredException(String message, String errorCode) {
+            super(message, null, errorCode);
+        }
+    }
+
     public static class FfmpegRequiredException extends BaseAppException {
         public FfmpegRequiredException(String message, String errorCode) {
             super(message, null, errorCode);
