@@ -1416,17 +1416,9 @@ public class ApplicationProperties {
         // Enables hostname verification for TLS connections
         private Boolean sslCheckServerIdentity;
 
-        /**
-         * SMTP timeouts in milliseconds. JavaMail defaults all three to infinite, and mail is sent
-         * on request threads, so leaving them unset means a relay that accepts a connection and
-         * then stops responding holds that thread for good.
-         *
-         * <p>Settings rather than constants because how long is too long is a property of the
-         * operator's relay, not of this code: a slow corporate gateway may legitimately need
-         * longer, and nothing here can know that.
-         */
+        // Milliseconds. JavaMail leaves these infinite when unset, and mail sends on request
+        // threads, so a relay that accepts and then stops responding holds one for good.
         private int connectionTimeoutMs = 10_000;
-
         private int readTimeoutMs = 30_000;
         private int writeTimeoutMs = 30_000;
     }

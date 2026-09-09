@@ -56,7 +56,6 @@ class MailConfigTest {
                 () -> assertEquals("password", impl.getPassword()),
                 () -> assertEquals("UTF-8", impl.getDefaultEncoding()),
                 () -> assertEquals("true", props.getProperty("mail.smtp.auth")),
-                // Unset means infinite in JavaMail, which parks a request thread on a wedged relay
                 () -> assertEquals("10000", props.getProperty("mail.smtp.connectiontimeout")),
                 () -> assertEquals("30000", props.getProperty("mail.smtp.timeout")),
                 () -> assertEquals("30000", props.getProperty("mail.smtp.writetimeout")),
@@ -91,7 +90,6 @@ class MailConfigTest {
 
     @Test
     void smtpTimeoutsComeFromSettings() {
-        // A slow corporate relay is a real configuration, so the operator's numbers must win.
         when(mailProps.getConnectionTimeoutMs()).thenReturn(45_000);
         when(mailProps.getReadTimeoutMs()).thenReturn(90_000);
         when(mailProps.getWriteTimeoutMs()).thenReturn(120_000);
@@ -111,8 +109,8 @@ class MailConfigTest {
 
     @Test
     void smtpTimeoutDefaultsAreFinite() {
-        // The point of the change: unset must not mean infinite. Asserted on a real settings object
-        // so a silently-changed default cannot pass through the mocks above.
+        // Real settings object: the mocks above return 0 for an unstubbed int, hiding a lost
+        // default.
         ApplicationProperties.Mail defaults = new ApplicationProperties.Mail();
 
         assertAll(

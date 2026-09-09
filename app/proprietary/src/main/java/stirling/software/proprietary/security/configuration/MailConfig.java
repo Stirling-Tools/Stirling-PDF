@@ -62,11 +62,7 @@ public class MailConfig {
         // Retrieves the JavaMail properties to configure additional SMTP parameters
         Properties props = mailSender.getJavaMailProperties();
 
-        // JavaMail defaults every one of these to infinite, so an SMTP server that accepts the
-        // connection and then stops responding parks the calling thread for good. Mail is sent
-        // synchronously from request threads (backup notifications, invites), so an unreachable or
-        // wedged relay is a thread leak rather than a failed send. The values are settings, since
-        // what counts as too long belongs to the operator's relay rather than to this code.
+        // Sends are synchronous on request threads, so an unbounded timeout leaks one per send.
         props.put(
                 "mail.smtp.connectiontimeout",
                 String.valueOf(mailProperties.getConnectionTimeoutMs()));
