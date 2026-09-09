@@ -10,7 +10,10 @@ import {
 } from "vitest";
 import { setupServer } from "msw/node";
 import { http, HttpResponse } from "msw";
-import { createPortalQueryClient } from "@portal/queryClient";
+import {
+  getPortalQueryClient,
+  resetPortalQueryClient,
+} from "@portal/queryClient";
 import { qk } from "@portal/queries/keys";
 import { usersBackend } from "@app/portal/usersBackend";
 
@@ -68,9 +71,12 @@ beforeEach(() => {
   teamName = "Old name";
 });
 
+// The client outlives a mount now, so each case starts from a cold one.
+beforeEach(resetPortalQueryClient);
+
 describe("SaaS /team/my resolution cache", () => {
   it("dedupes within staleTime but re-resolves after invalidation", async () => {
-    const client = createPortalQueryClient();
+    const client = getPortalQueryClient();
 
     // Two resolves within staleTime → one network call (the collapse).
     expect((await usersBackend.fetchTeams())[0]?.name).toBe("Old name");

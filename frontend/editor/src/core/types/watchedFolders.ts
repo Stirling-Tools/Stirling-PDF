@@ -64,3 +64,10 @@ export interface WatchedFolderRunEntry {
   processedAt?: Date;
   status: "processing" | "processed";
 }
+
+export interface WatchedFolderViewData {
+  /** Folder currently open in the view; null = the folder list / home. */
+  folderId: string | null;
+  pendingFileId?: string;
+  pendingFileIds?: string[];
+}

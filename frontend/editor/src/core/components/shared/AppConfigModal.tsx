@@ -33,7 +33,6 @@ import {
   useUnsavedChanges,
 } from "@app/contexts/UnsavedChangesContext";
 import { stripBasePath, withBasePath } from "@app/constants/app";
-import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 
 interface AppConfigModalProps {
   opened: boolean;
@@ -232,27 +231,9 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
   const handleClose = useCallback(async () => {
     const canProceed = await confirmIfDirty();
     if (!canProceed) return false;
-
-    // Only unwind history if settings was opened via the URL; opened via state
-    // there's no /settings entry to pop and navigate(-1) would jump to /files.
-    if (urlSync && location.pathname.startsWith("/settings")) {
-      // "default" key = first entry (deep link/refresh); nothing to pop to.
-      if (location.key === "default") {
-        navigate(EDITOR_BASENAME, { replace: true });
-      } else {
-        navigate(-1);
-      }
-    }
     onClose();
     return true;
-  }, [
-    confirmIfDirty,
-    location.key,
-    location.pathname,
-    navigate,
-    onClose,
-    urlSync,
-  ]);
+  }, [confirmIfDirty, onClose]);
 
   // Synchronous wrapper for contexts (e.g. tour buttons) that need () => void
   const handleCloseSync = useCallback(() => {

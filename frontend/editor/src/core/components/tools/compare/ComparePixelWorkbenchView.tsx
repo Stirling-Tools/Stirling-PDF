@@ -170,7 +170,7 @@ const ComparePixelWorkbenchView = ({
         <SegmentedControl
           size="sm"
           value={viewMode}
-          onChange={(value) => setViewMode(value as PixelViewMode)}
+          onChange={(value) => setViewMode(value)}
           options={[
             {
               value: "side-by-side",

@@ -12,409 +12,35 @@
 import type { TFunction } from "i18next";
 import { apiClient } from "@portal/api/http";
 import { fromWirePolicy, toWirePolicy } from "@app/policies/codec";
-import { resolveRunOn } from "@app/policies/runOn";
 import { runsToActivity, runsToStats } from "@app/policies/runs";
-import { policyStep, type PolicyToolStep } from "@app/policies/operations";
-import type { ToolEndpoint } from "@app/types/toolApiTypes";
+import {
+  policyStepFromWire,
+  type PolicyToolId,
+} from "@app/policies/operations";
+import type { Policy } from "@portal/api/pipelines";
 import type {
   PolicyDecodedState,
   PolicyRunView,
+  WireOutputOptions,
   WirePipelineStep,
   WirePolicy,
 } from "@app/policies/types";
 
-export type {
-  PolicyActivityItem,
-  PolicyDecodedState,
-  PolicyRunView,
-  PolicyStats,
-  WireOutputOptions,
-  WireOutputSpec,
-  WirePolicy,
-} from "@app/policies/types";
+export type { PolicyRunView, WirePolicy } from "@app/policies/types";
 
-// Re-export the wire step type under the legacy name components depend on.
-export type { WirePipelineStep as PipelineStep } from "@app/policies/types";
-
-/* ──────────────────────────────────────────────────────────────────────── */
-/*  Catalogue model — portal-specific                                        */
-/* ──────────────────────────────────────────────────────────────────────── */
-
-export type PolicyStatus = "active" | "paused";
-
-export type PolicyRowStatus = "active" | "paused" | "setup";
-
-export type PolicyFieldType = "toggle" | "select" | "chips" | "text";
-
-export interface PolicyField {
-  label: string;
-  key: string;
-  type: PolicyFieldType;
-  value: boolean | string | string[];
-  options?: string[];
-}
-
-export interface PolicyCategory {
-  id: string;
-  label: string;
-  tone: "neutral" | "blue" | "purple" | "green" | "amber" | "red";
-  desc: string;
-  providesClassification?: boolean;
-  comingSoon?: boolean;
-  requiresAiEngine?: boolean;
-}
-
-export interface PolicyConfigDef {
-  summary: string;
-  rules: string[];
-  scopeLabel: string;
-  fields: PolicyField[];
-  defaultOperations: PolicyToolStep[];
-}
-
-export interface PolicyState {
-  configured: boolean;
-  status: PolicyStatus;
-  sources: string[];
-  scopeTypes: string[];
-  reviewerEmail: string;
-  fieldValues: Record<string, boolean | string | string[]>;
-  outputMode?: "new_file" | "new_version";
-  outputName?: string;
-  outputNamePosition?: "prefix" | "suffix" | "auto-number";
-  runOn?: "upload" | "export";
-  maxRetries?: number;
-  retryDelayMinutes?: number;
-  backendId?: string;
-  isDefault?: boolean;
-}
-
-export interface PolicySetupResult {
-  fieldValues: Record<string, boolean | string | string[]>;
-  sources: string[];
-  scopeTypes: string[];
-  reviewerEmail: string;
-  outputMode: "new_file" | "new_version";
-  outputName: string;
-  outputNamePosition: "prefix" | "suffix" | "auto-number";
-  runOn: "upload" | "export";
-  maxRetries: number;
-  retryDelayMinutes: number;
-  steps: WirePipelineStep[];
-}
-
-export interface DecoratedPolicy {
-  category: PolicyCategory;
-  config: PolicyConfigDef;
-  state: PolicyState;
-  steps: WirePipelineStep[];
-  stats: import("@app/policies/types").PolicyStats;
-  activity: import("@app/policies/types").PolicyActivityItem[];
-}
-
-export interface PoliciesSummary {
-  active: number;
-  paused: number;
-  categories: number;
-  docsEnforced: number;
-}
-
-export interface PoliciesResponse {
-  summary: PoliciesSummary;
-  catalogue: CatalogueEntry[];
-}
-
-export interface CatalogueEntry {
-  category: PolicyCategory;
-  config: PolicyConfigDef;
-  policy: DecoratedPolicy | null;
-}
-
-/* ──────────────────────────────────────────────────────────────────────── */
-/*  Endpoint display labels                                                   */
-/* ──────────────────────────────────────────────────────────────────────── */
-
-/**
- * i18n keys keyed by endpoint; labels stored steps in the detail view. Mostly
- * {@link ToolEndpoint}s, plus the AI classify endpoint, which isn't part of the generated union.
- */
-export const ENDPOINT_LABELS: Partial<
-  Record<ToolEndpoint | "/api/v1/ai/tools/classify-and-label", string>
-> = {
-  "/api/v1/security/auto-redact": "portal.policies.endpoints.autoRedact",
-  "/api/v1/security/sanitize-pdf": "portal.policies.endpoints.sanitizePdf",
-  "/api/v1/security/add-watermark": "portal.policies.endpoints.addWatermark",
-  "/api/v1/misc/ocr-pdf": "portal.policies.endpoints.ocrPdf",
-  "/api/v1/misc/flatten": "portal.policies.endpoints.flatten",
-  "/api/v1/misc/compress-pdf": "portal.policies.endpoints.compressPdf",
-  "/api/v1/ai/tools/classify-and-label":
-    "portal.policies.endpoints.classifyAndLabel",
-};
-
-export function humanizeEndpoint(
-  path: string,
-  t: (key: string) => string,
-): string {
-  const label = ENDPOINT_LABELS[path as ToolEndpoint];
-  if (label) return t(label);
-  const last = path.split("/").filter(Boolean).pop() ?? path;
-  return last
-    .replace(/-/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase())
-    .trim();
-}
-
-/* ──────────────────────────────────────────────────────────────────────── */
-/*  Catalogue definitions                                                     */
-/* ──────────────────────────────────────────────────────────────────────── */
-
-const DEFAULT_PII_PATTERNS: string[] = [
-  "\\b(?!000|666|9\\d{2})\\d{3}([- ])(?!00)\\d{2}\\1(?!0000)\\d{4}\\b",
-  "\\b(?:4\\d{12}(?:\\d{3})?|5[1-5]\\d{14}|3[47]\\d{13}|6(?:011|5\\d{2})\\d{12})\\b",
-];
-
-/** `label`/`desc` values are i18n keys — render with t(). */
-export const POLICY_CATEGORIES: PolicyCategory[] = [
-  {
-    id: "ingestion",
-    label: "portal.policies.categories.ingestion.label",
-    tone: "blue",
-    desc: "portal.policies.categories.ingestion.desc",
-    providesClassification: true,
-    comingSoon: true,
-  },
-  {
-    id: "security",
-    label: "portal.policies.categories.security.label",
-    tone: "purple",
-    desc: "portal.policies.categories.security.desc",
-  },
-  {
-    id: "classification",
-    label: "portal.policies.categories.classification.label",
-    tone: "blue",
-    desc: "portal.policies.categories.classification.desc",
-    providesClassification: true,
-  },
-  {
-    id: "compliance",
-    label: "portal.policies.categories.compliance.label",
-    tone: "amber",
-    desc: "portal.policies.categories.compliance.desc",
-    comingSoon: true,
-  },
-  {
-    id: "routing",
-    label: "portal.policies.categories.routing.label",
-    tone: "green",
-    desc: "portal.policies.categories.routing.desc",
-    comingSoon: true,
-  },
-  {
-    id: "retention",
-    label: "portal.policies.categories.retention.label",
-    tone: "neutral",
-    desc: "portal.policies.categories.retention.desc",
-    comingSoon: true,
-  },
-];
-
-/**
- * `summary`/`rules`/`scopeLabel`/field `label` values are i18n keys — render
- * with t(). Field `value`/`options` strings are persisted policy state and
- * stay as stable values (translating them would corrupt saved configs).
- */
-export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
-  ingestion: {
-    summary: "portal.policies.config.ingestion.summary",
-    rules: [
-      "portal.policies.config.ingestion.rules.0",
-      "portal.policies.config.ingestion.rules.1",
-      "portal.policies.config.ingestion.rules.2",
-      "portal.policies.config.ingestion.rules.3",
-    ],
-    scopeLabel: "portal.policies.config.scopeAll",
-    defaultOperations: [policyStep("ocr"), policyStep("flatten")],
-    fields: [
-      {
-        label: "portal.policies.config.ingestion.fields.minConfidence",
-        key: "minConfidence",
-        type: "select",
-        value: "p80",
-        options: ["p60", "p70", "p80", "p90", "p95"],
-      },
-      {
-        label: "portal.policies.config.ingestion.fields.belowThreshold",
-        key: "belowThreshold",
-        type: "select",
-        value: "flagForReview",
-        options: ["flagForReview", "routeToBucket", "hold"],
-      },
-    ],
-  },
-  security: {
-    summary: "portal.policies.config.security.summary",
-    rules: [
-      "portal.policies.config.security.rules.0",
-      "portal.policies.config.security.rules.1",
-      "portal.policies.config.security.rules.2",
-    ],
-    scopeLabel: "portal.policies.config.scopeAll",
-    defaultOperations: [
-      // Flatten to image so redactions can't be lifted off.
-      policyStep("redact", {
-        useRegex: true,
-        convertPDFToImage: true,
-        wordsToRedact: DEFAULT_PII_PATTERNS,
-      }),
-      // JavaScript removal only; the tool enables removeEmbeddedFiles by default, so turn it off.
-      policyStep("sanitize", { removeEmbeddedFiles: false }),
-      // Bake in via image so it can't be stripped.
-      policyStep("watermark", { convertPDFToImage: true }),
-    ],
-    fields: [],
-  },
-  classification: {
-    summary: "portal.policies.config.classification.summary",
-    rules: [
-      "portal.policies.config.classification.rules.0",
-      "portal.policies.config.classification.rules.1",
-    ],
-    scopeLabel: "portal.policies.config.scopeAll",
-    defaultOperations: [policyStep("classify")],
-    fields: [],
-  },
-  compliance: {
-    summary: "portal.policies.config.compliance.summary",
-    rules: [
-      "portal.policies.config.compliance.rules.0",
-      "portal.policies.config.compliance.rules.1",
-      "portal.policies.config.compliance.rules.2",
-    ],
-    scopeLabel: "portal.policies.config.scopeAll",
-    // Apply writes our sensitivity label into the document after it is sanitised and flattened.
-    // Offered only once a Purview tenant is connected (it needs a tenant connection and a label
-    // GUID, which no default can guess), and hidden entirely until then.
-    defaultOperations: [
-      policyStep("sanitize"),
-      policyStep("flatten"),
-      policyStep("purviewApplyLabel"),
-    ],
-    fields: [
-      {
-        label: "portal.policies.config.compliance.fields.frameworks",
-        key: "frameworks",
-        type: "chips",
-        value: ["hipaa"],
-        options: ["hipaa", "gdpr", "soc2", "fedramp", "pciDss", "iso27001"],
-      },
-      {
-        label: "portal.policies.config.compliance.fields.onViolation",
-        key: "onViolation",
-        type: "select",
-        value: "flagForReview",
-        options: [
-          "flagForReview",
-          "blockExport",
-          "autoRedactPhi",
-          "quarantineDocument",
-        ],
-      },
-      {
-        label: "portal.policies.config.compliance.fields.auditTrail",
-        key: "auditTrail",
-        type: "toggle",
-        value: true,
-      },
-      {
-        label: "portal.policies.config.compliance.fields.accessLog",
-        key: "accessLog",
-        type: "toggle",
-        value: true,
-      },
-    ],
-  },
-  routing: {
-    summary: "portal.policies.config.routing.summary",
-    rules: [
-      "portal.policies.config.routing.rules.0",
-      "portal.policies.config.routing.rules.1",
-      "portal.policies.config.routing.rules.2",
-    ],
-    scopeLabel: "portal.policies.config.scopeAll",
-    defaultOperations: [policyStep("compress")],
-    fields: [
-      {
-        label: "portal.policies.config.routing.fields.destination",
-        key: "destination",
-        type: "select",
-        value: "documents",
-        options: ["documents", "s3Bucket", "sharePoint", "webhook"],
-      },
-      {
-        label: "portal.policies.config.routing.fields.webhookUrl",
-        key: "webhookUrl",
-        type: "text",
-        value: "",
-      },
-      {
-        label: "portal.policies.config.routing.fields.notify",
-        key: "notify",
-        type: "toggle",
-        value: false,
-      },
-    ],
-  },
-  retention: {
-    summary: "portal.policies.config.retention.summary",
-    rules: [
-      "portal.policies.config.retention.rules.0",
-      "portal.policies.config.retention.rules.1",
-      "portal.policies.config.retention.rules.2",
-    ],
-    scopeLabel: "portal.policies.config.scopeAll",
-    defaultOperations: [policyStep("compress")],
-    fields: [
-      {
-        label: "portal.policies.config.retention.fields.keepFor",
-        key: "keepFor",
-        type: "select",
-        value: "sevenYears",
-        options: [
-          "thirtyDays",
-          "oneYear",
-          "threeYears",
-          "sevenYears",
-          "indefinite",
-        ],
-      },
-      {
-        label: "portal.policies.config.retention.fields.archiveAfter",
-        key: "archiveAfter",
-        type: "select",
-        value: "never",
-        options: ["thirtyDays", "ninetyDays", "oneYear", "never"],
-      },
-      {
-        label: "portal.policies.config.retention.fields.immutableHold",
-        key: "immutableHold",
-        type: "toggle",
-        value: false,
-      },
-    ],
-  },
-};
-
-export const POLICY_DOC_TYPES: string[] = [
-  "contracts",
-  "invoices",
-  "taxDocuments",
-  "hrRecords",
-  "insurance",
-  "medicalPhi",
-  "legalFilings",
-  "financialReports",
-];
+/* Catalogue model + definitions live in @app/policies/catalog - shared with the
+   editor's folder-processing setup - and are re-exported here for the portal. */
+export * from "@app/policies/catalog";
+import {
+  POLICY_CATEGORIES,
+  POLICY_CONFIG,
+  type CatalogueEntry,
+  type DecoratedPolicy,
+  type PoliciesResponse,
+  type PolicySetupResult,
+  type PolicyState,
+  type PolicyStatus,
+} from "@app/policies/catalog";
 
 // ── Client-side catalogue assembly ───────────────────────────────────────────
 
@@ -423,8 +49,8 @@ function decoratePolicy(
   runs: PolicyRunView[],
   isDefault: boolean,
 ): DecoratedPolicy | null {
-  const category = POLICY_CATEGORIES.find((c) => c.id === decoded.categoryId);
-  const config = POLICY_CONFIG[decoded.categoryId];
+  const category = POLICY_CATEGORIES.find((c) => c.id === decoded.policyKey);
+  const config = POLICY_CONFIG[decoded.policyKey];
   if (!category || !config) return null;
 
   const policyRuns = runs.filter((r) => r.policyId === decoded.id);
@@ -432,7 +58,10 @@ function decoratePolicy(
   const state: PolicyState = {
     configured: true,
     status,
+    required: decoded.required,
+    extraOptions: decoded.extraOptions,
     sources: decoded.sources,
+    runsOnEditor: decoded.runsOnEditor,
     scopeTypes: decoded.scopeTypes,
     reviewerEmail: decoded.reviewerEmail,
     fieldValues: decoded.fieldValues,
@@ -483,8 +112,8 @@ export function assemblePolicies(
   >();
   for (const wire of wirePolicies) {
     const decoded = fromWirePolicy(wire);
-    if (decoded.categoryId) {
-      decodedByCategory.set(decoded.categoryId, { decoded, isDefault: false });
+    if (decoded.policyKey) {
+      decodedByCategory.set(decoded.policyKey, { decoded, isDefault: false });
     }
   }
 
@@ -496,32 +125,82 @@ export function assemblePolicies(
     return { category, config: POLICY_CONFIG[category.id], policy };
   });
 
-  const active = wirePolicies.filter((p) => p.enabled).length;
-  const paused = wirePolicies.filter((p) => !p.enabled).length;
-  const enabledPolicyIds = new Set(
-    wirePolicies.filter((p) => p.enabled).map((p) => p.id),
-  );
-  const docsEnforced = runs.filter(
-    (r) =>
-      r.status === "COMPLETED" &&
-      r.policyId != null &&
-      enabledPolicyIds.has(r.policyId),
-  ).length;
-  const summary: PoliciesSummary = {
-    active,
-    paused,
-    categories: POLICY_CATEGORIES.length,
-    docsEnforced,
-  };
-
-  return { summary, catalogue };
+  return { catalogue };
 }
 
-/** GET /api/v1/policies/{id} — one stored policy's raw record. */
-export async function fetchPolicy(id: string): Promise<WirePolicy> {
-  return apiClient.local.json<WirePolicy>(
-    `/api/v1/policies/${encodeURIComponent(id)}`,
-  );
+/**
+ * Whether `inner` appears in `outer` in order (no reordering), each used once. The wizard renders
+ * a category's capabilities in a fixed order, so a policy whose enabled tools are a subsequence of
+ * the template's canonical chain round-trips; any other order cannot be shown simply.
+ */
+function isOrderedSubset<T>(inner: T[], outer: T[]): boolean {
+  let cursor = 0;
+  for (const item of inner) {
+    const at = outer.indexOf(item, cursor);
+    if (at === -1) return false;
+    cursor = at + 1;
+  }
+  return true;
+}
+
+/**
+ * The CatalogueEntry that seeds the simple wizard for a policy, or null if the wizard can't express
+ * it losslessly - the single authority for routing an edit to the wizard vs the full builder. Null on
+ * anything the wizard can't show: no template origin, a server input/destination, an unknown or extra
+ * tool, or a reordered chain.
+ */
+export function parseSimplePolicy(
+  policy: Policy,
+  runs: PolicyRunView[] = [],
+): CatalogueEntry | null {
+  const rawCategory = policy.output?.options?.categoryId;
+  const categoryId = typeof rawCategory === "string" ? rawCategory : "";
+  if (!categoryId) return null;
+  const category = POLICY_CATEGORIES.find((c) => c.id === categoryId);
+  const config = POLICY_CONFIG[categoryId];
+  if (!category || !config) return null;
+
+  // The wizard only runs on the editor (sources + runOn live in the options bag, not as server
+  // inputs/destinations). A policy carrying either cannot be shown simply.
+  if ((policy.inputs?.length ?? 0) > 0) return null;
+  if ((policy.outputIds?.length ?? 0) > 0) return null;
+
+  // Every step must be one of this template's capabilities, and they must stay in canonical order.
+  const canonical = config.defaultOperations.map((op) => op.toolId);
+  const toolIds: PolicyToolId[] = [];
+  for (const step of policy.steps) {
+    const parsed = policyStepFromWire(step as WirePipelineStep);
+    if (!parsed || !canonical.includes(parsed.toolId)) return null;
+    toolIds.push(parsed.toolId);
+  }
+  if (!isOrderedSubset(toolIds, canonical)) return null;
+
+  const wire: WirePolicy = {
+    id: policy.id ?? "",
+    name: policy.name,
+    enabled: policy.enabled,
+    required: policy.required,
+    trigger: null,
+    steps: policy.steps as WirePipelineStep[],
+    // The options bag is untyped on the pipeline record; the codec reads it defensively.
+    output: {
+      type: "inline",
+      options: (policy.output?.options ?? {}) as Partial<WireOutputOptions>,
+    },
+    editor: policy.editor,
+  };
+  const decorated = decoratePolicy(fromWirePolicy(wire), runs, false);
+  if (!decorated) return null;
+  // The wire codec models neither the icon nor the (custom) name; carry them from the raw record so
+  // the Customise hand-off preserves them instead of resetting to the category default.
+  return {
+    category,
+    config,
+    policy: {
+      ...decorated,
+      state: { ...decorated.state, name: policy.name, icon: policy.icon },
+    },
+  };
 }
 
 /**
@@ -560,13 +239,10 @@ export async function clearProcessedHistory(id: string): Promise<void> {
 
 // ── Wire-build helpers (so Policies.tsx doesn't need codec knowledge) ────────
 
-const DEFAULT_RETRIES = 3;
-const DEFAULT_RETRY_DELAY = 5;
-
 // Catalogue policy bodies carry categoryId at the top level so the pipelines
 // mock handler can discriminate them from raw pipeline saves on the shared
 // POST /api/v1/policies endpoint. The real backend ignores unknown fields.
-type CatalogueWireBody = WirePolicy & { categoryId: string };
+type CatalogueWireBody = WirePolicy & { categoryId: string; icon?: string };
 
 /**
  * The persisted policy name derived from its category, e.g. "Security Policy".
@@ -587,14 +263,19 @@ export function buildWireFromSetup(
   t: TFunction,
   enabled = true,
 ): CatalogueWireBody {
+  const stored = entry.policy?.state;
   return {
     categoryId: entry.category.id,
+    icon: stored?.icon,
     ...toWirePolicy({
-      id: entry.policy?.state.backendId ?? "",
-      name: policyDisplayName(entry, t),
+      id: stored?.backendId ?? "",
+      name: stored?.name ?? policyDisplayName(entry, t),
       enabled,
-      categoryId: entry.category.id,
+      required: result.required,
+      extraOptions: result.extraOptions,
+      policyKey: entry.category.id,
       sources: result.sources,
+      runsOnEditor: result.runsOnEditor,
       scopeTypes: result.scopeTypes,
       reviewerEmail: result.reviewerEmail,
       fieldValues: result.fieldValues,
@@ -605,36 +286,6 @@ export function buildWireFromSetup(
       maxRetries: result.maxRetries,
       retryDelayMinutes: result.retryDelayMinutes,
       steps: result.steps,
-    }),
-  };
-}
-
-/** Build a wire policy from an existing decorated policy (e.g. for pause/resume). */
-export function buildWireFromState(
-  entry: CatalogueEntry,
-  policy: DecoratedPolicy,
-  enabled: boolean,
-  t: TFunction,
-): CatalogueWireBody {
-  const s = policy.state;
-  return {
-    categoryId: entry.category.id,
-    ...toWirePolicy({
-      id: s.backendId ?? "",
-      name: policyDisplayName(entry, t),
-      enabled,
-      categoryId: entry.category.id,
-      sources: s.sources,
-      scopeTypes: s.scopeTypes,
-      reviewerEmail: s.reviewerEmail,
-      fieldValues: s.fieldValues,
-      runOn: resolveRunOn(s.runOn, entry.category.id),
-      outputMode: s.outputMode ?? "new_version",
-      outputName: s.outputName ?? "",
-      outputNamePosition: s.outputNamePosition ?? "suffix",
-      maxRetries: s.maxRetries ?? DEFAULT_RETRIES,
-      retryDelayMinutes: s.retryDelayMinutes ?? DEFAULT_RETRY_DELAY,
-      steps: policy.steps,
     }),
   };
 }

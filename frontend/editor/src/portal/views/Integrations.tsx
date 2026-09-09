@@ -31,6 +31,7 @@ import {
 } from "@portal/components/sources/connectionTypes";
 import { STEP_OPERATIONS } from "@portal/components/policies/stepOperations";
 import { COMING_SOON_SOURCE_TYPES } from "@portal/components/sources/sourceTypes";
+import { useConnectGate } from "@portal/hooks/useConnectGate";
 import "@portal/theme/surface.css";
 import "@portal/views/Integrations.css";
 
@@ -94,6 +95,7 @@ type IntegrationRow = {
 
 export function Integrations() {
   const { t } = useTranslation();
+  const { guard } = useConnectGate();
   const [connections, setConnections] = useState<IntegrationConfig[] | null>(
     null,
   );
@@ -212,13 +214,23 @@ export function Integrations() {
     return counts;
   }, [catalogue]);
 
-  const openCreate = useCallback((typeId: string) => {
-    setModal({ open: true, editing: null, fixedTypeId: typeId });
-  }, []);
+  // Connecting an integration and editing one both need a linked account. Memoised
+  // because both land in the row-building useMemo deps below.
+  const openCreate = useMemo(
+    () =>
+      guard((typeId: string) => {
+        setModal({ open: true, editing: null, fixedTypeId: typeId });
+      }),
+    [guard],
+  );
 
-  const openEdit = useCallback((connection: IntegrationConfig) => {
-    setModal({ open: true, editing: connection });
-  }, []);
+  const openEdit = useMemo(
+    () =>
+      guard((connection: IntegrationConfig) => {
+        setModal({ open: true, editing: connection });
+      }),
+    [guard],
+  );
 
   const remove = useCallback(
     async (connection: IntegrationConfig) => {

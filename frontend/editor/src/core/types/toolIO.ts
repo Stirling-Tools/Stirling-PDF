@@ -65,6 +65,47 @@ export const TOOL_FORMATS = [
   "NONE",
 ] as const satisfies readonly ToolFormat[];
 
+/** Filename extensions from the backend ToolFormat declarations. */
+export const TOOL_FORMAT_EXTENSIONS: Record<ToolFormat, readonly string[]> = {
+  PDF: ["pdf"],
+  PDF_ENCRYPTED: ["pdf"],
+  IMAGE: [
+    "png",
+    "jpg",
+    "jpeg",
+    "gif",
+    "webp",
+    "bmp",
+    "tif",
+    "tiff",
+    "svg",
+    "psd",
+    "ai",
+    "eps",
+  ],
+  ZIP: ["zip", "rar", "7z", "tar", "gz", "bz2", "xz", "lz", "lzma", "z"],
+  WORD: ["doc", "docx", "odt", "rtf"],
+  PPT: ["ppt", "pptx", "odp"],
+  EXCEL: ["xls", "xlsx", "ods"],
+  CSV: ["csv"],
+  HTML: ["html", "htm", "xhtml"],
+  XML: ["xml", "xsd", "xsl"],
+  JSON: ["json"],
+  TEXT: ["txt", "text", "md", "markdown"],
+  MARKDOWN: ["md", "markdown"],
+  JAVASCRIPT: ["js", "jsx"],
+  EBOOK: ["epub", "mobi", "azw3", "fb2", "txt", "docx"],
+  EMAIL: ["eml", "msg"],
+  POSTSCRIPT: ["ps", "eps"],
+  PCL: ["pcl", "pxl"],
+  XPS: ["xps", "oxps"],
+  VIDEO: ["mp4", "webm", "avi", "mov", "mkv"],
+  CBZ: ["cbz"],
+  CBR: ["cbr"],
+  ANY: [],
+  NONE: [],
+};
+
 /** How many files go in and come out. A multi-output tool returns its results zipped, and the caller unpacks them. */
 export type ToolArity = "SISO" | "SIMO" | "MISO" | "MIMO";
 
@@ -86,6 +127,8 @@ export interface ToolIOCase {
 /** What one endpoint accepts and produces. */
 export interface ToolIOSpec {
   accepts: ToolFormat[];
+  /** Overrides the broad format categories for filename-based input checks. */
+  inputExtensions?: string[];
   produces: ToolFormat;
   arity: ToolArity;
   cases?: ToolIOCase[];
@@ -108,11 +151,13 @@ export const TOOL_IO: ToolIOTable = {
     accepts: ["CBR"],
     produces: "PDF",
     arity: "SISO",
+    inputExtensions: ["cbr", "rar"],
   },
   "/api/v1/convert/cbz/pdf": {
     accepts: ["CBZ"],
     produces: "PDF",
     arity: "SISO",
+    inputExtensions: ["cbz", "zip"],
   },
   "/api/v1/convert/ebook/pdf": {
     accepts: ["EBOOK"],
@@ -133,16 +178,48 @@ export const TOOL_IO: ToolIOTable = {
     accepts: ["HTML", "ZIP"],
     produces: "PDF",
     arity: "SISO",
+    inputExtensions: ["html", "zip"],
   },
   "/api/v1/convert/img/pdf": {
     accepts: ["IMAGE"],
     produces: "PDF",
     arity: "MISO",
+    inputExtensions: [
+      "bmp",
+      "btf",
+      "btiff",
+      "cur",
+      "emf",
+      "gif",
+      "ico",
+      "jb2",
+      "jbig2",
+      "jp2",
+      "jpeg",
+      "jpg",
+      "pbm",
+      "pcx",
+      "pgm",
+      "png",
+      "ppm",
+      "psb",
+      "psd",
+      "rle",
+      "svg",
+      "tf8",
+      "tif",
+      "tiff",
+      "wbmp",
+      "wbp",
+      "webp",
+      "wmf",
+    ],
   },
   "/api/v1/convert/markdown/pdf": {
     accepts: ["MARKDOWN", "ZIP"],
     produces: "PDF",
     arity: "SISO",
+    inputExtensions: ["md", "zip"],
   },
   "/api/v1/convert/pdf/cbr": {
     accepts: ["PDF"],
@@ -260,6 +337,7 @@ export const TOOL_IO: ToolIOTable = {
     accepts: ["IMAGE"],
     produces: "PDF",
     arity: "MIMO",
+    inputExtensions: ["svg"],
     cases: [
       {
         when: [
@@ -488,9 +566,34 @@ export const TOOL_IO: ToolIOTable = {
     arity: "SISO",
   },
   "/api/v1/misc/extract-image-scans": {
-    accepts: ["PDF"],
+    accepts: ["PDF", "IMAGE"],
     produces: "IMAGE",
     arity: "SIMO",
+    inputExtensions: [
+      "pdf",
+      "bmp",
+      "dib",
+      "gif",
+      "jpeg",
+      "jpg",
+      "jpe",
+      "jp2",
+      "png",
+      "webp",
+      "avif",
+      "pbm",
+      "pgm",
+      "ppm",
+      "pxm",
+      "pnm",
+      "pfm",
+      "sr",
+      "ras",
+      "tiff",
+      "tif",
+      "hdr",
+      "pic",
+    ],
   },
   "/api/v1/misc/extract-images": {
     accepts: ["PDF"],

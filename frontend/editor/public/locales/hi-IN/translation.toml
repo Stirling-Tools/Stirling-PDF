@@ -41,7 +41,7 @@ false = "नहीं"
 fileNotSavedToDisk = "डिस्क पर सहेजा नहीं गया"
 fileSavedToDisk = "फ़ाइल डिस्क पर सहेजी गई"
 fileSelected = "चयनित: {{filename}}"
-filesSelected = "फ़ाइलें चयनित"
+filesSelected = "{{count}} फ़ाइलें"
 font = "फ़ॉन्ट"
 fontSizeTooltip = "पॉइंट्स में पृष्ठ संख्या के टेक्स्ट का आकार। बड़ी संख्या बड़ा टेक्स्ट बनाती है।"
 fontTypeTooltip = "पृष्ठ संख्याओं के लिए फ़ॉन्ट परिवार। अपने दस्तावेज़ शैली के आधार पर चुनें।"
@@ -3526,7 +3526,6 @@ label = "Y स्थान"
 
 [crop.error]
 failed = "PDF क्रॉप करने में विफल"
-invalidArea = "क्रॉप क्षेत्र PDF सीमाओं से बाहर जा रहा है"
 
 [crop.preview]
 title = "क्रॉप क्षेत्र चयन"
@@ -3969,6 +3968,7 @@ back = "वापस"
 backToFolder = "{{folder}} पर वापस"
 backToMyFiles = "मेरी फ़ाइलों पर वापस"
 breadcrumbs = "फ़ोल्डर पथ"
+bulkActions = "कार्रवाइयाँ"
 cancel = "रद्द करें"
 classification = "वर्गीकरण"
 clearSelection = "चयन साफ़ करें"
@@ -4142,6 +4142,11 @@ totalSize = "कुल आकार"
 type = "प्रकार"
 versionHistory = "संस्करण यात्रा"
 
+[filesPage.filters]
+activeCount = "{{count}} फ़िल्टर सक्रिय"
+clearAll = "फ़िल्टर साफ़ करें"
+label = "फ़िल्टर"
+
 [filesPage.folderName]
 cancel = "रद्द करें"
 error = "फ़ोल्डर सहेजा नहीं जा सका। पुनः प्रयास करें।"
@@ -4176,6 +4181,7 @@ label = "Filter files by name"
 placeholder = "Filter files…"
 
 [filesPage.sort]
+label = "फ़ाइलें क्रमबद्ध करें"
 modifiedAsc = "सबसे पुराने पहले"
 modifiedDesc = "हाल के पहले"
 nameAsc = "नाम A→Z"
@@ -4305,11 +4311,14 @@ issues = "GitHub"
 [formFill]
 allSaved = "सब सहेजा गया"
 analyzingFields = "Analysing form fields..."
+applyFailed = "बदलाव लागू नहीं किए जा सके"
 extractCsvError = "CSV extract करने में विफल"
 extractXlsxError = "XLSX extract करने में विफल"
 filled = "filled"
 flattenAfterFilling = "भरने के बाद समतल करें"
+goToPage = "इस पेज पर जाएँ"
 noFields = "No fillable form fields found in this PDF."
+page = "पेज"
 placeholderEnter = "Enter"
 placeholderSelect = "Select"
 requiredAbbreviation = "आव."
@@ -4318,7 +4327,82 @@ rescanFields = "फ़ील्ड्स दोबारा स्कैन क�
 rescanFormFields = "फॉर्म फ़ील्ड्स दोबारा स्कैन करें"
 save = "सहेजें"
 saveShortcut = "सहेजने के लिए Ctrl+S"
+skippedEdits_one = "1 बदलाव लागू नहीं किया जा सका:"
+skippedEdits_other = "{{count}} बदलाव लागू नहीं किए जा सके:"
+skippedEditsTruncated = "{{count}} और सूचीबद्ध नहीं हैं।"
 unsavedChanges = "बिना सहेजे बदलाव"
+
+[formFill.create]
+commit = "PDF में {{count}} फ़ील्ड जोड़ें"
+empty = "अभी तक कोई फ़ील्ड नहीं बनाया गया है।"
+failed = "फ़ील्ड जोड़ने में विफल"
+goToField = "इस फ़ील्ड पर जाएँ"
+hint = "फ़ील्ड प्रकार चुनें, फिर उसे पेज पर बनाएँ।"
+placing = "पेज पर {{type}} फ़ील्ड बनाएँ। रोकने के लिए Esc दबाएँ।"
+preview = "पूर्वावलोकन के लिए दबाए रखें"
+previewHelp = "फ़ील्ड जोड़े जाने के बाद वे कैसे दिखेंगे, यह देखने के लिए दबाए रखें, संपादन रूपरेखाओं के बिना।"
+removeField = "फ़ील्ड हटाएँ"
+
+[formFill.editor]
+action = "बटन कार्रवाई"
+actionHelp = "क्लिक करने पर बटन क्या करता है।"
+actionNone = "कोई नहीं"
+actionPrint = "प्रिंट"
+actionReset = "फ़ॉर्म रीसेट करें"
+actionSubmit = "URL पर सबमिट करें"
+actionUri = "URL खोलें"
+actionUrl = "URL"
+actionUrlHelp = "वह पता जिसे बटन खोलता है या जिस पर सबमिट करता है।"
+addOption = "विकल्प जोड़ें"
+caption = "बटन कैप्शन"
+captionHelp = "बटन के सामने छपा पाठ।"
+defaultValue = "डिफ़ॉल्ट मान"
+defaultValueHelp = "किसी के भरने से पहले फ़ील्ड में क्या होता है। खाली फ़ील्ड के लिए खाली छोड़ें।"
+fontSize = "फ़ॉन्ट आकार"
+fontSizeHelp = "फ़ील्ड के अंदर पाठ का आकार। रीडर को फ़िट करने के लिए आकार तय करने देने हेतु खाली छोड़ें।"
+label = "लेबल"
+labelHelp = "फ़ॉर्म भरने वाले व्यक्ति को दिखाया जाने वाला पाठ। फ़ील्ड नाम पर वापस जाने के लिए इसे खाली छोड़ें।"
+maxLength = "अधिकतम लंबाई (comb)"
+maxLengthHelp = "फिट होने वाले वर्णों की संख्या सीमित करता है, जिन्हें समान दूरी वाले बॉक्स के रूप में बनाया जाता है।"
+multiline = "मल्टी-लाइन"
+multilineHelp = "एक से अधिक पंक्ति के पाठ की अनुमति देता है और फ़ील्ड के किनारे पर रैप करता है।"
+multiSelect = "एकाधिक चयन की अनुमति दें"
+multiSelectHelp = "एक साथ एक से अधिक विकल्प चुने जाने देता है।"
+name = "फ़ील्ड नाम"
+nameHelp = "फ़ील्ड का आंतरिक नाम। डेटा निर्यात करते समय या किसी अन्य सिस्टम से फ़ॉर्म भरते समय उपयोग होता है, इसलिए इसे अद्वितीय और स्पेस से मुक्त रखें।"
+optionGap = "विकल्प अंतराल"
+optionGapHelp = "बटनों के बीच अंतराल, पॉइंट्स में। उन्हें बॉक्स में समान रूप से नीचे तक फैलाने के लिए खाली छोड़ें।"
+optionPlaceholder = "विकल्प {{n}}"
+options = "विकल्प"
+optionsEmpty = "कम से कम एक विकल्प जोड़ें।"
+optionsHelp = "सूची में दिए गए विकल्प। प्रत्येक वैसा ही संग्रहीत होता है जैसा टाइप किया गया है, इसलिए उन्हें छोटा और अलग रखें।"
+optionSize = "विकल्प आकार"
+optionSizeHelp = "प्रत्येक बटन की चौड़ाई और ऊँचाई, पॉइंट्स में। उन्हें आपके बनाए बॉक्स में फ़िट करने के लिए खाली छोड़ें।"
+readOnly = "केवल-पठन"
+readOnlyHelp = "मान दिखाता है लेकिन किसी को भी इसे संपादित करने से रोकता है।"
+removeOption = "विकल्प हटाएँ"
+required = "आवश्यक"
+requiredHelp = "जब तक यह फ़ील्ड भरा नहीं जाता, फ़ॉर्म सबमिट नहीं किया जा सकता।"
+signatureNote = "केवल प्लेसहोल्डर - आप यहाँ हस्ताक्षर नहीं करते। यह चिह्नित करता है कि हस्ताक्षर कहाँ होना चाहिए ताकि PDF signer (Adobe Acrobat, signing service आदि) दस्तावेज़ पर हस्ताक्षर होने पर इस स्थान पर हस्ताक्षर रखे।"
+tooltip = "टूलटिप"
+tooltipHelp = "PDF रीडर में जब कोई फ़ील्ड पर होवर करता है, तब दिखने वाला संकेत।"
+type = "प्रकार"
+typeHelp = "यह किस प्रकार का फ़ील्ड है। इसे बदलने से फ़ील्ड फिर से बनता है, इसलिए इसका मौजूदा मान आगे नहीं ले जाया जाता।"
+
+[formFill.mode]
+create = "बनाएँ"
+fill = "भरें"
+label = "फ़ॉर्म संपादक मोड"
+modify = "संशोधित करें"
+
+[formFill.modify]
+commit = "{{count}} बदलाव सहेजें"
+delete = "हटाएँ"
+empty = "इस PDF में अभी कोई फ़ॉर्म फ़ील्ड नहीं है।"
+failed = "बदलाव सहेजने में विफल"
+groupSizeHint = "विकल्प आकार का उपयोग करें"
+hint = "किसी फ़ील्ड के गुण संपादित करने के लिए उसे चुनें, उसे पेज पर खींचें, या हटाएँ।"
+restore = "पुनर्स्थापित करें"
 
 [formFill.sidebar]
 close = "साइडबार बंद करें"
@@ -4584,6 +4668,10 @@ title = "मेटाडेटा बदलें"
 desc = "दस्तावेज़ प्रतिबंध और अनुमतियाँ बदलें"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "अनुमतियां बदलें"
+
+[home.classify]
+desc = "पहचानें कि यह किस प्रकार का दस्तावेज़ है और उसे टैग करें।"
+title = "वर्गीकृत करें"
 
 [home.compare]
 desc = "2 PDF दस्तावेजों के बीच अंतर की तुलना करें और दिखाएं"
@@ -5097,6 +5185,30 @@ openProcessor = "Open PDF Processor"
 [navFooter.credits]
 count = "{{remaining}} of {{total}}"
 label = "Free credits"
+
+[notifications]
+empty = "रिपोर्ट करने के लिए कुछ नहीं।"
+handoffUnavailable = "यह ब्राउज़र प्रोसेसर को दस्तावेज़ संपादक को पास करने नहीं देगा। इसके बजाय इसे संपादक से खोलें।"
+noDocumentLinked = "यह विफलता किसी विशिष्ट दस्तावेज़ से जुड़ी नहीं है, इसलिए यहाँ खोलने के लिए कुछ नहीं है।"
+notOnThisDevice = "यह दस्तावेज़ इस डिवाइस पर नहीं है, इसलिए इसे यहाँ नहीं खोला जा सकता।"
+occurrences = "{{count}} बार"
+open = "सूचनाएँ"
+title = "सूचनाएँ"
+unread = "अपठित"
+
+[notifications.action]
+failed = "यह काम नहीं किया। थोड़ी देर में फिर कोशिश करें।"
+unavailable = "इस सूचना के लिए उपलब्ध नहीं है।"
+
+[notifications.detail]
+copied = "कॉपी किया गया"
+copy = "त्रुटि कॉपी करें"
+less = "कम दिखाएँ"
+more = "पूरा संदेश दिखाएँ"
+
+[notifications.section]
+earlier = "पहले"
+new = "नया"
 
 [oauth.error]
 message = "प्रमाणीकरण सफल नहीं हुआ। आप यह विंडो बंद कर फिर से प्रयास कर सकते हैं।"
@@ -6735,8 +6847,8 @@ barAria = "Free PDFs remaining"
 capSuffix_one = "{{allowance}} मुफ़्त PDFs में से उपयोग हुआ"
 capSuffix_other = "{{allowance}} मुफ़्त PDFs में से उपयोग हुआ"
 eyebrow = "Processor trial"
-statusLabel_one = "{{remaining}} शेष"
-statusLabel_other = "{{remaining}} शेष"
+statusLabel_one = "{{used}} उपयोग किया गया"
+statusLabel_other = "{{used}} उपयोग किए गए"
 sub = "PDF Editor का मुफ़्त उपयोग करें। PDFs को अपने-आप process करने के लिए भुगतान करें।"
 title_one = "{{allowance}} PDFs मुफ़्त process करें"
 title_other = "{{allowance}} PDFs मुफ़्त process करें"
@@ -7417,6 +7529,8 @@ acknowledge = "Acknowledge"
 confirm = "Are you sure?"
 dismiss = "Dismiss"
 dismissSkipFile = "Skip this file"
+viewFile = "फ़ाइल देखें"
+viewInProcessor = "प्रोसेसर में देखें"
 
 [portal.failures.debug]
 copyJson = "Copy JSON"
@@ -7428,6 +7542,8 @@ showJson = "Show raw JSON ({{total}})"
 
 [portal.failures.disabled]
 closed = "This failure is already closed."
+noDocument = "यह विफलता किसी विशिष्ट दस्तावेज़ के लिए रिकॉर्ड नहीं की गई थी, इसलिए यहाँ खोलने के लिए कुछ नहीं है।"
+unattended = "यह फ़ाइल किसी फ़ोल्डर, bucket या webhook द्वारा दी गई थी, इसलिए इसे खोलने के लिए किसी का ब्राउज़र इसे होल्ड नहीं कर रहा है।"
 unavailable = "Not available for this failure."
 
 [portal.failures.empty]
@@ -8716,7 +8832,9 @@ title = "स्रोत"
 connectSource = "स्रोत कनेक्ट करें"
 
 [portal.sources.builder]
+advanced = "उन्नत"
 back = "स्रोतों पर वापस"
+backToSource = "स्रोत सेटअप पर वापस जाएँ"
 backToTypes = "सभी स्रोत प्रकार"
 cancel = "रद्द करें"
 chooseHint = "चुनें कि दस्तावेज़ कहाँ से आते हैं। greyed-out connectors आने वाले हैं।"
@@ -8726,7 +8844,6 @@ create = "स्रोत बनाएँ"
 createTitle = "स्रोत कनेक्ट करें"
 delete = "हटाएँ"
 editTitle = "स्रोत संपादित करें"
-enabled = "सक्षम"
 save = "बदलाव सेव करें"
 
 [portal.sources.builder.folderAccess]
@@ -8763,6 +8880,7 @@ consume = "Consume: प्रत्येक file को एक बार proces
 snapshot = "Snapshot: हर run में folder फिर से पढ़ें"
 
 [portal.sources.networkFields.recursive]
+helperText = "यदि आपकी फ़ाइलें नेस्टेड फ़ोल्डरों में व्यवस्थित हैं तो सबफ़ोल्डर शामिल करें, या केवल शीर्ष स्तर देखें।"
 label = "Folder depth"
 
 [portal.sources.networkFields.recursive.options]
@@ -8816,6 +8934,7 @@ hash = "Size, date और content check"
 stat = "Size और date modified"
 
 [portal.sources.types.folder.fields.mode]
+helperText = "प्रोसेस होने के बाद मूल फ़ाइल को उसी स्थान पर छोड़ना है या नहीं। यदि मूल फ़ाइल उसी स्थान पर छोड़ी जाती है, तो अगली बार pipeline स्रोत स्कैन करने पर इसे फिर से प्रोसेस किया जाएगा।"
 label = "Read mode"
 
 [portal.sources.types.folder.fields.mode.options]
@@ -8823,6 +8942,7 @@ consume = "Consume: प्रत्येक फ़ाइल को एक ब�
 snapshot = "Snapshot: हर run में folder को फिर से पढ़ें"
 
 [portal.sources.types.folder.fields.recursive]
+helperText = "यदि आपकी फ़ाइलें नेस्टेड फ़ोल्डरों में व्यवस्थित हैं तो सबफ़ोल्डर शामिल करें, या केवल शीर्ष स्तर देखें।"
 label = "Folder depth"
 
 [portal.sources.types.folder.fields.recursive.options]
@@ -9696,7 +9816,9 @@ toolNotAvailableLocally = "आपका Stirling-PDF सर्वर ऑफ़�
 expired = "आपका सत्र समाप्त हो गया है। कृपया पृष्ठ को रिफ्रेश करें और पुन: प्रयास करें।"
 
 [settings]
+backToSections = "सभी सेटिंग्स"
 close = "बंद करें"
+title = "सेटिंग्स"
 
 [settings.ai]
 documents = "दस्तावेज़ और RAG"
@@ -10635,6 +10757,7 @@ ariaLabel = "Super search"
 filtersAriaLabel = "Search filters"
 hint = "Type to search"
 placeholder = "Search Stirling"
+placeholderShort = "खोजें"
 showLess = "Show less"
 showMore = "Show {{count}} more"
 
@@ -10831,6 +10954,7 @@ searchPlaceholder = "टूल खोजें..."
 
 [toolPicker.subcategories]
 advancedFormatting = "उन्नत फ़ॉर्मेटिंग"
+ai = "AI"
 automation = "स्वचालन"
 developerTools = "डेवलपर टूल"
 documentReview = "दस्तावेज़ समीक्षा"
@@ -11335,8 +11459,11 @@ columnDefault = "स्तंभ {{index}}"
 convertToPdf = "PDF में बदलें"
 csvStats = "{{rows}} पंक्तियाँ · {{columns}} स्तंभ · {{size}}"
 emptyFile = "खाली फ़ाइल"
+htmlHidePreview = "पूर्वावलोकन छिपाएँ"
 htmlPreview = "HTML पूर्वावलोकन"
+htmlPreviewMobileHidden = "HTML पेज डेस्कटॉप चौड़ाई के लिए लेआउट किए गए हैं, इसलिए यहाँ पूर्वावलोकन डिफ़ॉल्ट रूप से बंद है।"
 htmlPreviewWarning = "HTML पूर्वावलोकन — बाहरी संसाधन लोड नहीं हो सकते · {{size}}"
+htmlShowPreview = "फिर भी पूर्वावलोकन दिखाएँ"
 invalidJson = "अवैध JSON — कच्ची सामग्री दिखाई जा रही है"
 lineNumbers = "पंक्ति संख्याएँ"
 loading = "लोड हो रहा है..."
@@ -11683,6 +11810,7 @@ exportAll = "PDF निर्यात करें"
 exportSelected = "चयनित पृष्ठ निर्यात करें"
 formFill = "फ़ॉर्म भरें"
 hideToolbar = "Hide toolbar"
+moreActions = "अधिक कार्रवाइयाँ"
 multiTool = "मल्टी-टूल"
 panMode = "पैन मोड"
 print = "PDF प्रिंट करें"
@@ -11703,6 +11831,8 @@ selectAll = "सभी चुनें"
 selectByNumber = "पृष्ठ संख्याओं से चुनें"
 selectLanguage = "भाषा चुनें"
 share = "साझा करें"
+showAllTools = "सभी टूल दिखाएँ"
+showFewerTools = "टूलबार संक्षिप्त करें"
 showToolbar = "Show toolbar"
 toggleAnnotations = "एनोटेशन की दृश्यता टॉगल करें"
 toggleAttachments = "संलग्नक टॉगल करें"
