@@ -15,6 +15,7 @@ vi.mock("@app/i18n/tomlBackend", () => ({
 }));
 
 import i18n, { updateSupportedLanguages } from "@app/i18n";
+import { I18N_STORAGE_KEYS, LanguageSource } from "@app/i18n/languages";
 
 describe("updateSupportedLanguages", () => {
   beforeEach(() => {
@@ -27,6 +28,15 @@ describe("updateSupportedLanguages", () => {
     updateSupportedLanguages(null, "en-US");
     expect(spy).not.toHaveBeenCalled();
     spy.mockRestore();
+  });
+
+  it("still records the source when the reload is skipped", async () => {
+    await i18n.changeLanguage("en-US");
+    updateSupportedLanguages(null, "en-US");
+    expect(localStorage.getItem(I18N_STORAGE_KEYS.LANGUAGE)).toBe("en-US");
+    expect(localStorage.getItem(I18N_STORAGE_KEYS.LANGUAGE_SOURCE)).toBe(
+      String(LanguageSource.ServerDefault),
+    );
   });
 
   it("switches when the server default differs", async () => {
