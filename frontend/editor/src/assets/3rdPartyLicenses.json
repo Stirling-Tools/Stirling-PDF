@@ -283,7 +283,7 @@
     {
       "moduleName": "@tanstack/react-query",
       "moduleUrl": "https://github.com/TanStack/query",
-      "moduleVersion": "5.101.4",
+      "moduleVersion": "5.102.0",
       "moduleLicense": "MIT",
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
     },
@@ -520,7 +520,7 @@
     },
     {
       "moduleName": "use-sync-external-store",
-      "moduleUrl": "https://github.com/facebook/react",
+      "moduleUrl": "https://github.com/react/react",
       "moduleVersion": "1.6.0",
       "moduleLicense": "MIT",
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
