@@ -33,6 +33,13 @@ import "@portal/views/Policies.css";
 interface PolicySetupWizardProps {
   /** The category being configured, or null when closed. */
   entry: CatalogueEntry | null;
+  /** Whether the user may edit pipelines and policies (a manager); when false the wizard is read-only. */
+  canManagePolicies?: boolean;
+  /**
+   * The permission check is still loading. The enforce toggle stays locked, but the manager-only
+   * tooltip is withheld so a still-loading manager isn't told they lack permission.
+   */
+  permissionsLoading?: boolean;
   onClose: () => void;
   /**
    * Fires on submit with the collected settings + built pipeline steps. May be
@@ -214,6 +221,8 @@ function seedTools(entry: CatalogueEntry): ToolState[] {
  */
 export function PolicySetupWizard({
   entry,
+  canManagePolicies = true,
+  permissionsLoading = false,
   onClose,
   onSubmit,
   onCustomise,
@@ -224,6 +233,8 @@ export function PolicySetupWizard({
     <PolicySetupWizardBody
       key={entry.category.id}
       entry={entry}
+      canManagePolicies={canManagePolicies}
+      permissionsLoading={permissionsLoading}
       onClose={onClose}
       onSubmit={onSubmit}
       onCustomise={onCustomise}
@@ -233,11 +244,15 @@ export function PolicySetupWizard({
 
 function PolicySetupWizardBody({
   entry,
+  canManagePolicies,
+  permissionsLoading,
   onClose,
   onSubmit,
   onCustomise,
 }: {
   entry: CatalogueEntry;
+  canManagePolicies: boolean;
+  permissionsLoading: boolean;
   onClose: () => void;
   onSubmit: (entry: CatalogueEntry, result: PolicySetupResult) => Promise<void>;
   onCustomise: (entry: CatalogueEntry, result: PolicySetupResult) => void;
@@ -274,9 +289,10 @@ function PolicySetupWizardBody({
   );
   const [maxRetries] = useState(policy?.state.maxRetries ?? 0);
   const [retryDelayMinutes] = useState(policy?.state.retryDelayMinutes ?? 0);
-  // A suggested policy is something the org requires by nature, so new ones default to required;
-  // editing preserves whatever was saved.
+  // A template is a policy by nature - a failure should block the file, not wave it through - so a
+  // new one defaults to required (blocking). Editing preserves whatever was saved.
   const [required, setRequired] = useState(policy?.state.required ?? true);
+  const readOnly = !canManagePolicies;
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -412,6 +428,7 @@ function PolicySetupWizardBody({
             style={{ marginLeft: "auto" }}
             onClick={submit}
             loading={submitting}
+            disabled={readOnly}
           >
             {isEdit
               ? t("portal.policies.wizard.actions.saveChanges")
@@ -530,6 +547,8 @@ function PolicySetupWizardBody({
         <EnforceAsPolicyControl
           required={required}
           onRequiredChange={setRequired}
+          disabled={!canManagePolicies}
+          permissionsLoading={permissionsLoading}
         />
       </div>
     </Modal>
