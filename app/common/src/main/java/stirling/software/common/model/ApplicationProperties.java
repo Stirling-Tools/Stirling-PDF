@@ -1318,7 +1318,7 @@ public class ApplicationProperties {
         private String appNameNavbar;
         private List<String> languages;
         private String logoStyle = "modern"; // Options: "modern" (default) or "classic"
-        private boolean defaultHideUnavailableTools = false;
+        private boolean defaultHideUnavailableTools = true;
         private boolean defaultHideUnavailableConversions = false;
         private HideDisabledTools hideDisabledTools = new HideDisabledTools();
 

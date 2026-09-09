@@ -102,7 +102,7 @@ function ServerDefaultsSync() {
   useEffect(() => {
     if (config) {
       const serverDefaults = {
-        hideUnavailableTools: config.defaultHideUnavailableTools ?? false,
+        hideUnavailableTools: config.defaultHideUnavailableTools ?? true,
         hideUnavailableConversions:
           config.defaultHideUnavailableConversions ?? false,
       };

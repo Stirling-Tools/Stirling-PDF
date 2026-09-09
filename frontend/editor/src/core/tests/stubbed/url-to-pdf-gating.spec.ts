@@ -1,15 +1,18 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
 
 const listEntry = (page: import("@playwright/test").Page) =>
-  page.locator('[data-tour="tool-button-urlToPdf"]').first();
+  page.locator('[data-tour="tool-button-urlToPdf"]');
 
 test.describe("URL to PDF tracks the url-to-pdf endpoint flag", () => {
   test("endpoint enabled: offered in the tool list and the tool opens", async ({
     page,
   }) => {
     await page.goto("/editor", { waitUntil: "domcontentloaded" });
-    await expect(listEntry(page)).toBeVisible({ timeout: 15000 });
-    await expect(listEntry(page)).not.toHaveAttribute("aria-disabled", "true");
+    await expect(listEntry(page).first()).toBeVisible({ timeout: 15000 });
+    await expect(listEntry(page).first()).not.toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
 
     await page.goto("/url-to-pdf", { waitUntil: "domcontentloaded" });
     await expect(page.getByTestId("url-to-pdf-input")).toBeVisible({
@@ -24,12 +27,12 @@ test.describe("URL to PDF tracks the url-to-pdf endpoint flag", () => {
       },
     });
 
-    test("still listed, but marked unavailable and will not open", async ({
+    test("dropped from the tool list and the tool will not open", async ({
       page,
     }) => {
       await page.goto("/editor", { waitUntil: "domcontentloaded" });
-      await expect(listEntry(page)).toBeVisible({ timeout: 15000 });
-      await expect(listEntry(page)).toHaveAttribute("aria-disabled", "true");
+      await page.waitForTimeout(2500);
+      await expect(listEntry(page)).toHaveCount(0);
 
       await page.goto("/url-to-pdf", { waitUntil: "domcontentloaded" });
       await page.waitForTimeout(2000);

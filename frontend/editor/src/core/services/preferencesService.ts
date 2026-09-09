@@ -60,7 +60,7 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
   hasCompletedOnboarding: false,
   hasSeenIntroOnboarding: false,
   hasSeenCookieBanner: false,
-  hideUnavailableTools: false,
+  hideUnavailableTools: true,
   hideUnavailableConversions: false,
   logoVariant: null,
   pdfRenderMode: "normal",
