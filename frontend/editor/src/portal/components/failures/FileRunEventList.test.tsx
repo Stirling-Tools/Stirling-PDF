@@ -347,8 +347,21 @@ describe("FileRunEventList", () => {
 
   it("replaces the acted-on row in place using the server's response", async () => {
     fetchFileRunEvents.mockResolvedValue([event()]);
+    // An acknowledged row comes back offering what is left to do with it, which is
+    // the one thing on screen that tells the replacement from the row it replaced.
     applyFileRunEventAction.mockResolvedValue(
-      event({ status: "ACKNOWLEDGED", statusActor: "me@example.com" }),
+      event({
+        status: "ACKNOWLEDGED",
+        statusActor: "me@example.com",
+        actions: [
+          offer({
+            id: "DISMISS",
+            labelKey: "portal.failures.action.dismiss",
+            defaultLabel: "Dismiss",
+            slot: "OVERFLOW",
+          }),
+        ],
+      }),
     );
 
     render(<FileRunEventList />);
@@ -356,12 +369,11 @@ describe("FileRunEventList", () => {
     fireEvent.click(screen.getByRole("button", { name: "More options" }));
     fireEvent.click(screen.getByRole("menuitem", { name: "Acknowledge" }));
 
-    await waitFor(() => {
-      expect(applyFileRunEventAction).toHaveBeenCalledWith(
-        "fre-1",
-        "ACKNOWLEDGE",
-      );
-    });
+    // Wait on the replaced row, not on the call: the call lands synchronously, so
+    // waiting on it leaves the assertions below racing the response into state.
+    expect(await screen.findByRole("button", { name: "Dismiss" })).toBeTruthy();
+    expect(screen.getByText("Password-protected document")).toBeTruthy();
+    expect(applyFileRunEventAction).toHaveBeenCalledWith("fre-1", "ACKNOWLEDGE");
     // Updated from the response rather than by refetching, so the list does not
     // reload and jump under the reviewer.
     expect(fetchFileRunEvents).toHaveBeenCalledTimes(1);
