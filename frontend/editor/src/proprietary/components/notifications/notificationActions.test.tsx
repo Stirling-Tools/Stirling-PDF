@@ -996,7 +996,7 @@ describe("REPAIR", () => {
     const outcome = await registry().REPAIR?.run(corruptedPolicyContext());
 
     expect(repairDocuments).toHaveBeenCalledWith(["f-1"]);
-    // Repairing alone resolves nothing: the run that failed has to be the thing that passes.
+    // The re-run, not the repair, is what resolves the row.
     expect(rechainPolicyOnDocument).toHaveBeenCalled();
     expect(outcome).toEqual({ ok: true });
     expect(reportNotificationResolved).toHaveBeenCalledWith("failure:evt-1");
@@ -1080,7 +1080,6 @@ describe("REPAIR", () => {
   });
 
   it("leaves the row open when the repair worked but the re-run failed again", async () => {
-    // The honest outcome for a repair that produced a file the tool still cannot read.
     retryWithFiles.mockResolvedValue({
       ok: false,
       reason: "serverMessage",
@@ -1097,7 +1096,6 @@ describe("REPAIR", () => {
   });
 
   it("leaves the row open when the policy re-run cannot be tracked", async () => {
-    // Nothing here will collect what an untracked run produces, so the failure is not resolved.
     rechainPolicyOnDocument.mockResolvedValue({ ok: true, tracked: false });
 
     const outcome = await registry().REPAIR?.run(corruptedPolicyContext());
@@ -1109,7 +1107,7 @@ describe("REPAIR", () => {
 
   it("is offered only where the repaired document has somewhere to land", async () => {
     expect(registry().REPAIR?.available(corruptedPolicyContext())).toBe(true);
-    // The processor shell has no workbench contexts, so the row promotes something else.
+    // Without a workbench the row promotes the next action instead.
     expect(
       registry(inProcessor).REPAIR?.available(corruptedPolicyContext()),
     ).toBe(false);
@@ -1122,7 +1120,7 @@ describe("REPAIR", () => {
   });
 
   it("is not offered for a stash belonging to a different failure on the same file", async () => {
-    // One stash per file but one incident per kind per file: E004 is not this row's to repair.
+    // The stash on this file belongs to the E004 row, not this one.
     expect(
       registry().REPAIR?.available(
         corruptedContext({

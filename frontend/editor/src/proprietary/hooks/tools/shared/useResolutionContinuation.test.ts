@@ -136,13 +136,16 @@ beforeEach(() => {
 
 describe("useResolutionContinuation", () => {
   it("carries a manual repair through a damaged document's policy and closes the row", async () => {
-    // The Repair tool run by hand asks the same of the document as the row's own button would.
+    // Manual repair counts as the resolution, same as the button.
     fetchNotifications.mockResolvedValue({
       notifications: [
         policyRow({
           kindId: "INPUT_CORRUPTED",
           fileId: "f-damaged",
-          actions: [offer("REPAIR", "RESOLUTION"), offer("OPEN_IN_TOOL", "OVERFLOW")],
+          actions: [
+            offer("REPAIR", "RESOLUTION"),
+            offer("OPEN_IN_TOOL", "OVERFLOW"),
+          ],
         }),
       ],
       viewerReviewsTeam: false,

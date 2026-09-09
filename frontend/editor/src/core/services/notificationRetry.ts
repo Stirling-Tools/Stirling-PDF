@@ -162,7 +162,7 @@ export interface RetryOutcome {
 const UNLOCK_ENDPOINT =
   "/api/v1/security/remove-password" satisfies ToolEndpoint;
 
-/** As above. Takes one document and answers with one, so a batch is one call per file. */
+/** Takes one document and answers with one, so a batch is one call per file. */
 const REPAIR_ENDPOINT = "/api/v1/misc/repair" satisfies ToolEndpoint;
 
 /** Unlock a held document for a failure with no stashed operation, e.g. a policy run. */
@@ -212,7 +212,10 @@ export interface RepairedDocument {
   file: RetryOutputFile;
 }
 
-/** As {@link RetryOutcome}, but the outputs stay paired to their inputs for versioning. */
+/**
+ * As {@link RetryOutcome}, but the outputs stay paired to their inputs for versioning.
+ * `repaired` is only ever present on success.
+ */
 export interface RepairOutcome {
   ok: boolean;
   reason?: RetryFailure;
@@ -260,7 +263,6 @@ export async function retryWithFiles(
   return postFiles(payload.endpoint, payload.params, files, null);
 }
 
-/** Loads the documents this browser holds, then posts them. */
 async function postDocuments(
   endpoint: string,
   params: Record<string, unknown>,

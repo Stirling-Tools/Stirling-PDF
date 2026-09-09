@@ -343,8 +343,6 @@ class FailureKindTest {
 
         @Test
         void aRepairableKindNeverPromotesOpenInToolOverTheRepair() {
-            // Opening the tool stays declared for the truncated-upload case, but the same bytes
-            // fail the same way, so promoting it would offer a button that almost never works.
             assertThat(FailureKind.INPUT_CORRUPTED.getOfferedActions())
                     .contains(offered(FailureActionId.REPAIR, OWNER, RESOLUTION, "repair"))
                     .contains(offered(FailureActionId.OPEN_IN_TOOL, OWNER, OVERFLOW, "openInTool"));

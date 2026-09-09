@@ -199,7 +199,6 @@ export function useNotificationActions(): ClientActionRegistry {
   const navigation = useContext(NavigationActionsContext);
   const viewer = useContext(ViewerContext);
   const canOpenHere = Boolean(fileContext && fileStore && navigation && viewer);
-  // The upload chain a retry rejoins excludes Classification when the engine is off.
 
   /** Opens the way the file sidebar does: an id the workbench does not hold renders nothing. */
   const openInWorkbench = useCallback(
@@ -308,8 +307,8 @@ export function useNotificationActions(): ClientActionRegistry {
 
     /**
      * An untracked run is a failure on purpose: nothing here will collect what it produces.
-     * `fix` is what already happened to the document, which the copy has to own up to: the user
-     * is left holding a changed file either way.
+     * `fix` names what already happened to the document, because the user is left holding it
+     * either way.
      */
     const rerunOutcome = (
       outcome: PolicyRerunOutcome,
@@ -483,7 +482,7 @@ export function useNotificationActions(): ClientActionRegistry {
     };
 
     const repair: ClientActionSpec = {
-      // As decrypt: a repaired document needs somewhere to land, so the processor shell defers.
+      // A repaired document needs somewhere to land, so the processor shell defers.
       available: (context) => fileContext !== undefined && canRetry(context),
       closesPanel: true,
       run: async (context): Promise<ClientActionOutcome> => {
@@ -560,7 +559,6 @@ export function useNotificationActions(): ClientActionRegistry {
 
         // Ignored on purpose: a refused resolve is not a failed repair.
         await reportNotificationResolved(context.notification.id);
-        // The stash described the run that just succeeded, so it has nothing left to offer.
         await clearRetryPayload(context.notification.fileId);
         return { ok: true };
       },

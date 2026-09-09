@@ -471,8 +471,7 @@ describe("repairDocuments", () => {
   });
 
   it("fails the whole batch when one document cannot be repaired", async () => {
-    // A re-run whose merge still holds one broken input fails exactly as it did before, so a
-    // partial repair would cost the user a second failure to read.
+    // All or nothing: a partial repair still fails the re-run.
     getStirlingFiles.mockImplementation(async (ids: string[]) =>
       ids.map((id) => new File(["%PDF-1.7"], `${id}.pdf`)),
     );

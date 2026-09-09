@@ -69,8 +69,7 @@ class FailureClassifierTest {
 
         @Test
         void everyUnreadableDocumentIsTheSameKind() {
-            // E003 rides along: PDFBox swallows the failure it names, so it is claimed only so a
-            // known code can never surface as UNKNOWN.
+            // E003 included on purpose: a known code must classify, never fall to UNKNOWN.
             for (String code : new String[] {"E001", "E002", "E003"}) {
                 assertThat(classifier.classify(problemDetail(HttpStatus.BAD_REQUEST, code)))
                         .as("%s", code)
