@@ -1,8 +1,10 @@
 package stirling.software.proprietary.policy.engine;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Semaphore;
 import java.util.function.Consumer;
 
 import org.springframework.stereotype.Service;
@@ -10,6 +12,8 @@ import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.ApplicationProperties;
+import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.input.InputSource;
 import stirling.software.proprietary.policy.input.ResolvedInput;
 import stirling.software.proprietary.policy.ledger.ProcessedLedger;
@@ -42,6 +46,17 @@ public class PolicyRunner {
     private final SourceStore sourceStore;
     private final SourceDocCounter docCounter;
     private final ProcessedLedger processedLedger;
+    private final ApplicationProperties applicationProperties;
+    private final PolicyAccessGuard policyAccessGuard;
+
+    /**
+     * One admission gate per sweep: every run is visible immediately, but only this many execute at
+     * once, so completions arrive steadily from the first file onward.
+     */
+    private Semaphore sweepAdmission() {
+        int concurrency = applicationProperties.getPolicies().getSweepConcurrency();
+        return concurrency > 0 ? new Semaphore(concurrency) : null;
+    }
 
     /** Full-listing sweep over every input: resolve each source, then reconcile the ledger. */
     public SweepOutcome run(Policy policy) {
@@ -63,24 +78,53 @@ public class PolicyRunner {
     }
 
     /**
+     * Run one named file of the policy and nothing else: a per-file retry, where claiming the
+     * folder's other files would process work the user did not ask for - including an original they
+     * just restored, whose ledger row the restore deliberately forgot.
+     */
+    public SweepOutcome runFile(Policy policy, String identity) {
+        return run(policy, policy.inputs(), SweepKind.LIGHT, identity);
+    }
+
+    /** Sweep every one of the given inputs, claiming whatever each source offers. */
+    public SweepOutcome run(Policy policy, List<PipelineInput> inputs, SweepKind sweep) {
+        return run(policy, inputs, sweep, null);
+    }
+
+    /**
      * Core sweep: pulls each of the given inputs' sources; each yielded unit becomes its own run so
      * one failure does not affect the others. No inputs means one run with no input (generator
      * pipeline). Missing or disabled sources are skipped so one broken reference does not stop the
      * rest. Presence cleanup only runs when the sweep covered every input of the policy - a
-     * single-binding fire cannot reconcile the whole policy's ledger. Returns the ids of the runs
-     * it started plus what the sweep skipped, so a manual trigger can report which runs to follow
-     * or why nothing ran.
+     * single-binding fire cannot reconcile the whole policy's ledger. A non-null {@code target}
+     * narrows the sweep to that one ledger identity. Returns the ids of the runs it started plus
+     * what the sweep skipped, so a manual trigger can report which runs to follow or why nothing
+     * ran.
      */
-    public SweepOutcome run(Policy policy, List<PipelineInput> inputs, SweepKind sweep) {
+    private SweepOutcome run(
+            Policy policy, List<PipelineInput> inputs, SweepKind sweep, String target) {
+        if (policyAccessGuard.isOrphaned(policy)) {
+            // Reachable by nobody, so nobody could stop it: running would replace files in place
+            // in a folder no user can list, pause, revert, or delete.
+            log.warn("Processing folder {} has no reachable owner; not sweeping it", policy.id());
+            return new SweepOutcome(List.of(), 0, 0, 0, 0, 0);
+        }
         long sweepStart = System.currentTimeMillis();
-        PolicySweep context = new PolicySweep(policy.id(), sweep, processedLedger);
+        PolicySweep context = new PolicySweep(policy.id(), sweep, processedLedger, target);
+        Semaphore admission = sweepAdmission();
         List<String> runIds = new ArrayList<>();
         if (inputs.isEmpty()) {
-            // Generator pipeline: one run with no input. Still fall through to the cleanup
-            // below so rows recorded for its folder outputs are pruned like anything else,
-            // instead of accumulating until the policy is deleted.
-            // Generator pipeline: no input, so neither a source nor a document to attribute to.
-            runIds.add(startRun(policy, null, null, PolicyInputs.of(List.of()), unused -> {}));
+            // Generator pipeline: one run with no input, so neither a source nor a document to
+            // attribute to. Still falls through to the cleanup below, so rows recorded for its
+            // folder outputs are pruned instead of accumulating until the policy is deleted.
+            runIds.add(
+                    startRun(
+                            policy,
+                            null,
+                            null,
+                            PolicyInputs.of(List.of()),
+                            unused -> {},
+                            admission));
         }
         for (PipelineInput input : inputs) {
             String sourceId = input.sourceId();
@@ -100,7 +144,7 @@ public class PolicyRunner {
                 context.vetoCleanup();
                 continue;
             }
-            runIds.addAll(pullAndRun(policy, sourceId, source.toInputSpec(), context));
+            runIds.addAll(pullAndRun(policy, sourceId, source.toInputSpec(), context, admission));
         }
         boolean fullPolicy = inputs.size() == policy.inputs().size();
         if (fullPolicy && context.cleanupAllowed()) {
@@ -141,13 +185,48 @@ public class PolicyRunner {
         return policyEngine.submit(definition, inputs, listener);
     }
 
+    /** Whether nothing of the policy is running or mid-settle — safe to move its files. */
+    public boolean quiesced(String policyId) {
+        return !policyEngine.hasActiveRuns(policyId) && !processedLedger.anyInFlight(policyId);
+    }
+
+    /** Cancel every non-terminal run of the policy (see {@link PolicyEngine#cancelAllFor}). */
+    public int cancelRuns(String policyId) {
+        return policyEngine.cancelAllFor(policyId);
+    }
+
+    /**
+     * Wait until every run of the policy has settled its claim: none outside a terminal state, no
+     * ledger row in flight. False on timeout — a run inside a long tool call can outlive any
+     * reasonable request budget.
+     */
+    public boolean awaitQuiesce(String policyId, Duration timeout) {
+        long deadline = System.currentTimeMillis() + timeout.toMillis();
+        while (policyEngine.hasActiveRuns(policyId) || processedLedger.anyInFlight(policyId)) {
+            if (System.currentTimeMillis() >= deadline) {
+                return false;
+            }
+            try {
+                Thread.sleep(150);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return false;
+            }
+        }
+        return true;
+    }
+
     /**
      * Resolves the source and starts a run per unit; records how many documents the source fed and
      * returns the ids of the runs started. Any source that could not be listed completely vetoes
      * this sweep's ledger cleanup.
      */
     private List<String> pullAndRun(
-            Policy policy, String sourceId, InputSpec spec, PolicySweep context) {
+            Policy policy,
+            String sourceId,
+            InputSpec spec,
+            PolicySweep context,
+            Semaphore admission) {
         InputSource source = sourceFor(spec);
         if (source == null) {
             log.warn(
@@ -181,7 +260,8 @@ public class PolicyRunner {
                             sourceId,
                             unit.fileIdentity(),
                             unit.inputs(),
-                            unit.onComplete()));
+                            unit.onComplete(),
+                            admission));
             docsFed += unit.inputs().primary().size();
         }
         docCounter.record(sourceId, docsFed);
@@ -193,13 +273,39 @@ public class PolicyRunner {
             String sourceId,
             String fileIdentity,
             PolicyInputs inputs,
-            Consumer<Boolean> onComplete) {
+            Consumer<Boolean> onComplete,
+            Semaphore admission) {
         log.info("Running policy {} ({})", policy.id(), policy.name());
         PolicyRunHandle handle =
                 policyEngine.runPolicy(
-                        policy, inputs, PolicyProgressListener.NOOP, sourceId, fileIdentity);
+                        policy,
+                        inputs,
+                        PolicyProgressListener.NOOP,
+                        sourceId,
+                        fileIdentity,
+                        admission);
         handle.completion()
-                .whenComplete((run, throwable) -> onComplete.accept(succeeded(run, throwable)));
+                .whenComplete(
+                        (run, throwable) -> {
+                            boolean cancelled =
+                                    run != null && run.getStatus() == PolicyRunStatus.CANCELLED;
+                            boolean neverAdmitted =
+                                    run != null
+                                            && PolicyEngine.QUEUE_FULL_CODE.equals(
+                                                    run.getErrorCode());
+                            if (cancelled || neverAdmitted) {
+                                // Neither is a verdict on the file: cancellation is the
+                                // user's intent, and queue-full means nothing was attempted.
+                                // Settle, then drop the row, so the file reads as queued and
+                                // the next sweep takes it again.
+                                onComplete.accept(false);
+                                if (fileIdentity != null) {
+                                    processedLedger.forget(policy.id(), fileIdentity);
+                                }
+                                return;
+                            }
+                            onComplete.accept(succeeded(run, throwable));
+                        });
         return handle.runId();
     }
 
