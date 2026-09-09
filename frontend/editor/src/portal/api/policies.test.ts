@@ -1,7 +1,33 @@
 import { describe, expect, it } from "vitest";
-import { parseSimplePolicy } from "@portal/api/policies";
+import {
+  buildWireFromSetup,
+  parseSimplePolicy,
+  type PolicySetupResult,
+} from "@portal/api/policies";
 import { policyStep, policyStepToWire } from "@app/policies/operations";
 import type { Policy } from "@portal/api/pipelines";
+import type { TFunction } from "i18next";
+
+const t = ((key: string) => key) as unknown as TFunction;
+
+/** A minimal wizard result; the fields under test are the stored name/icon, not these. */
+function setupResult(): PolicySetupResult {
+  return {
+    required: false,
+    fieldValues: {},
+    sources: [],
+    runsOnEditor: true,
+    scopeTypes: [],
+    reviewerEmail: "",
+    outputMode: "new_version",
+    outputName: "",
+    outputNamePosition: "suffix",
+    runOn: "upload",
+    maxRetries: 0,
+    retryDelayMinutes: 0,
+    steps: [],
+  };
+}
 
 /** A template-representable classification policy, `required` as given. */
 function classificationPolicy(required: boolean): Policy {
@@ -42,5 +68,19 @@ describe("parseSimplePolicy", () => {
     const entry = parseSimplePolicy(policy);
     expect(entry?.policy?.state.runOn).toBe("export");
     expect(entry?.policy?.state.runsOnEditor).toBe(true);
+  });
+});
+
+describe("buildWireFromSetup", () => {
+  it("preserves the stored icon and name so a wizard save doesn't reset them", () => {
+    const policy: Policy = {
+      ...classificationPolicy(false),
+      name: "My classifier",
+      icon: "shield",
+    };
+    const entry = parseSimplePolicy(policy);
+    const wire = buildWireFromSetup(entry!, setupResult(), t);
+    expect(wire.icon).toBe("shield");
+    expect(wire.name).toBe("My classifier");
   });
 });
