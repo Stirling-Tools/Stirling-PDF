@@ -74,9 +74,6 @@ function defaultRedirectPath(): string {
 
 export const POST_LOGIN_REDIRECT_STORAGE_KEY = "stirling_post_login_path";
 
-/** localStorage key holding the JWT. The SPA has no cookie-session flow. */
-export const JWT_STORAGE_KEY = "stirling_jwt";
-
 function normalizeRedirectPath(target?: string): string {
   if (!target || typeof target !== "string") {
     return defaultRedirectPath();

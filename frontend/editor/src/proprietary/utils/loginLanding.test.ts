@@ -79,4 +79,15 @@ describe("fetchRootDestination", () => {
     expect(await fetchRootDestination()).toBe("signedOut");
     expect(h.get).not.toHaveBeenCalled();
   });
+
+  it("still calls /me for a Supabase session with no Spring JWT", async () => {
+    window.localStorage.removeItem("stirling_jwt");
+    window.localStorage.setItem("sb-abcdef-auth-token", "{}");
+    h.get.mockResolvedValueOnce(
+      mockMe({ portalAccess: true, loginLandingView: "processor" }),
+    );
+    expect(await fetchRootDestination()).toBe("processor");
+    expect(h.get).toHaveBeenCalledTimes(1);
+    window.localStorage.removeItem("sb-abcdef-auth-token");
+  });
 });

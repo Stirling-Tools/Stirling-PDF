@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { beforeEach, describe, it, expect, vi } from "vitest";
 import { render, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import LoggedInState from "@app/routes/login/LoggedInState";
@@ -19,6 +19,10 @@ vi.mock("react-router-dom", async () => {
 });
 
 describe("LoggedInState", () => {
+  beforeEach(() => {
+    mockNavigate.mockClear();
+  });
+
   it("navigates to the resolved landing path", async () => {
     vi.mocked(resolveLandingPath).mockResolvedValueOnce("/editor");
     render(
