@@ -138,9 +138,15 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     onPreviewFile?.(null);
   };
 
+  const eligibleFiles =
+    convertOperation.getEligibleFiles?.(
+      convertParams.parameters,
+      selectedFiles,
+    ) ?? selectedFiles;
+
   return createToolFlow({
     files: {
-      selectedFiles,
+      selectedFiles: eligibleFiles,
       isCollapsed: hasResults,
     },
     steps: [
@@ -153,7 +159,7 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
             parameters={convertParams.parameters}
             onParameterChange={convertParams.updateParameter}
             getAvailableToExtensions={convertParams.getAvailableToExtensions}
-            selectedFiles={selectedFiles}
+            selectedFiles={eligibleFiles}
             onSourceFormatSelected={handleSourceFormatSelected}
             disabled={endpointLoading}
           />

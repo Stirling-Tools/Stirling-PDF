@@ -113,7 +113,9 @@ const AddPageNumbers = ({
 
   return createToolFlow({
     files: {
-      selectedFiles,
+      selectedFiles:
+        operation.getEligibleFiles?.(params.parameters, selectedFiles) ??
+        selectedFiles,
       isCollapsed: hasResults,
     },
     steps: getSteps(),

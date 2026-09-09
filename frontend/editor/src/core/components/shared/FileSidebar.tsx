@@ -75,6 +75,7 @@ import {
 } from "@app/components/watchedFolders/watchedFolderDragState";
 import { WATCHED_FOLDERS_ENABLED } from "@app/constants/featureFlags";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
+import { useToolEligibleFileIds } from "@app/contexts/ToolFileEligibilityContext";
 import "@app/components/shared/FileSidebar.css";
 
 // Shared with the processor sidebar via tokens, so the two cannot drift.
@@ -834,6 +835,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       !isGoogleDriveEnabled && config?.hideDisabledToolsGoogleDrive;
 
     const width = collapsed ? COLLAPSED_WIDTH : EXPANDED_WIDTH;
+    const eligibleFileIds = useToolEligibleFileIds();
 
     // Render one file row (shared by the flat list and the grouped SaaS layout).
     const renderFileRow = (stub: StirlingFileStub) => {
@@ -885,6 +887,12 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           : lineageKey;
       return (
         <FileItem
+          isToolSkipped={
+            isInWorkbench &&
+            !isWatchedFoldersActive &&
+            eligibleFileIds !== null &&
+            !eligibleFileIds.has(stub.id)
+          }
           key={rowKey}
           fileId={stub.id}
           name={stub.name}
