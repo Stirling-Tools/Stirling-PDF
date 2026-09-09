@@ -25,7 +25,9 @@ export function UnlinkedServicesCard({
           key={provider.id}
           provider={provider}
           isConfigured={false}
-          settings={getProviderSettings(settings, provider)}
+          settings={
+            getProviderSettings(settings, provider) as Record<string, unknown>
+          }
           onChange={(updatedSettings) =>
             updateProviderSettings(
               settings,

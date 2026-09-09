@@ -25,7 +25,9 @@ export function LinkedServicesCard({
           key={provider.id}
           provider={provider}
           isConfigured={true}
-          settings={getProviderSettings(settings, provider)}
+          settings={
+            getProviderSettings(settings, provider) as Record<string, unknown>
+          }
           onChange={(updatedSettings) =>
             updateProviderSettings(
               settings,
